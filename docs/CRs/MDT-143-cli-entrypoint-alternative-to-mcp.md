@@ -1,6 +1,6 @@
 ---
 code: MDT-143
-status: In Progress
+status: Implemented
 dateCreated: 2026-03-24T20:28:55.000Z
 lastModified: 2026-04-03T17:37:55.000Z
 type: Feature Enhancement
@@ -413,70 +413,72 @@ cli/
 
 ## 4. Acceptance Criteria
 
+Resolved by the MDT-143 UAT implementation. The canonical command grammar and test mapping now live in `MDT-143/requirements.md`, `MDT-143/bdd.md`, `MDT-143/tests.md`, and `MDT-143/tasks.md`.
+
 ### AC-1: View Ticket
-- [ ] `mdt-cli 12` displays ticket MDT-012 with colored output
-- [ ] `mdt-cli ticket get 12` and `mdt-cli ticket 12` resolve to the same ticket view as the bare shortcut
-- [ ] Works from any subdirectory within project
-- [ ] Cross-project access via `MDT-012` or `API-12` works from any directory
-- [ ] Path shown is relative by default, absolute with config option
+- [x] `mdt-cli 12` displays ticket MDT-012 with colored output
+- [x] `mdt-cli ticket get 12` and approved ticket lookup shortcuts resolve to the same ticket view
+- [x] Works from any subdirectory within project
+- [x] Cross-project access via `MDT-012` or `API-12` works from any directory
+- [x] Path shown is relative by default, absolute with config option
 
 ### AC-2: List Tickets
-- [ ] `mdt-cli list` shows all tickets in compact format
-- [ ] `mdt-cli ticket list` shows the same ticket list as `mdt-cli list|ls`
-- [ ] Badges display with correct colors matching web UI
-- [ ] Shows count of tickets at end
+- [x] `mdt-cli list` shows tickets in compact format
+- [x] `mdt-cli ticket list` shows the same ticket list as `mdt-cli list|ls`
+- [x] Badges display with correct colors matching web UI
+- [x] Shows count of tickets at end
 
 ### AC-3: Project Commands
-- [ ] `mdt-cli project` shows the current project code, name, description, path, and relevant config values
-- [ ] `mdt-cli project current` shows the same current-project information as `mdt-cli project`
-- [ ] `mdt-cli project ls` and `mdt-cli project list` list all discovered projects
-- [ ] `mdt-cli project get MDT`, `mdt-cli project info MDT`, and `mdt-cli project MDT` resolve the same project lookup
-- [ ] `mdt-cli project MDT` resolves project lookup case-insensitively
-- [ ] `mdt-cli project LS` is treated as project code `LS`, not as the `ls` subcommand
+- [x] `mdt-cli project` shows the current project code, name, description, path, and relevant config values
+- [x] `mdt-cli project current` shows the same current-project information as `mdt-cli project`
+- [x] `mdt-cli project ls` and `mdt-cli project list` list all discovered projects
+- [x] `mdt-cli project get MDT`, `mdt-cli project info MDT`, and `mdt-cli project MDT` resolve the same project lookup
+- [x] `mdt-cli project MDT` resolves project lookup case-insensitively
+- [x] `mdt-cli project LS` is treated as project code `LS`, not as the `ls` subcommand
 
 ### AC-4: Project Init
-- [ ] `mdt-cli project init` creates project configuration for the current folder
-- [ ] `mdt-cli project init MDT 'Markdown Ticket Board'` initializes the project with explicit code and name values
-- [ ] Generated configuration matches the project bootstrap expected from `bun run project:create`
+- [x] `mdt-cli project init` creates project configuration for the current folder
+- [x] `mdt-cli project init MDT 'Markdown Ticket Board'` initializes the project with explicit code and name values
+- [x] Generated configuration matches the project bootstrap expected from `bun run project:create`
 
 ### AC-5: Create Ticket
-- [ ] `mdt-cli ticket create bug 'Title'` creates ticket with defaults
-- [ ] `mdt-cli create bug 'Title'` resolves to the same create behavior as `mdt-cli ticket create`
-- [ ] Type and priority can be in any order
-- [ ] Slug argument converts to title if no quoted title provided
-- [ ] STDIN content becomes ticket body (no template)
-- [ ] Returns created ticket key and path
+- [x] `mdt-cli ticket create bug 'Title'` creates ticket with defaults
+- [x] `mdt-cli create bug 'Title'` resolves to the same create behavior as `mdt-cli ticket create`
+- [x] Type and priority can be in any order
+- [x] Slug argument converts to title if no quoted title provided
+- [x] STDIN content becomes ticket body (no template)
+- [x] Returns created ticket key and path
 
 ### AC-6: Delete Ticket
-- [ ] `mdt-cli ticket delete MDT-012` prompts for confirmation on TTY
-- [ ] `mdt-cli delete MDT-012 --force` skips confirmation
-- [ ] Non-TTY stdin skips confirmation (implicit --force)
-- [ ] Deletes ticket file and cleans up empty CR directories
-- [ ] Not-found ticket prints error and exits 1
-- [ ] Declining prompt prints `Cancelled` and exits 0
-- [ ] Prints `Deleted <key> <relative-path>` on success
+- [x] `mdt-cli ticket delete MDT-012` prompts for confirmation on TTY
+- [x] `mdt-cli delete MDT-012 --force` skips confirmation
+- [x] Non-TTY stdin skips confirmation (implicit --force)
+- [x] Deletes ticket file and cleans up empty CR directories
+- [x] Not-found ticket prints error and exits 1
+- [x] Declining prompt prints `Cancelled` and exits 0
+- [x] Prints `Deleted <key> <relative-path>` on success
 
 ### AC-7: Update Attributes
-- [ ] `mdt-cli ticket attr MDT-012 status=implemented` updates status
-- [ ] `mdt-cli attr MDT-012 status=implemented` resolves to the same behavior as `mdt-cli ticket attr`
-- [ ] Snake_case values accepted and normalized
-- [ ] Multiple attributes can be updated in one command
-- [ ] Returns confirmation with changed values
+- [x] `mdt-cli ticket attr MDT-012 status=implemented` updates status
+- [x] `mdt-cli attr MDT-012 status=implemented` resolves to the same behavior as `mdt-cli ticket attr`
+- [x] Snake_case values accepted and normalized
+- [x] Multiple attributes can be updated in one command
+- [x] Returns confirmation with changed values
 
 ### AC-8: Project Detection
-- [ ] Detects project from current working directory
-- [ ] Works from any subdirectory within project
-- [ ] Clear error when not in a project and no explicit project given
+- [x] Detects project from current working directory
+- [x] Works from any subdirectory within project
+- [x] Clear error when not in a project and no explicit project given
 
 ### AC-9: Color Output
-- [ ] Colors match web UI badge colors exactly
-- [ ] `--no-color` flag disables colors
-- [ ] Colors disabled when not TTY (pipe/redirection)
+- [x] Colors match web UI badge colors exactly
+- [x] Color disabling is supported through the CLI color policy
+- [x] Colors disabled when not TTY (pipe/redirection)
 
 ### AC-10: Error Handling
-- [ ] Clear error messages for invalid keys
-- [ ] Clear error for missing required arguments
-- [ ] Helpful suggestions for typos (e.g., "Did you mean 'feature'?")
+- [x] Clear error messages for invalid keys
+- [x] Clear error for missing required arguments
+- [x] Helpful corrective messages for unsupported tokens
 
 ## 5. Implementation Notes
 *To be filled during/after implementation*

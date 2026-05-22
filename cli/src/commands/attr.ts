@@ -288,8 +288,7 @@ export async function ticketAttrAction(
 
   try {
     // Resolve project object
-    const projects = await projectService.getAllProjects()
-    const project = projects.find(p => p.project.code === projectCode)
+    const project = await projectService.getProjectByCodeOrId(projectCode)
     if (!project) {
       throw new CliCommandError('PROJECT_NOT_FOUND', `Project ${projectCode} not found`, { projectCode })
     }

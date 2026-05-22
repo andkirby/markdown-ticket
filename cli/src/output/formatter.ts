@@ -8,13 +8,13 @@
  * call formatter functions and console.log/print the result.
  */
 
-import type { Ticket } from '@mdt/shared/models/Ticket.js'
 import type { Project } from '@mdt/shared/models/Project.js'
+import type { Ticket } from '@mdt/shared/models/Ticket.js'
 import type { AttrOperation } from '@mdt/shared/services/ticket/types.js'
 import { readdirSync, statSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
-import { shouldUseColor, colorizeStatus, colorizePriority, colorizeType, colorizeTitle, colorizeTicketKey, colorizeProjectCode, colorizeProjectId, colorizePath, visiblePadEnd, statusDisplayLabel } from './colors.js'
 import { getCliConfig } from '../utils/cliConfig.js'
+import { colorizePath, colorizePriority, colorizeProjectCode, colorizeProjectId, colorizeStatus, colorizeTicketKey, colorizeTitle, colorizeType, shouldUseColor, statusDisplayLabel, visiblePadEnd } from './colors.js'
 
 /**
  * Format ticket details for console output
@@ -47,7 +47,7 @@ export function formatTicketView(ticket: Ticket, projectPath?: string): string {
   lines.push('─'.repeat(60))
 
   // Metadata fields (2-column layout)
-  const fields: Array<{ label: string; value: string; colorFn?: (s: string) => string }> = [
+  const fields: Array<{ label: string, value: string, colorFn?: (s: string) => string }> = [
     { label: 'status', value: ticket.status, colorFn: useColor ? colorizeStatus : undefined },
     { label: 'type', value: ticket.type, colorFn: useColor ? colorizeType : undefined },
     { label: 'priority', value: ticket.priority, colorFn: useColor ? colorizePriority : undefined },
@@ -179,6 +179,53 @@ export function formatTicketList(tickets: Ticket[], projectCode: string, project
 }
 
 /**
+ * Format ticket list as files only (paths only, one per line).
+ */
+export function formatTicketListFiles(tickets: Ticket[], projectPath?: string): string {
+  return tickets
+    .map(t => t.filePath ? formatPath(t.filePath, projectPath) : '')
+    .filter(Boolean)
+    .join('\n')
+}
+
+/**
+ * Format ticket list as info without path lines.
+ */
+export function formatTicketListInfo(tickets: Ticket[], projectCode: string): string {
+  const lines: string[] = []
+  const useColor = shouldUseColor()
+
+  for (const ticket of tickets) {
+    const code = useColor ? colorizeTicketKey(ticket.code) : ticket.code
+    const title = useColor ? colorizeTitle(ticket.title) : ticket.title
+    lines.push(`${code} ${title}`)
+
+    const STATUS_W = 11
+    const TYPE_W = 13
+    const PRIORITY_W = 8
+
+    const statusPart = visiblePadEnd(useColor ? colorizeStatus(statusDisplayLabel(ticket.status)) : statusDisplayLabel(ticket.status), STATUS_W)
+    const typeFirstWord = ticket.type.split(' ')[0] ?? ticket.type
+    const typePart = visiblePadEnd(useColor ? colorizeType(typeFirstWord) : typeFirstWord, TYPE_W)
+    const metaParts = [statusPart, typePart]
+
+    if (ticket.priority) {
+      const priorityPart = visiblePadEnd(useColor ? colorizePriority(ticket.priority) : ticket.priority, PRIORITY_W)
+      metaParts.push(priorityPart)
+    }
+
+    if (ticket.phaseEpic) {
+      metaParts.push(ticket.phaseEpic)
+    }
+
+    lines.push(`  ${metaParts.join(' | ')}`)
+  }
+
+  lines.push(`${tickets.length} ticket${tickets.length !== 1 ? 's' : ''} in ${projectCode} project`)
+  return lines.join('\n')
+}
+
+/**
  * Format project details for console output
  *
  * Output format:
@@ -273,6 +320,22 @@ export function formatProjectList(projects: Project[]): string {
 }
 
 /**
+ * Format project initialization success.
+ */
+export function formatProjectInit(project: Project, targetDir: string): string {
+  const lines: string[] = []
+  const useColor = shouldUseColor()
+  const code = useColor ? colorizeProjectCode(project.project.code) : project.project.code
+  const displayDir = useColor ? colorizePath(targetDir) : targetDir
+
+  lines.push(`Initialized project ${code} in ${displayDir}`)
+  lines.push(`  ${'config:'.padEnd(10)} ${project.project.configFile}`)
+  lines.push(`  ${'tickets:'.padEnd(10)} ${project.project.ticketsPath}`)
+
+  return lines.join('\n')
+}
+
+/**
  * Format ticket creation success message
  *
  * @param ticketKey - Created ticket key
@@ -290,6 +353,33 @@ export function formatTicketCreate(ticketKey: string, ticketPath: string, projec
   lines.push(`  ${useColor ? colorizePath(displayPath) : displayPath}`)
 
   return lines.join('\n')
+}
+
+/**
+ * Format delete confirmation prompt for interactive terminals.
+ */
+export function formatTicketDeletePrompt(ticketKey: string, title: string): string {
+  const useColor = shouldUseColor()
+  const key = useColor ? colorizeTicketKey(ticketKey) : ticketKey
+  const displayTitle = useColor ? colorizeTitle(title) : title
+  return `Delete ${key} (${displayTitle})? [y/N] `
+}
+
+/**
+ * Format delete cancellation.
+ */
+export function formatTicketDeleteCancelled(): string {
+  return 'Cancelled'
+}
+
+/**
+ * Format delete success.
+ */
+export function formatTicketDelete(ticketKey: string, ticketPath: string, projectPath?: string): string {
+  const useColor = shouldUseColor()
+  const key = useColor ? colorizeTicketKey(ticketKey) : ticketKey
+  const displayPath = formatPath(ticketPath, projectPath)
+  return `Deleted ${key} ${useColor ? colorizePath(displayPath) : displayPath}`
 }
 
 /**
@@ -346,7 +436,6 @@ export function formatTicketAttrPipe(ticketKey: string, results: AttrUpdateResul
 
   return lines.join('\n')
 }
-
 
 /**
  * Format ticket rename confirmation
@@ -461,13 +550,15 @@ function listSubdocuments(ticket: Ticket): string[] | null {
   const sorted = entries.sort((a, b) => {
     const aDir = isDirectorySafe(crDir, a)
     const bDir = isDirectorySafe(crDir, b)
-    if (aDir && !bDir) return -1
-    if (!aDir && bDir) return 1
+    if (aDir && !bDir)
+      return -1
+    if (!aDir && bDir)
+      return 1
     return a.localeCompare(b)
   })
 
   // Append trailing / for directories
-  return sorted.map(entry => {
+  return sorted.map((entry) => {
     if (isDirectorySafe(crDir, entry)) {
       return `${entry}/`
     }

@@ -15,6 +15,7 @@ import readline from 'node:readline'
 import { TICKET_KEY_INPUT_PATTERN } from '@mdt/domain-contracts'
 import { ProjectService } from '@mdt/shared/services/ProjectService.js'
 import { TicketService } from '@mdt/shared/services/TicketService.js'
+import { formatTicketDelete, formatTicketDeleteCancelled, formatTicketDeletePrompt } from '../output/formatter.js'
 import { CliCommandError, getOutputFormat, pathObject, writeStructuredSuccess } from '../output/structured.js'
 
 /**
@@ -43,7 +44,7 @@ function confirmDelete(key: string, title: string): Promise<boolean> {
       output: process.stdout,
     })
 
-    rl.question(`Delete ${key} (${title})? [y/N] `, (answer) => {
+    rl.question(formatTicketDeletePrompt(key, title), (answer) => {
       rl.close()
       resolve(answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes')
     })
@@ -100,7 +101,7 @@ export async function ticketDeleteAction(
   if (needsConfirm) {
     const confirmed = await confirmDelete(key, ticket.title)
     if (!confirmed) {
-      console.log('Cancelled')
+      console.log(formatTicketDeleteCancelled())
       return
     }
   }
@@ -114,9 +115,7 @@ export async function ticketDeleteAction(
   // Clean up empty CR directory
   await cleanupEmptyCRDir(ticket.filePath)
 
-  // Print relative path
   const projectPath = project.project.path
-  const relativePath = path.relative(projectPath, ticket.filePath)
   const outputFormat = getOutputFormat(options)
   if (outputFormat !== 'human') {
     writeStructuredSuccess(
@@ -138,5 +137,5 @@ export async function ticketDeleteAction(
     return
   }
 
-  console.log(`Deleted ${key} ${relativePath}`)
+  console.log(formatTicketDelete(key, ticket.filePath, projectPath))
 }
