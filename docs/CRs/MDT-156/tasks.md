@@ -202,11 +202,11 @@ bunx playwright test tests/e2e/security-hardening.spec.ts --project=chromium --g
 ```
 
 **Done when**:
-- [ ] `TEST-devtools-policy-api` GREEN.
-- [ ] `TEST-config-maintenance-policy` GREEN.
-- [ ] `devtools_stream_allows_configured_origin` GREEN.
-- [ ] Production devtools disabled unless explicitly opted in.
-- [ ] Production maintenance/debug mutation routes return generic 404 or 403 when disabled.
+- [x] `TEST-devtools-policy-api` GREEN.
+- [x] `TEST-config-maintenance-policy` GREEN.
+- [x] `devtools_stream_allows_configured_origin` GREEN.
+- [x] Production devtools disabled unless explicitly opted in.
+- [x] Production maintenance/debug mutation routes return generic 404 or 403 when disabled.
 
 ### Task 3: Canonical filesystem allowed-root enforcement
 
@@ -268,11 +268,11 @@ bunx playwright test tests/e2e/security-hardening.spec.ts --project=chromium --g
 ```
 
 **Done when**:
-- [ ] `TEST-filesystem-access-unit` GREEN.
-- [ ] `TEST-filesystem-api-integration` GREEN.
-- [ ] `/api/directories?path=/etc` returns 403 with no entries.
-- [ ] `/api/filesystem/exists` outside-root returns 403 with no existence or expanded path.
-- [ ] Symlink, encoded traversal, and Unicode-normalized escape cases deny.
+- [x] `TEST-filesystem-access-unit` GREEN.
+- [x] `TEST-filesystem-api-integration` GREEN.
+- [x] `/api/directories?path=/etc` returns 403 with no entries.
+- [x] `/api/filesystem/exists` outside-root returns 403 with no existence or expanded path.
+- [x] Symlink, encoded traversal, and Unicode-normalized escape cases deny.
 
 ### Task 4: MCP HTTP production config wiring and Docker documentation
 
@@ -334,10 +334,10 @@ bun test docs/tests/mcp-docker-docs.test.ts
 ```
 
 **Done when**:
-- [ ] `TEST-mcp-http-config` GREEN.
-- [ ] `TEST-docker-mcp-docs` GREEN.
-- [ ] `MCP_SECURITY_ORIGIN_VALIDATION=true` with empty `MCP_ALLOWED_ORIGINS` fails startup clearly.
-- [ ] Production Docker defaults and migration docs are aligned.
+- [x] `TEST-mcp-http-config` GREEN.
+- [x] `TEST-docker-mcp-docs` GREEN.
+- [x] `MCP_SECURITY_ORIGIN_VALIDATION=true` with empty `MCP_ALLOWED_ORIGINS` fails startup clearly.
+- [x] Production Docker defaults and migration docs are aligned.
 
 ### Task 5: MCP auth session visibility rate-limit and reverse-proxy caller identity
 
@@ -395,10 +395,10 @@ bun run --cwd mcp-server jest mcp-server/tests/http-auth-session-rate-limit.test
 ```
 
 **Done when**:
-- [ ] `TEST-mcp-auth-session-rate-limit` GREEN.
-- [ ] `TEST-mcp-reverse-proxy-caller-identity` GREEN.
-- [ ] `/sessions` hidden outside development unless authenticated.
-- [ ] `X-Forwarded-For`, `X-Forwarded-Proto`, `X-Forwarded-Host`, and `Host` cases behave as specified.
+- [x] `TEST-mcp-auth-session-rate-limit` GREEN.
+- [x] `TEST-mcp-reverse-proxy-caller-identity` GREEN.
+- [x] `/sessions` hidden outside development unless authenticated.
+- [x] `X-Forwarded-For`, `X-Forwarded-Proto`, `X-Forwarded-Host`, and `Host` cases behave as specified.
 
 ### Task 6: Dependency threshold and tracked secret hygiene
 
@@ -460,10 +460,10 @@ bun audit
 ```
 
 **Done when**:
-- [ ] `TEST-dependency-audit-runtime` GREEN.
-- [ ] `TEST-secret-scan-tracked-files` GREEN.
+- [x] `TEST-dependency-audit-runtime` GREEN.
+- [x] `TEST-secret-scan-tracked-files` GREEN.
 - [ ] Runtime high/critical dependency threshold is met or follow-up is documented.
-- [ ] No committed secrets/tokens remain in tracked MDT-156 scan scope.
+- [x] No committed secrets/tokens remain in tracked MDT-156 scan scope.
 
 ### Task 7: Security E2E journey and existing suite preservation gate
 
@@ -544,20 +544,20 @@ bun run test:e2e
 ```
 
 **Done when**:
-- [ ] `TEST-security-e2e` GREEN.
+- [x] `TEST-security-e2e` GREEN.
 - [ ] `TEST-existing-suite-preservation` GREEN.
-- [ ] All four BDD scenarios GREEN.
-- [ ] Existing suite exclusions, if any, list suite, reason, environment constraint, and owner.
-- [ ] No duplicated runtime owner introduced.
+- [x] All four BDD scenarios GREEN.
+- [x] Existing suite exclusions, if any, list suite, reason, environment constraint, and owner.
+- [x] No duplicated runtime owner introduced.
 
 ## Post-Implementation
 
-- [ ] No duplicated CORS, filesystem, MCP config, or rate-limit ownership.
-- [ ] Scope boundaries respected; no MDT-157 auth/RBAC implementation added.
+- [x] No duplicated CORS, filesystem, MCP config, or rate-limit ownership.
+- [x] Scope boundaries respected; no MDT-157 auth/RBAC implementation added.
 - [ ] All canonical `TEST-*` plans GREEN.
-- [ ] All BDD scenarios GREEN.
+- [x] All BDD scenarios GREEN.
 - [ ] Existing unit and E2E suite preservation gate completed.
-- [ ] Fallback/absence paths match requirements: no-Origin, missing MCP allowed origins, disabled production devtools/maintenance endpoints, outside-root filesystem requests.
+- [x] Fallback/absence paths match requirements: no-Origin, missing MCP allowed origins, disabled production devtools/maintenance endpoints, outside-root filesystem requests.
 
 ## Task Breakdown Complete
 
@@ -567,3 +567,29 @@ bun run test:e2e
 **Tracker**: not written because this run is constrained to `tasks.md` and `tasks.trace.md` only
 
 **Next**: `/mdt:implement MDT-156` or `/mdt:implement-agentic MDT-156`
+
+## Implementation Closure - 2026-05-22
+
+Status: Tasks 2-7 completed after Task 1 baseline commit.
+
+Final verification:
+- `bun run --cwd server jest` - 38 suites passed, 474 tests passed, 8 skipped.
+- `bun run --cwd mcp-server jest` - 9 suites passed, 139 tests passed.
+- `bun run --cwd server build`
+- `bun run --cwd mcp-server build`
+- `bun run build`
+- `bun audit` - no vulnerabilities found.
+- `bun test docs/tests/mcp-docker-docs.test.ts` - 2 tests passed.
+- `bunx playwright test tests/e2e/security-hardening.spec.ts --project=chromium` - 3 tests passed.
+- `bun run test:e2e` - 222 tests passed, 1 skipped.
+
+Remaining non-MDT-156 gate:
+- `bun run lint` still fails on pre-existing frontend lint issues outside MDT-156-owned files.
+
+Post-review fixes delivered:
+- MCP auth now fails config validation when enabled without `MCP_AUTH_TOKEN`.
+- MCP reverse proxy trust defaults to disabled and is configured with `MCP_TRUST_PROXY` only when explicitly set.
+- MCP anonymous rate-limit caller keys ignore client-controlled `Origin`, `Host`, and raw `X-Forwarded-*` headers.
+- Production filesystem authorization no longer falls back to `$HOME` when no configured roots exist.
+- Malformed percent-encoded filesystem paths fail as controlled access denial.
+- Final reviewer pass reported no blocking findings.

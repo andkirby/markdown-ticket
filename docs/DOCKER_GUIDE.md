@@ -308,12 +308,13 @@ curl http://localhost:3012/health
 
 ## Security Configuration
 
-For production deployments, enable optional security features.
+For production deployments, MCP HTTP origin validation and rate limiting are enabled by default.
+Set `MCP_ALLOWED_ORIGINS` before starting the production compose stack.
 See [DOCKER_REFERENCE.md - Security Configuration](DOCKER_REFERENCE.md#security-configuration) for details.
 
 ```yaml
 environment:
-  # Origin validation
+  # Origin validation (required in production)
   - MCP_SECURITY_ORIGIN_VALIDATION=true
   - MCP_ALLOWED_ORIGINS=https://yourdomain.com
 
@@ -324,6 +325,9 @@ environment:
   # Authentication
   - MCP_SECURITY_AUTH=true
   - MCP_AUTH_TOKEN=${MCP_AUTH_TOKEN}
+
+  # Reverse proxy trust, only when MCP is behind a known proxy
+  - MCP_TRUST_PROXY=1
 ```
 
 ---

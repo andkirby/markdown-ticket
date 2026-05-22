@@ -305,7 +305,7 @@ app.use('/api/events', createSSERouter(fileWatcher, originPolicy))
 app.use('/api', createSystemRouter(fileWatcher, projectController, projectDiscovery, documentService.fileInvoker as FileInvokerAdapter))
 
 // Dev tools routes (logging)
-app.use('/api', createDevToolsRouter())
+app.use('/api/devtools', createDevToolsRouter(originPolicy))
 
 // API Documentation routes (Redoc UI)
 app.use('/api-docs', createDocsRouter())
