@@ -183,7 +183,7 @@ startNumber = 1
 
 ## HTTP Transport Features
 
-### Security Options (Optional)
+### Security Options
 Configure via environment variables:
 
 ```bash
@@ -199,7 +199,12 @@ MCP_AUTH_TOKEN=your-secret-token
 # Enable origin validation
 MCP_SECURITY_ORIGIN_VALIDATION=true
 MCP_ALLOWED_ORIGINS=http://localhost:5173,https://yourdomain.com
+
+# Trust reverse proxy forwarded headers only when deployed behind a known proxy
+MCP_TRUST_PROXY=1
 ```
+
+In production, origin validation and rate limiting default to enabled. If `MCP_SECURITY_ORIGIN_VALIDATION=true`, `MCP_ALLOWED_ORIGINS` must contain at least one origin or startup fails before binding the HTTP transport. If `MCP_SECURITY_AUTH=true`, `MCP_AUTH_TOKEN` is required or startup fails. `MCP_TRUST_PROXY` defaults to `false`; set it only behind a trusted reverse proxy so caller-aware rate limits cannot be bypassed with spoofed forwarded headers.
 
 ### Session Management
 - **Optional Sessions**: HTTP requests can use `Mcp-Session-Id` header

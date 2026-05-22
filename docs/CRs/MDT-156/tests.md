@@ -135,3 +135,19 @@ Implementation-phase verification should add or update the planned executable te
 **Output**: `docs/CRs/MDT-156/tests.md` and `docs/CRs/MDT-156/tests.trace.md`
 **Executable tests**: not created in this pass by instruction
 **Next**: `/mdt:tasks MDT-156`
+
+## Final Gate Status - 2026-05-22
+
+Passed:
+- `bun run --cwd server jest` - 38 suites passed, 474 tests passed, 8 skipped.
+- `bun run --cwd mcp-server jest` - 9 suites passed, 139 tests passed.
+- `bun run --cwd server build`
+- `bun run --cwd mcp-server build`
+- `bun run build`
+- `bun audit` - no vulnerabilities found.
+- `bun test docs/tests/mcp-docker-docs.test.ts` - 2 tests passed.
+- `bunx playwright test tests/e2e/security-hardening.spec.ts --project=chromium` - 3 tests passed.
+- `bun run test:e2e` - 222 tests passed, 1 skipped.
+
+Not green:
+- `bun run lint` still fails on pre-existing frontend lint issues outside MDT-156-owned files. Owner: existing frontend lint cleanup.

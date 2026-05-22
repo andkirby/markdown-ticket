@@ -11,6 +11,7 @@ import { ConfigService } from './config/index.js'
 import { CRService } from './services/crService.js'
 import { MCPTools } from './tools/index.js'
 import { startHttpTransport } from './transports/http.js'
+import { parseHttpTransportConfig } from './transports/httpSecurity.js'
 import { startStdioTransport } from './transports/stdio.js'
 
 class MCPCRServer {
@@ -145,10 +146,10 @@ class MCPCRServer {
       // Start transports
       this.log('🚀 Starting MCP CR Server...')
       const httpEnabled = process.env.MCP_HTTP_ENABLED === 'true' || process.env.HTTP_ENABLED === 'true'
-      const httpPort = Number.parseInt(process.env.MCP_HTTP_PORT || process.env.HTTP_PORT || '3002', 10)
+      const httpConfig = parseHttpTransportConfig(process.env)
 
       if (httpEnabled) {
-        await startHttpTransport(this.mcpTools!, { port: httpPort })
+        await startHttpTransport(this.mcpTools!, httpConfig)
       }
       else {
         await startStdioTransport(this.mcpTools!)
@@ -196,7 +197,9 @@ async function main(): Promise<void> {
   await server.start()
 }
 
-main().catch((error) => {
-  console.error('❌ Fatal error:', error)
-  process.exit(1)
-})
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main().catch((error) => {
+    console.error('❌ Fatal error:', error)
+    process.exit(1)
+  })
+}

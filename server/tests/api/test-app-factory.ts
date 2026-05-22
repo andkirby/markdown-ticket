@@ -20,6 +20,7 @@ import express from 'express'
 import { DocumentController } from '../../controllers/DocumentController'
 import { ProjectController } from '../../controllers/ProjectController'
 import { errorHandler, notFoundHandler } from '../../middleware/errorHandler'
+import { createDevToolsRouter } from '../../routes/devtools'
 import { createDocumentRouter } from '../../routes/documents'
 import { createProjectRouter } from '../../routes/projects'
 import { createSSERouter } from '../../routes/sse'
@@ -177,8 +178,7 @@ export function createTestApp(): TestAppResult {
   app.use('/api/documents', createDocumentRouter(documentController, projectController))
   app.use('/api/events', createSSERouter(fileWatcher, originPolicy))
   app.use('/api', createSystemRouter(fileWatcher, projectController, projectDiscovery, documentService.fileInvoker as FileInvokerAdapter))
-  // Devtools router is OOS for E2E testing per MDT-106 (development-only feature)
-  // app.use('/api', createDevToolsRouter());
+  app.use('/api/devtools', createDevToolsRouter(originPolicy))
   // Note: Skipping /api-docs route due to import.meta issue in openapi/config.ts
   // app.use('/api-docs', createDocsRouter());
 

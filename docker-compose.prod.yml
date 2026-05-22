@@ -67,14 +67,15 @@ services:
       # Cache Configuration
       - MCP_CACHE_TIMEOUT=300
 
-      # Phase 2 Security (enable as needed)
-      # - MCP_SECURITY_ORIGIN_VALIDATION=true
-      # - MCP_ALLOWED_ORIGINS=https://yourdomain.com
-      # - MCP_SECURITY_RATE_LIMITING=true
-      # - MCP_RATE_LIMIT_MAX=100
-      # - MCP_RATE_LIMIT_WINDOW_MS=60000
+      # Phase 2 Security (enabled by default in production)
+      - MCP_SECURITY_ORIGIN_VALIDATION=true
+      - MCP_ALLOWED_ORIGINS=${MCP_ALLOWED_ORIGINS:?Set MCP_ALLOWED_ORIGINS for production MCP HTTP}
+      - MCP_SECURITY_RATE_LIMITING=true
+      - MCP_RATE_LIMIT_MAX=100
+      - MCP_RATE_LIMIT_WINDOW_MS=60000
       # - MCP_SECURITY_AUTH=true
       # - MCP_AUTH_TOKEN=${MCP_AUTH_TOKEN}  # Set in .env file
+      # - MCP_TRUST_PROXY=1  # Enable only behind a trusted reverse proxy
     # Resource limits
     deploy:
       resources:

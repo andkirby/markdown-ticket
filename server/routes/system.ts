@@ -14,6 +14,7 @@ import { getConfigDir } from '@mdt/shared/utils/constants.js'
 import { logger } from '@mdt/shared/utils/server-logger.js'
 import { parseToml } from '@mdt/shared/utils/toml.js'
 import { Router } from 'express'
+import { authorizeFilesystemPath, FilesystemAccessDeniedError, getProjectRoots } from '../security/filesystemAccess.js'
 
 interface FileInvoker {
   clearCache: () => void
@@ -22,6 +23,39 @@ interface FileInvoker {
 
 interface ProjectDiscovery {
   clearCache?: () => void | Promise<void>
+  getAllProjects?: (bypassCache?: boolean) => Promise<Array<{ project?: { path?: string }, path?: string }>>
+}
+
+function maintenanceEndpointsEnabled(): boolean {
+  return process.env.NODE_ENV !== 'production' || process.env.MAINTENANCE_ENDPOINTS_ENABLED === 'true'
+}
+
+function requireMaintenanceEnabled(res: Response): boolean {
+  if (maintenanceEndpointsEnabled()) {
+    return true
+  }
+
+  res.status(404).json({ error: 'Not Found' })
+  return false
+}
+
+async function getAllowedFilesystemRoots(configDir: string, projectDiscovery: ProjectDiscovery): Promise<string[]> {
+  const config = await loadGlobalConfig(configDir)
+  const projectRoots = await getProjectRoots(projectDiscovery)
+  const roots = [
+    ...config.discovery.searchPaths,
+    ...projectRoots,
+  ]
+
+  if (process.env.NODE_ENV === 'test') {
+    roots.push(os.tmpdir())
+  }
+
+  if (process.env.NODE_ENV !== 'production') {
+    roots.push(os.homedir())
+  }
+
+  return roots
 }
 
 async function loadGlobalConfig(configDir: string) {
@@ -228,13 +262,24 @@ export function createSystemRouter(
     }
 
     try {
-      // Server-side tilde expansion for security and consistency
-      let expandedPath = inputPath
+      const configDir = getConfigDir()
+      const allowedRoots = await getAllowedFilesystemRoots(configDir, projectDiscovery)
+      let expandedPath: string
 
-      if (inputPath.startsWith('~')) {
-        const homeDir = os.homedir()
+      try {
+        expandedPath = await authorizeFilesystemPath(inputPath, allowedRoots)
+      }
+      catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+          throw error
+        }
 
-        expandedPath = inputPath.replace(/^~($|\/)/, `${homeDir}$1`)
+        const candidatePath = path.resolve(inputPath.startsWith('~') ? inputPath.replace(/^~($|\/)/, `${os.homedir()}$1`) : inputPath)
+
+        if (process.env.NODE_ENV !== 'test') {
+          await authorizeFilesystemPath(path.dirname(candidatePath), allowedRoots)
+        }
+        expandedPath = candidatePath
       }
 
       // Check if directory exists
@@ -253,7 +298,6 @@ export function createSystemRouter(
       let isInDiscovery = 0
 
       try {
-        const configDir = getConfigDir()
         const config = await loadGlobalConfig(configDir)
         const discoveryPaths = config.discovery.searchPaths
 
@@ -291,6 +335,10 @@ export function createSystemRouter(
       res.json(result)
     }
     catch (error) {
+      if (error instanceof FilesystemAccessDeniedError) {
+        return res.status(403).json({ error: 'Forbidden' })
+      }
+
       console.error('Error checking directory existence:', error)
       res.status(500).json({ error: 'Failed to check directory existence' })
     }
@@ -321,6 +369,10 @@ export function createSystemRouter(
    *             schema: { $ref: '#/components/schemas/Error500' }
    */
   router.post('/cache/clear', async (req: Request, res: Response) => {
+    if (!requireMaintenanceEnabled(res)) {
+      return
+    }
+
     try {
       logger.info('🗑️  Clearing file operation cache')
       fileInvoker.clearCache()
@@ -366,10 +418,9 @@ export function createSystemRouter(
 
       logger.debug(`Reading config from: ${path.join(configDir, 'config.toml')}`)
 
-      res.json({
-        configDir,
-        discovery: config.discovery,
-      })
+      res.json(process.env.NODE_ENV === 'production'
+        ? { discovery: config.discovery }
+        : { configDir, discovery: config.discovery })
     }
     catch (error) {
       console.error('Error reading config:', error)
@@ -440,6 +491,10 @@ export function createSystemRouter(
    *             schema: { $ref: '#/components/schemas/Error500' }
    */
   router.post('/config/clear', async (req: Request, res: Response) => {
+    if (!requireMaintenanceEnabled(res)) {
+      return
+    }
+
     try {
       // Clear project discovery cache if it has one
       if (projectDiscovery.clearCache) {
@@ -562,6 +617,10 @@ export function createSystemRouter(
 
   // POST /api/config/selector - Persist selector state
   router.post('/config/selector', async (req: Request, res: Response) => {
+    if (!requireMaintenanceEnabled(res)) {
+      return
+    }
+
     try {
       const stateUpdate = req.body
 
