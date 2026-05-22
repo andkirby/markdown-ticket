@@ -97,13 +97,13 @@ Markdown density is a browser-local visual preference. See `docs/architecture/pr
 | Code blocks | Token-aware background, border, 8px radius or less, horizontal scroll, clear vertical rhythm |
 | Tables | Horizontal scroll wrapper behavior, visible cell padding, header tint, row dividers, no cramped default table layout |
 | Mermaid | Preserve existing diagram renderer; diagram surface should not inherit inline-code chrome |
-| Wireloom | Preserve existing rendered SVG behavior; pending/error states use theme tokens instead of hard-coded colors |
+| Wireloom | Render SVG artifacts at native width in Documents View, allow horizontal scroll when wider than the pane, and expose the shared zoom/fullscreen inspection affordance |
 | Images | Max width 100%, auto height, rounded only when the image is a content figure |
 
 ## Layout
 
 - `.prose` owns markdown internals only; outer viewer components own pane padding and scrolling.
-- Documents View gives the prose block a readable measure and keeps large artifacts scrollable inside the viewer.
+- Documents View gives normal prose a readable measure while allowing large artifacts to use the available viewer width before horizontal scrolling.
 - Ticket Viewer keeps the timestamp above or beside content without covering the first heading.
 - The Table of Contents is an external navigation affordance, not part of markdown flow.
 - Long links, file paths, and identifiers may wrap, but normal words should not break letter-by-letter.
@@ -118,6 +118,8 @@ Markdown density is a browser-local visual preference. See `docs/architecture/pr
 | focused link | keyboard focus on markdown link | visible focus ring or underline treatment using `--ring` |
 | wide table | table exceeds content width | horizontal scroll without page-level overflow |
 | long code block | code line exceeds content width | code block scrolls horizontally; prose column does not widen |
+| wide artifact | Mermaid, Wireloom, table, or code block exceeds prose measure | artifact may use the full document pane; normal paragraphs, headings, and lists remain constrained |
+| Wireloom fullscreen | user selects the Wireloom inspection control | shared zoom overlay opens without changing inline document layout |
 | empty markdown | no body content | owning viewer renders its empty state; markdown surface renders nothing |
 | dark mode | root has `.dark` | all prose, code, table, and diagram fallback colors use theme tokens |
 
@@ -129,7 +131,7 @@ Markdown density is a browser-local visual preference. See `docs/architecture/pr
 | < 640px | H1/H2 scale down enough to avoid overlap with viewer actions and timestamps |
 | < 640px | ToC opens as an overlay/sheet and must not cover the active paragraph by default |
 | 640-1024px | Documents may keep two panes only if the prose column remains at least 48ch |
-| > 1024px | Documents use readable measure with artifact overflow; ticket modal keeps compact rhythm |
+| > 1024px | Documents use readable prose measure with full-pane artifact width; ticket modal keeps compact rhythm |
 
 ## Tokens used
 
@@ -155,7 +157,7 @@ Markdown density is a browser-local visual preference. See `docs/architecture/pr
 | compact prose | `.prose--compact` proposed | short preview variant |
 | heading anchor | `.header-anchor` | markdown-it-anchor output |
 | frontmatter disclosure | `.document-frontmatter` | Documents View file updates spec |
-| wireloom render | `.wireloom`, `.wireloom-pending`, `.wireloom-error` | existing markdown rendering |
+| wireloom render | `.wireloom`, `.wireloom__diagram`, `.wireloom__fullscreen-button`, `.wireloom-pending`, `.wireloom-error` | native-width artifact rendering and shared zoom affordance |
 
 ## Extension notes
 

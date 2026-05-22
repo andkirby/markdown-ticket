@@ -11,13 +11,14 @@ window "Documents View Navigation — Default":
       col 520:
         row:
           text "Documents" bold
-          combo value="Filename ▾"
-          button "↑"
           spacer
           icon name="check"
           icon name="star"
           icon name="gear"
-        input placeholder="Filter documents..." type=search id="nav-search"
+        row id="nav-controls":
+          input placeholder="Search documents..." type=search id="nav-search"
+          combo value="Update Date ▾" id="nav-sort"
+          button "↓" id="nav-direction"
         section "Favs":
           list:
             item "docs                                      ★" id="fav-folder"
@@ -39,6 +40,7 @@ window "Documents View Navigation — Default":
         text "# Selected document" bold id="doc-heading"
         text "Markdown content renders here." muted
 
+annotation "Header controls are [search flex] [sort] [direction] on the second row" target="nav-controls" position=right
 annotation "Favs render above Recent only when reconciled favs exist" target="fav-folder" position=right
 annotation "Active star removes the fav; row opens document or locates folder" target="fav-document" position=right
 annotation "Recent section remains below Favs and keeps existing behavior" target="recent-1" position=right
@@ -55,13 +57,14 @@ window "Documents View Navigation — Filter Active":
       col 520:
         row:
           text "Documents" bold
-          combo value="Filename ▾"
-          button "↑"
           spacer
           icon name="check"
           icon name="star"
           icon name="gear"
-        input placeholder="navigation" type=search id="active-filter"
+        row id="active-filter-row":
+          input placeholder="navigation" type=search id="active-filter"
+          combo value="Title ▾"
+          button "↑"
         section "Favs":
           list:
             item "docs                                      ★" id="fav-filtered"
@@ -79,7 +82,8 @@ window "Documents View Navigation — Filter Active":
         text "# Selected document" bold
         text "Markdown content renders here." muted
 
-annotation "Filter narrows the tree only; Favs and Recent stay visible" target="active-filter" position=right
+annotation "Search narrows the tree only; Favs and Recent stay visible" target="active-filter" position=right
+annotation "Sort controls stay to the right of the search field" target="active-filter-row" position=right
 annotation "Favs are not removed by tree filtering" target="fav-filtered" position=right
 annotation "Selected file highlighted in filtered results" target="filtered-selected" position=right
 ```
@@ -93,13 +97,14 @@ window "Documents View Navigation — Selected Hidden by Filter":
       col 520:
         row:
           text "Documents" bold
-          combo value="Filename ▾"
-          button "↑"
           spacer
           icon name="check"
           icon name="star" id="scroll-clear"
           icon name="gear"
-        input placeholder="docker" type=search id="hide-filter"
+        row:
+          input placeholder="docker" type=search id="hide-filter"
+          combo value="Filename ▾"
+          button "↑"
         section "Favs":
           list:
             item "docs                                      ★" id="folder-fav-hidden-filter"
@@ -123,13 +128,14 @@ window "Documents View Navigation — Restored Collapsed Sections":
       col 520:
         row:
           text "Documents" bold
-          combo value="Filename ▾"
-          button "↑"
           spacer
           icon name="check"
           icon name="star"
           icon name="gear"
-        input placeholder="Filter documents..." type=search
+        row:
+          input placeholder="Search documents..." type=search
+          combo value="Filename ▾"
+          button "↑"
         section "Favs" id="favs-collapsed":
           text "collapsed" muted
         section "Recent" id="recent-collapsed":
@@ -156,13 +162,14 @@ window "Documents View Navigation — Fav Show All":
       col 520:
         row:
           text "Documents" bold
-          combo value="Filename ▾"
-          button "↑"
           spacer
           icon name="check"
           icon name="star"
           icon name="gear"
-        input placeholder="Filter documents..." type=search
+        row:
+          input placeholder="Search documents..." type=search
+          combo value="Filename ▾"
+          button "↑"
         section "Favs                         Show all" id="fav-show-all":
           list:
             item "docs                                      ★"
@@ -194,13 +201,14 @@ window "Documents View Navigation — Fav Show Less":
       col 520:
         row:
           text "Documents" bold
-          combo value="Filename ▾"
-          button "↑"
           spacer
           icon name="check"
           icon name="star"
           icon name="gear"
-        input placeholder="Filter documents..." type=search
+        row:
+          input placeholder="Search documents..." type=search
+          combo value="Filename ▾"
+          button "↑"
         section "Favs                         Show less" id="fav-show-less":
           list:
             item "docs                                      ★"
@@ -251,13 +259,13 @@ window "Documents View Navigation — Mobile":
   panel:
     text "Documents" bold
     row:
-      combo value="Filename ▾"
-      button "↑"
-      spacer
       icon name="check"
       icon name="star"
       icon name="gear"
-    input placeholder="Filter documents..." type=search
+    row:
+      input placeholder="Search documents..." type=search
+      combo value="Filename ▾"
+      button "↑"
     section "Favs":
       list:
         item "docs                         ★"
@@ -289,6 +297,7 @@ Mobile behavior:
 | Sidebar background | `--muted` | `bg-muted/30` | Existing Documents View panel style |
 | Sidebar divider | `--border` | `border-r border-border` | Existing split-pane divider |
 | Section labels | `--muted-foreground` | inline compact section controls | Compact labels for Favs, Recent, and tree areas |
+| Search/sort row | `--border`, `--background`, `--foreground` | `.documents-view__navigation-controls-row`, `.documents-view__search-field`, `.documents-view__sort-select`, `.documents-view__sort-direction-button` | Search flexes left; sort select and direction stay fixed on the right |
 | Fav rows | `--foreground`, `--muted-foreground`, `--star-*` | `.fav-star.fav-star--document.active` | Active star is trailing/right-aligned; document row opens; folder row locates |
 | Recent rows | `--foreground`, `--muted-foreground` | tree file row classes | Same title, filename, truncation, and hover behavior as file rows |
 | Favs/Recent/tree divider | `--border` | `border-b border-border` | Thin separators; Favs expands inline with Show all; tree scrolls independently below shortcut sections |
@@ -297,7 +306,7 @@ Mobile behavior:
 | Section open state | browser localStorage | document navigation preferences | Favs and Recent collapsed/open state persists per project as separate values in the current browser |
 | Fav show-all state | browser localStorage | document navigation preferences | Show all/less state persists per project separately from section open state |
 | Muted disabled row | `--muted-foreground` | `data-tree-state="disabled"` proposed | Excluded paths |
-| Sort direction | `--muted-foreground` | icon-only button | Reverses the selected sort field |
+| Sort direction | `--muted-foreground` | `.documents-view__sort-direction-button` | Reverses the selected sort field |
 | Collapse tree | `--muted-foreground` | icon-only button | Collapses folders except selected ancestors |
 | Scroll target | `--primary` | `data-testid="scroll-to-active-document-button"` | Clears filter only when selected row is hidden |
 | Configure document paths | `--muted-foreground` | icon-only button | Opens path configuration |

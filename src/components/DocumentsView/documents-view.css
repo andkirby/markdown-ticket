@@ -15,6 +15,30 @@
     @apply flex h-full min-h-0 flex-col border-r border-border bg-muted/30;
   }
 
+  .documents-view__navigation-header {
+    @apply flex-shrink-0 border-b border-border p-4;
+  }
+
+  .documents-view__navigation-primary-row {
+    @apply mb-3 flex items-center justify-between gap-3;
+  }
+
+  .documents-view__navigation-controls-row {
+    @apply mb-3 flex items-center gap-2;
+  }
+
+  .documents-view__search-field {
+    @apply relative min-w-0 flex-1;
+  }
+
+  .documents-view__sort-select {
+    @apply h-[38px] w-28 flex-shrink-0 rounded border border-border bg-background px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary;
+  }
+
+  .documents-view__sort-direction-button {
+    @apply inline-flex h-[38px] w-8 flex-shrink-0 items-center justify-center rounded border border-border bg-background transition-colors hover:bg-muted;
+  }
+
   .documents-view__resize-handle {
     @apply bg-border/70 transition-colors hover:bg-border;
   }
