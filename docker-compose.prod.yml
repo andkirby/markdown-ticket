@@ -73,8 +73,8 @@ services:
       - MCP_SECURITY_RATE_LIMITING=true
       - MCP_RATE_LIMIT_MAX=100
       - MCP_RATE_LIMIT_WINDOW_MS=60000
-      # - MCP_SECURITY_AUTH=true
-      # - MCP_AUTH_TOKEN=${MCP_AUTH_TOKEN}  # Set in .env file
+      - MCP_SECURITY_AUTH=${MCP_SECURITY_AUTH:-true}
+      - MCP_AUTH_TOKEN=${MCP_AUTH_TOKEN:?Set MCP_AUTH_TOKEN for production MCP HTTP}
       # - MCP_TRUST_PROXY=1  # Enable only behind a trusted reverse proxy
     # Resource limits
     deploy:
@@ -95,9 +95,10 @@ services:
 # Production Tips:
 # 1. Use .env file for production secrets:
 #    - MCP_AUTH_TOKEN=your-secret-token
+#    - API_AUTH_TOKEN=your-backend-admin-token
 #    - Database credentials (if applicable)
 #
-# 3. Enable Phase 2 security features as needed
+# 3. Keep MCP_SECURITY_AUTH enabled for production MCP HTTP unless running a controlled migration
 #
 # 4. Monitor resource usage and adjust limits accordingly
 #

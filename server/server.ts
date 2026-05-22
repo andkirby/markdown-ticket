@@ -28,6 +28,7 @@ import { createDocumentRouter } from './routes/documents.js'
 import { createProjectRouter } from './routes/projects.js'
 import { createSSERouter } from './routes/sse.js'
 import { createSystemRouter } from './routes/system.js'
+import { createApiAuthMiddleware } from './security/apiAuth.js'
 import { createCorsOptions, createDefaultOriginPolicy, securityHeaders } from './security/originPolicy.js'
 import { DocumentService } from './services/DocumentService.js'
 import FileWatcherService from './services/fileWatcher/index.js'
@@ -291,6 +292,9 @@ async function initializeMultiProjectWatchers(): Promise<void> {
 // =============================================================================
 // Register Routes
 // =============================================================================
+
+// Backend API auth gate: after generic middleware, before protected /api routers.
+app.use('/api', createApiAuthMiddleware())
 
 // Multi-Project API routes
 app.use('/api/projects', createProjectRouter(projectController))
