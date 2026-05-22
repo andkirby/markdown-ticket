@@ -31,7 +31,7 @@ function createProcessorMd(): MarkdownIt {
 
   // @ts-expect-error markdown-it types don't expose all plugin signatures cleanly
   const md = new MarkdownIt({
-    html: true,
+    html: false,
     linkify: true,
     typographer: true,
   })
@@ -98,6 +98,23 @@ describe('useMarkdownProcessor pipeline (markdown-it)', () => {
       expect(html).toContain('<table>')
       expect(html).toContain('<th>')
       expect(html).toContain('<td>')
+    })
+
+    it('keeps angle-bracket placeholders as text instead of opening raw HTML tags', () => {
+      const html = renderPipeline([
+        '- `BR-1` WHEN command receives <key>, it resolves the ticket.',
+        '- `BR-2` WHEN --project <code> is provided, it selects the project.',
+        '',
+        '| Route | IDs |',
+        '| --- | --- |',
+        '| bdd | `BR-1`, `BR-2` |',
+      ].join('\n'))
+
+      expect(html).toContain('&lt;key&gt;')
+      expect(html).toContain('&lt;code&gt;')
+      expect(html).toContain('<table>')
+      expect(html).not.toContain('<code><code>')
+      expect(html).not.toContain('<code> is provided')
     })
   })
 
