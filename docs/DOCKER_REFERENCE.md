@@ -168,18 +168,38 @@ Limits request rate per IP address to prevent abuse.
 
 ### Authentication
 
+Backend REST API authentication is controlled separately from MCP HTTP auth:
+
 ```yaml
 environment:
-  - MCP_SECURITY_AUTH=true
-  - MCP_AUTH_TOKEN=${MCP_AUTH_TOKEN}  # From .env file
+  # Backend API; protects non-health `/api/*` routes
+  - API_SECURITY_AUTH=true
+  - API_AUTH_TOKEN=${API_AUTH_TOKEN}
+
+  # MCP HTTP; production compose defaults auth to true
+  - MCP_SECURITY_AUTH=${MCP_SECURITY_AUTH:-true}
+  - MCP_AUTH_TOKEN=${MCP_AUTH_TOKEN:?Set MCP_AUTH_TOKEN for production MCP HTTP}
 ```
 
-Requires Bearer token authentication:
+Backend API clients authenticate with either header:
+
+```bash
+curl -H "Authorization: Bearer ${API_AUTH_TOKEN}" http://localhost:5174/api/projects
+curl -H "X-API-Key: ${API_AUTH_TOKEN}" http://localhost:5174/api/projects
+```
+
+MCP HTTP clients must use Bearer authentication:
 
 ```bash
 curl -H "Authorization: Bearer ${MCP_AUTH_TOKEN}" \
   http://localhost:3012/mcp
 ```
+
+If production compose starts without `MCP_AUTH_TOKEN`, startup/config validation fails with a missing-token error. If a legacy deployment explicitly runs backend API or MCP HTTP without auth, MDT-157 logs a migration warning and continues only for compatibility. Treat that warning as action required: set `API_SECURITY_AUTH`/`API_AUTH_TOKEN` for backend API and `MCP_SECURITY_AUTH`/`MCP_AUTH_TOKEN` for MCP HTTP, then restart.
+
+Reverse proxies must forward `Authorization` and `X-API-Key` unchanged. `Origin`, `Referer`, and forwarded IP headers are never credentials; stripping both credential headers causes protected backend requests to fail closed with `401`.
+
+MDT-157 covers authentication only; public read-only sharing belongs to MDT-172.
 
 ---
 

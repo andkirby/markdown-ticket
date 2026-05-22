@@ -11,8 +11,8 @@ import { ConfigService } from './config/index.js'
 import { CRService } from './services/crService.js'
 import { MCPTools } from './tools/index.js'
 import { startHttpTransport } from './transports/http.js'
-import { parseHttpTransportConfig } from './transports/httpSecurity.js'
 import { startStdioTransport } from './transports/stdio.js'
+import { selectMcpTransport } from './transports/transportSelection.js'
 
 class MCPCRServer {
   private configService!: ConfigService
@@ -145,11 +145,10 @@ class MCPCRServer {
 
       // Start transports
       this.log('🚀 Starting MCP CR Server...')
-      const httpEnabled = process.env.MCP_HTTP_ENABLED === 'true' || process.env.HTTP_ENABLED === 'true'
-      const httpConfig = parseHttpTransportConfig(process.env)
+      const transportSelection = selectMcpTransport(process.env)
 
-      if (httpEnabled) {
-        await startHttpTransport(this.mcpTools!, httpConfig)
+      if (transportSelection.mode === 'http') {
+        await startHttpTransport(this.mcpTools!, transportSelection.httpConfig!)
       }
       else {
         await startStdioTransport(this.mcpTools!)

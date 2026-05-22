@@ -206,6 +206,10 @@ MCP_TRUST_PROXY=1
 
 In production, origin validation and rate limiting default to enabled. If `MCP_SECURITY_ORIGIN_VALIDATION=true`, `MCP_ALLOWED_ORIGINS` must contain at least one origin or startup fails before binding the HTTP transport. If `MCP_SECURITY_AUTH=true`, `MCP_AUTH_TOKEN` is required or startup fails. `MCP_TRUST_PROXY` defaults to `false`; set it only behind a trusted reverse proxy so caller-aware rate limits cannot be bypassed with spoofed forwarded headers.
 
+Production Docker sets `MCP_SECURITY_AUTH=${MCP_SECURITY_AUTH:-true}` and requires `MCP_AUTH_TOKEN=${MCP_AUTH_TOKEN:?Set MCP_AUTH_TOKEN for production MCP HTTP}`. Existing MCP HTTP deployments that explicitly run without auth may continue during migration, but the migration warning means `/mcp` is reachable without bearer credentials. Operator action is to set `MCP_SECURITY_AUTH=true`, set `MCP_AUTH_TOKEN`, restart MCP HTTP, and update clients to send `Authorization: Bearer <token>`.
+
+MDT-157 covers MCP HTTP authentication only. Public read-only sharing is deferred to MDT-172.
+
 ### Session Management
 - **Optional Sessions**: HTTP requests can use `Mcp-Session-Id` header
 - **Timeout**: Default 30 minutes (configurable)
