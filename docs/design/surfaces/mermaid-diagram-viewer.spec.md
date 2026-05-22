@@ -32,6 +32,7 @@ MermaidOverlayState (same MermaidContainer, data-overlay-enabled=true)
 |------|------|
 | Markdown render hook | `src/components/MarkdownContent/usePostRender.ts` |
 | Mermaid block generation | `src/utils/mermaid/core.ts` |
+| Mermaid browser rendering | `src/utils/mermaid/hooks.ts` |
 | Viewer overlay behavior | `src/utils/mermaid/fullscreen.ts` |
 | Zoom and pan behavior | `src/utils/mermaid/zoom.ts` |
 | Constants | `src/utils/mermaid/constants.ts` |
@@ -44,7 +45,8 @@ MermaidOverlayState (same MermaidContainer, data-overlay-enabled=true)
 ### Inline State
 
 - Mermaid container stays in normal markdown flow.
-- Diagram markup remains `.mermaid-container > code.mermaid`.
+- Diagram markup remains `.mermaid-container > .mermaid`.
+- The `.mermaid` element stores decoded source in `data-source-encoded`; browser rendering must use that preserved source instead of reading escaped DOM text.
 - No extra pan/zoom wrapper is introduced.
 - Fullscreen button sits at top-left of the Mermaid container.
 - Inline diagram sizing must continue to fit the document width.
@@ -128,7 +130,8 @@ Focus trapping is not implemented in the current surface. If this viewer evolves
 | Element | Class / Attribute | Source |
 |---------|-------------------|--------|
 | Mermaid container | `.mermaid-container` | `src/utils/mermaid/core.ts` |
-| Mermaid diagram | `.mermaid` | Mermaid renderer |
+| Mermaid diagram | `.mermaid` | `src/utils/mermaid/core.ts`, rendered by `src/utils/mermaid/hooks.ts` |
+| Mermaid source | `data-source-encoded` | `src/utils/mermaid/core.ts` |
 | Fullscreen button | `.mermaid-fullscreen-btn` | `src/utils/mermaid/fullscreen.ts` |
 | Overlay state | `data-overlay-enabled="true"` | `src/utils/mermaid/fullscreen.ts` |
 | Zoom state | `data-zoom-enabled="true"` | `src/utils/mermaid/zoom.ts` |
@@ -148,5 +151,6 @@ If the viewer gets non-diagram content or separate controls beyond the exit butt
 
 - Do not reintroduce a `.mermaid-panzoom` wrapper unless inline layout behavior is explicitly tested.
 - Do not call native `requestFullscreen()` for this surface; it caused headed Chrome/macOS input delay.
+- Do not render Mermaid from markdown-it escaped DOM text; use preserved decoded source and `mermaid.render(id, source)` per diagram.
 - Keep pan/zoom dependency-free unless native handlers cannot satisfy the interaction contract.
 - Add E2E coverage for immediate wheel/drag if browser automation can reproduce headed overlay behavior.

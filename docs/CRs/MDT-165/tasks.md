@@ -356,6 +356,45 @@ bun test src/utils/markdownPreprocessor.mdt150.test.ts
 
 ---
 
+### Task 6: UAT Follow-Up — Render Mermaid from Preserved Decoded Source
+
+**Milestone**: UAT — Mermaid browser rendering regression
+
+**Structure**: `src/utils/mermaid/core.ts`, `src/utils/mermaid/hooks.ts`, `src/components/MarkdownContent/usePostRender.ts`, `src/styles/prose.css`
+
+**Makes GREEN (Automated Tests)**:
+- `TEST-mermaid-core-unit` → `src/utils/mermaid/core.test.ts`: Mermaid source entity decoding and source preservation
+- `TEST-processor-pipeline-unit` → `src/components/MarkdownContent/useMarkdownProcessor.test.ts`: markdown-it pipeline still produces Mermaid-compatible output
+- `TEST-mermaid-render-runtime` → browser runtime check: Mermaid renders from decoded source without syntax-error fallback
+
+**Makes GREEN (Behavior)**:
+- `mermaid_decoded_source_rendering` → `docs/CRs/MDT-157/architecture.md` renders two Mermaid SVG diagrams in the browser
+
+**Scope**: Align MDT Mermaid rendering with `mdopen` by rendering each diagram from preserved decoded fence source.
+**Boundary**: No change to ticket markdown syntax, no doc diagram rewrites, no server changes.
+
+**Modifies**:
+- `src/utils/mermaid/core.ts` — stores decoded Mermaid source in `data-source-encoded`
+- `src/utils/mermaid/hooks.ts` — uses `mermaid.render(id, source)` per diagram instead of page-wide `mermaid.run()`
+- `src/components/MarkdownContent/usePostRender.ts` — scopes Mermaid rendering to the current MarkdownContent container
+- `src/styles/prose.css` — targets `.mermaid` container styling after switching from `code` to `div`
+
+**Verify**:
+
+```bash
+bun test src/utils/mermaid/core.test.ts
+bun test src/components/MarkdownContent/useMarkdownProcessor.test.ts
+bun run build
+scripts/validate-mermaid-md docs/CRs/MDT-157/architecture.md
+```
+
+**Done when**:
+- [x] `docs/CRs/MDT-157/architecture.md` renders two Mermaid SVGs in the browser
+- [x] Browser text does not include `Syntax error in text`
+- [x] Fullscreen buttons still appear for rendered Mermaid diagrams
+
+---
+
 ## Architecture Coverage
 
 | Layer | Arch Files | In Tasks | Gap | Status |

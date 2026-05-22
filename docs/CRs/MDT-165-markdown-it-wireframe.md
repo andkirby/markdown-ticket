@@ -137,6 +137,29 @@ Migrate `useMarkdownProcessor.ts` from Showdown to markdown-it with a custom fen
 - `bun install` to pick up new direct dependency
 - No configuration changes required
 
+## 8. Clarifications
+
+### UAT Session 2026-05-22
+
+Approved follow-up: Mermaid rendering must preserve decoded fence source and render each diagram from that source in the browser. UAT found that the Mermaid source in `docs/CRs/MDT-157/architecture.md` was valid in external Mermaid editors and `mdopen`, while MDT displayed Mermaid's syntax-error fallback because browser rendering depended on markdown-it escaped DOM text.
+
+Changed requirement IDs:
+- `BR-6` refined in place: Mermaid compatibility now includes decoded source preservation and per-diagram browser rendering from that source.
+
+Updated workflow documents:
+- `requirements.md`
+- `architecture.md`
+- `tests.md`
+- `tasks.md`
+- `uat.md`
+- `*.trace.md` projections for requirements, BDD, architecture, tests, and tasks
+
+Follow-up execution slice:
+- `TASK-6`: render Mermaid from preserved decoded source.
+
+Strict drift/lock:
+- Not used. This is a same-ticket UAT refinement with stage validation and rendered trace projections.
+
 ---
 
 > Requirements trace projection: [requirements.trace.md](./MDT-165/requirements.trace.md)

@@ -20,8 +20,9 @@
 | Heading slug format | `slugify` | Simple text, multi-word, punctuation, Unicode, special chars, hyphens |
 | TOC heading level offset | `tableOfContents` | headerLevelStart=3, h1 offset, h2 offset |
 | Inline markdown stripping | `tableOfContents` | Bold, italic, code, links in heading text |
-| Mermaid HTML entity decode | `mermaid/core` | `&gt;`, `&lt;`, `&amp;` decoded correctly |
+| Mermaid HTML entity decode | `mermaid/core` | `&gt;`, `&lt;`, `&amp;`, quotes, and apostrophes decoded into preserved source |
 | Mermaid unique IDs | `mermaid/core` | Multiple blocks get unique incrementing IDs |
+| Mermaid runtime source rendering | `mermaid/hooks` | Browser renderer calls Mermaid with preserved decoded source and does not render syntax-error fallback |
 
 ## External Dependency Tests
 
@@ -47,11 +48,13 @@
 | Test ID | File | Covers |
 |---------|------|--------|
 | `TEST-markdown-it-migration-e2e` | `tests/e2e/ticket/markdown-it-migration.spec.ts` | BR-1 through BR-11 |
+| `TEST-mermaid-render-runtime` | `src/utils/mermaid/hooks.ts` + Playwright runtime check | BR-6, C4 |
 
 ## Test Status
 
 ### All GREEN (implementation complete)
 - `processMermaidBlocks` — 5/5 pass
+- Mermaid runtime source rendering — Playwright check GREEN for `docs/CRs/MDT-157/architecture.md`
 - `extractTableOfContents` — 12/12 pass
 - `markdownItWireframePlugin` — 9/9 pass
 - `slugify` — 11/11 pass
@@ -70,6 +73,12 @@ bun test src/utils/slugify.test.ts
 bun test src/utils/tableOfContents.test.ts
 bun test src/utils/mermaid/core.test.ts
 bun test src/components/MarkdownContent/useMarkdownProcessor.test.ts
+
+# Mermaid UAT render regression
+scripts/validate-mermaid-md docs/CRs/MDT-157/architecture.md
+# Browser check: open /prj/MDT/ticket/MDT-157/architecture.md and assert:
+# - `.mermaid > svg` count is 2
+# - body text does not include "Syntax error in text"
 
 # Run E2E tests
 PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/ticket/markdown-it-migration.spec.ts --project=chromium
