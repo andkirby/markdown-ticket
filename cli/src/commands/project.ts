@@ -10,7 +10,7 @@ import process from 'node:process'
 import { ProjectService } from '@mdt/shared/services/ProjectService.js'
 import { ServiceError } from '@mdt/shared/services/ServiceError.js'
 import { ProjectManager } from '@mdt/shared/tools/ProjectManager.js'
-import { formatProjectList as formatProjectListFormatter, formatProjectView } from '../output/formatter.js'
+import { formatProjectInit, formatProjectList as formatProjectListFormatter, formatProjectView } from '../output/formatter.js'
 import { CliCommandError, formatProjectForStructured, getOutputFormat, writeStructuredSuccess } from '../output/structured.js'
 
 interface ProjectInitOptions extends StructuredOutputOptions {
@@ -169,9 +169,7 @@ export async function projectInitAction(
       return
     }
 
-    console.log(`Initialized project ${project.project.code} in ${targetDir}`)
-    console.log(`  config:    ${project.project.configFile}`)
-    console.log(`  tickets:   ${project.project.ticketsPath}`)
+    console.log(formatProjectInit(project, targetDir))
   }
   catch (error) {
     if (error instanceof ServiceError) {
