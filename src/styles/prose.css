@@ -12,6 +12,7 @@
 
 .prose--document {
   max-width: 72ch;
+  --prose-anchor-offset: 0px;
 }
 
 .prose--ticket {
@@ -58,7 +59,7 @@
   font-weight: 650;
   line-height: 1.25;
   letter-spacing: 0;
-  scroll-margin-top: 3rem;
+  scroll-margin-top: calc(var(--prose-anchor-offset, 2.25rem) + var(--prose-anchor-gap, 0.75rem));
 }
 
 .prose h1 {
@@ -428,7 +429,7 @@
 }
 
 .prose [id] {
-  scroll-margin-top: 3rem;
+  scroll-margin-top: calc(var(--prose-anchor-offset, 2.25rem) + var(--prose-anchor-gap, 0.75rem));
 }
 
 .prose h1[id] > .header-anchor,
