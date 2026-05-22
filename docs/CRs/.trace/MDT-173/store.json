@@ -14,7 +14,7 @@
     {
       "id": "BR-10.2",
       "kind": "behavior",
-      "text": "Documents View lets users resize and collapse the document navigation sidebar, and preserves the sidebar width and collapsed state per project.",
+      "text": "Documents View lets users resize and collapse the document navigation sidebar, preserves the sidebar width and collapsed state per project, and keeps navigation controls readable by placing search and sorting on the second header row, with search flexing left of sort and direction controls.",
       "sourceRef": "CR:MDT-173",
       "routePolicy": "bdd"
     },
@@ -40,34 +40,20 @@
     },
     {
       "id": "document_navigation_resizes_and_collapses",
-      "title": "Document navigation can resize and collapse",
+      "title": "Document navigation can resize, collapse, and keep search/sort controls readable",
       "covers": [
         "BR-10.2"
       ],
-      "given": "a user is viewing a document with the navigation sidebar visible",
-      "when": "the user resizes or collapses the document navigation panel",
-      "then": "the preview pane adjusts immediately and the navigation panel state is preserved for the project",
+      "given": "a user is viewing Documents View with the navigation sidebar visible",
+      "when": "the user uses navigation controls or resizes or collapses the document navigation panel",
+      "then": "search flexes left of the sort and direction controls, the preview pane adjusts immediately, and the navigation panel state is preserved for the project",
       "sourceRef": "CR:MDT-173"
     }
   ],
   "obligations": [
     {
-      "id": "OBL-wide-document-artifacts",
-      "title": "Document artifact width is independent from readable prose measure",
-      "derivedFrom": [
-        "BR-10.1",
-        "C10"
-      ],
-      "artifactIds": [
-        "ART-markdown-viewer",
-        "ART-prose-css",
-        "ART-documents-css"
-      ],
-      "sourceRef": "CR:MDT-173"
-    },
-    {
       "id": "OBL-resizable-document-navigation",
-      "title": "Document navigation panel is resizable, collapsible, and project-persistent",
+      "title": "Document navigation panel is resizable, collapsible, project-persistent, and keeps search/sort controls readable",
       "derivedFrom": [
         "BR-10.2"
       ],
@@ -75,7 +61,9 @@
         "ART-documents-layout",
         "ART-documents-css",
         "ART-document-navigation-config",
-        "ART-resizable-primitive"
+        "ART-resizable-primitive",
+        "ART-documents-navigation-spec",
+        "ART-documents-navigation-mockups"
       ],
       "sourceRef": "CR:MDT-173"
     },
@@ -89,7 +77,25 @@
         "ART-wireloom-fullscreen",
         "ART-wireloom-renderer",
         "ART-mermaid-zoom",
-        "ART-prose-css"
+        "ART-prose-css",
+        "ART-markdown-content-spec",
+        "ART-markdown-content-mockups"
+      ],
+      "sourceRef": "CR:MDT-173"
+    },
+    {
+      "id": "OBL-wide-document-artifacts",
+      "title": "Document artifact width is independent from readable prose measure",
+      "derivedFrom": [
+        "BR-10.1",
+        "C10"
+      ],
+      "artifactIds": [
+        "ART-markdown-viewer",
+        "ART-prose-css",
+        "ART-documents-css",
+        "ART-markdown-content-spec",
+        "ART-markdown-content-mockups"
       ],
       "sourceRef": "CR:MDT-173"
     }
@@ -148,6 +154,30 @@
       "path": "src/utils/mermaid/zoom.ts",
       "kind": "runtime",
       "sourceRef": "CR:MDT-173"
+    },
+    {
+      "id": "ART-markdown-content-spec",
+      "path": "docs/design/surfaces/markdown-content.spec.md",
+      "kind": "doc",
+      "sourceRef": "CR:MDT-173"
+    },
+    {
+      "id": "ART-markdown-content-mockups",
+      "path": "docs/design/surfaces/markdown-content.mockups.md",
+      "kind": "doc",
+      "sourceRef": "CR:MDT-173"
+    },
+    {
+      "id": "ART-documents-navigation-spec",
+      "path": "docs/design/surfaces/documents-view-navigation.spec.md",
+      "kind": "doc",
+      "sourceRef": "CR:MDT-173"
+    },
+    {
+      "id": "ART-documents-navigation-mockups",
+      "path": "docs/design/surfaces/documents-view-navigation.mockups.md",
+      "kind": "doc",
+      "sourceRef": "CR:MDT-173"
     }
   ],
   "testPlans": [
@@ -164,7 +194,7 @@
     {
       "id": "TEST-document-navigation-layout",
       "kind": "unit",
-      "title": "Document navigation preferences persist sidebar width and collapsed state",
+      "title": "Document navigation preferences persist sidebar width and collapsed state, with search flexing left of sort controls",
       "covers": [
         "BR-10.2"
       ],
@@ -193,31 +223,15 @@
   ],
   "tasks": [
     {
-      "id": "TASK-10",
-      "title": "Expand document artifact layout without widening prose",
-      "ownsArtifactIds": [
-        "ART-markdown-viewer",
-        "ART-prose-css",
-        "ART-documents-css"
-      ],
-      "makesGreenIds": [
-        "document_artifacts_use_available_width",
-        "TEST-document-artifact-layout",
-        "TEST-browser-wide-artifact-check"
-      ],
-      "skills": [
-        "mdt-frontend"
-      ],
-      "sourceRef": "CR:MDT-173"
-    },
-    {
       "id": "TASK-11",
-      "title": "Add resizable and collapsible document navigation",
+      "title": "Add resizable, collapsible, and readable document navigation",
       "ownsArtifactIds": [
         "ART-documents-layout",
         "ART-document-navigation-config",
         "ART-resizable-primitive",
-        "ART-documents-css"
+        "ART-documents-css",
+        "ART-documents-navigation-spec",
+        "ART-documents-navigation-mockups"
       ],
       "makesGreenIds": [
         "document_navigation_resizes_and_collapses",
@@ -226,7 +240,8 @@
       ],
       "skills": [
         "mdt-frontend",
-        "shadcn"
+        "shadcn",
+        "mdt-ux-designer"
       ],
       "sourceRef": "CR:MDT-173"
     },
@@ -237,14 +252,38 @@
         "ART-wireloom-fullscreen",
         "ART-wireloom-renderer",
         "ART-mermaid-zoom",
-        "ART-prose-css"
+        "ART-prose-css",
+        "ART-markdown-content-spec",
+        "ART-markdown-content-mockups"
       ],
       "makesGreenIds": [
         "document_artifacts_use_available_width",
         "TEST-wireloom-inspection"
       ],
       "skills": [
-        "mdt-frontend"
+        "mdt-frontend",
+        "mdt-ux-designer"
+      ],
+      "sourceRef": "CR:MDT-173"
+    },
+    {
+      "id": "TASK-10",
+      "title": "Expand document artifact layout without widening prose",
+      "ownsArtifactIds": [
+        "ART-markdown-viewer",
+        "ART-prose-css",
+        "ART-documents-css",
+        "ART-markdown-content-spec",
+        "ART-markdown-content-mockups"
+      ],
+      "makesGreenIds": [
+        "document_artifacts_use_available_width",
+        "TEST-document-artifact-layout",
+        "TEST-browser-wide-artifact-check"
+      ],
+      "skills": [
+        "mdt-frontend",
+        "mdt-ux-designer"
       ],
       "sourceRef": "CR:MDT-173"
     }
