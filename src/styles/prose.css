@@ -493,12 +493,12 @@
   -webkit-overflow-scrolling: touch;
 }
 
-.prose code.mermaid::before,
-.prose code.mermaid::after {
+.prose .mermaid::before,
+.prose .mermaid::after {
   content: none !important;
 }
 
-.prose code.mermaid {
+.prose .mermaid {
   padding: 0 !important;
   border: 0;
   background: transparent;

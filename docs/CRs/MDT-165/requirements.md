@@ -30,10 +30,19 @@ MDT-165 migrates the markdown rendering pipeline from Showdown to markdown-it, e
 | Strikethrough output | `<s>` tag (markdown-it default) | `<del>` tag (Showdown output) | DOMPurify config updated to allow `<s>`; test assertions updated |
 | Heading anchor rendering | Entire heading text wrapped in `<a class="header-anchor">`, `#` via CSS `::after` on hover | Separate permalink `#` link after heading text | Clickable title is more intuitive; CSS hover avoids visual noise |
 | Heading scroll offset | `scroll-margin-top: 3rem` on `.prose [id]` | No offset | Sticky tab bar covers headings at viewport top; offset ensures visibility |
+| Mermaid rendering source | Browser rendering uses decoded Mermaid fence source preserved separately from the mutated DOM node | Let Mermaid read escaped markdown-it HTML from `.mermaid` DOM | Prevents valid diagrams with quotes or escaped entities from rendering Mermaid syntax-error fallback |
 
 ## Open Questions
 
 None. All semantic conflicts resolved in Non-Ambiguity Table above.
+
+## UAT Refinement: Mermaid Render Source
+
+UAT on 2026-05-22 found that raw Mermaid code from `docs/CRs/MDT-157/architecture.md` was valid in external Mermaid editors and `mdopen`, but MDT displayed Mermaid's syntax-error fallback. The approved refinement keeps `BR-6` in place and clarifies that Mermaid blocks must preserve decoded fence source separately from rendered DOM before browser rendering.
+
+Affected requirement:
+
+- `BR-6`: refined in place. Mermaid compatibility means browser diagrams render from preserved decoded source, not from markdown-it escaped DOM text.
 
 ---
 *Rendered by /mdt:requirements via spec-trace*

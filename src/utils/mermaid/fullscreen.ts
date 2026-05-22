@@ -57,8 +57,8 @@ function handleOverlayKeydown(event: KeyboardEvent): void {
 /**
  * Add fullscreen buttons to all mermaid containers
  */
-export function addFullscreenButtons(): void {
-  const mermaidContainers = document.querySelectorAll('.mermaid-container')
+export function addFullscreenButtons(root: ParentNode = document): void {
+  const mermaidContainers = root.querySelectorAll('.mermaid-container')
 
   mermaidContainers.forEach((container) => {
     if (container.querySelector('.mermaid-fullscreen-btn'))

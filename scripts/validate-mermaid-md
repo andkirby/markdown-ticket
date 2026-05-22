@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+set -u
+
+if ! command -v mmdc >/dev/null 2>&1; then
+  echo "mmdc not found. Install it with: bun install -g @mermaid-js/mermaid-cli" >&2
+  exit 127
+fi
+
+if [ "$#" -eq 0 ]; then
+  echo "Usage: $0 <file.md> [more.md ...]" >&2
+  exit 2
+fi
+
+tmp_dir="$(mktemp -d)"
+trap 'rm -rf "$tmp_dir"' EXIT
+
+status=0
+
+for md_file in "$@"; do
+  if [ ! -f "$md_file" ]; then
+    echo "Missing file: $md_file" >&2
+    status=1
+    continue
+  fi
+
+  file_dir="$tmp_dir/$(basename "$md_file").blocks"
+  mkdir -p "$file_dir"
+
+  if ! awk -v dir="$file_dir" '
+    /^```mermaid[[:space:]]*$/ { in_block = 1; block += 1; next }
+    /^```[[:space:]]*$/ && in_block { in_block = 0; next }
+    in_block {
+      output = dir "/block_" block ".mmd"
+      print > output
+    }
+  ' "$md_file"; then
+    echo "$md_file: failed to extract mermaid blocks" >&2
+    status=1
+    continue
+  fi
+
+  block_count="$(find "$file_dir" -name 'block_*.mmd' | wc -l | tr -d ' ')"
+
+  if [ "$block_count" = "0" ]; then
+    echo "$md_file: no mermaid blocks"
+    continue
+  fi
+
+  echo "$md_file: validating $block_count mermaid block(s)"
+
+  find "$file_dir" -name 'block_*.mmd' -print | sort -V | while IFS= read -r block_file; do
+    block_name="$(basename "$block_file" .mmd)"
+    block_number="${block_name#block_}"
+    output_file="$file_dir/${block_name}.svg"
+
+    if mmdc -i "$block_file" -o "$output_file" >/dev/null 2>"$file_dir/${block_name}.err"; then
+      echo "  block $block_number: ok"
+    else
+      echo "  block $block_number: failed"
+      cat "$file_dir/${block_name}.err" >&2
+      exit 1
+    fi
+  done
+
+  if [ "$?" -ne 0 ]; then
+    status=1
+  fi
+done
+
+exit "$status"

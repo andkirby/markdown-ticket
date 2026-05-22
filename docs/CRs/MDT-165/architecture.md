@@ -20,6 +20,8 @@ MDT-165 replaces Showdown with markdown-it as the markdown rendering engine in `
 | `domPurifyConfig.ts` | HTML sanitization whitelist (tags + attributes) | ART-dom-purify-config |
 | `tableOfContents.ts` | TOC extraction from raw markdown (no rendering) | ART-table-of-contents |
 | `mermaid/core.ts` | Mermaid diagram post-processing (regex transform) | ART-mermaid-core |
+| `mermaid/hooks.ts` | Browser-side Mermaid rendering from preserved decoded source | ART-mermaid-hooks |
+| `usePostRender.ts` | Post-render orchestration scoped to the current Markdown container | ART-post-render |
 | `syntaxHighlight.ts` | Prism syntax highlighting on rendered code blocks | ART-syntax-highlight |
 | `markdownPreprocessor.ts` | Smart-link preprocessing (ticket/doc refs → links) | ART-preprocessor |
 | `useHtmlParser.ts` | HTML → React parser; skips `header-anchor` links to prevent SmartLink wrapping | ART-html-parser |
@@ -37,6 +39,26 @@ preprocessMarkdown(markdown, project, linkConfig, ...)
 ```
 
 **Owner**: `useMarkdownProcessor.ts`
+
+### Flow 1a: Mermaid Browser Rendering
+
+```text
+processMermaidBlocks(html):
+  Decode markdown-it code-block entities into Mermaid source
+  Emit .mermaid node with data-source-encoded="{decoded source}"
+  Keep visible fallback text escaped
+
+usePostRender(container):
+  renderMermaid(container)
+
+renderMermaid(container):
+  For each .mermaid-container in this MarkdownContent root:
+    Reset diagram text from data-source-encoded
+    Call mermaid.render(uniqueSvgId, decodedSource)
+    Replace diagram contents with returned SVG
+```
+
+**Owner**: `mermaid/core.ts`, `mermaid/hooks.ts`, `usePostRender.ts`
 
 ### Flow 2: Wireframe Label Rendering
 
@@ -98,6 +120,7 @@ Custom permalink wraps heading content in clickable anchor:
 7. **Heading anchors are whole-title clickable**: The entire heading text is wrapped in `<a class="header-anchor">`. No separate `#` permalink text. The `#` symbol appears only on hover via CSS `::after`.
 8. **Heading scroll offset**: All `[id]` elements inside `.prose` have `scroll-margin-top: 3rem` to clear the sticky tab bar during anchor navigation.
 9. **HTML parser skips heading anchors**: `useHtmlParser.ts` must not convert `<a class="header-anchor">` elements into SmartLink components.
+10. **Mermaid source preservation**: Mermaid browser rendering uses decoded fence source stored separately from rendered DOM. Do not depend on `mermaid.run()` reading escaped markdown-it HTML from the display node.
 
 ## Asses-Driven Architecture Responses
 
@@ -134,6 +157,10 @@ New markdown rendering features should be added as markdown-it plugins via `md.u
 `markdownItWireloomPlugin` was added as a fence renderer following this extension rule. Wireloom (`wireloom` package) is an optional dependency — when installed, ```wireloom blocks render as SVG wireframes via post-render async rendering (same pattern as Mermaid). When not installed, blocks fall back to plain `<pre><code>` display. The plugin uses placeholder divs with base64-encoded sources; `renderWireloomElements()` in `usePostRender.ts` handles async rendering and DOM replacement.
 
 **Theme reactivity**: `useTheme` dispatches a `theme-change` custom event on theme toggle. `usePostRender` listens for this event and re-renders both Mermaid diagrams and Wireloom wireframes with the correct theme. Wireloom SVGs cache by source+theme key, so toggling back is instant.
+
+### UAT Mermaid Rendering Follow-Up
+
+UAT on 2026-05-22 compared MDT with `mdopen` and found the key discrepancy: `mdopen` renders each diagram with `mermaid.render(id, source)` from preserved fence source, while MDT used `mermaid.run()` over DOM that had passed through markdown-it escaping. The approved follow-up adopts the `mdopen` source-preservation pattern for MDT while keeping the existing markdown pipeline order.
 
 ## Diagrams
 
