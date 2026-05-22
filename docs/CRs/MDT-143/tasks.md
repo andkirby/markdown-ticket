@@ -20,6 +20,7 @@
 | Ticket create + stdin | `cli/src/commands/create.ts`, `cli/src/utils/stdin.ts` | Task 4 |
 | Ticket attr parsing + mutation | `cli/src/commands/attr.ts` | Task 5 |
 | Output formatting + colors | `cli/src/output/formatter.ts`, `cli/src/output/colors.ts`, `cli/src/utils/cliConfig.ts` | Task 6 |
+| Structured JSON/YAML output | `cli/src/output/structured.ts`, command result adapters | Task 14 |
 | CLI E2E harness | `cli/tests/e2e/` | Task 7 |
 
 ## Constraint Coverage
@@ -32,6 +33,7 @@
 | C4 | Task 2, Task 3 |
 | C5 | Task 4, Task 5 |
 | C6 | Task 6, Task 7 |
+| C7 | Task 14 |
 
 ## Milestones
 
@@ -41,6 +43,7 @@
 | M1: Read Paths | `view_ticket_from_detected_project`, `view_ticket_across_projects`, `list_tickets_in_detected_project`, `show_current_project_details`, `list_projects_via_project_namespace`, `resolve_project_token_without_subcommand_collision` | Task 2, Task 3, Task 6 | Ticket/project read flows GREEN |
 | M2: Mutations | `initialize_project_in_current_folder`, `initialize_project_with_custom_tickets_path`, `create_ticket_from_slug_with_order_independent_tokens`, `create_ticket_from_piped_input`, `update_ticket_attributes_in_one_command` | Task 4, Task 5, Task 6, Task 12 | Create/attr/init flows GREEN |
 | M3: Verification | all MDT-143 scenarios | Task 7 | CLI E2E suite GREEN |
+| M4: Agent Output | `emit_structured_ticket_detail_output`, `emit_structured_ticket_list_output`, `emit_structured_project_output`, `emit_structured_mutation_output` | Task 14 | JSON/YAML structured-output E2E GREEN |
 
 ---
 
@@ -315,13 +318,38 @@
 
 ---
 
+### Task 14: Add agent-safe --json and --yaml output modes (UAT)
+
+**Structure**: `cli/src/output/structured.ts`, `cli/src/index.ts`, command result adapters in `cli/src/commands/*`
+
+**Scope**: Add mutually exclusive `--json` and `--yaml` flags for supported ticket and project commands. Serialize a shared command result object with `schemaVersion`, `ok`, `command`, `data`, `meta`, and `diagnostics`; include normalized IDs, display labels, relative and absolute paths, list metadata, and mutation changes.
+
+**Boundary**: Structured output must not scrape human formatter strings. Command handlers should produce typed result objects, then route to either human formatter or structured serializer.
+
+**Makes GREEN**:
+- `emit_structured_ticket_detail_output`
+- `emit_structured_ticket_list_output`
+- `emit_structured_project_output`
+- `emit_structured_mutation_output`
+- `TEST-cli-structured-output`
+
+**Done when**:
+- [x] `--json` and `--yaml` produce the same schema for ticket get/list, project current/get/list, create, attr, delete, and project init
+- [x] Structured modes emit no ANSI sequences or decorative separators
+- [x] Structured success payloads write to stdout as UTF-8 and preserve exit-code semantics
+- [x] Structured failures write `ok=false` envelopes to stderr and leave stdout empty
+- [x] Supplying both `--json` and `--yaml` exits 1 with a clear mutually-exclusive-format error
+
+---
+
 ## Post-Implementation
 
 - [x] `mdt-cli` exposes the canonical `entity action` command tree plus approved shortcuts
 - [ ] Project reads go through `ProjectService`; project init goes through `ProjectManager`
 - [ ] Ticket reads and attr writes go through `TicketService`
 - [ ] CLI output stays formatter-owned and TTY-aware
-- [ ] CLI E2E coverage is GREEN
+- [x] CLI structured output stays schema-owned and agent-safe
+- [x] CLI E2E coverage is GREEN
 
 ---
 *Canonical task ownership and GREEN links: [tasks.trace.md](./tasks.trace.md)*

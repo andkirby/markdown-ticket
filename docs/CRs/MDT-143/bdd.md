@@ -5,7 +5,7 @@
 
 ## Overview
 
-BDD for this ticket is organized around six CLI journeys: ticket retrieval, project inspection, project bootstrap, ticket mutation, list filtering, and command guide. The scenario set stays within the normal-mode budget by covering the canonical `commander` command tree while still locking the retained shortcut behaviors where they are operator-visible.
+BDD for this ticket is organized around seven CLI journeys: ticket retrieval, project inspection, project bootstrap, ticket mutation, list filtering, command guide, and structured output for agents. The scenario set stays within the normal-mode budget by covering the canonical `commander` command tree while still locking the retained shortcut behaviors where they are operator-visible.
 
 ## Acceptance Strategy
 
@@ -17,6 +17,7 @@ BDD for this ticket is organized around six CLI journeys: ticket retrieval, proj
 | Ticket mutation and formatting | `update_ticket_attributes_in_one_command`, `render_colored_relative_ticket_output`, `render_absolute_ticket_path_when_configured` | BR-10, BR-11, BR-12, BR-13 |
 | List filtering and paging | `filter_ticket_list_by_multiple_criteria` | BR-18 |
 | Command guide | `show_generated_command_guide` | BR-19 |
+| Structured output | `emit_structured_ticket_detail_output`, `emit_structured_ticket_list_output`, `emit_structured_project_output`, `emit_structured_mutation_output` | BR-22 |
 
 ## E2E Framework
 
@@ -43,6 +44,9 @@ MDT-143 introduces a terminal-first CLI surface. CLI acceptance tests run as rea
 - `project init` is expected to materialize project configuration in the current folder, not just print a template to stdout.
 - STDIN creation is a no-template path: generated frontmatter plus generated H1, followed by the literal piped body content.
 - `--guide` at global scope prints a full command manual; at per-namespace scope (e.g., `ticket --guide`) prints that namespace's commands only. Content is generated from the commander tree.
+- `--json` and `--yaml` are agent-facing output modes. They use the same schema, suppress ANSI/decorative formatting, and include normalized IDs, display labels, paths, timestamps, list metadata, and mutation changes.
+- Structured success payloads go to stdout. Structured failure payloads go to stderr with `ok=false`, an error code, and no partial success payload on stdout.
+- `--json` and `--yaml` are mutually exclusive.
 - Per-element color scheme: ticket title white bold, ticket key light-cyan bold, project code dark cyan bold, project description normal, file paths gray.
 - Ticket detail view shows 1st-level subdocuments from the ticket's CR directory (e.g., `docs/CRs/MDT-012/`), excluding the main ticket `.md` file. Directories are shown with trailing `/`; nested contents are not expanded. Omitted when no subdocuments exist.
 
@@ -50,6 +54,7 @@ MDT-143 introduces a terminal-first CLI surface. CLI acceptance tests run as rea
 
 - Original scenario coverage is canonical in `spec-trace`; all scenarios have been translated into CLI E2E suites in `cli/tests/e2e/` and are GREEN.
 - UAT session 2026-03-30 added two new scenarios (`filter_ticket_list_by_multiple_criteria`, `show_generated_command_guide`) and refined four existing scenarios. Four new E2E suites are planned in tasks 8-11.
+- UAT session 2026-05-22 added structured-output scenarios for ticket detail, ticket list, project output, and mutation output. Edge/error handling is covered in tests, not BDD, because spec-trace routes constraints and edge cases to the tests stage.
 - CLI E2E runs real-process tests using `@mdt/shared/test-lib` for isolated project fixtures and process helpers.
 
 ---

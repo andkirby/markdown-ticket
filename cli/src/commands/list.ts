@@ -8,19 +8,20 @@
 
 import type { Ticket } from '@mdt/shared/models/Ticket.js'
 import type { ListTicketsSort } from '@mdt/shared/services/ticket/types.js'
-import process from 'node:process'
+import type { StructuredOutputOptions } from '../output/structured.js'
 import { ProjectService } from '@mdt/shared/services/ProjectService.js'
+import { ServiceError } from '@mdt/shared/services/ServiceError.js'
 import { DEFAULT_LIST_LIMIT } from '@mdt/shared/services/ticket/types.js'
 import { TicketService } from '@mdt/shared/services/TicketService.js'
 import { colorizePriority, colorizeStatus, colorizeTicketKey, colorizeTitle, colorizeType, shouldUseColor, statusDisplayLabel, visiblePadEnd } from '../output/colors.js'
 import { formatTicketList as formatTicketListFormatter } from '../output/formatter.js'
+import { CliCommandError, formatProjectForStructured, formatTicketForStructured, getOutputFormat, writeStructuredSuccess } from '../output/structured.js'
 import { PRIORITY_TOKENS, STATUS_ALIASES, TYPE_TOKENS } from '../utils/aliases.js'
 
 /**
  * List command options
  */
-interface ListCommandOptions {
-  json?: boolean
+interface ListCommandOptions extends StructuredOutputOptions {
   all?: boolean
   limit?: number
   offset?: number
@@ -101,13 +102,6 @@ function parseFilters(filterArgs: string[]): Record<string, string | string[]> {
 }
 
 /**
- * Format ticket list as JSON
- */
-function formatTicketListJSON(tickets: Ticket[]): string {
-  return JSON.stringify(tickets, null, 2)
-}
-
-/**
  * Format ticket list as files only (paths only, one per line)
  */
 function formatTicketListFiles(tickets: Ticket[], projectPath?: string): string {
@@ -182,8 +176,7 @@ export async function ticketListAction(filterArgs: string[] = [], options: ListC
   if (options.project) {
     const resolved = await projectService.getProjectByCodeOrId(options.project)
     if (!resolved) {
-      console.error(`Error: Project '${options.project}' not found`)
-      process.exit(1)
+      throw new CliCommandError('PROJECT_NOT_FOUND', `Project ${options.project} not found`, { projectCode: options.project })
     }
     projectCode = resolved.project.code
     projectPath = resolved.project.path
@@ -191,8 +184,7 @@ export async function ticketListAction(filterArgs: string[] = [], options: ListC
   else {
     const projectResult = await projectService.resolveCurrentProject()
     if (!projectResult.data) {
-      console.error('Error: No project context. Run from a project directory.')
-      process.exit(1)
+      throw new CliCommandError('NO_PROJECT_CONTEXT', 'No project context. Run from a project directory.')
     }
     projectCode = projectResult.data.project.code
     projectPath = projectResult.data.project.path
@@ -217,19 +209,58 @@ export async function ticketListAction(filterArgs: string[] = [], options: ListC
   const sort: ListTicketsSort = 'dateModified'
 
   // List tickets with filters, sort, and pagination
-  const result = await ticketService.listTickets({
+  const listRequest = {
     projectRef: projectCode,
     filters: Object.keys(filters).length > 0 ? filters : undefined,
     sort,
     limit,
     offset: options.offset,
+  }
+
+  const result = await ticketService.listTickets(listRequest)
+
+  const totalResult = await ticketService.listTickets({
+    projectRef: projectCode,
+    filters: Object.keys(filters).length > 0 ? filters : undefined,
+    sort,
   })
 
   const tickets = result.data
+  const outputFormat = getOutputFormat(options)
 
   // Format output based on mode
-  if (options.json) {
-    console.log(formatTicketListJSON(tickets))
+  if (outputFormat !== 'human') {
+    const project = await projectService.getProjectByCodeOrId(projectCode)
+    if (!project) {
+      throw ServiceError.projectNotFound(projectCode)
+    }
+    writeStructuredSuccess(
+      outputFormat,
+      'ticket.list',
+      {
+        items: tickets.map(ticket => formatTicketForStructured(ticket, projectPath)),
+        count: {
+          total: totalResult.data.length,
+          returned: tickets.length,
+        },
+        filters,
+        sort,
+        pagination: {
+          limit: limit ?? null,
+          offset: options.offset ?? 0,
+          all: options.all ?? false,
+        },
+        outputMode: {
+          files: options.files ?? false,
+          info: options.info ?? false,
+        },
+        project: formatProjectForStructured(project),
+      },
+      {
+        projectCode,
+        projectId: project.id,
+      },
+    )
   }
   else if (options.files) {
     console.log(formatTicketListFiles(tickets, projectPath))

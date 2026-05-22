@@ -281,6 +281,34 @@
       "text": "IF operator invokes mdt-cli ticket list --project <code> and the project does not exist, THEN the system shall print 'Project <code> not found' and exit with code 1.",
       "sourceRef": "CR:MDT-143",
       "routePolicy": "tests"
+    },
+    {
+      "id": "BR-22",
+      "kind": "behavior",
+      "text": "WHEN operator passes --json or --yaml to supported ticket and project commands, the system shall emit a machine-readable representation of the same command result instead of human-formatted text. Supported commands include ticket get/list/create/attr/delete and project current/get/info/list/init. The structured payload shall use one shared JSON-compatible schema for both formats with schemaVersion, ok, command, data, meta, and diagnostics fields; include normalized ticket keys/project codes, project identifiers, raw enum values plus display labels, relative and absolute paths where paths are relevant, ISO timestamps, ticket subdocuments for detail views, list counts/filters/pagination, and mutation change arrays; and preserve the existing command exit-code semantics.",
+      "sourceRef": "CR:MDT-143",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C7",
+      "kind": "constraint",
+      "text": "Structured output modes shall be deterministic and agent-safe: no ANSI escape sequences, no decorative separators, no prose-only success payloads, stable field names, stable key order, JSON-compatible values, explicit null for absent optional scalar fields, arrays for repeatable values, UTF-8 stdout for successful payloads, and YAML generated from the same object used for JSON.",
+      "sourceRef": "CR:MDT-143",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-9",
+      "kind": "edge_case",
+      "text": "IF operator supplies both --json and --yaml, THEN the system shall reject the command with a clear mutually-exclusive-format error and exit with code 1.",
+      "sourceRef": "CR:MDT-143",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-10",
+      "kind": "edge_case",
+      "text": "IF a command fails while --json or --yaml is selected, THEN the system shall emit a structured error envelope to stderr with ok=false, command, error.code, error.message, and optional diagnostics, emit no partial success payload to stdout, and preserve the command's non-zero exit code.",
+      "sourceRef": "CR:MDT-143",
+      "routePolicy": "tests"
     }
   ],
   "scenarios": [
@@ -545,6 +573,50 @@
       "when": "operator runs mdt-cli ticket list --project NOPE",
       "then": "the system prints 'Project NOPE not found' and exits with code 1",
       "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "emit_structured_ticket_detail_output",
+      "title": "Emit structured ticket detail output",
+      "covers": [
+        "BR-22"
+      ],
+      "given": "operator is in a detected project and ticket MDT-012 exists with metadata and 1st-level subdocuments",
+      "when": "operator runs mdt-cli ticket get MDT-012 --json or mdt-cli ticket get MDT-012 --yaml",
+      "then": "the system prints one structured payload with schemaVersion, ok, command, ticket data, metadata, relative and absolute paths, and subdocument entries, with no ANSI styling or decorative separators",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "emit_structured_ticket_list_output",
+      "title": "Emit structured ticket list output",
+      "covers": [
+        "BR-22"
+      ],
+      "given": "operator is in a detected project with multiple tickets",
+      "when": "operator runs mdt-cli ticket list --json with filters, --limit, --all, --files, --info, or --project",
+      "then": "the system prints a structured list payload containing items, total count, returned count, filters, sort, pagination, selected project, and output mode information using the same schema shape as YAML mode",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "emit_structured_project_output",
+      "title": "Emit structured project output",
+      "covers": [
+        "BR-22"
+      ],
+      "given": "registered projects exist and the current working directory may or may not be inside one",
+      "when": "operator runs mdt-cli project current --json, mdt-cli project get MDT --yaml, or mdt-cli project list --json",
+      "then": "the system prints structured project data including code, identifier, name, description, paths, and relevant configuration values without relying on human list formatting",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "emit_structured_mutation_output",
+      "title": "Emit structured mutation output",
+      "covers": [
+        "BR-22"
+      ],
+      "given": "operator creates, updates, deletes, or initializes a ticket or project with structured output selected",
+      "when": "the command succeeds",
+      "then": "the system prints a structured success envelope with the created/updated/deleted entity, relevant paths, and mutation change details such as attr old and new values",
+      "sourceRef": "CR:MDT-143"
     }
   ],
   "obligations": [
@@ -738,6 +810,28 @@
         "ART-shared-test-lib"
       ],
       "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "OBL-structured-output",
+      "title": "Implement agent-safe --json and --yaml output modes through a shared structured-output adapter, accepted at global/command scope, with deterministic success envelopes and structured error envelopes.",
+      "derivedFrom": [
+        "BR-22",
+        "C7",
+        "Edge-9",
+        "Edge-10"
+      ],
+      "artifactIds": [
+        "ART-cli-structured-output",
+        "ART-cli-formatter",
+        "ART-cli-index",
+        "ART-cli-view",
+        "ART-cli-list",
+        "ART-cli-project",
+        "ART-cli-create",
+        "ART-cli-attr",
+        "ART-cli-delete"
+      ],
+      "sourceRef": "CR:MDT-143"
     }
   ],
   "artifacts": [
@@ -900,6 +994,12 @@
     {
       "id": "ART-cli-delete",
       "path": "cli/src/commands/delete.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "ART-cli-structured-output",
+      "path": "cli/src/output/structured.ts",
       "kind": "runtime",
       "sourceRef": "CR:MDT-143"
     }
@@ -1079,6 +1179,19 @@
         "Edge-8"
       ],
       "file": "cli/tests/e2e/ticket/list-enhancements.spec.ts",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "TEST-cli-structured-output",
+      "kind": "e2e",
+      "title": "Structured --json and --yaml CLI output for ticket, project, mutation, and error flows",
+      "covers": [
+        "BR-22",
+        "C7",
+        "Edge-9",
+        "Edge-10"
+      ],
+      "file": "cli/tests/e2e/output/structured-output.spec.ts",
       "sourceRef": "CR:MDT-143"
     }
   ],
@@ -1268,11 +1381,45 @@
       "sourceRef": "CR:MDT-143"
     },
     {
+      "id": "TASK-cli-structured-output",
+      "title": "Add agent-safe --json and --yaml output modes",
+      "ownsArtifactIds": [
+        "ART-cli-structured-output",
+        "ART-cli-formatter",
+        "ART-cli-index",
+        "ART-cli-view",
+        "ART-cli-list",
+        "ART-cli-project",
+        "ART-cli-create",
+        "ART-cli-attr",
+        "ART-cli-delete"
+      ],
+      "makesGreenIds": [
+        "emit_structured_ticket_detail_output",
+        "emit_structured_ticket_list_output",
+        "emit_structured_project_output",
+        "emit_structured_mutation_output",
+        "TEST-cli-structured-output"
+      ],
+      "skills": [
+        "cli-presentation",
+        "shared-service-delegation"
+      ],
+      "sourceRef": "CR:MDT-143"
+    },
+    {
       "id": "TASK-cli-list-enhancements",
       "title": "Implement list filtering, pagination, output modes, and --project flag",
+      "ownsArtifactIds": [
+        "ART-domain-ticket-filters",
+        "ART-shared-ticket-service",
+        "ART-cli-list",
+        "ART-cli-formatter",
+        "ART-cli-view"
+      ],
       "makesGreenIds": [
-        "list_tickets_in_detected_project",
         "filter_ticket_list_by_multiple_criteria",
+        "list_tickets_in_detected_project",
         "list_tickets_in_target_project",
         "list_tickets_rejects_unknown_project",
         "TEST-cli-list-enhancements"

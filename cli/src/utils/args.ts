@@ -39,63 +39,73 @@ export function normalizeShortcuts(argv: string[]): string[] {
     return argv
   }
 
-  const [first, ...rest] = args
+  const globalOutputFlags: string[] = []
+  const commandArgs = [...args]
+  while (commandArgs[0] === '--json' || commandArgs[0] === '--yaml') {
+    globalOutputFlags.push(commandArgs.shift()!)
+  }
+
+  if (commandArgs.length === 0) {
+    return argv
+  }
+
+  const [first, ...rest] = commandArgs
 
   // Pattern 1: Bare number (e.g., "5", "005", "123") → ticket get
   if (/^\d+$/.test(first)) {
-    return buildArgv(['ticket', 'get', first, ...rest])
+    return buildArgv([...globalOutputFlags, 'ticket', 'get', first, ...rest])
   }
 
   // Pattern 2: t alias (e.g., "t ABC-12") → ticket get
   if (first === 't') {
     if (rest.length === 0) {
       // Just "t" without args - treat as "ticket" namespace
-      return buildArgv(['ticket', ...rest])
+      return buildArgv([...globalOutputFlags, 'ticket', ...rest])
     }
-    return buildArgv(['ticket', 'get', ...rest])
+    return buildArgv([...globalOutputFlags, 'ticket', 'get', ...rest])
   }
 
   // Pattern 3: ticket namespace with bare number (e.g., "ticket 5") → ticket get
   if (first === 'ticket' && rest.length > 0) {
     const [second, ...restRest] = rest
     if (/^\d+$/.test(second)) {
-      return buildArgv(['ticket', 'get', second, ...restRest])
+      return buildArgv([...globalOutputFlags, 'ticket', 'get', second, ...restRest])
     }
   }
 
   // Pattern 4: list shortcuts → ticket list
   if (first === 'list' || first === 'ls') {
-    return buildArgv(['ticket', 'list', ...rest])
+    return buildArgv([...globalOutputFlags, 'ticket', 'list', ...rest])
   }
 
   // Pattern 5: create/attr/rename shortcuts → ticket create/attr/rename
   if (first === 'create') {
-    return buildArgv(['ticket', 'create', ...rest])
+    return buildArgv([...globalOutputFlags, 'ticket', 'create', ...rest])
   }
 
   if (first === 'attr') {
-    return buildArgv(['ticket', 'attr', ...rest])
+    return buildArgv([...globalOutputFlags, 'ticket', 'attr', ...rest])
   }
 
   if (first === 'rename') {
-    return buildArgv(['ticket', 'rename', ...rest])
+    return buildArgv([...globalOutputFlags, 'ticket', 'rename', ...rest])
   }
 
   if (first === 'delete') {
-    return buildArgv(['ticket', 'delete', ...rest])
+    return buildArgv([...globalOutputFlags, 'ticket', 'delete', ...rest])
   }
 
   // Pattern 6: Cross-project ticket key (e.g., "ABC/MDT-12") → ticket get
   // Pattern: PROJECT-CODE/TICKET-KEY or PROJECT/TICKET-NUMBER
   const crossProjectPattern = /^[^/]+\/[a-z0-9]+-\d+$/i
   if (crossProjectPattern.test(first)) {
-    return buildArgv(['ticket', 'get', first, ...rest])
+    return buildArgv([...globalOutputFlags, 'ticket', 'get', first, ...rest])
   }
 
   // Pattern 7: Full ticket key as bare argument (e.g., "ABC-012") → ticket get
   const fullKeyPattern = /^[a-z][a-z0-9]*-\d+$/i
   if (fullKeyPattern.test(first)) {
-    return buildArgv(['ticket', 'get', first, ...rest])
+    return buildArgv([...globalOutputFlags, 'ticket', 'get', first, ...rest])
   }
 
   // Pattern 8: project namespace shortcuts
@@ -105,12 +115,16 @@ export function normalizeShortcuts(argv: string[]): string[] {
   if (first === 'project') {
     if (rest.length === 0) {
       // "project" with no args → "project current"
-      return buildArgv(['project', 'current', ...rest])
+      return buildArgv([...globalOutputFlags, 'project', 'current', ...rest])
     }
 
     const [second, ...restRest] = rest
 
     // If second arg starts with --, it's an option, not a subcommand — pass through
+    if (second === '--json' || second === '--yaml') {
+      return buildArgv([...globalOutputFlags, 'project', 'current', ...rest])
+    }
+
     if (second.startsWith('--') || second.startsWith('-')) {
       // Let commander handle "project --guide" as-is
       return argv
@@ -119,7 +133,7 @@ export function normalizeShortcuts(argv: string[]): string[] {
     // If second arg is NOT a reserved subcommand (case-sensitive), treat as project code
     if (!reservedProjectSubcommands.includes(second)) {
       // "project <code>" → "project get <code>"
-      return buildArgv(['project', 'get', second, ...restRest])
+      return buildArgv([...globalOutputFlags, 'project', 'get', second, ...restRest])
     }
 
     // Otherwise, let commander handle the subcommand as-is

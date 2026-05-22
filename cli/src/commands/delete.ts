@@ -7,13 +7,15 @@
  */
 
 import type { Project } from '@mdt/shared/models/Project.js'
-import { TICKET_KEY_INPUT_PATTERN } from '@mdt/domain-contracts'
+import type { StructuredOutputOptions } from '../output/structured.js'
 import { readdir, rm } from 'node:fs/promises'
 import path from 'node:path'
 import process from 'node:process'
 import readline from 'node:readline'
+import { TICKET_KEY_INPUT_PATTERN } from '@mdt/domain-contracts'
 import { ProjectService } from '@mdt/shared/services/ProjectService.js'
 import { TicketService } from '@mdt/shared/services/TicketService.js'
+import { CliCommandError, getOutputFormat, pathObject, writeStructuredSuccess } from '../output/structured.js'
 
 /**
  * Resolve current project context
@@ -81,7 +83,7 @@ async function cleanupEmptyCRDir(filePath: string): Promise<void> {
  */
 export async function ticketDeleteAction(
   key: string,
-  options: { force?: boolean },
+  options: { force?: boolean } & StructuredOutputOptions,
 ): Promise<void> {
   const project = await resolveCurrentProject()
   const ticketService = new TicketService(true)
@@ -89,7 +91,7 @@ export async function ticketDeleteAction(
   // Resolve the ticket to get its title and path
   const ticket = await ticketService.getCR(project, key)
   if (!ticket) {
-    throw new Error(`Ticket ${key} not found`)
+    throw new CliCommandError('TICKET_NOT_FOUND', `Ticket ${key} not found`, { ticketKey: key })
   }
 
   // Determine if confirmation is needed
@@ -106,7 +108,7 @@ export async function ticketDeleteAction(
   // Delete via shared service
   const deleted = await ticketService.deleteCR(project, key)
   if (!deleted) {
-    throw new Error(`Ticket ${key} not found`)
+    throw new CliCommandError('TICKET_NOT_FOUND', `Ticket ${key} not found`, { ticketKey: key })
   }
 
   // Clean up empty CR directory
@@ -115,5 +117,26 @@ export async function ticketDeleteAction(
   // Print relative path
   const projectPath = project.project.path
   const relativePath = path.relative(projectPath, ticket.filePath)
+  const outputFormat = getOutputFormat(options)
+  if (outputFormat !== 'human') {
+    writeStructuredSuccess(
+      outputFormat,
+      'ticket.delete',
+      {
+        ticket: {
+          key: ticket.code,
+          title: ticket.title,
+          paths: pathObject(ticket.filePath, projectPath),
+        },
+        deleted: true,
+      },
+      {
+        projectCode: project.project.code,
+        projectId: project.id,
+      },
+    )
+    return
+  }
+
   console.log(`Deleted ${key} ${relativePath}`)
 }
