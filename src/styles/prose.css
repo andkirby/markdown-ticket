@@ -11,8 +11,12 @@
 }
 
 .prose--document {
-  max-width: 72ch;
+  max-width: none;
   --prose-anchor-offset: 0px;
+}
+
+.prose--document > :is(h1, h2, h3, h4, h5, h6, p, ul, ol, blockquote, hr) {
+  max-width: 72ch;
 }
 
 .prose--ticket {
@@ -506,15 +510,52 @@
 }
 
 .prose .wireloom {
+  position: relative;
   max-width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
 
+.prose .wireloom__diagram {
+  display: inline-block;
+}
+
 .prose .wireloom svg {
   display: block;
-  max-width: 100%;
+  max-width: none;
   height: auto;
+}
+
+.prose .wireloom__fullscreen-btn {
+  position: sticky;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 10;
+  display: inline-flex;
+  width: 2rem;
+  height: 2rem;
+  align-items: center;
+  justify-content: center;
+  float: left;
+  margin: 0.5rem -2.5rem 0 0.5rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.375rem;
+  color: hsl(var(--foreground));
+  background: hsl(var(--background) / 0.82);
+  box-shadow: 0 1px 3px hsl(var(--foreground) / 0.14);
+  backdrop-filter: blur(8px);
+}
+
+.prose .wireloom__fullscreen-btn:hover {
+  background: hsl(var(--muted) / 0.9);
+}
+
+.prose .wireloom[data-overlay-enabled="true"] .wireloom__fullscreen-btn {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  float: none;
+  margin: 0;
 }
 
 .prose .wireloom-pending {

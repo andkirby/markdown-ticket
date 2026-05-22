@@ -73,4 +73,18 @@ describe('wireloomRenderer graceful fallback', () => {
 
     expect(typeof available).toBe('boolean')
   })
+
+  it('wraps rendered SVGs for native-width scrolling and fullscreen controls', async () => {
+    const { renderWireloomElements } = await import('./wireloomRenderer')
+    const source = 'window "Test":\n  panel:\n    text "Hello"'
+    const encoded = btoa(unescape(encodeURIComponent(source)))
+    const container = document.createElement('div')
+    container.innerHTML = `<div class="wireloom-pending" data-source-encoded="${encoded}"></div>`
+
+    await renderWireloomElements(container)
+
+    expect(container.querySelector('.wireloom__diagram svg')).toBeTruthy()
+    expect(container.querySelector('.wireloom__fullscreen-btn')).toBeTruthy()
+    expect(container.querySelector('.wireloom')?.getAttribute('data-source-encoded')).toBe(encoded)
+  })
 })

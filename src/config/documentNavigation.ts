@@ -5,16 +5,23 @@ export interface DocumentNavigationPreferences {
   favsExpanded: boolean
   favsShowAll: boolean
   recentExpanded: boolean
+  navigationPanelSize: number
+  navigationPanelCollapsed: boolean
 }
 
 const MAX_RECENT_DOCUMENTS = 5
 const TICKET_AREA_PATH = 'docs/CRs'
+const DEFAULT_NAVIGATION_PANEL_SIZE = 33
+const MIN_NAVIGATION_PANEL_SIZE = 18
+const MAX_NAVIGATION_PANEL_SIZE = 45
 
 const DEFAULT_DOCUMENT_NAVIGATION_PREFERENCES: DocumentNavigationPreferences = {
   recentDocuments: [],
   favsExpanded: true,
   favsShowAll: false,
   recentExpanded: true,
+  navigationPanelSize: DEFAULT_NAVIGATION_PANEL_SIZE,
+  navigationPanelCollapsed: false,
 }
 
 const STORAGE_KEY = 'markdown-ticket:documents-navigation'
@@ -36,6 +43,13 @@ function uniqueValidPaths(paths: string[]): string[] {
   return Array.from(new Set(paths.map(normalizePath).filter(path => path && !isTicketAreaPath(path))))
 }
 
+function normalizeNavigationPanelSize(value: unknown): number {
+  if (typeof value !== 'number' || !Number.isFinite(value))
+    return DEFAULT_NAVIGATION_PANEL_SIZE
+
+  return Math.min(MAX_NAVIGATION_PANEL_SIZE, Math.max(MIN_NAVIGATION_PANEL_SIZE, value))
+}
+
 function normalizeDocumentNavigationPreferences(value: unknown): DocumentNavigationPreferences {
   const candidate = value && typeof value === 'object'
     ? value as Partial<DocumentNavigationPreferences>
@@ -53,6 +67,10 @@ function normalizeDocumentNavigationPreferences(value: unknown): DocumentNavigat
     recentExpanded: typeof candidate.recentExpanded === 'boolean'
       ? candidate.recentExpanded
       : DEFAULT_DOCUMENT_NAVIGATION_PREFERENCES.recentExpanded,
+    navigationPanelSize: normalizeNavigationPanelSize(candidate.navigationPanelSize),
+    navigationPanelCollapsed: typeof candidate.navigationPanelCollapsed === 'boolean'
+      ? candidate.navigationPanelCollapsed
+      : DEFAULT_DOCUMENT_NAVIGATION_PREFERENCES.navigationPanelCollapsed,
   }
 }
 

@@ -8,4 +8,4 @@ export { initMermaid } from './core'
 export { addFullscreenButtons, updateFullscreenButtons } from './fullscreen'
 export { useMermaid, type UseMermaidReturn } from './hooks'
 
-export { disableZoom, enableZoom, type HTMLElementWithZoomHandlers, type ZoomHandlers } from './zoom'
+export { disableZoom, enableZoom, type HTMLElementWithZoomHandlers, type ZoomHandlers, type ZoomOptions } from './zoom'
