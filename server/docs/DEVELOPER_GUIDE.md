@@ -13,6 +13,20 @@ Follow this checklist when adding new functionality:
 5. **Create/modify route** for endpoint definition
 6. **Update server.js** if needed (rare)
 
+### Adding a Backend API Endpoint
+
+New backend endpoints should be implemented as Express routes under `server/routes/` and mounted under `/api` in `server/server.ts`. The central API auth gate is mounted once with `app.use('/api', createApiAuthMiddleware())` before protected routers, so new `/api/*` routes require a token automatically unless they are one of the explicit exemptions.
+
+Default rule: every new `/api/*` endpoint is protected by `API_AUTH_TOKEN`.
+
+Only these backend routes are public:
+- `GET /api/status`
+- `GET /api/health`
+
+Do not add per-controller token checks. If a new public unauthenticated endpoint is required, update `server/security/apiAuth.ts`, document the reason in the owning CR architecture, and add API tests proving the exemption is narrow.
+
+Vite middleware endpoints in `vite.config.ts` are not backend API routes and do not pass through this auth gate. They need their own local-only or auth boundary.
+
 ### Example: Adding a "Tag" Feature
 
 #### Step 1: Add Utility (if needed)
@@ -71,6 +85,8 @@ router.get('/tags/:tag', (req, res) =>
 // server/server.js
 app.use('/api/tickets', createTicketRouter(ticketController));
 ```
+
+Register new routers after the central `/api` auth middleware in `server/server.ts` so they inherit authentication.
 
 ## File Location Guide
 
@@ -440,6 +456,8 @@ app.use('/api/my-resource', myRouter);
 ### DO ✅
 - Keep controllers thin (just HTTP handling)
 - Put business logic in services
+- Mount new backend APIs under `/api` after the central auth middleware
+- Add API tests for auth behavior when adding a new route or exemption
 - Use descriptive error messages
 - Inject dependencies via constructor
 - Write tests for services and controllers
@@ -449,6 +467,8 @@ app.use('/api/my-resource', myRouter);
 
 ### DON'T ❌
 - Don't put business logic in controllers
+- Don't add ad hoc auth checks inside controllers
+- Don't add unauthenticated `/api/*` routes without updating `apiAuth` exemptions and tests
 - Don't access database/files from controllers
 - Don't use global variables
 - Don't mix HTTP concerns in services
@@ -512,12 +532,15 @@ async getAllProjects(options = {}) {
 
 ## Security Checklist
 
+- [ ] Mount backend API routes under `/api` after `createApiAuthMiddleware()`
+- [ ] Confirm the route is protected unless it is `GET /api/status` or `GET /api/health`
+- [ ] Add auth-enabled API tests for missing token, valid `Authorization: Bearer`, and/or `X-API-Key`
 - [ ] Validate all user input
 - [ ] Sanitize file paths (use `path.basename()`)
 - [ ] Check permissions before file operations
 - [ ] Use HTTPS in production
 - [ ] Implement rate limiting
-- [ ] Add authentication/authorization
+- [ ] Document and test any intentional public route exemption
 - [ ] Sanitize error messages (don't leak internals)
 - [ ] Use security headers (helmet.js)
 - [ ] Keep dependencies updated
