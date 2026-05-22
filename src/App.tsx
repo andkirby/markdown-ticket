@@ -20,6 +20,7 @@ import { Toaster } from './components/ui/sonner'
 import { ViewModeSwitcher } from './components/ViewModeSwitcher'
 import { getSortPreferences, setSortPreferences } from './config/sorting'
 import { useGlobalKeyboard } from './hooks/useGlobalKeyboard'
+import { formatRootViewPageTitle, PageTitlePriority, usePageTitle } from './hooks/usePageTitle'
 import { useProjectManager } from './hooks/useProjectManager'
 import { getProjectCode } from './utils/projectUtils'
 import { normalizeTicketKey, setCurrentProject, validateProjectCode } from './utils/routing'
@@ -84,6 +85,16 @@ function ProjectRouteHandler() {
   }
 
   const viewMode = getCurrentViewMode()
+  const rootTitleArea = viewMode === 'list'
+    ? 'Listing'
+    : viewMode === 'documents'
+      ? 'Documents'
+      : 'Board'
+  const rootPageTitle = projectCode
+    ? formatRootViewPageTitle(projectCode, rootTitleArea)
+    : null
+
+  usePageTitle(rootPageTitle, PageTitlePriority.ROOT_VIEW)
 
   const handleSortPreferencesChange = (newPreferences: SortPreferences) => {
     setLocalSortPreferences(newPreferences)

@@ -13,6 +13,7 @@ import {
   setDocumentNavigationPreferences,
 } from '../../config/documentNavigation'
 import { getDocumentSortPreferences, setDocumentSortPreferences } from '../../config/documentSorting'
+import { formatDocumentPageTitle, PageTitlePriority, usePageTitle } from '../../hooks/usePageTitle'
 import { useEventBus } from '../../services/eventBus'
 import {
   resolveDocumentFilenameTabs,
@@ -30,6 +31,7 @@ interface DocumentsLayoutProps {
 }
 
 export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
+  const { projectCode } = useParams<{ projectCode: string }>()
   const [searchParams] = useSearchParams()
   const pathParams = useParams<{ '*': string }>()
   const pathFromRoute = pathParams['*']
@@ -496,6 +498,22 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
     return resolveDocumentFilenameTabs(files, selectedFile)
   }, [files, selectedFile])
 
+  const selectedDocument = useMemo(() => {
+    return selectedFile ? findFileByPath(files, selectedFile) : null
+  }, [files, selectedFile])
+
+  const selectedDocumentTitle = selectedDocument?.title
+    || selectedDocument?.name
+    || selectedFile?.split('/').pop()
+    || null
+
+  usePageTitle(
+    selectedFile && !selectedFileDeleted
+      ? formatDocumentPageTitle(projectCode, selectedDocumentTitle)
+      : null,
+    PageTitlePriority.DOCUMENT,
+  )
+
   const handlePathsSelected = async (paths: string[]) => {
     try {
       // Save the selected paths to configuration
@@ -717,7 +735,7 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
                   <MarkdownViewer
                     projectId={projectId}
                     filePath={selectedFile}
-                    fileInfo={findFileByPath(files, selectedFile)}
+                    fileInfo={selectedDocument}
                     refreshToken={documentRefreshToken}
                     fileDeleted={selectedFileDeleted}
                     updateState={viewerUpdateState}

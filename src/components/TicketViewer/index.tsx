@@ -14,6 +14,7 @@ import {
 } from '../../config/settingsPreferences'
 import { dataLayer } from '../../services/dataLayer'
 import { useEventBus } from '../../services/eventBus'
+import { formatTicketPageTitle, PageTitlePriority, usePageTitle } from '../../hooks/usePageTitle'
 import { filePathToApiPath } from '../../utils/subdocPathValidation'
 import { extractTableOfContents } from '../../utils/tableOfContents'
 import { processContentForDisplay } from '../../utils/titleExtraction'
@@ -26,6 +27,7 @@ import { Modal, ModalBody } from '../ui/Modal'
 import { CompactTicketHeader } from './CompactTicketHeader'
 import { TicketDocumentTabs } from './TicketDocumentTabs'
 import { TraceGraphShell } from './TraceGraphShell'
+import { ROOT_DOCUMENT_PATH, splitPathSegments } from './subdocumentPath'
 import { useTicketDocumentContent } from './useTicketDocumentContent'
 import { useTicketDocumentNavigation } from './useTicketDocumentNavigation'
 import { useTicketDocumentRealtime } from './useTicketDocumentRealtime'
@@ -37,6 +39,50 @@ interface TicketViewerProps {
   onClose: () => void
   ticketsPath?: string
   ticketError?: string | null
+}
+
+function humanizeTitleSegment(value: string): string {
+  return value
+    .replace(/\.[^.]+$/, '')
+    .replace(/[-_]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/\b\w/g, character => character.toUpperCase())
+}
+
+function findSubdocumentLabel(subdocuments: SubDocument[], selectedPath: string, ticketCode: string): string | null {
+  for (const subdocument of subdocuments) {
+    if (subdocument.filePath && filePathToApiPath(subdocument.filePath, ticketCode) === selectedPath) {
+      return humanizeTitleSegment(subdocument.name)
+    }
+
+    if (subdocument.children.length > 0) {
+      const childLabel = findSubdocumentLabel(subdocument.children, selectedPath, ticketCode)
+      if (childLabel) {
+        return childLabel
+      }
+    }
+  }
+
+  return null
+}
+
+function deriveTicketContextLabel(
+  subdocuments: SubDocument[],
+  selectedPath: string,
+  ticketCode: string,
+  isTraceGraphOpen: boolean,
+): string | null {
+  if (isTraceGraphOpen) {
+    return 'Trace Graph'
+  }
+
+  if (!selectedPath || selectedPath === ROOT_DOCUMENT_PATH) {
+    return null
+  }
+
+  const fallbackLabel = splitPathSegments(selectedPath).map(humanizeTitleSegment).filter(Boolean).join(' ')
+  return findSubdocumentLabel(subdocuments, selectedPath, ticketCode) ?? (fallbackLabel || null)
 }
 
 const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ticketsPath, ticketError }) => {
@@ -265,6 +311,20 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
   const tocItems = useMemo(() => {
     return subdocContent ? extractTableOfContents(subdocContent, 3) : []
   }, [subdocContent])
+
+  const ticketContextLabel = useMemo(() => {
+    if (!currentTicket) {
+      return null
+    }
+
+    return deriveTicketContextLabel(liveSubdocs, selectedPath, currentTicket.code, isTraceGraphOpen)
+  }, [currentTicket, isTraceGraphOpen, liveSubdocs, selectedPath])
+
+  const ticketPageTitle = currentTicket
+    ? formatTicketPageTitle(currentTicket.code, currentTicket.title, ticketContextLabel)
+    : null
+
+  usePageTitle(isOpen ? ticketPageTitle : null, PageTitlePriority.TICKET)
 
   if (!currentTicket && !ticketError)
     return null
