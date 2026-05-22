@@ -84,9 +84,17 @@ mock.module('./TicketDocumentTabs', () => ({
   TicketDocumentTabs: () => <div data-testid="ticket-document-tabs" />,
 }))
 
+let selectedPath = 'main'
+let liveSubdocuments: Array<{
+  name: string
+  kind: 'file' | 'folder'
+  filePath?: string
+  children: unknown[]
+}> = []
+
 mock.module('./useTicketDocumentNavigation', () => ({
   useTicketDocumentNavigation: () => ({
-    selectedPath: 'main',
+    selectedPath,
     folderStack: [],
     selectPath: mock(() => undefined),
     pendingPath: null,
@@ -96,7 +104,7 @@ mock.module('./useTicketDocumentNavigation', () => ({
 
 mock.module('./useTicketDocumentRealtime', () => ({
   useTicketDocumentRealtime: () => ({
-    subdocuments: [],
+    subdocuments: liveSubdocuments,
     handleSSEUpdate: mock(() => undefined),
   }),
 }))
@@ -155,11 +163,15 @@ describe('TicketViewer', () => {
       ticketCode: 'MDT-173',
       label: 'MDT-173/store.json',
     })
+    selectedPath = 'main'
+    liveSubdocuments = []
+    document.title = 'CR Task Board'
   })
 
   afterEach(() => {
     cleanup()
     localStorage.clear()
+    document.title = 'CR Task Board'
   })
 
   afterAll(() => {
@@ -173,6 +185,28 @@ describe('TicketViewer', () => {
     expect(markdown).toHaveClass('prose', 'prose--ticket', 'prose--density-compact', 'max-w-none', 'dark:prose-invert')
     expect(markdown).toHaveAttribute('data-header-level-start', '3')
     expect(markdown.closest('.ticket-viewer-content')).toHaveStyle('--prose-anchor-offset: 0px')
+    await waitFor(() => expect(fetchTraceStoreMetadata).toHaveBeenCalled())
+  })
+
+  it('sets the browser title from the active ticket code and title', async () => {
+    renderTicketViewer()
+
+    expect(document.title).toBe('MDT-173 - Markdown typography variants')
+    await waitFor(() => expect(fetchTraceStoreMetadata).toHaveBeenCalled())
+  })
+
+  it('appends the active ticket subdocument label to the browser title', async () => {
+    selectedPath = 'architecture'
+    liveSubdocuments = [{
+      name: 'architecture',
+      kind: 'file',
+      filePath: 'docs/CRs/MDT-173/architecture.md',
+      children: [],
+    }]
+
+    renderTicketViewer()
+
+    expect(document.title).toBe('MDT-173 - Markdown typography variants - Architecture')
     await waitFor(() => expect(fetchTraceStoreMetadata).toHaveBeenCalled())
   })
 
@@ -231,12 +265,14 @@ describe('TicketViewer', () => {
 
     expect(screen.getByTestId('ticket-detail')).toHaveAttribute('data-close-on-overlay-click', 'false')
     expect(screen.getByTestId('trace-graph-shell')).toBeInTheDocument()
+    expect(document.title).toBe('MDT-173 - Markdown typography variants - Trace Graph')
 
     fireEvent.click(screen.getByRole('button', { name: 'Back to ticket' }))
 
     expect(onClose).not.toHaveBeenCalled()
     expect(screen.queryByTestId('trace-graph-shell')).toBeNull()
     expect(screen.getByTestId('ticket-detail')).toBeInTheDocument()
+    expect(document.title).toBe('MDT-173 - Markdown typography variants')
   })
 
   it('does not carry an open trace graph to the next ticket', async () => {
