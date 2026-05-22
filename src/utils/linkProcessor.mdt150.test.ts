@@ -52,6 +52,16 @@ describe('MDT-150: linkProcessor constraint regression (C1, C2, C5)', () => {
       expect(result.ticketKey).toBe('MDT-017')
       expect(result.anchor).toBe('#section')
     })
+
+    it('classifies absolute ticket subdocument URL with anchor as DOCUMENT', () => {
+      const result = classifyLink('/prj/MDT/ticket/MDT-175/requirements.trace.md#br-13', project)
+      expect(result.type).toBe(LinkType.DOCUMENT)
+      expect(result.projectCode).toBe('MDT')
+      expect(result.ticketKey).toBe('MDT-175')
+      expect(result.documentPath).toBe('requirements.trace.md')
+      expect(result.anchor).toBe('#br-13')
+      expect(result.isValid).toBe(true)
+    })
   })
 
   // C2: External link behavior unchanged
@@ -89,6 +99,14 @@ describe('MDT-150: linkProcessor constraint regression (C1, C2, C5)', () => {
     it('classifies .md relative paths as DOCUMENT', () => {
       const result = classifyLink('architecture.md', project)
       expect(result.type).toBe(LinkType.DOCUMENT)
+      expect(result.isValid).toBe(true)
+    })
+
+    it('classifies .md relative paths with anchors as DOCUMENT', () => {
+      const result = classifyLink('requirements.trace.md#br-13', project)
+      expect(result.type).toBe(LinkType.DOCUMENT)
+      expect(result.documentPath).toBe('requirements.trace.md')
+      expect(result.anchor).toBe('#br-13')
       expect(result.isValid).toBe(true)
     })
 
