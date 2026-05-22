@@ -31,7 +31,9 @@ REST API for Markdown Ticket - an AI-powered Kanban board where tickets are mark
 - **Git integration**: Version control for all ticket changes
 
 ## Authentication
-Currently, the API does not require authentication. Future versions may add API key or OAuth support.
+Protected backend API routes require an admin token when API authentication is enabled.
+Send either \`Authorization: Bearer <token>\` or \`X-API-Key: <token>\`.
+\`GET /api/status\` and \`GET /api/health\` are public health/status endpoints.
 
 ## Error Handling
 All endpoints return consistent error responses with \`error\` and \`message\` fields.
