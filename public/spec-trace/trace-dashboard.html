@@ -960,6 +960,7 @@
     const ACCESS_TOKEN = dashboardParams.get('token') || '';
     const PROJECT_CODE = dashboardParams.get('project') || '';
     const TICKET_CODE = dashboardParams.get('ticket') || '';
+    const IS_EMBEDDED = dashboardParams.get('embedded') === '1';
     const DEFAULT_STORE_URL = PROJECT_CODE && TICKET_CODE
       ? `/api/projects/${encodeURIComponent(PROJECT_CODE)}/crs/${encodeURIComponent(TICKET_CODE)}/trace-store`
       : './store.json';
@@ -1053,6 +1054,14 @@
 
     elements.asideToggle.addEventListener('click', toggleAside);
     elements.asideEdgeToggle.addEventListener('click', toggleAside);
+
+    document.addEventListener('keydown', (event) => {
+      if (!IS_EMBEDDED || event.key !== 'Escape')
+        return;
+
+      event.preventDefault();
+      window.parent.postMessage({ type: 'spec-trace:close' }, window.location.origin);
+    });
 
     window.addEventListener('resize', () => {
       if (state.graph) {

@@ -36,7 +36,7 @@ describe('TraceGraphShell', () => {
     )
 
     const iframe = screen.getByTitle('MDT-174 Trace Graph')
-    expect(iframe).toHaveAttribute('src', '/spec-trace/trace-dashboard.html?project=MDT&ticket=MDT-174')
+    expect(iframe).toHaveAttribute('src', '/spec-trace/trace-dashboard.html?embedded=1&project=MDT&ticket=MDT-174')
     expect(iframe.getAttribute('src')).not.toContain('docs/CRs')
     expect(iframe.getAttribute('src')).not.toContain('store.json')
   })
@@ -73,5 +73,45 @@ describe('TraceGraphShell', () => {
 
     expect(screen.getByRole('heading', { name: 'Trace store unavailable' })).toBeInTheDocument()
     expect(screen.queryByTitle('MDT-174 Trace Graph')).toBeNull()
+  })
+
+  it('closes when the embedded dashboard requests close', () => {
+    const onClose = mock()
+
+    render(
+      <TraceGraphShell
+        isOpen={true}
+        projectCode="MDT"
+        ticketCode="MDT-174"
+        onClose={onClose}
+      />,
+    )
+
+    window.dispatchEvent(new MessageEvent('message', {
+      data: { type: 'spec-trace:close' },
+      origin: window.location.origin,
+    }))
+
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
+  it('ignores close messages from another origin', () => {
+    const onClose = mock()
+
+    render(
+      <TraceGraphShell
+        isOpen={true}
+        projectCode="MDT"
+        ticketCode="MDT-174"
+        onClose={onClose}
+      />,
+    )
+
+    window.dispatchEvent(new MessageEvent('message', {
+      data: { type: 'spec-trace:close' },
+      origin: 'https://example.com',
+    }))
+
+    expect(onClose).not.toHaveBeenCalled()
   })
 })

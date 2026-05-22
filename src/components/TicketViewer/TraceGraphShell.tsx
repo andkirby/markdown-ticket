@@ -1,5 +1,5 @@
 import { AlertTriangle, ArrowLeft } from 'lucide-react'
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { Modal, ModalBody } from '../ui/Modal'
 
 interface TraceGraphShellProps {
@@ -19,12 +19,30 @@ export function TraceGraphShell({
 }: TraceGraphShellProps) {
   const iframeSrc = useMemo(() => {
     const params = new URLSearchParams({
+      embedded: '1',
       project: projectCode,
       ticket: ticketCode,
     })
 
     return `/spec-trace/trace-dashboard.html?${params.toString()}`
   }, [projectCode, ticketCode])
+
+  useEffect(() => {
+    if (!isOpen)
+      return
+
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin)
+        return
+      if (event.data?.type !== 'spec-trace:close')
+        return
+
+      onClose()
+    }
+
+    window.addEventListener('message', handleMessage)
+    return () => window.removeEventListener('message', handleMessage)
+  }, [isOpen, onClose])
 
   return (
     <Modal
