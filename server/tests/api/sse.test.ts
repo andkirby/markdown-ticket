@@ -51,7 +51,7 @@ describe('sSE Endpoint - /api/events', () => {
       req.on('response', (res: SupertestResponse) => {
         assertSSEConnection(res)
         expect(res.status).toBe(200)
-        expect(res.headers['access-control-allow-origin']).toBe('*')
+        expect(res.headers['access-control-allow-origin']).toBeUndefined()
         setTimeout(() => {
           try {
             req.abort()
