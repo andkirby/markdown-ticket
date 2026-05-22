@@ -1712,7 +1712,7 @@
         node.stage,
         node.type,
         node.sourceRef,
-        JSON.stringify(node.raw || {}),
+        ...(node.tags || []),
       ].join(' ').toLowerCase();
     }
 
