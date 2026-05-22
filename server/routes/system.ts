@@ -129,14 +129,17 @@ export function createSystemRouter(
    *                 timestamp: { type: string, format: date-time }
    *                 sseClients: { type: integer }
    */
-  router.get('/status', (req: Request, res: Response) => {
+  router.get('/status', (_req: Request, res: Response) => {
     res.json({
       status: 'ok',
       message: 'Ticket board server is running',
-      tasksDir: process.env.TICKETS_DIR || './sample-tasks',
       timestamp: new Date().toISOString(),
       sseClients: fileWatcher.getClientCount(),
     })
+  })
+
+  router.get('/health', (_req: Request, res: Response) => {
+    res.json({ status: 'ok' })
   })
 
   /**

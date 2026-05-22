@@ -25,6 +25,7 @@ import { createDocumentRouter } from '../../routes/documents'
 import { createProjectRouter } from '../../routes/projects'
 import { createSSERouter } from '../../routes/sse'
 import { createSystemRouter } from '../../routes/system'
+import { createApiAuthMiddleware } from '../../security/apiAuth'
 import { createCorsOptions, createDefaultOriginPolicy, securityHeaders } from '../../security/originPolicy'
 import { DocumentService } from '../../services/DocumentService'
 import FileWatcherService from '../../services/fileWatcher/index.js'
@@ -174,6 +175,9 @@ export function createTestApp(): TestAppResult {
   const documentController = new DocumentController(documentService)
 
   // Register Routes
+  // Mirror production: auth is after generic middleware and before protected /api routers.
+  app.use('/api', createApiAuthMiddleware())
+
   app.use('/api/projects', createProjectRouter(projectController))
   app.use('/api/documents', createDocumentRouter(documentController, projectController))
   app.use('/api/events', createSSERouter(fileWatcher, originPolicy))

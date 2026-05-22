@@ -7,13 +7,16 @@ import { createAuthMiddleware } from '../src/transports/middleware'
 import { RateLimitManager } from '../src/utils/rateLimitManager'
 
 describe('MCP auth session rate-limit hardening', () => {
-  it('auth middleware accepts only matching bearer token', async () => {
+  it('auth middleware accepts only matching bearer token and rejects missing, malformed, different-length, and equal-length invalid tokens', async () => {
     const app = express()
     app.use(createAuthMiddleware('expected-token'))
     app.get('/protected', (_req, res) => res.json({ ok: true }))
 
     expect((await request(app).get('/protected').set('Authorization', 'Bearer expected-token')).status).toBe(200)
-    expect((await request(app).get('/protected').set('Authorization', 'Bearer wrong-token')).status).toBe(401)
+    expect((await request(app).get('/protected')).status).toBe(401)
+    expect((await request(app).get('/protected').set('Authorization', 'Basic expected-token')).status).toBe(401)
+    expect((await request(app).get('/protected').set('Authorization', 'Bearer short')).status).toBe(401)
+    expect((await request(app).get('/protected').set('Authorization', 'Bearer wronged-token')).status).toBe(401)
   })
 
   it('rate limits by caller plus tool instead of tool alone', () => {

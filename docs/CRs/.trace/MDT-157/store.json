@@ -1,0 +1,813 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-157"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "WHEN a request targets a protected backend API route without a credential, the system shall reject the request with HTTP 401 and a generic authentication error.",
+      "sourceRef": "docs/CRs/MDT-157-api-auth.md#acceptance-criteria-functional",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "WHEN a request targets a protected backend API route with a valid admin token, the system shall process the request according to the existing route contract.",
+      "sourceRef": "docs/CRs/MDT-157-api-auth.md#acceptance-criteria-functional",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.3",
+      "kind": "behavior",
+      "text": "WHEN a request targets GET /api/projects without a credential before public sharing is implemented, the system shall reject the request with HTTP 401.",
+      "sourceRef": "docs/CRs/MDT-157-api-auth.md#end-state-alignment",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.4",
+      "kind": "behavior",
+      "text": "WHEN a request targets POST /api/projects/:id/crs without a credential, the system shall reject the request with HTTP 401.",
+      "sourceRef": "docs/CRs/MDT-157-api-auth.md#acceptance-criteria-functional",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.5",
+      "kind": "behavior",
+      "text": "WHEN a request targets GET /api/status or GET /api/health without a credential, the system shall return the health or status response without authentication.",
+      "sourceRef": "docs/CRs/MDT-157-api-auth.md#acceptance-criteria-functional",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.6",
+      "kind": "behavior",
+      "text": "WHEN backend API authentication configuration is absent in local development or test mode, the system shall preserve the existing no-auth request behavior.",
+      "sourceRef": "docs/CRs/MDT-157-api-auth.md#desired-outcome",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.7",
+      "kind": "behavior",
+      "text": "WHEN a curl or server-to-server request has no Origin header, the system shall authenticate the request using the same credential rules as any other request.",
+      "sourceRef": "docs/CRs/MDT-157-api-auth.md#edge-cases",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-2.1",
+      "kind": "behavior",
+      "text": "WHEN MCP stdio transport starts without auth configuration, the system shall preserve existing stdio operation without requiring HTTP authentication settings.",
+      "sourceRef": "docs/CRs/MDT-157-api-auth.md#acceptance-criteria-functional",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-2.2",
+      "kind": "behavior",
+      "text": "WHEN MCP HTTP transport receives a request without a valid bearer token while HTTP auth is enabled, the system shall reject the request with HTTP 401.",
+      "sourceRef": "docs/CRs/MDT-157-api-auth.md#affected-areas",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-2.3",
+      "kind": "behavior",
+      "text": "WHEN MCP HTTP production Docker configuration enables HTTP transport, the system shall require bearer authentication by default when MCP_AUTH_TOKEN is configured.",
+      "sourceRef": "docs/CRs/MDT-157/assess.md#mcp-http-auth-configuration",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-2.4",
+      "kind": "behavior",
+      "text": "WHEN an existing deployment starts without auth environment variables, the system shall continue functioning and emit an observable migration warning.",
+      "sourceRef": "docs/CRs/MDT-157-api-auth.md#edge-cases",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "The system shall compare backend API tokens and MCP bearer tokens using length-checked timing-safe comparison.",
+      "sourceRef": "docs/CRs/MDT-157/assess.md#token-comparison-utility",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "The system shall add less than 5ms median latency per authenticated backend API request under the project test harness.",
+      "sourceRef": "docs/CRs/MDT-157-api-auth.md#non-functional",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "The system shall keep authentication enforcement centralized so protected backend API route coverage can be verified without per-controller drift.",
+      "sourceRef": "docs/CRs/MDT-157/assess.md#backend-express-request-pipeline",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "The system shall not rely on Origin, Referer, or reverse-proxy identity headers as authentication credentials.",
+      "sourceRef": "docs/CRs/MDT-157/assess.md#reverse-proxy-auth-header-handling",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C5",
+      "kind": "constraint",
+      "text": "The system shall accept admin credentials from Authorization Bearer tokens and X-API-Key headers without logging raw credential values.",
+      "sourceRef": "docs/architecture/auth-and-sharing-architecture.md#token-model",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C6",
+      "kind": "constraint",
+      "text": "The system shall keep MDT-157 limited to authentication and shall not add public sharing, project visibility filtering, read-only policy, RBAC, TLS termination, or token rotation behavior.",
+      "sourceRef": "docs/CRs/MDT-157-api-auth.md#scope",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C7",
+      "kind": "constraint",
+      "text": "The system shall expose unauthenticated health/status endpoints without exposing project metadata, filesystem paths, or credential configuration values.",
+      "sourceRef": "docs/architecture/auth-and-sharing-architecture.md#error-semantics",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "IF a supplied token is empty, malformed, or a different byte length from the configured token, THEN the system shall reject it without raw token logging.",
+      "sourceRef": "docs/CRs/MDT-157/assess.md#token-comparison-utility",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-2",
+      "kind": "edge_case",
+      "text": "IF MCP HTTP auth is explicitly enabled without a configured MCP_AUTH_TOKEN, THEN the system shall fail startup or configuration validation with a generic missing-token error.",
+      "sourceRef": "docs/CRs/MDT-157/assess.md#verification-gaps",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-3",
+      "kind": "edge_case",
+      "text": "IF a reverse proxy does not forward Authorization or X-API-Key headers, THEN protected requests shall fail closed with HTTP 401 rather than bypassing authentication.",
+      "sourceRef": "docs/CRs/MDT-157/assess.md#reverse-proxy-auth-header-handling",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C8",
+      "kind": "constraint",
+      "text": "The system shall preserve all existing test behavior outside auth-enabled test contexts, and the existing test suite shall pass after MDT-157 changes.",
+      "sourceRef": "docs/CRs/MDT-157-api-auth.md#acceptance-criteria-non-regression",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C9",
+      "kind": "constraint",
+      "text": "The system shall document the no-auth migration path for existing deployments, including auth environment variables, production Docker behavior, and the meaning of migration warnings.",
+      "sourceRef": "docs/CRs/MDT-157-api-auth.md#migration",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-4",
+      "kind": "edge_case",
+      "text": "IF nginx or a reverse proxy forwards Authorization or X-API-Key headers unchanged, THEN protected backend requests with valid credentials shall authenticate successfully.",
+      "sourceRef": "docs/CRs/MDT-157/assess.md#reverse-proxy-auth-header-handling",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "backend_protected_requests_require_credentials",
+      "title": "Protected backend API routes reject anonymous requests",
+      "covers": [
+        "BR-1.1",
+        "BR-1.3",
+        "BR-1.4"
+      ],
+      "given": "backend API authentication is enabled",
+      "when": "I request GET /api/projects or POST /api/projects/:id/crs without a credential",
+      "then": "I receive HTTP 401 with a generic authentication error and no protected route data",
+      "sourceRef": "requirements.trace.md#BR-1.1"
+    },
+    {
+      "id": "backend_admin_token_allows_existing_route_behavior",
+      "title": "Valid backend admin credentials allow protected API use",
+      "covers": [
+        "BR-1.2"
+      ],
+      "given": "backend API authentication is enabled and I have the configured admin token",
+      "when": "I call a protected backend API route with the admin token",
+      "then": "the route responds according to its existing authenticated request contract",
+      "sourceRef": "requirements.trace.md#BR-1.2"
+    },
+    {
+      "id": "backend_health_endpoints_remain_public",
+      "title": "Health and status endpoints stay unauthenticated",
+      "covers": [
+        "BR-1.5"
+      ],
+      "given": "backend API authentication is enabled",
+      "when": "I request GET /api/status or GET /api/health without a credential",
+      "then": "I receive the health or status response without an authentication challenge",
+      "sourceRef": "requirements.trace.md#BR-1.5"
+    },
+    {
+      "id": "backend_no_auth_config_preserves_local_behavior",
+      "title": "Missing local/test auth configuration preserves no-auth behavior",
+      "covers": [
+        "BR-1.6"
+      ],
+      "given": "the backend is running in local development or test mode without authentication configuration",
+      "when": "I call an existing backend API route without a credential",
+      "then": "I receive the same response that route provided before MDT-157 authentication was enabled",
+      "sourceRef": "requirements.trace.md#BR-1.6"
+    },
+    {
+      "id": "backend_no_origin_uses_token_rules",
+      "title": "No-Origin API clients follow the same token rules",
+      "covers": [
+        "BR-1.7"
+      ],
+      "given": "backend API authentication is enabled",
+      "when": "a curl or server-to-server client sends protected backend API requests with no Origin header",
+      "then": "requests without a valid credential are rejected and requests with a valid admin token are processed normally",
+      "sourceRef": "requirements.trace.md#BR-1.7"
+    },
+    {
+      "id": "mcp_stdio_ignores_http_auth_settings",
+      "title": "MCP stdio startup remains independent of HTTP auth",
+      "covers": [
+        "BR-2.1"
+      ],
+      "given": "MCP is started in stdio transport mode without authentication configuration",
+      "when": "the stdio transport starts",
+      "then": "existing stdio operation is available without requiring HTTP authentication settings",
+      "sourceRef": "requirements.trace.md#BR-2.1"
+    },
+    {
+      "id": "mcp_http_rejects_missing_or_invalid_bearer",
+      "title": "MCP HTTP rejects requests without a valid bearer token",
+      "covers": [
+        "BR-2.2"
+      ],
+      "given": "MCP HTTP authentication is enabled",
+      "when": "I send an MCP HTTP request without a bearer token or with an invalid bearer token",
+      "then": "I receive HTTP 401 and the MCP tool request is not processed",
+      "sourceRef": "requirements.trace.md#BR-2.2"
+    },
+    {
+      "id": "mcp_http_accepts_production_bearer_default",
+      "title": "Production Docker MCP HTTP requires bearer auth when a token is configured",
+      "covers": [
+        "BR-2.3"
+      ],
+      "given": "production Docker configuration enables MCP HTTP transport and MCP_AUTH_TOKEN is configured",
+      "when": "I start the production Docker MCP HTTP service",
+      "then": "bearer authentication is required by default for MCP HTTP requests",
+      "sourceRef": "requirements.trace.md#BR-2.3"
+    },
+    {
+      "id": "mcp_existing_deployment_migration_warning",
+      "title": "Existing no-auth deployments continue with migration warning",
+      "covers": [
+        "BR-2.4"
+      ],
+      "given": "an existing deployment starts without authentication environment variables",
+      "when": "the backend or MCP HTTP deployment starts",
+      "then": "it continues functioning and emits an observable migration warning with next-step guidance",
+      "sourceRef": "requirements.trace.md#BR-2.4"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-backend-local-test-compat",
+      "title": "Missing backend auth config in local development or test preserves existing no-auth behavior while non-local no-auth startup emits migration guidance",
+      "derivedFrom": [
+        "BR-1.6",
+        "BR-2.4",
+        "C8",
+        "C9"
+      ],
+      "artifactIds": [
+        "ART-server-api-auth",
+        "ART-server-bootstrap",
+        "ART-server-test-app-factory",
+        "ART-server-api-auth-tests",
+        "ART-docker-guide",
+        "ART-docker-reference"
+      ],
+      "sourceRef": "architecture.md#health-status-and-migration-contract"
+    },
+    {
+      "id": "OBL-backend-token-contract",
+      "title": "Backend admin credentials are parsed only from Authorization Bearer or X-API-Key and compared with length-checked timing-safe comparison without raw-token logging",
+      "derivedFrom": [
+        "BR-1.2",
+        "BR-1.7",
+        "C1",
+        "C4",
+        "C5",
+        "Edge-1"
+      ],
+      "artifactIds": [
+        "ART-server-api-auth",
+        "ART-server-auth-unit-tests",
+        "ART-server-api-auth-tests"
+      ],
+      "sourceRef": "architecture.md#backend-credential-contract"
+    },
+    {
+      "id": "OBL-backend-origin-proxy-contract",
+      "title": "Origin and reverse-proxy identity headers are never credentials; missing forwarded credential headers fail closed and forwarded Authorization or X-API-Key headers authenticate normally",
+      "derivedFrom": [
+        "BR-1.7",
+        "C4",
+        "Edge-3",
+        "Edge-4"
+      ],
+      "artifactIds": [
+        "ART-server-api-auth",
+        "ART-nginx-config",
+        "ART-server-api-auth-tests",
+        "ART-docker-guide"
+      ],
+      "sourceRef": "architecture.md#reverse-proxy-contract"
+    },
+    {
+      "id": "OBL-mcp-http-auth-regression",
+      "title": "MCP HTTP rejects missing or invalid bearer credentials when auth is enabled and keeps timing-safe token comparison and env validation locked by regression tests",
+      "derivedFrom": [
+        "BR-2.2",
+        "C1",
+        "Edge-1",
+        "Edge-2"
+      ],
+      "artifactIds": [
+        "ART-mcp-auth-middleware",
+        "ART-mcp-http-security",
+        "ART-mcp-http-transport",
+        "ART-mcp-http-auth-tests",
+        "ART-mcp-http-security-tests"
+      ],
+      "sourceRef": "architecture.md#mcp-http-auth-and-production-defaults"
+    },
+    {
+      "id": "OBL-backend-central-auth-gate",
+      "title": "Backend REST authentication is enforced once at the /api pipeline before protected routers, with health/status exemption classification before auth-disabled or credential decisions",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "C3",
+        "C6"
+      ],
+      "artifactIds": [
+        "ART-server-api-auth",
+        "ART-server-bootstrap",
+        "ART-server-test-app-factory",
+        "ART-server-api-auth-tests"
+      ],
+      "sourceRef": "architecture.md#backend-api-authentication-boundary"
+    },
+    {
+      "id": "OBL-backend-health-status-exemption",
+      "title": "GET /api/status and GET /api/health always next() before auth decisions and expose only minimal health data",
+      "derivedFrom": [
+        "BR-1.5",
+        "C7"
+      ],
+      "artifactIds": [
+        "ART-server-api-auth",
+        "ART-server-system-router",
+        "ART-docker-compose-base",
+        "ART-server-api-auth-tests"
+      ],
+      "sourceRef": "architecture.md#backend-api-authentication-boundary"
+    },
+    {
+      "id": "OBL-auth-performance-and-regression-tests",
+      "title": "Auth-enabled tests import the production-equivalent API test app factory, isolate configuration, preserve existing no-auth suites, and verify middleware overhead stays below 5ms median per request",
+      "derivedFrom": [
+        "C2",
+        "C8"
+      ],
+      "artifactIds": [
+        "ART-server-api-auth",
+        "ART-server-api-auth-tests",
+        "ART-server-auth-unit-tests",
+        "ART-mcp-http-auth-tests",
+        "ART-mcp-http-security-tests"
+      ],
+      "sourceRef": "architecture.md#runtime-vs-test-scaffolding"
+    },
+    {
+      "id": "OBL-mcp-production-docker-auth-default",
+      "title": "Production Docker MCP HTTP defaults MCP_SECURITY_AUTH to true, fails clearly without MCP_AUTH_TOKEN, and preserves legacy no-auth migration warnings outside that default path",
+      "derivedFrom": [
+        "BR-2.3",
+        "BR-2.4",
+        "C9",
+        "Edge-2"
+      ],
+      "artifactIds": [
+        "ART-docker-compose-prod",
+        "ART-mcp-http-security",
+        "ART-mcp-entrypoint",
+        "ART-mcp-transport-selection",
+        "ART-docker-guide",
+        "ART-docker-reference",
+        "ART-mcp-guide",
+        "ART-mcp-http-security-tests"
+      ],
+      "sourceRef": "architecture.md#mcp-http-auth-and-production-defaults"
+    },
+    {
+      "id": "OBL-mcp-stdio-http-separation",
+      "title": "MCP stdio remains independent of HTTP auth settings and continues without auth configuration",
+      "derivedFrom": [
+        "BR-2.1",
+        "C8"
+      ],
+      "artifactIds": [
+        "ART-mcp-entrypoint",
+        "ART-mcp-transport-selection",
+        "ART-mcp-http-security",
+        "ART-mcp-http-security-tests"
+      ],
+      "sourceRef": "architecture.md#mcp-http-auth-and-production-defaults"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-server-api-auth",
+      "path": "server/security/apiAuth.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#backend-api-authentication-boundary"
+    },
+    {
+      "id": "ART-server-bootstrap",
+      "path": "server/server.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#backend-api-authentication-boundary"
+    },
+    {
+      "id": "ART-server-test-app-factory",
+      "path": "server/tests/api/test-app-factory.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md#runtime-vs-test-scaffolding"
+    },
+    {
+      "id": "ART-server-system-router",
+      "path": "server/routes/system.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#health-status-and-migration-contract"
+    },
+    {
+      "id": "ART-server-api-auth-tests",
+      "path": "server/tests/api/api-auth.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md#runtime-vs-test-scaffolding"
+    },
+    {
+      "id": "ART-server-auth-unit-tests",
+      "path": "server/tests/security/apiAuth.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md#runtime-vs-test-scaffolding"
+    },
+    {
+      "id": "ART-mcp-http-security",
+      "path": "mcp-server/src/transports/httpSecurity.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#mcp-http-auth-and-production-defaults"
+    },
+    {
+      "id": "ART-mcp-auth-middleware",
+      "path": "mcp-server/src/transports/middleware.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#mcp-http-auth-and-production-defaults"
+    },
+    {
+      "id": "ART-mcp-http-transport",
+      "path": "mcp-server/src/transports/http.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#mcp-http-auth-and-production-defaults"
+    },
+    {
+      "id": "ART-mcp-entrypoint",
+      "path": "mcp-server/src/index.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#mcp-http-auth-and-production-defaults"
+    },
+    {
+      "id": "ART-mcp-http-auth-tests",
+      "path": "mcp-server/tests/http-auth-session-rate-limit.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md#runtime-vs-test-scaffolding"
+    },
+    {
+      "id": "ART-mcp-http-security-tests",
+      "path": "mcp-server/tests/http-security-config.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md#runtime-vs-test-scaffolding"
+    },
+    {
+      "id": "ART-docker-compose-prod",
+      "path": "docker-compose.prod.yml",
+      "kind": "config",
+      "sourceRef": "architecture.md#mcp-http-auth-and-production-defaults"
+    },
+    {
+      "id": "ART-docker-compose-base",
+      "path": "docker-compose.yml",
+      "kind": "config",
+      "sourceRef": "architecture.md#health-status-and-migration-contract"
+    },
+    {
+      "id": "ART-nginx-config",
+      "path": "nginx.conf",
+      "kind": "config",
+      "sourceRef": "architecture.md#reverse-proxy-contract"
+    },
+    {
+      "id": "ART-docker-guide",
+      "path": "docs/DOCKER_GUIDE.md",
+      "kind": "doc",
+      "sourceRef": "architecture.md#health-status-and-migration-contract"
+    },
+    {
+      "id": "ART-docker-reference",
+      "path": "docs/DOCKER_REFERENCE.md",
+      "kind": "doc",
+      "sourceRef": "architecture.md#health-status-and-migration-contract"
+    },
+    {
+      "id": "ART-mcp-guide",
+      "path": "docs/MCP_SERVER_GUIDE.md",
+      "kind": "doc",
+      "sourceRef": "architecture.md#mcp-http-auth-and-production-defaults"
+    },
+    {
+      "id": "ART-mcp-transport-selection",
+      "path": "mcp-server/src/transports/transportSelection.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#mcp-http-auth-and-production-defaults"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-backend-api-auth-unit",
+      "kind": "unit",
+      "title": "Backend API auth config, credential parsing, route exemption, and timing-safe comparison",
+      "covers": [
+        "C1",
+        "C4",
+        "C5",
+        "C6",
+        "C7",
+        "Edge-1",
+        "OBL-backend-token-contract",
+        "OBL-backend-health-status-exemption"
+      ],
+      "file": "server/tests/security/apiAuth.test.ts",
+      "sourceRef": "tests.md#backend-api-auth-unit"
+    },
+    {
+      "id": "TEST-mcp-http-auth-regression",
+      "kind": "unit",
+      "title": "MCP HTTP bearer auth rejects missing, malformed, different-length, and equal-length invalid tokens",
+      "covers": [
+        "BR-2.2",
+        "C1",
+        "Edge-1",
+        "OBL-mcp-http-auth-regression"
+      ],
+      "file": "mcp-server/tests/http-auth-session-rate-limit.test.ts",
+      "sourceRef": "tests.md#mcp-http-auth-regression"
+    },
+    {
+      "id": "TEST-existing-suite-preservation",
+      "kind": "integration",
+      "title": "Existing server, MCP, frontend, and E2E suites remain green outside auth-enabled contexts",
+      "covers": [
+        "C8",
+        "OBL-auth-performance-and-regression-tests"
+      ],
+      "file": "docs/CRs/MDT-157/tests.md",
+      "sourceRef": "tests.md#existing-suite-preservation"
+    },
+    {
+      "id": "TEST-backend-api-auth-contract",
+      "kind": "integration",
+      "title": "Backend protected route auth, migration warning, health bypass, no-Origin, proxy header, latency, and local no-auth contract",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.5",
+        "BR-1.6",
+        "BR-1.7",
+        "BR-2.4",
+        "C2",
+        "C3",
+        "C4",
+        "C5",
+        "C7",
+        "C8",
+        "Edge-3",
+        "Edge-4",
+        "OBL-backend-central-auth-gate",
+        "OBL-backend-local-test-compat",
+        "OBL-backend-origin-proxy-contract",
+        "OBL-auth-performance-and-regression-tests"
+      ],
+      "file": "server/tests/api/api-auth.test.ts",
+      "sourceRef": "CR:MDT-157"
+    },
+    {
+      "id": "TEST-mcp-http-security-config",
+      "kind": "unit",
+      "title": "MCP HTTP env parsing, stdio transport selection, legacy no-auth warning, production Docker auth default, and missing token failure",
+      "covers": [
+        "BR-2.1",
+        "BR-2.3",
+        "BR-2.4",
+        "C8",
+        "C9",
+        "Edge-2",
+        "OBL-mcp-stdio-http-separation",
+        "OBL-mcp-production-docker-auth-default",
+        "OBL-mcp-http-auth-regression"
+      ],
+      "file": "mcp-server/tests/http-security-config.test.ts",
+      "sourceRef": "CR:MDT-157"
+    },
+    {
+      "id": "TEST-api-auth-migration-docs",
+      "kind": "integration",
+      "title": "Backend and MCP auth migration warning docs plus nginx credential header forwarding contract",
+      "covers": [
+        "BR-2.4",
+        "C4",
+        "C9",
+        "Edge-3",
+        "Edge-4",
+        "OBL-backend-origin-proxy-contract",
+        "OBL-backend-local-test-compat",
+        "OBL-mcp-production-docker-auth-default"
+      ],
+      "file": "docs/tests/api-auth-docs.test.ts",
+      "sourceRef": "CR:MDT-157"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-0",
+      "title": "Implement backend API auth module and unit contract",
+      "ownsArtifactIds": [
+        "ART-server-api-auth",
+        "ART-server-auth-unit-tests"
+      ],
+      "makesGreenIds": [
+        "TEST-backend-api-auth-unit"
+      ],
+      "sourceRef": "tasks.md#task-0"
+    },
+    {
+      "id": "TASK-1",
+      "title": "Wire backend auth middleware, health exemptions, and API contract tests",
+      "ownsArtifactIds": [
+        "ART-server-bootstrap",
+        "ART-server-system-router",
+        "ART-server-test-app-factory",
+        "ART-server-api-auth-tests",
+        "ART-docker-compose-base"
+      ],
+      "makesGreenIds": [
+        "backend_protected_requests_require_credentials",
+        "backend_admin_token_allows_existing_route_behavior",
+        "backend_health_endpoints_remain_public",
+        "backend_no_auth_config_preserves_local_behavior",
+        "backend_no_origin_uses_token_rules",
+        "TEST-backend-api-auth-contract"
+      ],
+      "sourceRef": "tasks.md#task-1"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Set production Docker auth defaults and migration/proxy docs",
+      "ownsArtifactIds": [
+        "ART-docker-compose-prod",
+        "ART-nginx-config",
+        "ART-docker-guide",
+        "ART-docker-reference",
+        "ART-mcp-guide"
+      ],
+      "makesGreenIds": [
+        "mcp_http_accepts_production_bearer_default",
+        "mcp_existing_deployment_migration_warning",
+        "TEST-api-auth-migration-docs"
+      ],
+      "sourceRef": "tasks.md#task-3"
+    },
+    {
+      "id": "TASK-4",
+      "title": "Run latency and existing suite preservation gates",
+      "makesGreenIds": [
+        "TEST-existing-suite-preservation"
+      ],
+      "sourceRef": "tasks.md#task-4"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Harden MCP HTTP auth regression and stdio selection seams",
+      "ownsArtifactIds": [
+        "ART-mcp-auth-middleware",
+        "ART-mcp-http-security",
+        "ART-mcp-http-transport",
+        "ART-mcp-transport-selection",
+        "ART-mcp-entrypoint",
+        "ART-mcp-http-auth-tests",
+        "ART-mcp-http-security-tests"
+      ],
+      "makesGreenIds": [
+        "mcp_stdio_ignores_http_auth_settings",
+        "mcp_http_rejects_missing_or_invalid_bearer",
+        "TEST-mcp-http-auth-regression",
+        "TEST-mcp-http-security-config"
+      ],
+      "sourceRef": "tasks.md#task-2"
+    }
+  ]
+}

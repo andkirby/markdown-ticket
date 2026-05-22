@@ -12,11 +12,16 @@ export interface HttpTransportSecurityConfig {
   rateLimitWindowMs?: number
   enableAuth?: boolean
   authToken?: string
+  authMigrationWarningRequired?: boolean
   sessionTimeoutMs?: number
 }
 
+const MCP_HTTP_NO_AUTH_MIGRATION_WARNING = 'MCP HTTP transport is running without bearer authentication. Set MCP_SECURITY_AUTH=true and MCP_AUTH_TOKEN before exposing /mcp; existing no-auth HTTP mode is a migration compatibility path.'
+
 export function parseHttpTransportConfig(env: NodeJS.ProcessEnv): HttpTransportSecurityConfig {
   const nodeEnv = env.NODE_ENV || 'development'
+  const httpEnabled = env.MCP_HTTP_ENABLED === 'true' || env.HTTP_ENABLED === 'true'
+  const authEnabled = env.MCP_SECURITY_AUTH === 'true'
   const originValidationEnabled = env.MCP_SECURITY_ORIGIN_VALIDATION === undefined
     ? nodeEnv === 'production'
     : env.MCP_SECURITY_ORIGIN_VALIDATION === 'true'
@@ -29,8 +34,14 @@ export function parseHttpTransportConfig(env: NodeJS.ProcessEnv): HttpTransportS
     throw new Error('MCP_SECURITY_ORIGIN_VALIDATION=true requires MCP_ALLOWED_ORIGINS')
   }
 
-  if (env.MCP_SECURITY_AUTH === 'true' && !env.MCP_AUTH_TOKEN?.trim()) {
+  if (authEnabled && !env.MCP_AUTH_TOKEN?.trim()) {
     throw new Error('MCP_SECURITY_AUTH=true requires MCP_AUTH_TOKEN')
+  }
+
+  const authMigrationWarningRequired = httpEnabled && nodeEnv === 'production' && !authEnabled
+
+  if (authMigrationWarningRequired) {
+    console.warn(MCP_HTTP_NO_AUTH_MIGRATION_WARNING)
   }
 
   return {
@@ -44,8 +55,9 @@ export function parseHttpTransportConfig(env: NodeJS.ProcessEnv): HttpTransportS
       : env.MCP_SECURITY_RATE_LIMITING !== 'false',
     rateLimitMax: Number.parseInt(env.MCP_RATE_LIMIT_MAX || '100', 10),
     rateLimitWindowMs: Number.parseInt(env.MCP_RATE_LIMIT_WINDOW_MS || '60000', 10),
-    enableAuth: env.MCP_SECURITY_AUTH === 'true',
+    enableAuth: authEnabled,
     authToken: env.MCP_AUTH_TOKEN,
+    authMigrationWarningRequired,
   }
 }
 
