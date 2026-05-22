@@ -1,3 +1,4 @@
+import type { CRStatus } from '@mdt/shared/models/Types.js'
 import type { AttrOperation } from '@mdt/shared/services/ticket/types.js'
 /**
  * CLI Ticket Attr Command (MDT-143)
@@ -7,12 +8,13 @@ import type { AttrOperation } from '@mdt/shared/services/ticket/types.js'
  */
 
 import type { AttrUpdateResult } from '../output/formatter.js'
-import process from 'node:process'
+import type { StructuredOutputOptions } from '../output/structured.js'
 import { ProjectService } from '@mdt/shared/services/ProjectService.js'
 import { ServiceError } from '@mdt/shared/services/ServiceError.js'
 import { TicketService } from '@mdt/shared/services/TicketService.js'
 import { KeyNormalizationError, normalizeKey } from '@mdt/shared/utils/keyNormalizer.js'
 import { formatTicketAttrPipe } from '../output/formatter.js'
+import { CliCommandError, formatAttrChangesForStructured, getOutputFormat, writeStructuredSuccess } from '../output/structured.js'
 import { PRIORITY_TOKENS, STATUS_ALIASES } from '../utils/aliases.js'
 
 /**
@@ -196,10 +198,16 @@ function normalizeFieldValue(field: string, value: string): string | string[] {
  * @param attrTokens - Array of attribute tokens to update
  * @throws Process.exit(1) on error
  */
-export async function ticketAttrAction(key: string, attrTokens: string[]): Promise<void> {
+export async function ticketAttrAction(
+  key: string,
+  attrTokens: string[],
+  options: StructuredOutputOptions = {},
+): Promise<void> {
   if (!attrTokens || attrTokens.length === 0) {
-    console.error('Error: No attributes specified. Usage: mdt-cli ticket attr <ticket> <field>=<value> ...')
-    process.exit(1)
+    throw new CliCommandError(
+      'MISSING_ATTRIBUTES',
+      'No attributes specified. Usage: mdt-cli ticket attr <ticket> <field>=<value> ...',
+    )
   }
 
   const projectService = new ProjectService(true) // quiet=true
@@ -221,8 +229,10 @@ export async function ticketAttrAction(key: string, attrTokens: string[]): Promi
     const projectResult = await projectService.resolveCurrentProject()
 
     if (!projectResult.data) {
-      console.error('Error: No project context. Run from a project directory or use an explicit key like MDT-143.')
-      process.exit(1)
+      throw new CliCommandError(
+        'NO_PROJECT_CONTEXT',
+        'No project context. Run from a project directory or use an explicit key like MDT-143.',
+      )
     }
 
     projectCode = projectResult.data.project.code
@@ -233,8 +243,10 @@ export async function ticketAttrAction(key: string, attrTokens: string[]): Promi
     }
     catch (error) {
       if (error instanceof KeyNormalizationError) {
-        console.error(`Error: Invalid key format '${key}'. Expected: numeric shorthand, full format ABC-012, or cross-project ABC/DEF-012`)
-        process.exit(1)
+        throw new CliCommandError(
+          'INVALID_TICKET_KEY',
+          `Invalid key format '${key}'. Expected: numeric shorthand, full format ABC-012, or cross-project ABC/DEF-012`,
+        )
       }
       throw error
     }
@@ -247,8 +259,10 @@ export async function ticketAttrAction(key: string, attrTokens: string[]): Promi
     }
     catch (error) {
       if (error instanceof KeyNormalizationError) {
-        console.error(`Error: Invalid key format '${key}'. Expected: numeric shorthand, full format ABC-012, or cross-project ABC/DEF-012`)
-        process.exit(1)
+        throw new CliCommandError(
+          'INVALID_TICKET_KEY',
+          `Invalid key format '${key}'. Expected: numeric shorthand, full format ABC-012, or cross-project ABC/DEF-012`,
+        )
       }
       throw error
     }
@@ -264,8 +278,7 @@ export async function ticketAttrAction(key: string, attrTokens: string[]): Promi
     }
     catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      console.error(`Error: ${message}`)
-      process.exit(1)
+      throw new CliCommandError('INVALID_ATTRIBUTE_TOKEN', message)
     }
   }
 
@@ -278,8 +291,7 @@ export async function ticketAttrAction(key: string, attrTokens: string[]): Promi
     const projects = await projectService.getAllProjects()
     const project = projects.find(p => p.project.code === projectCode)
     if (!project) {
-      console.error(`Error: Project '${projectCode}' not found`)
-      process.exit(1)
+      throw new CliCommandError('PROJECT_NOT_FOUND', `Project ${projectCode} not found`, { projectCode })
     }
 
     // Get current ticket to capture old values for pipe format
@@ -313,13 +325,12 @@ export async function ticketAttrAction(key: string, attrTokens: string[]): Promi
     // Handle status updates through updateCRStatus
     for (const statusOp of statusOps) {
       if (statusOp.op !== 'replace') {
-        console.error('Error: status only supports = operator')
-        process.exit(1)
+        throw new CliCommandError('INVALID_ATTRIBUTE_OPERATOR', 'status only supports = operator')
       }
       const statusValue = typeof statusOp.value === 'string' ? statusOp.value : String(statusOp.value)
       const oldValue = getFieldValue('status')
 
-      await ticketService.updateCRStatus(project, ticketKey, statusValue as any)
+      await ticketService.updateCRStatus(project, ticketKey, statusValue as CRStatus)
 
       results.push({
         field: 'status',
@@ -352,24 +363,44 @@ export async function ticketAttrAction(key: string, attrTokens: string[]): Promi
       }
     }
 
+    const outputFormat = getOutputFormat(options)
+    if (outputFormat !== 'human') {
+      writeStructuredSuccess(
+        outputFormat,
+        'ticket.attr',
+        {
+          ticket: {
+            key: resultTicketCode,
+          },
+          changes: formatAttrChangesForStructured(results),
+        },
+        {
+          projectCode,
+          projectId: project.id,
+        },
+      )
+      return
+    }
+
     // Print pipe-separated confirmation
     console.log(formatTicketAttrPipe(resultTicketCode, results))
   }
   catch (error) {
+    if (error instanceof CliCommandError) {
+      throw error
+    }
+
     if (error instanceof ServiceError) {
       if (error.code === 'TICKET_NOT_FOUND') {
-        console.error(`Error: Ticket ${ticketKey} not found`)
-        process.exit(1)
+        throw error
       }
       if (error.code === 'INVALID_OPERATION') {
-        console.error(`Error: ${error.message}`)
-        process.exit(1)
+        throw error
       }
     }
 
     // Generic error
     const message = error instanceof Error ? error.message : String(error)
-    console.error(`Error: Failed to update ticket attributes: ${message}`)
-    process.exit(1)
+    throw new CliCommandError('ATTR_UPDATE_FAILED', `Failed to update ticket attributes: ${message}`)
   }
 }

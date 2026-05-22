@@ -17,6 +17,7 @@ This CR introduces a standalone `mdt-cli` entrypoint for reading and mutating CR
 | C4 | architecture.md (project detection behavior), tasks.md (shared detector extraction), tests.md (deep subdirectory detection) |
 | C5 | architecture.md (input-handling safety), tasks.md (create pipeline), tests.md (literal persistence and injection regression) |
 | C6 | architecture.md (TTY and color gating), tasks.md (non-TTY branch), tests.md (no ANSI output snapshots) |
+| C7 | architecture.md (structured-output contract), tasks.md (structured-output adapter), tests.md (deterministic JSON/YAML coverage) |
 
 ## Non-Ambiguity Table
 
@@ -52,6 +53,13 @@ This CR introduces a standalone `mdt-cli` entrypoint for reading and mutating CR
 - BR-18 added: positional list filter behavior (AND cross-field, comma+fuzzy within field) on status, priority, type, assignee, epic
 - BR-19 added: --guide flag at global and per-namespace scope, generated from commander tree
 
+## UAT Refinements (2026-05-22)
+
+- BR-22 added: `--json` and `--yaml` structured output for supported ticket and project commands
+- C7 added: structured modes are deterministic and agent-safe (no ANSI, no separators, stable schema, same object for JSON/YAML)
+- Edge-9 added: `--json` and `--yaml` are mutually exclusive
+- Edge-10 added: structured modes return parseable error envelopes on failure
+
 ## Review Notes
 
 - The requirements intentionally lock project detection to filesystem-root search even though the current MCP helper shows a bounded search depth. Architecture should treat the existing implementation as insufficient, not as the target behavior.
@@ -62,6 +70,8 @@ This CR introduces a standalone `mdt-cli` entrypoint for reading and mutating CR
 - Attribute mutation is intentionally stricter than ticket lookup: v1 supports canonical `mdt-cli ticket attr <ticket> <attr-op><value>...` plus the `mdt-cli attr ...` shortcut alias, but not ticket-key-prefixed write shortcuts.
 - Relation attributes now have explicit operator semantics: `=` replaces the whole list, `+=` appends with duplicate suppression, and `-=` removes values. Scalar attributes stay `=` only.
 - Error handling stays user-facing: invalid keys, missing arguments, and missing project context are behavioral outcomes that must remain explicit in CLI output and later tests.
+- Structured output is a parallel agent-facing representation. It must not be derived by scraping human output; command handlers should build a shared result object and hand it either to the human formatter or the structured serializer.
+- JSON and YAML must expose the same data shape. Prefer stable normalized fields over display-only text, while still including display labels where they help LLM agents explain results.
 
 ---
 *Canonical requirements and route summaries: [requirements.trace.md](./requirements.trace.md)*

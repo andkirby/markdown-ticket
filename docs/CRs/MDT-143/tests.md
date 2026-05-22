@@ -20,6 +20,7 @@ CLI acceptance for `MDT-143` should run as real-process E2E in `cli/tests/e2e/`,
 | Attr output format | `cli/tests/e2e/ticket/attr-output.spec.ts` | TBA |
 | CLI color scheme | `cli/tests/e2e/output/color-scheme.spec.ts` | TBA |
 | Command guide | `cli/tests/e2e/guide.spec.ts` | TBA |
+| Structured output | `cli/tests/e2e/output/structured-output.spec.ts` | TBA |
 
 ## Test Details
 
@@ -146,6 +147,17 @@ CLI acceptance for `MDT-143` should run as real-process E2E in `cli/tests/e2e/`,
 | should print project commands only with project --guide | BR-19 |
 | should include all registered aliases in guide output | BR-19 |
 
+### Structured Output (`cli/tests/e2e/output/structured-output.spec.ts`)
+
+| Test Name | Covers |
+|-----------|--------|
+| should print ticket detail as JSON and YAML with the same schema | BR-22, C7 |
+| should print ticket list metadata, filters, paths, and pagination in structured mode | BR-22, C7 |
+| should print project current/get/list payloads in structured mode | BR-22, C7 |
+| should print create, attr, delete, and project init mutation payloads in structured mode | BR-22, C7 |
+| should reject commands that include both --json and --yaml | Edge-9 |
+| should print structured error envelopes to stderr with empty stdout | Edge-10 |
+
 ## Constraint Coverage
 
 | Constraint ID | Test File | Tests |
@@ -157,6 +169,7 @@ CLI acceptance for `MDT-143` should run as real-process E2E in `cli/tests/e2e/`,
 | C4 | `ticket/read.spec.ts` | Root-up project detection for shorthand reads |
 | C5 | `ticket/create.spec.ts`, `ticket/attr.spec.ts` | Literal stdin and attr value handling |
 | C6 | `ticket/read.spec.ts` | No ANSI output for redirected or non-TTY execution |
+| C7 | `output/structured-output.spec.ts` | Deterministic agent-safe JSON/YAML serialization |
 
 ## Verify
 
@@ -170,6 +183,7 @@ bun test cli/tests/e2e/ticket/read.spec.ts
 bun test cli/tests/e2e/project/project.spec.ts
 bun test cli/tests/e2e/ticket/create.spec.ts
 bun test cli/tests/e2e/ticket/attr.spec.ts
+bun test cli/tests/e2e/output/structured-output.spec.ts
 ```
 
 ---

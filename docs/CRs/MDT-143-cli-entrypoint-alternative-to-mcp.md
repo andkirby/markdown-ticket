@@ -1,6 +1,6 @@
 ---
 code: MDT-143
-status: Implemented
+status: In Progress
 dateCreated: 2026-03-24T20:28:55.000Z
 lastModified: 2026-04-03T17:37:55.000Z
 type: Feature Enhancement
@@ -581,3 +581,21 @@ cli/
 **Updated workflow documents**: None (implementation-only fix, no spec change)
 **uat.md written**: yes
 **Strict drift/lock**: not used
+
+### UAT Session 2026-05-22
+
+**Approved changes**: Add agent-safe structured output modes.
+
+| Change | Requirement Impact |
+|--------|-------------------|
+| `--json` and `--yaml` for supported ticket and project commands | BR-22 added |
+| Deterministic shared structured schema with no ANSI/decorative output | C7 added |
+| Reject conflicting `--json` and `--yaml` flags | Edge-9 added |
+| Structured failures emit `ok=false` envelopes to stderr | Edge-10 added |
+
+**Updated workflow documents**: requirements.md, bdd.md, architecture.md, tests.md, tasks.md, uat.md, and generated `*.trace.md` projections.
+**uat.md written**: yes
+**Strict drift/lock**: not used
+**New task**: TASK-cli-structured-output
+**New artifact**: ART-cli-structured-output
+**New test plan**: TEST-cli-structured-output
