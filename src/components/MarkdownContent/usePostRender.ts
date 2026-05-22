@@ -28,19 +28,16 @@ export function usePostRender({
   useEffect(() => {
     if (processedContent && containerRef.current) {
       const timeoutId = setTimeout(() => {
-        renderMermaid()
+        void (async () => {
+          if (!containerRef.current)
+            return
 
-        // Render Wireloom wireframes (optional — no-op if not installed)
-        if (containerRef.current) {
+          await renderMermaid(containerRef.current)
           renderWireloomElements(containerRef.current)
-        }
-
-        // Validate link conversion
-        if (containerRef.current) {
           validateAllReferences(containerRef.current)
-        }
 
-        onRenderComplete?.()
+          onRenderComplete?.()
+        })()
       }, 100)
 
       return () => clearTimeout(timeoutId)
@@ -53,7 +50,7 @@ export function usePostRender({
       if (!containerRef.current)
         return
 
-      renderMermaid()
+      void renderMermaid(containerRef.current)
       renderWireloomElements(containerRef.current)
     }
 

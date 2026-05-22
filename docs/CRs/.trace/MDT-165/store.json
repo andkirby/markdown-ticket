@@ -45,16 +45,6 @@
       ]
     },
     {
-      "id": "BR-6",
-      "kind": "behavior",
-      "text": "WHEN markdown content contains a fenced code block with language 'mermaid', the system shall produce HTML output compatible with the existing processMermaidBlocks function for diagram rendering",
-      "sourceRef": "CR Section 5 Acceptance Criteria: mermaid blocks compatible with processMermaidBlocks",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:now"
-      ]
-    },
-    {
       "id": "BR-7",
       "kind": "behavior",
       "text": "WHEN rendered HTML contains fenced code blocks with language class attributes, the system shall apply Prism syntax highlighting to each block based on its language",
@@ -213,6 +203,13 @@
       "tags": [
         "timing:now"
       ]
+    },
+    {
+      "id": "BR-6",
+      "kind": "behavior",
+      "text": "WHEN markdown content contains a fenced code block with language 'mermaid', the system shall preserve the decoded Mermaid fence source separately from rendered DOM and render the browser diagram from that source so markdown-it HTML entity escaping cannot break Mermaid rendering",
+      "sourceRef": "UAT 2026-05-22",
+      "routePolicy": "bdd"
     }
   ],
   "scenarios": [
@@ -327,6 +324,17 @@
       "when": "the document is rendered",
       "then": "two checkbox input elements are visible, the first unchecked and the second checked, and both are disabled",
       "sourceRef": "BR-5"
+    },
+    {
+      "id": "mermaid_decoded_source_rendering",
+      "title": "Mermaid renders from preserved decoded source",
+      "covers": [
+        "BR-6"
+      ],
+      "given": "A markdown document contains a mermaid fenced block whose labels include characters escaped by markdown-it, such as quotes or arrows",
+      "when": "MarkdownContent renders the document in the browser",
+      "then": "The renderer stores the decoded Mermaid source separately, renders an SVG from that source, and does not display Mermaid's syntax error fallback",
+      "sourceRef": "CR:MDT-165"
     }
   ],
   "obligations": [
@@ -512,6 +520,21 @@
         "ART-css"
       ],
       "sourceRef": "CR:MDT-165"
+    },
+    {
+      "id": "OBL-mermaid-source-preservation",
+      "title": "Mermaid rendering preserves decoded fence source and renders each diagram explicitly from source",
+      "derivedFrom": [
+        "BR-6",
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-mermaid-core",
+        "ART-mermaid-hooks",
+        "ART-post-render",
+        "ART-prose-css"
+      ],
+      "sourceRef": "UAT 2026-05-22"
     }
   ],
   "artifacts": [
@@ -598,6 +621,24 @@
       "path": "src/index.css",
       "kind": "runtime",
       "sourceRef": "CR:MDT-165"
+    },
+    {
+      "id": "ART-mermaid-hooks",
+      "path": "src/utils/mermaid/hooks.ts",
+      "kind": "runtime",
+      "sourceRef": "UAT 2026-05-22"
+    },
+    {
+      "id": "ART-post-render",
+      "path": "src/components/MarkdownContent/usePostRender.ts",
+      "kind": "runtime",
+      "sourceRef": "UAT 2026-05-22"
+    },
+    {
+      "id": "ART-prose-css",
+      "path": "src/styles/prose.css",
+      "kind": "runtime",
+      "sourceRef": "UAT 2026-05-22"
     }
   ],
   "testPlans": [
@@ -712,6 +753,17 @@
       ],
       "file": "src/components/MarkdownContent/useMarkdownProcessor.test.ts",
       "sourceRef": "tests.md#processor-pipeline"
+    },
+    {
+      "id": "TEST-mermaid-render-runtime",
+      "kind": "integration",
+      "title": "Browser Mermaid renderer uses preserved decoded source",
+      "covers": [
+        "BR-6",
+        "C4"
+      ],
+      "file": "src/utils/mermaid/hooks.ts",
+      "sourceRef": "UAT 2026-05-22"
     }
   ],
   "tasks": [
@@ -799,6 +851,27 @@
         "TEST-processor-pipeline-unit"
       ],
       "sourceRef": "CR:MDT-165"
+    },
+    {
+      "id": "TASK-6",
+      "title": "UAT follow-up: render Mermaid from preserved decoded source",
+      "ownsArtifactIds": [
+        "ART-mermaid-core",
+        "ART-mermaid-hooks",
+        "ART-post-render",
+        "ART-prose-css"
+      ],
+      "makesGreenIds": [
+        "TEST-mermaid-core-unit",
+        "TEST-processor-pipeline-unit",
+        "TEST-mermaid-render-runtime",
+        "mermaid_decoded_source_rendering"
+      ],
+      "skills": [
+        "mdt-frontend",
+        "playwright-cli"
+      ],
+      "sourceRef": "UAT 2026-05-22"
     }
   ]
 }
