@@ -1,5 +1,6 @@
 /* eslint-disable node/prefer-global/process -- Build config, unused-imports/no-unused-vars -- Unused variables in config, unicorn/prefer-number-properties, node/handle-callback-err, style/multiline-ternary -- Config file patterns */
 import type http from 'node:http'
+import type { IncomingHttpHeaders } from 'node:http'
 import path from 'node:path'
 import react from '@vitejs/plugin-react'
 import { defineConfig, loadEnv } from 'vite'
@@ -27,6 +28,23 @@ const devStreamClients = new Set<http.ServerResponse>() // DEV mode SSE clients
 const statusRequestTimes = new Map() // IP -> last request time
 const STATUS_RATE_LIMIT = 2000 // 2 seconds minimum between requests (reduced from 10s)
 
+interface FrontendLoggingRequestLike {
+  headers: IncomingHttpHeaders
+  socket?: {
+    remoteAddress?: string
+  }
+  connection?: {
+    remoteAddress?: string
+  }
+  ip?: string
+}
+
+interface FrontendLoggingResponseLike {
+  statusCode: number
+  setHeader: (name: string, value: string) => void
+  end: (body?: string) => void
+}
+
 function parseCsvEnv(value?: string) {
   return value
     ?.split(',')
@@ -47,6 +65,66 @@ function toAllowedHost(entry: string) {
   }
 }
 
+export function isLoopbackAddress(address: string | undefined): boolean {
+  if (!address) {
+    return false
+  }
+
+  const normalizedAddress = address.trim().replace(/^\[|\]$/g, '').toLowerCase()
+
+  if (normalizedAddress === 'localhost' || normalizedAddress === '::1' || normalizedAddress === '0:0:0:0:0:0:0:1') {
+    return true
+  }
+
+  if (normalizedAddress.startsWith('::ffff:')) {
+    return isLoopbackAddress(normalizedAddress.slice('::ffff:'.length))
+  }
+
+  const ipv4Parts = normalizedAddress.split('.')
+  if (ipv4Parts.length !== 4) {
+    return false
+  }
+
+  const [firstPart, ...remainingParts] = ipv4Parts
+  return firstPart === '127' && remainingParts.every((part) => {
+    if (!/^\d+$/.test(part)) {
+      return false
+    }
+
+    const value = Number(part)
+    return value >= 0 && value <= 255
+  })
+}
+
+export function isLocalFrontendLoggingRequest(req: FrontendLoggingRequestLike): boolean {
+  const remoteAddress = req.socket?.remoteAddress || req.connection?.remoteAddress || req.ip
+  return isLoopbackAddress(remoteAddress)
+}
+
+export function rejectNonLocalFrontendLoggingRequest(
+  req: FrontendLoggingRequestLike,
+  res: FrontendLoggingResponseLike,
+): boolean {
+  if (isLocalFrontendLoggingRequest(req)) {
+    return false
+  }
+
+  res.statusCode = 403
+  res.setHeader('Content-Type', 'application/json')
+  res.end(JSON.stringify({ error: 'Forbidden' }))
+  return true
+}
+
+export function parseFrontendLogsRequestBody(body: string): { ok: true; logs?: unknown[] } | { ok: false } {
+  try {
+    const parsedBody = JSON.parse(body) as { logs?: unknown[] }
+    return { ok: true, logs: parsedBody.logs }
+  }
+  catch {
+    return { ok: false }
+  }
+}
+
 // Vite plugin for frontend logging endpoints
 function frontendLoggingPlugin() {
   return {
@@ -54,6 +132,10 @@ function frontendLoggingPlugin() {
     configureServer(server) {
       server.middlewares.use('/api/frontend/logs/status', (req, res, next) => {
         if (req.method === 'GET') {
+          if (rejectNonLocalFrontendLoggingRequest(req, res)) {
+            return
+          }
+
         // Rate limiting for status endpoint - improved IP detection for Docker
           const clientIP = req.headers['x-forwarded-for']
             || req.headers['x-real-ip']
@@ -102,6 +184,10 @@ function frontendLoggingPlugin() {
 
       server.middlewares.use('/api/frontend/logs/start', (req, res, next) => {
         if (req.method === 'POST') {
+          if (rejectNonLocalFrontendLoggingRequest(req, res)) {
+            return
+          }
+
           frontendSessionActive = true
           frontendSessionStart = Date.now()
           console.log('🔍 Frontend logging session started')
@@ -115,6 +201,10 @@ function frontendLoggingPlugin() {
 
       server.middlewares.use('/api/frontend/logs/stop', (req, res, next) => {
         if (req.method === 'POST') {
+          if (rejectNonLocalFrontendLoggingRequest(req, res)) {
+            return
+          }
+
           frontendSessionActive = false
           frontendSessionStart = null
           console.log('🔍 Frontend logging session stopped')
@@ -129,6 +219,10 @@ function frontendLoggingPlugin() {
       // SSE streaming endpoint
       server.middlewares.use('/api/frontend/logs/stream', (req, res, next) => {
         if (req.method === 'GET') {
+          if (rejectNonLocalFrontendLoggingRequest(req, res)) {
+            return
+          }
+
         // Set SSE headers
           res.writeHead(200, {
             'Content-Type': 'text/event-stream',
@@ -332,10 +426,22 @@ function frontendLoggingPlugin() {
 
       server.middlewares.use('/api/frontend/logs', (req, res, next) => {
         if (req.method === 'POST') {
+          if (rejectNonLocalFrontendLoggingRequest(req, res)) {
+            return
+          }
+
           let body = ''
           req.on('data', chunk => body += chunk)
           req.on('end', () => {
-            const { logs } = JSON.parse(body)
+            const parsedBody = parseFrontendLogsRequestBody(body)
+            if (!parsedBody.ok) {
+              res.statusCode = 400
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify({ error: 'Invalid JSON' }))
+              return
+            }
+
+            const { logs } = parsedBody
             if (logs && Array.isArray(logs)) {
               frontendLogs.push(...logs)
               if (frontendLogs.length > MAX_FRONTEND_LOGS) {
@@ -367,6 +473,10 @@ function frontendLoggingPlugin() {
           })
         }
         else if (req.method === 'GET') {
+          if (rejectNonLocalFrontendLoggingRequest(req, res)) {
+            return
+          }
+
           const url = new URL(req.url, `http://${req.headers.host}`)
           const lines = Math.min(Number.parseInt(url.searchParams.get('lines')) || 20, MAX_FRONTEND_LOGS)
           const filter = url.searchParams.get('filter')

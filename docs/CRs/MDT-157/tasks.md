@@ -335,6 +335,49 @@ bun test docs/tests/api-auth-docs.test.ts
 - [x] Auth latency remains below the <5ms median overhead budget.
 - [x] No unrelated files were changed.
 
+### Task 5: UAT lock Vite frontend logging endpoints to localhost
+
+**Milestone**: UAT — Vite dev logging boundary
+
+**Structure**: `vite.config.ts`, `tests/vite-frontend-logs-security.test.ts`
+
+**Makes GREEN (Automated Tests)**:
+- `TEST-vite-frontend-logs-localhost` -> `tests/vite-frontend-logs-security.test.ts`: Vite-only frontend logging middleware is loopback-only and handles malformed JSON safely
+
+**Scope**: Lock Vite dev-server `/api/frontend/logs*` endpoints to localhost/loopback clients because they bypass backend API auth.
+**Boundary**: Do not change backend REST auth, MCP auth, production Docker auth defaults, or MDT-172 public sharing behavior.
+
+**Creates**:
+- `tests/vite-frontend-logs-security.test.ts`
+
+**Modifies**:
+- `vite.config.ts`
+
+**Must Not Touch**:
+- `server/security/apiAuth.ts`
+- `server/controllers/**`
+- `mcp-server/src/tools/**`
+- MDT-172 sharing implementation
+
+**Create/Move**:
+- Add a reusable Vite middleware caller check for loopback-only access.
+- Apply the check to all `/api/frontend/logs*` Vite middleware endpoints before body parsing or state mutation.
+- Reject LAN/tunnel/non-loopback callers with a generic 403.
+- Ignore spoofed `X-Forwarded-*` headers for localhost decisions.
+- Return controlled 400 for malformed JSON on `POST /api/frontend/logs`.
+
+**Verify**:
+```bash
+bun test tests/vite-frontend-logs-security.test.ts
+bun run test:e2e
+```
+
+**Done when**:
+- [x] Loopback requests to `/api/frontend/logs*` still work in local dev/E2E.
+- [x] Non-loopback requests are rejected before logs are accepted or sessions start/stop.
+- [x] Spoofed forwarded headers do not bypass the loopback check.
+- [x] Malformed JSON does not crash middleware.
+
 ## Architecture Coverage
 
 | Layer | Arch Files | In Tasks | Gap | Status |
@@ -344,6 +387,7 @@ bun test docs/tests/api-auth-docs.test.ts
 | `server/routes/` | 1 | 1 | 0 | ✅ |
 | `server/tests/security/` | 1 | 1 | 0 | ✅ |
 | `server/tests/api/` | 2 | 2 | 0 | ✅ |
+| Vite dev middleware | 1 | 1 | 0 | ✅ |
 | `mcp-server/src/transports/` | 3 | 3 | 0 | ✅ |
 | `mcp-server/src/` | 1 | 1 | 0 | ✅ |
 | `mcp-server/tests/` | 2 | 2 | 0 | ✅ |
