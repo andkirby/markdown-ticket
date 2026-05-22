@@ -17,6 +17,7 @@ This pass adds executable RED tests and canonical `spec-trace` test-plan records
 | MCP HTTP auth middleware | `mcp-server/tests/http-auth-session-rate-limit.test.ts` | unit | Missing, malformed, different-length, and equal-length invalid bearer tokens return 401; valid token succeeds. |
 | MCP HTTP config/defaults | `mcp-server/tests/http-security-config.test.ts` | unit | Auth env parsing, explicit auth without `MCP_AUTH_TOKEN` failure, concrete stdio transport selection without auth-token requirement, legacy no-auth migration warning, production Docker auth-on default. |
 | Migration docs and nginx | `docs/tests/api-auth-docs.test.ts` | integration/script | Docker/MCP migration docs mention env vars, warnings, credential headers; nginx preserves `Authorization` and `X-API-Key`. |
+| Vite dev frontend logging boundary | `tests/vite-frontend-logs-security.test.ts` | unit/integration | Vite-only `/api/frontend/logs*` middleware accepts loopback clients, rejects non-loopback clients before state mutation/body handling, and returns controlled 400 for malformed JSON. |
 | Existing suites | `docs/CRs/MDT-157/tests.md` | suite gate | Existing server, MCP, frontend, and E2E suites remain green outside auth-enabled contexts. |
 
 ## Data Mechanism Tests
@@ -38,6 +39,7 @@ This pass adds executable RED tests and canonical `spec-trace` test-plan records
 | `MCP_SECURITY_AUTH` | `mcp-server/tests/http-security-config.test.ts` | Stdio mode does not parse/require HTTP auth token; explicit HTTP auth requires `MCP_AUTH_TOKEN`; legacy HTTP no-auth emits migration warning; production Docker defaults auth on. |
 | `MCP_AUTH_TOKEN` | `mcp-server/tests/http-security-config.test.ts`, `mcp-server/tests/http-auth-session-rate-limit.test.ts` | Missing with auth enabled fails startup/config; valid bearer accepted by MCP middleware. |
 | `Authorization` / `X-API-Key` forwarding | `docs/tests/api-auth-docs.test.ts`, `server/tests/api/api-auth.test.ts` | Preserved headers authenticate; missing/stripped headers fail closed. |
+| Vite frontend log endpoint caller boundary | `tests/vite-frontend-logs-security.test.ts` | Loopback requests are accepted; LAN/tunnel/non-loopback requests are rejected; spoofed forwarded headers are ignored. |
 
 ## Constraint Coverage
 
@@ -52,6 +54,7 @@ This pass adds executable RED tests and canonical `spec-trace` test-plan records
 | `C7` | `server/tests/security/apiAuth.test.ts`, `server/tests/api/api-auth.test.ts` | Health/status public and minimal. |
 | `C8` | `server/tests/api/api-auth.test.ts`, `mcp-server/tests/http-security-config.test.ts`, existing-suite gate | Local/test no-auth compatibility, stdio transport auth independence, plus full-suite preservation. |
 | `C9` | `server/tests/api/api-auth.test.ts`, `docs/tests/api-auth-docs.test.ts`, `mcp-server/tests/http-security-config.test.ts` | Migration warnings, migration docs path, and production Docker MCP auth defaults. |
+| `C10` | `tests/vite-frontend-logs-security.test.ts` | Vite dev frontend logging endpoints are localhost-only despite bypassing backend auth middleware. |
 
 ## BDD and Acceptance Continuity
 
@@ -79,6 +82,7 @@ bun run --cwd mcp-server build
 bun run build
 bun run test:e2e
 bun test docs/tests/api-auth-docs.test.ts
+bun test tests/vite-frontend-logs-security.test.ts
 ```
 
 ## Verify
@@ -96,6 +100,7 @@ Targeted RED test commands:
 bun run --cwd server jest tests/security/apiAuth.test.ts tests/api/api-auth.test.ts
 bun run --cwd mcp-server jest tests/http-auth-session-rate-limit.test.ts tests/http-security-config.test.ts
 bun test docs/tests/api-auth-docs.test.ts
+bun test tests/vite-frontend-logs-security.test.ts
 ```
 
 ## Test Specification Complete

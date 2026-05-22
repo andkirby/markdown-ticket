@@ -243,6 +243,13 @@
       "tags": [
         "timing:in-ticket"
       ]
+    },
+    {
+      "id": "C10",
+      "kind": "constraint",
+      "text": "The system shall allow Vite dev-server frontend logging endpoints under /api/frontend/logs only from localhost or loopback clients because those endpoints bypass backend API authentication.",
+      "sourceRef": "CR:MDT-157",
+      "routePolicy": "tests"
     }
   ],
   "scenarios": [
@@ -506,6 +513,18 @@
         "ART-mcp-http-security-tests"
       ],
       "sourceRef": "architecture.md#mcp-http-auth-and-production-defaults"
+    },
+    {
+      "id": "OBL-vite-frontend-logging-localhost",
+      "title": "Vite frontend logging endpoints are localhost-only and reject non-loopback callers before body parsing or state mutation",
+      "derivedFrom": [
+        "C10"
+      ],
+      "artifactIds": [
+        "ART-vite-frontend-logging",
+        "ART-vite-frontend-logging-tests"
+      ],
+      "sourceRef": "CR:MDT-157"
     }
   ],
   "artifacts": [
@@ -622,6 +641,18 @@
       "path": "mcp-server/src/transports/transportSelection.ts",
       "kind": "runtime",
       "sourceRef": "architecture.md#mcp-http-auth-and-production-defaults"
+    },
+    {
+      "id": "ART-vite-frontend-logging",
+      "path": "vite.config.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-157"
+    },
+    {
+      "id": "ART-vite-frontend-logging-tests",
+      "path": "tests/vite-frontend-logs-security.test.ts",
+      "kind": "test",
+      "sourceRef": "CR:MDT-157"
     }
   ],
   "testPlans": [
@@ -729,6 +760,16 @@
       ],
       "file": "docs/tests/api-auth-docs.test.ts",
       "sourceRef": "CR:MDT-157"
+    },
+    {
+      "id": "TEST-vite-frontend-logs-localhost",
+      "kind": "integration",
+      "title": "Vite frontend logging endpoints accept loopback callers, reject non-loopback callers, ignore spoofed forwarded headers, and handle malformed JSON safely",
+      "covers": [
+        "C10",
+        "OBL-vite-frontend-logging-localhost"
+      ],
+      "sourceRef": "CR:MDT-157"
     }
   ],
   "tasks": [
@@ -808,6 +849,18 @@
         "TEST-mcp-http-security-config"
       ],
       "sourceRef": "tasks.md#task-2"
+    },
+    {
+      "id": "TASK-5",
+      "title": "UAT lock Vite frontend logging endpoints to localhost",
+      "ownsArtifactIds": [
+        "ART-vite-frontend-logging",
+        "ART-vite-frontend-logging-tests"
+      ],
+      "makesGreenIds": [
+        "TEST-vite-frontend-logs-localhost"
+      ],
+      "sourceRef": "CR:MDT-157"
     }
   ]
 }

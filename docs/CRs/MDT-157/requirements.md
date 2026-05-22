@@ -22,6 +22,7 @@ Assessment source reality is preserved: MCP `timingSafeEqual` comparison and env
 | C7 | architecture.md health/status exemption; tests.md unauthenticated health responses |
 | C8 | tests.md non-auth regression suite preservation; tasks.md full existing suite verification |
 | C9 | architecture.md/docs migration note; tasks.md deployment documentation update |
+| C10 | architecture.md Vite dev logging boundary; tests.md localhost-only enforcement for `/api/frontend/logs` |
 
 ## Edge Case Carryover
 
@@ -40,6 +41,7 @@ Assessment source reality is preserved: MCP `timingSafeEqual` comparison and env
 | `/api/projects` before MDT-172 | Anonymous `GET /api/projects` returns `401` before public sharing exists. | Return filtered public project lists now. | Public sharing and visibility filtering belong to MDT-172. |
 | Health endpoints | `GET /api/status` and `GET /api/health` are unauthenticated and expose no sensitive metadata. | Protect health endpoints or expose project/config details through health. | Acceptance requires unauthenticated health/status without widening data exposure. |
 | Origin handling | Origin is not an authentication signal; no-Origin requests use the same token rules. | Reject curl/server-to-server requests because Origin is missing. | Authentication must work for API clients and behind proxies. |
+| Vite frontend logging endpoints | Vite-only `/api/frontend/logs*` endpoints are reachable only from localhost/loopback clients. | Treat Vite dev logging endpoints as public LAN/tunnel APIs. | These endpoints bypass backend auth and exist only for local debugging. |
 
 ## Configuration
 
@@ -66,6 +68,7 @@ Migration documentation must explain existing no-auth deployment behavior, requi
 - Security constraints cover timing-safe comparison, raw-token logging, proxy header behavior, and out-of-scope authorization/sharing.
 - Regression constraints preserve existing non-auth test behavior outside auth-enabled contexts.
 - Migration constraints require docs for no-auth deployments, env vars, production Docker behavior, and warning meaning.
+- UAT refinement adds localhost-only enforcement for Vite dev frontend logging endpoints that bypass backend auth middleware.
 - No clarification blockers remain for requirements.
 
 ---

@@ -135,6 +135,23 @@ Test scaffolding responsibilities:
 - MCP tests verify stdio independence, HTTP auth rejection/acceptance, env parsing, explicit-auth-without-token failure, production Docker auth defaults, and migration warning behavior.
 - A lightweight backend auth overhead check must demonstrate less than 5ms median added latency under the project test harness.
 
+## UAT: Vite Frontend Logging Boundary
+
+Vite dev-server frontend logging endpoints under `/api/frontend/logs*` are not backend routes and do not pass through `server/security/apiAuth.ts`. They must remain local debugging endpoints only.
+
+Owner module: `vite.config.ts` owns the Vite middleware boundary for:
+
+- `GET /api/frontend/logs/status`
+- `POST /api/frontend/logs/start`
+- `POST /api/frontend/logs/stop`
+- `GET /api/frontend/logs/stream`
+- `POST /api/frontend/logs`
+- `GET /api/frontend/logs`
+
+The Vite middleware must reject non-loopback clients before reading request bodies or mutating logging state. Allowed client addresses are localhost/loopback forms only: `127.0.0.1`, `::1`, IPv4-mapped loopback, and local hostnames that resolve to loopback in the request context. LAN, tunnel, proxy, and arbitrary `X-Forwarded-*` identities must not be trusted as localhost credentials.
+
+Malformed JSON submitted to `POST /api/frontend/logs` must fail with a controlled 400 response instead of crashing middleware processing.
+
 ## Invariants
 
 - MDT-157 authenticates only; it does not authorize access levels or filter projects.
@@ -148,6 +165,7 @@ Test scaffolding responsibilities:
 - Existing no-auth local/test behavior stays intact outside auth-enabled test contexts.
 - Production Docker MCP HTTP defaults auth on via `MCP_SECURITY_AUTH=${MCP_SECURITY_AUTH:-true}` and must fail clearly when the token is missing.
 - Non-local deployments that explicitly run MCP HTTP with no token and auth disabled outside production Docker defaults keep the migration warning.
+- Vite-only frontend logging endpoints are localhost-only and are not exposed as unauthenticated LAN/tunnel APIs.
 
 ## BDD Scenario Carryover
 
