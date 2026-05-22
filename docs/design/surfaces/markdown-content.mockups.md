@@ -78,12 +78,15 @@ window "Markdown Content — Rich Markdown":
         text "SmartLink"
     section "Blockquote" id="quote":
       text "Use a quiet left border and muted text."
-    section "Mermaid / Wireloom artifact" id="diagram":
-      text "Large rendered artifacts scroll inside the prose area."
+    section "Wide rendered artifact" id="diagram":
+      row justify=end:
+        button "⛶" id="artifact-zoom"
+      text "Rendered Wireloom or Mermaid output uses available document pane width."
 
 annotation "Tables need padding, borders, header treatment, and horizontal overflow" target="table" position=right
 annotation "Blockquotes use tokenized border and muted text" target="quote" position=right
-annotation "Rendered diagrams keep their own artifact behavior" target="diagram" position=right
+annotation "Rendered diagrams can use full document pane width while prose stays readable" target="diagram" position=right
+annotation "Wireloom uses the shared zoom/fullscreen inspection affordance" target="artifact-zoom" position=top
 annotation "Inline code should avoid global break-all behavior" target="inline-code" position=right
 ```
 
@@ -122,3 +125,4 @@ annotation "Long code scrolls inside the code block, not the page" target="mobil
 | Inline code | `--code-inline-fg` | `.prose :not(pre) > code` | Slight color only, no background or border, no letter-by-letter breaking |
 | Table | `--border`, `--muted` | `.prose table` | Padded cells and horizontal overflow |
 | Blockquote | `--border`, `--muted-foreground` | `.prose blockquote` | Quiet callout treatment |
+| Wide artifact | `--border`, `--background` | `.wireloom__diagram`, `.wireloom__fullscreen-button` | Native-width rendered artifact with horizontal scroll and zoom inspection |

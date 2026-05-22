@@ -662,36 +662,10 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
         className="documents-view__navigation-panel"
       >
         <div className="documents-view__navigation-inner">
-          <div className="p-4 border-b border-border flex-shrink-0">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center space-x-3">
+          <div className="documents-view__navigation-header">
+            <div className="documents-view__navigation-primary-row">
+              <div className="flex min-w-0 items-center">
                 <h3 className="font-semibold text-foreground">Documents</h3>
-                <div className="flex items-center space-x-1">
-                  <select
-                    value={sortBy}
-                    onChange={e => setSortBy(e.target.value as 'name' | 'title' | 'created' | 'modified')}
-                    className="text-xs border border-border rounded px-2 py-1 bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary w-28"
-                    title="Sort by"
-                  >
-                    <option value="name">Filename</option>
-                    <option value="title">Title</option>
-                    <option value="created">Created Date</option>
-                    <option value="modified">Update Date</option>
-                  </select>
-                  <button
-                    onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
-                    className="p-1 border border-border rounded bg-background hover:bg-muted transition-colors"
-                    title={`Sort ${sortDirection === 'asc' ? 'ascending' : 'descending'}`}
-                  >
-                    {sortDirection === 'asc'
-                      ? (
-                          <ChevronUp className="h-3 w-3" />
-                        )
-                      : (
-                          <ChevronDown className="h-3 w-3" />
-                        )}
-                  </button>
-                </div>
               </div>
               <div className="flex items-center gap-1">
                 <button
@@ -736,16 +710,44 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
                 </button>
               </div>
             </div>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Search documents..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 text-sm border border-border rounded-md bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                data-testid="document-filter-input"
-              />
+            <div className="documents-view__navigation-controls-row">
+              <div className="documents-view__search-field">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Search documents..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 text-sm border border-border rounded-md bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  data-testid="document-filter-input"
+                />
+              </div>
+              <select
+                value={sortBy}
+                onChange={e => setSortBy(e.target.value as 'name' | 'title' | 'created' | 'modified')}
+                className="documents-view__sort-select"
+                title="Sort by"
+              >
+                <option value="name">Filename</option>
+                <option value="title">Title</option>
+                <option value="created">Created Date</option>
+                <option value="modified">Update Date</option>
+              </select>
+              <button
+                type="button"
+                onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
+                className="documents-view__sort-direction-button"
+                title={`Sort ${sortDirection === 'asc' ? 'ascending' : 'descending'}`}
+                aria-label={`Sort ${sortDirection === 'asc' ? 'ascending' : 'descending'}`}
+              >
+                {sortDirection === 'asc'
+                  ? (
+                      <ChevronUp className="h-3 w-3" />
+                    )
+                  : (
+                      <ChevronDown className="h-3 w-3" />
+                    )}
+              </button>
             </div>
           </div>
           <div className="flex-shrink-0 p-2 pb-0">

@@ -8,11 +8,14 @@ Navigation model for large configured document sets in Documents View.
 DocumentsLayout
 ├── DocumentsSidebar
 │   ├── SidebarHeader
-│   │   ├── SortControls
+│   │   ├── TitleActionRow
 │   │   ├── CollapseTreeButton
 │   │   ├── ScrollToActiveDocumentButton
-│   │   └── ConfigurePathsButton
-│   ├── FilterInput
+│   │   ├── ConfigurePathsButton
+│   │   └── SearchSortRow
+│   │       ├── SearchInput
+│   │       ├── SortSelect
+│   │       └── SortDirectionButton
 │   ├── FavDocuments
 │   ├── RecentDocuments
 │   └── FileTree
@@ -27,7 +30,8 @@ DocumentsLayout
 |-------|-----------|------|-------------|
 | DocumentsLayout | `src/components/DocumentsView/DocumentsLayout.tsx` | this spec | always in documents route |
 | SidebarHeader | `src/components/DocumentsView/DocumentsLayout.tsx` | this spec | always |
-| FilterInput | `src/components/DocumentsView/DocumentsLayout.tsx` | this spec | always |
+| SearchSortRow | `src/components/DocumentsView/DocumentsLayout.tsx` | this spec | always |
+| SearchInput | `src/components/DocumentsView/DocumentsLayout.tsx` | this spec | always |
 | FavDocuments | `src/components/DocumentsView/FavDocuments.tsx` | this spec | when reconciled favs exist |
 | RecentDocuments | `src/components/DocumentsView/RecentDocuments.tsx` | this spec | when user has opened documents |
 | FileTree | `src/components/DocumentsView/FileTree.tsx` | this spec | when documents are configured |
@@ -40,9 +44,11 @@ DocumentsLayout
 | Type | Path |
 |------|------|
 | Layout | `src/components/DocumentsView/DocumentsLayout.tsx` |
+| Layout CSS | `src/components/DocumentsView/documents-view.css` |
 | Favs | `src/components/DocumentsView/FavDocuments.tsx` |
 | Recent | `src/components/DocumentsView/RecentDocuments.tsx` |
 | Tree | `src/components/DocumentsView/FileTree.tsx` |
+| Navigation preferences | `src/config/documentNavigation.ts` |
 | Fav star entity | `src/styles/entities/fav-star.css` |
 | Path configuration | `src/components/DocumentsView/PathSelector.tsx` |
 | Existing update spec | `docs/design/surfaces/documents-view-file-updates.spec.md` |
@@ -64,9 +70,13 @@ DocumentsLayout
 
 ## Layout
 
-- Sidebar keeps the existing two-pane layout and muted background.
-- Header order: title, sort select, sort direction, collapse control, active-document target, path configuration.
-- Filter input sits directly below the header controls.
+- Sidebar keeps the two-pane layout and muted background, but its desktop width is resizable and collapsible.
+- Sidebar default width is about one third of the Documents View; user-resized width and collapsed state persist per project.
+- Collapsing navigation removes the sidebar and exposes a compact show-navigation control in the viewer pane.
+- Header first row contains the `Documents` title on the left and navigation action icons on the right.
+- Header second row order is always: search input flexing left, sort select, sort direction button.
+- Search input uses the available row width before the fixed-width sort controls; sort controls must not squeeze title/actions into the first row.
+- Search, sort select, and sort direction button share a single visual row and equal control height.
 - Favs appear above Recent when reconciled favs exist.
 - Favs are collapsible, default to expanded, and initially show up to 5 rows in this version.
 - Favs expanded/collapsed state is browser-local UI state and persists for the current project.
@@ -107,15 +117,18 @@ DocumentsLayout
 | recent collapsed | user collapses Recent | recent shortcut rows are hidden; divider and tree stay visible |
 | recent collapse restored | user reloads Documents View in same browser/project | Recent restores the last expanded/collapsed state when recent documents exist |
 | recent default expanded | no browser section-state preference exists | Recent renders expanded when recent documents exist |
+| sidebar resized | user drags the pane handle | navigation width changes immediately; preview pane gets the remaining width |
+| sidebar collapsed | user selects the hide-navigation action or drags to collapsed size | navigation panel is hidden; viewer pane expands; show-navigation control appears |
+| sidebar restored | user selects show-navigation | navigation panel returns to the last non-collapsed project width |
 | expand current | user clicks target action | selected document ancestors expand and row scrolls into view |
-| filter active | user types in filter input | tree shows matching folders/files; Favs and Recent remain visible |
+| search active | user types in search input | tree shows matching folders/files; Favs and Recent remain visible |
 | filter hides selected | selected file does not match filter | target action clears filter, expands ancestors, scrolls to selected file |
 | no matches | filter returns no files | tree area shows compact empty state; Favs and Recent remain available |
 | no configured paths | backend returns 404 | PathSelector modal opens |
 
 ## Filter Behavior
 
-- The input is a tree filter, not full-text content search.
+- The search input is a tree filter, not full-text content search.
 - Match against file name, title, and project-relative path.
 - Multi-word queries use AND matching.
 - Matching folders show their matching descendants.
@@ -182,9 +195,9 @@ DocumentsLayout
 |------------|--------|
 | < 640px | Documents route uses one primary pane at a time: navigation list or document preview |
 | < 640px | persistent sidebar/tree must not remain beside the markdown preview |
-| < 640px | header controls wrap to two rows in navigation mode; Favs and recent documents remain above tree |
-| 640-1024px | sidebar keeps fixed width only when preview content still has readable measure; tree rows truncate long names |
-| > 1024px | two-pane layout; sidebar sections remain visible above scroll area |
+| < 640px | navigation mode keeps title/actions above the search/sort row; Favs and recent documents remain above tree |
+| 640-1024px | sidebar width may be resized only while preview content still has readable measure; tree rows truncate long names |
+| > 1024px | two-pane layout; sidebar sections remain visible above scroll area; artifacts in preview may use remaining pane width |
 
 ## Tokens used
 
@@ -202,7 +215,9 @@ DocumentsLayout
 
 | Element | Class | Source |
 |---------|-------|--------|
-| layout utilities | Tailwind inline utilities | `STYLING.md` keep-inline rule |
+| navigation shell | `.documents-view__layout`, `.documents-view__navigation-panel`, `.documents-view__preview-panel` | resizable Documents View split |
+| navigation header | `.documents-view__navigation-header`, `.documents-view__navigation-primary-row`, `.documents-view__navigation-controls-row` | compact two-row sidebar header |
+| search and sort controls | `.documents-view__search-field`, `.documents-view__sort-select`, `.documents-view__sort-direction-button` | `[search flex] [sort] [direction]` control row |
 | tree row state | `data-tree-state` proposed | semantic row state: `selected`, `muted`, `disabled`, `located` |
 | fav star | `.fav-star`, `.fav-star--document`, `.active` | shared star icon state for tree and Favs rows |
 | document fav star button | `.document-fav-star-button` | compact focus, hover, and opacity treatment |
