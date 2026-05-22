@@ -172,6 +172,7 @@ describe('TicketViewer', () => {
     const markdown = screen.getByTestId('markdown-content')
     expect(markdown).toHaveClass('prose', 'prose--ticket', 'prose--density-compact', 'max-w-none', 'dark:prose-invert')
     expect(markdown).toHaveAttribute('data-header-level-start', '3')
+    expect(markdown.closest('.ticket-viewer-content')).toHaveStyle('--prose-anchor-offset: 0px')
     await waitFor(() => expect(fetchTraceStoreMetadata).toHaveBeenCalled())
   })
 
