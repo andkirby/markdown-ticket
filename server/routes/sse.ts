@@ -1,7 +1,9 @@
 import type { Request } from 'express'
+import type { OriginPolicy } from '../security/originPolicy.js'
 import type FileWatcherService from '../services/fileWatcher/index.js'
 import { logger } from '@mdt/shared/utils/server-logger.js'
 import { Router } from 'express'
+import { createDefaultOriginPolicy } from '../security/originPolicy.js'
 
 interface _ResponseLike {
   write: (data: string) => void
@@ -18,7 +20,7 @@ interface _ResponseLike {
  * @param fileWatcher - File watcher service instance.
  * @returns Express router.
  */
-export function createSSERouter(fileWatcher: FileWatcherService): Router {
+export function createSSERouter(fileWatcher: FileWatcherService, originPolicy: OriginPolicy = createDefaultOriginPolicy()): Router {
   const router = Router()
 
   /**
@@ -39,14 +41,25 @@ export function createSSERouter(fileWatcher: FileWatcherService): Router {
    */
 
   router.get('/', (req: Request, res: any) => {
-    // Set SSE headers
-    res.writeHead(200, {
+    const accessControlAllowOrigin = originPolicy.getAccessControlAllowOrigin(req.headers.origin)
+    const headers: Record<string, string> = {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       'Connection': 'keep-alive',
-      'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Headers': 'Cache-Control',
-    })
+    }
+
+    if (accessControlAllowOrigin) {
+      headers['Access-Control-Allow-Origin'] = accessControlAllowOrigin
+      headers.Vary = 'Origin'
+    }
+
+    if (req.headers.origin && !accessControlAllowOrigin) {
+      logger.warn('SSE stream request from disallowed origin', { origin: req.headers.origin })
+    }
+
+    // Set SSE headers
+    res.writeHead(200, headers)
 
     // Add client to file watcher service first (so it's tracked before sending data)
     fileWatcher.addClient(res)

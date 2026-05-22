@@ -24,6 +24,7 @@ import { createDocumentRouter } from '../../routes/documents'
 import { createProjectRouter } from '../../routes/projects'
 import { createSSERouter } from '../../routes/sse'
 import { createSystemRouter } from '../../routes/system'
+import { createCorsOptions, createDefaultOriginPolicy, securityHeaders } from '../../security/originPolicy'
 import { DocumentService } from '../../services/DocumentService'
 import FileWatcherService from '../../services/fileWatcher/index.js'
 import { TicketService } from '../../services/TicketService'
@@ -134,9 +135,11 @@ interface TestAppResult {
 export function createTestApp(): TestAppResult {
   // Create Express app
   const app: Express = express()
+  const originPolicy = createDefaultOriginPolicy()
 
   // Middleware
-  app.use(cors())
+  app.use(securityHeaders)
+  app.use(cors(createCorsOptions(originPolicy)))
   app.use(express.json())
 
   // Skip log interception for tests (devtools is OOS for E2E testing per MDT-106)
@@ -172,7 +175,7 @@ export function createTestApp(): TestAppResult {
   // Register Routes
   app.use('/api/projects', createProjectRouter(projectController))
   app.use('/api/documents', createDocumentRouter(documentController, projectController))
-  app.use('/api/events', createSSERouter(fileWatcher))
+  app.use('/api/events', createSSERouter(fileWatcher, originPolicy))
   app.use('/api', createSystemRouter(fileWatcher, projectController, projectDiscovery, documentService.fileInvoker as FileInvokerAdapter))
   // Devtools router is OOS for E2E testing per MDT-106 (development-only feature)
   // app.use('/api', createDevToolsRouter());

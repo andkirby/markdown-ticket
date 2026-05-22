@@ -1,0 +1,1042 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-156"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "WHEN GET /api/events receives a request with an allowed Origin, the system shall establish the SSE stream and return Access-Control-Allow-Origin for that Origin.",
+      "sourceRef": "CR Acceptance Criteria: SSE endpoint enforces CORS allowlist",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "WHEN GET /api/events receives a request with a disallowed Origin, the system shall not return Access-Control-Allow-Origin for that Origin.",
+      "sourceRef": "Security audit finding 4: SSE endpoint overrides CORS",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.3",
+      "kind": "behavior",
+      "text": "WHEN a devtools stream endpoint receives a request with an allowed Origin, the system shall establish the stream and return Access-Control-Allow-Origin for that Origin.",
+      "sourceRef": "CR Acceptance Criteria: Devtools endpoints enforce CORS allowlist",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.4",
+      "kind": "behavior",
+      "text": "WHEN a devtools endpoint receives a request with a disallowed Origin, the system shall not return Access-Control-Allow-Origin for that Origin.",
+      "sourceRef": "Security audit finding 5: Devtools endpoints override CORS",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-2.1",
+      "kind": "behavior",
+      "text": "WHEN GET /api/directories is requested for a path outside allowed roots, the system shall return HTTP 403 without listing directory entries.",
+      "sourceRef": "CR Acceptance Criteria: /api/directories?path=/etc returns 403",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-2.2",
+      "kind": "behavior",
+      "text": "WHEN POST /api/filesystem/exists is requested for a path outside allowed roots, the system shall return HTTP 403 without revealing existence or expanded absolute path details.",
+      "sourceRef": "Security audit finding 8: path existence check leaks filesystem structure",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-2.3",
+      "kind": "behavior",
+      "text": "WHEN filesystem browsing is requested for a path inside allowed roots, the system shall return directory information needed by the project selection workflow.",
+      "sourceRef": "CR Constraints: maintain local development workflow",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-3.1",
+      "kind": "behavior",
+      "text": "WHILE running production Docker configuration, the MCP HTTP service shall enable origin validation and rate limiting by default.",
+      "sourceRef": "CR Success Conditions: MCP production Docker config enables origin validation and rate limiting",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-3.2",
+      "kind": "behavior",
+      "text": "WHILE using MCP stdio transport, the system shall not require HTTP authentication, origin validation, or rate-limit configuration.",
+      "sourceRef": "CR Non-Functional: Existing MCP stdio transport unaffected",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-3.3",
+      "kind": "behavior",
+      "text": "WHEN MCP HTTP bearer authentication is enabled, the system shall compare presented tokens using timing-safe comparison.",
+      "sourceRef": "Assess: MCP token comparison hardening",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-3.4",
+      "kind": "behavior",
+      "text": "WHILE not running in development mode, the MCP HTTP service shall hide or deny session-inspection endpoints unless architecture explicitly allows them behind a security control.",
+      "sourceRef": "Assess: /sessions visibility policy",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-4.1",
+      "kind": "behavior",
+      "text": "WHEN backend Express returns an HTTP response, the system shall include X-Content-Type-Options: nosniff and X-Frame-Options: DENY.",
+      "sourceRef": "CR Success Conditions: Backend responses include security headers",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-5.1",
+      "kind": "behavior",
+      "text": "WHEN production dependency audit is evaluated after updates, the system shall resolve DOMPurify to at least 3.3.2, express-rate-limit to at least 8.2.2, and path-to-regexp to at least 8.4.0 where those packages are present in runtime dependency resolution.",
+      "sourceRef": "CR Success Conditions: dependency versions",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-6.1",
+      "kind": "behavior",
+      "text": "WHEN tracked files are scanned for secrets, the system shall report no committed secrets or tokens in tracked .env, config, Docker, compose, or documentation files.",
+      "sourceRef": "CR Success Conditions and Assess: tracked-file secret scan",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-7.1",
+      "kind": "behavior",
+      "text": "WHILE running in production, the system shall either disable devtools endpoints by default or expose them only when an explicit DEVTOOLS_ENABLED opt-in is set.",
+      "sourceRef": "Assess: devtools production exposure decision",
+      "routePolicy": "clarification",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-8.1",
+      "kind": "behavior",
+      "text": "WHILE MDT-157 authentication is not implemented, the system shall either apply minimum filtering or gating to config and maintenance endpoints in MDT-156 or explicitly document their residual risk as deferred to MDT-157.",
+      "sourceRef": "Assess: config and maintenance endpoint exposure decision",
+      "routePolicy": "clarification",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "The system shall use one backend allowed-origin decision for REST CORS, SSE streams, and devtools streams.",
+      "sourceRef": "Assess: backend CORS and streaming routes",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "The system shall allow requests with no Origin header for curl, server-to-server, and local tooling clients.",
+      "sourceRef": "CR Edge Cases: Requests with no Origin header still work",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "The system shall define allowed filesystem roots as exactly one selected policy before implementation: configured project roots only, discovery search paths only, or discovery search paths plus configured project roots.",
+      "sourceRef": "CR Open Questions: Filesystem restriction",
+      "routePolicy": "clarification",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "The system shall perform filesystem authorization using canonical resolved paths before returning existence or directory data.",
+      "sourceRef": "CR Edge Cases: symlink and traversal bypasses",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C5",
+      "kind": "constraint",
+      "text": "The system shall not require changes to the shared service layer public API surface.",
+      "sourceRef": "CR Constraints: shared service layer API surface",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C6",
+      "kind": "constraint",
+      "text": "The system shall preserve nginx reverse-proxy compatibility, including X-Forwarded-* operation.",
+      "sourceRef": "CR Constraints: nginx reverse proxy",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C7",
+      "kind": "constraint",
+      "text": "The system shall keep authentication and authorization mechanisms out of MDT-156 except for preserving or hardening existing optional MCP HTTP auth behavior.",
+      "sourceRef": "CR Out of scope: Authentication and authorization",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C8",
+      "kind": "constraint",
+      "text": "The system shall treat confirmed committed secrets as in scope for removal in MDT-156 while deferring secret rotation policy to MDT-157 or a follow-up operations ticket.",
+      "sourceRef": "Assess: secret scan remediation scope",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C9",
+      "kind": "constraint",
+      "text": "The system shall choose whether MCP HTTP rate limiting keys are caller-aware in MDT-156 or explicitly deferred to MDT-157 or follow-up work.",
+      "sourceRef": "Assess: rate-limit key semantics",
+      "routePolicy": "clarification",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "IF a path inside an allowed root resolves through a symbolic link outside allowed roots, THEN the system shall deny the request.",
+      "sourceRef": "CR Edge Cases: Symbolic links do not bypass path restrictions",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-2",
+      "kind": "edge_case",
+      "text": "IF a requested path uses URL encoding or Unicode normalization to represent traversal or an outside-root path, THEN the system shall deny the request.",
+      "sourceRef": "CR Edge Cases: URL-encoded or Unicode-normalized paths do not bypass checks",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-3",
+      "kind": "edge_case",
+      "text": "IF dependency updates cannot remove a critical or high production vulnerability without a breaking change, THEN the system shall record the unresolved advisory and required follow-up decision.",
+      "sourceRef": "CR Open Questions: transitive dependency bumps",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-4",
+      "kind": "edge_case",
+      "text": "IF an unauthorized Origin attempts to subscribe to real-time file or log streams, THEN the system shall prevent browser-readable stream access by omitting or denying matching CORS access.",
+      "sourceRef": "Security audit findings 4 and 5",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C10",
+      "kind": "constraint",
+      "text": "The system shall pass all existing unit and E2E suites after MDT-156 changes, with any environment-specific exclusions documented with the excluded suite, reason, and follow-up owner.",
+      "sourceRef": "CR Non-Functional: All existing E2E and unit tests pass after changes; reviewer GAP-2",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-9.1",
+      "kind": "behavior",
+      "text": "WHEN Docker or MCP production security defaults or required environment variables change, the system shall document the new defaults and required variables in relevant Docker or MCP documentation or compose comments.",
+      "sourceRef": "CR Known Constraints: Docker compose files are user-facing config; plan slice 6 MCP HTTP hardening; reviewer GAP-3",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-3.5",
+      "kind": "behavior",
+      "text": "WHEN existing MCP HTTP clients send no Origin header or a configured allowed Origin, the system shall continue accepting compatible requests subject to the configured authentication and rate-limit policy.",
+      "sourceRef": "CR Constraints: Must not break existing MCP client integrations; CR Edge Cases: no Origin requests; reviewer GAP-4",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-9.2",
+      "kind": "behavior",
+      "text": "WHEN production Docker MCP security behavior changes, the system shall provide migration guidance describing required allowed-origin and rate-limit configuration for existing deployments.",
+      "sourceRef": "CR Known Constraints: Docker compose files are user-facing config; assess MCP HTTP transport and Docker defaults; reviewer GAP-4",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "sse_stream_allows_configured_origin",
+      "title": "SSE stream allows GET /api/events from a configured browser origin",
+      "covers": [
+        "BR-1.1"
+      ],
+      "given": "Given a browser request to GET /api/events uses an Origin that is configured as allowed",
+      "when": "When the client opens GET /api/events as an event stream",
+      "then": "Then the stream is established and the response exposes that Origin through Access-Control-Allow-Origin",
+      "sourceRef": "requirements BR-1.1; ticket AC SSE endpoint enforces CORS allowlist"
+    },
+    {
+      "id": "devtools_stream_allows_configured_origin",
+      "title": "Devtools stream allows configured browser origin",
+      "covers": [
+        "BR-1.3"
+      ],
+      "given": "Given a browser request to the architecture-owned devtools stream route, currently expected to be GET /api/devtools/logs/stream, uses an Origin that is configured as allowed",
+      "when": "When the client opens that devtools stream route",
+      "then": "Then the stream is established and the response exposes that Origin through Access-Control-Allow-Origin",
+      "sourceRef": "requirements BR-1.3; ticket AC Devtools endpoints enforce CORS allowlist; architecture must confirm exact devtools stream routes"
+    },
+    {
+      "id": "directory_browse_denies_outside_root",
+      "title": "GET /api/directories denies /etc outside allowed roots",
+      "covers": [
+        "BR-2.1"
+      ],
+      "given": "Given a client requests GET /api/directories?path=/etc and /etc is outside allowed roots",
+      "when": "When the request is submitted",
+      "then": "Then the response is HTTP 403 and no directory entries are returned",
+      "sourceRef": "requirements BR-2.1; ticket AC GET /api/directories?path=/etc returns 403"
+    },
+    {
+      "id": "directory_browse_allows_inside_root",
+      "title": "GET /api/directories allows an inside-root project path",
+      "covers": [
+        "BR-2.3"
+      ],
+      "given": "Given a client requests GET /api/directories?path=/allowed/project where /allowed/project represents a path inside allowed roots",
+      "when": "When the request is submitted",
+      "then": "Then the response includes directory information needed for project selection",
+      "sourceRef": "requirements BR-2.3; CR constraint maintain local development workflow"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-cors-single-origin-policy",
+      "title": "REST CORS, SSE streams, and devtools streams must use one shared allowed-origin decision that reflects configured origins and preserves no-Origin clients.",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "C1",
+        "C2",
+        "Edge-4"
+      ],
+      "artifactIds": [
+        "ART-server-security-origin-policy",
+        "ART-server-server",
+        "ART-server-routes-sse",
+        "ART-server-routes-devtools"
+      ],
+      "sourceRef": "architecture:CORS boundary"
+    },
+    {
+      "id": "OBL-filesystem-allowed-roots",
+      "title": "Filesystem APIs must allow only canonical paths contained in discovery search paths plus configured project roots, denying all other paths before directory or existence data is returned.",
+      "derivedFrom": [
+        "BR-2.1",
+        "BR-2.2",
+        "BR-2.3",
+        "C3",
+        "C4",
+        "C5",
+        "Edge-1",
+        "Edge-2"
+      ],
+      "artifactIds": [
+        "ART-server-security-filesystem-access",
+        "ART-server-routes-system",
+        "ART-server-controllers-project",
+        "ART-shared-services-project"
+      ],
+      "sourceRef": "architecture:filesystem allowed roots"
+    },
+    {
+      "id": "OBL-devtools-production-policy",
+      "title": "Devtools endpoints are enabled by default only outside production; production exposure requires explicit DEVTOOLS_ENABLED=true and still uses the shared CORS policy.",
+      "derivedFrom": [
+        "BR-7.1",
+        "BR-1.3",
+        "BR-1.4",
+        "C1",
+        "C7",
+        "Edge-4"
+      ],
+      "artifactIds": [
+        "ART-server-routes-devtools",
+        "ART-server-security-origin-policy",
+        "ART-server-server"
+      ],
+      "sourceRef": "architecture:devtools production policy"
+    },
+    {
+      "id": "OBL-mcp-auth-session-rate-limit",
+      "title": "MCP HTTP auth token checks must be timing-safe when auth is enabled; session inspection is hidden outside development unless authenticated, and rate-limit keys are caller-aware rather than tool-only.",
+      "derivedFrom": [
+        "BR-3.3",
+        "BR-3.4",
+        "BR-3.5",
+        "C7",
+        "C9"
+      ],
+      "artifactIds": [
+        "ART-mcp-middleware",
+        "ART-mcp-http-transport",
+        "ART-mcp-rate-limit-manager"
+      ],
+      "sourceRef": "architecture:MCP session and rate limit policy"
+    },
+    {
+      "id": "OBL-backend-security-headers",
+      "title": "Backend Express responses must set X-Content-Type-Options nosniff and X-Frame-Options DENY without broad authentication or TLS changes in MDT-156.",
+      "derivedFrom": [
+        "BR-4.1",
+        "C7"
+      ],
+      "artifactIds": [
+        "ART-server-server"
+      ],
+      "sourceRef": "architecture:backend security headers"
+    },
+    {
+      "id": "OBL-config-maintenance-minimum-gating",
+      "title": "Config reads remain client-compatible but must avoid unnecessary sensitive path disclosure; production maintenance or debug mutation endpoints require explicit opt-in until MDT-157 auth exists.",
+      "derivedFrom": [
+        "BR-8.1",
+        "C7"
+      ],
+      "artifactIds": [
+        "ART-server-routes-system",
+        "ART-server-server"
+      ],
+      "sourceRef": "architecture:config maintenance endpoint scope"
+    },
+    {
+      "id": "OBL-dependency-audit-threshold",
+      "title": "MDT-156 dependency work targets production/runtime high and critical vulnerabilities, requiring DOMPurify, express-rate-limit, and path-to-regexp to meet patched resolved versions or record a follow-up for breaking upgrades.",
+      "derivedFrom": [
+        "BR-5.1",
+        "Edge-3"
+      ],
+      "artifactIds": [
+        "ART-package-json",
+        "ART-bun-lock"
+      ],
+      "sourceRef": "architecture:dependency audit threshold"
+    },
+    {
+      "id": "OBL-secret-scan-scope",
+      "title": "Secret scanning for MDT-156 is limited to tracked .env, config, Docker, compose, and documentation files; confirmed tracked secrets are removed while rotation policy is deferred.",
+      "derivedFrom": [
+        "BR-6.1",
+        "C8"
+      ],
+      "artifactIds": [
+        "ART-security-audit-research",
+        "ART-docker-compose-prod",
+        "ART-docker-compose-dev",
+        "ART-docs-docker-guide",
+        "ART-docs-mcp-guide"
+      ],
+      "sourceRef": "architecture:secret scan scope"
+    },
+    {
+      "id": "OBL-docker-mcp-docs",
+      "title": "Docker and MCP documentation must describe production default changes, required allowed-origin configuration, rate limiting behavior, and migration guidance for existing deployments.",
+      "derivedFrom": [
+        "BR-9.1",
+        "BR-9.2",
+        "BR-3.1",
+        "BR-3.5"
+      ],
+      "artifactIds": [
+        "ART-docs-docker-guide",
+        "ART-docs-mcp-guide",
+        "ART-docker-compose-prod"
+      ],
+      "sourceRef": "architecture:Docker MCP migration docs"
+    },
+    {
+      "id": "OBL-mcp-production-config",
+      "title": "MCP HTTP startup must parse environment security settings and pass them into the HTTP transport; production Docker enables origin validation and rate limiting by default; when origin validation is enabled without MCP_ALLOWED_ORIGINS, startup must fail closed with a configuration error while stdio remains unaffected.",
+      "derivedFrom": [
+        "BR-3.1",
+        "BR-3.2",
+        "BR-3.5",
+        "C6",
+        "C7"
+      ],
+      "artifactIds": [
+        "ART-mcp-index",
+        "ART-mcp-http-transport",
+        "ART-docker-compose-prod",
+        "ART-docker-compose-dev"
+      ],
+      "sourceRef": "architecture:MCP production defaults"
+    },
+    {
+      "id": "OBL-existing-suite-preservation",
+      "title": "Existing unit and E2E suites must remain green after MDT-156 changes; any environment-specific exclusion must document suite, reason, and follow-up owner in the test-stage artifact.",
+      "derivedFrom": [
+        "C10"
+      ],
+      "artifactIds": [
+        "ART-server-server",
+        "ART-server-routes-system",
+        "ART-server-routes-sse",
+        "ART-server-routes-devtools",
+        "ART-mcp-index",
+        "ART-mcp-http-transport",
+        "ART-package-json",
+        "ART-bun-lock"
+      ],
+      "sourceRef": "architecture:existing suite preservation handoff"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-server-security-origin-policy",
+      "path": "server/security/originPolicy.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:CORS boundary"
+    },
+    {
+      "id": "ART-server-server",
+      "path": "server/server.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:backend security baseline"
+    },
+    {
+      "id": "ART-server-routes-sse",
+      "path": "server/routes/sse.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:SSE stream CORS flow"
+    },
+    {
+      "id": "ART-server-routes-devtools",
+      "path": "server/routes/devtools.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:devtools stream and production policy"
+    },
+    {
+      "id": "ART-server-security-filesystem-access",
+      "path": "server/security/filesystemAccess.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:filesystem allowed roots"
+    },
+    {
+      "id": "ART-server-routes-system",
+      "path": "server/routes/system.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:filesystem config maintenance endpoints"
+    },
+    {
+      "id": "ART-server-controllers-project",
+      "path": "server/controllers/ProjectController.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:filesystem controller boundary"
+    },
+    {
+      "id": "ART-shared-services-project",
+      "path": "shared/services/ProjectService.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:directory listing service compatibility"
+    },
+    {
+      "id": "ART-mcp-index",
+      "path": "mcp-server/src/index.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:MCP config wiring"
+    },
+    {
+      "id": "ART-mcp-http-transport",
+      "path": "mcp-server/src/transports/http.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:MCP HTTP production defaults"
+    },
+    {
+      "id": "ART-mcp-middleware",
+      "path": "mcp-server/src/transports/middleware.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:MCP auth comparison and session visibility"
+    },
+    {
+      "id": "ART-mcp-rate-limit-manager",
+      "path": "mcp-server/src/utils/rateLimitManager.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:MCP caller-aware rate limits"
+    },
+    {
+      "id": "ART-docker-compose-prod",
+      "path": "docker-compose.prod.yml",
+      "kind": "config",
+      "sourceRef": "architecture:MCP production Docker defaults"
+    },
+    {
+      "id": "ART-docker-compose-dev",
+      "path": "docker-compose.yml",
+      "kind": "config",
+      "sourceRef": "architecture:development Docker compatibility"
+    },
+    {
+      "id": "ART-package-json",
+      "path": "package.json",
+      "kind": "config",
+      "sourceRef": "architecture:dependency thresholds"
+    },
+    {
+      "id": "ART-bun-lock",
+      "path": "bun.lock",
+      "kind": "config",
+      "sourceRef": "architecture:resolved dependency thresholds"
+    },
+    {
+      "id": "ART-docs-docker-guide",
+      "path": "docs/DOCKER_GUIDE.md",
+      "kind": "doc",
+      "sourceRef": "architecture:Docker migration docs"
+    },
+    {
+      "id": "ART-docs-mcp-guide",
+      "path": "docs/MCP_SERVER_GUIDE.md",
+      "kind": "doc",
+      "sourceRef": "architecture:MCP HTTP security docs"
+    },
+    {
+      "id": "ART-security-audit-research",
+      "path": "docs/CRs/MDT-156/security-audit-research.md",
+      "kind": "doc",
+      "sourceRef": "architecture:secret scan scope source"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-origin-policy-unit",
+      "kind": "unit",
+      "title": "Shared origin policy accepts configured origins, preserves no-Origin clients, and rejects disallowed origins for REST and streams",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "C1",
+        "C2",
+        "Edge-4",
+        "OBL-cors-single-origin-policy"
+      ],
+      "file": "server/tests/security/originPolicy.test.ts",
+      "sourceRef": "tests.md:CORS policy"
+    },
+    {
+      "id": "TEST-sse-cors-api",
+      "kind": "integration",
+      "title": "GET /api/events uses the shared CORS policy for allowed, disallowed, and no-Origin requests",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "C1",
+        "C2",
+        "Edge-4",
+        "OBL-cors-single-origin-policy"
+      ],
+      "file": "server/tests/api/sse-cors.test.ts",
+      "sourceRef": "tests.md:SSE CORS"
+    },
+    {
+      "id": "TEST-filesystem-access-unit",
+      "kind": "unit",
+      "title": "Filesystem boundary helper authorizes only canonical paths under discovery roots plus configured project roots",
+      "covers": [
+        "BR-2.1",
+        "BR-2.2",
+        "BR-2.3",
+        "C3",
+        "C4",
+        "C5",
+        "Edge-1",
+        "Edge-2",
+        "OBL-filesystem-allowed-roots"
+      ],
+      "file": "server/tests/security/filesystemAccess.test.ts",
+      "sourceRef": "tests.md:Filesystem boundary"
+    },
+    {
+      "id": "TEST-filesystem-api-integration",
+      "kind": "integration",
+      "title": "Directory browsing and filesystem exists APIs deny outside roots before leaking entries or expanded paths",
+      "covers": [
+        "BR-2.1",
+        "BR-2.2",
+        "BR-2.3",
+        "C3",
+        "C4",
+        "Edge-1",
+        "Edge-2",
+        "OBL-filesystem-allowed-roots"
+      ],
+      "file": "server/tests/api/filesystem-boundary.test.ts",
+      "sourceRef": "tests.md:Filesystem API"
+    },
+    {
+      "id": "TEST-backend-security-headers",
+      "kind": "integration",
+      "title": "Backend Express responses include nosniff and DENY frame headers without changing authentication scope",
+      "covers": [
+        "BR-4.1",
+        "C7",
+        "OBL-backend-security-headers"
+      ],
+      "file": "server/tests/api/security-headers.test.ts",
+      "sourceRef": "tests.md:Headers"
+    },
+    {
+      "id": "TEST-config-maintenance-policy",
+      "kind": "integration",
+      "title": "Config reads filter sensitive detail and production maintenance endpoints require explicit opt-in",
+      "covers": [
+        "BR-8.1",
+        "C7",
+        "OBL-config-maintenance-minimum-gating"
+      ],
+      "file": "server/tests/api/config-maintenance-policy.test.ts",
+      "sourceRef": "tests.md:Config maintenance"
+    },
+    {
+      "id": "TEST-mcp-http-config",
+      "kind": "unit",
+      "title": "MCP HTTP startup wires env security config, enables production Docker defaults, preserves stdio, and fails startup when origin validation has no allowed origins",
+      "covers": [
+        "BR-3.1",
+        "BR-3.2",
+        "BR-3.5",
+        "C6",
+        "C7",
+        "OBL-mcp-production-config"
+      ],
+      "file": "mcp-server/tests/http-security-config.test.ts",
+      "sourceRef": "tests.md:MCP config"
+    },
+    {
+      "id": "TEST-mcp-auth-session-rate-limit",
+      "kind": "unit",
+      "title": "MCP HTTP auth uses timing-safe comparison, hides sessions outside development unless authenticated, and rate limits by caller-aware keys",
+      "covers": [
+        "BR-3.3",
+        "BR-3.4",
+        "BR-3.5",
+        "C7",
+        "C9",
+        "OBL-mcp-auth-session-rate-limit"
+      ],
+      "file": "mcp-server/tests/http-auth-session-rate-limit.test.ts",
+      "sourceRef": "tests.md:MCP auth sessions rate limits"
+    },
+    {
+      "id": "TEST-dependency-audit-runtime",
+      "kind": "unit",
+      "title": "Runtime dependency audit verifies patched DOMPurify, express-rate-limit, and path-to-regexp versions or records breaking follow-up",
+      "covers": [
+        "BR-5.1",
+        "Edge-3",
+        "OBL-dependency-audit-threshold"
+      ],
+      "file": "server/tests/security/dependencyAudit.test.ts",
+      "sourceRef": "tests.md:Dependency audit"
+    },
+    {
+      "id": "TEST-secret-scan-tracked-files",
+      "kind": "unit",
+      "title": "Tracked .env, config, Docker, compose, and documentation files contain no committed secrets or tokens",
+      "covers": [
+        "BR-6.1",
+        "C8",
+        "OBL-secret-scan-scope"
+      ],
+      "file": "server/tests/security/trackedSecretScan.test.ts",
+      "sourceRef": "tests.md:Secret scan"
+    },
+    {
+      "id": "TEST-docker-mcp-docs",
+      "kind": "integration",
+      "title": "Docker and MCP docs describe production security defaults, required allowed origins, rate limiting, and migration guidance",
+      "covers": [
+        "BR-9.1",
+        "BR-9.2",
+        "BR-3.1",
+        "BR-3.5",
+        "OBL-docker-mcp-docs"
+      ],
+      "file": "docs/tests/mcp-docker-docs.test.ts",
+      "sourceRef": "tests.md:Docs migration"
+    },
+    {
+      "id": "TEST-security-e2e",
+      "kind": "integration",
+      "title": "E2E/API security journey covers configured-origin streams, outside-root denial, inside-root browsing, and production-compatible no-Origin behavior",
+      "covers": [
+        "BR-1.1",
+        "BR-1.3",
+        "BR-2.1",
+        "BR-2.3",
+        "C2"
+      ],
+      "file": "tests/e2e/security-hardening.spec.ts",
+      "sourceRef": "tests.md:E2E journey"
+    },
+    {
+      "id": "TEST-existing-suite-preservation",
+      "kind": "integration",
+      "title": "Existing server, MCP, frontend, and E2E suites remain green after MDT-156 or exclusions document suite, reason, environment constraint, and owner",
+      "covers": [
+        "C10",
+        "OBL-existing-suite-preservation"
+      ],
+      "file": "docs/CRs/MDT-156/tests.md",
+      "sourceRef": "tests.md:Existing suite preservation"
+    },
+    {
+      "id": "TEST-devtools-policy-api",
+      "kind": "integration",
+      "title": "Devtools routes enforce shared CORS and production opt-in behavior without wildcard stream headers",
+      "covers": [
+        "BR-1.3",
+        "BR-1.4",
+        "BR-7.1",
+        "C1",
+        "C7",
+        "Edge-4",
+        "OBL-cors-single-origin-policy",
+        "OBL-devtools-production-policy"
+      ],
+      "file": "server/tests/api/devtools-security.test.ts",
+      "sourceRef": "tests.md:Devtools policy"
+    },
+    {
+      "id": "TEST-backend-reverse-proxy-compat",
+      "kind": "integration",
+      "title": "Backend security behavior remains compatible behind nginx with X-Forwarded-For, X-Forwarded-Proto, and X-Forwarded-Host headers",
+      "covers": [
+        "C6",
+        "BR-4.1",
+        "OBL-backend-security-headers"
+      ],
+      "file": "server/tests/api/reverse-proxy-compat.test.ts",
+      "sourceRef": "tests.md:Reverse proxy compatibility"
+    },
+    {
+      "id": "TEST-mcp-reverse-proxy-caller-identity",
+      "kind": "integration",
+      "title": "MCP HTTP caller identity and rate limiting behave correctly behind nginx using X-Forwarded-For, X-Forwarded-Proto, and Host headers",
+      "covers": [
+        "C6",
+        "C9",
+        "BR-3.5",
+        "OBL-mcp-auth-session-rate-limit",
+        "OBL-mcp-production-config"
+      ],
+      "file": "mcp-server/tests/http-reverse-proxy-caller-identity.test.ts",
+      "sourceRef": "tests.md:Reverse proxy compatibility"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-2",
+      "title": "Devtools CORS and production debug/config endpoint gating",
+      "ownsArtifactIds": [
+        "ART-server-routes-devtools",
+        "ART-server-routes-system",
+        "ART-server-server",
+        "ART-server-security-origin-policy"
+      ],
+      "makesGreenIds": [
+        "TEST-devtools-policy-api",
+        "TEST-config-maintenance-policy",
+        "devtools_stream_allows_configured_origin"
+      ],
+      "sourceRef": "tasks.md#task-2"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Canonical filesystem allowed-root enforcement",
+      "ownsArtifactIds": [
+        "ART-server-security-filesystem-access",
+        "ART-server-routes-system",
+        "ART-server-controllers-project",
+        "ART-shared-services-project"
+      ],
+      "makesGreenIds": [
+        "TEST-filesystem-access-unit",
+        "TEST-filesystem-api-integration",
+        "directory_browse_denies_outside_root",
+        "directory_browse_allows_inside_root"
+      ],
+      "sourceRef": "tasks.md#task-3"
+    },
+    {
+      "id": "TASK-4",
+      "title": "MCP HTTP production config wiring and Docker documentation",
+      "ownsArtifactIds": [
+        "ART-mcp-index",
+        "ART-mcp-http-transport",
+        "ART-docker-compose-prod",
+        "ART-docker-compose-dev",
+        "ART-docs-docker-guide",
+        "ART-docs-mcp-guide"
+      ],
+      "makesGreenIds": [
+        "TEST-mcp-http-config",
+        "TEST-docker-mcp-docs"
+      ],
+      "sourceRef": "tasks.md#task-4"
+    },
+    {
+      "id": "TASK-5",
+      "title": "MCP auth session visibility rate-limit and reverse-proxy caller identity",
+      "ownsArtifactIds": [
+        "ART-mcp-middleware",
+        "ART-mcp-http-transport",
+        "ART-mcp-rate-limit-manager",
+        "ART-mcp-index"
+      ],
+      "makesGreenIds": [
+        "TEST-mcp-auth-session-rate-limit",
+        "TEST-mcp-reverse-proxy-caller-identity"
+      ],
+      "sourceRef": "tasks.md#task-5"
+    },
+    {
+      "id": "TASK-7",
+      "title": "Security E2E journey and existing suite preservation gate",
+      "ownsArtifactIds": [
+        "ART-server-server",
+        "ART-server-routes-sse",
+        "ART-server-routes-devtools",
+        "ART-server-routes-system",
+        "ART-server-security-origin-policy",
+        "ART-server-security-filesystem-access",
+        "ART-mcp-index",
+        "ART-mcp-http-transport",
+        "ART-package-json",
+        "ART-bun-lock"
+      ],
+      "makesGreenIds": [
+        "TEST-security-e2e",
+        "TEST-existing-suite-preservation",
+        "sse_stream_allows_configured_origin",
+        "devtools_stream_allows_configured_origin",
+        "directory_browse_denies_outside_root",
+        "directory_browse_allows_inside_root"
+      ],
+      "skills": [
+        "playwright-skill"
+      ],
+      "sourceRef": "tasks.md#task-7"
+    },
+    {
+      "id": "TASK-1",
+      "title": "Backend security baseline and shared stream CORS policy",
+      "ownsArtifactIds": [
+        "ART-server-security-origin-policy",
+        "ART-server-server",
+        "ART-server-routes-sse"
+      ],
+      "makesGreenIds": [
+        "TEST-origin-policy-unit",
+        "TEST-sse-cors-api",
+        "TEST-backend-security-headers",
+        "TEST-backend-reverse-proxy-compat",
+        "sse_stream_allows_configured_origin"
+      ],
+      "sourceRef": "tasks.md#task-1"
+    },
+    {
+      "id": "TASK-6",
+      "title": "Dependency threshold and tracked secret hygiene",
+      "ownsArtifactIds": [
+        "ART-package-json",
+        "ART-bun-lock",
+        "ART-docker-compose-prod",
+        "ART-docker-compose-dev",
+        "ART-docs-docker-guide",
+        "ART-docs-mcp-guide"
+      ],
+      "makesGreenIds": [
+        "TEST-dependency-audit-runtime",
+        "TEST-secret-scan-tracked-files"
+      ],
+      "sourceRef": "tasks.md#task-6"
+    }
+  ]
+}
