@@ -48,6 +48,40 @@ describe('mermaid zoom', () => {
     expect(diagram.style.touchAction).toBe('none')
   })
 
+  it('supports a custom diagram selector', () => {
+    document.body.innerHTML = `
+      <div class="diagram-container">
+        <div class="custom-diagram" data-fullscreen-scale="1.5">
+          <svg viewBox="0 0 300 200"></svg>
+        </div>
+      </div>
+    `
+    const container = document.querySelector('.diagram-container') as HTMLElement
+    const diagram = container.querySelector('.custom-diagram') as HTMLElement
+
+    diagram.getBoundingClientRect = () => ({
+      x: 0,
+      y: 0,
+      width: 300,
+      height: 200,
+      top: 0,
+      right: 300,
+      bottom: 200,
+      left: 0,
+      toJSON: () => ({}),
+    })
+
+    enableZoom(container, { diagramSelector: '.custom-diagram' })
+
+    expect(container.getAttribute('data-zoom-enabled')).toBe('true')
+    expect(diagram.style.cursor).toBe('grab')
+
+    disableZoom(container, { diagramSelector: '.custom-diagram' })
+
+    expect(container.getAttribute('data-zoom-enabled')).toBe('false')
+    expect(diagram.style.cursor).toBe('')
+  })
+
   it('zooms with the mouse wheel', () => {
     const { container, diagram } = createMermaidContainer()
     enableZoom(container)

@@ -9,6 +9,7 @@
  * 2. Post-render hook calls renderWireloomElements() to async-render.
  * 3. On theme-change, already-rendered `.wireloom` divs are re-rendered.
  */
+import { addWireloomFullscreenButtons } from './wireloomFullscreen'
 
 /** Cache: source+theme → rendered SVG or error HTML */
 const cache = new Map<string, string>()
@@ -58,6 +59,19 @@ function decodeSource(encoded: string): string {
   return decodeURIComponent(escape(atob(encoded)))
 }
 
+function createWireloomWrapper(encoded: string, svg: string): HTMLDivElement {
+  const wrapper = document.createElement('div')
+  const diagram = document.createElement('div')
+
+  wrapper.className = 'wireloom'
+  wrapper.setAttribute('data-source-encoded', encoded)
+  diagram.className = 'wireloom__diagram'
+  diagram.innerHTML = svg
+  wrapper.appendChild(diagram)
+
+  return wrapper
+}
+
 /**
  * Render Wireloom elements in a container.
  *
@@ -102,10 +116,7 @@ export async function renderWireloomElements(container: HTMLElement): Promise<vo
     // Use cache if available (avoids re-rendering on every theme toggle)
     const cached = cache.get(key)
     if (cached !== undefined) {
-      const wrapper = document.createElement('div')
-      wrapper.className = 'wireloom'
-      wrapper.setAttribute('data-source-encoded', encoded)
-      wrapper.innerHTML = cached
+      const wrapper = createWireloomWrapper(encoded, cached)
       el.replaceWith(wrapper)
       continue
     }
@@ -113,10 +124,7 @@ export async function renderWireloomElements(container: HTMLElement): Promise<vo
     try {
       const { svg } = await mod.default.render(`wireloom-${i++}-${Date.now()}`, source, { theme })
       cache.set(key, svg)
-      const wrapper = document.createElement('div')
-      wrapper.className = 'wireloom'
-      wrapper.setAttribute('data-source-encoded', encoded)
-      wrapper.innerHTML = svg
+      const wrapper = createWireloomWrapper(encoded, svg)
       el.replaceWith(wrapper)
     }
     catch (err) {
@@ -127,4 +135,6 @@ export async function renderWireloomElements(container: HTMLElement): Promise<vo
       el.replaceWith(errorDiv)
     }
   }
+
+  addWireloomFullscreenButtons(container)
 }

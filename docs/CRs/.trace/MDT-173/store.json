@@ -1,0 +1,252 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-173"
+  },
+  "requirements": [
+    {
+      "id": "BR-10.1",
+      "kind": "behavior",
+      "text": "Documents View keeps prose text at a readable measure while rendered wide artifacts such as Wireloom, Mermaid, tables, and code blocks can use the available document pane and scroll horizontally only when their intrinsic width exceeds that pane.",
+      "sourceRef": "CR:MDT-173",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-10.2",
+      "kind": "behavior",
+      "text": "Documents View lets users resize and collapse the document navigation sidebar, and preserves the sidebar width and collapsed state per project.",
+      "sourceRef": "CR:MDT-173",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C10",
+      "kind": "constraint",
+      "text": "Readable prose width must remain constrained; widening artifact rendering must not make normal document paragraphs span the full desktop pane.",
+      "sourceRef": "CR:MDT-173",
+      "routePolicy": "tests"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "document_artifacts_use_available_width",
+      "title": "Wide document artifacts use available pane width",
+      "covers": [
+        "BR-10.1"
+      ],
+      "given": "a document contains readable prose and a wide rendered artifact",
+      "when": "the document is opened in a wide Documents View pane",
+      "then": "normal prose remains constrained to a readable measure and the artifact container uses the available pane width before horizontal scrolling is needed",
+      "sourceRef": "CR:MDT-173"
+    },
+    {
+      "id": "document_navigation_resizes_and_collapses",
+      "title": "Document navigation can resize and collapse",
+      "covers": [
+        "BR-10.2"
+      ],
+      "given": "a user is viewing a document with the navigation sidebar visible",
+      "when": "the user resizes or collapses the document navigation panel",
+      "then": "the preview pane adjusts immediately and the navigation panel state is preserved for the project",
+      "sourceRef": "CR:MDT-173"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-wide-document-artifacts",
+      "title": "Document artifact width is independent from readable prose measure",
+      "derivedFrom": [
+        "BR-10.1",
+        "C10"
+      ],
+      "artifactIds": [
+        "ART-markdown-viewer",
+        "ART-prose-css",
+        "ART-documents-css"
+      ],
+      "sourceRef": "CR:MDT-173"
+    },
+    {
+      "id": "OBL-resizable-document-navigation",
+      "title": "Document navigation panel is resizable, collapsible, and project-persistent",
+      "derivedFrom": [
+        "BR-10.2"
+      ],
+      "artifactIds": [
+        "ART-documents-layout",
+        "ART-documents-css",
+        "ART-document-navigation-config",
+        "ART-resizable-primitive"
+      ],
+      "sourceRef": "CR:MDT-173"
+    },
+    {
+      "id": "OBL-wireloom-inspection",
+      "title": "Wireloom artifacts keep native inline sizing and can open a zoomable inspection overlay",
+      "derivedFrom": [
+        "BR-10.1"
+      ],
+      "artifactIds": [
+        "ART-wireloom-fullscreen",
+        "ART-wireloom-renderer",
+        "ART-mermaid-zoom",
+        "ART-prose-css"
+      ],
+      "sourceRef": "CR:MDT-173"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-documents-layout",
+      "path": "src/components/DocumentsView/DocumentsLayout.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-173"
+    },
+    {
+      "id": "ART-documents-css",
+      "path": "src/components/DocumentsView/documents-view.css",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-173"
+    },
+    {
+      "id": "ART-markdown-viewer",
+      "path": "src/components/DocumentsView/MarkdownViewer.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-173"
+    },
+    {
+      "id": "ART-prose-css",
+      "path": "src/styles/prose.css",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-173"
+    },
+    {
+      "id": "ART-document-navigation-config",
+      "path": "src/config/documentNavigation.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-173"
+    },
+    {
+      "id": "ART-resizable-primitive",
+      "path": "src/components/ui/resizable.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-173"
+    },
+    {
+      "id": "ART-wireloom-fullscreen",
+      "path": "src/utils/wireloomFullscreen.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-173"
+    },
+    {
+      "id": "ART-wireloom-renderer",
+      "path": "src/utils/wireloomRenderer.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-173"
+    },
+    {
+      "id": "ART-mermaid-zoom",
+      "path": "src/utils/mermaid/zoom.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-173"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-document-artifact-layout",
+      "kind": "unit",
+      "title": "Document viewer keeps prose readable while wide artifacts use full content width",
+      "covers": [
+        "BR-10.1",
+        "C10"
+      ],
+      "sourceRef": "CR:MDT-173"
+    },
+    {
+      "id": "TEST-document-navigation-layout",
+      "kind": "unit",
+      "title": "Document navigation preferences persist sidebar width and collapsed state",
+      "covers": [
+        "BR-10.2"
+      ],
+      "sourceRef": "CR:MDT-173"
+    },
+    {
+      "id": "TEST-wireloom-inspection",
+      "kind": "unit",
+      "title": "Wireloom rendering wraps SVGs for native-width scroll and fullscreen controls",
+      "covers": [
+        "BR-10.1"
+      ],
+      "sourceRef": "CR:MDT-173"
+    },
+    {
+      "id": "TEST-browser-wide-artifact-check",
+      "kind": "e2e",
+      "title": "Browser check verifies artifact width, prose width, and sidebar collapse behavior",
+      "covers": [
+        "BR-10.1",
+        "BR-10.2",
+        "C10"
+      ],
+      "sourceRef": "CR:MDT-173"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-10",
+      "title": "Expand document artifact layout without widening prose",
+      "ownsArtifactIds": [
+        "ART-markdown-viewer",
+        "ART-prose-css",
+        "ART-documents-css"
+      ],
+      "makesGreenIds": [
+        "document_artifacts_use_available_width",
+        "TEST-document-artifact-layout",
+        "TEST-browser-wide-artifact-check"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "CR:MDT-173"
+    },
+    {
+      "id": "TASK-11",
+      "title": "Add resizable and collapsible document navigation",
+      "ownsArtifactIds": [
+        "ART-documents-layout",
+        "ART-document-navigation-config",
+        "ART-resizable-primitive",
+        "ART-documents-css"
+      ],
+      "makesGreenIds": [
+        "document_navigation_resizes_and_collapses",
+        "TEST-document-navigation-layout",
+        "TEST-browser-wide-artifact-check"
+      ],
+      "skills": [
+        "mdt-frontend",
+        "shadcn"
+      ],
+      "sourceRef": "CR:MDT-173"
+    },
+    {
+      "id": "TASK-12",
+      "title": "Add Wireloom native-width rendering and zoomable inspection",
+      "ownsArtifactIds": [
+        "ART-wireloom-fullscreen",
+        "ART-wireloom-renderer",
+        "ART-mermaid-zoom",
+        "ART-prose-css"
+      ],
+      "makesGreenIds": [
+        "document_artifacts_use_available_width",
+        "TEST-wireloom-inspection"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "CR:MDT-173"
+    }
+  ]
+}
