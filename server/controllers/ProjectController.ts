@@ -3,6 +3,11 @@ import type { Project, ProjectConfig } from '@mdt/shared/models/Project.js'
 import type { TicketMetadata } from '@mdt/shared/models/Ticket.js'
 import type { ProjectCreateInput, ProjectUpdateInput } from '@mdt/shared/tools/ProjectManager.js'
 import type { Request, Response } from 'express'
+import { getConfigDir } from '@mdt/shared/utils/constants.js'
+import { parseToml } from '@mdt/shared/utils/toml.js'
+import * as fs from 'node:fs/promises'
+import * as os from 'node:os'
+import { authorizeFilesystemPath, FilesystemAccessDeniedError, getProjectRoots } from '../security/filesystemAccess.js'
 import type { CRData, TicketService } from '../services/TicketService.js'
 import type { TreeNode } from '../types/tree.js'
 
@@ -404,15 +409,43 @@ export class ProjectController {
   async getSystemDirectories(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { path: requestPath } = req.query
-      const result = await this.projectService.getSystemDirectories(requestPath as string)
+      const configPath = `${getConfigDir()}/config.toml`
+      let discoveryPaths: string[] = []
+
+      try {
+        const config = parseToml(await fs.readFile(configPath, 'utf8')) as { discovery?: { searchPaths?: string[] } }
+
+        discoveryPaths = config.discovery?.searchPaths || []
+      }
+      catch {
+        discoveryPaths = []
+      }
+
+      const allowedRoots = [
+        ...discoveryPaths,
+        ...await getProjectRoots(this.projectService),
+      ]
+
+      if (process.env.NODE_ENV === 'test') {
+        allowedRoots.push(os.tmpdir())
+      }
+
+      if (process.env.NODE_ENV !== 'production') {
+        allowedRoots.push(os.homedir())
+      }
+
+      const targetPath = requestPath
+        ? await authorizeFilesystemPath(requestPath as string, allowedRoots)
+        : await authorizeFilesystemPath(allowedRoots[0] || process.cwd(), allowedRoots)
+      const result = await this.projectService.getSystemDirectories(targetPath)
 
       res.json(result)
     }
     catch (error: unknown) {
       console.error('Error listing directories:', error)
       const err = error as Error
-      if (err.message.includes('Access denied')) {
-        res.status(403).json({ error: err.message })
+      if (error instanceof FilesystemAccessDeniedError || err.message.includes('Access denied')) {
+        res.status(403).json({ error: 'Forbidden' })
       }
       else if (err.message.includes('not found') || err.message.includes('not accessible')) {
         res.status(404).json({ error: err.message })

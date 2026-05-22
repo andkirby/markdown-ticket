@@ -1,4 +1,16 @@
 import type { NextFunction, Request, Response } from 'express'
+import { timingSafeEqual } from 'node:crypto'
+
+function tokenMatches(actualToken: string, expectedToken: string): boolean {
+  const actualBuffer = Buffer.from(actualToken)
+  const expectedBuffer = Buffer.from(expectedToken)
+
+  if (actualBuffer.length !== expectedBuffer.length) {
+    return false
+  }
+
+  return timingSafeEqual(actualBuffer, expectedBuffer)
+}
 
 /**
  * Authentication middleware
@@ -32,7 +44,7 @@ export function createAuthMiddleware(expectedToken: string) {
 
     const token = parts[1]
 
-    if (token !== expectedToken) {
+    if (!tokenMatches(token, expectedToken)) {
       return res.status(401).json({
         jsonrpc: '2.0',
         error: {

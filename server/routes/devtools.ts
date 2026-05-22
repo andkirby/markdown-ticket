@@ -1,5 +1,8 @@
 import type { NextFunction, Request, Response } from 'express'
+import type { OriginPolicy } from '../security/originPolicy.js'
+import process from 'node:process'
 import { Router } from 'express'
+import { createDefaultOriginPolicy } from '../security/originPolicy.js'
 
 // Type definitions
 interface LogEntry {
@@ -150,8 +153,32 @@ function devModeRateLimit(req: Request, res: Response, next: NextFunction): void
  *
  * @returns Express router.
  */
-export function createDevToolsRouter(): Router {
+function isDevtoolsEnabled(): boolean {
+  return process.env.NODE_ENV !== 'production' || process.env.DEVTOOLS_ENABLED === 'true'
+}
+
+function writeStreamHeaders(req: Request, res: Response, originPolicy: OriginPolicy): void {
+  const accessControlAllowOrigin = originPolicy.getAccessControlAllowOrigin(req.headers.origin)
+  const headers: Record<string, string> = {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+  }
+
+  if (accessControlAllowOrigin) {
+    headers['Access-Control-Allow-Origin'] = accessControlAllowOrigin
+    headers.Vary = 'Origin'
+  }
+
+  res.writeHead(200, headers)
+}
+
+export function createDevToolsRouter(originPolicy: OriginPolicy = createDefaultOriginPolicy()): Router {
   const router = Router()
+
+  if (!isDevtoolsEnabled()) {
+    return router
+  }
 
   // ============================================================================
   // Server Logs API
@@ -217,13 +244,7 @@ export function createDevToolsRouter(): Router {
   router.get('/logs/stream', (req: Request, res: Response) => {
     const { filter } = req.query
 
-    // Set SSE headers
-    res.writeHead(200, {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
-      'Access-Control-Allow-Origin': '*',
-    })
+    writeStreamHeaders(req, res, originPolicy)
 
     // Send initial connection message
     res.write(`data: ${JSON.stringify({

@@ -2,7 +2,7 @@
  * Rate Limit Manager
  *
  * Implements sliding window rate limiting for MCP tool invocations.
- * Tracks requests per tool with configurable limits.
+ * Tracks requests per caller and tool with configurable limits.
  */
 
 import process from 'node:process'
@@ -38,7 +38,7 @@ interface ToolRateLimitInfo {
  */
 export class RateLimitManager {
   private config: RateLimitConfig
-  private toolLimits = new Map<string, ToolRateLimitInfo>()
+  private callerToolLimits = new Map<string, ToolRateLimitInfo>()
   private logger: (message: string) => void
 
   constructor(config: RateLimitConfig, logger?: (message: string) => void) {
@@ -46,7 +46,7 @@ export class RateLimitManager {
     this.logger = logger || console.error
 
     if (this.config.enabled) {
-      this.logger(`🛡️  Rate limiting enabled: ${this.config.maxRequests} requests per ${this.config.windowMs / 1000}s per tool`)
+      this.logger(`🛡️  Rate limiting enabled: ${this.config.maxRequests} requests per ${this.config.windowMs / 1000}s per caller/tool`)
     }
     else {
       this.logger(`ℹ️  Rate limiting disabled`)
@@ -59,7 +59,7 @@ export class RateLimitManager {
    * @param toolName - Name of the tool being invoked
    * @returns RateLimitResult with allow/deny decision and metadata
    */
-  checkRateLimit(toolName: string): RateLimitResult {
+  checkRateLimit(toolName: string, callerKey: string): RateLimitResult {
     // If rate limiting is disabled, always allow
     if (!this.config.enabled) {
       return {
@@ -70,11 +70,12 @@ export class RateLimitManager {
     }
 
     const now = Date.now()
-    const toolInfo = this.toolLimits.get(toolName)
+    const rateLimitKey = `${callerKey}:${toolName}`
+    const toolInfo = this.callerToolLimits.get(rateLimitKey)
 
     // Initialize tool info if not exists
     if (!toolInfo) {
-      this.toolLimits.set(toolName, {
+      this.callerToolLimits.set(rateLimitKey, {
         count: 1,
         windowStart: now,
         lastRequest: now,
@@ -91,7 +92,7 @@ export class RateLimitManager {
     const windowElapsed = now - toolInfo.windowStart
     if (windowElapsed >= this.config.windowMs) {
       // Window has passed, reset
-      this.toolLimits.set(toolName, {
+      this.callerToolLimits.set(rateLimitKey, {
         count: 1,
         windowStart: now,
         lastRequest: now,
@@ -108,7 +109,7 @@ export class RateLimitManager {
     if (toolInfo.count < this.config.maxRequests) {
       // Increment counter
       const newCount = toolInfo.count + 1
-      this.toolLimits.set(toolName, {
+      this.callerToolLimits.set(rateLimitKey, {
         ...toolInfo,
         count: newCount,
         lastRequest: now,
@@ -148,7 +149,7 @@ export class RateLimitManager {
    * @returns Current rate limit info or null if tool not tracked
    */
   getToolStatus(toolName: string): ToolRateLimitInfo | null {
-    const info = this.toolLimits.get(toolName)
+    const info = this.callerToolLimits.get(toolName)
     if (!info) {
       return null
     }
@@ -156,7 +157,7 @@ export class RateLimitManager {
     // Check if window has expired
     const now = Date.now()
     if (now - info.windowStart >= this.config.windowMs) {
-      this.toolLimits.delete(toolName)
+      this.callerToolLimits.delete(toolName)
       return null
     }
 
@@ -169,7 +170,7 @@ export class RateLimitManager {
    * @param toolName - Name of the tool to reset
    */
   resetToolLimit(toolName: string): void {
-    this.toolLimits.delete(toolName)
+    this.callerToolLimits.delete(toolName)
     this.logger(`🔄 Rate limit reset for tool '${toolName}'`)
   }
 
@@ -177,8 +178,8 @@ export class RateLimitManager {
    * Reset all rate limits
    */
   resetAllLimits(): void {
-    const count = this.toolLimits.size
-    this.toolLimits.clear()
+    const count = this.callerToolLimits.size
+    this.callerToolLimits.clear()
     this.logger(`🔄 Reset ${count} tool rate limits`)
   }
 
@@ -189,9 +190,9 @@ export class RateLimitManager {
     const now = Date.now()
     let cleaned = 0
 
-    for (const [toolName, info] of this.toolLimits.entries()) {
+    for (const [toolName, info] of this.callerToolLimits.entries()) {
       if (now - info.windowStart >= this.config.windowMs) {
-        this.toolLimits.delete(toolName)
+        this.callerToolLimits.delete(toolName)
         cleaned++
       }
     }
@@ -211,13 +212,13 @@ export class RateLimitManager {
     config: RateLimitConfig
   } {
     const now = Date.now()
-    const activeTools = Array.from(this.toolLimits.values()).filter(
+    const activeTools = Array.from(this.callerToolLimits.values()).filter(
       info => now - info.windowStart < this.config.windowMs,
     ).length
 
     return {
       enabled: this.config.enabled,
-      totalTools: this.toolLimits.size,
+      totalTools: this.callerToolLimits.size,
       activeTools,
       config: { ...this.config },
     }

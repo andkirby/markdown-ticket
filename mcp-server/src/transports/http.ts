@@ -4,6 +4,7 @@ import type {
 } from '@modelcontextprotocol/sdk/types.js'
 import type { Request, Response } from 'express'
 import type { MCPTools } from '../tools/index.js'
+import type { HttpTransportSecurityConfig } from './httpSecurity.js'
 
 import process from 'node:process'
 
@@ -13,21 +14,11 @@ import express from 'express'
 import { RateLimitManager } from '../utils/rateLimitManager.js'
 import { Sanitizer } from '../utils/sanitizer.js'
 import { ToolError } from '../utils/toolError.js'
+import { getCallerIdentity, validateHttpTransportConfig } from './httpSecurity.js'
 import { createAuthMiddleware, createOriginValidationMiddleware } from './middleware.js'
 import { SessionManager } from './sessionManager.js'
 
-export interface HttpTransportConfig {
-  port: number
-  host?: string
-  enableOriginValidation?: boolean
-  allowedOrigins?: string[]
-  enableRateLimiting?: boolean
-  rateLimitMax?: number
-  rateLimitWindowMs?: number
-  enableAuth?: boolean
-  authToken?: string
-  sessionTimeoutMs?: number
-}
+export type HttpTransportConfig = HttpTransportSecurityConfig
 
 const MCP_PROTOCOL_VERSION = '2025-06-18'
 
@@ -49,11 +40,18 @@ export async function startHttpTransport(
   const app = express()
   const host = config.host || '127.0.0.1'
 
+  validateHttpTransportConfig(config)
+  app.set('trust proxy', config.trustProxy || false)
+
   // Initialize session manager
   const sessionManager = new SessionManager(config.sessionTimeoutMs || 30 * 60 * 1000)
 
   // Initialize centralized rate limit manager
-  const rateLimitManager = RateLimitManager.fromEnvironment()
+  const rateLimitManager = new RateLimitManager({
+    enabled: config.enableRateLimiting !== false,
+    maxRequests: config.rateLimitMax || 100,
+    windowMs: config.rateLimitWindowMs || 60000,
+  })
 
   // Log all incoming requests BEFORE body parsing (simplified)
   app.use((req, res, next) => {
@@ -168,7 +166,7 @@ export async function startHttpTransport(
         const tool_args = params.arguments || {}
 
         // Check rate limit before processing tool call
-        const rateLimitResult = rateLimitManager.checkRateLimit(tool_name)
+        const rateLimitResult = rateLimitManager.checkRateLimit(tool_name, getCallerIdentity(req))
         if (!rateLimitResult.allowed) {
           const errorMessage = `Rate limit exceeded for tool '${tool_name}'. Maximum ${rateLimitManager.getStats().config.maxRequests} requests per ${rateLimitManager.getStats().config.windowMs / 1000} seconds.`
 
@@ -524,8 +522,10 @@ export async function startHttpTransport(
    * GET /sessions - List active sessions (debug endpoint)
    * Only available if auth is disabled or in development
    */
-  if (!config.enableAuth || process.env.NODE_ENV === 'development') {
-    app.get('/sessions', (req: Request, res: Response) => {
+  if (process.env.NODE_ENV === 'development' || config.enableAuth) {
+    const sessionsHandlers = [
+      ...(process.env.NODE_ENV === 'development' ? [] : [createAuthMiddleware(config.authToken!)]),
+      (req: Request, res: Response) => {
       const sessions = sessionManager.getActiveSessions().map(s => ({
         id: s.id,
         createdAt: s.createdAt,
@@ -537,7 +537,10 @@ export async function startHttpTransport(
         count: sessions.length,
         sessions,
       })
-    })
+      },
+    ]
+
+    app.get('/sessions', ...sessionsHandlers)
   }
 
   // Start HTTP server

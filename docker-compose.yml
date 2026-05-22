@@ -72,7 +72,7 @@ services:
       # Cache Configuration
       - MCP_CACHE_TIMEOUT=300
 
-      # Phase 2 Security (optional, disabled by default)
+      # Phase 2 Security (development defaults; production override enables origin validation/rate limits)
       - MCP_SECURITY_ORIGIN_VALIDATION=false
       - MCP_SECURITY_RATE_LIMITING=false
       - MCP_SECURITY_AUTH=false

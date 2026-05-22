@@ -52,7 +52,7 @@ test.describe('E2E Infrastructure', () => {
     await page.waitForLoadState('load')
 
     // Check page title (verifies React rendered)
-    await expect(page).toHaveTitle(/CR Task Board/)
+    await expect(page).toHaveTitle(/Board/)
 
     // Wait for loading state to clear (board OR empty-state, whichever renders)
     await page.waitForSelector(commonSelectors.loading, { state: 'hidden', timeout: 10000 }).catch(() => {

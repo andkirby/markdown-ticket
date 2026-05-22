@@ -36,7 +36,7 @@ export async function startStdioTransport(mcpTools: MCPTools): Promise<void> {
     const { name, arguments: args } = request.params
 
     // Check rate limit before processing tool call
-    const rateLimitResult = rateLimitManager.checkRateLimit(name)
+    const rateLimitResult = rateLimitManager.checkRateLimit(name, 'stdio')
 
     if (!rateLimitResult.allowed) {
       const errorMessage = `Rate limit exceeded for tool '${name}'. Maximum ${rateLimitManager.getStats().config.maxRequests} requests per ${rateLimitManager.getStats().config.windowMs / 1000} seconds.`
