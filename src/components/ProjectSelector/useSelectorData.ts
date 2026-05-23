@@ -10,6 +10,10 @@ import type { SelectorData, SelectorPreferences, SelectorState } from './types'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { authFetch } from '../../auth/authFetch'
 
+interface UseSelectorDataOptions {
+  loadOwnerState?: boolean
+}
+
 const DEFAULT_PREFERENCES: SelectorPreferences = {
   visibleCount: 7,
   compactInactive: true,
@@ -19,12 +23,13 @@ const DEFAULT_PREFERENCES: SelectorPreferences = {
  * Hook for loading and managing selector data
  * Implements BR-7, BR-8, BR-10
  */
-export function useSelectorData(): SelectorData & {
+export function useSelectorData(options: UseSelectorDataOptions = {}): SelectorData & {
   trackProjectUsage: (projectKey: string) => void
   toggleFavorite: (projectKey: string) => void
   error?: string
   loaded: boolean
 } {
+  const { loadOwnerState = true } = options
   const [preferences, setPreferences] = useState<SelectorPreferences>(DEFAULT_PREFERENCES)
   const [selectorState, setSelectorState] = useState<Record<string, SelectorState>>({})
   const [error, setError] = useState<string | undefined>()
@@ -33,6 +38,14 @@ export function useSelectorData(): SelectorData & {
 
   // Load initial data from API
   useEffect(() => {
+    if (!loadOwnerState) {
+      setPreferences(DEFAULT_PREFERENCES)
+      setSelectorState({})
+      setError(undefined)
+      setLoaded(true)
+      return
+    }
+
     let cancelled = false
     const loadData = async () => {
       try {
@@ -69,10 +82,14 @@ export function useSelectorData(): SelectorData & {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [loadOwnerState])
 
   // Persist state changes to API (debounced)
   const persistState = useCallback((state: Record<string, SelectorState>) => {
+    if (!loadOwnerState) {
+      return
+    }
+
     if (persistenceTimerRef.current !== null) {
       clearTimeout(persistenceTimerRef.current)
     }
@@ -91,7 +108,7 @@ export function useSelectorData(): SelectorData & {
     }, 300)
 
     persistenceTimerRef.current = timer
-  }, [])
+  }, [loadOwnerState])
 
   // Track project usage (BR-5.3, BR-5.4, BR-5.5)
   const trackProjectUsage = useCallback((projectKey: string) => {

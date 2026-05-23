@@ -375,6 +375,7 @@ function ProjectRouteHandler() {
                 onEditProject={handleEditProject}
                 selectedProject={selectedProject}
                 onOpenSettings={() => setShowSettings(true)}
+                onUnlockOwnerAccess={accessMode === 'read-only' ? handleUnlockClick : undefined}
                 canManageProjects={canManageProjects}
               />
             </div>
@@ -460,7 +461,7 @@ function ProjectRouteHandler() {
       >
         <ModalBody>
           <AuthUnlockPanel
-            title="Unlock owner access"
+            title="Unlock access"
             description="Enter an owner token to manage projects. Your read-only session stays available if the token is not accepted."
             error={ownerUnlockError}
             errorTestId="sharing-owner-unlock-error"

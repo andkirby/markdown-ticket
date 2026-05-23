@@ -28,6 +28,22 @@ describe('useSelectorData - BR-7.1, BR-7.2: Load preferences from user.toml', ()
     mockFetch.mockClear()
   })
 
+  it('uses defaults without fetching owner selector state when owner access is unavailable', async () => {
+    const { result } = renderHook(() => useSelectorData({ loadOwnerState: false }))
+
+    await waitFor(() => {
+      expect(result.current.loaded).toBe(true)
+    })
+
+    expect(globalThis.fetch).not.toHaveBeenCalled()
+    expect(result.current.preferences).toEqual({
+      visibleCount: 7,
+      compactInactive: true,
+    })
+    expect(result.current.selectorState).toEqual({})
+    expect(result.current.error).toBeUndefined()
+  })
+
   it('returns visibleCount from user.toml', async () => {
     const mockResponse = {
       preferences: {

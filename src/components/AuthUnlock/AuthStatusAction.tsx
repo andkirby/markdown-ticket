@@ -7,12 +7,12 @@ interface AuthStatusActionProps {
 }
 
 export function AuthStatusAction({ accessMode, onLock, onUnlockClick }: AuthStatusActionProps) {
-  if (accessMode === 'no-auth-dev') {
+  if (accessMode === 'no-auth-dev' || accessMode === 'read-only') {
     return null
   }
 
   const owner = accessMode === 'owner-admin'
-  const canUnlock = accessMode === 'locked' || accessMode === 'read-only'
+  const canUnlock = accessMode === 'locked'
   const label = {
     'unknown': 'Checking auth',
     'locked': 'Locked',
@@ -36,7 +36,7 @@ export function AuthStatusAction({ accessMode, onLock, onUnlockClick }: AuthStat
         : canUnlock
           ? (
               <button
-                data-testid={accessMode === 'read-only' ? 'sharing-owner-unlock-button' : 'auth-unlock-affordance'}
+                data-testid="auth-unlock-affordance"
                 type="button"
                 className="text-sm"
                 onClick={onUnlockClick}

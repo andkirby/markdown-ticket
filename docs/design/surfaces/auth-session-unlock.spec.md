@@ -29,6 +29,7 @@ AuthUnlockPanel
 ├── Description: server accepts an owner token or scoped read token
 ├── AccessTokenInput[type=password]
 ├── UnlockButton
+├── CancelButton (when launched from an existing read-only board)
 ├── InlineError (invalid token / session rejected)
 └── HelpText (tokens are exchanged for secure cookies; not stored in browser storage)
 ```
@@ -54,7 +55,8 @@ AuthUnlockPanel
 | `locked` | user selects Unlock, or protected owner route returns 401 | AuthUnlockPanel | enter token, retry, theme toggle |
 | `unlocking` | unlock submitted | disabled token input, spinner button | cancel/clear optional |
 | `error` | invalid token/session failure | AuthUnlockPanel with inline error | edit token, retry |
-| `read-only` | anonymous public project, share session, or accepted read token | normal app with read-only chip; owner actions hidden | view, search, sort, open tickets/docs, unlock with owner token |
+| `read-only` | anonymous public project, share session, or accepted read token | normal app with one read-only chip; owner actions hidden; hamburger shows `Unlock access` | view, search, sort, open tickets/docs, unlock with owner token |
+| `read-only-owner-unlock` | read-only visitor selects `Unlock access` from hamburger menu | owner-token modal/sheet over current board | enter owner token, cancel back to board |
 | `owner-admin` | session cookie accepted | normal app; owner chip in header | all admin actions, lock/logout |
 | `no-auth-dev` | backend auth disabled, or legacy local backend has no `/api/auth/session` and still returns projects | normal app; no header auth chip; no unlock affordance | all current local-dev actions |
 | `backend-down` | network error / 5xx | existing backend-down state | retry |
@@ -66,7 +68,9 @@ AuthUnlockPanel
 3. `401` means authentication is required, not an empty project list.
 4. Read-only sessions must never expose owner-only project mutation controls.
 5. A failed unlock must keep the user on the same panel and preserve focus on the token input.
-6. Logout/Lock must clear only the server session cookie; it must not mutate project data.
+6. Read-only owner-upgrade unlock is recoverable: Cancel closes the overlay and returns to the existing read-only board.
+7. A bad owner token submitted from read-only mode returns to the read-only board state after the error is dismissed or cancel is selected; it must not trap the visitor on a full locked screen.
+8. Logout/Lock must clear only the server session cookie; it must not mutate project data.
 
 ## Unlock flow
 
@@ -110,8 +114,19 @@ The frontend must not write the token to `localStorage`, `sessionStorage`, index
 ### Header auth action
 
 - Locked: small outline chip "Locked" + `Unlock` button.
-- Read-only: small outline chip "Read only" + `Unlock` button. The button opens the same panel for owner-token upgrade.
+- Read-only: single small outline chip "Read only". The owner-upgrade entry is `Unlock access` inside the hamburger menu, not an inline header button.
 - Owner/admin: small success/neutral chip "Owner session" + secondary `Lock` button.
+
+### Read-only owner unlock overlay
+
+- Uses `Modal`/center sheet behavior, not a full-page replacement.
+- Background board remains visible but inert under the overlay.
+- Title: `Unlock access`
+- Body: `Enter an owner token to manage projects. Cancel returns to read-only mode.`
+- Input label: `Owner token`
+- Actions: secondary `Cancel`, primary `Unlock`.
+- Error: `Owner token was not accepted.` Keep this generic and avoid clearing read-only access.
+- Closing via Cancel, Escape, or backdrop returns to the same read-only project, view mode, and selected project.
 
 ## Copy
 
@@ -122,6 +137,9 @@ The frontend must not write the token to `localStorage`, `sessionStorage`, index
 | Input label | `Access token` |
 | Button | `Unlock` |
 | Invalid token | `Token was not accepted.` |
+| Owner upgrade title | `Unlock access` |
+| Owner upgrade body | `Enter an owner token to manage projects. Cancel returns to read-only mode.` |
+| Owner upgrade invalid token | `Owner token was not accepted.` |
 | Help | `Tokens are exchanged for a secure server session and are not stored in browser storage.` |
 
 ## Accessibility
@@ -149,11 +167,23 @@ This surface owns authentication state and token entry only. Project visibility 
 - `data-testid="auth-unlock-panel"`
 - `data-testid="auth-token-input"`
 - `data-testid="auth-unlock-submit"`
+- `data-testid="auth-unlock-cancel"`
 - `data-testid="auth-unlock-error"`
 - `data-testid="auth-status-chip"`
 - `data-testid="auth-lock-button"`
-- `data-testid="auth-unlock-affordance"`
+- `data-testid="auth-unlock-affordance"` (locked state only)
+- `data-testid="sharing-owner-unlock-button"` (read-only hamburger menu item)
 - Existing `add-project-modal` must not be reachable in locked/anonymous states.
+
+## E2E Journey Contract
+
+| Journey | Given | When | Expected |
+|---------|-------|------|----------|
+| read-only cancel | visitor is viewing a read-only project | select `Unlock access`, then Cancel | overlay closes and the same board remains visible |
+| read-only bad owner token | visitor is viewing a read-only project | submit invalid owner token | generic error appears; Cancel returns to read-only board |
+| read-token unlock | locked visitor submits valid scoped read token | token exchange succeeds | app shows read-only chip and token-scoped projects |
+| owner unlock | locked visitor submits valid owner token | token exchange succeeds | app shows owner session and owner actions |
+| storage safety | any token is submitted | request completes | raw token is not visible in URL, localStorage, or sessionStorage |
 
 ## Legacy/local fallback rule
 

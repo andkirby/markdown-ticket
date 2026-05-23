@@ -14,6 +14,7 @@ interface SecondaryHeaderProps {
   onEditProject?: () => void
   selectedProject?: Project | null
   onOpenSettings?: () => void
+  onUnlockOwnerAccess?: () => void
   canManageProjects?: boolean
 }
 
@@ -25,6 +26,7 @@ export const SecondaryHeader: React.FC<SecondaryHeaderProps> = ({
   onEditProject,
   selectedProject,
   onOpenSettings,
+  onUnlockOwnerAccess,
   canManageProjects = true,
 }) => {
   return (
@@ -45,6 +47,7 @@ export const SecondaryHeader: React.FC<SecondaryHeaderProps> = ({
         sortPreferences={sortPreferences}
         onSortPreferencesChange={onSortPreferencesChange}
         onOpenSettings={onOpenSettings}
+        onUnlockOwnerAccess={onUnlockOwnerAccess}
         canManageProjects={canManageProjects}
       />
     </div>
