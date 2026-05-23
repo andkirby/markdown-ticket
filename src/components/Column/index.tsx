@@ -84,7 +84,7 @@ const DraggableTicketCard: React.FC<DraggableTicketCardProps> = ({ ticket, onMov
         cursor: canWrite ? 'move' : 'default',
         boxShadow: isDragging ? '0 25px 50px -12px rgba(0, 0, 0, 0.25)' : undefined,
       }}
-      data-testid="drag-handle"
+      data-testid={canWrite ? 'drag-handle' : undefined}
     >
       <TicketCard ticket={ticket} onMove={onMove} onEdit={onEdit} canEdit={canWrite} />
     </div>

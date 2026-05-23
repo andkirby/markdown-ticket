@@ -3,11 +3,16 @@
  * Handles errors thrown from route handlers and controllers.
  */
 
-import process from 'node:process'
-
 interface ExpressRequest {
   path: string
   method: string
+  app?: {
+    locals?: {
+      runtimeConfig?: {
+        nodeEnv?: string
+      }
+    }
+  }
 }
 
 interface ExpressResponse {
@@ -52,7 +57,7 @@ export function errorHandler(err: CustomError, req: ExpressRequest, res: Express
   }
 
   // Add stack trace in development mode
-  if (process.env.NODE_ENV === 'development' && err.stack) {
+  if (req.app?.locals?.runtimeConfig?.nodeEnv === 'development' && err.stack) {
     errorResponse.stack = err.stack
   }
 

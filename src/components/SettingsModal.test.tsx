@@ -66,7 +66,7 @@ describe('SettingsModal', () => {
   it('renders the Settings tabs', () => {
     render(<SettingsModal isOpen={true} onClose={onClose} />)
 
-    expect(screen.getByTestId('settings-modal')).toBeInTheDocument()
+    expect(screen.getByTestId('settings-modal')).toHaveClass('sm:max-w-5xl')
     expect(screen.getByTestId('settings-tab-appearance')).toHaveTextContent('Appearance')
     expect(screen.getByTestId('settings-tab-board')).toHaveTextContent('Board')
     expect(screen.getByTestId('settings-tab-advanced')).toHaveTextContent('Advanced')

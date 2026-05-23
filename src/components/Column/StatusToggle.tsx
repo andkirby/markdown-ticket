@@ -170,7 +170,7 @@ const StatusToggle: React.FC<StatusToggleProps> = ({
         /**
          * @testid status-dropdown — Status toggle button for changing ticket status
          */
-        data-testid="status-dropdown"
+        data-testid={canWrite ? 'status-dropdown' : undefined}
         ref={drop}
         onClick={handleButtonClick}
         onMouseEnter={handleMouseEnter}

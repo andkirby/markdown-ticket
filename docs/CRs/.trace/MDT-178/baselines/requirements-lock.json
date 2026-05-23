@@ -1,0 +1,42 @@
+{
+  "ticket": "MDT-178",
+  "generatedAt": "2026-05-23T15:54:30.707Z",
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.2",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.3",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.4",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.5",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C1",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C2",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C3",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C4",
+      "routePolicy": "tests"
+    }
+  ]
+}

@@ -12,6 +12,7 @@ export const OwnerOnlyApiPrefix = {
   CONFIG: '/api/config',
   DIRECTORIES: '/api/directories',
   FILESYSTEM: '/api/filesystem',
+  READ_TOKENS: '/api/read-tokens',
 } as const
 
 export function isSafeReadMethod(method: string): boolean {
@@ -42,6 +43,7 @@ export function isOwnerOnlyRoute(path: string): boolean {
     || path.startsWith(OwnerOnlyApiPrefix.CONFIG)
     || path.startsWith(OwnerOnlyApiPrefix.DIRECTORIES)
     || path.startsWith(OwnerOnlyApiPrefix.FILESYSTEM)
+    || path.startsWith(OwnerOnlyApiPrefix.READ_TOKENS)
 }
 
 export function requireWriteAccess(req: Request, res: Response, next: NextFunction): void {

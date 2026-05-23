@@ -75,7 +75,7 @@ relatedTickets: MDT-157
 | Dependency bumps | Which transitive deps can be bumped without breaking changes? | Must pass existing test suite |
 
 ### Known Constraints
-- Existing `ALLOWED_DOMAINS` env var pattern should be reused
+- Existing `PUBLIC_ORIGIN` env var pattern should be reused
 - Docker compose files are user-facing config — changes should be documented
 
 ### References

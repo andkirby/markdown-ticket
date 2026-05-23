@@ -17,6 +17,7 @@ import { ProjectService as SharedProjectService } from '@mdt/shared/services/Pro
 import cors from 'cors'
 
 import express from 'express'
+import { buildRuntimeConfig } from '../../config/runtimeConfig'
 import { DocumentController } from '../../controllers/DocumentController'
 import { ProjectController } from '../../controllers/ProjectController'
 import { errorHandler, notFoundHandler } from '../../middleware/errorHandler'
@@ -24,11 +25,12 @@ import { createAuthRouter } from '../../routes/auth'
 import { createDevToolsRouter } from '../../routes/devtools'
 import { createDocumentRouter } from '../../routes/documents'
 import { createProjectRouter } from '../../routes/projects'
+import { createPublicReadTokensRouter, createReadTokensRouter } from '../../routes/readTokens'
 import { createShareRouter } from '../../routes/share'
 import { createSSERouter } from '../../routes/sse'
 import { createSystemRouter } from '../../routes/system'
 import { createApiAuthMiddleware } from '../../security/apiAuth'
-import { createCorsOptions, createDefaultOriginPolicy, securityHeaders } from '../../security/originPolicy'
+import { createCorsOptions, createOriginPolicy, securityHeaders } from '../../security/originPolicy'
 import { DocumentService } from '../../services/DocumentService'
 import FileWatcherService from '../../services/fileWatcher/index.js'
 import { TicketService } from '../../services/TicketService'
@@ -139,7 +141,10 @@ interface TestAppResult {
 export function createTestApp(): TestAppResult {
   // Create Express app
   const app: Express = express()
-  const originPolicy = createDefaultOriginPolicy()
+  const runtimeConfig = buildRuntimeConfig()
+  app.locals.runtimeConfig = runtimeConfig
+  app.locals.configDir = runtimeConfig.configDir
+  const originPolicy = createOriginPolicy(runtimeConfig.origins.allowedOrigins)
 
   // Middleware
   app.use(securityHeaders)
@@ -180,15 +185,22 @@ export function createTestApp(): TestAppResult {
   // Mirror production: auth session routes are before protected /api routers.
   app.use('/api/auth', createAuthRouter())
   app.use('/api/share', createShareRouter(projectServiceAdapter as unknown as ProjectServiceExtension))
+  app.use('/api/read-tokens', createPublicReadTokensRouter())
 
   // Mirror production: auth is after generic middleware and before protected /api routers.
-  app.use('/api', createApiAuthMiddleware())
+  app.use('/api', createApiAuthMiddleware(runtimeConfig.auth, {
+    allowLocalReadSessionFallback: runtimeConfig.readSessions.allowLocalFallback,
+    configDir: runtimeConfig.configDir,
+    originPolicy,
+    readSessionSecret: runtimeConfig.readSessions.secret,
+  }))
 
   app.use('/api/projects', createProjectRouter(projectController))
+  app.use('/api/read-tokens', createReadTokensRouter())
   app.use('/api/documents', createDocumentRouter(documentController, projectController))
   app.use('/api/events', createSSERouter(fileWatcher, originPolicy, projectServiceAdapter as unknown as ProjectServiceExtension))
   app.use('/api', createSystemRouter(fileWatcher, projectController, projectDiscovery, documentService.fileInvoker as FileInvokerAdapter))
-  app.use('/api/devtools', createDevToolsRouter(originPolicy))
+  app.use('/api/devtools', createDevToolsRouter(originPolicy, runtimeConfig.system.devtoolsEnabled))
   // Note: Skipping /api-docs route due to import.meta issue in openapi/config.ts
   // app.use('/api-docs', createDocsRouter());
 

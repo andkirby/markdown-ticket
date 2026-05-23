@@ -10,6 +10,7 @@ type AuthEndpointState = 'checking' | 'enabled' | 'disabled' | 'unsupported'
 interface SessionResponse {
   authEnabled?: boolean
   authenticated?: boolean
+  readAuthenticated?: boolean
 }
 
 export function AuthSessionProvider({ children }: { children: ReactNode }) {
@@ -35,7 +36,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
 
   const markNoAuthDev = useCallback(() => {
     setAuthEndpointState(current => current === 'enabled' ? current : 'disabled')
-    setAccessMode('no-auth-dev')
+    setAccessMode(current => current === 'read-only' ? current : 'no-auth-dev')
     setSessionStatus('unlocked')
   }, [])
 
@@ -64,7 +65,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
 
   const markProjectListLoaded = useCallback((_projectCount: number) => {
     setAccessMode((current) => {
-      if (current === 'owner-admin' || current === 'no-auth-dev' || current === 'backend-down') {
+      if (current === 'owner-admin' || current === 'read-only' || current === 'no-auth-dev' || current === 'backend-down') {
         return current
       }
 
@@ -182,6 +183,11 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
 
         const session = await response.json() as SessionResponse
         if (cancelled) {
+          return
+        }
+
+        if (session.readAuthenticated) {
+          markReadOnly()
           return
         }
 

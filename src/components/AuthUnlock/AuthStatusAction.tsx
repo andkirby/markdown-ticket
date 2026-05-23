@@ -35,7 +35,12 @@ export function AuthStatusAction({ accessMode, onLock, onUnlockClick }: AuthStat
           )
         : canUnlock
           ? (
-              <button data-testid="auth-unlock-affordance" type="button" className="text-sm" onClick={onUnlockClick}>
+              <button
+                data-testid={accessMode === 'read-only' ? 'sharing-owner-unlock-button' : 'auth-unlock-affordance'}
+                type="button"
+                className="text-sm"
+                onClick={onUnlockClick}
+              >
                 Unlock
               </button>
             )

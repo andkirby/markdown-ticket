@@ -47,7 +47,7 @@ Security decisions live at route/bootstrap boundaries before sensitive operation
 
 ### CORS for REST, SSE, and devtools
 
-1. `server/server.ts` constructs the allowed-origin policy from built-in local origins and `ALLOWED_DOMAINS`.
+1. `server/server.ts` constructs the allowed-origin policy from built-in local origins and `PUBLIC_ORIGIN`.
 2. `server/security/originPolicy.ts` owns the origin decision for REST CORS and stream routes.
 3. `server/routes/sse.ts` and `server/routes/devtools.ts` ask the same policy before writing stream headers.
 4. Requests with no `Origin` remain allowed for curl, server-to-server calls, and local tooling.

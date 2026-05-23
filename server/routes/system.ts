@@ -4,16 +4,15 @@ import type FileWatcherService from '../services/fileWatcher/index.js'
 import * as fs from 'node:fs/promises'
 import * as os from 'node:os'
 import * as path from 'node:path'
-import process from 'node:process'
 import {
   validateGlobalConfig,
   validateSelectorState,
   validateUserConfig,
 } from '@mdt/domain-contracts'
-import { getConfigDir } from '@mdt/shared/utils/constants.js'
 import { logger } from '@mdt/shared/utils/server-logger.js'
 import { parseToml } from '@mdt/shared/utils/toml.js'
 import { Router } from 'express'
+import { getRuntimeConfig } from '../config/runtimeConfig.js'
 import { authorizeFilesystemPath, FilesystemAccessDeniedError, getProjectRoots } from '../security/filesystemAccess.js'
 
 interface FileInvoker {
@@ -26,12 +25,8 @@ interface ProjectDiscovery {
   getAllProjects?: (bypassCache?: boolean) => Promise<Array<{ project?: { path?: string }, path?: string }>>
 }
 
-function maintenanceEndpointsEnabled(): boolean {
-  return process.env.NODE_ENV !== 'production' || process.env.MAINTENANCE_ENDPOINTS_ENABLED === 'true'
-}
-
-function requireMaintenanceEnabled(res: Response): boolean {
-  if (maintenanceEndpointsEnabled()) {
+function requireMaintenanceEnabled(req: Request, res: Response): boolean {
+  if (getRuntimeConfig(req).system.maintenanceEndpointsEnabled) {
     return true
   }
 
@@ -39,7 +34,8 @@ function requireMaintenanceEnabled(res: Response): boolean {
   return false
 }
 
-async function getAllowedFilesystemRoots(configDir: string, projectDiscovery: ProjectDiscovery): Promise<string[]> {
+async function getAllowedFilesystemRoots(configDir: string, projectDiscovery: ProjectDiscovery, req: Request): Promise<string[]> {
+  const runtimeConfig = getRuntimeConfig(req)
   const config = await loadGlobalConfig(configDir)
   const projectRoots = await getProjectRoots(projectDiscovery)
   const roots = [
@@ -47,11 +43,11 @@ async function getAllowedFilesystemRoots(configDir: string, projectDiscovery: Pr
     ...projectRoots,
   ]
 
-  if (process.env.NODE_ENV === 'test') {
+  if (runtimeConfig.system.isTest) {
     roots.push(os.tmpdir())
   }
 
-  if (process.env.NODE_ENV !== 'production') {
+  if (!runtimeConfig.system.isProduction) {
     roots.push(os.homedir())
   }
 
@@ -187,7 +183,7 @@ export function createSystemRouter(
    */
   router.get('/config/links', async (req: Request, res: Response) => {
     try {
-      const configDir = getConfigDir()
+      const configDir = getRuntimeConfig(req).configDir
       const config = await loadGlobalConfig(configDir)
 
       res.json(config.links)
@@ -265,8 +261,8 @@ export function createSystemRouter(
     }
 
     try {
-      const configDir = getConfigDir()
-      const allowedRoots = await getAllowedFilesystemRoots(configDir, projectDiscovery)
+      const configDir = getRuntimeConfig(req).configDir
+      const allowedRoots = await getAllowedFilesystemRoots(configDir, projectDiscovery, req)
       let expandedPath: string
 
       try {
@@ -279,7 +275,7 @@ export function createSystemRouter(
 
         const candidatePath = path.resolve(inputPath.startsWith('~') ? inputPath.replace(/^~($|\/)/, `${os.homedir()}$1`) : inputPath)
 
-        if (process.env.NODE_ENV !== 'test') {
+        if (!getRuntimeConfig(req).system.isTest) {
           await authorizeFilesystemPath(path.dirname(candidatePath), allowedRoots)
         }
         expandedPath = candidatePath
@@ -372,7 +368,7 @@ export function createSystemRouter(
    *             schema: { $ref: '#/components/schemas/Error500' }
    */
   router.post('/cache/clear', async (req: Request, res: Response) => {
-    if (!requireMaintenanceEnabled(res)) {
+    if (!requireMaintenanceEnabled(req, res)) {
       return
     }
 
@@ -416,12 +412,12 @@ export function createSystemRouter(
    */
   router.get('/config', async (req: Request, res: Response) => {
     try {
-      const configDir = getConfigDir()
+      const configDir = getRuntimeConfig(req).configDir
       const config = await loadGlobalConfig(configDir)
 
       logger.debug(`Reading config from: ${path.join(configDir, 'config.toml')}`)
 
-      res.json(process.env.NODE_ENV === 'production'
+      res.json(getRuntimeConfig(req).system.isProduction
         ? { discovery: config.discovery }
         : { configDir, discovery: config.discovery })
     }
@@ -458,7 +454,7 @@ export function createSystemRouter(
    */
   router.get('/config/global', async (req: Request, res: Response) => {
     try {
-      const configDir = getConfigDir()
+      const configDir = getRuntimeConfig(req).configDir
       logger.debug(`Reading global config from: ${path.join(configDir, 'config.toml')}`)
 
       res.json(await loadGlobalConfig(configDir))
@@ -494,7 +490,7 @@ export function createSystemRouter(
    *             schema: { $ref: '#/components/schemas/Error500' }
    */
   router.post('/config/clear', async (req: Request, res: Response) => {
-    if (!requireMaintenanceEnabled(res)) {
+    if (!requireMaintenanceEnabled(req, res)) {
       return
     }
 
@@ -602,7 +598,7 @@ export function createSystemRouter(
   // GET /api/config/selector - Return preferences and state
   router.get('/config/selector', async (req: Request, res: Response) => {
     try {
-      const configDir = getConfigDir()
+      const configDir = getRuntimeConfig(req).configDir
       logger.debug('getConfigDir returned:', configDir)
       const userConfig = await loadUserConfig(configDir)
       const selectorState = await loadSelectorState(configDir)
@@ -620,7 +616,7 @@ export function createSystemRouter(
 
   // POST /api/config/selector - Persist selector state
   router.post('/config/selector', async (req: Request, res: Response) => {
-    if (!requireMaintenanceEnabled(res)) {
+    if (!requireMaintenanceEnabled(req, res)) {
       return
     }
 
@@ -631,7 +627,7 @@ export function createSystemRouter(
         return res.status(400).json({ error: 'Bad Request', message: 'Request body must be an object' })
       }
 
-      const configDir = getConfigDir()
+      const configDir = getRuntimeConfig(req).configDir
       const statePath = path.join(configDir, 'project-selector.json')
       const validatedState = validateSelectorState(stateUpdate)
 

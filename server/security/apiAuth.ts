@@ -1,9 +1,10 @@
 import type { NextFunction, Request, Response } from 'express'
+import { Buffer } from 'node:buffer'
 import { timingSafeEqual } from 'node:crypto'
 import { isOwnerOnlyRoute, isPublicReadRoute, isReadOnlyMutationCandidate } from './accessPolicy.js'
 import { verifyOwnerSessionCookie } from './apiSession.js'
-import { createDefaultOriginPolicy } from './originPolicy.js'
-import { getReadSessionSecret, getReadSessionState } from './readSession.js'
+import { getReadSessionState } from './readSession.js'
+import { createReadTokenStore } from './readTokenStore.js'
 
 const EXEMPT_API_ROUTES = new Set(['/api/status', '/api/health'])
 export const OWNER_INTENT_HEADER = 'x-mdt-owner-intent'
@@ -31,7 +32,7 @@ export interface ApiAuthLogger {
   warn: (message: string, meta?: Record<string, unknown>) => void
 }
 
-export function parseApiAuthConfig(env: NodeJS.ProcessEnv = process.env): ApiAuthConfig {
+export function parseApiAuthConfig(env: NodeJS.ProcessEnv): ApiAuthConfig {
   const authFlag = parseAuthFlag(env.API_SECURITY_AUTH)
   const token = env.API_AUTH_TOKEN?.trim()
 
@@ -68,7 +69,7 @@ export function extractApiCredential(req: Request): string | null {
   }
 
   const apiKey = apiKeyHeader.trim()
-  return apiKey ? apiKey : null
+  return apiKey || null
 }
 
 export function timingSafeTokenMatches(actualToken: string | undefined, expectedToken: string | undefined): boolean {
@@ -87,13 +88,14 @@ export function timingSafeTokenMatches(actualToken: string | undefined, expected
 }
 
 export function createApiAuthMiddleware(
-  config: ApiAuthConfig = parseApiAuthConfig(),
+  config: ApiAuthConfig,
+  options: ApiAuthMiddlewareOptions,
   logger: ApiAuthLogger = console,
 ) {
   let migrationWarningEmitted = false
-  const originPolicy = createDefaultOriginPolicy()
+  const { originPolicy } = options
 
-  return (req: Request, res: Response, next: NextFunction): void => {
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     if (isApiAuthExemptRoute(req.method, getRequestPath(req))) {
       setRequestAccess(req, { canWrite: false, mode: 'anonymous', projectRefs: [], shareIds: [] })
       next()
@@ -101,6 +103,15 @@ export function createApiAuthMiddleware(
     }
 
     if (!config.enabled) {
+      const readSession = await resolveActiveReadSession(
+        getReadSessionState(req, options.readSessionSecret),
+        options,
+      )
+      if (readSession.authenticated) {
+        enforceReadOnlyAccess(req, res, next, readSession)
+        return
+      }
+
       if (config.migrationWarningRequired && !migrationWarningEmitted) {
         migrationWarningEmitted = true
         logger.warn('Backend API authentication is disabled. Set API_SECURITY_AUTH=true and API_AUTH_TOKEN to protect API routes.')
@@ -131,33 +142,92 @@ export function createApiAuthMiddleware(
       return
     }
 
-    const readSession = getReadSessionState(req, getReadSessionSecret(config.token))
-    setRequestAccess(req, {
-      canWrite: false,
-      mode: readSession.authenticated ? 'read-only' : 'anonymous',
-      projectRefs: readSession.projectRefs,
-      shareIds: readSession.shareIds,
-    })
-
-    const requestPath = getRequestPath(req)
-
-    if (isPublicReadRoute(requestPath, req.method)) {
-      next()
-      return
-    }
-
-    if (isReadOnlyMutationCandidate(requestPath, req.method)) {
-      res.status(403).json({ error: 'Forbidden' })
-      return
-    }
-
-    if (isOwnerOnlyRoute(requestPath)) {
-      res.status(403).json({ error: 'Forbidden' })
-      return
-    }
-
-    res.status(401).json({ error: 'Authentication required' })
+    const readSession = await resolveActiveReadSession(
+      getReadSessionState(req, options.readSessionSecret),
+      options,
+    )
+    enforceReadOnlyAccess(req, res, next, readSession)
   }
+}
+
+export interface ApiAuthMiddlewareOptions extends ReadSessionResolutionOptions {
+  originPolicy: OriginPolicyLike
+}
+
+interface ReadOnlySessionState {
+  authenticated: boolean
+  projectRefs: string[]
+  shareIds: string[]
+  staticProjectRefs?: string[]
+  tokenIds?: string[]
+  tokenProjectRefs?: string[]
+}
+
+export interface ReadSessionResolutionOptions {
+  allowLocalReadSessionFallback: boolean
+  configDir: string
+  readSessionSecret?: string
+}
+
+export async function resolveActiveReadSession(
+  readSession: ReadOnlySessionState,
+  options: ReadSessionResolutionOptions,
+): Promise<ReadOnlySessionState> {
+  if (!readSession.authenticated || !readSession.tokenIds?.length) {
+    return readSession
+  }
+
+  const store = createReadTokenStore({ configDir: options.configDir })
+  const activeProjectRefs = new Set<string>()
+  const staticProjectRefs = readSession.staticProjectRefs ?? (readSession.tokenProjectRefs ? [] : readSession.projectRefs)
+  for (const tokenId of readSession.tokenIds) {
+    try {
+      const token = await store.resolveTokenById(tokenId)
+      for (const projectRef of token.projectRefs) {
+        activeProjectRefs.add(projectRef)
+      }
+    }
+    catch {
+      // Revoked, expired, malformed, or missing token grants fail closed.
+    }
+  }
+
+  if (activeProjectRefs.size === 0 && staticProjectRefs.length === 0 && options.allowLocalReadSessionFallback) {
+    return readSession
+  }
+
+  return {
+    ...readSession,
+    projectRefs: Array.from(new Set([...staticProjectRefs, ...activeProjectRefs])),
+  }
+}
+
+function enforceReadOnlyAccess(req: Request, res: Response, next: NextFunction, readSession: ReadOnlySessionState): void {
+  setRequestAccess(req, {
+    canWrite: false,
+    mode: readSession.authenticated ? 'read-only' : 'anonymous',
+    projectRefs: readSession.projectRefs,
+    shareIds: readSession.shareIds,
+  })
+
+  const requestPath = getRequestPath(req)
+
+  if (isPublicReadRoute(requestPath, req.method)) {
+    next()
+    return
+  }
+
+  if (isReadOnlyMutationCandidate(requestPath, req.method)) {
+    res.status(403).json({ error: 'Forbidden' })
+    return
+  }
+
+  if (isOwnerOnlyRoute(requestPath)) {
+    res.status(403).json({ error: 'Forbidden' })
+    return
+  }
+
+  res.status(401).json({ error: 'Authentication required' })
 }
 
 export function getRequestAccess(req: Request): RequestAccessContext {
@@ -205,7 +275,7 @@ function extractBearerToken(value: string | undefined): string | null {
   }
 
   const token = parts[1]?.trim()
-  return token ? token : null
+  return token || null
 }
 
 function getRequestPath(req: Request): string {

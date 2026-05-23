@@ -35,7 +35,7 @@ Tests must verify the architecture obligations for CORS, filesystem boundaries, 
 
 | Mechanism | Planned Test File | Required Cases |
 |-----------|-------------------|----------------|
-| Origin allowlist | `server/tests/security/originPolicy.test.ts` | built-in local origin accepted; `ALLOWED_DOMAINS` origin accepted; disallowed origin rejected; missing Origin accepted. |
+| Origin allowlist | `server/tests/security/originPolicy.test.ts` | built-in local origin accepted; `PUBLIC_ORIGIN` accepted; disallowed origin rejected; missing Origin accepted. |
 | Stream CORS headers | `server/tests/api/sse-cors.test.ts`, `server/tests/api/devtools-security.test.ts` | allowed Origin gets matching `Access-Control-Allow-Origin`; disallowed Origin does not; no response uses `*`; devtools CORS explicitly covers `OBL-cors-single-origin-policy`. |
 | Filesystem allowed roots | `server/tests/security/filesystemAccess.test.ts` | configured project root accepted; discovery root accepted; `/etc` denied; sibling prefix path denied. |
 | Canonical path containment | `server/tests/security/filesystemAccess.test.ts` | direct child accepted; `..` escape denied; symlink escape denied; URL-encoded traversal denied; Unicode-normalized outside path denied. |
@@ -51,7 +51,7 @@ Tests must verify the architecture obligations for CORS, filesystem boundaries, 
 
 | Dependency or Config | Planned Test | Behavior When Absent or Invalid |
 |----------------------|--------------|---------------------------------|
-| `ALLOWED_DOMAINS` | `TEST-origin-policy-unit` | Falls back to built-in local origins; no-Origin requests remain accepted. |
+| `PUBLIC_ORIGIN` | `TEST-origin-policy-unit` | Falls back to built-in local origins; no-Origin requests remain accepted. |
 | `DEVTOOLS_ENABLED` | `TEST-devtools-policy-api` | Production devtools disabled when absent; enabled only with explicit `true`. |
 | `MAINTENANCE_ENDPOINTS_ENABLED` | `TEST-config-maintenance-policy` | Production maintenance/debug mutation routes return generic 404 or 403 when absent. |
 | `X-Forwarded-For` | `TEST-backend-reverse-proxy-compat`, `TEST-mcp-reverse-proxy-caller-identity` | Backend accepts proxied requests without changing security headers/CORS; MCP caller identity/rate-limit buckets use forwarded client address according to trusted proxy behavior. |

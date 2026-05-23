@@ -55,6 +55,8 @@ Complete reference of all environment variables used in the Markdown Ticket proj
 
 ## Backend Variables
 
+Backend runtime variables are parsed by `server/config/runtimeConfig.ts`. The canonical architecture guide is [Runtime Configuration Architecture](architecture/runtime-configuration-architecture.md).
+
 ### PORT
 - **Description**: Backend server port
 - **Default**: `3001`
@@ -67,7 +69,7 @@ Complete reference of all environment variables used in the Markdown Ticket proj
   - Development: Enables stack traces in error responses
   - Production: Optimized for performance
   - Test: Test-specific behavior
-- **Usage**: `server/middleware/errorHandler.ts:52`
+- **Usage**: Parsed at startup into `RuntimeConfig.system`
 
 ### TICKETS_DIR
 - **Description**: Directory path for ticket files
@@ -77,7 +79,7 @@ Complete reference of all environment variables used in the Markdown Ticket proj
 ### CONFIG_DIR
 - **Description**: Configuration directory path for project discovery, templates, and user config
 - **Default**: `~/.config/markdown-ticket`
-- **Usage**: `shared/utils/constants.ts:52`
+- **Usage**: Parsed at startup into `RuntimeConfig.configDir`
 
 ### DEBUG
 - **Description**: Enable console output during tests
@@ -90,15 +92,20 @@ Complete reference of all environment variables used in the Markdown Ticket proj
 - **Default**: `true` in Docker environments
 - **Usage**: Docker compose files
 
-### ALLOWED_DOMAINS
-- **Description**: Unified domain allowlist for both CORS and Vite dev server
-- **Format**: `mydomain.com,another.com` (hostnames only, no protocol)
-- **Default**: None
-- **Usage**: `server/server.ts`, `vite.config.ts`
+### PUBLIC_ORIGIN
+- **Description**: Canonical deployment origin for browser API access and generated share/invite links
+- **Format**: `https://tickets.example.com`
+- **Default**: None; local development origins remain allowed
+- **Usage**: Parsed at startup into `RuntimeConfig.origins.publicOrigin`
 - **Notes**:
-  - Backend generates `https://` and `http://` URLs for CORS
-  - Vite uses hostnames directly for `allowedHosts`
-  - Set in `.env.local` to keep private domains out of git
+  - Must be a full `http(s)` origin.
+  - Vite derives the dev-server allowed host from this value.
+  - Set in `.env.local` to keep private domains out of git.
+
+### API_READ_SESSION_SECRET
+- **Description**: Explicit signing secret for read-only share and invite sessions
+- **Default**: When unset, uses `API_AUTH_TOKEN` if set; local/test fallback only outside production
+- **Usage**: Parsed at startup into `RuntimeConfig.readSessions.secret`
 
 ### DOCKER
 - **Description**: Indicates running in Docker environment
@@ -287,8 +294,8 @@ VITE_BACKEND_URL=http://localhost:3001
 VITE_FRONTEND_LOGGING_AUTOSTART=false
 NODE_ENV=development
 
-# Optional: Allow custom domains (keeps private domains out of git)
-# ALLOWED_DOMAINS=my-private-domain.com
+# Optional: Configure deployment origin (keeps private domains out of git)
+# PUBLIC_ORIGIN=https://my-private-domain.com
 ```
 
 ### Docker Development

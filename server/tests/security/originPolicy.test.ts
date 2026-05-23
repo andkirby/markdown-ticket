@@ -5,7 +5,7 @@ import {
   createCorsOptions,
   createDefaultOriginPolicy,
   createOriginPolicy,
-  parseAllowedDomains,
+  parsePublicOrigin,
 } from '../../security/originPolicy'
 
 type CorsOriginCallback = (error: Error | null, allowed?: boolean) => void
@@ -28,19 +28,23 @@ describe('originPolicy', () => {
     expect(policy.isAllowedOrigin('http://localhost:6173')).toBe(true)
   })
 
-  it('expands configured domains to HTTPS and HTTP origins', () => {
-    expect(parseAllowedDomains('app.example.com, https://admin.example.com/')).toEqual([
-      'https://app.example.com',
-      'http://app.example.com',
-      'https://admin.example.com',
-    ])
+  it('parses the configured public origin without inventing schemes for host-only values', () => {
+    expect(parsePublicOrigin('https://app.example.com/')).toBe('https://app.example.com')
+    expect(parsePublicOrigin('app.example.com')).toBeUndefined()
   })
 
-  it('deduplicates default and configured origins', () => {
-    const origins = createAllowedOrigins('localhost:5173,app.example.com,app.example.com')
+  it('rejects public origin values that are not exact origins', () => {
+    expect(parsePublicOrigin('https://app.example.com/path')).toBeUndefined()
+    expect(parsePublicOrigin('https://app.example.com?from=settings')).toBeUndefined()
+    expect(parsePublicOrigin('https://app.example.com#section')).toBeUndefined()
+    expect(parsePublicOrigin('https://app.example.com,https://admin.example.com')).toBeUndefined()
+    expect(parsePublicOrigin('https://')).toBeUndefined()
+  })
+
+  it('deduplicates default and configured public origins', () => {
+    const origins = createAllowedOrigins('http://localhost:5173/')
 
     expect(origins.filter(origin => origin === 'http://localhost:5173')).toHaveLength(1)
-    expect(origins.filter(origin => origin === 'https://app.example.com')).toHaveLength(1)
   })
 
   it('rejects disallowed origins for REST and stream decisions', () => {

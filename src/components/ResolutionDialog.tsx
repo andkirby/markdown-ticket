@@ -30,6 +30,7 @@ export const ResolutionDialog: React.FC<ResolutionDialogProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onCancel}
+      size="md"
       data-testid="resolution-dialog"
     >
       <ModalHeader

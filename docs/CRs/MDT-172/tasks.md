@@ -156,6 +156,6 @@ bun test src/components/ReadOnlyMode.test.tsx
 ## Follow-up TODOs from sharing UAT
 
 - [ ] Treat `MDT-178` as a required architecture cleanup before closing public/read-only sharing as production-ready.
-- [ ] Verify generated share and invite links use the runtime-configured public origin and do not fall back to `localhost` when `ALLOWED_DOMAINS` is configured.
-- [ ] Add E2E coverage for the owner journey where a configured public hostname is selected for a read-access invite link.
+- [ ] Verify generated share and invite links use the runtime-configured `PUBLIC_ORIGIN` and do not fall back to `localhost`.
+- [ ] Add E2E coverage for the owner journey where a configured public origin is used for a read-access invite link.
 - [ ] Keep sharing storage and runtime deployment settings separate: project sharing/token state stays in `CONFIG_DIR`, while deployment origins come from the runtime config boundary.
