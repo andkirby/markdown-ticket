@@ -72,13 +72,17 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
 
   // Load discovery paths when component mounts
   useEffect(() => {
-    if (isOpen) {
-      loadDiscoveryPaths()
-    }
-  }, [isOpen])
+    if (!isOpen || !canManageProjects)
+      return
+
+    loadDiscoveryPaths()
+  }, [canManageProjects, isOpen])
 
   // Check path when form data changes using simplified hook
   useEffect(() => {
+    if (!isOpen || !canManageProjects)
+      return
+
     const timerRef = { id: undefined as ReturnType<typeof setTimeout> | undefined }
 
     const updateState = (exists: boolean, inDiscovery: boolean) => {
@@ -102,7 +106,7 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
         clearTimeout(timerRef.id)
       }
     }
-  }, [formData.path, checkPath])
+  }, [canManageProjects, formData.path, isOpen, checkPath])
 
   const handleSmartClose = () => {
     if (hasFormData()) {
