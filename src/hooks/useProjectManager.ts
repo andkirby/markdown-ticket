@@ -1,6 +1,8 @@
 import type { Project, ProjectConfig } from '@mdt/shared/models/Project'
 import type { Ticket } from '../types'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useAuthSession } from '../auth/AuthSessionProvider'
+import { authFetch, isAuthRequiredResponse, isBackendDownError, isBackendDownResponse } from '../auth/authFetch'
 import { dataLayer } from '../services/dataLayer'
 import { useEventBus } from '../services/eventBus'
 import { useSSEEvents } from './useSSEEvents'
@@ -45,6 +47,7 @@ interface UseProjectManagerReturn {
 
 export function useProjectManager(options: UseProjectManagerOptions = {}): UseProjectManagerReturn {
   const { autoSelectFirst = true, handleSSEEvents = false } = options
+  const { accessMode, markBackendDown, markLocked, markProjectListLoaded } = useAuthSession()
 
   const [projects, setProjects] = useState<Project[]>([])
   const [selectedProjectValue, setSelectedProjectValue] = useState<Project | null>(null)
@@ -90,14 +93,30 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
   const fetchProjects = useCallback(async (): Promise<void> => {
     try {
       setIsBackendDown(false)
-      const response = await fetch('/api/projects')
+      const response = await authFetch('/api/projects')
 
       if (!response.ok) {
+        if (isAuthRequiredResponse(response)) {
+          setProjects([])
+          setSelectedProjectValue(null)
+          setTickets([])
+          setProjectConfig(null)
+          markLocked()
+          return
+        }
+
+        if (isBackendDownResponse(response)) {
+          setIsBackendDown(true)
+          markBackendDown()
+          throw new Error('Backend server is not responding. Please check that the server is running.')
+        }
+
         throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }
 
       const allProjects = await response.json()
       setProjects(allProjects)
+      markProjectListLoaded(allProjects.length)
 
       // Auto-select first project if none selected and autoSelectFirst is enabled
       if (autoSelectFirst && allProjects.length > 0 && !selectedProjectRef.current) {
@@ -106,6 +125,12 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
     }
     catch (error) {
       console.error('Failed to fetch projects:', error)
+      if (isBackendDownError(error)) {
+        setIsBackendDown(true)
+        markBackendDown()
+        throw new Error('Backend server is not responding. Please check that the server is running.')
+      }
+
       // Check if it's a network error (backend down) or HTTP 500 from proxy
       if (error instanceof TypeError && (
         error.message.includes('fetch')
@@ -124,7 +149,7 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
 
       throw error
     }
-  }, [autoSelectFirst]) // Removed selectedProject and ticketOps dependencies
+  }, [autoSelectFirst, markBackendDown, markLocked, markProjectListLoaded]) // Removed selectedProject and ticketOps dependencies
 
   const refreshProjects = useCallback(async () => {
     await fetchProjects()
@@ -167,6 +192,19 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
   useEffect(() => {
     fetchProjects().finally(() => setLoading(false))
   }, [fetchProjects])
+
+  // Drop stale owner-only state immediately when the browser session locks.
+  useEffect(() => {
+    if (accessMode !== 'locked')
+      return
+
+    setProjects([])
+    setSelectedProjectValue(null)
+    selectedProjectRef.current = null
+    setTickets([])
+    setProjectConfig(null)
+    setIsBackendDown(false)
+  }, [accessMode])
 
   // Reconcile projects on SSE reconnection (only if this instance handles SSE events)
   useEventBus('sse:reconnected', useCallback(() => {

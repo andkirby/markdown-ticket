@@ -26,6 +26,7 @@
 
 import * as React from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { useAuthSession } from '@/auth/AuthSessionProvider'
 import { useProjectManager } from '@/hooks/useProjectManager'
 import { getProjectCode } from '@/utils/projectUtils'
 import { TooltipProvider } from '../ui/tooltip'
@@ -54,6 +55,7 @@ import { useSelectorData } from './useSelectorData'
 function ProjectSelector({ className = '' }: { className?: string }) {
   const { projectCode: urlProjectCode } = useParams<{ projectCode: string }>()
   const navigate = useNavigate()
+  const { canManageProjects } = useAuthSession()
 
   // Load selector data (preferences, state, and mutation functions)
   const {
@@ -100,7 +102,9 @@ function ProjectSelector({ className = '' }: { className?: string }) {
       }
 
       // Track usage state (increments count, updates lastUsedAt)
-      trackProjectUsage(projectKey)
+      if (canManageProjects) {
+        trackProjectUsage(projectKey)
+      }
 
       // Update selected project via useProjectManager (single transition authority)
       setSelectedProject(project)
@@ -113,16 +117,18 @@ function ProjectSelector({ className = '' }: { className?: string }) {
 
       // Panel closes automatically via ProjectBrowserPanel's onSelect handler
     },
-    [projects, trackProjectUsage, setSelectedProject, navigate],
+    [canManageProjects, projects, trackProjectUsage, setSelectedProject, navigate],
   )
 
   // Handle favorite toggle
   const handleFavoriteToggle = React.useCallback(
     (projectKey: string, e: React.MouseEvent) => {
       e.stopPropagation()
-      toggleFavorite(projectKey)
+      if (canManageProjects) {
+        toggleFavorite(projectKey)
+      }
     },
-    [toggleFavorite],
+    [canManageProjects, toggleFavorite],
   )
 
   // Get active project key for display

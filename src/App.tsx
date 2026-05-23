@@ -3,8 +3,11 @@ import type { Ticket } from './types'
 import { getTicketsPath } from '@mdt/shared/models/Project'
 import { useEffect, useRef, useState } from 'react'
 import { BrowserRouter, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { AuthSessionProvider, useAuthSession } from './auth/AuthSessionProvider'
 import { AddProjectModal } from './components/AddProjectModal'
 import { MobileLogo } from './components/AppHeader'
+import { AuthStatusAction } from './components/AuthUnlock/AuthStatusAction'
+import { AuthUnlockPanel } from './components/AuthUnlock/AuthUnlockPanel'
 import { EventHistory } from './components/DevTools/EventHistory'
 import { useEventHistoryState } from './components/DevTools/useEventHistoryState'
 import { DirectTicketAccess } from './components/DirectTicketAccess'
@@ -42,10 +45,20 @@ function ProjectRouteHandler() {
     refreshProjects,
     loading: projectsLoading,
   } = useProjectManager({ autoSelectFirst: false, handleSSEEvents: true })
+  const {
+    accessMode,
+    sessionStatus,
+    canManageProjects,
+    unlock,
+    lock,
+    markLocked,
+  } = useAuthSession()
 
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
   const [ticketError, setTicketError] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [unlockError, setUnlockError] = useState<string | null>(null)
+  const [authRefreshInFlight, setAuthRefreshInFlight] = useState(false)
   const [eventHistoryOpen, eventHistoryForceHidden, setEventHistoryState] = useEventHistoryState()
   const [localSortPreferences, setLocalSortPreferences] = useState<SortPreferences>(getSortPreferences)
   const [showAddProjectModal, setShowAddProjectModal] = useState(false)
@@ -69,6 +82,7 @@ function ProjectRouteHandler() {
   selectedTicketRef.current = selectedTicket
   const setSelectedTicketRef = useRef(setSelectedTicket)
   setSelectedTicketRef.current = setSelectedTicket
+  const ownerRefreshRef = useRef(false)
 
   // Determine current view mode from URL
   const getCurrentViewMode = (): 'board' | 'list' | 'documents' => {
@@ -102,16 +116,73 @@ function ProjectRouteHandler() {
   }
 
   const handleAddProject = () => {
+    if (!canManageProjects)
+      return
+
     setShowAddProjectModal(true)
   }
 
   const handleEditProject = () => {
+    if (!canManageProjects)
+      return
+
     setShowEditProjectModal(true)
   }
 
+  const handleUnlock = async (token: string) => {
+    setUnlockError(null)
+    await unlock(token)
+  }
+
+  const handleLock = async () => {
+    setShowAddProjectModal(false)
+    setShowEditProjectModal(false)
+    setShowSettings(false)
+    await lock()
+  }
+
+  const handleUnlockClick = () => {
+    const tokenInput = document.querySelector<HTMLInputElement>('[data-testid="auth-token-input"]')
+    if (tokenInput) {
+      tokenInput.focus()
+      return
+    }
+
+    markLocked()
+  }
+
+  useEffect(() => {
+    if (accessMode !== 'owner-admin') {
+      ownerRefreshRef.current = false
+      return
+    }
+
+    if (ownerRefreshRef.current)
+      return
+
+    ownerRefreshRef.current = true
+    setAuthRefreshInFlight(true)
+    refreshProjects()
+      .catch((err) => {
+        console.error('Failed to refresh projects after unlock:', err)
+      })
+      .finally(() => setAuthRefreshInFlight(false))
+  }, [accessMode, refreshProjects])
+
+  useEffect(() => {
+    if (accessMode === 'locked' && sessionStatus === 'error') {
+      setUnlockError('Token was not accepted.')
+      return
+    }
+
+    if (sessionStatus !== 'error') {
+      setUnlockError(null)
+    }
+  }, [accessMode, sessionStatus])
+
   // Handle project selection and validation
   useEffect(() => {
-    if (projectsLoading) {
+    if (projectsLoading || authRefreshInFlight || accessMode === 'unknown' || accessMode === 'locked' || accessMode === 'backend-down') {
       setErrorRef.current(null) // Clear errors when loading
       return
     }
@@ -136,7 +207,7 @@ function ProjectRouteHandler() {
       setCurrentProject(projectCode)
     }
     setErrorRef.current(null)
-  }, [projectCode, projects, projectsLoading, selectedProject, setSelectedProject])
+  }, [accessMode, authRefreshInFlight, projectCode, projects, projectsLoading, selectedProject, setSelectedProject])
 
   // Initialize view mode from localStorage when URL has no view suffix
   useEffect(() => {
@@ -207,7 +278,7 @@ function ProjectRouteHandler() {
     navigate(targetPath)
   }
 
-  if (projectsLoading) {
+  if (projectsLoading || authRefreshInFlight || accessMode === 'unknown') {
     return (
       <div data-testid="loading" className="min-h-[100dvh] bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -242,6 +313,11 @@ function ProjectRouteHandler() {
               </div>
             </div>
             <div className="flex items-center">
+              <AuthStatusAction
+                accessMode={accessMode}
+                onLock={handleLock}
+                onUnlockClick={handleUnlockClick}
+              />
               <SecondaryHeader
                 viewMode={viewMode}
                 sortPreferences={(viewMode === 'board' || viewMode === 'list') ? localSortPreferences : undefined}
@@ -250,6 +326,7 @@ function ProjectRouteHandler() {
                 onEditProject={handleEditProject}
                 selectedProject={selectedProject}
                 onOpenSettings={() => setShowSettings(true)}
+                canManageProjects={canManageProjects}
               />
             </div>
           </div>
@@ -257,13 +334,25 @@ function ProjectRouteHandler() {
       </nav>
 
       <div className="flex-1 overflow-hidden">
-        <ProjectView
-          onTicketClick={handleTicketClick}
-          selectedProject={selectedProject}
-          tickets={tickets}
-          viewMode={viewMode}
-          sortPreferences={(viewMode === 'board' || viewMode === 'list') ? localSortPreferences : undefined}
-        />
+        {accessMode === 'locked'
+          ? (
+              <div className="flex h-full items-center justify-center p-6">
+                <AuthUnlockPanel
+                  error={unlockError}
+                  unlocking={sessionStatus === 'unlocking'}
+                  onUnlock={handleUnlock}
+                />
+              </div>
+            )
+          : (
+              <ProjectView
+                onTicketClick={handleTicketClick}
+                selectedProject={selectedProject}
+                tickets={tickets}
+                viewMode={viewMode}
+                sortPreferences={(viewMode === 'board' || viewMode === 'list') ? localSortPreferences : undefined}
+              />
+            )}
       </div>
 
       <TicketViewer
@@ -275,7 +364,7 @@ function ProjectRouteHandler() {
       />
 
       <AddProjectModal
-        isOpen={showAddProjectModal}
+        isOpen={showAddProjectModal && canManageProjects}
         onClose={() => setShowAddProjectModal(false)}
         onProjectCreated={async () => {
           setShowAddProjectModal(false)
@@ -285,7 +374,7 @@ function ProjectRouteHandler() {
         }}
       />
 
-      {selectedProject && (
+      {selectedProject && canManageProjects && (
         <AddProjectModal
           isOpen={showEditProjectModal}
           onClose={() => setShowEditProjectModal(false)}
@@ -314,7 +403,7 @@ function ProjectRouteHandler() {
       />
 
       <SettingsModal
-        isOpen={showSettings}
+        isOpen={showSettings && canManageProjects}
         onClose={() => setShowSettings(false)}
       />
 
@@ -334,24 +423,26 @@ function ProjectRouteHandler() {
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<RedirectToCurrentProject />} />
-        <Route path="/:ticketKey" element={<DirectTicketAccess />} />
-        <Route path="/prj/:projectCode" element={<ProjectRouteHandler />} />
-        <Route path="/prj/:projectCode/list" element={<ProjectRouteHandler />} />
-        <Route path="/prj/:projectCode/documents" element={<ProjectRouteHandler />} />
-        {/* MDT-150: Path-style document routes for SmartLink resolution */}
-        <Route path="/prj/:projectCode/documents/*" element={<ProjectRouteHandler />} />
-        {/* MDT-094: Unified route for tickets with optional sub-document path */}
-        <Route path="/prj/:projectCode/ticket/:ticketKey/*" element={<ProjectRouteHandler />} />
-        <Route path="/prj/:projectCode/ticket/:ticketKey" element={<ProjectRouteHandler />} />
-        <Route path="/ticket/:ticketKey" element={<DirectTicketAccess />} />
-        {/* MDT-094: Direct ticket access with sub-document path */}
-        <Route path="/ticket/:ticketKey/*" element={<DirectTicketAccess />} />
-        <Route path="*" element={<RouteErrorModal error="Page not found" />} />
-      </Routes>
-    </BrowserRouter>
+    <AuthSessionProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<RedirectToCurrentProject />} />
+          <Route path="/:ticketKey" element={<DirectTicketAccess />} />
+          <Route path="/prj/:projectCode" element={<ProjectRouteHandler />} />
+          <Route path="/prj/:projectCode/list" element={<ProjectRouteHandler />} />
+          <Route path="/prj/:projectCode/documents" element={<ProjectRouteHandler />} />
+          {/* MDT-150: Path-style document routes for SmartLink resolution */}
+          <Route path="/prj/:projectCode/documents/*" element={<ProjectRouteHandler />} />
+          {/* MDT-094: Unified route for tickets with optional sub-document path */}
+          <Route path="/prj/:projectCode/ticket/:ticketKey/*" element={<ProjectRouteHandler />} />
+          <Route path="/prj/:projectCode/ticket/:ticketKey" element={<ProjectRouteHandler />} />
+          <Route path="/ticket/:ticketKey" element={<DirectTicketAccess />} />
+          {/* MDT-094: Direct ticket access with sub-document path */}
+          <Route path="/ticket/:ticketKey/*" element={<DirectTicketAccess />} />
+          <Route path="*" element={<RouteErrorModal error="Page not found" />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthSessionProvider>
   )
 }
 

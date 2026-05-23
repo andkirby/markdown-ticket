@@ -24,6 +24,7 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler.js'
 import { createDevToolsRouter, setupLogInterception } from './routes/devtools.js'
 import { createDocsRouter } from './routes/docs.js'
 import { createDocumentRouter } from './routes/documents.js'
+import { createAuthRouter } from './routes/auth.js'
 // Routes
 import { createProjectRouter } from './routes/projects.js'
 import { createSSERouter } from './routes/sse.js'
@@ -293,7 +294,10 @@ async function initializeMultiProjectWatchers(): Promise<void> {
 // Register Routes
 // =============================================================================
 
-// Backend API auth gate: after generic middleware, before protected /api routers.
+// Browser auth session routes are intentionally mounted before the protected API auth gate.
+app.use('/api/auth', createAuthRouter())
+
+// Backend API auth gate: after generic middleware and auth session routes, before protected /api routers.
 app.use('/api', createApiAuthMiddleware())
 
 // Multi-Project API routes
