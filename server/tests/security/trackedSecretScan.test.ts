@@ -20,7 +20,7 @@ describe('tracked secret scan', () => {
       let content = readFileSync(file, 'utf8')
 
       for (const placeholder of ALLOWED_PLACEHOLDERS) {
-        content = content.replaceAll(placeholder, '')
+        content = content.split(placeholder).join('')
       }
 
       expect(content).not.toMatch(/MCP_AUTH_TOKEN\s*=\s*[A-Za-z0-9._-]{16,}/)
