@@ -1,6 +1,6 @@
 # Settings
 
-Modal with tabbed sections for user preferences. All settings are client-side — stored in localStorage or cookies. No API calls needed. Each control writes immediately on change (no Save button).
+Owner/admin modal with tabbed sections for user preferences and project sharing controls. Most settings are client-side and write immediately; Sharing is API-backed.
 
 ## Composition
 
@@ -14,8 +14,9 @@ Modal[size="md"]
         ├── Tabs.List (horizontal, border-b)
         │   ├── Tabs.Trigger[Appearance]
         │   ├── Tabs.Trigger[Board]
+        │   ├── Tabs.Trigger[Sharing]
         │   └── Tabs.Trigger[Advanced]
-        └── Tabs.Content × 3
+        └── Tabs.Content × 4
             ├── Appearance panel
             │   ├── div.setting-group["Theme"]
             │   │   ├── label + description
@@ -23,6 +24,9 @@ Modal[size="md"]
             │   └── div.setting-group["Default View"]
             │       ├── label + description
             │       └── Select[Board / List]
+            │   └── div.setting-group["Markdown Density"]
+            │       ├── label + description
+            │       └── Select[Compact / Default / Comfortable]
             ├── Board panel
             │   ├── div.setting-group["Card Density"]
             │   │   ├── label + description
@@ -33,6 +37,12 @@ Modal[size="md"]
             │   └── div.setting-group["Visible Card Badges"]
             │       ├── label + description
             │       └── CheckboxList[Status / Priority / Type / Phase / Related / Depends / Blocks / Worktree]
+            ├── Sharing panel (owner/admin only)
+            │   ├── div.setting-group["Project Access"]
+            │   │   └── Select[Private / Unlisted read-only / Public read-only]
+            │   └── div.setting-group["Share link"]
+            │       ├── ReadonlyInput[share URL] or helper text
+            │       └── ActionRow[Rotate, Save]
             └── Advanced panel
                 ├── div.setting-group["Event History"]
                 │   ├── label + description
@@ -52,6 +62,7 @@ Modal[size="md"]
 | Button | `src/components/ui/Button.tsx` | — | clear cache action |
 | Switch | `src/components/ui/switch.tsx` | — | toggle preferences |
 | Checkbox list | native checkbox controls | — | visible card badges |
+| Readonly input | native input with `readOnly` | — | Sharing tab with generated share URL |
 
 ## Source files
 
@@ -63,6 +74,7 @@ Modal[size="md"]
 | Link config | `src/config/linkConfig.ts` |
 | Event history | `src/components/DevTools/useEventHistoryState.ts` |
 | Cache utils | `src/utils/cache.ts` |
+| Sharing API | `PUT /api/projects/:code/sharing` |
 
 ## Layout
 
@@ -96,6 +108,7 @@ Modal[size="md"]
 | Switch | label/description left, switch right (`flex items-center justify-between`) |
 | Button action | label/description left, button right (`flex items-center justify-between`) |
 | Checkbox list | label + description above, checkbox rows below (`flex-col gap-2`) |
+| Share link | label above, readonly generated URL below, save/rotate actions in trailing row |
 
 ## Tabs
 
@@ -105,6 +118,7 @@ Modal[size="md"]
 |---------|---------|---------|---------|
 | Theme | cookie `theme` | ButtonGroup (Light / Dark / System) | `system` |
 | Default View | localStorage `mdt-settings-default-view` | Select (Board / List) | `board` |
+| Markdown Density | localStorage `mdt-settings-markdown-density` | Select (Compact / Default / Comfortable) | `default` |
 
 ### Board
 
@@ -113,6 +127,27 @@ Modal[size="md"]
 | Card Density | localStorage `mdt-settings-card-density` | Select (Comfortable / Compact) | `comfortable` |
 | Smart Links | localStorage `markdown-ticket-link-config.enableAutoLinking` | Switch toggle | `true` |
 | Visible Card Badges | localStorage `markdown-ticket:board:ticket-card-badges` | Checkbox list | Status, Priority, Type, Phase, Related, Depends, Blocks, Worktree |
+
+### Sharing
+
+Visible only when current access mode includes owner/admin permission. Hidden entirely for anonymous and read-token visitors.
+
+| Setting | Storage | Control | Default |
+|---------|---------|---------|---------|
+| Sharing mode | server project sharing config | Select (Private / Unlisted read-only / Public read-only) | Private |
+| Share link | derived from server-generated share ID | read-only input | hidden until read-only sharing is enabled |
+| Rotate link | server project sharing config | Button "Rotate" | visible only when a non-private share link exists |
+| Save sharing | server project sharing config | Button "Save" | always visible on Sharing tab |
+
+Interaction rules:
+- Changing Sharing mode is local until Save is selected. Save writes through an authenticated API and shows loading/error state inline.
+- Unlisted read-only is the default sharing choice for link sharing: accessible through share URL, absent from anonymous project listing.
+- Public read-only appears in anonymous project listing and should be selected only when the owner wants directory-style discovery.
+- Read-only modes never grant mutation rights.
+- Read tokens are entered through the auth unlock flow, not managed from Settings in this version.
+- Share links use a server-generated, non-enumerable public share ID. Clients must never submit a custom share ID.
+- Rotate invalidates the previous share URL by asking the backend to generate a new share ID.
+- Write/admin tokens must never be included in generated links.
 
 ### Advanced
 
@@ -133,6 +168,13 @@ Modal[size="md"]
 | badge unselected | visible card badge hidden | checkbox unchecked; label remains readable, no disabled styling |
 | invalid badge storage | stored list is empty, malformed, or unsupported | UI falls back to default checked badges |
 | clearing cache | Clear Cache clicked | toast confirmation |
+| readonly visitor | current access mode lacks owner/admin | Settings entry is hidden; modal is not reachable |
+| sharing loading | sharing config loads or saves | affected controls disabled with inline spinner |
+| sharing error | sharing read/write fails | destructive inline message with retry |
+| unlisted shared | Sharing mode = Unlisted read-only | share link input visible; Rotate and Save actions available; project not listed anonymously |
+| public shared | Sharing mode = Public read-only | share link input visible; Rotate and Save actions available; project appears in anonymous listing |
+| unlisted/public unsaved | mode selected but no share ID yet | helper text: "Save to generate a share link." |
+| share link rotated | Rotate selected | previous URL no longer grants access; new read-only URL appears after save response |
 
 ## Visible Card Badges
 
@@ -161,7 +203,7 @@ The Board tab includes a checkbox list for board ticket card badges. The list co
 
 ## Entry Point
 
-Settings opens from the **hamburger menu** via ⚙ Settings item. Theme quick-access buttons **remain** in hamburger menu for fast switching.
+Settings opens from the **hamburger menu** via ⚙ Settings item for owner/admin users. Theme quick-access buttons **remain** in hamburger menu for fast switching, including read-only mode.
 
 ## Tokens used
 
@@ -173,6 +215,7 @@ Settings opens from the **hamburger menu** via ⚙ Settings item. Theme quick-ac
 | primary | `--primary` | active theme button, switch on, active tab |
 | border | `--border` | tab list border, select border |
 | muted | `--muted` | inactive switch, inactive theme button |
+| readonly input | `--muted` | generated share URL background |
 
 ## Extension notes
 
@@ -182,3 +225,4 @@ Settings opens from the **hamburger menu** via ⚙ Settings item. Theme quick-ac
 - Card density: consumers should read from `mdt-settings-card-density` and apply CSS class changes to TicketCard and column spacing.
 - Default view: consumers should read from `mdt-settings-default-view` on initial load when URL has no view suffix.
 - Visible card badges: consumers should read from `markdown-ticket:board:ticket-card-badges`, validate badge IDs against the supported board-card badge set, preserve the standard display order, and fall back to default badges when storage is invalid or empty.
+- Sharing controls are not client-only preferences. They require owner/admin access and must use backend authorization as the source of truth.

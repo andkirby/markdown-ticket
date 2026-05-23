@@ -6,6 +6,7 @@
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import process from 'node:process'
+import type { ProjectSharingSettings, RegistryData } from '@mdt/shared/models/Project.js'
 import { DEFAULTS } from '@mdt/shared/utils/constants.js'
 import { parseToml, stringify } from '@mdt/shared/utils/toml.js'
 
@@ -25,19 +26,38 @@ interface ProjectRegistryEntry {
   active: boolean
   documentPaths: string[]
   excludeFolders: string[]
+  registryFile?: string
+  sharing?: ProjectSharingSettings
+  dateRegistered?: string
+  lastAccessed?: string
+  version?: string
 }
 
 interface ProjectListEntry {
   id: string
   project: {
+    id: string
     name: string
     code: string
     path: string
+    configFile: string
     description: string
     repository: string
     active: boolean
+    ticketsPath: string
+  }
+  metadata: {
+    dateRegistered: string
+    lastAccessed: string
+    version: string
+    sharing?: ProjectSharingSettings
+  }
+  document: {
+    paths: string[]
+    excludeFolders: string[]
   }
   configPath: string
+  registryFile?: string
 }
 
 interface ProjectCR {
@@ -105,6 +125,12 @@ export class ProjectService {
     if (fs.existsSync(projectsRegistryDir)) {
       const entries = fs.readdirSync(projectsRegistryDir, { withFileTypes: true })
       for (const entry of entries) {
+        if (entry.isFile() && entry.name.endsWith('.toml')) {
+          this.loadProjectFromRegistryFile(path.join(projectsRegistryDir, entry.name))
+        }
+      }
+
+      for (const entry of entries) {
         if (entry.isDirectory()) {
           const configPath = path.join(projectsRegistryDir, entry.name, '.mdt-config.toml')
           if (fs.existsSync(configPath)) {
@@ -136,7 +162,46 @@ export class ProjectService {
   /**
    * Load a single project from its config file
    */
-  private loadProjectFromConfig(configPath: string, entryName: string): void {
+  private loadProjectFromRegistryFile(registryPath: string): void {
+    try {
+      const registry = parseToml(fs.readFileSync(registryPath, 'utf-8')) as RegistryData
+      const projectPath = registry.project?.path
+      if (!projectPath) {
+        return
+      }
+
+      const projectCode = registry.project.code || registry.project.id || path.basename(registryPath, '.toml')
+      const configPath = path.join(projectPath, '.mdt-config.toml')
+
+      if (fs.existsSync(configPath)) {
+        this.loadProjectFromConfig(configPath, projectCode, registry, registryPath)
+        return
+      }
+
+      this.projectsRegistry.set(projectCode, {
+        name: registry.project.name || projectCode,
+        code: registry.project.code || projectCode,
+        ticketsPath: registry.project.ticketsPath || DEFAULTS.TICKETS_PATH,
+        path: projectPath,
+        projectDir: path.basename(projectPath),
+        description: registry.project.description || '',
+        repository: registry.project.repository || '',
+        active: registry.project.active !== false,
+        documentPaths: registry.project.document?.paths || [],
+        excludeFolders: registry.project.document?.excludeFolders || ['node_modules', '.git', 'dist'],
+        registryFile: registryPath,
+        sharing: registry.metadata?.sharing,
+        dateRegistered: registry.metadata?.dateRegistered,
+        lastAccessed: registry.metadata?.lastAccessed,
+        version: registry.metadata?.version,
+      })
+    }
+    catch {
+      // Skip invalid registry files
+    }
+  }
+
+  private loadProjectFromConfig(configPath: string, entryName: string, registryData?: RegistryData, registryFile?: string): void {
     try {
       const content = fs.readFileSync(configPath, 'utf-8')
       // Parse basic TOML (simplified for testing)
@@ -180,9 +245,14 @@ export class ProjectService {
           projectDir: projectDirName, // Just the directory name for registry lookups
           description: descriptionMatch ? descriptionMatch[1] : '',
           repository: repositoryMatch ? repositoryMatch[1] : '',
-          active: true,
+          active: registryData?.project?.active !== false,
           documentPaths,
           excludeFolders,
+          registryFile,
+          sharing: registryData?.metadata?.sharing,
+          dateRegistered: registryData?.metadata?.dateRegistered,
+          lastAccessed: registryData?.metadata?.lastAccessed,
+          version: registryData?.metadata?.version,
         })
       }
     }
@@ -207,17 +277,32 @@ export class ProjectService {
     // Always refresh to pick up projects created by ProjectFactory
     this.loadProjectsRegistry()
 
+    const today = new Date().toISOString().split('T')[0]
     const result = Array.from(this.projectsRegistry.values()).map(project => ({
       id: project.code,
       project: {
+        id: project.code,
         name: project.name,
         code: project.code,
         path: project.path, // Always use the full path
+        configFile: path.join(project.path, '.mdt-config.toml'),
         description: project.description,
         repository: project.repository,
         active: project.active,
+        ticketsPath: project.ticketsPath,
+      },
+      metadata: {
+        dateRegistered: project.dateRegistered || today,
+        lastAccessed: project.lastAccessed || today,
+        version: project.version || '1.0.0',
+        ...(project.sharing ? { sharing: project.sharing } : {}),
+      },
+      document: {
+        paths: project.documentPaths,
+        excludeFolders: project.excludeFolders,
       },
       configPath: path.join(project.path, '.mdt-config.toml'),
+      ...(project.registryFile ? { registryFile: project.registryFile } : {}),
     }))
     return result
   }

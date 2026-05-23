@@ -123,6 +123,10 @@ class FileWatcherService extends EventEmitter {
       this.handleDocumentChangeForSSE(data)
     })
 
+    this.pathWatcher.on('registry-change', () => {
+      this.sseBroadcaster.disconnectReadOnlyClients()
+    })
+
     // Wire up registry events to SSE broadcasting
     this.pathWatcher.on('project-created', (data) => {
       this.sseBroadcaster.broadcast({ type: 'project-created', data })
@@ -291,7 +295,10 @@ class FileWatcherService extends EventEmitter {
   /**
    * Add an SSE client connection.
    */
-  addClient(response: ResponseLike): void {
+  addClient(response: ResponseLike, scope?: ResponseLike['mdtSseScope']): void {
+    if (scope) {
+      response.mdtSseScope = scope
+    }
     this.sseBroadcaster.addClient(response)
   }
 
@@ -300,6 +307,10 @@ class FileWatcherService extends EventEmitter {
    */
   removeClient(response: ResponseLike): void {
     this.sseBroadcaster.removeClient(response)
+  }
+
+  disconnectReadOnlyClients(): void {
+    this.sseBroadcaster.disconnectReadOnlyClients()
   }
 
   /**

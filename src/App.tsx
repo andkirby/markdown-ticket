@@ -3,7 +3,9 @@ import type { Ticket } from './types'
 import { getTicketsPath } from '@mdt/shared/models/Project'
 import { useEffect, useRef, useState } from 'react'
 import { BrowserRouter, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { AuthSessionProvider, useAuthSession } from './auth/AuthSessionProvider'
+import { authFetch, isBackendDownError, isBackendDownResponse } from './auth/authFetch'
+import { useAuthSession } from './auth/AuthSessionContext'
+import { AuthSessionProvider } from './auth/AuthSessionProvider'
 import { AddProjectModal } from './components/AddProjectModal'
 import { MobileLogo } from './components/AppHeader'
 import { AuthStatusAction } from './components/AuthUnlock/AuthStatusAction'
@@ -25,10 +27,10 @@ import { getSortPreferences, setSortPreferences } from './config/sorting'
 import { useGlobalKeyboard } from './hooks/useGlobalKeyboard'
 import { formatRootViewPageTitle, PageTitlePriority, usePageTitle } from './hooks/usePageTitle'
 import { useProjectManager } from './hooks/useProjectManager'
+import { syncSSEAccessMode } from './services/sseClient'
 import { getProjectCode } from './utils/projectUtils'
 import { normalizeTicketKey, setCurrentProject, validateProjectCode } from './utils/routing'
 import './utils/cache' // Import cache utilities for development
-import './services/sseClient' // Initialize SSE connection
 
 function ProjectRouteHandler() {
   const { projectCode } = useParams<{ projectCode: string }>()
@@ -351,6 +353,7 @@ function ProjectRouteHandler() {
                 tickets={tickets}
                 viewMode={viewMode}
                 sortPreferences={(viewMode === 'board' || viewMode === 'list') ? localSortPreferences : undefined}
+                canWrite={canManageProjects}
               />
             )}
       </div>
@@ -405,6 +408,8 @@ function ProjectRouteHandler() {
       <SettingsModal
         isOpen={showSettings && canManageProjects}
         onClose={() => setShowSettings(false)}
+        selectedProject={selectedProject}
+        onProjectSharingUpdated={refreshProjects}
       />
 
       <QuickSearchModal
@@ -421,12 +426,94 @@ function ProjectRouteHandler() {
   )
 }
 
+function ShareRouteHandler() {
+  const { shareId } = useParams<{ shareId: string }>()
+  const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const { markReadOnly, markBackendDown } = useAuthSession()
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function exchangeShareSession(): Promise<void> {
+      if (!shareId) {
+        setError('Invalid share link')
+        return
+      }
+
+      if (searchParams.has('code')) {
+        window.history.replaceState(null, '', `/share/${encodeURIComponent(shareId)}`)
+      }
+
+      try {
+        const response = await authFetch(`/api/share/${encodeURIComponent(shareId)}/session`, { method: 'POST' })
+
+        if (cancelled) {
+          return
+        }
+
+        if (!response.ok) {
+          if (isBackendDownResponse(response)) {
+            markBackendDown()
+            return
+          }
+
+          setError(response.status === 404 ? 'Share link not found' : 'Share link could not be opened')
+          return
+        }
+
+        const data = await response.json() as { project?: { id?: string, project?: { code?: string } } }
+        const projectCode = data.project?.project?.code || data.project?.id
+
+        if (!projectCode) {
+          setError('Share link returned no project')
+          return
+        }
+
+        markReadOnly()
+        syncSSEAccessMode('read-only', { forceReconnect: true })
+        navigate(`/prj/${projectCode}`, { replace: true })
+      }
+      catch (err) {
+        if (cancelled) {
+          return
+        }
+
+        if (isBackendDownError(err)) {
+          markBackendDown()
+          return
+        }
+
+        setError('Share link could not be opened')
+      }
+    }
+
+    void exchangeShareSession()
+
+    return () => {
+      cancelled = true
+    }
+  }, [markBackendDown, markReadOnly, navigate, searchParams, shareId])
+
+  if (error) {
+    return <RouteErrorModal error={error} />
+  }
+
+  return (
+    <div data-testid="share-loading" className="min-h-[100dvh] bg-background flex items-center justify-center">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+    </div>
+  )
+}
+
 function App() {
   return (
     <AuthSessionProvider>
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<RedirectToCurrentProject />} />
+          <Route path="/share/:shareId" element={<ShareRouteHandler />} />
           <Route path="/:ticketKey" element={<DirectTicketAccess />} />
           <Route path="/prj/:projectCode" element={<ProjectRouteHandler />} />
           <Route path="/prj/:projectCode/list" element={<ProjectRouteHandler />} />

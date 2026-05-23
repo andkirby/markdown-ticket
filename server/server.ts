@@ -27,6 +27,7 @@ import { createDocumentRouter } from './routes/documents.js'
 import { createAuthRouter } from './routes/auth.js'
 // Routes
 import { createProjectRouter } from './routes/projects.js'
+import { createShareRouter } from './routes/share.js'
 import { createSSERouter } from './routes/sse.js'
 import { createSystemRouter } from './routes/system.js'
 import { createApiAuthMiddleware } from './security/apiAuth.js'
@@ -296,6 +297,7 @@ async function initializeMultiProjectWatchers(): Promise<void> {
 
 // Browser auth session routes are intentionally mounted before the protected API auth gate.
 app.use('/api/auth', createAuthRouter())
+app.use('/api/share', createShareRouter(projectServiceAdapter as ProjectServiceExtension))
 
 // Backend API auth gate: after generic middleware and auth session routes, before protected /api routers.
 app.use('/api', createApiAuthMiddleware())
@@ -307,7 +309,7 @@ app.use('/api/projects', createProjectRouter(projectController))
 app.use('/api/documents', createDocumentRouter(documentController, projectController))
 
 // SSE routes
-app.use('/api/events', createSSERouter(fileWatcher, originPolicy))
+app.use('/api/events', createSSERouter(fileWatcher, originPolicy, projectServiceAdapter as ProjectServiceExtension))
 
 // System routes (status, directories, filesystem, config)
 app.use('/api', createSystemRouter(fileWatcher, projectController, projectDiscovery, documentService.fileInvoker as FileInvokerAdapter))

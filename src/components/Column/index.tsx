@@ -37,6 +37,7 @@ interface ColumnProps {
   clearTicketPosition: (ticketCode: string) => void
   /** Primary status for this column (for testid) */
   status?: Status
+  canWrite?: boolean
   // Mobile column switcher props
   allColumns?: Array<{ label: string, statuses: Status[], color: string }>
   currentColumnIndex?: number
@@ -48,19 +49,21 @@ interface DraggableTicketCardProps {
   ticket: Ticket
   onMove: (newStatus: string) => void
   onEdit: () => void
+  canWrite: boolean
 }
 
 /**
  * @testid drag-handle — Drag handle for ticket card
  */
-const DraggableTicketCard: React.FC<DraggableTicketCardProps> = ({ ticket, onMove, onEdit }) => {
+const DraggableTicketCard: React.FC<DraggableTicketCardProps> = ({ ticket, onMove, onEdit, canWrite }) => {
   const [{ isDragging }, drag] = useDrag(() => ({
     type: 'ticket',
     item: { ticket },
+    canDrag: () => canWrite,
     collect: monitor => ({
       isDragging: !!monitor.isDragging(),
     }),
-  }))
+  }), [canWrite, ticket])
 
   // Monitor drag state changes for debugging
   useEffect(() => {
@@ -75,15 +78,15 @@ const DraggableTicketCard: React.FC<DraggableTicketCardProps> = ({ ticket, onMov
       className={`draggable-ticket transition-all duration-300 ease-out ${
         isDragging
           ? 'opacity-40 scale-95 rotate-2 shadow-2xl'
-          : 'hover:scale-[1.02] hover:-translate-y-1'
+          : canWrite ? 'hover:scale-[1.02] hover:-translate-y-1' : ''
       }`}
       style={{
-        cursor: 'move',
+        cursor: canWrite ? 'move' : 'default',
         boxShadow: isDragging ? '0 25px 50px -12px rgba(0, 0, 0, 0.25)' : undefined,
       }}
       data-testid="drag-handle"
     >
-      <TicketCard ticket={ticket} onMove={onMove} onEdit={onEdit} />
+      <TicketCard ticket={ticket} onMove={onMove} onEdit={onEdit} canEdit={canWrite} />
     </div>
   )
 }
@@ -103,6 +106,7 @@ const Column: React.FC<ColumnProps> = ({
   getTicketPosition,
   clearTicketPosition,
   status,
+  canWrite = true,
   allColumns,
   currentColumnIndex = 0,
   onColumnSwitch,
@@ -167,12 +171,20 @@ const Column: React.FC<ColumnProps> = ({
   const toggleTicketCount = allTickets.filter(ticket => ticket.status === toggleStatus).length
 
   const handleToggleDrop = (status: Status, ticket: Ticket) => {
+    if (!canWrite) {
+      return
+    }
+
     // Find ticket index in all tickets array
     const ticketIndex = allTickets.findIndex(t => t.code === ticket.code)
     onDrop(status, ticket, columnIndex, ticketIndex)
   }
 
   const handleDrop = (ticket: Ticket) => {
+    if (!canWrite) {
+      return
+    }
+
     // Find ticket index in all tickets array
     if (column.label === 'Done' && column.statuses.length > 1) {
       setResolutionDialog({
@@ -187,7 +199,7 @@ const Column: React.FC<ColumnProps> = ({
   }
 
   const handleResolutionChoice = (status: Status) => {
-    if (resolutionDialog.ticket) {
+    if (canWrite && resolutionDialog.ticket) {
       const ticketIndex = allTickets.findIndex(t => t.code === resolutionDialog.ticket?.code)
       onDrop(status, resolutionDialog.ticket, columnIndex, ticketIndex)
     }
@@ -203,6 +215,7 @@ const Column: React.FC<ColumnProps> = ({
       handleDrop(item.ticket)
       return { handled: false }
     },
+    canDrop: () => canWrite,
   })
 
   return (
@@ -269,6 +282,7 @@ const Column: React.FC<ColumnProps> = ({
                 clearTicketPosition={clearTicketPosition}
                 mergeMode={mergeMode}
                 setMergeMode={setMergeMode}
+                canWrite={canWrite}
               />
             )}
             <span className="bg-primary/20 text-primary text-xs px-2 py-1 rounded-full font-mono min-w-[2rem] text-center tabular-nums">
@@ -292,6 +306,7 @@ const Column: React.FC<ColumnProps> = ({
               ticket={ticket}
               onMove={() => {}} // Not needed since drop is handled by column
               onEdit={() => onTicketEdit(ticket)}
+              canWrite={canWrite}
             />
           ))}
 

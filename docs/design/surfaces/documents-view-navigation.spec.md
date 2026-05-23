@@ -61,7 +61,8 @@ DocumentsLayout
 - `docs/CRs/` is always treated as ticket territory, not general documentation.
 - If a configured document root overlaps `docs/CRs/`, the tree excludes the ticket area from that root.
 - Custom configured paths are valid document roots only outside excluded ticket areas.
-- Eligible folders and markdown documents can be marked as Favs from tree row star controls.
+- Eligible folders and markdown documents can be marked as Favs from tree row star controls when the user has write/admin access.
+- In read-only access, Favs may be shown from existing durable state, but add/remove star controls and path configuration are hidden because they write project/user state.
 - Fav state is additive document navigation state; it must not change Recent or All Documents behavior.
 - Selecting a document fav opens that markdown document and selects the matching tree row.
 - Selecting a folder fav expands ancestors and locates the folder row without opening a document preview.
@@ -125,6 +126,7 @@ DocumentsLayout
 | filter hides selected | selected file does not match filter | target action clears filter, expands ancestors, scrolls to selected file |
 | no matches | filter returns no files | tree area shows compact empty state; Favs and Recent remain available |
 | no configured paths | backend returns 404 | PathSelector modal opens |
+| read-only | access mode lacks write/admin | Configure paths hidden; tree and Favs star mutation controls absent; existing Favs and Recents remain selectable shortcuts |
 
 ## Filter Behavior
 
@@ -145,6 +147,7 @@ DocumentsLayout
 - Hidden empty Favs does not clear the saved expanded/collapsed preference.
 - Favs are reconciled against the eligible document tree; deleted or excluded targets are hidden from the section and tree metadata.
 - The star control in tree rows adds or removes a fav without selecting the row.
+- In read-only mode, star controls are not rendered in tree rows or Fav rows.
 - The synthetic root grouping row `./` does not show a fav star.
 - Fav row and tree row star controls preserve the project favorite star active, inactive, hover, focus, title, and accessible-label pattern.
 - Fav row and tree row star controls are trailing actions, not leading icons.

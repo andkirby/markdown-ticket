@@ -71,12 +71,12 @@ describe('backend browser auth session contract - MDT-176', () => {
     const cookie = cookiePair(firstSetCookie(unlock))
     expect(cookie).toContain('=')
 
-    const projects = await request(app)
-      .get('/api/projects')
+    const config = await request(app)
+      .get('/api/config')
       .set('Cookie', cookie)
 
-    expect(projects.status).toBe(200)
-    expect(JSON.stringify(projects.body)).not.toContain(adminToken)
+    expect(config.status).toBe(200)
+    expect(JSON.stringify(config.body)).not.toContain(adminToken)
   })
 
   it('rejects invalid session exchange tokens with a generic response and no token echo or logs', async () => {
@@ -128,11 +128,40 @@ describe('backend browser auth session contract - MDT-176', () => {
     expect(clearCookie).toMatch(/HttpOnly/i)
     expect(clearCookie).toMatch(/SameSite=Strict/i)
 
-    const projects = await request(app)
-      .get('/api/projects')
+    const config = await request(app)
+      .get('/api/config')
       .set('Cookie', cookie)
 
-    expect(projects.status).toBe(401)
+    expect(config.status).toBe(403)
+  })
+
+  it('does not globally invalidate owner sessions when logout has no concrete Origin', async () => {
+    const firstUnlock = await request(app)
+      .post('/api/auth/session')
+      .set('Origin', allowedOrigin)
+      .set('X-Forwarded-Proto', 'https')
+      .send({ token: adminToken })
+    const firstCookie = cookiePair(firstSetCookie(firstUnlock))
+
+    const secondUnlock = await request(app)
+      .post('/api/auth/session')
+      .set('Origin', allowedOrigin)
+      .set('X-Forwarded-Proto', 'https')
+      .send({ token: adminToken })
+    const secondCookie = cookiePair(firstSetCookie(secondUnlock))
+
+    const logout = await request(app)
+      .delete('/api/auth/session')
+      .set('Cookie', firstCookie)
+      .set('X-MDT-Owner-Intent', '1')
+
+    expect(logout.status).toBe(204)
+
+    const config = await request(app)
+      .get('/api/config')
+      .set('Cookie', secondCookie)
+
+    expect(config.status).toBe(200)
   })
 
   it('requires Origin and X-MDT-Owner-Intent for cookie-authenticated API mutations', async () => {
@@ -177,12 +206,12 @@ describe('backend browser auth session contract - MDT-176', () => {
 
   it('keeps header-token authentication and health/status exemptions working beside session cookies', async () => {
     const bearer = await request(app)
-      .get('/api/projects')
+      .get('/api/config')
       .set('Authorization', `Bearer ${adminToken}`)
     expect(bearer.status).toBe(200)
 
     const apiKey = await request(app)
-      .get('/api/projects')
+      .get('/api/config')
       .set('X-API-Key', adminToken)
     expect(apiKey.status).toBe(200)
 

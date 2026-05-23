@@ -29,6 +29,7 @@ interface BoardProps {
   tickets?: Ticket[]
   loading?: boolean
   sortPreferences?: SortPreferences
+  canWrite?: boolean
 }
 
 // Note: TicketItem removed - drag functionality handled in Column.tsx
@@ -42,6 +43,7 @@ const BoardContent: React.FC<BoardProps> = ({
   tickets: propTickets,
   loading: propLoading,
   sortPreferences: propSortPreferences,
+  canWrite = true,
 }) => {
   const [localSortPreferences, setLocalSortPreferences] = useState<SortPreferences>(
     propSortPreferences || getSortPreferences,
@@ -142,6 +144,10 @@ const BoardContent: React.FC<BoardProps> = ({
   }, [])
 
   const handleDrop = useCallback(async (status: Status, ticket: Ticket, currentColumnIndex?: number, currentTicketIndex?: number) => {
+    if (!canWrite) {
+      return
+    }
+
     // Skip if ticket is already in the correct status
     if (ticket.status === status) {
       return
@@ -249,9 +255,13 @@ const BoardContent: React.FC<BoardProps> = ({
         console.error('Error Details:', errorDescription)
       console.error('Full Error Object:', error)
     }
-  }, [onTicketUpdate, updateTicketOptimistic, getTicketPosition, clearTicketPosition, showError])
+  }, [canWrite, onTicketUpdate, updateTicketOptimistic, getTicketPosition, clearTicketPosition, showError])
 
   const handleTicketCreate = useCallback(async () => {
+    if (!canWrite) {
+      return
+    }
+
     if (!selectedProject) {
       console.error('No project selected')
       return
@@ -264,7 +274,7 @@ const BoardContent: React.FC<BoardProps> = ({
     catch (error) {
       console.error('Failed to create ticket:', error)
     }
-  }, [selectedProject, createTicket])
+  }, [canWrite, selectedProject, createTicket])
 
   const handleTicketEdit = useCallback((ticket: Ticket) => {
     onTicketClick(ticket)
@@ -497,18 +507,22 @@ const BoardContent: React.FC<BoardProps> = ({
             >
               Refresh
             </Button>
-            <Button
-              onClick={handleTicketCreate}
-              className="btn btn-primary h-9 px-3"
-              disabled={!selectedProject}
-            >
-              Create
-            </Button>
-            <HamburgerMenu
-              onAddProject={() => console.warn('Add Project clicked from Board')}
-              onEditProject={() => console.warn('Edit Project clicked from Board')}
-              hasActiveProject={true}
-            />
+            {canWrite && (
+              <>
+                <Button
+                  onClick={handleTicketCreate}
+                  className="btn btn-primary h-9 px-3"
+                  disabled={!selectedProject}
+                >
+                  Create
+                </Button>
+                <HamburgerMenu
+                  onAddProject={() => console.warn('Add Project clicked from Board')}
+                  onEditProject={() => console.warn('Edit Project clicked from Board')}
+                  hasActiveProject={true}
+                />
+              </>
+            )}
           </div>
         </div>
       )}
@@ -541,6 +555,7 @@ const BoardContent: React.FC<BoardProps> = ({
                 getTicketPosition={getTicketPosition}
                 clearTicketPosition={clearTicketPosition}
                 status={primaryStatus}
+                canWrite={canWrite}
                 // Mobile column switcher props
                 allColumns={visibleColumns}
                 currentColumnIndex={actualColumnIndex}

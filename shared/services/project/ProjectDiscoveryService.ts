@@ -98,6 +98,8 @@ export class ProjectDiscoveryService implements IProjectDiscoveryService {
             dateRegistered: registryData.metadata.dateRegistered || project.metadata.dateRegistered,
             lastAccessed: registryData.metadata.lastAccessed || project.metadata.lastAccessed,
             version: registryData.metadata.version || project.metadata.version,
+            globalOnly: registryData.metadata.globalOnly,
+            sharing: registryData.metadata.sharing,
           }
 
           projects.push(project)

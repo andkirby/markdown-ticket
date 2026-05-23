@@ -58,6 +58,22 @@ describe('FavDocuments (MDT-171)', () => {
     expect(onExpandedChange).toHaveBeenCalledWith(false)
   })
 
+  it('hides favorite mutation controls when no toggle handler is provided', () => {
+    render(
+      <FavDocuments
+        documents={documents}
+        isExpanded={true}
+        showAll={false}
+        onSelectDocument={mock()}
+        onExpandedChange={mock()}
+        onShowAllChange={mock()}
+      />,
+    )
+
+    expect(screen.getAllByTestId('document-fav-item')).toHaveLength(2)
+    expect(screen.queryByTestId('document-fav-star')).not.toBeInTheDocument()
+  })
+
   it('shows a five-row preview and trailing show-all action for overflow favs', () => {
     const manyDocuments = Array.from({ length: 7 }, (_, index) => ({
       name: `doc-${index}.md`,

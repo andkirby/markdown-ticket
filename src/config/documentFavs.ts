@@ -1,5 +1,6 @@
 import type { DocumentFavItem, DocumentFavState } from '@mdt/domain-contracts'
 import { validateDocumentFavState } from '@mdt/domain-contracts'
+import { authFetch } from '../auth/authFetch'
 
 export type { DocumentFavItem, DocumentFavState }
 
@@ -10,7 +11,7 @@ export interface SaveDocumentFavsRequest {
 
 export async function saveDocumentFavs({ projectId, favItems }: SaveDocumentFavsRequest): Promise<DocumentFavState> {
   const state = validateDocumentFavState({ favItems })
-  const response = await fetch('/api/documents/favs', {
+  const response = await authFetch('/api/documents/favs', {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',

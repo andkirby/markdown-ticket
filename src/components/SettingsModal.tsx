@@ -1,8 +1,10 @@
+import type { Project } from '@mdt/shared/models/Project'
 import type { CardDensity, DefaultView, MarkdownDensity } from '../config/settingsPreferences'
 import type { TicketCardBadgeId } from '../config/ticketCardBadges'
 import * as Tabs from '@radix-ui/react-tabs'
-import { Monitor, Moon, Sun, Trash2 } from 'lucide-react'
-import { useCallback, useState } from 'react'
+import { Info, Monitor, Moon, Sun, Trash2 } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { authFetch } from '../auth/authFetch'
 import {
   getCardDensity,
   getDefaultView,
@@ -18,10 +20,12 @@ import {
 } from '../config/ticketCardBadges'
 import { useTheme } from '../hooks/useTheme'
 import { nuclearCacheClear } from '../utils/cache'
+import { getProjectCode } from '../utils/projectUtils'
 import { getEventHistoryForceHidden, toggleEventHistory } from './DevTools/useEventHistoryState'
 import { ButtonGroup } from './ui/button-group'
 import { Modal, ModalBody, ModalHeader } from './ui/Modal'
 import { Switch } from './ui/switch'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip'
 
 function readAutoLinking(): boolean {
   try {
@@ -48,11 +52,52 @@ function writeAutoLinking(value: boolean): void {
 interface SettingsModalProps {
   isOpen: boolean
   onClose: () => void
+  selectedProject?: Project | null
+  onProjectSharingUpdated?: () => Promise<void> | void
 }
 
-type SettingsTab = 'appearance' | 'board' | 'advanced'
+type SettingsTab = 'appearance' | 'board' | 'sharing' | 'advanced'
+type SharingMode = 'private' | 'unlisted-readonly' | 'public-readonly'
 
-export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
+const SHARING_MODES: Array<{ value: SharingMode, label: string }> = [
+  { value: 'private', label: 'Private' },
+  { value: 'unlisted-readonly', label: 'Unlisted read-only' },
+  { value: 'public-readonly', label: 'Public read-only' },
+]
+
+async function getSharingErrorMessage(response: Response, projectCode: string): Promise<string> {
+  const responseMessage = await readErrorMessage(response)
+  const statusLabel = `${response.status} ${response.statusText || 'Error'}`.trim()
+
+  if (response.status === 404) {
+    return `Sharing update failed: project "${projectCode}" or the sharing endpoint was not found. Refresh the project list and try again. (${statusLabel})`
+  }
+
+  if (response.status === 401 || response.status === 403) {
+    return `Sharing update failed: owner access is required. Unlock with an owner token and try again. (${statusLabel})`
+  }
+
+  return `Sharing update failed${responseMessage ? `: ${responseMessage}` : ''}. (${statusLabel})`
+}
+
+async function readErrorMessage(response: Response): Promise<string> {
+  try {
+    const contentType = response.headers.get('content-type') || ''
+    if (contentType.includes('application/json')) {
+      const body = await response.json() as { error?: unknown, message?: unknown }
+      const message = typeof body.message === 'string' ? body.message : undefined
+      const error = typeof body.error === 'string' ? body.error : undefined
+      return message || error || ''
+    }
+
+    return (await response.text()).trim()
+  }
+  catch {
+    return ''
+  }
+}
+
+export function SettingsModal({ isOpen, onClose, selectedProject, onProjectSharingUpdated }: SettingsModalProps) {
   const { themeMode, setTheme } = useTheme()
   const [activeTab, setActiveTab] = useState<SettingsTab>('appearance')
 
@@ -70,9 +115,36 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   )
   const [autoLinking, setAutoLinking] = useState(readAutoLinking)
   const [visibleBadgeIds, setVisibleBadgeIds] = useState(getVisibleTicketCardBadges)
+  const [sharingMode, setSharingMode] = useState<SharingMode>('private')
+  const [shareId, setShareId] = useState('')
+  const [sharingStatus, setSharingStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [sharingError, setSharingError] = useState<string | null>(null)
 
   // Advanced
   const [eventHistoryVisible, setEventHistoryVisible] = useState(() => !getEventHistoryForceHidden())
+
+  useEffect(() => {
+    if (!selectedProject) {
+      if (activeTab === 'sharing') {
+        setActiveTab('appearance')
+      }
+      return
+    }
+
+    const sharing = selectedProject.metadata?.sharing
+    setSharingMode((sharing?.mode as SharingMode | undefined) || 'private')
+    setShareId(sharing?.shareId || '')
+    setSharingStatus('idle')
+    setSharingError(null)
+  }, [activeTab, selectedProject])
+
+  const shareUrl = useMemo(() => {
+    if (sharingMode === 'private' || !shareId) {
+      return ''
+    }
+
+    return `${window.location.origin}/share/${shareId}`
+  }, [shareId, sharingMode])
 
   // Appearance handlers
   const handleThemeChange = useCallback((mode: 'light' | 'dark' | 'system') => {
@@ -113,6 +185,49 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     })
   }, [])
 
+  const updateSharing = useCallback(async (rotateShareId = false) => {
+    if (!selectedProject) {
+      return
+    }
+
+    setSharingStatus('saving')
+    setSharingError(null)
+
+    try {
+      const projectCode = getProjectCode(selectedProject)
+      const response = await authFetch(`/api/projects/${encodeURIComponent(projectCode)}/sharing`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        ownerIntent: true,
+        body: JSON.stringify({
+          mode: sharingMode,
+          ...(rotateShareId ? { rotateShareId: true } : {}),
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(await getSharingErrorMessage(response, projectCode))
+      }
+
+      const updatedProject = await response.json() as Project
+      setShareId(updatedProject.metadata?.sharing?.shareId || '')
+      setSharingStatus('saved')
+      await onProjectSharingUpdated?.()
+    }
+    catch (error) {
+      setSharingStatus('error')
+      setSharingError(error instanceof Error ? error.message : 'Failed to update sharing')
+    }
+  }, [onProjectSharingUpdated, selectedProject, sharingMode])
+
+  const handleSaveSharing = useCallback(async () => {
+    await updateSharing(false)
+  }, [updateSharing])
+
+  const handleRotateShareId = useCallback(async () => {
+    await updateSharing(true)
+  }, [updateSharing])
+
   // Advanced handlers
   const handleEventHistoryChange = useCallback((checked: boolean) => {
     setEventHistoryVisible(checked)
@@ -151,6 +266,16 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             >
               Board
             </Tabs.Trigger>
+            {selectedProject && (
+              <Tabs.Trigger
+                value="sharing"
+                data-testid="settings-tab-sharing"
+                className="tab tab--fill"
+                onClick={() => setActiveTab('sharing')}
+              >
+                Sharing
+              </Tabs.Trigger>
+            )}
             <Tabs.Trigger
               value="advanced"
               data-testid="settings-tab-advanced"
@@ -277,6 +402,88 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </div>
             </div>
           </Tabs.Content>
+
+          {selectedProject && (
+            <Tabs.Content value="sharing" className="tab__content">
+              <div className="settings-group">
+                <div className="settings-label-row">
+                  <label className="settings-label" htmlFor="settings-sharing-mode">Project Access</label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          data-testid="settings-sharing-info"
+                          aria-label="Project access mode details"
+                          className="settings-info-trigger"
+                        >
+                          <Info className="h-4 w-4" aria-hidden="true" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <p>Private hides the project. Unlisted creates a direct read-only link. Public also lists the project for anonymous visitors.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <select
+                  id="settings-sharing-mode"
+                  data-testid="settings-sharing-mode"
+                  value={sharingMode}
+                  onChange={event => setSharingMode(event.target.value as SharingMode)}
+                  className="settings-select mt-2"
+                >
+                  {SHARING_MODES.map(option => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              {sharingMode !== 'private' && (
+                <div className="settings-group">
+                  <label className="settings-label" htmlFor="settings-share-url">Share Link</label>
+                  {shareUrl && (
+                    <input
+                      id="settings-share-url"
+                      data-testid="settings-share-url"
+                      value={shareUrl}
+                      readOnly
+                      className="settings-input mt-2 font-mono text-xs"
+                    />
+                  )}
+                  {!shareUrl && <p className="settings-desc mt-2">Save to generate a share link.</p>}
+                </div>
+              )}
+
+              <div className="settings-group-row">
+                <div>
+                  <label className="settings-label">Save Sharing</label>
+                  {sharingError && <p className="settings-desc text-destructive">{sharingError}</p>}
+                  {sharingStatus === 'saved' && <p className="settings-desc">Sharing updated.</p>}
+                </div>
+                <div className="flex gap-2">
+                  {sharingMode !== 'private' && shareId && (
+                    <button
+                      data-testid="settings-rotate-share-id"
+                      onClick={handleRotateShareId}
+                      disabled={sharingStatus === 'saving'}
+                      className="settings-action-btn disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      Rotate
+                    </button>
+                  )}
+                  <button
+                    data-testid="settings-save-sharing"
+                    onClick={handleSaveSharing}
+                    disabled={sharingStatus === 'saving'}
+                    className="settings-action-btn disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {sharingStatus === 'saving' ? 'Saving...' : 'Save'}
+                  </button>
+                </div>
+              </div>
+            </Tabs.Content>
+          )}
 
           <Tabs.Content value="advanced" className="tab__content">
             <div className="settings-group-row">

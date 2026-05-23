@@ -4,6 +4,7 @@ import { ChevronDown, ChevronUp, Crosshair, ListCollapse, PanelLeftClose, PanelL
 import * as React from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
+import { authFetch } from '@/auth/authFetch'
 import { Modal } from '@/components/ui/Modal'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -30,13 +31,14 @@ import RecentDocuments from './RecentDocuments'
 
 interface DocumentsLayoutProps {
   projectId: string
+  canWrite?: boolean
 }
 
 const DOCUMENT_NAVIGATION_PANEL_MIN_SIZE = 18
 const DOCUMENT_NAVIGATION_PANEL_MAX_SIZE = 45
 const DOCUMENT_NAVIGATION_PANEL_COLLAPSED_SIZE = 0
 
-export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
+export default function DocumentsLayout({ projectId, canWrite = true }: DocumentsLayoutProps) {
   const { projectCode } = useParams<{ projectCode: string }>()
   const [searchParams] = useSearchParams()
   const pathParams = useParams<{ '*': string }>()
@@ -50,7 +52,7 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
   const [documentRefreshToken, setDocumentRefreshToken] = useState(0)
   const [selectedFileDeleted, setSelectedFileDeleted] = useState(false)
   const [viewerUpdateState, setViewerUpdateState] = useState<'idle' | 'updated' | 'syncing'>('idle')
-  const [navigationPreferences, setNavigationPreferencesState] = useState(() =>
+  const [navigationPreferences, setNavigationPreferences] = useState(() =>
     getDocumentNavigationPreferences(projectId))
 
   // Load sort preferences from localStorage on mount
@@ -86,12 +88,12 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
   }, [selectedFile])
 
   useEffect(() => {
-    setNavigationPreferencesState(getDocumentNavigationPreferences(projectId))
+    setNavigationPreferences(getDocumentNavigationPreferences(projectId))
   }, [projectId])
 
-  const setNavigationPreferences = useCallback((preferences: typeof navigationPreferences) => {
+  const persistNavigationPreferences = useCallback((preferences: typeof navigationPreferences) => {
     setDocumentNavigationPreferences(projectId, preferences)
-    setNavigationPreferencesState(preferences)
+    setNavigationPreferences(preferences)
   }, [projectId])
 
   const handleNavigationPanelResize = useCallback((panelSize: PanelSize, _id: string | number | undefined, previousPanelSize: PanelSize | undefined) => {
@@ -99,14 +101,14 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
       return
 
     const isCollapsed = panelSize.asPercentage <= DOCUMENT_NAVIGATION_PANEL_COLLAPSED_SIZE + 1
-    setNavigationPreferences({
+    persistNavigationPreferences({
       ...navigationPreferences,
       navigationPanelCollapsed: isCollapsed,
       navigationPanelSize: isCollapsed
         ? navigationPreferences.navigationPanelSize
         : panelSize.asPercentage,
     })
-  }, [navigationPreferences, setNavigationPreferences])
+  }, [navigationPreferences, persistNavigationPreferences])
 
   const handleToggleNavigationPanel = useCallback(() => {
     const nextCollapsed = !navigationPreferences.navigationPanelCollapsed
@@ -118,11 +120,11 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
       navigationPanelRef.current?.expand()
     }
 
-    setNavigationPreferences({
+    persistNavigationPreferences({
       ...navigationPreferences,
       navigationPanelCollapsed: nextCollapsed,
     })
-  }, [navigationPreferences, setNavigationPreferences])
+  }, [navigationPreferences, persistNavigationPreferences])
 
   // Helper to sanitize and validate relative path (blocks .. traversal)
   const sanitizePath = (relativePath: string): string | null => {
@@ -200,7 +202,7 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
       if (showLoading)
         setLoading(true)
       setError(null)
-      const response = await fetch(`/api/documents?projectId=${encodeURIComponent(projectId)}`)
+      const response = await authFetch(`/api/documents?projectId=${encodeURIComponent(projectId)}`)
 
       if (response.status === 404) {
         // No documents configured, show path selector
@@ -245,7 +247,7 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
   const selectFile = useCallback((filePath: string) => {
     setSelectedFile(filePath)
     addRecentDocument(projectId, filePath)
-    setNavigationPreferencesState(getDocumentNavigationPreferences(projectId))
+    setNavigationPreferences(getDocumentNavigationPreferences(projectId))
 
     const encodedPath = filePath.split('/').map(encodeURIComponent).join('/')
     const basePath = window.location.pathname.split('/documents')[0]
@@ -323,9 +325,9 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
 
     const sanitized = sanitizeDocumentNavigationPreferences(navigationPreferences, eligiblePaths)
     if (JSON.stringify(sanitized) !== JSON.stringify(navigationPreferences)) {
-      setNavigationPreferences(sanitized)
+      persistNavigationPreferences(sanitized)
     }
-  }, [collectPaths, files, navigationPreferences, projectId])
+  }, [collectPaths, files, navigationPreferences, persistNavigationPreferences, projectId])
 
   // Memoized filtered and sorted files
   const filteredFiles = useMemo(() => {
@@ -415,19 +417,23 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
   }, [files, searchQuery, sortBy, sortDirection])
 
   // Helper function to find file by path in nested structure
-  const findFileByPath = (fileList: DocumentFile[], targetPath: string): DocumentFile | null => {
-    for (const file of fileList) {
-      if (file.path === targetPath) {
-        return file
+  const findFileByPath = useCallback((fileList: DocumentFile[], targetPath: string): DocumentFile | null => {
+    const find = (items: DocumentFile[]): DocumentFile | null => {
+      for (const file of items) {
+        if (file.path === targetPath) {
+          return file
+        }
+        if (file.children) {
+          const found = find(file.children)
+          if (found)
+            return found
+        }
       }
-      if (file.children) {
-        const found = findFileByPath(file.children, targetPath)
-        if (found)
-          return found
-      }
+      return null
     }
-    return null
-  }
+
+    return find(fileList)
+  }, [])
 
   const applyFavItemsToFiles = useCallback((fileList: DocumentFile[], favItems: Array<Pick<DocumentFile, 'path' | 'type' | 'favoritedAt'>>): DocumentFile[] => {
     const favs = new Map(favItems.map(item => [item.path, item]))
@@ -450,6 +456,10 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
   }, [collectFiles, files])
 
   const handleToggleFavorite = useCallback(async (file: DocumentFile) => {
+    if (!canWrite) {
+      return
+    }
+
     const nextFavItems = file.favorite
       ? favoriteDocuments
           .filter(document => document.path !== file.path)
@@ -482,7 +492,7 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
       setFiles(previousFiles)
       setError(error instanceof Error ? error.message : 'Failed to save document favs')
     }
-  }, [applyFavItemsToFiles, favoriteDocuments, files, projectId])
+  }, [applyFavItemsToFiles, canWrite, favoriteDocuments, files, projectId])
 
   const handleSelectFavorite = useCallback((file: DocumentFile) => {
     if (file.type === 'file') {
@@ -508,28 +518,28 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
         title: file?.title,
       }
     })
-  }, [files, navigationPreferences.recentDocuments])
+  }, [files, findFileByPath, navigationPreferences.recentDocuments])
 
   const handleFavsExpandedChange = useCallback((favsExpanded: boolean) => {
-    setNavigationPreferences({
+    persistNavigationPreferences({
       ...navigationPreferences,
       favsExpanded,
     })
-  }, [navigationPreferences, setNavigationPreferences])
+  }, [navigationPreferences, persistNavigationPreferences])
 
   const handleFavsShowAllChange = useCallback((favsShowAll: boolean) => {
-    setNavigationPreferences({
+    persistNavigationPreferences({
       ...navigationPreferences,
       favsShowAll,
     })
-  }, [navigationPreferences, setNavigationPreferences])
+  }, [navigationPreferences, persistNavigationPreferences])
 
   const handleRecentExpandedChange = useCallback((recentExpanded: boolean) => {
-    setNavigationPreferences({
+    persistNavigationPreferences({
       ...navigationPreferences,
       recentExpanded,
     })
-  }, [navigationPreferences, setNavigationPreferences])
+  }, [navigationPreferences, persistNavigationPreferences])
 
   const filenameTabs = useMemo(() => {
     return resolveDocumentFilenameTabs(files, selectedFile)
@@ -537,7 +547,7 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
 
   const selectedDocument = useMemo(() => {
     return selectedFile ? findFileByPath(files, selectedFile) : null
-  }, [files, selectedFile])
+  }, [files, findFileByPath, selectedFile])
 
   const selectedDocumentTitle = selectedDocument?.title
     || selectedDocument?.name
@@ -552,9 +562,13 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
   )
 
   const handlePathsSelected = async (paths: string[]) => {
+    if (!canWrite) {
+      return
+    }
+
     try {
       // Save the selected paths to configuration
-      const response = await fetch('/api/documents/configure', {
+      const response = await authFetch('/api/documents/configure', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -618,6 +632,14 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
           <div className="text-destructive mb-2">Error loading documents</div>
           <div className="text-sm text-muted-foreground">{error}</div>
         </div>
+      </div>
+    )
+  }
+
+  if (showPathSelector && !canWrite) {
+    return (
+      <div className="flex items-center justify-center h-64 text-muted-foreground">
+        No documents are configured for this project.
       </div>
     )
   }
@@ -699,15 +721,17 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
                 >
                   <Crosshair className="h-4 w-4 text-muted-foreground hover:text-foreground" />
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setShowPathSelector(true)}
-                  className="p-1 hover:bg-muted rounded transition-colors"
-                  title="Configure document paths"
-                  data-testid="configure-paths-button"
-                >
-                  <Pencil className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-                </button>
+                {canWrite && (
+                  <button
+                    type="button"
+                    onClick={() => setShowPathSelector(true)}
+                    className="p-1 hover:bg-muted rounded transition-colors"
+                    title="Configure document paths"
+                    data-testid="configure-paths-button"
+                  >
+                    <Pencil className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                  </button>
+                )}
               </div>
             </div>
             <div className="documents-view__navigation-controls-row">
@@ -756,7 +780,7 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
               isExpanded={navigationPreferences.favsExpanded}
               showAll={navigationPreferences.favsShowAll}
               onSelectDocument={handleSelectFavorite}
-              onToggleFavorite={handleToggleFavorite}
+              onToggleFavorite={canWrite ? handleToggleFavorite : undefined}
               onExpandedChange={handleFavsExpandedChange}
               onShowAllChange={handleFavsShowAllChange}
             />
@@ -775,7 +799,7 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
                 onFileSelect={selectFile}
                 selectedFile={selectedFile}
                 expandAllFolders={Boolean(searchQuery.trim())}
-                onToggleFavorite={handleToggleFavorite}
+                onToggleFavorite={canWrite ? handleToggleFavorite : undefined}
               />
             </div>
           </ScrollArea>

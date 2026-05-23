@@ -128,6 +128,7 @@ export class ProjectFactory {
         lastAccessed: registryData.metadata.lastAccessed || new Date().toISOString().split('T')[0],
         version: registryData.metadata.version || '1.0.0',
         globalOnly: true,
+        sharing: registryData.metadata.sharing,
       },
       document: registryData.project.document,
       registryFile: registryPath,
