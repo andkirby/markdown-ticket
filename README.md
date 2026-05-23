@@ -90,7 +90,14 @@ AI-powered commands for the entire development lifecycle:
 - Markdown rendering with Mermaid diagrams
 - Multi-project support
 - Real-time updates
+- Secure browser unlock for authenticated deployments
+- Context-aware browser tab titles
 - Git-based storage (no database)
+
+### CLI Access
+
+- Use `mdt-cli` to create, list, view, update, and delete tickets from the terminal
+- Structured output is available for automation-friendly workflows
 
 ### MCP Integration
 
