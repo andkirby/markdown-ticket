@@ -1,5 +1,5 @@
 import type { SortPreferences } from '../config/sorting'
-import { ArrowUpDown, Edit, Eye, EyeOff, Menu, Monitor, Moon, Plus, Settings, Sun, Trash2 } from 'lucide-react'
+import { ArrowUpDown, Edit, Eye, EyeOff, KeyRound, Menu, Monitor, Moon, Plus, Settings, Sun, Trash2 } from 'lucide-react'
 import * as React from 'react'
 import { createPortal } from 'react-dom'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -17,6 +17,7 @@ interface HamburgerMenuProps {
   sortPreferences?: SortPreferences
   onSortPreferencesChange?: (preferences: SortPreferences) => void
   onOpenSettings?: () => void
+  onUnlockOwnerAccess?: () => void
   canManageProjects?: boolean
 }
 
@@ -27,6 +28,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   sortPreferences,
   onSortPreferencesChange,
   onOpenSettings,
+  onUnlockOwnerAccess,
   canManageProjects = true,
 }) => {
   const { themeMode, setTheme } = useTheme()
@@ -102,6 +104,11 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
     onOpenSettings?.()
   }
 
+  const handleUnlockOwnerAccess = () => {
+    setIsOpen(false)
+    onUnlockOwnerAccess?.()
+  }
+
   return (
     <div className="relative flex" ref={menuRef}>
       <Button
@@ -147,6 +154,17 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
               >
                 <Edit className="h-4 w-4 mr-2" />
                 Edit Project
+              </button>
+            )}
+
+            {onUnlockOwnerAccess && (
+              <button
+                data-testid="sharing-owner-unlock-button"
+                onClick={handleUnlockOwnerAccess}
+                className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+              >
+                <KeyRound className="h-4 w-4 mr-2" />
+                Unlock access
               </button>
             )}
 

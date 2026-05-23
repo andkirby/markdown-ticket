@@ -51,7 +51,7 @@ window "Markdown Ticket Board — Read-only Session":
       text "Markdown Ticket Board" bold
       row:
         status "Read only" kind=info id="readonly-chip"
-        button "Unlock" id="readonly-unlock"
+        button "≡" id="readonly-menu-trigger"
   panel:
     row justify=between:
       text "Public Project" bold
@@ -61,7 +61,60 @@ window "Markdown Ticket Board — Read-only Session":
       item "MDT-168 — Documentation polish"
 
 annotation "Read-only users can view, sort, search, and open tickets; mutations stay hidden or disabled." target="readonly-chip" position=bottom
-annotation "Unlock reuses the same token panel for owner-token upgrade." target="readonly-unlock" position=right
+annotation "Owner-upgrade action is in the hamburger menu as Unlock access, not inline beside the badge." target="readonly-menu-trigger" position=right
+```
+
+## Read-only owner unlock overlay
+
+```wireloom
+window "Markdown Ticket Board — Owner Unlock Overlay":
+  header:
+    row justify=between:
+      text "Markdown Ticket Board" bold
+      row:
+        status "Read only" kind=info id="readonly-overlay-chip"
+        button "≡"
+  panel:
+    row justify=between:
+      text "PRI — Private roadmap" bold
+      combo value="Board"
+    list:
+      item "PRI-101 — Review API contract"
+      item "PRI-102 — Draft launch notes"
+  sheet position=center title="Unlock access":
+    text "Enter an owner token to manage projects. Cancel returns to read-only mode."
+    input placeholder="Owner token" type=password id="owner-token-input"
+    text "Tokens are exchanged for a secure server session and are not stored in browser storage." muted
+    row justify=end:
+      button "Cancel" id="owner-unlock-cancel"
+      button "Unlock" primary id="owner-unlock-submit"
+
+annotation "Board stays visible behind the overlay; cancel restores this read-only state." target="owner-unlock-cancel" position=right
+annotation "This path accepts owner tokens only; friend read access is already active." target="owner-token-input" position=bottom
+```
+
+## Read-only owner unlock error
+
+```wireloom
+window "Markdown Ticket Board — Owner Unlock Error":
+  header:
+    row justify=between:
+      text "Markdown Ticket Board" bold
+      status "Read only" kind=info
+  panel:
+    text "PRI — Private roadmap" bold
+    list:
+      item "PRI-101 — Review API contract"
+  sheet position=center title="Unlock access":
+    text "Enter an owner token to manage projects. Cancel returns to read-only mode."
+    input placeholder="Owner token" type=password id="bad-owner-token"
+    text "Owner token was not accepted." id="owner-token-error"
+    row justify=end:
+      button "Cancel" id="bad-owner-cancel"
+      button "Unlock" primary
+
+annotation "Bad owner token does not clear the read-session cookie or replace the board with locked state." target="owner-token-error" position=right
+annotation "Cancel returns to the same project and view mode." target="bad-owner-cancel" position=bottom
 ```
 
 ## Owner session unlocked
@@ -101,6 +154,7 @@ window "Markdown Ticket Board — Read Token Accepted":
     list:
       item "PRI — Private Project (read token)"
       item "PUB — Public Project"
+      item "DOCS — Documentation (read token)"
 
 annotation "Read token broadens visible projects only; it does not grant writes." target="token-readonly-chip" position=bottom
 ```

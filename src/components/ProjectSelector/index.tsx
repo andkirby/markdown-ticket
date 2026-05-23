@@ -65,7 +65,7 @@ function ProjectSelector({ className = '' }: { className?: string }) {
     toggleFavorite,
     error: selectorError,
     loaded: selectorLoaded,
-  } = useSelectorData()
+  } = useSelectorData({ loadOwnerState: canManageProjects })
 
   // Load projects and selection logic from useProjectManager
   // This instance handles SSE events since ProjectSelector is the main project switcher
