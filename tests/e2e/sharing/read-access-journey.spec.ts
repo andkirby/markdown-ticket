@@ -123,6 +123,36 @@ test.describe('MDT-177 read access sharing journey', () => {
     await visitor.close()
   })
 
+  test('share session survives refresh without owner-only filesystem probes', async ({ page, browser, e2eContext }) => {
+    const dataset = await createSharingDataset(e2eContext.projectFactory)
+    const filesystemProbeStatuses: number[] = []
+
+    const shareUrl = await generateProjectShareLink(page, dataset.extraPrivate.code)
+    const context = await browser.newContext()
+    const visitor = await context.newPage()
+    visitor.on('response', (response) => {
+      if (new URL(response.url()).pathname === '/api/filesystem/exists') {
+        filesystemProbeStatuses.push(response.status())
+      }
+    })
+
+    await visitor.goto(shareUrl)
+    await visitor.waitForLoadState('load')
+    await waitForBoardReady(visitor)
+    await expect(visitor).toHaveURL(new RegExp(`/prj/${dataset.extraPrivate.code}(?:$|[/?#])`, 'u'))
+    await expect(visitor.locator(sharingSelectors.readOnlyBadge)).toBeVisible()
+
+    await visitor.reload()
+    await visitor.waitForLoadState('load')
+    await waitForBoardReady(visitor)
+    await expect(visitor).toHaveURL(new RegExp(`/prj/${dataset.extraPrivate.code}(?:$|[/?#])`, 'u'))
+    await expect(visitor.locator(sharingSelectors.readOnlyBadge)).toBeVisible()
+    expect(filesystemProbeStatuses).toEqual([])
+
+    await visitor.close()
+    await context.close()
+  })
+
   test('read-only owner unlock cancel and invalid token preserve route, view state, and session', async ({ page, browser, e2eContext }) => {
     const dataset = await createSharingDataset(e2eContext.projectFactory)
     const accessName = accessNameFor(dataset)
