@@ -35,12 +35,11 @@ window "App Header — Read-only":
       combo value="Public Project ▾"
       spacer
       status "Read only" kind=info id="readonly-badge"
-      button "Unlock" id="readonly-unlock"
       combo value="Key ▾ ⇅"
-      button "≡"
+      button "≡" id="readonly-menu-trigger"
 
 annotation "Badge appears before sort controls when access mode cannot write" target="readonly-badge" position=bottom
-annotation "Unlock opens the auth token panel for owner-token upgrade" target="readonly-unlock" position=bottom
+annotation "Owner-upgrade entry is in the hamburger menu, not inline in the header." target="readonly-menu-trigger" position=bottom
 ```
 
 ### Board View Active
@@ -126,6 +125,7 @@ annotation "Sort controls appear on mobile only" target="menu-sort" position=rig
 window "App Header — Read-only Menu":
   panel:
     list:
+      item "Unlock access" id="readonly-unlock-access"
       item "Sort controls" id="readonly-menu-sort"
     divider
     list:
@@ -136,6 +136,7 @@ window "App Header — Read-only Menu":
       button "Dark"
       button "System"
 
+annotation "Unlock access opens the owner-token overlay while preserving the read-only board." target="readonly-unlock-access" position=right
 annotation "Add/Edit Project and Settings are absent without owner/admin access" target="readonly-menu-sort" position=right
 ```
 
@@ -164,5 +165,6 @@ annotation "Token submission uses backend exchange; invalid errors stay generic"
 | Hamburger trigger | `--foreground` | ghost button | `p-2`, Menu icon 4×4 |
 | Menu dropdown | `--popover` | `bg-background border` | `w-48`, absolute positioned |
 | Read-only badge | `--muted` | `chip` / small badge | Shown only when write access is unavailable |
+| Unlock access item | `--foreground` | menu item with `KeyRound` icon | Read-only sessions only |
 | Theme button group | `--primary` / `--muted` | `ButtonGroup` | Active: primary bg |
 | Sort select | `--background` | `border rounded-md` | Hidden on `< sm` |

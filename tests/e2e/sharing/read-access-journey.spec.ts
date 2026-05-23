@@ -144,14 +144,14 @@ test.describe('MDT-177 read access sharing journey', () => {
     await waitForListReady(visitor)
     const listUrl = visitor.url()
 
-    await visitor.locator(sharingSelectors.ownerUnlockButton).click()
+    await openOwnerUnlockFromMenu(visitor)
     await expect(visitor.locator(sharingSelectors.ownerUnlockDialog)).toBeVisible()
     await visitor.locator(sharingSelectors.ownerUnlockCancelButton).click()
     await expect(visitor.locator(sharingSelectors.ownerUnlockDialog)).toHaveCount(0)
     expect(visitor.url()).toBe(listUrl)
     await expect(visitor.locator(listSelectors.ticketTable).or(visitor.locator(listSelectors.ticketList))).toBeVisible()
 
-    await visitor.locator(sharingSelectors.ownerUnlockButton).click()
+    await openOwnerUnlockFromMenu(visitor)
     await visitor.locator(authSelectors.tokenInput).fill(invalidOwnerToken)
     await visitor.locator(authSelectors.unlockSubmit).click()
     await expect(visitor.locator(sharingSelectors.ownerUnlockError)).toBeVisible()
@@ -161,7 +161,7 @@ test.describe('MDT-177 read access sharing journey', () => {
 
     await visitor.goto(`/prj/${dataset.firstPrivate.code}/documents`)
     await waitForDocumentsReady(visitor)
-    await visitor.locator(sharingSelectors.ownerUnlockButton).click()
+    await openOwnerUnlockFromMenu(visitor)
     await visitor.locator(sharingSelectors.ownerUnlockCancelButton).click()
     await expect(visitor.locator(documentSelectors.documentTree)).toBeVisible()
     await visitor.close()
@@ -369,6 +369,11 @@ function clearRuntimeConfigOverride(e2eContext: E2EContext): void {
 async function openProjectBrowser(page: Page): Promise<void> {
   await page.locator(selectorSelectors.panelTrigger).click()
   await expect(page.locator(selectorSelectors.projectPanel)).toBeVisible()
+}
+
+async function openOwnerUnlockFromMenu(page: Page): Promise<void> {
+  await page.locator(projectSelectors.hamburgerMenu).click()
+  await page.locator(sharingSelectors.ownerUnlockButton).click()
 }
 
 async function assertOwnerControlsSuppressed(page: Page): Promise<void> {
