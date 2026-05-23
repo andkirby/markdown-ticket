@@ -2,6 +2,7 @@ import type { Project } from '@mdt/shared/models/Project'
 import type { Ticket } from '../types'
 import { CRStatus, CRType } from '@mdt/domain-contracts'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { authFetch } from '../auth/authFetch'
 import { useTicketPosition } from '../components/Column/useTicketPosition'
 
 export function useTicketOperations(
@@ -36,7 +37,7 @@ export function useTicketOperations(
     }
 
     try {
-      const response = await fetch(`/api/projects/${currentProject.id}/crs`, {
+      const response = await authFetch(`/api/projects/${currentProject.id}/crs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -74,7 +75,7 @@ export function useTicketOperations(
     }
 
     try {
-      const response = await fetch(`/api/projects/${currentProject.id}/crs/${ticketCode}`, {
+      const response = await authFetch(`/api/projects/${currentProject.id}/crs/${ticketCode}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates),
@@ -171,7 +172,7 @@ export function useTicketOperations(
     }
 
     try {
-      const response = await fetch(`/api/projects/${currentProject.id}/crs/${ticketCode}`, {
+      const response = await authFetch(`/api/projects/${currentProject.id}/crs/${ticketCode}`, {
         method: 'DELETE',
       })
 

@@ -1,7 +1,10 @@
 import type { NextFunction, Request, Response } from 'express'
 import { timingSafeEqual } from 'node:crypto'
+import { verifyOwnerSessionCookie } from './apiSession.js'
+import { createDefaultOriginPolicy } from './originPolicy.js'
 
 const EXEMPT_API_ROUTES = new Set(['/api/status', '/api/health'])
+const OWNER_INTENT_HEADER = 'x-mdt-owner-intent'
 
 export interface ApiAuthConfig {
   enabled: boolean
@@ -73,6 +76,7 @@ export function createApiAuthMiddleware(
   logger: ApiAuthLogger = console,
 ) {
   let migrationWarningEmitted = false
+  const originPolicy = createDefaultOriginPolicy()
 
   return (req: Request, res: Response, next: NextFunction): void => {
     if (isApiAuthExemptRoute(req.method, getRequestPath(req))) {
@@ -91,13 +95,27 @@ export function createApiAuthMiddleware(
     }
 
     const credential = extractApiCredential(req)
-    if (!timingSafeTokenMatches(credential ?? undefined, config.token)) {
+    if (timingSafeTokenMatches(credential ?? undefined, config.token)) {
+      next()
+      return
+    }
+
+    if (!verifyOwnerSessionCookie(req, config.token)) {
       res.status(401).json({ error: 'Authentication required' })
+      return
+    }
+
+    if (requiresCookieMutationIntent(req) && !hasCookieMutationIntent(req, originPolicy)) {
+      res.status(403).json({ error: 'Forbidden' })
       return
     }
 
     next()
   }
+}
+
+interface OriginPolicyLike {
+  isAllowedOrigin: (origin: string | undefined) => boolean
 }
 
 function parseAuthFlag(value: string | undefined): boolean | undefined {
@@ -137,4 +155,17 @@ function extractBearerToken(value: string | undefined): string | null {
 
 function getRequestPath(req: Request): string {
   return req.originalUrl?.split('?')[0] || req.path || req.url.split('?')[0] || ''
+}
+
+function requiresCookieMutationIntent(req: Request): boolean {
+  return !['GET', 'HEAD', 'OPTIONS'].includes(req.method.toUpperCase())
+}
+
+function hasCookieMutationIntent(req: Request, originPolicy: OriginPolicyLike): boolean {
+  const origin = req.headers.origin
+  const intent = req.headers[OWNER_INTENT_HEADER]
+
+  return typeof origin === 'string'
+    && originPolicy.isAllowedOrigin(origin)
+    && intent === '1'
 }

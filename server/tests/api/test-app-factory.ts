@@ -20,6 +20,7 @@ import express from 'express'
 import { DocumentController } from '../../controllers/DocumentController'
 import { ProjectController } from '../../controllers/ProjectController'
 import { errorHandler, notFoundHandler } from '../../middleware/errorHandler'
+import { createAuthRouter } from '../../routes/auth'
 import { createDevToolsRouter } from '../../routes/devtools'
 import { createDocumentRouter } from '../../routes/documents'
 import { createProjectRouter } from '../../routes/projects'
@@ -175,6 +176,9 @@ export function createTestApp(): TestAppResult {
   const documentController = new DocumentController(documentService)
 
   // Register Routes
+  // Mirror production: auth session routes are before protected /api routers.
+  app.use('/api/auth', createAuthRouter())
+
   // Mirror production: auth is after generic middleware and before protected /api routers.
   app.use('/api', createApiAuthMiddleware())
 

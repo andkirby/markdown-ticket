@@ -1,12 +1,16 @@
 import { Info, Moon, Plus, Sun } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuthSession } from '../auth/AuthSessionProvider'
+import { authFetch } from '../auth/authFetch'
 import { useProjectManager } from '../hooks/useProjectManager'
 import { useTheme } from '../hooks/useTheme'
 import { getProjectCode } from '../utils/projectUtils'
 import { getCurrentProject } from '../utils/routing'
 import { AddProjectModal } from './AddProjectModal'
 import { MobileLogo } from './AppHeader'
+import { AuthStatusAction } from './AuthUnlock/AuthStatusAction'
+import { AuthUnlockPanel } from './AuthUnlock/AuthUnlockPanel'
 import { Alert, AlertDescription, AlertTitle } from './ui/alert'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip'
 
@@ -22,22 +26,55 @@ interface ConfigInfo {
 export function RedirectToCurrentProject() {
   const navigate = useNavigate()
   const { projects, loading, refreshProjects, isBackendDown } = useProjectManager({ autoSelectFirst: false })
+  const { accessMode, sessionStatus, canManageProjects, unlock, lock, markLocked } = useAuthSession()
   const { theme, toggleTheme } = useTheme()
   const [configInfo, setConfigInfo] = useState<ConfigInfo | null>(null)
   const [showAddProjectModal, setShowAddProjectModal] = useState(false)
+  const [unlockError, setUnlockError] = useState<string | null>(null)
+  const [authRefreshInFlight, setAuthRefreshInFlight] = useState(false)
+  const ownerRefreshRef = useRef(false)
 
   // Fetch configuration info when no projects are found
   useEffect(() => {
-    if (!loading && projects.length === 0) {
-      fetch('/api/config')
+    if (!loading && projects.length === 0 && canManageProjects) {
+      authFetch('/api/config')
         .then(res => res.json())
         .then(setConfigInfo)
         .catch(err => console.error('Failed to fetch config info:', err))
     }
-  }, [loading, projects.length])
+  }, [canManageProjects, loading, projects.length])
 
   useEffect(() => {
-    if (loading)
+    if (accessMode !== 'owner-admin') {
+      ownerRefreshRef.current = false
+      return
+    }
+
+    if (ownerRefreshRef.current)
+      return
+
+    ownerRefreshRef.current = true
+    setAuthRefreshInFlight(true)
+    refreshProjects()
+      .catch((err) => {
+        console.error('Failed to refresh projects after unlock:', err)
+      })
+      .finally(() => setAuthRefreshInFlight(false))
+  }, [accessMode, refreshProjects])
+
+  useEffect(() => {
+    if (accessMode === 'locked' && sessionStatus === 'error') {
+      setUnlockError('Token was not accepted.')
+      return
+    }
+
+    if (sessionStatus !== 'error') {
+      setUnlockError(null)
+    }
+  }, [accessMode, sessionStatus])
+
+  useEffect(() => {
+    if (loading || authRefreshInFlight || accessMode === 'unknown' || (accessMode === 'locked' && !isBackendDown))
       return
 
     const currentProject = getCurrentProject()
@@ -54,9 +91,24 @@ export function RedirectToCurrentProject() {
       // No projects available, stay on root and show empty state
       // This will be handled by the main app
     }
-  }, [navigate, projects, loading])
+  }, [accessMode, authRefreshInFlight, isBackendDown, navigate, projects, loading])
 
-  if (loading) {
+  const handleUnlock = async (token: string) => {
+    setUnlockError(null)
+    await unlock(token)
+  }
+
+  const handleUnlockClick = () => {
+    const tokenInput = document.querySelector<HTMLInputElement>('[data-testid="auth-token-input"]')
+    if (tokenInput) {
+      tokenInput.focus()
+      return
+    }
+
+    markLocked()
+  }
+
+  if (loading || authRefreshInFlight || accessMode === 'unknown') {
     return (
       <div data-testid="loading" className="min-h-[100dvh] bg-background flex items-center justify-center">
         {/* @testid loading — Loading spinner/state */}
@@ -64,6 +116,47 @@ export function RedirectToCurrentProject() {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading projects...</p>
         </div>
+      </div>
+    )
+  }
+
+  if (accessMode === 'locked' && !isBackendDown) {
+    return (
+      <div className="min-h-[100dvh] bg-background">
+        <nav className="bg-card border-b shadow-sm">
+          <div className="max-w-7xl mx-auto px-1 sm:px-2 lg:px-2">
+            <div className="flex justify-between h-16">
+              <div className="flex items-center space-x-8">
+                <div className="flex-shrink-0">
+                  <MobileLogo />
+                </div>
+                <h1 className="text-xl font-semibold">Markdown Ticket Board</h1>
+              </div>
+              <div className="flex items-center gap-4">
+                <AuthStatusAction
+                  accessMode={accessMode}
+                  onLock={lock}
+                  onUnlockClick={handleUnlockClick}
+                />
+                <button
+                  data-testid="theme-toggle"
+                  onClick={toggleTheme}
+                  className="btn btn-ghost p-2 h-10 w-10"
+                  aria-label="Toggle theme"
+                >
+                  {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                </button>
+              </div>
+            </div>
+          </div>
+        </nav>
+        <main className="flex items-center justify-center min-h-[calc(100dvh-4rem)] p-6">
+          <AuthUnlockPanel
+            error={unlockError}
+            unlocking={sessionStatus === 'unlocking'}
+            onUnlock={handleUnlock}
+          />
+        </main>
       </div>
     )
   }
@@ -112,7 +205,7 @@ export function RedirectToCurrentProject() {
             <div className="text-center max-w-2xl mx-auto p-8">
               <div className="flex items-center justify-center gap-3 mb-6">
                 <h2 className="text-2xl font-semibold">No Projects Found</h2>
-                {!isBackendDown && (
+                {!isBackendDown && canManageProjects && (
                   <button
                     onClick={() => setShowAddProjectModal(true)}
                     className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 transition-colors flex items-center gap-2"
@@ -131,7 +224,7 @@ export function RedirectToCurrentProject() {
                       <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                       </svg>
-                      Backend Server Not Responding
+                      Backend Server Unavailable
                     </AlertTitle>
                     <AlertDescription className="mt-3">
                       <div className="space-y-4">
@@ -285,9 +378,9 @@ services:
         </div>
 
         {/* Add Project Modal - Only show when backend is up */}
-        {!isBackendDown && (
+        {!isBackendDown && canManageProjects && (
           <AddProjectModal
-            isOpen={showAddProjectModal}
+            isOpen={showAddProjectModal && canManageProjects}
             onClose={() => setShowAddProjectModal(false)}
             onProjectCreated={async () => {
               setShowAddProjectModal(false)

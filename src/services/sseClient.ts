@@ -69,6 +69,7 @@ class SSEClient {
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null
   private url: string = ''
   private isConnected = false
+  private suppressed = false
 
   // Event deduplication tracking
   private processedEventIds = new Set<string>()
@@ -82,6 +83,10 @@ class SSEClient {
    * @param url - SSE endpoint URL (default: /api/events)
    */
   connect(url: string = '/api/events'): void {
+    if (this.suppressed) {
+      return
+    }
+
     // Close existing connection
     if (this.eventSource) {
       console.warn('[SSEClient] Closing existing connection')
@@ -96,7 +101,7 @@ class SSEClient {
     }
 
     try {
-      this.eventSource = new EventSource(fullUrl)
+      this.eventSource = new EventSource(fullUrl, { withCredentials: true })
 
       // Connection opened
       this.eventSource.onopen = () => {
@@ -191,6 +196,17 @@ class SSEClient {
    */
   isSSEConnected(): boolean {
     return this.isConnected && this.eventSource?.readyState === EventSource.OPEN
+  }
+
+  /**
+   * Suppress connections while the browser is locked or backend state is invalid.
+   */
+  setSuppressed(suppressed: boolean): void {
+    this.suppressed = suppressed
+
+    if (suppressed) {
+      this.disconnect()
+    }
   }
 
   /**
@@ -407,6 +423,10 @@ class SSEClient {
    * Schedule reconnection with exponential backoff
    */
   private scheduleReconnect(): void {
+    if (this.suppressed) {
+      return
+    }
+
     this.reconnectAttempts++
 
     // Exponential backoff: 1s, 2s, 4s, 8s, 16s (max 30s)
@@ -417,6 +437,10 @@ class SSEClient {
     )
 
     this.reconnectTimer = setTimeout(() => {
+      if (this.suppressed) {
+        return
+      }
+
       this.connect(this.url)
     }, delay)
   }
@@ -461,7 +485,30 @@ class SSEClient {
 // Export singleton instance
 const sseClient = new SSEClient()
 
+export function syncSSEAccessMode(accessMode: string): void {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  if (accessMode === 'unknown') {
+    return
+  }
+
+  if (accessMode === 'locked' || accessMode === 'backend-down') {
+    sseClient.setSuppressed(true)
+    return
+  }
+
+  sseClient.setSuppressed(false)
+
+  if (!sseClient.isSSEConnected()) {
+    sseClient.connect()
+  }
+}
+
 // Auto-connect on module load (can be disabled if needed)
 if (typeof window !== 'undefined') {
   sseClient.connect()
 }
+
+export { sseClient }

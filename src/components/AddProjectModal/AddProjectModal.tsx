@@ -1,6 +1,8 @@
 import { Check, Info, X } from 'lucide-react'
 import * as React from 'react'
 import { useEffect, useState } from 'react'
+import { useAuthSession } from '@/auth/AuthSessionProvider'
+import { authFetch } from '@/auth/authFetch'
 import { Button } from '@/components/ui'
 import { Modal, ModalBody, ModalFooter, ModalHeader } from '@/components/ui/Modal'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -32,6 +34,7 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
   editMode = false,
   editProject,
 }) => {
+  const { canManageProjects } = useAuthSession()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // 🔐 Simplified path resolution hook - uses enhanced API
@@ -55,7 +58,7 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
 
   const loadDiscoveryPaths = async () => {
     try {
-      const response = await fetch('/api/config/global')
+      const response = await authFetch('/api/config/global')
       if (response.ok) {
         const data = await response.json()
         const paths = data.discovery?.searchPaths || []
@@ -123,7 +126,7 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
     setIsSubmitting(true)
     try {
       if (editMode) {
-        const response = await fetch(`/api/projects/${encodeURIComponent(formData.code)}/update`, {
+        const response = await authFetch(`/api/projects/${encodeURIComponent(formData.code)}/update`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -165,7 +168,7 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
         globalOnly: formData.useGlobalConfigOnly,
       }
 
-      const response = await fetch('/api/projects/create', {
+      const response = await authFetch('/api/projects/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -209,7 +212,7 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
     // Reset form and continue
   }
 
-  if (!isOpen)
+  if (!isOpen || !canManageProjects)
     return null
 
   return (

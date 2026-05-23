@@ -242,6 +242,8 @@ shared/
 
 ### Environment Variables
 - `BACKEND_URL` - Backend server URL (default: http://localhost:3001)
+- `API_SECURITY_AUTH` - Enable backend API auth when `true`; leave unset or set `false` for local no-auth development
+- `API_AUTH_TOKEN` - Owner token used by API clients and browser unlock when auth is enabled
 - `MCP_PROJECT_FILTER` - Limit MCP to specific project
 - `MCP_SCAN_PATHS` - Set project paths for MCP scanning
 - `MCP_HTTP_ENABLED` - Enable HTTP transport for MCP server
@@ -256,6 +258,14 @@ shared/
 **For complete configuration specification, see:**
 - **[CONFIG_SPECIFICATION.md](CONFIG_SPECIFICATION.md)** - Local `.mdt-config.toml`
 - **[CONFIG_GLOBAL_SPECIFICATION.md](CONFIG_GLOBAL_SPECIFICATION.md)** - Global registry
+
+### Auth Sessions During Development
+
+Local development defaults to no-auth mode when `API_SECURITY_AUTH` and `API_AUTH_TOKEN` are unset. In no-auth mode, the browser loads normally without the unlock panel and local owner controls remain available.
+
+To test the browser auth-session flow locally, start the backend with `API_SECURITY_AUTH=true` and an operator-provided `API_AUTH_TOKEN`, then unlock in the browser. The unlock flow calls `POST /api/auth/session`; the Lock/Logout action calls `DELETE /api/auth/session`. Full cookie, CSRF, logout, and MDT-172 compatibility details live in [AUTH_SESSION_GUIDE.md](AUTH_SESSION_GUIDE.md).
+
+Do not store the owner token in localStorage, sessionStorage, frontend code, or URLs.
 
 ---
 

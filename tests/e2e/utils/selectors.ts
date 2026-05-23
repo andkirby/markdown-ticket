@@ -168,6 +168,28 @@ export const projectSelectors = {
 } as const
 
 /**
+ * Browser auth session selectors (MDT-176)
+ */
+export const authSelectors = {
+  /** Locked-session unlock panel */
+  unlockPanel: '[data-testid="auth-unlock-panel"]',
+  /** Password-style owner token input */
+  tokenInput: '[data-testid="auth-token-input"]',
+  /** Unlock submit button */
+  unlockSubmit: '[data-testid="auth-unlock-submit"]',
+  /** Generic invalid unlock error */
+  unlockError: '[data-testid="auth-unlock-error"]',
+  /** Session status indicator */
+  statusChip: '[data-testid="auth-status-chip"]',
+  /** Lock/logout action */
+  lockButton: '[data-testid="auth-lock-button"]',
+  /** MDT-172-compatible public-empty state */
+  noPublicProjectsState: '[data-testid="auth-no-public-projects"]',
+  /** Unlock affordance outside the locked auth panel */
+  unlockAffordance: '[data-testid="auth-unlock-affordance"]',
+} as const
+
+/**
  * List view selectors
  */
 export const listSelectors = {
