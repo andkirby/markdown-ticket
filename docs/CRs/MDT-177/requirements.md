@@ -25,7 +25,7 @@ Canonical requirements live in spec-trace and are rendered in [requirements.trac
 | C3 | architecture.md rate limiting; tests.md exchange throttling coverage |
 | C4 | architecture.md security boundaries; tests.md URL/storage/log safety checks |
 | C5 | architecture.md authorization boundary; tests.md backend mutation denial |
-| C6 | architecture.md origin policy contract; tests.md allowed-domain cases |
+| C6 | architecture.md origin policy contract; tests.md `PUBLIC_ORIGIN` and current-origin fallback cases |
 | C7 | architecture.md read-session merge helper; tests.md additive grant coverage |
 | C8 | architecture.md compatibility decision; tests.md env read-token preservation |
 | C9 | architecture.md route ownership; tests.md owner-only management API coverage |
@@ -42,7 +42,7 @@ Canonical requirements live in spec-trace and are rendered in [requirements.trac
 | Read-session grant merge | Successful invite exchange or share-link exchange while a read session exists merges the new grants with existing read grants and sets the merged read-session expiry to the earliest expiry among active grants. | Opening a new invite or share link replaces existing grants, extends access to the latest expiry, or leaves expiry policy for architecture to choose. | The ticket requires additive grants, and review fixed expiry semantics to the earliest active grant expiry. |
 | Project switching | Token-scoped visitors switch among visible granted projects without re-entering a token. | Prompt per project switch. | The token session represents the visitor's allowed project set. |
 | Read-only unlock | Owner unlock from read-only mode is an overlay with cancel and bad-token recovery. | Switch to a full locked screen on failure. | The visitor must not lose the current read-only board. |
-| Link origin | Current origin is default only when server policy accepts it; multiple public origins require owner choice. | Always use `window.location.origin`. | Public sharing links must use allowed, intentional origins. |
+| Link origin | `PUBLIC_ORIGIN` is used when configured; current origin is fallback only when server policy accepts it and no public origin is configured. | Always use `window.location.origin`, or let the owner choose arbitrary domains. | Public sharing links must use server-approved, intentional origins. |
 | Revocation | Revocation blocks future exchanges and refreshed sessions from granting private project access. | Existing browser access remains valid indefinitely. | Revocation must have an enforceable next-check boundary. |
 | Expiry | Expired tokens cannot generate invites or exchange into sessions. | Expiry only hides UI status. | Expiry must be enforced server-side. |
 | Write denial | Backend authorization denies every read-only mutation even if the UI hides controls. | Rely on frontend hiding alone. | The backend remains the enforcement layer. |

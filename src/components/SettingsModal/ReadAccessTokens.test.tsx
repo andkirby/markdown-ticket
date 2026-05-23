@@ -30,15 +30,15 @@ function createProject(): Project {
 }
 
 function ReadAccessHarness() {
-  const [selectedOrigin, setSelectedOrigin] = useState('http://localhost:6173')
+  const [linkOrigin, setLinkOrigin] = useState('http://localhost:6173')
 
   return (
     <>
-      <div data-testid="selected-origin">{selectedOrigin}</div>
+      <div data-testid="link-origin">{linkOrigin}</div>
       <ReadAccessTokens
         projects={[createProject()]}
-        selectedOrigin={selectedOrigin}
-        onSelectedOriginChange={setSelectedOrigin}
+        linkOrigin={linkOrigin}
+        onLinkOriginChange={setLinkOrigin}
       />
     </>
   )
@@ -87,7 +87,7 @@ describe('ReadAccessTokens', () => {
     render(<ReadAccessHarness />)
 
     await waitFor(() => {
-      expect(screen.getByTestId('selected-origin').textContent).toBe('https://share.example.com')
+      expect(screen.getByTestId('link-origin').textContent).toBe('https://share.example.com')
     })
     expect(screen.queryByTestId('sharing-link-origin-select')).toBeNull()
 

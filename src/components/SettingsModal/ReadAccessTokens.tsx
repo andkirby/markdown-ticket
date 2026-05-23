@@ -6,8 +6,8 @@ import { getProjectCode } from '../../utils/projectUtils'
 
 interface ReadAccessTokensProps {
   projects: Project[]
-  selectedOrigin: string
-  onSelectedOriginChange: (origin: string) => void
+  linkOrigin: string
+  onLinkOriginChange: (origin: string) => void
 }
 
 interface ListedReadToken {
@@ -28,7 +28,7 @@ interface CreationResult {
   rawToken: string
 }
 
-export function ReadAccessTokens({ projects, selectedOrigin, onSelectedOriginChange }: ReadAccessTokensProps) {
+export function ReadAccessTokens({ projects, linkOrigin, onLinkOriginChange }: ReadAccessTokensProps) {
   const [tokens, setTokens] = useState<ListedReadToken[]>([])
   const [name, setName] = useState('')
   const [expiryDays, setExpiryDays] = useState('7')
@@ -44,9 +44,9 @@ export function ReadAccessTokens({ projects, selectedOrigin, onSelectedOriginCha
     code: getProjectCode(project),
     name: project.project.name,
   })), [projects])
-  const effectiveSelectedOrigin = useMemo(() => (
-    originOptions.includes(selectedOrigin) ? selectedOrigin : ''
-  ), [originOptions, selectedOrigin])
+  const effectiveLinkOrigin = useMemo(() => (
+    originOptions.includes(linkOrigin) ? linkOrigin : ''
+  ), [originOptions, linkOrigin])
 
   const loadTokens = useCallback(async () => {
     const response = await authFetch('/api/read-tokens')
@@ -62,13 +62,13 @@ export function ReadAccessTokens({ projects, selectedOrigin, onSelectedOriginCha
     setOriginNotice(data.linkOrigins.notice ?? null)
 
     const serverSelectedOrigin = data.linkOrigins.selectedOrigin
-    if (serverSelectedOrigin && serverSelectedOrigin !== selectedOrigin) {
-      onSelectedOriginChange(serverSelectedOrigin)
+    if (serverSelectedOrigin && serverSelectedOrigin !== linkOrigin) {
+      onLinkOriginChange(serverSelectedOrigin)
     }
-    else if (!serverSelectedOrigin && selectedOrigin) {
-      onSelectedOriginChange('')
+    else if (!serverSelectedOrigin && linkOrigin) {
+      onLinkOriginChange('')
     }
-  }, [onSelectedOriginChange, selectedOrigin])
+  }, [onLinkOriginChange, linkOrigin])
 
   useEffect(() => {
     void loadTokens()
@@ -117,7 +117,7 @@ export function ReadAccessTokens({ projects, selectedOrigin, onSelectedOriginCha
 
   const generateInvite = useCallback(async (token: ListedReadToken) => {
     setInviteUrl('')
-    if (token.status !== 'active' || !effectiveSelectedOrigin) {
+    if (token.status !== 'active' || !effectiveLinkOrigin) {
       return
     }
 
@@ -125,7 +125,7 @@ export function ReadAccessTokens({ projects, selectedOrigin, onSelectedOriginCha
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       ownerIntent: true,
-      body: JSON.stringify({ origin: effectiveSelectedOrigin }),
+      body: JSON.stringify({ origin: effectiveLinkOrigin }),
     })
 
     if (!response.ok) {
@@ -134,7 +134,7 @@ export function ReadAccessTokens({ projects, selectedOrigin, onSelectedOriginCha
 
     const data = await response.json() as { inviteUrl?: string }
     setInviteUrl(data.inviteUrl ?? '')
-  }, [effectiveSelectedOrigin])
+  }, [effectiveLinkOrigin])
 
   const revokeToken = useCallback(async (tokenId: string) => {
     const response = await authFetch(`/api/read-tokens/${encodeURIComponent(tokenId)}/revoke`, {
@@ -244,9 +244,9 @@ export function ReadAccessTokens({ projects, selectedOrigin, onSelectedOriginCha
                   type="button"
                   data-testid="sharing-generate-invite"
                   onClick={() => void generateInvite(token)}
-                  disabled={token.status !== 'active' || !effectiveSelectedOrigin}
+                  disabled={token.status !== 'active' || !effectiveLinkOrigin}
                   className="settings-action-btn"
-                  data-disabled={token.status !== 'active' || !effectiveSelectedOrigin ? 'true' : undefined}
+                  data-disabled={token.status !== 'active' || !effectiveLinkOrigin ? 'true' : undefined}
                 >
                   Invite
                 </button>

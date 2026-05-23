@@ -6,7 +6,7 @@
 
 ## Feature: Runtime-configured sharing links
 
-As an MDT owner, I want share and invite links to use deployment-configured public origins so generated links work outside localhost.
+As an MDT owner, I want share and invite links to use the deployment-configured public origin so generated links work outside localhost.
 
 ### Scenario: Runtime config is parsed once at startup
 

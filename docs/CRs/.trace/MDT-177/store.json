@@ -87,8 +87,8 @@
     {
       "id": "BR-1.9",
       "kind": "behavior",
-      "text": "WHEN more than one configured public origin is available, the system shall let the owner choose the origin used for generated share and invite links.",
-      "sourceRef": "CR Section 5 Functional; settings.spec.md multiple public origins state",
+      "text": "WHEN PUBLIC_ORIGIN is configured, the system shall use that server-selected origin for generated share and invite links without exposing an owner domain picker.",
+      "sourceRef": "CR Section 5 Functional; settings.spec.md configured public origin state",
       "routePolicy": "bdd",
       "tags": [
         "timing:in-ticket"
@@ -217,8 +217,8 @@
     {
       "id": "C6",
       "kind": "constraint",
-      "text": "The system shall normalize configured public origins from ALLOWED_DOMAINS before link generation and reject disallowed origins as generated link bases.",
-      "sourceRef": "CR Section 7 Deployment; assess.md Allowed-domain link generation",
+      "text": "The system shall use PUBLIC_ORIGIN as the only configured deployment origin for generated link bases and reject disallowed origins.",
+      "sourceRef": "CR Section 7 Deployment; assess.md PUBLIC_ORIGIN link generation",
       "routePolicy": "tests",
       "tags": [
         "timing:in-ticket"
@@ -414,14 +414,14 @@
     },
     {
       "id": "configured_origin_selection_and_fallback",
-      "title": "Owner can choose configured public origins and sees fallback explanation",
+      "title": "Configured PUBLIC_ORIGIN is used and unsafe fallback is explained",
       "covers": [
         "BR-1.9",
         "BR-1.10"
       ],
-      "given": "Given the server exposes configured public origins for link generation",
-      "when": "When more than one configured public origin is available or the current browser origin is not accepted",
-      "then": "Then the owner can choose the generated link origin or sees a configured public origin selected with an explanation that the current origin is unavailable",
+      "given": "Given the server exposes PUBLIC_ORIGIN for link generation",
+      "when": "When PUBLIC_ORIGIN is configured or the current browser origin is not accepted",
+      "then": "Then generated links use PUBLIC_ORIGIN, or link generation is withheld with an explanation when no safe origin exists",
       "sourceRef": "docs/CRs/MDT-177/requirements.trace.md#BR-1.9"
     },
     {
@@ -557,7 +557,7 @@
     },
     {
       "id": "OBL-origin-selection-contract",
-      "title": "Origin generation uses the current browser origin only when originPolicy accepts it, otherwise uses normalized configured public origins from ALLOWED_DOMAINS excluding local defaults, with no generated URL when no allowed public origin exists.",
+      "title": "Origin generation uses PUBLIC_ORIGIN when configured, otherwise uses the current browser origin only when originPolicy accepts it, with no generated URL when no allowed origin exists.",
       "derivedFrom": [
         "BR-1.8",
         "BR-1.9",
@@ -970,7 +970,7 @@
   "tasks": [
     {
       "id": "TASK-5",
-      "title": "Build Settings read-access token management and origin selector",
+      "title": "Build Settings read-access token management and link-origin handling",
       "ownsArtifactIds": [
         "ART-src-settings-modal",
         "ART-src-settings-read-access-tokens",

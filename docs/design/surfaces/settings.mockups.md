@@ -95,14 +95,22 @@ window "Settings — Sharing":
     tab "Advanced"
   panel:
     section "Project Access":
+      row:
+        text "Project Access" bold
+        button "i" id="sharing-mode-info"
       combo value="Private" options="Private,Unlisted read-only,Public read-only" id="sharing-mode"
+    divider
+    section "Read access tokens":
+      text "Create named read-only access for one person across multiple projects." muted
+      button "Create read token" id="create-read-token"
     divider
     section "Save Sharing":
       row justify=end:
         button "Save" id="save-sharing"
 
 annotation "Writes through authenticated API; default is Private" target="sharing-mode" position=right
-annotation "Read tokens are entered through the unlock flow, not managed from Settings" target="save-sharing" position=right
+annotation "Info explains Private, Unlisted, and Public before the owner saves." target="sharing-mode-info" position=right
+annotation "Read tokens are named, multi-project, and managed by owner/admin users here." target="create-read-token" position=right
 ```
 
 ## Sharing Tab (unlisted read-only enabled)
@@ -119,6 +127,7 @@ window "Settings — Unlisted Sharing Enabled":
       combo value="Unlisted read-only" options="Private,Unlisted read-only,Public read-only"
     divider
     section "Share link":
+      text "Using https://tickets.example.com" muted id="share-origin"
       input placeholder="https://app.example/share/7YpQ9zM2" disabled id="public-share-url"
     divider
     section "Save Sharing":
@@ -128,6 +137,81 @@ window "Settings — Unlisted Sharing Enabled":
 
 annotation "Share ID is bookmarkable, not listed in anonymous project browser, and never grants writes" target="public-share-url" position=right
 annotation "Rotate asks the backend for a new server-generated share ID" target="rotate-public-link" position=right
+annotation "Origin is server-selected from PUBLIC_ORIGIN or an allowed current-origin fallback; no owner domain picker is shown." target="share-origin" position=right
+```
+
+## Sharing Tab (read tokens managed)
+
+```wireloom
+window "Settings — Read Access Tokens":
+  tabs:
+    tab "Appearance"
+    tab "Board"
+    tab "Sharing" active
+    tab "Advanced"
+  panel:
+    section "Read access tokens":
+      row justify=between:
+        text "Named access" bold
+        button "Create read token" primary id="token-create"
+      list:
+        slot "Bob":
+          row:
+            chip "2 projects"
+            chip "Active"
+          text "PRI, DOCS" muted
+          row:
+            button "Generate invite" id="token-invite"
+            button "Revoke"
+        slot "Contractor":
+          row:
+            chip "Expired"
+          text "OPS" muted
+          button "Generate invite" disabled
+
+annotation "Rows show name, project scope, and status; never show the raw token after creation." target="token-invite" position=right
+```
+
+## Create Read Token
+
+```wireloom
+window "Settings — Create Read Token":
+  sheet position=center title="Create read token":
+    input placeholder="Name, e.g. Bob" id="token-name"
+    section "Allowed projects":
+      checkbox "PRI — Private roadmap" checked label-right id="token-project-pri"
+      checkbox "DOCS — Documentation" checked label-right
+      checkbox "OPS — Operations" label-right
+    section "Expiry":
+      combo value="30 days" options="7 days,30 days,90 days,No expiry" id="token-expiry"
+    row justify=end:
+      button "Cancel"
+      button "Create token" primary id="token-save"
+
+annotation "At least one project must be selected before Create token is enabled." target="token-project-pri" position=right
+annotation "Raw token is displayed once after creation, then replaced by named metadata." target="token-save" position=right
+```
+
+## Invite Link Generated
+
+```wireloom
+window "Settings — Invite Link Generated":
+  tabs:
+    tab "Appearance"
+    tab "Board"
+    tab "Sharing" active
+    tab "Advanced"
+  panel:
+    section "Invite link for Bob":
+      text "Using https://tickets.example.com" muted id="invite-origin"
+      input placeholder="https://tickets.example.com/invite/r4nd0m-code" disabled id="invite-link"
+      text "This one-time link expires soon and does not expose the persistent token." muted
+      row justify=end:
+        button "Copy link" primary
+        button "Done"
+
+annotation "Domain is selected by the server from PUBLIC_ORIGIN, or current origin only when allowed and no PUBLIC_ORIGIN exists." target="invite-origin" position=right
+annotation "Opening this link exchanges the code into an HttpOnly read cookie and cleans the URL." target="invite-link" position=right
 ```
 
 ## Sharing Tab (share link pending)
@@ -175,24 +259,25 @@ window "Settings":
 ## Mobile
 
 ```wireloom
-window "Settings — Mobile Board":
+window "Settings — Mobile Sharing":
   tabs:
     tab "App"
-    tab "Board" active
+    tab "Board"
     tab "Share"
     tab "Adv"
   panel:
-    section "Card Density":
-      text "Compact shows more tickets per column" muted
-      combo value="Comfortable" options="Comfortable,Compact"
+    section "Project Access":
+      row:
+        text "Project Access" bold
+        button "i"
+      combo value="Unlisted read-only" options="Private,Unlisted read-only,Public read-only"
     divider
-    section "Visible Card Badges":
-      text "Board cards only" muted
-      checkbox "Status" checked label-right
-      checkbox "Priority" checked label-right
-      checkbox "Type" checked label-right
-      checkbox "Phase" checked label-right
-      checkbox "More relationship badges" checked label-right
+    section "Read access tokens":
+      list:
+        slot "Bob":
+          text "PRI, DOCS" muted
+          button "Invite"
+      button "Create read token"
 ```
 
 ## Annotations
@@ -209,8 +294,11 @@ window "Settings — Mobile Board":
 | Theme button inactive | `--muted` | `bg-muted text-foreground` | |
 | Select | `--background` | `border rounded-md px-3 py-2` | |
 | Share link input | `--muted` | `font-mono text-xs` | read-only, generated by backend |
+| Link origin text | `--muted-foreground` | `settings-desc` | server-selected link origin or no-origin notice |
 | Rotate share ID | `--border` | `settings-action-btn` | visible only when a non-private share ID exists |
 | Save sharing | `--primary` / `--border` | `settings-action-btn` | disabled while saving |
+| Token row | `--border` / `--background` | proposed `settings-token-row` | compact list row with actions |
+| Invite link input | `--muted` | `font-mono text-xs` | one-time invite URL, copyable |
 | Read-only tabs | `--muted-foreground` | hidden Sharing tab | Sharing tab absent without owner/admin |
 | Switch on | `--primary` | bg-primary, knob right | |
 | Switch off | `--muted` | bg-muted, knob left | |

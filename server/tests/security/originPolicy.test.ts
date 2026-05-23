@@ -41,7 +41,7 @@ describe('originPolicy', () => {
     expect(parsePublicOrigin('https://')).toBeUndefined()
   })
 
-  it('deduplicates default and configured public origins', () => {
+  it('deduplicates default and configured public origin', () => {
     const origins = createAllowedOrigins('http://localhost:5173/')
 
     expect(origins.filter(origin => origin === 'http://localhost:5173')).toHaveLength(1)
