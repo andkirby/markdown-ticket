@@ -36,9 +36,11 @@ Do NOT hand-roll `fixed inset-0` overlays. The base Modal handles:
 | Size | Max width | Use for |
 |------|-----------|---------|
 | `sm` | `sm:max-w-lg` | Confirmations, alerts |
-| `md` | `sm:max-w-xl` | Settings, simple forms |
+| `md` | `sm:max-w-xl` | Simple forms |
 | `lg` | `sm:max-w-3xl` | Project forms |
-| `xl` | `sm:max-w-5xl` | Ticket viewer, search |
+| `xl` | `sm:max-w-5xl` | Default modal width, ticket viewer, search, settings |
+
+The default modal width is `xl`. Use `sm`, `md`, or `lg` explicitly for dialogs that should stay narrower.
 
 ## Spacing Standard
 
@@ -63,7 +65,7 @@ For content modals (Pattern B), override ModalBody to `p-0` and manage padding p
 For: forms with actions, settings with tabs.
 
 ```tsx
-<Modal isOpen={show} onClose={close} size="md">
+<Modal isOpen={show} onClose={close}>
   <ModalHeader title="Title" onClose={close} />
   <ModalBody>
     {/* Form content — padded by default p-4 */}

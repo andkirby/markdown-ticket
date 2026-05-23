@@ -254,7 +254,7 @@ const FileTree = React.forwardRef<FileTreeHandle, FileTreeProps>(({
   }
 
   return (
-    <div data-testid="document-tree" className="space-y-1">
+    <div data-testid="document-tree" className="min-h-4 space-y-1">
       {renderFiles(files)}
     </div>
   )

@@ -5,6 +5,7 @@ import type { Server } from 'node:http'
 import { createServer, request as httpRequest } from 'node:http'
 import express from 'express'
 import request from 'supertest'
+import { buildRuntimeConfig } from '../../config/runtimeConfig'
 import { createDevToolsRouter } from '../../routes/devtools'
 import { createOriginPolicy } from '../../security/originPolicy'
 
@@ -34,8 +35,9 @@ function withEnv<T>(updates: Record<string, string | undefined>, run: () => T): 
 function createApp(): Express {
   const app = express()
   const originPolicy = createOriginPolicy(['https://app.example.com'])
+  const runtimeConfig = buildRuntimeConfig()
 
-  app.use('/api/devtools', createDevToolsRouter(originPolicy))
+  app.use('/api/devtools', createDevToolsRouter(originPolicy, runtimeConfig.system.devtoolsEnabled))
   return app
 }
 

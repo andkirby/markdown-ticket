@@ -45,13 +45,6 @@ interface FrontendLoggingResponseLike {
   end: (body?: string) => void
 }
 
-function parseCsvEnv(value?: string) {
-  return value
-    ?.split(',')
-    .map(entry => entry.trim())
-    .filter(Boolean) || []
-}
-
 function toAllowedHost(entry: string) {
   try {
     return new URL(entry).hostname
@@ -63,6 +56,11 @@ function toAllowedHost(entry: string) {
       .replace(/:\d+$/, '')
       .trim()
   }
+}
+
+function publicOriginHost(value?: string) {
+  const origin = value?.trim()
+  return origin ? [toAllowedHost(origin)] : []
 }
 
 export function isLoopbackAddress(address: string | undefined): boolean {
@@ -115,7 +113,7 @@ export function rejectNonLocalFrontendLoggingRequest(
   return true
 }
 
-export function parseFrontendLogsRequestBody(body: string): { ok: true; logs?: unknown[] } | { ok: false } {
+export function parseFrontendLogsRequestBody(body: string): { ok: true, logs?: unknown[] } | { ok: false } {
   try {
     const parsedBody = JSON.parse(body) as { logs?: unknown[] }
     return { ok: true, logs: parsedBody.logs }
@@ -136,7 +134,7 @@ function frontendLoggingPlugin() {
             return
           }
 
-        // Rate limiting for status endpoint - improved IP detection for Docker
+          // Rate limiting for status endpoint - improved IP detection for Docker
           const clientIP = req.headers['x-forwarded-for']
             || req.headers['x-real-ip']
             || req.connection?.remoteAddress
@@ -223,7 +221,7 @@ function frontendLoggingPlugin() {
             return
           }
 
-        // Set SSE headers
+          // Set SSE headers
           res.writeHead(200, {
             'Content-Type': 'text/event-stream',
             'Cache-Control': 'no-cache',
@@ -537,15 +535,13 @@ export default defineConfig(({ mode }) => {
   const backendUrl = env.VITE_BACKEND_URL || process.env.DOCKER_BACKEND_URL || 'http://localhost:3001'
 
   // Allowed hosts for Vite dev server (for tunneling/custom domains)
-  // ALLOWED_DOMAINS is shared with backend CORS (uses hostnames only)
-  const additionalHosts = parseCsvEnv(env.ALLOWED_DOMAINS || process.env.ALLOWED_DOMAINS)
+  const additionalHosts = publicOriginHost(env.PUBLIC_ORIGIN || process.env.PUBLIC_ORIGIN)
   const allowedHosts = [
     '.loca.lt',
     '.trycloudflare.com',
     '.ngrok-free.app',
     ...additionalHosts,
   ]
-
 
   return {
     plugins: [react(), frontendLoggingPlugin(), envInjectionPlugin()],

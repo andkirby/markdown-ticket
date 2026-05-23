@@ -638,7 +638,7 @@ export default function DocumentsLayout({ projectId, canWrite = true }: Document
 
   if (showPathSelector && !canWrite) {
     return (
-      <div className="flex items-center justify-center h-64 text-muted-foreground">
+      <div data-testid="document-tree" className="flex items-center justify-center h-64 text-muted-foreground">
         No documents are configured for this project.
       </div>
     )

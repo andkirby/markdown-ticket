@@ -41,7 +41,7 @@ Use `requirements.trace.md` for canonical requirement rows, routes, and summarie
 
 | Setting | Description | Default | When Absent |
 |---------|-------------|---------|-------------|
-| `ALLOWED_DOMAINS` | Existing backend allowlist extension used for browser origins. | Localhost development origins only. | Only built-in local origins are accepted for browser CORS. |
+| `PUBLIC_ORIGIN` | Backend deployment origin used for browser API access. | Localhost development origins only. | Only built-in local origins are accepted for browser CORS. |
 | `MCP_SECURITY_ORIGIN_VALIDATION` | Enables MCP HTTP origin validation. | Production Docker: enabled; local/dev: may remain configurable. | Architecture must define safe fallback without breaking stdio. |
 | `MCP_ALLOWED_ORIGINS` | Allowed MCP HTTP browser origins. | Deployment-specific. | Architecture must define whether startup fails closed or uses documented local defaults. |
 | `MCP_SECURITY_RATE_LIMITING` | Enables MCP HTTP rate limiting. | Production Docker: enabled. | Architecture must define local/dev behavior and caller-key semantics. |

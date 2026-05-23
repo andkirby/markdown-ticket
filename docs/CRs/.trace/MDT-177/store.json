@@ -1,0 +1,1142 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-177"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "WHEN an owner creates named read access, the system shall persist one active named read-token record with the supplied human-readable name, at least two selected projects, optional expiry, and no browser-visible persistent token after the one-time creation result is dismissed.",
+      "sourceRef": "CR Section 5 Functional; settings.spec.md Sharing interaction rules",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "WHEN an owner requests an invite link for an active named read-token record, the system shall generate one short-lived one-time invite URL scoped to that named token and containing no persistent read token.",
+      "sourceRef": "CR Section 5 Functional/Non-Functional; settings.spec.md Read access tokens",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.3",
+      "kind": "behavior",
+      "text": "WHEN a clean browser opens a valid invite link, the system shall exchange the invite code into an HttpOnly read session cookie and replace the browser URL with a code-free destination before rendering project content.",
+      "sourceRef": "CR Section 5 Functional; auth-session-unlock.spec.md Storage and security",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.4",
+      "kind": "behavior",
+      "text": "WHILE a visitor has a valid named read-token session, the system shall list the token-assigned projects plus public projects and allow switching among them without prompting for another token.",
+      "sourceRef": "CR Section 5 Functional; project-browser.spec.md Read Access Project Switching",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.5",
+      "kind": "behavior",
+      "text": "WHEN a named-token visitor opens a valid share link, the system shall add the share-linked project to the existing read session without removing token-assigned or public project access.",
+      "sourceRef": "CR Section 5 Functional; assess.md Read-session merge semantics",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.6",
+      "kind": "behavior",
+      "text": "WHEN a read-only visitor starts owner unlock and selects Cancel, the system shall close the unlock overlay and return to the same read-only project, route, and view state.",
+      "sourceRef": "CR Section 5 Functional; auth-session-unlock.spec.md Critical UX rules",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.7",
+      "kind": "behavior",
+      "text": "IF a read-only visitor submits an invalid owner token, THEN the system shall show a generic owner-token error while preserving the active read-only session and a cancel path back to the board.",
+      "sourceRef": "CR Section 5 Functional; auth-session-unlock.spec.md Read-only owner unlock overlay",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.8",
+      "kind": "behavior",
+      "text": "WHEN an owner generates a share or invite link and the current browser origin is accepted by server policy, the system shall use the current browser origin as the default link origin.",
+      "sourceRef": "CR Section 5 Functional; settings.spec.md Sharing interaction rules",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.9",
+      "kind": "behavior",
+      "text": "WHEN more than one configured public origin is available, the system shall let the owner choose the origin used for generated share and invite links.",
+      "sourceRef": "CR Section 5 Functional; settings.spec.md multiple public origins state",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.10",
+      "kind": "behavior",
+      "text": "IF the current browser origin is not accepted by server policy and at least one configured public origin exists, THEN the system shall select a configured public origin for generated links and explain that the current origin is unavailable.",
+      "sourceRef": "settings.spec.md Sharing interaction rules; assess.md Allowed-domain link generation",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.11",
+      "kind": "behavior",
+      "text": "WHEN an owner revokes a named read-token record, the system shall prevent that token from granting private project access on the next invite exchange, read-token exchange, or read-session refresh.",
+      "sourceRef": "CR Section 5 Functional; assess.md Named read-token storage and route ownership",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.12",
+      "kind": "behavior",
+      "text": "IF a named read-token record is expired, THEN the system shall disable new invite generation and reject session exchange for that token.",
+      "sourceRef": "CR Section 5 Functional/Non-Functional; settings.spec.md token expired state",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.14",
+      "kind": "behavior",
+      "text": "WHILE a visitor is read-only, the system shall hide or disable owner-only controls for creating, editing, dragging, deleting, configuring, favoriting, or writing files.",
+      "sourceRef": "CR Section 5 Functional; auth-session-unlock.spec.md Read-only boundary",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.15",
+      "kind": "behavior",
+      "text": "WHEN an owner lists named read access, the system shall show each record's name, project scope, expiry, active/expired/revoked status, invite action availability, and revoke action availability without showing raw tokens.",
+      "sourceRef": "settings.spec.md Token list states",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.16",
+      "kind": "behavior",
+      "text": "IF an invite code is invalid, expired, consumed, or associated with a revoked token, THEN the system shall reject the exchange with a generic failure and leave any existing session grants unchanged.",
+      "sourceRef": "CR Section 5 Non-Functional; assess.md One-time invite links",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.17",
+      "kind": "behavior",
+      "text": "WHEN a named-token visitor refreshes after the read session expires or is refreshed, the system shall recompute project access from the current token record status before granting private projects.",
+      "sourceRef": "CR Section 5 Functional revoke criterion; assess.md Verification Gaps",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "The system shall store persistent named read tokens only as server-side hashes and never as reversible raw token values.",
+      "sourceRef": "CR Section 5 Non-Functional",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "The system shall store invite codes as short-lived, single-use secrets with consumed and expiry state that can be checked atomically during exchange.",
+      "sourceRef": "CR Section 5 Non-Functional; assess.md One-time invite links",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "The system shall apply rate limiting to invite-code exchange attempts using the public token exchange protection or an equivalent route-specific limiter.",
+      "sourceRef": "CR Section 5 Non-Functional; assess.md One-time invite links",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "The system shall not write raw read tokens, invite codes, or owner tokens to application logs, telemetry, URL history after exchange, localStorage, sessionStorage, indexedDB, or browser-readable cookies.",
+      "sourceRef": "CR Section 5 Non-Functional; auth-session-unlock.spec.md Storage and security",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C5",
+      "kind": "constraint",
+      "text": "The system shall enforce read-only mutation denial on the backend for every protected write endpoint regardless of frontend control visibility.",
+      "sourceRef": "CR Section 5 Non-Functional; assess.md Verification Gaps",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C6",
+      "kind": "constraint",
+      "text": "The system shall normalize configured public origins from ALLOWED_DOMAINS before link generation and reject disallowed origins as generated link bases.",
+      "sourceRef": "CR Section 7 Deployment; assess.md Allowed-domain link generation",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C7",
+      "kind": "constraint",
+      "text": "The system shall merge read-session grants by set union of projectRefs and shareIds so duplicate grants do not create duplicate visible projects.",
+      "sourceRef": "assess.md Read-session merge semantics",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C8",
+      "kind": "constraint",
+      "text": "The system shall keep env-configured API_READ_TOKEN_HASHES exchange behavior working unless architecture explicitly records a deprecation decision for MDT-177.",
+      "sourceRef": "CR Section 7 Deployment; assess.md Preservation tests needed",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C9",
+      "kind": "constraint",
+      "text": "The system shall keep owner management APIs for named read tokens unavailable to anonymous, read-only, and share-link-only visitors.",
+      "sourceRef": "CR Section 4 Integration Points; settings.spec.md Sharing visibility",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C10",
+      "kind": "constraint",
+      "text": "The system shall carry MDT-177 E2E journey coverage into the downstream tests stage as Playwright coverage rather than API-only verification.",
+      "sourceRef": "CR Section 5 Testing; assess.md Playwright journey coverage readiness",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C11",
+      "kind": "constraint",
+      "text": "The system shall avoid exposing private or unlisted project names, counts, paths, or disabled placeholders to visitors who lack a matching public, token, or share grant.",
+      "sourceRef": "project-browser.spec.md privacy boundary",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-2",
+      "kind": "edge_case",
+      "text": "IF a selected project is removed from a named token scope before the visitor refreshes access, THEN the system shall stop listing that private project after the next session refresh or exchange.",
+      "sourceRef": "CR Section 5 revoke criterion; project-browser.spec.md Visibility",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-3",
+      "kind": "edge_case",
+      "text": "IF no configured public origin is available and the current origin is rejected by server policy, THEN the system shall withhold generated share and invite URLs until an allowed origin is available.",
+      "sourceRef": "settings.spec.md Sharing interaction rules; assess.md Allowed-domain link generation",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-4",
+      "kind": "edge_case",
+      "text": "IF a one-time invite code is reused after successful consumption, THEN the system shall reject the reuse without revealing whether the code was previously valid.",
+      "sourceRef": "CR Section 5 Non-Functional; assess.md One-time invite links",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-5",
+      "kind": "edge_case",
+      "text": "IF backend origin or token-store configuration cannot be read, THEN the system shall fail closed for new link generation and invite exchange while preserving existing valid read-only sessions.",
+      "sourceRef": "assess.md Dependency and Tooling Pressure",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "IF invite exchange or share-link exchange succeeds while the browser already has a read session, THEN the system shall merge the new grants with existing read grants and set the merged read-session expiry to the earliest expiry among active grants.",
+      "sourceRef": "requirements review gap: merge expiry semantics",
+      "routePolicy": "tests"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "owner_creates_named_multi_project_token",
+      "title": "Owner creates named multi-project read access",
+      "covers": [
+        "BR-1.1",
+        "BR-1.15"
+      ],
+      "given": "Given an owner is signed in with at least two private projects and opens Settings Sharing",
+      "when": "When the owner creates named read access called Bob scoped to two projects with optional expiry and dismisses the one-time creation result",
+      "then": "Then the token list shows Bob with the selected project scope expiry active status invite and revoke actions and no raw persistent token is visible",
+      "sourceRef": "docs/CRs/MDT-177/requirements.trace.md#BR-1.1"
+    },
+    {
+      "id": "owner_generates_one_time_invite_link",
+      "title": "Owner generates one-time invite without persistent token exposure",
+      "covers": [
+        "BR-1.2"
+      ],
+      "given": "Given an owner has an active named read-token record for Bob",
+      "when": "When the owner requests an invite link for that record",
+      "then": "Then the generated URL is short-lived one-time scoped to Bob and contains no persistent read token",
+      "sourceRef": "docs/CRs/MDT-177/requirements.trace.md#BR-1.2"
+    },
+    {
+      "id": "invite_exchange_cleans_url_before_content",
+      "title": "Invite exchange cleans the URL before project content renders",
+      "covers": [
+        "BR-1.3"
+      ],
+      "given": "Given a clean browser has no owner or read session",
+      "when": "When the browser opens a valid invite link",
+      "then": "Then the invite code is exchanged into a read-only session and the browser lands on a code-free project URL before project content renders",
+      "sourceRef": "docs/CRs/MDT-177/requirements.trace.md#BR-1.3"
+    },
+    {
+      "id": "token_scoped_project_switching",
+      "title": "Token-scoped visitor switches among assigned and public projects",
+      "covers": [
+        "BR-1.4"
+      ],
+      "given": "Given a visitor has a valid named read-token session for two private projects and a public project is available",
+      "when": "When the visitor opens the project browser and switches among the visible projects",
+      "then": "Then the assigned private projects plus public projects load read-only without prompting for another token",
+      "sourceRef": "docs/CRs/MDT-177/requirements.trace.md#BR-1.4"
+    },
+    {
+      "id": "share_link_merge_preserves_token_access",
+      "title": "Share link adds access without replacing token-scoped projects",
+      "covers": [
+        "BR-1.5"
+      ],
+      "given": "Given a named-token visitor can see token-assigned projects and public projects",
+      "when": "When the visitor opens a valid share link for an additional unlisted project",
+      "then": "Then the share-linked project is added and the token-assigned and public projects remain visible",
+      "sourceRef": "docs/CRs/MDT-177/requirements.trace.md#BR-1.5"
+    },
+    {
+      "id": "readonly_unlock_cancel_returns_to_same_view",
+      "title": "Read-only unlock cancel returns to the same view",
+      "covers": [
+        "BR-1.6"
+      ],
+      "given": "Given a read-only visitor is viewing a project board list or documents route",
+      "when": "When the visitor starts owner unlock and selects Cancel",
+      "then": "Then the unlock overlay closes and the same read-only project route and view state remain active",
+      "sourceRef": "docs/CRs/MDT-177/requirements.trace.md#BR-1.6"
+    },
+    {
+      "id": "readonly_bad_owner_token_preserves_session",
+      "title": "Invalid owner unlock preserves read-only session",
+      "covers": [
+        "BR-1.7"
+      ],
+      "given": "Given a read-only visitor opens the owner unlock overlay from an active read-only project",
+      "when": "When the visitor submits an invalid owner token",
+      "then": "Then a generic owner-token error is shown and the visitor keeps the active read-only session with a cancel path back to the board",
+      "sourceRef": "docs/CRs/MDT-177/requirements.trace.md#BR-1.7"
+    },
+    {
+      "id": "allowed_current_origin_defaults_links",
+      "title": "Allowed current origin is the default generated link origin",
+      "covers": [
+        "BR-1.8"
+      ],
+      "given": "Given an owner is generating a share or invite link and the current browser origin is accepted by server policy",
+      "when": "When the link is generated",
+      "then": "Then the generated link uses the current browser origin by default",
+      "sourceRef": "docs/CRs/MDT-177/requirements.trace.md#BR-1.8"
+    },
+    {
+      "id": "configured_origin_selection_and_fallback",
+      "title": "Owner can choose configured public origins and sees fallback explanation",
+      "covers": [
+        "BR-1.9",
+        "BR-1.10"
+      ],
+      "given": "Given the server exposes configured public origins for link generation",
+      "when": "When more than one configured public origin is available or the current browser origin is not accepted",
+      "then": "Then the owner can choose the generated link origin or sees a configured public origin selected with an explanation that the current origin is unavailable",
+      "sourceRef": "docs/CRs/MDT-177/requirements.trace.md#BR-1.9"
+    },
+    {
+      "id": "revocation_recomputed_on_next_access_check",
+      "title": "Revocation blocks private access on the next check",
+      "covers": [
+        "BR-1.11",
+        "BR-1.17"
+      ],
+      "given": "Given a named-token visitor has private project access from a named read-token record",
+      "when": "When the owner revokes that record and the visitor next exchanges refreshes or reloads after the read session is checked",
+      "then": "Then the revoked token no longer grants private project access",
+      "sourceRef": "docs/CRs/MDT-177/requirements.trace.md#BR-1.11"
+    },
+    {
+      "id": "expired_or_invalid_invite_does_not_change_session",
+      "title": "Expired or invalid invite cannot grant access or change existing grants",
+      "covers": [
+        "BR-1.12",
+        "BR-1.16"
+      ],
+      "given": "Given a named read-token record is expired or an invite code is invalid expired consumed or tied to a revoked token",
+      "when": "When an owner views the token actions or a browser attempts that invite exchange",
+      "then": "Then new invite generation is disabled or the exchange is rejected with a generic failure and any existing read-session grants are unchanged",
+      "sourceRef": "docs/CRs/MDT-177/requirements.trace.md#BR-1.12"
+    },
+    {
+      "id": "readonly_owner_controls_hidden",
+      "title": "Read-only visitors do not see write or owner controls",
+      "covers": [
+        "BR-1.14"
+      ],
+      "given": "Given a visitor is in read-only mode from a public share or named-token session",
+      "when": "When the visitor views boards lists documents project browser header controls and settings entry points",
+      "then": "Then owner-only controls for creating editing dragging deleting configuring favoriting or writing files are hidden or disabled",
+      "sourceRef": "docs/CRs/MDT-177/requirements.trace.md#BR-1.14"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-read-token-store-persistence",
+      "title": "Named read access is persisted by readTokenStore in CONFIG_DIR/auth/read-access-tokens.json as versioned JSON with hashed token secrets, project refs, optional expiry, revocation state, and raw token returned only once at creation.",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.11",
+        "BR-1.12",
+        "BR-1.15",
+        "BR-1.17",
+        "C1",
+        "C4",
+        "Edge-2",
+        "Edge-5"
+      ],
+      "artifactIds": [
+        "ART-server-security-read-token-store",
+        "ART-server-routes-read-tokens",
+        "ART-src-settings-read-access-tokens"
+      ],
+      "sourceRef": "architecture.md#read-token-store"
+    },
+    {
+      "id": "OBL-invite-lifecycle",
+      "title": "Invite codes are random one-time secrets stored only as hashes with expiresAt and consumedAt, are consumed atomically before session issuance, inherit token revocation and expiry checks, and fail with generic errors.",
+      "derivedFrom": [
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.16",
+        "C2",
+        "C3",
+        "C4",
+        "Edge-4",
+        "Edge-5"
+      ],
+      "artifactIds": [
+        "ART-server-security-read-token-store",
+        "ART-server-routes-read-tokens",
+        "ART-server-security-read-session",
+        "ART-src-app"
+      ],
+      "sourceRef": "architecture.md#invite-lifecycle"
+    },
+    {
+      "id": "OBL-read-token-route-shape",
+      "title": "Owner management uses GET and POST /api/read-tokens, POST /api/read-tokens/:tokenId/invites, and POST /api/read-tokens/:tokenId/revoke behind owner access, while public invite exchange uses POST /api/read-tokens/invites/:code/session before the owner auth gate with the public token exchange limiter.",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.15",
+        "C3",
+        "C9"
+      ],
+      "artifactIds": [
+        "ART-server-routes-read-tokens",
+        "ART-server-security-api-auth",
+        "ART-server-server",
+        "ART-src-settings-modal",
+        "ART-src-settings-read-access-tokens"
+      ],
+      "sourceRef": "architecture.md#route-shape"
+    },
+    {
+      "id": "OBL-read-session-union-earliest-expiry",
+      "title": "Read-session issuance goes through one helper that reads the current valid cookie, unions projectRefs and shareIds without duplicates, and sets the merged cookie expiry to the earliest expiry among active grants.",
+      "derivedFrom": [
+        "BR-1.5",
+        "C7",
+        "Edge-1"
+      ],
+      "artifactIds": [
+        "ART-server-security-read-session",
+        "ART-server-routes-share",
+        "ART-server-routes-read-tokens",
+        "ART-server-routes-auth"
+      ],
+      "sourceRef": "architecture.md#read-session-merge"
+    },
+    {
+      "id": "OBL-env-token-compatibility",
+      "title": "The existing API_READ_TOKEN_HASHES flow stays supported through /api/auth/read-token and is refactored to use the same read-session merge helper without requiring named-token records or changing env hash format.",
+      "derivedFrom": [
+        "C8",
+        "BR-1.17",
+        "C1",
+        "C7"
+      ],
+      "artifactIds": [
+        "ART-server-routes-auth",
+        "ART-server-security-read-session",
+        "ART-server-security-read-token-store"
+      ],
+      "sourceRef": "architecture.md#env-token-compatibility"
+    },
+    {
+      "id": "OBL-origin-selection-contract",
+      "title": "Origin generation uses the current browser origin only when originPolicy accepts it, otherwise uses normalized configured public origins from ALLOWED_DOMAINS excluding local defaults, with no generated URL when no allowed public origin exists.",
+      "derivedFrom": [
+        "BR-1.8",
+        "BR-1.9",
+        "BR-1.10",
+        "C6",
+        "Edge-3",
+        "Edge-5"
+      ],
+      "artifactIds": [
+        "ART-server-security-origin-policy",
+        "ART-server-routes-read-tokens",
+        "ART-server-security-project-sharing",
+        "ART-server-server",
+        "ART-src-settings-modal",
+        "ART-src-settings-read-access-tokens"
+      ],
+      "sourceRef": "architecture.md#origin-selection"
+    },
+    {
+      "id": "OBL-readonly-owner-unlock-overlay",
+      "title": "The app owns read-only owner-unlock overlay open and error state over the current route, AuthSessionProvider owns session exchange, and the owner-upgrade path posts only to /api/auth/session so bad owner tokens never clear the active read session or fall through to read-token exchange.",
+      "derivedFrom": [
+        "BR-1.6",
+        "BR-1.7",
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-src-app",
+        "ART-src-auth-session-provider",
+        "ART-src-auth-status-action",
+        "ART-src-auth-unlock-panel",
+        "ART-tests-e2e-selectors"
+      ],
+      "sourceRef": "architecture.md#unlock-state"
+    },
+    {
+      "id": "OBL-project-selector-readonly-scope",
+      "title": "ProjectSelector reflects backend-filtered visibility for token, public, and share grants, permits switching among visible read-only projects, suppresses favorite writes for non-owner modes, and never renders unavailable private or unlisted projects as disabled placeholders.",
+      "derivedFrom": [
+        "BR-1.4",
+        "BR-1.5",
+        "BR-1.14",
+        "C5",
+        "C11",
+        "Edge-2"
+      ],
+      "artifactIds": [
+        "ART-server-security-api-auth",
+        "ART-server-security-project-sharing",
+        "ART-src-project-selector-index",
+        "ART-src-project-browser-panel",
+        "ART-src-project-selector-card",
+        "ART-src-project-selector-data"
+      ],
+      "sourceRef": "architecture.md#project-selector"
+    },
+    {
+      "id": "OBL-settings-read-access-ui",
+      "title": "Settings remains owner-only and composes a ReadAccessTokens section for name, multi-project scope, optional expiry, status listing, invite generation, revocation, one-time raw-token display, and configured-origin selection for share and invite links.",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.8",
+        "BR-1.9",
+        "BR-1.10",
+        "BR-1.11",
+        "BR-1.12",
+        "BR-1.15",
+        "C4",
+        "C9"
+      ],
+      "artifactIds": [
+        "ART-src-settings-modal",
+        "ART-src-settings-read-access-tokens",
+        "ART-server-routes-read-tokens",
+        "ART-tests-e2e-selectors"
+      ],
+      "sourceRef": "architecture.md#settings-sharing-ui"
+    },
+    {
+      "id": "OBL-backend-readonly-enforcement",
+      "title": "Backend auth and project-sharing remain the privacy and mutation enforcement boundary for read-only visitors, denying protected writes and sanitizing path/config metadata regardless of hidden frontend controls.",
+      "derivedFrom": [
+        "BR-1.14",
+        "C5",
+        "C9",
+        "C11"
+      ],
+      "artifactIds": [
+        "ART-server-security-api-auth",
+        "ART-server-security-project-sharing",
+        "ART-server-routes-read-tokens",
+        "ART-server-routes-share"
+      ],
+      "sourceRef": "architecture.md#authorization-boundary"
+    },
+    {
+      "id": "OBL-e2e-journey-ownership",
+      "title": "The MDT-177 Playwright journey spec is the architecture-owned E2E artifact and must cover named token creation, invite URL cleanup, token project switching, share-link merge, unlock cancel and bad-token recovery, origin selection, revoke and invalid invite paths, and read-only control suppression.",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.5",
+        "BR-1.6",
+        "BR-1.7",
+        "BR-1.8",
+        "BR-1.9",
+        "BR-1.10",
+        "BR-1.11",
+        "BR-1.12",
+        "BR-1.14",
+        "BR-1.15",
+        "BR-1.16",
+        "BR-1.17",
+        "C10"
+      ],
+      "artifactIds": [
+        "ART-tests-e2e-read-access-journey",
+        "ART-tests-e2e-selectors"
+      ],
+      "sourceRef": "architecture.md#verification-ownership"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-server-security-read-token-store",
+      "path": "server/security/readTokenStore.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#structure"
+    },
+    {
+      "id": "ART-server-routes-read-tokens",
+      "path": "server/routes/readTokens.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#route-shape"
+    },
+    {
+      "id": "ART-server-security-read-session",
+      "path": "server/security/readSession.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#read-session-merge"
+    },
+    {
+      "id": "ART-server-routes-auth",
+      "path": "server/routes/auth.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#env-token-compatibility"
+    },
+    {
+      "id": "ART-server-routes-share",
+      "path": "server/routes/share.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#read-session-merge"
+    },
+    {
+      "id": "ART-server-security-api-auth",
+      "path": "server/security/apiAuth.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#authorization-boundary"
+    },
+    {
+      "id": "ART-server-security-project-sharing",
+      "path": "server/security/projectSharing.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#project-visibility"
+    },
+    {
+      "id": "ART-server-security-origin-policy",
+      "path": "server/security/originPolicy.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#origin-selection"
+    },
+    {
+      "id": "ART-server-server",
+      "path": "server/server.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#route-shape"
+    },
+    {
+      "id": "ART-src-app",
+      "path": "src/App.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#invite-and-unlock-routing"
+    },
+    {
+      "id": "ART-src-auth-session-provider",
+      "path": "src/auth/AuthSessionProvider.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#unlock-state"
+    },
+    {
+      "id": "ART-src-settings-modal",
+      "path": "src/components/SettingsModal.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#settings-sharing-ui"
+    },
+    {
+      "id": "ART-src-settings-read-access-tokens",
+      "path": "src/components/SettingsModal/ReadAccessTokens.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#settings-sharing-ui"
+    },
+    {
+      "id": "ART-src-auth-unlock-panel",
+      "path": "src/components/AuthUnlock/AuthUnlockPanel.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#unlock-state"
+    },
+    {
+      "id": "ART-src-auth-status-action",
+      "path": "src/components/AuthUnlock/AuthStatusAction.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#unlock-state"
+    },
+    {
+      "id": "ART-src-project-selector-index",
+      "path": "src/components/ProjectSelector/index.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#project-selector"
+    },
+    {
+      "id": "ART-src-project-browser-panel",
+      "path": "src/components/ProjectSelector/ProjectBrowserPanel.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#project-selector"
+    },
+    {
+      "id": "ART-src-project-selector-card",
+      "path": "src/components/ProjectSelector/ProjectSelectorCard.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#project-selector"
+    },
+    {
+      "id": "ART-src-project-selector-data",
+      "path": "src/components/ProjectSelector/useSelectorData.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#project-selector"
+    },
+    {
+      "id": "ART-tests-e2e-read-access-journey",
+      "path": "tests/e2e/sharing/read-access-journey.spec.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md#verification-ownership"
+    },
+    {
+      "id": "ART-tests-e2e-selectors",
+      "path": "tests/e2e/utils/selectors.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md#verification-ownership"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-e2e-selector-contract",
+      "kind": "e2e",
+      "title": "Read access journey selector contract",
+      "covers": [
+        "OBL-e2e-journey-ownership",
+        "OBL-readonly-owner-unlock-overlay",
+        "OBL-settings-read-access-ui"
+      ],
+      "file": "tests/e2e/utils/selectors.ts",
+      "sourceRef": "Architecture test scaffold ART-tests-e2e-selectors"
+    },
+    {
+      "id": "TEST-read-token-store-persistence",
+      "kind": "unit",
+      "title": "Read token store persistence and invite lifecycle",
+      "covers": [
+        "BR-1.1",
+        "BR-1.11",
+        "BR-1.12",
+        "BR-1.15",
+        "BR-1.16",
+        "BR-1.17",
+        "C1",
+        "C2",
+        "C4",
+        "Edge-2",
+        "Edge-4",
+        "Edge-5",
+        "OBL-read-token-store-persistence",
+        "OBL-invite-lifecycle"
+      ],
+      "file": "server/tests/security/readTokenStore.test.ts",
+      "sourceRef": "Read Token Store and Invite Lifecycle architecture sections"
+    },
+    {
+      "id": "TEST-read-session-merge",
+      "kind": "unit",
+      "title": "Read session grant merge and earliest expiry",
+      "covers": [
+        "BR-1.5",
+        "C7",
+        "Edge-1",
+        "OBL-read-session-union-earliest-expiry"
+      ],
+      "file": "server/tests/security/readSession.test.ts",
+      "sourceRef": "Read Session Merge architecture section"
+    },
+    {
+      "id": "TEST-read-token-management-api",
+      "kind": "integration",
+      "title": "Read token owner management and invite exchange API",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.11",
+        "BR-1.12",
+        "BR-1.15",
+        "BR-1.16",
+        "C2",
+        "C3",
+        "C4",
+        "C9",
+        "Edge-4",
+        "OBL-read-token-route-shape",
+        "OBL-invite-lifecycle",
+        "OBL-settings-read-access-ui"
+      ],
+      "file": "server/tests/api/read-token-management.test.ts",
+      "sourceRef": "Route Shape and Settings Sharing UI architecture sections"
+    },
+    {
+      "id": "TEST-share-session-merge-api",
+      "kind": "integration",
+      "title": "Share route preserves existing read-token projects",
+      "covers": [
+        "BR-1.5",
+        "C7",
+        "Edge-1",
+        "OBL-read-session-union-earliest-expiry"
+      ],
+      "file": "server/tests/api/public-sharing.test.ts",
+      "sourceRef": "Read Session Merge architecture section"
+    },
+    {
+      "id": "TEST-origin-public-link-policy",
+      "kind": "unit",
+      "title": "Public link origin policy selection",
+      "covers": [
+        "BR-1.8",
+        "BR-1.9",
+        "BR-1.10",
+        "C6",
+        "Edge-3",
+        "Edge-5",
+        "OBL-origin-selection-contract"
+      ],
+      "file": "server/tests/security/originPolicy.test.ts",
+      "sourceRef": "Origin Selection architecture section"
+    },
+    {
+      "id": "TEST-readonly-mutation-denial-api",
+      "kind": "integration",
+      "title": "Read-only mutation denial across project ticket and document APIs",
+      "covers": [
+        "C5",
+        "OBL-backend-readonly-enforcement"
+      ],
+      "file": "server/tests/api/public-sharing.test.ts",
+      "sourceRef": "Backend authorization mutation endpoint matrix"
+    },
+    {
+      "id": "TEST-env-read-token-compatibility",
+      "kind": "integration",
+      "title": "Env read token compatibility and read-only denial",
+      "covers": [
+        "C5",
+        "C8",
+        "C11",
+        "OBL-env-token-compatibility",
+        "OBL-backend-readonly-enforcement"
+      ],
+      "file": "server/tests/api/public-sharing.test.ts",
+      "sourceRef": "Env Token Compatibility architecture section"
+    },
+    {
+      "id": "TEST-read-access-journey",
+      "kind": "e2e",
+      "title": "Read access sharing journey",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.5",
+        "BR-1.6",
+        "BR-1.7",
+        "BR-1.8",
+        "BR-1.9",
+        "BR-1.10",
+        "BR-1.11",
+        "BR-1.12",
+        "BR-1.14",
+        "BR-1.15",
+        "BR-1.16",
+        "BR-1.17",
+        "C10",
+        "OBL-e2e-journey-ownership",
+        "OBL-project-selector-readonly-scope"
+      ],
+      "file": "tests/e2e/sharing/read-access-journey.spec.ts",
+      "sourceRef": "BDD scenarios and architecture OBL-e2e-journey-ownership"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-5",
+      "title": "Build Settings read-access token management and origin selector",
+      "ownsArtifactIds": [
+        "ART-src-settings-modal",
+        "ART-src-settings-read-access-tokens",
+        "ART-tests-e2e-selectors",
+        "ART-server-routes-read-tokens"
+      ],
+      "makesGreenIds": [
+        "TEST-read-access-journey",
+        "TEST-e2e-selector-contract",
+        "owner_creates_named_multi_project_token",
+        "owner_generates_one_time_invite_link",
+        "allowed_current_origin_defaults_links",
+        "configured_origin_selection_and_fallback"
+      ],
+      "skills": [
+        "mdt-frontend",
+        "playwright-cli"
+      ],
+      "sourceRef": "tasks.md#task-5"
+    },
+    {
+      "id": "TASK-6",
+      "title": "Handle invite route and recoverable read-only owner unlock overlay",
+      "ownsArtifactIds": [
+        "ART-src-app",
+        "ART-src-auth-session-provider",
+        "ART-src-auth-status-action",
+        "ART-src-auth-unlock-panel",
+        "ART-tests-e2e-selectors",
+        "ART-server-routes-read-tokens"
+      ],
+      "makesGreenIds": [
+        "TEST-read-access-journey",
+        "TEST-e2e-selector-contract",
+        "invite_exchange_cleans_url_before_content",
+        "readonly_unlock_cancel_returns_to_same_view",
+        "readonly_bad_owner_token_preserves_session",
+        "expired_or_invalid_invite_does_not_change_session"
+      ],
+      "skills": [
+        "mdt-frontend",
+        "playwright-cli"
+      ],
+      "sourceRef": "tasks.md#task-6"
+    },
+    {
+      "id": "TASK-7",
+      "title": "Integrate ProjectSelector read-only affordances and scoped visibility",
+      "ownsArtifactIds": [
+        "ART-src-project-selector-index",
+        "ART-src-project-browser-panel",
+        "ART-src-project-selector-card",
+        "ART-src-project-selector-data",
+        "ART-server-security-project-sharing",
+        "ART-server-security-api-auth",
+        "ART-tests-e2e-selectors"
+      ],
+      "makesGreenIds": [
+        "TEST-read-access-journey",
+        "TEST-readonly-mutation-denial-api",
+        "token_scoped_project_switching",
+        "share_link_merge_preserves_token_access",
+        "readonly_owner_controls_hidden",
+        "revocation_recomputed_on_next_access_check"
+      ],
+      "skills": [
+        "mdt-frontend",
+        "playwright-cli"
+      ],
+      "sourceRef": "tasks.md#task-7"
+    },
+    {
+      "id": "TASK-8",
+      "title": "Complete E2E journey and final verification",
+      "ownsArtifactIds": [
+        "ART-tests-e2e-read-access-journey",
+        "ART-tests-e2e-selectors"
+      ],
+      "makesGreenIds": [
+        "TEST-read-access-journey",
+        "TEST-e2e-selector-contract",
+        "owner_creates_named_multi_project_token",
+        "owner_generates_one_time_invite_link",
+        "invite_exchange_cleans_url_before_content",
+        "token_scoped_project_switching",
+        "share_link_merge_preserves_token_access",
+        "readonly_unlock_cancel_returns_to_same_view",
+        "readonly_bad_owner_token_preserves_session",
+        "allowed_current_origin_defaults_links",
+        "configured_origin_selection_and_fallback",
+        "expired_or_invalid_invite_does_not_change_session",
+        "readonly_owner_controls_hidden",
+        "revocation_recomputed_on_next_access_check"
+      ],
+      "skills": [
+        "mdt-frontend",
+        "playwright-cli"
+      ],
+      "sourceRef": "tasks.md#task-8"
+    },
+    {
+      "id": "TASK-0",
+      "title": "Runtime probe and missing infrastructure inventory",
+      "ownsArtifactIds": [
+        "ART-server-security-read-token-store",
+        "ART-server-routes-read-tokens",
+        "ART-src-settings-read-access-tokens"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-0"
+    },
+    {
+      "id": "TASK-1",
+      "title": "Implement readTokenStore persistence and invite lifecycle",
+      "ownsArtifactIds": [
+        "ART-server-security-read-token-store"
+      ],
+      "makesGreenIds": [
+        "TEST-read-token-store-persistence"
+      ],
+      "sourceRef": "tasks.md#task-1"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Merge read sessions and preserve env-token compatibility",
+      "ownsArtifactIds": [
+        "ART-server-security-read-session",
+        "ART-server-routes-auth"
+      ],
+      "makesGreenIds": [
+        "TEST-read-session-merge",
+        "TEST-env-read-token-compatibility"
+      ],
+      "sourceRef": "tasks.md#task-2"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Mount read-token owner and invite API routes",
+      "ownsArtifactIds": [
+        "ART-server-routes-read-tokens",
+        "ART-server-server",
+        "ART-server-security-api-auth",
+        "ART-server-security-read-token-store",
+        "ART-server-security-read-session"
+      ],
+      "makesGreenIds": [
+        "TEST-read-token-management-api"
+      ],
+      "sourceRef": "tasks.md#task-3"
+    },
+    {
+      "id": "TASK-4",
+      "title": "Add share-session merge and public-origin policy helpers",
+      "ownsArtifactIds": [
+        "ART-server-routes-share",
+        "ART-server-security-origin-policy",
+        "ART-server-security-project-sharing",
+        "ART-server-server"
+      ],
+      "makesGreenIds": [
+        "TEST-share-session-merge-api",
+        "TEST-origin-public-link-policy"
+      ],
+      "sourceRef": "tasks.md#task-4"
+    }
+  ]
+}

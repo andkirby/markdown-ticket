@@ -1,6 +1,5 @@
 import type { NextFunction, Request, Response } from 'express'
 import type { OriginPolicy } from '../security/originPolicy.js'
-import process from 'node:process'
 import { Router } from 'express'
 import { createDefaultOriginPolicy } from '../security/originPolicy.js'
 
@@ -150,13 +149,7 @@ function devModeRateLimit(req: Request, res: Response, next: NextFunction): void
 
 /**
  * Router for development tools and logging endpoints.
- *
- * @returns Express router.
  */
-function isDevtoolsEnabled(): boolean {
-  return process.env.NODE_ENV !== 'production' || process.env.DEVTOOLS_ENABLED === 'true'
-}
-
 function writeStreamHeaders(req: Request, res: Response, originPolicy: OriginPolicy): void {
   const accessControlAllowOrigin = originPolicy.getAccessControlAllowOrigin(req.headers.origin)
   const headers: Record<string, string> = {
@@ -173,10 +166,10 @@ function writeStreamHeaders(req: Request, res: Response, originPolicy: OriginPol
   res.writeHead(200, headers)
 }
 
-export function createDevToolsRouter(originPolicy: OriginPolicy = createDefaultOriginPolicy()): Router {
+export function createDevToolsRouter(originPolicy: OriginPolicy = createDefaultOriginPolicy(), devtoolsEnabled = true): Router {
   const router = Router()
 
-  if (!isDevtoolsEnabled()) {
+  if (!devtoolsEnabled) {
     return router
   }
 

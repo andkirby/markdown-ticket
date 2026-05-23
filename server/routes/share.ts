@@ -1,11 +1,11 @@
 import type { Request, Response } from 'express'
 import type { ProjectServiceExtension } from '../controllers/ProjectController.js'
 import { Router } from 'express'
-import { parseApiAuthConfig } from '../security/apiAuth.js'
-import { publicTokenExchangeRateLimit } from '../security/publicRateLimit.js'
-import { appendReadSessionCookie, getReadSessionSecret } from '../security/readSession.js'
-import { findProjectByShareId, sanitizeProjectForAccess } from '../security/projectSharing.js'
+import { getRuntimeConfig } from '../config/runtimeConfig.js'
 import { shouldUseSecureSessionCookie } from '../security/apiSession.js'
+import { findProjectByShareId, sanitizeProjectForAccess } from '../security/projectSharing.js'
+import { publicTokenExchangeRateLimit } from '../security/publicRateLimit.js'
+import { appendMergedReadSessionCookie } from '../security/readSession.js'
 
 export function createShareRouter(projectService: ProjectServiceExtension): Router {
   const router = Router()
@@ -24,15 +24,19 @@ export function createShareRouter(projectService: ProjectServiceExtension): Rout
       return
     }
 
-    const config = parseApiAuthConfig()
-    const secret = getReadSessionSecret(config.token)
+    const runtimeConfig = getRuntimeConfig(req)
+    const secret = runtimeConfig.readSessions.secret
     if (!secret) {
       res.status(500).json({ error: 'Sharing is not configured' })
       return
     }
 
-    appendReadSessionCookie(res, secret, { shareIds: [shareId] }, {
-      secure: shouldUseSecureSessionCookie(req),
+    appendMergedReadSessionCookie({
+      req,
+      res,
+      secret,
+      shareIds: [shareId],
+      secure: shouldUseSecureSessionCookie(req, runtimeConfig.nodeEnv),
     })
 
     res.json({

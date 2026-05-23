@@ -176,7 +176,7 @@ function ProjectSelector({ className = '' }: { className?: string }) {
           selectorState={selectorState}
           onProjectSelect={handleProjectSelect}
           onLauncherClick={handleLauncherClick}
-          onFavoriteToggle={handleFavoriteToggle}
+          onFavoriteToggle={canManageProjects ? handleFavoriteToggle : undefined}
         />
       </TooltipProvider>
 
@@ -187,7 +187,7 @@ function ProjectSelector({ className = '' }: { className?: string }) {
         preferences={preferences}
         selectorState={selectorState}
         onProjectSelect={handleProjectSelect}
-        onFavoriteToggle={handleFavoriteToggle}
+        onFavoriteToggle={canManageProjects ? handleFavoriteToggle : undefined}
         isOpen={isPanelOpen}
         onClose={handlePanelClose}
       />

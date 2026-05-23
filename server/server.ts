@@ -13,25 +13,27 @@ import { ProjectManager } from '@mdt/shared/tools/ProjectManager.js'
 import { DEFAULTS } from '@mdt/shared/utils/constants.js'
 import { logger } from '@mdt/shared/utils/server-logger.js'
 import cors from 'cors'
-// Load environment variables from root .env.local (for CORS_ALLOWED_ORIGINS, etc.)
+// Load environment variables from root .env.local.
 import { config } from 'dotenv'
 import express from 'express'
+import { buildRuntimeConfig } from './config/runtimeConfig.js'
 // Controllers
 import { DocumentController } from './controllers/DocumentController.js'
 import { ProjectController } from './controllers/ProjectController.js'
 // Middleware
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js'
+import { createAuthRouter } from './routes/auth.js'
 import { createDevToolsRouter, setupLogInterception } from './routes/devtools.js'
 import { createDocsRouter } from './routes/docs.js'
 import { createDocumentRouter } from './routes/documents.js'
-import { createAuthRouter } from './routes/auth.js'
 // Routes
 import { createProjectRouter } from './routes/projects.js'
+import { createPublicReadTokensRouter, createReadTokensRouter } from './routes/readTokens.js'
 import { createShareRouter } from './routes/share.js'
 import { createSSERouter } from './routes/sse.js'
 import { createSystemRouter } from './routes/system.js'
 import { createApiAuthMiddleware } from './security/apiAuth.js'
-import { createCorsOptions, createDefaultOriginPolicy, securityHeaders } from './security/originPolicy.js'
+import { createCorsOptions, createOriginPolicy, securityHeaders } from './security/originPolicy.js'
 import { DocumentService } from './services/DocumentService.js'
 import FileWatcherService from './services/fileWatcher/index.js'
 import { TicketService } from './services/TicketService.js'
@@ -127,16 +129,19 @@ class ProjectServiceAdapter {
 // =============================================================================
 
 const app: Express = express()
+const runtimeConfig = buildRuntimeConfig()
 const PORT: number = Number(process.env.PORT) || 3001
+app.locals.runtimeConfig = runtimeConfig
+app.locals.configDir = runtimeConfig.configDir
 
 // =============================================================================
 // Middleware
 // =============================================================================
 
-const originPolicy = createDefaultOriginPolicy()
+const originPolicy = createOriginPolicy(runtimeConfig.origins.allowedOrigins)
 
-if (process.env.ALLOWED_DOMAINS) {
-  logger.info(`🌐 CORS allowed origins: ${process.env.ALLOWED_DOMAINS}`)
+if (runtimeConfig.origins.publicOrigin) {
+  logger.info(`🌐 Public origin: ${runtimeConfig.origins.publicOrigin}`)
 }
 
 app.use(securityHeaders)
@@ -298,12 +303,19 @@ async function initializeMultiProjectWatchers(): Promise<void> {
 // Browser auth session routes are intentionally mounted before the protected API auth gate.
 app.use('/api/auth', createAuthRouter())
 app.use('/api/share', createShareRouter(projectServiceAdapter as ProjectServiceExtension))
+app.use('/api/read-tokens', createPublicReadTokensRouter())
 
 // Backend API auth gate: after generic middleware and auth session routes, before protected /api routers.
-app.use('/api', createApiAuthMiddleware())
+app.use('/api', createApiAuthMiddleware(runtimeConfig.auth, {
+  allowLocalReadSessionFallback: runtimeConfig.readSessions.allowLocalFallback,
+  configDir: runtimeConfig.configDir,
+  originPolicy,
+  readSessionSecret: runtimeConfig.readSessions.secret,
+}))
 
 // Multi-Project API routes
 app.use('/api/projects', createProjectRouter(projectController))
+app.use('/api/read-tokens', createReadTokensRouter())
 
 // Document routes
 app.use('/api/documents', createDocumentRouter(documentController, projectController))
@@ -315,7 +327,7 @@ app.use('/api/events', createSSERouter(fileWatcher, originPolicy, projectService
 app.use('/api', createSystemRouter(fileWatcher, projectController, projectDiscovery, documentService.fileInvoker as FileInvokerAdapter))
 
 // Dev tools routes (logging)
-app.use('/api/devtools', createDevToolsRouter(originPolicy))
+app.use('/api/devtools', createDevToolsRouter(originPolicy, runtimeConfig.system.devtoolsEnabled))
 
 // API Documentation routes (Redoc UI)
 app.use('/api-docs', createDocsRouter())

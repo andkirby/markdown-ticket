@@ -169,7 +169,7 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
                   </div>
 
                   {/* Mobile: Card View */}
-                  <div className="md:hidden p-4 space-y-2" data-testid="ticket-list">
+                  <div className="md:hidden p-4 space-y-2" data-testid="ticket-list-mobile">
                     {sortedTickets.map(ticket => (
                       <div
                         key={ticket.code}

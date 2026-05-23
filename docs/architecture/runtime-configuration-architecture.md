@@ -28,14 +28,24 @@ Required shape:
 ```ts
 type RuntimeConfig = {
   configDir: string;
+  nodeEnv?: string;
   auth: ApiAuthConfig;
   origins: {
-    allowedDomains: string[];
     allowedOrigins: string[];
-    publicLinkOrigins: string[];
+    publicOrigin?: string;
   };
   readSessions: {
-    secret: string | null;
+    secret?: string;
+    allowLocalFallback: boolean;
+  };
+  system: {
+    devtoolsEnabled: boolean;
+    isProduction: boolean;
+    isTest: boolean;
+    maintenanceEndpointsEnabled: boolean;
+  };
+  readTokens: {
+    staticScopes: ReadTokenScope[];
   };
 };
 ```
@@ -44,52 +54,35 @@ Rules:
 
 - `server/server.ts` loads dotenv for local development, builds `RuntimeConfig`, and stores it on `app.locals.runtimeConfig`.
 - Route factories and middleware receive config through explicit parameters or `app.locals`; they do not call `process.env`.
+- Missing `app.locals.runtimeConfig` is a server setup error; request-time config fallback creation is not allowed.
 - Policy helpers accept plain values and stay pure.
 - Tests build config from explicit env maps so each test controls its own runtime assumptions.
 
 ## Origin Variables
 
-Use separate variables for separate jobs.
+Use one deployment origin variable.
 
 | Variable | Purpose | Notes |
 |----------|---------|-------|
-| `PUBLIC_LINK_ORIGINS` | Origins shown in generated share/invite links | Preferred for sharing UI. Values are full origins, comma-separated. |
-| `ALLOWED_ORIGINS` | Browser origins allowed to call the backend | Preferred for CORS/origin checks. Values are full origins, comma-separated. |
-| `ALLOWED_DOMAINS` | Backward-compatible host allowlist | Existing deployments may already set this. Treat entries as hostnames unless they include a scheme. |
-
-`ALLOWED_DOMAINS` may remain supported, but it is not the canonical owner for all origin behavior.
+| `PUBLIC_ORIGIN` | Canonical browser/API and generated link origin | Full `http(s)` origin. Added to backend allowed origins and used for share/invite link bases. |
 
 Public link origin selection:
 
-1. Use `PUBLIC_LINK_ORIGINS` when configured.
-2. Otherwise derive origins from `ALLOWED_DOMAINS`.
-3. Always keep the current request/browser origin as a fallback.
-4. Never silently collapse configured hostnames to `localhost`.
-
-If several public origins are configured, the sharing UI should let the owner choose one and should default to the first configured origin.
+1. Use `PUBLIC_ORIGIN` when configured.
+2. Otherwise use the current browser origin from `Origin` or `Referer` only when it is allowed by the origin policy.
+3. Report when no safe origin can be selected.
 
 ## Sharing Interaction
 
 This document does not replace the access model in [Authentication and Sharing Architecture](./auth-and-sharing-architecture.md). It defines where runtime settings come from.
 
-Sharing services consume `RuntimeConfig.origins.publicLinkOrigins` to generate links. They do not parse env variables.
+Sharing services consume `RuntimeConfig.origins.publicOrigin` to generate links. They do not parse env variables.
 
-Read-token and invite services consume config through their route/service boundary. They do not own deployment host selection.
+Read-token and invite services consume config through their route/service boundary. The read-token API returns server-owned `PublicLinkOriginOptions` (`options`, optional `selectedOrigin`, optional `notice`) and the UI uses that contract directly.
 
-## Migration Rule
+## Implementation Rules
 
-When touching backend modules:
-
-- keep direct `process.env` access inside `server/config/` or startup-only code;
-- migrate nearby env reads into `RuntimeConfig`;
-- add a focused test for each variable moved into the config boundary;
-- preserve existing env variable names unless an architecture ticket explicitly deprecates them.
-
-## Done State
-
-The runtime config boundary is complete when:
-
-- `rg "process\\.env" server` shows env reads only in startup/config/test setup code;
-- share/invite links honor configured public origins;
-- backend and frontend behavior agree for `ALLOWED_DOMAINS`;
-- route tests can configure origins without mutating global process env after app creation.
+- Direct `process.env` access belongs in `server/config/`, `server/server.ts`, development utilities, and tests.
+- Runtime-dependent routes read `RuntimeConfig` from `app.locals.runtimeConfig`.
+- Public link generation uses `RuntimeConfig.origins.publicOrigin` or the server-approved current request origin.
+- Tests configure runtime assumptions through explicit env maps or app-local runtime config before request handling.
