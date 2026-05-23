@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express'
+import { Buffer } from 'node:buffer'
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 
 export const OWNER_SESSION_COOKIE_NAME = 'mdt_owner_session'
@@ -76,7 +77,7 @@ export function invalidateOwnerSessions(): void {
   sessionGeneration += 1
 }
 
-export function shouldUseSecureSessionCookie(req: Request, nodeEnv = process.env.NODE_ENV): boolean {
+export function shouldUseSecureSessionCookie(req: Request, nodeEnv: string | undefined): boolean {
   return nodeEnv === 'production' || req.secure || req.headers['x-forwarded-proto'] === 'https'
 }
 

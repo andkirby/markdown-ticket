@@ -1,12 +1,22 @@
 import type { Ticket as DomainTicket, SearchMode } from '@mdt/domain-contracts'
-import { ProjectSharingMode, type Project, type ProjectConfig, type ProjectSharingModeValue } from '@mdt/shared/models/Project.js'
+import type { Project, ProjectConfig, ProjectSharingModeValue } from '@mdt/shared/models/Project.js'
 import type { TicketMetadata } from '@mdt/shared/models/Ticket.js'
 import type { ProjectCreateInput, ProjectUpdateInput } from '@mdt/shared/tools/ProjectManager.js'
 import type { Request, Response } from 'express'
-import { getConfigDir } from '@mdt/shared/utils/constants.js'
-import { parseToml } from '@mdt/shared/utils/toml.js'
+import type { CRData, TicketService } from '../services/TicketService.js'
+import type { TreeNode } from '../types/tree.js'
 import * as fs from 'node:fs/promises'
 import * as os from 'node:os'
+import process from 'node:process'
+import { SearchRequestSchema } from '@mdt/domain-contracts'
+import { ProjectSharingMode } from '@mdt/shared/models/Project.js'
+import { WorktreeService } from '@mdt/shared/services/WorktreeService.js'
+import { ProjectManager } from '@mdt/shared/tools/ProjectManager.js'
+import { ProjectValidator } from '@mdt/shared/tools/ProjectValidator.js'
+import { DEFAULTS } from '@mdt/shared/utils/constants.js'
+
+import { parseToml } from '@mdt/shared/utils/toml.js'
+import { getRuntimeConfig } from '../config/runtimeConfig.js'
 import { getRequestAccess } from '../security/apiAuth.js'
 import { authorizeFilesystemPath, FilesystemAccessDeniedError, getProjectRoots } from '../security/filesystemAccess.js'
 import {
@@ -18,14 +28,6 @@ import {
   sanitizeProjectsForAccess,
   updateProjectSharing,
 } from '../security/projectSharing.js'
-import type { CRData, TicketService } from '../services/TicketService.js'
-import type { TreeNode } from '../types/tree.js'
-
-import { SearchRequestSchema } from '@mdt/domain-contracts'
-import { WorktreeService } from '@mdt/shared/services/WorktreeService.js'
-import { ProjectManager } from '@mdt/shared/tools/ProjectManager.js'
-import { ProjectValidator } from '@mdt/shared/tools/ProjectValidator.js'
-import { DEFAULTS } from '@mdt/shared/utils/constants.js'
 
 export type Ticket = Pick<DomainTicket, 'code' | 'filePath'>
 
@@ -486,7 +488,7 @@ export class ProjectController {
   async getSystemDirectories(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { path: requestPath } = req.query
-      const configPath = `${getConfigDir()}/config.toml`
+      const configPath = `${getRuntimeConfig(req).configDir}/config.toml`
       let discoveryPaths: string[] = []
 
       try {
@@ -503,11 +505,12 @@ export class ProjectController {
         ...await getProjectRoots(this.projectService),
       ]
 
-      if (process.env.NODE_ENV === 'test') {
+      const runtimeConfig = getRuntimeConfig(req)
+      if (runtimeConfig.system.isTest) {
         allowedRoots.push(os.tmpdir())
       }
 
-      if (process.env.NODE_ENV !== 'production') {
+      if (!runtimeConfig.system.isProduction) {
         allowedRoots.push(os.homedir())
       }
 

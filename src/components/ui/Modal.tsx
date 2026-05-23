@@ -25,7 +25,7 @@ const modalVariants = cva(
       },
     },
     defaultVariants: {
-      size: 'md',
+      size: 'xl',
       variant: 'default',
     },
   },

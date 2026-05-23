@@ -2,6 +2,7 @@
 
 import type { Express } from 'express'
 import request from 'supertest'
+import { createReadSessionCookie, getReadSessionSecret } from '../../security/readSession'
 import { cleanupTestEnvironment, setupTestEnvironment } from './setup'
 
 const adminToken = 'mdt-157-admin-token'
@@ -192,7 +193,30 @@ describe('backend local/test no-auth compatibility - MDT-157', () => {
     const res = await request(app).get('/api/projects')
     expect(res.status).toBe(200)
   })
+
+  it('keeps read-session visitors read-only even when owner auth is disabled locally', async () => {
+    const secret = getReadSessionSecret(undefined, process.env)
+    if (!secret) {
+      throw new Error('Expected local read-session secret in test mode')
+    }
+    const readOnlyCookie = cookiePair(createReadSessionCookie(secret, { projectRefs: ['MDT'] }, { secure: false }))
+
+    const config = await request(app)
+      .get('/api/config')
+      .set('Cookie', readOnlyCookie)
+    expect(config.status).toBe(403)
+
+    const mutation = await request(app)
+      .post('/api/projects/MDT/crs')
+      .set('Cookie', readOnlyCookie)
+      .send({ title: 'Blocked write', type: 'Feature Enhancement' })
+    expect(mutation.status).toBe(403)
+  })
 })
+
+function cookiePair(setCookieHeader: string): string {
+  return setCookieHeader.split(';')[0] ?? ''
+}
 
 function median(values: number[]): number {
   const sorted = [...values].sort((left, right) => left - right)

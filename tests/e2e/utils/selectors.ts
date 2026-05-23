@@ -190,6 +190,60 @@ export const authSelectors = {
 } as const
 
 /**
+ * Read-access sharing selectors (MDT-177)
+ */
+export const sharingSelectors = {
+  /** Settings button in the hamburger menu */
+  settingsButton: '[data-testid="settings-button"]',
+  /** Settings modal container */
+  settingsModal: '[data-testid="settings-modal"]',
+  /** Sharing tab in Settings */
+  settingsSharingTab: '[data-testid="settings-tab-sharing"]',
+  /** Named read-access management section */
+  namedAccessSection: '[data-testid="sharing-named-access-section"]',
+  /** Human-readable named access label input */
+  namedAccessNameInput: '[data-testid="sharing-named-access-name-input"]',
+  /** Optional expiry input for named read access */
+  namedAccessExpiryInput: '[data-testid="sharing-named-access-expiry-input"]',
+  /** Project scope checkbox for named read access */
+  namedAccessProjectCheckbox: (code: string) => `[data-testid="sharing-named-access-project-${code}"]`,
+  /** Create named read access button */
+  createNamedAccessButton: '[data-testid="sharing-create-named-access"]',
+  /** One-time creation result panel */
+  creationResult: '[data-testid="sharing-creation-result"]',
+  /** Dismiss one-time creation result button */
+  dismissCreationResultButton: '[data-testid="sharing-dismiss-creation-result"]',
+  /** Named read-access list */
+  namedAccessList: '[data-testid="sharing-named-access-list"]',
+  /** Named read-access row by human-readable name */
+  namedAccessRow: (name: string) => `[data-testid="sharing-named-access-row"][data-access-name="${name}"]`,
+  /** Persistent raw token display, which should never remain visible */
+  rawPersistentToken: '[data-testid="sharing-raw-persistent-token"]',
+  /** Invite generation action within a named read-access row */
+  inviteButton: '[data-testid="sharing-generate-invite"]',
+  /** Revoke action within a named read-access row */
+  revokeButton: '[data-testid="sharing-revoke-named-access"]',
+  /** Generated invite URL field */
+  inviteUrl: '[data-testid="sharing-invite-url"]',
+  /** Generated share URL field */
+  shareUrl: '[data-testid="settings-share-url"]',
+  /** Explanation shown when current origin cannot be used */
+  linkOriginFallbackNotice: '[data-testid="sharing-link-origin-fallback-notice"]',
+  /** Generic invite exchange error */
+  inviteError: '[data-testid="sharing-invite-error"]',
+  /** Read-only session indicator */
+  readOnlyBadge: '[data-testid="sharing-readonly-badge"]',
+  /** Read-only owner unlock action */
+  ownerUnlockButton: '[data-testid="sharing-owner-unlock-button"]',
+  /** Read-only owner unlock dialog */
+  ownerUnlockDialog: '[data-testid="sharing-owner-unlock-dialog"]',
+  /** Cancel button in the read-only owner unlock dialog */
+  ownerUnlockCancelButton: '[data-testid="sharing-owner-unlock-cancel"]',
+  /** Generic owner-token error inside read-only owner unlock */
+  ownerUnlockError: '[data-testid="sharing-owner-unlock-error"]',
+} as const
+
+/**
  * List view selectors
  */
 export const listSelectors = {
@@ -283,8 +337,9 @@ export const pathSelectorSelectors = {
   configureButton: '[data-testid="configure-paths-button"]',
   /** Path selector modal container */
   pathSelector: '[data-testid="path-selector"]',
-  /** Checkbox for a specific path (use with path, e.g., path-checkbox-docs)
-   *  Special cases: 'root' for ./, other paths have / replaced with -
+  /**
+   * Checkbox for a specific path (use with path, e.g., path-checkbox-docs)
+   * Special cases: 'root' for ./, other paths have / replaced with -
    */
   pathCheckbox: (path: string) => {
     // Map path to the safe testid format used in the component

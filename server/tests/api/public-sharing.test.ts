@@ -144,6 +144,169 @@ describe('public read-only sharing - MDT-172', () => {
     expect(mutation.status).toBe(403)
   })
 
+  it('denies all protected project, ticket, and document mutations for scoped read-only sessions', async () => {
+    const cr = await projectFactory.createTestCR('PRI', {
+      title: 'Private baseline ticket',
+      type: 'Feature Enhancement',
+      priority: 'High',
+      content: 'This ticket must not be mutated by read-only access.',
+    })
+    expect(cr.success).toBe(true)
+    expect(cr.crCode).toEqual(expect.any(String))
+    const crId = cr.crCode!
+
+    const exchange = await request(app)
+      .post('/api/auth/read-token')
+      .send({ token: readToken })
+
+    expect(exchange.status).toBe(200)
+    const readOnlyCookie = cookiePair(firstSetCookie(exchange))
+
+    const projectConfigPath = join(projectFactory.getProjectsDir(), 'PRI', '.mdt-config.toml')
+    const projectConfigBefore = await fs.readFile(projectConfigPath, 'utf8')
+    const documentFavStatePath = join(configDir, 'projects', 'PRI', 'document-favs.json')
+
+    const deniedMutations = [
+      {
+        label: 'POST /api/projects/create',
+        send: () => request(app)
+          .post('/api/projects/create')
+          .set('Cookie', readOnlyCookie)
+          .send({ name: 'Rogue Project', code: 'ROG', path: join(tempDir, 'rogue-project') }),
+      },
+      {
+        label: 'PUT /api/projects/:code/update',
+        send: () => request(app)
+          .put('/api/projects/PRI/update')
+          .set('Cookie', readOnlyCookie)
+          .send({ name: 'Mutated Private Project' }),
+      },
+      {
+        label: 'PUT /api/projects/:code/sharing',
+        send: () => request(app)
+          .put('/api/projects/PRI/sharing')
+          .set('Cookie', readOnlyCookie)
+          .send({ mode: 'public-readonly' }),
+      },
+      {
+        label: 'PUT /api/projects/:code/enable',
+        send: () => request(app)
+          .put('/api/projects/PRI/enable')
+          .set('Cookie', readOnlyCookie)
+          .send({}),
+      },
+      {
+        label: 'PUT /api/projects/:code/disable',
+        send: () => request(app)
+          .put('/api/projects/PRI/disable')
+          .set('Cookie', readOnlyCookie)
+          .send({}),
+      },
+      {
+        label: 'POST /api/projects/:projectId/crs',
+        send: () => request(app)
+          .post('/api/projects/PRI/crs')
+          .set('Cookie', readOnlyCookie)
+          .send({ title: 'Illegal write', type: 'Feature Enhancement' }),
+      },
+      {
+        label: 'PATCH /api/projects/:projectId/crs/:crId',
+        send: () => request(app)
+          .patch(`/api/projects/PRI/crs/${crId}`)
+          .set('Cookie', readOnlyCookie)
+          .send({ status: 'In Progress' }),
+      },
+      {
+        label: 'PUT /api/projects/:projectId/crs/:crId',
+        send: () => request(app)
+          .put(`/api/projects/PRI/crs/${crId}`)
+          .set('Cookie', readOnlyCookie)
+          .send({ title: 'Illegal replacement', type: 'Bug Fix' }),
+      },
+      {
+        label: 'DELETE /api/projects/:projectId/crs/:crId',
+        send: () => request(app)
+          .delete(`/api/projects/PRI/crs/${crId}`)
+          .set('Cookie', readOnlyCookie),
+      },
+      {
+        label: 'PUT /api/documents/favs',
+        send: () => request(app)
+          .put('/api/documents/favs')
+          .set('Cookie', readOnlyCookie)
+          .send({
+            projectId: 'PRI',
+            favItems: [
+              { path: 'README.md', type: 'file', favoritedAt: '2026-05-23T00:00:00.000Z' },
+            ],
+          }),
+      },
+      {
+        label: 'POST /api/documents/configure',
+        send: () => request(app)
+          .post('/api/documents/configure')
+          .set('Cookie', readOnlyCookie)
+          .send({ projectId: 'PRI', documentPaths: ['docs', 'README.md'] }),
+      },
+    ]
+
+    for (const mutation of deniedMutations) {
+      const response = await mutation.send()
+      expect(response.body).toEqual({ error: 'Forbidden' })
+      expect(response.status).toBe(403)
+    }
+
+    const projects = await request(app)
+      .get('/api/projects')
+      .set('Authorization', `Bearer ${ownerToken}`)
+      .query({ bypassCache: 'true' })
+
+    expect(projects.status).toBe(200)
+    expect(projects.body.map((project: { id: string }) => project.id)).toEqual(['PRI', 'PUB', 'UNS'])
+    const privateProject = projects.body.find((project: { id: string }) => project.id === 'PRI')
+    expect(privateProject.project.name).toBe('Private Project')
+    expect(privateProject.project.active).toBe(true)
+    expect(privateProject.metadata?.sharing).toBeUndefined()
+
+    const ticket = await request(app)
+      .get(`/api/projects/PRI/crs/${crId}`)
+      .set('Authorization', `Bearer ${ownerToken}`)
+    expect(ticket.status).toBe(200)
+    expect(ticket.body.title).toBe('Private baseline ticket')
+    expect(ticket.body.status).toBe('Proposed')
+
+    const tickets = await request(app)
+      .get('/api/projects/PRI/crs')
+      .set('Authorization', `Bearer ${ownerToken}`)
+    expect(tickets.status).toBe(200)
+    expect(tickets.body.map((item: { code: string }) => item.code)).toEqual([crId])
+
+    expect(await fs.readFile(projectConfigPath, 'utf8')).toBe(projectConfigBefore)
+    expect(await pathExists(documentFavStatePath)).toBe(false)
+  })
+
+  it('merges an unlisted share session into an existing read-token session without dropping token projects', async () => {
+    const readExchange = await request(app)
+      .post('/api/auth/read-token')
+      .send({ token: readToken })
+
+    expect(readExchange.status).toBe(200)
+    const readCookie = readExchange.headers['set-cookie']
+
+    const shareExchange = await request(app)
+      .post('/api/share/uns-share-id/session')
+      .set('Cookie', readCookie)
+
+    expect(shareExchange.status).toBe(200)
+    const mergedCookie = shareExchange.headers['set-cookie']
+
+    const scopedList = await request(app)
+      .get('/api/projects')
+      .set('Cookie', mergedCookie)
+
+    expect(scopedList.body.map((project: { id: string }) => project.id)).toEqual(['PRI', 'PUB', 'UNS'])
+  })
+
   it('lets owner/admin update sharing without storing it in project-local config', async () => {
     const update = await request(app)
       .put('/api/projects/PRI/sharing')
@@ -184,4 +347,26 @@ describe('public read-only sharing - MDT-172', () => {
 
 function hashToken(token: string): string {
   return createHash('sha256').update(token).digest('hex')
+}
+
+function firstSetCookie(response: request.Response): string {
+  const raw = response.headers['set-cookie']
+  if (Array.isArray(raw)) {
+    return raw[0] ?? ''
+  }
+  return raw ?? ''
+}
+
+function cookiePair(setCookieHeader: string): string {
+  return setCookieHeader.split(';')[0] ?? ''
+}
+
+async function pathExists(filePath: string): Promise<boolean> {
+  try {
+    await fs.access(filePath)
+    return true
+  }
+  catch {
+    return false
+  }
 }

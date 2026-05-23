@@ -21,6 +21,7 @@ import { RouteErrorModal } from './components/RouteErrorModal'
 import { SecondaryHeader } from './components/SecondaryHeader'
 import { SettingsModal } from './components/SettingsModal'
 import TicketViewer from './components/TicketViewer'
+import { Modal, ModalBody } from './components/ui/Modal'
 import { Toaster } from './components/ui/sonner'
 import { ViewModeSwitcher } from './components/ViewModeSwitcher'
 import { getSortPreferences, setSortPreferences } from './config/sorting'
@@ -31,6 +32,15 @@ import { syncSSEAccessMode } from './services/sseClient'
 import { getProjectCode } from './utils/projectUtils'
 import { normalizeTicketKey, setCurrentProject, validateProjectCode } from './utils/routing'
 import './utils/cache' // Import cache utilities for development
+
+interface InviteExchangeResult {
+  ok: boolean
+  status: number
+  backendDown: boolean
+  projectRefs: string[]
+}
+
+const inviteExchangeCache = new Map<string, Promise<InviteExchangeResult>>()
 
 function ProjectRouteHandler() {
   const { projectCode } = useParams<{ projectCode: string }>()
@@ -54,6 +64,7 @@ function ProjectRouteHandler() {
     unlock,
     lock,
     markLocked,
+    markOwnerAdmin,
   } = useAuthSession()
 
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
@@ -68,6 +79,8 @@ function ProjectRouteHandler() {
   const [lastBoardListMode, setLastBoardListMode] = useState<'board' | 'list'>(() => (localStorage.getItem('lastBoardListMode') as 'board' | 'list') || 'board')
   const [showQuickSearch, setShowQuickSearch] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+  const [showOwnerUnlock, setShowOwnerUnlock] = useState(false)
+  const [ownerUnlockError, setOwnerUnlockError] = useState<string | null>(null)
 
   // Global keyboard shortcuts
   useGlobalKeyboard({
@@ -144,6 +157,12 @@ function ProjectRouteHandler() {
   }
 
   const handleUnlockClick = () => {
+    if (accessMode === 'read-only') {
+      setOwnerUnlockError(null)
+      setShowOwnerUnlock(true)
+      return
+    }
+
     const tokenInput = document.querySelector<HTMLInputElement>('[data-testid="auth-token-input"]')
     if (tokenInput) {
       tokenInput.focus()
@@ -151,6 +170,29 @@ function ProjectRouteHandler() {
     }
 
     markLocked()
+  }
+
+  const handleOwnerUnlock = async (token: string) => {
+    setOwnerUnlockError(null)
+    try {
+      const response = await authFetch('/api/auth/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token }),
+      })
+
+      if (!response.ok) {
+        setOwnerUnlockError('Owner token was not accepted.')
+        return
+      }
+
+      markOwnerAdmin()
+      syncSSEAccessMode('owner-admin', { forceReconnect: true })
+      setShowOwnerUnlock(false)
+    }
+    catch {
+      setOwnerUnlockError('Owner token was not accepted.')
+    }
   }
 
   useEffect(() => {
@@ -315,6 +357,11 @@ function ProjectRouteHandler() {
               </div>
             </div>
             <div className="flex items-center">
+              {(accessMode === 'read-only' || selectedProject?.project.path === '') && (
+                <span data-testid="sharing-readonly-badge" className="mr-2 rounded-full border border-border px-2 py-1 text-xs">
+                  Read only
+                </span>
+              )}
               <AuthStatusAction
                 accessMode={accessMode}
                 onLock={handleLock}
@@ -405,10 +452,31 @@ function ProjectRouteHandler() {
         forceHidden={eventHistoryForceHidden}
       />
 
+      <Modal
+        isOpen={showOwnerUnlock && accessMode === 'read-only'}
+        onClose={() => setShowOwnerUnlock(false)}
+        size="sm"
+        data-testid="sharing-owner-unlock-dialog"
+      >
+        <ModalBody>
+          <AuthUnlockPanel
+            title="Unlock owner access"
+            description="Enter an owner token to manage projects. Your read-only session stays available if the token is not accepted."
+            error={ownerUnlockError}
+            errorTestId="sharing-owner-unlock-error"
+            panelTestId="sharing-owner-unlock-panel"
+            onUnlock={handleOwnerUnlock}
+            onCancel={() => setShowOwnerUnlock(false)}
+            cancelTestId="sharing-owner-unlock-cancel"
+          />
+        </ModalBody>
+      </Modal>
+
       <SettingsModal
         isOpen={showSettings && canManageProjects}
         onClose={() => setShowSettings(false)}
         selectedProject={selectedProject}
+        projects={projects}
         onProjectSharingUpdated={refreshProjects}
       />
 
@@ -507,6 +575,127 @@ function ShareRouteHandler() {
   )
 }
 
+function InviteRouteHandler() {
+  const { code: pathCode } = useParams<{ code: string }>()
+  const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const { markReadOnly, markBackendDown } = useAuthSession()
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function exchangeInviteSession(): Promise<void> {
+      const code = searchParams.get('code') || pathCode
+      if (!code) {
+        setError('Invite link was not accepted')
+        return
+      }
+
+      try {
+        const response = await exchangeInviteCode(code)
+
+        if (cancelled) {
+          return
+        }
+
+        if (!response.ok) {
+          if (response.backendDown) {
+            markBackendDown()
+            return
+          }
+
+          window.history.replaceState(null, '', '/invite/error')
+          setError(`Invite link was not accepted (${response.status})`)
+          return
+        }
+
+        const projectCode = response.projectRefs[0]
+        if (!projectCode) {
+          setError('Invite link returned no project')
+          return
+        }
+
+        markReadOnly()
+        syncSSEAccessMode('read-only', { forceReconnect: true })
+        navigate(`/prj/${projectCode}`, { replace: true })
+      }
+      catch (err) {
+        if (cancelled) {
+          return
+        }
+
+        if (isBackendDownError(err)) {
+          markBackendDown()
+          return
+        }
+
+        setError('Invite link was not accepted')
+      }
+    }
+
+    void exchangeInviteSession()
+
+    return () => {
+      cancelled = true
+    }
+  }, [markBackendDown, markReadOnly, navigate, pathCode, searchParams])
+
+  if (error) {
+    return (
+      <div data-testid="sharing-invite-error" className="min-h-[100dvh] bg-background flex items-center justify-center p-6 text-sm text-destructive">
+        {error}
+      </div>
+    )
+  }
+
+  return (
+    <div data-testid="invite-loading" className="min-h-[100dvh] bg-background flex items-center justify-center">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+    </div>
+  )
+}
+
+function exchangeInviteCode(code: string): Promise<InviteExchangeResult> {
+  const existingExchange = inviteExchangeCache.get(code)
+  if (existingExchange) {
+    return existingExchange
+  }
+
+  const exchange = authFetch(`/api/read-tokens/invites/${encodeURIComponent(code)}/session`, { method: 'POST' })
+    .then(async (response): Promise<InviteExchangeResult> => {
+      if (!response.ok) {
+        inviteExchangeCache.delete(code)
+        return {
+          ok: false,
+          status: response.status,
+          backendDown: isBackendDownResponse(response),
+          projectRefs: [],
+        }
+      }
+
+      const data = await response.json() as { projectRefs?: string[] }
+      return {
+        ok: true,
+        status: response.status,
+        backendDown: false,
+        projectRefs: data.projectRefs ?? [],
+      }
+    })
+    .catch((error): InviteExchangeResult => {
+      inviteExchangeCache.delete(code)
+      return {
+        ok: false,
+        status: 0,
+        backendDown: isBackendDownError(error),
+        projectRefs: [],
+      }
+    })
+
+  inviteExchangeCache.set(code, exchange)
+  return exchange
+}
+
 function App() {
   return (
     <AuthSessionProvider>
@@ -514,6 +703,7 @@ function App() {
         <Routes>
           <Route path="/" element={<RedirectToCurrentProject />} />
           <Route path="/share/:shareId" element={<ShareRouteHandler />} />
+          <Route path="/invite/:code" element={<InviteRouteHandler />} />
           <Route path="/:ticketKey" element={<DirectTicketAccess />} />
           <Route path="/prj/:projectCode" element={<ProjectRouteHandler />} />
           <Route path="/prj/:projectCode/list" element={<ProjectRouteHandler />} />

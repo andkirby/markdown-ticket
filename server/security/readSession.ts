@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express'
+import { Buffer } from 'node:buffer'
 import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 
 export const READ_SESSION_COOKIE_NAME = 'mdt_read_session'
@@ -11,6 +12,9 @@ interface ReadSessionPayload {
   projectRefs: string[]
   shareIds: string[]
   sid: string
+  staticProjectRefs?: string[]
+  tokenIds?: string[]
+  tokenProjectRefs?: string[]
 }
 
 export interface ReadSessionCookieOptions {
@@ -22,11 +26,25 @@ export interface ReadSessionState {
   authenticated: boolean
   projectRefs: string[]
   shareIds: string[]
+  staticProjectRefs: string[]
+  tokenIds: string[]
+  tokenProjectRefs: string[]
 }
 
 export interface ReadSessionGrants {
   projectRefs?: string[]
   shareIds?: string[]
+  staticProjectRefs?: string[]
+  tokenIds?: string[]
+  tokenProjectRefs?: string[]
+}
+
+export interface MergeReadSessionInput extends ReadSessionGrants {
+  req: Request
+  res: Response
+  secret: string
+  expiresAt?: Date
+  secure?: boolean
 }
 
 export interface ReadTokenScope {
@@ -79,6 +97,9 @@ export function createReadSessionCookie(secret: string, grants: ReadSessionGrant
     iat: now,
     projectRefs: [...new Set(grants.projectRefs ?? [])],
     shareIds: [...new Set(grants.shareIds ?? [])],
+    staticProjectRefs: [...new Set(grants.staticProjectRefs ?? (grants.tokenIds?.length ? [] : grants.projectRefs ?? []))],
+    tokenIds: [...new Set(grants.tokenIds ?? [])],
+    tokenProjectRefs: [...new Set(grants.tokenProjectRefs ?? (grants.tokenIds?.length ? grants.projectRefs ?? [] : []))],
     sid: randomBytes(24).toString('hex'),
   }
   const encodedPayload = encodeBase64Url(JSON.stringify(payload))
@@ -92,40 +113,59 @@ export function appendReadSessionCookie(res: Response, secret: string, grants: R
   res.append('Set-Cookie', createReadSessionCookie(secret, grants, options))
 }
 
+export function appendMergedReadSessionCookie(input: MergeReadSessionInput): void {
+  const now = Math.floor(Date.now() / 1000)
+  const currentPayload = getReadSessionPayload(input.req, input.secret)
+  const currentExpiry = currentPayload?.exp && currentPayload.exp > now ? currentPayload.exp : undefined
+  const requestedExpiry = input.expiresAt ? Math.floor(input.expiresAt.getTime() / 1000) : undefined
+  const maxExpiry = now + READ_SESSION_MAX_AGE_SECONDS
+  const nextExpiry = Math.min(...[currentExpiry, requestedExpiry, maxExpiry].filter((value): value is number => typeof value === 'number'))
+
+  appendReadSessionCookie(input.res, input.secret, {
+    projectRefs: mergeUnique(
+      mergeUnique(currentPayload?.staticProjectRefs ?? (currentPayload?.tokenIds?.length ? [] : currentPayload?.projectRefs), input.tokenIds?.length ? [] : input.projectRefs),
+      mergeUnique(currentPayload?.tokenProjectRefs ?? (currentPayload?.tokenIds?.length ? currentPayload.projectRefs : []), input.tokenIds?.length ? input.projectRefs : []),
+    ),
+    shareIds: mergeUnique(currentPayload?.shareIds, input.shareIds),
+    tokenIds: mergeUnique(currentPayload?.tokenIds, input.tokenIds),
+    staticProjectRefs: mergeUnique(currentPayload?.staticProjectRefs ?? (currentPayload?.tokenIds?.length ? [] : currentPayload?.projectRefs), input.tokenIds?.length ? [] : input.projectRefs),
+    tokenProjectRefs: mergeUnique(currentPayload?.tokenProjectRefs ?? (currentPayload?.tokenIds?.length ? currentPayload.projectRefs : []), input.tokenIds?.length ? input.projectRefs : []),
+  }, {
+    secure: input.secure ?? false,
+    maxAgeSeconds: Math.max(1, nextExpiry - now),
+  })
+}
+
 export function getReadSessionState(req: Request, secret: string | undefined): ReadSessionState {
   if (!secret) {
-    return { authenticated: false, projectRefs: [], shareIds: [] }
+    return { authenticated: false, projectRefs: [], shareIds: [], staticProjectRefs: [], tokenIds: [], tokenProjectRefs: [] }
   }
 
-  const cookieValue = extractCookieValue(req, READ_SESSION_COOKIE_NAME)
-  if (!cookieValue) {
-    return { authenticated: false, projectRefs: [], shareIds: [] }
-  }
-
-  const [encodedPayload, actualSignature] = cookieValue.split('.')
-  if (!encodedPayload || !actualSignature) {
-    return { authenticated: false, projectRefs: [], shareIds: [] }
-  }
-
-  const expectedSignature = signPayload(encodedPayload, secret)
-  if (!safeStringEquals(actualSignature, expectedSignature)) {
-    return { authenticated: false, projectRefs: [], shareIds: [] }
-  }
-
-  const payload = parsePayload(encodedPayload)
-  if (!payload || payload.exp <= Math.floor(Date.now() / 1000)) {
-    return { authenticated: false, projectRefs: [], shareIds: [] }
+  const payload = getReadSessionPayload(req, secret)
+  if (!payload) {
+    return { authenticated: false, projectRefs: [], shareIds: [], staticProjectRefs: [], tokenIds: [], tokenProjectRefs: [] }
   }
 
   return {
     authenticated: true,
     projectRefs: payload.projectRefs,
     shareIds: payload.shareIds,
+    staticProjectRefs: payload.staticProjectRefs ?? (payload.tokenIds?.length ? [] : payload.projectRefs),
+    tokenIds: payload.tokenIds ?? [],
+    tokenProjectRefs: payload.tokenProjectRefs ?? (payload.tokenIds?.length ? payload.projectRefs : []),
   }
 }
 
-export function getReadSessionSecret(ownerToken: string | undefined, env: NodeJS.ProcessEnv = process.env): string | undefined {
-  return ownerToken || env.API_READ_SESSION_SECRET
+export function getReadSessionSecret(ownerToken: string | undefined, env: NodeJS.ProcessEnv): string | undefined {
+  if (env.API_READ_SESSION_SECRET || ownerToken) {
+    return env.API_READ_SESSION_SECRET || ownerToken
+  }
+
+  return isLocalOrTestEnv(env.NODE_ENV) ? 'mdt-local-read-session-secret' : undefined
+}
+
+function isLocalOrTestEnv(nodeEnv: string | undefined): boolean {
+  return !nodeEnv || nodeEnv === 'development' || nodeEnv === 'test' || nodeEnv === 'local'
 }
 
 function extractCookieValue(req: Request, cookieName: string): string | null {
@@ -144,6 +184,30 @@ function extractCookieValue(req: Request, cookieName: string): string | null {
   return null
 }
 
+function getReadSessionPayload(req: Request, secret: string): ReadSessionPayload | null {
+  const cookieValue = extractCookieValue(req, READ_SESSION_COOKIE_NAME)
+  if (!cookieValue) {
+    return null
+  }
+
+  const [encodedPayload, actualSignature] = cookieValue.split('.')
+  if (!encodedPayload || !actualSignature) {
+    return null
+  }
+
+  const expectedSignature = signPayload(encodedPayload, secret)
+  if (!safeStringEquals(actualSignature, expectedSignature)) {
+    return null
+  }
+
+  const payload = parsePayload(encodedPayload)
+  if (!payload || payload.exp <= Math.floor(Date.now() / 1000)) {
+    return null
+  }
+
+  return payload
+}
+
 function parsePayload(encodedPayload: string): ReadSessionPayload | null {
   try {
     const parsed = JSON.parse(decodeBase64Url(encodedPayload)) as Partial<ReadSessionPayload>
@@ -153,6 +217,9 @@ function parsePayload(encodedPayload: string): ReadSessionPayload | null {
       || !Array.isArray(parsed.projectRefs)
       || !parsed.projectRefs.every(projectRef => typeof projectRef === 'string')
       || (parsed.shareIds !== undefined && (!Array.isArray(parsed.shareIds) || !parsed.shareIds.every(shareId => typeof shareId === 'string')))
+      || (parsed.staticProjectRefs !== undefined && (!Array.isArray(parsed.staticProjectRefs) || !parsed.staticProjectRefs.every(projectRef => typeof projectRef === 'string')))
+      || (parsed.tokenIds !== undefined && (!Array.isArray(parsed.tokenIds) || !parsed.tokenIds.every(tokenId => typeof tokenId === 'string')))
+      || (parsed.tokenProjectRefs !== undefined && (!Array.isArray(parsed.tokenProjectRefs) || !parsed.tokenProjectRefs.every(projectRef => typeof projectRef === 'string')))
       || typeof parsed.sid !== 'string'
     ) {
       return null
@@ -161,11 +228,18 @@ function parsePayload(encodedPayload: string): ReadSessionPayload | null {
     return {
       ...parsed,
       shareIds: parsed.shareIds ?? [],
+      staticProjectRefs: parsed.staticProjectRefs ?? (parsed.tokenIds?.length ? [] : parsed.projectRefs),
+      tokenIds: parsed.tokenIds ?? [],
+      tokenProjectRefs: parsed.tokenProjectRefs ?? (parsed.tokenIds?.length ? parsed.projectRefs : []),
     } as ReadSessionPayload
   }
   catch {
     return null
   }
+}
+
+function mergeUnique(existing: string[] | undefined, next: string[] | undefined): string[] {
+  return [...new Set([...(existing ?? []), ...(next ?? [])])]
 }
 
 function signPayload(encodedPayload: string, secret: string): string {

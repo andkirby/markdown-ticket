@@ -22,6 +22,7 @@ import { useTheme } from '../hooks/useTheme'
 import { nuclearCacheClear } from '../utils/cache'
 import { getProjectCode } from '../utils/projectUtils'
 import { getEventHistoryForceHidden, toggleEventHistory } from './DevTools/useEventHistoryState'
+import { ReadAccessTokens } from './SettingsModal/ReadAccessTokens'
 import { ButtonGroup } from './ui/button-group'
 import { Modal, ModalBody, ModalHeader } from './ui/Modal'
 import { Switch } from './ui/switch'
@@ -53,6 +54,7 @@ interface SettingsModalProps {
   isOpen: boolean
   onClose: () => void
   selectedProject?: Project | null
+  projects?: Project[]
   onProjectSharingUpdated?: () => Promise<void> | void
 }
 
@@ -97,7 +99,7 @@ async function readErrorMessage(response: Response): Promise<string> {
   }
 }
 
-export function SettingsModal({ isOpen, onClose, selectedProject, onProjectSharingUpdated }: SettingsModalProps) {
+export function SettingsModal({ isOpen, onClose, selectedProject, projects = [], onProjectSharingUpdated }: SettingsModalProps) {
   const { themeMode, setTheme } = useTheme()
   const [activeTab, setActiveTab] = useState<SettingsTab>('appearance')
 
@@ -117,6 +119,7 @@ export function SettingsModal({ isOpen, onClose, selectedProject, onProjectShari
   const [visibleBadgeIds, setVisibleBadgeIds] = useState(getVisibleTicketCardBadges)
   const [sharingMode, setSharingMode] = useState<SharingMode>('private')
   const [shareId, setShareId] = useState('')
+  const [linkOrigin, setLinkOrigin] = useState('')
   const [sharingStatus, setSharingStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [sharingError, setSharingError] = useState<string | null>(null)
 
@@ -139,12 +142,12 @@ export function SettingsModal({ isOpen, onClose, selectedProject, onProjectShari
   }, [activeTab, selectedProject])
 
   const shareUrl = useMemo(() => {
-    if (sharingMode === 'private' || !shareId) {
+    if (sharingMode === 'private' || !shareId || !linkOrigin) {
       return ''
     }
 
-    return `${window.location.origin}/share/${shareId}`
-  }, [shareId, sharingMode])
+    return `${linkOrigin}/share/${shareId}`
+  }, [linkOrigin, shareId, sharingMode])
 
   // Appearance handlers
   const handleThemeChange = useCallback((mode: 'light' | 'dark' | 'system') => {
@@ -245,7 +248,7 @@ export function SettingsModal({ isOpen, onClose, selectedProject, onProjectShari
   }, [])
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="md" data-testid="settings-modal">
+    <Modal isOpen={isOpen} onClose={onClose} data-testid="settings-modal">
       <ModalHeader title="Settings" onClose={onClose} closeTestId="settings-close" />
       <ModalBody className="p-0">
         <Tabs.Root value={activeTab} onValueChange={value => setActiveTab(value as SettingsTab)}>
@@ -451,7 +454,11 @@ export function SettingsModal({ isOpen, onClose, selectedProject, onProjectShari
                       className="settings-input mt-2 font-mono text-xs"
                     />
                   )}
-                  {!shareUrl && <p className="settings-desc mt-2">Save to generate a share link.</p>}
+                  {!shareUrl && (
+                    <p className="settings-desc mt-2">
+                      {shareId ? 'No allowed public origin is available for share links.' : 'Save to generate a share link.'}
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -482,6 +489,12 @@ export function SettingsModal({ isOpen, onClose, selectedProject, onProjectShari
                   </button>
                 </div>
               </div>
+
+              <ReadAccessTokens
+                projects={projects}
+                selectedOrigin={linkOrigin}
+                onSelectedOriginChange={setLinkOrigin}
+              />
             </Tabs.Content>
           )}
 

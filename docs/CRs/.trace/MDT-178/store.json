@@ -1,0 +1,511 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-178"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "WHEN the backend starts, the system shall parse runtime environment variables once into a typed RuntimeConfig object before routes and middleware are registered.",
+      "sourceRef": "CR Acceptance Criteria: typed runtime config module",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "Backend feature modules shall not read process.env directly; direct env reads are limited to server/config, startup wiring, development utilities, and test setup code.",
+      "sourceRef": "CR Acceptance Criteria: process.env boundary",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "Runtime deployment hostnames, public link origins, CORS origins, and read-session secrets shall remain outside project-local .mdt-config.toml.",
+      "sourceRef": "docs/architecture/runtime-configuration-architecture.md",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "Route and unit tests shall configure runtime assumptions through explicit env maps or app-local RuntimeConfig creation before routes run; request-time RuntimeConfig fallback creation is not allowed.",
+      "sourceRef": "docs/CRs/MDT-178/requirements.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "WHEN PUBLIC_ORIGIN is configured, the system shall expose that full origin as the generated share and invite link base and as a backend allowed browser origin.",
+      "sourceRef": "docs/CRs/MDT-178/requirements.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.3",
+      "kind": "behavior",
+      "text": "WHEN PUBLIC_ORIGIN is absent, the system shall not derive generated public link origins from other app origin environment variables or hostnames.",
+      "sourceRef": "docs/CRs/MDT-178/requirements.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.4",
+      "kind": "behavior",
+      "text": "WHEN PUBLIC_ORIGIN is absent and the current browser origin is allowed, the system shall use the current origin derived from Origin or Referer for generated sharing links.",
+      "sourceRef": "docs/CRs/MDT-178/requirements.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.5",
+      "kind": "behavior",
+      "text": "WHEN no configured public origin is available and the current browser origin is rejected or absent, the system shall report that no safe generated-link origin can be selected.",
+      "sourceRef": "docs/CRs/MDT-178/requirements.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "PUBLIC_ORIGIN shall be the only configured deployment origin variable for app browser-origin and generated-link behavior.",
+      "sourceRef": "docs/CRs/MDT-178/requirements.md",
+      "routePolicy": "tests"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "runtime_config_startup_boundary",
+      "title": "Runtime config is parsed once at startup",
+      "covers": [
+        "BR-1.1"
+      ],
+      "given": "the backend process has runtime environment variables",
+      "when": "the server app is created",
+      "then": "routes and middleware use the app runtime config instead of reading env during request handling",
+      "sourceRef": "requirements.md#runtime-config-owner"
+    },
+    {
+      "id": "public_origin_is_used",
+      "title": "Configured public origin is used",
+      "covers": [
+        "BR-1.2"
+      ],
+      "given": "PUBLIC_ORIGIN contains a full origin",
+      "when": "an owner opens sharing settings and generates an invite",
+      "then": "the generated invite link uses PUBLIC_ORIGIN",
+      "sourceRef": "docs/CRs/MDT-178/bdd.md"
+    },
+    {
+      "id": "current_origin_fallback_reported",
+      "title": "Current origin fallback remains safe and visible",
+      "covers": [
+        "BR-1.3",
+        "BR-1.4"
+      ],
+      "given": "PUBLIC_ORIGIN is absent",
+      "when": "an owner lists read-access link options or creates an invite from an allowed current origin",
+      "then": "the generated public link origin is the allowed current origin",
+      "sourceRef": "docs/CRs/MDT-178/bdd.md"
+    },
+    {
+      "id": "no_safe_origin_reported",
+      "title": "Missing safe origin blocks invite links",
+      "covers": [
+        "BR-1.5"
+      ],
+      "given": "no configured public origin is available",
+      "when": "an owner opens sharing settings from a rejected current origin",
+      "then": "the UI reports that no safe generated-link origin exists",
+      "sourceRef": "docs/CRs/MDT-178/bdd.md"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-runtime-config-boundary",
+      "title": "Parse env once into app-local RuntimeConfig before registering route and middleware behavior",
+      "derivedFrom": [
+        "BR-1.1",
+        "C1",
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-server-config-runtime-config",
+        "ART-server-server",
+        "ART-server-tests-test-app-factory",
+        "ART-server-tests-runtime-config"
+      ],
+      "sourceRef": "architecture.md#runtime-config-boundary"
+    },
+    {
+      "id": "OBL-auth-route-config-injection",
+      "title": "Auth and read-session behavior consumes injected runtime auth/read-session config rather than route-time env reads",
+      "derivedFrom": [
+        "BR-1.1",
+        "C1",
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-server-security-api-auth",
+        "ART-server-security-read-session",
+        "ART-server-routes-auth",
+        "ART-server-routes-share",
+        "ART-server-routes-read-tokens"
+      ],
+      "sourceRef": "architecture.md#route-wiring"
+    },
+    {
+      "id": "OBL-config-doc-sot",
+      "title": "Runtime deployment hostnames and secrets remain in runtime config, not project-local config",
+      "derivedFrom": [
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-server-config-runtime-config",
+        "ART-server-server"
+      ],
+      "sourceRef": "architecture.md#invariants"
+    },
+    {
+      "id": "OBL-operator-docs-runtime-sot",
+      "title": "Operator environment docs point to the RuntimeConfig SOT and document PUBLIC_ORIGIN",
+      "derivedFrom": [
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-docs-environment-variables",
+        "ART-server-config-runtime-config"
+      ],
+      "sourceRef": "architecture.md#extension-rule"
+    },
+    {
+      "id": "OBL-origin-policy-pure-inputs",
+      "title": "Keep origin helpers pure and drive CORS/public-link decisions from RuntimeConfig origins",
+      "derivedFrom": [
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.5",
+        "C2"
+      ],
+      "artifactIds": [
+        "ART-server-security-origin-policy",
+        "ART-server-security-public-link-origins",
+        "ART-server-config-runtime-config",
+        "ART-server-tests-origin-policy",
+        "ART-server-tests-public-link-origins",
+        "ART-shared-public-link-origin"
+      ],
+      "sourceRef": "docs/CRs/MDT-178/architecture.md"
+    },
+    {
+      "id": "OBL-share-invite-origin-selection",
+      "title": "Read-token invite and share URL generation honors server-owned public origin options from RuntimeConfig",
+      "derivedFrom": [
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.5",
+        "C2"
+      ],
+      "artifactIds": [
+        "ART-server-routes-read-tokens",
+        "ART-server-routes-share",
+        "ART-server-tests-read-token-management",
+        "ART-e2e-sharing-read-access",
+        "ART-ui-read-access-tokens-test",
+        "ART-shared-public-link-origin"
+      ],
+      "sourceRef": "docs/CRs/MDT-178/architecture.md"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-server-routes-auth",
+      "path": "server/routes/auth.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#route-wiring"
+    },
+    {
+      "id": "ART-server-routes-share",
+      "path": "server/routes/share.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#route-wiring"
+    },
+    {
+      "id": "ART-server-server",
+      "path": "server/server.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#startup-wiring"
+    },
+    {
+      "id": "ART-server-config-runtime-config",
+      "path": "server/config/runtimeConfig.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#runtime-config-boundary"
+    },
+    {
+      "id": "ART-server-security-origin-policy",
+      "path": "server/security/originPolicy.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#origin-policy"
+    },
+    {
+      "id": "ART-server-security-api-auth",
+      "path": "server/security/apiAuth.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#auth-middleware"
+    },
+    {
+      "id": "ART-server-security-read-session",
+      "path": "server/security/readSession.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#read-session-secret"
+    },
+    {
+      "id": "ART-server-routes-read-tokens",
+      "path": "server/routes/readTokens.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#route-wiring"
+    },
+    {
+      "id": "ART-server-tests-test-app-factory",
+      "path": "server/tests/api/test-app-factory.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md#test-wiring"
+    },
+    {
+      "id": "ART-server-tests-runtime-config",
+      "path": "server/tests/config/runtimeConfig.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md#test-strategy"
+    },
+    {
+      "id": "ART-server-tests-origin-policy",
+      "path": "server/tests/security/originPolicy.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md#test-strategy"
+    },
+    {
+      "id": "ART-server-tests-read-token-management",
+      "path": "server/tests/api/read-token-management.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md#test-strategy"
+    },
+    {
+      "id": "ART-e2e-sharing-read-access",
+      "path": "tests/e2e/sharing/read-access-journey.spec.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md#e2e-strategy"
+    },
+    {
+      "id": "ART-docs-environment-variables",
+      "path": "docs/ENVIRONMENT_VARIABLES.md",
+      "kind": "doc",
+      "sourceRef": "architecture.md#extension-rule"
+    },
+    {
+      "id": "ART-server-security-public-link-origins",
+      "path": "server/security/publicLinkOrigins.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-178/architecture.md"
+    },
+    {
+      "id": "ART-server-tests-public-link-origins",
+      "path": "server/tests/security/publicLinkOrigins.test.ts",
+      "kind": "test",
+      "sourceRef": "docs/CRs/MDT-178/tests.md"
+    },
+    {
+      "id": "ART-ui-read-access-tokens-test",
+      "path": "src/components/SettingsModal/ReadAccessTokens.test.tsx",
+      "kind": "test",
+      "sourceRef": "docs/CRs/MDT-178/tests.md"
+    },
+    {
+      "id": "ART-shared-public-link-origin",
+      "path": "shared/models/PublicLinkOrigin.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-178/architecture.md"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-runtime-config-parser",
+      "kind": "unit",
+      "title": "RuntimeConfig parser and env-boundary scan coverage",
+      "covers": [
+        "BR-1.1",
+        "C1",
+        "C3",
+        "C4"
+      ],
+      "file": "server/tests/config/runtimeConfig.test.ts",
+      "sourceRef": "tests.md#runtime-config-parser"
+    },
+    {
+      "id": "TEST-sharing-origin-selection-e2e",
+      "kind": "e2e",
+      "title": "Configured public origin is used for invite links",
+      "covers": [
+        "BR-1.2"
+      ],
+      "file": "tests/e2e/sharing/read-access-journey.spec.ts",
+      "sourceRef": "bdd:public_origin_is_used"
+    },
+    {
+      "id": "TEST-origin-policy-runtime-origins",
+      "kind": "unit",
+      "title": "Pure origin policy and public origin parsing",
+      "covers": [
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.5",
+        "C2"
+      ],
+      "file": "server/tests/security/originPolicy.test.ts",
+      "sourceRef": "docs/CRs/MDT-178/tests.md"
+    },
+    {
+      "id": "TEST-read-token-runtime-origins",
+      "kind": "integration",
+      "title": "Read-token API invite URLs honor PUBLIC_ORIGIN and current-origin fallback",
+      "covers": [
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.5",
+        "C2",
+        "C4"
+      ],
+      "file": "server/tests/api/read-token-management.test.ts",
+      "sourceRef": "docs/CRs/MDT-178/tests.md"
+    },
+    {
+      "id": "TEST-public-link-origin-selection",
+      "kind": "unit",
+      "title": "Public link origin option contract uses PUBLIC_ORIGIN and current-origin fallback",
+      "covers": [
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.5",
+        "C2"
+      ],
+      "file": "server/tests/security/publicLinkOrigins.test.ts",
+      "sourceRef": "docs/CRs/MDT-178/tests.md"
+    },
+    {
+      "id": "TEST-sharing-origin-selection-ui",
+      "kind": "unit",
+      "title": "Read-access UI uses server-selected link origin without an owner picker",
+      "covers": [
+        "BR-1.2"
+      ],
+      "file": "src/components/SettingsModal/ReadAccessTokens.test.tsx",
+      "sourceRef": "docs/CRs/MDT-178/tests.md"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-5",
+      "title": "Update runtime configuration operator docs",
+      "ownsArtifactIds": [
+        "ART-docs-environment-variables"
+      ],
+      "makesGreenIds": [
+        "TEST-runtime-config-parser"
+      ],
+      "skills": [
+        "mdt:implement"
+      ],
+      "sourceRef": "tasks.md#task-5"
+    },
+    {
+      "id": "TASK-1",
+      "title": "Add RuntimeConfig boundary and startup wiring",
+      "ownsArtifactIds": [
+        "ART-server-config-runtime-config",
+        "ART-server-server",
+        "ART-server-tests-test-app-factory",
+        "ART-server-tests-runtime-config"
+      ],
+      "makesGreenIds": [
+        "runtime_config_startup_boundary",
+        "TEST-runtime-config-parser"
+      ],
+      "skills": [
+        "mdt:implement"
+      ],
+      "sourceRef": "docs/CRs/MDT-178/tasks.md"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Inject runtime config into auth, share, and read-token routes",
+      "ownsArtifactIds": [
+        "ART-server-security-api-auth",
+        "ART-server-security-read-session",
+        "ART-server-routes-auth",
+        "ART-server-routes-share",
+        "ART-server-routes-read-tokens",
+        "ART-server-tests-read-token-management"
+      ],
+      "makesGreenIds": [
+        "public_origin_is_used",
+        "current_origin_fallback_reported",
+        "no_safe_origin_reported",
+        "TEST-read-token-runtime-origins"
+      ],
+      "skills": [
+        "mdt:implement"
+      ],
+      "sourceRef": "docs/CRs/MDT-178/tasks.md"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Make origin policy pure and runtime driven",
+      "ownsArtifactIds": [
+        "ART-server-security-origin-policy",
+        "ART-server-security-public-link-origins",
+        "ART-server-tests-origin-policy",
+        "ART-server-tests-public-link-origins",
+        "ART-shared-public-link-origin"
+      ],
+      "makesGreenIds": [
+        "public_origin_is_used",
+        "current_origin_fallback_reported",
+        "no_safe_origin_reported",
+        "TEST-origin-policy-runtime-origins",
+        "TEST-public-link-origin-selection"
+      ],
+      "skills": [
+        "mdt:implement"
+      ],
+      "sourceRef": "docs/CRs/MDT-178/tasks.md"
+    },
+    {
+      "id": "TASK-4",
+      "title": "Wire owner UI origin handling and E2E coverage",
+      "ownsArtifactIds": [
+        "ART-e2e-sharing-read-access",
+        "ART-server-routes-read-tokens",
+        "ART-ui-read-access-tokens-test"
+      ],
+      "makesGreenIds": [
+        "public_origin_is_used",
+        "TEST-sharing-origin-selection-e2e",
+        "TEST-sharing-origin-selection-ui"
+      ],
+      "skills": [
+        "mdt:implement",
+        "playwright-skill"
+      ],
+      "sourceRef": "docs/CRs/MDT-178/tasks.md"
+    }
+  ]
+}

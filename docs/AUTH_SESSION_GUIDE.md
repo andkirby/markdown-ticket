@@ -79,7 +79,7 @@ Cookie-authenticated non-GET API mutations require both:
 - an allowed `Origin`; and
 - `X-MDT-Owner-Intent: 1`.
 
-The frontend `authFetch` boundary adds the owner intent header for browser mutation requests. Configure allowed deployment origins with `ALLOWED_DOMAINS` when serving from a production domain. Local development origins are allowed by default.
+The frontend `authFetch` boundary adds the owner intent header for browser mutation requests. Configure the deployment origin with `PUBLIC_ORIGIN` when serving from a production domain. Local development origins are allowed by default.
 
 Bearer and `X-API-Key` API clients are authenticated by their request headers and are not rejected for missing `X-MDT-Owner-Intent` when no owner session cookie is used.
 

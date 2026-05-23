@@ -5,6 +5,7 @@
 
 export * from './models/Config.js'
 export * from './models/Project.js'
+export * from './models/PublicLinkOrigin.js'
 // Models
 export * from './models/Ticket.js'
 

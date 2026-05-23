@@ -5,9 +5,25 @@ interface AuthUnlockPanelProps {
   error?: string | null
   unlocking?: boolean
   onUnlock?: (token: string) => Promise<void> | void
+  title?: string
+  description?: string
+  panelTestId?: string
+  errorTestId?: string
+  onCancel?: () => void
+  cancelTestId?: string
 }
 
-export function AuthUnlockPanel({ error, unlocking = false, onUnlock }: AuthUnlockPanelProps) {
+export function AuthUnlockPanel({
+  error,
+  unlocking = false,
+  onUnlock,
+  title = 'Board is locked',
+  description = 'This server accepts an owner token for management or a read token for scoped read-only access.',
+  panelTestId = 'auth-unlock-panel',
+  errorTestId = 'auth-unlock-error',
+  onCancel,
+  cancelTestId,
+}: AuthUnlockPanelProps) {
   const [token, setToken] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -23,10 +39,10 @@ export function AuthUnlockPanel({ error, unlocking = false, onUnlock }: AuthUnlo
   }
 
   return (
-    <section data-testid="auth-unlock-panel" className="mx-auto max-w-lg rounded-xl border border-border bg-card p-6 shadow-sm">
-      <h1 className="text-2xl font-semibold tracking-tight">Board is locked</h1>
+    <section data-testid={panelTestId} className="mx-auto max-w-lg rounded-xl border border-border bg-card p-4 shadow-sm">
+      <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        This server accepts an owner token for management or a read token for scoped read-only access.
+        {description}
       </p>
       <form className="mt-4 space-y-4" onSubmit={handleSubmit}>
         <label className="block text-sm font-medium" htmlFor="auth-token-input">Access token</label>
@@ -42,18 +58,30 @@ export function AuthUnlockPanel({ error, unlocking = false, onUnlock }: AuthUnlo
           autoComplete="current-password"
         />
         {error && (
-          <p data-testid="auth-unlock-error" role="alert" className="text-sm text-destructive">
+          <p data-testid={errorTestId} role="alert" className="text-sm text-destructive">
             {error}
           </p>
         )}
-        <button
-          data-testid="auth-unlock-submit"
-          type="submit"
-          disabled={unlocking || token.length === 0}
-          className="rounded-md bg-primary px-4 py-2 text-primary-foreground disabled:opacity-50"
-        >
-          Unlock
-        </button>
+        <div className="flex gap-2">
+          {onCancel && (
+            <button
+              data-testid={cancelTestId}
+              type="button"
+              onClick={onCancel}
+              className="rounded-md border border-border px-4 py-2"
+            >
+              Cancel
+            </button>
+          )}
+          <button
+            data-testid="auth-unlock-submit"
+            type="submit"
+            disabled={unlocking || token.length === 0}
+            className="rounded-md bg-primary px-4 py-2 text-primary-foreground disabled:opacity-50"
+          >
+            Unlock
+          </button>
+        </div>
       </form>
       <p className="mt-4 text-xs text-muted-foreground">
         Tokens are exchanged for a secure server session and are not stored in browser storage.

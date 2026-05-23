@@ -1,6 +1,6 @@
 ---
 code: MDT-178
-status: Proposed
+status: In Progress
 dateCreated: 2026-05-23T12:23:33.682Z
 type: Architecture
 priority: High
@@ -18,33 +18,30 @@ Canonical guide: [Runtime Configuration Architecture](../architecture/runtime-co
 
 MDT has one server-side runtime configuration boundary. Environment variables are parsed once, validated into a typed runtime config, and injected into routes, middleware, stores, and policy helpers.
 
-Feature modules do not read `process.env` directly. Sharing link generation uses configured public origins from the runtime config and keeps `ALLOWED_DOMAINS` backward-compatible.
+Feature modules do not read `process.env` directly. Sharing link generation uses the configured `PUBLIC_ORIGIN` from runtime config.
 
 ## Scope
 
 In scope:
 - Add a typed backend runtime config boundary.
-- Centralize parsing for auth, config directory, read-session secret, allowed origins, allowed domains, and public link origins.
+- Centralize parsing for auth, config directory, read-session secret, allowed origins, and the public origin.
 - Inject runtime config into auth/sharing routes and security helpers.
-- Preserve existing env variable compatibility, especially `ALLOWED_DOMAINS`.
 - Add tests proving share/invite link origins use runtime config instead of defaulting to localhost.
 
 Out of scope:
 - Changing project registry TOML schema.
 - Moving sharing state into project-local `.mdt-config.toml`.
 - Designing multi-user accounts or RBAC.
-- Removing existing env variables without a separate deprecation decision.
+- Adding compatibility branches for removed origin variables.
 
 ## Acceptance Criteria
 
-- [ ] Backend has one typed runtime config module that parses env at startup.
-- [ ] Direct backend `process.env` reads are limited to config/startup/test setup boundaries.
-- [ ] Sharing and invite link generation honors `PUBLIC_LINK_ORIGINS` when set.
-- [ ] Sharing and invite link generation derives from `ALLOWED_DOMAINS` when no public link origin is set.
-- [ ] Multiple configured public origins are exposed to the sharing UI for owner selection.
-- [ ] Existing deployments using `ALLOWED_DOMAINS=host.example.com` continue to work.
-- [ ] Route/unit tests cover configured public origin, allowed-domain fallback, and current-origin fallback.
-- [ ] Documentation points operators to the runtime config SOT.
+- [x] Backend has one typed runtime config module that parses env at startup.
+- [x] Direct backend `process.env` reads are limited to config/startup/test setup boundaries.
+- [x] Sharing and invite link generation honors `PUBLIC_ORIGIN` when set.
+- [x] Removed origin variables are not part of runtime behavior.
+- [x] Route/unit tests cover configured public origin and current-origin fallback.
+- [x] Documentation points operators to the runtime config SOT.
 
 ## Verification
 

@@ -1,8 +1,7 @@
 import type { CorsOptions } from 'cors'
 import type { NextFunction, Request, Response } from 'express'
-import process from 'node:process'
 
-const DEFAULT_ALLOWED_ORIGINS = [
+const DEFAULT_LOCAL_ORIGINS = [
   'http://localhost:5173',
   'http://localhost:3001',
   'http://localhost:4173',
@@ -23,28 +22,35 @@ function trimTrailingSlash(value: string): string {
   return value.replace(/\/+$/, '')
 }
 
-export function parseAllowedDomains(value: string | undefined): string[] {
+export function parsePublicOrigin(value: string | undefined): string | undefined {
   if (!value) {
-    return []
+    return undefined
   }
 
-  return value
-    .split(',')
-    .map(domain => trimTrailingSlash(domain.trim()))
-    .filter(Boolean)
-    .flatMap((domain) => {
-      if (/^https?:\/\//i.test(domain)) {
-        return [domain]
-      }
+  const trimmedValue = value.trim()
+  if (trimmedValue.includes(',')) {
+    return undefined
+  }
 
-      return [`https://${domain}`, `http://${domain}`]
-    })
+  try {
+    const parsed = new URL(trimmedValue)
+    if (!['http:', 'https:'].includes(parsed.protocol) || parsed.pathname !== '/' || parsed.search || parsed.hash) {
+      return undefined
+    }
+
+    return parsed.origin
+  }
+  catch {
+    return undefined
+  }
 }
 
-export function createAllowedOrigins(allowedDomains = process.env.ALLOWED_DOMAINS): string[] {
+export function createAllowedOrigins(publicOrigin?: string): string[] {
+  const normalizedPublicOrigin = publicOrigin ? trimTrailingSlash(publicOrigin.trim()) : undefined
+
   return Array.from(new Set([
-    ...DEFAULT_ALLOWED_ORIGINS,
-    ...parseAllowedDomains(allowedDomains),
+    ...DEFAULT_LOCAL_ORIGINS,
+    ...(normalizedPublicOrigin ? [normalizedPublicOrigin] : []),
   ]))
 }
 
@@ -72,8 +78,8 @@ export function createOriginPolicy(allowedOrigins: Iterable<string>): OriginPoli
   }
 }
 
-export function createDefaultOriginPolicy(allowedDomains = process.env.ALLOWED_DOMAINS): OriginPolicy {
-  return createOriginPolicy(createAllowedOrigins(allowedDomains))
+export function createDefaultOriginPolicy(publicOrigin?: string): OriginPolicy {
+  return createOriginPolicy(createAllowedOrigins(publicOrigin))
 }
 
 export function createCorsOptions(originPolicy: OriginPolicy, logger?: OriginPolicyLogger): CorsOptions {
