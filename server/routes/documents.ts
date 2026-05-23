@@ -1,5 +1,6 @@
 import type { DocumentController } from '../controllers/DocumentController.js'
 import type { ProjectController } from '../controllers/ProjectController.js'
+import type { NextFunction, Request, Response } from 'express'
 import { Router } from 'express'
 
 /**
@@ -14,6 +15,22 @@ export function createDocumentRouter(
   projectController: ProjectController,
 ): Router {
   const router = Router()
+  const requireVisibleProject = async (req: Request, res: Response, next: NextFunction) => {
+    const projectId = typeof req.query.projectId === 'string'
+      ? req.query.projectId
+      : typeof req.body?.projectId === 'string'
+        ? req.body.projectId
+        : null
+
+    if (!projectId) {
+      next()
+      return
+    }
+
+    if (await projectController.ensureProjectVisible(projectId, req, res)) {
+      next()
+    }
+  }
 
   /**
    * @openapi
@@ -35,7 +52,7 @@ export function createDocumentRouter(
    *       400: { $ref: '#/components/responses/BadRequest' }
    *       404: { $ref: '#/components/responses/NotFound' }
    */
-  router.get('/', (req, res) => documentController.getDocuments(req, res))
+  router.get('/', requireVisibleProject, (req, res) => documentController.getDocuments(req, res))
 
   /**
    * @openapi
@@ -63,7 +80,7 @@ export function createDocumentRouter(
    *       403: { description: Access denied or invalid file path }
    *       404: { $ref: '#/components/responses/NotFound' }
    */
-  router.get('/content', (req, res) => documentController.getDocumentContent(req, res))
+  router.get('/content', requireVisibleProject, (req, res) => documentController.getDocumentContent(req, res))
 
   /**
    * @openapi

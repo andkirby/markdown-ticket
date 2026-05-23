@@ -9,6 +9,7 @@
  */
 import * as React from 'react'
 import { useCallback, useEffect, useState } from 'react'
+import { authFetch } from '@/auth/authFetch'
 import { ScrollArea } from '@/components/ui/scroll-area'
 
 interface PathItem {
@@ -33,7 +34,7 @@ export default function PathSelector({ projectId, onPathsSelected, onCancel }: P
   const loadFileSystem = useCallback(async () => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/filesystem?projectId=${encodeURIComponent(projectId)}`)
+      const response = await authFetch(`/api/filesystem?projectId=${encodeURIComponent(projectId)}`)
       if (response.ok) {
         const data = await response.json()
         setItems(data)
@@ -50,7 +51,7 @@ export default function PathSelector({ projectId, onPathsSelected, onCancel }: P
   const loadCurrentDocumentPaths = useCallback(async () => {
     try {
       // Get the actual configured paths from the config file
-      const response = await fetch(`/api/projects/${encodeURIComponent(projectId)}/config`)
+      const response = await authFetch(`/api/projects/${encodeURIComponent(projectId)}/config`)
 
       if (response.ok) {
         const data = await response.json()

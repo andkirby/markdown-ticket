@@ -112,6 +112,22 @@ annotation "Priority, phase, and relationship badges are hidden by board prefere
 annotation "Visible badges keep TicketAttributeTags order" target="configured-status" position=top
 ```
 
+## Read-only State
+
+```wireloom
+window "Ticket Card — Read-only":
+  panel:
+    row:
+      text "MDT-172" bold id="readonly-ticket-code"
+      text "Public read-only sharing"
+    row:
+      chip "Implemented"
+      chip "High"
+      chip "Feature"
+
+annotation "Card opens viewer only; edit icon and drag affordance are absent" target="readonly-ticket-code" position=right
+```
+
 ## Invalid Status
 
 ```wireloom
@@ -143,6 +159,7 @@ annotation "data-invalid=true, tooltip: 'Invalid status: Foo'" target="invalid-b
 | Title text | `--foreground` | `text-gray-900 dark:text-white` | `font-semibold text-sm` |
 | Separator | `--foreground` | `•` with `mx-1` | Between code and title |
 | Edit icon | `--muted-foreground` | `opacity-0 group-hover:opacity-100` | 4×4 pencil |
+| Read-only card | `--foreground` | no edit icon, no move cursor | Opens viewer only |
 | Badges | badge.css vars | `.badge[data-*]` | See BADGE_ARCHITECTURE.md |
 | Worktree icon | n/a | `🪾` emoji | Appended to ticket code in title row; also shown as a chip in badge bar |
 | Hidden badge preference | localStorage | `markdown-ticket:board:ticket-card-badges` | Filters board card badges only; no visual placeholder |

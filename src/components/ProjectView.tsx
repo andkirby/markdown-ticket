@@ -2,6 +2,7 @@ import type { Project } from '@mdt/shared/models/Project'
 import type { SortPreferences } from '../config/sorting'
 import type { Ticket } from '../types'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { authFetch } from '../auth/authFetch'
 import { sortTickets } from '../utils/sorting'
 import { StatusBadge } from './Badge'
 import Board from './Board'
@@ -21,9 +22,10 @@ interface ProjectViewProps {
   viewMode?: ViewMode
   loading?: boolean
   sortPreferences?: SortPreferences
+  canWrite?: boolean
 }
 
-export default function ProjectView({ onTicketClick, selectedProject, tickets: propTickets, updateTicketOptimistic, viewMode: externalViewMode, loading: propLoading, sortPreferences }: ProjectViewProps) {
+export default function ProjectView({ onTicketClick, selectedProject, tickets: propTickets, updateTicketOptimistic, viewMode: externalViewMode, loading: propLoading, sortPreferences, canWrite = true }: ProjectViewProps) {
   // Use external viewMode if provided, otherwise fall back to internal state
   const [internalViewMode] = useState<ViewMode>(() => {
     const saved = localStorage.getItem(VIEW_MODE_KEY)
@@ -54,13 +56,17 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
   }, [selectedProject])
 
   const handleTicketUpdate = useCallback(async (ticketCode: string, updates: Partial<Ticket>) => {
+    if (!canWrite) {
+      throw new Error('Read-only session cannot update tickets')
+    }
+
     const currentProject = selectedProjectRef.current
     if (!currentProject) {
       throw new Error('No project selected')
     }
 
     try {
-      const response = await fetch(`/api/projects/${currentProject.id}/crs/${ticketCode}`, {
+      const response = await authFetch(`/api/projects/${currentProject.id}/crs/${ticketCode}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -103,7 +109,7 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
       console.error('Failed to update ticket:', error)
       throw error
     }
-  }, []) // Removed selectedProject from deps - using ref instead
+  }, [canWrite]) // Removed selectedProject from deps - using ref instead
 
   return (
     <div className="h-full flex flex-col">
@@ -119,6 +125,7 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
                 tickets={propTickets || []}
                 loading={loading}
                 sortPreferences={sortPreferences}
+                canWrite={canWrite}
               />
             )
           : viewMode === 'list'
@@ -184,7 +191,7 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
               ? (
                   selectedProject
                     ? (
-                        <DocumentsLayout projectId={selectedProject.id} />
+                        <DocumentsLayout projectId={selectedProject.id} canWrite={canWrite} />
                       )
                     : (
                         <div className="flex items-center justify-center h-full text-muted-foreground">

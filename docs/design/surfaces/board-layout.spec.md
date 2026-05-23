@@ -1,6 +1,6 @@
 # Board Layout
 
-Kanban board — the primary surface for viewing and managing tickets as columns. Each column maps to one or more ticket statuses. Supports drag-and-drop, inline sort/filter, and responsive mobile column switching.
+Kanban board — the primary surface for viewing tickets as columns. In owner/admin mode it supports management actions; in read-only mode it preserves viewing, sorting, filtering, and responsive mobile column switching while blocking all mutations.
 
 ## Composition
 
@@ -138,6 +138,7 @@ On mobile (`< 768px`), only one column is visible at a time. The `useBoardLayout
 | no project | no project selected | centered empty state: 📋 icon, message, backend-down alert |
 | error | API failure | destructive Alert with Refresh button |
 | resolution dialog | drop on Done column | modal asking status choice (Implemented / Partially Implemented / Rejected) |
+| read-only | current access mode lacks write/admin | Create hidden/disabled, drag handles inactive, drop highlights disabled, status toggles view-only, ticket edit/delete affordances hidden |
 
 ## Drag-and-Drop
 
@@ -148,12 +149,14 @@ On mobile (`< 768px`), only one column is visible at a time. The `useBoardLayout
 - On drop: updates ticket status via API with optimistic UI update
 - Error: toast notification, reverts optimistic state
 - Hold/Reject restore: tickets moving from hold/reject back to active status restore their saved column position
+- Read-only mode: `DndProvider` may remain mounted for layout compatibility, but tickets are not draggable and drop targets do not call mutation APIs.
 
 ## Sort & Filter
 
 - **Sort**: Applied per-column, not globally. `SortPreferences` stored in localStorage (`markdown-ticket-sort-preferences`). Attributes: Key (desc), Title (asc), Created Date (desc), Update Date (desc).
 - **Filter**: Board-level text filter matching title, code, or description. Applied before column grouping.
 - Both controls in `showHeader` mode only (multi-project Board). In single-project mode, controls live in the app header.
+- Sort and filter remain available in read-only mode because they do not mutate server state.
 
 ## Tokens used
 
@@ -164,6 +167,7 @@ On mobile (`< 768px`), only one column is visible at a time. The `useBoardLayout
 | ticket count | `--primary` | `bg-primary/20 text-primary` pill |
 | border | `--border` | column borders |
 | background | `--background` | column content area |
+| read-only badge | `--muted` | compact chip; usually owned by App Header |
 
 ## Extension notes
 

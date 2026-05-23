@@ -88,6 +88,7 @@ Card fills the column width minus padding. Column padding is `px-3`, drop zone g
 | dragging | user drags the card | wrapper: `opacity-40 scale-95 rotate-2 shadow-2xl`, cursor: move |
 | invalid status | status not in valid set | class `ticket-card--invalid`, `data-invalid="true"`, title tooltip shows invalid status name |
 | click | user clicks card | opens TicketViewer modal for this ticket |
+| read-only | `canEdit=false` from project view | card remains clickable for viewing; edit icon/action is absent; drag wrapper disables dragging |
 
 ## Badge Display Order
 
@@ -144,3 +145,4 @@ The code segment renders with worktree indicator:
 - Invalid status detection: `isValidStatus()` checks against hardcoded CR status list. If statuses become configurable, this check must update.
 - The drag wrapper (`DraggableTicketCard`) lives in `Column/index.tsx`, not in TicketCard. Card does not own its own drag behavior.
 - Edit button on hover uses `group-hover` — requires `group` class on the card root.
+- Read-only cards must not show a disabled pencil placeholder. Remove the edit affordance entirely so the card reads as a viewer link, not a blocked editor.

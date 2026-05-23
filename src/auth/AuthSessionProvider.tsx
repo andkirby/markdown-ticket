@@ -1,31 +1,16 @@
 import type { ReactNode } from 'react'
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import type { AccessMode, AuthSessionContextValue, SessionStatus } from './AuthSessionContext'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { syncSSEAccessMode } from '../services/sseClient'
 import { authFetch, isAuthRequiredResponse, isBackendDownError, isBackendDownResponse } from './authFetch'
+import { AuthSessionContext } from './AuthSessionContext'
 
-export type AccessMode = 'unknown' | 'locked' | 'owner-admin' | 'no-auth-dev' | 'backend-down'
-export type SessionStatus = 'checking' | 'locked' | 'unlocking' | 'unlocked' | 'error'
 type AuthEndpointState = 'checking' | 'enabled' | 'disabled' | 'unsupported'
-
-export interface AuthSessionContextValue {
-  accessMode: AccessMode
-  sessionStatus: SessionStatus
-  canManageProjects: boolean
-  unlock: (token: string) => Promise<void>
-  lock: () => Promise<void>
-  markLocked: () => void
-  markBackendDown: () => void
-  markNoAuthDev: () => void
-  markOwnerAdmin: () => void
-  markProjectListLoaded: (projectCount: number) => void
-}
 
 interface SessionResponse {
   authEnabled?: boolean
   authenticated?: boolean
 }
-
-const AuthSessionContext = createContext<AuthSessionContextValue | null>(null)
 
 export function AuthSessionProvider({ children }: { children: ReactNode }) {
   const [accessMode, setAccessMode] = useState<AccessMode>('unknown')
@@ -35,6 +20,12 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
   const markLocked = useCallback(() => {
     setAccessMode('locked')
     setSessionStatus('locked')
+  }, [])
+
+  const markReadOnly = useCallback(() => {
+    setAuthEndpointState('enabled')
+    setAccessMode('read-only')
+    setSessionStatus('unlocked')
   }, [])
 
   const markBackendDown = useCallback(() => {
@@ -61,13 +52,14 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
         current === 'backend-down'
         || current === 'owner-admin'
         || current === 'no-auth-dev'
+        || current === 'locked'
       ) {
         return current
       }
 
-      return 'locked'
+      return 'read-only'
     })
-    setSessionStatus(current => current === 'checking' ? 'locked' : current)
+    setSessionStatus(current => current === 'checking' ? 'unlocked' : current)
   }, [])
 
   const markProjectListLoaded = useCallback((_projectCount: number) => {
@@ -84,7 +76,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
         return current
       }
 
-      return current === 'unknown' ? 'locked' : current
+      return current === 'unknown' ? 'read-only' : current
     })
     setSessionStatus((current) => {
       if (authEndpointState === 'disabled' || authEndpointState === 'unsupported') {
@@ -93,7 +85,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
       if (authEndpointState === 'checking') {
         return current
       }
-      return current === 'checking' ? 'locked' : current
+      return current === 'checking' ? 'unlocked' : current
     })
   }, [authEndpointState])
 
@@ -108,6 +100,23 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
 
       if (!response.ok) {
         if (isAuthRequiredResponse(response)) {
+          const readResponse = await authFetch('/api/auth/read-token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token }),
+          })
+
+          if (readResponse.ok) {
+            markReadOnly()
+            syncSSEAccessMode('read-only', { forceReconnect: true })
+            return
+          }
+
+          if (isBackendDownResponse(readResponse)) {
+            markBackendDown()
+            return
+          }
+
           setAccessMode('locked')
           setSessionStatus('error')
           return
@@ -133,7 +142,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
       token = ''
       void token
     }
-  }, [markBackendDown, markOwnerAdmin])
+  }, [markBackendDown, markOwnerAdmin, markReadOnly])
 
   const lock = useCallback(async () => {
     try {
@@ -213,6 +222,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
     unlock,
     lock,
     markLocked,
+    markReadOnly,
     markBackendDown,
     markNoAuthDev,
     markOwnerAdmin,
@@ -223,6 +233,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
     unlock,
     lock,
     markLocked,
+    markReadOnly,
     markBackendDown,
     markNoAuthDev,
     markOwnerAdmin,
@@ -234,13 +245,4 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthSessionContext.Provider>
   )
-}
-
-export function useAuthSession(): AuthSessionContextValue {
-  const context = useContext(AuthSessionContext)
-  if (!context) {
-    throw new Error('useAuthSession must be used within AuthSessionProvider')
-  }
-
-  return context
 }

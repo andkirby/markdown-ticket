@@ -12,11 +12,11 @@ window "Markdown Ticket Board — Locked":
       button "Theme"
   panel:
     section "Board is locked" id="locked-card":
-      text "This server requires an owner access token before projects can be managed."
+      text "This server accepts an owner token for management or a read token for scoped read-only access."
       text "Access token"
       input placeholder="Enter access token" type=password id="token-input"
       button "Unlock" primary id="unlock-button"
-      text "Your token is exchanged for a secure server session and is not stored in browser storage."
+      text "Tokens are exchanged for a secure server session and are not stored in browser storage."
 
 annotation "401 from /api/projects routes here; never show No Projects Found for auth-required." target="locked-card" position=right
 annotation "Raw token stays only in input state until POST /api/auth/session returns." target="token-input" position=bottom
@@ -32,7 +32,7 @@ window "Markdown Ticket Board — Unlock Error":
       status "Locked" kind=warning
   panel:
     section "Board is locked":
-      text "This server requires an owner access token before projects can be managed."
+      text "This server accepts an owner token for management or a read token for scoped read-only access."
       text "Access token"
       input placeholder="Enter access token" type=password id="retry-input"
       text "Token was not accepted." id="token-error"
@@ -40,6 +40,28 @@ window "Markdown Ticket Board — Unlock Error":
       text "Check the token configured on the server and try again."
 
 annotation "Generic error: do not reveal whether token length, format, or value was close." target="token-error" position=right
+```
+
+## Read-only session
+
+```wireloom
+window "Markdown Ticket Board — Read-only Session":
+  header:
+    row justify=between:
+      text "Markdown Ticket Board" bold
+      row:
+        status "Read only" kind=info id="readonly-chip"
+        button "Unlock" id="readonly-unlock"
+  panel:
+    row justify=between:
+      text "Public Project" bold
+      combo value="Key ▾"
+    list:
+      item "MDT-172 — Public read-only sharing"
+      item "MDT-168 — Documentation polish"
+
+annotation "Read-only users can view, sort, search, and open tickets; mutations stay hidden or disabled." target="readonly-chip" position=bottom
+annotation "Unlock reuses the same token panel for owner-token upgrade." target="readonly-unlock" position=right
 ```
 
 ## Owner session unlocked
@@ -64,6 +86,21 @@ annotation "Create Project appears only after owner/admin session is established
 annotation "Lock clears server session cookie; it does not delete data." target="owner-chip" position=bottom
 ```
 
-## MDT-172 placeholder
+## Read token accepted
 
-Public/read-only project visibility is intentionally not mocked here. MDT-172 owns the sharing contract, labels, empty states, and owner-upgrade affordance. MDT-176 only distinguishes locked, owner session, local auth-off, and backend unavailable states.
+```wireloom
+window "Markdown Ticket Board — Read Token Accepted":
+  header:
+    row justify=between:
+      text "Markdown Ticket Board" bold
+      row:
+        status "Read only" kind=info id="token-readonly-chip"
+        button "Unlock"
+  panel:
+    text "Scoped projects" bold
+    list:
+      item "PRI — Private Project (read token)"
+      item "PUB — Public Project"
+
+annotation "Read token broadens visible projects only; it does not grant writes." target="token-readonly-chip" position=bottom
+```

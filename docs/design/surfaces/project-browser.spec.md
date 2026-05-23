@@ -1,6 +1,6 @@
 # Project Browser
 
-Full-screen overlay panel for browsing, filtering, and switching between all registered projects. MDT-129 plus MDT-152 search extension.
+Full-screen overlay panel for browsing, filtering, and switching between projects visible to the current access mode. MDT-129 plus MDT-152 search extension.
 
 ## Composition
 
@@ -15,7 +15,7 @@ ProjectBrowserPanel
     │   └── CloseButton (p-2, rounded-lg, hover:bg-gray-100)
     └── ProjectList (max-h-[60vh], overflow-y-auto, p-6)
         ├── ProjectGrid (grid grid-cols-1 md:grid-cols-2, gap-4)
-        │   └── ProjectSelectorCard[] (border rounded-xl)
+        │   └── ProjectSelectorCard[] (border rounded-xl, optional access badge)
         └── EmptyState (text-center py-12)
             ├── no-projects (0 registered)
             └── no-search-results (query matches nothing)
@@ -55,6 +55,7 @@ LauncherButton (+ icon, rounded-full w-10 h-10)
 ## Search Logic
 
 - **Scope**: Client-side filter on preloaded project list
+- **Visibility**: The preloaded list is already filtered by backend access mode: anonymous users receive `public-readonly` projects only; `unlisted-readonly` projects are absent unless opened through `/share/{shareId}`; read-token users receive token-scoped projects; owner/admin users receive all allowed projects.
 - **Match**: Case-insensitive substring on project `code`, title (`name` in the data model), OR `description`
 - **Current project exclusion**: If the query matches the current project code, title/name, or description, the current project does NOT appear in results
 - **Debounce**: None needed (instant client-side filtering)
@@ -113,6 +114,7 @@ LauncherButton (+ icon, rounded-full w-10 h-10)
 | searching | User types in search input | Filter project cards by code/title/description substring; current project excluded if matched |
 | no projects | 0 registered projects | Empty state: "No projects available" |
 | no search results | Query matches zero projects (excluding current) | Empty state: "No projects match your search" |
+| no visible projects | API returns zero listable projects for current access mode | Empty state: "No public projects available"; Authorize action visible |
 
 ### Card
 
@@ -123,6 +125,7 @@ LauncherButton (+ icon, rounded-full w-10 h-10)
 | hover | Mouse enter | `hover:shadow-lg`, `-translate-y-0.5`, `scale-[1.02]` |
 | favorited | `project.favorite === true` | Star icon visible, `rotate-[15deg]` |
 | not favorited | `project.favorite === false` | No star (or hidden star on hover) |
+| read-only visible | project access mode is read-only | small "Read-only" badge; favorite star toggle hidden because it writes state |
 
 ### Chip
 
@@ -213,6 +216,8 @@ Focused project cards show the standard blue focus ring. Arrow navigation applie
 4. Navigation to `/prj/{key}` (preserving last view mode)
 5. Panel closes after selection (panel calls `onClose()` in its `handleProjectSelect`)
 
+Read-only visitors can select visible listable projects normally. Project cards must not reveal private or unlisted project names, counts, paths, or disabled placeholders.
+
 ## Favorite toggle behavior
 
 1. User clicks star → `onFavoriteToggle(projectKey, event)` fires
@@ -225,3 +230,6 @@ Focused project cards show the standard blue focus ring. Arrow navigation applie
 - The "Add Project" flow is handled by `AddProjectModal`, not this surface
 - HoverCard open/close delay is configurable (100ms default per MDT-129 AC)
 - Cross-project ticket search from Cmd+K is specified in `quick-search.spec.md`
+- Visibility is backend-filtered. Do not implement client-side hiding as the only privacy control.
+- `unlisted-readonly` is reachable by share route, not by anonymous project browser listing.
+- Read-only cards can show a static access badge, but must not expose favorite toggles because selector favorites are mutable user state.

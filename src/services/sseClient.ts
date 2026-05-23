@@ -70,6 +70,7 @@ class SSEClient {
   private url: string = ''
   private isConnected = false
   private suppressed = false
+  private accessMode: string | null = null
 
   // Event deduplication tracking
   private processedEventIds = new Set<string>()
@@ -209,6 +210,14 @@ class SSEClient {
     }
   }
 
+  getAccessMode(): string | null {
+    return this.accessMode
+  }
+
+  setAccessMode(accessMode: string | null): void {
+    this.accessMode = accessMode
+  }
+
   /**
    * Get connection statistics
    */
@@ -217,12 +226,14 @@ class SSEClient {
     reconnectAttempts: number
     url: string
     readyState: number | null
+    accessMode: string | null
   } {
     return {
       isConnected: this.isConnected,
       reconnectAttempts: this.reconnectAttempts,
       url: this.url,
       readyState: this.eventSource?.readyState ?? null,
+      accessMode: this.accessMode,
     }
   }
 
@@ -485,7 +496,7 @@ class SSEClient {
 // Export singleton instance
 const sseClient = new SSEClient()
 
-export function syncSSEAccessMode(accessMode: string): void {
+export function syncSSEAccessMode(accessMode: string, options: { forceReconnect?: boolean } = {}): void {
   if (typeof window === 'undefined') {
     return
   }
@@ -494,6 +505,10 @@ export function syncSSEAccessMode(accessMode: string): void {
     return
   }
 
+  const previousAccessMode = sseClient.getAccessMode()
+  const accessModeChanged = previousAccessMode !== null && previousAccessMode !== accessMode
+  sseClient.setAccessMode(accessMode)
+
   if (accessMode === 'locked' || accessMode === 'backend-down') {
     sseClient.setSuppressed(true)
     return
@@ -501,14 +516,14 @@ export function syncSSEAccessMode(accessMode: string): void {
 
   sseClient.setSuppressed(false)
 
+  if (accessModeChanged || options.forceReconnect) {
+    sseClient.connect()
+    return
+  }
+
   if (!sseClient.isSSEConnected()) {
     sseClient.connect()
   }
-}
-
-// Auto-connect on module load (can be disabled if needed)
-if (typeof window !== 'undefined') {
-  sseClient.connect()
 }
 
 export { sseClient }

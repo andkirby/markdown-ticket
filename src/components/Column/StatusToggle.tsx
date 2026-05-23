@@ -19,6 +19,7 @@ interface StatusToggleProps {
   // Optional external state management
   mergeMode?: boolean
   setMergeMode?: (enabled: boolean) => void
+  canWrite?: boolean
 }
 
 const StatusToggle: React.FC<StatusToggleProps> = ({
@@ -32,6 +33,7 @@ const StatusToggle: React.FC<StatusToggleProps> = ({
   clearTicketPosition,
   mergeMode: externalMergeMode,
   setMergeMode: externalSetMergeMode,
+  canWrite = true,
 }) => {
   const { mergeMode: internalMergeMode, activeState: _activeState, toggleViewMode: _toggleViewMode, setMergeMode: internalSetMergeMode, isHovering: _isHovering, handleMouseEnter, handleMouseLeave } = useButtonModes()
   const [isHoveringCount, setIsHoveringCount] = useState(false)
@@ -42,14 +44,18 @@ const StatusToggle: React.FC<StatusToggleProps> = ({
   const setMergeMode = externalSetMergeMode || internalSetMergeMode
 
   // Update showCheckbox based on all hover states
-  const showCheckbox = isHoveringCount || mergeMode
+  const showCheckbox = canWrite && (isHoveringCount || mergeMode)
 
   const { drop, isOver } = useDropZone({
     onDrop: (item) => {
+      if (!canWrite) {
+        return
+      }
       // When a ticket is dropped on the StatusToggle, update its status to match the toggle status
       onDrop(status, item.ticket)
     },
     markHandled: true, // Prevent further drop handling by parent
+    canDrop: () => canWrite,
   })
 
   const getIcon = () => {
@@ -78,6 +84,10 @@ const StatusToggle: React.FC<StatusToggleProps> = ({
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.stopPropagation()
+    if (!canWrite) {
+      return
+    }
+
     const isChecked = e.target.checked
 
     // Only toggle merge mode, don't execute merge
@@ -126,7 +136,7 @@ const StatusToggle: React.FC<StatusToggleProps> = ({
   const getCheckboxClasses = () => {
     const baseClasses = 'w-4 h-4 rounded transition-all duration-150 ease-out cursor-pointer'
 
-    if (mergeMode) {
+    if (mergeMode && canWrite) {
       // Orange theme when checked (merge mode active)
       return `${baseClasses} text-orange-600 bg-orange-100 border-orange-400 focus:ring-orange-500 focus:ring-2 focus:ring-offset-1 dark:focus:ring-offset-gray-800`
     }
@@ -145,7 +155,7 @@ const StatusToggle: React.FC<StatusToggleProps> = ({
       return `${baseClasses} bg-orange-100 border-orange-300 text-orange-800 dark:bg-orange-900/20 dark:border-orange-700 dark:text-orange-300`
     }
 
-    if (mergeMode) {
+    if (mergeMode && canWrite) {
       // Merge mode - gray button with orange border
       return `${baseClasses} bg-gray-100 border-gray-300 text-gray-700 dark:bg-gray-700 dark:border-gray-500 dark:text-gray-300 ring-2 ring-orange-300 dark:ring-orange-600`
     }
@@ -169,7 +179,7 @@ const StatusToggle: React.FC<StatusToggleProps> = ({
           ${getButtonStyles()}
           ${isOver ? 'ring-2 ring-blue-400 bg-blue-50 dark:bg-blue-950/20' : ''}
         `}
-        title={mergeMode ? `Click to exit merge mode. Drag tickets here to move them to parent column.` : `${status} tickets${ticketCount > 0 ? ` (${ticketCount})` : ''}`}
+        title={mergeMode && canWrite ? `Click to exit merge mode. Drag tickets here to move them to parent column.` : `${status} tickets${ticketCount > 0 ? ` (${ticketCount})` : ''}`}
       >
         <span className="flex items-center justify-between w-full gap-2">
           <span className="flex items-center gap-1">

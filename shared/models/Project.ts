@@ -11,6 +11,8 @@ export type {
   ProjectConfigProject,
   ProjectDetails,
   ProjectDocumentSettings,
+  ProjectSharingModeValue,
+  ProjectSharingSettings,
   ProjectMetadata,
   ProjectRegistryEntry,
   ProjectRegistryProject,
@@ -18,6 +20,12 @@ export type {
   RegistryData,
   TicketsPath,
   UpdateProjectInput,
+} from '@mdt/domain-contracts'
+
+export {
+  ProjectSharingMode,
+  ProjectSharingModes,
+  ProjectSharingSettingsSchema,
 } from '@mdt/domain-contracts'
 
 type LegacyProjectConfig = ProjectConfig & {

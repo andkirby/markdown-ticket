@@ -1,3 +1,4 @@
+import type { Project } from '@mdt/shared/models/Project'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test'
 import { MARKDOWN_DENSITY_KEY } from '../config/settingsPreferences'
@@ -19,6 +20,30 @@ function installMatchMedia(): void {
       dispatchEvent: mock(),
     })),
   })
+}
+
+function createProject(overrides: Partial<Project> = {}): Project {
+  return {
+    id: 'MDT',
+    project: {
+      id: 'MDT',
+      name: 'Markdown Ticket',
+      code: 'MDT',
+      path: '/tmp/markdown-ticket',
+      configFile: '.mdt-config.toml',
+      active: true,
+      description: '',
+      repository: '',
+      ticketsPath: 'docs/CRs',
+    },
+    metadata: {
+      dateRegistered: '2026-05-23',
+      lastAccessed: '2026-05-23',
+      version: '1.0.0',
+      sharing: { mode: 'private' },
+    },
+    ...overrides,
+  }
 }
 
 describe('SettingsModal', () => {
@@ -101,5 +126,38 @@ describe('SettingsModal', () => {
     fireEvent.click(screen.getByTestId('settings-event-history'))
 
     expect(localStorage.getItem('mdt-eventHistory-hidden')).toBe('true')
+  })
+
+  it('shows project access help for owner sharing settings', () => {
+    render(<SettingsModal isOpen={true} onClose={onClose} selectedProject={createProject()} />)
+    selectTab('settings-tab-sharing')
+
+    expect(screen.getByTestId('settings-sharing-mode')).toBeInTheDocument()
+    expect(screen.getByTestId('settings-sharing-info')).toHaveAccessibleName('Project access mode details')
+  })
+
+  it('shows an informative sharing error when the project or endpoint is missing', async () => {
+    const fetchMock = mock(() => Promise.resolve(new Response(
+      JSON.stringify({ error: 'Not Found', message: 'Project not found' }),
+      {
+        status: 404,
+        statusText: 'Not Found',
+        headers: { 'Content-Type': 'application/json' },
+      },
+    )))
+    globalThis.fetch = fetchMock as unknown as typeof fetch
+
+    render(<SettingsModal isOpen={true} onClose={onClose} selectedProject={createProject()} />)
+    selectTab('settings-tab-sharing')
+
+    fireEvent.change(screen.getByTestId('settings-sharing-mode'), {
+      target: { value: 'public-readonly' },
+    })
+    fireEvent.click(screen.getByTestId('settings-save-sharing'))
+
+    await waitFor(() => {
+      expect(screen.getByText(/project "MDT" or the sharing endpoint was not found/u)).toBeInTheDocument()
+    })
+    expect(screen.getByText(/404 Not Found/u)).toBeInTheDocument()
   })
 })

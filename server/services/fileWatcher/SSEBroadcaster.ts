@@ -39,6 +39,10 @@ export interface ResponseLike {
   destroyed?: boolean
   closed?: boolean
   end?: () => void
+  mdtSseScope?: {
+    canWrite: boolean
+    projectRefs: string[]
+  }
 }
 
 /**
@@ -60,6 +64,22 @@ export class SSEBroadcaster extends EventEmitter {
     this.clients.delete(response)
   }
 
+  disconnectReadOnlyClients(): void {
+    this.clients.forEach((client) => {
+      if (!client.mdtSseScope || client.mdtSseScope.canWrite) {
+        return
+      }
+
+      try {
+        client.end?.()
+      }
+      catch {
+        // Ignore disconnect cleanup errors.
+      }
+      this.removeClient(client)
+    })
+  }
+
   sendSSEEvent(response: ResponseLike, event: SSEEvent): void {
     response.write(`data: ${JSON.stringify(event)}\n\n`)
   }
@@ -74,7 +94,8 @@ export class SSEBroadcaster extends EventEmitter {
       try {
         if (client.destroyed || client.closed)
           staleClients.push(client)
-        else this.sendSSEEvent(client, event)
+        else if (canClientReceiveEvent(client, event))
+          this.sendSSEEvent(client, event)
       }
       catch {
         staleClients.push(client)
@@ -137,4 +158,27 @@ export class SSEBroadcaster extends EventEmitter {
     this.clients.clear()
     this.eventQueue = []
   }
+}
+
+function canClientReceiveEvent(client: ResponseLike, event: SSEEvent): boolean {
+  const scope = client.mdtSseScope
+  if (!scope || scope.canWrite) {
+    return true
+  }
+
+  const projectId = extractProjectId(event)
+  if (!projectId) {
+    return true
+  }
+
+  return scope.projectRefs.includes(projectId)
+}
+
+function extractProjectId(event: SSEEvent): string | null {
+  if (!event.data || typeof event.data !== 'object') {
+    return null
+  }
+
+  const projectId = (event.data as { projectId?: unknown }).projectId
+  return typeof projectId === 'string' ? projectId : null
 }

@@ -95,6 +95,8 @@ The system supports three valid file relationship states:
 
 ### Project Clone Prevention with Git Worktrees
 
+For the durable architecture rule, see [Project Identity and Worktrees](architecture/project-identity-and-worktrees.md).
+
 **Rule**: `config.project.id` must equal the directory basename
 
 **Implementation**:

@@ -40,6 +40,44 @@ annotation "Active project has blue gradient bg and star" target="card-mdt" posi
 annotation "Inactive projects use white/gray gradient" target="card-abc" position=right
 ```
 
+### Read-only Project List
+
+```wireloom
+window "Project Browser — Read-only":
+  panel:
+    row:
+      text "Projects" bold
+      input placeholder="Search projects..." type=search
+      button "×"
+    divider
+    grid cols=2 rows=1:
+      cell id="readonly-card-mdt":
+        row:
+          text "MDT" bold
+          chip "Read-only" id="readonly-project-chip"
+        text "Markdown Ticket"
+        text "Lightweight ticket mgmt" muted
+
+annotation "Favorite toggle is absent because it writes selector state" target="readonly-project-chip" position=right
+```
+
+### Public Visitor Empty State
+
+```wireloom
+window "Project Browser — No Public Projects":
+  panel:
+    row:
+      text "Projects" bold
+      input placeholder="Search projects..." type=search
+      button "×"
+    divider
+    text "No public projects available" muted id="no-public-projects"
+    row:
+      button "Authorize" id="authorize-from-empty"
+
+annotation "Unlisted share links do not appear here" target="no-public-projects" position=bottom
+```
+
 ### Search State (User Types "MD")
 
 Current project (MDT) is excluded when the query matches its code, title, or description:
@@ -157,8 +195,8 @@ window "Project Browser — Mobile":
     list:
       slot "MDT":
         row:
-          icon name="star"
           text "Markdown Ticket" bold
+          chip "Read-only"
         text "Lightweight mgmt" muted
       slot "ABC":
         text "Another Project"
@@ -362,6 +400,8 @@ annotation "Appears centered with pt-20 offset" target="rail-panel-search" posit
 | Empty state | `--muted-foreground` | `text-center py-12 text-gray-500` | |
 | HoverCard | — | shadcn `HoverCard` / `HoverCardContent` | w-80, 100ms delay |
 | Search section label | `--muted-foreground` | `text-xs uppercase tracking-wide` | "No projects match your search" |
+| No public projects action | `--primary` | outline or secondary button | Opens Authorize modal |
+| Read-only badge | `--muted` | compact chip | Replaces mutable favorite affordance for visitors |
 
 ## Maintenance Notes
 

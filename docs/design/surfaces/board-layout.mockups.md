@@ -86,6 +86,42 @@ annotation "ring-2 ring-blue-400/30 highlight" target="drag-col-header" position
 annotation "bg-blue-50/50 drop target zone" target="drop-zone" position=right
 ```
 
+## Read-only State
+
+```wireloom
+window "Board — Read-only":
+  panel:
+    row:
+      chip "Read-only" id="board-readonly-badge"
+      spacer
+      combo value="Key ▾"
+    grid cols=4 rows=1:
+      cell:
+        kv "Backlog" "3"
+        list:
+          slot "MDT-042 • Public viewer":
+            chip "Proposed"
+            chip "Feature"
+      cell:
+        kv "Open" "5"
+        list:
+          slot "MDT-039 • Shared board":
+            chip "Approved"
+            chip "Security"
+      cell:
+        kv "In Progress" "2"
+        list:
+          slot "MDT-037 • No drag handle":
+            chip "In Progress"
+      cell:
+        kv "Done" "4"
+        list:
+          slot "MDT-036 • Completed work":
+            chip "Impl"
+
+annotation "Create/edit/delete controls are hidden; cards are clickable for viewing only" target="board-readonly-badge" position=right
+```
+
 ## Empty Column
 
 ```wireloom
@@ -165,3 +201,4 @@ annotation "StatusToggle pill: filters visible tickets" target="toggle-pill" pos
 | Loading skeleton | n/a | `animate-pulse` gradient | Gray gradient with staggered delay |
 | Column border | `--border` | `border-r border-border` | First col also `border-l` |
 | ScrollArea | n/a | `type="hover"` | Fades after 600ms |
+| Read-only card state | `--muted-foreground` | no drag cursor | Cards open viewer only; no mutation affordances |
