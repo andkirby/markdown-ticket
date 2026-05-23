@@ -492,8 +492,8 @@ export function SettingsModal({ isOpen, onClose, selectedProject, projects = [],
 
               <ReadAccessTokens
                 projects={projects}
-                selectedOrigin={linkOrigin}
-                onSelectedOriginChange={setLinkOrigin}
+                linkOrigin={linkOrigin}
+                onLinkOriginChange={setLinkOrigin}
               />
             </Tabs.Content>
           )}

@@ -281,12 +281,12 @@ bun run validate:ts
 - `src/components/ProjectSelector/**`
 
 **Create/Move**:
-- Add origin helper(s) for allowed current origin, configured public origins, and fail-closed no-origin state.
+- Add origin helper(s) for `PUBLIC_ORIGIN`, allowed current-origin fallback, and fail-closed no-origin state.
 - Replace share route direct cookie issuance with the read-session merge helper.
 
 **Exclude**: No Settings selector UI, no invite-route UI.
 
-**Anti-duplication**: Import existing `parseAllowedDomains`/origin policy utilities and the read-session merge helper; do not build a separate URL-origin parser.
+**Anti-duplication**: Import the runtime-configured origin policy utilities and the read-session merge helper; do not build a separate URL-origin parser.
 
 **Duplication Guard**:
 - Check current CORS origin parsing before adding public-link normalization.
@@ -296,7 +296,7 @@ bun run validate:ts
 **Verify**:
 
 ```bash
-bun run --cwd server jest tests/security/originPolicy.test.ts tests/api/public-sharing.test.ts -t "exposes configured public origins|defaults generated links|falls back to a configured public origin|withholds generated link bases|merges an unlisted share session" --runInBand
+bun run --cwd server jest tests/security/originPolicy.test.ts tests/security/publicLinkOrigins.test.ts tests/api/public-sharing.test.ts -t "configured public origin|current allowed origin|withholds generated link bases|merges an unlisted share session" --runInBand
 bun run validate:ts
 ```
 
@@ -306,7 +306,7 @@ bun run validate:ts
 - [x] Current-origin/default/fallback/no-origin cases pass.
 - [x] No duplicate origin parser exists.
 
-## Task 5: Build Settings read-access token management and origin selector
+## Task 5: Build Settings read-access token management and link-origin handling
 
 **Skills**: `mdt-frontend`, `playwright-cli`
 
@@ -316,7 +316,7 @@ bun run validate:ts
 
 **Makes GREEN (Automated Tests)**:
 - `TEST-e2e-selector-contract` -> `tests/e2e/utils/selectors.ts`: read access selector exports
-- `TEST-read-access-journey` -> `tests/e2e/sharing/read-access-journey.spec.ts`: owner Settings and origin-selection specs
+- `TEST-read-access-journey` -> `tests/e2e/sharing/read-access-journey.spec.ts`: owner Settings and generated-link origin specs
 
 **Makes GREEN (Behavior)**:
 - `owner_creates_named_multi_project_token` -> `tests/e2e/sharing/read-access-journey.spec.ts` (BR-1.1, BR-1.15)
@@ -324,7 +324,7 @@ bun run validate:ts
 - `allowed_current_origin_defaults_links` -> `tests/e2e/sharing/read-access-journey.spec.ts` (BR-1.8)
 - `configured_origin_selection_and_fallback` -> `tests/e2e/sharing/read-access-journey.spec.ts` (BR-1.9, BR-1.10)
 
-**Scope**: Add owner-only Settings UI for named read access, one-time result display, invite generation, revoke, status, project multi-select, expiry, and origin selection.
+**Scope**: Add owner-only Settings UI for named read access, one-time result display, invite generation, revoke, status, project multi-select, expiry, and server-selected link-origin handling.
 
 **Boundary**: Settings UI and selector contract only.
 
@@ -360,7 +360,7 @@ bun run validate:ts
 
 ```bash
 bun run validate:ts
-bunx playwright test tests/e2e/sharing/read-access-journey.spec.ts --project=chromium --grep "owner creates named multi-project access|configured public origins can be selected"
+bunx playwright test tests/e2e/sharing/read-access-journey.spec.ts --project=chromium --grep "owner creates named multi-project access|configured public origin is used"
 ```
 
 **Done when**:
