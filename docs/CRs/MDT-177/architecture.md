@@ -15,7 +15,7 @@ server/
     readSession.ts           # signed read cookie, merge helper, expiry policy
     apiAuth.ts               # owner/read-only access boundary
     projectSharing.ts        # project visibility and sanitization
-    originPolicy.ts          # allowed/current/public origin normalization
+    publicLinkOrigins.ts     # server-approved generated link origin options
   routes/
     readTokens.ts            # owner management and public invite exchange
     auth.ts                  # owner session and env read-token compatibility
@@ -124,12 +124,12 @@ The env-token path keeps using `parseReadTokenScopes()` and `resolveReadTokenSco
 `server/security/originPolicy.ts` remains the policy source. MDT-177 adds a public-link view of origins:
 
 - current browser origin is usable only when `originPolicy.isAllowedOrigin(currentOrigin)` accepts it
-- configured public origin comes from explicit runtime configuration
+- configured public origin comes from `PUBLIC_ORIGIN` in runtime configuration
 - local default origins are valid for CORS but excluded from configured public link choices
-- public-link origins must be full origins; host-only expansion remains limited to allowed-origin policy
+- public-link origin must be a full origin; host-only expansion is not part of the sharing runtime contract
 - generated link bases that are not allowed are rejected
 
-When configured public origins exist, Settings defaults to the first server-selected origin and shows an origin selector. When no configured public origin exists, the current origin is usable only if the server origin policy accepts it. When no valid public origin exists, share and invite URL generation is withheld.
+When `PUBLIC_ORIGIN` exists, Settings uses the server-selected origin and does not show a domain picker. When no configured public origin exists, the current origin is usable only if the server origin policy accepts it. When no valid public origin exists, share and invite URL generation is withheld.
 
 ## Settings Sharing UI
 
@@ -139,7 +139,7 @@ When configured public origins exist, Settings defaults to the first server-sele
 - show one-time raw token/invite result after creation or invite generation
 - list name, project scope, expiry, active/expired/revoked status, invite action, and revoke action
 - disable invite generation for expired or revoked records
-- use the selected link origin for both share links and invite links
+- use the server-selected link origin for both share links and invite links
 
 Read-only visitors never reach Settings; backend authorization still enforces this.
 

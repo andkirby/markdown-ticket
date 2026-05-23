@@ -39,10 +39,16 @@ Modal[size="md"]
             │       └── CheckboxList[Status / Priority / Type / Phase / Related / Depends / Blocks / Worktree]
             ├── Sharing panel (owner/admin only)
             │   ├── div.setting-group["Project Access"]
+            │   │   ├── LabelRow[label + Info tooltip]
             │   │   └── Select[Private / Unlisted read-only / Public read-only]
-            │   └── div.setting-group["Share link"]
-            │       ├── ReadonlyInput[share URL] or helper text
-            │       └── ActionRow[Rotate, Save]
+            │   ├── div.setting-group["Share link"]
+            │   │   ├── LinkOrigin[server-selected PUBLIC_ORIGIN or allowed current origin]
+            │   │   ├── ReadonlyInput[share URL] or helper text
+            │   │   └── ActionRow[Rotate, Save]
+            │   └── div.setting-group["Read access tokens"]
+            │       ├── TokenList[named token rows]
+            │       ├── CreateTokenForm[name, project multiselect, expiry]
+            │       └── InviteLinkResult[shown once after generation]
             └── Advanced panel
                 ├── div.setting-group["Event History"]
                 │   ├── label + description
@@ -62,7 +68,9 @@ Modal[size="md"]
 | Button | `src/components/ui/Button.tsx` | — | clear cache action |
 | Switch | `src/components/ui/switch.tsx` | — | toggle preferences |
 | Checkbox list | native checkbox controls | — | visible card badges |
-| Readonly input | native input with `readOnly` | — | Sharing tab with generated share URL |
+| Readonly input | native input with `readOnly` | — | Sharing tab with generated share URL or invite link |
+| Link origin notice | text | — | visible only when no server-approved link origin is available |
+| Project multiselect | checkbox list or compact multiselect | `project-browser.spec.md` visibility rules | read-token creation |
 
 ## Source files
 
@@ -108,7 +116,9 @@ Modal[size="md"]
 | Switch | label/description left, switch right (`flex items-center justify-between`) |
 | Button action | label/description left, button right (`flex items-center justify-between`) |
 | Checkbox list | label + description above, checkbox rows below (`flex-col gap-2`) |
-| Share link | label above, readonly generated URL below, save/rotate actions in trailing row |
+| Share link | label above, optional domain selector, readonly generated URL below, save/rotate actions in trailing row |
+| Token list | heading and description above, rows with name/scope/expiry/actions below |
+| Token create form | name input, project scope checklist, expiry select, create action |
 
 ## Tabs
 
@@ -135,19 +145,28 @@ Visible only when current access mode includes owner/admin permission. Hidden en
 | Setting | Storage | Control | Default |
 |---------|---------|---------|---------|
 | Sharing mode | server project sharing config | Select (Private / Unlisted read-only / Public read-only) | Private |
-| Share link | derived from server-generated share ID | read-only input | hidden until read-only sharing is enabled |
+| Share link | derived from server-generated share ID and server-selected public origin | read-only input | hidden until read-only sharing is enabled |
 | Rotate link | server project sharing config | Button "Rotate" | visible only when a non-private share link exists |
 | Save sharing | server project sharing config | Button "Save" | always visible on Sharing tab |
+| Public origin | server-selected `PUBLIC_ORIGIN` or allowed current origin fallback | read-only API state | `PUBLIC_ORIGIN` when configured |
+| Read access tokens | server token store | Token list + create/revoke/generate invite | empty list |
 
 Interaction rules:
 - Changing Sharing mode is local until Save is selected. Save writes through an authenticated API and shows loading/error state inline.
 - Unlisted read-only is the default sharing choice for link sharing: accessible through share URL, absent from anonymous project listing.
 - Public read-only appears in anonymous project listing and should be selected only when the owner wants directory-style discovery.
 - Read-only modes never grant mutation rights.
-- Read tokens are entered through the auth unlock flow, not managed from Settings in this version.
+- Read access tokens are managed from Settings by owner/admin users. Each token has a human-readable name, one or more assigned projects, optional expiry, and revoke action.
+- Raw read tokens are shown once only when created. After creation, rows show name, project scope, expiry, and status; they never show the raw token again.
+- Invite links use short-lived one-time codes derived from a named token. The persistent read token must not appear in the generated URL.
+- Invite link generation requires a valid named token and at least one assigned project.
+- Project assignment uses visible owner/admin projects only and supports selecting multiple projects for the same person.
+- Opening an invite link exchanges the code into the `mdt_read_session` HttpOnly cookie and removes the code from the browser URL.
+- Opening a one-project `/share/{shareId}` link must not erase existing projects granted by a named read token.
 - Share links use a server-generated, non-enumerable public share ID. Clients must never submit a custom share ID.
 - Rotate invalidates the previous share URL by asking the backend to generate a new share ID.
 - Write/admin tokens must never be included in generated links.
+- Link generation uses `PUBLIC_ORIGIN` when configured. When `PUBLIC_ORIGIN` is absent, the current browser origin is used only if accepted by server policy. When no safe origin exists, link generation is disabled with concise helper text. The owner UI does not show a domain selector.
 
 ### Advanced
 
@@ -175,6 +194,16 @@ Interaction rules:
 | public shared | Sharing mode = Public read-only | share link input visible; Rotate and Save actions available; project appears in anonymous listing |
 | unlisted/public unsaved | mode selected but no share ID yet | helper text: "Save to generate a share link." |
 | share link rotated | Rotate selected | previous URL no longer grants access; new read-only URL appears after save response |
+| configured public origin | server returns `PUBLIC_ORIGIN` | generated links use that origin |
+| no public origin | server accepts the current browser origin | generated links use current origin |
+| no safe origin | server returns no selected origin | invite/share link actions disabled with helper text |
+| token list empty | no named read tokens | compact empty state with "Create read token" action |
+| token created | owner creates named token | show raw token/invite result once with copy action; row appears in token list |
+| token active | token has project scope and is not expired/revoked | row shows name, project count/list, expiry, Generate invite, Revoke |
+| token expired | expiry passed | row remains visible with Expired status; invite action disabled |
+| token revoked | owner revokes token | row shows Revoked status; invite action disabled |
+| invite generated | owner selects Generate invite | readonly invite URL visible with copy action and one-time/expiry helper |
+| token create error | create/generate/revoke fails | destructive inline message inside token section |
 
 ## Visible Card Badges
 
@@ -204,6 +233,18 @@ The Board tab includes a checkbox list for board ticket card badges. The list co
 ## Entry Point
 
 Settings opens from the **hamburger menu** via ⚙ Settings item for owner/admin users. Theme quick-access buttons **remain** in hamburger menu for fast switching, including read-only mode.
+
+## E2E Journey Contract
+
+| Journey | Given | When | Expected |
+|---------|-------|------|----------|
+| owner creates multi-project token | owner session, at least two projects | create token named "Bob" with two projects | token row shows Bob, two-project scope, active status |
+| invite exchange | clean browser opens generated invite link | backend accepts one-time code | URL is cleaned, read-only cookie is set, assigned projects are visible |
+| token-scoped switching | read-only visitor has token for two private projects | open project browser and select either project | selected project loads read-only without asking for another token |
+| share-link merge | token-scoped visitor opens an unlisted project link | share route grants one additional project | existing token-scoped projects remain visible |
+| revoke | owner revokes token | visitor refreshes after session expiry or exchange retry | token no longer grants private projects |
+| public origin | `PUBLIC_ORIGIN` exists | owner generates share/invite link | server-selected origin is used in the URL |
+| read-only boundary | token-scoped visitor tries write affordance | UI renders read-only state | mutation controls are hidden or disabled and backend still denies writes |
 
 ## Tokens used
 

@@ -11,7 +11,7 @@
 - Add one-time invite links that exchange into `mdt_read_session`, expire quickly, are single-use, are rate-limited, and never expose persistent read tokens in URLs.
 - Preserve existing read-session grants when a visitor opens an additional `/share/{shareId}` link.
 - Make read-only owner unlock recoverable: cancel returns to the current board, and a bad owner token does not collapse the visitor into a locked dead end.
-- Generate share and invite links from the current allowed origin or an owner-selected configured public origin from explicit public-link runtime configuration.
+- Generate share and invite links from the server-selected `PUBLIC_ORIGIN`, or from the current allowed origin only when `PUBLIC_ORIGIN` is not configured.
 - Add Playwright journey coverage for public, unlisted, named-token, project-switching, share-merge, unlock cancel, bad unlock recovery, and URL cleanup flows.
 
 ### Current System Assumptions
@@ -19,10 +19,10 @@
 - `server/routes/auth.ts` owns env-configured read-token exchange at `/api/auth/read-token`; there is no named token store, owner CRUD route, invite-code route, or durable revocation model.
 - `server/routes/share.ts` owns share-id exchange at `/api/share/:shareId/session` and writes only the opened share grant.
 - `server/security/originPolicy.ts` parses allowed origins for CORS, but does not expose a public-origin list or distinguish local defaults from link-generation candidates.
-- `src/components/SettingsModal.tsx` owns project sharing controls and builds links from `window.location.origin`; it has no read-token management section or origin selector.
+- `src/components/SettingsModal.tsx` owns project sharing controls and builds links from `window.location.origin`; it has no read-token management section and no server-selected link-origin handling.
 - `src/auth/AuthSessionProvider.tsx` treats unlock as owner-token first, then read-token fallback; read-only Unlock currently uses the same full locked panel path, not a recoverable overlay.
 - `src/components/ProjectSelector/` renders the backend-filtered project list, but read-only badge/favorite suppression and named-token switch journeys are not covered end to end.
-- Existing tests cover MDT-172 public sharing and MDT-176 auth unlock basics; they do not cover named token management, invite exchange, read-session merge, allowed-domain link selection, or read-only owner-upgrade recovery.
+- Existing tests cover MDT-172 public sharing and MDT-176 auth unlock basics; they do not cover named token management, invite exchange, read-session merge, `PUBLIC_ORIGIN` link handling, or read-only owner-upgrade recovery.
 
 ## Fitness Summary
 
@@ -67,7 +67,7 @@
 ### Allowed-domain link generation
 - Current system assumes: CORS allowed origins are internal server policy, and Settings builds share URLs from `window.location.origin`.
 - Feature needs: generated share/invite links default to the server-selected configured origin; if no configured origin exists, current origin is used only when accepted by server policy.
-- Mismatch: `originPolicy.ts` includes local defaults in `allowedOrigins`, but Settings needs configured public origins suitable for user-facing links.
+- Mismatch: `originPolicy.ts` includes local defaults in `allowedOrigins`, but Settings needs a server-approved generated-link origin suitable for user-facing links.
 - Adjustment required: Expose a small owner-readable public-origin endpoint or include the list in sharing/token responses. Architecture must define whether local defaults are excluded from public link choices and keep generated-link origin selection server-owned.
 - Scope: local
 
@@ -128,4 +128,4 @@ Preferred path: continue with `mdt:architecture MDT-177` in the same CR.
 - No external blocker found.
 - Architecture must decide the persistent token-store path and file format before implementation.
 - Architecture must decide the invite route shape and frontend clean-URL destination before Playwright journeys are finalized.
-- Architecture must define whether configured public origins exclude local default origins for generated public links.
+- Architecture must define how `PUBLIC_ORIGIN`, allowed current-origin fallback, and no-origin failure behave for generated public links.

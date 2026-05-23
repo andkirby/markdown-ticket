@@ -29,7 +29,7 @@ Frontend component unit tests were not added because project E2E guidance says f
 | Hash-only persistent secrets | `readTokenStore` | raw token/code absent from disk and list responses; hashes match submitted secrets |
 | Invite lifecycle | `readTokenStore`, `readTokens` route | short-lived code generation, atomic single-use consume, expired/revoked/generic invalid failure |
 | Read-session merge | `readSession`, `share` route | projectRefs/shareIds union, de-dupe, earliest active expiry, invalid existing cookie fallback |
-| Origin selection | `publicLinkOrigins` | configured public origins default first; current origin only when no configured origins exist; no-origin fail closed |
+| Origin selection | `publicLinkOrigins` | `PUBLIC_ORIGIN` wins; current origin only when no public origin is configured; no-origin fail closed |
 | Backend authorization | API routes | read-only mutation denial across project, ticket, and document write endpoints; owner-only token management for anonymous/read-only/share-only visitors |
 
 ## Read-only Mutation Endpoint Coverage

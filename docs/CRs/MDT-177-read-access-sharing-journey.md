@@ -17,20 +17,20 @@ priority: High
 - `server/routes/auth.ts` supports scoped read tokens through env config, but owner users have no UI to create named multi-project access for a person.
 - `server/routes/share.ts` opens `/share/{shareId}` as a read session, but the journey must preserve any existing read-token project grants instead of replacing them.
 - `src/components/AuthUnlock/AuthUnlockPanel.tsx` can trap a read-only visitor in an owner unlock state without a clear cancel path back to the board.
-- `src/components/SettingsModal.tsx` builds share URLs from the current browser origin only; owner users need clear behavior when runtime configuration contains one or more public link origins.
+- `src/components/SettingsModal.tsx` builds share URLs from the current browser origin only; owner users need links to follow the server-owned `PUBLIC_ORIGIN` runtime contract.
 
 ### Affected Artifacts
 - `server/security/readSession.ts` — read-cookie grant shape, merge behavior, and expiry rules.
 - `server/routes/auth.ts` — read-token exchange and owner-token unlock behavior.
 - `server/routes/share.ts` — share-id exchange into read-only session.
-- `server/security/originPolicy.ts` — select configured public origins for link generation from runtime-provided values.
+- `server/security/publicLinkOrigins.ts` — select the server-approved public link origin from runtime-provided values.
 - `src/components/SettingsModal.tsx` — sharing controls, read-token management, generated links.
 - `src/components/AuthUnlock/` — read-only unlock/cancel journey.
 - `src/components/ProjectSelector/` — project switching for token-scoped read-only visitors.
 - `tests/e2e/` — browser journeys for anonymous, share-link, read-token, and unlock recovery flows.
 
 ### Scope
-- **Changes**: Add owner-managed named read access tokens, multi-project token scopes, one-time invite links, read-session merge behavior, allowed-domain link selection, and Playwright journey coverage.
+- **Changes**: Add owner-managed named read access tokens, multi-project token scopes, one-time invite links, read-session merge behavior, server-owned link-origin handling, and Playwright journey coverage.
 - **Unchanged**: No public write access, no owner token in URLs, no OAuth/accounts/RBAC, no MCP public read API expansion.
 
 ## 2. Decision
@@ -71,9 +71,9 @@ Add named read access tokens with server-generated one-time invite links that ex
 |----------|-------------|--------------|
 | `server/security/readSession.ts` | Behavior changed | Merge projectRefs/shareIds when issuing a new read session for an existing visitor |
 | `server/routes/share.ts` | Behavior changed | Preserve existing read-cookie grants when opening `/share/{shareId}` |
-| `server/security/originPolicy.ts` | Method added | Expose configured public origins suitable for owner link generation |
+| `server/security/publicLinkOrigins.ts` | Module added | Resolve server-approved public link origin options for generated links |
 | `server/server.ts` | Route added | Mount read-token management routes behind owner/admin protection |
-| `src/components/SettingsModal.tsx` | UI changed | Add read-token management section and allowed-domain selector for generated links |
+| `src/components/SettingsModal.tsx` | UI changed | Add read-token management section that uses the server-selected link origin |
 | `src/components/AuthUnlock/` | UI changed | Make owner unlock a recoverable overlay from read-only mode |
 | `src/components/ProjectSelector/` | UI verified | Ensure token-scoped read-only users can switch among all allowed projects |
 
@@ -84,7 +84,7 @@ Add named read access tokens with server-generated one-time invite links that ex
 | Settings sharing UI | `/api/read-tokens` | Owner creates, lists, revokes named read-token records |
 | Invite link route | `/api/read-tokens/invite/:code/session` | One-time code exchange into read session cookie |
 | Share route | `readSession.ts` | Merge existing grants with shareId grant |
-| Link generation UI | `originPolicy.ts` | Public origin list derived from explicit public-link runtime configuration and current origin |
+| Link generation UI | `publicLinkOrigins.ts` | Public link origin derived from `PUBLIC_ORIGIN` or an allowed current origin fallback |
 
 ### Key Patterns
 - Existing auth boundary: keep credential parsing in `server/security/apiAuth.ts` and route-level exchanges under auth routes.
@@ -110,8 +110,9 @@ Add named read access tokens with server-generated one-time invite links that ex
 - [ ] Opening `/share/{shareId}` while already token-scoped preserves existing token-scoped projects.
 - [ ] Read-only visitor pressing Unlock can cancel back to the board.
 - [ ] Bad owner-token unlock from read-only mode returns to read-only state, not a locked dead end.
-- [ ] Generated links default to current browser origin when valid.
-- [ ] If multiple configured public origins exist, owner can choose which origin to use for generated links.
+- [ ] Generated links use `PUBLIC_ORIGIN` when configured.
+- [ ] When `PUBLIC_ORIGIN` is absent, generated links use the current browser origin only if the server origin policy accepts it.
+- [ ] The owner UI does not synthesize link origins or expose a domain picker.
 - [ ] Revoked read token stops granting project access on the next exchange/session refresh.
 
 ### Non-Functional
@@ -142,13 +143,13 @@ Add named read access tokens with server-generated one-time invite links that ex
 ## 7. Deployment
 
 - Requires persistent server config storage for named read-token records.
-- Supports comma-separated explicit public link origins; generated links use current origin or an owner-selected configured origin.
+- Supports a single `PUBLIC_ORIGIN`; generated links use that origin or an allowed current-origin fallback when `PUBLIC_ORIGIN` is absent.
 - Existing env-based `API_READ_TOKEN_HASHES` remains as a compatibility path unless architecture rejects it.
 
 ## 8. Workflow Plan
 
 1. Commit current MDT-172 work before starting this ticket.
-2. Create this ticket with the user journey, token model, allowed-domain questions, and E2E expectations.
+2. Create this ticket with the user journey, token model, `PUBLIC_ORIGIN` questions, and E2E expectations.
 3. Run UX design first enough to define the intended Settings, unlock, project-switching, and invite-link surfaces.
 4. Run the MDT pipeline through assess, requirements, BDD, architecture, tests, and tasks with E2E journeys included.
 5. Reconcile the pipeline output with the UX design artifacts; update specs/mockups if the pipeline finds gaps.
