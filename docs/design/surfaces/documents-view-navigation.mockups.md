@@ -88,6 +88,40 @@ annotation "Favs are not removed by tree filtering" target="fav-filtered" positi
 annotation "Selected file highlighted in filtered results" target="filtered-selected" position=right
 ```
 
+## Read-only Navigation
+
+```wireloom
+window "Documents View Navigation — Read-only":
+  panel:
+    row:
+      col 520:
+        row:
+          text "Documents" bold
+          spacer
+          icon name="check"
+        row id="readonly-nav-controls":
+          input placeholder="Search documents..." type=search
+          combo value="Update Date ▾"
+          button "↓"
+        section "Favs":
+          list:
+            item "docs" id="readonly-fav-folder"
+            item "Documents View Navigation" id="readonly-fav-doc"
+        section "Recent":
+          list:
+            item "Documents View Navigation"
+        divider
+        text "All Documents" bold
+        tree:
+          node "docs" collapsed id="readonly-docs-root"
+      col fill:
+        text "# Selected document" bold
+        text "Markdown content renders here." muted
+
+annotation "Configure paths and fav-star mutation controls are absent in read-only mode" target="readonly-nav-controls" position=right
+annotation "Existing Favs remain selectable shortcuts, without remove-star buttons" target="readonly-fav-doc" position=right
+```
+
 ## Filter Hides Selected
 
 ```wireloom
@@ -310,5 +344,6 @@ Mobile behavior:
 | Collapse tree | `--muted-foreground` | icon-only button | Collapses folders except selected ancestors |
 | Scroll target | `--primary` | `data-testid="scroll-to-active-document-button"` | Clears filter only when selected row is hidden |
 | Configure document paths | `--muted-foreground` | icon-only button | Opens path configuration |
+| Read-only document nav | `--muted-foreground` | no star mutation controls | Existing shortcuts remain clickable; configure paths is hidden |
 | Excluded ticket area | `--muted-foreground` | PathSelector annotation | `docs/CRs/` is automatically excluded from document browsing |
 | Filename tabs | `--border`, `--primary` | `.tab__list`, `.tab` | Full grouped-tab contract lives in `document-filename-tabs.mockups.md` |

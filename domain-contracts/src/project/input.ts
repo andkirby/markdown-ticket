@@ -6,6 +6,10 @@ import {
   ProjectConfigSchema,
   ProjectDetailsSchema,
   ProjectDocumentSettingsSchema,
+  ProjectSharingMode,
+  ProjectSharingModeSchema,
+  ProjectSharingModes,
+  ProjectSharingSettingsSchema,
   TicketsPathSchema,
   UpdateProjectInputSchema,
 } from './schema'
@@ -19,6 +23,8 @@ export type {
   ProjectConfigProject,
   ProjectDetails,
   ProjectDocumentSettings,
+  ProjectSharingModeValue,
+  ProjectSharingSettings,
   TicketsPath,
   UpdateProjectInput,
 } from './schema'
@@ -31,6 +37,10 @@ export {
   ProjectConfigSchema,
   ProjectDetailsSchema,
   ProjectDocumentSettingsSchema,
+  ProjectSharingMode,
+  ProjectSharingModeSchema,
+  ProjectSharingModes,
+  ProjectSharingSettingsSchema,
   TicketsPathSchema,
   UpdateProjectInputSchema,
 }

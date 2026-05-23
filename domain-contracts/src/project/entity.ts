@@ -4,6 +4,10 @@ import {
   ProjectRegistryProjectSchema,
   ProjectRuntimeFieldsSchema,
   ProjectSchema,
+  ProjectSharingMode,
+  ProjectSharingModeSchema,
+  ProjectSharingModes,
+  ProjectSharingSettingsSchema,
 } from './schema'
 
 export type {
@@ -12,6 +16,8 @@ export type {
   ProjectRegistryEntry,
   ProjectRegistryProject,
   ProjectRuntimeFields,
+  ProjectSharingModeValue,
+  ProjectSharingSettings,
 } from './schema'
 
 export {
@@ -19,5 +25,9 @@ export {
   ProjectRegistryEntrySchema,
   ProjectRegistryProjectSchema,
   ProjectRuntimeFieldsSchema,
+  ProjectSharingMode,
+  ProjectSharingModeSchema,
+  ProjectSharingModes,
+  ProjectSharingSettingsSchema,
   ProjectSchema,
 }

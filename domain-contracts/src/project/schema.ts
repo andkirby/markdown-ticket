@@ -26,6 +26,26 @@ export interface ProjectDocumentSettings {
   maxDepth?: number
 }
 
+export const ProjectSharingMode = {
+  PRIVATE: 'private',
+  UNLISTED_READONLY: 'unlisted-readonly',
+  PUBLIC_READONLY: 'public-readonly',
+} as const
+
+export type ProjectSharingModeValue = typeof ProjectSharingMode[keyof typeof ProjectSharingMode]
+
+export const ProjectSharingModes = [
+  ProjectSharingMode.PRIVATE,
+  ProjectSharingMode.UNLISTED_READONLY,
+  ProjectSharingMode.PUBLIC_READONLY,
+] as const
+
+export interface ProjectSharingSettings {
+  mode: ProjectSharingModeValue
+  shareId?: string
+  updatedAt?: string
+}
+
 export interface ProjectDetails {
   code: string
   name: string
@@ -87,6 +107,7 @@ export interface ProjectMetadata {
   lastAccessed: string
   version: string
   globalOnly?: boolean
+  sharing?: ProjectSharingSettings
 }
 
 export interface Project {
@@ -202,6 +223,19 @@ export const DocumentConfigSchema = DocumentConfigObjectSchema.refine(
 
 export const ProjectDocumentSettingsSchema = DocumentConfigObjectSchema.partial().strict()
 
+export const ProjectSharingModeSchema = z.enum(ProjectSharingModes)
+
+export const ProjectSharingSettingsSchema = z.object({
+  mode: ProjectSharingModeSchema.default(ProjectSharingMode.PRIVATE),
+  shareId: z.string()
+    .trim()
+    .min(12, 'Share ID must be at least 12 characters')
+    .max(128, 'Share ID must be at most 128 characters')
+    .regex(/^[A-Za-z0-9_-]+$/u, 'Share ID may contain only letters, numbers, underscore, and hyphen')
+    .optional(),
+  updatedAt: z.string().optional(),
+}).strict()
+
 export const ProjectDetailsSchema = z.object({
   code: ProjectCodeSchema,
   name: ProjectNameSchema,
@@ -270,6 +304,7 @@ export const ProjectMetadataSchema = z.object({
   lastAccessed: DateOnlySchema,
   version: z.string().trim().min(1, 'Version is required'),
   globalOnly: z.boolean().optional(),
+  sharing: ProjectSharingSettingsSchema.optional(),
 }).strict()
 
 export const ProjectSchema = z.object({
@@ -343,6 +378,8 @@ export const ProjectSchemas = {
   projectMetadata: ProjectMetadataSchema,
   projectRegistryEntry: ProjectRegistryEntrySchema,
   projectRegistryProject: ProjectRegistryProjectSchema,
+  projectSharingMode: ProjectSharingModeSchema,
+  projectSharingSettings: ProjectSharingSettingsSchema,
   documentConfig: DocumentConfigSchema,
   createProjectInput: CreateProjectInputSchema,
   updateProjectInput: UpdateProjectInputSchema,

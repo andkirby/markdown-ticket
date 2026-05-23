@@ -9,7 +9,7 @@ interface FavDocumentsProps {
   isExpanded: boolean
   showAll: boolean
   onSelectDocument: (document: DocumentFile) => void
-  onToggleFavorite: (document: DocumentFile) => void
+  onToggleFavorite?: (document: DocumentFile) => void
   onExpandedChange: (expanded: boolean) => void
   onShowAllChange: (showAll: boolean) => void
 }
@@ -93,20 +93,22 @@ export default function FavDocuments({
                   )}
                 </div>
               </button>
-              <button
-                type="button"
-                className="document-fav-star-button opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                title="Click to unfavorite"
-                aria-label="Toggle favorite"
-                data-testid="document-fav-star"
-                data-document-path={document.path}
-                onClick={(event) => {
-                  event.stopPropagation()
-                  onToggleFavorite(document)
-                }}
-              >
-                <Icon name="fav-star" className="fav-star fav-star--document active" />
-              </button>
+              {onToggleFavorite && (
+                <button
+                  type="button"
+                  className="document-fav-star-button opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  title="Click to unfavorite"
+                  aria-label="Toggle favorite"
+                  data-testid="document-fav-star"
+                  data-document-path={document.path}
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onToggleFavorite(document)
+                  }}
+                >
+                  <Icon name="fav-star" className="fav-star fav-star--document active" />
+                </button>
+              )}
             </div>
           ))}
         </div>

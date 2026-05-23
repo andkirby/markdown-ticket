@@ -27,18 +27,18 @@ describe('backend API auth contract - MDT-157', () => {
     process.env = originalEnv
   })
 
-  it('returns 401 for protected backend routes without credentials', async () => {
-    const projects = await request(app).get('/api/projects')
-    expect(projects.status).toBe(401)
-    expect(JSON.stringify(projects.body)).not.toContain('mdt-157-admin-token')
+  it('returns 403 for owner-only and mutation routes without credentials', async () => {
+    const config = await request(app).get('/api/config')
+    expect(config.status).toBe(403)
+    expect(JSON.stringify(config.body)).not.toContain('mdt-157-admin-token')
 
     const createCr = await request(app).post('/api/projects/test/crs').send({ title: 'No auth' })
-    expect(createCr.status).toBe(401)
+    expect(createCr.status).toBe(403)
   })
 
   it('accepts valid Authorization Bearer credentials for protected routes', async () => {
     const res = await request(app)
-      .get('/api/projects')
+      .get('/api/config')
       .set('Authorization', `Bearer ${adminToken}`)
 
     expect(res.status).toBe(200)
@@ -46,7 +46,7 @@ describe('backend API auth contract - MDT-157', () => {
 
   it('accepts valid X-API-Key credentials for protected routes', async () => {
     const res = await request(app)
-      .get('/api/projects')
+      .get('/api/config')
       .set('X-API-Key', adminToken)
 
     expect(res.status).toBe(200)
@@ -65,11 +65,11 @@ describe('backend API auth contract - MDT-157', () => {
   })
 
   it('applies identical token rules to no-Origin curl/server-to-server requests', async () => {
-    const missing = await request(app).get('/api/projects').unset('Origin')
-    expect(missing.status).toBe(401)
+    const missing = await request(app).get('/api/config').unset('Origin')
+    expect(missing.status).toBe(403)
 
     const valid = await request(app)
-      .get('/api/projects')
+      .get('/api/config')
       .unset('Origin')
       .set('Authorization', `Bearer ${adminToken}`)
     expect(valid.status).toBe(200)
@@ -77,17 +77,17 @@ describe('backend API auth contract - MDT-157', () => {
 
   it('fails closed when reverse proxy strips credential headers', async () => {
     const res = await request(app)
-      .get('/api/projects')
+      .get('/api/config')
       .set('X-Forwarded-For', '203.0.113.10')
       .set('X-Forwarded-Proto', 'https')
       .set('X-Forwarded-Host', 'mdt.example.test')
 
-    expect(res.status).toBe(401)
+    expect(res.status).toBe(403)
   })
 
   it('authenticates when reverse proxy forwards Authorization or X-API-Key unchanged', async () => {
     const forwardedBearer = await request(app)
-      .get('/api/projects')
+      .get('/api/config')
       .set('X-Forwarded-For', '203.0.113.10')
       .set('X-Forwarded-Proto', 'https')
       .set('X-Forwarded-Host', 'mdt.example.test')
@@ -95,7 +95,7 @@ describe('backend API auth contract - MDT-157', () => {
     expect(forwardedBearer.status).toBe(200)
 
     const forwardedApiKey = await request(app)
-      .get('/api/projects')
+      .get('/api/config')
       .set('X-Forwarded-For', '203.0.113.10')
       .set('X-Forwarded-Proto', 'https')
       .set('X-Forwarded-Host', 'mdt.example.test')
@@ -105,7 +105,7 @@ describe('backend API auth contract - MDT-157', () => {
 
   it('adds less than 5ms median latency on an authenticated protected route versus the same route with auth disabled', async () => {
     const iterations = 25
-    const protectedRoute = '/api/projects'
+    const protectedRoute = '/api/config'
     const authenticatedSamples: number[] = []
 
     for (let index = 0; index < iterations; index += 1) {

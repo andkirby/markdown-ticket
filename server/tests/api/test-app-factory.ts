@@ -24,6 +24,7 @@ import { createAuthRouter } from '../../routes/auth'
 import { createDevToolsRouter } from '../../routes/devtools'
 import { createDocumentRouter } from '../../routes/documents'
 import { createProjectRouter } from '../../routes/projects'
+import { createShareRouter } from '../../routes/share'
 import { createSSERouter } from '../../routes/sse'
 import { createSystemRouter } from '../../routes/system'
 import { createApiAuthMiddleware } from '../../security/apiAuth'
@@ -178,13 +179,14 @@ export function createTestApp(): TestAppResult {
   // Register Routes
   // Mirror production: auth session routes are before protected /api routers.
   app.use('/api/auth', createAuthRouter())
+  app.use('/api/share', createShareRouter(projectServiceAdapter as unknown as ProjectServiceExtension))
 
   // Mirror production: auth is after generic middleware and before protected /api routers.
   app.use('/api', createApiAuthMiddleware())
 
   app.use('/api/projects', createProjectRouter(projectController))
   app.use('/api/documents', createDocumentRouter(documentController, projectController))
-  app.use('/api/events', createSSERouter(fileWatcher, originPolicy))
+  app.use('/api/events', createSSERouter(fileWatcher, originPolicy, projectServiceAdapter as unknown as ProjectServiceExtension))
   app.use('/api', createSystemRouter(fileWatcher, projectController, projectDiscovery, documentService.fileInvoker as FileInvokerAdapter))
   app.use('/api/devtools', createDevToolsRouter(originPolicy))
   // Note: Skipping /api-docs route due to import.meta issue in openapi/config.ts

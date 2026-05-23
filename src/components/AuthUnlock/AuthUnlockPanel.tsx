@@ -26,7 +26,7 @@ export function AuthUnlockPanel({ error, unlocking = false, onUnlock }: AuthUnlo
     <section data-testid="auth-unlock-panel" className="mx-auto max-w-lg rounded-xl border border-border bg-card p-6 shadow-sm">
       <h1 className="text-2xl font-semibold tracking-tight">Board is locked</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        This server requires an owner access token before projects can be managed.
+        This server accepts an owner token for management or a read token for scoped read-only access.
       </p>
       <form className="mt-4 space-y-4" onSubmit={handleSubmit}>
         <label className="block text-sm font-medium" htmlFor="auth-token-input">Access token</label>
@@ -56,7 +56,7 @@ export function AuthUnlockPanel({ error, unlocking = false, onUnlock }: AuthUnlo
         </button>
       </form>
       <p className="mt-4 text-xs text-muted-foreground">
-        Your token is exchanged for a secure server session and is not stored in browser storage.
+        Tokens are exchanged for a secure server session and are not stored in browser storage.
       </p>
     </section>
   )

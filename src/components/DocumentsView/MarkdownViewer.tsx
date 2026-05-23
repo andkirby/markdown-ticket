@@ -3,6 +3,7 @@ import Prism from 'prismjs'
 import * as React from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { authFetch } from '@/auth/authFetch'
 import { RelativeTimestamp } from '@/components/shared/RelativeTimestamp'
 import TableOfContents from '@/components/shared/TableOfContents'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -104,7 +105,7 @@ export default function MarkdownViewer({ projectId, filePath, fileInfo, refreshT
       if (!hasContentRef.current)
         setLoading(true)
       setError(null)
-      const response = await fetch(`/api/documents/content?projectId=${encodeURIComponent(projectId)}&filePath=${encodeURIComponent(filePath)}`)
+      const response = await authFetch(`/api/documents/content?projectId=${encodeURIComponent(projectId)}&filePath=${encodeURIComponent(filePath)}`)
       if (response.ok) {
         const text = await response.text()
         setContent(text)

@@ -1,13 +1,13 @@
 # Auth Session Unlock
 
-Owner/admin unlock surface for MDT-176. This spec covers the browser authentication step introduced after MDT-157 backend API auth. It prevents the locked backend from looking like an empty project list.
+Owner/admin and scoped read-token unlock surface for browser authentication. It prevents auth-required backends from looking like empty project lists and gives read-only visitors an owner-upgrade path.
 
 ## Composition
 
 ```text
 AppRoot
 ├── AuthStateProvider / auth-aware fetch boundary
-│   ├── accessMode: unknown | locked | owner-admin | no-auth-dev | backend-down
+│   ├── accessMode: unknown | locked | read-only | owner-admin | no-auth-dev | backend-down
 │   ├── sessionStatus: checking | locked | unlocking | unlocked | error
 │   └── unlock(token) / lock()
 ├── AppHeader
@@ -15,20 +15,22 @@ AppRoot
 │   ├── ProjectSelector / current project controls (conditional)
 │   └── AuthStatusAction
 │       ├── Locked chip + Unlock button
+│       ├── Read-only chip + Unlock button
 │       └── Owner session chip + Lock button
 └── MainContent
-    ├── AuthUnlockPanel (401 from `/api/projects`)
+    ├── AuthUnlockPanel (owner unlock request or owner-only 401)
+    ├── ReadOnlyProjectBoard/List/Documents (public share or scoped read token)
     ├── ProjectBoard/List/Documents (owner-admin or no-auth-dev)
     └── BackendDownState (network/5xx)
 
 AuthUnlockPanel
 ├── Security icon / lock mark
 ├── Title: "Board is locked"
-├── Description: server requires an owner access token
+├── Description: server accepts an owner token or scoped read token
 ├── AccessTokenInput[type=password]
 ├── UnlockButton
 ├── InlineError (invalid token / session rejected)
-└── HelpText (token is exchanged for secure cookie; not stored in browser storage)
+└── HelpText (tokens are exchanged for secure cookies; not stored in browser storage)
 ```
 
 ## Source files
@@ -49,9 +51,10 @@ AuthUnlockPanel
 | State | Trigger | UI | Allowed actions |
 |-------|---------|----|-----------------|
 | `checking` | initial app load | skeleton or compact loading card | none |
-| `locked` | `/api/projects` returns 401 | AuthUnlockPanel | enter token, retry, theme toggle |
+| `locked` | user selects Unlock, or protected owner route returns 401 | AuthUnlockPanel | enter token, retry, theme toggle |
 | `unlocking` | unlock submitted | disabled token input, spinner button | cancel/clear optional |
 | `error` | invalid token/session failure | AuthUnlockPanel with inline error | edit token, retry |
+| `read-only` | anonymous public project, share session, or accepted read token | normal app with read-only chip; owner actions hidden | view, search, sort, open tickets/docs, unlock with owner token |
 | `owner-admin` | session cookie accepted | normal app; owner chip in header | all admin actions, lock/logout |
 | `no-auth-dev` | backend auth disabled, or legacy local backend has no `/api/auth/session` and still returns projects | normal app; no header auth chip; no unlock affordance | all current local-dev actions |
 | `backend-down` | network error / 5xx | existing backend-down state | retry |
@@ -61,7 +64,7 @@ AuthUnlockPanel
 1. Never show `Create Project` while `accessMode` is `unknown` or `locked`.
 2. Never show "No Projects Found" for a `401` response.
 3. `401` means authentication is required, not an empty project list.
-4. MDT-176 must not invent public/read-only behavior; anonymous public project visibility belongs to MDT-172.
+4. Read-only sessions must never expose owner-only project mutation controls.
 5. A failed unlock must keep the user on the same panel and preserve focus on the token input.
 6. Logout/Lock must clear only the server session cookie; it must not mutate project data.
 
@@ -71,10 +74,12 @@ AuthUnlockPanel
 User enters token
 → POST /api/auth/session { token }
 → Backend validates token using MDT-157 auth owner logic
-→ Backend sets HttpOnly Secure SameSite=Strict cookie
+→ If owner token is valid, backend sets HttpOnly Secure SameSite=Strict owner cookie
+→ If owner token is rejected, frontend retries POST /api/auth/read-token { token }
+→ If read token is valid, backend sets HttpOnly SameSite=Lax read-session cookie
 → Frontend discards raw token immediately
 → Frontend retries /api/projects with credentials: include
-→ App renders owner/admin state
+→ App renders owner/admin or read-only state
 ```
 
 ## Storage and security
@@ -83,6 +88,7 @@ User enters token
 |------|---------|------|
 | Raw admin token | not stored | held only in input state until submit; clear after response |
 | Admin session | server-set cookie | `HttpOnly; Secure; SameSite=Strict`; `Path=/api` preferred |
+| Read session | server-set cookie | `HttpOnly; SameSite=Lax`; scoped to project refs or share IDs; `Path=/api` |
 | Access mode | React memory | derived from session check/API responses |
 | Remember-me | out of scope | no persistent browser token storage |
 
@@ -98,12 +104,13 @@ The frontend must not write the token to `localStorage`, `sessionStorage`, index
 - Description: `text-sm text-muted-foreground`.
 - Token input row: password input with visible label "Access token".
 - Primary action: full-width or right-aligned `Unlock` button using `bg-primary text-primary-foreground`.
-- Help text: small muted copy; include "Token is exchanged for a secure server session. It is not stored in this browser.".
+- Help text: small muted copy; include "Tokens are exchanged for a secure server session. They are not stored in browser storage.".
 - Error text: `text-destructive`, short and generic: "Token was not accepted.".
 
 ### Header auth action
 
 - Locked: small outline chip "Locked" + `Unlock` button.
+- Read-only: small outline chip "Read only" + `Unlock` button. The button opens the same panel for owner-token upgrade.
 - Owner/admin: small success/neutral chip "Owner session" + secondary `Lock` button.
 
 ## Copy
@@ -111,11 +118,11 @@ The frontend must not write the token to `localStorage`, `sessionStorage`, index
 | Context | Copy |
 |---------|------|
 | Locked title | `Board is locked` |
-| Locked body | `This server requires an owner access token before projects can be managed.` |
+| Locked body | `This server accepts an owner token for management or a read token for scoped read-only access.` |
 | Input label | `Access token` |
 | Button | `Unlock` |
 | Invalid token | `Token was not accepted.` |
-| Help | `Your token is exchanged for a secure server session and is not stored in browser storage.` |
+| Help | `Tokens are exchanged for a secure server session and are not stored in browser storage.` |
 
 ## Accessibility
 
@@ -125,20 +132,17 @@ The frontend must not write the token to `localStorage`, `sessionStorage`, index
 - Focus moves to token input when locked state first appears.
 - Header Lock action is keyboard reachable and has confirmation only if session-sensitive work is in progress.
 
-## MDT-172 boundary
+## Read-only boundary
 
-This surface owns authentication state only. It must not decide which projects are public and must not expose read-only sharing labels before MDT-172 exists.
-
-MDT-176 active states are limited to:
+This surface owns authentication state and token entry only. Project visibility is still decided by backend project-sharing rules.
 
 | API/auth result | UI |
 |------------|----|
-| `401` | `AuthUnlockPanel` |
+| `401` from owner-only context | `AuthUnlockPanel` |
+| public/share/read token accepted | normal app in read-only mode |
 | auth disabled / local no-auth | normal app with no auth header chrome |
 | owner/admin session | normal project list and admin actions |
 | backend 5xx/network failure | backend unavailable state |
-
-Future MDT-172 may add anonymous public project states, but those states require their own authorization contract and copy.
 
 ## Verification hooks
 
@@ -148,6 +152,7 @@ Future MDT-172 may add anonymous public project states, but those states require
 - `data-testid="auth-unlock-error"`
 - `data-testid="auth-status-chip"`
 - `data-testid="auth-lock-button"`
+- `data-testid="auth-unlock-affordance"`
 - Existing `add-project-modal` must not be reachable in locked/anonymous states.
 
 ## Legacy/local fallback rule

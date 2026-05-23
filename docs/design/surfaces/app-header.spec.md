@@ -1,6 +1,6 @@
 # App Header
 
-Top navigation bar — the chrome that persists across all views. Provides project identity, view switching, project selection, and the action menu.
+Top navigation bar — the chrome that persists across all views. Provides project identity, view switching, project selection, read-only/auth state, and the action menu.
 
 ## Composition
 
@@ -12,6 +12,9 @@ nav.main-nav
 │   │   ├── ViewModeSwitcher
 │   │   └── ProjectSelector (flex-1)
 │   └── div.nav-right
+│       ├── AuthStatusAction
+│       │   ├── StatusChip
+│       │   └── Button[Unlock | Lock]
 │       └── SecondaryHeader
 │           ├── SortControls (board/list only, desktop only)
 │           └── HamburgerMenu
@@ -25,6 +28,7 @@ nav.main-nav
 | ViewModeSwitcher | `src/components/ViewModeSwitcher/ViewModeSwitcher.tsx` | — | always |
 | ProjectSelector | `src/components/ProjectSelector/index.tsx` | `project-browser.spec.md` | always |
 | SecondaryHeader | `src/components/SecondaryHeader.tsx` | — | always |
+| AuthStatusAction | `src/components/AuthUnlock/AuthStatusAction.tsx` | `auth-session-unlock.spec.md` | hidden only in no-auth-dev mode |
 | SortControls | `src/components/SortControls.tsx` | — | board or list view, desktop only |
 | HamburgerMenu | `src/components/HamburgerMenu.tsx` | — | always (via SecondaryHeader) |
 
@@ -35,6 +39,7 @@ nav.main-nav
 | Component | `src/App.tsx` (nav section, lines ~211–243) |
 | SecondaryHeader | `src/components/SecondaryHeader.tsx` |
 | HamburgerMenu | `src/components/HamburgerMenu.tsx` |
+| Auth status action | `src/components/AuthUnlock/AuthStatusAction.tsx` |
 | ViewModeSwitcher | `src/components/ViewModeSwitcher/ViewModeSwitcher.tsx` |
 | AppHeader exports | `src/components/AppHeader/index.tsx` |
 
@@ -56,8 +61,9 @@ nav.main-nav
 
 ### Nav-right slot (flex, items-center)
 
-1. **SortControls** — hidden on `< sm` breakpoint; only when viewMode is `board` or `list`
-2. **HamburgerMenu** — always visible, `≡` icon button
+1. **AuthStatusAction** — status chip before sort controls; hidden in no-auth-dev mode
+2. **SortControls** — hidden on `< sm` breakpoint; only when viewMode is `board` or `list`
+3. **HamburgerMenu** — always visible, `≡` icon button
 
 ## States
 
@@ -67,6 +73,10 @@ nav.main-nav
 | board view | viewMode=board | SortControls visible (desktop), ViewModeSwitcher shows board active |
 | list view | viewMode=list | SortControls visible (desktop), ViewModeSwitcher shows list active |
 | documents view | viewMode=documents | SortControls hidden, ViewModeSwitcher shows documents active |
+| public read-only | anonymous visitor opens shared project | AuthStatusAction shows "Read only" + Unlock; mutating menu items hidden or disabled |
+| token read-only | visitor has scoped read token | AuthStatusAction shows "Read only" + Unlock; visible projects include token scope |
+| owner/admin | valid write/admin access | AuthStatusAction shows "Owner session" + Lock; project mutation menu items available |
+| no-auth-dev | auth disabled locally | AuthStatusAction hidden; local project mutation menu items available |
 
 ## Responsive
 
@@ -84,6 +94,7 @@ nav.main-nav
 | border | `--border` (via `border-gray-200/50`) | bottom separator |
 | foreground | `--foreground` | text in nav items |
 | primary | `--primary` | active states, focus rings |
+| muted | `--muted` | auth status chip background |
 
 ## Hamburger Menu Contents
 
@@ -91,13 +102,13 @@ The hamburger menu is the only structured action menu. Current items in order:
 
 | Order | Item | Icon | Condition |
 |-------|------|------|-----------|
-| 1 | Add Project | `Plus` | always |
-| 2 | Edit Project | `Edit` | when a project is selected |
+| 1 | Add Project | `Plus` | owner/admin only |
+| 2 | Edit Project | `Edit` | owner/admin only and when a project is selected |
 | 3 | Sort by (mobile) | — | mobile only, board/list view |
 | 4 | Sort direction (mobile) | `ArrowUpDown` | mobile only, board/list view |
 | 5 | Clear Cache | `Trash2` | always |
-| 6 | Event History | `Eye`/`EyeOff` | toggled on: show "hide"; toggled off: show "show" |
-| 7 | Settings | `Settings` | always |
+| 6 | Event History | `Eye`/`EyeOff` | when event history is available |
+| 7 | Settings | `Settings` | owner/admin only |
 | 8 | Theme selector | `Sun`/`Moon`/`Monitor` | always (quick access, also in Settings) |
 
 The menu is a positioned dropdown: `absolute right-0 top-full mt-1 w-48`, with click-outside-to-close behavior.
@@ -106,5 +117,7 @@ The menu is a positioned dropdown: `absolute right-0 top-full mt-1 w-48`, with c
 
 - New header-level features MUST choose between nav-left, nav-right, or hamburger menu — no new floating elements.
 - If the hamburger menu exceeds 8 items, consider splitting into a dedicated settings surface.
+- Access-token entry is owned by `AuthStatusAction` and `AuthUnlockPanel`; do not add a second persistent header form.
+- Owner/admin-only actions must be hidden or disabled in read-only mode, but backend authorization remains authoritative.
 - Future settings entry point: Settings item in the hamburger menu opens the dedicated Settings modal. See `settings.spec.md`.
 - ViewModeSwitcher does not persist its own state — persistence is handled by `App.tsx` via localStorage keys `lastBoardListMode` and `lastViewMode`.

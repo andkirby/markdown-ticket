@@ -1,0 +1,880 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-172"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "The system shall keep every active project private until sharing is explicitly enabled.",
+      "sourceRef": "CR Functional AC 1",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "WHEN an anonymous visitor requests the project list, the system shall return only active projects configured as public-readonly.",
+      "sourceRef": "CR Functional AC 3-4",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.3",
+      "kind": "behavior",
+      "text": "WHEN an anonymous visitor opens /share/{shareId} with a valid unlisted-readonly share ID, the system shall open that project without adding it to the anonymous project list.",
+      "sourceRef": "CR Functional AC 4-5",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.4",
+      "kind": "behavior",
+      "text": "WHEN an anonymous or read-token visitor reads tickets or documents for a visible shared project, the system shall return the normal read data for that project.",
+      "sourceRef": "CR Functional AC 6",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.5",
+      "kind": "behavior",
+      "text": "WHEN a read-only visitor attempts any project, ticket, document, filesystem, or favorite mutation, the system shall return 403 and shall not change persisted state.",
+      "sourceRef": "CR Functional AC 7, 13",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.6",
+      "kind": "behavior",
+      "text": "WHEN an owner/admin changes project sharing in Settings, the system shall persist Private, Unlisted read-only, or Public read-only for that project.",
+      "sourceRef": "CR Functional AC 2",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.7",
+      "kind": "behavior",
+      "text": "WHEN a visitor enters a valid scoped read token, the system shall expand the visible project list to only token-scoped projects and keep those projects read-only.",
+      "sourceRef": "CR Functional AC 9-10",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.8",
+      "kind": "behavior",
+      "text": "WHEN a visitor enters an invalid scoped read token or exchange code, the system shall show a generic denial without revealing project existence.",
+      "sourceRef": "CR Functional AC 11",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.9",
+      "kind": "behavior",
+      "text": "WHEN a share URL contains a one-time code, the browser shall exchange it through POST storage and then remove the code from the address bar.",
+      "sourceRef": "CR Functional AC 12",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.10",
+      "kind": "behavior",
+      "text": "WHILE the user has read-only access, the UI shall hide or disable project creation, project editing, ticket creation, drag/drop, status toggles, deletes, document favorite writes, and document configuration controls.",
+      "sourceRef": "CR Functional AC 13",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "The system shall use non-enumerable random identifiers for share IDs and read tokens.",
+      "sourceRef": "CR Security Constraints",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "The system shall store only token hashes server-side and shall not log raw tokens, cookies, authorization headers, or one-time exchange codes.",
+      "sourceRef": "CR Security Constraints",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "The system shall keep owner/admin credentials out of URLs and browser-readable storage.",
+      "sourceRef": "CR Security Constraints",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "The system shall keep backend authorization as the source of truth for every mutation.",
+      "sourceRef": "CR Success Conditions",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C5",
+      "kind": "constraint",
+      "text": "SSE subscriptions shall filter events to the caller's visible project scope and shall not carry read or admin tokens in query strings.",
+      "sourceRef": "CR Security Constraints",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "A token scoped to zero projects shall authenticate successfully and reveal no additional projects.",
+      "sourceRef": "CR Edge Cases",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-2",
+      "kind": "edge_case",
+      "text": "A project switched from public-readonly to unlisted-readonly shall disappear from anonymous project lists but remain reachable by its share ID.",
+      "sourceRef": "CR Edge Cases",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-3",
+      "kind": "edge_case",
+      "text": "A disabled shared project shall disappear from anonymous and token-scoped lists and shall stop resolving through its share ID.",
+      "sourceRef": "CR Edge Cases",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-4",
+      "kind": "edge_case",
+      "text": "Expired, revoked, malformed, or replayed one-time codes shall fail with a generic denial.",
+      "sourceRef": "CR Edge Cases",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C6",
+      "kind": "constraint",
+      "text": "The system shall not widen CORS allowlists or Origin handling for sharing endpoints.",
+      "sourceRef": "CR Security Constraints",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C7",
+      "kind": "constraint",
+      "text": "The system shall enforce concrete CSRF and Origin protection for cookie-backed owner/admin mutations.",
+      "sourceRef": "CR Security Constraints",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C8",
+      "kind": "constraint",
+      "text": "Token entry and exchange endpoints shall be rate limited or explicitly bounded by the existing deployment rate-limit policy and shall return generic errors.",
+      "sourceRef": "CR Security Constraints",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "private_by_default",
+      "title": "Private projects are hidden by default",
+      "covers": [
+        "BR-1.1"
+      ],
+      "given": "Given a fresh deployment with active projects and no sharing configuration",
+      "when": "When an anonymous visitor opens the app",
+      "then": "Then the project list is empty and no private project metadata is displayed",
+      "sourceRef": "BDD private visibility"
+    },
+    {
+      "id": "anonymous_public_listing",
+      "title": "Anonymous list includes only public projects",
+      "covers": [
+        "BR-1.2"
+      ],
+      "given": "Given one project is public-readonly, one is unlisted-readonly, and one is private",
+      "when": "When an anonymous visitor requests the project list",
+      "then": "Then only the public-readonly project is returned",
+      "sourceRef": "BDD public list"
+    },
+    {
+      "id": "unlisted_share_link_opens_project",
+      "title": "Unlisted share link opens a project",
+      "covers": [
+        "BR-1.3",
+        "BR-1.4"
+      ],
+      "given": "Given a project is unlisted-readonly with a valid share ID",
+      "when": "When an anonymous visitor opens /share/{shareId}",
+      "then": "Then the visitor sees the shared board/list/documents data for that project",
+      "sourceRef": "BDD share route"
+    },
+    {
+      "id": "readonly_mutations_are_denied",
+      "title": "Read-only visitors cannot mutate shared projects",
+      "covers": [
+        "BR-1.5"
+      ],
+      "given": "Given an anonymous visitor can read a shared project",
+      "when": "When the visitor sends POST, PATCH, PUT, or DELETE requests for that project",
+      "then": "Then each request returns 403 and persisted project data is unchanged",
+      "sourceRef": "BDD mutation denial"
+    },
+    {
+      "id": "owner_updates_project_sharing",
+      "title": "Owner changes project sharing settings",
+      "covers": [
+        "BR-1.6"
+      ],
+      "given": "Given an owner/admin session is unlocked",
+      "when": "When the owner sets a project to Private, Unlisted read-only, or Public read-only in Settings",
+      "then": "Then the saved sharing mode changes the project visibility on the next read",
+      "sourceRef": "BDD owner settings"
+    },
+    {
+      "id": "scoped_read_token_expands_projects",
+      "title": "Scoped read token reveals only scoped projects",
+      "covers": [
+        "BR-1.7"
+      ],
+      "given": "Given a scoped read token grants access to two projects",
+      "when": "When a visitor submits the token through the authorization flow",
+      "then": "Then those projects are visible and remain read-only",
+      "sourceRef": "BDD token auth"
+    },
+    {
+      "id": "invalid_token_generic_denial",
+      "title": "Invalid read tokens fail generically",
+      "covers": [
+        "BR-1.8"
+      ],
+      "given": "Given a visitor submits an invalid scoped read token",
+      "when": "When the token is rejected",
+      "then": "Then the UI shows a generic denial and no project names or counts are revealed",
+      "sourceRef": "BDD token denial"
+    },
+    {
+      "id": "share_code_exchange_cleans_url",
+      "title": "One-time share code is exchanged and removed from URL",
+      "covers": [
+        "BR-1.9"
+      ],
+      "given": "Given a share link contains a one-time code",
+      "when": "When the browser opens the link",
+      "then": "Then the code is exchanged through POST and the current address no longer contains the code",
+      "sourceRef": "BDD one-time exchange"
+    },
+    {
+      "id": "readonly_ui_removes_editing",
+      "title": "Read-only UI removes mutation controls",
+      "covers": [
+        "BR-1.10"
+      ],
+      "given": "Given a read-only visitor is viewing a shared project",
+      "when": "When the board, list, project selector, settings, and documents views render",
+      "then": "Then project add/edit, ticket create, drag/drop, status toggles, delete, document favorite, and document configuration controls are unavailable",
+      "sourceRef": "BDD read-only UI"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-sharing-contracts",
+      "title": "Define project sharing modes and metadata as typed contracts with private as the default.",
+      "derivedFrom": [
+        "BR-1.1",
+        "C1"
+      ],
+      "artifactIds": [
+        "ART-domain-project-schema",
+        "ART-shared-project-factory",
+        "ART-shared-project-discovery"
+      ],
+      "sourceRef": "architecture contracts"
+    },
+    {
+      "id": "OBL-access-context",
+      "title": "Resolve owner-admin, no-auth-dev, anonymous public, and read-only scoped access before project APIs execute.",
+      "derivedFrom": [
+        "BR-1.2",
+        "BR-1.4",
+        "BR-1.5",
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-server-api-auth",
+        "ART-server-read-session",
+        "ART-server-project-sharing"
+      ],
+      "sourceRef": "architecture access middleware"
+    },
+    {
+      "id": "OBL-project-filtering",
+      "title": "Filter project list and project-specific read routes through one project visibility policy.",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "Edge-2",
+        "Edge-3"
+      ],
+      "artifactIds": [
+        "ART-server-project-controller",
+        "ART-server-project-routes",
+        "ART-server-project-sharing"
+      ],
+      "sourceRef": "architecture project visibility"
+    },
+    {
+      "id": "OBL-sharing-settings",
+      "title": "Owner/admin sharing changes persist in global registry metadata and never in project-local source config.",
+      "derivedFrom": [
+        "BR-1.6",
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-shared-project-config-service",
+        "ART-server-project-sharing",
+        "ART-server-project-controller"
+      ],
+      "sourceRef": "architecture settings storage"
+    },
+    {
+      "id": "OBL-read-token-exchange",
+      "title": "Scoped read tokens are matched by hash, set server-managed read-only cookies, and use generic errors.",
+      "derivedFrom": [
+        "BR-1.7",
+        "BR-1.8",
+        "C2",
+        "Edge-1",
+        "Edge-4"
+      ],
+      "artifactIds": [
+        "ART-server-auth-routes",
+        "ART-server-read-session",
+        "ART-server-project-sharing"
+      ],
+      "sourceRef": "architecture token exchange"
+    },
+    {
+      "id": "OBL-mutation-gate",
+      "title": "Every non-read API route rejects read-only callers with 403 before controller mutation logic runs.",
+      "derivedFrom": [
+        "BR-1.5",
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-server-api-auth",
+        "ART-server-project-routes",
+        "ART-server-document-routes",
+        "ART-server-project-controller"
+      ],
+      "sourceRef": "architecture mutation protection"
+    },
+    {
+      "id": "OBL-sse-filtering",
+      "title": "SSE clients carry readable project scope and receive only events for visible projects.",
+      "derivedFrom": [
+        "C5",
+        "BR-1.4"
+      ],
+      "artifactIds": [
+        "ART-server-sse-routes",
+        "ART-server-sse-broadcaster",
+        "ART-server-file-watcher"
+      ],
+      "sourceRef": "architecture SSE visibility"
+    },
+    {
+      "id": "OBL-readonly-ui",
+      "title": "Frontend access state drives canWrite flags that hide or disable project, ticket, drag/drop, and document mutation controls.",
+      "derivedFrom": [
+        "BR-1.10",
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-src-auth-provider",
+        "ART-src-app",
+        "ART-src-board",
+        "ART-src-column",
+        "ART-src-project-view",
+        "ART-src-documents-layout",
+        "ART-src-settings"
+      ],
+      "sourceRef": "architecture frontend controls"
+    },
+    {
+      "id": "OBL-verification",
+      "title": "API and UI tests cover private defaults, public/unlisted visibility, token scopes, mutation denial, and read-only controls.",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.5",
+        "BR-1.10",
+        "C1",
+        "C2",
+        "C4",
+        "C5",
+        "Edge-1",
+        "Edge-2",
+        "Edge-3",
+        "Edge-4"
+      ],
+      "artifactIds": [
+        "ART-test-sharing-api",
+        "ART-test-readonly-ui"
+      ],
+      "sourceRef": "architecture verification"
+    },
+    {
+      "id": "OBL-system-route-policy",
+      "title": "System, config, cache, and filesystem routes are owner-only or sanitized for read-only callers.",
+      "derivedFrom": [
+        "BR-1.5",
+        "C4",
+        "C6",
+        "C7"
+      ],
+      "artifactIds": [
+        "ART-server-system-routes",
+        "ART-server-access-policy",
+        "ART-server-api-auth"
+      ],
+      "sourceRef": "architecture system route policy"
+    },
+    {
+      "id": "OBL-central-access-policy",
+      "title": "One access policy classifies routes and enforces write requirements before controllers execute.",
+      "derivedFrom": [
+        "BR-1.5",
+        "C4",
+        "C7"
+      ],
+      "artifactIds": [
+        "ART-server-access-policy",
+        "ART-server-api-auth",
+        "ART-server-project-routes",
+        "ART-server-document-routes",
+        "ART-server-system-routes"
+      ],
+      "sourceRef": "architecture centralized policy"
+    },
+    {
+      "id": "OBL-share-link-exchange",
+      "title": "Stable share IDs resolve to a read-only session; one-time codes use POST exchange and URL cleanup separately.",
+      "derivedFrom": [
+        "BR-1.3",
+        "BR-1.9",
+        "C1",
+        "C2"
+      ],
+      "artifactIds": [
+        "ART-server-share-routes",
+        "ART-server-read-session",
+        "ART-src-app"
+      ],
+      "sourceRef": "architecture share links"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-domain-project-schema",
+      "path": "domain-contracts/src/project/schema.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture shared contracts"
+    },
+    {
+      "id": "ART-shared-project-factory",
+      "path": "shared/services/project/ProjectFactory.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture registry metadata"
+    },
+    {
+      "id": "ART-shared-project-discovery",
+      "path": "shared/services/project/ProjectDiscoveryService.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture registry metadata"
+    },
+    {
+      "id": "ART-shared-project-config-service",
+      "path": "shared/services/project/ProjectConfigService.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture registry metadata writes"
+    },
+    {
+      "id": "ART-server-api-auth",
+      "path": "server/security/apiAuth.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture access resolver"
+    },
+    {
+      "id": "ART-server-read-session",
+      "path": "server/security/readSession.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture read-only cookie session"
+    },
+    {
+      "id": "ART-server-project-sharing",
+      "path": "server/security/projectSharing.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture sharing policy service"
+    },
+    {
+      "id": "ART-server-auth-routes",
+      "path": "server/routes/auth.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture token exchange endpoint"
+    },
+    {
+      "id": "ART-server-share-routes",
+      "path": "server/routes/share.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture share link endpoint"
+    },
+    {
+      "id": "ART-server-project-controller",
+      "path": "server/controllers/ProjectController.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture project visibility and sharing settings"
+    },
+    {
+      "id": "ART-server-project-routes",
+      "path": "server/routes/projects.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture project API routing"
+    },
+    {
+      "id": "ART-server-document-routes",
+      "path": "server/routes/documents.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture document read/write gates"
+    },
+    {
+      "id": "ART-server-sse-routes",
+      "path": "server/routes/sse.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture SSE access scope"
+    },
+    {
+      "id": "ART-server-sse-broadcaster",
+      "path": "server/services/fileWatcher/SSEBroadcaster.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture SSE filtering"
+    },
+    {
+      "id": "ART-server-file-watcher",
+      "path": "server/services/fileWatcher/index.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture SSE filtering integration"
+    },
+    {
+      "id": "ART-src-auth-provider",
+      "path": "src/auth/AuthSessionProvider.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture access mode state"
+    },
+    {
+      "id": "ART-src-app",
+      "path": "src/App.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture share route and read-only propagation"
+    },
+    {
+      "id": "ART-src-settings",
+      "path": "src/components/SettingsModal.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture owner sharing controls"
+    },
+    {
+      "id": "ART-src-board",
+      "path": "src/components/Board.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture read-only board controls"
+    },
+    {
+      "id": "ART-src-column",
+      "path": "src/components/Column/index.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture read-only drag and status controls"
+    },
+    {
+      "id": "ART-src-project-view",
+      "path": "src/components/ProjectView.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture read-only list/board propagation"
+    },
+    {
+      "id": "ART-src-documents-layout",
+      "path": "src/components/DocumentsView/DocumentsLayout.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture read-only document controls"
+    },
+    {
+      "id": "ART-test-sharing-api",
+      "path": "server/tests/api/public-sharing.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture API sharing tests"
+    },
+    {
+      "id": "ART-test-readonly-ui",
+      "path": "src/components/ReadOnlyMode.test.tsx",
+      "kind": "test",
+      "sourceRef": "architecture UI read-only tests"
+    },
+    {
+      "id": "ART-server-system-routes",
+      "path": "server/routes/system.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture system route access"
+    },
+    {
+      "id": "ART-server-access-policy",
+      "path": "server/security/accessPolicy.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture centralized access policy"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-readonly-ui",
+      "kind": "unit",
+      "title": "Read-only UI hides mutation affordances",
+      "covers": [
+        "BR-1.10",
+        "C4"
+      ],
+      "file": "src/components/ReadOnlyMode.test.tsx",
+      "sourceRef": "tests.md#read-only-ui"
+    },
+    {
+      "id": "TEST-sse-sharing-scope",
+      "kind": "integration",
+      "title": "SSE event delivery is scoped to readable projects",
+      "covers": [
+        "C5",
+        "BR-1.4"
+      ],
+      "file": "server/tests/api/public-sharing.test.ts",
+      "sourceRef": "tests.md#sse-sharing-scope"
+    },
+    {
+      "id": "TEST-share-code-url-cleanup",
+      "kind": "e2e",
+      "title": "One-time share code uses POST exchange and URL cleanup",
+      "covers": [
+        "BR-1.9",
+        "C2",
+        "C3"
+      ],
+      "file": "tests/e2e/public-sharing.spec.ts",
+      "sourceRef": "tests.md#share-code-url-cleanup"
+    },
+    {
+      "id": "TEST-system-route-sharing-access",
+      "kind": "integration",
+      "title": "System, config, cache, and filesystem routes do not leak or mutate for read-only callers",
+      "covers": [
+        "BR-1.5",
+        "C4",
+        "C6",
+        "C7"
+      ],
+      "file": "server/tests/api/public-sharing.test.ts",
+      "sourceRef": "tests.md#system-route-access"
+    },
+    {
+      "id": "TEST-public-sharing-api",
+      "kind": "integration",
+      "title": "Public sharing API visibility and read-only mutation contract",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.5",
+        "BR-1.6",
+        "BR-1.7",
+        "BR-1.8",
+        "C1",
+        "C2",
+        "C3",
+        "C4",
+        "C6",
+        "C7",
+        "C8",
+        "Edge-1",
+        "Edge-2",
+        "Edge-3",
+        "Edge-4"
+      ],
+      "file": "server/tests/api/public-sharing.test.ts",
+      "sourceRef": "tests.md#public-sharing-api"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-1",
+      "title": "Add typed sharing metadata and registry preservation",
+      "ownsArtifactIds": [
+        "ART-domain-project-schema",
+        "ART-shared-project-factory",
+        "ART-shared-project-discovery",
+        "ART-shared-project-config-service"
+      ],
+      "makesGreenIds": [
+        "private_by_default",
+        "TEST-public-sharing-api"
+      ],
+      "skills": [
+        "backend",
+        "typescript"
+      ],
+      "sourceRef": "tasks.md#task-1"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Implement backend read-only access context and read session exchange",
+      "ownsArtifactIds": [
+        "ART-server-api-auth",
+        "ART-server-read-session",
+        "ART-server-project-sharing",
+        "ART-server-auth-routes",
+        "ART-server-share-routes"
+      ],
+      "makesGreenIds": [
+        "anonymous_public_listing",
+        "unlisted_share_link_opens_project",
+        "scoped_read_token_expands_projects",
+        "invalid_token_generic_denial",
+        "share_code_exchange_cleans_url",
+        "TEST-public-sharing-api"
+      ],
+      "skills": [
+        "backend",
+        "security"
+      ],
+      "sourceRef": "tasks.md#task-2"
+    },
+    {
+      "id": "TASK-5",
+      "title": "Run validation and fix review findings",
+      "ownsArtifactIds": [
+        "ART-test-sharing-api",
+        "ART-test-readonly-ui"
+      ],
+      "makesGreenIds": [
+        "TEST-public-sharing-api",
+        "TEST-readonly-ui",
+        "TEST-sse-sharing-scope"
+      ],
+      "skills": [
+        "code-review",
+        "testing"
+      ],
+      "sourceRef": "tasks.md#task-5"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Apply centralized access policy to project, document, system, and SSE routes",
+      "ownsArtifactIds": [
+        "ART-server-access-policy",
+        "ART-server-project-controller",
+        "ART-server-project-routes",
+        "ART-server-document-routes",
+        "ART-server-system-routes",
+        "ART-server-sse-routes",
+        "ART-server-sse-broadcaster",
+        "ART-server-file-watcher"
+      ],
+      "makesGreenIds": [
+        "readonly_mutations_are_denied",
+        "unlisted_share_link_opens_project",
+        "TEST-public-sharing-api",
+        "TEST-sse-sharing-scope",
+        "TEST-system-route-sharing-access"
+      ],
+      "skills": [
+        "backend",
+        "security"
+      ],
+      "sourceRef": "tasks.md#task-3"
+    },
+    {
+      "id": "TASK-4",
+      "title": "Add owner sharing settings and frontend read-only capabilities",
+      "ownsArtifactIds": [
+        "ART-src-auth-provider",
+        "ART-src-app",
+        "ART-src-settings",
+        "ART-src-project-view",
+        "ART-src-board",
+        "ART-src-column",
+        "ART-src-documents-layout"
+      ],
+      "makesGreenIds": [
+        "owner_updates_project_sharing",
+        "readonly_ui_removes_editing",
+        "share_code_exchange_cleans_url",
+        "TEST-readonly-ui",
+        "TEST-share-code-url-cleanup"
+      ],
+      "skills": [
+        "frontend-react-component",
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-4"
+    }
+  ]
+}

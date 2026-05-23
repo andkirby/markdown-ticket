@@ -1,10 +1,25 @@
 import type { NextFunction, Request, Response } from 'express'
 import { timingSafeEqual } from 'node:crypto'
+import { isOwnerOnlyRoute, isPublicReadRoute, isReadOnlyMutationCandidate } from './accessPolicy.js'
 import { verifyOwnerSessionCookie } from './apiSession.js'
 import { createDefaultOriginPolicy } from './originPolicy.js'
+import { getReadSessionSecret, getReadSessionState } from './readSession.js'
 
 const EXEMPT_API_ROUTES = new Set(['/api/status', '/api/health'])
-const OWNER_INTENT_HEADER = 'x-mdt-owner-intent'
+export const OWNER_INTENT_HEADER = 'x-mdt-owner-intent'
+
+export type RequestAccessMode = 'anonymous' | 'read-only' | 'owner-admin' | 'no-auth-dev'
+
+export interface RequestAccessContext {
+  canWrite: boolean
+  mode: RequestAccessMode
+  projectRefs: string[]
+  shareIds: string[]
+}
+
+export interface AccessRequest extends Request {
+  mdtAccess?: RequestAccessContext
+}
 
 export interface ApiAuthConfig {
   enabled: boolean
@@ -80,6 +95,7 @@ export function createApiAuthMiddleware(
 
   return (req: Request, res: Response, next: NextFunction): void => {
     if (isApiAuthExemptRoute(req.method, getRequestPath(req))) {
+      setRequestAccess(req, { canWrite: false, mode: 'anonymous', projectRefs: [], shareIds: [] })
       next()
       return
     }
@@ -90,27 +106,66 @@ export function createApiAuthMiddleware(
         logger.warn('Backend API authentication is disabled. Set API_SECURITY_AUTH=true and API_AUTH_TOKEN to protect API routes.')
       }
 
+      setRequestAccess(req, { canWrite: true, mode: 'no-auth-dev', projectRefs: [], shareIds: [] })
       next()
       return
     }
 
     const credential = extractApiCredential(req)
     if (timingSafeTokenMatches(credential ?? undefined, config.token)) {
+      setRequestAccess(req, { canWrite: true, mode: 'owner-admin', projectRefs: [], shareIds: [] })
       next()
       return
     }
 
-    if (!verifyOwnerSessionCookie(req, config.token)) {
-      res.status(401).json({ error: 'Authentication required' })
-      return
-    }
+    const hasOwnerSession = verifyOwnerSessionCookie(req, config.token)
 
-    if (requiresCookieMutationIntent(req) && !hasCookieMutationIntent(req, originPolicy)) {
+    if (hasOwnerSession && requiresCookieMutationIntent(req) && !hasCookieMutationIntent(req, originPolicy)) {
       res.status(403).json({ error: 'Forbidden' })
       return
     }
 
-    next()
+    if (hasOwnerSession) {
+      setRequestAccess(req, { canWrite: true, mode: 'owner-admin', projectRefs: [], shareIds: [] })
+      next()
+      return
+    }
+
+    const readSession = getReadSessionState(req, getReadSessionSecret(config.token))
+    setRequestAccess(req, {
+      canWrite: false,
+      mode: readSession.authenticated ? 'read-only' : 'anonymous',
+      projectRefs: readSession.projectRefs,
+      shareIds: readSession.shareIds,
+    })
+
+    const requestPath = getRequestPath(req)
+
+    if (isPublicReadRoute(requestPath, req.method)) {
+      next()
+      return
+    }
+
+    if (isReadOnlyMutationCandidate(requestPath, req.method)) {
+      res.status(403).json({ error: 'Forbidden' })
+      return
+    }
+
+    if (isOwnerOnlyRoute(requestPath)) {
+      res.status(403).json({ error: 'Forbidden' })
+      return
+    }
+
+    res.status(401).json({ error: 'Authentication required' })
+  }
+}
+
+export function getRequestAccess(req: Request): RequestAccessContext {
+  return (req as AccessRequest).mdtAccess ?? {
+    canWrite: false,
+    mode: 'anonymous',
+    projectRefs: [],
+    shareIds: [],
   }
 }
 
@@ -168,4 +223,8 @@ function hasCookieMutationIntent(req: Request, originPolicy: OriginPolicyLike): 
   return typeof origin === 'string'
     && originPolicy.isAllowedOrigin(origin)
     && intent === '1'
+}
+
+function setRequestAccess(req: Request, access: RequestAccessContext): void {
+  ;(req as AccessRequest).mdtAccess = access
 }

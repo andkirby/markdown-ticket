@@ -245,6 +245,7 @@ export function createProjectRouter(projectController: ProjectController): Route
    *         $ref: '#/components/responses/NotFound'
    */
   router.put('/:code/update', (req, res) => projectController.updateProject(req, res))
+  router.put('/:code/sharing', (req, res) => projectController.updateProjectSharing(req, res))
 
   /**
    * @openapi

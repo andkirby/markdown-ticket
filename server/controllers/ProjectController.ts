@@ -1,5 +1,5 @@
 import type { Ticket as DomainTicket, SearchMode } from '@mdt/domain-contracts'
-import type { Project, ProjectConfig } from '@mdt/shared/models/Project.js'
+import { ProjectSharingMode, type Project, type ProjectConfig, type ProjectSharingModeValue } from '@mdt/shared/models/Project.js'
 import type { TicketMetadata } from '@mdt/shared/models/Ticket.js'
 import type { ProjectCreateInput, ProjectUpdateInput } from '@mdt/shared/tools/ProjectManager.js'
 import type { Request, Response } from 'express'
@@ -7,7 +7,17 @@ import { getConfigDir } from '@mdt/shared/utils/constants.js'
 import { parseToml } from '@mdt/shared/utils/toml.js'
 import * as fs from 'node:fs/promises'
 import * as os from 'node:os'
+import { getRequestAccess } from '../security/apiAuth.js'
 import { authorizeFilesystemPath, FilesystemAccessDeniedError, getProjectRoots } from '../security/filesystemAccess.js'
+import {
+  filterProjectsForAccess,
+  findProjectByRef,
+  isProjectVisibleToAccess,
+  isWriteAccess,
+  sanitizeProjectForAccess,
+  sanitizeProjectsForAccess,
+  updateProjectSharing,
+} from '../security/projectSharing.js'
 import type { CRData, TicketService } from '../services/TicketService.js'
 import type { TreeNode } from '../types/tree.js'
 
@@ -72,6 +82,11 @@ export interface TreeServiceInterface {
 
 interface FileWatcher {
   reconfigureDocumentWatchers?: (projectId: string, projectRoot: string, documentPaths: string[], ticketsPath?: string) => Promise<number>
+  disconnectReadOnlyClients?: () => void
+}
+
+function isProjectSharingMode(value: unknown): value is ProjectSharingModeValue {
+  return typeof value === 'string' && Object.values(ProjectSharingMode).includes(value as ProjectSharingModeValue)
 }
 
 /**
@@ -175,10 +190,13 @@ export class ProjectController {
       const projects = await this.projectService.getAllProjects(bypassCache)
       // Filter out inactive projects (MDT-001)
       const activeProjects = projects.filter(project => project.project.active === true)
+      const access = getRequestAccess(req)
+      const visibleProjects = filterProjectsForAccess(activeProjects, access)
 
-      res.json(activeProjects)
+      res.json(sanitizeProjectsForAccess(visibleProjects, access))
     }
-    catch {
+    catch (error: unknown) {
+      console.error('Error getting projects:', error)
       res.status(500).json({ error: 'Failed to get projects' })
     }
   }
@@ -198,9 +216,10 @@ export class ProjectController {
     try {
       // Get project by ID first, then get config using project path
       const projects = await this.projectService.getAllProjects()
-      const project = projects.find(p => p.id === projectId || p.project.code === projectId)
+      const project = findProjectByRef(projects, projectId)
+      const access = getRequestAccess(req)
 
-      if (!project) {
+      if (!project || !isProjectVisibleToAccess(project, access)) {
         res.status(404).json({ error: 'Not Found', message: 'Project not found' })
 
         return
@@ -214,7 +233,10 @@ export class ProjectController {
         return
       }
 
-      const result = { project, config }
+      const result = {
+        project: sanitizeProjectForAccess(project, access),
+        config: isWriteAccess(access) ? config : null,
+      }
 
       res.json(result)
     }
@@ -342,6 +364,61 @@ export class ProjectController {
       else {
         res.status(500).json({ error: 'Internal Server Error', message: 'Failed to update project' })
       }
+    }
+  }
+
+  async updateProjectSharing(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const { code } = req.params
+
+      if (!code) {
+        res.status(400).json({ error: 'Bad Request', message: 'Project code is required' })
+        return
+      }
+
+      const projects = await this.projectService.getAllProjects(true)
+      const project = findProjectByRef(projects, code)
+
+      if (!project) {
+        res.status(404).json({ error: 'Not Found', message: 'Project not found' })
+        return
+      }
+
+      const body = req.body as { mode?: unknown, rotateShareId?: unknown, shareId?: unknown }
+      if (!isProjectSharingMode(body.mode)) {
+        res.status(400).json({ error: 'Bad Request', message: 'Invalid sharing mode' })
+        return
+      }
+      if (body.shareId !== undefined) {
+        res.status(400).json({ error: 'Bad Request', message: 'Share ID is server-generated' })
+        return
+      }
+      if (body.rotateShareId !== undefined && typeof body.rotateShareId !== 'boolean') {
+        res.status(400).json({ error: 'Bad Request', message: 'Invalid share rotation flag' })
+        return
+      }
+
+      const updatedProject = await updateProjectSharing(project, {
+        mode: body.mode,
+        ...(body.rotateShareId === true ? { rotateShareId: true } : {}),
+      })
+
+      if ('clearCache' in this.projectService.projectDiscovery) {
+        await (this.projectService.projectDiscovery as { clearCache?: () => void | Promise<void> }).clearCache?.()
+      }
+
+      this.fileWatcher.disconnectReadOnlyClients?.()
+      res.json(updatedProject)
+    }
+    catch (error: unknown) {
+      const err = error as Error
+      if (err.message.includes('Invalid')) {
+        res.status(400).json({ error: 'Bad Request', message: err.message })
+        return
+      }
+
+      console.error('Error updating project sharing:', error)
+      res.status(500).json({ error: 'Internal Server Error', message: 'Failed to update project sharing' })
     }
   }
 
@@ -545,14 +622,8 @@ export class ProjectController {
         return
       }
 
-      // Get project by ID first, supporting bypassCache query param
-      const bypassCache = req.query.bypassCache === 'true'
-      const projects = await this.projectService.getAllProjects(bypassCache)
-      const project = projects.find(p => p.id === projectId || p.project.code === projectId)
-
+      const project = await this.resolveVisibleProject(projectId, req, res)
       if (!project) {
-        res.status(404).json({ error: 'Not Found', message: 'Project not found' })
-
         return
       }
 
@@ -574,6 +645,10 @@ export class ProjectController {
       if (!projectId || !crId) {
         res.status(400).json({ error: 'Bad Request', message: 'Project ID and CR ID are required' })
 
+        return
+      }
+
+      if (!await this.resolveVisibleProject(projectId, req, res)) {
         return
       }
 
@@ -770,6 +845,10 @@ export class ProjectController {
         return
       }
 
+      if (!await this.resolveVisibleProject(projectId, req, res)) {
+        return
+      }
+
       if (!this.ticketService) {
         res.status(501).json({ error: 'Ticket service not available' })
         return
@@ -794,6 +873,10 @@ export class ProjectController {
 
       if (!projectId || !crId) {
         res.status(400).json({ error: 'Bad Request', message: 'Project ID and CR ID are required' })
+        return
+      }
+
+      if (!await this.resolveVisibleProject(projectId, req, res)) {
         return
       }
 
@@ -823,6 +906,10 @@ export class ProjectController {
 
       if (!projectId || !crId) {
         res.status(400).json({ error: 'Bad Request', message: 'Project ID and CR ID are required' })
+        return
+      }
+
+      if (!await this.resolveVisibleProject(projectId, req, res)) {
         return
       }
 
@@ -884,5 +971,22 @@ export class ProjectController {
 
       res.status(500).json({ error: 'Internal Server Error', message: 'Failed to delete CR', details: err.message })
     }
+  }
+
+  async ensureProjectVisible(projectRef: string, req: Request, res: Response): Promise<boolean> {
+    return Boolean(await this.resolveVisibleProject(projectRef, req, res))
+  }
+
+  private async resolveVisibleProject(projectRef: string, req: Request, res: Response): Promise<Project | null> {
+    const projects = await this.projectService.getAllProjects(req.query.bypassCache === 'true')
+    const project = findProjectByRef(projects, projectRef)
+    const access = getRequestAccess(req)
+
+    if (!project || !isProjectVisibleToAccess(project, access)) {
+      res.status(404).json({ error: 'Not Found', message: 'Project not found' })
+      return null
+    }
+
+    return project
   }
 }

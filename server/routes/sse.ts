@@ -1,9 +1,12 @@
 import type { Request } from 'express'
 import type { OriginPolicy } from '../security/originPolicy.js'
+import type { ProjectServiceExtension } from '../controllers/ProjectController.js'
 import type FileWatcherService from '../services/fileWatcher/index.js'
 import { logger } from '@mdt/shared/utils/server-logger.js'
 import { Router } from 'express'
+import { getRequestAccess } from '../security/apiAuth.js'
 import { createDefaultOriginPolicy } from '../security/originPolicy.js'
+import { filterProjectsForAccess } from '../security/projectSharing.js'
 
 interface _ResponseLike {
   write: (data: string) => void
@@ -20,7 +23,11 @@ interface _ResponseLike {
  * @param fileWatcher - File watcher service instance.
  * @returns Express router.
  */
-export function createSSERouter(fileWatcher: FileWatcherService, originPolicy: OriginPolicy = createDefaultOriginPolicy()): Router {
+export function createSSERouter(
+  fileWatcher: FileWatcherService,
+  originPolicy: OriginPolicy = createDefaultOriginPolicy(),
+  projectService?: ProjectServiceExtension,
+): Router {
   const router = Router()
 
   /**
@@ -40,7 +47,7 @@ export function createSSERouter(fileWatcher: FileWatcherService, originPolicy: O
    *               description: SSE formatted events
    */
 
-  router.get('/', (req: Request, res: any) => {
+  router.get('/', async (req: Request, res: any) => {
     const accessControlAllowOrigin = originPolicy.getAccessControlAllowOrigin(req.headers.origin)
     const headers: Record<string, string> = {
       'Content-Type': 'text/event-stream',
@@ -58,11 +65,17 @@ export function createSSERouter(fileWatcher: FileWatcherService, originPolicy: O
       logger.warn('SSE stream request from disallowed origin', { origin: req.headers.origin })
     }
 
+    const access = getRequestAccess(req)
+    const projectRefs = await resolveSseProjectRefs(projectService, access)
+
     // Set SSE headers
     res.writeHead(200, headers)
 
     // Add client to file watcher service first (so it's tracked before sending data)
-    fileWatcher.addClient(res)
+    fileWatcher.addClient(res, {
+      canWrite: access.canWrite,
+      projectRefs,
+    })
 
     // Send initial connection event on next tick to ensure stream is ready
     // This is critical for test environments where data listeners are attached asynchronously
@@ -89,4 +102,16 @@ export function createSSERouter(fileWatcher: FileWatcherService, originPolicy: O
   })
 
   return router
+}
+
+async function resolveSseProjectRefs(
+  projectService: ProjectServiceExtension | undefined,
+  access: ReturnType<typeof getRequestAccess>,
+): Promise<string[]> {
+  if (access.canWrite || !projectService) {
+    return []
+  }
+
+  const projects = await projectService.getAllProjects()
+  return filterProjectsForAccess(projects, access).flatMap(project => [project.id, project.project.code])
 }
