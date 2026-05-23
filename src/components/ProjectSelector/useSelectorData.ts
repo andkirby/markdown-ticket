@@ -8,6 +8,7 @@
 
 import type { SelectorData, SelectorPreferences, SelectorState } from './types'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { authFetch } from '../../auth/authFetch'
 
 const DEFAULT_PREFERENCES: SelectorPreferences = {
   visibleCount: 7,
@@ -35,7 +36,7 @@ export function useSelectorData(): SelectorData & {
     let cancelled = false
     const loadData = async () => {
       try {
-        const response = await fetch('/api/config/selector')
+        const response = await authFetch('/api/config/selector')
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`)
         }
@@ -78,7 +79,7 @@ export function useSelectorData(): SelectorData & {
 
     const timer = setTimeout(async () => {
       try {
-        await fetch('/api/config/selector', {
+        await authFetch('/api/config/selector', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(state),

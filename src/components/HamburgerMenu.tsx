@@ -11,12 +11,13 @@ import { ButtonGroup, ButtonGroupSeparator } from './ui/button-group'
 import { Button } from './ui/index'
 
 interface HamburgerMenuProps {
-  onAddProject: () => void
+  onAddProject?: () => void
   onEditProject?: () => void
   hasActiveProject?: boolean
   sortPreferences?: SortPreferences
   onSortPreferencesChange?: (preferences: SortPreferences) => void
   onOpenSettings?: () => void
+  canManageProjects?: boolean
 }
 
 export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
@@ -26,6 +27,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   sortPreferences,
   onSortPreferencesChange,
   onOpenSettings,
+  canManageProjects = true,
 }) => {
   const { themeMode, setTheme } = useTheme()
   const [isOpen, setIsOpen] = useState(false)
@@ -55,7 +57,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
 
   const handleAddProject = () => {
     setIsOpen(false)
-    onAddProject()
+    onAddProject?.()
   }
 
   const handleEditProject = () => {
@@ -126,16 +128,18 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
             {/**
               * @testid add-project-button — Button to open add project modal
               */}
-            <button
-              data-testid="add-project-button"
-              onClick={handleAddProject}
-              className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Project
-            </button>
+            {canManageProjects && onAddProject && (
+              <button
+                data-testid="add-project-button"
+                onClick={handleAddProject}
+                className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Project
+              </button>
+            )}
 
-            {hasActiveProject && (
+            {canManageProjects && hasActiveProject && (
               <button
                 data-testid="edit-project-button"
                 onClick={handleEditProject}
@@ -220,14 +224,16 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
             )}
 
             {/* Settings */}
-            <button
-              data-testid="settings-button"
-              onClick={handleOpenSettings}
-              className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
-            >
-              <Settings className="h-4 w-4 mr-2" />
-              Settings
-            </button>
+            {canManageProjects && onOpenSettings && (
+              <button
+                data-testid="settings-button"
+                onClick={handleOpenSettings}
+                className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                Settings
+              </button>
+            )}
 
             {/* Delimiter before theme quick-access */}
             <ButtonGroupSeparator />

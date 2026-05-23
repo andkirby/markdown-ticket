@@ -1,0 +1,1077 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-176"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "WHEN project loading returns 401 Authentication required, the system shall show a locked-board state instead of any empty-project state.",
+      "sourceRef": "docs/CRs/MDT-176-browser-auth-session-unlock.md#problem; docs/design/surfaces/auth-session-unlock.spec.md#critical-ux-rules",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "WHILE the board is locked, the system shall provide a password-style access-token input and unlock action.",
+      "sourceRef": "docs/CRs/MDT-176-browser-auth-session-unlock.md#functional; docs/design/surfaces/auth-session-unlock.spec.md#state-model",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.3",
+      "kind": "behavior",
+      "text": "WHEN a valid owner access token is submitted, the system shall establish an owner browser session and load manageable projects without requiring the token to be entered again.",
+      "sourceRef": "docs/CRs/MDT-176-browser-auth-session-unlock.md#desired-outcome; docs/design/surfaces/auth-session-unlock.spec.md#unlock-flow",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.4",
+      "kind": "behavior",
+      "text": "IF the submitted access token is invalid, THEN the system shall keep the locked panel visible and show a generic inline rejection message.",
+      "sourceRef": "docs/CRs/MDT-176-browser-auth-session-unlock.md#functional; docs/design/surfaces/auth-session-unlock.spec.md#copy",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.5",
+      "kind": "behavior",
+      "text": "WHILE no owner session is established, the system shall keep project-management actions unavailable to the browser user.",
+      "sourceRef": "docs/CRs/MDT-176-browser-auth-session-unlock.md#functional; docs/design/surfaces/auth-session-unlock.spec.md#critical-ux-rules",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.6",
+      "kind": "behavior",
+      "text": "WHEN the user locks or logs out of an owner session, the system shall clear the browser session and return to the locked state without mutating project data.",
+      "sourceRef": "docs/CRs/MDT-176-browser-auth-session-unlock.md#functional; docs/design/surfaces/auth-session-unlock.spec.md#critical-ux-rules",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.7",
+      "kind": "behavior",
+      "text": "WHILE backend authentication is disabled for local development or test mode, the system shall load the normal application without an unlock prompt.",
+      "sourceRef": "docs/CRs/MDT-176-browser-auth-session-unlock.md#scope; docs/CRs/MDT-176/assess.md#current-system-assumptions",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.8",
+      "kind": "behavior",
+      "text": "WHEN anonymous project loading returns public read-only projects after MDT-172, the system shall render those projects with owner actions unavailable and an unlock affordance available.",
+      "sourceRef": "docs/CRs/MDT-176-browser-auth-session-unlock.md#mdt-172-compatibility; docs/design/surfaces/auth-session-unlock.spec.md#mdt-172-compatibility",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.9",
+      "kind": "behavior",
+      "text": "WHEN anonymous project loading returns 200 with an empty public list after MDT-172, the system shall show a no-public-projects state with an unlock affordance and no project-creation action.",
+      "sourceRef": "docs/CRs/MDT-176-browser-auth-session-unlock.md#mdt-172-compatibility; docs/design/surfaces/auth-session-unlock.spec.md#mdt-172-compatibility",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.10",
+      "kind": "behavior",
+      "text": "IF an unlock attempt fails, THEN the system shall preserve the unlock context and keep focus available for token correction.",
+      "sourceRef": "docs/design/surfaces/auth-session-unlock.spec.md#accessibility; docs/design/surfaces/auth-session-unlock.mockups.md#invalid-token-state",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-2.1",
+      "kind": "behavior",
+      "text": "WHEN POST /api/auth/session receives a valid owner token, the system shall return a successful session response with a server-managed session cookie.",
+      "sourceRef": "docs/CRs/MDT-176-browser-auth-session-unlock.md#scope; docs/design/surfaces/auth-session-unlock.spec.md#unlock-flow",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-2.2",
+      "kind": "behavior",
+      "text": "WHEN a protected backend API route receives a valid owner session cookie, the system shall authenticate the request as an owner request.",
+      "sourceRef": "docs/CRs/MDT-176-browser-auth-session-unlock.md#scope; docs/CRs/MDT-176/assess.md#backend-api-auth-middleware",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-2.3",
+      "kind": "behavior",
+      "text": "WHEN the browser session is cleared through the lock or logout flow, the system shall invalidate the session cookie for subsequent protected API requests.",
+      "sourceRef": "docs/CRs/MDT-176-browser-auth-session-unlock.md#functional; docs/design/surfaces/auth-session-unlock.spec.md#critical-ux-rules",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-3.1",
+      "kind": "behavior",
+      "text": "The system shall provide operator documentation for enabling auth, unlocking browser sessions, cookie and security behavior, logout, and local no-auth mode.",
+      "sourceRef": "docs/CRs/MDT-176-browser-auth-session-unlock.md#affected-areas; docs/CRs/MDT-176/assess.md#dependency-and-tooling-pressure",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "The system shall never store or expose the raw admin token in browser storage, URL state, logs, telemetry, or visible error text.",
+      "sourceRef": "docs/CRs/MDT-176-browser-auth-session-unlock.md#security; docs/design/surfaces/auth-session-unlock.spec.md#storage-and-security",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "The system shall set the owner session cookie with HttpOnly, SameSite=Strict, and Secure in HTTPS or production deployments.",
+      "sourceRef": "docs/CRs/MDT-176-browser-auth-session-unlock.md#desired-outcome; docs/CRs/MDT-176-browser-auth-session-unlock.md#security",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "The system shall validate session exchange tokens using the existing MDT-157 owner token rules rather than a separate credential parser.",
+      "sourceRef": "docs/CRs/MDT-176-browser-auth-session-unlock.md#security; docs/CRs/MDT-176/assess.md#backend-api-auth-middleware",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "The system shall include a documented CSRF mitigation decision and matching verification for cookie-authenticated mutation routes.",
+      "sourceRef": "docs/CRs/MDT-176-browser-auth-session-unlock.md#security; docs/CRs/MDT-176/assess.md#cookie-authenticated-mutation-safety",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C5",
+      "kind": "constraint",
+      "text": "The system shall keep MDT-176 authentication state behavior independent of MDT-172 authorization and sharing behavior so MDT-176 can ship first.",
+      "sourceRef": "docs/CRs/MDT-176-browser-auth-session-unlock.md#out-of-scope; docs/CRs/MDT-176/assess.md#recommendation",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C6",
+      "kind": "constraint",
+      "text": "The system shall preserve MDT-157 header-token authentication, health/status exemptions, and local no-auth compatibility after session-cookie support is added.",
+      "sourceRef": "docs/CRs/MDT-176/assess.md#verification-gaps; docs/CRs/MDT-157-api-auth.md#acceptance-criteria",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C7",
+      "kind": "constraint",
+      "text": "The system shall not introduce multi-user accounts, RBAC, OAuth, password login, token rotation, or refresh-token behavior for this ticket.",
+      "sourceRef": "docs/CRs/MDT-176-browser-auth-session-unlock.md#out-of-scope",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C8",
+      "kind": "constraint",
+      "text": "The system shall document auth setup, browser unlock, session cookie behavior, logout, security expectations, and local no-auth behavior in operator-facing documentation.",
+      "sourceRef": "docs/CRs/MDT-176-browser-auth-session-unlock.md#affected-areas; docs/CRs/MDT-176/assess.md#dependency-and-tooling-pressure",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "IF the backend is unavailable or returns a server error, THEN the system shall show the backend-down state instead of the locked-board state.",
+      "sourceRef": "docs/design/surfaces/auth-session-unlock.spec.md#state-model; docs/CRs/MDT-176/assess.md#verification-gaps",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-2",
+      "kind": "edge_case",
+      "text": "IF an SSE or reconnecting request observes a cleared or rejected session, THEN the system shall converge back to locked state without showing stale owner controls.",
+      "sourceRef": "docs/CRs/MDT-176/assess.md#verification-gaps; docs/design/surfaces/auth-session-unlock.spec.md#state-model",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-3",
+      "kind": "edge_case",
+      "text": "IF anonymous GET /api/projects returns 401 before MDT-172 or 200 after MDT-172, THEN the system shall distinguish locked, public-read-only, and public-empty states by response semantics.",
+      "sourceRef": "docs/CRs/MDT-176-browser-auth-session-unlock.md#mdt-172-compatibility; docs/design/surfaces/auth-session-unlock.spec.md#mdt-172-compatibility",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-2.4",
+      "kind": "behavior",
+      "text": "IF a session exchange or session-authenticated request has missing or invalid credentials, THEN the system shall reject the request with a generic authentication failure.",
+      "sourceRef": "docs/CRs/MDT-176-browser-auth-session-unlock.md#functional; docs/CRs/MDT-157-api-auth.md#acceptance-criteria",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C9",
+      "kind": "constraint",
+      "text": "The system shall verify locked, unlock, invalid unlock, logout, and hidden admin controls in an isolated auth-enabled Playwright E2E setup without changing the default no-auth E2E suite.",
+      "sourceRef": "docs/CRs/MDT-176-browser-auth-session-unlock.md#verification; docs/CRs/MDT-176/assess.md#verification-harness; tests/AGENTS.md",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "locked_backend_shows_unlock_panel",
+      "title": "Locked backend shows unlock panel instead of empty project UI",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.5"
+      ],
+      "given": "the backend requires owner authentication and I have no owner session",
+      "when": "I open the board",
+      "then": "I see a Board is locked message with an access-token input and unlock action, and project-management actions are not available",
+      "sourceRef": "docs/CRs/MDT-176/requirements.trace.md#br-11; docs/design/surfaces/auth-session-unlock.spec.md#locked-panel"
+    },
+    {
+      "id": "successful_unlock_starts_owner_session",
+      "title": "Valid token unlocks owner session and loads projects",
+      "covers": [
+        "BR-1.3",
+        "BR-1.5"
+      ],
+      "given": "the board is locked and I have a valid owner access token",
+      "when": "I submit the token from the unlock panel",
+      "then": "the board loads manageable projects, shows owner-session status, and owner-only actions become available",
+      "sourceRef": "docs/CRs/MDT-176/requirements.trace.md#br-13; docs/design/surfaces/auth-session-unlock.spec.md#unlock-flow"
+    },
+    {
+      "id": "invalid_unlock_stays_locked",
+      "title": "Invalid token keeps user in locked correction flow",
+      "covers": [
+        "BR-1.4",
+        "BR-1.10"
+      ],
+      "given": "the board is locked and I enter an invalid access token",
+      "when": "I submit the unlock form",
+      "then": "I remain on the locked panel with a generic token rejection message and can correct the token from the same context",
+      "sourceRef": "docs/CRs/MDT-176/requirements.trace.md#br-14; docs/design/surfaces/auth-session-unlock.spec.md#accessibility"
+    },
+    {
+      "id": "local_no_auth_loads_normally",
+      "title": "Local no-auth mode bypasses unlock prompt",
+      "covers": [
+        "BR-1.7"
+      ],
+      "given": "backend authentication is disabled for local development or test mode",
+      "when": "I open the application",
+      "then": "the normal project experience loads without showing an unlock prompt",
+      "sourceRef": "docs/CRs/MDT-176/requirements.trace.md#br-17; docs/CRs/MDT-176-browser-auth-session-unlock.md#scope"
+    },
+    {
+      "id": "public_projects_remain_read_only",
+      "title": "Anonymous public projects remain read-only with unlock affordance",
+      "covers": [
+        "BR-1.8",
+        "BR-1.5"
+      ],
+      "given": "MDT-172 public read-only project listing is available and I have no owner session",
+      "when": "I open the application and public projects are returned",
+      "then": "I can view public projects, see an unlock affordance, and project-management actions remain unavailable",
+      "sourceRef": "docs/CRs/MDT-176/requirements.trace.md#br-18; docs/design/surfaces/auth-session-unlock.spec.md#mdt-172-compatibility"
+    },
+    {
+      "id": "public_empty_shows_unlock_only",
+      "title": "Anonymous public-empty state does not expose project creation",
+      "covers": [
+        "BR-1.9",
+        "BR-1.5"
+      ],
+      "given": "MDT-172 public read-only listing is available and no public projects are returned",
+      "when": "I open the application without an owner session",
+      "then": "I see a no-public-projects message with an unlock affordance and no project-creation action",
+      "sourceRef": "docs/CRs/MDT-176/requirements.trace.md#br-19; docs/design/surfaces/auth-session-unlock.mockups.md#anonymous-public-empty-state-after-mdt-172"
+    },
+    {
+      "id": "lock_action_returns_to_locked_state",
+      "title": "Lock action ends owner session without changing project data",
+      "covers": [
+        "BR-1.6"
+      ],
+      "given": "I have unlocked an owner session and projects are visible",
+      "when": "I use the lock action and then reload or request protected project data",
+      "then": "the board remains locked and no project data is changed",
+      "sourceRef": "docs/CRs/MDT-176/requirements.trace.md#br-16; docs/design/surfaces/auth-session-unlock.mockups.md#owner-session-unlocked"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-session-endpoint-placement",
+      "title": "Mount auth session routes before the protected API auth gate, with GET/POST/DELETE /api/auth/session explicitly owned by the auth route.",
+      "derivedFrom": [
+        "BR-2.1",
+        "BR-2.3",
+        "BR-2.4",
+        "C3",
+        "C6"
+      ],
+      "artifactIds": [
+        "ART-server-auth-routes",
+        "ART-server-entry",
+        "ART-server-test-factory"
+      ],
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#session-endpoint-placement"
+    },
+    {
+      "id": "OBL-session-cookie-contract",
+      "title": "Issue an opaque signed owner session cookie that never contains the raw admin token and uses HttpOnly, SameSite=Strict, Path=/api, and Secure for HTTPS/production.",
+      "derivedFrom": [
+        "BR-1.3",
+        "BR-2.1",
+        "BR-2.2",
+        "BR-2.3",
+        "C1",
+        "C2",
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-server-api-session",
+        "ART-server-auth-routes",
+        "ART-server-api-auth",
+        "ART-server-auth-session-tests"
+      ],
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#session-cookie-contract"
+    },
+    {
+      "id": "OBL-auth-middleware-session-recognition",
+      "title": "Keep server/security/apiAuth.ts as the protected-route authentication owner and extend it to accept either existing header credentials or verified owner session cookies.",
+      "derivedFrom": [
+        "BR-2.2",
+        "BR-2.4",
+        "C3",
+        "C6"
+      ],
+      "artifactIds": [
+        "ART-server-api-auth",
+        "ART-server-api-session",
+        "ART-server-project-routes",
+        "ART-server-system-routes",
+        "ART-server-api-auth-tests",
+        "ART-server-auth-session-tests"
+      ],
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#backend-auth-boundary"
+    },
+    {
+      "id": "OBL-cookie-csrf-mitigation",
+      "title": "For cookie-authenticated non-GET API mutations, require same-origin or allowed Origin validation plus a frontend-set owner-intent header; do not require this for header-token API clients.",
+      "derivedFrom": [
+        "C4",
+        "C6"
+      ],
+      "artifactIds": [
+        "ART-server-api-auth",
+        "ART-frontend-auth-fetch",
+        "ART-frontend-data-layer",
+        "ART-frontend-ticket-ops",
+        "ART-frontend-add-project-modal",
+        "ART-frontend-selector-data",
+        "ART-server-auth-session-tests"
+      ],
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#csrf-mitigation"
+    },
+    {
+      "id": "OBL-frontend-auth-fetch-boundary",
+      "title": "Route browser API calls through an auth-aware fetch boundary that includes credentials, adds mutation intent headers, classifies 401 as locked, and keeps network or 5xx failures as backend-down.",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.4",
+        "C1",
+        "C4",
+        "Edge-1"
+      ],
+      "artifactIds": [
+        "ART-frontend-auth-fetch",
+        "ART-frontend-auth-provider",
+        "ART-frontend-project-manager",
+        "ART-frontend-data-layer",
+        "ART-frontend-ticket-ops",
+        "ART-frontend-selector-data"
+      ],
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#frontend-fetch-boundary"
+    },
+    {
+      "id": "OBL-frontend-auth-state-provider",
+      "title": "Use a frontend auth provider as the single owner of accessMode and sessionStatus, including locked, unlocking, owner-admin, no-auth-dev, anonymous-public, anonymous-empty, and backend-down transitions.",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.6",
+        "BR-1.7",
+        "BR-1.8",
+        "BR-1.9",
+        "BR-1.10",
+        "C5",
+        "Edge-3"
+      ],
+      "artifactIds": [
+        "ART-frontend-auth-provider",
+        "ART-frontend-auth-fetch",
+        "ART-frontend-app",
+        "ART-frontend-root-redirect",
+        "ART-frontend-project-manager",
+        "ART-frontend-auth-unlock-panel",
+        "ART-frontend-auth-status-action"
+      ],
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#frontend-auth-state-boundary"
+    },
+    {
+      "id": "OBL-locked-unlock-ui",
+      "title": "Render the locked state through dedicated AuthUnlock UI with generic invalid-token copy, focus recovery, and no raw token persistence beyond submit-time input state.",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.4",
+        "BR-1.10",
+        "C1"
+      ],
+      "artifactIds": [
+        "ART-frontend-auth-unlock-panel",
+        "ART-frontend-auth-provider",
+        "ART-frontend-auth-fetch",
+        "ART-e2e-auth-session",
+        "ART-e2e-selectors"
+      ],
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#locked-ui"
+    },
+    {
+      "id": "OBL-admin-action-gating",
+      "title": "Gate Add/Create/Edit Project, settings-style owner actions, and project-management affordances behind owner-admin or no-auth-dev capability; anonymous states may show only read/navigation and unlock affordances.",
+      "derivedFrom": [
+        "BR-1.5",
+        "BR-1.8",
+        "BR-1.9",
+        "C5"
+      ],
+      "artifactIds": [
+        "ART-frontend-secondary-header",
+        "ART-frontend-hamburger",
+        "ART-frontend-add-project-modal",
+        "ART-frontend-app",
+        "ART-frontend-root-redirect",
+        "ART-frontend-project-selector",
+        "ART-frontend-auth-status-action"
+      ],
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#admin-action-gating"
+    },
+    {
+      "id": "OBL-local-no-auth-compat",
+      "title": "Preserve auth-disabled local/test behavior by having the auth status route and frontend provider classify no-auth responses as no-auth-dev without showing an unlock prompt.",
+      "derivedFrom": [
+        "BR-1.7",
+        "C6"
+      ],
+      "artifactIds": [
+        "ART-server-auth-routes",
+        "ART-server-api-auth",
+        "ART-frontend-auth-provider",
+        "ART-frontend-project-manager",
+        "ART-frontend-app",
+        "ART-server-api-auth-tests"
+      ],
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#local-no-auth"
+    },
+    {
+      "id": "OBL-mdt172-compatibility",
+      "title": "Keep authentication state separate from future MDT-172 authorization so 401 maps to locked, 200 public lists map to anonymous-public, and 200 empty public lists map to anonymous-empty with no owner actions.",
+      "derivedFrom": [
+        "BR-1.8",
+        "BR-1.9",
+        "C5",
+        "Edge-3"
+      ],
+      "artifactIds": [
+        "ART-frontend-auth-provider",
+        "ART-frontend-project-manager",
+        "ART-frontend-root-redirect",
+        "ART-frontend-auth-unlock-panel",
+        "ART-frontend-auth-status-action",
+        "ART-server-project-routes"
+      ],
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#mdt-172-compatibility"
+    },
+    {
+      "id": "OBL-sse-session-convergence",
+      "title": "Coordinate SSE connection lifecycle with auth state so locked sessions do not keep stale owner event streams and cleared sessions converge back to locked controls.",
+      "derivedFrom": [
+        "BR-1.6",
+        "Edge-2"
+      ],
+      "artifactIds": [
+        "ART-frontend-sse-client",
+        "ART-frontend-auth-provider",
+        "ART-frontend-project-manager"
+      ],
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#sse-session-semantics"
+    },
+    {
+      "id": "OBL-isolated-auth-e2e",
+      "title": "Verify locked, unlock, invalid unlock, logout, and hidden admin controls in an isolated auth-enabled Playwright spec that configures API_SECURITY_AUTH/API_AUTH_TOKEN only for that auth run.",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.5",
+        "BR-1.6",
+        "BR-1.7",
+        "C1",
+        "C9"
+      ],
+      "artifactIds": [
+        "ART-e2e-auth-session",
+        "ART-e2e-selectors",
+        "ART-server-test-factory",
+        "ART-frontend-auth-unlock-panel",
+        "ART-frontend-auth-status-action"
+      ],
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#e2e-contract"
+    },
+    {
+      "id": "OBL-server-session-tests",
+      "title": "Cover session exchange, invalid token, cookie flags, logout cookie invalidation, protected route access via session cookie, and missing or invalid credential rejection in API tests.",
+      "derivedFrom": [
+        "BR-2.1",
+        "BR-2.2",
+        "BR-2.3",
+        "BR-2.4",
+        "C1",
+        "C2",
+        "C3",
+        "C4",
+        "C6"
+      ],
+      "artifactIds": [
+        "ART-server-auth-session-tests",
+        "ART-server-api-auth-tests",
+        "ART-server-api-auth",
+        "ART-server-api-session",
+        "ART-server-auth-routes"
+      ],
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#server-verification"
+    },
+    {
+      "id": "OBL-operator-docs",
+      "title": "Document enabling auth, browser unlock, cookie and security behavior, logout, local no-auth mode, and MDT-172 sequencing for operators.",
+      "derivedFrom": [
+        "BR-3.1",
+        "C8",
+        "C5",
+        "C6"
+      ],
+      "artifactIds": [
+        "ART-doc-auth-session",
+        "ART-doc-docker",
+        "ART-doc-development"
+      ],
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#operator-docs"
+    },
+    {
+      "id": "OBL-auth-scope-boundary",
+      "title": "Limit MDT-176 to single-owner token-to-cookie browser session support and exclude multi-user accounts, RBAC, OAuth, password login, token rotation, and refresh-token behavior.",
+      "derivedFrom": [
+        "C7"
+      ],
+      "artifactIds": [
+        "ART-architecture-doc",
+        "ART-tasks-doc",
+        "ART-server-auth-routes",
+        "ART-server-api-session",
+        "ART-server-api-auth",
+        "ART-frontend-auth-provider"
+      ],
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#auth-scope-boundary"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-server-api-auth",
+      "path": "server/security/apiAuth.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#backend-auth-boundary"
+    },
+    {
+      "id": "ART-server-api-session",
+      "path": "server/security/apiSession.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#session-cookie-contract"
+    },
+    {
+      "id": "ART-server-auth-routes",
+      "path": "server/routes/auth.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#session-endpoint-placement"
+    },
+    {
+      "id": "ART-server-entry",
+      "path": "server/server.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#server-route-order"
+    },
+    {
+      "id": "ART-server-test-factory",
+      "path": "server/tests/api/test-app-factory.ts",
+      "kind": "test",
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#runtime-vs-test-scaffolding"
+    },
+    {
+      "id": "ART-server-auth-session-tests",
+      "path": "server/tests/api/auth-session.test.ts",
+      "kind": "test",
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#server-verification"
+    },
+    {
+      "id": "ART-server-api-auth-tests",
+      "path": "server/tests/api/api-auth.test.ts",
+      "kind": "test",
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#mdt-157-preservation"
+    },
+    {
+      "id": "ART-server-project-routes",
+      "path": "server/routes/projects.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#protected-api-routes"
+    },
+    {
+      "id": "ART-server-system-routes",
+      "path": "server/routes/system.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#health-status-and-auth-status"
+    },
+    {
+      "id": "ART-frontend-auth-provider",
+      "path": "src/auth/AuthSessionProvider.tsx",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#frontend-auth-state-boundary"
+    },
+    {
+      "id": "ART-frontend-auth-fetch",
+      "path": "src/auth/authFetch.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#frontend-fetch-boundary"
+    },
+    {
+      "id": "ART-frontend-auth-unlock-panel",
+      "path": "src/components/AuthUnlock/AuthUnlockPanel.tsx",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#locked-ui"
+    },
+    {
+      "id": "ART-frontend-auth-status-action",
+      "path": "src/components/AuthUnlock/AuthStatusAction.tsx",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#header-auth-action"
+    },
+    {
+      "id": "ART-frontend-project-manager",
+      "path": "src/hooks/useProjectManager.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#project-loading-auth-semantics"
+    },
+    {
+      "id": "ART-frontend-app",
+      "path": "src/App.tsx",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#app-composition"
+    },
+    {
+      "id": "ART-frontend-root-redirect",
+      "path": "src/components/RedirectToCurrentProject.tsx",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#root-empty-and-locked-states"
+    },
+    {
+      "id": "ART-frontend-secondary-header",
+      "path": "src/components/SecondaryHeader.tsx",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#admin-action-gating"
+    },
+    {
+      "id": "ART-frontend-hamburger",
+      "path": "src/components/HamburgerMenu.tsx",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#admin-action-gating"
+    },
+    {
+      "id": "ART-frontend-project-selector",
+      "path": "src/components/ProjectSelector/index.tsx",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#project-selector-auth-semantics"
+    },
+    {
+      "id": "ART-frontend-selector-data",
+      "path": "src/components/ProjectSelector/useSelectorData.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#frontend-fetch-boundary"
+    },
+    {
+      "id": "ART-frontend-add-project-modal",
+      "path": "src/components/AddProjectModal/AddProjectModal.tsx",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#admin-action-gating"
+    },
+    {
+      "id": "ART-frontend-data-layer",
+      "path": "src/services/dataLayer.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#frontend-fetch-boundary"
+    },
+    {
+      "id": "ART-frontend-ticket-ops",
+      "path": "src/hooks/useTicketOperations.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#frontend-fetch-boundary"
+    },
+    {
+      "id": "ART-frontend-sse-client",
+      "path": "src/services/sseClient.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#sse-session-semantics"
+    },
+    {
+      "id": "ART-e2e-auth-session",
+      "path": "tests/e2e/auth/session-unlock.spec.ts",
+      "kind": "test",
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#e2e-contract"
+    },
+    {
+      "id": "ART-e2e-selectors",
+      "path": "tests/e2e/utils/selectors.ts",
+      "kind": "test",
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#e2e-contract"
+    },
+    {
+      "id": "ART-doc-auth-session",
+      "path": "docs/AUTH_SESSION_GUIDE.md",
+      "kind": "doc",
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#operator-docs"
+    },
+    {
+      "id": "ART-doc-docker",
+      "path": "docs/DOCKER_GUIDE.md",
+      "kind": "doc",
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#operator-docs"
+    },
+    {
+      "id": "ART-doc-development",
+      "path": "docs/DEVELOPMENT_GUIDE.md",
+      "kind": "doc",
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#operator-docs"
+    },
+    {
+      "id": "ART-architecture-doc",
+      "path": "docs/CRs/MDT-176/architecture.md",
+      "kind": "doc",
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#auth-scope-boundary"
+    },
+    {
+      "id": "ART-tasks-doc",
+      "path": "docs/CRs/MDT-176/tasks.md",
+      "kind": "doc",
+      "sourceRef": "docs/CRs/MDT-176/architecture.md#auth-scope-boundary"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-auth-session-api",
+      "kind": "integration",
+      "title": "Browser session API exchange, cookie, logout, protected-route, CSRF, and header-auth regression coverage",
+      "covers": [
+        "BR-2.1",
+        "BR-2.2",
+        "BR-2.3",
+        "BR-2.4",
+        "C1",
+        "C2",
+        "C3",
+        "C4",
+        "C6",
+        "OBL-server-session-tests",
+        "OBL-session-endpoint-placement",
+        "OBL-session-cookie-contract",
+        "OBL-auth-middleware-session-recognition",
+        "OBL-cookie-csrf-mitigation"
+      ],
+      "file": "server/tests/api/auth-session.test.ts",
+      "sourceRef": "docs/CRs/MDT-176/tests.md#backend-session-api-contract"
+    },
+    {
+      "id": "TEST-auth-session-docs",
+      "kind": "integration",
+      "title": "Operator docs cover enabling auth, browser unlock, cookie/security behavior, logout, local no-auth mode, and scope boundary",
+      "covers": [
+        "BR-3.1",
+        "C1",
+        "C4",
+        "C7",
+        "C8",
+        "OBL-operator-docs",
+        "OBL-auth-scope-boundary"
+      ],
+      "file": "docs/tests/auth-session-docs.test.ts",
+      "sourceRef": "docs/CRs/MDT-176/tests.md#operator-documentation-contract"
+    },
+    {
+      "id": "TEST-local-no-auth-regression",
+      "kind": "e2e",
+      "title": "Default no-auth Playwright suite remains unchanged and auth-specific env is isolated to the auth spec",
+      "covers": [
+        "BR-1.7",
+        "C6",
+        "C9",
+        "OBL-local-no-auth-compat",
+        "OBL-isolated-auth-e2e"
+      ],
+      "file": "docs/CRs/MDT-176/tests.md",
+      "sourceRef": "docs/CRs/MDT-176/tests.md#default-no-auth-suite-preservation"
+    },
+    {
+      "id": "TEST-auth-session-e2e",
+      "kind": "e2e",
+      "title": "Isolated auth-enabled Playwright coverage for locked, unlock, invalid unlock, logout, hidden admin controls, backend-down distinction, SSE/logout convergence, and no raw browser token storage",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.5",
+        "BR-1.6",
+        "BR-1.10",
+        "C1",
+        "C5",
+        "C9",
+        "Edge-1",
+        "Edge-2",
+        "Edge-3",
+        "OBL-isolated-auth-e2e",
+        "OBL-locked-unlock-ui",
+        "OBL-admin-action-gating",
+        "OBL-mdt172-compatibility",
+        "OBL-sse-session-convergence"
+      ],
+      "file": "tests/e2e/auth/session-unlock.spec.ts",
+      "sourceRef": "scenario:locked_backend_shows_unlock_panel,scenario:successful_unlock_starts_owner_session,scenario:invalid_unlock_stays_locked,scenario:lock_action_returns_to_locked_state,scenario:public_empty_shows_unlock_only"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-1",
+      "title": "Implement backend owner session cookie contract and protected-route validation",
+      "ownsArtifactIds": [
+        "ART-server-api-session",
+        "ART-server-auth-routes",
+        "ART-server-api-auth",
+        "ART-server-entry",
+        "ART-server-test-factory",
+        "ART-server-auth-session-tests",
+        "ART-server-api-auth-tests",
+        "ART-server-system-routes",
+        "ART-server-project-routes"
+      ],
+      "makesGreenIds": [
+        "TEST-auth-session-api"
+      ],
+      "sourceRef": "tasks.md#task-1"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Introduce frontend auth state provider and authFetch API boundary",
+      "ownsArtifactIds": [
+        "ART-frontend-auth-provider",
+        "ART-frontend-auth-fetch",
+        "ART-frontend-project-manager",
+        "ART-frontend-data-layer",
+        "ART-frontend-ticket-ops",
+        "ART-frontend-selector-data",
+        "ART-frontend-sse-client",
+        "ART-frontend-app"
+      ],
+      "makesGreenIds": [
+        "local_no_auth_loads_normally",
+        "TEST-local-no-auth-regression"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-2"
+    },
+    {
+      "id": "TASK-5",
+      "title": "Update operator documentation for auth sessions and local no-auth mode",
+      "ownsArtifactIds": [
+        "ART-doc-auth-session",
+        "ART-doc-docker",
+        "ART-doc-development",
+        "ART-architecture-doc",
+        "ART-tasks-doc"
+      ],
+      "makesGreenIds": [
+        "TEST-auth-session-docs"
+      ],
+      "sourceRef": "tasks.md#task-5"
+    },
+    {
+      "id": "TASK-6",
+      "title": "Run final auth-session verification and trace closure",
+      "ownsArtifactIds": [
+        "ART-server-auth-session-tests",
+        "ART-server-api-auth-tests",
+        "ART-e2e-auth-session",
+        "ART-e2e-selectors",
+        "ART-tasks-doc"
+      ],
+      "makesGreenIds": [
+        "TEST-auth-session-api",
+        "TEST-auth-session-e2e",
+        "TEST-auth-session-docs",
+        "TEST-local-no-auth-regression",
+        "locked_backend_shows_unlock_panel",
+        "successful_unlock_starts_owner_session",
+        "invalid_unlock_stays_locked",
+        "lock_action_returns_to_locked_state",
+        "local_no_auth_loads_normally",
+        "public_projects_remain_read_only",
+        "public_empty_shows_unlock_only"
+      ],
+      "sourceRef": "tasks.md#task-6"
+    },
+    {
+      "id": "TASK-0",
+      "title": "Create auth-session walking skeleton and verify runners",
+      "ownsArtifactIds": [
+        "ART-server-api-session",
+        "ART-server-auth-routes",
+        "ART-frontend-auth-fetch",
+        "ART-frontend-auth-provider",
+        "ART-frontend-auth-status-action",
+        "ART-frontend-auth-unlock-panel",
+        "ART-doc-auth-session",
+        "ART-tasks-doc",
+        "ART-server-entry",
+        "ART-server-test-factory",
+        "ART-frontend-app",
+        "ART-e2e-selectors"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-0"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Integrate locked/unlock UI and gate owner-only controls",
+      "ownsArtifactIds": [
+        "ART-e2e-auth-session",
+        "ART-e2e-selectors",
+        "ART-frontend-add-project-modal",
+        "ART-frontend-app",
+        "ART-frontend-auth-status-action",
+        "ART-frontend-auth-unlock-panel",
+        "ART-frontend-hamburger",
+        "ART-frontend-project-selector",
+        "ART-frontend-root-redirect",
+        "ART-frontend-secondary-header"
+      ],
+      "makesGreenIds": [
+        "locked_backend_shows_unlock_panel",
+        "invalid_unlock_stays_locked",
+        "successful_unlock_starts_owner_session"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-3"
+    },
+    {
+      "id": "TASK-4",
+      "title": "Complete logout, SSE convergence, and MDT-172 anonymous compatibility states",
+      "ownsArtifactIds": [
+        "ART-e2e-auth-session",
+        "ART-frontend-auth-fetch",
+        "ART-frontend-auth-provider",
+        "ART-frontend-auth-status-action",
+        "ART-frontend-project-manager",
+        "ART-frontend-project-selector",
+        "ART-frontend-root-redirect",
+        "ART-frontend-sse-client"
+      ],
+      "makesGreenIds": [
+        "lock_action_returns_to_locked_state",
+        "public_empty_shows_unlock_only",
+        "public_projects_remain_read_only"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-4"
+    }
+  ]
+}

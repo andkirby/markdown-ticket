@@ -1,6 +1,6 @@
 ---
 code: MDT-176
-status: Proposed
+status: Implemented
 dateCreated: 2026-05-22T21:39:55.803Z
 type: Feature Enhancement
 priority: High
@@ -67,13 +67,33 @@ When the backend is locked, the UI should clearly show an authentication-require
 - [ ] Session validation reuses MDT-157 auth owner logic rather than adding a second credential parser
 - [ ] CSRF risk is considered for cookie-authenticated mutation routes
 
-### MDT-172 Compatibility
-- [ ] Future anonymous public-readonly project lists can coexist with the locked/admin state
-- [ ] If anonymous `GET /api/projects` returns public projects, Create Project remains hidden until admin session exists
+### MDT-172 Boundary
+- [ ] Public/read-only sharing remains out of scope for MDT-176
+- [ ] Auth-enabled anonymous access stays locked until an owner session exists
 - [ ] If anonymous `GET /api/projects` returns `401`, show unlock state
-- [ ] If anonymous `GET /api/projects` returns `200` with empty public list, show "No public projects" plus unlock affordance, not admin create
+- [ ] Create Project remains hidden until owner session exists
 
 ## 3. Verification
+
+> Requirements trace projection: [requirements.trace.md](./MDT-176/requirements.trace.md)
+>
+> Requirements notes: [requirements.md](./MDT-176/requirements.md)
+>
+> BDD trace projection: [bdd.trace.md](./MDT-176/bdd.trace.md)
+>
+> BDD notes: [bdd.md](./MDT-176/bdd.md)
+>
+> Architecture trace projection: [architecture.trace.md](./MDT-176/architecture.trace.md)
+>
+> Architecture notes: [architecture.md](./MDT-176/architecture.md)
+>
+> Tests trace projection: [tests.trace.md](./MDT-176/tests.trace.md)
+>
+> Tests notes: [tests.md](./MDT-176/tests.md)
+>
+> Tasks trace projection: [tasks.trace.md](./MDT-176/tasks.trace.md)
+>
+> Tasks breakdown: [tasks.md](./MDT-176/tasks.md)
 
 - API tests for `POST /api/auth/session`, invalid token, cookie flags, logout, and protected route access via session cookie
 - Frontend/unit tests for 401-to-locked-state handling

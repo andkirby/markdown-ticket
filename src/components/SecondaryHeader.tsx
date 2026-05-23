@@ -14,6 +14,7 @@ interface SecondaryHeaderProps {
   onEditProject?: () => void
   selectedProject?: Project | null
   onOpenSettings?: () => void
+  canManageProjects?: boolean
 }
 
 export const SecondaryHeader: React.FC<SecondaryHeaderProps> = ({
@@ -24,6 +25,7 @@ export const SecondaryHeader: React.FC<SecondaryHeaderProps> = ({
   onEditProject,
   selectedProject,
   onOpenSettings,
+  canManageProjects = true,
 }) => {
   return (
     <div className="flex items-center space-x-1 sm:space-x-4">
@@ -36,16 +38,15 @@ export const SecondaryHeader: React.FC<SecondaryHeaderProps> = ({
       )}
 
       {/* Hamburger Menu - visible in all views */}
-      {onAddProject && (
-        <HamburgerMenu
-          onAddProject={onAddProject}
-          onEditProject={onEditProject}
-          hasActiveProject={!!selectedProject}
-          sortPreferences={sortPreferences}
-          onSortPreferencesChange={onSortPreferencesChange}
-          onOpenSettings={onOpenSettings}
-        />
-      )}
+      <HamburgerMenu
+        onAddProject={onAddProject}
+        onEditProject={onEditProject}
+        hasActiveProject={!!selectedProject}
+        sortPreferences={sortPreferences}
+        onSortPreferencesChange={onSortPreferencesChange}
+        onOpenSettings={onOpenSettings}
+        canManageProjects={canManageProjects}
+      />
     </div>
   )
 }

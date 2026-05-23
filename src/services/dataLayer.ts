@@ -16,6 +16,7 @@ import {
   normalizeTicket as normalizeSharedTicket,
   normalizeTicketMetadata as normalizeSharedTicketMetadata,
 } from '@mdt/shared/models/Ticket'
+import { authFetch } from '../auth/authFetch'
 
 type CreateTicketData = TicketData & {
   status?: Status
@@ -77,7 +78,7 @@ class DataLayer {
    */
   async fetchProjects(): Promise<Project[]> {
     try {
-      const response = await fetch(`${this.baseUrl}/projects`)
+      const response = await authFetch(`${this.baseUrl}/projects`)
 
       if (!response.ok) {
         throw new Error(`Failed to fetch projects: ${response.statusText}`)
@@ -100,7 +101,7 @@ class DataLayer {
   async fetchProjectConfig(projectId: string): Promise<ProjectConfig | null> {
     return this.dedupe(`config-${projectId}`, async () => {
       try {
-        const response = await fetch(`${this.baseUrl}/projects/${projectId}/config`)
+        const response = await authFetch(`${this.baseUrl}/projects/${projectId}/config`)
 
         if (!response.ok) {
           if (response.status === 404) {
@@ -131,7 +132,7 @@ class DataLayer {
   async fetchTickets(projectId: string): Promise<Ticket[]> {
     return this.dedupe(`tickets-${projectId}`, async () => {
       try {
-        const response = await fetch(`${this.baseUrl}/projects/${projectId}/crs`)
+        const response = await authFetch(`${this.baseUrl}/projects/${projectId}/crs`)
 
         if (!response.ok) {
           throw new Error(`Failed to fetch tickets: ${response.statusText}`)
@@ -160,7 +161,7 @@ class DataLayer {
    */
   async fetchTicketsMetadata(projectId: string): Promise<TicketMetadata[]> {
     try {
-      const response = await fetch(`${this.baseUrl}/projects/${projectId}/crs`)
+      const response = await authFetch(`${this.baseUrl}/projects/${projectId}/crs`)
 
       if (!response.ok) {
         throw new Error(`Failed to fetch ticket metadata: ${response.statusText}`)
@@ -184,7 +185,7 @@ class DataLayer {
     try {
       console.warn(`[DataLayer] 🔍 Fetching ticket: ${ticketCode} from project: ${projectId}`)
 
-      const response = await fetch(`${this.baseUrl}/projects/${projectId}/crs/${ticketCode}`)
+      const response = await authFetch(`${this.baseUrl}/projects/${projectId}/crs/${ticketCode}`)
 
       if (!response.ok) {
         if (response.status === 404) {
@@ -218,7 +219,7 @@ class DataLayer {
     ticketCode: string,
     subDocName: string,
   ): Promise<{ code: string, content: string, dateCreated: string | null, lastModified: string | null }> {
-    const response = await fetch(
+    const response = await authFetch(
       `${this.baseUrl}/projects/${projectId}/crs/${ticketCode}/subdocuments/${encodeURIComponent(subDocName)}`,
     )
 
@@ -230,7 +231,7 @@ class DataLayer {
   }
 
   async fetchTraceStoreMetadata(projectId: string, ticketCode: string): Promise<TraceStoreMetadata> {
-    const response = await fetch(
+    const response = await authFetch(
       `${this.baseUrl}/projects/${projectId}/crs/${ticketCode}/trace-store/meta`,
     )
 
@@ -250,7 +251,7 @@ class DataLayer {
   }
 
   async fetchTraceStore(projectId: string, ticketCode: string): Promise<unknown> {
-    const response = await fetch(
+    const response = await authFetch(
       `${this.baseUrl}/projects/${projectId}/crs/${ticketCode}/trace-store`,
     )
 
@@ -266,7 +267,7 @@ class DataLayer {
    */
   async createTicket(projectId: string, data: CreateTicketData): Promise<Ticket> {
     try {
-      const response = await fetch(`${this.baseUrl}/projects/${projectId}/crs`, {
+      const response = await authFetch(`${this.baseUrl}/projects/${projectId}/crs`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -313,7 +314,7 @@ class DataLayer {
         }
       }
 
-      const response = await fetch(`${this.baseUrl}/projects/${projectId}/crs/${ticketCode}`, {
+      const response = await authFetch(`${this.baseUrl}/projects/${projectId}/crs/${ticketCode}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -337,7 +338,7 @@ class DataLayer {
    */
   async deleteTicket(projectId: string, ticketCode: string): Promise<void> {
     try {
-      const response = await fetch(`${this.baseUrl}/projects/${projectId}/crs/${ticketCode}`, {
+      const response = await authFetch(`${this.baseUrl}/projects/${projectId}/crs/${ticketCode}`, {
         method: 'DELETE',
       })
 
@@ -366,7 +367,7 @@ class DataLayer {
     const cacheKey = `search-${req.mode}-${'projectCode' in req ? req.projectCode : ''}-${req.query}`
     return this.dedupe(cacheKey, async () => {
       try {
-        const response = await fetch(`${this.baseUrl}/projects/search`, {
+        const response = await authFetch(`${this.baseUrl}/projects/search`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(req),

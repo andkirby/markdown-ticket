@@ -309,6 +309,7 @@ curl http://localhost:3012/health
 ## Security Configuration
 
 For production deployments, configure backend API auth and MCP HTTP auth before exposing the stack.
+For browser owner-session unlock, cookie behavior, CSRF, logout, and local no-auth rules, see [AUTH_SESSION_GUIDE.md](AUTH_SESSION_GUIDE.md).
 MCP HTTP origin validation, rate limiting, and bearer auth are enabled by default in `docker-compose.prod.yml`.
 Set `MCP_ALLOWED_ORIGINS` and `MCP_AUTH_TOKEN` before starting the production compose stack.
 See [DOCKER_REFERENCE.md - Security Configuration](DOCKER_REFERENCE.md#security-configuration) for details.
@@ -339,9 +340,10 @@ environment:
 
 MDT-157 keeps existing no-auth deployments running during migration. A warning that backend API or MCP HTTP authentication is disabled means the process is reachable without credentials and needs operator action before exposure:
 
-1. Set `API_SECURITY_AUTH=true` and `API_AUTH_TOKEN=<strong-token>` for backend REST API routes.
-2. Set `MCP_SECURITY_AUTH=true` and `MCP_AUTH_TOKEN=<strong-token>` for MCP HTTP, or use the production compose default `MCP_SECURITY_AUTH=${MCP_SECURITY_AUTH:-true}`.
-3. Restart the affected service and verify clients send `Authorization: Bearer <token>` or `X-API-Key: <token>` for backend API requests, and `Authorization: Bearer <token>` for MCP HTTP.
+1. Set `API_SECURITY_AUTH=true` and provide `API_AUTH_TOKEN` from a secret manager or protected environment file for backend REST API routes.
+2. Browser users unlock through the UI, which calls `POST /api/auth/session`; logout/lock calls `DELETE /api/auth/session`. Do not put the owner token in browser storage or a URL.
+3. Set `MCP_SECURITY_AUTH=true` and `MCP_AUTH_TOKEN=<strong-token>` for MCP HTTP, or use the production compose default `MCP_SECURITY_AUTH=${MCP_SECURITY_AUTH:-true}`.
+4. Restart the affected service and verify clients send `Authorization: Bearer <token>` or `X-API-Key: <token>` for backend API requests, and `Authorization: Bearer <token>` for MCP HTTP.
 
 `Authorization` and `X-API-Key` are the only backend credential headers. Reverse proxies must forward them unchanged; `Origin`, `Referer`, `X-Forwarded-For`, and `X-Real-IP` are not credentials. If a proxy strips both credential headers, protected backend requests fail closed with `401`.
 
