@@ -1,5 +1,48 @@
 # Release Notes
 
+## v0.21.0 (2026-05-23)
+
+### New Features
+
+**Browser Session Unlock (MDT-176)**
+- Protected deployments now show a clear locked state instead of an empty project list
+- Owners can unlock the browser session with an access token
+- The token is exchanged for a secure session cookie, so it is not stored in browser storage
+- Logout returns the browser to the locked state
+
+**Trace Graph Viewer (MDT-174)**
+- Ticket trace data can now open in an embedded graph viewer
+- Trace graph routes use ticket and project context instead of exposing local trace paths
+
+### Improvements
+
+**API and MCP Security (MDT-157, MDT-156)**
+- Backend API routes now enforce token authentication when security is enabled
+- Production MCP HTTP transport defaults are safer
+- Filesystem, SSE, devtools, and secret-scan boundaries were hardened
+
+**CLI Output and Workflow (MDT-143)**
+- CLI output now supports structured formats for automation
+- Ticket creation, viewing, and project commands received post-implementation polish
+- CLI serialization changes were verified against markdown rendering paths
+
+**Contextual Browser Titles (MDT-175)**
+- Browser tabs now reflect the active board, list, document, or ticket context
+- Navigation no longer leaves stale generic titles behind
+
+**Documents and Markdown UX (MDT-173)**
+- Documents navigation and artifact layout were refined after the typography density release
+- Search, sort, and document reading surfaces are easier to scan
+
+### Bug Fixes
+
+**Markdown Rendering Stability (MDT-165)**
+- Mermaid diagrams now render from preserved decoded source
+- Raw markdown HTML is escaped correctly before rendering
+- Anchor offsets and subdocument links were tightened
+
+---
+
 ## v0.20.0 (2026-05-21)
 
 ### New Features
