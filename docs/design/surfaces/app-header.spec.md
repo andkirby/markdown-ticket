@@ -76,8 +76,8 @@ nav.main-nav
 | board view | viewMode=board | SortControls visible (desktop), ViewModeSwitcher shows board active |
 | list view | viewMode=list | SortControls visible (desktop), ViewModeSwitcher shows list active |
 | documents view | viewMode=documents | SortControls hidden, ViewModeSwitcher shows documents active |
-| public read-only | anonymous visitor opens shared project | single `Read only` badge in nav; hamburger includes `Unlock access`; mutating menu items hidden or disabled |
-| token read-only | visitor has scoped read token | single `Read only` badge in nav; hamburger includes `Unlock access`; visible projects include token scope |
+| public read-only | anonymous visitor opens shared project | single `Read only` badge in nav; hamburger includes `Unlock access`; owner/admin menu items are not mounted |
+| token read-only | visitor has scoped read token | single `Read only` badge in nav; hamburger includes `Unlock access`; visible projects include token scope; owner/admin menu items are not mounted |
 | owner/admin | valid write/admin access | AuthStatusAction shows "Owner session" + Lock; project mutation menu items available |
 | no-auth-dev | auth disabled locally | AuthStatusAction hidden; local project mutation menu items available |
 
@@ -110,7 +110,7 @@ The hamburger menu is the only structured action menu. Current items in order:
 | 3 | Unlock access | `KeyRound` | read-only only |
 | 4 | Sort by (mobile) | — | mobile only, board/list view |
 | 5 | Sort direction (mobile) | `ArrowUpDown` | mobile only, board/list view |
-| 6 | Clear Cache | `Trash2` | always |
+| 6 | Clear Cache | `Trash2` | always; read-only clears browser storage only, owner/admin may also clear backend cache |
 | 7 | Event History | `Eye`/`EyeOff` | when event history is available |
 | 8 | Settings | `Settings` | owner/admin only |
 | 9 | Theme selector | `Sun`/`Moon`/`Monitor` | always (quick access, also in Settings) |
@@ -122,6 +122,7 @@ The menu is a positioned dropdown: `absolute right-0 top-full mt-1 w-48`, with c
 - New header-level features MUST choose between nav-left, nav-right, or hamburger menu — no new floating elements.
 - If the hamburger menu grows beyond the current action set, consider splitting into a dedicated settings surface.
 - Access-token entry is owned by `AuthStatusAction` and `AuthUnlockPanel`; do not add a second persistent header form.
-- Owner/admin-only actions must be hidden or disabled in read-only mode, but backend authorization remains authoritative.
+- Owner/admin-only actions must not be mounted in read-only mode. Backend authorization remains authoritative, but hidden components must not run owner-only effects.
+- Frontend API calls to `/api/*` must go through `authFetch` or an approved API wrapper so session cookies and owner-intent headers are applied consistently.
 - Future settings entry point: Settings item in the hamburger menu opens the dedicated Settings modal. See `settings.spec.md`.
 - ViewModeSwitcher does not persist its own state — persistence is handled by `App.tsx` via localStorage keys `lastBoardListMode` and `lastViewMode`.

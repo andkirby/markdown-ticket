@@ -123,18 +123,14 @@ test.describe('MDT-177 read access sharing journey', () => {
     await visitor.close()
   })
 
-  test('share session survives refresh without owner-only filesystem probes', async ({ page, browser, e2eContext }) => {
+  test('share session survives refresh without owner-only endpoint probes', async ({ page, browser, e2eContext }) => {
     const dataset = await createSharingDataset(e2eContext.projectFactory)
-    const filesystemProbeStatuses: number[] = []
+    const ownerOnlyEndpointCalls: string[] = []
 
     const shareUrl = await generateProjectShareLink(page, dataset.extraPrivate.code)
     const context = await browser.newContext()
     const visitor = await context.newPage()
-    visitor.on('response', (response) => {
-      if (new URL(response.url()).pathname === '/api/filesystem/exists') {
-        filesystemProbeStatuses.push(response.status())
-      }
-    })
+    watchOwnerOnlyEndpointCalls(visitor, ownerOnlyEndpointCalls)
 
     await visitor.goto(shareUrl)
     await visitor.waitForLoadState('load')
@@ -147,7 +143,13 @@ test.describe('MDT-177 read access sharing journey', () => {
     await waitForBoardReady(visitor)
     await expect(visitor).toHaveURL(new RegExp(`/prj/${dataset.extraPrivate.code}(?:$|[/?#])`, 'u'))
     await expect(visitor.locator(sharingSelectors.readOnlyBadge)).toBeVisible()
-    expect(filesystemProbeStatuses).toEqual([])
+
+    await visitor.locator(projectSelectors.hamburgerMenu).click()
+    await visitor.locator('[data-testid="clear-cache-button"]').click()
+    await visitor.waitForLoadState('load')
+    await waitForBoardReady(visitor)
+    await expect(visitor.locator(sharingSelectors.readOnlyBadge)).toBeVisible()
+    expect(ownerOnlyEndpointCalls).toEqual([])
 
     await visitor.close()
     await context.close()
@@ -225,7 +227,7 @@ test.describe('MDT-177 read access sharing journey', () => {
     await expect(visitor.locator(sharingSelectors.inviteError)).toBeVisible()
     await expect(visitor.locator(projectSelectors.projectSelector(dataset.firstPrivate.code))).toHaveCount(0)
 
-    await page.locator(sharingSelectors.namedAccessRow(accessName)).first().locator(sharingSelectors.inviteButton).click()
+    await expect(page.locator(sharingSelectors.namedAccessRow(accessName)).first().locator(sharingSelectors.inviteButton)).toBeDisabled()
     await expect(page.locator(sharingSelectors.inviteUrl)).toHaveCount(0)
     await visitor.close()
   })
@@ -404,6 +406,23 @@ async function openProjectBrowser(page: Page): Promise<void> {
 async function openOwnerUnlockFromMenu(page: Page): Promise<void> {
   await page.locator(projectSelectors.hamburgerMenu).click()
   await page.locator(sharingSelectors.ownerUnlockButton).click()
+}
+
+function watchOwnerOnlyEndpointCalls(page: Page, calls: string[]): void {
+  page.on('request', (request) => {
+    const pathname = new URL(request.url()).pathname
+    if (isOwnerOnlyEndpoint(pathname)) {
+      calls.push(`${request.method()} ${pathname}`)
+    }
+  })
+}
+
+function isOwnerOnlyEndpoint(pathname: string): boolean {
+  return pathname.startsWith('/api/config')
+    || pathname.startsWith('/api/filesystem')
+    || pathname.startsWith('/api/directories')
+    || pathname.startsWith('/api/read-tokens')
+    || pathname.startsWith('/api/cache')
 }
 
 async function assertOwnerControlsSuppressed(page: Page): Promise<void> {

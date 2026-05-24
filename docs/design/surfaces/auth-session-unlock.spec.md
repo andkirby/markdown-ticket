@@ -71,6 +71,8 @@ AuthUnlockPanel
 6. Read-only owner-upgrade unlock is recoverable: Cancel closes the overlay and returns to the existing read-only board.
 7. A bad owner token submitted from read-only mode returns to the read-only board state after the error is dismissed or cancel is selected; it must not trap the visitor on a full locked screen.
 8. Logout/Lock must clear only the server session cookie; it must not mutate project data.
+9. Read-only sessions must not mount owner/admin-only surfaces that call `/api/config`, `/api/filesystem`, `/api/directories`, `/api/read-tokens`, or `/api/cache`.
+10. Frontend API calls must use `authFetch` or an approved wrapper rather than raw `fetch('/api/...')`.
 
 ## Unlock flow
 
@@ -162,6 +164,17 @@ This surface owns authentication state and token entry only. Project visibility 
 | owner/admin session | normal project list and admin actions |
 | backend 5xx/network failure | backend unavailable state |
 
+## Capability Boundary
+
+| Capability | Owner/admin | no-auth-dev | read-only | locked |
+|------------|-------------|-------------|-----------|--------|
+| `canWriteTickets` | yes | yes | no | no |
+| `canManageProjects` | yes | yes | no | no |
+| `canManageSharing` | yes | yes | no | no |
+| `canUseOwnerEndpoints` | yes | yes | no | no |
+
+Owner-only modals and settings panels must be mounted only when the matching capability is true. Passing `isOpen=false` is not enough when a child component owns API effects.
+
 ## Verification hooks
 
 - `data-testid="auth-unlock-panel"`
@@ -184,6 +197,7 @@ This surface owns authentication state and token entry only. Project visibility 
 | read-token unlock | locked visitor submits valid scoped read token | token exchange succeeds | app shows read-only chip and token-scoped projects |
 | owner unlock | locked visitor submits valid owner token | token exchange succeeds | app shows owner session and owner actions |
 | storage safety | any token is submitted | request completes | raw token is not visible in URL, localStorage, or sessionStorage |
+| read-only refresh boundary | visitor opens a public/share/read-token project | refresh page | read-only access remains and no owner-only endpoint is requested |
 
 ## Legacy/local fallback rule
 

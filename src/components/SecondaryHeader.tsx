@@ -16,6 +16,8 @@ interface SecondaryHeaderProps {
   onOpenSettings?: () => void
   onUnlockOwnerAccess?: () => void
   canManageProjects?: boolean
+  canManageSharing?: boolean
+  canUseOwnerEndpoints?: boolean
 }
 
 export const SecondaryHeader: React.FC<SecondaryHeaderProps> = ({
@@ -28,6 +30,8 @@ export const SecondaryHeader: React.FC<SecondaryHeaderProps> = ({
   onOpenSettings,
   onUnlockOwnerAccess,
   canManageProjects = true,
+  canManageSharing = canManageProjects,
+  canUseOwnerEndpoints = canManageProjects,
 }) => {
   return (
     <div className="flex items-center space-x-1 sm:space-x-4">
@@ -49,6 +53,8 @@ export const SecondaryHeader: React.FC<SecondaryHeaderProps> = ({
         onOpenSettings={onOpenSettings}
         onUnlockOwnerAccess={onUnlockOwnerAccess}
         canManageProjects={canManageProjects}
+        canManageSharing={canManageSharing}
+        canUseOwnerEndpoints={canUseOwnerEndpoints}
       />
     </div>
   )

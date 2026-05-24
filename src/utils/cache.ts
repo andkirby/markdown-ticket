@@ -1,6 +1,7 @@
 /**
  * Cache management utilities for development
  */
+import { authFetch } from '../auth/authFetch'
 
 export function clearAllCache() {
   if (typeof window !== 'undefined') {
@@ -61,7 +62,7 @@ function clearProjectCache(projectId?: string) {
 
 async function clearBackendCache() {
   try {
-    const response = await fetch('/api/cache/clear', {
+    const response = await authFetch('/api/cache/clear', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -82,10 +83,16 @@ async function clearBackendCache() {
   }
 }
 
-export async function nuclearCacheClear() {
+interface NuclearCacheClearOptions {
+  includeBackend?: boolean
+}
+
+export async function nuclearCacheClear(options: NuclearCacheClearOptions = {}) {
+  const { includeBackend = true } = options
   if (typeof window !== 'undefined') {
-    // Clear backend cache first
-    await clearBackendCache()
+    if (includeBackend) {
+      await clearBackendCache()
+    }
 
     // Clear all frontend storage
     clearAllCache()

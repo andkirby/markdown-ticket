@@ -60,7 +60,10 @@ function ProjectRouteHandler() {
   const {
     accessMode,
     sessionStatus,
+    canWriteTickets,
     canManageProjects,
+    canManageSharing,
+    canUseOwnerEndpoints,
     unlock,
     lock,
     markLocked,
@@ -377,6 +380,8 @@ function ProjectRouteHandler() {
                 onOpenSettings={() => setShowSettings(true)}
                 onUnlockOwnerAccess={accessMode === 'read-only' ? handleUnlockClick : undefined}
                 canManageProjects={canManageProjects}
+                canManageSharing={canManageSharing}
+                canUseOwnerEndpoints={canUseOwnerEndpoints}
               />
             </div>
           </div>
@@ -401,7 +406,7 @@ function ProjectRouteHandler() {
                 tickets={tickets}
                 viewMode={viewMode}
                 sortPreferences={(viewMode === 'board' || viewMode === 'list') ? localSortPreferences : undefined}
-                canWrite={canManageProjects}
+                canWrite={canWriteTickets}
               />
             )}
       </div>
@@ -414,16 +419,18 @@ function ProjectRouteHandler() {
         ticketsPath={getTicketsPath(projectConfig)}
       />
 
-      <AddProjectModal
-        isOpen={showAddProjectModal && canManageProjects}
-        onClose={() => setShowAddProjectModal(false)}
-        onProjectCreated={async () => {
-          setShowAddProjectModal(false)
-          if (refreshProjects) {
-            await refreshProjects()
-          }
-        }}
-      />
+      {canManageProjects && (
+        <AddProjectModal
+          isOpen={showAddProjectModal}
+          onClose={() => setShowAddProjectModal(false)}
+          onProjectCreated={async () => {
+            setShowAddProjectModal(false)
+            if (refreshProjects) {
+              await refreshProjects()
+            }
+          }}
+        />
+      )}
 
       {selectedProject && canManageProjects && (
         <AddProjectModal
@@ -473,13 +480,15 @@ function ProjectRouteHandler() {
         </ModalBody>
       </Modal>
 
-      <SettingsModal
-        isOpen={showSettings && canManageProjects}
-        onClose={() => setShowSettings(false)}
-        selectedProject={selectedProject}
-        projects={projects}
-        onProjectSharingUpdated={refreshProjects}
-      />
+      {canManageSharing && (
+        <SettingsModal
+          isOpen={showSettings}
+          onClose={() => setShowSettings(false)}
+          selectedProject={selectedProject}
+          projects={projects}
+          onProjectSharingUpdated={refreshProjects}
+        />
+      )}
 
       <QuickSearchModal
         isOpen={showQuickSearch}
