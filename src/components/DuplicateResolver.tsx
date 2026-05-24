@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { useCallback, useEffect, useState } from 'react'
+import { authFetch } from '../auth/authFetch'
 
 interface Duplicate {
   code: string
@@ -34,7 +35,7 @@ export const DuplicateResolver: React.FC<DuplicateResolverProps> = ({ projectId,
 
   const loadDuplicates = useCallback(async () => {
     try {
-      const response = await fetch(`/api/duplicates/${projectId}`)
+      const response = await authFetch(`/api/duplicates/${projectId}`)
       const data = await response.json()
       setDuplicates(data.duplicates || [])
     }
@@ -52,7 +53,7 @@ export const DuplicateResolver: React.FC<DuplicateResolverProps> = ({ projectId,
 
   const getPreviewInfo = async (filepath: string): Promise<PreviewInfo | null> => {
     try {
-      const response = await fetch('/api/duplicates/preview', {
+      const response = await authFetch('/api/duplicates/preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectId, filepath }),
@@ -84,7 +85,7 @@ export const DuplicateResolver: React.FC<DuplicateResolverProps> = ({ projectId,
 
     setResolving(showConfirm.filepath)
     try {
-      const response = await fetch('/api/duplicates/resolve', {
+      const response = await authFetch('/api/duplicates/resolve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

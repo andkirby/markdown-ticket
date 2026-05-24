@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react'
+import { authFetch } from '../auth/authFetch'
 
 /**
  * Simplified path resolution hook that leverages enhanced /api/filesystem/exists endpoint
@@ -25,7 +26,7 @@ export function usePathResolution() {
     setIsLoading(true)
 
     try {
-      const response = await fetch('/api/filesystem/exists', {
+      const response = await authFetch('/api/filesystem/exists', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

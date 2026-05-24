@@ -1,8 +1,9 @@
 import { ChevronRight, Folder } from 'lucide-react'
 import * as React from 'react'
 import { useEffect, useState } from 'react'
+import { authFetch } from '@/auth/authFetch'
 import { Button } from '@/components/ui/index'
-import { Modal, ModalBody, ModalFooter, ModalHeader } from '@/components/ui/Modal'
+import { Modal, ModalFooter, ModalHeader } from '@/components/ui/Modal'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { usePathResolution } from '@/hooks/usePathResolution'
 
@@ -57,7 +58,7 @@ export default function FolderBrowserModal({
       const pathCheck = await checkPath(path || '~')
       const expandedPath = pathCheck.expandedPath
 
-      const response = await fetch(`/api/directories${expandedPath ? `?path=${encodeURIComponent(expandedPath)}` : ''}`)
+      const response = await authFetch(`/api/directories${expandedPath ? `?path=${encodeURIComponent(expandedPath)}` : ''}`)
 
       if (response.ok) {
         const data: DirectoryListing = await response.json()
@@ -69,7 +70,7 @@ export default function FolderBrowserModal({
       else {
         console.warn('Directory not found, falling back to home directory')
         // Use the expanded path from checkPath as fallback
-        const fallbackResponse = await fetch(`/api/directories?path=${encodeURIComponent(expandedPath)}`)
+        const fallbackResponse = await authFetch(`/api/directories?path=${encodeURIComponent(expandedPath)}`)
 
         if (fallbackResponse.ok) {
           const fallbackData: DirectoryListing = await fallbackResponse.json()
@@ -198,57 +199,57 @@ export default function FolderBrowserModal({
                       </div>
                     </div>
                   )
-                  : (
-                      <div className="border border-gray-200 dark:border-gray-700 rounded-lg">
-                        <div className="p-2">
-                          {/* Add ".." parent directory link */}
-                          {directoryListing.parentPath && (
-                            <div
-                              className={`flex items-center py-2 px-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer group ${
-                                selectedPath === directoryListing.parentPath ? 'bg-primary/10 dark:bg-primary/20 border-l-2 border-primary' : ''
+                : (
+                    <div className="border border-gray-200 dark:border-gray-700 rounded-lg">
+                      <div className="p-2">
+                        {/* Add ".." parent directory link */}
+                        {directoryListing.parentPath && (
+                          <div
+                            className={`flex items-center py-2 px-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer group ${
+                              selectedPath === directoryListing.parentPath ? 'bg-primary/10 dark:bg-primary/20 border-l-2 border-primary' : ''
+                            }`}
+                            onClick={() => navigateUp()}
+                          >
+                            <div className="flex items-center flex-1 min-w-0">
+                              <Folder className="w-4 h-4 text-blue-500 dark:text-blue-400 mr-2 flex-shrink-0" />
+                              <span className={`text-sm truncate ${
+                                selectedPath === directoryListing.parentPath ? 'font-medium text-primary dark:text-primary-400' : 'text-gray-700 dark:text-gray-300'
                               }`}
-                              onClick={() => navigateUp()}
+                              >
+                                ..
+                              </span>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-gray-400 dark:text-gray-500 mr-2 opacity-0 group-hover:opacity-100" />
+                          </div>
+                        )}
+
+                        {directoryListing.directories.map((item) => {
+                          const isSelected = selectedPath === item.path
+                          return (
+                            <div
+                              key={item.path}
+                              data-testid="folder-browser-item"
+                              className={`flex items-center py-2 px-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer group ${
+                                isSelected ? 'bg-primary/10 dark:bg-primary/20 border-l-2 border-primary' : ''
+                              }`}
+                              onClick={() => handleItemClick(item)}
                             >
                               <div className="flex items-center flex-1 min-w-0">
                                 <Folder className="w-4 h-4 text-blue-500 dark:text-blue-400 mr-2 flex-shrink-0" />
                                 <span className={`text-sm truncate ${
-                                  selectedPath === directoryListing.parentPath ? 'font-medium text-primary dark:text-primary-400' : 'text-gray-700 dark:text-gray-300'
+                                  isSelected ? 'font-medium text-primary dark:text-primary-400' : 'text-gray-700 dark:text-gray-300'
                                 }`}
                                 >
-                                  ..
+                                  {item.name}
                                 </span>
                               </div>
                               <ChevronRight className="w-4 h-4 text-gray-400 dark:text-gray-500 mr-2 opacity-0 group-hover:opacity-100" />
                             </div>
-                          )}
-
-                          {directoryListing.directories.map((item) => {
-                            const isSelected = selectedPath === item.path
-                            return (
-                              <div
-                                key={item.path}
-                                data-testid="folder-browser-item"
-                                className={`flex items-center py-2 px-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer group ${
-                                  isSelected ? 'bg-primary/10 dark:bg-primary/20 border-l-2 border-primary' : ''
-                                }`}
-                                onClick={() => handleItemClick(item)}
-                              >
-                                <div className="flex items-center flex-1 min-w-0">
-                                  <Folder className="w-4 h-4 text-blue-500 dark:text-blue-400 mr-2 flex-shrink-0" />
-                                  <span className={`text-sm truncate ${
-                                    isSelected ? 'font-medium text-primary dark:text-primary-400' : 'text-gray-700 dark:text-gray-300'
-                                  }`}
-                                  >
-                                    {item.name}
-                                  </span>
-                                </div>
-                                <ChevronRight className="w-4 h-4 text-gray-400 dark:text-gray-500 mr-2 opacity-0 group-hover:opacity-100" />
-                              </div>
-                            )
-                          })}
-                        </div>
+                          )
+                        })}
                       </div>
-                    )}
+                    </div>
+                  )}
         </div>
       </ScrollArea>
 

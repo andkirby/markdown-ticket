@@ -1,6 +1,7 @@
 import type { Project } from '@mdt/shared/models/Project'
 import type { Ticket } from '../types'
 import { formatCrKey } from '@mdt/shared/utils/keyNormalizer'
+import { authFetch } from '../auth/authFetch'
 
 export function normalizeTicketKey(key: string): string {
   // Validate input
@@ -25,7 +26,7 @@ export function validateProjectCode(code: string): boolean {
 
 export async function findProjectByTicketKey(ticketKey: string): Promise<string | null> {
   try {
-    const response = await fetch('/api/projects')
+    const response = await authFetch('/api/projects')
     if (!response.ok)
       return null
 
@@ -47,7 +48,7 @@ export async function findProjectByTicketKey(ticketKey: string): Promise<string 
     // accumulated E2E project first.
     for (const project of orderedProjects) {
       try {
-        const ticketsResponse = await fetch(`/api/projects/${project.id}/crs`)
+        const ticketsResponse = await authFetch(`/api/projects/${project.id}/crs`)
         if (!ticketsResponse.ok)
           continue
 

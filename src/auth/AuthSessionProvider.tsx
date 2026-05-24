@@ -215,25 +215,32 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [markBackendDown, markNoAuthDev, markOwnerAdmin, markUnauthenticatedSession])
+  }, [markBackendDown, markNoAuthDev, markOwnerAdmin, markReadOnly, markUnauthenticatedSession])
 
   useEffect(() => {
     syncSSEAccessMode(accessMode)
   }, [accessMode])
 
-  const value = useMemo<AuthSessionContextValue>(() => ({
-    accessMode,
-    sessionStatus,
-    canManageProjects: accessMode === 'owner-admin' || accessMode === 'no-auth-dev',
-    unlock,
-    lock,
-    markLocked,
-    markReadOnly,
-    markBackendDown,
-    markNoAuthDev,
-    markOwnerAdmin,
-    markProjectListLoaded,
-  }), [
+  const value = useMemo<AuthSessionContextValue>(() => {
+    const ownerCapable = accessMode === 'owner-admin' || accessMode === 'no-auth-dev'
+
+    return {
+      accessMode,
+      sessionStatus,
+      canWriteTickets: ownerCapable,
+      canManageProjects: ownerCapable,
+      canManageSharing: ownerCapable,
+      canUseOwnerEndpoints: ownerCapable,
+      unlock,
+      lock,
+      markLocked,
+      markReadOnly,
+      markBackendDown,
+      markNoAuthDev,
+      markOwnerAdmin,
+      markProjectListLoaded,
+    }
+  }, [
     accessMode,
     sessionStatus,
     unlock,

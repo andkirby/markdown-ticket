@@ -6,7 +6,10 @@ export type SessionStatus = 'checking' | 'locked' | 'unlocking' | 'unlocked' | '
 export interface AuthSessionContextValue {
   accessMode: AccessMode
   sessionStatus: SessionStatus
+  canWriteTickets: boolean
   canManageProjects: boolean
+  canManageSharing: boolean
+  canUseOwnerEndpoints: boolean
   unlock: (token: string) => Promise<void>
   lock: () => Promise<void>
   markLocked: () => void
