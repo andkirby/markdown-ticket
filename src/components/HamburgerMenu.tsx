@@ -1,8 +1,8 @@
 import type { SortPreferences } from '../config/sorting'
 import { ArrowUpDown, Edit, Eye, EyeOff, KeyRound, Menu, Monitor, Moon, Plus, Settings, Sun, Trash2 } from 'lucide-react'
 import * as React from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { useCallback, useEffect, useRef, useState } from 'react'
 import { DEFAULT_SORT_ATTRIBUTES } from '../config/sorting'
 import { useTheme } from '../hooks/useTheme'
 import { nuclearCacheClear } from '../utils/cache'
@@ -19,6 +19,8 @@ interface HamburgerMenuProps {
   onOpenSettings?: () => void
   onUnlockOwnerAccess?: () => void
   canManageProjects?: boolean
+  canManageSharing?: boolean
+  canUseOwnerEndpoints?: boolean
 }
 
 export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
@@ -30,6 +32,8 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   onOpenSettings,
   onUnlockOwnerAccess,
   canManageProjects = true,
+  canManageSharing = canManageProjects,
+  canUseOwnerEndpoints = canManageProjects,
 }) => {
   const { themeMode, setTheme } = useTheme()
   const [isOpen, setIsOpen] = useState(false)
@@ -70,7 +74,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   const handleClearCache = () => {
     console.warn('🔧 Cache clear button clicked')
     setIsOpen(false)
-    nuclearCacheClear()
+    nuclearCacheClear({ includeBackend: canUseOwnerEndpoints })
   }
 
   const handleToggleEventHistory = () => {
@@ -242,7 +246,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
             )}
 
             {/* Settings */}
-            {canManageProjects && onOpenSettings && (
+            {canManageSharing && onOpenSettings && (
               <button
                 data-testid="settings-button"
                 onClick={handleOpenSettings}

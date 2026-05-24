@@ -1,5 +1,6 @@
 import type { GlobalConfig } from '@mdt/domain-contracts'
 import { useEffect, useState } from 'react'
+import { authFetch } from '../auth/authFetch'
 
 export function useConfig() {
   const [config, setConfig] = useState<GlobalConfig | null>(null)
@@ -11,7 +12,7 @@ export function useConfig() {
       setLoading(true)
       setError(null)
 
-      const response = await fetch('/api/config/global')
+      const response = await authFetch('/api/config/global')
       if (response.ok) {
         const data: GlobalConfig = await response.json()
         setConfig(data)
