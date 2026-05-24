@@ -88,11 +88,39 @@ export interface FilterTicketsOptions {
  * Used so that simplified keys (MDT-42) match stored keys (MDT-042).
  */
 function normalizeTicketKeyTerm(term: string): string {
-  const match = term.match(/^([a-z]+)-0*(\d+)$/i)
+  const match = term.match(/^([a-z]+)-(\d+)$/i)
   if (match) {
     return formatCrKey(match[1]!.toUpperCase(), Number.parseInt(match[2]!, 10)).toLowerCase()
   }
   return term
+}
+
+function getTicketNumber(code: string): number {
+  const match = code.match(/^[A-Z]+-(\d+)/i)
+  return match ? Number.parseInt(match[1]!, 10) : 0
+}
+
+function scoreTermMatch(term: string, normalizedTerm: string, ticket: Ticket): number {
+  const keyNum = ticket.code.split('-')[1] || ''
+  const code = ticket.code.toLowerCase()
+  const title = ticket.title.toLowerCase()
+  const titleWords = title.split(/[^a-z0-9]+/).filter(Boolean)
+
+  if (code === normalizedTerm || code === term)
+    return 100
+  if (keyNum === term)
+    return 90
+  if (code.startsWith(normalizedTerm) || code.startsWith(term))
+    return 80
+  if (titleWords.some(word => word.startsWith(term)))
+    return 70
+  if (keyNum.includes(term))
+    return 50
+  if (code.includes(normalizedTerm) || code.includes(term))
+    return 40
+  if (title.includes(term))
+    return 30
+  return 0
 }
 
 /**
@@ -107,36 +135,38 @@ export function filterTickets(options: FilterTicketsOptions): Ticket[] {
 
   const searchTerms = query.toLowerCase().trim().split(/\s+/)
 
-  const matches = tickets.filter((ticket) => {
-    const keyNum = ticket.code.split('-')[1] || ''
-    const code = ticket.code.toLowerCase()
-    const title = ticket.title.toLowerCase()
+  const matches = tickets
+    .map((ticket, index) => {
+      let score = 0
 
-    // All search terms must match (AND logic)
-    return searchTerms.every((term) => {
-      // Normalize simplified ticket keys (e.g., "mdt-42" → "mdt-042")
-      // so they match zero-padded stored keys
-      const normalizedTerm = normalizeTicketKeyTerm(term)
+      // All search terms must match (AND logic)
+      for (const term of searchTerms) {
+        // Normalize simplified ticket keys (e.g., "mdt-42" → "mdt-042")
+        // so they match zero-padded stored keys.
+        const normalizedTerm = normalizeTicketKeyTerm(term)
+        const termScore = scoreTermMatch(term, normalizedTerm, ticket)
 
-      // Match by key number (e.g., "136" matches "MDT-136")
-      if (keyNum.includes(term)) {
-        return true
+        if (termScore === 0) {
+          return null
+        }
+
+        score += termScore
       }
-      // Match by full code (e.g., "mdt-136" matches "MDT-136")
-      if (code.includes(normalizedTerm)) {
-        return true
-      }
-      // Also try original term for non-key searches
-      if (code.includes(term)) {
-        return true
-      }
-      // Match by title substring
-      if (title.includes(term)) {
-        return true
-      }
-      return false
+
+      return { ticket, score, index }
     })
-  })
+    .filter((match): match is { ticket: Ticket, score: number, index: number } => match !== null)
+    .sort((a, b) => {
+      if (b.score !== a.score)
+        return b.score - a.score
+
+      const ticketNumberDelta = getTicketNumber(b.ticket.code) - getTicketNumber(a.ticket.code)
+      if (ticketNumberDelta !== 0)
+        return ticketNumberDelta
+
+      return a.index - b.index
+    })
+    .map(match => match.ticket)
 
   return matches.slice(0, maxResults)
 }

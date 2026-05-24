@@ -199,6 +199,27 @@ describe('useQuickSearch - Result limit (C2)', () => {
     expect(result.length).toBe(3)
   })
 
+  it('ranks newer title matches before applying the result limit', () => {
+    const tickets: Ticket[] = [
+      createMockTicket({ code: 'MDT-012', title: 'Sortable Ticket Attributes with Admin Configuration' }),
+      createMockTicket({ code: 'MDT-020', title: 'Configuration Management Improvements and Add Project UI' }),
+      createMockTicket({ code: 'MDT-028', title: 'MCP configuration changes' }),
+      createMockTicket({ code: 'MDT-038', title: 'Add Config Cache Clear Button to Hamburger Menu' }),
+      createMockTicket({ code: 'MDT-041', title: 'Project Edit Modal with Enhanced Configuration Management' }),
+      createMockTicket({ code: 'MDT-058', title: 'Backend fails to parse project.code from .mdt-config.toml for specific projects' }),
+      createMockTicket({ code: 'MDT-073', title: 'Configuration Management CLI Tool for Project Discovery' }),
+      createMockTicket({ code: 'MDT-076', title: 'No Projects Found UI Architecture - Configuration-Driven Project Discovery' }),
+      createMockTicket({ code: 'MDT-077', title: 'Project Entity Configuration Architecture' }),
+      createMockTicket({ code: 'MDT-078', title: 'Configuration loading behavior' }),
+      createMockTicket({ code: 'MDT-168', title: 'Provide configuration management UI and API' }),
+    ]
+
+    const result = filterTickets({ query: 'config', tickets })
+
+    expect(result.some(t => t.code === 'MDT-168')).toBe(true)
+    expect(result[0].code).toBe('MDT-168')
+  })
+
   it('returns empty array when no matches', () => {
     const tickets: Ticket[] = [
       createMockTicket({ code: 'MDT-001', title: 'First Ticket' }),
