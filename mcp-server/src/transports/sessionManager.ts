@@ -1,5 +1,5 @@
+import { randomUUID } from 'node:crypto'
 import { EventEmitter } from 'node:events'
-import { v4 as uuidv4 } from 'uuid'
 
 /**
  * Session data for tracking client connections
@@ -33,7 +33,7 @@ export class SessionManager {
    * Create a new session
    */
   createSession(clientInfo?: { userAgent?: string, origin?: string }): Session {
-    const sessionId = uuidv4()
+    const sessionId = randomUUID()
     const session: Session = {
       id: sessionId,
       createdAt: new Date(),

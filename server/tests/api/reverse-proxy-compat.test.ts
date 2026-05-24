@@ -36,7 +36,7 @@ describe('reverse proxy compatibility', () => {
   it('does not let forwarded host or proto bypass origin checks', async () => {
     const response = await request(createApp())
       .get('/health')
-      .set('Origin', 'https://attacker.example.com')
+      .set('Origin', 'https://disallowed.example.com')
       .set('Host', 'internal:4001')
       .set('X-Forwarded-Proto', 'https')
       .set('X-Forwarded-Host', 'app.example.com')

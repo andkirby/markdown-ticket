@@ -1,6 +1,5 @@
 /// <reference types="jest" />
 
-import { EventEmitter } from 'node:events'
 import express from 'express'
 import request from 'supertest'
 import { createAuthMiddleware } from '../src/transports/middleware'
