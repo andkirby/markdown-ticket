@@ -103,3 +103,13 @@ src/components/QuickSearch/
 > Architecture projection: [architecture.md](./MDT-136/architecture.md) (rendered from canonical spec-trace state)
 
 > Tests projection: [tests.md](./MDT-136/tests.md) (rendered from canonical spec-trace state)
+
+## 8. Clarifications
+
+### UAT Session 2026-05-23
+
+- Fixed current-project quick search result ranking so title matches are ranked before the 10-result cap is applied; this prevents relevant tickets such as `MDT-168` from being hidden behind older `config` matches.
+- No spec changes required: existing `BR-3` covers title/key filtering, `C2` covers the 10-result cap, and `TEST-use-quick-search-unit` covers the regression.
+- Updated workflow documents: none.
+- `uat.md` written: no.
+- Strict drift/lock used: no.
