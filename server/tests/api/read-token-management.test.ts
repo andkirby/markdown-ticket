@@ -216,7 +216,7 @@ describe('read token management API - MDT-177', () => {
     const list = await request(app)
       .get('/api/read-tokens')
       .set('Authorization', `Bearer ${ownerToken}`)
-      .set('Origin', 'https://attacker.example.test')
+      .set('Origin', 'https://disallowed.example.test')
 
     expect(list.status).toBe(200)
     expect(list.body.linkOrigins).toMatchObject({
@@ -228,7 +228,7 @@ describe('read token management API - MDT-177', () => {
     const invite = await request(app)
       .post(`/api/read-tokens/${create.body.id}/invites`)
       .set('Authorization', `Bearer ${ownerToken}`)
-      .set('Origin', 'https://attacker.example.test')
+      .set('Origin', 'https://disallowed.example.test')
       .send({})
 
     expect(invite.status).toBe(400)

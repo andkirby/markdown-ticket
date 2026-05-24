@@ -21,11 +21,11 @@ describe('MCP reverse proxy caller identity', () => {
   it('ignores spoofed forwarded headers when Express has not trusted them', () => {
     const req = {
       headers: {
-        origin: 'https://app.example.com',
+        'origin': 'https://app.example.com',
         'x-forwarded-for': '203.0.113.99',
         'x-forwarded-proto': 'https',
         'x-forwarded-host': 'spoofed.example.com',
-        host: 'mcp.local',
+        'host': 'mcp.local',
       },
       ip: '127.0.0.1',
       protocol: 'http',

@@ -2,7 +2,7 @@ import type {
   JSONRPCError,
   JSONRPCResponse,
 } from '@modelcontextprotocol/sdk/types.js'
-import type { Request, Response } from 'express'
+import type { Express, Request, Response } from 'express'
 import type { MCPTools } from '../tools/index.js'
 import type { HttpTransportSecurityConfig } from './httpSecurity.js'
 
@@ -22,6 +22,11 @@ export type HttpTransportConfig = HttpTransportSecurityConfig
 
 const MCP_PROTOCOL_VERSION = '2025-06-18'
 
+export interface HttpTransportApp {
+  app: Express
+  sessionManager: SessionManager
+}
+
 /**
  * Start HTTP transport for MCP server
  * Implements MCP Streamable HTTP transport specification (2025-06-18)
@@ -37,9 +42,37 @@ export async function startHttpTransport(
   mcpTools: MCPTools,
   config: HttpTransportConfig,
 ): Promise<void> {
-  const app = express()
   const host = config.host || '127.0.0.1'
+  const { app, sessionManager } = createHttpTransportApp(mcpTools, config)
 
+  // Start HTTP server
+  const httpServer = app.listen(config.port, host, () => {
+    console.error(`✅ HTTP transport listening on http://${host}:${config.port}/mcp`)
+  })
+
+  // Graceful shutdown
+  process.on('SIGTERM', () => {
+    console.error('🛑 SIGTERM received, shutting down HTTP transport...')
+    sessionManager.shutdown()
+    httpServer.close(() => {
+      console.error('✅ HTTP transport shut down complete')
+    })
+  })
+
+  return new Promise((resolve) => {
+    httpServer.on('listening', () => resolve())
+    httpServer.on('error', (error) => {
+      console.error('❌ HTTP transport failed to start:', error)
+      throw error
+    })
+  })
+}
+
+export function createHttpTransportApp(
+  mcpTools: MCPTools,
+  config: HttpTransportConfig,
+): HttpTransportApp {
+  const app = express()
   validateHttpTransportConfig(config)
   app.set('trust proxy', config.trustProxy || false)
 
@@ -81,7 +114,7 @@ export async function startHttpTransport(
           callback(null, true)
         }
         else {
-          callback(new Error('Origin not allowed by CORS policy'))
+          callback(null, false)
         }
       }
       else {
@@ -526,44 +559,24 @@ export async function startHttpTransport(
     const sessionsHandlers = [
       ...(process.env.NODE_ENV === 'development' ? [] : [createAuthMiddleware(config.authToken!)]),
       (req: Request, res: Response) => {
-      const sessions = sessionManager.getActiveSessions().map(s => ({
-        id: s.id,
-        createdAt: s.createdAt,
-        lastActivity: s.lastActivity,
-        clientInfo: s.clientInfo,
-      }))
+        const sessions = sessionManager.getActiveSessions().map(s => ({
+          id: s.id,
+          createdAt: s.createdAt,
+          lastActivity: s.lastActivity,
+          clientInfo: s.clientInfo,
+        }))
 
-      res.status(200).json({
-        count: sessions.length,
-        sessions,
-      })
+        res.status(200).json({
+          count: sessions.length,
+          sessions,
+        })
       },
     ]
 
     app.get('/sessions', ...sessionsHandlers)
   }
 
-  // Start HTTP server
-  const httpServer = app.listen(config.port, host, () => {
-    console.error(`✅ HTTP transport listening on http://${host}:${config.port}/mcp`)
-  })
-
-  // Graceful shutdown
-  process.on('SIGTERM', () => {
-    console.error('🛑 SIGTERM received, shutting down HTTP transport...')
-    sessionManager.shutdown()
-    httpServer.close(() => {
-      console.error('✅ HTTP transport shut down complete')
-    })
-  })
-
-  return new Promise((resolve) => {
-    httpServer.on('listening', () => resolve())
-    httpServer.on('error', (error) => {
-      console.error('❌ HTTP transport failed to start:', error)
-      throw error
-    })
-  })
+  return { app, sessionManager }
 }
 
 /**
