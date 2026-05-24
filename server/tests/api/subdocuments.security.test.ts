@@ -1,7 +1,7 @@
 /**
  * Subdocument API Security Integration Tests - MDT-151
  *
- * Verifies path traversal, encoding attacks, and symlink containment
+ * Verifies path traversal, encoding stress cases, and symlink containment
  * at the HTTP API level. RED tests — will fail until implementation exists.
  */
 

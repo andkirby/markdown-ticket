@@ -88,7 +88,7 @@ describe('sSE CORS policy', () => {
   })
 
   it('does not expose stream access to disallowed browser origins', async () => {
-    const response = await getSseHeaders(`${baseUrl}/api/events`, 'https://attacker.example.com')
+    const response = await getSseHeaders(`${baseUrl}/api/events`, 'https://disallowed.example.com')
 
     expect(response.statusCode).toBe(200)
     expect(response.headers['access-control-allow-origin']).toBeUndefined()

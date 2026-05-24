@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from 'express'
+import { Buffer } from 'node:buffer'
 import { timingSafeEqual } from 'node:crypto'
 
 function tokenMatches(actualToken: string, expectedToken: string): boolean {

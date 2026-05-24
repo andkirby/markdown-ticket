@@ -33,7 +33,7 @@ describe('publicLinkOrigins - MDT-178', () => {
   it('uses the configured public origin without offering a rejected current origin', () => {
     const result = resolvePublicLinkOriginOptions({
       allowedOrigins: createAllowedOrigins('https://share.example.com'),
-      currentOrigin: 'https://attacker.example.test',
+      currentOrigin: 'https://disallowed.example.test',
       publicOrigin: 'https://share.example.com',
     })
 
@@ -56,7 +56,7 @@ describe('publicLinkOrigins - MDT-178', () => {
   it('withholds generated link bases when no configured public origin is available and current origin is rejected', () => {
     const result = resolvePublicLinkOriginOptions({
       allowedOrigins: createAllowedOrigins(),
-      currentOrigin: 'https://attacker.example.test',
+      currentOrigin: 'https://disallowed.example.test',
     })
 
     expect(result.options).toEqual([])

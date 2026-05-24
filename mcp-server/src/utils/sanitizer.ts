@@ -113,7 +113,7 @@ const SANITIZER_CONFIGS = {
         return { tagName, attribs }
       },
     },
-    // Remove all style attributes to prevent CSS-based attacks
+    // Remove all style attributes to prevent CSS-based stress cases
     allowedStyles: {},
     // Remove all class attributes except for safe ones
     allowedClasses: {
@@ -262,7 +262,7 @@ export class Sanitizer {
   }
 
   /**
-   * Sanitize error messages to prevent reflection attacks
+   * Sanitize error messages to prevent reflection stress cases
    * Optimized with improved pattern matching
    */
   static sanitizeError(error: Error | string): string {

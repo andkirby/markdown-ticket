@@ -7,7 +7,7 @@ import { cleanupTestEnvironment, setupTestEnvironment } from './setup'
 const adminToken = 'mdt-176-admin-token'
 const badToken = 'mdt-176-bad-token'
 const allowedOrigin = 'http://localhost:6173'
-const disallowedOrigin = 'https://attacker.example.test'
+const disallowedOrigin = 'https://disallowed.example.test'
 
 function firstSetCookie(response: request.Response): string {
   const raw = response.headers['set-cookie']

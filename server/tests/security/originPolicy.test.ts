@@ -50,8 +50,8 @@ describe('originPolicy', () => {
   it('rejects disallowed origins for REST and stream decisions', () => {
     const policy = createOriginPolicy(['https://app.example.com'])
 
-    expect(policy.isAllowedOrigin('https://attacker.example.com')).toBe(false)
-    expect(policy.getAccessControlAllowOrigin('https://attacker.example.com')).toBeUndefined()
+    expect(policy.isAllowedOrigin('https://disallowed.example.com')).toBe(false)
+    expect(policy.getAccessControlAllowOrigin('https://disallowed.example.com')).toBeUndefined()
   })
 
   it('returns matching Access-Control-Allow-Origin only for configured origins', () => {
@@ -76,7 +76,7 @@ describe('originPolicy', () => {
     })).resolves.toBe(true)
 
     await expect(new Promise((resolve, reject) => {
-      resolveOrigin('https://attacker.example.com', (error, allowed) => {
+      resolveOrigin('https://disallowed.example.com', (error, allowed) => {
         if (error) {
           reject(error)
           return

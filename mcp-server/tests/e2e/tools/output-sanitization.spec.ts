@@ -190,7 +190,7 @@ Testing sanitization of malicious content.
       // Given: Multiple types of event handlers
       const maliciousContent = `
         <img onerror="maliciousCode()">
-        <body onload="initAttack()">
+        <body onload="initStress()">
         <a onmouseover="trackMouse()">
         <form onsubmit="stealData()">
       `
