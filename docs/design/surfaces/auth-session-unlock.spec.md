@@ -15,7 +15,7 @@ AppRoot
 │   ├── ProjectSelector / current project controls (conditional)
 │   └── AuthStatusAction
 │       ├── Locked chip + Unlock button
-│       └── Owner/admin hidden; Owner session + Lock live in HamburgerMenu
+│       └── Owner/admin hidden; Lock action lives in HamburgerMenu
 └── MainContent
     ├── AuthUnlockPanel (owner unlock request or owner-only 401)
     ├── ReadOnlyProjectBoard/List/Documents (public share or scoped read token)
@@ -56,7 +56,7 @@ AuthUnlockPanel
 | `error` | invalid token/session failure | AuthUnlockPanel with inline error | edit token, retry |
 | `read-only` | anonymous public project, share session, or accepted read token | normal app with one read-only chip; owner actions hidden; hamburger shows `Unlock access` | view, search, sort, open tickets/docs, unlock with owner token |
 | `read-only-owner-unlock` | read-only visitor selects `Unlock access` from hamburger menu | owner-token modal/sheet over current board | enter owner token, cancel back to board |
-| `owner-admin` | session cookie accepted | normal app; owner session + Lock inside hamburger menu | all admin actions, lock/logout |
+| `owner-admin` | session cookie accepted | normal app; Lock inside hamburger menu | all admin actions, lock owner/admin access |
 | `no-auth-dev` | backend auth disabled, or legacy local backend has no `/api/auth/session` and still returns projects | normal app; no header auth chip; no unlock affordance | all current local-dev actions |
 | `backend-down` | network error / 5xx | existing backend-down state | retry |
 
@@ -69,7 +69,7 @@ AuthUnlockPanel
 5. A failed unlock must keep the user on the same panel and preserve focus on the token input.
 6. Read-only owner-upgrade unlock is recoverable: Cancel closes the overlay and returns to the existing read-only board.
 7. A bad owner token submitted from read-only mode returns to the read-only board state after the error is dismissed or cancel is selected; it must not trap the visitor on a full locked screen.
-8. Logout/Lock must clear only the server session cookie; it must not mutate project data.
+8. Logout/Lock must clear only the owner/admin server session cookie; it must not mutate project data or clear independent public/share/read-token access.
 9. Read-only sessions must not mount owner/admin-only surfaces that call `/api/config`, `/api/filesystem`, `/api/directories`, `/api/read-tokens`, or `/api/cache`.
 10. Frontend API calls must use `authFetch` or an approved wrapper rather than raw `fetch('/api/...')`.
 
@@ -116,7 +116,8 @@ The frontend must not write the token to `localStorage`, `sessionStorage`, index
 
 - Locked: small outline chip "Locked" + `Unlock` button.
 - Read-only: single small outline chip "Read only". The owner-upgrade entry is `Unlock access` inside the hamburger menu, not an inline header button.
-- Owner/admin: no inline auth chip. The hamburger menu shows a non-clickable "Owner session" row and a `Lock` menu item.
+- Owner/admin: no inline auth chip. The hamburger menu shows a `Lock` menu item only when the owner session is valid.
+- Lock is a downgrade action, not a global sign-out. After Lock, the app reloads visible projects and stays on the current board/list/documents route if that project is still public or read-token visible. It shows the locked unlock panel only when no non-owner project access remains.
 
 ### Read-only owner unlock overlay
 
@@ -195,6 +196,7 @@ Owner-only modals and settings panels must be mounted only when the matching cap
 | read-only bad owner token | visitor is viewing a read-only project | submit invalid owner token | generic error appears; Cancel returns to read-only board |
 | read-token unlock | locked visitor submits valid scoped read token | token exchange succeeds | app shows read-only chip and token-scoped projects |
 | owner unlock | locked visitor submits valid owner token | token exchange succeeds | app shows owner session and owner actions |
+| owner lock with public access | owner views a public project, including documents | select `Lock` from hamburger menu | owner controls disappear, `Read only` appears, and current content remains visible |
 | storage safety | any token is submitted | request completes | raw token is not visible in URL, localStorage, or sessionStorage |
 | read-only refresh boundary | visitor opens a public/share/read-token project | refresh page | read-only access remains and no owner-only endpoint is requested |
 

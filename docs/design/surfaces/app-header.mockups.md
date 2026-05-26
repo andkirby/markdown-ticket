@@ -18,7 +18,7 @@ window "App Header — Desktop":
       combo value="Sort by Key ⇅" id="sort-controls"
       button "≡" id="hamburger-trigger"
 
-annotation "Owner session and Lock live inside the hamburger menu, not inline in the header." target="hamburger-trigger" position=bottom
+annotation "Owner lock/logout lives inside the hamburger menu; the menu does not claim session status." target="hamburger-trigger" position=bottom
 ```
 
 ## Desktop Read-only
@@ -101,7 +101,6 @@ annotation "Sort controls live inside hamburger menu on mobile" target="hamburge
 window "App Header — Hamburger Menu":
   panel:
     list:
-      item "Owner session" id="menu-owner-session"
       item "Lock" id="menu-owner-lock"
     divider
     list:
@@ -120,7 +119,7 @@ window "App Header — Hamburger Menu":
       button "🌙"
       button "💻"
 
-annotation "Owner session is a status row; Lock clears the owner session cookie." target="menu-owner-session" position=right
+annotation "Lock clears the owner session cookie and is shown only for owner/admin access." target="menu-owner-lock" position=right
 annotation "Sort controls appear on mobile only" target="menu-sort" position=right
 ```
 
@@ -171,7 +170,6 @@ annotation "Token submission uses backend exchange; invalid errors stay generic"
 | Menu dropdown | `--popover` | `bg-background border` | `w-48`, absolute positioned |
 | Read-only badge | `--muted` | `chip` / small badge | Shown only when write access is unavailable |
 | Unlock access item | `--foreground` | menu item with `KeyRound` icon | Read-only sessions only |
-| Owner session item | `--foreground`, success icon color | menu status row with `ShieldCheck` icon | Owner/admin sessions only |
 | Lock item | `--foreground` | menu item with `LockKeyhole` icon | Owner/admin sessions only |
 | Theme button group | `--primary` / `--muted` | `ButtonGroup` | Active: primary bg |
 | Sort select | `--background` | `border rounded-md` | Hidden on `< sm` |

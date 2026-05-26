@@ -7,7 +7,8 @@
 
 import { expect, test } from '../fixtures/test-fixtures.js'
 import { buildScenario } from '../setup/index.js'
-import { authSelectors, boardSelectors, projectSelectors } from '../utils/selectors.js'
+import { waitForDocumentsReady } from '../utils/helpers.js'
+import { authSelectors, boardSelectors, documentSelectors, projectSelectors, sharingSelectors } from '../utils/selectors.js'
 
 const authE2EEnabled = process.env.MDT_E2E_AUTH_ENABLED === 'true'
 const adminToken = process.env.API_AUTH_TOKEN ?? 'mdt-176-e2e-token'
@@ -65,6 +66,7 @@ test.describe('MDT-176 auth session unlock', () => {
     }))
     expect(JSON.stringify(browserState)).not.toContain(adminToken)
 
+    await page.locator(authSelectors.menuButton).click()
     await page.locator(authSelectors.lockButton).click()
     await page.reload()
 
@@ -83,6 +85,7 @@ test.describe('MDT-176 auth session unlock', () => {
     await page.locator(authSelectors.unlockSubmit).click()
     await expect(page.locator(boardSelectors.board)).toBeVisible()
 
+    await page.locator(authSelectors.menuButton).click()
     await page.locator(authSelectors.lockButton).click()
 
     await page.route('**/api/events**', async route => {
@@ -106,29 +109,9 @@ test.describe('MDT-176 auth session unlock', () => {
     await expect(page.locator(projectSelectors.addProjectButton)).toHaveCount(0)
   })
 
-  test('auth-enabled 200 project responses without owner session stay locked until MDT-172 defines sharing', async ({ page, e2eContext }) => {
+  test('auth-enabled public project responses render read-only sharing instead of a locked screen', async ({ page, e2eContext }) => {
     void e2eContext
-    const publicProject = {
-      id: 'public-demo',
-      project: {
-        id: 'public-demo',
-        name: 'Public Demo',
-        code: 'PUB',
-        path: '/tmp/public-demo',
-        configFile: '/tmp/public-demo/.mdt-config.toml',
-        startNumber: 1,
-        counterFile: '.mdt-counter',
-        active: true,
-        description: 'Future public project',
-        repository: '',
-        ticketsPath: 'docs/CRs',
-      },
-      metadata: {
-        dateRegistered: '2026-05-23',
-        lastAccessed: '2026-05-23',
-        version: '1.0.0',
-      },
-    }
+    const publicProject = createPublicProjectFixture()
 
     await page.route('**/api/projects', async route => {
       await route.fulfill({
@@ -141,11 +124,75 @@ test.describe('MDT-176 auth session unlock', () => {
     await page.goto('/prj/PUB')
     await page.waitForLoadState('load')
 
-    await expect(page.locator(authSelectors.statusChip)).toHaveText('Locked')
-    await expect(page.locator(authSelectors.unlockPanel)).toBeVisible()
-    await expect(page.locator(authSelectors.unlockAffordance)).toBeVisible()
+    await expect(page.locator(sharingSelectors.readOnlyBadge)).toBeVisible()
+    await expect(page.locator(authSelectors.unlockPanel)).toHaveCount(0)
     await expect(page.locator(projectSelectors.addProjectButton)).toHaveCount(0)
     await expect(page.locator(projectSelectors.editProjectButton)).toHaveCount(0)
+  })
+
+  test('locking owner access on a public documents route downgrades to read-only without blanking the page', async ({ page, e2eContext }) => {
+    void e2eContext
+    const publicProject = createPublicProjectFixture()
+    let ownerAuthenticated = true
+
+    await page.route('**/api/auth/session', async route => {
+      if (route.request().method() === 'DELETE') {
+        ownerAuthenticated = false
+        await route.fulfill({ status: 204, body: '' })
+        return
+      }
+
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          authEnabled: true,
+          authenticated: ownerAuthenticated,
+          readAuthenticated: false,
+        }),
+      })
+    })
+    await page.route('**/api/projects/public-demo/crs', async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: '[]',
+      })
+    })
+    await page.route('**/api/projects/public-demo/config', async route => {
+      await route.fulfill({ status: 404, contentType: 'application/json', body: '{}' })
+    })
+    await page.route('**/api/documents?projectId=public-demo', async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: '[]',
+      })
+    })
+    await page.route('**/api/projects', async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([publicProject]),
+      })
+    })
+
+    await page.goto('/prj/PUB/documents')
+    await page.waitForLoadState('load')
+    await waitForDocumentsReady(page)
+
+    await page.locator(authSelectors.menuButton).click()
+    await page.locator(authSelectors.lockButton).click()
+
+    await expect(page.locator(sharingSelectors.readOnlyBadge)).toBeVisible()
+    await expect(page.locator(authSelectors.unlockPanel)).toHaveCount(0)
+    await expect(page.locator(documentSelectors.documentTree)).toBeVisible()
+
+    await page.reload()
+    await page.waitForLoadState('load')
+    await waitForDocumentsReady(page)
+    await expect(page.locator(sharingSelectors.readOnlyBadge)).toBeVisible()
+    await expect(page.locator(authSelectors.unlockPanel)).toHaveCount(0)
   })
 
   test('legacy no-auth backend does not masquerade as public sharing', async ({ page, e2eContext }) => {
@@ -219,3 +266,31 @@ test.describe('MDT-176 auth session unlock', () => {
     await expect(page.getByText(/backend.*down|backend.*unavailable|service unavailable/i)).toBeVisible()
   })
 })
+
+function createPublicProjectFixture() {
+  return {
+    id: 'public-demo',
+    project: {
+      id: 'public-demo',
+      name: 'Public Demo',
+      code: 'PUB',
+      path: '/tmp/public-demo',
+      configFile: '/tmp/public-demo/.mdt-config.toml',
+      startNumber: 1,
+      counterFile: '.mdt-counter',
+      active: true,
+      description: 'Public project',
+      repository: '',
+      ticketsPath: 'docs/CRs',
+    },
+    metadata: {
+      dateRegistered: '2026-05-23',
+      lastAccessed: '2026-05-23',
+      version: '1.0.0',
+      sharing: {
+        mode: 'public-readonly',
+        shareId: 'pub-share-id',
+      },
+    },
+  }
+}

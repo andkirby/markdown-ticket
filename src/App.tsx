@@ -157,6 +157,9 @@ function ProjectRouteHandler() {
     setShowEditProjectModal(false)
     setShowSettings(false)
     await lock()
+    await refreshProjects().catch((err) => {
+      console.error('Failed to refresh projects after lock:', err)
+    })
   }
 
   const handleUnlockClick = () => {
@@ -234,6 +237,11 @@ function ProjectRouteHandler() {
       return
     }
 
+    if (accessMode === 'read-only' && projects.length === 0) {
+      markLocked()
+      return
+    }
+
     if (!projectCode)
       return
 
@@ -254,7 +262,7 @@ function ProjectRouteHandler() {
       setCurrentProject(projectCode)
     }
     setErrorRef.current(null)
-  }, [accessMode, authRefreshInFlight, projectCode, projects, projectsLoading, selectedProject, setSelectedProject])
+  }, [accessMode, authRefreshInFlight, markLocked, projectCode, projects, projectsLoading, selectedProject, setSelectedProject])
 
   // Initialize view mode from localStorage when URL has no view suffix
   useEffect(() => {
@@ -360,7 +368,7 @@ function ProjectRouteHandler() {
               </div>
             </div>
             <div className="flex items-center">
-              {(accessMode === 'read-only' || selectedProject?.project.path === '') && (
+              {accessMode === 'read-only' && (
                 <span data-testid="sharing-readonly-badge" className="mr-2 rounded-full border border-border px-2 py-1 text-xs">
                   Read only
                 </span>

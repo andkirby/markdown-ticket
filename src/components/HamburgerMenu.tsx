@@ -1,6 +1,6 @@
 import type { SortPreferences } from '../config/sorting'
 import type { AccessMode } from '@/auth/AuthSessionContext'
-import { ArrowUpDown, Edit, Eye, EyeOff, KeyRound, LockKeyhole, Menu, Monitor, Moon, Plus, Settings, ShieldCheck, Sun, Trash2 } from 'lucide-react'
+import { ArrowUpDown, Edit, Eye, EyeOff, KeyRound, LockKeyhole, Menu, Monitor, Moon, Plus, Settings, Sun, Trash2 } from 'lucide-react'
 import * as React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -123,7 +123,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
     void onLock?.()
   }
 
-  const showOwnerSession = accessMode === 'owner-admin'
+  const showLockAction = accessMode === 'owner-admin' && canUseOwnerEndpoints && Boolean(onLock)
 
   return (
     <div className="relative flex" ref={menuRef}>
@@ -148,15 +148,8 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
           }}
         >
           <div className="py-1">
-            {showOwnerSession && (
+            {showLockAction && (
               <>
-                <div
-                  data-testid="auth-status-chip"
-                  className="flex items-center w-full px-4 py-2 text-sm text-foreground"
-                >
-                  <ShieldCheck className="h-4 w-4 mr-2 text-green-600 dark:text-green-400" />
-                  Owner session
-                </div>
                 <button
                   data-testid="auth-lock-button"
                   onClick={handleLock}

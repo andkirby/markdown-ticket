@@ -183,6 +183,8 @@ export const authSelectors = {
   statusChip: '[data-testid="auth-status-chip"]',
   /** Lock/logout action */
   lockButton: '[data-testid="auth-lock-button"]',
+  /** Header hamburger menu trigger */
+  menuButton: '[data-testid="hamburger-menu"]',
   /** MDT-172-compatible public-empty state */
   noPublicProjectsState: '[data-testid="auth-no-public-projects"]',
   /** Unlock affordance outside the locked auth panel */
