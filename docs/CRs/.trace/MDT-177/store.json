@@ -320,6 +320,13 @@
       "text": "IF invite exchange or share-link exchange succeeds while the browser already has a read session, THEN the system shall merge the new grants with existing read grants and set the merged read-session expiry to the earliest expiry among active grants.",
       "sourceRef": "requirements review gap: merge expiry semantics",
       "routePolicy": "tests"
+    },
+    {
+      "id": "C12",
+      "kind": "constraint",
+      "text": "The system shall define shared access-mode, capability, public-link-origin, and read-token API response shapes in domain-contracts so frontend, backend, and tests do not redeclare boundary contracts.",
+      "sourceRef": "CR:MDT-177",
+      "routePolicy": "tests"
     }
   ],
   "scenarios": [
@@ -681,6 +688,25 @@
         "ART-tests-e2e-selectors"
       ],
       "sourceRef": "architecture.md#verification-ownership"
+    },
+    {
+      "id": "OBL-access-contract-boundary",
+      "title": "Access and read-token boundary DTOs are schema-first domain contracts imported by frontend, backend, and tests instead of being redeclared locally.",
+      "derivedFrom": [
+        "C12",
+        "C6",
+        "C9",
+        "BR-1.15"
+      ],
+      "artifactIds": [
+        "ART-domain-access-contracts",
+        "ART-domain-access-contract-tests",
+        "ART-server-routes-read-tokens",
+        "ART-server-security-api-auth",
+        "ART-src-auth-session-provider",
+        "ART-src-settings-read-access-tokens"
+      ],
+      "sourceRef": "CR:MDT-177"
     }
   ],
   "artifacts": [
@@ -809,6 +835,18 @@
       "path": "tests/e2e/utils/selectors.ts",
       "kind": "test",
       "sourceRef": "architecture.md#verification-ownership"
+    },
+    {
+      "id": "ART-domain-access-contracts",
+      "path": "domain-contracts/src/access/schema.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-177"
+    },
+    {
+      "id": "ART-domain-access-contract-tests",
+      "path": "domain-contracts/src/access/__tests__/schema.test.ts",
+      "kind": "test",
+      "sourceRef": "CR:MDT-177"
     }
   ],
   "testPlans": [
@@ -965,6 +1003,17 @@
       ],
       "file": "tests/e2e/sharing/read-access-journey.spec.ts",
       "sourceRef": "BDD scenarios and architecture OBL-e2e-journey-ownership"
+    },
+    {
+      "id": "TEST-access-domain-contracts",
+      "kind": "unit",
+      "title": "Access and read-token domain contract schemas",
+      "covers": [
+        "C12",
+        "OBL-access-contract-boundary"
+      ],
+      "file": "domain-contracts/src/access/__tests__/schema.test.ts",
+      "sourceRef": "CR:MDT-177"
     }
   ],
   "tasks": [
@@ -1137,6 +1186,27 @@
         "TEST-origin-public-link-policy"
       ],
       "sourceRef": "tasks.md#task-4"
+    },
+    {
+      "id": "TASK-9",
+      "title": "Extract read-access boundary contracts into domain-contracts",
+      "ownsArtifactIds": [
+        "ART-domain-access-contracts",
+        "ART-domain-access-contract-tests",
+        "ART-server-routes-read-tokens",
+        "ART-server-security-api-auth",
+        "ART-src-auth-session-provider",
+        "ART-src-settings-read-access-tokens"
+      ],
+      "makesGreenIds": [
+        "TEST-access-domain-contracts",
+        "TEST-read-token-management-api",
+        "TEST-read-access-journey"
+      ],
+      "skills": [
+        "mdt:implement"
+      ],
+      "sourceRef": "CR:MDT-177"
     }
   ]
 }

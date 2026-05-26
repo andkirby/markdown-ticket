@@ -1,5 +1,1 @@
-export interface PublicLinkOriginOptions {
-  options: string[]
-  selectedOrigin?: string
-  notice?: string
-}
+export type { PublicLinkOriginOptions } from '@mdt/domain-contracts'

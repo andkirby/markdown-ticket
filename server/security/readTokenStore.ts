@@ -1,3 +1,4 @@
+import type { CreateReadTokenInput, ListedReadToken, ReadTokenCreationResponse } from '@mdt/domain-contracts'
 import { Buffer } from 'node:buffer'
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto'
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
@@ -9,11 +10,7 @@ const STORE_RELATIVE_PATH = path.join('auth', 'read-access-tokens.json')
 const DEFAULT_INVITE_TTL_MS = 15 * 60 * 1000
 const storeWriteLocks = new Map<string, Promise<void>>()
 
-export interface CreateTokenInput {
-  name: string
-  projectRefs: string[]
-  expiresAt?: string | null
-}
+export type CreateTokenInput = CreateReadTokenInput
 
 export interface ReadTokenRecord {
   id: string
@@ -35,19 +32,7 @@ export interface ReadInviteRecord {
   revokedAt: string | null
 }
 
-export interface ListedReadToken {
-  id: string
-  name: string
-  projectRefs: string[]
-  expiresAt: string | null
-  createdAt: string
-  revokedAt: string | null
-  status: 'active' | 'expired' | 'revoked'
-}
-
-export interface TokenCreationResult extends ListedReadToken {
-  rawToken: string
-}
+export type TokenCreationResult = ReadTokenCreationResponse
 
 export interface InviteCreationResult {
   code: string
