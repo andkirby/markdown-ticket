@@ -42,10 +42,10 @@ MDT-150 implementation review identified hardening concerns before final ship:
 
 ## Acceptance Criteria
 
-- [ ] sourcePath is constructed from `subdocument.filePath` (not string interpolation)
-- [ ] `convertDocumentReferences` regex doesn't over-match
+- [x] sourcePath is constructed from `subdocument.filePath` (not string interpolation)
+- [x] `convertDocumentReferences` regex doesn't over-match
 - [x] `[label](requirements.md#section)` and `[label](requirements.trace.md#section)` render as working same-ticket subdocument links
 - [x] Resolved routes shaped `/prj/<project>/ticket/<ticket>/<subdocument>.md#section` classify as document links, not broken links
 - [x] Relative `.md#section` hrefs preserve the anchor during classification
-- [ ] MDT-152 test files are not in the MDT-150 diff
-- [ ] All 77+ existing tests still pass
+- [x] MDT-152 test files are not in the MDT-150 diff
+- [x] All 77+ existing tests still pass
