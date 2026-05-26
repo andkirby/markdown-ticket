@@ -124,9 +124,15 @@ window "Markdown Ticket Board — Owner Session":
   header:
     row justify=between:
       text "Markdown Ticket Board" bold
-      row:
-        status "Owner session" kind=success id="owner-chip"
-        button "Lock"
+      button "≡" id="owner-menu-trigger"
+  sheet position=bottom title="Menu":
+    list:
+      item "Owner session" id="owner-chip"
+      item "Lock" id="owner-lock"
+    divider
+    list:
+      item "Create Project"
+      item "Settings"
   panel:
     row justify=between:
       text "Projects" bold
@@ -136,7 +142,8 @@ window "Markdown Ticket Board — Owner Session":
       item "DEVPT — Dev process tracker"
 
 annotation "Create Project appears only after owner/admin session is established." target="create-project" position=left
-annotation "Lock clears server session cookie; it does not delete data." target="owner-chip" position=bottom
+annotation "Owner session and Lock are menu items, not inline header controls." target="owner-menu-trigger" position=bottom
+annotation "Lock clears server session cookie; it does not delete data." target="owner-lock" position=right
 ```
 
 ## Read token accepted

@@ -1,5 +1,6 @@
 import type { SortPreferences } from '../config/sorting'
-import { ArrowUpDown, Edit, Eye, EyeOff, KeyRound, Menu, Monitor, Moon, Plus, Settings, Sun, Trash2 } from 'lucide-react'
+import type { AccessMode } from '@/auth/AuthSessionContext'
+import { ArrowUpDown, Edit, Eye, EyeOff, KeyRound, LockKeyhole, Menu, Monitor, Moon, Plus, Settings, ShieldCheck, Sun, Trash2 } from 'lucide-react'
 import * as React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -18,6 +19,8 @@ interface HamburgerMenuProps {
   onSortPreferencesChange?: (preferences: SortPreferences) => void
   onOpenSettings?: () => void
   onUnlockOwnerAccess?: () => void
+  onLock?: () => Promise<void> | void
+  accessMode?: AccessMode
   canManageProjects?: boolean
   canManageSharing?: boolean
   canUseOwnerEndpoints?: boolean
@@ -31,6 +34,8 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   onSortPreferencesChange,
   onOpenSettings,
   onUnlockOwnerAccess,
+  onLock,
+  accessMode = 'unknown',
   canManageProjects = true,
   canManageSharing = canManageProjects,
   canUseOwnerEndpoints = canManageProjects,
@@ -113,6 +118,13 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
     onUnlockOwnerAccess?.()
   }
 
+  const handleLock = () => {
+    setIsOpen(false)
+    void onLock?.()
+  }
+
+  const showOwnerSession = accessMode === 'owner-admin'
+
   return (
     <div className="relative flex" ref={menuRef}>
       <Button
@@ -136,6 +148,27 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
           }}
         >
           <div className="py-1">
+            {showOwnerSession && (
+              <>
+                <div
+                  data-testid="auth-status-chip"
+                  className="flex items-center w-full px-4 py-2 text-sm text-foreground"
+                >
+                  <ShieldCheck className="h-4 w-4 mr-2 text-green-600 dark:text-green-400" />
+                  Owner session
+                </div>
+                <button
+                  data-testid="auth-lock-button"
+                  onClick={handleLock}
+                  className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                >
+                  <LockKeyhole className="h-4 w-4 mr-2" />
+                  Lock
+                </button>
+                <div className="my-1 border-t border-border" />
+              </>
+            )}
+
             {/**
               * @testid add-project-button — Button to open add project modal
               */}
