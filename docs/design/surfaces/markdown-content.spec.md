@@ -108,6 +108,15 @@ Markdown density is a browser-local visual preference. See `docs/architecture/pr
 - The Table of Contents is an external navigation affordance, not part of markdown flow.
 - Long links, file paths, and identifiers may wrap, but normal words should not break letter-by-letter.
 
+## Link Context
+
+- `sourcePath` is optional context for resolving relative markdown document references.
+- Ticket Viewer passes `{ticketCode}.md` for the main ticket document.
+- Ticket Viewer passes the selected `SubDocument.filePath` for sub-documents.
+- MarkdownContent and the markdown processor must treat `sourcePath` as context only. They must not infer ticket file paths from route segments or selected tab labels.
+- Existing markdown links, inline code, and fenced code stay protected before automatic document-reference conversion.
+- Automatic document-reference conversion only targets standalone relative `.md` references with optional anchors. URL-like and email-like tokens ending in `.md` are plain text unless authored as markdown links.
+
 ## States
 
 | State | Trigger | Visual Change |

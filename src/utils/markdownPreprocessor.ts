@@ -4,6 +4,23 @@ interface PreprocessorState {
   inlineCodePlaceholders: string[]
 }
 
+const DOCUMENT_REFERENCE_PATTERN = /(^|[\s([{<])((?:\.{1,2}\/|[\w.-]+\/)*[\w][\w.-]*\.md(?:#[A-Za-z0-9][A-Za-z0-9._~:/?#[\]@!$&'()*+,;=%-]*)?)(?=$|[\s)\]},>.,;:!?])/g
+
+function isRelativeMarkdownHref(href: string): boolean {
+  if (!/\.md(?:#[^\s)]*)?$/.test(href)) {
+    return false
+  }
+
+  if (/^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith('//') || href.startsWith('/')) {
+    return false
+  }
+
+  DOCUMENT_REFERENCE_PATTERN.lastIndex = 0
+  const isMatch = DOCUMENT_REFERENCE_PATTERN.test(` ${href}`)
+  DOCUMENT_REFERENCE_PATTERN.lastIndex = 0
+  return isMatch
+}
+
 /**
  * Safely replaces all occurrences of a placeholder with its content
  */
@@ -90,7 +107,7 @@ function protectExistingLinks(markdown: string, state: PreprocessorState, source
   return markdown.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, href) => {
     // MDT-150: Resolve relative .md hrefs in existing links
     let resolvedHref = href
-    if (sourcePath && ticketKey && projectCode && /\.md(#|$)/.test(href)) {
+    if (sourcePath && ticketKey && projectCode && isRelativeMarkdownHref(href)) {
       resolvedHref = resolveDocumentRef(href, sourcePath, ticketKey, projectCode, ticketsPath)
     }
     const resolvedMatch = resolvedHref !== href ? `[${text}](${resolvedHref})` : match
@@ -221,14 +238,14 @@ function convertDocumentReferences(
   projectCode?: string,
   ticketsPath?: string,
 ): string {
-  return markdown.replace(/(\S+\.md(?:#\S+)?)/g, (match, filename) => {
+  return markdown.replace(DOCUMENT_REFERENCE_PATTERN, (match, prefix, filename) => {
     // Match .md references that may have path prefixes like ../ ./. etc.
     // If we have sourcePath context, resolve to absolute URLs
     if (sourcePath && ticketKey && projectCode) {
       const resolved = resolveDocumentRef(filename, sourcePath, ticketKey, projectCode, ticketsPath)
       if (resolved !== filename) {
         // Successfully resolved — produce markdown link with absolute URL
-        return `[${filename}](${resolved})`
+        return `${prefix}[${filename}](${resolved})`
       }
     }
 
@@ -238,7 +255,7 @@ function convertDocumentReferences(
     if (ticketKeyPattern.test(filename)) {
       return match
     }
-    return `[${filename}](${filename})`
+    return `${prefix}[${filename}](${filename})`
   })
 }
 
