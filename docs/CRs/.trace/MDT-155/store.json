@@ -1,0 +1,376 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-155"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "WHEN a ticket subdocument is rendered, the system shall provide MarkdownContent a sourcePath derived from the selected SubDocument.filePath.",
+      "sourceRef": "CR Acceptance Criteria: sourcePath is constructed from subdocument.filePath",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "WHEN markdown text contains a standalone relative .md reference with an optional heading anchor, the system shall convert only that reference into a document link while preserving the anchor.",
+      "sourceRef": "CR Acceptance Criteria: .md#anchor links render as same-ticket subdocument links",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.3",
+      "kind": "behavior",
+      "text": "WHEN an absolute ticket subdocument route includes an optional heading anchor, the system shall classify it as a document link for the current project.",
+      "sourceRef": "CR Acceptance Criteria: resolved subdocument routes classify as document links",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "The document-reference conversion pattern shall not match markdown references embedded in URLs, email-like tokens, or protected markdown link/code placeholders.",
+      "sourceRef": "CR Scope: tighten convertDocumentReferences regex",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "The implementation shall preserve existing ticket, external, document, and anchor link classification behavior outside the MDT-155 cases.",
+      "sourceRef": "CR Scope: preserve SmartLink behavior",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "The MDT-155 implementation shall not modify MDT-152 quick-search RED test files.",
+      "sourceRef": "CR Acceptance Criteria: MDT-152 test files are not in the MDT-150 diff",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.4",
+      "kind": "behavior",
+      "text": "WHEN a relative markdown link href targets a .md file with a heading anchor, the system shall classify it as a document link and preserve the anchor.",
+      "sourceRef": "CR Acceptance Criteria: relative .md#section hrefs preserve the anchor during classification",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "The implementation shall preserve the existing frontend test suite with no regressions.",
+      "sourceRef": "CR Acceptance Criteria: All 77+ existing tests still pass",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "subdocument_sourcepath_uses_file_path",
+      "title": "Subdocument render uses discovered filePath",
+      "covers": [
+        "BR-1.1"
+      ],
+      "given": "a ticket has a discovered subdocument with filePath MDT-155/requirements.trace.md",
+      "when": "the user opens the requirements.trace subdocument",
+      "then": "MarkdownContent receives sourcePath MDT-155/requirements.trace.md",
+      "sourceRef": "CR:MDT-155"
+    },
+    {
+      "id": "standalone_markdown_refs_are_tight",
+      "title": "Standalone markdown references are converted tightly",
+      "covers": [
+        "BR-1.2"
+      ],
+      "given": "markdown contains standalone document references and non-reference tokens ending in .md",
+      "when": "the markdown preprocessor runs",
+      "then": "only standalone relative markdown references become document links and anchors are preserved",
+      "sourceRef": "CR:MDT-155"
+    },
+    {
+      "id": "absolute_subdoc_routes_are_documents",
+      "title": "Absolute ticket subdocument routes classify as documents",
+      "covers": [
+        "BR-1.3"
+      ],
+      "given": "a link href is /prj/MDT/ticket/MDT-175/requirements.trace.md#br-13",
+      "when": "the link processor classifies the href",
+      "then": "the result is a current-project document link with documentPath requirements.trace.md and anchor #br-13",
+      "sourceRef": "CR:MDT-155"
+    },
+    {
+      "id": "relative_markdown_anchor_links_are_documents",
+      "title": "Relative markdown href anchors remain document links",
+      "covers": [
+        "BR-1.4"
+      ],
+      "given": "a markdown link href is requirements.trace.md#br-13",
+      "when": "the link processor classifies the href",
+      "then": "the result is a document link with documentPath requirements.trace.md and anchor #br-13",
+      "sourceRef": "CR:MDT-155"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-sourcepath-filepath",
+      "title": "TicketViewer resolves the active subdocument and passes its filePath as MarkdownContent sourcePath",
+      "derivedFrom": [
+        "BR-1.1"
+      ],
+      "artifactIds": [
+        "ART-ticket-viewer",
+        "ART-ticket-viewer-test"
+      ],
+      "sourceRef": "architecture.md#ticketviewer-source-path"
+    },
+    {
+      "id": "OBL-tight-md-regex",
+      "title": "markdownPreprocessor converts only standalone relative markdown references and preserves anchors",
+      "derivedFrom": [
+        "BR-1.2",
+        "C1"
+      ],
+      "artifactIds": [
+        "ART-markdown-preprocessor",
+        "ART-markdown-preprocessor-test"
+      ],
+      "sourceRef": "architecture.md#markdown-reference-regex"
+    },
+    {
+      "id": "OBL-link-classification-preserved",
+      "title": "Existing linkProcessor document route classification remains covered by regression tests",
+      "derivedFrom": [
+        "BR-1.3",
+        "C2"
+      ],
+      "artifactIds": [
+        "ART-link-processor-test"
+      ],
+      "sourceRef": "architecture.md#link-classification-preservation"
+    },
+    {
+      "id": "OBL-no-mdt152-edits",
+      "title": "MDT-152 quick-search test files are excluded from implementation ownership",
+      "derivedFrom": [
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-ticket-viewer",
+        "ART-markdown-preprocessor"
+      ],
+      "sourceRef": "architecture.md#scope-exclusions"
+    },
+    {
+      "id": "OBL-relative-md-anchor-classification",
+      "title": "Relative markdown hrefs with anchors classify as document links with anchors preserved",
+      "derivedFrom": [
+        "BR-1.4",
+        "C2"
+      ],
+      "artifactIds": [
+        "ART-link-processor-test"
+      ],
+      "sourceRef": "architecture.md#link-classification-preservation"
+    },
+    {
+      "id": "OBL-full-existing-test-regression",
+      "title": "Existing frontend tests remain green after MDT-155 hardening",
+      "derivedFrom": [
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-ticket-viewer-test",
+        "ART-markdown-preprocessor-test",
+        "ART-link-processor-test"
+      ],
+      "sourceRef": "architecture.md#verification-contract"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-ticket-viewer",
+      "path": "src/components/TicketViewer/index.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#ticketviewer-source-path"
+    },
+    {
+      "id": "ART-ticket-viewer-test",
+      "path": "src/components/TicketViewer/TicketViewer.test.tsx",
+      "kind": "test",
+      "sourceRef": "tests.md#ticketviewer-source-path"
+    },
+    {
+      "id": "ART-markdown-preprocessor",
+      "path": "src/utils/markdownPreprocessor.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#markdown-reference-regex"
+    },
+    {
+      "id": "ART-markdown-preprocessor-test",
+      "path": "src/utils/markdownPreprocessor.mdt155.test.ts",
+      "kind": "test",
+      "sourceRef": "tests.md#markdown-reference-regex"
+    },
+    {
+      "id": "ART-link-processor-test",
+      "path": "src/utils/linkProcessor.mdt150.test.ts",
+      "kind": "test",
+      "sourceRef": "tests.md#link-classification-preservation"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-ticket-viewer-sourcepath",
+      "kind": "unit",
+      "title": "TicketViewer passes selected SubDocument.filePath to MarkdownContent",
+      "covers": [
+        "BR-1.1",
+        "OBL-sourcepath-filepath"
+      ],
+      "file": "src/components/TicketViewer/TicketViewer.test.tsx",
+      "sourceRef": "tests.md#ticketviewer-source-path"
+    },
+    {
+      "id": "TEST-markdown-reference-regex",
+      "kind": "unit",
+      "title": "markdownPreprocessor converts only standalone relative markdown references",
+      "covers": [
+        "BR-1.2",
+        "C1",
+        "OBL-tight-md-regex"
+      ],
+      "file": "src/utils/markdownPreprocessor.mdt155.test.ts",
+      "sourceRef": "tests.md#markdown-reference-regex"
+    },
+    {
+      "id": "TEST-link-processor-subdoc-anchor",
+      "kind": "unit",
+      "title": "linkProcessor classifies absolute ticket subdocument routes with anchors",
+      "covers": [
+        "BR-1.3",
+        "C2",
+        "OBL-link-classification-preserved"
+      ],
+      "file": "src/utils/linkProcessor.mdt150.test.ts",
+      "sourceRef": "tests.md#link-classification-preservation"
+    },
+    {
+      "id": "TEST-no-mdt152-diff",
+      "kind": "manual",
+      "title": "Git diff excludes MDT-152 quick-search test files",
+      "covers": [
+        "C3",
+        "OBL-no-mdt152-edits"
+      ],
+      "sourceRef": "tests.md#scope-exclusion-check"
+    },
+    {
+      "id": "TEST-relative-md-anchor-classification",
+      "kind": "unit",
+      "title": "linkProcessor classifies relative markdown hrefs with anchors",
+      "covers": [
+        "BR-1.4",
+        "OBL-relative-md-anchor-classification"
+      ],
+      "file": "src/utils/linkProcessor.mdt150.test.ts",
+      "sourceRef": "tests.md#link-classification-preservation"
+    },
+    {
+      "id": "TEST-existing-frontend-suite",
+      "kind": "unit",
+      "title": "Existing frontend suite remains green",
+      "covers": [
+        "C4",
+        "OBL-full-existing-test-regression"
+      ],
+      "sourceRef": "tests.md#full-regression-check"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-2",
+      "title": "Use selected SubDocument.filePath for TicketViewer sourcePath",
+      "ownsArtifactIds": [
+        "ART-ticket-viewer"
+      ],
+      "makesGreenIds": [
+        "subdocument_sourcepath_uses_file_path",
+        "TEST-ticket-viewer-sourcepath"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-2"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Tighten markdownPreprocessor document reference matching",
+      "ownsArtifactIds": [
+        "ART-markdown-preprocessor"
+      ],
+      "makesGreenIds": [
+        "standalone_markdown_refs_are_tight",
+        "TEST-markdown-reference-regex"
+      ],
+      "sourceRef": "tasks.md#task-3"
+    },
+    {
+      "id": "TASK-1",
+      "title": "Add focused MDT-155 regression tests",
+      "ownsArtifactIds": [
+        "ART-ticket-viewer-test",
+        "ART-markdown-preprocessor-test",
+        "ART-link-processor-test"
+      ],
+      "makesGreenIds": [
+        "TEST-ticket-viewer-sourcepath",
+        "TEST-markdown-reference-regex",
+        "TEST-link-processor-subdoc-anchor",
+        "TEST-relative-md-anchor-classification"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-1"
+    },
+    {
+      "id": "TASK-4",
+      "title": "Verify link preservation, full regression, and MDT-152 exclusion",
+      "ownsArtifactIds": [
+        "ART-link-processor-test",
+        "ART-ticket-viewer",
+        "ART-markdown-preprocessor"
+      ],
+      "makesGreenIds": [
+        "absolute_subdoc_routes_are_documents",
+        "relative_markdown_anchor_links_are_documents",
+        "TEST-link-processor-subdoc-anchor",
+        "TEST-relative-md-anchor-classification",
+        "TEST-existing-frontend-suite",
+        "TEST-no-mdt152-diff"
+      ],
+      "sourceRef": "tasks.md#task-4"
+    }
+  ]
+}

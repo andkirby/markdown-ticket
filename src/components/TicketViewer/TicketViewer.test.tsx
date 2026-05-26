@@ -29,14 +29,17 @@ mock.module('../MarkdownContent', () => ({
     markdown,
     className,
     headerLevelStart,
+    sourcePath,
   }: {
     markdown: string
     className?: string
     headerLevelStart?: number
+    sourcePath?: string
   }) => (
     <article
       data-testid="markdown-content"
       data-header-level-start={headerLevelStart}
+      data-source-path={sourcePath}
       className={className}
     >
       {markdown}
@@ -207,6 +210,24 @@ describe('TicketViewer', () => {
     renderTicketViewer()
 
     expect(document.title).toBe('MDT-173 - Markdown typography variants - Architecture')
+    await waitFor(() => expect(fetchTraceStoreMetadata).toHaveBeenCalled())
+  })
+
+  it('passes the selected subdocument filePath as MarkdownContent sourcePath', async () => {
+    selectedPath = 'docs/CRs/architecture'
+    liveSubdocuments = [{
+      name: 'architecture',
+      kind: 'file',
+      filePath: 'docs/CRs/MDT-173/architecture.md',
+      children: [],
+    }]
+
+    renderTicketViewer()
+
+    expect(screen.getByTestId('markdown-content')).toHaveAttribute(
+      'data-source-path',
+      'docs/CRs/MDT-173/architecture.md',
+    )
     await waitFor(() => expect(fetchTraceStoreMetadata).toHaveBeenCalled())
   })
 
