@@ -15,8 +15,7 @@ AppRoot
 │   ├── ProjectSelector / current project controls (conditional)
 │   └── AuthStatusAction
 │       ├── Locked chip + Unlock button
-│       ├── Read-only chip + Unlock button
-│       └── Owner session chip + Lock button
+│       └── Owner/admin hidden; Owner session + Lock live in HamburgerMenu
 └── MainContent
     ├── AuthUnlockPanel (owner unlock request or owner-only 401)
     ├── ReadOnlyProjectBoard/List/Documents (public share or scoped read token)
@@ -57,7 +56,7 @@ AuthUnlockPanel
 | `error` | invalid token/session failure | AuthUnlockPanel with inline error | edit token, retry |
 | `read-only` | anonymous public project, share session, or accepted read token | normal app with one read-only chip; owner actions hidden; hamburger shows `Unlock access` | view, search, sort, open tickets/docs, unlock with owner token |
 | `read-only-owner-unlock` | read-only visitor selects `Unlock access` from hamburger menu | owner-token modal/sheet over current board | enter owner token, cancel back to board |
-| `owner-admin` | session cookie accepted | normal app; owner chip in header | all admin actions, lock/logout |
+| `owner-admin` | session cookie accepted | normal app; owner session + Lock inside hamburger menu | all admin actions, lock/logout |
 | `no-auth-dev` | backend auth disabled, or legacy local backend has no `/api/auth/session` and still returns projects | normal app; no header auth chip; no unlock affordance | all current local-dev actions |
 | `backend-down` | network error / 5xx | existing backend-down state | retry |
 
@@ -117,7 +116,7 @@ The frontend must not write the token to `localStorage`, `sessionStorage`, index
 
 - Locked: small outline chip "Locked" + `Unlock` button.
 - Read-only: single small outline chip "Read only". The owner-upgrade entry is `Unlock access` inside the hamburger menu, not an inline header button.
-- Owner/admin: small success/neutral chip "Owner session" + secondary `Lock` button.
+- Owner/admin: no inline auth chip. The hamburger menu shows a non-clickable "Owner session" row and a `Lock` menu item.
 
 ### Read-only owner unlock overlay
 
@@ -150,7 +149,7 @@ The frontend must not write the token to `localStorage`, `sessionStorage`, index
 - Error text is announced with `role="alert"`.
 - Unlock button is disabled while submitting and while token field is empty.
 - Focus moves to token input when locked state first appears.
-- Header Lock action is keyboard reachable and has confirmation only if session-sensitive work is in progress.
+- Hamburger Lock action is keyboard reachable and has confirmation only if session-sensitive work is in progress.
 
 ## Read-only boundary
 

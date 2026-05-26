@@ -2,16 +2,14 @@ import type { AccessMode } from '@/auth/AuthSessionContext'
 
 interface AuthStatusActionProps {
   accessMode: AccessMode
-  onLock?: () => Promise<void> | void
   onUnlockClick?: () => void
 }
 
-export function AuthStatusAction({ accessMode, onLock, onUnlockClick }: AuthStatusActionProps) {
-  if (accessMode === 'no-auth-dev' || accessMode === 'read-only') {
+export function AuthStatusAction({ accessMode, onUnlockClick }: AuthStatusActionProps) {
+  if (accessMode === 'no-auth-dev' || accessMode === 'read-only' || accessMode === 'owner-admin') {
     return null
   }
 
-  const owner = accessMode === 'owner-admin'
   const canUnlock = accessMode === 'locked'
   const label = {
     'unknown': 'Checking auth',
@@ -27,24 +25,16 @@ export function AuthStatusAction({ accessMode, onLock, onUnlockClick }: AuthStat
       <span data-testid="auth-status-chip" className="rounded-full border border-border px-2 py-1 text-xs">
         {label}
       </span>
-      {owner
-        ? (
-            <button data-testid="auth-lock-button" type="button" className="text-sm" onClick={() => void onLock?.()}>
-              Lock
-            </button>
-          )
-        : canUnlock
-          ? (
-              <button
-                data-testid="auth-unlock-affordance"
-                type="button"
-                className="text-sm"
-                onClick={onUnlockClick}
-              >
-                Unlock
-              </button>
-            )
-          : null}
+      {canUnlock && (
+        <button
+          data-testid="auth-unlock-affordance"
+          type="button"
+          className="text-sm"
+          onClick={onUnlockClick}
+        >
+          Unlock
+        </button>
+      )}
     </div>
   )
 }

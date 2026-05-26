@@ -17,6 +17,17 @@ describe('AuthStatusAction', () => {
     expect(screen.queryByTestId('auth-status-chip')).toBeNull()
   })
 
+  it('does not render owner session because the hamburger menu owns it', () => {
+    render(
+      <AuthStatusAction
+        accessMode="owner-admin"
+      />,
+    )
+
+    expect(screen.queryByTestId('auth-status-chip')).toBeNull()
+    expect(screen.queryByTestId('auth-lock-button')).toBeNull()
+  })
+
   it('keeps locked unlock as an explicit action', () => {
     const onUnlockClick = mock()
 

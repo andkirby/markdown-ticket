@@ -367,7 +367,6 @@ function ProjectRouteHandler() {
               )}
               <AuthStatusAction
                 accessMode={accessMode}
-                onLock={handleLock}
                 onUnlockClick={handleUnlockClick}
               />
               <SecondaryHeader
@@ -379,6 +378,8 @@ function ProjectRouteHandler() {
                 selectedProject={selectedProject}
                 onOpenSettings={() => setShowSettings(true)}
                 onUnlockOwnerAccess={accessMode === 'read-only' ? handleUnlockClick : undefined}
+                onLock={handleLock}
+                accessMode={accessMode}
                 canManageProjects={canManageProjects}
                 canManageSharing={canManageSharing}
                 canUseOwnerEndpoints={canUseOwnerEndpoints}
