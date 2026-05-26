@@ -77,6 +77,11 @@ export function RedirectToCurrentProject() {
     if (loading || authRefreshInFlight || accessMode === 'unknown' || (accessMode === 'locked' && !isBackendDown))
       return
 
+    if (accessMode === 'read-only' && projects.length === 0 && !isBackendDown) {
+      markLocked()
+      return
+    }
+
     const currentProject = getCurrentProject()
 
     if (currentProject && projects.some(p => getProjectCode(p) === currentProject)) {
@@ -91,7 +96,7 @@ export function RedirectToCurrentProject() {
       // No projects available, stay on root and show empty state
       // This will be handled by the main app
     }
-  }, [accessMode, authRefreshInFlight, isBackendDown, navigate, projects, loading])
+  }, [accessMode, authRefreshInFlight, isBackendDown, markLocked, navigate, projects, loading])
 
   const handleUnlock = async (token: string) => {
     setUnlockError(null)

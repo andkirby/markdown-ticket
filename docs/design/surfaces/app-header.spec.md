@@ -78,7 +78,7 @@ nav.main-nav
 | documents view | viewMode=documents | SortControls hidden, ViewModeSwitcher shows documents active |
 | public read-only | anonymous visitor opens shared project | single `Read only` badge in nav; hamburger includes `Unlock access`; owner/admin menu items are not mounted |
 | token read-only | visitor has scoped read token | single `Read only` badge in nav; hamburger includes `Unlock access`; visible projects include token scope; owner/admin menu items are not mounted |
-| owner/admin | valid write/admin access | no inline auth chip; hamburger menu shows "Owner session" and `Lock`; project mutation menu items available |
+| owner/admin | valid write/admin access | no inline auth chip; hamburger menu includes `Lock`; project mutation menu items available |
 | no-auth-dev | auth disabled locally | AuthStatusAction hidden; local project mutation menu items available |
 
 ## Responsive
@@ -105,17 +105,16 @@ The hamburger menu is the only structured action menu. Current items in order:
 
 | Order | Item | Icon | Condition |
 |-------|------|------|-----------|
-| 1 | Owner session | `ShieldCheck` | owner/admin only, non-clickable status row |
-| 2 | Lock | `LockKeyhole` | owner/admin only |
-| 3 | Add Project | `Plus` | owner/admin only |
-| 4 | Edit Project | `Edit` | owner/admin only and when a project is selected |
-| 5 | Unlock access | `KeyRound` | read-only only |
-| 6 | Sort by (mobile) | — | mobile only, board/list view |
-| 7 | Sort direction (mobile) | `ArrowUpDown` | mobile only, board/list view |
-| 8 | Clear Cache | `Trash2` | always; read-only clears browser storage only, owner/admin may also clear backend cache |
-| 9 | Event History | `Eye`/`EyeOff` | when event history is available |
-| 10 | Settings | `Settings` | owner/admin only |
-| 11 | Theme selector | `Sun`/`Moon`/`Monitor` | always (quick access, also in Settings) |
+| 1 | Lock | `LockKeyhole` | owner/admin only |
+| 2 | Add Project | `Plus` | owner/admin only |
+| 3 | Edit Project | `Edit` | owner/admin only and when a project is selected |
+| 4 | Unlock access | `KeyRound` | read-only only |
+| 5 | Sort by (mobile) | — | mobile only, board/list view |
+| 6 | Sort direction (mobile) | `ArrowUpDown` | mobile only, board/list view |
+| 7 | Clear Cache | `Trash2` | always; read-only clears browser storage only, owner/admin may also clear backend cache |
+| 8 | Event History | `Eye`/`EyeOff` | when event history is available |
+| 9 | Settings | `Settings` | owner/admin only |
+| 10 | Theme selector | `Sun`/`Moon`/`Monitor` | always (quick access, also in Settings) |
 
 The menu is a positioned dropdown: `absolute right-0 top-full mt-1 w-48`, with click-outside-to-close behavior.
 
@@ -124,7 +123,8 @@ The menu is a positioned dropdown: `absolute right-0 top-full mt-1 w-48`, with c
 - New header-level features MUST choose between nav-left, nav-right, or hamburger menu — no new floating elements.
 - If the hamburger menu grows beyond the current action set, consider splitting into a dedicated settings surface.
 - Access-token entry is owned by `AuthStatusAction` and `AuthUnlockPanel`; do not add a second persistent header form.
-- Owner session state and Lock are owned by `HamburgerMenu`; do not render a second owner chip or Lock button inline in the nav.
+- Owner lock/logout is owned by `HamburgerMenu`; do not render owner-session status text inside the action menu or as a second inline chip.
+- `Lock` clears owner/admin privileges only. If the current project is still visible through public/share/read-token access, the header must downgrade to the single `Read only` badge and keep the current route visible.
 - Owner/admin-only actions must not be mounted in read-only mode. Backend authorization remains authoritative, but hidden components must not run owner-only effects.
 - Frontend API calls to `/api/*` must go through `authFetch` or an approved API wrapper so session cookies and owner-intent headers are applied consistently.
 - Future settings entry point: Settings item in the hamburger menu opens the dedicated Settings modal. See `settings.spec.md`.

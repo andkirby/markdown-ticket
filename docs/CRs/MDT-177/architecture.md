@@ -169,6 +169,8 @@ State ownership:
 
 The owner-upgrade submit path posts only to `/api/auth/session`. A bad owner token must not clear the existing read session or move the visitor to a full locked screen.
 
+Owner Lock is the reverse downgrade, not a global access clear. It deletes the owner session, reloads backend-filtered visible projects, and leaves public/share/read-token access active. If the current project remains visible, the same board/list/documents route stays mounted with owner controls removed and the read-only badge shown. If no non-owner project remains visible, the UI converges to the locked unlock panel.
+
 ## Project Selector
 
 ProjectSelector remains a display and navigation surface, not an authorization layer. Visible projects come from backend-filtered `/api/projects`:

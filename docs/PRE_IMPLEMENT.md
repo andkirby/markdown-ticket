@@ -9,10 +9,11 @@
 ## Table of Contents
 
 1. [Type-Safe Enum Pattern](#type-safe-enum-pattern)
-2. [Verification & Validation Workflow](#verification--validation-workflow)
-3. [Code Quality Tools](#code-quality-tools)
-4. [Testing Strategy](#testing-strategy)
-5. [Build & Development Workflow](#build--development-workflow)
+2. [Auth and Permission Boundary](#auth-and-permission-boundary)
+3. [Verification & Validation Workflow](#verification--validation-workflow)
+4. [Code Quality Tools](#code-quality-tools)
+5. [Testing Strategy](#testing-strategy)
+6. [Build & Development Workflow](#build--development-workflow)
 
 ---
 
@@ -108,6 +109,33 @@ const options = CRTypes.map(type => ({ value: type, label: type }))
 
 - **MDT-101**: Domain contracts package as single source of truth for all CR enums
 - **Type suffix**: `Value` suffix for inferred types avoids naming conflicts with const objects
+
+---
+
+## Auth and Permission Boundary
+
+Before implementing any editing form, mutation modal, settings panel, filesystem picker, drag/drop mutation, or write-capable toolbar action, read [Authentication and Sharing Architecture](architecture/auth-and-sharing-architecture.md) and [Auth Session Guide](AUTH_SESSION_GUIDE.md).
+
+### Required Pattern
+
+- Use `useAuthSession()` capability flags for UI decisions.
+- Owner/admin and local no-auth-dev can write; read-only and locked cannot.
+- Owner-only components must not be mounted in read-only mode if they run API effects.
+- All frontend `/api/*` calls must go through `authFetch` or an approved API wrapper.
+- Browser-session mutations must pass `ownerIntent: true`.
+- Backend route policy is authoritative. UI hiding is not security.
+
+### Form Checklist
+
+For every new write-capable form or modal:
+
+1. Add a capability boundary to the relevant `docs/design/surfaces/*.spec.md`.
+2. Hide or do not mount the form unless the matching capability is true.
+3. Add backend denial coverage for read-only direct API calls.
+4. Add UI/E2E coverage proving read-only users cannot reach the form.
+5. Check refresh behavior so hidden forms do not call owner-only endpoints.
+
+If the form edits tickets, projects, sharing, filesystem paths, documents, config, or token access, this checklist is mandatory.
 
 ---
 

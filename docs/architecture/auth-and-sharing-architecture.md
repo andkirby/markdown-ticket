@@ -230,6 +230,39 @@ The frontend uses backend-provided access context/capabilities to shape the UI:
 
 The UI is advisory. Backend authorization is the enforcement layer.
 
+## Editing Form Integration Contract
+
+Every new editing form, mutation modal, settings panel, wizard, or toolbar action must integrate with this access model before implementation is considered complete.
+
+Use this contract for ticket edit forms, project edit forms, settings forms, document configuration forms, filesystem pickers, token/share controls, drag/drop mutation surfaces, and any future write-capable UI.
+
+Required frontend integration:
+
+- Read capability flags from `useAuthSession()` instead of inventing local auth checks.
+- Mount owner-only forms only when the matching capability is true. Passing `isOpen=false` is not enough if child components run effects.
+- Hide write actions in read-only and locked modes. Do not render disabled private-project placeholders that reveal names or counts.
+- Use `authFetch` or an approved API wrapper for every `/api/*` call so cookies and owner-intent headers are applied consistently.
+- Send `ownerIntent: true` for browser cookie-backed mutations that require owner/admin access.
+- Treat `401` as an auth/session state, `403` as denied capability, and private/missing project access as generic not found.
+- Preserve read-only journeys: opening owner unlock from read-only must be recoverable and must not clear an existing read session on bad owner-token input.
+- Treat owner Lock as a privilege downgrade. It clears owner/admin access, reloads visible projects, and keeps the current route visible when public/share/read-token access still allows it. Only show the locked unlock panel when no non-owner project access remains.
+
+Required backend integration:
+
+- Classify every new route as public-read, owner-only, or read-only mutation-denied in the centralized access policy.
+- Derive project visibility from the resolved request access context; do not parse credentials inside route handlers.
+- Return sanitized project/document/ticket data for read-only principals and never include private paths/config metadata unless owner/admin.
+- Enforce writes server-side even when the UI hides controls.
+- Add focused tests for anonymous, read-only, owner/admin, and local no-auth behavior when the route or form changes access-sensitive behavior.
+
+Minimum tests for a write-capable UI:
+
+- owner/admin can complete the mutation;
+- read-only cannot see or submit the mutation control;
+- direct read-only API mutation returns `403`;
+- locked or missing owner session does not look like an empty data state;
+- refresh preserves the correct access mode and does not trigger owner-only endpoint probes from hidden forms.
+
 ## MCP Boundary
 
 MCP stdio remains local and unchanged by public sharing.
@@ -291,6 +324,8 @@ src/config/projectSharing.ts
 ```
 
 Keep route policy centralized. Do not scatter one-off checks inside each controller except where the controller maps access errors to HTTP status.
+
+When adding a form or mutation surface, update the surface spec under `docs/design/surfaces/` with its capability boundary and test hooks. UX specs are part of the access contract, not decoration.
 
 ## Ticket Review Notes
 

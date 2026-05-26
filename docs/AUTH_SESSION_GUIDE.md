@@ -58,7 +58,9 @@ Exchanges the configured owner token for a browser owner session cookie. Invalid
 
 ### `DELETE /api/auth/session`
 
-Logs out / locks the browser session. The backend invalidates current owner sessions and clears the browser cookie. The UI clears owner-only state, hides admin controls, and returns to the locked state. When backend auth is disabled for local development, no browser unlock UI is shown.
+Locks owner/admin access for the browser. The backend invalidates current owner sessions and clears the owner cookie. The UI clears owner-only state, hides admin controls, and reloads visible projects.
+
+If public, share, or scoped read-token access still exposes the current project, the UI stays on the same board/list/documents route in read-only mode. It returns to the locked unlock panel only when no non-owner project access remains. When backend auth is disabled for local development, no browser unlock UI is shown.
 
 ## Cookie behavior
 
@@ -83,11 +85,23 @@ The frontend `authFetch` boundary adds the owner intent header for browser mutat
 
 Bearer and `X-API-Key` API clients are authenticated by their request headers and are not rejected for missing `X-MDT-Owner-Intent` when no owner session cookie is used.
 
+## Frontend mutation integration
+
+New write-capable UI must use the auth-session capability model:
+
+- Use `useAuthSession()` capability flags such as `canWriteTickets`, `canManageProjects`, `canManageSharing`, and `canUseOwnerEndpoints`.
+- Do not mount owner-only forms, modals, filesystem pickers, or settings panels for read-only or locked visitors.
+- Use `authFetch` or an approved API wrapper for `/api/*` calls.
+- Pass `ownerIntent: true` for browser-session mutations.
+- Keep read-only recovery intact: owner unlock from read-only is a modal/menu journey, not a full locked-page trap.
+
+Before shipping a new edit form, also update the relevant UX surface spec and include tests that prove read-only visitors cannot see the form and cannot call the backend mutation directly.
+
 ## Logout / lock behavior
 
 Use the UI Lock / Logout action to end the browser owner session. It calls `DELETE /api/auth/session`, clears the owner cookie, disconnects stale owner event streams, and reloads project state without owner-only controls.
 
-After logout, protected API calls return to the locked behavior until the operator unlocks again.
+After logout, protected owner-only API calls return to locked/denied behavior until the operator unlocks again. Public and read-token access remain available according to sharing rules.
 
 ## Local no-auth development
 
@@ -109,4 +123,4 @@ Never bake the owner token into a frontend image or publish it in documentation,
 
 ## MDT-172 sequencing and compatibility
 
-MDT-176 must ship before MDT-172. MDT-176 adds authentication state, browser unlock, logout, and response semantics for public/locked/owner states. It does not implement MDT-172 project sharing, authorization filtering, or public-read permissions. Public project filtering remains a future MDT-172 responsibility.
+MDT-176 shipped before MDT-172. MDT-176 added authentication state, browser unlock, logout, and response semantics for locked/owner states. MDT-172 added public project filtering and read-only authorization. Current code must treat owner lock as a downgrade to the best available non-owner access, not as unconditional full lockout.

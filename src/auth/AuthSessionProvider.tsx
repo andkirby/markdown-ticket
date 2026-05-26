@@ -51,7 +51,6 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
     setAccessMode((current) => {
       if (
         current === 'backend-down'
-        || current === 'owner-admin'
         || current === 'no-auth-dev'
         || current === 'locked'
       ) {
@@ -147,12 +146,28 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
 
   const lock = useCallback(async () => {
     try {
-      await authFetch('/api/auth/session', { method: 'DELETE', ownerIntent: true })
+      const response = await authFetch('/api/auth/session', { method: 'DELETE', ownerIntent: true })
+      if (isBackendDownResponse(response)) {
+        markBackendDown()
+        return
+      }
+
+      if (!response.ok && !isAuthRequiredResponse(response)) {
+        setSessionStatus('error')
+        return
+      }
+
+      markUnauthenticatedSession()
     }
-    finally {
-      markLocked()
+    catch (error) {
+      if (isBackendDownError(error)) {
+        markBackendDown()
+        return
+      }
+
+      setSessionStatus('error')
     }
-  }, [markLocked])
+  }, [markBackendDown, markUnauthenticatedSession])
 
   useEffect(() => {
     let cancelled = false
