@@ -31,6 +31,7 @@ Canonical requirements live in spec-trace and are rendered in [requirements.trac
 | C9 | architecture.md route ownership; tests.md owner-only management API coverage |
 | C10 | tests.md Playwright plan for MDT-177 journeys |
 | C11 | architecture.md project visibility filtering; tests.md privacy boundary coverage |
+| C12 | architecture.md domain-contract ownership; tests.md schema contract coverage |
 
 ## Non-Ambiguity Table
 
@@ -53,3 +54,7 @@ Canonical requirements live in spec-trace and are rendered in [requirements.trac
 - BDD should cover the owner token creation, invite exchange, token project switching, share-link merge, unlock cancel, bad-token recovery, allowed-origin selection, revoke/expiry, and user-visible read-only control journeys.
 - Architecture must keep named-token owner CRUD separate from public invite exchange and preserve env-token compatibility unless it records an explicit MDT-177 deprecation decision.
 - Tests must include Playwright coverage for MDT-177 journeys and backend read-only mutation denial, not only unit and API contracts.
+
+## UAT Refinement 2026-05-24
+
+The read-access boundary contracts are part of MDT-177 and must not stay as parallel local TypeScript interfaces. Access-mode vocabulary, auth capability flags, public-link-origin response shape, and read-token management API DTOs belong in `domain-contracts`. Runtime policy, route authorization, cookie handling, and token persistence internals stay in server modules.

@@ -8,7 +8,10 @@
  * - Clean separation: ONLY handles SSE, no business logic
  */
 
+import type { AccessMode, RequestAccessMode } from '@mdt/domain-contracts'
 import { eventBus } from './eventBus'
+
+type SSEAccessMode = AccessMode | RequestAccessMode
 
 interface SSEMessageData {
   type: string
@@ -70,7 +73,7 @@ class SSEClient {
   private url: string = ''
   private isConnected = false
   private suppressed = false
-  private accessMode: string | null = null
+  private accessMode: SSEAccessMode | null = null
 
   // Event deduplication tracking
   private processedEventIds = new Set<string>()
@@ -210,11 +213,11 @@ class SSEClient {
     }
   }
 
-  getAccessMode(): string | null {
+  getAccessMode(): SSEAccessMode | null {
     return this.accessMode
   }
 
-  setAccessMode(accessMode: string | null): void {
+  setAccessMode(accessMode: SSEAccessMode | null): void {
     this.accessMode = accessMode
   }
 
@@ -226,7 +229,7 @@ class SSEClient {
     reconnectAttempts: number
     url: string
     readyState: number | null
-    accessMode: string | null
+    accessMode: SSEAccessMode | null
   } {
     return {
       isConnected: this.isConnected,
@@ -496,7 +499,7 @@ class SSEClient {
 // Export singleton instance
 const sseClient = new SSEClient()
 
-export function syncSSEAccessMode(accessMode: string, options: { forceReconnect?: boolean } = {}): void {
+export function syncSSEAccessMode(accessMode: SSEAccessMode, options: { forceReconnect?: boolean } = {}): void {
   if (typeof window === 'undefined') {
     return
   }

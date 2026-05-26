@@ -32,9 +32,22 @@ src/
 tests/
   e2e/sharing/read-access-journey.spec.ts
   e2e/utils/selectors.ts
+domain-contracts/
+  src/access/schema.ts       # access vocabulary and read-token API DTO owner
 ```
 
 Runtime code owns token/session behavior. The Playwright spec and selector constants are test scaffolding only and must not become production dependencies.
+
+## Domain Contracts Boundary
+
+`domain-contracts/src/access/schema.ts` owns schema-first boundary shapes shared across frontend, backend, and tests:
+
+- access-mode and session-status vocabulary
+- owner/read-only capability flags
+- public-link-origin response options
+- read-token list, create, invite, and invite-session response DTOs
+
+Server policy remains outside `domain-contracts`: route allow/deny decisions, cookie parsing/signing, read-session merge behavior, and read-token store persistence internals stay in `server/security/*` and `server/routes/*`.
 
 ## Read Token Store
 
@@ -184,6 +197,8 @@ Frontend hiding improves UX but is never the security boundary.
 `tests/e2e/sharing/read-access-journey.spec.ts` is architecture-owned E2E coverage for MDT-177 and must carry into the tests stage. It covers named token creation, invite URL cleanup, project switching, share merge, unlock cancel, bad unlock recovery, origin selection, revoke/invalid invite paths, and read-only control suppression.
 
 `tests/e2e/utils/selectors.ts` owns the stable selector contract for the Settings token UI, invite exchange error, read-only badge, and owner-unlock overlay.
+
+`domain-contracts/src/access/__tests__/schema.test.ts` owns schema coverage for shared access/read-token DTOs. It prevents server and UI code from reintroducing parallel contract interfaces.
 
 ## Invariants
 

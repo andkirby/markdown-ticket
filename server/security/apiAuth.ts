@@ -1,3 +1,4 @@
+import type { RequestAccessMode } from '@mdt/domain-contracts'
 import type { NextFunction, Request, Response } from 'express'
 import { Buffer } from 'node:buffer'
 import { timingSafeEqual } from 'node:crypto'
@@ -8,8 +9,6 @@ import { createReadTokenStore } from './readTokenStore.js'
 
 const EXEMPT_API_ROUTES = new Set(['/api/status', '/api/health'])
 export const OWNER_INTENT_HEADER = 'x-mdt-owner-intent'
-
-export type RequestAccessMode = 'anonymous' | 'read-only' | 'owner-admin' | 'no-auth-dev'
 
 export interface RequestAccessContext {
   canWrite: boolean

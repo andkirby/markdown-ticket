@@ -3,6 +3,9 @@
  * Clean public API re-exporting all production modules
  */
 
+// Export access and sharing boundary contracts
+export * from './access'
+
 // Export application config contracts
 export * from './app-config'
 

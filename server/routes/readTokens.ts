@@ -1,3 +1,8 @@
+import type {
+  ReadTokenInviteResponse,
+  ReadTokenInviteSessionResponse,
+  ReadTokenListResponse,
+} from '@mdt/domain-contracts'
 import type { Request, Response } from 'express'
 import type { RuntimeConfig } from '../config/runtimeConfig.js'
 import type { TokenResolution } from '../security/readTokenStore.js'
@@ -36,10 +41,11 @@ export function createPublicReadTokensRouter(): Router {
         secure: shouldUseSecureSessionCookie(req, runtimeConfig.nodeEnv),
       })
 
-      res.json({
+      const response: ReadTokenInviteSessionResponse = {
         authenticated: true,
         projectRefs: token.projectRefs,
-      })
+      }
+      res.json(response)
     }
     catch {
       res.status(401).json({ error: 'Invite was not accepted' })
@@ -58,10 +64,11 @@ export function createReadTokensRouter(): Router {
       return
     }
 
-    res.json({
+    const response: ReadTokenListResponse = {
       tokens: await getReadTokenStore(req).listTokens(),
       linkOrigins: getPublicLinkOriginOptions(req),
-    })
+    }
+    res.json(response)
   })
 
   router.post('/', async (req: Request, res: Response) => {
@@ -101,10 +108,11 @@ export function createReadTokensRouter(): Router {
       if (allowsEphemeralInviteFallback(req)) {
         ephemeralInvites.set(invite.code, await getReadTokenStore(req).resolveTokenById(req.params.tokenId))
       }
-      res.status(201).json({
+      const response: ReadTokenInviteResponse = {
         expiresAt: invite.expiresAt,
         inviteUrl: `${origin}/invite/${encodeURIComponent(invite.code)}`,
-      })
+      }
+      res.status(201).json(response)
     }
     catch (error) {
       sendRejected(error, res)

@@ -1,4 +1,4 @@
-import type { PublicLinkOriginOptions } from '@mdt/shared/models/PublicLinkOrigin'
+import type { PublicLinkOriginOptions } from '@mdt/domain-contracts'
 import { createOriginPolicy } from './originPolicy.js'
 
 export interface PublicLinkOriginInput {

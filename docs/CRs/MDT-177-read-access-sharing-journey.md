@@ -72,6 +72,7 @@ Add named read access tokens with server-generated one-time invite links that ex
 | `server/security/readSession.ts` | Behavior changed | Merge projectRefs/shareIds when issuing a new read session for an existing visitor |
 | `server/routes/share.ts` | Behavior changed | Preserve existing read-cookie grants when opening `/share/{shareId}` |
 | `server/security/publicLinkOrigins.ts` | Module added | Resolve server-approved public link origin options for generated links |
+| `domain-contracts/src/access/schema.ts` | Contract added | Own access-mode, capability, public-link-origin, and read-token API DTO schemas |
 | `server/server.ts` | Route added | Mount read-token management routes behind owner/admin protection |
 | `src/components/SettingsModal.tsx` | UI changed | Add read-token management section that uses the server-selected link origin |
 | `src/components/AuthUnlock/` | UI changed | Make owner unlock a recoverable overlay from read-only mode |
@@ -155,3 +156,13 @@ Add named read access tokens with server-generated one-time invite links that ex
 5. Reconcile the pipeline output with the UX design artifacts; update specs/mockups if the pipeline finds gaps.
 6. Run `mdt:implement` against the resulting tasks.
 7. Run code review with a teammate, apply fixes, then ask the teammate to double-check.
+
+## 9. Clarifications
+
+### UAT Session 2026-05-24
+
+- Approved change: extract pure access/read-token boundary contracts into `domain-contracts`.
+- Changed requirement IDs: added `C12`.
+- Updated workflow documents: `requirements.md`, `architecture.md`, `tests.md`, `tasks.md`, trace projections, and `uat.md`.
+- Implementation scope: access/session vocabulary, auth capability shape, public-link-origin DTO, read-token list/create/invite response DTOs.
+- Out of scope: cookie/session internals, route authorization policy, token-store persistence format, and UI behavior changes.
