@@ -20,7 +20,7 @@ describe('HamburgerMenu', () => {
     cleanup()
   })
 
-  it('shows owner session and lock inside the menu for owner-admin access', () => {
+  it('shows lock inside the menu for owner-admin access', () => {
     const onLock = mock()
 
     render(
@@ -32,10 +32,23 @@ describe('HamburgerMenu', () => {
 
     fireEvent.click(screen.getByTestId('hamburger-menu'))
 
-    expect(screen.getByTestId('auth-status-chip')).toHaveTextContent('Owner session')
-
     fireEvent.click(screen.getByTestId('auth-lock-button'))
 
     expect(onLock).toHaveBeenCalled()
+  })
+
+  it('does not show owner lock actions for read-only access', () => {
+    render(
+      <HamburgerMenu
+        accessMode="read-only"
+        onLock={mock()}
+        canUseOwnerEndpoints={false}
+      />,
+    )
+
+    fireEvent.click(screen.getByTestId('hamburger-menu'))
+
+    expect(screen.queryByTestId('auth-status-chip')).toBeNull()
+    expect(screen.queryByTestId('auth-lock-button')).toBeNull()
   })
 })

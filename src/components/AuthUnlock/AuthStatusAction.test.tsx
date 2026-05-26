@@ -17,7 +17,7 @@ describe('AuthStatusAction', () => {
     expect(screen.queryByTestId('auth-status-chip')).toBeNull()
   })
 
-  it('does not render owner session because the hamburger menu owns it', () => {
+  it('does not render owner session status inline', () => {
     render(
       <AuthStatusAction
         accessMode="owner-admin"
