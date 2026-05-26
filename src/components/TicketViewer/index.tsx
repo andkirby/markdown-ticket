@@ -67,6 +67,23 @@ function findSubdocumentLabel(subdocuments: SubDocument[], selectedPath: string,
   return null
 }
 
+function findSubdocumentSourcePath(subdocuments: SubDocument[], selectedPath: string, ticketCode: string): string | null {
+  for (const subdocument of subdocuments) {
+    if (subdocument.filePath && filePathToApiPath(subdocument.filePath, ticketCode) === selectedPath) {
+      return subdocument.filePath
+    }
+
+    if (subdocument.children.length > 0) {
+      const childSourcePath = findSubdocumentSourcePath(subdocument.children, selectedPath, ticketCode)
+      if (childSourcePath) {
+        return childSourcePath
+      }
+    }
+  }
+
+  return null
+}
+
 function deriveTicketContextLabel(
   subdocuments: SubDocument[],
   selectedPath: string,
@@ -320,6 +337,18 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
     return deriveTicketContextLabel(liveSubdocs, selectedPath, currentTicket.code, isTraceGraphOpen)
   }, [currentTicket, isTraceGraphOpen, liveSubdocs, selectedPath])
 
+  const markdownSourcePath = useMemo(() => {
+    if (!currentTicket) {
+      return undefined
+    }
+
+    if (selectedPath === ROOT_DOCUMENT_PATH) {
+      return `${currentTicket.code}.md`
+    }
+
+    return findSubdocumentSourcePath(liveSubdocs, selectedPath, currentTicket.code) ?? undefined
+  }, [currentTicket, liveSubdocs, selectedPath])
+
   const ticketPageTitle = currentTicket
     ? formatTicketPageTitle(currentTicket.code, currentTicket.title, ticketContextLabel)
     : null
@@ -425,7 +454,7 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
                             <MarkdownContent
                               markdown={subdocContent}
                               currentProject={projectCode}
-                              sourcePath={selectedPath === 'main' ? `${currentTicket?.code}.md` : `${currentTicket?.code}/${selectedPath}.md`}
+                              sourcePath={markdownSourcePath}
                               ticketsPath={ticketsPath}
                               headerLevelStart={3}
                               className={`prose prose--ticket ${getMarkdownDensityClass(markdownDensity)} max-w-none dark:prose-invert`}

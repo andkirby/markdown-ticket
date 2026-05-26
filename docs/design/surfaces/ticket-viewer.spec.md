@@ -127,6 +127,8 @@ Two horizontal bars, both with bottom border:
 - Padding: `px-4 py-4 sm:px-5`
 - RelativeTimestamp: `absolute right-4 top-4 z-[1] sm:right-5`
 - MarkdownContent: receives `headerLevelStart={3}` (renders H1 as H3)
+- MarkdownContent: receives `sourcePath="{ticketCode}.md"` for the main document.
+- MarkdownContent: receives the selected `SubDocument.filePath` for sub-documents. The viewer must not reconstruct this value from the selected URL/API path.
 - MarkdownContent uses the `ticket` typography variant from `markdown-content.spec.md`.
 - Ticket prose keeps compact rhythm: moderate section gaps, readable paragraphs, styled task lists, and scrollable artifacts.
 - Timestamp placement must not overlap the first rendered heading or first paragraph.
@@ -279,7 +281,8 @@ Proposed viewport variant:
 - Header badges differ from card badges: the header adds `assignee`. If badge display needs to be consistent, `CompactTicketHeader` and `TicketAttributeTags` should share a badge order config.
 - Content processing: `processContentForDisplay()` removes H1 headers before rendering. `headerLevelStart={3}` shifts remaining headers down.
 - The viewer fetches full ticket content on open if `ticket.content` is missing (shallow list ticket vs. full API ticket).
-- Sub-document path resolution is handled by `subdocumentPath.ts` — not by the viewer directly.
+- Sub-document navigation path derivation is handled by `subdocumentPath.ts`.
+- Sub-document markdown source context is resolved by TicketViewer from the selected `SubDocument.filePath`, then passed to `MarkdownContent.sourcePath`.
 - Close button position (`right-3 top-3`) must account for ToC toggle if one is added in the future.
 - Trace graph store path resolution is handled by the backend from project config and ticket code. The frontend never constructs filesystem paths.
 - The graph dashboard HTML remains a static, isolated graph reader. TicketViewer owns only the entry point and return shell.
