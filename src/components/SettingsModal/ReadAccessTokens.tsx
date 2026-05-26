@@ -1,5 +1,10 @@
+import type {
+  ListedReadToken,
+  ReadTokenCreationResponse,
+  ReadTokenInviteResponse,
+  ReadTokenListResponse,
+} from '@mdt/domain-contracts'
 import type { Project } from '@mdt/shared/models/Project'
-import type { PublicLinkOriginOptions } from '@mdt/shared/models/PublicLinkOrigin'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { authFetch } from '../../auth/authFetch'
 import { getProjectCode } from '../../utils/projectUtils'
@@ -8,19 +13,6 @@ interface ReadAccessTokensProps {
   projects: Project[]
   linkOrigin: string
   onLinkOriginChange: (origin: string) => void
-}
-
-interface ListedReadToken {
-  id: string
-  name: string
-  projectRefs: string[]
-  expiresAt: string | null
-  status: 'active' | 'expired' | 'revoked'
-}
-
-interface ListResponse {
-  tokens?: ListedReadToken[]
-  linkOrigins: PublicLinkOriginOptions
 }
 
 interface CreationResult {
@@ -54,8 +46,8 @@ export function ReadAccessTokens({ projects, linkOrigin, onLinkOriginChange }: R
       return
     }
 
-    const data = await response.json() as ListResponse
-    setTokens(data.tokens ?? [])
+    const data = await response.json() as ReadTokenListResponse
+    setTokens(data.tokens)
 
     const nextOrigins = data.linkOrigins.options
     setOriginOptions(nextOrigins)
@@ -103,7 +95,7 @@ export function ReadAccessTokens({ projects, linkOrigin, onLinkOriginChange }: R
         throw new Error('Read access was not created')
       }
 
-      const created = await response.json() as ListedReadToken & { rawToken: string }
+      const created = await response.json() as ReadTokenCreationResponse
       setCreationResult({ name: created.name, rawToken: created.rawToken })
       setName('')
       setSelectedProjects([])
@@ -132,8 +124,8 @@ export function ReadAccessTokens({ projects, linkOrigin, onLinkOriginChange }: R
       return
     }
 
-    const data = await response.json() as { inviteUrl?: string }
-    setInviteUrl(data.inviteUrl ?? '')
+    const data = await response.json() as ReadTokenInviteResponse
+    setInviteUrl(data.inviteUrl)
   }, [effectiveLinkOrigin])
 
   const revokeToken = useCallback(async (tokenId: string) => {

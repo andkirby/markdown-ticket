@@ -573,3 +573,59 @@ spec-trace render tasks MDT-177
 - [x] All MDT-177 BDD scenarios are GREEN through Playwright.
 - [x] No duplicated selectors, fixtures, route owners, or security helpers exist.
 - [x] Final spec-trace tasks validation and render pass.
+
+## Task 9: Extract read-access boundary contracts into domain-contracts
+
+**Skills**: `mdt:implement`
+
+**Milestone**: UAT - Contract boundary hardening
+
+**Structure**: `domain-contracts/src/access/schema.ts`, `domain-contracts/src/access/__tests__/schema.test.ts`, `src/auth/AuthSessionContext.ts`, `src/services/sseClient.ts`, `src/components/SettingsModal/ReadAccessTokens.tsx`, `server/security/apiAuth.ts`, `server/security/publicLinkOrigins.ts`, `server/routes/readTokens.ts`
+
+**Makes GREEN (Automated Tests)**:
+- `TEST-access-domain-contracts` -> `domain-contracts/src/access/__tests__/schema.test.ts`: access/read-token schema contracts
+- `TEST-read-token-management-api` -> `server/tests/api/read-token-management.test.ts`: read-token API still returns the same DTOs
+- `TEST-read-access-journey` -> `tests/e2e/sharing/read-access-journey.spec.ts`: UI still consumes the same sharing journey responses
+
+**Scope**: Move pure access/read-token DTOs into `domain-contracts` and update frontend/backend consumers to import them.
+
+**Boundary**: Do not move route authorization, cookie/session behavior, read-token store persistence internals, or UI behavior into `domain-contracts`.
+
+**Creates**:
+- `domain-contracts/src/access/schema.ts`
+- `domain-contracts/src/access/index.ts`
+- `domain-contracts/src/access/__tests__/schema.test.ts`
+
+**Modifies**:
+- `domain-contracts/src/index.ts`
+- `shared/models/PublicLinkOrigin.ts`
+- `src/auth/AuthSessionContext.ts`
+- `src/services/sseClient.ts`
+- `src/components/SettingsModal/ReadAccessTokens.tsx`
+- `server/security/apiAuth.ts`
+- `server/security/publicLinkOrigins.ts`
+- `server/security/readTokenStore.ts`
+- `server/routes/readTokens.ts`
+
+**Must Not Touch**:
+- `server/security/readSession.ts`
+- route auth policy behavior
+- read-token persisted JSON format
+- Playwright journey semantics
+
+**Anti-duplication**: Consumers import types from `@mdt/domain-contracts`; `shared/models/PublicLinkOrigin.ts` is a compatibility re-export only.
+
+**Verify**:
+
+```bash
+bun run --cwd domain-contracts test -- access --runInBand
+bun run --cwd domain-contracts build
+bun run validate:ts
+bun run --cwd server jest tests/api/read-token-management.test.ts tests/security/readTokenStore.test.ts --runInBand
+bunx playwright test tests/e2e/sharing/read-access-journey.spec.ts --project=chromium --grep "share session survives refresh"
+```
+
+**Done when**:
+- [x] Contract schemas parse representative access and read-token DTOs.
+- [x] Frontend/backend no longer redeclare the extracted boundary shapes.
+- [x] Existing read-token API and refresh journey tests stay GREEN.
