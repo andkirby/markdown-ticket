@@ -26,7 +26,7 @@ interface ConfigInfo {
 export function RedirectToCurrentProject() {
   const navigate = useNavigate()
   const { projects, loading, refreshProjects, isBackendDown } = useProjectManager({ autoSelectFirst: false })
-  const { accessMode, sessionStatus, canManageProjects, unlock, lock, markLocked } = useAuthSession()
+  const { accessMode, sessionStatus, canManageProjects, unlock, markLocked } = useAuthSession()
   const { theme, toggleTheme } = useTheme()
   const [configInfo, setConfigInfo] = useState<ConfigInfo | null>(null)
   const [showAddProjectModal, setShowAddProjectModal] = useState(false)
@@ -135,7 +135,6 @@ export function RedirectToCurrentProject() {
               <div className="flex items-center gap-4">
                 <AuthStatusAction
                   accessMode={accessMode}
-                  onLock={lock}
                   onUnlockClick={handleUnlockClick}
                 />
                 <button
