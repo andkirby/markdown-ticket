@@ -1,108 +1,100 @@
 import type { ProjectConfig, TreeNode } from './TreeBuildingStrategy.js'
+import { readdir } from 'node:fs/promises'
 import * as path from 'node:path'
+import { shouldIgnorePath } from '../utils/fsIgnoreList.js'
 import { TreeBuildingStrategy } from './TreeBuildingStrategy.js'
-
-interface FolderNode {
-  name: string
-  path: string
-  type: 'folder'
-  children: Record<string, FolderNode | FileNode | TreeNode>
-}
-
-interface FileNode {
-  name: string
-  path: string
-  type: 'file'
-}
-
-interface TreeObject {
-  [key: string]: FolderNode | FileNode | TreeNode
-}
 
 /**
  * Strategy for building trees for path selection (no metadata).
  */
 export class PathSelectionStrategy extends TreeBuildingStrategy {
   async buildTree(
-    filePaths: string[],
+    _filePaths: string[],
     projectPath: string,
-    _config: ProjectConfig,
+    config: ProjectConfig,
   ): Promise<TreeNode[]> {
-    const tree: TreeObject = {}
+    return await this.buildSelectionTree(projectPath, config)
+  }
+
+  private async buildSelectionTree(projectPath: string, config: ProjectConfig): Promise<TreeNode[]> {
+    const maxDepth = config.document?.maxDepth ?? 5
+    const excludeFolders = config.document?.excludeFolders ?? config.exclude_folders ?? []
+    const ticketsPath = typeof config.ticketsPath === 'string' ? this.normalizePath(config.ticketsPath) : undefined
     const rootFiles: TreeNode[] = []
 
-    for (const filePath of filePaths) {
-      const relativePath = path.relative(projectPath, filePath)
-      const parts = relativePath.split(path.sep)
+    const walk = async (absoluteDir: string, relativeParts: string[]): Promise<TreeNode[]> => {
+      const nodes: TreeNode[] = []
 
-      if (parts.length === 1) {
-        rootFiles.push(await this.processFile(filePath, relativePath))
-        continue
-      }
+      try {
+        const entries = await readdir(absoluteDir, { withFileTypes: true })
 
-      let current: TreeObject = tree
-      let currentRelativePath = ''
+        for (const entry of entries) {
+          const nextParts = [...relativeParts, entry.name]
+          const relativePath = this.normalizePath(nextParts.join(path.sep))
+          const depth = nextParts.length
 
-      // Build nested structure
-      for (let i = 0; i < parts.length - 1; i++) {
-        const part = parts[i]
+          if (depth > maxDepth || this.shouldExclude(relativePath, ticketsPath, excludeFolders)) {
+            continue
+          }
 
-        currentRelativePath = currentRelativePath ? path.join(currentRelativePath, part) : part
+          const absolutePath = path.join(absoluteDir, entry.name)
 
-        if (!current[part]) {
-          current[part] = {
-            type: 'folder' as const,
-            name: part,
-            path: currentRelativePath,
-            children: {} as TreeObject,
+          if (entry.isDirectory()) {
+            nodes.push({
+              name: entry.name,
+              path: relativePath,
+              type: 'folder',
+              children: depth < maxDepth ? await walk(absolutePath, nextParts) : [],
+            })
+            continue
+          }
+
+          if (entry.isFile() && entry.name.endsWith('.md')) {
+            const fileNode = await this.processFile(absolutePath, relativePath)
+            if (relativeParts.length === 0) {
+              rootFiles.push(fileNode)
+            }
+            else {
+              nodes.push(fileNode)
+            }
           }
         }
-        current = (current[part] as FolderNode).children as TreeObject
+      }
+      catch {
+        return nodes
       }
 
-      // Add the file
-      const fileName = parts[parts.length - 1]
-
-      current[fileName] = await this.processFile(filePath, relativePath)
+      return this.sortNodes(nodes)
     }
 
-    const result = this._treeToArray(tree)
+    const result = await walk(projectPath, [])
 
     if (rootFiles.length > 0) {
       result.unshift({
         name: './ (root files)',
         path: './',
         type: 'folder',
-        children: rootFiles,
+        children: this.sortNodes(rootFiles),
       })
     }
 
     return result
   }
 
-  private _treeToArray(obj: TreeObject): TreeNode[] {
-    const items: TreeNode[] = []
-
-    for (const [name, item] of Object.entries(obj)) {
-      if ((item as FolderNode).type === 'folder') {
-        const folderItem = item as FolderNode
-        const children = this._treeToArray(folderItem.children as TreeObject)
-
-        if (children.length > 0) {
-          items.push({
-            name,
-            path: folderItem.path,
-            type: 'folder',
-            children,
-          })
-        }
-      }
-      else {
-        items.push(item as TreeNode)
-      }
+  private shouldExclude(relativePath: string, ticketsPath: string | undefined, excludeFolders: string[]): boolean {
+    if (ticketsPath && (relativePath === ticketsPath || relativePath.startsWith(`${ticketsPath}/`))) {
+      return true
     }
 
-    return items.sort((a, b) => {
+    return shouldIgnorePath(relativePath, excludeFolders)
+  }
+
+  private normalizePath(inputPath: string): string {
+    return inputPath.replace(/\\/g, '/').replace(/\/+/g, '/').replace(/\/$/, '')
+  }
+
+  private sortNodes(nodes: TreeNode[]): TreeNode[] {
+    return nodes.sort((a, b) => {
       if (a.type !== b.type) {
         return a.type === 'folder' ? -1 : 1
       }

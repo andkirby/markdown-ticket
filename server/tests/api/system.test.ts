@@ -7,6 +7,8 @@
 
 /// <reference types="jest" />
 
+import { mkdir, writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
 import { createTestDocument, documentFixtures } from './fixtures/documents'
 import { assertBadRequest, assertBodyHasProperties, assertErrorMessage, assertIsArray, assertNotFound, assertSuccess, createGetRequest, createPostRequest } from './helpers'
 import { cleanupTestEnvironment, setProjectDocumentMaxDepth, setupTestEnvironment } from './setup'
@@ -142,6 +144,39 @@ describe('system Endpoint Tests (MDT-106)', () => {
       expect(allPaths).toContain('README.md')
       expect(allPaths).toContain('docs/overview.md')
       expect(allPaths).not.toContain('docs/guide/getting-started.md')
+    })
+
+    it('should include selectable folders even when they do not contain markdown files', async () => {
+      const project = await projectFactory.createProject('empty', {
+        name: 'Path Selection Folder Project',
+        code: 'PFOL',
+        documentPaths: ['docs'],
+      })
+      const projectPath = join(projectFactory.getProjectsDir(), project.key)
+
+      await mkdir(join(projectPath, 'src/components'), { recursive: true })
+      await mkdir(join(projectPath, 'docs/empty-section'), { recursive: true })
+      await writeFile(join(projectPath, 'src/components/Button.tsx'), 'export const Button = null\n')
+      await createTestDocument(projectFactory, project.key, 'docs/overview.md', documentFixtures.withFrontmatter)
+
+      const response = await createGetRequest(app, `/api/filesystem?projectId=${project.key}`)
+
+      assertSuccess(response, 200)
+      assertIsArray(response)
+
+      const walk = (nodes: Array<Record<string, unknown>>): string[] =>
+        nodes.flatMap(node => [
+          node.path as string,
+          ...(Array.isArray(node.children) ? walk(node.children as Array<Record<string, unknown>>) : []),
+        ])
+
+      const allPaths = walk(response.body as Array<Record<string, unknown>>)
+
+      expect(allPaths).toContain('src')
+      expect(allPaths).toContain('src/components')
+      expect(allPaths).toContain('docs/empty-section')
+      expect(allPaths).toContain('docs/overview.md')
+      expect(allPaths).not.toContain('src/components/Button.tsx')
     })
   })
 
