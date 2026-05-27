@@ -43,6 +43,7 @@ Runtime code owns token/session behavior. The Playwright spec and selector const
 `domain-contracts/src/access/schema.ts` owns schema-first boundary shapes shared across frontend, backend, and tests:
 
 - access-mode and session-status vocabulary
+- auth access indicator vocabulary
 - owner/read-only capability flags
 - public-link-origin response options
 - read-token list, create, invite, and invite-session response DTOs
@@ -169,7 +170,24 @@ State ownership:
 
 The owner-upgrade submit path posts only to `/api/auth/session`. A bad owner token must not clear the existing read session or move the visitor to a full locked screen.
 
-Owner Lock is the reverse downgrade, not a global access clear. It deletes the owner session, reloads backend-filtered visible projects, and leaves public/share/read-token access active. If the current project remains visible, the same board/list/documents route stays mounted with owner controls removed and the read-only badge shown. If no non-owner project remains visible, the UI converges to the locked unlock panel.
+Owner Lock is the reverse downgrade, not a global access clear. It deletes the owner session, reloads backend-filtered visible projects, and leaves public/share/read-token access active. If the current project remains visible, the same board/list/documents route stays mounted with owner controls removed and read-only status inside the hamburger menu. If no non-owner project remains visible, the UI converges to the locked unlock panel.
+
+All project-list owners must refresh when access mode changes from owner/admin to read-only, including the page-level project manager and the ProjectSelector project manager. This prevents stale owner-only projects from remaining in the selector after Lock.
+
+If the current route points to a project that is not visible under read-only access, the route may show a project-unavailable error with a path back to allowed projects or owner unlock. It must not keep stale owner content mounted.
+
+The active ProjectSelector rail card opens the project browser; it must not navigate to the current project's base board route because that strips documents/list context during read-only recovery checks.
+
+## Header Access Chrome
+
+`src/components/HamburgerMenu.tsx` owns access chrome:
+
+- green dot: owner/admin access
+- orange dot: share/read-token access beyond public projects
+- no dot: public-only read-only, locked, backend-down, or local no-auth mode
+- `Read only` text appears inside the hamburger menu, not inline in the header
+
+`src/auth/AuthSessionProvider.tsx` derives the indicator from owner session state and read-session authentication. Anonymous public projects produce read-only access with no indicator dot.
 
 ## Project Selector
 
@@ -198,9 +216,11 @@ Frontend hiding improves UX but is never the security boundary.
 
 `tests/e2e/sharing/read-access-journey.spec.ts` is architecture-owned E2E coverage for MDT-177 and must carry into the tests stage. It covers named token creation, invite URL cleanup, project switching, share merge, unlock cancel, bad unlock recovery, origin selection, revoke/invalid invite paths, and read-only control suppression.
 
-`tests/e2e/utils/selectors.ts` owns the stable selector contract for the Settings token UI, invite exchange error, read-only badge, and owner-unlock overlay.
+`tests/e2e/utils/selectors.ts` owns the stable selector contract for the Settings token UI, invite exchange error, hamburger read-only status, access indicator dot, and owner-unlock overlay.
 
 `domain-contracts/src/access/__tests__/schema.test.ts` owns schema coverage for shared access/read-token DTOs. It prevents server and UI code from reintroducing parallel contract interfaces.
+
+`tests/e2e/auth/session-unlock.spec.ts` carries the owner-lock downgrade regression for public documents, project-list refresh, public-only no-dot behavior, and the project-unavailable fallback.
 
 ## Invariants
 

@@ -49,9 +49,11 @@ window "Markdown Ticket Board — Read-only Session":
   header:
     row justify=between:
       text "Markdown Ticket Board" bold
-      row:
-        status "Read only" kind=info id="readonly-chip"
-        button "≡" id="readonly-menu-trigger"
+      button "≡" id="readonly-menu-trigger"
+  sheet position=bottom title="Menu":
+    list:
+      item "Read only" id="readonly-menu-status"
+      item "Unlock access" id="readonly-unlock-menu"
   panel:
     row justify=between:
       text "Public Project" bold
@@ -60,8 +62,8 @@ window "Markdown Ticket Board — Read-only Session":
       item "MDT-172 — Public read-only sharing"
       item "MDT-168 — Documentation polish"
 
-annotation "Read-only users can view, sort, search, and open tickets; mutations stay hidden or disabled." target="readonly-chip" position=bottom
-annotation "Owner-upgrade action is in the hamburger menu as Unlock access, not inline beside the badge." target="readonly-menu-trigger" position=right
+annotation "Public-only read access has no header dot; the Read only label lives in the menu." target="readonly-menu-status" position=right
+annotation "Owner-upgrade action is in the hamburger menu as Unlock access." target="readonly-unlock-menu" position=right
 ```
 
 ## Read-only owner unlock overlay
@@ -72,8 +74,8 @@ window "Markdown Ticket Board — Owner Unlock Overlay":
     row justify=between:
       text "Markdown Ticket Board" bold
       row:
-        status "Read only" kind=info id="readonly-overlay-chip"
         button "≡"
+        status "●" kind=warning id="shared-read-dot"
   panel:
     row justify=between:
       text "PRI — Private roadmap" bold
@@ -89,6 +91,7 @@ window "Markdown Ticket Board — Owner Unlock Overlay":
       button "Cancel" id="owner-unlock-cancel"
       button "Unlock" primary id="owner-unlock-submit"
 
+annotation "Orange dot marks read-token/share access while owner-upgrade overlay is open." target="shared-read-dot" position=bottom
 annotation "Board stays visible behind the overlay; cancel restores this read-only state." target="owner-unlock-cancel" position=right
 annotation "This path accepts owner tokens only; friend read access is already active." target="owner-token-input" position=bottom
 ```
@@ -100,7 +103,9 @@ window "Markdown Ticket Board — Owner Unlock Error":
   header:
     row justify=between:
       text "Markdown Ticket Board" bold
-      status "Read only" kind=info
+      row:
+        button "≡"
+        status "●" kind=warning
   panel:
     text "PRI — Private roadmap" bold
     list:
@@ -124,7 +129,9 @@ window "Markdown Ticket Board — Owner Session":
   header:
     row justify=between:
       text "Markdown Ticket Board" bold
-      button "≡" id="owner-menu-trigger"
+      row id="owner-menu-trigger":
+        button "≡"
+        status "●" kind=success id="owner-access-dot"
   sheet position=bottom title="Menu":
     list:
       item "Lock" id="owner-lock"
@@ -141,7 +148,7 @@ window "Markdown Ticket Board — Owner Session":
       item "DEVPT — Dev process tracker"
 
 annotation "Create Project appears only after owner/admin session is established." target="create-project" position=left
-annotation "Lock is a menu action; session status is not duplicated inside the menu." target="owner-menu-trigger" position=bottom
+annotation "Green dot marks owner/admin access; session status is not duplicated inside the menu." target="owner-access-dot" position=bottom
 annotation "Lock clears server session cookie; it does not delete data." target="owner-lock" position=right
 ```
 
@@ -153,8 +160,8 @@ window "Markdown Ticket Board — Read Token Accepted":
     row justify=between:
       text "Markdown Ticket Board" bold
       row:
-        status "Read only" kind=info id="token-readonly-chip"
-        button "Unlock"
+        button "≡" id="token-menu-trigger"
+        status "●" kind=warning id="token-readonly-dot"
   panel:
     text "Scoped projects" bold
     list:
@@ -162,5 +169,5 @@ window "Markdown Ticket Board — Read Token Accepted":
       item "PUB — Public Project"
       item "DOCS — Documentation (read token)"
 
-annotation "Read token broadens visible projects only; it does not grant writes." target="token-readonly-chip" position=bottom
+annotation "Read token broadens visible projects only; orange dot shows shared read access." target="token-readonly-dot" position=bottom
 ```

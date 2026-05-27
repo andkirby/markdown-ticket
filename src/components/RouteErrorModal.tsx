@@ -1,14 +1,15 @@
 import { AlertTriangle, Home } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { Modal, ModalBody, ModalFooter } from './ui/Modal'
 import { Button } from './ui'
+import { Modal, ModalBody, ModalFooter } from './ui/Modal'
 
 interface RouteErrorModalProps {
   error: string
+  title?: string
   onClose?: () => void
 }
 
-export function RouteErrorModal({ error, onClose }: RouteErrorModalProps) {
+export function RouteErrorModal({ error, title = 'Page Not Found', onClose }: RouteErrorModalProps) {
   const navigate = useNavigate()
 
   const handleGoHome = () => {
@@ -21,7 +22,7 @@ export function RouteErrorModal({ error, onClose }: RouteErrorModalProps) {
       <ModalBody>
         <div className="flex items-center space-x-3 mb-4">
           <AlertTriangle className="h-6 w-6 text-destructive" />
-          <h2 className="modal__title">Page Not Found</h2>
+          <h2 className="modal__title">{title}</h2>
         </div>
 
         <p className="text-muted-foreground mb-6">{error}</p>

@@ -57,6 +57,7 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
   const [isBackendDown, setIsBackendDown] = useState<boolean>(false)
 
   const selectedProjectRef = useRef<Project | null>(null)
+  const lastAccessModeRef = useRef(accessMode)
 
   // Fetch tickets for a specific project
   const fetchTicketsForProject = useCallback(async (project: Project): Promise<void> => {
@@ -192,6 +193,22 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
   useEffect(() => {
     fetchProjects().finally(() => setLoading(false))
   }, [fetchProjects])
+
+  // Reconcile every project-manager instance when browser capabilities change.
+  useEffect(() => {
+    const previousAccessMode = lastAccessModeRef.current
+    lastAccessModeRef.current = accessMode
+
+    if (previousAccessMode === accessMode)
+      return
+
+    if (accessMode === 'unknown' || accessMode === 'locked' || accessMode === 'backend-down')
+      return
+
+    refreshProjects().catch((err) => {
+      console.error('Failed to refresh projects after access mode change:', err)
+    })
+  }, [accessMode, refreshProjects])
 
   // Drop stale owner-only state immediately when the browser session locks.
   useEffect(() => {

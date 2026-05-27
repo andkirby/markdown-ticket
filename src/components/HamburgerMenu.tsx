@@ -1,5 +1,5 @@
 import type { SortPreferences } from '../config/sorting'
-import type { AccessMode } from '@/auth/AuthSessionContext'
+import type { AccessMode, AuthAccessIndicator } from '@/auth/AuthSessionContext'
 import { ArrowUpDown, Edit, Eye, EyeOff, KeyRound, LockKeyhole, Menu, Monitor, Moon, Plus, Settings, Sun, Trash2 } from 'lucide-react'
 import * as React from 'react'
 import { useEffect, useRef, useState } from 'react'
@@ -21,6 +21,7 @@ interface HamburgerMenuProps {
   onUnlockOwnerAccess?: () => void
   onLock?: () => Promise<void> | void
   accessMode?: AccessMode
+  accessIndicator?: AuthAccessIndicator
   canManageProjects?: boolean
   canManageSharing?: boolean
   canUseOwnerEndpoints?: boolean
@@ -36,6 +37,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   onUnlockOwnerAccess,
   onLock,
   accessMode = 'unknown',
+  accessIndicator = 'none',
   canManageProjects = true,
   canManageSharing = canManageProjects,
   canUseOwnerEndpoints = canManageProjects,
@@ -124,6 +126,12 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   }
 
   const showLockAction = accessMode === 'owner-admin' && canUseOwnerEndpoints && Boolean(onLock)
+  const showReadOnlyStatus = accessMode === 'read-only'
+  const accessIndicatorClass = accessIndicator === 'owner'
+    ? 'bg-green-500'
+    : accessIndicator === 'shared'
+      ? 'bg-orange-500'
+      : ''
 
   return (
     <div className="relative flex" ref={menuRef}>
@@ -132,9 +140,16 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
         variant="ghost"
         size="sm"
         onClick={() => setIsOpen(!isOpen)}
-        className="p-2"
+        className="relative p-2"
       >
         <Menu className="h-4 w-4" />
+        {accessIndicator !== 'none' && (
+          <span
+            data-testid="auth-access-indicator"
+            className={`absolute right-1 top-1 h-2 w-2 rounded-full ring-2 ring-background ${accessIndicatorClass}`}
+            aria-hidden="true"
+          />
+        )}
       </Button>
 
       {isOpen && createPortal(
@@ -148,6 +163,19 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
           }}
         >
           <div className="py-1">
+            {showReadOnlyStatus && (
+              <>
+                <div
+                  data-testid="sharing-readonly-badge"
+                  className="flex items-center w-full px-4 py-2 text-sm text-muted-foreground"
+                >
+                  {accessIndicator === 'shared' && <span className="h-2 w-2 rounded-full mr-2 bg-orange-500" />}
+                  Read only
+                </div>
+                <div className="my-1 border-t border-border" />
+              </>
+            )}
+
             {showLockAction && (
               <>
                 <button

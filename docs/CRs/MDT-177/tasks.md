@@ -13,6 +13,7 @@ Canonical projection: [tasks.trace.md](./tasks.trace.md)
 | M4 - Invite and unlock recovery | Task 6 | Invite route, URL cleanup, cancel, and bad owner-token recovery are GREEN. |
 | M5 - Read-only project browser | Task 7 | Token/share/public visibility and read-only affordances are integrated. |
 | M6 - Journey completion | Task 8 | Full Playwright journey and final verification are GREEN. |
+| UAT - Lock/status refinement | Task 10 | Owner Lock refreshes read-only visibility and hamburger access chrome is aligned. |
 
 ## Task 0: Runtime probe and missing infrastructure inventory
 
@@ -629,3 +630,62 @@ bunx playwright test tests/e2e/sharing/read-access-journey.spec.ts --project=chr
 - [x] Contract schemas parse representative access and read-token DTOs.
 - [x] Frontend/backend no longer redeclare the extracted boundary shapes.
 - [x] Existing read-token API and refresh journey tests stay GREEN.
+
+## Task 10: Refine owner lock visibility and hamburger access chrome
+
+**Skills**: `mdt-frontend`, `mdt-ux-designer`, `playwright-cli`
+
+**Milestone**: UAT - Lock/status refinement
+
+**Structure**: `src/auth/AuthSessionProvider.tsx`, `src/hooks/useProjectManager.ts`, `src/components/HamburgerMenu.tsx`, `src/App.tsx`, `src/components/RouteErrorModal.tsx`, `domain-contracts/src/access/schema.ts`, `tests/e2e/auth/session-unlock.spec.ts`, `tests/e2e/sharing/read-access-journey.spec.ts`
+
+**Makes GREEN (Automated Tests)**:
+- `TEST-auth-session-lock-refresh` -> `tests/e2e/auth/session-unlock.spec.ts`: owner Lock refreshes project visibility and status chrome.
+- `TEST-read-access-journey` -> `tests/e2e/sharing/read-access-journey.spec.ts`: shared read access still shows correct read-only status.
+- `TEST-access-domain-contracts` -> `domain-contracts/src/access/__tests__/schema.test.ts`: auth access indicator vocabulary is shared.
+
+**Makes GREEN (Behavior)**:
+- `owner_lock_refreshes_read_visibility` (BR-1.18)
+- `hamburger_access_status_indicator` (BR-1.19)
+
+**Scope**: Refresh all project-list surfaces after owner Lock, improve private-route fallback copy, move read-only status into the hamburger menu, and add owner/shared access dots.
+
+**Boundary**: Header/status UX and frontend project-list reconciliation only. Do not change backend authorization or read-session grant semantics.
+
+**Creates**:
+- None
+
+**Modifies**:
+- `domain-contracts/src/access/schema.ts`
+- `src/auth/AuthSessionContext.ts`
+- `src/auth/AuthSessionProvider.tsx`
+- `src/hooks/useProjectManager.ts`
+- `src/App.tsx`
+- `src/components/HamburgerMenu.tsx`
+- `src/components/ProjectSelector/ProjectSelectorRail.tsx`
+- `src/components/RouteErrorModal.tsx`
+- `tests/e2e/auth/session-unlock.spec.ts`
+- `tests/e2e/sharing/read-access-journey.spec.ts`
+- `tests/e2e/utils/selectors.ts`
+
+**Must Not Touch**:
+- server route authorization policy
+- read-token persistence format
+- share/read-session merge rules
+
+**Verify**:
+
+```bash
+bun run --cwd domain-contracts test -- access --runInBand
+bun test src/components/HamburgerMenu.test.tsx src/components/AuthUnlock/AuthStatusAction.test.tsx
+bun run validate:ts
+bunx playwright test tests/e2e/auth/session-unlock.spec.ts --project=chromium
+bunx playwright test tests/e2e/sharing/read-access-journey.spec.ts --project=chromium --grep "valid invite exchange"
+```
+
+**Done when**:
+- [ ] Owner Lock removes owner-only projects from every visible project selector after downgrade.
+- [ ] Public-only read-only access shows no hamburger dot.
+- [ ] Share/read-token access shows an orange hamburger dot.
+- [ ] Owner/admin access shows a green hamburger dot.
+- [ ] Read-only text is inside the hamburger menu, not inline in the header.

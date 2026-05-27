@@ -322,9 +322,23 @@
       "routePolicy": "tests"
     },
     {
+      "id": "BR-1.18",
+      "kind": "behavior",
+      "text": "WHEN an owner locks owner/admin access, the system shall refresh every visible project list from the backend-filtered read access view and either keep the current route when still visible or show a project-unavailable state with a path to allowed projects or owner unlock.",
+      "sourceRef": "CR:MDT-177",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.19",
+      "kind": "behavior",
+      "text": "WHILE browser access state is visible in the app header, the system shall keep read-only status inside the hamburger menu, show a green hamburger dot for owner/admin access, show an orange hamburger dot for share or read-token access, and show no dot for public-only read-only access.",
+      "sourceRef": "CR:MDT-177",
+      "routePolicy": "bdd"
+    },
+    {
       "id": "C12",
       "kind": "constraint",
-      "text": "The system shall define shared access-mode, capability, public-link-origin, and read-token API response shapes in domain-contracts so frontend, backend, and tests do not redeclare boundary contracts.",
+      "text": "The system shall define shared access-mode, auth access indicator, capability, public-link-origin, and read-token API response shapes in domain-contracts so frontend, backend, and tests do not redeclare boundary contracts.",
       "sourceRef": "CR:MDT-177",
       "routePolicy": "tests"
     }
@@ -465,6 +479,28 @@
       "when": "When the visitor views boards lists documents project browser header controls and settings entry points",
       "then": "Then owner-only controls for creating editing dragging deleting configuring favoriting or writing files are hidden or disabled",
       "sourceRef": "docs/CRs/MDT-177/requirements.trace.md#BR-1.14"
+    },
+    {
+      "id": "owner_lock_refreshes_read_visibility",
+      "title": "Owner lock refreshes read-only project visibility",
+      "covers": [
+        "BR-1.18"
+      ],
+      "given": "Given an owner is viewing a project list that includes owner-only and public projects",
+      "when": "When the owner selects Lock from the hamburger menu",
+      "then": "Then every project selector view reloads from read-only visibility, owner-only projects disappear, and the current route either remains visible or shows a project-unavailable state with a path to allowed projects or owner unlock",
+      "sourceRef": "CR:MDT-177"
+    },
+    {
+      "id": "hamburger_access_status_indicator",
+      "title": "Hamburger menu shows access status without inline badge",
+      "covers": [
+        "BR-1.19"
+      ],
+      "given": "Given the app is in owner, shared read-only, or public read-only access",
+      "when": "When the header renders",
+      "then": "Then owner access shows a green hamburger dot, share/read-token access shows an orange hamburger dot, public-only read-only shows no dot, and the Read only label appears inside the hamburger menu",
+      "sourceRef": "CR:MDT-177"
     }
   ],
   "obligations": [
@@ -707,6 +743,41 @@
         "ART-src-settings-read-access-tokens"
       ],
       "sourceRef": "CR:MDT-177"
+    },
+    {
+      "id": "OBL-hamburger-access-status",
+      "title": "Hamburger owns access status chrome",
+      "derivedFrom": [
+        "BR-1.19",
+        "C12"
+      ],
+      "artifactIds": [
+        "ART-src-hamburger-menu",
+        "ART-src-auth-session-provider",
+        "ART-domain-access-contracts",
+        "ART-tests-e2e-selectors"
+      ],
+      "sourceRef": "CR:MDT-177"
+    },
+    {
+      "id": "OBL-owner-lock-read-visibility-refresh",
+      "title": "Owner lock refreshes read-only project visibility",
+      "derivedFrom": [
+        "BR-1.18",
+        "BR-1.4",
+        "BR-1.5",
+        "C11"
+      ],
+      "artifactIds": [
+        "ART-src-app",
+        "ART-src-auth-session-provider",
+        "ART-src-use-project-manager",
+        "ART-src-route-error-modal",
+        "ART-src-project-selector-index",
+        "ART-src-project-browser-panel",
+        "ART-src-project-selector-rail"
+      ],
+      "sourceRef": "CR:MDT-177"
     }
   ],
   "artifacts": [
@@ -847,6 +918,30 @@
       "path": "domain-contracts/src/access/__tests__/schema.test.ts",
       "kind": "test",
       "sourceRef": "CR:MDT-177"
+    },
+    {
+      "id": "ART-src-hamburger-menu",
+      "path": "src/components/HamburgerMenu.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-177"
+    },
+    {
+      "id": "ART-src-use-project-manager",
+      "path": "src/hooks/useProjectManager.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-177"
+    },
+    {
+      "id": "ART-src-route-error-modal",
+      "path": "src/components/RouteErrorModal.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-177"
+    },
+    {
+      "id": "ART-src-project-selector-rail",
+      "path": "src/components/ProjectSelector/ProjectSelectorRail.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-177"
     }
   ],
   "testPlans": [
@@ -977,6 +1072,20 @@
       "sourceRef": "Env Token Compatibility architecture section"
     },
     {
+      "id": "TEST-auth-session-lock-refresh",
+      "kind": "e2e",
+      "title": "Auth session lock refreshes read-only visibility and status chrome",
+      "covers": [
+        "BR-1.18",
+        "BR-1.19",
+        "C12",
+        "OBL-owner-lock-read-visibility-refresh",
+        "OBL-hamburger-access-status"
+      ],
+      "file": "tests/e2e/auth/session-unlock.spec.ts",
+      "sourceRef": "CR:MDT-177"
+    },
+    {
       "id": "TEST-read-access-journey",
       "kind": "e2e",
       "title": "Read access sharing journey",
@@ -997,12 +1106,15 @@
         "BR-1.15",
         "BR-1.16",
         "BR-1.17",
+        "BR-1.18",
+        "BR-1.19",
         "C10",
         "OBL-e2e-journey-ownership",
-        "OBL-project-selector-readonly-scope"
+        "OBL-project-selector-readonly-scope",
+        "OBL-hamburger-access-status"
       ],
       "file": "tests/e2e/sharing/read-access-journey.spec.ts",
-      "sourceRef": "BDD scenarios and architecture OBL-e2e-journey-ownership"
+      "sourceRef": "CR:MDT-177"
     },
     {
       "id": "TEST-access-domain-contracts",
@@ -1010,7 +1122,8 @@
       "title": "Access and read-token domain contract schemas",
       "covers": [
         "C12",
-        "OBL-access-contract-boundary"
+        "OBL-access-contract-boundary",
+        "OBL-hamburger-access-status"
       ],
       "file": "domain-contracts/src/access/__tests__/schema.test.ts",
       "sourceRef": "CR:MDT-177"
@@ -1205,6 +1318,33 @@
       ],
       "skills": [
         "mdt:implement"
+      ],
+      "sourceRef": "CR:MDT-177"
+    },
+    {
+      "id": "TASK-10",
+      "title": "Refine owner lock visibility and hamburger access chrome",
+      "ownsArtifactIds": [
+        "ART-src-app",
+        "ART-src-auth-session-provider",
+        "ART-src-use-project-manager",
+        "ART-src-hamburger-menu",
+        "ART-src-route-error-modal",
+        "ART-src-project-selector-rail",
+        "ART-domain-access-contracts",
+        "ART-tests-e2e-selectors"
+      ],
+      "makesGreenIds": [
+        "owner_lock_refreshes_read_visibility",
+        "hamburger_access_status_indicator",
+        "TEST-auth-session-lock-refresh",
+        "TEST-read-access-journey",
+        "TEST-access-domain-contracts"
+      ],
+      "skills": [
+        "mdt-frontend",
+        "mdt-ux-designer",
+        "playwright-cli"
       ],
       "sourceRef": "CR:MDT-177"
     }
