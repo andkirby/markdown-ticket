@@ -35,6 +35,7 @@ test.describe('Document Path Persistence', () => {
     // Wait for modal to appear with heading
     const modalHeading = page.locator('h3:has-text("Select Document Paths")')
     await expect(modalHeading).toBeVisible({ timeout: 5000 })
+    await page.locator(pathSelectorSelectors.expandAllButton).click()
 
     // Wait for file system to load - look for any checkbox
     await page.waitForSelector('input[type="checkbox"]', { timeout: 10000 })
@@ -85,6 +86,7 @@ test.describe('Document Path Persistence', () => {
     // Reopen the path selector to verify persistence
     await configureButton.click()
     await expect(modalHeading).toBeVisible({ timeout: 5000 })
+    await page.locator(pathSelectorSelectors.expandAllButton).click()
 
     // Wait for checkboxes to load
     await page.waitForSelector('input[type="checkbox"]', { timeout: 5000 })

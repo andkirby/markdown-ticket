@@ -341,6 +341,18 @@ export const pathSelectorSelectors = {
   configureButton: '[data-testid="configure-paths-button"]',
   /** Path selector modal container */
   pathSelector: '[data-testid="path-selector"]',
+  /** Path selector tree */
+  tree: '[data-testid="path-selector-tree"]',
+  /** Expand all button */
+  expandAllButton: '[data-testid="path-selector-expand-all"]',
+  /** Collapse all button */
+  collapseAllButton: '[data-testid="path-selector-collapse-all"]',
+  /** Info tooltip trigger */
+  infoButton: '[data-testid="path-selector-info"]',
+  /** Info tooltip content */
+  infoTooltip: '[data-testid="path-selector-info-tooltip"]',
+  /** Max depth metadata */
+  maxDepth: '[data-testid="path-selector-max-depth"]',
   /**
    * Checkbox for a specific path (use with path, e.g., path-checkbox-docs)
    * Special cases: 'root' for ./, other paths have / replaced with -
@@ -351,6 +363,13 @@ export const pathSelectorSelectors = {
       ? 'root'
       : path.replace(/\//g, '-').replace(/^\./, 'root')
     return `[data-testid="path-checkbox-${safeTestId}"]`
+  },
+  /** Folder expand/collapse toggle for a specific path */
+  pathToggle: (path: string) => {
+    const safeTestId = path === './'
+      ? 'root'
+      : path.replace(/\//g, '-').replace(/^\./, 'root')
+    return `[data-testid="path-toggle-${safeTestId}"]`
   },
   /** Cancel button */
   cancelButton: '[data-testid="path-selector-cancel"]',
