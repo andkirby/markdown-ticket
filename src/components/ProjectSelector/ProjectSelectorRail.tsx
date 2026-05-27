@@ -114,7 +114,7 @@ const ProjectSelectorRail: React.FC<ProjectSelectorRailProps> = ({
           <ProjectSelectorCard
             project={activeProject}
             isActive={true}
-            onSelect={onProjectSelect}
+            onSelect={onLauncherClick}
             onFavoriteToggle={onFavoriteToggle}
             useRailWidthConstraints={true}
           />

@@ -59,6 +59,7 @@ function ProjectRouteHandler() {
   } = useProjectManager({ autoSelectFirst: false, handleSSEEvents: true })
   const {
     accessMode,
+    accessIndicator,
     sessionStatus,
     canWriteTickets,
     canManageProjects,
@@ -253,7 +254,9 @@ function ProjectRouteHandler() {
 
     const project = projects.find(p => getProjectCode(p) === projectCode)
     if (!project) {
-      setErrorRef.current(`Project '${projectCode}' not found`)
+      setErrorRef.current(accessMode === 'read-only'
+        ? `Project '${projectCode}' does not exist or is not available with current access. Open an allowed project from the home route or unlock access.`
+        : `Project '${projectCode}' not found`)
       return
     }
 
@@ -342,7 +345,7 @@ function ProjectRouteHandler() {
   }
 
   if (error) {
-    return <RouteErrorModal error={error} />
+    return <RouteErrorModal title={error.includes('current access') ? 'Project Not Available' : undefined} error={error} />
   }
 
   return (
@@ -368,11 +371,6 @@ function ProjectRouteHandler() {
               </div>
             </div>
             <div className="flex items-center">
-              {accessMode === 'read-only' && (
-                <span data-testid="sharing-readonly-badge" className="mr-2 rounded-full border border-border px-2 py-1 text-xs">
-                  Read only
-                </span>
-              )}
               <AuthStatusAction
                 accessMode={accessMode}
                 onUnlockClick={handleUnlockClick}
@@ -388,6 +386,7 @@ function ProjectRouteHandler() {
                 onUnlockOwnerAccess={accessMode === 'read-only' ? handleUnlockClick : undefined}
                 onLock={handleLock}
                 accessMode={accessMode}
+                accessIndicator={accessIndicator}
                 canManageProjects={canManageProjects}
                 canManageSharing={canManageSharing}
                 canUseOwnerEndpoints={canUseOwnerEndpoints}

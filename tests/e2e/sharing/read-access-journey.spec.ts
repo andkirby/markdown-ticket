@@ -82,7 +82,8 @@ test.describe('MDT-177 read access sharing journey', () => {
     await expect(visitor).toHaveURL(new RegExp(`/prj/${dataset.firstPrivate.code}(?:$|[/?#])`, 'u'))
     expect(visitor.url()).not.toMatch(/(?:invite|code|token)=/iu)
     await expect(visitor.locator(boardSelectors.board)).toBeVisible()
-    await expect(visitor.locator(sharingSelectors.readOnlyBadge)).toBeVisible()
+    await expect(visitor.locator(authSelectors.accessIndicator)).toBeVisible()
+    await expectReadOnlyStatusInMenu(visitor)
 
     await openProjectBrowser(visitor)
     await expect(visitor.locator(projectSelectors.projectOption(dataset.firstPrivate.code))).toBeVisible()
@@ -93,6 +94,22 @@ test.describe('MDT-177 read access sharing journey', () => {
 
     await assertOwnerControlsSuppressed(visitor)
     await visitor.close()
+  })
+
+  test('public read-only project renders tickets for an anonymous visitor', async ({ page, browser, e2eContext }) => {
+    const dataset = await createSharingDataset(e2eContext.projectFactory)
+
+    await makeProjectPublicReadonly(page, dataset.publicProject.code)
+
+    const context = await browser.newContext()
+    const visitor = await context.newPage()
+    await visitor.goto(`/prj/${dataset.publicProject.code}`)
+    await waitForBoardReady(visitor)
+
+    await expect(visitor.locator(boardSelectors.ticketByCode(`${dataset.publicProject.code}-001`))).toBeVisible()
+
+    await visitor.close()
+    await context.close()
   })
 
   test('share link merge adds the linked project without replacing existing token and public access', async ({ page, browser, e2eContext }) => {
@@ -136,19 +153,19 @@ test.describe('MDT-177 read access sharing journey', () => {
     await visitor.waitForLoadState('load')
     await waitForBoardReady(visitor)
     await expect(visitor).toHaveURL(new RegExp(`/prj/${dataset.extraPrivate.code}(?:$|[/?#])`, 'u'))
-    await expect(visitor.locator(sharingSelectors.readOnlyBadge)).toBeVisible()
+    await expectReadOnlyStatusInMenu(visitor)
 
     await visitor.reload()
     await visitor.waitForLoadState('load')
     await waitForBoardReady(visitor)
     await expect(visitor).toHaveURL(new RegExp(`/prj/${dataset.extraPrivate.code}(?:$|[/?#])`, 'u'))
-    await expect(visitor.locator(sharingSelectors.readOnlyBadge)).toBeVisible()
+    await expectReadOnlyStatusInMenu(visitor)
 
     await visitor.locator(projectSelectors.hamburgerMenu).click()
     await visitor.locator('[data-testid="clear-cache-button"]').click()
     await visitor.waitForLoadState('load')
     await waitForBoardReady(visitor)
-    await expect(visitor.locator(sharingSelectors.readOnlyBadge)).toBeVisible()
+    await expectReadOnlyStatusInMenu(visitor)
     expect(ownerOnlyEndpointCalls).toEqual([])
 
     await visitor.close()
@@ -189,7 +206,7 @@ test.describe('MDT-177 read access sharing journey', () => {
     await expect(visitor.locator(sharingSelectors.ownerUnlockError)).toBeVisible()
     await expect(visitor.locator(sharingSelectors.ownerUnlockError)).not.toContainText(invalidOwnerToken)
     await visitor.locator(sharingSelectors.ownerUnlockCancelButton).click()
-    await expect(visitor.locator(sharingSelectors.readOnlyBadge)).toBeVisible()
+    await expectReadOnlyStatusInMenu(visitor)
 
     await visitor.goto(`/prj/${dataset.firstPrivate.code}/documents`)
     await waitForDocumentsReady(visitor)
@@ -406,6 +423,12 @@ async function openProjectBrowser(page: Page): Promise<void> {
 async function openOwnerUnlockFromMenu(page: Page): Promise<void> {
   await page.locator(projectSelectors.hamburgerMenu).click()
   await page.locator(sharingSelectors.ownerUnlockButton).click()
+}
+
+async function expectReadOnlyStatusInMenu(page: Page): Promise<void> {
+  await page.locator(projectSelectors.hamburgerMenu).click()
+  await expect(page.locator(sharingSelectors.readOnlyBadge)).toBeVisible()
+  await page.locator(projectSelectors.hamburgerMenu).click()
 }
 
 function watchOwnerOnlyEndpointCalls(page: Page, calls: string[]): void {

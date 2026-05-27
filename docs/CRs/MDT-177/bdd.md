@@ -31,6 +31,8 @@ Canonical scenarios are stored in spec-trace and rendered in [bdd.trace.md](./bd
 - Link generation uses the server-selected configured origin, allowed current origin when no configured origin exists, or no-origin failure state.
 - Revoked, expired, invalid, consumed, or revoked-token invite paths fail visibly without widening access.
 - Read-only visitors do not see write, project mutation, settings, favorite, drag, delete, or file-write controls.
+- Owner Lock refreshes all project-list surfaces into read-only visibility, removing owner-only projects after the downgrade.
+- Header access status lives in the hamburger menu: owner/admin gets a green dot, share/read-token gets an orange dot, and public-only read-only gets no dot.
 
 ## Execution Notes
 

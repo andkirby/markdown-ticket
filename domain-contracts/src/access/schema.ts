@@ -39,6 +39,14 @@ export const AuthCapabilitiesSchema = z.object({
 
 export type AuthCapabilities = z.infer<typeof AuthCapabilitiesSchema>
 
+export const AuthAccessIndicatorSchema = z.enum([
+  'none',
+  'owner',
+  'shared',
+])
+
+export type AuthAccessIndicator = z.infer<typeof AuthAccessIndicatorSchema>
+
 export const PublicLinkOriginOptionsSchema = z.object({
   options: z.array(z.string()),
   selectedOrigin: z.string().optional(),

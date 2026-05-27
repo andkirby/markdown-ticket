@@ -5,8 +5,8 @@ import type { Express } from 'express'
 import { createHash } from 'node:crypto'
 import { promises as fs } from 'node:fs'
 import { join } from 'node:path'
-import request from 'supertest'
 import { parseToml, stringify } from '@mdt/shared/utils/toml.js'
+import request from 'supertest'
 import { cleanupTestEnvironment, setupTestEnvironment } from './setup'
 
 const ownerToken = 'mdt-172-owner-token'
@@ -75,6 +75,10 @@ describe('public read-only sharing - MDT-172', () => {
     expect(res.body.map((project: { id: string }) => project.id)).toEqual(['PUB'])
     expect(JSON.stringify(res.body)).not.toContain('Private Project')
     expect(JSON.stringify(res.body)).not.toContain('Unlisted Project')
+
+    const tickets = await request(app).get('/api/projects/PUB/crs')
+    expect(tickets.status).toBe(200)
+    expect(tickets.body[0].title).toBe('Public ticket')
   })
 
   it('opens an unlisted project through share session without listing it anonymously', async () => {

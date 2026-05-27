@@ -185,6 +185,8 @@ export const authSelectors = {
   lockButton: '[data-testid="auth-lock-button"]',
   /** Header hamburger menu trigger */
   menuButton: '[data-testid="hamburger-menu"]',
+  /** Small auth access indicator dot on hamburger menu */
+  accessIndicator: '[data-testid="auth-access-indicator"]',
   /** MDT-172-compatible public-empty state */
   noPublicProjectsState: '[data-testid="auth-no-public-projects"]',
   /** Unlock affordance outside the locked auth panel */

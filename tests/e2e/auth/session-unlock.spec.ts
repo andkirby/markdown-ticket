@@ -6,9 +6,10 @@
  */
 
 import { expect, test } from '../fixtures/test-fixtures.js'
+import type { Page } from '@playwright/test'
 import { buildScenario } from '../setup/index.js'
 import { waitForDocumentsReady } from '../utils/helpers.js'
-import { authSelectors, boardSelectors, documentSelectors, projectSelectors, sharingSelectors } from '../utils/selectors.js'
+import { authSelectors, boardSelectors, documentSelectors, projectSelectors, selectorSelectors, sharingSelectors } from '../utils/selectors.js'
 
 const authE2EEnabled = process.env.MDT_E2E_AUTH_ENABLED === 'true'
 const adminToken = process.env.API_AUTH_TOKEN ?? 'mdt-176-e2e-token'
@@ -124,7 +125,8 @@ test.describe('MDT-176 auth session unlock', () => {
     await page.goto('/prj/PUB')
     await page.waitForLoadState('load')
 
-    await expect(page.locator(sharingSelectors.readOnlyBadge)).toBeVisible()
+    await expectReadOnlyStatusInMenu(page)
+    await expect(page.locator(authSelectors.accessIndicator)).toHaveCount(0)
     await expect(page.locator(authSelectors.unlockPanel)).toHaveCount(0)
     await expect(page.locator(projectSelectors.addProjectButton)).toHaveCount(0)
     await expect(page.locator(projectSelectors.editProjectButton)).toHaveCount(0)
@@ -133,6 +135,7 @@ test.describe('MDT-176 auth session unlock', () => {
   test('locking owner access on a public documents route downgrades to read-only without blanking the page', async ({ page, e2eContext }) => {
     void e2eContext
     const publicProject = createPublicProjectFixture()
+    const privateProject = createPrivateProjectFixture()
     let ownerAuthenticated = true
 
     await page.route('**/api/auth/session', async route => {
@@ -173,7 +176,7 @@ test.describe('MDT-176 auth session unlock', () => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify([publicProject]),
+        body: JSON.stringify(ownerAuthenticated ? [publicProject, privateProject] : [publicProject]),
       })
     })
 
@@ -184,14 +187,21 @@ test.describe('MDT-176 auth session unlock', () => {
     await page.locator(authSelectors.menuButton).click()
     await page.locator(authSelectors.lockButton).click()
 
-    await expect(page.locator(sharingSelectors.readOnlyBadge)).toBeVisible()
+    await expectReadOnlyStatusInMenu(page)
+    await expect(page.locator(authSelectors.accessIndicator)).toHaveCount(0)
     await expect(page.locator(authSelectors.unlockPanel)).toHaveCount(0)
     await expect(page.locator(documentSelectors.documentTree)).toBeVisible()
+
+    await page.locator(selectorSelectors.panelTrigger).click()
+    await expect(page.locator(selectorSelectors.projectPanel)).toBeVisible()
+    await expect(page.locator(projectSelectors.projectOption('PRI'))).toHaveCount(0)
+    await expect(page.locator(projectSelectors.projectOption('PUB'))).toBeVisible()
+    await page.locator('[data-testid="project-browser-close"]').click()
 
     await page.reload()
     await page.waitForLoadState('load')
     await waitForDocumentsReady(page)
-    await expect(page.locator(sharingSelectors.readOnlyBadge)).toBeVisible()
+    await expectReadOnlyStatusInMenu(page)
     await expect(page.locator(authSelectors.unlockPanel)).toHaveCount(0)
   })
 
@@ -293,4 +303,34 @@ function createPublicProjectFixture() {
       },
     },
   }
+}
+
+function createPrivateProjectFixture() {
+  return {
+    id: 'private-demo',
+    project: {
+      id: 'private-demo',
+      name: 'Private Demo',
+      code: 'PRI',
+      path: '/tmp/private-demo',
+      configFile: '/tmp/private-demo/.mdt-config.toml',
+      startNumber: 1,
+      counterFile: '.mdt-counter',
+      active: true,
+      description: 'Owner-only project',
+      repository: '',
+      ticketsPath: 'docs/CRs',
+    },
+    metadata: {
+      dateRegistered: '2026-05-23',
+      lastAccessed: '2026-05-23',
+      version: '1.0.0',
+    },
+  }
+}
+
+async function expectReadOnlyStatusInMenu(page: Page): Promise<void> {
+  await page.locator(authSelectors.menuButton).click()
+  await expect(page.locator(sharingSelectors.readOnlyBadge)).toBeVisible()
+  await page.locator(authSelectors.menuButton).click()
 }
