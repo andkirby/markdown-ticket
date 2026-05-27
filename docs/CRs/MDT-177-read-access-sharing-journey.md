@@ -166,3 +166,11 @@ Add named read access tokens with server-generated one-time invite links that ex
 - Updated workflow documents: `requirements.md`, `architecture.md`, `tests.md`, `tasks.md`, trace projections, and `uat.md`.
 - Implementation scope: access/session vocabulary, auth capability shape, public-link-origin DTO, read-token list/create/invite response DTOs.
 - Out of scope: cookie/session internals, route authorization policy, token-store persistence format, and UI behavior changes.
+
+### UAT Session 2026-05-26
+
+- Approved changes: owner Lock refreshes all project-list surfaces after downgrade, current private routes show a project-unavailable fallback, read-only status moves into the hamburger menu, and hamburger access dots show owner/shared access state.
+- Changed requirement IDs: added `BR-1.18`, added `BR-1.19`, refined `C12`.
+- Updated workflow documents: `requirements.md`, `bdd.md`, `architecture.md`, `tests.md`, `tasks.md`, trace projections, and `uat.md`.
+- Implementation scope: auth access indicator contract, AuthSessionProvider access indicator derivation, project-manager access-mode reconciliation, hamburger menu status/dot UI, route error copy, and E2E coverage.
+- Strict drift/lock was not used.

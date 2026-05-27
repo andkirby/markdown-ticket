@@ -8,6 +8,7 @@ Owner/admin and scoped read-token unlock surface for browser authentication. It 
 AppRoot
 ├── AuthStateProvider / auth-aware fetch boundary
 │   ├── accessMode: unknown | locked | read-only | owner-admin | no-auth-dev | backend-down
+│   ├── accessIndicator: none | owner | shared
 │   ├── sessionStatus: checking | locked | unlocking | unlocked | error
 │   └── unlock(token) / lock()
 ├── AppHeader
@@ -54,7 +55,7 @@ AuthUnlockPanel
 | `locked` | user selects Unlock, or protected owner route returns 401 | AuthUnlockPanel | enter token, retry, theme toggle |
 | `unlocking` | unlock submitted | disabled token input, spinner button | cancel/clear optional |
 | `error` | invalid token/session failure | AuthUnlockPanel with inline error | edit token, retry |
-| `read-only` | anonymous public project, share session, or accepted read token | normal app with one read-only chip; owner actions hidden; hamburger shows `Unlock access` | view, search, sort, open tickets/docs, unlock with owner token |
+| `read-only` | anonymous public project, share session, or accepted read token | normal app; owner actions hidden; hamburger menu shows `Read only` and `Unlock access`; orange dot only for share/read-token access | view, search, sort, open tickets/docs, unlock with owner token |
 | `read-only-owner-unlock` | read-only visitor selects `Unlock access` from hamburger menu | owner-token modal/sheet over current board | enter owner token, cancel back to board |
 | `owner-admin` | session cookie accepted | normal app; Lock inside hamburger menu | all admin actions, lock owner/admin access |
 | `no-auth-dev` | backend auth disabled, or legacy local backend has no `/api/auth/session` and still returns projects | normal app; no header auth chip; no unlock affordance | all current local-dev actions |
@@ -72,6 +73,7 @@ AuthUnlockPanel
 8. Logout/Lock must clear only the owner/admin server session cookie; it must not mutate project data or clear independent public/share/read-token access.
 9. Read-only sessions must not mount owner/admin-only surfaces that call `/api/config`, `/api/filesystem`, `/api/directories`, `/api/read-tokens`, or `/api/cache`.
 10. Frontend API calls must use `authFetch` or an approved wrapper rather than raw `fetch('/api/...')`.
+11. Access mode chrome must live in the hamburger menu: green dot for owner/admin, orange dot for share/read-token access, no dot for public-only read-only access.
 
 ## Unlock flow
 
@@ -115,8 +117,10 @@ The frontend must not write the token to `localStorage`, `sessionStorage`, index
 ### Header auth action
 
 - Locked: small outline chip "Locked" + `Unlock` button.
-- Read-only: single small outline chip "Read only". The owner-upgrade entry is `Unlock access` inside the hamburger menu, not an inline header button.
-- Owner/admin: no inline auth chip. The hamburger menu shows a `Lock` menu item only when the owner session is valid.
+- Read-only: no inline header chip. The hamburger menu shows a non-action `Read only` row and the `Unlock access` owner-upgrade entry.
+- Public-only read-only: no hamburger dot.
+- Share/read-token read-only: orange hamburger dot.
+- Owner/admin: green hamburger dot and no inline auth chip. The hamburger menu shows a `Lock` menu item only when the owner session is valid.
 - Lock is a downgrade action, not a global sign-out. After Lock, the app reloads visible projects and stays on the current board/list/documents route if that project is still public or read-token visible. It shows the locked unlock panel only when no non-owner project access remains.
 
 ### Read-only owner unlock overlay
@@ -183,6 +187,7 @@ Owner-only modals and settings panels must be mounted only when the matching cap
 - `data-testid="auth-unlock-cancel"`
 - `data-testid="auth-unlock-error"`
 - `data-testid="auth-status-chip"`
+- `data-testid="auth-access-indicator"`
 - `data-testid="auth-lock-button"`
 - `data-testid="auth-unlock-affordance"` (locked state only)
 - `data-testid="sharing-owner-unlock-button"` (read-only hamburger menu item)
@@ -196,7 +201,9 @@ Owner-only modals and settings panels must be mounted only when the matching cap
 | read-only bad owner token | visitor is viewing a read-only project | submit invalid owner token | generic error appears; Cancel returns to read-only board |
 | read-token unlock | locked visitor submits valid scoped read token | token exchange succeeds | app shows read-only chip and token-scoped projects |
 | owner unlock | locked visitor submits valid owner token | token exchange succeeds | app shows owner session and owner actions |
-| owner lock with public access | owner views a public project, including documents | select `Lock` from hamburger menu | owner controls disappear, `Read only` appears, and current content remains visible |
+| owner lock with public access | owner views a public project, including documents | select `Lock` from hamburger menu | owner controls disappear, hamburger shows `Read only` with no dot, and current content remains visible |
+| owner lock with private route | owner views a project not visible to read-only access | select `Lock` from hamburger menu | visible project list refreshes; current route shows project unavailable rather than stale owner content |
+| shared access indicator | visitor gets share/read-token access | app renders | hamburger shows orange dot and read-only status lives inside the menu |
 | storage safety | any token is submitted | request completes | raw token is not visible in URL, localStorage, or sessionStorage |
 | read-only refresh boundary | visitor opens a public/share/read-token project | refresh page | read-only access remains and no owner-only endpoint is requested |
 

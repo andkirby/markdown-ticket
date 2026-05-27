@@ -26,9 +26,12 @@ describe('HamburgerMenu', () => {
     render(
       <HamburgerMenu
         accessMode="owner-admin"
+        accessIndicator="owner"
         onLock={onLock}
       />,
     )
+
+    expect(screen.getByTestId('auth-access-indicator')).toBeInTheDocument()
 
     fireEvent.click(screen.getByTestId('hamburger-menu'))
 
@@ -50,5 +53,17 @@ describe('HamburgerMenu', () => {
 
     expect(screen.queryByTestId('auth-status-chip')).toBeNull()
     expect(screen.queryByTestId('auth-lock-button')).toBeNull()
+    expect(screen.getByTestId('sharing-readonly-badge')).toHaveTextContent('Read only')
+  })
+
+  it('shows shared access indicator for token or share read access', () => {
+    render(
+      <HamburgerMenu
+        accessMode="read-only"
+        accessIndicator="shared"
+      />,
+    )
+
+    expect(screen.getByTestId('auth-access-indicator')).toBeInTheDocument()
   })
 })

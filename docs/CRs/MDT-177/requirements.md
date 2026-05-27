@@ -58,3 +58,15 @@ Canonical requirements live in spec-trace and are rendered in [requirements.trac
 ## UAT Refinement 2026-05-24
 
 The read-access boundary contracts are part of MDT-177 and must not stay as parallel local TypeScript interfaces. Access-mode vocabulary, auth capability flags, public-link-origin response shape, and read-token management API DTOs belong in `domain-contracts`. Runtime policy, route authorization, cookie handling, and token persistence internals stay in server modules.
+
+## UAT Refinement 2026-05-26
+
+Owner Lock is refined as a privilege downgrade with immediate read-visibility reconciliation. After locking, every project list must reload from backend-filtered read access. If the current project remains public/share/read-token visible, the route stays mounted; if it is no longer visible, the UI may show a project-unavailable state, but it must not show stale owner-only content.
+
+Header access chrome is refined: read-only text moves into the hamburger menu, owner/admin access shows a green dot on the hamburger trigger, share/read-token access shows an orange dot, and public-only read-only access shows no dot.
+
+Changed IDs:
+
+- `BR-1.18` added for owner Lock project-list refresh and project-unavailable fallback.
+- `BR-1.19` added for hamburger-owned read-only status and access indicator dots.
+- `C12` refined to include the shared auth access indicator contract.

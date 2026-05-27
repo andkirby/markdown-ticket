@@ -1,15 +1,16 @@
-import type { AccessMode, AuthCapabilities, SessionStatus } from '@mdt/domain-contracts'
+import type { AccessMode, AuthAccessIndicator, AuthCapabilities, SessionStatus } from '@mdt/domain-contracts'
 import { createContext, useContext } from 'react'
 
-export type { AccessMode, SessionStatus } from '@mdt/domain-contracts'
+export type { AccessMode, AuthAccessIndicator, SessionStatus } from '@mdt/domain-contracts'
 
 export interface AuthSessionContextValue extends AuthCapabilities {
   accessMode: AccessMode
+  accessIndicator: AuthAccessIndicator
   sessionStatus: SessionStatus
   unlock: (token: string) => Promise<void>
   lock: () => Promise<void>
   markLocked: () => void
-  markReadOnly: () => void
+  markReadOnly: (source?: 'public' | 'shared') => void
   markBackendDown: () => void
   markNoAuthDev: () => void
   markOwnerAdmin: () => void

@@ -16,15 +16,17 @@ window "App Header — Desktop":
       combo value="MDT Project ▾" id="project-selector"
       spacer
       combo value="Sort by Key ⇅" id="sort-controls"
-      button "≡" id="hamburger-trigger"
+      row id="hamburger-trigger":
+        button "≡"
+        status "●" kind=success id="owner-dot"
 
-annotation "Owner lock/logout lives inside the hamburger menu; the menu does not claim session status." target="hamburger-trigger" position=bottom
+annotation "Green dot marks owner/admin access; Lock remains inside the hamburger menu." target="owner-dot" position=bottom
 ```
 
-## Desktop Read-only
+## Desktop Public Read-only
 
 ```wireloom
-window "App Header — Read-only":
+window "App Header — Public Read-only":
   header:
     row:
       icon name="star"
@@ -34,12 +36,31 @@ window "App Header — Read-only":
         segment "Docs"
       combo value="Public Project ▾"
       spacer
-      status "Read only" kind=info id="readonly-badge"
       combo value="Key ▾ ⇅"
       button "≡" id="readonly-menu-trigger"
 
-annotation "Badge appears before sort controls when access mode cannot write" target="readonly-badge" position=bottom
-annotation "Owner-upgrade entry is in the hamburger menu, not inline in the header." target="readonly-menu-trigger" position=bottom
+annotation "Public-only read access has no header dot; the Read only label is inside the hamburger menu." target="readonly-menu-trigger" position=bottom
+```
+
+## Desktop Shared Read-only
+
+```wireloom
+window "App Header — Shared Read-only":
+  header:
+    row:
+      icon name="star"
+      segmented:
+        segment "Board" selected
+        segment "List"
+        segment "Docs"
+      combo value="Private Project ▾"
+      spacer
+      combo value="Key ▾ ⇅"
+      row id="shared-menu-trigger":
+        button "≡"
+        status "●" kind=warning id="shared-dot"
+
+annotation "Orange dot marks read-token or share-link access beyond public projects." target="shared-dot" position=bottom
 ```
 
 ### Board View Active
@@ -129,6 +150,7 @@ annotation "Sort controls appear on mobile only" target="menu-sort" position=rig
 window "App Header — Read-only Menu":
   panel:
     list:
+      item "Read only" id="readonly-status-row"
       item "Unlock access" id="readonly-unlock-access"
       item "Sort controls" id="readonly-menu-sort"
     divider
@@ -140,6 +162,7 @@ window "App Header — Read-only Menu":
       button "Dark"
       button "System"
 
+annotation "Read-only status moved from the header into the menu." target="readonly-status-row" position=right
 annotation "Unlock access opens the owner-token overlay while preserving the read-only board." target="readonly-unlock-access" position=right
 annotation "Add/Edit Project and Settings are absent without owner/admin access" target="readonly-menu-sort" position=right
 ```
@@ -167,8 +190,10 @@ annotation "Token submission uses backend exchange; invalid errors stay generic"
 | Nav border | `--border` | `border-gray-200/50` | Subtle bottom separator |
 | Nav shadow | n/a | `shadow-sm` | Fixed on scroll |
 | Hamburger trigger | `--foreground` | ghost button | `p-2`, Menu icon 4×4 |
+| Owner access dot | green utility | absolute status dot | Top-right of hamburger trigger |
+| Shared access dot | orange utility | absolute status dot | Top-right of hamburger trigger; absent for public-only read-only |
 | Menu dropdown | `--popover` | `bg-background border` | `w-48`, absolute positioned |
-| Read-only badge | `--muted` | `chip` / small badge | Shown only when write access is unavailable |
+| Read-only status row | `--muted-foreground` | menu status row | Inside hamburger menu only |
 | Unlock access item | `--foreground` | menu item with `KeyRound` icon | Read-only sessions only |
 | Lock item | `--foreground` | menu item with `LockKeyhole` icon | Owner/admin sessions only |
 | Theme button group | `--primary` / `--muted` | `ButtonGroup` | Active: primary bg |

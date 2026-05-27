@@ -20,6 +20,8 @@ Frontend component unit tests were not added because project E2E guidance says f
 | `server/security/accessPolicy.ts` | `server/tests/api/public-sharing.test.ts` | `TEST-readonly-mutation-denial-api` |
 | `server/security/originPolicy.ts` | `server/tests/security/originPolicy.test.ts` | `TEST-origin-public-link-policy` |
 | `domain-contracts/src/access/schema.ts` | `domain-contracts/src/access/__tests__/schema.test.ts` | `TEST-access-domain-contracts` |
+| `src/components/HamburgerMenu.tsx` | `src/components/HamburgerMenu.test.tsx`; `tests/e2e/auth/session-unlock.spec.ts` | `TEST-auth-session-lock-refresh` |
+| `src/hooks/useProjectManager.ts` | `tests/e2e/auth/session-unlock.spec.ts` | `TEST-auth-session-lock-refresh` |
 | `tests/e2e/sharing/read-access-journey.spec.ts` | `tests/e2e/sharing/read-access-journey.spec.ts` | `TEST-read-access-journey` |
 | `tests/e2e/utils/selectors.ts` | `tests/e2e/utils/selectors.ts` | `TEST-e2e-selector-contract` |
 
@@ -33,6 +35,8 @@ Frontend component unit tests were not added because project E2E guidance says f
 | Origin selection | `publicLinkOrigins` | `PUBLIC_ORIGIN` wins; current origin only when no public origin is configured; no-origin fail closed |
 | Backend authorization | API routes | read-only mutation denial across project, ticket, and document write endpoints; owner-only token management for anonymous/read-only/share-only visitors |
 | Boundary contracts | `domain-contracts/src/access/schema.ts` | access/session vocabulary, public-link-origin DTO, and read-token management response DTOs parse through canonical schemas |
+| Owner Lock downgrade | `AuthSessionProvider`, `useProjectManager`, `ProjectSelector` | project list refreshes after Lock; owner-only projects disappear from selector; public-only access has no dot |
+| Header access chrome | `HamburgerMenu` | Read-only status row lives inside menu; green owner dot; orange shared dot; no dot for public-only read-only |
 
 ## Read-only Mutation Endpoint Coverage
 
@@ -68,6 +72,8 @@ All requested write endpoints exist in current routers and are covered by `TEST-
 | C10 | `TEST-read-access-journey` |
 | C11 | `TEST-env-read-token-compatibility` |
 | C12 | `TEST-access-domain-contracts` |
+| BR-1.18 | `TEST-auth-session-lock-refresh`, `TEST-read-access-journey` |
+| BR-1.19 | `TEST-auth-session-lock-refresh`, `TEST-read-access-journey`, `TEST-access-domain-contracts` |
 
 ## Expected RED Tests
 
@@ -83,7 +89,9 @@ All requested write endpoints exist in current routers and are covered by `TEST-
 ```bash
 bun run validate:ts
 bun run --cwd domain-contracts test -- access --runInBand
+bun test src/components/HamburgerMenu.test.tsx src/components/AuthUnlock/AuthStatusAction.test.tsx
 bun run --cwd server jest tests/security/readTokenStore.test.ts tests/security/readSession.test.ts tests/security/originPolicy.test.ts tests/api/read-token-management.test.ts tests/api/public-sharing.test.ts --runInBand
+bunx playwright test tests/e2e/auth/session-unlock.spec.ts --project=chromium
 bunx playwright test tests/e2e/sharing/read-access-journey.spec.ts --project=chromium
 spec-trace validate MDT-177 --stage tests --format json
 spec-trace render tests MDT-177

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { AccessMode, AuthSessionContextValue, SessionStatus } from './AuthSessionContext'
+import type { AccessMode, AuthAccessIndicator, AuthSessionContextValue, SessionStatus } from './AuthSessionContext'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { syncSSEAccessMode } from '../services/sseClient'
 import { authFetch, isAuthRequiredResponse, isBackendDownError, isBackendDownResponse } from './authFetch'
@@ -15,34 +15,40 @@ interface SessionResponse {
 
 export function AuthSessionProvider({ children }: { children: ReactNode }) {
   const [accessMode, setAccessMode] = useState<AccessMode>('unknown')
+  const [accessIndicator, setAccessIndicator] = useState<AuthAccessIndicator>('none')
   const [sessionStatus, setSessionStatus] = useState<SessionStatus>('checking')
   const [authEndpointState, setAuthEndpointState] = useState<AuthEndpointState>('checking')
 
   const markLocked = useCallback(() => {
     setAccessMode('locked')
+    setAccessIndicator('none')
     setSessionStatus('locked')
   }, [])
 
-  const markReadOnly = useCallback(() => {
+  const markReadOnly = useCallback((source: 'public' | 'shared' = 'shared') => {
     setAuthEndpointState('enabled')
     setAccessMode('read-only')
+    setAccessIndicator(source === 'shared' ? 'shared' : 'none')
     setSessionStatus('unlocked')
   }, [])
 
   const markBackendDown = useCallback(() => {
     setAccessMode('backend-down')
+    setAccessIndicator('none')
     setSessionStatus('error')
   }, [])
 
   const markNoAuthDev = useCallback(() => {
     setAuthEndpointState(current => current === 'enabled' ? current : 'disabled')
     setAccessMode(current => current === 'read-only' ? current : 'no-auth-dev')
+    setAccessIndicator(current => current === 'shared' ? current : 'none')
     setSessionStatus('unlocked')
   }, [])
 
   const markOwnerAdmin = useCallback(() => {
     setAuthEndpointState('enabled')
     setAccessMode('owner-admin')
+    setAccessIndicator('owner')
     setSessionStatus('unlocked')
   }, [])
 
@@ -59,6 +65,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
 
       return 'read-only'
     })
+    setAccessIndicator('none')
     setSessionStatus(current => current === 'checking' ? 'unlocked' : current)
   }, [])
 
@@ -202,7 +209,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
         }
 
         if (session.readAuthenticated) {
-          markReadOnly()
+          markReadOnly('shared')
           return
         }
 
@@ -241,6 +248,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
 
     return {
       accessMode,
+      accessIndicator,
       sessionStatus,
       canWriteTickets: ownerCapable,
       canManageProjects: ownerCapable,
@@ -257,6 +265,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
     }
   }, [
     accessMode,
+    accessIndicator,
     sessionStatus,
     unlock,
     lock,

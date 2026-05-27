@@ -1,6 +1,6 @@
 import type { Project } from '@mdt/shared/models/Project'
 import type { SortPreferences } from '../config/sorting'
-import type { AccessMode } from '@/auth/AuthSessionContext'
+import type { AccessMode, AuthAccessIndicator } from '@/auth/AuthSessionContext'
 import * as React from 'react'
 import { HamburgerMenu } from './HamburgerMenu'
 import { SortControls } from './SortControls'
@@ -18,6 +18,7 @@ interface SecondaryHeaderProps {
   onUnlockOwnerAccess?: () => void
   onLock?: () => Promise<void> | void
   accessMode?: AccessMode
+  accessIndicator?: AuthAccessIndicator
   canManageProjects?: boolean
   canManageSharing?: boolean
   canUseOwnerEndpoints?: boolean
@@ -34,6 +35,7 @@ export const SecondaryHeader: React.FC<SecondaryHeaderProps> = ({
   onUnlockOwnerAccess,
   onLock,
   accessMode,
+  accessIndicator = 'none',
   canManageProjects = true,
   canManageSharing = canManageProjects,
   canUseOwnerEndpoints = canManageProjects,
@@ -59,6 +61,7 @@ export const SecondaryHeader: React.FC<SecondaryHeaderProps> = ({
         onUnlockOwnerAccess={onUnlockOwnerAccess}
         onLock={onLock}
         accessMode={accessMode}
+        accessIndicator={accessIndicator}
         canManageProjects={canManageProjects}
         canManageSharing={canManageSharing}
         canUseOwnerEndpoints={canUseOwnerEndpoints}
