@@ -383,9 +383,9 @@ const BoardContent: React.FC<BoardProps> = ({
     return (
       <div className="flex items-center justify-center min-h-[300px]">
         <div className="text-center max-w-lg mx-auto p-6">
-          <div className="text-6xl text-gray-300 mb-4">📋</div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Project Selected</h3>
-          <p className="text-sm text-gray-600 mb-4">Choose a project from the header to view its change requests.</p>
+          <div className="mb-4 text-6xl text-muted-foreground">📋</div>
+          <h3 className="mb-2 text-lg font-medium text-foreground">No Project Selected</h3>
+          <p className="mb-4 text-sm text-muted-foreground">Choose a project from the header to view its change requests.</p>
 
           {/* Backend down warning */}
           {projects.length === 0 && isBackendDown && (
