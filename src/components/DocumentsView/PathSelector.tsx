@@ -10,6 +10,7 @@
 import * as React from 'react'
 import { useCallback, useEffect, useState } from 'react'
 import { authFetch } from '@/auth/authFetch'
+import { Button } from '@/components/ui/Button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 
 interface PathItem {
@@ -30,18 +31,32 @@ export default function PathSelector({ projectId, onPathsSelected, onCancel }: P
   const [items, setItems] = useState<PathItem[]>([])
   const [selectedPaths, setSelectedPaths] = useState<Set<string>>(() => new Set())
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   const loadFileSystem = useCallback(async () => {
     try {
       setLoading(true)
-      const response = await authFetch(`/api/filesystem?projectId=${encodeURIComponent(projectId)}`)
-      if (response.ok) {
-        const data = await response.json()
-        setItems(data)
+      setLoadError(null)
+      const response = await authFetch(`/api/filesystem?projectId=${encodeURIComponent(projectId)}`, {
+        ownerIntent: true,
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to load selectable paths (${response.status})`)
       }
+
+      const data: unknown = await response.json()
+
+      if (!Array.isArray(data)) {
+        throw new TypeError('Selectable paths response was not a tree')
+      }
+
+      setItems(data as PathItem[])
     }
     catch (error) {
       console.error('Failed to load file system:', error)
+      setItems([])
+      setLoadError(error instanceof Error ? error.message : 'Failed to load selectable paths')
     }
     finally {
       setLoading(false)
@@ -102,7 +117,7 @@ export default function PathSelector({ projectId, onPathsSelected, onCancel }: P
     return (
       <div key={item.path} style={{ marginLeft: `${depth * 20}px` }}>
         <label
-          className="flex items-center py-1 hover:bg-accent rounded cursor-pointer"
+          className="flex cursor-pointer items-center rounded py-1 text-foreground hover:bg-accent"
           htmlFor={`checkbox-${item.path}`}
         >
           <input
@@ -124,6 +139,40 @@ export default function PathSelector({ projectId, onPathsSelected, onCancel }: P
     )
   }
 
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center h-64">
+          <div className="text-muted-foreground">Loading file system...</div>
+        </div>
+      )
+    }
+
+    if (loadError) {
+      return (
+        <div className="flex h-64 items-center justify-center rounded-lg border border-border px-4 text-center text-sm text-destructive">
+          {loadError}
+        </div>
+      )
+    }
+
+    if (items.length === 0) {
+      return (
+        <div className="flex h-64 items-center justify-center rounded-lg border border-border px-4 text-center text-sm text-muted-foreground">
+          No selectable document paths found.
+        </div>
+      )
+    }
+
+    return (
+      <div className="rounded-lg border border-border">
+        <div className="p-4">
+          {items.map(item => renderItem(item))}
+        </div>
+      </div>
+    )
+  }
+
   const handleSave = () => {
     onPathsSelected(Array.from(selectedPaths))
   }
@@ -131,9 +180,9 @@ export default function PathSelector({ projectId, onPathsSelected, onCancel }: P
   return (
     <div className="flex flex-col h-[70vh]" data-testid="path-selector">
       {/* Fixed Header */}
-      <div className="flex-shrink-0 p-6 border-b">
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">Select Document Paths</h3>
-        <p className="text-sm text-gray-600">
+      <div className="flex-shrink-0 border-b border-gray-200 px-4 py-3 dark:border-gray-700">
+        <h3 className="mb-2 text-xl font-semibold text-foreground">Select Document Paths</h3>
+        <p className="text-sm text-muted-foreground">
           Choose the files and folders you want to include in the documents view.
         </p>
         <p className="mt-2 text-xs text-muted-foreground" data-testid="document-exclusion-notice">
@@ -145,30 +194,17 @@ export default function PathSelector({ projectId, onPathsSelected, onCancel }: P
       <ScrollArea
         type="hover"
         scrollHideDelay={600}
-        className="flex-1"
-        style={{ height: 'calc(80vh - 250px)' }}
+        className="min-h-0 flex-1"
       >
-        <div className="p-6">
-          {loading
-            ? (
-                <div className="flex items-center justify-center h-64">
-                  <div className="text-muted-foreground">Loading file system...</div>
-                </div>
-              )
-            : (
-                <div className="border border-gray-200 rounded-lg">
-                  <div className="p-4">
-                    {items.map(item => renderItem(item))}
-                  </div>
-                </div>
-              )}
+        <div className="p-4">
+          {renderContent()}
         </div>
       </ScrollArea>
 
       {/* Fixed Footer */}
-      <div className="flex-shrink-0 border-t p-6">
+      <div className="flex-shrink-0 border-t border-gray-200 px-4 py-3 dark:border-gray-700">
         <div className="flex justify-between items-center">
-          <div className="text-sm text-gray-600" data-testid="path-selector-count">
+          <div className="text-sm text-muted-foreground" data-testid="path-selector-count">
             {selectedPaths.size}
             {' '}
             item
@@ -177,21 +213,20 @@ export default function PathSelector({ projectId, onPathsSelected, onCancel }: P
             selected
           </div>
           <div className="flex space-x-3">
-            <button
+            <Button
+              variant="outline"
               onClick={onCancel}
-              className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
               data-testid="path-selector-cancel"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleSave}
               disabled={selectedPaths.size === 0}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               data-testid="path-selector-save"
             >
               Save Selection
-            </button>
+            </Button>
           </div>
         </div>
       </div>
