@@ -37,7 +37,7 @@ DocumentsLayout
 | FileTree | `src/components/DocumentsView/FileTree.tsx` | this spec | when documents are configured |
 | DocumentFilenameTabs | `src/components/DocumentsView/DocumentFilenameTabs.tsx` | `document-filename-tabs.spec.md` | when selected markdown file belongs to a filename group |
 | MarkdownViewer | `src/components/DocumentsView/MarkdownViewer.tsx` | `documents-view-file-updates.spec.md` | when a file is selected |
-| PathSelector | `src/components/DocumentsView/PathSelector.tsx` | — | when no document paths are configured |
+| PathSelector | `src/components/DocumentsView/PathSelector.tsx` | `documents-path-selector.spec.md` | when no document paths are configured |
 
 ## Source files
 

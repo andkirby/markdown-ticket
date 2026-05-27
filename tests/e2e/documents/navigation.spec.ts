@@ -133,12 +133,34 @@ test.describe('Documents View navigation (MDT-162)', () => {
     await expect(page.locator(documentSelectors.documentItem).filter({ hasText: 'Navigation Spec' })).toBeVisible()
   })
 
-  test('path configuration discloses automatic docs/CRs exclusion', async ({ page, e2eContext }) => {
-    const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
+  test('path configuration shows collapsed selector tree and configured ticket-path help', async ({ page, e2eContext }) => {
+    const ticketsPath = 'tickets'
+    const project = await e2eContext.projectFactory.createProject('empty', {
+      name: 'Path Selector Project',
+      ticketsPath,
+      documentPaths: ['docs/design'],
+    })
+    await mkdir(join(project.path, 'docs', 'design'), { recursive: true })
+    await writeFile(join(project.path, 'docs', 'design', 'selector.md'), '# Selector\n\nContent.')
 
-    await page.goto(`/prj/${scenario.projectCode}/documents`)
+    await page.goto(`/prj/${project.key}/documents`)
     await page.locator(pathSelectorSelectors.configureButton).click()
 
-    await expect(page.locator(documentSelectors.exclusionNotice)).toContainText('docs/CRs')
+    await expect(page.locator(pathSelectorSelectors.maxDepth)).toContainText('Max depth: 5')
+    await expect(page.locator(pathSelectorSelectors.pathCheckbox('docs'))).toBeVisible()
+    await expect(page.locator(pathSelectorSelectors.pathCheckbox('docs/design'))).toBeVisible()
+    await expect(page.locator(pathSelectorSelectors.pathCheckbox('docs/design/selector.md'))).not.toBeVisible()
+
+    await page.locator(pathSelectorSelectors.pathToggle('docs/design')).click()
+    await expect(page.locator(pathSelectorSelectors.pathCheckbox('docs/design/selector.md'))).toBeVisible()
+
+    await page.locator(pathSelectorSelectors.collapseAllButton).click()
+    await expect(page.locator(pathSelectorSelectors.pathCheckbox('docs/design'))).not.toBeVisible()
+
+    await page.locator(pathSelectorSelectors.expandAllButton).click()
+    await expect(page.locator(pathSelectorSelectors.pathCheckbox('docs/design'))).toBeVisible()
+
+    await page.locator(pathSelectorSelectors.infoButton).hover()
+    await expect(page.locator(pathSelectorSelectors.infoTooltip)).toContainText(`${ticketsPath} is excluded automatically`)
   })
 })
