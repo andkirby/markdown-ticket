@@ -6,6 +6,8 @@ Navigation model for large configured document sets in Documents View.
 
 ```text
 DocumentsLayout
+├── NoDocumentPathsEmptyState
+│   └── ConfigureDocumentPathsCTA
 ├── DocumentsSidebar
 │   ├── SidebarHeader
 │   │   ├── TitleActionRow
@@ -35,9 +37,10 @@ DocumentsLayout
 | FavDocuments | `src/components/DocumentsView/FavDocuments.tsx` | this spec | when reconciled favs exist |
 | RecentDocuments | `src/components/DocumentsView/RecentDocuments.tsx` | this spec | when user has opened documents |
 | FileTree | `src/components/DocumentsView/FileTree.tsx` | this spec | when documents are configured |
+| NoDocumentPathsEmptyState | `src/components/DocumentsView/DocumentsLayout.tsx` | this spec | when backend reports no configured document paths |
 | DocumentFilenameTabs | `src/components/DocumentsView/DocumentFilenameTabs.tsx` | `document-filename-tabs.spec.md` | when selected markdown file belongs to a filename group |
 | MarkdownViewer | `src/components/DocumentsView/MarkdownViewer.tsx` | `documents-view-file-updates.spec.md` | when a file is selected |
-| PathSelector | `src/components/DocumentsView/PathSelector.tsx` | `documents-path-selector.spec.md` | when no document paths are configured |
+| PathSelector | `src/components/DocumentsView/PathSelector.tsx` | `documents-path-selector.spec.md` | when a write-capable user opens document path configuration |
 
 ## Source files
 
@@ -57,6 +60,7 @@ DocumentsLayout
 ## Navigation Rules
 
 - Documents View shows configured document paths only.
+- Documents View does not auto-open path configuration when no paths are configured; it shows an empty state with a clear configure action.
 - Ticket paths are excluded from Documents navigation by default.
 - `docs/CRs/` is always treated as ticket territory, not general documentation.
 - If a configured document root overlaps `docs/CRs/`, the tree excludes the ticket area from that root.
@@ -75,6 +79,7 @@ DocumentsLayout
 - Sidebar default width is about one third of the Documents View; user-resized width and collapsed state persist per project.
 - Collapsing navigation removes the sidebar and exposes a compact show-navigation control in the viewer pane.
 - Header first row contains the `Documents` title on the left and navigation action icons on the right.
+- The path configuration action uses a gear/settings icon, not an edit pencil, because it opens configuration rather than editing a document.
 - Header second row order is always: search input flexing left, sort select, sort direction button.
 - Search input uses the available row width before the fixed-width sort controls; sort controls must not squeeze title/actions into the first row.
 - Search, sort select, and sort direction button share a single visual row and equal control height.
@@ -125,7 +130,8 @@ DocumentsLayout
 | search active | user types in search input | tree shows matching folders/files; Favs and Recent remain visible |
 | filter hides selected | selected file does not match filter | target action clears filter, expands ancestors, scrolls to selected file |
 | no matches | filter returns no files | tree area shows compact empty state; Favs and Recent remain available |
-| no configured paths | backend returns 404 | PathSelector modal opens |
+| no configured paths | backend returns 404 | centered empty state appears; modal stays closed |
+| configure from empty state | user clicks `Configure document paths` | PathSelector modal opens with the same behavior as the sidebar gear action |
 | read-only | access mode lacks write/admin | Configure paths hidden; tree and Favs star mutation controls absent; existing Favs and Recents remain selectable shortcuts |
 
 ## Filter Behavior

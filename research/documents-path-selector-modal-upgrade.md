@@ -23,6 +23,12 @@ aa
 
 `aa` and `aa/bb` are open so the selection is visible. `cc` remains collapsed so the modal does not become an expanded file browser.
 
+## Plan Update
+
+Do not auto-open the selector when a project has no configured document paths. First load should show a friendly empty state with a `Configure document paths` button. That button opens the same selector modal as the sidebar configuration action.
+
+The sidebar configuration action should use a gear/settings icon because it changes Documents View configuration, not document content.
+
 ## Remaining Boundary
 
 If this surface grows again, split the path-selection tree into a dedicated endpoint such as:
