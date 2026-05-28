@@ -15,7 +15,7 @@ ProjectBrowserPanel
     │   └── CloseButton (p-2, rounded-lg, hover:bg-gray-100)
     └── ProjectList (max-h-[60vh], overflow-y-auto, p-6)
         ├── ProjectGrid (grid grid-cols-1 md:grid-cols-2, gap-4)
-        │   └── ProjectSelectorCard[] (border rounded-xl, optional access badge)
+        │   └── ProjectSelectorCard[] (border rounded-xl)
         └── EmptyState (text-center py-12)
             ├── no-projects (0 registered)
             └── no-search-results (query matches nothing)
@@ -55,7 +55,7 @@ LauncherButton (+ icon, rounded-full w-10 h-10)
 ## Search Logic
 
 - **Scope**: Client-side filter on preloaded project list
-- **Visibility**: The preloaded list is already filtered by backend access mode: anonymous users receive `public-readonly` projects only; `unlisted-readonly` projects are absent unless opened through `/share/{shareId}`; read-token users receive token-scoped projects; owner/admin users receive all allowed projects.
+- **Visibility**: The preloaded list is already filtered by backend access mode: anonymous users receive `public-readonly` projects only; `unlisted-readonly` projects are absent unless opened through `/share/{shareId}`; read-token users receive all token-scoped projects plus public projects; owner/admin users receive all allowed projects.
 - **Match**: Case-insensitive substring on project `code`, title (`name` in the data model), OR `description`
 - **Current project exclusion**: If the query matches the current project code, title/name, or description, the current project does NOT appear in results
 - **Debounce**: None needed (instant client-side filtering)
@@ -114,7 +114,7 @@ LauncherButton (+ icon, rounded-full w-10 h-10)
 | searching | User types in search input | Filter project cards by code/title/description substring; current project excluded if matched |
 | no projects | 0 registered projects | Empty state: "No projects available" |
 | no search results | Query matches zero projects (excluding current) | Empty state: "No projects match your search" |
-| no visible projects | API returns zero listable projects for current access mode | Empty state: "No public projects available"; Authorize action visible |
+| no visible projects | API returns zero listable projects for current access mode | Empty state: "No projects available" |
 
 ### Card
 
@@ -125,7 +125,10 @@ LauncherButton (+ icon, rounded-full w-10 h-10)
 | hover | Mouse enter | `hover:shadow-lg`, `-translate-y-0.5`, `scale-[1.02]` |
 | favorited | `project.favorite === true` | Star icon visible, `rotate-[15deg]` |
 | not favorited | `project.favorite === false` | No star (or hidden star on hover) |
-| read-only visible | project access mode is read-only | small "Read-only" badge; favorite star toggle hidden because it writes state |
+| read-only visible | project access mode is read-only | favorite star toggle hidden because it writes state |
+| token-scoped visible | read token grants project scope | card is selectable like any other visible project |
+| public visible | anonymous or token visitor can see public project | no favorite toggle |
+| share-link merged | visitor opened `/share/{shareId}` while token-scoped | additional shared project appears without removing token-scoped projects |
 
 ### Chip
 
@@ -216,7 +219,29 @@ Focused project cards show the standard blue focus ring. Arrow navigation applie
 4. Navigation to `/prj/{key}` (preserving last view mode)
 5. Panel closes after selection (panel calls `onClose()` in its `handleProjectSelect`)
 
-Read-only visitors can select visible listable projects normally. Project cards must not reveal private or unlisted project names, counts, paths, or disabled placeholders.
+Read-only visitors can select visible listable projects normally. Token-scoped visitors must be able to switch among every project assigned to their named read token without re-entering a token. Project cards must not reveal private or unlisted project names, counts, paths, or disabled placeholders.
+
+## Read Access Project Switching
+
+| Visitor state | Visible projects | Switching rule |
+|---------------|------------------|----------------|
+| Anonymous | `public-readonly` only | can switch among public projects |
+| Unlisted share link only | active shared project plus public projects if backend lists them | active shared project stays available by share-session grant |
+| Named read token | token-assigned projects plus public projects | can switch among all visible projects with no token prompt |
+| Named read token + share link | token-assigned projects, public projects, and the opened share-link project | share-link grant is additive and must not overwrite token scope |
+| Owner/admin | all registered projects | normal owner selector behavior |
+
+The project browser does not own authorization. It reflects the backend-filtered project list and must not implement privacy by client-side hiding alone.
+
+## E2E Journey Contract
+
+| Journey | Given | When | Expected |
+|---------|-------|------|----------|
+| token project switch | read-only session grants PRI and DOCS | open project browser | both PRI and DOCS are selectable |
+| no repeated token | visitor switches PRI -> DOCS -> PRI | each project loads | no unlock prompt appears |
+| public plus token | token grants PRI and public project PUB exists | open project browser | PRI and PUB both appear |
+| share merge | token grants PRI and DOCS | visitor opens `/share/{shareId}` for OPS | PRI, DOCS, and OPS remain visible |
+| privacy boundary | anonymous visitor opens project browser | private/unlisted projects exist | private/unlisted names are absent, not disabled placeholders |
 
 ## Favorite toggle behavior
 
@@ -232,4 +257,5 @@ Read-only visitors can select visible listable projects normally. Project cards 
 - Cross-project ticket search from Cmd+K is specified in `quick-search.spec.md`
 - Visibility is backend-filtered. Do not implement client-side hiding as the only privacy control.
 - `unlisted-readonly` is reachable by share route, not by anonymous project browser listing.
-- Read-only cards can show a static access badge, but must not expose favorite toggles because selector favorites are mutable user state.
+- Read-only cards must not expose favorite toggles because selector favorites are mutable user state.
+- Token-scoped read-only visitors use the same selector interactions as owner users for visible projects, but all write-oriented project actions remain hidden.
