@@ -52,30 +52,78 @@ window "Project Browser — Read-only":
     divider
     grid cols=2 rows=1:
       cell id="readonly-card-mdt":
-        row:
-          text "MDT" bold
-          chip "Read-only" id="readonly-project-chip"
+        text "MDT" bold
         text "Markdown Ticket"
         text "Lightweight ticket mgmt" muted
 
-annotation "Favorite toggle is absent because it writes selector state" target="readonly-project-chip" position=right
+annotation "Favorite toggle is absent because it writes selector state" target="readonly-card-mdt" position=right
 ```
 
-### Public Visitor Empty State
+### Token-scoped Project List
 
 ```wireloom
-window "Project Browser — No Public Projects":
+window "Project Browser — Token Scoped":
   panel:
     row:
       text "Projects" bold
       input placeholder="Search projects..." type=search
       button "×"
     divider
-    text "No public projects available" muted id="no-public-projects"
-    row:
-      button "Authorize" id="authorize-from-empty"
+    grid cols=2 rows=2:
+      cell id="token-card-pri":
+        text "PRI" bold
+        text "Private roadmap"
+        text "Read-only via Bob token" muted
+      cell id="token-card-docs":
+        text "DOCS" bold
+        text "Documentation"
+        text "Read-only via Bob token" muted
+      cell id="token-card-pub":
+        text "PUB" bold
+        text "Public project"
+        text "Read-only for everyone" muted
 
-annotation "Unlisted share links do not appear here" target="no-public-projects" position=bottom
+annotation "Named read tokens can grant several projects; each card remains directly selectable." target="token-card-pri" position=right
+annotation "Public projects appear alongside token-scoped projects." target="token-card-pub" position=bottom
+```
+
+### Share Link Merged With Token Scope
+
+```wireloom
+window "Project Browser — Token Plus Share Link":
+  panel:
+    row:
+      text "Projects" bold
+      input placeholder="Search projects..." type=search
+      button "×"
+    divider
+    grid cols=2 rows=2:
+      cell id="merge-card-pri":
+        text "PRI" bold
+        text "Private roadmap"
+      cell id="merge-card-docs":
+        text "DOCS" bold
+        text "Documentation"
+      cell id="merge-card-ops":
+        text "OPS" bold id="share-merge-project"
+        text "Operations notes"
+
+annotation "Opening a one-project share link adds OPS without removing PRI or DOCS." target="share-merge-project" position=right
+```
+
+### Empty State
+
+```wireloom
+window "Project Browser — No Projects":
+  panel:
+    row:
+      text "Projects" bold
+      input placeholder="Search projects..." type=search
+      button "×"
+    divider
+    text "No projects available" muted id="no-projects"
+
+annotation "Unlisted share links do not appear in anonymous project browser listing" target="no-projects" position=bottom
 ```
 
 ### Search State (User Types "MD")
@@ -185,7 +233,7 @@ window "Project Browser — Empty":
 ### Mobile Viewport
 
 ```wireloom
-window "Project Browser — Mobile":
+window "Project Browser — Mobile Token Scoped":
   panel:
     row:
       text "Projects" bold id="pb-title-mobile"
@@ -193,15 +241,13 @@ window "Project Browser — Mobile":
       button "×"
     divider
     list:
-      slot "MDT":
-        row:
-          text "Markdown Ticket" bold
-          chip "Read-only"
-        text "Lightweight mgmt" muted
-      slot "ABC":
-        text "Another Project"
-      slot "XYZ":
-        text "Third Project"
+      slot "PRI":
+        text "Private roadmap" bold
+        text "Read-only via Bob token" muted
+      slot "DOCS":
+        text "Documentation" bold
+      slot "PUB":
+        text "Public project" bold
 
 annotation "Single column on mobile" target="pb-search-mobile" position=bottom
 ```
@@ -400,8 +446,6 @@ annotation "Appears centered with pt-20 offset" target="rail-panel-search" posit
 | Empty state | `--muted-foreground` | `text-center py-12 text-gray-500` | |
 | HoverCard | — | shadcn `HoverCard` / `HoverCardContent` | w-80, 100ms delay |
 | Search section label | `--muted-foreground` | `text-xs uppercase tracking-wide` | "No projects match your search" |
-| No public projects action | `--primary` | outline or secondary button | Opens Authorize modal |
-| Read-only badge | `--muted` | compact chip | Replaces mutable favorite affordance for visitors |
 
 ## Maintenance Notes
 
