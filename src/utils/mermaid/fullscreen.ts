@@ -65,7 +65,7 @@ export function addFullscreenButtons(root: ParentNode = document): void {
       return
 
     const button = document.createElement('button')
-    button.className = 'mermaid-fullscreen-btn absolute top-2 left-2 z-10 px-2 py-1 bg-black/20 hover:bg-black/30 text-white text-xs rounded transition-colors duration-200 backdrop-blur-sm'
+    button.className = 'mermaid-fullscreen-btn diagram-fullscreen-btn'
     button.title = 'Enter fullscreen'
     button.type = 'button'
 
