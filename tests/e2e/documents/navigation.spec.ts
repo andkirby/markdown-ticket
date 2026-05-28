@@ -144,6 +144,7 @@ test.describe('Documents View navigation (MDT-162)', () => {
     await writeFile(join(project.path, 'docs', 'design', 'selector.md'), '# Selector\n\nContent.')
 
     await page.goto(`/prj/${project.key}/documents`)
+    await expect(page.locator(pathSelectorSelectors.configureButton)).toHaveAttribute('aria-label', 'Configure document paths')
     await page.locator(pathSelectorSelectors.configureButton).click()
 
     await expect(page.locator(pathSelectorSelectors.maxDepth)).toContainText('Max depth: 5')
@@ -162,5 +163,25 @@ test.describe('Documents View navigation (MDT-162)', () => {
 
     await page.locator(pathSelectorSelectors.infoButton).hover()
     await expect(page.locator(pathSelectorSelectors.infoTooltip)).toContainText(`${ticketsPath} is excluded automatically`)
+  })
+
+  test('no configured paths shows a friendly configure action before opening selector', async ({ page, e2eContext }) => {
+    const project = await e2eContext.projectFactory.createProject('empty', {
+      name: 'Unconfigured Documents Project',
+      documentPaths: [],
+    })
+    await mkdir(join(project.path, 'docs'), { recursive: true })
+    await writeFile(join(project.path, 'docs', 'guide.md'), '# Guide\n\nContent.')
+
+    await page.goto(`/prj/${project.key}/documents`)
+
+    await expect(page.locator(documentSelectors.documentTree)).toContainText('No document paths configured')
+    await expect(page.locator(pathSelectorSelectors.pathSelector)).not.toBeVisible()
+    await expect(page.locator(pathSelectorSelectors.emptyStateConfigureButton)).toBeVisible()
+
+    await page.locator(pathSelectorSelectors.emptyStateConfigureButton).click()
+
+    await expect(page.locator(pathSelectorSelectors.pathSelector)).toBeVisible()
+    await expect(page.locator(pathSelectorSelectors.pathCheckbox('docs'))).toBeVisible()
   })
 })

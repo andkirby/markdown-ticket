@@ -48,6 +48,23 @@ annotation "All Documents: collapsible tree roots" target="docs-root" position=r
 annotation "Grouped markdown filename tabs are owned by document-filename-tabs.mockups.md" target="filename-tabs" position=top
 ```
 
+## No Configured Paths
+
+```wireloom
+window "Documents View Navigation — No Configured Paths":
+  panel:
+    row:
+      col 520:
+        text "No document paths configured" bold id="empty-title"
+        text "Choose which folders or Markdown files should appear in Documents View." muted
+        button "Configure document paths" id="empty-configure"
+      col fill:
+        text "Select document paths to start browsing project docs." muted
+
+annotation "Do not auto-open the tree selector; keep the page calm on first load." target="empty-title" position=right
+annotation "CTA opens the same PathSelector modal as the sidebar gear action." target="empty-configure" position=right
+```
+
 ## Active Filter
 
 ```wireloom
@@ -343,7 +360,8 @@ Mobile behavior:
 | Sort direction | `--muted-foreground` | `.documents-view__sort-direction-button` | Reverses the selected sort field |
 | Collapse tree | `--muted-foreground` | icon-only button | Collapses folders except selected ancestors |
 | Scroll target | `--primary` | `data-testid="scroll-to-active-document-button"` | Clears filter only when selected row is hidden |
-| Configure document paths | `--muted-foreground` | icon-only button | Opens path configuration |
+| Configure document paths | `--muted-foreground` | gear/settings icon-only button | Opens path configuration |
+| No-paths configure CTA | `--foreground`, `--border`, `--background` | outline button | Opens path configuration without auto-opening the modal on first load |
 | Read-only document nav | `--muted-foreground` | no star mutation controls | Existing shortcuts remain clickable; configure paths is hidden |
 | Excluded ticket area | `--muted-foreground` | PathSelector annotation | `docs/CRs/` is automatically excluded from document browsing |
 | Filename tabs | `--border`, `--primary` | `.tab__list`, `.tab` | Full grouped-tab contract lives in `document-filename-tabs.mockups.md` |

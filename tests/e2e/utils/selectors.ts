@@ -339,6 +339,8 @@ export const documentSelectors = {
 export const pathSelectorSelectors = {
   /** Configure paths button in documents view header */
   configureButton: '[data-testid="configure-paths-button"]',
+  /** Configure paths button in the no-paths empty state */
+  emptyStateConfigureButton: '[data-testid="configure-paths-empty-button"]',
   /** Path selector modal container */
   pathSelector: '[data-testid="path-selector"]',
   /** Path selector tree */
