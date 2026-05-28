@@ -1,10 +1,11 @@
 import type { PanelImperativeHandle, PanelSize } from 'react-resizable-panels'
 import type { DocumentFile, FileTreeHandle } from './FileTree'
-import { ChevronDown, ChevronUp, Crosshair, ListCollapse, PanelLeftClose, PanelLeftOpen, Pencil, Search } from 'lucide-react'
+import { ChevronDown, ChevronUp, Crosshair, ListCollapse, PanelLeftClose, PanelLeftOpen, Search, Settings } from 'lucide-react'
 import * as React from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { authFetch } from '@/auth/authFetch'
+import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -47,6 +48,7 @@ export default function DocumentsLayout({ projectId, canWrite = true }: Document
   const [selectedFile, setSelectedFile] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [showPathSelector, setShowPathSelector] = useState(false)
+  const [noDocumentPathsConfigured, setNoDocumentPathsConfigured] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [documentRefreshToken, setDocumentRefreshToken] = useState(0)
@@ -205,14 +207,15 @@ export default function DocumentsLayout({ projectId, canWrite = true }: Document
       const response = await authFetch(`/api/documents?projectId=${encodeURIComponent(projectId)}`)
 
       if (response.status === 404) {
-        // No documents configured, show path selector
-        setShowPathSelector(true)
+        setNoDocumentPathsConfigured(true)
+        setShowPathSelector(false)
         setFiles([])
         return []
       }
       else if (response.ok) {
         const data = await response.json()
         setFiles(data)
+        setNoDocumentPathsConfigured(false)
         setShowPathSelector(false)
         return data
       }
@@ -617,6 +620,22 @@ export default function DocumentsLayout({ projectId, canWrite = true }: Document
     fileTreeRef.current?.collapseAll()
   }
 
+  const pathSelectorModal = showPathSelector && canWrite
+    ? (
+        <Modal
+          isOpen={showPathSelector}
+          onClose={handleCancelPathSelection}
+          size="lg"
+        >
+          <PathSelector
+            projectId={projectId}
+            onPathsSelected={handlePathsSelected}
+            onCancel={handleCancelPathSelection}
+          />
+        </Modal>
+      )
+    : null
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -636,219 +655,220 @@ export default function DocumentsLayout({ projectId, canWrite = true }: Document
     )
   }
 
-  if (showPathSelector && !canWrite) {
+  if (noDocumentPathsConfigured) {
     return (
-      <div data-testid="document-tree" className="flex items-center justify-center h-64 text-muted-foreground">
-        No documents are configured for this project.
-      </div>
-    )
-  }
-
-  if (showPathSelector) {
-    return (
-      <Modal
-        isOpen={showPathSelector}
-        onClose={handleCancelPathSelection}
-        size="lg"
-      >
-        <PathSelector
-          projectId={projectId}
-          onPathsSelected={handlePathsSelected}
-          onCancel={handleCancelPathSelection}
-        />
-      </Modal>
-    )
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-muted-foreground">Loading documents...</div>
-      </div>
+      <>
+        <div data-testid="document-tree" className="flex h-64 items-center justify-center px-4">
+          <div className="max-w-sm text-center">
+            <h3 className="text-base font-semibold text-foreground">No document paths configured</h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Choose which folders or Markdown files should appear in Documents View.
+            </p>
+            {canWrite && (
+              <Button
+                type="button"
+                onClick={() => setShowPathSelector(true)}
+                variant="outline"
+                size="sm"
+                className="mt-4"
+                leftIcon={<Settings className="h-4 w-4" aria-hidden="true" />}
+                data-testid="configure-paths-empty-button"
+              >
+                Configure document paths
+              </Button>
+            )}
+          </div>
+        </div>
+        {pathSelectorModal}
+      </>
     )
   }
 
   return (
-    <ResizablePanelGroup direction="horizontal" className="documents-view__layout">
-      <ResizablePanel
-        id="documents-navigation"
-        panelRef={navigationPanelRef}
-        defaultSize={navigationPreferences.navigationPanelCollapsed
-          ? `${DOCUMENT_NAVIGATION_PANEL_COLLAPSED_SIZE}%`
-          : `${navigationPreferences.navigationPanelSize}%`}
-        minSize={`${DOCUMENT_NAVIGATION_PANEL_MIN_SIZE}%`}
-        maxSize={`${DOCUMENT_NAVIGATION_PANEL_MAX_SIZE}%`}
-        collapsedSize={`${DOCUMENT_NAVIGATION_PANEL_COLLAPSED_SIZE}%`}
-        collapsible
-        onResize={handleNavigationPanelResize}
-        className="documents-view__navigation-panel"
-      >
-        <div className="documents-view__navigation-inner">
-          <div className="documents-view__navigation-header">
-            <div className="documents-view__navigation-primary-row">
-              <div className="flex min-w-0 items-center">
-                <h3 className="font-semibold text-foreground">Documents</h3>
-              </div>
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={handleToggleNavigationPanel}
-                  className="p-1 hover:bg-muted rounded transition-colors"
-                  title="Hide document navigation"
-                  aria-label="Hide document navigation"
-                  data-testid="toggle-document-navigation-button"
-                >
-                  <PanelLeftClose className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCollapseTree}
-                  className="p-1 hover:bg-muted rounded transition-colors"
-                  title="Collapse document tree"
-                  aria-label="Collapse document tree"
-                  data-testid="collapse-document-tree-button"
-                >
-                  <ListCollapse className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-                </button>
-                <button
-                  type="button"
-                  onClick={handleScrollToSelectedFile}
-                  disabled={!selectedFile}
-                  className="p-1 hover:bg-muted rounded transition-colors disabled:cursor-not-allowed disabled:opacity-40"
-                  title="Scroll to active document"
-                  aria-label="Scroll to active document"
-                  data-testid="scroll-to-active-document-button"
-                >
-                  <Crosshair className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-                </button>
-                {canWrite && (
+    <>
+      <ResizablePanelGroup direction="horizontal" className="documents-view__layout">
+        <ResizablePanel
+          id="documents-navigation"
+          panelRef={navigationPanelRef}
+          defaultSize={navigationPreferences.navigationPanelCollapsed
+            ? `${DOCUMENT_NAVIGATION_PANEL_COLLAPSED_SIZE}%`
+            : `${navigationPreferences.navigationPanelSize}%`}
+          minSize={`${DOCUMENT_NAVIGATION_PANEL_MIN_SIZE}%`}
+          maxSize={`${DOCUMENT_NAVIGATION_PANEL_MAX_SIZE}%`}
+          collapsedSize={`${DOCUMENT_NAVIGATION_PANEL_COLLAPSED_SIZE}%`}
+          collapsible
+          onResize={handleNavigationPanelResize}
+          className="documents-view__navigation-panel"
+        >
+          <div className="documents-view__navigation-inner">
+            <div className="documents-view__navigation-header">
+              <div className="documents-view__navigation-primary-row">
+                <div className="flex min-w-0 items-center">
+                  <h3 className="font-semibold text-foreground">Documents</h3>
+                </div>
+                <div className="flex items-center gap-1">
                   <button
                     type="button"
-                    onClick={() => setShowPathSelector(true)}
+                    onClick={handleToggleNavigationPanel}
                     className="p-1 hover:bg-muted rounded transition-colors"
-                    title="Configure document paths"
-                    data-testid="configure-paths-button"
+                    title="Hide document navigation"
+                    aria-label="Hide document navigation"
+                    data-testid="toggle-document-navigation-button"
                   >
-                    <Pencil className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                    <PanelLeftClose className="h-4 w-4 text-muted-foreground hover:text-foreground" />
                   </button>
-                )}
-              </div>
-            </div>
-            <div className="documents-view__navigation-controls-row">
-              <div className="documents-view__search-field">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <input
-                  type="text"
-                  placeholder="Search documents..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 text-sm border border-border rounded-md bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                  data-testid="document-filter-input"
-                />
-              </div>
-              <select
-                value={sortBy}
-                onChange={e => setSortBy(e.target.value as 'name' | 'title' | 'created' | 'modified')}
-                className="documents-view__sort-select"
-                title="Sort by"
-              >
-                <option value="name">Filename</option>
-                <option value="title">Title</option>
-                <option value="created">Created Date</option>
-                <option value="modified">Update Date</option>
-              </select>
-              <button
-                type="button"
-                onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
-                className="documents-view__sort-direction-button"
-                title={`Sort ${sortDirection === 'asc' ? 'ascending' : 'descending'}`}
-                aria-label={`Sort ${sortDirection === 'asc' ? 'ascending' : 'descending'}`}
-              >
-                {sortDirection === 'asc'
-                  ? (
-                      <ChevronUp className="h-3 w-3" />
-                    )
-                  : (
-                      <ChevronDown className="h-3 w-3" />
-                    )}
-              </button>
-            </div>
-          </div>
-          <div className="flex-shrink-0 p-2 pb-0">
-            <FavDocuments
-              documents={favoriteDocuments}
-              isExpanded={navigationPreferences.favsExpanded}
-              showAll={navigationPreferences.favsShowAll}
-              onSelectDocument={handleSelectFavorite}
-              onToggleFavorite={canWrite ? handleToggleFavorite : undefined}
-              onExpandedChange={handleFavsExpandedChange}
-              onShowAllChange={handleFavsShowAllChange}
-            />
-            <RecentDocuments
-              documents={recentDocuments}
-              isExpanded={navigationPreferences.recentExpanded}
-              onSelectDocument={selectFile}
-              onExpandedChange={handleRecentExpandedChange}
-            />
-          </div>
-          <ScrollArea className="min-h-0 flex-1" data-testid="document-tree-scroll-area">
-            <div className="p-2">
-              <FileTree
-                ref={fileTreeRef}
-                files={filteredFiles}
-                onFileSelect={selectFile}
-                selectedFile={selectedFile}
-                expandAllFolders={Boolean(searchQuery.trim())}
-                onToggleFavorite={canWrite ? handleToggleFavorite : undefined}
-              />
-            </div>
-          </ScrollArea>
-        </div>
-      </ResizablePanel>
-      <ResizableHandle withHandle className="documents-view__resize-handle" />
-      <ResizablePanel id="documents-preview" minSize={40} className="documents-view__preview-panel">
-        {navigationPreferences.navigationPanelCollapsed && (
-          <button
-            type="button"
-            onClick={handleToggleNavigationPanel}
-            className="documents-view__navigation-expand"
-            title="Show document navigation"
-            aria-label="Show document navigation"
-            data-testid="show-document-navigation-button"
-          >
-            <PanelLeftOpen className="h-4 w-4" />
-          </button>
-        )}
-        {selectedFile
-          ? (
-              <div className="documents-view__viewer-panel">
-                {filenameTabs && (
-                  <div className="documents-view__filename-tabs">
-                    <DocumentFilenameTabs
-                      tabs={filenameTabs.tabs}
-                      activeTabKey={filenameTabs.activeTabKey}
-                      onSelectTab={selectFile}
-                    />
-                  </div>
-                )}
-                <div className="documents-view__viewer-content">
-                  <MarkdownViewer
-                    projectId={projectId}
-                    filePath={selectedFile}
-                    fileInfo={selectedDocument}
-                    refreshToken={documentRefreshToken}
-                    fileDeleted={selectedFileDeleted}
-                    updateState={viewerUpdateState}
-                  />
+                  <button
+                    type="button"
+                    onClick={handleCollapseTree}
+                    className="p-1 hover:bg-muted rounded transition-colors"
+                    title="Collapse document tree"
+                    aria-label="Collapse document tree"
+                    data-testid="collapse-document-tree-button"
+                  >
+                    <ListCollapse className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleScrollToSelectedFile}
+                    disabled={!selectedFile}
+                    className="p-1 hover:bg-muted rounded transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+                    title="Scroll to active document"
+                    aria-label="Scroll to active document"
+                    data-testid="scroll-to-active-document-button"
+                  >
+                    <Crosshair className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                  </button>
+                  {canWrite && (
+                    <button
+                      type="button"
+                      onClick={() => setShowPathSelector(true)}
+                      className="p-1 hover:bg-muted rounded transition-colors"
+                      title="Configure document paths"
+                      aria-label="Configure document paths"
+                      data-testid="configure-paths-button"
+                    >
+                      <Settings className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                    </button>
+                  )}
                 </div>
               </div>
-            )
-          : (
-              <div className="flex items-center justify-center h-full text-muted-foreground">
-                Select a document to view
+              <div className="documents-view__navigation-controls-row">
+                <div className="documents-view__search-field">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Search documents..."
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 text-sm border border-border rounded-md bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    data-testid="document-filter-input"
+                  />
+                </div>
+                <select
+                  value={sortBy}
+                  onChange={e => setSortBy(e.target.value as 'name' | 'title' | 'created' | 'modified')}
+                  className="documents-view__sort-select"
+                  title="Sort by"
+                >
+                  <option value="name">Filename</option>
+                  <option value="title">Title</option>
+                  <option value="created">Created Date</option>
+                  <option value="modified">Update Date</option>
+                </select>
+                <button
+                  type="button"
+                  onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
+                  className="documents-view__sort-direction-button"
+                  title={`Sort ${sortDirection === 'asc' ? 'ascending' : 'descending'}`}
+                  aria-label={`Sort ${sortDirection === 'asc' ? 'ascending' : 'descending'}`}
+                >
+                  {sortDirection === 'asc'
+                    ? (
+                        <ChevronUp className="h-3 w-3" />
+                      )
+                    : (
+                        <ChevronDown className="h-3 w-3" />
+                      )}
+                </button>
               </div>
-            )}
-      </ResizablePanel>
-    </ResizablePanelGroup>
+            </div>
+            <div className="flex-shrink-0 p-2 pb-0">
+              <FavDocuments
+                documents={favoriteDocuments}
+                isExpanded={navigationPreferences.favsExpanded}
+                showAll={navigationPreferences.favsShowAll}
+                onSelectDocument={handleSelectFavorite}
+                onToggleFavorite={canWrite ? handleToggleFavorite : undefined}
+                onExpandedChange={handleFavsExpandedChange}
+                onShowAllChange={handleFavsShowAllChange}
+              />
+              <RecentDocuments
+                documents={recentDocuments}
+                isExpanded={navigationPreferences.recentExpanded}
+                onSelectDocument={selectFile}
+                onExpandedChange={handleRecentExpandedChange}
+              />
+            </div>
+            <ScrollArea className="min-h-0 flex-1" data-testid="document-tree-scroll-area">
+              <div className="p-2">
+                <FileTree
+                  ref={fileTreeRef}
+                  files={filteredFiles}
+                  onFileSelect={selectFile}
+                  selectedFile={selectedFile}
+                  expandAllFolders={Boolean(searchQuery.trim())}
+                  onToggleFavorite={canWrite ? handleToggleFavorite : undefined}
+                />
+              </div>
+            </ScrollArea>
+          </div>
+        </ResizablePanel>
+        <ResizableHandle withHandle className="documents-view__resize-handle" />
+        <ResizablePanel id="documents-preview" minSize={40} className="documents-view__preview-panel">
+          {navigationPreferences.navigationPanelCollapsed && (
+            <button
+              type="button"
+              onClick={handleToggleNavigationPanel}
+              className="documents-view__navigation-expand"
+              title="Show document navigation"
+              aria-label="Show document navigation"
+              data-testid="show-document-navigation-button"
+            >
+              <PanelLeftOpen className="h-4 w-4" />
+            </button>
+          )}
+          {selectedFile
+            ? (
+                <div className="documents-view__viewer-panel">
+                  {filenameTabs && (
+                    <div className="documents-view__filename-tabs">
+                      <DocumentFilenameTabs
+                        tabs={filenameTabs.tabs}
+                        activeTabKey={filenameTabs.activeTabKey}
+                        onSelectTab={selectFile}
+                      />
+                    </div>
+                  )}
+                  <div className="documents-view__viewer-content">
+                    <MarkdownViewer
+                      projectId={projectId}
+                      filePath={selectedFile}
+                      fileInfo={selectedDocument}
+                      refreshToken={documentRefreshToken}
+                      fileDeleted={selectedFileDeleted}
+                      updateState={viewerUpdateState}
+                    />
+                  </div>
+                </div>
+              )
+            : (
+                <div className="flex items-center justify-center h-full text-muted-foreground">
+                  Select a document to view
+                </div>
+              )}
+        </ResizablePanel>
+      </ResizablePanelGroup>
+      {pathSelectorModal}
+    </>
   )
 }
