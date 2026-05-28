@@ -61,7 +61,7 @@ export function addWireloomFullscreenButtons(container: ParentNode = document): 
       return
 
     const button = document.createElement('button')
-    button.className = 'wireloom__fullscreen-btn'
+    button.className = 'wireloom__fullscreen-btn diagram-fullscreen-btn'
     button.title = 'Enter fullscreen'
     button.type = 'button'
     button.innerHTML = getFullscreenIcon(false)
