@@ -4,7 +4,6 @@ import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 
 export const OWNER_SESSION_COOKIE_NAME = 'mdt_owner_session'
 export const OWNER_SESSION_COOKIE_PATH = '/api'
-export const OWNER_SESSION_MAX_AGE_SECONDS = 8 * 60 * 60
 
 interface OwnerSessionPayload {
   exp: number
@@ -15,7 +14,7 @@ interface OwnerSessionPayload {
 
 export interface OwnerSessionCookieOptions {
   secure: boolean
-  maxAgeSeconds?: number
+  maxAgeSeconds: number
 }
 
 export interface OwnerSessionState {
@@ -25,7 +24,7 @@ export interface OwnerSessionState {
 let sessionGeneration = 0
 
 export function createOwnerSessionCookie(expectedToken: string, options: OwnerSessionCookieOptions): string {
-  const maxAgeSeconds = options.maxAgeSeconds ?? OWNER_SESSION_MAX_AGE_SECONDS
+  const maxAgeSeconds = options.maxAgeSeconds
   const now = Math.floor(Date.now() / 1000)
   const payload: OwnerSessionPayload = {
     exp: now + maxAgeSeconds,
