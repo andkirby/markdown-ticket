@@ -72,7 +72,7 @@ Cookie attributes:
 - `SameSite=Strict` to reduce cross-site request risk.
 - `Path=/api` so it is only sent to API routes.
 - `Secure` when the request is HTTPS or the backend is running in production. Local non-HTTPS development may omit `Secure` so local testing works.
-- Finite max age; logout clears it with `DELETE /api/auth/session`.
+- Finite max age, configured by `OWNER_SESSION_MAX_AGE_DAYS` and defaulting to 14 days; logout clears it with `DELETE /api/auth/session`.
 
 ## CSRF protection for browser cookie sessions
 

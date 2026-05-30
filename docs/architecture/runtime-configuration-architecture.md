@@ -38,6 +38,9 @@ type RuntimeConfig = {
     secret?: string;
     allowLocalFallback: boolean;
   };
+  ownerSessions: {
+    maxAgeSeconds: number;
+  };
   system: {
     devtoolsEnabled: boolean;
     isProduction: boolean;
@@ -71,6 +74,12 @@ Public link origin selection:
 1. Use `PUBLIC_ORIGIN` when configured.
 2. Otherwise use the current browser origin from `Origin` or `Referer` only when it is allowed by the origin policy.
 3. Report when no safe origin can be selected.
+
+## Session Variables
+
+| Variable | Purpose | Notes |
+|----------|---------|-------|
+| `OWNER_SESSION_MAX_AGE_DAYS` | Browser owner-session cookie lifetime | Positive integer days. Defaults to 14. Parsed into `RuntimeConfig.ownerSessions.maxAgeSeconds`. |
 
 ## Sharing Interaction
 
