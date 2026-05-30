@@ -107,6 +107,15 @@ Backend runtime variables are parsed by `server/config/runtimeConfig.ts`. The ca
 - **Default**: When unset, uses `API_AUTH_TOKEN` if set; local/test fallback only outside production
 - **Usage**: Parsed at startup into `RuntimeConfig.readSessions.secret`
 
+### OWNER_SESSION_MAX_AGE_DAYS
+- **Description**: Browser owner-session cookie lifetime after unlock
+- **Default**: `14`
+- **Format**: Positive integer days
+- **Usage**: Parsed at startup into `RuntimeConfig.ownerSessions.maxAgeSeconds`
+- **Notes**:
+  - Applies only to owner/admin browser sessions created by `POST /api/auth/session`.
+  - Does not change read-token or invite-session lifetimes.
+
 ### DOCKER
 - **Description**: Indicates running in Docker environment
 - **Type**: Boolean

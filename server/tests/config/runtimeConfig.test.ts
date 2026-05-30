@@ -27,6 +27,9 @@ describe('runtimeConfig - MDT-178', () => {
         secret: 'read-session-secret',
         allowLocalFallback: false,
       },
+      ownerSessions: {
+        maxAgeSeconds: 14 * 24 * 60 * 60,
+      },
       system: {
         devtoolsEnabled: false,
         isProduction: true,
@@ -80,6 +83,23 @@ describe('runtimeConfig - MDT-178', () => {
       isTest: true,
       maintenanceEndpointsEnabled: true,
     })
+  })
+
+  it('parses owner session max age from runtime config', () => {
+    const config = buildRuntimeConfig({
+      NODE_ENV: 'production',
+      CONFIG_DIR: '/tmp/mdt-config',
+      OWNER_SESSION_MAX_AGE_DAYS: '2',
+    } as NodeJS.ProcessEnv)
+
+    expect(config.ownerSessions.maxAgeSeconds).toBe(2 * 24 * 60 * 60)
+  })
+
+  it('rejects invalid owner session max age values at startup', () => {
+    expect(() => buildRuntimeConfig({
+      NODE_ENV: 'production',
+      OWNER_SESSION_MAX_AGE_DAYS: '0',
+    } as NodeJS.ProcessEnv)).toThrow(/OWNER_SESSION_MAX_AGE_DAYS/)
   })
 
   it('fails fast when request handlers run without app-local runtime config', () => {

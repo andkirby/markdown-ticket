@@ -34,6 +34,7 @@ describe('MDT-176 auth session operator documentation', () => {
       'logout',
       'DELETE /api/auth/session',
       'POST /api/auth/session',
+      'OWNER_SESSION_MAX_AGE_DAYS',
     ]) {
       expect(authGuide).toContain(requiredTerm)
     }

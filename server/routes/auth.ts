@@ -7,7 +7,6 @@ import {
   appendOwnerSessionCookie,
   getOwnerSessionState,
   invalidateOwnerSessions,
-  OWNER_SESSION_MAX_AGE_SECONDS,
   shouldUseSecureSessionCookie,
 } from '../security/apiSession.js'
 import { createOriginPolicy } from '../security/originPolicy.js'
@@ -53,7 +52,7 @@ export function createAuthRouter(): Router {
     }
 
     appendOwnerSessionCookie(res, runtimeConfig.auth.token!, {
-      maxAgeSeconds: OWNER_SESSION_MAX_AGE_SECONDS,
+      maxAgeSeconds: runtimeConfig.ownerSessions.maxAgeSeconds,
       secure: shouldUseSecureSessionCookie(req, runtimeConfig.nodeEnv),
     })
 

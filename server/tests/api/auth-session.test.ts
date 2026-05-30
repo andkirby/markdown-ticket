@@ -21,6 +21,10 @@ function cookiePair(setCookieHeader: string): string {
   return setCookieHeader.split(';')[0]
 }
 
+function ownerSessionMaxAgeSeconds(app: Express): number {
+  return (app.locals.runtimeConfig as { ownerSessions: { maxAgeSeconds: number } }).ownerSessions.maxAgeSeconds
+}
+
 describe('backend browser auth session contract - MDT-176', () => {
   let tempDir: string
   let app: Express
@@ -58,6 +62,7 @@ describe('backend browser auth session contract - MDT-176', () => {
     expect(setCookie).toMatch(/Secure/i)
     expect(setCookie).toMatch(/SameSite=Strict/i)
     expect(setCookie).toMatch(/Path=\/api/i)
+    expect(setCookie).toContain(`Max-Age=${ownerSessionMaxAgeSeconds(app)}`)
     expect(setCookie).not.toContain(adminToken)
   })
 

@@ -5,6 +5,9 @@ import { parseApiAuthConfig } from '../security/apiAuth.js'
 import { createAllowedOrigins, parsePublicOrigin } from '../security/originPolicy.js'
 import { getReadSessionSecret, parseReadTokenScopes } from '../security/readSession.js'
 
+const DEFAULT_OWNER_SESSION_MAX_AGE_DAYS = 14
+const SECONDS_PER_DAY = 24 * 60 * 60
+
 export interface RuntimeConfig {
   configDir: string
   nodeEnv?: string
@@ -16,6 +19,9 @@ export interface RuntimeConfig {
   readSessions: {
     secret?: string
     allowLocalFallback: boolean
+  }
+  ownerSessions: {
+    maxAgeSeconds: number
   }
   system: {
     devtoolsEnabled: boolean
@@ -44,6 +50,9 @@ export function buildRuntimeConfig(env: NodeJS.ProcessEnv = process.env): Runtim
       secret: getReadSessionSecret(auth.token, env),
       allowLocalFallback: !isAuthConfigured(env) && isLocalOrTestEnv(env.NODE_ENV),
     },
+    ownerSessions: {
+      maxAgeSeconds: resolveOwnerSessionMaxAgeSeconds(env),
+    },
     system: {
       devtoolsEnabled: env.NODE_ENV !== 'production' || env.DEVTOOLS_ENABLED === 'true',
       isProduction: env.NODE_ENV === 'production',
@@ -71,7 +80,8 @@ function isRuntimeConfig(value: unknown): value is RuntimeConfig {
     && typeof value === 'object'
     && typeof (value as RuntimeConfig).configDir === 'string'
     && typeof (value as RuntimeConfig).auth === 'object'
-    && typeof (value as RuntimeConfig).origins === 'object',
+    && typeof (value as RuntimeConfig).origins === 'object'
+    && typeof (value as RuntimeConfig).ownerSessions === 'object',
   )
 }
 
@@ -94,4 +104,27 @@ function resolveConfigDir(env: NodeJS.ProcessEnv): string {
 
 function isLocalOrTestEnv(nodeEnv: string | undefined): boolean {
   return !nodeEnv || nodeEnv === 'development' || nodeEnv === 'test' || nodeEnv === 'local'
+}
+
+function resolveOwnerSessionMaxAgeSeconds(env: NodeJS.ProcessEnv): number {
+  const configuredDays = parsePositiveInteger(env.OWNER_SESSION_MAX_AGE_DAYS, 'OWNER_SESSION_MAX_AGE_DAYS')
+  return (configuredDays ?? DEFAULT_OWNER_SESSION_MAX_AGE_DAYS) * SECONDS_PER_DAY
+}
+
+function parsePositiveInteger(value: string | undefined, name: string): number | undefined {
+  if (value === undefined || value.trim() === '') {
+    return undefined
+  }
+
+  const normalizedValue = value.trim()
+  if (!/^\d+$/u.test(normalizedValue)) {
+    throw new Error(`${name} must be a positive integer`)
+  }
+
+  const parsed = Number.parseInt(normalizedValue, 10)
+  if (!Number.isSafeInteger(parsed) || parsed <= 0) {
+    throw new Error(`${name} must be a positive integer`)
+  }
+
+  return parsed
 }
