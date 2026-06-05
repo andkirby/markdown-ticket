@@ -1,6 +1,6 @@
 ---
 code: MDT-177
-status: In Progress
+status: Implemented
 dateCreated: 2026-05-23T09:35:14.630Z
 type: Feature Enhancement
 priority: High
@@ -103,24 +103,24 @@ Add named read access tokens with server-generated one-time invite links that ex
 > Architecture notes: [architecture.md](./MDT-177/architecture.md)
 
 ### Functional
-- [ ] Owner can create a named read access token with at least two assigned projects.
-- [ ] Owner can generate a one-time invite link for the named token.
-- [ ] Opening the invite link from a clean browser sets read-only access and removes the code/token from the address bar.
-- [ ] Token-scoped visitor sees all assigned projects plus public projects and can switch between them.
-- [ ] Token-scoped visitor cannot create, edit, drag, delete, configure, favorite, or write files.
-- [ ] Opening `/share/{shareId}` while already token-scoped preserves existing token-scoped projects.
-- [ ] Read-only visitor pressing Unlock can cancel back to the board.
-- [ ] Bad owner-token unlock from read-only mode returns to read-only state, not a locked dead end.
-- [ ] Generated links use `PUBLIC_ORIGIN` when configured.
-- [ ] When `PUBLIC_ORIGIN` is absent, generated links use the current browser origin only if the server origin policy accepts it.
-- [ ] The owner UI does not synthesize link origins or expose a domain picker.
-- [ ] Revoked read token stops granting project access on the next exchange/session refresh.
+- [x] Owner can create a named read access token with at least two assigned projects.
+- [x] Owner can generate a one-time invite link for the named token.
+- [x] Opening the invite link from a clean browser sets read-only access and removes the code/token from the address bar.
+- [x] Token-scoped visitor sees all assigned projects plus public projects and can switch between them.
+- [x] Token-scoped visitor cannot create, edit, drag, delete, configure, favorite, or write files.
+- [x] Opening `/share/{shareId}` while already token-scoped preserves existing token-scoped projects.
+- [x] Read-only visitor pressing Unlock can cancel back to the board.
+- [x] Bad owner-token unlock from read-only mode returns to read-only state, not a locked dead end.
+- [x] Generated links use `PUBLIC_ORIGIN` when configured.
+- [x] When `PUBLIC_ORIGIN` is absent, generated links use the current browser origin only if the server origin policy accepts it.
+- [x] The owner UI does not synthesize link origins or expose a domain picker.
+- [x] Revoked read token stops granting project access on the next exchange/session refresh.
 
 ### Non-Functional
-- [ ] Persistent read tokens are stored only as hashes server-side.
-- [ ] Invite codes are short-lived, single-use, and rate-limited.
-- [ ] Raw tokens and invite codes are not logged or stored in browser-readable storage.
-- [ ] Backend authorization remains the enforcement layer for every read-only mutation attempt.
+- [x] Persistent read tokens are stored only as hashes server-side.
+- [x] Invite codes are short-lived, single-use, and rate-limited.
+- [x] Raw tokens and invite codes are not logged or stored in browser-readable storage.
+- [x] Backend authorization remains the enforcement layer for every read-only mutation attempt.
 
 ### Testing
 - Unit: `readTokenStore.ts` covers hash storage, project scopes, expiry, revocation, and one-time code consumption.

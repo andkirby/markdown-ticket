@@ -684,8 +684,8 @@ bunx playwright test tests/e2e/sharing/read-access-journey.spec.ts --project=chr
 ```
 
 **Done when**:
-- [ ] Owner Lock removes owner-only projects from every visible project selector after downgrade.
-- [ ] Public-only read-only access shows no hamburger dot.
-- [ ] Share/read-token access shows an orange hamburger dot.
-- [ ] Owner/admin access shows a green hamburger dot.
-- [ ] Read-only text is inside the hamburger menu, not inline in the header.
+- [x] Owner Lock removes owner-only projects from every visible project selector after downgrade.
+- [x] Public-only read-only access shows no hamburger dot.
+- [x] Share/read-token access shows an orange hamburger dot.
+- [x] Owner/admin access shows a green hamburger dot.
+- [x] Read-only text is inside the hamburger menu, not inline in the header.
