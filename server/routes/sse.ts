@@ -71,6 +71,16 @@ export function createSSERouter(
     // Set SSE headers
     res.writeHead(200, headers)
 
+    // Disable all timeouts for long-lived SSE connections
+    // Node.js defaults: requestTimeout=300s, headersTimeout=60s, keepAliveTimeout=5s
+    // These will kill SSE connections if not disabled
+    req.setTimeout(0)
+    res.setTimeout(0)
+    if (req.socket) {
+      req.socket.setTimeout(0)
+      req.socket.setKeepAlive(true)
+    }
+
     // Add client to file watcher service first (so it's tracked before sending data)
     fileWatcher.addClient(res, {
       canWrite: access.canWrite,

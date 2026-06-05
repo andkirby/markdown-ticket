@@ -354,7 +354,7 @@ export { app }
 
 // Start server only when run directly (not when imported for testing)
 if (import.meta.url === `file://${process.argv[1]}`) {
-  app.listen(PORT, async () => {
+  const server = app.listen(PORT, async () => {
     logger.info(`🚀 Ticket board server running on port ${PORT}`)
     logger.info(`🌐 API endpoints:`)
     logger.info(`   GET  /api/events - Server-Sent Events for real-time updates`)
@@ -370,6 +370,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     await initializeMultiProjectWatchers()
     fileWatcher.startHeartbeat()
   })
+
+  // Note: We intentionally do NOT disable server-level timeouts here.
+  // The SSE route (/api/events) handles this per-request with req.setTimeout(0)
+  // to avoid affecting timeouts for all other routes.
 }
 
 // Graceful shutdown
