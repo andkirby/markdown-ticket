@@ -67,7 +67,7 @@ describe('MobileLogo', () => {
 
       const logo = screen.getByTestId('app-logo')
       expect(logo).toBeInTheDocument()
-      expect(logo).toHaveAttribute('src', expect.stringContaining('logo-mdt-m-dark_64x64.png'))
+      expect(logo).toHaveAttribute('src', '/logo-mdt-m-dark_64x64.png')
     })
   })
 })

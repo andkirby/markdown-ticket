@@ -93,7 +93,7 @@ import { MobileThemeToggle } from './components/MobileThemeToggle'
 | `ART-button-group-separator` | `src/components/UI/separator.tsx` | runtime | `OBL-hamburger-theme-controls` |
 | `ART-hamburger-menu` | `src/components/AppHeader/HamburgerMenu.tsx` | runtime | `OBL-hamburger-theme-controls`, `OBL-integration`, `OBL-mobile-header` |
 | `ART-mobile-logo` | `src/components/AppHeader/MobileLogo.tsx` | runtime | `OBL-integration`, `OBL-mobile-header` |
-| `ART-mobile-logo-asset` | `designs/logo-mdt-m-dark_64x64.png` | runtime | `OBL-mobile-header` |
+| `ART-mobile-logo-asset` | `/logo-mdt-m-dark_64x64.png` | runtime | `OBL-mobile-header` |
 | `ART-project-view-modified` | `src/components/ProjectView.tsx` | runtime | `OBL-integration`, `OBL-mobile-cards` |
 | `ART-use-view-mode-persistence` | `src/components/ViewModeSwitcher/useViewModePersistence.ts` | runtime | `OBL-integration`, `OBL-persistence` |
 | `ART-view-mode-switcher-component` | `src/components/ViewModeSwitcher/ViewModeSwitcher.tsx` | runtime | `OBL-integration`, `OBL-responsive-navigation`, `OBL-toggle-navigation`, `OBL-view-mode-switcher-ui` |
