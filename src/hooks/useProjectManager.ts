@@ -13,6 +13,25 @@ interface UseProjectManagerOptions {
   handleSSEEvents?: boolean
 }
 
+/**
+ * Module-level dedup for concurrent project fetches.
+ * Multiple useProjectManager instances may call fetchProjects() simultaneously
+ * (on mount, on SSE reconnect, on access mode change). This ensures only one
+ * HTTP request is in-flight at a time — all callers share the same Promise.
+ */
+let _projectsFetchInflight: Promise<Project[]> | null = null
+
+async function fetchProjectsDeduped(): Promise<Project[]> {
+  if (_projectsFetchInflight) return _projectsFetchInflight
+  _projectsFetchInflight = authFetch('/api/projects')
+    .then(async (res) => {
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`)
+      return res.json() as Promise<Project[]>
+    })
+    .finally(() => { _projectsFetchInflight = null })
+  return _projectsFetchInflight
+}
+
 interface UseProjectManagerReturn {
   // Project management
   projects: Project[]
@@ -90,32 +109,12 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
     }
   }, []) // No dependencies - uses ref instead
 
-  // Fetch all projects
+  // Fetch all projects (uses deduped network call to prevent N× requests from N instances)
   const fetchProjects = useCallback(async (): Promise<void> => {
     try {
       setIsBackendDown(false)
-      const response = await authFetch('/api/projects')
+      const allProjects = await fetchProjectsDeduped()
 
-      if (!response.ok) {
-        if (isAuthRequiredResponse(response)) {
-          setProjects([])
-          setSelectedProjectValue(null)
-          setTickets([])
-          setProjectConfig(null)
-          markLocked()
-          return
-        }
-
-        if (isBackendDownResponse(response)) {
-          setIsBackendDown(true)
-          markBackendDown()
-          throw new Error('Backend server is not responding. Please check that the server is running.')
-        }
-
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-      }
-
-      const allProjects = await response.json()
       setProjects(allProjects)
       markProjectListLoaded(allProjects.length)
 
@@ -150,7 +149,7 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
 
       throw error
     }
-  }, [autoSelectFirst, markBackendDown, markLocked, markProjectListLoaded]) // Removed selectedProject and ticketOps dependencies
+  }, [autoSelectFirst, markBackendDown, markProjectListLoaded])
 
   const refreshProjects = useCallback(async () => {
     await fetchProjects()

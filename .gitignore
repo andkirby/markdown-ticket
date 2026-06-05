@@ -106,3 +106,4 @@ spec-trace*.md
 *.bun-build
 /*.md
 /*.txt
+incidents/
