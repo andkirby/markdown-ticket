@@ -559,6 +559,14 @@ export default defineConfig(({ mode }) => {
       port: Number(process.env.PORT) || 5173,
       allowedHosts,
       proxy: {
+        '/api/events': {
+          target: backendUrl,
+          changeOrigin: true,
+          secure: false,
+          // SSE connections must never timeout at the proxy level
+          timeout: 0,
+          proxyTimeout: 0,
+        },
         '/api': {
           target: backendUrl,
           changeOrigin: true,
