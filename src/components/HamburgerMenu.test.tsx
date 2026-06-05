@@ -1,9 +1,29 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test'
+import { EventHistory } from './DevTools/EventHistory'
+import { setEventHistoryForceHidden, setEventHistoryOpen, useEventHistoryState } from './DevTools/useEventHistoryState'
 import { HamburgerMenu } from './HamburgerMenu'
+
+function EventHistoryHarness() {
+  const [isOpen, forceHidden, setEventHistoryState] = useEventHistoryState()
+
+  return (
+    <>
+      <HamburgerMenu />
+      <EventHistory
+        isOpen={isOpen}
+        forceHidden={forceHidden}
+        onOpenChange={open => setEventHistoryState(open, false)}
+      />
+    </>
+  )
+}
 
 describe('HamburgerMenu', () => {
   beforeEach(() => {
+    localStorage.clear()
+    setEventHistoryForceHidden(false)
+    setEventHistoryOpen(false)
     window.matchMedia = mock(() => ({
       matches: false,
       media: '',
@@ -18,6 +38,9 @@ describe('HamburgerMenu', () => {
 
   afterEach(() => {
     cleanup()
+    setEventHistoryForceHidden(false)
+    setEventHistoryOpen(false)
+    localStorage.clear()
   })
 
   it('shows lock inside the menu for owner-admin access', () => {
@@ -65,5 +88,25 @@ describe('HamburgerMenu', () => {
     )
 
     expect(screen.getByTestId('auth-access-indicator')).toBeInTheDocument()
+  })
+
+  it('toggles event history visibility from the menu', () => {
+    setEventHistoryForceHidden(true)
+
+    render(<EventHistoryHarness />)
+
+    expect(screen.queryByTestId('event-history-open-button')).toBeNull()
+
+    fireEvent.click(screen.getByTestId('hamburger-menu'))
+    fireEvent.click(screen.getByTestId('event-history-toggle'))
+
+    expect(localStorage.getItem('mdt-eventHistory-hidden')).toBe('false')
+    expect(screen.getByTestId('event-history-open-button')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByTestId('hamburger-menu'))
+    fireEvent.click(screen.getByTestId('event-history-toggle'))
+
+    expect(localStorage.getItem('mdt-eventHistory-hidden')).toBe('true')
+    expect(screen.queryByTestId('event-history-open-button')).toBeNull()
   })
 })

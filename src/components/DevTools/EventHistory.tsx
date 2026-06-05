@@ -75,6 +75,7 @@ export function EventHistory({ isOpen: controlledIsOpen, onOpenChange, forceHidd
   if (!isOpen) {
     return (
       <button
+        data-testid="event-history-open-button"
         onClick={() => setIsOpen(true)}
         className="fixed bottom-4 right-4 bg-gray-900 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-gray-800 transition-colors z-50"
         title="Open Event History"
@@ -87,7 +88,10 @@ export function EventHistory({ isOpen: controlledIsOpen, onOpenChange, forceHidd
   }
 
   return (
-    <div className="fixed bottom-0 right-0 w-[500px] h-96 bg-gray-900 text-white shadow-2xl flex flex-col z-50 border-t-2 border-blue-500">
+    <div
+      data-testid="event-history-panel"
+      className="fixed bottom-0 right-0 w-[500px] h-96 bg-gray-900 text-white shadow-2xl flex flex-col z-50 border-t-2 border-blue-500"
+    >
       {/* Header */}
       <div className="bg-gray-800 px-4 py-2 flex items-center justify-between border-b border-gray-700">
         <div className="flex items-center space-x-4">
