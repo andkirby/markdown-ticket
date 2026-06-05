@@ -68,7 +68,7 @@ export function isBackendDownError(error: unknown): boolean {
       || error.message.includes('Failed to fetch')
       || error.message.includes('NetworkError')
     ))
-    || (error instanceof Error && error.message.includes('HTTP 500'))
+    || (error instanceof Error && /HTTP 5\d\d/u.test(error.message))
 }
 
 function isNetworkError(error: unknown): boolean {
