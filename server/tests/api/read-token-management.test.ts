@@ -12,6 +12,7 @@ import { cleanupTestEnvironment, setupTestEnvironment } from './setup'
 const ownerToken = 'mdt-177-owner-token'
 const allowedOrigin = 'http://localhost:6173'
 const envReadToken = 'mdt-177-env-read-token'
+const futureExpiry = () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
 
 function firstSetCookie(response: request.Response): string {
   const raw = response.headers['set-cookie']
@@ -60,7 +61,7 @@ describe('read token management API - MDT-177', () => {
       .send({
         name: 'Bob',
         projectRefs: ['PRA', 'PRB'],
-        expiresAt: '2026-06-01T00:00:00.000Z',
+        expiresAt: futureExpiry(),
       })
 
     expect(create.status).toBe(201)
