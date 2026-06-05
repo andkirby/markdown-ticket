@@ -7,7 +7,7 @@ import { createPortal } from 'react-dom'
 import { DEFAULT_SORT_ATTRIBUTES } from '../config/sorting'
 import { useTheme } from '../hooks/useTheme'
 import { nuclearCacheClear } from '../utils/cache'
-import { getEventHistoryForceHidden, toggleEventHistory } from './DevTools/useEventHistoryState'
+import { getEventHistoryForceHidden, subscribeEventHistoryState, toggleEventHistory } from './DevTools/useEventHistoryState'
 import { ButtonGroup, ButtonGroupSeparator } from './ui/button-group'
 import { Button } from './ui/index'
 
@@ -50,10 +50,9 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
 
   // Track EventHistory state changes
   useEffect(() => {
-    const checkInterval = setInterval(() => {
-      setEventHistoryForceHidden(getEventHistoryForceHidden())
-    }, 100)
-    return () => clearInterval(checkInterval)
+    return subscribeEventHistoryState((_open, hidden) => {
+      setEventHistoryForceHidden(hidden)
+    })
   }, [])
 
   useEffect(() => {
@@ -275,7 +274,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
             </button>
 
             {/**
-              * @testid event-history-toggle — Button to toggle event history panel
+              * @testid event-history-toggle — Button to toggle event history visibility
               */}
             {!eventHistoryForceHidden && (
               <button

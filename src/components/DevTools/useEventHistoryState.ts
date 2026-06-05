@@ -33,7 +33,13 @@ const initialState = loadInitialState()
 
 let globalIsOpen = initialState.isOpen
 let globalForceHidden = initialState.forceHidden
-const listeners = new Set<(open: boolean, forceHidden: boolean) => void>()
+type EventHistoryStateListener = (open: boolean, forceHidden: boolean) => void
+
+const listeners = new Set<EventHistoryStateListener>()
+
+function notifyListeners() {
+  listeners.forEach(listener => listener(globalIsOpen, globalForceHidden))
+}
 
 /**
  * Persist forceHidden state to localStorage
@@ -48,7 +54,7 @@ function persistState(forceHidden: boolean) {
 }
 
 /**
- * Toggle EventHistory visibility (called from hamburger menu)
+ * Toggle EventHistory visibility.
  * When hiding, sets forceHidden=true to hide both popup AND floating button
  */
 export function toggleEventHistory() {
@@ -63,7 +69,7 @@ export function toggleEventHistory() {
     globalForceHidden = false
   }
   persistState(globalForceHidden)
-  listeners.forEach(listener => listener(globalIsOpen, globalForceHidden))
+  notifyListeners()
 }
 
 /**
@@ -76,7 +82,7 @@ export function setEventHistoryOpen(open: boolean) {
     globalForceHidden = false
     persistState(false)
   }
-  listeners.forEach(listener => listener(globalIsOpen, globalForceHidden))
+  notifyListeners()
 }
 
 /**
@@ -84,8 +90,11 @@ export function setEventHistoryOpen(open: boolean) {
  */
 export function setEventHistoryForceHidden(forceHidden: boolean) {
   globalForceHidden = forceHidden
+  if (forceHidden) {
+    globalIsOpen = false
+  }
   persistState(forceHidden)
-  listeners.forEach(listener => listener(globalIsOpen, globalForceHidden))
+  notifyListeners()
 }
 
 /**
@@ -100,6 +109,13 @@ export function getEventHistoryOpen(): boolean {
  */
 export function getEventHistoryForceHidden(): boolean {
   return globalForceHidden
+}
+
+export function subscribeEventHistoryState(listener: EventHistoryStateListener): () => void {
+  listeners.add(listener)
+  return () => {
+    listeners.delete(listener)
+  }
 }
 
 /**
@@ -122,10 +138,7 @@ export function useEventHistoryState(): [boolean, boolean, (open: boolean, force
       setIsOpen(open)
       setForceHidden(hidden)
     }
-    listeners.add(listener)
-    return () => {
-      listeners.delete(listener)
-    }
+    return subscribeEventHistoryState(listener)
   }, [])
 
   // Sync with global state if it changes externally
@@ -139,12 +152,15 @@ export function useEventHistoryState(): [boolean, boolean, (open: boolean, force
   }, [isOpen, forceHidden])
 
   const setState = (open: boolean, hidden?: boolean) => {
-    globalIsOpen = open
+    globalIsOpen = hidden ? false : open
     if (hidden !== undefined) {
       globalForceHidden = hidden
     }
+    if (open) {
+      globalForceHidden = false
+    }
     persistState(globalForceHidden)
-    listeners.forEach(listener => listener(globalIsOpen, globalForceHidden))
+    notifyListeners()
   }
 
   return [isOpen, forceHidden, setState]
