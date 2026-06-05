@@ -25,7 +25,7 @@ priority: Medium
 
 ## Affected Artifacts
 - `src/App.tsx` (lines 27-119) — Current ViewModeSwitcher implementation
-- `designs/logo-mdt-m-dark_64x64.png` — Mobile logo (new asset)
+- `/logo-mdt-m-dark_64x64.png` — Mobile logo (new asset)
 - Navigation header components — Mobile responsive changes
 
 
@@ -38,7 +38,7 @@ priority: Medium
 ## Mobile Requirements (< 768px viewport)
 
 - **Navigation**: Only Board|List toggle button visible (Documents button hidden)
-- **Logo**: Use `designs/logo-mdt-m-dark_64x64.png` instead of default logo
+- **Logo**: Use `/logo-mdt-m-dark_64x64.png` instead of default logo
 - **Header**: Remove project title from navigation
 - **Theme Toggle**: Move dark/light toggle button into hamburger menu
 - **List View Cards**: 2-line layout (line 1: CR-key + badges, line 2: title at 100% width)
@@ -79,7 +79,7 @@ Create merged Board|List toggle button with hover overlay that shows alternate v
 | `src/components/ViewModeSwitcher/BoardListToggle.tsx` | Component | Merged Board|List toggle with hover overlay, click-to-toggle, visual state management |
 | `src/components/ViewModeSwitcher/useViewModePersistence.ts` | Hook | localStorage management for lastBoardListMode persistence |
 | `src/components/ViewModeSwitcher/types.ts` | Types | ViewMode type following Type-Safe Enum pattern (docs/PRE_IMPLEMENT.md) |
-| `designs/logo-mdt-m-dark_64x64.png` | Asset | Mobile-specific logo (64x64px) |
+| `/logo-mdt-m-dark_64x64.png` | Asset | Mobile-specific logo (64x64px) |
 | `src/components/ProjectView.tsx` | Modified | Mobile list view card layout (2-line: badges + title) |
 
 ## Modified Artifacts
@@ -129,7 +129,7 @@ This feature has **17 behavioral requirements**, **6 constraints**, and **2 edge
 - [ ] Documents button functions identically to current implementation
 - [ ] localStorage persists lastBoardListMode across browser sessions
 - [ ] Mobile: Project title hidden in navigation header
-- [ ] Mobile: Logo switches to `designs/logo-mdt-m-dark_64x64.png`
+- [ ] Mobile: Logo switches to `/logo-mdt-m-dark_64x64.png`
 - [ ] Mobile: Theme toggle button moved to hamburger menu
 - [ ] Mobile list view: Ticket cards display in 2-line layout (line 1: CR-key + badges, line 2: title at 100% width)
 

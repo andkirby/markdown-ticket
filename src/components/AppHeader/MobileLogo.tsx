@@ -20,7 +20,7 @@ export function MobileLogo() {
     }
   }, [])
 
-  const logoSrc = isMobile ? '/designs/logo-mdt-m-dark_64x64.png' : '/logo.jpeg'
+  const logoSrc = isMobile ? '/logo-mdt-m-dark_64x64.png' : '/logo.jpeg'
 
   return (
     <img

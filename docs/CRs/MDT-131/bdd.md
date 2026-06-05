@@ -116,7 +116,7 @@
   Covers: `BR-7.2`
   Given: the application loads on mobile viewport (width < 768px)
   When: I view the navigation header
-  Then: I see the mobile logo from designs/logo-mdt-m-dark_64x64.png
+  Then: I see the mobile logo from /logo-mdt-m-dark_64x64.png
 
 ### BR-8
 
