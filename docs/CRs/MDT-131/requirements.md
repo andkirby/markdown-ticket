@@ -40,7 +40,7 @@ This feature reduces navigation space from 3 buttons to 2 by merging Board and L
 ### BR-7
 
 - `BR-7.1` [bdd] WHEN application loads on mobile viewport, the system shall NOT display the project title in the navigation header
-- `BR-7.2` [bdd] WHEN application loads on mobile viewport, the system shall use the mobile logo from designs/logo-mdt-m-dark_64x64.png instead of the default logo
+- `BR-7.2` [bdd] WHEN application loads on mobile viewport, the system shall use the mobile logo from /logo-mdt-m-dark_64x64.png instead of the default logo
 - `BR-7.3` [bdd] WHEN user opens the hamburger menu on any device (mobile or desktop), the system shall display a button-group with 3 theme options (Light, Dark, System) showing only icons with no text labels. The active theme is highlighted with primary color. The desktop theme toggle button in the top right corner has been removed.
 
 ### BR-8
