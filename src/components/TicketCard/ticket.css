@@ -1,14 +1,46 @@
 /**
  * Ticket Card Styles
- * Follows styling architecture from STYLING.md
+ *
+ * Base class and variants for the kanban ticket card.
+ * Inline layout/spacing stays in TSX per STYLING.md.
+ *
+ * Classes:
+ *   .ticket-card          — base card (surface, border, shadow, hover)
+ *   .ticket-card--invalid — red border/ring for unknown status
+ *   .ticket-card__title   — title typography
+ *   .ticket-card__edit    — hover-reveal edit button
  */
 
-/* Base ticket card class - keeps inline layout and spacing in TSX */
-.ticket-card {
-  @apply border-gray-200/50 dark:border-slate-700/50;
-}
+@layer components {
+  /* Base ticket card */
+  .ticket-card {
+    @apply rounded-xl border px-3 py-4 cursor-pointer backdrop-blur-sm;
+    @apply transition-all duration-300 ease-out;
+    /* Surface gradient — light: white-to-gray, dark: slate-800-to-900 */
+    @apply bg-gradient-to-br from-white to-gray-50/80 dark:from-slate-800 dark:to-slate-900/80;
+    @apply border-gray-200/50 dark:border-slate-700/50;
+    /* Subtle resting shadow */
+    @apply shadow-[0_1px_3px_rgba(0,0,0,0.04)];
+    /* Hover lift — matches DraggableTicketCard visual feel */
+    @apply hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.15)] hover:-translate-y-0.5 hover:scale-[1.005];
+  }
 
-/* Invalid status state - red border and ring */
-.ticket-card--invalid {
-  @apply border-red-500 dark:border-red-500 ring-2 ring-red-500/30;
+  /* Invalid status — red border + ring */
+  .ticket-card--invalid {
+    @apply border-red-500 dark:border-red-500 ring-2 ring-red-500/30;
+  }
+
+  /* Title typography */
+  .ticket-card__title {
+    @apply font-semibold text-sm truncate;
+    @apply text-gray-900 dark:text-white;
+  }
+
+  /* Hover-reveal edit button */
+  .ticket-card__edit {
+    @apply opacity-0 group-hover:opacity-100;
+    @apply text-gray-400 dark:text-gray-500;
+    @apply hover:text-gray-600 dark:hover:text-gray-300;
+    @apply transition-all duration-200 ease-out;
+  }
 }
