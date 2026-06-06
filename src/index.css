@@ -31,6 +31,7 @@
 @import './components/DocumentsView/documents-view.css';
 @import './components/shared/relative-timestamp.css';
 @import './styles/entities/fav-star.css';
+@import './components/ProjectSelector/project-selector.css';
 
 @tailwind base;
 @tailwind components;

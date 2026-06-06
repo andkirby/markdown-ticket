@@ -259,7 +259,7 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Search projects..."
               data-testid="project-browser-search-input"
-              className="w-full pl-10 pr-4 py-2 text-sm rounded-lg border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
+              className="project-search"
             />
           </div>
         </ModalHeader>
