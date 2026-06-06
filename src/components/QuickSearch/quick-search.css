@@ -1,0 +1,157 @@
+/**
+ * Quick Search Styles (MDT-136, MDT-152)
+ *
+ * Styles for the Cmd+K quick search overlay:
+ * - Search input with mode indicator badge
+ * - Result items (current project + cross-project)
+ * - Loading skeletons, error states, empty states
+ *
+ * Uses CSS variables for semantic colors so the palette
+ * can be re-themed without touching component code.
+ *
+ * @see STYLING.md for naming conventions
+ */
+
+@layer components {
+  /* ── Search Result Item (shared for current + cross-project) ── */
+
+  .search-result {
+    @apply w-full px-4 py-3 text-left transition-colors ring-inset;
+
+    background: transparent;
+  }
+
+  .search-result:hover {
+    background: var(--search-result-hover-bg);
+  }
+
+  .search-result:focus-visible {
+    @apply outline-none ring-2 ring-ring;
+  }
+
+  .search-result[data-selected="true"] {
+    background: var(--search-result-selected-bg);
+    box-shadow: inset 0 0 0 2px var(--search-result-selected-ring);
+  }
+
+  /* Result child parts */
+  .search-result__code {
+    @apply font-mono text-sm font-medium whitespace-nowrap shrink-0;
+    color: var(--search-result-code-color);
+  }
+
+  /* Cross-project variant uses purple code color */
+  .search-result[data-type="cross-project"] .search-result__code {
+    color: var(--search-result-code-cross-color);
+  }
+
+  .search-result__title {
+    color: var(--search-result-title-color);
+  }
+
+  /* Project label badge (cross-project results only) */
+  .search-result__project-label {
+    @apply inline-flex items-center px-1.5 py-0.5 rounded;
+    background: var(--search-result-label-bg);
+    color: var(--search-result-label-color);
+  }
+
+  .search-result__project-name {
+    color: var(--search-result-project-name-color);
+  }
+
+  /* ── Section header ── */
+
+  .search-section-header {
+    @apply px-4 py-2 text-xs font-semibold uppercase tracking-wide;
+    color: var(--search-section-header-color);
+    border-bottom: 1px solid var(--search-section-header-border);
+  }
+
+  /* ── Result list container ── */
+
+  .search-results-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .search-results-list > li + li {
+    border-top: 1px solid var(--search-results-divider);
+  }
+
+  /* ── Mode indicator badge ── */
+
+  .search-mode-badge {
+    @apply absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap;
+
+    background: var(--search-mode-badge-bg);
+    color: var(--search-mode-badge-text);
+  }
+
+  /* ── Error / Retry link ── */
+
+  .search-retry-link {
+    @apply text-sm font-medium hover:underline;
+    color: var(--search-retry-color);
+  }
+
+  /* ── Error text ── */
+
+  .search-error-text {
+    color: var(--search-error-color);
+  }
+
+  /* ── Skeleton loading card ── */
+
+  .search-skeleton-bar {
+    @apply h-4 rounded animate-pulse;
+    background: var(--search-skeleton-bg);
+  }
+}
+
+/* ── CSS Variables — Light Mode ── */
+:root {
+  --search-result-hover-bg: theme('colors.gray.50');
+  --search-result-selected-bg: rgb(239 246 255 / 0.5);
+  --search-result-selected-ring: theme('colors.blue.400');
+  --search-result-code-color: theme('colors.blue.600');
+  --search-result-code-cross-color: theme('colors.purple.600');
+  --search-result-title-color: theme('colors.gray.900');
+  --search-result-label-bg: theme('colors.purple.50');
+  --search-result-label-color: theme('colors.purple.700');
+  --search-result-project-name-color: theme('colors.gray.500');
+
+  --search-section-header-color: theme('colors.gray.500');
+  --search-section-header-border: theme('colors.gray.100');
+  --search-results-divider: theme('colors.gray.100');
+
+  --search-mode-badge-bg: theme('colors.blue.100');
+  --search-mode-badge-text: theme('colors.blue.700');
+  --search-retry-color: theme('colors.blue.600');
+  --search-error-color: theme('colors.red.600');
+  --search-skeleton-bg: theme('colors.gray.200');
+}
+
+/* ── CSS Variables — Dark Mode ── */
+.dark {
+  --search-result-hover-bg: theme('colors.gray.800');
+  --search-result-selected-bg: rgb(30 58 138 / 0.2);
+  --search-result-selected-ring: theme('colors.blue.500');
+  --search-result-code-color: theme('colors.blue.400');
+  --search-result-code-cross-color: theme('colors.purple.400');
+  --search-result-title-color: theme('colors.gray.100');
+  --search-result-label-bg: rgb(126 34 206 / 0.3);
+  --search-result-label-color: theme('colors.purple.300');
+  --search-result-project-name-color: theme('colors.gray.400');
+
+  --search-section-header-color: theme('colors.gray.400');
+  --search-section-header-border: theme('colors.gray.800');
+  --search-results-divider: theme('colors.gray.800');
+
+  --search-mode-badge-bg: rgb(30 58 138 / 0.4);
+  --search-mode-badge-text: theme('colors.blue.300');
+  --search-retry-color: theme('colors.blue.400');
+  --search-error-color: theme('colors.red.400');
+  --search-skeleton-bg: theme('colors.gray.700');
+}

@@ -13,6 +13,8 @@ import type { SearchResponse } from '@mdt/domain-contracts'
 import type { QueryMode } from '@/hooks/useQuickSearch'
 import type { Ticket } from '@/types/ticket'
 
+import { cn } from '@/lib/utils'
+
 // ---------------------------------------------------------------------------
 // Skeleton card — renders during loading (C4: within 50ms)
 // ---------------------------------------------------------------------------
@@ -20,9 +22,9 @@ import type { Ticket } from '@/types/ticket'
 function SkeletonCard(): React.ReactElement {
   return (
     <li className="px-4 py-3" data-testid="quick-search-skeleton">
-      <div className="flex items-center gap-3 animate-pulse">
-        <div className="h-4 w-16 rounded bg-gray-200 dark:bg-gray-700" />
-        <div className="h-4 w-48 rounded bg-gray-200 dark:bg-gray-700" />
+      <div className="flex items-center gap-3">
+        <div className="search-skeleton-bar w-16" />
+        <div className="search-skeleton-bar w-48" />
       </div>
     </li>
   )
@@ -40,14 +42,14 @@ interface ErrorStateProps {
 function ErrorState({ error, onRetry }: ErrorStateProps): React.ReactElement {
   return (
     <div className="p-4 text-center" data-testid="quick-search-error">
-      <p className="text-sm text-red-600 dark:text-red-400 mb-2">
+      <p className="text-sm search-error-text mb-2">
         {'Search failed: '}
         {error.message}
       </p>
       <button
         type="button"
         data-testid="quick-search-retry"
-        className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline"
+        className="search-retry-link"
         onClick={onRetry}
       >
         Retry
@@ -74,22 +76,22 @@ function CrossProjectResultItem({ result, isSelected, onSelect }: CrossProjectRe
         role="option"
         aria-selected={isSelected}
         data-testid="quick-search-cross-project-result-item"
-        className={`w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ring-inset ${
-          isSelected ? 'ring-2 ring-blue-400 dark:ring-blue-500 bg-blue-50/50 dark:bg-blue-900/20' : ''
-        }`}
+        data-selected={isSelected ? 'true' : undefined}
+        data-type="cross-project"
+        className="search-result"
         onClick={onSelect}
       >
         <div className="flex items-center gap-3">
-          <span className="font-mono text-sm font-medium text-purple-600 dark:text-purple-400 whitespace-nowrap shrink-0">
+          <span className="search-result__code">
             {result.ticket.code}
           </span>
-          <span className="text-gray-900 dark:text-gray-100 truncate">
+          <span className="search-result__title truncate">
             {result.ticket.title}
           </span>
         </div>
-        <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+        <div className="mt-1 text-xs search-result__project-name">
           <span
-            className="inline-flex items-center px-1.5 py-0.5 rounded bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300"
+            className="search-result__project-label"
             data-testid="quick-search-project-label"
           >
             {result.project.code}
@@ -141,7 +143,7 @@ export function QuickSearchResults({
   if (invalidProjectCode) {
     return (
       <div className="p-8 text-center text-gray-500" data-testid="quick-search-no-results">
-        <p className="text-sm text-red-600 dark:text-red-400">
+        <p className="text-sm search-error-text">
           Project
           {' '}
           <span className="font-mono font-medium">{invalidProjectCode}</span>
@@ -176,7 +178,7 @@ export function QuickSearchResults({
       {isCrossProjectMode && (
         <div role="group" aria-label={isProjectScopeMode ? 'Project Results' : 'Cross-Project Results'} data-testid="quick-search-cross-project-section">
           {/* Section header */}
-          <div className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-gray-100 dark:border-gray-800">
+          <div className="search-section-header">
             {isProjectScopeMode ? 'Project Results' : 'Cross-Project Results'}
           </div>
 
@@ -187,7 +189,7 @@ export function QuickSearchResults({
 
           {/* Loading skeletons (C4: renders within 50ms) */}
           {crossProjectLoading && !crossProjectError && (
-            <ul className="divide-y divide-gray-100 dark:divide-gray-800">
+            <ul className="search-results-list">
               <SkeletonCard />
               <SkeletonCard />
               <SkeletonCard />
@@ -196,7 +198,7 @@ export function QuickSearchResults({
 
           {/* Cross-project results */}
           {!crossProjectLoading && !crossProjectError && hasCrossProjectResults && (
-            <ul className="divide-y divide-gray-100 dark:divide-gray-800">
+            <ul className="search-results-list">
               {crossProjectResults.map((result, index) => (
                 <CrossProjectResultItem
                   key={result.ticket.code}
@@ -224,11 +226,11 @@ export function QuickSearchResults({
       {hasCurrentProjectResults && !isProjectScopeMode && (
         <div role="group" aria-label="Current Project" data-testid="quick-search-current-project-section">
           {isTicketKeyMode && (
-            <div className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-gray-100 dark:border-gray-800">
+            <div className="search-section-header">
               Current Project
             </div>
           )}
-          <ul className="divide-y divide-gray-100 dark:divide-gray-800">
+          <ul className="search-results-list">
             {tickets.map((ticket, index) => {
               // Offset index by cross-project results count for selection
               const effectiveIndex = isTicketKeyMode ? crossProjectResults.length + index : index
@@ -240,16 +242,15 @@ export function QuickSearchResults({
                     role="option"
                     aria-selected={isSelected}
                     data-testid="quick-search-result-item"
-                    className={`w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ring-inset ${
-                      isSelected ? 'ring-2 ring-blue-400 dark:ring-blue-500 bg-blue-50/50 dark:bg-blue-900/20' : ''
-                    }`}
+                    data-selected={isSelected ? 'true' : undefined}
+                    className="search-result"
                     onClick={() => onSelect(ticket)}
                   >
                     <div className="flex items-center gap-3">
-                      <span className="font-mono text-sm font-medium text-blue-600 dark:text-blue-400 whitespace-nowrap shrink-0">
+                      <span className="search-result__code">
                         {ticket.code}
                       </span>
-                      <span className="text-gray-900 dark:text-gray-100 truncate">
+                      <span className="search-result__title truncate">
                         {ticket.title}
                       </span>
                     </div>

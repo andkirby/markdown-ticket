@@ -70,7 +70,7 @@ export function QuickSearchInput({ value, onChange, onKeyDown, queryMode, queryP
       {modeLabel && (
         <span
           data-testid="quick-search-mode-indicator"
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 whitespace-nowrap"
+        className="search-mode-badge"
         >
           {modeLabel}
         </span>
