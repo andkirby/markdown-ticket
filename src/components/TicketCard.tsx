@@ -39,7 +39,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onMove: _onMove, onClic
 
   return (
     <div
-      className={`group ticket-card bg-gradient-to-br from-white to-gray-50/80 dark:from-slate-800 dark:to-slate-900/80 border rounded-xl px-3 py-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.15)] hover:-translate-y-0.5 hover:scale-[1.005] transition-all duration-300 ease-out cursor-pointer backdrop-blur-sm ${
+      className={`group ticket-card ${
         hasInvalidStatus ? 'ticket-card--invalid' : ''
       }`}
       onClick={onEdit}
@@ -50,7 +50,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onMove: _onMove, onClic
     >
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <h4 className="ticket-title font-semibold text-gray-900 dark:text-white text-sm truncate">
+          <h4 className="ticket-card__title">
             <TicketCode code={ticket.code} ticket={ticket} />
             <span className="mx-1 text-gray-900 dark:text-white">•</span>
             {ticket.title}
@@ -70,7 +70,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onMove: _onMove, onClic
                 e.stopPropagation()
                 onEdit()
               }}
-              className="opacity-0 group-hover:opacity-100 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-all duration-200 ease-out"
+              className="ticket-card__edit"
               title="Edit ticket"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -418,6 +418,15 @@ Existing global classes in `src/index.css` and shared entity CSS include:
 | `.avatar`, `.avatar-*` | Avatar sizes | `styles/components/layout.css` |
 | `.settings-*` | Settings modal | `components/SettingsModal/settings.css` |
 | `.tab`, `.tab__*`, `.tab--*` | Shared Radix Tabs pattern | `components/SettingsModal/settings.css` |
+| `.ticket-card`, `.ticket-card--invalid` | Ticket card surface + hover | `components/TicketCard/ticket.css` |
+| `.ticket-card__title` | Ticket title typography | `components/TicketCard/ticket.css` |
+| `.ticket-card__edit` | Hover-reveal edit button | `components/TicketCard/ticket.css` |
+| `.board-container` | Kanban grid layout | `components/Column/column.css` |
+| `.column`, `.column--over` | Board column + drop target | `components/Column/column.css` |
+| `.column__header` | Column gradient header bar | `components/Column/column.css` |
+| `.column__count` | Ticket count badge in header | `components/Column/column.css` |
+| `.column-drop-zone` | Inner scrollable ticket list | `components/Column/column.css` |
+| `.draggable-ticket`, `.draggable-ticket--*` | Drag wrapper states | `components/Column/column.css` |
 
 This section is a snapshot, not the source of truth for naming rules.
 
