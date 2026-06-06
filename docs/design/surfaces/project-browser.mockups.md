@@ -19,25 +19,78 @@ window "Project Browser — Default":
     grid cols=2 rows=2:
       cell id="card-mdt":
         row:
+          avatar "MDT" id="mdt-accent"
           icon name="star" id="mdt-star"
-          text "MDT" bold
-        text "Markdown Ticket"
-        text "Lightweight ticket mgmt" muted
+          text "Markdown Ticket" bold
+        text "Local CR board and docs" muted
       cell id="card-abc":
-        text "ABC" bold
-        text "Another Project"
+        row:
+          avatar "ABC" id="abc-accent"
+          text "Another Project" bold
         text "Example desc here" muted
       cell id="card-xyz":
-        text "XYZ" bold
-        text "Third Project"
+        row:
+          avatar "XYZ"
+          text "Third Project" bold
         text "Another example" muted
       cell id="card-api":
-        text "API" bold
-        text "API Gateway"
+        row:
+          avatar "API"
+          text "API Gateway" bold
         text "Backend service" muted
 
-annotation "Active project has blue gradient bg and star" target="card-mdt" position=top
-annotation "Inactive projects use white/gray gradient" target="card-abc" position=right
+annotation "Accent mark uses current user's selected project accent or deterministic fallback" target="mdt-accent" position=top
+annotation "Favorite star remains separate; accents are identity marks, not status badges" target="mdt-star" position=right
+```
+
+### Filled Accent Treatment
+
+Same card size as the standard browser card; only the left identity area is filled by color or a user-owned image.
+
+```wireloom
+window "Project Browser — Filled Accent Treatment":
+  panel:
+    row:
+      text "Projects" bold
+      input placeholder="Search projects..." type=search
+      button "×"
+    divider
+    grid cols=2 rows=1:
+      cell id="filled-color-card":
+        row:
+          avatar "MDT" id="filled-color"
+          text "Markdown Ticket" bold
+          spacer
+          icon name="star"
+        text "Local CR board and project documents" muted
+      cell id="filled-image-card":
+        row:
+          avatar "img" id="filled-image"
+          text "Summary Link" bold
+        text "Article summarization and review" muted
+
+annotation "Same row height; left identity area is the filled color/image region." target="filled-color" position=top
+annotation "Personal image support must be explicit user selection, not auto-discovery from project folder." target="filled-image" position=right
+```
+
+### Accent Fallback State
+
+```wireloom
+window "Project Browser — Accent Fallback":
+  panel:
+    row:
+      text "Projects" bold
+      input placeholder="Search projects..." type=search
+      button "×"
+    divider
+    grid cols=2 rows=1:
+      cell id="fallback-card":
+        row:
+          avatar "DOCS" id="fallback-accent"
+          text "Documentation" bold
+        text "No user-selected accent yet" muted
+
+annotation "Fallback accent is deterministic from project code/id and does not require migration." target="fallback-accent" position=right
 ```
 
 ### Read-only Project List
@@ -52,11 +105,14 @@ window "Project Browser — Read-only":
     divider
     grid cols=2 rows=1:
       cell id="readonly-card-mdt":
-        text "MDT" bold
+        row:
+          avatar "MDT" id="readonly-accent"
+          text "Markdown Ticket" bold
         text "Markdown Ticket"
         text "Lightweight ticket mgmt" muted
 
 annotation "Favorite toggle is absent because it writes selector state" target="readonly-card-mdt" position=right
+annotation "Accent is personal visual preference; it does not grant write access to project config" target="readonly-accent" position=bottom
 ```
 
 ### Token-scoped Project List
@@ -168,13 +224,16 @@ window "Project Browser — No Matches":
 window "Project Card — Active":
   panel:
     row:
-      icon name="star" id="active-star"
+      avatar "MDT" id="active-accent"
       text "MDT" bold id="active-code"
+      spacer
+      icon name="star" id="active-star"
     text "Markdown Ticket" id="active-name"
     text "Lightweight ticket management" muted id="active-desc"
 
 annotation "Blue gradient bg, blue border, shadow-md, rounded-xl" target="active-code" position=top
 annotation "Fav-star active, rotate-[15deg]" target="active-star" position=right
+annotation "Accent mark precedes code/name and uses current user's preference" target="active-accent" position=left
 ```
 
 ### Card Detail: Inactive Project (No Favorite)
@@ -182,11 +241,14 @@ annotation "Fav-star active, rotate-[15deg]" target="active-star" position=right
 ```wireloom
 window "Project Card — Inactive":
   panel:
-    text "ABC" bold id="inactive-code"
+    row:
+      avatar "ABC" id="inactive-accent"
+      text "ABC" bold id="inactive-code"
     text "Another Project" id="inactive-name"
     text "Example description here" muted id="inactive-desc"
 
 annotation "White/gray gradient bg, no star, shadow-sm" target="inactive-code" position=top
+annotation "Accent does not change card size" target="inactive-accent" position=left
 ```
 
 ### Card Detail: Inactive Project (Favorited)
@@ -264,8 +326,9 @@ window "Project Selector Rail — Desktop":
     row:
       panel id="active-card":
         row:
+          avatar "MDT" id="rail-active-accent"
           icon name="star"
-          text "MDT" bold
+          text "Markdown Ticket" bold
         text "Markdown Ticket"
         text "ticket mgmt" muted
       chip "ABC" id="chip-abc"
@@ -276,6 +339,7 @@ window "Project Selector Rail — Desktop":
 annotation "Active card: click opens panel (NOT switch)" target="active-card" position=top
 annotation "Inactive chips: click switches project" target="chip-abc" position=bottom
 annotation "Launcher button: opens project browser panel" target="launcher-btn" position=right
+annotation "Rail accent stays compact; do not use filled-card treatment in the rail" target="rail-active-accent" position=bottom
 ```
 
 ### Active Card Detail
@@ -301,6 +365,7 @@ window "Rail Chip — Default":
     text "ABC" bold id="chip-default"
 
 annotation "rounded-md px-2 py-1.5 h-12" target="chip-default" position=right
+annotation "Chip may include compact accent dot/mark but height remains h-12" target="chip-default" position=bottom
 ```
 
 ```wireloom
@@ -446,8 +511,11 @@ annotation "Appears centered with pt-20 offset" target="rail-panel-search" posit
 | Empty state | `--muted-foreground` | `text-center py-12 text-gray-500` | |
 | HoverCard | — | shadcn `HoverCard` / `HoverCardContent` | w-80, 100ms delay |
 | Search section label | `--muted-foreground` | `text-xs uppercase tracking-wide` | "No projects match your search" |
+| Accent mark | proposed project accent tokens | `.project-accent-mark` + `data-project-accent` | Personal project identity preference |
+| Filled identity area | proposed project accent tokens | `.project-identity-fill` | Same-size color/image treatment for browser cards only |
 
 ## Maintenance Notes
 
 - Keep this file focused on canonical surface states: panel default/search/empty/mobile, rail desktop/mobile, and launcher open.
 - Avoid adding more single-control snapshots unless they introduce a new interaction contract; prefer a short row in `project-browser.spec.md` state tables.
+- Keep personal project accent rendering here; keep the color picker control in `project-edit-form.mockups.md`.
