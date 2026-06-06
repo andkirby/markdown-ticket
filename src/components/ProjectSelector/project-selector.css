@@ -1,0 +1,213 @@
+/**
+ * Project Selector Styles (MDT-129)
+ *
+ * Reusable classes for the project selector system:
+ * - Rail: active card + inactive chips + launcher button
+ * - Panel: browser modal with search and card grid
+ *
+ * Uses CSS variables for semantic colors so the palette
+ * can be re-themed without touching component code.
+ *
+ * @see STYLING.md for naming conventions
+ * @see fav-star.css for favorite star variants (.fav-star--card, .fav-star--chip)
+ */
+
+@layer components {
+  /* ── Shared transition (cards, chips, launcher all use the same lift) ── */
+  .project-lift {
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out, background 0.2s ease-out, border-color 0.2s ease-out;
+  }
+
+  .project-lift:hover {
+    transform: translateY(-2px) scale(1.02);
+  }
+
+  /* ── Project Card (rail active + panel cards) ── */
+
+  .project-card {
+    @apply relative flex items-center justify-center border rounded-xl px-2 sm:px-4 py-1.5 min-h-12 cursor-pointer;
+
+    background: linear-gradient(
+      135deg,
+      var(--project-card-bg-from),
+      var(--project-card-bg-to)
+    );
+    border-color: var(--project-card-border);
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  }
+
+  .project-card:hover {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  }
+
+  .project-card:focus-visible {
+    @apply outline-none ring-2 ring-ring;
+  }
+
+  /* Active variant — highlighted gradient */
+  .project-card[data-active="true"] {
+    background: linear-gradient(
+      135deg,
+      var(--project-card-active-bg-from),
+      var(--project-card-active-bg-to)
+    );
+    border-color: var(--project-card-active-border);
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  }
+
+  .project-card[data-active="true"]:hover {
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  }
+
+  /* Card child elements */
+  .project-card__code {
+    @apply text-xs sm:text-sm font-medium flex-shrink-0;
+    color: var(--project-card-code-color);
+  }
+
+  .project-card__title {
+    @apply text-[10px] sm:text-xs font-bold truncate break-words leading-tight;
+    color: var(--project-card-title-color);
+  }
+
+  .project-card__desc {
+    @apply hidden sm:block text-xs truncate break-words leading-tight mt-0.5;
+    color: var(--project-card-desc-color);
+  }
+
+  /* Rail width constraints */
+  .project-card--rail {
+    @apply min-w-[100px] sm:min-w-[150px] max-w-[280px] flex-1;
+  }
+
+  /* ── Project Chip (compact inactive projects in rail) ── */
+
+  .project-chip {
+    @apply relative inline-flex items-center justify-center rounded-md px-2 py-1.5 h-12 cursor-pointer;
+
+    background: linear-gradient(
+      135deg,
+      var(--project-card-bg-from),
+      var(--project-card-bg-to)
+    );
+    border: 1px solid var(--project-card-border);
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  }
+
+  .project-chip:hover {
+    background: var(--accent);
+    color: var(--accent-foreground);
+    border-color: var(--project-chip-hover-border);
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  }
+
+  .project-chip:focus-visible {
+    @apply outline-none ring-2 ring-ring;
+  }
+
+  .project-chip__code {
+    @apply text-sm font-medium;
+    color: var(--project-chip-code-color);
+  }
+
+  /* ── Launcher Button ── */
+
+  .project-launcher {
+    @apply inline-flex items-center justify-center rounded-full w-10 h-10 cursor-pointer;
+
+    background: linear-gradient(
+      135deg,
+      var(--project-launcher-bg-from),
+      var(--project-launcher-bg-to)
+    );
+    border: 1px solid var(--project-launcher-border);
+    backdrop-filter: blur(4px);
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  }
+
+  .project-launcher:hover {
+    background: linear-gradient(
+      135deg,
+      var(--project-launcher-hover-bg-from),
+      var(--project-launcher-hover-bg-to)
+    );
+    border-color: var(--project-launcher-hover-border);
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  }
+
+  .project-launcher.active {
+    @apply ring-2 ring-primary;
+  }
+
+  /* ── Search Input (panel header) ── */
+
+  .project-search {
+    @apply w-full pl-10 pr-4 py-2 text-sm rounded-lg border focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent;
+
+    background: var(--project-search-bg);
+    border-color: var(--project-search-border);
+    color: var(--project-search-text);
+  }
+
+  .project-search::placeholder {
+    color: var(--project-search-placeholder);
+  }
+}
+
+/* ── CSS Variables — Light Mode ── */
+:root {
+  --project-card-bg-from: theme('colors.white');
+  --project-card-bg-to: rgb(249 250 251 / 0.8);
+  --project-card-border: rgb(229 231 235 / 0.5);
+  --project-card-code-color: theme('colors.gray.900');
+  --project-card-title-color: theme('colors.gray.700');
+  --project-card-desc-color: theme('colors.gray.500');
+
+  --project-card-active-bg-from: theme('colors.blue.50');
+  --project-card-active-bg-to: theme('colors.indigo.50');
+  --project-card-active-border: theme('colors.blue.200');
+
+  --project-chip-code-color: theme('colors.gray.700');
+  --project-chip-hover-border: theme('colors.blue.300');
+
+  --project-launcher-bg-from: theme('colors.gray.100');
+  --project-launcher-bg-to: rgb(229 231 235 / 0.8);
+  --project-launcher-border: rgb(209 213 219 / 0.5);
+  --project-launcher-hover-bg-from: theme('colors.blue.50');
+  --project-launcher-hover-bg-to: theme('colors.indigo.50');
+  --project-launcher-hover-border: theme('colors.blue.300');
+
+  --project-search-bg: theme('colors.gray.50');
+  --project-search-border: theme('colors.gray.200');
+  --project-search-text: theme('colors.gray.900');
+  --project-search-placeholder: theme('colors.gray.400');
+}
+
+/* ── CSS Variables — Dark Mode ── */
+.dark {
+  --project-card-bg-from: theme('colors.slate.800');
+  --project-card-bg-to: rgb(15 23 42 / 0.8);
+  --project-card-border: rgb(51 65 85 / 0.5);
+  --project-card-code-color: theme('colors.white');
+  --project-card-title-color: theme('colors.gray.300');
+  --project-card-desc-color: theme('colors.gray.400');
+
+  --project-card-active-bg-from: theme('colors.blue.950');
+  --project-card-active-bg-to: theme('colors.indigo.950');
+  --project-card-active-border: theme('colors.blue.800');
+
+  --project-chip-code-color: theme('colors.gray.300');
+  --project-chip-hover-border: theme('colors.blue.700');
+
+  --project-launcher-bg-from: theme('colors.slate.700');
+  --project-launcher-bg-to: rgb(30 41 59 / 0.8);
+  --project-launcher-border: rgb(71 85 105 / 0.5);
+  --project-launcher-hover-bg-from: theme('colors.blue.950');
+  --project-launcher-hover-bg-to: theme('colors.indigo.950');
+  --project-launcher-hover-border: theme('colors.blue.700');
+
+  --project-search-bg: theme('colors.slate.800');
+  --project-search-border: theme('colors.slate.600');
+  --project-search-text: theme('colors.white');
+  --project-search-placeholder: theme('colors.slate.500');
+}

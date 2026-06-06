@@ -11,6 +11,7 @@
 
 import { Plus } from 'lucide-react'
 import * as React from 'react'
+import { cn } from '@/lib/utils'
 
 /**
  * Props for LauncherButton component
@@ -44,26 +45,9 @@ const LauncherButton: React.FC<LauncherButtonProps> = ({
     onLauncherClick()
   }
 
-  const buttonClasses = `
-    inline-flex items-center justify-center
-    bg-gradient-to-br from-gray-100 to-gray-200/80
-    dark:from-slate-700 dark:to-slate-800/80
-    border border-gray-300/50 dark:border-slate-600/50
-    rounded-full w-10 h-10
-    hover:from-blue-50 hover:to-indigo-50
-    dark:hover:from-blue-950 dark:hover:to-indigo-950
-    hover:border-blue-300 dark:hover:border-blue-700
-    hover:-translate-y-0.5 hover:scale-[1.02]
-    transition-all duration-200 ease-out
-    cursor-pointer
-    shadow-sm hover:shadow-md
-    backdrop-blur-sm
-    ${isPanelOpen ? 'ring-2 ring-blue-400 dark:ring-blue-600' : ''}
-  `
-
   return (
     <button
-      className={buttonClasses}
+      className={cn('project-launcher project-lift', isPanelOpen && 'active')}
       onClick={handleClick}
       data-testid="project-selector-launcher"
       aria-label="Open project selector panel"

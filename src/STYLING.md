@@ -402,6 +402,11 @@ Existing global classes in `src/index.css` and shared entity CSS include:
 | `.tooltip`, `.tooltip-*` | Tooltips | `styles/components/overlays.css` |
 | `.skeleton`, `.skeleton-*` | Loading placeholders | `styles/components/loading.css` |
 | `.fav-star`, `.fav-star--*` | Favorite star indicator | `styles/entities/fav-star.css` |
+| `.project-card`, `.project-card--*` | Project selector card (rail + panel) | `components/ProjectSelector/project-selector.css` |
+| `.project-chip`, `.project-chip__*` | Compact project chip (rail inactive) | `components/ProjectSelector/project-selector.css` |
+| `.project-launcher` | Panel launcher button | `components/ProjectSelector/project-selector.css` |
+| `.project-search` | Panel search input | `components/ProjectSelector/project-selector.css` |
+| `.project-lift` | Shared hover lift transition | `components/ProjectSelector/project-selector.css` |
 | `.count-badge`, `.count-badge--*` | Count indicators | `styles/components/loading.css` |
 | `.status-dot`, `.status-dot--*` | Pulsing status dots | `styles/components/loading.css` |
 | `.avatar`, `.avatar-*` | Avatar sizes | `styles/components/layout.css` |
