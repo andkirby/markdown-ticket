@@ -1,6 +1,7 @@
 import type { DocumentFile } from './FileTree'
 import { ChevronDown, ChevronRight, File, Folder } from 'lucide-react'
 import { useMemo } from 'react'
+import { cn } from '@/lib/utils'
 // eslint-disable-next-line no-restricted-imports
 import { Icon } from '../shared/Icon'
 
@@ -96,7 +97,7 @@ export default function FavDocuments({
               {onToggleFavorite && (
                 <button
                   type="button"
-                  className="document-fav-star-button opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  className="fav-star-btn fav-star-btn--document"
                   title="Click to unfavorite"
                   aria-label="Toggle favorite"
                   data-testid="document-fav-star"
@@ -106,7 +107,7 @@ export default function FavDocuments({
                     onToggleFavorite(document)
                   }}
                 >
-                  <Icon name="fav-star" className="fav-star fav-star--document active" />
+                  <Icon name="fav-star" className={cn('fav-star fav-star--document', 'active')} />
                 </button>
               )}
             </div>

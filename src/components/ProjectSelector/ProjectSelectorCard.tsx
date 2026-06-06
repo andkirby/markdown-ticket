@@ -110,9 +110,9 @@ const ProjectSelectorCard: React.FC<ProjectSelectorCardProps> = ({
       {onFavoriteToggle && (
         <button
           className={cn(
-            'absolute top-1 right-1 w-5 h-5 hover:scale-110 transition-all cursor-pointer drop-shadow-md opacity-60 group-hover:opacity-100',
-            project.favorite && 'rotate-[15deg]',
+            'fav-star-btn fav-star-btn--card',
           )}
+          data-favorited={project.favorite ? 'true' : undefined}
           onClick={handleFavoriteClick}
           onKeyDown={handleFavoriteKeyDown}
           title={project.favorite ? 'Click to unfavorite' : 'Click to favorite'}

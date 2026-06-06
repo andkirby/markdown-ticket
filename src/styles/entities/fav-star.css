@@ -10,7 +10,63 @@
  *   <Icon name="fav-star" className="fav-star fav-star--chip" />
  */
 
-/* Base star styles */
+/* ── Star button wrapper ── */
+
+.fav-star-btn {
+  @apply inline-flex items-center justify-center cursor-pointer transition-all;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.fav-star-btn:focus-visible {
+  @apply outline-none ring-2 ring-ring rounded-sm;
+}
+
+/* Card context — absolute overlay in top-right corner */
+.fav-star-btn--card {
+  @apply absolute top-1 right-1 w-5 h-5 drop-shadow-md;
+  opacity: 0.6;
+  transform: scale(1);
+}
+
+/* Brighten on card hover, scale on direct hover */
+.group:hover .fav-star-btn--card {
+  opacity: 1;
+}
+
+.fav-star-btn--card:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* Favorited base — tilted star */
+.fav-star-btn--card[data-favorited="true"] {
+  transform: rotate(15deg);
+}
+
+/* Favorited: brighten on card hover */
+.group:hover .fav-star-btn--card[data-favorited="true"] {
+  opacity: 1;
+  transform: rotate(15deg);
+}
+
+/* Favorited: scale on direct hover — must beat group:hover specificity */
+.group:hover .fav-star-btn--card[data-favorited="true"]:hover {
+  transform: rotate(15deg) scale(1.1);
+}
+
+/* Document context — inline opacity fade */
+.fav-star-btn--document {
+  opacity: 0.7;
+}
+
+.fav-star-btn--document:hover {
+  opacity: 1;
+}
+
+/* ── Star icon ── */
+
 .fav-star {
   width: 1.25rem;
   height: 1.25rem;
@@ -19,26 +75,29 @@
   transition: fill 0.2s ease, color 0.2s ease, opacity 0.2s ease;
 }
 
-/* Hover state - brighter appearance (only on direct hover) */
+/* Hover state — brighter appearance (only on direct hover) */
 .fav-star:hover {
   fill: var(--star-hover-fill);
   color: var(--star-hover-color);
 }
 
-/* Active/favorited state */
+/* Favorited state */
+.fav-star[data-favorited="true"],
 .fav-star.active {
   fill: var(--star-active-fill);
   color: var(--star-active-color);
 }
 
-/* Active star turns yellow on card hover OR direct star hover */
+/* Favorited star turns yellow on card hover OR direct star hover */
+.fav-star[data-favorited="true"]:hover,
+.group:hover .fav-star[data-favorited="true"],
 .fav-star.active:hover,
 .group:hover .fav-star.active {
   fill: var(--star-active-hover-fill);
   color: var(--star-active-hover-color);
 }
 
-/* Chip variant - smaller, rotated overlay */
+/* Chip variant — smaller, rotated overlay */
 .fav-star--chip {
   position: absolute;
   top: 0;
@@ -59,11 +118,12 @@
   opacity: 1;
 }
 
-/* Card variant - inline with content */
+/* Card variant — inline with content */
 .fav-star--card {
   flex-shrink: 0;
 }
 
+/* Document variant — compact size */
 .fav-star--document {
   width: 1rem;
   height: 1rem;

@@ -1,6 +1,7 @@
 import { ChevronDown, ChevronRight, File, Folder } from 'lucide-react'
 import * as React from 'react'
 import { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { cn } from '@/lib/utils'
 // eslint-disable-next-line no-restricted-imports
 import { Icon } from '../shared/Icon'
 
@@ -232,7 +233,7 @@ const FileTree = React.forwardRef<FileTreeHandle, FileTreeProps>(({
           {onToggleFavorite && file.path !== './' && (
             <button
               type="button"
-              className="document-fav-star-button opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="fav-star-btn fav-star-btn--document"
               onClick={event => handleFavoriteClick(event, file)}
               title={file.favorite ? 'Click to unfavorite' : 'Click to favorite'}
               aria-label="Toggle favorite"
@@ -241,7 +242,7 @@ const FileTree = React.forwardRef<FileTreeHandle, FileTreeProps>(({
             >
               <Icon
                 name="fav-star"
-                className={`fav-star fav-star--document ${file.favorite ? 'active' : ''}`}
+                className={cn('fav-star fav-star--document', file.favorite && 'active')}
               />
             </button>
           )}
