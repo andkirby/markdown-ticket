@@ -1729,7 +1729,7 @@
       if (node.stage === 'artifacts' && node.title.includes('/')) {
         return formatPathLines(node.title);
       }
-      return escapeHtml(compact(node.title, 160));
+      return escapeHtml(state.fullCards ? node.title : compact(node.title, 160));
     }
 
     function formatDetailTitle(node) {
