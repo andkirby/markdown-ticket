@@ -407,6 +407,11 @@ Existing global classes in `src/index.css` and shared entity CSS include:
 | `.project-launcher` | Panel launcher button | `components/ProjectSelector/project-selector.css` |
 | `.project-search` | Panel search input | `components/ProjectSelector/project-selector.css` |
 | `.project-lift` | Shared hover lift transition | `components/ProjectSelector/project-selector.css` |
+| `.search-result`, `.search-result__*` | Quick search result items | `components/QuickSearch/quick-search.css` |
+| `.search-results-list` | Result list container with dividers | `components/QuickSearch/quick-search.css` |
+| `.search-section-header` | Section header in results | `components/QuickSearch/quick-search.css` |
+| `.search-mode-badge` | Mode indicator pill (In: CODE) | `components/QuickSearch/quick-search.css` |
+| `.search-skeleton-bar` | Loading skeleton bar | `components/QuickSearch/quick-search.css` |
 | `.count-badge`, `.count-badge--*` | Count indicators | `styles/components/loading.css` |
 | `.status-dot`, `.status-dot--*` | Pulsing status dots | `styles/components/loading.css` |
 | `.avatar`, `.avatar-*` | Avatar sizes | `styles/components/layout.css` |
