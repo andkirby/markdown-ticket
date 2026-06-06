@@ -26,6 +26,7 @@
 
 import * as React from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { cn } from '@/lib/utils'
 import { useAuthSession } from '@/auth/AuthSessionContext'
 import { useProjectManager } from '@/hooks/useProjectManager'
 import { getProjectCode } from '@/utils/projectUtils'
@@ -164,7 +165,7 @@ function ProjectSelector({ className = '' }: { className?: string }) {
 
   return (
     <div
-      className={`project-selector ${className}`.trim()}
+      className={cn('project-selector', className)}
       data-testid="project-selector"
     >
       {/* Rail: active project + inactive visible projects */}

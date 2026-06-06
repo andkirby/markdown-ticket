@@ -12,6 +12,7 @@
 
 import type { ProjectWithSelectorState } from './types'
 import * as React from 'react'
+import { cn } from '@/lib/utils'
 // eslint-disable-next-line no-restricted-imports
 import { Icon } from '../shared/Icon'
 import {
@@ -48,19 +49,7 @@ const ProjectSelectorChip: React.FC<ProjectSelectorChipProps> = ({
     onSelect(project.project.code || project.id)
   }
 
-  const chipClasses = `
-    group relative inline-flex items-center justify-center
-    bg-gradient-to-br from-white to-gray-50/80
-    dark:from-slate-800 dark:to-slate-900/80
-    border border-gray-200/50 dark:border-slate-700/50
-    rounded-md px-2 py-1.5 h-12
-    hover:bg-accent hover:text-accent-foreground
-    hover:border-blue-300 dark:hover:border-blue-700
-    hover:-translate-y-0.5 hover:scale-[1.02]
-    transition-all duration-200 ease-out
-    cursor-pointer
-    shadow-sm hover:shadow-md
-  `
+  const chipClasses = cn('project-chip project-lift group')
 
   return (
     <HoverCard>
@@ -71,7 +60,7 @@ const ProjectSelectorChip: React.FC<ProjectSelectorChipProps> = ({
           data-testid={`project-selector-chip-${project.project.code || project.id}`}
           data-project-key={project.project.code || project.id}
         >
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <span className="project-chip__code">
             {project.project.code || project.id}
           </span>
 

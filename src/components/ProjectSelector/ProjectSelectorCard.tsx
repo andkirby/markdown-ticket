@@ -89,15 +89,8 @@ const ProjectSelectorCard: React.FC<ProjectSelectorCardProps> = ({
   const isProjectBrowserCard = testIdPrefix === 'project-browser-card'
 
   const cardClasses = cn(
-    'group relative flex items-center justify-center',
-    isActive
-      ? 'bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border-blue-200 dark:border-blue-800 shadow-md hover:shadow-lg'
-      : 'bg-gradient-to-br from-white to-gray-50/80 dark:from-slate-800 dark:to-slate-900/80 border-gray-200/50 dark:border-slate-700/50 shadow-sm hover:shadow-md',
-    'border rounded-xl px-2 sm:px-4 py-1.5 min-h-12',
-    useRailWidthConstraints && 'min-w-[100px] sm:min-w-[150px] max-w-[280px] flex-1',
-    'hover:-translate-y-0.5 hover:scale-[1.02]',
-    'focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400',
-    'transition-all duration-200 ease-out cursor-pointer',
+    'project-card project-lift group',
+    useRailWidthConstraints && 'project-card--rail',
   )
 
   const cardContent = (
@@ -110,14 +103,16 @@ const ProjectSelectorCard: React.FC<ProjectSelectorCardProps> = ({
       aria-label={`Select project ${project.project.name || project.project.code || project.id}`}
       data-testid={`${testIdPrefix ?? 'project-selector-card'}-${project.project.code || project.id}`}
       data-project-key={project.project.code || project.id}
+      data-active={isActive ? 'true' : undefined}
       data-project-browser-card={isProjectBrowserCard ? 'true' : undefined}
     >
       {/* Favorite indicator - overlay star */}
       {onFavoriteToggle && (
         <button
-          className={`absolute top-1 right-1 w-5 h-5 hover:scale-110 transition-all cursor-pointer drop-shadow-md opacity-60 group-hover:opacity-100 ${
-            project.favorite ? 'rotate-[15deg]' : ''
-          }`}
+          className={cn(
+            'absolute top-1 right-1 w-5 h-5 hover:scale-110 transition-all cursor-pointer drop-shadow-md opacity-60 group-hover:opacity-100',
+            project.favorite && 'rotate-[15deg]',
+          )}
           onClick={handleFavoriteClick}
           onKeyDown={handleFavoriteKeyDown}
           title={project.favorite ? 'Click to unfavorite' : 'Click to favorite'}
@@ -125,22 +120,21 @@ const ProjectSelectorCard: React.FC<ProjectSelectorCardProps> = ({
         >
           <Icon
             name="fav-star"
-            className={`fav-star fav-star--card ${project.favorite ? 'active' : ''}`}
+            className={cn('fav-star fav-star--card', project.favorite && 'active')}
           />
         </button>
       )}
 
       <div className="flex items-center gap-1 sm:gap-2 w-full">
-        {/* Project code and title */}
-        <div className="text-xs sm:text-sm font-medium flex-shrink-0 text-gray-900 dark:text-white">
+        <div className="project-card__code">
           {project.project.code || project.id}
         </div>
         <div className="flex-1 text-left min-w-0">
-          <div className="text-[10px] sm:text-xs font-bold text-gray-700 dark:text-gray-300 truncate break-words leading-tight">
+          <div className="project-card__title">
             {project.project.name}
           </div>
           {shouldShowDescription && project.project.description && (
-            <div className="hidden sm:block text-xs text-gray-500 dark:text-gray-400 truncate break-words leading-tight mt-0.5">
+            <div className="project-card__desc">
               {project.project.description}
             </div>
           )}
