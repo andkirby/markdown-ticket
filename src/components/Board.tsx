@@ -361,7 +361,7 @@ const BoardContent: React.FC<BoardProps> = ({
   // Show loading state with skeleton loader
   if (loading) {
     return (
-      <div className="board-container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-8">
+      <div className="board-container--loading">
         {[1, 2, 3, 4].map(col => (
           <div key={col} className="space-y-4">
             <div className="h-12 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 rounded-lg animate-pulse" />
@@ -528,7 +528,7 @@ const BoardContent: React.FC<BoardProps> = ({
       )}
 
       {/* Board Grid - render regardless of showHeader */}
-      <div data-testid="kanban-board" className="board-container flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 w-full items-stretch p-1 overflow-hidden">
+      <div data-testid="kanban-board" className="board-container flex-1 min-h-0">
         {visibleColumns
           // On mobile, only show the active column; on desktop+, show all columns
           .filter((_, index) => shouldShowColumn(index))

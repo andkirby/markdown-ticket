@@ -1,0 +1,66 @@
+/**
+ * Board Column & Draggable Ticket Styles
+ *
+ * Covers:
+ *   .board-container    — kanban grid layout
+ *   .board-container__skeleton — loading skeleton grid
+ *   .column             — column wrapper (drop target states)
+ *   .column__header     — column header gradient bar
+ *   .column__count      — ticket count badge in header
+ *   .column-drop-zone   — inner scrollable ticket list
+ *   .draggable-ticket   — drag wrapper with drag/hover states
+ */
+
+@layer components {
+  /* Board grid — responsive 1→2→3→4 columns */
+  .board-container {
+    @apply grid w-full items-stretch p-1 overflow-hidden;
+    @apply grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
+  }
+
+  .board-container--loading {
+    @apply grid gap-6 p-8;
+    @apply grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
+  }
+
+  /* Column wrapper */
+  .column {
+    @apply flex flex-col h-full min-h-0 relative;
+    @apply transition-all duration-200 ease-out;
+  }
+
+  /* Column drop-target highlight */
+  .column--over {
+    @apply bg-blue-50/50 dark:bg-blue-950/30 ring-2 ring-blue-400/30;
+  }
+
+  /* Column header — gradient bar */
+  .column__header {
+    @apply px-3 py-2 rounded-t-lg shadow-md z-10;
+    @apply border border-black/5 dark:border-white/10;
+  }
+
+  /* Ticket count badge in column header */
+  .column__count {
+    @apply bg-primary/20 text-primary text-xs px-2 py-1 rounded-full;
+    @apply font-mono min-w-[2rem] text-center tabular-nums;
+  }
+
+  /* Inner drop zone / ticket list */
+  .column-drop-zone {
+    @apply px-3 py-2 space-y-2;
+  }
+
+  /* Draggable ticket wrapper */
+  .draggable-ticket {
+    @apply transition-all duration-300 ease-out;
+  }
+
+  .draggable-ticket--dragging {
+    @apply opacity-40 scale-95 rotate-2 shadow-2xl;
+  }
+
+  .draggable-ticket--draggable {
+    @apply hover:scale-[1.02] hover:-translate-y-1;
+  }
+}

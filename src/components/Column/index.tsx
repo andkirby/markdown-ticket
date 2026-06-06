@@ -75,10 +75,10 @@ const DraggableTicketCard: React.FC<DraggableTicketCardProps> = ({ ticket, onMov
   return (
     <div
       ref={drag}
-      className={`draggable-ticket transition-all duration-300 ease-out ${
+      className={`draggable-ticket ${
         isDragging
-          ? 'opacity-40 scale-95 rotate-2 shadow-2xl'
-          : canWrite ? 'hover:scale-[1.02] hover:-translate-y-1' : ''
+          ? 'draggable-ticket--dragging'
+          : canWrite ? 'draggable-ticket--draggable' : ''
       }`}
       style={{
         cursor: canWrite ? 'move' : 'default',
@@ -222,14 +222,12 @@ const Column: React.FC<ColumnProps> = ({
     <div
       ref={drop}
       data-testid={status ? `column-${status}` : undefined}
-      className={`column flex flex-col transition-all duration-200 ease-out h-full min-h-0 relative ${
-        isOver
-          ? 'bg-blue-50/50 dark:bg-blue-950/30 ring-2 ring-blue-400/30'
-          : ''
+      className={`column ${
+        isOver ? 'column--over' : ''
       }`}
     >
       {/* Column Header */}
-      <div className={`px-3 py-2 border border-black/5 dark:border-white/10 bg-gradient-to-br rounded-t-lg shadow-md z-10 ${getColumnGradient(column.color)}`}>
+      <div className={`column__header bg-gradient-to-br ${getColumnGradient(column.color)}`}>
         <div className="flex items-center justify-between">
           {/* Mobile: Column dropdown menu */}
           {isMobileView && allColumns && onColumnSwitch
@@ -285,7 +283,7 @@ const Column: React.FC<ColumnProps> = ({
                 canWrite={canWrite}
               />
             )}
-            <span className="bg-primary/20 text-primary text-xs px-2 py-1 rounded-full font-mono min-w-[2rem] text-center tabular-nums">
+            <span className="column__count">
               {visibleTickets.length}
             </span>
           </div>
@@ -299,7 +297,7 @@ const Column: React.FC<ColumnProps> = ({
         className={`flex-1 min-h-0 border-r border-border ${isFirstColumn ? 'border-l border-border' : ''}`}
       >
         {/* @testid drop-zone — Column drop area for drag-and-drop */}
-        <div data-testid="drop-zone" className="column-drop-zone px-3 py-2 space-y-2">
+        <div data-testid="drop-zone" className="column-drop-zone">
           {visibleTickets.map(ticket => (
             <DraggableTicketCard
               key={ticket.code}
