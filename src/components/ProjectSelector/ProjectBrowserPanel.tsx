@@ -28,6 +28,7 @@ import type { Project } from '@mdt/shared/models/Project'
 import type { ProjectWithSelectorState, SelectorPreferences, SelectorState } from './types'
 import * as React from 'react'
 import { Modal, ModalBody, ModalHeader } from '@/components/ui/Modal'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import ProjectSelectorCard from './ProjectSelectorCard'
 
 interface ProjectBrowserPanelProps {
@@ -289,7 +290,8 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
         </ModalHeader>
 
         {/* Project list */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <ScrollArea type="hover" scrollHideDelay={600} className="flex-1 min-h-0 overflow-hidden">
+          <div className="p-4">
           {displayProjects.length === 0
             ? (
                 <div
@@ -323,7 +325,8 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
                   ))}
                 </div>
               )}
-        </div>
+          </div>
+        </ScrollArea>
       </ModalBody>
     </Modal>
   )
