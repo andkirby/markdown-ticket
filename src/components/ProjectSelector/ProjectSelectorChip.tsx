@@ -71,6 +71,8 @@ const ProjectSelectorChip: React.FC<ProjectSelectorChipProps> = ({
           style={chipStyle}
           data-testid={`project-selector-chip-${project.project.code || project.id}`}
           data-project-key={project.project.code || project.id}
+          data-accent-enabled={accentEnabled}
+          data-accent-gradients={accentGradients}
         >
           <span className="project-chip__surface" aria-hidden="true">
             <span className="project-chip__accent-mark" />

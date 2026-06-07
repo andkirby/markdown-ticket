@@ -168,8 +168,9 @@
     display: none;
   }
 
-  /* Flat mode */
-  .project-chip[data-accent-gradients="false"] .project-chip__accent-mark {
+  /* Flat mode (default for chips) */
+  .project-chip[data-accent-gradients="false"] .project-chip__accent-mark,
+  .project-chip__accent-mark {
     position: absolute;
     inset-block: 0;
     inset-inline-start: 0;
@@ -180,16 +181,11 @@
     pointer-events: none;
   }
 
-  /* Chips always use flat stripe — no gradient */
-  .project-chip__accent-mark {
-    position: absolute;
-    inset-block: 0;
-    inset-inline-start: 0;
-    width: 4px;
-    border-radius: 0;
-    background: var(--project-accent, rgb(148 163 184));
+  /* Gradient mode for chips */
+  .project-chip[data-accent-gradients="true"] .project-chip__accent-mark {
+    width: 25px;
+    background: linear-gradient(270deg, rgb(from var(--project-accent, rgb(148 163 184)) r g b / 0) 40%, rgb(from var(--project-accent, rgb(148 163 184)) r g b / 1) 100%);
     opacity: 0.3;
-    pointer-events: none;
   }
 
   .project-chip__content {
