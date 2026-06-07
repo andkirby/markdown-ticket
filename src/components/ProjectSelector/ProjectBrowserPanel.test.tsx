@@ -86,7 +86,7 @@ describe('ProjectBrowserPanel accent rendering - MDT-181', () => {
 
     const card = screen.getByTestId('project-browser-card-API')
     expect(card).toBeInTheDocument()
-    expect(card.querySelector('.project-card__identity-fill')).toBeInTheDocument()
+    expect(card.querySelector('.project-card__identity')).toBeInTheDocument()
   })
 
   it('renders identity fill without auto-discovering project-folder images when no accent is configured', () => {
@@ -94,7 +94,7 @@ describe('ProjectBrowserPanel accent rendering - MDT-181', () => {
 
     const card = screen.getByTestId('project-browser-card-API')
     expect(card).toBeInTheDocument()
-    expect(card.querySelector('.project-card__identity-fill')).toBeInTheDocument()
+    expect(card.querySelector('.project-card__identity')).toBeInTheDocument()
     expect(card.querySelector('img')).toBeNull()
   })
 })

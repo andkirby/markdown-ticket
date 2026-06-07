@@ -147,9 +147,7 @@ const ProjectSelectorCard: React.FC<ProjectSelectorCardProps> = ({
       )}
 
       <div className="project-card__surface" aria-hidden="true">
-        <div className="project-card__identity">
-          <div className="project-card__identity-fill" />
-        </div>
+        <div className="project-card__identity" />
       </div>
 
       <div className="project-card__content">
