@@ -160,6 +160,7 @@ test.describe('Project Management', () => {
     await page.click(projectSelectors.editProjectButton)
     await expect(page.locator(projectSelectors.editProjectModal)).toBeVisible()
     await expect(page.getByLabel('Description')).toHaveValue(updatedDescription)
+    await expect(page.getByLabel('Repository URL')).toHaveValue(updatedRepository)
   })
 
   test('switch projects via selector', async ({ page, e2eContext }) => {

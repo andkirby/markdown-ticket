@@ -1,4 +1,5 @@
 import { ProjectValidator } from '@mdt/shared/tools/ProjectValidator'
+import type { ProjectEditFormData } from '@mdt/domain-contracts'
 import { useEffect, useRef, useState } from 'react'
 
 interface ProjectFormData {
@@ -11,22 +12,13 @@ interface ProjectFormData {
   useGlobalConfigOnly: boolean
 }
 
-interface EditProjectData {
-  name: string
-  code: string
-  path: string
-  crsPath: string
-  description: string
-  repositoryUrl: string
-}
-
 interface UseProjectFormReturn {
   formData: ProjectFormData
   errors: Record<string, string>
   hasFormData: () => boolean
   updateField: (field: keyof ProjectFormData, value: string | boolean) => void
   validateForm: () => boolean
-  resetForm: (editMode?: boolean, editProject?: EditProjectData) => void
+  resetForm: (editMode?: boolean, editProject?: ProjectEditFormData) => void
   generateCodeFromName: (name: string) => string
 }
 
@@ -40,7 +32,7 @@ const DEFAULT_FORM_DATA: ProjectFormData = {
   useGlobalConfigOnly: false,
 }
 
-function createInitialFormData(editMode: boolean, editProject?: EditProjectData): ProjectFormData {
+function createInitialFormData(editMode: boolean, editProject?: ProjectEditFormData): ProjectFormData {
   if (editMode && editProject) {
     return {
       name: editProject.name,
@@ -56,7 +48,7 @@ function createInitialFormData(editMode: boolean, editProject?: EditProjectData)
   return DEFAULT_FORM_DATA
 }
 
-export function useProjectForm(editMode = false, editProject?: EditProjectData): UseProjectFormReturn {
+export function useProjectForm(editMode = false, editProject?: ProjectEditFormData): UseProjectFormReturn {
   // Use refs to track previous values for comparison
   const prevEditModeRef = useRef(editMode)
   const prevEditProjectRef = useRef(editProject)
@@ -152,7 +144,7 @@ export function useProjectForm(editMode = false, editProject?: EditProjectData):
     return Object.keys(newErrors).length === 0
   }
 
-  const resetForm = (shouldEditMode = false, editData?: EditProjectData) => {
+  const resetForm = (shouldEditMode = false, editData?: ProjectEditFormData) => {
     if (shouldEditMode && editData) {
       setFormData(createInitialFormData(true, editData))
     }
