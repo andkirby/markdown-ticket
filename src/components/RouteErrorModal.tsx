@@ -18,11 +18,11 @@ export function RouteErrorModal({ error, title = 'Page Not Found', onClose }: Ro
   }
 
   return (
-    <Modal isOpen={true} onClose={onClose ?? handleGoHome} size="sm" data-testid="route-error">
+    <Modal isOpen={true} onClose={onClose ?? handleGoHome} size="sm" overlayClassName="modal--center" data-testid="route-error">
       <ModalBody>
         <div className="flex items-center space-x-3 mb-4">
           <AlertTriangle className="h-6 w-6 text-destructive" />
-          <h2 className="modal__title">{title}</h2>
+          <h1 className="modal__headline">{title}</h1>
         </div>
 
         <p className="text-muted-foreground mb-6">{error}</p>

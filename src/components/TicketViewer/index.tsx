@@ -411,7 +411,7 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
             ? (
                 <div data-testid="ticket-not-found" className="flex flex-col items-center justify-center py-16 px-6">
                   <AlertTriangle className="h-10 w-10 text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Ticket Not Found</h3>
+                  <h1 className="modal__headline mb-2">Ticket Not Found</h1>
                   <p className="text-muted-foreground text-center">{ticketError}</p>
                 </div>
               )

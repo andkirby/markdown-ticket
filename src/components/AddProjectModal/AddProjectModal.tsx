@@ -9,9 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { usePathResolution } from '@/hooks/usePathResolution'
 import { eventBus } from '@/services/eventBus'
-import { AccentColorPicker } from './components/AccentColorPicker'
 import { FormField } from './components/FormField'
-import { useSelectorData } from '../ProjectSelector/useSelectorData'
 import { useProjectForm } from './hooks/useProjectForm'
 
 interface AddProjectModalProps {
@@ -42,18 +40,13 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
   // 🔐 Simplified path resolution hook - uses enhanced API
   const { checkPath } = usePathResolution()
   const [showConfirmClose, setShowConfirmClose] = useState(false)
+
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [createdFiles, setCreatedFiles] = useState<string[]>([])
   const [showSuccess, setShowSuccess] = useState(false)
   const [_discoveryPaths, setDiscoveryPaths] = useState<string[]>([])
   const [isPathInDiscovery, setIsPathInDiscovery] = useState(false)
   const [pathExists, setPathExists] = useState(false)
-  const {
-    selectorState,
-    setAccent,
-    clearAccent,
-    loaded: selectorStateLoaded,
-  } = useSelectorData({ loadOwnerState: editMode })
 
   // Use the extracted form hook
   const {
@@ -388,36 +381,6 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
               type="url"
             />
 
-            {editMode && (
-              <section
-                className="border-t border-gray-200 dark:border-gray-700 pt-5"
-                data-testid="project-accent-section"
-              >
-                <div className="space-y-3">
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Your Project Accent</h3>
-                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                      Personal preference only. Saved to your selector state and kept separate from shared project metadata.
-                    </p>
-                  </div>
-
-                  {selectorStateLoaded && formData.code
-                    ? (
-                        <AccentColorPicker
-                          value={selectorState[formData.code]?.accent}
-                          disabled={!formData.code}
-                          onChange={accent => setAccent(formData.code, accent)}
-                          onReset={() => clearAccent(formData.code)}
-                        />
-                      )
-                    : (
-                        <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-700 px-3 py-3 text-sm text-gray-500 dark:text-gray-400">
-                          Loading accent preferences…
-                        </div>
-                      )}
-                </div>
-              </section>
-            )}
           </div>
         </ScrollArea>
 
@@ -447,9 +410,9 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
       </Modal>
 
       {/* Confirm Close Dialog — Pattern C */}
-      <Modal isOpen={showConfirmClose} onClose={() => setShowConfirmClose(false)} size="sm">
+      <Modal isOpen={showConfirmClose} onClose={() => setShowConfirmClose(false)} size="sm" overlayClassName="modal--center">
         <ModalBody>
-          <h3 className="modal__title mb-2">Discard Changes?</h3>
+          <h1 className="modal__headline mb-2">Discard Changes?</h1>
           <p className="text-gray-600 dark:text-gray-300 mb-4">
             You have unsaved changes. Are you sure you want to close this dialog?
           </p>
@@ -469,9 +432,9 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
       </Modal>
 
       {/* Confirmation Dialog — Pattern C */}
-      <Modal isOpen={showConfirmation} onClose={() => setShowConfirmation(false)} size="sm" data-testid="confirm-creation-dialog">
+      <Modal isOpen={showConfirmation} onClose={() => setShowConfirmation(false)} size="sm" overlayClassName="modal--center" data-testid="confirm-creation-dialog">
         <ModalBody>
-          <h3 className="modal__title mb-2">Confirm Project Creation</h3>
+          <h1 className="modal__headline mb-2">Confirm Project Creation</h1>
           <div className="mb-4 space-y-2">
             <p>
               <strong>Project Name:</strong>
@@ -516,14 +479,14 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
       </Modal>
 
       {/* Success Dialog — Pattern C */}
-      <Modal isOpen={showSuccess} onClose={() => setShowSuccess(false)} size="sm" data-testid="success-dialog">
+      <Modal isOpen={showSuccess} onClose={() => setShowSuccess(false)} size="sm" overlayClassName="modal--center" data-testid="success-dialog">
         <ModalBody>
           <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
             <Check className="w-6 h-6 text-green-600 dark:text-green-400" />
           </div>
-          <h3 className="modal__title mb-2 text-center">
+          <h1 className="modal__headline mb-2 text-center">
             {editMode ? 'Project Updated Successfully!' : 'Project Created Successfully!'}
-          </h3>
+          </h1>
           {createdFiles.length > 0 && (
             <div className="mb-4 text-left">
               <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">Created files:</p>

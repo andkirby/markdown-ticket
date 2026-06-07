@@ -472,6 +472,7 @@ function ProjectRouteHandler() {
         isOpen={showOwnerUnlock && accessMode === 'read-only'}
         onClose={() => setShowOwnerUnlock(false)}
         size="sm"
+        overlayClassName="modal--center"
         data-testid="sharing-owner-unlock-dialog"
       >
         <ModalBody>
