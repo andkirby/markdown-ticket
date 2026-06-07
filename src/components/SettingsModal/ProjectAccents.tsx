@@ -3,7 +3,7 @@ import type { Project } from '@mdt/shared/models/Project'
 import type { SelectorState } from '../ProjectSelector/types'
 import { Check, ChevronDown, RotateCcw } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { ACCENT_PALETTE, getFallbackAccent, isValidAccentHex, normalizeAccentHex } from '@/utils/accentColors'
+import { ACCENT_PALETTE, expandShorthandHex, getFallbackAccent, isValidAccentHex, normalizeAccentHex } from '@/utils/accentColors'
 
 interface ProjectAccentsProps {
   projects: Project[]
@@ -37,7 +37,6 @@ export function ProjectAccents({
     () => defaultProjectCode || projectOptions[0]?.code || '',
   )
 
-  // Keep selected in sync if projects change
   useEffect(() => {
     if (projectOptions.length > 0 && !projectOptions.some(p => p.code === selectedCode)) {
       setSelectedCode(projectOptions[0].code)
@@ -50,9 +49,7 @@ export function ProjectAccents({
   const resolvedAccent = currentAccent || getFallbackAccent(selectedCode)
 
   const normalizedValue = useMemo(() => {
-    if (!currentAccent || !isValidAccentHex(currentAccent)) {
-      return ''
-    }
+    if (!currentAccent || !isValidAccentHex(currentAccent)) return ''
     return normalizeAccentHex(currentAccent)
   }, [currentAccent])
 
@@ -62,7 +59,6 @@ export function ProjectAccents({
   const [validationError, setValidationError] = useState<string | undefined>()
   const [paletteOpen, setPaletteOpen] = useState(false)
 
-  // Sync when project changes
   useEffect(() => {
     setCustomHex(normalizedValue)
     setValidationError(undefined)
@@ -76,27 +72,26 @@ export function ProjectAccents({
   }, [onAccentChange, selectedCode])
 
   const handleInputChange = useCallback((value: string) => {
+    // Allow max 7 chars (#rrggbb)
+    if (value.length > 7) return
     setCustomHex(value)
-    if (validationError) {
-      setValidationError(undefined)
-    }
+    if (validationError) setValidationError(undefined)
   }, [validationError])
 
   const commitHex = useCallback(() => {
-    const nextValue = customHex.trim()
-    if (!nextValue) {
+    const expanded = expandShorthandHex(customHex)
+    if (!customHex.trim()) {
       setValidationError(undefined)
       return
     }
-    if (!isValidAccentHex(nextValue)) {
+    if (!expanded) {
       setValidationError('Enter a valid hex like #2563eb')
       return
     }
-    const normalized = normalizeAccentHex(nextValue)
-    setCustomHex(normalized)
+    setCustomHex(expanded)
     setValidationError(undefined)
-    if (normalized !== normalizedValue) {
-      onAccentChange(selectedCode, normalized)
+    if (expanded !== normalizedValue) {
+      onAccentChange(selectedCode, expanded)
     }
   }, [customHex, normalizedValue, onAccentChange, selectedCode])
 
@@ -112,7 +107,6 @@ export function ProjectAccents({
 
   return (
     <div className="project-accents" data-testid="project-accents-section">
-      {/* Row 1: label + dropdown (rendered by host) — dropdown is here */}
       <select
         data-testid="accent-project-select"
         value={selectedCode}
@@ -124,7 +118,7 @@ export function ProjectAccents({
         ))}
       </select>
 
-      {/* Row 2: swatch + hex input + reset + expand */}
+      {/* Swatch + hex input + reset + save + choose-color + expand */}
       <div className="project-accents__row">
         <span
           className="project-accents__swatch"
@@ -135,6 +129,7 @@ export function ProjectAccents({
             data-testid="accent-custom-hex-input"
             type="text"
             inputMode="text"
+            maxLength={7}
             value={customHex}
             placeholder={fallbackHex}
             className="project-accents__input"
@@ -170,6 +165,16 @@ export function ProjectAccents({
             <Check className="h-3.5 w-3.5" />
           </button>
         )}
+        <a
+          className="project-accents__link"
+          data-testid="accent-choose-color-link"
+          href={CHOOSE_COLOR_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Open color picker"
+        >
+          choose ↗
+        </a>
         <button
           type="button"
           className="project-accents__icon-btn"
@@ -204,16 +209,6 @@ export function ProjectAccents({
               </button>
             ))}
           </div>
-
-          <a
-            className="accent-color-picker__link"
-            data-testid="accent-choose-color-link"
-            href={CHOOSE_COLOR_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Choose color ↗
-          </a>
         </div>
       )}
     </div>

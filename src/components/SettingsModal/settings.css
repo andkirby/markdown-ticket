@@ -132,7 +132,7 @@
 }
 
 .project-accents__input {
-  @apply w-full px-2.5 py-1.5 text-sm font-mono border border-border rounded-md bg-background text-foreground;
+  @apply w-[7.5rem] px-2 py-1.5 text-sm font-mono border border-border rounded-md bg-background text-foreground;
   @apply focus:outline-none focus:ring-2 focus:ring-ring;
 }
 
@@ -158,6 +158,14 @@
 
 .project-accents__save-btn:hover {
   @apply bg-primary text-primary-foreground;
+}
+
+.project-accents__link {
+  @apply text-xs font-medium text-primary whitespace-nowrap;
+}
+
+.project-accents__link:hover {
+  @apply underline;
 }
 
 .project-accents__palette {
