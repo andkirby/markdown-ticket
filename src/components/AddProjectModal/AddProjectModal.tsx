@@ -1,3 +1,4 @@
+import type { ProjectEditFormData } from '@mdt/domain-contracts'
 import { Check, Info } from 'lucide-react'
 import * as React from 'react'
 import { useEffect, useState } from 'react'
@@ -17,14 +18,7 @@ interface AddProjectModalProps {
   onClose: () => void
   onProjectCreated: () => void
   editMode?: boolean
-  editProject?: {
-    name: string
-    code: string
-    path: string
-    crsPath: string
-    description: string
-    repositoryUrl: string
-  }
+  editProject?: ProjectEditFormData
 }
 
 export const AddProjectModal: React.FC<AddProjectModalProps> = ({

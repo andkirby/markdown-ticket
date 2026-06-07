@@ -455,9 +455,9 @@ function ProjectRouteHandler() {
             name: selectedProject.project.name,
             code: getProjectCode(selectedProject),
             path: selectedProject.project.path,
-            crsPath: 'docs/CRs',
+            crsPath: selectedProject.project.ticketsPath || 'docs/CRs',
             description: selectedProject.project.description || '',
-            repositoryUrl: '',
+            repositoryUrl: selectedProject.project.repository || '',
           }}
         />
       )}
