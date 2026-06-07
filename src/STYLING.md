@@ -453,6 +453,45 @@ Rules:
 
 ---
 
+## Scrollable Regions
+
+All in-component scroll regions use `<ScrollArea>` (from `ui/scroll-area.tsx`). It renders a Radix-based scrollbar that appears on hover and fades after 600ms.
+
+### Required recipe
+
+```tsx
+<ScrollArea type="hover" scrollHideDelay={600} className="flex-1 min-h-0 overflow-hidden">
+  {content}
+</ScrollArea>
+```
+
+All three classes are required — without any one of them the ScrollArea will expand to fit content instead of scrolling:
+
+| Class | Why |
+|-------|-----|
+| `flex-1` | Grow to fill available flex space |
+| `min-h-0` | Allow flex item to shrink below content size |
+| `overflow-hidden` | Clip overflow so Radix viewport detects scrollable content |
+
+The parent **must** have a constrained height (explicit `height` or `flex` with `overflow: hidden`). Without a constrained parent, the ScrollArea root expands to fit all content and nothing scrolls.
+
+Content padding goes on a wrapper `div` inside ScrollArea, never on ScrollArea itself.
+
+### Where used
+
+| Consumer | Parent constraint |
+|----------|-----------------|
+| Board columns | `.column` has `flex flex-col h-full` |
+| Project Browser | `.modal__body--constrained` has `height: 80dvh; overflow: hidden` |
+| Quick Search results | `.modal__body--constrained` |
+| Add/Edit Project | `ScrollArea` with explicit `style={{ height: 'calc(100vh - 300px)' }}` |
+| Folder Browser | `ScrollArea` with explicit `style={{ height: 'calc(80vh - 180px)' }}` |
+
+### When NOT to use ScrollArea
+
+- `.modal` outer overlay — native `overflow-y-auto` for full-page scroll of long-document modals
+- Horizontal tab overflow — `.scrollbar-hide` (scrollbar hidden entirely)
+
 ## SVG Icons
 
 Use SVG sprites for reusable icons.
