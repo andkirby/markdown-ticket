@@ -91,17 +91,17 @@
 
   /* Gradient mode (default) — identity bar fades top→bottom */
   .project-card__identity {
-    background: linear-gradient(180deg, rgb(from var(--project-accent, rgb(148 163 184)) r g b / 0) 40%, rgb(from var(--project-accent, rgb(148 163 184)) r g b / 1) 100%);
+    background: linear-gradient(250deg, rgb(from var(--project-accent, rgb(148 163 184)) r g b / 0) 40%, rgb(from var(--project-accent, rgb(148 163 184)) r g b / 1) 100%);
     opacity: 0.5;
   }
 
-  /* Active card — theme bg on left, accent tint fading in from right */
+  /* Active card — accent tint on left, theme bg on right */
   .project-card[data-active="true"][data-accent-enabled="true"][data-accent-gradients="true"] {
-    background: linear-gradient(to right, var(--project-card-active-bg-from), rgb(from var(--project-accent, theme('colors.blue.100')) r g b / 0.15));
+    background: linear-gradient(to left, var(--project-card-active-bg-from), rgb(from var(--project-accent, #dbeafe) r g b / 0.15));
   }
 
   .dark .project-card[data-active="true"][data-accent-enabled="true"][data-accent-gradients="true"] {
-    background: linear-gradient(to right, var(--project-card-active-bg-from), rgb(from var(--project-accent, theme('colors.blue.900')) r g b / 0.15));
+    background: linear-gradient(to left, var(--project-card-active-bg-from), rgb(from var(--project-accent, #1e3a5f) r g b / 0.15));
   }
 
   .project-card__content {
