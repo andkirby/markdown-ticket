@@ -65,6 +65,10 @@
   @apply flex items-center gap-1.5;
 }
 
+.settings-label-sm {
+  @apply text-sm text-muted-foreground;
+}
+
 .settings-info-trigger {
   @apply inline-flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground transition-colors;
   @apply hover:bg-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring;
@@ -113,6 +117,14 @@
 /* Project Accents */
 .project-accents {
   @apply flex flex-col gap-1.5;
+}
+
+.project-accents__toggles {
+  @apply flex flex-col gap-2 mb-3;
+}
+
+.project-accents__toggle-row {
+  @apply flex items-center justify-between;
 }
 
 .project-accents__select {

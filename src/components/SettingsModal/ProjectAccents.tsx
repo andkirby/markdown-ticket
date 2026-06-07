@@ -1,9 +1,11 @@
 import type * as React from 'react'
 import type { Project } from '@mdt/shared/models/Project'
-import type { SelectorState } from '../ProjectSelector/types'
+import type { SelectorPreferences, SelectorState } from '../ProjectSelector/types'
 import { Check, ChevronDown, RotateCcw } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ACCENT_PALETTE, expandShorthandHex, getFallbackAccent, isValidAccentHex, normalizeAccentHex } from '@/utils/accentColors'
+import { loadLocalPreferences, SELECTOR_PREFS_SYNC_EVENT } from '../ProjectSelector/useSelectorData'
+import { Switch } from '../ui/switch'
 
 interface ProjectAccentsProps {
   projects: Project[]
@@ -16,7 +18,7 @@ interface ProjectAccentsProps {
   hasUnsavedChanges: boolean
 }
 
-const CHOOSE_COLOR_URL = 'https://share.google/ATp6ypatbFk69dC91'
+const CHOOSE_COLOR_URL = 'https://www.figma.com/colors/'
 
 export function ProjectAccents({
   projects,
@@ -58,6 +60,36 @@ export function ProjectAccents({
   const [customHex, setCustomHex] = useState(normalizedValue)
   const [validationError, setValidationError] = useState<string | undefined>()
   const [paletteOpen, setPaletteOpen] = useState(false)
+
+  // Accent rendering preferences (persisted immediately to localStorage)
+  const [accentEnabled, setAccentEnabledLocal] = useState<boolean>(() => {
+    const stored = loadLocalPreferences()
+    return stored.accentEnabled ?? true
+  })
+  const [accentGradients, setAccentGradientsLocal] = useState<boolean>(() => {
+    const stored = loadLocalPreferences()
+    return stored.accentGradients ?? true
+  })
+
+  const persistPref = useCallback((prefs: Partial<SelectorPreferences>) => {
+    try {
+      const existing = loadLocalPreferences()
+      localStorage.setItem('mdt-selector-preferences', JSON.stringify({ ...existing, ...prefs }))
+    }
+    catch { /* ignore */ }
+  }, [])
+
+  const handleAccentEnabledChange = useCallback((enabled: boolean) => {
+    setAccentEnabledLocal(enabled)
+    persistPref({ accentEnabled: enabled })
+    window.dispatchEvent(new CustomEvent(SELECTOR_PREFS_SYNC_EVENT))
+  }, [persistPref])
+
+  const handleAccentGradientsChange = useCallback((gradients: boolean) => {
+    setAccentGradientsLocal(gradients)
+    persistPref({ accentGradients: gradients })
+    window.dispatchEvent(new CustomEvent(SELECTOR_PREFS_SYNC_EVENT))
+  }, [persistPref])
 
   useEffect(() => {
     setCustomHex(normalizedValue)
@@ -107,6 +139,28 @@ export function ProjectAccents({
 
   return (
     <div className="project-accents" data-testid="project-accents-section">
+      <div className="project-accents__toggles">
+        <div className="project-accents__toggle-row">
+          <span className="settings-label-sm">Accent Colors</span>
+          <Switch
+            checked={accentEnabled}
+            onCheckedChange={handleAccentEnabledChange}
+            data-testid="toggle-accent-enabled"
+          />
+        </div>
+        {accentEnabled && (
+          <div className="project-accents__toggle-row">
+            <span className="settings-label-sm">Gradient Accents</span>
+            <Switch
+              checked={accentGradients}
+              onCheckedChange={handleAccentGradientsChange}
+              data-testid="toggle-accent-gradients"
+            />
+          </div>
+        )}
+      </div>
+
+      {accentEnabled && (<>
       <select
         data-testid="accent-project-select"
         value={selectedCode}
@@ -220,6 +274,7 @@ export function ProjectAccents({
           </div>
         </div>
       )}
+      </>)}
     </div>
   )
 }

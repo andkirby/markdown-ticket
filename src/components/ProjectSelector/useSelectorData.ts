@@ -23,6 +23,7 @@ const DEFAULT_PREFERENCES: SelectorPreferences = {
 }
 
 export const SELECTOR_STATE_SYNC_EVENT = 'mdt:selector-state-updated'
+export const SELECTOR_PREFS_SYNC_EVENT = 'mdt:selector-prefs-updated'
 
 /**
  * Hook for loading and managing selector data
@@ -56,9 +57,19 @@ export function useSelectorData(options: UseSelectorDataOptions = {}): SelectorD
       }
     }
 
+    const handlePrefsSync = () => {
+      const localOverrides = loadLocalPreferences()
+      setPreferences(prev => ({
+        ...prev,
+        ...localOverrides,
+      }))
+    }
+
     window.addEventListener(SELECTOR_STATE_SYNC_EVENT, handleSelectorStateSync)
+    window.addEventListener(SELECTOR_PREFS_SYNC_EVENT, handlePrefsSync)
     return () => {
       window.removeEventListener(SELECTOR_STATE_SYNC_EVENT, handleSelectorStateSync)
+      window.removeEventListener(SELECTOR_PREFS_SYNC_EVENT, handlePrefsSync)
     }
   }, [loadOwnerState])
 
@@ -266,7 +277,7 @@ export function useSelectorData(options: UseSelectorDataOptions = {}): SelectorD
   }
 }
 
-function loadLocalPreferences(): Partial<SelectorPreferences> {
+export function loadLocalPreferences(): Partial<SelectorPreferences> {
   try {
     const stored = localStorage.getItem('mdt-selector-preferences')
     if (stored) {
