@@ -2,7 +2,7 @@
 
 Related spec: `settings.spec.md`
 
-## Appearance Tab (default)
+## Appearance Tab — Project Accent collapsed
 
 ```wireloom
 window "Settings":
@@ -26,6 +26,72 @@ window "Settings":
     section "Markdown Density":
       text "Adjust rendered ticket and document text size" muted
       combo value="Default" options="Compact,Default,Comfortable"
+    divider
+    section "Project Accents" id="project-accents":
+      row:
+        text "Project Accents" bold
+        button "i" id="accents-info"
+      combo value="MDT" options="MDT,API,OPS" id="project-select"
+    divider
+    row justify=end:
+      button "Cancel"
+      button "Save" primary id="save-accents"
+
+annotation "Personal preference, not shared with other users. Accent renders as a left-edge stripe on selector chips and an identity bar on browser cards." target="accents-info" position=right
+annotation "Dropdown lists all registered projects. On change, the palette loads that project's current accent." target="project-select" position=right
+```
+
+## Appearance Tab — Project Accent palette open
+
+```wireloom
+window "Settings — Accent Palette":
+  tabs:
+    tab "Appearance" active
+    tab "Board"
+    tab "Sharing"
+    tab "Advanced"
+  panel:
+    section "Project Accents" id="palette-section":
+      row:
+        text "Project Accents" bold
+        button "i" id="accents-info-expanded"
+      combo value="MDT" options="MDT,API,OPS" id="project-select-expanded"
+      row:
+        text "#2563eb" muted id="current-hex"
+        spacer
+        button "↺" id="reset-btn"
+      row:
+        button "red"
+        button "orange"
+        button "amber"
+        button "yellow"
+        button "lime"
+        button "green"
+        button "emerald"
+        button "teal"
+      row:
+        button "cyan"
+        button "blue" id="preset-blue"
+        button "indigo"
+        button "violet"
+        button "purple"
+        button "fuchsia"
+        button "pink"
+        button "rose"
+      text "Custom hex"
+      row:
+        input placeholder="#2563eb" id="custom-hex"
+        text "Choose color ↗" muted id="choose-color"
+    divider
+    row justify=end:
+      button "Cancel"
+      button "Save" primary id="save-expanded"
+
+annotation "Changing the dropdown loads the new project's current accent into the palette." target="project-select-expanded" position=right
+annotation "Presets are 16 colors; clicking one selects it immediately in the staged form." target="preset-blue" position=right
+annotation "Custom hex validated on blur. Invalid values show inline error and preserve previous accent." target="custom-hex" position=right
+annotation "Opens https://share.google/ATp6ypatbFk69dC91 in a new tab." target="choose-color" position=right
+annotation "↺ removes the stored accent. Project reverts to its deterministic fallback color." target="reset-btn" position=right
 ```
 
 ## Board Tab
@@ -300,6 +366,13 @@ window "Settings — Mobile Sharing":
 | Token row | `--border` / `--background` | proposed `settings-token-row` | compact list row with actions |
 | Invite link input | `--muted` | `font-mono text-xs` | one-time invite URL, copyable |
 | Read-only tabs | `--muted-foreground` | hidden Sharing tab | Sharing tab absent without owner/admin |
+| Project accent row | `--border` | proposed `settings-accent-row` | per-project code + swatch + picker |
+| Reset to default | `--border` / `--destructive` on hover | `accent-color-picker__reset` | visible only when accent stored |
+| Accent preset swatch | per-user accent token | `accent-color-picker__preset-swatch` | 16-color palette swatch |
+| Accent preset selected | `--primary` | `accent-color-picker__preset[data-selected="true"]` | ring highlight on active |
+| Custom hex input | `--background` / `--border` | `accent-color-picker__custom-input` | `#RRGGBB` validation on blur |
+| Validation error | `--destructive` | `accent-color-picker__error` | inline, replaces previous accent |
+| Choose color link | `--primary` | `accent-color-picker__link` | `target="_blank" rel="noopener noreferrer" |
 | Switch on | `--primary` | bg-primary, knob right | |
 | Switch off | `--muted` | bg-muted, knob left | |
 | Checkbox checked | `--primary` | native checkbox or app checkbox checked state | Immediate persistence |

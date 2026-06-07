@@ -7,7 +7,7 @@
 
 ## Overview
 
-14 BDD scenarios across 9 journeys covering all 21 BDD-routed behavior requirements for project accent colors. Scenarios test the complete user flow: selecting accents in the Project Edit form, persistence as personal preference, rendering in selector rail and browser cards, theme derivation, backend validation, and preservation of existing behavior. The fallback behavior is modeled across 3 separate scenarios to capture session boundaries (derivation, stability, override).
+14 BDD scenarios across 9 journeys covering all 22 BDD-routed behavior requirements for project accent colors. Scenarios test the complete user flow: selecting accents in Settings, persistence as personal preference, rendering in selector rail and browser cards, theme derivation, backend validation, reset to default, and preservation of existing behavior. The fallback behavior is modeled across 3 separate scenarios to capture session boundaries (derivation, stability, override).
 
 ## Acceptance Strategy
 

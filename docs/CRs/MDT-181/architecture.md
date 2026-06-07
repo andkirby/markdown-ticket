@@ -79,18 +79,29 @@ The accent color flows through the same data path as existing selector state (fa
 
 ## Canonical Runtime Flows
 
-### Flow 1: Accent Selection (Edit Form)
+### Flow 1: Accent Selection (Settings)
 
 ```
-User opens Project Edit form
-  → AddProjectModal renders AccentColorPicker with current accent
-  → User selects preset or enters custom hex
+User opens Settings > Appearance
+  → SettingsModal renders Project Accents section
+  → Each registered project shows its current accent + AccentColorPicker
+  → User selects preset or enters custom hex for a project
   → AccentColorPicker validates hex inline (isValidAccentHex)
-  → On valid selection: onChange(accent) called
-  → AddProjectModal calls useSelectorData.setAccent(projectKey, accent)
+  → Changes are staged locally (not yet persisted)
+  → User clicks Save → useSelectorData.setAccent(projectKey, accent) for each changed project
   → Hook updates selectorState and debounced-persists to /api/config/selector
   → Backend validates accent hex via SelectorStateEntrySchema
   → Persisted to project-selector.json
+```
+
+### Flow 1b: Accent Reset (Settings)
+
+```
+User clicks 'Reset to default' for a project
+  → useSelectorData.clearAccent(projectKey) called
+  → Accent key removed from selector state entry
+  → Debounced persist to /api/config/selector
+  → Project reverts to deterministic fallback accent
 ```
 
 ### Flow 2: Accent Resolution (Rendering)
@@ -179,24 +190,31 @@ Theme adaptation for surfaces adjacent to the accent identity area:
 
 The CSS does not define static accent color variables — all accent color comes from inline custom properties set by React components.
 
-## Edit Form Separation
+## Settings Integration
 
-The `AddProjectModal` in edit mode gains a "Your Project Accent" section:
+Accent controls live in the Settings modal under the Appearance tab as a "Project Accents" section:
 
 ```
+Settings > Appearance
 ┌─────────────────────────────────────┐
-│  Project Name: [__________]         │  ← shared metadata (PUT /api/projects/:code/update)
-│  Description: [__________]          │
-│  Repository:  [__________]          │
+│  Theme:      [Light] [Dark] [System]│
+│  Default View: [Board ▾]            │
+│  Markdown Density: [Default ▾]      │
 ├─────────────────────────────────────┤
-│  ── Your Project Accent ──          │  ← personal preference section
-│  [AccentColorPicker dropdown]       │     persisted via /api/config/selector
-│  [Choose color ↗]                   │
+│  ── Project Accents ──              │
+│  Each project row:                  │
+│  [code] [current swatch] [picker]   │
+│  [Reset to default] if accent set   │
 │                                     │
+│  [Choose color ↗]                   │
 └─────────────────────────────────────┘
 ```
 
-The accent section saves independently via `useSelectorData.setAccent()`. The shared project fields save via the existing PUT endpoint. The two persistence paths are completely separate.
+Accent changes are **staged locally** and persisted only when the user explicitly saves. Canceling Settings discards all accent changes.
+
+The Edit Project form (AddProjectModal) no longer contains accent controls — it handles shared project metadata only.
+
+**Rationale**: Settings naturally owns personal preferences with proper save/cancel semantics. Mixing personal accent controls into the shared metadata edit form created a persistence bug (immediate save on pick vs staged save for other fields). Settings eliminates this by keeping the concern boundary clean.
 
 ## Fallback Accent Algorithm
 
@@ -225,10 +243,12 @@ src/utils/
   accentColors.ts                    ← NEW: palette, fallback, foreground, validation
   __tests__/accentColors.test.ts     ← NEW: accent utilities tests
 
+src/components/SettingsModal.tsx           ← "Project Accents" section in Appearance tab
+src/components/SettingsModal/
+  ProjectAccents.tsx                      ← NEW: per-project accent rows with pickers
 src/components/AddProjectModal/
-  AddProjectModal.tsx                ← "Your Project Accent" section addition
-  components/AccentColorPicker.tsx   ← NEW: color picker dropdown
-  components/AccentColorPicker.css   ← NEW: picker styles
+  components/AccentColorPicker.tsx        ← reused from Settings (no longer in AddProjectModal)
+  components/AccentColorPicker.css        ← reused
 
 src/components/ProjectSelector/
   useSelectorData.ts                 ← setAccent() extension

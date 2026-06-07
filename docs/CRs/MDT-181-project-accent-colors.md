@@ -1,6 +1,6 @@
 ---
 code: MDT-181
-status: In Progress
+status: Implemented
 dateCreated: 2026-06-06T15:52:14.196Z
 type: Feature Enhancement
 priority: Medium
@@ -27,11 +27,13 @@ full
 
 ### Scope
 - In scope:
-  - Users can select one accent from a 16-color preset set in the Project Edit form.
-  - Users can alternatively enter a custom hex color in the Project Edit form.
+  - Users can select one accent from a 16-color preset set in Settings > Appearance > Project Accents.
+  - Users can alternatively enter a custom hex color in Settings.
   - Backend validates custom hex values before persistence.
   - The selected accent is stored as a user preference for that project and is not shared with other users.
+  - Users can reset a project accent to the deterministic fallback from Settings.
   - The selected accent applies to project selector chips as a flat left-edge accent stripe, to project browser cards, and to fallback project identity marks for the current user.
+  - Accent changes in Settings are staged and persisted on explicit Save, not immediately on pick.
   - Browser cards can use a same-size filled identity treatment where the left identity area is filled by accent color or image.
   - Light and dark mode derive theme-appropriate rendering from the same stored accent selection.
 - Out of scope:
@@ -104,13 +106,14 @@ full
 ## 4. Acceptance Criteria
 
 ### Functional
-- [ ] User can select one accent from 16 available preset project accent colors in the Project Edit form.
-- [ ] User can alternatively enter a custom hex color in the Project Edit form.
-- [ ] Project Edit form shows a `choose color` link that opens `https://share.google/ATp6ypatbFk69dC91` in a new tab.
+- [ ] User can select one accent from 16 available preset project accent colors in Settings > Appearance > Project Accents.
+- [ ] User can alternatively enter a custom hex color in Settings.
+- [ ] Settings shows a `choose color` link that opens `https://share.google/ATp6ypatbFk69dC91` in a new tab.
 - [ ] Backend validates custom hex values before saving them.
 - [ ] Invalid custom hex values show a field-level validation error and do not replace the previous valid accent.
-- [ ] Accent selection is saved as the current user's preference for that project.
+- [ ] Accent selection is saved as the current user's preference for that project on explicit Save in Settings.
 - [ ] Accent selection is not visible to other users unless they choose the same preference independently.
+- [ ] User can reset a project accent to its deterministic fallback from Settings.
 - [ ] Project selector rail displays the current user's configured project accent as a compact flat stripe on the left edge of the selector chip.
 - [ ] Project browser cards display the current user's configured accents without increasing normal card row height.
 - [ ] Filled identity treatment supports accent-color fill and uploaded-image fill while preserving card dimensions.
@@ -177,3 +180,21 @@ full
 > Tests notes: [tests.md](./MDT-181/tests.md)
 >
 > Tests trace projection: [tests.trace.md](./MDT-181/tests.trace.md)
+
+## 8. Clarifications
+
+### UAT Session 2026-06-07
+
+**Approved changes:**
+- Move accent picker from Edit Project form to Settings > Appearance > Project Accents
+- Fix persistence bug: stage changes locally, persist on explicit Save, Cancel discards
+- Add "Reset to default" button per project to revert to deterministic fallback
+- Remove "Your Project Accent" section from AddProjectModal
+
+**Changed requirement IDs:** BR-1.1, BR-1.2, BR-1.3, BR-1.4, BR-1.5, BR-2.1, C7 (refine_in_place); BR-9.1 (additive_change)
+
+**Updated workflow documents:** requirements.md, bdd.md, architecture.md, uat.md
+
+**Trace revalidated:** requirements ✅, all stages rendered
+
+**More implementation required:** Yes — 5 execution slices in uat.md
