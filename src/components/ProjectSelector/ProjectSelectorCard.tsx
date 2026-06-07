@@ -13,6 +13,7 @@
 import type { ProjectWithSelectorState } from './types'
 import * as React from 'react'
 import { cn } from '@/lib/utils'
+import { getFallbackAccent } from '@/utils/accentColors'
 // eslint-disable-next-line no-restricted-imports
 import { Icon } from '../shared/Icon'
 import {
@@ -36,6 +37,8 @@ interface ProjectSelectorCardProps {
   useRailWidthConstraints?: boolean
   /** Override test ID prefix (default: "project-selector-card") */
   testIdPrefix?: string
+  /** Optional keydown handler from parent composite views */
+  onCardKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void
 }
 
 /**
@@ -59,6 +62,7 @@ const ProjectSelectorCard: React.FC<ProjectSelectorCardProps> = ({
   onFavoriteToggle,
   useRailWidthConstraints = false,
   testIdPrefix,
+  onCardKeyDown,
 }) => {
   // Active cards always show description
   const shouldShowDescription = showDescription || isActive
@@ -87,17 +91,26 @@ const ProjectSelectorCard: React.FC<ProjectSelectorCardProps> = ({
   }
 
   const isProjectBrowserCard = testIdPrefix === 'project-browser-card'
+  const resolvedAccent = project.selectorState.accent ?? getFallbackAccent(project.project.code || project.id)
 
   const cardClasses = cn(
-    'project-card project-lift group',
+    'project-card project-lift group min-h-12',
     useRailWidthConstraints && 'project-card--rail',
   )
+
+  const cardStyle = {
+    '--project-accent': resolvedAccent,
+  } as React.CSSProperties
 
   const cardContent = (
     <div
       className={cardClasses}
       onClick={handleCardClick}
-      onKeyDown={handleCardKeyDown}
+      onKeyDown={(event) => {
+        onCardKeyDown?.(event)
+        handleCardKeyDown(event)
+      }}
+      style={cardStyle}
       role="button"
       tabIndex={0}
       aria-label={`Select project ${project.project.name || project.project.code || project.id}`}
@@ -125,7 +138,13 @@ const ProjectSelectorCard: React.FC<ProjectSelectorCardProps> = ({
         </button>
       )}
 
-      <div className="flex items-center gap-1 sm:gap-2 w-full">
+      <div className="project-card__surface" aria-hidden="true">
+        <div className="project-card__identity">
+          <div className="project-card__identity-fill" />
+        </div>
+      </div>
+
+      <div className="project-card__content">
         <div className="project-card__code">
           {project.project.code || project.id}
         </div>

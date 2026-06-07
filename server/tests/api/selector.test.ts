@@ -27,8 +27,8 @@ describe('Selector Config Endpoint Tests (MDT-129)', () => {
     app = context.app
   })
 
-  // Helper function to get the current config dir (respects process.env.CONFIG_DIR changes)
-  const getCurrentConfigDir = () => process.env.CONFIG_DIR || configDir
+  // Use the app runtime config dir so test file I/O matches the server under test
+  const getCurrentConfigDir = () => app?.locals?.runtimeConfig?.configDir || configDir
 
   afterAll(async () => {
     await cleanupTestEnvironment(tempDir)
@@ -487,6 +487,89 @@ anotherUnknown = 123
         // In a real scenario, this might use debouncing, but should still complete in reasonable time
         expect(writeTime).toBeLessThan(5000) // 5 seconds max
       })
+    })
+  })
+
+  describe('MDT-181 accent color persistence and validation', () => {
+    afterEach(() => {
+      try {
+        unlinkSync(join(getCurrentConfigDir(), 'project-selector.json'))
+      }
+      catch {
+        // Ignore if file doesn't exist
+      }
+    })
+
+    it('returns valid accent values and strips malformed stored accents', async () => {
+      const stateContent = JSON.stringify({
+        'PROJ-A': {
+          favorite: true,
+          lastUsedAt: '2026-06-07T10:00:00Z',
+          count: 2,
+          accent: '#2563eb',
+        },
+        'PROJ-B': {
+          favorite: false,
+          lastUsedAt: null,
+          count: 0,
+          accent: 'blue',
+        },
+      }, null, 2)
+      writeFileSync(join(getCurrentConfigDir(), 'project-selector.json'), stateContent, 'utf-8')
+
+      const response = await createGetRequest(app, '/api/config/selector')
+
+      assertSuccess(response, 200)
+      expect(response.body.selectorState['PROJ-A'].accent).toBe('#2563eb')
+      expect(response.body.selectorState['PROJ-B'].accent).toBeUndefined()
+    })
+
+    it('persists valid accent values and normalizes uppercase hex before storage', async () => {
+      const stateUpdate = {
+        'PROJ-A': {
+          favorite: true,
+          lastUsedAt: '2026-06-07T10:00:00Z',
+          count: 2,
+          accent: '#FF0000',
+        },
+      }
+
+      const response = await createPostRequest(app, '/api/config/selector', stateUpdate)
+      assertSuccess(response, 200)
+
+      const filePath = join(getCurrentConfigDir(), 'project-selector.json')
+      const savedState = JSON.parse(readFileSync(filePath, 'utf-8'))
+      expect(savedState['PROJ-A'].accent).toBe('#ff0000')
+      expect(existsSync(join(getCurrentConfigDir(), '.mdt-config.toml'))).toBe(false)
+    })
+
+    it('rejects malformed accent values before persistence and leaves the previous file unchanged', async () => {
+      const existingState = {
+        'PROJ-A': {
+          favorite: false,
+          lastUsedAt: null,
+          count: 0,
+          accent: '#16a34a',
+        },
+      }
+      const filePath = join(getCurrentConfigDir(), 'project-selector.json')
+      writeFileSync(filePath, JSON.stringify(existingState, null, 2), 'utf-8')
+
+      const invalidAccents = ['#f00', 'blue', '3b82f6', '#ffffff00']
+
+      for (const accent of invalidAccents) {
+        const response = await createPostRequest(app, '/api/config/selector', {
+          'PROJ-A': {
+            favorite: false,
+            lastUsedAt: null,
+            count: 0,
+            accent,
+          },
+        })
+
+        expect(response.status).toBeGreaterThanOrEqual(400)
+        expect(JSON.parse(readFileSync(filePath, 'utf-8'))).toEqual(existingState)
+      }
     })
   })
 })

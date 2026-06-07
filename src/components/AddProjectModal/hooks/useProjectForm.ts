@@ -40,34 +40,41 @@ const DEFAULT_FORM_DATA: ProjectFormData = {
   useGlobalConfigOnly: false,
 }
 
+function createInitialFormData(editMode: boolean, editProject?: EditProjectData): ProjectFormData {
+  if (editMode && editProject) {
+    return {
+      name: editProject.name,
+      code: editProject.code,
+      path: editProject.path,
+      crsPath: editProject.crsPath,
+      description: editProject.description,
+      repositoryUrl: editProject.repositoryUrl,
+      useGlobalConfigOnly: false,
+    }
+  }
+
+  return DEFAULT_FORM_DATA
+}
+
 export function useProjectForm(editMode = false, editProject?: EditProjectData): UseProjectFormReturn {
   // Use refs to track previous values for comparison
   const prevEditModeRef = useRef(editMode)
   const prevEditProjectRef = useRef(editProject)
   const isInitializedRef = useRef(false)
 
-  const [formData, setFormData] = useState<ProjectFormData>(() => {
-    // Initialize state based on props
-    if (editMode && editProject) {
-      return {
-        name: editProject.name,
-        code: editProject.code,
-        path: editProject.path,
-        crsPath: editProject.crsPath,
-        description: editProject.description,
-        repositoryUrl: editProject.repositoryUrl,
-        useGlobalConfigOnly: false,
-      }
-    }
-    return DEFAULT_FORM_DATA
-  })
+  const [formData, setFormData] = useState<ProjectFormData>(() => createInitialFormData(editMode, editProject))
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const hasFormData = () => {
-    return formData.name.trim() !== ''
-      || formData.code.trim() !== ''
-      || formData.description.trim() !== ''
-      || formData.path.trim() !== ''
+    const initialFormData = createInitialFormData(editMode, editProject)
+
+    return formData.name !== initialFormData.name
+      || formData.code !== initialFormData.code
+      || formData.path !== initialFormData.path
+      || formData.crsPath !== initialFormData.crsPath
+      || formData.description !== initialFormData.description
+      || formData.repositoryUrl !== initialFormData.repositoryUrl
+      || formData.useGlobalConfigOnly !== initialFormData.useGlobalConfigOnly
   }
 
   const generateCodeFromName = (name: string): string => {
@@ -147,15 +154,7 @@ export function useProjectForm(editMode = false, editProject?: EditProjectData):
 
   const resetForm = (shouldEditMode = false, editData?: EditProjectData) => {
     if (shouldEditMode && editData) {
-      setFormData({
-        name: editData.name,
-        code: editData.code,
-        path: editData.path,
-        crsPath: editData.crsPath,
-        description: editData.description,
-        repositoryUrl: editData.repositoryUrl,
-        useGlobalConfigOnly: false,
-      })
+      setFormData(createInitialFormData(true, editData))
     }
     else {
       setFormData(DEFAULT_FORM_DATA)
@@ -186,15 +185,7 @@ export function useProjectForm(editMode = false, editProject?: EditProjectData):
       // Use a ref to store the update function and call it after useEffect
       const updateFormData = () => {
         if (editMode && editProject) {
-          setFormData({
-            name: editProject.name,
-            code: editProject.code,
-            path: editProject.path,
-            crsPath: editProject.crsPath,
-            description: editProject.description,
-            repositoryUrl: editProject.repositoryUrl,
-            useGlobalConfigOnly: false,
-          })
+          setFormData(createInitialFormData(true, editProject))
         }
         else {
           setFormData(DEFAULT_FORM_DATA)

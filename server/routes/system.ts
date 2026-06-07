@@ -5,8 +5,9 @@ import * as fs from 'node:fs/promises'
 import * as os from 'node:os'
 import * as path from 'node:path'
 import {
+  sanitizeSelectorState,
+  safeValidateSelectorState,
   validateGlobalConfig,
-  validateSelectorState,
   validateUserConfig,
 } from '@mdt/domain-contracts'
 import { logger } from '@mdt/shared/utils/server-logger.js'
@@ -80,10 +81,10 @@ async function loadSelectorState(configDir: string) {
   try {
     const statePath = path.join(configDir, 'project-selector.json')
     const stateContent = await fs.readFile(statePath, 'utf8')
-    return validateSelectorState(JSON.parse(stateContent))
+    return sanitizeSelectorState(JSON.parse(stateContent))
   }
   catch {
-    return validateSelectorState({})
+    return sanitizeSelectorState({})
   }
 }
 
@@ -627,15 +628,22 @@ export function createSystemRouter(
         return res.status(400).json({ error: 'Bad Request', message: 'Request body must be an object' })
       }
 
+      const validatedState = safeValidateSelectorState(stateUpdate)
+      if (!validatedState.success) {
+        return res.status(400).json({
+          error: 'Bad Request',
+          message: 'Selector state payload is invalid',
+        })
+      }
+
       const configDir = getRuntimeConfig(req).configDir
       const statePath = path.join(configDir, 'project-selector.json')
-      const validatedState = validateSelectorState(stateUpdate)
 
       // Ensure directory exists
       await fs.mkdir(configDir, { recursive: true })
 
       // Write to file
-      await fs.writeFile(statePath, JSON.stringify(validatedState, null, 2), 'utf8')
+      await fs.writeFile(statePath, JSON.stringify(validatedState.data, null, 2), 'utf8')
 
       res.json({
         success: true,

@@ -9,6 +9,7 @@
 import type { SelectorData, SelectorPreferences, SelectorState } from './types'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { authFetch } from '../../auth/authFetch'
+import { isValidAccentHex, normalizeAccentHex } from '../../utils/accentColors'
 
 interface UseSelectorDataOptions {
   loadOwnerState?: boolean
@@ -19,22 +20,45 @@ const DEFAULT_PREFERENCES: SelectorPreferences = {
   compactInactive: true,
 }
 
+const SELECTOR_STATE_SYNC_EVENT = 'mdt:selector-state-updated'
+
 /**
  * Hook for loading and managing selector data
  * Implements BR-7, BR-8, BR-10
  */
-export function useSelectorData(options: UseSelectorDataOptions = {}): SelectorData & {
-  trackProjectUsage: (projectKey: string) => void
-  toggleFavorite: (projectKey: string) => void
-  error?: string
-  loaded: boolean
-} {
+export function useSelectorData(options: UseSelectorDataOptions = {}): SelectorData {
   const { loadOwnerState = true } = options
   const [preferences, setPreferences] = useState<SelectorPreferences>(DEFAULT_PREFERENCES)
   const [selectorState, setSelectorState] = useState<Record<string, SelectorState>>({})
   const [error, setError] = useState<string | undefined>()
   const [loaded, setLoaded] = useState(false)
   const persistenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (persistenceTimerRef.current !== null) {
+        clearTimeout(persistenceTimerRef.current)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!loadOwnerState || typeof window === 'undefined') {
+      return
+    }
+
+    const handleSelectorStateSync = (event: Event) => {
+      const customEvent = event as CustomEvent<Record<string, SelectorState>>
+      if (customEvent.detail) {
+        setSelectorState(customEvent.detail)
+      }
+    }
+
+    window.addEventListener(SELECTOR_STATE_SYNC_EVENT, handleSelectorStateSync)
+    return () => {
+      window.removeEventListener(SELECTOR_STATE_SYNC_EVENT, handleSelectorStateSync)
+    }
+  }, [loadOwnerState])
 
   // Load initial data from API
   useEffect(() => {
@@ -113,11 +137,7 @@ export function useSelectorData(options: UseSelectorDataOptions = {}): SelectorD
   // Track project usage (BR-5.3, BR-5.4, BR-5.5)
   const trackProjectUsage = useCallback((projectKey: string) => {
     setSelectorState((prevState) => {
-      const existing = prevState[projectKey] || {
-        favorite: false,
-        lastUsedAt: null,
-        count: 0,
-      }
+      const existing = prevState[projectKey] || createDefaultSelectorStateEntry()
 
       const updated: SelectorState = {
         ...existing,
@@ -131,6 +151,7 @@ export function useSelectorData(options: UseSelectorDataOptions = {}): SelectorD
       }
 
       persistState(newState)
+      broadcastSelectorState(newState)
       return newState
     })
   }, [persistState])
@@ -138,11 +159,7 @@ export function useSelectorData(options: UseSelectorDataOptions = {}): SelectorD
   // Toggle favorite state (BR-8.1, BR-8.2)
   const toggleFavorite = useCallback((projectKey: string) => {
     setSelectorState((prevState) => {
-      const existing = prevState[projectKey] || {
-        favorite: false,
-        lastUsedAt: null,
-        count: 0,
-      }
+      const existing = prevState[projectKey] || createDefaultSelectorStateEntry()
 
       const updated: SelectorState = {
         ...existing,
@@ -155,15 +172,62 @@ export function useSelectorData(options: UseSelectorDataOptions = {}): SelectorD
       }
 
       persistState(newState)
+      broadcastSelectorState(newState)
       return newState
     })
   }, [persistState])
+
+  const setAccent = useCallback((projectKey: string, accent: string) => {
+    if (!loadOwnerState || !isValidAccentHex(accent)) {
+      return
+    }
+
+    setSelectorState((prevState) => {
+      const existing = prevState[projectKey] || createDefaultSelectorStateEntry()
+      const updated: SelectorState = {
+        ...existing,
+        accent: normalizeAccentHex(accent),
+      }
+
+      const newState = {
+        ...prevState,
+        [projectKey]: updated,
+      }
+
+      persistState(newState)
+      broadcastSelectorState(newState)
+      return newState
+    })
+  }, [loadOwnerState, persistState])
+
+  const clearAccent = useCallback((projectKey: string) => {
+    if (!loadOwnerState) {
+      return
+    }
+
+    setSelectorState((prevState) => {
+      const existing = prevState[projectKey] || createDefaultSelectorStateEntry()
+      const { accent: _, ...withoutAccent } = existing
+      const updated: SelectorState = withoutAccent as SelectorState
+
+      const newState = {
+        ...prevState,
+        [projectKey]: updated,
+      }
+
+      persistState(newState)
+      broadcastSelectorState(newState)
+      return newState
+    })
+  }, [loadOwnerState, persistState])
 
   return {
     preferences,
     selectorState,
     trackProjectUsage,
     toggleFavorite,
+    setAccent,
+    clearAccent,
     error,
     loaded,
   }
@@ -216,12 +280,36 @@ function validateSelectorState(raw: Record<string, unknown>): Record<string, Sel
       count = Math.max(0, stateEntry.count)
     }
 
-    validated[projectKey] = {
+    const validatedEntry: SelectorState = {
       favorite,
       lastUsedAt,
       count,
     }
+
+    if (typeof stateEntry.accent === 'string' && isValidAccentHex(stateEntry.accent)) {
+      validatedEntry.accent = normalizeAccentHex(stateEntry.accent)
+    }
+
+    validated[projectKey] = validatedEntry
   }
 
   return validated
+}
+
+function createDefaultSelectorStateEntry(): SelectorState {
+  return {
+    favorite: false,
+    lastUsedAt: null,
+    count: 0,
+  }
+}
+
+function broadcastSelectorState(state: Record<string, SelectorState>) {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  window.dispatchEvent(new CustomEvent<Record<string, SelectorState>>(SELECTOR_STATE_SYNC_EVENT, {
+    detail: state,
+  }))
 }

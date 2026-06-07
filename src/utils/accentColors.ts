@@ -1,0 +1,88 @@
+export interface AccentPaletteEntry {
+  name: string
+  hex: string
+  foreground: string
+}
+
+const ACCENT_HEX_PATTERN = /^#[0-9a-fA-F]{6}$/u
+const LIGHT_FOREGROUND = '#ffffff'
+const DARK_FOREGROUND = '#1a1a1a'
+
+const ACCENT_PRESETS = [
+  { name: 'red', hex: '#dc2626' },
+  { name: 'orange', hex: '#ea580c' },
+  { name: 'amber', hex: '#d97706' },
+  { name: 'yellow', hex: '#ca8a04' },
+  { name: 'lime', hex: '#65a30d' },
+  { name: 'green', hex: '#16a34a' },
+  { name: 'emerald', hex: '#059669' },
+  { name: 'teal', hex: '#0d9488' },
+  { name: 'cyan', hex: '#0891b2' },
+  { name: 'blue', hex: '#2563eb' },
+  { name: 'indigo', hex: '#4f46e5' },
+  { name: 'violet', hex: '#7c3aed' },
+  { name: 'purple', hex: '#9333ea' },
+  { name: 'fuchsia', hex: '#c026d3' },
+  { name: 'pink', hex: '#db2777' },
+  { name: 'rose', hex: '#e11d48' },
+] as const
+
+export const ACCENT_PALETTE: AccentPaletteEntry[] = ACCENT_PRESETS.map(entry => ({
+  ...entry,
+  foreground: getForegroundForAccent(entry.hex),
+}))
+
+export function isValidAccentHex(value: string): boolean {
+  return ACCENT_HEX_PATTERN.test(value)
+}
+
+export function normalizeAccentHex(value: string): string {
+  return value.toLowerCase()
+}
+
+export function getFallbackAccent(projectCode: string): string {
+  const normalizedCode = projectCode.trim().toUpperCase()
+  if (!normalizedCode) {
+    return ACCENT_PALETTE[0].hex
+  }
+
+  const hash = Array.from(normalizedCode).reduce((sum, char) => sum + char.charCodeAt(0), 0)
+  return ACCENT_PALETTE[hash % ACCENT_PALETTE.length].hex
+}
+
+export function getForegroundForAccent(hex: string): string {
+  const normalizedHex = normalizeAccentHex(hex)
+  const lightContrast = getContrastRatio(LIGHT_FOREGROUND, normalizedHex)
+  const darkContrast = getContrastRatio(DARK_FOREGROUND, normalizedHex)
+
+  return darkContrast > lightContrast ? DARK_FOREGROUND : LIGHT_FOREGROUND
+}
+
+function getContrastRatio(foreground: string, background: string): number {
+  const lighter = Math.max(getRelativeLuminance(foreground), getRelativeLuminance(background))
+  const darker = Math.min(getRelativeLuminance(foreground), getRelativeLuminance(background))
+  return (lighter + 0.05) / (darker + 0.05)
+}
+
+function getRelativeLuminance(hex: string): number {
+  const { r, g, b } = hexToRgb(hex)
+  return 0.2126 * toLinearChannel(r) + 0.7152 * toLinearChannel(g) + 0.0722 * toLinearChannel(b)
+}
+
+function hexToRgb(hex: string): { r: number, g: number, b: number } {
+  const normalizedHex = normalizeAccentHex(hex).replace('#', '')
+  const value = Number.parseInt(normalizedHex, 16)
+
+  return {
+    r: (value >> 16) & 255,
+    g: (value >> 8) & 255,
+    b: value & 255,
+  }
+}
+
+function toLinearChannel(channel: number): number {
+  const normalizedChannel = channel / 255
+  return normalizedChannel <= 0.03928
+    ? normalizedChannel / 12.92
+    : ((normalizedChannel + 0.055) / 1.055) ** 2.4
+}

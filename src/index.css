@@ -23,6 +23,7 @@
 @import './styles/utilities.css';
 
 /* Component-local CSS (follows STYLING.md component-folder pattern) */
+@import './components/Header/header.css';
 @import './components/Badge/badge.css';
 @import './components/SmartLink/smart-link.css';
 @import './components/TicketViewer/ticket-viewer.css';
@@ -35,6 +36,7 @@
 @import './styles/entities/fav-star.css';
 @import './components/ProjectSelector/project-selector.css';
 @import './components/QuickSearch/quick-search.css';
+@import './components/AddProjectModal/components/AccentColorPicker.css';
 
 @tailwind base;
 @tailwind components;

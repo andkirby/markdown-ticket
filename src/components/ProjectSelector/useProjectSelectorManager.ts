@@ -48,6 +48,7 @@ function mergeProjectWithSelectorState(
     favorite: state.favorite,
     lastUsedAt: state.lastUsedAt,
     count: state.count,
+    accent: state.accent,
   }
 }
 
@@ -192,6 +193,7 @@ export function useProjectSelectorManager(
       favorite: state.favorite,
       lastUsedAt: state.lastUsedAt,
       count: state.count,
+      accent: state.accent,
     }
   }
 

@@ -60,6 +60,35 @@
   }
 
   /* Card child elements */
+  .project-card__surface {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: inherit;
+    pointer-events: none;
+  }
+
+  .project-card__identity {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    width: 6px;
+    background: rgb(148 163 184 / 0.12);
+  }
+
+  .project-card__identity-fill {
+    width: 100%;
+    height: 100%;
+    background: var(--project-accent, rgb(148 163 184));
+    opacity: 0.4;
+  }
+
+  .project-card__content {
+    @apply relative flex items-center gap-1 sm:gap-2 w-full min-w-0;
+
+    z-index: 1;
+  }
+
   .project-card__code {
     @apply text-xs sm:text-sm font-medium flex-shrink-0;
     color: var(--project-card-code-color);
@@ -103,6 +132,31 @@
 
   .project-chip:focus-visible {
     @apply outline-none ring-2 ring-ring;
+  }
+
+  .project-chip__surface {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: inherit;
+    pointer-events: none;
+  }
+
+  .project-chip__accent-mark {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    width: 4px;
+    border-radius: 0;
+    background: var(--project-accent, rgb(148 163 184));
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  .project-chip__content {
+    @apply relative inline-flex items-center justify-center h-full;
+
+    z-index: 1;
   }
 
   .project-chip__code {

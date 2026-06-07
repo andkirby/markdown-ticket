@@ -797,3 +797,292 @@ describe('useSelectorData - BR-8.1, BR-8.2: Favorite toggle', () => {
     }, { timeout: 1000 })
   })
 })
+
+describe('useSelectorData - MDT-181 accent preference state', () => {
+  beforeEach(() => {
+    mockFetch.mockReset()
+  })
+  afterEach(() => {
+    mockFetch.mockReset()
+  })
+
+  it('loads accent values from selector state response entries', async () => {
+    const mockResponse = {
+      preferences: {
+        visibleCount: 7,
+        compactInactive: true,
+      },
+      selectorState: {
+        'PROJ-A': {
+          favorite: true,
+          lastUsedAt: '2026-06-07T12:00:00.000Z',
+          count: 4,
+          accent: '#2563eb',
+        },
+      },
+    }
+
+    ;(globalThis.fetch as typeof mockFetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockResponse,
+    } as Response)
+
+    const { result } = renderHook(() => useSelectorData())
+
+    await waitFor(() => {
+      expect(result.current.loaded).toBe(true)
+    })
+
+    expect((result.current.selectorState['PROJ-A'] as unknown as Record<string, unknown>).accent).toBe('#2563eb')
+  })
+
+  it('does not expose owner accent state when owner access is unavailable', async () => {
+    ;(globalThis.fetch as typeof mockFetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        preferences: {
+          visibleCount: 7,
+          compactInactive: true,
+        },
+        selectorState: {
+          'PROJ-A': {
+            favorite: false,
+            lastUsedAt: null,
+            count: 0,
+            accent: '#2563eb',
+          },
+        },
+      }),
+    } as Response)
+
+    const { result } = renderHook(() => useSelectorData({ loadOwnerState: false }))
+
+    await waitFor(() => {
+      expect(result.current.loaded).toBe(true)
+    })
+
+    expect(globalThis.fetch).not.toHaveBeenCalled()
+    expect(result.current.selectorState).toEqual({})
+    expect((result.current.selectorState['PROJ-A'] as unknown as Record<string, unknown> | undefined)?.accent).toBeUndefined()
+  })
+
+  it('persists accent updates through the selector state API without dropping existing favorite or usage fields', async () => {
+    const mockResponse = {
+      preferences: {
+        visibleCount: 7,
+        compactInactive: true,
+      },
+      selectorState: {
+        'PROJ-A': {
+          favorite: true,
+          lastUsedAt: '2026-06-07T12:00:00.000Z',
+          count: 4,
+          accent: '#2563eb',
+        },
+      },
+    }
+
+    ;(globalThis.fetch as typeof mockFetch)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({}),
+      } as Response)
+
+    const { result } = renderHook(() => useSelectorData())
+
+    await waitFor(() => {
+      expect(result.current.loaded).toBe(true)
+    })
+
+    act(() => {
+      ;(result.current as unknown as { setAccent: (projectKey: string, accent: string) => void }).setAccent('PROJ-A', '#e74c3c')
+    })
+
+    await waitFor(() => {
+      expect(globalThis.fetch).toHaveBeenCalledTimes(2)
+    }, { timeout: 1000 })
+
+    const persistCall = (globalThis.fetch as unknown as { mock: { calls: Array<[string, RequestInit]> } }).mock.calls[1]
+    const persistedBody = JSON.parse(String(persistCall[1]?.body ?? '{}')) as Record<string, Record<string, unknown>>
+
+    expect(persistedBody['PROJ-A']?.favorite).toBe(true)
+    expect(persistedBody['PROJ-A']?.count).toBe(4)
+    expect(persistedBody['PROJ-A']?.lastUsedAt).toBe('2026-06-07T12:00:00.000Z')
+    expect(persistedBody['PROJ-A']?.accent).toBe('#e74c3c')
+  })
+})
+
+describe('useSelectorData - MDT-181 accent preference persistence', () => {
+  beforeEach(() => {
+    mockFetch.mockReset()
+  })
+  afterEach(() => {
+    mockFetch.mockReset()
+  })
+
+  it('loads accent values from selector state', async () => {
+    const mockResponse = {
+      preferences: {
+        visibleCount: 7,
+        compactInactive: true,
+      },
+      selectorState: {
+        'PROJ-A': {
+          favorite: false,
+          lastUsedAt: '2026-06-07T10:00:00Z',
+          count: 1,
+          accent: '#2563eb',
+        },
+      },
+    }
+
+    ;(globalThis.fetch as typeof mockFetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockResponse,
+    } as Response)
+
+    const { result } = renderHook(() => useSelectorData())
+
+    await waitFor(() => {
+      expect(result.current.loaded).toBe(true)
+    })
+
+    expect((result.current.selectorState['PROJ-A'] as any).accent).toBe('#2563eb')
+  })
+
+  it('persists accent updates through /api/config/selector', async () => {
+    const mockResponse = {
+      preferences: {
+        visibleCount: 7,
+        compactInactive: true,
+      },
+      selectorState: {
+        'PROJ-A': {
+          favorite: false,
+          lastUsedAt: '2026-06-07T10:00:00Z',
+          count: 1,
+          accent: '#2563eb',
+        },
+      },
+    }
+
+    ;(globalThis.fetch as typeof mockFetch)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({}),
+      } as Response)
+
+    const { result } = renderHook(() => useSelectorData())
+
+    await waitFor(() => {
+      expect(result.current.loaded).toBe(true)
+    })
+
+    act(() => {
+      ;(result.current as any).setAccent('PROJ-A', '#e11d48')
+    })
+
+    await waitFor(() => {
+      expect(globalThis.fetch).toHaveBeenCalledTimes(2)
+    }, { timeout: 1000 })
+
+    const persistedCall = (globalThis.fetch as typeof mockFetch).mock.calls[1]
+    expect(persistedCall?.[0]).toBe('/api/config/selector')
+    expect(String((persistedCall?.[1] as RequestInit)?.body || '')).toContain('#e11d48')
+  })
+
+  it('drops malformed accent values from loaded selector state', async () => {
+    const mockResponse = {
+      preferences: {
+        visibleCount: 7,
+        compactInactive: true,
+      },
+      selectorState: {
+        'PROJ-A': {
+          favorite: false,
+          lastUsedAt: '2026-06-07T10:00:00Z',
+          count: 1,
+          accent: 'blue',
+        },
+      },
+    }
+
+    ;(globalThis.fetch as typeof mockFetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockResponse,
+    } as Response)
+
+    const { result } = renderHook(() => useSelectorData())
+
+    await waitFor(() => {
+      expect(result.current.loaded).toBe(true)
+    })
+
+    expect((result.current.selectorState['PROJ-A'] as any).accent).toBeUndefined()
+  })
+
+  it('does not persist accent changes when owner selector state is unavailable', async () => {
+    const { result } = renderHook(() => useSelectorData({ loadOwnerState: false }))
+
+    await waitFor(() => {
+      expect(result.current.loaded).toBe(true)
+    })
+
+    act(() => {
+      ;(result.current as any).setAccent?.('PROJ-A', '#2563eb')
+    })
+
+    expect(globalThis.fetch).not.toHaveBeenCalled()
+    expect(result.current.selectorState).toEqual({})
+  })
+
+  it('clearAccent removes accent from selector state and persists', async () => {
+    const mockResponse = {
+      preferences: { visibleCount: 7, compactInactive: true },
+      selectorState: {
+        'PROJ-A': { favorite: false, lastUsedAt: null, count: 3, accent: '#dc2626' },
+      },
+    }
+    ;(globalThis.fetch as any).mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockResponse,
+    } as Response)
+
+    const { result } = renderHook(() => useSelectorData())
+
+    await waitFor(() => {
+      expect(result.current.loaded).toBe(true)
+    })
+
+    expect(result.current.selectorState['PROJ-A'].accent).toBe('#dc2626')
+
+    act(() => {
+      result.current.clearAccent('PROJ-A')
+    })
+
+    expect(result.current.selectorState['PROJ-A'].accent).toBeUndefined()
+    expect(result.current.selectorState['PROJ-A'].favorite).toBe(false)
+    expect(result.current.selectorState['PROJ-A'].count).toBe(3)
+
+    // Debounced persist
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 400))
+    })
+
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      '/api/config/selector',
+      expect.objectContaining({ method: 'POST' }),
+    )
+    const lastCall = (globalThis.fetch as any).mock.calls.at(-1)
+    const persistedState = JSON.parse(lastCall[1].body)
+    expect(persistedState['PROJ-A'].accent).toBeUndefined()
+  })
+})
