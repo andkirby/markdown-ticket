@@ -40,6 +40,32 @@ export function normalizeAccentHex(value: string): string {
   return value.toLowerCase()
 }
 
+/**
+ * Expand and normalize loose hex input into strict `#rrggbb`.
+ * - Auto-prepends `#` if missing
+ * - Expands 3-char shorthand: `0bc` → `#00bbcc`
+ * - Returns empty string if input cannot be resolved to a valid 6-digit hex
+ */
+export function expandShorthandHex(raw: string): string {
+  const trimmed = raw.trim()
+  if (!trimmed) return ''
+
+  const withHash = trimmed.startsWith('#') ? trimmed : `#${trimmed}`
+
+  // Already valid 6-digit
+  if (isValidAccentHex(withHash)) return normalizeAccentHex(withHash)
+
+  // 3-char shorthand (#abc → #aabbcc)
+  const shorthand = /^#([0-9a-fA-F]{3})$/u
+  const match = shorthand.exec(withHash)
+  if (match) {
+    const [r, g, b] = match[1]!
+    return normalizeAccentHex(`#${r}${r}${g}${g}${b}${b}`)
+  }
+
+  return ''
+}
+
 export function getFallbackAccent(projectCode: string): string {
   const normalizedCode = projectCode.trim().toUpperCase()
   if (!normalizedCode) {
