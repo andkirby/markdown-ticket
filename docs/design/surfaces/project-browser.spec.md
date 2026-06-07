@@ -82,11 +82,10 @@ LauncherButton (+ icon, rounded-full w-10 h-10)
 ### Project Identity Accent
 
 - Project identity accent is a current-user visual preference, not shared project metadata.
-- The accent is selected from the Project Edit form; this surface only consumes the selected preference.
-- If no user-selected accent exists, derive a deterministic fallback accent from the project code/id.
+- The accent is selected from **Settings > Appearance > Project Accents**; this surface only consumes the selected preference.
+- If no user-selected accent exists, derive a deterministic fallback via FNV-1a hash → 360° hue mapping with HSL(saturation 65%, lightness 45%). This produces a unique vivid color per project code; at 0.3 opacity the accent renders as a soft pastel.
 - Store one canonical accent value per user/project pair; light and dark mode derive contrast and surface treatment from that value.
-- The canonical preset palette has 16 visually separated values: Navy, Azure, Turquoise, Forest, Olive, Gold, Copper, Tangerine, Coral, Crimson, Raspberry, Plum, Violet, Indigo, Brown, Graphite.
-- The accent may also be a backend-validated custom hex value chosen from the Project Edit form.
+- The accent may also be a backend-validated custom hex value chosen from **Settings > Appearance > Project Accents**.
 - Do not discover or auto-read project images from the project folder for this personal preference.
 - If personal image support is added later, image selection must use user-owned preference storage; shared project-folder branding belongs to a separate design/CR.
 
@@ -97,8 +96,9 @@ LauncherButton (+ icon, rounded-full w-10 h-10)
 - Inactive: `bg-gradient-to-br from-white to-gray-50/80 dark:from-slate-800 dark:to-slate-900/80 border-gray-200/50 dark:border-slate-700/50 shadow-sm hover:shadow-md`
 - Shared: `border rounded-xl px-2 sm:px-4 py-1.5 min-h-12 hover:-translate-y-0.5 hover:scale-[1.02] transition-all duration-200 ease-out cursor-pointer`
 - Favorite star: `absolute top-1 right-1`, fav-star pattern from `THEME.md`
-- Accent mark treatment: same card height; a fixed-width left identity area may be filled with accent color or a user-owned image. The content area keeps the existing code/name/description hierarchy.
-- Compact monogram treatment: 32-40px accent block with project code/initials; use when filled-left treatment is too visually heavy.
+- Accent mark treatment: same card height; a fixed-width left identity area rendered via CSS with accent color. The identity bar uses a 250° diagonal gradient (transparent upper-right → opaque lower-left) at 0.5 opacity. The content area keeps the existing code/name/description hierarchy.
+- Active card gradient: when accent is enabled and gradients are on, the card background uses `linear-gradient(to left, theme-bg, accent tint 0.15)` — accent bleeds from the left, theme background on the right.
+- Flat mode (gradients off): identity bar is a 6px solid stripe at 0.3 opacity.
 
 ### Project Chip (Rail)
 
@@ -141,7 +141,7 @@ LauncherButton (+ icon, rounded-full w-10 h-10)
 | not favorited | `project.favorite === false` | No star (or hidden star on hover) |
 | accent configured | Current user selected project accent | Card/chip uses selected accent for identity mark |
 | custom hex accent | Current user selected validated hex | Card/chip uses the custom hex with derived light/dark contrast treatment |
-| accent fallback | No current-user accent exists | Card/chip uses deterministic project code/id fallback accent |
+| accent fallback | No current-user accent exists | Card/chip uses deterministic FNV-1a → 360° hue HSL fallback |
 | filled identity | Browser card renders filled-left treatment | Same card row height; left identity area filled by accent color or user-owned image |
 | read-only visible | project access mode is read-only | favorite star toggle hidden because it writes state |
 | token-scoped visible | read token grants project scope | card is selectable like any other visible project |
@@ -156,6 +156,8 @@ LauncherButton (+ icon, rounded-full w-10 h-10)
 | hover | Mouse enter | HoverCard opens with full details (100ms delay) |
 | favorited | `project.favorite === true` | `fav-star--chip` overlay visible |
 | accent configured | Current user selected project accent | Chip shows compact accent mark while preserving `h-12` |
+| gradient mode on | Accent gradients toggle is on | 25px gradient stripe on left edge, fading at 0.3 opacity |
+| gradient mode off | Accent gradients toggle is off | 4px solid flat stripe on left edge at 0.3 opacity |
 | mobile hidden | Viewport < 768px | Chips hidden; only active card shown |
 
 ## Ordering
@@ -209,6 +211,11 @@ Focused project cards show the standard blue focus ring. Arrow navigation applie
 | Primary text | `--foreground` | Card title, code |
 | Muted text | `--muted-foreground` | Card description |
 | Project accent palette | proposed project accent tokens | Personal project identity marks; same source value derives light/dark surfaces |
+| Accent identity bar | CSS `.project-card__identity` | 250° diagonal gradient, 0.5 opacity |
+| Accent flat stripe | CSS `.project-card__identity` (gradients off) | 6px solid, 0.3 opacity |
+| Chip accent gradient | CSS `.project-chip__accent-mark` (gradients on) | 25px gradient stripe, 0.3 opacity |
+| Chip accent flat | CSS `.project-chip__accent-mark` (gradients off) | 4px solid, 0.3 opacity |
+| Active card bg | CSS `.project-card[data-accent-gradients="true"]` | `linear-gradient(to left, theme-bg, accent/0.15)` |
 | Star tokens | `--star-*` | Favorite indicators (see `THEME.md`) |
 | Backdrop | — | `bg-black/50` (per MODALS.md) |
 

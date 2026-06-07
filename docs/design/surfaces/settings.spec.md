@@ -75,6 +75,7 @@ Modal[size="md"]
 | Link origin notice | text | — | visible only when no server-approved link origin is available |
 | Project multiselect | checkbox list or compact multiselect | `project-browser.spec.md` visibility rules | read-token creation |
 | AccentColorPicker | `src/components/AddProjectModal/components/AccentColorPicker.tsx` | this spec | reused in Project Accents section |
+| ProjectAccents | `src/components/SettingsModal/ProjectAccents.tsx` | this spec | accent editor in Appearance tab |
 
 ## Source files
 
@@ -146,7 +147,7 @@ A section below Markdown Density with two rendering-mode toggles, a project drop
 
 **Toggles**:
 - **Accent Colors** (Switch, default on): master toggle. Off disables all accent marks on chips and cards.
-- **Gradient Accents** (Switch, default on): only visible when Accent Colors is on. On = gradient fades. Off = flat 4px/6px stripes at 0.3 opacity.
+- **Gradient Accents** (Switch, default on): only visible when Accent Colors is on. On = 25px gradient stripe on chips, 250° diagonal identity bar on cards, accent-tinted card background (`to left` gradient). Off = flat 4px stripe on chips, 6px solid bar on cards, no background tint, all at 0.3 opacity.
 
 **Header row**: "Project Accents" label + (i) info button.
 
@@ -163,6 +164,10 @@ A section below Markdown Density with two rendering-mode toggles, a project drop
 **Auto-expansion**: shorthand hex like `0bc` expands to `#00bbcc` on blur. Missing `#` auto-prepended.
 
 **Reset button**: ↺ (rotate-left icon). Visible only when a user accent is stored.
+
+**"choose ↗" link**: opens `https://www.figma.com/colors/` in a new tab for browsing the full color spectrum.
+
+**Fallback algorithm**: when no user accent is stored, each project gets a deterministic fallback via FNV-1a hash → 360° hue mapping with fixed saturation 65%, lightness 45%. This produces a unique vivid color per project code; at 0.3 opacity the accent renders as a soft pastel. Results are cached in a `Map<string, string>`.
 
 **Persistence semantics**: accent changes are **staged locally** and persisted only on explicit Save. Cancel discards. Rendering mode toggles (Accent Colors, Gradient Accents) persist immediately to localStorage.
 
