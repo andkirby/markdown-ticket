@@ -107,7 +107,6 @@ const ProjectSelectorRail: React.FC<ProjectSelectorRailProps> = ({
       {/* Active project card (always visible, click to open browser) */}
       {activeProject && (
         <div
-          className="px-2 cursor-pointer"
           data-testid="project-selector-rail-active"
           onClick={handleActiveCardClick}
         >

@@ -1,0 +1,32 @@
+@layer components {
+  .header {
+    @apply sticky top-0 z-50 backdrop-blur-xl border-b shadow-sm;
+    background-color: rgb(255 255 255 / 0.9);
+    border-color: rgb(229 231 235 / 0.5);
+  }
+
+  .dark .header {
+    background-color: rgb(17 24 39 / 0.9);
+    border-color: rgb(55 65 81 / 0.5);
+  }
+
+  .header__container {
+    @apply px-1 sm:px-2 lg:px-2;
+  }
+
+  .header__content {
+    @apply flex justify-between h-16;
+  }
+
+  .header__left {
+    @apply flex items-center gap-2 min-w-0 flex-1 overflow-hidden;
+  }
+
+  .header__left-section {
+    @apply flex-shrink-0;
+  }
+
+  .header__right {
+    @apply flex items-center;
+  }
+}
