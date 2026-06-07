@@ -27,6 +27,9 @@ Modal[size="md"]
             │   └── div.setting-group["Markdown Density"]
             │       ├── label + description
             │       └── Select[Compact / Default / Comfortable]
+            │   └── div.setting-group["Project Accents"]
+            │       ├── label + description
+            │       └── ProjectAccents component
             ├── Board panel
             │   ├── div.setting-group["Card Density"]
             │   │   ├── label + description
@@ -71,6 +74,7 @@ Modal[size="md"]
 | Readonly input | native input with `readOnly` | — | Sharing tab with generated share URL or invite link |
 | Link origin notice | text | — | visible only when no server-approved link origin is available |
 | Project multiselect | checkbox list or compact multiselect | `project-browser.spec.md` visibility rules | read-token creation |
+| AccentColorPicker | `src/components/AddProjectModal/components/AccentColorPicker.tsx` | this spec | reused in Project Accents section |
 
 ## Source files
 
@@ -83,6 +87,9 @@ Modal[size="md"]
 | Event history | `src/components/DevTools/useEventHistoryState.ts` |
 | Cache utils | `src/utils/cache.ts` |
 | Sharing API | `PUT /api/projects/:code/sharing` |
+| Accent picker | `src/components/AddProjectModal/components/AccentColorPicker.tsx` |
+| Accent utilities | `src/utils/accentColors.ts` |
+| Selector state hook | `src/components/ProjectSelector/useSelectorData.ts` |
 
 ## Layout
 
@@ -129,6 +136,35 @@ Modal[size="md"]
 | Theme | cookie `theme` | ButtonGroup (Light / Dark / System) | `system` |
 | Default View | localStorage `mdt-settings-default-view` | Select (Board / List) | `board` |
 | Markdown Density | localStorage `mdt-settings-markdown-density` | Select (Compact / Default / Comfortable) | `default` |
+| Project Accents | `project-selector.json` via `/api/config/selector` | Per-project picker rows | deterministic fallback |
+
+### Project Accents (Appearance tab)
+
+A section below Markdown Density with a project dropdown and a collapsible color palette.
+
+**Header row**: "Project Accents" label + (i) info button.
+
+**(i) tooltip**: shows contextual help:
+- "Personal preference, not shared with other users."
+- "Accent renders as a left-edge stripe on selector chips and an identity bar on browser cards."
+
+**Project dropdown**: a combo/select listing all registered projects (e.g. MDT, API, OPS). On change, the palette loads that project's current accent color. Defaults to the first project.
+
+**Collapsible palette**: when expanded, shows below the dropdown:
+- Current hex value (muted) + ↺ Reset button (rotate-left icon)
+- AccentColorPicker (4×4 preset grid + custom hex input)
+- "Choose color ↗" link (opens external color picker)
+- Palette collapses when the user clicks outside or navigates away
+
+**Project change behavior**: switching the dropdown loads the new project's current accent into the palette. Any unstaged edits to the previous project's accent are preserved in local staging state.
+
+**Reset button**: ↺ (rotate-left icon). Visible only when a user accent is stored. Removes the stored `accent` key from the selector state entry so the project reverts to its deterministic fallback (`getFallbackAccent(projectCode)`).
+
+**Persistence semantics**: accent changes are **staged locally** and persisted only when the user explicitly clicks Save. Canceling Settings discards all unsaved accent changes across all projects. This fixes the immediate-pick persistence bug that existed when the picker lived in the Edit Project form.
+
+**Storage**: `project-selector.json` via `/api/config/selector`. Never in `.mdt-config.toml`, shared project metadata, or localStorage.
+
+**Reuse**: the existing `AccentColorPicker` component is reused as-is. Only its host container changes (from AddProjectModal → SettingsModal).
 
 ### Board
 
