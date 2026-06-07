@@ -128,7 +128,7 @@
 }
 
 .project-accents__field {
-  @apply flex flex-col flex-1 min-w-0;
+  @apply flex flex-col;
 }
 
 .project-accents__input {
