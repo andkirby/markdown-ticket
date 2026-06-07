@@ -216,7 +216,7 @@ export function QuickSearchModal({ isOpen, onClose, tickets, onSelectTicket, onS
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl" overlayClassName="backdrop-blur-sm" data-testid="quick-search-modal">
-      <ModalBody className="p-0">
+      <ModalBody className="modal__body--constrained">
         {/* Search input */}
         <div className="modal__section">
           <QuickSearchInput

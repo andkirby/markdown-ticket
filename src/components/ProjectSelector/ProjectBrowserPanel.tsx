@@ -250,7 +250,7 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl" overlayClassName="backdrop-blur-sm" data-testid="project-browser-panel">
-      <ModalBody className="p-0">
+      <ModalBody className="modal__body--constrained">
         {/* Header with inline search input */}
         <ModalHeader
           onClose={onClose}
@@ -258,9 +258,9 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
           closeButtonTabIndex={-1}
           className="flex items-center gap-3"
         >
-          <h3 className="modal__title shrink-0">
+          <h1 className="modal__headline shrink-0">
             Projects
-          </h3>
+          </h1>
           {/* Search input (MDT-152) */}
           <div className="relative min-w-0 flex-1">
             <svg
@@ -289,7 +289,7 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
         </ModalHeader>
 
         {/* Project list */}
-        <div className="max-h-[60vh] overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-4">
           {displayProjects.length === 0
             ? (
                 <div

@@ -1,6 +1,8 @@
 import type { Project } from '@mdt/shared/models/Project'
 import type { CardDensity, DefaultView, MarkdownDensity } from '../config/settingsPreferences'
 import type { TicketCardBadgeId } from '../config/ticketCardBadges'
+import type { SelectorState } from './ProjectSelector/types'
+import { SELECTOR_STATE_SYNC_EVENT } from './ProjectSelector/useSelectorData'
 import * as Tabs from '@radix-ui/react-tabs'
 import { Info, Monitor, Moon, Sun, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -22,6 +24,7 @@ import { useTheme } from '../hooks/useTheme'
 import { nuclearCacheClear } from '../utils/cache'
 import { getProjectCode } from '../utils/projectUtils'
 import { getEventHistoryForceHidden, toggleEventHistory } from './DevTools/useEventHistoryState'
+import { ProjectAccents } from './SettingsModal/ProjectAccents'
 import { ReadAccessTokens } from './SettingsModal/ReadAccessTokens'
 import { ButtonGroup } from './ui/button-group'
 import { Modal, ModalBody, ModalHeader } from './ui/Modal'
@@ -125,6 +128,116 @@ export function SettingsModal({ isOpen, onClose, selectedProject, projects = [],
 
   // Advanced
   const [eventHistoryVisible, setEventHistoryVisible] = useState(() => !getEventHistoryForceHidden())
+
+  // Project Accents (staged — not persisted until Save)
+  const [accentStaging, setAccentStaging] = useState<{
+    changes: Map<string, string | null> // null = clear
+    base: Record<string, SelectorState>
+  } | null>(null)
+  const [accentLoaded, setAccentLoaded] = useState(false)
+
+  // Load selector state on mount
+  useEffect(() => {
+    if (!isOpen) {
+      return
+    }
+    let cancelled = false
+    const loadSelectorState = async () => {
+      try {
+        const response = await authFetch('/api/config/selector')
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`)
+        }
+        const data = await response.json()
+        if (!cancelled) {
+          const state = (data.selectorState || {}) as Record<string, SelectorState>
+          setAccentStaging({ changes: new Map(), base: state })
+          setAccentLoaded(true)
+        }
+      }
+      catch {
+        if (!cancelled) {
+          setAccentStaging({ changes: new Map(), base: {} })
+          setAccentLoaded(true)
+        }
+      }
+    }
+    loadSelectorState()
+    return () => { cancelled = true }
+  }, [isOpen])
+
+  // Reset staging when modal reopens
+  useEffect(() => {
+    if (!isOpen) {
+      setAccentStaging(null)
+      setAccentLoaded(false)
+    }
+  }, [isOpen])
+
+  const stagedSelectorState = useMemo(() => {
+    if (!accentStaging) {
+      return {}
+    }
+    const merged = { ...accentStaging.base }
+    for (const [key, value] of accentStaging.changes) {
+      const existing = merged[key] || { favorite: false, lastUsedAt: null, count: 0 }
+      if (value === null) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { accent: _, ...rest } = existing
+        merged[key] = rest as SelectorState
+      }
+      else {
+        merged[key] = { ...existing, accent: value }
+      }
+    }
+    return merged
+  }, [accentStaging])
+
+  const handleAccentChange = useCallback((projectKey: string, accent: string) => {
+    setAccentStaging(prev => {
+      if (!prev) {
+        return prev
+      }
+      const changes = new Map(prev.changes)
+      changes.set(projectKey, accent)
+      return { ...prev, changes }
+    })
+  }, [])
+
+  const handleAccentReset = useCallback((projectKey: string) => {
+    setAccentStaging(prev => {
+      if (!prev) {
+        return prev
+      }
+      const changes = new Map(prev.changes)
+      changes.set(projectKey, null)
+      return { ...prev, changes }
+    })
+  }, [])
+
+  const handleSaveAccents = useCallback(async () => {
+    if (!accentStaging || accentStaging.changes.size === 0) {
+      return
+    }
+    try {
+      const response = await authFetch('/api/config/selector', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(stagedSelectorState),
+      })
+      if (response.ok) {
+        // Update base with current staged state
+        setAccentStaging({ changes: new Map(), base: stagedSelectorState })
+        // Broadcast to useSelectorData hooks so chips/cards update immediately
+        window.dispatchEvent(new CustomEvent(SELECTOR_STATE_SYNC_EVENT, {
+          detail: stagedSelectorState,
+        }))
+      }
+    }
+    catch (err) {
+      console.error('Failed to save accent preferences:', err)
+    }
+  }, [accentStaging, stagedSelectorState])
 
   useEffect(() => {
     if (!selectedProject) {
@@ -355,6 +468,40 @@ export function SettingsModal({ isOpen, onClose, selectedProject, projects = [],
                 <option value="default">Default</option>
                 <option value="comfortable">Comfortable</option>
               </select>
+            </div>
+
+            <div className="settings-group">
+              <div className="settings-label-row">
+                <label className="settings-label">Project Accents</label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        data-testid="accents-info"
+                        aria-label="Project accent details"
+                        className="settings-info-trigger"
+                      >
+                        <Info className="h-4 w-4" aria-hidden="true" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p>Personal preference, not shared with other users.</p>
+                      <p className="mt-1">Accent renders as a left-edge stripe on selector chips and an identity bar on browser cards.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <ProjectAccents
+                projects={projects}
+                defaultProjectCode={selectedProject?.project?.code}
+                selectorState={stagedSelectorState}
+                loaded={accentLoaded}
+                onAccentChange={handleAccentChange}
+                onAccentReset={handleAccentReset}
+                onSave={handleSaveAccents}
+                hasUnsavedChanges={accentStaging !== null && accentStaging.changes.size > 0}
+              />
             </div>
           </Tabs.Content>
 

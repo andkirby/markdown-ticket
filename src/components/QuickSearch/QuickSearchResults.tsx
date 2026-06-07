@@ -204,7 +204,7 @@ export function QuickSearchResults({
   }
 
   return (
-    <div className="max-h-[50vh] overflow-y-auto" role="listbox" aria-label="Search results" data-testid="quick-search-results">
+    <div className="flex-1 overflow-y-auto" role="listbox" aria-label="Search results" data-testid="quick-search-results">
       {/* Cross-project section (ticket-key or project-scope mode) */}
       {isCrossProjectMode && scopeShowsTickets && (
         <div role="group" aria-label={isProjectScopeMode ? 'Project Results' : 'Cross-Project Results'} data-testid="quick-search-cross-project-section">

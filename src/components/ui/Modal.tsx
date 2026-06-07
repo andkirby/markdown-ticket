@@ -154,9 +154,9 @@ const ModalHeader = React.forwardRef<HTMLDivElement, ModalHeaderProps>(
         {...props}
       >
         {title && (
-          <h3 className="modal__title">
+          <h1 className="modal__headline">
             {title}
-          </h3>
+          </h1>
         )}
         {description && (
           <p className="modal__description">
