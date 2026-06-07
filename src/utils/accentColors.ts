@@ -8,20 +8,6 @@ const ACCENT_HEX_PATTERN = /^#[0-9a-fA-F]{6}$/u
 const LIGHT_FOREGROUND = '#ffffff'
 const DARK_FOREGROUND = '#1a1a1a'
 
-/**
- * Fallback accent pool — 24 colors from Figma design tokens,
- * evenly spaced by hue (~15° intervals) for maximum visual variety.
- * High saturation is intentional — at 0.3 opacity they render as soft pastels.
- */
-const FALLBACK_ACCENT_POOL = [
-  '#ed2100', '#c04000', '#e86100', '#ffa500',
-  '#ffce1b', '#ccff00', '#7cfc00', '#00bb77',
-  '#00cec8', '#00ffff', '#007ba7', '#0047ab',
-  '#0014a8', '#0000cd', '#7f00ff', '#8a00c4',
-  '#ff1dce', '#e40078', '#ff1d8d', '#ff0038',
-  '#c11c84', '#636b2f', '#4682b4', '#6d8196',
-] as const
-
 const ACCENT_PRESETS = [
   { name: 'red', hex: '#dc2626' },
   { name: 'orange', hex: '#ea580c' },
@@ -80,16 +66,6 @@ export function expandShorthandHex(raw: string): string {
   return ''
 }
 
-export function getFallbackAccent(projectCode: string): string {
-  const normalizedCode = projectCode.trim().toUpperCase()
-  if (!normalizedCode) {
-    return ACCENT_PALETTE[0].hex
-  }
-
-  const hash = fnv1a(normalizedCode)
-  return FALLBACK_ACCENT_POOL[hash % FALLBACK_ACCENT_POOL.length]
-}
-
 /** FNV-1a — fast, excellent distribution for short strings */
 function fnv1a(str: string): number {
   let h = 0x811c9dc5
@@ -98,6 +74,37 @@ function fnv1a(str: string): number {
     h = Math.imul(h, 0x01000193)
   }
   return h >>> 0
+}
+
+const fallbackCache = new Map<string, string>()
+
+export function getFallbackAccent(projectCode: string): string {
+  const normalizedCode = projectCode.trim().toUpperCase()
+  if (!normalizedCode) {
+    return hslToHex(0, 65, 45)
+  }
+
+  const cached = fallbackCache.get(normalizedCode)
+  if (cached) return cached
+
+  const hash = fnv1a(normalizedCode)
+  const hue = (hash * 360 / 4294967296) | 0
+  const hex = hslToHex(hue, 65, 45)
+  fallbackCache.set(normalizedCode, hex)
+  return hex
+}
+
+/** HSL (h: 0–360, s: 0–100, l: 0–100) → #rrggbb */
+function hslToHex(h: number, s: number, l: number): string {
+  const sNorm = s / 100
+  const lNorm = l / 100
+  const a = sNorm * Math.min(lNorm, 1 - lNorm)
+  const f = (n: number): number => {
+    const k = (n + h / 30) % 12
+    return lNorm - a * Math.max(Math.min(k - 3, 9 - k, 1), -1)
+  }
+  const toHex = (v: number): string => Math.round(v * 255).toString(16).padStart(2, '0')
+  return `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`
 }
 
 export function getForegroundForAccent(hex: string): string {

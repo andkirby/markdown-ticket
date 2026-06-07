@@ -18,6 +18,8 @@ interface UseSelectorDataOptions {
 const DEFAULT_PREFERENCES: SelectorPreferences = {
   visibleCount: 7,
   compactInactive: true,
+  accentEnabled: true,
+  accentGradients: true,
 }
 
 export const SELECTOR_STATE_SYNC_EVENT = 'mdt:selector-state-updated'
@@ -85,7 +87,11 @@ export function useSelectorData(options: UseSelectorDataOptions = {}): SelectorD
         const validatedPreferences = validatePreferences(data.preferences || {})
         const validatedState = validateSelectorState(data.selectorState || {})
 
-        setPreferences(validatedPreferences)
+        // Merge localStorage overrides (accentEnabled, accentGradients)
+        const localOverrides = loadLocalPreferences()
+        const merged = { ...validatedPreferences, ...localOverrides }
+
+        setPreferences(merged)
         setSelectorState(validatedState)
         setLoaded(true)
         setError(undefined)
@@ -132,7 +138,7 @@ export function useSelectorData(options: UseSelectorDataOptions = {}): SelectorD
     }, 300)
 
     persistenceTimerRef.current = timer
-  }, [loadOwnerState])
+  }, [loadOwnerState, preferences])
 
   // Track project usage (BR-5.3, BR-5.4, BR-5.5)
   const trackProjectUsage = useCallback((projectKey: string) => {
@@ -221,6 +227,31 @@ export function useSelectorData(options: UseSelectorDataOptions = {}): SelectorD
     })
   }, [loadOwnerState, persistState])
 
+  const persistPreferences = useCallback((prefs: SelectorPreferences) => {
+    try {
+      localStorage.setItem('mdt-selector-preferences', JSON.stringify(prefs))
+    }
+    catch {
+      console.warn('Failed to persist selector preferences')
+    }
+  }, [])
+
+  const setAccentEnabled = useCallback((enabled: boolean) => {
+    setPreferences(prev => {
+      const next = { ...prev, accentEnabled: enabled }
+      persistPreferences(next)
+      return next
+    })
+  }, [persistPreferences])
+
+  const setAccentGradients = useCallback((gradients: boolean) => {
+    setPreferences(prev => {
+      const next = { ...prev, accentGradients: gradients }
+      persistPreferences(next)
+      return next
+    })
+  }, [persistPreferences])
+
   return {
     preferences,
     selectorState,
@@ -228,9 +259,26 @@ export function useSelectorData(options: UseSelectorDataOptions = {}): SelectorD
     toggleFavorite,
     setAccent,
     clearAccent,
+    setAccentEnabled,
+    setAccentGradients,
     error,
     loaded,
   }
+}
+
+function loadLocalPreferences(): Partial<SelectorPreferences> {
+  try {
+    const stored = localStorage.getItem('mdt-selector-preferences')
+    if (stored) {
+      const parsed = JSON.parse(stored) as Partial<SelectorPreferences>
+      return {
+        ...(parsed.accentEnabled !== undefined && { accentEnabled: parsed.accentEnabled }),
+        ...(parsed.accentGradients !== undefined && { accentGradients: parsed.accentGradients }),
+      }
+    }
+  }
+  catch { /* ignore */ }
+  return {}
 }
 
 function validatePreferences(raw: Record<string, unknown>): SelectorPreferences {
@@ -246,9 +294,23 @@ function validatePreferences(raw: Record<string, unknown>): SelectorPreferences 
     compactInactive = rawCompactInactive
   }
 
+  let accentEnabled = DEFAULT_PREFERENCES.accentEnabled
+  const rawAccentEnabled = raw.accentEnabled
+  if (typeof rawAccentEnabled === 'boolean') {
+    accentEnabled = rawAccentEnabled
+  }
+
+  let accentGradients = DEFAULT_PREFERENCES.accentGradients
+  const rawAccentGradients = raw.accentGradients
+  if (typeof rawAccentGradients === 'boolean') {
+    accentGradients = rawAccentGradients
+  }
+
   return {
     visibleCount,
     compactInactive,
+    accentEnabled,
+    accentGradients,
   }
 }
 

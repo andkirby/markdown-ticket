@@ -301,6 +301,41 @@ Each mismatch from `assess.md` has a concrete architectural response:
 
 **Dependency pressure**: No new dependencies adopted. All functionality implemented with existing packages (Zod for validation, existing CSS custom property system for rendering).
 
+## Accent Rendering Modes
+
+Two user-controllable flags stored in `localStorage` key `mdt-selector-preferences`:
+
+| Flag | Default | Effect when on | Effect when off |
+|------|---------|----------------|-----------------|
+| `accentEnabled` | `true` | Accent marks visible on chips and cards | No accent marks rendered |
+| `accentGradients` | `true` | Gradient fade accent marks | Flat 4px/6px stripes at 0.3 opacity |
+
+### Gradient CSS
+
+**Chip** (inactive, `project-chip__accent-mark`):
+```css
+width: 25px;
+background: linear-gradient(270deg, rgb(from var(--project-accent) r g b / 0) 40%, rgb(from var(--project-accent) r g b / 1) 100%);
+```
+
+**Card** (`project-card__identity-fill`):
+```css
+width: 40%;
+min-width: 100px;
+background: linear-gradient(260deg, rgb(from var(--project-accent) r g b / 0) 40%, rgb(from var(--project-accent) r g b / 1) 100%);
+opacity: 0.5;
+```
+
+**Active card** (gradient mode only):
+```css
+background: linear-gradient(135deg, var(--project-card-active-bg-from), var(--project-card-active-accent-to));
+```
+Token `--project-card-active-accent-to`: `blue.100` (light), `blue.900` (dark).
+
+### Data attributes
+
+Chips and cards use `data-accent-enabled` and `data-accent-gradients` boolean attributes. CSS selectors gate gradient vs flat vs disabled rendering.
+
 **Verification gaps addressed**: OBL-test-coverage-extension requires extending 4 existing test suites and creating 2 new test files before implementation.
 
 ---

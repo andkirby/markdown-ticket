@@ -198,3 +198,26 @@ full
 **Trace revalidated:** requirements ✅, all stages rendered
 
 **More implementation required:** Yes — 5 execution slices in uat.md
+
+### UAT Session 2026-06-07 (round 2)
+
+**Approved changes:**
+- Add "Accent Colors" toggle (default on) — master on/off for accent marks
+- Add "Gradient Accents" toggle (default on) — gradient fade vs flat stripe
+- Chip gradient: 25px CSS gradient fade using `rgb(from var(...) r g b / ...)` relative color syntax
+- Card gradient: 40% width gradient fade at 0.5 opacity, min-width 100px
+- Active card gradient: `linear-gradient(135deg, ..., accent-to)` with light/dark tokens
+- Gradient/flat mode gated by `data-accent-gradients` attribute on chips and cards
+- Accent enable/disable gated by `data-accent-enabled` attribute
+- Rendering flags persisted in localStorage `mdt-selector-preferences`
+- Remove round color swatch from accent editor row
+- Add native color picker slider after hex input
+- Hex input: max 7 chars, placeholder = fallback hex, shorthand auto-expansion
+
+**Changed requirement IDs:** BR-10.1, BR-10.2, BR-11.1, BR-11.2 (additive_change); C10 (additive_change)
+
+**Updated workflow documents:** requirements.md, bdd.md, architecture.md, settings.spec.md, settings.mockups.md
+
+**Trace revalidated:** requirements ✅, all stages rendered
+
+**More implementation required:** Yes — wire toggle switches into Settings Appearance tab
