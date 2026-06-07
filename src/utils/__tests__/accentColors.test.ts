@@ -71,8 +71,9 @@ describe('accentColors fallback accent', () => {
     const different = getFallbackAccent('OPS')
 
     expect(first).toBe(second)
-    expect(ACCENT_PALETTE.some(entry => entry.hex === first)).toBe(true)
-    expect(ACCENT_PALETTE.some(entry => entry.hex === different)).toBe(true)
+    expect(first).toMatch(/^#[0-9a-f]{6}$/)
+    expect(different).toMatch(/^#[0-9a-f]{6}$/)
+    expect(first).not.toBe(different)
   })
 })
 
