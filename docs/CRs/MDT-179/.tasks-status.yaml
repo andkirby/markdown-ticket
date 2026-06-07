@@ -1,0 +1,31 @@
+cr_key: "MDT-179"
+total: 6
+tasks:
+  - id: 1
+    title: "Walking Skeleton — Search Types, Schemas, and Tests"
+    status: pending
+    skills:
+      - mdt-frontend
+  - id: 2
+    title: "Scope State Hook and Scope Bar Component"
+    status: pending
+    skills:
+      - mdt-frontend
+  - id: 3
+    title: "Client-Side Project Matching and Extended Query Mode"
+    status: pending
+    skills:
+      - mdt-frontend
+  - id: 4
+    title: "Grouped Results Rendering with Entity Type Row Components"
+    status: pending
+    skills:
+      - mdt-frontend
+  - id: 5
+    title: "Keyboard Navigation and Modal Integration"
+    status: pending
+    skills:
+      - mdt-frontend
+  - id: 6
+    title: "Unified Search Backend Endpoint"
+    status: pending

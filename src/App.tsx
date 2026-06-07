@@ -503,6 +503,12 @@ function ProjectRouteHandler() {
         onClose={() => setShowQuickSearch(false)}
         tickets={tickets}
         onSelectTicket={handleTicketClick}
+        onSelectProject={(project) => {
+          const code = project.project?.code
+          if (code) {
+            navigate(`/prj/${code}`)
+          }
+        }}
         currentProjectCode={projectCode}
         projects={projects}
       />

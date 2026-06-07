@@ -80,6 +80,28 @@
     border-top: 1px solid var(--search-results-divider);
   }
 
+  /* ── Scope bar tab strip (MDT-179) ── */
+
+  .search-scope-bar {
+    @apply flex items-center gap-1 px-4 py-1;
+    border-bottom: 1px solid var(--search-section-header-border);
+  }
+
+  .search-scope-bar__tab {
+    @apply px-2.5 py-1 text-xs font-medium rounded-md transition-colors;
+    color: var(--search-section-header-color);
+    background: transparent;
+  }
+
+  .search-scope-bar__tab:hover {
+    background: var(--search-result-hover-bg);
+  }
+
+  .search-scope-bar__tab--active {
+    background: var(--search-scope-tab-active-bg);
+    color: var(--search-scope-tab-active-text);
+  }
+
   /* ── Mode indicator badge ── */
 
   .search-mode-badge {
@@ -128,6 +150,9 @@
 
   --search-mode-badge-bg: theme('colors.blue.100');
   --search-mode-badge-text: theme('colors.blue.700');
+
+  --search-scope-tab-active-bg: theme('colors.blue.100');
+  --search-scope-tab-active-text: theme('colors.blue.700');
   --search-retry-color: theme('colors.blue.600');
   --search-error-color: theme('colors.red.600');
   --search-skeleton-bg: theme('colors.gray.200');
@@ -151,6 +176,9 @@
 
   --search-mode-badge-bg: rgb(30 58 138 / 0.4);
   --search-mode-badge-text: theme('colors.blue.300');
+
+  --search-scope-tab-active-bg: rgb(30 58 138 / 0.4);
+  --search-scope-tab-active-text: theme('colors.blue.300');
   --search-retry-color: theme('colors.blue.400');
   --search-error-color: theme('colors.red.400');
   --search-skeleton-bg: theme('colors.gray.700');

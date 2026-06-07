@@ -380,3 +380,39 @@ describe('MDT-152: parseQueryParts — extract structured query parts', () => {
     expect(parts.projectCode).toBe('ABC')
   })
 })
+
+// ============================================================================
+// MDT-179: Scope-Aware Query Mode Classification
+// ============================================================================
+
+describe('MDT-179: parseQueryMode — scope-aware classification (BR-3.3, BR-3.4, BR-4.1–BR-4.3)', () => {
+  it('ticket key still prioritized over scope (BR-3.3)', () => {
+    expect(parseQueryMode('MDT-179', 'global')).toBe('ticket_key')
+  })
+
+  it('global scope returns "global" mode', () => {
+    expect(parseQueryMode('some query', 'global')).toBe('global')
+  })
+
+  it('projects scope returns "projects_only" mode (BR-4.1)', () => {
+    expect(parseQueryMode('task ma', 'projects')).toBe('projects_only')
+  })
+
+  it('documents scope returns "documents_only" mode (BR-4.3)', () => {
+    expect(parseQueryMode('readme', 'documents')).toBe('documents_only')
+  })
+
+  it('tickets scope returns "current_project" for backward compat (BR-4.2)', () => {
+    expect(parseQueryMode('badge', 'tickets')).toBe('current_project')
+  })
+
+  it('@CODE syntax still parsed as project_scope regardless of scope (BR-3.4)', () => {
+    expect(parseQueryMode('@MDT search', 'global')).toBe('project_scope')
+    expect(parseQueryMode('@MDT search', 'tickets')).toBe('project_scope')
+  })
+
+  it('scope parameter ignored for ticket_key detection (BR-3.3)', () => {
+    expect(parseQueryMode('TMGR-001', 'projects')).toBe('ticket_key')
+    expect(parseQueryMode('TMGR-001', 'documents')).toBe('ticket_key')
+  })
+})
