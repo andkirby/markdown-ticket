@@ -16,6 +16,40 @@ Do NOT hand-roll `fixed inset-0` overlays. The base Modal handles:
 - Body scroll lock
 - Focus management
 
+## Vertical Positioning — No-Jump Architecture
+
+Modals are **top-anchored** by default. The modal starts at a fixed offset from the top of the viewport (`10dvh`) and grows downward. When content shrinks (search filtering, tab switching), only the bottom edge retracts — the top never moves.
+
+This prevents the "jump" that occurs with vertically-centered modals when their height changes dynamically.
+
+### When content modals resize
+
+Content modals have two layout modes:
+
+**1. Free-growing (long documents)** — Ticket Viewer
+
+The modal extends below the viewport. The outer overlay (`.modal`) scrolls the whole dialog.
+- Use `className="p-0"` on ModalBody
+- No `flex-1` or `overflow-y-auto` on inner content — let it grow naturally
+- No-jump guarantee: top-anchoring means only the bottom edge retracts when content shrinks
+
+**2. Constrained (fixed chrome + scrollable list)** — Project Browser, Quick Search, Settings
+
+The modal caps at 80dvh. Header/tabs stay pinned, inner content scrolls.
+- Use `className="modal__body--constrained"` on ModalBody
+- Inner scrollable area uses `flex-1 overflow-y-auto`
+- No-jump guarantee: the max-height cap prevents height changes entirely
+
+### Opt-in centering for static modals
+
+Small static-content modals (alerts, confirms — Pattern C) can opt into vertical centering since their content never changes and won't jump:
+
+```tsx
+<Modal size="sm" overlayClassName="modal--center">
+```
+
+**Do NOT use `modal--center`** on modals whose content changes after opening.
+
 ## Required Behaviors
 
 1. **Close on Escape** key
@@ -54,7 +88,7 @@ All modals follow the **tight layout** (ticket viewer style):
 
 **Do NOT** use `p-6` in any modal component. The tight layout keeps modals compact and visually consistent.
 
-For content modals (Pattern B), override ModalBody to `p-0` and manage padding per-section:
+For content modals (Pattern B), use `className="modal__body--constrained"` which sets `p-0 flex flex-col` — header and tabs stay pinned, inner content scrolls. Sections manage their own padding:
 - Compact bars: `px-4 py-3`
 - Content areas: `px-4 py-4 sm:px-5`
 
@@ -84,13 +118,25 @@ For: ticket viewer, search — content-rich modals that manage their own chrome.
 ```tsx
 <Modal isOpen={show} onClose={close} size="xl">
   <ModalBody className="p-0">
-    {/* Content owns its sections with border-b separators */}
+    {/* Long-document modal: grows freely, outer overlay scrolls */}
     {/* Close button: absolute right-3 top-3 z-20 */}
   </ModalBody>
 </Modal>
-```text
+```
 
-- ModalBody: `className="p-0"` — no padding, content manages its own
+For constrained modals with fixed chrome + scrollable content, use `modal__body--constrained`:
+
+```tsx
+<Modal isOpen={show} onClose={close} size="xl">
+  <ModalBody className="modal__body--constrained">
+    <ModalHeader title="..." onClose={close} />
+    <div className="flex-1 overflow-y-auto">...</div>
+  </ModalBody>
+</Modal>
+```
+
+- Free-growing: `className="p-0"` — content grows, outer overlay scrolls
+- Constrained: `className="modal__body--constrained"` — fixed chrome, internal scrolling, capped at 80dvh
 - Close button: absolutely positioned `right-3 top-3 z-20`, 8×8 rounded button
 - Content sections separated by `border-b border-gray-200 dark:border-gray-700`
 - Each section manages its own padding (`px-4 py-3` etc.)
@@ -100,11 +146,11 @@ For: ticket viewer, search — content-rich modals that manage their own chrome.
 For: error pages, confirm dialogs, one-prompt modals.
 
 ```tsx
-<Modal isOpen={show} onClose={close} size="sm">
+<Modal isOpen={show} onClose={close} size="sm" overlayClassName="modal--center">
   <ModalBody>
     <div className="flex items-center space-x-3 mb-4">
       <AlertTriangle className="h-6 w-6 text-destructive" />
-      <h3 className="text-lg font-semibold">Confirm Action</h3>
+      <h1 className="modal__headline">Confirm Action</h1>
     </div>
     <p className="text-muted-foreground mb-4">{message}</p>
     <ModalFooter justify="end">
@@ -118,6 +164,34 @@ For: error pages, confirm dialogs, one-prompt modals.
 - Uses ModalBody with default `p-4` padding
 - Icon + title on one line, description below, actions at bottom
 - No ModalHeader — the icon+title pair replaces it for small modals
+- `overlayClassName="modal--center"` for vertical centering (safe because content is static)
+
+## Headline — `.modal__headline`
+
+Every modal title uses `<h1 className="modal__headline">` for consistent typography:
+
+- **Element**: `<h1>` — semantic top-level heading inside the dialog
+- **Class**: `.modal__headline` — `text-lg font-semibold leading-6 text-gray-900 dark:text-white` (18px)
+- **Never** write inline font classes on modal titles — always use `.modal__headline`
+
+### Via ModalHeader (Pattern A)
+
+`ModalHeader` renders the `<h1>` automatically:
+
+```tsx
+<ModalHeader title="Settings" onClose={close} />
+// → <h1 class="modal__headline">Settings</h1>
+```
+
+### Manual (Patterns B, C)
+
+When composing headers manually, use the same class:
+
+```tsx
+<h1 className="modal__headline">Discard Changes?</h1>
+```
+
+Never use `<h2>`, `<h3>`, or inline font classes for modal titles.
 
 ## Close Button Styles
 
@@ -176,6 +250,7 @@ If you find a hand-rolled modal (`fixed inset-0` in component JSX):
 ❌ **Arbitrary z-index values** — base Modal uses `z-50`
 ❌ **Hardcoded `bg-white dark:bg-gray-800`** — use `bg-white dark:bg-slate-900` or just let Modal handle it
 ❌ **Inconsistent border colors** — always `border-gray-200 dark:border-gray-700`
+❌ **Using `<h2>`, `<h3>` or inline font classes for modal titles** — always `<h1 className="modal__headline">`
 
 ## Quick Checklist
 

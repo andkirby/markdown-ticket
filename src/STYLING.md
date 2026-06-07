@@ -399,6 +399,7 @@ Existing global classes in `src/index.css` and shared entity CSS include:
 | `.label` | Form labels | `styles/components/forms.css` |
 | `.dropdown`, `.dropdown-*` | Dropdown menus | `styles/components/overlays.css` |
 | `.modal`, `.modal-*` | Modal dialogs | `components/ui/modal.css` |
+| `.modal__headline` | Canonical modal `<h1>` title | `components/ui/modal.css` |
 | `.tooltip`, `.tooltip-*` | Tooltips | `styles/components/overlays.css` |
 | `.skeleton`, `.skeleton-*` | Loading placeholders | `styles/components/loading.css` |
 | `.fav-star`, `.fav-star--*` | Favorite star indicator | `styles/entities/fav-star.css` |
