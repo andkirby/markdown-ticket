@@ -32,13 +32,13 @@ const projects = [
   makeProject('FIN', 'Ledger', 'Billing and revenue tools'),
 ]
 
-function renderPanel() {
+function renderPanel(selectorState: Record<string, any> = {}) {
   return render(
     <ProjectBrowserPanel
       projects={projects}
       activeProjectKey="MDT"
       preferences={{ visibleCount: 7, compactInactive: true }}
-      selectorState={{}}
+      selectorState={selectorState}
       onProjectSelect={mock()}
       isOpen={true}
       onClose={mock()}
@@ -66,5 +66,35 @@ describe('ProjectBrowserPanel search', () => {
     fireEvent.change(searchInput, { target: { value: 'billing' } })
     expect(screen.getByTestId('project-browser-card-FIN')).toBeInTheDocument()
     expect(screen.queryByTestId('project-browser-card-OPS')).not.toBeInTheDocument()
+  })
+})
+
+describe('ProjectBrowserPanel accent rendering - MDT-181', () => {
+  afterEach(() => {
+    cleanup()
+  })
+
+  it('renders a filled identity area for a configured browser-card accent', () => {
+    renderPanel({
+      API: {
+        favorite: false,
+        lastUsedAt: '2026-06-07T12:00:00.000Z',
+        count: 1,
+        accent: '#2563eb',
+      },
+    })
+
+    const card = screen.getByTestId('project-browser-card-API')
+    expect(card).toBeInTheDocument()
+    expect(card.querySelector('.project-card__identity-fill')).toBeInTheDocument()
+  })
+
+  it('renders identity fill without auto-discovering project-folder images when no accent is configured', () => {
+    renderPanel()
+
+    const card = screen.getByTestId('project-browser-card-API')
+    expect(card).toBeInTheDocument()
+    expect(card.querySelector('.project-card__identity-fill')).toBeInTheDocument()
+    expect(card.querySelector('img')).toBeNull()
   })
 })

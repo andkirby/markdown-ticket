@@ -33,6 +33,8 @@ export interface ProjectWithSelectorState extends Project {
   lastUsedAt: string | null
   /** Shorthand for selectorState.count */
   count: number
+  /** Optional user-configured accent from selector state */
+  accent?: string
 }
 
 /**
@@ -48,6 +50,10 @@ export interface SelectorData {
   trackProjectUsage: (projectKey: string) => void
   /** Toggle favorite state for a project */
   toggleFavorite: (projectKey: string) => void
+  /** Persist accent state for a project */
+  setAccent: (projectKey: string, accent: string) => void
+  /** Clear stored accent for a project (reverts to fallback) */
+  clearAccent: (projectKey: string) => void
   /** Error message if data loading failed */
   error?: string
   /** Whether data has finished loading */

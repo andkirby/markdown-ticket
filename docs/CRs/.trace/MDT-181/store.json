@@ -1,0 +1,1153 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-181"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "WHEN user opens the Project Edit form for a project, the system shall display a color picker dropdown containing 16 preset accent colors",
+      "sourceRef": "MDT-181 §4 Functional: select one accent from 16 presets",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "WHEN user selects a preset accent color in the Project Edit form, the system shall store the selected accent as the current user's preference for that project",
+      "sourceRef": "MDT-181 §4 Functional: accent selection saved as user preference",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.3",
+      "kind": "behavior",
+      "text": "WHEN user enters a custom hex color value in the Project Edit form, the system shall validate the hex value and store it as the current user's preference for that project",
+      "sourceRef": "MDT-181 §4 Functional: custom hex color entry",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.4",
+      "kind": "behavior",
+      "text": "WHEN user enters an invalid custom hex value in the Project Edit form, the system shall display a field-level validation error and shall not replace the previous valid accent",
+      "sourceRef": "MDT-181 §4 Functional: invalid hex shows validation error",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.5",
+      "kind": "behavior",
+      "text": "WHEN user views the Project Edit form, the system shall display a 'choose color' link that opens https://share.google/ATp6ypatbFk69dC91 in a new browser tab",
+      "sourceRef": "MDT-181 §4 Functional: choose color link",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-2.1",
+      "kind": "behavior",
+      "text": "WHEN user saves a project accent selection, the system shall persist it as a per-user, per-project preference in the owner-owned selector state storage",
+      "sourceRef": "MDT-181 §4 Functional: saved as current user's preference",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-2.2",
+      "kind": "behavior",
+      "text": "WHEN user saves a project accent selection, the system shall not write the accent to .mdt-config.toml, global project registry, shared project metadata, CLI config, or MCP-visible project output",
+      "sourceRef": "MDT-181 §4 Functional: not visible to other users; §2 Constraints",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-2.3",
+      "kind": "behavior",
+      "text": "WHEN user A has configured an accent for project X, user B's view of project X shall not reflect user A's accent selection",
+      "sourceRef": "MDT-181 §4 Functional: not visible to other users unless independently chosen",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-3.1",
+      "kind": "behavior",
+      "text": "WHEN project has a user-configured accent, the system shall display the accent as a compact identity mark on the corresponding project selector chip in the rail",
+      "sourceRef": "MDT-181 §4 Functional: selector rail displays configured accent",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-3.2",
+      "kind": "behavior",
+      "text": "WHEN project does not have a user-configured accent, the system shall display a deterministic fallback accent on the corresponding selector chip, stable across sessions",
+      "sourceRef": "MDT-181 §4 Functional: deterministic fallback accents",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-3.3",
+      "kind": "behavior",
+      "text": "WHEN accent identity marks are rendered on selector chips, the system shall not increase the compact chip dimensions",
+      "sourceRef": "MDT-181 §4 Non-Functional: no layout shift in selector rail",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-4.1",
+      "kind": "behavior",
+      "text": "WHEN project has a user-configured accent, the system shall display the accent as a filled identity area on the corresponding project browser card",
+      "sourceRef": "MDT-181 §4 Functional: browser cards display configured accents",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-4.2",
+      "kind": "behavior",
+      "text": "WHEN accent identity is rendered on browser cards, the system shall not increase the normal card row height",
+      "sourceRef": "MDT-181 §4 Functional: without increasing card row height",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-4.3",
+      "kind": "behavior",
+      "text": "WHEN browser card identity area supports both accent-color fill and image fill, the system shall preserve card dimensions regardless of fill type",
+      "sourceRef": "MDT-181 §4 Functional: filled identity treatment supports both",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-5.1",
+      "kind": "behavior",
+      "text": "WHEN project has no user-configured accent, the system shall assign a deterministic fallback accent derived from the project code, stable across sessions and without requiring migration",
+      "sourceRef": "MDT-181 §4 Functional: deterministic fallback; §2 Constraints: deterministic across sessions",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-5.2",
+      "kind": "behavior",
+      "text": "WHEN user subsequently configures an accent for a project that previously used a fallback, the system shall replace the fallback with the user-selected accent",
+      "sourceRef": "MDT-181 §4 Non-Functional: no reconfigure needed before using selector",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-6.1",
+      "kind": "behavior",
+      "text": "WHEN user switches between light and dark mode, the system shall derive theme-appropriate rendering from the same stored accent selection without requiring separate color choices",
+      "sourceRef": "MDT-181 §4 Functional: light and dark mode derive from same accent; §2 Constraints: derive from stored accent",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-6.2",
+      "kind": "behavior",
+      "text": "WHEN accent marks are rendered in either light or dark mode, the system shall maintain readable foreground text contrast for project code or initials",
+      "sourceRef": "MDT-181 §4 Non-Functional: readable contrast in light and dark",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-7.1",
+      "kind": "behavior",
+      "text": "WHEN accent identity marks are added to selector chips and browser cards, the system shall preserve existing project search, selection, favorites, and ordering behavior",
+      "sourceRef": "MDT-181 §4 Functional: existing behavior continues to work",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-7.2",
+      "kind": "behavior",
+      "text": "WHEN accent identity marks are added to browser cards, the system shall preserve existing keyboard navigation and focus management behavior",
+      "sourceRef": "MDT-181 §2 Constraints: preserve keyboard navigation",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-8.1",
+      "kind": "behavior",
+      "text": "WHEN user submits a custom hex accent value, the backend shall validate the hex format before persisting and shall reject malformed, unsafe, transparent, or unreadable values",
+      "sourceRef": "MDT-181 §4 Functional: backend validates custom hex",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "Accent selections shall be stored in owner-owned project-selector.json only, never in .mdt-config.toml, global project registry, shared project metadata, CLI config, or MCP-visible output",
+      "sourceRef": "MDT-181 §2 Constraints: persistence boundary",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "A single stored hex accent value shall produce theme-appropriate rendering in both light and dark modes without requiring separate per-theme stored colors",
+      "sourceRef": "MDT-181 §2 Constraints: derive light and dark from stored accent",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "Accent identity marks shall not increase the dimensions of selector chips or browser cards",
+      "sourceRef": "MDT-181 §4 Non-Functional: no layout shift",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "The 16-color preset palette shall meet WCAG AA 4.5:1 contrast ratio for foreground text (project code/initials) rendered on accent backgrounds in both light and dark modes",
+      "sourceRef": "MDT-181 §4 Non-Functional: readable contrast",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C5",
+      "kind": "constraint",
+      "text": "Custom hex values shall trigger automatic foreground color selection (light or dark text) based on the accent luminance to maintain readable contrast",
+      "sourceRef": "MDT-181 §4 Non-Functional: custom hex constrained",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C6",
+      "kind": "constraint",
+      "text": "Fallback accent assignment shall be deterministic based on project code, stable across sessions, and shall not require migration before rendering",
+      "sourceRef": "MDT-181 §2 Constraints: deterministic fallback",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C7",
+      "kind": "constraint",
+      "text": "The Project Edit form shall clearly separate personal accent preference controls from shared project metadata fields",
+      "sourceRef": "MDT-181 §2 Constraints: not shared project metadata",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C8",
+      "kind": "constraint",
+      "text": "Backend hex validation shall accept 6-digit hex values with leading # character only and shall reject 3-digit shorthand, non-hex characters, missing #, and transparent values",
+      "sourceRef": "MDT-181 §2 Constraints: validation",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C9",
+      "kind": "constraint",
+      "text": "The 'choose color' external link shall use target=_blank with appropriate security attributes (rel=noopener or equivalent)",
+      "sourceRef": "MDT-181 §4 Functional: choose color link opens in new tab",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "WHEN current user has no configured accent for a project, the system shall render the deterministic fallback accent without error",
+      "sourceRef": "MDT-181 §4 Edge: no configured accent",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-2",
+      "kind": "edge_case",
+      "text": "WHEN current user enters a malformed custom hex value, the system shall show a field-level error and preserve the previous valid accent",
+      "sourceRef": "MDT-181 §4 Edge: malformed hex",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-3",
+      "kind": "edge_case",
+      "text": "WHEN current user opens the external color helper link and returns without changing the value, the system shall leave the accent unchanged",
+      "sourceRef": "MDT-181 §4 Edge: returns without changing",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-4",
+      "kind": "edge_case",
+      "text": "WHEN multiple projects are configured with the same accent color, the system shall render them correctly without conflict",
+      "sourceRef": "MDT-181 §4 Edge: same accent for multiple projects",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-5",
+      "kind": "edge_case",
+      "text": "WHEN project has a long code or long name, the accent identity mark shall not affect text truncation or card layout",
+      "sourceRef": "MDT-181 §4 Edge: long code/name",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-6",
+      "kind": "edge_case",
+      "text": "WHEN user switches between light and dark mode, accent rendering shall update immediately without page reload or re-selection",
+      "sourceRef": "MDT-181 §4 Edge: mode switch",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-8",
+      "kind": "edge_case",
+      "text": "WHEN project has no uploaded image or image fails to load, the accent color shall serve as the sole identity source without degradation",
+      "sourceRef": "MDT-181 §4 Edge: no image or image fails",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-9",
+      "kind": "edge_case",
+      "text": "WHEN project folder contains possible logo or image files but the user has not selected one, the system shall not auto-discover or auto-display those files as identity",
+      "sourceRef": "MDT-181 §4 Edge: project folder images not selected",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-7",
+      "kind": "edge_case",
+      "text": "WHEN read-only visitor accesses a project, the system shall not write shared project configuration for accent preferences and shall display the deterministic fallback accent for that project",
+      "sourceRef": "MDT-181 §4 Edge: read-only visitor",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-10",
+      "kind": "edge_case",
+      "text": "WHEN previously selected personal image is missing from user-owned storage, the system shall fall back to accent color identity — DEFERRED: personal image storage is out of scope for this CR",
+      "sourceRef": "MDT-181 §4 Edge: previously selected personal image missing",
+      "routePolicy": "not_applicable",
+      "tags": [
+        "timing:now"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "color_picker_preset_selection",
+      "title": "User selects a preset accent color from the Project Edit form",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2"
+      ],
+      "given": "the user opens the Project Edit form for a project",
+      "when": "the user selects one of the 16 preset accent colors from the color picker dropdown",
+      "then": "the selected accent is stored as the current user's preference for that project",
+      "sourceRef": "MDT-181 §4 Functional"
+    },
+    {
+      "id": "color_picker_custom_hex",
+      "title": "User enters a valid custom hex accent color",
+      "covers": [
+        "BR-1.3"
+      ],
+      "given": "the user opens the Project Edit form for a project",
+      "when": "the user enters a valid custom hex color value (e.g. #e74c3c) in the custom hex input",
+      "then": "the system validates the hex value and stores it as the current user's preference for that project",
+      "sourceRef": "MDT-181 §4 Functional"
+    },
+    {
+      "id": "accent_persistence_personal_only",
+      "title": "Accent selection persists as personal preference without writing shared project config",
+      "covers": [
+        "BR-2.1",
+        "BR-2.2"
+      ],
+      "given": "the user selects an accent color for a project in the Project Edit form",
+      "when": "the user saves the accent selection",
+      "then": "the accent is persisted in the owner-owned selector state and is not written to .mdt-config.toml, global project registry, shared project metadata, CLI config, or MCP-visible output",
+      "sourceRef": "MDT-181 §4 Functional"
+    },
+    {
+      "id": "choose_color_external_link",
+      "title": "Choose color link opens external color helper in new tab",
+      "covers": [
+        "BR-1.5"
+      ],
+      "given": "the user opens the Project Edit form for a project",
+      "when": "the user clicks the 'choose color' link",
+      "then": "the system opens https://share.google/ATp6ypatbFk69dC91 in a new browser tab",
+      "sourceRef": "MDT-181 §4 Functional"
+    },
+    {
+      "id": "rail_chip_accent_identity",
+      "title": "Selector rail chip displays configured accent as compact identity mark",
+      "covers": [
+        "BR-3.1",
+        "BR-3.3"
+      ],
+      "given": "the user has configured an accent color for a project",
+      "when": "the project selector rail renders the project chip",
+      "then": "the chip displays the configured accent as a compact identity mark without increasing chip dimensions",
+      "sourceRef": "MDT-181 §4 Functional"
+    },
+    {
+      "id": "theme_derivation_single_accent",
+      "title": "Light and dark mode derive rendering from the same stored accent with readable contrast",
+      "covers": [
+        "BR-6.1",
+        "BR-6.2"
+      ],
+      "given": "the user has configured a single accent color for a project",
+      "when": "the user switches between light and dark mode",
+      "then": "the system derives theme-appropriate rendering from the same stored accent without requiring separate color choices and maintains readable foreground text contrast for project code or initials",
+      "sourceRef": "MDT-181 §4 Functional"
+    },
+    {
+      "id": "existing_behavior_preserved",
+      "title": "Accent identity marks do not break existing search, selection, favorites, ordering, or keyboard navigation",
+      "covers": [
+        "BR-7.1",
+        "BR-7.2"
+      ],
+      "given": "accent identity marks are rendered on selector chips and browser cards",
+      "when": "the user searches projects, selects a project, toggles favorites, or uses keyboard navigation in the browser panel",
+      "then": "existing project search, selection, favorites, ordering behavior and keyboard focus management continue to work as before",
+      "sourceRef": "MDT-181 §4 Functional"
+    },
+    {
+      "id": "cross_user_accent_independence",
+      "title": "Each user's accent preference is independent of other users",
+      "covers": [
+        "BR-2.3"
+      ],
+      "given": "user A has configured a blue accent for project X",
+      "when": "user B views the same project X with their own green accent configured",
+      "then": "user B sees the green accent and user A's blue accent does not appear in user B's view",
+      "sourceRef": "MDT-181 §4 Functional"
+    },
+    {
+      "id": "color_picker_invalid_hex_rejected",
+      "title": "User enters an invalid custom hex value and previous accent is preserved",
+      "covers": [
+        "BR-1.4"
+      ],
+      "given": "the user has previously saved a valid accent for a project and opens the Project Edit form",
+      "when": "the user enters an invalid custom hex value (e.g. 'blue' (named color), '#f00' (3-digit shorthand), '3b82f6' (missing #), '#ffffff00' (transparent))",
+      "then": "the system displays a field-level validation error and the previous valid accent remains unchanged",
+      "sourceRef": "MDT-181 §4 Functional; C8"
+    },
+    {
+      "id": "backend_hex_validation",
+      "title": "Backend rejects malformed custom hex accent values before persistence",
+      "covers": [
+        "BR-8.1"
+      ],
+      "given": "the user submits a custom hex accent value through the API",
+      "when": "the hex value is one of: named color (e.g. 'blue'), 3-digit shorthand (e.g. '#f00'), missing leading # (e.g. '3b82f6'), or transparent (e.g. '#ffffff00')",
+      "then": "the backend rejects the value before persisting and returns a validation error",
+      "sourceRef": "MDT-181 §4 Functional; C8"
+    },
+    {
+      "id": "browser_card_filled_identity",
+      "title": "Browser card displays filled accent identity area without increasing row height",
+      "covers": [
+        "BR-4.1",
+        "BR-4.2",
+        "BR-4.3"
+      ],
+      "given": "the user has configured an accent color for a project",
+      "when": "the project browser panel renders the project card",
+      "then": "the card displays the accent as a filled identity area on the left side preserving the normal card row height. Image fill support is a deferred extensibility point — not tested in this scenario.",
+      "sourceRef": "MDT-181 §4 Functional"
+    },
+    {
+      "id": "rail_fallback_derivation",
+      "title": "Unconfigured project receives deterministic fallback accent on selector rail",
+      "covers": [
+        "BR-3.2",
+        "BR-5.1"
+      ],
+      "given": "the user has not configured an accent for a project",
+      "when": "the project selector rail renders the project chip",
+      "then": "the project receives a deterministic fallback accent derived from the project code",
+      "sourceRef": "MDT-181 §4 Functional"
+    },
+    {
+      "id": "rail_fallback_session_stability",
+      "title": "Fallback accent remains stable across page reloads and sessions",
+      "covers": [
+        "BR-3.2",
+        "BR-5.1"
+      ],
+      "given": "the user has not configured an accent for a project and has seen the fallback accent on the selector rail",
+      "when": "the user reloads the page or opens a new session",
+      "then": "the same deterministic fallback accent appears for that project",
+      "sourceRef": "MDT-181 §4 Functional"
+    },
+    {
+      "id": "rail_fallback_user_override",
+      "title": "User-configured accent replaces the fallback",
+      "covers": [
+        "BR-5.2"
+      ],
+      "given": "a project is displaying a deterministic fallback accent on the selector rail",
+      "when": "the user configures a personal accent color for that project",
+      "then": "the selector rail and browser panel replace the fallback with the user-selected accent",
+      "sourceRef": "MDT-181 §4 Functional"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-schema-accent-field",
+      "title": "Extend SelectorStateEntrySchema with optional accent field (hex string) for per-project color preference",
+      "derivedFrom": [
+        "BR-2.1",
+        "C1"
+      ],
+      "artifactIds": [
+        "ART-schema-selector-state",
+        "ART-selector-types"
+      ],
+      "sourceRef": "architecture: Schema Extension Decision"
+    },
+    {
+      "id": "OBL-hex-validation-contract",
+      "title": "Accent hex validation accepts only #RRGGBB format; rejects 3-digit shorthand, named colors, missing #, transparent, and non-hex characters — enforced in both domain-contracts schema and backend API",
+      "derivedFrom": [
+        "BR-8.1",
+        "C8"
+      ],
+      "artifactIds": [
+        "ART-schema-selector-validation",
+        "ART-schema-selector-state",
+        "ART-config-repo"
+      ],
+      "sourceRef": "architecture: Backend Validation Contract"
+    },
+    {
+      "id": "OBL-accent-palette-definition",
+      "title": "Define 16-color preset palette with names, hex values, and verified WCAG AA 4.5:1 contrast for foreground text on accent backgrounds in both light and dark modes",
+      "derivedFrom": [
+        "C4",
+        "C5"
+      ],
+      "artifactIds": [
+        "ART-accent-utilities"
+      ],
+      "sourceRef": "architecture: Palette Definition"
+    },
+    {
+      "id": "OBL-foreground-auto-selection",
+      "title": "Implement automatic foreground color selection (light/dark text) from accent hex luminance using WCAG luminance contrast algorithm — applies to both preset and custom hex values",
+      "derivedFrom": [
+        "BR-6.2",
+        "C5"
+      ],
+      "artifactIds": [
+        "ART-accent-utilities"
+      ],
+      "sourceRef": "architecture: Foreground Auto-Selection"
+    },
+    {
+      "id": "OBL-fallback-accent-algorithm",
+      "title": "Implement deterministic getFallbackAccent(projectCode) using project code hash modulo palette size — stable across sessions, no migration required",
+      "derivedFrom": [
+        "BR-5.1",
+        "BR-3.2",
+        "C6",
+        "Edge-1"
+      ],
+      "artifactIds": [
+        "ART-accent-utilities"
+      ],
+      "sourceRef": "architecture: Fallback Accent Algorithm"
+    },
+    {
+      "id": "OBL-theme-derivation-strategy",
+      "title": "Single stored hex drives theme-appropriate rendering in both light and dark modes via HSL lightness shift — light mode: lighter surface tints from accent; dark mode: darker surface tints with brighter accent marks. No separate per-theme stored colors.",
+      "derivedFrom": [
+        "BR-6.1",
+        "C2",
+        "Edge-6"
+      ],
+      "artifactIds": [
+        "ART-accent-utilities",
+        "ART-selector-css"
+      ],
+      "sourceRef": "assess.md Mismatch: Theme Derivation Strategy; architecture: Theme Derivation"
+    },
+    {
+      "id": "OBL-selector-hook-accent-extension",
+      "title": "Extend useSelectorData hook to expose setAccent(projectKey, accent) with persistence through /api/config/selector — accent saved independently of shared project metadata update",
+      "derivedFrom": [
+        "BR-1.2",
+        "BR-1.3",
+        "BR-2.1",
+        "BR-5.2"
+      ],
+      "artifactIds": [
+        "ART-selector-hook",
+        "ART-selector-types"
+      ],
+      "sourceRef": "assess.md Mismatch: Selector State Schema Extension; architecture: Hook Extension"
+    },
+    {
+      "id": "OBL-edit-form-accent-section",
+      "title": "Add visually separated 'Your Project Accent' section in AddProjectModal edit mode with color picker dropdown (16 presets + custom hex), persisted via /api/config/selector independently of shared project PUT. Section clearly demarcated from shared project metadata fields.",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.5",
+        "C7",
+        "C9"
+      ],
+      "artifactIds": [
+        "ART-edit-form",
+        "ART-accent-picker-component",
+        "ART-accent-picker-css"
+      ],
+      "sourceRef": "assess.md Mismatch: Project Edit Form — Shared vs Personal Boundary; architecture: Edit Form Section"
+    },
+    {
+      "id": "OBL-frontend-hex-validation",
+      "title": "Frontend inline field-level validation for custom hex input — rejects invalid values without overriding the previous valid accent. Uses same #RRGGBB validation rules as backend.",
+      "derivedFrom": [
+        "BR-1.4",
+        "Edge-2"
+      ],
+      "artifactIds": [
+        "ART-accent-picker-component",
+        "ART-accent-utilities"
+      ],
+      "sourceRef": "architecture: Frontend Hex Validation"
+    },
+    {
+      "id": "OBL-external-link-security",
+      "title": "Choose color link uses target=_blank with rel=noopener noreferrer — opens https://share.google/ATp6ypatbFk69dC91 in new tab with security attributes",
+      "derivedFrom": [
+        "BR-1.5",
+        "C9",
+        "Edge-3"
+      ],
+      "artifactIds": [
+        "ART-accent-picker-component"
+      ],
+      "sourceRef": "architecture: External Link Security"
+    },
+    {
+      "id": "OBL-chip-accent-identity",
+      "title": "Project selector chips render accent as a compact identity mark (colored indicator bar, dot, or border tint) via inline CSS custom property — does not increase chip dimensions",
+      "derivedFrom": [
+        "BR-3.1",
+        "BR-3.3",
+        "BR-5.1",
+        "C3",
+        "Edge-5"
+      ],
+      "artifactIds": [
+        "ART-selector-chip",
+        "ART-selector-css",
+        "ART-accent-utilities"
+      ],
+      "sourceRef": "assess.md Mismatch: Card/Chip Identity Rendering; architecture: Chip Accent"
+    },
+    {
+      "id": "OBL-accent-resolve-flow",
+      "title": "Canonical accent resolution flow: read selectorState.accent → if present use it; if absent call getFallbackAccent(projectCode) → pass resolved accent to chip/card components via inline style CSS custom property",
+      "derivedFrom": [
+        "BR-5.1",
+        "BR-5.2",
+        "BR-3.2",
+        "Edge-1",
+        "Edge-4"
+      ],
+      "artifactIds": [
+        "ART-selector-hook",
+        "ART-accent-utilities",
+        "ART-selector-chip",
+        "ART-selector-card"
+      ],
+      "sourceRef": "architecture: Accent Resolution Flow"
+    },
+    {
+      "id": "OBL-accent-storage-isolation",
+      "title": "Accent persistence goes through /api/config/selector only — never written to .mdt-config.toml, global project registry, shared project metadata, CLI config, or MCP-visible output. Read-only visitors receive fallback accents only.",
+      "derivedFrom": [
+        "BR-2.1",
+        "BR-2.2",
+        "BR-2.3",
+        "C1",
+        "Edge-7"
+      ],
+      "artifactIds": [
+        "ART-selector-hook",
+        "ART-config-repo",
+        "ART-edit-form"
+      ],
+      "sourceRef": "architecture: Storage Isolation"
+    },
+    {
+      "id": "OBL-existing-behavior-preservation",
+      "title": "Accent identity marks must preserve existing project search, selection, favorites, ordering, keyboard navigation, and focus management behavior — additive change only",
+      "derivedFrom": [
+        "BR-7.1",
+        "BR-7.2"
+      ],
+      "artifactIds": [
+        "ART-selector-chip",
+        "ART-selector-card",
+        "ART-selector-css"
+      ],
+      "sourceRef": "architecture: Behavior Preservation"
+    },
+    {
+      "id": "OBL-css-accent-variable-system",
+      "title": "CSS system uses per-element inline CSS custom property (style=--project-accent: #hex) for accent application. Theme adaptation via CSS opacity/overlay technique or HSL-derived surface variants defined in accent utilities. No static CSS variable per accent.",
+      "derivedFrom": [
+        "BR-6.1",
+        "C2",
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-selector-css",
+        "ART-accent-utilities"
+      ],
+      "sourceRef": "assess.md Mismatch: Theme Derivation Strategy; architecture: CSS Variable System"
+    },
+    {
+      "id": "OBL-test-coverage-extension",
+      "title": "Extend existing test suites (domain-contracts accent schema, useSelectorData accent read/write, selector API accent validation, browser panel accent rendering) plus new accent utilities unit tests for palette, fallback, foreground, hex validation",
+      "derivedFrom": [
+        "BR-8.1",
+        "C4",
+        "C5",
+        "C6",
+        "C8",
+        "Edge-1",
+        "Edge-2",
+        "Edge-4",
+        "Edge-6"
+      ],
+      "artifactIds": [
+        "ART-schema-accent-test",
+        "ART-accent-utilities-test",
+        "ART-selector-hook-test",
+        "ART-selector-api-test",
+        "ART-browser-panel-test"
+      ],
+      "sourceRef": "assess.md: Verification Gaps; architecture: Test Coverage"
+    },
+    {
+      "id": "OBL-card-accent-identity",
+      "title": "Project browser cards render accent as a filled identity area on the left side with slot-based design supporting both accent-color fill and future image fill — preserves card row height regardless of fill type",
+      "derivedFrom": [
+        "BR-4.1",
+        "BR-4.2",
+        "BR-4.3",
+        "C3",
+        "Edge-5",
+        "Edge-8",
+        "Edge-9"
+      ],
+      "artifactIds": [
+        "ART-selector-card",
+        "ART-selector-css",
+        "ART-accent-utilities"
+      ],
+      "sourceRef": "assess.md Mismatch: Card/Chip Identity Rendering; architecture: Card Accent Identity"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-schema-selector-state",
+      "path": "domain-contracts/src/app-config/schema.ts",
+      "kind": "runtime",
+      "sourceRef": "assess.md Mismatch: Selector State Schema Extension; architecture: Schema Extension"
+    },
+    {
+      "id": "ART-schema-selector-validation",
+      "path": "domain-contracts/src/app-config/validation.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture: Accent Hex Validation in Domain Contracts"
+    },
+    {
+      "id": "ART-accent-utilities",
+      "path": "src/utils/accentColors.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture: Accent Palette, Fallback, Foreground Selection, Hex Validation Utilities"
+    },
+    {
+      "id": "ART-accent-utilities-test",
+      "path": "src/utils/__tests__/accentColors.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture: Accent Utilities Unit Tests"
+    },
+    {
+      "id": "ART-accent-picker-component",
+      "path": "src/components/AddProjectModal/components/AccentColorPicker.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture: Color Picker Dropdown Component"
+    },
+    {
+      "id": "ART-accent-picker-css",
+      "path": "src/components/AddProjectModal/components/AccentColorPicker.css",
+      "kind": "runtime",
+      "sourceRef": "architecture: Color Picker Styles"
+    },
+    {
+      "id": "ART-edit-form",
+      "path": "src/components/AddProjectModal/AddProjectModal.tsx",
+      "kind": "runtime",
+      "sourceRef": "assess.md Mismatch: Project Edit Form — Shared vs Personal Boundary; architecture: Edit Form Accent Section"
+    },
+    {
+      "id": "ART-selector-chip",
+      "path": "src/components/ProjectSelector/ProjectSelectorChip.tsx",
+      "kind": "runtime",
+      "sourceRef": "assess.md Mismatch: Card/Chip Identity Rendering; architecture: Chip Accent Identity Mark"
+    },
+    {
+      "id": "ART-selector-card",
+      "path": "src/components/ProjectSelector/ProjectSelectorCard.tsx",
+      "kind": "runtime",
+      "sourceRef": "assess.md Mismatch: Card/Chip Identity Rendering; architecture: Card Accent Identity Area"
+    },
+    {
+      "id": "ART-selector-css",
+      "path": "src/components/ProjectSelector/project-selector.css",
+      "kind": "runtime",
+      "sourceRef": "assess.md Mismatch: Theme Derivation Strategy; architecture: CSS Accent Variables and Theme Adaptation"
+    },
+    {
+      "id": "ART-selector-hook",
+      "path": "src/components/ProjectSelector/useSelectorData.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture: Selector Data Hook Accent Extension"
+    },
+    {
+      "id": "ART-selector-types",
+      "path": "src/components/ProjectSelector/types.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture: Type Definitions for Accent"
+    },
+    {
+      "id": "ART-config-repo",
+      "path": "server/repositories/ConfigRepository.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture: Backend Selector State Handling"
+    },
+    {
+      "id": "ART-schema-accent-test",
+      "path": "domain-contracts/src/app-config/__tests__/accent.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture: Accent Schema and Validation Tests"
+    },
+    {
+      "id": "ART-selector-hook-test",
+      "path": "src/components/ProjectSelector/useSelectorData.test.ts",
+      "kind": "test",
+      "sourceRef": "assess.md: Verification Gaps; architecture: Hook Accent Test Extension"
+    },
+    {
+      "id": "ART-selector-api-test",
+      "path": "server/tests/api/selector.test.ts",
+      "kind": "test",
+      "sourceRef": "assess.md: Verification Gaps; architecture: Backend Accent API Tests"
+    },
+    {
+      "id": "ART-browser-panel-test",
+      "path": "src/components/ProjectSelector/ProjectBrowserPanel.test.tsx",
+      "kind": "test",
+      "sourceRef": "assess.md: Verification Gaps; architecture: Browser Panel Accent Rendering Tests"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-selector-accent-schema",
+      "kind": "unit",
+      "title": "Selector state accent schema validation",
+      "covers": [
+        "C8",
+        "Edge-2"
+      ],
+      "file": "domain-contracts/src/app-config/__tests__/accent.test.ts",
+      "sourceRef": "CR:MDT-181"
+    },
+    {
+      "id": "TEST-accent-color-utilities",
+      "kind": "unit",
+      "title": "Accent palette, fallback, and foreground utility tests",
+      "covers": [
+        "C4",
+        "C5",
+        "C6",
+        "Edge-1"
+      ],
+      "file": "src/utils/__tests__/accentColors.test.ts",
+      "sourceRef": "CR:MDT-181"
+    },
+    {
+      "id": "TEST-selector-api-accent-validation",
+      "kind": "integration",
+      "title": "Selector API accent persistence and validation",
+      "covers": [
+        "C1",
+        "C8",
+        "Edge-7"
+      ],
+      "file": "server/tests/api/selector.test.ts",
+      "sourceRef": "CR:MDT-181"
+    },
+    {
+      "id": "TEST-selector-accent-rendering",
+      "kind": "unit",
+      "title": "Project selector card and chip accent rendering",
+      "covers": [
+        "C3",
+        "Edge-4",
+        "Edge-5",
+        "Edge-8",
+        "Edge-9"
+      ],
+      "file": "src/components/ProjectSelector/ProjectSelectorAccent.test.tsx",
+      "sourceRef": "CR:MDT-181"
+    },
+    {
+      "id": "TEST-e2e-project-accent-colors",
+      "kind": "e2e",
+      "title": "Project accent color edit-form and selector rendering flows",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.5",
+        "BR-2.1",
+        "BR-2.2",
+        "BR-3.1",
+        "BR-3.2",
+        "BR-3.3",
+        "BR-4.1",
+        "BR-4.2",
+        "BR-5.1",
+        "BR-5.2",
+        "BR-6.1",
+        "BR-6.2",
+        "BR-7.1",
+        "BR-7.2",
+        "C2",
+        "C3",
+        "C7",
+        "C9",
+        "Edge-2",
+        "Edge-3",
+        "Edge-6"
+      ],
+      "file": "tests/e2e/selector/project-accent-colors.spec.ts",
+      "sourceRef": "CR:MDT-181"
+    },
+    {
+      "id": "TEST-selector-hook-accent-state",
+      "kind": "unit",
+      "title": "useSelectorData accent loading, isolation, and persistence",
+      "covers": [
+        "BR-2.1",
+        "BR-2.3",
+        "BR-5.2",
+        "Edge-7"
+      ],
+      "file": "src/components/ProjectSelector/useSelectorData.test.ts",
+      "sourceRef": "tests.md#test-selector-hook-accent-state"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-0",
+      "title": "Create missing accent infrastructure stubs and verify builds",
+      "ownsArtifactIds": [
+        "ART-accent-utilities",
+        "ART-accent-picker-component",
+        "ART-accent-picker-css"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-0"
+    },
+    {
+      "id": "TASK-1",
+      "title": "Lock selector accent schema and backend validation boundary",
+      "ownsArtifactIds": [
+        "ART-schema-selector-state",
+        "ART-schema-selector-validation",
+        "ART-schema-accent-test",
+        "ART-config-repo",
+        "ART-selector-api-test"
+      ],
+      "makesGreenIds": [
+        "TEST-selector-accent-schema",
+        "TEST-selector-api-accent-validation",
+        "backend_hex_validation"
+      ],
+      "sourceRef": "tasks.md#task-1"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Integrate the personal accent picker into the project edit form",
+      "ownsArtifactIds": [
+        "ART-edit-form",
+        "ART-accent-picker-component",
+        "ART-accent-picker-css"
+      ],
+      "makesGreenIds": [
+        "TEST-e2e-project-accent-colors",
+        "choose_color_external_link",
+        "color_picker_invalid_hex_rejected"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-3"
+    },
+    {
+      "id": "TASK-4",
+      "title": "Render selector chip and browser-card accent identity states",
+      "ownsArtifactIds": [
+        "ART-selector-chip",
+        "ART-selector-card",
+        "ART-selector-css",
+        "ART-browser-panel-test"
+      ],
+      "makesGreenIds": [
+        "TEST-selector-accent-rendering",
+        "TEST-e2e-project-accent-colors",
+        "color_picker_preset_selection",
+        "color_picker_custom_hex",
+        "accent_persistence_personal_only",
+        "rail_chip_accent_identity",
+        "rail_fallback_derivation",
+        "rail_fallback_session_stability",
+        "rail_fallback_user_override",
+        "browser_card_filled_identity"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-4"
+    },
+    {
+      "id": "TASK-5",
+      "title": "Finalize theme derivation and preserved selector interactions",
+      "ownsArtifactIds": [
+        "ART-selector-card",
+        "ART-selector-css",
+        "ART-browser-panel-test"
+      ],
+      "makesGreenIds": [
+        "TEST-e2e-project-accent-colors",
+        "theme_derivation_single_accent",
+        "existing_behavior_preserved"
+      ],
+      "skills": [
+        "mdt-frontend",
+        "playwright-skill"
+      ],
+      "sourceRef": "tasks.md#task-5"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Implement accent utilities and selector state hook",
+      "ownsArtifactIds": [
+        "ART-accent-utilities",
+        "ART-accent-utilities-test",
+        "ART-selector-hook",
+        "ART-selector-hook-test",
+        "ART-selector-types"
+      ],
+      "makesGreenIds": [
+        "TEST-accent-color-utilities",
+        "TEST-selector-hook-accent-state",
+        "cross_user_accent_independence"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-2"
+    }
+  ]
+}

@@ -21,6 +21,7 @@ import { RouteErrorModal } from './components/RouteErrorModal'
 import { SecondaryHeader } from './components/SecondaryHeader'
 import { SettingsModal } from './components/SettingsModal'
 import TicketViewer from './components/TicketViewer'
+import { Header, HeaderContent } from './components/Header'
 import { Modal, ModalBody } from './components/ui/Modal'
 import { Toaster } from './components/ui/sonner'
 import { ViewModeSwitcher } from './components/ViewModeSwitcher'
@@ -351,16 +352,13 @@ function ProjectRouteHandler() {
   return (
     <div className="App h-[100dvh] flex flex-col bg-background overflow-hidden">
       {/* Navigation Bar */}
-      <nav
-        data-testid="main-nav"
-        className="backdrop-blur-xl bg-white/90 dark:bg-gray-900/90 border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0 z-50 shadow-sm"
-      >
-        <div className="px-1 sm:px-2 lg:px-2">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center gap-1 sm:gap-4 min-w-0 flex-1 overflow-hidden">
-              <div className="flex-shrink-0">
-                <MobileLogo />
-              </div>
+      <Header>
+        <HeaderContent
+          leftSection={
+            <MobileLogo />
+          }
+          centerSection={
+            <>
               <ViewModeSwitcher
                 currentMode={viewMode === 'documents' ? lastBoardListMode : viewMode}
                 onModeChange={handleViewModeChange}
@@ -369,8 +367,10 @@ function ProjectRouteHandler() {
               <div className="min-w-0 flex-1">
                 <ProjectSelector />
               </div>
-            </div>
-            <div className="flex items-center">
+            </>
+          }
+          rightSection={
+            <>
               <AuthStatusAction
                 accessMode={accessMode}
                 onUnlockClick={handleUnlockClick}
@@ -391,10 +391,10 @@ function ProjectRouteHandler() {
                 canManageSharing={canManageSharing}
                 canUseOwnerEndpoints={canUseOwnerEndpoints}
               />
-            </div>
-          </div>
-        </div>
-      </nav>
+            </>
+          }
+        />
+      </Header>
 
       <div className="flex-1 overflow-hidden">
         {accessMode === 'locked'

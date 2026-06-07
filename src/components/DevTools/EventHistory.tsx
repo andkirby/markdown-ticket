@@ -2,7 +2,7 @@
  * EventHistory - Development Tool for Debugging Events
  *
  * This component displays recent events from the EventBus for debugging purposes.
- * Only renders in development mode.
+ * Visibility is controlled by the Event History preference.
  */
 
 import type { Event } from '../../services/eventBus'
@@ -50,11 +50,6 @@ export function EventHistory({ isOpen: controlledIsOpen, onOpenChange, forceHidd
       clearInterval(interval)
     }
   }, [])
-
-  // Don't render in production
-  if (import.meta.env.PROD) {
-    return null
-  }
 
   // When forceHidden is true, hide both popup AND floating button
   if (forceHidden) {

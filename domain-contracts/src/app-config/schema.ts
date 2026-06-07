@@ -43,6 +43,8 @@ export const SELECTOR_STATE_ENTRY_DEFAULTS = {
   count: 0,
 } as const
 
+export const SELECTOR_ACCENT_HEX_PATTERN = /^#[0-9a-fA-F]{6}$/u
+
 export const DOCUMENT_FAV_STATE_DEFAULTS = {
   favItems: [] as DocumentFavItem[],
 } as const
@@ -122,13 +124,18 @@ export const UserConfigSchema = z.object({
   },
 })
 
+export const SelectorAccentSchema = z.string()
+  .regex(SELECTOR_ACCENT_HEX_PATTERN, 'Accent must be a 6-digit hex color with leading #')
+  .transform(value => value.toLowerCase())
+
 export const SelectorStateEntrySchema = z.object({
   favorite: z.boolean().catch(SELECTOR_STATE_ENTRY_DEFAULTS.favorite).default(SELECTOR_STATE_ENTRY_DEFAULTS.favorite),
   lastUsedAt: z.string().datetime({ offset: true }).nullable().catch(SELECTOR_STATE_ENTRY_DEFAULTS.lastUsedAt).default(SELECTOR_STATE_ENTRY_DEFAULTS.lastUsedAt),
   count: z.number().int().min(0).catch(SELECTOR_STATE_ENTRY_DEFAULTS.count).default(SELECTOR_STATE_ENTRY_DEFAULTS.count),
-}).catch({ ...SELECTOR_STATE_ENTRY_DEFAULTS }).default({ ...SELECTOR_STATE_ENTRY_DEFAULTS })
+  accent: SelectorAccentSchema.optional(),
+})
 
-export const SelectorStateSchema = z.record(SelectorStateEntrySchema).catch({}).default({})
+export const SelectorStateSchema = z.record(SelectorStateEntrySchema).default({})
 
 const ProjectRelativeDocumentPathSchema = z.string()
   .min(1)
