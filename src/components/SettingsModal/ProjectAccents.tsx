@@ -143,6 +143,19 @@ export function ProjectAccents({
             </p>
           )}
         </div>
+        <input
+          type="color"
+          data-testid="accent-color-slider"
+          className="project-accents__color-slider"
+          value={resolvedAccent}
+          title="Pick color"
+          onChange={e => {
+            const hex = normalizeAccentHex(e.target.value)
+            setCustomHex(hex)
+            setValidationError(undefined)
+            onAccentChange(selectedCode, hex)
+          }}
+        />
         {hasAccent && (
           <button
             type="button"

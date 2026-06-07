@@ -168,6 +168,25 @@
   @apply underline;
 }
 
+.project-accents__color-slider {
+  @apply h-7 w-7 cursor-pointer rounded-md border border-border bg-background p-0.5;
+  @apply appearance-none [-webkit-appearance:none];
+}
+
+.project-accents__color-slider::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.project-accents__color-slider::-webkit-color-swatch {
+  border: none;
+  border-radius: 4px;
+}
+
+.project-accents__color-slider::-moz-color-swatch {
+  border: none;
+  border-radius: 4px;
+}
+
 .project-accents__palette {
   @apply flex flex-col gap-2.5 mt-1.5 pt-2.5 border-t border-gray-200 dark:border-gray-700;
 }
