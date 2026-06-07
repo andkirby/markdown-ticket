@@ -8,6 +8,20 @@ const ACCENT_HEX_PATTERN = /^#[0-9a-fA-F]{6}$/u
 const LIGHT_FOREGROUND = '#ffffff'
 const DARK_FOREGROUND = '#1a1a1a'
 
+/**
+ * Fallback accent pool — 24 colors from Figma design tokens,
+ * evenly spaced by hue (~15° intervals) for maximum visual variety.
+ * High saturation is intentional — at 0.3 opacity they render as soft pastels.
+ */
+const FALLBACK_ACCENT_POOL = [
+  '#ed2100', '#c04000', '#e86100', '#ffa500',
+  '#ffce1b', '#ccff00', '#7cfc00', '#00bb77',
+  '#00cec8', '#00ffff', '#007ba7', '#0047ab',
+  '#0014a8', '#0000cd', '#7f00ff', '#8a00c4',
+  '#ff1dce', '#e40078', '#ff1d8d', '#ff0038',
+  '#c11c84', '#636b2f', '#4682b4', '#6d8196',
+] as const
+
 const ACCENT_PRESETS = [
   { name: 'red', hex: '#dc2626' },
   { name: 'orange', hex: '#ea580c' },
@@ -73,7 +87,7 @@ export function getFallbackAccent(projectCode: string): string {
   }
 
   const hash = fnv1a(normalizedCode)
-  return ACCENT_PALETTE[hash % ACCENT_PALETTE.length].hex
+  return FALLBACK_ACCENT_POOL[hash % FALLBACK_ACCENT_POOL.length]
 }
 
 /** FNV-1a — fast, excellent distribution for short strings */
