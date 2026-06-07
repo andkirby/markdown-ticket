@@ -20,11 +20,13 @@ import express from 'express'
 import { buildRuntimeConfig } from '../../config/runtimeConfig'
 import { DocumentController } from '../../controllers/DocumentController'
 import { ProjectController } from '../../controllers/ProjectController'
+import { SearchController } from '../../controllers/SearchController'
 import { errorHandler, notFoundHandler } from '../../middleware/errorHandler'
 import { createAuthRouter } from '../../routes/auth'
 import { createDevToolsRouter } from '../../routes/devtools'
 import { createDocumentRouter } from '../../routes/documents'
 import { createProjectRouter } from '../../routes/projects'
+import { createSearchRouter } from '../../routes/search'
 import { createPublicReadTokensRouter, createReadTokensRouter } from '../../routes/readTokens'
 import { createShareRouter } from '../../routes/share'
 import { createSSERouter } from '../../routes/sse'
@@ -196,6 +198,11 @@ export function createTestApp(): TestAppResult {
   }))
 
   app.use('/api/projects', createProjectRouter(projectController))
+
+  // MDT-179: Unified search
+  const searchController = new SearchController(projectController)
+  app.use('/api/search', createSearchRouter(searchController))
+
   app.use('/api/read-tokens', createReadTokensRouter())
   app.use('/api/documents', createDocumentRouter(documentController, projectController))
   app.use('/api/events', createSSERouter(fileWatcher, originPolicy, projectServiceAdapter as unknown as ProjectServiceExtension))

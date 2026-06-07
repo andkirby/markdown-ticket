@@ -12,32 +12,46 @@ import type { Ticket } from '@/types/ticket'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
+import type { SearchScopeValue } from '@mdt/domain-contracts'
+import { SearchScope, SearchScopes } from '@mdt/domain-contracts'
 import { Modal, ModalBody } from '@/components/ui/Modal'
 import { useCrossProjectSearch } from '@/hooks/useCrossProjectSearch'
+import { useProjectSearch } from '@/hooks/useProjectSearch'
 import { parseQueryMode, parseQueryParts, useQuickSearch } from '@/hooks/useQuickSearch'
+import { useSearchScope } from '@/hooks/useSearchScope'
 
 import { QuickSearchInput } from './QuickSearchInput'
 import { QuickSearchResults } from './QuickSearchResults'
+import { SearchScopeBar } from './SearchScopeBar'
 
 export interface QuickSearchModalProps {
   isOpen: boolean
   onClose: () => void
   tickets: Ticket[]
   onSelectTicket: (ticket: Ticket, targetProjectCode?: string) => void
+  /** MDT-179: Navigate to a project. If not provided, project clicks do nothing. */
+  onSelectProject?: (project: Project) => void
   /** Current project code for mode indicator and cross-project filtering */
   currentProjectCode?: string
-  /** All known projects — used to validate @CODE project-scoped queries */
+  /** All known projects — used to validate @CODE project-scoped queries and project search */
   projects?: Project[]
 }
 
-export function QuickSearchModal({ isOpen, onClose, tickets, onSelectTicket, currentProjectCode, projects }: QuickSearchModalProps): React.ReactElement | null {
+export function QuickSearchModal({ isOpen, onClose, tickets, onSelectTicket, onSelectProject, currentProjectCode, projects }: QuickSearchModalProps): React.ReactElement | null {
   const [query, setQuery] = useState('')
+  const { scope, setScope, cycleScope, resetScope } = useSearchScope()
 
   const { filteredTickets, selectedIndex, setSelectedIndex } = useQuickSearch({ tickets, query })
   const crossProject = useCrossProjectSearch()
 
-  // Parse query mode
-  const queryMode: QueryMode = useMemo(() => parseQueryMode(query), [query])
+  // MDT-179: Client-side project matching
+  const { matches: projectMatches } = useProjectSearch({
+    projects: projects ?? [],
+    query,
+  })
+
+  // Parse query mode (scope-aware for MDT-179)
+  const queryMode: QueryMode = useMemo(() => parseQueryMode(query, scope), [query, scope])
   const queryParts = useMemo(() => parseQueryParts(query), [query])
 
   // Validate project code for project_scope mode (client-side check)
@@ -83,13 +97,14 @@ export function QuickSearchModal({ isOpen, onClose, tickets, onSelectTicket, cur
     }
   }, [isOpen, crossProject.cancel])
 
-  // Reset query when modal opens
+  // Reset query and scope when modal opens
   useEffect(() => {
     if (isOpen) {
       setQuery('')
       setSelectedIndex(0)
+      resetScope()
     }
-  }, [isOpen, setSelectedIndex])
+  }, [isOpen, setSelectedIndex, resetScope])
 
   // Exclude current project from cross-project results — the current project
   // section already shows those tickets via filteredTickets
@@ -98,10 +113,17 @@ export function QuickSearchModal({ isOpen, onClose, tickets, onSelectTicket, cur
     [crossProject.results, currentProjectCode],
   )
 
-  // Compute total selectable results across all sections
+  // Compute total selectable results across all sections (MDT-179: includes project matches, respects scope)
+  const projectCount = (scope === SearchScope.GLOBAL || scope === SearchScope.PROJECTS) && projectMatches.length
+  const scopedProjectResults = (scope === SearchScope.GLOBAL || scope === SearchScope.PROJECTS)
+    ? projectMatches
+    : []
+  // Scope filtering: hide tickets when scope is projects/documents
+  const scopeShowsTickets = scope === SearchScope.GLOBAL || scope === SearchScope.TICKETS
+  const visibleTickets = scopeShowsTickets ? filteredTickets : []
   const totalSelectableResults = (queryMode === 'ticket_key' || queryMode === 'project_scope')
-    ? filteredCrossProjectResults.length + (queryMode === 'project_scope' ? 0 : filteredTickets.length)
-    : filteredTickets.length
+    ? filteredCrossProjectResults.length + (queryMode === 'project_scope' ? 0 : visibleTickets.length) + scopedProjectResults.length
+    : visibleTickets.length + scopedProjectResults.length
 
   // Clamp selectedIndex when results change
   useMemo(() => {
@@ -113,23 +135,44 @@ export function QuickSearchModal({ isOpen, onClose, tickets, onSelectTicket, cur
     }
   }, [totalSelectableResults, selectedIndex])
 
-  // Compute section boundaries for Tab navigation
+  // Compute section counts for Enter handler dispatch (MDT-179)
   const crossProjectCount = (queryMode === 'ticket_key' || queryMode === 'project_scope') ? filteredCrossProjectResults.length : 0
-  const currentProjectCount = queryMode === 'project_scope' ? 0 : filteredTickets.length
-  const sectionBoundaries = useMemo(() => {
-    const boundaries: { start: number, end: number, label: string }[] = []
-    if (crossProjectCount > 0) {
-      boundaries.push({ start: 0, end: crossProjectCount - 1, label: 'Cross-Project Results' })
-    }
-    if (currentProjectCount > 0) {
-      boundaries.push({ start: crossProjectCount, end: crossProjectCount + currentProjectCount - 1, label: 'Current Project' })
-    }
-    return boundaries
-  }, [crossProjectCount, currentProjectCount])
+  const currentProjectCount = queryMode === 'project_scope' ? 0 : visibleTickets.length
+  const scopedProjectCount = scopedProjectResults.length
+
+  /** Scopes available for Tab cycling (Documents hidden until doc search is implemented). */
+  const cycleableScopes = useMemo(() => SearchScopes.filter((s): s is SearchScopeValue => s !== SearchScope.DOCUMENTS), [])
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    // MDT-179: Tab cycles scope (All → Tickets → Projects)
+    if (e.key === 'Tab') {
+      e.preventDefault()
+      const currentIdx = cycleableScopes.indexOf(scope)
+      if (e.shiftKey) {
+        const prevIndex = currentIdx - 1
+        setScope(cycleableScopes[prevIndex < 0 ? cycleableScopes.length - 1 : prevIndex] as SearchScopeValue)
+      }
+      else {
+        const nextIndex = (currentIdx + 1) % cycleableScopes.length
+        setScope(cycleableScopes[nextIndex] as SearchScopeValue)
+      }
+      return
+    }
+
     if (e.key === 'Enter') {
-      // In cross-project modes, check cross-project results first
+      // Check project results first (MDT-179)
+      const projectStartIndex = crossProjectCount + currentProjectCount
+      if (selectedIndex >= projectStartIndex && scopedProjectResults.length > 0) {
+        const projectIndex = selectedIndex - projectStartIndex
+        const scoredProject = scopedProjectResults[projectIndex]
+        if (scoredProject && onSelectProject) {
+          onSelectProject(scoredProject.project)
+          onClose()
+          return
+        }
+      }
+
+      // In cross-project modes, check cross-project results
       if (queryMode === 'ticket_key' || queryMode === 'project_scope') {
         if (selectedIndex < filteredCrossProjectResults.length) {
           const result = filteredCrossProjectResults[selectedIndex]
@@ -144,8 +187,8 @@ export function QuickSearchModal({ isOpen, onClose, tickets, onSelectTicket, cur
       const effectiveIndex = queryMode === 'ticket_key'
         ? selectedIndex - filteredCrossProjectResults.length
         : selectedIndex
-      if (effectiveIndex >= 0 && effectiveIndex < filteredTickets.length) {
-        const selectedTicket = filteredTickets[effectiveIndex]
+      if (effectiveIndex >= 0 && effectiveIndex < visibleTickets.length) {
+        const selectedTicket = visibleTickets[effectiveIndex]
         if (selectedTicket) {
           onSelectTicket(selectedTicket)
           onClose()
@@ -154,28 +197,13 @@ export function QuickSearchModal({ isOpen, onClose, tickets, onSelectTicket, cur
     }
     else if (e.key === 'ArrowDown') {
       e.preventDefault()
-      setSelectedIndex(Math.min(selectedIndex + 1, totalSelectableResults - 1))
+      setSelectedIndex(Math.min(selectedIndex + 1, Math.max(0, totalSelectableResults - 1)))
     }
     else if (e.key === 'ArrowUp') {
       e.preventDefault()
       setSelectedIndex(Math.max(selectedIndex - 1, 0))
     }
-    else if (e.key === 'Tab') {
-      e.preventDefault()
-      if (sectionBoundaries.length <= 1)
-        return
-      // Find which section we're currently in, then jump to start of next section
-      const currentSection = sectionBoundaries.findIndex(
-        s => selectedIndex >= s.start && selectedIndex <= s.end,
-      )
-      if (currentSection === -1)
-        return
-      const nextSection = e.shiftKey
-        ? (currentSection - 1 + sectionBoundaries.length) % sectionBoundaries.length
-        : (currentSection + 1) % sectionBoundaries.length
-      setSelectedIndex(sectionBoundaries[nextSection]!.start)
-    }
-  }, [queryMode, filteredTickets, filteredCrossProjectResults, selectedIndex, totalSelectableResults, sectionBoundaries, onSelectTicket, onClose])
+  }, [queryMode, visibleTickets, filteredCrossProjectResults, scopedProjectResults, selectedIndex, totalSelectableResults, onSelectTicket, onSelectProject, onClose, setScope, scope, cycleableScopes, crossProjectCount, currentProjectCount])
 
   const handleSelectTicket = useCallback((ticket: Ticket, targetProjectCode?: string) => {
     onSelectTicket(ticket, targetProjectCode)
@@ -201,9 +229,15 @@ export function QuickSearchModal({ isOpen, onClose, tickets, onSelectTicket, cur
           />
         </div>
 
+        {/* MDT-179: Scope bar */}
+        <SearchScopeBar
+          activeScope={scope}
+          onScopeChange={setScope}
+        />
+
         {/* Results */}
         <QuickSearchResults
-          tickets={filteredTickets}
+          tickets={visibleTickets}
           selectedIndex={selectedIndex}
           onSelect={handleSelectTicket}
           queryMode={queryMode}
@@ -212,6 +246,14 @@ export function QuickSearchModal({ isOpen, onClose, tickets, onSelectTicket, cur
           crossProjectError={crossProject.error}
           onRetry={crossProject.retry}
           invalidProjectCode={invalidProjectCode ? queryParts.projectCode ?? null : null}
+          projectResults={scopedProjectResults}
+          activeScope={scope}
+          onSelectProject={(project) => {
+            if (onSelectProject) {
+              onSelectProject(project as Project)
+              onClose()
+            }
+          }}
         />
       </ModalBody>
     </Modal>

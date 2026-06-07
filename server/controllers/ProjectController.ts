@@ -140,6 +140,12 @@ export class ProjectController {
     this.worktreeService = new WorktreeService() // MDT-093: Initialize WorktreeService
   }
 
+  /** MDT-179: Expose project service for unified search */
+  getProjectService() { return this.projectService }
+
+  /** MDT-179: Expose ticket service for unified search */
+  getTicketService() { return this.ticketService }
+
   /**
    * Search tickets across projects. MDT-152.
    */

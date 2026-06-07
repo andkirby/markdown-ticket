@@ -1,0 +1,1020 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-179"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "WHEN user activates quick search, the system shall present a visible scope indicator showing the active search scope (Global, Tickets, Projects, or Documents)",
+      "sourceRef": "MDT-179 AC: Functional #1,#3",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "WHEN user activates quick search, the system shall display visible scope controls allowing selection of Global, Tickets, Projects, or Documents scope",
+      "sourceRef": "MDT-179 AC: Functional #1,#2",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.3",
+      "kind": "behavior",
+      "text": "WHEN user activates a scope control, the system shall switch the search scope to the selected entity type and update the scope indicator within 100ms",
+      "sourceRef": "MDT-179 AC: Functional #2",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-2.1",
+      "kind": "behavior",
+      "text": "WHEN user types a query in Global scope, the system shall display results grouped into separate labeled sections for Projects, Tickets, and Documents",
+      "sourceRef": "MDT-179 AC: Functional #5",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-2.2",
+      "kind": "behavior",
+      "text": "WHEN search results include multiple entity types, the system shall render each entity type with visually distinct styling (icon, color, or badge)",
+      "sourceRef": "MDT-179 AC: Functional #6",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-2.3",
+      "kind": "behavior",
+      "text": "WHEN user selects a project result, the system shall navigate to the selected project and close the search modal",
+      "sourceRef": "MDT-179 AC: Functional #7",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-2.4",
+      "kind": "behavior",
+      "text": "WHEN user selects a ticket result, the system shall navigate to the selected ticket and close the search modal",
+      "sourceRef": "MDT-179 AC: Functional #7 (implied)",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-2.5",
+      "kind": "behavior",
+      "text": "WHEN user selects a document result, the system shall navigate to the selected document and close the search modal",
+      "sourceRef": "MDT-179 AC: Functional #7 (implied)",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-3.2",
+      "kind": "behavior",
+      "text": "WHEN user types a project code query, the system shall match and return projects whose code matches the query as a case-insensitive prefix",
+      "sourceRef": "MDT-179 AC: Functional #8",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-3.3",
+      "kind": "behavior",
+      "text": "WHEN user types an exact ticket key (e.g., 'MDT-179'), the system shall prioritize the ticket lookup over project and document matching",
+      "sourceRef": "MDT-179 AC: Functional #9",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-3.4",
+      "kind": "behavior",
+      "text": "WHEN user types a project-scoped ticket query (e.g., '@CODE text'), the system shall search for tickets within the specified project and display results as ticket results, not project results",
+      "sourceRef": "MDT-179 AC: Functional #10",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-4.1",
+      "kind": "behavior",
+      "text": "WHEN search scope is set to Projects, the system shall display only project results matching the query",
+      "sourceRef": "MDT-179 AC: Functional #1,#2",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-4.2",
+      "kind": "behavior",
+      "text": "WHEN search scope is set to Tickets, the system shall display only ticket results matching the query",
+      "sourceRef": "MDT-179 AC: Functional #1,#2",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-4.3",
+      "kind": "behavior",
+      "text": "WHEN search scope is set to Documents, the system shall display only document results matching the query",
+      "sourceRef": "MDT-179 AC: Functional #1,#2,#11",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-4.4",
+      "kind": "behavior",
+      "text": "WHEN user switches search scope, the system shall either preserve the current query text or clear it according to a visible predictable rule displayed to the user",
+      "sourceRef": "MDT-179 AC: Edge Cases #5",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-5.1",
+      "kind": "behavior",
+      "text": "WHEN keyboard focus is inside the search modal, Arrow Up and Arrow Down keys shall navigate across all visible result items in grouped sections sequentially",
+      "sourceRef": "MDT-179 AC: Non-Functional #3",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-5.2",
+      "kind": "behavior",
+      "text": "WHEN keyboard focus is inside the search modal, Tab key shall jump to the first item of the next result group and Shift+Tab shall jump to the first item of the previous group",
+      "sourceRef": "MDT-179 AC: Non-Functional #3",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-5.3",
+      "kind": "behavior",
+      "text": "WHEN user presses Enter on a selected result, the system shall activate that result (navigate to project/ticket/document) and close the modal",
+      "sourceRef": "MDT-179 AC: Non-Functional #3",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-6.1",
+      "kind": "behavior",
+      "text": "WHEN a query matches both a project name and a ticket title, the system shall display separate project results and ticket results in their respective groups",
+      "sourceRef": "MDT-179 AC: Edge Cases #1",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-6.3",
+      "kind": "behavior",
+      "text": "WHEN search results are empty for the active scope, the system shall display a no-results state that identifies the active scope and does not imply other scopes were searched",
+      "sourceRef": "MDT-179 AC: Functional #12",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-6.4",
+      "kind": "behavior",
+      "text": "WHEN user enters invalid project-code syntax in the project scope, the system shall not block project name lookup",
+      "sourceRef": "MDT-179 AC: Edge Cases #3",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "Search scope changes shall not cause visible layout jumps in the command palette (reflow must be bounded to content area)",
+      "sourceRef": "MDT-179 AC: Non-Functional #1",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "Result grouping shall remain readable on viewports from 320px to 1920px width",
+      "sourceRef": "MDT-179 AC: Non-Functional #2",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "Keyboard focus shall remain inside the command palette while it is open",
+      "sourceRef": "MDT-179 AC: Non-Functional #3",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "Search shall not reveal entities unavailable to the current access mode (read-only sessions, token-scoped sessions)",
+      "sourceRef": "MDT-179 AC: Non-Functional #4, Edge Cases #2",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C5",
+      "kind": "constraint",
+      "text": "Existing ticket search behavior (current_project mode, ticket_key mode, project_scope mode) shall be preserved without breaking changes",
+      "sourceRef": "MDT-179 AC: Functional #9,#10",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C6",
+      "kind": "constraint",
+      "text": "The search interaction model shall be extensible to document content search without requiring a command palette redesign",
+      "sourceRef": "MDT-179 AC: Functional #11",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-6.2",
+      "kind": "behavior",
+      "text": "WHEN a query matches only hidden or inaccessible entities, the system shall not expose those entity names in search results",
+      "sourceRef": "MDT-179 AC: Edge Cases #2",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-3.1",
+      "kind": "behavior",
+      "text": "WHEN user types a partial project name query (e.g., 'task ma'), the system shall match and return projects whose name contains word prefixes matching each query term",
+      "sourceRef": "MDT-179 AC: Functional #8",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.4",
+      "kind": "behavior",
+      "text": "WHEN user presses Tab (or Shift+Tab) in the search modal, the system shall cycle the search scope (All → Tickets → Projects → Documents) without requiring pointer input",
+      "sourceRef": "impl:QuickSearchModal.tsx:Tab-handler",
+      "routePolicy": "bdd"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "scope_controls_visible",
+      "title": "Scope controls are visible when quick search opens",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2"
+      ],
+      "given": "the quick search modal is opened via Cmd+K",
+      "when": "the modal finishes rendering",
+      "then": "a scope indicator shows 'Global' as active scope AND scope control buttons/tabs for Global, Tickets, Projects, and Documents are visible",
+      "sourceRef": "MDT-179 AC: Functional #1,#2"
+    },
+    {
+      "id": "scope_switch_via_click",
+      "title": "User switches scope by clicking a scope control",
+      "covers": [
+        "BR-1.3"
+      ],
+      "given": "the quick search modal is open with Global scope active",
+      "when": "the user clicks the 'Projects' scope control",
+      "then": "the scope indicator updates to 'Projects' within 100ms AND the results area filters to show only project-type results",
+      "sourceRef": "MDT-179 AC: Functional #2"
+    },
+    {
+      "id": "global_search_grouped_results",
+      "title": "Global search displays grouped results for all entity types",
+      "covers": [
+        "BR-2.1",
+        "BR-2.2"
+      ],
+      "given": "the quick search modal is open in Global scope",
+      "when": "the user types a query matching at least one project, one ticket, and one document",
+      "then": "results are displayed in three separate labeled groups (Projects, Tickets, Documents) AND each group has visually distinct styling (icon, color, or badge)",
+      "sourceRef": "MDT-179 AC: Functional #5,#6"
+    },
+    {
+      "id": "ticket_key_priority",
+      "title": "Exact ticket key prioritizes ticket lookup",
+      "covers": [
+        "BR-3.3"
+      ],
+      "given": "a ticket with key 'MDT-179' exists AND a project containing 'MDT' in its name exists",
+      "when": "the user types 'MDT-179' in the search input",
+      "then": "the ticket result for MDT-179 appears with higher prominence than project results",
+      "sourceRef": "MDT-179 AC: Functional #9"
+    },
+    {
+      "id": "keyboard_navigation_grouped",
+      "title": "Arrow keys navigate across grouped sections, Tab jumps between groups",
+      "covers": [
+        "BR-5.1",
+        "BR-5.2"
+      ],
+      "given": "the quick search modal shows grouped results with Projects (2 items) and Tickets (3 items)",
+      "when": "the user presses ArrowDown from the last project item",
+      "then": "focus moves to the first ticket item AND pressing Tab from the Tickets group jumps focus to the first item of the Projects group",
+      "sourceRef": "MDT-179 AC: Non-Functional #3"
+    },
+    {
+      "id": "enter_activates_result",
+      "title": "Enter activates the selected result and closes modal",
+      "covers": [
+        "BR-5.3"
+      ],
+      "given": "the quick search modal shows grouped results AND a project result is selected via keyboard",
+      "when": "the user presses Enter",
+      "then": "the modal closes AND the application navigates to the selected project",
+      "sourceRef": "MDT-179 AC: Non-Functional #3"
+    },
+    {
+      "id": "ambiguous_query_separate_groups",
+      "title": "Query matching project name and ticket title shows separate groups",
+      "covers": [
+        "BR-6.1"
+      ],
+      "given": "a project named 'Test' exists AND a ticket titled 'Test feature' exists",
+      "when": "the user types 'test' in the search input",
+      "then": "the project appears in the Projects group AND the ticket appears in the Tickets group as separate, labeled results",
+      "sourceRef": "MDT-179 AC: Edge Cases #1"
+    },
+    {
+      "id": "empty_state_shows_active_scope",
+      "title": "No-results state identifies the active scope",
+      "covers": [
+        "BR-6.3"
+      ],
+      "given": "the quick search modal is open in Projects scope",
+      "when": "the user types a query that matches no projects",
+      "then": "a no-results message shows the active scope as 'Projects' AND does not imply tickets or documents were searched",
+      "sourceRef": "MDT-179 AC: Functional #12"
+    },
+    {
+      "id": "scoped_search_filters_entity_type",
+      "title": "Scoped search filters to one entity type and preserves query on scope switch",
+      "covers": [
+        "BR-4.1",
+        "BR-4.2",
+        "BR-4.3",
+        "BR-4.4"
+      ],
+      "given": "the quick search modal is open",
+      "when": "the user types a query matching projects and tickets, then switches scope from Global to Projects",
+      "then": "the query text is preserved AND only project results are displayed",
+      "sourceRef": "MDT-179 AC: Functional #1,#2, Edge Cases #5"
+    },
+    {
+      "id": "project_scope_ticket_search",
+      "title": "Project-scoped ticket query returns tickets and invalid code does not block project name lookup",
+      "covers": [
+        "BR-3.4",
+        "BR-6.4"
+      ],
+      "given": "the quick search modal is open in Projects scope",
+      "when": "the user types an invalid project-code pattern followed by a name",
+      "then": "the system performs project name lookup without blocking on the invalid code syntax",
+      "sourceRef": "MDT-179 AC: Functional #10, Edge Cases #3"
+    },
+    {
+      "id": "select_ticket_or_document",
+      "title": "Selecting a ticket result navigates to that ticket",
+      "covers": [
+        "BR-2.4"
+      ],
+      "given": "the quick search modal shows grouped results including tickets",
+      "when": "the user clicks a ticket result",
+      "then": "the search modal closes AND the application navigates to the ticket",
+      "sourceRef": "MDT-179 AC: Functional #7"
+    },
+    {
+      "id": "select_document_navigates",
+      "title": "Selecting a document result navigates to that document",
+      "covers": [
+        "BR-2.5"
+      ],
+      "given": "the quick search modal shows grouped results including documents",
+      "when": "the user clicks a document result",
+      "then": "the search modal closes AND the application navigates to the document",
+      "sourceRef": "MDT-179 AC: Functional #7"
+    },
+    {
+      "id": "project_scope_returns_tickets",
+      "title": "Project-scoped ticket query (@CODE text) returns ticket results not project results",
+      "covers": [
+        "BR-3.4"
+      ],
+      "given": "the quick search modal is open",
+      "when": "the user types '@MDT search term' to search tickets in the MDT project",
+      "then": "results display tickets from the MDT project in a Tickets section, not the MDT project itself",
+      "sourceRef": "MDT-179 AC: Functional #10"
+    },
+    {
+      "id": "select_project_navigates",
+      "title": "Selecting a project result navigates to that project",
+      "covers": [
+        "BR-2.3"
+      ],
+      "given": "the quick search modal shows grouped results including a project named 'Task Manager'",
+      "when": "the user clicks the project result for 'Task Manager'",
+      "then": "the search modal closes AND the application navigates to the 'Task Manager' project",
+      "sourceRef": "MDT-179 AC: Functional #7"
+    },
+    {
+      "id": "partial_project_name_matching",
+      "title": "Partial project name query matches by word prefix",
+      "covers": [
+        "BR-3.1",
+        "BR-3.2"
+      ],
+      "given": "a project named 'Task Manager' with code 'TMGR' exists",
+      "when": "the user types 'task ma' in the search input",
+      "then": "the 'Task Manager' project appears in the Projects result group",
+      "sourceRef": "MDT-179 AC: Functional #8"
+    },
+    {
+      "id": "scope_switch_via_keyboard",
+      "title": "User switches scope via Tab key",
+      "covers": [
+        "BR-1.4"
+      ],
+      "given": "the quick search modal is open with any scope active",
+      "when": "the user presses the Tab key",
+      "then": "the scope cycles to the next tab (All→Tickets→Projects→Documents→All)",
+      "sourceRef": "impl:QuickSearchModal.tsx:Tab-handler"
+    },
+    {
+      "id": "shortcut_cycles_scopes",
+      "title": "Repeated Tab presses cycle scopes with visible indicator; Shift+Tab reverses",
+      "covers": [
+        "BR-1.4"
+      ],
+      "given": "the quick search modal is open on Global scope",
+      "when": "the user presses Tab multiple times",
+      "then": "the scope cycles through All→Tickets→Projects→Documents→All and the active tab indicator updates each time; Shift+Tab cycles backwards",
+      "sourceRef": "impl:QuickSearchModal.tsx:Tab-handler"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-unified-search-schema",
+      "title": "Create UnifiedSearchRequest and UnifiedSearchResponse schemas supporting discriminated result types (project, ticket, document) alongside existing SearchResponse for backward compatibility",
+      "derivedFrom": [
+        "BR-2.1",
+        "BR-2.2",
+        "C5",
+        "C6"
+      ],
+      "artifactIds": [
+        "ART-search-types",
+        "ART-search-schema",
+        "ART-search-index",
+        "ART-search-types-test"
+      ],
+      "sourceRef": "Architecture: Search Schema"
+    },
+    {
+      "id": "OBL-grouped-results",
+      "title": "Restructure QuickSearchResults to render N labeled result groups with per-entity-type row components (ProjectResultRow, DocumentResultRow, existing ticket row)",
+      "derivedFrom": [
+        "BR-2.1",
+        "BR-2.2",
+        "BR-2.3",
+        "BR-2.4",
+        "BR-2.5",
+        "BR-6.1"
+      ],
+      "artifactIds": [
+        "ART-quick-search-results",
+        "ART-result-row-project",
+        "ART-result-row-document"
+      ],
+      "sourceRef": "Architecture: Grouped Results"
+    },
+    {
+      "id": "OBL-scope-controls-ui",
+      "title": "Add SearchScopeBar component with tab/button group for scope selection and integrate into QuickSearchInput",
+      "derivedFrom": [
+        "BR-1.2",
+        "BR-1.3",
+        "C1",
+        "C2"
+      ],
+      "artifactIds": [
+        "ART-scope-bar",
+        "ART-quick-search-input"
+      ],
+      "sourceRef": "Architecture: Scope Controls UI"
+    },
+    {
+      "id": "OBL-project-matching",
+      "title": "Add client-side project matching hook (useProjectSearch) with word-prefix scoring using existing projects prop",
+      "derivedFrom": [
+        "BR-3.1",
+        "BR-3.2"
+      ],
+      "artifactIds": [
+        "ART-project-match",
+        "ART-use-project-search-test"
+      ],
+      "sourceRef": "Architecture: Project Matching"
+    },
+    {
+      "id": "OBL-unified-search-endpoint",
+      "title": "Create new /api/search endpoint with SearchController for unified search across entity types, preserving existing /api/projects/search endpoint",
+      "derivedFrom": [
+        "C5",
+        "BR-4.1",
+        "BR-4.2",
+        "BR-4.3"
+      ],
+      "artifactIds": [
+        "ART-unified-search-endpoint",
+        "ART-search-controller"
+      ],
+      "sourceRef": "Architecture: Backend Endpoint"
+    },
+    {
+      "id": "OBL-access-control",
+      "title": "Unified search must filter results by current session access policy, excluding hidden/unavailable projects, tickets, and documents",
+      "derivedFrom": [
+        "BR-6.2",
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-search-controller",
+        "ART-unified-search-endpoint"
+      ],
+      "sourceRef": "Architecture: Access Control"
+    },
+    {
+      "id": "OBL-empty-states",
+      "title": "No-results states must identify the active scope and not imply other scopes were searched",
+      "derivedFrom": [
+        "BR-6.3",
+        "BR-6.4"
+      ],
+      "artifactIds": [
+        "ART-quick-search-results"
+      ],
+      "sourceRef": "Architecture: Empty States"
+    },
+    {
+      "id": "OBL-query-classification",
+      "title": "Extend QueryMode from 3 ticket modes to 6+ modes (global, projects, documents, tickets, ticket_key, project_scope) with scope-aware classification; extend useCrossProjectSearch to use unified search endpoint when available",
+      "derivedFrom": [
+        "BR-3.1",
+        "BR-3.2",
+        "BR-3.3",
+        "BR-3.4",
+        "BR-4.1",
+        "BR-4.2",
+        "BR-4.3",
+        "BR-4.4"
+      ],
+      "artifactIds": [
+        "ART-query-mode-hook",
+        "ART-search-types",
+        "ART-cross-search-hook"
+      ],
+      "sourceRef": "Architecture: Query Classification"
+    },
+    {
+      "id": "OBL-scope-model",
+      "title": "Introduce SearchScope enum (Global, Tickets, Projects, Documents) and scope state management via useSearchScope hook",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4"
+      ],
+      "artifactIds": [
+        "ART-search-types",
+        "ART-search-schema",
+        "ART-search-mode-hook",
+        "ART-scope-bar",
+        "ART-use-search-scope-test"
+      ],
+      "sourceRef": "Architecture: Scope Model"
+    },
+    {
+      "id": "OBL-keyboard-navigation",
+      "title": "Arrow keys navigate all results across grouped sections; Tab cycles scope tabs (All→Tickets→Projects→Documents); Shift+Tab reverses; Enter activates selected result",
+      "derivedFrom": [
+        "BR-5.1",
+        "BR-5.2",
+        "BR-5.3",
+        "BR-1.4",
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-quick-search-modal",
+        "ART-quick-search-results"
+      ],
+      "sourceRef": "impl:QuickSearchModal.tsx:handleKeyDown"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-search-types",
+      "path": "domain-contracts/src/search/types.ts",
+      "kind": "runtime",
+      "sourceRef": "Architecture: New unified search types module"
+    },
+    {
+      "id": "ART-search-schema",
+      "path": "domain-contracts/src/search/schema.ts",
+      "kind": "runtime",
+      "sourceRef": "Architecture: Unified search request/response schemas"
+    },
+    {
+      "id": "ART-search-index",
+      "path": "domain-contracts/src/search/index.ts",
+      "kind": "runtime",
+      "sourceRef": "Architecture: Search module barrel export"
+    },
+    {
+      "id": "ART-query-mode-hook",
+      "path": "src/hooks/useQuickSearch.ts",
+      "kind": "runtime",
+      "sourceRef": "Architecture: Extended query mode parsing"
+    },
+    {
+      "id": "ART-search-mode-hook",
+      "path": "src/hooks/useSearchScope.ts",
+      "kind": "runtime",
+      "sourceRef": "Architecture: New scope state management hook"
+    },
+    {
+      "id": "ART-project-match",
+      "path": "src/hooks/useProjectSearch.ts",
+      "kind": "runtime",
+      "sourceRef": "Architecture: Client-side project matching hook"
+    },
+    {
+      "id": "ART-quick-search-modal",
+      "path": "src/components/QuickSearch/QuickSearchModal.tsx",
+      "kind": "runtime",
+      "sourceRef": "Architecture: Restructured modal with scope integration"
+    },
+    {
+      "id": "ART-quick-search-input",
+      "path": "src/components/QuickSearch/QuickSearchInput.tsx",
+      "kind": "runtime",
+      "sourceRef": "Architecture: Input with scope controls"
+    },
+    {
+      "id": "ART-quick-search-results",
+      "path": "src/components/QuickSearch/QuickSearchResults.tsx",
+      "kind": "runtime",
+      "sourceRef": "Architecture: Grouped results with entity type sections"
+    },
+    {
+      "id": "ART-scope-bar",
+      "path": "src/components/QuickSearch/SearchScopeBar.tsx",
+      "kind": "runtime",
+      "sourceRef": "Architecture: Scope selector tab bar component"
+    },
+    {
+      "id": "ART-result-row-project",
+      "path": "src/components/QuickSearch/ProjectResultRow.tsx",
+      "kind": "runtime",
+      "sourceRef": "Architecture: Project result row component"
+    },
+    {
+      "id": "ART-result-row-document",
+      "path": "src/components/QuickSearch/DocumentResultRow.tsx",
+      "kind": "runtime",
+      "sourceRef": "Architecture: Document result row component"
+    },
+    {
+      "id": "ART-unified-search-endpoint",
+      "path": "server/routes/search.ts",
+      "kind": "runtime",
+      "sourceRef": "Architecture: New unified search API route"
+    },
+    {
+      "id": "ART-search-controller",
+      "path": "server/controllers/SearchController.ts",
+      "kind": "runtime",
+      "sourceRef": "Architecture: New unified search controller"
+    },
+    {
+      "id": "ART-cross-search-hook",
+      "path": "src/hooks/useCrossProjectSearch.ts",
+      "kind": "runtime",
+      "sourceRef": "Architecture: Extended cross-project search hook"
+    },
+    {
+      "id": "ART-search-types-test",
+      "path": "domain-contracts/src/search/__tests__/search.test.ts",
+      "kind": "test",
+      "sourceRef": "Architecture: Schema validation tests"
+    },
+    {
+      "id": "ART-use-search-scope-test",
+      "path": "src/hooks/__tests__/useSearchScope.test.ts",
+      "kind": "test",
+      "sourceRef": "Architecture: Scope state hook tests"
+    },
+    {
+      "id": "ART-use-project-search-test",
+      "path": "src/hooks/__tests__/useProjectSearch.test.ts",
+      "kind": "test",
+      "sourceRef": "Architecture: Project matching hook tests"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-search-scope-hook",
+      "kind": "unit",
+      "title": "useSearchScope hook tests",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-4.4"
+      ],
+      "file": "src/hooks/__tests__/useSearchScope.test.ts",
+      "sourceRef": "OBL-scope-model"
+    },
+    {
+      "id": "TEST-project-search-hook",
+      "kind": "unit",
+      "title": "useProjectSearch hook tests - client-side project matching",
+      "covers": [
+        "BR-3.1",
+        "BR-3.2",
+        "BR-6.4"
+      ],
+      "file": "src/hooks/__tests__/useProjectSearch.test.ts",
+      "sourceRef": "OBL-project-matching"
+    },
+    {
+      "id": "TEST-query-mode-extended",
+      "kind": "unit",
+      "title": "Extended query mode parsing with scope-aware classification",
+      "covers": [
+        "BR-3.3",
+        "BR-3.4",
+        "BR-4.1",
+        "BR-4.2",
+        "BR-4.3"
+      ],
+      "file": "src/hooks/useQuickSearch.test.ts",
+      "sourceRef": "OBL-query-classification"
+    },
+    {
+      "id": "TEST-search-schema",
+      "kind": "unit",
+      "title": "Unified search request/response schema validation",
+      "covers": [
+        "BR-2.1",
+        "BR-2.2",
+        "C5",
+        "C6"
+      ],
+      "file": "domain-contracts/src/search/__tests__/search.test.ts",
+      "sourceRef": "OBL-unified-search-schema"
+    },
+    {
+      "id": "TEST-quick-search-results-grouped",
+      "kind": "unit",
+      "title": "QuickSearchResults grouped rendering tests",
+      "covers": [
+        "BR-2.1",
+        "BR-2.2",
+        "BR-6.1",
+        "BR-6.3"
+      ],
+      "file": "src/components/QuickSearch/__tests__/QuickSearchResults.test.tsx",
+      "sourceRef": "OBL-grouped-results"
+    },
+    {
+      "id": "TEST-keyboard-navigation",
+      "kind": "unit",
+      "title": "Keyboard navigation across N grouped sections",
+      "covers": [
+        "BR-5.1",
+        "BR-5.2",
+        "BR-5.3",
+        "C3"
+      ],
+      "file": "src/components/QuickSearch/__tests__/QuickSearchModal.keyboard.test.tsx",
+      "sourceRef": "OBL-keyboard-navigation"
+    },
+    {
+      "id": "TEST-unified-search-endpoint",
+      "kind": "integration",
+      "title": "Unified search API endpoint integration tests",
+      "covers": [
+        "BR-4.1",
+        "BR-4.2",
+        "BR-4.3",
+        "BR-6.2",
+        "C4",
+        "C5"
+      ],
+      "file": "server/tests/api/search.test.ts",
+      "sourceRef": "OBL-unified-search-endpoint,OBL-access-control"
+    },
+    {
+      "id": "TEST-e2e-scoped-search",
+      "kind": "e2e",
+      "title": "E2E: Scoped global search scenarios",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-2.1",
+        "BR-2.2",
+        "BR-2.3",
+        "BR-2.4",
+        "BR-3.1",
+        "BR-3.2",
+        "BR-3.3",
+        "BR-5.1",
+        "BR-5.2",
+        "BR-5.3",
+        "BR-6.1",
+        "BR-6.3"
+      ],
+      "file": "tests/e2e/scoped-search.spec.ts",
+      "sourceRef": "BDD scenarios"
+    },
+    {
+      "id": "TEST-scope-bar",
+      "kind": "unit",
+      "title": "SearchScopeBar component tests",
+      "covers": [
+        "BR-1.2",
+        "BR-1.3",
+        "C1",
+        "C2"
+      ],
+      "file": "src/components/QuickSearch/__tests__/SearchScopeBar.test.tsx",
+      "sourceRef": "OBL-scope-controls-ui"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-4",
+      "title": "Grouped results rendering with entity type row components",
+      "ownsArtifactIds": [
+        "ART-quick-search-results",
+        "ART-result-row-project",
+        "ART-result-row-document"
+      ],
+      "makesGreenIds": [
+        "TEST-quick-search-results-grouped",
+        "global_search_grouped_results",
+        "ambiguous_query_separate_groups",
+        "empty_state_shows_active_scope"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-4"
+    },
+    {
+      "id": "TASK-6",
+      "title": "Unified search backend endpoint with access control",
+      "ownsArtifactIds": [
+        "ART-search-controller",
+        "ART-unified-search-endpoint",
+        "ART-cross-search-hook"
+      ],
+      "makesGreenIds": [
+        "TEST-unified-search-endpoint"
+      ],
+      "sourceRef": "tasks.md#task-6"
+    },
+    {
+      "id": "TASK-1",
+      "title": "Walking skeleton: search types, scope enum, schemas, and tests",
+      "ownsArtifactIds": [
+        "ART-search-types",
+        "ART-search-schema",
+        "ART-search-index",
+        "ART-search-types-test"
+      ],
+      "makesGreenIds": [
+        "TEST-search-schema"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-1"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Scope state hook, scope bar component, and scope bar tests",
+      "ownsArtifactIds": [
+        "ART-search-mode-hook",
+        "ART-scope-bar",
+        "ART-use-search-scope-test"
+      ],
+      "makesGreenIds": [
+        "TEST-search-scope-hook",
+        "TEST-scope-bar",
+        "scope_controls_visible",
+        "scope_switch_via_click",
+        "scope_switch_via_keyboard"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-2"
+    },
+    {
+      "id": "TASK-5",
+      "title": "Keyboard navigation across N grouped sections and modal integration",
+      "ownsArtifactIds": [
+        "ART-quick-search-modal",
+        "ART-quick-search-input"
+      ],
+      "makesGreenIds": [
+        "TEST-keyboard-navigation",
+        "TEST-e2e-scoped-search",
+        "keyboard_navigation_grouped",
+        "enter_activates_result",
+        "select_project_navigates",
+        "select_ticket_or_document",
+        "select_document_navigates",
+        "project_scope_returns_tickets",
+        "shortcut_cycles_scopes"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-5"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Client-side project matching and extended query mode",
+      "ownsArtifactIds": [
+        "ART-project-match",
+        "ART-query-mode-hook",
+        "ART-use-project-search-test"
+      ],
+      "makesGreenIds": [
+        "TEST-project-search-hook",
+        "TEST-query-mode-extended",
+        "partial_project_name_matching",
+        "ticket_key_priority",
+        "project_scope_ticket_search",
+        "scoped_search_filters_entity_type",
+        "project_scope_returns_tickets"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-3"
+    }
+  ]
+}

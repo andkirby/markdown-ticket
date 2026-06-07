@@ -20,3 +20,6 @@ export * from './ticket'
 
 // Export core types and enums
 export * from './types'
+
+// Export unified search contracts (MDT-179)
+export * from './search'
