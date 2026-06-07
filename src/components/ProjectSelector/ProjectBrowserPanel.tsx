@@ -132,6 +132,7 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
   onFavoriteToggle,
   isOpen,
   onClose,
+  preferences,
 }) => {
   // Search state
   const [searchQuery, setSearchQuery] = React.useState('')
@@ -321,6 +322,8 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
                       onFavoriteToggle={onFavoriteToggle}
                       testIdPrefix="project-browser-card"
                       onCardKeyDown={handleProjectGridKeyDown}
+                      accentEnabled={preferences.accentEnabled}
+                      accentGradients={preferences.accentGradients}
                     />
                   ))}
                 </div>

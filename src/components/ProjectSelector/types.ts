@@ -54,6 +54,10 @@ export interface SelectorData {
   setAccent: (projectKey: string, accent: string) => void
   /** Clear stored accent for a project (reverts to fallback) */
   clearAccent: (projectKey: string) => void
+  /** Toggle accent coloring on/off */
+  setAccentEnabled: (enabled: boolean) => void
+  /** Toggle gradient accent mode on/off */
+  setAccentGradients: (gradients: boolean) => void
   /** Error message if data loading failed */
   error?: string
   /** Whether data has finished loading */

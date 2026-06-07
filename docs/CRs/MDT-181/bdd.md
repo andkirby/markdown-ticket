@@ -63,5 +63,44 @@ All 21 BDD-routed behavior requirements have scenario coverage. Constraints (C1â
 - Scenarios can be executed against `bun run dev:full` dev environment
 - Cross-user independence scenario requires two browser contexts or sessions (single-user deployment makes this a verification of isolation boundary rather than runtime multi-user)
 
+## UAT Refinement â€” Accent Rendering Modes
+
+### BR-10.1: Accent coloring master toggle off
+```gherkin
+Scenario: accent_coloring_disabled
+  Given user has enabled accent colors
+  When user toggles "Accent Colors" off in Settings > Appearance
+  Then selector chips and browser cards render without accent marks
+  And project codes and names remain fully visible
+```
+
+### BR-10.2: Accent coloring re-enabled
+```gherkin
+Scenario: accent_coloring_re_enabled
+  Given user has disabled accent colors
+  When user toggles "Accent Colors" back on
+  Then accent marks reappear immediately on chips and cards
+  And no page reload is required
+```
+
+### BR-11.1: Gradient accent mode on (default)
+```gherkin
+Scenario: gradient_accent_mode
+  Given user has gradient accents enabled
+  When a project has a configured accent
+  Then the chip shows a 25px gradient fade from transparent to accent color
+  And the browser card shows a 40% width gradient fade at 0.5 opacity
+  And the active card shows a subtle background gradient
+```
+
+### BR-11.2: Flat accent mode
+```gherkin
+Scenario: flat_accent_mode
+  Given user has gradient accents disabled
+  When a project has a configured accent
+  Then the chip shows a 4px flat stripe at 0.3 opacity
+  And the browser card shows a 6px flat stripe at 0.3 opacity
+```
+
 ---
 *BDD trace projection: [bdd.trace.md](./bdd.trace.md)*

@@ -29,6 +29,10 @@ interface ProjectSelectorChipProps {
   compact?: boolean
   /** Callback when project is selected */
   onSelect: (projectKey: string) => void
+  /** Whether accent coloring is enabled */
+  accentEnabled?: boolean
+  /** Whether gradient accent mode is active */
+  accentGradients?: boolean
 }
 
 /**
@@ -45,6 +49,8 @@ const ProjectSelectorChip: React.FC<ProjectSelectorChipProps> = ({
   project,
   compact: _compact,
   onSelect,
+  accentEnabled = true,
+  accentGradients = true,
 }) => {
   const handleClick = () => {
     onSelect(project.project.code || project.id)

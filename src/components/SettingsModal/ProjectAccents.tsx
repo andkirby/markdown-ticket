@@ -120,10 +120,6 @@ export function ProjectAccents({
 
       {/* Swatch + hex input + reset + save + choose-color + expand */}
       <div className="project-accents__row">
-        <span
-          className="project-accents__swatch"
-          style={{ backgroundColor: resolvedAccent }}
-        />
         <div className="project-accents__field">
           <input
             data-testid="accent-custom-hex-input"
