@@ -137,10 +137,16 @@ Modal[size="md"]
 | Default View | localStorage `mdt-settings-default-view` | Select (Board / List) | `board` |
 | Markdown Density | localStorage `mdt-settings-markdown-density` | Select (Compact / Default / Comfortable) | `default` |
 | Project Accents | `project-selector.json` via `/api/config/selector` | Per-project picker rows | deterministic fallback |
+| Accent Colors | localStorage `mdt-selector-preferences` | Switch toggle | `true` (on) |
+| Gradient Accents | localStorage `mdt-selector-preferences` | Switch toggle | `true` (on) |
 
 ### Project Accents (Appearance tab)
 
-A section below Markdown Density with a project dropdown and a collapsible color palette.
+A section below Markdown Density with two rendering-mode toggles, a project dropdown, and a compact inline accent editor.
+
+**Toggles**:
+- **Accent Colors** (Switch, default on): master toggle. Off disables all accent marks on chips and cards.
+- **Gradient Accents** (Switch, default on): only visible when Accent Colors is on. On = gradient fades. Off = flat 4px/6px stripes at 0.3 opacity.
 
 **Header row**: "Project Accents" label + (i) info button.
 
@@ -148,23 +154,19 @@ A section below Markdown Density with a project dropdown and a collapsible color
 - "Personal preference, not shared with other users."
 - "Accent renders as a left-edge stripe on selector chips and an identity bar on browser cards."
 
-**Project dropdown**: a combo/select listing all registered projects (e.g. MDT, API, OPS). On change, the palette loads that project's current accent color. Defaults to the first project.
+**Project dropdown**: a select listing all registered projects. On change, the editor loads that project's current accent. Defaults to the current project.
 
-**Collapsible palette**: when expanded, shows below the dropdown:
-- Current hex value (muted) + ↺ Reset button (rotate-left icon)
-- AccentColorPicker (4×4 preset grid + custom hex input)
-- "Choose color ↗" link (opens external color picker)
-- Palette collapses when the user clicks outside or navigates away
+**Inline editor row**: hex input (max 7 chars, placeholder = fallback hex) + native color picker slider + ↺ Reset + ✓ Save + "choose ↗" link + ▼ expand palette.
 
-**Project change behavior**: switching the dropdown loads the new project's current accent into the palette. Any unstaged edits to the previous project's accent are preserved in local staging state.
+**Collapsible palette**: when expanded, shows the 4×4 preset grid below the row.
 
-**Reset button**: ↺ (rotate-left icon). Visible only when a user accent is stored. Removes the stored `accent` key from the selector state entry so the project reverts to its deterministic fallback (`getFallbackAccent(projectCode)`).
+**Auto-expansion**: shorthand hex like `0bc` expands to `#00bbcc` on blur. Missing `#` auto-prepended.
 
-**Persistence semantics**: accent changes are **staged locally** and persisted only when the user explicitly clicks Save. Canceling Settings discards all unsaved accent changes across all projects. This fixes the immediate-pick persistence bug that existed when the picker lived in the Edit Project form.
+**Reset button**: ↺ (rotate-left icon). Visible only when a user accent is stored.
 
-**Storage**: `project-selector.json` via `/api/config/selector`. Never in `.mdt-config.toml`, shared project metadata, or localStorage.
+**Persistence semantics**: accent changes are **staged locally** and persisted only on explicit Save. Cancel discards. Rendering mode toggles (Accent Colors, Gradient Accents) persist immediately to localStorage.
 
-**Reuse**: the existing `AccentColorPicker` component is reused as-is. Only its host container changes (from AddProjectModal → SettingsModal).
+**Storage**: accent values in `project-selector.json` via `/api/config/selector`. Rendering flags in localStorage `mdt-selector-preferences`.
 
 ### Board
 

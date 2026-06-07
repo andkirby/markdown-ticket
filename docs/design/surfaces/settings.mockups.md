@@ -31,14 +31,31 @@ window "Settings":
       row:
         text "Project Accents" bold
         button "i" id="accents-info"
+      row:
+        text "Accent Colors" id="accent-colors-label"
+        toggle "on" id="accent-enabled"
+      row:
+        text "Gradient Accents" id="gradient-label"
+        toggle "on" id="gradient-enabled"
       combo value="MDT" options="MDT,API,OPS" id="project-select"
+      row:
+        input placeholder="#00bbcc" id="hex-input"
+        button "🎨" id="color-slider"
+        button "↺" id="reset-btn"
+        button "✓" id="save-btn"
+        text "choose ↗" muted id="choose-link"
+        button "▼" id="palette-toggle"
     divider
     row justify=end:
       button "Cancel"
       button "Save" primary id="save-accents"
 
-annotation "Personal preference, not shared with other users. Accent renders as a left-edge stripe on selector chips and an identity bar on browser cards." target="accents-info" position=right
-annotation "Dropdown lists all registered projects. On change, the palette loads that project's current accent." target="project-select" position=right
+annotation "Personal preference, not shared with other users." target="accents-info" position=right
+annotation "Master toggle: off hides all accent marks on chips and cards." target="accent-enabled" position=right
+annotation "On = gradient fade. Off = flat 4px stripe." target="gradient-enabled" position=right
+annotation "Dropdown lists all registered projects." target="project-select" position=right
+annotation "Max 7 chars. Shorthand like 0bc auto-expands to #00bbcc on blur." target="hex-input" position=right
+annotation "Reset removes stored accent, reverts to fallback." target="reset-btn" position=right
 ```
 
 ## Appearance Tab — Project Accent palette open

@@ -35,6 +35,8 @@ export const GLOBAL_CONFIG_DEFAULTS = {
 export const PROJECT_SELECTOR_PREFERENCES_DEFAULTS = {
   visibleCount: 7,
   compactInactive: true,
+  accentEnabled: true,
+  accentGradients: true,
 } as const
 
 export const SELECTOR_STATE_ENTRY_DEFAULTS = {
@@ -100,6 +102,8 @@ export const GlobalConfigSchema = z.object({
 export const SelectorPreferencesSchema = z.object({
   visibleCount: z.number().int().min(1).catch(PROJECT_SELECTOR_PREFERENCES_DEFAULTS.visibleCount).default(PROJECT_SELECTOR_PREFERENCES_DEFAULTS.visibleCount),
   compactInactive: z.boolean().catch(PROJECT_SELECTOR_PREFERENCES_DEFAULTS.compactInactive).default(PROJECT_SELECTOR_PREFERENCES_DEFAULTS.compactInactive),
+  accentEnabled: z.boolean().catch(PROJECT_SELECTOR_PREFERENCES_DEFAULTS.accentEnabled).default(PROJECT_SELECTOR_PREFERENCES_DEFAULTS.accentEnabled),
+  accentGradients: z.boolean().catch(PROJECT_SELECTOR_PREFERENCES_DEFAULTS.accentGradients).default(PROJECT_SELECTOR_PREFERENCES_DEFAULTS.accentGradients),
 }).catch({ ...PROJECT_SELECTOR_PREFERENCES_DEFAULTS }).default({ ...PROJECT_SELECTOR_PREFERENCES_DEFAULTS })
 
 export const UserUIConfigSchema = z.object({

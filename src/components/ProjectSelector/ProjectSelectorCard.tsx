@@ -38,6 +38,10 @@ interface ProjectSelectorCardProps {
   /** Override test ID prefix (default: "project-selector-card") */
   testIdPrefix?: string
   /** Optional keydown handler from parent composite views */
+  /** Whether accent coloring is enabled */
+  accentEnabled?: boolean
+  /** Whether gradient accent mode is active */
+  accentGradients?: boolean
   onCardKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void
 }
 
@@ -63,6 +67,8 @@ const ProjectSelectorCard: React.FC<ProjectSelectorCardProps> = ({
   useRailWidthConstraints = false,
   testIdPrefix,
   onCardKeyDown,
+  accentEnabled = true,
+  accentGradients = true,
 }) => {
   // Active cards always show description
   const shouldShowDescription = showDescription || isActive
@@ -117,6 +123,8 @@ const ProjectSelectorCard: React.FC<ProjectSelectorCardProps> = ({
       data-testid={`${testIdPrefix ?? 'project-selector-card'}-${project.project.code || project.id}`}
       data-project-key={project.project.code || project.id}
       data-active={isActive ? 'true' : undefined}
+      data-accent-enabled={accentEnabled}
+      data-accent-gradients={accentGradients}
       data-project-browser-card={isProjectBrowserCard ? 'true' : undefined}
     >
       {/* Favorite indicator - overlay star */}

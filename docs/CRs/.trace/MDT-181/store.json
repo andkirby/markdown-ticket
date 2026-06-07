@@ -389,6 +389,41 @@
       "text": "WHEN user clicks 'Reset to default' for a project accent in Settings, the system shall remove the stored accent so the project reverts to its deterministic fallback",
       "sourceRef": "CR:MDT-181",
       "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-10.1",
+      "kind": "behavior",
+      "text": "WHEN user toggles the 'Accent Colors' setting off in Settings > Appearance, the system shall disable all accent coloring on selector chips and browser cards, rendering them without any accent stripe or fill",
+      "sourceRef": "CR:MDT-181",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-10.2",
+      "kind": "behavior",
+      "text": "WHEN user toggles the 'Accent Colors' setting back on, the system shall restore accent rendering immediately without reload",
+      "sourceRef": "CR:MDT-181",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-11.1",
+      "kind": "behavior",
+      "text": "WHEN user toggles the 'Gradient Accents' setting on (default), the system shall render accent marks as gradient fades on chips and browser cards instead of flat stripes",
+      "sourceRef": "CR:MDT-181",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-11.2",
+      "kind": "behavior",
+      "text": "WHEN user toggles the 'Gradient Accents' setting off, the system shall render accent marks as flat opacity stripes (chip: 4px left-edge, card: 6px left-edge) at 0.3 opacity",
+      "sourceRef": "CR:MDT-181",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C10",
+      "kind": "constraint",
+      "text": "Accent enable/disable and gradient mode flags shall be persisted in localStorage as part of selector preferences, surviving reload but not tied to project-selector.json backend state",
+      "sourceRef": "CR:MDT-181",
+      "routePolicy": "tests"
     }
   ],
   "scenarios": [

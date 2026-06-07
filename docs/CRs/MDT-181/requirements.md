@@ -36,10 +36,12 @@ MDT-181 adds per-user, per-project accent colors to the project selector and bro
 | Image slot in cards | Card identity area designed as a slot accepting either accent color or image source (extensibility only, not implemented in this CR) | No extensibility for future image; separate card layout for images | CR acceptance criteria includes image fill as a supported treatment. Slot-based design avoids card layout rework when image support arrives. |
 | Read-only visitor accent | Read-only visitors receive deterministic fallback accent only — no personal preference storage. Avoids introducing localStorage as a new storage mechanism consistent with single-user deployment model | Read-only visitors use localStorage for personal accent preferences | Current deployment model is single-user (owner-admin). Adding client-side storage for non-owner users introduces a new persistence mechanism. Fallback-only keeps the change bounded. |
 | Selector chip treatment | Non-active project selector chips use a flat accent stripe on the left edge of the chip | Gradient stripe; accent dot; border tint; filled chip background | The chosen treatment stays compact, keeps chip dimensions stable, and provides stronger identity without adding extra visual noise. |
+| Gradient accent mode | Default on. Gradient mode renders accent marks as CSS gradient fades. Flat mode renders 4px/6px stripes at 0.3 opacity. User toggle in Settings. | No user toggle, gradient-only or flat-only | Gives users control over visual density. Defaults to gradient (richer appearance). |
+| Accent coloring toggle | Default on. Master toggle disables all accent coloring on chips and cards. User toggle in Settings. | Accent always visible | Some users prefer minimal visual noise. Toggle respects preference immediately. |
 
 ## Configuration
 
-No new environment variables or configuration settings required. Accent preferences ride on existing `project-selector.json` and `/api/config/selector` infrastructure.
+No new environment variables or configuration settings required. Accent preferences ride on existing `project-selector.json` and `/api/config/selector` infrastructure. Gradient and coloring flags persist in localStorage (`mdt-selector-preferences`).
 
 ---
 *Requirements trace projection: [requirements.trace.md](./requirements.trace.md)*

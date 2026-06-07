@@ -39,6 +39,8 @@ describe('useSelectorData - BR-7.1, BR-7.2: Load preferences from user.toml', ()
     expect(result.current.preferences).toEqual({
       visibleCount: 7,
       compactInactive: true,
+      accentEnabled: true,
+      accentGradients: true,
     })
     expect(result.current.selectorState).toEqual({})
     expect(result.current.error).toBeUndefined()
