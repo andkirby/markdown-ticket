@@ -72,8 +72,18 @@ export function getFallbackAccent(projectCode: string): string {
     return ACCENT_PALETTE[0].hex
   }
 
-  const hash = Array.from(normalizedCode).reduce((sum, char) => sum + char.charCodeAt(0), 0)
+  const hash = fnv1a(normalizedCode)
   return ACCENT_PALETTE[hash % ACCENT_PALETTE.length].hex
+}
+
+/** FNV-1a — fast, excellent distribution for short strings */
+function fnv1a(str: string): number {
+  let h = 0x811c9dc5
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i)
+    h = Math.imul(h, 0x01000193)
+  }
+  return h >>> 0
 }
 
 export function getForegroundForAccent(hex: string): string {
