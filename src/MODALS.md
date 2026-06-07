@@ -33,12 +33,26 @@ The modal extends below the viewport. The outer overlay (`.modal`) scrolls the w
 - No `flex-1` or `overflow-y-auto` on inner content — let it grow naturally
 - No-jump guarantee: top-anchoring means only the bottom edge retracts when content shrinks
 
-**2. Constrained (fixed chrome + scrollable list)** — Project Browser, Quick Search, Settings
+**2. Constrained (fixed chrome + scrollable list)** — Project Browser, Quick Search
 
-The modal caps at 80dvh. Header/tabs stay pinned, inner content scrolls.
-- Use `className="modal__body--constrained"` on ModalBody
-- Inner scrollable area uses `flex-1 overflow-y-auto`
-- No-jump guarantee: the max-height cap prevents height changes entirely
+The modal body is capped at 80dvh. Header stays pinned, inner content scrolls.
+
+```tsx
+<ModalBody className="modal__body--constrained">
+  {/* Fixed header — stays pinned */}
+  <ModalHeader title="..." onClose={close} />
+
+  {/* Scrollable content — see STYLING.md "Scrollable Regions" for recipe */}
+  <ScrollArea type="hover" scrollHideDelay={600}
+    className="flex-1 min-h-0 overflow-hidden">
+    <div className="p-4">...</div>
+  </ScrollArea>
+</ModalBody>
+```
+
+`.modal__body--constrained` sets `display: flex; flex-direction: column; height: 80dvh; overflow: hidden`. The ScrollArea fills the remaining space after the header.
+
+Do NOT use for forms or long-document modals (settings, ticket viewer) — those should grow freely.
 
 ### Opt-in centering for static modals
 

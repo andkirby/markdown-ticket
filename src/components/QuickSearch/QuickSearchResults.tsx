@@ -15,6 +15,7 @@ import type { ScoredProject } from '@/hooks/useProjectSearch'
 import type { Ticket } from '@/types/ticket'
 
 import { cn } from '@/lib/utils'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { DocumentResultRow } from './DocumentResultRow'
 import type { DocumentResultItem } from './DocumentResultRow'
 import { ProjectResultRow } from './ProjectResultRow'
@@ -204,7 +205,7 @@ export function QuickSearchResults({
   }
 
   return (
-    <div className="flex-1 overflow-y-auto" role="listbox" aria-label="Search results" data-testid="quick-search-results">
+    <ScrollArea type="hover" scrollHideDelay={600} className="flex-1 min-h-0" role="listbox" aria-label="Search results" data-testid="quick-search-results">
       {/* Cross-project section (ticket-key or project-scope mode) */}
       {isCrossProjectMode && scopeShowsTickets && (
         <div role="group" aria-label={isProjectScopeMode ? 'Project Results' : 'Cross-Project Results'} data-testid="quick-search-cross-project-section">
@@ -338,6 +339,6 @@ export function QuickSearchResults({
           </div>
         )
       })()}
-    </div>
+    </ScrollArea>
   )
 }
