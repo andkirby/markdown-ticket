@@ -52,7 +52,7 @@ window "Settings":
 
 annotation "Personal preference, not shared with other users." target="accents-info" position=right
 annotation "Master toggle: off hides all accent marks on chips and cards." target="accent-enabled" position=right
-annotation "On = gradient fade. Off = flat 4px stripe." target="gradient-enabled" position=right
+annotation "On = 25px gradient fade on chips, diagonal identity bar + accent-tinted card bg. Off = flat 4px/6px stripes at 0.3 opacity." target="gradient-enabled" position=right
 annotation "Dropdown lists all registered projects." target="project-select" position=right
 annotation "Max 7 chars. Shorthand like 0bc auto-expands to #00bbcc on blur." target="hex-input" position=right
 annotation "Reset removes stored accent, reverts to fallback." target="reset-btn" position=right
@@ -107,7 +107,7 @@ window "Settings — Accent Palette":
 annotation "Changing the dropdown loads the new project's current accent into the palette." target="project-select-expanded" position=right
 annotation "Presets are 16 colors; clicking one selects it immediately in the staged form." target="preset-blue" position=right
 annotation "Custom hex validated on blur. Invalid values show inline error and preserve previous accent." target="custom-hex" position=right
-annotation "Opens https://share.google/ATp6ypatbFk69dC91 in a new tab." target="choose-color" position=right
+annotation "Opens https://www.figma.com/colors/ in a new tab." target="choose-color" position=right
 annotation "↺ removes the stored accent. Project reverts to its deterministic fallback color." target="reset-btn" position=right
 ```
 
