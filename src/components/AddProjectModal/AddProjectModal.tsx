@@ -9,7 +9,9 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { usePathResolution } from '@/hooks/usePathResolution'
 import { eventBus } from '@/services/eventBus'
+import { AccentColorPicker } from './components/AccentColorPicker'
 import { FormField } from './components/FormField'
+import { useSelectorData } from '../ProjectSelector/useSelectorData'
 import { useProjectForm } from './hooks/useProjectForm'
 
 interface AddProjectModalProps {
@@ -46,6 +48,12 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
   const [_discoveryPaths, setDiscoveryPaths] = useState<string[]>([])
   const [isPathInDiscovery, setIsPathInDiscovery] = useState(false)
   const [pathExists, setPathExists] = useState(false)
+  const {
+    selectorState,
+    setAccent,
+    clearAccent,
+    loaded: selectorStateLoaded,
+  } = useSelectorData({ loadOwnerState: editMode })
 
   // Use the extracted form hook
   const {
@@ -379,6 +387,37 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
               error={errors.repositoryUrl}
               type="url"
             />
+
+            {editMode && (
+              <section
+                className="border-t border-gray-200 dark:border-gray-700 pt-5"
+                data-testid="project-accent-section"
+              >
+                <div className="space-y-3">
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Your Project Accent</h3>
+                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                      Personal preference only. Saved to your selector state and kept separate from shared project metadata.
+                    </p>
+                  </div>
+
+                  {selectorStateLoaded && formData.code
+                    ? (
+                        <AccentColorPicker
+                          value={selectorState[formData.code]?.accent}
+                          disabled={!formData.code}
+                          onChange={accent => setAccent(formData.code, accent)}
+                          onReset={() => clearAccent(formData.code)}
+                        />
+                      )
+                    : (
+                        <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-700 px-3 py-3 text-sm text-gray-500 dark:text-gray-400">
+                          Loading accent preferences…
+                        </div>
+                      )}
+                </div>
+              </section>
+            )}
           </div>
         </ScrollArea>
 

@@ -68,6 +68,7 @@ function mergeProjectWithSelectorState(
     favorite: state.favorite,
     lastUsedAt: state.lastUsedAt,
     count: state.count,
+    accent: state.accent,
   }
 }
 
@@ -197,16 +198,39 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
     const gridElement = projectGridRef.current
     const activeElement = document.activeElement
 
-    if (!gridElement || !(activeElement instanceof HTMLElement))
+    if (!gridElement)
       return
 
     const cards = Array.from(
       gridElement.querySelectorAll<HTMLElement>('[data-project-browser-card="true"]'),
     )
-    const currentIndex = cards.indexOf(activeElement)
+    const currentCard = e.currentTarget instanceof HTMLElement && e.currentTarget.dataset.projectBrowserCard === 'true'
+      ? e.currentTarget
+      : activeElement instanceof HTMLElement
+        ? activeElement.closest<HTMLElement>('[data-project-browser-card="true"]')
+        : null
+    const currentIndex = currentCard ? cards.indexOf(currentCard) : -1
 
-    if (currentIndex === -1)
+    if (currentIndex === -1 || !currentCard)
       return
+
+    if (e.key === 'ArrowRight') {
+      const nextCard = currentCard.nextElementSibling
+      if (nextCard instanceof HTMLElement) {
+        e.preventDefault()
+        nextCard.focus()
+        return
+      }
+    }
+
+    if (e.key === 'ArrowLeft') {
+      const previousCard = currentCard.previousElementSibling
+      if (previousCard instanceof HTMLElement) {
+        e.preventDefault()
+        previousCard.focus()
+        return
+      }
+    }
 
     e.preventDefault()
 
@@ -294,6 +318,7 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
                       showDescription={true}
                       onFavoriteToggle={onFavoriteToggle}
                       testIdPrefix="project-browser-card"
+                      onCardKeyDown={handleProjectGridKeyDown}
                     />
                   ))}
                 </div>

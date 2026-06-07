@@ -31,7 +31,7 @@ full
   - Users can alternatively enter a custom hex color in the Project Edit form.
   - Backend validates custom hex values before persistence.
   - The selected accent is stored as a user preference for that project and is not shared with other users.
-  - The selected accent applies to project selector chips, project browser cards, and fallback project identity marks for the current user.
+  - The selected accent applies to project selector chips as a flat left-edge accent stripe, to project browser cards, and to fallback project identity marks for the current user.
   - Browser cards can use a same-size filled identity treatment where the left identity area is filled by accent color or image.
   - Light and dark mode derive theme-appropriate rendering from the same stored accent selection.
 - Out of scope:
@@ -111,7 +111,7 @@ full
 - [ ] Invalid custom hex values show a field-level validation error and do not replace the previous valid accent.
 - [ ] Accent selection is saved as the current user's preference for that project.
 - [ ] Accent selection is not visible to other users unless they choose the same preference independently.
-- [ ] Project selector rail displays the current user's configured project accent in a compact identity mark.
+- [ ] Project selector rail displays the current user's configured project accent as a compact flat stripe on the left edge of the selector chip.
 - [ ] Project browser cards display the current user's configured accents without increasing normal card row height.
 - [ ] Filled identity treatment supports accent-color fill and uploaded-image fill while preserving card dimensions.
 - [ ] Projects without current-user configured accents receive deterministic fallback accents.
@@ -161,3 +161,19 @@ full
   - Test existing project browser search and selection behavior remains intact.
 - Documentation verification:
   - Update design surface docs to describe the 16-color preset palette, custom hex option, Project Edit form dropdown, personal preference boundary, and single-accent theme derivation rule.
+
+> Requirements trace projection: [requirements.trace.md](./MDT-181/requirements.trace.md)
+>
+> Requirements notes: [requirements.md](./MDT-181/requirements.md)
+>
+> BDD trace projection: [bdd.trace.md](./MDT-181/bdd.trace.md)
+>
+> BDD notes: [bdd.md](./MDT-181/bdd.md)
+>
+> Architecture trace projection: [architecture.trace.md](./MDT-181/architecture.trace.md)
+>
+> Architecture notes: [architecture.md](./MDT-181/architecture.md)
+>
+> Tests notes: [tests.md](./MDT-181/tests.md)
+>
+> Tests trace projection: [tests.trace.md](./MDT-181/tests.trace.md)

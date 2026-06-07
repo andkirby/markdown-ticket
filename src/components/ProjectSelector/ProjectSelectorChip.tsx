@@ -13,6 +13,7 @@
 import type { ProjectWithSelectorState } from './types'
 import * as React from 'react'
 import { cn } from '@/lib/utils'
+import { getFallbackAccent } from '@/utils/accentColors'
 // eslint-disable-next-line no-restricted-imports
 import { Icon } from '../shared/Icon'
 import {
@@ -49,7 +50,11 @@ const ProjectSelectorChip: React.FC<ProjectSelectorChipProps> = ({
     onSelect(project.project.code || project.id)
   }
 
-  const chipClasses = cn('project-chip project-lift group')
+  const chipClasses = cn('project-chip project-lift group h-12')
+  const resolvedAccent = project.selectorState.accent ?? getFallbackAccent(project.project.code || project.id)
+  const chipStyle = {
+    '--project-accent': resolvedAccent,
+  } as React.CSSProperties
 
   return (
     <HoverCard>
@@ -57,11 +62,17 @@ const ProjectSelectorChip: React.FC<ProjectSelectorChipProps> = ({
         <div
           className={chipClasses}
           onClick={handleClick}
+          style={chipStyle}
           data-testid={`project-selector-chip-${project.project.code || project.id}`}
           data-project-key={project.project.code || project.id}
         >
-          <span className="project-chip__code">
-            {project.project.code || project.id}
+          <span className="project-chip__surface" aria-hidden="true">
+            <span className="project-chip__accent-mark" />
+          </span>
+          <span className="project-chip__content">
+            <span className="project-chip__code">
+              {project.project.code || project.id}
+            </span>
           </span>
 
           {/* Favorite indicator - rotated star in top-right corner */}
