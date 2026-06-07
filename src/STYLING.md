@@ -427,6 +427,7 @@ Existing global classes in `src/index.css` and shared entity CSS include:
 | `.column__count` | Ticket count badge in header | `components/Column/column.css` |
 | `.column-drop-zone` | Inner scrollable ticket list | `components/Column/column.css` |
 | `.draggable-ticket`, `.draggable-ticket--*` | Drag wrapper states | `components/Column/column.css` |
+| `.header`, `.header__*` | Sticky navigation bar | `components/Header/header.css` |
 
 This section is a snapshot, not the source of truth for naming rules.
 
