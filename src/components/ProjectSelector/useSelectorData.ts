@@ -20,7 +20,7 @@ const DEFAULT_PREFERENCES: SelectorPreferences = {
   compactInactive: true,
 }
 
-const SELECTOR_STATE_SYNC_EVENT = 'mdt:selector-state-updated'
+export const SELECTOR_STATE_SYNC_EVENT = 'mdt:selector-state-updated'
 
 /**
  * Hook for loading and managing selector data

@@ -5,66 +5,6 @@
   },
   "requirements": [
     {
-      "id": "BR-1.1",
-      "kind": "behavior",
-      "text": "WHEN user opens the Project Edit form for a project, the system shall display a color picker dropdown containing 16 preset accent colors",
-      "sourceRef": "MDT-181 §4 Functional: select one accent from 16 presets",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:now"
-      ]
-    },
-    {
-      "id": "BR-1.2",
-      "kind": "behavior",
-      "text": "WHEN user selects a preset accent color in the Project Edit form, the system shall store the selected accent as the current user's preference for that project",
-      "sourceRef": "MDT-181 §4 Functional: accent selection saved as user preference",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:now"
-      ]
-    },
-    {
-      "id": "BR-1.3",
-      "kind": "behavior",
-      "text": "WHEN user enters a custom hex color value in the Project Edit form, the system shall validate the hex value and store it as the current user's preference for that project",
-      "sourceRef": "MDT-181 §4 Functional: custom hex color entry",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:now"
-      ]
-    },
-    {
-      "id": "BR-1.4",
-      "kind": "behavior",
-      "text": "WHEN user enters an invalid custom hex value in the Project Edit form, the system shall display a field-level validation error and shall not replace the previous valid accent",
-      "sourceRef": "MDT-181 §4 Functional: invalid hex shows validation error",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:now"
-      ]
-    },
-    {
-      "id": "BR-1.5",
-      "kind": "behavior",
-      "text": "WHEN user views the Project Edit form, the system shall display a 'choose color' link that opens https://share.google/ATp6ypatbFk69dC91 in a new browser tab",
-      "sourceRef": "MDT-181 §4 Functional: choose color link",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:now"
-      ]
-    },
-    {
-      "id": "BR-2.1",
-      "kind": "behavior",
-      "text": "WHEN user saves a project accent selection, the system shall persist it as a per-user, per-project preference in the owner-owned selector state storage",
-      "sourceRef": "MDT-181 §4 Functional: saved as current user's preference",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:now"
-      ]
-    },
-    {
       "id": "BR-2.2",
       "kind": "behavior",
       "text": "WHEN user saves a project accent selection, the system shall not write the accent to .mdt-config.toml, global project registry, shared project metadata, CLI config, or MCP-visible project output",
@@ -275,16 +215,6 @@
       ]
     },
     {
-      "id": "C7",
-      "kind": "constraint",
-      "text": "The Project Edit form shall clearly separate personal accent preference controls from shared project metadata fields",
-      "sourceRef": "MDT-181 §2 Constraints: not shared project metadata",
-      "routePolicy": "tests",
-      "tags": [
-        "timing:now"
-      ]
-    },
-    {
       "id": "C8",
       "kind": "constraint",
       "text": "Backend hex validation shall accept 6-digit hex values with leading # character only and shall reject 3-digit shorthand, non-hex characters, missing #, and transparent values",
@@ -403,6 +333,62 @@
       "tags": [
         "timing:now"
       ]
+    },
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "WHEN user opens Settings > Appearance > Project Accents, the system shall display a color picker containing 16 preset accent colors for each registered project",
+      "sourceRef": "CR:MDT-181",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "WHEN user selects a preset accent color in Settings, the system shall persist the selected accent as the current user's preference for that project on explicit Save",
+      "sourceRef": "CR:MDT-181",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.3",
+      "kind": "behavior",
+      "text": "WHEN user enters a custom hex color value in Settings, the system shall validate the hex value and store it as the current user's preference for that project on explicit Save",
+      "sourceRef": "CR:MDT-181",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.4",
+      "kind": "behavior",
+      "text": "WHEN user enters an invalid custom hex value in Settings, the system shall display a field-level validation error and shall not replace the previous valid accent",
+      "sourceRef": "CR:MDT-181",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.5",
+      "kind": "behavior",
+      "text": "WHEN user views the accent picker in Settings, the system shall display a 'choose color' link that opens https://share.google/ATp6ypatbFk69dC91 in a new browser tab",
+      "sourceRef": "CR:MDT-181",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.1",
+      "kind": "behavior",
+      "text": "WHEN user saves a project accent selection in Settings, the system shall persist it as a per-user, per-project preference in the owner-owned selector state storage",
+      "sourceRef": "CR:MDT-181",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C7",
+      "kind": "constraint",
+      "text": "Accent preference controls shall live in the Settings modal, completely separate from shared project metadata in the Edit Project form",
+      "sourceRef": "CR:MDT-181",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-9.1",
+      "kind": "behavior",
+      "text": "WHEN user clicks 'Reset to default' for a project accent in Settings, the system shall remove the stored accent so the project reverts to its deterministic fallback",
+      "sourceRef": "CR:MDT-181",
+      "routePolicy": "bdd"
     }
   ],
   "scenarios": [

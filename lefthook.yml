@@ -13,9 +13,9 @@ remotes:
       - configs/general/block-generated-files.yml
       - configs/general/block-co-authored-by.yml
       # Ticket hygiene — block unchecked tasks in Implemented tickets
-      - configs/general/block-mdt-incomplete-tasks.yml
+      - configs/mdt/block-mdt-incomplete-tasks.yml
       # Markdown + TypeScript
-      - configs/typescript/check-markdown-fences.yml
+      - configs/general/check-markdown-fences.yml
       - configs/typescript/run-knip.yml
       - configs/typescript/run-eslint-staged.yml
       # Monorepo — enforces @mdt/shared alias

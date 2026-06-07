@@ -2,11 +2,13 @@ import type { Locator } from '@playwright/test'
 import { expect, test } from '../fixtures/test-fixtures.js'
 import { buildScenario } from '../setup/index.js'
 import { waitForBoardReady } from '../utils/helpers.js'
-import { projectSelectors, selectorSelectors } from '../utils/selectors.js'
+import { projectSelectors, selectorSelectors, sharingSelectors } from '../utils/selectors.js'
 
 const accentSelectors = {
-  section: '[data-testid="project-accent-section"]',
-  picker: '[data-testid="project-accent-picker"]',
+  section: '[data-testid="project-accents-section"]',
+  projectSelect: '[data-testid="accent-project-select"]',
+  paletteToggle: '[data-testid="accent-palette-toggle"]',
+  palette: '[data-testid="accent-palette"]',
   presetGrid: '[data-testid="project-accent-presets"]',
   preset: (name: string) => `[data-testid="accent-preset-${name}"]`,
   allPresets: '[data-testid^="accent-preset-"]',
@@ -14,6 +16,8 @@ const accentSelectors = {
   validationError: '[data-testid="accent-validation-error"]',
   chooseColorLink: '[data-testid="accent-choose-color-link"]',
   resetButton: '[data-testid="accent-reset-button"]',
+  saveButton: '[data-testid="save-accents-button"]',
+  infoButton: '[data-testid="accents-info"]',
 } as const
 
 async function readSelectorState(backendUrl: string) {
@@ -37,19 +41,35 @@ async function getAccentVariable(locator: Locator) {
   return locator.evaluate((element: HTMLElement) => element.style.getPropertyValue('--project-accent'))
 }
 
+async function openSettingsAccents(page: import('@playwright/test').Page) {
+  await page.click(projectSelectors.hamburgerMenu)
+  await page.click(sharingSelectors.settingsButton)
+  await expect(page.locator(sharingSelectors.settingsModal)).toBeVisible()
+  // Appearance tab is the default
+  await expect(page.locator(accentSelectors.section)).toBeVisible()
+}
+
+async function closeSettings(page: import('@playwright/test').Page) {
+  await page.click('[data-testid="settings-close"]')
+  await expect(page.locator(sharingSelectors.settingsModal)).toBeHidden()
+}
+
 test.describe('Project accent colors - MDT-181', () => {
-  test('edit form shows accent controls and a secure choose-color link', async ({ page, e2eContext }) => {
+  test('settings shows project accents section with (i) tooltip and choose-color link', async ({ page, e2eContext }) => {
     const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
 
     await page.goto(`/prj/${scenario.projectCode}`)
     await waitForBoardReady(page)
 
-    await page.click(projectSelectors.hamburgerMenu)
-    await page.click(projectSelectors.editProjectButton)
+    await openSettingsAccents(page)
 
-    await expect(page.locator(projectSelectors.editProjectModal)).toBeVisible()
-    await expect(page.locator(accentSelectors.section)).toContainText('Your Project Accent')
-    await expect(page.locator(accentSelectors.picker)).toBeVisible()
+    // Section visible with project dropdown
+    await expect(page.locator(accentSelectors.projectSelect)).toBeVisible()
+    await expect(page.locator(accentSelectors.infoButton)).toBeVisible()
+
+    // Open palette
+    await page.click(accentSelectors.paletteToggle)
+    await expect(page.locator(accentSelectors.palette)).toBeVisible()
     await expect(page.locator(accentSelectors.presetGrid)).toBeVisible()
     await expect(page.locator(accentSelectors.allPresets)).toHaveCount(16)
     await expect(page.locator(accentSelectors.customHexInput)).toBeVisible()
@@ -59,7 +79,7 @@ test.describe('Project accent colors - MDT-181', () => {
     await expect(page.locator(accentSelectors.chooseColorLink)).toHaveAttribute('rel', /noreferrer/)
   })
 
-  test('preset accent saves through selector state and renders on inactive chips and browser cards', async ({ page, e2eContext }) => {
+  test('preset accent stages in settings, saves on button, renders on inactive chips and browser cards', async ({ page, e2eContext }) => {
     const activeProject = await buildScenario(e2eContext.projectFactory, 'simple')
     const secondProject = await e2eContext.projectFactory.createProject('empty', {
       name: 'Accent Target Project',
@@ -75,23 +95,31 @@ test.describe('Project accent colors - MDT-181', () => {
     await page.goto(`/prj/${activeProject.projectCode}`)
     await waitForBoardReady(page)
 
-    await page.click(projectSelectors.hamburgerMenu)
-    await page.click(projectSelectors.editProjectButton)
+    await openSettingsAccents(page)
 
+    // Open palette
+    await page.click(accentSelectors.paletteToggle)
+    await expect(page.locator(accentSelectors.palette)).toBeVisible()
+
+    // Pick a preset — this stages but does NOT persist yet
+    await page.click(accentSelectors.preset('blue'))
+
+    // Save button should appear
+    await expect(page.locator(accentSelectors.saveButton)).toBeVisible()
+
+    // Click Save — this persists
     const persistResponse = page.waitForResponse(response =>
       response.url().includes('/api/config/selector')
       && response.request().method() === 'POST',
     )
-
-    await page.click(accentSelectors.preset('blue'))
+    await page.click(accentSelectors.saveButton)
     await persistResponse
 
     const selectorState = await readSelectorState(e2eContext.backendUrl)
     expect(selectorState[activeProject.projectCode]?.accent).toBe('#2563eb')
     expect(sharedUpdateRequests).toHaveLength(0)
 
-    await page.click(projectSelectors.projectCancelButton)
-    await expect(page.locator(projectSelectors.editProjectModal)).toBeHidden()
+    await closeSettings(page)
 
     await page.click(selectorSelectors.panelTrigger)
     await page.locator(projectSelectors.projectOption(secondProject.key)).click()
@@ -105,6 +133,26 @@ test.describe('Project accent colors - MDT-181', () => {
     const browserCard = page.locator(projectSelectors.projectOption(activeProject.projectCode))
     await expect(browserCard).toBeVisible()
     expect(await getAccentVariable(browserCard)).toBe('#2563eb')
+  })
+
+  test('canceling settings discards staged accent changes', async ({ page, e2eContext }) => {
+    const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
+
+    await page.goto(`/prj/${scenario.projectCode}`)
+    await waitForBoardReady(page)
+
+    await openSettingsAccents(page)
+
+    // Open palette and pick a color
+    await page.click(accentSelectors.paletteToggle)
+    await page.click(accentSelectors.preset('blue'))
+
+    // Close settings without saving
+    await closeSettings(page)
+
+    // Verify accent was NOT persisted
+    const selectorState = await readSelectorState(e2eContext.backendUrl)
+    expect(selectorState[scenario.projectCode]?.accent).toBeUndefined()
   })
 
   test('invalid custom hex shows a field error and preserves the previous accent', async ({ page, e2eContext }) => {
@@ -122,8 +170,10 @@ test.describe('Project accent colors - MDT-181', () => {
     await page.goto(`/prj/${scenario.projectCode}`)
     await waitForBoardReady(page)
 
-    await page.click(projectSelectors.hamburgerMenu)
-    await page.click(projectSelectors.editProjectButton)
+    await openSettingsAccents(page)
+
+    // Open palette
+    await page.click(accentSelectors.paletteToggle)
 
     await page.locator(accentSelectors.customHexInput).fill('blue')
     await page.locator(accentSelectors.customHexInput).blur()
@@ -131,6 +181,7 @@ test.describe('Project accent colors - MDT-181', () => {
     await expect(page.locator(accentSelectors.validationError)).toBeVisible()
     await page.waitForTimeout(500)
 
+    // Accent should not have changed
     const selectorState = await readSelectorState(e2eContext.backendUrl)
     expect(selectorState[scenario.projectCode]?.accent).toBe('#16a34a')
   })
@@ -166,18 +217,18 @@ test.describe('Project accent colors - MDT-181', () => {
     await page.locator(projectSelectors.projectOption(primaryProject.projectCode)).click()
     await waitForBoardReady(page)
 
-    await page.click(projectSelectors.hamburgerMenu)
-    await page.click(projectSelectors.editProjectButton)
+    // Set accent via Settings
+    await openSettingsAccents(page)
+    await page.click(accentSelectors.paletteToggle)
 
     const persistResponse = page.waitForResponse(response =>
       response.url().includes('/api/config/selector')
       && response.request().method() === 'POST',
     )
-
     await page.click(accentSelectors.preset(overridePreset))
+    await page.click(accentSelectors.saveButton)
     await persistResponse
-    await page.click(projectSelectors.projectCancelButton)
-    await expect(page.locator(projectSelectors.editProjectModal)).toBeHidden()
+    await closeSettings(page)
 
     await page.click(selectorSelectors.panelTrigger)
     await page.locator(projectSelectors.projectOption(secondaryProject.key)).click()
@@ -305,31 +356,29 @@ test.describe('Project accent colors - MDT-181', () => {
     expect(accentedCardBox?.height).toBe(fallbackCardBox?.height)
   })
 
-  test('edit form saves selected accent and it renders on inactive chip and browser card', async ({ page, e2eContext }) => {
+  test('settings saves selected accent and it renders on inactive chip and browser card', async ({ page, e2eContext }) => {
     const activeProject = await buildScenario(e2eContext.projectFactory, 'simple')
     const secondProject = await e2eContext.projectFactory.createProject('empty', {
       name: 'Accent Render Target',
     })
 
-    // No accent set initially
     await page.goto(`/prj/${activeProject.projectCode}`)
     await waitForBoardReady(page)
 
-    // Open edit form and pick green
-    await page.click(projectSelectors.hamburgerMenu)
-    await page.click(projectSelectors.editProjectButton)
-    await expect(page.locator(accentSelectors.picker)).toBeVisible()
+    // Open settings and pick green
+    await openSettingsAccents(page)
+    await page.click(accentSelectors.paletteToggle)
+
+    await page.click(accentSelectors.preset('green'))
 
     const persistResponse = page.waitForResponse(response =>
       response.url().includes('/api/config/selector')
       && response.request().method() === 'POST',
     )
-    await page.click(accentSelectors.preset('green'))
+    await page.click(accentSelectors.saveButton)
     await persistResponse
 
-    // Close form
-    await page.click(projectSelectors.projectCancelButton)
-    await expect(page.locator(projectSelectors.editProjectModal)).toBeHidden()
+    await closeSettings(page)
 
     // Switch to second project so activeProject becomes inactive
     await page.click(selectorSelectors.panelTrigger)
@@ -364,10 +413,8 @@ test.describe('Project accent colors - MDT-181', () => {
     await page.goto(`/prj/${activeProject.projectCode}`)
     await waitForBoardReady(page)
 
-    // Open edit form — reset button should be visible
-    await page.click(projectSelectors.hamburgerMenu)
-    await page.click(projectSelectors.editProjectButton)
-    await expect(page.locator(accentSelectors.picker)).toBeVisible()
+    // Open settings — reset button should be visible
+    await openSettingsAccents(page)
     await expect(page.locator('[data-testid="accent-reset-button"]')).toBeVisible()
 
     // Click reset
@@ -376,17 +423,13 @@ test.describe('Project accent colors - MDT-181', () => {
       && response.request().method() === 'POST',
     )
     await page.click('[data-testid="accent-reset-button"]')
+    await page.click(accentSelectors.saveButton)
     await persistResponse
 
     // Verify accent is cleared in persisted state
     const selectorState = await readSelectorState(e2eContext.backendUrl)
     expect(selectorState[activeProject.projectCode]?.accent).toBeUndefined()
 
-    // Reset button should be gone (no accent set)
-    await expect(page.locator('[data-testid="accent-reset-button"]')).toBeHidden()
-
-    // Close form
-    await page.click(projectSelectors.projectCancelButton)
-    await expect(page.locator(projectSelectors.editProjectModal)).toBeHidden()
+    await closeSettings(page)
   })
 })
