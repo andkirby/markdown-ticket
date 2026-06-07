@@ -20,6 +20,7 @@ import { buildRuntimeConfig } from './config/runtimeConfig.js'
 // Controllers
 import { DocumentController } from './controllers/DocumentController.js'
 import { ProjectController } from './controllers/ProjectController.js'
+import { SearchController } from './controllers/SearchController.js'
 // Middleware
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js'
 import { createAuthRouter } from './routes/auth.js'
@@ -29,6 +30,7 @@ import { createDocumentRouter } from './routes/documents.js'
 // Routes
 import { createProjectRouter } from './routes/projects.js'
 import { createPublicReadTokensRouter, createReadTokensRouter } from './routes/readTokens.js'
+import { createSearchRouter } from './routes/search.js'
 import { createShareRouter } from './routes/share.js'
 import { createSSERouter } from './routes/sse.js'
 import { createSystemRouter } from './routes/system.js'
@@ -315,6 +317,10 @@ app.use('/api', createApiAuthMiddleware(runtimeConfig.auth, {
 
 // Multi-Project API routes
 app.use('/api/projects', createProjectRouter(projectController))
+
+// MDT-179: Unified search endpoint
+const searchController = new SearchController(projectController)
+app.use('/api/search', createSearchRouter(searchController))
 app.use('/api/read-tokens', createReadTokensRouter())
 
 // Document routes

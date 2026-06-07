@@ -13,7 +13,7 @@ import { useCallback, useMemo, useState } from 'react'
 // MDT-152: Query Mode Detection — pure functions
 // ---------------------------------------------------------------------------
 
-export type QueryMode = 'current_project' | 'ticket_key' | 'project_scope'
+export type QueryMode = 'current_project' | 'ticket_key' | 'project_scope' | 'global' | 'projects_only' | 'documents_only'
 
 export interface QueryParts {
   mode: QueryMode
@@ -23,12 +23,17 @@ export interface QueryParts {
 }
 
 /**
- * Classify a raw search query into one of three modes:
+ * Classify a raw search query into one of six modes:
  *   'ticket_key'      — CODE-NUMBER (2-5 uppercase letters, 1-5 digits)
  *   'project_scope'   — @CODE followed by space and search text
- *   'current_project' — plain text, anything else
+ *   'global'          — plain text in Global scope
+ *   'projects_only'   — plain text in Projects scope
+ *   'documents_only'  — plain text in Documents scope
+ *   'current_project' — plain text, anything else (legacy default)
+ *
+ * For scoped modes, use the scope-aware variant: parseQueryModeScoped()
  */
-export function parseQueryMode(query: string): QueryMode {
+export function parseQueryMode(query: string, _scope?: string): QueryMode {
   const trimmed = query.trim()
 
   if (!trimmed)
@@ -43,6 +48,11 @@ export function parseQueryMode(query: string): QueryMode {
   const ticketMatch = trimmed.match(TICKET_KEY_INPUT_PATTERN)
   if (ticketMatch)
     return 'ticket_key'
+
+  // Scope-aware classification
+  if (_scope === 'projects') return 'projects_only'
+  if (_scope === 'documents') return 'documents_only'
+  if (_scope === 'global') return 'global'
 
   return 'current_project'
 }
@@ -192,12 +202,9 @@ export function useQuickSearch(options: UseQuickSearchOptions): UseQuickSearchRe
     return filterTickets({ query, tickets })
   }, [tickets, query])
 
-  // Reset selection when filtered results change
-  useMemo(() => {
-    if (selectedIndex >= filteredTickets.length) {
-      setSelectedIndex(Math.max(0, filteredTickets.length - 1))
-    }
-  }, [filteredTickets.length, selectedIndex])
+  // Note: Selection clamping is handled by the parent modal (MDT-179)
+  // which manages N-section navigation including projects and documents.
+  // The hook no longer clamps internally to avoid conflicting with the modal's index management.
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {

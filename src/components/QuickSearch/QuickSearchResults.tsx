@@ -11,9 +11,13 @@
 
 import type { SearchResponse } from '@mdt/domain-contracts'
 import type { QueryMode } from '@/hooks/useQuickSearch'
+import type { ScoredProject } from '@/hooks/useProjectSearch'
 import type { Ticket } from '@/types/ticket'
 
 import { cn } from '@/lib/utils'
+import { DocumentResultRow } from './DocumentResultRow'
+import type { DocumentResultItem } from './DocumentResultRow'
+import { ProjectResultRow } from './ProjectResultRow'
 
 // ---------------------------------------------------------------------------
 // Skeleton card — renders during loading (C4: within 50ms)
@@ -120,6 +124,14 @@ export interface QuickSearchResultsProps {
   invalidProjectCode: string | null
   /** Total results for keyboard nav — reserved for future cross-section navigation */
   _totalResults?: number
+  /** Project search results (MDT-179) */
+  projectResults?: ScoredProject[]
+  /** Document search results (MDT-179) */
+  documentResults?: DocumentResultItem[]
+  /** Active search scope for empty state messaging (MDT-179) */
+  activeScope?: string
+  /** Callback when a project result is clicked (MDT-179) */
+  onSelectProject?: (project: ScoredProject['project']) => void
 }
 
 export function QuickSearchResults({
@@ -132,12 +144,26 @@ export function QuickSearchResults({
   crossProjectError,
   onRetry,
   invalidProjectCode,
+  projectResults = [],
+  documentResults = [],
+  activeScope,
+  onSelectProject,
 }: QuickSearchResultsProps): React.ReactElement {
   const isTicketKeyMode = queryMode === 'ticket_key'
   const isProjectScopeMode = queryMode === 'project_scope'
   const isCrossProjectMode = isTicketKeyMode || isProjectScopeMode
   const hasCurrentProjectResults = tickets.length > 0
   const hasCrossProjectResults = crossProjectResults.length > 0
+
+  // Scope filtering (MDT-179): hide ticket results when scope is projects/documents
+  const scopeShowsTickets = !activeScope || activeScope === 'global' || activeScope === 'tickets'
+  const scopeShowsProjects = !activeScope || activeScope === 'global' || activeScope === 'projects'
+  const scopeShowsDocuments = !activeScope || activeScope === 'global' || activeScope === 'documents'
+
+  // Offset computation for selection highlight across sections
+  const crossProjectCount = isCrossProjectMode ? crossProjectResults.length : 0
+  const currentProjectCount = (isProjectScopeMode ? 0 : tickets.length) * (scopeShowsTickets ? 1 : 0)
+  const projectOffset = crossProjectCount + currentProjectCount
 
   // Invalid project code — show error immediately, no fetch
   if (invalidProjectCode) {
@@ -155,10 +181,15 @@ export function QuickSearchResults({
   }
 
   // Nothing at all yet — default empty state
-  if (!hasCurrentProjectResults && !hasCrossProjectResults && !crossProjectLoading && !crossProjectError && !isCrossProjectMode) {
+  const hasProjectResults = projectResults.length > 0 && scopeShowsProjects
+  const hasDocumentResults = documentResults.length > 0 && scopeShowsDocuments
+  const visibleTicketResults = scopeShowsTickets && !isProjectScopeMode && hasCurrentProjectResults
+  if (!hasCurrentProjectResults && !hasCrossProjectResults && !hasProjectResults && !hasDocumentResults && !crossProjectLoading && !crossProjectError && !isCrossProjectMode) {
     return (
       <div className="p-8 text-center text-gray-500" data-testid="quick-search-no-results">
-        No results found
+        {activeScope && activeScope !== 'global'
+          ? `No results found in ${activeScope}`
+          : 'No results found'}
       </div>
     )
   }
@@ -175,7 +206,7 @@ export function QuickSearchResults({
   return (
     <div className="max-h-[50vh] overflow-y-auto" role="listbox" aria-label="Search results" data-testid="quick-search-results">
       {/* Cross-project section (ticket-key or project-scope mode) */}
-      {isCrossProjectMode && (
+      {isCrossProjectMode && scopeShowsTickets && (
         <div role="group" aria-label={isProjectScopeMode ? 'Project Results' : 'Cross-Project Results'} data-testid="quick-search-cross-project-section">
           {/* Section header */}
           <div className="search-section-header">
@@ -223,7 +254,7 @@ export function QuickSearchResults({
       )}
 
       {/* Current project section — hidden in project_scope mode (results come from cross-project) */}
-      {hasCurrentProjectResults && !isProjectScopeMode && (
+      {hasCurrentProjectResults && !isProjectScopeMode && scopeShowsTickets && (
         <div role="group" aria-label="Current Project" data-testid="quick-search-current-project-section">
           {isTicketKeyMode && (
             <div className="search-section-header">
@@ -261,6 +292,52 @@ export function QuickSearchResults({
           </ul>
         </div>
       )}
+
+      {/* MDT-179: Projects section */}
+      {projectResults.length > 0 && scopeShowsProjects && (() => {
+        const offset = crossProjectCount + currentProjectCount
+        return (
+          <div role="group" aria-label="Projects" data-testid="quick-search-projects-section">
+            <div className="search-section-header">
+              Projects
+            </div>
+            <ul className="search-results-list">
+              {projectResults.map((scoredProject, index) => (
+                <ProjectResultRow
+                  key={scoredProject.project.project?.code ?? scoredProject.project.id}
+                  scoredProject={scoredProject}
+                  isSelected={selectedIndex === offset + index}
+                  onSelect={() => onSelectProject?.(scoredProject.project)}
+                />
+              ))}
+            </ul>
+          </div>
+        )
+      })()}
+
+      {/* MDT-179: Documents section */}
+      {documentResults.length > 0 && scopeShowsDocuments && (() => {
+        const offset = crossProjectCount + currentProjectCount + projectResults.length
+        return (
+          <div role="group" aria-label="Documents" data-testid="quick-search-documents-section">
+            <div className="search-section-header">
+              Documents
+            </div>
+            <ul className="search-results-list">
+              {documentResults.map((doc, index) => (
+                <DocumentResultRow
+                  key={`${doc.project.code}-${doc.path}`}
+                  document={doc}
+                  isSelected={selectedIndex === offset + index}
+                  onSelect={() => {
+                    // Document navigation handled by parent modal
+                  }}
+                />
+              ))}
+            </ul>
+          </div>
+        )
+      })()}
     </div>
   )
 }

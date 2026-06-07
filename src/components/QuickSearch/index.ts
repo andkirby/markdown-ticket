@@ -6,3 +6,6 @@
 export { QuickSearchInput } from './QuickSearchInput'
 export { QuickSearchModal } from './QuickSearchModal'
 export { QuickSearchResults } from './QuickSearchResults'
+export { SearchScopeBar } from './SearchScopeBar'
+export { ProjectResultRow } from './ProjectResultRow'
+export { DocumentResultRow } from './DocumentResultRow'
