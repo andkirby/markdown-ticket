@@ -89,20 +89,19 @@
     opacity: 0.3;
   }
 
-  /* Gradient mode (default) */
+  /* Gradient mode (default) — identity bar fades top→bottom */
   .project-card__identity {
-    background: linear-gradient(260deg, rgb(from var(--project-accent, rgb(148 163 184)) r g b / 0) 40%, rgb(from var(--project-accent, rgb(148 163 184)) r g b / 1) 100%);
+    background: linear-gradient(180deg, rgb(from var(--project-accent, rgb(148 163 184)) r g b / 0) 40%, rgb(from var(--project-accent, rgb(148 163 184)) r g b / 1) 100%);
     opacity: 0.5;
   }
 
-  /* Active card with gradient background */
+  /* Active card — theme bg on left, accent tint fading in from right */
   .project-card[data-active="true"][data-accent-enabled="true"][data-accent-gradients="true"] {
-    background: linear-gradient(135deg, var(--project-card-active-bg-from), var(--project-card-active-accent-to));
+    background: linear-gradient(to right, var(--project-card-active-bg-from), rgb(from var(--project-accent, theme('colors.blue.100')) r g b / 0.15));
   }
 
-  /* Active card in dark mode with gradient */
   .dark .project-card[data-active="true"][data-accent-enabled="true"][data-accent-gradients="true"] {
-    background: linear-gradient(135deg, var(--project-card-active-bg-from), var(--project-card-active-accent-to));
+    background: linear-gradient(to right, var(--project-card-active-bg-from), rgb(from var(--project-accent, theme('colors.blue.900')) r g b / 0.15));
   }
 
   .project-card__content {
@@ -181,14 +180,14 @@
     pointer-events: none;
   }
 
-  /* Gradient mode (default) */
+  /* Chips always use flat stripe — no gradient */
   .project-chip__accent-mark {
     position: absolute;
     inset-block: 0;
     inset-inline-start: 0;
-    width: 25px;
+    width: 4px;
     border-radius: 0;
-    background: linear-gradient(270deg, rgb(from var(--project-accent, rgb(148 163 184)) r g b / 0) 40%, rgb(from var(--project-accent, rgb(148 163 184)) r g b / 1) 100%);
+    background: var(--project-accent, rgb(148 163 184));
     opacity: 0.3;
     pointer-events: none;
   }
@@ -260,7 +259,6 @@
   --project-card-active-bg-from: theme('colors.blue.50');
   --project-card-active-bg-to: theme('colors.indigo.50');
   --project-card-active-border: theme('colors.blue.200');
-  --project-card-active-accent-to: theme('colors.blue.100');
 
   --project-chip-code-color: theme('colors.gray.700');
   --project-chip-hover-border: theme('colors.blue.300');
@@ -290,7 +288,6 @@
   --project-card-active-bg-from: theme('colors.blue.950');
   --project-card-active-bg-to: theme('colors.indigo.950');
   --project-card-active-border: theme('colors.blue.800');
-  --project-card-active-accent-to: theme('colors.blue.900');
 
   --project-chip-code-color: theme('colors.gray.300');
   --project-chip-hover-border: theme('colors.blue.700');
