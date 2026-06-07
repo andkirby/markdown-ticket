@@ -432,4 +432,71 @@ test.describe('Project accent colors - MDT-181', () => {
 
     await closeSettings(page)
   })
+
+  test('accent colors toggle hides accent marks on chips and cards', async ({ page, e2eContext }) => {
+    const activeProject = await buildScenario(e2eContext.projectFactory, 'simple')
+    const inactiveProject = await e2eContext.projectFactory.createProject('empty', {
+      name: 'Accent Target Project',
+    })
+
+    await writeSelectorState(e2eContext.backendUrl, {
+      [inactiveProject.key]: {
+        visible: true,
+        favorite: false,
+        lastUsedAt: null,
+        count: 0,
+        accent: '#2563eb',
+      },
+    })
+
+    await page.goto(`/prj/${activeProject.projectCode}`)
+    await waitForBoardReady(page)
+
+    // Verify accent mark is visible initially
+    const chip = page.locator(`[data-testid="project-selector-chip-${inactiveProject.key}"]`)
+    await expect(chip.locator('.project-chip__accent-mark')).toBeVisible()
+
+    // Open settings and toggle off
+    await openSettingsAccents(page)
+    await page.click('[data-testid="toggle-accent-enabled"]')
+
+    // Accent mark should be hidden
+    await expect(chip.locator('.project-chip__accent-mark')).toBeHidden()
+
+    await closeSettings(page)
+  })
+
+  test('gradient toggle switches between gradient and flat stripe', async ({ page, e2eContext }) => {
+    const activeProject = await buildScenario(e2eContext.projectFactory, 'simple')
+    const inactiveProject = await e2eContext.projectFactory.createProject('empty', {
+      name: 'Gradient Target Project',
+    })
+
+    await writeSelectorState(e2eContext.backendUrl, {
+      [inactiveProject.key]: {
+        visible: true,
+        favorite: false,
+        lastUsedAt: null,
+        count: 0,
+        accent: '#2563eb',
+      },
+    })
+
+    await page.goto(`/prj/${activeProject.projectCode}`)
+    await waitForBoardReady(page)
+
+    const chip = page.locator(`[data-testid="project-selector-chip-${inactiveProject.key}"]`)
+
+    // Default: gradient mode
+    await expect(chip).toHaveAttribute('data-accent-gradients', 'true')
+
+    // Open settings and toggle gradients off
+    await openSettingsAccents(page)
+    await page.click('[data-testid="toggle-accent-gradients"]')
+
+    // Should switch to flat
+    await expect(chip).toHaveAttribute('data-accent-gradients', 'false')
+
+    await closeSettings(page)
+  })
 })
