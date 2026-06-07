@@ -80,7 +80,7 @@
     width: 100%;
     height: 100%;
     background: var(--project-accent, rgb(148 163 184));
-    opacity: 0.4;
+    opacity: 0.3;
   }
 
   .project-card__content {
@@ -149,7 +149,7 @@
     width: 4px;
     border-radius: 0;
     background: var(--project-accent, rgb(148 163 184));
-    opacity: 0.4;
+    opacity: 0.3;
     pointer-events: none;
   }
 
