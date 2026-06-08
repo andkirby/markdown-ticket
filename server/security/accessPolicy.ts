@@ -1,13 +1,13 @@
 import type { NextFunction, Request, Response } from 'express'
 import { getRequestAccess } from './apiAuth.js'
 
-export const PublicReadApiPrefix = {
+const PublicReadApiPrefix = {
   DOCUMENTS: '/api/documents',
   EVENTS: '/api/events',
   PROJECTS: '/api/projects',
 } as const
 
-export const OwnerOnlyApiPrefix = {
+const OwnerOnlyApiPrefix = {
   CACHE: '/api/cache',
   CONFIG: '/api/config',
   DIRECTORIES: '/api/directories',
@@ -15,7 +15,7 @@ export const OwnerOnlyApiPrefix = {
   READ_TOKENS: '/api/read-tokens',
 } as const
 
-export function isSafeReadMethod(method: string): boolean {
+function isSafeReadMethod(method: string): boolean {
   return ['GET', 'HEAD', 'OPTIONS'].includes(method.toUpperCase())
 }
 
@@ -46,11 +46,3 @@ export function isOwnerOnlyRoute(path: string): boolean {
     || path.startsWith(OwnerOnlyApiPrefix.READ_TOKENS)
 }
 
-export function requireWriteAccess(req: Request, res: Response, next: NextFunction): void {
-  if (getRequestAccess(req).canWrite) {
-    next()
-    return
-  }
-
-  res.status(403).json({ error: 'Forbidden' })
-}

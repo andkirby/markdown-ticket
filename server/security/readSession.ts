@@ -3,8 +3,8 @@ import { Buffer } from 'node:buffer'
 import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 
 export const READ_SESSION_COOKIE_NAME = 'mdt_read_session'
-export const READ_SESSION_COOKIE_PATH = '/api'
-export const READ_SESSION_MAX_AGE_SECONDS = 24 * 60 * 60
+const READ_SESSION_COOKIE_PATH = '/api'
+const READ_SESSION_MAX_AGE_SECONDS = 24 * 60 * 60
 
 interface ReadSessionPayload {
   exp: number
@@ -17,12 +17,12 @@ interface ReadSessionPayload {
   tokenProjectRefs?: string[]
 }
 
-export interface ReadSessionCookieOptions {
+interface ReadSessionCookieOptions {
   secure: boolean
   maxAgeSeconds?: number
 }
 
-export interface ReadSessionState {
+interface ReadSessionState {
   authenticated: boolean
   projectRefs: string[]
   shareIds: string[]
@@ -31,7 +31,7 @@ export interface ReadSessionState {
   tokenProjectRefs: string[]
 }
 
-export interface ReadSessionGrants {
+interface ReadSessionGrants {
   projectRefs?: string[]
   shareIds?: string[]
   staticProjectRefs?: string[]
@@ -39,7 +39,7 @@ export interface ReadSessionGrants {
   tokenProjectRefs?: string[]
 }
 
-export interface MergeReadSessionInput extends ReadSessionGrants {
+interface MergeReadSessionInput extends ReadSessionGrants {
   req: Request
   res: Response
   secret: string
@@ -47,12 +47,12 @@ export interface MergeReadSessionInput extends ReadSessionGrants {
   secure?: boolean
 }
 
-export interface ReadTokenScope {
+interface ReadTokenScope {
   hash: string
   projectRefs: string[]
 }
 
-export function hashReadToken(token: string): string {
+function hashReadToken(token: string): string {
   return createHash('sha256').update(token).digest('hex')
 }
 
@@ -109,7 +109,7 @@ export function createReadSessionCookie(secret: string, grants: ReadSessionGrant
   return `${READ_SESSION_COOKIE_NAME}=${encodedPayload}.${signature}; Max-Age=${maxAgeSeconds}; Path=${READ_SESSION_COOKIE_PATH}; HttpOnly; SameSite=Lax${securePart}`
 }
 
-export function appendReadSessionCookie(res: Response, secret: string, grants: ReadSessionGrants, options: ReadSessionCookieOptions): void {
+function appendReadSessionCookie(res: Response, secret: string, grants: ReadSessionGrants, options: ReadSessionCookieOptions): void {
   res.append('Set-Cookie', createReadSessionCookie(secret, grants, options))
 }
 

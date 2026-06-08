@@ -2,13 +2,13 @@ import type { ResolvedTicketLocation } from '@mdt/shared/services/ticket/types.j
 import { existsSync, lstatSync, readFileSync, realpathSync, statSync } from 'node:fs'
 import { basename, dirname, isAbsolute, join, relative } from 'node:path'
 
-export interface TraceStoreMetadata {
+interface TraceStoreMetadata {
   exists: boolean
   ticketCode: string
   label: string
 }
 
-export interface TraceStoreReadResult {
+interface TraceStoreReadResult {
   metadata: TraceStoreMetadata
   store: unknown
 }

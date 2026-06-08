@@ -10,9 +10,9 @@ const STORE_RELATIVE_PATH = path.join('auth', 'read-access-tokens.json')
 const DEFAULT_INVITE_TTL_MS = 15 * 60 * 1000
 const storeWriteLocks = new Map<string, Promise<void>>()
 
-export type CreateTokenInput = CreateReadTokenInput
+type CreateTokenInput = CreateReadTokenInput
 
-export interface ReadTokenRecord {
+interface ReadTokenRecord {
   id: string
   name: string
   tokenHash: string
@@ -22,7 +22,7 @@ export interface ReadTokenRecord {
   revokedAt: string | null
 }
 
-export interface ReadInviteRecord {
+interface ReadInviteRecord {
   id: string
   tokenId: string
   codeHash: string
@@ -32,9 +32,9 @@ export interface ReadInviteRecord {
   revokedAt: string | null
 }
 
-export type TokenCreationResult = ReadTokenCreationResponse
+type TokenCreationResult = ReadTokenCreationResponse
 
-export interface InviteCreationResult {
+interface InviteCreationResult {
   code: string
   expiresAt: string
 }
@@ -45,7 +45,7 @@ export interface TokenResolution {
   expiresAt: string | null
 }
 
-export interface ReadTokenStore {
+interface ReadTokenStore {
   createToken: (input: CreateTokenInput) => Promise<TokenCreationResult>
   listTokens: () => Promise<ListedReadToken[]>
   createInvite: (tokenId: string) => Promise<InviteCreationResult>
@@ -55,7 +55,7 @@ export interface ReadTokenStore {
   revokeToken: (tokenId: string) => Promise<ListedReadToken>
 }
 
-export interface ReadTokenStoreOptions {
+interface ReadTokenStoreOptions {
   configDir: string
   now?: () => Date
 }
@@ -66,7 +66,7 @@ interface PersistedReadTokenStore {
   invites: ReadInviteRecord[]
 }
 
-export class ReadTokenStoreError extends Error {
+class ReadTokenStoreError extends Error {
   constructor(message = 'Read access token store is invalid or unavailable') {
     super(message)
     this.name = 'ReadTokenStoreError'
