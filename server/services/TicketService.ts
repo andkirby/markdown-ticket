@@ -22,13 +22,13 @@ export type CRData = Pick<TicketData, 'title' | 'type' | 'priority' | 'descripti
 }
 
 /** Search result item with ticket and project context */
-export interface SearchResultItem {
+interface SearchResultItem {
   ticket: { code: string, title: string }
   project: { code: string, name: string }
 }
 
 /** Search response shape */
-export interface SearchResponse {
+interface SearchResponse {
   results: SearchResultItem[]
   total: number
 }

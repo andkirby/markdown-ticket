@@ -7,14 +7,14 @@ import path from 'node:path'
 import { getDefaultPaths } from '@mdt/shared/utils/constants.js'
 import { parseToml, stringify } from '@mdt/shared/utils/toml.js'
 
-export interface ProjectSharingUpdate {
+interface ProjectSharingUpdate {
   mode: ProjectSharingModeValue
   rotateShareId?: boolean
 }
 
 const SHARE_ID_PATTERN = /^[A-Za-z0-9_-]{12,128}$/u
 
-export function getProjectSharing(project: Project): ProjectSharingSettings {
+function getProjectSharing(project: Project): ProjectSharingSettings {
   return project.metadata.sharing ?? { mode: ProjectSharingMode.PRIVATE }
 }
 
@@ -90,7 +90,7 @@ export function findProjectByShareId(projects: Project[], shareId: string): Proj
   }) ?? null
 }
 
-export function projectMatchesRef(project: Project, projectRef: string): boolean {
+function projectMatchesRef(project: Project, projectRef: string): boolean {
   return project.id === projectRef
     || project.project.id === projectRef
     || project.project.code === projectRef

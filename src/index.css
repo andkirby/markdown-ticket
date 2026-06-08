@@ -37,7 +37,6 @@
 @import './components/ProjectSelector/project-selector.css';
 @import './components/QuickSearch/quick-search.css';
 @import './components/AddProjectModal/components/AccentColorPicker.css';
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

@@ -2,8 +2,8 @@ import type { Request, Response } from 'express'
 import { Buffer } from 'node:buffer'
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 
-export const OWNER_SESSION_COOKIE_NAME = 'mdt_owner_session'
-export const OWNER_SESSION_COOKIE_PATH = '/api'
+const OWNER_SESSION_COOKIE_NAME = 'mdt_owner_session'
+const OWNER_SESSION_COOKIE_PATH = '/api'
 
 interface OwnerSessionPayload {
   exp: number
@@ -12,18 +12,18 @@ interface OwnerSessionPayload {
   sid: string
 }
 
-export interface OwnerSessionCookieOptions {
+interface OwnerSessionCookieOptions {
   secure: boolean
   maxAgeSeconds: number
 }
 
-export interface OwnerSessionState {
+interface OwnerSessionState {
   authenticated: boolean
 }
 
 let sessionGeneration = 0
 
-export function createOwnerSessionCookie(expectedToken: string, options: OwnerSessionCookieOptions): string {
+function createOwnerSessionCookie(expectedToken: string, options: OwnerSessionCookieOptions): string {
   const maxAgeSeconds = options.maxAgeSeconds
   const now = Math.floor(Date.now() / 1000)
   const payload: OwnerSessionPayload = {

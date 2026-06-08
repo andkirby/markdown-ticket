@@ -13,6 +13,7 @@ import { AuthUnlockPanel } from './components/AuthUnlock/AuthUnlockPanel'
 import { EventHistory } from './components/DevTools/EventHistory'
 import { useEventHistoryState } from './components/DevTools/useEventHistoryState'
 import { DirectTicketAccess } from './components/DirectTicketAccess'
+import { Header, HeaderContent } from './components/Header'
 import { ProjectSelector } from './components/ProjectSelector'
 import ProjectView from './components/ProjectView'
 import { QuickSearchModal } from './components/QuickSearch'
@@ -21,7 +22,6 @@ import { RouteErrorModal } from './components/RouteErrorModal'
 import { SecondaryHeader } from './components/SecondaryHeader'
 import { SettingsModal } from './components/SettingsModal'
 import TicketViewer from './components/TicketViewer'
-import { Header, HeaderContent } from './components/Header'
 import { Modal, ModalBody } from './components/ui/Modal'
 import { Toaster } from './components/ui/sonner'
 import { ViewModeSwitcher } from './components/ViewModeSwitcher'
@@ -357,7 +357,7 @@ function ProjectRouteHandler() {
           leftSection={
             <MobileLogo />
           }
-          centerSection={
+          centerSection={(
             <>
               <ViewModeSwitcher
                 currentMode={viewMode === 'documents' ? lastBoardListMode : viewMode}
@@ -368,8 +368,8 @@ function ProjectRouteHandler() {
                 <ProjectSelector />
               </div>
             </>
-          }
-          rightSection={
+          )}
+          rightSection={(
             <>
               <AuthStatusAction
                 accessMode={accessMode}
@@ -392,7 +392,7 @@ function ProjectRouteHandler() {
                 canUseOwnerEndpoints={canUseOwnerEndpoints}
               />
             </>
-          }
+          )}
         />
       </Header>
 

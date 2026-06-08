@@ -17,17 +17,17 @@ export interface RequestAccessContext {
   shareIds: string[]
 }
 
-export interface AccessRequest extends Request {
+interface AccessRequest extends Request {
   mdtAccess?: RequestAccessContext
 }
 
-export interface ApiAuthConfig {
+interface ApiAuthConfig {
   enabled: boolean
   token?: string
   migrationWarningRequired: boolean
 }
 
-export interface ApiAuthLogger {
+interface ApiAuthLogger {
   warn: (message: string, meta?: Record<string, unknown>) => void
 }
 
@@ -149,7 +149,7 @@ export function createApiAuthMiddleware(
   }
 }
 
-export interface ApiAuthMiddlewareOptions extends ReadSessionResolutionOptions {
+interface ApiAuthMiddlewareOptions extends ReadSessionResolutionOptions {
   originPolicy: OriginPolicyLike
 }
 
@@ -162,7 +162,7 @@ interface ReadOnlySessionState {
   tokenProjectRefs?: string[]
 }
 
-export interface ReadSessionResolutionOptions {
+interface ReadSessionResolutionOptions {
   allowLocalReadSessionFallback: boolean
   configDir: string
   readSessionSecret?: string
