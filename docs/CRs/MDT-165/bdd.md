@@ -5,9 +5,9 @@
 
 ## Overview
 
-10 BDD scenarios cover all 11 behavioral requirements for the Showdown → markdown-it migration. Scenarios verify user-visible rendering behavior: wireframe labels, tables, strikethrough, task lists, Mermaid diagrams, syntax highlighting, smart links, heading IDs, TOC extraction, and DOMPurify sanitization. Note: `wireframe_with_metadata_label` covers both BR-1 and BR-10; `heading_id_generation` covers both BR-9 and BR-11.
+12 BDD scenarios cover all 13 behavioral requirements for the Showdown → markdown-it migration plus UAT refinements. Scenarios verify user-visible rendering behavior: wireframe labels, tables, strikethrough, task lists, Mermaid diagrams, Wireloom SVG blocks, Wireloom error handling, syntax highlighting, smart links, heading IDs, TOC extraction, and DOMPurify sanitization. Note: `wireframe_with_metadata_label` covers both BR-1 and BR-10; `heading_id_generation` covers both BR-9 and BR-11.
 
-**All 10 scenarios GREEN.** E2E: 4/4 test cases pass. Unit tests: 80/80 GREEN.
+**Original 10 migration scenarios GREEN.** E2E: 4/4 test cases pass. Unit tests: 80/80 GREEN. The 2 Wireloom UAT scenarios are implemented under `TASK-7` with targeted unit and Documents View E2E coverage.
 
 ## Acceptance Strategy
 
@@ -24,6 +24,7 @@
 | Wireframe rendering | `wireframe_with_metadata_label`, `wireframe_without_metadata` | 2 |
 | Markdown feature parity | `table_rendering`, `strikethrough_rendering`, `task_list_rendering` | 3 |
 | Pipeline compatibility | `mermaid_block_compatibility`, `prism_syntax_highlighting`, `smart_link_preprocessing` | 3 |
+| Wireloom rendering | `wireloom_block_renders_with_defaults`, `malformed_wireloom_error_visible` | 2 |
 | Heading & TOC | `heading_id_generation` | 1 |
 | Sanitization | `dompurify_allows_wireframe_label` | 1 |
 
@@ -53,6 +54,22 @@
 - Smart link test uses `code: 'MDT'` in project creation so the preprocessor matches `MDT-001` as a ticket reference (preprocessor uses `currentProject` prefix for regex matching)
 - BR-10 is covered by two scenarios: `wireframe_with_metadata_label` (end-to-end rendering) and `dompurify_allows_wireframe_label` (sanitization-specific). Both are intentional — the first validates the integrated pipeline, the second isolates the sanitization concern
 - BR-11 (TOC extraction) E2E coverage: the ticket detail TOC sidebar only populates for subdocuments, not main ticket content. E2E tests verify heading IDs exist (BR-9); BR-11 TOC extraction correctness is verified via unit tests for `extractTableOfContents()` including headerLevelStart offset
+
+## UAT Scenarios: Wireloom 0.7.0 Defaults
+
+### `wireloom_block_renders_with_defaults`
+
+- Covers: `BR-12`
+- Given markdown content contains a fenced code block with language `wireloom`
+- When the markdown surface finishes post-render processing
+- Then the block is replaced by inline Wireloom SVG using MDT's light/dark theme defaults, long annotation bodies are compacted before render, and other fenced code blocks remain unchanged
+
+### `malformed_wireloom_error_visible`
+
+- Covers: `BR-13`
+- Given markdown content contains an invalid `wireloom` fenced block
+- When Wireloom render reports a parse failure
+- Then the markdown surface shows an inline Wireloom error with available source position context and the rest of the markdown remains rendered
 
 ---
 *Rendered by /mdt:bdd via spec-trace*

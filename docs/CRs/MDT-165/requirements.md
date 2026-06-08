@@ -5,7 +5,7 @@
 
 ## Overview
 
-MDT-165 migrates the markdown rendering pipeline from Showdown to markdown-it, enabling labeled wireframe code blocks with metadata in the fence info string. The migration touches the rendering step, heading ID generation, table-of-contents extraction, Mermaid post-processing regex, and all Showdown consumers. 11 behavioral requirements, 5 constraints, and 5 edge cases are specified.
+MDT-165 migrates the markdown rendering pipeline from Showdown to markdown-it, enabling labeled wireframe code blocks with metadata in the fence info string. The migration touches the rendering step, heading ID generation, table-of-contents extraction, Mermaid post-processing regex, Wireloom fenced-block rendering, and all Showdown consumers. 13 behavioral requirements, 6 constraints, and 6 edge cases are specified.
 
 ## Constraint Carryover
 
@@ -31,6 +31,7 @@ MDT-165 migrates the markdown rendering pipeline from Showdown to markdown-it, e
 | Heading anchor rendering | Entire heading text wrapped in `<a class="header-anchor">`, `#` via CSS `::after` on hover | Separate permalink `#` link after heading text | Clickable title is more intuitive; CSS hover avoids visual noise |
 | Heading scroll offset | `scroll-margin-top: 3rem` on `.prose [id]` | No offset | Sticky tab bar covers headings at viewport top; offset ensures visibility |
 | Mermaid rendering source | Browser rendering uses decoded Mermaid fence source preserved separately from the mutated DOM node | Let Mermaid read escaped markdown-it HTML from `.mermaid` DOM | Prevents valid diagrams with quotes or escaped entities from rendering Mermaid syntax-error fallback |
+| Wireloom render defaults | MDT owns explicit Wireloom defaults at the integration boundary: `theme: "default"` in light mode, `theme: "dark"` in dark mode, and compact annotation line wrapping before render | Rely on implicit package defaults or require authors to hand-wrap every long annotation | Wireloom is pre-1.0; central defaults make future package changes and 0.7.0 behavior auditable |
 
 ## Open Questions
 
@@ -43,6 +44,24 @@ UAT on 2026-05-22 found that raw Mermaid code from `docs/CRs/MDT-157/architectur
 Affected requirement:
 
 - `BR-6`: refined in place. Mermaid compatibility means browser diagrams render from preserved decoded source, not from markdown-it escaped DOM text.
+
+## UAT Refinement: Wireloom 0.7.0 Defaults
+
+UAT on 2026-06-08 found that the Wireloom integration exists in the markdown-it/post-render pipeline and `wireloom` is upgraded to `^0.7.0` from upstream commit `bc075376`, but Wireloom behavior needs to be explicit in the ticket rather than living only in implementation notes.
+
+Approved changes:
+
+- Add first-class support requirements for `wireloom` fenced blocks rendering as inline SVG.
+- Centralize MDT-owned Wireloom render defaults so the app does not rely on implicit package defaults.
+- Compact long Wireloom annotation bodies before render so callouts wrap and do not expand the whole SVG unnecessarily.
+- Keep the existing no-crash markdown rendering contract when Wireloom source is malformed or the package cannot load.
+
+Affected requirement IDs:
+
+- `BR-12`: added. Wireloom fenced blocks render as inline SVG through the shared markdown pipeline with explicit MDT defaults.
+- `BR-13`: added. Malformed Wireloom source shows a useful inline error and does not crash the markdown surface.
+- `C6`: added. Wireloom render defaults, including theme and compact annotation layout, are centralized at the integration boundary.
+- `Edge-6`: added. Missing/unloadable Wireloom falls back to escaped plain code.
 
 ---
 *Rendered by /mdt:requirements via spec-trace*

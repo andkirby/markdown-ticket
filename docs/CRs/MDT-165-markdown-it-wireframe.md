@@ -160,6 +160,36 @@ Follow-up execution slice:
 Strict drift/lock:
 - Not used. This is a same-ticket UAT refinement with stage validation and rendered trace projections.
 
+### UAT Session 2026-06-08
+
+Approved follow-up: Wireloom fenced blocks are now an explicit same-ticket refinement for the MDT-165 markdown-it rendering pipeline. Wireloom is upgraded to `0.7.0` from upstream commit `bc075376`; MDT should centralize the app-level render defaults rather than rely on implicit package defaults.
+
+Changed requirement IDs:
+- `BR-12` added: `wireloom` fenced blocks render as inline SVG through the shared markdown pipeline with explicit MDT defaults.
+- `BR-13` added: malformed Wireloom source shows a useful inline error and does not crash markdown rendering.
+- `C6` added: Wireloom render defaults, including theme and compact annotation layout, are centralized at the integration boundary.
+- `Edge-6` added: missing/unloadable Wireloom falls back to escaped plain code.
+
+Updated workflow documents:
+- `requirements.md`
+- `bdd.md`
+- `architecture.md`
+- `tests.md`
+- `tasks.md`
+- `uat.md`
+- `*.trace.md` projections for requirements, BDD, architecture, tests, and tasks
+
+Follow-up execution slice:
+- `TASK-7`: make Wireloom 0.7.0 render defaults explicit.
+
+Implementation result:
+- `TASK-7` implemented. Wireloom render defaults now live in `src/utils/wireloomRenderer.ts`; long annotation bodies are compacted before render; malformed source errors include enumerable Wireloom source positions; missing package fallback remains escaped plain code.
+- Targeted Wireloom unit tests and Documents View Wireloom E2E passed.
+- Full changed-file TypeScript validation is blocked by unrelated ProjectSelector/accent-color worktree errors.
+
+Strict drift/lock:
+- Not used. This is a same-ticket UAT refinement with stage validation and rendered trace projections.
+
 ---
 
 > Requirements trace projection: [requirements.trace.md](./MDT-165/requirements.trace.md)

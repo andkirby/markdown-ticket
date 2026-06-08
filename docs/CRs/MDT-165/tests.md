@@ -23,12 +23,16 @@
 | Mermaid HTML entity decode | `mermaid/core` | `&gt;`, `&lt;`, `&amp;`, quotes, and apostrophes decoded into preserved source |
 | Mermaid unique IDs | `mermaid/core` | Multiple blocks get unique incrementing IDs |
 | Mermaid runtime source rendering | `mermaid/hooks` | Browser renderer calls Mermaid with preserved decoded source and does not render syntax-error fallback |
+| Wireloom render defaults | `wireloomRenderer` | Light mode passes `theme: "default"`, dark mode passes `theme: "dark"`, and long annotation bodies are compacted before render from one integration boundary |
+| Wireloom error surface | `wireloomRenderer` | Malformed source renders `.wireloom-error` with available line/column context and does not crash |
+| Wireloom fallback | `wireloomRenderer` | Missing/unloadable package falls back to escaped `pre > code.language-wireloom` |
 
 ## External Dependency Tests
 
 | Dependency | Real Test | Behavior When Absent |
 |------------|-----------|----------------------|
 | `markdown-it` | Wireframe plugin test creates md instance | Tests fail to import |
+| `wireloom` | Wireloom renderer test renders a real SVG through the package | Falls back to plain escaped code block if dynamic import fails |
 | `preprocessMarkdown` | Preprocessor pipeline compat test (BR-8) | N/A (uses existing module) |
 | `DOMPurify` | Pipeline test runs sanitize | N/A (bundled) |
 | `Prism` | Pipeline test runs highlightCodeBlocks | N/A (bundled) |
@@ -49,6 +53,9 @@
 |---------|------|--------|
 | `TEST-markdown-it-migration-e2e` | `tests/e2e/ticket/markdown-it-migration.spec.ts` | BR-1 through BR-11 |
 | `TEST-mermaid-render-runtime` | `src/utils/mermaid/hooks.ts` + Playwright runtime check | BR-6, C4 |
+| `TEST-wireloom-plugin-unit` | `src/utils/wireloomRenderer.test.ts` | BR-12, Edge-6 |
+| `TEST-wireloom-renderer-unit` | `src/utils/wireloomRenderer.test.ts` | BR-12, BR-13, C6, Edge-6 |
+| `TEST-wireloom-live-document-e2e` | `tests/e2e/documents/live-updates.spec.ts` | BR-12 |
 
 ## Test Status
 
@@ -64,6 +71,18 @@
 - **Total: 86/86 unit tests GREEN**
 - **E2E: 4/4 GREEN**
 
+### UAT Implemented: Wireloom 0.7.0 Defaults
+
+- `TEST-wireloom-plugin-unit`: confirms `wireloom` fences emit safe placeholders and non-Wireloom fences stay unchanged.
+- `TEST-wireloom-renderer-unit`: confirms centralized render defaults, compact annotation bodies, inline parse errors with source position, and fallback to plain code when Wireloom cannot load.
+- `TEST-wireloom-live-document-e2e`: confirms Documents View refreshes rendered Wireloom blocks after file changes.
+
+Validation evidence:
+- `bun test src/utils/wireloomRenderer.test.ts src/utils/wireloomFullscreen.test.ts` — 18/18 pass.
+- `PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/documents/live-updates.spec.ts --project=chromium --grep "Wireloom"` — 1/1 pass.
+- Targeted ESLint for `src/utils/wireloomRenderer.ts` and `src/utils/wireloomRenderer.test.ts` — pass.
+- `bun run validate:ts` is blocked by unrelated ProjectSelector/accent-color TypeScript errors in the dirty worktree, not by the Wireloom files.
+
 ## Verify
 
 ```bash
@@ -73,6 +92,8 @@ bun test src/utils/slugify.test.ts
 bun test src/utils/tableOfContents.test.ts
 bun test src/utils/mermaid/core.test.ts
 bun test src/components/MarkdownContent/useMarkdownProcessor.test.ts
+bun test src/utils/wireloomRenderer.test.ts
+bun test src/utils/wireloomFullscreen.test.ts
 
 # Mermaid UAT render regression
 scripts/validate-mermaid-md docs/CRs/MDT-157/architecture.md
@@ -82,6 +103,7 @@ scripts/validate-mermaid-md docs/CRs/MDT-157/architecture.md
 
 # Run E2E tests
 PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/ticket/markdown-it-migration.spec.ts --project=chromium
+PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/documents/live-updates.spec.ts --project=chromium --grep "Wireloom"
 
 # Validate trace
 spec-trace validate MDT-165 --stage tests
