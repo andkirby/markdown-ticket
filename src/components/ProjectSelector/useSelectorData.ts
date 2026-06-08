@@ -256,7 +256,7 @@ export function useSelectorData(options: UseSelectorDataOptions = {}): SelectorD
     })
   }, [persistPreferences])
 
-  const setAccentStyle = useCallback((style: string) => {
+  const setAccentStyle = useCallback((style: SelectorPreferences['accentStyle']) => {
     setPreferences(prev => {
       const next = { ...prev, accentStyle: style as SelectorPreferences['accentStyle'] }
       persistPreferences(next)
@@ -294,17 +294,28 @@ export function loadLocalPreferences(): Partial<SelectorPreferences> {
       const parsed = JSON.parse(stored) as Record<string, unknown>
       const result: Partial<SelectorPreferences> = {}
       if (typeof parsed.accentEnabled === 'boolean') result.accentEnabled = parsed.accentEnabled
-      if (typeof parsed.accentStyle === 'string') result.accentStyle = parsed.accentStyle as SelectorPreferences['accentStyle']
+      const migratedStyle = migrateAccentStyle(parsed)
+      if (migratedStyle) result.accentStyle = migratedStyle
       if (typeof parsed.autocolor === 'boolean') result.autocolor = parsed.autocolor
-      // Migration: convert old boolean to new style
-      if (typeof parsed.accentGradients === 'boolean' && parsed.accentStyle === undefined) {
-        result.accentStyle = parsed.accentGradients ? 'gradient' : 'flat'
-      }
       return result
     }
   }
   catch { /* ignore */ }
   return {}
+}
+
+/**
+ * Migrate legacy `accentGradients` boolean to `accentStyle` enum.
+ * Single migration path — called from both loadLocalPreferences and validatePreferences.
+ */
+function migrateAccentStyle(raw: Record<string, unknown>): SelectorPreferences['accentStyle'] | undefined {
+  if (typeof raw.accentStyle === 'string' && ['gradient', 'flat', 'plate'].includes(raw.accentStyle)) {
+    return raw.accentStyle as 'gradient' | 'flat' | 'plate'
+  }
+  if (typeof raw.accentGradients === 'boolean') {
+    return raw.accentGradients ? 'gradient' : 'flat'
+  }
+  return undefined
 }
 
 function validatePreferences(raw: Record<string, unknown>): SelectorPreferences {
@@ -315,30 +326,20 @@ function validatePreferences(raw: Record<string, unknown>): SelectorPreferences 
   }
 
   let compactInactive = DEFAULT_PREFERENCES.compactInactive
-  const rawCompactInactive = raw.compactInactive
-  if (typeof rawCompactInactive === 'boolean') {
-    compactInactive = rawCompactInactive
+  if (typeof raw.compactInactive === 'boolean') {
+    compactInactive = raw.compactInactive
   }
 
   let accentEnabled = DEFAULT_PREFERENCES.accentEnabled
-  const rawAccentEnabled = raw.accentEnabled
-  if (typeof rawAccentEnabled === 'boolean') {
-    accentEnabled = rawAccentEnabled
+  if (typeof raw.accentEnabled === 'boolean') {
+    accentEnabled = raw.accentEnabled
   }
 
-  let accentStyle = DEFAULT_PREFERENCES.accentStyle
-  const rawAccentStyle = raw.accentStyle
-  if (typeof rawAccentStyle === 'string' && ['gradient', 'flat', 'plate'].includes(rawAccentStyle)) {
-    accentStyle = rawAccentStyle as SelectorPreferences['accentStyle']
-  } else if (typeof raw.accentGradients === 'boolean') {
-    // Migration from old boolean field
-    accentStyle = raw.accentGradients ? 'gradient' : 'flat'
-  }
+  const accentStyle = migrateAccentStyle(raw) ?? DEFAULT_PREFERENCES.accentStyle
 
   let autocolor = DEFAULT_PREFERENCES.autocolor
-  const rawAutocolor = raw.autocolor
-  if (typeof rawAutocolor === 'boolean') {
-    autocolor = rawAutocolor
+  if (typeof raw.autocolor === 'boolean') {
+    autocolor = raw.autocolor
   }
 
   return {

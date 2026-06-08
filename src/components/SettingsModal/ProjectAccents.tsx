@@ -63,18 +63,11 @@ export function ProjectAccents({
   const [paletteOpen, setPaletteOpen] = useState(false)
 
   // Accent rendering preferences (persisted immediately to localStorage)
-  const [accentEnabled, setAccentEnabledLocal] = useState<boolean>(() => {
-    const stored = loadLocalPreferences()
-    return stored.accentEnabled ?? true
-  })
-  const [accentStyle, setAccentStyleLocal] = useState<string>(() => {
-    const stored = loadLocalPreferences()
-    return stored.accentStyle ?? 'gradient'
-  })
-  const [autocolor, setAutocolorLocal] = useState<boolean>(() => {
-    const stored = loadLocalPreferences()
-    return stored.autocolor ?? true
-  })
+  const prefsMemo = useMemo(() => loadLocalPreferences(), [])
+
+  const [accentEnabled, setAccentEnabledLocal] = useState<boolean>(() => prefsMemo.accentEnabled ?? true)
+  const [accentStyle, setAccentStyleLocal] = useState<string>(() => prefsMemo.accentStyle ?? 'gradient')
+  const [autocolor, setAutocolorLocal] = useState<boolean>(() => prefsMemo.autocolor ?? true)
 
   const persistPref = useCallback((prefs: Partial<SelectorPreferences>) => {
     try {
