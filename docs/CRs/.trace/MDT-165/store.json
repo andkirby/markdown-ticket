@@ -210,6 +210,34 @@
       "text": "WHEN markdown content contains a fenced code block with language 'mermaid', the system shall preserve the decoded Mermaid fence source separately from rendered DOM and render the browser diagram from that source so markdown-it HTML entity escaping cannot break Mermaid rendering",
       "sourceRef": "UAT 2026-05-22",
       "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-12",
+      "kind": "behavior",
+      "text": "WHEN markdown content contains a fenced code block with language 'wireloom', the system shall render it as inline Wireloom SVG using explicit MDT render defaults and preserve normal fenced-code behavior for all other languages",
+      "sourceRef": "UAT 2026-06-08 Wireloom 0.7.0 defaults",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-13",
+      "kind": "behavior",
+      "text": "WHEN Wireloom rendering fails because the source is malformed, the system shall show a useful inline error with available line and column context and shall not crash the markdown rendering surface",
+      "sourceRef": "UAT 2026-06-08 Wireloom 0.7.0 defaults",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "Edge-6",
+      "kind": "edge_case",
+      "text": "IF the wireloom package is unavailable or dynamic import fails, THEN wireloom fenced blocks shall fall back to escaped plain code blocks rather than disappearing or breaking the markdown pipeline",
+      "sourceRef": "UAT 2026-06-08 Wireloom 0.7.0 defaults",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C6",
+      "kind": "constraint",
+      "text": "Wireloom rendering SHALL centralize MDT default render options so light mode uses theme 'default', dark mode uses theme 'dark', long annotation bodies are compacted to the configured line length before render, and future Wireloom defaults are changed in one integration boundary",
+      "sourceRef": "UAT 2026-06-08 Wireloom 0.7.0 defaults",
+      "routePolicy": "tests"
     }
   ],
   "scenarios": [
@@ -335,6 +363,28 @@
       "when": "MarkdownContent renders the document in the browser",
       "then": "The renderer stores the decoded Mermaid source separately, renders an SVG from that source, and does not display Mermaid's syntax error fallback",
       "sourceRef": "CR:MDT-165"
+    },
+    {
+      "id": "malformed_wireloom_error_visible",
+      "title": "Malformed Wireloom shows inline error without crashing",
+      "covers": [
+        "BR-13"
+      ],
+      "given": "Given markdown content contains an invalid wireloom fenced block",
+      "when": "When Wireloom render reports a parse failure",
+      "then": "Then the markdown surface shows an inline Wireloom error with available source position context and the rest of the markdown remains rendered",
+      "sourceRef": "UAT 2026-06-08 Wireloom 0.7.0 defaults"
+    },
+    {
+      "id": "wireloom_block_renders_with_defaults",
+      "title": "Wireloom block renders with explicit MDT defaults",
+      "covers": [
+        "BR-12"
+      ],
+      "given": "Given a markdown document contains a valid fenced code block with language wireloom",
+      "when": "When Documents View renders the markdown content",
+      "then": "Then the block is replaced by an inline Wireloom SVG using MDT light or dark theme defaults, long annotation bodies are compacted before render, and other fenced code blocks remain unchanged",
+      "sourceRef": "UAT 2026-06-08 Wireloom 0.7.0 defaults"
     }
   ],
   "obligations": [
@@ -535,6 +585,61 @@
         "ART-prose-css"
       ],
       "sourceRef": "UAT 2026-05-22"
+    },
+    {
+      "id": "OBL-wireloom-error-surface",
+      "title": "Show Wireloom parse failures inline without crashing the markdown surface",
+      "derivedFrom": [
+        "BR-13"
+      ],
+      "artifactIds": [
+        "ART-wireloom-renderer",
+        "ART-wireloom-renderer-test"
+      ],
+      "sourceRef": "UAT 2026-06-08 Wireloom 0.7.0 defaults"
+    },
+    {
+      "id": "OBL-wireloom-fallback",
+      "title": "Fall back to escaped plain code blocks when the Wireloom package cannot load",
+      "derivedFrom": [
+        "Edge-6"
+      ],
+      "artifactIds": [
+        "ART-wireloom-renderer",
+        "ART-wireloom-renderer-test"
+      ],
+      "sourceRef": "UAT 2026-06-08 Wireloom 0.7.0 defaults"
+    },
+    {
+      "id": "OBL-wireloom-fence-rendering",
+      "title": "Render wireloom fenced blocks through the shared markdown-it/post-render pipeline",
+      "derivedFrom": [
+        "BR-12",
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-markdown-processor",
+        "ART-wireloom-plugin",
+        "ART-post-render",
+        "ART-wireloom-renderer",
+        "ART-dom-purify-config",
+        "ART-wireloom-fullscreen",
+        "ART-wireloom-fullscreen-test",
+        "ART-prose-css"
+      ],
+      "sourceRef": "UAT 2026-06-08 Wireloom 0.7.0 defaults"
+    },
+    {
+      "id": "OBL-wireloom-render-defaults",
+      "title": "Centralize Wireloom render defaults for theme and compact annotation layout",
+      "derivedFrom": [
+        "BR-12",
+        "C6"
+      ],
+      "artifactIds": [
+        "ART-wireloom-renderer"
+      ],
+      "sourceRef": "UAT 2026-06-08 Wireloom 0.7.0 defaults"
     }
   ],
   "artifacts": [
@@ -639,6 +744,36 @@
       "path": "src/styles/prose.css",
       "kind": "runtime",
       "sourceRef": "UAT 2026-05-22"
+    },
+    {
+      "id": "ART-wireloom-plugin",
+      "path": "src/utils/markdownItWireloomPlugin.ts",
+      "kind": "runtime",
+      "sourceRef": "UAT 2026-06-08 Wireloom 0.7.0 defaults"
+    },
+    {
+      "id": "ART-wireloom-renderer",
+      "path": "src/utils/wireloomRenderer.ts",
+      "kind": "runtime",
+      "sourceRef": "UAT 2026-06-08 Wireloom 0.7.0 defaults"
+    },
+    {
+      "id": "ART-wireloom-fullscreen",
+      "path": "src/utils/wireloomFullscreen.ts",
+      "kind": "runtime",
+      "sourceRef": "UAT 2026-06-08 Wireloom 0.7.0 defaults"
+    },
+    {
+      "id": "ART-wireloom-renderer-test",
+      "path": "src/utils/wireloomRenderer.test.ts",
+      "kind": "test",
+      "sourceRef": "UAT 2026-06-08 Wireloom 0.7.0 defaults"
+    },
+    {
+      "id": "ART-wireloom-fullscreen-test",
+      "path": "src/utils/wireloomFullscreen.test.ts",
+      "kind": "test",
+      "sourceRef": "UAT 2026-06-08 Wireloom 0.7.0 defaults"
     }
   ],
   "testPlans": [
@@ -764,6 +899,40 @@
       ],
       "file": "src/utils/mermaid/hooks.ts",
       "sourceRef": "UAT 2026-05-22"
+    },
+    {
+      "id": "TEST-wireloom-plugin-unit",
+      "kind": "unit",
+      "title": "Wireloom markdown-it fence plugin emits safe placeholders and preserves non-wireloom fences",
+      "covers": [
+        "BR-12",
+        "Edge-6"
+      ],
+      "file": "src/utils/wireloomRenderer.test.ts",
+      "sourceRef": "UAT 2026-06-08 Wireloom 0.7.0 defaults"
+    },
+    {
+      "id": "TEST-wireloom-live-document-e2e",
+      "kind": "e2e",
+      "title": "Documents View refreshes rendered Wireloom blocks after file changes",
+      "covers": [
+        "BR-12"
+      ],
+      "file": "tests/e2e/documents/live-updates.spec.ts",
+      "sourceRef": "UAT 2026-06-08 Wireloom 0.7.0 defaults"
+    },
+    {
+      "id": "TEST-wireloom-renderer-unit",
+      "kind": "unit",
+      "title": "Wireloom renderer unit tests cover defaults, compact annotations, fallback, and errors",
+      "covers": [
+        "BR-12",
+        "BR-13",
+        "C6",
+        "Edge-6"
+      ],
+      "file": "src/utils/wireloomRenderer.test.ts",
+      "sourceRef": "UAT 2026-06-08 Wireloom 0.7.0 defaults"
     }
   ],
   "tasks": [
@@ -872,6 +1041,29 @@
         "playwright-cli"
       ],
       "sourceRef": "UAT 2026-05-22"
+    },
+    {
+      "id": "TASK-7",
+      "title": "UAT follow-up: make Wireloom 0.7.0 render defaults explicit",
+      "ownsArtifactIds": [
+        "ART-wireloom-plugin",
+        "ART-wireloom-renderer",
+        "ART-wireloom-renderer-test",
+        "ART-wireloom-fullscreen",
+        "ART-wireloom-fullscreen-test",
+        "ART-prose-css"
+      ],
+      "makesGreenIds": [
+        "wireloom_block_renders_with_defaults",
+        "malformed_wireloom_error_visible",
+        "TEST-wireloom-plugin-unit",
+        "TEST-wireloom-renderer-unit",
+        "TEST-wireloom-live-document-e2e"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "UAT 2026-06-08 Wireloom 0.7.0 defaults"
     }
   ]
 }
