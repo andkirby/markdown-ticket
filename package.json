@@ -104,7 +104,7 @@
     "clean:all": "bun run clean && rimraf node_modules */node_modules",
     "check": "bun run validate:ts:all && bun run lint:all && bun run check-shared",
     "check:full": "bun run check && bun run format:check && bun run knip",
-    "prepare": "husky"
+    "postinstall": "lefthook install"
   },
   "dependencies": {
     "@mdt/domain-contracts": "workspace:*",
@@ -168,7 +168,6 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "happy-dom": "^20.9.0",
-    "husky": "^9.1.7",
     "jiti": "^2.6.1",
     "knip": "^5.88.1",
     "tsx": "^4.21.0",
