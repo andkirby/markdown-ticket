@@ -56,8 +56,7 @@ export interface SelectorData {
   clearAccent: (projectKey: string) => void
   /** Toggle accent coloring on/off */
   setAccentEnabled: (enabled: boolean) => void
-  /** Set accent rendering style */
-  setAccentStyle: (style: string) => void
+  setAccentStyle: (style: SelectorPreferences['accentStyle']) => void
   /** Toggle autocolor fallback on/off */
   setAutocolor: (enabled: boolean) => void
   /** Error message if data loading failed */
