@@ -395,6 +395,54 @@ scripts/validate-mermaid-md docs/CRs/MDT-157/architecture.md
 
 ---
 
+### Task 7: UAT Follow-Up — Make Wireloom 0.7.0 Render Defaults Explicit
+
+**Milestone**: UAT — Wireloom 0.7.0 defaults and error surface
+
+**Structure**: `src/utils/wireloomRenderer.ts`, `src/utils/markdownItWireloomPlugin.ts`, `src/utils/wireloomRenderer.test.ts`, `src/utils/wireloomFullscreen.ts`, `src/utils/wireloomFullscreen.test.ts`, `src/styles/prose.css`
+
+**Makes GREEN (Automated Tests)**:
+- `TEST-wireloom-plugin-unit` → `src/utils/wireloomRenderer.test.ts`: Wireloom fences emit placeholders and non-Wireloom fences stay untouched.
+- `TEST-wireloom-renderer-unit` → `src/utils/wireloomRenderer.test.ts`: explicit render defaults, compact annotation bodies, parse-error surface, and missing-package fallback.
+- `TEST-wireloom-live-document-e2e` → `tests/e2e/documents/live-updates.spec.ts`: Documents View refreshes rendered Wireloom content after file changes.
+
+**Makes GREEN (Behavior)**:
+- `wireloom_block_renders_with_defaults`: `wireloom` fenced blocks become inline SVG using MDT-owned light/dark render defaults and compact annotation layout.
+- `malformed_wireloom_error_visible`: invalid Wireloom renders an inline `.wireloom-error` without crashing the rest of the markdown surface.
+
+**Scope**: Make the current Wireloom integration's default render behavior explicit and regression-tested after the package upgrade to `^0.7.0` from upstream commit `bc075376`, including compact callout layout for long annotation bodies.
+
+**Boundary**: No rewrite of the markdown pipeline, no new markdown surface, and no Wireloom package changes.
+
+**Modifies**:
+- `src/utils/wireloomRenderer.ts` — centralize default render options, compact long annotation bodies before render, and include available `WireloomError` line/column context.
+- `src/utils/wireloomRenderer.test.ts` — cover defaults, compact annotations, fallback, parse errors, and successful SVG replacement.
+- `src/utils/markdownItWireloomPlugin.ts` — keep placeholder emission safe and limited to `wireloom` fences.
+
+**Verify**:
+
+```bash
+bun test src/utils/wireloomRenderer.test.ts
+bun test src/utils/wireloomFullscreen.test.ts
+PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/documents/live-updates.spec.ts --project=chromium --grep "Wireloom"
+```
+
+**Done when**:
+- [x] Light mode Wireloom renders pass `theme: "default"` explicitly.
+- [x] Dark mode Wireloom renders pass `theme: "dark"` explicitly.
+- [x] Long annotation bodies are compacted before Wireloom render so callouts wrap and do not expand the whole SVG unnecessarily.
+- [x] Malformed Wireloom source shows line/column when the package exposes it.
+- [x] Missing/unloadable Wireloom falls back to escaped plain code.
+- [x] Existing fullscreen control still attaches after successful render.
+
+**Implementation evidence**:
+- `bun test src/utils/wireloomRenderer.test.ts src/utils/wireloomFullscreen.test.ts` — 18/18 pass.
+- `PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/documents/live-updates.spec.ts --project=chromium --grep "Wireloom"` — 1/1 pass.
+- Targeted ESLint for `src/utils/wireloomRenderer.ts` and `src/utils/wireloomRenderer.test.ts` — pass.
+- `bun run validate:ts` is blocked by unrelated ProjectSelector/accent-color TypeScript errors in the dirty worktree.
+
+---
+
 ## Architecture Coverage
 
 | Layer | Arch Files | In Tasks | Gap | Status |

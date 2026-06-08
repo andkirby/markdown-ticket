@@ -22,6 +22,9 @@ MDT-165 replaces Showdown with markdown-it as the markdown rendering engine in `
 | `mermaid/core.ts` | Mermaid diagram post-processing (regex transform) | ART-mermaid-core |
 | `mermaid/hooks.ts` | Browser-side Mermaid rendering from preserved decoded source | ART-mermaid-hooks |
 | `usePostRender.ts` | Post-render orchestration scoped to the current Markdown container | ART-post-render |
+| `markdownItWireloomPlugin.ts` | Detects `wireloom` fences and emits encoded async-render placeholders | ART-wireloom-plugin |
+| `wireloomRenderer.ts` | Lazy-loads Wireloom, applies theme and annotation layout defaults, replaces placeholders, and handles errors/fallbacks | ART-wireloom-renderer |
+| `wireloomFullscreen.ts` | Adds shared fullscreen inspection controls to rendered Wireloom artifacts | ART-wireloom-fullscreen |
 | `syntaxHighlight.ts` | Prism syntax highlighting on rendered code blocks | ART-syntax-highlight |
 | `markdownPreprocessor.ts` | Smart-link preprocessing (ticket/doc refs → links) | ART-preprocessor |
 | `useHtmlParser.ts` | HTML → React parser; skips `header-anchor` links to prevent SmartLink wrapping | ART-html-parser |
@@ -121,6 +124,8 @@ Custom permalink wraps heading content in clickable anchor:
 8. **Heading scroll offset**: All `[id]` elements inside `.prose` have `scroll-margin-top: 3rem` to clear the sticky tab bar during anchor navigation.
 9. **HTML parser skips heading anchors**: `useHtmlParser.ts` must not convert `<a class="header-anchor">` elements into SmartLink components.
 10. **Mermaid source preservation**: Mermaid browser rendering uses decoded fence source stored separately from rendered DOM. Do not depend on `mermaid.run()` reading escaped markdown-it HTML from the display node.
+11. **Wireloom defaults are explicit**: `wireloomRenderer.ts` owns MDT's Wireloom defaults. Light mode renders with `theme: "default"`, dark mode renders with `theme: "dark"`, and long annotation bodies are compacted before render unless a future UAT explicitly changes that contract.
+12. **Wireloom failures stay local**: malformed Wireloom source and missing package imports render inline fallback/error UI and must not throw through the markdown rendering surface.
 
 ## Asses-Driven Architecture Responses
 
@@ -154,9 +159,13 @@ New markdown rendering features should be added as markdown-it plugins via `md.u
 
 ### Wireloom Integration (optional)
 
-`markdownItWireloomPlugin` was added as a fence renderer following this extension rule. Wireloom (`wireloom` package) is an optional dependency — when installed, ```wireloom blocks render as SVG wireframes via post-render async rendering (same pattern as Mermaid). When not installed, blocks fall back to plain `<pre><code>` display. The plugin uses placeholder divs with base64-encoded sources; `renderWireloomElements()` in `usePostRender.ts` handles async rendering and DOM replacement.
+`markdownItWireloomPlugin` was added as a fence renderer following this extension rule. Wireloom (`wireloom` package) is an optional dependency. When installed, `wireloom` fenced blocks render as SVG wireframes via post-render async rendering (same pattern as Mermaid). When not installed, blocks fall back to plain `<pre><code>` display. The plugin uses placeholder divs with base64-encoded sources; `renderWireloomElements()` in `usePostRender.ts` handles async rendering and DOM replacement.
 
 **Theme reactivity**: `useTheme` dispatches a `theme-change` custom event on theme toggle. `usePostRender` listens for this event and re-renders both Mermaid diagrams and Wireloom wireframes with the correct theme. Wireloom SVGs cache by source+theme key, so toggling back is instant.
+
+**UAT default contract**: Wireloom is upgraded to `^0.7.0` from upstream commit `bc075376`. MDT should not rely on implicit package defaults. `wireloomRenderer.ts` must centralize the render options and pass the selected theme explicitly on every `wireloom.render(id, source, options)` call. The first approved defaults are light mode `theme: "default"`, dark mode `theme: "dark"`, and compact annotation wrapping before render. Annotation compaction uses Wireloom's parse/serialize API so the original Markdown source stays unchanged while the rendered SVG uses shorter callout lines.
+
+**Error surface**: Wireloom parse failures should render `.wireloom-error` inline. When the error exposes line/column data, that position must be included. Non-Wireloom code fences continue through the default markdown-it fence renderer.
 
 ### UAT Mermaid Rendering Follow-Up
 

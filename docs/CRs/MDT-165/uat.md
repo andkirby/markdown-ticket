@@ -2,49 +2,56 @@
 
 ## Objective
 
-Fix the MDT-165 Mermaid rendering follow-up discovered during UAT: valid Mermaid blocks from markdown-it output must render in MDT the same way they render in `mdopen` and the Mermaid online editor.
+Make the MDT-165 Wireloom integration explicit after the upstream Wireloom upgrade to `0.7.0` (`bc075376`): `wireloom` fenced blocks should render as inline SVG through the existing markdown pipeline with centralized MDT defaults, compact annotation layout, useful inline errors, and no regression for other fenced code blocks.
 
 ## Approved Changes
 
-- Preserve decoded Mermaid fence source separately from rendered DOM.
-- Render each browser diagram with `mermaid.render(id, source)` from preserved source.
-- Scope Mermaid rendering to the current `MarkdownContent` container.
-- Do not rewrite existing Mermaid diagrams to remove quotes; quoted labels remain valid Mermaid.
+- Treat Wireloom fenced blocks as first-class markdown content in this ticket.
+- Centralize Wireloom render defaults in the MDT integration boundary.
+- Use `theme: "default"` for light mode and `theme: "dark"` for dark mode.
+- Compact long annotation bodies before render so callouts wrap and stay close to the target surface.
+- Keep graceful fallback to escaped plain code when Wireloom cannot load.
+- Show useful inline parse errors, including line/column when Wireloom exposes them.
+- Keep the markdown-it pipeline shape unchanged.
 
 ## Changed Requirement IDs
 
-- `BR-6`: refined in place. Mermaid compatibility now means browser rendering uses preserved decoded fence source and does not depend on Mermaid reading markdown-it escaped DOM text.
+- `BR-12`: added for `wireloom` fenced blocks rendering as inline SVG with explicit MDT defaults.
+- `BR-13`: added for malformed Wireloom source showing inline errors without crashing markdown rendering.
+- `C6`: added for centralized Wireloom render defaults, including theme and compact annotation layout.
+- `Edge-6`: added for missing/unloadable Wireloom fallback.
 
 ## Affected Downstream Trace
 
-- Scenario: `mermaid_decoded_source_rendering`
-- Artifacts: `ART-mermaid-core`, `ART-mermaid-hooks`, `ART-post-render`, `ART-prose-css`
-- Obligation: `OBL-mermaid-source-preservation`
-- Tests: `TEST-mermaid-core-unit`, `TEST-processor-pipeline-unit`, `TEST-mermaid-render-runtime`
-- Task: `TASK-6`
+- Scenarios: `wireloom_block_renders_with_defaults`, `malformed_wireloom_error_visible`
+- Artifacts: `ART-wireloom-plugin`, `ART-wireloom-renderer`, `ART-wireloom-renderer-test`, `ART-wireloom-fullscreen`, `ART-wireloom-fullscreen-test`, `ART-prose-css`
+- Obligations: `OBL-wireloom-fence-rendering`, `OBL-wireloom-render-defaults`, `OBL-wireloom-error-surface`, `OBL-wireloom-fallback`
+- Tests: `TEST-wireloom-plugin-unit`, `TEST-wireloom-renderer-unit`, `TEST-wireloom-live-document-e2e`
+- Task: `TASK-7`
 
 ## Execution Slices
 
-### Slice 1: Mermaid Source Preservation
+### Slice 1: Wireloom Defaults and Error Surface
 
-Objective: Store decoded Mermaid fence source and render browser diagrams from that source.
+Objective: Make Wireloom render options explicit and make malformed-source failures useful without escaping the markdown surface.
 
 Direct artifacts/files:
-- `src/utils/mermaid/core.ts`
-- `src/utils/mermaid/hooks.ts`
-- `src/components/MarkdownContent/usePostRender.ts`
+- `src/utils/wireloomRenderer.ts`
+- `src/utils/wireloomRenderer.test.ts`
+- `src/utils/markdownItWireloomPlugin.ts`
+- `src/utils/wireloomFullscreen.ts`
+- `src/utils/wireloomFullscreen.test.ts`
 - `src/styles/prose.css`
 
 Direct GREEN targets:
-- `bun test src/utils/mermaid/core.test.ts`
-- `bun test src/components/MarkdownContent/useMarkdownProcessor.test.ts`
-- `bun run build`
-- `scripts/validate-mermaid-md docs/CRs/MDT-157/architecture.md`
+- `bun test src/utils/wireloomRenderer.test.ts`
+- `bun test src/utils/wireloomFullscreen.test.ts`
+- `PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/documents/live-updates.spec.ts --project=chromium --grep "Wireloom"`
 
 Impacted canonical task IDs:
-- `TASK-6`
+- `TASK-7`
 
-Why this slice exists: `mdopen` renders Mermaid from preserved source; MDT was using DOM text after markdown-it escaping, which could render Mermaid's syntax-error fallback for valid diagrams.
+Why this slice exists: Wireloom `0.7.0` is now the integration target, but the app-level defaults, compact annotation layout, and malformed-source behavior need to be explicit and regression-tested rather than inferred from the current package behavior.
 
 ## Validation
 
@@ -53,11 +60,23 @@ Why this slice exists: `mdopen` renders Mermaid from preserved source; MDT was u
 - `spec-trace validate MDT-165 --stage architecture`
 - `spec-trace validate MDT-165 --stage tests`
 - `spec-trace validate MDT-165 --stage tasks`
-- Browser check: `/prj/MDT/ticket/MDT-157/architecture.md` renders two `.mermaid > svg` diagrams and does not show `Syntax error in text`.
+- `spec-trace validate MDT-165 --stage all`
+- `bun test src/utils/wireloomRenderer.test.ts`
+- `bun test src/utils/wireloomFullscreen.test.ts`
+- `PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/documents/live-updates.spec.ts --project=chromium --grep "Wireloom"`
+
+Result:
+- `spec-trace validate MDT-165 --stage all` passed.
+- `bun test src/utils/wireloomRenderer.test.ts src/utils/wireloomFullscreen.test.ts` passed.
+- `PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/documents/live-updates.spec.ts --project=chromium --grep "Wireloom"` passed.
+- Targeted ESLint for the edited Wireloom files passed.
+- `bun run validate:ts` is blocked by unrelated ProjectSelector/accent-color TypeScript errors in the dirty worktree.
 
 ## Watchlist
 
-- Do not remove valid Mermaid quotes from documentation as a workaround.
-- Keep the markdown rendering pipeline order intact.
-- Re-render on theme changes must continue to use preserved source.
-- Fullscreen controls must still attach after SVG rendering.
+- Do not change the markdown pipeline order.
+- Do not render non-Wireloom fences through Wireloom.
+- Do not rely on implicit Wireloom package defaults for theme behavior.
+- Do not require document authors to hand-wrap long annotation text for compact rendering.
+- Preserve theme-change re-rendering for already-rendered Wireloom blocks.
+- Keep rendered SVG insertion inside the existing DOMPurify and SVG safety boundary.
