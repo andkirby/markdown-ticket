@@ -13,7 +13,7 @@
 import type { ProjectWithSelectorState } from './types'
 import * as React from 'react'
 import { cn } from '@/lib/utils'
-import { getFallbackAccent } from '@/utils/accentColors'
+import { getFallbackAccent, getAccentBrightness } from '@/utils/accentColors'
 // eslint-disable-next-line no-restricted-imports
 import { Icon } from '../shared/Icon'
 import {
@@ -31,8 +31,12 @@ interface ProjectSelectorChipProps {
   onSelect: (projectKey: string) => void
   /** Whether accent coloring is enabled */
   accentEnabled?: boolean
-  /** Whether gradient accent mode is active */
-  accentGradients?: boolean
+  /** Accent rendering style */
+  accentStyle?: string
+  /** Whether autocolor fallback is enabled */
+  autocolor?: boolean
+  /** Whether user has a stored accent for this project */
+  hasAccent?: boolean
 }
 
 /**
@@ -50,7 +54,9 @@ const ProjectSelectorChip: React.FC<ProjectSelectorChipProps> = ({
   compact: _compact,
   onSelect,
   accentEnabled = true,
-  accentGradients = true,
+  accentStyle = 'gradient',
+  autocolor = true,
+  hasAccent = false,
 }) => {
   const handleClick = () => {
     onSelect(project.project.code || project.id)
@@ -58,9 +64,13 @@ const ProjectSelectorChip: React.FC<ProjectSelectorChipProps> = ({
 
   const chipClasses = cn('project-chip project-lift group h-12')
   const resolvedAccent = project.selectorState.accent ?? getFallbackAccent(project.project.code || project.id)
+  const hasVisibleAccent = accentEnabled && (hasAccent || autocolor)
+
   const chipStyle = {
-    '--project-accent': resolvedAccent,
+    '--project-accent': hasVisibleAccent ? resolvedAccent : undefined,
   } as React.CSSProperties
+
+  const accentBrightness = hasVisibleAccent ? getAccentBrightness(resolvedAccent) : undefined
 
   return (
     <HoverCard>
@@ -72,7 +82,10 @@ const ProjectSelectorChip: React.FC<ProjectSelectorChipProps> = ({
           data-testid={`project-selector-chip-${project.project.code || project.id}`}
           data-project-key={project.project.code || project.id}
           data-accent-enabled={accentEnabled}
-          data-accent-gradients={accentGradients}
+          data-accent-style={accentStyle}
+          data-autocolor={autocolor}
+          {...(hasAccent && { 'data-has-accent': '' })}
+          {...(accentBrightness && { 'data-accent-brightness': accentBrightness })}
         >
           <span className="project-chip__surface" aria-hidden="true">
             <span className="project-chip__accent-mark" />

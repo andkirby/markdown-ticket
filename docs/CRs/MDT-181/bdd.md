@@ -7,7 +7,7 @@
 
 ## Overview
 
-14 BDD scenarios across 9 journeys covering all 22 BDD-routed behavior requirements for project accent colors. Scenarios test the complete user flow: selecting accents in Settings, persistence as personal preference, rendering in selector rail and browser cards, theme derivation, backend validation, reset to default, and preservation of existing behavior. The fallback behavior is modeled across 3 separate scenarios to capture session boundaries (derivation, stability, override).
+18 BDD scenarios across 11 journeys covering all BDD-routed behavior requirements for project accent colors. Scenarios test the complete user flow: selecting accents in Settings, persistence as personal preference, rendering in selector rail and browser cards, theme derivation, backend validation, reset to default, accent rendering styles (gradient, flat, plate), autocolor behavior, and preservation of existing behavior.
 
 ## Acceptance Strategy
 
@@ -24,9 +24,11 @@ Scenarios are grouped into 9 journeys:
 | Backend validation | 1 | BR-8.1 |
 | Existing behavior preservation | 1 | BR-7.1, BR-7.2 |
 | Cross-user independence | 1 | BR-2.3 |
-| **Total** | **14** | **21 BRs** |
+| Accent rendering styles | 3 | BR-10.1, BR-10.2, BR-11.1, BR-11.2, BR-11.3 |
+| Autocolor behavior | 3 | BR-12.1, BR-12.2, BR-12.3 |
+| **Total** | **18** | **25 BRs** |
 
-All 21 BDD-routed behavior requirements have scenario coverage. Constraints (C1–C9) and edge cases (Edge-1–Edge-10) are routed to `mdt:tests` and are not BDD coverage targets.
+All BDD-routed behavior requirements have scenario coverage. Constraints (C1–C9) and edge cases (Edge-1–Edge-10) are routed to `mdt:tests` and are not BDD coverage targets.
 
 ## Test-Facing Contract Notes
 
@@ -39,7 +41,7 @@ All 21 BDD-routed behavior requirements have scenario coverage. Constraints (C1�
 | Custom hex input | `data-testid="accent-custom-hex-input"` | Enter custom hex value |
 | Validation error | `data-testid="accent-validation-error"` | Assert error visibility |
 | Choose color link | `data-testid="accent-choose-color-link"` | Click external link |
-| Selector chip left-edge stripe | `data-testid="project-selector-chip-{code}"` | Assert flat left-edge accent stripe rendering |
+| Selector chip accent | `data-testid="project-selector-chip-{code}"` | Assert accent rendering per style (gradient, flat, plate) |
 | Browser card identity area | `data-testid="project-browser-card-{code}"` | Assert filled identity |
 
 ### API Endpoints
@@ -83,23 +85,63 @@ Scenario: accent_coloring_re_enabled
   And no page reload is required
 ```
 
-### BR-11.1: Gradient accent mode on (default)
+### BR-11.1: Gradient accent style (default)
 ```gherkin
-Scenario: gradient_accent_mode
-  Given user has gradient accents enabled
+Scenario: gradient_accent_style
+  Given user has "Gradient" style selected in Settings > Appearance
   When a project has a configured accent
   Then the chip shows a 25px gradient fade from transparent to accent color
   And the browser card shows a 40% width gradient fade at 0.5 opacity
   And the active card shows a subtle background gradient
 ```
 
-### BR-11.2: Flat accent mode
+### BR-11.2: Flat accent style
 ```gherkin
-Scenario: flat_accent_mode
-  Given user has gradient accents disabled
+Scenario: flat_accent_style
+  Given user has "Flat" style selected in Settings > Appearance
   When a project has a configured accent
   Then the chip shows a 4px flat stripe at 0.3 opacity
   And the browser card shows a 6px flat stripe at 0.3 opacity
+```
+
+### BR-11.3: Plate accent style
+```gherkin
+Scenario: plate_accent_style
+  Given user has "Plate" style selected in Settings > Appearance
+  When a project has a configured accent
+  Then the chip code element renders as a colored badge with accent-filled background
+  And the chip code badge has right-rounded corners and auto-computed foreground for contrast
+  And the browser card code element renders as a colored badge with accent-filled background
+  And the browser card identity area is removed — the badge provides the accent identity
+```
+
+### BR-12.1: Autocolor on (default)
+```gherkin
+Scenario: autocolor_on_fallback
+  Given user has Autocolor enabled in Settings > Appearance
+  And a project has no user-configured accent
+  When the project appears in the selector rail or browser
+  Then the project shows a deterministic fallback accent color
+```
+
+### BR-12.2: Autocolor off
+```gherkin
+Scenario: autocolor_off_no_fallback
+  Given user has Autocolor disabled in Settings > Appearance
+  And a project has no user-configured accent
+  When the project appears in the selector rail or browser
+  Then the project shows no accent color
+  And plate-style code badges revert to plain text with default code color
+```
+
+### BR-12.3: Reset fills auto hex when autocolor off
+```gherkin
+Scenario: reset_fills_auto_hex
+  Given user has Autocolor disabled in Settings > Appearance
+  And the selected project has an empty hex input
+  When user clicks the Reset button
+  Then the computed fallback hex is filled into the hex input
+  And the user can keep or modify the value before saving
 ```
 
 ---

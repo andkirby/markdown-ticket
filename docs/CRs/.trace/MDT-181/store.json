@@ -405,25 +405,53 @@
       "routePolicy": "bdd"
     },
     {
+      "id": "C10",
+      "kind": "constraint",
+      "text": "Accent enable/disable and gradient mode flags shall be persisted in localStorage as part of selector preferences, surviving reload but not tied to project-selector.json backend state",
+      "sourceRef": "CR:MDT-181",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-11.3",
+      "kind": "behavior",
+      "text": "User can select Plate accent style from Settings dropdown — project code renders as a colored badge with accent-filled background and computed foreground text on chips and cards",
+      "sourceRef": "CR:MDT-181",
+      "routePolicy": "bdd"
+    },
+    {
       "id": "BR-11.1",
       "kind": "behavior",
-      "text": "WHEN user toggles the 'Gradient Accents' setting on (default), the system shall render accent marks as gradient fades on chips and browser cards instead of flat stripes",
+      "text": "User can select Gradient accent style (default) from Settings dropdown — chip shows 25px gradient fade, card shows 40% width gradient fade, active card shows background gradient",
       "sourceRef": "CR:MDT-181",
       "routePolicy": "bdd"
     },
     {
       "id": "BR-11.2",
       "kind": "behavior",
-      "text": "WHEN user toggles the 'Gradient Accents' setting off, the system shall render accent marks as flat opacity stripes (chip: 4px left-edge, card: 6px left-edge) at 0.3 opacity",
+      "text": "User can select Flat accent style from Settings dropdown — chip shows 4px flat stripe, card shows 6px flat stripe, both at 0.3 opacity",
       "sourceRef": "CR:MDT-181",
       "routePolicy": "bdd"
     },
     {
-      "id": "C10",
-      "kind": "constraint",
-      "text": "Accent enable/disable and gradient mode flags shall be persisted in localStorage as part of selector preferences, surviving reload but not tied to project-selector.json backend state",
+      "id": "BR-12.1",
+      "kind": "behavior",
+      "text": "When Autocolor is enabled (default), projects without a user-configured accent show a deterministic fallback accent color in selector rail and browser",
       "sourceRef": "CR:MDT-181",
-      "routePolicy": "tests"
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-12.2",
+      "kind": "behavior",
+      "text": "When Autocolor is disabled, projects without a user-configured accent show no accent color in selector rail and browser",
+      "sourceRef": "CR:MDT-181",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-12.3",
+      "kind": "behavior",
+      "text": "When Autocolor is off and the hex input is empty, Reset fills the computed fallback hex into the input so the user can see or modify it before saving",
+      "sourceRef": "CR:MDT-181",
+      "routePolicy": "bdd"
     }
   ],
   "scenarios": [
@@ -589,6 +617,105 @@
       "when": "the user configures a personal accent color for that project",
       "then": "the selector rail and browser panel replace the fallback with the user-selected accent",
       "sourceRef": "MDT-181 §4 Functional"
+    },
+    {
+      "id": "plate_accent_style",
+      "title": "Plate accent style renders code badge",
+      "covers": [
+        "BR-11.3"
+      ],
+      "given": "User has \"Plate\" style selected in Settings > Appearance",
+      "when": "A project has a configured accent",
+      "then": "The chip code renders as a colored badge with accent-filled background, right-rounded corners, and white foreground. The browser card code renders the same badge treatment with the identity area removed.",
+      "sourceRef": "CR:MDT-181"
+    },
+    {
+      "id": "accent_coloring_disabled",
+      "title": "Accent coloring disabled",
+      "covers": [
+        "BR-10.1"
+      ],
+      "given": "User has enabled accent colors",
+      "when": "User toggles Accent Colors off in Settings > Appearance",
+      "then": "Selector chips and browser cards render without accent marks; project codes and names remain fully visible",
+      "sourceRef": "CR:MDT-181"
+    },
+    {
+      "id": "accent_coloring_re_enabled",
+      "title": "Accent coloring re-enabled",
+      "covers": [
+        "BR-10.2"
+      ],
+      "given": "User has disabled accent colors",
+      "when": "User toggles Accent Colors back on",
+      "then": "Accent marks reappear immediately on chips and cards; no page reload is required",
+      "sourceRef": "CR:MDT-181"
+    },
+    {
+      "id": "gradient_accent_style",
+      "title": "Gradient accent style rendering",
+      "covers": [
+        "BR-11.1"
+      ],
+      "given": "User has Gradient style selected in Settings > Appearance",
+      "when": "A project has a configured accent",
+      "then": "The chip shows a 25px gradient fade from transparent to accent color; the browser card shows a 40% width gradient fade at 0.5 opacity; the active card shows a subtle background gradient",
+      "sourceRef": "CR:MDT-181"
+    },
+    {
+      "id": "flat_accent_style",
+      "title": "Flat accent style rendering",
+      "covers": [
+        "BR-11.2"
+      ],
+      "given": "User has Flat style selected in Settings > Appearance",
+      "when": "A project has a configured accent",
+      "then": "The chip shows a 4px flat stripe at 0.3 opacity; the browser card shows a 6px flat stripe at 0.3 opacity",
+      "sourceRef": "CR:MDT-181"
+    },
+    {
+      "id": "accent_reset_to_default",
+      "title": "Accent reset to default",
+      "covers": [
+        "BR-9.1"
+      ],
+      "given": "User has a configured accent for a project in Settings > Appearance",
+      "when": "User clicks Reset to default for that project",
+      "then": "The stored accent is removed; the project reverts to its deterministic fallback accent",
+      "sourceRef": "CR:MDT-181"
+    },
+    {
+      "id": "autocolor_on_fallback",
+      "title": "Autocolor on produces fallback",
+      "covers": [
+        "BR-12.1"
+      ],
+      "given": "User has Autocolor enabled in Settings > Appearance",
+      "when": "A project with no user-configured accent appears in the selector",
+      "then": "The project shows a deterministic fallback accent color",
+      "sourceRef": "CR:MDT-181"
+    },
+    {
+      "id": "autocolor_off_no_fallback",
+      "title": "Autocolor off: no fallback",
+      "covers": [
+        "BR-12.2"
+      ],
+      "given": "User has Autocolor disabled in Settings > Appearance",
+      "when": "A project with no user-configured accent appears in the selector",
+      "then": "The project shows no accent color",
+      "sourceRef": "CR:MDT-181"
+    },
+    {
+      "id": "reset_fills_auto_hex",
+      "title": "Reset fills auto hex when autocolor off",
+      "covers": [
+        "BR-12.3"
+      ],
+      "given": "User has Autocolor disabled and the hex input is empty for the selected project",
+      "when": "User clicks the Reset button",
+      "then": "The computed fallback hex is filled into the hex input",
+      "sourceRef": "CR:MDT-181"
     }
   ],
   "obligations": [
@@ -1054,6 +1181,23 @@
       ],
       "file": "src/components/ProjectSelector/useSelectorData.test.ts",
       "sourceRef": "tests.md#test-selector-hook-accent-state"
+    },
+    {
+      "id": "TEST-accent-style-dropdown",
+      "kind": "e2e",
+      "title": "Accent style dropdown and autocolor controls rendering mode",
+      "covers": [
+        "BR-10.1",
+        "BR-10.2",
+        "BR-11.1",
+        "BR-11.2",
+        "BR-11.3",
+        "BR-12.1",
+        "BR-12.2",
+        "BR-12.3",
+        "C10"
+      ],
+      "sourceRef": "CR:MDT-181"
     }
   ],
   "tasks": [
@@ -1169,6 +1313,28 @@
         "mdt-frontend"
       ],
       "sourceRef": "tasks.md#task-2"
+    },
+    {
+      "id": "TASK-accent-style",
+      "title": "Replace gradient toggle with Style dropdown; add Plate style and Autocolor toggle",
+      "makesGreenIds": [
+        "accent_coloring_disabled",
+        "accent_coloring_re_enabled",
+        "gradient_accent_style",
+        "flat_accent_style",
+        "plate_accent_style",
+        "accent_reset_to_default",
+        "autocolor_on_fallback",
+        "autocolor_off_no_fallback",
+        "reset_fills_auto_hex",
+        "TEST-accent-style-dropdown"
+      ],
+      "skills": [
+        "css",
+        "react",
+        "typescript"
+      ],
+      "sourceRef": "CR:MDT-181"
     }
   ]
 }

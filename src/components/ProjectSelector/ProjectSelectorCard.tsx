@@ -13,7 +13,7 @@
 import type { ProjectWithSelectorState } from './types'
 import * as React from 'react'
 import { cn } from '@/lib/utils'
-import { getFallbackAccent } from '@/utils/accentColors'
+import { getFallbackAccent, getAccentBrightness } from '@/utils/accentColors'
 // eslint-disable-next-line no-restricted-imports
 import { Icon } from '../shared/Icon'
 import {
@@ -41,7 +41,9 @@ interface ProjectSelectorCardProps {
   /** Whether accent coloring is enabled */
   accentEnabled?: boolean
   /** Whether gradient accent mode is active */
-  accentGradients?: boolean
+  accentStyle?: string
+  autocolor?: boolean
+  hasAccent?: boolean
   onCardKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void
 }
 
@@ -68,7 +70,9 @@ const ProjectSelectorCard: React.FC<ProjectSelectorCardProps> = ({
   testIdPrefix,
   onCardKeyDown,
   accentEnabled = true,
-  accentGradients = true,
+  accentStyle = 'gradient',
+  autocolor = true,
+  hasAccent = false,
 }) => {
   // Active cards always show description
   const shouldShowDescription = showDescription || isActive
@@ -98,15 +102,18 @@ const ProjectSelectorCard: React.FC<ProjectSelectorCardProps> = ({
 
   const isProjectBrowserCard = testIdPrefix === 'project-browser-card'
   const resolvedAccent = project.selectorState.accent ?? getFallbackAccent(project.project.code || project.id)
-
   const cardClasses = cn(
     'project-card project-lift group min-h-12',
     useRailWidthConstraints && 'project-card--rail',
   )
 
+  const hasVisibleAccent = accentEnabled && (hasAccent || autocolor)
+
   const cardStyle = {
-    '--project-accent': resolvedAccent,
+    '--project-accent': hasVisibleAccent ? resolvedAccent : undefined,
   } as React.CSSProperties
+
+  const accentBrightness = hasVisibleAccent ? getAccentBrightness(resolvedAccent) : undefined
 
   const cardContent = (
     <div
@@ -124,7 +131,10 @@ const ProjectSelectorCard: React.FC<ProjectSelectorCardProps> = ({
       data-project-key={project.project.code || project.id}
       data-active={isActive ? 'true' : undefined}
       data-accent-enabled={accentEnabled}
-      data-accent-gradients={accentGradients}
+      data-accent-style={accentStyle}
+      data-autocolor={autocolor}
+      {...(hasAccent && { 'data-has-accent': '' })}
+      {...(accentBrightness && { 'data-accent-brightness': accentBrightness })}
       data-project-browser-card={isProjectBrowserCard ? 'true' : undefined}
     >
       {/* Favorite indicator - overlay star */}

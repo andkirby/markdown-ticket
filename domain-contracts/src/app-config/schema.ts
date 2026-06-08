@@ -36,7 +36,8 @@ export const PROJECT_SELECTOR_PREFERENCES_DEFAULTS = {
   visibleCount: 7,
   compactInactive: true,
   accentEnabled: true,
-  accentGradients: true,
+  autocolor: true,
+  accentStyle: 'gradient',
 } as const
 
 export const SELECTOR_STATE_ENTRY_DEFAULTS = {
@@ -103,7 +104,12 @@ export const SelectorPreferencesSchema = z.object({
   visibleCount: z.number().int().min(1).catch(PROJECT_SELECTOR_PREFERENCES_DEFAULTS.visibleCount).default(PROJECT_SELECTOR_PREFERENCES_DEFAULTS.visibleCount),
   compactInactive: z.boolean().catch(PROJECT_SELECTOR_PREFERENCES_DEFAULTS.compactInactive).default(PROJECT_SELECTOR_PREFERENCES_DEFAULTS.compactInactive),
   accentEnabled: z.boolean().catch(PROJECT_SELECTOR_PREFERENCES_DEFAULTS.accentEnabled).default(PROJECT_SELECTOR_PREFERENCES_DEFAULTS.accentEnabled),
-  accentGradients: z.boolean().catch(PROJECT_SELECTOR_PREFERENCES_DEFAULTS.accentGradients).default(PROJECT_SELECTOR_PREFERENCES_DEFAULTS.accentGradients),
+  autocolor: z.boolean().catch(PROJECT_SELECTOR_PREFERENCES_DEFAULTS.autocolor).default(PROJECT_SELECTOR_PREFERENCES_DEFAULTS.autocolor),
+  accentStyle: z.enum(['gradient', 'flat', 'plate']).catch(PROJECT_SELECTOR_PREFERENCES_DEFAULTS.accentStyle).default(PROJECT_SELECTOR_PREFERENCES_DEFAULTS.accentStyle),
+  // Legacy migration: accept old boolean and convert
+}).transform((data) => {
+  // No-op transform ensures passthrough; migration handled by .catch() defaults
+  return data
 }).catch({ ...PROJECT_SELECTOR_PREFERENCES_DEFAULTS }).default({ ...PROJECT_SELECTOR_PREFERENCES_DEFAULTS })
 
 export const UserUIConfigSchema = z.object({

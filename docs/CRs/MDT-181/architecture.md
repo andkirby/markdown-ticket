@@ -34,8 +34,8 @@ The accent color flows through the same data path as existing selector state (fa
 | Responsibility | Boundary |
 |---------------|----------|
 | 16-color preset palette with names, hex values, and WCAG AA verified foreground colors | Read-only constant export |
-| `getFallbackAccent(projectCode)` — deterministic hash → palette index | Pure function, no side effects |
-| `getForegroundForAccent(hex)` — luminance-based light/dark text selection | Pure function using WCAG luminance algorithm |
+| `getFallbackAccent(projectCode)` — deterministic FNV-1a hash → HSL hue mapping | Pure function, no side effects, cached |
+| `getForegroundForAccent(hex)` — perceptual brightness light/dark text selection | Pure function using sRGB perceptual brightness formula |
 | `isValidAccentHex(value)` — frontend/backend hex validation | Pure predicate function |
 | HSL conversion helpers for theme derivation | Internal utilities |
 
@@ -73,9 +73,9 @@ The accent color flows through the same data path as existing selector state (fa
 
 | Responsibility | Boundary |
 |---------------|----------|
-| Render compact flat accent stripe on the left edge of the chip | Accepts `accent` prop; applies via inline style CSS custom property |
+| Render accent on the chip according to the selected style (gradient, flat stripe, or plate badge) | Accepts `accent` prop and `accentStyle` prop; applies via inline style CSS custom property and data attribute |
 
-**Invariant**: Chip dimensions do not increase. The stripe is a flat left-edge treatment, not a gradient, dot, border tint, or filled-chip background.
+**Invariant**: Chip dimensions do not increase. The accent renders according to the selected style (gradient fade, flat stripe, or plate badge).
 
 ## Canonical Runtime Flows
 
@@ -98,22 +98,32 @@ User opens Settings > Appearance
 
 ```
 User clicks 'Reset to default' for a project
-  → useSelectorData.clearAccent(projectKey) called
-  → Accent key removed from selector state entry
-  → Debounced persist to /api/config/selector
-  → Project reverts to deterministic fallback accent
+  → If autocolor is on:
+    → useSelectorData.clearAccent(projectKey) called
+    → Accent key removed from selector state entry
+    → Project reverts to deterministic fallback accent
+  → If autocolor is off AND hex input is empty:
+    → Computed fallback hex filled into hex input field
+    → User can keep, modify, or clear before saving
+  → If autocolor is off AND user accent is stored:
+    → useSelectorData.clearAccent(projectKey) called
+    → Accent key removed; project shows no accent
+  → Debounced persist to /api/config/selector (when clearing)
 ```
 
 ### Flow 2: Accent Resolution (Rendering)
 
 ```
-Chip/Card component receives ProjectWithSelectorState
+Chip/Card component receives ProjectWithSelectorState + autocolor preference
   → Component calls resolveAccent(project) helper
   → If selectorState.accent exists → use it
-  → Else → getFallbackAccent(project.code) → deterministic palette color
-  → Component sets inline style="--project-accent: {resolvedAccent}"
-  → CSS consumes var(--project-accent) for identity rendering
-  → getForegroundForAccent(hex) provides text color for code/initials on accent
+  → Else if autocolor is on → getFallbackAccent(project.code) → deterministic color
+  → Else (autocolor off, no user accent) → no accent color (null)
+  → If accent resolved:
+    → Component sets inline style="--project-accent: {resolvedAccent}"
+    → CSS consumes var(--project-accent) for identity rendering
+    → getForegroundForAccent(hex) provides text color for code/initials on accent
+  → If no accent: accent marks hidden, default card/chip rendering
 ```
 
 ### Flow 3: Theme Adaptation
@@ -149,7 +159,7 @@ The palette uses well-distributed hues across the color wheel with WCAG AA 4.5:1
 | 15 | Pink | `#db2777` | `#ffffff` | Tailwind pink-600 |
 | 16 | Rose | `#e11d48` | `#ffffff` | Tailwind rose-600 |
 
-**Foreground selection**: Each preset has a foreground color determined by the `getForegroundForAccent()` luminance algorithm. High-luminance presets (Yellow, Lime, Amber) use dark text (`#1a1a1a`); low-luminance presets use white (`#ffffff`). Custom hex values compute foreground via relative luminance comparison against `#ffffff` and `#000000`.
+**Foreground selection**: Each preset has a foreground color determined by the `getForegroundForAccent()` perceptual brightness algorithm. The function computes sRGB perceptual brightness `(r×299 + g×587 + b×114) / 1000` and selects dark text (`#1a1a1a`) for colors above 150 brightness, white (`#ffffff`) for colors below. This correctly handles saturated hues (e.g., vivid blues like `#007fff` get white text, not black) that WCAG luminance misclassifies as "dark". All presets use white text except very light/pastel custom hex values.
 
 ## Hex Validation Contract
 
@@ -202,15 +212,18 @@ Settings > Appearance
 │  Markdown Density: [Default ▾]      │
 ├─────────────────────────────────────┤
 │  ── Project Accents ──              │
-│  Each project row:                  │
-│  [code] [current swatch] [picker]   │
-│  [Reset to default] if accent set   │
+│  Accent Colors: [on]                │
+│  Autocolor:     [on]                │
+│  Style:         [Gradient ▾]        │
+│  Project:       [MDT ▾]             │
+│  [#hex] [🎨] [↺] [✓] [choose↗] [▼] │
+│  [4×4 palette when expanded]        │
 │                                     │
 │  [Choose color ↗]                   │
 └─────────────────────────────────────┘
 ```
 
-Accent changes are **staged locally** and persisted only when the user explicitly saves. Canceling Settings discards all accent changes.
+Accent changes are **staged locally** and persisted only on explicit Save. Cancel discards. Rendering preferences (Accent Colors, Autocolor, Style) persist immediately to localStorage.
 
 The Edit Project form (AddProjectModal) no longer contains accent controls — it handles shared project metadata only.
 
@@ -220,16 +233,17 @@ The Edit Project form (AddProjectModal) no longer contains accent controls — i
 
 ```
 function getFallbackAccent(projectCode: string): string
-  1. hash = simple string hash of projectCode (sum of char codes)
-  2. index = hash % 16 (palette size)
-  3. return PALETTE[index].hex
+  1. hash = FNV-1a hash of projectCode (uppercase)
+  2. hue = (hash * 360 / 2^32) | 0
+  3. return hslToHex(hue, 65, 45)
 ```
 
 Properties:
-- Deterministic: same project code always maps to same palette color
+- Deterministic: same project code always maps to same hue
 - Stable across sessions: no randomness, no storage dependency
 - No migration required: fallback is computed, not stored
-- Even distribution: hash modulo 16 provides reasonable spread across palette
+- Even distribution: FNV-1a provides excellent spread for short strings
+- Results cached in a `Map<string, string>` for performance
 
 ## Structure
 
@@ -301,16 +315,19 @@ Each mismatch from `assess.md` has a concrete architectural response:
 
 **Dependency pressure**: No new dependencies adopted. All functionality implemented with existing packages (Zod for validation, existing CSS custom property system for rendering).
 
-## Accent Rendering Modes
+## Accent Rendering Styles
 
-Two user-controllable flags stored in `localStorage` key `mdt-selector-preferences`:
+Three user-controllable flags stored in `localStorage` key `mdt-selector-preferences`:
 
-| Flag | Default | Effect when on | Effect when off |
-|------|---------|----------------|-----------------|
-| `accentEnabled` | `true` | Accent marks visible on chips and cards | No accent marks rendered |
-| `accentGradients` | `true` | Gradient fade accent marks | Flat 4px/6px stripes at 0.3 opacity |
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `accentEnabled` | `boolean` | `true` | Master on/off for accent marks on chips and cards |
+| `autocolor` | `boolean` | `true` | On = projects without a user accent get a deterministic fallback color. Off = no accent for unconfigured projects. |
+| `accentStyle` | `string` | `"gradient"` | Named rendering style: `"gradient"`, `"flat"`, or `"plate"` |
 
-### Gradient CSS
+### Style: Gradient (default)
+
+Gradient fade accent marks using CSS `linear-gradient` with relative color syntax.
 
 **Chip** (inactive, `project-chip__accent-mark`):
 ```css
@@ -332,9 +349,49 @@ background: linear-gradient(135deg, var(--project-card-active-bg-from), var(--pr
 ```
 Token `--project-card-active-accent-to`: `blue.100` (light), `blue.900` (dark).
 
+### Style: Flat
+
+Thin solid accent stripes at reduced opacity.
+
+**Chip**: 4px flat stripe at 0.3 opacity on left edge.
+**Card**: 6px flat bar at 0.3 opacity on left edge, no background tint.
+
+### Style: Plate
+
+The project code itself renders as a colored badge (identity plate). The code text is replaced from plain text to a badge element with accent-filled background and auto-computed foreground.
+
+**Chip**: The chip container removes its left padding (`padding-left: 0; padding-inline: 0 0.25rem; justify-content: flex-start`) so the code badge sits flush on the left edge. The code element gets an accent-filled background at **0.5 opacity** (`rgb(from var(--project-accent) r g b / 0.5)`), a **1px border** matching the chip border (`var(--project-card-border)`, no left border), and `border-radius: 0 13px 13px 0` (right-rounded).
+
+**Card**: Same treatment — container removes left padding (`padding-left: 0; padding-inline-start: 0`). The code element gets accent-filled background at **0.8 opacity** (`rgb(from var(--project-accent) r g b / 0.8)`), the same border treatment, and `border-radius: 0 10px 10px 0`. Card identity area is hidden.
+
+**Foreground auto-selection**: Colored badges set `--project-accent-fg` via `getForegroundForAccent(hex)`, which computes sRGB perceptual brightness and selects `#ffffff` (white) for dark accents or `#1a1a1a` (dark) for bright accents. CSS uses `var(--project-accent-fg, var(--project-card-code-color))` — when the accent is colored, the computed foreground is used; when uncolored, the theme's own code color applies.
+
+**`hasVisibleAccent` guard**: The component only sets `--project-accent` and `--project-accent-fg` when there is a visible accent (`accentEnabled && (hasAccent || autocolor)`). This prevents uncolored plates from receiving a computed foreground or fallback accent.
+
+**Uncolored plate**: When autocolor is off and no user accent is stored, the badge keeps its shape (border, height, padding, border-radius) but renders with `background: transparent` and theme code color text. The badge is visually a bordered outline matching the card/chip border.
+
+### Autocolor Behavior
+
+When `autocolor` is `true` (default):
+- Projects without a user-configured accent receive a deterministic fallback via `getFallbackAccent(projectCode)`.
+- **Reset** clears the stored user accent → project reverts to fallback.
+
+When `autocolor` is `false`:
+- Projects without a user-configured accent show **no accent color**.
+- **Reset** with empty hex input → fills the computed fallback hex into the input field (so the user can see/keep the auto value). Reset with a stored user accent → clears the stored accent.
+- User can return to no-accent by deleting the hex input value and saving.
+
+The autocolor flag is independent of `accentStyle`. Autocolor controls *whether* a fallback color is applied; style controls *how* the accent renders.
+
 ### Data attributes
 
-Chips and cards use `data-accent-enabled` and `data-accent-gradients` boolean attributes. CSS selectors gate gradient vs flat vs disabled rendering.
+Chips and cards use `data-accent-enabled` boolean attribute, `data-autocolor` boolean attribute, `data-accent-style` attribute (values: `gradient`, `flat`, `plate`), and optional `data-has-accent` attribute (present when user has configured an accent). CSS selectors gate rendering per style.
+
+When `data-autocolor` is `false` and `data-has-accent` is absent:
+- Gradient/flat accent marks are hidden.
+- Plate code badges render as neutral badges: same border and shape, `background: transparent`, theme code color text.
+
+**Migration from `data-accent-gradients`**: The existing `data-accent-gradients="true|false"` attribute is replaced by `data-accent-style="gradient|flat|plate"`. During migration, `accentGradients: true` maps to `accentStyle: "gradient"`, `accentGradients: false` maps to `accentStyle: "flat"`.
 
 **Verification gaps addressed**: OBL-test-coverage-extension requires extending 4 existing test suites and creating 2 new test files before implementation.
 

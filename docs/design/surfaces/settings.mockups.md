@@ -35,8 +35,8 @@ window "Settings":
         text "Accent Colors" id="accent-colors-label"
         toggle "on" id="accent-enabled"
       row:
-        text "Gradient Accents" id="gradient-label"
-        toggle "on" id="gradient-enabled"
+        text "Style" id="style-label"
+        combo value="Gradient" options="Gradient,Flat,Plate" id="accent-style"
       combo value="MDT" options="MDT,API,OPS" id="project-select"
       row:
         input placeholder="#00bbcc" id="hex-input"
@@ -52,10 +52,11 @@ window "Settings":
 
 annotation "Personal preference, not shared with other users." target="accents-info" position=right
 annotation "Master toggle: off hides all accent marks on chips and cards." target="accent-enabled" position=right
-annotation "On = 25px gradient fade on chips, diagonal identity bar + accent-tinted card bg. Off = flat 4px/6px stripes at 0.3 opacity." target="gradient-enabled" position=right
+annotation "On = deterministic fallback color per project. Off = only manual accents shown. Reset fills auto hex into empty input when off." target="autocolor-toggle" position=right
+annotation "Three accent rendering styles: Gradient (fade), Flat (thin stripe), Plate (colored code badge with auto-contrast text)." target="accent-style" position=right
 annotation "Dropdown lists all registered projects." target="project-select" position=right
 annotation "Max 7 chars. Shorthand like 0bc auto-expands to #00bbcc on blur." target="hex-input" position=right
-annotation "Reset removes stored accent, reverts to fallback." target="reset-btn" position=right
+annotation "Reset: on = clear accent and revert to fallback. Autocolor off + empty input = fill auto hex. Autocolor off + accent set = clear accent." target="reset-btn" position=right
 ```
 
 ## Appearance Tab — Project Accent palette open
@@ -108,7 +109,7 @@ annotation "Changing the dropdown loads the new project's current accent into th
 annotation "Presets are 16 colors; clicking one selects it immediately in the staged form." target="preset-blue" position=right
 annotation "Custom hex validated on blur. Invalid values show inline error and preserve previous accent." target="custom-hex" position=right
 annotation "Opens https://www.figma.com/colors/ in a new tab." target="choose-color" position=right
-annotation "↺ removes the stored accent. Project reverts to its deterministic fallback color." target="reset-btn" position=right
+annotation "↺ clears stored accent (reverts to fallback or no accent). Autocolor off + empty input fills auto hex instead." target="reset-btn" position=right
 ```
 
 ## Board Tab

@@ -323,7 +323,9 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
                       testIdPrefix="project-browser-card"
                       onCardKeyDown={handleProjectGridKeyDown}
                       accentEnabled={preferences.accentEnabled}
-                      accentGradients={preferences.accentGradients}
+                      accentStyle={preferences.accentStyle}
+                      autocolor={preferences.autocolor}
+                      hasAccent={!!project.selectorState.accent}
                     />
                   ))}
                 </div>

@@ -40,7 +40,8 @@ describe('useSelectorData - BR-7.1, BR-7.2: Load preferences from user.toml', ()
       visibleCount: 7,
       compactInactive: true,
       accentEnabled: true,
-      accentGradients: true,
+      autocolor: true,
+      accentStyle: 'gradient',
     })
     expect(result.current.selectorState).toEqual({})
     expect(result.current.error).toBeUndefined()

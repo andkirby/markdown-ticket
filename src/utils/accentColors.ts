@@ -107,23 +107,21 @@ function hslToHex(h: number, s: number, l: number): string {
   return `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`
 }
 
+/** Perceptual brightness classification for accent colors */
+export type AccentBrightness = 'light' | 'dark'
+
+/**
+ * Classify an accent hex as 'light' or 'dark' using sRGB perceptual brightness.
+ * Used by components to set `data-accent-brightness` for CSS theme-aware foreground selection.
+ */
+export function getAccentBrightness(hex: string): AccentBrightness {
+  const { r, g, b } = hexToRgb(normalizeAccentHex(hex))
+  const perceivedBrightness = (r * 299 + g * 587 + b * 114) / 1000
+  return perceivedBrightness > 150 ? 'light' : 'dark'
+}
+
 export function getForegroundForAccent(hex: string): string {
-  const normalizedHex = normalizeAccentHex(hex)
-  const lightContrast = getContrastRatio(LIGHT_FOREGROUND, normalizedHex)
-  const darkContrast = getContrastRatio(DARK_FOREGROUND, normalizedHex)
-
-  return darkContrast > lightContrast ? DARK_FOREGROUND : LIGHT_FOREGROUND
-}
-
-function getContrastRatio(foreground: string, background: string): number {
-  const lighter = Math.max(getRelativeLuminance(foreground), getRelativeLuminance(background))
-  const darker = Math.min(getRelativeLuminance(foreground), getRelativeLuminance(background))
-  return (lighter + 0.05) / (darker + 0.05)
-}
-
-function getRelativeLuminance(hex: string): number {
-  const { r, g, b } = hexToRgb(hex)
-  return 0.2126 * toLinearChannel(r) + 0.7152 * toLinearChannel(g) + 0.0722 * toLinearChannel(b)
+  return getAccentBrightness(hex) === 'light' ? DARK_FOREGROUND : LIGHT_FOREGROUND
 }
 
 function hexToRgb(hex: string): { r: number, g: number, b: number } {
@@ -135,11 +133,4 @@ function hexToRgb(hex: string): { r: number, g: number, b: number } {
     g: (value >> 8) & 255,
     b: value & 255,
   }
-}
-
-function toLinearChannel(channel: number): number {
-  const normalizedChannel = channel / 255
-  return normalizedChannel <= 0.03928
-    ? normalizedChannel / 12.92
-    : ((normalizedChannel + 0.055) / 1.055) ** 2.4
 }

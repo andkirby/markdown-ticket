@@ -117,7 +117,9 @@ const ProjectSelectorRail: React.FC<ProjectSelectorRailProps> = ({
             onFavoriteToggle={onFavoriteToggle}
             useRailWidthConstraints={true}
             accentEnabled={preferences.accentEnabled}
-            accentGradients={preferences.accentGradients}
+            accentStyle={preferences.accentStyle}
+            autocolor={preferences.autocolor}
+            hasAccent={!!activeProject.selectorState.accent}
           />
         </div>
       )}
@@ -135,7 +137,9 @@ const ProjectSelectorRail: React.FC<ProjectSelectorRailProps> = ({
               compact={preferences.compactInactive}
               onSelect={onProjectSelect}
               accentEnabled={preferences.accentEnabled}
-              accentGradients={preferences.accentGradients}
+              accentStyle={preferences.accentStyle}
+              autocolor={preferences.autocolor}
+              hasAccent={!!project.selectorState.accent}
             />
           ))}
         </div>
