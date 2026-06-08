@@ -8,7 +8,7 @@ export class FilesystemAccessDeniedError extends Error {
   }
 }
 
-export function expandUserPath(inputPath: string): string {
+function expandUserPath(inputPath: string): string {
   let decodedPath: string
 
   try {
@@ -25,11 +25,11 @@ export function expandUserPath(inputPath: string): string {
   return decodedPath
 }
 
-export async function realpathIfExists(inputPath: string): Promise<string> {
+async function realpathIfExists(inputPath: string): Promise<string> {
   return fs.realpath(path.resolve(expandUserPath(inputPath)))
 }
 
-export async function normalizeAllowedRoots(roots: Iterable<string>): Promise<string[]> {
+async function normalizeAllowedRoots(roots: Iterable<string>): Promise<string[]> {
   const normalizedRoots: string[] = []
 
   for (const root of roots) {

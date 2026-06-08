@@ -1,7 +1,7 @@
 import type { PublicLinkOriginOptions } from '@mdt/domain-contracts'
 import { createOriginPolicy } from './originPolicy.js'
 
-export interface PublicLinkOriginInput {
+interface PublicLinkOriginInput {
   allowedOrigins: Iterable<string>
   currentOrigin?: string
   publicOrigin?: string

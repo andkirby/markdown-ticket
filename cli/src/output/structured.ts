@@ -5,14 +5,14 @@ import { readdirSync, statSync } from 'node:fs'
 import path from 'node:path'
 import { statusDisplayLabel } from './colors.js'
 
-export type OutputFormat = 'human' | 'json' | 'yaml'
+type OutputFormat = 'human' | 'json' | 'yaml'
 
 export interface StructuredOutputOptions {
   json?: boolean
   yaml?: boolean
 }
 
-export interface StructuredEnvelope {
+interface StructuredEnvelope {
   schemaVersion: 1
   ok: boolean
   command: string
@@ -63,7 +63,7 @@ export function assertSingleOutputFormat(options: StructuredOutputOptions = {}):
   }
 }
 
-export function formatStructuredSuccess(
+function formatStructuredSuccess(
   format: Exclude<OutputFormat, 'human'>,
   command: string,
   data: unknown,
@@ -80,7 +80,7 @@ export function formatStructuredSuccess(
   })
 }
 
-export function formatStructuredError(
+function formatStructuredError(
   format: Exclude<OutputFormat, 'human'>,
   command: string,
   error: unknown,
