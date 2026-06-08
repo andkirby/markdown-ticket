@@ -4,10 +4,10 @@ import { WorktreeConfigSchema } from './worktree'
 
 export const PROJECT_CODE_PATTERN = /^[A-Z][A-Z0-9]{1,4}$/
 const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/u
-const WINDOWS_ABSOLUTE_PATH_PATTERN = /^[A-Za-z]:[\\/]/u
-const TICKETS_PATH_INVALID_CHARS_PATTERN = /[<>"|?*]/u
+const _WINDOWS_ABSOLUTE_PATH_PATTERN = /^[A-Za-z]:[\\/]/u
+const _TICKETS_PATH_INVALID_CHARS_PATTERN = /[<>"|?*]/u
 
-function normalizeTicketsPath(path: string): string {
+function _normalizeTicketsPath(path: string): string {
   return path
     .replace(/\\/gu, '/')
     .replace(/^\.\/+/u, '')
@@ -231,7 +231,7 @@ export const ProjectSharingSettingsSchema = z.object({
     .trim()
     .min(12, 'Share ID must be at least 12 characters')
     .max(128, 'Share ID must be at most 128 characters')
-    .regex(/^[A-Za-z0-9_-]+$/u, 'Share ID may contain only letters, numbers, underscore, and hyphen')
+    .regex(/^[\w-]+$/u, 'Share ID may contain only letters, numbers, underscore, and hyphen')
     .optional(),
   updatedAt: z.string().optional(),
 }).strict()
@@ -350,6 +350,21 @@ export const CreateProjectInputSchema = z.object({
 }).strict()
 
 export type CreateProjectInput = z.infer<typeof CreateProjectInputSchema>
+
+/**
+ * Shape of the data passed to the project form when editing an existing project.
+ * Used by AddProjectModal (editMode=true) and useProjectForm.
+ * Field names follow form convention (camelCase with Url suffix) rather than
+ * persistence convention (repository, ticketsPath).
+ */
+export interface ProjectEditFormData {
+  name: string
+  code: string
+  path: string
+  crsPath: string
+  description: string
+  repositoryUrl: string
+}
 
 export const UpdateProjectInputSchema = z.object({
   name: ProjectNameSchema.optional(),
