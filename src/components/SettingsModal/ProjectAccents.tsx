@@ -1,6 +1,7 @@
 import type * as React from 'react'
 import type { Project } from '@mdt/shared/models/Project'
-import type { SelectorPreferences, SelectorState } from '../ProjectSelector/types'
+import type { SelectorState } from '../ProjectSelector/types'
+import type { SelectorPreferences } from '@mdt/domain-contracts'
 import { Check, ChevronDown, RotateCcw } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ACCENT_PALETTE, expandShorthandHex, getFallbackAccent, isValidAccentHex, normalizeAccentHex } from '@/utils/accentColors'
@@ -66,9 +67,13 @@ export function ProjectAccents({
     const stored = loadLocalPreferences()
     return stored.accentEnabled ?? true
   })
-  const [accentGradients, setAccentGradientsLocal] = useState<boolean>(() => {
+  const [accentStyle, setAccentStyleLocal] = useState<string>(() => {
     const stored = loadLocalPreferences()
-    return stored.accentGradients ?? true
+    return stored.accentStyle ?? 'gradient'
+  })
+  const [autocolor, setAutocolorLocal] = useState<boolean>(() => {
+    const stored = loadLocalPreferences()
+    return stored.autocolor ?? true
   })
 
   const persistPref = useCallback((prefs: Partial<SelectorPreferences>) => {
@@ -85,9 +90,15 @@ export function ProjectAccents({
     window.dispatchEvent(new CustomEvent(SELECTOR_PREFS_SYNC_EVENT))
   }, [persistPref])
 
-  const handleAccentGradientsChange = useCallback((gradients: boolean) => {
-    setAccentGradientsLocal(gradients)
-    persistPref({ accentGradients: gradients })
+  const handleAutocolorChange = useCallback((enabled: boolean) => {
+    setAutocolorLocal(enabled)
+    persistPref({ autocolor: enabled })
+    window.dispatchEvent(new CustomEvent(SELECTOR_PREFS_SYNC_EVENT))
+  }, [persistPref])
+
+  const handleAccentStyleChange = useCallback((style: string) => {
+    setAccentStyleLocal(style)
+    persistPref({ accentStyle: style as SelectorPreferences['accentStyle'] })
     window.dispatchEvent(new CustomEvent(SELECTOR_PREFS_SYNC_EVENT))
   }, [persistPref])
 
@@ -128,10 +139,19 @@ export function ProjectAccents({
   }, [customHex, normalizedValue, onAccentChange, selectedCode])
 
   const handleReset = useCallback(() => {
-    setCustomHex('')
-    setValidationError(undefined)
-    onAccentReset(selectedCode)
-  }, [onAccentReset, selectedCode])
+    if (!autocolor && !currentAccent) {
+      // Autocolor off + no stored accent: fill fallback hex into input
+      const fallback = getFallbackAccent(selectedCode)
+      setCustomHex(fallback)
+      setValidationError(undefined)
+      onAccentChange(selectedCode, fallback)
+    } else {
+      // Normal reset: clear stored accent
+      setCustomHex('')
+      setValidationError(undefined)
+      onAccentReset(selectedCode)
+    }
+  }, [autocolor, currentAccent, selectedCode, onAccentChange, onAccentReset])
 
   if (!loaded) {
     return <p className="settings-desc mt-1">Loading…</p>
@@ -150,12 +170,27 @@ export function ProjectAccents({
         </div>
         {accentEnabled && (
           <div className="project-accents__toggle-row">
-            <span className="settings-label-sm">Gradient Accents</span>
+            <span className="settings-label-sm">Autocolor</span>
             <Switch
-              checked={accentGradients}
-              onCheckedChange={handleAccentGradientsChange}
-              data-testid="toggle-accent-gradients"
+              checked={autocolor}
+              onCheckedChange={handleAutocolorChange}
+              data-testid="toggle-autocolor"
             />
+          </div>
+        )}
+        {accentEnabled && (
+          <div className="project-accents__row">
+            <span className="settings-label-sm">Style</span>
+            <select
+              data-testid="accent-style-select"
+              value={accentStyle}
+              onChange={e => handleAccentStyleChange(e.target.value)}
+              className="settings-select project-accents__select"
+            >
+              <option value="gradient">Gradient</option>
+              <option value="flat">Flat</option>
+              <option value="plate">Plate</option>
+            </select>
           </div>
         )}
       </div>

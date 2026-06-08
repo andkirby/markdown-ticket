@@ -45,6 +45,9 @@ describe('Selector Config Endpoint Tests (MDT-129)', () => {
         expect(response.body.preferences).toEqual({
           visibleCount: 7,
           compactInactive: true,
+          accentEnabled: true,
+          autocolor: true,
+          accentStyle: 'gradient',
         })
         expect(response.body.selectorState).toEqual({})
       })
@@ -100,6 +103,9 @@ compactInactive = false
         expect(response.body.preferences).toEqual({
           visibleCount: 10,
           compactInactive: false,
+          accentEnabled: true,
+          autocolor: true,
+          accentStyle: 'gradient',
         })
       })
     })
@@ -352,6 +358,9 @@ anotherUnknown = 123
         expect(response.body.preferences).toEqual({
           visibleCount: 7,
           compactInactive: true,
+          accentEnabled: true,
+          autocolor: true,
+          accentStyle: 'gradient',
         })
         // Unknown fields should not be in response
         expect((response.body.preferences as Record<string, unknown>).unknownField).toBeUndefined()

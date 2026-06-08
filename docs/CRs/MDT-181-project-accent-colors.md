@@ -20,9 +20,9 @@ full
 - Light and dark mode should not require separate user color choices that can drift apart.
 
 ### Affected Areas
-- Frontend: Project Edit form color picker dropdown, project selector rail, and project browser cards.
+- Frontend: Settings > Appearance > Project Accents color picker, project selector rail, and project browser cards.
 - User preference storage: per-user project accent preference keyed by project identity.
-- Tests: Project Edit form control behavior, preference persistence, selector rendering, accessibility, and theme behavior.
+- Tests: Settings modal accent control behavior, preference persistence, selector rendering, accessibility, and theme behavior.
 - Documentation: project browser, project edit form, and preference storage guidance.
 
 ### Scope
@@ -32,7 +32,10 @@ full
   - Backend validates custom hex values before persistence.
   - The selected accent is stored as a user preference for that project and is not shared with other users.
   - Users can reset a project accent to the deterministic fallback from Settings.
-  - The selected accent applies to project selector chips as a flat left-edge accent stripe, to project browser cards, and to fallback project identity marks for the current user.
+  - The selected accent renders on selector chips and browser cards according to the chosen Style (Gradient, Flat, or Plate).
+  - Plate style renders the project code as a colored badge with auto-computed foreground (light/dark) for WCAG contrast.
+  - Autocolor toggle (default on): on = projects without a user-set accent get a deterministic fallback color; off = no accent for unconfigured projects.
+  - When Autocolor is off, Reset fills the computed fallback hex into an empty input; user can delete the hex value to remove the accent entirely.
   - Accent changes in Settings are staged and persisted on explicit Save, not immediately on pick.
   - Browser cards can use a same-size filled identity treatment where the left identity area is filled by accent color or image.
   - Light and dark mode derive theme-appropriate rendering from the same stored accent selection.
@@ -50,7 +53,7 @@ full
 ### Success Conditions
 - Users can choose one of 16 preset project accent colors for a project.
 - Users can choose a custom hex color when the preset palette is not enough.
-- The Project Edit form exposes a color picker dropdown for the current user's project accent preference.
+- The Settings modal exposes a color picker dropdown for the current user's project accent preference.
 - Project selector rail items remain compact while gaining stronger visual identity.
 - Project browser cards remain the same row size while supporting a filled color/image identity area.
 - Existing project cards without a user-configured accent receive stable fallback visual identities.
@@ -114,22 +117,23 @@ full
 - [ ] Accent selection is saved as the current user's preference for that project on explicit Save in Settings.
 - [ ] Accent selection is not visible to other users unless they choose the same preference independently.
 - [ ] User can reset a project accent to its deterministic fallback from Settings.
-- [ ] Project selector rail displays the current user's configured project accent as a compact flat stripe on the left edge of the selector chip.
+- [ ] Project selector rail displays the current user's configured project accent according to the selected Style (Gradient, Flat, or Plate).
 - [ ] Project browser cards display the current user's configured accents without increasing normal card row height.
+- [ ] Plate style renders the project code as a colored badge with auto-computed foreground for readable contrast.
 - [ ] Filled identity treatment supports accent-color fill and uploaded-image fill while preserving card dimensions.
-- [ ] Projects without current-user configured accents receive deterministic fallback accents.
+- [ ] Projects without current-user configured accents receive deterministic fallback accents (Autocolor on) or no accent (Autocolor off).
 - [ ] Light and dark mode use the same stored accent choice with theme-appropriate contrast.
 - [ ] Existing project search, selection, favorites, and ordering behavior continue to work.
 
 ### Non-Functional
-- [ ] Accent marks meet readable contrast for project code or initials in light and dark mode.
+- [ ] Accent marks meet readable contrast for project code or initials in light and dark mode. Plate style uses sRGB perceptual brightness to auto-select light or dark foreground text.
 - [ ] Palette choice does not introduce layout shift in selector rail or browser cards.
 - [ ] Accent persistence does not require users to reconfigure existing projects before using the selector.
 - [ ] Custom hex input is constrained to backend-validated hex values.
 - [ ] Accent persistence does not modify shared project configuration or project metadata.
 
 ### Edge Cases
-- Current user has no configured accent for a project.
+- Current user has no configured accent for a project (Autocolor on → fallback applied; Autocolor off → no accent).
 - Current user enters malformed custom hex.
 - Current user opens the external color helper and returns without changing the value.
 - Another user has a different configured accent for the same project.
@@ -145,10 +149,14 @@ full
 
 ### How to Verify Success
 - Manual verification:
-  - Open the Project Edit form and choose accents from the color picker dropdown.
+  - Open Settings > Appearance > Project Accents.
+  - Select a project from the dropdown and choose an accent from the palette or custom hex.
   - Select Custom hex, enter a valid hex, and confirm the preview/persistence.
   - Enter invalid hex and confirm backend validation error.
-  - Click `choose color` and confirm it opens `https://share.google/ATp6ypatbFk69dC91` in a new tab.
+  - Click `choose color` and confirm it opens the color picker in a new tab.
+  - Switch Style between Gradient, Flat, and Plate — verify each renders correctly on chips and cards.
+  - Toggle Autocolor off, delete hex input for a project, save — verify no accent renders for that project.
+  - With Autocolor off and empty input, click Reset — verify fallback hex fills into the input.
   - Configure several projects with different personal accents.
   - Open the selector rail and project browser.
   - Confirm the identity treatment improves recognition without changing card size.
@@ -156,14 +164,17 @@ full
   - Confirm the selected accent is not written to project configuration or shared project metadata.
 - Automated verification:
   - Test user/project accent preference persistence and fallback behavior.
-  - Test the Project Edit form color picker dropdown saves only user preference state.
+  - Test Settings color picker saves only user preference state on explicit Save.
   - Test custom hex validation rejects malformed values before persistence.
   - Test the `choose color` link uses `target="_blank"` with a safe external-link policy.
   - Test selector rail and browser card rendering with configured and fallback accents.
+  - Test Plate style renders code badge with auto-contrast foreground.
+  - Test Autocolor toggle: on produces fallback, off produces no accent for unconfigured projects.
+  - Test Reset fills auto hex when Autocolor off and input empty.
   - Test read-only/shared project access does not write shared configuration when accent preference changes.
   - Test existing project browser search and selection behavior remains intact.
 - Documentation verification:
-  - Update design surface docs to describe the 16-color preset palette, custom hex option, Project Edit form dropdown, personal preference boundary, and single-accent theme derivation rule.
+  - Update design surface docs to describe the 16-color preset palette, custom hex option, Style dropdown, Autocolor toggle, Plate style, personal preference boundary, and single-accent theme derivation rule.
 
 > Requirements trace projection: [requirements.trace.md](./MDT-181/requirements.trace.md)
 >
@@ -221,3 +232,25 @@ full
 **Trace revalidated:** requirements ✅, all stages rendered
 
 **More implementation required:** Yes — wire toggle switches into Settings Appearance tab
+
+### UAT Session 2026-06-08
+
+**Approved changes:**
+- Replace `accentGradients: boolean` with `accentStyle: string` enum (`"gradient"` | `"flat"` | `"plate"`) in schema and localStorage
+- Replace "Gradient Accents" toggle with "Style" dropdown offering three named styles: Gradient, Flat, Plate
+- Add Plate style: project code renders as a colored badge (identity plate) with accent-filled background and auto-computed foreground (light/dark via WCAG luminance)
+- Chip plate: code element gets right-rounded accent-filled background, auto-contrast foreground, inner highlight shadow
+- Card plate: same badge treatment on code element; identity area (gradient/stripe) removed — badge provides accent identity
+- Add Autocolor toggle (default on): on = deterministic fallback for unconfigured projects; off = no accent for unconfigured projects
+- Autocolor off + reset + empty input: reset fills the computed fallback hex into the input field
+- Delete hex input value + save = revert to autocolor (or no accent if autocolor off)
+- Migrate data attribute from `data-accent-gradients="true|false"` to `data-accent-style="gradient|flat|plate"`
+- Migrate stored preference: `accentGradients: true` → `accentStyle: "gradient"`, `accentGradients: false` → `accentStyle: "flat"`
+
+**Changed requirement IDs:** BR-11.1, BR-11.2, C10 (refine_in_place); BR-11.3, BR-12.1, BR-12.2, BR-12.3 (additive_change)
+
+**Updated workflow documents:** requirements.md, bdd.md, architecture.md, settings.spec.md, settings.mockups.md, uat.md
+
+**Trace revalidated:** requirements ✅, bdd ✅, architecture ✅, tests ✅, tasks ✅ — all stages rendered
+
+**More implementation required:** Yes — 6 execution slices in uat.md

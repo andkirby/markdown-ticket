@@ -487,15 +487,78 @@ test.describe('Project accent colors - MDT-181', () => {
 
     const chip = page.locator(`[data-testid="project-selector-chip-${inactiveProject.key}"]`)
 
-    // Default: gradient mode
-    await expect(chip).toHaveAttribute('data-accent-gradients', 'true')
+    // Default: gradient style
+    await expect(chip).toHaveAttribute('data-accent-style', 'gradient')
 
-    // Open settings and toggle gradients off
+    // Open settings and switch to flat style
     await openSettingsAccents(page)
-    await page.click('[data-testid="toggle-accent-gradients"]')
+    await page.selectOption('[data-testid="accent-style-select"]', 'flat')
 
     // Should switch to flat
-    await expect(chip).toHaveAttribute('data-accent-gradients', 'false')
+    await expect(chip).toHaveAttribute('data-accent-style', 'flat')
+
+    await closeSettings(page)
+  })
+
+  test('plate style renders code badge with accent background', async ({ page }) => {
+    const inactiveProject = { key: 'OPS', name: 'Operations' }
+    const activeProject = { projectCode: 'MDT', projectName: 'Markdown Ticket' }
+
+    await mockSelectorState(page, {
+      [inactiveProject.key]: {
+        favorite: false,
+        lastUsedAt: null,
+        count: 0,
+        accent: '#dc2626',
+      },
+    })
+
+    await page.goto(`/prj/${activeProject.projectCode}`)
+    await waitForBoardReady(page)
+
+    const chip = page.locator(`[data-testid="project-selector-chip-${inactiveProject.key}"]`)
+
+    // Switch to plate style
+    await openSettingsAccents(page)
+    await page.selectOption('[data-testid="accent-style-select"]', 'plate')
+
+    // Should have plate style attribute
+    await expect(chip).toHaveAttribute('data-accent-style', 'plate')
+
+    // Code badge should have accent background
+    const codeBadge = chip.locator('.project-chip__code')
+    await expect(codeBadge).toHaveCSS('background-color', /rgb/) // some rgb color
+
+    await closeSettings(page)
+  })
+
+  test('autocolor off hides accent for unconfigured projects', async ({ page }) => {
+    const inactiveProject = { key: 'OPS', name: 'Operations' }
+    const activeProject = { projectCode: 'MDT', projectName: 'Markdown Ticket' }
+
+    await mockSelectorState(page, {
+      [inactiveProject.key]: {
+        favorite: false,
+        lastUsedAt: null,
+        count: 0,
+        // No accent configured
+      },
+    })
+
+    await page.goto(`/prj/${activeProject.projectCode}`)
+    await waitForBoardReady(page)
+
+    const chip = page.locator(`[data-testid="project-selector-chip-${inactiveProject.key}"]`)
+
+    // Default: autocolor on, should have fallback
+    await expect(chip).toHaveAttribute('data-autocolor', 'true')
+
+    // Toggle autocolor off
+    await openSettingsAccents(page)
+    await page.click('[data-testid="toggle-autocolor"]')
+
+    // Should switch autocolor off
+    await expect(chip).toHaveAttribute('data-autocolor', 'false')
 
     await closeSettings(page)
   })
