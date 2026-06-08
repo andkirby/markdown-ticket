@@ -19,7 +19,8 @@ const DEFAULT_PREFERENCES: SelectorPreferences = {
   visibleCount: 7,
   compactInactive: true,
   accentEnabled: true,
-  accentGradients: true,
+  autocolor: true,
+  accentStyle: 'gradient',
 }
 
 export const SELECTOR_STATE_SYNC_EVENT = 'mdt:selector-state-updated'
@@ -98,7 +99,7 @@ export function useSelectorData(options: UseSelectorDataOptions = {}): SelectorD
         const validatedPreferences = validatePreferences(data.preferences || {})
         const validatedState = validateSelectorState(data.selectorState || {})
 
-        // Merge localStorage overrides (accentEnabled, accentGradients)
+        // Merge localStorage overrides (accentEnabled, autocolor, accentStyle)
         const localOverrides = loadLocalPreferences()
         const merged = { ...validatedPreferences, ...localOverrides }
 
@@ -255,9 +256,17 @@ export function useSelectorData(options: UseSelectorDataOptions = {}): SelectorD
     })
   }, [persistPreferences])
 
-  const setAccentGradients = useCallback((gradients: boolean) => {
+  const setAccentStyle = useCallback((style: string) => {
     setPreferences(prev => {
-      const next = { ...prev, accentGradients: gradients }
+      const next = { ...prev, accentStyle: style as SelectorPreferences['accentStyle'] }
+      persistPreferences(next)
+      return next
+    })
+  }, [persistPreferences])
+
+  const setAutocolor = useCallback((enabled: boolean) => {
+    setPreferences(prev => {
+      const next = { ...prev, autocolor: enabled }
       persistPreferences(next)
       return next
     })
@@ -271,7 +280,8 @@ export function useSelectorData(options: UseSelectorDataOptions = {}): SelectorD
     setAccent,
     clearAccent,
     setAccentEnabled,
-    setAccentGradients,
+    setAccentStyle,
+    setAutocolor,
     error,
     loaded,
   }
@@ -281,11 +291,16 @@ export function loadLocalPreferences(): Partial<SelectorPreferences> {
   try {
     const stored = localStorage.getItem('mdt-selector-preferences')
     if (stored) {
-      const parsed = JSON.parse(stored) as Partial<SelectorPreferences>
-      return {
-        ...(parsed.accentEnabled !== undefined && { accentEnabled: parsed.accentEnabled }),
-        ...(parsed.accentGradients !== undefined && { accentGradients: parsed.accentGradients }),
+      const parsed = JSON.parse(stored) as Record<string, unknown>
+      const result: Partial<SelectorPreferences> = {}
+      if (typeof parsed.accentEnabled === 'boolean') result.accentEnabled = parsed.accentEnabled
+      if (typeof parsed.accentStyle === 'string') result.accentStyle = parsed.accentStyle as SelectorPreferences['accentStyle']
+      if (typeof parsed.autocolor === 'boolean') result.autocolor = parsed.autocolor
+      // Migration: convert old boolean to new style
+      if (typeof parsed.accentGradients === 'boolean' && parsed.accentStyle === undefined) {
+        result.accentStyle = parsed.accentGradients ? 'gradient' : 'flat'
       }
+      return result
     }
   }
   catch { /* ignore */ }
@@ -311,17 +326,27 @@ function validatePreferences(raw: Record<string, unknown>): SelectorPreferences 
     accentEnabled = rawAccentEnabled
   }
 
-  let accentGradients = DEFAULT_PREFERENCES.accentGradients
-  const rawAccentGradients = raw.accentGradients
-  if (typeof rawAccentGradients === 'boolean') {
-    accentGradients = rawAccentGradients
+  let accentStyle = DEFAULT_PREFERENCES.accentStyle
+  const rawAccentStyle = raw.accentStyle
+  if (typeof rawAccentStyle === 'string' && ['gradient', 'flat', 'plate'].includes(rawAccentStyle)) {
+    accentStyle = rawAccentStyle as SelectorPreferences['accentStyle']
+  } else if (typeof raw.accentGradients === 'boolean') {
+    // Migration from old boolean field
+    accentStyle = raw.accentGradients ? 'gradient' : 'flat'
+  }
+
+  let autocolor = DEFAULT_PREFERENCES.autocolor
+  const rawAutocolor = raw.autocolor
+  if (typeof rawAutocolor === 'boolean') {
+    autocolor = rawAutocolor
   }
 
   return {
     visibleCount,
     compactInactive,
     accentEnabled,
-    accentGradients,
+    accentStyle,
+    autocolor,
   }
 }
 

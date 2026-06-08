@@ -2,63 +2,71 @@
 
 ## Objective
 
-Move project accent controls from the Edit Project form to the Settings modal, fix the immediate-persistence bug, and wire the reset capability.
+Replace the "Gradient Accents" toggle with a "Style" dropdown offering three named accent rendering styles (Gradient, Flat, Plate). Add "Plate" as a new style that renders the project code as a colored badge (identity plate concept).
 
 ## Approved Changes
 
-1. **Accent picker location**: Move from `AddProjectModal` edit form → `SettingsModal` Appearance tab, as a "Project Accents" section showing all registered projects with per-project accent pickers.
-2. **Persistence semantics**: Stage accent changes locally; persist only on explicit Save in Settings. Cancel discards changes.
-3. **Reset to default**: Add "Reset to default" button per project row; removes stored accent key so project reverts to deterministic fallback.
-4. **Edit form cleanup**: Remove the "Your Project Accent" section from `AddProjectModal`.
+1. **Replace `accentGradients: boolean` with `accentStyle: string`**: Schema field change from boolean toggle to string enum (`"gradient"` | `"flat"` | `"plate"`). Default: `"gradient"`.
+2. **Replace "Gradient Accents" toggle with "Style" dropdown**: In Settings > Appearance, the second toggle becomes a select dropdown with three named options: Gradient, Flat, Plate.
+3. **Add Plate style**: New rendering style where the project code element becomes a colored badge filled with the accent color and computed foreground text. On chips, the code gets a right-rounded accent background. On cards, the code badge replaces the identity area. Foreground auto-selected via `getForegroundForAccent()` for WCAG contrast.
+4. **Add Autocolor toggle** (Switch, default on): When on, projects without a user-set accent receive a deterministic fallback color. When off, unconfigured projects show no accent. Reset behavior changes: when autocolor is off and the hex input is empty, reset fills the computed fallback hex into the input.
+5. **Migrate data attribute**: Replace `data-accent-gradients="true|false"` with `data-accent-style="gradient|flat|plate"` on chips and cards.
+6. **Migrate stored preference**: Existing `accentGradients: true` → `accentStyle: "gradient"`, `accentGradients: false` → `accentStyle: "flat"`.
 
 ## Changed Requirement IDs
 
 | ID | Change Type | What Changed |
 |----|------------|--------------|
-| BR-1.1 | refine_in_place | "Project Edit form" → "Settings > Appearance > Project Accents" |
-| BR-1.2 | refine_in_place | "Project Edit form" → "Settings", explicit Save persistence |
-| BR-1.3 | refine_in_place | "Project Edit form" → "Settings", explicit Save persistence |
-| BR-1.4 | refine_in_place | "Project Edit form" → "Settings" |
-| BR-1.5 | refine_in_place | "Project Edit form" → "Settings" |
-| BR-2.1 | refine_in_place | "saves a project accent" → "saves in Settings" |
-| C7 | refine_in_place | "Edit form shall clearly separate" → "Settings modal, completely separate from Edit Project form" |
-| BR-9.1 | additive_change | New: reset to default from Settings |
+| BR-11.1 | refine_in_place | "gradient accents enabled" → "Gradient style selected" |
+| BR-11.2 | refine_in_place | "gradient accents disabled" → "Flat style selected" |
+| BR-11.3 | additive_change | New: Plate accent style scenario with auto-contrast foreground |
+| BR-12.1 | additive_change | New: Autocolor on — deterministic fallback applied |
+| BR-12.2 | additive_change | New: Autocolor off — no fallback, no accent for unconfigured projects |
+| BR-12.3 | additive_change | New: Reset fills auto hex when autocolor off and input empty |
+| C10 | refine_in_place | Boolean flag → string enum with migration; autocolor flag added |
 
 ## Affected Downstream Trace
 
-- **bdd**: scenarios `color_picker_preset_selection`, `color_picker_custom_hex`, `color_picker_invalid_hex_rejected`, `choose_color_external_link` — update UI entry point to Settings
-- **architecture**: Flow 1 (Edit Form → Settings), Edit Form Separation → Settings Integration, Structure section
-- **tests**: E2E tests need Settings modal interaction instead of edit-form hamburger path
-- **tasks**: New tasks for Settings integration; remove edit-form accent task content
+- **requirements**: Non-ambiguity table entries for gradient mode and accent coloring toggle updated
+- **bdd**: BR-11.1, BR-11.2 refined; BR-11.3 added (plate style scenario)
+- **architecture**: Accent Rendering Modes → Accent Rendering Styles; data attribute migration; schema change
+- **tests**: New E2E test for plate style; existing gradient/flat tests updated for dropdown interaction
+- **tasks**: New tasks for schema migration, CSS plate style, component style prop, Settings dropdown
 
 ## Execution Slices
 
-### Slice 1: Create `ProjectAccents` component for Settings
+### Slice 1: Schema migration — `accentGradients` → `accentStyle`
 
-- **Objective**: New component rendering per-project accent rows with pickers and reset buttons
+- **Objective**: Update `SelectorPreferencesSchema` in domain-contracts to replace `accentGradients: boolean` with `accentStyle: z.enum(["gradient", "flat", "plate"])`. Default `"gradient"`. Add migration logic for existing stored values.
+- **Direct artifacts**: `domain-contracts/src/app-config/schema.ts`
+- **GREEN targets**: Schema parse validates new and legacy values; migration tests pass
+- **Impacted tasks**: Schema update task
+
+### Slice 2: CSS — add Plate style rules
+
+- **Objective**: Add CSS rules for `data-accent-style="plate"` on chips and cards. Chip: code element gets accent-filled background, right-rounded corners, computed foreground. Card: same badge treatment, identity area hidden.
+- **Direct artifacts**: `src/components/ProjectSelector/project-selector.css`
+- **GREEN targets**: Plate style renders correctly in light and dark mode
+
+### Slice 3: Components — wire `accentStyle` prop to data attributes
+
+- **Objective**: Update `ProjectSelectorChip.tsx` and `ProjectSelectorCard.tsx` to read `accentStyle` from preferences and set `data-accent-style` attribute. Remove `data-accent-gradients`.
+- **Direct artifacts**: `src/components/ProjectSelector/ProjectSelectorChip.tsx`, `src/components/ProjectSelector/ProjectSelectorCard.tsx`
+- **GREEN targets**: Chips and cards render correct style based on preference
+
+### Slice 4: Settings — replace toggle with Style dropdown + Autocolor toggle
+
+- **Objective**: In `ProjectAccents.tsx`, replace "Gradient Accents" Switch with a "Style" select dropdown (Gradient / Flat / Plate). Add "Autocolor" Switch toggle. Persist `accentStyle` and `autocolor` to localStorage. Update reset button behavior for autocolor-off state.
 - **Direct artifacts**: `src/components/SettingsModal/ProjectAccents.tsx`
-- **GREEN targets**: Unit test for ProjectAccents rendering
-- **Impacted tasks**: TASK-3 (refactored)
+- **GREEN targets**: Dropdown shows three options; autocolor toggle works; reset fills auto hex when appropriate; rendering updates immediately
 
-### Slice 2: Wire into SettingsModal Appearance tab
+### Slice 5: E2E tests — add plate scenario, update existing
 
-- **Objective**: Add "Project Accents" section under Appearance tab; stage changes; Save persists; Cancel discards
-- **Direct artifacts**: `src/components/SettingsModal.tsx`
-- **GREEN targets**: Settings renders project accents; Save persists; Cancel discards
-
-### Slice 3: Remove accent section from AddProjectModal
-
-- **Objective**: Remove "Your Project Accent" section from edit form; clean up imports
-- **Direct artifacts**: `src/components/AddProjectModal/AddProjectModal.tsx`
-- **GREEN targets**: Edit form no longer shows accent controls; existing form tests still pass
-
-### Slice 4: Update E2E tests for Settings path
-
-- **Objective**: Rewrite accent E2E tests to use Settings modal instead of edit form; add reset test; add form-save-impacts-UI test
+- **Objective**: Add E2E test for plate style rendering. Update gradient/flat test selectors to use dropdown instead of toggle.
 - **Direct artifacts**: `tests/e2e/selector/project-accent-colors.spec.ts`
-- **GREEN targets**: All 9+ E2E tests pass via Settings interaction
+- **GREEN targets**: All accent E2E tests pass
 
-### Slice 5: Verify and clean up
+### Slice 6: Verify and clean up
 
 - **Objective**: Full unit + E2E suite green; validate trace; commit
 - **Direct artifacts**: None (validation pass)
@@ -69,13 +77,14 @@ Move project accent controls from the Edit Project form to the Settings modal, f
 - `spec-trace validate MDT-181 --stage requirements` ✅
 - `spec-trace render all MDT-181` ✅
 - Unit tests: will run after each slice
-- E2E: will run after Slice 4
+- E2E: will run after Slice 5
 
 ## Watchlist
 
-- Settings modal is already complex — keep the accents section self-contained in `ProjectAccents.tsx`
-- Staging semantics: accent changes must NOT persist until explicit Save (fixes the original bug)
-- `AccentColorPicker` component is reused as-is; only its host changes
+- Schema migration: existing `accentGradients` boolean values must gracefully convert to `accentStyle` string
+- CSS specificity: plate style must work alongside existing gradient and flat rules without conflicts
+- Dark mode: plate badge foreground must remain readable on dark accent backgrounds
+- The plate style removes the identity area from cards — ensure layout doesn't shift
 
 ## Open Decisions
 

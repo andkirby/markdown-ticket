@@ -314,7 +314,7 @@ PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/selector/project-accent-
 - (none — existing selector files extended)
 
 **Modifies**:
-- `src/components/ProjectSelector/ProjectSelectorChip.tsx` — apply resolved flat left-edge accent stripe without size growth
+- `src/components/ProjectSelector/ProjectSelectorChip.tsx` — apply resolved accent per style (gradient, flat, plate) without size growth
 - `src/components/ProjectSelector/ProjectSelectorCard.tsx` — add identity slot/fill and consume resolved accent
 - `src/components/ProjectSelector/project-selector.css` — chip/card accent variables and compact layout styles
 - `src/components/ProjectSelector/ProjectBrowserPanel.test.tsx` — extend browser-card regression coverage

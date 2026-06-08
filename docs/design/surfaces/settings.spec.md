@@ -139,21 +139,28 @@ Modal[size="md"]
 | Markdown Density | localStorage `mdt-settings-markdown-density` | Select (Compact / Default / Comfortable) | `default` |
 | Project Accents | `project-selector.json` via `/api/config/selector` | Per-project picker rows | deterministic fallback |
 | Accent Colors | localStorage `mdt-selector-preferences` | Switch toggle | `true` (on) |
-| Gradient Accents | localStorage `mdt-selector-preferences` | Switch toggle | `true` (on) |
+| Autocolor | localStorage `mdt-selector-preferences` | Switch toggle | `true` (on) |
+| Style | localStorage `mdt-selector-preferences` | Select dropdown (Gradient / Flat / Plate) | `gradient` |
 
 ### Project Accents (Appearance tab)
 
-A section below Markdown Density with two rendering-mode toggles, a project dropdown, and a compact inline accent editor.
+A section below Markdown Density with rendering controls (Accent Colors toggle, Autocolor toggle, Style dropdown), a project dropdown, and a compact inline accent editor.
 
 **Toggles**:
 - **Accent Colors** (Switch, default on): master toggle. Off disables all accent marks on chips and cards.
-- **Gradient Accents** (Switch, default on): only visible when Accent Colors is on. On = 25px gradient stripe on chips, 250° diagonal identity bar on cards, accent-tinted card background (`to left` gradient). Off = flat 4px stripe on chips, 6px solid bar on cards, no background tint, all at 0.3 opacity.
+- **Autocolor** (Switch, default on): only visible when Accent Colors is on. On = projects without a user-set accent receive a deterministic fallback color. Off = projects without a user accent show no accent color at all.
+- **Style** (Select dropdown, default `gradient`): only visible when Accent Colors is on. Three named rendering styles:
+  - **Gradient** — 25px gradient fade stripe on chips, 250° diagonal identity bar on cards, accent-tinted card background on active cards.
+  - **Flat** — thin 4px solid stripe on chips, 6px solid bar on cards, no background tint. All at 0.3 opacity.
+  - **Plate** — the project code renders as a colored badge flush to the left edge of the card/chip, with accent-filled background and auto-computed foreground (perceptual brightness formula). On chips, the code badge is right-rounded. On cards, the badge replaces the identity area. When autocolor is off and no user accent is stored, plate badges revert to plain text.
 
 **Header row**: "Project Accents" label + (i) info button.
 
 **(i) tooltip**: shows contextual help:
 - "Personal preference, not shared with other users."
-- "Accent renders as a left-edge stripe on selector chips and an identity bar on browser cards."
+- "Autocolor: on = each project gets a deterministic fallback color. Off = only projects with a manually set accent show color."
+- "Style controls how accents look: gradient fade, flat stripe, or plate (colored code badge flush to left edge, perceptual brightness text)."
+- "Delete the hex input value and save to revert to autocolor (or no accent if autocolor is off)."
 
 **Project dropdown**: a select listing all registered projects. On change, the editor loads that project's current accent. Defaults to the current project.
 
@@ -163,15 +170,17 @@ A section below Markdown Density with two rendering-mode toggles, a project drop
 
 **Auto-expansion**: shorthand hex like `0bc` expands to `#00bbcc` on blur. Missing `#` auto-prepended.
 
-**Reset button**: ↺ (rotate-left icon). Visible only when a user accent is stored.
+**Reset button**: ↺ (rotate-left icon). Behavior depends on Autocolor state:
+- **Autocolor on** (default): clears the stored user accent → project reverts to deterministic fallback.
+- **Autocolor off**: if the hex input is empty, fills the computed fallback hex into the input. If a user accent is stored, clears it. This lets users undo a custom color choice (reset fills the auto value) or drop to no accent (clear hex input manually).
 
 **"choose ↗" link**: opens `https://www.figma.com/colors/` in a new tab for browsing the full color spectrum.
 
-**Fallback algorithm**: when no user accent is stored, each project gets a deterministic fallback via FNV-1a hash → 360° hue mapping with fixed saturation 65%, lightness 45%. This produces a unique vivid color per project code; at 0.3 opacity the accent renders as a soft pastel. Results are cached in a `Map<string, string>`.
+**Fallback algorithm**: when Autocolor is on and no user accent is stored, each project gets a deterministic fallback via FNV-1a hash → 360° hue mapping with fixed saturation 65%, lightness 45%. This produces a unique vivid color per project code; at 0.3 opacity the accent renders as a soft pastel. Results are cached in a `Map<string, string>`. When Autocolor is off, projects without a user accent show no accent color.
 
-**Persistence semantics**: accent changes are **staged locally** and persisted only on explicit Save. Cancel discards. Rendering mode toggles (Accent Colors, Gradient Accents) persist immediately to localStorage.
+**Persistence semantics**: accent changes are **staged locally** and persisted only on explicit Save. Cancel discards. Rendering preferences (Accent Colors, Autocolor, Style) persist immediately to localStorage.
 
-**Storage**: accent values in `project-selector.json` via `/api/config/selector`. Rendering flags in localStorage `mdt-selector-preferences`.
+**Storage**: accent values in `project-selector.json` via `/api/config/selector`. Rendering preferences (`accentEnabled`, `autocolor`, `accentStyle`) in localStorage `mdt-selector-preferences`.
 
 ### Board
 

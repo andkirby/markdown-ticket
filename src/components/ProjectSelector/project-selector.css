@@ -81,27 +81,73 @@
     display: none;
   }
 
-  /* Flat mode */
-  .project-card[data-accent-gradients="false"] .project-card__identity {
+  /* Flat style — thin solid stripe */
+  .project-card[data-accent-style="flat"] .project-card__identity {
     width: 6px;
     min-width: 0;
     background: var(--project-accent, rgb(148 163 184));
     opacity: 0.3;
   }
 
-  /* Gradient mode (default) — identity bar fades top→bottom */
+  /* Gradient style (default) — identity bar fades */
+  .project-card[data-accent-style="gradient"] .project-card__identity {
+    background: linear-gradient(250deg, rgb(from var(--project-accent, rgb(148 163 184)) r g b / 0) 40%, rgb(from var(--project-accent, rgb(148 163 184)) r g b / 1) 100%);
+    opacity: 0.5;
+  }
+
+  /* Default identity (no style attr) matches gradient */
   .project-card__identity {
     background: linear-gradient(250deg, rgb(from var(--project-accent, rgb(148 163 184)) r g b / 0) 40%, rgb(from var(--project-accent, rgb(148 163 184)) r g b / 1) 100%);
     opacity: 0.5;
   }
 
-  /* Active card — accent tint on left, theme bg on right */
-  .project-card[data-active="true"][data-accent-enabled="true"][data-accent-gradients="true"] {
+  /* Plate style — hide identity area, flush badge to left edge */
+  .project-card[data-accent-style="plate"] .project-card__identity {
+    display: none;
+  }
+
+  .project-card[data-accent-style="plate"] {
+    padding-left: 0;
+    padding-inline-start: 0;
+  }
+
+  .project-card[data-accent-style="plate"] .project-card__code {
+    display: inline-flex;
+    height: 1.5rem;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.5rem 0 0.375rem;
+    color: var(--plate-fg-light);
+    background: rgb(from var(--project-accent) r g b / 0.8);
+    border: 1px solid var(--project-card-border);
+    border-left: none;
+    border-radius: 0 10px 10px 0;
+    box-shadow: none;
+  }
+
+  .project-card[data-accent-style="plate"][data-accent-brightness="light"] .project-card__code {
+    color: var(--plate-fg-dark);
+  }
+
+  /* Active card — accent tint (gradient style only) */
+  .project-card[data-active="true"][data-accent-enabled="true"][data-accent-style="gradient"] {
     background: linear-gradient(to left, var(--project-card-active-bg-from), rgb(from var(--project-accent, #dbeafe) r g b / 0.15));
   }
 
-  .dark .project-card[data-active="true"][data-accent-enabled="true"][data-accent-gradients="true"] {
+  .dark .project-card[data-active="true"][data-accent-enabled="true"][data-accent-style="gradient"] {
     background: linear-gradient(to left, var(--project-card-active-bg-from), rgb(from var(--project-accent, #1e3a5f) r g b / 0.15));
+  }
+
+  /* Autocolor off — no accent when no user accent set */
+  .project-card[data-autocolor="false"]:not([data-has-accent]) .project-card__identity {
+    display: none;
+  }
+
+  /* Autocolor off + plate: neutral badge (same shape, no fill) */
+  .project-card[data-accent-style="plate"][data-autocolor="false"]:not([data-has-accent]) .project-card__code {
+    background: transparent;
+    color: var(--plate-fg-dark);
   }
 
   .project-card__content {
@@ -168,8 +214,8 @@
     display: none;
   }
 
-  /* Flat mode (default for chips) */
-  .project-chip[data-accent-gradients="false"] .project-chip__accent-mark,
+  /* Flat style — thin solid stripe */
+  .project-chip[data-accent-style="flat"] .project-chip__accent-mark,
   .project-chip__accent-mark {
     position: absolute;
     inset-block: 0;
@@ -181,11 +227,52 @@
     pointer-events: none;
   }
 
-  /* Gradient mode for chips */
-  .project-chip[data-accent-gradients="true"] .project-chip__accent-mark {
+  /* Gradient style — wider gradient fade */
+  .project-chip[data-accent-style="gradient"] .project-chip__accent-mark {
     width: 25px;
     background: linear-gradient(270deg, rgb(from var(--project-accent, rgb(148 163 184)) r g b / 0) 40%, rgb(from var(--project-accent, rgb(148 163 184)) r g b / 1) 100%);
     opacity: 0.3;
+  }
+
+  /* Plate style — hide accent mark, flush badge to left edge */
+  .project-chip[data-accent-style="plate"] .project-chip__accent-mark {
+    display: none;
+  }
+
+  .project-chip[data-accent-style="plate"] {
+    padding-left: 0;
+    padding-inline: 0 0.25rem;
+    justify-content: flex-start;
+  }
+
+  .project-chip[data-accent-style="plate"] .project-chip__code {
+    display: inline-flex;
+    height: 1.5rem;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.25rem 0 0.5rem;
+    color: var(--plate-fg-light);
+    background: rgb(from var(--project-accent) r g b / 0.5);
+    border: 1px solid var(--project-card-border);
+    border-left: none;
+    border-radius: 0 13px 13px 0;
+    box-shadow: none;
+  }
+
+  .project-chip[data-accent-style="plate"][data-accent-brightness="light"] .project-chip__code {
+    color: var(--plate-fg-dark);
+  }
+
+  /* Autocolor off — no accent mark when no user accent set */
+  .project-chip[data-autocolor="false"]:not([data-has-accent]) .project-chip__accent-mark {
+    display: none;
+  }
+
+  /* Autocolor off + plate: neutral badge (same shape, no fill) */
+  .project-chip[data-accent-style="plate"][data-autocolor="false"]:not([data-has-accent]) .project-chip__code {
+    background: transparent;
+    color: var(--plate-fg-dark);
   }
 
   .project-chip__content {
@@ -195,7 +282,7 @@
   }
 
   .project-chip__code {
-    @apply text-sm font-medium;
+    @apply text-sm font-medium leading-none;
     color: var(--project-chip-code-color);
   }
 
@@ -259,6 +346,9 @@
   --project-chip-code-color: theme('colors.gray.700');
   --project-chip-hover-border: theme('colors.blue.300');
 
+  --plate-fg-light: theme('colors.white');
+  --plate-fg-dark: theme('colors.gray.900');
+
   --project-launcher-bg-from: theme('colors.gray.100');
   --project-launcher-bg-to: rgb(229 231 235 / 0.8);
   --project-launcher-border: rgb(209 213 219 / 0.5);
@@ -287,6 +377,9 @@
 
   --project-chip-code-color: theme('colors.gray.300');
   --project-chip-hover-border: theme('colors.blue.700');
+
+  --plate-fg-light: theme('colors.gray.300');
+  --plate-fg-dark: theme('colors.gray.700');
 
   --project-launcher-bg-from: theme('colors.slate.700');
   --project-launcher-bg-to: rgb(30 41 59 / 0.8);
