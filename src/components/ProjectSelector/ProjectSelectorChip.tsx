@@ -13,7 +13,7 @@
 import type { ProjectWithSelectorState } from './types'
 import * as React from 'react'
 import { cn } from '@/lib/utils'
-import { getFallbackAccent, getAccentBrightness } from '@/utils/accentColors'
+import { useAccentStyle } from './useAccentStyle'
 // eslint-disable-next-line no-restricted-imports
 import { Icon } from '../shared/Icon'
 import {
@@ -31,8 +31,7 @@ interface ProjectSelectorChipProps {
   onSelect: (projectKey: string) => void
   /** Whether accent coloring is enabled */
   accentEnabled?: boolean
-  /** Accent rendering style */
-  accentStyle?: string
+  accentStyle?: 'gradient' | 'flat' | 'plate'
   /** Whether autocolor fallback is enabled */
   autocolor?: boolean
   /** Whether user has a stored accent for this project */
@@ -63,14 +62,14 @@ const ProjectSelectorChip: React.FC<ProjectSelectorChipProps> = ({
   }
 
   const chipClasses = cn('project-chip project-lift group h-12')
-  const resolvedAccent = project.selectorState.accent ?? getFallbackAccent(project.project.code || project.id)
-  const hasVisibleAccent = accentEnabled && (hasAccent || autocolor)
 
-  const chipStyle = {
-    '--project-accent': hasVisibleAccent ? resolvedAccent : undefined,
-  } as React.CSSProperties
-
-  const accentBrightness = hasVisibleAccent ? getAccentBrightness(resolvedAccent) : undefined
+  const { style: chipStyle, accentBrightness } = useAccentStyle({
+    project,
+    accentEnabled,
+    accentStyle,
+    autocolor,
+    hasAccent,
+  })
 
   return (
     <HoverCard>

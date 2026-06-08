@@ -13,7 +13,7 @@
 import type { ProjectWithSelectorState } from './types'
 import * as React from 'react'
 import { cn } from '@/lib/utils'
-import { getFallbackAccent, getAccentBrightness } from '@/utils/accentColors'
+import { useAccentStyle } from './useAccentStyle'
 // eslint-disable-next-line no-restricted-imports
 import { Icon } from '../shared/Icon'
 import {
@@ -40,8 +40,7 @@ interface ProjectSelectorCardProps {
   /** Optional keydown handler from parent composite views */
   /** Whether accent coloring is enabled */
   accentEnabled?: boolean
-  /** Whether gradient accent mode is active */
-  accentStyle?: string
+  accentStyle?: 'gradient' | 'flat' | 'plate'
   autocolor?: boolean
   hasAccent?: boolean
   onCardKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void
@@ -101,19 +100,19 @@ const ProjectSelectorCard: React.FC<ProjectSelectorCardProps> = ({
   }
 
   const isProjectBrowserCard = testIdPrefix === 'project-browser-card'
-  const resolvedAccent = project.selectorState.accent ?? getFallbackAccent(project.project.code || project.id)
+
+  const { style: cardStyle, accentBrightness } = useAccentStyle({
+    project,
+    accentEnabled,
+    accentStyle,
+    autocolor,
+    hasAccent,
+  })
+
   const cardClasses = cn(
     'project-card project-lift group min-h-12',
     useRailWidthConstraints && 'project-card--rail',
   )
-
-  const hasVisibleAccent = accentEnabled && (hasAccent || autocolor)
-
-  const cardStyle = {
-    '--project-accent': hasVisibleAccent ? resolvedAccent : undefined,
-  } as React.CSSProperties
-
-  const accentBrightness = hasVisibleAccent ? getAccentBrightness(resolvedAccent) : undefined
 
   const cardContent = (
     <div
