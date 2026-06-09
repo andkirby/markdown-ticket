@@ -128,7 +128,7 @@
 }
 
 .project-accents__select {
-  @apply mt-1 max-w-[200px];
+  @apply mt-1 max-w-[320px];
 }
 
 .project-accents__row {
