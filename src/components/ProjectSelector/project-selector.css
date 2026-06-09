@@ -157,7 +157,7 @@
   .project-card[data-accent-style="plate"][data-autocolor="false"]:not([data-has-accent]) .project-card__code,
   .project-chip[data-accent-style="plate"][data-autocolor="false"]:not([data-has-accent]) .project-chip__code {
     background: transparent;
-    color: var(--plate-fg-dark);
+    color: var(--project-chip-code-color);
   }
 
   .project-card__content {
