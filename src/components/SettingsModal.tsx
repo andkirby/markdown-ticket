@@ -2,7 +2,6 @@ import type { Project } from '@mdt/shared/models/Project'
 import type { CardDensity, DefaultView, MarkdownDensity } from '../config/settingsPreferences'
 import type { TicketCardBadgeId } from '../config/ticketCardBadges'
 import type { SelectorState } from './ProjectSelector/types'
-import { SELECTOR_STATE_SYNC_EVENT } from './ProjectSelector/useSelectorData'
 import * as Tabs from '@radix-ui/react-tabs'
 import { Info, Monitor, Moon, Sun, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -24,6 +23,7 @@ import { useTheme } from '../hooks/useTheme'
 import { nuclearCacheClear } from '../utils/cache'
 import { getProjectCode } from '../utils/projectUtils'
 import { getEventHistoryForceHidden, toggleEventHistory } from './DevTools/useEventHistoryState'
+import { SELECTOR_STATE_SYNC_EVENT } from './ProjectSelector/useSelectorData'
 import { ProjectAccents } from './SettingsModal/ProjectAccents'
 import { ReadAccessTokens } from './SettingsModal/ReadAccessTokens'
 import { ButtonGroup } from './ui/button-group'
@@ -163,7 +163,9 @@ export function SettingsModal({ isOpen, onClose, selectedProject, projects = [],
       }
     }
     loadSelectorState()
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [isOpen])
 
   // Reset staging when modal reopens
@@ -182,8 +184,7 @@ export function SettingsModal({ isOpen, onClose, selectedProject, projects = [],
     for (const [key, value] of accentStaging.changes) {
       const existing = merged[key] || { favorite: false, lastUsedAt: null, count: 0 }
       if (value === null) {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { accent: _, ...rest } = existing
+        const { accent: _accent, ...rest } = existing
         merged[key] = rest as SelectorState
       }
       else {
@@ -194,7 +195,7 @@ export function SettingsModal({ isOpen, onClose, selectedProject, projects = [],
   }, [accentStaging])
 
   const handleAccentChange = useCallback((projectKey: string, accent: string) => {
-    setAccentStaging(prev => {
+    setAccentStaging((prev) => {
       if (!prev) {
         return prev
       }
@@ -205,7 +206,7 @@ export function SettingsModal({ isOpen, onClose, selectedProject, projects = [],
   }, [])
 
   const handleAccentReset = useCallback((projectKey: string) => {
-    setAccentStaging(prev => {
+    setAccentStaging((prev) => {
       if (!prev) {
         return prev
       }
@@ -487,7 +488,8 @@ export function SettingsModal({ isOpen, onClose, selectedProject, projects = [],
                     </TooltipTrigger>
                     <TooltipContent className="max-w-xs">
                       <p>Personal preference, not shared with other users.</p>
-                      <p className="mt-1">Accent renders as a left-edge stripe on selector chips and an identity bar on browser cards.</p>
+                      <p className="mt-1">Choose a Style: Gradient (fade), Flat (stripe), or Plate (colored code badge).</p>
+                      <p className="mt-1">Autocolor assigns deterministic fallback colors to projects you haven’t customized.</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
