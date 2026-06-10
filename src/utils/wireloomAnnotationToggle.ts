@@ -583,6 +583,15 @@ export function addAnnotationToggle(
     }
   })
 
+  // Auto-enter compact mode — annotated mockups default to clean marker view
+  // User can toggle back to full callouts
+  cachedResult = computeMarkerPositions(svgRoot, annotations)
+  if (cachedResult.positions.size > 0) {
+    switchToCompact(wrapper, annotations, cachedResult.positions, cachedResult.colors)
+    toggle.classList.add(TOGGLE_ACTIVE_CLASS)
+    toggle.title = 'Show callout annotations'
+  }
+
   wrapper.appendChild(toggle)
 }
 
