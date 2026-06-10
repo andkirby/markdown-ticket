@@ -1,5 +1,79 @@
 # Release Notes
 
+## v0.22.0 (2026-06-10)
+
+### New Features
+
+**Per-User Project Accent Colors (MDT-181)**
+- Assign a custom color to each project so you can spot it at a glance on the board
+- Choose from a 24-color token pool, type a hex code, or use the native color picker slider
+- Two accent modes: solid fill or diagonal gradient — toggle in Settings → Board
+- Auto-color mode distributes colors evenly across projects using FNV-1a hashing
+- Accent colors appear on project chips, board cards, and the project selector
+- All colors are theme-aware and adapt automatically to light and dark mode
+
+**Scoped Global Search (MDT-179)**
+- Search for tickets across every project from a single entry point
+- Scope tabs let you narrow results to a specific project or search all projects at once
+- Project matching highlights the best-fit project for your query
+
+**Wireloom Annotation View Toggle (MDT-182)**
+- Wireloom wireframe blocks can now show or hide annotations with a compact toggle
+- Choose between labeled annotations, compact mode, or no annotations — persists per session
+- A global configuration option for the default annotation mode is coming soon
+
+**Project Edit Modal (MDT-041)**
+- Edit project details directly from the UI with a dedicated form
+- Real-time validation and inline feedback for name, code, and path fields
+- Changes take effect immediately without a page reload
+
+**Upgraded Path Selector (Documents)**
+- Rebuilt path selector modal with a selectable folder tree
+- Folders are clearly presented — click to select, no more auto-opening on browse
+
+### Improvements
+
+**Read-Access Sharing Hardened (MDT-177)**
+- Read-only sharing journeys stabilized end-to-end — tokens, sessions, and admin boundaries
+- Public read access is preserved correctly after lock/unlock cycles
+- Owner session moved into the menu for clearer access control
+
+**Owner Session Lifetime (MDT-176)**
+- Browser auth sessions now have a configurable lifetime
+- Token exchange and session cookie flow validated across refresh cycles
+
+**Runtime Configuration Centralized (MDT-178)**
+- Runtime configuration consolidated to eliminate drift between environments
+- Read token test expiry no longer drifts over time
+
+**Quick Search Ranking (MDT-136)**
+- Quick search now ranks results before applying the limit, so the best matches always appear at the top
+
+### Bug Fixes
+
+**SSE Reconnect Cascade Eliminated (MDT-180)**
+- Fixed a bug where SSE reconnection storms caused periodic idle page reloads
+- Reconnects are now properly deduplicated and throttled
+
+**Markdown Document Links Hardened (MDT-155)**
+- Source-path construction and regex safety improved for document smart links
+- Edge cases with special characters in paths no longer break link generation
+
+**Mobile Logo Asset Path (MDT-131)**
+- Corrected the mobile logo asset path so it loads reliably on small screens
+
+**Wireloom Annotations (MDT-165)**
+- Compact Wireloom annotation rendering fixed after an earlier regression
+- Annotation display now works correctly alongside the new toggle
+
+**UI Polish**
+- Floating timestamp layout unified across document and ticket views
+- Modal architecture improved — no-jump positioning and constrained scroll regions
+- ScrollArea standardized for all constrained modal content
+- Theme-aware code color applied to uncolored plate badges
+
+---
+
 ## v0.21.0 (2026-05-23)
 
 ### New Features
