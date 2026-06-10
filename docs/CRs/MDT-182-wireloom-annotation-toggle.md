@@ -1,6 +1,6 @@
 ---
 code: MDT-182
-status: In Progress
+status: Partially Implemented
 dateCreated: 2026-06-08T21:00:07.233Z
 type: Feature Enhancement
 priority: Medium

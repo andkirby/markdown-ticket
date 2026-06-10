@@ -1,0 +1,654 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-182"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "WHEN a rendered Wireloom block is displayed, the system shall show a visible annotation mode toggle control on the block.",
+      "sourceRef": "CR Section 4: Functional - A rendered Wireloom block offers a visible control",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "WHEN user selects full callout mode, the system shall display Wireloom annotations as always-visible callout boxes (current default behavior).",
+      "sourceRef": "CR Section 4: Full callout mode preserves current readable annotation view",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.3",
+      "kind": "behavior",
+      "text": "WHEN user selects compact mode, the system shall replace always-visible callout boxes with numbered target markers at the same positions.",
+      "sourceRef": "CR Section 4: Compact mode replaces always-visible callout boxes with numbered target markers",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.4",
+      "kind": "behavior",
+      "text": "WHEN user hovers over a compact marker, the system shall display the matching annotation text in a tooltip.",
+      "sourceRef": "CR Section 4: Hovering or focusing a marker shows matching annotation text",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.5",
+      "kind": "behavior",
+      "text": "WHEN user focuses a compact marker via keyboard, the system shall display the matching annotation text.",
+      "sourceRef": "CR Section 4: Hovering or focusing a marker shows matching annotation text",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.6",
+      "kind": "behavior",
+      "text": "WHEN user clicks or taps a compact marker, the system shall keep the annotation visible until the user dismisses it or selects another marker.",
+      "sourceRef": "CR Section 4: Clicking or tapping a marker keeps annotation visible until dismissed",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.7",
+      "kind": "behavior",
+      "text": "WHEN user activates the annotation mode toggle, the system shall not modify the source Markdown file.",
+      "sourceRef": "CR Section 4: The control does not modify the source Markdown file",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.8",
+      "kind": "behavior",
+      "text": "WHEN a non-Wireloom code fence is rendered, the system shall not show an annotation mode toggle.",
+      "sourceRef": "CR Section 4: Non-Wireloom code fences render exactly as before",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.9",
+      "kind": "behavior",
+      "text": "WHEN multiple Wireloom blocks appear in one document, each block shall have its own independent annotation mode toggle.",
+      "sourceRef": "CR Section 5: Edge Cases - Multiple Wireloom blocks in one document",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.10",
+      "kind": "behavior",
+      "text": "WHEN user presses Escape while a compact marker annotation is displayed, the system shall dismiss the annotation.",
+      "sourceRef": "CR Section 5: Accessibility - keyboard dismiss",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "Compact mode shall avoid expanding the rendered SVG canvas dimensions beyond the base mockup dimensions.",
+      "sourceRef": "CR Section 4: Non-Functional - Compact mode avoids expanding rendered SVG canvas",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "Keyboard and screen reader users shall be able to reach annotation marker controls and read annotation text without a pointer device.",
+      "sourceRef": "CR Section 4: Non-Functional - Keyboard and screen reader access",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "Malformed Wireloom source shall show the existing inline error behavior regardless of annotation mode.",
+      "sourceRef": "CR Section 4: Non-Functional - Malformed Wireloom source shows existing inline error",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "Missing or unloadable Wireloom shall fall back to escaped plain code regardless of annotation mode.",
+      "sourceRef": "CR Section 4: Non-Functional - Missing Wireloom falls back to escaped plain code",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C5",
+      "kind": "constraint",
+      "text": "The annotation mode toggle shall preserve its state when the user switches theme while compact mode is active.",
+      "sourceRef": "CR Section 5: Edge Cases - User switches theme while compact mode is active",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C6",
+      "kind": "constraint",
+      "text": "The annotation mode toggle shall preserve its state when the user opens or closes fullscreen while compact mode is active.",
+      "sourceRef": "CR Section 5: Edge Cases - User opens fullscreen while compact mode is active",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "WHEN multiple annotations target the same element, the system shall display distinct numbered markers at the same target position with unique annotation text for each.",
+      "sourceRef": "CR Section 5: Edge Cases - Multiple annotations target the same element",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-2",
+      "kind": "edge_case",
+      "text": "WHEN annotation text exceeds the available tooltip width, the system shall wrap or truncate the text in a readable manner.",
+      "sourceRef": "CR Section 5: Edge Cases - Long annotation text exceeds tooltip width",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-3",
+      "kind": "edge_case",
+      "text": "WHEN a Wireloom annotation target cannot be resolved, the system shall skip the marker for that annotation without breaking other markers.",
+      "sourceRef": "CR Section 5: Edge Cases - Annotation target cannot be resolved",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "toggle_visible_on_wireloom_block",
+      "title": "Annotation mode toggle is visible on rendered Wireloom block",
+      "covers": [
+        "BR-1.1"
+      ],
+      "given": "a document containing a Wireloom code block is open",
+      "when": "the Wireloom block has finished rendering",
+      "then": "an annotation mode toggle control is visible on the block",
+      "sourceRef": "BR-1.1"
+    },
+    {
+      "id": "switch_to_compact_mode",
+      "title": "Switching to compact mode replaces callouts with numbered markers",
+      "covers": [
+        "BR-1.3"
+      ],
+      "given": "a rendered Wireloom block is displaying full callout mode",
+      "when": "the user activates the annotation mode toggle to select compact mode",
+      "then": "the always-visible callout boxes are replaced with numbered target markers at the same positions",
+      "sourceRef": "BR-1.3"
+    },
+    {
+      "id": "switch_back_to_callout_mode",
+      "title": "Switching back to callout mode restores full callout view",
+      "covers": [
+        "BR-1.2",
+        "BR-1.3"
+      ],
+      "given": "a rendered Wireloom block is displaying compact mode",
+      "when": "the user activates the annotation mode toggle to select callout mode",
+      "then": "the numbered markers are replaced with always-visible callout boxes",
+      "sourceRef": "BR-1.2"
+    },
+    {
+      "id": "hover_marker_shows_annotation",
+      "title": "Hovering a compact marker shows annotation tooltip",
+      "covers": [
+        "BR-1.4"
+      ],
+      "given": "a rendered Wireloom block is displaying compact mode with numbered markers",
+      "when": "the user hovers over a numbered marker",
+      "then": "a tooltip displays the matching annotation text for that marker",
+      "sourceRef": "BR-1.4"
+    },
+    {
+      "id": "focus_marker_shows_annotation",
+      "title": "Focusing a compact marker via keyboard shows annotation tooltip",
+      "covers": [
+        "BR-1.5"
+      ],
+      "given": "a rendered Wireloom block is displaying compact mode with numbered markers",
+      "when": "the user tabs to focus a numbered marker",
+      "then": "a tooltip displays the matching annotation text for that marker",
+      "sourceRef": "BR-1.5"
+    },
+    {
+      "id": "click_marker_keeps_annotation",
+      "title": "Clicking a compact marker keeps annotation visible until dismissed",
+      "covers": [
+        "BR-1.6"
+      ],
+      "given": "a rendered Wireloom block is displaying compact mode with numbered markers",
+      "when": "the user clicks a numbered marker",
+      "then": "the annotation text stays visible until the user clicks elsewhere, clicks another marker, or presses Escape",
+      "sourceRef": "BR-1.6"
+    },
+    {
+      "id": "escape_dismisses_annotation",
+      "title": "Pressing Escape dismisses a displayed compact annotation",
+      "covers": [
+        "BR-1.10"
+      ],
+      "given": "a compact marker annotation is currently displayed",
+      "when": "the user presses Escape",
+      "then": "the annotation tooltip is dismissed",
+      "sourceRef": "BR-1.10"
+    },
+    {
+      "id": "toggle_does_not_modify_source",
+      "title": "Toggling annotation mode does not modify source Markdown",
+      "covers": [
+        "BR-1.7"
+      ],
+      "given": "a document containing a Wireloom code block is open",
+      "when": "the user switches annotation mode between callout and compact",
+      "then": "the source Markdown file content remains unchanged",
+      "sourceRef": "BR-1.7"
+    },
+    {
+      "id": "no_toggle_on_non_wireloom",
+      "title": "Non-Wireloom code fences do not show annotation mode toggle",
+      "covers": [
+        "BR-1.8"
+      ],
+      "given": "a document containing regular code fences (non-wireloom) is open",
+      "when": "the code blocks have finished rendering",
+      "then": "no annotation mode toggle control appears on non-Wireloom code blocks",
+      "sourceRef": "BR-1.8"
+    },
+    {
+      "id": "independent_toggles_per_block",
+      "title": "Multiple Wireloom blocks have independent annotation mode toggles",
+      "covers": [
+        "BR-1.9"
+      ],
+      "given": "a document containing two Wireloom code blocks is open and both are rendered",
+      "when": "the user switches one block to compact mode",
+      "then": "the other block remains in its current annotation mode and each block has its own toggle",
+      "sourceRef": "BR-1.9"
+    },
+    {
+      "id": "full_callout_mode_default",
+      "title": "Full callout mode is the default and preserves current rendering",
+      "covers": [
+        "BR-1.2"
+      ],
+      "given": "a document containing a Wireloom code block with annotations is open",
+      "when": "the Wireloom block has finished rendering",
+      "then": "annotations are displayed as always-visible callout boxes (current default behavior)",
+      "sourceRef": "BR-1.2"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-svg-post-processor",
+      "title": "Post-process rendered Wireloom SVG to extract annotation positions and support compact mode overlay",
+      "derivedFrom": [
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.5",
+        "BR-1.6",
+        "C1"
+      ],
+      "artifactIds": [
+        "ART-wireloom-annotation-toggle",
+        "ART-wireloom-renderer"
+      ],
+      "sourceRef": "architecture: SVG annotation extraction"
+    },
+    {
+      "id": "OBL-toggle-control",
+      "title": "Add annotation mode toggle button to Wireloom wrapper DOM, co-located with fullscreen button",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3"
+      ],
+      "artifactIds": [
+        "ART-wireloom-annotation-toggle",
+        "ART-prose-css"
+      ],
+      "sourceRef": "architecture: toggle control placement"
+    },
+    {
+      "id": "OBL-compact-markers",
+      "title": "Compact mode replaces callout SVG elements with numbered markers positioned at annotation target coordinates",
+      "derivedFrom": [
+        "BR-1.3",
+        "C1"
+      ],
+      "artifactIds": [
+        "ART-wireloom-annotation-toggle",
+        "ART-wireloom-annotation-toggle-css"
+      ],
+      "sourceRef": "architecture: compact marker rendering"
+    },
+    {
+      "id": "OBL-tooltip-interaction",
+      "title": "Tooltip/popover shows annotation text on hover, focus, click, and dismisses on Escape or outside click",
+      "derivedFrom": [
+        "BR-1.4",
+        "BR-1.5",
+        "BR-1.6",
+        "BR-1.10",
+        "C2"
+      ],
+      "artifactIds": [
+        "ART-wireloom-annotation-toggle",
+        "ART-wireloom-annotation-toggle-css"
+      ],
+      "sourceRef": "architecture: tooltip interaction model"
+    },
+    {
+      "id": "OBL-source-unchanged",
+      "title": "Toggle operates purely on rendered DOM without modifying source Markdown or Wireloom source",
+      "derivedFrom": [
+        "BR-1.7"
+      ],
+      "artifactIds": [
+        "ART-wireloom-annotation-toggle"
+      ],
+      "sourceRef": "architecture: no source mutation"
+    },
+    {
+      "id": "OBL-no-toggle-non-wireloom",
+      "title": "Annotation toggle only appears on .wireloom blocks, not on other code fences or diagram types",
+      "derivedFrom": [
+        "BR-1.8"
+      ],
+      "artifactIds": [
+        "ART-wireloom-annotation-toggle",
+        "ART-wireloom-renderer"
+      ],
+      "sourceRef": "architecture: scope to wireloom only"
+    },
+    {
+      "id": "OBL-per-block-state",
+      "title": "Annotation mode state is per-block, stored in-memory on the DOM element via data attribute",
+      "derivedFrom": [
+        "BR-1.9"
+      ],
+      "artifactIds": [
+        "ART-wireloom-annotation-toggle"
+      ],
+      "sourceRef": "architecture: per-block independent state"
+    },
+    {
+      "id": "OBL-theme-fullscreen-preserve",
+      "title": "Compact mode state persists across theme changes and fullscreen toggle without re-rendering to callout mode",
+      "derivedFrom": [
+        "C5",
+        "C6"
+      ],
+      "artifactIds": [
+        "ART-wireloom-annotation-toggle",
+        "ART-wireloom-fullscreen",
+        "ART-wireloom-renderer"
+      ],
+      "sourceRef": "architecture: state persistence"
+    },
+    {
+      "id": "OBL-error-fallback-preserve",
+      "title": "Malformed source and missing Wireloom fallback paths remain unchanged regardless of annotation mode",
+      "derivedFrom": [
+        "C3",
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-wireloom-renderer"
+      ],
+      "sourceRef": "architecture: error fallback unchanged"
+    },
+    {
+      "id": "OBL-e2e-coverage",
+      "title": "E2E test file covers all BDD scenarios for annotation toggle",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.5",
+        "BR-1.6",
+        "BR-1.7",
+        "BR-1.8",
+        "BR-1.9",
+        "BR-1.10"
+      ],
+      "artifactIds": [
+        "ART-e2e-test"
+      ],
+      "sourceRef": "architecture: E2E test plan"
+    },
+    {
+      "id": "OBL-accessibility",
+      "title": "Compact markers are focusable, have ARIA labels, and tooltip content is announced to screen readers; DOM Purify config allows tooltip attributes",
+      "derivedFrom": [
+        "C2"
+      ],
+      "artifactIds": [
+        "ART-wireloom-annotation-toggle",
+        "ART-wireloom-annotation-toggle-css",
+        "ART-dom-purify"
+      ],
+      "sourceRef": "architecture: accessibility"
+    },
+    {
+      "id": "OBL-unit-tests",
+      "title": "Unit tests cover annotation extraction, marker generation, tooltip show/hide, and toggle state management",
+      "derivedFrom": [
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.5",
+        "BR-1.6",
+        "BR-1.10",
+        "C2"
+      ],
+      "artifactIds": [
+        "ART-wireloom-annotation-toggle-test"
+      ],
+      "sourceRef": "architecture: unit test plan"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-wireloom-annotation-toggle",
+      "path": "src/utils/wireloomAnnotationToggle.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture: annotation toggle logic"
+    },
+    {
+      "id": "ART-wireloom-annotation-toggle-css",
+      "path": "src/styles/wireloom-annotations.css",
+      "kind": "runtime",
+      "sourceRef": "architecture: compact mode marker and tooltip styles"
+    },
+    {
+      "id": "ART-wireloom-annotation-toggle-test",
+      "path": "src/utils/wireloomAnnotationToggle.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture: unit tests for annotation toggle"
+    },
+    {
+      "id": "ART-wireloom-renderer",
+      "path": "src/utils/wireloomRenderer.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture: modified renderer to support compact mode"
+    },
+    {
+      "id": "ART-wireloom-fullscreen",
+      "path": "src/utils/wireloomFullscreen.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture: fullscreen must preserve compact mode state"
+    },
+    {
+      "id": "ART-prose-css",
+      "path": "src/styles/prose.css",
+      "kind": "runtime",
+      "sourceRef": "architecture: prose CSS for wireloom block styling"
+    },
+    {
+      "id": "ART-e2e-test",
+      "path": "tests/e2e/documents/wireloom-annotation-toggle.spec.ts",
+      "kind": "test",
+      "sourceRef": "architecture: E2E tests for annotation toggle"
+    },
+    {
+      "id": "ART-dom-purify",
+      "path": "src/components/MarkdownContent/domPurifyConfig.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture: DOM Purify config may need to allow tooltip attributes"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-annotation-toggle-e2e",
+      "kind": "e2e",
+      "title": "E2E tests for Wireloom annotation view toggle BDD scenarios",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.5",
+        "BR-1.6",
+        "BR-1.7",
+        "BR-1.8",
+        "BR-1.9",
+        "BR-1.10"
+      ],
+      "file": "tests/e2e/documents/wireloom-annotation-toggle.spec.ts",
+      "sourceRef": "BDD scenarios: toggle_visible_on_wireloom_block through independent_toggles_per_block"
+    },
+    {
+      "id": "TEST-annotation-toggle-unit",
+      "kind": "unit",
+      "title": "Unit tests for Wireloom annotation toggle logic",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.5",
+        "BR-1.6",
+        "BR-1.7",
+        "BR-1.8",
+        "BR-1.9",
+        "BR-1.10",
+        "C1",
+        "C2",
+        "C3",
+        "C4",
+        "C5",
+        "C6",
+        "Edge-1",
+        "Edge-2",
+        "Edge-3"
+      ],
+      "file": "src/utils/wireloomAnnotationToggle.test.ts",
+      "sourceRef": "architecture: OBL-toggle-control, OBL-compact-markers, OBL-tooltip-interaction, OBL-accessibility, OBL-theme-fullscreen-preserve"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-2",
+      "title": "Implement compact mode with numbered markers and tooltip interactions",
+      "ownsArtifactIds": [
+        "ART-wireloom-annotation-toggle",
+        "ART-wireloom-annotation-toggle-css"
+      ],
+      "makesGreenIds": [
+        "TEST-annotation-toggle-unit"
+      ],
+      "sourceRef": "tasks.md#task-2"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Integrate annotation toggle into Wireloom renderer and fullscreen",
+      "ownsArtifactIds": [
+        "ART-wireloom-renderer",
+        "ART-wireloom-fullscreen",
+        "ART-dom-purify",
+        "ART-prose-css"
+      ],
+      "makesGreenIds": [
+        "TEST-annotation-toggle-unit"
+      ],
+      "sourceRef": "tasks.md#task-3"
+    },
+    {
+      "id": "TASK-4",
+      "title": "Wire E2E tests and make all BDD scenarios GREEN",
+      "ownsArtifactIds": [
+        "ART-e2e-test"
+      ],
+      "makesGreenIds": [
+        "TEST-annotation-toggle-e2e",
+        "toggle_visible_on_wireloom_block",
+        "full_callout_mode_default",
+        "switch_to_compact_mode",
+        "switch_back_to_callout_mode",
+        "hover_marker_shows_annotation",
+        "focus_marker_shows_annotation",
+        "click_marker_keeps_annotation",
+        "escape_dismisses_annotation",
+        "toggle_does_not_modify_source",
+        "no_toggle_on_non_wireloom",
+        "independent_toggles_per_block"
+      ],
+      "sourceRef": "tasks.md#task-4"
+    },
+    {
+      "id": "TASK-1",
+      "title": "Create wireloomAnnotationToggle module with annotation parsing and toggle control",
+      "ownsArtifactIds": [
+        "ART-wireloom-annotation-toggle",
+        "ART-wireloom-annotation-toggle-css",
+        "ART-wireloom-annotation-toggle-test"
+      ],
+      "makesGreenIds": [
+        "TEST-annotation-toggle-unit"
+      ],
+      "sourceRef": "tasks.md#task-1"
+    }
+  ]
+}
