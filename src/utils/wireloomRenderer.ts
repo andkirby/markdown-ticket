@@ -10,6 +10,7 @@
  * 3. On theme-change, already-rendered `.wireloom` divs are re-rendered.
  */
 import type { RenderResult, Document as WireloomDocument } from 'wireloom'
+import { addAnnotationToggle, reapplyCompactMode } from './wireloomAnnotationToggle'
 import { addWireloomFullscreenButtons } from './wireloomFullscreen'
 
 export const WIRELOOM_RENDER_THEME = {
@@ -231,17 +232,29 @@ export async function renderWireloomElements(
     return
   }
 
+  const parseFn = mod.default.parse
   let i = 0
   for (const el of allTargets) {
     const encoded = el.getAttribute('data-source-encoded') ?? ''
     const source = decodeSource(encoded)
     const key = getCacheKey(source, renderOptions.theme)
 
+    // Capture current annotation mode before replacement (for theme-change re-renders)
+    const previousMode = el.getAttribute('data-annotation-mode') || ''
+
     // Use cache if available (avoids re-rendering on every theme toggle)
     const cached = cache.get(key)
     if (cached !== undefined) {
       const wrapper = createWireloomWrapper(encoded, cached)
+      if (previousMode)
+        wrapper.setAttribute('data-annotation-mode', previousMode)
       el.replaceWith(wrapper)
+      // Add annotation toggle
+      if (parseFn)
+        addAnnotationToggle(wrapper, source, parseFn)
+      // Re-apply compact mode if was active before re-render
+      if (previousMode === 'compact' && parseFn)
+        reapplyCompactMode(wrapper, source, parseFn)
       continue
     }
 
@@ -250,7 +263,15 @@ export async function renderWireloomElements(
       const { svg } = await mod.default.render(`wireloom-${i++}-${options.now?.() ?? Date.now()}`, compactSource, renderOptions)
       cache.set(key, svg)
       const wrapper = createWireloomWrapper(encoded, svg)
+      if (previousMode)
+        wrapper.setAttribute('data-annotation-mode', previousMode)
       el.replaceWith(wrapper)
+      // Add annotation toggle
+      if (parseFn)
+        addAnnotationToggle(wrapper, source, parseFn)
+      // Re-apply compact mode if was active before re-render
+      if (previousMode === 'compact' && parseFn)
+        reapplyCompactMode(wrapper, source, parseFn)
     }
     catch (err) {
       const errorDiv = document.createElement('div')
