@@ -87,7 +87,9 @@ AI-powered commands for the entire development lifecycle:
 ### Visual Kanban Board
 
 - Drag-drop ticket management
-- Markdown rendering with Mermaid diagrams
+- Markdown rendering with Mermaid diagrams and Wireloom wireframes
+- Per-user project accent colors (solid or gradient)
+- Scoped global search across all projects
 - Multi-project support
 - Real-time updates
 - Secure browser unlock for authenticated deployments
