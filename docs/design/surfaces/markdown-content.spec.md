@@ -19,11 +19,16 @@ MarkdownContent
 │   ├── HorizontalRules
 │   ├── MermaidDiagram
 │   └── WireloomFrame
+│       ├── FullscreenButton
+│       └── AnnotationToggle
+│           ├── CompactMarkers[]
+│           └── Tooltip (fixed, body-level)
 └── PostRenderEnhancements
     ├── HeadingAnchors
     ├── SmartLinks
     ├── MermaidRenderer
-    └── LinkValidation
+    ├── LinkValidation
+    └── WireloomAnnotationToggle
 ```
 
 ## Children
@@ -44,6 +49,7 @@ MarkdownContent
 | Markdown pipeline | `src/components/MarkdownContent/useMarkdownProcessor.ts` |
 | Parser options | `src/components/MarkdownContent/useHtmlParser.ts` |
 | Prose CSS | `src/styles/prose.css` |
+| Wireloom annotations CSS | `src/styles/wireloom-annotations.css` |
 | Base typography | `src/styles/base.css` |
 | Tokens | `src/styles/design-tokens.css` |
 
@@ -129,6 +135,7 @@ Markdown density is a browser-local visual preference. See `docs/architecture/pr
 | long code block | code line exceeds content width | code block scrolls horizontally; prose column does not widen |
 | wide artifact | Mermaid, Wireloom, table, or code block exceeds prose measure | artifact may use the full document pane; normal paragraphs, headings, and lists remain constrained |
 | Wireloom fullscreen | user selects the Wireloom inspection control | shared zoom overlay opens without changing inline document layout |
+| Wireloom compact annotations | user clicks # toggle on annotated Wireloom block | callout boxes hidden, numbered markers appear; see [Wireloom Annotation Toggle](#wireloom-annotation-toggle) |
 | empty markdown | no body content | owning viewer renders its empty state; markdown surface renders nothing |
 | dark mode | root has `.dark` | all prose, code, table, and diagram fallback colors use theme tokens |
 
@@ -167,6 +174,26 @@ Markdown density is a browser-local visual preference. See `docs/architecture/pr
 | heading anchor | `.header-anchor` | markdown-it-anchor output |
 | frontmatter disclosure | `.document-frontmatter` | Documents View file updates spec |
 | wireloom render | `.wireloom`, `.wireloom__diagram`, `.wireloom__fullscreen-button`, `.wireloom-pending`, `.wireloom-error` | native-width artifact rendering and shared zoom affordance |
+| annotation toggle | `.wireloom__annotation-toggle`, `.wireloom__compact-marker`, `.wireloom__annotation-tooltip` | annotation view toggle, compact markers, tooltip |
+
+## Wireloom Annotation Toggle
+
+Compact annotation mode for Wireloom blocks with annotations. Users switch between full callout (default) and compact numbered-marker views.
+
+**Source**: `src/utils/wireloomAnnotationToggle.ts`, `src/styles/wireloom-annotations.css`
+
+| Aspect | Detail |
+|--------|--------|
+| Toggle | `#` button per Wireloom block (only if annotations exist) |
+| Compact mode | Callout SVG elements hidden, numbered markers at target positions |
+| Tooltip | `position: fixed` on `document.body` — escapes overflow |
+| Colors | Auto-detected from SVG callout elements via CSS custom properties |
+| Dismiss | Click outside, scroll, Escape, or hover another marker |
+| State | Per-block, in-memory only (`data-annotation-mode` attribute) |
+| Theme-aware | Survives theme change; re-detects colors from re-rendered SVG |
+| One-tooltip rule | Hovering always clears any pinned state |
+
+Full spec: `docs/CRs/MDT-182/architecture.md`
 
 ## Extension notes
 
