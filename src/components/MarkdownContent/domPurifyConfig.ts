@@ -108,4 +108,14 @@ export const ALLOWED_ATTR = [
   'offset',
   // Wireloom placeholder
   'data-source-encoded',
+  // Wireloom annotation toggle
+  'data-annotation-mode',
+  'data-callout-dot-color',
+  'data-callout-box-fill',
+  'data-callout-box-stroke',
+  'data-callout-text-color',
+  'data-annotation-index',
+  'data-wireloom-callout',
+  'aria-describedby',
+  'aria-hidden',
 ] as const

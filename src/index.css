@@ -15,6 +15,7 @@
 
 /* Markdown/prose rendering */
 @import './styles/prose.css';
+@import './styles/wireloom-annotations.css';
 
 /* Animations */
 @import './styles/animations.css';

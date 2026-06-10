@@ -1,0 +1,134 @@
+/* =========================================================================
+ * Wireloom annotation toggle — compact mode markers & tooltips
+ *
+ * Colors are set via CSS custom properties on .wireloom[data-annotation-mode]
+ * by the JS toggle logic, derived from the actual Wireloom SVG callout colors.
+ * This keeps compact-mode visuals in sync with Wireloom's theme automatically.
+ *
+ * Custom properties used:
+ *   --wl-dot       — circle/line connector color
+ *   --wl-box-fill  — callout box background
+ *   --wl-box-stroke — callout box border
+ *   --wl-text      — callout text color
+ * ========================================================================= */
+
+/* Toggle button — co-located with fullscreen button */
+.wireloom__annotation-toggle {
+  position: absolute;
+  top: 0.5rem;
+  left: 2.5rem; /* offset right of fullscreen button */
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.5rem;
+  border: 0;
+  border-radius: 0.25rem;
+  color: white;
+  background: rgb(0 0 0 / 0.2);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1rem;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  cursor: pointer;
+  transition-property: color, background-color;
+  transition-duration: 200ms;
+}
+
+.wireloom__annotation-toggle:hover,
+.wireloom__annotation-toggle:focus-visible {
+  background: rgb(0 0 0 / 0.3);
+}
+
+.wireloom__annotation-toggle--active {
+  background: var(--wl-dot, rgb(0 0 0 / 0.4));
+}
+
+.wireloom__annotation-toggle--active:hover,
+.wireloom__annotation-toggle--active:focus-visible {
+  filter: brightness(1.15);
+}
+
+/* Hide SVG callout elements when in compact mode. */
+.wireloom__callouts-hidden .wireloom__diagram svg [data-wireloom-callout] {
+  display: none;
+}
+
+/* Prevent compact-mode markers from causing vertical scrollbar. */
+.wireloom__callouts-hidden {
+  overflow-y: hidden;
+}
+
+/* -----------------------------------------------------------------------
+ * Compact markers — match Wireloom callout dot style
+ * Small numbered circles using the callout connector color.
+ * ----------------------------------------------------------------------- */
+.wireloom__compact-marker {
+  position: absolute;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.125rem;
+  height: 1.125rem;
+  border: 1.5px solid var(--wl-dot, #8a7a4f);
+  border-radius: 50%;
+  background: var(--wl-box-fill, #fefcf3);
+  color: var(--wl-dot, #8a7a4f);
+  font-size: 0.6rem;
+  font-weight: 700;
+  font-family: system-ui, sans-serif;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.12);
+  transition-property: background-color, color, box-shadow;
+  transition-duration: 150ms;
+}
+
+.wireloom__compact-marker:hover,
+.wireloom__compact-marker:focus-visible {
+  background: var(--wl-dot, #8a7a4f);
+  color: var(--wl-box-fill, #fefcf3);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.2);
+  outline: none;
+}
+
+.wireloom__compact-marker--active {
+  background: var(--wl-dot, #8a7a4f);
+  color: var(--wl-box-fill, #fefcf3);
+  border-color: var(--wl-dot, #8a7a4f);
+  box-shadow: 0 0 0 2px rgb(0 0 0 / 0.1);
+}
+
+/* -----------------------------------------------------------------------
+ * Tooltip — matches Wireloom callout box style
+ * Same fill, border, text color as the SVG callout rects.
+ * Lives on document.body as position:fixed to escape overflow.
+ * Positioning is set via inline styles by showTooltip().
+ * ----------------------------------------------------------------------- */
+.wireloom__annotation-tooltip {
+  max-width: 18rem;
+  padding: 0.5rem 0.625rem;
+  border: 1px solid var(--wl-box-stroke, #b8a26b);
+  border-radius: 4px;
+  background: var(--wl-box-fill, #fefcf3);
+  color: var(--wl-text, #3d3526);
+  font-size: 0.75rem;
+  font-family: system-ui, sans-serif;
+  line-height: 1.4;
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  opacity: 0;
+  visibility: hidden;
+  transition-property: opacity, visibility;
+  transition-duration: 150ms;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
+}
+
+.wireloom__annotation-tooltip--visible {
+  opacity: 1;
+  visibility: visible;
+}
