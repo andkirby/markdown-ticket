@@ -246,7 +246,7 @@ describe('TicketViewer', () => {
     const markdown = screen.getByTestId('markdown-content')
     expect(markdown).not.toHaveStyle('padding-top: 2.25rem')
     expect(markdown.parentElement).not.toHaveAttribute('style')
-    expect(screen.getByRole('button', { name: /toggle timestamp display/i }).parentElement).toHaveClass('static', 'sm:absolute')
+    expect(screen.getByRole('button', { name: /toggle timestamp display/i }).closest('.relative-timestamp__floating')).toBeTruthy()
     await waitFor(() => expect(fetchTraceStoreMetadata).toHaveBeenCalled())
   })
 

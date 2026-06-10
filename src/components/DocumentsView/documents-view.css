@@ -82,10 +82,6 @@
     max-width: 72ch;
   }
 
-  .document-viewer__content:has(> .relative-timestamp__floating) {
-    padding-top: 2.25rem;
-  }
-
   .document-frontmatter {
     @apply mb-4 overflow-hidden rounded-md border border-border bg-muted/50;
   }
