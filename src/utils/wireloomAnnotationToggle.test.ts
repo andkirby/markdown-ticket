@@ -218,9 +218,8 @@ describe('compact mode switching', () => {
     document.body.appendChild(wrapper)
 
     addAnnotationToggle(wrapper, ANNOTATED_SOURCE, mockParse)
-    const toggle = wrapper.querySelector('.wireloom__annotation-toggle') as HTMLButtonElement
-    toggle.click()
 
+    // Default is compact (auto-entered)
     expect(wrapper.getAttribute('data-annotation-mode')).toBe('compact')
     const markers = wrapper.querySelectorAll('.wireloom__compact-marker')
     expect(markers.length).toBe(1)
@@ -235,8 +234,7 @@ describe('compact mode switching', () => {
     document.body.appendChild(wrapper)
 
     addAnnotationToggle(wrapper, MULTI_ANNOTATION_SOURCE, mockParse)
-    const toggle = wrapper.querySelector('.wireloom__annotation-toggle') as HTMLButtonElement
-    toggle.click()
+    // Already in compact mode (default)
 
     const markers = wrapper.querySelectorAll('.wireloom__compact-marker')
     expect(markers.length).toBe(2)
@@ -258,8 +256,7 @@ describe('compact mode switching', () => {
     addAnnotationToggle(wrapper, ANNOTATED_SOURCE, mockParse)
     const toggle = wrapper.querySelector('.wireloom__annotation-toggle') as HTMLButtonElement
 
-    // Switch to compact
-    toggle.click()
+    // Already in compact mode (default)
     expect(wrapper.querySelectorAll('.wireloom__compact-marker').length).toBe(1)
 
     // Switch back to callout
@@ -269,7 +266,7 @@ describe('compact mode switching', () => {
   })
 
   it('does not expand SVG canvas dimensions', () => {
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100" width="200" height="100"><g id="loginBtn"><rect x="10" y="10" width="80" height="30"/></g></svg>`
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100" width="200" height="100"><g id="loginBtn"><rect x="10" y="10" width="80" height="30"/></g><line x1="50" y1="25" x2="100" y2="5" stroke="#8a7a4f" stroke-width="1"/><circle cx="50" cy="25" r="3" fill="#8a7a4f"/><rect x="100" y="0" width="80" height="20" rx="4" fill="#fefcf3" stroke="#b8a26b" stroke-width="1"/><text x="110" y="14" fill="#3d3526">Test</text></svg>`
     const wrapper = createWireloomWrapper(ANNOTATED_SOURCE, svg)
     document.body.appendChild(wrapper)
 
@@ -278,8 +275,7 @@ describe('compact mode switching', () => {
     const originalHeight = svgEl.getAttribute('height')
 
     addAnnotationToggle(wrapper, ANNOTATED_SOURCE, mockParse)
-    const toggle = wrapper.querySelector('.wireloom__annotation-toggle') as HTMLButtonElement
-    toggle.click()
+    // Already in compact mode (default)
 
     // SVG dimensions should be unchanged
     expect(svgEl.getAttribute('width')).toBe(originalWidth)
@@ -298,10 +294,7 @@ describe('tooltip interactions', () => {
     )
     document.body.appendChild(wrapper)
     addAnnotationToggle(wrapper, ANNOTATED_SOURCE, mockParse)
-
-    // Switch to compact mode
-    const toggle = wrapper.querySelector('.wireloom__annotation-toggle') as HTMLButtonElement
-    toggle.click()
+    // Already in compact mode (default)
   })
 
   afterEach(() => {
@@ -382,12 +375,16 @@ describe('per-block state isolation', () => {
     expect(wrapper1.querySelector('.wireloom__annotation-toggle')).toBeTruthy()
     expect(wrapper2.querySelector('.wireloom__annotation-toggle')).toBeTruthy()
 
-    // Switch wrapper1 to compact
+    // Both default to compact
+    expect(wrapper1.getAttribute('data-annotation-mode')).toBe('compact')
+    expect(wrapper2.getAttribute('data-annotation-mode')).toBe('compact')
+
+    // Switch wrapper1 back to callout
     const toggle1 = wrapper1.querySelector('.wireloom__annotation-toggle') as HTMLButtonElement
     toggle1.click()
 
-    expect(wrapper1.getAttribute('data-annotation-mode')).toBe('compact')
-    expect(wrapper2.getAttribute('data-annotation-mode')).toBeFalsy() // still default
+    expect(wrapper1.getAttribute('data-annotation-mode')).toBe('callout')
+    expect(wrapper2.getAttribute('data-annotation-mode')).toBe('compact') // still default
   })
 })
 
@@ -403,8 +400,8 @@ describe('source immutability', () => {
     addAnnotationToggle(wrapper, ANNOTATED_SOURCE, mockParse)
 
     const toggle = wrapper.querySelector('.wireloom__annotation-toggle') as HTMLButtonElement
-    toggle.click() // compact
-    toggle.click() // callout
+    toggle.click() // compact → callout
+    toggle.click() // callout → compact
 
     expect(wrapper.getAttribute('data-source-encoded')).toBe(originalEncoded)
   })
@@ -426,7 +423,7 @@ describe('state persistence', () => {
     )
     document.body.appendChild(wrapper)
 
-    // Simulate: was in compact mode, SVG was re-rendered
+    // Simulate: was in compact mode (default), SVG was re-rendered
     wrapper.setAttribute('data-annotation-mode', 'compact')
     reapplyCompactMode(wrapper, ANNOTATED_SOURCE, mockParse)
 
@@ -465,8 +462,7 @@ describe('accessibility', () => {
     document.body.appendChild(wrapper)
 
     addAnnotationToggle(wrapper, ANNOTATED_SOURCE, mockParse)
-    const toggle = wrapper.querySelector('.wireloom__annotation-toggle') as HTMLButtonElement
-    toggle.click()
+    // Already in compact mode (default)
 
     const marker = wrapper.querySelector('.wireloom__compact-marker') as HTMLButtonElement
     expect(marker.tagName).toBe('BUTTON')
@@ -482,8 +478,7 @@ describe('accessibility', () => {
     document.body.appendChild(wrapper)
 
     addAnnotationToggle(wrapper, ANNOTATED_SOURCE, mockParse)
-    const toggle = wrapper.querySelector('.wireloom__annotation-toggle') as HTMLButtonElement
-    toggle.click()
+    // Already in compact mode (default)
 
     const tooltip = document.getElementById('wireloom-tooltip-portal') as HTMLElement
     expect(tooltip.getAttribute('role')).toBe('tooltip')
@@ -516,8 +511,7 @@ describe('edge cases', () => {
     document.body.appendChild(wrapper)
 
     addAnnotationToggle(wrapper, SAME_TARGET_SOURCE, mockParse)
-    const toggle = wrapper.querySelector('.wireloom__annotation-toggle') as HTMLButtonElement
-    toggle.click()
+    // Already in compact mode (default)
 
     const markers = wrapper.querySelectorAll('.wireloom__compact-marker')
     expect(markers.length).toBe(2)
@@ -538,8 +532,7 @@ describe('edge cases', () => {
     document.body.appendChild(wrapper)
 
     addAnnotationToggle(wrapper, UNRESOLVABLE_SOURCE, mockParse)
-    const toggle = wrapper.querySelector('.wireloom__annotation-toggle') as HTMLButtonElement
-    toggle.click()
+    // Already in compact mode (default)
 
     const markers = wrapper.querySelectorAll('.wireloom__compact-marker')
     expect(markers.length).toBe(1) // only the one with a callout circle
