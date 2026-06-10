@@ -4,7 +4,7 @@
   }
 
   .relative-timestamp__floating {
-    @apply absolute right-4 top-4 z-[1] flex items-center gap-3 sm:right-5;
+    @apply static mb-2 z-[1] flex items-center justify-end gap-3 sm:absolute sm:right-5 sm:top-4 sm:mb-0;
   }
 
   .relative-timestamp__sync-state {

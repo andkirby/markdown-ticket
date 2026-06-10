@@ -12,9 +12,9 @@ import {
   MARKDOWN_DENSITY_CHANGE_EVENT,
   MARKDOWN_DENSITY_KEY,
 } from '../../config/settingsPreferences'
+import { formatTicketPageTitle, PageTitlePriority, usePageTitle } from '../../hooks/usePageTitle'
 import { dataLayer } from '../../services/dataLayer'
 import { useEventBus } from '../../services/eventBus'
-import { formatTicketPageTitle, PageTitlePriority, usePageTitle } from '../../hooks/usePageTitle'
 import { filePathToApiPath } from '../../utils/subdocPathValidation'
 import { extractTableOfContents } from '../../utils/tableOfContents'
 import { processContentForDisplay } from '../../utils/titleExtraction'
@@ -25,9 +25,9 @@ import { RelativeTimestamp } from '../shared/RelativeTimestamp'
 import TableOfContents from '../shared/TableOfContents'
 import { Modal, ModalBody } from '../ui/Modal'
 import { CompactTicketHeader } from './CompactTicketHeader'
+import { ROOT_DOCUMENT_PATH, splitPathSegments } from './subdocumentPath'
 import { TicketDocumentTabs } from './TicketDocumentTabs'
 import { TraceGraphShell } from './TraceGraphShell'
-import { ROOT_DOCUMENT_PATH, splitPathSegments } from './subdocumentPath'
 import { useTicketDocumentContent } from './useTicketDocumentContent'
 import { useTicketDocumentNavigation } from './useTicketDocumentNavigation'
 import { useTicketDocumentRealtime } from './useTicketDocumentRealtime'
@@ -445,7 +445,7 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
                         )}
                         <div data-testid="ticket-content" className={pendingPath || subdocLoading ? 'pointer-events-none opacity-50' : ''}>
                           <div className="relative modal__section--content">
-                            <div className="relative-timestamp__floating static mb-2 justify-end sm:absolute sm:mb-0">
+                            <div className="relative-timestamp__floating">
                               <RelativeTimestamp
                                 createdAt={currentTicket!.dateCreated}
                                 updatedAt={currentTicket!.lastModified}
