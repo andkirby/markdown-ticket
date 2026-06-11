@@ -1,5 +1,6 @@
 import type { WorktreeConfig } from './worktree'
 import { z } from 'zod'
+import { SafeConfigStringOptionalSchema, SafeConfigStringSchema } from '../app-config/schema'
 import { WorktreeConfigSchema } from './worktree'
 
 export const PROJECT_CODE_PATTERN = /^[A-Z][A-Z0-9]{1,4}$/
@@ -154,8 +155,7 @@ export const ProjectCodeSchema = z.string()
   .max(5, 'Project code must be 2-5 chars')
   .regex(PROJECT_CODE_PATTERN, 'Project code must be 2-5 chars, start with uppercase letter, and contain only alphanumeric characters')
 
-export const ProjectNameSchema = z.string()
-  .min(1, 'Project name cannot be empty or whitespace-only')
+export const ProjectNameSchema = SafeConfigStringSchema
   .refine(
     name => name.trim().length >= 3,
     'Project name must have at least 3 characters',
@@ -241,8 +241,8 @@ export const ProjectDetailsSchema = z.object({
   name: ProjectNameSchema,
   id: ProjectIdSchema,
   ticketsPath: TicketsPathSchema,
-  description: z.string().optional(),
-  repository: z.string().optional(),
+  description: SafeConfigStringOptionalSchema.optional(),
+  repository: SafeConfigStringOptionalSchema.optional(),
   active: z.boolean().default(true),
 }).strict()
 
@@ -251,8 +251,8 @@ export const LocalProjectConfigProjectSchema = z.object({
   name: ProjectNameSchema,
   id: ProjectIdSchema.optional(),
   ticketsPath: TicketsPathSchema.optional(),
-  description: z.string().optional(),
-  repository: z.string().optional(),
+  description: SafeConfigStringOptionalSchema.optional(),
+  repository: SafeConfigStringOptionalSchema.optional(),
   active: z.boolean().optional(),
   path: ProjectPathSchema.optional(),
   startNumber: StartNumberSchema.optional(),
@@ -268,12 +268,12 @@ export const LocalProjectConfigSchema = z.object({
 export const ProjectConfigSchema = z.object({
   project: z.object({
     code: z.string().trim().min(1, 'Project code is required'),
-    name: z.string().trim().min(1, 'Project name is required'),
+    name: SafeConfigStringSchema,
     id: ProjectIdSchema.optional(),
     ticketsPath: TicketsPathSchema.optional(),
     active: z.boolean().optional(),
-    description: z.string().optional(),
-    repository: z.string().optional(),
+    description: SafeConfigStringOptionalSchema.optional(),
+    repository: SafeConfigStringOptionalSchema.optional(),
     path: ProjectPathSchema.optional(),
     startNumber: StartNumberInputSchema.optional(),
     counterFile: CounterFileSchema.optional(),
@@ -327,8 +327,8 @@ export const ProjectRegistryProjectSchema = z.object({
   code: ProjectCodeSchema.optional(),
   id: ProjectIdSchema.optional(),
   ticketsPath: TicketsPathSchema.optional(),
-  description: z.string().optional(),
-  repository: z.string().optional(),
+  description: SafeConfigStringOptionalSchema.optional(),
+  repository: SafeConfigStringOptionalSchema.optional(),
   startNumber: StartNumberSchema.optional(),
   counterFile: CounterFileSchema.optional(),
   dateRegistered: DateOnlySchema.optional(),
@@ -345,8 +345,8 @@ export const CreateProjectInputSchema = z.object({
   name: ProjectNameSchema,
   id: ProjectIdSchema,
   ticketsPath: TicketsPathSchema,
-  description: z.string().optional(),
-  repository: z.string().optional(),
+  description: SafeConfigStringOptionalSchema.optional(),
+  repository: SafeConfigStringOptionalSchema.optional(),
 }).strict()
 
 export type CreateProjectInput = z.infer<typeof CreateProjectInputSchema>
@@ -368,8 +368,8 @@ export interface ProjectEditFormData {
 
 export const UpdateProjectInputSchema = z.object({
   name: ProjectNameSchema.optional(),
-  description: z.string().optional(),
-  repository: z.string().optional(),
+  description: SafeConfigStringOptionalSchema.optional(),
+  repository: SafeConfigStringOptionalSchema.optional(),
   active: z.boolean().optional(),
 }).strict().refine(
   data => Object.keys(data).length > 0,

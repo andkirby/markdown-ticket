@@ -6,7 +6,7 @@ import {
   directoryExists,
   listFiles,
   readFile,
-  writeFile,
+  writeFileAtomic,
 } from '../../utils/file-utils.js'
 import { logQuiet } from '../../utils/logger.js'
 import {
@@ -153,7 +153,7 @@ export class ProjectRegistry {
       }
 
       const tomlContent = stringify(projectData)
-      writeFile(projectFile, tomlContent)
+      writeFileAtomic(projectFile, tomlContent)
     }
     catch (error) {
       logQuiet(this.quiet, 'Error registering project:', error)

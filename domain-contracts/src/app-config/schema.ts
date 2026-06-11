@@ -1,5 +1,38 @@
 import { z } from 'zod'
 
+/**
+ * SEC-001: Safe config string schema for user-editable fields persisted to TOML.
+ * Defense-in-depth: smol-toml handles escaping at serialization time,
+ * but this rejects obviously hostile values at the validation boundary.
+ * Rejects newlines, null bytes, and control characters.
+ */
+export const SafeConfigStringSchema = z.string()
+  .min(1)
+  .max(512)
+  // eslint-disable-next-line no-control-regex -- intentional: rejects control chars in TOML config strings
+  .refine(s => !/[\x00-\x08\t\v\f\x0E-\x1F\x7F]/u.test(s), 'String contains control characters')
+  .refine(s => !s.includes('\n'), 'String must not contain newlines')
+  .refine(s => !s.includes('\r'), 'String must not contain carriage returns')
+
+/**
+ * Safe config string that allows empty values (for optional fields like description).
+ */
+export const SafeConfigStringOptionalSchema = SafeConfigStringSchema.or(z.literal(''))
+
+/**
+ * Safe config string for path-like fields (searchPaths entries, document paths).
+ * Allows forward slashes but rejects null bytes, backslashes (on non-Windows),
+ * and path traversal segments.
+ */
+export const SafeConfigPathStringSchema = z.string()
+  .min(1)
+  .max(1024)
+  .refine(s => !s.includes('\0'), 'Path must not contain null bytes')
+  .refine(s => !s.includes('\n'), 'Path must not contain newlines')
+  .refine(s => !s.includes('\r'), 'Path must not contain carriage returns')
+
+export type SafeConfigString = z.infer<typeof SafeConfigStringSchema>
+
 export const GLOBAL_DISCOVERY_DEFAULTS = {
   autoDiscover: true,
   searchPaths: [] as string[],
@@ -46,7 +79,7 @@ export const SELECTOR_STATE_ENTRY_DEFAULTS = {
   count: 0,
 } as const
 
-export const SELECTOR_ACCENT_HEX_PATTERN = /^#[0-9a-fA-F]{6}$/u
+export const SELECTOR_ACCENT_HEX_PATTERN = /^#[0-9a-f]{6}$/iu
 
 export const DOCUMENT_FAV_STATE_DEFAULTS = {
   favItems: [] as DocumentFavItem[],
@@ -60,7 +93,7 @@ export const USER_CONFIG_DEFAULTS = {
 
 export const GlobalDiscoveryConfigSchema = z.object({
   autoDiscover: z.boolean().catch(GLOBAL_DISCOVERY_DEFAULTS.autoDiscover).default(GLOBAL_DISCOVERY_DEFAULTS.autoDiscover),
-  searchPaths: z.array(z.string()).catch([...GLOBAL_DISCOVERY_DEFAULTS.searchPaths]).default([...GLOBAL_DISCOVERY_DEFAULTS.searchPaths]),
+  searchPaths: z.array(SafeConfigPathStringSchema).catch([...GLOBAL_DISCOVERY_DEFAULTS.searchPaths]).default([...GLOBAL_DISCOVERY_DEFAULTS.searchPaths]),
   maxDepth: z.number().int().min(1).max(50).catch(GLOBAL_DISCOVERY_DEFAULTS.maxDepth).default(GLOBAL_DISCOVERY_DEFAULTS.maxDepth),
 }).catch({ ...GLOBAL_DISCOVERY_DEFAULTS, searchPaths: [...GLOBAL_DISCOVERY_DEFAULTS.searchPaths] }).default({ ...GLOBAL_DISCOVERY_DEFAULTS, searchPaths: [...GLOBAL_DISCOVERY_DEFAULTS.searchPaths] })
 

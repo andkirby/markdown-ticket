@@ -1,9 +1,10 @@
 import type { Project, ProjectSharingModeValue, ProjectSharingSettings, RegistryData } from '@mdt/shared/models/Project.js'
 import type { RequestAccessContext } from './apiAuth.js'
-import { ProjectSharingMode } from '@mdt/shared/models/Project.js'
 import { randomBytes } from 'node:crypto'
-import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises'
+import { mkdir, readdir, readFile, rename, unlink, writeFile } from 'node:fs/promises'
 import path from 'node:path'
+import process from 'node:process'
+import { ProjectSharingMode } from '@mdt/shared/models/Project.js'
 import { getDefaultPaths } from '@mdt/shared/utils/constants.js'
 import { parseToml, stringify } from '@mdt/shared/utils/toml.js'
 
@@ -12,7 +13,7 @@ interface ProjectSharingUpdate {
   rotateShareId?: boolean
 }
 
-const SHARE_ID_PATTERN = /^[A-Za-z0-9_-]{12,128}$/u
+const SHARE_ID_PATTERN = /^[\w-]{12,128}$/u
 
 function getProjectSharing(project: Project): ProjectSharingSettings {
   return project.metadata.sharing ?? { mode: ProjectSharingMode.PRIVATE }
@@ -126,7 +127,20 @@ export async function updateProjectSharing(project: Project, update: ProjectShar
     sharing: nextSharing,
   }
 
-  await writeFile(registryPath, stringify(registry), 'utf8')
+  const tmpPath = `${registryPath}.${process.pid}.${randomBytes(8).toString('hex')}.tmp`
+  try {
+    await writeFile(tmpPath, stringify(registry), 'utf8')
+    await rename(tmpPath, registryPath)
+  }
+  catch (writeError) {
+    try {
+      await unlink(tmpPath)
+    }
+    catch {
+      // best-effort cleanup
+    }
+    throw writeError
+  }
 
   return {
     ...project,
