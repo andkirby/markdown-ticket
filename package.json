@@ -16,6 +16,8 @@
     "install:prod": "bun install --ci --omit=dev && bun pm cache clean --force && bun install --workspaces --omit=dev && bun pm cache clean --force",
     "dev": "vite --host",
     "dev:server": "bun run --cwd server dev",
+    "smart-server": "bash scripts/smart-server.sh",
+    "smart-server:30": "bash scripts/smart-server.sh 1800",
     "dev:full": "bun run build:shared && concurrently \"bun run dev\" \"bun run dev:server\"",
     "build:shared": "bun run --cwd shared build",
     "build:server": "bun run --cwd server build",

@@ -417,10 +417,28 @@ This builds shared code and starts both frontend (5173) and backend (3001).
 |---------|-------|------|------|
 | frontend-vite | `bun run dev` | `Ctrl+C` | `bun run fe:test` |
 | backend-express | `bun run dev:server` | `Ctrl+C` | `bun run --cwd server jest` |
+| backend-express (smart) | `bun run smart-server` | `Ctrl+C` | same |
 | mcp-server | `bun run --cwd mcp-server dev` | `Ctrl+C` | `bun run --cwd mcp-server jest` |
 | shared-lib | `bun run build:shared` | N/A | `bun run --cwd shared jest` |
 | domain-contracts | `bun run build:domain-contracts` | N/A | `cd domain-contracts && jest` |
 | e2e-playwright | `bun run test:e2e` | `Ctrl+C` | `bun run test:e2e` |
+
+### Smart Server (auto prod↔dev)
+
+Switches between prod (`bun server/server.ts`) and dev (`bun --hot`) automatically:
+
+- **Starts in prod mode** (~200 MB) — low memory
+- **File change in `server/`** → switches to dev mode (`--hot`) — auto-reload
+- **1 hour idle** → falls back to prod — memory drops
+- **Crash recovery** — auto-restarts
+
+```bash
+bun run smart-server          # 1-hour idle timeout (default)
+bun run smart-server:30       # 30-min timeout
+bash scripts/smart-server.sh 900  # custom (15 min)
+```
+
+Overhead: ~8 MB (bash + fswatch, constant, no growth).
 
 ### MCP Server Modes
 
