@@ -1,8 +1,10 @@
 import type { DocumentFavItem, DocumentFavState } from '@mdt/domain-contracts'
 import type { Project } from '@mdt/shared/models/Project.js'
 import type { TreeNode } from '../types/tree.js'
+import { randomBytes } from 'node:crypto'
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
+import process from 'node:process'
 import {
   parseDocumentFavStateOrDefault,
   validateDocumentFavState,
@@ -44,7 +46,21 @@ export class DocumentFavStateService {
     }
 
     await fs.mkdir(path.dirname(this.getStatePath(project)), { recursive: true })
-    await fs.writeFile(this.getStatePath(project), JSON.stringify(state, null, 2), 'utf8')
+    const statePath = this.getStatePath(project)
+    const tmpPath = `${statePath}.${process.pid}.${randomBytes(8).toString('hex')}.tmp`
+    try {
+      await fs.writeFile(tmpPath, JSON.stringify(state, null, 2), 'utf8')
+      await fs.rename(tmpPath, statePath)
+    }
+    catch (writeError) {
+      try {
+        await fs.unlink(tmpPath)
+      }
+      catch {
+        // best-effort cleanup
+      }
+      throw writeError
+    }
 
     return state
   }

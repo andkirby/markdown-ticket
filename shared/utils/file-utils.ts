@@ -1,5 +1,7 @@
+import { randomBytes } from 'node:crypto'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
+import process from 'node:process'
 
 /** Shared file system utilities */
 
@@ -44,6 +46,42 @@ export function writeFile(filePath: string, content: string): void {
     fs.writeFileSync(filePath, content, 'utf8')
   }
   catch {
+    throw new Error(`Failed to write file ${filePath}`)
+  }
+}
+
+/**
+ * SEC-002: Atomic file write using write-to-temp-then-rename.
+ * Guarantees the target file is either fully updated or left unchanged —
+ * never partially written (corrupt) on crash/restart.
+ *
+ * On POSIX systems, rename() is atomic. On Windows it is also atomic
+ * when source and destination are on the same volume.
+ *
+ * @param filePath - Target file path
+ * @param content - Content to write
+ */
+export function writeFileAtomic(filePath: string, content: string): void {
+  const tmpPath = `${filePath}.${process.pid}.${randomBytes(8).toString('hex')}.tmp`
+  try {
+    const parentDir = path.dirname(filePath)
+    if (!directoryExists(parentDir)) {
+      createDirectory(parentDir)
+    }
+
+    fs.writeFileSync(tmpPath, content, 'utf8')
+    fs.renameSync(tmpPath, filePath)
+  }
+  catch {
+    // Clean up temp file if it was created but rename failed
+    try {
+      if (fileExists(tmpPath)) {
+        fs.unlinkSync(tmpPath)
+      }
+    }
+    catch {
+      // Best-effort cleanup — don't mask the original error
+    }
     throw new Error(`Failed to write file ${filePath}`)
   }
 }

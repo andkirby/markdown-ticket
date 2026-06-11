@@ -1,12 +1,14 @@
 import type { Request, Response } from 'express'
 import type { ProjectController } from '../controllers/ProjectController.js'
 import type FileWatcherService from '../services/fileWatcher/index.js'
+import { randomBytes } from 'node:crypto'
 import * as fs from 'node:fs/promises'
 import * as os from 'node:os'
 import * as path from 'node:path'
+import process from 'node:process'
 import {
-  sanitizeSelectorState,
   safeValidateSelectorState,
+  sanitizeSelectorState,
   validateGlobalConfig,
   validateUserConfig,
 } from '@mdt/domain-contracts'
@@ -642,8 +644,22 @@ export function createSystemRouter(
       // Ensure directory exists
       await fs.mkdir(configDir, { recursive: true })
 
-      // Write to file
-      await fs.writeFile(statePath, JSON.stringify(validatedState.data, null, 2), 'utf8')
+      // SEC-002: Atomic write for selector state JSON
+      const tmpPath = `${statePath}.${process.pid}.${randomBytes(8).toString('hex')}.tmp`
+      try {
+        await fs.writeFile(tmpPath, JSON.stringify(validatedState.data, null, 2), 'utf8')
+        await fs.rename(tmpPath, statePath)
+      }
+      catch (writeError) {
+        // Clean up temp file on failure
+        try {
+          await fs.unlink(tmpPath)
+        }
+        catch {
+          // best-effort cleanup
+        }
+        throw writeError
+      }
 
       res.json({
         success: true,
