@@ -1,312 +1,152 @@
 # Quick Search
 
-Cmd+K modal for finding and opening tickets by key, title, or cross-project query. Supports current-project search, cross-project ticket key lookup, and scoped project search. MDT-136 + cross-project extension.
+Cmd/Ctrl+K modal for finding tickets and projects without leaving the current route.
+
+Related artifacts:
+- Interaction contract: `quick-search.interactions.md`
+- Review mockups: `quick-search.mockups.md`
+- Project browser contract: `project-browser.spec.md`
+- Document search boundary: `documents-view-navigation.spec.md`
+
+## Owns
+
+- Quick Search modal composition and visible chrome.
+- Search scope bar labels, order, and visibility.
+- Result groups for tickets, projects, and future documents.
+- Empty, loading, error, and selected-result presentation.
+- Responsive and accessibility requirements for the Quick Search surface.
+
+## Does Not Own
+
+- Project browser card layout, filtering rules, or project-selector rail behavior.
+- Documents View tree filtering, document title extraction, or full-text indexing.
+- Backend search endpoint shape beyond the UI states needed to consume it.
+- Detailed ranking algorithms; only user-visible ordering guarantees are specified here.
+- Modal primitive internals. Shared modal behavior is owned by `src/MODALS.md`.
 
 ## Composition
 
 ```text
 QuickSearchModal
-├── Backdrop (bg-black/50, backdrop-blur-sm)
-└── Modal Container (max-w-[900px], pt-[15vh])
-    ├── SearchInput
-    │   ├── SearchIcon (absolute left-3)
-    │   └── InputField (pl-10, text-lg, border-0)
-    ├── ModeIndicator (below input, left-aligned)
-    └── QuickSearchResults
-        ├── LoadingState
-        │   ├── Spinner (centered, 24px)
-        │   └── SkeletonCards[] (3 cards, pulse animation)
-        ├── SectionLabels ("Current Project" | "Cross-Project")
-        ├── ResultList (max-h-[50vh], overflow-y-auto, divide-y)
-        │   ├── TicketResultItem[] (px-4, py-3, hover:bg-gray-50)
-        │   └── ProjectContextLabel (for cross-project tickets)
-        └── NoResults (p-8, text-center)
+├── Modal[size=xl, constrained body]
+│   ├── SearchInput
+│   │   ├── SearchIcon
+│   │   ├── InputField
+│   │   └── ModeIndicator[conditional]
+│   ├── SearchScopeBar
+│   │   ├── ScopeTab[All]
+│   │   ├── ScopeTab[Tickets]
+│   │   └── ScopeTab[Projects]
+│   └── QuickSearchResults
+│       ├── CrossProjectTickets[conditional]
+│       ├── CurrentProjectTickets[conditional]
+│       ├── Projects[conditional]
+│       ├── Documents[future, hidden until wired]
+│       ├── LoadingState[conditional]
+│       ├── ErrorState[conditional]
+│       └── EmptyState[conditional]
 ```
 
 ## Children
 
 | Child | Component | Spec | Conditional |
 |-------|-----------|------|-------------|
-| SearchInput | `QuickSearchInput.tsx` | — | always |
-| QuickSearchResults | `QuickSearchResults.tsx` | — | always |
+| Modal | `src/components/ui/Modal.tsx` | `src/MODALS.md` | always while open |
+| SearchInput | `src/components/QuickSearch/QuickSearchInput.tsx` | this spec | always |
+| SearchScopeBar | `src/components/QuickSearch/SearchScopeBar.tsx` | this spec | always |
+| QuickSearchResults | `src/components/QuickSearch/QuickSearchResults.tsx` | this spec | always |
+| ProjectResultRow | `src/components/QuickSearch/ProjectResultRow.tsx` | `project-browser.spec.md` for project identity rules | when project results exist |
+| DocumentResultRow | `src/components/QuickSearch/DocumentResultRow.tsx` | `documents-view-navigation.spec.md` for document-search boundary | future document search |
 
-## Source files
+## Source / Verification Anchors
 
-| Type | Path |
-|------|------|
-| Modal | `src/components/QuickSearch/QuickSearchModal.tsx` |
-| Input | `src/components/QuickSearch/QuickSearchInput.tsx` |
-| Results | `src/components/QuickSearch/QuickSearchResults.tsx` |
-| Hook | `src/hooks/useQuickSearch.ts` |
-| Exports | `src/components/QuickSearch/index.ts` |
+These refs are drift anchors, not a code inventory. Keep them short and update them only when the owning surface, behavior model, style contract, or verification surface changes.
+
+| Anchor | Path | Why It Exists |
+|--------|------|---------------|
+| Surface owner | `src/components/QuickSearch/QuickSearchModal.tsx` | modal composition and lifecycle |
+| Result rendering | `src/components/QuickSearch/QuickSearchResults.tsx` | visible groups, rows, and remote states |
+| Behavior model | `src/hooks/useQuickSearch.ts`, `src/hooks/useSearchScope.ts` | query filtering and scope state |
+| Style contract | `src/components/QuickSearch/quick-search.css` | semantic search classes only |
+| Verification | `src/components/QuickSearch/__tests__/`, `tests/e2e/quick-search/modal.spec.ts`, `tests/e2e/scoped-search.spec.ts` | keyboard, scope, and result behavior |
 
 ## Layout
 
-- Fixed full-viewport overlay, `z-50`
-- Backdrop: `bg-black/50 backdrop-blur-sm`
-- Modal container: `pointer-events-none` wrapper, `items-start justify-center pt-[15vh]`
-- Content card: `pointer-events-auto`, `max-w-[900px]`, `mx-4`, `bg-white dark:bg-slate-900`, `rounded-xl`, `shadow-2xl`, `overflow-hidden`
-- Search input section: `border-b border-gray-200 dark:border-gray-700`
-- Input: `w-full pl-10 pr-4 py-3 text-lg`, no border/ring, transparent bg
-- Search icon: `absolute left-3 top-1/2 -translate-y-1/2`, `h-5 w-5 text-gray-400`
-- Results area: `max-h-[50vh] overflow-y-auto`, `divide-y divide-gray-100 dark:divide-gray-800`
-- Result item: `w-full px-4 py-3 text-left`, flex row with `gap-3`
-- Ticket key: `font-mono text-sm font-medium text-blue-600 dark:text-blue-400 whitespace-nowrap shrink-0`
-- Ticket title: `text-gray-900 dark:text-gray-100 truncate`
+- Quick Search uses the shared `Modal` with `size="xl"` and `ModalBody` using `modal__body--constrained`.
+- The search input occupies the first modal section.
+- The scope bar sits directly below the input and above all results.
+- Results scroll inside `QuickSearchResults`; the modal shell does not grow as results change.
+- Section headers are compact, uppercase labels above each visible result group.
+- Result rows use the shared `.search-result` styling and must keep keyboard-selected and hover states visually distinct.
+
+## Scopes
+
+| Scope | Label | Visible Now | Result Groups |
+|-------|-------|-------------|---------------|
+| `global` | `All` | yes | current-project tickets, cross-project tickets when syntax triggers them, project matches |
+| `tickets` | `Tickets` | yes | current-project tickets, cross-project tickets when syntax triggers them |
+| `projects` | `Projects` | yes | project matches only |
+| `documents` | `Documents` | no | future document results only |
+
+Documents are intentionally hidden from the scope bar until document search is wired. The result component may contain document-row support before the scope is visible.
+
+## Result Groups
+
+| Group | When Visible | User Action |
+|-------|--------------|-------------|
+| Cross-Project Results | ticket-key query or `@CODE query` returns remote ticket results | select ticket and navigate with target project code |
+| Current Project | current scope permits tickets and local ticket results exist | select ticket in current project |
+| Projects | `All` or `Projects` scope has project matches | select project and close modal |
+| Documents | future document search returns matches and `Documents` scope is visible | open document in Documents View |
+
+Group order is cross-project tickets, current-project tickets, projects, then documents. Keyboard selection follows the same order.
 
 ## States
 
-| State | Trigger | Visual Change |
-|-------|---------|---------------|
-| closed | Escape / click outside / Backspace on empty | `display: none` |
-| open | Cmd+K / Ctrl+K | Backdrop visible, input auto-focused, query reset to `""`, selectedIndex reset to `0` |
-| idle | Open, no query | All tickets shown (up to `MAX_RESULTS` = 10) |
-| filtering | User types (current project mode) | Client-side filter fires immediately (no debounce); results update in real-time |
-| debouncing | User types (cross-project mode) | Show previous results while waiting for 300ms pause |
-| loading | Cross-project fetch initiated | Spinner + 3 skeleton cards in results area |
-| loaded | Cross-project results received | Results replace skeletons |
-| error | Fetch failed | Error message with retry option |
-| navigating | ↑ / ↓ arrow keys | `selectedIndex` moves; selected item gets `bg-blue-50 dark:bg-blue-900/20` |
-| selecting | Enter on result | `onSelectTicket` fires, modal closes |
-| no results | Query matches zero tickets | Empty state with contextual hint |
-| body scroll lock | Modal open | `document.body.style.overflow = 'hidden'` |
-
-## Keyboard
-
-| Key | Action |
-|-----|--------|
-| `Cmd+K` / `Ctrl+K` | Toggle modal open/close |
-| `Escape` | Close modal |
-| `↑` / `↓` | Navigate result selection |
-| `Enter` | Select highlighted result, close modal |
-| `Tab` | Cycle between sections (current → cross-project) |
-| `Shift+Tab` | Reverse cycle sections |
-| `Backspace` (empty input) | Close modal |
-
-## Search Modes
-
-The modal operates in different modes based on query syntax:
-
-| Mode | Trigger | Behavior |
-|------|---------|----------|
-| **Current Project** | Default (no special syntax) | Filter current project tickets client-side |
-| **Specific Project** | `@{CODE} {query}` prefix | Load and search tickets from specified project |
-| **Cross-Project Ticket Key** | `{CODE}-{number}` pattern | Search for specific ticket across all projects |
-
-### Query Syntax
-
-#### Mode 1: Current Project (Default)
-
-```text
-badge fix
-```
-
--> Search current project tickets by title/keyword
-
-#### Mode 2: Specific Project
-
-```text
-@MDT badge
-@ABC login redirect
-```
-
--> Load tickets from project `MDT` or `ABC`, filter by text. Requires `@CODE` followed by a space and search text.
-
-#### Mode 3: Cross-Project Ticket Key
-
-```text
-ABC-42
-MDT-136
-```
-
--> Search for ticket across all projects. Pattern: `{PROJECT_CODE}-{NUMBER}` where code is 2-5 uppercase letters and number is 1-5 digits. Regex: `/^[A-Z]{2,5}-\d{1,5}$/i`
-
-#### Invalid/Incomplete Project Scope
-
-```text
-@mdt
-@abc
-```
-
--> Do not trigger backend search until the user enters `@CODE {query}`. Project discovery/filtering belongs to ProjectBrowserPanel.
-
-## Search Logic
-
-### Current Project Mode
-- **Scope**: Current project tickets only (preloaded in memory)
-- **Matching**: AND logic — all whitespace-separated terms must match
-- **Fields searched** (per term): key number (`"136"` → matches `MDT-136`), full code (`"mdt-136"`), title substring (case-insensitive)
-- **Max results**: `MAX_RESULTS = 10`
-- **No debounce needed**: client-side filtering is instant
-
-### Cross-Project Modes
-- **Debounce**: 300ms before triggering fetch
-- **Max results**: 5 per project, max 15 total
-- **Cache**: Recent project tickets cached locally with 5 min TTL
-- **Current project exclusion**: If current project is `MDT` and user types `MDT-136`, show it in "Current Project" or cross-project results as an explicit ticket match. If user types `@MDT badge` while in project `MDT`, search MDT without exclusion because the user explicitly scoped the query.
-
-## Async Loading
-
-Cross-project ticket search requires backend fetch:
-
-```text
-User Types -> Debounce (300ms) -> Loading State -> Results
-```
-
-### Skeleton Design
-
-- Count: 3 skeleton cards
-- Height: Match ticket result item (~48px)
-- Animation: Subtle pulse (opacity 0.3 → 0.5 → 0.3)
-- Color: `bg-gray-200 dark:bg-gray-800`
-
-### Spinner
-- Position: Centered in results area
-- Size: 24px
-- Color: `text-gray-400`
-- Animation: Rotate
-
-## Mode Indicator
-
-Visual pill below input, above results, left-aligned:
-
-| Mode | Text | Style |
-|------|------|-------|
-| Current Project | `In: {CODE}` | `bg-gray-100 text-gray-700` |
-| Specific Project | `In: {CODE}` | `bg-blue-100 text-blue-700` |
-| Cross-Project Key | `Searching: {CODE}-{num}` | `bg-purple-100 text-purple-700` |
-
-### Results Section Labels
-
-When showing cross-project results alongside current project results:
-
-- **"Current Project"** — tickets from the active project
-- **"Cross-Project"** — tickets from other projects
-
-Labels: `text-xs uppercase tracking-wide text-gray-500`
-
-## Empty States
-
-| Context | Message | Hint |
-|---------|---------|------|
-| No current project results | `No tickets found in {CODE}` | "Try searching across projects with: `ABC-42` (ticket key) or `@ABC search terms` (specific project)" |
-| No cross-project results (query text) | `No tickets found matching "{query}"` | "Check your search terms and try again." |
-| No cross-project results (ticket key) | `Ticket {CODE}-{NUMBER} not found` | "Check the ticket key and try again." |
-| Invalid project code in @syntax | `Project {CODE} not found` | "Check the project code and try again." |
-
-## API Endpoints
-
-### Cross-Project Ticket Search
-
-```text
-POST /api/projects/search
-```
-
-**Modes**: `ticket_key` (specific ticket lookup), `project_scope` (specific project search)
-
-**Request**:
-
-```json
-{
-  "mode": "project_scope",
-  "query": "login redirect",
-  "projectCode": "ABC",
-  "limitPerProject": 5,
-  "limitTotal": 15
-}
-```
-
-**Response**:
-
-```json
-{
-  "results": [
-    {
-      "ticket": {
-        "code": "ABC-42",
-        "title": "Auth service refactor",
-        "status": "in-progress"
-      },
-      "project": { "code": "ABC", "name": "Another Project" }
-    }
-  ],
-  "total": 5
-}
-```
-
+| State | Trigger | Visible Contract |
+|-------|---------|------------------|
+| closed | `isOpen=false`, Escape, backdrop click, or selection | modal unmounted |
+| opened | Cmd/Ctrl+K | query cleared, scope reset to `All`, input focused, first selectable result selected |
+| filtering | plain text query | local ticket and project matches update immediately |
+| scoped | user clicks scope tab or presses Tab / Shift+Tab | active scope tab changes and non-matching groups are hidden |
+| cross-project loading | ticket-key or `@CODE query` search is pending | skeleton rows appear in cross-project group |
+| cross-project error | remote ticket search fails | concise error with retry action |
+| invalid project | `@CODE query` uses unknown loaded project code | project-not-found empty state; no remote search is required |
+| empty | no visible result group has rows | concise empty message for active scope |
+| selected | keyboard index points at a row | selected row uses `data-selected="true"` treatment |
 
 ## Accessibility
 
-- `role="combobox"` on input with `aria-expanded`
-- `aria-activedescendant` pointing to selected result
-- `role="listbox"` on results container
-- `role="option"` on each result item
-- `aria-label` on mode indicator
-- Screen reader: "Searching in project {CODE}" on mode change, "Found N tickets" on results load, "No results found" on empty
+- The modal must follow `src/MODALS.md` requirements unless that shared contract is explicitly revised.
+- The scope bar uses `role="tablist"` and scope buttons use `role="tab"` with `aria-selected`.
+- The results container uses `role="listbox"`.
+- Selectable result rows use `role="option"` and `aria-selected`.
+- Escape closes the modal through the shared modal behavior.
+- The focused input remains the primary keyboard target while arrow keys and Enter operate the selected result.
 
 ## Responsive
 
-| Breakpoint | Change |
-|------------|--------|
-| < 640px (mobile) | Full-width modal (`mx-4` keeps 16px gutter), `max-w-[900px]` still applies, 50vh result cap |
-| ≥ 640px | Same — modal width is content-driven up to 900px |
+| Breakpoint | Contract |
+|------------|----------|
+| `< 640px` | modal keeps page gutters, input and tabs remain single-column, results scroll within the constrained body |
+| `>= 640px` | same composition, wider result rows may show more title/project context |
 
-## Tokens used
+## Semantic Style Anchors
 
-| Element | Token | Usage |
-|---------|-------|-------|
-| Modal background | `--card` | `bg-white dark:bg-slate-900` |
-| Primary text | `--foreground` | Ticket title |
-| Muted text | `--muted-foreground` | Placeholder, no-results |
-| Border | `--border` | Divider between input and results |
-| Primary | `--primary` | Ticket key text color (blue-600/blue-400) |
-| Backdrop | — | `bg-black/50` (per MODALS.md convention) |
+Only keep class names that express durable composition or state. Exact token values remain owned by CSS and theme files.
 
-## Classes used
+| Element | Semantic Anchor | Contract |
+|---------|-----------------|----------|
+| Modal shell | `Modal`, `ModalBody`, `modal__body--constrained` | shared modal primitive owns backdrop, focus trap, and scroll lock |
+| Result row | `.search-result` | one row pattern covers hover, focus-visible, and keyboard-selected states |
+| Result group label | `.search-section-header` | keeps ticket, project, and future document groups visually separate |
+| Scope bar | `.search-scope-bar`, `.search-scope-bar__tab` | visible tab state is the source of truth for active scope |
+| Mode badge | `.search-mode-badge` | query syntax context stays secondary to the visible scope tabs |
+| Remote state | `.search-skeleton-bar`, `.search-error-text`, `.search-retry-link` | loading, error, and retry are scoped to remote ticket lookup |
 
-| Element | Class | Source |
-|---------|-------|--------|
-| Modal overlay | Fixed overlay pattern | `MODALS.md` |
-| Search icon | Inline SVG | `STYLING.md` (one-off) |
-| Result items | Inline Tailwind | `STYLING.md` (local layout) |
+## Maintenance Rules
 
-## Modal conventions (MODALS.md compliance)
-
-- ✅ `bg-black/50 backdrop-blur-sm` backdrop
-- ✅ Escape to close
-- ✅ Click outside to close (`mousedown` listener on `document`)
-- ✅ `pointer-events-none` on outer container
-- ✅ `pointer-events-auto` on content card
-- ✅ Body scroll prevention (set on open, restored on close)
-- ⚠️ Focus trapping: not currently implemented (acceptable for search-only modal)
-- ⚠️ `role="dialog"` / `aria-modal`: not currently applied (acceptable — input gets focus)
-
-## Implementation Phases
-
-### Phase 1: ProjectBrowserPanel Search
-- Add search input to panel
-- Client-side filtering
-- Current project exclusion
-
-### Phase 2: Cross-Project Ticket Key Search
-- Detect ticket key pattern (regex)
-- Backend endpoint `POST /api/projects/search`
-- Loading states (spinner + skeleton)
-- Mode indicator
-- Results section labels
-
-### Phase 3: Project-Scoped Search
-- Detect `@CODE {query}` syntax
-- Reuse `POST /api/projects/search` with `mode: "project_scope"`
-- Search-result caching (5 min TTL)
-
-### Phase 4: Polish
-- Keyboard section navigation (Tab)
-- Screen reader announcements
-- Error states
-- Performance optimization
-
-## Extension notes
-
-- Result items currently show key + title only. Status/priority badges and match highlighting are potential additions but out of scope for the base spec.
-- The modal is rendered via `createPortal` to `document.body`.
+- Keep this file focused on the durable surface contract. Put precedence, query syntax, and keyboard dispatch details in `quick-search.interactions.md`.
+- Do not add phase plans to this spec. If behavior is not implemented, mark it as future or keep it out.
+- Do not add full-text document search here. Document search starts from filename/title/path metadata unless a separate design changes that boundary.
+- If a scope becomes visible or hidden, update the scope table, mockups, and tests together.
