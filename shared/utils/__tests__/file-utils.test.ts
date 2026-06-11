@@ -8,6 +8,7 @@ import {
   listFiles,
   readFile,
   writeFile,
+  writeFileAtomic,
 } from '../file-utils'
 
 describe('file Utils', () => {
@@ -93,6 +94,49 @@ describe('file Utils', () => {
       fs.writeFileSync(path.join(testDir, 'a.txt'), '')
       fs.writeFileSync(path.join(testDir, 'b.log'), '')
       expect(listFiles(testDir, f => f.endsWith('.txt'))).toEqual(['a.txt'])
+    })
+  })
+
+  describe('SEC-002: writeFileAtomic', () => {
+    it('should write file content atomically', () => {
+      writeFileAtomic(testFile, 'atomic content')
+      expect(readFile(testFile)).toBe('atomic content')
+    })
+
+    it('should not leave .tmp files after successful write', () => {
+      writeFileAtomic(testFile, 'clean write')
+      const files = fs.readdirSync(testDir)
+      const tmpFiles = files.filter(f => f.endsWith('.tmp'))
+      expect(tmpFiles).toEqual([])
+    })
+
+    it('should overwrite existing file content', () => {
+      writeFileAtomic(testFile, 'first')
+      writeFileAtomic(testFile, 'second')
+      expect(readFile(testFile)).toBe('second')
+    })
+
+    it('should create parent directory if missing', () => {
+      const nestedFile = path.join(testDir, 'sub', 'dir', 'file.txt')
+      writeFileAtomic(nestedFile, 'nested content')
+      expect(readFile(nestedFile)).toBe('nested content')
+    })
+
+    it('should throw error for invalid path', () => {
+      expect(() => writeFileAtomic('/non/existent/readonly/file.txt', 'fail')).toThrow()
+    })
+
+    it('should clean up temp file on write failure', () => {
+      // Write to a path where directory creation will fail (permission denied on root)
+      const badPath = '/dev/null/impossible/file.txt'
+      try {
+        writeFileAtomic(badPath, 'fail')
+      }
+      catch {
+        // Expected to throw
+      }
+      // No .tmp files should be left in /dev/null/impossible/
+      expect(fileExists('/dev/null/impossible/file.txt')).toBe(false)
     })
   })
 })

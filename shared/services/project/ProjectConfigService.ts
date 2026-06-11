@@ -4,7 +4,7 @@ import { getTicketsPath, isLegacyConfig, migrateLegacyConfig, validateProjectCon
 import { validateTicketsPath } from '../../tools/ProjectValidator.js'
 import { getDefaultConfig as getDefaultConfigUtil, processConfig } from '../../utils/config-validator.js'
 import { CONFIG_FILES, DEFAULTS, getDefaultPaths } from '../../utils/constants.js'
-import { createDirectory, directoryExists, fileExists, readFile, writeFile } from '../../utils/file-utils.js'
+import { createDirectory, directoryExists, fileExists, readFile, writeFileAtomic } from '../../utils/file-utils.js'
 import { logQuiet } from '../../utils/logger.js'
 import {
   buildConfigFilePath,
@@ -90,7 +90,7 @@ export class ProjectConfigService implements IProjectConfigService {
       if (isLegacyConfig(config)) {
         logQuiet(this.quiet, `Automatically migrating legacy configuration format for project at ${projectPath}...`)
         const migratedConfig = migrateLegacyConfig(config)
-        writeFile(configPath, stringify(migratedConfig))
+        writeFileAtomic(configPath, stringify(migratedConfig))
         logQuiet(this.quiet, `Updated legacy config to clean format at ${configPath}`)
         return migratedConfig
       }
@@ -156,7 +156,7 @@ export class ProjectConfigService implements IProjectConfigService {
         }
       }
 
-      writeFile(configPath, stringify(config))
+      writeFileAtomic(configPath, stringify(config))
       logQuiet(this.quiet, `Updated local config for ${projectId} at ${configPath}`)
     }
     catch (error) {
@@ -223,18 +223,18 @@ export class ProjectConfigService implements IProjectConfigService {
       if (writeReference.mode === ProjectConfigurationMode.GLOBAL_ONLY) {
         // Strategy 1: Global-Only - Update project details in global registry
         Object.assign(registryData.project, updates)
-        writeFile(writeReference.registryPath!, stringify(registryData))
+        writeFileAtomic(writeReference.registryPath!, stringify(registryData))
         logQuiet(this.quiet, `Updated project ${projectId} in global registry (global-only mode)`)
       }
       else {
         // Strategy 2: Project-First - Write registry metadata and update local config
-        writeFile(writeReference.registryPath!, stringify(registryData))
+        writeFileAtomic(writeReference.registryPath!, stringify(registryData))
 
         // Update local config
         if (writeReference.localConfigPath && fileExists(writeReference.localConfigPath)) {
           const localConfig = parseToml(readFile(writeReference.localConfigPath)) as ProjectConfig
           Object.assign(localConfig.project, updates)
-          writeFile(writeReference.localConfigPath, stringify(localConfig))
+          writeFileAtomic(writeReference.localConfigPath, stringify(localConfig))
           logQuiet(this.quiet, `Updated project ${projectId} in local config`)
         }
         else {
@@ -259,7 +259,7 @@ export class ProjectConfigService implements IProjectConfigService {
 
       const localConfig = parseToml(readFile(writeReference.localConfigPath!)) as ProjectConfig
       Object.assign(localConfig.project, updates)
-      writeFile(writeReference.localConfigPath!, stringify(localConfig))
+      writeFileAtomic(writeReference.localConfigPath!, stringify(localConfig))
       logQuiet(this.quiet, `Updated project ${projectId} in local config by path`)
     }
     catch (error) {
@@ -354,7 +354,7 @@ export class ProjectConfigService implements IProjectConfigService {
         // Set paths under project.document to match TOML structure [project.document.paths]
         localConfig.project.document.paths = documentPaths
 
-        writeFile(configPath, stringify(localConfig))
+        writeFileAtomic(configPath, stringify(localConfig))
         logQuiet(this.quiet, `Updated document paths for project ${projectId}: [${documentPaths.join(', ')}]`)
       }
       else {

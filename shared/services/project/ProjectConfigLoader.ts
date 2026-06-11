@@ -1,7 +1,7 @@
 import type { ProjectConfig } from '../../models/Project.js'
 import { isLegacyConfig, validateProjectConfig } from '../../models/Project.js'
 import { CONFIG_FILES } from '../../utils/constants.js'
-import { fileExists, readFile, writeFile } from '../../utils/file-utils.js'
+import { fileExists, readFile, writeFileAtomic } from '../../utils/file-utils.js'
 import { logQuiet } from '../../utils/logger.js'
 import { buildConfigFilePath } from '../../utils/path-resolver.js'
 import { parseToml, stringify } from '../../utils/toml.js'
@@ -80,7 +80,7 @@ export class ProjectConfigLoader {
     // Write the migrated config back to disk to clean up the legacy format
     // This ensures the migration is persisted and future reads are fast
     const tomlContent = stringify(migratedConfig)
-    writeFile(configPath, tomlContent)
+    writeFileAtomic(configPath, tomlContent)
     logQuiet(this.quiet, `Updated legacy config to clean format at ${configPath}`)
 
     return migratedConfig
