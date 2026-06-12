@@ -4,6 +4,7 @@ import { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'r
 import { cn } from '@/lib/utils'
 // eslint-disable-next-line no-restricted-imports
 import { Icon } from '../shared/Icon'
+import CopyPathButton from './CopyPathButton'
 
 export interface DocumentFile {
   name: string
@@ -230,6 +231,9 @@ const FileTree = React.forwardRef<FileTreeHandle, FileTreeProps>(({
               </div>
             )}
           </div>
+          {file.type === 'file' && (
+            <CopyPathButton path={file.path} />
+          )}
           {onToggleFavorite && file.path !== './' && (
             <button
               type="button"
