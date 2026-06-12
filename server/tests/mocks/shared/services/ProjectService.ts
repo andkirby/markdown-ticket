@@ -3,10 +3,10 @@
  * Provides a functional mock that mimics the real ProjectService behavior
  */
 
+import type { ProjectSharingSettings, RegistryData } from '@mdt/shared/models/Project.js'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import process from 'node:process'
-import type { ProjectSharingSettings, RegistryData } from '@mdt/shared/models/Project.js'
 import { DEFAULTS } from '@mdt/shared/utils/constants.js'
 import { parseToml, stringify } from '@mdt/shared/utils/toml.js'
 

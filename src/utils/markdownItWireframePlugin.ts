@@ -24,14 +24,13 @@ function extractMetadata(info: string): string {
   return remainder
 }
 
-
 /**
  * markdown-it plugin that adds labeled wireframe fence rendering.
  */
 export function markdownItWireframePlugin(md: MarkdownIt): void {
   const defaultFence = md.renderer.rules.fence
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line ts/no-explicit-any
   md.renderer.rules.fence = (tokens: any, idx: number, options: any, env: any, self: any) => {
     const token = tokens[idx]
     const info = token.info ? unescapeAll(token.info.trim()) : ''

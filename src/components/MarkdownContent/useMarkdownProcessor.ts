@@ -6,11 +6,11 @@ import taskLists from 'markdown-it-task-lists'
 import { useMemo } from 'react'
 import { getLinkConfig } from '../../config/linkConfig'
 import { classifyLink } from '../../utils/linkProcessor'
-import { markdownItWireloomPlugin } from '../../utils/markdownItWireloomPlugin'
 import { markdownItWireframePlugin } from '../../utils/markdownItWireframePlugin'
+import { markdownItWireloomPlugin } from '../../utils/markdownItWireloomPlugin'
 import { preprocessMarkdown } from '../../utils/markdownPreprocessor'
-import { slugify } from '../../utils/slugify'
 import { processMermaidBlocks } from '../../utils/mermaid'
+import { slugify } from '../../utils/slugify'
 import { highlightCodeBlocks } from '../../utils/syntaxHighlight'
 import { ALLOWED_ATTR, ALLOWED_TAGS } from './domPurifyConfig'
 
@@ -79,7 +79,7 @@ export function useMarkdownProcessor(
       const originalHeadingOpen = md.renderer.rules.heading_open
       md.renderer.rules.heading_open = (tokens, idx, options, env, self) => {
         const token = tokens[idx]
-        const level = parseInt(token.tag.slice(1)) // e.g., 'h1' → 1
+        const level = Number.parseInt(token.tag.slice(1)) // e.g., 'h1' → 1
         const adjusted = Math.min(level + headerLevelStart - 1, 6)
         token.tag = `h${adjusted}`
         if (originalHeadingOpen) {

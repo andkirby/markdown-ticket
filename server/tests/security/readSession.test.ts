@@ -24,7 +24,7 @@ const readSessionModulePath = '../../security/readSession'
 async function loadAppendMergedReadSessionCookie(): Promise<AppendMergedReadSessionCookie> {
   const module = await import(readSessionModulePath) as { appendMergedReadSessionCookie?: AppendMergedReadSessionCookie }
   if (typeof module.appendMergedReadSessionCookie !== 'function') {
-    throw new Error('appendMergedReadSessionCookie is required for MDT-177 read-session merge behavior')
+    throw new TypeError('appendMergedReadSessionCookie is required for MDT-177 read-session merge behavior')
   }
   return module.appendMergedReadSessionCookie
 }

@@ -15,6 +15,7 @@ export const SearchMode = {
   PROJECT_SCOPE: 'project_scope',
 } as const
 
+// eslint-disable-next-line ts/no-redeclare
 export type SearchMode = (typeof SearchMode)[keyof typeof SearchMode]
 
 // ---------------------------------------------------------------------------
@@ -71,4 +72,5 @@ export const SearchErrorCode = {
   VALIDATION_ERROR: 'validation_error',
 } as const
 
+// eslint-disable-next-line ts/no-redeclare
 export type SearchErrorCode = (typeof SearchErrorCode)[keyof typeof SearchErrorCode]

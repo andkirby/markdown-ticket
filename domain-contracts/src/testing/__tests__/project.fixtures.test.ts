@@ -4,10 +4,8 @@
 
 import {
   CreateProjectInputSchema,
-  LocalProjectConfigSchema,
-  ProjectSchema,
-  UpdateProjectInputSchema,
   safeValidateProject,
+  UpdateProjectInputSchema,
   validateLocalProjectConfig,
   validateProject,
 } from '../../project/index.js'

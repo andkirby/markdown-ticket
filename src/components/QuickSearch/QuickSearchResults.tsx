@@ -10,14 +10,13 @@
  */
 
 import type { SearchResponse } from '@mdt/domain-contracts'
-import type { QueryMode } from '@/hooks/useQuickSearch'
+import type { DocumentResultItem } from './DocumentResultRow'
 import type { ScoredProject } from '@/hooks/useProjectSearch'
-import type { Ticket } from '@/types/ticket'
+import type { QueryMode } from '@/hooks/useQuickSearch'
 
-import { cn } from '@/lib/utils'
+import type { Ticket } from '@/types/ticket'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { DocumentResultRow } from './DocumentResultRow'
-import type { DocumentResultItem } from './DocumentResultRow'
 import { ProjectResultRow } from './ProjectResultRow'
 
 // ---------------------------------------------------------------------------
@@ -164,7 +163,7 @@ export function QuickSearchResults({
   // Offset computation for selection highlight across sections
   const crossProjectCount = isCrossProjectMode ? crossProjectResults.length : 0
   const currentProjectCount = (isProjectScopeMode ? 0 : tickets.length) * (scopeShowsTickets ? 1 : 0)
-  const projectOffset = crossProjectCount + currentProjectCount
+  const _projectOffset = crossProjectCount + currentProjectCount
 
   // Invalid project code — show error immediately, no fetch
   if (invalidProjectCode) {
@@ -184,7 +183,7 @@ export function QuickSearchResults({
   // Nothing at all yet — default empty state
   const hasProjectResults = projectResults.length > 0 && scopeShowsProjects
   const hasDocumentResults = documentResults.length > 0 && scopeShowsDocuments
-  const visibleTicketResults = scopeShowsTickets && !isProjectScopeMode && hasCurrentProjectResults
+  const _visibleTicketResults = scopeShowsTickets && !isProjectScopeMode && hasCurrentProjectResults
   if (!hasCurrentProjectResults && !hasCrossProjectResults && !hasProjectResults && !hasDocumentResults && !crossProjectLoading && !crossProjectError && !isCrossProjectMode) {
     return (
       <div className="p-8 text-center text-gray-500" data-testid="quick-search-no-results">

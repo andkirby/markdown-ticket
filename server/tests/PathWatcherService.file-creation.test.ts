@@ -14,6 +14,7 @@ interface FileChangePayload {
 function waitForFileChange(service: PathWatcherService, timeoutMs = 5000): Promise<FileChangePayload> {
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
+      // eslint-disable-next-line ts/no-use-before-define
       service.off('file-change', onFileChange)
       reject(new Error('Timed out waiting for file-change event'))
     }, timeoutMs)
@@ -30,6 +31,7 @@ function waitForFileChange(service: PathWatcherService, timeoutMs = 5000): Promi
 function waitForReady(service: PathWatcherService, timeoutMs = 5000): Promise<void> {
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
+      // eslint-disable-next-line ts/no-use-before-define
       service.off('ready', onReady)
       reject(new Error('Timed out waiting for watcher ready event'))
     }, timeoutMs)

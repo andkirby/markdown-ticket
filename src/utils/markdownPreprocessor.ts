@@ -4,7 +4,7 @@ interface PreprocessorState {
   inlineCodePlaceholders: string[]
 }
 
-const DOCUMENT_REFERENCE_PATTERN = /(^|[\s([{<])((?:\.{1,2}\/|[\w.-]+\/)*[\w][\w.-]*\.md(?:#[A-Za-z0-9][A-Za-z0-9._~:/?#[\]@!$&'()*+,;=%-]*)?)(?=$|[\s)\]},>.,;:!?])/g
+const DOCUMENT_REFERENCE_PATTERN = /(^|[\s([{<])((?:[\w.-]+\/)*\w[\w.-]*\.md(?:#[A-Za-z0-9][\w.~:/?#[\]@!$&'()*+,;=%-]*)?)(?=$|[\s)\]},>.;:!?])/g
 
 function isRelativeMarkdownHref(href: string): boolean {
   if (!/\.md(?:#[^\s)]*)?$/.test(href)) {
@@ -198,6 +198,7 @@ function resolveDocumentRef(
 
   // Check if resolved path is a ticket-key .md file at the tickets level
   // e.g., "MDT-150-smartlink-doc-urls.md" or "MDT-151.md"
+  // eslint-disable-next-line regexp/no-super-linear-backtracking, regexp/optimal-quantifier-concatenation
   const resolvedTicketMatch = resolvedPath.match(/^([A-Z]+-\d+)[^/]*\.md$/)
   if (resolvedTicketMatch) {
     return `/prj/${projectCode}/ticket/${resolvedTicketMatch[1]}${anchor}`

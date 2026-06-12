@@ -21,7 +21,8 @@ export const TICKET_KEY_INPUT_PATTERN = /^([A-Z][A-Z0-9]{1,4})-(\d{1,5})$/i
  *   [1] = project code (e.g. "MDT")
  *   [2] = search text after the space
  */
-export const PROJECT_SCOPE_INPUT_PATTERN = /^@([A-Z][A-Z0-9]{1,4})\s+(.*)$/i
+// eslint-disable-next-line regexp/no-super-linear-backtracking
+export const PROJECT_SCOPE_INPUT_PATTERN = /^@([A-Z][A-Z0-9]{1,4})\s+([^\n]*)$/i
 
 const TrimmedTitleSchema = z.string()
   .min(1, 'Title is required')

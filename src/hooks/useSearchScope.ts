@@ -26,7 +26,8 @@ export interface UseSearchScopeResult {
  */
 export function getNextScope(current: SearchScopeValue): SearchScopeValue {
   const index = SearchScopes.indexOf(current)
-  if (index === -1) return SearchScope.GLOBAL
+  if (index === -1)
+    return SearchScope.GLOBAL
   return SearchScopes[(index + 1) % SearchScopes.length] as SearchScopeValue
 }
 
@@ -37,18 +38,14 @@ export function getNextScope(current: SearchScopeValue): SearchScopeValue {
  * The cycle function advances through: global → tickets → projects → documents → global.
  */
 export function useSearchScope(): UseSearchScopeResult {
-  const [scope, setScopeState] = useState<SearchScopeValue>(SearchScope.GLOBAL)
-
-  const setScope = useCallback((newScope: SearchScopeValue) => {
-    setScopeState(newScope)
-  }, [])
+  const [scope, setScope] = useState<SearchScopeValue>(SearchScope.GLOBAL)
 
   const cycleScope = useCallback(() => {
-    setScopeState(prev => getNextScope(prev))
+    setScope(prev => getNextScope(prev))
   }, [])
 
   const resetScope = useCallback(() => {
-    setScopeState(SearchScope.GLOBAL)
+    setScope(SearchScope.GLOBAL)
   }, [])
 
   return { scope, setScope, cycleScope, resetScope }

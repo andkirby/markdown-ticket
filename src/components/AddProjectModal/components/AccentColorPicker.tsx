@@ -124,30 +124,34 @@ export function AccentColorPicker({ value, onChange, onReset, error, disabled = 
           }}
           onBlur={handleCustomBlur}
         />
-        {validationError ? (
-          <p className="accent-color-picker__error" data-testid="accent-validation-error">
-            {validationError}
-          </p>
-        ) : null}
+        {validationError
+          ? (
+              <p className="accent-color-picker__error" data-testid="accent-validation-error">
+                {validationError}
+              </p>
+            )
+          : null}
       </div>
 
-      {onReset && normalizedValue ? (
-        <button
-          type="button"
-          className="accent-color-picker__reset"
-          data-testid="accent-reset-button"
-          disabled={disabled}
-          onClick={() => {
-            if (!disabled) {
-              setCustomHex('')
-              setValidationError(undefined)
-              onReset()
-            }
-          }}
-        >
-          Reset to default
-        </button>
-      ) : null}
+      {onReset && normalizedValue
+        ? (
+            <button
+              type="button"
+              className="accent-color-picker__reset"
+              data-testid="accent-reset-button"
+              disabled={disabled}
+              onClick={() => {
+                if (!disabled) {
+                  setCustomHex('')
+                  setValidationError(undefined)
+                  onReset()
+                }
+              }}
+            >
+              Reset to default
+            </button>
+          )
+        : null}
     </div>
   )
 }

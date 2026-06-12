@@ -1,5 +1,5 @@
-import MarkdownIt from 'markdown-it'
 import { describe, expect, it } from 'bun:test'
+import MarkdownIt from 'markdown-it'
 import { preprocessMarkdown } from './markdownPreprocessor'
 
 describe('preprocessMarkdown', () => {

@@ -11,7 +11,7 @@ const SCANNED_FILES = [
 
 const ALLOWED_PLACEHOLDERS = [
   'your-secret-token',
-  '${MCP_AUTH_TOKEN}',
+  '${MCP_AUTH_TOKEN}', // eslint-disable-line no-template-curly-in-string
 ]
 
 describe('tracked secret scan', () => {
@@ -23,8 +23,8 @@ describe('tracked secret scan', () => {
         content = content.split(placeholder).join('')
       }
 
-      expect(content).not.toMatch(/MCP_AUTH_TOKEN\s*=\s*[A-Za-z0-9._-]{16,}/)
-      expect(content).not.toMatch(/Bearer\s+[A-Za-z0-9._-]{16,}/)
+      expect(content).not.toMatch(/MCP_AUTH_TOKEN\s*=\s*[\w.-]{16,}/)
+      expect(content).not.toMatch(/Bearer\s+[\w.-]{16,}/)
     }
   })
 })

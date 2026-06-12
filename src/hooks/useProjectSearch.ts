@@ -7,7 +7,7 @@
 
 import type { Project } from '@mdt/shared/models/Project'
 
-import { useCallback, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 
 // ---------------------------------------------------------------------------
 // Pure matching functions (exported for testing)
@@ -34,16 +34,20 @@ function scoreTerm(term: string, project: Project): number {
   const t = term.toLowerCase()
 
   // Exact code match
-  if (code === t) return 100
+  if (code === t)
+    return 100
 
   // Code prefix match (e.g., "tm" matches "TMGR")
-  if (code.startsWith(t)) return 90
+  if (code.startsWith(t))
+    return 90
 
   // Word-prefix match in name
   const words = name.split(/[^a-z0-9]+/).filter(Boolean)
   for (const word of words) {
-    if (word === t) return 80 // exact word match
-    if (word.startsWith(t)) return 70 // word prefix match (e.g., "task" matches "Task Manager")
+    if (word === t)
+      return 80 // exact word match
+    if (word.startsWith(t))
+      return 70 // word prefix match (e.g., "task" matches "Task Manager")
   }
 
   return 0
@@ -56,7 +60,8 @@ function scoreTerm(term: string, project: Project): number {
 export function matchProjects(options: ProjectMatchOptions): ScoredProject[] {
   const { projects, query, maxResults = 10 } = options
 
-  if (!query.trim()) return []
+  if (!query.trim())
+    return []
 
   const terms = query.toLowerCase().trim().split(/\s+/)
 
@@ -65,7 +70,8 @@ export function matchProjects(options: ProjectMatchOptions): ScoredProject[] {
       let score = 0
       for (const term of terms) {
         const termScore = scoreTerm(term, project)
-        if (termScore === 0) return null
+        if (termScore === 0)
+          return null
         score += termScore
       }
       return { project, score }
