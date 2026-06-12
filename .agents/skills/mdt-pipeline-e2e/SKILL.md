@@ -1,511 +1,286 @@
 ---
 name: mdt-pipeline-e2e
-version: 1.0.0
 description: |
-  Full MDT ticket lifecycle pipeline — spec through implementation to done.
-  Runs as a single agent using Ralph loop with milestones for each stage.
-  Stages: assess → requirements → BDD → architecture → UX design (if UI) →
-  tests → tasks → implement → code review → fix → tech-debt → user review → close.
-  
-  Fully automatic until blocked: generates all artifacts, implements code,
-  ensures tests green, self-reviews code, and closes the ticket.
-  
-  Use when asked to "run the full pipeline", "implement ABC-012 end to end",
-  "take this ticket to done", or "full auto pipeline".
+  Run a project-agnostic ticket lifecycle pipeline from discovery and specification
+  through implementation, verification, review, and user-approved close. Use when
+  asked to run the full pipeline, implement a ticket end to end, take a ticket to
+  done, resume a lifecycle pipeline, or coordinate spec-to-code work with quality
+  gates across any language or repository.
 ---
 
-# MDT Full Lifecycle Pipeline v2
+# Ticket Pipeline E2E
 
-## Overview
+Run one ticket from intent to reviewed implementation. Keep the workflow
+project-agnostic: discover local conventions first, then use the repository's own
+tools, docs, skill index, commands, ticket system, and language stack.
 
-End-to-end pipeline that takes a ticket from idea to **Implemented**.
-Runs as a **single agent** using a **Ralph loop** — each iteration is a milestone
-(stage). No sub-agents or teams needed.
+## Core Rules
 
-```
- assess → requirements → BDD → architecture → UX design* → tests → tasks
-       → implement → code review → tech-debt → user review → close
+- Read project instructions before acting: root agent docs, ticket docs, and the
+  project-local skill index if present.
+- If `docs/SKILLS.md` exists, read it before selecting helper skills. Treat it as
+  project-local guidance, not a required file for every repository.
+- Use local ticket, trace, and CLI tools when available. Do not hardcode MDT-only
+  commands unless the target project explicitly documents them.
+- Never auto-close without explicit user approval.
+- Keep the working tree scoped. Do not stash, reset, or stage unrelated changes.
+- Record state on disk so the pipeline can resume after context loss.
 
- * UX design only if ticket involves UI changes
-```
+## References
 
-Every milestone follows the same 3-step pattern:
+Load only the references needed for the current run:
 
-```
-1. Load skill → execute the workflow → produce artifacts
-2. Self-review → check for gaps → fix
-3. ralph_done → advance to next milestone
-```
+| Reference | When to read |
+|-----------|--------------|
+| `references/ralph-loop.md` | Ralph tools or protocol are available in the host app |
+| `references/language-typescript.md` | TypeScript, JavaScript, Node, Bun, npm, pnpm, yarn, React |
+| `references/language-python.md` | Python, Django, Flask, FastAPI, pytest, uv, Poetry |
+| `references/language-rust.md` | Rust, Cargo, crates, clippy |
+| `references/language-go.md` | Go modules, `go test`, `go vet` |
 
-## Quick Start
+If Ralph is not available, use ordinary planning wording: "milestone started",
+"milestone complete", and "next milestone".
 
-```
-/mdt:pipeline-e2e ABC-012
-/mdt:pipeline-e2e ABC-012 --from architecture
-/mdt:pipeline-e2e ABC-012 --skip assess
-/mdt:pipeline-e2e ABC-012 --no-auto-close
-/mdt:pipeline-e2e ABC-012 --ignore baseline,lint
-```
+## Pipeline Shape
 
-## Milestones
+Use these milestones. Skip a milestone only when local project instructions or
+ticket scope make it irrelevant.
 
-| # | Milestone | What happens | Skill |
-|---|-----------|-------------|-------|
-| 0 | **Pre-flight** | Git state check, baseline build, ticket load | — |
-| 1 | **Assess** | Feasibility, scope, risk | `mdt:assess` |
-| 2 | **Requirements** | Functional + non-functional requirements | `mdt:requirements` |
-| 3 | **BDD** | Behavior scenarios (Given/When/Then) | `mdt:bdd` |
-| 4 | **Architecture** | Backend design, module boundaries, data flow | `mdt:architecture` |
-| 5 | **UX Design** | Design specs, state tables, wireframes *(conditional)* | `ux-designer-specifier` |
-| 6 | **Tests** | Test plans mapping requirements → test files | `mdt:tests` |
-| 7 | **Tasks** | Implementable tasks with TDD structure | `mdt:tasks` |
-| 8 | **Implement** | TDD execution, build + test gates | `mdt:implement` |
-| 9 | **Code Review** | Self-review checklist, fix issues | — |
-| 10 | **Tech Debt** | Structural issues scan | `mdt:tech-debt` |
-| 11 | **User Review + Close** | Present to user, close ticket | — |
+| # | Milestone | Purpose |
+|---|-----------|---------|
+| 0 | Pre-flight | Discover project, ticket, state, tools, dirty tree, baseline |
+| 1 | Assess | Clarify scope, risk, dependencies, non-goals |
+| 2 | Requirements | Define required behavior and constraints |
+| 3 | Scenarios | Capture acceptance scenarios or equivalent examples |
+| 4 | Architecture | Decide ownership, boundaries, data flow, migration path |
+| 5 | UX Design | Only for user-facing UI or interaction changes |
+| 6 | Tests | Map requirements/scenarios to verification commands and files |
+| 7 | Tasks | Produce ordered, scoped implementation tasks |
+| 8 | Implement | Execute tasks with TDD or equivalent verification discipline |
+| 9 | Review | Review diff against requirements, architecture, and tests |
+| 10 | Debt | Identify blocking structural debt and deferred follow-ups |
+| 11 | User Review | Present evidence, handle changes, close only on approval |
 
-## Flags
+## Inputs
 
-| Flag | Description |
-|------|-------------|
-| `ABC-012` | Required. Ticket key. |
-| `--from STAGE` | Resume from a specific milestone. Verifies prior artifacts exist. |
-| `--skip STAGES` | Comma-separated milestones to skip. Use sparingly. |
-| `--no-auto-close` | Run all milestones but stop before closing ticket. |
-| `--ux-force` | Force UX design milestone even for non-UI tickets. |
-| `--ignore CHECKS` | Comma-separated pre-flight checks to skip: `baseline`, `lint`, `build`. |
+Accept a ticket key, issue URL, file path, or concise task description.
 
-## Execution
+Common flags:
 
-### Pre-flight (Milestone 0)
+| Flag | Meaning |
+|------|---------|
+| `--from STAGE` | Resume from a milestone after validating prior state |
+| `--skip STAGES` | Skip named milestones with a short recorded reason |
+| `--no-auto-close` | Stop before status close; closing still requires approval |
+| `--ux-force` | Run UX design even if UI is not auto-detected |
+| `--ignore CHECKS` | Ignore specific pre-flight checks only when user approved |
+| `--language NAME` | Force a language reference when auto-detection is ambiguous |
 
-Run before starting the Ralph loop. **Blocks pipeline if dirty.**
+## Pre-Flight
 
-**0a. Git state check**
+1. Discover project context:
+   - Read root instructions such as `AGENTS.md`, `CLAUDE.md`, `.github/copilot-instructions.md`, or equivalent.
+   - Read `docs/SKILLS.md` if present.
+   - Read ticket-system docs or CLI docs before mutating ticket state.
+   - Detect package files: `package.json`, `pyproject.toml`, `Cargo.toml`,
+     `go.mod`, or project-specific manifests.
+2. Identify language references to load. Prefer project docs over generic refs.
+3. Resolve ticket source, artifact directory, current status, and existing spec files.
+4. Create or update a state file in the ticket artifact directory:
 
-```bash
-git status --porcelain
-```
-
-If working tree is dirty:
-```
-⚠️ Working tree has uncommitted changes:
-  {list changed files}
-
-Options:
-  [Commit changes]   — run /commit skill, then restart pipeline
-  [Stash changes]    — git stash, pipeline proceeds, pop at end
-  [Abort]            — stop pipeline, clean up yourself
-```
-
-**0b. Baseline build check** *(skip with `--ignore baseline`)*
-
-```bash
-bun run build:all 2>&1
-bunx jest --no-coverage --testTimeout=10000 --forceExit 2>&1
-bun run lint 2>&1
-```
-
-Record baseline:
-```
-Baseline:
-  Build:    ✅ / ❌
-  Tests:    {N}/{N} passing, {N} failing
-  Lint:     ✅ / ❌
-
-Pre-existing failures (if any):
-  {list failing suites and test names}
+```json
+{
+  "pipeline": "mdt-pipeline-e2e",
+  "version": 2,
+  "ticket": "<ticket key or source>",
+  "currentMilestone": "pre-flight",
+  "completedMilestones": [],
+  "baseline": {},
+  "approvals": {},
+  "commits": [],
+  "updatedAt": "<ISO8601>"
+}
 ```
 
-If baseline build fails and user says proceed — note it. The pipeline will
-still ensure the final state is better than baseline.
+5. Inspect git state:
+   - Run tracked and untracked status checks.
+   - If unrelated changes exist, leave them untouched and record the boundary.
+   - If conflicting changes block the task, stop and ask.
+6. Run baseline commands from project docs. If undocumented, infer cautiously from
+   manifests and loaded language references.
 
-**0c. Load ticket context**
+Baseline record:
 
-```bash
-mdt-cli 12
+```text
+Build: <pass/fail/skipped> command=<...>
+Tests: <pass/fail/skipped> command=<...>
+Lint:  <pass/fail/skipped> command=<...>
+Known pre-existing failures: <summary>
 ```
 
-This reads ticket base data. `{TICKETS_PATH}` and `{PROJECT_CODE}` are
-injected by session hooks. If missing, run `mdt-cli project | grep tickets` to resolve.
+## Milestone Contract
 
-Parse ticket to determine:
-- Ticket type (feature, bugfix, docs, refactor)
-- Whether UI is involved (scan title, description, tags)
-- Existing artifacts (check `{TICKETS_PATH}/{CR-KEY}/`)
+For each milestone:
 
-**0d. Start Ralph loop**
+1. Load only the project docs, workflow skills, and language references needed.
+2. Read all prior artifacts from disk; do not rely on conversation memory.
+3. Produce or update the milestone artifact in the ticket artifact directory.
+4. Self-review for completeness, traceability, and consistency.
+5. Update the pipeline state file with:
+   - milestone name,
+   - artifact paths,
+   - verification evidence,
+   - skipped or deferred items,
+   - user approvals when relevant.
 
-```
-ralph_start:
-  name: mdt-pipeline-{CR-KEY}
-  task: {the milestone plan from below}
-  maxIterations: 50
-  itemsPerIteration: 1
-  reflectEvery: 5
-```
+When Ralph tools exist, follow `references/ralph-loop.md` for milestone start and
+finish calls. Otherwise, report concise milestone progress in normal text.
 
-### Spec Milestones (1–7)
+## Spec Milestones
 
-Each spec milestone follows this pattern:
+Keep artifacts concise and traceable.
 
-```
-── Iteration ──────────────────────────────
-1. Load skill:
-   Read mdt skill: /mdt
-   Read skills/{stage}/SKILL.md
+Assess:
+- Define scope, non-goals, dependencies, risks, and implementation confidence.
 
-2. Execute the workflow:
-   - Read ticket CR
-   - Read all prior artifacts from disk
-   - Generate stage artifacts
-   - Write to {TICKETS_PATH}/{CR-KEY}/
+Requirements:
+- Capture functional requirements, non-functional constraints, and durable docs
+  that may need updates.
 
-3. Self-review:
-   - Re-read all artifacts produced
-   - Check completeness, traceability, consistency
-   - Fix any gaps found
-   - Re-verify
+Scenarios:
+- Write acceptance examples in the project's preferred form: BDD, examples,
+  fixtures, API contracts, screenshots, or CLI transcripts.
 
-4. Report:
-   {stage} complete. Artifacts: {list files}
+Architecture:
+- Define behavior owners, module boundaries, data flow, storage/API changes,
+  error handling, migration strategy, and rollback/compatibility constraints.
+- For backend or shared logic, name the owning layer and consumers.
+- For UI, include state transitions and accessibility/responsive constraints.
 
-5. ralph_done → next milestone
-```
+UX Design:
+- Run only for UI, interaction, content, or visual changes unless forced.
+- Select the UX skill from the project skill registry first. If no project UX
+  skill is documented, use the global UX designer/specifier skill. Use wireframe
+  skills only when a visual sketch, state diagram, or layout mockup reduces
+  ambiguity.
+- Treat UX skills as design-content helpers. The pipeline owns reading the
+  ticket, writing the ticket-local UX artifact, and updating durable docs.
+- First write a ticket-local UX artifact such as `ux-design.md` for proposed
+  flows, alternatives, state tables, and implementation notes.
+- Before durable docs are updated, run a reviewer gate. Prefer a project UX
+  reviewer skill or reviewer role if the registry provides one; otherwise use an
+  independent review pass with the selected UX skill. Human review is optional
+  unless the project requires it.
+- The reviewer must approve the ticket-local UX draft or request revisions.
+  Record reviewer identity, verdict, required changes, and approval evidence in
+  the ticket-local UX artifact and pipeline state.
+- Only after approval, update durable design documentation before moving to
+  Tests or Tasks. If no durable doc is needed, record the reason in the
+  ticket-local UX artifact.
+- Keep durable docs focused on final surface behavior, states, interaction
+  contracts, accessibility, and responsive expectations.
 
-**Architecture milestone (4) — extra quality focus:**
+Tests:
+- Map each requirement and scenario to concrete verification.
+- Prefer exact commands and file paths.
+- Mark expected RED/GREEN state before implementation.
 
-Self-review must verify:
-- Module boundaries with clear ownership
-- Data flow (request → controller → service → repo)
-- Error handling strategy (not "try/catch everywhere")
-- Type safety (no `any` without justification)
-- Every module testable in isolation
-- No circular dependencies
-- No god objects or grab-bag services
+Tasks:
+- Order tasks so each has a clear scope, owned files, verification command, and
+  expected behavior change.
+- Split large tickets into parts when a single diff would be hard to review.
 
-**UX Design milestone (5) — conditional:**
+Pause before implementation unless the user explicitly requested full autonomy.
+Summarize artifacts, key decisions, and verification plan.
 
-Auto-detect: scan ticket for UI-related keywords (frontend, component, CSS,
-modal, page, layout, visual, button, form, table, dashboard).
+## Status Transitions
 
-If UI detected (or `--ux-force`):
-- Load skills: `ux-designer-specifier`, `mdt-ux-designer`
-- Produce concise design document updates in `docs/design/surfaces/`
-- State tables for interactive elements
-- Wireframes via `wireloom` skill if needed
-- Focus: interaction flows, state transitions, responsive behavior
+When the agent starts implementation work with intent to implement the ticket,
+move the ticket from backlog/open/proposed into the project's documented
+in-progress status before editing code. Use the local ticket CLI, tracker API,
+or issue system documented by the project.
 
-If no UI detected, skip this milestone entirely.
+Rules:
+- Do this after the spec checkpoint when the user approves implementation.
+- If the user explicitly requested full autonomy, do it before the first
+  implementation task.
+- If a project distinguishes "open" from "in progress", prefer "in progress"
+  once code/spec implementation has started.
+- If no status system exists, record the milestone in the pipeline state file
+  instead of inventing a status.
 
-**After all spec milestones — user checkpoint:**
+## Implementation
 
-Before implementation starts, pause and present:
+Use the repository's implementation skill or workflow when one exists.
 
-```
-═══════════════════════════════════════════
-  {CR-KEY} — Spec Complete
-═══════════════════════════════════════════
+General implementation rules:
+- Follow task order.
+- Prefer TDD or an equivalent pre/post verification loop.
+- Use exact commands from task artifacts or project docs.
+- Do not broaden scope without recording why.
+- Update task checkboxes or trace records only after evidence passes.
+- Update durable docs when behavior, commands, architecture, or user workflows change.
+- If implementation changes the agreed UX behavior, update both the ticket-local
+  UX artifact and durable design docs before review.
 
-Artifacts:
-  {list all files}
+Hard gates before leaving implementation:
+- Required build/typecheck passes or the documented equivalent is satisfied.
+- Required tests pass, except recorded pre-existing failures.
+- Required lint/format/static checks pass or documented exceptions are recorded.
 
-Architecture summary:
-  {3-5 key design decisions}
+## Review
 
-Ticket status will change to: In Progress
+Review changed files against:
 
-Options:
-  [Proceed to implementation]
-  [Review artifacts first]
-  [Revise a specific stage]
-═══════════════════════════════════════════
-```
+- Ticket requirements and scenarios.
+- Architecture decisions and ownership boundaries.
+- Test plan coverage.
+- Language-specific failure modes from loaded references.
+- Project-specific style and docs.
 
-On "Proceed":
-```bash
-mdt-cli attr {ticket-number} status=in_progress
-```
+Block close on:
+- Logic bugs, data loss, race conditions, security regressions, resource leaks,
+  missing required tests, or architecture drift.
+- Unexplained broad diffs.
+- Uncommitted required artifacts.
 
-### Implementation Milestone (8)
+Fix issues in priority order and re-run affected verification.
 
-```
-1. Load skill:
-   Read mdt skill: /mdt:implement
+## Git And Close
 
-2. Execute:
-   mdt:implement {CR-KEY} --all
+Commit only when the user requested commits or the workflow explicitly requires
+commits. Keep commits scoped:
 
-   - Follow TDD: RED → GREEN for every task
-   - After all tasks complete, verify hard gates
+1. Spec artifacts.
+2. Implementation.
+3. Review fixes.
+4. Pre-existing fixes only when explicitly in scope or low-risk and approved.
 
-3. Hard gates (must ALL pass before leaving this milestone):
-   - bun run build:all → exit 0
-   - Full test suite → 0 failures
-   - Lint → 0 errors
+Close report:
 
-4. If gates fail:
-   - Fix. Re-run. Max 3 attempts per gate.
-   - If still failing after 3 attempts → escalate to user.
-
-5. ralph_done → next milestone
-```
-
-### Code Review Milestone (9)
-
-Self-review of all changed files.
-
-**9a. Collect changes**
-```bash
-git diff --name-only main...HEAD
-git ls-files --others --exclude-standard
-```
-
-**9b. Review checklist** — apply to every changed file:
-
-```
-🔴 Critical (blocks close):
-  - Logic bugs / race conditions
-  - Resource leaks (timers, listeners, handles)
-  - Double-call bugs (lifecycle methods called twice)
-  - Missing error handling (uncaught promises, unhandled edges)
-
-🟡 Medium (must fix):
-  - Missing tests for new code paths
-  - Non-idempotent operations that should be
-  - Hardcoded values that should be configurable
-  - Type safety gaps (`as any` without justification)
-
-🟢 Minor (fix if easy):
-  - Dead code, unused imports
-  - Misleading comments
-  - Inconsistent naming
-
-Architecture check:
-  - Clean separation of concerns
-  - No circular dependencies
-  - Single responsibility per module
-  - Clear data flow (no hidden mutations)
+```text
+Ticket: <key>
+Built: <short summary>
+Artifacts: <spec/test/task/state files>
+Changed code: <files>
+Verification: <commands and results>
+Known trade-offs: <deferred items>
+Commits: <hashes, if any>
+Approval needed: <yes/no>
 ```
 
-**9c. Fix issues found**
+On approval, use the project's documented status transition. If no status system
+exists, stop after reporting the evidence.
 
-Fix in priority order: critical → medium → minor.
-After fixes, re-run: build + tests + lint.
+## Resume
 
-**9d. Pre-existing test failures**
+For `--from STAGE`:
 
-Check for test failures that predate this ticket:
+1. Read the pipeline state file.
+2. Verify required prior artifacts exist.
+3. Check whether prior artifacts changed since their recorded timestamp/hash.
+4. Re-run cheap validation for stale or edited artifacts.
+5. Resume at the requested milestone only after state is consistent.
 
-```
-Pre-existing failure policy:
-  ✅ Fix if: root cause is clear and low-risk (missing mock, config, typo)
-  ⚠️ Note if: root cause requires deep domain knowledge or risky refactoring
-  ❌ Skip if: fix could break other working features
-
-If fixing:
-  - Fix root cause, not the test (unless test is wrong)
-  - Commit separately from ticket implementation
-  - Re-run full suite → must pass
-
-If noting:
-  - Record in close report as "known issues"
-  - Let user decide whether to fix before close
-```
-
-**9e. Commit implementation changes**
-
-```
-Commit strategy:
-  1. Spec artifacts commit:    feat(scope): {CR-KEY} spec artifacts
-  2. Implementation commits:   feat(scope): {CR-KEY} {what was built}
-  3. Pre-existing fixes:       fix(scope): fix N pre-existing test failures
-  4. Review fixes:             fix(scope): {CR-KEY} code review fixes
-```
-
-Separate commits for traceability. Use the `/commit` skill for each.
-
-### Tech Debt Milestone (10)
-
-```
-1. Load skill:
-   Read mdt skill: /mdt:tech-debt
-
-2. Execute:
-   mdt:tech-debt {CR-KEY}
-
-3. Handle results:
-   - Fix CRITICAL and HIGH items
-   - Record MEDIUM/LOW in debt.md for later
-   - Re-run tests after any fix
-
-4. ralph_done → next milestone
-```
-
-### User Review + Close Milestone (11)
-
-**11a. Build close report**
-
-```
-═══════════════════════════════════════════════════
-  {CR-KEY} — Ready for Review
-═══════════════════════════════════════════════════
-
-## What was built
-  {5-10 line summary}
-
-## Artifacts
-  Spec:  {list {TICKETS_PATH}/{CR-KEY}/*}
-  Code:  {list changed files}
-  Tests: {N} new tests, {N} pre-existing fixed
-
-## Quality gates
-  Build:    ✅ clean
-  Tests:    ✅ {N}/{N} passing ({N} suites)
-  Lint:     ✅ 0 errors
-  Review:   ✅ 0 critical, 0 medium issues
-  Debt:     {N} items (CRITICAL: {N}, HIGH: {N})
-
-## Commits
-  {list git log --oneline for this ticket}
-
-## Durable document updates
-  {list any docs/ files created or updated:
-   design specs, architecture docs, README changes, etc.}
-
-## Known trade-offs
-  {anything deferred, MEDIUM debt items, noted pre-existing failures}
-═══════════════════════════════════════════════════
-```
-
-**11b. Ask user**
-
-```
-Ready for your review. Options:
-  [Approve and close]  — commit any remaining, set Implemented
-  [Request changes]    — describe what needs fixing
-  [See diff]           — show git diff for specific files
-  [Run app]            — start dev server for manual testing
-```
-
-**11c. Handle response**
-
-| Response | Action |
-|----------|--------|
-| Approve | Commit remaining, set status = Implemented |
-| Changes requested | Fix, re-test, re-present at next Ralph iteration |
-| See diff | Show diff, wait for next instruction |
-| Run app | `bun run dev:full`, guide user to test |
-
-**11d. Close (on approval)**
-
-Before setting Implemented, verify close checklist:
-
-```
-Close checklist:
-  ✅ Spec artifacts exist and are complete
-  ✅ All tasks checked in tasks.md
-  ✅ Build clean
-  ✅ All tests green
-  ✅ Lint clean
-  ✅ Code review done (0 critical, 0 medium)
-  ✅ Tech debt checked
-  ✅ Durable docs updated (design, README, etc.)
-  ✅ Changes committed
-  ✅ User approved
-```
-
-All ✅ → `mdt-cli attr {ticket-number} status=implemented`
-
-## Context Management
-
-Single agent, Ralph loop. Context grows with each milestone.
-
-**Recycling strategy:**
-- Each milestone reads artifacts from disk, not from conversation history
-- Spec milestones produce files → next milestone reads them fresh
-- If context gets heavy (>6 milestones in), the Ralph `reflectEvery` checkpoint
-  is a good time to summarize and trim
-- Spec artifacts on disk are always the source of truth, not conversation memory
-
-**Document update tracking:**
-
-During the planning phase, maintain a list of durable documents to update:
-
-```
-Durable documents to update:
-  [ ] docs/design/surfaces/{feature}.spec.md    (UX milestone)
-  [ ] docs/ARCHITECTURE.md                       (if arch changes)
-  [ ] README.md                                  (if user-facing changes)
-  [ ] AGENTS.md                                  (if dev workflow changes)
-  [ ] DEBUG.md                                   (if runtime changes)
-```
-
-Update these during the appropriate milestone. Check off at close.
-
-## `--from` State Validation
-
-When resuming with `--from {stage}`, verify prior artifacts exist:
-
-| --from | Required artifacts |
-|--------|-------------------|
-| requirements | `assess.md` |
-| bdd | `requirements.md` |
-| architecture | `bdd.md` |
-| ux-design | `architecture.md` |
-| tests | `architecture.md` |
-| tasks | `tests.md` |
-| implement | `tasks.md` |
-| code-review | implementation code exists |
-| tech-debt | implementation code exists |
-
-If required artifacts missing → STOP with message:
-```
-Cannot resume from {stage}: missing {artifact}.
-Run earlier stages first or use --skip to override.
-```
-
-## Error Handling
-
-| Condition | Action |
-|-----------|--------|
-| Dirty git tree | Ask user: commit, stash, or abort |
-| Baseline build broken | Note, proceed with warning. Ensure final > baseline. |
-| Spec milestone produces weak artifacts | Self-review catches, fix, retry |
-| Implementation TDD stuck | Max 3 retries per task, then escalate |
-| Build fails after implementation | Fix, max 3 attempts, then escalate |
-| Code review finds critical bugs | Fix, re-test, continue |
-| Pre-existing test failure (complex) | Note in close report, don't rabbit-hole |
-| User requests changes | Fix, re-test, re-present |
-
-## Examples
-
-### Full pipeline
-```
-/mdt:pipeline-e2e ABC-042
-→ All milestones from pre-flight to close
-```
-
-### Resume mid-pipeline
-```
-/mdt:pipeline-e2e ABC-042 --from architecture
-→ Validates requirements.md + bdd.md exist, starts at architecture
-```
-
-### Backend ticket (no UX)
-```
-/mdt:pipeline-e2e ABC-042
-→ Auto-detects no UI, skips UX design milestone
-```
-
-### Skip baseline check
-```
-/mdt:pipeline-e2e ABC-042 --ignore baseline
-→ Skips pre-flight build/test check
-```
-
-### Don't auto-close
-```
-/mdt:pipeline-e2e ABC-042 --no-auto-close
-→ Runs all milestones, stops before setting Implemented
-```
+If state is missing, reconstruct it from artifacts and git history, then ask only
+if reconstruction is ambiguous or risky.

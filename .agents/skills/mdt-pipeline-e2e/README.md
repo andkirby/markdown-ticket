@@ -1,123 +1,71 @@
-# mdt-pipeline-e2e
+# Ticket Pipeline E2E
 
-Full lifecycle pipeline for MDT-managed tickets — spec through implementation to done.
+Project-agnostic ticket lifecycle skill for taking one ticket from discovery to
+reviewed implementation and user-approved close.
 
-## What it does
+## Workflow
 
-Takes a ticket from idea to **Implemented** in a single automated run:
+```mermaid
+flowchart TD
+    A["Input: ticket key, issue URL, file path, or task"] --> B["Pre-flight"]
+    B --> B1["Read project instructions"]
+    B --> B2["Read docs/SKILLS.md if present"]
+    B --> B3["Detect language and tools"]
+    B --> B4["Create or update pipeline state"]
+    B --> B5["Record baseline verification"]
 
-```
-pre-flight → assess → requirements → BDD → architecture → UX design* → tests → tasks
-          → implement → code review → tech-debt → user review → close
-```
+    B5 --> C["Assess"]
+    C --> D["Requirements"]
+    D --> E["Scenarios"]
+    E --> F["Architecture"]
+    F --> G{"UI or interaction change?"}
+    G -->|Yes| H["UX draft in ticket"]
+    H --> HR{"UX reviewer approves?"}
+    HR -->|Revise| H
+    HR -->|Approved| H1["Update durable design docs"]
+    H1 --> I
+    G -->|No| I["Tests"]
+    I --> J["Tasks"]
+    J --> K{"Proceed to implementation?"}
+    K -->|Revise| C
+    K -->|Proceed| K1["Set ticket status to in progress"]
+    K1 --> L["Implement"]
 
-Runs as a **single agent** with a **Ralph loop**. Each iteration is one milestone.
-No sub-agents or teams needed.
+    L --> M["Hard gates"]
+    M --> M1{"Build/typecheck pass?"}
+    M1 -->|No| L
+    M1 -->|Yes| M2{"Tests pass?"}
+    M2 -->|No| L
+    M2 -->|Yes| M3{"Lint/static checks pass?"}
+    M3 -->|No| L
+    M3 -->|Yes| N["Review"]
 
-## Usage
+    N --> O{"Blocking issue?"}
+    O -->|Yes| L
+    O -->|No| P["Debt scan"]
+    P --> Q["Close report"]
+    Q --> R{"User approves?"}
+    R -->|Changes requested| L
+    R -->|Approved| S["Project status transition"]
+    S --> T["Done"]
 
-```
-/mdt:pipeline-e2e ABC-012                          # full auto
-/mdt:pipeline-e2e ABC-012 --from architecture       # resume mid-pipeline
-/mdt:pipeline-e2e ABC-012 --skip assess             # skip specific milestones
-/mdt:pipeline-e2e ABC-012 --no-auto-close           # don't close ticket
-/mdt:pipeline-e2e ABC-012 --ux-force                # force UX design stage
-/mdt:pipeline-e2e ABC-012 --ignore baseline,lint    # skip pre-flight checks
-```
+    B4 -. resume .-> U["--from STAGE"]
+    U --> V["Validate prior artifacts and state"]
+    V --> C
 
-## Milestones
-
-| # | Milestone | What happens | Skill loaded |
-|---|-----------|-------------|-------------|
-| 0 | Pre-flight | Git state, baseline build, load ticket | — |
-| 1 | Assess | Feasibility, scope, risk | `mdt:assess` |
-| 2 | Requirements | Functional + non-functional requirements | `mdt:requirements` |
-| 3 | BDD | Behavior scenarios (Given/When/Then) | `mdt:bdd` |
-| 4 | Architecture | Backend design, module boundaries | `mdt:architecture` |
-| 5 | UX Design | Design specs, state tables, wireframes | `ux-designer-specifier` |
-| 6 | Tests | Test plans | `mdt:tests` |
-| 7 | Tasks | Implementable tasks with TDD structure | `mdt:tasks` |
-| 8 | Implement | TDD execution | `mdt:implement` |
-| 9 | Code Review | Self-review, fix issues, fix pre-existing tests | — |
-| 10 | Tech Debt | Structural issues scan | `mdt:tech-debt` |
-| 11 | User Review + Close | Present to user, close ticket | — |
-
-UX Design (5) is **conditional** — auto-skipped for backend-only tickets.
-
-## Per-milestone pattern
-
-Every milestone follows the same loop:
-
-```
-1. Load skill          → read the relevant SKILL.md
-2. Execute workflow    → produce artifacts
-3. Self-review         → check for gaps, fix
-4. ralph_done          → advance to next milestone
-```
-
-## Key behaviors
-
-### Pre-flight
-- **Dirty git tree blocks the pipeline.** Options: commit, stash, or abort.
-- Baseline build + test + lint check. Recorded for comparison at close.
-- Can skip with `--ignore baseline` if you know the state.
-
-### Spec → Implementation checkpoint
-After all spec milestones pass, the pipeline pauses for user approval before
-starting implementation. Ticket moves to `in_progress` only when implementation starts.
-
-### Pre-existing test failures
-The pipeline fixes simple pre-existing failures (missing mocks, config, typos).
-Complex failures that require deep domain knowledge are **noted, not fixed** — 
-the pipeline doesn't rabbit-hole on unrelated test suites.
-
-### Commit strategy
-Separate commits for traceability:
-1. Spec artifacts
-2. Implementation
-3. Pre-existing test fixes (separate commit)
-4. Code review fixes
-
-### Close checklist
-Before setting `Implemented`, all of these must pass:
-- Spec artifacts exist and complete
-- All tasks checked
-- Build clean
-- All tests green
-- Lint clean
-- Code review done
-- Tech debt checked
-- Durable docs updated
-- Changes committed
-- User approved
-
-### Durable document updates
-The pipeline tracks documents that need updating:
-- `docs/design/surfaces/*.spec.md` — UX milestone
-- `docs/ARCHITECTURE.md` — if architecture changes
-- `README.md` — if user-facing changes
-- `AGENTS.md` / `DEBUG.md` — if dev workflow changes
-
-## Dependencies
-
-This skill builds on:
-- `mdt` — core MDT workflow skills (assess, requirements, bdd, etc.)
-- `mdt-pipeline` — v1 pipeline patterns (Producer/Reviewer quality gates)
-- `ux-designer-specifier` — UX design specs (conditional)
-- `mdt-ux-designer` — project-specific UX context (conditional)
-- `wireloom` — wireframe authoring (conditional)
-- `commit` — conventional commit skill
-
-## File location
-
-```
-.agents/skills/mdt-pipeline-e2e/
-├── SKILL.md     ← you are here
-└── README.md    ← this file
+    B -. optional .-> W["Ralph loop reference"]
+    W -. tools exist .-> X["ralph_start / ralph_done"]
+    W -. no tools .-> Y["plain milestone wording"]
 ```
 
-## Relationship to v1
+## Reference Loading
 
-`mdt-pipeline` (v1) uses a Producer/Reviewer team with quality gates between
-spec stages. mdt-pipeline-e2e replaces the team with a single-agent Ralph loop. Both are
-available — v1 if you have team support, e2e for simpler single-agent execution.
+`SKILL.md` stays lean and loads focused references only when needed:
+
+- `references/ralph-loop.md` for agentic apps with Ralph tooling.
+- `references/language-typescript.md` for TypeScript/JavaScript projects.
+- `references/language-python.md` for Python projects.
+- `references/language-rust.md` for Rust projects.
+- `references/language-go.md` for Go projects.
+
+Project docs always win over generic language references.
