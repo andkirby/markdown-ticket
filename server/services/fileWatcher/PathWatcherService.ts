@@ -540,6 +540,50 @@ export class PathWatcherService extends EventEmitter {
     return watchPath.replace(/\/?$/, '/')
   }
 
+  /**
+   * MDT-183: Stop all watchers for a specific project.
+   * Removes main watcher, document watchers, worktree HEAD watcher, and individual worktree watchers.
+   */
+  async stopProject(projectId: string): Promise<void> {
+    const prefixes = [
+      projectId, // main watcher
+      `${projectId}__document__`, // document watchers
+      `${projectId}__worktree_heads`, // worktree HEAD watcher
+      `${projectId}__worktree__`, // individual worktree watchers
+    ]
+
+    for (const [wid, watcher] of this.watchers.entries()) {
+      if (prefixes.some(prefix => wid === prefix || wid.startsWith(prefix))) {
+        console.warn(`Stopping watcher for project ${projectId}: ${wid}`)
+        this.watchers.delete(wid)
+        try {
+          await watcher.close()
+        }
+        catch (e) {
+          console.error(`Error closing watcher ${wid}:`, e)
+        }
+      }
+    }
+
+    // Clean up worktree watchers for this project
+    for (const [wid, entry] of this.worktreeWatchers.entries()) {
+      if (entry.projectId === projectId) {
+        this.worktreeWatchers.delete(wid)
+        try {
+          await entry.watcher.close()
+        }
+        catch (e) {
+          console.error(`Error closing worktree watcher ${wid}:`, e)
+        }
+      }
+    }
+
+    // Clean up project metadata
+    this.watchPaths.delete(projectId)
+    this.projectRoots.delete(projectId)
+    this.ticketPaths.delete(projectId)
+  }
+
   stop(): void {
     this.watchers.forEach((w, pid) => {
       console.warn(`Stopping file watcher for project: ${pid}`)

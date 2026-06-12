@@ -1,6 +1,6 @@
 import type { Request } from 'express'
-import type { OriginPolicy } from '../security/originPolicy.js'
 import type { ProjectServiceExtension } from '../controllers/ProjectController.js'
+import type { OriginPolicy } from '../security/originPolicy.js'
 import type FileWatcherService from '../services/fileWatcher/index.js'
 import { logger } from '@mdt/shared/utils/server-logger.js'
 import { Router } from 'express'
@@ -81,8 +81,8 @@ export function createSSERouter(
       req.socket.setKeepAlive(true)
     }
 
-    // Add client to file watcher service first (so it's tracked before sending data)
-    fileWatcher.addClient(res, {
+    // Add client to file watcher service (also triggers lazy watcher provisioning)
+    await fileWatcher.addClient(res, {
       canWrite: access.canWrite,
       projectRefs,
     })
@@ -98,17 +98,6 @@ export function createSSERouter(
     })
 
     logger.info(`SSE client connected. Total clients: ${fileWatcher.getClientCount()}`)
-
-    // Handle client disconnect
-    req.on('close', () => {
-      logger.info('SSE client disconnected')
-      fileWatcher.removeClient(res)
-    })
-
-    req.on('aborted', () => {
-      logger.info('SSE client aborted')
-      fileWatcher.removeClient(res)
-    })
   })
 
   return router
@@ -118,10 +107,14 @@ async function resolveSseProjectRefs(
   projectService: ProjectServiceExtension | undefined,
   access: ReturnType<typeof getRequestAccess>,
 ): Promise<string[]> {
-  if (access.canWrite || !projectService) {
+  if (!projectService) {
     return []
   }
 
   const projects = await projectService.getAllProjects()
-  return filterProjectsForAccess(projects, access).flatMap(project => [project.id, project.project.code])
+  const accessibleProjects = access.canWrite
+    ? projects
+    : filterProjectsForAccess(projects, access)
+
+  return accessibleProjects.flatMap(project => [project.id, project.project.code])
 }

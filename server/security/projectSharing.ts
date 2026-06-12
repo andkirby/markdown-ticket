@@ -16,7 +16,7 @@ interface ProjectSharingUpdate {
 const SHARE_ID_PATTERN = /^[\w-]{12,128}$/u
 
 function getProjectSharing(project: Project): ProjectSharingSettings {
-  return project.metadata.sharing ?? { mode: ProjectSharingMode.PRIVATE }
+  return project.metadata?.sharing ?? { mode: ProjectSharingMode.PRIVATE }
 }
 
 export function isWriteAccess(access: RequestAccessContext | undefined): boolean {

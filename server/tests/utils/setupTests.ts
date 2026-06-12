@@ -21,13 +21,13 @@ const shouldSuppressConsole = process.env.DEBUG !== 'true'
 
 globalThis.console = {
   ...console,
-  log: shouldSuppressConsole ? jest.fn() : console.log.bind(console),
+  log: shouldSuppressConsole ? jest.fn() : console.log.bind(console), // eslint-disable-line no-console
 
   error: shouldSuppressConsole ? jest.fn() : console.error.bind(console),
 
   warn: shouldSuppressConsole ? jest.fn() : console.warn.bind(console),
-  info: shouldSuppressConsole ? jest.fn() : console.info.bind(console),
-  debug: shouldSuppressConsole ? jest.fn() : console.debug.bind(console),
+  info: shouldSuppressConsole ? jest.fn() : console.info.bind(console), // eslint-disable-line no-console
+  debug: shouldSuppressConsole ? jest.fn() : console.debug.bind(console), // eslint-disable-line no-console
 }
 
 // Mock process.env for consistent test environment
@@ -85,6 +85,8 @@ export function createMockReqRes(): {
     params: {},
     query: {},
     body: {},
+    // Default to dev-mode write access so project visibility checks pass
+    mdtAccess: { canWrite: true, mode: 'no-auth-dev', projectRefs: [], shareIds: [] },
   }
 
   const res: Partial<Response> = {
