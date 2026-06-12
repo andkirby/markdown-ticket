@@ -1,6 +1,6 @@
 ---
 code: MDT-183
-status: In Progress
+status: Implemented
 dateCreated: 2026-06-11T23:03:52.657Z
 type: Architecture
 priority: High
@@ -96,7 +96,7 @@ relatedTickets: MDT-180
 ### Edge Cases
 - [x] Client connects and disconnects rapidly (debounce watcher start/stop)
 - [x] Client has read-only scope — watchers still created but events filtered
-- [ ] Hot reload (`--hot`) restarts process — lazy init re-runs cleanly
+- [x] Hot reload (`--hot`) restarts process — lazy init re-runs cleanly
 - [x] Multiple browser tabs to same project — shared watchers, not duplicated
 
 ## 5. Verification
