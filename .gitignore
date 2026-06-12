@@ -91,6 +91,12 @@ counter-api/
 **/.*.json
 **/.*.yaml
 /.*/
+!/.agents/
+!/.agents/skills/
+!/.agents/skills/mdt-pipeline-e2e/
+!/.agents/skills/mdt-pipeline-e2e/**
+/.agents/skills/*/
+!/.agents/skills/mdt-pipeline-e2e/
 
 # Task status tracking
 *.tasks-status.yaml
