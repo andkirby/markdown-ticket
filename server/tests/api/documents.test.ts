@@ -555,7 +555,7 @@ describe('documents API Tests (MDT-106)', () => {
     })
 
     it('should validate GET /api/documents/content 400 error response', async () => {
-      const response = await request(app).get('/api/documents/content?projectId=TEST')
+      const response = await request(app).get(`/api/documents/content?projectId=${projectCode}`)
 
       expect(response.status).toBe(400)
       expect(response.body).toHaveProperty('error')

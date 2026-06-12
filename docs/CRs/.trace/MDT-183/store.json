@@ -1,0 +1,377 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-183"
+  },
+  "requirements": [
+    {
+      "id": "BR-1",
+      "kind": "behavior",
+      "text": "Server starts with zero chokidar watchers (registry watcher excepted)",
+      "sourceRef": "MDT-183 §4 Functional",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2",
+      "kind": "behavior",
+      "text": "SSE connection triggers watcher creation for that client's project scope",
+      "sourceRef": "MDT-183 §4 Functional",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3",
+      "kind": "behavior",
+      "text": "Multiple SSE clients for same project share one watcher set",
+      "sourceRef": "MDT-183 §4 Functional",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4",
+      "kind": "behavior",
+      "text": "When all SSE clients for a project disconnect, that project's watchers stop",
+      "sourceRef": "MDT-183 §4 Functional",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-5",
+      "kind": "behavior",
+      "text": "Zombie SSE connections detected and removed within 60s",
+      "sourceRef": "MDT-183 §4 Functional",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-6",
+      "kind": "behavior",
+      "text": "sseClients count reflects live connections only",
+      "sourceRef": "MDT-183 §4 Functional",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C-1",
+      "kind": "constraint",
+      "text": "Server RSS under 300 MB with ≤5 SSE clients and ≤3 active projects",
+      "sourceRef": "MDT-183 §4 Non-Functional",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-2",
+      "kind": "constraint",
+      "text": "No increase in file change detection latency",
+      "sourceRef": "MDT-183 §4 Non-Functional",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-3",
+      "kind": "constraint",
+      "text": "Zero watchers running when no SSE clients connected",
+      "sourceRef": "MDT-183 §4 Non-Functional",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "Debounce watcher start/stop on rapid client connect/disconnect",
+      "sourceRef": "MDT-183 §4 Edge Cases",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-2",
+      "kind": "edge_case",
+      "text": "Lazy init re-runs cleanly after bun --hot process restart",
+      "sourceRef": "MDT-183 §4 Edge Cases",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-3",
+      "kind": "edge_case",
+      "text": "Multiple browser tabs to same project share watchers, not duplicated",
+      "sourceRef": "MDT-183 §4 Edge Cases",
+      "routePolicy": "tests"
+    }
+  ],
+  "scenarios": [],
+  "obligations": [
+    {
+      "id": "OBL-lazy-init",
+      "title": "Server starts with zero project chokidar watchers; watchers created on first SSE client connection",
+      "derivedFrom": [
+        "BR-1",
+        "BR-2"
+      ],
+      "artifactIds": [
+        "ART-path-watcher",
+        "ART-watcher-lifecycle",
+        "ART-server-entry"
+      ],
+      "sourceRef": "MDT-183 §4 Functional: zero watchers at start, SSE triggers creation"
+    },
+    {
+      "id": "OBL-per-project-scope",
+      "title": "Watchers created per project scope derived from SSE client mdtSseScope.projectRefs; shared across clients for same project",
+      "derivedFrom": [
+        "BR-2",
+        "BR-3"
+      ],
+      "artifactIds": [
+        "ART-watcher-lifecycle",
+        "ART-sse-route",
+        "ART-sse-broadcaster"
+      ],
+      "sourceRef": "MDT-183 §4 Functional: per-project watcher scope"
+    },
+    {
+      "id": "OBL-lazy-stop",
+      "title": "When all SSE clients for a project disconnect, that project's chokidar watchers stop and resources release",
+      "derivedFrom": [
+        "BR-4"
+      ],
+      "artifactIds": [
+        "ART-watcher-lifecycle",
+        "ART-sse-broadcaster"
+      ],
+      "sourceRef": "MDT-183 §4 Functional: watchers stop on last disconnect"
+    },
+    {
+      "id": "OBL-zombie-detection",
+      "title": "Heartbeat uses write-error detection: catch write failure to identify zombie connections, remove within 60s",
+      "derivedFrom": [
+        "BR-5",
+        "BR-6"
+      ],
+      "artifactIds": [
+        "ART-sse-broadcaster",
+        "ART-sse-zombie-test"
+      ],
+      "sourceRef": "MDT-183 §4 Functional: zombie detection within 60s"
+    },
+    {
+      "id": "OBL-memory-target",
+      "title": "Server RSS under 300 MB with ≤5 SSE clients and ≤3 active projects; zero watchers when no SSE clients connected",
+      "derivedFrom": [
+        "C-1",
+        "C-3"
+      ],
+      "artifactIds": [
+        "ART-watcher-lifecycle",
+        "ART-path-watcher"
+      ],
+      "sourceRef": "MDT-183 §4 Non-Functional: memory and watcher count"
+    },
+    {
+      "id": "OBL-no-latency-regression",
+      "title": "File change detection latency unchanged from current; lazy watcher startup must not miss events",
+      "derivedFrom": [
+        "C-2"
+      ],
+      "artifactIds": [
+        "ART-path-watcher",
+        "ART-watcher-lifecycle"
+      ],
+      "sourceRef": "MDT-183 §4 Non-Functional: no latency regression"
+    },
+    {
+      "id": "OBL-rapid-connect-debounce",
+      "title": "Debounce watcher start/stop when clients connect and disconnect rapidly to avoid chokidar init/teardown thrashing",
+      "derivedFrom": [
+        "Edge-1"
+      ],
+      "artifactIds": [
+        "ART-watcher-lifecycle"
+      ],
+      "sourceRef": "MDT-183 §4 Edge Cases: rapid connect/disconnect"
+    },
+    {
+      "id": "OBL-hot-reload-clean",
+      "title": "Lazy init re-runs cleanly after bun --hot process restart",
+      "derivedFrom": [
+        "Edge-2"
+      ],
+      "artifactIds": [
+        "ART-server-entry",
+        "ART-watcher-lifecycle"
+      ],
+      "sourceRef": "MDT-183 §4 Edge Cases: hot reload"
+    },
+    {
+      "id": "OBL-shared-watchers",
+      "title": "Multiple SSE clients for same project share one watcher set, not duplicated",
+      "derivedFrom": [
+        "Edge-3",
+        "BR-3"
+      ],
+      "artifactIds": [
+        "ART-watcher-lifecycle",
+        "ART-sse-broadcaster",
+        "ART-watcher-lifecycle-test"
+      ],
+      "sourceRef": "MDT-183 §4 Edge Cases: shared watchers"
+    },
+    {
+      "id": "OBL-facade-refactor",
+      "title": "FileWatcherService facade updated to delegate watcher lifecycle to WatcherLifecycleManager instead of eager init",
+      "derivedFrom": [
+        "BR-1",
+        "BR-2",
+        "BR-4"
+      ],
+      "artifactIds": [
+        "ART-file-watcher-facade",
+        "ART-watcher-lifecycle"
+      ],
+      "sourceRef": "MDT-183 §4: facade coordination refactor"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-path-watcher",
+      "path": "server/services/fileWatcher/PathWatcherService.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-183 §4: watcher lifecycle"
+    },
+    {
+      "id": "ART-sse-broadcaster",
+      "path": "server/services/fileWatcher/SSEBroadcaster.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-183 §4: zombie detection"
+    },
+    {
+      "id": "ART-file-watcher-facade",
+      "path": "server/services/fileWatcher/index.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-183 §4: lazy lifecycle coordination"
+    },
+    {
+      "id": "ART-sse-route",
+      "path": "server/routes/sse.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-183 §4: SSE connection lifecycle"
+    },
+    {
+      "id": "ART-server-entry",
+      "path": "server/server.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-183 §4: startup watcher init removal"
+    },
+    {
+      "id": "ART-watcher-lifecycle",
+      "path": "server/services/fileWatcher/WatcherLifecycleManager.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-183 §2: new component for lazy watcher coordination"
+    },
+    {
+      "id": "ART-sse-zombie-test",
+      "path": "server/tests/sseBroadcaster.zombie.test.ts",
+      "kind": "test",
+      "sourceRef": "MDT-183 §4: zombie detection tests"
+    },
+    {
+      "id": "ART-watcher-lifecycle-test",
+      "path": "server/tests/watcherLifecycle.test.ts",
+      "kind": "test",
+      "sourceRef": "MDT-183 §4: lazy lifecycle tests"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-watcher-lifecycle",
+      "kind": "unit",
+      "title": "WatcherLifecycleManager lazy provisioning",
+      "covers": [
+        "BR-1",
+        "BR-2",
+        "BR-3",
+        "BR-4",
+        "C-3",
+        "Edge-1",
+        "Edge-3"
+      ],
+      "file": "server/tests/watcherLifecycle.test.ts",
+      "sourceRef": "MDT-183 architecture: WatcherLifecycleManager"
+    },
+    {
+      "id": "TEST-sse-zombie",
+      "kind": "unit",
+      "title": "SSEBroadcaster zombie detection via write-error",
+      "covers": [
+        "BR-5",
+        "BR-6"
+      ],
+      "file": "server/tests/sseBroadcaster.zombie.test.ts",
+      "sourceRef": "MDT-183 architecture: SSE zombie detection (D1)"
+    },
+    {
+      "id": "TEST-memory-constraint",
+      "kind": "manual",
+      "title": "Memory constraint verification under SSE load",
+      "covers": [
+        "C-1"
+      ],
+      "file": "server/tests/watcherLifecycle.test.ts",
+      "sourceRef": "MDT-183 §4 Non-Functional: RSS under 300 MB"
+    },
+    {
+      "id": "TEST-latency-constraint",
+      "kind": "integration",
+      "title": "File change detection latency unchanged after lazy watcher",
+      "covers": [
+        "C-2"
+      ],
+      "file": "server/tests/watcherLifecycle.test.ts",
+      "sourceRef": "MDT-183 §4 Non-Functional: no latency regression"
+    },
+    {
+      "id": "TEST-hot-reload-clean",
+      "kind": "integration",
+      "title": "Lazy watcher init re-runs after bun --hot restart",
+      "covers": [
+        "Edge-2"
+      ],
+      "file": "server/tests/watcherLifecycle.test.ts",
+      "sourceRef": "MDT-183 §4 Edge Cases: hot reload"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-1",
+      "title": "Create WatcherLifecycleManager with lazy init and refcount",
+      "ownsArtifactIds": [
+        "ART-watcher-lifecycle",
+        "ART-path-watcher",
+        "ART-watcher-lifecycle-test"
+      ],
+      "makesGreenIds": [
+        "TEST-watcher-lifecycle",
+        "TEST-latency-constraint"
+      ],
+      "sourceRef": "tasks.md#task-1"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Fix SSEBroadcaster zombie detection and heartbeat leak",
+      "ownsArtifactIds": [
+        "ART-sse-broadcaster",
+        "ART-sse-zombie-test"
+      ],
+      "makesGreenIds": [
+        "TEST-sse-zombie"
+      ],
+      "sourceRef": "tasks.md#task-2"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Wire lazy lifecycle into FileWatcherService facade and SSE route",
+      "ownsArtifactIds": [
+        "ART-file-watcher-facade",
+        "ART-sse-route",
+        "ART-server-entry"
+      ],
+      "makesGreenIds": [
+        "TEST-watcher-lifecycle",
+        "TEST-sse-zombie",
+        "TEST-hot-reload-clean",
+        "TEST-memory-constraint"
+      ],
+      "sourceRef": "tasks.md#task-3"
+    }
+  ]
+}
