@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { buildTicketPath, buildTicketSubDocPath } from '../routes'
 import { findProjectByTicketKey, normalizeTicketKey } from '../utils/routing'
 import { extractSubDocPath } from '../utils/subdocPathValidation'
 import { RouteErrorModal } from './RouteErrorModal'
@@ -36,8 +37,8 @@ export function DirectTicketAccess() {
 
         // Redirect to project with ticket modal and optional sub-document path
         const targetPath = subDocPath
-          ? `/prj/${projectCode}/ticket/${normalizedKey}/${subDocPath}`
-          : `/prj/${projectCode}/ticket/${normalizedKey}`
+          ? buildTicketSubDocPath(projectCode, normalizedKey, subDocPath)
+          : buildTicketPath(projectCode, normalizedKey)
 
         navigate(targetPath, { replace: true })
       }

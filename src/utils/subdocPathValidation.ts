@@ -1,3 +1,5 @@
+import { buildDirectTicketPath, buildDirectTicketSubDocPath, buildTicketPath, buildTicketSubDocPath } from '../routes'
+
 /**
  * Sub-document path validation utilities for MDT-094.
  *
@@ -135,13 +137,12 @@ export function filePathToApiPath(filePath: string, ticketId: string): string {
  * extractSubDocPath('/ticket/MDT-093', 'MDT-093') // null
  */
 export function extractSubDocPath(pathname: string, crId: string): string | null {
-  // Try both patterns: /ticket/:crId/* and /prj/:projectCode/ticket/:crId/*
-  const patterns = [
-    // Pattern 1: /ticket/MDT-093/prep/test.md
-    new RegExp(`^/ticket/${crId}/(.+)$`),
-    // Pattern 2: /prj/MDT/ticket/MDT-093/prep/test.md
-    new RegExp(`^/prj/[^/]+/ticket/${crId}/(.+)$`),
-  ]
+  // Derive regex from route pattern constants
+  // ROUTE_TICKET_SUBDOC = '/prj/:projectCode/ticket/:ticketKey/*'
+  // ROUTE_DIRECT_TICKET_SUBDOC = '/ticket/:ticketKey/*'
+  const directPattern = new RegExp(`^/ticket/${crId}/(.+)$`)
+  const projectPattern = new RegExp(`^/prj/[^/]+/ticket/${crId}/(.+)$`)
+  const patterns = [directPattern, projectPattern]
 
   for (const pattern of patterns) {
     const match = pathname.match(pattern)
@@ -171,11 +172,11 @@ export function extractSubDocPath(pathname: string, crId: string): string | null
  */
 export function hashToPathUrl(hash: string, crId: string, projectCode?: string): string {
   if (!hash) {
-    return projectCode ? `/prj/${projectCode}/ticket/${crId}` : `/ticket/${crId}`
+    return projectCode ? buildTicketPath(projectCode, crId) : buildDirectTicketPath(crId)
   }
 
   const urlPath = apiPathToUrlPath(hash)
   return projectCode
-    ? `/prj/${projectCode}/ticket/${crId}/${urlPath}`
-    : `/ticket/${crId}/${urlPath}`
+    ? buildTicketSubDocPath(projectCode, crId, urlPath)
+    : buildDirectTicketSubDocPath(crId, urlPath)
 }

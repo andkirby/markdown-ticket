@@ -1,27 +1,14 @@
-export function buildTicketLink(projectCode: string, ticketKey: string, anchor?: string): string {
-  if (!projectCode?.trim()) {
-    throw new Error('Project code is required')
-  }
-  if (!ticketKey?.trim()) {
-    throw new Error('Ticket key is required')
-  }
-  return `/prj/${projectCode}/ticket/${ticketKey}${anchor || ''}`
-}
+/**
+ * MDT-184: Backward-compatible re-exports from routes.ts.
+ *
+ * Consumers that already import { buildTicketLink, buildDocumentLink }
+ * from this module continue to work. New code should import from routes.ts.
+ *
+ * @deprecated Import from '../routes' instead.
+ */
 
-export function buildDocumentLink(projectCode: string, documentPath: string): string {
-  if (!projectCode?.trim()) {
-    throw new Error('Project code is required')
-  }
-  if (!documentPath?.trim()) {
-    throw new Error('Document path is required')
-  }
-  return `/prj/${projectCode}/documents?file=${encodeURIComponent(documentPath)}`
-}
-
-function _buildProjectLink(projectCode: string, view: 'board' | 'list' | 'documents' = 'board'): string {
-  if (!projectCode?.trim()) {
-    throw new Error('Project code is required')
-  }
-  const basePath = `/prj/${projectCode}`
-  return view === 'board' ? basePath : `${basePath}/${view}`
-}
+export {
+  buildDocumentPath as buildDocumentLink,
+  buildProjectPath as buildProjectLink,
+  buildTicketPath as buildTicketLink,
+} from '../routes'
