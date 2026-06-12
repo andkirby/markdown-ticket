@@ -176,8 +176,8 @@ bash scripts/smart-server.sh 60
 - [x] Browser connect creates watchers (check logs)
 - [x] Browser close removes watchers after debounce (check logs)
 - [x] Full server test suite passes (regression)
-- [ ] Server RSS < 300 MB with 3 active projects (manual)
-- [ ] `bun --hot` restart re-runs lazy init cleanly
+- [x] Server RSS < 300 MB with 3 active projects (manual)
+- [x] `bun --hot` restart re-runs lazy init cleanly
 
 ## Post-Implementation
 
@@ -185,5 +185,5 @@ bash scripts/smart-server.sh 60
 - [x] Scope boundaries respected (no frontend/MCP/shared changes)
 - [x] All unit tests GREEN
 - [x] No leaked `setInterval` (jest exits without `--forceExit`)
-- [ ] Smoke test: open/close browser tab, verify watcher count in logs
-- [ ] Verify F-4 fix: no reconnect cascade in SSE event history
+- [x] Smoke test: open/close browser tab, verify watcher count in logs
+- [x] Verify F-4 fix: no reconnect cascade in SSE event history
