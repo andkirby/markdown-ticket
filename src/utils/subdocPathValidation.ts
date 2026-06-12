@@ -1,4 +1,4 @@
-import { buildDirectTicketPath, buildDirectTicketSubDocPath, buildTicketPath, buildTicketSubDocPath } from '../routes'
+import { buildDirectTicketPath, buildDirectTicketSubDocPath, buildTicketPath, buildTicketSubDocPath, ROUTE_DIRECT_TICKET_SUBDOC, ROUTE_TICKET_SUBDOC, routePatternToRegex } from '../routes'
 
 /**
  * Sub-document path validation utilities for MDT-094.
@@ -137,11 +137,18 @@ export function filePathToApiPath(filePath: string, ticketId: string): string {
  * extractSubDocPath('/ticket/MDT-093', 'MDT-093') // null
  */
 export function extractSubDocPath(pathname: string, crId: string): string | null {
-  // Derive regex from route pattern constants
-  // ROUTE_TICKET_SUBDOC = '/prj/:projectCode/ticket/:ticketKey/*'
-  // ROUTE_DIRECT_TICKET_SUBDOC = '/ticket/:ticketKey/*'
-  const directPattern = new RegExp(`^/ticket/${crId}/(.+)$`)
-  const projectPattern = new RegExp(`^/prj/[^/]+/ticket/${crId}/(.+)$`)
+  // Derive regex from route pattern constants via routePatternToRegex.
+  // The generic regex has [^/]+ for each :param and (.+) for *.
+  // We replace the :ticketKey slot (the [^/]+ after /ticket/) with the literal crId.
+  const directSrc = routePatternToRegex(ROUTE_DIRECT_TICKET_SUBDOC).source
+  const projectSrc = routePatternToRegex(ROUTE_TICKET_SUBDOC).source
+  const directPattern = new RegExp(`^${directSrc.replace('[^/]+', crId)}$`)
+  // For project pattern, replace only the second [^/]+ (after /ticket/)
+  const ticketSeg = '/ticket/'
+  const segIdx = projectSrc.indexOf(ticketSeg)
+  const projectWithId = projectSrc.substring(0, segIdx + ticketSeg.length)
+    + projectSrc.substring(segIdx + ticketSeg.length).replace('[^/]+', crId)
+  const projectPattern = new RegExp(`^${projectWithId}$`)
   const patterns = [directPattern, projectPattern]
 
   for (const pattern of patterns) {
