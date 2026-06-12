@@ -70,10 +70,10 @@ cd server && bunx jest tests/watcherLifecycle.test.ts --no-coverage --testTimeou
 ```
 
 **Done when**:
-- [ ] All 13 watcherLifecycle tests GREEN
-- [ ] `activeWatcherCount()` returns correct count
-- [ ] `refCount(projectId)` returns correct count
-- [ ] 5s debounce fires correctly
+- [x] All 12 watcherLifecycle tests GREEN
+- [x] `activeWatcherCount()` returns correct count
+- [x] `refCount(projectId)` returns correct count
+- [x] 5s debounce fires correctly
 
 ---
 
@@ -113,9 +113,9 @@ cd server && bunx jest tests/sseBroadcaster.zombie.test.ts --no-coverage --testT
 ```
 
 **Done when**:
-- [ ] All 9 zombie detection tests GREEN
-- [ ] `stop()` clears heartbeat interval (no leaked timer)
-- [ ] Backward compat: `destroyed`/`closed` flags still trigger removal without write
+- [x] All 9 zombie detection tests GREEN
+- [x] `stop()` clears heartbeat interval (no leaked timer)
+- [x] Backward compat: `destroyed`/`closed` flags still trigger removal without write
 
 ---
 
@@ -171,19 +171,19 @@ bash scripts/smart-server.sh 60
 ```
 
 **Done when**:
-- [ ] All unit tests GREEN
-- [ ] Server starts with zero watchers (check logs)
-- [ ] Browser connect creates watchers (check logs)
-- [ ] Browser close removes watchers after debounce (check logs)
-- [ ] Full server test suite passes (regression)
+- [x] All unit tests GREEN
+- [x] Server starts with zero watchers (check logs)
+- [x] Browser connect creates watchers (check logs)
+- [x] Browser close removes watchers after debounce (check logs)
+- [x] Full server test suite passes (regression)
 - [ ] Server RSS < 300 MB with 3 active projects (manual)
 - [ ] `bun --hot` restart re-runs lazy init cleanly
 
 ## Post-Implementation
 
-- [ ] No duplication (grep for watcher lifecycle logic outside WatcherLifecycleManager)
-- [ ] Scope boundaries respected (no frontend/MCP/shared changes)
-- [ ] All unit tests GREEN
-- [ ] No leaked `setInterval` (jest exits without `--forceExit`)
+- [x] No duplication (grep for watcher lifecycle logic outside WatcherLifecycleManager)
+- [x] Scope boundaries respected (no frontend/MCP/shared changes)
+- [x] All unit tests GREEN
+- [x] No leaked `setInterval` (jest exits without `--forceExit`)
 - [ ] Smoke test: open/close browser tab, verify watcher count in logs
 - [ ] Verify F-4 fix: no reconnect cascade in SSE event history
