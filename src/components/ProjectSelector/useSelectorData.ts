@@ -150,7 +150,7 @@ export function useSelectorData(options: UseSelectorDataOptions = {}): SelectorD
     }, 300)
 
     persistenceTimerRef.current = timer
-  }, [loadOwnerState, preferences])
+  }, [loadOwnerState])
 
   // Track project usage (BR-5.3, BR-5.4, BR-5.5)
   const trackProjectUsage = useCallback((projectKey: string) => {
@@ -249,7 +249,7 @@ export function useSelectorData(options: UseSelectorDataOptions = {}): SelectorD
   }, [])
 
   const setAccentEnabled = useCallback((enabled: boolean) => {
-    setPreferences(prev => {
+    setPreferences((prev) => {
       const next = { ...prev, accentEnabled: enabled }
       persistPreferences(next)
       return next
@@ -257,7 +257,7 @@ export function useSelectorData(options: UseSelectorDataOptions = {}): SelectorD
   }, [persistPreferences])
 
   const setAccentStyle = useCallback((style: SelectorPreferences['accentStyle']) => {
-    setPreferences(prev => {
+    setPreferences((prev) => {
       const next = { ...prev, accentStyle: style as SelectorPreferences['accentStyle'] }
       persistPreferences(next)
       return next
@@ -265,7 +265,7 @@ export function useSelectorData(options: UseSelectorDataOptions = {}): SelectorD
   }, [persistPreferences])
 
   const setAutocolor = useCallback((enabled: boolean) => {
-    setPreferences(prev => {
+    setPreferences((prev) => {
       const next = { ...prev, autocolor: enabled }
       persistPreferences(next)
       return next
@@ -293,10 +293,13 @@ export function loadLocalPreferences(): Partial<SelectorPreferences> {
     if (stored) {
       const parsed = JSON.parse(stored) as Record<string, unknown>
       const result: Partial<SelectorPreferences> = {}
-      if (typeof parsed.accentEnabled === 'boolean') result.accentEnabled = parsed.accentEnabled
+      if (typeof parsed.accentEnabled === 'boolean')
+        result.accentEnabled = parsed.accentEnabled
       const migratedStyle = migrateAccentStyle(parsed)
-      if (migratedStyle) result.accentStyle = migratedStyle
-      if (typeof parsed.autocolor === 'boolean') result.autocolor = parsed.autocolor
+      if (migratedStyle)
+        result.accentStyle = migratedStyle
+      if (typeof parsed.autocolor === 'boolean')
+        result.autocolor = parsed.autocolor
       return result
     }
   }

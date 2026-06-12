@@ -26,9 +26,9 @@
 
 import * as React from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { cn } from '@/lib/utils'
 import { useAuthSession } from '@/auth/AuthSessionContext'
 import { useProjectManager } from '@/hooks/useProjectManager'
+import { cn } from '@/lib/utils'
 import { getProjectCode } from '@/utils/projectUtils'
 import { TooltipProvider } from '../ui/tooltip'
 import ProjectBrowserPanel from './ProjectBrowserPanel'

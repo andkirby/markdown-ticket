@@ -1,7 +1,7 @@
 import {
+  SafeConfigPathStringSchema,
   SafeConfigStringOptionalSchema,
   SafeConfigStringSchema,
-  SafeConfigPathStringSchema,
 } from '../schema.js'
 
 describe('SEC-001: SafeConfigStringSchema', () => {

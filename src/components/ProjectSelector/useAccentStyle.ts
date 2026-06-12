@@ -24,7 +24,7 @@ export interface AccentStyleResult {
   accentBrightness: AccentBrightness | undefined
 }
 
-export function useAccentStyle(options: UseAccentStyleOptions): AccentStyleResult {
+export function getAccentStyle(options: UseAccentStyleOptions): AccentStyleResult {
   const {
     project,
     accentEnabled = true,

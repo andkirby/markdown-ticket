@@ -4,7 +4,7 @@ export interface AccentPaletteEntry {
   foreground: string
 }
 
-const ACCENT_HEX_PATTERN = /^#[0-9a-fA-F]{6}$/u
+const ACCENT_HEX_PATTERN = /^#[0-9a-f]{6}$/iu
 const LIGHT_FOREGROUND = '#ffffff'
 const DARK_FOREGROUND = '#1a1a1a'
 
@@ -48,15 +48,17 @@ export function normalizeAccentHex(value: string): string {
  */
 export function expandShorthandHex(raw: string): string {
   const trimmed = raw.trim()
-  if (!trimmed) return ''
+  if (!trimmed)
+    return ''
 
   const withHash = trimmed.startsWith('#') ? trimmed : `#${trimmed}`
 
   // Already valid 6-digit
-  if (isValidAccentHex(withHash)) return normalizeAccentHex(withHash)
+  if (isValidAccentHex(withHash))
+    return normalizeAccentHex(withHash)
 
   // 3-char shorthand (#abc → #aabbcc)
-  const shorthand = /^#([0-9a-fA-F]{3})$/u
+  const shorthand = /^#([0-9a-f]{3})$/iu
   const match = shorthand.exec(withHash)
   if (match) {
     const [r, g, b] = match[1]!
@@ -68,7 +70,7 @@ export function expandShorthandHex(raw: string): string {
 
 /** FNV-1a — fast, excellent distribution for short strings */
 function fnv1a(str: string): number {
-  let h = 0x811c9dc5
+  let h = 0x811C9DC5
   for (let i = 0; i < str.length; i++) {
     h ^= str.charCodeAt(i)
     h = Math.imul(h, 0x01000193)
@@ -85,7 +87,8 @@ export function getFallbackAccent(projectCode: string): string {
   }
 
   const cached = fallbackCache.get(normalizedCode)
-  if (cached) return cached
+  if (cached)
+    return cached
 
   const hash = fnv1a(normalizedCode)
   const hue = (hash * 360 / 4294967296) | 0

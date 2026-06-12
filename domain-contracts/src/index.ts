@@ -15,11 +15,11 @@ export * from './config'
 // Export project-related schemas and validation
 export * from './project'
 
+// Export unified search contracts (MDT-179)
+export * from './search'
+
 // Export ticket/CR-related schemas and validation (includes CR_CODE_PATTERN)
 export * from './ticket'
 
 // Export core types and enums
 export * from './types'
-
-// Export unified search contracts (MDT-179)
-export * from './search'

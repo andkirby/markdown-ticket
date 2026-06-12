@@ -300,7 +300,7 @@ export class SubdocumentService {
     }
 
     // Whitelist: alphanumeric, hyphens, underscores, dots (single, within segments)
-    const segmentPattern = /^[a-zA-Z0-9._-]+$/
+    const segmentPattern = /^[\w.-]+$/
     for (const segment of segments) {
       if (!segmentPattern.test(segment)) {
         return false

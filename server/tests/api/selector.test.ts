@@ -11,7 +11,6 @@
 
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import process from 'node:process'
 import { assertBodyHasProperties, assertSuccess, createGetRequest, createPostRequest } from './helpers'
 import { cleanupTestEnvironment, setupTestEnvironment } from './setup'
 

@@ -6,14 +6,14 @@
  * @testid quick-search-modal — modal overlay container
  */
 
+import type { SearchScopeValue } from '@mdt/domain-contracts'
 import type { Project } from '@mdt/shared/models/Project'
 import type { QueryMode } from '@/hooks/useQuickSearch'
+
 import type { Ticket } from '@/types/ticket'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
-
-import type { SearchScopeValue } from '@mdt/domain-contracts'
 import { SearchScope, SearchScopes } from '@mdt/domain-contracts'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Modal, ModalBody } from '@/components/ui/Modal'
 import { useCrossProjectSearch } from '@/hooks/useCrossProjectSearch'
 import { useProjectSearch } from '@/hooks/useProjectSearch'
@@ -39,7 +39,7 @@ export interface QuickSearchModalProps {
 
 export function QuickSearchModal({ isOpen, onClose, tickets, onSelectTicket, onSelectProject, currentProjectCode, projects }: QuickSearchModalProps): React.ReactElement | null {
   const [query, setQuery] = useState('')
-  const { scope, setScope, cycleScope, resetScope } = useSearchScope()
+  const { scope, setScope, cycleScope: _cycleScope, resetScope } = useSearchScope()
 
   const { filteredTickets, selectedIndex, setSelectedIndex } = useQuickSearch({ tickets, query })
   const crossProject = useCrossProjectSearch()
@@ -87,15 +87,14 @@ export function QuickSearchModal({ isOpen, onClose, tickets, onSelectTicket, onS
     else {
       crossProject.cancel()
     }
-    // crossProject is a stable hook return — re-create only on query changes
-  }, [queryMode, queryParts.ticketCode, queryParts.projectCode, queryParts.searchText, invalidProjectCode, crossProject.search, crossProject.cancel])
+  }, [queryMode, queryParts.ticketCode, queryParts.projectCode, queryParts.searchText, invalidProjectCode, crossProject])
 
   // Cleanup cross-project search on close
   useEffect(() => {
     if (!isOpen) {
       crossProject.cancel()
     }
-  }, [isOpen, crossProject.cancel])
+  }, [isOpen, crossProject])
 
   // Reset query and scope when modal opens
   useEffect(() => {
@@ -114,13 +113,13 @@ export function QuickSearchModal({ isOpen, onClose, tickets, onSelectTicket, onS
   )
 
   // Compute total selectable results across all sections (MDT-179: includes project matches, respects scope)
-  const projectCount = (scope === SearchScope.GLOBAL || scope === SearchScope.PROJECTS) && projectMatches.length
-  const scopedProjectResults = (scope === SearchScope.GLOBAL || scope === SearchScope.PROJECTS)
+  const _projectCount = (scope === SearchScope.GLOBAL || scope === SearchScope.PROJECTS) && projectMatches.length
+  const scopedProjectResults = useMemo(() => (scope === SearchScope.GLOBAL || scope === SearchScope.PROJECTS)
     ? projectMatches
-    : []
+    : [], [scope, projectMatches])
   // Scope filtering: hide tickets when scope is projects/documents
   const scopeShowsTickets = scope === SearchScope.GLOBAL || scope === SearchScope.TICKETS
-  const visibleTickets = scopeShowsTickets ? filteredTickets : []
+  const visibleTickets = useMemo(() => scopeShowsTickets ? filteredTickets : [], [scopeShowsTickets, filteredTickets])
   const totalSelectableResults = (queryMode === 'ticket_key' || queryMode === 'project_scope')
     ? filteredCrossProjectResults.length + (queryMode === 'project_scope' ? 0 : visibleTickets.length) + scopedProjectResults.length
     : visibleTickets.length + scopedProjectResults.length
@@ -133,12 +132,12 @@ export function QuickSearchModal({ isOpen, onClose, tickets, onSelectTicket, onS
     else if (totalSelectableResults === 0 && selectedIndex !== 0) {
       setSelectedIndex(0)
     }
-  }, [totalSelectableResults, selectedIndex])
+  }, [totalSelectableResults, selectedIndex, setSelectedIndex])
 
   // Compute section counts for Enter handler dispatch (MDT-179)
   const crossProjectCount = (queryMode === 'ticket_key' || queryMode === 'project_scope') ? filteredCrossProjectResults.length : 0
   const currentProjectCount = queryMode === 'project_scope' ? 0 : visibleTickets.length
-  const scopedProjectCount = scopedProjectResults.length
+  const _scopedProjectCount = scopedProjectResults.length
 
   /** Scopes available for Tab cycling (Documents hidden until doc search is implemented). */
   const cycleableScopes = useMemo(() => SearchScopes.filter((s): s is SearchScopeValue => s !== SearchScope.DOCUMENTS), [])
@@ -203,7 +202,7 @@ export function QuickSearchModal({ isOpen, onClose, tickets, onSelectTicket, onS
       e.preventDefault()
       setSelectedIndex(Math.max(selectedIndex - 1, 0))
     }
-  }, [queryMode, visibleTickets, filteredCrossProjectResults, scopedProjectResults, selectedIndex, totalSelectableResults, onSelectTicket, onSelectProject, onClose, setScope, scope, cycleableScopes, crossProjectCount, currentProjectCount])
+  }, [queryMode, visibleTickets, filteredCrossProjectResults, scopedProjectResults, selectedIndex, totalSelectableResults, onSelectTicket, onSelectProject, onClose, setScope, scope, cycleableScopes, crossProjectCount, currentProjectCount, setSelectedIndex])
 
   const handleSelectTicket = useCallback((ticket: Ticket, targetProjectCode?: string) => {
     onSelectTicket(ticket, targetProjectCode)

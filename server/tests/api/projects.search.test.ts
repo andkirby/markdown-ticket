@@ -15,7 +15,6 @@ import { generateTestProjectCode } from './fixtures/projects'
 import {
   assertBadRequest,
   assertNotFound,
-  assertStatus,
   assertSuccess,
 } from './helpers'
 import { cleanupTestEnvironment, setupTestEnvironment } from './setup'
@@ -47,7 +46,8 @@ describe('POST /api/projects/search — MDT-152', () => {
         type: 'Feature Enhancement',
         content: 'Test content',
       })
-      if (!crResult.success) return
+      if (!crResult.success)
+        return
 
       const res = await request(app)
         .post('/api/projects/search')
@@ -89,7 +89,8 @@ describe('POST /api/projects/search — MDT-152', () => {
         type: 'Feature Enhancement',
         content: 'Test content',
       })
-      if (!crResult.success) return
+      if (!crResult.success)
+        return
 
       const res = await request(app)
         .post('/api/projects/search')
@@ -121,12 +122,15 @@ describe('POST /api/projects/search — MDT-152', () => {
         type: 'Feature Enhancement',
         content: 'Test content',
       })
-      if (!crResult.success) return
+      if (!crResult.success)
+        return
 
       // Extract the number part and strip leading zeros: MDT-001 → MDT-1
       const fullCode = crResult.crCode!
+      // eslint-disable-next-line regexp/no-super-linear-backtracking
       const match = fullCode.match(/^(\w+)-0*(\d+)$/)
-      if (!match) return
+      if (!match)
+        return
       const simplifiedKey = `${match[1]}-${match[2]}`
 
       const res = await request(app)

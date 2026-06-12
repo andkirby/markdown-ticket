@@ -35,7 +35,7 @@ export function SearchScopeBar({ activeScope, onScopeChange, className }: Search
       role="tablist"
       aria-label="Search scope"
     >
-      {VISIBLE_SCOPES.map((scope) => (
+      {VISIBLE_SCOPES.map(scope => (
         <button
           key={scope}
           type="button"

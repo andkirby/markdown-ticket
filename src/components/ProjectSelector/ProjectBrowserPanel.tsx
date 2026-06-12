@@ -293,43 +293,43 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
         {/* Project list */}
         <ScrollArea type="hover" scrollHideDelay={600} className="flex-1 min-h-0 overflow-hidden">
           <div className="p-4">
-          {displayProjects.length === 0
-            ? (
-                <div
-                  data-testid="project-browser-empty-state"
-                  className="text-center py-12 text-gray-500 dark:text-gray-400"
-                >
-                  {searchQuery.trim()
-                    ? 'No projects match your search'
-                    : 'No projects available'}
-                </div>
-              )
-            : (
-                <div
-                  ref={projectGridRef}
-                  className="grid grid-cols-1 md:grid-cols-2 gap-4"
-                  onKeyDown={handleProjectGridKeyDown}
-                >
-                  {displayProjects.map(project => (
-                    <ProjectSelectorCard
-                      key={project.project.code || project.id}
-                      project={project}
-                      isActive={
-                        (project.project.code || project.id) === activeProjectKey
-                      }
-                      onSelect={handleProjectSelect}
-                      showDescription={true}
-                      onFavoriteToggle={onFavoriteToggle}
-                      testIdPrefix="project-browser-card"
-                      onCardKeyDown={handleProjectGridKeyDown}
-                      accentEnabled={preferences.accentEnabled}
-                      accentStyle={preferences.accentStyle}
-                      autocolor={preferences.autocolor}
-                      hasAccent={!!project.selectorState.accent}
-                    />
-                  ))}
-                </div>
-              )}
+            {displayProjects.length === 0
+              ? (
+                  <div
+                    data-testid="project-browser-empty-state"
+                    className="text-center py-12 text-gray-500 dark:text-gray-400"
+                  >
+                    {searchQuery.trim()
+                      ? 'No projects match your search'
+                      : 'No projects available'}
+                  </div>
+                )
+              : (
+                  <div
+                    ref={projectGridRef}
+                    className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                    onKeyDown={handleProjectGridKeyDown}
+                  >
+                    {displayProjects.map(project => (
+                      <ProjectSelectorCard
+                        key={project.project.code || project.id}
+                        project={project}
+                        isActive={
+                          (project.project.code || project.id) === activeProjectKey
+                        }
+                        onSelect={handleProjectSelect}
+                        showDescription={true}
+                        onFavoriteToggle={onFavoriteToggle}
+                        testIdPrefix="project-browser-card"
+                        onCardKeyDown={handleProjectGridKeyDown}
+                        accentEnabled={preferences.accentEnabled}
+                        accentStyle={preferences.accentStyle}
+                        autocolor={preferences.autocolor}
+                        hasAccent={!!project.selectorState.accent}
+                      />
+                    ))}
+                  </div>
+                )}
           </div>
         </ScrollArea>
       </ModalBody>

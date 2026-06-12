@@ -20,7 +20,7 @@ describe('parseCreateTokens', () => {
   // ── Title extraction ──────────────────────────────────────────────
 
   test('quoted title (single quotes)', () => {
-    const result = parseCreateTokens(['feature', "'Fix login bug'"])
+    const result = parseCreateTokens(['feature', '\'Fix login bug\''])
     expect(result.title).toBe('Fix login bug')
     expect(result.slug).toBeNull()
     expect(result.type).toBe(TYPE_FEATURE)
@@ -49,7 +49,7 @@ describe('parseCreateTokens', () => {
   // ── Explicit slug after title ─────────────────────────────────────
 
   test('dashed token after quoted title becomes slug', () => {
-    const result = parseCreateTokens(['feature', "'New feature'", 'custom-slug'])
+    const result = parseCreateTokens(['feature', '\'New feature\'', 'custom-slug'])
     expect(result.title).toBe('New feature')
     expect(result.slug).toBe('custom-slug')
   })
@@ -88,14 +88,14 @@ describe('parseCreateTokens', () => {
   // ── Type and priority parsing ─────────────────────────────────────
 
   test('combined type/priority token', () => {
-    const result = parseCreateTokens(['feature/p2', "'New feature'"])
+    const result = parseCreateTokens(['feature/p2', '\'New feature\''])
     expect(result.type).toBe(TYPE_FEATURE)
     expect(result.priority).toBe(PRIORITY_P2)
     expect(result.title).toBe('New feature')
   })
 
   test('separate type and priority tokens', () => {
-    const result = parseCreateTokens(['high', 'bug', "'Critical crash'"])
+    const result = parseCreateTokens(['high', 'bug', '\'Critical crash\''])
     expect(result.type).toBe(TYPE_BUG)
     expect(result.priority).toBe(PRIORITY_HIGH)
     expect(result.title).toBe('Critical crash')
@@ -104,7 +104,7 @@ describe('parseCreateTokens', () => {
   // ── Defaults ──────────────────────────────────────────────────────
 
   test('defaults to default type and medium priority', () => {
-    const result = parseCreateTokens(["'Just a title'"])
+    const result = parseCreateTokens(['\'Just a title\''])
     expect(result.type).toBe(TYPE_TASK)
     expect(result.priority).toBe(PRIORITY_MEDIUM)
     expect(result.title).toBe('Just a title')

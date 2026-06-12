@@ -1,6 +1,6 @@
+import type { NextFunction, Request, Response } from 'express'
 import type { DocumentController } from '../controllers/DocumentController.js'
 import type { ProjectController } from '../controllers/ProjectController.js'
-import type { NextFunction, Request, Response } from 'express'
 import { Router } from 'express'
 
 /**

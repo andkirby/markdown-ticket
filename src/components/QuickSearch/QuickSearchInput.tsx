@@ -70,7 +70,7 @@ export function QuickSearchInput({ value, onChange, onKeyDown, queryMode, queryP
       {modeLabel && (
         <span
           data-testid="quick-search-mode-indicator"
-        className="search-mode-badge"
+          className="search-mode-badge"
         >
           {modeLabel}
         </span>

@@ -13,7 +13,6 @@
 import type { ProjectWithSelectorState } from './types'
 import * as React from 'react'
 import { cn } from '@/lib/utils'
-import { useAccentStyle } from './useAccentStyle'
 // eslint-disable-next-line no-restricted-imports
 import { Icon } from '../shared/Icon'
 import {
@@ -21,6 +20,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from '../ui/hover-card'
+import { getAccentStyle } from './useAccentStyle'
 
 interface ProjectSelectorChipProps {
   /** Project with selector state to display */
@@ -63,7 +63,7 @@ const ProjectSelectorChip: React.FC<ProjectSelectorChipProps> = ({
 
   const chipClasses = cn('project-chip project-lift group h-12')
 
-  const { style: chipStyle, accentBrightness } = useAccentStyle({
+  const { style: chipStyle, accentBrightness } = getAccentStyle({
     project,
     accentEnabled,
     accentStyle,

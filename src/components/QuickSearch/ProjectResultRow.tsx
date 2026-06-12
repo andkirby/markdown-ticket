@@ -8,8 +8,6 @@
 
 import type { ScoredProject } from '@/hooks/useProjectSearch'
 
-import { cn } from '@/lib/utils'
-
 export interface ProjectResultRowProps {
   scoredProject: ScoredProject
   isSelected: boolean

@@ -6,7 +6,7 @@
  */
 
 import { z } from 'zod'
-import { SearchScope, SearchScopes, SearchResultType, SearchResultTypes } from './types'
+import { SearchResultType, SearchResultTypes, SearchScope, SearchScopes } from './types'
 
 // ---------------------------------------------------------------------------
 // UnifiedSearchRequestSchema

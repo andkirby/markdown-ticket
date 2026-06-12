@@ -145,7 +145,7 @@ describe('Ticket List Enhancements', () => {
 
   test('should list tickets in a target project via --project', async () => {
     // Create a second project with a ticket
-    const project2 = await projectFactory.createProject('empty', {
+    const _project2 = await projectFactory.createProject('empty', {
       code: 'PROJ',
       name: 'Second Project',
     })
