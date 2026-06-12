@@ -21,11 +21,6 @@
 
 ### Under the Hood
 
-**Route Pattern Centralization (MDT-184)**
-- All route paths (`/prj/:projectCode/ticket/:ticketKey`, etc.) are now defined in a single module using React Router's `generatePath`
-- Pattern constants and builder functions are mechanically coupled — they can never get out of sync
-- Automated constraint test ensures no hardcoded path literals leak outside the routes module
-
 **Server Developer Experience**
 - New `smart-server` auto mode switcher detects dev vs prod and adjusts configuration accordingly
 - Config writes hardened with atomic persistence and input validation
