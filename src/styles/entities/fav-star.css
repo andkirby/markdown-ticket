@@ -56,9 +56,19 @@
   transform: rotate(15deg) scale(1.1);
 }
 
-/* Document context — inline opacity fade */
+/* Document context — hidden by default, shown on row hover, always shown when active */
 .fav-star-btn--document {
-  opacity: 0.7;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.group:hover .fav-star-btn--document {
+  opacity: 1;
+}
+
+/* Favorited — always visible */
+.fav-star-btn--document[data-active] {
+  opacity: 1;
 }
 
 .fav-star-btn--document:hover {
