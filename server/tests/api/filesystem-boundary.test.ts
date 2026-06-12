@@ -5,12 +5,30 @@ import * as os from 'node:os'
 import * as path from 'node:path'
 import express from 'express'
 import request from 'supertest'
-import { createSystemRouter } from '../../routes/system'
 import { ProjectController } from '../../controllers/ProjectController'
+import { createSystemRouter } from '../../routes/system'
 
 function createApp(projectRoot: string) {
   const app = express()
   app.use(express.json())
+
+  // RuntimeConfig required by getRuntimeConfig() in system routes
+  app.locals.runtimeConfig = {
+    configDir: projectRoot,
+    nodeEnv: 'test',
+    auth: { token: undefined, mode: 'none' },
+    origins: { allowedOrigins: [] },
+    readSessions: { allowLocalFallback: true },
+    ownerSessions: { maxAgeSeconds: 86400 },
+    system: {
+      devtoolsEnabled: true,
+      isProduction: false,
+      isTest: true,
+      maintenanceEndpointsEnabled: false,
+    },
+    readTokens: { staticScopes: [] },
+  }
+
   const projectService = {
     getAllProjects: jest.fn(async () => [{ id: 'p', project: { path: projectRoot, code: 'P' } }]),
     getSystemDirectories: jest.fn(async (targetPath: string) => ({ currentPath: targetPath, parentPath: '', directories: [] })),

@@ -2,11 +2,16 @@
 
 import express from 'express'
 import request from 'supertest'
+import { buildRuntimeConfig } from '../../config/runtimeConfig'
 import { createSystemRouter } from '../../routes/system'
 
 function appWithSystemRouter() {
   const app = express()
   app.use(express.json())
+
+  // Build runtimeConfig from current env (test sets NODE_ENV before calling this)
+  app.locals.runtimeConfig = buildRuntimeConfig(process.env)
+
   app.use('/api', createSystemRouter(
     { getClientCount: () => 0 } as any,
     { getSystemDirectories: jest.fn() } as any,
