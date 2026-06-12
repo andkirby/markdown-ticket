@@ -128,6 +128,28 @@ function frontendLoggingPlugin() {
   return {
     name: 'frontend-logging',
     configureServer(server) {
+      // Disable Vite HTTP server timeouts for SSE connections
+      // Node.js defaults: keepAliveTimeout=5s, requestTimeout=300s — both kill long-lived SSE
+      server.middlewares.use('/api/events', (req, res, next) => {
+        if (req.headers.accept?.includes('text/event-stream')) {
+          req.setTimeout(0)
+          res.setTimeout(0)
+          if (req.socket) {
+            req.socket.setTimeout(0)
+            req.socket.setKeepAlive(true)
+          }
+        }
+        next()
+      })
+
+      // Also disable server-level timeouts (covers Bun where socket APIs may be no-ops)
+      if (server.httpServer) {
+        server.httpServer.timeout = 0
+        server.httpServer.keepAliveTimeout = 0
+        server.httpServer.requestTimeout = 0
+        server.httpServer.headersTimeout = 0
+      }
+
       server.middlewares.use('/api/frontend/logs/status', (req, res, next) => {
         if (req.method === 'GET') {
           if (rejectNonLocalFrontendLoggingRequest(req, res)) {
