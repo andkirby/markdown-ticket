@@ -37,6 +37,7 @@ export default function CopyPathButton({ path }: CopyPathButtonProps) {
     <button
       type="button"
       className="copy-path-btn"
+      data-copied={copied ? '' : undefined}
       onClick={handleClick}
       title={`Copy path: ${path}`}
       aria-label={`Copy path to clipboard: ${path}`}
