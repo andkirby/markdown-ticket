@@ -343,6 +343,13 @@ export { app }
 // Start server only when run directly (not when imported for testing)
 if (import.meta.url === `file://${process.argv[1]}`) {
   const _server = app.listen(PORT, async () => {
+    // Disable server-level timeouts for SSE support.
+    // Per-request req.setTimeout(0) in the SSE route works on Node.js but is a no-op on Bun.
+    // This server-level fallback ensures SSE survives on both runtimes.
+    _server.timeout = 0
+    _server.keepAliveTimeout = 0
+    _server.requestTimeout = 0
+    _server.headersTimeout = 0
     logger.info(`🚀 Ticket board server running on port ${PORT}`)
     logger.info(`🌐 API endpoints:`)
     logger.info(`   GET  /api/events - Server-Sent Events for real-time updates`)
@@ -358,10 +365,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     await initializeMultiProjectWatchers()
     fileWatcher.startHeartbeat()
   })
-
-  // Note: We intentionally do NOT disable server-level timeouts here.
-  // The SSE route (/api/events) handles this per-request with req.setTimeout(0)
-  // to avoid affecting timeouts for all other routes.
 }
 
 // Graceful shutdown
