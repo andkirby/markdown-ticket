@@ -95,9 +95,7 @@ export default function FavDocuments({
                   )}
                 </div>
               </button>
-              {document.type === 'file' && (
-                <CopyPathButton path={document.path} />
-              )}
+              <CopyPathButton path={document.path} />
               {onToggleFavorite && (
                 <button
                   type="button"

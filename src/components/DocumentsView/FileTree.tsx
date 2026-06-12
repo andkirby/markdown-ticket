@@ -231,9 +231,7 @@ const FileTree = React.forwardRef<FileTreeHandle, FileTreeProps>(({
               </div>
             )}
           </div>
-          {file.type === 'file' && (
-            <CopyPathButton path={file.path} />
-          )}
+          <CopyPathButton path={file.path} />
           {onToggleFavorite && file.path !== './' && (
             <button
               type="button"
