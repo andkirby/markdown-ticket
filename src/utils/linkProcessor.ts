@@ -1,5 +1,6 @@
 import type { ProjectConfig } from '@mdt/shared/models/Project.js'
 import type { LinkContext, NormalizedLink } from './linkNormalization'
+import { buildTicketLink } from './linkBuilder'
 import { createLinkContext, LinkNormalizer } from './linkNormalization'
 
 export enum LinkType {
@@ -86,7 +87,7 @@ export function classifyLink(href: string, currentProject: string): ParsedLink {
     const [, ticketKey, , anchor] = ticketMatch
     return {
       type: LinkType.TICKET,
-      href,
+      href: buildTicketLink(currentProject, ticketKey, anchor),
       text,
       projectCode: currentProject,
       ticketKey,
@@ -100,12 +101,13 @@ export function classifyLink(href: string, currentProject: string): ParsedLink {
   if (crossProjectMatch) {
     const [, projectCode, number, , anchor] = crossProjectMatch
     if (projectCode !== currentProject) {
+      const ticketKey = `${projectCode}-${number}`
       return {
         type: LinkType.CROSS_PROJECT,
-        href,
+        href: buildTicketLink(projectCode, ticketKey, anchor),
         text,
         projectCode,
-        ticketKey: `${projectCode}-${number}`,
+        ticketKey,
         anchor,
         isValid: true,
       }
