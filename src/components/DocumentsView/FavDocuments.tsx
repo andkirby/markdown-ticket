@@ -4,6 +4,7 @@ import { useMemo } from 'react'
 import { cn } from '@/lib/utils'
 // eslint-disable-next-line no-restricted-imports
 import { Icon } from '../shared/Icon'
+import CopyPathButton from './CopyPathButton'
 
 interface FavDocumentsProps {
   documents: DocumentFile[]
@@ -94,6 +95,9 @@ export default function FavDocuments({
                   )}
                 </div>
               </button>
+              {document.type === 'file' && (
+                <CopyPathButton path={document.path} />
+              )}
               {onToggleFavorite && (
                 <button
                   type="button"
