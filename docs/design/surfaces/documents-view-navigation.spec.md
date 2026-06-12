@@ -158,6 +158,9 @@ DocumentsLayout
 - Fav row and tree row star controls preserve the project favorite star active, inactive, hover, focus, title, and accessible-label pattern.
 - Fav row and tree row star controls are trailing actions, not leading icons.
 - Active stars remove favs. Inactive tree stars add favs.
+- Trailing actions (copy path button and fav star) are hidden by default and revealed on row hover via the `group` class and `group:hover` cascade.
+- Active/favorited stars are always visible (via `data-active` attribute) regardless of hover state.
+- Copy path button is a trailing action present on all rows (files and folders) — see `copy-document-path.spec.md`.
 - Selecting a document fav opens the physical file path, expands its tree ancestors, and selects the matching filename tab when applicable.
 - Selecting a folder fav expands and locates the matching folder in the tree.
 - Empty Favs is hidden.
@@ -219,7 +222,7 @@ DocumentsLayout
 | border | `--border` | sidebar divider, header separator, and Favs/Recent/tree divider |
 | focus ring | `--ring` | input and icon-button focus |
 | favorite star | `--star-*` | inactive, active, hover, and active-hover document fav states |
-
+| copy path icon | `--muted-foreground` / `--foreground` / `--primary` | hover-revealed trailing action — see `copy-document-path.spec.md` |
 ## Classes used
 
 | Element | Class | Source |
@@ -230,6 +233,9 @@ DocumentsLayout
 | tree row state | `data-tree-state` proposed | semantic row state: `selected`, `muted`, `disabled`, `located` |
 | fav star | `.fav-star`, `.fav-star--document`, `.active` | shared star icon state for tree and Favs rows |
 | document fav star button | `.document-fav-star-button` | compact focus, hover, and opacity treatment |
+| fav star hover reveal | `.fav-star-btn--document`, `[data-active]` | hidden by default, visible on `group:hover`, always visible when favorited |
+| copy path button | `.copy-path-btn` | hover-revealed trailing action — see `copy-document-path.spec.md` |
+| row hover group | `.group` (Tailwind) | required on all row containers for trailing-action hover cascade |
 | sidebar section | Tailwind inline utilities | compact section spacing and dividers |
 
 ## Extension notes
