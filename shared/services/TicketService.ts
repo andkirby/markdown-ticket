@@ -5,7 +5,6 @@
  */
 
 import type { Project } from '../models/Project.js'
-import { formatCrKey } from '../utils/keyNormalizer.js'
 import type {
   Ticket,
   TicketData,
@@ -32,6 +31,7 @@ import {
   TICKET_UPDATE_ALLOWED_ATTRS,
 } from '../models/Ticket.js'
 import { DEFAULTS } from '../utils/constants.js'
+import { formatCrKey } from '../utils/keyNormalizer.js'
 import { CRService as SharedCRService } from './CRService.js'
 import { ProjectService } from './ProjectService.js'
 import { ServiceError } from './ServiceError.js'
@@ -813,7 +813,7 @@ export class TicketService {
 
     // Replace first H1 with new title
     const updatedContent = content.replace(
-      /^#\s+.+$/m,
+      /^#\s+(?:\S.*|[\t\v\f \xA0\u1680\u2000-\u200A\u202F\u205F\u3000\uFEFF])$/m,
       `# ${newTitle}`,
     )
 

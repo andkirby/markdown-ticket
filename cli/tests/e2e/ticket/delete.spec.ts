@@ -223,6 +223,6 @@ describe('Ticket Delete', () => {
 
     expect(result.exitCode).toBe(0)
     expect(result.stdout).toContain('docs/CRs/')
-    expect(result.stdout).not.toMatch(new RegExp('^/'))
+    expect(result.stdout).not.toMatch(/^\//)
   })
 })

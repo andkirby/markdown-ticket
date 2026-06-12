@@ -50,9 +50,12 @@ export function parseQueryMode(query: string, _scope?: string): QueryMode {
     return 'ticket_key'
 
   // Scope-aware classification
-  if (_scope === 'projects') return 'projects_only'
-  if (_scope === 'documents') return 'documents_only'
-  if (_scope === 'global') return 'global'
+  if (_scope === 'projects')
+    return 'projects_only'
+  if (_scope === 'documents')
+    return 'documents_only'
+  if (_scope === 'global')
+    return 'global'
 
   return 'current_project'
 }

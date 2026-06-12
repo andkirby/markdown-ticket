@@ -45,9 +45,10 @@ export function extractTableOfContents(content: string, headerLevelStart: number
   const contentWithoutCode = stripFencedCodeBlocks(content)
 
   const toc: TocItem[] = []
-  const headingRegex = /^(#{1,6})\s+(.+)$/gm
+  const headingRegex = /^(#{1,6})\s([^\n]+)$/gm
   let match
 
+  // eslint-disable-next-line no-cond-assign
   while ((match = headingRegex.exec(contentWithoutCode)) !== null) {
     const level = match[1].length
     const rawText = match[2].trim()

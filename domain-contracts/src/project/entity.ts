@@ -5,8 +5,8 @@ import {
   ProjectRuntimeFieldsSchema,
   ProjectSchema,
   ProjectSharingMode,
-  ProjectSharingModeSchema,
   ProjectSharingModes,
+  ProjectSharingModeSchema,
   ProjectSharingSettingsSchema,
 } from './schema'
 
@@ -25,9 +25,9 @@ export {
   ProjectRegistryEntrySchema,
   ProjectRegistryProjectSchema,
   ProjectRuntimeFieldsSchema,
-  ProjectSharingMode,
-  ProjectSharingModeSchema,
-  ProjectSharingModes,
-  ProjectSharingSettingsSchema,
   ProjectSchema,
+  ProjectSharingMode,
+  ProjectSharingModes,
+  ProjectSharingModeSchema,
+  ProjectSharingSettingsSchema,
 }

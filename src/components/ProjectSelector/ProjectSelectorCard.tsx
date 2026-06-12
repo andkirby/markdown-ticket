@@ -13,7 +13,6 @@
 import type { ProjectWithSelectorState } from './types'
 import * as React from 'react'
 import { cn } from '@/lib/utils'
-import { useAccentStyle } from './useAccentStyle'
 // eslint-disable-next-line no-restricted-imports
 import { Icon } from '../shared/Icon'
 import {
@@ -21,6 +20,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from '../ui/hover-card'
+import { getAccentStyle } from './useAccentStyle'
 
 interface ProjectSelectorCardProps {
   /** Project with selector state to display */
@@ -101,7 +101,7 @@ const ProjectSelectorCard: React.FC<ProjectSelectorCardProps> = ({
 
   const isProjectBrowserCard = testIdPrefix === 'project-browser-card'
 
-  const { style: cardStyle, accentBrightness } = useAccentStyle({
+  const { style: cardStyle, accentBrightness } = getAccentStyle({
     project,
     accentEnabled,
     accentStyle,

@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
 interface HeaderProps {
@@ -31,7 +31,7 @@ export function Header({ children, className }: HeaderProps) {
 
 /**
  * HeaderContent - single-row flex layout
- * 
+ *
  * Layout:
  * [ leftSection ][ centerSection ] [ rightSection ]
  */

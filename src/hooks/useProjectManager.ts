@@ -1,7 +1,7 @@
 import type { Project, ProjectConfig } from '@mdt/shared/models/Project'
 import type { Ticket } from '../types'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { authFetch, isAuthRequiredResponse, isBackendDownError, isBackendDownResponse } from '../auth/authFetch'
+import { authFetch, isBackendDownError } from '../auth/authFetch'
 import { useAuthSession } from '../auth/AuthSessionContext'
 import { dataLayer } from '../services/dataLayer'
 import { useEventBus } from '../services/eventBus'
@@ -22,10 +22,12 @@ interface UseProjectManagerOptions {
 let _projectsFetchInflight: Promise<Project[]> | null = null
 
 async function fetchProjectsDeduped(): Promise<Project[]> {
-  if (_projectsFetchInflight) return _projectsFetchInflight
+  if (_projectsFetchInflight)
+    return _projectsFetchInflight
   _projectsFetchInflight = authFetch('/api/projects')
     .then(async (res) => {
-      if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`)
+      if (!res.ok)
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`)
       return res.json() as Promise<Project[]>
     })
     .finally(() => { _projectsFetchInflight = null })
@@ -66,7 +68,7 @@ interface UseProjectManagerReturn {
 
 export function useProjectManager(options: UseProjectManagerOptions = {}): UseProjectManagerReturn {
   const { autoSelectFirst = true, handleSSEEvents = false } = options
-  const { accessMode, markBackendDown, markLocked, markProjectListLoaded } = useAuthSession()
+  const { accessMode, markBackendDown, markProjectListLoaded } = useAuthSession()
 
   const [projects, setProjects] = useState<Project[]>([])
   const [selectedProjectValue, setSelectedProjectValue] = useState<Project | null>(null)

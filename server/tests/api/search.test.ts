@@ -70,7 +70,7 @@ describe('POST /api/search — unified search (MDT-179)', () => {
 
     expect(response.status).toBe(200)
     // Should only contain ticket groups
-    const ticketGroups = response.body.groups.filter((g: any) => g.type === 'ticket')
+    const _ticketGroups = response.body.groups.filter((g: any) => g.type === 'ticket')
     const nonTicketGroups = response.body.groups.filter((g: any) => g.type !== 'ticket')
     // Only ticket groups should be present
     expect(nonTicketGroups.length).toBe(0)

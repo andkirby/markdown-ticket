@@ -7,16 +7,13 @@
 
 import { describe, expect, it } from 'bun:test'
 import {
-  ProjectResultItemSchema,
   ResultItemSchema,
-  TicketResultItemSchema,
-  DocumentResultItemSchema,
-  UnifiedSearchRequestSchema,
-  UnifiedSearchResponseSchema,
-  SearchScope,
-  SearchScopes,
   SearchResultType,
   SearchResultTypes,
+  SearchScope,
+  SearchScopes,
+  UnifiedSearchRequestSchema,
+  UnifiedSearchResponseSchema,
 } from '../index'
 
 // ---------------------------------------------------------------------------

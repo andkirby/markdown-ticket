@@ -12,13 +12,13 @@
  * OBL-syntax-highlight-compat, OBL-task-list-plugin
  */
 import { describe, expect, it } from 'bun:test'
+import DOMPurify from 'dompurify'
 import MarkdownIt from 'markdown-it'
 import anchor from 'markdown-it-anchor'
 import { markdownItWireframePlugin } from '../../utils/markdownItWireframePlugin'
-import { slugify } from '../../utils/slugify'
 import { processMermaidBlocks } from '../../utils/mermaid'
+import { slugify } from '../../utils/slugify'
 import { highlightCodeBlocks } from '../../utils/syntaxHighlight'
-import DOMPurify from 'dompurify'
 import { ALLOWED_ATTR, ALLOWED_TAGS } from './domPurifyConfig'
 
 /**
@@ -27,7 +27,7 @@ import { ALLOWED_ATTR, ALLOWED_TAGS } from './domPurifyConfig'
  */
 function createProcessorMd(): MarkdownIt {
   // @ts-expect-error markdown-it-task-lists has no type declarations
-  const taskLists = require('markdown-it-task-lists')
+  const taskLists = require('markdown-it-task-lists') // eslint-disable-line ts/no-require-imports
 
   // @ts-expect-error markdown-it types don't expose all plugin signatures cleanly
   const md = new MarkdownIt({
@@ -243,18 +243,18 @@ describe('useMarkdownProcessor pipeline (markdown-it)', () => {
 
   describe('showdown removal (C3)', () => {
     it('useMarkdownProcessor does not import showdown', async () => {
-      const fs = await import('fs')
-      const path = await import('path')
+      const fs = await import('node:fs')
+      const path = await import('node:path')
       const filePath = path.resolve(__dirname, 'useMarkdownProcessor.ts')
       const content = fs.readFileSync(filePath, 'utf-8')
 
       expect(content).not.toContain('showdown')
-      expect(content).not.toContain("from 'showdown'")
+      expect(content).not.toContain('from \'showdown\'')
     })
 
     it('tableOfContents does not import showdown', async () => {
-      const fs = await import('fs')
-      const path = await import('path')
+      const fs = await import('node:fs')
+      const path = await import('node:path')
       const filePath = path.resolve(__dirname, '../../utils/tableOfContents.ts')
       const content = fs.readFileSync(filePath, 'utf-8')
 
@@ -264,7 +264,7 @@ describe('useMarkdownProcessor pipeline (markdown-it)', () => {
 
   describe('preprocessor pipeline compat (BR-8, OBL-preprocessor-pipeline-compat)', () => {
     it('preprocesses ticket references before markdown-it rendering', () => {
-      const { preprocessMarkdown } = require('../../utils/markdownPreprocessor')
+      const { preprocessMarkdown } = require('../../utils/markdownPreprocessor') // eslint-disable-line ts/no-require-imports
       const linkConfig = { enableAutoLinking: true, enableTicketLinks: true, enableDocumentLinks: true }
       const md = createProcessorMd()
 
@@ -279,7 +279,7 @@ describe('useMarkdownProcessor pipeline (markdown-it)', () => {
     })
 
     it('preprocessor output is valid markdown-it input', () => {
-      const { preprocessMarkdown } = require('../../utils/markdownPreprocessor')
+      const { preprocessMarkdown } = require('../../utils/markdownPreprocessor') // eslint-disable-line ts/no-require-imports
       const linkConfig = { enableAutoLinking: true, enableTicketLinks: true, enableDocumentLinks: true }
       const md = createProcessorMd()
 

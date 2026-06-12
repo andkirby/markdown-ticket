@@ -7,9 +7,9 @@
 
 import type { Request, Response } from 'express'
 
-import { UnifiedSearchRequestSchema, SearchResultType } from '@mdt/domain-contracts'
-
 import type { ProjectController } from './ProjectController'
+
+import { SearchResultType, UnifiedSearchRequestSchema } from '@mdt/domain-contracts'
 
 export class SearchController {
   constructor(private projectController: ProjectController) {}
@@ -85,7 +85,7 @@ export class SearchController {
       })
     }
     catch (error: unknown) {
-      const err = error as Error
+      const _err = error as Error
       console.error('Error in unified search:', error)
       res.status(500).json({ error: 'Internal Server Error', message: 'Failed to search' })
     }
@@ -97,7 +97,8 @@ export class SearchController {
    */
   private async searchProjects(query: string, limit: number): Promise<any[]> {
     const projectService = this.projectController.getProjectService()
-    if (!projectService) return []
+    if (!projectService)
+      return []
 
     const allProjects = await projectService.getAllProjects()
     const terms = query.toLowerCase().trim().split(/\s+/)
@@ -108,19 +109,34 @@ export class SearchController {
         const code = project.project?.code?.toLowerCase() ?? ''
         let score = 0
         for (const term of terms) {
-          if (code === term) { score += 100; continue }
-          if (code.startsWith(term)) { score += 90; continue }
+          if (code === term) {
+            score += 100
+            continue
+          }
+          if (code.startsWith(term)) {
+            score += 90
+            continue
+          }
           const words = name.split(/[^a-z0-9]+/).filter(Boolean)
           let matched = false
           for (const word of words) {
-            if (word === term) { score += 80; matched = true; break }
-            if (word.startsWith(term)) { score += 70; matched = true; break }
+            if (word === term) {
+              score += 80
+              matched = true
+              break
+            }
+            if (word.startsWith(term)) {
+              score += 70
+              matched = true
+              break
+            }
           }
-          if (!matched) return null
+          if (!matched)
+            return null
         }
         return { project, score }
       })
-      .filter((m: any): m is { project: any; score: number } => m !== null)
+      .filter((m: any): m is { project: any, score: number } => m !== null)
       .sort((a: any, b: any) => b.score - a.score)
       .slice(0, limit)
       .map((m: any) => ({
@@ -136,7 +152,8 @@ export class SearchController {
    */
   private async searchTickets(query: string, limit: number): Promise<any[]> {
     const ticketService = this.projectController.getTicketService()
-    if (!ticketService) return []
+    if (!ticketService)
+      return []
 
     try {
       // Use ticket_key mode with the query as-is for broad matching

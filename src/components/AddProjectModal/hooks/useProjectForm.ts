@@ -1,5 +1,5 @@
-import { ProjectValidator } from '@mdt/shared/tools/ProjectValidator'
 import type { ProjectEditFormData } from '@mdt/domain-contracts'
+import { ProjectValidator } from '@mdt/shared/tools/ProjectValidator'
 import { useEffect, useRef, useState } from 'react'
 
 interface ProjectFormData {

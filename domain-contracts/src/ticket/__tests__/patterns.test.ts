@@ -12,9 +12,6 @@ import { describe, expect, it } from 'bun:test'
 import { PROJECT_CODE_PATTERN } from '../../project/schema'
 import {
   CR_CODE_PATTERN,
-} from '../frontmatter'
-// These imports WILL FAIL until the developer implements them (RED phase)
-import {
   PROJECT_SCOPE_INPUT_PATTERN,
   TICKET_KEY_INPUT_PATTERN,
 } from '../frontmatter'

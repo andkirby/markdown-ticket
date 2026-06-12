@@ -1,6 +1,3 @@
-import type { NextFunction, Request, Response } from 'express'
-import { getRequestAccess } from './apiAuth.js'
-
 const PublicReadApiPrefix = {
   DOCUMENTS: '/api/documents',
   EVENTS: '/api/events',
@@ -45,4 +42,3 @@ export function isOwnerOnlyRoute(path: string): boolean {
     || path.startsWith(OwnerOnlyApiPrefix.FILESYSTEM)
     || path.startsWith(OwnerOnlyApiPrefix.READ_TOKENS)
 }
-
