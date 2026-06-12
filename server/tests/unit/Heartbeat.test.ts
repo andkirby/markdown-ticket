@@ -107,7 +107,7 @@ describe('SSEBroadcaster Heartbeat', () => {
       expect(client3.write).toHaveBeenCalled()
     })
 
-    it('should skip clients with headersSent=true', () => {
+    it('should write heartbeat to all clients regardless of headersSent (SSE always has headersSent=true)', () => {
       const client1 = createMockClient({ headersSent: true })
       const client2 = createMockClient({ headersSent: false })
 
@@ -117,7 +117,8 @@ describe('SSEBroadcaster Heartbeat', () => {
       broadcaster.startHeartbeat(1000)
       jest.advanceTimersByTime(1000)
 
-      expect(client1.write).not.toHaveBeenCalled()
+      // MDT-183: Both clients get heartbeat for zombie detection
+      expect(client1.write).toHaveBeenCalled()
       expect(client2.write).toHaveBeenCalled()
     })
 
@@ -217,21 +218,19 @@ describe('SSEBroadcaster Heartbeat', () => {
       expect(client2.write).toHaveBeenCalled()
     })
 
-    it('should allow multiple heartbeat intervals to be started', () => {
+    it('should replace previous heartbeat when called again', () => {
       const client = createMockClient()
       broadcaster.addClient(client)
 
       broadcaster.startHeartbeat(1000)
       broadcaster.startHeartbeat(500)
 
+      // Only the 500ms interval should be active (first was replaced)
       jest.advanceTimersByTime(500)
-      const countAfter500 = client.write.mock.calls.length
+      expect(client.write).toHaveBeenCalledTimes(1)
 
       jest.advanceTimersByTime(500)
-      const countAfter1000 = client.write.mock.calls.length
-
-      // Both intervals should be active
-      expect(countAfter1000).toBeGreaterThan(countAfter500)
+      expect(client.write).toHaveBeenCalledTimes(2)
     })
   })
 

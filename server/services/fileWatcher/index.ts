@@ -1,11 +1,13 @@
 import type { DocumentChangeEventPayload, FileChangeEventPayload, ProjectPath, WorktreeWatcherEntry } from './PathWatcherService.js'
 import type { FileChangeEvent, ResponseLike, SSEEvent, TicketData } from './SSEBroadcaster.js'
+import type { ProjectRegistration } from './WatcherLifecycleManager.js'
 import { EventEmitter } from 'node:events'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import matter from 'gray-matter'
 import { PathWatcherService } from './PathWatcherService.js'
 import { SSEBroadcaster } from './SSEBroadcaster.js'
+import { WatcherLifecycleManager } from './WatcherLifecycleManager.js'
 
 interface FileInvoker {
   invalidateFile: (filePath: string) => void
@@ -40,6 +42,7 @@ interface DocumentChangeEvent {
 class FileWatcherService extends EventEmitter {
   private pathWatcher: PathWatcherService
   private sseBroadcaster: SSEBroadcaster
+  private lifecycleManager: WatcherLifecycleManager
   private fileInvoker: FileInvoker | null = null
 
   /** Backward compatibility: expose watchers map for tests */
@@ -81,6 +84,7 @@ class FileWatcherService extends EventEmitter {
     super()
     this.pathWatcher = new PathWatcherService()
     this.sseBroadcaster = new SSEBroadcaster()
+    this.lifecycleManager = new WatcherLifecycleManager(this.pathWatcher)
     this.setupEventForwarding()
   }
 
@@ -293,19 +297,53 @@ class FileWatcherService extends EventEmitter {
   }
 
   /**
-   * Add an SSE client connection.
+   * Register project metadata for lazy watcher creation.
+   * Called during startup project discovery — no watchers created yet.
    */
-  addClient(response: ResponseLike, scope?: ResponseLike['mdtSseScope']): void {
+  registerProject(project: ProjectRegistration): void {
+    this.lifecycleManager.registerProject(project)
+  }
+
+  /**
+   * Add an SSE client connection and ensure watchers for client's project scope.
+   * The facade owns the client lifecycle — it registers close/error handlers
+   * and delegates removal to the lifecycle manager + broadcaster.
+   */
+  async addClient(response: ResponseLike, scope?: ResponseLike['mdtSseScope']): Promise<void> {
     if (scope) {
       response.mdtSseScope = scope
     }
     this.sseBroadcaster.addClient(response)
+
+    // Register lifecycle handlers — facade is the sole owner of client removal
+    response.on('close', () => this.removeClient(response))
+    response.on('error', () => this.removeClient(response))
+
+    // Lazy watcher provisioning: start watchers for this client's project scope
+    // projectRefs contains both project IDs (e.g. 'markdown-ticket') and codes (e.g. 'MDT')
+    // Filter out pure numeric strings (ticket numbers like '001')
+    const projectIds = scope?.projectRefs?.filter(ref => !/^\d+$/.test(ref)) ?? []
+    if (projectIds.length > 0) {
+      // Generate a unique client ID for lifecycle tracking
+      const clientId = `sse-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+      ;(response as any).__lifecycleClientId = clientId
+      await this.lifecycleManager.ensureWatchers(clientId, projectIds)
+    }
   }
 
   /**
-   * Remove an SSE client connection.
+   * Remove an SSE client connection and release watcher subscriptions.
    */
   removeClient(response: ResponseLike): void {
+    // Release watcher subscriptions before removing from broadcaster
+    const scope = response.mdtSseScope
+    const clientId = (response as any).__lifecycleClientId as string | undefined
+    if (clientId && scope?.projectRefs) {
+      const projectIds = scope.projectRefs.filter(ref => !/^\d+$/.test(ref))
+      if (projectIds.length > 0) {
+        this.lifecycleManager.releaseProject(clientId, projectIds)
+      }
+    }
     this.sseBroadcaster.removeClient(response)
   }
 
@@ -387,6 +425,7 @@ class FileWatcherService extends EventEmitter {
    * Stop all watchers and clean up resources.
    */
   stop(): void {
+    this.lifecycleManager.stop()
     this.pathWatcher.stop()
     this.sseBroadcaster.stop()
   }
