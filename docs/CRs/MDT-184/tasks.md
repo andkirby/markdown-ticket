@@ -54,9 +54,9 @@ bun test src/__tests__/routes.test.ts
 ```
 
 **Done when**:
-- [ ] All pattern constants defined (`ROUTE_PROJECT`, `ROUTE_TICKET`, etc.)
-- [ ] All builder functions exported (`buildProjectPath`, `buildTicketPath`, `buildTicketSubDocPath`, `buildDocumentPath`, `buildDirectTicketPath`, `buildDirectTicketSubDocPath`)
-- [ ] Tests GREEN
+- [x] All pattern constants defined (`ROUTE_PROJECT`, `ROUTE_TICKET`, etc.)
+- [x] All builder functions exported (`buildProjectPath`, `buildTicketPath`, `buildTicketSubDocPath`, `buildDocumentPath`, `buildDirectTicketPath`, `buildDirectTicketSubDocPath`)
+- [x] Tests GREEN
 
 ---
 
@@ -87,9 +87,9 @@ bun test src/utils/linkBuilder.mdt150.test.ts
 ```
 
 **Done when**:
-- [ ] `linkBuilder.ts` imports from `routes.ts`
-- [ ] `/prj/` literal no longer appears in `linkBuilder.ts`
-- [ ] Existing tests pass unchanged
+- [x] `linkBuilder.ts` imports from `routes.ts`
+- [x] `/prj/` literal no longer appears in `linkBuilder.ts`
+- [x] Existing tests pass unchanged
 
 ---
 
@@ -119,9 +119,9 @@ bun test src/utils/linkNormalization.mdt150.test.ts
 ```
 
 **Done when**:
-- [ ] `DEFAULT_WEB_BASE` removed
-- [ ] `buildTicketWebRoute`/`buildDocumentWebRoute` removed or delegate to linkBuilder
-- [ ] Existing tests pass unchanged
+- [x] `DEFAULT_WEB_BASE` removed
+- [x] `buildTicketWebRoute`/`buildDocumentWebRoute` removed or delegate to linkBuilder
+- [x] Existing tests pass unchanged
 
 ---
 
@@ -150,8 +150,8 @@ bun test src/utils/markdownPreprocessor.test.ts src/utils/markdownPreprocessor.m
 ```
 
 **Done when**:
-- [ ] No `/prj/` template literals remain
-- [ ] Existing tests pass unchanged
+- [x] No `/prj/` template literals remain
+- [x] Existing tests pass unchanged
 
 ---
 
@@ -181,8 +181,8 @@ bun test src/components/TicketViewer/useTicketDocumentNavigation.test.tsx
 ```
 
 **Done when**:
-- [ ] No `/prj/` template literals remain
-- [ ] Existing tests pass unchanged
+- [x] No `/prj/` template literals remain
+- [x] Existing tests pass unchanged
 
 ---
 
@@ -211,9 +211,9 @@ bun test src/__tests__/routes.test.ts
 ```
 
 **Done when**:
-- [ ] All `<Route path={...}>` use imported pattern constants
-- [ ] All `navigate()` calls use builder functions
-- [ ] Existing tests pass
+- [x] All `<Route path={...}>` use imported pattern constants
+- [x] All `navigate()` calls use builder functions
+- [x] Existing tests pass
 
 ---
 
@@ -246,10 +246,10 @@ bun test src/__tests__/no-hardcoded-routes.test.ts
 ```
 
 **Done when**:
-- [ ] No `/prj/` template literals remain in any of the 4 files
-- [ ] All `navigate()` calls use builder functions
-- [ ] Existing tests pass
-- [ ] Hardcoded-path constraint test passes
+- [x] No `/prj/` template literals remain in any of the 4 files
+- [x] All `navigate()` calls use builder functions
+- [x] Existing tests pass
+- [x] Hardcoded-path constraint test passes
 
 ---
 
@@ -277,12 +277,12 @@ bun test src/components/TicketViewer/subdocumentPath.test.ts
 ```
 
 **Done when**:
-- [ ] All tests pass
-- [ ] Hardcoded-path scan finds zero violations
+- [x] All tests pass
+- [x] Hardcoded-path scan finds zero violations
 
 ## Post-Implementation
 
-- [ ] No duplication (grep check)
-- [ ] Scope boundaries respected
-- [ ] All unit tests GREEN
+- [x] No duplication (grep check)
+- [x] Scope boundaries respected
+- [x] All unit tests GREEN
 - [ ] Smoke test passes (app loads, ticket navigation works)

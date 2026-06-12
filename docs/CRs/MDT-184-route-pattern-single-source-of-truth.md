@@ -1,6 +1,6 @@
 ---
 code: MDT-184
-status: In Progress
+status: Implemented
 dateCreated: 2026-06-12T21:00:00.000Z
 type: Tech Debt
 priority: Medium
@@ -51,13 +51,13 @@ Introduce a `src/routes.ts` (or extend `linkBuilder.ts`) that:
 
 ## 3. Acceptance Criteria
 
-- [ ] No file outside `routes.ts`/`linkBuilder.ts` contains a hardcoded `/prj/` template literal
-- [ ] `App.tsx` route `path` props use pattern constants
-- [ ] All `navigate()` calls use builder functions
-- [ ] `linkNormalization.ts` delegates to `linkBuilder.ts` instead of reimplementing
-- [ ] Sub-document path builder exists and is used by `useTicketDocumentNavigation.ts`, `DirectTicketAccess.tsx`, `subdocPathValidation.ts`
-- [ ] `markdownPreprocessor.ts` uses builders
-- [ ] Existing tests pass; no behavioral change
+- [x] No file outside `routes.ts`/`linkBuilder.ts` contains a hardcoded `/prj/` template literal
+- [x] `App.tsx` route `path` props use pattern constants
+- [x] All `navigate()` calls use builder functions
+- [x] `linkNormalization.ts` delegates to `linkBuilder.ts` instead of reimplementing
+- [x] Sub-document path builder exists and is used by `useTicketDocumentNavigation.ts`, `DirectTicketAccess.tsx`, `subdocPathValidation.ts`
+- [x] `markdownPreprocessor.ts` uses builders
+- [x] Existing tests pass; no behavioral change
 
 > Architecture trace projection: [architecture.trace.md](./MDT-184/architecture.trace.md)
 > Architecture notes: [architecture.md](./MDT-184/architecture.md)
