@@ -1,6 +1,6 @@
 ---
 code: MDT-184
-status: Open
+status: In Progress
 dateCreated: 2026-06-12T21:00:00.000Z
 type: Tech Debt
 priority: Medium
@@ -58,3 +58,6 @@ Introduce a `src/routes.ts` (or extend `linkBuilder.ts`) that:
 - [ ] Sub-document path builder exists and is used by `useTicketDocumentNavigation.ts`, `DirectTicketAccess.tsx`, `subdocPathValidation.ts`
 - [ ] `markdownPreprocessor.ts` uses builders
 - [ ] Existing tests pass; no behavioral change
+
+> Architecture trace projection: [architecture.trace.md](./MDT-184/architecture.trace.md)
+> Architecture notes: [architecture.md](./MDT-184/architecture.md)
