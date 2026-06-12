@@ -100,7 +100,7 @@ export default function FavDocuments({
                 <button
                   type="button"
                   className="fav-star-btn fav-star-btn--document"
-                  title="Click to unfavorite"
+                  data-active=""
                   aria-label="Toggle favorite"
                   data-testid="document-fav-star"
                   data-document-path={document.path}

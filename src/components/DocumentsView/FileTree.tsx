@@ -236,6 +236,7 @@ const FileTree = React.forwardRef<FileTreeHandle, FileTreeProps>(({
             <button
               type="button"
               className="fav-star-btn fav-star-btn--document"
+              data-active={file.favorite ? '' : undefined}
               onClick={event => handleFavoriteClick(event, file)}
               title={file.favorite ? 'Click to unfavorite' : 'Click to favorite'}
               aria-label="Toggle favorite"
