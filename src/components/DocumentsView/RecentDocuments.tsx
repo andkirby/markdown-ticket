@@ -49,7 +49,7 @@ export default function RecentDocuments({
               key={document.path}
               type="button"
               onClick={() => onSelectDocument(document.path)}
-              className="flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1 text-left text-foreground transition-colors hover:bg-muted"
+              className="group flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1 text-left text-foreground transition-colors hover:bg-muted"
               title={document.path}
               data-testid="document-recent-item"
               data-document-path={document.path}
