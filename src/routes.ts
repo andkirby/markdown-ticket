@@ -12,6 +12,27 @@
 
 import { generatePath } from 'react-router-dom'
 
+// ── Pattern-to-regex helper ───────────────────────────────────────────────
+
+/**
+ * Converts a route pattern (e.g. '/prj/:projectCode/ticket/:ticketKey/*')
+ * into a RegExp that matches concrete paths.
+ *
+ * - `:param` segments become `[^/]+`
+ * - `*` (wildcard) becomes `(.+)`
+ * - Literal characters are escaped
+ *
+ * @param pattern - Route pattern constant (e.g. ROUTE_TICKET_SUBDOC)
+ * @returns RegExp for matching concrete paths
+ */
+export function routePatternToRegex(pattern: string): RegExp {
+  const escaped = pattern
+    .replace(/[.*+?^${}()|[\]\\]/g, '\\$&') // escape regex specials
+    .replace(/:([A-Z_]\w*)/gi, '[^/]+') // replace :params
+    .replace(/\\\*/g, '(.+)') // replace escaped * with capture
+  return new RegExp(`^${escaped}$`)
+}
+
 // ── Pattern constants (used by <Route path={...}> in App.tsx) ─────────────
 
 export const ROUTE_PROJECT = '/prj/:projectCode' as const

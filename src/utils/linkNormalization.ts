@@ -54,8 +54,6 @@ export interface PathResolutionResult {
  * Core link normalization service
  */
 export class LinkNormalizer {
-  /** @deprecated Use routes.ts builders directly */
-  public static readonly DEFAULT_WEB_BASE = '/prj'
   private static readonly SECURITY_VIOLATIONS = {
     PATH_TRAVERSAL: 'Path traversal attempt detected',
     OUTSIDE_BOUNDS: 'Path resolves outside project boundaries',
@@ -442,7 +440,7 @@ export function createLinkContext(params: {
     sourcePath: params.sourcePath,
     projectConfig: params.projectConfig,
     documentPaths: params.documentPaths || [],
-    webBasePath: params.webBasePath || LinkNormalizer.DEFAULT_WEB_BASE,
+    webBasePath: params.webBasePath,
   }
 }
 

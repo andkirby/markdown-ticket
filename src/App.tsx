@@ -29,7 +29,7 @@ import { getSortPreferences, setSortPreferences } from './config/sorting'
 import { useGlobalKeyboard } from './hooks/useGlobalKeyboard'
 import { formatRootViewPageTitle, PageTitlePriority, usePageTitle } from './hooks/usePageTitle'
 import { useProjectManager } from './hooks/useProjectManager'
-import { buildProjectPath, buildTicketPath, ROUTE_DIRECT_TICKET, ROUTE_DIRECT_TICKET_SUBDOC, ROUTE_PROJECT, ROUTE_PROJECT_DOCUMENTS, ROUTE_PROJECT_DOCUMENTS_WILDCARD, ROUTE_PROJECT_LIST, ROUTE_TICKET, ROUTE_TICKET_SUBDOC } from './routes'
+import { buildProjectPath, buildTicketPath, ROUTE_DIRECT_TICKET, ROUTE_DIRECT_TICKET_SUBDOC, ROUTE_PROJECT, ROUTE_PROJECT_DOCUMENTS, ROUTE_PROJECT_DOCUMENTS_WILDCARD, ROUTE_PROJECT_LIST, ROUTE_TICKET, ROUTE_TICKET_SUBDOC, routePatternToRegex } from './routes'
 import { syncSSEAccessMode } from './services/sseClient'
 import { getProjectCode } from './utils/projectUtils'
 import { normalizeTicketKey, setCurrentProject, validateProjectCode } from './utils/routing'
@@ -275,7 +275,8 @@ function ProjectRouteHandler() {
       return
 
     // Check if URL is just /prj/:code (no view suffix)
-    const isRootProjectPath = /^\/prj\/[^/]+$/.test(location.pathname)
+    // Derive from ROUTE_PROJECT pattern constant — MDT-184
+    const isRootProjectPath = routePatternToRegex(ROUTE_PROJECT).test(location.pathname)
 
     if (isRootProjectPath) {
       const lastBoardListMode = localStorage.getItem('lastBoardListMode')
