@@ -1,6 +1,6 @@
 import type { Express } from 'express'
 import type { ProjectServiceExtension } from './controllers/ProjectController.js'
-import type { ProjectPath } from './services/fileWatcher/PathWatcherService.js'
+import type { ProjectRegistration } from './services/fileWatcher/WatcherLifecycleManager.js'
 import * as path from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
@@ -201,7 +201,7 @@ async function initializeMultiProjectWatchers(): Promise<void> {
 
     logger.info(`Found ${projects.length} projects for file watching`)
 
-    const projectPaths: ProjectPath[] = []
+    const projectPaths: ProjectRegistration[] = []
 
     // Add configured projects
     for (const project of projects) {
@@ -245,15 +245,10 @@ async function initializeMultiProjectWatchers(): Promise<void> {
             path: watchPath,
             projectRoot: configPath,
             projectCode: config.project?.code || serverProject.id.toUpperCase(), // MDT-142: Use project code for worktree detection
+            documentPaths,
+            ticketsPath: crPath,
           })
-          logger.info(`✅ Will watch project ${serverProject.project.name} at: ${watchPath}`)
-
-          if (documentPaths.length > 0) {
-            const documentWatcherCount = fileWatcher.initDocumentWatchers(serverProject.id, configPath, documentPaths, crPath)
-            if (documentWatcherCount > 0) {
-              logger.info(`📄 Document watchers initialized for ${serverProject.project.name}: ${documentWatcherCount}`)
-            }
-          }
+          logger.info(`✅ Registered project ${serverProject.project.name} at: ${watchPath}`)
         }
         catch {
           logger.warn(`⚠️  CR directory not found for project ${serverProject.project.name}: ${fullCRPath}`)
@@ -265,28 +260,15 @@ async function initializeMultiProjectWatchers(): Promise<void> {
     }
 
     if (projectPaths.length === 0) {
-      logger.warn('⚠️  No valid project paths found, skipping file watcher initialization')
+      logger.warn('⚠️  No valid project paths found, skipping file watcher registration')
     }
     else {
-      fileWatcher.initMultiProjectWatcher(projectPaths)
-      logger.info(`📡 Multi-project file watchers initialized for ${projectPaths.length} directories`)
-
+      // MDT-183: Register projects for lazy watcher lifecycle (no watchers created yet)
       projectPaths.forEach((project) => {
-        logger.info(`   📂 ${project.id}: ${project.path}`)
+        fileWatcher.registerProject(project)
+        logger.info(`   📂 Registered project ${project.id}: ${project.path}`)
       })
-
-      // MDT-142: Auto-discover and create worktree watchers
-      for (const project of projectPaths) {
-        // Use stored project root, or derive from watch path
-        const projectRoot = project.projectRoot || project.path.replace(/\/?\*\*?\/\*\.md$/, '').replace(/\/[^/]+\/[^/]+$/, '')
-        fileWatcher.initWorktreeWatchers(project.id, projectRoot, project.projectCode)
-          .then((count) => {
-            if (count > 0) {
-              logger.info(`   🌿 ${project.id}: ${count} worktree watcher(s) created`)
-            }
-          })
-          .catch(err => logger.warn(`   🌿 ${project.id}: Failed to init worktree watchers:`, err))
-      }
+      logger.info(`📡 ${projectPaths.length} projects registered for lazy watcher lifecycle`)
     }
 
     // Initialize global registry watcher for project lifecycle events
@@ -360,7 +342,7 @@ export { app }
 
 // Start server only when run directly (not when imported for testing)
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const server = app.listen(PORT, async () => {
+  const _server = app.listen(PORT, async () => {
     logger.info(`🚀 Ticket board server running on port ${PORT}`)
     logger.info(`🌐 API endpoints:`)
     logger.info(`   GET  /api/events - Server-Sent Events for real-time updates`)

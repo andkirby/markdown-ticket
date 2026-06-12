@@ -33,7 +33,7 @@ export interface FileChangeEvent {
 
 /** Response-like object for SSE client connections. */
 export interface ResponseLike {
-  write: (data: string) => void
+  write: (data: string) => boolean | void
   on: (event: string, callback: (...args: unknown[]) => void) => void
   headersSent: boolean
   destroyed?: boolean
@@ -53,11 +53,15 @@ export class SSEBroadcaster extends EventEmitter {
   private clients: Set<ResponseLike> = new Set()
   private eventQueue: SSEEvent[] = []
   private debounceTimers: Map<string, NodeJS.Timeout> = new Map()
+  private heartbeatInterval: NodeJS.Timeout | null = null
 
+  /**
+   * Add a client to the broadcast set.
+   * Lifecycle (close/error handlers) is managed by the facade, not here.
+   * The broadcaster is a pure broadcast medium — it doesn't own connections.
+   */
   addClient(response: ResponseLike): void {
     this.clients.add(response)
-    response.on('close', () => this.removeClient(response))
-    response.on('error', () => this.removeClient(response))
   }
 
   removeClient(response: ResponseLike): void {
@@ -117,21 +121,34 @@ export class SSEBroadcaster extends EventEmitter {
   }
 
   startHeartbeat(intervalMs = 30000): void {
-    setInterval(() => {
+    // Clear any existing heartbeat before starting a new one
+    if (this.heartbeatInterval !== null) {
+      clearInterval(this.heartbeatInterval)
+    }
+
+    this.heartbeatInterval = setInterval(() => {
       const heartbeatEvent: SSEEvent = { type: 'heartbeat', data: { timestamp: Date.now() } }
+      const staleClients: ResponseLike[] = []
       this.clients.forEach((client) => {
         try {
+          // Check flags first (no write needed)
           if (client.destroyed || client.closed) {
-            this.removeClient(client)
+            staleClients.push(client)
             return
           }
-          if (!client.headersSent)
-            this.sendSSEEvent(client, heartbeatEvent)
+          // Write heartbeat — detect zombies via write error or false return
+          const result = client.write(`data: ${JSON.stringify(heartbeatEvent)}\n\n`)
+          if (result === false) {
+            // Write returned false — socket buffer full or broken
+            staleClients.push(client)
+          }
         }
         catch {
-          this.removeClient(client)
+          // Write threw — zombie connection (EPIPE, ECONNRESET, etc.)
+          staleClients.push(client)
         }
       })
+      staleClients.forEach(client => this.removeClient(client))
     }, intervalMs)
   }
 
@@ -144,6 +161,10 @@ export class SSEBroadcaster extends EventEmitter {
   }
 
   stop(): void {
+    if (this.heartbeatInterval !== null) {
+      clearInterval(this.heartbeatInterval)
+      this.heartbeatInterval = null
+    }
     this.debounceTimers.forEach(timer => clearTimeout(timer))
     this.debounceTimers.clear()
     this.clients.forEach((client) => {

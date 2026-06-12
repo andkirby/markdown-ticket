@@ -40,34 +40,13 @@ describe('SSEBroadcaster', () => {
       expect(broadcaster.getClientCount()).toBe(0)
     })
 
-    it('should remove client on close event', () => {
+    it('should not auto-register close/error handlers (facade owns lifecycle)', () => {
       const mockClient = createMockClient()
       broadcaster.addClient(mockClient)
-      expect(broadcaster.getClientCount()).toBe(1)
 
-      // Simulate client close by calling the registered callback
+      // SSEBroadcaster no longer registers close/error handlers — facade does
       const onCalls = (mockClient.on as jest.Mock).mock.calls
-      const closeCallback = onCalls.find((call: unknown[]) => call[0] === 'close')?.[1]
-      if (closeCallback) {
-        closeCallback()
-      }
-
-      expect(broadcaster.getClientCount()).toBe(0)
-    })
-
-    it('should remove client on error event', () => {
-      const mockClient = createMockClient()
-      broadcaster.addClient(mockClient)
-      expect(broadcaster.getClientCount()).toBe(1)
-
-      // Simulate client error by calling the registered callback
-      const onCalls = (mockClient.on as jest.Mock).mock.calls
-      const errorCallback = onCalls.find((call: unknown[]) => call[0] === 'error')?.[1]
-      if (errorCallback) {
-        errorCallback()
-      }
-
-      expect(broadcaster.getClientCount()).toBe(0)
+      expect(onCalls.length).toBe(0)
     })
 
     it('should not add duplicate clients', () => {
@@ -304,7 +283,7 @@ describe('SSEBroadcaster', () => {
       expect(client.write).toHaveBeenCalled()
     })
 
-    it('should skip clients that already sent headers', () => {
+    it('should write heartbeat to all clients including headersSent=true (SSE always has headersSent)', () => {
       const client1 = createMockClient({ headersSent: true })
       const client2 = createMockClient()
       broadcaster.addClient(client1)
@@ -313,7 +292,8 @@ describe('SSEBroadcaster', () => {
       broadcaster.startHeartbeat(5000)
       jest.advanceTimersByTime(5000)
 
-      expect(client1.write).not.toHaveBeenCalled()
+      // MDT-183: Both clients get heartbeat for zombie detection
+      expect(client1.write).toHaveBeenCalled()
       expect(client2.write).toHaveBeenCalled()
     })
 
