@@ -1,5 +1,35 @@
 # Release Notes
 
+## v0.23.0 (2026-06-12)
+
+### Improvements
+
+**Lazy File Watchers and SSE Zombie Detection (MDT-183)**
+- Backend memory usage reduced significantly — file watchers now start on demand instead of all at boot
+- SSE zombie clients are detected and cleaned up automatically, preventing memory leaks from closed browser tabs
+- Server-level timeouts disabled for SSE connections to prevent premature drops through reverse proxies
+- Multiple pre-existing API test failures fixed for better CI reliability
+
+**Copy Document Path**
+- File rows in the Documents view now show a copy-path button on hover
+- Works on both files and folders — click to copy the relative path to clipboard
+- Copy button and favorite star appear on hover to keep the UI clean by default
+
+**Related Ticket Links Fixed**
+- Clicking a related ticket badge (e.g. MDT-167) on a ticket page now navigates to the correct URL instead of appending to the current path
+- Cross-project ticket links also produce correct absolute URLs
+
+### Under the Hood
+
+**Route Pattern Centralization (MDT-184)**
+- All route paths (`/prj/:projectCode/ticket/:ticketKey`, etc.) are now defined in a single module using React Router's `generatePath`
+- Pattern constants and builder functions are mechanically coupled — they can never get out of sync
+- Automated constraint test ensures no hardcoded path literals leak outside the routes module
+
+**Server Developer Experience**
+- New `smart-server` auto mode switcher detects dev vs prod and adjusts configuration accordingly
+- Config writes hardened with atomic persistence and input validation
+
 ## v0.22.0 (2026-06-10)
 
 ### New Features
