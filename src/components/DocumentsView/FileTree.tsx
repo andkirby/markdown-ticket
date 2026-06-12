@@ -196,7 +196,7 @@ const FileTree = React.forwardRef<FileTreeHandle, FileTreeProps>(({
       <div key={file.path}>
         <div
           ref={element => setItemRef(file.path, element)}
-          className={`flex items-center gap-2 px-2 py-1 rounded cursor-pointer hover:bg-muted transition-colors ${
+          className={`group flex items-center gap-2 px-2 py-1 rounded cursor-pointer hover:bg-muted transition-colors ${
             selectedFile === file.path ? 'bg-primary/10 text-primary' : 'text-foreground'
           } ${locatedPath === file.path ? 'ring-1 ring-primary/40' : ''}`}
           style={{ paddingLeft: `${level * 16 + 8}px` }}
