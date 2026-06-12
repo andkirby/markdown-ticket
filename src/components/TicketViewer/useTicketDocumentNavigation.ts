@@ -11,6 +11,7 @@ import type { SubDocument } from '@mdt/shared/models/SubDocument.js'
 import type { Location } from 'react-router-dom'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { buildTicketSubDocPath } from '../../routes'
 import { apiPathToUrlPath, extractSubDocPath, urlPathToApiPath } from '../../utils/subdocPathValidation'
 import { deriveFolderStack, ROOT_DOCUMENT_PATH } from './subdocumentPath'
 
@@ -79,7 +80,7 @@ function initFromPath(
         selectedPath: hash,
         folderStack: deriveFolderStack(hash, subdocuments),
         needsRedirect: true,
-        redirectUrl: `/prj/${projectCode}/ticket/${ticketCode}/${urlPath}`,
+        redirectUrl: buildTicketSubDocPath(projectCode, ticketCode, urlPath),
       }
     }
   }
@@ -165,7 +166,7 @@ export function useTicketDocumentNavigation(
 
     // Update URL to include namespace path for deep linking support
     const urlPath = apiPathToUrlPath(path)
-    navigate(`/prj/${projectCode}/ticket/${ticketCode}/${urlPath}`, { replace: true })
+    navigate(buildTicketSubDocPath(projectCode, ticketCode, urlPath), { replace: true })
   }, [subdocuments, projectCode, ticketCode, navigate])
 
   const confirmPathSwitch = useCallback(() => {

@@ -1,3 +1,5 @@
+import { buildDocumentPathWithAnchor, buildTicketPath, buildTicketSubDocPath } from '../routes'
+
 interface PreprocessorState {
   linkPlaceholders: string[]
   codeBlockPlaceholders: string[]
@@ -124,7 +126,7 @@ function convertTicketReferences(markdown: string, currentProject: string): stri
   const projectPattern = new RegExp(`\\b(${currentProject}-\\d+)\\b`, 'g')
   // Use absolute URLs to prevent Showdown.js from resolving relative to current page
   // Ensure the URLs are explicitly absolute to avoid any relative resolution issues
-  return markdown.replace(projectPattern, `[$1](/prj/${currentProject}/ticket/$1)`)
+  return markdown.replace(projectPattern, (_, ticketRef) => `[${ticketRef}](${buildTicketPath(currentProject, ticketRef)})`)
 }
 
 /**
@@ -177,12 +179,12 @@ function resolveDocumentRef(
   // 1. Ticket key pattern (bare: MDT-151, with .md: MDT-151.md, with suffix: MDT-150-smartlink-doc-urls.md)
   const ticketKeyMatch = pathPart.match(/^([A-Z]+-\d+)(?:-[^/]*?)?\.md$/)
   if (ticketKeyMatch) {
-    return `/prj/${projectCode}/ticket/${ticketKeyMatch[1]}${anchor}`
+    return buildTicketPath(projectCode, ticketKeyMatch[1], anchor)
   }
 
   // 2. Bare filename (no /, no ..) → ticket subdoc URL
   if (!pathPart.includes('/') && !pathPart.includes('..')) {
-    return `/prj/${projectCode}/ticket/${ticketKey}/${pathPart}${anchor}`
+    return buildTicketSubDocPath(projectCode, ticketKey, pathPart, anchor)
   }
 
   // 3. Relative path (contains .. or /)
@@ -201,7 +203,7 @@ function resolveDocumentRef(
   // eslint-disable-next-line regexp/no-super-linear-backtracking, regexp/optimal-quantifier-concatenation
   const resolvedTicketMatch = resolvedPath.match(/^([A-Z]+-\d+)[^/]*\.md$/)
   if (resolvedTicketMatch) {
-    return `/prj/${projectCode}/ticket/${resolvedTicketMatch[1]}${anchor}`
+    return buildTicketPath(projectCode, resolvedTicketMatch[1], anchor)
   }
 
   // Check if resolved path is inside the current ticket subdoc directory
@@ -213,7 +215,7 @@ function resolveDocumentRef(
     if (subPath.startsWith(subdocPrefix)) {
       subPath = subPath.slice(subdocPrefix.length)
     }
-    return `/prj/${projectCode}/ticket/${ticketKey}/${subPath}${anchor}`
+    return buildTicketSubDocPath(projectCode, ticketKey, subPath, anchor)
   }
 
   // Path escapes the tickets directory → documents view
@@ -224,7 +226,7 @@ function resolveDocumentRef(
   // For a path like "docs/README.md" (already has a prefix), use as-is
   const docsPrefix = tp.split('/').slice(0, -1).join('/') // e.g., "docs" from "docs/CRs"
   const fullPath = docsPrefix ? `${docsPrefix}/${resolvedPath}` : resolvedPath
-  return `/prj/${projectCode}/documents?file=${encodeURIComponent(fullPath)}${anchor}`
+  return buildDocumentPathWithAnchor(projectCode, fullPath, anchor)
 }
 
 /**

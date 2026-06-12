@@ -7,6 +7,7 @@
 
 import type { ProjectConfig } from '@mdt/shared/models/Project.js'
 import { basename, dirname, extname, normalize, relative, resolve, sep } from '@mdt/shared/utils/path-browser.js'
+import { buildDocumentPath, buildTicketPath } from '../routes'
 
 export interface LinkContext {
   /** Current project code */
@@ -53,6 +54,7 @@ export interface PathResolutionResult {
  * Core link normalization service
  */
 export class LinkNormalizer {
+  /** @deprecated Use routes.ts builders directly */
   public static readonly DEFAULT_WEB_BASE = '/prj'
   private static readonly SECURITY_VIOLATIONS = {
     PATH_TRAVERSAL: 'Path traversal attempt detected',
@@ -154,17 +156,14 @@ export class LinkNormalizer {
    * Build web route for a document link
    */
   static buildDocumentWebRoute(projectCode: string, documentPath: string): string {
-    const webBase = this.DEFAULT_WEB_BASE
-    const encodedPath = encodeURIComponent(documentPath)
-    return `${webBase}/${projectCode}/documents?file=${encodedPath}`
+    return buildDocumentPath(projectCode, documentPath)
   }
 
   /**
    * Build web route for a ticket link
    */
   static buildTicketWebRoute(projectCode: string, ticketKey: string, anchor?: string): string {
-    const webBase = this.DEFAULT_WEB_BASE
-    return `${webBase}/${projectCode}/ticket/${ticketKey}${anchor || ''}`
+    return buildTicketPath(projectCode, ticketKey, anchor)
   }
 
   /**

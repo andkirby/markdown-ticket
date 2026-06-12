@@ -29,6 +29,7 @@ import { getSortPreferences, setSortPreferences } from './config/sorting'
 import { useGlobalKeyboard } from './hooks/useGlobalKeyboard'
 import { formatRootViewPageTitle, PageTitlePriority, usePageTitle } from './hooks/usePageTitle'
 import { useProjectManager } from './hooks/useProjectManager'
+import { buildProjectPath, buildTicketPath, ROUTE_DIRECT_TICKET, ROUTE_DIRECT_TICKET_SUBDOC, ROUTE_PROJECT, ROUTE_PROJECT_DOCUMENTS, ROUTE_PROJECT_DOCUMENTS_WILDCARD, ROUTE_PROJECT_LIST, ROUTE_TICKET, ROUTE_TICKET_SUBDOC } from './routes'
 import { syncSSEAccessMode } from './services/sseClient'
 import { getProjectCode } from './utils/projectUtils'
 import { normalizeTicketKey, setCurrentProject, validateProjectCode } from './utils/routing'
@@ -281,7 +282,7 @@ function ProjectRouteHandler() {
 
       // If user's last preference was list view, navigate to it
       if (lastBoardListMode === 'list') {
-        navigate(`/prj/${projectCode}/list`, { replace: true })
+        navigate(buildProjectPath(projectCode, 'list'), { replace: true })
       }
       // Otherwise stay on board view (default)
     }
@@ -310,7 +311,7 @@ function ProjectRouteHandler() {
   }, [location.pathname, tickets, projectsLoading, selectedProject])
 
   const handleViewModeChange = (mode: 'board' | 'list' | 'documents') => {
-    const basePath = `/prj/${projectCode}`
+    const basePath = buildProjectPath(projectCode)
     const newPath = mode === 'board' ? basePath : `${basePath}/${mode}`
 
     // Store view mode preferences
@@ -327,12 +328,12 @@ function ProjectRouteHandler() {
   const handleTicketClick = (ticket: Ticket, targetProjectCode?: string) => {
     const ticketProject = targetProjectCode || projectCode
     const viewParam = viewMode !== 'board' ? `?view=${viewMode}` : ''
-    navigate(`/prj/${ticketProject}/ticket/${ticket.code}${viewParam}`)
+    navigate(`${buildTicketPath(ticketProject, ticket.code)}${viewParam}`)
   }
 
   const handleTicketClose = () => {
     const viewContext = searchParams.get('view') || 'board'
-    const basePath = `/prj/${projectCode}`
+    const basePath = buildProjectPath(projectCode)
     const targetPath = viewContext === 'board' ? basePath : `${basePath}/${viewContext}`
     navigate(targetPath)
   }
@@ -507,7 +508,7 @@ function ProjectRouteHandler() {
         onSelectProject={(project) => {
           const code = project.project?.code
           if (code) {
-            navigate(`/prj/${code}`)
+            navigate(buildProjectPath(code))
           }
         }}
         currentProjectCode={projectCode}
@@ -566,7 +567,7 @@ function ShareRouteHandler() {
 
         markReadOnly()
         syncSSEAccessMode('read-only', { forceReconnect: true })
-        navigate(`/prj/${projectCode}`, { replace: true })
+        navigate(buildProjectPath(projectCode), { replace: true })
       }
       catch (err) {
         if (cancelled) {
@@ -643,7 +644,7 @@ function InviteRouteHandler() {
 
         markReadOnly()
         syncSSEAccessMode('read-only', { forceReconnect: true })
-        navigate(`/prj/${projectCode}`, { replace: true })
+        navigate(buildProjectPath(projectCode), { replace: true })
       }
       catch (err) {
         if (cancelled) {
@@ -730,17 +731,17 @@ function App() {
           <Route path="/share/:shareId" element={<ShareRouteHandler />} />
           <Route path="/invite/:code" element={<InviteRouteHandler />} />
           <Route path="/:ticketKey" element={<DirectTicketAccess />} />
-          <Route path="/prj/:projectCode" element={<ProjectRouteHandler />} />
-          <Route path="/prj/:projectCode/list" element={<ProjectRouteHandler />} />
-          <Route path="/prj/:projectCode/documents" element={<ProjectRouteHandler />} />
+          <Route path={ROUTE_PROJECT} element={<ProjectRouteHandler />} />
+          <Route path={ROUTE_PROJECT_LIST} element={<ProjectRouteHandler />} />
+          <Route path={ROUTE_PROJECT_DOCUMENTS} element={<ProjectRouteHandler />} />
           {/* MDT-150: Path-style document routes for SmartLink resolution */}
-          <Route path="/prj/:projectCode/documents/*" element={<ProjectRouteHandler />} />
+          <Route path={ROUTE_PROJECT_DOCUMENTS_WILDCARD} element={<ProjectRouteHandler />} />
           {/* MDT-094: Unified route for tickets with optional sub-document path */}
-          <Route path="/prj/:projectCode/ticket/:ticketKey/*" element={<ProjectRouteHandler />} />
-          <Route path="/prj/:projectCode/ticket/:ticketKey" element={<ProjectRouteHandler />} />
-          <Route path="/ticket/:ticketKey" element={<DirectTicketAccess />} />
+          <Route path={ROUTE_TICKET_SUBDOC} element={<ProjectRouteHandler />} />
+          <Route path={ROUTE_TICKET} element={<ProjectRouteHandler />} />
+          <Route path={ROUTE_DIRECT_TICKET} element={<DirectTicketAccess />} />
           {/* MDT-094: Direct ticket access with sub-document path */}
-          <Route path="/ticket/:ticketKey/*" element={<DirectTicketAccess />} />
+          <Route path={ROUTE_DIRECT_TICKET_SUBDOC} element={<DirectTicketAccess />} />
           <Route path="*" element={<RouteErrorModal error="Page not found" />} />
         </Routes>
       </BrowserRouter>
