@@ -1,4 +1,5 @@
 import { ChevronDown, ChevronRight, File } from 'lucide-react'
+import CopyPathButton from './CopyPathButton'
 
 interface RecentDocument {
   path: string
@@ -64,6 +65,7 @@ export default function RecentDocuments({
                   </div>
                 )}
               </div>
+              <CopyPathButton path={document.path} />
             </button>
           ))}
         </div>
