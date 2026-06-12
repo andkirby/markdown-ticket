@@ -29,6 +29,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useAuthSession } from '@/auth/AuthSessionContext'
 import { useProjectManager } from '@/hooks/useProjectManager'
 import { cn } from '@/lib/utils'
+import { buildProjectPath } from '@/routes'
 import { getProjectCode } from '@/utils/projectUtils'
 import { TooltipProvider } from '../ui/tooltip'
 import ProjectBrowserPanel from './ProjectBrowserPanel'
@@ -112,7 +113,7 @@ function ProjectSelector({ className = '' }: { className?: string }) {
 
       // Preserve current view mode when switching projects
       const lastViewMode = localStorage.getItem('lastViewMode') || 'board'
-      const basePath = `/prj/${projectKey}`
+      const basePath = buildProjectPath(projectKey)
       const newPath = lastViewMode === 'board' ? basePath : `${basePath}/${lastViewMode}`
       navigate(newPath)
 

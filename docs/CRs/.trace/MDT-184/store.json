@@ -224,6 +224,135 @@
       "sourceRef": "Migrate navigate() to builders"
     }
   ],
-  "testPlans": [],
-  "tasks": []
+  "testPlans": [
+    {
+      "id": "TEST-routes-patterns",
+      "kind": "unit",
+      "title": "Route pattern constants and builder functions produce correct paths",
+      "covers": [
+        "BR-1",
+        "BR-2",
+        "BR-3"
+      ],
+      "file": "src/__tests__/routes.test.ts",
+      "sourceRef": "architecture.md: Module Boundaries"
+    },
+    {
+      "id": "TEST-no-hardcoded-paths",
+      "kind": "unit",
+      "title": "No /prj/ hardcoded paths outside routes.ts",
+      "covers": [
+        "C-1"
+      ],
+      "file": "src/__tests__/no-hardcoded-routes.test.ts",
+      "sourceRef": "architecture.md: Invariants"
+    },
+    {
+      "id": "TEST-existing-tests-pass",
+      "kind": "unit",
+      "title": "Existing linkBuilder, linkProcessor, markdownPreprocessor tests pass unchanged",
+      "covers": [
+        "C-3",
+        "C-2"
+      ],
+      "file": "src/utils/linkBuilder.mdt150.test.ts",
+      "sourceRef": "architecture.md: Overview"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-1",
+      "title": "Create routes.ts with pattern constants and builder functions",
+      "ownsArtifactIds": [
+        "ART-routes"
+      ],
+      "makesGreenIds": [
+        "TEST-routes-patterns"
+      ],
+      "sourceRef": "tasks.md#task-1"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Refactor linkNormalization.ts to remove DEFAULT_WEB_BASE and delegate to linkBuilder",
+      "ownsArtifactIds": [
+        "ART-link-normalizer"
+      ],
+      "makesGreenIds": [
+        "TEST-existing-tests-pass"
+      ],
+      "sourceRef": "tasks.md#task-3"
+    },
+    {
+      "id": "TASK-4",
+      "title": "Migrate markdownPreprocessor.ts to use builders",
+      "ownsArtifactIds": [
+        "ART-markdown-preprocessor"
+      ],
+      "makesGreenIds": [
+        "TEST-existing-tests-pass"
+      ],
+      "sourceRef": "tasks.md#task-4"
+    },
+    {
+      "id": "TASK-5",
+      "title": "Migrate subdocPathValidation.ts to use builders and derive regex from patterns",
+      "ownsArtifactIds": [
+        "ART-subdoc-validation"
+      ],
+      "makesGreenIds": [
+        "TEST-existing-tests-pass"
+      ],
+      "sourceRef": "tasks.md#task-5"
+    },
+    {
+      "id": "TASK-6",
+      "title": "Migrate App.tsx route definitions and navigate() calls to use route constants and builders",
+      "ownsArtifactIds": [
+        "ART-app"
+      ],
+      "makesGreenIds": [
+        "TEST-routes-patterns",
+        "TEST-existing-tests-pass"
+      ],
+      "sourceRef": "tasks.md#task-6"
+    },
+    {
+      "id": "TASK-7",
+      "title": "Migrate component navigate() calls to builders (DirectTicketAccess, useTicketDocumentNavigation, ProjectSelector, RedirectToCurrentProject)",
+      "ownsArtifactIds": [
+        "ART-direct-ticket",
+        "ART-ticket-doc-nav",
+        "ART-project-selector",
+        "ART-redirect-component"
+      ],
+      "makesGreenIds": [
+        "TEST-existing-tests-pass",
+        "TEST-no-hardcoded-paths"
+      ],
+      "sourceRef": "tasks.md#task-7"
+    },
+    {
+      "id": "TASK-8",
+      "title": "Run full test suite and verify no hardcoded /prj/ violations remain",
+      "ownsArtifactIds": [
+        "ART-routes"
+      ],
+      "makesGreenIds": [
+        "TEST-no-hardcoded-paths"
+      ],
+      "sourceRef": "tasks.md#task-8"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Refactor linkBuilder.ts to delegate to routes.ts",
+      "ownsArtifactIds": [
+        "ART-link-builder",
+        "ART-link-processor"
+      ],
+      "makesGreenIds": [
+        "TEST-existing-tests-pass"
+      ],
+      "sourceRef": "tasks.md#task-2"
+    }
+  ]
 }

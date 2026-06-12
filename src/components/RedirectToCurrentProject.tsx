@@ -5,6 +5,7 @@ import { authFetch } from '../auth/authFetch'
 import { useAuthSession } from '../auth/AuthSessionContext'
 import { useProjectManager } from '../hooks/useProjectManager'
 import { useTheme } from '../hooks/useTheme'
+import { buildProjectPath } from '../routes'
 import { getProjectCode } from '../utils/projectUtils'
 import { getCurrentProject } from '../utils/routing'
 import { AddProjectModal } from './AddProjectModal'
@@ -85,12 +86,12 @@ export function RedirectToCurrentProject() {
     const currentProject = getCurrentProject()
 
     if (currentProject && projects.some(p => getProjectCode(p) === currentProject)) {
-      navigate(`/prj/${currentProject}`, { replace: true })
+      navigate(buildProjectPath(currentProject), { replace: true })
     }
     else if (projects.length > 0) {
       // No current project or invalid project, redirect to first available
       const firstProjectCode = getProjectCode(projects[0])
-      navigate(`/prj/${firstProjectCode}`, { replace: true })
+      navigate(buildProjectPath(firstProjectCode), { replace: true })
     }
     else {
       // No projects available, stay on root and show empty state
@@ -393,7 +394,7 @@ services:
               // Redirect to the new project
               if (projects.length > 0) {
                 const firstProjectCode = getProjectCode(projects[0])
-                navigate(`/prj/${firstProjectCode}`, { replace: true })
+                navigate(buildProjectPath(firstProjectCode), { replace: true })
               }
             }}
           />

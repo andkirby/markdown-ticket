@@ -159,8 +159,8 @@ describe('RelationshipBadge', () => {
       // SmartLink renders an anchor for ticket links
       const link = screen.getByText('TEST-100').closest('a')
       expect(link).toBeTruthy()
-      // href is relative to current route: /prj/TEST resolves TEST-100 to /prj/TEST/TEST-100
-      expect(link?.getAttribute('href')).toBe('/prj/TEST/TEST-100')
+      // href is now absolute via buildTicketPath
+      expect(link?.getAttribute('href')).toBe('/prj/TEST/ticket/TEST-100')
     })
 
     it('should handle cross-project links', () => {
@@ -173,7 +173,7 @@ describe('RelationshipBadge', () => {
       const link = screen.getByText('OTHER-123').closest('a')
       expect(link).toBeTruthy()
       // Cross-project link resolves relative to current project route
-      expect(link?.getAttribute('href')).toBe('/prj/TEST/OTHER-123')
+      expect(link?.getAttribute('href')).toBe('/prj/TEST/ticket/OTHER-123')
     })
   })
 })
