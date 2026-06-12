@@ -80,24 +80,24 @@ relatedTickets: MDT-180
 ## 4. Acceptance Criteria
 
 ### Functional
-- [ ] Server starts with zero chokidar watchers (registry watcher excepted)
-- [ ] SSE connection triggers watcher creation for that client's project scope
-- [ ] Multiple SSE clients for same project share one watcher set
-- [ ] When all SSE clients for a project disconnect, that project's watchers stop
-- [ ] Zombie SSE connections (closed tab, network drop) are detected within 60s
-- [ ] `/api/status` `sseClients` reflects live connections only
-- [ ] File change events still flow correctly to all connected SSE clients
+- [x] Server starts with zero chokidar watchers (registry watcher excepted)
+- [x] SSE connection triggers watcher creation for that client's project scope
+- [x] Multiple SSE clients for same project share one watcher set
+- [x] When all SSE clients for a project disconnect, that project's watchers stop
+- [x] Zombie SSE connections (closed tab, network drop) are detected within 60s
+- [x] `/api/status` `sseClients` reflects live connections only
+- [x] File change events still flow correctly to all connected SSE clients
 
 ### Non-Functional
-- [ ] Server RSS memory under 300 MB with ≤5 SSE clients and ≤3 active projects
-- [ ] No increase in file change detection latency (measured SSE delivery time)
-- [ ] Zero watchers running when no SSE clients are connected
+- [x] Server RSS memory under 300 MB with ≤5 SSE clients and ≤3 active projects
+- [x] No increase in file change detection latency (measured SSE delivery time)
+- [x] Zero watchers running when no SSE clients are connected
 
 ### Edge Cases
-- [ ] Client connects and disconnects rapidly (debounce watcher start/stop)
-- [ ] Client has read-only scope — watchers still created but events filtered
+- [x] Client connects and disconnects rapidly (debounce watcher start/stop)
+- [x] Client has read-only scope — watchers still created but events filtered
 - [ ] Hot reload (`--hot`) restarts process — lazy init re-runs cleanly
-- [ ] Multiple browser tabs to same project — shared watchers, not duplicated
+- [x] Multiple browser tabs to same project — shared watchers, not duplicated
 
 ## 5. Verification
 
