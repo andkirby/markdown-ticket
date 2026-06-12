@@ -1,0 +1,229 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-184"
+  },
+  "requirements": [
+    {
+      "id": "BR-1",
+      "kind": "behavior",
+      "text": "All route paths are constructed through centralized builder functions, not inline template literals",
+      "sourceRef": "CR:MDT-184",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2",
+      "kind": "behavior",
+      "text": "App.tsx route definitions reference pattern constants from the centralized routes module",
+      "sourceRef": "CR:MDT-184",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3",
+      "kind": "behavior",
+      "text": "Sub-document ticket path builder exists and is used by all consumers that construct ticket sub-doc URLs",
+      "sourceRef": "CR:MDT-184",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C-1",
+      "kind": "constraint",
+      "text": "No file outside the routes module contains hardcoded /prj/ or /ticket/ path template literals",
+      "sourceRef": "CR:MDT-184",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-2",
+      "kind": "constraint",
+      "text": "linkNormalization.ts delegates to linkBuilder.ts for path construction instead of reimplementing",
+      "sourceRef": "CR:MDT-184",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-3",
+      "kind": "constraint",
+      "text": "Existing tests pass with no behavioral change",
+      "sourceRef": "CR:MDT-184",
+      "routePolicy": "tests"
+    }
+  ],
+  "scenarios": [],
+  "obligations": [
+    {
+      "id": "OBL-route-constants",
+      "title": "routes.ts owns all route pattern strings and exposes builder functions — no other file may contain /prj/ or /ticket/ template literals",
+      "derivedFrom": [
+        "BR-1",
+        "C-1"
+      ],
+      "artifactIds": [
+        "ART-routes",
+        "ART-link-builder"
+      ],
+      "sourceRef": "CR Section 2.1"
+    },
+    {
+      "id": "OBL-app-route-defs",
+      "title": "App.tsx Route path props reference pattern constants from routes.ts",
+      "derivedFrom": [
+        "BR-2"
+      ],
+      "artifactIds": [
+        "ART-app",
+        "ART-routes"
+      ],
+      "sourceRef": "CR Section 2.3"
+    },
+    {
+      "id": "OBL-subdoc-builder",
+      "title": "Sub-document ticket path builder (buildTicketSubDocPath) exists in routes.ts and is used by all sub-doc URL consumers",
+      "derivedFrom": [
+        "BR-3"
+      ],
+      "artifactIds": [
+        "ART-routes",
+        "ART-subdoc-validation",
+        "ART-direct-ticket",
+        "ART-ticket-doc-nav"
+      ],
+      "sourceRef": "CR Section 2.2"
+    },
+    {
+      "id": "OBL-link-normalizer-delegates",
+      "title": "linkNormalization.ts removes DEFAULT_WEB_BASE and its own builder methods, delegates to linkBuilder.ts",
+      "derivedFrom": [
+        "C-2"
+      ],
+      "artifactIds": [
+        "ART-link-normalizer",
+        "ART-link-builder"
+      ],
+      "sourceRef": "CR Section 3.AC-4"
+    },
+    {
+      "id": "OBL-markdown-preprocessor-migration",
+      "title": "markdownPreprocessor.ts uses buildTicketLink/buildTicketSubDocPath/buildDocumentLink instead of inline /prj/ template literals",
+      "derivedFrom": [
+        "BR-1",
+        "C-1"
+      ],
+      "artifactIds": [
+        "ART-markdown-preprocessor",
+        "ART-link-builder"
+      ],
+      "sourceRef": "CR Section 2.4"
+    },
+    {
+      "id": "OBL-navigate-migration",
+      "title": "All navigate() calls use builder functions from linkBuilder.ts instead of hand-rolled /prj/ template literals",
+      "derivedFrom": [
+        "BR-1",
+        "C-1"
+      ],
+      "artifactIds": [
+        "ART-direct-ticket",
+        "ART-ticket-doc-nav",
+        "ART-project-selector",
+        "ART-redirect-component",
+        "ART-link-builder"
+      ],
+      "sourceRef": "CR Section 2.4"
+    },
+    {
+      "id": "OBL-no-behavioral-change",
+      "title": "Refactor is purely structural — all existing tests pass without modification to assertions",
+      "derivedFrom": [
+        "C-3"
+      ],
+      "artifactIds": [
+        "ART-routes",
+        "ART-link-builder",
+        "ART-app"
+      ],
+      "sourceRef": "CR Section 3.AC-7"
+    },
+    {
+      "id": "OBL-link-processor-uses-builder",
+      "title": "linkProcessor.ts already delegates to buildTicketLink for ticket hrefs; remains stable during refactor",
+      "derivedFrom": [
+        "BR-1",
+        "C-1"
+      ],
+      "artifactIds": [
+        "ART-link-processor",
+        "ART-link-builder"
+      ],
+      "sourceRef": "MDT-172 hot fix"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-routes",
+      "path": "src/routes.ts",
+      "kind": "runtime",
+      "sourceRef": "CR Section 2: route pattern constants + builder functions"
+    },
+    {
+      "id": "ART-link-builder",
+      "path": "src/utils/linkBuilder.ts",
+      "kind": "runtime",
+      "sourceRef": "Existing builder, refactored to delegate to routes.ts"
+    },
+    {
+      "id": "ART-link-normalizer",
+      "path": "src/utils/linkNormalization.ts",
+      "kind": "runtime",
+      "sourceRef": "Refactored: remove DEFAULT_WEB_BASE, delegate to linkBuilder"
+    },
+    {
+      "id": "ART-link-processor",
+      "path": "src/utils/linkProcessor.ts",
+      "kind": "runtime",
+      "sourceRef": "Already uses buildTicketLink, no further change expected"
+    },
+    {
+      "id": "ART-markdown-preprocessor",
+      "path": "src/utils/markdownPreprocessor.ts",
+      "kind": "runtime",
+      "sourceRef": "Migrate inline /prj/ literals to builders"
+    },
+    {
+      "id": "ART-subdoc-validation",
+      "path": "src/utils/subdocPathValidation.ts",
+      "kind": "runtime",
+      "sourceRef": "Migrate inline /prj/ literals and regex to routes.ts"
+    },
+    {
+      "id": "ART-app",
+      "path": "src/App.tsx",
+      "kind": "runtime",
+      "sourceRef": "Route definitions reference pattern constants"
+    },
+    {
+      "id": "ART-direct-ticket",
+      "path": "src/components/DirectTicketAccess.tsx",
+      "kind": "runtime",
+      "sourceRef": "Migrate navigate() to builders"
+    },
+    {
+      "id": "ART-ticket-doc-nav",
+      "path": "src/components/TicketViewer/useTicketDocumentNavigation.ts",
+      "kind": "runtime",
+      "sourceRef": "Migrate navigate() to builders"
+    },
+    {
+      "id": "ART-project-selector",
+      "path": "src/components/ProjectSelector/index.tsx",
+      "kind": "runtime",
+      "sourceRef": "Migrate navigate() to builders"
+    },
+    {
+      "id": "ART-redirect-component",
+      "path": "src/components/RedirectToCurrentProject.tsx",
+      "kind": "runtime",
+      "sourceRef": "Migrate navigate() to builders"
+    }
+  ],
+  "testPlans": [],
+  "tasks": []
+}
