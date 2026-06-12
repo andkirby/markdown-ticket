@@ -13,7 +13,7 @@ Board (DndProvider wrapper)
     │   ├── Button[Refresh]
     │   ├── Button[Create]
     │   └── HamburgerMenu
-    └── div.board-grid (flex-1, grid)
+    └── div.board-container (flex-1, grid)
         ├── Column[Backlog]
         ├── Column[Open]
         ├── Column[In Progress]
@@ -67,12 +67,14 @@ Column
 
 ### Board grid
 
+- Class: `.board-container` (defined in `src/components/Column/column.css`)
 - Grid: `grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4`
 - Full width: `w-full`
 - Items stretch: `items-stretch`
 - Padding: `p-1`
 - Overflow: `overflow-hidden` on the grid, each column handles its own scroll
 - Height: `flex-1 min-h-0` (fills remaining viewport below app header)
+- Loading grid: `.board-container--loading` uses `grid gap-6 p-8` with same responsive column breakpoints
 
 ### Column
 

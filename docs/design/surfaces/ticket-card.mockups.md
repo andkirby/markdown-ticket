@@ -156,9 +156,9 @@ annotation "data-invalid=true, tooltip: 'Invalid status: Foo'" target="invalid-b
 | Card shadow (rest) | inline | `shadow-[0_1px_3px...]` | Very subtle |
 | Card shadow (hover) | inline | `shadow-[0_8px_20px...]` | Elevated shadow |
 | Ticket code | `--primary` | `text-primary dark:text-blue-400` | `font-medium` |
-| Title text | `--foreground` | `text-gray-900 dark:text-white` | `font-semibold text-sm` |
+| Title text | `--foreground` | `text-gray-900 dark:text-white` | `font-semibold text-sm` (`.ticket-card__title`) |
 | Separator | `--foreground` | `•` with `mx-1` | Between code and title |
-| Edit icon | `--muted-foreground` | `opacity-0 group-hover:opacity-100` | 4×4 pencil |
+| Edit icon | `--muted-foreground` | `.ticket-card__edit` `opacity-0 group-hover:opacity-100` | 4×4 pencil |
 | Read-only card | `--foreground` | no edit icon, no move cursor | Opens viewer only |
 | Badges | badge.css vars | `.badge[data-*]` | See BADGE_ARCHITECTURE.md |
 | Worktree icon | n/a | `🪾` emoji | Appended to ticket code in title row; also shown as a chip in badge bar |

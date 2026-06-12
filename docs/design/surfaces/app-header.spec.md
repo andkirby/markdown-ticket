@@ -5,21 +5,23 @@ Top navigation bar — the chrome that persists across all views. Provides proje
 ## Composition
 
 ```text
-nav.main-nav
-├── div.nav-inner
-│   ├── div.nav-left
-│   │   ├── MobileLogo
-│   │   ├── ViewModeSwitcher
-│   │   └── ProjectSelector (flex-1)
-│   └── div.nav-right
-│       ├── AuthStatusAction (locked state only)
-│       │   ├── StatusChip
-│       │   └── Button[Unlock]
-│       └── SecondaryHeader
-│           ├── SortControls (board/list only, desktop only)
-│           └── HamburgerMenu
-│               ├── AccessDot (owner/shared only)
-│               └── ReadOnlyStatusRow (inside menu)
+Header (nav.header)
+└── HeaderContent (div.header__content)
+    ├── div.header__left
+    │   ├── div.header__left-section
+    │   │   └── MobileLogo
+    │   └── centerSection
+    │       ├── ViewModeSwitcher
+    │       └── ProjectSelector (min-w-0 flex-1)
+    └── div.header__right
+        ├── AuthStatusAction (locked state only)
+        │   ├── StatusChip
+        │   └── Button[Unlock]
+        └── SecondaryHeader
+            ├── SortControls (board/list only, desktop only)
+            └── HamburgerMenu
+                ├── AccessDot (owner/shared only)
+                └── ReadOnlyStatusRow (inside menu)
 ```
 
 ## Children
@@ -38,30 +40,34 @@ nav.main-nav
 
 | Type | Path |
 |------|------|
-| Component | `src/App.tsx` (nav section, lines ~211–243) |
+| Header | `src/components/Header/index.tsx` |
+| Nav composition | `src/App.tsx` (Header/HeaderContent in AppRoot) |
 | SecondaryHeader | `src/components/SecondaryHeader.tsx` |
 | HamburgerMenu | `src/components/HamburgerMenu.tsx` |
 | Auth status action | `src/components/AuthUnlock/AuthStatusAction.tsx` |
 | ViewModeSwitcher | `src/components/ViewModeSwitcher/ViewModeSwitcher.tsx` |
 | AppHeader exports | `src/components/AppHeader/index.tsx` |
+| Header CSS | `src/components/Header/header.css` |
 
 ## Layout
 
-- Fixed height: `h-16` (64px)
-- Sticky top: `sticky top-0`
-- Backdrop blur: `backdrop-blur-xl bg-white/90 dark:bg-gray-900/90`
-- Border bottom: `border-b border-gray-200/50 dark:border-gray-700/50`
-- Shadow: `shadow-sm`
-- z-index: `z-50`
-- Horizontal padding: `px-1 sm:px-2 lg:px-2`
+- Fixed height: `h-16` (64px) via `.header__content`
+- Sticky top: `sticky top-0` via `.header`
+- Backdrop blur: `backdrop-blur-xl` via `.header`
+- Background: `bg-white/90 dark:bg-gray-900/90` via `.header`
+- Border bottom: `border-b` via `.header`; color `border-gray-200/50 dark:border-gray-700/50`
+- Shadow: `shadow-sm` via `.header`
+- z-index: `z-50` via `.header`
+- Horizontal padding: `px-1 sm:px-2 lg:px-2` via `.header__container`
 
-### Nav-left slot (flex, items-center, gap-1 sm:gap-4)
+### Header__left slot (flex, items-center, gap-2, min-w-0, flex-1, overflow-hidden)
 
-1. **MobileLogo** — `flex-shrink-0`, always visible
-2. **ViewModeSwitcher** — toggles between board/list/documents
-3. **ProjectSelector** — `min-w-0 flex-1 overflow-hidden`, fills remaining space
+1. **header__left-section** — `flex-shrink-0`, contains MobileLogo only
+2. **centerSection** (inline in header__left after left-section)
+   - **ViewModeSwitcher** — toggles between board/list/documents
+   - **ProjectSelector** — `min-w-0 flex-1`, fills remaining space
 
-### Nav-right slot (flex, items-center)
+### Header__right slot (flex, items-center)
 
 1. **AuthStatusAction** — locked status chip before sort controls; hidden in owner/admin, no-auth-dev, and read-only modes
 2. **SortControls** — hidden on `< sm` breakpoint; only when viewMode is `board` or `list`
