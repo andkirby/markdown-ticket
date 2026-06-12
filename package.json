@@ -28,6 +28,8 @@
     "server:dev": "bun run --cwd server dev",
     "build": "tsc --project tsconfig.shared.json && tsc && vite build",
     "lint": "bun run lint:all",
+    "lint:changed": "bash scripts/lint-changed.sh",
+    "lint:changed:fix": "bash scripts/lint-changed.sh --fix",
     "lint:all": "bun run lint:frontend && bun run lint:server && bun run lint:mcp && bun run lint:domain && bun run lint:shared && bun run lint:cli",
     "lint:frontend": "eslint \"src/**/*.{ts,tsx}\" --config eslint.config.ts --report-unused-disable-directives --max-warnings 0",
     "lint:server": "bun run --cwd server lint",
