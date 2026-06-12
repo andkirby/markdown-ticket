@@ -7,24 +7,23 @@ Card displayed in a board column representing a single ticket. Shows ticket iden
 ```text
 DraggableTicketCard (drag wrapper)
 └── TicketCard
-    ├── div.card-body
-    │   ├── div.title-row
-    │   │   └── h4.ticket-title
-    │   │       ├── TicketCode
-    │   │       ├── span[• separator]
-    │   │       └── span[title text]
-    │   └── div.attributes-row
-    │       ├── TicketAttributeTags (flex-1)
-    │       │   ├── StatusBadge
-    │       │   ├── PriorityBadge
-    │       │   ├── TypeBadge
-    │       │   ├── ContextBadge[phase] (conditional)
-    │       │   ├── RelationshipBadge[related] (conditional)
-    │       │   ├── RelationshipBadge[depends] (conditional)
-    │       │   ├── RelationshipBadge[blocks] (conditional)
-    │       │   └── ContextBadge[worktree] (conditional)
-    │       └── div.actions (shrink-0)
-    │           └── button[edit icon] (opacity on hover)
+    ├── div (title section)
+    │   └── h4.ticket-card__title
+    │       ├── TicketCode
+    │       ├── span[• separator]
+    │       └── span[title text]
+    └── div (attributes section)
+        ├── TicketAttributeTags (flex-1)
+        │   ├── StatusBadge
+        │   ├── PriorityBadge
+        │   ├── TypeBadge
+        │   ├── ContextBadge[phase] (conditional)
+        │   ├── RelationshipBadge[related] (conditional)
+        │   ├── RelationshipBadge[depends] (conditional)
+        │   ├── RelationshipBadge[blocks] (conditional)
+        │   └── ContextBadge[worktree] (conditional)
+        └── div.actions (shrink-0)
+            └── button[edit icon] (opacity on hover)
 ```
 
 ## Children
@@ -67,13 +66,13 @@ DraggableTicketCard (drag wrapper)
 - Flex: `flex items-start justify-between mb-2`
 - TicketCode rendered as `font-medium text-primary dark:text-blue-400`
 - Separator: `•` with `mx-1`
-- Title: `font-semibold text-sm truncate` — truncated when it overflows
+- Title: `.ticket-card__title` — `font-semibold text-sm truncate` — truncated when it overflows
 
 ### Attributes row
 
 - Flex: `flex items-start justify-between gap-2`
 - Badges: `flex flex-wrap gap-2`
-- Edit button: `opacity-0 group-hover:opacity-100`, `w-4 h-4` pencil icon
+- Edit button: `.ticket-card__edit` — `opacity-0 group-hover:opacity-100`, `w-4 h-4` pencil icon
 
 ### Card width
 
@@ -132,9 +131,10 @@ The code segment renders with worktree indicator:
 
 | Element | Class | Source |
 |---------|-------|--------|
-| card | `.ticket-card` | inline Tailwind |
-| invalid card | `.ticket-card--invalid` | inline Tailwind |
-| title | `.ticket-title` | inline Tailwind |
+| card | `.ticket-card` | inline Tailwind + `ticket.css` |
+| invalid card | `.ticket-card--invalid` | `ticket.css` |
+| title | `.ticket-card__title` | `ticket.css` |
+| edit button | `.ticket-card__edit` | `ticket.css` |
 | badge | `.badge[data-status="..."]` | `badge.css` |
 
 ## Extension notes
