@@ -235,6 +235,7 @@ markdown-ticket/
 
 ## What's New
 
+- **v0.24.0** (2026-06-13): Calmer project switcher — inactive projects reveal on hover
 - **v0.16.0** (2026-05-05): Cross-project ticket search from QuickSearch
 - **v0.15.0** (2026-05-01): SmartLink document URLs, flexible path configuration, drag-drop custom statuses
 - **v0.13.0** (2026-03-18): Dot-notation subdocument grouping, git worktree SSE events, TOML read/write support
