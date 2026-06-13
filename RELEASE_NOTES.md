@@ -1,5 +1,22 @@
 # Release Notes
 
+## v0.24.0 (2026-06-13)
+
+### Improvements
+
+**Calmer Project Switcher (MDT-185)**
+- The project switcher now shows only your active project by default, instead of every project at once
+- Hover the active project card to reveal the other projects as compact chips that fade and slide in
+- A subtle chevron hint on the card's edge signals that more projects are one hover away
+- Picking a project hides the chip strip instantly, even if your cursor stays put
+- Less visual noise during everyday board work, with the same one-gesture switching on desktop and mobile
+
+### Under the Hood
+
+**Single source of truth for routes (MDT-184)**
+- All frontend route patterns now live in one place instead of being hand-written across many files
+- No change to how anything behaves today — this just makes links and navigation safer to maintain
+
 ## v0.23.0 (2026-06-12)
 
 ### Improvements
