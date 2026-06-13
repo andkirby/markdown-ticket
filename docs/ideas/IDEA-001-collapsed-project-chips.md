@@ -1,9 +1,9 @@
 ---
 id: IDEA-001
-status: deferred
+status: promoted
 date: 2026-06-10
-resolution-date:
-promoted-to:
+resolution-date: 2026-06-12
+promoted-to: MDT-185
 ---
 
 # Collapsed Project Chips in Selector Rail

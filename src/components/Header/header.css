@@ -18,8 +18,11 @@
     @apply flex justify-between h-16;
   }
 
+  /* overflow-hidden omitted so the hover-revealed chip strip (MDT-185) can
+     overlay subsequent header elements. The active card truncates via its
+     own min-w-0 + max-w constraints. */
   .header__left {
-    @apply flex items-center gap-2 min-w-0 flex-1 overflow-hidden;
+    @apply flex items-center gap-2 min-w-0 flex-1;
   }
 
   .header__left-section {

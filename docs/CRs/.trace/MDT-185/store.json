@@ -1,0 +1,493 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-185"
+  },
+  "requirements": [
+    {
+      "id": "BR-5",
+      "kind": "behavior",
+      "text": "WHEN the user clicks the active project card, the system shall open the project browser (existing behavior, no regression).",
+      "sourceRef": "CR §2 Constraints, BR-1.3",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-6",
+      "kind": "behavior",
+      "text": "WHEN the inactive chip list is displayed (expanded or always), the system shall preserve favorites-first ordering from the selector manager.",
+      "sourceRef": "CR §2 Constraints",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "The expand/collapse animation shall complete within 200ms.",
+      "sourceRef": "CR §4 Non-Functional",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "The expand/collapse shall not cause layout shift or reflow of adjacent content.",
+      "sourceRef": "CR §4 Non-Functional",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "The collapse behavior shall not conflict with the existing HoverCard on the active card or on individual chips.",
+      "sourceRef": "CR §2 Constraints",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "No changes to useProjectSelectorManager hook shall be required.",
+      "sourceRef": "CR §3 Known Constraints",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "IF there is only one inactive project, the system shall not show a collapse indicator and shall display the single chip inline.",
+      "sourceRef": "CR §4 Edge Cases",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-2",
+      "kind": "edge_case",
+      "text": "WHEN the user rapidly hovers in and out of the collapse area, the system shall not flicker or exhibit animation jank.",
+      "sourceRef": "CR §4 Edge Cases",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-3",
+      "kind": "edge_case",
+      "text": "WHEN the chip list is collapsed, keyboard users shall be able to focus the indicator and expand it via Enter or Space, then tab through the revealed chips.",
+      "sourceRef": "CR §4 Edge Cases",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-2",
+      "kind": "behavior",
+      "text": "WHEN the pointer enters the active project card, the system shall reveal the inactive chips inline to the right of the active card in the header line, overlaying subsequent header elements.",
+      "sourceRef": "CR §2; UAT 2026-06-12",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-3",
+      "kind": "behavior",
+      "text": "WHILE the pointer remains within the active card or the revealed chip strip, the system shall keep the chips visible.",
+      "sourceRef": "CR §2",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-4",
+      "kind": "behavior",
+      "text": "WHEN the pointer leaves both the active card and the chip strip, the system shall hide the chips after a short delay.",
+      "sourceRef": "CR §2",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-7",
+      "kind": "behavior",
+      "text": "WHEN the inactive chips are revealed, each chip shall appear with a soft staggered entrance animation.",
+      "sourceRef": "UAT 2026-06-12",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1",
+      "kind": "behavior",
+      "text": "The selector rail shall always hide inactive project chips by default; they are revealed only by hovering the active project card.",
+      "sourceRef": "CR §2; UAT 2026-06-12 (always-hide)",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "active_card_still_opens_browser",
+      "title": "Active card click opens project browser without regression",
+      "covers": [
+        "BR-5"
+      ],
+      "given": "the selector rail is visible with a collapsed indicator",
+      "when": "the user clicks the active project card",
+      "then": "the project browser opens",
+      "sourceRef": "BR-5"
+    },
+    {
+      "id": "favorites_ordering_preserved",
+      "title": "Favorites-first ordering preserved in expanded list",
+      "covers": [
+        "BR-6"
+      ],
+      "given": "the selector rail has favorited and non-favorited inactive projects",
+      "when": "the collapsed indicator is expanded",
+      "then": "favorite chips appear before non-favorite chips in the list",
+      "sourceRef": "BR-6"
+    },
+    {
+      "id": "chips_hide_on_pointer_leave",
+      "title": "Chips hide when pointer leaves the active card and chip area",
+      "covers": [
+        "BR-4"
+      ],
+      "given": "the inactive chips are revealed next to the active card",
+      "when": "the pointer leaves both the active card and the chip strip",
+      "then": "the chips hide after a short delay",
+      "sourceRef": "BR-4"
+    },
+    {
+      "id": "chips_reveal_on_active_card_hover",
+      "title": "Hovering the active card reveals chips inline to the right with stagger",
+      "covers": [
+        "BR-1",
+        "BR-2",
+        "BR-3",
+        "BR-7"
+      ],
+      "given": "the selector rail has more than 3 inactive projects on desktop",
+      "when": "the user hovers the active project card",
+      "then": "the inactive chips appear inline to the right of the active card with a soft staggered entrance, overlaying header content, and stay visible while the pointer remains in the area",
+      "sourceRef": "BR-1,BR-2,BR-3,BR-7; UAT 2026-06-12"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-collapse-logic",
+      "title": "ProjectSelectorRail conditionally renders CollapsedChipsIndicator instead of inline chips when inactive count exceeds threshold",
+      "derivedFrom": [
+        "BR-1",
+        "Edge-1"
+      ],
+      "artifactIds": [
+        "ART-rail-component",
+        "ART-collapse-indicator",
+        "ART-collapse-hook"
+      ],
+      "sourceRef": "Architecture: Module Boundaries"
+    },
+    {
+      "id": "OBL-expand-hover",
+      "title": "CollapsedChipsIndicator expands on pointer hover using CSS transitions, managed by useCollapsedChips hover state",
+      "derivedFrom": [
+        "BR-2",
+        "BR-3",
+        "BR-4"
+      ],
+      "artifactIds": [
+        "ART-collapse-indicator",
+        "ART-collapse-hook",
+        "ART-selector-css"
+      ],
+      "sourceRef": "Architecture: Runtime Flow"
+    },
+    {
+      "id": "OBL-keyboard-access",
+      "title": "CollapsedChipsIndicator supports keyboard expand via Enter/Space and tab navigation to revealed chips",
+      "derivedFrom": [
+        "Edge-3",
+        "BR-2"
+      ],
+      "artifactIds": [
+        "ART-collapse-indicator",
+        "ART-collapse-hook"
+      ],
+      "sourceRef": "Architecture: Accessibility"
+    },
+    {
+      "id": "OBL-animation-perf",
+      "title": "Expand/collapse uses CSS transform+opacity transitions under 200ms with no layout reflow",
+      "derivedFrom": [
+        "C1",
+        "C2"
+      ],
+      "artifactIds": [
+        "ART-selector-css",
+        "ART-collapse-indicator"
+      ],
+      "sourceRef": "Architecture: Animation Strategy"
+    },
+    {
+      "id": "OBL-hovercard-no-conflict",
+      "title": "Collapse container hover zone does not interfere with chip HoverCard popups or active card HoverCard",
+      "derivedFrom": [
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-collapse-indicator",
+        "ART-chip-component",
+        "ART-card-component"
+      ],
+      "sourceRef": "Architecture: Hover Model"
+    },
+    {
+      "id": "OBL-hook-unchanged",
+      "title": "useProjectSelectorManager is not modified; collapse logic is purely presentational in the rail composition",
+      "derivedFrom": [
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-rail-component"
+      ],
+      "sourceRef": "Architecture: Module Boundaries"
+    },
+    {
+      "id": "OBL-ordering-preserved",
+      "title": "CollapsedChipsIndicator renders chips in the same order provided by the rail, preserving favorites-first",
+      "derivedFrom": [
+        "BR-6"
+      ],
+      "artifactIds": [
+        "ART-collapse-indicator",
+        "ART-rail-component"
+      ],
+      "sourceRef": "Architecture: Data Flow"
+    },
+    {
+      "id": "OBL-regression-tests",
+      "title": "Existing ProjectSelectorChip tests must pass unchanged to confirm no regression in chip rendering or HoverCard behavior",
+      "derivedFrom": [
+        "C3",
+        "BR-5"
+      ],
+      "artifactIds": [
+        "ART-chip-test"
+      ],
+      "sourceRef": "Architecture: Verification"
+    },
+    {
+      "id": "OBL-new-component-tests",
+      "title": "CollapsedChipsIndicator has component tests covering collapsed state, expanded state, keyboard interaction, and threshold behavior",
+      "derivedFrom": [
+        "BR-1",
+        "BR-2",
+        "BR-4",
+        "Edge-1",
+        "Edge-2",
+        "Edge-3"
+      ],
+      "artifactIds": [
+        "ART-collapse-test",
+        "ART-collapse-indicator"
+      ],
+      "sourceRef": "Architecture: Verification"
+    },
+    {
+      "id": "OBL-types-export",
+      "title": "types.ts may be extended with collapse-related props if the indicator needs shared types; no breaking changes to existing types",
+      "derivedFrom": [
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-selector-types"
+      ],
+      "sourceRef": "Architecture: Module Boundaries"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-rail-component",
+      "path": "src/components/ProjectSelector/ProjectSelectorRail.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR Affected Areas"
+    },
+    {
+      "id": "ART-chip-component",
+      "path": "src/components/ProjectSelector/ProjectSelectorChip.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR References"
+    },
+    {
+      "id": "ART-card-component",
+      "path": "src/components/ProjectSelector/ProjectSelectorCard.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR References"
+    },
+    {
+      "id": "ART-selector-css",
+      "path": "src/components/ProjectSelector/project-selector.css",
+      "kind": "runtime",
+      "sourceRef": "CR Affected Areas"
+    },
+    {
+      "id": "ART-selector-types",
+      "path": "src/components/ProjectSelector/types.ts",
+      "kind": "runtime",
+      "sourceRef": "CR Affected Areas"
+    },
+    {
+      "id": "ART-collapse-indicator",
+      "path": "src/components/ProjectSelector/CollapsedChipsIndicator.tsx",
+      "kind": "runtime",
+      "sourceRef": "Architecture: new component"
+    },
+    {
+      "id": "ART-collapse-hook",
+      "path": "src/components/ProjectSelector/useCollapsedChips.ts",
+      "kind": "runtime",
+      "sourceRef": "Architecture: new hook"
+    },
+    {
+      "id": "ART-chip-test",
+      "path": "src/components/ProjectSelector/ProjectSelectorChip.test.tsx",
+      "kind": "test",
+      "sourceRef": "Architecture: existing tests"
+    },
+    {
+      "id": "ART-collapse-test",
+      "path": "src/components/ProjectSelector/CollapsedChipsIndicator.test.tsx",
+      "kind": "test",
+      "sourceRef": "Architecture: new tests"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-regression-chip",
+      "kind": "unit",
+      "title": "Existing chip tests regression — no changes to chip component",
+      "covers": [
+        "BR-5",
+        "C3"
+      ],
+      "file": "src/components/ProjectSelector/ProjectSelectorChip.test.tsx",
+      "sourceRef": "tests.md"
+    },
+    {
+      "id": "TEST-collapse-indicator",
+      "kind": "unit",
+      "title": "CollapsedChipsIndicator unit tests — collapse/expand, keyboard, threshold, ordering, animation, reflow",
+      "covers": [
+        "BR-1",
+        "BR-2",
+        "BR-3",
+        "BR-4",
+        "BR-6",
+        "Edge-1",
+        "Edge-2",
+        "Edge-3",
+        "C1",
+        "C2"
+      ],
+      "file": "src/components/ProjectSelector/CollapsedChipsIndicator.test.tsx",
+      "sourceRef": "tests.md"
+    },
+    {
+      "id": "TEST-hook-unchanged",
+      "kind": "unit",
+      "title": "useProjectSelectorManager unchanged — existing selector tests must pass without modification",
+      "covers": [
+        "C4"
+      ],
+      "file": "src/components/ProjectSelector/useSelectorData.test.ts",
+      "sourceRef": "tests.md"
+    },
+    {
+      "id": "TEST-hover-reveal-e2e",
+      "kind": "e2e",
+      "title": "Hover-reveal behavior — chips hidden by default, reveal on active-card hover, hide on leave, select works",
+      "covers": [
+        "BR-1",
+        "BR-2",
+        "BR-3",
+        "BR-4",
+        "BR-6"
+      ],
+      "file": "tests/e2e/selector/project-selector.spec.ts",
+      "sourceRef": "uat.md"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-1",
+      "title": "Create useCollapsedChips hook with hover/focus/keyboard state management",
+      "ownsArtifactIds": [
+        "ART-collapse-hook"
+      ],
+      "makesGreenIds": [
+        "TEST-collapse-indicator"
+      ],
+      "sourceRef": "tasks.md#task-1"
+    },
+    {
+      "id": "TASK-2",
+      "title": "CollapsedChipsIndicator controlled overlay + CSS stagger animation",
+      "ownsArtifactIds": [
+        "ART-collapse-indicator",
+        "ART-selector-css",
+        "ART-collapse-test",
+        "ART-selector-types"
+      ],
+      "makesGreenIds": [
+        "TEST-collapse-indicator",
+        "chips_reveal_on_active_card_hover"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-2"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Wire active-card hover-reveal in ProjectSelectorRail",
+      "ownsArtifactIds": [
+        "ART-rail-component",
+        "ART-chip-component",
+        "ART-card-component",
+        "ART-chip-test"
+      ],
+      "makesGreenIds": [
+        "TEST-collapse-indicator",
+        "TEST-regression-chip",
+        "TEST-hook-unchanged",
+        "TEST-hover-reveal-e2e",
+        "active_card_still_opens_browser",
+        "favorites_ordering_preserved",
+        "chips_hide_on_pointer_leave"
+      ],
+      "sourceRef": "tasks.md#task-3"
+    }
+  ]
+}

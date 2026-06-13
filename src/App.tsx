@@ -312,7 +312,7 @@ function ProjectRouteHandler() {
   }, [location.pathname, tickets, projectsLoading, selectedProject])
 
   const handleViewModeChange = (mode: 'board' | 'list' | 'documents') => {
-    const basePath = buildProjectPath(projectCode)
+    const basePath = buildProjectPath(projectCode!)
     const newPath = mode === 'board' ? basePath : `${basePath}/${mode}`
 
     // Store view mode preferences
@@ -327,14 +327,14 @@ function ProjectRouteHandler() {
   }
 
   const handleTicketClick = (ticket: Ticket, targetProjectCode?: string) => {
-    const ticketProject = targetProjectCode || projectCode
+    const ticketProject = targetProjectCode || projectCode!
     const viewParam = viewMode !== 'board' ? `?view=${viewMode}` : ''
     navigate(`${buildTicketPath(ticketProject, ticket.code)}${viewParam}`)
   }
 
   const handleTicketClose = () => {
     const viewContext = searchParams.get('view') || 'board'
-    const basePath = buildProjectPath(projectCode)
+    const basePath = buildProjectPath(projectCode!)
     const targetPath = viewContext === 'board' ? basePath : `${basePath}/${viewContext}`
     navigate(targetPath)
   }

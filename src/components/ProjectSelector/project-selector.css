@@ -289,6 +289,54 @@
     color: var(--project-chip-code-color);
   }
 
+  /* ── Collapsed Chips Overlay (MDT-185) ── */
+  /* Hover-reveal strip shown to the right of the active card, inline in the header. */
+
+  /* Subtle hover affordance on the active card edge */
+  .project-expand-hint {
+    position: absolute;
+    top: 50%;
+    right: -4px;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    font-size: 14px;
+    line-height: 1;
+    color: var(--project-card-title-color);
+    opacity: 0.4;
+    pointer-events: none;
+    transition: opacity 120ms ease-out;
+  }
+
+  /* Overlay container — transparent inline strip to the right of the active
+     card. Absolutely positioned (not portaled): a DOM child of the active card
+     wrapper, so the strip stays open while the pointer is within the wrapper
+     (no debounce needed). Overlays subsequent header elements. */
+  .project-chips-overlay {
+    @apply absolute top-1/2;
+    left: 100%;
+    transform: translateY(-50%);
+    margin-left: 0.5rem; /* match header gap-2 (8px) */
+    z-index: 50;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+
+  /* Chips lay out in a single header line; no wrap so it reads as inline rail */
+  .project-chips-overlay__inner {
+    @apply flex items-center gap-2;
+    flex-wrap: nowrap;
+  }
+
+  /* Per-chip stagger entrance (keyframe lives in styles/animations.css) */
+  .project-chips-overlay__chip {
+    animation: chip-stagger-in 150ms ease-out both;
+  }
+
   /* ── Launcher Button ── */
 
   .project-launcher {

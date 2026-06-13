@@ -177,14 +177,13 @@ test.describe('Project Selector - Inactive Projects Display', () => {
     await page.goto(`/prj/${firstProject.projectCode}`)
     await waitForBoardReady(page)
 
-    // Verify inactive project chips are visible in the rail
+    // Inactive chips may be hidden behind active-card hover-reveal (MDT-185)
+    // Hover the active card to reveal them; harmless if already inline
+    await page.locator('[data-testid="project-selector-rail-active"]').hover()
     const inactiveCards = page.locator(selectorSelectors.inactiveProjectCard)
-    await expect(inactiveCards.first()).toBeVisible()
+    await expect(inactiveCards.first()).toBeVisible({ timeout: 5000 })
 
     // Compact mode (default) shows project codes as text in chips
-    // Don't assert on a specific project code — accumulated projects from previous
-    // tests may push this test's own projects outside the visibleCount limit.
-    // Instead, verify the first chip displays a project code pattern (e.g., "TABX")
     const firstChip = inactiveCards.first()
     await expect(firstChip).toHaveText(/^[A-Z]{4}$/, { timeout: 5000 })
   })
@@ -307,9 +306,11 @@ test.describe('Project Selector - Rail Ordering', () => {
     const activeCard = page.locator(selectorSelectors.activeProjectCard)
     await expect(activeCard).toContainText(firstProject.projectCode)
 
-    // Inactive cards should follow (favorites first, then by usage)
+    // Inactive cards follow (favorites first, then by usage)
+    // May be hidden behind active-card hover-reveal when many projects (MDT-185)
+    await page.locator('[data-testid="project-selector-rail-active"]').hover()
     const inactiveCards = page.locator(selectorSelectors.inactiveProjectCard)
-    await expect(inactiveCards.first()).toBeVisible()
+    await expect(inactiveCards.first()).toBeVisible({ timeout: 5000 })
   })
 })
 
@@ -332,6 +333,8 @@ test.describe('Project Selector - Configuration', () => {
     await expect(rail).toBeVisible()
 
     // Default visibleCount is 7; should show active + up to 6 inactive + launcher
+    // With MDT-185, inactive chips hide behind active-card hover-reveal when many projects
+    await page.locator('[data-testid="project-selector-rail-active"]').hover()
     const inactiveCards = page.locator(selectorSelectors.inactiveProjectCard)
     const count = await inactiveCards.count()
     expect(count).toBeLessThanOrEqual(6)
@@ -382,5 +385,130 @@ test.describe('Project Selector - Responsive Behavior', () => {
     await activeCard.click()
     const panel = page.locator(selectorSelectors.projectPanel)
     await expect(panel).toBeVisible()
+  })
+})
+
+test.describe('Project Selector - Hover-Reveal (MDT-185)', () => {
+  test('chips are hidden by default when above threshold, chevron hint shown', async ({ page, e2eContext }) => {
+    const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
+
+    // Create 5+ extra projects to exceed the collapse threshold (3)
+    for (let i = 0; i < 5; i++) {
+      await e2eContext.projectFactory.createProject('empty', {
+        name: `Extra Project ${i}`,
+      })
+    }
+
+    await page.goto(`/prj/${scenario.projectCode}`)
+    await waitForBoardReady(page)
+
+    // Inactive chips are ALWAYS hidden by default (MDT-185)
+    const inactiveCards = page.locator(selectorSelectors.inactiveProjectCard)
+    await expect(inactiveCards).toHaveCount(0)
+
+    // The hover affordance chevron should be visible on the active card
+    const hint = page.locator('[data-testid="rail-expand-hint"]')
+    await expect(hint).toBeVisible()
+  })
+
+  test('hovering the active card reveals chips inline to the right', async ({ page, e2eContext }) => {
+    const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
+
+    for (let i = 0; i < 5; i++) {
+      await e2eContext.projectFactory.createProject('empty', {
+        name: `Extra Project ${i}`,
+      })
+    }
+
+    await page.goto(`/prj/${scenario.projectCode}`)
+    await waitForBoardReady(page)
+
+    // Before hover: no chips visible
+    const inactiveCards = page.locator(selectorSelectors.inactiveProjectCard)
+    await expect(inactiveCards).toHaveCount(0)
+
+    // Hover the active card to reveal
+    await page.locator('[data-testid="project-selector-rail-active"]').hover()
+
+    // Chips should now be visible in the overlay
+    await expect(inactiveCards.first()).toBeVisible({ timeout: 5000 })
+    const count = await inactiveCards.count()
+    expect(count).toBeGreaterThan(0)
+
+    // The overlay should be transparent (no modal border/background)
+    const overlay = page.locator('[data-testid="collapsed-chips-overlay"]')
+    await expect(overlay).toBeVisible()
+  })
+
+  test('chips hide when pointer leaves the active card area', async ({ page, e2eContext }) => {
+    const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
+
+    for (let i = 0; i < 5; i++) {
+      await e2eContext.projectFactory.createProject('empty', {
+        name: `Extra Project ${i}`,
+      })
+    }
+
+    await page.goto(`/prj/${scenario.projectCode}`)
+    await waitForBoardReady(page)
+
+    // Reveal chips by hovering active card
+    const activeCard = page.locator('[data-testid="project-selector-rail-active"]')
+    await activeCard.hover()
+    const inactiveCards = page.locator(selectorSelectors.inactiveProjectCard)
+    await expect(inactiveCards.first()).toBeVisible({ timeout: 5000 })
+
+    // Move pointer away to a neutral area (top-left corner of viewport)
+    await page.mouse.move(0, 0)
+
+    // Chips should hide after debounce delay
+    await expect(inactiveCards).toHaveCount(0, { timeout: 5000 })
+  })
+
+  test('selecting a project from revealed chips works', async ({ page, e2eContext }) => {
+    const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
+    const targetProject = await e2eContext.projectFactory.createProject('empty', {
+      name: 'Target Project',
+    })
+
+    for (let i = 0; i < 4; i++) {
+      await e2eContext.projectFactory.createProject('empty', {
+        name: `Extra Project ${i}`,
+      })
+    }
+
+    // Mark the target as a favorite so favorites-first ordering guarantees
+    // it appears within the rail's visibleCount window
+    const backendUrl = process.env.VITE_BACKEND_URL || 'http://localhost:4001'
+    await fetch(`${backendUrl}/api/config/selector`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        [targetProject.key]: {
+          favorite: true,
+          lastUsedAt: new Date().toISOString(),
+          count: 1,
+        },
+      }),
+    })
+
+    await page.goto(`/prj/${scenario.projectCode}`)
+    await waitForBoardReady(page)
+
+    // Hover active card to reveal chips
+    await page.locator('[data-testid="project-selector-rail-active"]').hover()
+
+    // Click the target project chip in the overlay
+    const targetChip = page.locator(`[data-testid="project-selector-chip-${targetProject.key}"]`)
+    await expect(targetChip).toBeVisible({ timeout: 5000 })
+    await targetChip.click()
+
+    // The chip strip must hide immediately after selection, even though the
+    // pointer is still over where the clicked chip was (MDT-185).
+    await expect(page.locator('[data-testid="collapsed-chips-overlay"]')).toHaveCount(0, { timeout: 3000 })
+
+    // Verify we switched to the target project
+    await waitForBoardReady(page)
+    await expect(page.locator(selectorSelectors.activeProjectCard)).toContainText(targetProject.key)
   })
 })

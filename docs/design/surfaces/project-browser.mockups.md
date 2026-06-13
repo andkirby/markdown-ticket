@@ -318,15 +318,42 @@ annotation "Single column on mobile" target="pb-search-mobile" position=bottom
 
 ## Part 2: ProjectSelectorRail
 
-### Desktop (Active + Inactive Chips + Launcher)
+### Desktop — Collapsed (Default)
+
+Inactive chips are always hidden on desktop — no count threshold, no "+N" button. Only the active card shows, with a faint `‹` chevron hinting that hovering reveals more projects (MDT-185).
 
 ```wireloom
-window "Project Selector Rail — Desktop":
+window "Project Selector Rail — Desktop (Collapsed)":
   panel:
     row:
-      panel id="active-card":
+      panel id="active-card-collapsed":
         row:
-          avatar "MDT" id="rail-active-accent"
+          avatar "MDT" id="rail-active-accent-collapsed"
+          icon name="star"
+          text "Markdown Ticket" bold
+        text "Markdown Ticket"
+        text "ticket mgmt" muted
+      text "‹" muted id="rail-chevron"
+      spacer
+      button "⊕" id="launcher-btn-collapsed"
+
+annotation "Active card: click opens project browser (NOT switch)" target="active-card-collapsed" position=top
+annotation "Faint ‹ chevron hints hover reveals inactive chips. opacity 0.4, aria-hidden, pointer-events none; unmounts once revealed" target="rail-chevron" position=right
+annotation "Inactive chips always hidden by default — no threshold" target="rail-chevron" position=bottom
+annotation "Rail accent stays compact; do not use filled-card treatment in the rail" target="rail-active-accent-collapsed" position=bottom
+```
+
+### Desktop — Revealed (Hover Active Card)
+
+Hovering the active card reveals inactive chips **inline to the right**, as bare inline elements overlaying subsequent header content. Transparent container (no box/border/shadow), absolutely positioned as a child of the active card wrapper (`left: 100%`, `margin-left: 0.5rem` for the +8px header gap, `z-50`). Each chip fades/slides in with a ~25ms stagger. The strip is a DOM descendant of the hovered card wrapper, so moving the pointer from the card onto the chips stays "inside" the wrapper — chips unmount immediately when the pointer leaves the wrapper (no debounce). Clicking a chip also hides the strip immediately.
+
+```wireloom
+window "Project Selector Rail — Desktop (Revealed)":
+  panel:
+    row:
+      panel id="active-card-revealed":
+        row:
+          avatar "MDT" id="rail-active-accent-revealed"
           icon name="star"
           text "Markdown Ticket" bold
         text "Markdown Ticket"
@@ -334,12 +361,14 @@ window "Project Selector Rail — Desktop":
       chip "ABC" id="chip-abc"
       chip "XYZ" id="chip-xyz"
       chip "API" id="chip-api"
-      button "⊕" id="launcher-btn"
+      chip "DEF" id="chip-def"
+      button "⊕" id="launcher-btn-revealed"
 
-annotation "Active card: click opens panel (NOT switch)" target="active-card" position=top
-annotation "Inactive chips: click switches project" target="chip-abc" position=bottom
-annotation "Launcher button: opens project browser panel" target="launcher-btn" position=right
-annotation "Rail accent stays compact; do not use filled-card treatment in the rail" target="rail-active-accent" position=bottom
+annotation "Hover the active card to reveal chips inline to the right (MDT-185)" target="active-card-revealed" position=top
+annotation "Revealed chips use the same ProjectSelectorChip styling; click switches project" target="chip-abc" position=bottom
+annotation "Transparent overlay: absolute child of the card wrapper (left:100% + margin-left 0.5rem, z-50). No portal, no measurement, no debounce" target="chip-xyz" position=bottom
+annotation "Chips unmount immediately when the pointer leaves the wrapper (strip is a DOM descendant, so card→strip never fires pointerleave)" target="chip-api" position=bottom
+annotation "On chip click: strip hides IMMEDIATELY — selection completes the intent; rail returns to active-card-only" target="chip-def" position=bottom
 ```
 
 ### Active Card Detail
@@ -439,15 +468,14 @@ annotation "Only active card shown on mobile; chips hidden" target="mobile-activ
 window "Rail — Panel Opens":
   panel:
     row:
-      panel:
+      panel id="rail-active-opens":
         row:
           icon name="star"
           text "MDT" bold
         text "Markdown Ticket"
         text "ticket mgmt" muted
-      chip "ABC"
-      chip "XYZ"
-      chip "API"
+      text "‹" muted
+      spacer
       button "⊕"
     divider
     panel:
@@ -471,6 +499,7 @@ window "Rail — Panel Opens":
           text "API" bold
           text "API Gateway"
 
+annotation "Rail stays collapsed (active card only); click active card opens the browser" target="rail-active-opens" position=top
 annotation "Panel is full-screen overlay (not anchored to rail)" target="rail-panel-search" position=right
 annotation "Appears centered with pt-20 offset" target="rail-panel-search" position=top
 ```
