@@ -32,6 +32,7 @@ Load only the references needed for the current run:
 
 | Reference | When to read |
 |-----------|--------------|
+| `references/mdt-workflow.md` | User asks to use MDT flow or MDT workflow skills are available |
 | `references/ralph-loop.md` | Ralph tools or protocol are available in the host app |
 | `references/language-typescript.md` | TypeScript, JavaScript, Node, Bun, npm, pnpm, yarn, React |
 | `references/language-python.md` | Python, Django, Flask, FastAPI, pytest, uv, Poetry |
@@ -81,6 +82,7 @@ Common flags:
 1. Discover project context:
    - Read root instructions such as `AGENTS.md`, `CLAUDE.md`, `.github/copilot-instructions.md`, or equivalent.
    - Read `docs/SKILLS.md` if present.
+   - If the user says "use MDT flow", read `references/mdt-workflow.md`.
    - Read ticket-system docs or CLI docs before mutating ticket state.
    - Detect package files: `package.json`, `pyproject.toml`, `Cargo.toml`,
      `go.mod`, or project-specific manifests.
