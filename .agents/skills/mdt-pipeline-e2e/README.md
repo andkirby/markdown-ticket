@@ -62,6 +62,7 @@ flowchart TD
 
 `SKILL.md` stays lean and loads focused references only when needed:
 
+- `references/mdt-workflow.md` for prompts that say "use MDT flow".
 - `references/ralph-loop.md` for agentic apps with Ralph tooling.
 - `references/language-typescript.md` for TypeScript/JavaScript projects.
 - `references/language-python.md` for Python projects.
