@@ -90,6 +90,8 @@ counter-api/
 # MDT agentic implementation checkpoint state
 **/.*.json
 **/.*.yaml
+# Pipeline state tracking (ignore in any subfolder)
+**/pipeline-state.json
 /.*/
 !/.agents/
 !/.agents/skills/

@@ -407,6 +407,8 @@ Existing global classes in `src/index.css` and shared entity CSS include:
 | `.project-card`, `.project-card--*` | Project selector card (rail + panel) | `components/ProjectSelector/project-selector.css` |
 | `.project-chip`, `.project-chip__*` | Compact project chip (rail inactive) | `components/ProjectSelector/project-selector.css` |
 | `.project-launcher` | Panel launcher button | `components/ProjectSelector/project-selector.css` |
+| `.project-chips-overlay`, `.project-chips-overlay__*` | Hover-revealed inactive chip strip (MDT-185) | `components/ProjectSelector/project-selector.css` |
+| `.project-expand-hint` | Chevron hint on active card edge (MDT-185) | `components/ProjectSelector/project-selector.css` |
 | `.project-search` | Panel search input | `components/ProjectSelector/project-selector.css` |
 | `.project-lift` | Shared hover lift transition | `components/ProjectSelector/project-selector.css` |
 | `.search-result`, `.search-result__*` | Quick search result items | `components/QuickSearch/quick-search.css` |
