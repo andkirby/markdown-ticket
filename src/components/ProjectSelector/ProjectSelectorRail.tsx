@@ -1,19 +1,21 @@
 /**
- * ProjectSelectorRail Component (MDT-129)
+ * ProjectSelectorRail Component (MDT-129, MDT-185)
  *
- * Composes the selector rail with active card and inactive chips.
- * Implements responsive layout that adapts to mobile viewports.
+ * Composes the selector rail: the active project card plus inactive project
+ * chips revealed on hover.
  *
  * Behavior Requirements:
  * - BR-1.3: Active project always visible in rail, click to open browser
- * - BR-2.1-2.3: Inactive projects shown as chips based on compactInactive
  * - BR-9.1: Mobile shows only active project
  * - BR-6.1-6.4: Rail ordering prioritizes favorites
+ * - MDT-185: Inactive chips are hidden by default and revealed inline to the
+ *   right of the active card on hover. Selecting a chip hides them again.
  *
- * Responsibilities:
- * - Compose active project card with ProjectSelectorCard (clicks open browser)
- * - Render inactive visible projects with ProjectSelectorChip
- * - Apply mobile responsive layout (collapse to active only)
+ * The revealed strip is an absolutely-positioned child of the active card
+ * wrapper. It overlays subsequent header elements (the header's
+ * overflow-hidden is not applied to this section) and stays open while the
+ * pointer remains within the wrapper (card or strip), so no debounce is
+ * needed.
  */
 
 import type { Project } from '@mdt/shared/models/Project'
@@ -46,24 +48,10 @@ export interface ProjectSelectorRailProps {
 /**
  * ProjectSelectorRail component
  *
- * Displays a horizontal rail of project selectors:
- * - Active project as larger card (always first), click to open browser
- * - Inactive visible projects as chips (based on compactInactive)
- *
- * Mobile responsive behavior:
- * - Desktop: Shows active + visible inactive projects
- * - Mobile: Shows only active project (BR-9.1)
- *
  * @testid project-selector-rail — Rail container
  * @testid project-selector-rail-active — Active project card slot
- * @testid project-selector-rail-inactive — Inactive projects container
- *
- * Behavior scenarios:
- * - active_project_always_visible: Active project always rendered
- * - active_project_opens_browser: Click active card to open project browser
- * - inactive_projects_display_mode: Chips based on compactInactive
- * - mobile_responsive_selector: Mobile shows active only
- * - rail_ordering_prioritizes_favorites: Ordering from useProjectSelectorManager
+ * @testid collapsed-chips-overlay — Hover-revealed inactive chips strip
+ * @testid rail-expand-hint — Chevron hint on the active card edge
  */
 const ProjectSelectorRail: React.FC<ProjectSelectorRailProps> = ({
   projects,
@@ -74,7 +62,6 @@ const ProjectSelectorRail: React.FC<ProjectSelectorRailProps> = ({
   onLauncherClick,
   onFavoriteToggle,
 }) => {
-  // Get ordered rail projects with mobile responsive behavior
   const { railProjects, isMobile } = useProjectSelectorManager(
     projects,
     activeProjectKey,
@@ -82,7 +69,8 @@ const ProjectSelectorRail: React.FC<ProjectSelectorRailProps> = ({
     selectorState,
   )
 
-  // Separate active and inactive projects
+  const [isExpanded, setIsExpanded] = React.useState(false)
+
   const activeProject = railProjects.find(
     p => (p.project.code || p.id) === activeProjectKey,
   )
@@ -92,11 +80,19 @@ const ProjectSelectorRail: React.FC<ProjectSelectorRailProps> = ({
 
   // On mobile, only show active (BR-9.1)
   const visibleInactiveProjects = isMobile ? [] : inactiveProjects
+  const hasChips = visibleInactiveProjects.length > 0
 
   const handleActiveCardClick = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
     onLauncherClick()
+  }
+
+  // Selecting a project from the revealed chips also hides the strip (MDT-185),
+  // even if the pointer remains on the clicked chip.
+  const handleChipSelect = (projectKey: string) => {
+    onProjectSelect(projectKey)
+    setIsExpanded(false)
   }
 
   return (
@@ -107,8 +103,11 @@ const ProjectSelectorRail: React.FC<ProjectSelectorRailProps> = ({
       {/* Active project card (always visible, click to open browser) */}
       {activeProject && (
         <div
+          className="relative"
           data-testid="project-selector-rail-active"
           onClick={handleActiveCardClick}
+          onPointerEnter={hasChips ? () => setIsExpanded(true) : undefined}
+          onPointerLeave={hasChips ? () => setIsExpanded(false) : undefined}
         >
           <ProjectSelectorCard
             project={activeProject}
@@ -121,27 +120,44 @@ const ProjectSelectorRail: React.FC<ProjectSelectorRailProps> = ({
             autocolor={preferences.autocolor}
             hasAccent={!!activeProject.selectorState.accent}
           />
-        </div>
-      )}
 
-      {/* Inactive visible projects (hidden on mobile) */}
-      {!isMobile && visibleInactiveProjects.length > 0 && (
-        <div
-          className="flex items-center gap-2"
-          data-testid="project-selector-rail-inactive"
-        >
-          {visibleInactiveProjects.map(project => (
-            <ProjectSelectorChip
-              key={project.project.code || project.id}
-              project={project}
-              compact={preferences.compactInactive}
-              onSelect={onProjectSelect}
-              accentEnabled={preferences.accentEnabled}
-              accentStyle={preferences.accentStyle}
-              autocolor={preferences.autocolor}
-              hasAccent={!!project.selectorState.accent}
-            />
-          ))}
+          {/* Hover affordance: hint that more projects reveal on hover */}
+          {hasChips && !isExpanded && (
+            <span
+              className="project-expand-hint"
+              aria-hidden="true"
+              data-testid="rail-expand-hint"
+            >
+              ‹
+            </span>
+          )}
+
+          {/* Inactive chips — revealed to the right of the active card on hover (MDT-185) */}
+          {hasChips && isExpanded && (
+            <div
+              className="project-chips-overlay"
+              data-testid="collapsed-chips-overlay"
+            >
+              <div className="project-chips-overlay__inner">
+                {visibleInactiveProjects.map((project, index) => (
+                  <div
+                    key={project.project.code || project.id}
+                    className="project-chips-overlay__chip"
+                    style={{ animationDelay: `${Math.min(index, 8) * 25}ms` }}
+                  >
+                    <ProjectSelectorChip
+                      project={project}
+                      onSelect={handleChipSelect}
+                      accentEnabled={preferences.accentEnabled}
+                      accentStyle={preferences.accentStyle}
+                      autocolor={preferences.autocolor}
+                      hasAccent={!!project.selectorState.accent}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -149,3 +165,4 @@ const ProjectSelectorRail: React.FC<ProjectSelectorRailProps> = ({
 }
 
 export default ProjectSelectorRail
+export { ProjectSelectorRail }

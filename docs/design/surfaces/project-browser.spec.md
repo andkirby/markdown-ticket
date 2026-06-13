@@ -21,9 +21,11 @@ ProjectBrowserPanel
             └── no-search-results (query matches nothing)
 
 ProjectSelectorRail (composed by ProjectSelector)
-├── ActiveCard (ProjectSelectorCard, isActive=true, useRailWidthConstraints=true)
-└── InactiveChips[]
-    └── ProjectSelectorChip (compact code-only, HoverCard wrapper)
+└── ActiveCard (ProjectSelectorCard, isActive=true, useRailWidthConstraints=true)
+    ├── RailExpandHint (faint ‹ chevron) — when inactive chips exist & not revealed (MDT-185)
+    ├── hover trigger — reveal on `pointerenter` of the card wrapper (MDT-185)
+    └── ChipsOverlay (absolute-positioned child, revealed inline to the right on hover) (MDT-185)
+        └── ProjectSelectorChip[] (compact code-only, HoverCard wrapper, staggered entrance)
 
 LauncherButton (+ icon, rounded-full w-10 h-10)
 ```
@@ -50,6 +52,7 @@ LauncherButton (+ icon, rounded-full w-10 h-10)
 | Types | `src/components/ProjectSelector/types.ts` |
 | Index | `src/components/ProjectSelector/index.tsx` |
 | Hook | `src/components/ProjectSelector/useProjectSelectorManager.ts` |
+| Rail styles | `src/components/ProjectSelector/project-selector.css` |
 | Ordering | `src/utils/selectorOrdering.ts` |
 
 ## Search Logic
@@ -160,6 +163,34 @@ LauncherButton (+ icon, rounded-full w-10 h-10)
 | gradient mode off | Accent gradients toggle is off | 4px solid flat stripe on left edge at 0.3 opacity |
 | mobile hidden | Viewport < 768px | Chips hidden; only active card shown |
 
+### Rail — inactive chip reveal (MDT-185)
+
+On desktop, inactive chips are **always hidden by default** and revealed by hovering the active card. There is no count threshold and no separate "+N" button — even a single inactive chip hides behind the active-card hover. This keeps the header quiet during daily scanning. The reveal is **not** a modal, tooltip, or dropdown: it is the same `ProjectSelectorChip` instances, rendered as an absolutely-positioned child of the active card wrapper so they overlay subsequent header content as bare inline elements.
+
+Hover-reveal is progressive enhancement; keyboard users reach inactive projects via the project browser (click the active card).
+
+| State | Trigger | Visual Change |
+|-------|---------|---------------|
+| collapsed (default) | inactive chips exist | Only the active card shows; faint `‹` chevron on its right edge hints at reveal |
+| revealing | pointer enters the active card wrapper | Chips fade/slide in to the right of the active card (150ms per chip, ~25ms stagger) |
+| sustained | pointer stays inside the active card wrapper (card or chip strip) | Overlay remains visible; moving onto the chip strip is still inside the wrapper, so no `pointerleave` fires — no debounce is needed |
+| hiding | pointer leaves the active card wrapper | Overlay unmounts immediately (no debounce; the strip is a DOM descendant, so there is no card→strip gap to bridge) |
+| selected | user clicks a revealed chip | Overlay unmounts **immediately** — selection completes the intent, so the rail returns to the collapsed default showing only the newly active card; `‹` chevron reappears if inactive projects remain |
+| no chips | no inactive projects | No chevron, no hover behavior — active card only |
+| mobile | viewport < 768px | No reveal — mobile already shows the active card only; switching uses the browser |
+
+**On selection** — clicking a revealed chip is a completed intent, so the overlay unmounts **immediately**: the rail drops back to the collapsed default (active card only), and the `‹` chevron reappears if inactive projects remain. This is mandatory — the strip must never stay open after a switch.
+
+**Overlay positioning** — `.project-chips-overlay` is `position: absolute; left: 100%; top: 50%; transform: translateY(-50%); margin-left: 0.5rem` (the +8px matches header `gap-2`), `z-index: 50`. It is a DOM child of the active card wrapper (which is `position: relative`), so no portal, no `getBoundingClientRect`, and no scroll/resize listeners are required — it tracks the card automatically.
+
+**Why no debounce / no portal** — because the strip is a descendant of the hovered wrapper, `pointerenter`/`pointerleave` on the wrapper already cover moving between the card and the chips. This keeps the interaction to one `useState` boolean plus plain `onPointerEnter`/`onPointerLeave` handlers.
+
+**Visual treatment** — the overlay container is transparent: no background, border, shadow, padding, or border-radius. Revealed chips render identically to the old inline chips (the chip is always compact; its `compact` prop is unused).
+
+**Affordance** — `.project-expand-hint` chevron: `opacity: 0.4`, `color: var(--project-card-title-color)`, `right: -4px`, vertically centered, 14×14px, `transition: opacity 120ms ease-out`, `pointer-events: none`, `aria-hidden="true"`. Conditionally rendered only while collapsed and not revealed (`hasChips && !isExpanded`); unmounts once chips show.
+
+**Animation** — per chip: `@keyframes chip-stagger-in` (`translateY(6px) scale(.95)→0/1` + opacity, 150ms, delay `min(index, 8) × 25ms`), `ease-out` / fill `both`. The keyframe lives in `src/styles/animations.css` (not the component CSS). There is intentionally no container-level entrance animation — only the per-chip stagger.
+
 ## Ordering
 
 ### Rail Order
@@ -170,6 +201,7 @@ LauncherButton (+ icon, rounded-full w-10 h-10)
 4. Tiebreaker: `count` descending
 5. Visible count limited by `preferences.visibleCount`
 6. Mobile (<768px): only active project shown
+7. Desktop (MDT-185): inactive chips never render inline — they always hide behind active-card hover-reveal; favorites-first ordering is preserved in the revealed overlay
 
 ### Panel Order
 
@@ -196,9 +228,9 @@ Focused project cards show the standard blue focus ring. Arrow navigation applie
 
 | Breakpoint | Change |
 |------------|--------|
-| < 768px (mobile) | Rail: active card only, no chips. Panel: full-width, single-column grid |
+| < 768px (mobile) | Rail: active card only, no chips, no reveal. Panel: full-width, single-column grid |
 | < 480px (narrow mobile) | Header remains one row: title keeps `shrink-0`, search uses `min-w-0`, close remains 8×8 at far right |
-| ≥ 768px (md) | Rail: active card + chips. Panel: 2-column grid |
+| ≥ 768px (md) | Rail: active card only by default; inactive chips reveal on active-card hover as a transparent inline overlay to the right. Panel: 2-column grid |
 | ≥ 768px | Panel max-w-4xl still applies; cards show description text at `sm:` breakpoint |
 
 ## Tokens used
@@ -227,6 +259,9 @@ Focused project cards show the standard blue focus ring. Arrow navigation applie
 | Project accent mark | proposed `.project-accent-mark` with `data-project-accent` | New reusable identity primitive for rail chips and browser cards |
 | Filled identity area | proposed `.project-identity-fill` | Same-size color/image fill treatment inside cards |
 | HoverCard | `HoverCard`, `HoverCardContent`, `HoverCardTrigger` | shadcn/ui |
+| Rail expand hint | `.project-expand-hint` | `project-selector.css` (MDT-185) |
+| Reveal overlay | `.project-chips-overlay`, `.__inner`, `.__chip` | `project-selector.css` (MDT-185) |
+| Reveal keyframe | `@keyframes chip-stagger-in` | `styles/animations.css` (MDT-185) |
 | Modal overlay | Fixed overlay pattern | `MODALS.md` |
 
 ## Modal conventions (MODALS.md compliance)
@@ -289,3 +324,4 @@ The project browser does not own authorization. It reflects the backend-filtered
 - Read-only cards must not expose favorite toggles because selector favorites are mutable user state.
 - Project accent display is personal visual preference. It must not reveal shared project branding or private project-folder assets to other users.
 - Token-scoped read-only visitors use the same selector interactions as owner users for visible projects, but all write-oriented project actions remain hidden.
+- MDT-185 hover-reveal: inactive rail chips are always hidden on desktop and revealed by hovering the active card as a transparent, absolutely-positioned inline overlay (no threshold, no "+N" button, no portal, no debounce — the strip is a DOM child of the hovered card wrapper). Keyboard users reach inactive projects through the project browser (click the active card); the `‹` chevron is decorative (`aria-hidden`). Favorites-first ordering is preserved in the revealed chips.
