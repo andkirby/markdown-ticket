@@ -10,8 +10,8 @@ see [DOCKER_GUIDE.md](DOCKER_GUIDE.md).
 
 ## Port Mappings
 
-- **Frontend (dev)**: Container 5173 → Host 5174
-- **Frontend (prod)**: Container 80 → Host 5174
+- **Frontend (dev)**: Container 3075 → Host 3075
+- **Frontend (prod)**: Container 80 → Host 3070
 - **Backend**: Container 3001 → Not exposed (internal only)
 - **MCP Server**: Container 3002 → Host 3012
 
@@ -30,7 +30,7 @@ see [DOCKER_GUIDE.md](DOCKER_GUIDE.md).
 **Development Mode:**
 
 - Runtime: Vite dev server with Hot Module Replacement (HMR)
-- Port: 5173 (container) → 5174 (host)
+- Port: 3075 (container) → 3075 (host)
 - Watch: `src/` directory for instant updates
 - Proxy: `/api/*` → backend:3001
 
@@ -352,7 +352,7 @@ All projects and configuration remain unchanged (they're in mounted volumes).
 | Aspect            | Docker                    | Native                    |
 |-------------------|---------------------------|---------------------------|
 | **Startup**       | `./bin/dc up`             | `bun run dev:full`        |
-| **Ports**         | Frontend: 5174, MCP: 3012 | Frontend: 5173, MCP: 3002 |
+| **Ports**         | Frontend: 3070, MCP: 3012 | Frontend: 3075, MCP: 3002 |
 | **File watching** | Polling mode (slower)     | Native events (faster)    |
 | **Isolation**     | Containerized             | Shared system             |
 | **Build cache**   | Per-container             | Shared npm cache          |

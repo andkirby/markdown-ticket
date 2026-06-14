@@ -23,7 +23,7 @@ Load the skills accordingly:
 ## Development Commands
 
 ### Frontend
-- `bun run dev` - Dev server (localhost:5173)
+- `bun run dev` - Dev server (localhost:3075)
 - `bun run build` - Production build
 - `bun run lint` - ESLint
 

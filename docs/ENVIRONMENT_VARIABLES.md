@@ -48,7 +48,7 @@ Complete reference of all environment variables used in the Markdown Ticket proj
 
 ### VITE_HMR_PORT
 - **Description**: Vite Hot Module Replacement port
-- **Default**: `5173`
+- **Default**: `3075`
 - **Used by**: Vite configuration
 
 ---
@@ -176,7 +176,7 @@ Backend runtime variables are parsed by `server/config/runtimeConfig.ts`. The ca
 
 #### MCP_ALLOWED_ORIGINS
 - **Description**: Comma-separated list of allowed origins
-- **Format**: `http://localhost:5173,https://example.com`
+- **Format**: `http://localhost:3075,https://example.com`
 - **Usage**: `mcp-server/src/index.ts:136`
 
 ### Security - Rate Limiting
@@ -239,7 +239,7 @@ Backend runtime variables are parsed by `server/config/runtimeConfig.ts`. The ca
 - **Description**: Frontend test server port
 - **Default**: `6173`
 - **Usage**: `shared/test-lib/config/ports.ts`
-- **Notes**: Avoids conflict with dev server (5173)
+- **Notes**: Avoids conflict with dev server (3075)
 
 #### TEST_BACKEND_PORT
 - **Description**: Backend test server port
@@ -373,7 +373,7 @@ MCP_AUTH_TOKEN=<secure-token>
 - `DOCKER_BACKEND_URL=http://backend:3001`
 - `VITE_BACKEND_URL=`
 - `VITE_HMR_HOST=localhost`
-- `VITE_HMR_PORT=5173`
+- `VITE_HMR_PORT=3075`
 
 ### docker-compose.prod.yml (Production)
 - `NODE_ENV=production`

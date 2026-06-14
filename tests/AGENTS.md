@@ -10,7 +10,7 @@ supported or should be introduced.
 
 | Service | Test | Dev |
 |---------|------|-----|
-| Frontend (Vite) | 6173 | 5173 |
+| Frontend (Vite) | 6173 | 3075 |
 | Backend (Express) | 4001 | 3001 |
 
 Defined in `shared/test-lib/config/ports.ts` (MDT-092).
