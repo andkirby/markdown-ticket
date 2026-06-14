@@ -57,7 +57,8 @@ const ProjectSelectorChip: React.FC<ProjectSelectorChipProps> = ({
   autocolor = true,
   hasAccent = false,
 }) => {
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
     onSelect(project.project.code || project.id)
   }
 

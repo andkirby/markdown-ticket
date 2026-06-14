@@ -88,6 +88,16 @@ const ProjectSelectorRail: React.FC<ProjectSelectorRailProps> = ({
     onLauncherClick()
   }
 
+  // Handle pointer leave from the active card wrapper - only collapse if
+  // not moving into the chips overlay (a child element)
+  const handleWrapperPointerLeave = (e: React.PointerEvent) => {
+    // Check if the pointer is moving to a child element (the chips overlay)
+    if (e.currentTarget.contains(e.relatedTarget as Node)) {
+      return // Moving to a child, don't collapse
+    }
+    setIsExpanded(false)
+  }
+
   // Selecting a project from the revealed chips also hides the strip (MDT-185),
   // even if the pointer remains on the clicked chip.
   const handleChipSelect = (projectKey: string) => {
@@ -107,7 +117,7 @@ const ProjectSelectorRail: React.FC<ProjectSelectorRailProps> = ({
           data-testid="project-selector-rail-active"
           onClick={handleActiveCardClick}
           onPointerEnter={hasChips ? () => setIsExpanded(true) : undefined}
-          onPointerLeave={hasChips ? () => setIsExpanded(false) : undefined}
+          onPointerLeave={hasChips ? handleWrapperPointerLeave : undefined}
         >
           <ProjectSelectorCard
             project={activeProject}
@@ -137,6 +147,7 @@ const ProjectSelectorRail: React.FC<ProjectSelectorRailProps> = ({
             <div
               className="project-chips-overlay"
               data-testid="collapsed-chips-overlay"
+              onPointerEnter={() => setIsExpanded(true)}
             >
               <div className="project-chips-overlay__inner">
                 {visibleInactiveProjects.map((project, index) => (
