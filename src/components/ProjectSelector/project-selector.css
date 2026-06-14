@@ -319,7 +319,9 @@
     @apply absolute top-1/2;
     left: 100%;
     transform: translateY(-50%);
-    margin-left: 0.5rem; /* match header gap-2 (8px) */
+    /* Use padding (not margin) so the box touches the active card edge —
+       eliminates the dead zone that fired pointerleave mid-transition. */
+    padding-left: 0.5rem; /* visual gap-2 (8px), but box is contiguous */
     z-index: 50;
     background: transparent;
     border: none;
