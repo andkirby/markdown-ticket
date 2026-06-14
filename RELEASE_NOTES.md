@@ -637,7 +637,7 @@
 
 **Docker Deployment**
 - **Tailwind CSS Fix**: Frontend styling displays correctly in Docker containers
-- **Port Mapping**: Avoids conflicts (5174→5173 for frontend, 3012→3002 for MCP)
+- **Port Mapping**: Avoids conflicts (3070→80 for frontend, 3012→3002 for MCP)
 - **Health Checks**: All services include health check endpoints
 - **Network Communication**: Services communicate via Docker network names
 
@@ -832,7 +832,7 @@ Old: `document_paths`, `exclude_folders`, `max_depth` → New: `[project.documen
 **Project Rebranding**
 - **Consistent Naming**: Updated from 'md-ticket-board' to 'markdown-ticket' throughout
 - **Portable Scripts**: Changed shebang to `#!/usr/bin/env bash` for better compatibility
-- **Port Configuration**: Production frontend moved from port 5173 to 4173
+- **Port Configuration**: Production frontend moved from port 5173 to 3070
 - **Package Naming**: Consistent project/package ID across all components
 
 **Docker Configuration**
@@ -974,7 +974,7 @@ Old: `document_paths`, `exclude_folders`, `max_depth` → New: `[project.documen
 ## v0.6.0 (2025-10-18)
 
 ### Bug Fixes
-- **Smart Link URL Duplication**: Fixed critical bug where ticket links would show duplicated base URLs (e.g., `http://localhost:5173http://localhost:5173/...`).
+- **Smart Link URL Duplication**: Fixed critical bug where ticket links would show duplicated base URLs (e.g., `http://localhost:3075http://localhost:3075/...`).
 - **Project Creation SSE Events**: Resolved event ID mismatch issues when creating new projects that could cause UI inconsistencies.
 - **Stale Closure in Ticket Updates**: Fixed state update prevention that could stop board view updates when tickets were modified.
 - **API Endpoint Consistency**: Updated AddProjectModal to use correct `/api/directories` endpoint for directory discovery.

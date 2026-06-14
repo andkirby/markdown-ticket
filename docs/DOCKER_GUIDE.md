@@ -213,8 +213,8 @@ Demo projects are mounted from `./demo-projects/` and provide sample tickets for
 
 | Service             | Container Port | Host Port | Purpose                  |
 |---------------------|----------------|-----------|--------------------------|
-| **Frontend** (dev)  | 5173           | 5174      | Vite dev server with HMR |
-| **Frontend** (prod) | 80             | 5174      | Nginx static server      |
+| **Frontend** (dev)  | 3075           | 3075      | Vite dev server with HMR |
+| **Frontend** (prod) | 80             | 3070      | Nginx static server      |
 | **Backend**         | 3001           | (none)    | Express.js API + SSE     |
 | **MCP**             | 3002           | 3012      | HTTP transport for LLM   |
 
