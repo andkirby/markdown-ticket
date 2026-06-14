@@ -34,7 +34,7 @@ All procedures have been verified with evidence.
 | class | frontend |
 | entry | `vite.config.ts` → Vite dev server |
 | owner | root |
-| port | 5173 (configurable via `PORT` env) |
+| port | 3075 (configurable via `PORT` env) |
 | observe | Console output, `/api/frontend/logs/*` endpoints |
 | control | `bun run dev`, `bun run dev:full` |
 | inject | Vite HMR, browser DevTools console |
@@ -132,7 +132,7 @@ All procedures have been verified with evidence.
         ▼                     ▼                     ▼
 ┌──────────────┐    ┌──────────────────┐    ┌──────────────┐
 │ frontend-vite│───▶│ backend-express  │    │  mcp-server  │
-│   (5173)     │    │     (3001)       │    │  (stdio/3002)│
+│   (3075)     │    │     (3001)       │    │  (stdio/3002)│
 └──────────────┘    └──────────────────┘    └──────────────┘
         │                     │                     │
         │    /api/* proxy     │                     │
@@ -162,12 +162,12 @@ All procedures have been verified with evidence.
     ➜  Network: http://192.168.3.1:5174/
   ```
 
-- **Constraints**: Requires `shared/dist` to exist for `@mdt/shared` imports; auto-selects next port if 5173 is busy
+- **Constraints**: Requires `shared/dist` to exist for `@mdt/shared` imports; auto-selects next port if 3075 is busy
 
 ### Runtime `frontend-vite` / CONTROL / VERIFIED
 
 - **Action**: `bun run dev` starts server, `Ctrl+C` stops it
-- **Signal**: Server starts on port 5173, graceful shutdown on SIGINT
+- **Signal**: Server starts on port 3075, graceful shutdown on SIGINT
 - **Constraints**: Port configurable via `PORT` environment variable
 
 ### Runtime `frontend-vite` / ROLLOUT / VERIFIED
@@ -191,7 +191,7 @@ All procedures have been verified with evidence.
 
 ### Runtime `frontend-vite` / INJECT / VERIFIED
 
-- **Action**: Browser DevTools console at `http://localhost:5173/`
+- **Action**: Browser DevTools console at `http://localhost:3075/`
 - **Signal**: Can execute JavaScript, inspect React state, view network requests
 - **Constraints**: Only available when dev server is running
 
@@ -409,7 +409,7 @@ All procedures have been verified with evidence.
 bun run dev:full
 ```
 
-This builds shared code and starts both frontend (5173) and backend (3001).
+This builds shared code and starts both frontend (3075) and backend (3001).
 
 ### Individual Runtime Control
 
@@ -481,7 +481,7 @@ bun run test:e2e:ui
 
 | Service | Dev Port | Test Port | Notes |
 |---------|----------|-----------|-------|
-| Frontend (Vite) | 5173 | 6173 | Auto-increments if busy |
+| Frontend (Vite) | 3075 | 3076 | Auto-increments if busy |
 | Backend (Express) | 3001 | 4001 | Hardcoded in configs |
 | MCP HTTP | 3002 | N/A | Only with `MCP_HTTP_ENABLED=true` |
 

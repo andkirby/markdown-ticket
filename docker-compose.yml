@@ -15,7 +15,7 @@ services:
       target: development
     container_name: mdt-frontend
     ports:
-      - '5174:80' # Host:Container - map to nginx port 80 (production)
+      - '3070:80' # Host:Container - map to nginx port 80 (production)
     networks:
       - mdt-network
     depends_on:

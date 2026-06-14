@@ -50,7 +50,7 @@ cd md-ticket-board
 bun run dev:full
 ```
 
-This starts both the frontend (port 5173) and backend (port 3001) servers with automatic restart on file changes.
+This starts both the frontend (port 3075) and backend (port 3001) servers with automatic restart on file changes.
 
 #### Option B: Separate Servers
 
@@ -65,7 +65,7 @@ bun run dev
 ```
 
 ### 4. Access the Application
-Open your browser and navigate to: `http://localhost:5173`
+Open your browser and navigate to: `http://localhost:3075`
 
 ## API Endpoints
 
@@ -171,7 +171,7 @@ The application uses Tailwind CSS for styling. Configuration is in:
 
 1. **Port Already in Use**
    - Change the port in `vite.config.js` (frontend) or `server.js` (backend)
-   - Or kill the existing process: `lsof -ti:5173 | xargs kill -9`
+   - Or kill the existing process: `lsof -ti:3075 | xargs kill -9`
 
 2. **File Permission Issues**
    - Ensure the `docs/CRs/` directory is writable

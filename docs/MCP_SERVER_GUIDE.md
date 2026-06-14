@@ -198,7 +198,7 @@ MCP_AUTH_TOKEN=your-secret-token
 
 # Enable origin validation
 MCP_SECURITY_ORIGIN_VALIDATION=true
-MCP_ALLOWED_ORIGINS=http://localhost:5173,https://yourdomain.com
+MCP_ALLOWED_ORIGINS=http://localhost:3075,https://yourdomain.com
 
 # Trust reverse proxy forwarded headers only when deployed behind a known proxy
 MCP_TRUST_PROXY=1
