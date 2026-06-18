@@ -86,19 +86,4 @@ export class SectionService {
       result.warningsCount,
     )
   }
-
-  /** Get the section repository instance (for testing/advanced operations) */
-  getRepository(): SectionRepository {
-    return this.sectionRepository
-  }
-
-  /** Get the path resolver instance (for testing/advanced operations) */
-  getPathResolver(): PathResolver {
-    return this.pathResolver
-  }
-
-  /** Get the section editor instance (for testing/advanced operations) */
-  getEditor(): SectionEditor {
-    return this.sectionEditor
-  }
 }
