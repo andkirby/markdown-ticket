@@ -19,8 +19,8 @@ const DEFAULT_PREFERENCES: SelectorPreferences = {
   visibleCount: 7,
   compactInactive: true,
   accentEnabled: true,
-  autocolor: true,
-  accentStyle: 'gradient',
+  autocolor: false,
+  accentStyle: 'plate',
 }
 
 export const SELECTOR_STATE_SYNC_EVENT = 'mdt:selector-state-updated'
