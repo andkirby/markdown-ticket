@@ -95,6 +95,7 @@ counter-api/
 /.*/
 !/.agents/
 !/.agents/skills/
+/.agents/skills/*
 !/.agents/skills/mdt-pipeline-e2e/
 !/.agents/skills/mdt-pipeline-e2e/**
 /.agents/skills/*/
