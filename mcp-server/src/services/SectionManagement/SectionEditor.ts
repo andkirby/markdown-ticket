@@ -242,12 +242,4 @@ export class SectionEditor {
     // Clear cache after write
     this.sectionRepository.clearCache()
   }
-
-  /**
-   * Get the section repository instance
-   * Useful for testing or advanced operations
-   */
-  getRepository(): SectionRepository {
-    return this.sectionRepository
-  }
 }

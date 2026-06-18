@@ -3,7 +3,6 @@ import type { Ticket } from '../types'
 import { useEffect, useState } from 'react'
 import {
   getVisibleTicketCardBadges,
-  isTicketCardBadgeVisible,
   TICKET_CARD_BADGES_CHANGED_EVENT,
   TicketCardBadge,
 } from '../config/ticketCardBadges'
@@ -28,7 +27,7 @@ const TicketAttributeTags: React.FC<TicketAttributeTagsProps> = ({ ticket, class
     return () => window.removeEventListener(TICKET_CARD_BADGES_CHANGED_EVENT, handleBadgePreferenceChange)
   }, [])
 
-  const isVisible = (badgeId: TicketCardBadgeId) => isTicketCardBadgeVisible(visibleBadgeIds, badgeId)
+  const isVisible = (badgeId: TicketCardBadgeId) => visibleBadgeIds.includes(badgeId)
 
   return (
     <div className={`flex flex-wrap gap-2 ${className}`}>
