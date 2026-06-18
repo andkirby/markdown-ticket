@@ -43,24 +43,22 @@ export const TicketCardBadgeOptions: readonly TicketCardBadgeOption[] = [
   { id: TicketCardBadge.WORKTREE, label: 'Worktree' },
 ] as const
 
-export const DEFAULT_TICKET_CARD_BADGES: readonly TicketCardBadgeId[] = TicketCardBadgeIds
-
 function isTicketCardBadgeId(value: unknown): value is TicketCardBadgeId {
   return typeof value === 'string' && (TicketCardBadgeIds as readonly string[]).includes(value)
 }
 
 export function normalizeTicketCardBadgeIds(value: unknown): TicketCardBadgeId[] {
   if (!Array.isArray(value))
-    return [...DEFAULT_TICKET_CARD_BADGES]
+    return [...TicketCardBadgeIds]
 
   const selected = TicketCardBadgeIds.filter(id => value.includes(id))
-  return selected.length > 0 ? selected : [...DEFAULT_TICKET_CARD_BADGES]
+  return selected.length > 0 ? selected : [...TicketCardBadgeIds]
 }
 
 export function getVisibleTicketCardBadges(): TicketCardBadgeId[] {
   return readLocalStoragePreference(
     TICKET_CARD_BADGE_STORAGE_KEY,
-    [...DEFAULT_TICKET_CARD_BADGES],
+    [...TicketCardBadgeIds],
     {
       merge: storedValue => normalizeTicketCardBadgeIds(storedValue),
     },
@@ -78,11 +76,4 @@ export function setVisibleTicketCardBadges(badgeIds: readonly TicketCardBadgeId[
   }
 
   return normalized
-}
-
-export function isTicketCardBadgeVisible(
-  visibleBadgeIds: readonly TicketCardBadgeId[],
-  badgeId: TicketCardBadgeId,
-): boolean {
-  return visibleBadgeIds.includes(badgeId)
 }
