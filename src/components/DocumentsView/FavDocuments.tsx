@@ -100,7 +100,8 @@ export default function FavDocuments({
                 <button
                   type="button"
                   className="fav-star-btn fav-star-btn--document"
-                  data-active=""
+                  data-active={document.favorite ? '' : undefined}
+                  title={document.favorite ? 'Click to unfavorite' : 'Click to favorite'}
                   aria-label="Toggle favorite"
                   data-testid="document-fav-star"
                   data-document-path={document.path}
@@ -109,7 +110,7 @@ export default function FavDocuments({
                     onToggleFavorite(document)
                   }}
                 >
-                  <Icon name="fav-star" className={cn('fav-star fav-star--document', 'active')} />
+                  <Icon name="fav-star" className={cn('fav-star fav-star--document', document.favorite && 'active')} />
                 </button>
               )}
             </div>

@@ -99,12 +99,18 @@ describe('SettingsModal', () => {
     expect(localStorage.getItem(MARKDOWN_DENSITY_KEY)).toBe('comfortable')
   })
 
-  it('persists board preferences without backend requests', () => {
+  it('persists board preferences without backend requests', async () => {
     const fetchMock = mock(() => Promise.resolve(new Response('{}')))
     globalThis.fetch = fetchMock as unknown as typeof fetch
 
     render(<SettingsModal isOpen={true} onClose={onClose} />)
     selectTab('settings-tab-board')
+
+    // The modal loads accent/selector state once on open (added in MDT-181);
+    // let that mount-time request settle, then assert board-pref changes stay
+    // localStorage-only and trigger no further backend calls.
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled())
+    fetchMock.mockClear()
 
     fireEvent.change(screen.getByTestId('settings-card-density'), {
       target: { value: 'compact' },
@@ -128,11 +134,27 @@ describe('SettingsModal', () => {
     expect(localStorage.getItem('mdt-eventHistory-hidden')).toBe('true')
   })
 
-  it('shows project access help for owner sharing settings', () => {
+  it('shows project access help for owner sharing settings', async () => {
+    // The sharing tab mounts ReadAccessTokens, which fetches /api/read-tokens on
+    // mount (MDT-172). Without a fetch mock, bun's fetch throws on the relative
+    // URL under jsdom (about:blank). Mock both mount-time endpoints.
+    const fetchMock = mock(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.includes('/api/read-tokens')) {
+        return new Response(JSON.stringify({ tokens: [], linkOrigins: { options: [] } }), {
+          headers: { 'Content-Type': 'application/json' },
+        })
+      }
+      return new Response('{}')
+    })
+    globalThis.fetch = fetchMock as unknown as typeof fetch
+
     render(<SettingsModal isOpen={true} onClose={onClose} selectedProject={createProject()} />)
     selectTab('settings-tab-sharing')
 
-    expect(screen.getByTestId('settings-sharing-mode')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByTestId('settings-sharing-mode')).toBeInTheDocument()
+    })
     expect(screen.getByTestId('settings-sharing-info')).toHaveAccessibleName('Project access mode details')
   })
 
