@@ -1,7 +1,7 @@
 import type { Ticket } from '../types'
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { setVisibleTicketCardBadges, TicketCardBadge } from '../config/ticketCardBadges'
 import TicketAttributes from './TicketAttributes'
 import TicketAttributeTags from './TicketAttributeTags'
@@ -22,8 +22,17 @@ const ticket = {
   lastModified: '2026-05-17T00:00:00.000Z',
 } as Ticket
 
+// TicketAttributes renders RelationshipBadge, whose SmartLink needs the
+// :projectCode route param (matches the real app route /prj/:projectCode/...).
+// A bare MemoryRouter yields no params and buildTicketPath throws.
 function renderWithRouter(ui: React.ReactElement) {
-  return render(<MemoryRouter>{ui}</MemoryRouter>)
+  return render(
+    <MemoryRouter initialEntries={['/prj/MDT']}>
+      <Routes>
+        <Route path="/prj/:projectCode" element={ui} />
+      </Routes>
+    </MemoryRouter>,
+  )
 }
 
 describe('TicketAttributeTags badge visibility', () => {
