@@ -2,8 +2,9 @@ import type { Project } from '@mdt/shared/models/Project.js'
 import type { FileMetadata } from '../commands/ExtractMetadataCommand.js'
 import type { ProjectConfig, TreeNode as StrategyTreeNode } from '../strategies/TreeBuildingStrategy.js'
 import { TreeBuilder } from '../builders/TreeBuilder.js'
-import { TreeStrategyFactory } from '../factories/TreeStrategyFactory.js'
 import { ConfigRepository } from '../repositories/ConfigRepository.js'
+import { DocumentNavigationStrategy } from '../strategies/DocumentNavigationStrategy.js'
+import { PathSelectionStrategy } from '../strategies/PathSelectionStrategy.js'
 
 // Re-export TreeNode with metadata support
 interface TreeNode extends StrategyTreeNode {
@@ -41,7 +42,7 @@ export class TreeService {
       throw new Error('No document configuration found')
     }
 
-    const strategy = TreeStrategyFactory.createDocumentNavigationStrategy()
+    const strategy = new DocumentNavigationStrategy()
     const builder = new TreeBuilder(strategy)
     const projectConfig: ProjectConfig = {
       document: {
@@ -63,7 +64,7 @@ export class TreeService {
     const project = await this._getProject(projectId)
     const config = await this.configRepository.getConfig(project.project.path)
 
-    const strategy = TreeStrategyFactory.createPathSelectionStrategy()
+    const strategy = new PathSelectionStrategy()
     const builder = new TreeBuilder(strategy)
     const projectConfig: ProjectConfig = {
       document: {
