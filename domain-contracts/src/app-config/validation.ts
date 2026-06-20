@@ -1,10 +1,8 @@
 import {
   DOCUMENT_FAV_STATE_DEFAULTS,
-  DocumentFavItemSchema,
   DocumentFavStateSchema,
   GlobalConfigSchema,
   SELECTOR_ACCENT_HEX_PATTERN,
-  SelectorPreferencesSchema,
   SelectorStateEntrySchema,
   SelectorStateSchema,
   UserConfigSchema,
@@ -14,24 +12,8 @@ export function validateGlobalConfig(data: unknown) {
   return GlobalConfigSchema.parse(data)
 }
 
-export function safeValidateGlobalConfig(data: unknown) {
-  return GlobalConfigSchema.safeParse(data)
-}
-
 export function validateUserConfig(data: unknown) {
   return UserConfigSchema.parse(data)
-}
-
-export function safeValidateUserConfig(data: unknown) {
-  return UserConfigSchema.safeParse(data)
-}
-
-export function validateSelectorPreferences(data: unknown) {
-  return SelectorPreferencesSchema.parse(data)
-}
-
-export function safeValidateSelectorPreferences(data: unknown) {
-  return SelectorPreferencesSchema.safeParse(data)
 }
 
 export function validateSelectorStateEntry(data: unknown) {
@@ -92,14 +74,6 @@ export function sanitizeSelectorState(data: unknown) {
   }
 
   return sanitizedState
-}
-
-export function validateDocumentFavItem(data: unknown) {
-  return DocumentFavItemSchema.parse(data)
-}
-
-export function safeValidateDocumentFavItem(data: unknown) {
-  return DocumentFavItemSchema.safeParse(data)
 }
 
 export function validateDocumentFavState(data: unknown) {
