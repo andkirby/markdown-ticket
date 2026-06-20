@@ -26,6 +26,10 @@ function escapeHtml(content: string): string {
 export function initMermaid(isDark: boolean): void {
   mermaid.initialize({
     startOnLoad: false,
+    // Prevent mermaid from appending its own error <div> to document.body
+    // on parse errors — it skips cleanup on the throw path and leaves the
+    // orphan rendering below the page. The hook's catch renders errors inline.
+    suppressErrorRendering: true,
     theme: isDark ? 'dark' : 'default',
     themeVariables: {
       ...THEME_CONFIG,
