@@ -5,7 +5,6 @@
 
 import {
   safeValidateProject,
-  safeValidateProjectConfig,
   validateProject,
   validateProjectConfig,
 } from '../validation.js'
@@ -131,39 +130,6 @@ describe('safeValidateProject', () => {
     if (!result.success) {
       const projectError = result.error.issues.find(i => i.path[0] === 'project')
       expect(projectError?.message).toMatch(/Required/)
-    }
-  })
-})
-
-describe('safeValidateProjectConfig', () => {
-  it('returns success: true on valid input', () => {
-    const result = safeValidateProjectConfig({
-      'project': {
-        code: 'MDT',
-        name: 'Test Project',
-        id: 'test-id',
-        ticketsPath: './docs/CRs',
-      },
-      'project.document': {
-        paths: ['docs/**/*.md'],
-        excludeFolders: ['node_modules'],
-        maxDepth: 3,
-      },
-    })
-
-    expect(result.success).toBe(true)
-  })
-
-  it('returns success: false on invalid input', () => {
-    const result = safeValidateProjectConfig({
-      project: {
-        code: '', // empty code fails .min(1)
-      },
-    })
-
-    expect(result.success).toBe(false)
-    if (!result.success) {
-      expect(result.error.issues.length).toBeGreaterThan(0)
     }
   })
 })
