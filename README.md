@@ -53,7 +53,7 @@ claude mcp add --scope user mdt-all node $PWD/mcp-server/dist/index.js
 
 | Service | Docker | Local |
 |---------|--------|-------|
-| Web UI | http://localhost:5174 | http://localhost:4173 |
+| Web UI | http://localhost:3070 | http://localhost:3075 |
 | MCP | http://localhost:3012/mcp | stdio |
 
 ---
