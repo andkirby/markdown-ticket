@@ -1,6 +1,6 @@
 # Release Notes
 
-## v0.24.0 (2026-06-13)
+## v0.24.0 (2026-06-23)
 
 ### Improvements
 
@@ -9,7 +9,18 @@
 - Hover the active project card to reveal the other projects as compact chips that fade and slide in
 - A subtle chevron hint on the card's edge signals that more projects are one hover away
 - Picking a project hides the chip strip instantly, even if your cursor stays put
+- Accent colors now default to a solid fill with auto-color off, for a calmer first-run look — toggle either in Settings → Board
 - Less visual noise during everyday board work, with the same one-gesture switching on desktop and mobile
+
+**Dedicated Default Ports**
+- The web UI now runs on ports reserved for this app, so it no longer clashes with other Vite projects on your machine
+- Dev server: `http://localhost:3075` · Production (Docker): `http://localhost:3070`
+- Update any bookmarks, scripts, or reverse-proxy configs that pointed at the old ports (5173/5174)
+
+### Bug Fixes
+
+**Cleaner Broken Diagrams**
+- When a Mermaid diagram fails to render, the error now appears inline where the diagram belongs, instead of floating as an orphan box below the page
 
 ### Under the Hood
 
