@@ -10,93 +10,58 @@ description: |
 
 # Ticket Pipeline E2E
 
-Run one ticket from intent to reviewed implementation. Keep the workflow
-project-agnostic: discover local conventions first, then use the repository's own
-tools, docs, skill index, commands, ticket system, and language stack.
+Run one ticket from intent to reviewed implementation. Own the control loop;
+load project docs, project-local skills, references, and tools only when needed.
+
+## Start Here
+
+1. Read root instructions and ticket docs.
+2. Run this skill's `scripts/discover_project.sh <repo-root> [ticket]` when
+   shell access is available.
+3. Resolve the ticket source, artifact directory, current status, and existing
+   artifacts.
+4. Write or update `.pipeline-state.json` in the ticket artifact directory.
+5. Run baseline verification from project docs or discovered package scripts.
+6. Start the milestone matrix below.
 
 ## Core Rules
 
-- Read project instructions before acting: root agent docs, ticket docs, and the
-  project-local skill index if present.
-- If `docs/SKILLS.md` exists, read it before selecting helper skills. Treat it as
-  project-local guidance, not a required file for every repository.
-- Use local ticket, trace, and CLI tools when available. Do not hardcode MDT-only
-  commands unless the target project explicitly documents them.
-- Never auto-close without explicit user approval.
-- Keep the working tree scoped. Do not stash, reset, or stage unrelated changes.
-- Record state on disk so the pipeline can resume after context loss.
+- Prefer project docs over this generic skill for paths, commands, statuses,
+  durable docs, and verification.
+- Read `docs/SKILLS.md` when present before selecting helper skills.
+- Do not hardcode MDT commands unless the project documents MDT or the user says
+  "use MDT flow".
+- Never close a ticket without explicit user approval.
+- Keep the worktree scoped; never stash, reset, stage, or rewrite unrelated
+  user changes.
+- Record enough state on disk to resume after context loss.
 
-## References
+## Discovery Record
 
-Load only the references needed for the current run:
+Record this before milestone 1:
 
-| Reference | When to read |
-|-----------|--------------|
-| `references/mdt-workflow.md` | User asks to use MDT flow or MDT workflow skills are available |
-| `references/ralph-loop.md` | Ralph tools or protocol are available in the host app |
-| `references/language-typescript.md` | TypeScript, JavaScript, Node, Bun, npm, pnpm, yarn, React |
-| `references/language-python.md` | Python, Django, Flask, FastAPI, pytest, uv, Poetry |
-| `references/language-rust.md` | Rust, Cargo, crates, clippy |
-| `references/language-go.md` | Go modules, `go test`, `go vet` |
+```text
+Project docs: <files read>
+Ticket source: <key/url/path/description>
+Artifact directory: <path>
+Ticket status model: <states and transition command, or none>
+Workflow skills/tools: <project-local first, global fallback>
+Language/runtime: <detected stack and selected references>
+Verification commands: <baseline build/test/lint/docs commands>
+Dirty worktree boundary: <unrelated files to avoid, or none>
+```
 
-If Ralph is not available, use ordinary planning wording: "milestone started",
-"milestone complete", and "next milestone".
-
-## Pipeline Shape
-
-Use these milestones. Skip a milestone only when local project instructions or
-ticket scope make it irrelevant.
-
-| # | Milestone | Purpose |
-|---|-----------|---------|
-| 0 | Pre-flight | Discover project, ticket, state, tools, dirty tree, baseline |
-| 1 | Assess | Clarify scope, risk, dependencies, non-goals |
-| 2 | Requirements | Define required behavior and constraints |
-| 3 | Scenarios | Capture acceptance scenarios or equivalent examples |
-| 4 | Architecture | Decide ownership, boundaries, data flow, migration path |
-| 5 | UX Design | Only for user-facing UI or interaction changes |
-| 6 | Tests | Map requirements/scenarios to verification commands and files |
-| 7 | Tasks | Produce ordered, scoped implementation tasks |
-| 8 | Implement | Execute tasks with TDD or equivalent verification discipline |
-| 9 | Review | Review diff against requirements, architecture, and tests |
-| 10 | Debt | Identify blocking structural debt and deferred follow-ups |
-| 11 | User Review | Present evidence, handle changes, close only on approval |
-
-## Inputs
-
-Accept a ticket key, issue URL, file path, or concise task description.
-
-Common flags:
-
-| Flag | Meaning |
-|------|---------|
-| `--from STAGE` | Resume from a milestone after validating prior state |
-| `--skip STAGES` | Skip named milestones with a short recorded reason |
-| `--no-auto-close` | Stop before status close; closing still requires approval |
-| `--ux-force` | Run UX design even if UI is not auto-detected |
-| `--ignore CHECKS` | Ignore specific pre-flight checks only when user approved |
-| `--language NAME` | Force a language reference when auto-detection is ambiguous |
-
-## Pre-Flight
-
-1. Discover project context:
-   - Read root instructions such as `AGENTS.md`, `CLAUDE.md`, `.github/copilot-instructions.md`, or equivalent.
-   - Read `docs/SKILLS.md` if present.
-   - If the user says "use MDT flow", read `references/mdt-workflow.md`.
-   - Read ticket-system docs or CLI docs before mutating ticket state.
-   - Detect package files: `package.json`, `pyproject.toml`, `Cargo.toml`,
-     `go.mod`, or project-specific manifests.
-2. Identify language references to load. Prefer project docs over generic refs.
-3. Resolve ticket source, artifact directory, current status, and existing spec files.
-4. Create or update a state file in the ticket artifact directory:
+State file shape:
 
 ```json
 {
   "pipeline": "mdt-pipeline-e2e",
-  "version": 2,
+  "version": 4,
   "ticket": "<ticket key or source>",
   "currentMilestone": "pre-flight",
   "completedMilestones": [],
+  "discovery": {},
+  "artifacts": {},
   "baseline": {},
   "approvals": {},
   "commits": [],
@@ -104,161 +69,91 @@ Common flags:
 }
 ```
 
-5. Inspect git state:
-   - Run tracked and untracked status checks.
-   - If unrelated changes exist, leave them untouched and record the boundary.
-   - If conflicting changes block the task, stop and ask.
-6. Run baseline commands from project docs. If undocumented, infer cautiously from
-   manifests and loaded language references.
+## References
 
-Baseline record:
+Load only what applies:
+
+| Reference | Load when |
+|-----------|-----------|
+| `references/mdt-workflow.md` | User says "use MDT flow" or MDT stage skills are available |
+| `references/ux-gate.md` | UI, interaction, content, visual, or durable design-doc changes |
+| `references/ralph-loop.md` | Ralph tools or equivalent milestone protocol are available |
+| `references/language-typescript.md` | TypeScript, JavaScript, Node, Bun, npm, pnpm, yarn, React |
+| `references/language-python.md` | Python, Django, Flask, FastAPI, pytest, uv, Poetry |
+| `references/language-rust.md` | Rust, Cargo, crates, clippy |
+| `references/language-go.md` | Go modules, `go test`, `go vet` |
+
+## Inputs
+
+Accept a ticket key, issue URL, file path, or concise task description.
+
+| Flag | Meaning |
+|------|---------|
+| `--from STAGE` | Resume after validating prior artifacts and state |
+| `--skip STAGES` | Skip named milestones with a recorded reason |
+| `--no-auto-close` | Stop before final status close |
+| `--ux-force` | Run UX even when not auto-detected |
+| `--ignore CHECKS` | Ignore checks only with user approval |
+| `--language NAME` | Force a language reference when detection is ambiguous |
+
+## Milestone Matrix
+
+Default artifact names may be overridden by project docs.
+
+| Milestone | Load | Write | Done when | Stop if |
+|-----------|------|-------|-----------|---------|
+| Pre-flight | Root docs, ticket docs, skill registry | `.pipeline-state.json` | Discovery, dirty boundary, baseline commands recorded | Ticket/artifact dir/status is unsafe to infer |
+| Assess | `mdt:assess` if using MDT | `assess.md` | Scope, non-goals, risks, dependencies, confidence recorded | Scope is materially ambiguous |
+| Requirements | `mdt:requirements` if using MDT | `requirements.md` | Functional needs, constraints, durable-doc impacts recorded | Required behavior is unknowable |
+| Scenarios | `mdt:bdd` if using MDT | `bdd.md` or project equivalent | Acceptance examples are testable | Critical examples conflict |
+| Architecture | `mdt:architecture` if using MDT | `architecture.md` | Owners, boundaries, data flow, migration, rollback recorded | Ownership or migration path is unsafe |
+| UX | `references/ux-gate.md` | `ux-design.md` plus durable design docs when approved | UX draft reviewed; durable docs updated or skipped with reason | Required reviewer approval is missing |
+| Tests | `mdt:tests` plus language reference | `tests.md` | Each requirement/scenario maps to exact verification | No credible verification path exists |
+| Tasks | `mdt:tasks` if using MDT | `tasks.md` | Ordered tasks include scope, files, commands, expected result | Diff would be too broad for one ticket |
+| Implement | Implementation skill, task refs | Code, docs, task/state updates | Required checks pass or exceptions are recorded | Dirty conflict, destructive action, or blocked check |
+| Review | Changed files, artifacts, language refs | Review notes/state fixes | Blocking issues fixed and checks rerun | Data loss, security, missing tests, or architecture drift remains |
+| Debt | `mdt:tech-debt` if useful | Debt notes in state or ticket | Blocking debt separated from follow-ups | Debt blocks correctness |
+| User Review | Final artifacts and evidence | Close report | User approves close | User requests changes |
+
+Skip a milestone only when project rules or ticket scope make it irrelevant.
+Record the skipped milestone and reason in state.
+
+## State Updates
+
+After every milestone:
+
+- Write the human artifact named in the matrix unless project docs override it.
+- If a stage tool writes only a trace/projection file, also write the concise
+  human artifact named in the matrix.
+- Update `.pipeline-state.json`:
+  - `currentMilestone` is the next pending milestone or `user-review`.
+  - `completedMilestones` includes the finished milestone.
+  - `artifacts` maps milestone names to written paths.
+  - `baseline`, `approvals`, `commits`, and exceptions are current.
+- Do not call a milestone complete until its state and artifact entries are
+  written.
+
+## Implementation Gates
+
+- If implementing, move backlog/open/proposed work to the project's documented
+  in-progress status before editing code.
+- If no status system exists, record implementation start in state.
+- Continue into implementation when the user asked to run end to end, implement,
+  take the ticket to done, or use full autonomy.
+- Pause only for planning-only requests, required approvals, unsafe inference,
+  destructive actions, conflicting dirty worktree, or blocked verification.
+
+Hard gates before review:
 
 ```text
-Build: <pass/fail/skipped> command=<...>
-Tests: <pass/fail/skipped> command=<...>
-Lint:  <pass/fail/skipped> command=<...>
-Known pre-existing failures: <summary>
+Build/typecheck: <pass/fail/skipped> command=<...>
+Tests:          <pass/fail/skipped> command=<...>
+Lint/static:    <pass/fail/skipped> command=<...>
+Docs/other:     <pass/fail/skipped> command=<...>
+Known failures: <pre-existing or accepted exceptions>
 ```
 
-## Milestone Contract
-
-For each milestone:
-
-1. Load only the project docs, workflow skills, and language references needed.
-2. Read all prior artifacts from disk; do not rely on conversation memory.
-3. Produce or update the milestone artifact in the ticket artifact directory.
-4. Self-review for completeness, traceability, and consistency.
-5. Update the pipeline state file with:
-   - milestone name,
-   - artifact paths,
-   - verification evidence,
-   - skipped or deferred items,
-   - user approvals when relevant.
-
-When Ralph tools exist, follow `references/ralph-loop.md` for milestone start and
-finish calls. Otherwise, report concise milestone progress in normal text.
-
-## Spec Milestones
-
-Keep artifacts concise and traceable.
-
-Assess:
-- Define scope, non-goals, dependencies, risks, and implementation confidence.
-
-Requirements:
-- Capture functional requirements, non-functional constraints, and durable docs
-  that may need updates.
-
-Scenarios:
-- Write acceptance examples in the project's preferred form: BDD, examples,
-  fixtures, API contracts, screenshots, or CLI transcripts.
-
-Architecture:
-- Define behavior owners, module boundaries, data flow, storage/API changes,
-  error handling, migration strategy, and rollback/compatibility constraints.
-- For backend or shared logic, name the owning layer and consumers.
-- For UI, include state transitions and accessibility/responsive constraints.
-
-UX Design:
-- Run only for UI, interaction, content, or visual changes unless forced.
-- Select the UX skill from the project skill registry first. If no project UX
-  skill is documented, use the global UX designer/specifier skill. Use wireframe
-  skills only when a visual sketch, state diagram, or layout mockup reduces
-  ambiguity.
-- Treat UX skills as design-content helpers. The pipeline owns reading the
-  ticket, writing the ticket-local UX artifact, and updating durable docs.
-- First write a ticket-local UX artifact such as `ux-design.md` for proposed
-  flows, alternatives, state tables, and implementation notes.
-- Before durable docs are updated, run a reviewer gate. Prefer a project UX
-  reviewer skill or reviewer role if the registry provides one; otherwise use an
-  independent review pass with the selected UX skill. Human review is optional
-  unless the project requires it.
-- The reviewer must approve the ticket-local UX draft or request revisions.
-  Record reviewer identity, verdict, required changes, and approval evidence in
-  the ticket-local UX artifact and pipeline state.
-- Only after approval, update durable design documentation before moving to
-  Tests or Tasks. If no durable doc is needed, record the reason in the
-  ticket-local UX artifact.
-- Keep durable docs focused on final surface behavior, states, interaction
-  contracts, accessibility, and responsive expectations.
-
-Tests:
-- Map each requirement and scenario to concrete verification.
-- Prefer exact commands and file paths.
-- Mark expected RED/GREEN state before implementation.
-
-Tasks:
-- Order tasks so each has a clear scope, owned files, verification command, and
-  expected behavior change.
-- Split large tickets into parts when a single diff would be hard to review.
-
-Pause before implementation unless the user explicitly requested full autonomy.
-Summarize artifacts, key decisions, and verification plan.
-
-## Status Transitions
-
-When the agent starts implementation work with intent to implement the ticket,
-move the ticket from backlog/open/proposed into the project's documented
-in-progress status before editing code. Use the local ticket CLI, tracker API,
-or issue system documented by the project.
-
-Rules:
-- Do this after the spec checkpoint when the user approves implementation.
-- If the user explicitly requested full autonomy, do it before the first
-  implementation task.
-- If a project distinguishes "open" from "in progress", prefer "in progress"
-  once code/spec implementation has started.
-- If no status system exists, record the milestone in the pipeline state file
-  instead of inventing a status.
-
-## Implementation
-
-Use the repository's implementation skill or workflow when one exists.
-
-General implementation rules:
-- Follow task order.
-- Prefer TDD or an equivalent pre/post verification loop.
-- Use exact commands from task artifacts or project docs.
-- Do not broaden scope without recording why.
-- Update task checkboxes or trace records only after evidence passes.
-- Update durable docs when behavior, commands, architecture, or user workflows change.
-- If implementation changes the agreed UX behavior, update both the ticket-local
-  UX artifact and durable design docs before review.
-
-Hard gates before leaving implementation:
-- Required build/typecheck passes or the documented equivalent is satisfied.
-- Required tests pass, except recorded pre-existing failures.
-- Required lint/format/static checks pass or documented exceptions are recorded.
-
-## Review
-
-Review changed files against:
-
-- Ticket requirements and scenarios.
-- Architecture decisions and ownership boundaries.
-- Test plan coverage.
-- Language-specific failure modes from loaded references.
-- Project-specific style and docs.
-
-Block close on:
-- Logic bugs, data loss, race conditions, security regressions, resource leaks,
-  missing required tests, or architecture drift.
-- Unexplained broad diffs.
-- Uncommitted required artifacts.
-
-Fix issues in priority order and re-run affected verification.
-
-## Git And Close
-
-Commit only when the user requested commits or the workflow explicitly requires
-commits. Keep commits scoped:
-
-1. Spec artifacts.
-2. Implementation.
-3. Review fixes.
-4. Pre-existing fixes only when explicitly in scope or low-risk and approved.
-
-Close report:
+## Close Report
 
 ```text
 Ticket: <key>
@@ -271,18 +166,18 @@ Commits: <hashes, if any>
 Approval needed: <yes/no>
 ```
 
-On approval, use the project's documented status transition. If no status system
-exists, stop after reporting the evidence.
+On approval, use the project's documented close transition. Commit only when the
+user requested commits or the project workflow requires them.
 
 ## Resume
 
 For `--from STAGE`:
 
-1. Read the pipeline state file.
-2. Verify required prior artifacts exist.
-3. Check whether prior artifacts changed since their recorded timestamp/hash.
-4. Re-run cheap validation for stale or edited artifacts.
-5. Resume at the requested milestone only after state is consistent.
+1. Read `.pipeline-state.json`.
+2. Verify prior artifacts exist.
+3. Check whether prior artifacts changed since recorded timestamp/hash.
+4. Re-run cheap validation for stale artifacts.
+5. Resume only after state is consistent.
 
-If state is missing, reconstruct it from artifacts and git history, then ask only
-if reconstruction is ambiguous or risky.
+If state is missing, reconstruct it from artifacts and git history. Ask only
+when reconstruction is ambiguous or risky.
