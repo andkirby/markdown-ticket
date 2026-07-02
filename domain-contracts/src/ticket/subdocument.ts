@@ -10,8 +10,8 @@ export interface SubDocument {
 
 export const DEFAULT_SUBDOCUMENT_ORDER: readonly string[] = [
   'requirements',
-  'architecture',
   'bdd',
+  'architecture',
   'tests',
   'tasks',
   'design',
