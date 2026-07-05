@@ -2,8 +2,11 @@ import type { CorsOptions } from 'cors'
 import type { NextFunction, Request, Response } from 'express'
 
 const DEFAULT_LOCAL_ORIGINS = [
+  // Project frontend ports: 3075 dev (vite.config.ts), 3070 prod (Docker, see DOCKER_REFERENCE.md)
+  'http://localhost:3070',
+  'http://localhost:3075',
+  // Vite scaffold / tauri dev defaults
   'http://localhost:5173',
-  'http://localhost:3001',
   'http://localhost:4173',
   'http://localhost:6173',
 ] as const
