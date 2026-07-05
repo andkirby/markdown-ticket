@@ -41,7 +41,7 @@ window "Documents View Navigation — Default":
         text "Markdown content renders here." muted
 
 annotation "Header controls are [search flex] [sort] [direction] on the second row" target="nav-controls" position=right
-annotation "Favs render above Recent only when reconciled favs exist" target="fav-folder" position=right
+annotation "Favs render above Recent only when reconciled favs exist; expanded list scrolls within a relative height bound (~1/3 column, board-column style), header stays fixed" target="fav-folder" position=right
 annotation "Active star removes the fav; row opens document or locates folder" target="fav-document" position=right
 annotation "Recent section remains below Favs and keeps existing behavior" target="recent-1" position=right
 annotation "All Documents: collapsible tree roots" target="docs-root" position=right
@@ -239,8 +239,8 @@ window "Documents View Navigation — Fav Show All":
         text "# Selected document" bold
         text "Markdown content renders here." muted
 
-annotation "Initial view shows five fav rows" target="fav-cap-last" position=right
-annotation "Show all is a trailing header action; it expands every fav inline" target="fav-show-all" position=right
+annotation "Capped state: first five rows render; the cap is independent of the scroll bound" target="fav-cap-last" position=right
+annotation "Show all is a trailing header action that reveals every reconciled fav" target="fav-show-all" position=right
 ```
 
 ## Fav Show Less
@@ -261,16 +261,18 @@ window "Documents View Navigation — Fav Show Less":
           combo value="Filename ▾"
           button "↑"
         section "Favs                         Show less" id="fav-show-less":
-          list:
-            item "docs                                      ★"
+          list id="fav-scroll-body":
+            item "docs                                      ★" id="fav-overflow-top"
             item "architecture.md                           ★"
             item "README.md                                 ★"
             item "server                                    ★"
-            item "Documents View Navigation                 ★"
+            item "Documents View Navigation                 ★" id="fav-overflow-edge"
             item "docs/design                               ★"
+            item "documents-view-navigation.md              ★"
+            item "DEVELOPMENT_GUIDE.md                      ★" id="fav-overflow-bottom"
         section "Recent":
           list:
-            item "document-favs.md"
+            item "document-favs.md" id="fav-overflow-recent"
         divider
         text "All Documents" bold
         tree:
@@ -279,7 +281,9 @@ window "Documents View Navigation — Fav Show Less":
         text "# Selected document" bold
         text "Markdown content renders here." muted
 
-annotation "Show less stays in the Favs header and returns to the five-row preview" target="fav-show-less" position=right
+annotation "Expanded state: every reconciled fav renders; list body scrolls within a bound of ~1/3 of the column (header fixed)" target="fav-show-less" position=right
+annotation "Bound is relative to column height, not fixed px — scales with viewport, never starves Recent or the tree" target="fav-overflow-edge" position=right
+annotation "Recent and the tree keep their positions; only the Favs list body scrolls" target="fav-overflow-recent" position=right
 ```
 
 ## Excluded Ticket Area
@@ -351,7 +355,7 @@ Mobile behavior:
 | Search/sort row | `--border`, `--background`, `--foreground` | `.documents-view__navigation-controls-row`, `.documents-view__search-field`, `.documents-view__sort-select`, `.documents-view__sort-direction-button` | Search flexes left; sort select and direction stay fixed on the right |
 | Fav rows | `--foreground`, `--muted-foreground`, `--star-*` | `.fav-star.fav-star--document.active` | Active star is trailing/right-aligned; document row opens; folder row locates |
 | Recent rows | `--foreground`, `--muted-foreground` | tree file row classes | Same title, filename, truncation, and hover behavior as file rows |
-| Favs/Recent/tree divider | `--border` | `border-b border-border` | Thin separators; Favs expands inline with Show all; tree scrolls independently below shortcut sections |
+| Favs/Recent/tree divider | `--border` | `border-b border-border` | Thin separators; Favs list body scrolls within a relative height bound (~1/3 column); tree scrolls independently below shortcut sections |
 | Selected row | `--primary` | `data-tree-state="selected"` proposed | Active physical document highlight; filename tab selection follows the same file path |
 | Located folder row | `--primary` | `data-located="true"` | Folder fav target after locate action |
 | Section open state | browser localStorage | document navigation preferences | Favs and Recent collapsed/open state persists per project as separate values in the current browser |
