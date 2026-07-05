@@ -129,6 +129,7 @@ Documents View responds only while mounted. It does not need to refresh document
 | grouped sibling added | `document:file:changed` with `add` for same logical markdown base | Refresh tree and filename tabs, preserve current active tab |
 | current selected file deleted with grouped fallback | `document:file:changed` with `unlink` for `selectedFile`; root or sibling variant still exists | Select `main` when present, otherwise first sorted sibling tab; update preview to that physical file |
 | current selected file deleted without fallback | `document:file:changed` with `unlink` for `selectedFile`; no sibling remains | Keep path selected, replace preview with deleted-file empty state and action to choose another file |
+| selected file missing on load (SSE race, stale URL, or pre-reconnect) | content API returns `404` for `selectedFile` | Same as unlink-without-fallback: keep path selected, show deleted-file empty state |
 | document route not mounted | event arrives while Board/List is active | No visible UI change; next Documents View mount fetches fresh tree/content |
 | SSE reconnects | `sse:reconnected` | Refetch documents tree; if a file is selected, refetch its content |
 | refresh button or cache clear used | manual user action | Refetch tree and selected content; no route change |
@@ -151,6 +152,7 @@ Documents should not write date frontmatter automatically. For configured docume
 - Invalidate document content cache for the changed absolute file path.
 - Refetch the document tree after document events so metadata is recalculated from filesystem stats.
 - Broadcast only normalized project-relative document paths.
+- Return `404` (not `500`) when the content endpoint is asked for a file that no longer exists, so a missing file is a recoverable client condition, not a server error.
 - Debounce rapid writes by file path, matching the existing 100ms SSE debounce pattern.
 
 ## Frontend Requirements

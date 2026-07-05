@@ -96,6 +96,11 @@ export class DocumentController {
 
           break
         }
+        case 'File not found': {
+          res.status(404).json({ error: 'Not Found', message: error.message })
+
+          break
+        }
         case 'Invalid file path': {
           res.status(403).json({ error: 'Forbidden', message: error.message })
 
