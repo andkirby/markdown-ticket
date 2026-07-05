@@ -133,4 +133,29 @@ describe('FavDocuments (MDT-171)', () => {
 
     expect(onShowAllChange).toHaveBeenCalledWith(false)
   })
+
+  it('bounds the Favs list to a relative max-height so it scrolls instead of pushing the tree', () => {
+    const manyDocuments = Array.from({ length: 7 }, (_, index) => ({
+      name: `doc-${index}.md`,
+      path: `docs/doc-${index}.md`,
+      type: 'file' as const,
+      favorite: true,
+      favoritedAt: `2026-05-18T10:0${index}:00.000Z`,
+    }))
+
+    render(
+      <FavDocuments
+        documents={manyDocuments}
+        isExpanded={true}
+        showAll={true}
+        onSelectDocument={mock()}
+        onToggleFavorite={mock()}
+        onExpandedChange={mock()}
+        onShowAllChange={mock()}
+      />,
+    )
+
+    // Relative (column-share) bound, not a fixed pixel value.
+    expect(screen.getByTestId('document-favs').style.maxHeight).toMatch(/%/)
+  })
 })

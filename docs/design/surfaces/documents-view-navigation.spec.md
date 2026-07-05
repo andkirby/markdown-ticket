@@ -84,17 +84,19 @@ DocumentsLayout
 - Search input uses the available row width before the fixed-width sort controls; sort controls must not squeeze title/actions into the first row.
 - Search, sort select, and sort direction button share a single visual row and equal control height.
 - Favs appear above Recent when reconciled favs exist.
-- Favs are collapsible, default to expanded, and initially show up to 5 rows in this version.
-- Favs expanded/collapsed state is browser-local UI state and persists for the current project.
+- Favs are collapsible, default to expanded, and initially show up to 5 rows.
+- Favs is an independently scrollable region: the section header stays fixed and the list body scrolls, borrowing the board column scroll pattern (shared shadcn `ScrollArea` primitive with `min-h-0` and an auto-hiding scrollbar).
+- The Favs scroll region height is relative to the navigation column, not a fixed pixel value: content-sized up to roughly one third of the column height, so it scales with the viewport and never starves Recent or the file tree. The bound is exposed as a tunable value.
+- The five-row cap and `Show all` / `Show less` are independent of the scroll bound: the cap controls how many fav rows render; the bound controls region height. Scroll engages only when rendered rows exceed the bound (typically after `Show all`, or on short viewports).
 - When more than 5 reconciled favs exist, the Favs header shows a compact trailing `Show all` action.
-- Favs is not an independently scrollable block in MDT-171.
+- Favs expanded/collapsed state is browser-local UI state and persists for the current project.
 - Favs rows can represent configured folders or markdown documents.
 - Favs rows use an active star control aligned to the trailing/right edge to remove the fav.
 - Recent documents appear above the full tree only after the user opens documents and below Favs when both exist.
 - Recent documents are collapsible and default to expanded.
 - Recent expanded/collapsed state is browser-local UI state and persists for the current project.
 - Recent documents appear above the full tree, capped at 5 items.
-- Favs and Recent are outside the tree scroll area; only the file tree scrolls inside the sidebar.
+- Favs has its own bounded scroll area (see above); Recent stays outside any scroll area, and only the file tree scrolls in the remaining sidebar space below the shortcut sections.
 - A thin `--border` divider separates Favs, Recent, and the tree.
 - File tree starts with configured roots collapsed by default.
 - Favs and Recent rows use the same row padding, title/filename display, truncation, and hover treatment as file rows in the tree.
@@ -118,8 +120,10 @@ DocumentsLayout
 | fav toggled off | user clicks an active star in tree or Favs | star becomes inactive and the item is removed from Favs |
 | folder fav selected | user selects a folder fav row | filter clears if needed; ancestors expand; folder row scrolls into view and receives located state |
 | more than five favs | six or more reconciled favs exist | first five rows render and the Favs header shows trailing `Show all` |
-| show all favs | user selects `Show all` | all reconciled fav rows render and the action changes to `Show less` |
+| show all favs | user selects `Show all` | all reconciled fav rows render; if they exceed the region bound the list body scrolls with the header fixed; action changes to `Show less` |
 | show less favs | user selects `Show less` | Favs returns to the first five rows and the action changes to `Show all` |
+| favs overflow | rendered fav rows exceed the region bound (relative column height) | Favs list body scrolls internally; section header, Recent, and tree positions are unaffected |
+| favs scroll | user scrolls inside the Favs region | only the Favs list body moves; section header, Recent, and tree do not scroll |
 | recent collapsed | user collapses Recent | recent shortcut rows are hidden; divider and tree stay visible |
 | recent collapse restored | user reloads Documents View in same browser/project | Recent restores the last expanded/collapsed state when recent documents exist |
 | recent default expanded | no browser section-state preference exists | Recent renders expanded when recent documents exist |
@@ -164,12 +168,15 @@ DocumentsLayout
 - Selecting a document fav opens the physical file path, expands its tree ancestors, and selects the matching filename tab when applicable.
 - Selecting a folder fav expands and locates the matching folder in the tree.
 - Empty Favs is hidden.
+- The Favs list body is an independently scrollable region. Its height is content-sized up to roughly one third of the navigation column (relative, not a fixed pixel value), so it scales with the viewport and never starves Recent or the file tree; the bound is exposed as a tunable value.
+- The section header (toggle, label, and `Show all` / `Show less` action) stays fixed above the scroll area; only the list body scrolls, mirroring the board `Column` header + `ScrollArea` body pattern.
+- The scroll uses the shared shadcn `ScrollArea` primitive with `min-h-0` and `scrollHideDelay` so the scrollbar auto-hides, matching board column behavior.
 - More than five reconciled favs are persisted and remain reachable through `Show all`.
 - More than five reconciled favs show a compact `Show all` action in the Favs header line.
 - `Show all` reveals every reconciled fav in the section and changes to `Show less` in the same header position.
 - `Show less` returns the section to the first five visible fav rows.
 - Show-all state is browser-local per project and separate from the Favs expanded/collapsed state.
-- The Favs section does not get its own scrollbar; `Show all` expands the section inline.
+- The five-row cap and `Show all` / `Show less` are independent of the scroll bound: the cap controls how many rows render; the bound controls region height. Scroll engages only when rendered rows exceed the bound (typically after `Show all`, or on short viewports).
 
 ## Recent Documents
 
@@ -237,10 +244,12 @@ DocumentsLayout
 | copy path button | `.copy-path-btn` | hover-revealed trailing action — see `copy-document-path.spec.md` |
 | row hover group | `.group` (Tailwind) | required on all row containers for trailing-action hover cascade |
 | sidebar section | Tailwind inline utilities | compact section spacing and dividers |
+| favs scroll region | `ScrollArea` (shadcn) with `min-h-0` + relative `max-h` bound (≈ one third of column, tunable) | shared `ScrollArea` mechanism with board `Column` — see `src/components/Column/index.tsx`, `src/components/Column/column.css`; bound resolves against the `.documents-view__navigation-panel` definite height |
 
 ## Extension notes
 
 - Do not add content search into this sidebar filter. If content search is needed, make it a separate search mode or command surface.
 - Do not duplicate ticket navigation inside Documents View. Ticket files belong to the ticket board and ticket viewer.
 - Do not add unmanaged pinned lists. Durable shortcuts must use explicit Favs add/remove controls and the document fav state owner.
-- Do not add nested scrolling or a popover overflow for Favs; use the Favs header `Show all` / `Show less` action.
+- Favs uses one bounded scroll region (column-style) for overflow; do not stack a second nested scroller or a popover overflow inside it.
+- The Favs scroll bound is relative to the column height (≈ one third, tunable), not a fixed pixel value, so it shares the sidebar fairly with Recent and the tree across viewport sizes.
