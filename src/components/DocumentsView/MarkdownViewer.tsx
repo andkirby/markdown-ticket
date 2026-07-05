@@ -76,6 +76,7 @@ export default function MarkdownViewer({ projectId, filePath, fileInfo, refreshT
   const [content, setContent] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [notFound, setNotFound] = useState(false)
   const [markdownDensity, setMarkdownDensity] = useState(getMarkdownDensity)
   const hasContentRef = useRef(false)
   const loadedFilePathRef = useRef<string | null>(null)
@@ -105,12 +106,17 @@ export default function MarkdownViewer({ projectId, filePath, fileInfo, refreshT
       if (!hasContentRef.current)
         setLoading(true)
       setError(null)
+      setNotFound(false)
       const response = await authFetch(`/api/documents/content?projectId=${encodeURIComponent(projectId)}&filePath=${encodeURIComponent(filePath)}`)
       if (response.ok) {
         const text = await response.text()
         setContent(text)
         hasContentRef.current = true
         loadedFilePathRef.current = filePath
+      }
+      else if (response.status === 404) {
+        // File gone from FS (SSE race or stale URL) — show the deleted UI.
+        setNotFound(true)
       }
       else {
         setError('Failed to load document')
@@ -162,7 +168,7 @@ export default function MarkdownViewer({ projectId, filePath, fileInfo, refreshT
     )
   }
 
-  if (fileDeleted) {
+  if (fileDeleted || notFound) {
     return (
       <div data-testid="file-viewer" className="document-viewer__center document-viewer__deleted">
         <div className="document-viewer__deleted-content">

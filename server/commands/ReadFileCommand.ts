@@ -1,6 +1,10 @@
 import { promises as fs } from 'node:fs'
 import { Command } from './Command.js'
 
+function isMissingFileError(error: unknown): boolean {
+  return Boolean(error && typeof error === 'object' && (error as { code?: unknown }).code === 'ENOENT')
+}
+
 interface CacheEntry {
   data: string
   timestamp: number
@@ -39,7 +43,12 @@ export class ReadFileCommand extends Command {
 
       return content
     }
-    catch {
+    catch (error) {
+      // ponytail: ENOENT is a normal condition (file deleted externally) — surface it distinctly
+      // so the controller can return 404 instead of a generic 500.
+      if (isMissingFileError(error)) {
+        throw new Error('File not found')
+      }
       throw new Error(`Failed to read file: ${filePath}`)
     }
   }
