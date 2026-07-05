@@ -4,6 +4,7 @@ import { useMemo } from 'react'
 import { cn } from '@/lib/utils'
 // eslint-disable-next-line no-restricted-imports
 import { Icon } from '../shared/Icon'
+import { ScrollArea } from '../ui/scroll-area'
 import CopyPathButton from './CopyPathButton'
 
 interface FavDocumentsProps {
@@ -39,8 +40,13 @@ export default function FavDocuments({
   }
 
   return (
-    <section className="space-y-1 border-b border-border pb-2" aria-label="Favs">
-      <div className="flex items-center gap-1">
+    <section
+      className="flex min-h-0 flex-col gap-1 border-b border-border px-2 pt-2 pb-0"
+      style={{ maxHeight: 'var(--documents-favs-max-height, 33%)' }}
+      aria-label="Favs"
+      data-testid="document-favs"
+    >
+      <div className="flex flex-shrink-0 items-center gap-1">
         <button
           type="button"
           onClick={() => onExpandedChange(!isExpanded)}
@@ -66,56 +72,58 @@ export default function FavDocuments({
         )}
       </div>
       {isExpanded && (
-        <div id="document-favs-list" className="space-y-0.5" data-testid="document-favs-list">
-          {visibleDocuments.map(document => (
-            <div
-              key={document.path}
-              onClick={() => onSelectDocument(document)}
-              className="group flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1 text-left text-foreground transition-colors hover:bg-muted"
-              title={document.path}
-              data-testid="document-fav-item"
-              data-document-path={document.path}
-            >
-              <button
-                type="button"
+        <ScrollArea className="min-h-0 flex-1" id="document-favs-list" data-testid="document-favs-list">
+          <div className="space-y-0.5">
+            {visibleDocuments.map(document => (
+              <div
+                key={document.path}
                 onClick={() => onSelectDocument(document)}
-                className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                className="group flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1 text-left text-foreground transition-colors hover:bg-muted"
+                title={document.path}
+                data-testid="document-fav-item"
+                data-document-path={document.path}
               >
-                {document.type === 'folder'
-                  ? <Folder className="h-4 w-4 flex-shrink-0 text-muted-foreground" aria-hidden="true" />
-                  : <File className="h-4 w-4 flex-shrink-0 text-muted-foreground" aria-hidden="true" />}
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm">
-                    {getLabel(document)}
-                  </div>
-                  {document.type === 'file' && document.title && (
-                    <div className="truncate text-xs text-muted-foreground">
-                      {document.name}
-                    </div>
-                  )}
-                </div>
-              </button>
-              <CopyPathButton path={document.path} />
-              {onToggleFavorite && (
                 <button
                   type="button"
-                  className="fav-star-btn fav-star-btn--document"
-                  data-active={document.favorite ? '' : undefined}
-                  title={document.favorite ? 'Click to unfavorite' : 'Click to favorite'}
-                  aria-label="Toggle favorite"
-                  data-testid="document-fav-star"
-                  data-document-path={document.path}
-                  onClick={(event) => {
-                    event.stopPropagation()
-                    onToggleFavorite(document)
-                  }}
+                  onClick={() => onSelectDocument(document)}
+                  className="flex min-w-0 flex-1 items-center gap-2 text-left"
                 >
-                  <Icon name="fav-star" className={cn('fav-star fav-star--document', document.favorite && 'active')} />
+                  {document.type === 'folder'
+                    ? <Folder className="h-4 w-4 flex-shrink-0 text-muted-foreground" aria-hidden="true" />
+                    : <File className="h-4 w-4 flex-shrink-0 text-muted-foreground" aria-hidden="true" />}
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm">
+                      {getLabel(document)}
+                    </div>
+                    {document.type === 'file' && document.title && (
+                      <div className="truncate text-xs text-muted-foreground">
+                        {document.name}
+                      </div>
+                    )}
+                  </div>
                 </button>
-              )}
-            </div>
-          ))}
-        </div>
+                <CopyPathButton path={document.path} />
+                {onToggleFavorite && (
+                  <button
+                    type="button"
+                    className="fav-star-btn fav-star-btn--document"
+                    data-active={document.favorite ? '' : undefined}
+                    title={document.favorite ? 'Click to unfavorite' : 'Click to favorite'}
+                    aria-label="Toggle favorite"
+                    data-testid="document-fav-star"
+                    data-document-path={document.path}
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      onToggleFavorite(document)
+                    }}
+                  >
+                    <Icon name="fav-star" className={cn('fav-star fav-star--document', document.favorite && 'active')} />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
       )}
     </section>
   )

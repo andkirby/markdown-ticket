@@ -792,16 +792,16 @@ export default function DocumentsLayout({ projectId, canWrite = true }: Document
                 </button>
               </div>
             </div>
+            <FavDocuments
+              documents={favoriteDocuments}
+              isExpanded={navigationPreferences.favsExpanded}
+              showAll={navigationPreferences.favsShowAll}
+              onSelectDocument={handleSelectFavorite}
+              onToggleFavorite={canWrite ? handleToggleFavorite : undefined}
+              onExpandedChange={handleFavsExpandedChange}
+              onShowAllChange={handleFavsShowAllChange}
+            />
             <div className="flex-shrink-0 p-2 pb-0">
-              <FavDocuments
-                documents={favoriteDocuments}
-                isExpanded={navigationPreferences.favsExpanded}
-                showAll={navigationPreferences.favsShowAll}
-                onSelectDocument={handleSelectFavorite}
-                onToggleFavorite={canWrite ? handleToggleFavorite : undefined}
-                onExpandedChange={handleFavsExpandedChange}
-                onShowAllChange={handleFavsShowAllChange}
-              />
               <RecentDocuments
                 documents={recentDocuments}
                 isExpanded={navigationPreferences.recentExpanded}

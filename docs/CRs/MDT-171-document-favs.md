@@ -68,19 +68,19 @@ full
 ## 4. Acceptance Criteria
 
 ### Functional
-- [ ] User can add a folder to Favs from the document tree star control.
-- [ ] User can add a markdown document to Favs from the document tree star control.
-- [ ] Active star state is visible in tree rows and fav rows.
-- [ ] User can remove a fav by selecting the active star.
-- [ ] Favs section is hidden when empty.
-- [ ] Favs section appears above Recent when at least one fav exists.
-- [ ] Selecting a document fav opens that document.
-- [ ] Selecting a folder fav expands and locates that folder in the tree.
+- [x] User can add a folder to Favs from the document tree star control.
+- [x] User can add a markdown document to Favs from the document tree star control.
+- [x] Active star state is visible in tree rows and fav rows.
+- [x] User can remove a fav by selecting the active star.
+- [x] Favs section is hidden when empty.
+- [x] Favs section appears above Recent when at least one fav exists.
+- [x] Selecting a document fav opens that document.
+- [x] Selecting a folder fav expands and locates that folder in the tree.
 
 ### Non-Functional
-- [ ] Existing document loading behavior remains backward compatible.
-- [ ] Existing Recent behavior remains unchanged.
-- [ ] Document tree rows remain compact and do not increase sidebar clutter.
+- [x] Existing document loading behavior remains backward compatible.
+- [x] Existing Recent behavior remains unchanged.
+- [x] Document tree rows remain compact and do not increase sidebar clutter.
 
 ### Edge Cases
 - Deleted fav paths are removed or ignored on refresh.
@@ -95,3 +95,43 @@ full
 - Automated: component tests for star state and Favs rendering.
 - Automated: API/state tests for invalid, deleted, excluded fav paths, persistence, and route boundary.
 - E2E: verify fav add, remove, reload, document open, and folder locate flows.
+
+## 6. UAT
+
+### UAT Session 2026-07-05 — Favs section scrollable
+
+**Source:** Follow-up to MDT-171. With many document favs, `Show all` expanded
+the Favs section inline and pushed Recent and the file tree down indefinitely,
+consuming the sidebar. Canonical design updated in
+`docs/design/surfaces/documents-view-navigation.spec.md` (+ `.mockups.md`).
+
+**Approved changes (frontend only):**
+- Favs list body is an independently scrollable region, borrowing the board
+  column scroll pattern (shared shadcn `ScrollArea` with `min-h-0` and an
+  auto-hiding scrollbar). The section header (toggle + `Show all` / `Show less`)
+  stays fixed above the scroll area.
+- The scroll region height is relative to the navigation column
+  (`--documents-favs-max-height`, default ~one third), not a fixed pixel value,
+  so it scales with the viewport and never starves Recent or the file tree.
+- The five-row cap and `Show all` / `Show less` are retained and stay independent
+  of the scroll bound: the cap controls how many rows render; the bound controls
+  region height. Scroll engages only when rendered rows exceed the bound
+  (typically after `Show all`, or on short viewports).
+- No backend, persistence, or API changes. `document-favs.json` shape unchanged.
+
+**Acceptance checks:**
+- [x] With more than five favs and `Show all` active, the Favs list scrolls
+  within roughly one third of the column; Recent and the tree keep their positions.
+- [x] Favs header and `Show all` / `Show less` remain visible while the list body
+  scrolls.
+- [x] With five or fewer favs (capped), Favs does not scroll and behaves as before.
+- [x] Resizing the sidebar scales the Favs region; it never consumes the whole
+  column or hides the file tree.
+
+**Updated documents:** `docs/design/surfaces/documents-view-navigation.spec.md`,
+`docs/design/surfaces/documents-view-navigation.mockups.md`.
+
+**Affected code:** `src/components/DocumentsView/FavDocuments.tsx`,
+`src/components/DocumentsView/DocumentsLayout.tsx`.
+
+**Affected tests:** `src/components/DocumentsView/FavDocuments.test.tsx`.
