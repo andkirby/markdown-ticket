@@ -91,6 +91,19 @@ describe('PathWatcherService', () => {
 
       expect(readySpy).toHaveBeenCalledWith({ projectId: 'test' })
     })
+
+    // MDT-186: chokidar must not follow symlinks. An outward symlink in a watched
+    // tree (e.g. a DMG-build staging `Applications -> /Applications` inside an
+    // Xcode project) lets the watcher escape the project root and hit macOS symlink
+    // loops (Xcode's Ruby.framework/Headers/ruby/...), causing ELOOP crashes.
+    it('should disable symlink following to contain the watch tree (MDT-186)', () => {
+      service.initMultiProjectWatcher([{ id: 'test', path: '/test/*.md' }])
+
+      expect(chokidar.watch).toHaveBeenCalledWith(
+        '/test/**/*.md',
+        expect.objectContaining({ followSymlinks: false }),
+      )
+    })
   })
 
   describe('Dynamic path addition (BR-1.3)', () => {

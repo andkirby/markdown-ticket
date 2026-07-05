@@ -95,7 +95,6 @@ class FileWatcherService extends EventEmitter {
   private setupEventForwarding(): void {
     const eventsToForward = [
       'ready',
-      'error',
       'file-change',
       'project-created',
       'project-updated',
@@ -111,6 +110,19 @@ class FileWatcherService extends EventEmitter {
       this.pathWatcher.on(event, (data) => {
         this.emit(event, data)
       })
+    })
+
+    // 'error' is special: Node throws ERR_UNHANDLED_ERROR if an EventEmitter emits
+    // 'error' with zero listeners. chokidar emits real errors (ELOOP on symlink loops,
+    // EACCES on protected dirs, ENOSPC on inotify exhaustion) that we must never let
+    // kill the server. Always log; only re-emit if a consumer actually cares.
+    this.pathWatcher.on('error', (data) => {
+      const err = data?.error
+      const code = err && typeof err === 'object' && 'code' in err ? String((err as { code: unknown }).code) : ''
+      const msg = err instanceof Error ? `${code ? `${code}: ` : ''}${err.message}` : String(err)
+      console.error(`[FileWatcher] ${data?.projectId ? `[${data.projectId}] ` : ''}watcher error:`, msg)
+      if (this.listenerCount('error') > 0)
+        this.emit('error', data)
     })
 
     // Forward SSE broadcast events

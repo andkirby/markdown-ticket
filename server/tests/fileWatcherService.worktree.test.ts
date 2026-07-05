@@ -210,6 +210,55 @@ describe('FileWatcherService - Worktree Extensions (MDT-095)', () => {
       expect(fileWatcher.getWorktreeWatcherCount()).toBe(0)
     })
   })
+
+  describe('error containment (MDT-186)', () => {
+    // Regression: chokidar emits a real `error` (ELOOP on macOS symlink loops,
+    // EACCES, ENOSPC) when something inside a watched tree goes wrong. The
+    // main/document watcher forwards it as the 'error' event. Node's EventEmitter
+    // THROWS on an 'error' emit with zero listeners, which used to crash the
+    // server. The facade must swallow + log it when no consumer is listening.
+    it('must not throw when chokidar emits error and no facade error listener is attached', () => {
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+
+      // No fileWatcher.on('error', ...) attached on purpose.
+      fileWatcher.initMultiProjectWatcher([{ id: 'proj', path: '/p/*.md' }])
+
+      // Locate the chokidar 'error' callback registered by the main watcher.
+      const onErrorCall = mockWatcher.on.mock.calls.find(c => c[0] === 'error')
+      expect(onErrorCall).toBeDefined()
+      const trigger = onErrorCall![1] as (e: Error) => void
+
+      const eloop = Object.assign(new Error('too many symbolic links encountered'), {
+        code: 'ELOOP',
+        errno: -62,
+        syscall: 'lstat',
+      })
+
+      // Before the fix this line threw ERR_UNHANDLED_ERROR and killed the process.
+      expect(() => trigger(eloop)).not.toThrow()
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[FileWatcher]'),
+        expect.stringContaining('ELOOP'),
+      )
+
+      consoleErrorSpy.mockRestore()
+    })
+
+    it('should still forward error to consumers that attach a listener', () => {
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+      const consumer = jest.fn()
+      fileWatcher.on('error', consumer)
+
+      fileWatcher.initMultiProjectWatcher([{ id: 'proj', path: '/p/*.md' }])
+      const trigger = mockWatcher.on.mock.calls.find(c => c[0] === 'error')![1] as (e: Error) => void
+
+      trigger(new Error('boom'))
+
+      expect(consumer).toHaveBeenCalledTimes(1)
+      expect(consumer.mock.calls[0][0]).toMatchObject({ projectId: 'proj' })
+      consoleErrorSpy.mockRestore()
+    })
+  })
 })
 
 // ═══════════════════════════════════════════════════════════════════════════════

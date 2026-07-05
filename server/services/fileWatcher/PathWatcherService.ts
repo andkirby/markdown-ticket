@@ -41,7 +41,11 @@ export interface DocumentChangeEventPayload {
   timestamp: number
 }
 
-const OPTS = { ignoreInitial: true, persistent: true, awaitWriteFinish: { stabilityThreshold: 100, pollInterval: 100 } }
+// ponytail: followSymlinks:false avoids ELOOP crashes when a watched tree contains
+// recursive symlinks (e.g. Xcode's Ruby.framework/Headers/ruby/ruby/...). MDT only
+// needs markdown files, never symlink targets. Re-enable per-watcher if a project
+// legitimately stores tickets behind symlinks.
+const OPTS = { ignoreInitial: true, persistent: true, followSymlinks: false, awaitWriteFinish: { stabilityThreshold: 100, pollInterval: 100 } }
 
 export class PathWatcherService extends EventEmitter {
   private watchers = new Map<string, chokidar.FSWatcher>()
