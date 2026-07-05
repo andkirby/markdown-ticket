@@ -207,7 +207,7 @@ describe('documents API Tests (MDT-106)', () => {
     it('should return 404 for non-existent document', async () => {
       const response = await request(app).get(`/api/documents/content?projectId=${projectCode}&filePath=docs/nonexistent.md`)
 
-      expect([404, 500]).toContain(response.status)
+      expect(response.status).toBe(404)
     })
 
     it('should return document content for valid request', async () => {
