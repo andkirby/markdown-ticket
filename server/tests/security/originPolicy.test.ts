@@ -22,8 +22,9 @@ describe('originPolicy', () => {
   it('accepts local development origins by default', () => {
     const policy = createDefaultOriginPolicy('')
 
+    expect(policy.isAllowedOrigin('http://localhost:3070')).toBe(true)
+    expect(policy.isAllowedOrigin('http://localhost:3075')).toBe(true)
     expect(policy.isAllowedOrigin('http://localhost:5173')).toBe(true)
-    expect(policy.isAllowedOrigin('http://localhost:3001')).toBe(true)
     expect(policy.isAllowedOrigin('http://localhost:4173')).toBe(true)
     expect(policy.isAllowedOrigin('http://localhost:6173')).toBe(true)
   })
