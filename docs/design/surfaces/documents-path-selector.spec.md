@@ -32,6 +32,11 @@ PathSelector
 | ScrollArea | `src/components/ui/scroll-area.tsx` | tree body |
 | Button | `src/components/ui/Button.tsx` | toolbar and footer actions |
 
+## Selection Model
+
+- The selector lists every folder under the project root (respecting maxDepth and exclusions), including folders that contain no Markdown documents, so owners can select roots before any document exists.
+- This differs from the Documents View navigation tree, which prunes folders whose subtree has no Markdown document — see `documents-view-navigation.spec.md`. The two trees differ on this point on purpose; do not make them identical.
+
 ## Layout
 
 - Modal uses tight spacing: header/footer `px-4 py-3`, body `p-4`.
