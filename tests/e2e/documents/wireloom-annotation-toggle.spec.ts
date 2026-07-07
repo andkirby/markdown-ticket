@@ -34,7 +34,7 @@ const wireloomAnnotatedFixture = `
 \`\`\`wireloom
 window "Login":
   panel:
-    input "Email" id="emailField"
+    input id="emailField" placeholder="Email"
     button "Sign in" id="signInBtn"
 
 annotation "Enter your email address" target="emailField" position=left
@@ -125,7 +125,8 @@ test.describe('Wireloom annotation view toggle', () => {
     await expect(wireloomBlock.locator(selectors.compactMarker)).toHaveCount(0)
 
     // SVG content should contain callout text (annotation bodies visible)
-    const svg = wireloomBlock.locator('svg')
+    // Scope to the diagram so the fullscreen button's icon SVG is excluded
+    const svg = wireloomBlock.locator('.wireloom__diagram svg')
     await expect(svg).toBeVisible()
   })
 
@@ -198,7 +199,8 @@ test.describe('Wireloom annotation view toggle', () => {
     const marker = wireloomBlock.locator(selectors.compactMarker).first()
     await marker.hover()
 
-    const tooltip = wireloomBlock.locator(selectors.visibleTooltip)
+    // Tooltip is portaled to document.body, so scope to the page, not the block
+    const tooltip = page.locator(selectors.visibleTooltip)
     await expect(tooltip).toBeVisible()
     await expect(tooltip).toContainText('email')
   })
@@ -225,8 +227,8 @@ test.describe('Wireloom annotation view toggle', () => {
 
     // Marker should be active
     await expect(marker).toHaveClass(/--active/)
-      // Tooltip visible
-    const tooltip = wireloomBlock.locator(selectors.visibleTooltip)
+      // Tooltip visible (portaled to document.body)
+    const tooltip = page.locator(selectors.visibleTooltip)
     await expect(tooltip).toBeVisible()
   })
 
@@ -250,8 +252,8 @@ test.describe('Wireloom annotation view toggle', () => {
     const marker = wireloomBlock.locator(selectors.compactMarker).first()
     await marker.click()
 
-    // Tooltip visible
-    const tooltip = wireloomBlock.locator(selectors.visibleTooltip)
+    // Tooltip visible (portaled to document.body)
+    const tooltip = page.locator(selectors.visibleTooltip)
     await expect(tooltip).toBeVisible()
 
     // Press Escape
