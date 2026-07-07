@@ -125,3 +125,15 @@ priority: Medium
 - Automated verification: assert mode toggle renders the correct annotation presentation without changing source content.
 - Automated verification: assert malformed and missing-Wireloom fallback paths still work.
 - Browser verification: assert compact mode keeps rendered dimensions close to the base mockup dimensions.
+
+## 6. Work Notes
+
+### 2026-07-07 — Repaired annotation-toggle tests; reverted default to callout
+
+The annotation-toggle E2E suite (`tests/e2e/documents/wireloom-annotation-toggle.spec.ts`) was fully red. Three layered root causes, each masking the next:
+
+1. **Wireloom 0.7.0 grammar** dropped positional labels on `input` — `input "Email"` now throws a parse error, so blocks failed to render and `.wireloom` never appeared (masked every other test). Fixtures updated to `input id="..." placeholder="..."`.
+2. **Spec drift (reverted).** `c700bd20` hardcoded compact mode as the default but updated only code + unit test — not the BDD (`full_callout_mode_default`), requirements (BR-1.2 "Default mode is callout"), architecture, design doc, or UAT (configurable with callout fallback). All five spec artifacts specify callout-default. Reverted the auto-enter-compact block so the default is callout again. The UAT's planned `defaultAnnotationMode` preference is the correct future path to compact-by-default, not a hardcoded override.
+3. **Latent E2E selector bugs** exposed once the block rendered: `svg` locator matched the fullscreen button's icon too (scoped to `.wireloom__diagram svg`); tooltip locator was scoped to the block though the tooltip is portaled to `document.body` (use `page.locator`).
+
+Verified: documents E2E 36/36 (was 28 pass / 8 fail), unit 24/24, TS clean. Commit: `fix(MDT-182): repair wireloom annotation-toggle tests after 0.7.0 grammar + spec drift`.
