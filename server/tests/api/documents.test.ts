@@ -495,6 +495,53 @@ describe('documents API Tests (MDT-106)', () => {
     })
   })
 
+  describe('empty folder pruning (navigation tree)', () => {
+    let pruneProjectCode: string
+
+    beforeAll(async () => {
+      const project = await projectFactory.createProject('empty', {
+        name: 'Empty Folder Prune Project',
+        code: 'EPRN',
+        documentPaths: ['docs'],
+      })
+      pruneProjectCode = project.key
+      const projectPath = join(projectFactory.getProjectsDir(), project.key)
+
+      // A populated folder, a folder that only contains a non-markdown file,
+      // and a fully empty folder — only the populated one should survive.
+      await mkdir(join(projectPath, 'docs/guide'), { recursive: true })
+      await mkdir(join(projectPath, 'docs/assets'), { recursive: true })
+      await mkdir(join(projectPath, 'docs/empty-section'), { recursive: true })
+      await createTestDocument(projectFactory, pruneProjectCode, 'docs/guide/intro.md', documentFixtures.withFrontmatter)
+      await writeFile(join(projectPath, 'docs/assets/diagram.svg'), '<svg/>\n')
+    })
+
+    const walk = (nodes: Array<Record<string, unknown>>): string[] =>
+      nodes.flatMap(node => [
+        node.path as string,
+        ...(Array.isArray(node.children) ? walk(node.children as Array<Record<string, unknown>>) : []),
+      ])
+
+    it('excludes folders whose subtree has no markdown documents', async () => {
+      const response = await request(app).get(`/api/documents?projectId=${pruneProjectCode}`)
+
+      assertSuccess(response, 200)
+      assertIsArray(response)
+
+      const allPaths = walk(response.body as Array<Record<string, unknown>>)
+
+      // Populated folder and its markdown are present
+      expect(allPaths).toContain('docs')
+      expect(allPaths).toContain('docs/guide')
+      expect(allPaths).toContain('docs/guide/intro.md')
+      // Folders with no markdown anywhere beneath are pruned
+      expect(allPaths).not.toContain('docs/assets')
+      expect(allPaths).not.toContain('docs/empty-section')
+      // Non-markdown files never appear in the navigation tree
+      expect(allPaths).not.toContain('docs/assets/diagram.svg')
+    })
+  })
+
   describe('error cases', () => {
     it('should return 400 for missing projectId in discovery', async () => {
       const response = await request(app).get('/api/documents')
