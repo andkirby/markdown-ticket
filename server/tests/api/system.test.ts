@@ -146,7 +146,7 @@ describe('system Endpoint Tests (MDT-106)', () => {
       expect(allPaths).not.toContain('docs/guide/getting-started.md')
     })
 
-    it('should include selectable folders even when they do not contain markdown files', async () => {
+    it('should exclude selectable folders that contain no markdown files', async () => {
       const project = await projectFactory.createProject('empty', {
         name: 'Path Selection Folder Project',
         code: 'PFOL',
@@ -172,10 +172,14 @@ describe('system Endpoint Tests (MDT-106)', () => {
 
       const allPaths = walk(response.body as Array<Record<string, unknown>>)
 
-      expect(allPaths).toContain('src')
-      expect(allPaths).toContain('src/components')
-      expect(allPaths).toContain('docs/empty-section')
+      // Folders whose subtree has no markdown are pruned from the selector too
+      expect(allPaths).not.toContain('src')
+      expect(allPaths).not.toContain('src/components')
+      expect(allPaths).not.toContain('docs/empty-section')
+      // Folders that do contain markdown remain selectable
+      expect(allPaths).toContain('docs')
       expect(allPaths).toContain('docs/overview.md')
+      // Non-markdown files never appear
       expect(allPaths).not.toContain('src/components/Button.tsx')
     })
   })

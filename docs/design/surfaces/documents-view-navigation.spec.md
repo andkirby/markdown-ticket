@@ -61,7 +61,7 @@ DocumentsLayout
 
 - Documents View shows configured document paths only.
 - The navigation tree shows only folders whose subtree contains at least one Markdown document. Folders with no Markdown document anywhere beneath them are pruned and do not render, even when they are valid configured roots.
-- Folder pruning is specific to the navigation tree. The path selector intentionally lists every folder so owners can select roots that do not yet contain Markdown — see `documents-path-selector.spec.md`. The two trees differ on this point on purpose.
+- Folder pruning is shared with the path selector — both trees show only folders that contain at least one Markdown file. See `documents-path-selector.spec.md`.
 - Documents View does not auto-open path configuration when no paths are configured; it shows an empty state with a clear configure action.
 - Ticket paths are excluded from Documents navigation by default.
 - `docs/CRs/` is always treated as ticket territory, not general documentation.
@@ -136,7 +136,7 @@ DocumentsLayout
 | search active | user types in search input | tree shows matching folders/files; Favs and Recent remain visible |
 | filter hides selected | selected file does not match filter | target action clears filter, expands ancestors, scrolls to selected file |
 | no matches | filter returns no files | tree area shows compact empty state; Favs and Recent remain available |
-| empty folder pruned | a configured root folder has no Markdown document in its subtree | the folder does not appear in the navigation tree (the path selector still lists it) |
+| empty folder pruned | a configured root folder has no Markdown document in its subtree | the folder does not appear in the navigation tree or the path selector |
 | no configured paths | backend returns 404 | centered empty state appears; modal stays closed |
 | configure from empty state | user clicks `Configure document paths` | PathSelector modal opens with the same behavior as the sidebar gear action |
 | read-only | access mode lacks write/admin | Configure paths hidden; tree and Favs star mutation controls absent; existing Favs and Recents remain selectable shortcuts |

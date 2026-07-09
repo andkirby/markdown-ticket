@@ -13,7 +13,30 @@ export class PathSelectionStrategy extends TreeBuildingStrategy {
     projectPath: string,
     config: ProjectConfig,
   ): Promise<TreeNode[]> {
-    return await this.buildSelectionTree(projectPath, config)
+    const tree = await this.buildSelectionTree(projectPath, config)
+    return this.pruneFoldersWithoutMarkdown(tree)
+  }
+
+  /**
+   * Drop folders whose subtree contains no markdown documents.
+   * Applies to both path selection and document navigation — only folders
+   * that actually contain at least one markdown file are shown or selectable.
+   */
+  private pruneFoldersWithoutMarkdown(nodes: TreeNode[]): TreeNode[] {
+    const result: TreeNode[] = []
+    for (const node of nodes) {
+      if (node.type === 'file') {
+        result.push(node)
+        continue
+      }
+      if (node.type === 'folder') {
+        const children = node.children ? this.pruneFoldersWithoutMarkdown(node.children) : []
+        if (children.length > 0) {
+          result.push({ ...node, children })
+        }
+      }
+    }
+    return result
   }
 
   private async buildSelectionTree(projectPath: string, config: ProjectConfig): Promise<TreeNode[]> {
