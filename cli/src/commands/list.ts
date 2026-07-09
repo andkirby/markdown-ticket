@@ -10,11 +10,12 @@ import type { ListTicketsSort } from '@mdt/shared/services/ticket/types.js'
 import type { StructuredOutputOptions } from '../output/structured.js'
 import { ProjectService } from '@mdt/shared/services/ProjectService.js'
 import { ServiceError } from '@mdt/shared/services/ServiceError.js'
+import { lookupStatusToken } from '@mdt/shared/services/ticket/attrResolver.js'
 import { DEFAULT_LIST_LIMIT } from '@mdt/shared/services/ticket/types.js'
 import { TicketService } from '@mdt/shared/services/TicketService.js'
 import { formatTicketListFiles, formatTicketList as formatTicketListFormatter, formatTicketListInfo } from '../output/formatter.js'
 import { CliCommandError, formatProjectForStructured, formatTicketForStructured, getOutputFormat, writeStructuredSuccess } from '../output/structured.js'
-import { PRIORITY_TOKENS, STATUS_ALIASES, TYPE_TOKENS } from '../utils/aliases.js'
+import { PRIORITY_TOKENS, TYPE_TOKENS } from '../utils/aliases.js'
 
 /**
  * List command options
@@ -68,11 +69,10 @@ function parseFilters(filterArgs: string[]): Record<string, string | string[]> {
       continue
 
     // Normalize value based on field type
+    // Status tokens resolve through the shared attr gate so list filtering
+    // and attr mutation agree on the same alias meaning (MDT-143 UAT).
     if (filterField === 'status') {
-      const values = value.split(',').map((v) => {
-        const normalized = v.trim().toLowerCase().replace(/[\s-]+/g, '_')
-        return STATUS_ALIASES[normalized] || v.trim()
-      })
+      const values = value.split(',').map(v => lookupStatusToken(v) ?? v.trim())
       filters[filterField] = values
     }
     else if (filterField === 'priority') {

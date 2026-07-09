@@ -157,27 +157,6 @@
       "routePolicy": "bdd"
     },
     {
-      "id": "Edge-2",
-      "kind": "edge_case",
-      "text": "IF operator omits required command arguments or supplies an unrecognized create token, unsupported attribute-mutation form, unsupported attribute key, unsupported attribute operator, or unrecognized explicit project verb, THEN the system shall reject the command with a clear corrective message and a suggestion for the closest valid token when available.",
-      "sourceRef": "CR:4 AC-3,AC-5,AC-6",
-      "routePolicy": "tests"
-    },
-    {
-      "id": "C2",
-      "kind": "constraint",
-      "text": "The system shall accept only status, priority, phase, assignee, related, depends, blocks, impl-date, and impl-notes as mutable CLI attributes; only related, depends, and blocks may use += or -= operators, while all other mutable attributes use = only.",
-      "sourceRef": "CR:3 Update Attributes",
-      "routePolicy": "tests"
-    },
-    {
-      "id": "BR-10",
-      "kind": "behavior",
-      "text": "WHEN operator invokes mdt-cli ticket attr <ticket> <attr-op><value>... or mdt-cli attr <ticket> <attr-op><value>... with supported attribute keys, the system shall normalize accepted value aliases, apply = to scalar attributes, apply =, +=, or -= to relation attributes, update all supplied attributes on the target ticket, and confirm the applied changes using pipe-separated format showing old and new values. When a value is unchanged, the system shall print an unchanged message and exit with code 0.",
-      "sourceRef": "CR:MDT-143",
-      "routePolicy": "bdd"
-    },
-    {
       "id": "BR-18",
       "kind": "behavior",
       "text": "WHEN operator provides positional filter arguments after mdt-cli list or mdt-cli ticket list in key=value format, the system shall filter the ticket list using AND logic across different fields and comma-separated fuzzy matching within a single field. Filterable fields shall include status, priority, type, assignee, and epic (mapped to phaseEpic).",
@@ -269,13 +248,6 @@
       "routePolicy": "tests"
     },
     {
-      "id": "BR-4",
-      "kind": "behavior",
-      "text": "WHEN operator invokes mdt-cli ticket list, mdt-cli list, mdt-cli ls, or mdt-cli ticket ls, the system shall display up to 10 tickets sorted newest-first by modified date in compact form and report the project ticket count. Each ticket shall show the key and title on one line, followed by an indented pipe-separated metadata line with fixed-width columns (status 11, type 13, priority 8) and optional phase. The system shall support --all to show every ticket, --limit N to override the default count, --files to show file paths only, and --info to show ticket info without file paths. Positional filter arguments in key=value format (e.g., status=implemented priority=high) shall filter tickets using AND across fields and comma-separated fuzzy matching within a field. WHEN --project <code> is provided, the system shall list tickets from the specified project rather than the cwd-detected project. WHEN --project targets a project that does not exist, the system shall reject with 'Project <code> not found' and exit 1.",
-      "sourceRef": "CR:MDT-143",
-      "routePolicy": "bdd"
-    },
-    {
       "id": "Edge-8",
       "kind": "edge_case",
       "text": "IF operator invokes mdt-cli ticket list --project <code> and the project does not exist, THEN the system shall print 'Project <code> not found' and exit with code 1.",
@@ -307,6 +279,34 @@
       "id": "Edge-10",
       "kind": "edge_case",
       "text": "IF a command fails while --json or --yaml is selected, THEN the system shall emit a structured error envelope to stderr with ok=false, command, error.code, error.message, and optional diagnostics, emit no partial success payload to stdout, and preserve the command's non-zero exit code.",
+      "sourceRef": "CR:MDT-143",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-4",
+      "kind": "behavior",
+      "text": "WHEN operator invokes mdt-cli ticket list, mdt-cli list, mdt-cli ls, or mdt-cli ticket ls, the system shall display up to 10 tickets sorted newest-first by modified date in compact form and report the project ticket count. Each ticket shall show the key and title on one line, followed by an indented pipe-separated metadata line with fixed-width columns (status 11, type 13, priority 8) and optional phase. The system shall support --all to show every ticket, --limit N to override the default count, --files to show file paths only, and --info to show ticket info without file paths. Positional filter arguments in key=value format (e.g., status=implemented priority=high) shall filter tickets using AND across fields and comma-separated fuzzy matching within a field. Status filter tokens shall resolve through the same shared attribute input gate used by ticket attr, so a status alias (e.g., open, done, backlog, deferred) means the same canonical status for list filtering and for attribute mutation. WHEN --project <code> is provided, the system shall list tickets from the specified project rather than the cwd-detected project. WHEN --project targets a project that does not exist, the system shall reject with 'Project <code> not found' and exit 1.",
+      "sourceRef": "CR:MDT-143",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-10",
+      "kind": "behavior",
+      "text": "WHEN operator invokes mdt-cli ticket attr <ticket> <attr-op><value>... or mdt-cli attr <ticket> <attr-op><value>... with supported attribute keys, the system shall normalize accepted value aliases, apply = to scalar attributes, apply =, +=, or -= to relation attributes, update all supplied attributes on the target ticket, and confirm the applied changes using pipe-separated format showing old and new values. When a value is unchanged, the system shall print an unchanged message and exit with code 0. Enum value resolution (status, priority) shall run through a single shared input gate shared with the MCP surface, so alias canonicalization and unknown-value rejection are identical across interfaces; unknown enum values shall be rejected with the valid set and the alias map. Relation attribute values shall be split on commas into a list before being applied. The accepted attribute field list and the ticket attr --help text shall derive from one metadata source, so help output and parser validation cannot drift.",
+      "sourceRef": "CR:MDT-143",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "The system shall accept only status, priority, phase, assignee, related, depends, blocks, impl-date, and impl-notes as mutable CLI attributes; only related, depends, and blocks may use += or -= operators, while all other mutable attributes use = only. The accepted-field list shall be owned by a single metadata module consumed by both the ticket attr --help renderer and the attr token parser, so the documented fields and the validated fields cannot diverge.",
+      "sourceRef": "CR:MDT-143",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-2",
+      "kind": "edge_case",
+      "text": "IF operator omits required command arguments or supplies an unrecognized create token, unsupported attribute-mutation form, unsupported attribute key, unsupported attribute operator, or unrecognized explicit project verb, THEN the system shall reject the command with a clear corrective message and a suggestion for the closest valid token when available. IF operator supplies an unknown status or priority enum value to ticket attr, THEN the system shall reject the command with the valid value set and the alias map.",
       "sourceRef": "CR:MDT-143",
       "routePolicy": "tests"
     }
@@ -832,6 +832,24 @@
         "ART-cli-delete"
       ],
       "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "OBL-shared-attr-gate",
+      "title": "Attr enum values resolve through a single shared input gate (shared/services/ticket/attrResolver) shared with MCP, so alias canonicalization and unknown-value rejection are identical across interfaces; the accepted attr field list and ticket attr --help derive from one metadata module (cli attrMeta) consumed by both the help renderer and the parser, and the CLI status filter in list reuses the same gate so a status alias means the same canonical status for filtering and mutation.",
+      "derivedFrom": [
+        "BR-4",
+        "BR-10",
+        "C2",
+        "Edge-2"
+      ],
+      "artifactIds": [
+        "ART-shared-attr-resolver",
+        "ART-shared-attr-resolver-test",
+        "ART-cli-attr-meta",
+        "ART-cli-attr",
+        "ART-cli-list"
+      ],
+      "sourceRef": "CR:MDT-143"
     }
   ],
   "artifacts": [
@@ -1000,6 +1018,24 @@
     {
       "id": "ART-cli-structured-output",
       "path": "cli/src/output/structured.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "ART-shared-attr-resolver",
+      "path": "shared/services/ticket/attrResolver.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "ART-shared-attr-resolver-test",
+      "path": "shared/services/ticket/attrResolver.test.ts",
+      "kind": "test",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "ART-cli-attr-meta",
+      "path": "cli/src/commands/attrMeta.ts",
       "kind": "runtime",
       "sourceRef": "CR:MDT-143"
     }
@@ -1192,6 +1228,18 @@
         "Edge-10"
       ],
       "file": "cli/tests/e2e/output/structured-output.spec.ts",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "TEST-shared-attr-resolver",
+      "kind": "unit",
+      "title": "Shared attr resolver: status/priority alias canonicalization, unknown-value rejection, and list/attr token consistency",
+      "covers": [
+        "BR-4",
+        "BR-10",
+        "Edge-2"
+      ],
+      "file": "shared/services/ticket/attrResolver.test.ts",
       "sourceRef": "CR:MDT-143"
     }
   ],
@@ -1423,6 +1471,23 @@
         "list_tickets_in_target_project",
         "list_tickets_rejects_unknown_project",
         "TEST-cli-list-enhancements"
+      ],
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "TASK-cli-attr-shared-gate",
+      "title": "Consolidate attr enum resolution into shared input gate; fix open-alias drift and relation comma-split regression; single-source attr --help",
+      "ownsArtifactIds": [
+        "ART-shared-attr-resolver",
+        "ART-shared-attr-resolver-test",
+        "ART-cli-attr-meta"
+      ],
+      "makesGreenIds": [
+        "TEST-shared-attr-resolver",
+        "TEST-cli-ticket-attr"
+      ],
+      "skills": [
+        "mdt"
       ],
       "sourceRef": "CR:MDT-143"
     }

@@ -9,7 +9,7 @@
  * defined here; the canonical enum values are self-mapped at module load.
  */
 
-import { CRPriorities, CRPriority, CRStatus, CRStatuses, CRType, CRTypes } from '@mdt/domain-contracts/types'
+import { CRPriorities, CRPriority, CRType, CRTypes } from '@mdt/domain-contracts/types'
 
 // -------------------------------------------------------------------
 // Type aliases
@@ -63,29 +63,12 @@ for (const canonical of CRPriorities) {
 // -------------------------------------------------------------------
 // Status aliases
 // -------------------------------------------------------------------
-
-const CLI_STATUS_SHORTHANDS: Record<string, string> = {
-  'proposed': CRStatus.PROPOSED,
-  'approved': CRStatus.APPROVED,
-  'in_progress': CRStatus.IN_PROGRESS,
-  'in-progress': CRStatus.IN_PROGRESS,
-  'inprogress': CRStatus.IN_PROGRESS,
-  'implemented': CRStatus.IMPLEMENTED,
-  'rejected': CRStatus.REJECTED,
-  'on_hold': CRStatus.ON_HOLD,
-  'on-hold': CRStatus.ON_HOLD,
-  'onhold': CRStatus.ON_HOLD,
-  'partial': CRStatus.PARTIALLY_IMPLEMENTED,
-}
-
-/**
- * Full status token map: CLI shorthands + canonical values as self-mapping.
- */
-export const STATUS_ALIASES: Record<string, string> = { ...CLI_STATUS_SHORTHANDS }
-
-for (const canonical of CRStatuses) {
-  STATUS_ALIASES[canonical.toLowerCase().replace(/\s+/g, '_')] = canonical
-}
+// MOVED: status token resolution now lives in the shared input gate
+// `shared/services/ticket/attrResolver.ts`, so CLI attr mutation and list
+// filtering apply the SAME alias meaning. Do not re-add a local status map
+// here — it will drift from the shared resolver (that is how `open` ended up
+// meaning two things). The CLI imports lookupStatusToken / resolveStatusToken
+// directly where needed.
 
 // -------------------------------------------------------------------
 // Defaults (canonical constants)
