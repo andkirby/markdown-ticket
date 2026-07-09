@@ -60,6 +60,14 @@ This CR introduces a standalone `mdt-cli` entrypoint for reading and mutating CR
 - Edge-9 added: `--json` and `--yaml` are mutually exclusive
 - Edge-10 added: structured modes return parseable error envelopes on failure
 
+## UAT Refinements (2026-07-09)
+
+- BR-4 refined: list `status=` filter tokens resolve through the shared attr input gate so a status alias means the same canonical status for filtering and mutation
+- BR-10 refined: attr enum resolution (status, priority) runs through a single shared input gate shared with MCP; unknown enum values are rejected with the valid set + alias map; relation values split on commas; the accepted field list and `ticket attr --help` derive from one metadata source
+- C2 refined: the accepted-field list is owned by a single metadata module consumed by both the help renderer and the parser
+- Edge-2 refined: unknown status/priority enum values are rejected with the valid set and alias map
+- Bug fixes: `open` alias no longer means Proposed for `list` but Approved for `attr`; relation values (`related`/`depends`/`blocks`) split on commas again after a refactor regression left the branch unreachable
+
 ## Review Notes
 
 - The requirements intentionally lock project detection to filesystem-root search even though the current MCP helper shows a bounded search depth. Architecture should treat the existing implementation as insufficient, not as the target behavior.

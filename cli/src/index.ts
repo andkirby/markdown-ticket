@@ -7,6 +7,7 @@ import process from 'node:process'
  */
 
 import { Command } from 'commander'
+import { ATTR_HELP } from './commands/attrMeta.js'
 import { generateGuide } from './output/guide.js'
 import { assertSingleOutputFormat, getRequestedOutputFormat, writeStructuredError } from './output/structured.js'
 import { normalizeShortcuts } from './utils/args.js'
@@ -123,9 +124,9 @@ function registerCommands(program: Command): void {
   // ticket attr
   ticketCmd
     .command('attr')
-    .description('Update ticket attributes')
-    .argument('<key>', 'Ticket key')
-    .argument('<attrs...>', 'Attributes to update (e.g., status=Implemented)')
+    .description(ATTR_HELP.description)
+    .argument('<key>', 'Ticket key (e.g., 5, ABC-12, PROJ/MDT-12)')
+    .argument('<attrs...>', ATTR_HELP.attrsArg)
     .option('-j, --json', 'Output as JSON')
     .option('--yaml', 'Output as YAML')
     .action(async (key, attrs, options) => {

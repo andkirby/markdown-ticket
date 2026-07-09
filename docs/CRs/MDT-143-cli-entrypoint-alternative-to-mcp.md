@@ -603,3 +603,26 @@ Resolved by the MDT-143 UAT implementation. The canonical command grammar and te
 **New test plan**: TEST-cli-structured-output
 
 **Lesson learned**: adding a new YAML package can affect Markdown rendering outside the CLI path. During structured-output work, a YAML dependency change broke Mermaid rendering, so future CLI serialization dependency changes should verify rendered Markdown diagrams before release.
+
+### UAT Session 2026-07-09
+
+**Approved changes**: Finish the CLI alias-system rebuild and help parity — extract attr enum-value resolution into a shared input gate so CLI + MCP apply identical rules, and make `ticket attr --help` + the accepted-field list derive from one metadata source.
+
+| Change | Requirement Impact |
+|--------|-------------------|
+| Shared attr input gate (`shared/services/ticket/attrResolver.ts`); CLI `attr` and `list` both route through it | BR-4, BR-10 refined |
+| Single-source field/help metadata (`cli/src/commands/attrMeta.ts`) | C2 refined |
+| Unknown status/priority enum values rejected with valid set + alias map | Edge-2 refined |
+| Bug: `open` alias meant Proposed in `list` but Approved in `attr` — now Approved everywhere | implementation (BR-4/BR-10 consistency) |
+| Bug: relation values (`related`/`depends`/`blocks`) no longer split on commas (dead code after early return) — restored | implementation (BR-10) |
+| Removed duplicate stale `STATUS_ALIASES` from CLI; corrected `cli/mdt-cli/SKILL.md` alias reference | implementation |
+
+**Updated workflow documents**: requirements.md, uat.md, and generated `*.trace.md` projections (requirements, bdd, architecture, tests, tasks).
+**uat.md written**: yes
+**Strict drift/lock**: not used
+**New task**: TASK-cli-attr-shared-gate
+**New artifact**: ART-shared-attr-resolver, ART-shared-attr-resolver-test, ART-cli-attr-meta
+**New test plan**: TEST-shared-attr-resolver
+**New obligation**: OBL-shared-attr-gate
+
+**Lesson learned**: when migrating an alias/validation concern into shared, every CLI read-path that resolved tokens locally (here, `list` status filtering) must be routed through the new gate in the same change, or the same token silently means two things. The duplicate map is the drift source — delete it, do not keep it in sync.
