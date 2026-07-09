@@ -3,49 +3,22 @@ import type { AttrOperation } from '@mdt/shared/services/ticket/types.js'
 /**
  * CLI Ticket Attr Command (MDT-143)
  *
- * Implements ticket attribute update command using shared services.
- * Parses CLI attr tokens into shared AttrOperation requests and invokes shared ticket attr updates.
+ * Thin wire: parses terminal tokens into shared AttrOperation requests and
+ * delegates value resolution/validation to the shared attrResolver. No
+ * business logic here — only CLI-specific parsing (operators, field shorthands,
+ * quoted values) and output formatting.
  */
 
 import type { AttrUpdateResult } from '../output/formatter.js'
 import type { StructuredOutputOptions } from '../output/structured.js'
 import { ProjectService } from '@mdt/shared/services/ProjectService.js'
 import { ServiceError } from '@mdt/shared/services/ServiceError.js'
+import { resolveAttrValue } from '@mdt/shared/services/ticket/attrResolver.js'
 import { TicketService } from '@mdt/shared/services/TicketService.js'
 import { KeyNormalizationError, normalizeKey } from '@mdt/shared/utils/keyNormalizer.js'
 import { formatTicketAttrPipe } from '../output/formatter.js'
 import { CliCommandError, formatAttrChangesForStructured, getOutputFormat, writeStructuredSuccess } from '../output/structured.js'
-import { PRIORITY_TOKENS, STATUS_ALIASES } from '../utils/aliases.js'
-
-/**
- * Field mapping: CLI key → shared field name
- */
-const FIELD_MAPPING: Record<string, string> = {
-  'status': 'status',
-  'priority': 'priority',
-  'phase': 'phaseEpic',
-  'assignee': 'assignee',
-  'related': 'relatedTickets',
-  'depends': 'dependsOn',
-  'blocks': 'blocks',
-  'impl-date': 'implementationDate',
-  'impl-notes': 'implementationNotes',
-}
-
-/**
- * Reverse field mapping for error messages
- */
-/**
- * Scalar fields (only support = operator)
- */
-const _SCALAR_FIELDS = new Set([
-  'status',
-  'priority',
-  'phaseEpic',
-  'assignee',
-  'implementationDate',
-  'implementationNotes',
-])
+import { ATTR_FIELDS as FIELD_MAPPING } from './attrMeta.js'
 
 /**
  * Parse ticket key to extract project code and ticket key
@@ -171,24 +144,15 @@ function normalizeFieldValue(field: string, value: string): string | string[] {
     return trimmedValue.slice(1, -1)
   }
 
-  // Status normalization
-  if (field === 'status') {
-    const normalizedKey = trimmedValue.toLowerCase().replace(/\s+/g, '_')
-    return STATUS_ALIASES[normalizedKey] || trimmedValue
-  }
-
-  // Priority normalization
-  if (field === 'priority') {
-    const normalizedKey = trimmedValue.toLowerCase()
-    return PRIORITY_TOKENS[normalizedKey] || trimmedValue
-  }
-
   // Relation fields: split on commas for list operations
   if (field === 'relatedTickets' || field === 'dependsOn' || field === 'blocks') {
     return trimmedValue.split(',').map(v => v.trim()).filter(Boolean)
   }
 
-  return trimmedValue
+  // Enum fields → shared resolver (canonicalizes aliases, rejects unknowns).
+  // Non-enum scalar fields pass through as free text. Persistence stays
+  // permissive (MDT-148); this gate is input-only.
+  return resolveAttrValue(field, trimmedValue)
 }
 
 /**

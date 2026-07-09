@@ -108,6 +108,12 @@ Keys: `status`, `priority`, `phase`, `assignee`, `related`, `depends`, `blocks`,
 
 Relations (`related`, `depends`, `blocks`) support `=` (replace), `+=` (add), `-=` (remove). All others use `=` only.
 
+**Validation:** unknown keys and unknown enum values are rejected with the valid set printed. Enum fields:
+- `status` ∈ Proposed · Approved · In Progress · Implemented · Rejected · On Hold · Partially Implemented. Column/synonym aliases map: `backlog`→Proposed, `open`→Approved, `done`/`complete`/`completed`/`d`→Implemented, `in-progress`→In Progress, `partial`→Partially Implemented, `deferred`→On Hold.
+- `priority` ∈ Low · Medium · High · Critical. Aliases: `p1`–`p4`.
+
+Run `mdt-cli ticket attr --help` for the full field/value reference.
+
 ## Project
 
 ```bash
