@@ -34,8 +34,8 @@ PathSelector
 
 ## Selection Model
 
-- The selector lists every folder under the project root (respecting maxDepth and exclusions), including folders that contain no Markdown documents, so owners can select roots before any document exists.
-- This differs from the Documents View navigation tree, which prunes folders whose subtree has no Markdown document — see `documents-view-navigation.spec.md`. The two trees differ on this point on purpose; do not make them identical.
+- The selector lists folders under the project root (respecting maxDepth and exclusions), but only folders whose subtree contains at least one Markdown document. Folders with no Markdown anywhere beneath them are pruned — owners select from folders that already contain documents.
+- This matches the Documents View navigation tree, which prunes the same way — see `documents-view-navigation.spec.md`. Both trees share one rule: only folders with Markdown are shown.
 
 ## Layout
 
