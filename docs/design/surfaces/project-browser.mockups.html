@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>wiremd Mockup</title>
+  <style>
+
+/* wiremd Sketch Style - Balsamiq-inspired hand-drawn mockups */
+@import url('https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&display=swap');
+
+* {
+  box-sizing: border-box;
+}
+
+body.wmd-root {
+  font-family: 'Kalam', 'Comic Sans MS', 'Marker Felt', 'Chalkboard', cursive, sans-serif;
+  background: #f5f5dc;
+  color: #333;
+  padding: 20px;
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* Headings */
+.wmd-h1, .wmd-h2, .wmd-h3, .wmd-h4, .wmd-h5, .wmd-h6 {
+  font-weight: bold;
+  margin: 1em 0 0.5em;
+  line-height: 1.3;
+}
+
+.wmd-h1 { font-size: 2em; text-decoration: underline; }
+.wmd-h2 { font-size: 1.75em; }
+.wmd-h3 { font-size: 1.5em; }
+.wmd-h4 { font-size: 1.25em; }
+.wmd-h5 { font-size: 1.1em; }
+.wmd-h6 { font-size: 1em; }
+
+/* Paragraph */
+.wmd-paragraph {
+  margin: 0.5em 0;
+}
+
+/* Buttons */
+.wmd-button {
+  display: inline-block;
+  padding: 8px 16px;
+  margin: 4px;
+  background: #fff;
+  border: 2px solid #000;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.2);
+  transform: rotate(-0.5deg);
+  transition: all 0.1s;
+}
+
+.wmd-button:hover {
+  transform: rotate(-0.5deg) translateY(-2px);
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.2);
+}
+
+.wmd-button-primary, .wmd-button.wmd-primary {
+  background: #87CEEB;
+  border-color: #4682B4;
+}
+
+.wmd-button-secondary, .wmd-button.wmd-secondary {
+  background: #DDD;
+  border-color: #999;
+}
+
+.wmd-button-danger, .wmd-button.wmd-danger {
+  background: #FFB6C1;
+  border-color: #DC143C;
+}
+
+.wmd-button[disabled], .wmd-button.wmd-state-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.wmd-button.wmd-loading::after {
+  content: '...';
+  animation: loading 1s infinite;
+}
+
+/* Inputs */
+.wmd-input, .wmd-textarea, .wmd-select {
+  display: block;
+  width: 100%;
+  max-width: 400px;
+  padding: 8px 12px;
+  margin: 4px 0;
+  font-family: inherit;
+  font-size: 14px;
+  background: #fff;
+  border: 2px solid #666;
+  border-radius: 4px;
+  transform: rotate(0.3deg);
+}
+
+.wmd-input:focus, .wmd-textarea:focus, .wmd-select:focus {
+  outline: 2px solid #4682B4;
+  outline-offset: 2px;
+}
+
+.wmd-input[disabled], .wmd-input.wmd-state-disabled,
+.wmd-textarea[disabled], .wmd-textarea.wmd-state-disabled,
+.wmd-select[disabled], .wmd-select.wmd-state-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #f5f5f5;
+}
+
+.wmd-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Checkboxes and Radios */
+.wmd-checkbox, .wmd-radio {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+.wmd-checkbox input[type="checkbox"],
+.wmd-radio input[type="radio"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+/* Icons */
+.wmd-icon {
+  display: inline-block;
+  font-size: 1.2em;
+  line-height: 1;
+  vertical-align: middle;
+  margin: 0 0.2em;
+}
+
+/* Containers */
+.wmd-container-hero, .wmd-container-card, .wmd-container-modal {
+  background: #fff;
+  border: 3px solid #000;
+  border-radius: 12px;
+  padding: 24px;
+  margin: 16px 0;
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.15);
+  transform: rotate(-0.3deg);
+}
+
+.wmd-container-hero {
+  background: linear-gradient(135deg, #FFF9E6 0%, #FFE6CC 100%);
+  text-align: center;
+  padding: 48px 24px;
+}
+
+.wmd-container-card {
+  max-width: 400px;
+}
+
+.wmd-container-modal {
+  position: relative;
+  max-width: 500px;
+  margin: 32px auto;
+  border-width: 4px;
+}
+
+/* Radio Groups */
+.wmd-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.wmd-radio-group-inline {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.wmd-radio-group-inline .wmd-radio {
+  margin: 0;
+}
+
+/* Icons */
+.wmd-icon {
+  display: inline-block;
+  font-size: 1.2em;
+  line-height: 1;
+  vertical-align: middle;
+  margin: 0 0.2em;
+}
+
+/* Navigation */
+.wmd-nav {
+  background: #87CEEB;
+  border: 3px solid #4682B4;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 16px 0;
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.15);
+}
+
+.wmd-nav-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.wmd-brand {
+  font-weight: bold;
+  font-size: 1.2em;
+  margin-right: auto;
+}
+
+.wmd-nav-item {
+  display: inline-block;
+  color: #000;
+  text-decoration: none;
+  font-weight: bold;
+  padding: 6px 14px;
+  background: #fff;
+  border: 2px solid #000;
+  border-radius: 6px;
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.15);
+  transform: rotate(0.3deg);
+  transition: all 0.1s;
+}
+
+.wmd-nav-item:hover {
+  transform: rotate(0.3deg) translateY(-1px);
+  box-shadow: 2px 3px 0 rgba(0,0,0,0.15);
+  background: #f8f8f8;
+}
+
+.wmd-nav .wmd-button {
+  margin: 0;
+}
+
+/* Grid */
+.wmd-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns, 3), 1fr);
+  gap: 24px;
+  margin: 24px 0;
+}
+
+.wmd-grid-2 { grid-template-columns: repeat(2, 1fr); }
+.wmd-grid-3 { grid-template-columns: repeat(3, 1fr); }
+.wmd-grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+.wmd-grid-item {
+  background: #fff;
+  border: 2px solid #666;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.1);
+  transform: rotate(0.5deg);
+}
+
+.wmd-grid-item:nth-child(even) {
+  transform: rotate(-0.5deg);
+}
+
+/* Lists */
+.wmd-list {
+  margin: 12px 0;
+  padding-left: 24px;
+}
+
+.wmd-list-item {
+  margin: 4px 0;
+}
+
+/* Blockquote */
+.wmd-blockquote {
+  border-left: 4px solid #666;
+  padding-left: 16px;
+  margin: 16px 0;
+  font-style: italic;
+  color: #555;
+}
+
+/* Code */
+.wmd-code-inline {
+  background: #FFF3CD;
+  border: 1px solid #FFC107;
+  border-radius: 3px;
+  padding: 2px 6px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+}
+
+.wmd-code-block {
+  background: #FFF3CD;
+  border: 2px solid #FFC107;
+  border-radius: 6px;
+  padding: 12px;
+  margin: 12px 0;
+  overflow-x: auto;
+}
+
+.wmd-code-block code {
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+}
+
+/* Separator */
+.wmd-separator {
+  border: none;
+  border-top: 3px dashed #666;
+  margin: 24px 0;
+}
+
+/* Table */
+.wmd-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 3px solid #000;
+  border-radius: 8px;
+  margin: 16px 0;
+  overflow: hidden;
+}
+
+.wmd-table th, .wmd-table td {
+  border: 2px solid #666;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.wmd-table th {
+  background: #DDD;
+  font-weight: bold;
+}
+
+/* Table cell alignment - more specific to override th/td defaults */
+.wmd-table .wmd-align-left {
+  text-align: left !important;
+}
+
+.wmd-table .wmd-align-center {
+  text-align: center !important;
+}
+
+.wmd-table .wmd-align-right {
+  text-align: right !important;
+}
+
+/* State Containers */
+.wmd-container-loading-state {
+  background: #fff;
+  border: 2px solid #87CEEB;
+  border-radius: 8px;
+  padding: 32px;
+  margin: 16px 0;
+  text-align: center;
+  position: relative;
+}
+
+.wmd-container-loading-state::before {
+  content: '⟳';
+  display: block;
+  font-size: 48px;
+  margin-bottom: 16px;
+  animation: spin 1.5s linear infinite;
+  transform-origin: center;
+}
+
+.wmd-container-empty-state {
+  background: #f5f5f5;
+  border: 2px dashed #999;
+  border-radius: 8px;
+  padding: 48px 32px;
+  margin: 16px 0;
+  text-align: center;
+  color: #666;
+}
+
+.wmd-container-empty-state::before {
+  content: '📭';
+  display: block;
+  font-size: 64px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.wmd-container-error-state {
+  background: #FFE6E6;
+  border: 3px solid #DC143C;
+  border-radius: 8px;
+  padding: 32px;
+  margin: 16px 0;
+  text-align: center;
+}
+
+.wmd-container-error-state::before {
+  content: '⚠️';
+  display: block;
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .wmd-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .wmd-nav-content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .wmd-brand {
+    margin-right: 0;
+  }
+}
+
+@keyframes loading {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+  </style>
+</head>
+<body class="wmd-root wmd-sketch">
+  <h1 class="wmd-h1">Project Browser — Wireframe Schema</h1>
+<p class="wmd-paragraph">Related spec: project-browser.spec.md (MDT-129 panel, MDT-152 search extension)</p>
+<hr class="wmd-separator" />
+<h2 class="wmd-h2">Part 1: ProjectBrowserPanel (Full Overlay)</h2>
+<h3 class="wmd-h3">Default State (Panel Open)</h3>
+<pre class="wmd-code-block"><code data-lang="wireloom">window &quot;Project Browser — Default&quot;:
+  panel:
+    row:
+      text &quot;Projects&quot; bold id=&quot;pb-title&quot;
+      input placeholder=&quot;Search projects...&quot; type=search id=&quot;pb-search&quot;
+      button &quot;×&quot; id=&quot;pb-close&quot;
+    divider
+    grid cols=2 rows=2:
+      cell id=&quot;card-mdt&quot;:
+        row:
+          avatar &quot;MDT&quot; id=&quot;mdt-accent&quot;
+          icon name=&quot;star&quot; id=&quot;mdt-star&quot;
+          text &quot;Markdown Ticket&quot; bold
+        text &quot;Local CR board and docs&quot; muted
+      cell id=&quot;card-abc&quot;:
+        row:
+          avatar &quot;ABC&quot; id=&quot;abc-accent&quot;
+          text &quot;Another Project&quot; bold
+        text &quot;Example desc here&quot; muted
+      cell id=&quot;card-xyz&quot;:
+        row:
+          avatar &quot;XYZ&quot;
+          text &quot;Third Project&quot; bold
+        text &quot;Another example&quot; muted
+      cell id=&quot;card-api&quot;:
+        row:
+          avatar &quot;API&quot;
+          text &quot;API Gateway&quot; bold
+        text &quot;Backend service&quot; muted
+
+annotation &quot;Accent mark uses current user&#039;s selected project accent or deterministic fallback&quot; target=&quot;mdt-accent&quot; position=top
+annotation &quot;Favorite star remains separate; accents are identity marks, not status badges&quot; target=&quot;mdt-star&quot; position=right</code></pre>
+<h3 class="wmd-h3">Filled Accent Treatment</h3>
+<p class="wmd-paragraph">Same card size as the standard browser card; only the left identity area is filled by color or a user-owned image.</p>
+<pre class="wmd-code-block"><code data-lang="wireloom">window &quot;Project Browser — Filled Accent Treatment&quot;:
+  panel:
+    row:
+      text &quot;Projects&quot; bold
+      input placeholder=&quot;Search projects...&quot; type=search
+      button &quot;×&quot;
+    divider
+    grid cols=2 rows=1:
+      cell id=&quot;filled-color-card&quot;:
+        row:
+          avatar &quot;MDT&quot; id=&quot;filled-color&quot;
+          text &quot;Markdown Ticket&quot; bold
+          spacer
+          icon name=&quot;star&quot;
+        text &quot;Local CR board and project documents&quot; muted
+      cell id=&quot;filled-image-card&quot;:
+        row:
+          avatar &quot;img&quot; id=&quot;filled-image&quot;
+          text &quot;Summary Link&quot; bold
+        text &quot;Article summarization and review&quot; muted
+
+annotation &quot;Same row height; left identity area is the filled color/image region.&quot; target=&quot;filled-color&quot; position=top
+annotation &quot;Personal image support must be explicit user selection, not auto-discovery from project folder.&quot; target=&quot;filled-image&quot; position=right</code></pre>
+<h3 class="wmd-h3">Accent Fallback State</h3>
+<pre class="wmd-code-block"><code data-lang="wireloom">window &quot;Project Browser — Accent Fallback&quot;:
+  panel:
+    row:
+      text &quot;Projects&quot; bold
+      input placeholder=&quot;Search projects...&quot; type=search
+      button &quot;×&quot;
+    divider
+    grid cols=2 rows=1:
+      cell id=&quot;fallback-card&quot;:
+        row:
+          avatar &quot;DOCS&quot; id=&quot;fallback-accent&quot;
+          text &quot;Documentation&quot; bold
+        text &quot;No user-selected accent yet&quot; muted
+
+annotation &quot;Fallback accent is deterministic from project code/id and does not require migration.&quot; target=&quot;fallback-accent&quot; position=right</code></pre>
+<h3 class="wmd-h3">Read-only Project List</h3>
+<pre class="wmd-code-block"><code data-lang="wireloom">window &quot;Project Browser — Read-only&quot;:
+  panel:
+    row:
+      text &quot;Projects&quot; bold
+      input placeholder=&quot;Search projects...&quot; type=search
+      button &quot;×&quot;
+    divider
+    grid cols=2 rows=1:
+      cell id=&quot;readonly-card-mdt&quot;:
+        row:
+          avatar &quot;MDT&quot; id=&quot;readonly-accent&quot;
+          text &quot;Markdown Ticket&quot; bold
+        text &quot;Markdown Ticket&quot;
+        text &quot;Lightweight ticket mgmt&quot; muted
+
+annotation &quot;Favorite toggle is absent because it writes selector state&quot; target=&quot;readonly-card-mdt&quot; position=right
+annotation &quot;Accent is personal visual preference; it does not grant write access to project config&quot; target=&quot;readonly-accent&quot; position=bottom</code></pre>
+<h3 class="wmd-h3">Token-scoped Project List</h3>
+<pre class="wmd-code-block"><code data-lang="wireloom">window &quot;Project Browser — Token Scoped&quot;:
+  panel:
+    row:
+      text &quot;Projects&quot; bold
+      input placeholder=&quot;Search projects...&quot; type=search
+      button &quot;×&quot;
+    divider
+    grid cols=2 rows=2:
+      cell id=&quot;token-card-pri&quot;:
+        text &quot;PRI&quot; bold
+        text &quot;Private roadmap&quot;
+        text &quot;Read-only via Bob token&quot; muted
+      cell id=&quot;token-card-docs&quot;:
+        text &quot;DOCS&quot; bold
+        text &quot;Documentation&quot;
+        text &quot;Read-only via Bob token&quot; muted
+      cell id=&quot;token-card-pub&quot;:
+        text &quot;PUB&quot; bold
+        text &quot;Public project&quot;
+        text &quot;Read-only for everyone&quot; muted
+
+annotation &quot;Named read tokens can grant several projects; each card remains directly selectable.&quot; target=&quot;token-card-pri&quot; position=right
+annotation &quot;Public projects appear alongside token-scoped projects.&quot; target=&quot;token-card-pub&quot; position=bottom</code></pre>
+<h3 class="wmd-h3">Share Link Merged With Token Scope</h3>
+<pre class="wmd-code-block"><code data-lang="wireloom">window &quot;Project Browser — Token Plus Share Link&quot;:
+  panel:
+    row:
+      text &quot;Projects&quot; bold
+      input placeholder=&quot;Search projects...&quot; type=search
+      button &quot;×&quot;
+    divider
+    grid cols=2 rows=2:
+      cell id=&quot;merge-card-pri&quot;:
+        text &quot;PRI&quot; bold
+        text &quot;Private roadmap&quot;
+      cell id=&quot;merge-card-docs&quot;:
+        text &quot;DOCS&quot; bold
+        text &quot;Documentation&quot;
+      cell id=&quot;merge-card-ops&quot;:
+        text &quot;OPS&quot; bold id=&quot;share-merge-project&quot;
+        text &quot;Operations notes&quot;
+
+annotation &quot;Opening a one-project share link adds OPS without removing PRI or DOCS.&quot; target=&quot;share-merge-project&quot; position=right</code></pre>
+<h3 class="wmd-h3">Empty State</h3>
+<pre class="wmd-code-block"><code data-lang="wireloom">window &quot;Project Browser — No Projects&quot;:
+  panel:
+    row:
+      text &quot;Projects&quot; bold
+      input placeholder=&quot;Search projects...&quot; type=search
+      button &quot;×&quot;
+    divider
+    text &quot;No projects available&quot; muted id=&quot;no-projects&quot;
+
+annotation &quot;Unlisted share links do not appear in anonymous project browser listing&quot; target=&quot;no-projects&quot; position=bottom</code></pre>
+<h3 class="wmd-h3">Search State (User Types &quot;MD&quot;)</h3>
+<p class="wmd-paragraph">Current project (MDT) is excluded when the query matches its code, title, or description:</p>
+<pre class="wmd-code-block"><code data-lang="wireloom">window &quot;Project Browser — Search&quot;:
+  panel:
+    row:
+      text &quot;Projects&quot; bold
+      input placeholder=&quot;MD&quot; type=search id=&quot;pb-search-active&quot;
+      button &quot;×&quot;
+    divider
+    grid cols=2 rows=1:
+      cell id=&quot;card-amd&quot;:
+        text &quot;AMD&quot; bold
+        text &quot;A Markdown Project&quot;
+      cell:
+        text &quot;(no other matches)&quot; muted id=&quot;no-match&quot;
+    text &quot;Note: MDT excluded — it&#039;s current project&quot; muted id=&quot;excluded-note&quot;
+
+annotation &quot;Current project excluded from search results&quot; target=&quot;excluded-note&quot; position=bottom</code></pre>
+<h3 class="wmd-h3">Search Empty State (No Matches)</h3>
+<pre class="wmd-code-block"><code data-lang="wireloom">window &quot;Project Browser — No Matches&quot;:
+  panel:
+    row:
+      text &quot;Projects&quot; bold
+      input placeholder=&quot;ZZZ&quot; type=search id=&quot;pb-search-empty&quot;
+      button &quot;×&quot;
+    divider
+    text &quot;No projects match your search&quot; muted id=&quot;empty-search&quot;</code></pre>
+<h3 class="wmd-h3">Card Detail: Active Project</h3>
+<pre class="wmd-code-block"><code data-lang="wireloom">window &quot;Project Card — Active&quot;:
+  panel:
+    row:
+      avatar &quot;MDT&quot; id=&quot;active-accent&quot;
+      text &quot;MDT&quot; bold id=&quot;active-code&quot;
+      spacer
+      icon name=&quot;star&quot; id=&quot;active-star&quot;
+    text &quot;Markdown Ticket&quot; id=&quot;active-name&quot;
+    text &quot;Lightweight ticket management&quot; muted id=&quot;active-desc&quot;
+
+annotation &quot;Blue gradient bg, blue border, shadow-md, rounded-xl&quot; target=&quot;active-code&quot; position=top
+annotation &quot;Fav-star active, rotate-[15deg]&quot; target=&quot;active-star&quot; position=right
+annotation &quot;Accent mark precedes code/name and uses current user&#039;s preference&quot; target=&quot;active-accent&quot; position=left</code></pre>
+<h3 class="wmd-h3">Card Detail: Inactive Project (No Favorite)</h3>
+<pre class="wmd-code-block"><code data-lang="wireloom">window &quot;Project Card — Inactive&quot;:
+  panel:
+    row:
+      avatar &quot;ABC&quot; id=&quot;inactive-accent&quot;
+      text &quot;ABC&quot; bold id=&quot;inactive-code&quot;
+    text &quot;Another Project&quot; id=&quot;inactive-name&quot;
+    text &quot;Example description here&quot; muted id=&quot;inactive-desc&quot;
+
+annotation &quot;White/gray gradient bg, no star, shadow-sm&quot; target=&quot;inactive-code&quot; position=top
+annotation &quot;Accent does not change card size&quot; target=&quot;inactive-accent&quot; position=left</code></pre>
+<h3 class="wmd-h3">Card Detail: Inactive Project (Favorited)</h3>
+<pre class="wmd-code-block"><code data-lang="wireloom">window &quot;Project Card — Inactive Favorited&quot;:
+  panel:
+    row:
+      text &quot;XYZ&quot; bold id=&quot;fav-code&quot;
+      spacer
+      icon name=&quot;star&quot; id=&quot;fav-star&quot;
+    text &quot;Third Project&quot; id=&quot;fav-name&quot;
+    text &quot;Another example project&quot; muted id=&quot;fav-desc&quot;
+
+annotation &quot;Star: absolute top-1 right-1, opacity-60 group-hover:opacity-100&quot; target=&quot;fav-star&quot; position=right</code></pre>
+<h3 class="wmd-h3">Card Hover State</h3>
+<pre class="wmd-code-block"><code data-lang="wireloom">window &quot;Project Card — Hover&quot;:
+  panel:
+    text &quot;ABC&quot; bold id=&quot;hover-code&quot;
+    text &quot;Another Project&quot; id=&quot;hover-name&quot;
+    text &quot;Example description here&quot; muted id=&quot;hover-desc&quot;
+
+annotation &quot;shadow-lg, -translate-y-0.5, scale-[1.02]&quot; target=&quot;hover-code&quot; position=top
+annotation &quot;transition-all duration-200 ease-out&quot; target=&quot;hover-name&quot; position=right</code></pre>
+<h3 class="wmd-h3">Empty State (No Projects)</h3>
+<pre class="wmd-code-block"><code data-lang="wireloom">window &quot;Project Browser — Empty&quot;:
+  panel:
+    row:
+      text &quot;Projects&quot; bold
+      input placeholder=&quot;Search projects...&quot; type=search
+      button &quot;×&quot;
+    divider
+    text &quot;No projects available&quot; muted id=&quot;empty-projects&quot;</code></pre>
+<h3 class="wmd-h3">Mobile Viewport</h3>
+<pre class="wmd-code-block"><code data-lang="wireloom">window &quot;Project Browser — Mobile Token Scoped&quot;:
+  panel:
+    row:
+      text &quot;Projects&quot; bold id=&quot;pb-title-mobile&quot;
+      input placeholder=&quot;Search projects...&quot; type=search id=&quot;pb-search-mobile&quot;
+      button &quot;×&quot;
+    divider
+    list:
+      slot &quot;PRI&quot;:
+        text &quot;Private roadmap&quot; bold
+        text &quot;Read-only via Bob token&quot; muted
+      slot &quot;DOCS&quot;:
+        text &quot;Documentation&quot; bold
+      slot &quot;PUB&quot;:
+        text &quot;Public project&quot; bold
+
+annotation &quot;Single column on mobile&quot; target=&quot;pb-search-mobile&quot; position=bottom</code></pre>
+<hr class="wmd-separator" />
+<h2 class="wmd-h2">Part 2: ProjectSelectorRail</h2>
+<h3 class="wmd-h3">Desktop — Collapsed (Default)</h3>
+<p class="wmd-paragraph">Inactive chips are always hidden on desktop — no count threshold, no &quot;+N&quot; button. Only the active card shows, with a faint ‹ chevron hinting that hovering reveals more projects (MDT-185).</p>
+<pre class="wmd-code-block"><code data-lang="wireloom">window &quot;Project Selector Rail — Desktop (Collapsed)&quot;:
+  panel:
+    row:
+      panel id=&quot;active-card-collapsed&quot;:
+        row:
+          avatar &quot;MDT&quot; id=&quot;rail-active-accent-collapsed&quot;
+          icon name=&quot;star&quot;
+          text &quot;Markdown Ticket&quot; bold
+        text &quot;Markdown Ticket&quot;
+        text &quot;ticket mgmt&quot; muted
+      text &quot;‹&quot; muted id=&quot;rail-chevron&quot;
+      spacer
+      button &quot;⊕&quot; id=&quot;launcher-btn-collapsed&quot;
+
+annotation &quot;Active card: click opens project browser (NOT switch)&quot; target=&quot;active-card-collapsed&quot; position=top
+annotation &quot;Faint ‹ chevron hints hover reveals inactive chips. opacity 0.4, aria-hidden, pointer-events none; unmounts once revealed&quot; target=&quot;rail-chevron&quot; position=right
+annotation &quot;Inactive chips always hidden by default — no threshold&quot; target=&quot;rail-chevron&quot; position=bottom
+annotation &quot;Rail accent stays compact; do not use filled-card treatment in the rail&quot; target=&quot;rail-active-accent-collapsed&quot; position=bottom</code></pre>
+<h3 class="wmd-h3">Desktop — Revealed (Hover Active Card)</h3>
+<p class="wmd-paragraph">Hovering the active card reveals inactive chips <strong>inline to the right</strong>, as bare inline elements overlaying subsequent header content. Transparent container (no box/border/shadow), absolutely positioned as a child of the active card wrapper (left: 100%, margin-left: 0.5rem for the +8px header gap, z-50). Each chip fades/slides in with a ~25ms stagger. The strip is a DOM descendant of the hovered card wrapper, so moving the pointer from the card onto the chips stays "inside" the wrapper — chips unmount immediately when the pointer leaves the wrapper (no debounce). Clicking a chip also hides the strip immediately.</p>
+<pre class="wmd-code-block"><code data-lang="wireloom">window &quot;Project Selector Rail — Desktop (Revealed)&quot;:
+  panel:
+    row:
+      panel id=&quot;active-card-revealed&quot;:
+        row:
+          avatar &quot;MDT&quot; id=&quot;rail-active-accent-revealed&quot;
+          icon name=&quot;star&quot;
+          text &quot;Markdown Ticket&quot; bold
+        text &quot;Markdown Ticket&quot;
+        text &quot;ticket mgmt&quot; muted
+      chip &quot;ABC&quot; id=&quot;chip-abc&quot;
+      chip &quot;XYZ&quot; id=&quot;chip-xyz&quot;
+      chip &quot;API&quot; id=&quot;chip-api&quot;
+      chip &quot;DEF&quot; id=&quot;chip-def&quot;
+      button &quot;⊕&quot; id=&quot;launcher-btn-revealed&quot;
+
+annotation &quot;Hover the active card to reveal chips inline to the right (MDT-185)&quot; target=&quot;active-card-revealed&quot; position=top
+annotation &quot;Revealed chips use the same ProjectSelectorChip styling; click switches project&quot; target=&quot;chip-abc&quot; position=bottom
+annotation &quot;Transparent overlay: absolute child of the card wrapper (left:100% + margin-left 0.5rem, z-50). No portal, no measurement, no debounce&quot; target=&quot;chip-xyz&quot; position=bottom
+annotation &quot;Chips unmount immediately when the pointer leaves the wrapper (strip is a DOM descendant, so card→strip never fires pointerleave)&quot; target=&quot;chip-api&quot; position=bottom
+annotation &quot;On chip click: strip hides IMMEDIATELY — selection completes the intent; rail returns to active-card-only&quot; target=&quot;chip-def&quot; position=bottom</code></pre>
+<h3 class="wmd-h3">Active Card Detail</h3>
+<pre class="wmd-code-block"><code data-lang="wireloom">window &quot;Rail Active Card Detail&quot;:
+  panel:
+    row:
+      icon name=&quot;star&quot; id=&quot;rail-star&quot;
+      text &quot;MDT&quot; bold id=&quot;rail-active-code&quot;
+    text &quot;Markdown Ticket&quot; size=small id=&quot;rail-active-name&quot;
+    text &quot;Lightweight ticket management&quot; muted size=small id=&quot;rail-active-desc&quot;
+
+annotation &quot;min-w-[100px] sm:min-w-[150px] max-w-[280px]&quot; target=&quot;rail-active-code&quot; position=right
+annotation &quot;click → onLauncherClick() (opens panel, NOT switch)&quot; target=&quot;rail-active-code&quot; position=bottom</code></pre>
+<h3 class="wmd-h3">Inactive Chip Detail</h3>
+<pre class="wmd-code-block"><code data-lang="wireloom">window &quot;Rail Chip — Default&quot;:
+  panel:
+    text &quot;ABC&quot; bold id=&quot;chip-default&quot;
+
+annotation &quot;rounded-md px-2 py-1.5 h-12&quot; target=&quot;chip-default&quot; position=right
+annotation &quot;Chip may include compact accent dot/mark but height remains h-12&quot; target=&quot;chip-default&quot; position=bottom</code></pre>
+<pre class="wmd-code-block"><code data-lang="wireloom">window &quot;Rail Chip — Favorited&quot;:
+  panel:
+    row:
+      text &quot;XYZ&quot; bold id=&quot;chip-fav&quot;
+      icon name=&quot;star&quot; id=&quot;chip-fav-star&quot;
+
+annotation &quot;Fav-star rotated chip variant&quot; target=&quot;chip-fav-star&quot; position=right</code></pre>
+<h3 class="wmd-h3">Inactive Chip Hover (HoverCard)</h3>
+<pre class="wmd-code-block"><code data-lang="wireloom">window &quot;Rail Chip — Hover&quot;:
+  panel:
+    text &quot;ABC&quot; bold id=&quot;chip-hover-abc&quot;
+    divider
+    row:
+      text &quot;ABC&quot; bold
+      text &quot;Another Project&quot;
+    text &quot;Example description here&quot; muted id=&quot;hovercard-content&quot;
+
+annotation &quot;HoverCard w-80, 100ms delay&quot; target=&quot;hovercard-content&quot; position=right</code></pre>
+<h3 class="wmd-h3">Launcher Button</h3>
+<pre class="wmd-code-block"><code data-lang="wireloom">window &quot;Launcher Button — Default&quot;:
+  panel:
+    button &quot;⊕&quot; id=&quot;launcher-default&quot;
+
+annotation &quot;rounded-full w-10 h-10, gradient bg, shadow-sm&quot; target=&quot;launcher-default&quot; position=right</code></pre>
+<pre class="wmd-code-block"><code data-lang="wireloom">window &quot;Launcher Button — Active (Panel Open)&quot;:
+  panel:
+    button &quot;⊕&quot; id=&quot;launcher-active&quot;
+
+annotation &quot;ring-2 ring-blue-400 when panel open&quot; target=&quot;launcher-active&quot; position=right</code></pre>
+<h3 class="wmd-h3">Mobile Rail (Active Only + Launcher)</h3>
+<pre class="wmd-code-block"><code data-lang="wireloom">window &quot;Project Selector Rail — Mobile&quot;:
+  panel:
+    row:
+      panel id=&quot;mobile-active-card&quot;:
+        row:
+          icon name=&quot;star&quot;
+          text &quot;MDT&quot; bold
+        text &quot;Markdown Ticket&quot;
+        text &quot;ticket mgmt&quot; muted
+      spacer
+      button &quot;⊕&quot;
+
+annotation &quot;Only active card shown on mobile; chips hidden&quot; target=&quot;mobile-active-card&quot; position=bottom</code></pre>
+<hr class="wmd-separator" />
+<h2 class="wmd-h2">Part 3: Panel Open from Rail</h2>
+<h3 class="wmd-h3">Click Active Card → Panel Opens Below</h3>
+<pre class="wmd-code-block"><code data-lang="wireloom">window &quot;Rail — Panel Opens&quot;:
+  panel:
+    row:
+      panel id=&quot;rail-active-opens&quot;:
+        row:
+          icon name=&quot;star&quot;
+          text &quot;MDT&quot; bold
+        text &quot;Markdown Ticket&quot;
+        text &quot;ticket mgmt&quot; muted
+      text &quot;‹&quot; muted
+      spacer
+      button &quot;⊕&quot;
+    divider
+    panel:
+      row:
+        input placeholder=&quot;Search projects...&quot; type=search id=&quot;rail-panel-search&quot;
+        button &quot;×&quot;
+      divider
+      grid cols=2 rows=2:
+        cell:
+          row:
+            icon name=&quot;star&quot;
+            text &quot;MDT&quot; bold
+          text &quot;Markdown Ticket&quot;
+        cell:
+          text &quot;ABC&quot; bold
+          text &quot;Another Project&quot;
+        cell:
+          text &quot;XYZ&quot; bold
+          text &quot;Third Project&quot;
+        cell:
+          text &quot;API&quot; bold
+          text &quot;API Gateway&quot;
+
+annotation &quot;Rail stays collapsed (active card only); click active card opens the browser&quot; target=&quot;rail-active-opens&quot; position=top
+annotation &quot;Panel is full-screen overlay (not anchored to rail)&quot; target=&quot;rail-panel-search&quot; position=right
+annotation &quot;Appears centered with pt-20 offset&quot; target=&quot;rail-panel-search&quot; position=top</code></pre>
+<hr class="wmd-separator" />
+<h2 class="wmd-h2">Annotations</h2>
+<table class="wmd-table">
+  <thead>
+    <tr>
+      <th class="wmd-table-cell wmd-align-left">Element</th>
+    <th class="wmd-table-cell wmd-align-left">Token</th>
+    <th class="wmd-table-cell wmd-align-left">Class</th>
+    <th class="wmd-table-cell wmd-align-left">Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+    <td class="wmd-table-cell wmd-align-left">Backdrop</td>
+    <td class="wmd-table-cell wmd-align-left">—</td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">bg-black/50 backdrop-blur-sm</code></td>
+    <td class="wmd-table-cell wmd-align-left">Per MODALS.md</td>
+  </tr>
+    <tr>
+    <td class="wmd-table-cell wmd-align-left">Panel bg</td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">--card</code></td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">bg-white dark:bg-slate-900 rounded-2xl</code></td>
+    <td class="wmd-table-cell wmd-align-left">max-w-4xl</td>
+  </tr>
+    <tr>
+    <td class="wmd-table-cell wmd-align-left">Panel border</td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">--border</code></td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">border-gray-200 dark:border-slate-700</code></td>
+    <td class="wmd-table-cell wmd-align-left"></td>
+  </tr>
+    <tr>
+    <td class="wmd-table-cell wmd-align-left">Header border</td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">--border</code></td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">border-b border-gray-200 dark:border-slate-700</code></td>
+    <td class="wmd-table-cell wmd-align-left"></td>
+  </tr>
+    <tr>
+    <td class="wmd-table-cell wmd-align-left">Search input bg</td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">--muted</code></td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">bg-gray-100 dark:bg-slate-800 rounded-lg</code></td>
+    <td class="wmd-table-cell wmd-align-left">flex-1, replaces title</td>
+  </tr>
+    <tr>
+    <td class="wmd-table-cell wmd-align-left">Search input text</td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">--foreground</code></td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">text-sm</code></td>
+    <td class="wmd-table-cell wmd-align-left"></td>
+  </tr>
+    <tr>
+    <td class="wmd-table-cell wmd-align-left">Search icon</td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">--muted-foreground</code></td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">text-gray-400 h-4 w-4</code></td>
+    <td class="wmd-table-cell wmd-align-left">absolute left-9</td>
+  </tr>
+    <tr>
+    <td class="wmd-table-cell wmd-align-left">Close button</td>
+    <td class="wmd-table-cell wmd-align-left">—</td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">p-2 rounded-lg hover:bg-gray-100</code></td>
+    <td class="wmd-table-cell wmd-align-left">X icon, right of input</td>
+  </tr>
+    <tr>
+    <td class="wmd-table-cell wmd-align-left">Search empty state</td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">--muted-foreground</code></td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">text-center py-12 text-gray-500</code></td>
+    <td class="wmd-table-cell wmd-align-left"></td>
+  </tr>
+    <tr>
+    <td class="wmd-table-cell wmd-align-left">Card active bg</td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">--primary</code> (blue)</td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950</code></td>
+    <td class="wmd-table-cell wmd-align-left"></td>
+  </tr>
+    <tr>
+    <td class="wmd-table-cell wmd-align-left">Card active border</td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">--primary</code> (blue)</td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">border-blue-200 dark:border-blue-800</code></td>
+    <td class="wmd-table-cell wmd-align-left"></td>
+  </tr>
+    <tr>
+    <td class="wmd-table-cell wmd-align-left">Card inactive bg</td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">--card</code></td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">from-white to-gray-50/80 dark:from-slate-800 dark:to-slate-900/80</code></td>
+    <td class="wmd-table-cell wmd-align-left"></td>
+  </tr>
+    <tr>
+    <td class="wmd-table-cell wmd-align-left">Card inactive border</td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">--border</code></td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">border-gray-200/50 dark:border-slate-700/50</code></td>
+    <td class="wmd-table-cell wmd-align-left"></td>
+  </tr>
+    <tr>
+    <td class="wmd-table-cell wmd-align-left">Card shared</td>
+    <td class="wmd-table-cell wmd-align-left">—</td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">border rounded-xl px-2 sm:px-4 py-1.5 min-h-12</code></td>
+    <td class="wmd-table-cell wmd-align-left"></td>
+  </tr>
+    <tr>
+    <td class="wmd-table-cell wmd-align-left">Card hover</td>
+    <td class="wmd-table-cell wmd-align-left">—</td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">hover:shadow-lg hover:-translate-y-0.5 hover:scale-[1.02]</code></td>
+    <td class="wmd-table-cell wmd-align-left">transition-all 200ms</td>
+  </tr>
+    <tr>
+    <td class="wmd-table-cell wmd-align-left">Fav star (card)</td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">--star-*</code></td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">.fav-star.fav-star--card</code></td>
+    <td class="wmd-table-cell wmd-align-left">absolute top-1 right-1</td>
+  </tr>
+    <tr>
+    <td class="wmd-table-cell wmd-align-left">Fav star (chip)</td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">--star-*</code></td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">.fav-star.fav-star--chip</code></td>
+    <td class="wmd-table-cell wmd-align-left">rotated overlay</td>
+  </tr>
+    <tr>
+    <td class="wmd-table-cell wmd-align-left">Chip bg</td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">--card</code></td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">from-white to-gray-50/80 dark:from-slate-800</code></td>
+    <td class="wmd-table-cell wmd-align-left"></td>
+  </tr>
+    <tr>
+    <td class="wmd-table-cell wmd-align-left">Chip border</td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">--border</code></td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">border-gray-200/50</code></td>
+    <td class="wmd-table-cell wmd-align-left"></td>
+  </tr>
+    <tr>
+    <td class="wmd-table-cell wmd-align-left">Chip hover</td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">--accent</code></td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">hover:bg-accent hover:border-blue-300</code></td>
+    <td class="wmd-table-cell wmd-align-left"></td>
+  </tr>
+    <tr>
+    <td class="wmd-table-cell wmd-align-left">Chip shape</td>
+    <td class="wmd-table-cell wmd-align-left">—</td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">rounded-md px-2 py-1.5 h-12</code></td>
+    <td class="wmd-table-cell wmd-align-left"></td>
+  </tr>
+    <tr>
+    <td class="wmd-table-cell wmd-align-left">Launcher bg</td>
+    <td class="wmd-table-cell wmd-align-left">—</td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">from-gray-100 to-gray-200/80 dark:from-slate-700</code></td>
+    <td class="wmd-table-cell wmd-align-left"></td>
+  </tr>
+    <tr>
+    <td class="wmd-table-cell wmd-align-left">Launcher hover</td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">--primary</code> (blue)</td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">hover:from-blue-50 hover:to-indigo-50</code></td>
+    <td class="wmd-table-cell wmd-align-left"></td>
+  </tr>
+    <tr>
+    <td class="wmd-table-cell wmd-align-left">Launcher shape</td>
+    <td class="wmd-table-cell wmd-align-left">—</td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">rounded-full w-10 h-10</code></td>
+    <td class="wmd-table-cell wmd-align-left"></td>
+  </tr>
+    <tr>
+    <td class="wmd-table-cell wmd-align-left">Launcher ring</td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">--primary</code> (blue)</td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">ring-2 ring-blue-400 dark:ring-blue-600</code></td>
+    <td class="wmd-table-cell wmd-align-left">When panel open</td>
+  </tr>
+    <tr>
+    <td class="wmd-table-cell wmd-align-left">Grid</td>
+    <td class="wmd-table-cell wmd-align-left">—</td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">grid grid-cols-1 md:grid-cols-2 gap-4</code></td>
+    <td class="wmd-table-cell wmd-align-left"></td>
+  </tr>
+    <tr>
+    <td class="wmd-table-cell wmd-align-left">List scroll</td>
+    <td class="wmd-table-cell wmd-align-left">—</td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">max-h-[60vh] overflow-y-auto p-6</code></td>
+    <td class="wmd-table-cell wmd-align-left"></td>
+  </tr>
+    <tr>
+    <td class="wmd-table-cell wmd-align-left">Empty state</td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">--muted-foreground</code></td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">text-center py-12 text-gray-500</code></td>
+    <td class="wmd-table-cell wmd-align-left"></td>
+  </tr>
+    <tr>
+    <td class="wmd-table-cell wmd-align-left">HoverCard</td>
+    <td class="wmd-table-cell wmd-align-left">—</td>
+    <td class="wmd-table-cell wmd-align-left">shadcn <code class="wmd-code-inline">HoverCard</code> / <code class="wmd-code-inline">HoverCardContent</code></td>
+    <td class="wmd-table-cell wmd-align-left">w-80, 100ms delay</td>
+  </tr>
+    <tr>
+    <td class="wmd-table-cell wmd-align-left">Search section label</td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">--muted-foreground</code></td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">text-xs uppercase tracking-wide</code></td>
+    <td class="wmd-table-cell wmd-align-left">&quot;No projects match your search&quot;</td>
+  </tr>
+    <tr>
+    <td class="wmd-table-cell wmd-align-left">Accent mark</td>
+    <td class="wmd-table-cell wmd-align-left">proposed project accent tokens</td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">.project-accent-mark</code> + <code class="wmd-code-inline">data-project-accent</code></td>
+    <td class="wmd-table-cell wmd-align-left">Personal project identity preference</td>
+  </tr>
+    <tr>
+    <td class="wmd-table-cell wmd-align-left">Filled identity area</td>
+    <td class="wmd-table-cell wmd-align-left">proposed project accent tokens</td>
+    <td class="wmd-table-cell wmd-align-left"><code class="wmd-code-inline">.project-identity-fill</code></td>
+    <td class="wmd-table-cell wmd-align-left">Same-size color/image treatment for browser cards only</td>
+  </tr>
+  </tbody>
+</table>
+<h2 class="wmd-h2">Maintenance Notes</h2>
+<ul class="wmd-list">
+  <li class="wmd-list-item">Keep this file focused on canonical surface states: panel default/search/empty/mobile, rail desktop/mobile, and launcher open.</li>
+  <li class="wmd-list-item">Avoid adding more single-control snapshots unless they introduce a new interaction contract; prefer a short row in project-browser.spec.md state tables.</li>
+  <li class="wmd-list-item">Keep personal project accent rendering here; keep the color picker control in project-edit-form.mockups.md.</li>
+</ul>
+</body>
+</html>
