@@ -626,3 +626,31 @@ Resolved by the MDT-143 UAT implementation. The canonical command grammar and te
 **New obligation**: OBL-shared-attr-gate
 
 **Lesson learned**: when migrating an alias/validation concern into shared, every CLI read-path that resolved tokens locally (here, `list` status filtering) must be routed through the new gate in the same change, or the same token silently means two things. The duplicate map is the drift source — delete it, do not keep it in sync.
+
+### UAT Session 2026-07-13
+
+**Approved changes**: Fix same-field `+=`/`-=` accumulation in `TicketService.updateTicketAttributes`.
+
+| Change | Requirement Impact |
+|--------|-------------------|
+| Bug: multiple `+=` tokens on the same relation field in one command (e.g. `attr 42 related+=A related+=B related+=C`) reported success per token but only the last value persisted to frontmatter | BR-10 bug fix (implementation, no spec change) |
+| Bug: symmetric `-=` issue — multiple removals on the same field did not compose | BR-10 bug fix (implementation, no spec change) |
+| Fix: relation-field `add`/`remove`/`replace` branches now resolve effective current value from the accumulated in-batch `updates` map (falling back to the disk snapshot on first touch) instead of re-reading the immutable snapshot each iteration | implementation |
+| Tests: two regression e2e tests asserting against the file frontmatter (authoritative persistence check, not stdout) | TEST-cli-ticket-attr extended |
+
+**Root cause**: `updateTicketAttributes` read the ticket into an immutable snapshot once at the top of the method; every operation's "current value" came from that snapshot, ignoring values staged by earlier ops in the same batch. Each `+=` overwrote `updates[field]`, so only the last survived the single write. The CLI reported `op.value` per token, which is why stdout showed success while the file held only the final value.
+
+**Scope**: single method (`shared/services/TicketService.ts`). Persistence layer (`updateCRAttrs`) was already correct — it persisted exactly what it was handed. Fix reaches all three entry points (CLI, MCP server `update_cr_attrs`, web) since they all route through `updateTicketAttributes`.
+
+**Updated workflow documents**: None (implementation-only bug fix, no spec change).
+**uat.md written**: no (bug fix captured here; no requirement/contract change to trace).
+**Strict drift/lock**: not used.
+
+**Validation**:
+- New regression tests: 2/2 pass (failed before fix, pass after).
+- Full attr e2e suite: 14/14 pass.
+- Full ticket e2e suite: 62/62 pass.
+- MCP `crHandlers` unit tests: 30/30 pass.
+- `shared` + `cli` typecheck clean; `shared` rebuilt.
+
+**Lesson learned**: when a batch operation accumulates state in a map before a single persist, each loop iteration must read its "current value" from that map (falling back to the source-of-truth on first touch), not from a snapshot captured once before the loop. Per-token stdout reporting the in-memory *intent* rather than the *persisted aggregate* masked this for multiple `+=` in one command — e2e assertions must check the persisted file frontmatter, not the CLI's success output.

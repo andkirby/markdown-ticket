@@ -124,14 +124,25 @@ export class TicketService {
     const updates: Record<string, string | string[]> = {}
 
     for (const operation of normalizedOperations) {
-      const currentValue = this.getTicketField(currentTicket, operation.field)
+      // Resolve the effective current value for this field: prefer the
+      // accumulated in-batch state so multiple ops on the same field compose
+      // (e.g. `related+=A related+=B` must yield [A,B], not just [B]).
+      // Falls back to the disk snapshot on first touch.
+      const resolveRelationValue = (field: string): string[] => {
+        const pending = updates[field]
+        if (Array.isArray(pending))
+          return pending
+        if (typeof pending === 'string' && pending)
+          return pending.split(',').map(item => item.trim()).filter(Boolean)
+        return this.getRelationField(currentTicket, field)
+      }
 
       if (operation.op === 'replace') {
         if (this.isRelationField(operation.field)) {
           const nextValue = Array.isArray(operation.value)
             ? operation.value
             : (operation.value ? [operation.value] : [])
-          const currentRelationValue = this.getRelationField(currentTicket, operation.field)
+          const currentRelationValue = resolveRelationValue(operation.field)
 
           if (JSON.stringify(currentRelationValue) !== JSON.stringify(nextValue)) {
             updates[operation.field] = nextValue
@@ -140,6 +151,7 @@ export class TicketService {
           continue
         }
 
+        const currentValue = this.getTicketField(currentTicket, operation.field)
         const nextValue = Array.isArray(operation.value) ? operation.value.join(',') : operation.value
         if (currentValue !== nextValue) {
           updates[operation.field] = nextValue
@@ -148,7 +160,7 @@ export class TicketService {
         continue
       }
 
-      const currentRelationValue = this.getRelationField(currentTicket, operation.field)
+      const currentRelationValue = resolveRelationValue(operation.field)
       const normalizedValues = Array.isArray(operation.value) ? operation.value : [operation.value]
 
       if (operation.op === 'add') {

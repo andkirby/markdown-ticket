@@ -4,9 +4,20 @@
  * Tests for updating ticket attributes through various command forms.
  */
 
+import { readFileSync } from 'node:fs'
 import { ProjectFactory, TestEnvironment } from '@mdt/shared/test-lib'
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { runCli } from '../helpers/cli-runner.js'
+
+/**
+ * Read the frontmatter block of a CR markdown file and return it as raw text.
+ * Used to assert what actually persisted to disk (not just in-memory state).
+ */
+function readFrontmatter(filePath: string): string {
+  const content = readFileSync(filePath, 'utf8')
+  const match = content.match(/^---\n([\s\S]*?)\n---/)
+  return match ? match[1] : ''
+}
 
 describe('Ticket Attr', () => {
   let testEnv: TestEnvironment
@@ -14,6 +25,7 @@ describe('Ticket Attr', () => {
   let projectDir: string
   let projectCode: string
   let ticketKey: string
+  let ticketFilePath: string
 
   beforeAll(async () => {
     testEnv = new TestEnvironment()
@@ -40,6 +52,7 @@ describe('Ticket Attr', () => {
     })
 
     ticketKey = cr.crCode!
+    ticketFilePath = cr.filePath!
   })
 
   afterAll(async () => {
@@ -136,6 +149,50 @@ describe('Ticket Attr', () => {
 
     // Verify the append worked
     expect(dupResult.stdout).toContain('|')
+  })
+
+  test('should accumulate multiple += tokens on the same field in one command', async () => {
+    // Start from a clean slate so we can assert the full resulting set
+    await runCli(['attr', ticketKey, 'related='], {
+      cwd: projectDir,
+    })
+
+    // Append multiple values to the SAME field in a single command.
+    // Regression for: each += reflected in stdout but only the last persisted.
+    const result = await runCli(
+      ['attr', ticketKey, 'related+=MDT-101', 'related+=MDT-102', 'related+=MDT-103'],
+      { cwd: projectDir },
+    )
+
+    expect(result.exitCode).toBe(0)
+
+    // Assert what actually persisted to the file's frontmatter (the bug was
+    // that stdout showed success but only the last value was written).
+    const frontmatter = readFrontmatter(ticketFilePath)
+    expect(frontmatter).toContain('MDT-101')
+    expect(frontmatter).toContain('MDT-102')
+    expect(frontmatter).toContain('MDT-103')
+  })
+
+  test('should accumulate multiple -= tokens on the same field in one command', async () => {
+    // Seed a known set
+    await runCli(['attr', ticketKey, 'related=MDT-201,MDT-202,MDT-203,MDT-204'], {
+      cwd: projectDir,
+    })
+
+    // Remove multiple values from the SAME field in a single command
+    const result = await runCli(
+      ['attr', ticketKey, 'related-=MDT-202', 'related-=MDT-204'],
+      { cwd: projectDir },
+    )
+
+    expect(result.exitCode).toBe(0)
+
+    const frontmatter = readFrontmatter(ticketFilePath)
+    expect(frontmatter).toContain('MDT-201')
+    expect(frontmatter).toContain('MDT-203')
+    expect(frontmatter).not.toContain('MDT-202')
+    expect(frontmatter).not.toContain('MDT-204')
   })
 
   test('should remove relation values with -=', async () => {
