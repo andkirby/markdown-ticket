@@ -1,6 +1,6 @@
 ---
 code: MDT-172
-status: In Progress
+status: Implemented
 dateCreated: 2026-05-18T00:00:00.000Z
 type: Feature Enhancement
 priority: High
@@ -103,35 +103,35 @@ Architecture reference: [Authentication and Sharing Architecture](../architectur
 ## 4. Acceptance Criteria
 
 ### Functional
-- [ ] Fresh deployment exposes no public or unlisted projects until sharing is enabled.
-- [ ] Owner/admin can set project sharing to Private, Unlisted read-only, or Public read-only from Settings.
-- [ ] Anonymous `GET /api/projects` returns only `public-readonly` projects.
-- [ ] Anonymous `GET /api/projects` does not include `unlisted-readonly` projects.
-- [ ] Anonymous `/share/{shareId}` opens an `unlisted-readonly` project when the share ID is valid.
-- [ ] Anonymous read requests for a visible shared project return normal board/list/document data.
-- [ ] Anonymous mutating requests for a public project return `403`.
-- [ ] Anonymous requests for unshared projects return `404` or generic denial without leaking project existence.
-- [ ] Visitor can enter a scoped read token from the header/menu authorization flow.
-- [ ] Valid read token expands the visible project list to token-scoped projects.
-- [ ] Invalid token shows a generic error and does not reveal whether any project exists.
-- [ ] Share URL token/code exchange uses `POST` and removes the token/code from the address bar after storage.
-- [ ] Read-only UI hides or disables Add Project, Edit Project, create ticket, drag/drop, status toggles, delete, config editing, document fav writes, and document configuration controls.
+- [x] Fresh deployment exposes no public or unlisted projects until sharing is enabled.
+- [x] Owner/admin can set project sharing to Private, Unlisted read-only, or Public read-only from Settings.
+- [x] Anonymous `GET /api/projects` returns only `public-readonly` projects.
+- [x] Anonymous `GET /api/projects` does not include `unlisted-readonly` projects.
+- [x] Anonymous `/share/{shareId}` opens an `unlisted-readonly` project when the share ID is valid.
+- [x] Anonymous read requests for a visible shared project return normal board/list/document data.
+- [x] Anonymous mutating requests for a public project return `403`.
+- [x] Anonymous requests for unshared projects return `404` or generic denial without leaking project existence.
+- [x] Visitor can enter a scoped read token from the header/menu authorization flow.
+- [x] Valid read token expands the visible project list to token-scoped projects.
+- [x] Invalid token shows a generic error and does not reveal whether any project exists.
+- [x] Share URL token/code exchange uses `POST` and removes the token/code from the address bar after storage.
+- [x] Read-only UI hides or disables Add Project, Edit Project, create ticket, drag/drop, status toggles, delete, config editing, document fav writes, and document configuration controls.
 
 ### Non-Functional
-- [ ] Backend authorization checks are centralized and covered by route tests.
-- [ ] Share IDs and public project identifiers are non-enumerable.
-- [ ] Token exchange does not log raw tokens.
-- [ ] Project filtering adds no noticeable delay for normal local use.
-- [ ] Existing local development without sharing configured behaves as before.
+- [x] Backend authorization checks are centralized and covered by route tests.
+- [x] Share IDs and public project identifiers are non-enumerable.
+- [x] Token exchange does not log raw tokens.
+- [x] Project filtering adds no noticeable delay for normal local use.
+- [x] Existing local development without sharing configured behaves as before.
 
 ### Edge Cases
-- [ ] A token scoped to zero projects authenticates but shows no extra projects.
-- [ ] A project switched from `public-readonly` to `unlisted-readonly` disappears from anonymous project lists but remains reachable by valid share ID.
-- [ ] A project disabled after being shared disappears from anonymous and token-scoped project lists, and its share ID stops resolving.
-- [ ] Expired, revoked, malformed, or replayed one-time tokens fail generically.
-- [ ] Browser refresh preserves read access only according to the chosen storage policy.
-- [ ] Direct API calls cannot mutate even when frontend controls are hidden incorrectly.
-- [ ] SSE subscriptions for read-only visitors do not expose unshared project events.
+- [x] A token scoped to zero projects authenticates but shows no extra projects.
+- [x] A project switched from `public-readonly` to `unlisted-readonly` disappears from anonymous project lists but remains reachable by valid share ID.
+- [x] A project disabled after being shared disappears from anonymous and token-scoped project lists, and its share ID stops resolving.
+- [x] Expired, revoked, malformed, or replayed one-time tokens fail generically.
+- [x] Browser refresh preserves read access only according to the chosen storage policy.
+- [x] Direct API calls cannot mutate even when frontend controls are hidden incorrectly.
+- [x] SSE subscriptions for read-only visitors do not expose unshared project events.
 
 ## 5. Verification
 

@@ -347,7 +347,7 @@ MDT-157 keeps existing no-auth deployments running during migration. A warning t
 
 `Authorization` and `X-API-Key` are the only backend credential headers. Reverse proxies must forward them unchanged; `Origin`, `Referer`, `X-Forwarded-For`, and `X-Real-IP` are not credentials. If a proxy strips both credential headers, protected backend requests fail closed with `401`.
 
-MDT-157 covers authentication only. Public read-only sharing is deferred to MDT-172.
+MDT-157 covers authentication only. Public read-only sharing is implemented in MDT-172.
 
 ---
 
