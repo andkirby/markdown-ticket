@@ -130,19 +130,21 @@ Feature: Relationship badge click isolation
 
 ## Viewer divergence (full mode)
 
-### S11 — TicketViewer shows full codes, no elision, no overflow
+### S11 — TicketViewer elides globally (UAT 2026-07-16)
 
 ```gherkin
 Feature: Relationship badge in TicketViewer
-  The viewer is the detail surface and shows full CR keys.
+  Elision is global: the viewer elides same-project links like the board.
 
   Scenario: 5 same-project links in the viewer
     Given the TicketViewer renders a ticket with 5 same-project related links
-    When the RelationshipBadge renders in full mode
-    Then all 5 links render as full CR keys "MDT-030, MDT-005, MDT-035, MDT-040, MDT-041"
-    And no "+N" trigger is rendered
-    And no elision occurs
+    When the RelationshipBadge renders
+    Then the first 3 links render as bare numbers "030 005 035"
+    And a "+2" trigger is rendered for the remaining links
+    And no full "MDT-NNN" code is visible inline
 ```
+
+> UAT 2026-07-16: reversed the earlier "viewer keeps full codes" decision. Elision and overflow now apply on all surfaces while `ELIDE_EVERYWHERE` is on.
 
 ## Edge cases
 

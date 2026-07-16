@@ -77,7 +77,8 @@ Rules:
 - Same/cross classification reuses `classifyLink` from `linkProcessor.ts`; do not reimplement the regex.
 - Zero-padding is preserved so a bare number still reads as a ticket key, not an arbitrary integer. Extract the number segment from the full key (`split('-').pop()` on the normalized key), not from the raw input.
 - Each link keeps a per-link `title` attribute carrying its **full CR key** (e.g. `MDT-030`) so hover reveals what was elided. The legacy single `title` on the whole badge is removed.
-- **Surface scope**: elision applies on the **board card only**. In the `TicketViewer`, relationship links render full CR keys regardless of project, because the viewer has room and is the detail surface. See `ticket-viewer.spec.md`.
+- **Surface scope**: elision applies **globally** — board card and TicketViewer alike — while `ELIDE_EVERYWHERE` is on (default). The `displayMode` prop is retained for a future per-surface settings override but is currently a no-op when `ELIDE_EVERYWHERE` is on. (UAT 2026-07-16: changed from board-only to global.)
+- **Inline separator**: links render with no separator by default (`RELATIONSHIP_LINK_SEPARATOR = ''`). A non-empty value (e.g. `', '`) restores comma separation. Configured in `src/config/relationshipBadge.ts`.
 
 ### Overflow
 
@@ -87,7 +88,7 @@ Rules:
 
 Behavior:
 
-- When `links.length <= INLINE_MAX`: all links render inline, comma-separated. No trigger, no popover.
+- When `links.length <= INLINE_MAX`: all links render inline, separated by `RELATIONSHIP_LINK_SEPARATOR` (default: no separator). No trigger, no popover.
 - When `links.length > INLINE_MAX`: first `INLINE_MAX` links render inline; an OverflowTrigger renders `+N` where `N = links.length − INLINE_MAX`. The comma separator is **not** rendered before the trigger.
 - Popover lists the remaining `N` links, each as a full-CR-key `SmartLink` regardless of same/cross status (the popover is the "show me everything" affordance), each with a `title` carrying the full key.
 - Badge-level `title` tooltip in the overflow case lists **all** full keys joined by `, ` — so a quick hover still reveals the complete set without opening the popover.
@@ -97,10 +98,10 @@ Behavior:
 | `links` | Current project | Board renders |
 |---------|-----------------|---------------|
 | `['MDT-030']` | `MDT` | `🔗 030` |
-| `['MDT-030','MDT-005','MDT-035']` | `MDT` | `🔗 030, 005, 035` |
-| `['MDT-030','MDT-005','MDT-035','MDT-040','MDT-041']` | `MDT` | `🔗 030, 005, 035 +2` |
-| `['MDT-030','VOC-005','MDT-035']` | `MDT` | `🔗 030, VOC-005, 035` |
-| `['VOC-030','VOC-005','VOC-035']` | `MDT` | `🔗 VOC-030, VOC-005, VOC-035` |
+| `['MDT-030','MDT-005','MDT-035']` | `MDT` | `🔗 030 005 035` |
+| `['MDT-030','MDT-005','MDT-035','MDT-040','MDT-041']` | `MDT` | `🔗 030 005 035 +2` |
+| `['MDT-030','VOC-005','MDT-035']` | `MDT` | `🔗 030 VOC-005 035` |
+| `['VOC-030','VOC-005','VOC-035']` | `MDT` | `🔗 VOC-030 VOC-005 VOC-035` |
 
 ## States
 

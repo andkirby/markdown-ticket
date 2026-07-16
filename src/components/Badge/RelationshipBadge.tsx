@@ -5,8 +5,10 @@
  * Uses data attributes for color mapping (see badge.css).
  *
  * MDT-187 additions:
- * - `displayMode`: board passes 'compact' to elide same-project prefixes
- *   and collapse long lists behind a +N popover; the viewer uses 'full'.
+ * - Elide same-project prefixes to bare numbers. Global (all surfaces) when
+ *   `ELIDE_EVERYWHERE` is on; otherwise gated by `displayMode="compact"`.
+ * - Inline separator is configurable (`RELATIONSHIP_LINK_SEPARATOR`).
+ * - Collapse long lists behind a +N popover when above `INLINE_MAX`.
  * - Per-link `title` carries the full CR key even when elided.
  * - Click isolation: inline links and the +N trigger stop propagation so
  *   the parent card's viewer-open onClick does not double-fire.
@@ -19,6 +21,10 @@ import type { ElidedLink } from './relationshipLink'
 import type { RelationshipVariant } from './types'
 import { useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
+import {
+  ELIDE_EVERYWHERE,
+  RELATIONSHIP_LINK_SEPARATOR,
+} from '../../config/relationshipBadge'
 import { cn } from '../../lib/utils'
 import { classifyLink } from '../../utils/linkProcessor'
 import SmartLink from '../SmartLink'
@@ -32,8 +38,10 @@ export interface RelationshipBadgeProps {
   /** Array of ticket codes to display */
   links: string[]
   /**
-   * Board passes 'compact' to elide same-project prefixes and collapse
-   * long lists behind a +N popover. Viewer omits (defaults 'full').
+   * 'compact' elides same-project prefixes and collapses long lists behind a
+   * +N popover. 'full' renders full codes. When `ELIDE_EVERYWHERE` is on
+   * (the default), both modes elide; the prop is kept for callers and for
+   * a future per-surface settings override.
    */
   displayMode?: 'compact' | 'full'
   /** Additional CSS classes */
@@ -71,7 +79,8 @@ export function RelationshipBadge({
   const icon = RELATIONSHIP_ICONS[variant]
   const [overflowOpen, setOverflowOpen] = useState(false)
 
-  const isCompact = displayMode === 'compact'
+  // Elide when configured globally, or when this surface explicitly opts in.
+  const isCompact = ELIDE_EVERYWHERE || displayMode === 'compact'
   const hasOverflow = isCompact && links.length > INLINE_MAX
 
   const elided = useMemo<ElidedLink[]>(
@@ -91,6 +100,8 @@ export function RelationshipBadge({
 
   // Badge-level title: all full keys, for quick hover scan without opening the popover.
   const badgeTitle = links.join(', ')
+
+  const showSeparator = RELATIONSHIP_LINK_SEPARATOR.length > 0
 
   return (
     <Badge
@@ -117,7 +128,9 @@ export function RelationshipBadge({
           >
             {item.display}
           </SmartLink>
-          {index < inlineItems.length - 1 && <span className="mx-1">,</span>}
+          {showSeparator && index < inlineItems.length - 1 && (
+            <span className="mx-1">{RELATIONSHIP_LINK_SEPARATOR}</span>
+          )}
         </span>
       ))}
       {hasOverflow && overflowItems.length > 0 && (

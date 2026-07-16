@@ -51,8 +51,9 @@ describe('RelationshipBadge', () => {
       )
 
       expect(screen.getByText('🔗')).toBeInTheDocument()
-      expect(screen.getByText('TEST-100')).toBeInTheDocument()
-      expect(screen.getByText('TEST-101')).toBeInTheDocument()
+      // Global elision: same-project links render as bare numbers.
+      expect(screen.getByText('100')).toBeInTheDocument()
+      expect(screen.getByText('101')).toBeInTheDocument()
     })
 
     it('should set data-relationship="related" for related variant', () => {
@@ -76,7 +77,8 @@ describe('RelationshipBadge', () => {
       )
 
       expect(screen.getByText('⬅️')).toBeInTheDocument()
-      expect(screen.getByText('TEST-050')).toBeInTheDocument()
+      // Global elision: bare number.
+      expect(screen.getByText('050')).toBeInTheDocument()
     })
 
     it('should set data-relationship="depends" for depends variant', () => {
@@ -100,7 +102,8 @@ describe('RelationshipBadge', () => {
       )
 
       expect(screen.getByText('➡️')).toBeInTheDocument()
-      expect(screen.getByText('TEST-200')).toBeInTheDocument()
+      // Global elision: bare number.
+      expect(screen.getByText('200')).toBeInTheDocument()
     })
 
     it('should set data-relationship="blocks" for blocks variant', () => {
@@ -115,8 +118,8 @@ describe('RelationshipBadge', () => {
     })
   })
 
-  describe('multiple links (full mode, default)', () => {
-    it('should render multiple links separated by comma', () => {
+  describe('multiple links (default)', () => {
+    it('renders multiple links with no separator (configurable separator is empty)', () => {
       render(
         <TestHarness projectCode="TEST">
           <RelationshipBadge
@@ -126,9 +129,12 @@ describe('RelationshipBadge', () => {
         </TestHarness>,
       )
 
-      expect(screen.getByText('TEST-100')).toBeInTheDocument()
-      expect(screen.getByText('TEST-101')).toBeInTheDocument()
-      expect(screen.getByText('TEST-102')).toBeInTheDocument()
+      // Global elision: bare numbers.
+      expect(screen.getByText('100')).toBeInTheDocument()
+      expect(screen.getByText('101')).toBeInTheDocument()
+      expect(screen.getByText('102')).toBeInTheDocument()
+      // No comma separator between links.
+      expect(screen.queryByText(',')).not.toBeInTheDocument()
     })
   })
 
@@ -156,8 +162,8 @@ describe('RelationshipBadge', () => {
         </TestHarness>,
       )
 
-      // SmartLink renders an anchor for ticket links
-      const link = screen.getByText('TEST-100').closest('a')
+      // SmartLink renders an anchor; global elision shows bare number text.
+      const link = screen.getByText('100').closest('a')
       expect(link).toBeTruthy()
       // href is now absolute via buildTicketPath
       expect(link?.getAttribute('href')).toBe('/prj/TEST/ticket/TEST-100')
@@ -316,7 +322,7 @@ describe('RelationshipBadge', () => {
       )
     })
 
-    it('does not collapse in full mode (viewer) regardless of count', () => {
+    it('collapses globally regardless of displayMode (UAT: elision is global)', () => {
       render(
         <TestHarness projectCode="TEST">
           <RelationshipBadge
@@ -326,10 +332,10 @@ describe('RelationshipBadge', () => {
         </TestHarness>,
       )
 
-      // Full mode: all five render inline, no trigger
-      expect(screen.getByText('TEST-001')).toBeInTheDocument()
-      expect(screen.getByText('TEST-005')).toBeInTheDocument()
-      expect(screen.queryByText(/\+2/)).not.toBeInTheDocument()
+      // Global elision: first three inline as bare numbers, +2 trigger present.
+      expect(screen.getByText('001')).toBeInTheDocument()
+      expect(screen.getByText('003')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /\+2/ })).toBeInTheDocument()
     })
   })
 
