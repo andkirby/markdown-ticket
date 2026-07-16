@@ -58,6 +58,8 @@ annotation "opacity-40, scale-95, rotate-2, shadow-2xl" target="drag-code" posit
 
 ## With All Badges (Full Attributes)
 
+Same-project relationship links render as bare zero-padded numbers; lists over `INLINE_MAX` (3) collapse behind `+N`. See `relationship-badge.spec.md` for the full contract and `relationship-badge.mockups.md` for badge-focused states.
+
 ```wireloom
 window "Ticket Card — Full Badges":
   panel:
@@ -72,11 +74,12 @@ window "Ticket Card — Full Badges":
       chip "Phase:Auth" id="full-phase"
       chip "🪾 Worktree" id="full-worktree"
     row:
-      chip "Related:3" id="full-related"
-      chip "Dep:2" id="full-dep"
-      chip "Blocks:1" id="full-blocks"
+      chip "🔗 030, 005, 035 +2" id="full-related"
+      chip "⬅️ 012" id="full-dep"
+      chip "➡️ VOC-200" id="full-blocks"
 
-annotation "Badges wrap to multiple lines when they overflow" target="full-related" position=right
+annotation "Same-project links → bare number (030, not MDT-030).\nCross-project → full code (VOC-200).\n+2 opens a popover; see relationship-badge.mockups.md." target="full-related" position=right
+annotation "Badges wrap to multiple lines when they overflow the row" target="full-blocks" position=bottom
 ```
 
 ## Minimal Badges (No Optional Attributes)
