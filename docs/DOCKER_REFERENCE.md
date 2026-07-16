@@ -199,7 +199,7 @@ If production compose starts without `MCP_AUTH_TOKEN`, startup/config validation
 
 Reverse proxies must forward `Authorization` and `X-API-Key` unchanged. `Origin`, `Referer`, and forwarded IP headers are never credentials; stripping both credential headers causes protected backend requests to fail closed with `401`.
 
-MDT-157 covers authentication only; public read-only sharing belongs to MDT-172.
+MDT-157 covers authentication only; public read-only sharing is implemented in MDT-172.
 
 ---
 
