@@ -37,12 +37,12 @@ src/components/ui/
 interface RelationshipBadgeProps {
   variant: RelationshipVariant       // 'related' | 'depends' | 'blocks'
   links: string[]
-  displayMode?: 'compact' | 'full'   // NEW; default 'full'. Board passes 'compact'
+  displayMode?: 'compact' | 'full'   // retained; currently a no-op while ELIDE_EVERYWHERE is on
   className?: string
 }
 ```
 
-TicketAttributeTags (board) passes `displayMode="compact"`. TicketViewer keeps current usage (defaults to `'full'`).
+**UAT 2026-07-16**: elision is now global (`ELIDE_EVERYWHERE = true`), so `displayMode` no longer gates rendering — both board and viewer elide. The prop is retained for a future per-surface settings override. The inline separator is configurable (`RELATIONSHIP_LINK_SEPARATOR`, default `''` = no separator). Both constants live in `src/config/relationshipBadge.ts`; a settings UI item is deferred.
 
 ## Decisions
 
