@@ -1,6 +1,6 @@
 ---
 code: MDT-175
-status: In Progress
+status: Implemented
 dateCreated: 2026-05-22T11:59:02.098Z
 type: Feature Enhancement
 priority: Medium
@@ -76,30 +76,30 @@ priority: Medium
 ## 4. Acceptance Criteria
 
 ### Functional
-- [ ] Browser title is not always the static `CR Task Board` after navigating through primary app contexts.
-- [ ] Board context sets title to `{PROJECT_CODE} Board`.
-- [ ] List context sets title to `{PROJECT_CODE} Listing`.
-- [ ] Documents root context sets title to `{PROJECT_CODE} Documents`.
-- [ ] Main ticket context sets title to `{TICKET_CODE} - {ticket H1/title}`.
-- [ ] Ticket subdocument or special subtab context appends the active label after the main ticket title.
-- [ ] Project document context sets title to `{PROJECT_CODE} - {document H1/title/name}`.
-- [ ] No title-format Settings item is added in this CR.
-- [ ] Settings or modal-only contexts do not leave the title in a misleading stale content state after close.
-- [ ] Loading, missing, or error states fall back to a truthful app-level title.
-- [ ] Project switching updates the title to the new project context.
-- [ ] Closing a ticket or document restores the appropriate parent view title.
+- [x] Browser title is not always the static `CR Task Board` after navigating through primary app contexts.
+- [x] Board context sets title to `{PROJECT_CODE} Board`.
+- [x] List context sets title to `{PROJECT_CODE} Listing`.
+- [x] Documents root context sets title to `{PROJECT_CODE} Documents`.
+- [x] Main ticket context sets title to `{TICKET_CODE} - {ticket H1/title}`.
+- [x] Ticket subdocument or special subtab context appends the active label after the main ticket title.
+- [x] Project document context sets title to `{PROJECT_CODE} - {document H1/title/name}`.
+- [x] No title-format Settings item is added in this CR.
+- [x] Settings or modal-only contexts do not leave the title in a misleading stale content state after close.
+- [x] Loading, missing, or error states fall back to a truthful app-level title.
+- [x] Project switching updates the title to the new project context.
+- [x] Closing a ticket or document restores the appropriate parent view title.
 
 ### Non-Functional
-- [ ] Title updates do not require backend persistence.
-- [ ] Title updates do not add visible UI clutter.
-- [ ] Title values remain concise for browser tab and history display.
-- [ ] Existing navigation, ticket selection, and document selection behavior remain unchanged.
+- [x] Title updates do not require backend persistence.
+- [x] Title updates do not add visible UI clutter.
+- [x] Title values remain concise for browser tab and history display.
+- [x] Existing navigation, ticket selection, and document selection behavior remain unchanged.
 
 ### Edge Cases
-- [ ] A deleted or unavailable ticket does not leave its old title active.
-- [ ] A deleted or unavailable document does not leave its old title active.
-- [ ] Rapid navigation between tickets or documents ends with the final active context in `document.title`.
-- [ ] Empty or malformed names fall back to a stable app-level title.
+- [x] A deleted or unavailable ticket does not leave its old title active.
+- [x] A deleted or unavailable document does not leave its old title active.
+- [x] Rapid navigation between tickets or documents ends with the final active context in `document.title`.
+- [x] Empty or malformed names fall back to a stable app-level title.
 
 ## 5. Verification
 
