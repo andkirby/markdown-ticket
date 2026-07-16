@@ -11,10 +11,11 @@
 
 /**
  * Separator rendered between inline relationship links.
- * A single space keeps bare numbers readable (027 041 042) without the
- * visual heaviness of a comma.
+ * Uses a non-breaking space (\u00A0) so it survives inline-flow whitespace
+ * collapsing and does not break across lines — a regular space collapses to
+ * nothing between the wrapper spans (027 041 042, not 027041042).
  */
-export const RELATIONSHIP_LINK_SEPARATOR = ' '
+export const RELATIONSHIP_LINK_SEPARATOR = '\u00A0'
 
 /**
  * Elision applies to all surfaces (board + ticket viewer).
