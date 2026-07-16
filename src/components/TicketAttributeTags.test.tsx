@@ -80,8 +80,9 @@ describe('TicketAttributeTags badge visibility', () => {
     expect(screen.getByText('Feature Enhancement')).toBeInTheDocument()
     expect(screen.getByText('Settings')).toBeInTheDocument()
     expect(screen.getByText('worktree')).toBeInTheDocument()
-    expect(screen.getByText('MDT-166')).toBeInTheDocument()
-    expect(screen.getByText('MDT-101')).toBeInTheDocument()
-    expect(screen.getByText('MDT-200')).toBeInTheDocument()
+    // Relationship links elide same-project prefixes globally (MDT-187 UAT).
+    expect(screen.getByText('166')).toBeInTheDocument()
+    expect(screen.getByText('101')).toBeInTheDocument()
+    expect(screen.getByText('200')).toBeInTheDocument()
   })
 })
