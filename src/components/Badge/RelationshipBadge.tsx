@@ -129,7 +129,7 @@ export function RelationshipBadge({
             {item.display}
           </SmartLink>
           {showSeparator && index < inlineItems.length - 1 && (
-            <span className="mx-1">{RELATIONSHIP_LINK_SEPARATOR}</span>
+            <span>{RELATIONSHIP_LINK_SEPARATOR}</span>
           )}
         </span>
       ))}
