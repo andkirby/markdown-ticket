@@ -1,28 +1,47 @@
 /**
- * MDT-135: RelationshipBadge Component
+ * MDT-135, MDT-187: RelationshipBadge Component
  *
  * Displays relationship badges for related, depends, and blocks links.
  * Uses data attributes for color mapping (see badge.css).
+ *
+ * MDT-187 additions:
+ * - `displayMode`: board passes 'compact' to elide same-project prefixes
+ *   and collapse long lists behind a +N popover; the viewer uses 'full'.
+ * - Per-link `title` carries the full CR key even when elided.
+ * - Click isolation: inline links and the +N trigger stop propagation so
+ *   the parent card's viewer-open onClick does not double-fire.
  *
  * Obligations: OBL-relationship-badges
  * Coverage: BR-8
  */
 
+import type { ElidedLink } from './relationshipLink'
 import type { RelationshipVariant } from './types'
+import { useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { cn } from '../../lib/utils'
 import { classifyLink } from '../../utils/linkProcessor'
 import SmartLink from '../SmartLink'
 import { Badge } from '../ui/badge'
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
+import { elideLinks } from './relationshipLink'
 
 export interface RelationshipBadgeProps {
   /** Badge variant type */
   variant: RelationshipVariant
   /** Array of ticket codes to display */
   links: string[]
+  /**
+   * Board passes 'compact' to elide same-project prefixes and collapse
+   * long lists behind a +N popover. Viewer omits (defaults 'full').
+   */
+  displayMode?: 'compact' | 'full'
   /** Additional CSS classes */
   className?: string
 }
+
+/** Max links rendered inline before the rest collapse into a +N trigger. */
+export const INLINE_MAX = 3
 
 /**
  * Icon mapping for relationship types
@@ -39,34 +58,137 @@ const RELATIONSHIP_ICONS: Record<RelationshipVariant, string> = {
  * @example
  * <RelationshipBadge variant="related" links={['MDT-100', 'MDT-101']} />
  * <RelationshipBadge variant="depends" links={['MDT-050']} />
- * <RelationshipBadge variant="blocks" links={['MDT-200']} />
+ * <RelationshipBadge variant="blocks" links={['MDT-200']} displayMode="compact" />
  */
-export function RelationshipBadge({ variant, links, className }: RelationshipBadgeProps) {
+export function RelationshipBadge({
+  variant,
+  links,
+  displayMode = 'full',
+  className,
+}: RelationshipBadgeProps) {
   const { projectCode } = useParams<{ projectCode: string }>()
+  const currentProject = projectCode || ''
   const icon = RELATIONSHIP_ICONS[variant]
-  const title = links.join(', ')
+  const [overflowOpen, setOverflowOpen] = useState(false)
+
+  const isCompact = displayMode === 'compact'
+  const hasOverflow = isCompact && links.length > INLINE_MAX
+
+  const elided = useMemo<ElidedLink[]>(
+    () =>
+      isCompact
+        ? elideLinks(links, currentProject)
+        : links.map(link => ({
+            fullKey: link,
+            display: link,
+            isSameProject: false,
+          })),
+    [links, currentProject, isCompact],
+  )
+
+  const inlineItems = hasOverflow ? elided.slice(0, INLINE_MAX) : elided
+  const overflowItems = hasOverflow ? elided.slice(INLINE_MAX) : []
+
+  // Badge-level title: all full keys, for quick hover scan without opening the popover.
+  const badgeTitle = links.join(', ')
 
   return (
     <Badge
       variant="outline"
       className={cn('badge', className)}
       data-relationship={variant}
-      title={title}
+      title={badgeTitle}
     >
       <span className="mr-1">{icon}</span>
-      {links.map((link, index) => (
-        <span key={link}>
+      {inlineItems.map((item, index) => (
+        <span
+          key={item.fullKey}
+          // Stop the card's viewer-open onClick from firing on link navigation.
+          onClick={(e) => {
+            e.stopPropagation()
+          }}
+          title={item.fullKey}
+        >
           <SmartLink
-            link={classifyLink(link, projectCode || '')}
-            currentProject={projectCode || ''}
+            link={classifyLink(item.fullKey, currentProject)}
+            currentProject={currentProject}
             showIcon={false}
             className="hover:underline"
           >
-            {link}
+            {item.display}
           </SmartLink>
-          {index < links.length - 1 && <span className="mx-1">,</span>}
+          {index < inlineItems.length - 1 && <span className="mx-1">,</span>}
         </span>
       ))}
+      {hasOverflow && overflowItems.length > 0 && (
+        <Popover open={overflowOpen} onOpenChange={setOverflowOpen}>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className={cn(
+                'relationship-badge__overflow',
+                'ml-1 inline-flex items-center rounded-full px-1.5 py-0.5',
+                'text-xs font-medium opacity-80 hover:opacity-100 hover:underline',
+                'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+              )}
+              aria-haspopup="dialog"
+              aria-expanded={overflowOpen}
+              // Stop the card's viewer-open onClick from firing when opening the popover.
+              onClick={(e) => {
+                e.stopPropagation()
+              }}
+              title={`+${overflowItems.length} more: ${overflowItems.map(o => o.fullKey).join(', ')}`}
+            >
+              +
+              {overflowItems.length}
+            </button>
+          </PopoverTrigger>
+          <PopoverContent
+            align="start"
+            className="w-auto min-w-[8rem] p-2"
+            onOpenAutoFocus={(e) => {
+              // Move focus to the first popover link instead of the content container.
+              e.preventDefault()
+              const firstLink = document.getElementById(
+                popoverLinkId(variant, overflowItems[0]?.fullKey),
+              )
+              firstLink?.focus()
+            }}
+          >
+            <div className="flex flex-col gap-1">
+              {overflowItems.map(item => (
+                <span
+                  key={item.fullKey}
+                  id={popoverLinkId(variant, item.fullKey)}
+                  // Close popover + stop card onClick on navigation.
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setOverflowOpen(false)
+                  }}
+                  title={item.fullKey}
+                >
+                  <SmartLink
+                    link={classifyLink(item.fullKey, currentProject)}
+                    currentProject={currentProject}
+                    showIcon={false}
+                    className="inline-flex w-full items-center rounded px-1.5 py-1 text-xs hover:bg-accent hover:underline"
+                  >
+                    {item.fullKey}
+                  </SmartLink>
+                </span>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
+      )}
     </Badge>
   )
+}
+
+/** Stable id for a popover link so focus can be moved on open. */
+function popoverLinkId(
+  variant: RelationshipVariant,
+  fullKey: string | undefined,
+): string {
+  return fullKey ? `rel-${variant}-${fullKey}` : ''
 }

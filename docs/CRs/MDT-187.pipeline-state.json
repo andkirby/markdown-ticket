@@ -1,0 +1,89 @@
+{
+  "pipeline": "mdt-pipeline-e2e",
+  "version": 4,
+  "ticket": "MDT-187",
+  "currentMilestone": "closed",
+  "completedMilestones": [
+    "pre-flight",
+    "assess",
+    "requirements",
+    "scenarios",
+    "architecture",
+    "ux",
+    "tests",
+    "tasks",
+    "implement",
+    "review",
+    "user-review"
+  ],
+  "discovery": {
+    "projectDocs": ["AGENTS.md", "CLAUDE.md", "docs/SKILLS.md", "docs/PRE_IMPLEMENT.md"],
+    "ticketSource": "MDT-187",
+    "ticketPath": "docs/CRs/MDT-187-relationship-badge-overflow.md",
+    "artifactDirectory": "docs/CRs/MDT-187",
+    "ticketStatusModel": {
+      "states": ["Proposed", "Approved", "In Progress", "Implemented", "Partially Implemented", "On Hold", "Rejected"],
+      "transitionCommand": "mdt-cli ticket attr MDT-187 status=\"<STATUS>\""
+    },
+    "languageRuntime": "TypeScript / React / Vite / Bun / Playwright",
+    "verificationCommands": {
+      "tsAll": "bun run validate:ts:all",
+      "lint": "bun run lint:all",
+      "feTest": "bun test --isolate ./src",
+      "build": "bun run build"
+    }
+  },
+  "artifacts": {
+    "assess": "folded into CR (Open Questions / Constraints / Non-Goals sections)",
+    "requirements": "docs/CRs/MDT-187-relationship-badge-overflow.md",
+    "scenarios": "docs/CRs/MDT-187/bdd.md",
+    "architecture": "docs/CRs/MDT-187/architecture.md",
+    "ux": "docs/design/surfaces/relationship-badge.spec.md + relationship-badge.mockups.md (pre-existing, reviewed)",
+    "tests": "docs/CRs/MDT-187/tests.md",
+    "tasks": "docs/CRs/MDT-187/tasks.md"
+  },
+  "baseline": {
+    "validateTsAll": "1 pre-existing fail in server/tests/utils/setupTests.ts:92 (mdtAccess) — UNRELATED, unchanged",
+    "relationshipBadgeTests": "baseline 13/13 → now 97/97 across Badge module + TicketAttributeTags"
+  },
+  "approvals": {
+    "userReview": "approved"
+  },
+  "commits": [],
+  "implementationGates": {
+    "buildTypecheck": "pass (src clean; server pre-existing error unchanged)",
+    "tests": "pass (97/97)",
+    "lintStatic": "pass (lint:all clean)",
+    "build": "pass (bun run build succeeds)",
+    "knownFailures": "pre-existing server/tests/utils/setupTests.ts:92 mdtAccess TS error; repo-wide prettier/eslint-stylistic tension (pre-existing, affects untouched files too)"
+  },
+  "scope": {
+    "changedCode": [
+      "src/components/ui/popover.tsx (NEW)",
+      "src/components/Badge/relationshipLink.ts (NEW)",
+      "src/components/Badge/relationshipLink.test.ts (NEW)",
+      "src/components/Badge/RelationshipBadge.tsx (modified)",
+      "src/components/Badge/RelationshipBadge.test.tsx (modified)",
+      "src/components/TicketAttributeTags.tsx (modified)",
+      "package.json + bun.lock (@radix-ui/react-popover dep)"
+    ],
+    "changedDocs": [
+      "docs/design/surfaces/relationship-badge.spec.md (NEW, prior turn)",
+      "docs/design/surfaces/relationship-badge.mockups.md (NEW, prior turn)",
+      "docs/design/surfaces/ticket-card.spec.md (updated, prior turn)",
+      "docs/design/surfaces/ticket-card.mockups.md (updated, prior turn)",
+      "docs/CRs/MDT-187/*.md (architecture, bdd, tests, tasks)"
+    ]
+  },
+  "dirtyBoundary": {
+    "avoided": [
+      "docs/ideas/.next-idea",
+      "docs/ideas/README.md",
+      "docs/ideas/IDEA-005-tickets-to-mermaid-grid.md",
+      "docs/ideas/IDEA-006-ticket-sub-areas.md",
+      "docs/ideas/IDEA-006-ticket-sub-areas.research.md",
+      "docs/CRs/MDT-168/* (created by another session)"
+    ]
+  },
+  "updatedAt": "2026-07-16T12:50:00.000Z"
+}

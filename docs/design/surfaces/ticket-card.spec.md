@@ -37,7 +37,7 @@ DraggableTicketCard (drag wrapper)
 | PriorityBadge | `src/components/Badge/PriorityBadge.tsx` | — | always |
 | TypeBadge | `src/components/Badge/TypeBadge.tsx` | — | always |
 | ContextBadge | `src/components/Badge/ContextBadge.tsx` | — | phase, assignee, worktree |
-| RelationshipBadge | `src/components/Badge/RelationshipBadge.tsx` | — | related, depends, blocks |
+| RelationshipBadge | `src/components/Badge/RelationshipBadge.tsx` | `relationship-badge.spec.md` | related, depends, blocks |
 
 ## Source files
 
@@ -105,6 +105,15 @@ Badges appear left-to-right in this fixed order:
 If a badge value is empty or array is empty, the badge is not rendered.
 
 The board Settings tab can hide individual card badge types via `markdown-ticket:board:ticket-card-badges`. The configured list filters this order; it must not reorder badges or affect ticket viewer badges.
+
+## Relationship Badges (board)
+
+Relationship badges on the board follow `relationship-badge.spec.md`. Two board-specific contracts worth flagging here because they affect card density:
+
+- **Same-project elision**: links to the current project render as bare zero-padded numbers (`030`), not full CR keys. Cross-project links keep full codes. This is board-only — the TicketViewer shows full codes.
+- **Overflow compression**: when a relationship list exceeds `INLINE_MAX` (3), the rest collapse behind a `+N` trigger that opens a popover. This keeps long relationship lists from forcing the badge row to wrap and push other badges down.
+
+Both behaviors exist to keep cards compact on the dense board surface. Relationship-badge click handling (`stopPropagation`, popover keyboard behavior) is owned by the child spec.
 
 ## TicketCode
 
