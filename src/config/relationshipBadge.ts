@@ -11,9 +11,10 @@
 
 /**
  * Separator rendered between inline relationship links.
- * Empty string renders links adjacently with no separator.
+ * A single space keeps bare numbers readable (027 041 042) without the
+ * visual heaviness of a comma.
  */
-export const RELATIONSHIP_LINK_SEPARATOR = ''
+export const RELATIONSHIP_LINK_SEPARATOR = ' '
 
 /**
  * Elision applies to all surfaces (board + ticket viewer).
