@@ -12,6 +12,9 @@ export * from './app-config'
 // Export MCP server configuration schemas and validation
 export * from './config'
 
+// Export configuration management contracts (MDT-168)
+export * from './config-management'
+
 // Export project-related schemas and validation
 export * from './project'
 

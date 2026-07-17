@@ -102,3 +102,20 @@ AddProjectModal (editMode=true)
 - Add new editable fields only if `PUT /api/projects/{code}/update` accepts and validates them.
 - Folder browsing and the `Global Config Only` checkbox must not appear in edit mode.
 - The current success dialog still renders `Create Another` in edit mode; hide it in a follow-up UI cleanup if edit mode should only expose `Done`.
+
+## Guarded project identity/path operations (MDT-168)
+
+- `project.code`, `project.ticketsPath`, and registry project path are
+  **guarded** selectors (exposure matrix). They are not edited as ordinary scalar
+  fields. In edit mode they render read-only with a "Guarded" badge; activating
+  a guarded change opens a confirmation step (warning copy describing
+  consequences: registry identity, discovery scope, watcher/filesystem effects)
+  before the operation-specific mutation runs.
+- Guarded operations go through explicit operation-specific workflows
+  (`ConfigApplicationService.applyGuardedConfig`) that require a confirmation
+  token, run operation-specific validation, and keep registry identity and local
+  config consistent. They are never applied as ordinary scalar patches.
+- Safe metadata (`name`, `description`, `repository`, `active`) remains editable
+  through the normal edit save and is not guarded.
+- `project.id`, `startNumber`, and `counterFile` are file-only and are never
+  exposed as editable fields.

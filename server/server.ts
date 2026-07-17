@@ -24,6 +24,7 @@ import { SearchController } from './controllers/SearchController.js'
 // Middleware
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js'
 import { createAuthRouter } from './routes/auth.js'
+import { createConfigRouter } from './routes/config.js'
 import { createDevToolsRouter, setupLogInterception } from './routes/devtools.js'
 import { createDocsRouter } from './routes/docs.js'
 import { createDocumentRouter } from './routes/documents.js'
@@ -313,6 +314,10 @@ app.use('/api/events', createSSERouter(fileWatcher, originPolicy, projectService
 
 // System routes (status, directories, filesystem, config)
 app.use('/api', createSystemRouter(fileWatcher, projectController, projectDiscovery, documentService.fileInvoker as FileInvokerAdapter))
+
+// Configuration management routes (MDT-168): thin extracted config endpoints.
+// Owner-only via the /api/config prefix in accessPolicy.ts.
+app.use('/api/config', createConfigRouter())
 
 // Dev tools routes (logging)
 app.use('/api/devtools', createDevToolsRouter(originPolicy, runtimeConfig.system.devtoolsEnabled))

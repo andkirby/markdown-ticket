@@ -1,11 +1,16 @@
 import type { ProjectDetails } from '@mdt/domain-contracts'
 import * as path from 'node:path'
+import { PROJECT_DOCUMENT_CONFIG_DEFAULTS } from '@mdt/domain-contracts'
 import { glob } from 'glob'
 import { shouldIgnorePath } from '../utils/fsIgnoreList.js'
 
 // Define strategy interface
 interface ITreeBuildingStrategy {
-  buildTree: (filePaths: string[], projectPath: string, config: ProjectConfig) => Promise<unknown[]>
+  buildTree: (
+    filePaths: string[],
+    projectPath: string,
+    config: ProjectConfig,
+  ) => Promise<unknown[]>
 }
 
 // Project configuration interface (simplified for this context)
@@ -32,7 +37,11 @@ export class TreeBuilder {
    * @param maxDepth - Maximum depth to scan.
    * @returns Tree structure.
    */
-  async build(projectPath: string, config: ProjectConfig, maxDepth = 5): Promise<unknown[]> {
+  async build(
+    projectPath: string,
+    config: ProjectConfig,
+    maxDepth: number = PROJECT_DOCUMENT_CONFIG_DEFAULTS.maxDepth,
+  ): Promise<unknown[]> {
     // Get all markdown files
     // Use cwd instead of absolute path pattern for better compatibility
     let filePaths = await glob('**/*.md', {
@@ -51,13 +60,21 @@ export class TreeBuilder {
 
     // Filter out tickets path if configured
     if (config.ticketsPath) {
-      filePaths = this._filterTicketFiles(filePaths, projectPath, config.ticketsPath)
+      filePaths = this._filterTicketFiles(
+        filePaths,
+        projectPath,
+        config.ticketsPath,
+      )
     }
 
     return await this.strategy.buildTree(filePaths, projectPath, config)
   }
 
-  private _filterTicketFiles(filePaths: string[], projectPath: string, ticketsPath: string): string[] {
+  private _filterTicketFiles(
+    filePaths: string[],
+    projectPath: string,
+    ticketsPath: string,
+  ): string[] {
     if (ticketsPath === '.') {
       // Filter ticket files by pattern when in root directory
       return filePaths.filter((filePath) => {
@@ -69,6 +86,8 @@ export class TreeBuilder {
     // Filter out files in tickets directory
     const ticketsFullPath = path.join(projectPath, ticketsPath)
 
-    return filePaths.filter(filePath => !filePath.startsWith(ticketsFullPath))
+    return filePaths.filter(
+      filePath => !filePath.startsWith(ticketsFullPath),
+    )
   }
 }

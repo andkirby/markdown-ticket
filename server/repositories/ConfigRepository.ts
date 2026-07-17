@@ -1,6 +1,7 @@
 import type { DocumentConfig, TicketsPath } from '@mdt/domain-contracts'
 import { promises as fs } from 'node:fs'
 import * as path from 'node:path'
+import { PROJECT_DOCUMENT_CONFIG_DEFAULTS } from '@mdt/domain-contracts'
 import { DEFAULTS } from '@mdt/shared/utils/constants.js'
 import { parseToml } from '@mdt/shared/utils/toml.js'
 
@@ -42,14 +43,18 @@ export class ConfigRepository {
       const docPaths = parsed.project?.document?.paths
 
       if (docPaths && Array.isArray(docPaths)) {
-        config.documentPaths = docPaths.filter(path => typeof path === 'string')
+        config.documentPaths = docPaths.filter(
+          path => typeof path === 'string',
+        )
       }
 
       // Parse exclude folders
       const exclFolders = parsed.project?.document?.excludeFolders
 
       if (exclFolders && Array.isArray(exclFolders)) {
-        config.excludeFolders = exclFolders.filter(folder => typeof folder === 'string')
+        config.excludeFolders = exclFolders.filter(
+          folder => typeof folder === 'string',
+        )
       }
 
       const maxDepth = parsed.project?.document?.maxDepth
@@ -61,17 +66,26 @@ export class ConfigRepository {
       // Parse tickets path from project section
       if (parsed.project) {
         // New format: project.ticketsPath
-        if (parsed.project.ticketsPath && typeof parsed.project.ticketsPath === 'string') {
+        if (
+          parsed.project.ticketsPath
+          && typeof parsed.project.ticketsPath === 'string'
+        ) {
           config.ticketsPath = parsed.project.ticketsPath.trim()
         }
         // Legacy format: project.path
-        else if (parsed.project.path && typeof parsed.project.path === 'string') {
+        else if (
+          parsed.project.path
+          && typeof parsed.project.path === 'string'
+        ) {
           config.ticketsPath = parsed.project.path.trim()
         }
       }
 
       // Always ensure ticketsPath is in excludeFolders to prevent CR files from appearing in documents
-      if (config.ticketsPath && !config.excludeFolders.includes(config.ticketsPath)) {
+      if (
+        config.ticketsPath
+        && !config.excludeFolders.includes(config.ticketsPath)
+      ) {
         config.excludeFolders.push(config.ticketsPath)
       }
     }
@@ -87,7 +101,8 @@ export class ConfigRepository {
     return {
       documentPaths: [],
       excludeFolders: [DEFAULTS.TICKETS_PATH, 'node_modules', '.git'],
-      maxDepth: undefined,
+      // MDT-168: canonical document default (resolves drift; was undefined).
+      maxDepth: PROJECT_DOCUMENT_CONFIG_DEFAULTS.maxDepth,
       ticketsPath: null,
     }
   }
