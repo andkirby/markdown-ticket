@@ -5,8 +5,8 @@ dateCreated: 2026-07-17T15:35:08.636Z
 type: Feature Enhancement
 priority: High
 phaseEpic: MDT-188
-dependsOn: [MDT-189]
-blocks: [MDT-191]
+dependsOn: MDT-189
+blocks: MDT-191
 ---
 
 # CLI `mdt-cli deps`: check, tree, and mermaid output

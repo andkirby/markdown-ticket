@@ -5,8 +5,7 @@ dateCreated: 2026-07-17T15:35:08.742Z
 type: Architecture
 priority: High
 phaseEpic: MDT-188
-dependsOn: [MDT-189, MDT-190]
-blocks: []
+dependsOn: MDT-189,MDT-190
 ---
 
 # Dependency Write and Transition Enforcement
