@@ -1,6 +1,7 @@
 import type { GlobalConfig as DomainGlobalConfig, RegistryData as DomainRegistryData } from '@mdt/domain-contracts'
 import type { Project, ProjectConfig } from '../../models/Project.js'
 import type { Ticket } from '../../models/Ticket.js'
+import type { ProjectDocumentEffectiveConfig, ProjectDocumentPatchInput } from './ProjectDocumentPatch.js'
 
 export type GlobalConfig = DomainGlobalConfig
 
@@ -120,6 +121,12 @@ export interface IProjectConfigService {
   resolveProjectWriteReferenceByPath?: (projectId: string, projectPath: string) => ProjectWriteReference
   configureDocuments: (projectId: string, documentPaths: string[]) => Promise<void>
   configureDocumentsByPath: (projectId: string, projectPath: string, documentPaths: string[]) => Promise<void>
+  /** MDT-168: typed project-document patch (validates full candidate, atomic write). */
+  applyDocumentPatchByPath?: (
+    projectId: string,
+    projectPath: string,
+    patch: ProjectDocumentPatchInput,
+  ) => Promise<ProjectDocumentEffectiveConfig>
 }
 
 /** Project cache service - handles caching for performance */

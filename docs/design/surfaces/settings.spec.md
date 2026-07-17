@@ -319,3 +319,25 @@ Settings opens from the **hamburger menu** via ⚙ Settings item for owner/admin
 - Default view: consumers should read from `mdt-settings-default-view` on initial load when URL has no view suffix.
 - Visible card badges: consumers should read from `markdown-ticket:board:ticket-card-badges`, validate badge IDs against the supported board-card badge set, preserve the standard display order, and fall back to default badges when storage is invalid or empty.
 - Sharing controls are not client-only preferences. They require owner/admin access and must use backend authorization as the source of truth.
+
+## Backend-backed configuration sections (MDT-168)
+
+- Backend-backed configuration (global/system + stable user preferences owned by
+  the backend) is rendered in owned sections that consume the `useBackendConfig`
+  hook. These sections stage edits, surface field-level errors per selector, and
+  show save status. They mount only when the current access mode is owner/admin
+  (`canUseOwnerEndpoints`); read-only and anonymous visitors see only the
+  browser-only controls.
+- Browser-only controls (theme quick toggle, default view, card density, markdown
+  density, event history visibility, document tree recents/sort/collapse) remain
+  immediate-persist `localStorage` controls and never call the configuration
+  management API. Backend and browser-only state must not be mixed in one
+  section's save path.
+- Each editable selector follows the exposure matrix: editable selectors render
+  as normal inputs; guarded selectors (e.g. `discovery.searchPaths`,
+  `system.cacheTimeout`, `system.logLevel`) render with a warning and require
+  confirmation; `ui.autoRefresh` and `ui.refreshInterval` render read-only until
+  ownership is confirmed.
+- The backend denial path is authoritative: a read-only visitor who directly
+  calls a configuration mutation endpoint receives 403. UI hiding is not
+  security.

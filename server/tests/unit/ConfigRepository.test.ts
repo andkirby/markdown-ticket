@@ -6,6 +6,7 @@
 
 import { promises as fs } from 'node:fs'
 import * as path from 'node:path'
+import { PROJECT_DOCUMENT_CONFIG_DEFAULTS } from '@mdt/domain-contracts'
 import { ConfigRepository } from '../../repositories/ConfigRepository.js'
 
 describe('ConfigRepository', () => {
@@ -29,7 +30,8 @@ describe('ConfigRepository', () => {
       expect(config.excludeFolders).toContain('docs/CRs')
       expect(config.excludeFolders).toContain('node_modules')
       expect(config.excludeFolders).toContain('.git')
-      expect(config.maxDepth).toBeUndefined()
+      // MDT-168: default maxDepth is the canonical value (5), no longer undefined.
+      expect(config.maxDepth).toBe(PROJECT_DOCUMENT_CONFIG_DEFAULTS.maxDepth)
       expect(config.ticketsPath).toBeNull()
     })
 
