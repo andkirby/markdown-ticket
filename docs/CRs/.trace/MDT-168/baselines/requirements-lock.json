@@ -1,0 +1,118 @@
+{
+  "ticket": "MDT-168",
+  "generatedAt": "2026-07-16T13:22:27.945Z",
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.2",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.1",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.2",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.3",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3.1",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3.2",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3.3",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4.1",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4.2",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-5.1",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-6.1",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C-1",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-2",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-3",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-4",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-5",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-6",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-7",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-8",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-9",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-10",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-1",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-2",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-3",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-4",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-5",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-6",
+      "routePolicy": "tests"
+    }
+  ]
+}

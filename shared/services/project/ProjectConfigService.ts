@@ -1,4 +1,5 @@
 import type { ProjectConfig } from '../../models/Project.js'
+import type { ProjectDocumentEffectiveConfig, ProjectDocumentPatchInput } from './ProjectDocumentPatch.js'
 import type { GlobalConfig, IProjectConfigService, ProjectUpdateFields, ProjectWriteReference, RegistryData } from './types.js'
 import { getTicketsPath, isLegacyConfig, migrateLegacyConfig, validateProjectConfig } from '../../models/Project.js'
 import { validateTicketsPath } from '../../tools/ProjectValidator.js'
@@ -12,6 +13,11 @@ import {
   buildRegistryFilePath,
 } from '../../utils/path-resolver.js'
 import { parseToml, stringify } from '../../utils/toml.js'
+import {
+  applyProjectDocumentPatch,
+
+  validateProjectDocumentPatch,
+} from './ProjectDocumentPatch.js'
 import { ProjectConfigurationMode } from './types.js'
 
 interface ProjectDocumentConfig {
@@ -334,35 +340,60 @@ export class ProjectConfigService implements IProjectConfigService {
 
   /** Configure document paths for a project (direct path - supports auto-discovered projects) */
   async configureDocumentsByPath(projectId: string, projectPath: string, documentPaths: string[]): Promise<void> {
+    // MDT-168: delegate to the typed document patch seam. The legacy positional
+    // signature is preserved for backward compatibility (POST /api/documents/configure);
+    // it is translated into a paths-only patch validated by the strict schema.
+    await this.applyDocumentPatchByPath(projectId, projectPath, { paths: documentPaths })
+  }
+
+  /**
+   * Apply a typed project-document patch (MDT-168). Validates the COMPLETE
+   * candidate change via the strict patch schemas before one atomic write,
+   * preserves all sibling fields, and returns effective saved values.
+   *
+   * Throws a field-labeled error on validation failure (no partial write).
+   */
+  async applyDocumentPatchByPath(
+    projectId: string,
+    projectPath: string,
+    patchInput: ProjectDocumentPatchInput,
+  ): Promise<ProjectDocumentEffectiveConfig> {
     try {
-      const configPath = buildConfigFilePath(projectPath, CONFIG_FILES.PROJECT_CONFIG)
-      if (fileExists(configPath)) {
-        const localConfig = parseToml(readFile(configPath)) as LocalProjectConfigWithNestedDocument
-
-        // Ensure project.document structure exists
-        if (!localConfig.project) {
-          localConfig.project = {}
-        }
-        if (!localConfig.project.document) {
-          localConfig.project.document = {}
-        }
-
-        // Remove old buggy [document] section if exists (MDT-098)
-        // The TOML file should only have [project.document], not a top-level [document]
-        delete localConfig.document
-
-        // Set paths under project.document to match TOML structure [project.document.paths]
-        localConfig.project.document.paths = documentPaths
-
-        writeFileAtomic(configPath, stringify(localConfig))
-        logQuiet(this.quiet, `Updated document paths for project ${projectId}: [${documentPaths.join(', ')}]`)
+      // 1. Strictly validate the patch input (never converts invalid to default).
+      const validation = validateProjectDocumentPatch(patchInput)
+      if (!validation.ok) {
+        throw new Error(`${validation.field}: ${validation.message}`)
       }
-      else {
+
+      const configPath = buildConfigFilePath(projectPath, CONFIG_FILES.PROJECT_CONFIG)
+      if (!fileExists(configPath)) {
         throw new Error('Project configuration file not found')
       }
+
+      const localConfig = parseToml(readFile(configPath)) as LocalProjectConfigWithNestedDocument
+
+      // Ensure project.document structure exists
+      if (!localConfig.project) {
+        localConfig.project = {}
+      }
+      if (!localConfig.project.document) {
+        localConfig.project.document = {}
+      }
+
+      // Remove old buggy [document] section if exists (MDT-098)
+      delete localConfig.document
+
+      // 2. Apply validated patch, preserving siblings.
+      const effective = applyProjectDocumentPatch(localConfig.project.document, validation.validated)
+
+      // 3. One atomic write (write-temp-then-rename).
+      writeFileAtomic(configPath, stringify(localConfig))
+      logQuiet(this.quiet, `Applied document patch for project ${projectId}: ${JSON.stringify(effective)}`)
+
+      return effective
     }
     catch (error) {
-      logQuiet(this.quiet, `Error configuring documents for project ${projectId}: ${error}`)
+      logQuiet(this.quiet, `Error applying document patch for project ${projectId}: ${error}`)
       throw error
     }
   }

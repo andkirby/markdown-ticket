@@ -1,14 +1,28 @@
 import type { PanelImperativeHandle, PanelSize } from 'react-resizable-panels'
 import type { DocumentFile, FileTreeHandle } from './FileTree'
-import { ChevronDown, ChevronUp, Crosshair, ListCollapse, PanelLeftClose, PanelLeftOpen, Search, Settings } from 'lucide-react'
+import {
+  ChevronDown,
+  ChevronUp,
+  Crosshair,
+  ListCollapse,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Search,
+  Settings,
+} from 'lucide-react'
 import * as React from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { authFetch } from '@/auth/authFetch'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from '@/components/ui/resizable'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { applyConfig } from '../../config/configApiClient'
 import { saveDocumentFavs } from '../../config/documentFavs'
 import {
   addRecentDocument,
@@ -16,8 +30,15 @@ import {
   sanitizeDocumentNavigationPreferences,
   setDocumentNavigationPreferences,
 } from '../../config/documentNavigation'
-import { getDocumentSortPreferences, setDocumentSortPreferences } from '../../config/documentSorting'
-import { formatDocumentPageTitle, PageTitlePriority, usePageTitle } from '../../hooks/usePageTitle'
+import {
+  getDocumentSortPreferences,
+  setDocumentSortPreferences,
+} from '../../config/documentSorting'
+import {
+  formatDocumentPageTitle,
+  PageTitlePriority,
+  usePageTitle,
+} from '../../hooks/usePageTitle'
 import { useEventBus } from '../../services/eventBus'
 import {
   resolveDocumentFilenameTabs,
@@ -39,7 +60,10 @@ const DOCUMENT_NAVIGATION_PANEL_MIN_SIZE = 18
 const DOCUMENT_NAVIGATION_PANEL_MAX_SIZE = 45
 const DOCUMENT_NAVIGATION_PANEL_COLLAPSED_SIZE = 0
 
-export default function DocumentsLayout({ projectId, canWrite = true }: DocumentsLayoutProps) {
+export default function DocumentsLayout({
+  projectId,
+  canWrite = true,
+}: DocumentsLayoutProps) {
   const { projectCode } = useParams<{ projectCode: string }>()
   const [searchParams] = useSearchParams()
   const pathParams = useParams<{ '*': string }>()
@@ -48,26 +72,40 @@ export default function DocumentsLayout({ projectId, canWrite = true }: Document
   const [selectedFile, setSelectedFile] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [showPathSelector, setShowPathSelector] = useState(false)
-  const [noDocumentPathsConfigured, setNoDocumentPathsConfigured] = useState(false)
+  const [noDocumentPathsConfigured, setNoDocumentPathsConfigured]
+    = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [documentRefreshToken, setDocumentRefreshToken] = useState(0)
   const [selectedFileDeleted, setSelectedFileDeleted] = useState(false)
-  const [viewerUpdateState, setViewerUpdateState] = useState<'idle' | 'updated' | 'syncing'>('idle')
+  const [viewerUpdateState, setViewerUpdateState] = useState<
+    'idle' | 'updated' | 'syncing'
+  >('idle')
   const [navigationPreferences, setNavigationPreferences] = useState(() =>
-    getDocumentNavigationPreferences(projectId))
+    getDocumentNavigationPreferences(projectId),
+  )
 
   // Load sort preferences from localStorage on mount
   const savedPreferences = getDocumentSortPreferences(projectId)
-  const [sortBy, setSortBy] = useState<'name' | 'title' | 'created' | 'modified'>(savedPreferences.sortBy)
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(savedPreferences.sortDirection)
+  const [sortBy, setSortBy] = useState<
+    'name' | 'title' | 'created' | 'modified'
+  >(savedPreferences.sortBy)
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(
+    savedPreferences.sortDirection,
+  )
 
   // Refs to store timeout IDs for cleanup
   const sortByTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const sortDirectionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const selectedFileTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const sortDirectionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  )
+  const selectedFileTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  )
   const errorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const updateStateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const updateStateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  )
   const navigationPanelRef = useRef<PanelImperativeHandle | null>(null)
   const selectedFileRef = useRef<string | null>(null)
   const fileTreeRef = useRef<FileTreeHandle>(null)
@@ -76,10 +114,13 @@ export default function DocumentsLayout({ projectId, canWrite = true }: Document
   useEffect(() => {
     return () => {
       sortByTimeoutRef.current && clearTimeout(sortByTimeoutRef.current)
-      sortDirectionTimeoutRef.current && clearTimeout(sortDirectionTimeoutRef.current)
-      selectedFileTimeoutRef.current && clearTimeout(selectedFileTimeoutRef.current)
+      sortDirectionTimeoutRef.current
+      && clearTimeout(sortDirectionTimeoutRef.current)
+      selectedFileTimeoutRef.current
+      && clearTimeout(selectedFileTimeoutRef.current)
       errorTimeoutRef.current && clearTimeout(errorTimeoutRef.current)
-      updateStateTimeoutRef.current && clearTimeout(updateStateTimeoutRef.current)
+      updateStateTimeoutRef.current
+      && clearTimeout(updateStateTimeoutRef.current)
     }
   }, [])
 
@@ -93,24 +134,35 @@ export default function DocumentsLayout({ projectId, canWrite = true }: Document
     setNavigationPreferences(getDocumentNavigationPreferences(projectId))
   }, [projectId])
 
-  const persistNavigationPreferences = useCallback((preferences: typeof navigationPreferences) => {
-    setDocumentNavigationPreferences(projectId, preferences)
-    setNavigationPreferences(preferences)
-  }, [projectId])
+  const persistNavigationPreferences = useCallback(
+    (preferences: typeof navigationPreferences) => {
+      setDocumentNavigationPreferences(projectId, preferences)
+      setNavigationPreferences(preferences)
+    },
+    [projectId],
+  )
 
-  const handleNavigationPanelResize = useCallback((panelSize: PanelSize, _id: string | number | undefined, previousPanelSize: PanelSize | undefined) => {
-    if (!previousPanelSize)
-      return
+  const handleNavigationPanelResize = useCallback(
+    (
+      panelSize: PanelSize,
+      _id: string | number | undefined,
+      previousPanelSize: PanelSize | undefined,
+    ) => {
+      if (!previousPanelSize)
+        return
 
-    const isCollapsed = panelSize.asPercentage <= DOCUMENT_NAVIGATION_PANEL_COLLAPSED_SIZE + 1
-    persistNavigationPreferences({
-      ...navigationPreferences,
-      navigationPanelCollapsed: isCollapsed,
-      navigationPanelSize: isCollapsed
-        ? navigationPreferences.navigationPanelSize
-        : panelSize.asPercentage,
-    })
-  }, [navigationPreferences, persistNavigationPreferences])
+      const isCollapsed
+        = panelSize.asPercentage <= DOCUMENT_NAVIGATION_PANEL_COLLAPSED_SIZE + 1
+      persistNavigationPreferences({
+        ...navigationPreferences,
+        navigationPanelCollapsed: isCollapsed,
+        navigationPanelSize: isCollapsed
+          ? navigationPreferences.navigationPanelSize
+          : panelSize.asPercentage,
+      })
+    },
+    [navigationPreferences, persistNavigationPreferences],
+  )
 
   const handleToggleNavigationPanel = useCallback(() => {
     const nextCollapsed = !navigationPreferences.navigationPanelCollapsed
@@ -199,113 +251,157 @@ export default function DocumentsLayout({ projectId, canWrite = true }: Document
     }
   }, [pathFromRoute, searchParams])
 
-  const loadDocuments = useCallback(async (showLoading = true): Promise<DocumentFile[]> => {
-    try {
-      if (showLoading)
-        setLoading(true)
-      setError(null)
-      const response = await authFetch(`/api/documents?projectId=${encodeURIComponent(projectId)}`)
+  const loadDocuments = useCallback(
+    async (showLoading = true): Promise<DocumentFile[]> => {
+      try {
+        if (showLoading)
+          setLoading(true)
+        setError(null)
+        const response = await authFetch(
+          `/api/documents?projectId=${encodeURIComponent(projectId)}`,
+        )
 
-      if (response.status === 404) {
-        setNoDocumentPathsConfigured(true)
-        setShowPathSelector(false)
-        setFiles([])
+        if (response.status === 404) {
+          setNoDocumentPathsConfigured(true)
+          setShowPathSelector(false)
+          setFiles([])
+          return []
+        }
+        else if (response.ok) {
+          const data = await response.json()
+          setFiles(data)
+          setNoDocumentPathsConfigured(false)
+          setShowPathSelector(false)
+          return data
+        }
+        else {
+          throw new Error(`Failed to load documents: ${response.statusText}`)
+        }
+      }
+      catch (error) {
+        console.error('Failed to load documents:', error)
+        setError(
+          error instanceof Error ? error.message : 'Failed to load documents',
+        )
         return []
       }
-      else if (response.ok) {
-        const data = await response.json()
-        setFiles(data)
-        setNoDocumentPathsConfigured(false)
-        setShowPathSelector(false)
-        return data
+      finally {
+        if (showLoading)
+          setLoading(false)
       }
-      else {
-        throw new Error(`Failed to load documents: ${response.statusText}`)
-      }
-    }
-    catch (error) {
-      console.error('Failed to load documents:', error)
-      setError(error instanceof Error ? error.message : 'Failed to load documents')
-      return []
-    }
-    finally {
-      if (showLoading)
-        setLoading(false)
-    }
-  }, [projectId])
+    },
+    [projectId],
+  )
 
   useEffect(() => {
     loadDocuments()
   }, [loadDocuments])
 
-  const showTransientUpdateState = useCallback((state: 'updated' | 'syncing') => {
-    setViewerUpdateState(state)
-    if (updateStateTimeoutRef.current)
-      clearTimeout(updateStateTimeoutRef.current)
-    updateStateTimeoutRef.current = setTimeout(() => {
-      setViewerUpdateState('idle')
-    }, 2500)
-  }, [])
-
-  const selectFile = useCallback((filePath: string) => {
-    setSelectedFile(filePath)
-    addRecentDocument(projectId, filePath)
-    setNavigationPreferences(getDocumentNavigationPreferences(projectId))
-
-    const encodedPath = filePath.split('/').map(encodeURIComponent).join('/')
-    const basePath = window.location.pathname.split('/documents')[0]
-    window.history.pushState({}, '', `${basePath}/documents?file=${encodedPath}`)
-  }, [projectId])
-
-  useEventBus('document:file:changed', useCallback((event) => {
-    if (event.payload.projectId !== projectId)
-      return
-
-    const currentSelectedFile = selectedFileRef.current
-    const selectedFileChanged = currentSelectedFile === event.payload.filePath
-
-    loadDocuments(false)
-      .then((nextFiles) => {
-        if (!selectedFileChanged || event.payload.eventType !== 'unlink' || !currentSelectedFile) {
-          return
-        }
-
-        const fallbackFile = resolveFilenameTabFallback(nextFiles, currentSelectedFile)
-        if (fallbackFile) {
-          selectFile(fallbackFile)
-          return
-        }
-
-        setSelectedFileDeleted(true)
+  const showTransientUpdateState = useCallback(
+    (state: 'updated' | 'syncing') => {
+      setViewerUpdateState(state)
+      if (updateStateTimeoutRef.current)
+        clearTimeout(updateStateTimeoutRef.current)
+      updateStateTimeoutRef.current = setTimeout(() => {
         setViewerUpdateState('idle')
+      }, 2500)
+    },
+    [],
+  )
+
+  const selectFile = useCallback(
+    (filePath: string) => {
+      setSelectedFile(filePath)
+      addRecentDocument(projectId, filePath)
+      setNavigationPreferences(getDocumentNavigationPreferences(projectId))
+
+      const encodedPath = filePath.split('/').map(encodeURIComponent).join('/')
+      const basePath = window.location.pathname.split('/documents')[0]
+      window.history.pushState(
+        {},
+        '',
+        `${basePath}/documents?file=${encodedPath}`,
+      )
+    },
+    [projectId],
+  )
+
+  useEventBus(
+    'document:file:changed',
+    useCallback(
+      (event) => {
+        if (event.payload.projectId !== projectId)
+          return
+
+        const currentSelectedFile = selectedFileRef.current
+        const selectedFileChanged
+          = currentSelectedFile === event.payload.filePath
+
+        loadDocuments(false)
+          .then((nextFiles) => {
+            if (
+              !selectedFileChanged
+              || event.payload.eventType !== 'unlink'
+              || !currentSelectedFile
+            ) {
+              return
+            }
+
+            const fallbackFile = resolveFilenameTabFallback(
+              nextFiles,
+              currentSelectedFile,
+            )
+            if (fallbackFile) {
+              selectFile(fallbackFile)
+              return
+            }
+
+            setSelectedFileDeleted(true)
+            setViewerUpdateState('idle')
+          })
+          .catch((error) => {
+            console.error(
+              'Failed to refresh documents after SSE update:',
+              error,
+            )
+          })
+
+        if (!selectedFileChanged)
+          return
+
+        if (event.payload.eventType === 'unlink') {
+          setViewerUpdateState('idle')
+          return
+        }
+
+        setSelectedFileDeleted(false)
+        setDocumentRefreshToken(token => token + 1)
+        showTransientUpdateState('updated')
+      },
+      [loadDocuments, projectId, selectFile, showTransientUpdateState],
+    ),
+    [loadDocuments, projectId, selectFile, showTransientUpdateState],
+    'DocumentsLayout',
+  )
+
+  useEventBus(
+    'sse:reconnected',
+    useCallback(() => {
+      showTransientUpdateState('syncing')
+      loadDocuments(false).catch((error) => {
+        console.error(
+          'Failed to refresh documents after SSE reconnect:',
+          error,
+        )
       })
-      .catch((error) => {
-        console.error('Failed to refresh documents after SSE update:', error)
-      })
-
-    if (!selectedFileChanged)
-      return
-
-    if (event.payload.eventType === 'unlink') {
-      setViewerUpdateState('idle')
-      return
-    }
-
-    setSelectedFileDeleted(false)
-    setDocumentRefreshToken(token => token + 1)
-    showTransientUpdateState('updated')
-  }, [loadDocuments, projectId, selectFile, showTransientUpdateState]), [loadDocuments, projectId, selectFile, showTransientUpdateState], 'DocumentsLayout')
-
-  useEventBus('sse:reconnected', useCallback(() => {
-    showTransientUpdateState('syncing')
-    loadDocuments(false).catch((error) => {
-      console.error('Failed to refresh documents after SSE reconnect:', error)
-    })
-    if (selectedFileRef.current) {
-      setSelectedFileDeleted(false)
-      setDocumentRefreshToken(token => token + 1)
-    }
-  }, [loadDocuments, showTransientUpdateState]), [loadDocuments, showTransientUpdateState], 'DocumentsLayout')
+      if (selectedFileRef.current) {
+        setSelectedFileDeleted(false)
+        setDocumentRefreshToken(token => token + 1)
+      }
+    }, [loadDocuments, showTransientUpdateState]),
+    [loadDocuments, showTransientUpdateState],
+    'DocumentsLayout',
+  )
 
   const collectPaths = useCallback((fileList: DocumentFile[]): string[] => {
     return fileList.flatMap(file => [
@@ -314,23 +410,35 @@ export default function DocumentsLayout({ projectId, canWrite = true }: Document
     ])
   }, [])
 
-  const collectFiles = useCallback((fileList: DocumentFile[]): DocumentFile[] => {
-    return fileList.flatMap(file => [
-      file,
-      ...(file.children ? collectFiles(file.children) : []),
-    ])
-  }, [])
+  const collectFiles = useCallback(
+    (fileList: DocumentFile[]): DocumentFile[] => {
+      return fileList.flatMap(file => [
+        file,
+        ...(file.children ? collectFiles(file.children) : []),
+      ])
+    },
+    [],
+  )
 
   useEffect(() => {
     const eligiblePaths = collectPaths(files)
     if (eligiblePaths.length === 0)
       return
 
-    const sanitized = sanitizeDocumentNavigationPreferences(navigationPreferences, eligiblePaths)
+    const sanitized = sanitizeDocumentNavigationPreferences(
+      navigationPreferences,
+      eligiblePaths,
+    )
     if (JSON.stringify(sanitized) !== JSON.stringify(navigationPreferences)) {
       persistNavigationPreferences(sanitized)
     }
-  }, [collectPaths, files, navigationPreferences, persistNavigationPreferences, projectId])
+  }, [
+    collectPaths,
+    files,
+    navigationPreferences,
+    persistNavigationPreferences,
+    projectId,
+  ])
 
   // Memoized filtered and sorted files
   const filteredFiles = useMemo(() => {
@@ -345,8 +453,11 @@ export default function DocumentsLayout({ projectId, canWrite = true }: Document
           const fileTitle = file.title?.toLowerCase() || ''
           const filePath = file.path.toLowerCase()
 
-          const matchesSearch = searchTerms.every(term =>
-            fileName.includes(term) || fileTitle.includes(term) || filePath.includes(term),
+          const matchesSearch = searchTerms.every(
+            term =>
+              fileName.includes(term)
+              || fileTitle.includes(term)
+              || filePath.includes(term),
           )
 
           if (file.type === 'folder') {
@@ -373,144 +484,178 @@ export default function DocumentsLayout({ projectId, canWrite = true }: Document
 
     // Apply sorting
     const sortFiles = (fileList: DocumentFile[]): DocumentFile[] => {
-      return fileList.map((file) => {
-        if (file.type === 'folder' && file.children) {
-          return {
-            ...file,
-            children: sortFiles(file.children),
+      return fileList
+        .map((file) => {
+          if (file.type === 'folder' && file.children) {
+            return {
+              ...file,
+              children: sortFiles(file.children),
+            }
           }
-        }
-        return file
-      }).sort((a, b) => {
-        let aValue: string
-        let bValue: string
+          return file
+        })
+        .sort((a, b) => {
+          let aValue: string
+          let bValue: string
 
-        if (sortBy === 'created' || sortBy === 'modified') {
-          // Date-based sorting
-          const aDate = sortBy === 'created' ? a.dateCreated : a.lastModified
-          const bDate = sortBy === 'created' ? b.dateCreated : b.lastModified
+          if (sortBy === 'created' || sortBy === 'modified') {
+            // Date-based sorting
+            const aDate = sortBy === 'created' ? a.dateCreated : a.lastModified
+            const bDate = sortBy === 'created' ? b.dateCreated : b.lastModified
 
-          const aTime = aDate ? new Date(aDate).getTime() : 0
-          const bTime = bDate ? new Date(bDate).getTime() : 0
+            const aTime = aDate ? new Date(aDate).getTime() : 0
+            const bTime = bDate ? new Date(bDate).getTime() : 0
 
-          const comparison = aTime - bTime
-          return sortDirection === 'asc' ? comparison : -comparison
-        }
-        else {
-          // String-based sorting (name, title)
-          switch (sortBy) {
-            case 'title':
-              aValue = a.title || a.name
-              bValue = b.title || b.name
-              break
-            case 'name':
-            default:
-              aValue = a.name
-              bValue = b.name
-              break
+            const comparison = aTime - bTime
+            return sortDirection === 'asc' ? comparison : -comparison
           }
+          else {
+            // String-based sorting (name, title)
+            switch (sortBy) {
+              case 'title':
+                aValue = a.title || a.name
+                bValue = b.title || b.name
+                break
+              case 'name':
+              default:
+                aValue = a.name
+                bValue = b.name
+                break
+            }
 
-          const comparison = aValue.toLowerCase().localeCompare(bValue.toLowerCase())
-          return sortDirection === 'asc' ? comparison : -comparison
-        }
-      })
+            const comparison = aValue
+              .toLowerCase()
+              .localeCompare(bValue.toLowerCase())
+            return sortDirection === 'asc' ? comparison : -comparison
+          }
+        })
     }
 
     return sortFiles(processedFiles)
   }, [files, searchQuery, sortBy, sortDirection])
 
   // Helper function to find file by path in nested structure
-  const findFileByPath = useCallback((fileList: DocumentFile[], targetPath: string): DocumentFile | null => {
-    const find = (items: DocumentFile[]): DocumentFile | null => {
-      for (const file of items) {
-        if (file.path === targetPath) {
-          return file
+  const findFileByPath = useCallback(
+    (fileList: DocumentFile[], targetPath: string): DocumentFile | null => {
+      const find = (items: DocumentFile[]): DocumentFile | null => {
+        for (const file of items) {
+          if (file.path === targetPath) {
+            return file
+          }
+          if (file.children) {
+            const found = find(file.children)
+            if (found)
+              return found
+          }
         }
-        if (file.children) {
-          const found = find(file.children)
-          if (found)
-            return found
+        return null
+      }
+
+      return find(fileList)
+    },
+    [],
+  )
+
+  const applyFavItemsToFiles = useCallback(
+    (
+      fileList: DocumentFile[],
+      favItems: Array<Pick<DocumentFile, 'path' | 'type' | 'favoritedAt'>>,
+    ): DocumentFile[] => {
+      const favs = new Map(favItems.map(item => [item.path, item]))
+
+      return fileList.map((file) => {
+        const fav = favs.get(file.path)
+        return {
+          ...file,
+          favorite: Boolean(fav),
+          favoritedAt: fav?.favoritedAt,
+          ...(file.children
+            ? { children: applyFavItemsToFiles(file.children, favItems) }
+            : {}),
         }
-      }
-      return null
-    }
-
-    return find(fileList)
-  }, [])
-
-  const applyFavItemsToFiles = useCallback((fileList: DocumentFile[], favItems: Array<Pick<DocumentFile, 'path' | 'type' | 'favoritedAt'>>): DocumentFile[] => {
-    const favs = new Map(favItems.map(item => [item.path, item]))
-
-    return fileList.map((file) => {
-      const fav = favs.get(file.path)
-      return {
-        ...file,
-        favorite: Boolean(fav),
-        favoritedAt: fav?.favoritedAt,
-        ...(file.children ? { children: applyFavItemsToFiles(file.children, favItems) } : {}),
-      }
-    })
-  }, [])
+      })
+    },
+    [],
+  )
 
   const favoriteDocuments = useMemo(() => {
     return collectFiles(files)
       .filter(file => file.favorite && file.favoritedAt)
-      .sort((a, b) => new Date(b.favoritedAt!).getTime() - new Date(a.favoritedAt!).getTime())
+      .sort(
+        (a, b) =>
+          new Date(b.favoritedAt!).getTime()
+            - new Date(a.favoritedAt!).getTime(),
+      )
   }, [collectFiles, files])
 
-  const handleToggleFavorite = useCallback(async (file: DocumentFile) => {
-    if (!canWrite) {
-      return
-    }
+  const handleToggleFavorite = useCallback(
+    async (file: DocumentFile) => {
+      if (!canWrite) {
+        return
+      }
 
-    const nextFavItems = file.favorite
-      ? favoriteDocuments
-          .filter(document => document.path !== file.path)
-          .map(document => ({
-            path: document.path,
-            type: document.type,
-            favoritedAt: document.favoritedAt!,
-          }))
-      : [
-          {
-            path: file.path,
-            type: file.type,
-            favoritedAt: new Date().toISOString(),
-          },
-          ...favoriteDocuments.map(document => ({
-            path: document.path,
-            type: document.type,
-            favoritedAt: document.favoritedAt!,
-          })),
-        ]
+      const nextFavItems = file.favorite
+        ? favoriteDocuments
+            .filter(document => document.path !== file.path)
+            .map(document => ({
+              path: document.path,
+              type: document.type,
+              favoritedAt: document.favoritedAt!,
+            }))
+        : [
+            {
+              path: file.path,
+              type: file.type,
+              favoritedAt: new Date().toISOString(),
+            },
+            ...favoriteDocuments.map(document => ({
+              path: document.path,
+              type: document.type,
+              favoritedAt: document.favoritedAt!,
+            })),
+          ]
 
-    const previousFiles = files
-    setFiles(applyFavItemsToFiles(files, nextFavItems))
+      const previousFiles = files
+      setFiles(applyFavItemsToFiles(files, nextFavItems))
 
-    try {
-      const savedState = await saveDocumentFavs({ projectId, favItems: nextFavItems })
-      setFiles(currentFiles => applyFavItemsToFiles(currentFiles, savedState.favItems))
-    }
-    catch (error) {
-      setFiles(previousFiles)
-      setError(error instanceof Error ? error.message : 'Failed to save document favs')
-    }
-  }, [applyFavItemsToFiles, canWrite, favoriteDocuments, files, projectId])
+      try {
+        const savedState = await saveDocumentFavs({
+          projectId,
+          favItems: nextFavItems,
+        })
+        setFiles(currentFiles =>
+          applyFavItemsToFiles(currentFiles, savedState.favItems),
+        )
+      }
+      catch (error) {
+        setFiles(previousFiles)
+        setError(
+          error instanceof Error
+            ? error.message
+            : 'Failed to save document favs',
+        )
+      }
+    },
+    [applyFavItemsToFiles, canWrite, favoriteDocuments, files, projectId],
+  )
 
-  const handleSelectFavorite = useCallback((file: DocumentFile) => {
-    if (file.type === 'file') {
-      selectFile(file.path)
-      return
-    }
+  const handleSelectFavorite = useCallback(
+    (file: DocumentFile) => {
+      if (file.type === 'file') {
+        selectFile(file.path)
+        return
+      }
 
-    if (searchQuery) {
-      setSearchQuery('')
-      window.setTimeout(() => fileTreeRef.current?.locatePath(file.path), 0)
-      return
-    }
+      if (searchQuery) {
+        setSearchQuery('')
+        window.setTimeout(() => fileTreeRef.current?.locatePath(file.path), 0)
+        return
+      }
 
-    fileTreeRef.current?.locatePath(file.path)
-  }, [searchQuery, selectFile])
+      fileTreeRef.current?.locatePath(file.path)
+    },
+    [searchQuery, selectFile],
+  )
 
   const recentDocuments = useMemo(() => {
     return navigationPreferences.recentDocuments.map((path) => {
@@ -523,26 +668,35 @@ export default function DocumentsLayout({ projectId, canWrite = true }: Document
     })
   }, [files, findFileByPath, navigationPreferences.recentDocuments])
 
-  const handleFavsExpandedChange = useCallback((favsExpanded: boolean) => {
-    persistNavigationPreferences({
-      ...navigationPreferences,
-      favsExpanded,
-    })
-  }, [navigationPreferences, persistNavigationPreferences])
+  const handleFavsExpandedChange = useCallback(
+    (favsExpanded: boolean) => {
+      persistNavigationPreferences({
+        ...navigationPreferences,
+        favsExpanded,
+      })
+    },
+    [navigationPreferences, persistNavigationPreferences],
+  )
 
-  const handleFavsShowAllChange = useCallback((favsShowAll: boolean) => {
-    persistNavigationPreferences({
-      ...navigationPreferences,
-      favsShowAll,
-    })
-  }, [navigationPreferences, persistNavigationPreferences])
+  const handleFavsShowAllChange = useCallback(
+    (favsShowAll: boolean) => {
+      persistNavigationPreferences({
+        ...navigationPreferences,
+        favsShowAll,
+      })
+    },
+    [navigationPreferences, persistNavigationPreferences],
+  )
 
-  const handleRecentExpandedChange = useCallback((recentExpanded: boolean) => {
-    persistNavigationPreferences({
-      ...navigationPreferences,
-      recentExpanded,
-    })
-  }, [navigationPreferences, persistNavigationPreferences])
+  const handleRecentExpandedChange = useCallback(
+    (recentExpanded: boolean) => {
+      persistNavigationPreferences({
+        ...navigationPreferences,
+        recentExpanded,
+      })
+    },
+    [navigationPreferences, persistNavigationPreferences],
+  )
 
   const filenameTabs = useMemo(() => {
     return resolveDocumentFilenameTabs(files, selectedFile)
@@ -552,10 +706,11 @@ export default function DocumentsLayout({ projectId, canWrite = true }: Document
     return selectedFile ? findFileByPath(files, selectedFile) : null
   }, [files, findFileByPath, selectedFile])
 
-  const selectedDocumentTitle = selectedDocument?.title
-    || selectedDocument?.name
-    || selectedFile?.split('/').pop()
-    || null
+  const selectedDocumentTitle
+    = selectedDocument?.title
+      || selectedDocument?.name
+      || selectedFile?.split('/').pop()
+      || null
 
   usePageTitle(
     selectedFile && !selectedFileDeleted
@@ -564,13 +719,20 @@ export default function DocumentsLayout({ projectId, canWrite = true }: Document
     PageTitlePriority.DOCUMENT,
   )
 
-  const handlePathsSelected = async (paths: string[]) => {
+  const handlePathsSelected = async (patch: {
+    paths: string[]
+    excludeFolders?: string[]
+    maxDepth?: number
+  }) => {
     if (!canWrite) {
       return
     }
 
     try {
-      // Save the selected paths to configuration
+      // MDT-168: save paths via the existing document configure endpoint, then
+      // apply excludeFolders/maxDepth through the configuration management API
+      // (selector-scoped, strictly validated, atomic). Paths keep the legacy
+      // endpoint for back-compat with the document watcher reconfiguration flow.
       const response = await authFetch('/api/documents/configure', {
         method: 'POST',
         headers: {
@@ -578,21 +740,35 @@ export default function DocumentsLayout({ projectId, canWrite = true }: Document
         },
         body: JSON.stringify({
           projectId,
-          documentPaths: paths,
+          documentPaths: patch.paths,
         }),
       })
 
-      if (response.ok) {
-        // Reload documents after configuration
-        await loadDocuments()
-      }
-      else {
+      if (!response.ok) {
         throw new Error('Failed to save document configuration')
       }
+
+      // Apply the additional document fields via the config management API.
+      if (patch.excludeFolders !== undefined) {
+        await applyConfig(
+          'project.document.excludeFolders',
+          patch.excludeFolders,
+        )
+      }
+      if (patch.maxDepth !== undefined) {
+        await applyConfig('project.document.maxDepth', patch.maxDepth)
+      }
+
+      // Reload documents after configuration
+      await loadDocuments()
     }
     catch (error) {
       console.error('Failed to configure documents:', error)
-      setError(error instanceof Error ? error.message : 'Failed to configure documents')
+      setError(
+        error instanceof Error
+          ? error.message
+          : 'Failed to configure documents',
+      )
     }
   }
 
@@ -620,21 +796,22 @@ export default function DocumentsLayout({ projectId, canWrite = true }: Document
     fileTreeRef.current?.collapseAll()
   }
 
-  const pathSelectorModal = showPathSelector && canWrite
-    ? (
-        <Modal
-          isOpen={showPathSelector}
-          onClose={handleCancelPathSelection}
-          size="lg"
-        >
-          <PathSelector
-            projectId={projectId}
-            onPathsSelected={handlePathsSelected}
-            onCancel={handleCancelPathSelection}
-          />
-        </Modal>
-      )
-    : null
+  const pathSelectorModal
+    = showPathSelector && canWrite
+      ? (
+          <Modal
+            isOpen={showPathSelector}
+            onClose={handleCancelPathSelection}
+            size="lg"
+          >
+            <PathSelector
+              projectId={projectId}
+              onPathsSelected={handlePathsSelected}
+              onCancel={handleCancelPathSelection}
+            />
+          </Modal>
+        )
+      : null
 
   if (loading) {
     return (
@@ -658,11 +835,17 @@ export default function DocumentsLayout({ projectId, canWrite = true }: Document
   if (noDocumentPathsConfigured) {
     return (
       <>
-        <div data-testid="document-tree" className="flex h-64 items-center justify-center px-4">
+        <div
+          data-testid="document-tree"
+          className="flex h-64 items-center justify-center px-4"
+        >
           <div className="max-w-sm text-center">
-            <h3 className="text-base font-semibold text-foreground">No document paths configured</h3>
+            <h3 className="text-base font-semibold text-foreground">
+              No document paths configured
+            </h3>
             <p className="mt-2 text-sm text-muted-foreground">
-              Choose which folders or Markdown files should appear in Documents View.
+              Choose which folders or Markdown files should appear in Documents
+              View.
             </p>
             {canWrite && (
               <Button
@@ -686,13 +869,18 @@ export default function DocumentsLayout({ projectId, canWrite = true }: Document
 
   return (
     <>
-      <ResizablePanelGroup direction="horizontal" className="documents-view__layout">
+      <ResizablePanelGroup
+        direction="horizontal"
+        className="documents-view__layout"
+      >
         <ResizablePanel
           id="documents-navigation"
           panelRef={navigationPanelRef}
-          defaultSize={navigationPreferences.navigationPanelCollapsed
-            ? `${DOCUMENT_NAVIGATION_PANEL_COLLAPSED_SIZE}%`
-            : `${navigationPreferences.navigationPanelSize}%`}
+          defaultSize={
+            navigationPreferences.navigationPanelCollapsed
+              ? `${DOCUMENT_NAVIGATION_PANEL_COLLAPSED_SIZE}%`
+              : `${navigationPreferences.navigationPanelSize}%`
+          }
           minSize={`${DOCUMENT_NAVIGATION_PANEL_MIN_SIZE}%`}
           maxSize={`${DOCUMENT_NAVIGATION_PANEL_MAX_SIZE}%`}
           collapsedSize={`${DOCUMENT_NAVIGATION_PANEL_COLLAPSED_SIZE}%`}
@@ -766,7 +954,14 @@ export default function DocumentsLayout({ projectId, canWrite = true }: Document
                 </div>
                 <select
                   value={sortBy}
-                  onChange={e => setSortBy(e.target.value as 'name' | 'title' | 'created' | 'modified')}
+                  onChange={e =>
+                    setSortBy(
+                      e.target.value as
+                      | 'name'
+                      | 'title'
+                      | 'created'
+                      | 'modified',
+                    )}
                   className="documents-view__sort-select"
                   title="Sort by"
                 >
@@ -777,7 +972,8 @@ export default function DocumentsLayout({ projectId, canWrite = true }: Document
                 </select>
                 <button
                   type="button"
-                  onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
+                  onClick={() =>
+                    setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
                   className="documents-view__sort-direction-button"
                   title={`Sort ${sortDirection === 'asc' ? 'ascending' : 'descending'}`}
                   aria-label={`Sort ${sortDirection === 'asc' ? 'ascending' : 'descending'}`}
@@ -809,7 +1005,10 @@ export default function DocumentsLayout({ projectId, canWrite = true }: Document
                 onExpandedChange={handleRecentExpandedChange}
               />
             </div>
-            <ScrollArea className="min-h-0 flex-1" data-testid="document-tree-scroll-area">
+            <ScrollArea
+              className="min-h-0 flex-1"
+              data-testid="document-tree-scroll-area"
+            >
               <div className="p-2">
                 <FileTree
                   ref={fileTreeRef}
@@ -824,7 +1023,11 @@ export default function DocumentsLayout({ projectId, canWrite = true }: Document
           </div>
         </ResizablePanel>
         <ResizableHandle withHandle className="documents-view__resize-handle" />
-        <ResizablePanel id="documents-preview" minSize={40} className="documents-view__preview-panel">
+        <ResizablePanel
+          id="documents-preview"
+          minSize={40}
+          className="documents-view__preview-panel"
+        >
           {navigationPreferences.navigationPanelCollapsed && (
             <button
               type="button"

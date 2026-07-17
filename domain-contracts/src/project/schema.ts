@@ -8,6 +8,23 @@ const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/u
 const _WINDOWS_ABSOLUTE_PATH_PATTERN = /^[A-Za-z]:[\\/]/u
 const _TICKETS_PATH_INVALID_CHARS_PATTERN = /[<>"|?*]/u
 
+/**
+ * Canonical defaults for `[project.document]` configuration (MDT-168).
+ *
+ * Co-located with `DocumentConfigObjectSchema` because the default belongs with
+ * the schema that validates it. Re-exported from `config-management/defaults`
+ * as the canonical aggregation point for config-contract defaults.
+ *
+ * NOTE: `maxDepth` canonical default is `5`. This resolves the prior drift
+ * where the schema default was `3` while the runtime document-tree behavior
+ * (TreeBuilder, PathSelector, PathSelectionStrategy) effectively used `5`.
+ */
+export const PROJECT_DOCUMENT_CONFIG_DEFAULTS = {
+  paths: [] as string[],
+  excludeFolders: [] as string[],
+  maxDepth: 5,
+} as const
+
 function _normalizeTicketsPath(path: string): string {
   return path
     .replace(/\\/gu, '/')
@@ -147,7 +164,8 @@ export interface ProjectRegistryEntry {
 const DocumentConfigObjectSchema = z.object({
   paths: z.array(z.string()).default([]),
   excludeFolders: z.array(z.string()).default([]),
-  maxDepth: z.number().int().min(1).max(10).default(3),
+  // MDT-168: canonical default comes from config-management defaults (resolves drift: was 3).
+  maxDepth: z.number().int().min(1).max(10).default(PROJECT_DOCUMENT_CONFIG_DEFAULTS.maxDepth),
 }).strict()
 
 export const ProjectCodeSchema = z.string()

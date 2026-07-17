@@ -9,7 +9,8 @@ PathSelector
 ├── Header
 │   ├── Title
 │   ├── Description
-│   ├── MaxDepthMeta
+│   ├── MaxDepthInput (MDT-168: editable number input, range 1–10)
+│   ├── ExcludeFoldersInput (MDT-168: editable, comma separated)
 │   └── TicketPathInfoTooltip
 ├── TreeToolbar
 │   ├── ExpandAllButton
@@ -88,3 +89,20 @@ PathSelector
 - On first load, expand ancestors of configured selected paths only; do not expand the selected folder itself.
 - Keep tree expansion local to the open modal session.
 - Keep the path selector separate from Documents View navigation tree preferences.
+
+## Capability boundary (MDT-168)
+
+- The path selector (including the `MaxDepthInput` and `ExcludeFoldersInput`
+  controls) is mounted only when the current access mode is owner/admin
+  (`canWrite`). Read-only and anonymous visitors never reach the selector or its
+  save action.
+- `MaxDepthInput` and `ExcludeFoldersInput` are editable controls that stage
+  into the same document patch as the selected paths. On save they persist via
+  the configuration management API (`project.document.maxDepth`,
+  `project.document.excludeFolders`), which is strictly validated (range 1–10
+  for maxDepth; relative paths only, no `..` or absolute entries for
+  excludeFolders) and atomic per config file.
+- The auto-excluded tickets path is not shown in the editable exclude folders
+  text; it is always re-added by the backend read path.
+- The ticket path itself is a guarded selector; changing it is not exposed from
+  this surface (see `project-edit-form.spec.md`).

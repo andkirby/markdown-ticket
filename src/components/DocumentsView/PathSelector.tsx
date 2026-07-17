@@ -7,13 +7,26 @@
  * @testid path-selector-save — Save selection button
  * @testid path-selector-count — Display showing number of selected items
  */
-import { ChevronDown, ChevronRight, File, Folder, Info, ListCollapse, ListTree } from 'lucide-react'
+import {
+  ChevronDown,
+  ChevronRight,
+  File,
+  Folder,
+  Info,
+  ListCollapse,
+  ListTree,
+} from 'lucide-react'
 import * as React from 'react'
 import { useCallback, useEffect, useState } from 'react'
 import { authFetch } from '@/auth/authFetch'
 import { Button } from '@/components/ui/Button'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 
 interface PathItem {
@@ -24,9 +37,17 @@ interface PathItem {
   selected?: boolean
 }
 
+/** Optional document settings staged alongside path selection (MDT-168). */
+export interface DocumentSelectionPatch {
+  paths: string[]
+  excludeFolders?: string[]
+  maxDepth?: number
+}
+
 interface PathSelectorProps {
   projectId: string
-  onPathsSelected: (paths: string[]) => void
+  /** Called with selected paths; optionally carries excludeFolders/maxDepth (MDT-168). */
+  onPathsSelected: (patch: DocumentSelectionPatch) => void
   onCancel: () => void
 }
 
@@ -49,22 +70,35 @@ function collectAncestorPaths(paths: Iterable<string>): string[] {
   return Array.from(ancestors)
 }
 
-export default function PathSelector({ projectId, onPathsSelected, onCancel }: PathSelectorProps) {
+export default function PathSelector({
+  projectId,
+  onPathsSelected,
+  onCancel,
+}: PathSelectorProps) {
   const [items, setItems] = useState<PathItem[]>([])
-  const [selectedPaths, setSelectedPaths] = useState<Set<string>>(() => new Set())
-  const [expandedPaths, setExpandedPaths] = useState<Set<string>>(() => new Set())
+  const [selectedPaths, setSelectedPaths] = useState<Set<string>>(
+    () => new Set(),
+  )
+  const [expandedPaths, setExpandedPaths] = useState<Set<string>>(
+    () => new Set(),
+  )
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [maxDepth, setMaxDepth] = useState(5)
   const [ticketsPath, setTicketsPath] = useState('docs/CRs')
+  // MDT-168: editable excludeFolders (comma/space-separated input) staged into the patch.
+  const [excludeFoldersText, setExcludeFoldersText] = useState('')
 
   const loadFileSystem = useCallback(async () => {
     try {
       setLoading(true)
       setLoadError(null)
-      const response = await authFetch(`/api/filesystem?projectId=${encodeURIComponent(projectId)}`, {
-        ownerIntent: true,
-      })
+      const response = await authFetch(
+        `/api/filesystem?projectId=${encodeURIComponent(projectId)}`,
+        {
+          ownerIntent: true,
+        },
+      )
 
       if (!response.ok) {
         throw new Error(`Failed to load selectable paths (${response.status})`)
@@ -81,7 +115,11 @@ export default function PathSelector({ projectId, onPathsSelected, onCancel }: P
     catch (error) {
       console.error('Failed to load file system:', error)
       setItems([])
-      setLoadError(error instanceof Error ? error.message : 'Failed to load selectable paths')
+      setLoadError(
+        error instanceof Error
+          ? error.message
+          : 'Failed to load selectable paths',
+      )
     }
     finally {
       setLoading(false)
@@ -91,24 +129,50 @@ export default function PathSelector({ projectId, onPathsSelected, onCancel }: P
   const loadCurrentDocumentPaths = useCallback(async () => {
     try {
       // Get the actual configured paths from the config file
-      const response = await authFetch(`/api/projects/${encodeURIComponent(projectId)}/config`)
+      const response = await authFetch(
+        `/api/projects/${encodeURIComponent(projectId)}/config`,
+      )
 
       if (response.ok) {
         const data = await response.json()
 
         // Use document.paths from config (nested under project.document)
         // API returns: { project, config: { project: { document: { paths: [...] } } } }
-        const configuredPaths = new Set<string>(data.config?.project?.document?.paths || data.config?.document?.paths || [])
-        const configuredMaxDepth = data.config?.project?.document?.maxDepth ?? data.config?.document?.maxDepth
-        const configuredTicketsPath = data.config?.project?.ticketsPath
-          ?? data.project?.project?.ticketsPath
-          ?? data.project?.project?.path
-          ?? data.config?.project?.path
+        const configuredPaths = new Set<string>(
+          data.config?.project?.document?.paths
+          || data.config?.document?.paths
+          || [],
+        )
+        const configuredMaxDepth
+          = data.config?.project?.document?.maxDepth
+            ?? data.config?.document?.maxDepth
+        const configuredTicketsPath
+          = data.config?.project?.ticketsPath
+            ?? data.project?.project?.ticketsPath
+            ?? data.project?.project?.path
+            ?? data.config?.project?.path
 
         setSelectedPaths(configuredPaths)
         setExpandedPaths(new Set(collectAncestorPaths(configuredPaths)))
-        setMaxDepth(typeof configuredMaxDepth === 'number' ? configuredMaxDepth : 5)
-        setTicketsPath(typeof configuredTicketsPath === 'string' && configuredTicketsPath.trim() ? configuredTicketsPath : 'docs/CRs')
+        setMaxDepth(
+          typeof configuredMaxDepth === 'number' ? configuredMaxDepth : 5,
+        )
+        setTicketsPath(
+          typeof configuredTicketsPath === 'string'
+          && configuredTicketsPath.trim()
+            ? configuredTicketsPath
+            : 'docs/CRs',
+        )
+        // MDT-168: load current excludeFolders for editing (exclude the auto-added ticketsPath from the editable text).
+        const configuredExcludeFolders: string[]
+          = data.config?.project?.document?.excludeFolders
+            ?? data.config?.document?.excludeFolders
+            ?? []
+        setExcludeFoldersText(
+          configuredExcludeFolders
+            .filter(f => f !== configuredTicketsPath && f !== 'docs/CRs')
+            .join(', '),
+        )
       }
     }
     catch {
@@ -121,7 +185,11 @@ export default function PathSelector({ projectId, onPathsSelected, onCancel }: P
     loadCurrentDocumentPaths()
   }, [loadFileSystem, loadCurrentDocumentPaths])
 
-  const toggleSelection = (path: string, _isFolder: boolean, _item?: PathItem) => {
+  const toggleSelection = (
+    path: string,
+    _isFolder: boolean,
+    _item?: PathItem,
+  ) => {
     const newSelected = new Set(selectedPaths)
 
     // Simple toggle - don't auto-select/deselect children
@@ -147,10 +215,7 @@ export default function PathSelector({ projectId, onPathsSelected, onCancel }: P
         return []
       }
 
-      return [
-        item.path,
-        ...collectFolderPaths(item.children || []),
-      ]
+      return [item.path, ...collectFolderPaths(item.children || [])]
     })
   }
 
@@ -183,8 +248,8 @@ export default function PathSelector({ projectId, onPathsSelected, onCancel }: P
     const isExpanded = expandedPaths.has(item.path)
     const hasChildren = Boolean(item.children?.length)
 
-    const hasSelectedChildren = Array.from(selectedPaths).some(path =>
-      path.startsWith(`${item.path}/`) && path !== item.path,
+    const hasSelectedChildren = Array.from(selectedPaths).some(
+      path => path.startsWith(`${item.path}/`) && path !== item.path,
     )
 
     const safeTestId = getSafeTestId(item.path)
@@ -203,11 +268,17 @@ export default function PathSelector({ projectId, onPathsSelected, onCancel }: P
                   data-testid={`path-toggle-${safeTestId}`}
                 >
                   {isExpanded
-                    ? <ChevronDown className="h-4 w-4" aria-hidden="true" />
-                    : <ChevronRight className="h-4 w-4" aria-hidden="true" />}
+                    ? (
+                        <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                      )
+                    : (
+                        <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                      )}
                 </button>
               )
-            : <span className="mr-1 h-6 w-6 flex-shrink-0" />}
+            : (
+                <span className="mr-1 h-6 w-6 flex-shrink-0" />
+              )}
           <label
             className="flex min-w-0 flex-1 cursor-pointer items-center"
             htmlFor={`checkbox-${item.path}`}
@@ -216,13 +287,24 @@ export default function PathSelector({ projectId, onPathsSelected, onCancel }: P
               id={`checkbox-${item.path}`}
               type="checkbox"
               checked={isSelected}
-              onChange={() => toggleSelection(item.path, item.type === 'folder', item)}
+              onChange={() =>
+                toggleSelection(item.path, item.type === 'folder', item)}
               className="mr-2 cursor-pointer"
               data-testid={`path-checkbox-${safeTestId}`}
             />
             {isFolder
-              ? <Folder className="mr-2 h-4 w-4 flex-shrink-0 text-muted-foreground" aria-hidden="true" />
-              : <File className="mr-2 h-4 w-4 flex-shrink-0 text-muted-foreground" aria-hidden="true" />}
+              ? (
+                  <Folder
+                    className="mr-2 h-4 w-4 flex-shrink-0 text-muted-foreground"
+                    aria-hidden="true"
+                  />
+                )
+              : (
+                  <File
+                    className="mr-2 h-4 w-4 flex-shrink-0 text-muted-foreground"
+                    aria-hidden="true"
+                  />
+                )}
             <span
               className={cn(
                 'truncate text-sm',
@@ -234,7 +316,9 @@ export default function PathSelector({ projectId, onPathsSelected, onCancel }: P
             </span>
           </label>
         </div>
-        {isFolder && isExpanded && item.children?.map(child => renderItem(child, depth + 1))}
+        {isFolder
+          && isExpanded
+          && item.children?.map(child => renderItem(child, depth + 1))}
       </div>
     )
   }
@@ -290,33 +374,75 @@ export default function PathSelector({ projectId, onPathsSelected, onCancel }: P
             Collapse all
           </Button>
         </div>
-        <div className="rounded-lg border border-border" data-testid="path-selector-tree">
-          <div className="p-4">
-            {items.map(item => renderItem(item))}
-          </div>
+        <div
+          className="rounded-lg border border-border"
+          data-testid="path-selector-tree"
+        >
+          <div className="p-4">{items.map(item => renderItem(item))}</div>
         </div>
       </div>
     )
   }
 
   const handleSave = () => {
-    onPathsSelected(Array.from(selectedPaths))
+    // MDT-168: pass the full document patch (paths + editable excludeFolders/maxDepth).
+    const excludeFolders = excludeFoldersText
+      .split(/[,\s]+/u)
+      .map(f => f.trim())
+      .filter(f => f.length > 0)
+    onPathsSelected({
+      paths: Array.from(selectedPaths),
+      excludeFolders,
+      maxDepth,
+    })
   }
 
   return (
     <div className="flex flex-col h-[70vh]" data-testid="path-selector">
       {/* Fixed Header */}
       <div className="flex-shrink-0 border-b border-gray-200 px-4 py-3 dark:border-gray-700">
-        <h3 className="mb-2 text-xl font-semibold text-foreground">Select Document Paths</h3>
+        <h3 className="mb-2 text-xl font-semibold text-foreground">
+          Select Document Paths
+        </h3>
         <p className="text-sm text-muted-foreground">
-          Choose the files and folders you want to include in the documents view.
+          Choose the files and folders you want to include in the documents
+          view.
         </p>
-        <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-          <span data-testid="path-selector-max-depth">
-            Max depth:
-            {' '}
-            {maxDepth}
-          </span>
+        <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+          <label
+            className="flex items-center gap-1"
+            data-testid="path-selector-max-depth"
+          >
+            <span>Max depth:</span>
+            <input
+              type="number"
+              min={1}
+              max={10}
+              value={maxDepth}
+              onChange={e =>
+                setMaxDepth(
+                  Math.min(10, Math.max(1, Number(e.target.value) || 5)),
+                )}
+              className="w-14 rounded border border-gray-300 px-1 py-0.5 text-xs dark:border-gray-600 dark:bg-gray-800"
+              aria-label="Document scan max depth (1 to 10)"
+              data-testid="path-selector-max-depth-input"
+            />
+          </label>
+          <label
+            className="flex items-center gap-1"
+            data-testid="path-selector-exclude-folders"
+          >
+            <span>Exclude folders:</span>
+            <input
+              type="text"
+              value={excludeFoldersText}
+              onChange={e => setExcludeFoldersText(e.target.value)}
+              placeholder="node_modules, dist"
+              className="w-48 rounded border border-gray-300 px-1 py-0.5 text-xs dark:border-gray-600 dark:bg-gray-800"
+              aria-label="Folders to exclude from document discovery (comma separated)"
+              data-testid="path-selector-exclude-folders-input"
+            />
+          </label>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -329,11 +455,15 @@ export default function PathSelector({ projectId, onPathsSelected, onCancel }: P
                   <Info className="h-4 w-4" aria-hidden="true" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent className="max-w-xs" data-testid="path-selector-info-tooltip">
+              <TooltipContent
+                className="max-w-xs"
+                data-testid="path-selector-info-tooltip"
+              >
                 <p>
                   {ticketsPath}
                   {' '}
-                  is excluded automatically because it is the ticket area.
+                  is excluded automatically because it is the
+                  ticket area.
                 </p>
               </TooltipContent>
             </Tooltip>
@@ -342,20 +472,17 @@ export default function PathSelector({ projectId, onPathsSelected, onCancel }: P
       </div>
 
       {/* Scrollable Content Area */}
-      <ScrollArea
-        type="hover"
-        scrollHideDelay={600}
-        className="min-h-0 flex-1"
-      >
-        <div className="p-4">
-          {renderContent()}
-        </div>
+      <ScrollArea type="hover" scrollHideDelay={600} className="min-h-0 flex-1">
+        <div className="p-4">{renderContent()}</div>
       </ScrollArea>
 
       {/* Fixed Footer */}
       <div className="flex-shrink-0 border-t border-gray-200 px-4 py-3 dark:border-gray-700">
         <div className="flex justify-between items-center">
-          <div className="text-sm text-muted-foreground" data-testid="path-selector-count">
+          <div
+            className="text-sm text-muted-foreground"
+            data-testid="path-selector-count"
+          >
             {selectedPaths.size}
             {' '}
             item

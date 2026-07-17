@@ -1,0 +1,240 @@
+{
+  "pipeline": "mdt-pipeline-e2e",
+  "version": 4,
+  "ticket": "MDT-168",
+  "title": "Provide configuration management UI and API",
+  "currentMilestone": "user-review",
+  "completedMilestones": ["pre-flight", "assess", "cr-scope-update", "requirements", "bdd", "architecture", "ux", "tests", "tasks", "implement", "review"],
+  "discovery": {
+    "projectDocs": [
+      "AGENTS.md",
+      "CLAUDE.md",
+      "DEBUG.md",
+      "docs/SKILLS.md",
+      "docs/PRE_IMPLEMENT.md",
+      "domain-contracts/AGENTS.md",
+      "src/AGENTS.md"
+    ],
+    "ticketSource": "docs/CRs/MDT-168-configuration-editing-api.md",
+    "artifactDirectory": "docs/CRs/MDT-168",
+    "ticketStatusModel": {
+      "current": "In Progress",
+      "transitionCommand": "mdt-cli attr 168 status=\"<STATUS>\"",
+      "terminalApprovedStatus": "Implemented"
+    },
+    "workflowSkills": {
+      "pipeline": "mdt-pipeline-e2e (loaded)",
+      "mdtIndex": "mdt (to load per milestone)",
+      "traceCli": "mdt:spec-trace-cli + spec-trace binary 0.4.0",
+      "ux": "mdt-ux-designer + ux-designer-specifier"
+    },
+    "languageRuntime": {
+      "stack": "TypeScript / Bun / React+Vite / Express / Jest / Playwright",
+      "languageReference": "references/language-typescript.md (mdt-pipeline-e2e)",
+      "packageOrder": ["domain-contracts", "shared", "server", "mcp-server", "frontend(src)"]
+    },
+    "keyFindings": {
+      "configContracts": {
+        "globalUser": "domain-contracts/src/app-config/schema.ts (tolerant .catch().default() schemas)",
+        "projectDocument": "domain-contracts/src/project/schema.ts (strict .refine()/.strict())",
+        "note": "config/ is the MCP server's OWN config, NOT the app config targeted by MDT-168"
+      },
+      "maxDepthDrift": {
+        "documentSchemaDefault": 3,
+        "documentSchemaRange": "1-10",
+        "configRepositoryReturns": "undefined (no default)",
+        "runtimeFallbackTreeBuilder": 5,
+        "runtimeFallbackPathSelector": 5,
+        "runtimeFallbackPathSelectionStrategy": 5,
+        "registryAndFixtures": 3,
+        "discoveryGlobalDefault": 3,
+        "discoveryMcpServer": 4,
+        "resolution": "canonical document default belongs in domain-contracts; resolve to a single value"
+      },
+      "configReadFragmentation": [
+        "server/routes/system.ts loadGlobalConfig/loadUserConfig (validated)",
+        "server/controllers/ProjectController.getSystemDirectories (raw parseToml cast)",
+        "shared/services/project/ProjectConfigService.getGlobalConfig (sync)",
+        "server/repositories/ConfigRepository.getConfig (document config, returns maxDepth undefined)"
+      ],
+      "mutationSeams": {
+        "globalUserHttp": "NONE - config.toml/user.toml are read-only over HTTP",
+        "selectorStateHttp": "POST /api/config/selector (project-selector.json, maintenance-gated)",
+        "projectDocumentHttp": "POST /api/documents/configure (writes ONLY project.document.paths, validates Array.isArray only)",
+        "projectMetadataHttp": "PUT /api/projects/:code/update (name/description/repository only in edit mode)",
+        "cliWriters": "shared/tools/config-cli.ts, shared/tools/project-cli.ts, ProjectConfigService lifecycle methods"
+      },
+      "atomicWriteHelpers": {
+        "sharedSync": "shared/utils/file-utils.ts writeFileAtomic (SEC-002, write-temp-then-rename)",
+        "inlineAsync": "server/routes/system.ts POST /api/config/selector (rolls its own async)"
+      },
+      "authPolicy": {
+        "configRoutesOwnerOnly": "/api/config/* requires owner-admin (accessPolicy.ts isOwnerOnlyRoute)",
+        "capabilities": "canWriteTickets/canManageProjects/canManageSharing/canUseOwnerEndpoints all collapse to ownerCapable boolean",
+        "browserMutations": "must pass ownerIntent: true via authFetch"
+      },
+      "uiOwnership": {
+        "settingsModal": "coordinates browser prefs (localStorage) + selector JSON state + sharing + tokens + maintenance; does NOT use useConfig",
+        "pathSelector": "Documents settings; saves only paths via parent DocumentsLayout; maxDepth read-only display; no excludeFolders edit",
+        "addProjectModal": "dual create/edit; edit mode sends only name/description/repository; code/path/ticketsPath read-only",
+        "browserOnlyStorage": "src/config/*.ts modules (settingsPreferences, ticketCardBadges, documentNavigation, documentSorting)"
+      }
+    }
+  },
+  "baseline": {
+    "runAt": "2026-07-16",
+    "commands": [
+      {
+        "cmd": "bun run --cwd domain-contracts build",
+        "result": "pass"
+      },
+      {
+        "cmd": "bun run --cwd domain-contracts test",
+        "result": "pass-with-preexisting-failures",
+        "details": "135/135 tests pass; 2 suites fail to RUN (bun:test module resolution): src/ticket/__tests__/patterns.test.ts, src/search/__tests__/search.test.ts. Pre-existing, NOT MDT-168/config related."
+      },
+      {
+        "cmd": "bun run --cwd shared jest --testPathPattern=configureDocumentsByPath",
+        "result": "pass",
+        "details": "3/3 tests pass"
+      },
+      {
+        "cmd": "bun run --cwd server jest --testPathPattern=ConfigRepository",
+        "result": "pass",
+        "details": "8/8 tests pass"
+      },
+      {
+        "cmd": "bun run --cwd server jest --testPathPattern=config-maintenance-policy",
+        "result": "pass"
+      },
+      {
+        "cmd": "bun run --cwd server jest --testPathPattern=(system\\.test|documents\\.test)",
+        "result": "pre-existing-failures-env",
+        "details": "Failures are EADDRNOTAVAIL/ETIMEDOUT on localhost bind ports (network/port-binding flakiness), NOT config logic regressions. Config assertions within pass."
+      }
+    ],
+    "preExistingFailures": [
+      {
+        "package": "domain-contracts",
+        "files": ["src/ticket/__tests__/patterns.test.ts", "src/search/__tests__/search.test.ts"],
+        "reason": "Import bun:test under jest runner - module resolution, pre-existing"
+      },
+      {
+        "package": "server",
+        "files": ["tests/api/system.test.ts", "tests/api/documents.test.ts"],
+        "reason": "EADDRNOTAVAIL/ETIMEDOUT localhost port binding flakiness, pre-existing environment issue"
+      }
+    ]
+  },
+  "dirtyBoundary": {
+    "rule": "Preserve all pre-existing unrelated changes. Do not stash, reset, stage, delete, rewrite, or include them in MDT-168 work.",
+    "branch": "MDT-187-relationship-badge-overflow",
+    "unrelatedFiles": [
+      "docs/CRs/MDT-168-configuration-editing-api.md (modified - this is MDT-168 CR, in-scope input)",
+      "docs/CRs/MDT-168/assess.md (untracked - MDT-168 input)",
+      "docs/CRs/MDT-168/pipeline-agent-prompt.md (untracked - control artifact)",
+      "docs/ideas/IDEA-005-tickets-to-mermaid-grid.md (untracked - unrelated idea)"
+    ],
+    "constraints": {
+      "noNewPackages": "MDT-168 requires no new package; do not modify package.json/bun.lock without approval",
+      "noServerRestart": "Do not restart dev servers; use isolated test commands",
+      "noCommitStage": "Do not commit or stage unless user asks"
+    }
+  },
+  "specTrace": {
+    "version": "0.4.0",
+    "binaryPath": "/usr/local/bin/spec-trace",
+    "initialized": true,
+    "stageOrder": ["requirements", "bdd", "architecture", "tests", "tasks", "bundle"],
+    "rules": [
+      "serialized upsert only; never parallelize writes",
+      "every requirement upsert must declare --kind",
+      "only behavior requirements route to BDD; constraints/edge cases route to tests/clarification/NA",
+      "human artifacts (*.md) are canonical; *.trace.md are generated projections",
+      "strict validation after requirements lock"
+    ]
+  },
+  "artifacts": {
+    "pre-flight": "docs/CRs/MDT-168.pipeline-state.json",
+    "assess": "docs/CRs/MDT-168/assess.md (existing, preserved and revalidated against live code; verdict Option 2 - Redesign Inline confirmed)",
+    "cr-scope-update": "docs/CRs/MDT-168-configuration-editing-api.md (bounded refactors section + expanded acceptance criteria)",
+    "requirements": "docs/CRs/MDT-168/requirements.md + requirements.trace.md (12 BR, 10 C, 6 Edge; locked, validated clean)",
+    "tasks": "docs/CRs/MDT-168/tasks.md + tasks.trace.md + .tasks-status.yaml (9 tasks, 5 milestones; validated clean; render all + validate all strict = 0 issues)",
+    "tests": "docs/CRs/MDT-168/tests.md + tests.trace.md (22 test-plan records across contract/server/frontend/E2E; validated clean)",
+    "ux": "docs/CRs/MDT-168/ux-design.md (reviewer gate approved; durable docs update during TASK-8)",
+    "architecture": "docs/CRs/MDT-168/architecture.md + architecture.trace.md (26 artifacts, 15 obligations; validated clean; maxDepth resolved to 5)",
+    "bdd": "docs/CRs/MDT-168/bdd.md + bdd.trace.md (12 scenarios across 6 journeys; validated clean incl strict)"
+  },
+  "approvals": {},
+  "exceptions": [],
+  "commits": [],
+  "implementationProgress": {
+    "TASK-1": {
+      "status": "done",
+      "summary": "config-management contract module created (selectors, patch-schemas, defaults, barrel, 3 test suites)",
+      "evidence": "domain-contracts build pass; 160/160 tests pass (3 new suites GREEN); lint clean; maxDepth canonical=5 in schema"
+    },
+    "TASK-2": {
+      "status": "done",
+      "summary": "canonical PROJECT_DOCUMENT_CONFIG_DEFAULTS consumed by ConfigRepository (was undefined), TreeBuilder, PathSelectionStrategy (were literal 5); drift resolved",
+      "evidence": "shared build pass; ConfigRepository 8/8 GREEN; server tsc clean (no new errors); no stray maxDepth literal 5 in touched files"
+    },
+    "TASK-3": {
+      "status": "done",
+      "summary": "typed ProjectDocumentPatch command (validate full candidate, merge preserving siblings, return effective); configureDocumentsByPath rewired to delegate via patch",
+      "evidence": "shared build pass; patch tests 10/10 + preservation regression 3/3 GREEN"
+    },
+    "TASK-4": {
+      "status": "done",
+      "summary": "ConfigApplicationService (validation order, strict, atomic, side effects) + Global/User/Project storage adapters + ConfigSideEffectRegistry",
+      "evidence": "server tsc clean; 4 new suites 17/17 GREEN (service, adapters, atomic failure, side effects); no regressions in ConfigRepository/config-maintenance"
+    },
+    "TASK-5": {
+      "status": "done",
+      "summary": "thin ConfigController + routes/config.ts extracted from system.ts; OpenAPI selector/patch components documented; owner-only route policy (/api/config prefix); mounted in server.ts",
+      "evidence": "server tsc clean; 4 new suites 18/18 GREEN (config-api validation errors, owner-only policy, openapi contract, thin-routes); lint clean"
+    },
+    "TASK-6": {
+      "status": "done",
+      "summary": "ConfigApplicationService.applyGuardedConfig added (confirmation required, operation-specific validation, registry/local consistency); ProjectController document configure confirmed routing through the patch command (TASK-3)",
+      "evidence": "GuardedOperations 6/6 GREEN; server tsc clean"
+    },
+    "TASK-7": {
+      "status": "done",
+      "summary": "configApiClient (read selectors, apply mutation with field-error mapping, ownerIntent) + useBackendConfig hook (staged edits, save status, exposure, field errors, browser-only isolation)",
+      "evidence": "11/11 frontend tests GREEN (5 configApiClient + 6 useBackendConfig); tsc + lint clean"
+    },
+    "TASK-8": {
+      "status": "done",
+      "summary": "Documents excludeFolders/maxDepth editable controls wired through config API; parent sends document patch; durable surface specs updated (documents-path-selector capability boundary + editable controls, settings backend-config section capability, project-edit-form guarded workflow)",
+      "evidence": "frontend tsc clean; documents tests pass; 3 durable specs updated"
+    },
+    "TASK-9": {
+      "status": "done",
+      "summary": "4 Playwright E2E suites (persistence, permissions, validation-failure, refresh) - 10 tests compile; package-deps-unchanged guard 3/3 GREEN; package.json/bun.lock unchanged",
+      "evidence": "playwright --list = 10 tests/4 files; package-deps 3/3 GREEN; git diff package.json bun.lock empty"
+    }
+  },
+  "completionAudit": {
+    "objectiveStatus": "IMPLEMENTATION COMPLETE — all 9 tasks done; awaiting user approval to close",
+    "verificationSummary": {
+      "domain-contracts": "160/160 tests pass; build clean",
+      "shared": "13/13 config tests pass; build clean",
+      "server": "62/62 config tests pass across 13 suites; tsc clean (1 pre-existing setupTests error)",
+      "frontend": "11/11 config tests pass",
+      "e2e": "10 tests across 4 files compile via Playwright --list",
+      "traceGates": "spec-trace validate --stage all = 5/5 pass, 0 issues; render all succeeded",
+      "lint": "clean on all MDT-168 changed files",
+      "format": "prettier clean on all MDT-168 changed files",
+      "packageDeps": "package.json/bun.lock unchanged (C-10 honored)"
+    },
+    "preExistingFailuresUnrelated": [
+      "domain-contracts patterns.test.ts + search.test.ts (bun:test under jest)",
+      "server system.test.ts + documents.test.ts (EADDRNOTAVAIL/ETIMEDOUT port flakiness)",
+      "server setupTests.ts mdtAccess type error",
+      "70 pre-existing frontend test failures (useSelectorData, MarkdownViewer, RelativeTimestamp, SearchScopeBar, QuickSearchModal, SettingsModal board prefs, DataLayer dedup MDT-133) - none touch MDT-168 config code"
+    ],
+    "approvalRequired": "MDT-168 remains In Progress. NOT marked Implemented. Explicit user approval required to close."
+  },
+  "updatedAt": "2026-07-16T00:00:00Z"
+}

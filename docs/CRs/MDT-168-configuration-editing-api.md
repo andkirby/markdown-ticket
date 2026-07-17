@@ -1,6 +1,6 @@
 ---
 code: MDT-168
-status: Approved
+status: In Progress
 dateCreated: 2026-05-17T12:50:41.785Z
 type: Feature Enhancement
 priority: Medium
@@ -11,9 +11,11 @@ priority: Medium
 ## 1. Description
 
 ### Problem Statement
+
 Configuration is spread across local project files, global user/system files, registry files, browser storage, and feature-specific state files. Some settings already have UI ownership, but other settings require manual file edits. The product needs a secure, deliberate configuration-management surface rather than a generic config editor.
 
 ### Current State
+
 - `project.document.paths` is already managed from the Documents settings/path selector flow.
 - Project metadata is already managed from the Project Edit form.
 - Guarded project identity/path settings are related to project editing, not a general global settings page.
@@ -22,25 +24,28 @@ Configuration is spread across local project files, global user/system files, re
 - Browser-only preferences from MDT-167 intentionally remain local client state.
 
 ### Desired State
+
 Provide backend-backed configuration management for approved settings, routed to the UI surface that owns the user intent:
 
-| Configuration area | Owning UI surface |
-|--------------------|-------------------|
-| Project document discovery | Documents settings/path selector |
-| Project metadata | Project Edit form |
+| Configuration area                     | Owning UI surface                                                  |
+| -------------------------------------- | ------------------------------------------------------------------ |
+| Project document discovery             | Documents settings/path selector                                   |
+| Project metadata                       | Project Edit form                                                  |
 | Guarded project identity/path settings | Project Edit advanced/guarded section or separate guarded workflow |
-| Global app/system configuration | Settings modal advanced/global section |
-| Stable user preferences | Settings modal user/preferences section |
-| Browser-only UI state | Existing client-only Settings controls |
+| Global app/system configuration        | Settings modal advanced/global section                             |
+| Stable user preferences                | Settings modal user/preferences section                            |
+| Browser-only UI state                  | Existing client-only Settings controls                             |
 
 The API must expose only allowlisted settings. It must classify fields as editable, guarded, read-only, or file-only so the UI can avoid unsafe edits.
 
 ### Rationale
+
 Users should be able to manage common configuration from the app, but not at the cost of turning the UI into an unsafe TOML editor. The right design is a controlled configuration API plus focused UI entry points.
 
 ## 2. Scope
 
 ### In Scope
+
 - Define which configuration fields may be exposed to UI.
 - Add API support for reading editable configuration with exposure metadata.
 - Add API support for updating allowlisted configuration fields.
@@ -50,11 +55,42 @@ Users should be able to manage common configuration from the app, but not at the
 - Document which settings remain file-only.
 
 ### Out of Scope
+
 - Arbitrary TOML editing from the browser.
 - Bulk editing every configuration field.
 - Moving browser-only state to backend storage.
 - Replacing the existing project edit flow.
 - Replacing the existing document path selector flow.
+
+### Bounded Architecture Refactors (Option 2 — Redesign Inline)
+
+Per `assess.md`, this ticket performs bounded refactors inside MDT-168. These
+seams are required because the feature needs them, not as foundational cleanup:
+
+1. **Strict mutation contracts in `domain-contracts`** — Add selector metadata
+   and strict patch schemas; keep tolerant normalization schemas separate for
+   persisted-file reads. Invalid mutation input must be rejected, never
+   converted to a default.
+2. **Configuration application and persistence boundary** — One application
+   service resolves a selector to its scope, validates the whole request,
+   chooses the correct storage adapter (global/user/project/registry), writes
+   atomically, and reports side effects. Extract config endpoints from the
+   broad system router; keep controllers/routes transport-only.
+3. **Project-document patch command** — Replace the positional
+   `configureDocuments(projectId, documentPaths)` seam with a typed patch that
+   validates the complete candidate config before one atomic write and returns
+   effective saved values for refresh.
+4. **Canonical document defaults** — Define project document defaults in
+   `domain-contracts` and consume them from schema defaults, registry creation,
+   config readers, tree building, UI reset/display logic, tests, and docs.
+   Resolve the `maxDepth` default drift (schema=3 vs runtime=5 vs
+   ConfigRepository=undefined).
+5. **Explicit injected post-write effects** — Make cache, discovery, document
+   tree, and watcher refreshes explicit effects with defined failure behavior
+   and idempotency; do not bury side effects in TOML helpers.
+6. **Backend-backed Settings state** — Extract focused backend-config
+   hooks/controllers and owned Settings sections rather than expanding the
+   Settings modal into a persistence monolith. Preserve browser-only handlers.
 
 ## 3. Product Requirements
 
@@ -81,16 +117,59 @@ Users should be able to manage common configuration from the app, but not at the
 - `docs/CRs/MDT-163-preference-storage-architecture.md`
 - `docs/CRs/MDT-167-settings-modal.md`
 
+> Requirements trace projection: [requirements.trace.md](./MDT-168/requirements.trace.md)
+> Requirements notes: [requirements.md](./MDT-168/requirements.md)
+> BDD trace projection: [bdd.trace.md](./MDT-168/bdd.trace.md)
+> BDD notes: [bdd.md](./MDT-168/bdd.md)
+> Architecture trace projection: [architecture.trace.md](./MDT-168/architecture.trace.md)
+> Architecture notes: [architecture.md](./MDT-168/architecture.md)
+> Tests trace projection: [tests.trace.md](./MDT-168/tests.trace.md)
+> Tests notes: [tests.md](./MDT-168/tests.md)
+> Tasks trace projection: [tasks.trace.md](./MDT-168/tasks.trace.md)
+> Tasks notes: [tasks.md](./MDT-168/tasks.md)
+
 ## 5. Acceptance Criteria
 
+### Behavior
+
 - [ ] Configuration fields are classified as editable, guarded, read-only, or file-only.
-- [ ] The API exposes only allowlisted configuration selectors.
+- [ ] The API exposes only allowlisted configuration selectors (default-deny).
 - [ ] The API rejects unknown or disallowed selectors without writing partial changes.
-- [ ] Document discovery config is managed through the Documents settings flow.
+- [ ] Invalid mutation input is rejected with field-level errors, never converted to a default.
+- [ ] Document discovery config (`paths`, `excludeFolders`, `maxDepth`) is managed through the Documents settings flow with full-request validation and tree/watcher refresh.
 - [ ] Project metadata is managed through the Project Edit form.
 - [ ] Guarded project identity/path settings require a warning/confirmation flow or remain file-only.
 - [ ] Global/user config exposed in Settings follows the exposure matrix.
-- [ ] Browser-only settings remain client-only.
+- [ ] Browser-only settings remain client-only and never flow into backend TOML.
+- [ ] Read-only visitors cannot access config details or mutate any config scope.
+- [ ] Correct side effects fire after successful global discovery, link/system, user, project metadata, and document configuration updates.
+
+### Defaults and contracts
+
 - [ ] Configuration defaults are centralized instead of scattered as literals.
 - [ ] Contract-level configuration defaults live in `domain-contracts`; runtime-only filesystem defaults remain outside the contract layer.
-- [ ] Config docs and OpenAPI docs describe scopes, exposure policy, validation, and security boundaries.
+- [ ] Project document `maxDepth` default drift is resolved (runtime, contracts, API metadata, UI, tests, examples, and docs agree on one value).
+- [ ] Tolerant persisted-file read/normalization schemas are separate from strict mutation schemas.
+
+### Architecture (Option 2 — Redesign Inline)
+
+- [ ] `domain-contracts` holds canonical selector types, exposure metadata, strict mutation schemas, and persisted configuration defaults; no filesystem/controller/UI behavior there.
+- [ ] One configuration application boundary resolves scope, validates the full candidate change, delegates to explicit scope-specific storage adapters, performs one atomic write per config file, and reports side effects.
+- [ ] Express routes/controllers are thin; config endpoints are extracted from the broad system router rather than adding more direct filesystem logic there.
+- [ ] No catch-all repository or service with unrelated responsibilities; storage adapters stay scope-specific behind a small typed application API.
+- [ ] The positional `configureDocuments` seam is replaced by a typed project-document patch command.
+- [ ] Cache, discovery, document tree, and watcher refreshes are explicit injected post-write effects.
+- [ ] Guarded project code, ticket path, and registry path changes are explicit operation-specific workflows with confirmation and invariants, never ordinary scalar patches.
+
+### UI ownership
+
+- [ ] Documents settings own `project.document.*`.
+- [ ] Project Edit owns safe metadata and guarded project operations.
+- [ ] Settings owns global/system and stable backend user preferences.
+- [ ] Browser-only preferences remain local browser state.
+- [ ] Backend-backed Settings state is extracted into focused hooks/controllers and owned sections, not a persistence monolith.
+
+### Documentation and verification
+
+- [ ] Config docs and OpenAPI docs describe scopes, exposure policy, validation, and security boundaries with stable contracts.
+- [ ] Existing focused configuration tests remain green and strict patch/atomic-failure tests are added before replacing each mutation seam.

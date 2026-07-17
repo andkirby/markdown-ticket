@@ -1,6 +1,7 @@
 import type { ProjectConfig, TreeNode } from './TreeBuildingStrategy.js'
 import { readdir } from 'node:fs/promises'
 import * as path from 'node:path'
+import { PROJECT_DOCUMENT_CONFIG_DEFAULTS } from '@mdt/domain-contracts'
 import { shouldIgnorePath } from '../utils/fsIgnoreList.js'
 import { TreeBuildingStrategy } from './TreeBuildingStrategy.js'
 
@@ -30,7 +31,9 @@ export class PathSelectionStrategy extends TreeBuildingStrategy {
         continue
       }
       if (node.type === 'folder') {
-        const children = node.children ? this.pruneFoldersWithoutMarkdown(node.children) : []
+        const children = node.children
+          ? this.pruneFoldersWithoutMarkdown(node.children)
+          : []
         if (children.length > 0) {
           result.push({ ...node, children })
         }
@@ -39,13 +42,24 @@ export class PathSelectionStrategy extends TreeBuildingStrategy {
     return result
   }
 
-  private async buildSelectionTree(projectPath: string, config: ProjectConfig): Promise<TreeNode[]> {
-    const maxDepth = config.document?.maxDepth ?? 5
-    const excludeFolders = config.document?.excludeFolders ?? config.exclude_folders ?? []
-    const ticketsPath = typeof config.ticketsPath === 'string' ? this.normalizePath(config.ticketsPath) : undefined
+  private async buildSelectionTree(
+    projectPath: string,
+    config: ProjectConfig,
+  ): Promise<TreeNode[]> {
+    const maxDepth
+      = config.document?.maxDepth ?? PROJECT_DOCUMENT_CONFIG_DEFAULTS.maxDepth
+    const excludeFolders
+      = config.document?.excludeFolders ?? config.exclude_folders ?? []
+    const ticketsPath
+      = typeof config.ticketsPath === 'string'
+        ? this.normalizePath(config.ticketsPath)
+        : undefined
     const rootFiles: TreeNode[] = []
 
-    const walk = async (absoluteDir: string, relativeParts: string[]): Promise<TreeNode[]> => {
+    const walk = async (
+      absoluteDir: string,
+      relativeParts: string[],
+    ): Promise<TreeNode[]> => {
       const nodes: TreeNode[] = []
 
       try {
@@ -56,7 +70,10 @@ export class PathSelectionStrategy extends TreeBuildingStrategy {
           const relativePath = this.normalizePath(nextParts.join(path.sep))
           const depth = nextParts.length
 
-          if (depth > maxDepth || this.shouldExclude(relativePath, ticketsPath, excludeFolders)) {
+          if (
+            depth > maxDepth
+            || this.shouldExclude(relativePath, ticketsPath, excludeFolders)
+          ) {
             continue
           }
 
@@ -67,7 +84,8 @@ export class PathSelectionStrategy extends TreeBuildingStrategy {
               name: entry.name,
               path: relativePath,
               type: 'folder',
-              children: depth < maxDepth ? await walk(absolutePath, nextParts) : [],
+              children:
+                depth < maxDepth ? await walk(absolutePath, nextParts) : [],
             })
             continue
           }
@@ -104,8 +122,16 @@ export class PathSelectionStrategy extends TreeBuildingStrategy {
     return result
   }
 
-  private shouldExclude(relativePath: string, ticketsPath: string | undefined, excludeFolders: string[]): boolean {
-    if (ticketsPath && (relativePath === ticketsPath || relativePath.startsWith(`${ticketsPath}/`))) {
+  private shouldExclude(
+    relativePath: string,
+    ticketsPath: string | undefined,
+    excludeFolders: string[],
+  ): boolean {
+    if (
+      ticketsPath
+      && (relativePath === ticketsPath
+        || relativePath.startsWith(`${ticketsPath}/`))
+    ) {
       return true
     }
 
@@ -113,7 +139,10 @@ export class PathSelectionStrategy extends TreeBuildingStrategy {
   }
 
   private normalizePath(inputPath: string): string {
-    return inputPath.replace(/\\/g, '/').replace(/\/+/g, '/').replace(/\/$/, '')
+    return inputPath
+      .replace(/\\/g, '/')
+      .replace(/\/+/g, '/')
+      .replace(/\/$/, '')
   }
 
   private sortNodes(nodes: TreeNode[]): TreeNode[] {

@@ -1,0 +1,1166 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-168"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "WHEN the configuration API is queried, the system shall return every allowlisted selector with its scope, current effective value, exposure classification (editable, guarded, readOnly, or fileOnly), suggested owner surface, and human-readable validation constraints.",
+      "sourceRef": "CR §3, exposure.md",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "WHEN the configuration API is queried, the system shall omit file-only selectors and any selector not on the allowlist from the response.",
+      "sourceRef": "CR §3, exposure.md",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-2.1",
+      "kind": "behavior",
+      "text": "WHEN an owner submits an allowlisted editable selector with a valid value, the system shall validate the complete candidate change, write exactly one atomic write to the target config file, preserve all unrelated fields, and return the effective saved value for refresh.",
+      "sourceRef": "ui-ownership.md, CR §3",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-2.2",
+      "kind": "behavior",
+      "text": "IF a mutation request contains an unknown, disallowed, read-only, or file-only selector, THEN the system shall reject the entire request before writing any file and shall return a field-level error naming the offending selector.",
+      "sourceRef": "CR §3, assess.md mismatch 1",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-2.3",
+      "kind": "behavior",
+      "text": "IF a mutation request contains a valid selector with an invalid value, THEN the system shall reject the entire request before writing any file, return a field-level validation error, and never convert the invalid value to a default.",
+      "sourceRef": "assess.md mismatch 1",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-3.1",
+      "kind": "behavior",
+      "text": "WHEN document discovery configuration (paths, excludeFolders, or maxDepth) is changed through the Documents settings flow, the system shall apply the complete validated patch atomically and refresh the document tree and watchers to reflect the new effective configuration.",
+      "sourceRef": "ui-ownership.md Documents, assess.md mismatch 3",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-3.2",
+      "kind": "behavior",
+      "text": "WHEN global discovery, link, system, or stable user configuration is changed through the Settings modal, the system shall persist the change to the correct global or user config file and fire the required runtime side effect (global discovery cache refresh, link/system effect, or user preference application).",
+      "sourceRef": "ui-ownership.md Settings, exposure.md global/user",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-3.3",
+      "kind": "behavior",
+      "text": "WHEN project metadata (name, description, repository, or active state) is changed through the Project Edit form, the system shall persist the change and return the effective saved value for refresh.",
+      "sourceRef": "ui-ownership.md Project Edit",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-4.1",
+      "kind": "behavior",
+      "text": "WHEN a guarded operation (project code, ticketsPath, or registry path change) is requested, the system shall require explicit confirmation, run operation-specific validation and invariants, and never apply it as an ordinary scalar selector patch.",
+      "sourceRef": "ui-ownership.md Project Edit, assess.md mismatch 6",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-4.2",
+      "kind": "behavior",
+      "text": "WHEN a guarded operation partially applies, the system shall keep local config and registry identity consistent; a guarded operation shall not leave registry and local config desynchronized.",
+      "sourceRef": "assess.md mismatch 6, exposure.md registry",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-5.1",
+      "kind": "behavior",
+      "text": "WHILE a caller has read-only access, the system shall deny configuration detail reads and all configuration mutations, returning no writable config detail and rejecting writes.",
+      "sourceRef": "CR §3, accessPolicy",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-6.1",
+      "kind": "behavior",
+      "text": "WHILE a setting is classified browser-only, the system shall keep it in client-side browser state and never persist it to a backend config file.",
+      "sourceRef": "exposure.md browser-only, CR out-of-scope",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C-1",
+      "kind": "constraint",
+      "text": "The system shall maintain a default-deny selector allowlist; only selectors explicitly classified on the exposure matrix may be read or written through the configuration API.",
+      "sourceRef": "CR §3, exposure.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-2",
+      "kind": "constraint",
+      "text": "The system shall keep tolerant persisted-file read/normalization schemas separate from strict mutation schemas in domain-contracts; mutation input schemas shall not use catch-to-default recovery.",
+      "sourceRef": "assess.md mismatch 1",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-3",
+      "kind": "constraint",
+      "text": "The system shall perform one atomic write per config file per mutation request using the established write-temp-then-rename pattern, and shall leave every target file unchanged when the request is rejected.",
+      "sourceRef": "assess.md, file-utils.ts writeFileAtomic",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-4",
+      "kind": "constraint",
+      "text": "The system shall hold canonical project document configuration defaults in domain-contracts and consume the identical default value from schema defaults, registry creation, config readers, tree building, UI reset/display logic, tests, and documentation; the maxDepth default drift (schema 3 vs runtime 5 vs undefined) shall be resolved to one value.",
+      "sourceRef": "configuration-defaults.md, assess.md mismatch 4",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-5",
+      "kind": "constraint",
+      "text": "The system shall make cache, discovery, document tree, and watcher refreshes explicit injected post-write effects with defined failure behavior and idempotency; side effects shall not be buried inside TOML helper functions.",
+      "sourceRef": "prompt maintainable gate, assess.md mismatch 3/5",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-6",
+      "kind": "constraint",
+      "text": "The system shall define one configuration application boundary that resolves scope, validates the full candidate change, delegates to explicit scope-specific storage adapters (global, user, project, registry), and reports required side effects; no catch-all repository or service shall hold unrelated responsibilities.",
+      "sourceRef": "prompt maintainable gate, assess.md mismatch 2",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-7",
+      "kind": "constraint",
+      "text": "The system shall keep Express routes and controllers transport-only; configuration endpoints shall be extracted from the broad system router rather than adding direct filesystem logic inline in routes.",
+      "sourceRef": "assess.md mismatch 2",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-8",
+      "kind": "constraint",
+      "text": "The system shall preserve owner-only authorization for configuration reads and mutations; owner-only config detail and mutation endpoints shall reject read-only and anonymous callers with 403.",
+      "sourceRef": "accessPolicy.ts, CR §3",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-9",
+      "kind": "constraint",
+      "text": "The system shall provide stable API and OpenAPI contracts for configuration endpoints, including field-level error response shapes, and documentation describing scopes, exposure policy, validation, and security boundaries.",
+      "sourceRef": "CR §5, ui-ownership.md API",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-10",
+      "kind": "constraint",
+      "text": "The system shall require no new runtime package; MDT-168 shall reuse existing Zod, TOML parsing, atomic-write, auth, and test infrastructure without adding dependencies.",
+      "sourceRef": "prompt dirty boundary, assess.md dependency fit",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "WHEN a mutation request contains a mix of valid and invalid selectors, the system shall reject the entire request and write no file (no partial application).",
+      "sourceRef": "CR §3, assess.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-2",
+      "kind": "edge_case",
+      "text": "WHEN a persisted config file contains a legacy or invalid stored value, the tolerant read path shall normalize it to a valid shape for display, but the strict mutation path shall reject an attempt to write that same invalid value.",
+      "sourceRef": "assess.md mismatch 1",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-3",
+      "kind": "edge_case",
+      "text": "WHEN a config write succeeds but a downstream refresh side effect fails, the system shall leave the persisted configuration in the written state and report the side-effect failure distinctly from a write failure.",
+      "sourceRef": "C-5, prompt side effects",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-4",
+      "kind": "edge_case",
+      "text": "WHEN a document path is removed or excludeFolders/maxDepth change, the document tree and watchers shall converge to reflect the new effective configuration without duplicate watchers.",
+      "sourceRef": "BR-3.1, reconfigureDocumentWatchers",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-5",
+      "kind": "edge_case",
+      "text": "WHEN a target config file does not yet exist, a successful mutation shall create it with only the allowlisted change and the canonical defaults for untouched required fields.",
+      "sourceRef": "configuration-defaults.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-6",
+      "kind": "edge_case",
+      "text": "WHEN a browser-only setting is changed in the client, the system shall not emit any backend network call that persists it to TOML.",
+      "sourceRef": "BR-6.1, exposure.md",
+      "routePolicy": "tests"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "read_returns_exposure_metadata",
+      "title": "Configuration read returns exposure metadata for allowlisted selectors",
+      "covers": [
+        "BR-1.1"
+      ],
+      "given": "an owner is authenticated and allowlisted selectors exist across project, global, user, and registry scopes",
+      "when": "the owner reads the configuration",
+      "then": "the response lists each allowlisted selector with its scope, current effective value, exposure class (editable, guarded, readOnly, or fileOnly), suggested owner surface, and human-readable validation constraints",
+      "sourceRef": "BR-1.1, ui-ownership.md API"
+    },
+    {
+      "id": "read_omits_fileonly_and_unknown",
+      "title": "Configuration read omits file-only and non-allowlisted selectors",
+      "covers": [
+        "BR-1.2"
+      ],
+      "given": "file-only selectors (project id, startNumber, counterFile) and disallowed selectors exist on disk",
+      "when": "the owner reads the configuration",
+      "then": "the response omits all file-only and non-allowlisted selectors",
+      "sourceRef": "BR-1.2, exposure.md"
+    },
+    {
+      "id": "valid_editable_selector_persisted_atomically",
+      "title": "Valid editable selector is persisted atomically with unrelated fields preserved",
+      "covers": [
+        "BR-2.1"
+      ],
+      "given": "an owner submits an allowlisted editable selector with a valid value and the target config file already contains unrelated fields",
+      "when": "the mutation is applied",
+      "then": "exactly one atomic write occurs to the target file, all unrelated fields are preserved, and the effective saved value is returned for refresh",
+      "sourceRef": "BR-2.1"
+    },
+    {
+      "id": "document_config_patch_refreshes_tree",
+      "title": "Document discovery patch refreshes document tree and watchers",
+      "covers": [
+        "BR-3.1"
+      ],
+      "given": "an owner changes document discovery configuration (paths, excludeFolders, or maxDepth) through the Documents settings flow",
+      "when": "the patch is saved",
+      "then": "the document tree and watchers refresh to reflect the new effective configuration",
+      "sourceRef": "BR-3.1"
+    },
+    {
+      "id": "global_user_setting_persisted_with_side_effect",
+      "title": "Global or user setting change persists and fires the runtime side effect",
+      "covers": [
+        "BR-3.2"
+      ],
+      "given": "an owner changes a global discovery, link, system, or stable user preference through the Settings modal",
+      "when": "the change is saved",
+      "then": "the value persists to the correct global or user config file and the required runtime side effect fires",
+      "sourceRef": "BR-3.2"
+    },
+    {
+      "id": "reject_disallowed_or_unknown_selector",
+      "title": "Reject unknown, disallowed, read-only, or file-only selector with no write",
+      "covers": [
+        "BR-2.2"
+      ],
+      "given": "an owner submits a mutation request containing an unknown, disallowed, read-only, or file-only selector",
+      "when": "the request is processed",
+      "then": "the entire request is rejected before any file is written and a field-level error names the offending selector",
+      "sourceRef": "BR-2.2, Edge-1"
+    },
+    {
+      "id": "reject_invalid_value_never_defaults",
+      "title": "Reject invalid value with field error and never convert to default",
+      "covers": [
+        "BR-2.3"
+      ],
+      "given": "an owner submits an allowlisted selector with an invalid value (for example maxDepth out of range or a malformed path)",
+      "when": "the request is processed",
+      "then": "the request is rejected before any write, a field-level validation error is returned, and the invalid value is never converted to a default",
+      "sourceRef": "BR-2.3, C-2"
+    },
+    {
+      "id": "readonly_denied_config_detail_and_mutation",
+      "title": "Read-only caller is denied configuration detail and mutations",
+      "covers": [
+        "BR-5.1"
+      ],
+      "given": "a caller has read-only access",
+      "when": "the caller attempts to read writable config detail or mutate any config scope",
+      "then": "the system denies the request with no writable config detail returned and writes are rejected",
+      "sourceRef": "BR-5.1, C-8"
+    },
+    {
+      "id": "guarded_op_requires_confirmation",
+      "title": "Guarded operation requires confirmation and is not a scalar patch",
+      "covers": [
+        "BR-4.1"
+      ],
+      "given": "an owner requests a guarded operation (project code, ticketsPath, or registry path change)",
+      "when": "the request is submitted without the operation-specific confirmation",
+      "then": "the system rejects it as an ordinary scalar selector patch and requires explicit confirmation with operation-specific validation",
+      "sourceRef": "BR-4.1"
+    },
+    {
+      "id": "guarded_op_keeps_registry_local_consistent",
+      "title": "Guarded operation keeps registry and local config consistent",
+      "covers": [
+        "BR-4.2"
+      ],
+      "given": "an owner confirms a guarded operation that spans registry and local config",
+      "when": "the operation is applied",
+      "then": "registry identity and local config remain consistent and never partially desynchronize",
+      "sourceRef": "BR-4.2"
+    },
+    {
+      "id": "browser_only_never_reaches_backend",
+      "title": "Browser-only setting never reaches backend TOML",
+      "covers": [
+        "BR-6.1"
+      ],
+      "given": "a setting is classified browser-only and the owner changes it in the client",
+      "when": "the change is applied",
+      "then": "no backend network call persists it to a config file and it remains in client-side browser state",
+      "sourceRef": "BR-6.1, Edge-6"
+    },
+    {
+      "id": "project_metadata_edit_returns_effective_value",
+      "title": "Project metadata edit persists and returns effective value",
+      "covers": [
+        "BR-3.3"
+      ],
+      "given": "an owner edits project metadata (name, description, repository, or active) through the Project Edit form",
+      "when": "the edit is saved",
+      "then": "the change persists and the effective saved value is returned for refresh",
+      "sourceRef": "BR-3.3"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-selector-allowlist",
+      "title": "Define a default-deny selector allowlist in domain-contracts with exposure metadata (scope, editable/guarded/readOnly/fileOnly, owner surface, validation) consumed by both read and write paths",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "C-1",
+        "C-2"
+      ],
+      "artifactIds": [
+        "ART-dc-selectors",
+        "ART-dc-config-mgmt-index",
+        "ART-srv-config-app-service",
+        "ART-srv-openapi-schemas"
+      ],
+      "sourceRef": "assess mismatch 1; exposure.md; CR §3"
+    },
+    {
+      "id": "OBL-strict-patch-schemas",
+      "title": "Strict mutation patch schemas live in domain-contracts and never use catch-to-default; tolerant persisted-file read schemas remain separate",
+      "derivedFrom": [
+        "BR-2.3",
+        "C-2"
+      ],
+      "artifactIds": [
+        "ART-dc-patch-schemas",
+        "ART-dc-appconfig-schema",
+        "ART-dc-project-schema"
+      ],
+      "sourceRef": "assess mismatch 1; C-2"
+    },
+    {
+      "id": "OBL-config-application-boundary",
+      "title": "One ConfigApplicationService resolves selector scope, validates the full candidate change, delegates to the correct scope-specific storage adapter, performs one atomic write per file, and returns effective saved values",
+      "derivedFrom": [
+        "BR-2.1",
+        "BR-2.2",
+        "C-3",
+        "C-6"
+      ],
+      "artifactIds": [
+        "ART-srv-config-app-service",
+        "ART-srv-config-adapters"
+      ],
+      "sourceRef": "assess mismatch 2; prompt maintainable gate"
+    },
+    {
+      "id": "OBL-atomic-write",
+      "title": "Each mutation performs one atomic write per target config file via the existing writeFileAtomic pattern; rejected requests leave every target file unchanged",
+      "derivedFrom": [
+        "BR-2.1",
+        "BR-2.2",
+        "Edge-1",
+        "C-3"
+      ],
+      "artifactIds": [
+        "ART-srv-config-adapters",
+        "ART-shared-doc-patch"
+      ],
+      "sourceRef": "assess; file-utils.ts writeFileAtomic SEC-002"
+    },
+    {
+      "id": "OBL-explicit-side-effects",
+      "title": "Cache, discovery, document tree, and watcher refreshes are explicit injected post-write effects with defined failure behavior and idempotency; no side effects buried in TOML helpers",
+      "derivedFrom": [
+        "BR-3.1",
+        "BR-3.2",
+        "Edge-3",
+        "Edge-4",
+        "C-5"
+      ],
+      "artifactIds": [
+        "ART-srv-config-sidefx",
+        "ART-srv-config-app-service"
+      ],
+      "sourceRef": "assess mismatch 3/5; prompt side-effect gate"
+    },
+    {
+      "id": "OBL-document-patch-command",
+      "title": "Replace positional configureDocuments(projectId, documentPaths) with a typed project-document patch command that validates the complete candidate config before one atomic write and returns effective values for refresh",
+      "derivedFrom": [
+        "BR-3.1",
+        "Edge-4",
+        "C-3"
+      ],
+      "artifactIds": [
+        "ART-shared-doc-patch",
+        "ART-shared-project-config-service",
+        "ART-srv-project-controller"
+      ],
+      "sourceRef": "assess mismatch 3"
+    },
+    {
+      "id": "OBL-canonical-defaults",
+      "title": "Project document defaults live in domain-contracts (PROJECT_DOCUMENT_CONFIG_DEFAULTS) and are consumed identically by schema defaults, ConfigRepository, TreeBuilder, PathSelectionStrategy, registry creation, UI, tests, and docs; the maxDepth drift is resolved to one value",
+      "derivedFrom": [
+        "C-4",
+        "Edge-5"
+      ],
+      "artifactIds": [
+        "ART-dc-config-defaults",
+        "ART-dc-project-schema",
+        "ART-srv-config-repository",
+        "ART-srv-tree-builder",
+        "ART-srv-strategy-pathsel"
+      ],
+      "sourceRef": "configuration-defaults.md; assess mismatch 4"
+    },
+    {
+      "id": "OBL-thin-routes",
+      "title": "Configuration endpoints are extracted from the broad system router into routes/config.ts with a thin ConfigController; routes/controllers are transport-only delegates to ConfigApplicationService",
+      "derivedFrom": [
+        "C-7",
+        "C-6"
+      ],
+      "artifactIds": [
+        "ART-srv-config-routes",
+        "ART-srv-config-controller",
+        "ART-srv-system-routes"
+      ],
+      "sourceRef": "assess mismatch 2; prompt thin-route gate"
+    },
+    {
+      "id": "OBL-guarded-workflows",
+      "title": "Guarded code/ticketsPath/registry-path changes are explicit operation-specific workflows requiring confirmation, operation-specific validation, and registry/local consistency; never ordinary scalar patches",
+      "derivedFrom": [
+        "BR-4.1",
+        "BR-4.2"
+      ],
+      "artifactIds": [
+        "ART-srv-config-app-service",
+        "ART-srv-project-controller",
+        "ART-fe-add-project-modal"
+      ],
+      "sourceRef": "assess mismatch 6; ui-ownership.md Project Edit"
+    },
+    {
+      "id": "OBL-owner-only-authz",
+      "title": "Configuration detail reads and mutations remain owner-only; accessPolicy classifies config endpoints so read-only/anonymous callers get 403 with no writable config detail",
+      "derivedFrom": [
+        "BR-5.1",
+        "C-8"
+      ],
+      "artifactIds": [
+        "ART-srv-access-policy",
+        "ART-srv-config-controller",
+        "ART-srv-config-routes"
+      ],
+      "sourceRef": "accessPolicy.ts isOwnerOnlyRoute; CR §3"
+    },
+    {
+      "id": "OBL-browser-only-isolation",
+      "title": "Browser-only settings (theme quick toggle, default view, card density, event history, document tree recents/sort/collapse) stay in client localStorage and the backend-config hook never persists them to TOML",
+      "derivedFrom": [
+        "BR-6.1",
+        "Edge-6"
+      ],
+      "artifactIds": [
+        "ART-fe-use-backend-config",
+        "ART-fe-settings-sections",
+        "ART-fe-path-selector"
+      ],
+      "sourceRef": "exposure.md browser-only; src/config/*.ts"
+    },
+    {
+      "id": "OBL-settings-state-extraction",
+      "title": "Backend configuration state/actions are extracted into useBackendConfig hook and owned Settings sections, with staged edits, field errors, save status, and exposure metadata; browser-only handlers remain unchanged",
+      "derivedFrom": [
+        "BR-3.2",
+        "BR-1.1"
+      ],
+      "artifactIds": [
+        "ART-fe-use-backend-config",
+        "ART-fe-settings-sections",
+        "ART-fe-config-api-client"
+      ],
+      "sourceRef": "assess mismatch 5; ui-ownership.md Settings"
+    },
+    {
+      "id": "OBL-stable-openapi",
+      "title": "Configuration endpoints publish stable OpenAPI contracts including selector/patch response components and field-level error shapes; docs describe scopes, exposure, validation, and security boundaries",
+      "derivedFrom": [
+        "C-9",
+        "BR-2.2",
+        "BR-2.3"
+      ],
+      "artifactIds": [
+        "ART-srv-openapi-schemas",
+        "ART-srv-openapi-config"
+      ],
+      "sourceRef": "CR §5; C-9"
+    },
+    {
+      "id": "OBL-no-new-packages",
+      "title": "MDT-168 adds no runtime dependency; it reuses existing Zod, smol-toml, writeFileAtomic, auth middleware, and test infrastructure",
+      "derivedFrom": [
+        "C-10"
+      ],
+      "artifactIds": [
+        "ART-dc-config-mgmt-index",
+        "ART-srv-config-app-service"
+      ],
+      "sourceRef": "prompt dirty boundary; assess dependency fit healthy"
+    },
+    {
+      "id": "OBL-scope-adapters",
+      "title": "Scope-specific storage adapters (Global, User, Project, Registry) each own one config file read/normalize/write; the application service delegates to the resolved adapter and all editable selectors route through it",
+      "derivedFrom": [
+        "BR-2.1",
+        "BR-3.1",
+        "BR-3.2",
+        "BR-3.3",
+        "C-6"
+      ],
+      "artifactIds": [
+        "ART-srv-config-adapters",
+        "ART-srv-config-app-service"
+      ],
+      "sourceRef": "assess mismatch 2; prompt scope-specific adapters"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-dc-config-mgmt-index",
+      "path": "domain-contracts/src/config-management/index.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture: domain-contracts config-management barrel"
+    },
+    {
+      "id": "ART-dc-selectors",
+      "path": "domain-contracts/src/config-management/selectors.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture: selector types, exposure enum, default-deny allowlist registry"
+    },
+    {
+      "id": "ART-dc-patch-schemas",
+      "path": "domain-contracts/src/config-management/patch-schemas.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture: strict mutation patch schemas per selector"
+    },
+    {
+      "id": "ART-dc-config-defaults",
+      "path": "domain-contracts/src/config-management/defaults.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture: canonical config-contract defaults incl PROJECT_DOCUMENT_CONFIG_DEFAULTS"
+    },
+    {
+      "id": "ART-dc-project-schema",
+      "path": "domain-contracts/src/project/schema.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture: consume canonical document defaults"
+    },
+    {
+      "id": "ART-dc-appconfig-schema",
+      "path": "domain-contracts/src/app-config/schema.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture: tolerant reads retained; reference shared defaults"
+    },
+    {
+      "id": "ART-srv-config-app-service",
+      "path": "server/services/config/ConfigApplicationService.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture: the one configuration application boundary"
+    },
+    {
+      "id": "ART-srv-config-adapters",
+      "path": "server/services/config/adapters/",
+      "kind": "runtime",
+      "sourceRef": "architecture: GlobalConfigStorageAdapter, UserConfigStorageAdapter, ProjectConfigStorageAdapter, RegistryConfigStorageAdapter"
+    },
+    {
+      "id": "ART-srv-config-sidefx",
+      "path": "server/services/config/ConfigSideEffectRegistry.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture: explicit injected post-write effects (cache/discovery/tree/watcher)"
+    },
+    {
+      "id": "ART-srv-config-controller",
+      "path": "server/controllers/ConfigController.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture: thin transport-only config controller"
+    },
+    {
+      "id": "ART-srv-config-routes",
+      "path": "server/routes/config.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture: config routes extracted from system.ts"
+    },
+    {
+      "id": "ART-srv-system-routes",
+      "path": "server/routes/system.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture: config endpoints extracted out; retains non-config endpoints"
+    },
+    {
+      "id": "ART-srv-project-controller",
+      "path": "server/controllers/ProjectController.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture: configureDocuments replaced by document patch delegation; guarded workflow"
+    },
+    {
+      "id": "ART-srv-config-repository",
+      "path": "server/repositories/ConfigRepository.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture: consume canonical defaults; maxDepth no longer undefined"
+    },
+    {
+      "id": "ART-srv-tree-builder",
+      "path": "server/builders/TreeBuilder.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture: consume canonical document maxDepth default"
+    },
+    {
+      "id": "ART-srv-strategy-pathsel",
+      "path": "server/strategies/PathSelectionStrategy.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture: consume canonical document maxDepth default"
+    },
+    {
+      "id": "ART-srv-access-policy",
+      "path": "server/security/accessPolicy.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture: owner-only route classification for config endpoints"
+    },
+    {
+      "id": "ART-srv-openapi-schemas",
+      "path": "server/openapi/schemas.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture: register config selector/patch OpenAPI components"
+    },
+    {
+      "id": "ART-srv-openapi-config",
+      "path": "server/openapi/config.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture: config endpoint OpenAPI docs with field-level error shapes"
+    },
+    {
+      "id": "ART-shared-doc-patch",
+      "path": "shared/services/project/ProjectDocumentPatch.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture: typed project-document patch command + apply helper"
+    },
+    {
+      "id": "ART-shared-project-config-service",
+      "path": "shared/services/project/ProjectConfigService.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture: configureDocumentsByPath replaced by document patch application"
+    },
+    {
+      "id": "ART-fe-config-api-client",
+      "path": "src/config/configApiClient.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture: typed client for config read/mutation with field error handling"
+    },
+    {
+      "id": "ART-fe-use-backend-config",
+      "path": "src/hooks/useBackendConfig.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture: backend-config state/actions hook (staged edits, save status, exposure)"
+    },
+    {
+      "id": "ART-fe-settings-sections",
+      "path": "src/components/SettingsModal/",
+      "kind": "runtime",
+      "sourceRef": "architecture: owned backend-config Settings sections split from monolith"
+    },
+    {
+      "id": "ART-fe-path-selector",
+      "path": "src/components/DocumentsView/PathSelector.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture: edit excludeFolders + maxDepth via document patch"
+    },
+    {
+      "id": "ART-fe-add-project-modal",
+      "path": "src/components/AddProjectModal/AddProjectModal.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture: guarded workflow entry for code/ticketsPath"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-allowlist-exposure-contract",
+      "kind": "unit",
+      "title": "Selector allowlist + exposure metadata contract",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "C-1",
+        "C-2"
+      ],
+      "file": "domain-contracts/src/config-management/__tests__/selectors.test.ts",
+      "sourceRef": "tests.md: contract tests"
+    },
+    {
+      "id": "TEST-patch-schemas-strict",
+      "kind": "unit",
+      "title": "Strict patch schemas reject invalid and never default",
+      "covers": [
+        "BR-2.3",
+        "C-2",
+        "Edge-2"
+      ],
+      "file": "domain-contracts/src/config-management/__tests__/patch-schemas.test.ts",
+      "sourceRef": "tests.md: strict mutation tests"
+    },
+    {
+      "id": "TEST-canonical-defaults",
+      "kind": "unit",
+      "title": "Canonical config defaults + maxDepth drift resolution",
+      "covers": [
+        "C-4",
+        "Edge-5"
+      ],
+      "file": "domain-contracts/src/config-management/__tests__/defaults.test.ts",
+      "sourceRef": "tests.md: defaults tests"
+    },
+    {
+      "id": "TEST-document-patch-command",
+      "kind": "unit",
+      "title": "Project document patch command validates candidate and preserves siblings",
+      "covers": [
+        "BR-3.1",
+        "C-3",
+        "Edge-1"
+      ],
+      "file": "shared/tests/services/ProjectDocumentPatch.test.ts",
+      "sourceRef": "tests.md: document patch"
+    },
+    {
+      "id": "TEST-document-patch-preserve-regression",
+      "kind": "unit",
+      "title": "Document patch preserves existing [project.document] settings (regression of configureDocumentsByPath)",
+      "covers": [
+        "BR-2.1",
+        "C-3"
+      ],
+      "file": "shared/tests/services/ProjectConfigService/configureDocumentsByPath.test.ts",
+      "sourceRef": "tests.md: preservation regression"
+    },
+    {
+      "id": "TEST-config-application-service",
+      "kind": "integration",
+      "title": "ConfigApplicationService resolves scope, validates full candidate, atomic write, returns effective value",
+      "covers": [
+        "BR-2.1",
+        "BR-2.2",
+        "BR-2.3",
+        "C-3",
+        "C-6"
+      ],
+      "file": "server/tests/services/config/ConfigApplicationService.test.ts",
+      "sourceRef": "tests.md: application service"
+    },
+    {
+      "id": "TEST-scope-storage-adapters",
+      "kind": "integration",
+      "title": "Scope storage adapters read-tolerate + write-atomically per config file",
+      "covers": [
+        "BR-2.1",
+        "BR-3.2",
+        "BR-3.3",
+        "C-3",
+        "C-6"
+      ],
+      "file": "server/tests/services/config/adapters/StorageAdapters.test.ts",
+      "sourceRef": "tests.md: adapters"
+    },
+    {
+      "id": "TEST-atomic-failure-no-partial",
+      "kind": "integration",
+      "title": "Atomic failure: rejected request leaves every target file unchanged (no partial)",
+      "covers": [
+        "BR-2.2",
+        "BR-2.3",
+        "Edge-1",
+        "C-3"
+      ],
+      "file": "server/tests/services/config/AtomicFailure.test.ts",
+      "sourceRef": "tests.md: atomic failure"
+    },
+    {
+      "id": "TEST-side-effect-registry",
+      "kind": "integration",
+      "title": "Post-write side effects fire after success; failure reported distinct from write",
+      "covers": [
+        "BR-3.1",
+        "BR-3.2",
+        "Edge-3",
+        "Edge-4",
+        "C-5"
+      ],
+      "file": "server/tests/services/config/ConfigSideEffectRegistry.test.ts",
+      "sourceRef": "tests.md: side effects"
+    },
+    {
+      "id": "TEST-config-api-validation-errors",
+      "kind": "integration",
+      "title": "Config API returns field-level errors for disallowed/invalid selectors",
+      "covers": [
+        "BR-2.2",
+        "BR-2.3",
+        "C-9"
+      ],
+      "file": "server/tests/api/config-api.test.ts",
+      "sourceRef": "tests.md: config api"
+    },
+    {
+      "id": "TEST-config-owner-only-policy",
+      "kind": "integration",
+      "title": "Owner-only config policy: read-only/anonymous denied config detail and mutations (403)",
+      "covers": [
+        "BR-5.1",
+        "C-8"
+      ],
+      "file": "server/tests/api/config-owner-only.test.ts",
+      "sourceRef": "tests.md: permissions"
+    },
+    {
+      "id": "TEST-guarded-operations",
+      "kind": "integration",
+      "title": "Guarded operations require confirmation and keep registry/local consistent",
+      "covers": [
+        "BR-4.1",
+        "BR-4.2"
+      ],
+      "file": "server/tests/services/config/GuardedOperations.test.ts",
+      "sourceRef": "tests.md: guarded ops"
+    },
+    {
+      "id": "TEST-config-openapi-contract",
+      "kind": "integration",
+      "title": "Config OpenAPI contract validates selector/patch response + field error shapes",
+      "covers": [
+        "C-9"
+      ],
+      "file": "server/tests/api/config-openapi.test.ts",
+      "sourceRef": "tests.md: openapi"
+    },
+    {
+      "id": "TEST-frontend-config-api-client",
+      "kind": "unit",
+      "title": "configApiClient handles read + mutation and maps field errors",
+      "covers": [
+        "BR-1.1",
+        "BR-2.2"
+      ],
+      "file": "src/config/configApiClient.test.ts",
+      "sourceRef": "tests.md: api client"
+    },
+    {
+      "id": "TEST-use-backend-config-hook",
+      "kind": "unit",
+      "title": "useBackendConfig stages edits, save status, exposure; never persists browser-only to backend",
+      "covers": [
+        "BR-3.2",
+        "BR-6.1",
+        "Edge-6"
+      ],
+      "file": "src/hooks/useBackendConfig.test.tsx",
+      "sourceRef": "tests.md: backend config hook"
+    },
+    {
+      "id": "TEST-e2e-config-persistence",
+      "kind": "e2e",
+      "title": "E2E: owner config change persists and visible state refreshes",
+      "covers": [
+        "BR-2.1",
+        "BR-3.1",
+        "BR-3.2"
+      ],
+      "file": "tests/e2e/config/configuration-persistence.spec.ts",
+      "sourceRef": "bdd: valid_editable_selector_persisted_atomically, document_config_patch_refreshes_tree"
+    },
+    {
+      "id": "TEST-e2e-config-permissions",
+      "kind": "e2e",
+      "title": "E2E: read-only visitor cannot reach config detail or mutate",
+      "covers": [
+        "BR-5.1"
+      ],
+      "file": "tests/e2e/config/configuration-permissions.spec.ts",
+      "sourceRef": "bdd: readonly_denied_config_detail_and_mutation"
+    },
+    {
+      "id": "TEST-e2e-config-validation-failure",
+      "kind": "e2e",
+      "title": "E2E: invalid/disallowed selector shows field error and saves nothing",
+      "covers": [
+        "BR-2.2",
+        "BR-2.3"
+      ],
+      "file": "tests/e2e/config/configuration-validation-failure.spec.ts",
+      "sourceRef": "bdd: reject_disallowed_or_unknown_selector, reject_invalid_value_never_defaults"
+    },
+    {
+      "id": "TEST-e2e-config-refresh",
+      "kind": "e2e",
+      "title": "E2E: document config change refreshes document tree and watchers",
+      "covers": [
+        "BR-3.1",
+        "Edge-4"
+      ],
+      "file": "tests/e2e/config/configuration-refresh.spec.ts",
+      "sourceRef": "bdd: document_config_patch_refreshes_tree"
+    },
+    {
+      "id": "TEST-config-repository-defaults-regression",
+      "kind": "unit",
+      "title": "ConfigRepository consumes canonical maxDepth default (no longer undefined)",
+      "covers": [
+        "C-4"
+      ],
+      "file": "server/tests/unit/ConfigRepository.test.ts",
+      "sourceRef": "tests.md: defaults regression"
+    },
+    {
+      "id": "TEST-thin-routes-controllers",
+      "kind": "integration",
+      "title": "Config routes/controllers are transport-only delegates (no direct filesystem logic in routes)",
+      "covers": [
+        "C-7"
+      ],
+      "file": "server/tests/routes/config-routes-thin.test.ts",
+      "sourceRef": "tests.md: thin routes"
+    },
+    {
+      "id": "TEST-no-new-packages",
+      "kind": "unit",
+      "title": "MDT-168 adds no runtime dependency (package.json/bun.lock unchanged)",
+      "covers": [
+        "C-10"
+      ],
+      "file": "server/tests/config/package-deps-unchanged.test.ts",
+      "sourceRef": "tests.md: no new packages"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-2",
+      "title": "Consume canonical PROJECT_DOCUMENT_CONFIG_DEFAULTS across schema, ConfigRepository, TreeBuilder, PathSelectionStrategy",
+      "ownsArtifactIds": [
+        "ART-dc-project-schema",
+        "ART-srv-config-repository",
+        "ART-srv-tree-builder",
+        "ART-srv-strategy-pathsel"
+      ],
+      "makesGreenIds": [
+        "TEST-canonical-defaults",
+        "TEST-config-repository-defaults-regression"
+      ],
+      "sourceRef": "tasks.md#task-2"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Add typed ProjectDocumentPatch command + apply helper; rewire ProjectConfigService off positional configureDocuments",
+      "ownsArtifactIds": [
+        "ART-shared-doc-patch",
+        "ART-shared-project-config-service"
+      ],
+      "makesGreenIds": [
+        "TEST-document-patch-command",
+        "TEST-document-patch-preserve-regression"
+      ],
+      "sourceRef": "tasks.md#task-3"
+    },
+    {
+      "id": "TASK-8",
+      "title": "Split Settings backend-config sections; add Documents excludeFolders/maxDepth editing; Project Edit guarded workflow entry",
+      "ownsArtifactIds": [
+        "ART-fe-settings-sections",
+        "ART-fe-path-selector",
+        "ART-fe-add-project-modal"
+      ],
+      "skills": [
+        "mdt-frontend",
+        "mdt-ux-designer",
+        "frontend-react-component"
+      ],
+      "sourceRef": "tasks.md#task-8"
+    },
+    {
+      "id": "TASK-1",
+      "title": "Add config-management contract module: selector allowlist, exposure, strict patch schemas, canonical defaults",
+      "ownsArtifactIds": [
+        "ART-dc-config-mgmt-index",
+        "ART-dc-selectors",
+        "ART-dc-patch-schemas",
+        "ART-dc-config-defaults",
+        "ART-dc-appconfig-schema"
+      ],
+      "makesGreenIds": [
+        "TEST-allowlist-exposure-contract",
+        "TEST-patch-schemas-strict",
+        "TEST-canonical-defaults"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-1"
+    },
+    {
+      "id": "TASK-4",
+      "title": "Implement ConfigApplicationService + Global/User/Project/Registry storage adapters + ConfigSideEffectRegistry",
+      "ownsArtifactIds": [
+        "ART-srv-config-app-service",
+        "ART-srv-config-adapters",
+        "ART-srv-config-sidefx"
+      ],
+      "makesGreenIds": [
+        "TEST-config-application-service",
+        "TEST-scope-storage-adapters",
+        "TEST-atomic-failure-no-partial",
+        "TEST-side-effect-registry",
+        "valid_editable_selector_persisted_atomically",
+        "reject_disallowed_or_unknown_selector",
+        "reject_invalid_value_never_defaults"
+      ],
+      "sourceRef": "tasks.md#task-4"
+    },
+    {
+      "id": "TASK-5",
+      "title": "Extract thin ConfigController + routes/config.ts from system.ts; register OpenAPI components; owner-only policy",
+      "ownsArtifactIds": [
+        "ART-srv-config-controller",
+        "ART-srv-config-routes",
+        "ART-srv-system-routes",
+        "ART-srv-access-policy",
+        "ART-srv-openapi-schemas",
+        "ART-srv-openapi-config"
+      ],
+      "makesGreenIds": [
+        "TEST-config-api-validation-errors",
+        "TEST-config-owner-only-policy",
+        "TEST-config-openapi-contract",
+        "TEST-thin-routes-controllers",
+        "read_returns_exposure_metadata",
+        "read_omits_fileonly_and_unknown",
+        "readonly_denied_config_detail_and_mutation"
+      ],
+      "sourceRef": "tasks.md#task-5"
+    },
+    {
+      "id": "TASK-6",
+      "title": "Rewire ProjectController document configure to patch command; add guarded project code/ticketsPath/registry workflows",
+      "ownsArtifactIds": [
+        "ART-srv-project-controller"
+      ],
+      "makesGreenIds": [
+        "TEST-guarded-operations",
+        "guarded_op_requires_confirmation",
+        "guarded_op_keeps_registry_local_consistent",
+        "document_config_patch_refreshes_tree",
+        "project_metadata_edit_returns_effective_value"
+      ],
+      "sourceRef": "tasks.md#task-6"
+    },
+    {
+      "id": "TASK-7",
+      "title": "Add configApiClient + useBackendConfig hook (staged edits, save status, exposure, field errors); preserve browser-only isolation",
+      "ownsArtifactIds": [
+        "ART-fe-config-api-client",
+        "ART-fe-use-backend-config"
+      ],
+      "makesGreenIds": [
+        "TEST-frontend-config-api-client",
+        "TEST-use-backend-config-hook",
+        "browser_only_never_reaches_backend"
+      ],
+      "skills": [
+        "mdt-frontend",
+        "frontend-react-component"
+      ],
+      "sourceRef": "tasks.md#task-7"
+    },
+    {
+      "id": "TASK-9",
+      "title": "Add config E2E suites (persistence, permissions, validation failure, refresh); update durable surface specs; package-deps guard",
+      "makesGreenIds": [
+        "TEST-e2e-config-persistence",
+        "TEST-e2e-config-permissions",
+        "TEST-e2e-config-validation-failure",
+        "TEST-e2e-config-refresh",
+        "TEST-no-new-packages",
+        "global_user_setting_persisted_with_side_effect"
+      ],
+      "skills": [
+        "playwright-skill"
+      ],
+      "sourceRef": "tasks.md#task-9"
+    }
+  ]
+}
