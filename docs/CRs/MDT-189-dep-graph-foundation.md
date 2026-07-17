@@ -5,8 +5,7 @@ dateCreated: 2026-07-17T15:35:08.528Z
 type: Architecture
 priority: High
 phaseEpic: MDT-188
-dependsOn: []
-blocks: [MDT-190, MDT-191]
+blocks: MDT-190,MDT-191
 ---
 
 # Dependency Graph Foundation and `blocks` Migration
