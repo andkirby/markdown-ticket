@@ -137,18 +137,16 @@ export function filePathToApiPath(filePath: string, ticketId: string): string {
  * extractSubDocPath('/ticket/MDT-093', 'MDT-093') // null
  */
 export function extractSubDocPath(pathname: string, crId: string): string | null {
-  // Derive regex from route pattern constants via routePatternToRegex.
-  // The generic regex has [^/]+ for each :param and (.+) for *.
-  // We replace the :ticketKey slot (the [^/]+ after /ticket/) with the literal crId.
-  const directSrc = routePatternToRegex(ROUTE_DIRECT_TICKET_SUBDOC).source
-  const projectSrc = routePatternToRegex(ROUTE_TICKET_SUBDOC).source
-  const directPattern = new RegExp(`^${directSrc.replace('[^/]+', crId)}$`)
-  // For project pattern, replace only the second [^/]+ (after /ticket/)
-  const ticketSeg = '/ticket/'
-  const segIdx = projectSrc.indexOf(ticketSeg)
-  const projectWithId = projectSrc.substring(0, segIdx + ticketSeg.length)
-    + projectSrc.substring(segIdx + ticketSeg.length).replace('[^/]+', crId)
-  const projectPattern = new RegExp(`^${projectWithId}$`)
+  // Substitute the literal `:ticketKey` token in the un-escaped route pattern
+  // constants BEFORE converting to a regex. This avoids brittle string
+  // surgery on the escaped regex source (`\/` vs `/`), which previously
+  // caused the projectCode slot to be mistaken for the ticketKey slot.
+  // MDT-138 UAT 2026-07-18: regression introduced by MDT-184.
+  const escapedCrId = crId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const directPatternSrc = ROUTE_DIRECT_TICKET_SUBDOC.replace(':ticketKey', escapedCrId)
+  const projectPatternSrc = ROUTE_TICKET_SUBDOC.replace(':ticketKey', escapedCrId)
+  const directPattern = routePatternToRegex(directPatternSrc)
+  const projectPattern = routePatternToRegex(projectPatternSrc)
   const patterns = [directPattern, projectPattern]
 
   for (const pattern of patterns) {
