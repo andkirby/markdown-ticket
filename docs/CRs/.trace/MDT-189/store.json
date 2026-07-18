@@ -208,7 +208,162 @@
       "routePolicy": "tests"
     }
   ],
-  "scenarios": [],
+  "scenarios": [
+    {
+      "id": "voc_lying_ticket_detected",
+      "title": "VOC lying-ticket detected",
+      "covers": [
+        "BR-1.1"
+      ],
+      "given": "project \"MDT\" has ticket MDT-100 with status \"Implemented\", and project \"MDT\" has ticket MDT-101 with status \"Approved\", and ticket MDT-102 has dependsOn [\"MDT-100\", \"MDT-101\"]",
+      "when": "the user runs \"mdt-cli deps MDT-102 --check\"",
+      "then": "the output contains a row with dep \"MDT-100\" and kind \"satisfied\", and the output contains a row with dep \"MDT-101\" and kind \"waiting\", and the output contains evidence 'MDT-101 is \"Approved\" (waiting)', and the summary line reads \"Ready: NO (1 unresolved)\"",
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "cross_project_dependency",
+      "title": "Cross-project dependency (the VOC scenario)",
+      "covers": [
+        "BR-1.2"
+      ],
+      "given": "the active project is \"MDT\", and project \"VOC\" has ticket VOC-053 with status \"Approved\", and ticket MDT-188 has dependsOn [\"VOC-053\"]",
+      "when": "the user runs \"mdt-cli deps MDT-188 --check\"",
+      "then": "the output contains a row with dep \"VOC-053\" and kind \"waiting\", and the dep key is rendered fully-qualified as \"VOC-053\"",
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "broken_plan_dep_rejected",
+      "title": "Broken-plan: dep is Rejected",
+      "covers": [
+        "BR-1.3"
+      ],
+      "given": "ticket MDT-101 has status \"Rejected\", and ticket MDT-102 has dependsOn [\"MDT-101\"]",
+      "when": "the user runs \"mdt-cli deps MDT-102 --check\"",
+      "then": "the row for MDT-101 has kind \"broken-plan\", and the action field contains \"reject-MDT-102 | unlink-MDT-102\"",
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "broken_plan_dep_missing",
+      "title": "Broken-plan: dep target missing",
+      "covers": [
+        "BR-1.4"
+      ],
+      "given": "ticket MDT-102 has dependsOn [\"MDT-999\"], and no ticket MDT-999 exists in any registered project",
+      "when": "the user runs \"mdt-cli deps MDT-102 --check\"",
+      "then": "the row for MDT-999 has status \"missing\", and the row has kind \"broken-plan\"",
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "clean_ticket_all_deps_satisfied",
+      "title": "All dependencies satisfied",
+      "covers": [
+        "BR-1.5"
+      ],
+      "given": "ticket MDT-100 has status \"Implemented\", and ticket MDT-102 has dependsOn [\"MDT-100\"]",
+      "when": "the user runs \"mdt-cli deps MDT-102 --check\"",
+      "then": "the output contains no violation rows, and the summary line reads \"Ready: YES\"",
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "leaf_ticket_no_deps",
+      "title": "Leaf ticket with no dependencies",
+      "covers": [
+        "BR-1.5"
+      ],
+      "given": "ticket MDT-100 has dependsOn []",
+      "when": "the user runs \"mdt-cli deps MDT-100 --check\"",
+      "then": "the output contains no violation rows, and the summary line reads \"Ready: YES\"",
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "unknown_dep_status_unsatisfied",
+      "title": "Unknown dep status treated as unsatisfied",
+      "covers": [
+        "BR-1.6"
+      ],
+      "given": "ticket MDT-101 has status \"Deferred\" (not in CRStatusSchema), and ticket MDT-102 has dependsOn [\"MDT-101\"]",
+      "when": "the user runs \"mdt-cli deps MDT-102 --check\"",
+      "then": "the row for MDT-101 has kind \"waiting\", and the evidence notes the status is unrecognized",
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "prose_precondition_gaps_surfaced",
+      "title": "CR-key tokens in body but not in dependsOn",
+      "covers": [
+        "BR-2.1"
+      ],
+      "given": "ticket MDT-188 has dependsOn [\"VOC-053\"], and the body of MDT-188 contains \"## Preconditions\\nVOC-049-VOC-052 implemented\"",
+      "when": "the user runs \"mdt-cli deps MDT-188 --check\"",
+      "then": "the output contains an \"Unverifiable prose\" section, and the section lists \"VOC-049\", \"VOC-050\", \"VOC-051\", \"VOC-052\", and the command exits 0 (informational; no write attempted)",
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "prose_scan_limited_to_preconditions",
+      "title": "Casual CR-key mentions are not flagged",
+      "covers": [
+        "BR-2.2"
+      ],
+      "given": "ticket MDT-188 body contains \"See also MDT-030 for context.\" (not in a precondition section)",
+      "when": "the user runs \"mdt-cli deps MDT-188 --check\"",
+      "then": "\"MDT-030\" does not appear in the prose-gaps section",
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "json_output_shape",
+      "title": "Agent / script JSON consumption",
+      "covers": [
+        "BR-3.1"
+      ],
+      "given": "the user runs \"mdt-cli deps MDT-188 --check --json\"",
+      "when": "stdout is produced",
+      "then": "stdout is valid JSON matching schema: {schemaVersion:1, ok:true, command:\"deps.check\", data:{ticket:\"MDT-188\", ready:false, violations:[{dep,status,kind,action}], proseGaps:[...]}}",
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "migration_dry_run",
+      "title": "Dry-run produces a report without writing",
+      "covers": [
+        "BR-4.1"
+      ],
+      "given": "the repo has ticket MDT-082 with dependsOn [\"MDT-071\"] and blocks [\"MDT-071\"]",
+      "when": "the operator runs \"bun run scripts/migrate-blocks.ts --dry-run\"",
+      "then": "a report is printed listing MDT-082 as a contradiction, and no file under docs/CRs/ is modified",
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "migration_contradiction_prompt",
+      "title": "Interactive contradiction resolution",
+      "covers": [
+        "BR-4.2"
+      ],
+      "given": "ticket MDT-082 has dependsOn [\"MDT-071\"] AND blocks [\"MDT-071\"]",
+      "when": "the operator runs \"bun run scripts/migrate-blocks.ts\" (real run)",
+      "then": "the script prompts: \"MDT-082 both dependsOn and blocks MDT-071. Keep dependsOn, drop blocks? [y/N]\", and on \"y\" the blocks entry is removed, and on \"n\" or EOF the run aborts with no writes",
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "post_migration_invariant",
+      "title": "blocks equals inverse(dependsOn) after migration",
+      "covers": [
+        "BR-4.3"
+      ],
+      "given": "the migration completes successfully",
+      "when": "the post-condition is checked",
+      "then": "for every ticket T in every registered project, T.blocks == sorted(inverse(all dependsOn edges pointing at T)), and the report records \"Invariant verified: 100% of N tickets\"",
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "blocks_direct_write_rejected",
+      "title": "Direct blocks write is rejected",
+      "covers": [
+        "BR-5.1"
+      ],
+      "given": "the user runs \"mdt-cli attr 189 blocks+=MDT-999\"",
+      "when": "the command is executed",
+      "then": "the command exits non-zero, and stderr contains \"blocks is derived from dependsOn; edit dependsOn instead\", and the ticket file is unchanged",
+      "sourceRef": "CR:MDT-189"
+    }
+  ],
   "obligations": [],
   "artifacts": [],
   "testPlans": [],
