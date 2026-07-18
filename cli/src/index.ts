@@ -164,6 +164,20 @@ function registerCommands(program: Command): void {
       }
     })
 
+  // ticket deps (MDT-189)
+  ticketCmd
+    .command('deps')
+    .description('Check a ticket\'s dependency readiness (mdt-cli ticket deps <KEY> --check)')
+    .argument('<key>', 'Ticket key (e.g., 5, ABC-12, PROJ/MDT-12)')
+    .option('--check', 'Compute dependency violations (default behavior; flag kept for clarity)')
+    .option('-p, --project <code>', 'Target project code')
+    .option('-j, --json', 'Output as JSON')
+    .option('--yaml', 'Output as YAML')
+    .action(async (key, options) => {
+      const { ticketDepsAction } = await import('./commands/deps.js')
+      await runCliAction(program, 'ticket.deps', options, mergedOptions => ticketDepsAction(key, mergedOptions))
+    })
+
   // ====================================================================
   // PROJECT NAMESPACE
   // ====================================================================
