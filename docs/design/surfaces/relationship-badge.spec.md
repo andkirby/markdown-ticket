@@ -6,7 +6,7 @@ Related artifacts:
 - Review mockups: `relationship-badge.mockups.md`
 - Parent surfaces: `ticket-card.spec.md`, `ticket-viewer.spec.md`
 - Style contract: `BADGE_ARCHITECTURE.md`
-- Sibling pattern: `ContextBadge[phase]` (the Epic badge) reuses the same `SmartLink` + `stopPropagation` contract for whole-string ticket keys in `phaseEpic` — see MDT-193. It does **not** own overflow/elision; only the phase variant linkifies, and only when the value is a bare key (`ABC-012`, `ABC-012.md`, `ABC-012#section`).
+- Sibling pattern: `context-badge.spec.md` — the `ContextBadge[phase]` (Epic) variant reuses the same `SmartLink` + `stopPropagation` contract for whole-string ticket keys in `phaseEpic` (MDT-193). Only the phase variant linkifies; assignee and worktree are plain text.
 
 ## Owns
 
