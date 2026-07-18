@@ -1006,6 +1006,31 @@
       ],
       "file": "server/tests/config/package-deps-unchanged.test.ts",
       "sourceRef": "tests.md: no new packages"
+    },
+    {
+      "id": "TEST-wired-side-effects",
+      "kind": "integration",
+      "title": "Wired side effects fire through the running PATCH /api/config endpoint (discovery cache + document watcher refresh)",
+      "covers": [
+        "BR-3.1",
+        "BR-3.2",
+        "Edge-3",
+        "Edge-4",
+        "C-5"
+      ],
+      "file": "server/tests/routes/config-side-effects.test.ts",
+      "sourceRef": "gap-fix: runtime side-effect wiring"
+    },
+    {
+      "id": "TEST-backend-config-section",
+      "kind": "unit",
+      "title": "BackendConfigSection renders editable backend selectors, stages edits, shows field errors; gated by capability",
+      "covers": [
+        "BR-3.2",
+        "BR-1.1"
+      ],
+      "file": "src/components/SettingsModal/BackendConfigSection.test.tsx",
+      "sourceRef": "gap-fix: Settings owned backend-config section"
     }
   ],
   "tasks": [
@@ -1038,21 +1063,6 @@
       "sourceRef": "tasks.md#task-3"
     },
     {
-      "id": "TASK-8",
-      "title": "Split Settings backend-config sections; add Documents excludeFolders/maxDepth editing; Project Edit guarded workflow entry",
-      "ownsArtifactIds": [
-        "ART-fe-settings-sections",
-        "ART-fe-path-selector",
-        "ART-fe-add-project-modal"
-      ],
-      "skills": [
-        "mdt-frontend",
-        "mdt-ux-designer",
-        "frontend-react-component"
-      ],
-      "sourceRef": "tasks.md#task-8"
-    },
-    {
       "id": "TASK-1",
       "title": "Add config-management contract module: selector allowlist, exposure, strict patch schemas, canonical defaults",
       "ownsArtifactIds": [
@@ -1071,47 +1081,6 @@
         "mdt-frontend"
       ],
       "sourceRef": "tasks.md#task-1"
-    },
-    {
-      "id": "TASK-4",
-      "title": "Implement ConfigApplicationService + Global/User/Project/Registry storage adapters + ConfigSideEffectRegistry",
-      "ownsArtifactIds": [
-        "ART-srv-config-app-service",
-        "ART-srv-config-adapters",
-        "ART-srv-config-sidefx"
-      ],
-      "makesGreenIds": [
-        "TEST-config-application-service",
-        "TEST-scope-storage-adapters",
-        "TEST-atomic-failure-no-partial",
-        "TEST-side-effect-registry",
-        "valid_editable_selector_persisted_atomically",
-        "reject_disallowed_or_unknown_selector",
-        "reject_invalid_value_never_defaults"
-      ],
-      "sourceRef": "tasks.md#task-4"
-    },
-    {
-      "id": "TASK-5",
-      "title": "Extract thin ConfigController + routes/config.ts from system.ts; register OpenAPI components; owner-only policy",
-      "ownsArtifactIds": [
-        "ART-srv-config-controller",
-        "ART-srv-config-routes",
-        "ART-srv-system-routes",
-        "ART-srv-access-policy",
-        "ART-srv-openapi-schemas",
-        "ART-srv-openapi-config"
-      ],
-      "makesGreenIds": [
-        "TEST-config-api-validation-errors",
-        "TEST-config-owner-only-policy",
-        "TEST-config-openapi-contract",
-        "TEST-thin-routes-controllers",
-        "read_returns_exposure_metadata",
-        "read_omits_fileonly_and_unknown",
-        "readonly_denied_config_detail_and_mutation"
-      ],
-      "sourceRef": "tasks.md#task-5"
     },
     {
       "id": "TASK-6",
@@ -1161,6 +1130,67 @@
         "playwright-skill"
       ],
       "sourceRef": "tasks.md#task-9"
+    },
+    {
+      "id": "TASK-4",
+      "title": "Implement ConfigApplicationService + Global/User/Project/Registry storage adapters + ConfigSideEffectRegistry",
+      "ownsArtifactIds": [
+        "ART-srv-config-app-service",
+        "ART-srv-config-adapters",
+        "ART-srv-config-sidefx"
+      ],
+      "makesGreenIds": [
+        "TEST-config-application-service",
+        "TEST-scope-storage-adapters",
+        "TEST-atomic-failure-no-partial",
+        "TEST-side-effect-registry",
+        "TEST-wired-side-effects",
+        "valid_editable_selector_persisted_atomically",
+        "reject_disallowed_or_unknown_selector",
+        "reject_invalid_value_never_defaults"
+      ],
+      "sourceRef": "tasks.md#task-4"
+    },
+    {
+      "id": "TASK-5",
+      "title": "Extract thin ConfigController + routes/config.ts from system.ts; register OpenAPI components; owner-only policy",
+      "ownsArtifactIds": [
+        "ART-srv-config-controller",
+        "ART-srv-config-routes",
+        "ART-srv-system-routes",
+        "ART-srv-access-policy",
+        "ART-srv-openapi-schemas",
+        "ART-srv-openapi-config"
+      ],
+      "makesGreenIds": [
+        "TEST-config-api-validation-errors",
+        "TEST-config-owner-only-policy",
+        "TEST-config-openapi-contract",
+        "TEST-thin-routes-controllers",
+        "TEST-wired-side-effects",
+        "read_returns_exposure_metadata",
+        "read_omits_fileonly_and_unknown",
+        "readonly_denied_config_detail_and_mutation"
+      ],
+      "sourceRef": "tasks.md#task-5"
+    },
+    {
+      "id": "TASK-8",
+      "title": "Split Settings backend-config sections; add Documents excludeFolders/maxDepth editing; Project Edit guarded workflow entry",
+      "ownsArtifactIds": [
+        "ART-fe-settings-sections",
+        "ART-fe-path-selector",
+        "ART-fe-add-project-modal"
+      ],
+      "makesGreenIds": [
+        "TEST-backend-config-section"
+      ],
+      "skills": [
+        "mdt-frontend",
+        "mdt-ux-designer",
+        "frontend-react-component"
+      ],
+      "sourceRef": "tasks.md#task-8"
     }
   ]
 }
