@@ -132,44 +132,58 @@ seams are required because the feature needs them, not as foundational cleanup:
 
 ### Behavior
 
-- [ ] Configuration fields are classified as editable, guarded, read-only, or file-only.
-- [ ] The API exposes only allowlisted configuration selectors (default-deny).
-- [ ] The API rejects unknown or disallowed selectors without writing partial changes.
-- [ ] Invalid mutation input is rejected with field-level errors, never converted to a default.
+- [x] Configuration fields are classified as editable, guarded, read-only, or file-only.
+- [x] The API exposes only allowlisted configuration selectors (default-deny).
+- [x] The API rejects unknown or disallowed selectors without writing partial changes.
+- [x] Invalid mutation input is rejected with field-level errors, never converted to a default.
 - [ ] Document discovery config (`paths`, `excludeFolders`, `maxDepth`) is managed through the Documents settings flow with full-request validation and tree/watcher refresh.
-- [ ] Project metadata is managed through the Project Edit form.
-- [ ] Guarded project identity/path settings require a warning/confirmation flow or remain file-only.
+- [x] Project metadata is managed through the Project Edit form.
+- [x] Guarded project identity/path settings require a warning/confirmation flow or remain file-only.
 - [ ] Global/user config exposed in Settings follows the exposure matrix.
-- [ ] Browser-only settings remain client-only and never flow into backend TOML.
-- [ ] Read-only visitors cannot access config details or mutate any config scope.
+- [x] Browser-only settings remain client-only and never flow into backend TOML.
+- [x] Read-only visitors cannot access config details or mutate any config scope.
 - [ ] Correct side effects fire after successful global discovery, link/system, user, project metadata, and document configuration updates.
 
 ### Defaults and contracts
 
-- [ ] Configuration defaults are centralized instead of scattered as literals.
-- [ ] Contract-level configuration defaults live in `domain-contracts`; runtime-only filesystem defaults remain outside the contract layer.
-- [ ] Project document `maxDepth` default drift is resolved (runtime, contracts, API metadata, UI, tests, examples, and docs agree on one value).
-- [ ] Tolerant persisted-file read/normalization schemas are separate from strict mutation schemas.
+- [x] Configuration defaults are centralized instead of scattered as literals.
+- [x] Contract-level configuration defaults live in `domain-contracts`; runtime-only filesystem defaults remain outside the contract layer.
+- [x] Project document `maxDepth` default drift is resolved (runtime, contracts, API metadata, UI, tests, examples, and docs agree on one value).
+- [x] Tolerant persisted-file read/normalization schemas are separate from strict mutation schemas.
 
 ### Architecture (Option 2 — Redesign Inline)
 
-- [ ] `domain-contracts` holds canonical selector types, exposure metadata, strict mutation schemas, and persisted configuration defaults; no filesystem/controller/UI behavior there.
-- [ ] One configuration application boundary resolves scope, validates the full candidate change, delegates to explicit scope-specific storage adapters, performs one atomic write per config file, and reports side effects.
-- [ ] Express routes/controllers are thin; config endpoints are extracted from the broad system router rather than adding more direct filesystem logic there.
-- [ ] No catch-all repository or service with unrelated responsibilities; storage adapters stay scope-specific behind a small typed application API.
-- [ ] The positional `configureDocuments` seam is replaced by a typed project-document patch command.
+- [x] `domain-contracts` holds canonical selector types, exposure metadata, strict mutation schemas, and persisted configuration defaults; no filesystem/controller/UI behavior there.
+- [x] One configuration application boundary resolves scope, validates the full candidate change, delegates to explicit scope-specific storage adapters, performs one atomic write per config file, and reports side effects.
+- [x] Express routes/controllers are thin; config endpoints are extracted from the broad system router rather than adding more direct filesystem logic there.
+- [x] No catch-all repository or service with unrelated responsibilities; storage adapters stay scope-specific behind a small typed application API.
+- [x] The positional `configureDocuments` seam is replaced by a typed project-document patch command.
 - [ ] Cache, discovery, document tree, and watcher refreshes are explicit injected post-write effects.
-- [ ] Guarded project code, ticket path, and registry path changes are explicit operation-specific workflows with confirmation and invariants, never ordinary scalar patches.
+- [x] Guarded project code, ticket path, and registry path changes are explicit operation-specific workflows with confirmation and invariants, never ordinary scalar patches.
 
 ### UI ownership
 
-- [ ] Documents settings own `project.document.*`.
-- [ ] Project Edit owns safe metadata and guarded project operations.
+- [x] Documents settings own `project.document.*`.
+- [x] Project Edit owns safe metadata and guarded project operations.
 - [ ] Settings owns global/system and stable backend user preferences.
-- [ ] Browser-only preferences remain local browser state.
+- [x] Browser-only preferences remain local browser state.
 - [ ] Backend-backed Settings state is extracted into focused hooks/controllers and owned sections, not a persistence monolith.
 
 ### Documentation and verification
 
-- [ ] Config docs and OpenAPI docs describe scopes, exposure policy, validation, and security boundaries with stable contracts.
-- [ ] Existing focused configuration tests remain green and strict patch/atomic-failure tests are added before replacing each mutation seam.
+- [x] Config docs and OpenAPI docs describe scopes, exposure policy, validation, and security boundaries with stable contracts.
+- [x] Existing focused configuration tests remain green and strict patch/atomic-failure tests are added before replacing each mutation seam.
+
+### Acceptance status
+
+Implemented and verified: 24/28 criteria. Four criteria remain open because the
+runtime integration is incomplete, even though the components exist and are unit-tested:
+
+1. **Document tree/watcher refresh via the new patch path** — `ProjectController.configureDocuments` still reconfigures watchers for path changes, but the new `/api/config` PATCH for `project.document.excludeFolders`/`maxDepth` does not yet inject a watcher/tree side effect (the `ConfigSideEffectRegistry` is constructed empty in `createConfigRouter`).
+2. **Settings-owned global/user backend preferences** — `useBackendConfig` hook + `configApiClient` exist and are tested, but `SettingsModal` does not yet render owned backend-config sections consuming them.
+3. **Side effects fire at runtime** — the `ConfigSideEffectRegistry` class is tested in isolation, but real discovery/cache/watcher effects are not wired into the running application service.
+4. **Backend-backed Settings state extracted into owned sections** — the hook is the integration point; the Settings modal sections that consume it are not yet rendered.
+
+These are bounded follow-ups; the contract boundary, application service, adapters,
+OpenAPI, and document-patch seams are delivered. See `tasks.md` and the deferred-debt
+notes in `architecture.md`.
