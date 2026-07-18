@@ -3,8 +3,8 @@
   "version": 4,
   "ticket": "MDT-189",
   "title": "Dependency Graph v1: mdt-cli deps --check with Foundation and Migration",
-  "currentMilestone": "bdd",
-  "completedMilestones": ["pre-flight", "requirements"],
+  "currentMilestone": "architecture",
+  "completedMilestones": ["pre-flight", "requirements", "bdd"],
   "scope": "spec-trace-wiring-only (stop before implement)",
   "discovery": {
     "projectDocs": [
@@ -109,10 +109,11 @@
   },
   "artifacts": {
     "pre-flight": "docs/CRs/MDT-189.pipeline-state.json (this file)",
-    "requirements": "docs/CRs/MDT-189/requirements.md (NEW - backfilled) + requirements.trace.md (13 BR across 5 behavior groups, 10 C, 6 Edge; C-5 not_applicable; validated clean)"
+    "requirements": "docs/CRs/MDT-189/requirements.md (NEW - backfilled) + requirements.trace.md (13 BR across 5 behavior groups, 10 C, 6 Edge; C-5 not_applicable; validated clean)",
+    "bdd": "docs/CRs/MDT-189/bdd.md (ingested, no content change) + bdd.trace.md (14 scenarios S1-S14; every scenario --covers a real BR-*; validated clean)"
   },
   "approvals": {},
   "exceptions": [],
   "commits": [],
-  "updatedAt": "2026-07-18T11:20:00Z"
+  "updatedAt": "2026-07-18T11:28:00Z"
 }
