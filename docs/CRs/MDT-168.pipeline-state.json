@@ -216,17 +216,18 @@
     }
   },
   "completionAudit": {
-    "objectiveStatus": "IMPLEMENTATION COMPLETE — all 9 tasks done; awaiting user approval to close",
+    "objectiveStatus": "IMPLEMENTATION COMPLETE + SPEC-TRACE SYNCED — all 9 tasks done, all 28 AC verified, gap fixes integrated; awaiting user approval to close",
     "verificationSummary": {
       "domain-contracts": "160/160 tests pass; build clean",
       "shared": "13/13 config tests pass; build clean",
-      "server": "62/62 config tests pass across 13 suites; tsc clean (1 pre-existing setupTests error)",
-      "frontend": "11/11 config tests pass",
+      "server": "66/66 config tests pass across 14 suites (includes wired-side-effects route tests); tsc clean",
+      "frontend": "16/16 config tests pass (includes BackendConfigSection); tsc clean",
       "e2e": "10 tests across 4 files compile via Playwright --list",
-      "traceGates": "spec-trace validate --stage all = 5/5 pass, 0 issues; render all succeeded",
+      "traceGates": "spec-trace validate --stage all = 5/5 pass, 0 issues; render all succeeded; gap-fix tests (TEST-wired-side-effects, TEST-backend-config-section) linked to TASK-4/5/8",
       "lint": "clean on all MDT-168 changed files",
       "format": "prettier clean on all MDT-168 changed files",
-      "packageDeps": "package.json/bun.lock unchanged (C-10 honored)"
+      "packageDeps": "package.json/bun.lock unchanged (C-10 honored)",
+      "acceptanceCriteria": "28/28 verified (all checkboxes checked in ticket)"
     },
     "preExistingFailuresUnrelated": [
       "domain-contracts patterns.test.ts + search.test.ts (bun:test under jest)",
