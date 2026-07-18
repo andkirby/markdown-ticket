@@ -128,23 +128,12 @@ All resolved during architecture (see §6 Implementation Notes):
 - MDT-187 — Relationship badge overflow (sister badge; pattern to mirror for linking + click propagation)
 - MDT-188 — Dependency graph epic (notes `phaseEpic` is not durable epic identity; context for why schema stays unchanged)
 
-## 8. UAT — 2026-07-18
+## 8. Clarifications / UAT history
 
-**Demonstration vehicle:** this CR's own frontmatter sets `phaseEpic: MDT-187`, so the Epic badge on MDT-193 itself exercises the feature against a real referenced ticket.
+### Round 2026-07-18 — initial implementation UAT (passed)
 
-**Verified:**
-- Board / list / ticket-detail header / attributes panel: the MDT-193 Epic badge renders `MDT-187` as a link, not plain text
-- Clicking navigates to `/prj/MDT/ticket/MDT-187`
-- Parent card/row onClick does not double-fire (click isolation confirmed by component test + E2E)
-- Sibling tickets with prose `phaseEpic` (e.g. `Phase A (Foundation)`) render unchanged as plain text — no regression
-
-**Surfaced during UAT (not a blocker, documented in §1 Out of scope and §6):**
-- A bare key whose project code differs from the current project (e.g. `ABC-012` viewed from `MDT`) linkifies but resolves against the **current** project route, not `ABC`. This is the pre-existing `classifyLink` ordering limitation shared with `RelationshipBadge`; fixing it is a deferred follow-up, not an MDT-193 regression.
-
-**Acceptance criteria status:** all §4 criteria met except the (withdrawn) cross-project-routing criterion, which was removed from §4 and moved to Out of scope §1 after the limitation was confirmed against `linkProcessor.mdt150.test.ts:119`.
-
-**Test evidence:**
-- `bun test src/components/Badge/ContextBadge.test.tsx` → 20/20 pass
-- `bun test src/components/Badge/` → 105/105 pass (no regression)
-- `bunx playwright test tests/e2e/board/epic-badge-link.spec.ts` → 1/1 pass
-- `bun run build` → success
+- Brief: `MDT-193/uat.md`
+- Outcome: all §4 acceptance criteria met; demonstration vehicle is this CR's own `phaseEpic: MDT-187` frontmatter
+- Surfaced (non-blocking): `classifyLink` resolves cross-project bare keys against the current project route — pre-existing limitation shared with `RelationshipBadge` (`linkProcessor.mdt150.test.ts:119`); moved to §1 Out of scope with a deferred follow-up noted in §6
+- Scope adjustment: original "cross-project routing" success condition and acceptance criterion withdrawn after the limitation was confirmed
+- Evidence: 20/20 ContextBadge unit tests; 105/105 badge suite; 1/1 E2E smoke; build clean
