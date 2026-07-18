@@ -11,7 +11,7 @@ import type { SubDocument } from '@mdt/shared/models/SubDocument.js'
 import type { Location } from 'react-router-dom'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { buildTicketSubDocPath } from '../../routes'
+import { buildTicketSubDocPath, isTraceGraphHash } from '../../routes'
 import { apiPathToUrlPath, extractSubDocPath, urlPathToApiPath } from '../../utils/subdocPathValidation'
 import { deriveFolderStack, ROOT_DOCUMENT_PATH } from './subdocumentPath'
 
@@ -31,21 +31,32 @@ interface UseTicketDocumentNavigationResult {
 
 /**
  * Find all valid file/folder paths in the subdocument tree.
- * MDT-138: Uses dot notation for virtual folders, slash notation for physical folders.
- * Also generates slash-separated paths for virtual folders for backward compatibility.
+ *
+ * MDT-138: A subdocument is reachable by BOTH its dot-notation filename form
+ * (e.g. `bdd.trace`) AND its slash-separated folder form (e.g. `bdd/trace`),
+ * regardless of whether the parent folder is virtual or physical. The URL is
+ * derived from the child's filePath, not the folder's storage type, so the
+ * valid-path lookup must accept either form.
+ *
+ * MDT-138 UAT 2026-07-18: previous logic generated both forms only for
+ * virtual folders, which made deep links to dot-notation children of physical
+ * folders (e.g. `/prj/MDT/ticket/MDT-138/bdd.trace.md`) fall back to Main.
  */
 function collectPaths(docs: SubDocument[], prefix = '', isVirtualPrefix = false): Set<string> {
   const paths = new Set<string>()
   for (const doc of docs) {
-    // Use dot separator if parent is virtual, otherwise use slash
-    const separator = isVirtualPrefix || doc.isVirtual ? '.' : '/'
+    // Canonical separator mirrors how the folder itself was reached: dot for
+    // virtual ancestry, slash for physical ancestry.
+    const separator = isVirtualPrefix ? '.' : '/'
     const fullPath = prefix ? `${prefix}${separator}${doc.name}` : doc.name
     paths.add(fullPath)
 
-    // MDT-138: For backward compatibility, also add slash-separated path for virtual folders
-    if (isVirtualPrefix || doc.isVirtual) {
-      const slashPath = prefix ? `${prefix}/${doc.name}` : doc.name
-      paths.add(slashPath)
+    // Always register the alternate form so deep links using the "wrong"
+    // separator still round-trip. At the top level (no prefix) both forms
+    // collapse to the same string, so we only add when there is a prefix.
+    if (prefix) {
+      const altSeparator = separator === '.' ? '/' : '.'
+      paths.add(`${prefix}${altSeparator}${doc.name}`)
     }
 
     if (doc.kind === 'folder' && doc.children.length > 0) {
@@ -69,9 +80,11 @@ function initFromPath(
   projectCode: string,
   location: Location,
 ): { selectedPath: string, folderStack: string[], needsRedirect: boolean, redirectUrl?: string } {
-  // Check for hash-based URL (backward compatibility)
+  // Check for hash-based URL (backward compatibility).
+  // MDT-174 hot-fix: the reserved `trace` hash is Trace Graph view state, not
+  // a legacy subdoc path. Skip the redirect path so it survives navigation.
   const hash = location.hash.replace(/^#/, '')
-  if (hash) {
+  if (hash && !isTraceGraphHash(hash)) {
     const validPaths = collectPaths(subdocuments)
     if (validPaths.has(hash)) {
       // Redirect to path-based URL (using full project path to avoid double redirect)
@@ -116,9 +129,10 @@ export function useTicketDocumentNavigation(
   // Handle redirect from hash-based URL
   useEffect(() => {
     if (state.needsRedirect && state.redirectUrl) {
+      console.warn('[DEBUG nav] redirect firing', { redirectUrl: state.redirectUrl, currentHash: location.hash })
       navigate(state.redirectUrl, { replace: true })
     }
-  }, [state.needsRedirect, state.redirectUrl, navigate])
+  }, [state.needsRedirect, state.redirectUrl, navigate, location.hash])
 
   // Track previous ticketCode to detect ticket changes
   const prevTicketCodeRef = useRef(ticketCode)
@@ -166,6 +180,7 @@ export function useTicketDocumentNavigation(
 
     // Update URL to include namespace path for deep linking support
     const urlPath = apiPathToUrlPath(path)
+    console.warn('[DEBUG nav] selectPath navigate', { path, urlPath, currentHash: location.hash })
     navigate(buildTicketSubDocPath(projectCode, ticketCode, urlPath), { replace: true })
   }, [subdocuments, projectCode, ticketCode, navigate])
 

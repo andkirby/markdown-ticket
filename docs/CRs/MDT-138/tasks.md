@@ -227,6 +227,118 @@ bunx playwright test tests/e2e/ticket/namespace.spec.ts --project=chromium
 
 ---
 
+### Task 4: Restore deep-link routing for `/prj/...` sub-document URLs (UAT 2026-07-18)
+
+**Skills**: frontend-react-component
+
+**Milestone**: UAT M3 — Restore deep-link routing (BR-9, BR-10, BR-11)
+
+**Source**: [uat.md](./uat.md) — UAT Refinement Brief 2026-07-18
+
+**Structure**: `src/utils/subdocPathValidation.ts`, `src/components/TicketViewer/useTicketDocumentNavigation.ts`
+
+**Status**:
+- Slice 1 (Bug 1 fix — `extractSubDocPath`): **DONE**
+- Slice 2 (Bug 2 fix — `collectPaths`): **DONE**
+- Slice 3 (test hardening): **DEFERRED** — should land before MDT-138 closes
+
+**Makes GREEN (Automated Tests)** — pending Slice 3:
+- New unit tests in `src/__tests__/subdocPathValidation.test.ts` covering:
+  - `extractSubDocPath('/prj/MDT/ticket/MDT-138/architecture.md', 'MDT-138')` → `'architecture.md'`
+  - `extractSubDocPath('/prj/MDT/ticket/MDT-138/requirements.trace.md', 'MDT-138')` → `'requirements.trace.md'`
+  - `extractSubDocPath('/prj/MDT/ticket/MDT-138/bdd/another.trace.md', 'MDT-138')` → `'bdd/another.trace.md'`
+  - `extractSubDocPath('/prj/MDT/ticket/MDT-138/bdd.trace.md', 'MDT-138')` → `'bdd.trace.md'` (Bug 2 direct case)
+  - `extractSubDocPath('/ticket/MDT-138/architecture.md', 'MDT-138')` → `'architecture.md'` (direct — keep passing)
+  - `extractSubDocPath('/prj/MDT/ticket/MDT-138', 'MDT-138')` → `null` (no subdoc)
+
+**Makes GREEN (Behavior)** — pending Slice 3 strengthening:
+- `root_document_url_routing` (BR-9) — assert `data-state="active"`
+- `dot_notation_url_routing` (BR-10) — assert `data-state="active"`
+- `folder_subfile_url_routing` (BR-11) — assert `data-state="active"`
+
+**Scope**:
+1. **Bug 1 (DONE)**: Fix `extractSubDocPath` so the `:ticketKey` substitution
+   lands in the correct slot of the project-prefixed regex. The previous logic
+   searched the escaped regex source for `'/ticket/'` and got `-1` because
+   `routePatternToRegex` escapes `/` as `\/`. New logic substitutes the
+   literal `:ticketKey` token in the un-escaped route pattern constants before
+   regex conversion.
+2. **Bug 2 (DONE)**: Fix `collectPaths` to generate both dot and slash path
+   forms for every non-root subdoc, regardless of folder storage type. The URL
+   is derived from the child's filePath (`bdd.trace.md` → `bdd.trace`), not
+   the folder's storage type, so the valid-path lookup must accept either form.
+3. **Slice 3 (DEFERRED)**: Strengthen the three E2E tests listed above to
+   assert `data-state="active"` after `page.goto` to a `/prj/...` deep link,
+   not merely `toBeVisible()`. Add unit coverage for `extractSubDocPath`.
+
+**Root cause reference**: Bug 1 introduced by MDT-184 (commit `b400447e`).
+Bug 2 was masked by Bug 1 and pre-existed in `collectPaths`. See `uat.md`
+"Root Cause" section for both.
+
+**Boundary**: Frontend utility + navigation hook + E2E assertions only.
+
+**Modifies (Slices 1 and 2 — committed)**:
+- `src/utils/subdocPathValidation.ts` — fixed `extractSubDocPath`
+- `src/components/TicketViewer/useTicketDocumentNavigation.ts` — rewrote `collectPaths`
+
+**Modifies (Slice 3 — deferred)**:
+- `src/__tests__/subdocPathValidation.test.ts` — new (or extend if exists)
+- `tests/e2e/ticket/namespace.spec.ts` — strengthen 3 tests with `data-state="active"` assertions
+
+**Must Not Touch**:
+- `src/routes.ts` (`routePatternToRegex` escaping is correct; Bug 1 was in the caller)
+- Backend services
+- Shared types
+
+**Anti-duplication**: Bug 1 fix operates on the un-escaped `ROUTE_TICKET_SUBDOC`
+pattern constant (`'/prj/:projectCode/ticket/:ticketKey/*'`) and substitutes
+the literal `:ticketKey` token before escaping, rather than pattern-matching
+against the escaped source. Bug 2 fix mirrors the same principle at the
+path-lookup layer: register both separator forms rather than guessing one
+from the folder's storage type.
+
+**Verify (Slices 1 and 2 — performed)**:
+
+```bash
+# Unit (existing)
+bun test src/__tests__/routes.test.ts                              # 22/22 pass
+bun test src/components/TicketViewer/useTicketDocumentNavigation.test.tsx  # 10/10 pass
+
+# E2E (existing suite — no regression)
+PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/ticket/namespace.spec.ts --project=chromium          # 19/19 pass
+PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/ticket/subdoc-navigation.spec.ts tests/e2e/ticket/subdoc-preload.spec.ts --project=chromium  # 21 pass, 1 pre-existing skip
+
+# TypeScript
+bunx tsc --noEmit -p tsconfig.json   # no new errors in changed files
+
+# Manual smoke (live)
+# All seven URL forms in uat.md verification table resolve to expected active tab
+```
+
+**Verify (Slice 3 — pending)**:
+
+```bash
+# New unit tests
+bun test src/__tests__/subdocPathValidation.test.ts
+
+# Strengthened E2E
+PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/ticket/namespace.spec.ts --project=chromium
+
+# Trace
+spec-trace validate MDT-138 --stage tests
+```
+
+**Done when**:
+- [x] `extractSubDocPath` returns the sub-document path for `/prj/{code}/ticket/{key}/{subdoc}.md`
+- [x] Direct `/ticket/{key}/{subdoc}.md` paths still extract correctly
+- [x] `collectPaths` emits both dot and slash forms for every non-root subdoc
+- [x] Manual smoke: `/prj/MDT/ticket/MDT-138/architecture.md` opens `architecture` tab + nested row
+- [x] Manual smoke: `/prj/MDT/ticket/MDT-138/bdd.trace.md` opens `bdd` tab + `trace` nested tab
+- [ ] New unit tests GREEN (Slice 3)
+- [ ] Strengthened E2E tests GREEN — assert `data-state="active"` on targeted tab (Slice 3)
+
+---
+
 ## Post-Implementation
 
 - [ ] No duplication (grep check for `parseNamespace`, `groupNamespacedFiles`)
