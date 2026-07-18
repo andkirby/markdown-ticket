@@ -36,6 +36,7 @@ import { CRService as SharedCRService } from './CRService.js'
 import { ProjectService } from './ProjectService.js'
 import { ServiceError } from './ServiceError.js'
 import { TemplateService } from './TemplateService.js'
+import { assertNotDerivedField } from './ticket/derivedFields.js'
 import { TicketLocationResolver } from './ticket/TicketLocationResolver.js'
 
 /**
@@ -539,6 +540,12 @@ export class TicketService {
 
   private validateAttrOperations(operations: AttrOperation[]): void {
     for (const operation of operations) {
+      // MDT-189: `blocks` is a derived field (inverse of dependsOn) and may
+      // not be written directly. The rejection surfaces as INVALID_OPERATION,
+      // which the CLI attr command passes through transparently. Edit
+      // dependsOn instead; the migration + derivation hook keeps blocks in
+      // sync. See architecture.md D3 and bdd.md S14.
+      assertNotDerivedField(operation.field, operation.op)
       if ((operation.op === 'add' || operation.op === 'remove') && !this.isRelationField(operation.field)) {
         throw ServiceError.invalidOperation(
           `Cannot use '${operation.op}' operation on non-relation field '${operation.field}'. Only relation fields (${RELATION_FIELDS.join(', ')}) support add/remove operations.`,
