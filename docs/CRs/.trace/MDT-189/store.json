@@ -965,5 +965,257 @@
       "sourceRef": "CR:MDT-189"
     }
   ],
-  "tasks": []
+  "tasks": [
+    {
+      "id": "TASK-satisfaction",
+      "title": "Add satisfaction function (isDependencySatisfied + classifyViolation in domain-contracts)",
+      "ownsArtifactIds": [
+        "ART-dc-satisfaction"
+      ],
+      "makesGreenIds": [
+        "unknown_dep_status_unsatisfied",
+        "TEST-satisfaction-implemented",
+        "TEST-satisfaction-rejected",
+        "TEST-satisfaction-unknown",
+        "TEST-satisfaction-contracts"
+      ],
+      "skills": [
+        "domain-contracts",
+        "tdd"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TASK-graph",
+      "title": "Add DependencyGraph module (buildGraph / violations / detectCycle / topoSort / inverse)",
+      "ownsArtifactIds": [
+        "ART-shared-dependency-graph"
+      ],
+      "makesGreenIds": [
+        "cross_project_dependency",
+        "TEST-build-graph-same-project",
+        "TEST-build-graph-cross-project",
+        "TEST-build-graph-dedup",
+        "TEST-violations-waiting",
+        "TEST-violations-broken-rejected",
+        "TEST-violations-missing",
+        "TEST-violations-clean",
+        "TEST-detect-cycle-two",
+        "TEST-detect-cycle-three",
+        "TEST-detect-cycle-none",
+        "TEST-detect-cycle-large",
+        "TEST-topo-sort-deterministic",
+        "TEST-topo-sort-diamond",
+        "TEST-inverse-roundtrip"
+      ],
+      "skills": [
+        "shared",
+        "tdd"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TASK-migration",
+      "title": "Add migration script + fixture (dry-run, interactive contradiction prompt, invariant check)",
+      "ownsArtifactIds": [
+        "ART-scripts-migrate-blocks"
+      ],
+      "makesGreenIds": [
+        "migration_dry_run",
+        "migration_contradiction_prompt",
+        "post_migration_invariant",
+        "TEST-migration-dry-run",
+        "TEST-migration-adds-reciprocal",
+        "TEST-migration-removes-stale",
+        "TEST-migration-contradiction-prompt-y",
+        "TEST-migration-contradiction-abort",
+        "TEST-migration-invariant",
+        "TEST-migration-report-format"
+      ],
+      "skills": [
+        "bash-scripting",
+        "shared"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TASK-dryrun",
+      "title": "Run dry-run and review report (review-only gate)",
+      "makesGreenIds": [
+        "migration_dry_run",
+        "TEST-migration-dry-run"
+      ],
+      "skills": [
+        "review"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TASK-migrate-real",
+      "title": "Run real migration and commit data + report (the one-way door)",
+      "makesGreenIds": [
+        "post_migration_invariant",
+        "TEST-migration-invariant"
+      ],
+      "skills": [
+        "git-hygiene"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TASK-remove-write",
+      "title": "Remove blocks write path from TicketService; MarkdownService derives blocks",
+      "ownsArtifactIds": [
+        "ART-shared-ticket-service",
+        "ART-shared-markdown-service"
+      ],
+      "makesGreenIds": [
+        "blocks_direct_write_rejected",
+        "TEST-blocks-write-rejected",
+        "TEST-blocks-still-derived",
+        "TEST-relations-still-work"
+      ],
+      "skills": [
+        "shared",
+        "regression-safety"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TASK-formatter",
+      "title": "Add deps formatter (table renderer + prose-gap section)",
+      "ownsArtifactIds": [
+        "ART-cli-deps-formatter"
+      ],
+      "makesGreenIds": [
+        "voc_lying_ticket_detected",
+        "TEST-deps-voc-scenario"
+      ],
+      "skills": [
+        "cli"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TASK-deps-command",
+      "title": "Add deps command + registration under ticket subcommand plus top-level deps alias",
+      "ownsArtifactIds": [
+        "ART-cli-deps-command",
+        "ART-cli-index"
+      ],
+      "makesGreenIds": [
+        "voc_lying_ticket_detected",
+        "cross_project_dependency",
+        "broken_plan_dep_rejected",
+        "broken_plan_dep_missing",
+        "clean_ticket_all_deps_satisfied",
+        "leaf_ticket_no_deps",
+        "unknown_dep_status_unsatisfied",
+        "prose_precondition_gaps_surfaced",
+        "prose_scan_limited_to_preconditions",
+        "json_output_shape",
+        "blocks_direct_write_rejected",
+        "TEST-deps-voc-scenario",
+        "TEST-deps-cross-project",
+        "TEST-deps-broken-rejected",
+        "TEST-deps-broken-missing",
+        "TEST-deps-clean",
+        "TEST-deps-no-deps",
+        "TEST-deps-unknown-status",
+        "TEST-deps-prose-gaps",
+        "TEST-deps-prose-ignore-casual",
+        "TEST-deps-json",
+        "TEST-deps-not-found",
+        "TEST-deps-write-path-rejected"
+      ],
+      "skills": [
+        "cli"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TASK-prose-scan",
+      "title": "Add prose precondition scanner (shared, reused later by MCP)",
+      "ownsArtifactIds": [
+        "ART-shared-prose-scanner"
+      ],
+      "makesGreenIds": [
+        "prose_precondition_gaps_surfaced",
+        "prose_scan_limited_to_preconditions",
+        "TEST-deps-prose-gaps",
+        "TEST-deps-prose-ignore-casual"
+      ],
+      "skills": [
+        "shared"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TASK-tests",
+      "title": "Run full test suite across shared + cli + server",
+      "makesGreenIds": [
+        "TEST-satisfaction-implemented",
+        "TEST-satisfaction-rejected",
+        "TEST-satisfaction-unknown",
+        "TEST-satisfaction-contracts",
+        "TEST-build-graph-same-project",
+        "TEST-build-graph-cross-project",
+        "TEST-build-graph-dedup",
+        "TEST-violations-waiting",
+        "TEST-violations-broken-rejected",
+        "TEST-violations-missing",
+        "TEST-violations-clean",
+        "TEST-detect-cycle-two",
+        "TEST-detect-cycle-three",
+        "TEST-detect-cycle-none",
+        "TEST-detect-cycle-large",
+        "TEST-topo-sort-deterministic",
+        "TEST-topo-sort-diamond",
+        "TEST-inverse-roundtrip",
+        "TEST-migration-dry-run",
+        "TEST-migration-adds-reciprocal",
+        "TEST-migration-removes-stale",
+        "TEST-migration-contradiction-prompt-y",
+        "TEST-migration-contradiction-abort",
+        "TEST-migration-invariant",
+        "TEST-migration-report-format",
+        "TEST-deps-voc-scenario",
+        "TEST-deps-cross-project",
+        "TEST-deps-broken-rejected",
+        "TEST-deps-broken-missing",
+        "TEST-deps-clean",
+        "TEST-deps-no-deps",
+        "TEST-deps-unknown-status",
+        "TEST-deps-prose-gaps",
+        "TEST-deps-prose-ignore-casual",
+        "TEST-deps-json",
+        "TEST-deps-not-found",
+        "TEST-deps-write-path-rejected",
+        "TEST-blocks-write-rejected",
+        "TEST-blocks-still-derived",
+        "TEST-relations-still-work"
+      ],
+      "skills": [
+        "jest"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TASK-smoke",
+      "title": "Manual acceptance smoke (mdt-cli deps --check on live repo, blocks write rejection, invariant report)",
+      "makesGreenIds": [
+        "voc_lying_ticket_detected",
+        "blocks_direct_write_rejected",
+        "post_migration_invariant",
+        "TEST-deps-voc-scenario",
+        "TEST-deps-write-path-rejected",
+        "TEST-migration-invariant"
+      ],
+      "skills": [
+        "repo-routing",
+        "manual-verification"
+      ],
+      "sourceRef": "CR:MDT-189"
+    }
+  ]
 }
