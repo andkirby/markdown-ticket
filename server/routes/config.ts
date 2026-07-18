@@ -9,12 +9,14 @@ import type { ConfigSelector } from '@mdt/domain-contracts'
  */
 import type { Request, Response } from 'express'
 import type { ConfigStorageAdapter } from '../services/config/types.js'
+import { logger } from '@mdt/shared/utils/server-logger.js'
 import { Router } from 'express'
 import { getRuntimeConfig } from '../config/runtimeConfig.js'
 import { ConfigController } from '../controllers/ConfigController.js'
 import { GlobalConfigStorageAdapter } from '../services/config/adapters/GlobalConfigStorageAdapter.js'
 import { ProjectConfigStorageAdapter } from '../services/config/adapters/ProjectConfigStorageAdapter.js'
 import { UserConfigStorageAdapter } from '../services/config/adapters/UserConfigStorageAdapter.js'
+import { ConfigSideEffectRegistry } from '../services/config/ConfigSideEffectRegistry.js'
 
 /**
  * Resolve the storage adapter for a selector scope. Global/user adapters are
@@ -24,6 +26,18 @@ import { UserConfigStorageAdapter } from '../services/config/adapters/UserConfig
 export interface ConfigRouteContext {
   /** Resolve the project path for a project/registry-scope selector. */
   resolveProjectPath?: (req: Request) => string | undefined
+  /** Resolve the project id for project-scope selectors (for watcher refresh). */
+  resolveProjectId?: (req: Request) => string | undefined
+  /** Clear the project discovery cache (fires after global discovery changes). */
+  clearDiscoveryCache?: () => void
+  /**
+   * Reconfigure document watchers after a project.document.* change.
+   * Returns the number of watchers registered.
+   */
+  reconfigureDocumentWatchers?: (
+    projectId: string,
+    documentPaths: string[],
+  ) => Promise<number>
 }
 
 export function createConfigRouter(context: ConfigRouteContext = {}): Router {
@@ -40,11 +54,19 @@ export function createConfigRouter(context: ConfigRouteContext = {}): Router {
     },
   }
 
+  // Build the post-write side-effect registry. Effects are explicit and
+  // injected (constraint C-5); a failing effect is reported but does not roll
+  // back the persisted write. The request-scoped project id is captured per
+  // request in bindAdapters below.
+  let currentProjectId: string | undefined
+  const sideEffects = buildSideEffectRegistry(context, () => currentProjectId)
+
   const controller = new ConfigController({
     adapterResolver: {
       resolve: (selector: ConfigSelector) =>
         resolverIndirection.resolver(selector),
     },
+    sideEffects,
   })
 
   /**
@@ -56,6 +78,9 @@ export function createConfigRouter(context: ConfigRouteContext = {}): Router {
     const globalAdapter = new GlobalConfigStorageAdapter(configDir)
     const userAdapter = new UserConfigStorageAdapter(configDir)
     const projectPath = context.resolveProjectPath?.(req)
+    // Capture the request-scoped project id so document-watcher side effects
+    // (which fire after a successful project.document.* write) can target it.
+    currentProjectId = context.resolveProjectId?.(req)
 
     resolverIndirection.resolver = (
       selector: ConfigSelector,
@@ -169,4 +194,77 @@ export function createConfigRouter(context: ConfigRouteContext = {}): Router {
   router.patch('/', (req, res) => controller.patchConfig(req, res))
 
   return router
+}
+
+/**
+ * Build the post-write side-effect registry from route context (MDT-168 C-5).
+ *
+ * Effects are explicit and injected; each defines its own failure behavior and
+ * is idempotent. A failing effect is reported in the response but does not roll
+ * back the persisted write. When the context provides no effect hooks, the
+ * registry is empty (effects are best-effort and degrade gracefully).
+ */
+function buildSideEffectRegistry(
+  context: ConfigRouteContext,
+  getProjectId: () => string | undefined,
+): ConfigSideEffectRegistry {
+  const effects = []
+
+  // Global discovery change -> invalidate the project discovery cache so the
+  // next read observes the new search paths / maxDepth / autoDiscover.
+  if (context.clearDiscoveryCache) {
+    effects.push({
+      name: 'discovery-cache-refresh',
+      triggers: ['global'],
+      run: async () => {
+        try {
+          context.clearDiscoveryCache!()
+          return { name: 'discovery-cache-refresh', ok: true }
+        }
+        catch (error) {
+          logger.warn('discovery-cache-refresh side effect failed:', error)
+          return {
+            name: 'discovery-cache-refresh',
+            ok: false,
+            message: error instanceof Error ? error.message : String(error),
+          }
+        }
+      },
+    })
+  }
+
+  // Project document config change -> reconfigure document watchers so the
+  // document tree/watchers converge to the new effective configuration.
+  if (context.reconfigureDocumentWatchers) {
+    effects.push({
+      name: 'document-watcher-refresh',
+      triggers: ['project'],
+      run: async () => {
+        const projectId = getProjectId()
+        if (!projectId) {
+          return {
+            name: 'document-watcher-refresh',
+            ok: false,
+            message: 'No project id in request scope; watcher refresh skipped.',
+          }
+        }
+        try {
+          // Pass empty paths to force the watcher to re-read effective config;
+          // the watcher service re-reads paths from the persisted config.
+          await context.reconfigureDocumentWatchers!(projectId, [])
+          return { name: 'document-watcher-refresh', ok: true }
+        }
+        catch (error) {
+          logger.warn('document-watcher-refresh side effect failed:', error)
+          return {
+            name: 'document-watcher-refresh',
+            ok: false,
+            message: error instanceof Error ? error.message : String(error),
+          }
+        }
+      },
+    })
+  }
+
+  return new ConfigSideEffectRegistry(effects)
 }

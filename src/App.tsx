@@ -2,8 +2,20 @@ import type { SortPreferences } from './config/sorting'
 import type { Ticket } from './types'
 import { getTicketsPath } from '@mdt/shared/models/Project'
 import { useEffect, useRef, useState } from 'react'
-import { BrowserRouter, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { authFetch, isBackendDownError, isBackendDownResponse } from './auth/authFetch'
+import {
+  BrowserRouter,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from 'react-router-dom'
+import {
+  authFetch,
+  isBackendDownError,
+  isBackendDownResponse,
+} from './auth/authFetch'
 import { useAuthSession } from './auth/AuthSessionContext'
 import { AuthSessionProvider } from './auth/AuthSessionProvider'
 import { AddProjectModal } from './components/AddProjectModal'
@@ -27,12 +39,32 @@ import { Toaster } from './components/ui/sonner'
 import { ViewModeSwitcher } from './components/ViewModeSwitcher'
 import { getSortPreferences, setSortPreferences } from './config/sorting'
 import { useGlobalKeyboard } from './hooks/useGlobalKeyboard'
-import { formatRootViewPageTitle, PageTitlePriority, usePageTitle } from './hooks/usePageTitle'
+import {
+  formatRootViewPageTitle,
+  PageTitlePriority,
+  usePageTitle,
+} from './hooks/usePageTitle'
 import { useProjectManager } from './hooks/useProjectManager'
-import { buildProjectPath, buildTicketPath, ROUTE_DIRECT_TICKET, ROUTE_DIRECT_TICKET_SUBDOC, ROUTE_PROJECT, ROUTE_PROJECT_DOCUMENTS, ROUTE_PROJECT_DOCUMENTS_WILDCARD, ROUTE_PROJECT_LIST, ROUTE_TICKET, ROUTE_TICKET_SUBDOC, routePatternToRegex } from './routes'
+import {
+  buildProjectPath,
+  buildTicketPath,
+  ROUTE_DIRECT_TICKET,
+  ROUTE_DIRECT_TICKET_SUBDOC,
+  ROUTE_PROJECT,
+  ROUTE_PROJECT_DOCUMENTS,
+  ROUTE_PROJECT_DOCUMENTS_WILDCARD,
+  ROUTE_PROJECT_LIST,
+  ROUTE_TICKET,
+  ROUTE_TICKET_SUBDOC,
+  routePatternToRegex,
+} from './routes'
 import { syncSSEAccessMode } from './services/sseClient'
 import { getProjectCode } from './utils/projectUtils'
-import { normalizeTicketKey, setCurrentProject, validateProjectCode } from './utils/routing'
+import {
+  normalizeTicketKey,
+  setCurrentProject,
+  validateProjectCode,
+} from './utils/routing'
 import './utils/cache' // Import cache utilities for development
 
 interface InviteExchangeResult {
@@ -78,11 +110,17 @@ function ProjectRouteHandler() {
   const [error, setError] = useState<string | null>(null)
   const [unlockError, setUnlockError] = useState<string | null>(null)
   const [authRefreshInFlight, setAuthRefreshInFlight] = useState(false)
-  const [eventHistoryOpen, eventHistoryForceHidden, setEventHistoryState] = useEventHistoryState()
-  const [localSortPreferences, setLocalSortPreferences] = useState<SortPreferences>(getSortPreferences)
+  const [eventHistoryOpen, eventHistoryForceHidden, setEventHistoryState]
+    = useEventHistoryState()
+  const [localSortPreferences, setLocalSortPreferences]
+    = useState<SortPreferences>(getSortPreferences)
   const [showAddProjectModal, setShowAddProjectModal] = useState(false)
   const [showEditProjectModal, setShowEditProjectModal] = useState(false)
-  const [lastBoardListMode, setLastBoardListMode] = useState<'board' | 'list'>(() => (localStorage.getItem('lastBoardListMode') as 'board' | 'list') || 'board')
+  const [lastBoardListMode, setLastBoardListMode] = useState<'board' | 'list'>(
+    () =>
+      (localStorage.getItem('lastBoardListMode') as 'board' | 'list')
+      || 'board',
+  )
   const [showQuickSearch, setShowQuickSearch] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [showOwnerUnlock, setShowOwnerUnlock] = useState(false)
@@ -120,11 +158,12 @@ function ProjectRouteHandler() {
   }
 
   const viewMode = getCurrentViewMode()
-  const rootTitleArea = viewMode === 'list'
-    ? 'Listing'
-    : viewMode === 'documents'
-      ? 'Documents'
-      : 'Board'
+  const rootTitleArea
+    = viewMode === 'list'
+      ? 'Listing'
+      : viewMode === 'documents'
+        ? 'Documents'
+        : 'Board'
   const rootPageTitle = projectCode
     ? formatRootViewPageTitle(projectCode, rootTitleArea)
     : null
@@ -172,7 +211,9 @@ function ProjectRouteHandler() {
       return
     }
 
-    const tokenInput = document.querySelector<HTMLInputElement>('[data-testid="auth-token-input"]')
+    const tokenInput = document.querySelector<HTMLInputElement>(
+      '[data-testid="auth-token-input"]',
+    )
     if (tokenInput) {
       tokenInput.focus()
       return
@@ -235,7 +276,13 @@ function ProjectRouteHandler() {
 
   // Handle project selection and validation
   useEffect(() => {
-    if (projectsLoading || authRefreshInFlight || accessMode === 'unknown' || accessMode === 'locked' || accessMode === 'backend-down') {
+    if (
+      projectsLoading
+      || authRefreshInFlight
+      || accessMode === 'unknown'
+      || accessMode === 'locked'
+      || accessMode === 'backend-down'
+    ) {
       setErrorRef.current(null) // Clear errors when loading
       return
     }
@@ -256,9 +303,11 @@ function ProjectRouteHandler() {
 
     const project = projects.find(p => getProjectCode(p) === projectCode)
     if (!project) {
-      setErrorRef.current(accessMode === 'read-only'
-        ? `Project '${projectCode}' does not exist or is not available with current access. Open an allowed project from the home route or unlock access.`
-        : `Project '${projectCode}' not found`)
+      setErrorRef.current(
+        accessMode === 'read-only'
+          ? `Project '${projectCode}' does not exist or is not available with current access. Open an allowed project from the home route or unlock access.`
+          : `Project '${projectCode}' not found`,
+      )
       return
     }
 
@@ -267,7 +316,16 @@ function ProjectRouteHandler() {
       setCurrentProject(projectCode)
     }
     setErrorRef.current(null)
-  }, [accessMode, authRefreshInFlight, markLocked, projectCode, projects, projectsLoading, selectedProject, setSelectedProject])
+  }, [
+    accessMode,
+    authRefreshInFlight,
+    markLocked,
+    projectCode,
+    projects,
+    projectsLoading,
+    selectedProject,
+    setSelectedProject,
+  ])
 
   // Initialize view mode from localStorage when URL has no view suffix
   useEffect(() => {
@@ -276,7 +334,9 @@ function ProjectRouteHandler() {
 
     // Check if URL is just /prj/:code (no view suffix)
     // Derive from ROUTE_PROJECT pattern constant — MDT-184
-    const isRootProjectPath = routePatternToRegex(ROUTE_PROJECT).test(location.pathname)
+    const isRootProjectPath = routePatternToRegex(ROUTE_PROJECT).test(
+      location.pathname,
+    )
 
     if (isRootProjectPath) {
       const lastBoardListMode = localStorage.getItem('lastBoardListMode')
@@ -335,20 +395,31 @@ function ProjectRouteHandler() {
   const handleTicketClose = () => {
     const viewContext = searchParams.get('view') || 'board'
     const basePath = buildProjectPath(projectCode!)
-    const targetPath = viewContext === 'board' ? basePath : `${basePath}/${viewContext}`
+    const targetPath
+      = viewContext === 'board' ? basePath : `${basePath}/${viewContext}`
     navigate(targetPath)
   }
 
   if (projectsLoading || authRefreshInFlight || accessMode === 'unknown') {
     return (
-      <div data-testid="loading" className="min-h-[100dvh] bg-background flex items-center justify-center">
+      <div
+        data-testid="loading"
+        className="min-h-[100dvh] bg-background flex items-center justify-center"
+      >
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     )
   }
 
   if (error) {
-    return <RouteErrorModal title={error.includes('current access') ? 'Project Not Available' : undefined} error={error} />
+    return (
+      <RouteErrorModal
+        title={
+          error.includes('current access') ? 'Project Not Available' : undefined
+        }
+        error={error}
+      />
+    )
   }
 
   return (
@@ -356,13 +427,13 @@ function ProjectRouteHandler() {
       {/* Navigation Bar */}
       <Header>
         <HeaderContent
-          leftSection={
-            <MobileLogo />
-          }
+          leftSection={<MobileLogo />}
           centerSection={(
             <>
               <ViewModeSwitcher
-                currentMode={viewMode === 'documents' ? lastBoardListMode : viewMode}
+                currentMode={
+                  viewMode === 'documents' ? lastBoardListMode : viewMode
+                }
                 onModeChange={handleViewModeChange}
                 isDocumentsView={viewMode === 'documents'}
               />
@@ -379,13 +450,23 @@ function ProjectRouteHandler() {
               />
               <SecondaryHeader
                 viewMode={viewMode}
-                sortPreferences={(viewMode === 'board' || viewMode === 'list') ? localSortPreferences : undefined}
-                onSortPreferencesChange={(viewMode === 'board' || viewMode === 'list') ? handleSortPreferencesChange : undefined}
+                sortPreferences={
+                  viewMode === 'board' || viewMode === 'list'
+                    ? localSortPreferences
+                    : undefined
+                }
+                onSortPreferencesChange={
+                  viewMode === 'board' || viewMode === 'list'
+                    ? handleSortPreferencesChange
+                    : undefined
+                }
                 onAddProject={handleAddProject}
                 onEditProject={handleEditProject}
                 selectedProject={selectedProject}
                 onOpenSettings={() => setShowSettings(true)}
-                onUnlockOwnerAccess={accessMode === 'read-only' ? handleUnlockClick : undefined}
+                onUnlockOwnerAccess={
+                  accessMode === 'read-only' ? handleUnlockClick : undefined
+                }
                 onLock={handleLock}
                 accessMode={accessMode}
                 accessIndicator={accessIndicator}
@@ -415,7 +496,11 @@ function ProjectRouteHandler() {
                 selectedProject={selectedProject}
                 tickets={tickets}
                 viewMode={viewMode}
-                sortPreferences={(viewMode === 'board' || viewMode === 'list') ? localSortPreferences : undefined}
+                sortPreferences={
+                  viewMode === 'board' || viewMode === 'list'
+                    ? localSortPreferences
+                    : undefined
+                }
                 canWrite={canWriteTickets}
               />
             )}
@@ -498,6 +583,7 @@ function ProjectRouteHandler() {
           selectedProject={selectedProject}
           projects={projects}
           onProjectSharingUpdated={refreshProjects}
+          canUseOwnerEndpoints={canUseOwnerEndpoints}
         />
       )}
 
@@ -538,11 +624,18 @@ function ShareRouteHandler() {
       }
 
       if (searchParams.has('code')) {
-        window.history.replaceState(null, '', `/share/${encodeURIComponent(shareId)}`)
+        window.history.replaceState(
+          null,
+          '',
+          `/share/${encodeURIComponent(shareId)}`,
+        )
       }
 
       try {
-        const response = await authFetch(`/api/share/${encodeURIComponent(shareId)}/session`, { method: 'POST' })
+        const response = await authFetch(
+          `/api/share/${encodeURIComponent(shareId)}/session`,
+          { method: 'POST' },
+        )
 
         if (cancelled) {
           return
@@ -554,11 +647,17 @@ function ShareRouteHandler() {
             return
           }
 
-          setError(response.status === 404 ? 'Share link not found' : 'Share link could not be opened')
+          setError(
+            response.status === 404
+              ? 'Share link not found'
+              : 'Share link could not be opened',
+          )
           return
         }
 
-        const data = await response.json() as { project?: { id?: string, project?: { code?: string } } }
+        const data = (await response.json()) as {
+          project?: { id?: string, project?: { code?: string } }
+        }
         const projectCode = data.project?.project?.code || data.project?.id
 
         if (!projectCode) {
@@ -596,7 +695,10 @@ function ShareRouteHandler() {
   }
 
   return (
-    <div data-testid="share-loading" className="min-h-[100dvh] bg-background flex items-center justify-center">
+    <div
+      data-testid="share-loading"
+      className="min-h-[100dvh] bg-background flex items-center justify-center"
+    >
       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
     </div>
   )
@@ -670,14 +772,20 @@ function InviteRouteHandler() {
 
   if (error) {
     return (
-      <div data-testid="sharing-invite-error" className="min-h-[100dvh] bg-background flex items-center justify-center p-6 text-sm text-destructive">
+      <div
+        data-testid="sharing-invite-error"
+        className="min-h-[100dvh] bg-background flex items-center justify-center p-6 text-sm text-destructive"
+      >
         {error}
       </div>
     )
   }
 
   return (
-    <div data-testid="invite-loading" className="min-h-[100dvh] bg-background flex items-center justify-center">
+    <div
+      data-testid="invite-loading"
+      className="min-h-[100dvh] bg-background flex items-center justify-center"
+    >
       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
     </div>
   )
@@ -689,7 +797,10 @@ function exchangeInviteCode(code: string): Promise<InviteExchangeResult> {
     return existingExchange
   }
 
-  const exchange = authFetch(`/api/read-tokens/invites/${encodeURIComponent(code)}/session`, { method: 'POST' })
+  const exchange = authFetch(
+    `/api/read-tokens/invites/${encodeURIComponent(code)}/session`,
+    { method: 'POST' },
+  )
     .then(async (response): Promise<InviteExchangeResult> => {
       if (!response.ok) {
         inviteExchangeCache.delete(code)
@@ -701,7 +812,7 @@ function exchangeInviteCode(code: string): Promise<InviteExchangeResult> {
         }
       }
 
-      const data = await response.json() as { projectRefs?: string[] }
+      const data = (await response.json()) as { projectRefs?: string[] }
       return {
         ok: true,
         status: response.status,
@@ -734,16 +845,28 @@ function App() {
           <Route path="/:ticketKey" element={<DirectTicketAccess />} />
           <Route path={ROUTE_PROJECT} element={<ProjectRouteHandler />} />
           <Route path={ROUTE_PROJECT_LIST} element={<ProjectRouteHandler />} />
-          <Route path={ROUTE_PROJECT_DOCUMENTS} element={<ProjectRouteHandler />} />
+          <Route
+            path={ROUTE_PROJECT_DOCUMENTS}
+            element={<ProjectRouteHandler />}
+          />
           {/* MDT-150: Path-style document routes for SmartLink resolution */}
-          <Route path={ROUTE_PROJECT_DOCUMENTS_WILDCARD} element={<ProjectRouteHandler />} />
+          <Route
+            path={ROUTE_PROJECT_DOCUMENTS_WILDCARD}
+            element={<ProjectRouteHandler />}
+          />
           {/* MDT-094: Unified route for tickets with optional sub-document path */}
           <Route path={ROUTE_TICKET_SUBDOC} element={<ProjectRouteHandler />} />
           <Route path={ROUTE_TICKET} element={<ProjectRouteHandler />} />
           <Route path={ROUTE_DIRECT_TICKET} element={<DirectTicketAccess />} />
           {/* MDT-094: Direct ticket access with sub-document path */}
-          <Route path={ROUTE_DIRECT_TICKET_SUBDOC} element={<DirectTicketAccess />} />
-          <Route path="*" element={<RouteErrorModal error="Page not found" />} />
+          <Route
+            path={ROUTE_DIRECT_TICKET_SUBDOC}
+            element={<DirectTicketAccess />}
+          />
+          <Route
+            path="*"
+            element={<RouteErrorModal error="Page not found" />}
+          />
         </Routes>
       </BrowserRouter>
     </AuthSessionProvider>

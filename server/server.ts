@@ -316,8 +316,33 @@ app.use('/api/events', createSSERouter(fileWatcher, originPolicy, projectService
 app.use('/api', createSystemRouter(fileWatcher, projectController, projectDiscovery, documentService.fileInvoker as FileInvokerAdapter))
 
 // Configuration management routes (MDT-168): thin extracted config endpoints.
-// Owner-only via the /api/config prefix in accessPolicy.ts.
-app.use('/api/config', createConfigRouter())
+// Owner-only via the /api/config prefix in accessPolicy.ts. Real post-write side
+// effects (discovery cache + document watcher refresh) are injected here.
+app.use(
+  '/api/config',
+  createConfigRouter({
+    resolveProjectId: (req) => {
+      const q = req.query.projectId
+      return typeof q === 'string' ? q : undefined
+    },
+    clearDiscoveryCache: () => projectDiscovery.clearCache(),
+    reconfigureDocumentWatchers: async (projectId, _documentPaths) => {
+      // Re-read effective document config and reconfigure watchers. The watcher
+      // service re-reads paths/ticketsPath from the project config.
+      const project = (await projectDiscovery.getAllProjects()).find(p => p.id === projectId)
+      if (!project) {
+        return 0
+      }
+      const config = projectDiscovery.getProjectConfig(project.project.path)
+      const documentPaths = config?.project?.document?.paths ?? config?.document?.paths ?? []
+      const ticketsPath = config?.project?.ticketsPath ?? undefined
+      if (fileWatcher.reconfigureDocumentWatchers) {
+        return fileWatcher.reconfigureDocumentWatchers(project.id, project.project.path, documentPaths, ticketsPath)
+      }
+      return 0
+    },
+  }),
+)
 
 // Dev tools routes (logging)
 app.use('/api/devtools', createDevToolsRouter(originPolicy, runtimeConfig.system.devtoolsEnabled))

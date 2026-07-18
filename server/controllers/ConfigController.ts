@@ -9,6 +9,7 @@ import type { ConfigSelector } from '@mdt/domain-contracts'
  */
 import type { Request, Response } from 'express'
 import type { StorageAdapterResolver } from '../services/config/ConfigApplicationService.js'
+import type { ConfigSideEffectRegistry } from '../services/config/ConfigSideEffectRegistry.js'
 import { CONFIG_SELECTOR_ALLOWLIST, Exposure } from '@mdt/domain-contracts'
 import { logger } from '@mdt/shared/utils/server-logger.js'
 import {
@@ -29,6 +30,8 @@ export interface ConfigDescriptorDto {
 export interface ConfigControllerDeps {
   /** Resolves the storage adapter for a selector (knows project path). */
   adapterResolver: StorageAdapterResolver
+  /** Injected post-write side effects (MDT-168: discovery/cache/tree/watcher). */
+  sideEffects?: ConfigSideEffectRegistry
 }
 
 /**
@@ -40,6 +43,7 @@ export class ConfigController {
   constructor(deps: ConfigControllerDeps) {
     this.applicationService = new ConfigApplicationService({
       adapterResolver: deps.adapterResolver,
+      sideEffects: deps.sideEffects,
     })
   }
 
