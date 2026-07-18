@@ -1,6 +1,6 @@
 ---
 code: MDT-188
-status: Proposed
+status: Approved
 dateCreated: 2026-07-17T15:33:01.144Z
 type: Feature Enhancement
 priority: High
@@ -138,7 +138,7 @@ surface them as externally-satisfied-with-evidence or link a ticket.
 
 ### Technical Requirements
 
-Three child tickets. See **Slice Structure** below.
+Two child tickets. See **Slice Structure** below.
 
 ### Data changes
 
@@ -156,79 +156,88 @@ same-vs-cross-project distinction already in MDT-187 badge elision.
 
 ## 4. Acceptance Criteria
 
-### Functional
+Epic-level criteria. Per-ticket criteria live in each child CR; the
+authoritative v1 acceptance test is the VOC scenario in MDT-189.
+
+### v1 (MDT-189)
 
 - [ ] **VOC lying-ticket scenario passes.** Given a ticket with
   `dependsOn: VOC-053` where VOC-053 is `Approved`, `mdt-cli deps <KEY> --check`
   prints a violation table naming the dep, its status, and the kind (`waiting`).
-- [ ] **Broken-plan guardrail fires.** Given a ticket with `dependsOn: B` where
-  B is `Rejected`, attempting to move the ticket to `In Progress` is hard-blocked
-  with a structured error listing B and the action (`reject-A | unlink-A`).
-- [ ] **Waiting guardrail warns.** Given the same move where B is `Approved`,
-  the move succeeds with a warning. No hard block.
-- [ ] **`--force` override works** on broken-plan, is logged, and writes a
-  decision note. Works identically across CLI, HTTP, MCP.
-- [ ] **Cycle write rejected.** Creating `A→B, B→A` via `dependsOn` fails at the
-  service boundary with the cycle path in the error.
-- [ ] **`blocks` is read-only post-migration.** Writing `blocks` directly fails
-  or is ignored; `blocks` always equals `inverse(dependsOn)`.
-- [ ] **`mdt-cli deps <KEY> --tree`** renders a DAG with reference markers for
-  repeated nodes (not recursive duplication). Supports `--depth`, `--direction`.
-- [ ] **`mdt-cli deps <KEY> --mermaid`** emits a Mermaid `flowchart` reusing
-  the MDT-164 overlay.
-- [ ] **Prose reconciliation prompt.** `--check` detects CR-key tokens in the
-  ticket body not present in `dependsOn` and prompts to add them.
+- [ ] **Broken-plan detection.** Same fixture, VOC-053 set to `Rejected`:
+  violation kind `broken-plan` with action `reject-A | unlink-A`.
+- [ ] **`blocks` is read-only post-migration.** Writing `blocks` via the
+  service API is rejected with an actionable error.
+- [ ] **Migration report committed.** Post-migration invariant
+  (`blocks === inverse(dependsOn)`) verified for 100% of tickets.
+
+### v1 enforcement (MDT-191, gated on MDT-189 proving demand)
+
+- [ ] **Waiting guardrail warns.** Status move with dep in Approved/In Progress
+  succeeds with warning; no hard block.
+- [ ] **Broken-plan guardrail hard-blocks.** Dep Rejected or missing → move
+  rejected; structured error returned. `--force` overrides, logged, recorded.
+- [ ] **Cycle write rejected.** `A→B, B→A` via `dependsOn` fails at the service
+  boundary with the cycle path in the error.
+- [ ] **`--force` consistent** across CLI, HTTP, MCP.
+
+### Deferred (v1.1+, separate tickets)
+
+- `mdt-cli deps --tree` / `--mermaid` (deferred unless trivial in MDT-189).
+- UI readiness banner + focused-neighborhood graph.
+- MCP wrappers (`check_readiness`, `suggest_next_actionable`, `list_unblocked`).
 
 ### Non-Functional
 
-- [ ] Graph module is O(V+E) for traversal and cycle detection; no quadratic
+- Graph module is O(V+E) for traversal and cycle detection; no quadratic
   behavior at the scale of a 168-ticket project.
-- [ ] No new source of truth introduced. All reads go through `DependencyGraph`.
+- No new source of truth introduced. All reads go through `DependencyGraph`.
 
 ### Edge cases
 
 - Missing dependency target (key with no ticket) → broken-plan.
 - Cross-project dependency where the other project is not registered →
   broken-plan with actionable message.
-- Self-dependency → rejected at write time.
+- Self-dependency → rejected at write time (MDT-191).
 - Legacy ticket with unknown status value → treated as unsatisfied (safe
   default); the migration must surface these before enforcement ships.
 
 ## 5. Slice Structure
 
-Three child tickets. One epic to hold them.
+Two child tickets. The original plan split foundation/migration/CLI into three;
+that produced a foundation ticket with no consumer, which is not user-testable.
+v1 collapses foundation + migration + `mdt-cli deps --check` into one ticket
+(MDT-189) so the graph module is proven by its consumer.
 
 ```
-MDT-189 (foundation + migration) ──┬──> MDT-190 (CLI deps) ──> MDT-191 (enforcement)
-                                   └──> MDT-191 could start, but shouldn't
+MDT-189 (v1: graph + migration + deps --check) ──> MDT-191 (enforcement, gated on demand)
 ```
 
-**MDT-189 — Foundation + `blocks` migration** (slices 1 + 2 of IDEA-008).
-Graph module in `shared/services/ticket/DependencyGraph.ts` (`buildGraph`,
-`isDependencySatisfied`, `violations`, `detectCycle`, `topoSort`, `inverse`)
-plus the one-time migration that makes `blocks` read-only. Ships first;
-required deliverable is the post-migration report.
+**MDT-189 — v1: `mdt-cli deps --check` with foundation and migration.**
+Collapses IDEA-008 slices 1 + 2 + 4. Graph module + `blocks` migration + the
+`--check` CLI command. **This is the demand probe and the whole point of v1.**
+A human runs the command, sees the violation table, the VOC scenario is
+detected. `--tree`/`--mermaid` deferred unless trivial. See [MDT-189](MDT-189-dep-graph-foundation.md)
+and its [design.md](MDT-188/design.md) for the user flow.
 
-**MDT-190 — CLI `mdt-cli deps --check` and `--tree`/`--mermaid`** (slices 4 + 5).
-Pure additive presentation over shared services; zero data risk. **This is the
-demand probe.** Ships the VOC-scenario checker — the thing the whole feature
-exists for.
-
-**MDT-191 — Write + transition enforcement** (slices 3 + 6).
+**MDT-191 — Write + transition enforcement.**
 Write-time validation (self/dup/cycle/missing-target) + status-mutation
 guardrail (broken-plan hard block, waiting warn, logged `--force`). Both at the
 `TicketService` boundary, both share the structured-error shape. **The risky
 ticket** — spiritual successor to the dead validator at `TicketService.ts:356`.
 
+**Related (not a child):** MDT-192 — frontmatter relationship-field format
+guard. Depends on MDT-189's migration (which decides the canonical format).
+
 ### Dependency gate
 
-MDT-189 blocks everything. MDT-190 and MDT-191 both depend on MDT-189. **But
-MDT-191 is gated on MDT-190, not just sequenced after it.** Don't ship the new
-validator (MDT-191) until users have proven they want the planning tool it
-enforces (MDT-190). If MDT-190 gets no use, you do not want to have already
-shipped the guardrail that's one legacy ticket away from being killed again.
-This is the direct defense against the dead-validator failure mode: ship the
-planning tool, let it run, then enforce.
+MDT-189 is the root and the demand probe. **MDT-191 is gated on MDT-189, not
+just sequenced after it.** Don't ship the new validator (MDT-191) until users
+have proven they want the planning tool it enforces (MDT-189's `--check`).
+If `--check` gets no use, you do not want to have already shipped the guardrail
+that's one legacy ticket away from being killed again. This is the direct
+defense against the dead-validator failure mode: ship the planning tool, let
+it run, then enforce.
 
 ## 6. Vision (not v1, recorded so it shapes v1)
 
@@ -287,6 +296,14 @@ Every "we will decide later" becomes a permanent bad default. Decided:
 
 ### Child tickets
 
-- **MDT-189** — Foundation + `blocks` migration (slices 1 + 2)
-- **MDT-190** — CLI `deps --check` and `--tree`/`--mermaid` (slices 4 + 5)
-- **MDT-191** — Write + transition enforcement (slices 3 + 6)
+- **MDT-189** — v1: `mdt-cli deps --check` with foundation and migration
+  (IDEA-008 slices 1 + 2 + 4). The demand probe.
+- **MDT-191** — Write + transition enforcement (IDEA-008 slices 3 + 6).
+  Gated on MDT-189 proving demand.
+
+### Related (not children)
+
+- **MDT-192** — Frontmatter relationship-field format guard. Depends on
+  MDT-189's migration.
+- **MDT-190** — Withdrawn. Original CLI-only ticket; collapsed into MDT-189
+  so the foundation is user-testable.

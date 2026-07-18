@@ -1,11 +1,11 @@
 ---
 code: MDT-191
-status: Proposed
+status: Approved
 dateCreated: 2026-07-17T15:35:08.742Z
 type: Architecture
 priority: High
 phaseEpic: MDT-188
-dependsOn: MDT-189,MDT-190
+dependsOn: MDT-189
 ---
 
 # Dependency Write and Transition Enforcement
@@ -17,17 +17,18 @@ dependsOn: MDT-189,MDT-190
 
 ### Problem Statement
 
-Once dependencies are real data (MDT-189) and visible (MDT-190), nothing
-enforces them. Writes can create cycles, self-edges, or dangling references.
-Status transitions can move a ticket to `In Progress` while it depends on a
-`Rejected` ticket — a broken plan that nobody is forced to resolve.
+Once dependencies are real data and visible via `mdt-cli deps --check`
+(MDT-189), nothing enforces them. Writes can create cycles, self-edges, or
+dangling references. Status transitions can move a ticket to `In Progress`
+while it depends on a `Rejected` ticket — a broken plan that nobody is forced
+to resolve.
 
 This ticket is the spiritual successor to the dead validator at
 `shared/services/TicketService.ts:356` ("Status transition validation removed
 to allow free movement. This accommodates legacy/unknown status values"). That
 validator died because legacy data broke it. This one ships only after MDT-189's
-migration has given it clean ground, and only after MDT-190 has proven the
-planning tool is wanted.
+migration has given it clean ground, and only after MDT-189's `deps --check`
+has proven the planning tool is wanted.
 
 ### Current State
 
@@ -61,8 +62,7 @@ one structured error shape:
 - `--force` plumbing through CLI, HTTP, MCP (UI follows in v1.1).
 
 **Out of scope:**
-- Graph module (MDT-189).
-- CLI query surface (MDT-190).
+- Graph module and CLI query surface (MDT-189).
 - UI guardrail rendering (v1.1).
 - Restoring the full transition table — we are *not* reviving
   `validTransitions`; we are adding dependency-aware enforcement only.
@@ -106,7 +106,7 @@ type ReadinessViolation = {
 ```
 
 HTTP: `409 Conflict` with this body. CLI: prints the table (same format as
-MDT-190's `--check`) and exits non-zero unless `--force`. MCP: returns the
+MDT-189's `deps --check`) and exits non-zero unless `--force`. MCP: returns the
 violation structure in the tool result.
 
 ### Trade-offs
@@ -234,8 +234,9 @@ at architecture). Must be human-readable and survive the next write.
 
 - **Epic:** MDT-188
 - **Design:** `docs/ideas/IDEA-008-ticket-dependency-graph.md` (slices 3 + 6)
-- **Depends on:** MDT-189 (graph module + migration), MDT-190 (proves demand
-  before enforcement ships)
+- **Depends on:** MDT-189 (graph module, migration, and `deps --check` —
+  the demand probe that must prove the planning tool is wanted before
+  enforcement ships)
 - `shared/services/TicketService.ts:51,108-159,356,457-529` — mutation boundary,
   dead validator tombstone, dead transition table
 - `domain-contracts/src/types/schema.ts:9-31` — status enum (no `Blocked`)
