@@ -364,8 +364,232 @@
       "sourceRef": "CR:MDT-189"
     }
   ],
-  "obligations": [],
-  "artifacts": [],
+  "obligations": [
+    {
+      "id": "OBL-satisfaction-split",
+      "title": "Split the satisfaction question into isDependencySatisfied(status) -> boolean (pure status check for UI badge) and classifyViolation(depStatus) -> SatisfactionKind (for CLI formatter and future guardrail); do not collapse into one tri-state function",
+      "derivedFrom": [
+        "C-1",
+        "BR-1.6"
+      ],
+      "artifactIds": [
+        "ART-dc-satisfaction"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "OBL-migration-via-markdown-service",
+      "title": "The blocks migration script writes via MarkdownService direct frontmatter rewrite, not via TicketService.updateTicketAttributes; migration is a data fix that must not route through the write path it is about to disable",
+      "derivedFrom": [
+        "C-2",
+        "BR-4.1",
+        "BR-4.2"
+      ],
+      "artifactIds": [
+        "ART-scripts-migrate-blocks",
+        "ART-shared-markdown-service"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "OBL-blocks-derived-on-write",
+      "title": "blocks remains stored in frontmatter but is recomputed whenever dependsOn changes; hand-edits to blocks are overwritten on next write; dependsOn is the contract and blocks is its inverse",
+      "derivedFrom": [
+        "C-3",
+        "C-7",
+        "BR-4.3",
+        "BR-5.1"
+      ],
+      "artifactIds": [
+        "ART-shared-markdown-service",
+        "ART-shared-ticket-service"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "OBL-check-informational-only",
+      "title": "The v1 --check surface surfaces prose gaps as a separate section but does not write dependsOn and does not prompt to mutate it; the reconciliation write interaction is deferred to MDT-191",
+      "derivedFrom": [
+        "C-4",
+        "BR-2.1"
+      ],
+      "artifactIds": [
+        "ART-cli-deps-command",
+        "ART-cli-deps-formatter"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "OBL-tree-mermaid-deferred",
+      "title": "The --tree and --mermaid flags are deferred to a follow-up ticket if their implementation cost exceeds one day; the acceptance test for MDT-189 is --check alone",
+      "derivedFrom": [
+        "C-5"
+      ],
+      "artifactIds": [
+        "ART-cli-deps-command"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "OBL-single-graph-module",
+      "title": "Provide exactly one dependency-graph module (shared/services/ticket/DependencyGraph.ts) as the sole interpreter of dependency edges; every future consumer (CLI, HTTP, MCP, UI) reads through it and none re-implements traversal",
+      "derivedFrom": [
+        "C-6"
+      ],
+      "artifactIds": [
+        "ART-shared-dependency-graph"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "OBL-satisfaction-in-domain-contracts",
+      "title": "Place isDependencySatisfied and classifyViolation in domain-contracts/src/ticket/satisfaction.ts so HTTP, MCP, and UI can import them without pulling the graph module or shared/",
+      "derivedFrom": [
+        "C-9"
+      ],
+      "artifactIds": [
+        "ART-dc-satisfaction"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "OBL-key-resolution-rule",
+      "title": "buildGraph resolves every dependsOn entry as: if the value matches ^[A-Z]+-\\d+$ use as-is (cross-project fully-qualified), otherwise prefix with {activeProjectCode}- and zero-pad to three digits; mirrors MDT-187 keyNormalizer",
+      "derivedFrom": [
+        "C-10",
+        "BR-1.2"
+      ],
+      "artifactIds": [
+        "ART-shared-dependency-graph"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "OBL-violation-classification",
+      "title": "violations() classifies each dependsOn edge into one of satisfied, waiting, broken-plan based on dep status (Implemented -> satisfied; missing or Rejected -> broken-plan; anything else unsatisfied -> waiting); safe default on unknown status is unsatisfied",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.6",
+        "Edge-1",
+        "Edge-2"
+      ],
+      "artifactIds": [
+        "ART-shared-dependency-graph",
+        "ART-dc-satisfaction"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "OBL-prose-scanner-shared",
+      "title": "A shared prose scanner reads only ## Precondition / ## Prerequisites sections, extracts CR-key tokens, diffs against dependsOn, and returns proseGaps; consumed by the CLI formatter, reused later by MCP",
+      "derivedFrom": [
+        "BR-2.1",
+        "BR-2.2"
+      ],
+      "artifactIds": [
+        "ART-shared-prose-scanner",
+        "ART-cli-deps-command"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "OBL-cli-deps-json-output",
+      "title": "The deps command exposes --json that emits the documented schemaVersion/ok/command/data shape with ticket, ready, violations[], proseGaps[] so agents and scripts can consume the result programmatically",
+      "derivedFrom": [
+        "BR-3.1"
+      ],
+      "artifactIds": [
+        "ART-cli-deps-command"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "OBL-write-path-removed",
+      "title": "After migration, TicketService.updateTicketAttributes rejects direct blocks writes with an actionable error (blocks is derived from dependsOn; edit dependsOn instead); MarkdownService continues to write the derived blocks value",
+      "derivedFrom": [
+        "BR-5.1",
+        "C-3"
+      ],
+      "artifactIds": [
+        "ART-shared-ticket-service",
+        "ART-shared-markdown-service"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "OBL-cli-pure-presentation",
+      "title": "The CLI deps command and formatter are pure presentation (argument parsing, output formatting, exit codes); reusable logic (graph, satisfaction, violation classification, prose scanning) lives in shared/ or domain-contracts/. The deps command is registered under the ticket subcommand plus a top-level deps alias mirroring attr.",
+      "derivedFrom": [
+        "C-8"
+      ],
+      "artifactIds": [
+        "ART-cli-deps-command",
+        "ART-cli-deps-formatter",
+        "ART-shared-dependency-graph",
+        "ART-shared-prose-scanner",
+        "ART-cli-index"
+      ],
+      "sourceRef": "CR:MDT-189"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-dc-satisfaction",
+      "path": "domain-contracts/src/ticket/satisfaction.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "ART-shared-dependency-graph",
+      "path": "shared/services/ticket/DependencyGraph.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "ART-shared-prose-scanner",
+      "path": "shared/services/ticket/proseScanner.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "ART-shared-ticket-service",
+      "path": "shared/services/TicketService.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "ART-shared-markdown-service",
+      "path": "shared/services/MarkdownService.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "ART-scripts-migrate-blocks",
+      "path": "scripts/migrate-blocks.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "ART-cli-deps-command",
+      "path": "cli/src/commands/deps.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "ART-cli-deps-formatter",
+      "path": "cli/src/output/depsFormatter.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "ART-cli-index",
+      "path": "cli/src/index.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-189"
+    }
+  ],
   "testPlans": [],
   "tasks": []
 }
