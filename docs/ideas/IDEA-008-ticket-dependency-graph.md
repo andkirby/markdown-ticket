@@ -188,12 +188,15 @@ The graph module is the spine. The **first user-facing slice is the checker,
 not the renderer** — because the checker is what fights the VOC scenario, and
 it is the cheapest probe for real demand.
 
-Slices are grouped into three child tickets (see MDT-188 for the canonical
-breakdown):
+Slices are grouped into two child tickets (see MDT-188 for the canonical
+breakdown). The original three-ticket split (foundation / CLI / enforcement)
+produced a foundation ticket with no consumer; v1 collapses foundation +
+migration + `deps --check` into one user-testable ticket:
 
-- **MDT-189 — Foundation + `blocks` migration** (slices 1 + 2 below).
-- **MDT-190 — CLI `deps --check` and `--tree`/`--mermaid`** (slices 4 + 5).
-- **MDT-191 — Write + transition enforcement** (slices 3 + 6).
+- **MDT-189 — v1: `mdt-cli deps --check` with foundation and migration**
+  (slices 1 + 2 + 4 below). The graph module is proven by its consumer.
+- **MDT-191 — Write + transition enforcement** (slices 3 + 6). Gated on
+  MDT-189 proving demand.
 
 Slice detail (for reference; tickets are authoritative):
 
@@ -273,9 +276,12 @@ Every "we will decide later" becomes a permanent bad default. Decided:
 
 ## Decision
 
-**Promoted to MDT-188** (epic) on 2026-07-17, with three child tickets:
-MDT-189 (foundation + migration), MDT-190 (CLI query), MDT-191 (enforcement).
-Ship canonical dependency semantics, the migration, and `mdt-cli deps --check`
+**Promoted to MDT-188** (epic) on 2026-07-17. Consolidated 2026-07-18 from
+three child tickets to two: MDT-189 (v1: graph + migration + `deps --check`)
+and MDT-191 (enforcement, gated on MDT-189 proving demand). The original
+MDT-190 (CLI-only) was withdrawn because a foundation ticket with no consumer
+is not user-testable. Ship canonical dependency semantics, the migration, and
+`mdt-cli deps --check`
 before any graph UI. Use the VOC lying-ticket scenario as the v1 acceptance
 test.
 
