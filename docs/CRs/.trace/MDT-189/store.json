@@ -3,5 +3,214 @@
   "ticket": {
     "key": "MDT-189"
   },
-  "requirements": []
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "WHEN a ticket depends on an unfinished (non-Implemented) ticket with a known schema status, THEN mdt-cli deps --check shall emit a row classifying the dep as kind: waiting, naming the dep, and including evidence of the dep's status.",
+      "sourceRef": "CR:MDT-189",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "WHEN a ticket depends on a fully-qualified cross-project key ({PROJECT}-###), THEN mdt-cli deps --check shall resolve the dep against the target project's tickets and render the row's dep key in the fully-qualified form (never the bare number).",
+      "sourceRef": "CR:MDT-189",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.3",
+      "kind": "behavior",
+      "text": "WHEN a ticket depends on a Rejected ticket, THEN mdt-cli deps --check shall classify the dep as kind: broken-plan and the row's action field shall contain actionable resolution hints (e.g., reject-<KEY> | unlink-<KEY>).",
+      "sourceRef": "CR:MDT-189",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.4",
+      "kind": "behavior",
+      "text": "WHEN a ticket depends on a key that does not resolve to any ticket in any registered project, THEN mdt-cli deps --check shall emit a row with status: missing, kind: broken-plan, naming the unresolved key.",
+      "sourceRef": "CR:MDT-189",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.5",
+      "kind": "behavior",
+      "text": "WHEN a ticket's every dependsOn edge is satisfied (or the ticket has no dependencies), THEN mdt-cli deps --check shall emit no violation rows and the summary line shall read Ready: YES.",
+      "sourceRef": "CR:MDT-189",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.6",
+      "kind": "behavior",
+      "text": "WHEN a ticket depends on a ticket whose status is not in CRStatusSchema (e.g., legacy Deferred), THEN mdt-cli deps --check shall classify the dep as kind: waiting (safe default -> unsatisfied) and the evidence shall note that the status is unrecognized.",
+      "sourceRef": "CR:MDT-189",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.1",
+      "kind": "behavior",
+      "text": "WHEN a ticket's body contains CR-key tokens inside a ## Precondition or ## Prerequisites section that are absent from dependsOn, THEN mdt-cli deps --check shall print an Unverifiable prose section listing those keys and exit 0 without attempting any write.",
+      "sourceRef": "CR:MDT-189",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.2",
+      "kind": "behavior",
+      "text": "WHEN a ticket's body mentions CR keys outside any precondition section (e.g., See also MDT-030 for context.), THEN mdt-cli deps --check shall NOT include those keys in the prose-gaps section.",
+      "sourceRef": "CR:MDT-189",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3.1",
+      "kind": "behavior",
+      "text": "WHEN a caller runs mdt-cli deps <KEY> --check --json, THEN stdout shall be valid JSON matching the documented schema (schemaVersion, ok, command, data: { ticket, ready, violations[], proseGaps[] }) so agents and scripts can consume the result programmatically.",
+      "sourceRef": "CR:MDT-189",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4.1",
+      "kind": "behavior",
+      "text": "WHEN an operator runs bun run scripts/migrate-blocks.ts --dry-run, THEN the script shall print a complete report (per-ticket diff, contradictions, invariant projection) and modify no file under docs/CRs/.",
+      "sourceRef": "CR:MDT-189",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4.2",
+      "kind": "behavior",
+      "text": "WHEN the migration runs for real and encounters a ticket that both dependsOn and blocks the same key, THEN the script shall prompt interactively (Keep dependsOn, drop blocks? [y/N]); on y the blocks entry is removed, on n or EOF the run aborts with no writes.",
+      "sourceRef": "CR:MDT-189",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4.3",
+      "kind": "behavior",
+      "text": "WHEN the migration completes successfully, THEN for every ticket T in every registered project T.blocks shall equal the sorted inverse of all dependsOn edges pointing at T, and the report shall record an invariant-verification line (Invariant verified: 100% of N tickets).",
+      "sourceRef": "CR:MDT-189",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-5.1",
+      "kind": "behavior",
+      "text": "WHEN a user attempts a direct blocks write (mdt-cli attr <KEY> blocks+=<OTHER>), THEN the command shall exit non-zero, stderr shall contain an actionable message naming the derived-field rule (blocks is derived from dependsOn; edit dependsOn instead), and the ticket file shall remain unchanged.",
+      "sourceRef": "CR:MDT-189",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C-1",
+      "kind": "constraint",
+      "text": "The satisfaction surface shall be split into two functions: isDependencySatisfied(status) -> boolean (pure status check; UI badge use case) and classifyViolation(depStatus) -> SatisfactionKind (kind for CLI formatter and future guardrail). The two questions shall not be collapsed into one tri-state return.",
+      "sourceRef": "CR:MDT-189",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-2",
+      "kind": "constraint",
+      "text": "The blocks migration script shall write via MarkdownService direct frontmatter rewrite, not via TicketService.updateTicketAttributes. Migration is a data fix, not a ticket mutation, and must not route through the write path it is about to disable.",
+      "sourceRef": "CR:MDT-189",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-3",
+      "kind": "constraint",
+      "text": "blocks shall remain stored in frontmatter but shall be recomputed (derived) whenever dependsOn changes. A hand-edit to blocks: shall be overwritten on the next write; dependsOn is the contract.",
+      "sourceRef": "CR:MDT-189",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-4",
+      "kind": "constraint",
+      "text": "The v1 --check surface shall be informational only: it shall surface prose gaps as a separate section but shall not write dependsOn or prompt the user to mutate it. The reconciliation write interaction is deferred to MDT-191.",
+      "sourceRef": "CR:MDT-189",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-5",
+      "kind": "constraint",
+      "text": "The --tree and --mermaid flags are deferred to a follow-up ticket if their implementation cost exceeds one day. They are nice-to-haves; the acceptance test for MDT-189 is --check alone.",
+      "sourceRef": "CR:MDT-189",
+      "routePolicy": "not_applicable"
+    },
+    {
+      "id": "C-6",
+      "kind": "constraint",
+      "text": "The system shall provide exactly one dependency-graph module (shared/services/ticket/DependencyGraph.ts) that is the sole interpreter of dependency edges. Every future consumer (CLI, HTTP, MCP, UI) shall read through it; no consumer shall re-implement graph traversal independently.",
+      "sourceRef": "CR:MDT-189",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-7",
+      "kind": "constraint",
+      "text": "The canonical dependency edge shall be dependsOn. After migration, blocks shall be defined as the sorted inverse of dependsOn and shall be read-only through the user-facing write path.",
+      "sourceRef": "CR:MDT-189",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-8",
+      "kind": "constraint",
+      "text": "The CLI (cli/src/commands/deps.ts, cli/src/output/depsFormatter.ts) shall be pure presentation: argument parsing, output formatting, and exit codes only. Any logic reusable by another consumer (MCP, HTTP, UI) - graph building, satisfaction, violation classification, prose scanning - shall live in shared/ or domain-contracts/.",
+      "sourceRef": "CR:MDT-189",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-9",
+      "kind": "constraint",
+      "text": "isDependencySatisfied and classifyViolation shall live in domain-contracts/src/ticket/satisfaction.ts so that HTTP, MCP, and UI packages can import them without pulling the graph module or shared/.",
+      "sourceRef": "CR:MDT-189",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-10",
+      "kind": "constraint",
+      "text": "buildGraph shall resolve every dependsOn entry with the following rule: if the stored value matches ^[A-Z]+-\\d+$, use it as-is (cross-project fully-qualified form); otherwise prefix with {activeProjectCode}- and zero-pad the numeric portion to three digits. This mirrors the keyNormalizer.ts rule established by MDT-187.",
+      "sourceRef": "CR:MDT-189",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "WHEN a dependency's target ticket has a status value not present in CRStatusSchema (legacy data, e.g., Deferred, Pending), the system shall apply a safe default of unsatisfied, classify the violation as waiting, and note in the evidence that the status is unrecognized. The system shall not throw, shall not treat the unknown status as satisfied, and shall not silently drop the edge.",
+      "sourceRef": "CR:MDT-189",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-2",
+      "kind": "edge_case",
+      "text": "WHEN a dependsOn entry does not resolve to any ticket in any registered project, the system shall emit a row with status: missing, kind: broken-plan, naming the unresolved key, and shall not crash the check.",
+      "sourceRef": "CR:MDT-189",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-3",
+      "kind": "edge_case",
+      "text": "WHEN a dependsOn entry references a fully-qualified cross-project key whose target project is not registered in the project registry, the system shall treat the target as missing (per Edge-2) and shall surface the unresolved project in the evidence rather than silently swallowing the cross-project reference.",
+      "sourceRef": "CR:MDT-189",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-4",
+      "kind": "edge_case",
+      "text": "WHEN a ticket has an empty dependsOn array (leaf ticket) or no dependsOn field at all, the system shall emit no violation rows, print Ready: YES, and never produce a spurious self or null edge.",
+      "sourceRef": "CR:MDT-189",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-5",
+      "kind": "edge_case",
+      "text": "WHEN pre-migration data has a ticket whose blocks and dependsOn entries contradict (e.g., A dependsOn B AND A blocks B), the migration script shall not silently reconcile the contradiction; it shall prompt the operator interactively (BR-4.2) and shall not write until the operator decides.",
+      "sourceRef": "CR:MDT-189",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-6",
+      "kind": "edge_case",
+      "text": "WHEN a ticket's dependsOn array contains duplicate entries (e.g., [MDT-100, MDT-100]), the graph builder shall collapse them to a single edge and shall not emit duplicate violation rows or duplicate inverse-blocks entries.",
+      "sourceRef": "CR:MDT-189",
+      "routePolicy": "tests"
+    }
+  ],
+  "scenarios": [],
+  "obligations": [],
+  "artifacts": [],
+  "testPlans": [],
+  "tasks": []
 }

@@ -3,8 +3,8 @@
   "version": 4,
   "ticket": "MDT-189",
   "title": "Dependency Graph v1: mdt-cli deps --check with Foundation and Migration",
-  "currentMilestone": "requirements",
-  "completedMilestones": ["pre-flight"],
+  "currentMilestone": "bdd",
+  "completedMilestones": ["pre-flight", "requirements"],
   "scope": "spec-trace-wiring-only (stop before implement)",
   "discovery": {
     "projectDocs": [
@@ -108,10 +108,11 @@
     "ux": "Backend + CLI only. v1 has no UI surface; design.md's user-flow diagram is the UX artifact if anyone asks."
   },
   "artifacts": {
-    "pre-flight": "docs/CRs/MDT-189.pipeline-state.json (this file)"
+    "pre-flight": "docs/CRs/MDT-189.pipeline-state.json (this file)",
+    "requirements": "docs/CRs/MDT-189/requirements.md (NEW - backfilled) + requirements.trace.md (13 BR across 5 behavior groups, 10 C, 6 Edge; C-5 not_applicable; validated clean)"
   },
   "approvals": {},
   "exceptions": [],
   "commits": [],
-  "updatedAt": "2026-07-18T11:08:00Z"
+  "updatedAt": "2026-07-18T11:20:00Z"
 }
