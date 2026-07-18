@@ -820,6 +820,24 @@
         "sub_tab_ordering"
       ],
       "sourceRef": "CR:MDT-138"
+    },
+    {
+      "id": "TASK-4",
+      "title": "Restore deep-link routing for /prj/... sub-document URLs (UAT 2026-07-18)",
+      "ownsArtifactIds": [
+        "ART-navigation-hook",
+        "ART-subdoc-tabs"
+      ],
+      "makesGreenIds": [
+        "root_document_url_routing",
+        "dot_notation_url_routing",
+        "folder_subfile_url_routing",
+        "physical_child_with_dot_in_filename"
+      ],
+      "skills": [
+        "frontend-react-component"
+      ],
+      "sourceRef": "./uat.md"
     }
   ]
 }

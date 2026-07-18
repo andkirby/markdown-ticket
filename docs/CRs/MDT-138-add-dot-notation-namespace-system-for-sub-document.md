@@ -1,6 +1,6 @@
 ---
 code: MDT-138
-status: Implemented
+status: In Progress
 dateCreated: 2026-03-12T22:06:27.335Z
 type: Feature Enhancement
 priority: Medium
@@ -189,3 +189,78 @@ Then: UI shows [bdd >] [scenario-1]
 - Q: How should the API represent dot-notation documents? → A: Virtual folders (backward compatible)
 - Q: Which shared types file should contain namespace-related types? → A: `shared/types/Document.ts`
 - Q: Where should backend namespace parsing unit tests live? → A: `server/src/__tests__/services/DocumentService.test.ts`
+
+### UAT Session 2026-07-18
+
+**Trigger**: Opening `http://localhost:3075/prj/MDT/ticket/MDT-138/architecture.md` falls back to the `[Main]` tab instead of opening `architecture`. Address bar keeps the deep-link URL, but no nested tab row renders and `/subdocuments/architecture` is never requested. Follow-up repro after the first fix revealed a second, masked bug at `http://localhost:3075/prj/MDT/ticket/MDT-138/bdd.trace.md` (dot-notation child of a physical folder).
+
+**Root causes**: two independent bugs.
+
+1. **Bug 1 (MDT-184 regression)**: `src/utils/subdocPathValidation.ts::extractSubDocPath`
+   searched for the literal substring `'/ticket/'` inside the regex source
+   produced by `routePatternToRegex`, but that source escapes `/` as `\/`, so
+   `indexOf` returned `-1`. The `:ticketKey` substitution then landed in the
+   projectCode slot, producing a pattern that matched
+   `/prj/MDT-138/ticket/...` instead of `/prj/MDT/ticket/MDT-138/...`. As a
+   result `extractSubDocPath` returned `null` for every project-prefixed
+   subdoc URL, and `useTicketDocumentNavigation` fell back to
+   `ROOT_DOCUMENT_PATH`. Direct `/ticket/{key}/{subdoc}` URLs still worked
+   because their pattern's first `[^/]+` slot is the ticket key.
+2. **Bug 2 (valid-path lookup asymmetry)**:
+   `src/components/TicketViewer/useTicketDocumentNavigation.ts::collectPaths`
+   decided the path separator for a child based on the **folder's** storage
+   type (virtual → dot, physical → slash) and only emitted both forms for
+   virtual folders. Dot-notation children of physical folders (e.g.
+   `bdd.trace.md` grouped under physical `bdd/`) were emitted as `bdd/trace`
+   but never as `bdd.trace`, while the URL is derived from the child's
+   filePath (`bdd.trace`). The `validPaths.has('bdd.trace')` lookup returned
+   false → Main fallback. This bug was entirely masked by Bug 1 until Bug 1
+   was fixed.
+
+**Implemented fixes** (`refine_in_place` — no new requirement IDs):
+- `extractSubDocPath` now substitutes the literal `:ticketKey` token in the
+  un-escaped `ROUTE_DIRECT_TICKET_SUBDOC` / `ROUTE_TICKET_SUBDOC` constants
+  (after regex-escaping `crId`) before converting to regex via
+  `routePatternToRegex`. No more string surgery on the escaped regex source.
+- `collectPaths` now generates **both** dot and slash path forms for every
+  non-root subdoc, regardless of folder storage type. Canonical separator
+  mirrors how the folder itself was reached; the alternate form is always
+  registered.
+
+**Deferred (Slice 3)**: unit tests for `extractSubDocPath` covering
+project-prefixed, direct, dot-notation, slash-notation, and multi-segment
+paths; E2E strengthening of `root_document_url_routing`,
+`dot_notation_url_routing`, and `folder_subfile_url_routing` to assert
+`data-state="active"` instead of `toBeVisible()`. Existing E2E suite still
+passes against the fixes, so this is hardening, not a functional gap.
+
+**Changed requirement IDs**: none new. Re-verified (still valid):
+`BR-6`, `BR-9`, `BR-10`, `BR-11`.
+
+**Updated workflow documents**:
+- `uat.md` — written (current-round brief, covers both bugs)
+- `tasks.md` — TASK-4 added (Restore deep-link routing for `/prj/...` subdoc URLs)
+- `requirements.md`, `bdd.md`, `architecture.md`, `tests.md` — no change
+  (intent unchanged; only test-binding obligations sharpened, recorded under
+  TASK-4)
+
+**Trace sync**:
+- `spec-trace task upsert MDT-138 TASK-4` (owns `ART-navigation-hook`,
+  `ART-subdoc-tabs`; makes green `root_document_url_routing`,
+  `dot_notation_url_routing`, `folder_subfile_url_routing`).
+- `spec-trace render tasks MDT-138` rendered.
+- `spec-trace validate MDT-138 --stage tasks` still reports one pre-existing
+  gap (`MISSING_TASK_CLOSURE` for `physical_child_with_dot_in_filename`)
+  unrelated to this UAT round — verified pre-existing via `git stash`.
+
+**Verification (this commit)**:
+- `bun test src/__tests__/routes.test.ts` — 22/22 pass
+- `bun test src/components/TicketViewer/useTicketDocumentNavigation.test.tsx` — 10/10 pass
+- `bunx playwright test tests/e2e/ticket/namespace.spec.ts` — 19/19 pass
+- `bunx playwright test tests/e2e/ticket/subdoc-navigation.spec.ts tests/e2e/ticket/subdoc-preload.spec.ts` — 21 pass, 1 pre-existing skip
+- Manual smoke (live): all seven URL forms in `uat.md` verification table resolve to expected active tab
+
+**Strict drift/lock**: not used (narrow approved refinement).
+
+**Implementation handoff**: Slice 3 (test hardening) remains; mark TASK-4
+done when it lands.
