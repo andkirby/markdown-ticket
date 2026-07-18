@@ -1,0 +1,117 @@
+{
+  "pipeline": "mdt-pipeline-e2e",
+  "version": 4,
+  "ticket": "MDT-189",
+  "title": "Dependency Graph v1: mdt-cli deps --check with Foundation and Migration",
+  "currentMilestone": "requirements",
+  "completedMilestones": ["pre-flight"],
+  "scope": "spec-trace-wiring-only (stop before implement)",
+  "discovery": {
+    "projectDocs": [
+      "AGENTS.md",
+      "docs/SKILLS.md"
+    ],
+    "ticketSource": "docs/CRs/MDT-189-dep-graph-foundation.md",
+    "artifactDirectory": "docs/CRs/MDT-189",
+    "ticketStatusModel": {
+      "current": "Proposed",
+      "transitionCommand": "mdt-cli attr 189 status=\"<STATUS>\" (may fail - known MDT-189 attr bug; fallback to direct edit + round-trip verify)",
+      "terminalApprovedStatus": "Implemented"
+    },
+    "workflowSkills": {
+      "orchestrator": "mdt-pipeline-e2e (loaded)",
+      "traceGate": "spec-trace-cli + spec-trace binary 0.4.0",
+      "mdtTemplates": "mdt (project workflow, loaded on demand)"
+    },
+    "languageRuntime": {
+      "stack": "TypeScript / Bun / shared services + cli + scripts",
+      "packageOrder": ["domain-contracts", "shared", "scripts", "cli"]
+    },
+    "keyFindings": {
+      "scope": "Existing artifacts exist for bdd/architecture/tests/tasks; requirements is missing and must be backfilled",
+      "existingArtifacts": {
+        "bdd": "docs/CRs/MDT-189/bdd.md (14 scenarios S1-S14; S1 acceptance, S2 VOC cross-project)",
+        "architecture": "docs/CRs/MDT-189/architecture.md (5 decisions D1-D5, DependencyGraph module API, migration sequence)",
+        "tests": "docs/CRs/MDT-189/tests.md (TEST-buildGraph-*, TEST-violations-*, TEST-migration-*, TEST-deps-*)",
+        "tasks": "docs/CRs/MDT-189/tasks.md (11 tasks: TASK-satisfaction through TASK-smoke)"
+      }
+    }
+  },
+  "baseline": {
+    "runAt": "2026-07-18",
+    "specTraceVersion": "0.4.0",
+    "commands": [
+      {
+        "cmd": "spec-trace --version",
+        "result": "pass",
+        "details": "0.4.0"
+      },
+      {
+        "cmd": "spec-trace init MDT-189",
+        "result": "pass",
+        "details": "Initialized trace store for MDT-189"
+      },
+      {
+        "cmd": "bun run --cwd server jest",
+        "result": "pass-with-preexisting-failures",
+        "details": "47 suites pass / 14 fail (88 failed tests, 547 passed). Failures are EADDRNOTAVAIL/ETIMEDOUT port binding flakiness + pre-existing MDT-129/MDT-181 selector issues - NOT MDT-189 related."
+      }
+    ],
+    "preExistingFailures": [
+      {
+        "package": "server",
+        "files": ["tests/api/selector.test.ts", "tests/api/system.test.ts", "tests/api/documents.test.ts"],
+        "reason": "EADDRNOTAVAIL/ETIMEDOUT localhost port binding flakiness + pre-existing MDT-129/MDT-181 accent color issues"
+      }
+    ]
+  },
+  "dirtyBoundary": {
+    "rule": "Branch MDT-187-relationship-badge-overflow has unrelated in-flight work (MDT-168 config CR, MDT-193 epic badge, ProjectSelector, MDT-129 redesign). Stage only MDT-189 files per commit. Verify with git diff --cached --name-only before every commit.",
+    "branch": "MDT-187-relationship-badge-overflow",
+    "unrelatedInFlightWork": [
+      "docs/CRs/MDT-005-project-selection-persistence.md",
+      "docs/CRs/MDT-129/* (redesign project selector)",
+      "docs/CRs/MDT-168/pipeline-agent-prompt.md",
+      "docs/CRs/MDT-193 (epic badge)",
+      "docs/ideas/* (IDEA-005)",
+      "mcp-server/*",
+      "src/components/ProjectSelector/*",
+      "tests/e2e/selector/*"
+    ]
+  },
+  "specTrace": {
+    "version": "0.4.0",
+    "initialized": true,
+    "storePath": "docs/CRs/.trace/MDT-189/store.json (black box - do not touch directly)",
+    "stageOrder": ["requirements", "bdd", "architecture", "tests", "tasks", "bundle"],
+    "rules": [
+      "serialized upsert only; never parallelize writes",
+      "every requirement upsert must declare --kind",
+      "only behavior requirements route to BDD; constraints/edge cases route to tests/clarification/NA",
+      "preserve IDs once written; do not remap to fix validation errors",
+      "human artifacts (*.md) are canonical; *.trace.md are generated projections"
+    ]
+  },
+  "milestonePlan": {
+    "pre-flight": "RUN (this state file)",
+    "assess": "SKIP (already done in IDEA-008 + MDT-188 epic + design.md)",
+    "requirements": "RUN (backfill - the genuine new work)",
+    "bdd": "RUN (ingest existing bdd.md)",
+    "architecture": "RUN (ingest existing architecture.md)",
+    "ux": "SKIP (backend + CLI only; no v1 UI surface)",
+    "tests": "RUN (ingest existing tests.md)",
+    "tasks": "RUN (ingest existing tasks.md)",
+    "implement": "DO NOT START (out of scope per prompt)"
+  },
+  "skipReasons": {
+    "assess": "Scope already assessed via IDEA-008 (ticket dependency graph idea), MDT-188 epic, and docs/CRs/MDT-188/design.md. MDT-187 precedent also skipped assess.",
+    "ux": "Backend + CLI only. v1 has no UI surface; design.md's user-flow diagram is the UX artifact if anyone asks."
+  },
+  "artifacts": {
+    "pre-flight": "docs/CRs/MDT-189.pipeline-state.json (this file)"
+  },
+  "approvals": {},
+  "exceptions": [],
+  "commits": [],
+  "updatedAt": "2026-07-18T11:08:00Z"
+}
