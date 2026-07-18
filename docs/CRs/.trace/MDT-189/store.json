@@ -590,6 +590,380 @@
       "sourceRef": "CR:MDT-189"
     }
   ],
-  "testPlans": [],
+  "testPlans": [
+    {
+      "id": "TEST-build-graph-same-project",
+      "kind": "unit",
+      "title": "Bare number dependsOn entry resolves to {CODE}-053 against the active project",
+      "covers": [
+        "C-10"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-build-graph-cross-project",
+      "kind": "unit",
+      "title": "Fully-qualified dependsOn entry stays as-is (cross-project)",
+      "covers": [
+        "BR-1.2",
+        "Edge-3"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-build-graph-dedup",
+      "kind": "unit",
+      "title": "Duplicate dependsOn entries collapse to one edge",
+      "covers": [
+        "Edge-6"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-satisfaction-implemented",
+      "kind": "unit",
+      "title": "isDependencySatisfied(\"Implemented\") returns true",
+      "covers": [
+        "BR-1.5"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-satisfaction-rejected",
+      "kind": "unit",
+      "title": "isDependencySatisfied(\"Rejected\") returns false; classifyViolation returns broken-plan",
+      "covers": [
+        "BR-1.3"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-satisfaction-unknown",
+      "kind": "unit",
+      "title": "isDependencySatisfied(\"Deferred\") returns false (safe default)",
+      "covers": [
+        "BR-1.6",
+        "Edge-1"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-violations-waiting",
+      "kind": "unit",
+      "title": "Approved dep produces one violation with kind waiting and informational action",
+      "covers": [
+        "BR-1.1"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-violations-broken-rejected",
+      "kind": "unit",
+      "title": "Rejected dep produces kind broken-plan with action naming reject/unlink",
+      "covers": [
+        "BR-1.3"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-violations-missing",
+      "kind": "unit",
+      "title": "Non-existent target produces status missing and kind broken-plan",
+      "covers": [
+        "BR-1.4",
+        "Edge-2"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-violations-clean",
+      "kind": "unit",
+      "title": "All Implemented deps produce an empty violations array",
+      "covers": [
+        "BR-1.5"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-detect-cycle-two",
+      "kind": "unit",
+      "title": "A->B, B->A returns the cycle path [A,B,A]",
+      "covers": [
+        "C-6"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-detect-cycle-three",
+      "kind": "unit",
+      "title": "A->B, B->C, C->A returns the cycle path",
+      "covers": [
+        "C-6"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-detect-cycle-none",
+      "kind": "unit",
+      "title": "A DAG returns null",
+      "covers": [
+        "C-6"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-detect-cycle-large",
+      "kind": "unit",
+      "title": "5-node synthetic cycle performance check (non-functional)",
+      "covers": [
+        "C-6"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-topo-sort-deterministic",
+      "kind": "unit",
+      "title": "Same graph twice yields the same topological order",
+      "covers": [
+        "C-6"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-topo-sort-diamond",
+      "kind": "unit",
+      "title": "Diamond dependency yields a valid topological order",
+      "covers": [
+        "C-6"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-inverse-roundtrip",
+      "kind": "unit",
+      "title": "inverse(buildGraph(t)) produces the expected blocks map and round-trips with dependsOn",
+      "covers": [
+        "BR-4.3"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-satisfaction-contracts",
+      "kind": "unit",
+      "title": "Covers every status in CRStatusSchema (7 values) with explicit expected result; unknown status returns false; classifyViolation for Implemented, Rejected, missing, unknown",
+      "covers": [
+        "C-1",
+        "C-9",
+        "Edge-1"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-migration-dry-run",
+      "kind": "integration",
+      "title": "Dry-run mode prints the report and writes nothing; fixture files unchanged",
+      "covers": [
+        "BR-4.1",
+        "C-4"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-migration-adds-reciprocal",
+      "kind": "integration",
+      "title": "Ticket with dependsOn but no blocks has blocks populated after run",
+      "covers": [
+        "C-3"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-migration-removes-stale",
+      "kind": "integration",
+      "title": "Ticket with blocks but no inbound dependsOn has blocks cleared after run",
+      "covers": [
+        "C-3"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-migration-contradiction-prompt-y",
+      "kind": "integration",
+      "title": "A dependsOn B, A blocks B + stdin y drops blocks and keeps dependsOn",
+      "covers": [
+        "BR-4.2",
+        "Edge-5"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-migration-contradiction-abort",
+      "kind": "integration",
+      "title": "Same fixture + stdin n or EOF aborts the run with no writes",
+      "covers": [
+        "BR-4.2",
+        "Edge-5"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-migration-invariant",
+      "kind": "integration",
+      "title": "After a successful run, blocks equals inverse(dependsOn) for 100% of fixture tickets",
+      "covers": [
+        "BR-4.3"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-migration-report-format",
+      "kind": "integration",
+      "title": "Report contains N changed, M added, K removed, J contradictions resolved",
+      "covers": [
+        "C-2"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-deps-voc-scenario",
+      "kind": "e2e",
+      "title": "S1 end-to-end against an in-memory fixture (the acceptance test)",
+      "covers": [
+        "BR-1.1"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-deps-cross-project",
+      "kind": "e2e",
+      "title": "S2 - VOC-053 row rendered fully-qualified",
+      "covers": [
+        "BR-1.2"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-deps-broken-rejected",
+      "kind": "e2e",
+      "title": "S3 - broken-plan action text",
+      "covers": [
+        "BR-1.3"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-deps-broken-missing",
+      "kind": "e2e",
+      "title": "S4 - status missing",
+      "covers": [
+        "BR-1.4",
+        "Edge-2"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-deps-clean",
+      "kind": "e2e",
+      "title": "S5 - Ready: YES summary",
+      "covers": [
+        "BR-1.5",
+        "Edge-4"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-deps-no-deps",
+      "kind": "e2e",
+      "title": "S6 - leaf ticket summary",
+      "covers": [
+        "BR-1.5",
+        "Edge-4"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-deps-unknown-status",
+      "kind": "e2e",
+      "title": "S7 - legacy Deferred classified as waiting",
+      "covers": [
+        "BR-1.6",
+        "Edge-1"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-deps-prose-gaps",
+      "kind": "e2e",
+      "title": "S8 - precondition section scan with missing structured deps",
+      "covers": [
+        "BR-2.1",
+        "C-4"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-deps-prose-ignore-casual",
+      "kind": "e2e",
+      "title": "S9 - see also MDT-030 not flagged",
+      "covers": [
+        "BR-2.2"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-deps-json",
+      "kind": "e2e",
+      "title": "S10 - JSON shape is parseable and matches schema",
+      "covers": [
+        "BR-3.1"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-deps-not-found",
+      "kind": "e2e",
+      "title": "Bad key produces CliCommandError and non-zero exit",
+      "covers": [
+        "C-8"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-deps-write-path-rejected",
+      "kind": "e2e",
+      "title": "S14 - mdt-cli attr blocks+= rejected",
+      "covers": [
+        "BR-5.1"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-blocks-write-rejected",
+      "kind": "unit",
+      "title": "updateTicketAttributes blocks throws an actionable error",
+      "covers": [
+        "BR-5.1"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-blocks-still-derived",
+      "kind": "unit",
+      "title": "After a dependsOn change, MarkdownService writes the derived blocks value",
+      "covers": [
+        "C-3"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-relations-still-work",
+      "kind": "unit",
+      "title": "dependsOn and relatedTickets writes are unaffected (regression)",
+      "covers": [
+        "C-7"
+      ],
+      "sourceRef": "CR:MDT-189"
+    }
+  ],
   "tasks": []
 }
