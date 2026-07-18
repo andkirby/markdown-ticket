@@ -1,5 +1,9 @@
 import type { Project } from '@mdt/shared/models/Project'
-import type { CardDensity, DefaultView, MarkdownDensity } from '../config/settingsPreferences'
+import type {
+  CardDensity,
+  DefaultView,
+  MarkdownDensity,
+} from '../config/settingsPreferences'
 import type { TicketCardBadgeId } from '../config/ticketCardBadges'
 import type { SelectorState } from './ProjectSelector/types'
 import * as Tabs from '@radix-ui/react-tabs'
@@ -22,23 +26,37 @@ import {
 import { useTheme } from '../hooks/useTheme'
 import { nuclearCacheClear } from '../utils/cache'
 import { getProjectCode } from '../utils/projectUtils'
-import { getEventHistoryForceHidden, toggleEventHistory } from './DevTools/useEventHistoryState'
+import {
+  getEventHistoryForceHidden,
+  toggleEventHistory,
+} from './DevTools/useEventHistoryState'
 import { SELECTOR_STATE_SYNC_EVENT } from './ProjectSelector/useSelectorData'
+import { BackendConfigSection } from './SettingsModal/BackendConfigSection'
 import { ProjectAccents } from './SettingsModal/ProjectAccents'
 import { ReadAccessTokens } from './SettingsModal/ReadAccessTokens'
 import { ButtonGroup } from './ui/button-group'
 import { Modal, ModalBody, ModalHeader } from './ui/Modal'
 import { Switch } from './ui/switch'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from './ui/tooltip'
 
 function readAutoLinking(): boolean {
   try {
     const stored = localStorage.getItem('markdown-ticket-link-config')
     if (stored) {
-      return (JSON.parse(stored) as { enableAutoLinking?: boolean }).enableAutoLinking ?? true
+      return (
+        (JSON.parse(stored) as { enableAutoLinking?: boolean })
+          .enableAutoLinking ?? true
+      )
     }
   }
-  catch { /* use default */ }
+  catch {
+    /* use default */
+  }
   return true
 }
 
@@ -46,7 +64,10 @@ function writeAutoLinking(value: boolean): void {
   try {
     const stored = localStorage.getItem('markdown-ticket-link-config')
     const current = stored ? JSON.parse(stored) : {}
-    localStorage.setItem('markdown-ticket-link-config', JSON.stringify({ ...current, enableAutoLinking: value }))
+    localStorage.setItem(
+      'markdown-ticket-link-config',
+      JSON.stringify({ ...current, enableAutoLinking: value }),
+    )
   }
   catch {
     console.warn('Failed to save link config')
@@ -59,6 +80,8 @@ interface SettingsModalProps {
   selectedProject?: Project | null
   projects?: Project[]
   onProjectSharingUpdated?: () => Promise<void> | void
+  /** Owner/admin capability; gates backend-owned config section (MDT-168). */
+  canUseOwnerEndpoints?: boolean
 }
 
 type SettingsTab = 'appearance' | 'board' | 'sharing' | 'advanced'
@@ -70,9 +93,13 @@ const SHARING_MODES: Array<{ value: SharingMode, label: string }> = [
   { value: 'public-readonly', label: 'Public read-only' },
 ]
 
-async function getSharingErrorMessage(response: Response, projectCode: string): Promise<string> {
+async function getSharingErrorMessage(
+  response: Response,
+  projectCode: string,
+): Promise<string> {
   const responseMessage = await readErrorMessage(response)
-  const statusLabel = `${response.status} ${response.statusText || 'Error'}`.trim()
+  const statusLabel
+    = `${response.status} ${response.statusText || 'Error'}`.trim()
 
   if (response.status === 404) {
     return `Sharing update failed: project "${projectCode}" or the sharing endpoint was not found. Refresh the project list and try again. (${statusLabel})`
@@ -89,8 +116,12 @@ async function readErrorMessage(response: Response): Promise<string> {
   try {
     const contentType = response.headers.get('content-type') || ''
     if (contentType.includes('application/json')) {
-      const body = await response.json() as { error?: unknown, message?: unknown }
-      const message = typeof body.message === 'string' ? body.message : undefined
+      const body = (await response.json()) as {
+        error?: unknown
+        message?: unknown
+      }
+      const message
+        = typeof body.message === 'string' ? body.message : undefined
       const error = typeof body.error === 'string' ? body.error : undefined
       return message || error || ''
     }
@@ -102,32 +133,40 @@ async function readErrorMessage(response: Response): Promise<string> {
   }
 }
 
-export function SettingsModal({ isOpen, onClose, selectedProject, projects = [], onProjectSharingUpdated }: SettingsModalProps) {
+export function SettingsModal({
+  isOpen,
+  onClose,
+  selectedProject,
+  projects = [],
+  onProjectSharingUpdated,
+  canUseOwnerEndpoints = false,
+}: SettingsModalProps) {
   const { themeMode, setTheme } = useTheme()
   const [activeTab, setActiveTab] = useState<SettingsTab>('appearance')
 
   // Appearance
-  const [defaultView, setDefaultView] = useState<DefaultView>(
-    getDefaultView,
-  )
-  const [markdownDensity, setMarkdownDensity] = useState<MarkdownDensity>(
-    getMarkdownDensity,
-  )
+  const [defaultView, setDefaultView] = useState<DefaultView>(getDefaultView)
+  const [markdownDensity, setMarkdownDensity]
+    = useState<MarkdownDensity>(getMarkdownDensity)
 
   // Board
-  const [cardDensity, setCardDensity] = useState<CardDensity>(
-    getCardDensity,
-  )
+  const [cardDensity, setCardDensity] = useState<CardDensity>(getCardDensity)
   const [autoLinking, setAutoLinking] = useState(readAutoLinking)
-  const [visibleBadgeIds, setVisibleBadgeIds] = useState(getVisibleTicketCardBadges)
+  const [visibleBadgeIds, setVisibleBadgeIds] = useState(
+    getVisibleTicketCardBadges,
+  )
   const [sharingMode, setSharingMode] = useState<SharingMode>('private')
   const [shareId, setShareId] = useState('')
   const [linkOrigin, setLinkOrigin] = useState('')
-  const [sharingStatus, setSharingStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [sharingStatus, setSharingStatus] = useState<
+    'idle' | 'saving' | 'saved' | 'error'
+  >('idle')
   const [sharingError, setSharingError] = useState<string | null>(null)
 
   // Advanced
-  const [eventHistoryVisible, setEventHistoryVisible] = useState(() => !getEventHistoryForceHidden())
+  const [eventHistoryVisible, setEventHistoryVisible] = useState(
+    () => !getEventHistoryForceHidden(),
+  )
 
   // Project Accents (staged — not persisted until Save)
   const [accentStaging, setAccentStaging] = useState<{
@@ -150,7 +189,10 @@ export function SettingsModal({ isOpen, onClose, selectedProject, projects = [],
         }
         const data = await response.json()
         if (!cancelled) {
-          const state = (data.selectorState || {}) as Record<string, SelectorState>
+          const state = (data.selectorState || {}) as Record<
+            string,
+            SelectorState
+          >
           setAccentStaging({ changes: new Map(), base: state })
           setAccentLoaded(true)
         }
@@ -182,7 +224,11 @@ export function SettingsModal({ isOpen, onClose, selectedProject, projects = [],
     }
     const merged = { ...accentStaging.base }
     for (const [key, value] of accentStaging.changes) {
-      const existing = merged[key] || { favorite: false, lastUsedAt: null, count: 0 }
+      const existing = merged[key] || {
+        favorite: false,
+        lastUsedAt: null,
+        count: 0,
+      }
       if (value === null) {
         const { accent: _accent, ...rest } = existing
         merged[key] = rest as SelectorState
@@ -194,16 +240,19 @@ export function SettingsModal({ isOpen, onClose, selectedProject, projects = [],
     return merged
   }, [accentStaging])
 
-  const handleAccentChange = useCallback((projectKey: string, accent: string) => {
-    setAccentStaging((prev) => {
-      if (!prev) {
-        return prev
-      }
-      const changes = new Map(prev.changes)
-      changes.set(projectKey, accent)
-      return { ...prev, changes }
-    })
-  }, [])
+  const handleAccentChange = useCallback(
+    (projectKey: string, accent: string) => {
+      setAccentStaging((prev) => {
+        if (!prev) {
+          return prev
+        }
+        const changes = new Map(prev.changes)
+        changes.set(projectKey, accent)
+        return { ...prev, changes }
+      })
+    },
+    [],
+  )
 
   const handleAccentReset = useCallback((projectKey: string) => {
     setAccentStaging((prev) => {
@@ -230,9 +279,11 @@ export function SettingsModal({ isOpen, onClose, selectedProject, projects = [],
         // Update base with current staged state
         setAccentStaging({ changes: new Map(), base: stagedSelectorState })
         // Broadcast to useSelectorData hooks so chips/cards update immediately
-        window.dispatchEvent(new CustomEvent(SELECTOR_STATE_SYNC_EVENT, {
-          detail: stagedSelectorState,
-        }))
+        window.dispatchEvent(
+          new CustomEvent(SELECTOR_STATE_SYNC_EVENT, {
+            detail: stagedSelectorState,
+          }),
+        )
       }
     }
     catch (err) {
@@ -264,19 +315,25 @@ export function SettingsModal({ isOpen, onClose, selectedProject, projects = [],
   }, [linkOrigin, shareId, sharingMode])
 
   // Appearance handlers
-  const handleThemeChange = useCallback((mode: 'light' | 'dark' | 'system') => {
-    setTheme(mode)
-  }, [setTheme])
+  const handleThemeChange = useCallback(
+    (mode: 'light' | 'dark' | 'system') => {
+      setTheme(mode)
+    },
+    [setTheme],
+  )
 
   const handleDefaultViewChange = useCallback((view: DefaultView) => {
     setDefaultView(view)
     setDefaultViewPreference(view)
   }, [])
 
-  const handleMarkdownDensityChange = useCallback((density: MarkdownDensity) => {
-    setMarkdownDensity(density)
-    setMarkdownDensityPreference(density)
-  }, [])
+  const handleMarkdownDensityChange = useCallback(
+    (density: MarkdownDensity) => {
+      setMarkdownDensity(density)
+      setMarkdownDensityPreference(density)
+    },
+    [],
+  )
 
   // Board handlers
   const handleCardDensityChange = useCallback((density: CardDensity) => {
@@ -289,53 +346,71 @@ export function SettingsModal({ isOpen, onClose, selectedProject, projects = [],
     writeAutoLinking(checked)
   }, [])
 
-  const handleVisibleBadgeChange = useCallback((badgeId: TicketCardBadgeId, checked: boolean) => {
-    setVisibleBadgeIds((currentBadgeIds) => {
-      if (!checked && currentBadgeIds.length === 1 && currentBadgeIds.includes(badgeId))
-        return currentBadgeIds
+  const handleVisibleBadgeChange = useCallback(
+    (badgeId: TicketCardBadgeId, checked: boolean) => {
+      setVisibleBadgeIds((currentBadgeIds) => {
+        if (
+          !checked
+          && currentBadgeIds.length === 1
+          && currentBadgeIds.includes(badgeId)
+        ) {
+          return currentBadgeIds
+        }
 
-      const nextBadgeIds = checked
-        ? [...currentBadgeIds, badgeId]
-        : currentBadgeIds.filter(currentBadgeId => currentBadgeId !== badgeId)
+        const nextBadgeIds = checked
+          ? [...currentBadgeIds, badgeId]
+          : currentBadgeIds.filter(
+              currentBadgeId => currentBadgeId !== badgeId,
+            )
 
-      return setVisibleTicketCardBadges(nextBadgeIds)
-    })
-  }, [])
-
-  const updateSharing = useCallback(async (rotateShareId = false) => {
-    if (!selectedProject) {
-      return
-    }
-
-    setSharingStatus('saving')
-    setSharingError(null)
-
-    try {
-      const projectCode = getProjectCode(selectedProject)
-      const response = await authFetch(`/api/projects/${encodeURIComponent(projectCode)}/sharing`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        ownerIntent: true,
-        body: JSON.stringify({
-          mode: sharingMode,
-          ...(rotateShareId ? { rotateShareId: true } : {}),
-        }),
+        return setVisibleTicketCardBadges(nextBadgeIds)
       })
+    },
+    [],
+  )
 
-      if (!response.ok) {
-        throw new Error(await getSharingErrorMessage(response, projectCode))
+  const updateSharing = useCallback(
+    async (rotateShareId = false) => {
+      if (!selectedProject) {
+        return
       }
 
-      const updatedProject = await response.json() as Project
-      setShareId(updatedProject.metadata?.sharing?.shareId || '')
-      setSharingStatus('saved')
-      await onProjectSharingUpdated?.()
-    }
-    catch (error) {
-      setSharingStatus('error')
-      setSharingError(error instanceof Error ? error.message : 'Failed to update sharing')
-    }
-  }, [onProjectSharingUpdated, selectedProject, sharingMode])
+      setSharingStatus('saving')
+      setSharingError(null)
+
+      try {
+        const projectCode = getProjectCode(selectedProject)
+        const response = await authFetch(
+          `/api/projects/${encodeURIComponent(projectCode)}/sharing`,
+          {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            ownerIntent: true,
+            body: JSON.stringify({
+              mode: sharingMode,
+              ...(rotateShareId ? { rotateShareId: true } : {}),
+            }),
+          },
+        )
+
+        if (!response.ok) {
+          throw new Error(await getSharingErrorMessage(response, projectCode))
+        }
+
+        const updatedProject = (await response.json()) as Project
+        setShareId(updatedProject.metadata?.sharing?.shareId || '')
+        setSharingStatus('saved')
+        await onProjectSharingUpdated?.()
+      }
+      catch (error) {
+        setSharingStatus('error')
+        setSharingError(
+          error instanceof Error ? error.message : 'Failed to update sharing',
+        )
+      }
+    },
+    [onProjectSharingUpdated, selectedProject, sharingMode],
+  )
 
   const handleSaveSharing = useCallback(async () => {
     await updateSharing(false)
@@ -363,9 +438,16 @@ export function SettingsModal({ isOpen, onClose, selectedProject, projects = [],
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} data-testid="settings-modal">
-      <ModalHeader title="Settings" onClose={onClose} closeTestId="settings-close" />
+      <ModalHeader
+        title="Settings"
+        onClose={onClose}
+        closeTestId="settings-close"
+      />
       <ModalBody className="p-0">
-        <Tabs.Root value={activeTab} onValueChange={value => setActiveTab(value as SettingsTab)}>
+        <Tabs.Root
+          value={activeTab}
+          onValueChange={value => setActiveTab(value as SettingsTab)}
+        >
           <Tabs.List className="tab__list settings-tab-list">
             <Tabs.Trigger
               value="appearance"
@@ -406,13 +488,17 @@ export function SettingsModal({ isOpen, onClose, selectedProject, projects = [],
           <Tabs.Content value="appearance" className="tab__content">
             <div className="settings-group">
               <label className="settings-label">Theme</label>
-              <p className="settings-desc">Choose light, dark, or system theme</p>
+              <p className="settings-desc">
+                Choose light, dark, or system theme
+              </p>
               <ButtonGroup orientation="horizontal" className="mt-3 w-full">
                 <button
                   data-testid="settings-theme-light"
                   onClick={() => handleThemeChange('light')}
                   className={`settings-theme-btn rounded-l-md ${
-                    themeMode === 'light' ? 'settings-theme-btn--active' : 'settings-theme-btn--inactive'
+                    themeMode === 'light'
+                      ? 'settings-theme-btn--active'
+                      : 'settings-theme-btn--inactive'
                   }`}
                 >
                   <Sun className="h-4 w-4" />
@@ -422,7 +508,9 @@ export function SettingsModal({ isOpen, onClose, selectedProject, projects = [],
                   data-testid="settings-theme-dark"
                   onClick={() => handleThemeChange('dark')}
                   className={`settings-theme-btn ${
-                    themeMode === 'dark' ? 'settings-theme-btn--active' : 'settings-theme-btn--inactive'
+                    themeMode === 'dark'
+                      ? 'settings-theme-btn--active'
+                      : 'settings-theme-btn--inactive'
                   }`}
                 >
                   <Moon className="h-4 w-4" />
@@ -432,7 +520,9 @@ export function SettingsModal({ isOpen, onClose, selectedProject, projects = [],
                   data-testid="settings-theme-system"
                   onClick={() => handleThemeChange('system')}
                   className={`settings-theme-btn rounded-r-md ${
-                    themeMode === 'system' ? 'settings-theme-btn--active' : 'settings-theme-btn--inactive'
+                    themeMode === 'system'
+                      ? 'settings-theme-btn--active'
+                      : 'settings-theme-btn--inactive'
                   }`}
                 >
                   <Monitor className="h-4 w-4" />
@@ -444,11 +534,14 @@ export function SettingsModal({ isOpen, onClose, selectedProject, projects = [],
             {/* Default View */}
             <div className="settings-group">
               <label className="settings-label">Default View</label>
-              <p className="settings-desc">Open this view when navigating to a project</p>
+              <p className="settings-desc">
+                Open this view when navigating to a project
+              </p>
               <select
                 data-testid="settings-default-view"
                 value={defaultView}
-                onChange={e => handleDefaultViewChange(e.target.value as DefaultView)}
+                onChange={e =>
+                  handleDefaultViewChange(e.target.value as DefaultView)}
                 className="settings-select mt-2"
               >
                 <option value="board">Board</option>
@@ -458,11 +551,14 @@ export function SettingsModal({ isOpen, onClose, selectedProject, projects = [],
 
             <div className="settings-group">
               <label className="settings-label">Markdown Density</label>
-              <p className="settings-desc">Adjust rendered ticket and document text size</p>
+              <p className="settings-desc">
+                Adjust rendered ticket and document text size
+              </p>
               <select
                 data-testid="settings-markdown-density"
                 value={markdownDensity}
-                onChange={e => handleMarkdownDensityChange(e.target.value as MarkdownDensity)}
+                onChange={e =>
+                  handleMarkdownDensityChange(e.target.value as MarkdownDensity)}
                 className="settings-select mt-2"
               >
                 <option value="compact">Compact</option>
@@ -488,8 +584,14 @@ export function SettingsModal({ isOpen, onClose, selectedProject, projects = [],
                     </TooltipTrigger>
                     <TooltipContent className="max-w-xs">
                       <p>Personal preference, not shared with other users.</p>
-                      <p className="mt-1">Choose a Style: Gradient (fade), Flat (stripe), or Plate (colored code badge).</p>
-                      <p className="mt-1">Autocolor assigns deterministic fallback colors to projects you haven’t customized.</p>
+                      <p className="mt-1">
+                        Choose a Style: Gradient (fade), Flat (stripe), or Plate
+                        (colored code badge).
+                      </p>
+                      <p className="mt-1">
+                        Autocolor assigns deterministic fallback colors to
+                        projects you haven’t customized.
+                      </p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -502,7 +604,9 @@ export function SettingsModal({ isOpen, onClose, selectedProject, projects = [],
                 onAccentChange={handleAccentChange}
                 onAccentReset={handleAccentReset}
                 onSave={handleSaveAccents}
-                hasUnsavedChanges={accentStaging !== null && accentStaging.changes.size > 0}
+                hasUnsavedChanges={
+                  accentStaging !== null && accentStaging.changes.size > 0
+                }
               />
             </div>
           </Tabs.Content>
@@ -510,11 +614,14 @@ export function SettingsModal({ isOpen, onClose, selectedProject, projects = [],
           <Tabs.Content value="board" className="tab__content">
             <div className="settings-group">
               <label className="settings-label">Card Density</label>
-              <p className="settings-desc">Compact shows more tickets per column</p>
+              <p className="settings-desc">
+                Compact shows more tickets per column
+              </p>
               <select
                 data-testid="settings-card-density"
                 value={cardDensity}
-                onChange={e => handleCardDensityChange(e.target.value as CardDensity)}
+                onChange={e =>
+                  handleCardDensityChange(e.target.value as CardDensity)}
                 className="settings-select mt-2"
               >
                 <option value="comfortable">Comfortable</option>
@@ -526,7 +633,9 @@ export function SettingsModal({ isOpen, onClose, selectedProject, projects = [],
             <div className="settings-group-row">
               <div>
                 <label className="settings-label">Smart Links</label>
-                <p className="settings-desc">Auto-detect ticket keys and document paths</p>
+                <p className="settings-desc">
+                  Auto-detect ticket keys and document paths
+                </p>
               </div>
               <Switch
                 checked={autoLinking}
@@ -537,14 +646,20 @@ export function SettingsModal({ isOpen, onClose, selectedProject, projects = [],
 
             <div className="settings-group">
               <label className="settings-label">Visible Card Badges</label>
-              <p className="settings-desc">Choose which badges appear on board ticket cards</p>
-              <div className="settings-checkbox-list" data-testid="settings-visible-card-badges">
+              <p className="settings-desc">
+                Choose which badges appear on board ticket cards
+              </p>
+              <div
+                className="settings-checkbox-list"
+                data-testid="settings-visible-card-badges"
+              >
                 {TicketCardBadgeOptions.map(option => (
                   <label key={option.id} className="settings-checkbox-row">
                     <input
                       type="checkbox"
                       checked={visibleBadgeIds.includes(option.id)}
-                      onChange={e => handleVisibleBadgeChange(option.id, e.target.checked)}
+                      onChange={e =>
+                        handleVisibleBadgeChange(option.id, e.target.checked)}
                       data-testid={`settings-visible-badge-${option.id}`}
                       className="settings-checkbox"
                     />
@@ -559,7 +674,12 @@ export function SettingsModal({ isOpen, onClose, selectedProject, projects = [],
             <Tabs.Content value="sharing" className="tab__content">
               <div className="settings-group">
                 <div className="settings-label-row">
-                  <label className="settings-label" htmlFor="settings-sharing-mode">Project Access</label>
+                  <label
+                    className="settings-label"
+                    htmlFor="settings-sharing-mode"
+                  >
+                    Project Access
+                  </label>
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -573,7 +693,11 @@ export function SettingsModal({ isOpen, onClose, selectedProject, projects = [],
                         </button>
                       </TooltipTrigger>
                       <TooltipContent className="max-w-xs">
-                        <p>Private hides the project. Unlisted creates a direct read-only link. Public also lists the project for anonymous visitors.</p>
+                        <p>
+                          Private hides the project. Unlisted creates a direct
+                          read-only link. Public also lists the project for
+                          anonymous visitors.
+                        </p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -582,18 +706,26 @@ export function SettingsModal({ isOpen, onClose, selectedProject, projects = [],
                   id="settings-sharing-mode"
                   data-testid="settings-sharing-mode"
                   value={sharingMode}
-                  onChange={event => setSharingMode(event.target.value as SharingMode)}
+                  onChange={event =>
+                    setSharingMode(event.target.value as SharingMode)}
                   className="settings-select mt-2"
                 >
                   {SHARING_MODES.map(option => (
-                    <option key={option.value} value={option.value}>{option.label}</option>
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
                   ))}
                 </select>
               </div>
 
               {sharingMode !== 'private' && (
                 <div className="settings-group">
-                  <label className="settings-label" htmlFor="settings-share-url">Share Link</label>
+                  <label
+                    className="settings-label"
+                    htmlFor="settings-share-url"
+                  >
+                    Share Link
+                  </label>
                   {shareUrl && (
                     <input
                       id="settings-share-url"
@@ -605,7 +737,9 @@ export function SettingsModal({ isOpen, onClose, selectedProject, projects = [],
                   )}
                   {!shareUrl && (
                     <p className="settings-desc mt-2">
-                      {shareId ? 'No allowed public origin is available for share links.' : 'Save to generate a share link.'}
+                      {shareId
+                        ? 'No allowed public origin is available for share links.'
+                        : 'Save to generate a share link.'}
                     </p>
                   )}
                 </div>
@@ -614,8 +748,14 @@ export function SettingsModal({ isOpen, onClose, selectedProject, projects = [],
               <div className="settings-group-row">
                 <div>
                   <label className="settings-label">Save Sharing</label>
-                  {sharingError && <p className="settings-desc text-destructive">{sharingError}</p>}
-                  {sharingStatus === 'saved' && <p className="settings-desc">Sharing updated.</p>}
+                  {sharingError && (
+                    <p className="settings-desc text-destructive">
+                      {sharingError}
+                    </p>
+                  )}
+                  {sharingStatus === 'saved' && (
+                    <p className="settings-desc">Sharing updated.</p>
+                  )}
                 </div>
                 <div className="flex gap-2">
                   {sharingMode !== 'private' && shareId && (
@@ -648,6 +788,10 @@ export function SettingsModal({ isOpen, onClose, selectedProject, projects = [],
           )}
 
           <Tabs.Content value="advanced" className="tab__content">
+            {/* MDT-168: backend-owned configuration (global/user editable
+                selectors). Owner-only; browser-only prefs stay in other tabs. */}
+            <BackendConfigSection enabled={canUseOwnerEndpoints} />
+
             <div className="settings-group-row">
               <div>
                 <label className="settings-label">Event History</label>
@@ -664,7 +808,9 @@ export function SettingsModal({ isOpen, onClose, selectedProject, projects = [],
             <div className="settings-group-row">
               <div>
                 <label className="settings-label">Cache</label>
-                <p className="settings-desc">Clear all cached data and reload</p>
+                <p className="settings-desc">
+                  Clear all cached data and reload
+                </p>
               </div>
               <button
                 data-testid="settings-clear-cache"
