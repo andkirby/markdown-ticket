@@ -131,7 +131,7 @@ If the first legacy ticket trips this guardrail and the temptation is to rip it 
 
 Reviewing the flow and decision tree exposes decisions that are currently implicit in the epic. Flagging them, not resolving — these belong in the architecture pass for MDT-189/MDT-191:
 
-- **Reconciliation prompt scope.** The flow assumes `--check` scans the whole ticket body for CR-key tokens. False positives are real (a "see also MDT-030" sentence triggers the prompt). Mitigation under consideration: only scan `## Precondition` / `## Prerequisites` sections. Decision needed at MDT-190 architecture.
+- **Reconciliation prompt scope.** The flow assumes `--check` scans the whole ticket body for CR-key tokens. False positives are real (a "see also MDT-030" sentence triggers the prompt). Mitigation under consideration: only scan `## Precondition` / `## Prerequisites` sections. Decision needed at MDT-189 architecture.
 - **Decision-note storage.** Diagram says "writes decision note." Open: append to `implementationNotes` (existing field, human-readable) vs. new `planningDecisions` frontmatter field (structured). MDT-191 recommends the former for v1; needs confirmation.
 - **Warning delivery.** Diagram says "warning returned in result." Open: synchronous in the mutation result (simplest for every consumer) vs. emitted as a separate event. MDT-191 recommends synchronous.
 - **Cache invalidation timing.** Diagram's terminal node says "file-watch invalidates graph cache." Not yet specified: does the guardrail re-read from cache or recompute? If cache, what's the staleness window for status changes? Belongs in MDT-189 architecture.
@@ -151,5 +151,6 @@ Reviewing the flow and decision tree exposes decisions that are currently implic
 - **Parent epic:** [MDT-188](../MDT-188-dependency-graph-epic.md)
 - **Design source:** [IDEA-008](../../ideas/IDEA-008-ticket-dependency-graph.md) — VOC scenario, satisfaction table, guardrail split
 - **Style precedent:** `docs/architecture/auth-and-sharing-architecture.md` — `flowchart TD`, quoted node labels, decision diamonds
-- **Child tickets:** [MDT-189](../MDT-189-dep-graph-foundation.md) (foundation+migration), [MDT-190](../MDT-190-cli-deps-query.md) (CLI query), [MDT-191](../MDT-191-dep-enforcement.md) (enforcement)
+- **Child tickets:** [MDT-189](../MDT-189-dep-graph-foundation.md) (v1: graph + migration + `deps --check`), [MDT-191](../MDT-191-dep-enforcement.md) (enforcement, gated on MDT-189)
+- **Withdrawn:** MDT-190 (collapsed into MDT-189 so the foundation is user-testable)
 - **Dead validator tombstone:** `shared/services/TicketService.ts:356` and `:457-529`
