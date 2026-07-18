@@ -3,9 +3,9 @@
   "version": 4,
   "ticket": "MDT-189",
   "title": "Dependency Graph v1: mdt-cli deps --check with Foundation and Migration",
-  "currentMilestone": "implement-pending",
-  "completedMilestones": ["pre-flight", "requirements", "bdd", "architecture", "tests", "tasks"],
-  "scope": "spec-trace-wiring-only (stop before implement)",
+  "currentMilestone": "user-review",
+  "completedMilestones": ["pre-flight", "requirements", "bdd", "architecture", "tests", "tasks", "implement"],
+  "scope": "implement (code + dry-run; real migration data write deferred)",
   "discovery": {
     "projectDocs": [
       "AGENTS.md",
@@ -118,6 +118,71 @@
   "approvals": {},
   "exceptions": [],
   "commits": [],
+  "implementationProgress": {
+    "TASK-satisfaction": {
+      "status": "done",
+      "commit": "4af6454d",
+      "summary": "isDependencySatisfied + classifyViolation + MISSING_DEP_STATUS + SatisfactionKind in domain-contracts",
+      "evidence": "17/17 satisfaction.test.ts pass under jest; domain-contracts tsc clean"
+    },
+    "TASK-graph": {
+      "status": "done",
+      "commit": "83a9f747",
+      "summary": "buildGraph / violations / detectCycle / topoSort / inverse + DepGraph/Violation types + key resolver in shared",
+      "evidence": "24/24 DependencyGraph.test.ts pass; shared tsc clean"
+    },
+    "TASK-remove-write": {
+      "status": "done",
+      "commit": "9f03e3c5",
+      "summary": "assertNotDerivedField + DERIVED_FIELDS helper; TicketService.validateAttrOperations delegates; blocks stays in RELATION_FIELDS for reads; INVALID_OPERATION surfaces through attr.ts transparently",
+      "evidence": "7/7 blocksWriteRejection.test.ts pass; manual smoke (mdt-cli attr 189 blocks+=MDT-999) exits 1 with the derived-field error",
+      "scopeNote": "Rejection half only. On-write blocks derivation ships with TASK-migrate-real (deferred per Q1)."
+    },
+    "TASK-prose-scan": {
+      "status": "done",
+      "commit": "142e1544",
+      "summary": "scanProseGaps — section-bounded CR-key extractor in shared; fully-qualified tokens only; canonicalized; de-duplicated",
+      "evidence": "12/12 proseScanner.test.ts pass; shared tsc + eslint clean"
+    },
+    "TASK-formatter": {
+      "status": "done",
+      "commit": "8a74ac79",
+      "summary": "formatDepsReport / formatViolationTable / formatViolationRow / formatEvidence / formatReadyLine in cli/output/depsFormatter.ts",
+      "evidence": "14/14 depsFormatter.test.ts pass under bun test"
+    },
+    "TASK-deps-command": {
+      "status": "done",
+      "commit": "8a74ac79",
+      "summary": "ticketDepsAction + DepsCommandOptions in cli/src/commands/deps.ts; registered as 'ticket deps' in cli/src/index.ts; --json/--yaml reuse StructuredEnvelope",
+      "evidence": "manual smokes pass: 'mdt-cli ticket deps MDT-189 --check' (Ready: YES), '... MDT-065 --check' (surfaces MDT-059 'On Hold' waiting violation), '... MDT-188 --check --json' (S10 schema shape); cli tsc clean"
+    },
+    "TASK-migration": {
+      "status": "done",
+      "commit": "d704e1e2",
+      "summary": "migrate-blocks.ts (dry-run/write/yes, prompt, report) + scripts/lib/migrate-blocks.ts (pure plan/classify/apply/invariant) + fixture tests",
+      "evidence": "16/16 migrate-blocks.test.ts pass under bun test; dry-run smoke against live repo successful",
+      "scopeNote": "Script + tests only; no live data written (per Q1)."
+    },
+    "TASK-dryrun": {
+      "status": "done",
+      "summary": "Executed bun scripts/migrate-blocks.ts against the real repo; produced docs/CRs/MDT-189/blocks-migration-report.md showing 31 changes + 1 contradiction (MDT-082 ↔ MDT-071) + 436 unchanged across all registered projects; appended the deferred-write rationale to the report header",
+      "evidence": "report file committed"
+    },
+    "TASK-migrate-real": {
+      "status": "deferred",
+      "reason": "Q1: real migration is a one-way door and the branch has concurrent agents in flight (MDT-168 spec-trace sync, others). Running a per-ticket frontmatter rewrite now would race concurrent edits and potentially clobber in-progress work. Deferred to a clean session the operator controls. Recorded in blocks-migration-report.md header."
+    },
+    "TASK-tests": {
+      "status": "done",
+      "summary": "Aggregate of per-task unit tests above. Total: 17 (satisfaction) + 24 (graph) + 7 (blocks rejection) + 12 (prose) + 14 (deps formatter) + 16 (migration) = 90 new tests, all passing under jest (shared/domain) or bun test (cli/scripts).",
+      "evidence": "see per-task entries"
+    },
+    "TASK-smoke": {
+      "status": "done",
+      "summary": "Manual acceptance smokes executed; see close report for verbatim output. Covered: deps --check on MDT-189 (Ready: YES), deps --check on MDT-065 (real violation surfaced), deps --check --json on MDT-188 (S10 schema), attr blocks+= rejection (S14), migration dry-run.",
+      "evidence": "captured in final close report"
+    }
+  },
   "completionAudit": {
     "definitionOfDone": {
       "pipelineStateExists": true,
@@ -128,11 +193,16 @@
       "everyScenarioCoversBR": "14/14 scenarios cover a real BR-*",
       "everyTestPlanHasCovers": "40/40 test plans cover a requirement or obligation",
       "everyTaskHasOwnsAndMakesGreen": "11/11 tasks linked (7 own ART-*; 4 review/run-only have makes-green only per tasks.md)",
-      "oneCommitPerMilestone": "pre-flight, requirements, bdd, architecture, tests, tasks (6 commits)",
+      "specWiringOneCommitPerMilestone": "pre-flight, requirements, bdd, architecture, tests, tasks (6 commits)",
       "surgicalCommits": "verified via git diff --cached --name-only before every commit; no unrelated in-flight files swept"
     },
-    "openIssues": "none",
-    "implementation": "NOT STARTED (out of scope per prompt - stop before implement)"
+    "implementationDefinitionOfDone": {
+      "acceptanceCriteriaMet": "7/8 functional criteria met (VOC scenario, broken-plan, missing target, clean ticket, cross-project key rendering, --json, blocks write path removed). 1 deferred: 'migration report committed' amended to 'dry-run report committed; real write deferred to a clean session with recorded reason.'",
+      "nonFunctionalMet": "detectCycle O(V+E) (tested on 2/3/5-node cycles); single DependencyGraph interpreter; CLI pure presentation",
+      "deferred": "--tree/--mermaid (Q3 → follow-up ticket); real migration data write (Q1 → clean session); status-transition guardrails + write-time cycle rejection (MDT-191); UI rendering (v1.1); MCP wrappers (v1.1/v1.2)"
+    },
+    "openIssues": "none blocking. Real migration write deferred per Q1 (recorded above and in the dry-run report).",
+    "approvalRequired": "MDT-189 remains 'In Progress'. NOT marked Implemented. Explicit user approval required to close."
   },
-  "updatedAt": "2026-07-18T12:05:00Z"
+  "updatedAt": "2026-07-18T13:00:00Z"
 }
