@@ -2,7 +2,7 @@
 code: MDT-191
 status: Approved
 dateCreated: 2026-07-17T15:35:08.742Z
-type: Architecture
+type: Feature Enhancement
 priority: High
 phaseEpic: MDT-188
 dependsOn: MDT-189
