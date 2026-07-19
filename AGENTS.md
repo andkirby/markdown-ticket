@@ -63,6 +63,10 @@ Load the skills accordingly:
     - Find usages of Ticket declared in a certain file: `scip-finder --from shared/models/Ticket.ts Ticket`
     - Find usages of method Ticket.save(): `scip-finder Ticket.save()`
     - Find usages of myFunction declared in handler.ts: `scip-finder --from handler.ts myFunction`
+- `bun run inspect:config` - Inspect where each configuration setting lives (browser vs backend file, and its exposure class). See [docs/CONFIG_INSPECTION.md](docs/CONFIG_INSPECTION.md).
+  - `--json` - Machine-readable output for agents
+  - `--summary` - Counts per exposure class
+  - `--scope <project|global|user|registry|browser>` / `--exposure <editable|guarded|readOnly|fileOnly|browser-only>` / `--filter <substring>` - filters
 
 ## Architecture
 
@@ -151,7 +155,8 @@ When users ask "how to" questions, search and read the relevant documentation be
 |---------------|----------------------|
 | "How do I run this?" | `README.md` (Quick Start section) |
 | "How do I use Docker?" | `docs/DOCKER_GUIDE.md`, `README.docker.md`, `docs/CRs/MDT-055*.md` (Docker architecture) |
-| "How do I configure projects?" | `docs/CONFIG_SPECIFICATION.md`, `docs/CONFIG_GLOBAL_SPECIFICATION.md` |
+| "How do I configure projects?" | `docs/CONFIG_SPECIFICATION.md`, `docs/CONFIG_GLOBAL_SPECIFICATION.md`, `docs/CONFIG_INSPECTION.md` (`bun run inspect:config`) |
+| "Where does a setting live?" | `docs/CONFIG_INSPECTION.md` — `bun run inspect:config` (browser vs backend file + exposure class) |
 | "How do I test/E2E?" | `tests/AGENTS.md`, `tests/e2e/AGENTS.md` |
 | "How does [feature] work?" | `docs/ARCHITECTURE.md`, `server/docs/ARCHITECTURE.md`, `docs/CRs/` (feature tickets) |
 | "How do I develop locally?" | `docs/DEVELOPMENT_GUIDE.md` |
