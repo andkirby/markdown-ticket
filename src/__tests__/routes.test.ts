@@ -18,6 +18,9 @@ import {
   ROUTE_DIRECT_TICKET,
   buildDirectTicketPath,
   buildDirectTicketSubDocPath,
+  TRACE_GRAPH_HASH,
+  TRACE_GRAPH_HASH_FRAGMENT,
+  isTraceGraphHash,
 } from '../routes'
 
 describe('MDT-184: routes.ts — pattern constants', () => {
@@ -114,6 +117,29 @@ describe('MDT-184: routes.ts — builder functions', () => {
       expect(buildDirectTicketSubDocPath('MDT-184', 'requirements.md')).toBe(
         '/ticket/MDT-184/requirements.md',
       )
+    })
+  })
+})
+
+describe('MDT-174 hot-fix: routes.ts — Trace Graph hash token', () => {
+  it('exposes the reserved hash token and fragment', () => {
+    expect(TRACE_GRAPH_HASH).toBe('trace')
+    expect(TRACE_GRAPH_HASH_FRAGMENT).toBe('#trace')
+  })
+
+  describe('isTraceGraphHash', () => {
+    it('matches the bare token', () => {
+      expect(isTraceGraphHash('trace')).toBe(true)
+    })
+
+    it('matches the leading-# fragment form', () => {
+      expect(isTraceGraphHash('#trace')).toBe(true)
+    })
+
+    it('rejects unrelated hashes (legacy subdoc names)', () => {
+      expect(isTraceGraphHash('architecture')).toBe(false)
+      expect(isTraceGraphHash('#architecture')).toBe(false)
+      expect(isTraceGraphHash('')).toBe(false)
     })
   })
 })

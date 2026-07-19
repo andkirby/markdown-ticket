@@ -74,6 +74,7 @@ TraceGraphShell (opened from TraceGraphAction)
 | Doc tabs | `src/components/TicketViewer/TicketDocumentTabs.tsx` |
 | Trace graph shell | `src/components/TicketViewer/TraceGraphShell.tsx` |
 | Trace graph availability hook | `src/components/TicketViewer/useTraceStoreAvailability.ts` |
+| Trace graph URL hash token | `src/routes.ts` (`TRACE_GRAPH_HASH`, `isTraceGraphHash`) |
 | Navigation hook | `src/components/TicketViewer/useTicketDocumentNavigation.ts` |
 | Content hook | `src/components/TicketViewer/useTicketDocumentContent.ts` |
 | Realtime hook | `src/components/TicketViewer/useTicketDocumentRealtime.ts` |
@@ -140,6 +141,13 @@ Two horizontal bars, both with bottom border:
 - Opens from the `Trace Graph` action as a full-screen ticket-owned viewer.
 - The shell owns app navigation: a floating semi-transparent `Back` button closes the shell and returns to the same ticket viewer state.
 - The dashboard HTML does not own the back button and does not render MDT app chrome.
+- **URL deep link (MDT-174):** shell open state is reflected in the URL via the reserved `#trace` hash fragment, so the URL is a shareable deep link into the graph view.
+  - Opening the shell appends `#trace`; the `Back` control / overlay / Escape removes it.
+  - The hash is the **single source of truth** for shell open state. No local component state mirrors it.
+  - `#trace` is reserved and must not collide with legacy hash-based sub-document links; `useTicketDocumentNavigation` skips it during hash→path redirect resolution.
+  - Switching sub-documents while the shell is open preserves `#trace` (document selection and graph open state are orthogonal).
+  - Closing the ticket modal or switching tickets navigates to a hash-less URL, which drops `#trace` naturally — the viewer must not auto-close the shell via its own effects (that races the modal's initial `isOpen=false` state on deep-link load and strips the hash).
+  - Reserved token and helpers live in `src/routes.ts` (`TRACE_GRAPH_HASH`, `TRACE_GRAPH_HASH_FRAGMENT`, `isTraceGraphHash`).
 - The iframe source is ticket-based, for example:
   - `/spec-trace/trace-dashboard.html?project={projectCode}&ticket={ticketCode}`
 - The dashboard HTML derives its data endpoint from `project` and `ticket`.
@@ -166,7 +174,8 @@ Two horizontal bars, both with bottom border:
 | subdoc removed | SSE subdocument unlink event | if viewing removed doc → switch to main, refetch ticket |
 | trace store present | standard trace store metadata exists | `Trace Graph` action appears in header action area |
 | trace store absent | metadata endpoint reports no store | no graph action is rendered |
-| trace graph open | user clicks `Trace Graph` | full-screen TraceGraphShell replaces ticket content visually; ticket viewer remains the return context |
+| trace graph open | user clicks `Trace Graph` | full-screen TraceGraphShell replaces ticket content visually; ticket viewer remains the return context; `#trace` appended to URL |
+| trace graph open via deep link | URL carries `#trace` on load | shell opens immediately once the ticket modal opens; `#trace` preserved through the async ticket fetch |
 | trace graph loading | iframe is mounting or dashboard fetches store | floating Back remains visible; iframe may show dashboard-owned loading |
 | trace graph unavailable after click | store disappears or fetch fails | floating Back remains visible; show compact shell-owned error in the viewport |
 

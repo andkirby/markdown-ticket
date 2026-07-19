@@ -11,7 +11,7 @@ import type { SubDocument } from '@mdt/shared/models/SubDocument.js'
 import type { Location } from 'react-router-dom'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { buildTicketSubDocPath, isTraceGraphHash } from '../../routes'
+import { buildTicketSubDocPath, isTraceGraphHash, TRACE_GRAPH_HASH_FRAGMENT } from '../../routes'
 import { apiPathToUrlPath, extractSubDocPath, urlPathToApiPath } from '../../utils/subdocPathValidation'
 import { deriveFolderStack, ROOT_DOCUMENT_PATH } from './subdocumentPath'
 
@@ -129,10 +129,9 @@ export function useTicketDocumentNavigation(
   // Handle redirect from hash-based URL
   useEffect(() => {
     if (state.needsRedirect && state.redirectUrl) {
-      console.warn('[DEBUG nav] redirect firing', { redirectUrl: state.redirectUrl, currentHash: location.hash })
       navigate(state.redirectUrl, { replace: true })
     }
-  }, [state.needsRedirect, state.redirectUrl, navigate, location.hash])
+  }, [state.needsRedirect, state.redirectUrl, navigate])
 
   // Track previous ticketCode to detect ticket changes
   const prevTicketCodeRef = useRef(ticketCode)
@@ -178,11 +177,15 @@ export function useTicketDocumentNavigation(
 
     setState(prev => ({ ...prev, selectedPath: path, folderStack, needsRedirect: false }))
 
-    // Update URL to include namespace path for deep linking support
+    // Update URL to include namespace path for deep linking support.
+    // MDT-174: preserve the reserved `#trace` hash — switching the active
+    // document is orthogonal to whether the Trace Graph is open, so the
+    // subdoc URL rewrite must not clobber Trace Graph view state.
     const urlPath = apiPathToUrlPath(path)
-    console.warn('[DEBUG nav] selectPath navigate', { path, urlPath, currentHash: location.hash })
-    navigate(buildTicketSubDocPath(projectCode, ticketCode, urlPath), { replace: true })
-  }, [subdocuments, projectCode, ticketCode, navigate])
+    const base = buildTicketSubDocPath(projectCode, ticketCode, urlPath)
+    const target = isTraceGraphHash(location.hash) ? base + TRACE_GRAPH_HASH_FRAGMENT : base
+    navigate(target, { replace: true })
+  }, [subdocuments, projectCode, ticketCode, navigate, location.hash])
 
   const confirmPathSwitch = useCallback(() => {
     setPendingPath(null)
