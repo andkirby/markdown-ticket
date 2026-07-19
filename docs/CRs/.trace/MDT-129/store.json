@@ -513,6 +513,41 @@
       "text": "WHEN the viewport is mobile-sized, the system shall display only the active project in the collapsed selector rail.",
       "sourceRef": "CR:MDT-129",
       "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-11.1",
+      "kind": "behavior",
+      "text": "WHEN the project browser panel is open with focus in the search field and the filtered list is non-empty, pressing ArrowDown shall move the selection highlight onto the first card in the filtered result list.",
+      "sourceRef": "CR:MDT-129",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-11.2",
+      "kind": "behavior",
+      "text": "WHEN a card is highlighted in the panel, pressing ArrowDown or ArrowUp shall move the highlight to the adjacent card within the filtered result list.",
+      "sourceRef": "CR:MDT-129",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-11.3",
+      "kind": "behavior",
+      "text": "WHEN ArrowDown is pressed on the last card of the filtered list, the highlight shall wrap to the first card; WHEN ArrowUp is pressed on the first card, the highlight shall wrap to the last card.",
+      "sourceRef": "CR:MDT-129",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-11.4",
+      "kind": "behavior",
+      "text": "WHEN a card is highlighted and the user types a character, focus shall remain in the search field and the query shall be updated; the keystroke shall not be dropped or stranded on the card.",
+      "sourceRef": "CR:MDT-129",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-11.5",
+      "kind": "behavior",
+      "text": "WHEN a card is highlighted and the user presses Enter, the highlighted project shall be selected and the panel closed.",
+      "sourceRef": "CR:MDT-129",
+      "routePolicy": "bdd"
     }
   ],
   "scenarios": [
@@ -696,6 +731,41 @@
       "given": "I am viewing the selector rail with inactive project chips visible",
       "when": "I hover over an inactive project chip",
       "then": "a hover card appears after a short delay showing the project code, name, description, and favorite status; when I stop hovering, the card dismisses after a short delay",
+      "sourceRef": "CR:MDT-129"
+    },
+    {
+      "id": "browser_arrow_keys_navigate_list",
+      "title": "Arrow keys move the highlight through the filtered project list, wrapping at the edges",
+      "covers": [
+        "BR-11.1",
+        "BR-11.2",
+        "BR-11.3"
+      ],
+      "given": "the project browser panel is open with at least one project in the filtered list and focus is in the search field",
+      "when": "I press ArrowDown, then ArrowDown/ArrowUp to move the highlight, then ArrowDown on the last card",
+      "then": "the first ArrowDown moves the highlight onto the first card; subsequent arrows move it through the filtered list; ArrowDown on the last card wraps the highlight back to the first card",
+      "sourceRef": "CR:MDT-129"
+    },
+    {
+      "id": "browser_typing_keeps_focus_in_search",
+      "title": "Typing while a card is highlighted keeps focus in the search field and updates the query",
+      "covers": [
+        "BR-11.4"
+      ],
+      "given": "a card is highlighted in the project browser panel after keyboard navigation",
+      "when": "I type a character",
+      "then": "focus remains in the search field, the query updates with the typed character, and the keystroke is not dropped or stranded on the highlighted card",
+      "sourceRef": "CR:MDT-129"
+    },
+    {
+      "id": "browser_enter_selects_highlighted_project",
+      "title": "Enter selects the highlighted project and closes the panel",
+      "covers": [
+        "BR-11.5"
+      ],
+      "given": "a card is highlighted in the project browser panel after keyboard navigation",
+      "when": "I press Enter",
+      "then": "the highlighted project becomes the current project and the panel closes",
       "sourceRef": "CR:MDT-129"
     }
   ],
@@ -990,6 +1060,22 @@
         "ART-test-selector-data-hook"
       ],
       "sourceRef": "CR:MDT-129"
+    },
+    {
+      "id": "OBL-browser-keyboard-navigation",
+      "title": "Project browser panel supports active-descendant keyboard navigation: arrow keys move a selection highlight through the filtered list (wrapping at edges), focus stays in the search field while typing, and Enter selects the highlighted project",
+      "derivedFrom": [
+        "BR-11.1",
+        "BR-11.2",
+        "BR-11.3",
+        "BR-11.4",
+        "BR-11.5"
+      ],
+      "artifactIds": [
+        "ART-browser-panel",
+        "ART-selector-card"
+      ],
+      "sourceRef": "CR:MDT-129"
     }
   ],
   "artifacts": [
@@ -1229,6 +1315,20 @@
         "C9"
       ],
       "sourceRef": "CR:MDT-129"
+    },
+    {
+      "id": "TEST-browser-keyboard-nav",
+      "kind": "unit",
+      "title": "Project browser panel keyboard navigation (arrow highlight, wrap, typing keeps focus, Enter selects)",
+      "covers": [
+        "BR-11.1",
+        "BR-11.2",
+        "BR-11.3",
+        "BR-11.4",
+        "BR-11.5"
+      ],
+      "file": "src/components/ProjectSelector/ProjectBrowserPanel.test.tsx",
+      "sourceRef": "CR:MDT-129"
     }
   ],
   "tasks": [
@@ -1397,6 +1497,24 @@
         "mobile_responsive_selector",
         "rail_ordering_prioritizes_favorites",
         "TEST-project-selector-e2e"
+      ],
+      "sourceRef": "CR:MDT-129"
+    },
+    {
+      "id": "TASK-13",
+      "title": "Port active-descendant keyboard navigation to ProjectBrowserPanel",
+      "ownsArtifactIds": [
+        "ART-browser-panel"
+      ],
+      "makesGreenIds": [
+        "browser_arrow_keys_navigate_list",
+        "browser_typing_keeps_focus_in_search",
+        "browser_enter_selects_highlighted_project",
+        "TEST-browser-keyboard-nav"
+      ],
+      "skills": [
+        "repo-routing",
+        "frontend-react-component"
       ],
       "sourceRef": "CR:MDT-129"
     }

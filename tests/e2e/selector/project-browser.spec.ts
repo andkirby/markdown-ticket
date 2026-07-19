@@ -241,7 +241,7 @@ test.describe('Project Browser Search - MDT-152', () => {
     expect(searchRequests).toHaveLength(0)
   })
 
-  test('Tab moves from search input to first project card, skipping close button', async ({ page, e2eContext }) => {
+  test('Tab does not move focus onto project cards (cards are listbox options; BR-11.4)', async ({ page, e2eContext }) => {
     const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
     await e2eContext.projectFactory.createProject('empty', {
       name: 'Secondary Project',
@@ -255,14 +255,14 @@ test.describe('Project Browser Search - MDT-152', () => {
 
     await page.keyboard.press('Tab')
 
-    const focusedTestId = await page.evaluate(() => document.activeElement?.getAttribute('data-testid'))
-    const focusedRole = await page.evaluate(() => document.activeElement?.getAttribute('role'))
-
-    expect(focusedTestId).toMatch(/^project-browser-card-/)
-    expect(focusedRole).toBe('button')
+    // Cards are listbox options (tabindex -1); Tab must never land on a project card.
+    const focusIsOnCard = await page.evaluate(() =>
+      !!document.activeElement?.closest('[data-project-browser-card="true"]'),
+    )
+    expect(focusIsOnCard).toBe(false)
   })
 
-  test('Enter activates the focused project card', async ({ page, e2eContext }) => {
+  test('Enter activates the active-descendant (highlighted) project card (BR-11.1, BR-11.5)', async ({ page, e2eContext }) => {
     const activeProject = await buildScenario(e2eContext.projectFactory, 'simple')
     const targetProject = await e2eContext.projectFactory.createProject('empty', {
       name: 'Keyboard Target',
@@ -274,33 +274,21 @@ test.describe('Project Browser Search - MDT-152', () => {
     await page.locator(selectorSelectors.panelTrigger).click()
     await expect(page.locator(browserSearchSelectors.panel)).toBeVisible()
 
-    await page.locator(browserSearchSelectors.projectCard(targetProject.key)).focus()
+    // Filter down to the target so it is the only (hence highlighted-first) result
+    await page.locator(browserSearchSelectors.searchInput).fill(targetProject.key)
+    await expect(page.locator(browserSearchSelectors.projectCard(targetProject.key))).toBeVisible()
+
+    // ArrowDown moves the active-descendant highlight onto the first result
+    await page.keyboard.press('ArrowDown')
+    await expect(page.locator(browserSearchSelectors.projectCard(targetProject.key))).toHaveAttribute('data-selected', 'true')
+
     await page.keyboard.press('Enter')
 
     await waitForBoardReady(page)
     await expect(page.locator(selectorSelectors.activeProjectCard)).toContainText(targetProject.key)
   })
 
-  test('Space activates the focused project card', async ({ page, e2eContext }) => {
-    const activeProject = await buildScenario(e2eContext.projectFactory, 'simple')
-    const targetProject = await e2eContext.projectFactory.createProject('empty', {
-      name: 'Space Target',
-    })
-
-    await page.goto(`/prj/${activeProject.projectCode}`)
-    await waitForBoardReady(page)
-
-    await page.locator(selectorSelectors.panelTrigger).click()
-    await expect(page.locator(browserSearchSelectors.panel)).toBeVisible()
-
-    await page.locator(browserSearchSelectors.projectCard(targetProject.key)).focus()
-    await page.keyboard.press('Space')
-
-    await waitForBoardReady(page)
-    await expect(page.locator(selectorSelectors.activeProjectCard)).toContainText(targetProject.key)
-  })
-
-  test('arrow keys move focus between visible project cards', async ({ page, e2eContext }) => {
+  test('arrow keys navigate the 2-column grid by column (Excel-grid) with cyclic wrap (BR-11.2, BR-11.3)', async ({ page, e2eContext }) => {
     const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
 
     for (let i = 0; i < 4; i++) {
@@ -318,25 +306,39 @@ test.describe('Project Browser Search - MDT-152', () => {
     const visibleProjectKeys = await page.locator('[data-project-browser-card="true"]').evaluateAll(nodes =>
       nodes.map(node => node.getAttribute('data-project-key')),
     )
-
     expect(visibleProjectKeys.length).toBeGreaterThanOrEqual(4)
 
-    await page.keyboard.press('Tab')
-    await expect(page.locator(browserSearchSelectors.projectCard(visibleProjectKeys[0]!))).toBeFocused()
+    // Confirm the rendered grid is actually 2 columns at desktop width (md:grid-cols-2).
+    // Without this, the column-nav assertions below would be meaningless.
+    const columnCount = await page.locator('[role="listbox"]').evaluate((el: HTMLElement) =>
+      window.getComputedStyle(el).gridTemplateColumns.split(' ').filter(Boolean).length,
+    )
+    expect(columnCount).toBe(2)
+    const cols = 2
+    const lastIndex = visibleProjectKeys.length - 1
 
-    await page.keyboard.press('ArrowRight')
-    await expect(page.locator(browserSearchSelectors.projectCard(visibleProjectKeys[1]!))).toBeFocused()
+    // The active project is highlighted on open, wherever it sits in the ordering
+    // (the panel is NOT active-first; it is favorites/usage ordered). Tab is
+    // intercepted so focus stays in the search field.
+    const activeKey = scenario.projectCode
+    const activeIndex = visibleProjectKeys.indexOf(activeKey)
+    expect(activeIndex).toBeGreaterThanOrEqual(0)
 
+    const selectedKey = async () => page.locator('[data-project-browser-card="true"][data-selected="true"]').getAttribute('data-project-key')
+    const selectedIndex = async () => visibleProjectKeys.indexOf((await selectedKey()) ?? '')
+
+    expect(await selectedKey()).toBe(activeKey)
+    await expect(page.locator(browserSearchSelectors.searchInput)).toBeFocused()
+
+    // ArrowDown moves down the SAME column: index += cols (wrapping to the column
+    // top if it overshoots). This is the assertion that catches the zigzag regression
+    // (linear nav would have moved to activeIndex + 1, a different column).
+    let expectedDown = activeIndex + cols
+    if (expectedDown > lastIndex)
+      expectedDown = activeIndex % cols
     await page.keyboard.press('ArrowDown')
-    await expect(page.locator(browserSearchSelectors.projectCard(visibleProjectKeys[3]!))).toBeFocused()
-
-    await page.keyboard.press('ArrowLeft')
-    await expect(page.locator(browserSearchSelectors.projectCard(visibleProjectKeys[2]!))).toBeFocused()
-
-    await page.keyboard.press('Home')
-    await expect(page.locator(browserSearchSelectors.projectCard(visibleProjectKeys[0]!))).toBeFocused()
-
-    await page.keyboard.press('End')
-    await expect(page.locator(browserSearchSelectors.projectCard(visibleProjectKeys[visibleProjectKeys.length - 1]!))).toBeFocused()
+    expect(await selectedIndex()).toBe(expectedDown)
+    // Sanity: the move was by a column, not by one (the zigzag bug)
+    expect(expectedDown).not.toBe(activeIndex + 1)
   })
 })

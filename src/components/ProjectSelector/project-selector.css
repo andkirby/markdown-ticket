@@ -44,6 +44,14 @@
     @apply outline-none ring-2 ring-ring;
   }
 
+  /* Active-descendant highlight in the project browser listbox (BR-11).
+     Uses outline (not ring/box-shadow) so it cannot be clobbered by the
+     active card's own box-shadow and stays visible on every card. */
+  .project-card[data-selected="true"] {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
   /* Active variant — highlighted gradient */
   .project-card[data-active="true"] {
     background: linear-gradient(
