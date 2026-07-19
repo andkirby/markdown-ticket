@@ -83,6 +83,21 @@ describe('useTicketDocumentNavigation', () => {
     expect(result.current.folderStack).toContain('poc')
   })
 
+  // ─── Reserved Trace Graph hash (MDT-174 hot-fix) ─────────────────────────
+
+  it('does not treat the reserved #trace hash as a legacy subdoc path', () => {
+    // Even if a subdocument literally named "trace" existed, the reserved
+    // token belongs to Trace Graph view state and must not trigger the
+    // hash→path redirect.
+    const subdocuments = [{ name: 'trace', kind: 'file' as const, children: [] }]
+    const { result } = renderHook(
+      () => useTicketDocumentNavigation({ subdocuments, ticketCode: 'MDT-093', projectCode: 'MDT' }),
+      { wrapper: ({ children }) => wrapper({ children, initialEntries: ['/ticket/MDT-093#trace'] }) },
+    )
+    expect(result.current.selectedPath).toBe('main')
+    expect(result.current.folderStack).toEqual([])
+  })
+
   // ─── Selection and URL update (BR-4.1, C4) ───────────────────────────────
 
   it('updates selected path when a non-main document is selected (BR-4.1, C4)', () => {

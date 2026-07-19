@@ -23,10 +23,12 @@ priority: High
 
 ### Affected Artifacts
 
-- `src/components/TicketViewer/index.tsx` - render conditional trace graph entry and open shell.
+- `src/components/TicketViewer/index.tsx` - render conditional trace graph entry and open shell; reflect shell open state in the `#trace` URL hash.
 - `src/components/TicketViewer/CompactTicketHeader.tsx` - host or expose header action placement.
 - `src/components/TicketViewer/TraceGraphShell.tsx` - new full-screen parent shell.
 - `src/components/TicketViewer/useTraceStoreAvailability.ts` - new availability hook.
+- `src/components/TicketViewer/useTicketDocumentNavigation.ts` - exclude reserved `#trace` from the legacy hash→subdoc redirect; preserve `#trace` across subdoc URL rewrites.
+- `src/routes.ts` - reserved trace-graph hash token and helpers (`TRACE_GRAPH_HASH`, `TRACE_GRAPH_HASH_FRAGMENT`, `isTraceGraphHash`).
 - `src/services/dataLayer.ts` - trace store metadata/data fetch methods.
 - `server/routes/projects.ts` - trace store routes under ticket resource.
 - `server/controllers/ProjectController.ts` - trace store route handlers.
@@ -144,25 +146,29 @@ Embed the static trace dashboard in a ticket-owned full-screen iframe shell with
 
 ### Functional
 
-- [ ] `GET /api/projects/:projectId/crs/:ticketCode/trace-store/meta` returns presence metadata for existing standard trace store.
-- [ ] `GET /api/projects/:projectId/crs/:ticketCode/trace-store` returns the JSON from `{ticketsDir}/.trace/{ticketCode}/store.json`.
-- [ ] Trace store endpoints return 404 for missing stores without leaking filesystem paths.
-- [ ] Trace store path resolution rejects traversal and symlink escapes outside the standard trace directory.
-- [ ] `TicketViewer` shows `Trace Graph` only when trace metadata reports an existing store.
-- [ ] Clicking `Trace Graph` opens a full-screen shell with Back and ticket context.
-- [ ] Back closes the shell and returns to the same ticket viewer state.
-- [ ] iframe URL uses only project code and ticket code query params.
-- [ ] Dashboard CSS is isolated from MDT app CSS through iframe rendering.
-- [ ] `trace-dashboard.html` fetches `/api/projects/{project}/crs/{ticket}/trace-store` from query params.
-- [ ] No graph-board internals are reimplemented in React.
+- [x] `GET /api/projects/:projectId/crs/:ticketCode/trace-store/meta` returns presence metadata for existing standard trace store.
+- [x] `GET /api/projects/:projectId/crs/:ticketCode/trace-store` returns the JSON from `{ticketsDir}/.trace/{ticketCode}/store.json`.
+- [x] Trace store endpoints return 404 for missing stores without leaking filesystem paths.
+- [x] Trace store path resolution rejects traversal and symlink escapes outside the standard trace directory.
+- [x] `TicketViewer` shows `Trace Graph` only when trace metadata reports an existing store.
+- [x] Clicking `Trace Graph` opens a full-screen shell with Back and ticket context.
+- [x] Back closes the shell and returns to the same ticket viewer state.
+- [x] Shell open state is reflected in the URL via the reserved `#trace` hash: clicking the action appends `#trace`, Back/overlay/Escape removes it, and the URL is a deep link that opens the shell on direct load.
+- [x] The `#trace` hash survives the async ticket fetch on deep-link load (no auto-close effect strips it while the modal's `isOpen` is briefly false).
+- [x] Switching sub-documents while the shell is open preserves `#trace` (document selection and graph open state are orthogonal).
+- [x] Closing the ticket modal and switching tickets navigate to hash-less URLs, dropping `#trace` naturally.
+- [x] iframe URL uses only project code and ticket code query params.
+- [x] Dashboard CSS is isolated from MDT app CSS through iframe rendering.
+- [x] `trace-dashboard.html` fetches `/api/projects/{project}/crs/{ticket}/trace-store` from query params.
+- [x] No graph-board internals are reimplemented in React.
 
 ### Non-Functional
 
-- [ ] Frontend query params do not contain filesystem paths.
-- [ ] Ticket Viewer remains usable when trace metadata request fails.
-- [ ] Dashboard iframe fills remaining viewport under the shell bar on mobile and desktop.
-- [ ] Existing ticket document tabs and MarkdownContent behavior remain unchanged when shell is closed.
-- [ ] Design docs remain aligned with implementation: `ticket-viewer.spec.md` and `ticket-viewer.mockups.md` reflect shipped behavior.
+- [x] Frontend query params do not contain filesystem paths.
+- [x] Ticket Viewer remains usable when trace metadata request fails.
+- [x] Dashboard iframe fills remaining viewport under the shell bar on mobile and desktop.
+- [x] Existing ticket document tabs and MarkdownContent behavior remain unchanged when shell is closed.
+- [x] Design docs remain aligned with implementation: `ticket-viewer.spec.md` and `ticket-viewer.mockups.md` reflect shipped behavior.
 
 ### Testing
 
@@ -173,6 +179,8 @@ Embed the static trace dashboard in a ticket-owned full-screen iframe shell with
 - API: store endpoint missing store -> 404 without absolute path in body.
 - Frontend unit: availability hook maps metadata states to render states.
 - Frontend unit: TraceGraphShell builds iframe URL from project code and ticket code.
+- Frontend unit: clicking `Trace Graph` appends `#trace`; Back removes it; an initial URL carrying `#trace` opens the shell on mount; dropping the hash via navigation closes it.
+- Frontend unit: `isTraceGraphHash` and the reserved token in `src/routes.ts`.
 - E2E: open ticket with trace store -> `Trace Graph` appears -> shell opens -> Back returns to ticket.
 - E2E: open ticket without trace store -> `Trace Graph` is absent.
 - Manual: verify dashboard styles are preserved inside iframe.

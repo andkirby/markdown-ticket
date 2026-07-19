@@ -44,6 +44,21 @@ export const ROUTE_TICKET_SUBDOC = '/prj/:projectCode/ticket/:ticketKey/*' as co
 export const ROUTE_DIRECT_TICKET = '/ticket/:ticketKey' as const
 export const ROUTE_DIRECT_TICKET_SUBDOC = '/ticket/:ticketKey/*' as const
 
+// ── Reserved URL hash fragments (URL-synced view state) ───────────────────
+//
+// MDT-174 hot-fix: the Trace Graph shell open/close state is reflected in the
+// URL hash so the URL is a deep link into the graph view. These constants are
+// the single source of truth for the reserved token. `useTicketDocumentNavigation`
+// excludes this token from the legacy hash-as-subdoc redirect (MDT-093) so the
+// two hash uses do not collide.
+
+export const TRACE_GRAPH_HASH = 'trace' as const
+export const TRACE_GRAPH_HASH_FRAGMENT = `#${TRACE_GRAPH_HASH}` as const
+
+export function isTraceGraphHash(hash: string): boolean {
+  return hash.replace(/^#/, '') === TRACE_GRAPH_HASH
+}
+
 // ── Builders (derive from pattern constants via generatePath) ─────────────
 
 export function buildProjectPath(projectCode: string, view: 'board' | 'list' | 'documents' = 'board'): string {
