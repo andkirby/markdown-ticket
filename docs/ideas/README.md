@@ -11,6 +11,7 @@
 | IDEA-005 | Tickets List → Mermaid Grid (CLI output) | triage | — |
 | IDEA-006 | Sub-Areas Within a Project (`area` attribute) | triage | — |
 | IDEA-007 | Status-Colored Ticket Reference Badges | triage | — |
+| IDEA-008 | Ticket Dependency Graph and Guardrails | triage | — |
 
 ## Resolved
 
