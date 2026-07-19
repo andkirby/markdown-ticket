@@ -31,7 +31,7 @@ function createProcessorMd(): MarkdownIt {
 
   // @ts-expect-error markdown-it types don't expose all plugin signatures cleanly
   const md = new MarkdownIt({
-    html: false,
+    html: true,
     linkify: true,
     typographer: true,
   })
@@ -100,21 +100,19 @@ describe('useMarkdownProcessor pipeline (markdown-it)', () => {
       expect(html).toContain('<td>')
     })
 
-    it('keeps angle-bracket placeholders as text instead of opening raw HTML tags', () => {
+    it('renders inline raw HTML in table cells (html: true regression)', () => {
+      // Under html:true, raw `<code>foo</code>` (NOT inside markdown backticks)
+      // is a live tag preserved through sanitization.
+      // Note: raw HTML inside backticks is still escaped — inline code protects
+      // its content from HTML parsing regardless of the html: flag.
       const html = renderPipeline([
-        '- `BR-1` WHEN command receives <key>, it resolves the ticket.',
-        '- `BR-2` WHEN --project <code> is provided, it selects the project.',
-        '',
         '| Route | IDs |',
         '| --- | --- |',
-        '| bdd | `BR-1`, `BR-2` |',
+        '| bdd | <code>foo</code> |',
       ].join('\n'))
 
-      expect(html).toContain('&lt;key&gt;')
-      expect(html).toContain('&lt;code&gt;')
       expect(html).toContain('<table>')
-      expect(html).not.toContain('<code><code>')
-      expect(html).not.toContain('<code> is provided')
+      expect(html).toContain('<code>foo</code>')
     })
   })
 
@@ -290,6 +288,64 @@ describe('useMarkdownProcessor pipeline (markdown-it)', () => {
       // Code block should be preserved through preprocess → render
       expect(html).toContain('language-typescript')
       expect(html).toContain('Title')
+    })
+  })
+
+  describe('raw HTML support (html: true) + XSS safety', () => {
+    it('preserves safe raw anchor with target=_blank (BR-HTML-1)', () => {
+      const html = renderPipeline('<a href="https://example.com" target="_blank">example-dot-com</a>')
+
+      expect(html).toContain('href="https://example.com"')
+      expect(html).toContain('target="_blank"')
+      expect(html).toContain('example-dot-com')
+    })
+
+    it('strips <script> tags (BR-HTML-2)', () => {
+      const html = renderPipeline('<script>alert(1)</script>after')
+
+      expect(html).not.toContain('<script')
+      expect(html).not.toContain('</script>')
+    })
+
+    it('strips event-handler attributes like onerror (BR-HTML-2)', () => {
+      const html = renderPipeline('<img src=x onerror=alert(1)>')
+
+      // <img> tag survives (allowed), but onerror is stripped (not in ALLOWED_ATTR)
+      expect(html).not.toContain('onerror')
+      expect(html).not.toContain('alert(1)')
+    })
+
+    it('strips javascript: URI scheme on href (BR-HTML-2)', () => {
+      const html = renderPipeline('<a href="javascript:alert(1)">x</a>')
+
+      expect(html).not.toContain('javascript:')
+      expect(html).not.toContain('alert(1)')
+    })
+
+    it('strips event-handler attributes but keeps safe href (BR-HTML-2)', () => {
+      const html = renderPipeline('<a href="https://example.com" onclick="alert(1)">x</a>')
+
+      // onclick is stripped, href kept
+      expect(html).not.toContain('onclick')
+      expect(html).not.toContain('alert(1)')
+      expect(html).toContain('href="https://example.com"')
+    })
+
+    it('strips disallowed tags like <iframe> entirely (BR-HTML-2)', () => {
+      const html = renderPipeline('<iframe src="https://evil.com"></iframe>after')
+
+      expect(html).not.toContain('<iframe')
+      expect(html).not.toContain('</iframe>')
+      expect(html).not.toContain('evil.com')
+    })
+
+    it('drops unknown tags like <key> (not in ALLOWED_TAGS)', () => {
+      const html = renderPipeline('receives <key>, it resolves')
+
+      // <key> is unknown to DOMPurify allowlist — stripped entirely.
+      // Inner text remains as plain text content.
+      expect(html).not.toContain('<key')
+      expect(html).not.toContain('</key>')
     })
   })
 

@@ -36,8 +36,13 @@ export function useMarkdownProcessor(
 
   // Initialize markdown-it converter
   const converter = useMemo(() => {
+    // `html: true` passes raw HTML (e.g. `<a href=... target=_blank>`) through to the
+    // token stream. Security is enforced downstream — DOMPurify (pipeline step 5 below)
+    // strips disallowed tags/attributes/dangerous URI schemes against an explicit
+    // allowlist, and SmartLink rebuilds every `<a>` from scratch so author-supplied
+    // target/rel/handlers are discarded. See docs/CRs/MDT-195 for the threat model.
     const md = new MarkdownIt({
-      html: false,
+      html: true,
       breaks: true,
       linkify: true,
       typographer: true,
