@@ -5,7 +5,7 @@ import type { Ticket } from '../../types'
 import { AlertTriangle, Network } from 'lucide-react'
 import * as React from 'react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
   getMarkdownDensity,
   getMarkdownDensityClass,
@@ -13,6 +13,7 @@ import {
   MARKDOWN_DENSITY_KEY,
 } from '../../config/settingsPreferences'
 import { formatTicketPageTitle, PageTitlePriority, usePageTitle } from '../../hooks/usePageTitle'
+import { isTraceGraphHash, TRACE_GRAPH_HASH_FRAGMENT } from '../../routes'
 import { dataLayer } from '../../services/dataLayer'
 import { useEventBus } from '../../services/eventBus'
 import { filePathToApiPath } from '../../utils/subdocPathValidation'
@@ -104,10 +105,22 @@ function deriveTicketContextLabel(
 
 const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ticketsPath, ticketError }) => {
   const { projectCode } = useParams<{ projectCode: string }>()
+  const location = useLocation()
+  const navigate = useNavigate()
   const [currentTicket, setCurrentTicket] = useState<Ticket | null>(ticket)
   const [markdownDensity, setMarkdownDensity] = useState(getMarkdownDensity)
-  const [isTraceGraphOpen, setIsTraceGraphOpen] = useState(false)
+  // MDT-174 hot-fix: Trace Graph open state is URL-synced via the reserved
+  // `#trace` hash so the URL is a deep link into the graph view.
+  const isTraceGraphOpen = isTraceGraphHash(location.hash)
   const [tabNavigationHeight, setTabNavigationHeight] = useState<number | null>(null)
+
+  const openTraceGraph = useCallback(() => {
+    navigate(location.pathname + location.search + TRACE_GRAPH_HASH_FRAGMENT, { replace: true })
+  }, [location.pathname, location.search, navigate])
+
+  const closeTraceGraph = useCallback(() => {
+    navigate(location.pathname + location.search, { replace: true })
+  }, [location.pathname, location.search, navigate])
 
   // MDT-094: Update internal state when prop changes.
   // When a ticket is selected, fetch full ticket content if not already present.
@@ -243,14 +256,12 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
     isEnabled: isOpen && !!currentTicket,
   })
 
-  useEffect(() => {
-    if (!isOpen)
-      setIsTraceGraphOpen(false)
-  }, [isOpen])
-
-  useEffect(() => {
-    setIsTraceGraphOpen(false)
-  }, [currentTicket?.code])
+  // MDT-174: Trace Graph open state is URL-synced via the reserved `#trace`
+  // hash. The hash is the single source of truth — we do NOT auto-close it
+  // here. Closing the ticket modal (App.tsx handleTicketClose) and switching
+  // tickets (handleTicketClick) both navigate to hash-less URLs, which drops
+  // `#trace` naturally. Auto-closing in this component raced the modal's
+  // initial isOpen=false state on deep-link load and stripped the hash.
 
   const { content: subdocContent, loading: subdocLoading, error: subdocError, invalidateCache, invalidateAndRefetch } = useTicketDocumentContent({
     projectId: projectCode ?? '',
@@ -363,7 +374,7 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
         <button
           type="button"
           className="trace-graph-action"
-          onClick={() => setIsTraceGraphOpen(true)}
+          onClick={openTraceGraph}
         >
           <Network aria-hidden="true" />
           <span>Trace Graph</span>
@@ -474,7 +485,7 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
           isOpen={isTraceGraphOpen}
           projectCode={projectCode ?? ''}
           ticketCode={currentTicket.code}
-          onClose={() => setIsTraceGraphOpen(false)}
+          onClose={closeTraceGraph}
         />
       )}
     </>

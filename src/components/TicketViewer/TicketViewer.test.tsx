@@ -3,7 +3,8 @@ import type * as React from 'react'
 import type { Ticket } from '../../types'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterAll, afterEach, beforeEach, describe, expect, it, mock } from 'bun:test'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
+import { TRACE_GRAPH_HASH_FRAGMENT } from '../../routes'
 import TicketViewer from './index'
 
 const fetchTicket = mock(async () => null)
@@ -133,10 +134,33 @@ const ticket = {
   lastModified: '2026-05-18T12:00:00Z',
 } as Ticket
 
-function renderTicketViewer(props: { ticket?: Ticket, isOpen?: boolean, onClose?: () => void } = {}) {
+// Location probe: MemoryRouter keeps its own history and does not touch
+// window.location, so we render a hidden element that mirrors the router's
+// current hash for assertions.
+function LocationHashProbe() {
+  const location = useLocation()
+  return <span data-testid="location-hash">{location.hash}</span>
+}
+
+// Capture the router's navigate so tests can simulate App-level navigations
+// (e.g. handleTicketClick) that drive hash changes from outside TicketViewer.
+let capturedNavigate: ((to: string) => void) | null = null
+function NavigateCapture() {
+  capturedNavigate = useNavigate()
+  return null
+}
+
+function renderTicketViewer(props: {
+  ticket?: Ticket
+  isOpen?: boolean
+  onClose?: () => void
+  initialEntry?: string
+} = {}) {
   const onClose = props.onClose ?? mock(() => undefined)
   const rendered = render(
-    <MemoryRouter initialEntries={['/projects/MDT']}>
+    <MemoryRouter initialEntries={[props.initialEntry ?? '/projects/MDT']}>
+      <LocationHashProbe />
+      <NavigateCapture />
       <Routes>
         <Route
           path="/projects/:projectCode"
@@ -169,6 +193,7 @@ describe('TicketViewer', () => {
     selectedPath = 'main'
     liveSubdocuments = []
     document.title = 'CR Task Board'
+    capturedNavigate = null
   })
 
   afterEach(() => {
@@ -296,44 +321,80 @@ describe('TicketViewer', () => {
     expect(document.title).toBe('MDT-173 - Markdown typography variants')
   })
 
-  it('does not carry an open trace graph to the next ticket', async () => {
+  // ─── MDT-174 hot-fix: #trace URL deep-link ────────────────────────────────
+
+  it('appends #trace to the URL when Trace Graph is opened', async () => {
+    fetchTraceStoreMetadata.mockResolvedValueOnce({
+      exists: true,
+      ticketCode: 'MDT-173',
+      label: 'MDT-173/store.json',
+    })
+
+    renderTicketViewer()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Trace Graph' }))
+
+    await waitFor(() => {
+      expect(screen.getByTestId('location-hash')).toHaveTextContent(TRACE_GRAPH_HASH_FRAGMENT)
+    })
+  })
+
+  it('removes #trace from the URL when Back is clicked', async () => {
+    fetchTraceStoreMetadata.mockResolvedValueOnce({
+      exists: true,
+      ticketCode: 'MDT-173',
+      label: 'MDT-173/store.json',
+    })
+
+    renderTicketViewer()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Trace Graph' }))
+    await waitFor(() => expect(screen.getByTestId('location-hash')).toHaveTextContent(TRACE_GRAPH_HASH_FRAGMENT))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Back to ticket' }))
+
+    await waitFor(() => {
+      expect(screen.getByTestId('location-hash')).toHaveTextContent('')
+    })
+  })
+
+  it('opens the Trace Graph shell when the URL already carries #trace', async () => {
     fetchTraceStoreMetadata.mockResolvedValue({
       exists: true,
       ticketCode: 'MDT-173',
       label: 'MDT-173/store.json',
     })
-    const nextTicket = {
-      ...ticket,
-      code: 'MDT-174',
-      title: 'Trace graph viewer',
-    } as Ticket
 
-    const { rerender } = renderTicketViewer()
+    renderTicketViewer({ initialEntry: `/projects/MDT${TRACE_GRAPH_HASH_FRAGMENT}` })
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Trace Graph' }))
-    expect(screen.getByTestId('trace-graph-shell')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByTestId('trace-graph-shell')).toBeInTheDocument()
+    })
+  })
 
-    rerender(
-      <MemoryRouter initialEntries={['/projects/MDT']}>
-        <Routes>
-          <Route
-            path="/projects/:projectCode"
-            element={(
-              <TicketViewer
-                ticket={nextTicket}
-                isOpen={true}
-                onClose={mock(() => undefined)}
-                ticketsPath="docs/CRs"
-              />
-            )}
-          />
-        </Routes>
-      </MemoryRouter>,
-    )
+  it('closes the Trace Graph when navigation drops the #trace hash (ticket switch)', async () => {
+    // MDT-174: the hash is the single source of truth. In the real app, ticket
+    // switching goes through App.tsx handleTicketClick, which navigates to a
+    // hash-less ticket URL. Simulate that navigation here via the captured
+    // router navigate and confirm the shell closes because the hash is gone.
+    fetchTraceStoreMetadata.mockResolvedValue({
+      exists: true,
+      ticketCode: 'MDT-173',
+      label: 'MDT-173/store.json',
+    })
+
+    renderTicketViewer({ initialEntry: `/projects/MDT${TRACE_GRAPH_HASH_FRAGMENT}` })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('trace-graph-shell')).toBeInTheDocument()
+    })
+
+    // Mirror handleTicketClick: navigate to the next ticket without #trace.
+    capturedNavigate!('/projects/MDT')
 
     await waitFor(() => {
       expect(screen.queryByTestId('trace-graph-shell')).toBeNull()
     })
-    expect(screen.getByTestId('ticket-detail')).toBeInTheDocument()
+    expect(screen.getByTestId('location-hash')).toHaveTextContent('')
   })
 })

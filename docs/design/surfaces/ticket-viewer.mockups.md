@@ -124,6 +124,8 @@ annotation "Viewport shell has no modal padding, margin, rounded card, or shadow
 annotation "Iframe is a black box; this mockup does not specify graph-board internals" target="trace-iframe" position=right
 ```
 
+> **URL deep link (MDT-174):** the shell looks identical whether opened by the `Trace Graph` action or by a URL carrying `#trace`. Opening appends `#trace` to the address bar; `Back`/overlay/Escape removes it. See `ticket-viewer.spec.md` → TraceGraphShell for the full rule.
+
 ## Trace Graph Unavailable After Open
 
 ```wireloom
