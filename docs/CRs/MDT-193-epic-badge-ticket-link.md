@@ -1,6 +1,6 @@
 ---
 code: MDT-193
-status: In Progress
+status: Implemented
 dateCreated: 2026-07-18T08:04:52.769Z
 type: Feature Enhancement
 priority: Medium
@@ -78,18 +78,18 @@ All resolved during architecture (see §6 Implementation Notes):
 ## 4. Acceptance Criteria
 
 ### Functional
-- [ ] A ticket whose epic value is a bare same-project ticket key shows that key as a clickable link in the Epic badge
-- [ ] Clicking a same-project Epic badge link navigates to the referenced ticket's view
-- [ ] A ticket whose epic value is a ticket-key shape (e.g. `ABC-012`, `ABC-012.md`, `ABC-012#section`) shows that key as a clickable link
-- [ ] Clicking the Epic badge link navigates within the app to the resolved ticket route
-- [ ] A ticket whose epic value is free text (not a ticket key) renders the Epic badge as plain text, identical to current behavior
-- [ ] Clicking the Epic badge link does not simultaneously trigger the parent card/row's primary action
-- [ ] Epic badge linking behaves identically across board cards, list rows, ticket detail header, and attributes panel
-- [ ] Disabling the global ticket-link toggle disables Epic badge links (consistency with other link surfaces)
+- [x] A ticket whose epic value is a bare same-project ticket key shows that key as a clickable link in the Epic badge
+- [x] Clicking a same-project Epic badge link navigates to the referenced ticket's view
+- [x] A ticket whose epic value is a ticket-key shape (e.g. `ABC-012`, `ABC-012.md`, `ABC-012#section`) shows that key as a clickable link
+- [x] Clicking the Epic badge link navigates within the app to the resolved ticket route
+- [x] A ticket whose epic value is free text (not a ticket key) renders the Epic badge as plain text, identical to current behavior
+- [x] Clicking the Epic badge link does not simultaneously trigger the parent card/row's primary action
+- [x] Epic badge linking behaves identically across board cards, list rows, ticket detail header, and attributes panel
+- [x] Disabling the global ticket-link toggle disables Epic badge links (consistency with other link surfaces)
 
 ### Non-Functional
-- [ ] No new runtime dependency introduced
-- [ ] No measurable increase in Epic badge render time (link resolution is a single regex classification)
+- [x] No new runtime dependency introduced
+- [x] No measurable increase in Epic badge render time (link resolution is a single regex classification)
 
 ### Edge Cases
 - Empty `phaseEpic` — badge does not render (no change from today)
