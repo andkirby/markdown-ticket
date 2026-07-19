@@ -174,17 +174,45 @@ exists for `--tree`; `--mermaid` is a formatter over the graph. Both are
 nice-to-haves. The acceptance test is `--check`; do not let tree/mermaid
 balloon the ticket.
 
+### D6 — Relationship inventory renders by default; `--check` is strict mode (UAT 2026-07-19)
+
+The default `mdt-cli deps <KEY>` output shows the relationship inventory, not
+just violations. `--check` becomes the strict violations-only mode that
+preserves the pre-UAT contract for scripts.
+
+**Why this amendment exists.** Initial v1 shipped `deps <KEY>` as
+violations-only — same as `deps <KEY> --check`. A ticket with empty
+`dependsOn` and non-empty `blocks` (e.g., MDT-189 itself) rendered as a bare
+"Ready: YES" indistinguishable from a leaf ticket with no relationships. That
+collapsed the user's primary question — "what is this ticket connected to?" —
+into the derived verdict only, losing the structure the verdict was computed
+from. UAT feedback: showing readiness without the graph is showing the answer
+without the question.
+
+**Decision.** Default output gains an inventory section computed from
+`inverse(graph)` for "Blocks" and `target.dependsOn` for "Depends on",
+rendered above the violations table. `--check` keeps the strict
+violations-only behavior. `--json`/`--yaml` gain a `relations` block. The
+inventory data comes from the same `DepGraph` the violation reporter uses
+(C-11) — the CLI calls `inverse(graph)`, never re-derives blocking edges from
+raw arrays.
+
 ## Data Flow
 
 ```
-User runs: mdt-cli deps MDT-188 --check
+User runs: mdt-cli deps MDT-188            (default; inventory + violations)
+   or:     mdt-cli deps MDT-188 --check    (strict; violations only)
   → depsAction resolves project + target ticket
   → TicketService.listTickets({ project, all: true })
   → buildGraph(tickets, project.code)
   → violations(target, graph) → Violation[]
+  → inverse(graph) → blocks-by-key map (used for relationship inventory)
   → scan target.content for CR-key tokens not in dependsOn → proseGaps
-  → depsFormatter.printViolationTable(target, violations)
-  → depsFormatter.printProseGaps(proseGaps)
+  → if --check strict: depsFormatter.printViolationTable + proseGaps only
+  → else (default): depsFormatter.printRelationshipInventory(target, graph)
+                    + depsFormatter.printViolationTable + proseGaps
+  → --json/--yaml: data.relations { dependsOn, blocks } added alongside
+                    data.violations and data.proseGaps
 ```
 
 ## Migration & Rollback

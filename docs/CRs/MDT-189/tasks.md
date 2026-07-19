@@ -103,6 +103,34 @@ commit must be separate so the one-way door is revertible.
 - Status-transition guardrail — MDT-191.
 - Write-time cycle rejection — MDT-191.
 
+## UAT 2026-07-19 — Relationship inventory amendment
+
+Tasks 1–11 are the original v1 plan and have shipped. UAT 2026-07-19 found
+that the shipped `deps <KEY>` output is violations-only — a ticket that only
+blocks others renders as a bare "Ready: YES" indistinguishable from a leaf.
+These two tasks close that gap. See `uat.md` for the brief.
+
+- [ ] 12. Add relationship-inventory formatter + `--check` strict mode (`TASK-relations-formatter`)
+  Owns: `cli/src/output/depsFormatter.ts` (extend), `cli/src/commands/deps.ts`
+  (strict-mode flag handling)
+  Makes Green: TEST-deps-default-inventory, TEST-deps-outgoing-blocks,
+  TEST-deps-check-strict
+  Notes: extend `DepsReport` with an optional `relations` field; add
+  `formatRelationshipInventory()` that renders "Depends on" and "Blocks"
+  sections from `target.dependsOn` and `inverse(graph)` respectively. Default
+  output gains the section; `--check` strict suppresses it. The inventory must
+  call `inverse(graph)` (C-11) — never re-derive blocking edges from raw
+  arrays in the CLI.
+
+- [ ] 13. Wire `relations` block into structured output (`TASK-relations-wire`)
+  Owns: `cli/src/commands/deps.ts` (structured-output branch), structured
+  output tests
+  Makes Green: TEST-deps-relations-json, TEST-deps-json (amended)
+  Notes: add `data.relations = { dependsOn: [{key, status}], blocks: [{key,
+  status}] }` to both `--json` and `--yaml` outputs. Existing `violations`
+  and `proseGaps` fields unchanged. The `relations` block is computed in the
+  same `depsAction` call that already builds the graph; no second traversal.
+
 ## Sequencing rules
 
 - TASK-graph depends on TASK-satisfaction.
@@ -111,15 +139,20 @@ commit must be separate so the one-way door is revertible.
 - TASK-remove-write depends on TASK-migrate-real (and is its own commit).
 - TASK-deps-command depends on TASK-graph + TASK-formatter.
 - TASK-prose-scan can parallelize with TASK-formatter.
-- TASK-smoke is the gate; nothing else closes the ticket.
+- TASK-relations-wire depends on TASK-relations-formatter.
+- TASK-smoke (re-run after UAT amendment) is the gate; nothing else closes
+  the ticket.
 
 ## Effort estimate
 
-- Foundation (TASK-satisfaction, TASK-graph): ~1 day.
+- Foundation (TASK-satisfaction, TASK-graph): ~1 day. ✓ shipped
 - Migration (TASK-migration + dryrun + real + remove-write): ~1 day, plus
-  review time for the data commit.
-- CLI (TASK-formatter + deps-command + prose-scan): ~1 day.
-- Verification: ~0.5 day.
+  review time for the data commit. ✓ shipped (dry-run; real write deferred
+  per operator decision)
+- CLI (TASK-formatter + deps-command + prose-scan): ~1 day. ✓ shipped
+- Verification: ~0.5 day. ✓ shipped
+- UAT 2026-07-19 amendment (TASK-relations-formatter + relations-wire):
+  ~0.5 day. **In progress.**
 
-**Total: ~3.5 days for an experienced contributor who knows the codebase.**
+**v1 total: ~3.5 days. UAT amendment: +0.5 day.**
 The graph module is small; the migration review is the real time sink.

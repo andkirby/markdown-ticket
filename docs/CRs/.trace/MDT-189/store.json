@@ -61,13 +61,6 @@
       "routePolicy": "bdd"
     },
     {
-      "id": "BR-3.1",
-      "kind": "behavior",
-      "text": "WHEN a caller runs mdt-cli deps <KEY> --check --json, THEN stdout shall be valid JSON matching the documented schema (schemaVersion, ok, command, data: { ticket, ready, violations[], proseGaps[] }) so agents and scripts can consume the result programmatically.",
-      "sourceRef": "CR:MDT-189",
-      "routePolicy": "bdd"
-    },
-    {
       "id": "BR-4.1",
       "kind": "behavior",
       "text": "WHEN an operator runs bun run scripts/migrate-blocks.ts --dry-run, THEN the script shall print a complete report (per-ticket diff, contradictions, invariant projection) and modify no file under docs/CRs/.",
@@ -204,6 +197,48 @@
       "id": "Edge-6",
       "kind": "edge_case",
       "text": "WHEN a ticket's dependsOn array contains duplicate entries (e.g., [MDT-100, MDT-100]), the graph builder shall collapse them to a single edge and shall not emit duplicate violation rows or duplicate inverse-blocks entries.",
+      "sourceRef": "CR:MDT-189",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-3.1",
+      "kind": "behavior",
+      "text": "WHEN a caller runs mdt-cli deps <KEY> --check --json (or --yaml), THEN stdout shall be valid structured output matching the documented schema (schemaVersion, ok, command, data: { ticket, ready, violations[], proseGaps[], relations: { dependsOn: [...], blocks: [...] } }) so agents and scripts can consume both the readiness verdict and the relationship inventory programmatically. UAT 2026-07-19 refine_in_place: added relations block; same ID because intent (machine-readable deps view) is unchanged.",
+      "sourceRef": "CR:MDT-189",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-6.1",
+      "kind": "behavior",
+      "text": "WHEN a caller runs mdt-cli deps <KEY> (default, no --check strict flag), THEN the human output shall include a relationship-inventory section listing every dependsOn entry (upstream) with its current status, and every entry in inverse(dependsOn) pointing at this ticket (downstream, i.e. what this ticket blocks) with each blocker's current status — independent of whether any violations exist.",
+      "sourceRef": "CR:MDT-189",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-6.2",
+      "kind": "behavior",
+      "text": "WHEN a ticket has an empty dependsOn array but a non-empty blocks array (or non-empty downstream edges in inverse(dependsOn)), THEN the relationship inventory shall render the downstream section with the blocking role named explicitly (e.g. Blocks: MDT-191) and the inventory section shall not be suppressed, even though the readiness verdict is Ready: YES.",
+      "sourceRef": "CR:MDT-189",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-6.3",
+      "kind": "behavior",
+      "text": "WHEN a caller runs mdt-cli deps <KEY> --check (strict mode), THEN the output shall remain violations-only — the same behavior that shipped before UAT 2026-07-19 — so existing scripts that depend on a stable violations-only contract are not broken.",
+      "sourceRef": "CR:MDT-189",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-6.4",
+      "kind": "behavior",
+      "text": "WHEN a caller runs mdt-cli deps <KEY> --json or --yaml, THEN the structured output shall include a relations block with dependsOn and blocks arrays (each entry carrying the related ticket's key and current status) alongside the existing violations and proseGaps arrays.",
+      "sourceRef": "CR:MDT-189",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C-11",
+      "kind": "constraint",
+      "text": "The relationship inventory (BR-6) shall be computed from the same DepGraph the violation reporter uses — never re-traversed or re-resolved by the CLI. inverse(graph) is the canonical source of what does this ticket block; the CLI is pure presentation over it. This prevents a second source of truth for the same symmetric fact and keeps C-6 (single graph interpreter) intact.",
       "sourceRef": "CR:MDT-189",
       "routePolicy": "tests"
     }
@@ -362,6 +397,50 @@
       "when": "the command is executed",
       "then": "the command exits non-zero, and stderr contains \"blocks is derived from dependsOn; edit dependsOn instead\", and the ticket file is unchanged",
       "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "deps_default_inventory",
+      "title": "Default deps output shows relationship inventory",
+      "covers": [
+        "BR-6.1"
+      ],
+      "given": "ticket MDT-102 has dependsOn [MDT-100, MDT-101] and ticket MDT-103 has dependsOn [MDT-102]",
+      "when": "the user runs mdt-cli deps MDT-102 (no --check flag)",
+      "then": "the output contains a relationship-inventory section listing MDT-100 and MDT-101 under Depends on and MDT-103 under Blocks, each entry showing its current status",
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "deps_outgoing_blocks_render",
+      "title": "Outgoing-blocks ticket renders blocking role",
+      "covers": [
+        "BR-6.2"
+      ],
+      "given": "ticket MDT-189 has dependsOn [] and ticket MDT-191 has dependsOn [MDT-189]",
+      "when": "the user runs mdt-cli deps MDT-189",
+      "then": "the output contains a relationship-inventory section with Blocks listing MDT-191 and is NOT a bare Ready: YES indistinguishable from a leaf, while still showing the readiness verdict",
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "deps_check_strict_violations_only",
+      "title": "Check strict mode stays violations-only",
+      "covers": [
+        "BR-6.3"
+      ],
+      "given": "ticket MDT-189 has dependsOn [] and blocks [MDT-191]",
+      "when": "the user runs mdt-cli deps MDT-189 --check",
+      "then": "the output is violations-only with no relationship-inventory section, matching the pre-UAT shape so existing scripts are not broken",
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "deps_relations_in_json",
+      "title": "JSON/YAML output carries relations block",
+      "covers": [
+        "BR-6.4"
+      ],
+      "given": "the user runs mdt-cli deps MDT-189 --json or --yaml",
+      "when": "the structured output is produced",
+      "then": "data.relations is present with dependsOn array (possibly empty) and blocks array of {key, status} entries, and existing data.violations and data.proseGaps fields are unchanged",
+      "sourceRef": "CR:MDT-189"
     }
   ],
   "obligations": [
@@ -495,17 +574,6 @@
       "sourceRef": "CR:MDT-189"
     },
     {
-      "id": "OBL-cli-deps-json-output",
-      "title": "The deps command exposes --json that emits the documented schemaVersion/ok/command/data shape with ticket, ready, violations[], proseGaps[] so agents and scripts can consume the result programmatically",
-      "derivedFrom": [
-        "BR-3.1"
-      ],
-      "artifactIds": [
-        "ART-cli-deps-command"
-      ],
-      "sourceRef": "CR:MDT-189"
-    },
-    {
       "id": "OBL-write-path-removed",
       "title": "After migration, TicketService.updateTicketAttributes rejects direct blocks writes with an actionable error (blocks is derived from dependsOn; edit dependsOn instead); MarkdownService continues to write the derived blocks value",
       "derivedFrom": [
@@ -530,6 +598,47 @@
         "ART-shared-dependency-graph",
         "ART-shared-prose-scanner",
         "ART-cli-index"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "OBL-relations-inventory-default",
+      "title": "Default deps output renders a relationship-inventory section computed from inverse(graph) (Depends on + Blocks), independent of violations; --check strict mode suppresses the section to preserve the pre-UAT violations-only contract",
+      "derivedFrom": [
+        "BR-6.1",
+        "BR-6.2",
+        "BR-6.3",
+        "C-11"
+      ],
+      "artifactIds": [
+        "ART-cli-deps-command",
+        "ART-cli-deps-formatter",
+        "ART-shared-dependency-graph"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "OBL-relations-in-structured-output",
+      "title": "Structured (--json/--yaml) output carries data.relations { dependsOn: [{key,status}], blocks: [{key,status}] } computed in the same depsAction call that already builds the graph; no second traversal",
+      "derivedFrom": [
+        "BR-6.4",
+        "BR-3.1",
+        "C-11"
+      ],
+      "artifactIds": [
+        "ART-cli-deps-command",
+        "ART-shared-dependency-graph"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "OBL-cli-deps-json-output",
+      "title": "The deps command exposes --json/--yaml that emits the documented schemaVersion/ok/command/data shape with ticket, ready, violations[], proseGaps[], and relations { dependsOn, blocks } so agents and scripts can consume both the readiness verdict and the relationship inventory programmatically (UAT 2026-07-19: added relations block per BR-3.1 refinement)",
+      "derivedFrom": [
+        "BR-3.1"
+      ],
+      "artifactIds": [
+        "ART-cli-deps-command"
       ],
       "sourceRef": "CR:MDT-189"
     }
@@ -963,6 +1072,44 @@
         "C-7"
       ],
       "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-deps-outgoing-blocks",
+      "kind": "unit",
+      "title": "Empty dependsOn + non-empty blocks renders the blocking role (the MDT-189 self-case); output is not a bare Ready: YES indistinguishable from a leaf",
+      "covers": [
+        "BR-6.2"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-deps-relations-json",
+      "kind": "unit",
+      "title": "JSON/YAML carries data.relations { dependsOn, blocks } with { key, status } entries; existing violations and proseGaps unchanged",
+      "covers": [
+        "BR-6.4",
+        "BR-3.1"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-deps-check-strict",
+      "kind": "unit",
+      "title": "Strict check mode (the --check flag) stays violations-only; pre-UAT output contract preserved",
+      "covers": [
+        "BR-6.3"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TEST-deps-default-inventory",
+      "kind": "unit",
+      "title": "Default deps output includes relationship-inventory section with Depends on + Blocks; inventory computed from inverse(graph), not re-derived in CLI (C-11)",
+      "covers": [
+        "BR-6.1",
+        "C-11"
+      ],
+      "sourceRef": "CR:MDT-189"
     }
   ],
   "tasks": [
@@ -1214,6 +1361,35 @@
       "skills": [
         "repo-routing",
         "manual-verification"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TASK-relations-formatter",
+      "title": "Add relationship-inventory formatter + --check strict mode: extend DepsReport with optional relations field; add formatRelationshipInventory() rendering Depends on and Blocks sections from target.dependsOn and inverse(graph); default output gains the section, --check strict suppresses it",
+      "ownsArtifactIds": [
+        "ART-cli-deps-formatter",
+        "ART-cli-deps-command"
+      ],
+      "makesGreenIds": [
+        "deps_default_inventory",
+        "deps_outgoing_blocks_render",
+        "deps_check_strict_violations_only",
+        "TEST-deps-default-inventory",
+        "TEST-deps-outgoing-blocks",
+        "TEST-deps-check-strict"
+      ],
+      "sourceRef": "CR:MDT-189"
+    },
+    {
+      "id": "TASK-relations-wire",
+      "title": "Wire relations block into structured --json/--yaml output: add data.relations { dependsOn: [{key,status}], blocks: [{key,status}] } alongside existing violations and proseGaps; computed in the same depsAction call that already builds the graph, no second traversal",
+      "ownsArtifactIds": [
+        "ART-cli-deps-command"
+      ],
+      "makesGreenIds": [
+        "deps_relations_in_json",
+        "TEST-deps-relations-json"
       ],
       "sourceRef": "CR:MDT-189"
     }

@@ -52,12 +52,20 @@ Each constraint must appear in architecture and be reachable from tasks/tests:
 | C-8 (CLI is pure presentation, logic in shared/) | architecture.md (Rationale), tasks.md (TASK-formatter, TASK-deps-command) |
 | C-9 (satisfaction lives in domain-contracts for cross-package import) | architecture.md (Component API), tasks.md (TASK-satisfaction) |
 | C-10 (key resolution rule: FQDN as-is vs project-prefix + zero-pad) | architecture.md (Key resolution), bdd.md (S2) |
+| C-11 (relationship inventory computed via `inverse(graph)`, not re-derived in CLI) | architecture.md (Decisions D6), bdd.md (S15, S16), tasks.md (TASK-relations-formatter, TASK-relations-wire) |
 
 ## Delivery Timing
 
-All behavior requirements (BR-1.1 through BR-5.1) are `Now` — they are
+All behavior requirements (BR-1.1 through BR-6.4) are `Now` — they are
 delivered in this ticket. No requirement is deferred except `--tree`/`--mermaid`
 (C-5), which are conditional cut-lines, not requirements.
+
+> **UAT 2026-07-19:** BR-6.x and C-11 added during post-implementation UAT
+> when the shipped `deps 189` output exposed a definition-of-done miss: a
+> ticket that only blocks others rendered as a bare "Ready: YES"
+> indistinguishable from a leaf. The fix is additive — the default output
+> gains a relationship-inventory section; `--check` strict mode preserves the
+> original violations-only contract for scripts.
 
 ## Behavioral Requirements
 
@@ -161,12 +169,19 @@ Covers: S9.
 
 Route: `bdd`
 
-WHEN a caller runs `mdt-cli deps <KEY> --check --json`, THEN stdout shall be
-valid JSON matching the documented schema (`schemaVersion`, `ok`, `command`,
-`data: { ticket, ready, violations[], proseGaps[] }`) so agents and scripts can
-consume the result programmatically.
+WHEN a caller runs `mdt-cli deps <KEY> --check --json` (or `--yaml`), THEN
+stdout shall be valid structured output matching the documented schema
+(`schemaVersion`, `ok`, `command`, `data: { ticket, ready, violations[],
+proseGaps[], relations: { dependsOn: [...], blocks: [...] } }`) so agents and
+scripts can consume both the readiness verdict *and* the relationship
+inventory programmatically.
 
-Covers: S10.
+Covers: S10, S18.
+
+> **UAT 2026-07-19 (refine_in_place):** Original BR-3.1 covered only
+> `{ ticket, ready, violations[], proseGaps[] }`. Amended to add the `relations`
+> block — same ID because the intent (machine-readable deps view) is unchanged;
+> the contract is expanded, not replaced.
 
 ### BR-4 — `blocks` migration is reviewable before commit
 
@@ -219,6 +234,63 @@ an actionable message naming the derived-field rule (`blocks is derived from
 dependsOn; edit dependsOn instead`), and the ticket file shall remain unchanged.
 
 Covers: S14.
+
+### BR-6 — Relationship inventory renders by default (UAT 2026-07-19)
+
+The default `mdt-cli deps <KEY>` output shows the ticket's *structural role in
+the graph*, not just its readiness verdict. A ticket that only has outgoing
+`blocks` edges (e.g., MDT-189 itself: `dependsOn: []`, `blocks: [MDT-191]`)
+must render its blocking role explicitly — never collapsing to a bare
+"Ready: YES" that is indistinguishable from a leaf ticket with no relationships
+at all. Readiness is a derived computation over the graph; showing readiness
+without showing the graph is showing the answer without the question.
+
+#### BR-6.1
+
+Route: `bdd`
+
+WHEN a caller runs `mdt-cli deps <KEY>` (default, no `--check` strict flag),
+THEN the human output shall include a relationship-inventory section listing
+every `dependsOn` entry (upstream) with its current status, and every entry
+in `inverse(dependsOn)` pointing at this ticket (downstream — i.e., what this
+ticket blocks) with each blocker's current status — independent of whether any
+violations exist.
+
+Covers: S15.
+
+#### BR-6.2
+
+Route: `bdd`
+
+WHEN a ticket has an empty `dependsOn` array but a non-empty `blocks` array
+(or non-empty downstream edges in `inverse(dependsOn)`), THEN the relationship
+inventory shall render the downstream section with the blocking role named
+explicitly (e.g., "Blocks: MDT-191") and the inventory section shall not be
+suppressed, even though the readiness verdict is `Ready: YES`.
+
+Covers: S16.
+
+#### BR-6.3
+
+Route: `bdd`
+
+WHEN a caller runs `mdt-cli deps <KEY> --check` (strict mode), THEN the output
+shall remain violations-only — the same behavior that shipped before UAT
+2026-07-19 — so existing scripts that depend on a stable violations-only
+contract are not broken.
+
+Covers: S17.
+
+#### BR-6.4
+
+Route: `bdd`
+
+WHEN a caller runs `mdt-cli deps <KEY> --json` or `--yaml`, THEN the
+structured output shall include a `relations` block with `dependsOn` and
+`blocks` arrays (each entry carrying the related ticket's key and current
+status) alongside the existing `violations` and `proseGaps` arrays.
+
+Covers: S18 (also amends BR-3.1).
 
 ## Constraints
 
@@ -309,6 +381,20 @@ fully-qualified form); otherwise prefix with `{activeProjectCode}-` and zero-pad
 the numeric portion to three digits. This mirrors the `keyNormalizer.ts` rule
 established by MDT-187.
 
+### C-11
+
+Route: `tests`
+
+The relationship inventory (BR-6) shall be computed from the same `DepGraph`
+the violation reporter uses — never re-traversed or re-resolved by the CLI.
+`inverse(graph)` is the canonical source of "what does this ticket block"; the
+CLI is pure presentation over it. This prevents a second source of truth for
+the same symmetric fact and keeps C-6 (single graph interpreter) intact.
+
+> **UAT 2026-07-19 (additive_change):** New constraint added alongside BR-6 to
+> keep the inventory data path honest — the CLI must call `inverse()`, not
+> re-derive blocking edges from raw `dependsOn` arrays.
+
 ## Edge Cases
 
 ### Edge-1
@@ -370,8 +456,8 @@ entries.
 
 | Route | Count | IDs |
 |---|---:|---|
-| bdd | 11 | BR-1.1, BR-1.2, BR-1.3, BR-1.4, BR-1.5, BR-1.6, BR-2.1, BR-2.2, BR-3.1, BR-4.1, BR-4.2, BR-4.3, BR-5.1 |
-| tests | 15 | C-1, C-2, C-3, C-4, C-6, C-7, C-8, C-9, C-10, Edge-1, Edge-2, Edge-3, Edge-4, Edge-5, Edge-6 |
+| bdd | 16 | BR-1.1, BR-1.2, BR-1.3, BR-1.4, BR-1.5, BR-1.6, BR-2.1, BR-2.2, BR-3.1, BR-4.1, BR-4.2, BR-4.3, BR-5.1, BR-6.1, BR-6.2, BR-6.3, BR-6.4 |
+| tests | 16 | C-1, C-2, C-3, C-4, C-6, C-7, C-8, C-9, C-10, C-11, Edge-1, Edge-2, Edge-3, Edge-4, Edge-5, Edge-6 |
 | not_applicable | 1 | C-5 |
 
 ## Scenario Coverage Matrix
@@ -394,6 +480,10 @@ Every scenario in [bdd.md](bdd.md) is covered by exactly one `BR-*` requirement:
 | S12 | Interactive contradiction prompt | BR-4.2 |
 | S13 | Post-migration invariant | BR-4.3 |
 | S14 | Direct blocks write rejected | BR-5.1 |
+| S15 | Default output shows relationship inventory | BR-6.1 |
+| S16 | Outgoing-blocks ticket renders blocking role | BR-6.2 |
+| S17 | `--check` strict mode stays violations-only | BR-6.3 |
+| S18 | JSON/YAML output carries `relations` block | BR-6.4 |
 
 No uncovered scenarios.
 

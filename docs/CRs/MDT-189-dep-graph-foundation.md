@@ -1,8 +1,8 @@
 ---
 code: MDT-189
-status: Proposed
+status: In Progress
 dateCreated: 2026-07-17T15:35:08.528Z
-type: Architecture
+type: Feature Enhancement
 priority: High
 phaseEpic: MDT-188
 blocks: MDT-191
@@ -322,6 +322,45 @@ formatter patterns (`formatter.ts`), supports color via `colors.ts`, respects
 - **Demand unknown.** This ticket is its own demand probe — if `deps --check`
   gets no use after shipping, MDT-191 (enforcement) does not ship. That's the
   design, not a failure.
+
+## 8. Clarifications
+
+### UAT Session 2026-07-19 — Relationship inventory renders by default
+
+**Trigger:** Operator ran `mdt ticket deps --yaml 189` and observed that the
+command returns readiness/violations only — no relationship tree. MDT-189
+itself (`dependsOn: []`, `blocks: [MDT-191]`) renders as `Ready: YES`
+indistinguishable from a leaf ticket.
+
+**Approved changes:**
+
+- Default `mdt-cli deps <KEY>` output gains a relationship-inventory section
+  ("Depends on" + "Blocks"), rendered independent of violations.
+- `--check` becomes strict mode (violations-only) to preserve the pre-UAT
+  contract for scripts.
+- Structured `--json` / `--yaml` gains a `data.relations` block with
+  `dependsOn` and `blocks` arrays of `{ key, status }` entries.
+- Inventory data sourced from `inverse(graph)` (C-11) — never re-derived in
+  the CLI.
+
+**Changed requirement IDs:**
+
+- `BR-3.1` — `refine_in_place` (expanded JSON schema to include `relations`).
+- `BR-6.1`, `BR-6.2`, `BR-6.3`, `BR-6.4` — `additive_change` (new behaviors).
+- `C-11` — `additive_change` (new constraint: inventory computed via
+  `inverse(graph)`).
+
+**Updated workflow documents:** `requirements.md`, `bdd.md` (S15–S18),
+`architecture.md` (D6, Data Flow), `tests.md` (4 new test IDs),
+`tasks.md` (TASK-relations-formatter, TASK-relations-wire).
+
+**`uat.md` written:** yes — `docs/CRs/MDT-189/uat.md`.
+
+**Strict drift/lock used:** no. Standard validate per stage; all 5 stages
+green (`spec-trace validate MDT-189 --stage all`).
+
+**Implementation required:** yes — two execution slices
+(TASK-relations-formatter, TASK-relations-wire). See `uat.md`.
 
 ## 8. References
 

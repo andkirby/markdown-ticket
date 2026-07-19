@@ -72,7 +72,8 @@ every case.
 Target: `cli/src/commands/deps.test.ts`
 
 Pattern mirrors `cli/src/commands/list.test.ts` (in-memory project, capture
-stdout). Each BDD scenario S1–S10 gets a test.
+stdout). Each BDD scenario S1–S18 gets a test. S15–S18 added in UAT
+2026-07-19 for the relationship-inventory amendment.
 
 | ID | Test | Maps to BDD |
 |---|---|---|
@@ -85,9 +86,13 @@ stdout). Each BDD scenario S1–S10 gets a test.
 | TEST-deps-unknown-status | S7 — legacy Deferred → waiting | S7 |
 | TEST-deps-prose-gaps | S8 — precondition section scan, missing structured deps | S8 |
 | TEST-deps-prose-ignore-casual | S9 — "see also MDT-030" not flagged | S9 |
-| TEST-deps-json | S10 — JSON shape, parseable | S10 |
+| TEST-deps-json | S10 — JSON shape, parseable; now includes `relations` block per UAT | S10, S18 |
 | TEST-deps-not-found | Bad key → `CliCommandError`, exit non-zero | — |
 | TEST-deps-write-path-rejected | S14 — `attr blocks+=` rejected | S14 |
+| TEST-deps-default-inventory | S15 — default output includes relationship-inventory section with Depends on + Blocks | S15 |
+| TEST-deps-outgoing-blocks | S16 — empty dependsOn + non-empty blocks renders the blocking role (the MDT-189 self-case) | S16 |
+| TEST-deps-check-strict | S17 — `--check` strict mode stays violations-only; pre-UAT output contract preserved | S17 |
+| TEST-deps-relations-json | S18 — JSON/YAML carries `data.relations { dependsOn, blocks }` with `{ key, status }` entries | S18 |
 
 ## Write-path removal — `shared/services/TicketService.ts`
 
