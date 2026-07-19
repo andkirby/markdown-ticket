@@ -1,6 +1,6 @@
 ---
 code: MDT-138
-status: In Progress
+status: Implemented
 dateCreated: 2026-03-12T22:06:27.335Z
 type: Feature Enhancement
 priority: Medium
@@ -121,26 +121,26 @@ relatedTickets: MDT-093
 ## 4. Acceptance Criteria
 
 ### Functional
-- [ ] Files matching `{type}.md` display as single `[type]` tab when no dot-variants exist
-- [ ] Files matching `{type}.{semantic}.md` are grouped under `[type >]` namespace tab
-- [ ] Namespace tab shows sub-tabs for each semantic part, sorted alphanumerically
-- [ ] When no `{type}.md` exists, only semantic sub-tabs are shown (NO `[main]` tab)
-- [ ] `a.b.c.md` displays as `[a >] [b.c]` (multiple dots preserved in sub-key)
-- [ ] Selecting namespace tab shows first sub-document
-- [ ] URL routing includes namespace path (e.g., `/ticket/{id}/architecture/approve-it`)
-- [ ] SSE updates reflect namespace changes in real-time
-- [ ] Folder-based and dot-notation documents coexist in same ticket
+- [x] Files matching `{type}.md` display as single `[type]` tab when no dot-variants exist
+- [x] Files matching `{type}.{semantic}.md` are grouped under `[type >]` namespace tab
+- [x] Namespace tab shows sub-tabs for each semantic part, sorted alphanumerically
+- [x] When no `{type}.md` exists, only semantic sub-tabs are shown (NO `[main]` tab)
+- [x] `a.b.c.md` displays as `[a >] [b.c]` (multiple dots preserved in sub-key)
+- [x] Selecting namespace tab shows first sub-document
+- [x] URL routing includes namespace path (e.g., `/ticket/{id}/architecture/approve-it`)
+- [x] SSE updates reflect namespace changes in real-time
+- [x] Folder-based and dot-notation documents coexist in same ticket
 
 ### Non-Functional
-- [ ] Namespace parsing completes in < 10ms per ticket
-- [ ] Tab rendering uses existing shadcn patterns
-- [ ] No layout shift when switching between namespace levels
+- [x] Namespace parsing completes in < 10ms per ticket
+- [x] Tab rendering uses existing shadcn patterns
+- [x] No layout shift when switching between namespace levels
 
 ### Edge Cases
-- [ ] Handle `a.b.c.d.md` (multiple dots) → namespace `a`, sub-key `b.c.d`
-- [ ] Handle conflicting folder + dot notation (e.g., `architecture/` folder AND `architecture.x.md`)
-- [ ] Handle special characters in semantic part (e.g., `tests.e2e-smoke.md`)
-- [ ] Handle folder + dot coexistence: `bdd.one.md` shows `[one]`, `bdd/two.md` shows `[/two]` (gray `/` prefix)
+- [x] Handle `a.b.c.d.md` (multiple dots) → namespace `a`, sub-key `b.c.d`
+- [x] Handle conflicting folder + dot notation (e.g., `architecture/` folder AND `architecture.x.md`)
+- [x] Handle special characters in semantic part (e.g., `tests.e2e-smoke.md`)
+- [x] Handle folder + dot coexistence: `bdd.one.md` shows `[one]`, `bdd/two.md` shows `[/two]` (gray `/` prefix)
 
 ## 5. Verification
 
