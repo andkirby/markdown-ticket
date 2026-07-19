@@ -1,6 +1,6 @@
 ---
 code: MDT-168
-status: In Progress
+status: Implemented
 dateCreated: 2026-05-17T12:50:41.785Z
 type: Feature Enhancement
 priority: Medium
@@ -116,6 +116,7 @@ seams are required because the feature needs them, not as foundational cleanup:
 - `docs/architecture/preference-storage-architecture.md`
 - `docs/CRs/MDT-163-preference-storage-architecture.md`
 - `docs/CRs/MDT-167-settings-modal.md`
+- Configuration inspection tool: `bun run inspect:config` (see [`docs/CONFIG_INSPECTION.md`](../CONFIG_INSPECTION.md)) — projects the exposure matrix + selector allowlist into a readable table or JSON; answers "where does each setting live"
 
 > Requirements trace projection: [requirements.trace.md](./MDT-168/requirements.trace.md)
 > Requirements notes: [requirements.md](./MDT-168/requirements.md)

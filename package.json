@@ -55,6 +55,8 @@
     "config:set:dev": "bunx tsx shared/tools/config-cli.ts set",
     "config:show:dev": "bunx tsx shared/tools/config-cli.ts show",
     "config:init:dev": "bunx tsx shared/tools/config-cli.ts init",
+    "inspect:config": "bun scripts/inspect-config.ts",
+    "inspect:config:json": "bun scripts/inspect-config.ts --json",
     "project": "node shared/dist/tools/project-cli.js",
     "project:create": "node shared/dist/tools/project-cli.js create",
     "project:list": "node shared/dist/tools/project-cli.js list",
