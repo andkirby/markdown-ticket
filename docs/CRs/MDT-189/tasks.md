@@ -9,13 +9,13 @@ commit must be separate so the one-way door is revertible.
 
 ## Foundation
 
-- [ ] 1. Add satisfaction function (`TASK-satisfaction`)
+- [x] 1. Add satisfaction function (`TASK-satisfaction`)
   Owns: `domain-contracts/src/ticket/satisfaction.ts`, `.test.ts`
   Makes Green: TEST-satisfaction-*
   Notes: pure function over CRStatusSchema. `classifyViolation` for
   missing/Rejected/etc. No graph dependency.
 
-- [ ] 2. Add graph module (`TASK-graph`)
+- [x] 2. Add graph module (`TASK-graph`)
   Owns: `shared/services/ticket/DependencyGraph.ts`, `.test.ts`
   Makes Green: TEST-buildGraph-*, TEST-violations-*, TEST-detectCycle-*,
   TEST-topoSort-*, TEST-inverse-*
@@ -24,26 +24,30 @@ commit must be separate so the one-way door is revertible.
 
 ## Migration
 
-- [ ] 3. Add migration script + fixture (`TASK-migration`)
+- [x] 3. Add migration script + fixture (`TASK-migration`)
   Owns: `scripts/migrate-blocks.ts`, `scripts/__fixtures__/`, `.test.ts`
   Makes Green: TEST-migration-*
   Notes: dry-run mode, interactive contradiction prompt, invariant check.
   Report written to `docs/CRs/MDT-189/blocks-migration-report.md`.
 
-- [ ] 4. Run dry-run; review report (`TASK-dryrun`)
+- [x] 4. Run dry-run; review report (`TASK-dryrun`)
   Owns: nothing (review only)
   Makes Green: prerequisite for TASK-migrate-real
   Notes: run `bun run scripts/migrate-blocks.ts --dry-run`, read the output,
   decide each contradiction's resolution in advance.
 
-- [ ] 5. Run real migration; commit data + report (`TASK-migrate-real`)
+- [x] 5. Run real migration; commit data + report (`TASK-migrate-real`) — **split to MDT-194**
   Owns: every `docs/CRs/MDT-*.md` file with changed `blocks:`,
   `docs/CRs/MDT-189/blocks-migration-report.md`
   Makes Green: TEST-migration-invariant on live repo
-  Notes: **Own commit.** This is the one-way door. Title:
-  `chore(MDT-189): migrate blocks to derived inverse of dependsOn`.
+  Notes: **Split to [MDT-194](../MDT-194-blocks-migration-write.md) on
+  2026-07-19.** MDT-189's deliverable for this task — the script, the dry-run,
+  the committed report, the documented deferral decision — is done. The
+  one-way-door data write itself is owned by MDT-194 and runs from a clean
+  session. Marking [x] here because MDT-189's portion is complete; the
+  remaining work has a ticket.
 
-- [ ] 6. Remove `blocks` write path (`TASK-remove-write`)
+- [x] 6. Remove `blocks` write path (`TASK-remove-write`)
   Owns: `shared/services/TicketService.ts:51,108-159`,
   `shared/services/MarkdownService.ts:240-247`,
   `server/tests/unit/TicketService.test.ts` (or shared equivalent)
@@ -55,20 +59,20 @@ commit must be separate so the one-way door is revertible.
 
 ## CLI
 
-- [ ] 7. Add deps formatter (`TASK-formatter`)
+- [x] 7. Add deps formatter (`TASK-formatter`)
   Owns: `cli/src/output/depsFormatter.ts`
   Makes Green: prerequisite for TASK-deps-command
   Notes: table renderer for violations; prose-gap section. Respects `NO_COLOR`
   via existing `colors.ts`. No graph logic.
 
-- [ ] 8. Add deps command + registration (`TASK-deps-command`)
+- [x] 8. Add deps command + registration (`TASK-deps-command`)
   Owns: `cli/src/commands/deps.ts`, `cli/src/index.ts` (register),
   `cli/src/commands/deps.test.ts`
   Makes Green: TEST-deps-voc-scenario (the acceptance test), TEST-deps-*
   Notes: `--check` default; `--json`; `--project`. Top-level `deps` alias.
   **If `--tree`/`--mermaid` are trivial here, add them; otherwise defer.**
 
-- [ ] 9. Add prose-gap scanner (`TASK-prose-scan`)
+- [x] 9. Add prose-gap scanner (`TASK-prose-scan`)
   Owns: `shared/services/ticket/proseScanner.ts` (shared, not cli/ — MCP will
   reuse), `cli/src/commands/deps.ts` (wire-in)
   Makes Green: TEST-deps-prose-gaps, TEST-deps-prose-ignore-casual
@@ -77,12 +81,12 @@ commit must be separate so the one-way door is revertible.
 
 ## Verification
 
-- [ ] 10. Run full test suite (`TASK-tests`)
+- [x] 10. Run full test suite (`TASK-tests`)
   Owns: nothing
   Makes Green: every test ID above
   Notes: `bun run --cwd server jest`; `bun run validate:ts` on changed files.
 
-- [ ] 11. Manual acceptance smoke (`TASK-smoke`)
+- [x] 11. Manual acceptance smoke (`TASK-smoke`)
   Owns: nothing
   Makes Green: the user-visible definition of done
   Notes:
@@ -162,4 +166,11 @@ These two tasks close that gap. See `uat.md` for the brief.
   ~0.5 day. **In progress.**
 
 **v1 total: ~3.5 days. UAT amendment: +0.5 day.**
+
+> **2026-07-19 close-out:** TASK-migrate-real split to MDT-194. All other
+> tasks shipped. MDT-189 marked Implemented for: graph module, satisfaction,
+> migration script + dry-run + report, write-path removal, deps command
+> (violations + prose gaps), and the UAT amendment (relationship inventory +
+> `--check` strict + structured `relations` block). The real `blocks` data
+> write is the only outstanding slice and is owned by MDT-194.
 The graph module is small; the migration review is the real time sink.
