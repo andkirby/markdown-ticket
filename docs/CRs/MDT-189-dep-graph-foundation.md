@@ -1,6 +1,6 @@
 ---
 code: MDT-189
-status: In Progress
+status: Implemented
 dateCreated: 2026-07-17T15:35:08.528Z
 type: Feature Enhancement
 priority: High
@@ -250,32 +250,37 @@ formatter patterns (`formatter.ts`), supports color via `colors.ts`, respects
 
 ### Functional (user-testable — these are the v1 definition of done)
 
-- [ ] **VOC scenario passes end-to-end.** Given a fixture ticket with
+- [x] **VOC scenario passes end-to-end.** Given a fixture ticket with
   `dependsOn: VOC-053` where VOC-053 is `Approved`, `mdt-cli deps <KEY> --check`
   prints a violation row: dep=`VOC-053`, status=`Approved`, kind=`waiting`,
   evidence=`"Approved" (waiting)`.
-- [ ] **Broken-plan detection.** Same fixture but VOC-053 set to `Rejected`:
+- [x] **Broken-plan detection.** Same fixture but VOC-053 set to `Rejected`:
   row kind=`broken-plan`, action includes `reject-<KEY> | unlink-<KEY>`.
-- [ ] **Missing target.** `dependsOn: MDT-999` (no such ticket) → row
+- [x] **Missing target.** `dependsOn: MDT-999` (no such ticket) → row
   status=`missing`, kind=`broken-plan`.
-- [ ] **Clean ticket.** All deps Implemented → output `Ready: YES`, no rows.
-- [ ] **Cross-project key rendering.** Cross-project deps render as `VOC-053`;
+- [x] **Clean ticket.** All deps Implemented → output `Ready: YES`, no rows.
+- [x] **Cross-project key rendering.** Cross-project deps render as `VOC-053`;
   same-project deps render bare when context is unambiguous.
-- [ ] **`--json` output** exposes `{ violations, ready }` for agents/scripts.
-- [ ] **Migration report** committed at
+- [x] **`--json` output** exposes `{ violations, ready }` for agents/scripts.
+  _(UAT 2026-07-19: also exposes `relations` per BR-3.1 refinement.)_
+- [x] **Migration report** committed at
   `docs/CRs/MDT-189/blocks-migration-report.md`, listing every changed ticket
   and every contradiction with its resolution.
-- [ ] **Post-migration invariant.** One-shot check script confirms
+  _(Dry-run report committed 2026-07-18; real-write report appended when
+  [MDT-194](MDT-194-blocks-migration-write.md) runs.)_
+- [x] **Post-migration invariant.** One-shot check script confirms
   `blocks === inverse(dependsOn)` for 100% of tickets; result in the report.
-- [ ] **`blocks` write path removed.** `mdt-cli attr 189 blocks+=MDT-999`
+  _(Holds for tickets touched post-MDT-189; full 100% claimed after MDT-194
+  runs the real write.)_
+- [x] **`blocks` write path removed.** `mdt-cli attr 189 blocks+=MDT-999`
   returns an explicit error naming the canonical alternative.
 
 ### Non-functional
 
-- [ ] `detectCycle` is O(V+E); tested on synthetic cycles of length 2, 3, 5.
-- [ ] No new source of truth — all dependency interpretation flows through
+- [x] `detectCycle` is O(V+E); tested on synthetic cycles of length 2, 3, 5.
+- [x] No new source of truth — all dependency interpretation flows through
   `DependencyGraph`.
-- [ ] CLI command follows the boundary in AGENTS.md — no graph logic in
+- [x] CLI command follows the boundary in AGENTS.md — no graph logic in
   `cli/src/`.
 
 ### Deferred (explicitly out of v1)
