@@ -1,5 +1,69 @@
 # Release Notes
 
+## v0.25.0 (2026-07-19)
+
+### New Features
+
+**Dependency Graph Foundation (MDT-189)**
+- A relationship inventory now renders by default in the dependency view, so you can see how tickets block and depend on each other at a glance
+- New `deps` CLI command and dependency formatter surface those relationships from the terminal
+- Ships with a satisfaction classifier and a prose precondition scanner in shared, plus a `migrate-blocks` dry-run that previews migration without touching live data
+- The actual blocks-migration write is deferred to a follow-up (MDT-194)
+
+**Configuration Editing API (MDT-168)**
+- Edit runtime configuration through a dedicated API and a new Settings → backend-config section
+- New `inspect:config` tool shows exactly where each setting lives — browser vs. backend file — and its exposure class; run `bun run inspect:config`
+- Runtime side effects are wired end-to-end with spec-trace validation
+
+**Compact Relationship Badges (MDT-187)**
+- Relationship badges now elide and collapse into an overflow popover when space is tight, keeping board cards and ticket headers readable
+- Global elision with a non-breaking-space separator handles badges with many links gracefully
+
+**Ticket Links in the Epic Badge (MDT-193)**
+- When a ticket's epic value is a ticket key (e.g. `MDT-187`), the Epic badge now renders it as a clickable in-app link
+- Free-text epic values still render as plain text, so non-ticket values are unchanged
+- Clicks navigate to the referenced ticket without also opening the parent card
+
+**Project Browser Keyboard Navigation (MDT-129)**
+- The project browser now supports active-descendant keyboard navigation with scroll-follow
+- Arrow through projects and press enter to select — fully keyboard-accessible
+
+**Raw HTML in Markdown (MDT-195)**
+- Authored raw HTML in markdown now reaches the DOM (for example `<a target="_blank">`), unlocking constructs markdown has no syntax for
+- Safety is enforced by a three-layer pipeline: markdown-it passthrough → DOMPurify strips scripts, event handlers, and dangerous URIs → SmartLink rebuilds every link with safe `target`/`rel` attributes
+- Backed by 7 new XSS-safety tests covering the threat model
+
+### Improvements
+
+**Scrollable Favs Section (MDT-171)**
+- The Favorites section now scrolls within a relative-height bound, so long fav lists no longer push the rest of the layout
+
+**Trace Graph Deep-Link (MDT-174)**
+- The Trace Graph is now deep-linkable via a `#trace` hash, so you can share or bookmark a direct link to the graph view
+
+**Smarter CLI Attribute Operations (MDT-143)**
+- CLI attribute alias resolution is routed through the shared input gate for consistency with other surfaces
+- Multiple same-field `+=`/`-=` operations in one command now accumulate correctly
+
+### Bug Fixes
+
+**Restored Sub-Document Deep-Linking (MDT-138)**
+- Fixed a regression where `/prj/...` sub-document URLs fell back to the Main tab instead of opening the right nested tab
+- Dot-notation children of physical folders now resolve both dot and slash path forms
+
+**Pruned Empty Folders (MDT-162)**
+- Folders containing no markdown files no longer appear in the document path selector
+
+**Hardened File Watcher (MDT-186)**
+- The backend file watcher no longer follows symlink loops or crashes on chokidar errors
+- `followSymlinks: false` plus a dedicated error handler prevent watcher-related restarts
+
+**Document and Navigation Fixes**
+- Viewing a document that was deleted from disk now returns a 404 instead of erroring
+- Empty folders are pruned from the navigation tree
+- BDD and Architecture subtab order corrected in the domain contracts
+- Default CORS origins now allow the project's frontend ports for smoother local development
+
 ## v0.24.0 (2026-06-23)
 
 ### Improvements
