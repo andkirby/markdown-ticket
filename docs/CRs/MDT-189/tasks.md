@@ -110,7 +110,7 @@ that the shipped `deps <KEY>` output is violations-only — a ticket that only
 blocks others renders as a bare "Ready: YES" indistinguishable from a leaf.
 These two tasks close that gap. See `uat.md` for the brief.
 
-- [ ] 12. Add relationship-inventory formatter + `--check` strict mode (`TASK-relations-formatter`)
+- [x] 12. Add relationship-inventory formatter + `--check` strict mode (`TASK-relations-formatter`)
   Owns: `cli/src/output/depsFormatter.ts` (extend), `cli/src/commands/deps.ts`
   (strict-mode flag handling)
   Makes Green: TEST-deps-default-inventory, TEST-deps-outgoing-blocks,
@@ -121,8 +121,12 @@ These two tasks close that gap. See `uat.md` for the brief.
   output gains the section; `--check` strict suppresses it. The inventory must
   call `inverse(graph)` (C-11) — never re-derive blocking edges from raw
   arrays in the CLI.
+  **Done 2026-07-19.** `formatRelationshipInventory` added; `buildRelations`
+  helper added to deps.ts (exported for direct unit testing). Live smoke
+  `mdt-cli ticket deps 189` shows "Blocks: MDT-191, MDT-192" — the original
+  bug is fixed.
 
-- [ ] 13. Wire `relations` block into structured output (`TASK-relations-wire`)
+- [x] 13. Wire `relations` block into structured output (`TASK-relations-wire`)
   Owns: `cli/src/commands/deps.ts` (structured-output branch), structured
   output tests
   Makes Green: TEST-deps-relations-json, TEST-deps-json (amended)
@@ -130,6 +134,9 @@ These two tasks close that gap. See `uat.md` for the brief.
   status}] }` to both `--json` and `--yaml` outputs. Existing `violations`
   and `proseGaps` fields unchanged. The `relations` block is computed in the
   same `depsAction` call that already builds the graph; no second traversal.
+  **Done 2026-07-19.** `data.relations` added to structured envelope; gated
+  on `!options.check` so `--check` strict JSON consumers see the same
+  pre-UAT shape. Live smoke `--json` confirmed.
 
 ## Sequencing rules
 

@@ -14,10 +14,13 @@
  */
 
 import type { Violation } from '@mdt/shared/services/ticket/DependencyGraph.js'
+import type { RelationEntry, Relations } from '../output/depsFormatter.js'
 import type { StructuredOutputOptions } from '../output/structured.js'
 import { ProjectService } from '@mdt/shared/services/ProjectService.js'
 import {
   buildGraph,
+  inverse,
+  resolveDepKey,
   violations,
 } from '@mdt/shared/services/ticket/DependencyGraph.js'
 import { scanProseGaps } from '@mdt/shared/services/ticket/proseScanner.js'
@@ -200,20 +203,42 @@ export async function ticketDepsAction(
   const violationList: Violation[] = violations(target, graph)
   const proseGaps = scanProseGaps(target, targetProjectCode)
 
+  // Relationship inventory (BR-6). Computed from the same graph the violation
+  // reporter uses (C-11): `dependsOn` from the target's own field, `blocks`
+  // from `inverse(graph)`. Never re-derived from raw arrays.
+  //
+  // `--check` strict mode suppresses the inventory to preserve the pre-UAT
+  // violations-only contract for scripts (BR-6.3). Default mode includes it.
+  const includeRelations = !options.check
+  const relations: Relations | undefined = includeRelations
+    ? buildRelations(target, graph, targetProjectCode, tickets)
+    : undefined
+
   const outputFormat = getOutputFormat(options)
   if (outputFormat !== 'human') {
-    // Structured envelope — data block shape mirrors bdd.md S10.
-    writeStructuredSuccess(
-      outputFormat,
-      'ticket.deps.check',
-      {
-        ticket: { key: target.code, title: target.title },
-        ready: violationList.length === 0,
-        violations: violationList,
-        proseGaps,
-      },
-      { projectCode: targetProjectCode, projectId },
-    )
+    // Structured envelope — data block shape mirrors bdd.md S10/S18.
+    const data: {
+      ticket: { key: string, title: string }
+      ready: boolean
+      violations: Violation[]
+      proseGaps: string[]
+      relations?: Relations
+    } = {
+      ticket: { key: target.code, title: target.title },
+      ready: violationList.length === 0,
+      violations: violationList,
+      proseGaps,
+    }
+    // BR-6.4: structured output carries the relations block alongside
+    // violations/proseGaps. Included in default mode; omitted in `--check`
+    // strict mode so JSON consumers can also distinguish the two contracts.
+    if (relations) {
+      data.relations = relations
+    }
+    writeStructuredSuccess(outputFormat, 'ticket.deps.check', data, {
+      projectCode: targetProjectCode,
+      projectId,
+    })
     return
   }
 
@@ -221,5 +246,48 @@ export async function ticketDepsAction(
     ticketCode: target.code,
     violations: violationList,
     proseGaps,
+    relations,
   }))
+}
+
+/**
+ * Build the relationship inventory for the target ticket (BR-6, C-11).
+ *
+ * - `dependsOn` comes from the target's own `dependsOn` field, each entry
+ *   resolved via `resolveDepKey` (the same function `buildGraph` uses) and
+ *   looked up in the tickets map for current status. Unresolved targets get
+ *   status 'missing' — matches the violation reporter's framing.
+ * - `blocks` comes from `inverse(graph)`: every ticket whose `dependsOn`
+ *   includes the target. This is the canonical source per C-11; the CLI
+ *   never re-derives blocking edges from raw arrays.
+ *
+ * Pure: takes the target + graph + ticket lookup, returns the inventory.
+ * Exported for direct unit testing of the inventory composition (S18).
+ */
+export function buildRelations(
+  target: { code: string, dependsOn: string[] },
+  graph: ReturnType<typeof buildGraph>,
+  activeProjectCode: string,
+  tickets: { code: string, status: string }[],
+): Relations {
+  const statusByCode = new Map(tickets.map(t => [t.code, t.status]))
+
+  const dependsOn: RelationEntry[] = target.dependsOn.map((rawKey) => {
+    const resolved = resolveDepKey(rawKey, activeProjectCode)
+    return {
+      key: resolved,
+      status: statusByCode.get(resolved) ?? 'missing',
+    }
+  })
+
+  // inverse(graph) maps a key K -> [keys that depend on K]. We want everyone
+  // who depends on the target — i.e., everyone the target blocks.
+  const blockedByMap = inverse(graph)
+  const blocksRaw = blockedByMap.get(target.code) ?? []
+  const blocks: RelationEntry[] = blocksRaw.map(key => ({
+    key,
+    status: statusByCode.get(key) ?? 'unknown',
+  }))
+
+  return { dependsOn, blocks }
 }
