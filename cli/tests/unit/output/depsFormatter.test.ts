@@ -20,6 +20,7 @@ import {
   formatDepsReport,
   formatEvidence,
   formatReadyLine,
+  formatRelationshipInventory,
   formatViolationRow,
   formatViolationTable,
 } from '../../../src/output/depsFormatter.js'
@@ -179,5 +180,98 @@ describe('formatDepsReport', () => {
     expect(report).toContain('Target missing (broken-plan)')
     expect(report).toContain('Unverifiable prose:')
     expect(report).toContain('Ready: NO (2 unresolved)')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// UAT 2026-07-19 — Relationship inventory (BR-6, TASK-relations-formatter)
+// ---------------------------------------------------------------------------
+
+describe('formatRelationshipInventory', () => {
+  it('renders both Depends on and Blocks sections (S15)', () => {
+    const lines = formatRelationshipInventory({
+      dependsOn: [
+        { key: 'MDT-100', status: 'Implemented' },
+        { key: 'MDT-101', status: 'Approved' },
+      ],
+      blocks: [{ key: 'MDT-103', status: 'Proposed' }],
+    })
+    const joined = lines.join('\n')
+    expect(joined).toContain('Depends on:')
+    expect(joined).toContain('MDT-100')
+    expect(joined).toContain('Implemented')
+    expect(joined).toContain('MDT-101')
+    expect(joined).toContain('Approved')
+    expect(joined).toContain('Blocks:')
+    expect(joined).toContain('MDT-103')
+    expect(joined).toContain('Proposed')
+  })
+
+  it('renders "(none)" placeholders when a section is empty (S16 setup)', () => {
+    const lines = formatRelationshipInventory({
+      dependsOn: [],
+      blocks: [{ key: 'MDT-191', status: 'Approved' }],
+    })
+    const joined = lines.join('\n')
+    expect(joined).toContain('Depends on:')
+    expect(joined).toMatch(/Depends on:\n\s+\(none\)/)
+    expect(joined).toContain('Blocks:')
+    expect(joined).toContain('MDT-191')
+  })
+})
+
+describe('formatDepsReport — relationship inventory (UAT 2026-07-19)', () => {
+  it('S15 — includes inventory section when relations present in default mode', () => {
+    const report = formatDepsReport({
+      ticketCode: 'MDT-102',
+      violations: [],
+      proseGaps: [],
+      relations: {
+        dependsOn: [{ key: 'MDT-100', status: 'Implemented' }],
+        blocks: [{ key: 'MDT-103', status: 'Proposed' }],
+      },
+    })
+    expect(report).toContain('Depends on:')
+    expect(report).toContain('MDT-100')
+    expect(report).toContain('Blocks:')
+    expect(report).toContain('MDT-103')
+    // Inventory renders above the violations section.
+    expect(report.indexOf('Depends on:')).toBeLessThan(report.indexOf('All dependencies satisfied.'))
+  })
+
+  it('S16 — outgoing-blocks ticket renders blocking role, not a bare Ready: YES', () => {
+    // The exact MDT-189 self-case: empty dependsOn, non-empty blocks.
+    const report = formatDepsReport({
+      ticketCode: 'MDT-189',
+      violations: [],
+      proseGaps: [],
+      relations: {
+        dependsOn: [],
+        blocks: [{ key: 'MDT-191', status: 'Approved' }],
+      },
+    })
+    // The blocking role is named explicitly.
+    expect(report).toContain('Blocks:')
+    expect(report).toContain('MDT-191')
+    // The "(none)" placeholder renders for the empty Depends on section so
+    // the output is not a bare Ready: YES.
+    expect(report).toMatch(/Depends on:\n\s+\(none\)/)
+    // Readiness verdict still present.
+    expect(report).toContain('Ready: YES')
+  })
+
+  it('S17 — strict mode (no relations field) suppresses the inventory section', () => {
+    // Simulates `--check` strict mode: the caller passes no `relations`.
+    const report = formatDepsReport({
+      ticketCode: 'MDT-189',
+      violations: [],
+      proseGaps: [],
+      // relations intentionally omitted — strict mode contract.
+    })
+    expect(report).not.toContain('Depends on:')
+    expect(report).not.toContain('Blocks:')
+    // Pre-UAT shape preserved.
+    expect(report).toContain('All dependencies satisfied.')
+    expect(report).toContain('Ready: YES')
   })
 })
