@@ -195,3 +195,66 @@ Feature: blocks becomes a derived field
     And stderr contains "blocks is derived from dependsOn; edit dependsOn instead"
     And the ticket file is unchanged
 ```
+
+## Relationship inventory renders by default (UAT 2026-07-19)
+
+The default `mdt-cli deps <KEY>` output shows the ticket's structural role in
+the graph, not just readiness. `--check` strict mode preserves the
+violations-only contract for scripts.
+
+### S15 — Default output shows relationship inventory
+
+```gherkin
+Feature: mdt-cli deps default output shows the relationship inventory
+  Readiness is a derived computation over the graph; the default output
+  shows the graph, not just the verdict.
+
+  Scenario: Ticket with both upstream and downstream edges
+    Given ticket MDT-100 has status "Implemented"
+    And ticket MDT-101 has status "Approved"
+    And ticket MDT-102 has status "Proposed"
+    And ticket MDT-102 has dependsOn ["MDT-100", "MDT-101"]
+    And ticket MDT-103 has dependsOn ["MDT-102"]
+    When the user runs "mdt-cli deps MDT-102"
+    Then the output contains a relationship-inventory section
+    And the section lists "MDT-100" and "MDT-101" under "Depends on"
+    And the section lists "MDT-103" under "Blocks"
+    And each entry shows its current status
+```
+
+### S16 — Outgoing-blocks ticket renders blocking role (the MDT-189 case)
+
+```gherkin
+  Scenario: Ticket with empty dependsOn but non-empty blocks
+    Given ticket MDT-189 has dependsOn []
+    And ticket MDT-191 has dependsOn ["MDT-189"]
+    When the user runs "mdt-cli deps MDT-189"
+    Then the output contains a relationship-inventory section
+    And the "Depends on" section is empty or omitted
+    And the "Blocks" section lists "MDT-191"
+    And the output is NOT a bare "Ready: YES" indistinguishable from a leaf
+    And the readiness verdict line is still present
+```
+
+### S17 — `--check` strict mode stays violations-only
+
+```gherkin
+  Scenario: Strict check mode preserves the pre-UAT contract
+    Given ticket MDT-189 has dependsOn [] and blocks ["MDT-191"]
+    When the user runs "mdt-cli deps MDT-189 --check"
+    Then the output is violations-only (no relationship-inventory section)
+    And the output matches the pre-UAT shape
+    And existing scripts that grep the check output are not broken
+```
+
+### S18 — JSON/YAML output carries `relations` block
+
+```gherkin
+  Scenario: Structured output carries the relationship inventory
+    When the user runs "mdt-cli deps MDT-189 --json"
+    Then stdout is valid JSON with data.relations present
+    And data.relations.dependsOn is an array (possibly empty)
+    And data.relations.blocks is an array of { key, status } entries
+    And the same shape applies to --yaml output
+    And the existing data.violations and data.proseGaps fields are unchanged
+```
