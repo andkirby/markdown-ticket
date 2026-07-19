@@ -305,5 +305,9 @@ Every "we will decide later" becomes a permanent bad default. Decided:
 
 - **MDT-192** — Frontmatter relationship-field format guard. Depends on
   MDT-189's migration.
+- **MDT-194** — Run real `blocks` migration write from clean session. Split
+  from MDT-189's TASK-migrate-real on 2026-07-19; the dry-run report is
+  committed but the one-way-door data write was deferred for operational
+  safety while the branch had concurrent agents in flight.
 - **MDT-190** — Withdrawn. Original CLI-only ticket; collapsed into MDT-189
   so the foundation is user-testable.
