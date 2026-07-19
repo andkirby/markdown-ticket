@@ -13,6 +13,9 @@
 - Selector Ordering Logic Tests (`TEST-selector-ordering`)
   Covers: `BR-6.1`, `BR-6.2`, `BR-6.3`, `BR-6.4`, `BR-4.3`, `BR-4.4`
   File: `src/utils/selectorOrdering.test.ts`
+- Project Browser Keyboard Navigation Tests (`TEST-browser-keyboard-nav`)
+  Covers: `BR-11.1`, `BR-11.2`, `BR-11.3`, `BR-11.4`, `BR-11.5`, `BR-11.6`
+  File: `src/components/ProjectSelector/ProjectBrowserPanel.test.tsx`
 
 ### e2e
 
@@ -38,3 +41,9 @@
 | `C7` | tests | `TEST-project-selector-e2e` | - |
 | `C9` | tests | `TEST-project-selector-e2e` | - |
 | `C10` | tests | `TEST-selector-api`, `TEST-selector-data-hook` | - |
+| `BR-11.1` | bdd | `TEST-browser-keyboard-nav` | - |
+| `BR-11.2` | bdd | `TEST-browser-keyboard-nav` | - |
+| `BR-11.3` | bdd | `TEST-browser-keyboard-nav` | - |
+| `BR-11.4` | bdd | `TEST-browser-keyboard-nav` | - |
+| `BR-11.5` | bdd | `TEST-browser-keyboard-nav` | - |
+| `BR-11.6` | bdd | `TEST-browser-keyboard-nav` | - |

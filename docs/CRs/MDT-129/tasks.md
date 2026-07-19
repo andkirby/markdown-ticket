@@ -38,12 +38,18 @@
 - Integrate project switching with useProjectManager and state persistence (`TASK-12`)
   Owns: `ART-browser-panel`, `ART-hook-project-manager`, `ART-selector-data-hook`, `ART-selector-rail`, `ART-test-e2e-selector`
   Makes Green: `state_persists_after_selection`, `switch_project_from_panel`, `switch_project_from_rail`, `TEST-project-selector-e2e`
+- Port active-descendant keyboard navigation to ProjectBrowserPanel (`TASK-13`)
+  Owns: `ART-browser-panel`
+  Makes Green: `browser_arrow_keys_navigate_list`, `browser_typing_keeps_focus_in_search`, `browser_enter_selects_highlighted_project`, `TEST-browser-keyboard-nav`
+- Scroll-follow: keep the highlighted card in view during keyboard navigation (`TASK-16`)
+  Owns: `ART-browser-panel`
+  Makes Green: `browser_scroll_follows_highlight`
 
 ## Artifact Ownership Summary
 
 | Artifact ID | Owning Task IDs |
 |---|---|
-| `ART-browser-panel` | `TASK-10`, `TASK-12` |
+| `ART-browser-panel` | `TASK-10`, `TASK-12`, `TASK-13` |
 | `ART-config-selector-state` | `TASK-3` |
 | `ART-config-user-toml` | `TASK-3` |
 | `ART-hook-project-manager` | `TASK-12` |
@@ -79,6 +85,10 @@
 | `switch_project_from_panel` | `TASK-12` |
 | `switch_project_from_rail` | `TASK-12` |
 | `TEST-project-selector-e2e` | `TASK-6`, `TASK-7`, `TASK-8`, `TASK-10`, `TASK-11`, `TASK-12` |
+| `TEST-browser-keyboard-nav` | `TASK-13` |
+| `browser_arrow_keys_navigate_list` | `TASK-13` |
+| `browser_typing_keeps_focus_in_search` | `TASK-13` |
+| `browser_enter_selects_highlighted_project` | `TASK-13` |
 | `TEST-selector-api` | `TASK-0`, `TASK-1`, `TASK-3` |
 | `TEST-selector-data-hook` | `TASK-0`, `TASK-1`, `TASK-4` |
 | `TEST-selector-ordering` | `TASK-0`, `TASK-2` |

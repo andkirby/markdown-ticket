@@ -104,6 +104,29 @@
   When: the selector rail renders
   Then: I see only the active project; clicking the active project provides access to remaining projects with the same state model
 
+### BR-11
+
+- Arrow keys move the highlight through the filtered project list, wrapping at the edges (`browser_arrow_keys_navigate_list`)
+  Covers: `BR-11.1`, `BR-11.2`, `BR-11.3`
+  Given: the project browser panel is open with at least one project in the filtered list and focus is in the search field
+  When: I press ArrowDown, then ArrowDown/ArrowUp to move the highlight, then ArrowDown on the last card
+  Then: the first ArrowDown moves the highlight onto the first card; subsequent arrows move it through the filtered list; ArrowDown on the last card wraps the highlight back to the first card
+- Typing while a card is highlighted keeps focus in the search field and updates the query (`browser_typing_keeps_focus_in_search`)
+  Covers: `BR-11.4`
+  Given: a card is highlighted in the project browser panel after keyboard navigation
+  When: I type a character
+  Then: focus remains in the search field, the query updates with the typed character, and the keystroke is not dropped or stranded on the highlighted card
+- Enter selects the highlighted project and closes the panel (`browser_enter_selects_highlighted_project`)
+  Covers: `BR-11.5`
+  Given: a card is highlighted in the project browser panel after keyboard navigation
+  When: I press Enter
+  Then: the highlighted project becomes the current project and the panel closes
+- The scroll container follows the highlighted card so it stays visible (`browser_scroll_follows_highlight`)
+  Covers: `BR-11.6`
+  Given: the project browser panel is open and the filtered list is longer than the visible area
+  When: I move the highlight with the keyboard past the visible edge of the scroll area
+  Then: the scroll container scrolls just enough to keep the highlighted card within the visible area, without moving it when it is already visible
+
 ## Coverage Summary
 
 | Requirement ID | Scenario Count | Scenario IDs |
@@ -147,3 +170,9 @@
 | `BR-8.7` | 1 | `state_persists_after_selection` |
 | `BR-9.1` | 1 | `mobile_responsive_selector` |
 | `BR-9.3` | 1 | `mobile_responsive_selector` |
+| `BR-11.1` | 1 | `browser_arrow_keys_navigate_list` |
+| `BR-11.2` | 1 | `browser_arrow_keys_navigate_list` |
+| `BR-11.3` | 1 | `browser_arrow_keys_navigate_list` |
+| `BR-11.4` | 1 | `browser_typing_keeps_focus_in_search` |
+| `BR-11.5` | 1 | `browser_enter_selects_highlighted_project` |
+| `BR-11.6` | 1 | `browser_scroll_follows_highlight` |

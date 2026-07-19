@@ -37,13 +37,13 @@ interface ProjectSelectorCardProps {
   useRailWidthConstraints?: boolean
   /** Override test ID prefix (default: "project-selector-card") */
   testIdPrefix?: string
-  /** Optional keydown handler from parent composite views */
+  /** Whether this card is the active-descendant highlight in a composite list (project browser) */
+  highlighted?: boolean
   /** Whether accent coloring is enabled */
   accentEnabled?: boolean
   accentStyle?: 'gradient' | 'flat' | 'plate'
   autocolor?: boolean
   hasAccent?: boolean
-  onCardKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void
 }
 
 /**
@@ -67,7 +67,7 @@ const ProjectSelectorCard: React.FC<ProjectSelectorCardProps> = ({
   onFavoriteToggle,
   useRailWidthConstraints = false,
   testIdPrefix,
-  onCardKeyDown,
+  highlighted = false,
   accentEnabled = true,
   accentStyle = 'gradient',
   autocolor = true,
@@ -118,17 +118,16 @@ const ProjectSelectorCard: React.FC<ProjectSelectorCardProps> = ({
     <div
       className={cardClasses}
       onClick={handleCardClick}
-      onKeyDown={(event) => {
-        onCardKeyDown?.(event)
-        handleCardKeyDown(event)
-      }}
+      onKeyDown={isProjectBrowserCard ? undefined : handleCardKeyDown}
       style={cardStyle}
-      role="button"
-      tabIndex={0}
+      role={isProjectBrowserCard ? 'option' : 'button'}
+      tabIndex={isProjectBrowserCard ? -1 : 0}
       aria-label={`Select project ${project.project.name || project.project.code || project.id}`}
+      aria-selected={isProjectBrowserCard ? highlighted : undefined}
       data-testid={`${testIdPrefix ?? 'project-selector-card'}-${project.project.code || project.id}`}
       data-project-key={project.project.code || project.id}
       data-active={isActive ? 'true' : undefined}
+      data-selected={isProjectBrowserCard && highlighted ? 'true' : undefined}
       data-accent-enabled={accentEnabled}
       data-accent-style={accentStyle}
       data-autocolor={autocolor}
@@ -142,6 +141,7 @@ const ProjectSelectorCard: React.FC<ProjectSelectorCardProps> = ({
           className={cn(
             'fav-star-btn fav-star-btn--card',
           )}
+          tabIndex={isProjectBrowserCard ? -1 : 0}
           data-favorited={project.favorite ? 'true' : undefined}
           onClick={handleFavoriteClick}
           onKeyDown={handleFavoriteKeyDown}

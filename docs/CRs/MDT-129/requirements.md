@@ -80,6 +80,15 @@ Ticket: `MDT-129`
 - `BR-10.6` [tests] WHEN unknown fields appear in user.toml or project-selector.json, the system shall ignore them safely.
 - `BR-10.7` [tests] WHEN a per-project state entry is invalid, the system shall drop that entry without preventing other valid entries from loading.
 
+### BR-11
+
+- `BR-11.1` [bdd] WHEN the project browser panel is open with focus in the search field and the filtered list is non-empty, pressing ArrowDown shall move the selection highlight onto the first card in the filtered result list.
+- `BR-11.2` [bdd] WHEN a card is highlighted in the panel, pressing ArrowDown or ArrowUp shall move the highlight to the adjacent card within the filtered result list.
+- `BR-11.3` [bdd] WHEN ArrowDown is pressed on the last card of the filtered list, the highlight shall wrap to the first card; WHEN ArrowUp is pressed on the first card, the highlight shall wrap to the last card.
+- `BR-11.4` [bdd] WHEN a card is highlighted and the user types a character, focus shall remain in the search field and the query shall be updated; the keystroke shall not be dropped or stranded on the card.
+- `BR-11.5` [bdd] WHEN a card is highlighted and the user presses Enter, the highlighted project shall be selected and the panel closed.
+- `BR-11.6` [bdd] WHEN the selection highlight moves to a card (on open or via keyboard navigation), the scroll container shall keep that card in view, scrolling only as much as needed so the highlighted card is never hidden outside the visible area.
+
 ## Constraints
 
 - `C1` [tests] User preferences stored in CONFIG_DIR/user.toml under [ui.projectSelector]
@@ -99,7 +108,7 @@ _No edge cases recorded._
 
 | Route | Count | IDs |
 |---|---:|---|
-| bdd | 39 | `BR-1.1`, `BR-1.2`, `BR-1.3`, `BR-1.4`, `BR-2.1`, `BR-2.3`, `BR-3.1`, `BR-3.2`, `BR-3.3`, `BR-3.4`, `BR-4.1`, `BR-4.2`, `BR-4.3`, `BR-4.4`, `BR-4.5`, `BR-5.1`, `BR-5.2`, `BR-5.3`, `BR-5.4`, `BR-5.5`, `BR-6.1`, `BR-6.2`, `BR-6.3`, `BR-6.4`, `BR-6.5`, `BR-7.1`, `BR-7.2`, `BR-7.3`, `BR-7.4`, `BR-7.5`, `BR-8.1`, `BR-8.2`, `BR-8.3`, `BR-8.4`, `BR-8.5`, `BR-8.6`, `BR-8.7`, `BR-9.1`, `BR-9.3` |
+| bdd | 45 | `BR-1.1`, `BR-1.2`, `BR-1.3`, `BR-1.4`, `BR-2.1`, `BR-2.3`, `BR-3.1`, `BR-3.2`, `BR-3.3`, `BR-3.4`, `BR-4.1`, `BR-4.2`, `BR-4.3`, `BR-4.4`, `BR-4.5`, `BR-5.1`, `BR-5.2`, `BR-5.3`, `BR-5.4`, `BR-5.5`, `BR-6.1`, `BR-6.2`, `BR-6.3`, `BR-6.4`, `BR-6.5`, `BR-7.1`, `BR-7.2`, `BR-7.3`, `BR-7.4`, `BR-7.5`, `BR-8.1`, `BR-8.2`, `BR-8.3`, `BR-8.4`, `BR-8.5`, `BR-8.6`, `BR-8.7`, `BR-9.1`, `BR-9.3`, `BR-11.1`, `BR-11.2`, `BR-11.3`, `BR-11.4`, `BR-11.5`, `BR-11.6` |
 | tests | 15 | `BR-10.1`, `BR-10.2`, `BR-10.3`, `BR-10.4`, `BR-10.5`, `BR-10.6`, `BR-10.7`, `C1`, `C2`, `C3`, `C5`, `C6`, `C7`, `C9`, `C10` |
 | clarification | 0 | - |
 | not_applicable | 0 | - |

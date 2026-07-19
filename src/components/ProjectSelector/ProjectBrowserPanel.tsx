@@ -17,6 +17,11 @@
  * - BR-1.4: Empty state when no projects match
  * - BR-1.5: Escape closes panel
  * - BR-1.6: Autofocus search input on open
+ * - BR-11.1: ArrowDown from search highlights the first card
+ * - BR-11.2: ArrowUp/ArrowDown move the highlight through the filtered list
+ * - BR-11.3: Cyclic wrap at list edges (last->first, first->last)
+ * - BR-11.4: Typing keeps focus in the search field and updates the query
+ * - BR-11.5: Enter selects the highlighted project and closes the panel
  *
  * @testid project-browser-panel — Panel container
  * @testid project-browser-search-input — Search input
@@ -106,6 +111,10 @@ function computePanelOrder(
   })
 }
 
+/**
+ * Read the rendered grid column count so keyboard nav can move within columns
+ * (Excel-grid behavior) instead of zigzagging linearly across a multi-column grid.
+ */
 function getGridColumnCount(element: HTMLElement): number {
   const columns = window.getComputedStyle(element).gridTemplateColumns
   const columnCount = columns.split(' ').filter(Boolean).length
@@ -134,21 +143,11 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
   onClose,
   preferences,
 }) => {
-  // Search state
+  // Search + active-descendant highlight state (BR-11)
   const [searchQuery, setSearchQuery] = React.useState('')
+  const [selectedProjectIndex, setSelectedProjectIndex] = React.useState(-1)
   const searchInputRef = React.useRef<HTMLInputElement>(null)
   const projectGridRef = React.useRef<HTMLDivElement>(null)
-
-  // Reset search and autofocus when panel opens
-  React.useEffect(() => {
-    if (isOpen) {
-      setSearchQuery('')
-      // Slight delay to ensure DOM is ready before focusing
-      requestAnimationFrame(() => {
-        searchInputRef.current?.focus()
-      })
-    }
-  }, [isOpen])
 
   // Compute panel order (favorites first, then by lastUsedAt)
   // MUST be before early return to avoid hooks rule violation
@@ -156,6 +155,23 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
     () => computePanelOrder(projects, selectorState),
     [projects, selectorState],
   )
+
+  // Reset search, autofocus, and highlight the active project when the panel opens.
+  // Runs after panelProjects is declared; no query on open so the active project
+  // is present in the list and becomes the starting highlight.
+  React.useEffect(() => {
+    if (isOpen) {
+      setSearchQuery('')
+      const activeIndex = panelProjects.findIndex(
+        p => (p.project.code || p.id) === activeProjectKey,
+      )
+      setSelectedProjectIndex(activeIndex)
+      // Slight delay to ensure DOM is ready before focusing
+      requestAnimationFrame(() => {
+        searchInputRef.current?.focus()
+      })
+    }
+  }, [isOpen, panelProjects, activeProjectKey])
 
   // Filter projects by search query (case-insensitive code, title/name, or description match)
   const displayProjects = React.useMemo(() => {
@@ -177,6 +193,28 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
     })
   }, [panelProjects, searchQuery, activeProjectKey])
 
+  // Clamp highlight within the filtered list (stale-index guard; BR-11.2)
+  React.useEffect(() => {
+    setSelectedProjectIndex((prev) => {
+      if (displayProjects.length === 0)
+        return -1
+      if (prev >= displayProjects.length)
+        return displayProjects.length - 1
+      return prev
+    })
+  }, [displayProjects.length])
+
+  // Keep the highlighted card scrolled into view whenever the highlight moves
+  // (BR-11.6). Runs before paint so the viewport follows the highlight with no
+  // visible jump. `block: 'nearest'` only scrolls when the card is outside the
+  // visible area, so it never fights the user.
+  React.useLayoutEffect(() => {
+    if (selectedProjectIndex < 0)
+      return
+    const highlighted = projectGridRef.current?.querySelector<HTMLElement>('[data-selected="true"]')
+    highlighted?.scrollIntoView({ block: 'nearest' })
+  }, [selectedProjectIndex])
+
   if (!isOpen)
     return null
 
@@ -185,74 +223,65 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
     onClose() // Close panel after selection
   }
 
-  const handleProjectGridKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (
-      e.key !== 'ArrowRight'
-      && e.key !== 'ArrowDown'
-      && e.key !== 'ArrowLeft'
-      && e.key !== 'ArrowUp'
-      && e.key !== 'Home'
-      && e.key !== 'End'
-    ) {
-      return
-    }
+  // Excel-grid active-descendant keyboard nav (BR-11). The panel is a
+  // multi-column grid: Down/Up move within the SAME column (±columnCount),
+  // Left/Right move between adjacent columns (±1), all with cyclic wrap.
+  // Tab/Shift+Tab act as down/up so focus never escapes to <body> (the
+  // regression where arrow keys went dead once focus left the search field).
+  const handlePanelKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const count = displayProjects.length
+    const isVertical = e.key === 'ArrowDown' || (e.key === 'Tab' && !e.shiftKey)
+    const isVerticalUp = e.key === 'ArrowUp' || (e.key === 'Tab' && e.shiftKey)
 
-    const gridElement = projectGridRef.current
-    const activeElement = document.activeElement
-
-    if (!gridElement)
+    if (!isVertical && !isVerticalUp && e.key !== 'ArrowRight' && e.key !== 'ArrowLeft' && e.key !== 'Enter')
       return
 
-    const cards = Array.from(
-      gridElement.querySelectorAll<HTMLElement>('[data-project-browser-card="true"]'),
-    )
-    const currentCard = e.currentTarget instanceof HTMLElement && e.currentTarget.dataset.projectBrowserCard === 'true'
-      ? e.currentTarget
-      : activeElement instanceof HTMLElement
-        ? activeElement.closest<HTMLElement>('[data-project-browser-card="true"]')
-        : null
-    const currentIndex = currentCard ? cards.indexOf(currentCard) : -1
-
-    if (currentIndex === -1 || !currentCard)
-      return
-
-    if (e.key === 'ArrowRight') {
-      const nextCard = currentCard.nextElementSibling
-      if (nextCard instanceof HTMLElement) {
+    if (e.key === 'Enter') {
+      if (selectedProjectIndex >= 0 && selectedProjectIndex < count) {
         e.preventDefault()
-        nextCard.focus()
-        return
+        const selected = displayProjects[selectedProjectIndex]
+        handleProjectSelect(selected.project.code || selected.id)
       }
-    }
-
-    if (e.key === 'ArrowLeft') {
-      const previousCard = currentCard.previousElementSibling
-      if (previousCard instanceof HTMLElement) {
-        e.preventDefault()
-        previousCard.focus()
-        return
-      }
+      return
     }
 
     e.preventDefault()
+    if (count === 0)
+      return
 
-    const columnCount = getGridColumnCount(gridElement)
-    const lastIndex = cards.length - 1
-    const nextIndexByKey = {
-      ArrowRight: Math.min(currentIndex + 1, lastIndex),
-      ArrowDown: Math.min(currentIndex + columnCount, lastIndex),
-      ArrowLeft: Math.max(currentIndex - 1, 0),
-      ArrowUp: Math.max(currentIndex - columnCount, 0),
-      Home: 0,
-      End: lastIndex,
-    } as const
+    const cols = projectGridRef.current ? getGridColumnCount(projectGridRef.current) : 1
+    const lastIndex = count - 1
+    const cur = selectedProjectIndex === -1 ? 0 : selectedProjectIndex
+    const col = cur % cols
+    let next = cur
 
-    cards[nextIndexByKey[e.key]].focus()
+    if (isVertical) {
+      next = cur + cols
+      if (next > lastIndex)
+        next = col // wrap to top of the same column
+    }
+    else if (isVerticalUp) {
+      next = cur - cols
+      if (next < 0) {
+        // wrap to the bottom of the same column
+        next = col
+        while (next + cols <= lastIndex)
+          next += cols
+      }
+    }
+    else if (e.key === 'ArrowRight') {
+      next = (cur + 1) % count
+    }
+    else if (e.key === 'ArrowLeft') {
+      next = (cur - 1 + count) % count
+    }
+
+    setSelectedProjectIndex(next)
   }
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl" overlayClassName="backdrop-blur-sm" data-testid="project-browser-panel">
-      <ModalBody className="modal__body--constrained">
+      <ModalBody className="modal__body--constrained" onKeyDown={handlePanelKeyDown}>
         {/* Header with inline search input */}
         <ModalHeader
           onClose={onClose}
@@ -282,7 +311,19 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
               ref={searchInputRef}
               type="text"
               value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value)
+                // Keep the highlight on the active project if it is still in the
+                // filtered results; otherwise drop the highlight so the next
+                // ArrowDown lands on the first result.
+                const q = e.target.value.trim().toLowerCase()
+                if (!q) {
+                  setSelectedProjectIndex(panelProjects.findIndex(p => (p.project.code || p.id) === activeProjectKey))
+                }
+                else {
+                  setSelectedProjectIndex(-1)
+                }
+              }}
               placeholder="Search projects..."
               data-testid="project-browser-search-input"
               className="project-search"
@@ -308,20 +349,21 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
                   <div
                     ref={projectGridRef}
                     className="grid grid-cols-1 md:grid-cols-2 gap-4"
-                    onKeyDown={handleProjectGridKeyDown}
+                    role="listbox"
+                    aria-label="Projects"
                   >
-                    {displayProjects.map(project => (
+                    {displayProjects.map((project, index) => (
                       <ProjectSelectorCard
                         key={project.project.code || project.id}
                         project={project}
                         isActive={
                           (project.project.code || project.id) === activeProjectKey
                         }
+                        highlighted={index === selectedProjectIndex}
                         onSelect={handleProjectSelect}
                         showDescription={true}
                         onFavoriteToggle={onFavoriteToggle}
                         testIdPrefix="project-browser-card"
-                        onCardKeyDown={handleProjectGridKeyDown}
                         accentEnabled={preferences.accentEnabled}
                         accentStyle={preferences.accentStyle}
                         autocolor={preferences.autocolor}

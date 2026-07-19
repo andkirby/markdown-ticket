@@ -272,10 +272,9 @@ test.describe('Project accent colors - MDT-181', () => {
     expect(await getAccentVariable(activeProjectCard)).toBe('#9333ea')
   })
 
-  test('keyboard navigation and focus management still work in the browser panel after accent rendering is added', async ({ page, e2eContext }) => {
+  test('keyboard navigation and selection still work in the browser panel after accent rendering is added', async ({ page, e2eContext }) => {
     const firstProject = await buildScenario(e2eContext.projectFactory, 'simple')
     const secondProject = await e2eContext.projectFactory.createProject('empty', { name: 'Keyboard Accent Two' })
-    const thirdProject = await e2eContext.projectFactory.createProject('empty', { name: 'Keyboard Accent Three' })
 
     await writeSelectorState(e2eContext.backendUrl, {
       [secondProject.key]: {
@@ -291,27 +290,20 @@ test.describe('Project accent colors - MDT-181', () => {
 
     await page.click(selectorSelectors.panelTrigger)
     const secondCard = page.locator(projectSelectors.projectOption(secondProject.key))
-    const thirdCard = page.locator(projectSelectors.projectOption(thirdProject.key))
+    await expect(secondCard).toBeVisible()
 
-    await secondCard.focus()
-    await expect(secondCard).toBeFocused()
+    // Filter down to the accented project so it is the only (hence first) result
+    await page.locator('[data-testid="project-browser-search-input"]').fill(secondProject.key)
+    await expect(secondCard).toBeVisible()
 
-    await secondCard.evaluate((element: HTMLElement) => {
-      element.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }))
-    })
-    await expect.poll(async () => {
-      return page.evaluate(() => document.activeElement?.getAttribute('data-testid') ?? null)
-    }).not.toBe(`project-browser-card-${secondProject.key}`)
+    // Active-descendant (BR-11): ArrowDown highlights the first result, Enter selects it
+    await page.keyboard.press('ArrowDown')
+    await expect(secondCard).toHaveAttribute('data-selected', 'true')
 
-    const focusedCardTestId = await page.evaluate(() => document.activeElement?.getAttribute('data-testid') ?? null)
-    expect(focusedCardTestId?.startsWith('project-browser-card-')).toBe(true)
+    await page.keyboard.press('Enter')
 
-    const nextProjectKey = focusedCardTestId!.replace('project-browser-card-', '')
-    await page.locator(`[data-testid="${focusedCardTestId}"]`).evaluate((element: HTMLElement) => {
-      element.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
-    })
     await waitForBoardReady(page)
-    await expect(page.locator(selectorSelectors.activeProjectCard)).toContainText(nextProjectKey)
+    await expect(page.locator(selectorSelectors.activeProjectCard)).toContainText(secondProject.key)
   })
 
   test('accent rendering does not change inactive chip or browser-card row height', async ({ page, e2eContext }) => {

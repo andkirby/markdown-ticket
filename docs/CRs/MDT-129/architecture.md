@@ -103,6 +103,10 @@ If persistence writes fail, the UI continues to display current favorite and usa
 
 To add a new selector view mode (e.g., grid): create `ProjectSelectorGrid.tsx`, add mode to `ViewModeSwitcher`, extend `useProjectSelectorManager` to provide grid-specific data. No changes to rail, panel, or ordering logic.
 
+## Pattern Note (UAT 2026-06-24)
+
+The project browser panel (`ProjectBrowserPanel.tsx`) uses an **active-descendant combobox** pattern for keyboard navigation, adapted from `src/components/QuickSearch/QuickSearchModal.tsx`: a `selectedProjectIndex` state drives a visual highlight (`data-selected`, rendered via CSS `outline` so it is not clobbered by the active card's box-shadow) on the filtered card list, DOM focus stays in the search input (cards are `role="option"` with `tabindex=-1`), typing updates the query in place, and Enter selects the highlighted project. The highlighted card is kept in view via a `useLayoutEffect` that calls `scrollIntoView({ block: 'nearest' })` on the `[data-selected="true"]` card whenever `selectedProjectIndex` changes, so the Radix `ScrollArea` viewport follows the highlight without a visible jump and only scrolls when the card is outside the visible area. **Two differences from QuickSearch**, because this is a multi-column GRID, not a single-column list: (1) navigation is Excel-grid — Down/Up move within the same column (±columnCount via `getGridColumnCount`), Left/Right move between adjacent columns (±1), all cyclic; Tab/Shift+Tab act as down/up and are intercepted on `ModalBody` so focus never escapes the panel. (2) The panel highlights the **active project on open** (wherever it sits in the favorites/usage ordering). This replaces the earlier roving-tabindex approach where DOM focus moved onto cards and stranded typed characters, and the intermediate linear-nav approach that zigzagged across columns.
+
 ## Obligations
 
 - Prioritize active project to remain visible in rail even when it would fall outside normal visible subset based on ordering rules (`OBL-active-project-always-visible`)
@@ -144,6 +148,9 @@ To add a new selector view mode (e.g., grid): create `ProjectSelectorGrid.tsx`, 
 - Persist selector state (favorite, lastUsedAt, count per project) to project-selector.json keyed by project code; write shortly after selection changes; handle missing or invalid JSON gracefully (`OBL-state-persistence`)
   Derived From: `BR-8.1`, `BR-8.2`, `BR-8.3`, `BR-8.4`, `BR-8.5`, `BR-8.6`, `BR-8.7`, `C2`, `C3`, `C10`
   Artifacts: `ART-selector-data-hook`, `ART-config-selector-state`, `ART-server-system-routes`
+- Project browser panel supports active-descendant keyboard navigation: arrow keys move a selection highlight through the filtered list (wrapping at edges), focus stays in the search field while typing, and Enter selects the highlighted project (`OBL-browser-keyboard-navigation`)
+  Derived From: `BR-11.1`, `BR-11.2`, `BR-11.3`, `BR-11.4`, `BR-11.5`
+  Artifacts: `ART-browser-panel`, `ART-selector-card`
 - E2E tests for selector behavior; Jest unit tests for ordering and data hook logic (`OBL-test-coverage`)
   Derived From: `BR-1.1`, `BR-1.2`, `BR-1.3`, `BR-1.4`, `BR-2.1`, `BR-2.3`, `BR-3.1`, `BR-3.2`, `BR-3.3`, `BR-3.4`, `BR-4.1`, `BR-4.2`, `BR-4.3`, `BR-4.4`, `BR-4.5`, `BR-5.1`, `BR-5.2`, `BR-5.3`, `BR-5.4`, `BR-5.5`, `BR-6.1`, `BR-6.2`, `BR-6.3`, `BR-6.4`, `BR-6.5`, `BR-7.1`, `BR-7.2`, `BR-7.3`, `BR-7.4`, `BR-7.5`, `BR-8.1`, `BR-8.2`, `BR-8.3`, `BR-8.4`, `BR-8.5`, `BR-8.6`, `BR-8.7`, `BR-9.1`, `BR-9.3`, `BR-10.1`, `BR-10.2`, `BR-10.3`, `BR-10.4`, `BR-10.5`, `BR-10.6`, `BR-10.7`, `C1`, `C2`, `C3`, `C5`, `C6`, `C7`, `C9`, `C10`
   Artifacts: `ART-test-e2e-selector`, `ART-test-ordering`, `ART-test-selector-data-hook`
@@ -152,13 +159,13 @@ To add a new selector view mode (e.g., grid): create `ProjectSelectorGrid.tsx`, 
 
 | Artifact ID | Path | Kind | Referencing Obligations |
 |---|---|---|---|
-| `ART-browser-panel` | `src/components/ProjectSelector/ProjectBrowserPanel.tsx` | runtime | `OBL-active-project-card-display`, `OBL-active-project-click-opens-browser`, `OBL-panel-displays-full-list`, `OBL-project-switching-flow`, `OBL-responsive-collapse` |
+| `ART-browser-panel` | `src/components/ProjectSelector/ProjectBrowserPanel.tsx` | runtime | `OBL-active-project-card-display`, `OBL-active-project-click-opens-browser`, `OBL-browser-keyboard-navigation`, `OBL-panel-displays-full-list`, `OBL-project-switching-flow`, `OBL-responsive-collapse` |
 | `ART-config-selector-state` | `CONFIG_DIR/project-selector.json` | config | `OBL-config-validation`, `OBL-load-selector-data`, `OBL-project-switching-flow`, `OBL-state-persistence` |
 | `ART-config-user-toml` | `CONFIG_DIR/user.toml` | config | `OBL-config-validation`, `OBL-configuration-load-and-defaults`, `OBL-inactive-projects-display-mode`, `OBL-load-selector-data`, `OBL-rail-ordering` |
 | `ART-hook-project-manager` | `src/hooks/useProjectManager.ts` | runtime | `OBL-project-switching-flow` |
 | `ART-hover-card-component` | `src/components/UI/hover-card.tsx` | runtime | `OBL-hover-card-on-chips` |
 | `ART-ordering-utils` | `src/utils/selectorOrdering.ts` | runtime | `OBL-active-project-always-visible`, `OBL-panel-displays-full-list`, `OBL-rail-ordering` |
-| `ART-selector-card` | `src/components/ProjectSelector/ProjectSelectorCard.tsx` | runtime | `OBL-active-project-card-display`, `OBL-hover-card-on-chips` |
+| `ART-selector-card` | `src/components/ProjectSelector/ProjectSelectorCard.tsx` | runtime | `OBL-active-project-card-display`, `OBL-browser-keyboard-navigation`, `OBL-hover-card-on-chips` |
 | `ART-selector-chip` | `src/components/ProjectSelector/ProjectSelectorChip.tsx` | runtime | `OBL-hover-card-on-chips`, `OBL-inactive-projects-display-mode` |
 | `ART-selector-data-hook` | `src/components/ProjectSelector/useSelectorData.ts` | runtime | `OBL-config-validation`, `OBL-configuration-load-and-defaults`, `OBL-load-selector-data`, `OBL-project-switching-flow`, `OBL-state-persistence` |
 | `ART-selector-index` | `src/components/ProjectSelector/index.tsx` | runtime | `OBL-active-project-card-display`, `OBL-active-project-click-opens-browser`, `OBL-responsive-collapse` |
@@ -220,6 +227,11 @@ To add a new selector view mode (e.g., grid): create `ProjectSelectorGrid.tsx`, 
 | `BR-10.5` | 2 | `OBL-config-validation`, `OBL-test-coverage` |
 | `BR-10.6` | 2 | `OBL-config-validation`, `OBL-test-coverage` |
 | `BR-10.7` | 2 | `OBL-config-validation`, `OBL-test-coverage` |
+| `BR-11.1` | 1 | `OBL-browser-keyboard-navigation` |
+| `BR-11.2` | 1 | `OBL-browser-keyboard-navigation` |
+| `BR-11.3` | 1 | `OBL-browser-keyboard-navigation` |
+| `BR-11.4` | 1 | `OBL-browser-keyboard-navigation` |
+| `BR-11.5` | 1 | `OBL-browser-keyboard-navigation` |
 | `C1` | 2 | `OBL-load-selector-data`, `OBL-test-coverage` |
 | `C2` | 3 | `OBL-load-selector-data`, `OBL-state-persistence`, `OBL-test-coverage` |
 | `C3` | 3 | `OBL-project-switching-flow`, `OBL-state-persistence`, `OBL-test-coverage` |
