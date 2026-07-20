@@ -23,9 +23,8 @@ A persistent "pin bar" in the top area of the desktop layout where users can pin
 
 ### Layout
 
-- Lives in the top bar area of the desktop view
-- Coexists with the project selector rail (IDEA-001) — the freed space from collapsed chips makes room
-- Should feel integrated, not bolted on
+- **Revised 2026-07-20**: lives in a **vertical left rail** (~48px wide), not the top header. See Decision.
+- Original plan (top header, coexisting with project selector rail) was abandoned due to collision with the board filter bar.
 
 ### Smart default
 
@@ -63,20 +62,51 @@ Alternative: global config ("always unpin on done" / "always leave"). Simpler bu
 - Documents view exists with folder browsing but no drag-drop
 - Favorites exist for documents but are per-project, not global
 
-### Open questions
+### Open questions (resolved 2026-07-20)
 
-- **Document drag-drop**: Does not exist yet. Would need a drag source on document rows/cards. Could use the same HTML5 DnD or a library approach.
-- **Persistence**: Where do pins live? Per-user, global (cross-project)? Likely stored in localStorage or user preferences.
-- **Max items**: Is there a cap? What happens when the bar overflows — scroll, wrap, shrink, or pop an overflow menu?
-- **Cross-project pins**: If user works across projects, can they pin MDT-042 and OTHER-15 side by side? Probably yes.
+- **Document drag-drop**: Still does not exist. Phase 1 ships **tickets only**; documents are phase 2 once a drag source exists on document rows.
+- **Persistence**: Follow the existing document-favorites pattern — server-backed via a `/api/pins` endpoint, not pure localStorage. The document favs API (`PUT /api/documents/favs`) is the established MDT pattern for persistent user selections; reinventing localStorage-only pins would fork the persistence story. Cross-project by default (pins carry their project code, e.g. `MDT-042`, `OTHER-15`).
+- **Max items / overflow**: Vertical scroll inside the rail. No cap, no wrap, no shrink-to-fit — the rail is a fixed-width column, overflow scrolls. Icon-only items keep each row to ~40px.
+- **Cross-project pins**: Yes. Pin model carries project code + ticket code; the rail renders both side by side. Tooltip shows full identity.
 
 ## Decision
 
-**Promote** — Option B (+N collapse button) is the right approach. Additive, no conflicts with existing interactions, well-understood UX pattern. Cost: S.
+**Promote** — with a spatial change from the original idea.
+
+The original idea placed the pin bar in the **top header area**, coexisting with the project selector
+rail (IDEA-001). That plan collided with the board filter bar
+(`docs/design/surfaces/board-filter-bar.spec.md`), which also needs `header__right`. Two horizontal
+strips fighting for one 64px header is a forever-collision.
+
+**Revised layout: vertical left rail.** The pin bar becomes a ~48px vertical rail on the left edge,
+sibling to the content area in `App.tsx` (the `flex-1` content row becomes `PinRail + content`). The
+filter bar keeps the header. Each surface gets its own zone — no shared-row negotiation, no permanent
+vertical tax on the board, no special-case layout code.
+
+Why a rail fits the pin bar specifically (vs. the header):
+
+- Pins are persistent, cross-view context; the header is per-view chrome. Different jobs.
+- The pin set is small; a vertical rail scales to ~10 icon-only items before scroll, vs. ~4 on a narrow header.
+- MDT has no left rail today (`App.tsx` is `flex flex-col`), so the rail is greenfield — no eviction.
+- A vertical strip is a larger, stabler drag-drop target than a thin header row.
+
+**Phase plan**:
+
+1. **Phase 1**: tickets only, vertical left rail, server-backed persistence (`/api/pins`), drag-to-pin from board cards, click-to-open, hover tooltip, unpin on hover-×.
+2. **Phase 2**: document pins (requires document drag source).
+3. **Deferred**: auto-populate with in-progress tickets, auto-unpin on done column (per-action toggle), mobile FAB/sheet for the rail.
+
+The smart-default auto-populate and auto-unpin-on-done behaviors from the original idea stay deferred
+per the idea's own "Default at launch: no auto-unpin" guidance.
+
+Cost: M (was S — bumped for the new rail primitive + server endpoint).
 
 ## References
 
 - MDT-129: Project selector redesign (top bar area)
 - IDEA-001: Collapsed project chips (frees space in top bar)
 - `src/components/ProjectSelector/ProjectSelectorRail.tsx` — current top bar occupant
-- Document favorites: existing per-project favorite mechanism
+- Document favorites: existing per-project favorite mechanism (`src/config/documentFavs.ts`, `PUT /api/documents/favs`)
+- `docs/design/surfaces/board-filter-bar.spec.md` — spatial boundary contract (filter owns header__right, pin owns left rail)
+- `docs/design/explorations/filtering-system.md` §3.1 — spatial decision and rejected horizontal alternatives
+- `src/App.tsx` — rail insertion point (`flex-1` content row becomes `PinRail + content`)
