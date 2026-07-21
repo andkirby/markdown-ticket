@@ -41,7 +41,7 @@ kill_processes_on_ports() {
 # Function to stop all running processes
 stop_processes() {
     echo "🛑 Stopping MDT processes..."
-    kill_processes_on_ports 5173 3001
+    kill_processes_on_ports 3075 3001
     echo "✅ All processes stopped"
 }
 
@@ -57,7 +57,7 @@ elif [ "$1" = "help" ] || [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
     echo ""
     echo "Options:"
     echo "  both (default)   - Start both frontend and backend servers"
-    echo "  frontend         - Start frontend server only (port 5173)"
+    echo "  frontend         - Start frontend server only (port 3075)"
     echo "  backend          - Start backend server only (port 3001)"
     echo "  stop             - Stop all running servers"
     echo "  help, --help, -h - Show this help message"
@@ -98,7 +98,7 @@ mkdir -p tasks
 
 # Kill existing processes on default ports
 echo "🔍 Checking for existing processes on default ports..."
-kill_processes_on_ports 5173 3001
+kill_processes_on_ports 3075 3001
 
 # Check if nodemon is installed for development
 if ! command -v nodemon &> /dev/null; then
@@ -129,7 +129,7 @@ else
     echo ""
     echo "Options:"
     echo "  both (default)   - Start both frontend and backend servers"
-    echo "  frontend         - Start frontend server only (port 5173)"
+    echo "  frontend         - Start frontend server only (port 3075)"
     echo "  backend          - Start backend server only (port 3001)" 
     echo "  stop             - Stop all running servers"
     exit 1
