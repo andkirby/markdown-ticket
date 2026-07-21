@@ -41,7 +41,7 @@ kill_processes_on_ports() {
 # Function to stop all running processes
 stop_processes() {
     echo "🛑 Stopping MDT production processes..."
-    kill_processes_on_ports 4173 5173 3001
+    kill_processes_on_ports 3070 3001
     echo "✅ All processes stopped"
 }
 
@@ -57,7 +57,7 @@ elif [ "$1" = "help" ] || [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
     echo ""
     echo "Options:"
     echo "  both (default)   - Start both frontend and backend production servers"
-    echo "  frontend         - Start frontend production server only (port 4173)"
+    echo "  frontend         - Start frontend production server only (port 3070)"
     echo "  backend          - Start backend production server only (port 3001)"
     echo "  stop             - Stop all running production servers"
     echo "  build            - Build all projects before starting (if needed)"
@@ -133,7 +133,7 @@ fi
 
 # Kill existing processes on default ports
 echo "🔍 Checking for existing processes on default ports..."
-kill_processes_on_ports 4173 5173 3001
+kill_processes_on_ports 3070 3001
 
 echo "✅ Setup complete!"
 echo ""
@@ -153,13 +153,13 @@ if [ -z "$1" ] || [ "$1" = "both" ] || [ "$1" = "build" ]; then
     sleep 2
 
     # Start frontend in background
-    echo "🎨 Starting frontend production server on port 4173..."
-    (cd "${SCRIPT_DIR}" && bun run preview) &
+    echo "🎨 Starting frontend production server on port 3070..."
+    (cd "${SCRIPT_DIR}" && bun run preview --port 3070 --strictPort) &
     FRONTEND_PID=$!
 
     echo ""
     echo "✅ Production servers started!"
-    echo "   Frontend: http://localhost:4173 (PID: $FRONTEND_PID)"
+    echo "   Frontend: http://localhost:3070 (PID: $FRONTEND_PID)"
     echo "   Backend:  http://localhost:3001 (PID: $BACKEND_PID)"
     echo ""
     echo "To stop servers, run: ./start.sh stop"
@@ -174,7 +174,7 @@ if [ -z "$1" ] || [ "$1" = "both" ] || [ "$1" = "build" ]; then
 
 elif [ "$1" = "frontend" ]; then
     echo "🚀 Starting frontend production server only..."
-    cd "${SCRIPT_DIR}" && bun run preview
+    cd "${SCRIPT_DIR}" && bun run preview --port 3070 --strictPort
 
 elif [ "$1" = "backend" ]; then
     echo "🚀 Starting backend production server only..."
@@ -186,7 +186,7 @@ else
     echo ""
     echo "Options:"
     echo "  both (default)   - Start both frontend and backend production servers"
-    echo "  frontend         - Start frontend production server only (port 4173)"
+    echo "  frontend         - Start frontend production server only (port 3070)"
     echo "  backend          - Start backend production server only (port 3001)"
     echo "  stop             - Stop all running production servers"
     echo "  build            - Build all projects then start both servers"
