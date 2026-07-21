@@ -349,7 +349,7 @@ To be filled...
 1. **Always cleanup** - Use `test.afterAll` to call both `projectFactory.cleanup()` and `testEnv.cleanup()`
 2. **Use unique codes** - Let system generate project codes or add timestamps
 3. **Check results** - Verify `success` property of CR creation results
-4. **Port isolation** - Tests use 6173/4001/4002, development uses 5173/3001/3002
+4. **Port isolation** - Tests use 6173/4001/4002, development uses 3075/3001/3002
 5. **Cleanup order** - Stop servers, then cleanup factory, then cleanup environment
 
 ## Quick Reference

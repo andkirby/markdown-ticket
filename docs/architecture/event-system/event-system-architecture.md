@@ -28,7 +28,7 @@ This document provides a comprehensive analysis of the current event management 
 ```mermaid
 graph TB
     User[User/Browser]
-    Frontend[React Frontend<br/>Port 5173]
+    Frontend[React Frontend<br/>Port 3075]
     Backend[Express Backend<br/>Port 3001]
     FS[File System<br/>docs/CRs/*.md]
 

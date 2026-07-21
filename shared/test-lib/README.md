@@ -7,7 +7,7 @@ Isolated test environment library for markdown-ticket E2E testing. Provides a cl
 `shared/test-lib` enables testing of markdown-ticket projects by:
 
 - Creating isolated temporary directories for each test session
-- Using dedicated test ports (6173/4001/4002) that don't conflict with dev servers (5173/3001/3002)
+- Using dedicated test ports (6173/4001/4002) that don't conflict with dev servers (3075/3001/3002)
 - Managing server lifecycles (frontend, backend, MCP) with health checks
 - Creating test projects with proper directory structure and configuration
 - Generating CRs with YAML frontmatter and markdown content
@@ -439,7 +439,7 @@ const response = await httpRequest({
 
 **Test Ports** (isolated from development):
 
-- Frontend: `6173` (vs dev: `5173`)
+- Frontend: `6173` (vs dev: `3075`)
 - Backend: `4001` (vs dev: `3001`)
 - MCP: `4002` (vs dev: `3002`)
 
