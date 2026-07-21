@@ -215,6 +215,7 @@ export default function MarkdownViewer({ projectId, filePath, fileInfo, refreshT
                     key={`${filePath}:${refreshToken}`}
                     markdown={parsedContent.body}
                     currentProject={projectCode || ''}
+                    sourcePath={filePath}
                     className={`prose prose--document ${getMarkdownDensityClass(markdownDensity)} max-w-none dark:prose-invert`}
                   />
                 )}

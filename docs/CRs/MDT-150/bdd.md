@@ -4,9 +4,10 @@
 
 SmartLink document URL generation — 5 scenarios across 2 journeys covering document reference resolution and anchor preservation.
 
-**Note**: Original `backend_blocks_path_traversal` and `backend_returns_missing_file_error` scenarios (BR-5) were removed because BR-5 is covered by MDT-151 (shipped). MDT-150 does not test backend path validation.
+**Note**: Original `backend_blocks_path_traversal` and `backend_returns_missing_file_error` scenarios (BR-5 in the original numbering) were removed because backend validation is covered by MDT-151 (shipped). MDT-150 does not test backend path validation. **BR-5 was re-added 2026-07-21 with a different meaning** — see scenarios below.
 
 **UAT refined**: 2026-04-29 — scenarios updated to reflect simplified resolution model (useParams instead of sourcePath threading).
+**UAT refined**: 2026-07-21 — added `documents_view_relative_reference` scenario for the documents-view resolution gap.
 
 ## Acceptance Strategy
 
@@ -16,15 +17,16 @@ SmartLink document URL generation — 5 scenarios across 2 journeys covering doc
 
 ## Journeys
 
-### 1. Document Reference Resolution (BR-1, BR-2)
+### 1. Document Reference Resolution (BR-1, BR-2, BR-5)
 
-Covers the core routing logic: SmartLink resolves `.md` references using the current ticket key from the route.
+Covers the core routing logic: the preprocessor resolves `.md` references using the source document's path as context.
 
 | Scenario | Covers |
 |---|---|
 | ticket_subdoc_reference | BR-1 |
 | project_doc_reference | BR-1 |
 | sibling_ticket_reference | BR-2 |
+| documents_view_relative_reference | BR-1, BR-5 (added 2026-07-21) |
 
 ### 2. Navigation (BR-3, BR-4)
 
@@ -45,7 +47,9 @@ Covers anchor preservation and path-style documents routing.
 | Ticket-key filename + anchor | `MDT-151.md#overview` | That ticket + scroll |
 | Ticket key | `MDT-151` | That ticket |
 | Ticket-prefixed filename | `MDT-150-smartlink-doc-urls.md` | That ticket |
-| Relative with `..` | `../../README.md` | Path math → documents view |
+| Relative with `..` (ticket view) | `../../README.md` | Path math → documents view |
+| Relative bare filename (documents view) | `relative.md` in `docs/architecture/aaaa.md` | `/prj/:code/documents/docs/architecture/relative.md` (BR-5) |
+| Relative with `..` (documents view) | `../sibling.md` in `docs/architecture/aaaa.md` | `/prj/:code/documents/docs/sibling.md` (BR-5) |
 
 ## Execution Notes
 

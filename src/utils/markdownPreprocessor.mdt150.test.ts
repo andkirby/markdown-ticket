@@ -286,4 +286,71 @@ describe('MDT-150: resolveDocumentRef via preprocessMarkdown', () => {
       expect(processed).not.toContain('/prj/')
     })
   })
+
+  // ---
+  // UAT 2026-07-21 (BR-5): documents-view resolution mode
+  // ---
+  // sourcePath is project-relative (e.g. "docs/architecture/aaaa.md") when
+  // the source document is rendered in the documents view (not a ticket).
+  // resolveDocumentRef detects this form via the ^[A-Z]+-\d+/ prefix check
+  // and resolves .md refs against the source document's directory, routing
+  // to the documents view — never to a ticket subdoc URL.
+  describe('BR-5: documents-view mode (sourcePath project-relative)', () => {
+    it('resolves bare filename against source document directory', () => {
+      // sourcePath = 'docs/architecture/aaaa.md' (documents-view form)
+      // relative.md should resolve to docs/architecture/relative.md
+      const markdown = 'See [relative](relative.md) for details.'
+      const processed = preprocessMarkdown(markdown, 'ABC', linkConfig, 'docs/architecture/aaaa.md')
+      const href = extractFirstHref(processed)
+      expect(href).not.toBeNull()
+      expect(href).toBe('/prj/ABC/documents?file=docs%2Farchitecture%2Frelative.md')
+    })
+
+    it('resolves ../sibling.md against source document directory', () => {
+      // sourcePath = 'docs/architecture/aaaa.md'
+      // ../sibling.md should resolve to docs/sibling.md (one level up)
+      const markdown = 'See [sibling](../sibling.md) for details.'
+      const processed = preprocessMarkdown(markdown, 'ABC', linkConfig, 'docs/architecture/aaaa.md')
+      const href = extractFirstHref(processed)
+      expect(href).not.toBeNull()
+      expect(href).toBe('/prj/ABC/documents?file=docs%2Fsibling.md')
+    })
+
+    it('resolves nested sub/deep.md against source document directory', () => {
+      const markdown = 'See [deep](sub/deep.md) for details.'
+      const processed = preprocessMarkdown(markdown, 'ABC', linkConfig, 'docs/architecture/aaaa.md')
+      const href = extractFirstHref(processed)
+      expect(href).not.toBeNull()
+      expect(href).toBe('/prj/ABC/documents?file=docs%2Farchitecture%2Fsub%2Fdeep.md')
+    })
+
+    it('preserves anchor on documents-view resolutions', () => {
+      const markdown = 'See [section](relative.md#section) for details.'
+      const processed = preprocessMarkdown(markdown, 'ABC', linkConfig, 'docs/architecture/aaaa.md')
+      const href = extractFirstHref(processed)
+      expect(href).not.toBeNull()
+      expect(href).toBe('/prj/ABC/documents?file=docs%2Farchitecture%2Frelative.md#section')
+    })
+
+    it('does NOT route documents-view refs to ticket subdoc URLs', () => {
+      // Even if the href looks like a ticket key (MDT-151.md), documents-view
+      // mode must route to the documents view, not a ticket.
+      // Note: bare MDT-NNN.md in documents view currently passes through due
+      // to Step 1.5 ticket-filename protection (pre-bug scope). This test
+      // covers the non-ticket-key-named case which is the reported bug.
+      const markdown = 'See [related](related.md) for details.'
+      const processed = preprocessMarkdown(markdown, 'ABC', linkConfig, 'docs/architecture/aaaa.md')
+      const href = extractFirstHref(processed)
+      expect(href).not.toBeNull()
+      expect(href).not.toContain('/ticket/')
+      expect(href).toContain('/documents')
+    })
+
+    it('resolves unwrapped bare filename in documents-view mode', () => {
+      // No explicit [text]() wrapping — preprocessor auto-wraps
+      const markdown = 'See relative.md for details.'
+      const processed = preprocessMarkdown(markdown, 'ABC', linkConfig, 'docs/architecture/aaaa.md')
+      expect(processed).toContain('/prj/ABC/documents?file=docs%2Farchitecture%2Frelative.md')
+    })
+  })
 })

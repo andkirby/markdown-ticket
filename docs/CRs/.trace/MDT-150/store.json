@@ -42,7 +42,7 @@
     {
       "id": "C4",
       "kind": "constraint",
-      "text": "Frontend must not perform security checks or file existence validation \u2014 that is the backend's responsibility",
+      "text": "Frontend must not perform security checks or file existence validation — that is the backend's responsibility",
       "sourceRef": "CR:MDT-150",
       "routePolicy": "tests"
     },
@@ -54,18 +54,25 @@
       "routePolicy": "bdd"
     },
     {
-      "id": "BR-1",
-      "kind": "behavior",
-      "text": "A bare .md filename (e.g. architecture.md) inside a ticket view navigates to the current ticket's subdocument. A relative .md path with .. (e.g. ../../README.md) navigates to the documents view with the resolved file path.",
-      "sourceRef": "CR:MDT-150",
-      "routePolicy": "bdd"
-    },
-    {
       "id": "C5",
       "kind": "constraint",
       "text": "Existing link classification and rendering must remain unchanged",
       "sourceRef": "CR:MDT-150",
       "routePolicy": "tests"
+    },
+    {
+      "id": "BR-1",
+      "kind": "behavior",
+      "text": "A bare .md filename (e.g. architecture.md) inside a ticket view navigates to the current ticket's subdocument. A relative .md path with .. (e.g. ../../README.md) navigates to the documents view with the resolved file path. The same resolution applies when the source document is rendered inside the documents view (/prj/:code/documents?file=...): relative hrefs resolve against the source document's directory, not the URL root.",
+      "sourceRef": "CR:MDT-150",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-5",
+      "kind": "behavior",
+      "text": "resolveDocumentRef accepts a source context anchored to either ticketsPath (ticket view) or the documents root (documents view). When the source is a documents-view file, bare and ..-relative .md hrefs resolve against the source document's directory and route to the documents view (/prj/:code/documents/:path), never to a ticket subdoc URL.",
+      "sourceRef": "CR:MDT-150",
+      "routePolicy": "bdd"
     }
   ],
   "scenarios": [
@@ -134,6 +141,18 @@
       "when": "the user clicks the link",
       "then": "the target view navigates to the subdoc URL with #overview and the browser scrolls to the heading with id overview",
       "sourceRef": "BR-3"
+    },
+    {
+      "id": "documents_view_relative_reference",
+      "title": "Relative .md reference in documents view resolves against the source document's directory",
+      "covers": [
+        "BR-1",
+        "BR-5"
+      ],
+      "given": "a markdown document at docs/architecture/aaaa.md is open in the documents view (/prj/:code/documents?file=docs/architecture/aaaa.md) and its body contains a link [x](relative.md)",
+      "when": "the user clicks the relative.md link",
+      "then": "the browser navigates to /prj/:code/documents/docs/architecture/relative.md (the source document's directory is preserved), not /prj/:code/documents/relative.md",
+      "sourceRef": "CR:MDT-150"
     }
   ],
   "obligations": [
@@ -210,19 +229,6 @@
       "sourceRef": "Architecture: anchor preservation"
     },
     {
-      "id": "OBL-preprocessor-resolve",
-      "title": "Preprocessor resolves bare/relative .md refs to absolute URLs using sourcePath. Bare filenames become ticket subdoc URLs. Ticket-key patterns become ticket URLs. Relative .. paths become documents URLs.",
-      "derivedFrom": [
-        "BR-1",
-        "BR-2",
-        "C3"
-      ],
-      "artifactIds": [
-        "ART-preprocessor"
-      ],
-      "sourceRef": "Architecture: preprocessor resolves all link types"
-    },
-    {
       "id": "OBL-sourcepath-thread",
       "title": "TicketViewer threads sourcePath (subdocument.filePath or ticketsPath/ticketKey.md) through MarkdownContent to useMarkdownProcessor to preprocessMarkdown",
       "derivedFrom": [
@@ -234,6 +240,34 @@
         "ART-markdown-content"
       ],
       "sourceRef": "Architecture: sourcePath plumbing"
+    },
+    {
+      "id": "OBL-preprocessor-resolve",
+      "title": "Preprocessor resolves bare/relative .md refs to absolute URLs using sourcePath. Bare filenames become ticket subdoc URLs (ticket context) or documents URLs (documents-view context). Ticket-key patterns become ticket URLs. Relative .. paths become documents URLs. Source context form (ticket-relative vs documents-relative) is auto-detected via the ^[A-Z]+-\\d+/ prefix.",
+      "derivedFrom": [
+        "BR-1",
+        "BR-2",
+        "BR-5",
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-preprocessor"
+      ],
+      "sourceRef": "CR:MDT-150"
+    },
+    {
+      "id": "OBL-documents-viewer-sourcepath",
+      "title": "DocumentsView/MarkdownViewer passes sourcePath (the selected document's project-relative path, e.g. docs/architecture/aaaa.md) to MarkdownContent so the preprocessor's resolveDocumentRef engages for documents-view rendering.",
+      "derivedFrom": [
+        "BR-1",
+        "BR-5",
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-documents-viewer",
+        "ART-markdown-content"
+      ],
+      "sourceRef": "CR:MDT-150"
     }
   ],
   "artifacts": [
@@ -278,19 +312,15 @@
       "path": "src/components/MarkdownContent/useMarkdownProcessor.ts",
       "kind": "runtime",
       "sourceRef": "Architecture: passes sourcePath to preprocessMarkdown"
+    },
+    {
+      "id": "ART-documents-viewer",
+      "path": "src/components/DocumentsView/MarkdownViewer.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-150"
     }
   ],
   "testPlans": [
-    {
-      "id": "TEST-preprocessor-regression",
-      "kind": "unit",
-      "title": "markdownPreprocessor unchanged (C5)",
-      "covers": [
-        "C5"
-      ],
-      "file": "src/utils/markdownPreprocessor.mdt150.test.ts",
-      "sourceRef": "tests.md#preprocessor-regression"
-    },
     {
       "id": "TEST-e2e-anchor-passthrough",
       "kind": "e2e",
@@ -357,6 +387,39 @@
       ],
       "file": "tests/e2e/documents/path-style-routing.spec.ts",
       "sourceRef": "tests.md#e2e-documents-path-route"
+    },
+    {
+      "id": "TEST-preprocessor-documents-mode",
+      "kind": "unit",
+      "title": "markdownPreprocessor documents-view mode: bare and ..-relative .md refs resolve against sourcePath",
+      "covers": [
+        "BR-1",
+        "BR-5",
+        "C3"
+      ],
+      "file": "src/utils/markdownPreprocessor.mdt150.test.ts",
+      "sourceRef": "CR:MDT-150"
+    },
+    {
+      "id": "TEST-e2e-documents-relative-link",
+      "kind": "e2e",
+      "title": "Documents-view relative .md link resolves to sibling path, not URL root",
+      "covers": [
+        "BR-1",
+        "BR-5"
+      ],
+      "file": "tests/e2e/documents/relative-link-resolution.spec.ts",
+      "sourceRef": "CR:MDT-150"
+    },
+    {
+      "id": "TEST-preprocessor-regression",
+      "kind": "unit",
+      "title": "markdownPreprocessor ticket-context behavior unchanged (C5); documents-mode branch is additive",
+      "covers": [
+        "C5"
+      ],
+      "file": "src/utils/markdownPreprocessor.mdt150.test.ts",
+      "sourceRef": "CR:MDT-150"
     }
   ],
   "tasks": [
@@ -407,17 +470,34 @@
       "sourceRef": "tasks.md#task-3"
     },
     {
+      "id": "TASK-documents-view-resolve",
+      "title": "Documents-view resolution: thread sourcePath from MarkdownViewer + add documents-mode branch to resolveDocumentRef",
+      "ownsArtifactIds": [
+        "ART-documents-viewer",
+        "ART-preprocessor",
+        "ART-markdown-content"
+      ],
+      "makesGreenIds": [
+        "documents_view_relative_reference",
+        "TEST-preprocessor-documents-mode",
+        "TEST-e2e-documents-relative-link"
+      ],
+      "sourceRef": "CR:MDT-150"
+    },
+    {
       "id": "TASK-regression-lock",
-      "title": "Constraint regression: verify all constraint tests GREEN",
+      "title": "Constraint regression lock: verify all constraint tests GREEN after documents-view branch added",
       "ownsArtifactIds": [
         "ART-link-processor",
-        "ART-smart-link"
+        "ART-smart-link",
+        "ART-preprocessor"
       ],
       "makesGreenIds": [
         "TEST-link-processor-regression",
-        "TEST-link-builder-regression"
+        "TEST-link-builder-regression",
+        "TEST-preprocessor-regression"
       ],
-      "sourceRef": "tasks.md#task-4"
+      "sourceRef": "CR:MDT-150"
     }
   ]
 }
