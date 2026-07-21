@@ -556,6 +556,28 @@ export default defineConfig(({ mode }) => {
   // In Docker, use backend service name; for E2E tests use VITE_BACKEND_URL; otherwise use localhost
   const backendUrl = env.VITE_BACKEND_URL || process.env.DOCKER_BACKEND_URL || 'http://localhost:3001'
 
+  // Shared API proxy — dev and preview both forward /api to the backend
+  const apiProxy = {
+    '/api/events': {
+      target: backendUrl,
+      changeOrigin: true,
+      secure: false,
+      // SSE connections must never timeout at the proxy level
+      timeout: 0,
+      proxyTimeout: 0,
+    },
+    '/api': {
+      target: backendUrl,
+      changeOrigin: true,
+      secure: false,
+    },
+    '/api-docs': {
+      target: backendUrl,
+      changeOrigin: true,
+      secure: false,
+    },
+  }
+
   // Allowed hosts for Vite dev server (for tunneling/custom domains)
   const additionalHosts = publicOriginHost(env.PUBLIC_ORIGIN || process.env.PUBLIC_ORIGIN)
   const allowedHosts = [
@@ -579,27 +601,16 @@ export default defineConfig(({ mode }) => {
     server: {
       host: '0.0.0.0',
       port: Number(process.env.PORT) || 3075,
+      strictPort: true,
       allowedHosts,
-      proxy: {
-        '/api/events': {
-          target: backendUrl,
-          changeOrigin: true,
-          secure: false,
-          // SSE connections must never timeout at the proxy level
-          timeout: 0,
-          proxyTimeout: 0,
-        },
-        '/api': {
-          target: backendUrl,
-          changeOrigin: true,
-          secure: false,
-        },
-        '/api-docs': {
-          target: backendUrl,
-          changeOrigin: true,
-          secure: false,
-        },
-      },
+      proxy: apiProxy,
+    },
+    preview: {
+      host: '0.0.0.0',
+      port: Number(process.env.PORT) || 3070,
+      strictPort: true,
+      allowedHosts,
+      proxy: apiProxy,
     },
   }
 })
