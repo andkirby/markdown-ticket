@@ -154,7 +154,7 @@ if [ -z "$1" ] || [ "$1" = "both" ] || [ "$1" = "build" ]; then
 
     # Start frontend in background
     echo "🎨 Starting frontend production server on port 3070..."
-    (cd "${SCRIPT_DIR}" && bun run preview --port 3070 --strictPort) &
+    (cd "${SCRIPT_DIR}" && bun run preview) &
     FRONTEND_PID=$!
 
     echo ""
@@ -174,7 +174,7 @@ if [ -z "$1" ] || [ "$1" = "both" ] || [ "$1" = "build" ]; then
 
 elif [ "$1" = "frontend" ]; then
     echo "🚀 Starting frontend production server only..."
-    cd "${SCRIPT_DIR}" && bun run preview --port 3070 --strictPort
+    cd "${SCRIPT_DIR}" && bun run preview
 
 elif [ "$1" = "backend" ]; then
     echo "🚀 Starting backend production server only..."
