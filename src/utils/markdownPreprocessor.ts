@@ -108,8 +108,10 @@ function normalizeNestedListIndentation(markdown: string): string {
 function protectExistingLinks(markdown: string, state: PreprocessorState, sourcePath?: string, ticketKey?: string, projectCode?: string, ticketsPath?: string): string {
   return markdown.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, href) => {
     // MDT-150: Resolve relative .md hrefs in existing links
+    // UAT 2026-07-21 (BR-5): engage when sourcePath+projectCode present,
+    // regardless of ticketKey — documents-view mode uses sourcePath without ticketKey.
     let resolvedHref = href
-    if (sourcePath && ticketKey && projectCode && isRelativeMarkdownHref(href)) {
+    if (sourcePath && projectCode && isRelativeMarkdownHref(href)) {
       resolvedHref = resolveDocumentRef(href, sourcePath, ticketKey, projectCode, ticketsPath)
     }
     const resolvedMatch = resolvedHref !== href ? `[${text}](${resolvedHref})` : match
@@ -154,6 +156,14 @@ function resolveRelativePath(sourceDir: string, relativePath: string): string {
  * Uses sourcePath (relative to ticketsPath, e.g. "MDT-150/requirements.md")
  * for .. resolution, then classifies the result against ticketsPath.
  *
+ * UAT 2026-07-21 (BR-5): sourcePath may also be a documents-view path
+ * (project-relative, e.g. "docs/architecture/aaaa.md") when the source
+ * document is being viewed in the documents view rather than a ticket.
+ * Detection rule: sourcePath NOT starting with a ticket-key prefix
+ * ("^[A-Z]+-\\d+/") is treated as documents-view mode. In documents mode
+ * all .md refs (bare and ..-relative) resolve against the source document's
+ * directory and route to the documents view, never to a ticket subdoc URL.
+ *
  * Returns the original href unchanged if it can't be resolved.
  */
 function resolveDocumentRef(
@@ -163,7 +173,7 @@ function resolveDocumentRef(
   projectCode: string,
   ticketsPath: string | undefined,
 ): string {
-  if (!sourcePath || !ticketKey) {
+  if (!sourcePath) {
     return href // Can't resolve without context
   }
 
@@ -174,6 +184,24 @@ function resolveDocumentRef(
   if (anchorIdx >= 0) {
     anchor = href.slice(anchorIdx)
     pathPart = href.slice(0, anchorIdx)
+  }
+
+  // UAT 2026-07-21 (BR-5): documents-view mode. sourcePath is project-relative
+  // (e.g. "docs/architecture/aaaa.md") — resolve .md refs against the source
+  // document's directory and route to the documents view.
+  // Detection: sourcePath is NOT a ticket-relative path. Ticket-relative forms are:
+  //   - subdoc:   "MDT-150/requirements.md"  (ticket key + "/" + path)
+  //   - main doc: "MDT-150.md"               (ticket key + ".md")
+  if (!/^[A-Z]+-\d+(?:\/|\.md$)/.test(sourcePath)) {
+    const sourceDir = sourcePath.includes('/') ? sourcePath.substring(0, sourcePath.lastIndexOf('/')) : ''
+    const resolvedPath = resolveRelativePath(sourceDir, pathPart)
+    // resolvedPath is project-relative; pass directly to buildDocumentPathWithAnchor
+    return buildDocumentPathWithAnchor(projectCode, resolvedPath, anchor)
+  }
+
+  // Ticket-context mode (original behavior). Requires ticketKey.
+  if (!ticketKey) {
+    return href
   }
 
   // 1. Ticket key pattern (bare: MDT-151, with .md: MDT-151.md, with suffix: MDT-150-smartlink-doc-urls.md)
@@ -243,8 +271,9 @@ function convertDocumentReferences(
 ): string {
   return markdown.replace(DOCUMENT_REFERENCE_PATTERN, (match, prefix, filename) => {
     // Match .md references that may have path prefixes like ../ ./. etc.
-    // If we have sourcePath context, resolve to absolute URLs
-    if (sourcePath && ticketKey && projectCode) {
+    // If we have sourcePath context, resolve to absolute URLs.
+    // UAT 2026-07-21 (BR-5): engage without ticketKey in documents-view mode.
+    if (sourcePath && projectCode) {
       const resolved = resolveDocumentRef(filename, sourcePath, ticketKey, projectCode, ticketsPath)
       if (resolved !== filename) {
         // Successfully resolved — produce markdown link with absolute URL
