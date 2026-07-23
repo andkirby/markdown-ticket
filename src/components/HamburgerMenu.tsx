@@ -25,6 +25,10 @@ interface HamburgerMenuProps {
   canManageProjects?: boolean
   canManageSharing?: boolean
   canUseOwnerEndpoints?: boolean
+  /** MDT-196: active board-filter value count for the mobile "Filter · N" row. */
+  filterCount?: number
+  /** MDT-196: open the mobile filter popover from the hamburger menu. */
+  onOpenFilters?: () => void
 }
 
 export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
@@ -41,6 +45,8 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   canManageProjects = true,
   canManageSharing = canManageProjects,
   canUseOwnerEndpoints = canManageProjects,
+  filterCount = 0,
+  onOpenFilters,
 }) => {
   const { themeMode, setTheme } = useTheme()
   const [isOpen, setIsOpen] = useState(false)
@@ -258,6 +264,28 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                     {sortPreferences.selectedDirection === 'asc' ? 'Descending' : 'Ascending'}
                   </button>
                 </>
+              </div>
+            )}
+
+            {/* MDT-196: Filter entry — mobile only, mirrors the sort-in-hamburger pattern */}
+            {onOpenFilters && (
+              <div className="sm:hidden">
+                <button
+                  data-testid="hamburger-filter-row"
+                  onClick={onOpenFilters}
+                  className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                >
+                  <ArrowUpDown className="h-4 w-4 mr-2 opacity-0" aria-hidden="true" />
+                  Filter
+                  {filterCount > 0 && (
+                    <span
+                      data-testid="hamburger-filter-count"
+                      className="ml-2 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-xs"
+                    >
+                      {filterCount}
+                    </span>
+                  )}
+                </button>
               </div>
             )}
 
