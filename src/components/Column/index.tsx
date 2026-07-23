@@ -1,3 +1,4 @@
+import type { TicketFilters } from '@mdt/domain-contracts'
 import type { Status, Ticket } from '../../types'
 import { CRStatus } from '@mdt/domain-contracts'
 import * as React from 'react'
@@ -6,6 +7,7 @@ import { useDrag } from 'react-dnd'
 import { getVisibleColumns } from '../../config'
 import { getColumnGradient } from '../../utils/colorUtils'
 import { sortTickets } from '../../utils/sorting'
+import { MobileChipStrip } from '../BoardFilterBar/MobileChipStrip'
 import { ResolutionDialog } from '../ResolutionDialog'
 import TicketCard from '../TicketCard'
 import {
@@ -43,6 +45,10 @@ interface ColumnProps {
   currentColumnIndex?: number
   onColumnSwitch?: (index: number) => void
   isMobileView?: boolean
+  /** MDT-196: active board filters for the mobile chip strip. */
+  mobileFilters?: TicketFilters
+  /** MDT-196: remove a filter value from a mobile chip. */
+  onRemoveMobileFilter?: (facet: import('../../utils/ticketFilters').FacetKey, value: string) => void
 }
 
 interface DraggableTicketCardProps {
@@ -111,6 +117,8 @@ const Column: React.FC<ColumnProps> = ({
   currentColumnIndex = 0,
   onColumnSwitch,
   isMobileView = true,
+  mobileFilters,
+  onRemoveMobileFilter,
 }) => {
   const [resolutionDialog, setResolutionDialog] = useState<{
     isOpen: boolean
@@ -288,6 +296,10 @@ const Column: React.FC<ColumnProps> = ({
             </span>
           </div>
         </div>
+        {/* MDT-196: mobile chip strip under the column header when filters active */}
+        {isMobileView && mobileFilters && onRemoveMobileFilter && (
+          <MobileChipStrip filters={mobileFilters} onRemove={onRemoveMobileFilter} />
+        )}
       </div>
 
       {/* Column Content */}

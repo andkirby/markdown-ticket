@@ -35,6 +35,12 @@ export interface TicketFilters {
   priority?: string | string[]
   assignee?: string | string[]
   phaseEpic?: string | string[]
+  /** Derived multi-select; v1.1 facet. Each value OR-combines within the facet. */
+  impactAreas?: string | string[]
+  /** Boolean facet; v1.1. `true` or `false` narrows; `undefined` = all. */
+  inWorktree?: boolean
+  /** Frontend free-text: multi-term AND over title/code/description. AND-combines with every facet. */
+  query?: string
   dateRange?: {
     start?: Date
     end?: Date

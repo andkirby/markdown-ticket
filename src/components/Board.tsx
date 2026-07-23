@@ -8,12 +8,14 @@ import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import { getColumnForStatus, getVisibleColumns } from '../config'
 import { getSortPreferences, setSortPreferences } from '../config/sorting'
+import { useBoardFilters } from '../hooks/useBoardFilters'
 import { useBoardLayout } from '../hooks/useBoardLayout'
 import { useProjectManager } from '../hooks/useProjectManager'
 import { useToast } from '../hooks/useToast'
 import { sortTickets } from '../utils/sorting'
+import { countActiveFilters } from '../utils/ticketFilters'
+import { BoardFilterBar } from './BoardFilterBar'
 import Column from './Column'
-import { FilterControls } from './FilterControls'
 import { HamburgerMenu } from './HamburgerMenu'
 import { SortControls } from './SortControls'
 import { Alert, AlertDescription, AlertTitle } from './ui/alert'
@@ -48,8 +50,11 @@ const BoardContent: React.FC<BoardProps> = ({
   const [localSortPreferences, setLocalSortPreferences] = useState<SortPreferences>(
     propSortPreferences || getSortPreferences,
   )
-  const [filterQuery, setFilterQuery] = useState('')
   const { error: showError } = useToast()
+
+  // Mobile filter popover open state (owned by Board so the HamburgerMenu can
+  // trigger it and close-on-navigate can reset it). MDT-196 mobile chrome.
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false)
 
   // Use custom hook for board layout management (mobile column switching)
   const { isMobile, setActiveColumnIndex, shouldShowColumn } = useBoardLayout()
@@ -105,6 +110,18 @@ const BoardContent: React.FC<BoardProps> = ({
       ...localTicketUpdates[ticket.code],
     }))
   }, [baseTickets, localTicketUpdates])
+
+  // Faceted filter state (MDT-196): single TicketFilters reducer + persistence +
+  // derived facet menus + filtered tickets. Replaces the old filterQuery useState
+  // and inline filteredTickets useMemo.
+  const {
+    filters: boardFilters,
+    filteredTickets,
+    facetOptions: boardFacetOptions,
+    toggleFilter: toggleBoardFilter,
+    setQuery: setBoardFilterQuery,
+    clearAll: clearBoardFilters,
+  } = useBoardFilters(tickets)
 
   // IMPORTANT: Always use hookData functions for state management operations
   // This ensures drag-and-drop operations work correctly even when using prop data
@@ -289,26 +306,8 @@ const BoardContent: React.FC<BoardProps> = ({
     }
   }, [refreshProjectTickets])
 
-  // Filter tickets based on search query
-  const filteredTickets = React.useMemo(() => {
-    if (!filterQuery.trim()) {
-      return tickets
-    }
-
-    const searchTerms = filterQuery.toLowerCase().trim().split(/\s+/)
-    return tickets.filter((ticket) => {
-      const title = ticket.title?.toLowerCase() || ''
-      const code = ticket.code?.toLowerCase() || ''
-      const description = ticket.description?.toLowerCase() || ''
-
-      // Check if all search terms match at least one of: title, code, or description
-      return searchTerms.every(term =>
-        title.includes(term)
-        || code.includes(term)
-        || description.includes(term),
-      )
-    })
-  }, [tickets, filterQuery])
+  // Filter tickets based on faceted filters (MDT-196).
+  // `filteredTickets` is computed inside useBoardFilters via applyTicketFilters.
 
   // Group filtered tickets by column with sorting
   const ticketsByColumn: Record<string, Ticket[]> = {}
@@ -491,11 +490,19 @@ const BoardContent: React.FC<BoardProps> = ({
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <FilterControls
-              searchQuery={filterQuery}
-              onSearchChange={setFilterQuery}
-              placeholder="Filter tickets..."
-            />
+            <div className="hidden sm:block">
+              <BoardFilterBar
+                desktop
+                filters={boardFilters}
+                totalCount={tickets.length}
+                filteredCount={filteredTickets.length}
+                facetOptions={boardFacetOptions}
+                onQueryChange={setBoardFilterQuery}
+                onToggle={toggleBoardFilter}
+                onRemove={(facet, value) => toggleBoardFilter(facet, value)}
+                onClearAll={clearBoardFilters}
+              />
+            </div>
             <SortControls
               preferences={sortPreferences}
               onPreferencesChange={handleSortPreferencesChange}
@@ -520,11 +527,78 @@ const BoardContent: React.FC<BoardProps> = ({
                   onAddProject={() => console.warn('Add Project clicked from Board')}
                   onEditProject={() => console.warn('Edit Project clicked from Board')}
                   hasActiveProject={true}
+                  filterCount={countActiveFilters(boardFilters)}
+                  onOpenFilters={() => setMobileFilterOpen(true)}
+                />
+                <BoardFilterBar
+                  desktop={false}
+                  filters={boardFilters}
+                  totalCount={tickets.length}
+                  filteredCount={filteredTickets.length}
+                  facetOptions={boardFacetOptions}
+                  onQueryChange={setBoardFilterQuery}
+                  onToggle={toggleBoardFilter}
+                  onRemove={(facet, value) => toggleBoardFilter(facet, value)}
+                  onClearAll={clearBoardFilters}
+                  mobilePopoverOpen={mobileFilterOpen}
+                  onMobilePopoverOpenChange={setMobileFilterOpen}
                 />
               </>
             )}
           </div>
         </div>
+      )}
+
+      {/* MDT-196: filter bar for single-project mode (showHeader=false).
+          Desktop bar renders above the board grid; mobile entry is a trigger
+          button that opens the shared mobile filter popover. The mobile chip
+          strip renders in the column header (MobileChipStrip) for both modes. */}
+      {!showHeader && (
+        <>
+          <div className="hidden sm:block px-2 pt-1">
+            <BoardFilterBar
+              desktop
+              filters={boardFilters}
+              totalCount={tickets.length}
+              filteredCount={filteredTickets.length}
+              facetOptions={boardFacetOptions}
+              onQueryChange={setBoardFilterQuery}
+              onToggle={toggleBoardFilter}
+              onRemove={(facet, value) => toggleBoardFilter(facet, value)}
+              onClearAll={clearBoardFilters}
+            />
+          </div>
+          {/* Mobile-only filter trigger + popover (single-project mode) */}
+          <div className="sm:hidden px-2 pt-1">
+            <BoardFilterBar
+              desktop={false}
+              filters={boardFilters}
+              totalCount={tickets.length}
+              filteredCount={filteredTickets.length}
+              facetOptions={boardFacetOptions}
+              onQueryChange={setBoardFilterQuery}
+              onToggle={toggleBoardFilter}
+              onRemove={(facet, value) => toggleBoardFilter(facet, value)}
+              onClearAll={clearBoardFilters}
+              mobilePopoverOpen={mobileFilterOpen}
+              onMobilePopoverOpenChange={setMobileFilterOpen}
+              mobileTrigger={(
+                <button
+                  type="button"
+                  data-testid="mobile-filter-trigger"
+                  className="inline-flex items-center gap-1 border border-border rounded-md px-3 py-1 text-sm bg-background"
+                >
+                  Filter
+                  {countActiveFilters(boardFilters) > 0 && (
+                    <span className="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-xs">
+                      {countActiveFilters(boardFilters)}
+                    </span>
+                  )}
+                </button>
+              )}
+            />
+          </div>
+        </>
       )}
 
       {/* Board Grid - render regardless of showHeader */}
@@ -561,6 +635,9 @@ const BoardContent: React.FC<BoardProps> = ({
                 currentColumnIndex={actualColumnIndex}
                 onColumnSwitch={setActiveColumnIndex}
                 isMobileView={isMobile}
+                // MDT-196: mobile chip strip filter props
+                mobileFilters={boardFilters}
+                onRemoveMobileFilter={(facet, value) => toggleBoardFilter(facet, value)}
               />
             )
           })}
