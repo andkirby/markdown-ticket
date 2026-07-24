@@ -1,0 +1,153 @@
+{
+  "pipeline": "mdt-pipeline-e2e",
+  "version": 6,
+  "ticket": "MDT-198",
+  "currentMilestone": "complete",
+  "completedMilestones": [
+    "pre-flight",
+    "assess",
+    "research",
+    "architecture",
+    "tests",
+    "implement",
+    "review",
+    "debt",
+    "reflection",
+    "user-review"
+  ],
+  "discovery": {
+    "projectRoot": ".",
+    "projectId": "markdown-ticket",
+    "projectCode": "MDT",
+    "ticketsPath": "docs/CRs",
+    "artifactDir": "docs/CRs/MDT-198",
+    "ticketFile": "docs/CRs/MDT-198-cloud-ticket-coordination.md",
+    "ticketType": "Research",
+    "requirementsScope": "none",
+    "statusModel": "mdt-cli attr <key> status=\"<value>\"",
+    "currentStatus": "Implemented",
+    "docsRead": [
+      "AGENTS.md",
+      "CLAUDE.md",
+      "docs/SKILLS.md",
+      "docs/PRE_IMPLEMENT.md",
+      "docs/CRs/MDT-198-cloud-ticket-coordination.md",
+      "docs/CRs/MDT-198/pipeline-agent-prompt.md",
+      "docs/architecture/auth-and-sharing-architecture.md",
+      "docs/architecture/project-identity-and-worktrees.md",
+      "docs/CRs/MDT-022-duplicate-ticket-detection-and-resolution-system-with-smart-numbering.md",
+      "docs/CRs/MDT-071-implement-file-based-cr-numbering-remove-mdt-next-.md",
+      "docs/CRs/MDT-157-api-auth.md",
+      "docs/CRs/MDT-172-public-read-only-sharing.md",
+      "docs/CRs/MDT-177-read-access-sharing-journey.md",
+      "docs/CRs/MDT-056-sse-connections-fail-through-cloudflare-tunnels.md"
+    ],
+    "codeRead": [
+      "shared/services/TicketService.ts (getNextCRNumber = pure local scan; createCR non-atomic seam at line 320->334)",
+      "shared/services/project/ProjectRegistry.ts (registry keyed by project.id)",
+      "shared/services/project/ProjectFactory.ts (project.id from config, fallback dir name)",
+      "server/services/TicketService.ts (adapter over shared)",
+      "server/services/fileWatcher/SSEBroadcaster.ts (in-process EventEmitter + Set, instance-local)",
+      "mcp-server/src/services/crService.ts (thin wrapper delegating to shared)",
+      "mcp-server/src/tools/handlers/crHandlers.ts (MCP create entry)",
+      "cli/src/commands/create.ts (CLI create entry)",
+      "server/security/apiAuth.ts (single owner/admin principal model)",
+      "domain-contracts/src/access/schema.ts (AccessMode: single-owner, no teammate identity)"
+    ],
+    "workflowSkills": ["mdt-pipeline-e2e", "mdt", "mdt:poc", "mdt:reflection", "mdt:ticket-creation", "mdt-cli", "wrangler"],
+    "language": "TypeScript/Bun/Node",
+    "overlapTickets": ["MDT-056 (SSE through CF tunnels, Proposed)"]
+  },
+  "baseline": {
+    "build": "bun run build / bun run build:all",
+    "typecheck": "bun run validate:ts",
+    "lint": "bun run lint",
+    "test": "bun run --cwd server jest / bun run test:e2e",
+    "poc": "Lifecycle POC 9/9 pass; local Wrangler D1-binding verification 6/6 pass.",
+    "markdownlint": "MDT-198 artifacts plus MDT-199 and MDT-200 (0 errors)",
+    "note": "No production code changed by this research ticket; POC code is throwaway."
+  },
+  "dirtyBoundary": {
+    "preExistingUntracked": [
+      "docs/CRs/MDT-198-cloud-ticket-coordination.md",
+      "docs/CRs/MDT-198/"
+    ],
+    "touchedFiles": [
+      "docs/CRs/MDT-198-cloud-ticket-coordination.md",
+      "docs/CRs/MDT-198.pipeline-state.json",
+      "docs/CRs/MDT-198/research.md",
+      "docs/CRs/MDT-198/poc.md",
+      "docs/CRs/MDT-198/verification.md",
+      "docs/CRs/MDT-198/poc/src/allocator.ts",
+      "docs/CRs/MDT-198/poc/src/run.ts",
+      "docs/CRs/MDT-198/poc/results.json",
+      "docs/CRs/MDT-198/poc/d1-binding/",
+      "docs/CRs/MDT-199-cloud-sync-coordination-architecture.md",
+      "docs/CRs/MDT-200-cloud-sync-first-slice.md"
+    ],
+    "unrelatedPreExistingModified": [
+      "docs/design/explorations/filtering-system.md",
+      "docs/design/surfaces/board-filter-bar.mockups.md",
+      "docs/design/surfaces/board-filter-bar.spec.md",
+      "src/components/Board.tsx",
+      "src/components/BoardFilterBar/ActiveFilterChips.tsx",
+      "src/components/BoardFilterBar/DesktopFilterBar.test.tsx",
+      "src/components/BoardFilterBar/DesktopFilterBar.tsx"
+    ],
+    "rule": "Only MDT-198 closure artifacts and the approved MDT-199/MDT-200 follow-ups were touched. Pre-existing board-filter changes were preserved. No commits made."
+  },
+  "milestones": {
+    "pre-flight": { "status": "complete", "skipped": false },
+    "assess": { "status": "complete", "skipped": false, "output": "Fit confirmed; scope = research only; no production implementation." },
+    "requirements": { "status": "skipped", "skipped": true, "reason": "Research ticket; requirements scope is none. Needs captured in research.md." },
+    "scenarios": { "status": "skipped", "skipped": true, "reason": "No product BDD; experiment cases recorded in poc.md." },
+    "architecture": { "status": "complete", "skipped": false, "output": "Deferred production architecture; research recommendation + integration map in research.md (RQ10, RQ12, sections 9-10, 14)." },
+    "ux": { "status": "skipped", "skipped": true, "reason": "No production UI implemented; required journeys captured in research.md." },
+    "tests": { "status": "complete", "skipped": false, "output": "Lifecycle POC 9/9 and local D1-binding concurrency checks 6/6 used as research evidence." },
+    "tasks": { "status": "skipped", "skipped": true, "reason": "No implementation task plan; experiment checklist in poc.md." },
+    "implement": { "status": "complete", "skipped": false, "output": "Executed mdt:poc only; no production service code." },
+    "review": { "status": "complete", "skipped": false, "output": "Second independent audit in verification.md corrected D1 batch shape, Access flows, plan-specific Time Travel, pricing, API replay semantics, cost math, schema, integration paths, and dirty-boundary reporting." },
+    "debt": { "status": "complete", "skipped": false, "output": "Recorded: worktree-canonical identity doc-vs-code gap (out of scope), offline-allocation deferral, Access-validation deferral." },
+    "reflection": { "status": "complete", "skipped": false, "output": "Findings reconciled into ticket acceptance criteria + research.md." },
+    "user-review": { "status": "complete", "skipped": false, "output": "Approved 2026-07-24: Markdown-authoritative projection, opt-in binding, no presence, no offline allocation, docs/architecture/cloud-sync/ namespace, and Architecture + Feature follow-ups." }
+  },
+  "artifacts": {
+    "research": "docs/CRs/MDT-198/research.md",
+    "poc-summary": "docs/CRs/MDT-198/poc.md",
+    "poc-code": "docs/CRs/MDT-198/poc/src/",
+    "poc-results": "docs/CRs/MDT-198/poc/results.json",
+    "d1-binding-poc": "docs/CRs/MDT-198/poc/d1-binding/",
+    "verification": "docs/CRs/MDT-198/verification.md",
+    "ticket": "docs/CRs/MDT-198-cloud-ticket-coordination.md",
+    "architecture-follow-up": "docs/CRs/MDT-199-cloud-sync-coordination-architecture.md",
+    "feature-follow-up": "docs/CRs/MDT-200-cloud-sync-first-slice.md"
+  },
+  "decision": {
+    "outcome": "Go (reduced scope)",
+    "rationale": "Workers + D1 sufficient for collision-free allocation, idempotent creation, and read-only header projection. A local D1 binding verified the static batch shape. Durable Objects excluded absent a proven stateful realtime need.",
+    "approvedAtUserReview": [
+      "Field authority: Markdown-as-authority with one-way cloud projection",
+      "Presence: excluded from slice 1",
+      "Offline allocation: deferred; cloud-bound creation requires connectivity",
+      "Project adoption: opt-in cloud binding",
+      "Owner documentation namespace: docs/architecture/cloud-sync/",
+      "Create Architecture + Feature follow-up tickets and close MDT-198 Implemented"
+    ],
+    "followUps": [
+      "MDT-199 Define cloud sync coordination architecture (dependsOn MDT-198)",
+      "MDT-200 Implement cloud sync first slice (dependsOn MDT-199)"
+    ]
+  },
+  "verification": {
+    "pocPassRate": "9/9 lifecycle; 6/6 D1-binding checks",
+    "markdownlint": "0 errors",
+    "gitDiffCheck": "no tracked whitespace errors; untracked ticket artifacts validated by markdownlint",
+    "codeClaimsReverified": true,
+    "cloudflareSourcesReopened": true
+  },
+  "approvals": {
+    "userReview": "approved 2026-07-24"
+  },
+  "commits": [],
+  "updatedAt": "2026-07-24T09:16:55Z"
+}
