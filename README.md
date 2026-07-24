@@ -87,6 +87,7 @@ AI-powered commands for the entire development lifecycle:
 ### Visual Kanban Board
 
 - Drag-drop ticket management
+- Faceted filtering by status, priority, assignee, and type (inline in the header, never a second row)
 - Markdown rendering with Mermaid diagrams and Wireloom wireframes
 - Per-user project accent colors (solid or gradient)
 - Scoped global search across all projects
