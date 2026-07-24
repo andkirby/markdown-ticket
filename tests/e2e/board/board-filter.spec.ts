@@ -154,7 +154,7 @@ test.describe('Board Filter Bar (MDT-196)', () => {
     await expect(page.getByTestId('filter-result-count')).toContainText('Showing 1 of 3')
   })
 
-  test('mobile: filter sheet opens from Hamburger Menu and applies a facet', async ({ page, e2eContext }) => {
+  test('mobile: filter modal opens from Hamburger Menu and applies a facet', async ({ page, e2eContext }) => {
     const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
 
     // Set a mobile viewport (< 640px = below the sm breakpoint).
@@ -169,13 +169,14 @@ test.describe('Board Filter Bar (MDT-196)', () => {
     await expect(filterRow).toBeVisible()
     await filterRow.click()
 
-    // The bottom-anchored filter sheet opens.
-    const sheet = page.getByTestId('mobile-filter-sheet')
-    await expect(sheet).toBeVisible()
+    // The full-width filter modal opens (reuses the shared <Modal> primitive).
+    const modal = page.getByTestId('mobile-filter-sheet')
+    await expect(modal).toBeVisible()
 
-    // Apply a status facet via the sheet checkbox.
-    await sheet.getByTestId('facet-section').filter({ hasText: 'Status' })
+    // Apply a status facet via the modal checkbox.
+    await modal.getByTestId('facet-section').filter({ hasText: 'Status' })
       .getByTestId('facet-option-checkbox').first().click()
+    // Close via the modal close button (X in the header).
     await page.getByTestId('mobile-filter-done').click()
 
     // The mobile chip strip shows under the column header.
