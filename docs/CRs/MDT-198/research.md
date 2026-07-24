@@ -495,16 +495,17 @@ retention, privacy, and incident paths.
     numbers retained indefinitely (or per policy) to prevent reuse.
   - Presence/activity: short retention (minutes–hours) or ephemeral.
   - Idempotency keys: hash at rest (never store raw request bodies beyond what
-    is needed for replay); prune after the reservation window.
+    is needed for replay). The final MDT-199 design retains the mapping for the
+    cloud-project lifetime so a delayed replay cannot allocate a second number.
   - PII: header fields may contain human text; store only what the projection
     needs; honor deletion requests by tombstoning.
 - **Vendor-exit path**: because Markdown/Git remains the durable authority, exit
   is **disable cloud binding** → all data continues to live in the repo. The D1
   export is a backup, not a dependency. No lock-in: the cloud stores only a
   derived mirror + counter.
-- **Incident path**: documented runbook for (a) D1 outage (clients degrade to
-  local-only; no reuse because local scanning remains), (b) Access outage
-  (allocation blocked until restored — acceptable for opt-in feature),
+- **Incident path**: documented runbook for (a) D1 outage (existing tickets
+  remain locally usable, but cloud-bound allocation is blocked), (b) Access
+  outage (allocation blocked until restored — acceptable for opt-in feature),
   (c) key-collision incident (run duplicate-detection [CODE: MDT-022 logic] +
   rename resolver).
 
@@ -679,8 +680,9 @@ a number within a project; `PRIMARY KEY (cloud_id, idem_key)` guarantees
 idempotency; `version` enables deterministic stale-write rejection (RQ6).
 
 **Idempotency storage:** hashed idempotency key + cached result row, written
-inside the same atomic `batch()` as the allocation, pruned after the
-reservation window.
+inside the same atomic `batch()` as the allocation. MDT-199 retains this
+mapping for the cloud-project lifetime so a delayed replay resolves to the
+original reservation.
 
 **Versioning:** integer `version` on `tickets`, incremented on every projection
 push; conditional `UPDATE ... WHERE version = ?` rejects stale writes.

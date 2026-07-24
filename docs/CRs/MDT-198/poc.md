@@ -90,8 +90,9 @@ limitations, architecture implication.
 - **Actual output:** all three return `local_number=1`; replays have
   `status="replayed"`.
 - **Result:** ✅ PASS.
-- **Limitations:** Idempotency window is local-table lifetime here; production
-  prunes keys after the reservation window.
+- **Limitations:** Idempotency window is local-table lifetime here. The final
+  MDT-199 architecture uses the same project-lifetime retention to protect
+  delayed replay.
 - **Architecture implication:** Retries after a network blip are safe; no
   duplicate numbers (RQ4/RQ5).
 
