@@ -8,6 +8,10 @@ It covers project discovery, global registry writes, document discovery, ticket 
 
 It does not define how to create or delete Git worktrees. Git remains the source of truth for worktree lifecycle.
 
+Opt-in cloud coordination uses a separately issued cloud project UUID. It is
+never inferred from checkout paths, branches, commits, or worktrees; see
+[`cloud-sync/data-and-consistency.md`](cloud-sync/data-and-consistency.md).
+
 ## Core Decision
 
 Project identity belongs to the canonical checkout. Linked Git worktrees must not become independent project registry entries and must not overwrite the canonical registry path.
