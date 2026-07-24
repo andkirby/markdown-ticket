@@ -79,14 +79,22 @@ dependsOn: MDT-199
 
 ## 3. Architecture Gate
 
-| Area | Required decision from MDT-199 |
+MDT-199 resolves the architecture gate. Implementation must follow:
+
+- [`docs/CRs/MDT-199/architecture.md`](MDT-199/architecture.md)
+- [`docs/architecture/cloud-sync/README.md`](../architecture/cloud-sync/README.md)
+- [`identity-and-access.md`](../architecture/cloud-sync/identity-and-access.md)
+- [`data-and-consistency.md`](../architecture/cloud-sync/data-and-consistency.md)
+- [`operations.md`](../architecture/cloud-sync/operations.md)
+
+| Area | Approved decision |
 |---|---|
-| Service boundary | Production Worker/package location and interfaces |
-| Identity | Access application, human claims, service-token claims, membership mapping |
-| Data | D1 migrations, indexes, idempotency retention, reservation lifecycle |
-| Integration | Shared allocator/projection interfaces and local fallback boundary |
-| Configuration | Cloud project binding, credential storage, exposure, and validation |
-| Delivery | Polling interval/configuration, deployment, rollback, and operational gates |
+| Service boundary | Add `cloud-sync-worker/` as one deployable root workspace; share only pure contracts through `domain-contracts` |
+| Identity | Two Access audiences; Worker JWT validation; email human and `common_name` machine principals; D1 project roles |
+| Data | One D1 database per environment; static transactional allocation batch; monotonic non-reuse; versioned projection and tombstones |
+| Integration | `shared/services/cloud-sync/` owns strategy, journal recovery, projection, and polling; all transports remain thin |
+| Configuration | Non-secret `[project.cloudSync]` binding; credentials stay in interactive or backend secret providers |
+| Delivery | Polling defaults to 15 seconds; real Access, deployed concurrency, migration, restore, and rollback gates are mandatory |
 
 ### Known Constraints
 
@@ -95,10 +103,14 @@ dependsOn: MDT-199
 - Presence and offline allocation are deferred.
 - Permanent architecture documentation lives under `docs/architecture/cloud-sync/`.
 
-### Decisions Deferred
+### Deployment Inputs
 
-- Concrete production artifacts and package layout are finalized by `MDT-199`.
-- Task decomposition is finalized by `mdt:tasks` after requirements, BDD, architecture, and tests are traced.
+Cloudflare account IDs, custom hostnames, Access audience values, D1 IDs,
+rate-limit namespace IDs, IdP groups, and production service-token owners are
+environment inputs. They do not reopen the approved architecture.
+
+MDT-200 remains `Proposed` until MDT-199 receives User Review approval. MDT-200
+owns all requirements, BDD, test, task, implementation, and runtime trace work.
 
 ## 4. Acceptance Criteria
 
