@@ -1,74 +1,88 @@
 # Board Filter Bar
 
-The board's narrowing surface — free-text search plus facet dropdowns over ticket attributes, with active filters shown as removable chips. One `TicketFilters` state shared across desktop and mobile chrome.
+The board's narrowing surface — a free-text search plus a faceted filter popover, both rendered **inside the app header's single row**. One `TicketFilters` state shared across desktop and mobile.
 
 Related artifacts:
 - Review mockups: `board-filter-bar.mockups.md`
 - Exploration / rejected alternatives: `../explorations/filtering-system.md`
 - Neighbor surface: `board-layout.spec.md`
-- Neighbor surface: `app-header.spec.md` (Hamburger Menu hosts mobile filter entry)
-- Neighbor surface: `pin-rail.spec.md` (planned, IDEA-002 — occupies its own left rail, not the header)
+- Neighbor surface: `app-header.spec.md` (owns the header zone this surface renders into)
+- Neighbor surface: `pin-rail.spec.md` (planned, IDEA-002 — separate left rail, not the header)
 - Data contract: `domain-contracts/src/ticket/input.ts` (`TicketFilters`)
+
+## The one rule
+
+**The filter surface never adds a second line to the header.** Every state — idle, active, popover open — renders within the existing 64px `nav.header` row. This is non-negotiable and drives every decision below.
 
 ## Owns
 
 - The `TicketFilters` state shape and its single predicate semantics (AND across facets, OR within a facet).
-- Desktop filter bar composition: free-text input, facet dropdowns, active-filter chip row, clear-all.
-- Mobile filter entry: Hamburger Menu "Filter · N" row, mobile chip strip under the column header, and the filter popover.
-- The "showing N of M" result-count text.
+- The free-text search input rendered inline in the header.
+- The compact "Filter · N" button rendered inline in the header, next to the search input.
+- The filter popover (facets + active chips + clear-all) that opens *from* the button, overlapping content, never pushing it down.
+- Mobile filter entry via the Hamburger Menu.
+- The "showing N of M" result count, rendered **inside the popover**, not as a header line.
 - Empty-filter invariant: an empty `TicketFilters` shows every ticket. No special cases.
 
 ## Does Not Own
 
+- The app header zone itself (`app-header.spec.md` owns `nav.header`, `header__left`, `header__right`). This surface renders *into* `header__left` as a tenant; it does not restructure the header.
 - Board column grouping, drag-drop, or per-column sort (`board-layout.spec.md`).
-- AppHeader composition or Hamburger Menu item order beyond the filter row's slot (`app-header.spec.md`).
-- Mobile one-column-at-a-time layout or the column switcher (`board-layout.spec.md` "Column: Mobile Behavior").
+- Mobile one-column-at-a-time layout or the column switcher (`board-layout.spec.md`).
 - Ticket badges shown inside cards (`ticket-card.spec.md`). Filter chips reuse badge styling but do not own it.
-- The pinned-items surface (IDEA-002 → planned `pin-rail.spec.md`). Pinned items live in their own left rail and are not part of the filter bar's `TicketFilters` state.
-- Backend filtering, MCP filtering, or saved/shared views (explicitly out of scope).
-- A future `Sheet`/`Drawer` primitive — mobile v1 uses the existing `Popover`.
+- The pinned-items surface (IDEA-002 / MDT-197, planned `pin-rail.spec.md`).
+- Backend filtering, MCP filtering, or saved/shared views.
+- A `Sheet`/`Drawer` primitive — mobile uses the existing `Popover`.
+
+## Spatial boundary
+
+The header (`nav.header`, 64px tall) has two zones. Measured from a 1280px-wide viewport:
+
+| Zone | Width | Contents today | Available for filter |
+|------|-------|----------------|----------------------|
+| `header__left` | ~1040px | MobileLogo (85px) + ViewModeSwitcher (~160px) + ProjectSelector (~207px), then `flex-1` dead stretch | **~580px dead space** — this is where the filter lives |
+| `header__right` | ~224px | SortControls + HamburgerMenu (+ AuthStatusAction when locked) | **0px** — full |
+
+The filter surface occupies the `header__left` dead zone, after ProjectSelector and before the `flex-1` stretch ends. It does **not** touch `header__right` (no room) and does **not** render below the header (no second line).
+
+This boundary is shared with the pin rail (IDEA-002 / MDT-197): filter owns `header__left` dead zone; pin owns a separate left rail. The two never compete for the same pixels.
 
 ## Composition
 
 ```text
-BoardFilterBar
-├── DesktopFilterBar                       (≥ sm only — hidden on < sm)
-│   ├── FreeTextSearch                     (re-skinned FilterControls)
-│   ├── FacetDropdown[status]
-│   ├── FacetDropdown[priority]
-│   ├── FacetDropdown[assignee]
-│   ├── FacetDropdown[type]
-│   ├── FacetDropdown[inWorktree]          (v1.1)
-│   ├── FacetDropdown[phaseEpic]           (v1.1)
-│   ├── FacetDropdown[impactAreas]         (v1.1)
-│   ├── ActiveFilterChips                  (one chip per selected value)
-│   └── ClearAll                           (≥1 active value only)
-├── MobileFilterEntry                      (< sm only — hidden ≥ sm)
-│   ├── HamburgerMenuRow["Filter · N"]     (count badge; opens popover)
-│   └── FilterPopover
-│       ├── FreeTextSearch
-│       ├── FacetSection × 4               (status, priority, assignee, type)
-│       └── ClearAll + Done
-└── MobileChipStrip                        (< 768px, in Column header; only when active)
-    └── Chip × N                           (one per active value, one-tap ✕)
+BoardFilterBar (rendered into header__left, after ProjectSelector)
+├── FreeTextSearch                  (inline input, ~200px, flex-shrink-0)
+├── FilterButton["Filter · N"]      (compact button; opens FilterPopover)
+│   └── FilterPopover               (Radix Popover — overlays content, does NOT push it)
+│       ├── ResultCount             ("Showing N of M tickets"; aria-live; popover-only)
+│       ├── FacetSection[status]    (checkbox list, multi-select)
+│       ├── FacetSection[priority]
+│       ├── FacetSection[assignee]
+│       ├── FacetSection[type]
+│       ├── FacetSection[inWorktree]      (v1.1)
+│       ├── FacetSection[phaseEpic]       (v1.1)
+│       ├── FacetSection[impactAreas]     (v1.1)
+│       ├── ActiveFilterChips       (one chip per selected value; popover-only)
+│       └── ClearAll                (text button)
+└── MobileFilterEntry               (< sm only — hidden ≥ sm; rendered via Hamburger Menu)
+    └── (same FilterPopover component, opened from the menu)
 ```
 
-Both desktop and mobile read from and write to the **same** `TicketFilters` reducer. Only the chrome differs.
+**Critical: `ActiveFilterChips` and `ResultCount` render inside the popover, not in the header.** This is what guarantees no second line. When filters are active, the only header-level evidence is the button label changing to `Filter · N`. The full detail (chips, count, clear-all) lives behind the popover. Opening the popover overlays the board — it never inserts a row.
 
 ## Children
 
 | Child | Component | Spec | Conditional |
 |-------|-----------|------|-------------|
-| BoardFilterBar | `src/components/BoardFilterBar/index.tsx` (new) | this file | board or list view, any project |
-| DesktopFilterBar | `src/components/BoardFilterBar/DesktopFilterBar.tsx` (new) | — | `≥ sm` |
-| FreeTextSearch | `src/components/FilterControls.tsx` (re-skinned) | — | always |
-| FacetDropdown | `src/components/BoardFilterBar/FacetDropdown.tsx` (new, Radix `DropdownMenu`) | — | desktop only |
-| FacetSection | `src/components/BoardFilterBar/FacetSection.tsx` (new, inside Popover) | — | mobile popover only |
-| ActiveFilterChips | `src/components/BoardFilterBar/ActiveFilterChips.tsx` (new, reuses `Badge` styling) | — | ≥1 active value |
-| ClearAll | text `button` | — | ≥1 active value |
-| HamburgerMenuRow | existing Hamburger Menu (`src/components/HamburgerMenu.tsx`) | `app-header.spec.md` | `< sm` |
-| FilterPopover | `src/components/ui/popover.tsx` (existing) | — | `< sm`, on tap |
-| MobileChipStrip | rendered inside `Column/index.tsx` header | `board-layout.spec.md` | `< 768px` and ≥1 active value |
+| BoardFilterBar | `src/components/BoardFilterBar/index.tsx` | this file | board or list view, any project |
+| FreeTextSearch | `src/components/FilterControls.tsx` (re-skinned) | — | desktop (`≥ sm`) inline in header |
+| FilterButton | `src/components/BoardFilterBar/FilterButton.tsx` | — | desktop (`≥ sm`) inline in header; label `Filter` or `Filter · N` |
+| FilterPopover | `src/components/BoardFilterBar/FilterPopover.tsx` (wraps `src/components/ui/popover.tsx`) | — | on FilterButton click / hamburger tap |
+| FacetSection | `src/components/BoardFilterBar/FacetSection.tsx` (checkbox list) | — | inside popover |
+| ActiveFilterChips | `src/components/BoardFilterBar/ActiveFilterChips.tsx` (reuses `Badge` styling) | — | inside popover; ≥1 active value |
+| ResultCount | `<span aria-live="polite">` | — | inside popover; always rendered there |
+| ClearAll | text `button` | — | inside popover; ≥1 active value |
+| HamburgerMenuRow | existing Hamburger Menu (`src/components/HamburgerMenu.tsx`) | `app-header.spec.md` | `< sm` (FilterButton entry lives here on mobile) |
 
 ## Source / Verification Anchors
 
@@ -76,11 +90,11 @@ Both desktop and mobile read from and write to the **same** `TicketFilters` redu
 |--------|------|---------------|
 | Data contract | `domain-contracts/src/ticket/input.ts` | `TicketFilters` shape — the single filter state |
 | Enum source of truth | `domain-contracts/src/types/schema.ts` | `CRStatuses`, `CRTypes`, `CRPriorities` feed static facet menus |
-| Behavior model | `src/hooks/useBoardFilters.ts` (new) | reducer, persistence, `clearAll` |
-| Board consumer | `src/components/Board.tsx` | where the predicate replaces the current inline filter |
-| Mobile column host | `src/components/Column/index.tsx` | renders MobileChipStrip in the column header |
-| Mobile menu host | `src/components/HamburgerMenu.tsx` | hosts the "Filter · N" row alongside mobile sort rows |
-| Verification | `tests/e2e/board-filter.spec.ts` (new) | add/remove/clear across desktop and mobile viewports |
+| Behavior model | `src/hooks/useBoardFilters.ts` | reducer, persistence, `clearAll` |
+| Header host | `src/App.tsx:428-480` | `Header`/`HeaderContent` — where the filter bar mounts (header__left centerSection) |
+| Header layout | `src/components/Header/header.css` | `header__left` / `header__right` zone definitions |
+| Mobile menu host | `src/components/HamburgerMenu.tsx` | hosts the "Filter · N" row on mobile |
+| Verification | `tests/e2e/board-filter.spec.ts` | add/remove/clear; assert header height never grows |
 
 ## Filter State Contract
 
@@ -88,13 +102,12 @@ The single source of truth. Every UI control, persistence layer, and future MCP/
 
 - **Across facets: AND.** `status=In Progress AND priority=High` narrows.
 - **Within a facet: OR.** `status=[In Progress, Approved]` widens.
-- **`query` is AND-combined with every facet**, and internally stays multi-term AND (today's `Board.tsx` behavior). Multi-term matching covers title, code, and description.
+- **`query` is AND-combined with every facet**, and internally stays multi-term AND over title/code/description.
 - **Empty `TicketFilters` = show everything.** No special-case branches.
-- **`assignee` uses the sentinel string `"__none__"` for "Unassigned."** One facet, one shape — no separate boolean flag.
-- **Static facets** (`status`, `type`, `priority`) draw their menu from the enums, not from the ticket set, so the menu never shrinks when a value is unused.
-- **Derived facets** (`assignee`, `phaseEpic`, `impactAreas`) draw their menu from the current ticket set via a `useMemo` over the array. No server round-trip.
+- **`assignee` uses the sentinel string `"__none__"` for "Unassigned."** One facet, one shape.
+- **Static facets** (`status`, `type`, `priority`) draw values from enums. **Derived facets** (`assignee`, `phaseEpic`, `impactAreas`) draw values from the current ticket set via `useMemo`.
 
-Persistence: `localStorage["markdown-ticket-filter-preferences"]`, mirroring `markdown-ticket-sort-preferences`. Lifecycle sibling of `localSortPreferences`.
+Persistence: `localStorage["markdown-ticket-filter-preferences"]`, mirroring `markdown-ticket-sort-preferences`.
 
 ## Facets
 
@@ -105,84 +118,84 @@ Persistence: `localStorage["markdown-ticket-filter-preferences"]`, mirroring `ma
 | `priority` | enum multi-select | `CRPriorities` (4) | ✓ | |
 | `assignee` | derived multi-select | unique assignees + `"__none__"` | ✓ | `"__none__"` = Unassigned |
 | `type` | enum multi-select | `CRTypes` (6) | ✓ | |
-| `inWorktree` | boolean | true / false | v1.1 | Tri-state: undefined = all |
+| `inWorktree` | boolean | true / false | v1.1 | |
 | `phaseEpic` | derived multi-select | unique phase values | v1.1 | |
-| `impactAreas` | derived multi-select | unique labels across tickets | v1.1 | |
+| `impactAreas` | derived multi-select | unique labels | v1.1 | |
 
-Deferred (out of scope, revisit with evidence): date ranges, relationship filters (`related`/`depends`/`blocks`), full-text search of `content`, text-syntax filter language, nested AND/OR, saved views.
+Deferred (out of scope): date ranges, relationship filters, full-text search of `content`, text-syntax language, nested AND/OR, saved views.
 
 ## Layout
 
-### Spatial boundary
+### Desktop (≥ sm) — single header row, always
 
-The filter bar and the pin rail (IDEA-002) occupy **different zones** by contract:
+All three elements render inline inside `header__left`, after ProjectSelector:
 
-| Surface | Zone | Why |
-|---------|------|-----|
-| BoardFilterBar (this surface) | `header__right`, sibling to `SortControls` | Narrowing is a per-view, transient action — belongs with sort, in the header. |
-| PinRail (planned) | New left rail, sibling to the content area in `App.tsx` (`flex-1` row becomes `PinRail + content`) | Pinned items are persistent, cross-view context — belongs in its own always-visible vertical zone. |
+1. **FreeTextSearch** — `~200px` wide, `flex-shrink-0`. Search icon + input + clear (× when non-empty). This is the primary narrowing tool and stays always-visible because users type faster than they click facets.
+2. **FilterButton** — compact, `flex-shrink-0`. Label: `Filter` when no facet values selected, `Filter · N` when N values active. Opens `FilterPopover`.
+3. The `flex-1` dead stretch in `header__left` absorbs any remaining space after these two, keeping them anchored next to ProjectSelector (left-of-center) rather than pushed against `header__right`.
 
-This split was forced by space: the 64px header cannot hold project selector + view switcher + filter bar + pin bar + sort + hamburger without collapsing something. Putting the pin bar in its own rail removes the collision instead of managing it. See `../explorations/filtering-system.md` §"Spatial decision" for the rejected alternatives.
+**The bar does NOT wrap.** FreeTextSearch + FilterButton together consume ~280px, well within the ~580px dead zone. If the viewport is so narrow that they'd collide with `header__right`, the FreeTextSearch shrinks (min-width ~120px) before anything wraps to a second line.
 
-### Desktop filter bar (≥ sm)
+### FilterPopover (opens from FilterButton, overlays content)
 
-- Container: `flex items-center gap-2`, sited next to `SortControls`.
-  - Single-project mode: inside `AppHeader`.
-  - Multi-project (`showHeader`) mode: inside `.board-header` (`board-layout.spec.md:9-14`).
-- FreeTextSearch first, then facet dropdowns in fixed order: status, priority, assignee, type.
-- FacetDropdown trigger label: `Status` when empty, `Status: N` when N values selected.
-- ActiveFilterChips row below the triggers: one chip per selected value, in facet order then value order. Horizontally wraps; never scrolls on desktop.
-- ClearAll: text button at the end of the chip row. Only renders when ≥1 chip exists.
-- Result-count text below the chip row: `Showing N of M tickets`. Always visible.
+- Anchored below-left of the FilterButton. Width ~320px. Overlays the board — does NOT insert a row.
+- Contents, top to bottom:
+  1. **ResultCount** — `Showing N of M tickets`. `aria-live="polite"`. Always present inside the popover.
+  2. **FreeTextSearch mirror** (optional) — if the header search is narrow on small desktops, a second search input inside the popover gives full-width typing room. On normal widths, omit (header search is enough).
+  3. **FacetSections** — collapsible checkbox lists in fixed order: status, priority, assignee, type. OR within, AND across.
+  4. **ActiveFilterChips** — one chip per selected value, removable. Renders here, not in the header.
+  5. **ClearAll** — text button, bottom of popover. Only when ≥1 value active.
+- Apply is **live** (toggling a checkbox immediately filters; no Done button needed). The popover closes on outside-click or Escape.
 
 ### Mobile (< sm)
 
-- Desktop bar hidden (`hidden sm:flex` — same pattern as `SortControls`).
-- **Hamburger Menu** gets a new "Filter · N" row in the same block as the existing mobile-only sort rows (`app-header.spec.md` items 6–7). N = count of active filter values; no badge when 0.
-- Tapping the row opens **FilterPopover** (existing `Popover` primitive), anchored to the menu item. Contains: FreeTextSearch, four FacetSections (collapsible, checkboxes), Clear all + Done footer.
-- **MobileChipStrip** renders inside the column header (`Column/index.tsx`), directly under the column switcher. Horizontal scroll; one chip per active value; each chip one-tap removable. Strip is absent entirely when no filters are active — no empty state, no wasted vertical space.
-- No result-count text on mobile (vertical budget too tight; the chip strip itself communicates state).
+- The inline FreeTextSearch and FilterButton are hidden on `< sm` (the header is too crowded with logo + view switcher + hamburger).
+- A **"Filter · N" row** in the Hamburger Menu opens the same `FilterPopover` component, anchored to the menu item.
+- **MobileChipStrip** renders inside the column header (`Column/index.tsx`), under the column switcher — horizontally scrollable, one chip per active value. This is the mobile active-filter summary (there is no header chip row on mobile).
+- Result count shows inside the popover, same as desktop.
 
 ## States
 
-| State | Trigger | Visual Change |
-|-------|---------|---------------|
-| empty | no filter values set | default trigger labels (`Status`, not `Status: 2`); no chip row; no ClearAll; no mobile strip |
-| active | ≥1 filter value set | trigger labels show count (`Status: 2`); chip row visible with ClearAll; mobile strip visible; hamburger row shows `Filter · N` |
-| facet open | click FacetDropdown / tap mobile "Filter" row | dropdown or popover open with value list; current selections checked |
-| all filtered out | predicate matches 0 tickets | board columns show empty state (`board-layout.spec.md` "empty column"); result-count reads `Showing 0 of M tickets` |
-| cleared | ClearAll pressed or last chip removed | returns to empty state via single `clearAll` action |
+| State | Trigger | Header appearance | Popover (when open) |
+|-------|---------|-------------------|---------------------|
+| empty | no filter values | FreeTextSearch empty; button reads `Filter` | result count "Showing all M"; no chips; no ClearAll |
+| query active | user typed in FreeTextSearch | input shows query; button still reads `Filter` (query is not a facet) | result count reflects query; no facet chips |
+| facet active | user checked facet value(s) in popover | button reads `Filter · N` | result count + chips + ClearAll |
+| query + facets | both | input shows query; button reads `Filter · N` | result count + chips + ClearAll |
+| all filtered out | predicate matches 0 | button reads `Filter · N`; input may have query | "Showing 0 of M"; board empty state behind popover |
+| cleared | ClearAll or last chip removed | button reverts to `Filter`; input clears | returns to empty state |
+
+**In every state, the header is exactly one row (64px).** The only thing that changes in the header is the content of the search input and the label on the button. No row is ever added.
 
 ## Responsive
 
-| Breakpoint | Change |
-|------------|--------|
-| `< 640px` (`< sm`) | Desktop bar hidden. Filter entry moves to Hamburger Menu as "Filter · N" row opening a Popover. MobileChipStrip appears in column header when filters active. |
-| `640px–767px` | Same as `< 640px` — still one-column-at-a-time board (`useBoardLayout` uses `max-width: 768px`). |
-| `≥ 768px` (desktop) | Desktop filter bar visible. MobileChipStrip absent. Hamburger "Filter · N" row absent. |
-
-Note the intentional split: desktop/mobile chrome flips at `sm` (640px), matching `SortControls`; the board's own column-layout flip happens at `768px`. Between 640–767px the desktop filter bar is hidden and the board is still single-column — the chip strip carries active-filter visibility there.
+| Breakpoint | Header filter chrome |
+|------------|---------------------|
+| `< 640px` (`< sm`) | Inline FreeTextSearch + FilterButton hidden. Entry via Hamburger Menu "Filter · N" row → popover. MobileChipStrip in column header when active. |
+| `≥ 640px` (`≥ sm`) | FreeTextSearch + FilterButton inline in `header__left`. No MobileChipStrip. Hamburger "Filter" row absent. |
+| narrow desktop (640–900px) | FreeTextSearch shrinks toward min-width (120px) before wrapping; never wraps to a second line. |
 
 ## Accessibility
 
-- Each FacetDropdown is a Radix `DropdownMenu`: arrow-key navigation, `Escape` to close, `aria-expanded` on trigger.
-- Each chip is a `button` with `aria-label="Remove filter: {facet} {value}"`.
-- ClearAll is a real `button` with `aria-label="Clear all filters"`, not an icon-only gesture.
-- The desktop filter bar is a `<toolbar>` landmark.
-- FilterPopover follows the existing `Popover` accessibility contract (focus trap, return focus on close).
-- Result-count text is an `aria-live="polite"` region so screen-reader users hear filter effects.
+- FreeTextSearch is a standard `<input>` with `aria-label="Filter tickets"`.
+- FilterButton is a `<button>` with `aria-expanded` reflecting popover state, `aria-haspopup="dialog"`, and `aria-label` that includes the count when active (`Filter, 3 active`).
+- FilterPopover follows the existing `Popover` contract: focus trap, `Escape` closes, focus returns to FilterButton.
+- FacetSections use native `<input type="checkbox">` with associated `<label>`.
+- Chips inside the popover are `<button>` with `aria-label="Remove filter: {facet} {value}"`.
+- ResultCount is `aria-live="polite"` so screen readers announce filter effects whether the popover is open or not.
 
 ## Semantic Style Anchors
 
 | Element | Anchor | Contract |
 |---------|--------|----------|
-| facet trigger | `Status` / `Status: N` label swap | the trigger is the per-facet summary — always honest about active state |
-| chip | reuses `Badge` styling (`src/components/Badge/`) | filter chips and ticket badges share one visual vocabulary |
-| active strip (mobile) | horizontally scrollable chip row | never wraps on mobile; never shows an empty state |
+| filter button label | `Filter` / `Filter · N` swap | the single header-level summary of facet state — honest without consuming width |
+| popover chip | reuses `Badge` styling (`src/components/Badge/`) | filter chips and ticket badges share one visual vocabulary |
+| mobile strip | horizontally scrollable chip row | never wraps; never shows an empty state |
 
 ## Extension notes
 
-- **Add a facet**: add an optional field to `TicketFilters`, add a row to the Facets table, add a `FacetDropdown` (desktop) and `FacetSection` (mobile). The predicate updates in one place (`useBoardFilters`). No special-case UI branches.
-- **Add the bottom-sheet mobile pattern (deferred)**: introduce a `Sheet` primitive in `src/components/ui/`, replace `FilterPopover` with it, keep `TicketFilters` and the chip strip unchanged. The data structure already supports it.
-- **Add a text-syntax mode (deferred)**: layer a syntax parser on top of the same `TicketFilters` reducer. No state-shape change.
-- **Add saved views (deferred)**: persist named `TicketFilters` snapshots. The state shape is already serializable.
+- **Add a facet**: add an optional field to `TicketFilters`, add a row to the Facets table, add a `FacetSection` inside the popover. The header never changes — the popover absorbs new facets.
+- **Show active chips inline in the header later (deferred)**: if a future header restructure frees more width, chips can render between FreeTextSearch and FilterButton. Today there isn't room, so chips live in the popover. The `TicketFilters` state is unchanged either way.
+- **Add the bottom-sheet mobile pattern (deferred)**: introduce a `Sheet` primitive, replace the mobile popover with it. No state change.
+- **Add a text-syntax mode (deferred)**: layer a parser on the same `TicketFilters` reducer. No state change.
+- **Add saved views (deferred)**: persist named snapshots. State shape is already serializable.

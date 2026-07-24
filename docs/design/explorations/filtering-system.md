@@ -93,24 +93,43 @@ Predicates render as chips below the input.
 
 ---
 
-## 3. Recommendation: Option B (chip bar), with a constrained v1
+## 3. Recommendation — FINAL: Option A (popover), adapted (2026-07-24)
 
-**Pick the Linear-style inline chip bar.** Reject the popover-only and text-syntax options for v1.
+> **This section supersedes the original Option B (chip bar) recommendation.**
+>
+> **The chip bar is dead.** It cannot satisfy the hard constraint: *the filter surface must never add
+> a second line to the header.* The chip bar (search input + 4 facet dropdowns + chips + result count)
+> is too wide for the only available header space and always wraps to a second row. This was confirmed
+> three ways:
+>
+> 1. **Implementation** — building the chip bar inline in the Board's own header block still produced a
+>    second line, because that block sits *below* `nav.header` (the app header), not inside it.
+> 2. **DOM measurement** — `header__right` is 224px (Sort + Hamburger + Auth = full). The chip bar
+>    does not fit. `header__left` has ~580px of dead space after ProjectSelector, but 4 facet
+>    dropdowns (~350px) + search (~200px) + chips consume all of it and wrap on realistic content.
+> 3. **User feedback** — "WHY FILTERS ALWAYS APPEAR IN 2ND LINE?" The answer: any inline facet UI is
+>    structurally too wide for a one-row header. Stop trying to make it fit.
+>
+> **The popover (Option A) is the only pattern that honors the one-row constraint.** A compact
+> `Filter · N` button + free-text search sit inline in `header__left` dead zone (~280px total). Facets,
+> chips, and result count live inside the popover that opens *from* the button — overlaying the board,
+> never pushing it down. The Baymard "applied filters overview" is satisfied by the button label
+> (`Filter · 3`) plus the chips visible the moment the popover opens.
 
-### Why chip bar over popover
+### Why popover over chip bar (revised)
 
-1. **Active state must be visible.** MDT's board is the primary surface; users live in it. Hiding
-   active filters behind a count badge (Option A) imports Notion's worst trait for a power-user
-   audience. The Baymard "applied filters overview" is non-negotiable here.
-2. **The facet set is small and fixed.** Eight must-haves, all known up front. The popover's main
-   advantage (scaling to many facets) buys us nothing.
-3. **It matches the existing badge language.** Cards already speak in status/priority/type chips. A
-   chip bar is the same vocabulary at board level. Cognitive cost ≈ zero.
+1. **One row, no exceptions.** The chip bar fails this. The popover passes it. This constraint is
+   non-negotiable and overrides every other consideration below.
+2. **Scales without header surgery.** Adding facets (v1.1: inWorktree, phaseEpic, impactAreas) adds
+   rows inside the popover — zero header impact. The chip bar would need 7 dropdowns inline.
+3. **The dead zone is finite.** `header__left` has ~580px today, shared with ProjectSelector growth,
+   the planned pin rail's absence, and future header tenants. A search input + one button is the
+   durable footprint; 4+ inline dropdowns is not.
 
 ### Why not text-syntax (yet)
 
-Text-syntax (Option C) is the most powerful and the natural endpoint for a developer tool. But it is a
-**second control layered on top of the visual one**, and shipping both at once doubles the surface. The
+Text-syntax (Option C) remains the natural endpoint for a developer tool and can be layered on later
+as an alternative input to the same `TicketFilters` reducer. It is not the v1 pattern — the popover is.
 research doc pins text-syntax as an explicit non-goal for v1. The chip bar's `TicketFilters` state
 shape supports adding a syntax mode later without a rewrite — same data structure, different input.
 That sequencing is correct.
@@ -225,13 +244,13 @@ model, not fight it.
 
 **Decision (v1):** mirror sort exactly. On `< sm`:
 
-- The desktop chip bar (`FreeTextSearch` + 4 `FacetDropdown`s + chips + `ClearAll`) is hidden, same as
-  `SortControls` is today.
+- The desktop inline controls (FreeTextSearch + FilterButton) are hidden, same as `SortControls` is
+  today.
 - A **"Filter · N" entry is added to the Hamburger Menu** in the same block as the existing "Sort by /
   Sort direction (mobile)" rows (app-header spec items 6–7). N = count of active filter values.
-- Tapping it opens a **Popover** anchored to the menu item, containing the four facets as collapsible
-  sections + the free-text input + `Clear all`. This reuses the existing `Popover` primitive — no new
-  component.
+- Tapping it opens the **same `FilterPopover`** used on desktop, anchored to the menu item. It contains
+  result count, the four FacetSections, active chips, and Clear all. Reuses the existing `Popover`
+  primitive — no new component.
 - **Active filters are surfaced in two places** so the "frozen filter" anti-pattern can't take hold:
   - The Hamburger Menu row reads `Filter · 3` (count badge, Asana-style).
   - A **compact chip strip** sits directly under the column header on mobile, one chip per active
@@ -275,72 +294,11 @@ explicitly revisit-able without touching `TicketFilters`.
 
 ## 5. Mockups
 
-Wireloom is structural, not pixel-perfect — it shows composition and state, not exact chip widths.
-All visible text is realistic UI copy.
-
-### 5.1 Default state — no filters active
-
-```wireloom
-window "Board — Filter bar (default)":
-  panel:
-    row:
-      input placeholder="Filter tickets..." id="freetext"
-      button "Status" id="facet-status"
-      button "Priority" id="facet-priority"
-      button "Assignee" id="facet-assignee"
-      button "Type" id="facet-type"
-      spacer
-      button "Sort: Key ↓" id="sort"
-      button "Refresh" id="refresh"
-    text "Showing all 14 tickets" id="result-count"
-```
-
-### 5.2 Active filters — chips visible
-
-```wireloom
-window "Board — Filter bar (active)":
-  panel:
-    row:
-      input placeholder="Filter tickets..." id="freetext"
-      button "Status: 2" id="facet-status-active"
-      button "Priority: 1" id="facet-priority-active"
-      button "Assignee" id="facet-assignee"
-      button "Type" id="facet-type"
-      spacer
-      button "Sort: Key ↓" id="sort"
-      button "Refresh" id="refresh"
-    row:
-      chip "In Progress" id="chip-1"
-      chip "Approved" id="chip-2"
-      chip "High" id="chip-3"
-      button "Clear all" id="clear-all"
-    text "Showing 3 of 14 tickets" id="result-count-active"
-```
-
-### 5.3 Facet dropdown open (priority)
-
-```wireloom
-window "Board — Filter bar (priority open)":
-  panel:
-    row:
-      input placeholder="Filter tickets..." id="freetext"
-      button "Status: 2" id="facet-status-active"
-      button "Priority: 1" id="facet-priority-open"
-      button "Assignee" id="facet-assignee"
-      button "Type" id="facet-type"
-      spacer
-      button "Sort: Key ↓" id="sort"
-  sheet position=bottom title="Priority":
-    panel:
-      checkbox "Critical" id="val-critical" label-right
-      checkbox "High" id="val-high" checked label-right
-      checkbox "Medium" id="val-medium" label-right
-      checkbox "Low" id="val-low" label-right
-      row justify=end:
-        button "Done" primary id="priority-done"
-```
-
-### 5.4 Mobile — collapsed filter tray
+> **Canonical mockups live in `docs/design/surfaces/board-filter-bar.mockups.md`.** The desktop
+> wireframes below were removed because they depicted the rejected Option B chip-bar pattern (inline
+> search + facet dropdowns + chip row + result-count on a second line). Keeping them here contradicted
+> the §3 FINAL recommendation (popover). The mobile wireframes below remain as exploration context;
+> the canonical mobile states are in the surface mockups file.
 
 ### 5.4 Mobile — default (no filters), one-column-at-a-time
 

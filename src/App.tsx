@@ -22,6 +22,7 @@ import { AddProjectModal } from './components/AddProjectModal'
 import { MobileLogo } from './components/AppHeader'
 import { AuthStatusAction } from './components/AuthUnlock/AuthStatusAction'
 import { AuthUnlockPanel } from './components/AuthUnlock/AuthUnlockPanel'
+import { BoardFilterBar } from './components/BoardFilterBar'
 import { EventHistory } from './components/DevTools/EventHistory'
 import { useEventHistoryState } from './components/DevTools/useEventHistoryState'
 import { DirectTicketAccess } from './components/DirectTicketAccess'
@@ -38,6 +39,7 @@ import { Modal, ModalBody } from './components/ui/Modal'
 import { Toaster } from './components/ui/sonner'
 import { ViewModeSwitcher } from './components/ViewModeSwitcher'
 import { getSortPreferences, setSortPreferences } from './config/sorting'
+import { useBoardFilters } from './hooks/useBoardFilters'
 import { useGlobalKeyboard } from './hooks/useGlobalKeyboard'
 import {
   formatRootViewPageTitle,
@@ -65,6 +67,7 @@ import {
   setCurrentProject,
   validateProjectCode,
 } from './utils/routing'
+import { countActiveFilters } from './utils/ticketFilters'
 import './utils/cache' // Import cache utilities for development
 
 interface InviteExchangeResult {
@@ -91,6 +94,19 @@ function ProjectRouteHandler() {
     refreshProjects,
     loading: projectsLoading,
   } = useProjectManager({ autoSelectFirst: false, handleSSEEvents: true })
+
+  // MDT-196: Board filter state lifted to App so the filter controls can render
+  // inline in the app header's single row (no second line). Board consumes the
+  // filtered tickets via props.
+  const {
+    filters: boardFilters,
+    filteredTickets: boardFilteredTickets,
+    facetOptions: boardFacetOptions,
+    toggleFilter: toggleBoardFilter,
+    setQuery: setBoardFilterQuery,
+    clearAll: clearBoardFilters,
+  } = useBoardFilters(tickets)
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false)
   const {
     accessMode,
     accessIndicator,
@@ -437,9 +453,24 @@ function ProjectRouteHandler() {
                 onModeChange={handleViewModeChange}
                 isDocumentsView={viewMode === 'documents'}
               />
-              <div className="min-w-0 flex-1">
+              <div className="min-w-0 flex-shrink-0">
                 <ProjectSelector />
               </div>
+              {(viewMode === 'board' || viewMode === 'list') && (
+                <div className="hidden sm:flex flex-1 items-center min-w-0">
+                  <BoardFilterBar
+                    desktop
+                    filters={boardFilters}
+                    totalCount={tickets.length}
+                    filteredCount={boardFilteredTickets.length}
+                    facetOptions={boardFacetOptions}
+                    onQueryChange={setBoardFilterQuery}
+                    onToggle={toggleBoardFilter}
+                    onRemove={(facet, value) => toggleBoardFilter(facet, value)}
+                    onClearAll={clearBoardFilters}
+                  />
+                </div>
+              )}
             </>
           )}
           rightSection={(
@@ -473,7 +504,26 @@ function ProjectRouteHandler() {
                 canManageProjects={canManageProjects}
                 canManageSharing={canManageSharing}
                 canUseOwnerEndpoints={canUseOwnerEndpoints}
+                filterCount={countActiveFilters(boardFilters)}
+                onOpenFilters={() => setMobileFilterOpen(true)}
               />
+              {(viewMode === 'board' || viewMode === 'list') && (
+                <div className="sm:hidden">
+                  <BoardFilterBar
+                    desktop={false}
+                    filters={boardFilters}
+                    totalCount={tickets.length}
+                    filteredCount={boardFilteredTickets.length}
+                    facetOptions={boardFacetOptions}
+                    onQueryChange={setBoardFilterQuery}
+                    onToggle={toggleBoardFilter}
+                    onRemove={(facet, value) => toggleBoardFilter(facet, value)}
+                    onClearAll={clearBoardFilters}
+                    mobilePopoverOpen={mobileFilterOpen}
+                    onMobilePopoverOpenChange={setMobileFilterOpen}
+                  />
+                </div>
+              )}
             </>
           )}
         />
@@ -495,6 +545,9 @@ function ProjectRouteHandler() {
                 onTicketClick={handleTicketClick}
                 selectedProject={selectedProject}
                 tickets={tickets}
+                filteredTickets={boardFilteredTickets}
+                mobileFilters={boardFilters}
+                onRemoveMobileFilter={(facet, value) => toggleBoardFilter(facet, value)}
                 viewMode={viewMode}
                 sortPreferences={
                   viewMode === 'board' || viewMode === 'list'

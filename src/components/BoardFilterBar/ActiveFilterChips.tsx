@@ -18,6 +18,11 @@ export interface ActiveFilterChipsProps {
   onRemove: (facet: FacetKey, value: string) => void
   /** Called when the user clicks "Clear all". Omit to hide the control. */
   onClearAll?: () => void
+  /**
+   * `"inline"` drops the top margin (used when the chip row is rendered inside
+   * the filter popover alongside the result-count). Default keeps `mt-1.5`.
+   */
+  variant?: 'standalone' | 'inline'
 }
 
 /** Facet display labels for aria-label composition. */
@@ -69,15 +74,18 @@ export const ActiveFilterChips: React.FC<ActiveFilterChipsProps> = ({
   filters,
   onRemove,
   onClearAll,
+  variant = 'standalone',
 }) => {
   const entries = deriveActiveEntries(filters)
   if (entries.length === 0)
     return null
 
+  const marginClass = variant === 'inline' ? '' : 'mt-1.5'
+
   return (
     <div
       data-testid="active-filter-chips"
-      className="flex flex-wrap items-center gap-1.5 mt-1.5"
+      className={`flex flex-wrap items-center gap-1.5 ${marginClass}`}
       role="group"
       aria-label="Active filters"
     >
