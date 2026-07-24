@@ -1,6 +1,6 @@
 ---
 code: MDT-199
-status: In Progress
+status: Implemented
 dateCreated: 2026-07-24T09:15:41.695Z
 type: Architecture
 priority: High
@@ -107,21 +107,21 @@ Use an opt-in Workers plus D1 coordination service protected by Cloudflare Acces
 
 ### Architecture
 
-- [ ] `docs/architecture/cloud-sync/README.md` defines system context, containers, components, trust boundaries, and delivery phases.
-- [ ] Identity, data consistency, and operations owner documents exist and contain no unresolved ownership conflicts.
-- [ ] D1 schema and static prepared-statement allocation batch preserve per-project uniqueness and idempotent replay.
-- [ ] API contracts define reservation, acknowledgement, projection, membership, error, and precondition semantics.
-- [ ] Human and machine Access flows define validation, attribution, expiry, revocation, and secret handling.
-- [ ] Local project identity and cloud project UUID binding remain explicitly separate.
-- [ ] The shared-service integration seam keeps CLI, MCP, server, and frontend consumers free of duplicated ticket business logic.
-- [ ] The dependent Feature CR is reconciled with the approved architecture before implementation.
+- [x] `docs/architecture/cloud-sync/README.md` defines system context, containers, components, trust boundaries, and delivery phases.
+- [x] Identity, data consistency, and operations owner documents exist and contain no unresolved ownership conflicts.
+- [x] D1 schema and static prepared-statement allocation batch preserve per-project uniqueness and idempotent replay.
+- [x] API contracts define reservation, acknowledgement, projection, membership, error, and precondition semantics.
+- [x] Human and machine Access flows define validation, attribution, expiry, revocation, and secret handling.
+- [x] Local project identity and cloud project UUID binding remain explicitly separate.
+- [x] The shared-service integration seam keeps CLI, MCP, server, and frontend consumers free of duplicated ticket business logic.
+- [x] The dependent Feature CR is reconciled with the approved architecture before implementation.
 
 ### Verification
 
-- [ ] Mermaid diagrams render successfully.
-- [ ] Modified Markdown passes project markdown lint.
-- [ ] Architecture claims are checked against current code and current official Cloudflare documentation.
-- [ ] No production behavior is claimed until the Feature CR implements and validates it.
+- [x] Mermaid diagrams render successfully.
+- [x] Modified Markdown passes project Markdown lint.
+- [x] Architecture claims are checked against current code and current official Cloudflare documentation.
+- [x] No production behavior is claimed until the Feature CR implements and validates it.
 
 ## 7. Deployment
 

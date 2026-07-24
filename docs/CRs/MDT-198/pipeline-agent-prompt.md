@@ -68,21 +68,10 @@ Read completely before changing anything:
 
 Read `docs/PRE_IMPLEMENT.md` before writing any TypeScript, including POC code.
 
-Create or update:
-
-```text
-docs/CRs/MDT-198.pipeline-state.json
-```
-
-Record:
-
-- project and ticket paths;
-- documents and skills read;
-- baseline commands;
-- current ticket status;
-- all pre-existing dirty files;
-- milestone decisions and skip reasons;
-- artifacts and verification results.
+Do not create the top-level `docs/CRs/MDT-198.pipeline-state.json`. A hidden,
+ignored checkpoint inside `docs/CRs/MDT-198/` is allowed but is not a durable
+output. Keep durable workflow outcomes in the ticket and approved research
+subdocuments.
 
 ## Dirty Worktree Boundary
 
@@ -125,7 +114,7 @@ Use the `mdt-pipeline-e2e` state contract, adapted for a Research ticket:
 | Reflection | Reconcile approved findings into the ticket and research artifacts |
 | User Review | Stop and request approval to close |
 
-Record every skipped milestone and reason in `.pipeline-state.json`.
+Keep skipped-milestone reasons concise in the final verification report.
 
 ## Current-truth Research
 
@@ -276,7 +265,6 @@ Fix every unambiguous mismatch found in:
 - `poc.md`;
 - MDT-198 research questions, initial findings, acceptance boxes, decision, and
   references;
-- `.pipeline-state.json`;
 - justified follow-up tickets;
 - current-state owner documentation when it is demonstrably stale.
 
@@ -355,7 +343,6 @@ Artifacts:
   - research.md
   - poc.md
   - verification.md
-  - .pipeline-state.json
   - follow-up tickets, if justified
 
 POC:

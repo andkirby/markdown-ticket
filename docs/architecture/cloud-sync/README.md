@@ -29,6 +29,28 @@ It does not make the cloud a ticket-content authority.
 9. Ticket numbers are never reused. Abandoned reservations create acceptable
    gaps.
 
+## V1 Product Decisions
+
+### Online-Only Creation
+
+Creating a ticket in a cloud-bound project requires a live coordinator.
+Offline clients may read and edit existing Markdown tickets, but they cannot
+allocate a fallback number, temporary key, range, or lease. This is the same
+behavior defined by the outage contract, made explicit as a product decision.
+
+Deferring offline creation does not remove the counter, reservation,
+idempotency, acknowledgement, membership, or audit model. Those records protect
+concurrent online creation, retries, and the boundary between cloud allocation
+and local Markdown persistence.
+
+### Projection Is Part of V1
+
+Versioned header projection remains in the first slice because teammate
+visibility before Git synchronization is one of the two approved cloud-sync
+outcomes. Projection versions, operation and content hashes, project revision
+cursors, tombstones, and polling protect stale online clients; they do not
+exist to support offline ticket creation.
+
 ## Ownership Map
 
 | Concern | Authority | Owner document |
@@ -94,22 +116,26 @@ C4Container
 
 ## Production Package Boundary
 
-`MDT-200` adds one deployable package and extends existing shared contracts:
+`MDT-200` adds one Cloudflare Worker package and extends existing shared
+contracts:
 
 ```text
-cloud-sync-worker/                         new deployable workspace
+cloud/                                    new private @mdt/cloud workspace
+  package.json
+  wrangler.jsonc                          Worker environments and bindings
+  migrations/                             ordered D1 migrations
   src/
-    index.ts                               Worker entry point and error boundary
-    http/router.ts                         versioned route matching only
-    identity/AccessPrincipalResolver.ts    JWT verification and principal mapping
-    application/                           allocation, membership, projection use cases
-    repositories/                          D1 prepared statements and batch execution
-    audit/AuditRecorder.ts                 redacted structured audit records
-  migrations/                              ordered Wrangler D1 migrations
-  test/                                    Workers-runtime and D1 integration tests
-  wrangler.jsonc                           environments, bindings, observability
+    cloudflare/
+      worker.ts                            HTTP and scheduled Worker entry points
+      http/                                versioned route mapping
+      access/                              Access JWT validation and principal mapping
+      application/                         allocation, membership, projection use cases
+      d1/                                  prepared statements and transactional batches
+      rate-limit/                          Workers rate-limit adapter
+      scheduled/                           reservation and audit maintenance dispatch
+  test/                                    unit, Workers-runtime, and D1 integration tests
 
-domain-contracts/src/cloud-sync/           pure request, response, and port types
+domain-contracts/src/cloud-sync/           pure request, response, and error types
 shared/services/cloud-sync/                application orchestration and strategies
 server/                                    thin browser-facing adapter and token provider
 cli/                                       thin interactive adapter
@@ -121,12 +147,21 @@ Dependency direction remains:
 
 ```text
 domain-contracts <- shared <- server | cli | mcp-server | src
-domain-contracts <- cloud-sync-worker
+domain-contracts <- cloud/cloudflare
+
+shared --JSON/HTTPS--> cloud/cloudflare
 ```
 
-The Worker does not import filesystem-aware `shared` services. Presentation
-adapters do not implement allocation, retry, polling merge, or projection
-conflict rules. Those rules belong to `shared/services/cloud-sync/`.
+The main application never imports `@mdt/cloud`; `shared` reaches it only
+through the protected HTTP contract. The cloud package does not import
+filesystem-aware `shared` services. Presentation adapters do not implement
+allocation, retry, polling merge, or projection conflict rules. Those local
+rules belong to `shared/services/cloud-sync/`; cloud-side coordination use
+cases belong to `cloud/src/cloudflare/application/`.
+
+This document owns the concrete package boundary. The
+[MDT-200 package note](../../CRs/MDT-200/cloud-package-boundary.md) records the
+rationale and implementation handoff without defining a second structure.
 
 ## Worker Components
 
@@ -139,6 +174,7 @@ C4Component
 
   Container_Boundary(worker, "Coordination Worker") {
     Component(router, "HTTP Router", "TypeScript", "Matches versioned routes and validates transport shape")
+    Component(maintenance, "Scheduled Maintenance", "TypeScript", "Expires stale reservations and enforces audit retention in bounded batches")
     Component(identity, "Access Principal Resolver", "TypeScript and Web Crypto", "Validates JWT and maps human or machine principal")
     Component(authz, "Membership Authorizer", "TypeScript", "Checks project role without disclosing hidden projects")
     Component(useCases, "Coordination Use Cases", "TypeScript", "Owns allocation, acknowledgement, projection, membership, and recovery")
@@ -147,6 +183,7 @@ C4Component
   }
 
   Rel(access, router, "Forwards admitted requests with assertion", "HTTPS")
+  Rel(maintenance, repositories, "Runs bounded maintenance batches")
   Rel(router, identity, "Requests verified principal")
   Rel(router, useCases, "Delegates validated command")
   Rel(useCases, authz, "Requires project capability")
@@ -176,6 +213,12 @@ That device-local routing key is never sent as cloud identity. Linked worktrees
 for one physical repository therefore resume the same pending operation while
 independent clones remain independent clients.
 
+Journal files live at
+`CONFIG_DIR/cloud-sync/journals/{routingHash}/{cloudProjectId}.json`; the lock
+and temporary file stay in the same directory. Implementations use user-only
+directory/file permissions (`0700`/`0600` on POSIX and the closest supported
+user-only protection elsewhere).
+
 ## Project Binding
 
 `MDT-200` adds this non-secret project configuration:
@@ -201,7 +244,17 @@ audience tag is permitted in `.mdt-config.toml` or the global project registry.
 specification and inspection registry before exposing them.
 
 The local runtime also has an operator-controlled cloud-sync origin allowlist.
-A repository-controlled `serviceUrl` is accepted only on an exact match.
+A repository-controlled `serviceUrl` is accepted only on an exact match. The
+allowlist is owned by the global `CONFIG_DIR/config.toml`, not by a project:
+
+```toml
+[cloudSync]
+allowedOrigins = ["https://mdt-sync.example.com"]
+```
+
+`cloudSync.allowedOrigins` is a global `fileOnly` selector containing absolute
+HTTPS origins only. Its default is empty, which denies every cloud credential
+flow until an operator configures an origin.
 Headless adapters refuse to attach service-token headers to any other origin,
 which prevents a modified project file from redirecting credentials.
 

@@ -1,6 +1,6 @@
 ---
 code: MDT-200
-status: Proposed
+status: In Progress
 dateCreated: 2026-07-24T09:16:41.530Z
 type: Feature Enhancement
 priority: High
@@ -49,6 +49,30 @@ dependsOn: MDT-199
   - Cloud editing of ticket bodies or cloud-authoritative header fields.
   - Jira-style comments, workflow administration, notifications, or reporting.
 
+### V1 Product Decisions
+
+#### Ticket Creation Requires the Cloud
+
+A cloud-bound project may read and edit existing Markdown tickets while
+offline, but creating a ticket requires a live cloud coordinator. If allocation
+is unavailable, creation stops with a recoverable error and never assigns a
+local fallback number, temporary key, offline range, or lease.
+
+This clarifies the existing outage contract; it does not add an offline
+reconciliation design. Online creation still requires the counter,
+reservations, idempotency key and request hash, acknowledgement state,
+membership, and audit data because concurrent requests, retries, and a local
+write failure remain possible.
+
+#### Header Projection Remains in V1
+
+The first slice retains cloud header projection because teammate visibility
+before Git synchronization is an explicit product outcome. Therefore
+`ticket_projections`, projection and project revisions, operation and content
+hashes, tombstones, and polling remain in scope. They protect stale online
+clients and derived cloud visibility; they are not support for offline ticket
+creation.
+
 ## 2. Desired Outcome
 
 ### Success Conditions
@@ -86,14 +110,15 @@ MDT-199 resolves the architecture gate. Implementation must follow:
 - [`identity-and-access.md`](../architecture/cloud-sync/identity-and-access.md)
 - [`data-and-consistency.md`](../architecture/cloud-sync/data-and-consistency.md)
 - [`operations.md`](../architecture/cloud-sync/operations.md)
+- [`cloud-package-boundary.md`](MDT-200/cloud-package-boundary.md)
 
 | Area | Approved decision |
 |---|---|
-| Service boundary | Add `cloud-sync-worker/` as one deployable root workspace; share only pure contracts through `domain-contracts` |
+| Service boundary | Add one Cloudflare Worker workspace at `cloud/`; keep its runtime implementation under `cloud/src/cloudflare/`; share only pure contracts through `domain-contracts` |
 | Identity | Two Access audiences; Worker JWT validation; email human and `common_name` machine principals; D1 project roles |
 | Data | One D1 database per environment; static transactional allocation batch; monotonic non-reuse; versioned projection and tombstones |
 | Integration | `shared/services/cloud-sync/` owns strategy, journal recovery, projection, and polling; all transports remain thin |
-| Configuration | Non-secret `[project.cloudSync]` binding; credentials stay in interactive or backend secret providers |
+| Configuration | Non-secret `[project.cloudSync]` binding plus global file-only `cloudSync.allowedOrigins`; credentials stay in interactive or backend secret providers |
 | Delivery | Polling defaults to 15 seconds; real Access, deployed concurrency, migration, restore, and rollback gates are mandatory |
 
 ### Known Constraints
@@ -109,8 +134,9 @@ Cloudflare account IDs, custom hostnames, Access audience values, D1 IDs,
 rate-limit namespace IDs, IdP groups, and production service-token owners are
 environment inputs. They do not reopen the approved architecture.
 
-MDT-200 remains `Proposed` until MDT-199 receives User Review approval. MDT-200
-owns all requirements, BDD, test, task, implementation, and runtime trace work.
+MDT-199 received User Review approval after its completed architecture package
+was independently reconciled. MDT-200 is `In Progress` and owns all
+requirements, BDD, test, task, implementation, and runtime trace work.
 
 ## 4. Acceptance Criteria
 
@@ -121,6 +147,7 @@ owns all requirements, BDD, test, task, implementation, and runtime trace work.
 - [ ] Different cloud projects allocate independently.
 - [ ] Failed local creation can retry the same reservation and acknowledge it without number reuse.
 - [ ] A cloud-bound create fails recoverably when the coordination service is unavailable; it does not allocate locally.
+- [ ] Existing Markdown tickets remain readable and editable during an outage while new cloud-bound ticket creation remains blocked.
 - [ ] Local-only project creation remains backward compatible.
 
 ### Identity and Isolation

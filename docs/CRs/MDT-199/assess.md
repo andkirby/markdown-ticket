@@ -111,9 +111,9 @@ that redesign, so no scope expansion is required.
 - Feature needs: an independently deployed Worker with D1, Access, migrations,
   observability, backup, restore, and rollback.
 - Mismatch: no current package owns cloud resources or their lifecycle.
-- Adjustment required: add a dedicated `cloud-sync-worker/` workspace in
-  MDT-200, with its own Wrangler configuration, migrations, contracts, and
-  deployment gates.
+- Adjustment required: add a dedicated Cloudflare Worker workspace at `cloud/`
+  in MDT-200, with implementation under `cloud/src/cloudflare/`, Wrangler
+  configuration, migrations, contracts, and deployment gates.
 - Scope: bounded.
 
 ## Dependency and Tooling Pressure

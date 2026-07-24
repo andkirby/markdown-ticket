@@ -40,17 +40,24 @@ C4Deployment
   Rel(worker, d1, "Runs prepared statements and batches", "D1 binding")
 ```
 
-The Worker is one new root workspace, `cloud-sync-worker/`, with a
-`wrangler.jsonc` source of truth. It uses:
+The cloud service is the root `cloud/` workspace. Its Worker entry point and
+Cloudflare implementation are under `cloud/src/cloudflare/`.
+`cloud/wrangler.jsonc` is the deployment source of truth. It uses:
 
 - one D1 binding named `DB`;
 - separate read and mutation rate-limit bindings;
+- one UTC Cron Trigger, every 15 minutes, invoking the Worker's `scheduled()`
+  handler for bounded reservation expiry and audit-retention batches;
 - Worker Logs and Traces;
 - non-secret `TEAM_DOMAIN`, `COORDINATION_AUD`, and `OPERATOR_AUD` variables;
 - a version metadata binding for diagnostic responses and logs.
 
 Binding types are generated with `wrangler types`; the implementation does not
 hand-write a duplicate `Env` interface.
+
+The Cron Trigger is declared only in `wrangler.jsonc`. Deployment validation
+invokes the local scheduled-handler endpoint, then confirms the deployed Cron
+event and resulting audit records before release.
 
 ## Secret Inventory
 
@@ -70,9 +77,8 @@ required. Production secrets use encrypted secret channels, never Wrangler
 
 ## Migration Procedure
 
-Every schema change is an ordered SQL migration under
-`cloud-sync-worker/migrations/`. Use the immutable D1 database name, not only
-the binding name, in operator commands.
+Every schema change is an ordered SQL migration under `cloud/migrations/`. Use
+the immutable D1 database name, not only the binding name, in operator commands.
 
 Before production:
 
@@ -336,6 +342,7 @@ Platform behavior is mutable. These primary sources were checked on
 - [Access service-token lifecycle](https://developers.cloudflare.com/cloudflare-one/access-controls/service-credentials/service-tokens/)
 - [Interactive Access CLI tokens](https://developers.cloudflare.com/cloudflare-one/tutorials/cli/)
 - [Workers rate-limit binding](https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/)
+- [Workers Cron Triggers](https://developers.cloudflare.com/workers/configuration/cron-triggers/)
 - [Workers secrets](https://developers.cloudflare.com/workers/configuration/secrets/)
 - [Workers versions and deployments](https://developers.cloudflare.com/workers/versions-and-deployments/)
 - [Workers Logs](https://developers.cloudflare.com/workers/observability/logs/workers-logs/)

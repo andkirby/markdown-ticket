@@ -2,11 +2,11 @@
 
 ## Result
 
-The architecture package is ready for User Review. It is documentation-only:
-no production TypeScript, configuration schema, package manifest, migration, or
-deployment resource was changed.
+The architecture package passed User Review and independent reconciliation. It
+is documentation-only: no production TypeScript, configuration schema, package
+manifest, migration, or deployment resource was changed.
 
-MDT-199 remains `In Progress`. MDT-200 remains `Proposed`.
+MDT-199 is `Implemented`. MDT-200 is now `In Progress`.
 
 ## Required Output Audit
 
@@ -16,7 +16,7 @@ MDT-199 remains `In Progress`. MDT-200 remains `Proposed`.
 | Concrete ticket handoff | `architecture.md` fixes package, dependency, identity, data, API, recovery, polling, security, and operations decisions | Pass |
 | Local auth boundary preserved | `auth-and-sharing-architecture.md` received one cloud identity cross-link only | Pass |
 | Local/worktree identity preserved | `project-identity-and-worktrees.md` received one explicit cloud UUID cross-link only | Pass |
-| MDT-200 reconciled | Its architecture gate now links the owners and records approved decisions; status is unchanged | Pass |
+| MDT-200 reconciled | Its architecture gate links the owners and records approved decisions; it later moved to `In Progress` | Pass |
 | Approved MDT-198 decisions preserved | Authority, opt-in, no fallback, exclusions, polling, and attribution match research and POC | Pass |
 | Proposed behavior not claimed as shipped | Owner docs consistently assign implementation and runtime gates to MDT-200 | Pass |
 
@@ -40,7 +40,7 @@ Rechecked on 2026-07-24:
 - `mcp-server/src/transports/transportSelection.ts:11-21` selects either stdio
   or HTTP. The architecture assigns a credential provider to each mode without
   changing that transport boundary.
-- A repository-wide non-document search found no `cloud-sync-worker`,
+- A repository-wide non-document search found no cloud service workspace,
   `CloudSyncCoordinator`, `CloudOperationJournal`, or
   `project.cloudSync` implementation. All described runtime behavior remains
   proposed.
@@ -77,6 +77,12 @@ Unambiguous drift fixed:
 
 - MDT-200 no longer defers package, identity, data, integration,
   configuration, or delivery decisions already resolved by MDT-199.
+- The browser credential sequence now sends `cf-access-token` through the
+  Access edge, which injects `Cf-Access-Jwt-Assertion` for Worker validation.
+- The automatic reservation-expiry and audit-retention behavior now has an
+  explicit 15-minute Wrangler Cron Trigger and scheduled Worker entry point.
+- The credential-origin allowlist now has one concrete owner and selector:
+  global `cloudSync.allowedOrigins` in `CONFIG_DIR/config.toml`.
 - Browser cloud routes are explicitly local-owner-only, preventing a local
   read-only share from receiving cloud-only projection state.
 - Project-controlled service origins must match an operator allowlist, and
@@ -86,25 +92,6 @@ Unambiguous drift fixed:
 
 No architecture decision remains open. Concrete Cloudflare IDs, hostnames,
 audiences, IdP groups, and credential owners are deployment inputs for MDT-200.
-
-## Superseded Trace Route
-
-The earlier pipeline created three untracked trace-heavy artifacts:
-
-```text
-docs/CRs/MDT-199.pipeline-state.json
-docs/CRs/MDT-199/requirements.trace.md
-docs/CRs/.trace/MDT-199/store.json
-```
-
-Git confirmed none was tracked, and the current-run timestamps and contents
-proved their origin. The generated requirements trace and canonical store were
-removed as superseded bureaucracy. The pipeline-state file was replaced with a
-small recovery-plan status record because the recovery goal explicitly retains
-that file.
-
-No requirements, BDD, architecture obligation, test plan, task, bundle, trace
-projection, or Spec Trace validation was added after the recovery goal.
 
 ## Validation Evidence
 
@@ -134,10 +121,7 @@ docs/design/surfaces/board-filter-bar.mockups.md
 docs/design/surfaces/board-filter-bar.spec.md
 ```
 
-The user-provided `pipeline-agent-prompt.md` and `goal-prompt.md` were preserved.
-No commit was created.
-
 ## User Review
 
-Approve the MDT-199 architecture package to close the architecture gate for
-MDT-200. Until approval, keep MDT-199 `In Progress` and MDT-200 `Proposed`.
+User Review approved the architecture package. The MDT-200 architecture gate
+is closed; start MDT-200 through its implementation pipeline.
