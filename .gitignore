@@ -117,3 +117,6 @@ spec-trace*.md
 /*.txt
 incidents/
 nohup.out
+
+# ignore agent prompts
+**/*prompt*.md
