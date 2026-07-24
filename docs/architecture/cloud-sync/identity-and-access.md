@@ -183,7 +183,8 @@ sequenceDiagram
   C->>A: Launch IdP login if no valid session
   A-->>C: Short-lived application token
   C-->>S: Token
-  S->>W: Coordination request with token
+  S->>A: Coordination request with cf-access-token
+  A->>W: Forward request with Cf-Access-Jwt-Assertion
   W->>W: Validate assertion and membership
   W-->>S: Typed result
   S-->>B: Local operation result

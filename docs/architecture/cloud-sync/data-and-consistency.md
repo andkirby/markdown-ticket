@@ -442,5 +442,9 @@ Re-enabling preserves the cloud counter and requires a fresh membership probe.
 | Local completed journal entries | Removed immediately after confirmed success |
 | Local failed journal entries | Until recovery or explicit operator retirement |
 
+Project-lifetime idempotency retention intentionally supersedes MDT-198's
+tentative prune-after-window note. A delayed replay must resolve to its original
+reservation rather than allocate a second number.
+
 Before deleting a cloud project, operations must export coordination data and
 confirm the canonical Markdown repository remains usable.

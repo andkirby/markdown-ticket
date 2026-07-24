@@ -55,7 +55,7 @@ flowchart TB
 
   subgraph Cloud["Cloud Sync Coordination"]
     Access["Cloudflare Access"]
-    Worker["cloud-sync-worker"]
+    Worker["cloud/src/cloudflare Worker adapter"]
     D1["D1 coordination database"]
     Access --> Worker
     Worker --> D1
@@ -82,10 +82,10 @@ contracts with local consumers.
 | `cli/` | Thin interactive adapter using the shared coordinator |
 | `mcp-server/` | Thin human stdio or machine HTTP credential adapter |
 | `src/` | Sync status, projection stub, conflict, and stale-state presentation |
-| `cloud-sync-worker/identity/` | Access assertion validation and principal mapping |
-| `cloud-sync-worker/application/` | Authorization and coordination use cases |
-| `cloud-sync-worker/repositories/` | Prepared D1 statements and transactional batches |
-| `cloud-sync-worker/migrations/` | Versioned D1 schema |
+| `cloud/src/cloudflare/application/` | Authorization and coordination use cases |
+| `cloud/src/cloudflare/access/` | Access assertion validation and principal mapping |
+| `cloud/src/cloudflare/d1/` | Prepared D1 statements and transactional batches |
+| `cloud/migrations/` | Versioned D1 schema |
 
 No presentation adapter may scan for or allocate a number itself. The Worker
 does not import filesystem-aware shared services.
@@ -114,6 +114,12 @@ operation journal survives these boundaries:
 
 Every recovery reuses the original idempotency key or reservation. Retired
 numbers are never reused.
+
+The journal is stored below `CONFIG_DIR/cloud-sync/journals/` with one file and
+lock per physical-repository routing hash plus cloud project UUID. The
+operator-controlled credential-origin allowlist is the global
+`cloudSync.allowedOrigins` field in `CONFIG_DIR/config.toml`; project files
+cannot expand it.
 
 ### Projection
 
@@ -191,6 +197,8 @@ detach procedure in the data owner document.
 - Worker version rollback never implies D1 rollback.
 - D1 Time Travel restore is a destructive incident procedure.
 - Weekly external export and quarterly restore drill supplement Time Travel.
+- A Wrangler-managed 15-minute Cron Trigger runs bounded reservation-expiry
+  and audit-retention maintenance through the Worker's scheduled entry point.
 - Durable D1 audit is in the mutation batch; sampled Worker logs are
   diagnostics.
 - Initial rollout is project allowlisted and requires deployed latency,
@@ -206,7 +214,7 @@ detach procedure in the data owner document.
 | Durable local journal | Recovers every network/filesystem crash boundary | Adds device-local state and lock ownership to the shared service |
 | Polling | No realtime stateful subsystem | Visibility is interval-bound and creates recurring reads |
 | Explicit projection conflict | Prevents silent mirror overwrite | Human or operator intervention is required for divergent writers |
-| Separate Worker workspace | Clear deployment and secret boundary | Adds one package and release pipeline to the monorepo |
+| Separate Cloudflare Worker workspace | Clear deployment and secret boundary from the local Markdown application | Adds one package and release pipeline to the monorepo |
 
 Rejected first-slice alternatives remain Git-only allocation, cloud-authoritative
 headers, offline local allocation with rename, automatic last-writer-wins

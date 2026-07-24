@@ -120,3 +120,6 @@ nohup.out
 
 # ignore agent prompts
 **/*prompt*.md
+
+# pipeline json
+**/*.pipeline-state.json
