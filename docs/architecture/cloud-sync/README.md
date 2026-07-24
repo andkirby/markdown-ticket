@@ -1,0 +1,228 @@
+# Cloud Sync Architecture
+
+## Status and Scope
+
+This namespace owns Markdown Ticket's opt-in cloud coordination architecture.
+It is the implementation contract for `MDT-200`, based on the approved
+`MDT-198` research and D1-binding proof of concept.
+
+Cloud sync solves two problems only:
+
+1. allocate collision-free ticket numbers across separate clones and processes;
+2. expose a versioned, read-only projection of ticket headers between Git
+   synchronizations.
+
+It does not make the cloud a ticket-content authority.
+
+## Non-Negotiable Invariants
+
+1. Cloud binding is opt-in per project.
+2. The cloud owns project membership and the per-project number counter.
+3. Markdown/Git owns ticket bodies and projected header fields.
+4. Header data flows one way, from Markdown into a versioned cloud mirror.
+5. A cloud-bound create requires the coordination service. It never falls back
+   to local numbering and never renames a ticket after creation.
+6. The first slice excludes presence, offline allocation, body sync,
+   WebSockets, and Durable Objects.
+7. Clients discover changes by polling.
+8. Audit records distinguish human principals from machine principals.
+9. Ticket numbers are never reused. Abandoned reservations create acceptable
+   gaps.
+
+## Ownership Map
+
+| Concern | Authority | Owner document |
+| --- | --- | --- |
+| Ticket body and projected headers | Local Markdown/Git | This document |
+| Cloud project UUID and binding | Cloud project plus local non-secret binding | [Data and consistency](data-and-consistency.md) |
+| Membership and roles | Cloud coordination service | [Identity and access](identity-and-access.md) |
+| Ticket-number allocation | D1 transaction | [Data and consistency](data-and-consistency.md) |
+| Projection version and polling cursor | D1 coordination records | [Data and consistency](data-and-consistency.md) |
+| Credentials and principal attribution | Cloudflare Access and client credential providers | [Identity and access](identity-and-access.md) |
+| Deployment, migrations, recovery, and telemetry | Cloud sync operator | [Operations](operations.md) |
+| Local checkout, worktree, and routing identity | Existing local project services | [Project identity](../project-identity-and-worktrees.md) |
+
+## System Context
+
+```mermaid
+C4Context
+  title Markdown Ticket cloud coordination - system context
+
+  Person(human, "Team member", "Creates and views tickets from a local Markdown Ticket client")
+  System(mdt, "Markdown Ticket", "Local browser, CLI, MCP, server, and shared services over Markdown/Git")
+  System(cloudSync, "Cloud Sync Coordination", "Allocates numbers, authorizes members, and mirrors headers")
+  System_Ext(access, "Cloudflare Access", "Authenticates human and machine callers")
+  System_Ext(git, "Git remote", "Shares canonical Markdown ticket content")
+
+  Rel(human, mdt, "Creates tickets and reviews projected teammate state")
+  Rel(mdt, access, "Obtains a human or service application token", "HTTPS")
+  Rel(mdt, cloudSync, "Reserves numbers, publishes headers, and polls projections", "JSON/HTTPS")
+  Rel(cloudSync, access, "Validates Access application assertions", "JWT/JWKS")
+  Rel(mdt, git, "Pushes and pulls canonical ticket files", "Git")
+```
+
+## Container Architecture
+
+```mermaid
+C4Container
+  title Markdown Ticket cloud coordination - containers
+
+  Person(member, "Team member", "Human operating one local clone")
+  System_Ext(access, "Cloudflare Access", "Identity-aware edge policy and application tokens")
+
+  System_Boundary(local, "Local Markdown Ticket installation") {
+    Container(adapters, "Presentation adapters", "React, CLI, MCP, Express", "Collect intent and render results without cloud business rules")
+    Container(shared, "Shared cloud-sync application service", "TypeScript library", "Owns create orchestration, retry journal, polling merge, and cloud/local strategy selection")
+    Container(files, "Project files", "Markdown and Git", "Canonical ticket bodies and projected headers")
+    Container(state, "Local operation journal", "Atomic JSON under CONFIG_DIR", "Stores non-secret pending reservation and projection retries")
+  }
+
+  System_Boundary(cloud, "Cloud Sync Coordination") {
+    Container(worker, "Coordination API", "Cloudflare Worker", "Validates principals, authorizes membership, and executes coordination use cases")
+    ContainerDb(d1, "Coordination database", "Cloudflare D1", "Projects, members, reservations, projections, idempotency, and audit")
+  }
+
+  Rel(member, adapters, "Requests creates and views board state")
+  Rel(adapters, shared, "Delegates typed operations")
+  Rel(shared, files, "Creates and reads canonical tickets", "Filesystem")
+  Rel(shared, state, "Persists and resumes incomplete operations", "Atomic file I/O")
+  Rel(shared, access, "Obtains Access application credentials", "cloudflared or service headers")
+  Rel(shared, worker, "Calls protected coordination endpoints", "JSON/HTTPS")
+  Rel(worker, access, "Validates issuer, audience, signature, and expiry", "JWT/JWKS")
+  Rel(worker, d1, "Executes prepared statements and transactional batches", "D1 binding")
+```
+
+## Production Package Boundary
+
+`MDT-200` adds one deployable package and extends existing shared contracts:
+
+```text
+cloud-sync-worker/                         new deployable workspace
+  src/
+    index.ts                               Worker entry point and error boundary
+    http/router.ts                         versioned route matching only
+    identity/AccessPrincipalResolver.ts    JWT verification and principal mapping
+    application/                           allocation, membership, projection use cases
+    repositories/                          D1 prepared statements and batch execution
+    audit/AuditRecorder.ts                 redacted structured audit records
+  migrations/                              ordered Wrangler D1 migrations
+  test/                                    Workers-runtime and D1 integration tests
+  wrangler.jsonc                           environments, bindings, observability
+
+domain-contracts/src/cloud-sync/           pure request, response, and port types
+shared/services/cloud-sync/                application orchestration and strategies
+server/                                    thin browser-facing adapter and token provider
+cli/                                       thin interactive adapter
+mcp-server/                                thin interactive or machine adapter
+src/                                       board state and sync-status presentation only
+```
+
+Dependency direction remains:
+
+```text
+domain-contracts <- shared <- server | cli | mcp-server | src
+domain-contracts <- cloud-sync-worker
+```
+
+The Worker does not import filesystem-aware `shared` services. Presentation
+adapters do not implement allocation, retry, polling merge, or projection
+conflict rules. Those rules belong to `shared/services/cloud-sync/`.
+
+## Worker Components
+
+```mermaid
+C4Component
+  title Cloud Sync Coordination Worker - components
+
+  System_Ext(access, "Cloudflare Access", "Protects the public API and signs application assertions")
+  ContainerDb(d1, "Coordination database", "Cloudflare D1", "Stores project coordination records")
+
+  Container_Boundary(worker, "Coordination Worker") {
+    Component(router, "HTTP Router", "TypeScript", "Matches versioned routes and validates transport shape")
+    Component(identity, "Access Principal Resolver", "TypeScript and Web Crypto", "Validates JWT and maps human or machine principal")
+    Component(authz, "Membership Authorizer", "TypeScript", "Checks project role without disclosing hidden projects")
+    Component(useCases, "Coordination Use Cases", "TypeScript", "Owns allocation, acknowledgement, projection, membership, and recovery")
+    Component(repositories, "D1 Repositories", "Prepared SQL", "Executes scoped reads and transactional batches")
+    Component(audit, "Audit Recorder", "TypeScript", "Builds redacted durable audit events")
+  }
+
+  Rel(access, router, "Forwards admitted requests with assertion", "HTTPS")
+  Rel(router, identity, "Requests verified principal")
+  Rel(router, useCases, "Delegates validated command")
+  Rel(useCases, authz, "Requires project capability")
+  Rel(authz, repositories, "Reads scoped membership")
+  Rel(useCases, repositories, "Reads and mutates coordination state")
+  Rel(useCases, audit, "Builds mutation outcome")
+  Rel(audit, repositories, "Adds audit statement to mutation batch")
+  Rel(repositories, d1, "Runs prepared statements", "D1 binding")
+```
+
+## Local Integration Contract
+
+`TicketService` receives a strategy selected from explicit project
+configuration:
+
+- `LocalTicketNumberAllocator` preserves current local-only behavior.
+- `CloudTicketNumberAllocator` calls the shared cloud coordinator.
+- `CloudProjectionClient` publishes derived headers and polls changes.
+- `CloudCredentialProvider` is injected per runtime; credentials are never part
+  of domain requests or stored in the project file.
+- `CloudOperationJournal` persists non-secret operation state before a network
+  call and uses atomic write-and-rename.
+
+The journal key combines a device-local hash of the physical Git common
+directory (or canonical project root outside Git) with the cloud project UUID.
+That device-local routing key is never sent as cloud identity. Linked worktrees
+for one physical repository therefore resume the same pending operation while
+independent clones remain independent clients.
+
+## Project Binding
+
+`MDT-200` adds this non-secret project configuration:
+
+```toml
+[project.cloudSync]
+enabled = true
+projectId = "018f5e6c-6f32-7c5b-9e76-97c7c769c123"
+serviceUrl = "https://mdt-sync.example.com"
+pollIntervalSeconds = 15
+```
+
+| Selector | Exposure | Rule |
+| --- | --- | --- |
+| `project.cloudSync.enabled` | `guarded` | Enable only after project provisioning and a successful identity/membership probe |
+| `project.cloudSync.projectId` | `fileOnly` | UUID issued by the cloud; immutable while enabled |
+| `project.cloudSync.serviceUrl` | `fileOnly` | Absolute HTTPS origin; no path, query, fragment, credentials, or wildcard; must exactly match an operator-controlled allowed origin |
+| `project.cloudSync.pollIntervalSeconds` | `guarded` | Integer from 5 through 300; default 15 |
+
+No Access token, service-token ID, service-token secret, JWT, team domain, or
+audience tag is permitted in `.mdt-config.toml` or the global project registry.
+`MDT-200` must add these selectors to the canonical configuration
+specification and inspection registry before exposing them.
+
+The local runtime also has an operator-controlled cloud-sync origin allowlist.
+A repository-controlled `serviceUrl` is accepted only on an exact match.
+Headless adapters refuse to attach service-token headers to any other origin,
+which prevents a modified project file from redirecting credentials.
+
+## Delivery Slices for MDT-200
+
+| Slice | Outcome | Exit gate |
+| --- | --- | --- |
+| 1. Protected skeleton | Worker package, D1 binding, migrations, Access validation, typed errors | Real human and service-token assertions validated in a protected staging Worker |
+| 2. Membership and allocation | Project provisioning, roles, reservation, idempotency, acknowledgement | Deployed concurrency, replay, isolation, denial, and recovery tests pass |
+| 3. Shared local orchestration | Strategy seam, durable operation journal, browser/CLI/MCP credential providers | Local-only regressions stay green; cloud create has no fallback path |
+| 4. Projection and polling | Versioned push, tombstone/restore, cursor polling, board projection stubs | Two independent clients observe updates inside the configured interval |
+| 5. Operational release | Alerts, migration checks, backup/restore/export drill, disable path | [Operations](operations.md) release gate is recorded against staging and production |
+
+## Evidence Boundary
+
+`MDT-198` proved the lifecycle model and a production-shaped static D1 batch
+locally: 50 concurrent unique allocations and 10 concurrent idempotent replays
+passed. It did not prove production capacity, multi-isolate latency, or real
+Cloudflare Access behavior. Those remain deployment gates for `MDT-200`, not
+claims of this architecture.
+
+Current official Cloudflare behavior used by this design was checked on
+2026-07-24. Source URLs and operational consequences are listed in
+[Operations](operations.md).

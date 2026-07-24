@@ -12,6 +12,10 @@ It is not a multi-instance cloud security design. If the app is later deployed b
 - `MDT-172` owns authorization and sharing: deciding which projects a principal can see and which actions are allowed.
 - `MDT-156` remains the baseline hardening layer for CORS, filesystem restrictions, security headers, and dependency patches.
 
+Opt-in cloud project membership is a separate boundary. It preserves this
+local single-owner model and is defined in
+[`cloud-sync/identity-and-access.md`](cloud-sync/identity-and-access.md).
+
 ## Core Decision
 
 Authentication and sharing must stay separate.
