@@ -85,7 +85,7 @@ export const ActiveFilterChips: React.FC<ActiveFilterChipsProps> = ({
   return (
     <div
       data-testid="active-filter-chips"
-      className={`flex flex-wrap items-center gap-1.5 ${marginClass}`}
+      className={`flex flex-wrap items-center gap-2 ${marginClass}`}
       role="group"
       aria-label="Active filters"
     >
