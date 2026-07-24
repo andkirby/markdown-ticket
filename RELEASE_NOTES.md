@@ -1,5 +1,31 @@
 # Release Notes
 
+## v0.26.0 (2026-07-22)
+
+### New Features
+
+**Faceted Board Filters (MDT-196)**
+- Filter the board by status, priority, assignee, and type — not just free-text search
+- The filter lives inline in the app header as a compact "Filter · N" button, so the header stays exactly one row
+- Clicking it opens a popover with a two-column facet grid; toggling checkboxes narrows the board live
+- On mobile, the filter opens as a full-width modal from the Hamburger Menu, with active filters shown as a chip strip under the column header
+- Filter state persists across page reloads (localStorage)
+
+### Improvements
+
+**Correct Dev/Preview Ports**
+- The dev server now correctly runs on port 3075 and the backend on 3001, matching what the docs have always said
+- `strictPort` prevents the server from silently shifting to a different port when 3075 is busy
+
+### Bug Fixes
+
+**Relative Document Links Now Resolve (MDT-150)**
+- Fixed SmartLink rendering relative `.md` links as 404 URLs in the documents view
+- Links like `core-layout.md` now resolve correctly to the query-parameter URL format
+
+**Backend Config Type Safety**
+- Fixed an invalid `ChangeEvent<number>` type in the configuration editing API that could cause runtime errors when editing numeric settings
+
 ## v0.25.0 (2026-07-19)
 
 ### New Features
