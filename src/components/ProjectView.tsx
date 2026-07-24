@@ -1,6 +1,8 @@
+import type { TicketFilters } from '@mdt/domain-contracts'
 import type { Project } from '@mdt/shared/models/Project'
 import type { SortPreferences } from '../config/sorting'
 import type { Ticket } from '../types'
+import type { FacetKey } from '../utils/ticketFilters'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { authFetch } from '../auth/authFetch'
 import { sortTickets } from '../utils/sorting'
@@ -18,6 +20,12 @@ interface ProjectViewProps {
   onTicketClick: (ticket: Ticket) => void
   selectedProject: Project | null
   tickets?: Ticket[]
+  /** Pre-filtered tickets from the app-level filter state (MDT-196). */
+  filteredTickets?: Ticket[]
+  /** Active filter state for the mobile chip strip (MDT-196). */
+  mobileFilters?: TicketFilters
+  /** Remove a filter value from the mobile chip strip (MDT-196). */
+  onRemoveMobileFilter?: (facet: FacetKey, value: string) => void
   updateTicketOptimistic?: (ticketCode: string, updates: Partial<Ticket>) => Promise<Ticket>
   viewMode?: ViewMode
   loading?: boolean
@@ -25,7 +33,7 @@ interface ProjectViewProps {
   canWrite?: boolean
 }
 
-export default function ProjectView({ onTicketClick, selectedProject, tickets: propTickets, updateTicketOptimistic, viewMode: externalViewMode, loading: propLoading, sortPreferences, canWrite = true }: ProjectViewProps) {
+export default function ProjectView({ onTicketClick, selectedProject, tickets: propTickets, filteredTickets: propFilteredTickets, mobileFilters, onRemoveMobileFilter, updateTicketOptimistic, viewMode: externalViewMode, loading: propLoading, sortPreferences, canWrite = true }: ProjectViewProps) {
   // Use external viewMode if provided, otherwise fall back to internal state
   const [internalViewMode] = useState<ViewMode>(() => {
     const saved = localStorage.getItem(VIEW_MODE_KEY)
@@ -123,6 +131,9 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
                 enableProjectSwitching={false}
                 selectedProject={selectedProject}
                 tickets={propTickets || []}
+                filteredTickets={propFilteredTickets || propTickets || []}
+                mobileFilters={mobileFilters}
+                onRemoveMobileFilter={onRemoveMobileFilter}
                 loading={loading}
                 sortPreferences={sortPreferences}
                 canWrite={canWrite}
