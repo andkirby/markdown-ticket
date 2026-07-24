@@ -133,7 +133,9 @@ window "Board — narrow desktop header":
 MDT mobile shows one column at a time (`useBoardLayout.ts`, `max-width: 768px`). The inline search
 and Filter button are hidden on `< sm`. Filter entry is a "Filter · N" row in the Hamburger Menu,
 wrapped in separators (`border-t` / `border-b`) to group it as a distinct section. Tapping it opens
-a bottom-anchored filter sheet (two-column facet grid + chips).
+a full-width filter modal (reuses the shared `<Modal>` primitive — same pattern as the project
+browser). The search input sits in the pinned header; below it a result-count + Clear-all row, then
+the two-column facet grid + chips inside a ScrollArea.
 
 ### Mobile — hamburger menu open (Filter row with separators)
 
@@ -207,13 +209,14 @@ window "Board — Mobile (filters active)":
         chip "Bug"
 ```
 
-### Mobile — filter sheet open (bottom-anchored, from Hamburger Menu)
+### Mobile — filter modal open (full-width modal, from Hamburger Menu)
 
-Opens a bottom-anchored filter sheet (thumb-reachable). Same two-column facet grid as desktop,
-plus a free-text input, active chips, and a Done button.
+Opens a full-width filter modal (reuses the shared `<Modal>` primitive, same pattern as the project
+browser). The "Filter" headline + search input sit in the pinned header. Below: a result-count +
+Clear-all row, then the two-column facet grid + chips inside a ScrollArea.
 
 ```wireloom
-window "Board — Mobile (filter sheet)":
+window "Board — Mobile (filter modal)":
   navbar:
     leading:
       backbutton "MDT"
@@ -221,12 +224,14 @@ window "Board — Mobile (filter sheet)":
       text "Change Requests"
     trailing:
       button "☰" id="hamburger-open"
-  sheet position=bottom title="Filter":
+  modal title="Filter" close-button=true:
+    header:
+      text "Filter" id="m-title"
+      input placeholder="Filter tickets..." id="m-freetext"
     panel:
       row:
         text "Showing 3 of 180 tickets" id="m-result-count"
         button "Clear all" id="m-clear-all"
-      input placeholder="Filter tickets..." id="m-freetext"
       grid cols=2:
         text "Type" id="m-section-type"
         text "Status" id="m-section-status"
@@ -243,7 +248,6 @@ window "Board — Mobile (filter sheet)":
       row:
         chip "In Progress" id="m-chip-1"
         chip "High" id="m-chip-2"
-      button "Done" id="m-done"
 ```
 
 ## Annotations
@@ -252,12 +256,12 @@ window "Board — Mobile (filter sheet)":
 |---------|------------------|-------|
 | `freetext` / `freetext-narrow` / `m-freetext` | re-skinned FilterControls, inline in header (right-aligned on desktop) | Preserves multi-term AND. Becomes `TicketFilters.query`. Shrinks on narrow desktop, never wraps. |
 | `filter-btn` / `filter-btn-active` / `filter-btn-open` | compact Filter button, inline in header (right-aligned) | Label: `Filter` when no facet values, `Filter · N` when N active. The ONLY header-level facet summary. |
-| `result-count` / `m-result-count` | `<span aria-live="polite">` inside popover/sheet | `Showing N of M tickets`. Lives in the popover, NOT in the header. |
+| `result-count` / `m-result-count` | `<span aria-live="polite">` inside popover (desktop) / below modal header (mobile) | `Showing N of M tickets`. Lives inside the popover/modal, NOT in the header. |
 | `section-type` / `section-status` / `section-priority` / `section-assignee` | FacetSection in a two-column `grid grid-cols-2 gap-x-4` | Row 1: Type \| Status. Row 2: Priority \| Assignee. Multi-select; OR within, AND across. |
-| `chip-*` / `m-chip-*` | reuses `Badge` styling (`gap-2`), inside popover/sheet (or mobile strip) | Removable. In the popover on desktop; in the column-header strip on mobile. |
-| `clear-all` / `m-clear-all` | text button, inside popover/sheet header row | Returns empty `TicketFilters`. |
+| `chip-*` / `m-chip-*` | reuses `Badge` styling (`gap-2`), inside popover/modal (or mobile strip) | Removable. In the popover on desktop; in the column-header strip on mobile. |
+| `clear-all` / `m-clear-all` | text button, inside popover header row / below modal header | Returns empty `TicketFilters`. Single instance — no duplication on mobile. |
 | `mobile-col-switcher` | existing `DropdownMenu` in Column header | Unchanged. MobileChipStrip sits below it on mobile. |
-| `menu-filter` | Hamburger Menu "Filter · N" row, wrapped in `separator` | Opens the bottom-anchored filter sheet. Separators above and below group it as a distinct menu section. |
-| `hamburger*` | existing Hamburger Menu | Mobile entry: "Filter · N" row (with separators) opens the bottom-anchored filter sheet. |
+| `menu-filter` | Hamburger Menu "Filter · N" row, wrapped in `separator` | Opens the full-width filter modal. Separators above and below group it as a distinct menu section. |
+| `hamburger*` | existing Hamburger Menu | Mobile entry: "Filter · N" row (with separators) opens the full-width filter modal. |
 | `m-clear` | chip-strip trailing clear (mobile) | Removes all active values from the strip in one tap. |
-| `m-done` | Done button at the bottom of the mobile filter sheet | Closes the sheet (apply is live; Done is for dismiss). |
+| `m-done` | close (✕) button in the mobile filter modal header | Closes the modal (apply is live; close is for dismiss). |

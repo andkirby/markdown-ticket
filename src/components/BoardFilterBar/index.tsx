@@ -4,9 +4,10 @@ import type { FacetKey } from '../../utils/ticketFilters'
 import type { FacetOption } from './FacetSection'
 import { CRPriorities, CRStatuses, CRTypes } from '@mdt/domain-contracts'
 import * as React from 'react'
-import { createPortal } from 'react-dom'
 import { countActiveFilters } from '../../utils/ticketFilters'
 import { FilterControls } from '../FilterControls'
+import { Modal, ModalBody, ModalHeader } from '../ui/Modal'
+import { ScrollArea } from '../ui/scroll-area'
 import { ActiveFilterChips } from './ActiveFilterChips'
 import { FacetSection } from './FacetSection'
 import { FilterButton } from './FilterButton'
@@ -138,7 +139,72 @@ function DesktopInlineFilterBar({
   )
 }
 
-// ─── Shared popover content (desktop popover + mobile sheet) ──────────────────
+// ─── Shared sub-components (desktop popover + mobile modal) ───────────────────
+
+/** Resolve the selected values array for a facet from the filter state. */
+function useSelectedFor(filters: TicketFilters) {
+  return React.useCallback((facet: FacetKey): string[] => {
+    const raw = filters[facet]
+    if (!raw)
+      return []
+    return Array.isArray(raw) ? raw : [raw]
+  }, [filters])
+}
+
+/** The "Showing N of M tickets" count (left) + Clear all button (right). */
+function ResultCountRow({ countText, onClearAll }: { countText: string, onClearAll: () => void }) {
+  return (
+    <div className="flex items-center justify-between m-2">
+      <span
+        data-testid="filter-result-count"
+        aria-live="polite"
+        className="text-xs text-muted-foreground"
+      >
+        {countText}
+      </span>
+      <button
+        type="button"
+        data-testid="clear-all-filters"
+        onClick={onClearAll}
+        className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
+        aria-label="Clear all filters"
+      >
+        Clear all
+      </button>
+    </div>
+  )
+}
+
+/**
+ * Two-column facet grid (surface spec §"Facet grid order").
+ * Column-major fill: Row 1 = Type | Status, Row 2 = Priority | Assignee.
+ */
+function FacetGrid({
+  filters,
+  facetOptions,
+  onToggle,
+}: {
+  filters: TicketFilters
+  facetOptions: { assignee: string[], phaseEpic: string[], impactAreas: string[] }
+  onToggle: (facet: FacetKey, value: string) => void
+}) {
+  const selectedFor = useSelectedFor(filters)
+  const assigneeOpts: FacetOption[] = facetOptions.assignee.map(v => ({
+    value: v,
+    label: v === '__none__' ? 'Unassigned' : v,
+  }))
+
+  return (
+    <div className="grid grid-cols-2 gap-x-4">
+      <FacetSection facet="type" label="Type" options={TYPE_OPTIONS} selected={selectedFor('type')} onToggle={onToggle} />
+      <FacetSection facet="status" label="Status" options={STATUS_OPTIONS} selected={selectedFor('status')} onToggle={onToggle} />
+      <FacetSection facet="priority" label="Priority" options={PRIORITY_OPTIONS} selected={selectedFor('priority')} onToggle={onToggle} />
+      <FacetSection facet="assignee" label="Assignee" options={assigneeOpts} selected={selectedFor('assignee')} onToggle={onToggle} />
+    </div>
+  )
+}
+
+// ─── Desktop popover content (result count + grid + chips) ────────────────────
 
 function FilterPopoverContent({
   countText,
@@ -155,54 +221,22 @@ function FilterPopoverContent({
   onRemove: (facet: FacetKey, value: string) => void
   onClearAll: () => void
 }) {
-  const selectedFor = (facet: FacetKey): string[] => {
-    const raw = filters[facet]
-    if (!raw)
-      return []
-    return Array.isArray(raw) ? raw : [raw]
-  }
-
-  const assigneeOpts: FacetOption[] = facetOptions.assignee.map(v => ({
-    value: v,
-    label: v === '__none__' ? 'Unassigned' : v,
-  }))
-
   return (
     <>
-      <div className="flex items-center justify-between mb-2">
-        <span
-          data-testid="filter-result-count"
-          aria-live="polite"
-          className="text-xs text-muted-foreground"
-        >
-          {countText}
-        </span>
-        <button
-          type="button"
-          data-testid="clear-all-filters"
-          onClick={onClearAll}
-          className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
-          aria-label="Clear all filters"
-        >
-          Clear all
-        </button>
-      </div>
-      {/*
-        Two-column facet grid (surface spec §"Facet grid order").
-        Column-major fill: Row 1 = Type | Status, Row 2 = Priority | Assignee.
-      */}
-      <div className="grid grid-cols-2 gap-x-4">
-        <FacetSection facet="type" label="Type" options={TYPE_OPTIONS} selected={selectedFor('type')} onToggle={onToggle} />
-        <FacetSection facet="status" label="Status" options={STATUS_OPTIONS} selected={selectedFor('status')} onToggle={onToggle} />
-        <FacetSection facet="priority" label="Priority" options={PRIORITY_OPTIONS} selected={selectedFor('priority')} onToggle={onToggle} />
-        <FacetSection facet="assignee" label="Assignee" options={assigneeOpts} selected={selectedFor('assignee')} onToggle={onToggle} />
-      </div>
+      <ResultCountRow countText={countText} onClearAll={onClearAll} />
+      <FacetGrid filters={filters} facetOptions={facetOptions} onToggle={onToggle} />
       <ActiveFilterChips filters={filters} onRemove={onRemove} variant="inline" />
     </>
   )
 }
 
-// ─── Mobile: bottom-anchored filter sheet (opened from Hamburger Menu) ────────
+// ─── Mobile: full-width filter modal (opened from Hamburger Menu) ─────────────
+//
+// Reuses the shared <Modal> primitive (the same one ProjectBrowserPanel uses),
+// with size="full" (100% width). The search input sits in the pinned ModalHeader
+// (same pattern as the project browser's inline search). Below it: a result-count
+// + Clear-all row, then the two-column FacetGrid + chips inside a Radix ScrollArea
+// that fills the remaining 80dvh-constrained body.
 
 function MobileFilterSheet({
   open,
@@ -225,85 +259,46 @@ function MobileFilterSheet({
   onToggle: (facet: FacetKey, value: string) => void
   onClearAll: () => void
 }) {
-  // Close on Escape (matches desktop popover close semantics).
-  React.useEffect(() => {
-    if (!open)
-      return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape')
-        onOpenChange(false)
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [open, onOpenChange])
-
-  if (!open)
-    return null
-
   const countText = filteredCount === totalCount
     ? `Showing all ${totalCount} ticket${totalCount === 1 ? '' : 's'}`
     : `Showing ${filteredCount} of ${totalCount} tickets`
 
-  return createPortal(
-    <>
-      {/* click-away overlay */}
-      <div
-        className="fixed inset-0 z-[60] bg-black/20"
-        onClick={() => onOpenChange(false)}
-        aria-hidden="true"
-      />
-      {/*
-        Bottom-anchored sheet (thumb-reachable). Portaled to document.body so it
-        escapes the header's backdrop-blur containing block (which would trap
-        position:fixed descendants inside the header's box). Scroll inherits the
-        project-standard global ::-webkit-scrollbar via overflow-y-auto.
-      */}
-      <div
-        role="dialog"
-        aria-label="Filter tickets"
-        data-testid="mobile-filter-sheet"
-        className="fixed inset-x-0 bottom-0 z-[61] max-h-[80vh] overflow-y-auto bg-popover border-t border-border rounded-t-lg shadow-lg p-4"
-      >
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium">Filter</span>
-          <button
-            type="button"
-            data-testid="mobile-clear-all"
-            onClick={onClearAll}
-            className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
-          >
-            Clear all
-          </button>
-        </div>
-        <input
-          type="text"
-          placeholder="Filter tickets..."
-          value={filters.query ?? ''}
-          onChange={e => onQueryChange(e.target.value)}
-          data-testid="mobile-filter-query"
-          className="w-full pl-3 pr-3 py-1 text-sm border border-border rounded-md bg-background mb-2"
-        />
-        <FilterPopoverContent
-          countText={countText}
-          filters={filters}
-          facetOptions={facetOptions}
-          onToggle={onToggle}
-          onRemove={() => {}}
-          onClearAll={onClearAll}
-        />
-        <div className="flex justify-end mt-2">
-          <button
-            type="button"
-            data-testid="mobile-filter-done"
-            onClick={() => onOpenChange(false)}
-            className="text-sm px-3 py-1 rounded-md bg-primary text-primary-foreground hover:bg-primary/90"
-          >
-            Done
-          </button>
-        </div>
-      </div>
-    </>,
-    document.body,
+  return (
+    <Modal
+      isOpen={open}
+      onClose={() => onOpenChange(false)}
+      size="full"
+      data-testid="mobile-filter-sheet"
+    >
+      <ModalBody className="modal__body--constrained">
+        <ModalHeader
+          onClose={() => onOpenChange(false)}
+          closeTestId="mobile-filter-done"
+          className="flex items-center gap-3"
+        >
+          <h1 className="modal__headline shrink-0">Filter</h1>
+          <div className="relative min-w-0 flex-1">
+            <input
+              type="text"
+              placeholder="Filter tickets..."
+              value={filters.query ?? ''}
+              onChange={e => onQueryChange(e.target.value)}
+              data-testid="mobile-filter-query"
+              className="project-search w-full"
+            />
+          </div>
+        </ModalHeader>
+        {/* Result-count row (single Clear-all — no duplication) */}
+        <ResultCountRow countText={countText} onClearAll={onClearAll} />
+        {/* Facet grid + chips scroll inside the constrained body */}
+        <ScrollArea type="hover" scrollHideDelay={600} className="flex-1 min-h-0 overflow-hidden">
+          <div className="p-4">
+            <FacetGrid filters={filters} facetOptions={facetOptions} onToggle={onToggle} />
+            <ActiveFilterChips filters={filters} onRemove={() => {}} variant="inline" />
+          </div>
+        </ScrollArea>
+      </ModalBody>
+    </Modal>
   )
 }
 
