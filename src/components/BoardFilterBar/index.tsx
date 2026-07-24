@@ -1,18 +1,18 @@
 import type { TicketFilters } from '@mdt/domain-contracts'
 import type { Ticket } from '../../types'
 import type { FacetKey } from '../../utils/ticketFilters'
-import type { FacetOption } from './FacetDropdown'
+import type { FacetOption } from './FacetSection'
 import { CRPriorities, CRStatuses, CRTypes } from '@mdt/domain-contracts'
 import * as React from 'react'
+import { createPortal } from 'react-dom'
 import { countActiveFilters } from '../../utils/ticketFilters'
 import { FilterControls } from '../FilterControls'
-import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
 import { ActiveFilterChips } from './ActiveFilterChips'
 import { FacetSection } from './FacetSection'
 import { FilterButton } from './FilterButton'
 
 export interface BoardFilterBarProps {
-  /** Whether to render the desktop inline chrome (search + FilterButton) or the mobile popover-only entry. */
+  /** Whether to render the desktop inline chrome (search + FilterButton) or the mobile filter sheet. */
   desktop?: boolean
   filters: TicketFilters
   totalCount: number
@@ -26,12 +26,7 @@ export interface BoardFilterBarProps {
   onToggle: (facet: FacetKey, value: string) => void
   onRemove: (facet: FacetKey, value: string) => void
   onClearAll: () => void
-  /**
-   * Mobile-only: when provided, renders a "Filter · N" trigger that opens a
-   * Popover containing the facet sections. Parent controls whether this shows.
-   */
-  mobileTrigger?: React.ReactNode
-  /** Controlled open state for the mobile filter popover (parent owns it). */
+  /** Controlled open state for the mobile filter sheet (parent owns it). */
   mobilePopoverOpen?: boolean
   onMobilePopoverOpenChange?: (open: boolean) => void
 }
@@ -50,7 +45,8 @@ const TYPE_OPTIONS: FacetOption[] = CRTypes.map(v => ({ value: v, label: v }))
  * row (surface spec: "never a second line").
  *
  * **Mobile** (`desktop=false`): no inline chrome; the parent (HamburgerMenu)
- * hosts a "Filter · N" trigger that opens a Popover with the same content.
+ * hosts a "Filter · N" trigger that opens a bottom-anchored filter sheet with
+ * the same content.
  *
  * Both modes read/write the SAME `TicketFilters` reducer.
  *
@@ -66,7 +62,6 @@ export const BoardFilterBar: React.FC<BoardFilterBarProps> = ({
   onToggle,
   onRemove,
   onClearAll,
-  mobileTrigger,
   mobilePopoverOpen = false,
   onMobilePopoverOpenChange,
 }) => {
@@ -86,10 +81,9 @@ export const BoardFilterBar: React.FC<BoardFilterBarProps> = ({
   }
 
   return (
-    <MobileFilterPopover
+    <MobileFilterSheet
       open={mobilePopoverOpen}
       onOpenChange={onMobilePopoverOpenChange ?? (() => {})}
-      trigger={mobileTrigger}
       filters={filters}
       totalCount={totalCount}
       filteredCount={filteredCount}
@@ -112,7 +106,7 @@ function DesktopInlineFilterBar({
   onToggle,
   onRemove,
   onClearAll,
-}: Omit<BoardFilterBarProps, 'desktop' | 'mobileTrigger' | 'mobilePopoverOpen' | 'onMobilePopoverOpenChange'>) {
+}: Omit<BoardFilterBarProps, 'desktop' | 'mobilePopoverOpen' | 'onMobilePopoverOpenChange'>) {
   const [popoverOpen, setPopoverOpen] = React.useState(false)
   const activeCount = countActiveFilters(filters)
 
@@ -144,7 +138,7 @@ function DesktopInlineFilterBar({
   )
 }
 
-// ─── Shared popover content (desktop popover + mobile popover) ────────────────
+// ─── Shared popover content (desktop popover + mobile sheet) ──────────────────
 
 function FilterPopoverContent({
   countText,
@@ -193,21 +187,26 @@ function FilterPopoverContent({
           Clear all
         </button>
       </div>
-      <FacetSection facet="status" label="Status" options={STATUS_OPTIONS} selected={selectedFor('status')} onToggle={onToggle} />
-      <FacetSection facet="priority" label="Priority" options={PRIORITY_OPTIONS} selected={selectedFor('priority')} onToggle={onToggle} />
-      <FacetSection facet="assignee" label="Assignee" options={assigneeOpts} selected={selectedFor('assignee')} onToggle={onToggle} />
-      <FacetSection facet="type" label="Type" options={TYPE_OPTIONS} selected={selectedFor('type')} onToggle={onToggle} />
+      {/*
+        Two-column facet grid (surface spec §"Facet grid order").
+        Column-major fill: Row 1 = Type | Status, Row 2 = Priority | Assignee.
+      */}
+      <div className="grid grid-cols-2 gap-x-4">
+        <FacetSection facet="type" label="Type" options={TYPE_OPTIONS} selected={selectedFor('type')} onToggle={onToggle} />
+        <FacetSection facet="status" label="Status" options={STATUS_OPTIONS} selected={selectedFor('status')} onToggle={onToggle} />
+        <FacetSection facet="priority" label="Priority" options={PRIORITY_OPTIONS} selected={selectedFor('priority')} onToggle={onToggle} />
+        <FacetSection facet="assignee" label="Assignee" options={assigneeOpts} selected={selectedFor('assignee')} onToggle={onToggle} />
+      </div>
       <ActiveFilterChips filters={filters} onRemove={onRemove} variant="inline" />
     </>
   )
 }
 
-// ─── Mobile: popover opened from Hamburger Menu ───────────────────────────────
+// ─── Mobile: bottom-anchored filter sheet (opened from Hamburger Menu) ────────
 
-function MobileFilterPopover({
+function MobileFilterSheet({
   open,
   onOpenChange,
-  trigger,
   filters,
   totalCount,
   filteredCount,
@@ -218,7 +217,6 @@ function MobileFilterPopover({
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
-  trigger?: React.ReactNode
   filters: TicketFilters
   totalCount: number
   filteredCount: number
@@ -227,14 +225,45 @@ function MobileFilterPopover({
   onToggle: (facet: FacetKey, value: string) => void
   onClearAll: () => void
 }) {
+  // Close on Escape (matches desktop popover close semantics).
+  React.useEffect(() => {
+    if (!open)
+      return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape')
+        onOpenChange(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open, onOpenChange])
+
+  if (!open)
+    return null
+
   const countText = filteredCount === totalCount
     ? `Showing all ${totalCount} ticket${totalCount === 1 ? '' : 's'}`
     : `Showing ${filteredCount} of ${totalCount} tickets`
 
-  return (
-    <Popover open={open} onOpenChange={onOpenChange}>
-      {trigger && <PopoverTrigger asChild>{trigger}</PopoverTrigger>}
-      <PopoverContent align="start" className="w-80 max-h-[70vh] overflow-y-auto" data-testid="mobile-filter-popover">
+  return createPortal(
+    <>
+      {/* click-away overlay */}
+      <div
+        className="fixed inset-0 z-[60] bg-black/20"
+        onClick={() => onOpenChange(false)}
+        aria-hidden="true"
+      />
+      {/*
+        Bottom-anchored sheet (thumb-reachable). Portaled to document.body so it
+        escapes the header's backdrop-blur containing block (which would trap
+        position:fixed descendants inside the header's box). Scroll inherits the
+        project-standard global ::-webkit-scrollbar via overflow-y-auto.
+      */}
+      <div
+        role="dialog"
+        aria-label="Filter tickets"
+        data-testid="mobile-filter-sheet"
+        className="fixed inset-x-0 bottom-0 z-[61] max-h-[80vh] overflow-y-auto bg-popover border-t border-border rounded-t-lg shadow-lg p-4"
+      >
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium">Filter</span>
           <button
@@ -272,8 +301,9 @@ function MobileFilterPopover({
             Done
           </button>
         </div>
-      </PopoverContent>
-    </Popover>
+      </div>
+    </>,
+    document.body,
   )
 }
 

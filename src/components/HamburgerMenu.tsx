@@ -130,6 +130,12 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
     void onLock?.()
   }
 
+  /** Close the menu first, then open the mobile filter sheet (MDT-196). */
+  const handleOpenFilters = () => {
+    setIsOpen(false)
+    onOpenFilters?.()
+  }
+
   const showLockAction = accessMode === 'owner-admin' && canUseOwnerEndpoints && Boolean(onLock)
   const showReadOnlyStatus = accessMode === 'read-only'
   const accessIndicatorClass = accessIndicator === 'owner'
@@ -267,12 +273,13 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
               </div>
             )}
 
-            {/* MDT-196: Filter entry — mobile only, mirrors the sort-in-hamburger pattern */}
+            {/* MDT-196: Filter entry — mobile only, wrapped in border separators to
+                group it as a distinct menu section (mirrors the Sort block pattern). */}
             {onOpenFilters && (
-              <div className="sm:hidden">
+              <div className="sm:hidden border-t border-b border-border">
                 <button
                   data-testid="hamburger-filter-row"
-                  onClick={onOpenFilters}
+                  onClick={handleOpenFilters}
                   className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
                 >
                   <ArrowUpDown className="h-4 w-4 mr-2 opacity-0" aria-hidden="true" />

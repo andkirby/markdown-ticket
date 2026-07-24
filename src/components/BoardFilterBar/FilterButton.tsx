@@ -52,11 +52,16 @@ export const FilterButton: React.FC<FilterButtonProps> = ({
             onClick={() => onOpenChange(false)}
             aria-hidden="true"
           />
+          {/*
+            Right-aligned popover (surface spec: anchored below-right of the button).
+            w-[440px] fits the two-column facet grid. Scroll inherits the project-standard
+            global ::-webkit-scrollbar (6px, gray-400 thumb, gray-100 track) via overflow-y-auto.
+          */}
           <div
             role="dialog"
             aria-label="Filter tickets"
             data-testid="filter-popover"
-            className="absolute top-full left-0 mt-1 z-50 w-80 max-h-[70vh] overflow-y-auto bg-popover border border-border rounded-lg shadow-lg p-3"
+            className="absolute top-full right-0 mt-1 z-50 w-[440px] max-h-[70vh] overflow-y-auto bg-popover border border-border rounded-lg shadow-lg p-3"
           >
             {children}
           </div>
