@@ -1,6 +1,8 @@
+import type { TicketFilters } from '@mdt/domain-contracts'
 import type { Project } from '@mdt/shared/models/Project'
 import type { SortPreferences } from '../config/sorting'
 import type { Status, Ticket } from '../types'
+import type { FacetKey } from '../utils/ticketFilters'
 import { CRStatus } from '@mdt/domain-contracts'
 import * as React from 'react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -8,13 +10,13 @@ import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import { getColumnForStatus, getVisibleColumns } from '../config'
 import { getSortPreferences, setSortPreferences } from '../config/sorting'
-import { useBoardFilters } from '../hooks/useBoardFilters'
+// MDT-196: BoardFilterBar + useBoardFilters + countActiveFilters moved to App.tsx header.
+// Board now consumes pre-filtered tickets via the `filteredTickets` prop.
 import { useBoardLayout } from '../hooks/useBoardLayout'
 import { useProjectManager } from '../hooks/useProjectManager'
 import { useToast } from '../hooks/useToast'
 import { sortTickets } from '../utils/sorting'
-import { countActiveFilters } from '../utils/ticketFilters'
-import { BoardFilterBar } from './BoardFilterBar'
+// MDT-196: countActiveFilters + BoardFilterBar moved to App.tsx
 import Column from './Column'
 import { HamburgerMenu } from './HamburgerMenu'
 import { SortControls } from './SortControls'
@@ -29,6 +31,12 @@ interface BoardProps {
   showHeader?: boolean
   selectedProject?: Project | null
   tickets?: Ticket[]
+  /** Pre-filtered tickets from the app-level filter state (MDT-196). When omitted, Board falls back to `tickets`. */
+  filteredTickets?: Ticket[]
+  /** Active filter state for the mobile chip strip (MDT-196). */
+  mobileFilters?: TicketFilters
+  /** Remove a filter value from the mobile chip strip (MDT-196). */
+  onRemoveMobileFilter?: (facet: FacetKey, value: string) => void
   loading?: boolean
   sortPreferences?: SortPreferences
   canWrite?: boolean
@@ -43,6 +51,9 @@ const BoardContent: React.FC<BoardProps> = ({
   showHeader = true,
   selectedProject: propSelectedProject,
   tickets: propTickets,
+  filteredTickets: propFilteredTickets,
+  mobileFilters,
+  onRemoveMobileFilter,
   loading: propLoading,
   sortPreferences: propSortPreferences,
   canWrite = true,
@@ -52,9 +63,7 @@ const BoardContent: React.FC<BoardProps> = ({
   )
   const { error: showError } = useToast()
 
-  // Mobile filter popover open state (owned by Board so the HamburgerMenu can
-  // trigger it and close-on-navigate can reset it). MDT-196 mobile chrome.
-  const [mobileFilterOpen, setMobileFilterOpen] = useState(false)
+  // MDT-196: mobileFilterOpen state moved to App.tsx (header owns all filter chrome).
 
   // Use custom hook for board layout management (mobile column switching)
   const { isMobile, setActiveColumnIndex, shouldShowColumn } = useBoardLayout()
@@ -111,17 +120,10 @@ const BoardContent: React.FC<BoardProps> = ({
     }))
   }, [baseTickets, localTicketUpdates])
 
-  // Faceted filter state (MDT-196): single TicketFilters reducer + persistence +
-  // derived facet menus + filtered tickets. Replaces the old filterQuery useState
-  // and inline filteredTickets useMemo.
-  const {
-    filters: boardFilters,
-    filteredTickets,
-    facetOptions: boardFacetOptions,
-    toggleFilter: toggleBoardFilter,
-    setQuery: setBoardFilterQuery,
-    clearAll: clearBoardFilters,
-  } = useBoardFilters(tickets)
+  // MDT-196: filter state is now owned by App.tsx (rendered in the header).
+  // Board consumes pre-filtered tickets via the `filteredTickets` prop.
+  // Fallback to `tickets` when the prop is absent (backward compat / standalone use).
+  const filteredTickets = propFilteredTickets ?? tickets
 
   // IMPORTANT: Always use hookData functions for state management operations
   // This ensures drag-and-drop operations work correctly even when using prop data
@@ -490,19 +492,6 @@ const BoardContent: React.FC<BoardProps> = ({
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <div className="hidden sm:block">
-              <BoardFilterBar
-                desktop
-                filters={boardFilters}
-                totalCount={tickets.length}
-                filteredCount={filteredTickets.length}
-                facetOptions={boardFacetOptions}
-                onQueryChange={setBoardFilterQuery}
-                onToggle={toggleBoardFilter}
-                onRemove={(facet, value) => toggleBoardFilter(facet, value)}
-                onClearAll={clearBoardFilters}
-              />
-            </div>
             <SortControls
               preferences={sortPreferences}
               onPreferencesChange={handleSortPreferencesChange}
@@ -527,21 +516,6 @@ const BoardContent: React.FC<BoardProps> = ({
                   onAddProject={() => console.warn('Add Project clicked from Board')}
                   onEditProject={() => console.warn('Edit Project clicked from Board')}
                   hasActiveProject={true}
-                  filterCount={countActiveFilters(boardFilters)}
-                  onOpenFilters={() => setMobileFilterOpen(true)}
-                />
-                <BoardFilterBar
-                  desktop={false}
-                  filters={boardFilters}
-                  totalCount={tickets.length}
-                  filteredCount={filteredTickets.length}
-                  facetOptions={boardFacetOptions}
-                  onQueryChange={setBoardFilterQuery}
-                  onToggle={toggleBoardFilter}
-                  onRemove={(facet, value) => toggleBoardFilter(facet, value)}
-                  onClearAll={clearBoardFilters}
-                  mobilePopoverOpen={mobileFilterOpen}
-                  onMobilePopoverOpenChange={setMobileFilterOpen}
                 />
               </>
             )}
@@ -549,57 +523,8 @@ const BoardContent: React.FC<BoardProps> = ({
         </div>
       )}
 
-      {/* MDT-196: filter bar for single-project mode (showHeader=false).
-          Desktop bar renders above the board grid; mobile entry is a trigger
-          button that opens the shared mobile filter popover. The mobile chip
-          strip renders in the column header (MobileChipStrip) for both modes. */}
-      {!showHeader && (
-        <>
-          <div className="hidden sm:block px-2 pt-1">
-            <BoardFilterBar
-              desktop
-              filters={boardFilters}
-              totalCount={tickets.length}
-              filteredCount={filteredTickets.length}
-              facetOptions={boardFacetOptions}
-              onQueryChange={setBoardFilterQuery}
-              onToggle={toggleBoardFilter}
-              onRemove={(facet, value) => toggleBoardFilter(facet, value)}
-              onClearAll={clearBoardFilters}
-            />
-          </div>
-          {/* Mobile-only filter trigger + popover (single-project mode) */}
-          <div className="sm:hidden px-2 pt-1">
-            <BoardFilterBar
-              desktop={false}
-              filters={boardFilters}
-              totalCount={tickets.length}
-              filteredCount={filteredTickets.length}
-              facetOptions={boardFacetOptions}
-              onQueryChange={setBoardFilterQuery}
-              onToggle={toggleBoardFilter}
-              onRemove={(facet, value) => toggleBoardFilter(facet, value)}
-              onClearAll={clearBoardFilters}
-              mobilePopoverOpen={mobileFilterOpen}
-              onMobilePopoverOpenChange={setMobileFilterOpen}
-              mobileTrigger={(
-                <button
-                  type="button"
-                  data-testid="mobile-filter-trigger"
-                  className="inline-flex items-center gap-1 border border-border rounded-md px-3 py-1 text-sm bg-background"
-                >
-                  Filter
-                  {countActiveFilters(boardFilters) > 0 && (
-                    <span className="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-xs">
-                      {countActiveFilters(boardFilters)}
-                    </span>
-                  )}
-                </button>
-              )}
-            />
-          </div>
-        </>
-      )}
+      {/* MDT-196: filter UI moved to App.tsx header — Board no longer renders
+          filter controls. The board consumes pre-filtered tickets via props. */}
 
       {/* Board Grid - render regardless of showHeader */}
       <div data-testid="kanban-board" className="board-container flex-1 min-h-0">
@@ -635,9 +560,9 @@ const BoardContent: React.FC<BoardProps> = ({
                 currentColumnIndex={actualColumnIndex}
                 onColumnSwitch={setActiveColumnIndex}
                 isMobileView={isMobile}
-                // MDT-196: mobile chip strip filter props
-                mobileFilters={boardFilters}
-                onRemoveMobileFilter={(facet, value) => toggleBoardFilter(facet, value)}
+                // MDT-196: mobile chip strip filter props (from App header)
+                mobileFilters={mobileFilters}
+                onRemoveMobileFilter={onRemoveMobileFilter}
               />
             )
           })}

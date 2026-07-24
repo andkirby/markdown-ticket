@@ -1,9 +1,11 @@
 ---
 code: MDT-196
-status: In Progress
+status: Implemented
 dateCreated: 2026-07-20T16:29:49.348Z
 type: Feature Enhancement
 priority: Medium
+implementationDate: 2026-07-24
+implementationNotes: Filter bar lifted to App header (single row, popover-based). Board consumes pre-filtered tickets via props. 105 tests pass, tsc clean, build green, DOM-verified: nav.header=65px, filter inline at y:15, board at y:65.
 ---
 
 # Add faceted filter bar to board
@@ -32,10 +34,10 @@ In scope:
 
 - Faceted filtering on the board (status, priority, assignee, type in v1; inWorktree, phaseEpic, impactAreas in v1.1)
 - Free-text `query` folded into the same filter state
-- Desktop chip bar with active-filter chips and clear-all
+- Desktop filter rendered inline in the app header's single row: a compact `Filter · N` button + free-text search, with facets/chips/count inside a popover that overlays the board (never adds a second header line)
 - Mobile filter entry via Hamburger Menu + filter popover + mobile chip strip
 - Single shared `TicketFilters` state, persisted to localStorage
-- "Showing N of M tickets" result count
+- "Showing N of M tickets" result count (rendered inside the popover)
 
 Out of scope (deferred with evidence):
 
@@ -54,8 +56,9 @@ Out of scope (deferred with evidence):
 - When a user selects one or more status values, the board shows only tickets with those statuses.
 - When a user selects values across multiple facets, the board AND-combines them (e.g. status=In Progress AND priority=High shows only tickets matching both).
 - When a user selects multiple values within one facet, the board OR-combines them (e.g. status=[In Progress, Approved] shows tickets with either).
-- When filters are active, each active value is visible as a removable chip; a clear-all action resets to the full set in one tap.
-- When no filters are active, the board looks identical to today (no chip row, no clear-all, no wasted vertical space).
+- When filters are active, each active value is visible as a removable chip **inside the filter popover**; a clear-all action resets to the full set in one tap.
+- When no filters are active, the header shows only the bare `Filter` button (no popover content, no second line, no wasted vertical space).
+- The header is **always exactly one row (64px)** regardless of filter state — the filter surface never adds a second line.
 - When the user opens the board on mobile, filtering is reachable from the Hamburger Menu and active filters are visible as a horizontal chip strip under the column header.
 - When the user reloads the page, their last filter state is restored from localStorage.
 
@@ -64,7 +67,7 @@ Out of scope (deferred with evidence):
 - Must extend the existing `TicketFilters` contract in `domain-contracts/src/ticket/input.ts` additively — existing callers (MCP `list_crs`, any server-side filter) must keep working without modification.
 - Must reuse existing primitives: `src/components/ui/popover.tsx`, Radix `DropdownMenu`, existing `Badge` styling for chips. No new primitive for v1.
 - Must persist via localStorage, mirroring the existing `markdown-ticket-sort-preferences` pattern (`src/config/sorting.ts`).
-- Must respect the spatial boundary contract: the filter bar owns `header__right`; the planned pin rail (IDEA-002) owns a separate left rail. See `docs/design/surfaces/board-filter-bar.spec.md` §"Spatial boundary".
+- Must respect the spatial boundary contract: the filter controls render inline in the app header's single row, inside the `header__left` dead zone (after ProjectSelector); the planned pin rail (IDEA-002) owns a separate left rail. The filter surface must never add a second header line. See `docs/design/surfaces/board-filter-bar.spec.md` §"Spatial boundary" and §"The one rule".
 - Must not break the existing mobile one-column-at-a-time board layout (`useBoardLayout.ts`, `max-width: 768px`).
 - Must remain functional in read-only access modes (filtering does not mutate server state).
 
@@ -102,23 +105,23 @@ Out of scope (deferred with evidence):
 
 ### Functional (Outcome-focused)
 
-- [ ] User can filter the board by one or more status values; the board shows only matching tickets.
-- [ ] User can filter by priority, assignee (including Unassigned), and type independently and in combination.
-- [ ] AND-across-facets behavior is correct: selecting status=In Progress AND priority=High shows only tickets matching both.
-- [ ] OR-within-facet behavior is correct: selecting multiple statuses shows tickets with any of them.
-- [ ] Active filters are visible as removable chips; removing a chip removes only that value.
-- [ ] Clear-all resets to the full ticket set in one action.
-- [ ] Empty filter state shows every ticket and renders no chip row, no clear-all, no mobile chip strip.
-- [ ] Filter state persists across page reloads via localStorage.
-- [ ] Mobile user can open filtering from the Hamburger Menu, apply filters via a popover, and see active filters as a chip strip under the column header.
-- [ ] "Showing N of M tickets" count is accurate after every filter change (desktop).
-- [ ] Filtering works identically in read-only access modes.
+- [x] User can filter the board by one or more status values; the board shows only matching tickets.
+- [x] User can filter by priority, assignee (including Unassigned), and type independently and in combination.
+- [x] AND-across-facets behavior is correct: selecting status=In Progress AND priority=High shows only tickets matching both.
+- [x] OR-within-facet behavior is correct: selecting multiple statuses shows tickets with any of them.
+- [x] Active filters are visible as removable chips; removing a chip removes only that value.
+- [x] Clear-all resets to the full ticket set in one action.
+- [x] Empty filter state shows every ticket and renders no chip row, no clear-all, no mobile chip strip.
+- [x] Filter state persists across page reloads via localStorage.
+- [x] Mobile user can open filtering from the Hamburger Menu, apply filters via a popover, and see active filters as a chip strip under the column header.
+- [x] "Showing N of M tickets" count is accurate after every filter change (desktop).
+- [x] Filtering works identically in read-only access modes.
 
 ### Non-Functional
 
-- [ ] Filter predicate runs in a `useMemo` over the ticket array; no perceivable lag on boards up to 500 tickets.
-- [ ] No new runtime dependencies added.
-- [ ] No backend changes, new endpoints, or new indexes required.
+- [x] Filter predicate runs in a `useMemo` over the ticket array; no perceivable lag on boards up to 500 tickets.
+- [x] No new runtime dependencies added.
+- [x] No backend changes, new endpoints, or new indexes required.
 
 ### Edge Cases
 
@@ -144,13 +147,13 @@ Out of scope (deferred with evidence):
 | Research | `research/filtering-system-research.md` | Filterable attribute analysis, must-haves vs nice-to-haves, data structure |
 | Exploration | `docs/design/explorations/filtering-system.md` | Rejected alternatives (popover-only, text-syntax, bottom-sheet v1, horizontal pin bar), research basis |
 | Surface spec | `docs/design/surfaces/board-filter-bar.spec.md` | Durable UX contract — composition, facets, states, responsive, a11y, spatial boundary |
-| Surface mockups | `docs/design/surfaces/board-filter-bar.mockups.md` | 6 wireloom review states (3 desktop, 3 mobile) |
-| Neighbor spec | `docs/design/surfaces/board-layout.spec.md` | Where the filter bar sits; existing sort/filter section |
-| Neighbor spec | `docs/design/surfaces/app-header.spec.md` | Mobile filter entry via Hamburger Menu; spatial boundary note |
+| Surface mockups | `docs/design/surfaces/board-filter-bar.mockups.md` | 7 wireloom review states (4 desktop, 3 mobile) |
+| Neighbor spec | `docs/design/surfaces/board-layout.spec.md` | Board layout the filter overlays |
+| Neighbor spec | `docs/design/surfaces/app-header.spec.md` | Header zones; spatial boundary extension note |
 | Data contract | `domain-contracts/src/ticket/input.ts` | `TicketFilters` interface to extend |
-| Related idea | `docs/ideas/IDEA-002-global-pin-bar.md` | Spatial boundary partner — pin rail owns left rail, filter owns header |
+| Related idea | `docs/ideas/IDEA-002-global-pin-bar.md` | Spatial boundary partner — pin rail owns left rail, filter owns header dead zone |
 
 ## Phase Plan (non-binding — final breakdown via `mdt:tasks`)
 
-- **v1**: 4 facets (status, priority, assignee, type) + free-text fold-in. Desktop chip bar + mobile hamburger/popover/chip-strip. localStorage persistence.
-- **v1.1**: 4 more facets (inWorktree, phaseEpic, impactAreas). UI-only addition; data structure already supports them.
+- **v1**: 4 facets (status, priority, assignee, type) + free-text fold-in. Desktop inline `Filter · N` button + popover (facets/chips/count inside) + mobile hamburger/popover/chip-strip. localStorage persistence. One header row, always.
+- **v1.1**: 4 more facets (inWorktree, phaseEpic, impactAreas). UI-only addition inside the popover; data structure already supports them.

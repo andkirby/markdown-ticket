@@ -22,6 +22,10 @@ interface SecondaryHeaderProps {
   canManageProjects?: boolean
   canManageSharing?: boolean
   canUseOwnerEndpoints?: boolean
+  /** MDT-196: active filter count for the mobile Hamburger Menu "Filter · N" row. */
+  filterCount?: number
+  /** MDT-196: opens the mobile filter popover from the Hamburger Menu. */
+  onOpenFilters?: () => void
 }
 
 export const SecondaryHeader: React.FC<SecondaryHeaderProps> = ({
@@ -39,6 +43,8 @@ export const SecondaryHeader: React.FC<SecondaryHeaderProps> = ({
   canManageProjects = true,
   canManageSharing = canManageProjects,
   canUseOwnerEndpoints = canManageProjects,
+  filterCount = 0,
+  onOpenFilters,
 }) => {
   return (
     <div className="flex items-center space-x-1 sm:space-x-4">
@@ -65,6 +71,8 @@ export const SecondaryHeader: React.FC<SecondaryHeaderProps> = ({
         canManageProjects={canManageProjects}
         canManageSharing={canManageSharing}
         canUseOwnerEndpoints={canUseOwnerEndpoints}
+        filterCount={filterCount}
+        onOpenFilters={onOpenFilters}
       />
     </div>
   )

@@ -5,82 +5,132 @@ Exploration (rejected alternatives): `../explorations/filtering-system.md`
 
 Wireloom is structural — it shows composition and state, not exact chip widths or pixel spacing.
 
-## Desktop
+**The one rule: the filter never adds a second header line.** The search input and the compact
+Filter button sit inline in the single header row, in the `header__left` dead zone after
+ProjectSelector. Facets, chips, and result count live inside the popover that opens *from* the
+button — overlaying the board, never pushing it down.
 
-### Default state — no filters active
+## Desktop — header is always one row
+
+### Idle (no filters)
+
+The header carries: logo · view switcher · project selector · **search input** · **Filter button** ·
+(gap) · sort · hamburger. One row. No "Showing all N tickets" line — that lives in the popover.
 
 ```wireloom
-window "Board — Filter bar (default)":
+window "Board — header (idle)":
   panel:
     row:
+      text "▣ MDT" id="logo"
+      segmented id="view-switcher":
+        segment "Board" selected
+        segment "List"
+        segment "Docs"
+      text "Markdown Ticket Board" id="proj-sel"
       input placeholder="Filter tickets..." id="freetext"
-      button "Status" id="facet-status"
-      button "Priority" id="facet-priority"
-      button "Assignee" id="facet-assignee"
-      button "Type" id="facet-type"
+      button "Filter" id="filter-btn"
       spacer
       button "Sort: Key ↓" id="sort"
-      button "Refresh" id="refresh"
-    text "Showing all 14 tickets" id="result-count"
+      button "☰" id="hamburger"
 ```
 
-### Active filters — chips visible
+### Facets active (button label changes, still one row)
+
+Only the FilterButton label changes — `Filter` → `Filter · 3`. The header row is identical otherwise.
+Chips and count are NOT in the header; they're in the popover.
 
 ```wireloom
-window "Board — Filter bar (active)":
+window "Board — header (facets active)":
   panel:
     row:
-      input placeholder="Filter tickets..." id="freetext"
-      button "Status: 2" id="facet-status-active"
-      button "Priority: 1" id="facet-priority-active"
-      button "Assignee" id="facet-assignee"
-      button "Type" id="facet-type"
+      text "▣ MDT" id="logo"
+      segmented id="view-switcher-active":
+        segment "Board" selected
+        segment "List"
+        segment "Docs"
+      text "Markdown Ticket Board" id="proj-sel"
+      input placeholder="Filter tickets..." id="freetext-active"
+      button "Filter · 3" id="filter-btn-active"
       spacer
       button "Sort: Key ↓" id="sort"
-      button "Refresh" id="refresh"
-    row:
-      chip "In Progress" id="chip-1"
-      chip "Approved" id="chip-2"
-      chip "High" id="chip-3"
-      button "Clear all" id="clear-all"
-    text "Showing 3 of 14 tickets" id="result-count-active"
+      button "☰" id="hamburger"
 ```
 
-### Facet dropdown open (priority)
+### Filter popover open (overlays board, does not add a row)
+
+The popover opens below-left of the FilterButton. It overlays the board columns. The header row
+itself is unchanged. Inside: result count, facet sections (checkboxes), active chips, clear-all.
 
 ```wireloom
-window "Board — Filter bar (priority open)":
+window "Board — filter popover open":
   panel:
     row:
-      input placeholder="Filter tickets..." id="freetext"
-      button "Status: 2" id="facet-status-active"
-      button "Priority: 1" id="facet-priority-open"
-      button "Assignee" id="facet-assignee"
-      button "Type" id="facet-type"
+      text "▣ MDT" id="logo"
+      segmented id="view-switcher-open":
+        segment "Board" selected
+        segment "List"
+        segment "Docs"
+      text "Markdown Ticket Board" id="proj-sel"
+      input placeholder="Filter tickets..." id="freetext-open"
+      button "Filter · 1" id="filter-btn-open"
       spacer
       button "Sort: Key ↓" id="sort"
-  sheet position=bottom title="Priority":
+      button "☰" id="hamburger"
+  sheet position=bottom title="Filter":
     panel:
-      checkbox "Critical" id="val-critical" label-right
-      checkbox "High" id="val-high" checked label-right
-      checkbox "Medium" id="val-medium" label-right
-      checkbox "Low" id="val-low" label-right
-      row justify=end:
-        button "Done" primary id="priority-done"
+      text "Showing 3 of 180 tickets" id="result-count"
+      text "Status" id="section-status"
+      checkbox "In Progress" id="st-progress" checked label-right
+      checkbox "Proposed" id="st-proposed" label-right
+      checkbox "Approved" id="st-approved" label-right
+      text "Priority" id="section-priority"
+      checkbox "Critical" id="pr-crit" label-right
+      checkbox "High" id="pr-high" label-right
+      checkbox "Medium" id="pr-med" label-right
+      checkbox "Low" id="pr-low" label-right
+      text "Assignee" id="section-assignee"
+      checkbox "Unassigned" id="as-none" label-right
+      checkbox "kirby" id="as-kirby" label-right
+      text "Type" id="section-type"
+      checkbox "Bug Fix" id="ty-bug" label-right
+      checkbox "Feature Enhancement" id="ty-feat" label-right
+      row:
+        chip "In Progress" id="chip-1"
+        button "Clear all" id="clear-all"
 ```
 
-## Mobile
+### Narrow desktop (640–900px) — search shrinks, never wraps
 
-MDT mobile shows one column at a time (`useBoardLayout.ts`, `max-width: 768px`). The desktop filter
-bar is hidden on `< sm` and the filter entry lives in the Hamburger Menu — same pattern as mobile sort
-today (`app-header.spec.md` items 6–7). These three mockups show the states the spec contracts.
-
-### Mobile — default (no filters), one-column-at-a-time
-
-No chip strip when nothing is active — vertical space is precious on mobile.
+On a narrow desktop the search input shrinks toward its min-width (120px) before the header would
+consider wrapping. The Filter button stays. One row, always.
 
 ```wireloom
-window "Board — Mobile (no filters)":
+window "Board — narrow desktop header":
+  panel:
+    row:
+      text "▣" id="logo-sm"
+      segmented id="view-switcher-narrow":
+        segment "Board" selected
+        segment "List"
+        segment "Docs"
+      text "MDT" id="proj-sel-sm"
+      input placeholder="Filter..." id="freetext-narrow"
+      button "Filter · 2" id="filter-btn-narrow"
+      spacer
+      button "Key ↓" id="sort-narrow"
+      button "☰" id="hamburger"
+```
+
+## Mobile — entry via Hamburger Menu
+
+MDT mobile shows one column at a time (`useBoardLayout.ts`, `max-width: 768px`). The inline search
+and Filter button are hidden on `< sm`. Filter entry is a "Filter · N" row in the Hamburger Menu
+that opens the same popover.
+
+### Mobile — idle (one column, no strip)
+
+```wireloom
+window "Board — Mobile (idle)":
   navbar:
     leading:
       backbutton "MDT"
@@ -102,8 +152,8 @@ window "Board — Mobile (no filters)":
 
 ### Mobile — filters active (chip strip under column header)
 
-When filters are active, a horizontally-scrollable chip strip appears under the column header. The
-Hamburger Menu row carries the count so the state is discoverable with the menu closed.
+When facets are active, a horizontal chip strip appears under the column switcher. The Hamburger
+row carries the count for discoverability with the menu closed.
 
 ```wireloom
 window "Board — Mobile (filters active)":
@@ -128,10 +178,9 @@ window "Board — Mobile (filters active)":
         chip "Bug"
 ```
 
-### Mobile — filter Popover open (from Hamburger Menu)
+### Mobile — filter popover open (from Hamburger Menu)
 
-Filtering is reached via the Hamburger Menu, same pattern as mobile sort. Opens a `Popover` (existing
-primitive) — not a bottom sheet, which would require a new component (deferred per spec).
+Opens the same `FilterPopover` component, anchored to the Hamburger Menu row.
 
 ```wireloom
 window "Board — Mobile (filter popover)":
@@ -144,31 +193,30 @@ window "Board — Mobile (filter popover)":
       button "☰" id="hamburger-open"
   sheet position=bottom title="Filter":
     panel:
+      text "Showing 3 of 180 tickets" id="m-result-count"
       input placeholder="Filter tickets..." id="m-freetext"
       text "Status" id="m-section-status"
-      checkbox "Proposed" id="m-st-proposed" label-right
       checkbox "In Progress" id="m-st-progress" checked label-right
-      checkbox "Approved" id="m-st-approved" checked label-right
+      checkbox "Proposed" id="m-st-proposed" label-right
       text "Priority" id="m-section-priority"
-      checkbox "Critical" id="m-pr-crit" label-right
       checkbox "High" id="m-pr-high" checked label-right
       checkbox "Medium" id="m-pr-med" label-right
-      checkbox "Low" id="m-pr-low" label-right
-      row justify=end:
+      row:
+        chip "In Progress" id="m-chip-1"
+        chip "High" id="m-chip-2"
         button "Clear all" id="m-clear-all"
-        button "Done" primary id="m-done"
 ```
 
 ## Annotations
 
 | Element | Semantic Pattern | Notes |
 |---------|------------------|-------|
-| `freetext` / `m-freetext` | re-skinned FilterControls | Preserves current multi-term AND behavior. Becomes `TicketFilters.query`. |
-| `facet-status` / `facet-priority` / etc. | Radix DropdownMenu trigger | Label shows facet name when empty; `Status: N` when N values selected. |
-| `chip-*` / `m-chip-*` | reuses `Badge` styling | Removable; `aria-label="Remove filter: {facet} {value}"`. OR within a facet. |
-| `clear-all` / `m-clear-all` | text button | Single action: returns empty `TicketFilters`. Only renders when ≥1 chip. |
-| `result-count` | text below bar (desktop) | `Showing N of M tickets`. `aria-live="polite"`. Absent on mobile per spec. |
-| `priority-done` / `m-done` | primary button in dropdown/popover footer | Apply-on-close, not live, to match the existing mobile-sort interaction. |
-| `mobile-col-switcher` | existing `DropdownMenu` in Column header | Unchanged from `board-layout.spec.md`. MobileChipStrip sits below it. |
-| `hamburger` / `hamburger-active` / `hamburger-open` | existing Hamburger Menu | New "Filter · N" row added in the same block as mobile-only sort rows. |
-| `m-clear` | chip-strip trailing clear | Removes all active values from the strip in one tap (alternative to opening the popover). |
+| `freetext` / `freetext-narrow` / `m-freetext` | re-skinned FilterControls, inline in header | Preserves multi-term AND. Becomes `TicketFilters.query`. Shrinks on narrow desktop, never wraps. |
+| `filter-btn` / `filter-btn-active` / `filter-btn-open` | compact Filter button, inline in header | Label: `Filter` when no facet values, `Filter · N` when N active. The ONLY header-level facet summary. |
+| `result-count` / `m-result-count` | `<span aria-live="polite">` inside popover | `Showing N of M tickets`. Lives in the popover, NOT in the header. |
+| `section-status` / `section-priority` / etc. | FacetSection (checkbox list) inside popover | Multi-select; OR within, AND across. |
+| `chip-*` / `m-chip-*` | reuses `Badge` styling, inside popover (or mobile strip) | Removable. In the popover on desktop; in the column-header strip on mobile. |
+| `clear-all` / `m-clear-all` | text button, inside popover | Returns empty `TicketFilters`. |
+| `mobile-col-switcher` | existing `DropdownMenu` in Column header | Unchanged. MobileChipStrip sits below it on mobile. |
+| `hamburger*` | existing Hamburger Menu | Mobile entry: "Filter · N" row opens the same FilterPopover. |
+| `m-clear` | chip-strip trailing clear (mobile) | Removes all active values from the strip in one tap. |
