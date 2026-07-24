@@ -19,7 +19,7 @@ Related artifacts:
 - The `TicketFilters` state shape and its single predicate semantics (AND across facets, OR within a facet).
 - The free-text search input rendered inline in the header.
 - The compact "Filter · N" button rendered inline in the header, next to the search input.
-- The filter popover (facets + active chips + clear-all) that opens *from* the button, overlapping content, never pushing it down. Desktop uses a manual overlay panel anchored below-right of the button; mobile uses a bottom-anchored sheet opened from the Hamburger Menu.
+- The filter popover (facets + active chips + clear-all) that opens *from* the button, overlapping content, never pushing it down. Desktop uses a manual overlay panel anchored below-right of the button; mobile uses a full-width `<Modal>` (shared primitive) opened from the Hamburger Menu.
 - Mobile filter entry via the Hamburger Menu (wrapped in `border-t`/`border-b` separators to group it as a distinct menu section).
 - The "showing N of M" result count, rendered **inside the popover**, not as a header line.
 - Empty-filter invariant: an empty `TicketFilters` shows every ticket. No special cases.
@@ -63,7 +63,10 @@ BoardFilterBar (rendered into header__left, right-aligned within the dead zone)
 │       ├── ActiveFilterChips       (one chip per selected value; popover-only)
 │       └── ClearAll                (text button)
 └── MobileFilterEntry               (< sm only — hidden ≥ sm; rendered via Hamburger Menu)
-    └── (same FacetGrid + chips inside a bottom-anchored sheet)
+    └── MobileFilterModal           (shared <Modal> primitive, size="full")
+        ├── ModalHeader (pinned)    "Filter" + inline search input + close (✕)
+        ├── ResultCountRow          "Showing N of M" + Clear all
+        └── ScrollArea              FacetGrid + ActiveFilterChips (scrolls)
 ```
 
 **Critical: `ActiveFilterChips` and `ResultCount` render inside the popover, not in the header.** This is what guarantees no second line. When filters are active, the only header-level evidence is the button label changing to `Filter · N`. The full detail (chips, count, clear-all) lives behind the popover. Opening the popover overlays the board — it never inserts a row.
@@ -87,13 +90,13 @@ This order groups the enum-backed facets (type, status, priority — bounded, sh
 | FreeTextSearch | `src/components/FilterControls.tsx` (re-skinned) | — | desktop (`≥ sm`) inline in header |
 | FilterButton | `src/components/BoardFilterBar/FilterButton.tsx` | — | desktop (`≥ sm`) inline in header; label `Filter` or `Filter · N` |
 | FilterPopover | manual overlay panel (fixed overlay + absolute panel; see `FilterButton.tsx`) | — | on FilterButton click |
-| FacetGrid | `grid grid-cols-2 gap-x-4` container in `index.tsx` | — | inside popover / mobile sheet |
+| FacetGrid | `grid grid-cols-2 gap-x-4` container in `index.tsx` | — | inside popover (desktop) / modal ScrollArea (mobile) |
 | FacetSection | `src/components/BoardFilterBar/FacetSection.tsx` (checkbox list) | — | inside FacetGrid |
 | ActiveFilterChips | `src/components/BoardFilterBar/ActiveFilterChips.tsx` (reuses `Badge` styling, `gap-2`) | — | inside popover; ≥1 active value |
 | ResultCount | `<span aria-live="polite">` | — | inside popover; always rendered there |
 | ClearAll | text `button` | — | inside popover; ≥1 active value |
 | HamburgerMenuRow | existing Hamburger Menu (`src/components/HamburgerMenu.tsx`) | `app-header.spec.md` | `< sm` (FilterButton entry lives here on mobile, wrapped in separators) |
-| MobileFilterSheet | bottom-anchored overlay panel in `index.tsx` (`MobileFilterPopover`) | — | `< sm`, opened from Hamburger Menu |
+| MobileFilterModal | `<Modal size="full">` + `ModalHeader` + `ScrollArea` in `index.tsx` (`MobileFilterSheet`) | `src/MODALS.md` Pattern B | `< sm`, opened from Hamburger Menu |
 
 ## Source / Verification Anchors
 
@@ -105,7 +108,7 @@ This order groups the enum-backed facets (type, status, priority — bounded, sh
 | Header host | `src/App.tsx:428-480` | `Header`/`HeaderContent` — where the filter bar mounts (header__left centerSection) |
 | Header layout | `src/components/Header/header.css` | `header__left` / `header__right` zone definitions |
 | Mobile menu host | `src/components/HamburgerMenu.tsx` | hosts the "Filter · N" row on mobile (wrapped in `border-t`/`border-b` separators) |
-| Verification | `tests/e2e/board/board-filter.spec.ts` | add/remove/clear via popover; assert header height never grows; mobile sheet opens on tap |
+| Verification | `tests/e2e/board/board-filter.spec.ts` | add/remove/clear via popover; assert header height never grows; mobile modal opens on tap |
 
 ## Filter State Contract
 
@@ -160,10 +163,13 @@ All three elements render inline inside `header__left`, **right-aligned** within
 ### Mobile (< sm)
 
 - The inline FreeTextSearch and FilterButton are hidden on `< sm` (the header is too crowded with logo + view switcher + hamburger).
-- A **"Filter · N" row** in the Hamburger Menu opens the filter panel. This row is wrapped in separators (`border-t` above, `border-b` below) so the Filter block reads as a distinct section, matching the Sort block's separator pattern.
-- The filter panel is a **bottom-anchored sheet** (`fixed inset-x-0 bottom-0 max-h-[80vh] overflow-y-auto`) for thumb reachability — not a Radix Popover anchored to an invisible trigger. It is **portaled to `document.body`** via `createPortal` so it escapes the header's `backdrop-blur-xl` containing block (which would otherwise trap `position:fixed` descendants inside the header's box). It contains: a free-text input, the same two-column FacetGrid, ActiveFilterChips, and a Done button. Tapping the Filter row first closes the Hamburger Menu, then opens the sheet.
+- A **"Filter · N" row** in the Hamburger Menu opens the filter modal. This row is wrapped in separators (`border-t` above, `border-b` below) so the Filter block reads as a distinct section, matching the Sort block's separator pattern. Tapping the Filter row first closes the Hamburger Menu, then opens the modal.
+- The filter modal reuses the **shared `<Modal>` primitive** (`src/components/ui/Modal.tsx`) with `size="full"` (100% width), the same pattern ProjectBrowserPanel uses (`src/MODALS.md` — "Pattern B / constrained"). It is portaled to `document.body` by `<Modal>`, so it naturally escapes the header's `backdrop-blur-xl` containing block. Structure:
+  1. **ModalHeader** (pinned): "Filter" headline + inline free-text search input + close (✕) button.
+  2. **ResultCountRow**: `Showing N of M tickets` (left, `aria-live`) + `Clear all` (right). This is the **single** Clear-all — no duplication.
+  3. **ScrollArea** (`type="hover"`, Radix): the two-column FacetGrid + ActiveFilterChips, filling the remaining `80dvh`-constrained body. The header stays pinned while the body scrolls.
 - **MobileChipStrip** renders inside the column header (`Column/index.tsx`), under the column switcher — horizontally scrollable, one chip per active value. This is the mobile active-filter summary (there is no header chip row on mobile).
-- Result count shows inside the panel, same as desktop.
+- Result count shows inside the modal (below the header), same semantics as desktop.
 
 ## States
 
@@ -182,7 +188,7 @@ All three elements render inline inside `header__left`, **right-aligned** within
 
 | Breakpoint | Header filter chrome |
 |------------|---------------------|
-| `< 640px` (`< sm`) | Inline FreeTextSearch + FilterButton hidden. Entry via Hamburger Menu "Filter · N" row (wrapped in `border-t`/`border-b` separators) → bottom-anchored filter sheet. MobileChipStrip in column header when active. |
+| `< 640px` (`< sm`) | Inline FreeTextSearch + FilterButton hidden. Entry via Hamburger Menu "Filter · N" row (wrapped in `border-t`/`border-b` separators) → full-width filter modal (`<Modal size="full">`). MobileChipStrip in column header when active. |
 | `≥ 640px` (`≥ sm`) | FreeTextSearch + FilterButton inline in `header__left`, right-aligned. No MobileChipStrip. Hamburger "Filter" row absent. |
 | narrow desktop (640–900px) | FreeTextSearch shrinks toward min-width (120px) before wrapping; never wraps to a second line. |
 
@@ -191,7 +197,7 @@ All three elements render inline inside `header__left`, **right-aligned** within
 - FreeTextSearch is a standard `<input>` with `aria-label="Filter tickets"`.
 - FilterButton is a `<button>` with `aria-expanded` reflecting popover state, `aria-haspopup="dialog"`, and `aria-label` that includes the count when active (`Filter, 3 active`).
 - FilterPopover (desktop) is a `role="dialog"` panel with `aria-label="Filter tickets"`. A fixed click-away overlay closes it; `Escape` closes it; focus returns to FilterButton.
-- MobileFilterSheet is a `role="dialog"` bottom-anchored panel with `aria-label="Filter tickets"`. Same close semantics (overlay click / Done button / Escape).
+- MobileFilterModal follows the shared `<Modal>` contract: `role="dialog"`, focus trap, `Escape` closes, body scroll lock, click-outside closes. The close (✕) button in the header is `aria-label="Close"`.
 - FacetSections use native `<input type="checkbox">` with associated `<label>`.
 - Chips inside the popover are `<button>` with `aria-label="Remove filter: {facet} {value}"`.
 - ResultCount is `aria-live="polite"` so screen readers announce filter effects whether the popover is open or not.
@@ -204,7 +210,7 @@ All three elements render inline inside `header__left`, **right-aligned** within
 | filter block alignment | `justify-end` within `header__left` dead zone | right-aligned next to sort + hamburger; never left-anchored to ProjectSelector |
 | facet grid | `grid grid-cols-2 gap-x-4` | two-column layout; type/status row, priority/assignee row |
 | popover chip | reuses `Badge` styling (`src/components/Badge/`); container uses `gap-2` (project standard) | filter chips and ticket badges share one visual vocabulary |
-| popover scroll | global `::-webkit-scrollbar` (6px, gray-400 thumb, gray-100 track) | the same scrollbar columns use — one scroll standard across the app |
+| popover scroll | desktop: global `::-webkit-scrollbar` (6px, gray-400 thumb, gray-100 track); mobile: Radix `ScrollArea` (`type="hover"`) inside the constrained `<Modal>` body | matches the project browser's scroll pattern (MODALS.md Pattern B) |
 | mobile menu Filter row | `border-t border-b border-border` separators | visually groups Filter as a distinct menu section (mirrors the Sort block) |
 | mobile strip | horizontally scrollable chip row | never wraps; never shows an empty state |
 
@@ -212,6 +218,6 @@ All three elements render inline inside `header__left`, **right-aligned** within
 
 - **Add a facet**: add an optional field to `TicketFilters`, add a row to the Facets table, add a `FacetSection` inside the popover. The header never changes — the popover absorbs new facets.
 - **Show active chips inline in the header later (deferred)**: if a future header restructure frees more width, chips can render between FreeTextSearch and FilterButton. Today there isn't room, so chips live in the popover. The `TicketFilters` state is unchanged either way.
-- **Add the bottom-sheet mobile pattern**: the mobile filter uses a manual bottom-anchored overlay panel (`fixed inset-x-0 bottom-0`). A future `Sheet`/`Drawer` primitive could replace it with no state change.
+- **Mobile modal pattern**: the mobile filter uses the shared `<Modal>` primitive with `size="full"` (100% width), the same pattern as the project browser. A future `Sheet`/`Drawer` primitive could replace it with no state change.
 - **Add a text-syntax mode (deferred)**: layer a parser on the same `TicketFilters` reducer. No state change.
 - **Add saved views (deferred)**: persist named snapshots. State shape is already serializable.
