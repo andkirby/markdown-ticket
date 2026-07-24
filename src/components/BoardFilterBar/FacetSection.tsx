@@ -1,6 +1,13 @@
 import type { FacetKey } from '../../utils/ticketFilters'
-import type { FacetOption } from './FacetDropdown'
 import * as React from 'react'
+
+/** A selectable value in a facet list. */
+export interface FacetOption {
+  /** The raw filter value (e.g. `"__none__"` for unassigned). */
+  value: string
+  /** The label shown in the list (e.g. `"Unassigned"`). */
+  label: string
+}
 
 export interface FacetSectionProps {
   facet: FacetKey
@@ -12,10 +19,9 @@ export interface FacetSectionProps {
 }
 
 /**
- * A checkbox group for one facet, rendered inside the mobile filter Popover.
- * Collapsible via the disclosure header so a long facet list stays scannable.
- *
- * Mobile counterpart to {@link FacetDropdown}. Both call the same `onToggle`.
+ * A checkbox group for one facet, rendered inside the filter popover (desktop)
+ * and the bottom-anchored filter sheet (mobile). Collapsible via the disclosure
+ * header so a long facet list stays scannable.
  *
  * @testid facet-section — the section container (data-facet)
  * @testid facet-option-checkbox — a checkbox (data-value)

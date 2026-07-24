@@ -457,7 +457,7 @@ function ProjectRouteHandler() {
                 <ProjectSelector />
               </div>
               {(viewMode === 'board' || viewMode === 'list') && (
-                <div className="hidden sm:flex flex-1 items-center min-w-0">
+                <div className="hidden sm:flex flex-1 items-center justify-end min-w-0">
                   <BoardFilterBar
                     desktop
                     filters={boardFilters}
