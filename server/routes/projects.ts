@@ -74,6 +74,12 @@ export function createProjectRouter(projectController: ProjectController): Route
   router.get('/:projectId/crs', (req, res) => projectController.getProjectCRs(req, res))
 
   /**
+   * Owner-only, header-only cloud projection feed. Registered before the
+   * generic CR routes so no ticket wildcard can consume it.
+   */
+  router.get('/:projectId/cloud-projections', (req, res) => projectController.getCloudProjections(req, res))
+
+  /**
    * @openapi
    * /api/projects/{projectId}/crs/{crId}:
    *   get:

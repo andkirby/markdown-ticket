@@ -1,0 +1,70 @@
+{
+  // Cloud Sync Coordination Worker — deployment source of truth.
+  // Permanent boundary: docs/CRs/MDT-200/cloud-package-boundary.md
+  // Operations: docs/architecture/cloud-sync/operations.md
+  //
+  // Resource identifiers marked REPLACE_ON_* are provisioned out of band;
+  // they do not belong in this file until a real environment exists.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "mdt-cloud-sync",
+  "main": "src/cloudflare/worker.ts",
+  "compatibility_date": "2026-07-24",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // D1 binding — one database per environment. Binding name is fixed: `DB`.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "mdt-cloud-sync",
+      "database_id": "REPLACE_ON_PROVISION",
+      "migrations_dir": "migrations"
+    }
+  ],
+
+  // Rate-limit bindings — abuse/ runaway-client guards, NOT allocation correctness.
+  // See operations.md "Rate Limits". Two classes: read (projection polling)
+  // and mutation (writes). Operator-mutation limiting is enforced in-app on the
+  // same mutation binding.
+  //
+  // Wrangler key is `ratelimits` and each item's `name` is the in-Worker
+  // binding identifier (there is no separate `binding` field for rate limits).
+  "ratelimits": [
+    {
+      "name": "RATE_LIMIT_READ",
+      "namespace_id": "REPLACE_ON_PROVISION",
+      "simple": { "limit": 600, "period": 60 }
+    },
+    {
+      "name": "RATE_LIMIT_MUTATE",
+      "namespace_id": "REPLACE_ON_PROVISION",
+      "simple": { "limit": 60, "period": 60 }
+    }
+  ],
+
+  // Scheduled maintenance — UTC, every 15 minutes.
+  // Expires stale `reserved` reservations and enforces audit retention in
+  // bounded batches (operations.md "Scheduled Maintenance").
+  "triggers": {
+    "crons": ["*/15 * * * *"]
+  },
+
+  // Non-secret environment variables. Audience tags must agree with the
+  // Cloudflare Access applications (identity-and-access.md). No tokens, secrets,
+  // or service credentials ever live here — use `wrangler secret put` or the
+  // production secret channel.
+  "vars": {
+    "TEAM_DOMAIN": "REPLACE_ON_PROVISION.example.com",
+    "COORDINATION_AUD": "REPLACE_ON_PROVISION",
+    "OPERATOR_AUD": "REPLACE_ON_PROVISION"
+  },
+
+  // Version metadata binding for diagnostic responses and logs.
+  "version_metadata": {
+    "binding": "VERSION_METADATA"
+  },
+
+  // Observability — Workers Logs.
+  "observability": {
+    "enabled": true
+  }
+}

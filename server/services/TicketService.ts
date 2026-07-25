@@ -110,6 +110,16 @@ export class TicketService {
   }
 
   /**
+   * Poll cloud-projected ticket headers for the project board.
+   * Credentials and cloud configuration remain server-side; the browser only
+   * receives the approved header projection.
+   */
+  async getCloudProjections(projectId: string, after = 0, limit = 100) {
+    const project = await this.getProject(projectId)
+    return this.sharedTicketService.pollCloudProjections(project, after, limit)
+  }
+
+  /**
    * Get specific CR from a project, including discovered sub-documents.
    */
   async getCR(projectId: string, crId: string): Promise<Ticket> {

@@ -65,6 +65,11 @@ Users need a dark theme option.
 EOF
 ```
 
+For an enabled `[project.cloudSync]` binding, `ticket create` uses the shared
+cloud coordinator automatically. It requires a live Access credential and does
+not allocate a local fallback number. Dedicated cloud project/member management
+commands are owned by MDT-202.
+
 Creates a ticket with default metadata and prints the key and path.
 
 - **`--project <code>`** — create in a different project instead of cwd-detected one.

@@ -7,6 +7,7 @@ const defaultConfig: GlobalConfig = {
   links: { ...GLOBAL_CONFIG_DEFAULTS.links },
   ui: { ...GLOBAL_CONFIG_DEFAULTS.ui },
   system: { ...GLOBAL_CONFIG_DEFAULTS.system },
+  cloudSync: { ...GLOBAL_CONFIG_DEFAULTS.cloudSync, allowedOrigins: [...GLOBAL_CONFIG_DEFAULTS.cloudSync.allowedOrigins] },
 }
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -55,6 +56,9 @@ export function migrateConfig(oldConfig: unknown, quiet = false): GlobalConfig {
       refreshInterval: getNumber(dashboard.refreshInterval, defaultConfig.ui.refreshInterval),
     },
     system: defaultConfig.system,
+    cloudSync: {
+      allowedOrigins: getArray(asRecord(config.cloudSync).allowedOrigins, defaultConfig.cloudSync.allowedOrigins),
+    },
   }
 }
 
@@ -83,6 +87,9 @@ export function validateConfig(config: unknown, quiet = false): GlobalConfig {
     system: {
       logLevel: getEnum(asRecord(root.system).logLevel, ['error', 'warn', 'info', 'debug'], defaultConfig.system.logLevel),
       cacheTimeout: getNumber(asRecord(root.system).cacheTimeout, defaultConfig.system.cacheTimeout),
+    },
+    cloudSync: {
+      allowedOrigins: getArray(asRecord(root.cloudSync).allowedOrigins, defaultConfig.cloudSync.allowedOrigins),
     },
   })
 }

@@ -1,0 +1,1350 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-200"
+  },
+  "requirements": [
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "The cloud/ Worker workspace owns all Cloudflare runtime implementation under cloud/src/cloudflare/. Application packages (shared, server, cli, mcp-server, src) reach the cloud service only through pure contracts in @mdt/domain-contracts and JSON/HTTPS. The cloud package imports only @mdt/domain-contracts; it never imports filesystem-aware shared, server, cli, mcp-server, or src. The main application never imports @mdt/cloud.",
+      "sourceRef": "docs/CRs/MDT-200/cloud-package-boundary.md",
+      "routePolicy": "tests",
+      "tags": [
+        "boundary",
+        "architecture"
+      ]
+    },
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "Concurrent create requests for one cloud project return unique ticket numbers with no duplicate ticket rows",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "Concurrent requests sharing one idempotency key return one stable reservation and advance the counter once",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.3",
+      "kind": "behavior",
+      "text": "Different cloud projects allocate ticket numbers independently",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.4",
+      "kind": "behavior",
+      "text": "A failed local Markdown write can retry the same reservation and acknowledge it without number reuse",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.6",
+      "kind": "behavior",
+      "text": "Existing Markdown tickets remain readable and editable during a cloud outage while new cloud-bound creation stays blocked",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.1",
+      "kind": "behavior",
+      "text": "A real Access-protected environment validates browser and interactive CLI human attribution from a verified email claim",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.2",
+      "kind": "behavior",
+      "text": "A real Access-protected environment validates service-token machine attribution from a verified common_name claim",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.3",
+      "kind": "behavior",
+      "text": "Viewer, contributor, and owner permissions are enforced per cloud project for read, reserve, publish, list-members, and manage-members operations",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.4",
+      "kind": "behavior",
+      "text": "Unauthorized or unknown project references do not disclose project existence; they return the same response as a hidden project",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.5",
+      "kind": "behavior",
+      "text": "Revoked membership blocks the next protected project operation; there is no authorization cache in the first slice",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3.1",
+      "kind": "behavior",
+      "text": "Acknowledged tickets expose only the approved header projection, never a ticket body",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3.2",
+      "kind": "behavior",
+      "text": "Stale projection writes are rejected through expected-version precondition semantics",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3.4",
+      "kind": "behavior",
+      "text": "The board distinguishes cloud-projected state from canonical local ticket state without implying teammate ownership, presence, or canonical local content",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4.1",
+      "kind": "behavior",
+      "text": "Allocation, projection, membership, denial, and recovery actions produce structured redacted audit records",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4.2",
+      "kind": "behavior",
+      "text": "Disabling cloud binding leaves all durable ticket content usable from Markdown/Git",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "Reusing one idempotency key with a different canonical request hash returns 409 idempotency_key_reused and does not allocate a new number",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-2",
+      "kind": "edge_case",
+      "text": "Acknowledgement lost after allocation leaves a recoverable reservation that replays with the same reservation id; if abandoned it is marked orphaned and the number is never reused",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-3",
+      "kind": "edge_case",
+      "text": "A scheduled handler marks reserved rows older than 24 hours as abandoned in bounded batches without decrementing the counter or deleting the reservation",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-4",
+      "kind": "edge_case",
+      "text": "The final owner cannot be removed or demoted; a principal cannot grant a role higher than its own",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-5",
+      "kind": "edge_case",
+      "text": "On an unknown kid the Access verifier refreshes JWKS once and retries so key rotation does not require a deployment",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-6",
+      "kind": "edge_case",
+      "text": "Headless adapters refuse to attach service-token headers to any origin not on the operator-controlled allowlist and reject redirects",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "The coordination database is authoritative for project UUID, membership, ticket-number counter, reservations, idempotency outcomes, projection versions, and audit. Markdown/Git is authoritative for ticket body and projected headers. D1 never writes a projected value back into Markdown.",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "Ticket numbers are never reused. Abandoned, orphaned, and acknowledged reservations all retain their numbers. The counter is monotonic.",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "Cloud binding is opt-in per project, enabled only after project provisioning and a successful identity/membership probe.",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C5",
+      "kind": "constraint",
+      "text": "No Access token, service-token ID/secret, JWT, team domain, or audience tag is permitted in .mdt-config.toml or the global project registry; credentials live only in interactive or backend secret providers.",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C7",
+      "kind": "constraint",
+      "text": "Rate limiting is only an abuse guard; it must not be used to issue numbers, enforce quotas, or replace D1 unique constraints.",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C8",
+      "kind": "constraint",
+      "text": "The first slice excludes presence, activity indicators, offline allocation, body sync, WebSockets, and Durable Objects.",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C6",
+      "kind": "constraint",
+      "text": "The effective trusted-origin set combines distribution-provided HTTPS origins with global fileOnly cloudSync.allowedOrigins extensions; an empty extension list denies custom origins, project files cannot expand trust, and a shipped service does not require per-device project activation.",
+      "sourceRef": "CR:MDT-200",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-1.5",
+      "kind": "behavior",
+      "text": "A cloud-bound create fails recoverably when coordination is unavailable; it never allocates a local fallback number, temporary key, offline range, or lease. This MUST hold through the real TicketService.createCR path (strategy selection), not only the isolated allocator unit test.",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md",
+      "routePolicy": "bdd",
+      "tags": [
+        "allocation",
+        "no-fallback",
+        "uat-refined"
+      ]
+    },
+    {
+      "id": "BR-1.7",
+      "kind": "behavior",
+      "text": "Local-only projects behave exactly as before this feature; allocation, creation, and board behavior are unchanged. This MUST be proven with the cloud strategy seam wired into TicketService (a project with no [project.cloudSync] binding selects LocalTicketNumberAllocator and never makes a cloud call).",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md",
+      "routePolicy": "bdd",
+      "tags": [
+        "compatibility",
+        "uat-refined"
+      ]
+    },
+    {
+      "id": "BR-3.3",
+      "kind": "behavior",
+      "text": "Another authorized client sees projected create and status changes within the configured polling interval, proven end-to-end (a local projection poller observing the cloud feed), not only the cloud polling endpoint in isolation.",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md",
+      "routePolicy": "bdd",
+      "tags": [
+        "projection",
+        "polling",
+        "uat-refined"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "concurrent_creates_unique_numbers",
+      "title": "Concurrent creates return unique numbers",
+      "covers": [
+        "BR-1.1"
+      ],
+      "given": "Two contributors each send a create request to one cloud-bound project at the same time",
+      "when": "When the Worker executes both reservation transactions",
+      "then": "Then each receives a distinct ticket number and no duplicate reservation row exists",
+      "sourceRef": "CR:MDT-200"
+    },
+    {
+      "id": "idempotent_replay_one_reservation",
+      "title": "Idempotent key replay returns one reservation",
+      "covers": [
+        "BR-1.2"
+      ],
+      "given": "A client sends a reservation request that fails after the Worker allocated, and retries with the same Idempotency-Key and request hash",
+      "when": "When the retry reaches the Worker",
+      "then": "Then the original reservation is returned and the project counter has advanced only once",
+      "sourceRef": "CR:MDT-200"
+    },
+    {
+      "id": "cross_project_isolation",
+      "title": "Cross-project allocation is independent",
+      "covers": [
+        "BR-1.3"
+      ],
+      "given": "Two cloud projects exist with counters at different values",
+      "when": "When each project processes a create concurrently",
+      "then": "Then each allocates from its own counter and the numbers do not collide",
+      "sourceRef": "CR:MDT-200"
+    },
+    {
+      "id": "recover_local_write_failure",
+      "title": "Failed local write retries the same reservation",
+      "covers": [
+        "BR-1.4"
+      ],
+      "given": "Allocation succeeds but the local Markdown write fails and the operation journal holds the reservation",
+      "when": "When the client retries create",
+      "then": "Then it reuses the same reservation id and acknowledges it without allocating a new number",
+      "sourceRef": "CR:MDT-200"
+    },
+    {
+      "id": "coordination_unavailable_no_fallback",
+      "title": "Coordination down blocks cloud create",
+      "covers": [
+        "BR-1.5"
+      ],
+      "given": "A cloud-bound project cannot reach the coordination service",
+      "when": "When a create is attempted",
+      "then": "Then it fails recoverably and never assigns a local fallback number, temporary key, range, or lease",
+      "sourceRef": "CR:MDT-200"
+    },
+    {
+      "id": "offline_existing_tickets_editable",
+      "title": "Outage keeps existing tickets usable",
+      "covers": [
+        "BR-1.6"
+      ],
+      "given": "The coordination service is unavailable for a cloud-bound project",
+      "when": "When a client reads or edits an existing Markdown ticket",
+      "then": "Then the operation succeeds while new cloud-bound creation stays blocked",
+      "sourceRef": "CR:MDT-200"
+    },
+    {
+      "id": "local_only_unchanged",
+      "title": "Local-only projects are unchanged",
+      "covers": [
+        "BR-1.7"
+      ],
+      "given": "A project has no cloud binding",
+      "when": "When a client creates a ticket",
+      "then": "Then allocation uses the existing local highest-plus-one scan and no cloud call is made",
+      "sourceRef": "CR:MDT-200"
+    },
+    {
+      "id": "human_email_attribution",
+      "title": "Human email attribution on live Worker",
+      "covers": [
+        "BR-2.1"
+      ],
+      "given": "A human authenticates through Cloudflare Access and calls the coordination API",
+      "when": "When the Worker validates the Cf-Access-Jwt-Assertion",
+      "then": "Then it maps the verified email as a human principal and the audit records kind=human",
+      "sourceRef": "CR:MDT-200"
+    },
+    {
+      "id": "machine_common_name_attribution",
+      "title": "Service-token machine attribution on live Worker",
+      "covers": [
+        "BR-2.2"
+      ],
+      "given": "A headless client presents Access service-token headers",
+      "when": "When Access forwards the assertion to the Worker",
+      "then": "Then it maps the verified common_name as a machine principal and the audit records kind=machine",
+      "sourceRef": "CR:MDT-200"
+    },
+    {
+      "id": "role_permissions_enforced",
+      "title": "Role permissions per project",
+      "covers": [
+        "BR-2.3"
+      ],
+      "given": "A viewer, contributor, and owner each attempt reserve, publish, list-members, and manage-members",
+      "when": "When each operation is authorized",
+      "then": "Then viewer is denied writes, contributor can reserve and publish but not manage members, and owner can do all",
+      "sourceRef": "CR:MDT-200"
+    },
+    {
+      "id": "unknown_project_non_disclosure",
+      "title": "Unknown project is non-disclosing",
+      "covers": [
+        "BR-2.4"
+      ],
+      "given": "A principal requests a project it has no membership in, and a truly nonexistent project",
+      "when": "When the Worker responds",
+      "then": "Then both return the identical 404 project_not_found with no distinguishing detail",
+      "sourceRef": "CR:MDT-200"
+    },
+    {
+      "id": "revocation_blocks_next_op",
+      "title": "Revoked membership blocks next operation",
+      "covers": [
+        "BR-2.5"
+      ],
+      "given": "An owner revokes a member's role",
+      "when": "When that member's next request reaches the Worker",
+      "then": "Then it is denied with no authorization cache having served a stale grant",
+      "sourceRef": "CR:MDT-200"
+    },
+    {
+      "id": "projection_excludes_body",
+      "title": "Projection exposes only approved headers",
+      "covers": [
+        "BR-3.1"
+      ],
+      "given": "A ticket is acknowledged and its projection published",
+      "when": "When another client polls projections",
+      "then": "Then it receives only code, title, status, type, priority, assignee, and dates, never the body",
+      "sourceRef": "CR:MDT-200"
+    },
+    {
+      "id": "stale_projection_rejected",
+      "title": "Stale projection write rejected",
+      "covers": [
+        "BR-3.2"
+      ],
+      "given": "A client publishes a projection whose expected version is older than the current version",
+      "when": "When the Worker checks the precondition",
+      "then": "Then it rejects the write and does not overwrite the newer projection",
+      "sourceRef": "CR:MDT-200"
+    },
+    {
+      "id": "polling_sees_changes_within_interval",
+      "title": "Another client sees changes via polling",
+      "covers": [
+        "BR-3.3"
+      ],
+      "given": "One client publishes a status change to a projection",
+      "when": "When a second authorized client polls at the configured interval",
+      "then": "Then it observes the change within pollIntervalSeconds",
+      "sourceRef": "CR:MDT-200"
+    },
+    {
+      "id": "board_distinguishes_projected_state",
+      "title": "Board labels projected stubs",
+      "covers": [
+        "BR-3.4"
+      ],
+      "given": "A cloud-projected header exists for a ticket with no canonical local file",
+      "when": "When the board renders",
+      "then": "Then it shows a clearly labeled read-only stub that implies no teammate ownership or presence",
+      "sourceRef": "CR:MDT-200"
+    },
+    {
+      "id": "audit_records_structured",
+      "title": "Actions produce structured redacted audit",
+      "covers": [
+        "BR-4.1"
+      ],
+      "given": "An allocation, projection update, membership change, denial, and recovery each occur",
+      "when": "When each completes",
+      "then": "Then a structured audit record is written to D1 with principal kind and id but no raw token, cookie, or assertion",
+      "sourceRef": "CR:MDT-200"
+    },
+    {
+      "id": "disable_leaves_markdown_usable",
+      "title": "Disabling cloud keeps content usable",
+      "covers": [
+        "BR-4.2"
+      ],
+      "given": "A cloud-bound project is suspended and detached per the documented sequence",
+      "when": "When cloud binding is removed",
+      "then": "Then all ticket files remain readable and editable from Markdown/Git",
+      "sourceRef": "CR:MDT-200"
+    },
+    {
+      "id": "idempotency_key_reuse_different_hash",
+      "title": "Idempotency key reused with a different request",
+      "covers": [
+        "BR-1.2"
+      ],
+      "given": "A client reuses an Idempotency-Key with a different canonical request hash",
+      "when": "When the request reaches the Worker",
+      "then": "Then it returns 409 idempotency_key_reused and allocates no new number",
+      "sourceRef": "CR:MDT-200"
+    },
+    {
+      "id": "recover_local_write_failure_and_orphan",
+      "title": "Failed local write retries the same reservation",
+      "covers": [
+        "BR-1.4"
+      ],
+      "given": "Allocation succeeded but neither acknowledgement nor a canonical file ever appears and the reservation ages",
+      "when": "When the client retries create or the scheduled handler runs",
+      "then": "Then it reuses the same reservation id and if retired the number is never reused",
+      "sourceRef": "CR:MDT-200"
+    },
+    {
+      "id": "human_attribution_with_jwks_refresh",
+      "title": "Human email attribution with JWKS refresh",
+      "covers": [
+        "BR-2.1"
+      ],
+      "given": "An assertion arrives with a kid absent from the cached JWKS",
+      "when": "When the verifier refreshes and the human authenticates through Access",
+      "then": "Then it maps the verified email as a human principal and refreshes JWKS once on unknown kid",
+      "sourceRef": "CR:MDT-200"
+    },
+    {
+      "id": "machine_attribution_origin_allowlist",
+      "title": "Service-token attribution respects origin allowlist",
+      "covers": [
+        "BR-2.2"
+      ],
+      "given": "A headless adapter is asked to send service-token headers to an origin not in cloudSync.allowedOrigins",
+      "when": "When it builds the request to obtain machine attribution",
+      "then": "Then it refuses to attach the headers and rejects any redirect",
+      "sourceRef": "CR:MDT-200"
+    },
+    {
+      "id": "role_permissions_protect_final_owner",
+      "title": "Role permissions protect the final owner",
+      "covers": [
+        "BR-2.3"
+      ],
+      "given": "An attempt is made to remove or demote the last owner of a project",
+      "when": "When the Worker authorizes the membership change",
+      "then": "Then it is denied",
+      "sourceRef": "CR:MDT-200"
+    },
+    {
+      "id": "audit_records_scheduled_expiry",
+      "title": "Scheduled expiry produces structured audit",
+      "covers": [
+        "BR-4.1"
+      ],
+      "given": "Reserved rows older than 24 hours exist",
+      "when": "When the 15-minute scheduled handler runs",
+      "then": "Then a bounded batch is marked abandoned and an audit record is written without decrementing the counter",
+      "sourceRef": "CR:MDT-200"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-package-boundary",
+      "title": "Cloud package boundary: cloud/ owns Worker runtime; app packages reach it only via JSON/HTTPS over @mdt/domain-contracts",
+      "derivedFrom": [
+        "C1"
+      ],
+      "artifactIds": [
+        "ART-cloud-workspace",
+        "ART-cloud-wrangler",
+        "ART-cloud-worker-entry",
+        "ART-cloud-migrations",
+        "ART-cloud-http",
+        "ART-cloud-access",
+        "ART-cloud-application",
+        "ART-cloud-d1",
+        "ART-cloud-rate-limit",
+        "ART-cloud-scheduled",
+        "ART-domain-cloud-sync"
+      ],
+      "sourceRef": "docs/CRs/MDT-200/cloud-package-boundary.md"
+    },
+    {
+      "id": "OBL-identity",
+      "title": "Access JWT validation and principal mapping: RS256 JWKS verify, human/machine principal, no secrets in config",
+      "derivedFrom": [
+        "BR-2.1"
+      ],
+      "artifactIds": [
+        "ART-cloud-access",
+        "ART-cloud-http",
+        "ART-cloud-wrangler"
+      ],
+      "sourceRef": "docs/architecture/cloud-sync/identity-and-access.md"
+    },
+    {
+      "id": "OBL-membership",
+      "title": "Membership authorization: per-project roles, non-disclosure, revocation, no authz cache",
+      "derivedFrom": [
+        "BR-2.3"
+      ],
+      "artifactIds": [
+        "ART-cloud-application",
+        "ART-cloud-d1"
+      ],
+      "sourceRef": "docs/architecture/cloud-sync/identity-and-access.md"
+    },
+    {
+      "id": "OBL-allocation",
+      "title": "Allocation transaction: static D1 batch allocates unique numbers with idempotent replay, monotonic counter, no reuse",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "C2",
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-cloud-application",
+        "ART-cloud-d1",
+        "ART-cloud-migrations"
+      ],
+      "sourceRef": "docs/architecture/cloud-sync/data-and-consistency.md"
+    },
+    {
+      "id": "OBL-local-orchestration",
+      "title": "Local orchestration: project binding selects local or durable cloud create; journal recovery; origin allowlist; local-only preserved",
+      "derivedFrom": [
+        "BR-1.4",
+        "BR-1.5",
+        "BR-1.6",
+        "BR-1.7",
+        "C4",
+        "C5",
+        "C6"
+      ],
+      "artifactIds": [
+        "ART-domain-cloud-sync",
+        "ART-shared-cloud-sync",
+        "ART-shared-ticket-service"
+      ],
+      "sourceRef": "docs/architecture/cloud-sync/README.md"
+    },
+    {
+      "id": "OBL-projection",
+      "title": "Versioned header projection: one-way publish, precondition conflicts, polling cursor, board distinction",
+      "derivedFrom": [
+        "BR-3.1",
+        "BR-3.2",
+        "BR-3.3",
+        "BR-3.4"
+      ],
+      "artifactIds": [
+        "ART-cloud-application",
+        "ART-cloud-d1",
+        "ART-domain-cloud-sync",
+        "ART-shared-cloud-sync",
+        "ART-shared-ticket-service",
+        "ART-server-cloud-projections",
+        "ART-frontend-cloud-projections"
+      ],
+      "sourceRef": "docs/architecture/cloud-sync/data-and-consistency.md"
+    },
+    {
+      "id": "OBL-operations",
+      "title": "Operations: migrations, scheduled maintenance, redacted audit, rate-limit abuse guard, disable/vendor-exit",
+      "derivedFrom": [
+        "BR-4.1",
+        "BR-4.2",
+        "C7",
+        "Edge-3"
+      ],
+      "artifactIds": [
+        "ART-cloud-scheduled",
+        "ART-cloud-rate-limit",
+        "ART-cloud-migrations",
+        "ART-cloud-wrangler",
+        "ART-cloud-d1"
+      ],
+      "sourceRef": "docs/architecture/cloud-sync/operations.md"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-cloud-workspace",
+      "path": "cloud/",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-200/cloud-package-boundary.md"
+    },
+    {
+      "id": "ART-cloud-wrangler",
+      "path": "cloud/wrangler.jsonc",
+      "kind": "config",
+      "sourceRef": "docs/CRs/MDT-200/cloud-package-boundary.md"
+    },
+    {
+      "id": "ART-cloud-worker-entry",
+      "path": "cloud/src/cloudflare/worker.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-200/cloud-package-boundary.md"
+    },
+    {
+      "id": "ART-cloud-migrations",
+      "path": "cloud/migrations/",
+      "kind": "config",
+      "sourceRef": "docs/CRs/MDT-200/cloud-package-boundary.md"
+    },
+    {
+      "id": "ART-cloud-http",
+      "path": "cloud/src/cloudflare/http/",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-200/cloud-package-boundary.md"
+    },
+    {
+      "id": "ART-cloud-access",
+      "path": "cloud/src/cloudflare/access/",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-200/cloud-package-boundary.md"
+    },
+    {
+      "id": "ART-cloud-application",
+      "path": "cloud/src/cloudflare/application/",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-200/cloud-package-boundary.md"
+    },
+    {
+      "id": "ART-cloud-d1",
+      "path": "cloud/src/cloudflare/d1/",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-200/cloud-package-boundary.md"
+    },
+    {
+      "id": "ART-cloud-rate-limit",
+      "path": "cloud/src/cloudflare/rate-limit/",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-200/cloud-package-boundary.md"
+    },
+    {
+      "id": "ART-cloud-scheduled",
+      "path": "cloud/src/cloudflare/scheduled/",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-200/cloud-package-boundary.md"
+    },
+    {
+      "id": "ART-domain-cloud-sync",
+      "path": "domain-contracts/src/cloud-sync/",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-200/cloud-package-boundary.md"
+    },
+    {
+      "id": "ART-shared-cloud-sync",
+      "path": "shared/services/cloud-sync/",
+      "kind": "runtime",
+      "sourceRef": "docs/architecture/cloud-sync/README.md"
+    },
+    {
+      "id": "ART-shared-ticket-service",
+      "path": "shared/services/TicketService.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/architecture/cloud-sync/README.md"
+    },
+    {
+      "id": "ART-server-cloud-projections",
+      "path": "server/routes/projects.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/architecture/cloud-sync/README.md"
+    },
+    {
+      "id": "ART-frontend-cloud-projections",
+      "path": "src/hooks/useCloudProjectionFeed.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-200/ux-design.md"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-alloc-concurrency",
+      "kind": "integration",
+      "title": "Allocation concurrency + uniqueness under local D1",
+      "covers": [
+        "BR-1.1"
+      ],
+      "file": "cloud/test/alloc.concurrency.test.ts",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md"
+    },
+    {
+      "id": "TEST-access-jwt-validation",
+      "kind": "unit",
+      "title": "Access JWT validation: RS256 issuer/audience/expiry principal mapping unknown kid refresh",
+      "covers": [
+        "BR-2.1",
+        "Edge-5"
+      ],
+      "file": "cloud/test/access.jwt.test.ts",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md"
+    },
+    {
+      "id": "TEST-membership-roles",
+      "kind": "integration",
+      "title": "Role enforcement viewer/contributor/owner final owner protection",
+      "covers": [
+        "BR-2.3",
+        "Edge-4"
+      ],
+      "file": "cloud/test/membership.roles.test.ts",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md"
+    },
+    {
+      "id": "TEST-tenant-isolation",
+      "kind": "integration",
+      "title": "Unknown vs hidden project non-disclosure revocation blocks next op",
+      "covers": [
+        "BR-2.4",
+        "BR-2.5"
+      ],
+      "file": "cloud/test/membership.isolation.test.ts",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md"
+    },
+    {
+      "id": "TEST-board-stub-render",
+      "kind": "e2e",
+      "title": "Board renders cloud stub read-only labeled non-draggable no body degraded state blocks create",
+      "covers": [
+        "BR-3.4"
+      ],
+      "file": "tests/e2e/cloud-sync-board.spec.ts",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md"
+    },
+    {
+      "id": "TEST-audit-redacted",
+      "kind": "integration",
+      "title": "Structured redacted audit for allocation projection membership denial recovery scheduled-expiry",
+      "covers": [
+        "BR-4.1",
+        "Edge-3"
+      ],
+      "file": "cloud/test/audit.test.ts",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md"
+    },
+    {
+      "id": "TEST-disable-markdown",
+      "kind": "manual",
+      "title": "Disabling cloud binding leaves Markdown usable operator procedure",
+      "covers": [
+        "BR-4.2"
+      ],
+      "file": "cloud/test/operations/disable.md",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md"
+    },
+    {
+      "id": "TEST-deployed-access-human",
+      "kind": "manual",
+      "title": "Real human email attribution against live Access-protected Worker",
+      "covers": [
+        "BR-2.1"
+      ],
+      "file": "cloud/test/operations/deployed-access.md",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md"
+    },
+    {
+      "id": "TEST-deployed-access-machine",
+      "kind": "manual",
+      "title": "Real service-token machine attribution against live Worker",
+      "covers": [
+        "BR-2.2"
+      ],
+      "file": "cloud/test/operations/deployed-access.md",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md"
+    },
+    {
+      "id": "TEST-deployed-concurrency",
+      "kind": "manual",
+      "title": "Deployed concurrency scenario with latency and D1 row evidence",
+      "covers": [
+        "BR-1.1"
+      ],
+      "file": "cloud/test/operations/deployed-concurrency.md",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md"
+    },
+    {
+      "id": "TEST-migration-apply",
+      "kind": "manual",
+      "title": "Apply migrations to remote D1 verify schema and FKs record bookmark",
+      "covers": [
+        "C2",
+        "C3"
+      ],
+      "file": "cloud/test/operations/migration.md",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md"
+    },
+    {
+      "id": "TEST-restore-export-drill",
+      "kind": "manual",
+      "title": "Export before restore restore export readability drill",
+      "covers": [
+        "BR-4.2"
+      ],
+      "file": "cloud/test/operations/restore.md",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md"
+    },
+    {
+      "id": "TEST-rate-limit-abuse",
+      "kind": "integration",
+      "title": "Rate limit is abuse-only does not gate allocation correctness",
+      "covers": [
+        "C7"
+      ],
+      "file": "cloud/test/ratelimit.test.ts",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md"
+    },
+    {
+      "id": "TEST-package-boundary",
+      "kind": "unit",
+      "title": "Package boundary: cloud imports only domain-contracts; no app package imports @mdt/cloud",
+      "covers": [
+        "C1"
+      ],
+      "file": "cloud/test/boundary.test.ts",
+      "sourceRef": "docs/CRs/MDT-200/cloud-package-boundary.md"
+    },
+    {
+      "id": "TEST-alloc-idempotency",
+      "kind": "integration",
+      "title": "Idempotent replay returns one reservation; key reuse with different hash is 409",
+      "covers": [
+        "BR-1.2",
+        "Edge-1"
+      ],
+      "file": "cloud/test/alloc.integration.test.ts",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md"
+    },
+    {
+      "id": "TEST-alloc-isolation",
+      "kind": "integration",
+      "title": "Cross-project allocation independence",
+      "covers": [
+        "BR-1.3"
+      ],
+      "file": "cloud/test/alloc.integration.test.ts",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md"
+    },
+    {
+      "id": "TEST-alloc-recovery",
+      "kind": "integration",
+      "title": "Local write failure retries same reservation; lost acknowledgement recovers from journal",
+      "covers": [
+        "BR-1.4",
+        "Edge-2"
+      ],
+      "file": "shared/services/cloud-sync/__tests__/recovery.test.ts",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md"
+    },
+    {
+      "id": "TEST-alloc-transaction-shape",
+      "kind": "integration",
+      "title": "Production allocation batch preserves atomic uniqueness and monotonic counters under a forced race",
+      "covers": [
+        "BR-1.1",
+        "C2",
+        "C3"
+      ],
+      "file": "cloud/test/alloc.concurrency.test.ts",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md"
+    },
+    {
+      "id": "TEST-no-fallback-local",
+      "kind": "unit",
+      "title": "Cloud-bound create has no local fallback; local-only preserved",
+      "covers": [
+        "BR-1.5",
+        "BR-1.7"
+      ],
+      "file": "shared/services/cloud-sync/__tests__/no-fallback.test.ts",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md"
+    },
+    {
+      "id": "TEST-machine-attribution",
+      "kind": "unit",
+      "title": "Machine common_name maps to a machine principal",
+      "covers": [
+        "BR-2.2",
+        "Edge-6"
+      ],
+      "file": "cloud/test/access.jwt.test.ts",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md"
+    },
+    {
+      "id": "TEST-projection-content",
+      "kind": "integration",
+      "title": "Projection exposes only approved headers and never a body",
+      "covers": [
+        "BR-3.1"
+      ],
+      "file": "cloud/test/projection.test.ts",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md"
+    },
+    {
+      "id": "TEST-projection-conflict",
+      "kind": "integration",
+      "title": "Stale expected-version is rejected and divergent conflict is not auto-merged",
+      "covers": [
+        "BR-3.2"
+      ],
+      "file": "cloud/test/projection.test.ts",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md"
+    },
+    {
+      "id": "TEST-projection-polling",
+      "kind": "integration",
+      "title": "Polling cursor returns acknowledged projections in revision order",
+      "covers": [
+        "BR-3.3"
+      ],
+      "file": "cloud/test/projection.test.ts",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md"
+    },
+    {
+      "id": "TEST-opt-in-binding",
+      "kind": "unit",
+      "title": "Cloud binding is opt-in per project; absent or disabled binding stays local",
+      "covers": [
+        "C4"
+      ],
+      "file": "shared/services/cloud-sync/__tests__/opt-in-binding.test.ts",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md"
+    },
+    {
+      "id": "TEST-config-no-secrets",
+      "kind": "unit",
+      "title": "Config schema rejects tokens secrets audience tags in project and global config files",
+      "covers": [
+        "C5"
+      ],
+      "file": "shared/services/cloud-sync/__tests__/config.test.ts",
+      "sourceRef": "docs/architecture/cloud-sync/README.md"
+    },
+    {
+      "id": "TEST-exclusions-enforced",
+      "kind": "unit",
+      "title": "First slice ships no presence offline-allocation body-sync WebSocket or Durable Object surface",
+      "covers": [
+        "C8"
+      ],
+      "file": "cloud/test/boundary.test.ts",
+      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md"
+    },
+    {
+      "id": "TEST-origin-allowlist",
+      "kind": "unit",
+      "title": "Shipped origins are trusted; custom origins are denied by default and project files cannot expand trust",
+      "covers": [
+        "C6"
+      ],
+      "file": "shared/services/cloud-sync/__tests__/origin-allowlist.test.ts",
+      "sourceRef": "CR:MDT-200"
+    },
+    {
+      "id": "TEST-create-orchestration",
+      "kind": "integration",
+      "title": "TicketService durable cloud create, recovery, no fallback, local edit and status projection",
+      "covers": [
+        "BR-1.4",
+        "BR-1.5",
+        "BR-1.6",
+        "BR-1.7",
+        "BR-3.3"
+      ],
+      "file": "shared/services/cloud-sync/__tests__/create-orchestrator.test.ts",
+      "sourceRef": "docs/CRs/MDT-200/tests.md"
+    },
+    {
+      "id": "TEST-local-projection-feed",
+      "kind": "integration",
+      "title": "Owner-only local server feed and production browser polling preserve header-only stale state",
+      "covers": [
+        "BR-3.3",
+        "BR-3.4"
+      ],
+      "file": "src/hooks/useCloudProjectionFeed.test.ts",
+      "sourceRef": "docs/CRs/MDT-200/tests.md"
+    },
+    {
+      "id": "TEST-audit-retention",
+      "kind": "integration",
+      "title": "Scheduled maintenance deletes audit rows older than 180 days in bounded batches",
+      "covers": [
+        "BR-4.1"
+      ],
+      "file": "cloud/test/maintenance.test.ts",
+      "sourceRef": "docs/architecture/cloud-sync/operations.md"
+    },
+    {
+      "id": "TEST-http-validation",
+      "kind": "unit",
+      "title": "Worker request bodies are JSON objects and size bounded; runtime failures use canonical errors",
+      "covers": [
+        "C2"
+      ],
+      "file": "cloud/test/http.body.test.ts",
+      "sourceRef": "docs/architecture/cloud-sync/data-and-consistency.md"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-boundary",
+      "title": "Slice 1: package-boundary and exclusions enforcement tests",
+      "ownsArtifactIds": [
+        "ART-cloud-workspace"
+      ],
+      "makesGreenIds": [
+        "TEST-package-boundary",
+        "TEST-exclusions-enforced"
+      ],
+      "skills": [
+        "spec-trace-cli"
+      ],
+      "sourceRef": "docs/CRs/MDT-200/cloud-package-boundary.md"
+    },
+    {
+      "id": "TASK-access",
+      "title": "Slice 1: Access JWT validation + principal mapping (RS256, JWKS, kid refresh)",
+      "ownsArtifactIds": [
+        "ART-cloud-access"
+      ],
+      "makesGreenIds": [
+        "TEST-access-jwt-validation",
+        "TEST-machine-attribution",
+        "TEST-deployed-access-human",
+        "TEST-deployed-access-machine",
+        "human_attribution_with_jwks_refresh",
+        "machine_attribution_origin_allowlist",
+        "machine_common_name_attribution"
+      ],
+      "skills": [
+        "workers-best-practices"
+      ],
+      "sourceRef": "docs/architecture/cloud-sync/identity-and-access.md"
+    },
+    {
+      "id": "TASK-migrations",
+      "title": "Slice 2: ordered D1 migrations + schema/indexes/FKs",
+      "ownsArtifactIds": [
+        "ART-cloud-migrations",
+        "ART-cloud-d1"
+      ],
+      "makesGreenIds": [
+        "TEST-migration-apply",
+        "TEST-alloc-transaction-shape"
+      ],
+      "skills": [
+        "wrangler"
+      ],
+      "sourceRef": "docs/architecture/cloud-sync/data-and-consistency.md"
+    },
+    {
+      "id": "TASK-allocation",
+      "title": "Slice 2: static allocation batch, reservation lifecycle, idempotency, recovery",
+      "ownsArtifactIds": [
+        "ART-cloud-application"
+      ],
+      "makesGreenIds": [
+        "TEST-alloc-concurrency",
+        "TEST-alloc-idempotency",
+        "TEST-alloc-isolation",
+        "TEST-alloc-recovery",
+        "TEST-deployed-concurrency",
+        "concurrent_creates_unique_numbers",
+        "idempotent_replay_one_reservation",
+        "idempotency_key_reuse_different_hash",
+        "cross_project_isolation",
+        "recover_local_write_failure",
+        "recover_local_write_failure_and_orphan",
+        "coordination_unavailable_no_fallback",
+        "offline_existing_tickets_editable",
+        "local_only_unchanged"
+      ],
+      "skills": [
+        "workers-best-practices"
+      ],
+      "sourceRef": "docs/architecture/cloud-sync/data-and-consistency.md"
+    },
+    {
+      "id": "TASK-membership",
+      "title": "Slice 2: membership authorizer, roles, non-disclosure, revocation",
+      "ownsArtifactIds": [
+        "ART-cloud-application"
+      ],
+      "makesGreenIds": [
+        "TEST-membership-roles",
+        "TEST-tenant-isolation",
+        "role_permissions_enforced",
+        "role_permissions_protect_final_owner",
+        "unknown_project_non_disclosure",
+        "revocation_blocks_next_op"
+      ],
+      "skills": [
+        "workers-best-practices"
+      ],
+      "sourceRef": "docs/architecture/cloud-sync/identity-and-access.md"
+    },
+    {
+      "id": "TASK-operations",
+      "title": "Slice 5: disable/export/restore drills + doc reconciliation",
+      "ownsArtifactIds": [
+        "ART-cloud-wrangler"
+      ],
+      "makesGreenIds": [
+        "TEST-disable-markdown",
+        "TEST-restore-export-drill",
+        "disable_leaves_markdown_usable"
+      ],
+      "skills": [
+        "mdt-release"
+      ],
+      "sourceRef": "docs/architecture/cloud-sync/operations.md"
+    },
+    {
+      "id": "TASK-config-inspection-registry",
+      "title": "UAT: register cloudSync selectors in the config-inspection registry (inspect:config --filter cloudSync returns 0 today)",
+      "ownsArtifactIds": [
+        "ART-domain-cloud-sync"
+      ],
+      "makesGreenIds": [
+        "TEST-opt-in-binding",
+        "TEST-config-no-secrets",
+        "TEST-origin-allowlist"
+      ],
+      "skills": [
+        "architecture-patterns"
+      ],
+      "sourceRef": "docs/CRs/MDT-200/uat.md"
+    },
+    {
+      "id": "TASK-concurrency-real-proof",
+      "title": "UAT: prove allocation concurrency against the real D1 batch (counter pre-read outside batch today); the sync-loop test does not prove concurrent-request behavior",
+      "ownsArtifactIds": [
+        "ART-cloud-d1"
+      ],
+      "makesGreenIds": [
+        "TEST-alloc-concurrency",
+        "concurrent_creates_unique_numbers",
+        "TEST-deployed-concurrency"
+      ],
+      "skills": [
+        "workers-best-practices"
+      ],
+      "sourceRef": "docs/CRs/MDT-200/uat.md"
+    },
+    {
+      "id": "TASK-app-strategy-wiring",
+      "title": "Wire TicketService.createCR to durable cloud orchestration while preserving local-only behavior",
+      "ownsArtifactIds": [
+        "ART-shared-ticket-service",
+        "ART-shared-cloud-sync"
+      ],
+      "makesGreenIds": [
+        "TEST-create-orchestration",
+        "TEST-no-fallback-local",
+        "coordination_unavailable_no_fallback",
+        "local_only_unchanged",
+        "offline_existing_tickets_editable"
+      ],
+      "sourceRef": "docs/CRs/MDT-200/uat.md"
+    },
+    {
+      "id": "TASK-cloud-client",
+      "title": "Implement coordination/projection HTTP clients, credentials, recovery, and safe projection retry",
+      "ownsArtifactIds": [
+        "ART-shared-cloud-sync"
+      ],
+      "makesGreenIds": [
+        "TEST-create-orchestration",
+        "TEST-no-fallback-local",
+        "TEST-local-projection-feed",
+        "recover_local_write_failure",
+        "polling_sees_changes_within_interval"
+      ],
+      "sourceRef": "docs/CRs/MDT-200/uat.md"
+    },
+    {
+      "id": "TASK-ack-projection-wiring",
+      "title": "Acknowledge reservation and create projection v1 atomically",
+      "ownsArtifactIds": [
+        "ART-cloud-application",
+        "ART-cloud-d1"
+      ],
+      "makesGreenIds": [
+        "TEST-projection-content",
+        "projection_excludes_body"
+      ],
+      "sourceRef": "docs/CRs/MDT-200/uat.md"
+    },
+    {
+      "id": "TASK-ratelimit-wiring",
+      "title": "Enforce advisory read, mutation, and operator rate limits in Worker routes",
+      "ownsArtifactIds": [
+        "ART-cloud-rate-limit",
+        "ART-cloud-worker-entry"
+      ],
+      "makesGreenIds": [
+        "TEST-rate-limit-abuse"
+      ],
+      "sourceRef": "docs/CRs/MDT-200/uat.md"
+    },
+    {
+      "id": "TASK-board-projection",
+      "title": "Poll through the owner-only local server feed and render read-only projected board stubs",
+      "ownsArtifactIds": [
+        "ART-server-cloud-projections",
+        "ART-frontend-cloud-projections"
+      ],
+      "makesGreenIds": [
+        "TEST-board-stub-render",
+        "TEST-local-projection-feed",
+        "board_distinguishes_projected_state",
+        "polling_sees_changes_within_interval"
+      ],
+      "sourceRef": "docs/CRs/MDT-200/ux-design.md"
+    },
+    {
+      "id": "TASK-local-orchestration",
+      "title": "Shared cloud create orchestration, operation journal, credentials, config, and allowlist",
+      "ownsArtifactIds": [
+        "ART-domain-cloud-sync",
+        "ART-shared-cloud-sync",
+        "ART-shared-ticket-service"
+      ],
+      "makesGreenIds": [
+        "TEST-create-orchestration",
+        "TEST-no-fallback-local",
+        "TEST-opt-in-binding",
+        "TEST-config-no-secrets",
+        "TEST-origin-allowlist"
+      ],
+      "sourceRef": "docs/CRs/MDT-200/tasks.md"
+    },
+    {
+      "id": "TASK-projection",
+      "title": "Atomic initial projection, versioned publish, safe local retry, polling, and board stubs",
+      "ownsArtifactIds": [
+        "ART-cloud-application",
+        "ART-cloud-d1",
+        "ART-domain-cloud-sync",
+        "ART-shared-cloud-sync",
+        "ART-shared-ticket-service",
+        "ART-server-cloud-projections",
+        "ART-frontend-cloud-projections"
+      ],
+      "makesGreenIds": [
+        "TEST-projection-content",
+        "TEST-projection-conflict",
+        "TEST-projection-polling",
+        "TEST-create-orchestration",
+        "TEST-local-projection-feed",
+        "TEST-board-stub-render",
+        "projection_excludes_body",
+        "stale_projection_rejected",
+        "polling_sees_changes_within_interval",
+        "board_distinguishes_projected_state"
+      ],
+      "sourceRef": "docs/CRs/MDT-200/tasks.md"
+    },
+    {
+      "id": "TASK-scheduled",
+      "title": "Scheduled reservation expiry, 180-day audit retention, and rate-limit abuse guard",
+      "ownsArtifactIds": [
+        "ART-cloud-scheduled",
+        "ART-cloud-rate-limit",
+        "ART-cloud-d1"
+      ],
+      "makesGreenIds": [
+        "TEST-audit-redacted",
+        "TEST-audit-retention",
+        "TEST-rate-limit-abuse",
+        "audit_records_structured",
+        "audit_records_scheduled_expiry"
+      ],
+      "sourceRef": "docs/CRs/MDT-200/tasks.md"
+    },
+    {
+      "id": "TASK-routing",
+      "title": "Versioned routing, bounded JSON validation, typed errors, request telemetry, and health route",
+      "ownsArtifactIds": [
+        "ART-cloud-http",
+        "ART-cloud-worker-entry"
+      ],
+      "makesGreenIds": [
+        "TEST-access-jwt-validation",
+        "TEST-http-validation",
+        "human_email_attribution"
+      ],
+      "sourceRef": "docs/CRs/MDT-200/tasks.md"
+    }
+  ]
+}

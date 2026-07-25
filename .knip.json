@@ -18,6 +18,7 @@
     "shared/**",
     "domain-contracts/**",
     "mcp-server/**",
+    "cloud/**",
     ".claude/**",
     "**/node_modules/**",
     "**/dist/**",

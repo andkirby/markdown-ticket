@@ -32,13 +32,13 @@ Each check fails closed.
 
 ## Access Applications
 
-Production uses two self-hosted Access application audiences on one protected
-HTTPS origin:
+Production uses two self-hosted Access application audiences on separately
+trusted HTTPS endpoints for one service deployment:
 
-| Audience | Paths | Accepted principal | Purpose |
+| Audience | Endpoint scope | Accepted principal | Purpose |
 | --- | --- | --- | --- |
-| Coordination | `/v1/projects/*` | IdP human or Access service token | Normal project operations |
-| Operator | `/v1/admin/*` | IdP human in the operator Access policy | Project provisioning and administrative repair |
+| Coordination | Trusted coordination origin, `/v1/projects/*` | IdP human or Access service token | Normal project operations |
+| Operator | Trusted provisioning origin, `/v1/admin/*` | IdP human in the operator Access policy | Project provisioning and administrative repair |
 
 The Worker config contains the team domain, coordination audience, and operator
 audience as non-secret environment variables. Access policies and the Worker
@@ -223,9 +223,12 @@ token authenticates the MCP caller; it is not a cloud credential and must not
 be forwarded to the coordination Worker.
 
 Before attaching any human token or service-token header, every adapter
-requires the project `serviceUrl` to exactly match an operator-controlled local
-allowlist. Redirects to another origin are rejected and credential-bearing
-requests use redirect mode `error`.
+requires the destination to exactly match the effective trusted-origin set:
+distribution-provided service origins plus operator-configured extensions.
+The repository-controlled project `serviceUrl` selects only the coordination
+origin; a privileged provisioning origin comes from the trusted service
+profile, never project data. Redirects to another origin are rejected and
+credential-bearing requests use redirect mode `error`.
 
 ## Secret and Token Policy
 
