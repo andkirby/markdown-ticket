@@ -1,0 +1,1403 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-201"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "Initial project provisioning shall succeed only for a human principal admitted by the operator Access policy; a project owner who is not an operator shall receive a clear denial.",
+      "sourceRef": "MDT-201 §4 AC-F2; Decisions: Provisioning authority",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-2.1",
+      "kind": "behavior",
+      "text": "Adding one human member shall grant that verified principal the assigned project role from multiple devices after personal authentication.",
+      "sourceRef": "MDT-201 §4 AC-F3",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-2.4",
+      "kind": "behavior",
+      "text": "Revoking one project membership shall block that principal from the project on the next protected operation across all devices.",
+      "sourceRef": "MDT-201 §4 AC-F7",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-2.5",
+      "kind": "behavior",
+      "text": "Revocation from one project shall not remove the same principal from other projects.",
+      "sourceRef": "MDT-201 §4 AC-F8",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-2.7",
+      "kind": "behavior",
+      "text": "Membership mutation shall preserve final-owner protection and shall not allow a principal to grant a role higher than its own.",
+      "sourceRef": "MDT-201 §3 Known Constraints",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-3.2",
+      "kind": "behavior",
+      "text": "Project and membership lookups shall preserve tenant isolation and shall not disclose project existence to unknown or non-member principals.",
+      "sourceRef": "MDT-201 §4 AC-NF2",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-3.3",
+      "kind": "behavior",
+      "text": "A teammate's first protected use shall authenticate against the coordination service, after which the service verifies existing membership; teammate authentication shall never carry provisioning authority.",
+      "sourceRef": "MDT-201 Decisions: Teammate first use, Provisioning authority",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-4.3",
+      "kind": "behavior",
+      "text": "Onboarding guidance shall present cloud membership and Git repository access as separate prerequisites for canonical Markdown collaboration.",
+      "sourceRef": "MDT-201 §4 AC-F11; Decisions Deferred",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-5.1",
+      "kind": "behavior",
+      "text": "Local-only project creation and existing-ticket editing shall remain backward compatible when the cloud management capability is present but unused.",
+      "sourceRef": "MDT-201 §4 AC-NF3",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "The effective trusted-origin set shall combine distribution-provided HTTPS service origins with operator-configured exact-HTTPS extensions; arbitrary repository-provided origins shall be denied.",
+      "sourceRef": "MDT-201 Decisions: Origin trust; §2 Constraints",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C5",
+      "kind": "constraint",
+      "text": "Initial provisioning shall require the operator Access audience; the provisioning endpoint shall come from a trusted distribution or operator service profile, never repository data; teammate and normal operations shall use only the coordination audience.",
+      "sourceRef": "MDT-201 Decisions: Provisioning authority, Service endpoints",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C7",
+      "kind": "constraint",
+      "text": "Membership, roles, and revocation shall be project-scoped; a principal's standing in one project shall not imply standing in another, and final-owner and no-self-elevation protections shall hold across mutations.",
+      "sourceRef": "MDT-201 §3 Known Constraints",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C9",
+      "kind": "constraint",
+      "text": "Cloud project membership and Git-host repository access shall be independent; the system shall not provision or imply Git-host permissions.",
+      "sourceRef": "MDT-201 §4 AC-F11; §2 Non-Goals",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "A principal who authenticates successfully through Access but is not a member of the project shall be denied on the next protected operation with non-disclosing behavior.",
+      "sourceRef": "MDT-201 §4 Edge: authenticated non-member",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-3",
+      "kind": "edge_case",
+      "text": "A lost device whose user remains a valid member shall not grant cloud access from its local session or journal; revoking the member shall block that device on the next protected operation.",
+      "sourceRef": "MDT-201 §4 Edge: lost device",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-4",
+      "kind": "edge_case",
+      "text": "A member revoked while another device still holds a valid Access session shall be blocked on that device's next protected operation via the per-operation cloud membership check; the client shall not cache or bypass the revoked membership.",
+      "sourceRef": "MDT-201 §4 Edge: revoked with live session; AC-F7",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-6",
+      "kind": "edge_case",
+      "text": "One device opening multiple cloud-bound projects with different memberships shall keep independent bindings, counters, and projections with no cross-project leakage.",
+      "sourceRef": "MDT-201 §4 Edge: multiple projects one device",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-7",
+      "kind": "edge_case",
+      "text": "A teammate with cloud membership but no Git repository access shall complete cloud operations while Markdown/Git collaboration is surfaced as a separately documented prerequisite.",
+      "sourceRef": "MDT-201 §4 Edge: member without Git access; AC-F11",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "Provisioning a cloud project from one installation shall return one stable cloud project UUID; another installation or clone shall connect explicitly to that UUID without provisioning another project.",
+      "sourceRef": "MDT-201 §4 AC-F1",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.3",
+      "kind": "behavior",
+      "text": "Repository configuration shall contain no cloud service origin and shall not select or redirect the privileged provisioning endpoint; the provisioning endpoint shall come only from the effective trusted service profile.",
+      "sourceRef": "MDT-201 §4 AC-F15; Decisions: Service endpoints",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.4",
+      "kind": "behavior",
+      "text": "The shipped trusted service profile shall let a new clone connect to an existing cloud project without project reprovisioning or repository configuration changes.",
+      "sourceRef": "MDT-201 §4 AC-F14; Decisions: Origin trust, Clone onboarding",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.6",
+      "kind": "behavior",
+      "text": "The CONFIG_DIR connection record shall be written only after provisioning or connect and membership verification succeed; a failed readiness, provisioning, connect, or membership step shall leave connection state unchanged.",
+      "sourceRef": "MDT-201 Decisions: Connection storage",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.7",
+      "kind": "behavior",
+      "text": "Retrying the same initial provisioning request with the same idempotency key and request content shall return the same cloud project UUID and shall not create a duplicate project; conflicting key reuse shall be rejected.",
+      "sourceRef": "MDT-201 §4 AC-F2; Decisions: Provisioning retry",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.8",
+      "kind": "behavior",
+      "text": "A legacy repository project.cloudSync binding shall be imported into CONFIG_DIR only through an explicit migration; migration shall not silently edit repository files and shall reject a conflicting CONFIG_DIR connection.",
+      "sourceRef": "MDT-201 §4 AC-F18",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-2.2",
+      "kind": "behavior",
+      "text": "A teammate shall join through personal Access authentication and an explicit connect to the existing cloud project UUID without entering a shared project password or copied token; the coordination service shall verify existing project membership.",
+      "sourceRef": "MDT-201 §4 AC-F5; Decisions: Clone onboarding, Teammate first use",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-2.3",
+      "kind": "behavior",
+      "text": "Machine members shall have project-scoped roles while each runtime stores its own service-token credentials in an owner-only CONFIG_DIR credential file; the secret shall never enter repository configuration or the membership API.",
+      "sourceRef": "MDT-201 §4 AC-F12; Decisions: Credential storage",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-2.6",
+      "kind": "behavior",
+      "text": "A new or replacement installation shall connect to an existing project membership after authentication without counter, membership, or projection migration.",
+      "sourceRef": "MDT-201 §4 AC-F11",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-3.1",
+      "kind": "behavior",
+      "text": "Device-local credentials, sessions, connection records, journals, locks, and caches shall never create a cloud project implicitly, grant a role, or define cloud project identity; connection state may select cloud operation only after cloud verification.",
+      "sourceRef": "MDT-201 §4 AC-F8",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-4.2",
+      "kind": "behavior",
+      "text": "Disabling a cloud-bound project shall suspend coordination and retain a disabled CONFIG_DIR connection record so new ticket creation remains fail-closed; only the separately acknowledged permanent-detach procedure may resume local allocation.",
+      "sourceRef": "MDT-201 §4 AC-F17; Decisions: Disable",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "The cloud project UUID, membership set, number counter, and projection namespace shall be project-scoped cloud authorities; CONFIG_DIR state may select a connection but remains non-authoritative for identity, membership, and numbering.",
+      "sourceRef": "MDT-201 §3 Known Constraints; §2 Success Conditions",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C6",
+      "kind": "constraint",
+      "text": "No cloud credential or reusable join secret shall be persisted in repository-controlled files, browser storage, logs, or project registry data; machine service-token credentials may persist only in owner-only atomic files under CONFIG_DIR/cloud-sync/credentials, and human Access tokens remain managed by cloudflared.",
+      "sourceRef": "MDT-201 §2 Constraints; §4 AC-NF1",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C8",
+      "kind": "constraint",
+      "text": "Machine membership shall be project-scoped while each runtime has a distinct CONFIG_DIR credential record with owner-only permissions; machine secrets shall never enter the membership API or repository-controlled state.",
+      "sourceRef": "MDT-201 §4 AC-F12",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-2",
+      "kind": "edge_case",
+      "text": "The same human principal using an already provisioned cloud project from two connected devices concurrently shall resolve the same cloud project UUID and membership with no session conflict.",
+      "sourceRef": "MDT-201 §4 Edge: same user two devices",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-5",
+      "kind": "edge_case",
+      "text": "A CONFIG_DIR connection with an untrusted or changed service origin shall fail closed; no credential shall be sent to the untrusted origin and repository data shall not redirect provisioning.",
+      "sourceRef": "MDT-201 §4 Edge: untrusted or changed origin",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-8",
+      "kind": "edge_case",
+      "text": "When the initial provisioning response times out, retrying with the journaled idempotency key and identical request content shall return the original cloud project UUID; changed request content shall be rejected.",
+      "sourceRef": "MDT-201 §4 Edge: provisioning timeout retry",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-9",
+      "kind": "edge_case",
+      "text": "When a legacy repository project.cloudSync binding exists, explicit migration shall import it only if CONFIG_DIR has no connection or the same connection; a conflicting connection shall fail without modifying either source.",
+      "sourceRef": "MDT-201 §4 Edge: legacy binding conflict",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-4.1",
+      "kind": "behavior",
+      "text": "Readiness, provisioning, membership, CONFIG_DIR connection state, diagnostics, and disable behavior shall be exposed through one reusable management service/API with no presentation logic.",
+      "sourceRef": "MDT-201 §4 AC-F19; Decisions: Adapter boundary",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "Shared services shall own readiness, provisioning, membership, CONFIG_DIR connection state, diagnostics, and disable semantics; presentation adapters shall only parse input and render output and shall contain no lifecycle business logic.",
+      "sourceRef": "MDT-201 Decisions: Adapter boundary",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.5",
+      "kind": "behavior",
+      "text": "Repository-controlled files and the registry entry CONFIG_DIR/projects/{localProjectId}.toml shall contain no cloud enablement, cloud project UUID, service origin, or credential; each installation shall store its connection separately under CONFIG_DIR/projects/{localProjectId}/cloud-sync.toml.",
+      "sourceRef": "MDT-201 §4 AC-F6,F7; Decisions: Connection storage",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "The device-local connection record shall live at CONFIG_DIR/projects/{localProjectId}/cloud-sync.toml and contain only version, state enabled or disabled, cloudProjectId, serviceOrigin, and pollIntervalSeconds; repository files and CONFIG_DIR/projects/{localProjectId}.toml registry entries shall contain none of these cloud connection fields.",
+      "sourceRef": "MDT-201 Decisions: Connection storage",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "unknown_or_non_member_non_disclosure",
+      "title": "Unknown and non-member principals get the same non-disclosing response",
+      "covers": [
+        "BR-3.2"
+      ],
+      "given": "A principal who is not a member of a project and a reference to an unknown project",
+      "when": "The principal queries project or membership state",
+      "then": "The same non-disclosing response is returned for unknown and non-member cases and no project existence is disclosed",
+      "sourceRef": "MDT-201 requirements.trace.md BR-3.2"
+    },
+    {
+      "id": "local_only_unchanged_with_capability_present",
+      "title": "Local-only projects are unchanged when the cloud capability is present",
+      "covers": [
+        "BR-5.1"
+      ],
+      "given": "A project with no cloud binding while the cloud management capability is present but unused",
+      "when": "Tickets are created and edited locally",
+      "then": "Creation and editing behave identically to before the cloud management capability existed",
+      "sourceRef": "MDT-201 requirements.trace.md BR-5.1"
+    },
+    {
+      "id": "revocation_project_scoped_and_protects_final_owner",
+      "title": "Revocation is project-scoped and protects the final owner",
+      "covers": [
+        "BR-2.4",
+        "BR-2.5",
+        "BR-2.7"
+      ],
+      "given": "A principal who is a member of two cloud projects and an owner of one of them",
+      "when": "The owner revokes the principal from one project, attempts to remove or demote the final owner, and attempts to grant a principal a role higher than the owner's own",
+      "then": "The revoked principal is blocked on the next protected operation in that project only and remains a member of the other project, the attempt to remove or demote the final owner is rejected, and the attempt to grant a role higher than the actor's own is rejected",
+      "sourceRef": "MDT-201 requirements.trace.md BR-2.4,BR-2.5,BR-2.7"
+    },
+    {
+      "id": "provision_once_resolves_same_uuid",
+      "title": "Provision retry and explicit connect resolve one UUID",
+      "covers": [
+        "BR-1.1",
+        "BR-1.4",
+        "BR-1.7"
+      ],
+      "given": "An operator-admitted human principal, a local project with no CONFIG_DIR connection, a shipped trusted service profile, and a journaled provisioning idempotency key",
+      "when": "The principal provisions the project, retries the same request after a simulated lost response, and a second installation explicitly connects using the returned cloud project UUID",
+      "then": "The retry returns the original UUID without a second cloud project, the first CONFIG_DIR connection is written only after verification, and the second installation connects to the same UUID without provisioning or changing repository files",
+      "sourceRef": "MDT-201 requirements.trace.md BR-1.1,BR-1.4,BR-1.7"
+    },
+    {
+      "id": "non_operator_owner_cannot_provision",
+      "title": "Non-operator owner cannot bootstrap provisioning",
+      "covers": [
+        "BR-1.2",
+        "BR-1.6"
+      ],
+      "given": "A human principal who is a project owner but is not admitted by the operator Access policy",
+      "when": "The principal attempts to provision the cloud project",
+      "then": "Provisioning is denied with a clear operator-authority message and no CONFIG_DIR connection record is written",
+      "sourceRef": "MDT-201 requirements.trace.md BR-1.2,BR-1.6"
+    },
+    {
+      "id": "repo_cannot_redirect_provisioning_endpoint",
+      "title": "Repository config cannot carry cloud state or redirect provisioning",
+      "covers": [
+        "BR-1.3",
+        "BR-1.5"
+      ],
+      "given": "A clone whose repository configuration contains attempted cloud enablement or a service origin that differs from the trusted service profile",
+      "when": "Provisioning or connect evaluates the trusted service profile and local CONFIG_DIR state",
+      "then": "Repository cloud fields are rejected or ignored as legacy migration input, the privileged endpoint comes only from the trusted profile, and all active connection fields are written only under CONFIG_DIR",
+      "sourceRef": "MDT-201 requirements.trace.md BR-1.3,BR-1.5"
+    },
+    {
+      "id": "owner_adds_human_and_machine_members",
+      "title": "Owner adds human and machine members at project scope",
+      "covers": [
+        "BR-2.1",
+        "BR-2.3"
+      ],
+      "given": "A project owner, an enabled CONFIG_DIR connection, and a machine runtime with its own service-token pair",
+      "when": "The owner adds a human principal and the machine principal id with project roles, and the machine installs its credential pair into the runtime CONFIG_DIR credential store",
+      "then": "The human role works from any personally authenticated device, the machine role is project-scoped, the credential file is owner-only, and the secret never enters the repository or membership request",
+      "sourceRef": "MDT-201 requirements.trace.md BR-2.1,BR-2.3"
+    },
+    {
+      "id": "teammate_joins_by_personal_auth",
+      "title": "Teammate explicitly connects by personal authentication",
+      "covers": [
+        "BR-2.2",
+        "BR-2.6"
+      ],
+      "given": "A provisioned cloud project UUID and a teammate already added as a human member",
+      "when": "The teammate authenticates personally on a new installation and connects using the cloud project UUID without any shared password or copied token",
+      "then": "The coordination service verifies membership, writes the installation's CONFIG_DIR connection, and uses existing counters, memberships, and projections without provisioning or migration",
+      "sourceRef": "MDT-201 requirements.trace.md BR-2.2,BR-2.6"
+    },
+    {
+      "id": "device_local_state_never_grants_identity",
+      "title": "Device-local state never grants identity or membership",
+      "covers": [
+        "BR-3.1",
+        "BR-3.3"
+      ],
+      "given": "A device holding a CONFIG_DIR connection, credentials, session, journal, and cache, and a teammate authenticating to the coordination service",
+      "when": "A protected project operation is attempted relying on that device-local state",
+      "then": "The local connection selects the cloud path but identity, membership, and provisioning authority are decided by the cloud per-operation check; local state never creates a project or grants a role",
+      "sourceRef": "MDT-201 requirements.trace.md BR-3.1,BR-3.3"
+    },
+    {
+      "id": "disable_never_resumes_local_numbering",
+      "title": "Disable retains state and never silently resumes local numbering",
+      "covers": [
+        "BR-4.2"
+      ],
+      "given": "A cloud-bound project with an enabled CONFIG_DIR connection",
+      "when": "The owner disables the project through the management service",
+      "then": "Cloud coordination is suspended, the local connection remains present with state disabled, new ticket creation fails closed, and no local allocator is selected",
+      "sourceRef": "MDT-201 requirements.trace.md BR-4.2"
+    },
+    {
+      "id": "legacy_binding_migrates_explicitly",
+      "title": "Legacy repository binding migrates explicitly without hidden edits",
+      "covers": [
+        "BR-1.8"
+      ],
+      "given": "A project with a legacy repository project.cloudSync binding and either no CONFIG_DIR connection, the same connection, or a conflicting connection",
+      "when": "The operator requests legacy binding migration",
+      "then": "A missing connection is imported after verification, an identical connection is a no-op, a conflict fails closed, and repository files are never edited without a separate explicit acknowledgement",
+      "sourceRef": "MDT-201 requirements.trace.md BR-1.8"
+    },
+    {
+      "id": "one_management_contract_no_presentation_logic",
+      "title": "One reusable management contract exposes the lifecycle with no presentation logic",
+      "covers": [
+        "BR-4.1"
+      ],
+      "given": "The reusable cloud project management contract consumed by presentation adapters",
+      "when": "Readiness, provisioning, membership, CONFIG_DIR connection, diagnostics, and disable operations are invoked through the contract",
+      "then": "All lifecycle behavior is exposed through one reusable contract, and adapters only parse input and render output with no lifecycle business logic",
+      "sourceRef": "MDT-201 requirements.trace.md BR-4.1"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-provisioning-authority",
+      "title": "Provisioning requires the operator Access audience and is denied to a project owner who is not an operator; an audience-aware credential resolver selects operator for provisioning and coordination for all other operations",
+      "derivedFrom": [
+        "BR-1.2",
+        "C5"
+      ],
+      "artifactIds": [
+        "ART-project-management",
+        "ART-management-coordinator",
+        "ART-credential-providers"
+      ],
+      "sourceRef": "MDT-201 architecture.md / assess.md"
+    },
+    {
+      "id": "OBL-trusted-service-profile",
+      "title": "The provisioning endpoint and operator audience come from a trusted service profile (distribution defaults plus operator exact-HTTPS extensions); repository data cannot select or redirect them, and the profile composes with the existing coordination-origin allowlist",
+      "derivedFrom": [
+        "BR-1.3",
+        "BR-1.4",
+        "C4",
+        "C5"
+      ],
+      "artifactIds": [
+        "ART-trusted-service-profile",
+        "ART-config"
+      ],
+      "sourceRef": "MDT-201 architecture.md / assess.md"
+    },
+    {
+      "id": "OBL-onboarding-docs",
+      "title": "Onboarding guidance documents cloud membership and Git-host repository access as separate prerequisites and names the disable and recovery procedures",
+      "derivedFrom": [
+        "BR-4.3",
+        "C9",
+        "Edge-7"
+      ],
+      "artifactIds": [
+        "ART-cloud-coordination-guide",
+        "ART-arch-cloud-sync"
+      ],
+      "sourceRef": "MDT-201 architecture.md / assess.md"
+    },
+    {
+      "id": "OBL-revocation",
+      "title": "Revocation takes effect on the next protected operation across all devices via the per-operation cloud membership check; it is project-scoped; the client does not cache or bypass a revoked membership",
+      "derivedFrom": [
+        "BR-2.4",
+        "BR-2.5",
+        "Edge-3",
+        "Edge-4"
+      ],
+      "artifactIds": [
+        "ART-project-management",
+        "ART-management-coordinator"
+      ],
+      "sourceRef": "MDT-201 architecture.md; GAP-3"
+    },
+    {
+      "id": "OBL-data-model",
+      "title": "CloudProject and MembershipRecord remain cloud-authoritative; each installation keeps a non-secret CONFIG_DIR connection record with an explicit enabled or disabled state, while repository files and the project registry contain no cloud connection",
+      "derivedFrom": [
+        "C2",
+        "C3",
+        "Edge-6"
+      ],
+      "artifactIds": [
+        "ART-contracts-config",
+        "ART-contracts-membership",
+        "ART-contracts-coordinator",
+        "ART-binding-writer"
+      ],
+      "sourceRef": "MDT-201 architecture.md Data Model"
+    },
+    {
+      "id": "OBL-disable",
+      "title": "Disable suspends cloud coordination, persists state disabled without deleting the CONFIG_DIR connection, and makes allocation fail closed; ordinary disable never resumes local numbering",
+      "derivedFrom": [
+        "BR-4.2"
+      ],
+      "artifactIds": [
+        "ART-project-management",
+        "ART-management-coordinator",
+        "ART-binding-writer",
+        "ART-allocator-strategy"
+      ],
+      "sourceRef": "MDT-201 architecture.md Disable"
+    },
+    {
+      "id": "OBL-e2e-decision",
+      "title": "Verification uses a local two-client integration contract plus a required manual smoke through the reusable service against the live Access-protected Worker; no browser or CLI E2E belongs to MDT-201",
+      "derivedFrom": [
+        "BR-4.1",
+        "BR-1.1",
+        "BR-2.2",
+        "BR-2.4"
+      ],
+      "artifactIds": [
+        "ART-arch-md",
+        "ART-live-onboarding-evidence"
+      ],
+      "sourceRef": "MDT-201 architecture.md Verification"
+    },
+    {
+      "id": "OBL-identity-isolation",
+      "title": "CONFIG_DIR connection and credential state may select a cloud path but never create a project implicitly, grant a role, or define identity; unknown and non-member lookups remain non-disclosing",
+      "derivedFrom": [
+        "BR-3.1",
+        "BR-3.2",
+        "Edge-1"
+      ],
+      "artifactIds": [
+        "ART-project-management",
+        "ART-management-coordinator",
+        "ART-config",
+        "ART-binding-writer"
+      ],
+      "sourceRef": "MDT-201 architecture.md Identity"
+    },
+    {
+      "id": "OBL-local-compat",
+      "title": "Only complete absence of a CONFIG_DIR cloud connection selects local-only behavior; a disabled or invalid connection fails closed, while genuinely local-only creation and editing remain unchanged",
+      "derivedFrom": [
+        "BR-5.1",
+        "BR-4.2"
+      ],
+      "artifactIds": [
+        "ART-project-management",
+        "ART-binding-writer",
+        "ART-allocator-strategy"
+      ],
+      "sourceRef": "MDT-201 architecture.md State Selection"
+    },
+    {
+      "id": "OBL-machine-credential-install",
+      "title": "Each machine runtime atomically stores its own Access service-token pair under CONFIG_DIR/cloud-sync/credentials with owner-only permissions; membership requests carry only the non-secret machine principal id",
+      "derivedFrom": [
+        "BR-2.3",
+        "C8"
+      ],
+      "artifactIds": [
+        "ART-credential-store",
+        "ART-credential-providers",
+        "ART-cloud-coordination-guide"
+      ],
+      "sourceRef": "MDT-201 architecture.md Credential Storage"
+    },
+    {
+      "id": "OBL-membership-lifecycle",
+      "title": "Human and machine principals are managed through the project-scoped members API; final-owner and no-self-elevation protections hold, and machine secrets never enter membership requests",
+      "derivedFrom": [
+        "BR-2.1",
+        "BR-2.3",
+        "BR-2.7",
+        "C7",
+        "C8"
+      ],
+      "artifactIds": [
+        "ART-project-management",
+        "ART-management-coordinator",
+        "ART-credential-store",
+        "ART-contracts-membership"
+      ],
+      "sourceRef": "MDT-201 architecture.md Membership"
+    },
+    {
+      "id": "OBL-no-persisted-secrets",
+      "title": "Repository files, project registry, browser-facing DTOs, and logs contain no cloud credentials; human tokens remain with cloudflared and machine secrets persist only in owner-only atomic CONFIG_DIR credential files",
+      "derivedFrom": [
+        "C6",
+        "BR-1.5",
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-credential-store",
+        "ART-test-no-persisted-secret",
+        "ART-test-credential-store"
+      ],
+      "sourceRef": "MDT-201 architecture.md Security"
+    },
+    {
+      "id": "OBL-teammate-connect",
+      "title": "A teammate explicitly connects an installation to the existing cloud project UUID using personal Access authentication; connect verifies membership, writes CONFIG_DIR state commit-last, and never provisions",
+      "derivedFrom": [
+        "BR-2.2",
+        "BR-2.6",
+        "BR-3.3"
+      ],
+      "artifactIds": [
+        "ART-project-management",
+        "ART-management-coordinator",
+        "ART-binding-writer"
+      ],
+      "sourceRef": "MDT-201 architecture.md Connect"
+    },
+    {
+      "id": "OBL-provisioning-idempotency",
+      "title": "Initial provisioning requires a journaled idempotency key; D1 returns the original cloud project UUID for an identical retry and rejects the same key with changed request content",
+      "derivedFrom": [
+        "BR-1.7",
+        "Edge-8"
+      ],
+      "artifactIds": [
+        "ART-cloud-provisioning",
+        "ART-cloud-provisioning-migration",
+        "ART-management-coordinator",
+        "ART-test-provision-idempotency"
+      ],
+      "sourceRef": "MDT-201 architecture.md Provisioning Idempotency"
+    },
+    {
+      "id": "OBL-legacy-binding-migration",
+      "title": "Legacy repository project.cloudSync state is read only as explicit migration input; import writes CONFIG_DIR after verification, rejects conflicts, and never silently edits repository files",
+      "derivedFrom": [
+        "BR-1.8",
+        "Edge-9"
+      ],
+      "artifactIds": [
+        "ART-project-config-service",
+        "ART-binding-writer",
+        "ART-project-management",
+        "ART-test-legacy-migration"
+      ],
+      "sourceRef": "MDT-201 architecture.md Legacy Migration"
+    },
+    {
+      "id": "OBL-verification-contracts",
+      "title": "Tests lock CONFIG_DIR state selection, provisioning idempotency, credential-file permissions and redaction, trusted-profile origin denial, explicit connect, legacy migration conflicts, and per-operation revocation; live Access onboarding is a manual gate",
+      "derivedFrom": [
+        "BR-1.6",
+        "BR-1.7",
+        "BR-1.8",
+        "BR-2.4",
+        "Edge-4",
+        "Edge-5",
+        "Edge-8",
+        "Edge-9",
+        "C6"
+      ],
+      "artifactIds": [
+        "ART-test-management-coordinator",
+        "ART-test-binding-writer",
+        "ART-test-credential-audience",
+        "ART-test-trusted-service-profile",
+        "ART-test-no-persisted-secret",
+        "ART-test-provision-idempotency",
+        "ART-test-credential-store",
+        "ART-test-legacy-migration",
+        "ART-live-onboarding-evidence"
+      ],
+      "sourceRef": "MDT-201 architecture.md Verification"
+    },
+    {
+      "id": "OBL-management-service",
+      "title": "One reusable CloudProjectManagementService exposes readiness, provisioning, explicit connect, membership, CONFIG_DIR state, diagnostics, disable, and migration with no presentation logic",
+      "derivedFrom": [
+        "BR-4.1",
+        "C1"
+      ],
+      "artifactIds": [
+        "ART-project-management",
+        "ART-management-coordinator",
+        "ART-contracts-project-management"
+      ],
+      "sourceRef": "MDT-201 architecture.md Module Boundaries"
+    },
+    {
+      "id": "OBL-binding-persistence",
+      "title": "CONFIG_DIR project connection state is written commit-last after provisioning or connect plus membership verification; absent means local-only, enabled selects cloud, disabled remains fail-closed; project cloudSync selectors are removed from normal configuration",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.5",
+        "BR-1.6",
+        "C3",
+        "Edge-2"
+      ],
+      "artifactIds": [
+        "ART-binding-writer",
+        "ART-config",
+        "ART-contracts-config",
+        "ART-config-selectors",
+        "ART-config-spec"
+      ],
+      "sourceRef": "MDT-201 architecture.md CONFIG_DIR State"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-project-management",
+      "path": "shared/services/cloud-sync/project-management.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-201 assess mismatch#1; BR-4.1"
+    },
+    {
+      "id": "ART-management-coordinator",
+      "path": "shared/services/cloud-sync/management-coordinator.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-201 assess mismatch#1; reuse CloudSyncCoordinator pattern"
+    },
+    {
+      "id": "ART-contracts-project-management",
+      "path": "domain-contracts/src/cloud-sync/project-management.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-201 data model: management req/resp DTOs, TrustedServiceProfile, audience types"
+    },
+    {
+      "id": "ART-trusted-service-profile",
+      "path": "shared/services/cloud-sync/trusted-service-profile.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-201 assess mismatch#4; BR-1.3/1.4, C4/C5"
+    },
+    {
+      "id": "ART-credential-providers",
+      "path": "shared/services/cloud-sync/credential-providers.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-201 assess mismatch#2/6; reuse ServiceTokenCredentialProvider, evolve audience"
+    },
+    {
+      "id": "ART-config",
+      "path": "shared/services/cloud-sync/config.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-201 reuse validateProjectBinding/checkOriginAllowlist/buildEffectiveCloudSyncConfig"
+    },
+    {
+      "id": "ART-contracts-config",
+      "path": "domain-contracts/src/cloud-sync/config.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-201 reuse ProjectCloudSyncBinding (BindingRecord)"
+    },
+    {
+      "id": "ART-contracts-membership",
+      "path": "domain-contracts/src/cloud-sync/membership.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-201 reuse ProjectMember/ProjectBindingProbe/UpsertProjectMemberRequest/CoordinationStateRequest"
+    },
+    {
+      "id": "ART-contracts-coordinator",
+      "path": "domain-contracts/src/cloud-sync/coordinator.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-201 reuse/evolve CloudCredential/CloudCredentialProvider (audience)"
+    },
+    {
+      "id": "ART-test-management-coordinator",
+      "path": "shared/services/cloud-sync/__tests__/management-coordinator.test.ts",
+      "kind": "test",
+      "sourceRef": "MDT-201 verify: envelope mapping, allowlist, redirect-error, audience routing"
+    },
+    {
+      "id": "ART-test-credential-audience",
+      "path": "shared/services/cloud-sync/__tests__/credential-audience.test.ts",
+      "kind": "test",
+      "sourceRef": "MDT-201 verify: operator vs coordination audience selection"
+    },
+    {
+      "id": "ART-test-trusted-service-profile",
+      "path": "shared/services/cloud-sync/__tests__/trusted-service-profile.test.ts",
+      "kind": "test",
+      "sourceRef": "MDT-201 verify: repo origins denied; distribution+operator merge"
+    },
+    {
+      "id": "ART-cloud-coordination-guide",
+      "path": "docs/CLOUD_COORDINATION_GUIDE.md",
+      "kind": "doc",
+      "sourceRef": "MDT-201 onboarding: cloud membership vs Git access; machine secret install"
+    },
+    {
+      "id": "ART-arch-cloud-sync",
+      "path": "docs/architecture/cloud-sync/README.md",
+      "kind": "doc",
+      "sourceRef": "MDT-201 reconcile permanent owner docs (identity/data/operations)"
+    },
+    {
+      "id": "ART-arch-md",
+      "path": "docs/CRs/MDT-201/architecture.md",
+      "kind": "doc",
+      "sourceRef": "MDT-201 architecture notes + E2E Decision Needed"
+    },
+    {
+      "id": "ART-test-no-persisted-secret",
+      "path": "shared/services/cloud-sync/__tests__/no-persisted-secret.test.ts",
+      "kind": "test",
+      "sourceRef": "MDT-201 C6 verification: no credential/secret/JWT in binding, registry, logs (redaction), browser storage"
+    },
+    {
+      "id": "ART-binding-writer",
+      "path": "shared/services/cloud-sync/project-state-store.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-201 architecture.md CONFIG_DIR State"
+    },
+    {
+      "id": "ART-project-config-service",
+      "path": "shared/services/cloud-sync/legacy-binding-migration.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-201 architecture.md Legacy Migration"
+    },
+    {
+      "id": "ART-test-binding-writer",
+      "path": "shared/services/cloud-sync/__tests__/project-state-store.test.ts",
+      "kind": "test",
+      "sourceRef": "MDT-201 tests.md TEST-project-state-store"
+    },
+    {
+      "id": "ART-credential-store",
+      "path": "shared/services/cloud-sync/credential-store.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-201 architecture.md Credential Storage"
+    },
+    {
+      "id": "ART-allocator-strategy",
+      "path": "shared/services/cloud-sync/allocator-strategy.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-201 architecture.md Disable"
+    },
+    {
+      "id": "ART-cloud-provisioning",
+      "path": "cloud/src/cloudflare/application/provisioning.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-201 architecture.md Provisioning Idempotency"
+    },
+    {
+      "id": "ART-cloud-provisioning-migration",
+      "path": "cloud/migrations/0002_project_provisioning_idempotency.sql",
+      "kind": "runtime",
+      "sourceRef": "MDT-201 architecture.md Provisioning Idempotency"
+    },
+    {
+      "id": "ART-test-provision-idempotency",
+      "path": "cloud/test/provisioning.idempotency.test.ts",
+      "kind": "test",
+      "sourceRef": "MDT-201 tests.md TEST-provision-idempotency"
+    },
+    {
+      "id": "ART-test-credential-store",
+      "path": "shared/services/cloud-sync/__tests__/credential-store.test.ts",
+      "kind": "test",
+      "sourceRef": "MDT-201 tests.md TEST-credential-store"
+    },
+    {
+      "id": "ART-test-legacy-migration",
+      "path": "shared/services/cloud-sync/__tests__/legacy-binding-migration.test.ts",
+      "kind": "test",
+      "sourceRef": "MDT-201 tests.md TEST-legacy-binding-migration"
+    },
+    {
+      "id": "ART-live-onboarding-evidence",
+      "path": "cloud/test/operations/live-onboarding.md",
+      "kind": "test",
+      "sourceRef": "MDT-201 tests.md TEST-live-access-onboarding"
+    },
+    {
+      "id": "ART-config-selectors",
+      "path": "domain-contracts/src/config-management/selectors.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-201 architecture.md CONFIG_DIR State"
+    },
+    {
+      "id": "ART-config-spec",
+      "path": "docs/CONFIG_SPECIFICATION.md",
+      "kind": "doc",
+      "sourceRef": "MDT-201 architecture.md Documentation"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-mgmt-coordinator-envelope",
+      "kind": "unit",
+      "title": "ManagementCoordinator maps cloud envelope to stable codes, enforces allowlist-before-credential and redirect:error, and routes by audience; no presentation logic",
+      "covers": [
+        "C1",
+        "C5"
+      ],
+      "file": "shared/services/cloud-sync/__tests__/management-coordinator.test.ts",
+      "sourceRef": "MDT-201 architecture OBL-management-service; ART-test-management-coordinator"
+    },
+    {
+      "id": "TEST-pm-enable-commit-last",
+      "kind": "unit",
+      "title": "Enable and connect write CONFIG_DIR state only after cloud verification; connect never provisions",
+      "covers": [
+        "BR-1.1",
+        "BR-1.6",
+        "C3"
+      ],
+      "file": "shared/services/cloud-sync/__tests__/project-management.test.ts",
+      "sourceRef": "MDT-201 OBL-binding-persistence, OBL-teammate-connect"
+    },
+    {
+      "id": "TEST-binding-writer",
+      "kind": "unit",
+      "title": "ProjectStateStore atomically persists exact CONFIG_DIR connection fields and distinguishes absent, enabled, and disabled",
+      "covers": [
+        "BR-1.5",
+        "BR-1.6",
+        "BR-4.2",
+        "C3"
+      ],
+      "file": "shared/services/cloud-sync/__tests__/project-state-store.test.ts",
+      "sourceRef": "MDT-201 OBL-binding-persistence, OBL-disable"
+    },
+    {
+      "id": "TEST-trusted-service-profile",
+      "kind": "unit",
+      "title": "TrustedServiceProfile merges distribution defaults and operator exact-HTTPS extensions; repository data cannot supply or redirect either endpoint",
+      "covers": [
+        "C4",
+        "BR-1.3",
+        "Edge-5"
+      ],
+      "file": "shared/services/cloud-sync/__tests__/trusted-service-profile.test.ts",
+      "sourceRef": "MDT-201 OBL-trusted-service-profile"
+    },
+    {
+      "id": "TEST-credential-audience",
+      "kind": "unit",
+      "title": "Credential resolution selects operator for provisioning and coordination otherwise; owner-not-operator is denied",
+      "covers": [
+        "C5",
+        "BR-1.2"
+      ],
+      "file": "shared/services/cloud-sync/__tests__/credential-audience.test.ts",
+      "sourceRef": "MDT-201 OBL-provisioning-authority"
+    },
+    {
+      "id": "TEST-mgmt-coordinator-authorization",
+      "kind": "integration",
+      "title": "Non-member denial is non-disclosing; revocation blocks next operation without client cache; final-owner and no-self-elevation protections hold; machine kind carries no secret",
+      "covers": [
+        "C7",
+        "C8",
+        "Edge-1",
+        "Edge-4",
+        "BR-2.7"
+      ],
+      "file": "shared/services/cloud-sync/__tests__/management-coordinator.test.ts",
+      "sourceRef": "MDT-201 OBL-membership-lifecycle, OBL-revocation"
+    },
+    {
+      "id": "TEST-device-state-non-authoritative",
+      "kind": "integration",
+      "title": "CONFIG_DIR connection, credentials, sessions, journals, locks, and caches never create a project implicitly or grant identity; cloud verifies every protected operation",
+      "covers": [
+        "C2",
+        "BR-3.1",
+        "Edge-3"
+      ],
+      "file": "shared/services/cloud-sync/__tests__/device-state-non-authoritative.test.ts",
+      "sourceRef": "MDT-201 OBL-identity-isolation"
+    },
+    {
+      "id": "TEST-pm-disable-no-local-resume",
+      "kind": "integration",
+      "title": "Disable suspends cloud coordination, retains state disabled, and forces allocator fail-closed; absent state alone selects local",
+      "covers": [
+        "BR-4.2"
+      ],
+      "file": "shared/services/cloud-sync/__tests__/project-management.test.ts",
+      "sourceRef": "MDT-201 OBL-disable, OBL-local-compat"
+    },
+    {
+      "id": "TEST-multi-project-isolation",
+      "kind": "integration",
+      "title": "Multiple local projects retain independent CONFIG_DIR connections, credentials, counters, and projections with no leakage",
+      "covers": [
+        "Edge-6"
+      ],
+      "file": "shared/services/cloud-sync/__tests__/project-management.test.ts",
+      "sourceRef": "MDT-201 OBL-data-model"
+    },
+    {
+      "id": "TEST-local-only-compat",
+      "kind": "integration",
+      "title": "Complete absence of CONFIG_DIR connection preserves local-only creation and editing; disabled or malformed state never falls back locally",
+      "covers": [
+        "BR-5.1",
+        "BR-4.2"
+      ],
+      "file": "shared/services/cloud-sync/__tests__/project-management.test.ts",
+      "sourceRef": "MDT-201 OBL-local-compat"
+    },
+    {
+      "id": "TEST-two-client-onboarding",
+      "kind": "integration",
+      "title": "One client provisions once and a second client explicitly connects to the returned UUID; both resolve one membership and revocation blocks the next operation",
+      "covers": [
+        "BR-1.1",
+        "BR-2.2",
+        "BR-2.6",
+        "Edge-2"
+      ],
+      "file": "shared/services/cloud-sync/__tests__/two-client-onboarding.test.ts",
+      "sourceRef": "MDT-201 OBL-e2e-decision"
+    },
+    {
+      "id": "TEST-machine-credential-local",
+      "kind": "integration",
+      "title": "ServiceTokenCredentialProvider resolves each runtime's credential only through the CONFIG_DIR credential store and sends no secret in membership requests",
+      "covers": [
+        "C8",
+        "BR-2.3"
+      ],
+      "file": "shared/services/cloud-sync/__tests__/credential-providers.test.ts",
+      "sourceRef": "MDT-201 OBL-machine-credential-install"
+    },
+    {
+      "id": "TEST-onboarding-docs",
+      "kind": "manual",
+      "title": "Documentation separates cloud membership from Git access and documents explicit connect, CONFIG_DIR credential installation, disable, legacy migration, and permanent detach",
+      "covers": [
+        "BR-4.3",
+        "C9",
+        "Edge-7"
+      ],
+      "file": "cloud/test/operations/onboarding-docs.md",
+      "sourceRef": "MDT-201 OBL-onboarding-docs"
+    },
+    {
+      "id": "TEST-provision-idempotency",
+      "kind": "integration",
+      "title": "D1 returns the original UUID for an identical provisioning retry and rejects an idempotency key reused with changed request content",
+      "covers": [
+        "BR-1.7",
+        "Edge-8"
+      ],
+      "file": "cloud/test/provisioning.idempotency.test.ts",
+      "sourceRef": "MDT-201 OBL-provisioning-idempotency"
+    },
+    {
+      "id": "TEST-credential-store",
+      "kind": "integration",
+      "title": "Machine credentials are atomically written under CONFIG_DIR with owner-only permissions, isolated per runtime, redacted, and never returned to browser-facing consumers",
+      "covers": [
+        "BR-2.3",
+        "C6",
+        "C8"
+      ],
+      "file": "shared/services/cloud-sync/__tests__/credential-store.test.ts",
+      "sourceRef": "MDT-201 OBL-machine-credential-install, OBL-no-persisted-secrets"
+    },
+    {
+      "id": "TEST-legacy-binding-migration",
+      "kind": "integration",
+      "title": "Explicit legacy import verifies membership, writes CONFIG_DIR, treats identical state as a no-op, rejects conflicts, and never silently edits the repository",
+      "covers": [
+        "BR-1.8",
+        "Edge-9"
+      ],
+      "file": "shared/services/cloud-sync/__tests__/legacy-binding-migration.test.ts",
+      "sourceRef": "MDT-201 OBL-legacy-binding-migration"
+    },
+    {
+      "id": "TEST-live-access-onboarding",
+      "kind": "manual",
+      "title": "Reusable management service against the deployed Access Worker proves operator provisioning and retry, teammate personal-auth connect, first protected operation, membership revocation, and disable",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.7",
+        "BR-2.2",
+        "BR-2.4",
+        "BR-4.2"
+      ],
+      "file": "cloud/test/operations/live-onboarding.md",
+      "sourceRef": "MDT-201 OBL-e2e-decision"
+    },
+    {
+      "id": "TEST-binding-no-persisted-secret",
+      "kind": "unit",
+      "title": "Repository config, CONFIG_DIR project registry entries, browser-facing DTOs, and logs contain no credential or reusable join secret",
+      "covers": [
+        "C6",
+        "BR-1.5",
+        "C3"
+      ],
+      "file": "shared/services/cloud-sync/__tests__/no-persisted-secret.test.ts",
+      "sourceRef": "MDT-201 OBL-no-persisted-secrets"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-1",
+      "title": "Define CONFIG_DIR connection, credential, audience, and management DTOs; compile skeletons without lifecycle logic",
+      "ownsArtifactIds": [
+        "ART-contracts-project-management",
+        "ART-contracts-coordinator",
+        "ART-contracts-config"
+      ],
+      "sourceRef": "tasks.md#TASK-1"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Implement owner-only CONFIG_DIR machine credential store and audience-aware credential resolution",
+      "ownsArtifactIds": [
+        "ART-credential-store",
+        "ART-credential-providers",
+        "ART-test-credential-store",
+        "ART-test-credential-audience"
+      ],
+      "makesGreenIds": [
+        "TEST-credential-store",
+        "TEST-credential-audience",
+        "TEST-machine-credential-local"
+      ],
+      "sourceRef": "tasks.md#TASK-2"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Implement trusted service profile from distribution defaults plus operator exact-HTTPS extensions; repository supplies no cloud origin",
+      "ownsArtifactIds": [
+        "ART-trusted-service-profile",
+        "ART-config",
+        "ART-test-trusted-service-profile"
+      ],
+      "makesGreenIds": [
+        "repo_cannot_redirect_provisioning_endpoint",
+        "TEST-trusted-service-profile"
+      ],
+      "sourceRef": "tasks.md#TASK-3"
+    },
+    {
+      "id": "TASK-5",
+      "title": "Implement ManagementCoordinator HTTP client with audience routing, allowlist-before-credential, redirect denial, and stable envelopes",
+      "ownsArtifactIds": [
+        "ART-management-coordinator",
+        "ART-test-management-coordinator"
+      ],
+      "makesGreenIds": [
+        "TEST-mgmt-coordinator-envelope"
+      ],
+      "sourceRef": "tasks.md#TASK-5"
+    },
+    {
+      "id": "TASK-7",
+      "title": "Implement human and machine membership plus project-scoped revocation; membership requests carry no machine secret",
+      "ownsArtifactIds": [
+        "ART-contracts-membership"
+      ],
+      "makesGreenIds": [
+        "owner_adds_human_and_machine_members",
+        "revocation_project_scoped_and_protects_final_owner",
+        "TEST-mgmt-coordinator-authorization"
+      ],
+      "sourceRef": "tasks.md#TASK-7"
+    },
+    {
+      "id": "TASK-8",
+      "title": "Enforce cloud identity and tenant isolation: CONFIG_DIR state selects a path but never grants identity or bypasses per-operation membership",
+      "makesGreenIds": [
+        "device_local_state_never_grants_identity",
+        "unknown_or_non_member_non_disclosure",
+        "TEST-device-state-non-authoritative"
+      ],
+      "sourceRef": "tasks.md#TASK-8"
+    },
+    {
+      "id": "TASK-9",
+      "title": "Implement disable as suspend plus retained disabled state and update allocator selection so only absent state is local",
+      "ownsArtifactIds": [
+        "ART-allocator-strategy"
+      ],
+      "makesGreenIds": [
+        "disable_never_resumes_local_numbering",
+        "TEST-pm-disable-no-local-resume"
+      ],
+      "sourceRef": "tasks.md#TASK-9"
+    },
+    {
+      "id": "TASK-11",
+      "title": "Prove two-client explicit-connect behavior locally and complete the live Access onboarding smoke through the reusable service",
+      "ownsArtifactIds": [
+        "ART-live-onboarding-evidence"
+      ],
+      "makesGreenIds": [
+        "TEST-two-client-onboarding",
+        "TEST-live-access-onboarding"
+      ],
+      "sourceRef": "tasks.md#TASK-11"
+    },
+    {
+      "id": "TASK-provision-idempotency",
+      "title": "Make cloud project provisioning retry-idempotent with a D1 uniqueness record and request-hash conflict detection",
+      "ownsArtifactIds": [
+        "ART-cloud-provisioning",
+        "ART-cloud-provisioning-migration",
+        "ART-test-provision-idempotency"
+      ],
+      "makesGreenIds": [
+        "TEST-provision-idempotency"
+      ],
+      "sourceRef": "tasks.md#TASK-provision-idempotency"
+    },
+    {
+      "id": "TASK-6",
+      "title": "Implement enable and explicit connect orchestration: journal provisioning key, verify cloud membership, then commit CONFIG_DIR connection",
+      "ownsArtifactIds": [
+        "ART-project-management"
+      ],
+      "makesGreenIds": [
+        "provision_once_resolves_same_uuid",
+        "non_operator_owner_cannot_provision",
+        "teammate_joins_by_personal_auth",
+        "one_management_contract_no_presentation_logic",
+        "TEST-pm-enable-commit-last"
+      ],
+      "sourceRef": "tasks.md#TASK-6"
+    },
+    {
+      "id": "TASK-10",
+      "title": "Implement explicit legacy binding migration, multi-project isolation, and genuine local-only compatibility",
+      "ownsArtifactIds": [
+        "ART-project-config-service",
+        "ART-test-legacy-migration"
+      ],
+      "makesGreenIds": [
+        "legacy_binding_migrates_explicitly",
+        "local_only_unchanged_with_capability_present",
+        "TEST-legacy-binding-migration",
+        "TEST-multi-project-isolation",
+        "TEST-local-only-compat"
+      ],
+      "sourceRef": "tasks.md#TASK-10"
+    },
+    {
+      "id": "TASK-4",
+      "title": "Implement atomic CONFIG_DIR ProjectStateStore with absent, enabled, and disabled semantics; remove normal project.cloudSync selectors and repository writes",
+      "ownsArtifactIds": [
+        "ART-binding-writer",
+        "ART-test-binding-writer",
+        "ART-test-no-persisted-secret",
+        "ART-config-selectors"
+      ],
+      "makesGreenIds": [
+        "TEST-binding-writer",
+        "TEST-binding-no-persisted-secret"
+      ],
+      "sourceRef": "tasks.md#TASK-4"
+    },
+    {
+      "id": "TASK-12",
+      "title": "Reconcile durable onboarding, cloud architecture, and configuration specs for CONFIG_DIR state, credential install, connect, disable, migration, Git separation, and permanent detach",
+      "ownsArtifactIds": [
+        "ART-cloud-coordination-guide",
+        "ART-arch-cloud-sync",
+        "ART-arch-md",
+        "ART-config-spec"
+      ],
+      "makesGreenIds": [
+        "TEST-onboarding-docs"
+      ],
+      "sourceRef": "tasks.md#TASK-12"
+    }
+  ]
+}

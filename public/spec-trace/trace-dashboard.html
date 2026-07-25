@@ -144,7 +144,7 @@
 
     .controls {
       display: grid;
-      grid-template-columns: minmax(240px, 1fr) 190px auto;
+      grid-template-columns: minmax(240px, 1fr) 190px 160px auto;
       gap: 10px;
       padding: 10px 16px;
       border-bottom: 1px solid var(--line);
@@ -168,6 +168,33 @@
 
     .select {
       padding: 0 10px;
+    }
+
+    .chain-depth {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 38px;
+      padding: 0 10px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      background: var(--paper);
+      color: var(--ink);
+    }
+
+    .chain-depth-label {
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--ink-subtle, #6b6358);
+      white-space: nowrap;
+    }
+
+    .chain-depth .select {
+      min-height: 0;
+      padding: 4px 8px;
+      border: 0;
+      background: transparent;
     }
 
     .ghost-button {
@@ -930,6 +957,15 @@
         <option value="tests">Tests</option>
         <option value="tasks">Tasks</option>
       </select>
+      <label class="chain-depth" for="chainDepthSelect" title="How far to follow relationships from the selected card. 1 = direct neighbors only.">
+        <span class="chain-depth-label">Chain</span>
+        <select class="select" id="chainDepthSelect" aria-label="Chain depth">
+          <option value="1">1 hop</option>
+          <option value="2">2 hops</option>
+          <option value="3">3 hops</option>
+          <option value="4">4 hops</option>
+        </select>
+      </label>
       <button class="ghost-button" id="clearButton" type="button">Clear Focus</button>
     </section>
 
@@ -987,7 +1023,16 @@
     const STORAGE_KEYS = {
       asideCollapsed: 'specTrace.traceDashboard.asideCollapsed',
       fullCards: 'specTrace.traceDashboard.fullCards',
+      chainDepth: 'specTrace.traceDashboard.chainDepth',
     };
+
+    // 1 = direct neighbors only (historical behavior). >=2 walks the related-map
+    // breadth-first so selecting a requirement also surfaces downstream artifacts
+    // and tasks. Capped at CHAIN_DEPTH_MAX so a dense store can't explode the
+    // active set.
+    const CHAIN_DEPTH_MIN = 1;
+    const CHAIN_DEPTH_MAX = 4;
+    const CHAIN_DEPTH_DEFAULT = 1;
 
     const state = {
       store: null,
@@ -997,6 +1042,7 @@
       stage: 'all',
       asideCollapsed: readStoredBoolean(STORAGE_KEYS.asideCollapsed, true),
       fullCards: readStoredBoolean(STORAGE_KEYS.fullCards, true),
+      chainDepth: clampChainDepth(readStoredNumber(STORAGE_KEYS.chainDepth, CHAIN_DEPTH_DEFAULT)),
       scrollTimers: new WeakMap(),
       columnScroll: new Map(),
       scrollSelectedIntoView: false,
@@ -1014,6 +1060,7 @@
       graphViewport: document.getElementById('graphViewport'),
       searchInput: document.getElementById('searchInput'),
       stageSelect: document.getElementById('stageSelect'),
+      chainDepthSelect: document.getElementById('chainDepthSelect'),
       clearButton: document.getElementById('clearButton'),
       cardsToggle: document.getElementById('cardsToggle'),
       asideToggle: document.getElementById('asideToggle'),
@@ -1033,6 +1080,12 @@
 
     elements.stageSelect.addEventListener('change', (event) => {
       state.stage = event.target.value;
+      render();
+    });
+
+    elements.chainDepthSelect.addEventListener('change', (event) => {
+      state.chainDepth = clampChainDepth(Number(event.target.value));
+      writeStoredNumber(STORAGE_KEYS.chainDepth, state.chainDepth);
       render();
     });
 
@@ -1254,6 +1307,7 @@
       renderDetail();
       renderAsideState();
       renderCardsState();
+      renderChainDepthState();
       requestAnimationFrame(drawEdges);
     }
 
@@ -1274,6 +1328,39 @@
       elements.app.classList.toggle('full-cards', state.fullCards);
       elements.cardsToggle.textContent = state.fullCards ? 'Fixed Cards' : 'Full Cards';
       elements.cardsToggle.setAttribute('aria-pressed', String(state.fullCards));
+    }
+
+    function renderChainDepthState() {
+      // Sync the <select>'s value whenever state.chainDepth changes for reasons
+      // other than a user change event (e.g. persisted default loaded at boot).
+      if (elements.chainDepthSelect && Number(elements.chainDepthSelect.value) !== state.chainDepth) {
+        elements.chainDepthSelect.value = String(state.chainDepth);
+      }
+    }
+
+    function clampChainDepth(value) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return CHAIN_DEPTH_DEFAULT;
+      return Math.min(CHAIN_DEPTH_MAX, Math.max(CHAIN_DEPTH_MIN, Math.round(n)));
+    }
+
+    function readStoredNumber(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        if (raw === null) return fallback;
+        const n = Number(raw);
+        return Number.isFinite(n) ? n : fallback;
+      } catch {
+        return fallback;
+      }
+    }
+
+    function writeStoredNumber(key, value) {
+      try {
+        localStorage.setItem(key, String(value));
+      } catch {
+        // Ignore storage failures; the in-memory state still applies for this page load.
+      }
     }
 
     function renderMetrics() {
@@ -1627,7 +1714,27 @@
 
     function activeNeighborhood() {
       if (!state.selectedId) return new Set();
-      return new Set([state.selectedId, ...(state.graph.related.get(state.selectedId) || [])]);
+      // BFS over the bidirectional related map. depth=1 reproduces the old
+      // one-hop neighborhood; higher depths follow the chain across stages so
+      // (e.g.) a requirement pulls in its obligations, then their artifacts,
+      // then their tasks.
+      const depth = state.chainDepth;
+      const visited = new Set([state.selectedId]);
+      let frontier = [state.selectedId];
+      for (let level = 0; level < depth; level += 1) {
+        const next = [];
+        for (const id of frontier) {
+          for (const relatedId of state.graph.related.get(id) || []) {
+            if (!visited.has(relatedId)) {
+              visited.add(relatedId);
+              next.push(relatedId);
+            }
+          }
+        }
+        if (next.length === 0) break;
+        frontier = next;
+      }
+      return visited;
     }
 
     function handleGraphWheel(event) {

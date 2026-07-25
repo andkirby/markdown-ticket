@@ -17,24 +17,25 @@ Two outcomes only:
 It does **not** make the cloud a ticket-content authority. Markdown/Git remains
 authoritative for ticket bodies and the projected header fields.
 
-## Opt-in per project
+## Opt-in per installation
 
-Cloud binding is opt-in per project. A project with no `[project.cloudSync]`
-section behaves exactly as before — local `highest + 1` allocation, no cloud
-calls. See [`docs/CONFIG_SPECIFICATION.md`](CONFIG_SPECIFICATION.md) for the
-binding schema.
-
-Enable a binding only after the project is provisioned and a membership probe
-succeeds:
+The cloud project is shared by the team, but each installation keeps its
+connection under `CONFIG_DIR`, outside the repository. A project with no
+CONFIG_DIR connection behaves exactly as before—local `highest + 1` allocation
+and no cloud calls. A disabled connection remains present and blocks new ticket
+creation.
 
 ```toml
-# .mdt-config.toml
-[project.cloudSync]
-enabled = true
-projectId = "018f5e6c-6f32-7c5b-9e76-97c7c769c123"
-serviceUrl = "https://mdt-sync.example.com"
+# CONFIG_DIR/projects/{localProjectId}/cloud-sync.toml
+version = 1
+state = "enabled"
+cloudProjectId = "018f5e6c-6f32-7c5b-9e76-97c7c769c123"
+serviceOrigin = "https://mdt-sync.example.com"
 pollIntervalSeconds = 15
 ```
+
+`.mdt-config.toml` and the global project registry contain no cloud enablement,
+cloud project UUID, service origin, or credential.
 
 ## Canonical project activation procedure
 
@@ -56,22 +57,24 @@ implement it independently.
 6. Validate the returned cloud project UUID.
 7. Authenticate against the coordination application and verify the initial
    owner membership.
-8. Atomically write the non-secret project binding as the final step.
+8. Atomically write the non-secret CONFIG_DIR connection as the final step.
 9. Report the project as ready only after a final status probe succeeds.
 
-Failure before step 8 leaves project configuration unchanged. A timeout after
+Failure before step 8 leaves CONFIG_DIR connection state unchanged. A timeout after
 provisioning resumes the same provisioning operation; it must not create a
 second cloud project. Tokens and assertions remain inside the credential
 provider throughout the procedure.
 
 ### Connect an existing clone or teammate
 
-1. Read the existing non-secret project binding from the repository.
+1. Obtain the existing non-secret cloud project UUID from the project owner or
+   team onboarding channel.
 2. Validate the coordination origin against the trusted service profile.
 3. Authenticate the person through the coordination Access application.
-4. Probe the bound cloud project and verify existing membership.
-5. Report ready, forbidden, unavailable, suspended, or incompatible without
-   changing the binding or provisioning another project.
+4. Probe that cloud project and verify existing membership.
+5. Atomically write the installation's CONFIG_DIR connection.
+6. Report ready, forbidden, unavailable, suspended, or incompatible without
+   provisioning another project.
 
 Connecting never calls the operator provisioning endpoint. Cloud membership
 and Git repository access remain separate prerequisites.
@@ -90,7 +93,7 @@ and Git repository access remain separate prerequisites.
 ## Operator setup
 
 Until MDT-201/202 provide the supported orchestration and CLI, the following is
-the manual operator fallback for establishing the same binding.
+the manual operator fallback for establishing the same connection.
 
 ### 1. Configure the origin allowlist (global)
 
@@ -119,8 +122,10 @@ POST https://mdt-sync-admin.example.com/v1/admin/projects
 ```
 
 `initialNextTicketNumber` must be greater than the highest ticket number in the
-local repository. The Worker returns the cloud project UUID once; the local
-owner writes the non-secret binding only after a membership probe succeeds.
+local repository. Provisioning uses a persisted idempotency key so a lost
+response can be retried without creating a second cloud project. The local
+installation writes its CONFIG_DIR connection only after a membership probe
+succeeds.
 
 ### 3. Onboard members
 
@@ -140,15 +145,16 @@ Credentials never live in `.mdt-config.toml` or the registry.
 | --- | --- | --- |
 | Browser (human) | short-lived Access app token | `cloudflared` obtains it; local server holds it in memory only |
 | Interactive CLI / stdio MCP (human) | same | `cloudflared access token -app=<origin>` |
-| Headless MCP / automation (machine) | Access service token | `CF_ACCESS_CLIENT_ID` / `CF_ACCESS_CLIENT_SECRET` in the process secret channel |
+| Headless MCP / automation (machine) | Access service token | owner-only `CONFIG_DIR/cloud-sync/credentials/{credentialRef}.toml` |
 
-Every adapter requires the project `serviceUrl` to exactly match an
-`allowedOrigins` entry before attaching any credential, and rejects redirects.
+Every adapter requires the connection `serviceOrigin` to exactly match the
+effective trusted service profile before attaching any credential, and rejects
+redirects.
 
 Existing browser, CLI, and MCP ticket-create operations all enter the same
 shared `TicketService` orchestration. MDT-202 adds dedicated `mdt cloud`
 management commands; it is not required for normal ticket creation once the
-project binding exists.
+CONFIG_DIR connection exists.
 
 The browser polls header projections through
 `GET /api/projects/{projectId}/cloud-projections`. That local endpoint is
@@ -172,11 +178,14 @@ atomic write-and-rename) survives these boundaries:
 
 ## Disable a project
 
-Disabling one client does not stop allocations by others. Follow the
-project-wide suspend + detach sequence (see
+Ordinary disable suspends project coordination and retains the installation's
+CONFIG_DIR connection with `state = "disabled"`; new ticket creation remains
+blocked. Disabling one installation alone does not stop allocations by others.
+Only permanent return to local numbering follows the project-wide suspend +
+detach sequence (see
 [`architecture/cloud-sync/data-and-consistency.md`](architecture/cloud-sync/data-and-consistency.md))
-before resuming local numbering. After detach, all ticket files remain usable
-from Markdown/Git.
+and removes connections after counter reconciliation. After detach, all ticket
+files remain usable from Markdown/Git.
 
 ## Vendor exit
 

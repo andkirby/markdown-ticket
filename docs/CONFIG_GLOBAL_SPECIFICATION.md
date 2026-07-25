@@ -196,9 +196,9 @@ linkValidation = true
 
 ### 4. Cloud Sync Origin Allowlist (`[cloudSync]`)
 
-Operator-controlled allowlist of coordination service origins. This is the only
-place a coordination origin is trusted; project `.mdt-config.toml` files cannot
-expand it (MDT-200, constraint C6).
+Operator-controlled extension list for coordination service origins.
+Distribution-provided origins remain trusted, and project `.mdt-config.toml`
+files cannot contain or expand cloud connection state (MDT-201).
 
 | Field | Type | Required | Default | Description |
 |-------|------|----------|---------|-------------|

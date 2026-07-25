@@ -16,7 +16,8 @@ It does not make the cloud a ticket-content authority.
 
 ## Non-Negotiable Invariants
 
-1. Cloud binding is opt-in per project.
+1. Cloud coordination is opt-in per local installation and binds explicitly to
+   one cloud project.
 2. The cloud owns project membership and the per-project number counter.
 3. Markdown/Git owns ticket bodies and projected header fields.
 4. Header data flows one way, from Markdown into a versioned cloud mirror.
@@ -56,7 +57,7 @@ exist to support offline ticket creation.
 | Concern | Authority | Owner document |
 | --- | --- | --- |
 | Ticket body and projected headers | Local Markdown/Git | This document |
-| Cloud project UUID and binding | Cloud project plus local non-secret binding | [Data and consistency](data-and-consistency.md) |
+| Cloud project UUID and connection | Cloud project plus CONFIG_DIR connection state | [Data and consistency](data-and-consistency.md) |
 | Membership and roles | Cloud coordination service | [Identity and access](identity-and-access.md) |
 | Ticket-number allocation | D1 transaction | [Data and consistency](data-and-consistency.md) |
 | Projection version and polling cursor | D1 coordination records | [Data and consistency](data-and-consistency.md) |
@@ -196,17 +197,19 @@ C4Component
 
 ## Local Integration Contract
 
-`TicketService.createCR()` reads the explicit project binding. With no enabled
-binding it preserves the existing local scan. With an enabled binding it calls
+`TicketService.createCR()` reads device-local cloud connection state. Complete
+absence preserves the existing local scan. An enabled connection calls
 `CloudCreateOrchestrator`, which persists the intent, reserves a number, writes
-the Markdown file exclusively, and acknowledges the header projection.
+the Markdown file exclusively, and acknowledges the header projection. A
+disabled, malformed, or untrusted connection fails closed.
 
 `CloudProjectionSync` journals and safely publishes later header changes.
 `CloudProjectionClient` polls derived headers through the owner-only local
 server adapter; the browser never receives Cloudflare credentials.
 `RuntimeCloudCredentialProvider` resolves either an interactive `cloudflared`
-token or the service-token environment pair. Credentials are never stored in
-the project file or operation journal.
+token or a machine service-token pair from the owner-only CONFIG_DIR credential
+store. Credentials are never stored in the project file, registry, or operation
+journal.
 
 The journal key combines a device-local hash of the physical Git common
 directory (or canonical project root outside Git) with the cloud project UUID.
@@ -220,29 +223,39 @@ and temporary file stay in the same directory. Implementations use user-only
 directory/file permissions (`0700`/`0600` on POSIX and the closest supported
 user-only protection elsewhere).
 
-## Project Binding
+## Local Cloud Connection
 
-`MDT-200` adds this non-secret project configuration:
+The cloud project is project-scoped, but every installation keeps its own
+non-secret connection outside the repository:
 
 ```toml
-[project.cloudSync]
-enabled = true
-projectId = "018f5e6c-6f32-7c5b-9e76-97c7c769c123"
-serviceUrl = "https://mdt-sync.example.com"
+# CONFIG_DIR/projects/{localProjectId}/cloud-sync.toml
+version = 1
+state = "enabled"
+cloudProjectId = "018f5e6c-6f32-7c5b-9e76-97c7c769c123"
+serviceOrigin = "https://mdt-sync.example.com"
 pollIntervalSeconds = 15
 ```
 
-| Selector | Exposure | Rule |
-| --- | --- | --- |
-| `project.cloudSync.enabled` | `guarded` | Enable only after project provisioning and a successful identity/membership probe |
-| `project.cloudSync.projectId` | `fileOnly` | UUID issued by the cloud; immutable while enabled |
-| `project.cloudSync.serviceUrl` | `fileOnly` | Coordination HTTPS origin; no path, query, fragment, credentials, or wildcard; must exactly match the effective trusted-origin set |
-| `project.cloudSync.pollIntervalSeconds` | `guarded` | Integer from 5 through 300; default 15 |
+| Field | Rule |
+| --- | --- |
+| `version` | Connection schema version; currently `1` |
+| `state` | `enabled` or `disabled`; disabled remains fail-closed |
+| `cloudProjectId` | UUID issued by the cloud |
+| `serviceOrigin` | Coordination HTTPS origin; exact trusted-origin match |
+| `pollIntervalSeconds` | Integer from 5 through 300; default 15 |
 
-No Access token, service-token ID, service-token secret, JWT, team domain, or
-audience tag is permitted in `.mdt-config.toml` or the global project registry.
-These selectors are registered in the canonical configuration specification
-and inspection registry.
+Repository `.mdt-config.toml` and the global registry entry
+`CONFIG_DIR/projects/{localProjectId}.toml` contain no cloud enablement, project
+UUID, service origin, credential, team domain, or audience.
+Legacy `[project.cloudSync]` is read only by the explicit MDT-201 migration
+flow; normal lifecycle operations never write it.
+
+Machine credentials live separately at
+`CONFIG_DIR/cloud-sync/credentials/{credentialRef}.toml`. The directory and file
+use user-only permissions (`0700`/`0600` on POSIX and the closest supported
+equivalent elsewhere), atomic writes, and redacted diagnostics. Human Access
+tokens remain managed by `cloudflared` and in process memory.
 
 The local runtime has an effective cloud-sync trusted-origin set composed of:
 
@@ -250,10 +263,9 @@ The local runtime has an effective cloud-sync trusted-origin set composed of:
 2. operator-controlled HTTPS origins added in global
    `CONFIG_DIR/config.toml`.
 
-A repository-controlled `serviceUrl` is accepted only on an exact match.
-Official hosted sync therefore does not require repeated per-device project
-enablement or allowlist edits. Self-hosted and custom services still require an
-operator to trust their exact origin globally:
+The connection `serviceOrigin` is accepted only on an exact trusted-profile
+match. Official hosted sync needs no per-project allowlist edit. Self-hosted and
+custom services still require an operator to trust their exact origin globally:
 
 ```toml
 [cloudSync]
@@ -264,21 +276,23 @@ allowedOrigins = ["https://mdt-sync.example.com"]
 operator-added absolute HTTPS origins only. Its default is empty, so no custom
 origin is trusted until an operator configures it; this does not remove the
 distribution-provided trusted origins.
-Headless adapters refuse to attach service-token headers to any other origin,
-which prevents a modified project file from redirecting credentials.
+Headless adapters refuse to attach service-token headers to any other origin.
+Repository contents cannot redirect credentials because they contain no active
+cloud origin.
 
-Project activation is project-scoped. The stable, non-secret binding may be
-shared with the repository, while credentials, sessions, operation journals,
-locks, and caches remain device-local and non-authoritative. A second clone
-uses the existing binding after personal authentication; it does not provision
-or enable another cloud project.
+Initial activation is one explicit operator operation. The client journals a
+provisioning idempotency key before the request; identical retries return the
+same UUID and conflicting key reuse fails. A second installation receives the
+non-secret cloud project UUID through the onboarding channel and runs explicit
+`connect`. Connect verifies membership and writes CONFIG_DIR state; it never
+provisions.
 
 Privileged project provisioning uses the operator Access audience. Its endpoint
 is resolved from a distribution- or operator-controlled trusted service
 profile, not from repository configuration. A normal project owner is not
 automatically a cloud-service operator. After provisioning, teammate login and
-all normal project operations use the coordination origin stored in the
-project binding.
+all normal project operations use the coordination origin stored in the local
+connection.
 
 ## Delivery Slices for MDT-200
 
