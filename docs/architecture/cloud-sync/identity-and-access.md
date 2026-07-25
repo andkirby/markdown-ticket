@@ -134,11 +134,12 @@ It accepts:
 }
 ```
 
-The Worker creates a random cloud project UUID, the initial counter, and the
-first owner membership in one D1 batch. `initialNextTicketNumber` must be
-greater than the highest ticket number in the local repository. The operator
-returns the UUID once; the local owner writes the non-secret binding only after
-a membership probe succeeds.
+The Worker creates a random cloud project UUID, the initial counter, the first
+owner membership, and the provisioning-idempotency record atomically.
+`initialNextTicketNumber` must be greater than the highest ticket number in the
+local repository. An identical retry returns the original UUID; reuse of the
+key with changed request content fails. The installation writes its CONFIG_DIR
+connection only after a membership probe succeeds.
 
 There is no anonymous bootstrap endpoint and no reusable bootstrap secret.
 
@@ -152,8 +153,8 @@ are both required. Removing either blocks subsequent project operations.
 
 1. An Access administrator creates a named, expiring service token.
 2. An owner adds its verified client ID (`common_name`) as a machine member.
-3. The client ID and secret are installed only in the headless runtime's secret
-   channel.
+3. The client ID and secret are installed only on the target runtime in the
+   owner-only CONFIG_DIR credential store.
 4. A test request confirms machine attribution before automation is enabled.
 
 ## Client Credential Flows
@@ -191,9 +192,9 @@ sequenceDiagram
 ```
 
 The local server invokes `cloudflared` with a fixed executable and argument
-array, never through a shell. The origin comes from validated project config,
-not request input. The server holds the returned token in memory only for its
-remaining lifetime.
+array, never through a shell. The origin comes from the trusted service profile
+or validated CONFIG_DIR connection, not repository or request input. The server
+holds the returned token in memory only for its remaining lifetime.
 
 ### Interactive CLI and Local MCP
 
@@ -210,12 +211,11 @@ it in structured logs.
 ### Headless MCP or Automation
 
 MCP HTTP and non-interactive automation use an Access service token. The two
-credential values are supplied by process environment or an OS/runtime secret
-store:
+credential values are installed in the runtime's owner-only CONFIG_DIR
+credential store:
 
 ```text
-CF_ACCESS_CLIENT_ID
-CF_ACCESS_CLIENT_SECRET
+CONFIG_DIR/cloud-sync/credentials/{credentialRef}.toml
 ```
 
 They are sent only to the fixed Access-protected origin. The local MCP bearer
@@ -224,18 +224,21 @@ be forwarded to the coordination Worker.
 
 Before attaching any human token or service-token header, every adapter
 requires the destination to exactly match the effective trusted-origin set:
-distribution-provided service origins plus operator-configured extensions.
-The repository-controlled project `serviceUrl` selects only the coordination
-origin; a privileged provisioning origin comes from the trusted service
-profile, never project data. Redirects to another origin are rejected and
-credential-bearing requests use redirect mode `error`.
+distribution-provided service origins plus operator-configured extensions. The
+CONFIG_DIR connection selects only a trusted coordination origin; a privileged
+provisioning origin comes from the trusted service profile. Repository data
+selects neither. Redirects to another origin are rejected and credential-bearing
+requests use redirect mode `error`.
 
 ## Secret and Token Policy
 
-- Project TOML and registry files contain no credential material.
+- Project TOML and registry files contain no cloud connection or credential
+  material.
 - Browser storage contains no cloud token or service secret.
 - Human application tokens are short-lived and retained in process memory only;
   `cloudflared` owns its own authenticated session storage.
+- Machine Access credentials are atomically stored only in owner-only CONFIG_DIR
+  credential files and are never returned by browser-facing DTOs.
 - Service tokens have named owners, explicit expiry, least-privilege
   membership, and an expiration alert.
 - Rotation installs the replacement token, validates it, switches automation,

@@ -28,6 +28,8 @@ The system uses a dual-configuration approach:
 | `~/.config/markdown-ticket/projects/{project-dir}.toml` | Project Registry | Global |
 | `{project}/.mdt-config.toml` | Project Configuration | Local |
 | `{project}/.mdt-next` | Counter File | Local |
+| `CONFIG_DIR/projects/{localProjectId}/cloud-sync.toml` | Device-local cloud connection | Local runtime |
+| `CONFIG_DIR/cloud-sync/credentials/{credentialRef}.toml` | Machine Access credential | Local runtime secret |
 
 ## Schema Definition
 
@@ -90,19 +92,33 @@ The system supports three valid file relationship states:
 | `excludeFolders` | array | Optional | [`{ticketsPath}`, `node_modules`, `.git`] | - | Folder names to exclude from discovery. `ticketsPath` is always auto-added if not present. |
 | `maxDepth` | number | Optional | 5 | 1-10 | Maximum directory depth for scanning |
 
-**Schema - [project.cloudSync] section** (MDT-200, opt-in cloud coordination):
+### Cloud Sync Runtime Files
+
+Cloud connection and credential state does not belong in `.mdt-config.toml` or
+the global project registry. Each installation stores its connection in:
+
+```text
+CONFIG_DIR/projects/{localProjectId}/cloud-sync.toml
+```
 
 | Field | Type | Required | Default | Range | Description |
 |-------|------|----------|---------|-------|-------------|
-| `enabled` | boolean | Required | false | - | Opt-in binding; enable only after provisioning and a successful identity/membership probe. While false, allocation stays local. |
-| `projectId` | string | Required when enabled | - | UUID | Cloud project UUID issued by the coordination service; immutable while `enabled = true`. |
-| `serviceUrl` | string | Required when enabled | - | absolute HTTPS origin | Coordination service origin. No path, query, fragment, credentials, or wildcard. Must exactly match an operator-controlled `cloudSync.allowedOrigins` entry. |
+| `version` | integer | Required | `1` | `1` | Connection schema version. |
+| `state` | string | Required | - | `enabled`, `disabled` | Enabled selects cloud coordination; disabled remains fail-closed. Only an absent connection is local-only. |
+| `cloudProjectId` | string | Required | - | UUID | Cloud project UUID issued by the coordination service. |
+| `serviceOrigin` | string | Required | - | absolute HTTPS origin | Coordination origin from the effective trusted service profile. |
 | `pollIntervalSeconds` | integer | Optional | 15 | 5–300 | Teammate projection polling interval. |
 
-No Access token, service-token ID, service-token secret, JWT, team domain, or
-audience tag is permitted in `.mdt-config.toml` or the global project registry.
-Credentials live only in interactive (`cloudflared`) or backend secret
-providers. See [`docs/CLOUD_COORDINATION_GUIDE.md`](CLOUD_COORDINATION_GUIDE.md).
+Machine credentials live at
+`CONFIG_DIR/cloud-sync/credentials/{credentialRef}.toml`. Credential files use
+atomic writes and owner-only permissions. Human Access tokens remain managed by
+`cloudflared` and are not persisted by MDT.
+
+No cloud enablement, cloud project UUID, service origin, Access token,
+service-token credential, JWT, team domain, or audience is permitted in
+`.mdt-config.toml` or the global registry entry
+`CONFIG_DIR/projects/{localProjectId}.toml`. Legacy
+`[project.cloudSync]` is explicit migration input only.
 
 
 ## Key Constraints
