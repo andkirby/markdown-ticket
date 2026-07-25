@@ -9,6 +9,10 @@ export * from './access'
 // Export application config contracts
 export * from './app-config'
 
+// Export cloud sync coordination contracts (MDT-200) — pure DTOs that cross the
+// coordination HTTP boundary; shared by cloud/ and local application packages.
+export * from './cloud-sync'
+
 // Export MCP server configuration schemas and validation
 export * from './config'
 

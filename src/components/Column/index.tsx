@@ -1,13 +1,15 @@
 import type { TicketFilters } from '@mdt/domain-contracts'
-import type { Status, Ticket } from '../../types'
+import type { BoardTicket, ProjectedStubTicket, Status, Ticket } from '../../types'
 import { CRStatus } from '@mdt/domain-contracts'
 import * as React from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import { useDrag } from 'react-dnd'
 import { getVisibleColumns } from '../../config'
+import { isProjectedStub } from '../../types'
 import { getColumnGradient } from '../../utils/colorUtils'
 import { sortTickets } from '../../utils/sorting'
 import { MobileChipStrip } from '../BoardFilterBar/MobileChipStrip'
+import { CloudProjectionStub } from '../CloudProjectionStub'
 import { ResolutionDialog } from '../ResolutionDialog'
 import TicketCard from '../TicketCard'
 import {
@@ -27,10 +29,13 @@ interface ColumnProps {
     statuses: Status[]
     color: string
   }
-  tickets: Ticket[]
-  allTickets: Ticket[] // All tickets to access deferred ones
+  /** MDT-200 U5: board tickets may be local (draggable) or projected stubs. */
+  tickets: BoardTicket[]
+  allTickets: BoardTicket[] // All tickets to access deferred ones
   onDrop: (status: Status, ticket: Ticket, currentColumnIndex?: number, currentTicketIndex?: number) => void
   onTicketEdit: (ticket: Ticket) => void
+  /** MDT-200 U5: open a projected stub read-only (no edit controls). */
+  onOpenProjection?: (stub: ProjectedStubTicket) => void
   sortAttribute?: string
   sortDirection?: 'asc' | 'desc'
   isFirstColumn?: boolean
@@ -119,6 +124,7 @@ const Column: React.FC<ColumnProps> = ({
   isMobileView = true,
   mobileFilters,
   onRemoveMobileFilter,
+  onOpenProjection,
 }) => {
   const [resolutionDialog, setResolutionDialog] = useState<{
     isOpen: boolean
@@ -148,11 +154,14 @@ const Column: React.FC<ColumnProps> = ({
 
   const toggleStatus = getToggleStatus()
 
-  // Filter tickets based on toggle and merge states
-  const getVisibleTickets = () => {
+  // Filter tickets based on toggle and merge states.
+  // MDT-200 U5: tickets may be projected stubs; sorting is structurally
+  // compatible so we cast at the sortTickets boundary and preserve the
+  // projected discriminator through to rendering.
+  const getVisibleTickets = (): BoardTicket[] => {
     if (!toggleStatus) {
       // No toggle status for this column, return all tickets as-is
-      return sortTickets(tickets, sortAttribute, sortDirection)
+      return sortTickets(tickets as Ticket[], sortAttribute, sortDirection) as unknown as BoardTicket[]
     }
 
     if (mergeMode) {
@@ -161,17 +170,17 @@ const Column: React.FC<ColumnProps> = ({
       const allRelatedTickets = allTickets.filter(ticket =>
         ticket.status === mainStatus || ticket.status === toggleStatus,
       )
-      return sortTickets(allRelatedTickets, sortAttribute, sortDirection)
+      return sortTickets(allRelatedTickets as Ticket[], sortAttribute, sortDirection) as unknown as BoardTicket[]
     }
     else if (viewMode) {
       // Toggle mode is active (but merge mode is off): Show ONLY tickets with the toggle status
       const toggleTickets = allTickets.filter(ticket => ticket.status === toggleStatus)
-      return sortTickets(toggleTickets, sortAttribute, sortDirection)
+      return sortTickets(toggleTickets as Ticket[], sortAttribute, sortDirection) as unknown as BoardTicket[]
     }
     else {
       // Both modes are inactive: Show only main tickets (excluding toggle status tickets)
       const mainTickets = tickets.filter(ticket => ticket.status !== toggleStatus)
-      return sortTickets(mainTickets, sortAttribute, sortDirection)
+      return sortTickets(mainTickets as Ticket[], sortAttribute, sortDirection) as unknown as BoardTicket[]
     }
   }
 
@@ -310,15 +319,28 @@ const Column: React.FC<ColumnProps> = ({
       >
         {/* @testid drop-zone — Column drop area for drag-and-drop */}
         <div data-testid="drop-zone" className="column-drop-zone">
-          {visibleTickets.map(ticket => (
-            <DraggableTicketCard
-              key={ticket.code}
-              ticket={ticket}
-              onMove={() => {}} // Not needed since drop is handled by column
-              onEdit={() => onTicketEdit(ticket)}
-              canWrite={canWrite}
-            />
-          ))}
+          {visibleTickets.map((ticket) => {
+            // MDT-200 U5: projected stubs are read-only and non-draggable.
+            // They render as a CloudProjectionStub (no drag handle, no edit).
+            if (isProjectedStub(ticket)) {
+              return (
+                <CloudProjectionStub
+                  key={ticket.code}
+                  ticket={ticket}
+                  onOpen={onOpenProjection}
+                />
+              )
+            }
+            return (
+              <DraggableTicketCard
+                key={ticket.code}
+                ticket={ticket}
+                onMove={() => {}} // Not needed since drop is handled by column
+                onEdit={() => onTicketEdit(ticket)}
+                canWrite={canWrite}
+              />
+            )
+          })}
 
           {visibleTickets.length === 0 && (
             <div className="flex items-center justify-center h-32 text-gray-400">

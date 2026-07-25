@@ -196,16 +196,17 @@ C4Component
 
 ## Local Integration Contract
 
-`TicketService` receives a strategy selected from explicit project
-configuration:
+`TicketService.createCR()` reads the explicit project binding. With no enabled
+binding it preserves the existing local scan. With an enabled binding it calls
+`CloudCreateOrchestrator`, which persists the intent, reserves a number, writes
+the Markdown file exclusively, and acknowledges the header projection.
 
-- `LocalTicketNumberAllocator` preserves current local-only behavior.
-- `CloudTicketNumberAllocator` calls the shared cloud coordinator.
-- `CloudProjectionClient` publishes derived headers and polls changes.
-- `CloudCredentialProvider` is injected per runtime; credentials are never part
-  of domain requests or stored in the project file.
-- `CloudOperationJournal` persists non-secret operation state before a network
-  call and uses atomic write-and-rename.
+`CloudProjectionSync` journals and safely publishes later header changes.
+`CloudProjectionClient` polls derived headers through the owner-only local
+server adapter; the browser never receives Cloudflare credentials.
+`RuntimeCloudCredentialProvider` resolves either an interactive `cloudflared`
+token or the service-token environment pair. Credentials are never stored in
+the project file or operation journal.
 
 The journal key combines a device-local hash of the physical Git common
 directory (or canonical project root outside Git) with the cloud project UUID.
@@ -235,38 +236,59 @@ pollIntervalSeconds = 15
 | --- | --- | --- |
 | `project.cloudSync.enabled` | `guarded` | Enable only after project provisioning and a successful identity/membership probe |
 | `project.cloudSync.projectId` | `fileOnly` | UUID issued by the cloud; immutable while enabled |
-| `project.cloudSync.serviceUrl` | `fileOnly` | Absolute HTTPS origin; no path, query, fragment, credentials, or wildcard; must exactly match an operator-controlled allowed origin |
+| `project.cloudSync.serviceUrl` | `fileOnly` | Coordination HTTPS origin; no path, query, fragment, credentials, or wildcard; must exactly match the effective trusted-origin set |
 | `project.cloudSync.pollIntervalSeconds` | `guarded` | Integer from 5 through 300; default 15 |
 
 No Access token, service-token ID, service-token secret, JWT, team domain, or
 audience tag is permitted in `.mdt-config.toml` or the global project registry.
-`MDT-200` must add these selectors to the canonical configuration
-specification and inspection registry before exposing them.
+These selectors are registered in the canonical configuration specification
+and inspection registry.
 
-The local runtime also has an operator-controlled cloud-sync origin allowlist.
-A repository-controlled `serviceUrl` is accepted only on an exact match. The
-allowlist is owned by the global `CONFIG_DIR/config.toml`, not by a project:
+The local runtime has an effective cloud-sync trusted-origin set composed of:
+
+1. product-controlled HTTPS origins shipped with the distribution; and
+2. operator-controlled HTTPS origins added in global
+   `CONFIG_DIR/config.toml`.
+
+A repository-controlled `serviceUrl` is accepted only on an exact match.
+Official hosted sync therefore does not require repeated per-device project
+enablement or allowlist edits. Self-hosted and custom services still require an
+operator to trust their exact origin globally:
 
 ```toml
 [cloudSync]
 allowedOrigins = ["https://mdt-sync.example.com"]
 ```
 
-`cloudSync.allowedOrigins` is a global `fileOnly` selector containing absolute
-HTTPS origins only. Its default is empty, which denies every cloud credential
-flow until an operator configures an origin.
+`cloudSync.allowedOrigins` is a global `fileOnly` selector containing
+operator-added absolute HTTPS origins only. Its default is empty, so no custom
+origin is trusted until an operator configures it; this does not remove the
+distribution-provided trusted origins.
 Headless adapters refuse to attach service-token headers to any other origin,
 which prevents a modified project file from redirecting credentials.
+
+Project activation is project-scoped. The stable, non-secret binding may be
+shared with the repository, while credentials, sessions, operation journals,
+locks, and caches remain device-local and non-authoritative. A second clone
+uses the existing binding after personal authentication; it does not provision
+or enable another cloud project.
+
+Privileged project provisioning uses the operator Access audience. Its endpoint
+is resolved from a distribution- or operator-controlled trusted service
+profile, not from repository configuration. A normal project owner is not
+automatically a cloud-service operator. After provisioning, teammate login and
+all normal project operations use the coordination origin stored in the
+project binding.
 
 ## Delivery Slices for MDT-200
 
 | Slice | Outcome | Exit gate |
 | --- | --- | --- |
-| 1. Protected skeleton | Worker package, D1 binding, migrations, Access validation, typed errors | Real human and service-token assertions validated in a protected staging Worker |
+| 1. Protected skeleton | Worker package, D1 binding, migrations, Access validation, typed errors | Real human and service-token assertions validated in the protected limited-production Worker |
 | 2. Membership and allocation | Project provisioning, roles, reservation, idempotency, acknowledgement | Deployed concurrency, replay, isolation, denial, and recovery tests pass |
 | 3. Shared local orchestration | Strategy seam, durable operation journal, browser/CLI/MCP credential providers | Local-only regressions stay green; cloud create has no fallback path |
 | 4. Projection and polling | Versioned push, tombstone/restore, cursor polling, board projection stubs | Two independent clients observe updates inside the configured interval |
-| 5. Operational release | Alerts, migration checks, backup/restore/export drill, disable path | [Operations](operations.md) release gate is recorded against staging and production |
+| 5. Operational release | Alerts, migration checks, backup/restore/export drill, disable path | [Operations](operations.md) release gate is recorded against the limited-production deployment and an isolated drill database |
 
 ## Evidence Boundary
 

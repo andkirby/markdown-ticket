@@ -122,6 +122,14 @@ The MCP server provides **10 consolidated tools** for complete CR management:
 - **`update_cr_status`** - Update CR status workflow
 - **`delete_cr`** - Remove CRs
 
+For a project with `[project.cloudSync].enabled = true`, these tools still use
+the shared `TicketService`: `create_cr` requires live coordination and never
+falls back to local numbering, while updates remain local-first and queue a
+header-only projection if the cloud is unavailable. Interactive MCP uses
+`cloudflared`; headless MCP uses `CF_ACCESS_CLIENT_ID` and
+`CF_ACCESS_CLIENT_SECRET`. See
+[`docs/CLOUD_COORDINATION_GUIDE.md`](CLOUD_COORDINATION_GUIDE.md).
+
 ### Advanced Features
 - **`manage_cr_sections`** - Efficient section operations (84-94% token savings)
 - **`suggest_cr_improvements`** - Get AI-powered improvement suggestions

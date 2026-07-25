@@ -59,6 +59,12 @@ export const boardSelectors = {
   mobileColumnSwitcherTrigger: '[data-testid="mobile-column-switcher-trigger"]',
   /** Mobile column dropdown option by column name */
   mobileColumnOption: (columnName: string) => `[data-testid="mobile-column-option-${columnName.toLowerCase().replace(/\s+/g, '-')}"]`,
+  /** MDT-200 U5: cloud-projected stub card (read-only, non-draggable) */
+  projectedStub: '[data-testid~="cloud-projection-stub"]',
+  /** MDT-200 U5: cloud-projected stub card by code (space-separated) */
+  projectedStubByCode: (code: string) => `[data-testid~="cloud-projection-stub-${code}"]`,
+  /** MDT-200 U5: the muted "cloud" label/badge on a projected stub */
+  cloudBadge: '[data-testid="cloud-badge"]',
 } as const
 
 /**
