@@ -1,20 +1,15 @@
 # Cloud Sync Operations
 
-## Environments and Topology
+## Environment and Topology
 
-Use separate Cloudflare resources for `staging` and `production`:
+V1 uses one production Cloudflare environment. There is no long-lived staging
+Worker or D1 database. Risk is controlled with local D1 integration tests,
+`wrangler deploy --dry-run`, a Time Travel bookmark before production
+migrations, and a rollout limited to explicitly selected projects.
 
-| Resource | Staging | Production |
-| --- | --- | --- |
-| Worker name | `mdt-cloud-sync-staging` | `mdt-cloud-sync-production` |
-| Custom domain | Dedicated Access-protected staging host | Dedicated Access-protected production host |
-| D1 database | Staging-only database | Production-only database |
-| Access applications | Staging coordination and operator audiences | Production coordination and operator audiences |
-| Rate-limit namespaces | Staging-only IDs | Production-only IDs |
-| Logs and alerts | Full sampling during validation | Tuned sampling plus unsampled durable audit |
-
-Production disables the `workers.dev` route. No production resource identifier,
-audience, service token, or secret is reused in staging.
+Temporary isolated D1 databases may be created for destructive restore drills.
+They are drill resources, not an application environment, and must never reuse
+production Access credentials.
 
 ```mermaid
 C4Deployment
@@ -83,7 +78,8 @@ the immutable D1 database name, not only the binding name, in operator commands.
 Before production:
 
 1. apply and test the migration against a fresh local D1 database;
-2. restore a representative staging export and apply the migration there;
+2. restore a representative export into a temporary isolated drill database
+   and apply the migration there;
 3. run schema, foreign-key, allocation, idempotency, and projection tests;
 4. retrieve and record the production Time Travel bookmark;
 5. apply migrations with `wrangler d1 migrations apply`;
@@ -101,12 +97,11 @@ rewrites data must use expand/migrate/contract across separate releases.
 2. Run type generation, TypeScript validation, lint, Workers-runtime tests, D1
    integration tests, and package build.
 3. Run `wrangler deploy --dry-run` and inspect bindings and bundle output.
-4. Apply required staging migrations.
-5. Upload a Worker version without directing production traffic.
-6. Smoke-test that version against staging and a protected production preview
-   where available.
-7. Apply production migrations after recording a Time Travel bookmark.
-8. Gradually deploy the version while monitoring errors, denials, D1 latency,
+4. Record a production Time Travel bookmark.
+5. Apply required production migrations.
+6. Upload and inspect a Worker version or protected preview where available.
+7. Deploy to the selected-project production rollout.
+8. Monitor errors, denials, D1 latency,
    conflicts, and allocation outcomes.
 9. Record Worker version ID, migration versions, bookmark, source revision,
    operator, and verification result.
@@ -154,7 +149,7 @@ export contains:
 - audit records inside their retention window;
 - migration version and export timestamp.
 
-Quarterly, restore an export into an isolated staging database and run
+Quarterly, restore an export into a temporary isolated drill database and run
 integrity checks. An untested export is not accepted as a backup.
 
 ## Rate Limits
@@ -170,11 +165,11 @@ class:
 | --- | --- | --- |
 | Projection polling | 600 requests per 60 seconds | `429 rate_limited` |
 | Mutations | 60 requests per 60 seconds | `429 rate_limited` |
-| Operator mutations | 20 requests per 60 seconds | `429 rate_limited` |
+| Operator mutations | Shared mutation budget: 60 requests per 60 seconds | `429 rate_limited` |
 
 Workers rate limits are location-local, permissive, and eventually consistent.
 They must not be used to issue numbers, enforce quotas, or replace D1 unique
-constraints. Tune initial limits from measured staging and production traffic;
+constraints. Tune initial limits from measured limited-production traffic;
 do not lower them below the documented client polling envelope without a
 compatibility review.
 
@@ -191,18 +186,15 @@ Every request emits one redacted structured completion event:
   "workerVersion": "version-id",
   "route": "reservation.create",
   "status": 201,
-  "durationMs": 18,
-  "cloudProjectId": "project-uuid",
-  "principalKind": "human",
-  "outcome": "allocated",
-  "d1RowsRead": 3,
-  "d1RowsWritten": 4
+  "durationMs": 18
 }
 ```
 
 Do not log raw request bodies, projected titles, assignee values, email beyond
 the durable audit requirement, filesystem paths, tokens, cookies, assertions,
-or SQL parameters.
+or SQL parameters. Project, principal, outcome, and resource attribution lives
+in the durable D1 audit record; D1 query and storage metrics come from
+Cloudflare's platform telemetry.
 
 ### Durable Audit
 

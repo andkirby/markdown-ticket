@@ -59,6 +59,9 @@ validate_file() {
     elif [[ "$file" =~ ^domain-contracts/(.+)$ ]]; then
         project_dir="domain-contracts"
         relative_path="${BASH_REMATCH[1]}"
+    elif [[ "$file" =~ ^cloud/(.+)$ ]]; then
+        project_dir="cloud"
+        relative_path="${BASH_REMATCH[1]}"
     else
         project_dir="root"
         relative_path="$file"

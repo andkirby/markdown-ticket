@@ -16,6 +16,9 @@ build/
 **/*.js.map
 **/*.d.ts.map
 !/server/**/*.js
+# Generated Cloudflare Worker binding types (MDT-200 cloud/ workspace).
+# Committed as the binding contract per docs/architecture/cloud-sync/operations.md.
+!/cloud/worker-configuration.d.ts
 
 # Docker files (not ignored)
 docker-compose.*.yml

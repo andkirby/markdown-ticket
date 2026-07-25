@@ -107,6 +107,27 @@ export const CONFIG_SELECTOR_ALLOWLIST: readonly ConfigSelector[] = [
     validation:
       '2-5 chars, uppercase alpha start, alphanumeric; confirmation required (guarded workflow).',
   },
+
+  // --- project.cloudSync (MDT-200 cloud coordination binding) ---
+  // Source: docs/architecture/cloud-sync/README.md § Project Binding.
+  // enabled/pollIntervalSeconds are guarded (confirmable via UI); projectId and
+  // serviceUrl are file-only (see inspect-config FILE_ONLY_SETTINGS) because
+  // projectId is immutable while enabled and serviceUrl gates credential flow.
+  {
+    selector: 'project.cloudSync.enabled',
+    scope: ConfigScope.PROJECT,
+    exposure: Exposure.GUARDED,
+    ownerSurface: ConfigOwnerSurface.PROJECT_EDIT,
+    validation:
+      'Boolean; enable only after provisioning and a successful identity/membership probe (guarded workflow).',
+  },
+  {
+    selector: 'project.cloudSync.pollIntervalSeconds',
+    scope: ConfigScope.PROJECT,
+    exposure: Exposure.GUARDED,
+    ownerSurface: ConfigOwnerSurface.PROJECT_EDIT,
+    validation: 'Integer from 5 through 300; default 15 (guarded workflow).',
+  },
   {
     selector: 'project.path',
     scope: ConfigScope.PROJECT,

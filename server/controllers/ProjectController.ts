@@ -3,6 +3,7 @@ import type { Project, ProjectConfig, ProjectSharingModeValue } from '@mdt/share
 import type { TicketMetadata } from '@mdt/shared/models/Ticket.js'
 import type { ProjectCreateInput, ProjectUpdateInput } from '@mdt/shared/tools/ProjectManager.js'
 import type { Request, Response } from 'express'
+import type { RequestAccessContext } from '../security/apiAuth.js'
 import type { CRData, TicketService } from '../services/TicketService.js'
 import type { TreeNode } from '../types/tree.js'
 import * as fs from 'node:fs/promises'
@@ -42,6 +43,7 @@ interface DirectoryListing {
 }
 
 export interface AuthenticatedRequest extends Request {
+  mdtAccess?: RequestAccessContext
   params: {
     projectId?: string
     code?: string
@@ -51,6 +53,8 @@ export interface AuthenticatedRequest extends Request {
     projectId?: string
     path?: string
     bypassCache?: string
+    after?: string
+    limit?: string
   }
   body: unknown
 }
@@ -644,6 +648,45 @@ export class ProjectController {
     catch (error: unknown) {
       console.error('Error getting project CRs:', error)
       res.status(500).json({ error: 'Internal Server Error', message: 'Failed to get project CRs' })
+    }
+  }
+
+  async getCloudProjections(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const { projectId } = req.params
+      if (!projectId) {
+        res.status(400).json({ error: 'Bad Request', message: 'Project ID is required' })
+        return
+      }
+
+      if (!isWriteAccess(getRequestAccess(req))) {
+        res.status(403).json({ error: 'Forbidden', message: 'Owner access is required' })
+        return
+      }
+
+      if (!this.ticketService) {
+        res.status(501).json({ error: 'Ticket service not available for cloud projections' })
+        return
+      }
+
+      const after = Number.parseInt(String(req.query.after ?? '0'), 10)
+      const limit = Number.parseInt(String(req.query.limit ?? '100'), 10)
+      if (!Number.isSafeInteger(after) || after < 0 || !Number.isSafeInteger(limit) || limit < 1 || limit > 500) {
+        res.status(400).json({ error: 'Bad Request', message: 'Invalid projection cursor or limit' })
+        return
+      }
+
+      const result = await this.ticketService.getCloudProjections(projectId, after, limit)
+      res.json(result)
+    }
+    catch (error: unknown) {
+      const err = error as Error
+      if (err.message === 'Project not found') {
+        res.status(404).json({ error: 'Not Found', message: err.message })
+        return
+      }
+      console.error('Error polling cloud projections:', error)
+      res.status(500).json({ error: 'Internal Server Error', message: 'Failed to poll cloud projections' })
     }
   }
 

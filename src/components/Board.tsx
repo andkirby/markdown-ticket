@@ -1,7 +1,11 @@
 import type { TicketFilters } from '@mdt/domain-contracts'
 import type { Project } from '@mdt/shared/models/Project'
+// MDT-196: BoardFilterBar + useBoardFilters + countActiveFilters moved to App.tsx header.
+// Board now consumes pre-filtered tickets via the `filteredTickets` prop.
+// MDT-200 U5: useCloudProjections merges cloud-projected stubs (read-only).
 import type { SortPreferences } from '../config/sorting'
-import type { Status, Ticket } from '../types'
+import type { ProjectionFeed } from '../hooks/useCloudProjections'
+import type { BoardTicket, ProjectedStubTicket, Status, Ticket } from '../types'
 import type { FacetKey } from '../utils/ticketFilters'
 import { CRStatus } from '@mdt/domain-contracts'
 import * as React from 'react'
@@ -10,9 +14,8 @@ import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import { getColumnForStatus, getVisibleColumns } from '../config'
 import { getSortPreferences, setSortPreferences } from '../config/sorting'
-// MDT-196: BoardFilterBar + useBoardFilters + countActiveFilters moved to App.tsx header.
-// Board now consumes pre-filtered tickets via the `filteredTickets` prop.
 import { useBoardLayout } from '../hooks/useBoardLayout'
+import { useCloudProjections } from '../hooks/useCloudProjections'
 import { useProjectManager } from '../hooks/useProjectManager'
 import { useToast } from '../hooks/useToast'
 import { sortTickets } from '../utils/sorting'
@@ -40,6 +43,13 @@ interface BoardProps {
   loading?: boolean
   sortPreferences?: SortPreferences
   canWrite?: boolean
+  /**
+   * MDT-200 U5: injected cloud projection feed. When present, the board merges
+   * read-only, non-draggable projected stubs for ticket numbers with no local
+   * file (BR-3.4). Production wiring drives this from a CloudProjectionClient
+   * poller; tests/E2E inject it directly.
+   */
+  projectionFeed?: ProjectionFeed | null
 }
 
 // Note: TicketItem removed - drag functionality handled in Column.tsx
@@ -57,6 +67,7 @@ const BoardContent: React.FC<BoardProps> = ({
   loading: propLoading,
   sortPreferences: propSortPreferences,
   canWrite = true,
+  projectionFeed = null,
 }) => {
   const [localSortPreferences, setLocalSortPreferences] = useState<SortPreferences>(
     propSortPreferences || getSortPreferences,
@@ -124,6 +135,14 @@ const BoardContent: React.FC<BoardProps> = ({
   // Board consumes pre-filtered tickets via the `filteredTickets` prop.
   // Fallback to `tickets` when the prop is absent (backward compat / standalone use).
   const filteredTickets = propFilteredTickets ?? tickets
+
+  // MDT-200 U5: merge cloud-projected stubs (read-only, non-draggable) for
+  // ticket numbers with no local file. Local tickets always win (BR-3.4, C2).
+  // Projected stubs are appended after local tickets and never auto-merged.
+  const { boardTickets } = useCloudProjections({
+    localTickets: filteredTickets,
+    feed: projectionFeed,
+  })
 
   // IMPORTANT: Always use hookData functions for state management operations
   // This ensures drag-and-drop operations work correctly even when using prop data
@@ -311,8 +330,10 @@ const BoardContent: React.FC<BoardProps> = ({
   // Filter tickets based on faceted filters (MDT-196).
   // `filteredTickets` is computed inside useBoardFilters via applyTicketFilters.
 
-  // Group filtered tickets by column with sorting
-  const ticketsByColumn: Record<string, Ticket[]> = {}
+  // Group filtered tickets by column with sorting.
+  // MDT-200 U5: iterate the merged board tickets (local + projected stubs) so
+  // stubs land in the correct column by status.
+  const ticketsByColumn: Record<string, BoardTicket[]> = {}
   const visibleColumns = getVisibleColumns()
 
   // Initialize with empty arrays
@@ -320,8 +341,8 @@ const BoardContent: React.FC<BoardProps> = ({
     ticketsByColumn[column.label] = []
   })
 
-  // Group filtered tickets by their column
-  filteredTickets.forEach((ticket) => {
+  // Group merged board tickets by their column
+  boardTickets.forEach((ticket) => {
     const column = getColumnForStatus(ticket.status as Status)
     if (ticketsByColumn[column.label]) {
       ticketsByColumn[column.label].push(ticket)
@@ -543,7 +564,7 @@ const BoardContent: React.FC<BoardProps> = ({
                 column={column}
                 isFirstColumn={actualColumnIndex === 0}
                 tickets={ticketsByColumn[column.label]}
-                allTickets={tickets}
+                allTickets={boardTickets}
                 sortAttribute={localSortPreferences.selectedAttribute}
                 sortDirection={localSortPreferences.selectedDirection}
                 onDrop={async (status: Status, ticket: Ticket, currentColumnIndex?: number, currentTicketIndex?: number) => {
@@ -563,6 +584,8 @@ const BoardContent: React.FC<BoardProps> = ({
                 // MDT-196: mobile chip strip filter props (from App header)
                 mobileFilters={mobileFilters}
                 onRemoveMobileFilter={onRemoveMobileFilter}
+                // MDT-200 U5: open a projected stub read-only (no edit controls).
+                onOpenProjection={(stub: ProjectedStubTicket) => onTicketClick(stub as unknown as Ticket)}
               />
             )
           })}

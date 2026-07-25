@@ -129,6 +129,18 @@ describe('public read-only sharing - MDT-172', () => {
     expect(ownerCreate.status).toBe(201)
   })
 
+  it('does not expose the owner cloud projection feed through public sharing', async () => {
+    const anonymous = await request(app).get('/api/projects/PUB/cloud-projections')
+    expect(anonymous.status).toBe(403)
+
+    const exchange = await request(app).post('/api/auth/read-token').send({ token: readToken })
+    const cookie = exchange.headers['set-cookie']
+    const scoped = await request(app)
+      .get('/api/projects/PRI/cloud-projections')
+      .set('Cookie', cookie)
+    expect(scoped.status).toBe(403)
+  })
+
   it('accepts hashed scoped read tokens without granting write access', async () => {
     const exchange = await request(app)
       .post('/api/auth/read-token')

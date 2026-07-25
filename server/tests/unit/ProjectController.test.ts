@@ -22,6 +22,7 @@ interface MockTicketService {
   >
   deleteCR: jest.MockedFunction<(projectId: string, crId: string) => Promise<DeleteResult>>
   getProjectCRs: jest.MockedFunction<(projectId: string) => Promise<unknown[]>>
+  getCloudProjections: jest.MockedFunction<(projectId: string, after?: number, limit?: number) => Promise<unknown>>
 }
 
 describe('projectController - CRUD Operations', () => {
@@ -118,6 +119,55 @@ describe('projectController - CRUD Operations', () => {
 
       expect(res.status).toHaveBeenCalledWith(501)
       expect(res.json).toHaveBeenCalledWith({ error: 'Ticket service not available for fetching CR' })
+    })
+  })
+
+  describe('getCloudProjections', () => {
+    it('returns the owner-only projection feed', async () => {
+      const { req, res } = createMockReqRes()
+      req.params = { projectId: 'test-project' }
+      req.query = { after: '7', limit: '25' }
+      const feed = {
+        enabled: true,
+        pollIntervalSeconds: 15,
+        items: [],
+        nextCursor: 7,
+        hasMore: false,
+        stale: false,
+      }
+      mockTicketService.getCloudProjections.mockResolvedValue(feed)
+
+      await projectController.getCloudProjections(req as AuthenticatedRequest, res as Response)
+
+      expect(mockTicketService.getCloudProjections).toHaveBeenCalledWith('test-project', 7, 25)
+      expect(res.json).toHaveBeenCalledWith(feed)
+    })
+
+    it('does not expose the cloud feed to read-only sessions', async () => {
+      const { req, res } = createMockReqRes()
+      req.params = { projectId: 'test-project' }
+      req.mdtAccess = {
+        canWrite: false,
+        mode: 'read-only',
+        projectRefs: ['test-project'],
+        shareIds: [],
+      }
+
+      await projectController.getCloudProjections(req as AuthenticatedRequest, res as Response)
+
+      expect(res.status).toHaveBeenCalledWith(403)
+      expect(mockTicketService.getCloudProjections).not.toHaveBeenCalled()
+    })
+
+    it('rejects an invalid projection cursor', async () => {
+      const { req, res } = createMockReqRes()
+      req.params = { projectId: 'test-project' }
+      req.query = { after: '-1', limit: '100' }
+
+      await projectController.getCloudProjections(req as AuthenticatedRequest, res as Response)
+
+      expect(res.status).toHaveBeenCalledWith(400)
+      expect(mockTicketService.getCloudProjections).not.toHaveBeenCalled()
     })
   })
 

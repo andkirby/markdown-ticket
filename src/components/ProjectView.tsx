@@ -1,10 +1,13 @@
 import type { TicketFilters } from '@mdt/domain-contracts'
 import type { Project } from '@mdt/shared/models/Project'
 import type { SortPreferences } from '../config/sorting'
+// MDT-200 U5: projection feed type for the cloud-projected stub merge.
+import type { ProjectionFeed } from '../hooks/useCloudProjections'
 import type { Ticket } from '../types'
 import type { FacetKey } from '../utils/ticketFilters'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { authFetch } from '../auth/authFetch'
+import { useCloudProjectionFeed } from '../hooks/useCloudProjectionFeed'
 import { sortTickets } from '../utils/sorting'
 import { StatusBadge } from './Badge'
 import Board from './Board'
@@ -13,6 +16,22 @@ import { TicketCode } from './TicketCode'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table'
 
 type ViewMode = 'board' | 'list' | 'documents'
+
+/**
+ * MDT-200 U5: optional testability seam. When `window.__MDT_PROJECTION_FEED__`
+ * is set (E2E/tests only), the board merges the injected cloud-projected stubs.
+ * is set (E2E/tests only), it overrides the production server-backed poller.
+ */
+interface WindowWithProjectionFeed {
+  __MDT_PROJECTION_FEED__?: ProjectionFeed | null
+}
+
+function readProjectionFeed(): ProjectionFeed | null {
+  if (typeof window === 'undefined')
+    return null
+  const w = window as unknown as WindowWithProjectionFeed
+  return w.__MDT_PROJECTION_FEED__ ?? null
+}
 
 const VIEW_MODE_KEY = 'single-project-view-mode'
 
@@ -62,6 +81,23 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
   useEffect(() => {
     selectedProjectRef.current = selectedProject
   }, [selectedProject])
+
+  // MDT-200 U5: tests can inject a deterministic feed; production polls the
+  // owner-only local server endpoint so Cloudflare credentials stay server-side.
+  const [injectedProjectionFeed, setInjectedProjectionFeed] = useState<ProjectionFeed | null | undefined>(
+    () => readProjectionFeed() ?? undefined,
+  )
+  useEffect(() => {
+    const sync = () => setInjectedProjectionFeed(readProjectionFeed() ?? undefined)
+    sync()
+    window.addEventListener('mdt:projection-feed', sync as EventListener)
+    return () => window.removeEventListener('mdt:projection-feed', sync as EventListener)
+  }, [])
+  const projectionFeed = useCloudProjectionFeed({
+    projectId: selectedProject?.id,
+    enabled: canWrite,
+    injectedFeed: injectedProjectionFeed,
+  })
 
   const handleTicketUpdate = useCallback(async (ticketCode: string, updates: Partial<Ticket>) => {
     if (!canWrite) {
@@ -137,6 +173,7 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
                 loading={loading}
                 sortPreferences={sortPreferences}
                 canWrite={canWrite}
+                projectionFeed={projectionFeed}
               />
             )
           : viewMode === 'list'

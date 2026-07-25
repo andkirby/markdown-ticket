@@ -95,12 +95,16 @@ AI-powered commands for the entire development lifecycle:
 - Real-time updates
 - Secure browser unlock for authenticated deployments
 - Context-aware browser tab titles
-- Git-based storage (no database)
+- Markdown/Git-authoritative ticket storage; optional cloud coordination stores
+  only membership, allocation, and projected-header metadata
 
 ### CLI Access
 
 - Use `mdt-cli` to create, list, view, update, and delete tickets from the terminal
 - Structured output is available for automation-friendly workflows
+- For an enabled cloud-bound project, the same create command obtains an Access
+  credential, reserves the shared number, writes Markdown, and acknowledges it;
+  it never falls back to a local number during an outage
 
 ### MCP Integration
 

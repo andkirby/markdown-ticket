@@ -1,0 +1,12 @@
+# Wrangler local state and caches
+.wrangler/
+
+# Local development secrets (never committed)
+.dev.vars
+.dev.vars.*
+
+# Build output
+dist/
+
+# Dependencies
+node_modules/

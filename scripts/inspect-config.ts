@@ -70,6 +70,30 @@ const FILE_ONLY_SETTINGS: readonly {
     file: '{project}/.mdt-config.toml',
     note: 'Manual config only.',
   },
+  // --- project.cloudSync (MDT-200) file-only selectors ---
+  // Source: docs/architecture/cloud-sync/README.md § Project Binding.
+  // projectId is immutable while enabled; serviceUrl gates credential flow and
+  // must exactly match a global cloudSync.allowedOrigins entry, so neither is
+  // editable through the API. enabled/pollIntervalSeconds are guarded and live
+  // in CONFIG_SELECTOR_ALLOWLIST instead.
+  {
+    selector: 'project.cloudSync.projectId',
+    scope: 'project',
+    file: '{project}/.mdt-config.toml',
+    note: 'Cloud project UUID issued by the cloud; immutable while enabled. Manual config only.',
+  },
+  {
+    selector: 'project.cloudSync.serviceUrl',
+    scope: 'project',
+    file: '{project}/.mdt-config.toml',
+    note: 'Coordination HTTPS origin; no path/query/fragment/credentials/wildcard. Must exactly match a global cloudSync.allowedOrigins entry. Manual config only.',
+  },
+  {
+    selector: 'cloudSync.allowedOrigins',
+    scope: 'global',
+    file: 'CONFIG_DIR/config.toml',
+    note: 'Operator-added absolute HTTPS origins only (default empty). Repository files cannot expand it. Manual config only.',
+  },
 ]
 
 // Backend settings defined in the Zod schemas and persisted to TOML, but NOT in

@@ -4,6 +4,12 @@
  * Migrated from mcp-server/src/services/crService.ts per MDT-082
  */
 
+import type {
+  CloudCredentialProvider,
+  CloudSyncCoordinator,
+  ProjectCloudSyncBinding,
+  ProjectedHeader,
+} from '@mdt/domain-contracts'
 import type { Project } from '../models/Project.js'
 import type {
   Ticket,
@@ -12,6 +18,7 @@ import type {
   TicketUpdateAttrs,
 } from '../models/Ticket.js'
 import type { CRStatus } from '../models/Types.js'
+import type { ProjectionClientPort } from './cloud-sync/projection-sync.js'
 import type { ReadResult } from './project/types.js'
 import type {
   AttrOperation,
@@ -23,21 +30,42 @@ import type {
 } from './ticket/types.js'
 import { readdir, readFile } from 'node:fs/promises'
 import * as path from 'node:path'
-import { CRStatus as CRStatusEnum } from '@mdt/domain-contracts'
+import { CoordinatorError, CRStatus as CRStatusEnum } from '@mdt/domain-contracts'
 import * as fs from 'fs-extra'
 import { getTicketsPath } from '../models/Project.js'
 import {
   arrayToString,
   TICKET_UPDATE_ALLOWED_ATTRS,
 } from '../models/Ticket.js'
-import { DEFAULTS } from '../utils/constants.js'
+import { DEFAULTS, getDefaultPaths } from '../utils/constants.js'
 import { formatCrKey } from '../utils/keyNormalizer.js'
+import { logQuiet } from '../utils/logger.js'
+import { readEnabledCloudSyncBinding } from './cloud-sync/allocator-strategy.js'
+import { CloudProjectionClient as HttpCloudProjectionClient } from './cloud-sync/CloudProjectionClient.js'
+import { buildEffectiveCloudSyncConfig } from './cloud-sync/config.js'
+import { CloudCreateOrchestrator, projectedHeaderHash } from './cloud-sync/create-orchestrator.js'
+import { RuntimeCloudCredentialProvider } from './cloud-sync/credential-providers.js'
+import { CloudOperationJournal } from './cloud-sync/operation-journal.js'
+import { CloudProjectionSync } from './cloud-sync/projection-sync.js'
 import { CRService as SharedCRService } from './CRService.js'
 import { ProjectService } from './ProjectService.js'
 import { ServiceError } from './ServiceError.js'
 import { TemplateService } from './TemplateService.js'
 import { assertNotDerivedField } from './ticket/derivedFields.js'
 import { TicketLocationResolver } from './ticket/TicketLocationResolver.js'
+
+/**
+ * A cloud coordinator + credential provider for one TicketService instance.
+ * Production defaults to the HTTP clients and runtime credential provider;
+ * callers may inject deterministic alternatives for tests. Missing credentials
+ * and coordinator failures remain fail-closed (BR-1.5).
+ */
+export interface CloudRuntimeDependencies {
+  credentialProvider?: CloudCredentialProvider
+  coordinatorFactory?: (binding: ProjectCloudSyncBinding) => CloudSyncCoordinator
+  projectionClientFactory?: (binding: ProjectCloudSyncBinding) => ProjectionClientPort
+  journalRoot?: string
+}
 
 /**
  * Case-insensitive substring match for fuzzy filtering.
@@ -70,11 +98,15 @@ export class TicketService {
   private projectService: ProjectService
   private templateService: TemplateService
   private readonly ticketLocationResolver: TicketLocationResolver
+  private readonly quiet: boolean
+  private readonly cloudRuntime: CloudRuntimeDependencies
 
-  constructor(quiet: boolean = false) {
+  constructor(quiet: boolean = false, cloudRuntime: CloudRuntimeDependencies = {}) {
     this.projectService = new ProjectService(quiet)
     this.templateService = new TemplateService(undefined, quiet)
     this.ticketLocationResolver = new TicketLocationResolver(this.projectService)
+    this.quiet = quiet
+    this.cloudRuntime = cloudRuntime
   }
 
   async listTickets(request: ListTicketsRequest): Promise<ReadResult<Ticket[]>> {
@@ -93,6 +125,101 @@ export class TicketService {
     }
 
     return { data: tickets }
+  }
+
+  async pollCloudProjections(
+    project: Project,
+    after = 0,
+    limit = 100,
+  ): Promise<{
+    enabled: boolean
+    pollIntervalSeconds: number
+    items: Array<ProjectedHeader & { ticketNumber: number, lifecycle: string }>
+    nextCursor: number | null
+    hasMore: boolean
+    stale: boolean
+    error?: string
+  }> {
+    try {
+      const config = this.projectService.getProjectConfig(project.project.path)
+      const binding = readEnabledCloudSyncBinding(config)
+      if (!binding) {
+        return {
+          enabled: false,
+          pollIntervalSeconds: 15,
+          items: [],
+          nextCursor: null,
+          hasMore: false,
+          stale: false,
+        }
+      }
+      const effectiveConfig = buildEffectiveCloudSyncConfig(
+        this.projectService.getGlobalConfig().cloudSync,
+      )
+      const credentialProvider = this.cloudRuntime.credentialProvider
+        ?? new RuntimeCloudCredentialProvider()
+      const credential = await credentialProvider.resolve(binding.serviceUrl)
+      if (!credential) {
+        return {
+          enabled: true,
+          pollIntervalSeconds: binding.pollIntervalSeconds,
+          items: [],
+          nextCursor: after,
+          hasMore: false,
+          stale: true,
+          error: 'authentication_required',
+        }
+      }
+      const client = this.cloudRuntime.projectionClientFactory?.(binding)
+        ?? new HttpCloudProjectionClient({
+          serviceUrl: binding.serviceUrl,
+          globalConfig: effectiveConfig,
+        }, binding.projectId, after)
+      const sync = new CloudProjectionSync({
+        binding,
+        allowedOrigins: effectiveConfig.allowedOrigins,
+        journalRoot: path.join(
+          this.cloudRuntime.journalRoot ?? getDefaultPaths().CONFIG_DIR,
+          'cloud-sync',
+          'projection-journal',
+        ),
+        physicalRepoPath: project.project.path,
+        credentialProvider,
+        client,
+      })
+      await sync.flush()
+      const result = await client.poll(credential, limit)
+      return {
+        enabled: true,
+        pollIntervalSeconds: binding.pollIntervalSeconds,
+        items: result.items.map(item => ({
+          ticketNumber: item.ticketNumber,
+          lifecycle: item.lifecycle,
+          code: item.code,
+          title: item.title,
+          status: item.status,
+          type: item.type,
+          priority: item.priority,
+          assignee: item.assignee,
+          date_created: item.date_created,
+          last_modified: item.last_modified,
+        })),
+        nextCursor: result.nextCursor ?? after,
+        hasMore: result.hasMore,
+        stale: false,
+      }
+    }
+    catch (error) {
+      return {
+        enabled: true,
+        pollIntervalSeconds: 15,
+        items: [],
+        nextCursor: after,
+        hasMore: false,
+        stale: true,
+        error: error instanceof CoordinatorError ? error.code : 'coordination_unavailable',
+      }
+    }
   }
 
   async getTicket(request: GetTicketRequest): Promise<TicketReadResult> {
@@ -314,33 +441,146 @@ export class TicketService {
   /**
    * Create a new CR in a project
    * MDT-095: Enhanced with worktree support - creates in worktree if branch exists
+   * MDT-200: local projects keep filesystem allocation; cloud-bound projects
+   * execute the durable reserve → write → acknowledge orchestration.
+   *   - Local project (no enabled `[project.cloudSync]` binding): identical
+   *     highest+1 filesystem scan, byte-for-byte (BR-1.7).
+   *   - Valid enabled binding uses the production HTTP coordinator and runtime
+   *     credentials by default; missing credentials or cloud failure never
+   *     allocate a local number (BR-1.5).
+   *   - Disabled binding: local allocation.
+   *   - Present malformed binding: fail closed; never risk a local collision.
    */
   async createCR(project: Project, crType: string, data: TicketData): Promise<Ticket> {
     try {
-      const nextNumber = await this.getNextCRNumber(project)
-      const crKey = formatCrKey(project.project.code, nextNumber)
-
-      const location = await this.ticketLocationResolver.resolve(project, crKey)
-      const crPath = path.join(location.projectRoot, location.ticketsPath)
-
-      const titleSlug = data.slug ?? this.createSlug(data.title)
-      const filename = `${crKey}-${titleSlug}.md`
-      const filePath = path.join(crPath, filename)
-
-      await fs.ensureDir(crPath)
-      const ticket = SharedCRService.createTicket(data, crKey, crType, filePath)
-      const markdownContent = this.formatCRAsMarkdown(ticket, data)
-      ticket.content = markdownContent
-      await fs.outputFile(filePath, markdownContent, 'utf-8')
-
-      return {
-        ...ticket,
-        inWorktree: location.isWorktree,
-        worktreePath: location.isWorktree ? location.projectRoot : undefined,
+      const projectConfig = this.projectService.getProjectConfig(project.project.path)
+      const binding = readEnabledCloudSyncBinding(projectConfig, {
+        log: (msg, err) => logQuiet(this.quiet, msg, err),
+      })
+      if (!binding) {
+        return this.createLocalTicketWithNumber(
+          project,
+          crType,
+          data,
+          await this.getNextCRNumber(project),
+        )
       }
+
+      const globalConfig = this.projectService.getGlobalConfig()
+      const effectiveConfig = buildEffectiveCloudSyncConfig(globalConfig.cloudSync)
+      const journal = new CloudOperationJournal({
+        rootDir: this.cloudRuntime.journalRoot
+          ?? path.join(getDefaultPaths().CONFIG_DIR, 'cloud-sync', 'journals'),
+        physicalRepoPath: project.project.path,
+      })
+      const orchestrator = new CloudCreateOrchestrator({
+        binding,
+        allowedOrigins: effectiveConfig.allowedOrigins,
+        journal,
+        credentialProvider: this.cloudRuntime.credentialProvider
+          ?? new RuntimeCloudCredentialProvider(),
+        coordinator: this.cloudRuntime.coordinatorFactory?.(binding),
+      })
+      return await orchestrator.create({
+        crType,
+        data,
+        writeLocal: async (ticketNumber, createdAt, draft) => {
+          const ticket = await this.createLocalTicketWithNumber(
+            project,
+            draft.crType,
+            draft.data,
+            ticketNumber,
+            createdAt,
+            true,
+          )
+          const header = this.toProjectedHeader(ticket)
+          return {
+            value: ticket,
+            acknowledgement: {
+              contentHash: projectedHeaderHash(header),
+              header,
+            },
+          }
+        },
+      })
     }
     catch (error) {
+      // MDT-200: preserve typed domain errors so callers can distinguish a
+      // cloud fail-closed (BR-1.5) from a generic create failure. CoordinatorError
+      // must surface verbatim — never swallowed into a local-fallback path.
+      if (error instanceof CoordinatorError || error instanceof ServiceError) {
+        throw error
+      }
       throw new Error(`Failed to create CR: ${(error as Error).message}`)
+    }
+  }
+
+  private async createLocalTicketWithNumber(
+    project: Project,
+    crType: string,
+    data: TicketData,
+    ticketNumber: number,
+    createdAt?: string,
+    exclusive = false,
+  ): Promise<Ticket> {
+    const crKey = formatCrKey(project.project.code, ticketNumber)
+    const location = await this.ticketLocationResolver.resolve(project, crKey)
+    const crPath = path.join(location.projectRoot, location.ticketsPath)
+    const titleSlug = data.slug ?? this.createSlug(data.title)
+    const filename = `${crKey}-${titleSlug}.md`
+    const filePath = path.join(crPath, filename)
+
+    await fs.ensureDir(crPath)
+    const ticket = SharedCRService.createTicket(data, crKey, crType, filePath)
+    if (createdAt) {
+      const stableCreatedAt = new Date(createdAt)
+      ticket.dateCreated = stableCreatedAt
+      ticket.lastModified = stableCreatedAt
+    }
+    const markdownContent = this.formatCRAsMarkdown(ticket, data)
+    ticket.content = markdownContent
+    if (exclusive) {
+      try {
+        await fs.outputFile(filePath, markdownContent, { encoding: 'utf8', flag: 'wx' })
+      }
+      catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== 'EEXIST') {
+          throw error
+        }
+        const existing = await readFile(filePath, 'utf8')
+        if (existing !== markdownContent) {
+          throw new CoordinatorError('reservation_state_conflict', {
+            message: `reserved ticket path already exists with different content: ${filename}`,
+          })
+        }
+      }
+    }
+    else {
+      await fs.outputFile(filePath, markdownContent, 'utf8')
+    }
+    // The projected header must use the durable file timestamp, not the
+    // in-memory creation timestamp. Later edits read `lastModified` from the
+    // same filesystem metadata; using different clocks would make the first
+    // legitimate projection update look like a divergence.
+    ticket.lastModified = (await fs.stat(filePath)).mtime
+
+    return {
+      ...ticket,
+      inWorktree: location.isWorktree,
+      worktreePath: location.isWorktree ? location.projectRoot : undefined,
+    }
+  }
+
+  private toProjectedHeader(ticket: Ticket): ProjectedHeader {
+    return {
+      code: ticket.code,
+      title: ticket.title,
+      status: ticket.status,
+      type: ticket.type || null,
+      priority: ticket.priority || null,
+      assignee: ticket.assignee || null,
+      date_created: ticket.dateCreated?.toISOString() ?? null,
+      last_modified: ticket.lastModified?.toISOString() ?? new Date().toISOString(),
     }
   }
 
@@ -366,6 +606,10 @@ export class TicketService {
 
       // Write back to file
       await fs.outputFile(cr.filePath, updatedContent, 'utf-8')
+      const updated = await this.getCR(project, key)
+      if (updated) {
+        await this.syncTicketProjectionBestEffort(project, cr, updated, 'active')
+      }
 
       return true
     }
@@ -432,6 +676,10 @@ export class TicketService {
 
       // Write back to file
       await fs.outputFile(cr.filePath, updatedContent, 'utf-8')
+      const updated = await this.getCR(project, key)
+      if (updated) {
+        await this.syncTicketProjectionBestEffort(project, cr, updated, 'active')
+      }
 
       return true
     }
@@ -588,10 +836,56 @@ export class TicketService {
       }
 
       await fs.remove(cr.filePath)
+      await this.syncTicketProjectionBestEffort(project, cr, cr, 'deleted')
       return true
     }
     catch {
       return false
+    }
+  }
+
+  private async syncTicketProjectionBestEffort(
+    project: Project,
+    previous: Ticket,
+    next: Ticket,
+    lifecycle: 'active' | 'deleted',
+  ): Promise<void> {
+    try {
+      const config = this.projectService.getProjectConfig(project.project.path)
+      const binding = readEnabledCloudSyncBinding(config)
+      if (!binding)
+        return
+      const ticketNumber = Number.parseInt(next.code.split('-').pop() ?? '', 10)
+      if (!Number.isSafeInteger(ticketNumber))
+        return
+
+      const effectiveConfig = buildEffectiveCloudSyncConfig(
+        this.projectService.getGlobalConfig().cloudSync,
+      )
+      const sync = new CloudProjectionSync({
+        binding,
+        allowedOrigins: effectiveConfig.allowedOrigins,
+        journalRoot: path.join(
+          this.cloudRuntime.journalRoot ?? getDefaultPaths().CONFIG_DIR,
+          'cloud-sync',
+          'projection-journal',
+        ),
+        physicalRepoPath: project.project.path,
+        credentialProvider: this.cloudRuntime.credentialProvider
+          ?? new RuntimeCloudCredentialProvider(),
+        client: this.cloudRuntime.projectionClientFactory?.(binding),
+      })
+      await sync.publish(
+        ticketNumber,
+        this.toProjectedHeader(previous),
+        this.toProjectedHeader(next),
+        lifecycle,
+      )
+    }
+    catch (error) {
+      // Existing Markdown edits stay successful while cloud projection is
+      // unavailable. The durable projection journal is retried by the poller.
+      logQuiet(this.quiet, `Cloud projection queued for ${next.code}`, error)
     }
   }
 

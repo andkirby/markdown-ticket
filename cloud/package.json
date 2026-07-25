@@ -1,0 +1,27 @@
+{
+  "name": "@mdt/cloud",
+  "type": "module",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Cloudflare Worker for Markdown Ticket cloud coordination (MDT-200 cloud package boundary)",
+  "license": "MIT",
+  "main": "src/cloudflare/worker.ts",
+  "scripts": {
+    "build": "tsc --noEmit --project tsconfig.json",
+    "lint": "eslint \"**/*.{ts,tsx}\" --config eslint.config.ts --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint \"**/*.{ts,tsx}\" --config eslint.config.ts --fix",
+    "cf:types": "wrangler types",
+    "deploy:dry-run": "wrangler deploy --dry-run",
+    "test": "bun test ./test",
+    "clean": "rm -rf dist .wrangler"
+  },
+  "dependencies": {
+    "@mdt/domain-contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "7.4.3",
+    "eslint": "^9.39.4",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.24.0"
+  }
+}

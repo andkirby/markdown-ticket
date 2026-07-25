@@ -194,6 +194,24 @@ enableHoverPreviews = false
 linkValidation = true
 ```
 
+### 4. Cloud Sync Origin Allowlist (`[cloudSync]`)
+
+Operator-controlled allowlist of coordination service origins. This is the only
+place a coordination origin is trusted; project `.mdt-config.toml` files cannot
+expand it (MDT-200, constraint C6).
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `allowedOrigins` | array<string> | Optional | `[]` | Absolute HTTPS origins only. Default empty denies every credential flow until an operator configures an origin. |
+
+Headless adapters refuse to attach service-token headers to any origin not on
+this list and reject redirects. Example:
+
+```toml
+[cloudSync]
+allowedOrigins = ["https://mdt-sync.example.com"]
+```
+
 ## Configuration Validation
 
 ### Discovery Validation Rules

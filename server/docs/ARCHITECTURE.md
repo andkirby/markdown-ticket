@@ -4,7 +4,7 @@ Layered architecture for the Express API server.
 
 ## Layers
 
-```
+```text
 HTTP Clients → server.ts → Generic Middleware → API Auth Gate → Routes → Controllers → Services → Data Storage
 ```
 
@@ -18,7 +18,7 @@ HTTP Clients → server.ts → Generic Middleware → API Auth Gate → Routes �
 
 ## Request Flow Example
 
-```
+```text
 GET /api/projects/markdown-ticket/crs
   → Middleware (validation, security)
   → API auth middleware
@@ -86,6 +86,11 @@ Vite middleware endpoints, such as `/api/frontend/logs*`, are not backend Expres
 |-------|------------|
 | `/api/projects` | ProjectController |
 | `/api/projects/:id/crs` | TicketController |
+| `/api/projects/:id/cloud-projections` | ProjectController (owner-only, header-only cloud feed) |
 | `/api/documents` | DocumentController |
 | `/api/events` | SSE (Server-Sent Events) |
 | `/api/system` | SystemController |
+
+Cloud-bound ticket creation and projection publishing stay in the shared
+`TicketService`; the server is a thin HTTP adapter. Cloudflare credentials
+remain server-side. The frontend polls only the owner-only header feed above.

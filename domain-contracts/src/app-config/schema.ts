@@ -58,11 +58,16 @@ export const GLOBAL_SYSTEM_DEFAULTS = {
   cacheTimeout: 30000,
 } as const
 
+export const GLOBAL_CLOUD_SYNC_DEFAULTS = {
+  allowedOrigins: [] as string[],
+} as const
+
 export const GLOBAL_CONFIG_DEFAULTS = {
   discovery: { ...GLOBAL_DISCOVERY_DEFAULTS },
   links: { ...GLOBAL_LINKS_DEFAULTS },
   ui: { ...GLOBAL_UI_DEFAULTS },
   system: { ...GLOBAL_SYSTEM_DEFAULTS },
+  cloudSync: { ...GLOBAL_CLOUD_SYNC_DEFAULTS },
 } as const
 
 export const PROJECT_SELECTOR_PREFERENCES_DEFAULTS = {
@@ -116,21 +121,36 @@ export const GlobalSystemConfigSchema = z.object({
   cacheTimeout: z.number().int().min(0).catch(GLOBAL_SYSTEM_DEFAULTS.cacheTimeout).default(GLOBAL_SYSTEM_DEFAULTS.cacheTimeout),
 }).catch({ ...GLOBAL_SYSTEM_DEFAULTS }).default({ ...GLOBAL_SYSTEM_DEFAULTS })
 
+export const GlobalCloudSyncConfigSchema = z.object({
+  allowedOrigins: z.array(z.string().url().refine(value => new URL(value).protocol === 'https:', 'Cloud sync origins must use HTTPS'))
+    .catch([...GLOBAL_CLOUD_SYNC_DEFAULTS.allowedOrigins])
+    .default([...GLOBAL_CLOUD_SYNC_DEFAULTS.allowedOrigins]),
+}).strict().catch({
+  ...GLOBAL_CLOUD_SYNC_DEFAULTS,
+  allowedOrigins: [...GLOBAL_CLOUD_SYNC_DEFAULTS.allowedOrigins],
+}).default({
+  ...GLOBAL_CLOUD_SYNC_DEFAULTS,
+  allowedOrigins: [...GLOBAL_CLOUD_SYNC_DEFAULTS.allowedOrigins],
+})
+
 export const GlobalConfigSchema = z.object({
   discovery: GlobalDiscoveryConfigSchema.default({ ...GLOBAL_DISCOVERY_DEFAULTS, searchPaths: [...GLOBAL_DISCOVERY_DEFAULTS.searchPaths] }),
   links: GlobalLinksConfigSchema.default({ ...GLOBAL_LINKS_DEFAULTS }),
   ui: GlobalUIConfigSchema.default({ ...GLOBAL_UI_DEFAULTS }),
   system: GlobalSystemConfigSchema.default({ ...GLOBAL_SYSTEM_DEFAULTS }),
+  cloudSync: GlobalCloudSyncConfigSchema.default({ ...GLOBAL_CLOUD_SYNC_DEFAULTS, allowedOrigins: [...GLOBAL_CLOUD_SYNC_DEFAULTS.allowedOrigins] }),
 }).catch({
   discovery: { ...GLOBAL_DISCOVERY_DEFAULTS, searchPaths: [...GLOBAL_DISCOVERY_DEFAULTS.searchPaths] },
   links: { ...GLOBAL_LINKS_DEFAULTS },
   ui: { ...GLOBAL_UI_DEFAULTS },
   system: { ...GLOBAL_SYSTEM_DEFAULTS },
+  cloudSync: { ...GLOBAL_CLOUD_SYNC_DEFAULTS, allowedOrigins: [...GLOBAL_CLOUD_SYNC_DEFAULTS.allowedOrigins] },
 }).default({
   discovery: { ...GLOBAL_DISCOVERY_DEFAULTS, searchPaths: [...GLOBAL_DISCOVERY_DEFAULTS.searchPaths] },
   links: { ...GLOBAL_LINKS_DEFAULTS },
   ui: { ...GLOBAL_UI_DEFAULTS },
   system: { ...GLOBAL_SYSTEM_DEFAULTS },
+  cloudSync: { ...GLOBAL_CLOUD_SYNC_DEFAULTS, allowedOrigins: [...GLOBAL_CLOUD_SYNC_DEFAULTS.allowedOrigins] },
 })
 
 export const SelectorPreferencesSchema = z.object({

@@ -90,6 +90,20 @@ The system supports three valid file relationship states:
 | `excludeFolders` | array | Optional | [`{ticketsPath}`, `node_modules`, `.git`] | - | Folder names to exclude from discovery. `ticketsPath` is always auto-added if not present. |
 | `maxDepth` | number | Optional | 5 | 1-10 | Maximum directory depth for scanning |
 
+**Schema - [project.cloudSync] section** (MDT-200, opt-in cloud coordination):
+
+| Field | Type | Required | Default | Range | Description |
+|-------|------|----------|---------|-------|-------------|
+| `enabled` | boolean | Required | false | - | Opt-in binding; enable only after provisioning and a successful identity/membership probe. While false, allocation stays local. |
+| `projectId` | string | Required when enabled | - | UUID | Cloud project UUID issued by the coordination service; immutable while `enabled = true`. |
+| `serviceUrl` | string | Required when enabled | - | absolute HTTPS origin | Coordination service origin. No path, query, fragment, credentials, or wildcard. Must exactly match an operator-controlled `cloudSync.allowedOrigins` entry. |
+| `pollIntervalSeconds` | integer | Optional | 15 | 5–300 | Teammate projection polling interval. |
+
+No Access token, service-token ID, service-token secret, JWT, team domain, or
+audience tag is permitted in `.mdt-config.toml` or the global project registry.
+Credentials live only in interactive (`cloudflared`) or backend secret
+providers. See [`docs/CLOUD_COORDINATION_GUIDE.md`](CLOUD_COORDINATION_GUIDE.md).
+
 
 ## Key Constraints
 

@@ -5,6 +5,7 @@ dateCreated: 2026-07-24T09:16:41.530Z
 type: Feature Enhancement
 priority: High
 dependsOn: MDT-199
+relatedTickets: MDT-201,MDT-202,MDT-203
 ---
 
 # Implement cloud sync first slice
@@ -142,38 +143,38 @@ requirements, BDD, test, task, implementation, and runtime trace work.
 
 ### Allocation and Recovery
 
-- [ ] Concurrent create requests for one project return unique ticket numbers with no duplicate ticket rows.
-- [ ] Concurrent requests sharing one idempotency key return one stable reservation and advance the counter once.
-- [ ] Different cloud projects allocate independently.
-- [ ] Failed local creation can retry the same reservation and acknowledge it without number reuse.
-- [ ] A cloud-bound create fails recoverably when the coordination service is unavailable; it does not allocate locally.
-- [ ] Existing Markdown tickets remain readable and editable during an outage while new cloud-bound ticket creation remains blocked.
-- [ ] Local-only project creation remains backward compatible.
+- [x] Concurrent create requests for one project return unique ticket numbers with no duplicate ticket rows.
+- [x] Concurrent requests sharing one idempotency key return one stable reservation and advance the counter once.
+- [x] Different cloud projects allocate independently.
+- [x] Failed local creation can retry the same reservation and acknowledge it without number reuse.
+- [x] A cloud-bound create fails recoverably when the coordination service is unavailable; it does not allocate locally.
+- [x] Existing Markdown tickets remain readable and editable during an outage while new cloud-bound ticket creation remains blocked.
+- [x] Local-only project creation remains backward compatible.
 
 ### Identity and Isolation
 
-- [ ] A real Access-protected environment validates browser and interactive CLI human attribution.
+- [x] A real Access-protected environment validates browser and interactive CLI human attribution.
 - [ ] A real Access-protected environment validates service-token machine attribution.
-- [ ] Viewer, contributor, and owner permissions are enforced per cloud project.
-- [ ] Unauthorized project references do not disclose project existence.
-- [ ] Revoked membership blocks the next protected project operation.
+- [x] Viewer, contributor, and owner permissions are enforced per cloud project.
+- [x] Unauthorized project references do not disclose project existence.
+- [x] Revoked membership blocks the next protected project operation.
 
 ### Projection and Board
 
-- [ ] Acknowledged tickets expose only the approved header projection, not ticket bodies.
-- [ ] Stale projection writes are rejected through version/precondition semantics.
+- [x] Acknowledged tickets expose only the approved header projection, not ticket bodies.
+- [x] Stale projection writes are rejected through version/precondition semantics.
 - [ ] Another authorized client sees projected create and status changes within the configured polling interval.
-- [ ] The board distinguishes cloud-projected state from canonical local ticket state without implying teammate ownership.
+- [x] The board distinguishes cloud-projected state from canonical local ticket state without implying teammate ownership.
 
 ### Operations and Documentation
 
-- [ ] Allocation, projection, membership, denial, and recovery actions produce structured audit records.
-- [ ] Rate limits and failure telemetry cover runaway clients and abandoned reservations.
+- [x] Allocation, projection, membership, denial, and recovery actions produce structured audit records.
+- [x] Rate limits and failure telemetry cover runaway clients and abandoned reservations.
 - [ ] Backup, restore, export, disable, and vendor-exit procedures are exercised.
-- [ ] `docs/CONFIG_SPECIFICATION.md` documents cloud binding and exposure rules.
-- [ ] `docs/CLOUD_COORDINATION_GUIDE.md` documents setup, onboarding, credentials, recovery, and disablement.
-- [ ] MCP, CLI, and server architecture documentation is reconciled wherever behavior or ownership changes.
-- [ ] Permanent architecture documentation under `docs/architecture/cloud-sync/` matches implemented behavior.
+- [x] `docs/CONFIG_SPECIFICATION.md` documents cloud binding and exposure rules.
+- [x] `docs/CLOUD_COORDINATION_GUIDE.md` documents setup, onboarding, credentials, recovery, and disablement.
+- [x] MCP, CLI, and server architecture documentation is reconciled wherever behavior or ownership changes.
+- [x] Permanent architecture documentation under `docs/architecture/cloud-sync/` matches implemented behavior.
 
 ## 5. Verification
 
@@ -196,3 +197,31 @@ requirements, BDD, test, task, implementation, and runtime trace work.
 - Render all Mermaid diagrams.
 - Run project Markdown lint on every changed durable document.
 - Reconcile requirements, architecture, tests, tasks, implementation, runtime behavior, and owner docs before closure.
+
+## 8. Clarifications
+
+### UAT Session 2026-07-25
+
+Post-implementation review found the cloud coordination service (Worker + D1)
+deployed and proven in isolation, but several acceptance criteria were met only
+by isolated tests, not through the real application path. Treated as a
+same-ticket spec delta; no requirement meaning changed.
+
+**Approved changes**:
+
+- Refined in place: `BR-1.5` (no-fallback through `TicketService.createCR`),
+  `BR-1.7` (local-only with seam wired in), `BR-3.3` (polling end-to-end).
+- Added 7 focused execution tasks: `TASK-app-strategy-wiring`,
+  `TASK-cloud-client`, `TASK-ack-projection-wiring`, `TASK-ratelimit-wiring`,
+  `TASK-board-projection`, `TASK-config-inspection-registry`,
+  `TASK-concurrency-real-proof`.
+- Fixed drift: unmasked `cloud` test script exit code; fixed domain-contracts
+  lint; corrected stale "migrations not applied" note.
+
+**Changed requirement IDs**: BR-1.5, BR-1.7, BR-3.3 (refined in place).
+
+**Updated workflow documents**: `uat.md` (current-round brief), `requirements.md`
+trace projection, `tasks.md` trace projection.
+
+**`uat.md` written**: yes.
+**Strict drift/lock used**: no (non-blocking validation; requirements re-rendered).

@@ -63,6 +63,7 @@ export function createMockTicketService() {
     updateCRPartial: jest.fn(),
     deleteCR: jest.fn(),
     getProjectCRs: jest.fn(),
+    getCloudProjections: jest.fn(),
   }
 
   return mockTicketService
