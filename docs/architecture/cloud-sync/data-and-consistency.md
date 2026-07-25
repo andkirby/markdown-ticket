@@ -37,6 +37,14 @@ CREATE TABLE cloud_projects (
   updated_at TEXT NOT NULL
 );
 
+CREATE TABLE project_provisioning_requests (
+  idempotency_key_hash TEXT PRIMARY KEY,
+  request_hash TEXT NOT NULL,
+  cloud_project_id TEXT NOT NULL UNIQUE,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (cloud_project_id) REFERENCES cloud_projects(id)
+);
+
 CREATE TABLE memberships (
   cloud_project_id TEXT NOT NULL,
   principal_kind TEXT NOT NULL
@@ -352,7 +360,7 @@ bounded.
 
 | Method and path | Minimum role | Success |
 | --- | --- | --- |
-| `POST /v1/admin/projects` | Operator audience | `201` project and initial owner |
+| `POST /v1/admin/projects` | Operator audience | `201` project and initial owner, or replay `200` |
 | `GET /v1/projects/{projectId}` | Viewer | `200` binding and coordination state |
 | `GET /v1/projects/{projectId}/members` | Owner | `200` member list |
 | `PUT /v1/projects/{projectId}/members/{kind}/{principalId}` | Owner | `200` upserted member |
@@ -367,6 +375,9 @@ bounded.
 
 Mutation responses include `requestId`; projection responses include
 `ETag: "<projectionVersion>"`. No endpoint accepts or returns a ticket body.
+Project provisioning requires an `Idempotency-Key`; the Worker stores its hash
+with a canonical request hash and returns `idempotency_conflict` when the same
+key is reused with different content.
 
 ## Error Contract
 
@@ -413,9 +424,10 @@ When coordination is unavailable:
 - polling shows the last projection as stale;
 - no caller allocates a local fallback number.
 
-Setting `enabled = false` detaches one client from polling and publishing but
-does not make local allocation safe. Existing Markdown remains usable, while
-new ticket creation stays blocked as long as a cloud project binding remains.
+Changing the CONFIG_DIR connection to `state = "disabled"` detaches one
+installation from polling and publishing but does not make local allocation
+safe. The connection remains present, existing Markdown remains usable, and new
+ticket creation fails closed.
 
 Permanent return to local allocation requires an owner-run detach procedure:
 
@@ -424,7 +436,7 @@ Permanent return to local allocation requires an owner-run detach procedure:
 3. synchronize Git so all canonical ticket numbers are present;
 4. verify the local next number is above both the highest file and the cloud
    counter;
-5. remove the cloud binding from every participating clone;
+5. remove the CONFIG_DIR cloud connection from every participating installation;
 6. resume local-only creation with explicit acknowledgement that cross-clone
    collision protection is gone.
 
@@ -435,6 +447,7 @@ Re-enabling preserves the cloud counter and requires a fresh membership probe.
 | Record | Retention |
 | --- | --- |
 | Project and membership | Until explicit project deletion procedure |
+| Project provisioning idempotency | Lifetime of the cloud project |
 | Reservations and allocated numbers | Lifetime of the cloud project |
 | Idempotency keys | Lifetime of the cloud project |
 | Active projections and tombstones | Lifetime of the cloud project |

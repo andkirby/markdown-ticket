@@ -310,7 +310,7 @@ For vendor exit:
 3. export all D1 tables, migrations, Access membership mapping, and audit data;
 4. verify each local repository's highest ticket number against the cloud
    counter;
-5. remove cloud bindings from clients;
+5. remove CONFIG_DIR cloud connections from clients;
 6. retain the export according to organizational policy;
 7. decommission Access applications, service tokens, Worker routes, and D1 only
    after Markdown continuity and export readability are verified.
