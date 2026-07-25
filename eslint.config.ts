@@ -16,6 +16,7 @@ export default antfu(
       'docs/CRs',
       'docs/archive',
       '.gitWT',
+      'src-tauri',
     ],
   },
   {
