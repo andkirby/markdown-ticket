@@ -2,7 +2,8 @@
  * Cloud credential providers — resolve a Cloudflare Access credential for one
  * runtime (human vs machine).
  *
- * Source: docs/architecture/cloud-sync/identity-and-access.md § Client Credential Flows.
+ * Source: docs/architecture/cloud-sync/identity-and-access.md § Client Credential Flows,
+ *         docs/CRs/MDT-201/requirements.md § Lifecycle Decisions (audience-aware).
  *
  * Two impls of the `CloudCredentialProvider` port from @mdt/domain-contracts:
  *
@@ -13,22 +14,38 @@
  *     is held in memory only — it is never printed, persisted, or logged.
  *
  *   - ServiceTokenCredentialProvider (machine, headless MCP / automation):
- *     reads CF_ACCESS_CLIENT_ID / CF_ACCESS_CLIENT_SECRET from the process env
- *     and returns null if either is absent. Sending them as the Access client
- *     headers (CF-Access-Client-Id / CF-Access-Client-Secret) is the runtime's
- *     job — this provider resolves presence and exposes the header pair via
- *     buildServiceTokenHeaders.
+ *     MDT-201: resolves the credential from the owner-only CONFIG_DIR machine
+ *     credential store when configured (`{ store, credentialRef }`). It
+ *     CONSUMES credentials installed by the operator-controlled Cloudflare
+ *     procedure — it never creates Cloudflare tokens. Falls back to
+ *     CF_ACCESS_CLIENT_ID / CF_ACCESS_CLIENT_SECRET env vars for backward
+ *     compatibility (Slice U2). Returns null if neither path yields a pair.
+ *
+ * `AudienceAwareCredentialResolver` routes one underlying credential provider
+ * to the correct Access audience per operation (BR-1.2, C5): provisioning uses
+ * the operator audience; connect, membership, diagnostics, disable, and normal
+ * coordination use the coordination audience. An owner who is not an operator
+ * is denied for provisioning with a clear operator-authority reason.
  *
  * Invariants (identity-and-access.md § Secret and Token Policy):
  *   - No credential is ever printed, persisted, or logged.
  *   - A credential is resolved only for an allowlisted origin (the caller —
  *     the coordinator — re-checks the allowlist before attaching any header).
+ *   - Membership requests carry only the non-secret machine principal id; the
+ *     secret never enters a membership payload (BR-2.3, C8).
  */
 
-import type { CloudCredential, CloudCredentialProvider } from '@mdt/domain-contracts'
+import type {
+  AudienceAwareCredentialProvider,
+  CloudAccessAudienceValue,
+  CloudCredential,
+  CloudCredentialProvider,
+} from '@mdt/domain-contracts'
 import type { ChildProcess, ExecFileException } from 'node:child_process'
+import type { MachineCredentialStore } from './credential-store.js'
 import { execFile } from 'node:child_process'
 import process from 'node:process'
+import { CloudAccessAudience } from '@mdt/domain-contracts'
 
 /** The spawn signature of node:child_process.execFile (injectable for tests). */
 export type ExecFile = (
@@ -98,19 +115,57 @@ export class CloudflaredCredentialProvider implements CloudCredentialProvider {
 }
 
 /**
- * Machine credential provider. Reads the Access service-token pair from the
- * process environment. Returns null if either value is absent so the caller can
- * surface authentication_required without a local fallback (BR-1.5).
+ * Machine credential provider. MDT-201: resolves the Access service-token pair
+ * from the owner-only CONFIG_DIR machine credential store when configured.
+ * Falls back to CF_ACCESS_CLIENT_ID / CF_ACCESS_CLIENT_SECRET env vars for
+ * backward compatibility (Slice U2). Returns null when neither path yields a
+ * pair so the caller can surface authentication_required without a local
+ * fallback (BR-1.5).
  *
- * The returned `cfAccessToken` carries the resolved client id (a non-secret
- * membership key per identity-and-access.md § Principal Contract). The runtime
- * attaches the actual Access client headers via `buildServiceTokenHeaders`.
+ * This provider CONSUMES credentials installed by the operator-controlled
+ * Cloudflare procedure — it does NOT create Cloudflare tokens (BR-2.3, C8).
+ *
+ * The returned `clientId` is the non-secret machine principal id used for
+ * project-scoped membership (identity-and-access.md § Principal Contract). The
+ * runtime attaches the actual Access client headers via
+ * `buildServiceTokenHeaders`. The secret never enters a membership payload.
  */
-export class ServiceTokenCredentialProvider implements CloudCredentialProvider {
+export interface ServiceTokenCredentialProviderOptions {
+  /** Owner-only CONFIG_DIR store; when provided, takes precedence over env. */
+  store?: MachineCredentialStore
+  /** Stable runtime name keyed under the credential store. */
+  credentialRef?: string
   /** Injectable env source (defaults to process.env). */
-  constructor(private readonly env: NodeJS.ProcessEnv = process.env) {}
+  env?: NodeJS.ProcessEnv
+}
+
+export class ServiceTokenCredentialProvider implements CloudCredentialProvider {
+  private readonly env: NodeJS.ProcessEnv
+  private readonly store?: MachineCredentialStore
+  private readonly credentialRef?: string
+
+  constructor(opts: ServiceTokenCredentialProviderOptions | NodeJS.ProcessEnv = process.env) {
+    // Accept either the legacy env-only shape (`new ServiceTokenCredentialProvider(process.env)`)
+    // or the MDT-201 options object for backward compatibility.
+    if (isOptionsObject(opts)) {
+      this.store = opts.store
+      this.credentialRef = opts.credentialRef
+      this.env = opts.env ?? process.env
+    }
+    else {
+      this.env = opts
+    }
+  }
 
   async resolve(_serviceUrl: string): Promise<CloudCredential | null> {
+    // Prefer the CONFIG_DIR store (MDT-201 owner-only per-runtime credential).
+    if (this.store && this.credentialRef) {
+      const record = await this.store.load(this.credentialRef)
+      if (record) {
+        return { kind: 'service', clientId: record.clientId, clientSecret: record.clientSecret }
+      }
+    }
+    // Backward-compatible env fallback (Slice U2).
     const clientId = this.env.CF_ACCESS_CLIENT_ID?.trim()
     const clientSecret = this.env.CF_ACCESS_CLIENT_SECRET?.trim()
     if (!clientId || !clientSecret)
@@ -119,6 +174,23 @@ export class ServiceTokenCredentialProvider implements CloudCredentialProvider {
     // Carrying it lets the runtime build the Access header pair without
     // re-reading the environment.
     return { kind: 'service', clientId, clientSecret }
+  }
+
+  /**
+   * The non-secret machine principal id used for project-scoped membership.
+   * Returns null when no credential is installed; the caller surfaces
+   * authentication_required without leaking the secret. Membership requests
+   * carry this id only (BR-2.3, C8).
+   */
+  async machinePrincipalId(): Promise<string | null> {
+    if (this.store && this.credentialRef) {
+      const record = await this.store.load(this.credentialRef)
+      if (record) {
+        return record.clientId
+      }
+    }
+    const clientId = this.env.CF_ACCESS_CLIENT_ID?.trim()
+    return clientId || null
   }
 
   /**
@@ -132,6 +204,14 @@ export class ServiceTokenCredentialProvider implements CloudCredentialProvider {
       this.env.CF_ACCESS_CLIENT_SECRET?.trim(),
     )
   }
+}
+
+function isOptionsObject(
+  opts: ServiceTokenCredentialProviderOptions | NodeJS.ProcessEnv,
+): opts is ServiceTokenCredentialProviderOptions {
+  return typeof opts === 'object' && opts !== null && (
+    'store' in opts || 'credentialRef' in opts || 'env' in opts
+  )
 }
 
 /**
@@ -148,6 +228,81 @@ export class RuntimeCloudCredentialProvider implements CloudCredentialProvider {
     return await this.service.resolve(serviceUrl) ?? await this.human.resolve(serviceUrl)
   }
 }
+
+/**
+ * Outcome of an operator-authority requirement check. `ok: false` surfaces a
+ * clear operator-authority reason without leaking a secret (BR-1.2, C5).
+ */
+export type RequireCredentialOutcome
+  = | { ok: true, credential: CloudCredential }
+    | { ok: false, reason: 'operator_authority_required' | 'authentication_required', message: string }
+
+/**
+ * Audience-aware credential resolver (MDT-201, BR-1.2 / C5).
+ *
+ * Routes one underlying credential provider to the correct Access audience per
+ * operation. Provisioning requires the `operator` audience; connect,
+ * membership, diagnostics, disable, and normal coordination use the
+ * `coordination` audience. A principal who is a project owner but is not
+ * admitted by the operator Access policy is denied for provisioning with a
+ * clear operator-authority reason and no fallback to coordination.
+ *
+ * The resolver does NOT create credentials. It only selects the audience for
+ * which the underlying provider resolves a credential at the validated origin.
+ */
+export class AudienceAwareCredentialResolver {
+  constructor(private readonly provider: AudienceAwareCredentialProvider) {}
+
+  /** Provisioning uses the operator audience. */
+  forProvisioning(serviceOrigin: string): Promise<CloudCredential | null> {
+    return this.provider.resolve(serviceOrigin, CloudAccessAudience.OPERATOR)
+  }
+
+  /** Connect uses the coordination audience (never operator). */
+  forConnect(serviceOrigin: string): Promise<CloudCredential | null> {
+    return this.provider.resolve(serviceOrigin, CloudAccessAudience.COORDINATION)
+  }
+
+  /** Membership mutations use the coordination audience. */
+  forMembership(serviceOrigin: string): Promise<CloudCredential | null> {
+    return this.provider.resolve(serviceOrigin, CloudAccessAudience.COORDINATION)
+  }
+
+  /** Diagnostics use the coordination audience. */
+  forDiagnostics(serviceOrigin: string): Promise<CloudCredential | null> {
+    return this.provider.resolve(serviceOrigin, CloudAccessAudience.COORDINATION)
+  }
+
+  /** Disable uses the coordination audience. */
+  forDisable(serviceOrigin: string): Promise<CloudCredential | null> {
+    return this.provider.resolve(serviceOrigin, CloudAccessAudience.COORDINATION)
+  }
+
+  /** Normal coordination operations use the coordination audience. */
+  forNormalOperation(serviceOrigin: string): Promise<CloudCredential | null> {
+    return this.provider.resolve(serviceOrigin, CloudAccessAudience.COORDINATION)
+  }
+
+  /**
+   * Require an operator-audience credential for provisioning. Returns a clear
+   * operator-authority denial when none is available; never falls back to a
+   * coordination credential. The denial message never contains a secret.
+   */
+  async requireForProvisioning(serviceOrigin: string): Promise<RequireCredentialOutcome> {
+    const credential = await this.forProvisioning(serviceOrigin)
+    if (!credential) {
+      return {
+        ok: false,
+        reason: 'operator_authority_required',
+        message: 'provisioning requires the operator Access audience; the current principal is not admitted by the operator policy',
+      }
+    }
+    return { ok: true, credential }
+  }
+}
+
+/** Re-export the audience values for callers building routing tables. */
+export { CloudAccessAudience, type CloudAccessAudienceValue }
 
 /**
  * Build the Cloudflare Access service-token header pair from the resolved env

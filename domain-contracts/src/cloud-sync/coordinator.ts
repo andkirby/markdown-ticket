@@ -15,6 +15,26 @@ import type {
   AcknowledgeReservationResponse,
 } from './projection'
 
+/**
+ * Cloudflare Access audiences used by audience-aware credential resolution and
+ * management HTTP routing.
+ *
+ * - `operator` — required for initial project provisioning (BR-1.2, C5). A
+ *   project owner who is not an operator is denied at this audience.
+ * - `coordination` — used by every other operation (teammate connect, normal
+ *   project operations, membership, diagnostics, disable).
+ *
+ * The privileged provisioning endpoint is resolved only from the trusted
+ * service profile, never from repository data (BR-1.3).
+ */
+export const CloudAccessAudience = {
+  OPERATOR: 'operator',
+  COORDINATION: 'coordination',
+} as const
+
+export type CloudAccessAudienceValue
+  = (typeof CloudAccessAudience)[keyof typeof CloudAccessAudience]
+
 /** A reservation returned by the coordinator. */
 export interface ReservationDTO {
   reservationId: string
@@ -36,6 +56,9 @@ export interface ReserveRequest {
  * Credential provider port — injected per runtime (browser server, interactive
  * CLI/MCP, headless MCP). Returns the header to attach, or null if no
  * credential is available (caller must NOT fall back to local numbering).
+ *
+ * MDT-201 adds audience-aware resolution: provisioning requests the `operator`
+ * audience; all other operations request `coordination` (C5, BR-1.2).
  */
 export type CloudCredential
   = | { kind: 'human', cfAccessToken: string }
@@ -49,6 +72,26 @@ export interface CloudCredentialProvider {
    * authentication_required without a local fallback.
    */
   resolve: (serviceUrl: string) => Promise<CloudCredential | null>
+}
+
+/**
+ * Audience-aware credential provider port (MDT-201).
+ *
+ * Implementations resolve a credential for the given audience at the validated
+ * service origin. Returns null when no credential is available for that
+ * audience; the caller surfaces authentication_required without a local
+ * fallback (BR-1.2, BR-1.5, C5).
+ *
+ * - `operator` resolution is used for provisioning. A project owner who is not
+ *   admitted by the operator Access policy receives a clear denial.
+ * - `coordination` resolution is used for connect, membership, diagnostics,
+ *   disable, and normal operations.
+ */
+export interface AudienceAwareCredentialProvider {
+  resolve: (
+    serviceOrigin: string,
+    audience: CloudAccessAudienceValue,
+  ) => Promise<CloudCredential | null>
 }
 
 /**

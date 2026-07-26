@@ -8,6 +8,7 @@ import type {
   CloudCredentialProvider,
   CloudSyncCoordinator,
   ProjectCloudSyncBinding,
+  ProjectConnectionRead,
   ProjectedHeader,
 } from '@mdt/domain-contracts'
 import type { Project } from '../models/Project.js'
@@ -40,13 +41,15 @@ import {
 import { DEFAULTS, getDefaultPaths } from '../utils/constants.js'
 import { formatCrKey } from '../utils/keyNormalizer.js'
 import { logQuiet } from '../utils/logger.js'
-import { readEnabledCloudSyncBinding } from './cloud-sync/allocator-strategy.js'
+import { bindingFromEnabledConnection } from './cloud-sync/allocator-strategy.js'
 import { CloudProjectionClient as HttpCloudProjectionClient } from './cloud-sync/CloudProjectionClient.js'
 import { buildEffectiveCloudSyncConfig } from './cloud-sync/config.js'
 import { CloudCreateOrchestrator, projectedHeaderHash } from './cloud-sync/create-orchestrator.js'
 import { RuntimeCloudCredentialProvider } from './cloud-sync/credential-providers.js'
 import { CloudOperationJournal } from './cloud-sync/operation-journal.js'
+import { ProjectStateStore } from './cloud-sync/project-state-store.js'
 import { CloudProjectionSync } from './cloud-sync/projection-sync.js'
+import { resolveTrustedServiceProfile } from './cloud-sync/trusted-service-profile.js'
 import { CRService as SharedCRService } from './CRService.js'
 import { ProjectService } from './ProjectService.js'
 import { ServiceError } from './ServiceError.js'
@@ -65,6 +68,12 @@ export interface CloudRuntimeDependencies {
   coordinatorFactory?: (binding: ProjectCloudSyncBinding) => CloudSyncCoordinator
   projectionClientFactory?: (binding: ProjectCloudSyncBinding) => ProjectionClientPort
   journalRoot?: string
+  /**
+   * CONFIG_DIR root for the cloud connection store
+   * (`{root}/projects/{projectId}/cloud-sync.toml`). Defaults to
+   * `getDefaultPaths().CONFIG_DIR`. Injected by tests to point at a temp dir.
+   */
+  stateStoreRoot?: string
 }
 
 /**
@@ -141,9 +150,8 @@ export class TicketService {
     error?: string
   }> {
     try {
-      const config = this.projectService.getProjectConfig(project.project.path)
-      const binding = readEnabledCloudSyncBinding(config)
-      if (!binding) {
+      const connection = await this.resolveCloudConnection(project)
+      if (connection.kind === 'absent') {
         return {
           enabled: false,
           pollIntervalSeconds: 15,
@@ -153,6 +161,21 @@ export class TicketService {
           stale: false,
         }
       }
+      if (connection.kind !== 'enabled') {
+        // disabled / malformed / untrusted: honest fail-closed. Do NOT report
+        // enabled:false (that would lie about cloud being off) and do NOT fall
+        // back to local polling (BR-4.2).
+        return {
+          enabled: true,
+          pollIntervalSeconds: 15,
+          items: [],
+          nextCursor: after,
+          hasMore: false,
+          stale: true,
+          error: 'coordination_suspended',
+        }
+      }
+      const binding = bindingFromEnabledConnection(connection.connection)
       const effectiveConfig = buildEffectiveCloudSyncConfig(
         this.projectService.getGlobalConfig().cloudSync,
       )
@@ -443,21 +466,18 @@ export class TicketService {
    * MDT-095: Enhanced with worktree support - creates in worktree if branch exists
    * MDT-200: local projects keep filesystem allocation; cloud-bound projects
    * execute the durable reserve → write → acknowledge orchestration.
-   *   - Local project (no enabled `[project.cloudSync]` binding): identical
-   *     highest+1 filesystem scan, byte-for-byte (BR-1.7).
-   *   - Valid enabled binding uses the production HTTP coordinator and runtime
-   *     credentials by default; missing credentials or cloud failure never
-   *     allocate a local number (BR-1.5).
-   *   - Disabled binding: local allocation.
-   *   - Present malformed binding: fail closed; never risk a local collision.
+   *   - Local project (no CONFIG_DIR cloud connection): identical highest+1
+   *     filesystem scan, byte-for-byte (BR-1.7, BR-5.1).
+   *   - Enabled CONFIG_DIR connection uses the production HTTP coordinator and
+   *     runtime credentials by default; missing credentials or cloud failure
+   *     never allocate a local number (BR-1.5).
+   *   - Disabled / malformed / untrusted connection: fail closed (BR-4.2). A
+   *     disabled connection never resumes local numbering.
    */
   async createCR(project: Project, crType: string, data: TicketData): Promise<Ticket> {
     try {
-      const projectConfig = this.projectService.getProjectConfig(project.project.path)
-      const binding = readEnabledCloudSyncBinding(projectConfig, {
-        log: (msg, err) => logQuiet(this.quiet, msg, err),
-      })
-      if (!binding) {
+      const connection = await this.resolveCloudConnection(project)
+      if (connection.kind === 'absent') {
         return this.createLocalTicketWithNumber(
           project,
           crType,
@@ -465,6 +485,14 @@ export class TicketService {
           await this.getNextCRNumber(project),
         )
       }
+      if (connection.kind !== 'enabled') {
+        // disabled / malformed / untrusted: fail closed (BR-4.2, BR-1.6). A
+        // disabled or invalid connection MUST NOT resume local numbering.
+        throw new CoordinatorError('coordination_suspended', {
+          message: `cloud connection is ${connection.kind}`,
+        })
+      }
+      const binding = bindingFromEnabledConnection(connection.connection)
 
       const globalConfig = this.projectService.getGlobalConfig()
       const effectiveConfig = buildEffectiveCloudSyncConfig(globalConfig.cloudSync)
@@ -844,6 +872,29 @@ export class TicketService {
     }
   }
 
+  /**
+   * Read this installation's cloud connection from CONFIG_DIR
+   * (`{CONFIG_DIR}/projects/{project.id}/cloud-sync.toml`) under the effective
+   * trusted service profile. This is the single authority for local-vs-cloud
+   * selection; the legacy `[project.cloudSync]` repo binding is no longer read.
+   *
+   * `absent` is the ONLY outcome that means local-only (BR-5.1). `enabled`
+   * selects cloud; `disabled` / `malformed` / `untrusted` fail closed (BR-4.2).
+   * CONFIG_DIR state never grants identity — the cloud re-verifies membership
+   * per operation (BR-3.1, TASK-8).
+   */
+  private async resolveCloudConnection(project: Project): Promise<ProjectConnectionRead> {
+    const globalConfig = this.projectService.getGlobalConfig()
+    const profile = resolveTrustedServiceProfile({
+      operatorOrigins: globalConfig.cloudSync.allowedOrigins,
+    })
+    const stateStore = new ProjectStateStore({
+      rootDir: this.cloudRuntime.stateStoreRoot ?? getDefaultPaths().CONFIG_DIR,
+      profile,
+    })
+    return stateStore.read(project.id)
+  }
+
   private async syncTicketProjectionBestEffort(
     project: Project,
     previous: Ticket,
@@ -851,10 +902,13 @@ export class TicketService {
     lifecycle: 'active' | 'deleted',
   ): Promise<void> {
     try {
-      const config = this.projectService.getProjectConfig(project.project.path)
-      const binding = readEnabledCloudSyncBinding(config)
-      if (!binding)
+      const connection = await this.resolveCloudConnection(project)
+      if (connection.kind !== 'enabled') {
+        // absent (local-only) or disabled/malformed/untrusted (fail-closed):
+        // no projection to publish. Local edits still succeed.
         return
+      }
+      const binding = bindingFromEnabledConnection(connection.connection)
       const ticketNumber = Number.parseInt(next.code.split('-').pop() ?? '', 10)
       if (!Number.isSafeInteger(ticketNumber))
         return
