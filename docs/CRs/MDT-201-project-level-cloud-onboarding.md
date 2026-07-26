@@ -168,48 +168,48 @@ dependsOn: MDT-200
 
 ### Functional
 
-- [ ] Provisioning a project from one device returns one stable cloud project
+- [x] Provisioning a project from one device returns one stable cloud project
   UUID; another clone connects explicitly to that UUID without provisioning.
-- [ ] Retrying the same provisioning request after a timeout returns the same
+- [x] Retrying the same provisioning request after a timeout returns the same
   cloud project UUID and does not create a duplicate project.
-- [ ] Initial provisioning succeeds only for a human admitted by the operator
+- [x] Initial provisioning succeeds only for a human admitted by the operator
   Access policy; a project owner who is not an operator receives a clear denial.
 - [ ] Adding one human member grants that verified principal the assigned project role from multiple devices.
 - [ ] A teammate joins through personal Access authentication without entering a shared project password or copied token.
-- [ ] Repository-controlled files and the project registry entry
+- [x] Repository-controlled files and the project registry entry
   `CONFIG_DIR/projects/{localProjectId}.toml` contain no cloud enablement, cloud
   project UUID, service origin, or credential.
-- [ ] Each installation stores its connection state under
+- [x] Each installation stores its connection state under
   `CONFIG_DIR/projects/{localProjectId}/cloud-sync.toml`; connecting verifies
   the existing UUID and membership before enabling cloud operations.
-- [ ] Device-local credentials, sessions, journals, locks, and caches do not create projects, grant roles, or define cloud project identity.
-- [ ] Revoking one project membership blocks the principal from that project across all devices on the next protected operation.
-- [ ] Revocation from one project does not remove the same principal from other projects.
+- [x] Device-local credentials, sessions, journals, locks, and caches do not create projects, grant roles, or define cloud project identity.
+- [x] Revoking one project membership blocks the principal from that project across all devices on the next protected operation.
+- [x] Revocation from one project does not remove the same principal from other projects.
 - [ ] A new or replacement device can use an existing project membership after authentication without counter, membership, or projection migration.
-- [ ] Machine members use project-scoped roles while each runtime stores its own
+- [x] Machine members use project-scoped roles while each runtime stores its own
   service-token credentials in an owner-only CONFIG_DIR credential file; the
   secret never enters repository configuration or the membership API.
-- [ ] Git repository access remains a separately documented prerequisite for canonical Markdown collaboration.
-- [ ] The shipped trusted service profile lets a new clone connect without
+- [x] Git repository access remains a separately documented prerequisite for canonical Markdown collaboration.
+- [x] The shipped trusted service profile lets a new clone connect without
   project reprovisioning or repository configuration changes.
-- [ ] Repository configuration cannot select or redirect the privileged
+- [x] Repository configuration cannot select or redirect the privileged
   provisioning endpoint; it comes from the effective trusted service profile.
-- [ ] Disabling a connection retains a disabled CONFIG_DIR record and blocks new
+- [x] Disabling a connection retains a disabled CONFIG_DIR record and blocks new
   ticket creation; only the separately acknowledged permanent-detach procedure
   may remove the record and resume local numbering.
-- [ ] A legacy repository `[project.cloudSync]` binding can be imported
+- [x] A legacy repository `[project.cloudSync]` binding can be imported
   explicitly into CONFIG_DIR; migration never silently edits repository files.
-- [ ] Readiness, provisioning, membership, binding, diagnostics, and disable
+- [x] Readiness, provisioning, membership, binding, diagnostics, and disable
   behavior are exposed through one reusable service/API with no presentation
   logic.
 
 ### Non-Functional
 
-- [ ] No cloud credential or reusable join secret is persisted in
+- [x] No cloud credential or reusable join secret is persisted in
   repository-controlled files, browser storage, logs, or project registry
   data; machine secrets are limited to owner-only CONFIG_DIR credential files.
-- [ ] Project and membership lookups preserve tenant isolation and non-disclosure behavior.
-- [ ] Local-only project creation and existing-ticket editing remain backward compatible.
+- [x] Project and membership lookups preserve tenant isolation and non-disclosure behavior.
+- [x] Local-only project creation and existing-ticket editing remain backward compatible.
 
 ### Edge Cases
 
