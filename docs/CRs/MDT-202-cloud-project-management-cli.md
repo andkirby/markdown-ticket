@@ -189,7 +189,7 @@ to the MDT-201 shared cloud-sync services.
 
 ### Functional
 
-- [ ] `mdt-cli cloud enable --owner <email>` detects the current project and refuses execution outside a configured project.
+- [x] `mdt-cli cloud enable --owner <email>` detects the current project and refuses execution outside a configured project.
 - [ ] `mdt-cli cloud enable` resolves a trusted service profile, authenticates
   to the operator audience, and checks service readiness and compatible
   capabilities before provisioning or writing CONFIG_DIR connection state.
@@ -227,13 +227,13 @@ to the MDT-201 shared cloud-sync services.
   adds or updates normalized membership without accepting a password or token.
   For `--kind machine` the principal is the non-secret machine principal ID;
   the client secret is never accepted here.
-- [ ] `mdt-cli cloud members remove <principal> --kind human|machine` revokes
+- [x] `mdt-cli cloud members remove <principal> --kind human|machine` revokes
   project membership and requires confirmation unless `--yes` is supplied.
-- [ ] `mdt-cli cloud credentials install <credential-ref> --client-id <id>`
+- [x] `mdt-cli cloud credentials install <credential-ref> --client-id <id>`
   reads the client secret from a hidden interactive prompt or stdin, never
   from argv. The secret is never printed, logged, returned in structured
   output, or written outside the owner-only CONFIG_DIR credential store.
-- [ ] `mdt-cli cloud credentials status <credential-ref>` and
+- [x] `mdt-cli cloud credentials status <credential-ref>` and
   `mdt-cli cloud credentials remove <credential-ref> [--yes]` expose only
   redacted diagnostic views and require confirmation for removal unless
   `--yes` is supplied.
@@ -253,26 +253,26 @@ to the MDT-201 shared cloud-sync services.
   authorization, configuration, readiness, network, and coordinator failures
   through one centralized, documented exit-code mapping. `process.exit()`
   decisions are not scattered across command handlers.
-- [ ] Confirmation is required for member removal, credential removal, disable,
+- [x] Confirmation is required for member removal, credential removal, disable,
   and legacy migration unless `--yes` is supplied.
-- [ ] Non-interactive execution never hangs waiting for input.
-- [ ] Every lifecycle operation is delegated to the MDT-201 management
+- [x] Non-interactive execution never hangs waiting for input.
+- [x] Every lifecycle operation is delegated to the MDT-201 management
   service/API; CLI code does not independently implement readiness,
   provisioning, membership, binding, credential, or disable rules.
 
 ### Non-Functional
 
-- [ ] No Access token, service-token secret, JWT, cookie, authorization header,
+- [x] No Access token, service-token secret, JWT, cookie, authorization header,
   client secret, or reusable join credential appears in CLI output (human,
   JSON, or YAML), arguments, `--guide` output, logs, repository files, the
   global registry, or CONFIG_DIR files outside the owner-only credential store.
-- [ ] CLI commands contain no allocation, membership, retry, project-binding,
+- [x] CLI commands contain no allocation, membership, retry, project-binding,
   credential-storage, or authorization business logic.
-- [ ] Local-only project commands retain current behavior when the cloud
+- [x] Local-only project commands retain current behavior when the cloud
   command group is unused.
-- [ ] Command help identifies Wrangler as an operator tool and does not
+- [x] Command help identifies Wrangler as an operator tool and does not
   instruct teammates to edit UUIDs manually.
-- [ ] `mdt-cli cloud --help` and the generated guide expose all approved
+- [x] `mdt-cli cloud --help` and the generated guide expose all approved
   subcommands and no provider-specific user workflow.
 
 ### Testing
