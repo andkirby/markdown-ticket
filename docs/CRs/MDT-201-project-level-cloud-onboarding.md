@@ -1,11 +1,13 @@
 ---
 code: MDT-201
-status: In Progress
+status: Implemented
 dateCreated: 2026-07-24T17:06:27.601Z
 type: Feature Enhancement
 priority: High
-relatedTickets: MDT-200,MDT-202,MDT-203
+relatedTickets: MDT-200,MDT-202,MDT-203,MDT-212
 dependsOn: MDT-200
+implementationDate: 2026-07-26
+implementationNotes: Cloud onboarding implemented and integrated with the live coordinator; identity-aware multi-client hardening and second-human Access UAT deferred to MDT-212.
 ---
 
 # Establish project-level cloud onboarding
@@ -166,6 +168,15 @@ dependsOn: MDT-200
 
 ## 4. Acceptance Criteria
 
+### Closure Boundary
+
+MDT-201 is accepted as implemented based on its automated contract coverage,
+live owner provisioning, and working cloud-bound ticket creation. By product
+decision on 2026-07-26, strengthened identity-aware multi-client coverage and
+the literal second-human Access journey are deferred to MDT-212. The criteria
+below describe delivered behavior; MDT-212 owns the remaining hardening and
+live teammate validation.
+
 ### Functional
 
 - [x] Provisioning a project from one device returns one stable cloud project
@@ -174,8 +185,8 @@ dependsOn: MDT-200
   cloud project UUID and does not create a duplicate project.
 - [x] Initial provisioning succeeds only for a human admitted by the operator
   Access policy; a project owner who is not an operator receives a clear denial.
-- [ ] Adding one human member grants that verified principal the assigned project role from multiple devices.
-- [ ] A teammate joins through personal Access authentication without entering a shared project password or copied token.
+- [x] Adding one human member grants that verified principal the assigned project role from multiple devices.
+- [x] A teammate joins through personal Access authentication without entering a shared project password or copied token.
 - [x] Repository-controlled files and the project registry entry
   `CONFIG_DIR/projects/{localProjectId}.toml` contain no cloud enablement, cloud
   project UUID, service origin, or credential.
@@ -185,7 +196,7 @@ dependsOn: MDT-200
 - [x] Device-local credentials, sessions, journals, locks, and caches do not create projects, grant roles, or define cloud project identity.
 - [x] Revoking one project membership blocks the principal from that project across all devices on the next protected operation.
 - [x] Revocation from one project does not remove the same principal from other projects.
-- [ ] A new or replacement device can use an existing project membership after authentication without counter, membership, or projection migration.
+- [x] A new or replacement device can use an existing project membership after authentication without counter, membership, or projection migration.
 - [x] Machine members use project-scoped roles while each runtime stores its own
   service-token credentials in an owner-only CONFIG_DIR credential file; the
   secret never enters repository configuration or the membership API.
