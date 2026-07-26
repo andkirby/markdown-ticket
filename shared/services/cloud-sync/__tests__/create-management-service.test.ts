@@ -19,16 +19,21 @@ import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from '@jest/globals'
 
 import {
+  CLOUD_SYNC_CONNECTION_VERSION,
   CloudSyncConnectionState,
+  type AudienceAwareCredentialProvider,
+  type CloudAccessAudienceValue,
   type CloudCredential,
   type ProjectBindingProbe,
+  type ProjectCloudSyncBinding,
 } from '@mdt/domain-contracts'
-import type { AudienceAwareCredentialProvider, CloudAccessAudienceValue } from '@mdt/domain-contracts'
+import { DISTRIBUTION_CLOUD_SYNC_ORIGINS } from '../config'
 import { createManagementService } from '../create-management-service'
 import { ProjectStateStore } from '../project-state-store'
 import { resolveTrustedServiceProfile } from '../trusted-service-profile'
 
 const PROJECT_ID = 'markdown-ticket'
+const DISTRIBUTION_ORIGIN = DISTRIBUTION_CLOUD_SYNC_ORIGINS[0]!
 
 describe('createManagementService (TEST-factory-wiring)', () => {
   let root: string
@@ -130,6 +135,47 @@ describe('createManagementService (TEST-factory-wiring)', () => {
     const store = new ProjectStateStore({ rootDir: root, profile })
     const read = await store.read(PROJECT_ID)
     expect(read.kind).toBe('enabled')
+  })
+
+  it('wires the supplied legacy migration source into migrateLegacyBinding', async () => {
+    const legacyBinding: ProjectCloudSyncBinding = {
+      enabled: true,
+      projectId: 'legacy-uuid',
+      serviceUrl: DISTRIBUTION_ORIGIN,
+      pollIntervalSeconds: 15,
+    }
+    const fakeFetch = makeFakeFetch({
+      provision: () => ({ projectId: 'unused', replayed: false }),
+      probe: (): ProjectBindingProbe => ({
+        projectId: 'legacy-uuid',
+        projectCode: 'MDT',
+        coordinationState: 'active',
+        role: 'owner',
+      }),
+    })
+    const provider: AudienceAwareCredentialProvider = {
+      resolve: async () => ({ kind: 'human', cfAccessToken: 'coord-token' }),
+    }
+
+    const { service } = createManagementService({
+      localProjectId: PROJECT_ID,
+      projectCode: 'MDT',
+      initialOwnerEmail: 'owner@example.com',
+      credentialProvider: provider,
+      fetchImpl: fakeFetch,
+      configDirRoot: root,
+      legacyMigrationSource: { readLegacyBinding: async () => legacyBinding },
+    })
+
+    const result = await service.migrateLegacyBinding()
+    expect(result.migrated).toBe(true)
+    expect(result.connection).toEqual({
+      version: CLOUD_SYNC_CONNECTION_VERSION,
+      state: CloudSyncConnectionState.ENABLED,
+      cloudProjectId: 'legacy-uuid',
+      serviceOrigin: DISTRIBUTION_ORIGIN,
+      pollIntervalSeconds: 15,
+    })
   })
 })
 

@@ -142,6 +142,26 @@ describe('CloudProjectManagementService enable + connect (TEST-pm-enable-commit-
       expect(retry.cloudProjectId).toBe('uuid-stable')
     })
 
+    it('re-running enable on an existing enabled connection returns the UUID without provisioning again', async () => {
+      let provisionCount = 0
+      const service = buildService({
+        provisionImpl: async () => {
+          provisionCount++
+          return { projectId: 'uuid-existing', replayed: false }
+        },
+        probeImpl: async id => ({ projectId: id, projectCode: 'MDT', coordinationState: 'active', role: 'owner' }),
+        credentialForProvisioning: { kind: 'human', cfAccessToken: 'op-tok' },
+        credentialForConnect: { kind: 'human', cfAccessToken: 'coord-tok' },
+      })
+
+      const first = await service.enable({ projectCode: 'MDT', initialOwnerEmail: 'o@e.com', idempotencyKey: 'k1', requestHash: 'a'.repeat(64) })
+      const second = await service.enable({ projectCode: 'MDT', initialOwnerEmail: 'o@e.com', idempotencyKey: 'k2', requestHash: 'b'.repeat(64) })
+
+      expect(first.cloudProjectId).toBe('uuid-existing')
+      expect(second).toEqual({ cloudProjectId: 'uuid-existing', replayed: true })
+      expect(provisionCount).toBe(1)
+    })
+
     it('writes NO CONFIG_DIR connection when provisioning is denied (owner-not-operator)', async () => {
       let provisionCalled = false
       const service = buildService({

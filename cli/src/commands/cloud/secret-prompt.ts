@@ -17,6 +17,8 @@
  */
 
 import process from 'node:process'
+import { createInterface } from 'node:readline/promises'
+import { Writable } from 'node:stream'
 import { CloudCommandError, CloudExitCode } from './exit-codes.js'
 
 interface SecretPromptOptions {
@@ -66,11 +68,23 @@ async function defaultReadAllStdin(): Promise<string> {
 }
 
 async function defaultReadHidden(_prompt: string): Promise<string> {
-  // Node has no built-in hidden-TTY read across platforms. We fall back to a
-  // plain prompt; the secret is still read from stdin and is never an argv
-  // value, which is the security-critical invariant. Operators who want a
-  // truly hidden echo should pipe the secret (`printf ... | mdt-cli cloud
-  // credentials install ...`) or rely on their terminal's own echo control.
   process.stdout.write(_prompt)
-  return defaultReadAllStdin()
+  const mutedOutput = new Writable({
+    write(_chunk, _encoding, callback) {
+      callback()
+    },
+  })
+  const rl = createInterface({
+    input: process.stdin,
+    output: mutedOutput,
+    terminal: true,
+  })
+  try {
+    const answer = await rl.question('')
+    process.stdout.write('\n')
+    return answer
+  }
+  finally {
+    rl.close()
+  }
 }
