@@ -102,6 +102,86 @@ describe('useBackendConfig hook', () => {
     })
     expect(applyConfig.mock.calls.length).toBe(callsBefore)
   })
+
+  // --- MDT-168 UAT 2026-07-26 / BR-7.1: same-browser consumer refresh signal ---
+
+  it('dispatches the selector-prefs refresh signal after a successful ui.projectSelector.* save', async () => {
+    const dispatched: string[] = []
+    const handler = (e: Event) => {
+      dispatched.push((e as CustomEvent).type)
+    }
+    window.addEventListener('mdt:selector-prefs-updated', handler)
+    try {
+      const { result } = renderHook(() => useHook(true))
+      await waitFor(() => expect(result.current.selectors.length).toBeGreaterThan(0))
+
+      act(() => {
+        result.current.stageEdit('ui.projectSelector.visibleCount', 9)
+      })
+      await act(async () => {
+        await result.current.applyOne('ui.projectSelector.visibleCount')
+      })
+
+      expect(dispatched).toContain('mdt:selector-prefs-updated')
+    }
+    finally {
+      window.removeEventListener('mdt:selector-prefs-updated', handler)
+    }
+  })
+
+  it('does NOT dispatch the selector-prefs refresh signal on a non-ui.projectSelector.* save', async () => {
+    const dispatched: string[] = []
+    const handler = (e: Event) => {
+      dispatched.push((e as CustomEvent).type)
+    }
+    window.addEventListener('mdt:selector-prefs-updated', handler)
+    try {
+      const { result } = renderHook(() => useHook(true))
+      await waitFor(() => expect(result.current.selectors.length).toBeGreaterThan(0))
+
+      act(() => {
+        result.current.stageEdit('links.enableTicketLinks', false)
+      })
+      await act(async () => {
+        await result.current.applyOne('links.enableTicketLinks')
+      })
+
+      expect(dispatched).not.toContain('mdt:selector-prefs-updated')
+    }
+    finally {
+      window.removeEventListener('mdt:selector-prefs-updated', handler)
+    }
+  })
+
+  it('does NOT dispatch the selector-prefs refresh signal when the apply fails', async () => {
+    const dispatched: string[] = []
+    const handler = (e: Event) => {
+      dispatched.push((e as CustomEvent).type)
+    }
+    window.addEventListener('mdt:selector-prefs-updated', handler)
+    try {
+      const { result } = renderHook(() => useHook(true))
+      await waitFor(() => expect(result.current.selectors.length).toBeGreaterThan(0))
+
+      act(() => {
+        result.current.stageEdit('ui.projectSelector.visibleCount', 9)
+      })
+      // Force the apply to fail by making applyConfig return ok:false for this selector.
+      applyConfig.mockImplementationOnce(async () => ({
+        ok: false,
+        error: { selector: 'ui.projectSelector.visibleCount', message: 'Invalid value.' },
+      }) as const)
+      await act(async () => {
+        await result.current.applyOne('ui.projectSelector.visibleCount')
+      })
+
+      expect(dispatched).not.toContain('mdt:selector-prefs-updated')
+      expect(result.current.saveStatus).toBe('error')
+    }
+    finally {
+      window.removeEventListener('mdt:selector-prefs-updated', handler)
+    }
+  })
 })
 
 function cleanup(): void {

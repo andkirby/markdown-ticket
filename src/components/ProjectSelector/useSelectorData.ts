@@ -58,7 +58,27 @@ export function useSelectorData(options: UseSelectorDataOptions = {}): SelectorD
       }
     }
 
-    const handlePrefsSync = () => {
+    const handlePrefsSync = async () => {
+      // BR-7.1: re-fetch backend preferences after a successful ui.projectSelector.*
+      // save so the rail reflects the persisted value in the same session. Then
+      // layer browser-only localStorage overrides on top — same merge order as
+      // the initial load ({...validatedPreferences, ...localOverrides}). Never
+      // let a backend re-fetch overwrite browser-only accent/autocolor/style.
+      try {
+        const response = await authFetch('/api/config/selector')
+        if (response.ok) {
+          const data = await response.json()
+          const validatedPreferences = validatePreferences(data.preferences || {})
+          const localOverrides = loadLocalPreferences()
+          const merged = { ...validatedPreferences, ...localOverrides }
+          setPreferences(merged)
+          return
+        }
+      }
+      catch {
+        // network/transport failure: fall back to localStorage-only merge below,
+        // matching the silent-fallback behavior used at initial load.
+      }
       const localOverrides = loadLocalPreferences()
       setPreferences(prev => ({
         ...prev,

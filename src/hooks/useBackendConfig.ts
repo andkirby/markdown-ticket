@@ -10,9 +10,38 @@ import type { ConfigSelectorDescriptor } from '../config/configApiClient'
  * document tree recents/sort/collapse) NEVER flow through this hook — they
  * remain in `src/config/*.ts` localStorage modules (BR-6.1, Edge-6). This hook
  * is only for backend-owned config selectors.
+ *
+ * MDT-168 UAT 2026-07-26 / BR-7.1: after a successful applyConfig for
+ * `ui.projectSelector.visibleCount` or `ui.projectSelector.compactInactive`,
+ * this hook notifies live project selector consumers by dispatching the
+ * existing narrow named window event already consumed by `useSelectorData`
+ * (`SELECTOR_PREFS_SYNC_EVENT`). The notification fires ONLY for those two
+ * selectors — it is not a generic event bus and is not broadcast on other
+ * config writes. This PoC transport is intentionally narrow; a server-side
+ * SSE-based config:changed event is the target architecture for the wider
+ * selector-refresh contract (see follow-up CR).
  */
 import { useCallback, useEffect, useState } from 'react'
+import { SELECTOR_PREFS_SYNC_EVENT } from '../components/ProjectSelector/useSelectorData'
 import { applyConfig, fetchConfigSelectors } from '../config/configApiClient'
+
+/**
+ * Selectors whose successful write requires a same-browser consumer refresh
+ * of the project selector rail (BR-7.1). Keep this list narrow: every entry
+ * here is a feature the config layer is coupled to. Adding selectors to this
+ * set is the PoC's known scaling limit and is gated by the follow-up CR.
+ */
+const SELECTOR_PREFS_REFRESH_SELECTORS: ReadonlySet<string> = new Set([
+  'ui.projectSelector.visibleCount',
+  'ui.projectSelector.compactInactive',
+])
+
+function notifySelectorPrefsConsumers(): void {
+  if (typeof window === 'undefined') {
+    return
+  }
+  window.dispatchEvent(new CustomEvent(SELECTOR_PREFS_SYNC_EVENT))
+}
 
 export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 
@@ -109,6 +138,11 @@ export function useBackendConfig(enabled: boolean): UseBackendConfigResult {
           return next
         })
         setSaveStatus('saved')
+        // BR-7.1: notify live selector consumers after a successful
+        // ui.projectSelector.* save so they can re-fetch backend prefs.
+        if (SELECTOR_PREFS_REFRESH_SELECTORS.has(selector)) {
+          notifySelectorPrefsConsumers()
+        }
         return true
       }
       else {
