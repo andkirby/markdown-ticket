@@ -6,7 +6,7 @@ import process from 'node:process'
  * This is the single owner of CLI command registration and help output.
  */
 
-import { Command } from 'commander'
+import { Command, Option } from 'commander'
 import { ATTR_HELP } from './commands/attrMeta.js'
 import { generateGuide } from './output/guide.js'
 import { assertSingleOutputFormat, getRequestedOutputFormat, writeStructuredError } from './output/structured.js'
@@ -38,7 +38,7 @@ export function main(): void {
     const guideIndex = process.argv.indexOf('--guide')
     const scopeIndex = guideIndex - 1
     const scope = scopeIndex >= 2 ? process.argv[scopeIndex] : undefined
-    if (scope === 'ticket' || scope === 'project') {
+    if (scope === 'ticket' || scope === 'project' || scope === 'cloud') {
       const subCmd = program.commands.find(c => c.name() === scope)
       if (subCmd) {
         console.log(generateGuide(subCmd, scope))
@@ -249,8 +249,220 @@ function registerCommands(program: Command): void {
     })
 
   // ====================================================================
+  // CLOUD NAMESPACE (MDT-202)
+  // Thin presentation adapter over the MDT-201 CloudProjectManagementService.
+  // Uses runCloudAction so failures map through the centralized cloud
+  // exit-code table (C-7) instead of the generic process.exit(1).
+  // ====================================================================
+
+  const cloudCmd = program
+    .command('cloud')
+    .description('Cloud project management (enable, connect, status, members, credentials)')
+
+  // Merge program-level options (global --json/--yaml) with the cloud
+  // subcommand options so runCloudAction and the handlers see the effective
+  // output format regardless of where --json/--yaml appeared on the argv.
+  const cloudOpts = (opts: Record<string, unknown>): Record<string, unknown> =>
+    ({ ...program.opts(), ...opts })
+
+  // cloud enable --owner <email>
+  cloudCmd
+    .command('enable')
+    .description('Provision one cloud project for the current project and bind this installation')
+    .requiredOption('--owner <email>', 'Initial owner email (verified by the operator Access policy)')
+    .addOption(jsonOption())
+    .addOption(yamlOption())
+    .action(async (rawOpts) => {
+      const { cloudEnableAction, runCloudAction } = await import('./commands/cloud.js')
+      const options = cloudOpts(rawOpts)
+      await runCloudAction('cloud.enable', options, () =>
+        cloudEnableAction({ ownerEmail: (rawOpts as Record<string, unknown>).owner as string }, options))
+    })
+
+  // cloud login
+  cloudCmd
+    .command('login')
+    .description('Obtain or refresh the personal Access session (does not bind this clone)')
+    .addOption(jsonOption())
+    .addOption(yamlOption())
+    .action(async (rawOpts) => {
+      const { cloudLoginAction, runCloudAction } = await import('./commands/cloud.js')
+      const options = cloudOpts(rawOpts)
+      await runCloudAction('cloud.login', options, () => cloudLoginAction(options))
+    })
+
+  // cloud connect <cloud-project-uuid>
+  cloudCmd
+    .command('connect')
+    .description('Bind this installation to an existing cloud project UUID (never provisions)')
+    .argument('<cloud-project-uuid>', 'Existing cloud project UUID shared out-of-band')
+    .addOption(jsonOption())
+    .addOption(yamlOption())
+    .action(async (uuid, rawOpts) => {
+      const { cloudConnectAction, runCloudAction } = await import('./commands/cloud.js')
+      const options = cloudOpts(rawOpts)
+      await runCloudAction('cloud.connect', options, () =>
+        cloudConnectAction({ cloudProjectId: uuid }, options))
+    })
+
+  // cloud status
+  cloudCmd
+    .command('status')
+    .description('Report the current cloud connection state')
+    .addOption(jsonOption())
+    .addOption(yamlOption())
+    .action(async (rawOpts) => {
+      const { cloudStatusAction, runCloudAction } = await import('./commands/cloud.js')
+      const options = cloudOpts(rawOpts)
+      await runCloudAction('cloud.status', options, () => cloudStatusAction(options))
+    })
+
+  // cloud doctor
+  cloudCmd
+    .command('doctor')
+    .description('Run redacted, actionable cloud connection diagnostics')
+    .addOption(jsonOption())
+    .addOption(yamlOption())
+    .action(async (rawOpts) => {
+      const { cloudDoctorAction, runCloudAction } = await import('./commands/cloud.js')
+      const options = cloudOpts(rawOpts)
+      await runCloudAction('cloud.doctor', options, () => cloudDoctorAction(options))
+    })
+
+  // cloud members <subcommand>
+  const membersCmd = cloudCmd.command('members').description('Project membership management')
+
+  membersCmd
+    .command('list')
+    .description('List project members and roles (owner only)')
+    .addOption(jsonOption())
+    .addOption(yamlOption())
+    .action(async (rawOpts) => {
+      const { cloudMembersListAction, runCloudAction } = await import('./commands/cloud.js')
+      const options = cloudOpts(rawOpts)
+      await runCloudAction('cloud.members.list', options, () => cloudMembersListAction(options))
+    })
+
+  membersCmd
+    .command('add')
+    .description('Add or update a human or machine member (no password or secret accepted)')
+    .argument('<principal>', 'Member principal (email for human; non-secret machine principal id for machine)')
+    .requiredOption('--kind <kind>', 'Principal kind: human or machine')
+    .requiredOption('--role <role>', 'Role: viewer, contributor, or owner')
+    .option('--display-label <label>', 'Optional display label (defaults to the principal)')
+    .addOption(jsonOption())
+    .addOption(yamlOption())
+    .action(async (principal, rawOpts) => {
+      const { cloudMembersAddAction, runCloudAction } = await import('./commands/cloud.js')
+      const options = cloudOpts(rawOpts)
+      const o = rawOpts as Record<string, unknown>
+      await runCloudAction('cloud.members.add', options, () =>
+        cloudMembersAddAction(
+          { principal, kind: o.kind as 'human' | 'machine', role: o.role as 'viewer' | 'contributor' | 'owner', ...(o.displayLabel ? { displayLabel: o.displayLabel as string } : {}) },
+          options,
+        ))
+    })
+
+  membersCmd
+    .command('remove')
+    .description('Remove a member from the project (requires confirmation unless --yes)')
+    .argument('<principal>', 'Member principal')
+    .requiredOption('--kind <kind>', 'Principal kind: human or machine')
+    .option('--yes', 'Skip the confirmation prompt')
+    .addOption(jsonOption())
+    .addOption(yamlOption())
+    .action(async (principal, rawOpts) => {
+      const { cloudMembersRemoveAction, runCloudAction } = await import('./commands/cloud.js')
+      const options = cloudOpts(rawOpts)
+      await runCloudAction('cloud.members.remove', options, () =>
+        cloudMembersRemoveAction({ principal, kind: (rawOpts as Record<string, unknown>).kind as 'human' | 'machine' }, options))
+    })
+
+  // cloud credentials <subcommand>
+  const credentialsCmd = cloudCmd.command('credentials').description('Owner-only machine credential store management')
+
+  credentialsCmd
+    .command('install')
+    .description('Install a Cloudflare service-token credential (secret read from stdin or hidden prompt; never argv)')
+    .argument('<credential-ref>', 'Credential reference (runtime name)')
+    .requiredOption('--client-id <id>', 'Non-secret machine principal id (Access service-token client id)')
+    .addOption(jsonOption())
+    .addOption(yamlOption())
+    .action(async (credentialRef, rawOpts) => {
+      const { cloudCredentialsInstallAction, runCloudAction } = await import('./commands/cloud.js')
+      const options = cloudOpts(rawOpts)
+      await runCloudAction('cloud.credentials.install', options, () =>
+        cloudCredentialsInstallAction({ credentialRef, clientId: (rawOpts as Record<string, unknown>).clientId as string }, options))
+    })
+
+  credentialsCmd
+    .command('status')
+    .description('Show a redacted diagnostic view of one credential (never the secret)')
+    .argument('<credential-ref>', 'Credential reference')
+    .addOption(jsonOption())
+    .addOption(yamlOption())
+    .action(async (credentialRef, rawOpts) => {
+      const { cloudCredentialsStatusAction, runCloudAction } = await import('./commands/cloud.js')
+      const options = cloudOpts(rawOpts)
+      await runCloudAction('cloud.credentials.status', options, () =>
+        cloudCredentialsStatusAction({ credentialRef }, options))
+    })
+
+  credentialsCmd
+    .command('remove')
+    .description('Remove a credential from the owner-only store (requires confirmation unless --yes)')
+    .argument('<credential-ref>', 'Credential reference')
+    .option('--yes', 'Skip the confirmation prompt')
+    .addOption(jsonOption())
+    .addOption(yamlOption())
+    .action(async (credentialRef, rawOpts) => {
+      const { cloudCredentialsRemoveAction, runCloudAction } = await import('./commands/cloud.js')
+      const options = cloudOpts(rawOpts)
+      await runCloudAction('cloud.credentials.remove', options, () =>
+        cloudCredentialsRemoveAction({ credentialRef }, options))
+    })
+
+  // cloud disable [--yes]
+  cloudCmd
+    .command('disable')
+    .description('Disable cloud coordination; retain disabled state; ticket creation stays fail-closed')
+    .option('--yes', 'Skip the confirmation prompt')
+    .addOption(jsonOption())
+    .addOption(yamlOption())
+    .action(async (rawOpts) => {
+      const { cloudDisableAction, runCloudAction } = await import('./commands/cloud.js')
+      const options = cloudOpts(rawOpts)
+      await runCloudAction('cloud.disable', options, () => cloudDisableAction(options))
+    })
+
+  // cloud migrate-legacy [--yes]
+  cloudCmd
+    .command('migrate-legacy')
+    .description('Import a legacy repository [project.cloudSync] binding into CONFIG_DIR (conflict-safe; repo untouched)')
+    .option('--yes', 'Skip the confirmation prompt')
+    .addOption(jsonOption())
+    .addOption(yamlOption())
+    .action(async (rawOpts) => {
+      const { cloudMigrateLegacyAction, runCloudAction } = await import('./commands/cloud.js')
+      const options = cloudOpts(rawOpts)
+      await runCloudAction('cloud.migrate-legacy', options, () => cloudMigrateLegacyAction(options))
+    })
+
+  // ====================================================================
   // End of command registration
   // ====================================================================
+}
+
+/**
+ * Commander Option helpers for --json/--yaml. Using `.addOption` keeps the
+ * guide generator consistent across the cloud group and the rest of the CLI.
+ */
+function jsonOption(): Option {
+  return new Option('-j, --json', 'Output as JSON')
+}
+
+function yamlOption(): Option {
+  return new Option('--yaml', 'Output as YAML')
 }
 
 async function runCliAction(

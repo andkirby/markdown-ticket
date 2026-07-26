@@ -1,0 +1,1189 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-202"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "md t-cli cloud enable --owner <email> detects the current project and refuses execution outside a configured project, then delegates provisioning to the MDT-201 management service.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "md t-cli cloud enable resolves a trusted service profile, authenticates to the operator audience, and checks service readiness and compatible capabilities before provisioning or writing CONFIG_DIR connection state.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.3",
+      "kind": "behavior",
+      "text": "a real 503 service_not_ready response leaves CONFIG_DIR connection state unchanged and exits with an actionable message; 503 is a failure case, not the default Worker state.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.4",
+      "kind": "behavior",
+      "text": "successful enablement provisions exactly one cloud project using the project code, initial owner identity, and a next number above existing tickets, then writes the non-secret CONFIG_DIR connection commit-last.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.5",
+      "kind": "behavior",
+      "text": "re-running enable for a valid connection reports the existing cloud project UUID and performs no second provisioning mutation.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.6",
+      "kind": "behavior",
+      "text": "md t-cli cloud login obtains or refreshes the personal Access session without modifying connection state or membership; login alone does not assign this clone to a project.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.7",
+      "kind": "behavior",
+      "text": "md t-cli cloud connect <cloud-project-uuid> consumes an existing UUID, authenticates to the coordination audience, verifies membership, writes CONFIG_DIR connection state commit-last, reports the verified role, and never provisions.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.8",
+      "kind": "behavior",
+      "text": "a teammate who clones a bound project authenticates, runs connect with the existing UUID, and uses the cloud project without running enable or provisioning again.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.9",
+      "kind": "behavior",
+      "text": "md t-cli cloud status distinguishes absent/local-only, enabled-ready, disabled, malformed, untrusted, authentication-required, forbidden, unavailable, suspended, stale, and incompatible states where supported by the shared contract.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.10",
+      "kind": "behavior",
+      "text": "md t-cli cloud doctor reports redacted actionable checks for project context, CONFIG_DIR connection state, trusted origin, credential availability, service readiness, membership, and coordinator reachability.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.1",
+      "kind": "behavior",
+      "text": "md t-cli cloud members list shows project members and roles only to an authorized owner.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.2",
+      "kind": "behavior",
+      "text": "md t-cli cloud members add <principal> --kind human|machine --role <role> adds or updates normalized membership through the MDT-201 service without accepting a password or token.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.3",
+      "kind": "behavior",
+      "text": "md t-cli cloud members remove <principal> --kind human|machine revokes membership and requires confirmation unless --yes is supplied.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.4",
+      "kind": "behavior",
+      "text": "machine membership accepts a verified non-secret machine principal id and never accepts or prints its client secret.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3.1",
+      "kind": "behavior",
+      "text": "md t-cli cloud credentials install <credential-ref> --client-id <id> reads the client secret from a hidden interactive prompt or stdin, never from argv, and writes only to the owner-only CONFIG_DIR credential store.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3.2",
+      "kind": "behavior",
+      "text": "md t-cli cloud credentials status <credential-ref> and credentials remove <credential-ref> expose only redacted diagnostic views; remove requires confirmation unless --yes is supplied.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4.1",
+      "kind": "behavior",
+      "text": "md t-cli cloud disable [--yes] delegates to the MDT-201 disable procedure, retains the connection as disabled, keeps ticket creation fail-closed, and never silently resumes local number allocation. There is no permanent-detach command in this ticket.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4.2",
+      "kind": "behavior",
+      "text": "md t-cli cloud migrate-legacy [--yes] explicitly imports a legacy repository project.cloudSync binding into CONFIG_DIR, rejects conflicts with existing state, leaves repository files unchanged, and requires confirmation unless --yes is supplied.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-5.1",
+      "kind": "behavior",
+      "text": "every cloud command supports human, --json, and --yaml output conventions.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-5.2",
+      "kind": "behavior",
+      "text": "every cloud command maps failures to stable non-zero exit codes through one centralized documented exit-code mapping; process.exit decisions are not scattered across command handlers.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-5.3",
+      "kind": "behavior",
+      "text": "confirmation is required for member removal, credential removal, disable, and legacy migration unless --yes is supplied; non-interactive execution never hangs waiting for input.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-6.1",
+      "kind": "behavior",
+      "text": "md t-cli cloud --help and the generated guide expose all approved subcommands and no provider-specific user workflow.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C-1",
+      "kind": "constraint",
+      "text": "active cloud connection state, the cloud project UUID, the service origin, and credentials are written only to CONFIG_DIR; .mdt-config.toml and the global project registry never hold active cloud state.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-2",
+      "kind": "constraint",
+      "text": "cli code contains no allocation, membership, retry, project-binding, credential-storage, or authorization business logic; every lifecycle operation delegates to the MDT-201 management service.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-3",
+      "kind": "constraint",
+      "text": "local-only project commands retain current behavior when the cloud command group is unused or no connection exists.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-4",
+      "kind": "constraint",
+      "text": "wrangler remains an operator deployment tool; command help does not instruct teammates to edit uuids manually or use provider-specific user workflows.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "not_applicable"
+    },
+    {
+      "id": "C-5",
+      "kind": "constraint",
+      "text": "no access token, service-token secret, jwt, cookie, authorization header, client secret, or reusable join credential appears in cli output (human/json/yaml), argv, --guide output, logs, repository files, the global registry, or CONFIG_DIR files outside the owner-only credential store.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-6",
+      "kind": "constraint",
+      "text": "the client secret is read from a hidden interactive prompt or stdin and is never accepted as an argv value.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-7",
+      "kind": "constraint",
+      "text": "one centralized documented cli exit-code mapping owns process.exit decisions for the cloud command group.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "a failed readiness, auth, provisioning, or membership step leaves CONFIG_DIR connection state unchanged.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-2",
+      "kind": "edge_case",
+      "text": "two independent CONFIG_DIR clients connect to the same cloud uuid without a second provisioning.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-3",
+      "kind": "edge_case",
+      "text": "disabled, malformed, and untrusted connections fail closed; ticket creation does not silently fall back to local numbering.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-4",
+      "kind": "edge_case",
+      "text": "a 503 service_not_ready response during enable or any protected operation is surfaced as an actionable failure and never written as enabled.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-5",
+      "kind": "edge_case",
+      "text": "non-interactive execution (no tty) of a command requiring confirmation exits non-zero with an actionable message instead of hanging.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-6",
+      "kind": "edge_case",
+      "text": "repeated enable on an already-valid connection performs no provisioning mutation and reports the existing uuid.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-7",
+      "kind": "edge_case",
+      "text": "migrate-legacy rejects a conflict with an existing non-absent CONFIG_DIR connection without writing.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-8",
+      "kind": "edge_case",
+      "text": "credential install with a malformed or empty secret fails closed without creating a partial credential file.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-9",
+      "kind": "edge_case",
+      "text": "connect rejects an unknown or revoked uuid with a forbidden/authentication failure and writes no connection state.",
+      "sourceRef": "CR:MDT-202",
+      "routePolicy": "tests"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "enable_detects_project",
+      "title": "enable refuses outside a project",
+      "covers": [
+        "BR-1.1"
+      ],
+      "given": "given the cwd is not inside a configured mdt project",
+      "when": "when mdt-cli cloud enable --owner owner@example.com is run",
+      "then": "then it exits non-zero with NO_PROJECT_CONTEXT and writes no connection state",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "login_no_state_change",
+      "title": "login does not change connection or membership",
+      "covers": [
+        "BR-1.6"
+      ],
+      "given": "given any connection state when absent or enabled",
+      "when": "when mdt-cli cloud login is run",
+      "then": "then the personal access session is obtained or refreshed and CONFIG_DIR connection state and membership are unchanged",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "status_states",
+      "title": "status distinguishes contract states",
+      "covers": [
+        "BR-1.9"
+      ],
+      "given": "given connection states absent/enabled/disabled/malformed/untrusted and coordinator states authentication-required/forbidden/unavailable/suspended/stale/incompatible",
+      "when": "when mdt-cli cloud status is run",
+      "then": "then each state is reported with a distinct actionable message and exit code",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "members_list_owner_only",
+      "title": "members list requires owner",
+      "covers": [
+        "BR-2.1"
+      ],
+      "given": "given a non-owner coordination credential",
+      "when": "when mdt-cli cloud members list is run",
+      "then": "then it exits non-zero with forbidden and lists no members",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "members_add_no_secret",
+      "title": "members add rejects secret input",
+      "covers": [
+        "BR-2.2",
+        "BR-2.4"
+      ],
+      "given": "given an owner credential",
+      "when": "when mdt-cli cloud members add machine-principal --kind machine --role member is run",
+      "then": "then upsert carries only the non-secret principal id and the secret is never accepted or printed",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "output_formats",
+      "title": "every command supports json and yaml",
+      "covers": [
+        "BR-5.1"
+      ],
+      "given": "given any cloud subcommand",
+      "when": "when run with --json or --yaml",
+      "then": "then it emits valid structured output with no secret values",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "members_remove_confirms",
+      "title": "members remove requires confirmation",
+      "covers": [
+        "BR-2.3",
+        "BR-5.3"
+      ],
+      "given": "given a tty and an owner credential",
+      "when": "when mdt-cli cloud members remove alice@example.com --kind human is run without --yes",
+      "then": "then it prompts for confirmation and only removes after confirmation; with --yes it removes without prompting",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "credentials_remove_confirms",
+      "title": "credential remove requires confirmation",
+      "covers": [
+        "BR-3.2",
+        "BR-5.3"
+      ],
+      "given": "given a tty and an installed credential",
+      "when": "when mdt-cli cloud credentials remove runtime-a is run without --yes",
+      "then": "then it prompts and only removes after confirmation; with --yes it removes without prompting",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "enable_readiness_gate",
+      "title": "enable checks readiness before provisioning",
+      "covers": [
+        "BR-1.2",
+        "BR-1.3"
+      ],
+      "given": "given a trusted profile and a worker returning 503 service_not_ready",
+      "when": "when mdt-cli cloud enable --owner owner@example.com is run",
+      "then": "then it exits non-zero with an actionable unavailable message and leaves CONFIG_DIR connection state unchanged",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "enable_provisions_once_writes_config_dir",
+      "title": "enable provisions and writes CONFIG_DIR commit-last",
+      "covers": [
+        "BR-1.4"
+      ],
+      "given": "given an operator-audience credential and a ready worker",
+      "when": "when mdt-cli cloud enable --owner owner@example.com is run",
+      "then": "then exactly one provision call is made and CONFIG_DIR connection is written while .mdt-config.toml and the registry are unchanged",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "enable_idempotent_rerun",
+      "title": "repeated enable performs no second provisioning",
+      "covers": [
+        "BR-1.5"
+      ],
+      "given": "given an existing valid enabled connection",
+      "when": "when mdt-cli cloud enable --owner owner@example.com is run again",
+      "then": "then it reports the existing uuid and performs zero provision calls",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "connect_verifies_membership_no_provision",
+      "title": "connect writes state only after membership verifies",
+      "covers": [
+        "BR-1.7"
+      ],
+      "given": "given an existing cloud uuid and a coordination credential",
+      "when": "when mdt-cli cloud connect <uuid> is run",
+      "then": "then it authenticates to the coordination audience, probes membership, writes CONFIG_DIR state commit-last, reports the role, and makes zero provision calls",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "connect_revoked_uuid",
+      "title": "writes nothing on revoked or unknown uuid",
+      "covers": [
+        "BR-1.7"
+      ],
+      "given": "given a uuid that the coordinator reports as forbidden or not found",
+      "when": "when mdt-cli cloud connect <uuid> is run",
+      "then": "then it exits non-zero and writes no CONFIG_DIR connection state",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "teammate_connect_journey",
+      "title": "teammate connects without enabling",
+      "covers": [
+        "BR-1.8"
+      ],
+      "given": "given two isolated CONFIG_DIR directories and one enabled project",
+      "when": "when the second client runs mdt-cli cloud connect <uuid>",
+      "then": "then both installations operate against the same cloud uuid and the second performs zero provision calls",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "doctor_redacted",
+      "title": "doctor reports redacted actionable checks",
+      "covers": [
+        "BR-1.10"
+      ],
+      "given": "given an enabled connection and an installed credential",
+      "when": "when mdt-cli cloud doctor is run",
+      "then": "then it reports project context, connection state, trusted origin, credential availability, readiness, membership, and reachability with no secret value present",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "credentials_install_secret_from_stdin",
+      "title": "credential install reads secret from stdin not argv",
+      "covers": [
+        "BR-3.1"
+      ],
+      "given": "given a non-tty stdin containing the secret",
+      "when": "when mdt-cli cloud credentials install runtime-a --client-id cid is run",
+      "then": "then the secret is read from stdin, written only to the owner-only CONFIG_DIR credential store, never printed, and an empty secret fails closed with no partial file",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "credentials_status_redacted",
+      "title": "credential status is redacted",
+      "covers": [
+        "BR-3.2"
+      ],
+      "given": "given an installed credential",
+      "when": "when mdt-cli cloud credentials status runtime-a is run",
+      "then": "then only the non-secret principal id and kind are shown and the secret is absent from stdout, json, and yaml",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "disable_retains_disabled_fail_closed",
+      "title": "disable retains disabled state",
+      "covers": [
+        "BR-4.1"
+      ],
+      "given": "given an enabled connection",
+      "when": "when mdt-cli cloud disable --yes is run",
+      "then": "then CONFIG_DIR connection state becomes disabled, ticket creation remains fail-closed, and local numbering does not resume",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "migrate_legacy_conflict_safe",
+      "title": "migrate-legacy rejects conflicts and leaves repo untouched",
+      "covers": [
+        "BR-4.2"
+      ],
+      "given": "given a legacy repository binding and an existing non-absent CONFIG_DIR connection",
+      "when": "when mdt-cli cloud migrate-legacy --yes is run",
+      "then": "then it exits non-zero with a conflict and writes nothing; on success it imports CONFIG_DIR state only and leaves repository files unchanged",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "centralized_exit_codes",
+      "title": "failures map through one exit-code table",
+      "covers": [
+        "BR-5.2"
+      ],
+      "given": "given authentication, authorization, configuration, readiness, network, and coordinator failures",
+      "when": "when any cloud command fails",
+      "then": "then the exit code comes from one centralized documented mapping and no handler calls process.exit inline",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "non_interactive_no_hang",
+      "title": "non-interactive confirmation does not hang",
+      "covers": [
+        "BR-5.3"
+      ],
+      "given": "given no tty and a command requiring confirmation without --yes",
+      "when": "when the command is run",
+      "then": "then it exits non-zero with an actionable message instead of waiting for input",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "help_and_guide_surface",
+      "title": "help and guide expose approved commands",
+      "covers": [
+        "BR-6.1"
+      ],
+      "given": "given the installed cli",
+      "when": "when mdt-cli cloud --help or the generated guide is rendered",
+      "then": "then it lists enable, login, connect, status, doctor, members, credentials, disable, migrate-legacy and no provider-specific user workflow",
+      "sourceRef": "CR:MDT-202"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-1",
+      "title": "cloud command group delegates every lifecycle op to MDT-201 service",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.4",
+        "BR-1.7",
+        "BR-2.1",
+        "BR-2.2",
+        "BR-4.1",
+        "C-2"
+      ],
+      "artifactIds": [
+        "ART-cli-cloud",
+        "ART-shared-mgmt-factory",
+        "ART-cli-cloud-options"
+      ],
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "OBL-2",
+      "title": "active cloud state lives only in CONFIG_DIR; .mdt-config.toml and registry untouched",
+      "derivedFrom": [
+        "BR-1.4",
+        "C-1",
+        "Edge-1"
+      ],
+      "artifactIds": [
+        "ART-shared-mgmt-factory",
+        "ART-cli-cloud"
+      ],
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "OBL-4",
+      "title": "one centralized exit-code mapping; no inline process.exit in cloud handlers",
+      "derivedFrom": [
+        "BR-5.2",
+        "C-7",
+        "Edge-5"
+      ],
+      "artifactIds": [
+        "ART-cli-cloud-exit",
+        "ART-cli-index-register"
+      ],
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "OBL-6",
+      "title": "disable retains disabled and fail-closed; migrate-legacy conflict-safe",
+      "derivedFrom": [
+        "BR-4.1",
+        "BR-4.2",
+        "Edge-3",
+        "Edge-7"
+      ],
+      "artifactIds": [
+        "ART-cli-cloud",
+        "ART-cli-cloud-confirm"
+      ],
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "OBL-7",
+      "title": "help and generated guide expose the approved command set only",
+      "derivedFrom": [
+        "BR-6.1",
+        "C-4"
+      ],
+      "artifactIds": [
+        "ART-cli-guide",
+        "ART-cli-index-register"
+      ],
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "OBL-3",
+      "title": "client secret never in argv, output, logs, or non-credential-store files",
+      "derivedFrom": [
+        "BR-3.1",
+        "BR-3.2",
+        "C-5",
+        "C-6",
+        "Edge-8"
+      ],
+      "artifactIds": [
+        "ART-cli-cloud-secret",
+        "ART-cli-cloud-render",
+        "ART-e2e-cloud"
+      ],
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "OBL-5",
+      "title": "connect verifies membership and never provisions; enable idempotent",
+      "derivedFrom": [
+        "BR-1.5",
+        "BR-1.7",
+        "BR-1.8",
+        "Edge-2",
+        "Edge-6",
+        "Edge-9"
+      ],
+      "artifactIds": [
+        "ART-cli-cloud",
+        "ART-shared-mgmt-factory",
+        "ART-e2e-cloud"
+      ],
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "OBL-8",
+      "title": "coordination guide documents owner enable and teammate connect journeys",
+      "derivedFrom": [
+        "BR-1.6",
+        "BR-1.8",
+        "BR-6.1"
+      ],
+      "artifactIds": [
+        "ART-doc-cloud-guide"
+      ],
+      "sourceRef": "CR:MDT-202"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-cli-cloud",
+      "path": "cli/src/commands/cloud.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "ART-cli-cloud-exit",
+      "path": "cli/src/commands/cloud/exit-codes.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "ART-cli-cloud-options",
+      "path": "cli/src/commands/cloud/options.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "ART-cli-cloud-render",
+      "path": "cli/src/commands/cloud/render.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "ART-cli-cloud-confirm",
+      "path": "cli/src/commands/cloud/confirm.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "ART-cli-cloud-secret",
+      "path": "cli/src/commands/cloud/secret-prompt.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "ART-shared-mgmt-factory",
+      "path": "shared/services/cloud-sync/create-management-service.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "ART-cli-index-register",
+      "path": "cli/src/index.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "ART-cli-guide",
+      "path": "cli/src/output/guide.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "ART-e2e-cloud",
+      "path": "cli/tests/e2e/cloud",
+      "kind": "test",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "ART-doc-cloud-guide",
+      "path": "docs/CLOUD_COORDINATION_GUIDE.md",
+      "kind": "doc",
+      "sourceRef": "CR:MDT-202"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-options-parse",
+      "kind": "unit",
+      "title": "Option parsing maps every cloud subcommand and option to a typed request DTO",
+      "covers": [
+        "BR-1.1",
+        "BR-2.2",
+        "BR-5.1"
+      ],
+      "file": "cli/tests/e2e/cloud",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "TEST-render-redact",
+      "kind": "unit",
+      "title": "Renderers emit no secret or token substring in any format",
+      "covers": [
+        "C-5",
+        "C-6",
+        "Edge-8"
+      ],
+      "file": "cli/tests/e2e/cloud",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "TEST-exit-codes",
+      "kind": "unit",
+      "title": "Every failure maps to the documented centralized exit code",
+      "covers": [
+        "BR-5.2",
+        "C-7"
+      ],
+      "file": "cli/tests/e2e/cloud",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "TEST-confirm-gate",
+      "kind": "unit",
+      "title": "Non-interactive destructive command without --yes exits CONFIRMATION_REQUIRED",
+      "covers": [
+        "Edge-5",
+        "BR-5.3"
+      ],
+      "file": "cli/tests/e2e/cloud",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "TEST-secret-stdin",
+      "kind": "unit",
+      "title": "Client secret read from stdin or hidden prompt; empty secret fails closed",
+      "covers": [
+        "BR-3.1",
+        "C-6",
+        "Edge-8"
+      ],
+      "file": "cli/tests/e2e/cloud",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "TEST-factory-wiring",
+      "kind": "integration",
+      "title": "createManagementService wires the service against a fake coordinator",
+      "covers": [
+        "OBL-1",
+        "OBL-2"
+      ],
+      "file": "cli/tests/e2e/cloud",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "TEST-enable-idempotent",
+      "kind": "integration",
+      "title": "Repeated enable performs no second provisioning",
+      "covers": [
+        "BR-1.5",
+        "Edge-6"
+      ],
+      "file": "cli/tests/e2e/cloud",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "TEST-connect-no-provision",
+      "kind": "integration",
+      "title": "Connect issues zero provision calls under all inputs",
+      "covers": [
+        "BR-1.7",
+        "Edge-9"
+      ],
+      "file": "cli/tests/e2e/cloud",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "TEST-disable-fail-closed",
+      "kind": "integration",
+      "title": "Disable retains disabled and the allocator fails closed",
+      "covers": [
+        "BR-4.1",
+        "Edge-3"
+      ],
+      "file": "cli/tests/e2e/cloud",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "TEST-migrate-conflict",
+      "kind": "integration",
+      "title": "Migrate-legacy against an existing connection writes nothing",
+      "covers": [
+        "BR-4.2",
+        "Edge-7"
+      ],
+      "file": "cli/tests/e2e/cloud",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "TEST-e2e-enable",
+      "kind": "e2e",
+      "title": "enable provisions once and writes CONFIG_DIR commit-last",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.4",
+        "C-1",
+        "Edge-1"
+      ],
+      "file": "cli/tests/e2e/cloud",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "TEST-e2e-enable-503",
+      "kind": "e2e",
+      "title": "real 503 leaves state unchanged and exits COORDINATION_UNAVAILABLE",
+      "covers": [
+        "BR-1.3",
+        "Edge-4"
+      ],
+      "file": "cli/tests/e2e/cloud",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "TEST-e2e-enable-idempotent",
+      "kind": "e2e",
+      "title": "repeated enable reports existing uuid with zero provision calls",
+      "covers": [
+        "BR-1.5",
+        "Edge-6"
+      ],
+      "file": "cli/tests/e2e/cloud",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "TEST-e2e-login",
+      "kind": "e2e",
+      "title": "login obtains a session without changing connection state",
+      "covers": [
+        "BR-1.6"
+      ],
+      "file": "cli/tests/e2e/cloud",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "TEST-e2e-connect",
+      "kind": "e2e",
+      "title": "connect verifies membership and writes state with zero provisions",
+      "covers": [
+        "BR-1.7"
+      ],
+      "file": "cli/tests/e2e/cloud",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "TEST-e2e-two-clients",
+      "kind": "e2e",
+      "title": "two isolated CONFIG_DIR clients share one uuid via connect",
+      "covers": [
+        "BR-1.8",
+        "Edge-2"
+      ],
+      "file": "cli/tests/e2e/cloud",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "TEST-e2e-status-states",
+      "kind": "e2e",
+      "title": "status distinguishes every contract-supported state",
+      "covers": [
+        "BR-1.9"
+      ],
+      "file": "cli/tests/e2e/cloud",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "TEST-e2e-doctor-redacted",
+      "kind": "e2e",
+      "title": "doctor reports redacted actionable checks",
+      "covers": [
+        "BR-1.10",
+        "C-5"
+      ],
+      "file": "cli/tests/e2e/cloud",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "TEST-e2e-members",
+      "kind": "e2e",
+      "title": "members list/add/remove with owner authorization and no secret",
+      "covers": [
+        "BR-2.1",
+        "BR-2.2",
+        "BR-2.3",
+        "BR-2.4"
+      ],
+      "file": "cli/tests/e2e/cloud",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "TEST-e2e-credentials",
+      "kind": "e2e",
+      "title": "credentials install/status/remove with secret from stdin only",
+      "covers": [
+        "BR-3.1",
+        "BR-3.2",
+        "C-6",
+        "Edge-8"
+      ],
+      "file": "cli/tests/e2e/cloud",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "TEST-e2e-disable",
+      "kind": "e2e",
+      "title": "disable retains disabled and keeps ticket creation fail-closed",
+      "covers": [
+        "BR-4.1",
+        "Edge-3"
+      ],
+      "file": "cli/tests/e2e/cloud",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "TEST-e2e-migrate",
+      "kind": "e2e",
+      "title": "migrate-legacy conflict rejected and repo files untouched on success",
+      "covers": [
+        "BR-4.2",
+        "Edge-7"
+      ],
+      "file": "cli/tests/e2e/cloud",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "TEST-e2e-output-formats",
+      "kind": "e2e",
+      "title": "every command honors --json and --yaml with no secret",
+      "covers": [
+        "BR-5.1"
+      ],
+      "file": "cli/tests/e2e/cloud",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "TEST-e2e-non-interactive",
+      "kind": "e2e",
+      "title": "destructive commands without --yes in non-TTY exit immediately",
+      "covers": [
+        "Edge-5",
+        "BR-5.3"
+      ],
+      "file": "cli/tests/e2e/cloud",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "TEST-e2e-help-guide",
+      "kind": "e2e",
+      "title": "help and generated guide expose the approved command set",
+      "covers": [
+        "BR-6.1",
+        "C-4"
+      ],
+      "file": "cli/tests/e2e/cloud",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "TEST-e2e-redaction-sweep",
+      "kind": "e2e",
+      "title": "matrix sweep asserts no secret in any output or written file",
+      "covers": [
+        "C-5",
+        "C-6"
+      ],
+      "file": "cli/tests/e2e/cloud",
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "TEST-local-only-unchanged",
+      "kind": "e2e",
+      "title": "local-only ticket commands behave identically when no cloud connection exists or cloud group is unused",
+      "covers": [
+        "C-3"
+      ],
+      "file": "cli/tests/e2e/cloud",
+      "sourceRef": "CR:MDT-202"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-1",
+      "title": "Add the shared management-service composition seam",
+      "ownsArtifactIds": [
+        "ART-shared-mgmt-factory"
+      ],
+      "makesGreenIds": [
+        "TEST-factory-wiring",
+        "TEST-enable-idempotent",
+        "TEST-connect-no-provision"
+      ],
+      "skills": [
+        "typescript"
+      ],
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Add cloud command DTO/options parsing and centralized exit-code mapping",
+      "ownsArtifactIds": [
+        "ART-cli-cloud-options",
+        "ART-cli-cloud-exit"
+      ],
+      "makesGreenIds": [
+        "TEST-options-parse",
+        "TEST-exit-codes",
+        "centralized_exit_codes"
+      ],
+      "skills": [
+        "typescript"
+      ],
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Add renderers with redaction, confirm gate, and hidden secret prompt",
+      "ownsArtifactIds": [
+        "ART-cli-cloud-render",
+        "ART-cli-cloud-confirm",
+        "ART-cli-cloud-secret"
+      ],
+      "makesGreenIds": [
+        "TEST-render-redact",
+        "TEST-confirm-gate",
+        "TEST-secret-stdin",
+        "non_interactive_no_hang",
+        "credentials_status_redacted"
+      ],
+      "skills": [
+        "typescript"
+      ],
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "TASK-4",
+      "title": "Register the cloud command group and generated guide; wire runCliAction exit mapping",
+      "ownsArtifactIds": [
+        "ART-cli-cloud",
+        "ART-cli-index-register",
+        "ART-cli-guide",
+        "ART-e2e-cloud"
+      ],
+      "makesGreenIds": [
+        "TEST-e2e-help-guide",
+        "help_and_guide_surface"
+      ],
+      "skills": [
+        "typescript"
+      ],
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "TASK-5",
+      "title": "Implement enable/login/connect/status/doctor adapters",
+      "makesGreenIds": [
+        "TEST-e2e-enable",
+        "TEST-e2e-enable-503",
+        "TEST-e2e-enable-idempotent",
+        "TEST-e2e-login",
+        "TEST-e2e-connect",
+        "TEST-e2e-status-states",
+        "TEST-e2e-doctor-redacted",
+        "TEST-e2e-two-clients",
+        "enable_detects_project",
+        "enable_readiness_gate",
+        "enable_provisions_once_writes_config_dir",
+        "enable_idempotent_rerun",
+        "login_no_state_change",
+        "connect_verifies_membership_no_provision",
+        "connect_revoked_uuid",
+        "teammate_connect_journey",
+        "status_states",
+        "doctor_redacted"
+      ],
+      "skills": [
+        "typescript"
+      ],
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "TASK-6",
+      "title": "Implement members add/remove/list adapters",
+      "makesGreenIds": [
+        "TEST-e2e-members",
+        "members_list_owner_only",
+        "members_add_no_secret",
+        "members_remove_confirms"
+      ],
+      "skills": [
+        "typescript"
+      ],
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "TASK-7",
+      "title": "Implement credentials install/status/remove adapters",
+      "makesGreenIds": [
+        "TEST-e2e-credentials",
+        "TEST-e2e-redaction-sweep",
+        "credentials_install_secret_from_stdin",
+        "credentials_remove_confirms"
+      ],
+      "skills": [
+        "typescript"
+      ],
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "TASK-8",
+      "title": "Implement disable and migrate-legacy adapters with confirmation",
+      "makesGreenIds": [
+        "TEST-e2e-disable",
+        "TEST-e2e-migrate",
+        "TEST-disable-fail-closed",
+        "TEST-migrate-conflict",
+        "disable_retains_disabled_fail_closed",
+        "migrate_legacy_conflict_safe"
+      ],
+      "skills": [
+        "typescript"
+      ],
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "TASK-9",
+      "title": "Update docs/CLOUD_COORDINATION_GUIDE.md with owner and teammate journeys",
+      "ownsArtifactIds": [
+        "ART-doc-cloud-guide"
+      ],
+      "skills": [
+        "technical-writing"
+      ],
+      "sourceRef": "CR:MDT-202"
+    },
+    {
+      "id": "TASK-10",
+      "title": "Run full verification: builds, lint, changed TS, spec-trace strict, redaction sweep",
+      "makesGreenIds": [
+        "TEST-e2e-output-formats",
+        "TEST-e2e-non-interactive",
+        "TEST-local-only-unchanged",
+        "output_formats"
+      ],
+      "skills": [
+        "bash-scripting"
+      ],
+      "sourceRef": "CR:MDT-202"
+    }
+  ]
+}
