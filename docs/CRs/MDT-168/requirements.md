@@ -45,9 +45,36 @@ Each constraint must appear in architecture and be reachable from tasks/tests:
 | C-9 (stable OpenAPI contracts)                    | architecture.md (API contracts), tasks.md (OpenAPI docs)                              |
 | C-10 (no new packages)                            | architecture.md (Dependencies), tasks.md (verify package.json unchanged)              |
 
+## Same-Browser Consumer Refresh (UAT 2026-07-26)
+
+A Settings save of `ui.projectSelector.visibleCount` /
+`ui.projectSelector.compactInactive` persists to `user.toml` correctly, but the
+project selector rail (MDT-129 `useSelectorData`) only reads those backend
+preferences **once on mount** and is not refreshed after the successful write.
+The rail and Settings drift within the same browser session until a full page
+reload.
+
+This refines how `BR-3.2` is interpreted for `ui.projectSelector.*`:
+
+- `BR-3.2` keeps the same ID. Its "fire the required runtime side effect" clause
+  is narrowed to make explicit that **no server/global side effect** is required
+  for user-scope selector preferences (no discovery cache, no watcher, no
+  registry reload) — that part of the existing architecture wording stands.
+- The **same-browser consumer refresh** is a distinct, narrower, observable
+  behavior and is promoted to its own requirement `BR-7.1` so it can carry its
+  own scenario, architecture obligation, and tests. This is `refine_in_place`
+  for BR-3.2 and `additive_change` for the consumer-refresh contract.
+
+| Concept                              | Final Semantic (chosen truth)                                                                                                                            | Rejected Semantic                                                                                       | Why                                                                                                                                                |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| User-scope selector write effects    | No server/global effect; the required effect is a same-browser consumer refresh signal so live selector consumers re-fetch backend prefs                 | Treat user prefs as globally effect-less (current wording) and rely on full page reload to converge     | The originating UAT bug: persisted value is correct but the rail shows stale prefs until reload. "No global effect" ≠ "no consumer-refresh effect" |
+| Consumer-refresh transport           | Narrow named window event already used by `useSelectorData` (`mdt:selector-prefs-updated`); after a successful `ui.projectSelector.*` save only           | A generic app-wide event bus; broadcasting on every config write                                         | The rail already listens for `SELECTOR_PREFS_SYNC_EVENT`; reusing it keeps the contract narrow and avoids a bus (architecture guidance)            |
+| Backend prefs vs browser-only prefs  | Backend prefs (`visibleCount`, `compactInactive`) are re-fetched from `/api/config/selector` on the refresh signal; browser-only prefs stay in localStorage | Re-fetch and overwrite localStorage accent/autocolor/style from the backend                             | MDT-129 ownership split: backend owns visibleCount/compactInactive; browser owns accent/autocolor/accentStyle (BR-6.1)                             |
+| `useSelectorData` merge on refresh   | Re-fetch backend prefs, then layer localStorage overrides on top (same merge order as initial load)                                                      | Replace all prefs with backend response; or skip backend and only re-read localStorage                  | Initial-load merge order (`{...validatedPreferences, ...localOverrides}`) must be preserved on refresh to keep browser-only prefs authoritative    |
+
 ## Delivery Timing
 
-All behavior requirements (BR-1.1 through BR-6.1) are `Now` — they are delivered
+All behavior requirements (BR-1.1 through BR-7.1) are `Now` — they are delivered
 in this ticket. No requirement is deferred.
 
 ## Open Questions / Decision-Needed

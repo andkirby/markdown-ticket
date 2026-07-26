@@ -26,6 +26,7 @@
 
 | Constraint ID | Tasks          |
 | ------------- | -------------- |
+| BR-7.1        | TASK-10        |
 | C-1           | TASK-1, TASK-5 |
 | C-2           | TASK-1, TASK-4 |
 | C-3           | TASK-3, TASK-4 |
@@ -39,13 +40,14 @@
 
 ## Milestones
 
-| Milestone                                     | BDD Scenarios (BR)                                                                                                                                                                                                                    | Tasks          | Checkpoint                             |
-| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | -------------------------------------- |
-| M0: Contract foundation                       | —                                                                                                                                                                                                                                     | TASK-1, TASK-2 | domain-contracts build + tests GREEN   |
-| M1: Application boundary (reads + validation) | read_returns_exposure_metadata, read_omits_fileonly_and_unknown, reject_disallowed_or_unknown_selector, reject_invalid_value_never_defaults, readonly_denied_config_detail_and_mutation, valid_editable_selector_persisted_atomically | TASK-4, TASK-5 | server integration tests GREEN         |
-| M2: Document + guarded + metadata             | document_config_patch_refreshes_tree, project_metadata_edit_returns_effective_value, guarded_op_requires_confirmation, guarded_op_keeps_registry_local_consistent                                                                     | TASK-3, TASK-6 | document patch + guarded tests GREEN   |
-| M3: Frontend isolation                        | browser_only_never_reaches_backend                                                                                                                                                                                                    | TASK-7, TASK-8 | frontend unit tests GREEN              |
-| M4: E2E acceptance + docs                     | global_user_setting_persisted_with_side_effect (+ all E2E)                                                                                                                                                                            | TASK-9         | E2E suites GREEN; durable docs updated |
+| Milestone                                     | BDD Scenarios (BR)                                                                                                                                                                                                                    | Tasks                | Checkpoint                             |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- | -------------------------------------- |
+| M0: Contract foundation                       | —                                                                                                                                                                                                                                     | TASK-1, TASK-2       | domain-contracts build + tests GREEN   |
+| M1: Application boundary (reads + validation) | read_returns_exposure_metadata, read_omits_fileonly_and_unknown, reject_disallowed_or_unknown_selector, reject_invalid_value_never_defaults, readonly_denied_config_detail_and_mutation, valid_editable_selector_persisted_atomically | TASK-4, TASK-5       | server integration tests GREEN         |
+| M2: Document + guarded + metadata             | document_config_patch_refreshes_tree, project_metadata_edit_returns_effective_value, guarded_op_requires_confirmation, guarded_op_keeps_registry_local_consistent                                                                     | TASK-3, TASK-6       | document patch + guarded tests GREEN   |
+| M3: Frontend isolation                        | browser_only_never_reaches_backend                                                                                                                                                                                                    | TASK-7, TASK-8       | frontend unit tests GREEN              |
+| M4: E2E acceptance + docs                     | global_user_setting_persisted_with_side_effect (+ all E2E)                                                                                                                                                                            | TASK-9               | E2E suites GREEN; durable docs updated |
+| M5: Same-browser consumer refresh (UAT)       | selector_pref_change_refreshes_live_consumers                                                                                                                                                                                         | TASK-10              | frontend unit + E2E refresh GREEN      |
 
 ---
 
@@ -392,6 +394,56 @@ git diff --check
 
 **Done when**: E2E suites GREEN; package.json/bun.lock unchanged; durable docs describe final behavior.
 
+### Task 10: same-browser selector consumer refresh for ui.projectSelector.* (UAT 2026-07-26)
+
+**Skills**: mdt-frontend, frontend-react-component
+
+**Structure**: `src/hooks/useBackendConfig.ts`, `src/components/ProjectSelector/useSelectorData.ts`
+
+**Makes GREEN (Automated Tests)**:
+
+- `TEST-use-backend-config-refresh-signal` → `useBackendConfig.test.tsx` (extend): after a successful `applyOne` for `ui.projectSelector.visibleCount` or `ui.projectSelector.compactInactive`, the hook emits the `mdt:selector-prefs-updated` (`SELECTOR_PREFS_SYNC_EVENT`) window event; non-`ui.projectSelector.*` saves do NOT emit it.
+- `TEST-selector-data-refresh-on-signal` → `useSelectorData.test.tsx` (new or extend): on `mdt:selector-prefs-updated`, re-fetches backend prefs from `/api/config/selector`, then layers localStorage overrides (`accentEnabled`/`autocolor`/`accentStyle`) on top — same merge order as initial load.
+- `TEST-e2e-config-refresh` → `tests/e2e/config/configuration-refresh.spec.ts` (extend): change `ui.projectSelector.visibleCount` in Settings, save, and verify the selector rail updates without a full page reload.
+
+**Makes GREEN (Behavior)**:
+
+- `selector_pref_change_refreshes_live_consumers` (BR-7.1)
+
+**Scope**: after a successful `applyConfig` for `ui.projectSelector.visibleCount` or `ui.projectSelector.compactInactive`, the writer (`useBackendConfig.applyOne`) notifies live selector consumers via the **existing narrow named window event** (`mdt:selector-prefs-updated` / `SELECTOR_PREFS_SYNC_EVENT`) already consumed by `useSelectorData`. On the signal, `useSelectorData` re-fetches backend prefs from `/api/config/selector` and layers browser-only localStorage overrides on top (preserving initial-load merge order).
+
+**Boundary**: frontend only. No server changes (no new side effect in `ConfigSideEffectRegistry`; `ui.projectSelector.*` correctly has no server/global effect). No new event bus — reuse the existing `mdt:selector-prefs-updated` event. No broadcast on unrelated config writes.
+
+**Modifies**:
+
+- `src/hooks/useBackendConfig.ts` (in `applyOne`, on `ok` and selector is `ui.projectSelector.*`, dispatch the existing `SELECTOR_PREFS_SYNC_EVENT`)
+- `src/components/ProjectSelector/useSelectorData.ts` (`handlePrefsSync`: re-fetch backend prefs from `/api/config/selector` then merge localStorage overrides — currently it only re-reads localStorage)
+- `src/hooks/useBackendConfig.test.tsx` (extend with refresh-signal assertions)
+- `src/components/ProjectSelector/useSelectorData.test.tsx` (extend or add with re-fetch-on-signal assertions)
+- `tests/e2e/config/configuration-refresh.spec.ts` (extend with `selector_pref_change_refreshes_live_consumers`)
+
+**Must Not Touch**: server, domain-contracts, `ConfigSideEffectRegistry`, browser-only preference handlers (`src/config/settingsPreferences.ts`, accent/autocolor/style localStorage modules — they stay browser-only per BR-6.1).
+
+**Exclude**:
+
+- Do NOT create a generic event bus or broadcast on every config write.
+- Do NOT move browser-only prefs (accent/autocolor/accentStyle) into backend TOML or into the refresh payload.
+- Do NOT rewrite MDT-129 ordering/rendering; this task touches only the refresh-signal emission in the writer and the backend-pref re-fetch in `useSelectorData`.
+- Do NOT add a server side effect for `ui.projectSelector.*` — "no server/global effect" still holds; only the same-browser consumer refresh is added.
+
+**Anti-duplication**: reuse the existing `SELECTOR_PREFS_SYNC_EVENT` constant from `useSelectorData.ts`; do not declare a second event name. Reuse the existing `loadLocalPreferences()` helper for the localStorage override layering.
+
+**Duplication Guard**: the writer emits the signal once (in `useBackendConfig.applyOne`); the consumer re-fetches backend prefs once (in `useSelectorData.handlePrefsSync`). No second writer, no second consumer.
+
+**Verify**:
+
+```bash
+bun test ./src   # useBackendConfig refresh-signal + useSelectorData re-fetch GREEN
+PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/config/configuration-refresh.spec.ts --project=chromium
+```
+
+**Done when**: after saving `ui.projectSelector.visibleCount` in Settings, the selector rail updates within the same session without a page reload; non-`ui.projectSelector.*` saves do not emit the signal; browser-only prefs remain in localStorage and are layered on top after the backend re-fetch.
+
 ---
 
 ## Architecture Coverage
@@ -411,9 +463,9 @@ No orphaned files.
 
 ## Post-Implementation
 
-- [ ] No duplication (grep: no second config writer, no `maxDepth` literal except canonical)
-- [ ] Scope boundaries respected
-- [ ] All unit/integration tests GREEN
-- [ ] All BDD scenarios GREEN (E2E)
-- [ ] Smoke: owner can edit document maxDepth, see tree refresh; read-only visitor blocked
-- [ ] package.json/bun.lock unchanged (C-10)
+- [x] No duplication (grep: no second config writer, no `maxDepth` literal except canonical)
+- [x] Scope boundaries respected
+- [x] All unit/integration tests GREEN
+- [x] All BDD scenarios GREEN (E2E)
+- [x] Smoke: owner can edit document maxDepth, see tree refresh; read-only visitor blocked
+- [x] package.json/bun.lock unchanged (C-10)

@@ -193,3 +193,67 @@ runtime-integration gaps are closed:
 4. **Backend-backed Settings state extracted** — the section is a focused
    component, not part of a persistence monolith; browser-only prefs stay in
    their existing tabs and never reach the backend.
+
+## 8. Clarifications
+
+### UAT Session 2026-07-26 — Same-browser selector consumer refresh for `ui.projectSelector.*`
+
+**Source:** UAT review of the configuration management surface (MDT-168) and
+its interaction with the project selector rail (MDT-129). Found that saving
+`ui.projectSelector.visibleCount` / `ui.projectSelector.compactInactive`
+through Settings persists correctly to `user.toml`, but the selector rail
+reads backend preferences once on mount (`useSelectorData` →
+`/api/config/selector`) and is not refreshed after the successful write, so
+the rail and Settings drift within the same browser session until a full page
+reload. Root cause verified in code: `useBackendConfig.applyOne` does not
+notify any other consumer on success, and `useSelectorData`'s existing
+`mdt:selector-prefs-updated` handler only re-reads localStorage overrides — it
+does not re-fetch backend prefs. The architecture wording
+`ui.projectSelector.* (user)` → "no global effect" was correct for the server
+side but was read as "no effect at all", which is how the consumer-refresh
+step was dropped.
+
+**Decision:** `refine_in_place` of `BR-3.2` (its "fire the required runtime
+side effect" clause is narrowed — user-scope selector prefs need no
+server/global effect) + `additive_change` for a new behavior `BR-7.1` that
+owns the same-browser consumer-refresh contract (distinct observable behavior,
+own scenario/obligation/tests). Treated as same-ticket UAT/refinement for
+MDT-168; not spun into a new CR.
+
+**Approved changes:**
+- After a successful `applyConfig` for `ui.projectSelector.visibleCount` or
+  `ui.projectSelector.compactInactive`, notify live selector consumers via the
+  existing narrow named window event (`mdt:selector-prefs-updated` /
+  `SELECTOR_PREFS_SYNC_EVENT`) already consumed by `useSelectorData` — not a
+  generic event bus, not broadcast on unrelated config writes.
+- On the signal, `useSelectorData` re-fetches backend prefs from
+  `/api/config/selector` and layers browser-only localStorage overrides
+  (`accentEnabled`/`autocolor`/`accentStyle`) on top, preserving the
+  initial-load merge order.
+- Browser-only prefs stay browser-only (BR-6.1); no server change; no new side
+  effect in `ConfigSideEffectRegistry`; no MDT-129 rewrite.
+
+**Changed requirement IDs:** `BR-3.2` (refined in place), `BR-7.1` (new,
+additive).
+
+**Updated workflow documents:** `requirements.md`, `bdd.md`, `architecture.md`,
+`tests.md`, `tasks.md` (mirrored from canonical spec-trace store).
+
+**New canonical trace records:** requirement `BR-7.1`; refined requirement
+`BR-3.2`; scenario `selector_pref_change_refreshes_live_consumers`;
+obligation `OBL-selector-consumer-refresh`; artifact `ART-fe-selector-data`;
+test plans `TEST-use-backend-config-refresh-signal`,
+`TEST-selector-data-refresh-on-signal`; extended covers on
+`TEST-e2e-config-refresh`; task `TASK-10`; milestone `M5`.
+
+**`uat.md` written:** yes (current-round execution brief at
+`docs/CRs/MDT-168/uat.md`).
+
+**Strict drift/lock used:** no.
+
+**Validation:** `spec-trace validate MDT-168 --stage all` passed across
+requirements, bdd, architecture, tests, tasks; all five `*.trace.md`
+projections re-rendered.
+
+**More implementation required:** yes — `TASK-10` (slice 1 in `uat.md`).
+Runtime code was not modified in this UAT round per the stop condition.

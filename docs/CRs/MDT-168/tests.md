@@ -50,10 +50,11 @@ Three test layers, cheapest first, matching the project's existing conventions:
 
 ### frontend
 
-| Module                | Test File                             | Covers                 | Tests                                                                 |
-| --------------------- | ------------------------------------- | ---------------------- | --------------------------------------------------------------------- |
-| `configApiClient.ts`  | `src/config/configApiClient.test.ts`  | BR-1.1, BR-2.2         | read returns descriptors; mutation maps field errors                  |
-| `useBackendConfig.ts` | `src/hooks/useBackendConfig.test.tsx` | BR-3.2, BR-6.1, Edge-6 | staged edits + save status; browser-only change emits no backend call |
+| Module                | Test File                             | Covers                        | Tests                                                                                                          |
+| --------------------- | ------------------------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `configApiClient.ts`  | `src/config/configApiClient.test.ts`  | BR-1.1, BR-2.2                | read returns descriptors; mutation maps field errors                                                           |
+| `useBackendConfig.ts` | `src/hooks/useBackendConfig.test.tsx` | BR-3.2, BR-6.1, BR-7.1, Edge-6 | staged edits + save status; browser-only change emits no backend call; **ui.projectSelector.* save emits selector-prefs refresh signal** |
+| `useSelectorData.ts`  | `src/components/ProjectSelector/useSelectorData.test.tsx` | BR-7.1 | **on `mdt:selector-prefs-updated`, re-fetches backend prefs from `/api/config/selector` and layers localStorage overrides (preserves merge order)** |
 
 ### E2E (Playwright, isolated 6173/4001)
 
@@ -62,7 +63,7 @@ Three test layers, cheapest first, matching the project's existing conventions:
 | Persistence + refresh | `tests/e2e/config/configuration-persistence.spec.ts`        | `valid_editable_selector_persisted_atomically`, `document_config_patch_refreshes_tree`, `global_user_setting_persisted_with_side_effect` |
 | Permissions           | `tests/e2e/config/configuration-permissions.spec.ts`        | `readonly_denied_config_detail_and_mutation`                                                                                             |
 | Validation failure    | `tests/e2e/config/configuration-validation-failure.spec.ts` | `reject_disallowed_or_unknown_selector`, `reject_invalid_value_never_defaults`                                                           |
-| Refresh behavior      | `tests/e2e/config/configuration-refresh.spec.ts`            | `document_config_patch_refreshes_tree`                                                                                                   |
+| Refresh behavior      | `tests/e2e/config/configuration-refresh.spec.ts`            | `document_config_patch_refreshes_tree`, `selector_pref_change_refreshes_live_consumers`                                                  |
 
 ## Data Mechanism Tests
 
@@ -85,6 +86,7 @@ Three test layers, cheapest first, matching the project's existing conventions:
 
 | Constraint ID | Closed By                                                                                                                 |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| BR-7.1        | TEST-use-backend-config-refresh-signal, TEST-selector-data-refresh-on-signal, TEST-e2e-config-refresh                    |
 | C-1           | TEST-allowlist-exposure-contract                                                                                          |
 | C-2           | TEST-patch-schemas-strict, TEST-allowlist-exposure-contract                                                               |
 | C-3           | TEST-document-patch-command, TEST-config-application-service, TEST-atomic-failure-no-partial, TEST-scope-storage-adapters |

@@ -15,6 +15,13 @@ assert the _bounded_ behaviors the redesign must deliver (atomic writes, no
 partial application, side-effect refresh, registry/local consistency) rather
 than generic TOML editing.
 
+A UAT-2026-07-26 scenario (`selector_pref_change_refreshes_live_consumers`,
+BR-7.1) closes a same-session freshness gap: persisting
+`ui.projectSelector.*` through Settings must also notify the project selector
+rail so live selector consumers re-fetch backend prefs without a full page
+reload. Browser-only prefs stay browser-only; nothing is broadcast on
+unrelated config writes.
+
 ## Acceptance Strategy
 
 - **Framework**: Playwright (browser E2E) exists at `tests/e2e/` with isolated
@@ -29,14 +36,15 @@ than generic TOML editing.
 
 ## Journey Map
 
-| Journey                | Scenarios                                                                                                                                                                                 | Covers                         |
-| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
-| Reads & exposure       | `read_returns_exposure_metadata`, `read_omits_fileonly_and_unknown`                                                                                                                       | BR-1.1, BR-1.2                 |
-| Valid mutations        | `valid_editable_selector_persisted_atomically`, `document_config_patch_refreshes_tree`, `global_user_setting_persisted_with_side_effect`, `project_metadata_edit_returns_effective_value` | BR-2.1, BR-3.1, BR-3.2, BR-3.3 |
-| Validation failures    | `reject_disallowed_or_unknown_selector`, `reject_invalid_value_never_defaults`                                                                                                            | BR-2.2, BR-2.3                 |
-| Permissions            | `readonly_denied_config_detail_and_mutation`                                                                                                                                              | BR-5.1                         |
-| Guarded operations     | `guarded_op_requires_confirmation`, `guarded_op_keeps_registry_local_consistent`                                                                                                          | BR-4.1, BR-4.2                 |
-| Browser-only isolation | `browser_only_never_reaches_backend`                                                                                                                                                      | BR-6.1                         |
+| Journey                       | Scenarios                                                                                                                                                                                 | Covers                         |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| Reads & exposure              | `read_returns_exposure_metadata`, `read_omits_fileonly_and_unknown`                                                                                                                       | BR-1.1, BR-1.2                 |
+| Valid mutations               | `valid_editable_selector_persisted_atomically`, `document_config_patch_refreshes_tree`, `global_user_setting_persisted_with_side_effect`, `project_metadata_edit_returns_effective_value` | BR-2.1, BR-3.1, BR-3.2, BR-3.3 |
+| Validation failures           | `reject_disallowed_or_unknown_selector`, `reject_invalid_value_never_defaults`                                                                                                            | BR-2.2, BR-2.3                 |
+| Permissions                   | `readonly_denied_config_detail_and_mutation`                                                                                                                                              | BR-5.1                         |
+| Guarded operations            | `guarded_op_requires_confirmation`, `guarded_op_keeps_registry_local_consistent`                                                                                                          | BR-4.1, BR-4.2                 |
+| Browser-only isolation        | `browser_only_never_reaches_backend`                                                                                                                                                      | BR-6.1                         |
+| Same-browser consumer refresh | `selector_pref_change_refreshes_live_consumers`                                                                                                                                           | BR-7.1                         |
 
 ## Test-Facing Contract Notes
 
@@ -60,6 +68,16 @@ These mechanics must be preserved by implementers and E2E authors:
 - **maxDepth** valid range differs by concept: document maxDepth is 1–10,
   discovery maxDepth is 1–50. Validation tests must use range-appropriate
   boundary values.
+- **Same-browser consumer refresh (BR-7.1)** is triggered only by a successful
+  `applyConfig` for `ui.projectSelector.visibleCount` or
+  `ui.projectSelector.compactInactive`. The transport is the narrow named
+  window event already used by `useSelectorData`
+  (`mdt:selector-prefs-updated` / `SELECTOR_PREFS_SYNC_EVENT`) — not a generic
+  event bus, and not broadcast on unrelated config writes. On the signal,
+  `useSelectorData` re-fetches backend prefs from `/api/config/selector` and
+  layers browser-only localStorage overrides (accentEnabled/autocolor/
+  accentStyle) on top, preserving the initial-load merge order. E2E must
+  verify the rail updates without a full page reload.
 
 ## Execution Notes
 

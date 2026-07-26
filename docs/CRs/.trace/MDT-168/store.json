@@ -65,16 +65,6 @@
       ]
     },
     {
-      "id": "BR-3.2",
-      "kind": "behavior",
-      "text": "WHEN global discovery, link, system, or stable user configuration is changed through the Settings modal, the system shall persist the change to the correct global or user config file and fire the required runtime side effect (global discovery cache refresh, link/system effect, or user preference application).",
-      "sourceRef": "ui-ownership.md Settings, exposure.md global/user",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:now"
-      ]
-    },
-    {
       "id": "BR-3.3",
       "kind": "behavior",
       "text": "WHEN project metadata (name, description, repository, or active state) is changed through the Project Edit form, the system shall persist the change and return the effective saved value for refresh.",
@@ -235,6 +225,20 @@
       "text": "WHEN a browser-only setting is changed in the client, the system shall not emit any backend network call that persists it to TOML.",
       "sourceRef": "BR-6.1, exposure.md",
       "routePolicy": "tests"
+    },
+    {
+      "id": "BR-3.2",
+      "kind": "behavior",
+      "text": "WHEN global discovery, link, system, or stable user configuration is changed through the Settings modal, the system shall persist the change to the correct global or user config file and fire the required runtime side effect. Global discovery/link/system changes fire their server-side effects (discovery cache refresh, link/system re-read); user-scope selector preferences (ui.projectSelector.*) require NO server/global effect (no discovery cache, watcher, or registry reload) and instead require the same-browser consumer refresh in BR-7.1.",
+      "sourceRef": "CR:MDT-168",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-7.1",
+      "kind": "behavior",
+      "text": "WHEN ui.projectSelector.visibleCount or ui.projectSelector.compactInactive is successfully written through the configuration management API, the system shall notify live project selector consumers in the same browser session via the existing narrow named window event (mdt:selector-prefs-updated / SELECTOR_PREFS_SYNC_EVENT), so useSelectorData re-fetches backend preferences from /api/config/selector and layers browser-only localStorage overrides (accentEnabled, autocolor, accentStyle) on top using the same merge order as initial load. The notification shall fire only after a successful ui.projectSelector.* save, shall not be a generic event bus, and shall not be broadcast on unrelated config writes. Browser-only preferences shall never flow through this refresh path.",
+      "sourceRef": "CR:MDT-168",
+      "routePolicy": "bdd"
     }
   ],
   "scenarios": [
@@ -369,6 +373,17 @@
       "when": "the edit is saved",
       "then": "the change persists and the effective saved value is returned for refresh",
       "sourceRef": "BR-3.3"
+    },
+    {
+      "id": "selector_pref_change_refreshes_live_consumers",
+      "title": "Successful ui.projectSelector.* save refreshes live selector consumers in the same browser session",
+      "covers": [
+        "BR-7.1"
+      ],
+      "given": "an owner has the Settings modal open and the project selector rail is mounted (useSelectorData has loaded backend preferences from /api/config/selector)",
+      "when": "the owner saves a new value for ui.projectSelector.visibleCount or ui.projectSelector.compactInactive through the backend-config section and the PATCH /api/config succeeds",
+      "then": "useBackendConfig.applyOne dispatches the existing narrow named window event (mdt:selector-prefs-updated / SELECTOR_PREFS_SYNC_EVENT), useSelectorData re-fetches backend preferences from /api/config/selector, layers browser-only localStorage overrides (accentEnabled/autocolor/accentStyle) on top, and the selector rail reflects the new value without a full page reload; the event is not dispatched on unrelated config writes and no browser-only preference flows through the refresh path",
+      "sourceRef": "CR:MDT-168"
     }
   ],
   "obligations": [
@@ -591,6 +606,18 @@
         "ART-srv-config-app-service"
       ],
       "sourceRef": "assess mismatch 2; prompt scope-specific adapters"
+    },
+    {
+      "id": "OBL-selector-consumer-refresh",
+      "title": "Successful ui.projectSelector.* writes notify live selector consumers in the same browser session for refresh",
+      "derivedFrom": [
+        "BR-7.1"
+      ],
+      "artifactIds": [
+        "ART-fe-use-backend-config",
+        "ART-fe-selector-data"
+      ],
+      "sourceRef": "CR:MDT-168"
     }
   ],
   "artifacts": [
@@ -749,6 +776,12 @@
       "path": "src/components/AddProjectModal/AddProjectModal.tsx",
       "kind": "runtime",
       "sourceRef": "architecture: guarded workflow entry for code/ticketsPath"
+    },
+    {
+      "id": "ART-fe-selector-data",
+      "path": "src/components/ProjectSelector/useSelectorData.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-168"
     }
   ],
   "testPlans": [
@@ -967,17 +1000,6 @@
       "sourceRef": "bdd: reject_disallowed_or_unknown_selector, reject_invalid_value_never_defaults"
     },
     {
-      "id": "TEST-e2e-config-refresh",
-      "kind": "e2e",
-      "title": "E2E: document config change refreshes document tree and watchers",
-      "covers": [
-        "BR-3.1",
-        "Edge-4"
-      ],
-      "file": "tests/e2e/config/configuration-refresh.spec.ts",
-      "sourceRef": "bdd: document_config_patch_refreshes_tree"
-    },
-    {
       "id": "TEST-config-repository-defaults-regression",
       "kind": "unit",
       "title": "ConfigRepository consumes canonical maxDepth default (no longer undefined)",
@@ -1031,6 +1053,38 @@
       ],
       "file": "src/components/SettingsModal/BackendConfigSection.test.tsx",
       "sourceRef": "gap-fix: Settings owned backend-config section"
+    },
+    {
+      "id": "TEST-use-backend-config-refresh-signal",
+      "kind": "unit",
+      "title": "useBackendConfig emits the selector-prefs refresh signal (mdt:selector-prefs-updated) after a successful ui.projectSelector.visibleCount or ui.projectSelector.compactInactive save, and does NOT emit it for non-ui.projectSelector.* saves",
+      "covers": [
+        "BR-7.1"
+      ],
+      "file": "src/hooks/useBackendConfig.test.tsx",
+      "sourceRef": "CR:MDT-168"
+    },
+    {
+      "id": "TEST-selector-data-refresh-on-signal",
+      "kind": "unit",
+      "title": "useSelectorData, on mdt:selector-prefs-updated, re-fetches backend preferences from /api/config/selector and layers browser-only localStorage overrides (accentEnabled/autocolor/accentStyle) on top, preserving the initial-load merge order",
+      "covers": [
+        "BR-7.1"
+      ],
+      "file": "src/components/ProjectSelector/useSelectorData.test.tsx",
+      "sourceRef": "CR:MDT-168"
+    },
+    {
+      "id": "TEST-e2e-config-refresh",
+      "kind": "e2e",
+      "title": "E2E: document config change refreshes document tree and watchers; ui.projectSelector.* save refreshes the selector rail in the same session without a full page reload",
+      "covers": [
+        "BR-3.1",
+        "Edge-4",
+        "BR-7.1"
+      ],
+      "file": "tests/e2e/config/configuration-refresh.spec.ts",
+      "sourceRef": "CR:MDT-168"
     }
   ],
   "tasks": [
@@ -1191,6 +1245,25 @@
         "frontend-react-component"
       ],
       "sourceRef": "tasks.md#task-8"
+    },
+    {
+      "id": "TASK-10",
+      "title": "After successful ui.projectSelector.* save, dispatch the existing selector-prefs refresh signal from useBackendConfig.applyOne and re-fetch backend prefs in useSelectorData on the signal",
+      "ownsArtifactIds": [
+        "ART-fe-use-backend-config",
+        "ART-fe-selector-data"
+      ],
+      "makesGreenIds": [
+        "selector_pref_change_refreshes_live_consumers",
+        "TEST-use-backend-config-refresh-signal",
+        "TEST-selector-data-refresh-on-signal",
+        "TEST-e2e-config-refresh"
+      ],
+      "skills": [
+        "mdt-frontend",
+        "frontend-react-component"
+      ],
+      "sourceRef": "CR:MDT-168"
     }
   ]
 }

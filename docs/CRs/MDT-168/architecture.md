@@ -59,9 +59,9 @@ sequenceDiagram
     participant F as Config file
     UI->>C: GET /api/config (or scoped)
     C->>A: readConfig(scope, selectors=allowlist)
-    A->>A: filter to default-deny ALLOWLIST; drop fileOnly/unknown
-    A->>AD: read + tolerant normalize
-    AD->>F: readFile + parseToml + validate*Config (catch->default)
+    A->>A: filter to default-deny ALLOWLIST and drop fileOnly/unknown
+    A->>AD: read and tolerant normalize
+    AD->>F: readFile, parseToml, validateConfig (catch to default)
     F-->>AD: tolerant normalized values
     AD-->>A: effective values
     A-->>A: attach exposure metadata per selector
@@ -83,9 +83,9 @@ sequenceDiagram
     participant AD as Scope Storage Adapter
     participant F as Config file
     participant S as ConfigSideEffectRegistry
-    UI->>C: PATCH /api/config {selector, value} (+confirm for guarded)
+    UI->>C: PATCH /api/config {selector, value} (confirm for guarded)
     C->>A: applyConfig(selector, value, access, opts)
-    A->>A: 1. resolve scope + exposure from ALLOWLIST
+    A->>A: 1. resolve scope and exposure from ALLOWLIST
     A->>A: 2. reject if not editable OR (guarded without confirm)
     A->>V: 3. validate FULL candidate change (strict, no catch-default)
     V-->>A: ok | field errors
@@ -93,13 +93,13 @@ sequenceDiagram
         A-->>C: 400 field-level error (NO write)
         C-->>UI: error naming selector
     else valid
-        A->>AD: 4. read current + merge candidate
+        A->>AD: 4. read current and merge candidate
         AD->>F: 5. ONE atomic write (writeFileAtomic, write-temp-then-rename)
         F-->>AD: effective saved value
         AD-->>A: saved descriptor
         A->>S: 6. run injected side effects (cache/discovery/tree/watcher)
         S-->>A: effect results (distinct from write success)
-        A-->>C: saved descriptor + side-effect report
+        A-->>C: saved descriptor and side-effect report
         C-->>UI: effective value for refresh
     end
 ```
@@ -132,12 +132,43 @@ _not_ in TOML helpers:
 | `project.document.*`          | reconfigure document watchers; invalidate document tree          |
 | `discovery.*` (global)        | invalidate `projectDiscovery` cache; refresh discovery           |
 | `links.*` / `system.*`        | link/system runtime re-read (next request observes new value)    |
-| `ui.projectSelector.*` (user) | user preference application (no global effect)                   |
+| `ui.projectSelector.*` (user) | no server/global effect; same-browser consumer refresh (see below) |
 | project metadata              | project list refresh; registry identity unchanged unless guarded |
 
 Effects accept failure reporting; a failed effect does not roll back the
 persisted write (persisted config is the source of truth; the effect converges
 on next refresh — Edge-4 idempotency).
+
+### Same-Browser Consumer Refresh for `ui.projectSelector.*` (BR-7.1)
+
+The `ui.projectSelector.*` row above is intentionally **not** "no effect". A
+successful `applyConfig` for `ui.projectSelector.visibleCount` or
+`ui.projectSelector.compactInactive` requires a **same-browser consumer
+refresh** so the project selector rail (MDT-129 `useSelectorData`) converges
+without a full page reload. This is distinct from a server/global side effect:
+
+- **No server/global effect**: no discovery cache invalidation, no document
+  watcher reconfiguration, no registry reload. The persisted `user.toml` value
+  is the source of truth; subsequent fresh sessions read it on next mount.
+- **Same-browser consumer refresh required**: the writer
+  (`useBackendConfig.applyOne`) must notify live selector consumers in the
+  current session. The transport is the narrow named window event already
+  consumed by `useSelectorData` (`mdt:selector-prefs-updated` /
+  `SELECTOR_PREFS_SYNC_EVENT`), dispatched only after a successful
+  `ui.projectSelector.*` save — **not** a generic event bus and **not**
+  broadcast on unrelated config writes.
+
+On the refresh signal, `useSelectorData` re-fetches backend prefs from
+`/api/config/selector` (the values for `visibleCount` and `compactInactive`)
+and then layers browser-only localStorage overrides (`accentEnabled`,
+`autocolor`, `accentStyle`) on top — the same merge order used at initial
+load (`{...validatedPreferences, ...localOverrides}`). Browser-only prefs
+never flow through this path (BR-6.1).
+
+This split is the contract that closes the UAT-2026-07-26 freshness defect:
+"no global effect" describes the server side only; the same-browser consumer
+refresh is mandatory and is owned by `useBackendConfig` (writer) and
+`useSelectorData` (consumer).
 
 ## Canonical Defaults (maxDepth Drift Resolution)
 
@@ -219,6 +250,10 @@ through an explicit operation method on `ConfigApplicationService` (e.g.
 6. `domain-contracts` config-management is pure (no fs/controller/UI).
 7. Routes/controllers are transport-only; no direct filesystem logic in routes.
 8. Browser-only settings never reach backend TOML.
+9. A successful `applyConfig` for `ui.projectSelector.visibleCount` or
+   `ui.projectSelector.compactInactive` notifies live selector consumers in the
+   same browser session via the narrow named window event already consumed by
+   `useSelectorData`; no generic event bus, no broadcast on unrelated writes.
 
 ## Extension Rule
 
