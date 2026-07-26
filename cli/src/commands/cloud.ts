@@ -20,6 +20,7 @@
 
 import type {
   CloudSyncConnection,
+  ProjectCloudSyncBinding,
   ProjectMember,
 } from '@mdt/domain-contracts'
 import type { ManagementServiceHandle } from '@mdt/shared/services/cloud-sync/create-management-service.js'
@@ -40,6 +41,7 @@ import {
   CliAudienceAwareCredentialProvider,
   computeInitialNextTicketNumber,
   createManagementService,
+  repositoryLegacyMigrationSource,
 } from '@mdt/shared/services/cloud-sync/create-management-service.js'
 import {
   CloudflaredCredentialProvider,
@@ -88,6 +90,8 @@ interface ProjectContext {
   localProjectId: string
   projectCode: string
   projectPath: string
+  operatorOrigins: string[]
+  legacyCloudSyncBinding: ProjectCloudSyncBinding | null
 }
 
 /** Resolve the current project or throw NO_PROJECT_CONTEXT. */
@@ -101,11 +105,24 @@ async function requireProjectContext(): Promise<ProjectContext> {
       CloudExitCode.NO_PROJECT_CONTEXT,
     )
   }
+  const projectConfig = projectService.getProjectConfig(result.data.project.path)
+  const globalConfig = projectService.getGlobalConfig()
   return {
     localProjectId: result.data.id,
     projectCode: result.data.project.code,
     projectPath: result.data.project.path,
+    operatorOrigins: globalConfig.cloudSync.allowedOrigins,
+    legacyCloudSyncBinding: legacyCloudSyncBindingFromProjectConfig(projectConfig),
   }
+}
+
+function legacyCloudSyncBindingFromProjectConfig(config: unknown): ProjectCloudSyncBinding | null {
+  const project = (config as { project?: { cloudSync?: unknown } } | null)?.project
+  const binding = project?.cloudSync
+  if (!binding || typeof binding !== 'object') {
+    return null
+  }
+  return binding as ProjectCloudSyncBinding
 }
 
 /**
@@ -122,7 +139,9 @@ async function buildHandle(ctx: ProjectContext): Promise<ManagementServiceHandle
     localProjectId: ctx.localProjectId,
     projectCode: ctx.projectCode,
     initialOwnerEmail: '', // supplied per-enable
+    operatorOrigins: ctx.operatorOrigins,
     credentialProvider: provider,
+    legacyMigrationSource: repositoryLegacyMigrationSource(async () => ctx.legacyCloudSyncBinding),
   })
 }
 

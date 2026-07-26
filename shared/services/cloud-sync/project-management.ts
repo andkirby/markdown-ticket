@@ -144,6 +144,11 @@ export class CloudProjectManagementService {
    * coordination membership → write CONFIG_DIR state commit-last.
    */
   async enable(req: ProvisionProjectRequest): Promise<ProvisionProjectResult> {
+    const existing = await this.opts.stateStore.read(this.opts.localProjectId)
+    if (existing.kind === 'enabled') {
+      return { cloudProjectId: existing.connection.cloudProjectId, replayed: true }
+    }
+
     const ready = await this.readiness()
     if (!ready.ready) {
       throw new CoordinatorError('coordination_unavailable', { message: ready.reason ?? 'not ready' })
