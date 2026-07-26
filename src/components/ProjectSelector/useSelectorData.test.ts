@@ -1089,3 +1089,129 @@ describe('useSelectorData - MDT-181 accent preference persistence', () => {
     expect(persistedState['PROJ-A'].accent).toBeUndefined()
   })
 })
+
+/**
+ * MDT-168 UAT 2026-07-26 / BR-7.1 — TEST-selector-data-refresh-on-signal.
+ *
+ * On `mdt:selector-prefs-updated` (dispatched by useBackendConfig after a
+ * successful ui.projectSelector.* save), useSelectorData must re-fetch backend
+ * preferences from /api/config/selector and layer browser-only localStorage
+ * overrides (accentEnabled/autocolor/accentStyle) on top — preserving the
+ * initial-load merge order. Browser-only prefs must never be overwritten by
+ * the backend re-fetch.
+ */
+describe('useSelectorData - MDT-168 BR-7.1: refresh on mdt:selector-prefs-updated', () => {
+  beforeEach(() => {
+    mockFetch.mockReset()
+    localStorage.clear()
+  })
+  afterEach(() => {
+    mockFetch.mockReset()
+    localStorage.clear()
+  })
+
+  it('re-fetches backend preferences on the refresh signal', async () => {
+    // Initial load reports visibleCount=7; after a save the backend reports 12.
+    ;(globalThis.fetch as typeof mockFetch)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          preferences: { visibleCount: 7, compactInactive: true },
+          selectorState: {},
+        }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          preferences: { visibleCount: 12, compactInactive: true },
+          selectorState: {},
+        }),
+      } as Response)
+
+    const { result } = renderHook(() => useSelectorData())
+    await waitFor(() => expect(result.current.loaded).toBe(true))
+    expect(result.current.preferences.visibleCount).toBe(7)
+
+    // Writer (useBackendConfig) dispatched this after a successful save.
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent('mdt:selector-prefs-updated'))
+    })
+
+    await waitFor(() => expect(result.current.preferences.visibleCount).toBe(12))
+  })
+
+  it('layers browser-only localStorage overrides on top of the re-fetched backend prefs', async () => {
+    // Browser-only prefs set locally. Backend must not overwrite them on refresh.
+    localStorage.setItem(
+      'mdt-selector-preferences',
+      JSON.stringify({ accentEnabled: false, autocolor: true, accentStyle: 'flat' }),
+    )
+    ;(globalThis.fetch as typeof mockFetch)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          preferences: { visibleCount: 7, compactInactive: true },
+          selectorState: {},
+        }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        // Backend (hypothetically) echoes accentEnabled=true / autocolor=false.
+        // Browser-only values from localStorage MUST win (BR-6.1).
+        json: async () => ({
+          preferences: { visibleCount: 12, compactInactive: true, accentEnabled: true, autocolor: false },
+          selectorState: {},
+        }),
+      } as Response)
+
+    const { result } = renderHook(() => useSelectorData())
+    await waitFor(() => expect(result.current.loaded).toBe(true))
+    // initial merge: backend visibleCount/compactInactive + localStorage browser-only
+    expect(result.current.preferences.accentEnabled).toBe(false)
+    expect(result.current.preferences.autocolor).toBe(true)
+    expect(result.current.preferences.accentStyle).toBe('flat')
+
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent('mdt:selector-prefs-updated'))
+    })
+
+    await waitFor(() => expect(result.current.preferences.visibleCount).toBe(12))
+    // Browser-only prefs survive the backend re-fetch (BR-6.1).
+    expect(result.current.preferences.accentEnabled).toBe(false)
+    expect(result.current.preferences.autocolor).toBe(true)
+    expect(result.current.preferences.accentStyle).toBe('flat')
+  })
+
+  it('falls back silently when the refresh re-fetch fails (rail stays usable)', async () => {
+    ;(globalThis.fetch as typeof mockFetch)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          preferences: { visibleCount: 7, compactInactive: true },
+          selectorState: {},
+        }),
+      } as Response)
+      .mockResolvedValueOnce({
+        // refresh re-fetch fails
+        ok: false,
+        status: 500,
+        json: async () => ({}),
+      } as Response)
+
+    const { result } = renderHook(() => useSelectorData())
+    await waitFor(() => expect(result.current.loaded).toBe(true))
+    expect(result.current.preferences.visibleCount).toBe(7)
+
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent('mdt:selector-prefs-updated'))
+    })
+    // Give the async handler a tick to settle.
+    await act(async () => {
+      await new Promise(r => setTimeout(r, 20))
+    })
+
+    // No crash, no error surface; preferences unchanged from before the signal.
+    expect(result.current.error).toBeUndefined()
+    expect(result.current.preferences.visibleCount).toBe(7)
+  })
+})
