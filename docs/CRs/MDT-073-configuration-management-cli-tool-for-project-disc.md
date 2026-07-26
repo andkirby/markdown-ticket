@@ -2,6 +2,7 @@
 code: MDT-073
 status: Implemented
 dateCreated: 2025-11-11T20:18:21.594Z
+lastModified: 2026-07-26T06:49:21.000Z
 type: Architecture
 priority: Medium
 assignee: Backend Team
@@ -157,3 +158,18 @@ npm run config:set:dev key value
 npm run config:show:dev
 npm run config:get:dev key
 ```
+
+### UAT Session 2026-07-26 — `+/-` array mutation hotfix
+
+**Context**: Follow-up enhancement to the config CLI built in this ticket. The original `set` only supported full comma-separated replacement for array keys (`discovery.searchPaths`, `cloudSync.allowedOrigins`), so adding or removing a single path required retyping the entire list. Added `+`/`-` prefix mutation; implemented and verified in the same session.
+
+**Approved changes** (same-ticket hotfix):
+- `shared/tools/config-cli.ts`: `+/-` prefix handling in `parseValue` plus a new `applyArrayMutation` helper. `+items` appends (dedupe, preserve first-seen order); `-items` removes matches (safe no-op if absent). Strict guard — `+/-` is valid only when the current value is an array; it fails loud on scalars and unknown keys to prevent silent data loss. `set` now echoes the resulting value via a shared `formatValue` (also reused by `get`). Help text updated.
+- Entrypoint guard switched from `import.meta.url` to an `argv`-basename check so the module compiles under both ESM (production) and CommonJS (jest), and stays inert when imported by tests.
+- `shared/tools/__tests__/config-cli.test.ts`: new suite (16 tests). `shared` lint clean.
+
+**Verified**: add / dedupe / add-multiple / remove / remove-multiple / no-op-remove; generic across `cloudSync.allowedOrigins`; scalar-guard (`+true` on a boolean) and empty-prefix errors; full-replace (`"/a,/b"`) and clear (`""`) still work; compiled `shared/dist` binary and `tsx` dev entry both execute; 16/16 tests pass.
+
+**Known limitation (out of scope)**: `getDefaultConfig()` in `shared/utils/config-validator.ts` returns a shared mutable singleton and `ConfigManager.readConfig()` returns it directly when the file is missing, so repeated in-process `set()` calls on a missing file pollute the default. Harmless in production (one `set` per process; `init` creates the file first). Tests isolate by writing a file per test. Candidate follow-up: return `structuredClone(defaultConfig)`.
+
+**Forward note**: the `bun run config*` scripts (along with `bun run project`, etc.) are slated to be unified into a single `mdt-cli` entrypoint in a separate, larger effort — at which point these npm-script wrappers become obsolete or thin aliases. This hotfix ships against the current script surface.
