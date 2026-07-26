@@ -109,25 +109,15 @@ export const CONFIG_SELECTOR_ALLOWLIST: readonly ConfigSelector[] = [
   },
 
   // --- project.cloudSync (MDT-200 cloud coordination binding) ---
-  // Source: docs/architecture/cloud-sync/README.md § Project Binding.
-  // enabled/pollIntervalSeconds are guarded (confirmable via UI); projectId and
-  // serviceUrl are file-only (see inspect-config FILE_ONLY_SETTINGS) because
-  // projectId is immutable while enabled and serviceUrl gates credential flow.
-  {
-    selector: 'project.cloudSync.enabled',
-    scope: ConfigScope.PROJECT,
-    exposure: Exposure.GUARDED,
-    ownerSurface: ConfigOwnerSurface.PROJECT_EDIT,
-    validation:
-      'Boolean; enable only after provisioning and a successful identity/membership probe (guarded workflow).',
-  },
-  {
-    selector: 'project.cloudSync.pollIntervalSeconds',
-    scope: ConfigScope.PROJECT,
-    exposure: Exposure.GUARDED,
-    ownerSurface: ConfigOwnerSurface.PROJECT_EDIT,
-    validation: 'Integer from 5 through 300; default 15 (guarded workflow).',
-  },
+  // MDT-201: active cloud connection state lives ONLY under CONFIG_DIR at
+  // `projects/{localProjectId}/cloud-sync.toml` (C3, BR-1.5). Repository
+  // `[project.cloudSync]` is legacy migration input only
+  // (`legacy-binding-migration.ts`); it is intentionally NOT on the normal
+  // configuration-management allowlist, so the API never reads or writes it as
+  // active state. Normal lifecycle operations never write repository cloud
+  // fields. See docs/CRs/MDT-201/requirements.md § Authority and Storage.
+  //
+  // (No selectors registered here for project.cloudSync.*)
   {
     selector: 'project.path',
     scope: ConfigScope.PROJECT,

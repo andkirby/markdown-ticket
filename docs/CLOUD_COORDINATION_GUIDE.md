@@ -181,11 +181,46 @@ atomic write-and-rename) survives these boundaries:
 Ordinary disable suspends project coordination and retains the installation's
 CONFIG_DIR connection with `state = "disabled"`; new ticket creation remains
 blocked. Disabling one installation alone does not stop allocations by others.
-Only permanent return to local numbering follows the project-wide suspend +
-detach sequence (see
-[`architecture/cloud-sync/data-and-consistency.md`](architecture/cloud-sync/data-and-consistency.md))
-and removes connections after counter reconciliation. After detach, all ticket
-files remain usable from Markdown/Git.
+
+Disable never silently resumes local numbering. A disabled connection is
+retained (not deleted) so the project remains diagnosable and recoverable; the
+allocator fail-closes on `disabled`, `malformed`, and `untrusted` connection
+states. Only a complete absence of a CONFIG_DIR connection selects local-only
+behavior.
+
+### Legacy repository binding migration
+
+A repository that still carries a legacy `[project.cloudSync]` block in
+`.mdt-config.toml` is migrated **explicitly**, never silently:
+
+1. Read the legacy binding **only** as migration input.
+2. If CONFIG_DIR already has the same connection → no-op.
+3. If CONFIG_DIR has a **conflicting** connection → fail closed (neither source
+   is modified).
+4. If CONFIG_DIR has no connection → verify the legacy service origin against
+   the trusted service profile, probe membership on the coordination audience,
+   then write the CONFIG_DIR connection commit-last.
+5. Repository files are **never** edited by migration. Removing the legacy
+   block is a separate, acknowledged cleanup step the operator performs in Git.
+
+Normal lifecycle operations (enable, connect, disable, ticket creation) never
+read or write repository cloud fields.
+
+### Permanent detach (return to local numbering)
+
+Permanent return to local numbering is a **separate, acknowledged procedure**
+distinct from disable. It is the only way to remove a CONFIG_DIR connection
+and resume local allocation:
+
+1. Suspend cloud coordination across the project (project-wide).
+2. Reconcile the cloud counter with the highest local ticket number so no
+   number is reused and no gap is silently closed.
+3. Record the reconciliation outcome.
+4. Remove the CONFIG_DIR connection record (`state = absent`).
+
+After detach, all ticket files remain usable from Markdown/Git, and the project
+resumes local `highest + 1` allocation. Detach is irreversible per project;
+re-enabling cloud sync provisions a **new** cloud project UUID.
 
 ## Vendor exit
 

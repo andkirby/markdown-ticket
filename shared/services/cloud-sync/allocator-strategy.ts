@@ -1,31 +1,31 @@
 /**
  * Ticket-number allocation strategy seam.
  *
- * Source: docs/CRs/MDT-199/architecture.md § Module Ownership,
- *         docs/CRs/MDT-200/architecture.md § Requirement → Module Conformance.
+ * Source: docs/CRs/MDT-201/architecture.md § Module Boundaries,
+ *         docs/architecture/cloud-sync/README.md § Local Integration Contract.
  *
- * TicketService selects a strategy from validated project config:
- *   - LocalTicketNumberAllocator: preserves the existing highest+1 scan exactly.
+ * TicketService selects a strategy from the CONFIG_DIR cloud connection:
+ *   - LocalTicketNumberAllocator: preserves the highest+1 scan exactly
+ *     (absent connection only — BR-5.1).
  *   - CloudTicketNumberAllocator: calls the shared cloud coordinator.
- *   - FailClosedCloudAllocator: a valid enabled binding with no coordinator
- *     wired yet (U1). Throws CoordinatorError('authentication_required') —
- *     never a local number (BR-1.5). U2 replaces this with the real client.
+ *   - FailClosedCloudAllocator: an enabled connection with no coordinator
+ *     wired. Throws CoordinatorError — never a local number (BR-1.5).
  *
  * A cloud-bound create with an unavailable coordinator fails recoverably and
- * NEVER falls back to local numbering (BR-1.5, C4). Local-only projects are
- * unchanged (BR-1.7).
+ * NEVER falls back to local numbering (BR-1.5, C4). Local-only projects (no
+ * CONFIG_DIR connection) are unchanged (BR-5.1).
  */
 
 import type {
   CloudCredential,
+  CloudSyncConnection,
   CloudSyncCoordinator,
   ProjectCloudSyncBinding,
+  ProjectConnectionRead,
   ReservationDTO,
   ReserveRequest,
 } from '@mdt/domain-contracts'
-import type { ProjectConfig } from '../../models/Project.js'
 import { CoordinatorError } from '@mdt/domain-contracts'
-import { validateProjectBinding } from './config.js'
 
 /** A strategy that allocates the next ticket number for one project. */
 export interface TicketNumberAllocator {
@@ -109,83 +109,75 @@ export class FailClosedCloudAllocator implements TicketNumberAllocator {
 }
 
 /**
- * Read the `[project.cloudSync]` binding from a loaded ProjectConfig and return
- * the validated binding ONLY when it is present, valid, and enabled.
+ * Allocator selection from a CONFIG_DIR `ProjectConnectionRead` (MDT-201, C3,
+ * BR-4.2, BR-5.1).
  *
- * Returns null when:
- *   - there is no binding section (backward-compatible local project, BR-1.7),
- *   - the binding is explicitly disabled (`enabled: false`).
+ *   - `absent`                    → local (the ONLY outcome that selects local).
+ *   - `enabled`                   → cloud path (fail-closed without a coordinator).
+ *   - `disabled`                  → fail-closed (disable NEVER resumes local).
+ *   - `malformed` / `untrusted`   → fail-closed.
  *
- * A present enabled/malformed binding throws. Falling back to local allocation
- * would risk reusing a number already allocated by another clone.
- *
- * Only a VALID enabled binding triggers the cloud path (which then fails closed
- * without a coordinator in U1). This distinction is deliberate and tested.
+ * This is the live selection rule: `TicketService` reads the CONFIG_DIR
+ * connection and routes through this model. The legacy `[project.cloudSync]`
+ * repo binding is no longer read by the allocator (MDT-201 cutover).
  */
-export function readEnabledCloudSyncBinding(
-  config: ProjectConfig | null,
-  opts?: { log?: (msg: string, err?: unknown) => void },
-): ProjectCloudSyncBinding | null {
-  if (!config?.project)
-    return null
-
-  const raw = (config.project as { cloudSync?: unknown }).cloudSync
-  if (raw == null)
-    return null
-
-  if (typeof raw === 'object' && raw !== null && (raw as { enabled?: unknown }).enabled === false) {
-    return null
-  }
-
-  let binding: ProjectCloudSyncBinding
-  try {
-    binding = validateProjectBinding(raw as Partial<ProjectCloudSyncBinding>)
-  }
-  catch (err) {
-    opts?.log?.(`Invalid [project.cloudSync] binding: ${(err as Error).message}`, err)
-    throw err
-  }
-  if (!binding.enabled)
-    return null
-
-  return binding
-}
+export type AllocatorSelection
+  = | { kind: 'local', allocator: TicketNumberAllocator }
+    | { kind: 'cloud', allocator: TicketNumberAllocator }
+    | { kind: 'fail-closed', reason: string }
 
 /**
- * Select the ticket-number allocator for one project from its loaded config.
+ * Synthesize the legacy `ProjectCloudSyncBinding` shape from an enabled
+ * CONFIG_DIR connection. `CloudCreateOrchestrator`, `CloudProjectionSync`,
+ * and the injected `coordinatorFactory`/`projectionClientFactory` all still
+ * consume the binding shape; this adapter lets the live TicketService path
+ * drive them from the new connection model without rewriting those modules.
  *
- * Selection rule (BR-1.5, BR-1.7):
- *   - No valid enabled binding  -> LocalTicketNumberAllocator (local scan preserved).
- *   - Valid enabled binding + coordinator present -> CloudTicketNumberAllocator.
- *   - Valid enabled binding + no coordinator (U1) -> FailClosedCloudAllocator
- *     (throws authentication_required; never a local number).
- *
- * `buildCloudAllocator` returns null when no coordinator is wired; the selector
- * substitutes the fail-closed allocator in that case. The cloud project id for
- * the ReserveRequest comes from the binding.
+ * Field mapping: `cloudProjectId → projectId`, `serviceOrigin → serviceUrl`.
+ * `enabled` is always true (only enabled connections reach the cloud path).
  */
-export function selectTicketNumberAllocator(
-  config: ProjectConfig | null,
-  localScan: () => Promise<number>,
-  buildCloudAllocator?: (
-    binding: ProjectCloudSyncBinding,
-  ) => {
-    coordinator: CloudSyncCoordinator
-    credential: CloudCredential | null
-    req: ReserveRequest
-  } | null,
-  opts?: { log?: (msg: string, err?: unknown) => void },
-): TicketNumberAllocator {
-  const binding = readEnabledCloudSyncBinding(config, opts)
-  if (!binding) {
-    return new LocalTicketNumberAllocator(localScan)
+export function bindingFromEnabledConnection(connection: CloudSyncConnection): ProjectCloudSyncBinding {
+  return {
+    enabled: true,
+    projectId: connection.cloudProjectId,
+    serviceUrl: connection.serviceOrigin,
+    pollIntervalSeconds: connection.pollIntervalSeconds,
   }
+}
 
-  // A valid enabled binding takes the cloud path. No coordinator wired yet
-  // (U1) -> fail closed. This MUST NOT fall back to local numbering.
-  const built = buildCloudAllocator?.(binding)
-  if (!built) {
-    return new FailClosedCloudAllocator(binding)
+export function selectAllocatorFromConnection(
+  read: ProjectConnectionRead,
+  localScan: () => Promise<number>,
+): AllocatorSelection {
+  switch (read.kind) {
+    case 'absent':
+      return { kind: 'local', allocator: new LocalTicketNumberAllocator(localScan) }
+
+    case 'enabled': {
+      // Cloud path. Without a coordinator wired (U1 / before connect), this
+      // fails closed — it MUST NOT fall back to local numbering (BR-1.5,
+      // BR-4.2). The caller wires the real coordinator via selectTicketNumber
+      // Allocator when available; this selection surfaces the fail-closed
+      // contract for the new connection model.
+      return {
+        kind: 'cloud',
+        allocator: new FailClosedCloudAllocator(bindingFromEnabledConnection(read.connection)),
+      }
+    }
+
+    case 'disabled':
+      // Disable NEVER resumes local numbering (BR-4.2). Retained state fails
+      // closed; only permanent-detach (separate procedure) removes the record.
+      return { kind: 'fail-closed', reason: 'cloud connection is disabled' }
+
+    case 'malformed':
+      return { kind: 'fail-closed', reason: 'cloud connection is malformed' }
+
+    case 'untrusted':
+      return { kind: 'fail-closed', reason: 'cloud connection serviceOrigin is untrusted' }
+
+    default:
+      // Exhaustiveness guard: any unrecognized state fails closed.
+      return { kind: 'fail-closed', reason: 'unrecognized connection state' }
   }
-  return new CloudTicketNumberAllocator(built.coordinator, built.credential, built.req)
 }
