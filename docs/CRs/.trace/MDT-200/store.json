@@ -1053,6 +1053,17 @@
       ],
       "file": "cloud/test/http.body.test.ts",
       "sourceRef": "docs/architecture/cloud-sync/data-and-consistency.md"
+    },
+    {
+      "id": "TEST-projection-sync-deletion",
+      "kind": "integration",
+      "title": "Delete tombstone reaches the cloud projection even when ticket content is unchanged",
+      "covers": [
+        "BR-3.1",
+        "BR-3.3"
+      ],
+      "file": "shared/services/cloud-sync/__tests__/projection-sync.test.ts",
+      "sourceRef": "lifecycle-aware early-return (delete tombstone)"
     }
   ],
   "tasks": [

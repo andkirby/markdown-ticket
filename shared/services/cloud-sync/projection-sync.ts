@@ -116,7 +116,13 @@ export class CloudProjectionSync {
     }
     try {
       const current = await this.client.get(pending.ticketNumber, credential)
-      if (current.contentHash === pending.contentHash) {
+      // The no-op guard must compare BOTH content and lifecycle. A delete keeps
+      // the same content hash (deleteCR passes previous === next), so a
+      // content-only check would drop the lifecycle:'deleted' tombstone and
+      // leave the cloud projection active forever (MDT-200 regression).
+      const sameContent = current.contentHash === pending.contentHash
+      const sameLifecycle = (current.lifecycle ?? 'active') === pending.lifecycle
+      if (sameContent && sameLifecycle) {
         await this.clear(pending.ticketNumber)
         return 'synced'
       }
