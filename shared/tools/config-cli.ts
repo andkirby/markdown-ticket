@@ -174,6 +174,18 @@ class ConfigManager {
   private parseValue(value: string, path: string[], config: GlobalConfig): ConfigValue {
     const currentValue = DotNotationParser.getNested(config, path)
 
+    // Array add/remove via +/- prefix (e.g. "+/new/path", "-/old/path").
+    // Only applies to keys whose current value is an array; fails loud on scalars or unknown keys.
+    if (value.startsWith('+') || value.startsWith('-')) {
+      if (Array.isArray(currentValue)) {
+        return this.applyArrayMutation(value, currentValue)
+      }
+      const kind = currentValue === undefined ? 'unset' : typeof currentValue
+      throw new ConfigError(
+        `'+/-' prefix only applies to array values; '${path.join('.')}' is ${kind}`,
+      )
+    }
+
     // If current value is a boolean, parse as boolean
     if (typeof currentValue === 'boolean') {
       return value.toLowerCase() === 'true'
@@ -188,13 +200,47 @@ class ConfigManager {
       return parsed
     }
 
-    // If current value is an array, parse as comma-separated values
+    // If current value is an array, parse as comma-separated values (full replace)
     if (Array.isArray(currentValue)) {
       return value.split(',').map(item => item.trim()).filter(item => item.length > 0)
     }
 
     // Default: treat as string
     return value
+  }
+
+  /**
+   * Apply an array add/remove mutation parsed from a "+items" / "-items" CLI value.
+   * The prefix sets the operation; the remainder is a comma-separated item list.
+   * Add appends new items (skipping duplicates, preserving order); remove drops matches.
+   */
+  private applyArrayMutation(value: string, currentValue: unknown): string[] {
+    const op = value[0]
+    const items = value
+      .slice(1)
+      .split(',')
+      .map(item => item.trim())
+      .filter(item => item.length > 0)
+
+    if (items.length === 0) {
+      throw new ConfigError(`No items specified after '${op}' prefix`)
+    }
+
+    const base = Array.isArray(currentValue)
+      ? currentValue.filter((item): item is string => typeof item === 'string')
+      : []
+
+    if (op === '+') {
+      const result = [...base]
+      for (const item of items) {
+        if (!result.includes(item)) {
+          result.push(item)
+        }
+      }
+      return result
+    }
+
+    return base.filter(item => !items.includes(item))
   }
 
   /**
@@ -262,15 +308,7 @@ class ConfigCommands {
     try {
       const value = await this.configManager.get(key)
       if (value !== undefined) {
-        if (Array.isArray(value)) {
-          console.error(`${key}: [${value.map(item => `"${item}"`).join(', ')}]`)
-        }
-        else if (typeof value === 'string') {
-          console.error(`${key}: "${value}"`)
-        }
-        else {
-          console.error(`${key}: ${value}`)
-        }
+        console.error(`${key}: ${this.formatValue(value)}`)
       }
       else {
         console.error(`Configuration key '${key}' not found`)
@@ -286,14 +324,30 @@ class ConfigCommands {
   async setCommand(key: string, value: string): Promise<void> {
     try {
       await this.configManager.set(key, value)
+      const result = await this.configManager.get(key)
       console.error(`✅ Configuration updated successfully`)
       console.error(`   File: ${this.configManager.getConfigPath()}`)
-      console.error(`   Key: ${key} = ${value}`)
+      console.error(`   Key: ${key}`)
+      console.error(`   Request: ${value}`)
+      console.error(`   Result: ${this.formatValue(result)}`)
     }
     catch (error) {
       console.error('Error setting configuration:', error instanceof Error ? error.message : String(error))
       process.exit(1)
     }
+  }
+
+  /**
+   * Format a config value for human-readable display
+   */
+  private formatValue(value: ConfigValue): string {
+    if (Array.isArray(value)) {
+      return `[${value.map(item => `"${item}"`).join(', ')}]`
+    }
+    if (typeof value === 'string') {
+      return `"${value}"`
+    }
+    return String(value)
   }
 
   async showCommand(): Promise<void> {
@@ -408,8 +462,14 @@ class ConfigCLI {
     console.error('                           config get links.enableTicketLinks')
     console.error('')
     console.error('  set <key> <value>  Set configuration value using dot notation')
-    console.error('                 Examples: config set discovery.autoDiscover true')
+    console.error('                 Arrays support +/- to add/remove items (any array key):')
+    console.error('                           config set discovery.searchPaths +/new/path')
+    console.error('                           config set discovery.searchPaths -/old/path')
+    console.error('                           config set cloudSync.allowedOrigins +https://example.com')
+    console.error('                 Or full replace (comma-separated):')
     console.error('                           config set discovery.searchPaths "/path1,/path2"')
+    console.error('                 Scalars:')
+    console.error('                           config set discovery.autoDiscover true')
     console.error('                           config set links.enableTicketLinks false')
     console.error('')
     console.error('  show          Display current configuration')
@@ -423,8 +483,11 @@ class ConfigCLI {
 // Export for testing
 export { ConfigCLI, ConfigError, ConfigManager, DotNotationParser }
 
-// Run CLI if this file is executed directly
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Run CLI if this file is executed directly.
+// Uses argv-basename (not import.meta.url) so the module compiles under both ESM
+// (production) and CommonJS (jest/ts-jest) module settings, and stays inert when imported.
+const entry = process.argv[1] ?? ''
+if (entry.endsWith('config-cli.ts') || entry.endsWith('config-cli.js')) {
   const cli = new ConfigCLI()
   cli.run(process.argv).catch((error) => {
     console.error('CLI error:', error instanceof Error ? error.message : String(error))
