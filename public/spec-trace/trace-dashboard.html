@@ -1023,16 +1023,22 @@
     const STORAGE_KEYS = {
       asideCollapsed: 'specTrace.traceDashboard.asideCollapsed',
       fullCards: 'specTrace.traceDashboard.fullCards',
-      chainDepth: 'specTrace.traceDashboard.chainDepth',
+      // Versioned: v2 moves the default from 1 to 2. The prior key
+      // (specTrace.traceDashboard.chainDepth) is intentionally left orphaned so
+      // existing users fall through to CHAIN_DEPTH_DEFAULT rather than being
+      // pinned to the old silent default of 1.
+      chainDepth: 'specTrace.traceDashboard.chainDepth.v2',
     };
 
-    // 1 = direct neighbors only (historical behavior). >=2 walks the related-map
-    // breadth-first so selecting a requirement also surfaces downstream artifacts
-    // and tasks. Capped at CHAIN_DEPTH_MAX so a dense store can't explode the
+    // Chain depth N means: hop 1 is always bidirectional (original 1-hop
+    // behavior, immutable), and hops 2..N are forward-only along the pipeline.
+    // depth=1 is the historical neighborhood; depth>=2 additionally flows
+    // downstream so a requirement surfaces its obligations, their artifacts, and
+    // their tasks. Capped at CHAIN_DEPTH_MAX so a dense store can't explode the
     // active set.
     const CHAIN_DEPTH_MIN = 1;
     const CHAIN_DEPTH_MAX = 4;
-    const CHAIN_DEPTH_DEFAULT = 1;
+    const CHAIN_DEPTH_DEFAULT = 2;
 
     const state = {
       store: null,
@@ -1287,13 +1293,21 @@
 
       const nodeById = new Map(nodes.map((node) => [node.id, node]));
       const validEdges = edges.filter((item) => nodeById.has(item.from) && nodeById.has(item.to));
+      // `related` is bidirectional: used by search (visibleNodeIds) and the detail
+      // panel, where showing both directions is the right call.
       const related = new Map(nodes.map((node) => [node.id, new Set()]));
+      // `forward` is directional (from -> to only): used by the selection chain
+      // (activeNeighborhood) so hops >=2 flow downstream along the pipeline
+      // (requirement -> obligation -> artifact -> task) without dragging in
+      // unrelated upstream nodes via back-edges.
+      const forward = new Map(nodes.map((node) => [node.id, new Set()]));
       for (const item of validEdges) {
         related.get(item.from).add(item.to);
         related.get(item.to).add(item.from);
+        forward.get(item.from).add(item.to);
       }
 
-      return { nodes, edges: validEdges, nodeById, related };
+      return { nodes, edges: validEdges, nodeById, related, forward };
     }
 
     function edge(from, to, kind) {
@@ -1714,25 +1728,58 @@
 
     function activeNeighborhood() {
       if (!state.selectedId) return new Set();
-      // BFS over the bidirectional related map. depth=1 reproduces the old
-      // one-hop neighborhood; higher depths follow the chain across stages so
-      // (e.g.) a requirement pulls in its obligations, then their artifacts,
-      // then their tasks.
+      // The active set combines two rules:
+      //
+      //   1. Hop 1 is always BIDIRECTIONAL around the selection. This is the
+      //      original pre-chain behavior: selecting an obligation highlights the
+      //      requirements it derives from (backward) as well as the artifacts it
+      //      maps to (forward), etc. This hop is immutable and runs at every
+      //      depth so a non-requirement seed always shows its direct lineage.
+      //
+      //   2. Hops 2..depth expand FORWARD-ONLY, and only from the hop-1 nodes
+      //      that were reached via a FORWARD edge. Backward-reached hop-1 nodes
+      //      are LEAVES: they show "where this came from" but do not propagate.
+      //      This prevents transitive noise through shared upstream nodes. E.g.
+      //      selecting an obligation that derives from a shared constraint C must
+      //      highlight C (its source) but must NOT highlight every other
+      //      obligation that also derives from C.
+      //
+      // Concretely: a requirement seed flows all the way to tasks (its
+      // obligations are forward-reached, so they propagate to artifacts, which
+      // propagate to tasks). An obligation seed shows its source requirements as
+      // leaves and its downstream artifacts/tasks as a chain, without pulling in
+      // sibling obligations through shared requirements.
       const depth = state.chainDepth;
-      const visited = new Set([state.selectedId]);
-      let frontier = [state.selectedId];
-      for (let level = 0; level < depth; level += 1) {
-        const next = [];
+      const selected = state.selectedId;
+      const forwardFromSelected = state.graph.forward.get(selected) || new Set();
+
+      // Hop 1: bidirectional neighbors. Track which ones are forward-reached
+      // (those will seed hop 2); the rest are leaves.
+      const visited = new Set([selected]);
+      const propagating = []; // forward-reached hop-1 nodes
+      for (const neighborId of state.graph.related.get(selected) || []) {
+        if (visited.has(neighborId)) continue;
+        visited.add(neighborId);
+        if (forwardFromSelected.has(neighborId)) {
+          propagating.push(neighborId);
+        }
+      }
+      if (propagating.length === 0 || depth < 2) return visited;
+
+      // Hops 2..depth: forward-only expansion from forward-reached nodes only.
+      let frontier = propagating;
+      for (let level = 1; level < depth; level += 1) {
+        const advancing = [];
         for (const id of frontier) {
-          for (const relatedId of state.graph.related.get(id) || []) {
-            if (!visited.has(relatedId)) {
-              visited.add(relatedId);
-              next.push(relatedId);
+          for (const targetId of state.graph.forward.get(id) || []) {
+            if (!visited.has(targetId)) {
+              visited.add(targetId);
+              advancing.push(targetId);
             }
           }
         }
-        if (next.length === 0) break;
-        frontier = next;
+        if (advancing.length === 0) break;
+        frontier = advancing;
       }
       return visited;
     }
@@ -1804,7 +1851,12 @@
         const y2 = toRect.top + toRect.height / 2 - canvasRect.top;
         const bend = Math.max(42, Math.min(120, Math.abs(x2 - x1) / 2));
         const d = 'M ' + x1 + ' ' + y1 + ' C ' + (x1 + bend) + ' ' + y1 + ', ' + (x2 - bend) + ' ' + y2 + ', ' + x2 + ' ' + y2;
-        const active = selected && activeSet.has(item.from) && activeSet.has(item.to) && (item.from === selected || item.to === selected);
+        // An edge is part of the active chain when both endpoints are in the
+        // active neighborhood. We do NOT require the edge to be incident to the
+        // selected node: at chain depth >=2 the chain spans multi-hop edges
+        // (e.g. obligation -> artifact) whose endpoints are both active but
+        // neither is the selection itself.
+        const active = selected && activeSet.has(item.from) && activeSet.has(item.to);
         const muted = selected && !active;
         paths.push('<path class="' + (active ? 'is-active' : '') + (muted ? ' is-muted' : '') + '" d="' + d + '" stroke="' + (EDGE_COLORS[item.kind] || '#a99d8b') + '"></path>');
       }
