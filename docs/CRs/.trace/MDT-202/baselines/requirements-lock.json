@@ -1,0 +1,158 @@
+{
+  "ticket": "MDT-202",
+  "generatedAt": "2026-07-26T10:05:35.671Z",
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.2",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.3",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.4",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.5",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.6",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.7",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.8",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.9",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.10",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.1",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.2",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.3",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.4",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3.1",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3.2",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4.1",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4.2",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-5.1",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-5.2",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-5.3",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-6.1",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C-1",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-2",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-3",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-4",
+      "routePolicy": "not_applicable"
+    },
+    {
+      "id": "C-5",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-6",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-7",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-1",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-2",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-3",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-4",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-5",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-6",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-7",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-8",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-9",
+      "routePolicy": "tests"
+    }
+  ]
+}

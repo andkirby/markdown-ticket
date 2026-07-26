@@ -90,10 +90,100 @@ and Git repository access remain separate prerequisites.
 - Ticket recommendations and adapter help must refer to these owners instead of
   creating competing procedures.
 
+## CLI journeys (`mdt-cli cloud`)
+
+The `mdt-cli cloud` command group (MDT-202) presents the canonical procedures
+above. It is a thin adapter: every lifecycle rule is owned by the MDT-201
+service. Login alone does not bind a clone to a project — a teammate or new
+clone must run `connect` explicitly.
+
+### Owner journey: enable a new cloud project
+
+```bash
+# From inside the project repository (the CLI detects the current project).
+mdt-cli cloud enable --owner you@example.com
+```
+
+- Detects the current project and refuses outside one (`NO_PROJECT_CONTEXT`).
+- Authenticates to the operator Access audience, verifies readiness, provisions
+  exactly one cloud project, probes coordination membership, then writes the
+  CONFIG_DIR connection commit-last.
+- Re-running `enable` on a valid connection reports the existing UUID and
+  performs **no** second provisioning.
+- Reports the non-secret cloud project UUID. The token is never printed or
+  persisted.
+
+### Teammate journey: connect an existing clone
+
+```bash
+# 1. Obtain the non-secret cloud project UUID from the owner out-of-band.
+# 2. From inside the cloned repository:
+mdt-cli cloud login
+mdt-cli cloud connect <cloud-project-uuid>
+```
+
+- `login` obtains or refreshes the personal Access session. It does **not**
+  change connection state or membership.
+- `connect <uuid>` verifies existing membership against the coordination
+  audience, writes the CONFIG_DIR connection commit-last, and reports the
+  verified role. It **never** provisions. Two independent clones that connect
+  to the same UUID operate against the same cloud project.
+
+### Diagnostics and status
+
+```bash
+mdt-cli cloud status     # one-line state: absent / enabled / disabled / ...
+mdt-cli cloud doctor     # redacted checks: context, connection, origin,
+                         # credential availability, readiness, membership
+```
+
+### Membership (owner only)
+
+```bash
+mdt-cli cloud members list
+mdt-cli cloud members add teammate@example.com --kind human --role contributor
+mdt-cli cloud members add my-runtime --kind machine --role viewer
+mdt-cli cloud members remove teammate@example.com --kind human     # prompts
+mdt-cli cloud members remove teammate@example.com --kind human --yes
+```
+
+Machine membership accepts the **non-secret** machine principal id only. The
+client secret is never accepted or printed here.
+
+### Credentials (owner-only machine credential store)
+
+```bash
+# Secret is read from stdin or a hidden prompt — NEVER from argv.
+printf '%s' "$CF_ACCESS_CLIENT_SECRET" | mdt-cli cloud credentials install runtime-a --client-id "$CF_ACCESS_CLIENT_ID"
+mdt-cli cloud credentials status runtime-a     # redacted view (no secret)
+mdt-cli cloud credentials remove runtime-a --yes
+```
+
+### Disable and legacy migration
+
+```bash
+mdt-cli cloud disable --yes           # retain disabled; ticket creation stays fail-closed
+mdt-cli cloud migrate-legacy --yes    # import repo [project.cloudSync] into CONFIG_DIR
+```
+
+`disable` retains a `disabled` connection and never silently resumes local
+numbering. There is no permanent-detach command in the CLI; that is a separate
+counter-reconciliation procedure. `migrate-legacy` is conflict-safe and leaves
+repository files unchanged.
+
+### Output and exit codes
+
+Every command supports human (default), `--json`, and `--yaml` output. Failures
+exit through one centralized, documented mapping: `2` no project, `3`
+authentication required, `4` forbidden, `5` not found, `6` conflict, `7`
+coordination suspended, `8` coordination unavailable (including a real `503`),
+`9` rate-limited, `10` config invalid, `11` untrusted origin, `12`
+confirmation required, `13` output-format conflict, `1` generic.
+
 ## Operator setup
 
-Until MDT-201/202 provide the supported orchestration and CLI, the following is
-the manual operator fallback for establishing the same connection.
+The CLI above is the supported path. The manual steps below are the operator
+fallback for establishing the same connection when the CLI is unavailable.
 
 ### 1. Configure the origin allowlist (global)
 
