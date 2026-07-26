@@ -34,7 +34,7 @@ import type {
   MemberRemoveRequestDto,
   MemberUpsertRequestDto,
 } from './cloud/options.js'
-import { createHash, randomUUID } from 'node:crypto'
+import { createHash } from 'node:crypto'
 import process from 'node:process'
 import {
   CliAudienceAwareCredentialProvider,
@@ -109,15 +109,11 @@ async function requireProjectContext(): Promise<ProjectContext> {
 }
 
 /**
- * Build the management-service handle for the current project. The credential
- * providers default to the real cloudflared + service-token providers; tests
- * inject via the CLOUD_SYNC_TEST_HANDLE environment hook (see __fixtures__).
+ * Build the management-service handle for the current project. Uses the real
+ * cloudflared + service-token credential providers. Tests construct the
+ * service directly via `createManagementService` (see shared/.../__tests__).
  */
 async function buildHandle(ctx: ProjectContext): Promise<ManagementServiceHandle> {
-  const injected = loadInjectedHandle()
-  if (injected) {
-    return injected
-  }
   const provider = new CliAudienceAwareCredentialProvider({
     service: new ServiceTokenCredentialProvider(),
     human: new CloudflaredCredentialProvider(),
@@ -128,18 +124,6 @@ async function buildHandle(ctx: ProjectContext): Promise<ManagementServiceHandle
     initialOwnerEmail: '', // supplied per-enable
     credentialProvider: provider,
   })
-}
-
-/** Test-injection hook (see cli/tests/e2e/cloud/fixtures). */
-function loadInjectedHandle(): ManagementServiceHandle | null {
-  const ref = process.env.MDT_CLOUD_TEST_HANDLE
-  if (!ref) {
-    return null
-  }
-  // The fixture writes the handle to globalThis under this key.
-  const store = (globalThis as unknown as Record<string, unknown>).__mdtCloudTestHandles as
-    Map<string, ManagementServiceHandle> | undefined
-  return store?.get(ref) ?? null
 }
 
 // ---------------------------------------------------------------------------
@@ -183,10 +167,16 @@ export async function cloudEnableAction(req: EnableRequestDto, options: CloudCom
   const initialNextTicketNumber = computeInitialNextTicketNumber(numbers)
 
   const handle = await buildHandle(ctx)
-  // Idempotency key + request hash — D1 enforces server-side; the journal
-  // improves client retry. We journal through the service when configured.
-  const idempotencyKey = randomUUID()
-  const requestHash = sha256(`${ctx.projectCode}|${req.ownerEmail}|${initialNextTicketNumber}`)
+  // Deterministic key + hash so re-running enable for the same
+  // project/owner/start-number produces the SAME idempotency key, letting the
+  // coordinator replay the existing UUID instead of provisioning a second
+  // project (BR-1.5 / Edge-6). A random per-invocation key would defeat
+  // server-side idempotency on retry.
+  const { idempotencyKey, requestHash } = enableIdempotencyTokens({
+    projectCode: ctx.projectCode,
+    ownerEmail: req.ownerEmail,
+    initialNextTicketNumber,
+  })
 
   const result = await handle.service.enable({
     projectCode: ctx.projectCode,
@@ -205,16 +195,14 @@ export async function cloudLoginAction(options: CloudCommandOptions): Promise<vo
   const ctx = await requireProjectContext()
   const handle = await buildHandle(ctx)
 
-  // Login obtains/refreshes the personal Access session by resolving a
-  // coordination-audience credential. It writes NO connection state.
-  // We discard the resolved credential; the side effect (cloudflared caches
-  // the session) is what matters. The service is not involved — login is
-  // pure presentation per BR-1.6.
-  const provider = new CliAudienceAwareCredentialProvider({
-    service: new ServiceTokenCredentialProvider(),
-    human: new CloudflaredCredentialProvider(),
-  })
-  const credential = await provider.resolve(handle.coordinationOrigin, 'coordination' as never)
+  // Login obtains/refreshes the PERSONAL Access session by invoking the human
+  // credential provider directly (architecture § cloud login). It must NOT go
+  // through the audience-aware provider, which prefers an installed service
+  // token — a machine identity, not a personal session. The resolved credential
+  // is discarded; the side effect (cloudflared caches the session) is what
+  // matters. Login writes NO connection state (BR-1.6).
+  const humanProvider = new CloudflaredCredentialProvider()
+  const credential = await humanProvider.resolve(handle.coordinationOrigin)
   if (!credential) {
     throw new CloudCommandError(
       'AUTHENTICATION_REQUIRED',
@@ -432,4 +420,23 @@ export async function runCloudAction(
 
 function sha256(input: string): string {
   return createHash('sha256').update(input).digest('hex')
+}
+
+/**
+ * Derive the deterministic provisioning idempotency key + request hash for
+ * `cloud enable` (BR-1.5 / Edge-6). Identical inputs MUST yield identical
+ * tokens so the coordinator replays the same UUID on retry instead of
+ * provisioning a second project. Exported for a regression test that locks
+ * the determinism invariant.
+ */
+export function enableIdempotencyTokens(input: {
+  projectCode: string
+  ownerEmail: string
+  initialNextTicketNumber: number
+}): { idempotencyKey: string, requestHash: string } {
+  const requestHash = sha256(`${input.projectCode}|${input.ownerEmail}|${input.initialNextTicketNumber}`)
+  return {
+    requestHash,
+    idempotencyKey: sha256(`idem|${requestHash}`),
+  }
 }
