@@ -78,6 +78,11 @@ export function exitCodeFor(error: unknown): CloudExitCodeValue {
   if (error instanceof ProjectStateFormatError || error instanceof MachineCredentialFormatError) {
     return CloudExitCode.CONFIG_INVALID
   }
+  // `assertSingleOutputFormat` throws a CliCommandError with this code; map it
+  // to the dedicated exit so the OUTPUT_FORMAT_CONFLICT entry is reachable.
+  if (error instanceof Error && (error as { code?: string }).code === 'OUTPUT_FORMAT_CONFLICT') {
+    return CloudExitCode.OUTPUT_FORMAT_CONFLICT
+  }
   return CloudExitCode.CLI_ERROR
 }
 
