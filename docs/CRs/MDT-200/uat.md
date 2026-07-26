@@ -184,3 +184,142 @@ Remaining gates are external evidence: deploy the reconciled source, real
 service-token attribution, a live two-client polling scenario, deployed
 concurrency evidence, export/restore/disable drills, and human approval of the
 requirements baseline.
+
+---
+
+# UAT Refinement Brief — 2026-07-27 (deletion-tombstone defect)
+
+## Objective
+
+A deletion tombstone never reaches the D1 projection. Reported and reproduced
+on the live cloud: ticket MDT-214 was created in a cloud-bound clone and then
+deleted with `mdt-cli ticket delete MDT-214`. The local `.md` is gone, but the
+cloud projection row stays `lifecycle='active'`, `deleted_at=NULL`, so the
+deleted ticket keeps surfacing on the board and in `mdt-cli cloud status`.
+
+Root cause confirmed three ways — code reading, type inspection, and a live D1
+query (see Validation). The client-side early-return guard in
+`CloudProjectionSync.attempt` compares only the content hash, and a delete
+keeps content unchanged (`deleteCR` passes `previous === next`), so the
+`lifecycle:'deleted'` publish is dropped as a "no-op" before it ever reaches
+the Worker. The Worker and `CloudProjectionClient.publish` routing are correct.
+
+## Approved Changes
+
+| Change | Detail |
+|--------|--------|
+| Lifecycle-aware no-op guard | `shared/services/cloud-sync/projection-sync.ts` `attempt()`: the early-return now fires only when BOTH content hash AND lifecycle match the observed cloud projection. A delete (same content, lifecycle flip) is no longer dropped. |
+| Regression test | `shared/services/cloud-sync/__tests__/projection-sync.test.ts`: new `describe('lifecycle-aware early-return (delete tombstone)')` with two cases — (1) delete with unchanged content still publishes `lifecycle:'deleted'`; (2) identical content AND lifecycle remains a genuine no-op. |
+
+## Changed Requirement IDs
+
+None. This is a defect against already-approved behavior, not a requirement
+change. The deletion→tombstone contract is part of the existing projection
+semantics (BR-3.x); no requirement ID was added, removed, or re-scoped.
+
+## Affected Downstream Trace
+
+- **requirements** — unchanged. The deletion→tombstone contract is already
+  covered by existing `BR-3.1` (projection reflects the ticket) and `BR-3.3`
+  (changes visible end-to-end through polling). No new requirement ID needed.
+- **bdd** — unchanged (existing scenarios cover lifecycle tombstones).
+- **architecture** — unchanged in shape. The fix tightens one guard condition
+  inside `OBL-projection` (already an owner of `ART-shared-cloud-sync`, which
+  owns `shared/services/cloud-sync/projection-sync.ts`); the obligation's
+  wording still holds.
+- **tests** — `TEST-projection-sync-deletion` added (kind: integration,
+  covers `BR-3.1,BR-3.3`, file:
+  `shared/services/cloud-sync/__tests__/projection-sync.test.ts`, source-ref:
+  `lifecycle-aware early-return (delete tombstone)`). Tests stage validated;
+  `tests.trace.md` re-rendered.
+- **tasks** — no canonical task added (single-line defect fix; tracked in
+  this round only).
+
+## Execution Slices
+
+### Slice 1 — Confirm + fix + regression test (DONE)
+
+- **Objective**: stop dropping the delete tombstone; prove it with a test that
+  fails pre-fix and passes post-fix.
+- **Direct artifacts**: `shared/services/cloud-sync/projection-sync.ts`,
+  `shared/services/cloud-sync/__tests__/projection-sync.test.ts`.
+- **Direct GREEN targets**: `lifecycle-aware early-return (delete tombstone)`
+  (2 cases in `projection-sync.test.ts`).
+- **Impacted tasks**: none canonical (defect fix on existing artifact).
+- **Why**: without the tombstone, deleted tickets stay live in the cloud
+  projection forever — the board and CLI keep showing them.
+
+## Validation
+
+Commands run and their actual output:
+
+- **Live D1 confirmation (read-only)** —
+  `npx wrangler d1 execute mdt-cloud-sync-production --remote --command
+  "SELECT ticket_number, lifecycle, deleted_at, projection_version, content_hash FROM ticket_projections WHERE ticket_number = 214;"`
+  (from `cloud/`, authed as andkirby@gmail.com). Result:
+  `lifecycle='active'`, `deleted_at=NULL`, `projection_version=1`,
+  `content_hash=e92e48b3…`. Only the create write landed; the delete never
+  reached D1. Empirically confirms the symptom against production.
+- **Diagnosis confirmed against source** — quoted lines:
+  - `TicketService.deleteCR` (TicketService.ts:859) calls
+    `syncTicketProjectionBestEffort(project, cr, cr, 'deleted')` at
+    TicketService.ts:867 — note `cr, cr` (previous === next).
+  - `projectedHeaderHash` (create-orchestrator.ts:115-117) hashes only the
+    `ProjectedHeader` (domain-contracts/src/cloud-sync/projection.ts:2-11),
+    which has no `lifecycle` field.
+  - `CloudProjectionSync.attempt` early-return (projection-sync.ts, pre-fix
+    118-122) compared only `contentHash`.
+  - `CloudProjectionClient.get` returns `lifecycle`
+    (CloudProjectionClient.ts:374, defaults to `'active'`); `publish` routes
+    `'deleted'` to the `/lifecycle` endpoint (CloudProjectionClient.ts:236).
+    Worker side writes
+    `deleted_at = CASE WHEN ? = 'deleted' THEN ? ELSE NULL END`
+    (cloud/src/cloudflare/d1/projection.ts:335). Worker side is correct; bug
+    is purely the client-side early-return.
+- **Regression test BEFORE fix** —
+  `bun run --cwd shared jest projection-sync`: 1 failed, 4 passed. New case
+  `publishes the lifecycle:deleted tombstone when content is unchanged but
+  lifecycle flips` failed with
+  `Expected number of calls: 1, Received number of calls: 0` — demonstrating
+  the dropped publish. The no-op case passed.
+- **Regression test AFTER fix** —
+  `bun run --cwd shared jest projection-sync`: 5/5 pass (incl. both new cases).
+- **No regression in create path** —
+  `bun run --cwd shared jest create-orchestrator`: 4/4 pass.
+- **`bun run build:shared`** — exit 0 (clean `tsc`).
+- **`bun run --cwd shared lint`** — exit 0 (`--max-warnings 0`, clean).
+- **spec-trace sync** —
+  `spec-trace test-plan upsert MDT-200 TEST-projection-sync-deletion --kind integration --title "Delete tombstone reaches the cloud projection even when ticket content is unchanged" --covers BR-3.1,BR-3.3 --file shared/services/cloud-sync/__tests__/projection-sync.test.ts --source-ref "lifecycle-aware early-return (delete tombstone)"`;
+  then `spec-trace validate MDT-200 --stage tests` (passed) and
+  `spec-trace render tests MDT-200` (re-rendered `tests.trace.md`). No new
+  requirement/obligation IDs — the existing `BR-3.1`/`BR-3.3` + `OBL-projection`
+  already cover the tombstone contract; this round only registers the new
+  regression coverage.
+
+## Watchlist
+
+- **Open question (do NOT resolve in this round): should `projectedHeaderHash`
+  include `lifecycle`?** Today the hash covers only `ProjectedHeader` content
+  fields, so a delete and a re-create-with-same-content produce the same hash.
+  This fix sidesteps that by comparing lifecycle separately. Folding lifecycle
+  into the hash is a hash-contract migration (all stored `content_hash` values
+  would change semantics; cloud-side replay/idempotency keyed on
+  `operation_id` + `content_hash` must be re-checked). Track as a follow-up
+  decision, not a fix.
+- The fix reads `current.lifecycle ?? 'active'`. If the Worker ever returns a
+  projection with an absent `lifecycle` for a genuinely-deleted row, the guard
+  would treat it as `'active'` — acceptable because `normalizeProjectionItem`
+  (CloudProjectionClient.ts:374) defaults absent lifecycle to `'active'`, and a
+  deleted row always carries an explicit `'deleted'` from the Worker.
+
+## UAT Concerns
+
+- **UC-1 (closed this round): deleted ticket stays active in cloud DB.** Repro
+  and live D1 evidence above. Fixed by the lifecycle-aware guard; covered by
+  the new regression cases.
+
+## Open Decisions
+
+The one open decision — whether `projectedHeaderHash` should include
+`lifecycle` — is recorded in Watchlist and explicitly deferred. Everything
+else in this round is closed.
