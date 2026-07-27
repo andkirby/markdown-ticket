@@ -8,7 +8,7 @@ export default {
     '**/__tests__/**/*.test.ts',
     '**/__tests__/**/*.spec.ts',
     '**/tests/**/*.test.ts',
-    '**/tests/**/*.spec.ts'
+    '**/tests/**/*.spec.ts',
   ],
   forceExit: true,
   collectCoverageFrom: [
@@ -20,7 +20,7 @@ export default {
     '!**/dist/**',
     '!**/*.d.ts',
     '!**/__tests__/**',
-    '!**/tests/**'
+    '!**/tests/**',
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
@@ -37,11 +37,11 @@ export default {
         useESM: true,
         tsconfig: {
           allowSyntheticDefaultImports: true,
-          esModuleInterop: true
-        }
-      }
-    ]
+          esModuleInterop: true,
+        },
+      },
+    ],
   },
   testTimeout: 30000,
-  verbose: true
-};
+  verbose: true,
+}
