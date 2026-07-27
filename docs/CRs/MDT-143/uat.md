@@ -70,3 +70,54 @@ from one metadata source.
 ## Open Decisions
 
 None. All changes are in-place refinements on the same CR.
+
+---
+
+## UAT Concerns (2026-07-26)
+
+Raised during MDT-209 planning (ticket write governance / agent deletion
+protection). Logged here for a **separate session** — do not address in MDT-209.
+
+### UC-1: `delete` leaves orphan `{KEY}/` subdocument folder when non-empty
+
+**Repro**: `mdt-cli delete 143` on a project where `docs/CRs/MDT-143/` contains
+sibling subdocuments (architecture.md, bdd.md, tasks.md, …).
+
+**Current behavior**: `cli/src/commands/delete.ts:59 cleanupEmptyCRDir` removes
+the folder **only if empty** after the `.md` file is gone. With subdocuments
+present, the `.md` is removed but the folder — and its 13 sibling files —
+survives as an orphan.
+
+**Evidence**: `docs/CRs/MDT-143/` currently holds 13 files (architecture.md,
+bdd.md, tasks.md, uat.md, …) plus a `poc/` subdir. A `delete 143` call would
+leave all of them parented to a "deleted" ticket.
+
+**Question**: should `delete` (a) recursively remove the entire `{KEY}/` folder,
+(b) refuse unless `--purge-subdocuments` is passed, or (c) stay as-is and treat
+subdocuments as independent artifacts? (a) matches user mental model of
+"deleting the ticket"; (b) is safer; (c) is current behavior.
+
+### UC-2: `delete` never touches `{ticketsPath}/.trace/{KEY}/`
+
+**Repro**: `mdt-cli delete 143` leaves `docs/CRs/.trace/MDT-143/` (with
+`baselines/` and `store.json`) intact on disk forever.
+
+**Current behavior**: `grep -rn "\.trace" shared/services/TicketService.ts
+cli/src/commands/delete.ts` returns zero hits. The spec-trace store is invisible
+to the delete path. Orphans accumulate per deleted ticket.
+
+**Evidence**: `docs/CRs/.trace/MDT-143/` exists with `baselines/` + `store.json`.
+No code path removes it.
+
+**Question**: should `delete` cascade to `.trace/{KEY}/`? If yes, `delete.ts`
+needs to resolve the trace root (likely `path.join(ticketsPath, '.trace', key)`)
+and remove it. If no, this should be documented as an intentional separation of
+concerns (trace = separate subsystem, garbage-collected elsewhere).
+
+### Scope note
+
+Both concerns are independent of MDT-209's agent-write-governance work. MDT-209
+will **block** direct agent deletes of `ticketsPath/**` (Rule C, in-progress),
+forcing deletes through `mdt-cli` — which makes the gaps above the *only* path
+to delete. Closing UC-1/UC-2 becomes more urgent once MDT-209 ships, but is
+out of scope for that ticket.
