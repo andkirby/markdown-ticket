@@ -74,7 +74,7 @@ export interface Relations {
  * above the violations table — even when both lists are empty, so a ticket
  * whose only role is blocking others still renders that role (BR-6.2).
  */
-export interface DepsReport {
+interface DepsReport {
   ticketCode: string
   violations: Violation[]
   proseGaps: string[]

@@ -23,7 +23,7 @@ import { ConfigSideEffectRegistry } from '../services/config/ConfigSideEffectReg
  * keyed by configDir; project adapters are keyed by a project path resolver
  * (project-scope selectors apply to the currently selected project).
  */
-export interface ConfigRouteContext {
+interface ConfigRouteContext {
   /** Resolve the project path for a project/registry-scope selector. */
   resolveProjectPath?: (req: Request) => string | undefined
   /** Resolve the project id for project-scope selectors (for watcher refresh). */
