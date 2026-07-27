@@ -1,5 +1,5 @@
-import { describe, expect, test } from 'bun:test'
 import { readFileSync } from 'node:fs'
+import { describe, expect, test } from 'bun:test'
 
 function read(path: string): string {
   return readFileSync(path, 'utf8')

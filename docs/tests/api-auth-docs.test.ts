@@ -1,5 +1,5 @@
-import { describe, expect, test } from 'bun:test'
 import { readFileSync } from 'node:fs'
+import { describe, expect, test } from 'bun:test'
 
 function read(path: string): string {
   return readFileSync(path, 'utf8')
@@ -9,8 +9,8 @@ describe('MDT-157 API auth migration docs', () => {
   test('production Docker defaults MCP HTTP auth on and requires a token', () => {
     const prodCompose = read('docker-compose.prod.yml')
 
-    expect(prodCompose).toContain('MCP_SECURITY_AUTH=${MCP_SECURITY_AUTH:-true}')
-    expect(prodCompose).toContain('MCP_AUTH_TOKEN=${MCP_AUTH_TOKEN:?Set MCP_AUTH_TOKEN for production MCP HTTP}')
+    expect(prodCompose).toContain('MCP_SECURITY_AUTH=${MCP_SECURITY_AUTH:-true}') // eslint-disable-line no-template-curly-in-string -- docker-compose substitution, must match literally
+    expect(prodCompose).toContain('MCP_AUTH_TOKEN=${MCP_AUTH_TOKEN:?Set MCP_AUTH_TOKEN for production MCP HTTP}') // eslint-disable-line no-template-curly-in-string -- docker-compose substitution, must match literally
   })
 
   test('Docker docs document backend and MCP auth migration path', () => {
