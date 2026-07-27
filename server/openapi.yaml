@@ -125,7 +125,7 @@ components:
           format: date
           nullable: true
           description: Date implementation completed (ISO 8601)
-          example: '2025-09-20'
+          example: 2025-09-20
         implementationNotes:
           type: string
           description: Notes about the implementation
@@ -723,7 +723,7 @@ components:
                 pattern: '^\d{4}-\d{2}-\d{2}$'
                 description: Date implementation completed (ISO 8601)
                 format: date
-                example: '2025-09-20'
+                example: 2025-09-20
               implementationNotes:
                 type: string
                 description: Notes about the implementation
