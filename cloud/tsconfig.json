@@ -2,25 +2,25 @@
   "compilerOptions": {
     "target": "ES2022",
     "lib": ["ES2022"],
+    "moduleDetection": "force",
     "rootDir": "./src",
     "module": "ESNext",
     "moduleResolution": "bundler",
     "paths": {
       "@/*": ["./src/*"]
     },
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
     "strict": true,
     "declaration": true,
     "declarationMap": true,
+    "noEmit": true,
     "outDir": "./dist",
     "sourceMap": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true,
-    "noEmit": true,
-    "allowImportingTsExtensions": true,
     "isolatedModules": true,
-    "resolveJsonModule": true,
-    "moduleDetection": "force"
+    "skipLibCheck": true
   },
   "include": [
     "src/**/*",
