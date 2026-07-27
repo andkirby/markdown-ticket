@@ -41,7 +41,7 @@ import {
  * the default behavior when no flag is given, mirroring the ticket spec
  * (`mdt-cli deps <KEY>` and `mdt-cli deps <KEY> --check` are equivalent).
  */
-export interface DepsCommandOptions extends StructuredOutputOptions {
+interface DepsCommandOptions extends StructuredOutputOptions {
   /** Explicitly request the check report. Default behavior; flag kept for clarity. */
   check?: boolean
   /** Explicit project code (overrides cwd detection). */

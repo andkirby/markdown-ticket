@@ -37,7 +37,7 @@ export class ConfigValidationError extends Error {
 }
 
 /** Result of a successful apply operation. */
-export interface ApplyConfigResult {
+interface ApplyConfigResult {
   selector: string
   effective: unknown
   filePath: string
@@ -53,7 +53,7 @@ export interface StorageAdapterResolver {
   resolve: (selector: ConfigSelector) => ConfigStorageAdapter<unknown>
 }
 
-export interface ConfigApplicationServiceOptions {
+interface ConfigApplicationServiceOptions {
   readonly adapterResolver: StorageAdapterResolver
   readonly sideEffects?: ConfigSideEffectRegistry
 }

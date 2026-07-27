@@ -18,7 +18,7 @@ import {
 } from '../services/config/ConfigApplicationService.js'
 
 /** Descriptor surfaced to the UI/API consumer for a readable selector. */
-export interface ConfigDescriptorDto {
+interface ConfigDescriptorDto {
   selector: string
   scope: string
   exposure: string
@@ -27,7 +27,7 @@ export interface ConfigDescriptorDto {
   value: unknown
 }
 
-export interface ConfigControllerDeps {
+interface ConfigControllerDeps {
   /** Resolves the storage adapter for a selector (knows project path). */
   adapterResolver: StorageAdapterResolver
   /** Injected post-write side effects (MDT-168: discovery/cache/tree/watcher). */
