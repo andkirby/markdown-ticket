@@ -240,6 +240,7 @@ markdown-ticket/
 
 ## What's New
 
+- **v0.27.0** (2026-07-27): Project-level cloud onboarding, multi-hop trace graph traversal, +/- array edits in the config CLI
 - **v0.24.0** (2026-06-13): Calmer project switcher — inactive projects reveal on hover
 - **v0.16.0** (2026-05-05): Cross-project ticket search from QuickSearch
 - **v0.15.0** (2026-05-01): SmartLink document URLs, flexible path configuration, drag-drop custom statuses

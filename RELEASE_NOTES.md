@@ -1,5 +1,33 @@
 # Release Notes
 
+## v0.27.0 (2026-07-27)
+
+### New Features
+
+**Project-Level Cloud Onboarding (MDT-201)**
+- Establish cloud sync once per project, instead of provisioning it independently on every device or clone
+- Cloud connection state lives under `CONFIG_DIR` on each machine, so credentials and tokens never need to go into the shared repository
+- Teammates join the same cloud project through a defined membership flow — no shared passwords or machine credentials
+- On a cloud-enabled project, `mdt-cli create` reserves the shared ticket number, writes the Markdown file, and acknowledges it; it never silently falls back to a local number during an outage
+
+**Trace Graph Chain-Depth Traversal (MDT-204)**
+- The spec-trace graph viewer now follows multi-hop pipelines (requirement → obligation → artifact → task) instead of only the direct 1-hop neighborhood
+- New `chainDepth` control (1–4 hops, default 2), persisted across reloads
+- Hop 1 stays bidirectional so backward lineage is preserved; deeper hops are forward-only, so a shared upstream constraint no longer drags in sibling obligations
+- Edge splines light up correctly across the full chain, not just the selected card
+
+### Improvements
+
+**Add/Remove Items in Array Config Values (MDT-073)**
+- Array-valued config keys (e.g. `discovery.searchPaths`, `cloudSync.allowedOrigins`) now accept `+`/`-` prefixes on `config:set` to add or remove a single item without retyping the whole comma-separated list
+- `config:set` now echoes the resulting value, so you can confirm the change at a glance
+
+### Bug Fixes
+
+**Project Selector Reflects Settings Without a Reload (MDT-168)**
+- Saving `ui.projectSelector.visibleCount` or `ui.projectSelector.compactInactive` from Settings now refreshes the project selector rail in the same session
+- Previously these preferences persisted correctly but the selector kept showing stale values until a full page reload
+
 ## v0.26.0 (2026-07-22)
 
 ### New Features
