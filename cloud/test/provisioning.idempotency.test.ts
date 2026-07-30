@@ -75,7 +75,24 @@ function provision(
       return { conflict: 'reused_key' as const }
     }
 
-    // 2. New key → create project + owner + audit + idempotency record.
+    // 1b. Check for an existing project with the SAME project code.
+    // "enable provisions exactly once": one cloud project per code, globally.
+    // The idempotency key protects retry of the identical request; this guard
+    // protects against re-provisioning the same code with a different key
+    // (e.g. a different owner email alias bypassing the idempotency key).
+    const existingByCode = db.prepare(
+      `SELECT id FROM cloud_projects WHERE project_code = ? ORDER BY created_at ASC LIMIT 1`,
+    ).get(projectCode) as { id: string } | null
+
+    if (existingByCode) {
+      db.prepare(
+        `INSERT INTO project_provisioning_idempotency (idempotency_key_hash, request_hash, cloud_project_id, created_at)
+         VALUES (?, ?, ?, ?)`,
+      ).run(sha256Sync(idempotencyKey), requestHash, existingByCode.id, now)
+      return { projectId: existingByCode.id, replayed: true }
+    }
+
+    // 2. New key + new code → create project + owner + audit + idempotency record.
     const projectId = crypto.randomUUID()
     db.prepare(
       `INSERT INTO cloud_projects (id, project_code, coordination_state, next_ticket_number, projection_revision, created_at, updated_at)
@@ -174,6 +191,26 @@ describe('provisioning idempotency (TEST-provision-idempotency)', () => {
     ).get(sha256Sync(idempotencyKey)) as { request_hash: string, cloud_project_id: string }
     expect(row.request_hash).toBe(sha256Sync('stored-hash'))
     expect(row.cloud_project_id).toBeTruthy()
+  })
+
+  test('the same project code with a different owner email replays the existing project (no duplicate)', () => {
+    // Regression: enable with andkirby@gmail.com then enable with
+    // andkirby+mdt@gmail.com must NOT create a second project for the same code.
+    // The idempotency keys differ (email is part of the hash), so without the
+    // code-based guard this would provision a duplicate.
+    const first = provision('VOC', 'andkirby@gmail.com', 1, 'key-voc-1', sha256Sync('voc-req-1'))
+    expect('conflict' in first).toBe(false)
+    const firstId = (first as { projectId: string }).projectId
+
+    // Different email → different idempotency key → would bypass key-only guard.
+    const second = provision('VOC', 'andkirby+mdt@gmail.com', 1, 'key-voc-2', sha256Sync('voc-req-2'))
+    expect('conflict' in second).toBe(false)
+    expect((second as { projectId: string, replayed: boolean }).projectId).toBe(firstId)
+    expect((second as { replayed: boolean }).replayed).toBe(true)
+
+    // Exactly one VOC project exists.
+    const count = db.prepare(`SELECT COUNT(*) AS n FROM cloud_projects WHERE project_code = ?`).get('VOC') as { n: number }
+    expect(count.n).toBe(1)
   })
 })
 
