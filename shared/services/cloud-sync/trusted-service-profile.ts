@@ -23,6 +23,8 @@
 import type { CloudSyncConnection, ProjectConnectionRead } from '@mdt/domain-contracts'
 import {
   DISTRIBUTION_CLOUD_SYNC_ORIGINS,
+  DISTRIBUTION_COORDINATION_ORIGIN,
+  DISTRIBUTION_PROVISIONING_ORIGIN,
   isAbsoluteHttpsOrigin,
 } from './config.js'
 
@@ -85,10 +87,11 @@ export class TrustedServiceProfile {
  * Compose the effective trusted service profile from distribution defaults and
  * operator exact-HTTPS extensions. Repository data is not an input.
  *
- * The provisioning endpoint is resolved from the trusted profile only: the
- * first distribution origin by default, or the first trusted origin when an
- * operator has reconfigured the set. A repository-supplied value can never
- * reach this resolver.
+ * The provisioning origin is the distribution admin endpoint (operator
+ * audience); the coordination default is the distribution coordination
+ * endpoint. Both are explicit constants so `enable` requests an
+ * operator-audience token and `connect` requests a coordination-audience one.
+ * A repository-supplied value can never reach this resolver.
  */
 export function resolveTrustedServiceProfile(
   inputs: TrustedServiceProfileInputs,
@@ -109,11 +112,10 @@ export function resolveTrustedServiceProfile(
       coordinationOriginDefault: '',
     })
   }
-  const provisioningOrigin = DISTRIBUTION_CLOUD_SYNC_ORIGINS[0] ?? origins[0]!
   return new TrustedServiceProfile({
     origins,
-    provisioningOrigin,
-    coordinationOriginDefault: DISTRIBUTION_CLOUD_SYNC_ORIGINS[0] ?? origins[0]!,
+    provisioningOrigin: DISTRIBUTION_PROVISIONING_ORIGIN,
+    coordinationOriginDefault: DISTRIBUTION_COORDINATION_ORIGIN,
   })
 }
 

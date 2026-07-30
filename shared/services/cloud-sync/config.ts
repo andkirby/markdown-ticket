@@ -28,10 +28,31 @@ const FORBIDDEN_SECRET_KEYS = [
   'apikey',
 ]
 
-/** Product-controlled origins trusted by this distribution (C6). */
+/**
+ * Product-controlled origins trusted by this distribution (C6).
+ *
+ * The coordination origin serves `/v1/projects/*` (coordination audience); the
+ * admin origin serves `/v1/admin/*` (operator audience, used only for
+ * provisioning). Both hit the same Worker; the audience is selected by the
+ * Access application that issued the JWT, which is bound to the origin.
+ */
 export const DISTRIBUTION_CLOUD_SYNC_ORIGINS = [
   'https://mdt-sync.constantapp.org',
+  'https://mdt-sync-admin.constantapp.org',
 ] as const
+
+/**
+ * The distribution origin whose Access application issues operator-audience
+ * tokens (provisioning). Distinct from the coordination origin so `enable`
+ * requests a token the Worker's `/v1/admin/*` routes will accept.
+ */
+export const DISTRIBUTION_PROVISIONING_ORIGIN = 'https://mdt-sync-admin.constantapp.org'
+
+/**
+ * The distribution origin whose Access application issues coordination-audience
+ * tokens (connect, membership, status, ticket allocation).
+ */
+export const DISTRIBUTION_COORDINATION_ORIGIN = 'https://mdt-sync.constantapp.org'
 
 /**
  * Merge immutable distribution origins with operator-controlled extensions.

@@ -17,14 +17,18 @@
 
 import { describe, expect, it } from '@jest/globals'
 
-import { DISTRIBUTION_CLOUD_SYNC_ORIGINS } from '../config'
+import {
+  DISTRIBUTION_CLOUD_SYNC_ORIGINS,
+  DISTRIBUTION_COORDINATION_ORIGIN,
+  DISTRIBUTION_PROVISIONING_ORIGIN,
+} from '../config'
 import {
   TrustedServiceProfile,
   resolveTrustedServiceProfile,
   type TrustedServiceProfileInputs,
 } from '../trusted-service-profile'
 
-const DISTRIBUTION_ORIGIN = DISTRIBUTION_CLOUD_SYNC_ORIGINS[0]!
+const DISTRIBUTION_ORIGIN = DISTRIBUTION_COORDINATION_ORIGIN
 
 describe('TrustedServiceProfile (TEST-trusted-service-profile)', () => {
   describe('effective trusted-origin set', () => {
@@ -39,7 +43,7 @@ describe('TrustedServiceProfile (TEST-trusted-service-profile)', () => {
         operatorOrigins: ['https://self-hosted.example.com'],
       })
       expect(profile.origins).toEqual([
-        DISTRIBUTION_ORIGIN,
+        ...DISTRIBUTION_CLOUD_SYNC_ORIGINS,
         'https://self-hosted.example.com',
       ])
       expect(profile.isTrusted('https://self-hosted.example.com')).toBe(true)
@@ -49,7 +53,7 @@ describe('TrustedServiceProfile (TEST-trusted-service-profile)', () => {
       const profile = resolveTrustedServiceProfile({
         operatorOrigins: [DISTRIBUTION_ORIGIN],
       })
-      expect(profile.origins).toEqual([DISTRIBUTION_ORIGIN])
+      expect(profile.origins).toEqual([...DISTRIBUTION_CLOUD_SYNC_ORIGINS])
     })
 
     it('rejects operator origins that are not exact HTTPS (no path, http, wildcard)', () => {
@@ -62,7 +66,7 @@ describe('TrustedServiceProfile (TEST-trusted-service-profile)', () => {
         ],
       })
       // None of the malformed operator origins are trusted; only distribution.
-      expect(profile.origins).toEqual([DISTRIBUTION_ORIGIN])
+      expect(profile.origins).toEqual([...DISTRIBUTION_CLOUD_SYNC_ORIGINS])
       expect(profile.isTrusted('http://insecure.example.com')).toBe(false)
     })
 
@@ -83,9 +87,16 @@ describe('TrustedServiceProfile (TEST-trusted-service-profile)', () => {
 
     it('the privileged provisioning endpoint comes only from the trusted profile', () => {
       const profile = resolveTrustedServiceProfile({ operatorOrigins: [] })
-      // The provisioning origin is the trusted distribution origin, not a
-      // repository-supplied value.
-      expect(profile.provisioningOrigin).toBe(DISTRIBUTION_ORIGIN)
+      // The provisioning origin is the distribution ADMIN endpoint (operator
+      // audience), not a repository-supplied value. It is distinct from the
+      // coordination origin so enable requests an operator-audience token.
+      expect(profile.provisioningOrigin).toBe(DISTRIBUTION_PROVISIONING_ORIGIN)
+      expect(profile.provisioningOrigin).not.toBe(profile.coordinationOriginDefault)
+    })
+
+    it('the coordination default is the distribution coordination endpoint', () => {
+      const profile = resolveTrustedServiceProfile({ operatorOrigins: [] })
+      expect(profile.coordinationOriginDefault).toBe(DISTRIBUTION_COORDINATION_ORIGIN)
     })
 
     it('a repository-supplied alternative provisioning origin is never selected', () => {
