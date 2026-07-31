@@ -70,7 +70,7 @@ describe('MarkdownViewer', () => {
     expect(viewer).toHaveClass('document-viewer')
     expect(container.querySelector('.relative-timestamp__floating')).toBeInTheDocument()
     expect(screen.getByRole('button')).toHaveClass('relative-timestamp', 'relative-timestamp--interactive')
-    expect(screen.getByRole('button')).toHaveTextContent('Updated 1 hour ago')
+    expect(screen.getByRole('button')).toHaveTextContent('1 hour ago')
   })
 
   it('renders markdown with the document prose variant', async () => {

@@ -6,7 +6,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { useDrag } from 'react-dnd'
 import { getVisibleColumns } from '../../config'
 import { isProjectedStub } from '../../types'
-import { getColumnGradient } from '../../utils/colorUtils'
 import { sortTickets } from '../../utils/sorting'
 import { MobileChipStrip } from '../BoardFilterBar/MobileChipStrip'
 import { CloudProjectionStub } from '../CloudProjectionStub'
@@ -54,6 +53,10 @@ interface ColumnProps {
   mobileFilters?: TicketFilters
   /** MDT-196: remove a filter value from a mobile chip. */
   onRemoveMobileFilter?: (facet: import('../../utils/ticketFilters').FacetKey, value: string) => void
+  /** v3 Pr.4: collapse this column to a 44px rail. */
+  collapsed?: boolean
+  /** v3 Pr.4: toggle collapse (click the rail to expand, the header chevron to collapse). */
+  onToggleCollapse?: () => void
 }
 
 interface DraggableTicketCardProps {
@@ -113,7 +116,7 @@ const Column: React.FC<ColumnProps> = ({
   onTicketEdit,
   sortAttribute = 'code',
   sortDirection = 'desc',
-  isFirstColumn = false,
+  isFirstColumn: _isFirstColumn = false,
   getTicketPosition,
   clearTicketPosition,
   status,
@@ -125,6 +128,8 @@ const Column: React.FC<ColumnProps> = ({
   mobileFilters,
   onRemoveMobileFilter,
   onOpenProjection,
+  collapsed = false,
+  onToggleCollapse,
 }) => {
   const [resolutionDialog, setResolutionDialog] = useState<{
     isOpen: boolean
@@ -239,126 +244,154 @@ const Column: React.FC<ColumnProps> = ({
     <div
       ref={drop}
       data-testid={status ? `column-${status}` : undefined}
-      className={`column ${
-        isOver ? 'column--over' : ''
-      }`}
+      className={`column ${isOver ? 'column--over' : ''} ${collapsed ? 'column--is-collapsed' : ''}`}
     >
-      {/* Column Header */}
-      <div className={`column__header bg-gradient-to-br ${getColumnGradient(column.color)}`}>
-        <div className="flex items-center justify-between">
-          {/* Mobile: Column dropdown menu */}
-          {isMobileView && allColumns && onColumnSwitch
-            ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      data-testid="mobile-column-switcher-trigger"
-                      className="font-semibold text-foreground text-left flex items-center gap-1 hover:bg-black/5 dark:hover:bg-white/5 px-2 py-1 rounded transition-colors border border-transparent hover:border-black/10 dark:hover:border-white/10"
-                    >
+      {/* eslint-disable-next-line style/multiline-ternary -- deeply nested JSX ternary; reformatting is noise */}
+      {collapsed && onToggleCollapse ? (
+        <button
+          type="button"
+          className="column__collapsed"
+          onClick={onToggleCollapse}
+          aria-label={`Expand column ${column.label}`}
+          title={`Expand ${column.label}`}
+        >
+          <span className="collapsed-strip" data-column-color={column.color} aria-hidden="true" />
+          <span className="column__count">{visibleTickets.length}</span>
+        </button>
+      ) : (
+        <>
+          {/* Column Header */}
+          <div className="column__header" data-column-color={column.color}>
+            <div className="flex items-center justify-between">
+              {/* Mobile: Column dropdown menu */}
+              {isMobileView && allColumns && onColumnSwitch
+                ? (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          data-testid="mobile-column-switcher-trigger"
+                          className="font-semibold text-foreground text-left flex items-center gap-1 hover:bg-black/5 dark:hover:bg-white/5 px-2 py-1 rounded transition-colors border border-transparent hover:border-black/10 dark:hover:border-white/10"
+                        >
+                          <h3 className="font-semibold text-foreground">{column.label}</h3>
+                          <svg className="h-4 w-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                          <span className="column__count ml-1">{visibleTickets.length}</span>
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-48">
+                        {allColumns.map((col, idx) => (
+                          <DropdownMenuItem
+                            key={col.label}
+                            data-testid={`mobile-column-option-${col.label.toLowerCase().replace(/\s+/g, '-')}`}
+                            onClick={() => onColumnSwitch(idx)}
+                            className={idx === currentColumnIndex ? 'bg-accent' : ''}
+                          >
+                            <div className="flex items-center justify-between w-full">
+                              <span>{col.label}</span>
+                              <span className="text-xs text-muted-foreground ml-2">
+                                {allTickets.filter(t => col.statuses.includes(t.status as Status)).length}
+                              </span>
+                            </div>
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )
+                : (
+                    <div className="column__title">
                       <h3 className="font-semibold text-foreground">{column.label}</h3>
-                      <svg className="h-4 w-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-48">
-                    {allColumns.map((col, idx) => (
-                      <DropdownMenuItem
-                        key={col.label}
-                        data-testid={`mobile-column-option-${col.label.toLowerCase().replace(/\s+/g, '-')}`}
-                        onClick={() => onColumnSwitch(idx)}
-                        className={idx === currentColumnIndex ? 'bg-accent' : ''}
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <span>{col.label}</span>
-                          <span className="text-xs text-muted-foreground ml-2">
-                            {allTickets.filter(t => col.statuses.includes(t.status as Status)).length}
-                          </span>
-                        </div>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )
-            : (
-                <h3 className="font-semibold text-foreground">{column.label}</h3>
-              )}
-          <div className="flex items-center gap-2">
-            {/* Status Toggle */}
-            {toggleStatus && (
-              <StatusToggle
-                status={toggleStatus}
-                isActive={viewMode}
-                ticketCount={toggleTicketCount}
-                onToggle={toggleViewMode}
-                onDrop={handleToggleDrop}
-                allTickets={allTickets}
-                getTicketPosition={getTicketPosition}
-                clearTicketPosition={clearTicketPosition}
-                mergeMode={mergeMode}
-                setMergeMode={setMergeMode}
-                canWrite={canWrite}
-              />
-            )}
-            <span className="column__count">
-              {visibleTickets.length}
-            </span>
-          </div>
-        </div>
-        {/* MDT-196: mobile chip strip under the column header when filters active */}
-        {isMobileView && mobileFilters && onRemoveMobileFilter && (
-          <MobileChipStrip filters={mobileFilters} onRemove={onRemoveMobileFilter} />
-        )}
-      </div>
-
-      {/* Column Content */}
-      <ScrollArea
-        type="hover"
-        scrollHideDelay={600}
-        className={`flex-1 min-h-0 border-r border-border ${isFirstColumn ? 'border-l border-border' : ''}`}
-      >
-        {/* @testid drop-zone — Column drop area for drag-and-drop */}
-        <div data-testid="drop-zone" className="column-drop-zone">
-          {visibleTickets.map((ticket) => {
-            // MDT-200 U5: projected stubs are read-only and non-draggable.
-            // They render as a CloudProjectionStub (no drag handle, no edit).
-            if (isProjectedStub(ticket)) {
-              return (
-                <CloudProjectionStub
-                  key={ticket.code}
-                  ticket={ticket}
-                  onOpen={onOpenProjection}
-                />
-              )
-            }
-            return (
-              <DraggableTicketCard
-                key={ticket.code}
-                ticket={ticket}
-                onMove={() => {}} // Not needed since drop is handled by column
-                onEdit={() => onTicketEdit(ticket)}
-                canWrite={canWrite}
-              />
-            )
-          })}
-
-          {visibleTickets.length === 0 && (
-            <div className="flex items-center justify-center h-32 text-gray-400">
-              <p className="text-sm">No tickets</p>
+                      <span className="column__count">{visibleTickets.length}</span>
+                    </div>
+                  )}
+              <div className="flex items-center gap-2">
+                {/* Status Toggle */}
+                {toggleStatus && (
+                  <StatusToggle
+                    status={toggleStatus}
+                    isActive={viewMode}
+                    ticketCount={toggleTicketCount}
+                    onToggle={toggleViewMode}
+                    onDrop={handleToggleDrop}
+                    allTickets={allTickets}
+                    getTicketPosition={getTicketPosition}
+                    clearTicketPosition={clearTicketPosition}
+                    mergeMode={mergeMode}
+                    setMergeMode={setMergeMode}
+                    canWrite={canWrite}
+                  />
+                )}
+                {!isMobileView && onToggleCollapse && (
+                  <button
+                    type="button"
+                    className="col-collapse-btn"
+                    onClick={onToggleCollapse}
+                    aria-label={`Collapse column ${column.label}`}
+                    title="Collapse column"
+                  >
+                    <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                )}
+              </div>
             </div>
-          )}
-        </div>
-      </ScrollArea>
+            {/* MDT-196: mobile chip strip under the column header when filters active */}
+            {isMobileView && mobileFilters && onRemoveMobileFilter && (
+              <MobileChipStrip filters={mobileFilters} onRemove={onRemoveMobileFilter} />
+            )}
+          </div>
 
-      {resolutionDialog.ticket && (
-        <ResolutionDialog
-          isOpen={resolutionDialog.isOpen}
-          ticketCode={resolutionDialog.ticket.code}
-          ticketTitle={resolutionDialog.ticket.title}
-          availableStatuses={column.statuses}
-          onResolve={handleResolutionChoice}
-          onCancel={handleResolutionCancel}
-        />
+          {/* Column Content */}
+          <ScrollArea
+            type="hover"
+            scrollHideDelay={600}
+            className="flex-1 min-h-0"
+          >
+            {/* @testid drop-zone — Column drop area for drag-and-drop */}
+            <div data-testid="drop-zone" className="column-drop-zone">
+              {visibleTickets.map((ticket) => {
+                // MDT-200 U5: projected stubs are read-only and non-draggable.
+                // They render as a CloudProjectionStub (no drag handle, no edit).
+                if (isProjectedStub(ticket)) {
+                  return (
+                    <CloudProjectionStub
+                      key={ticket.code}
+                      ticket={ticket}
+                      onOpen={onOpenProjection}
+                    />
+                  )
+                }
+                return (
+                  <DraggableTicketCard
+                    key={ticket.code}
+                    ticket={ticket}
+                    onMove={() => {}} // Not needed since drop is handled by column
+                    onEdit={() => onTicketEdit(ticket)}
+                    canWrite={canWrite}
+                  />
+                )
+              })}
+
+              {visibleTickets.length === 0 && (
+                <div className="flex items-center justify-center h-32 text-gray-400">
+                  <p className="text-sm">No tickets</p>
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+
+          {resolutionDialog.ticket && (
+            <ResolutionDialog
+              isOpen={resolutionDialog.isOpen}
+              ticketCode={resolutionDialog.ticket.code}
+              ticketTitle={resolutionDialog.ticket.title}
+              availableStatuses={column.statuses}
+              onResolve={handleResolutionChoice}
+              onCancel={handleResolutionCancel}
+            />
+          )}
+        </>
       )}
     </div>
   )

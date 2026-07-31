@@ -67,6 +67,22 @@ describe('TicketAttributeTags badge visibility', () => {
     expect(visibleBadgeText).toEqual(['Implemented', 'Feature Enhancement', 'worktree'])
   })
 
+  it('renders priority as a v3 badge (glyph + label) when PRIORITY is visible', () => {
+    setVisibleTicketCardBadges([
+      TicketCardBadge.STATUS,
+      TicketCardBadge.PRIORITY,
+    ])
+
+    const { container } = renderWithRouter(<TicketAttributeTags ticket={ticket} />)
+
+    // Status text still renders as a badge.
+    expect(screen.getByText('Implemented')).toBeInTheDocument()
+    // Priority renders as a v3 badge carrying data-priority + the priority label.
+    const badge = container.querySelector('.badge[data-priority="high"]')
+    expect(badge).not.toBeNull()
+    expect(badge?.textContent).toContain('High')
+  })
+
   it('does not apply board badge visibility to ticket attributes outside board cards', () => {
     setVisibleTicketCardBadges([
       TicketCardBadge.STATUS,

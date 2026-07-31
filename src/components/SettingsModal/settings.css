@@ -3,11 +3,14 @@
 @layer components {
   /* Tabs — shared Radix Tabs pattern */
   .tab__list {
-    @apply flex px-4 py-0 border-b border-gray-200 dark:border-gray-700;
+    @apply flex px-4 py-0;
+    background-color: var(--bg-subtle);
+    border-bottom: 1px solid hsl(var(--border));
   }
 
   .tab {
-    @apply px-2 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap;
+    @apply px-2 py-1.5 text-sm font-medium transition-colors hover:text-foreground whitespace-nowrap;
+    color: var(--text-muted);
   }
 
   .tab[data-state='active'] {
@@ -19,7 +22,7 @@
   }
 
   .settings-tab-list {
-    @apply bg-background;
+    background-color: var(--bg-subtle);
   }
 
   .tab__content {
@@ -28,7 +31,8 @@
 
   /* Legacy aliases — remove after migration */
   .settings-tab-trigger {
-    @apply flex-1 px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap;
+    @apply flex-1 px-4 py-3 text-sm font-medium transition-colors hover:text-foreground whitespace-nowrap;
+    color: var(--text-muted);
   }
   .settings-tab-trigger[data-state='active'] {
     @apply border-b-2 border-primary text-foreground;
@@ -66,25 +70,32 @@
 }
 
 .settings-label-sm {
-  @apply text-sm text-muted-foreground;
+  @apply text-sm;
+  color: var(--text-muted);
 }
 
 .settings-info-trigger {
-  @apply inline-flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground transition-colors;
+  @apply inline-flex h-6 w-6 items-center justify-center rounded-full transition-colors;
+  color: var(--text-muted);
   @apply hover:bg-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring;
 }
 
 .settings-desc {
-  @apply text-sm text-muted-foreground mt-0.5;
+  @apply text-sm mt-0.5;
+  color: var(--text-muted);
 }
 
 .settings-select {
-  @apply w-full max-w-xs border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground;
+  @apply w-full max-w-xs border rounded-md px-3 py-2 text-sm text-foreground;
+  border-color: hsl(var(--border));
+  background-color: var(--bg-muted);
   @apply focus:outline-none focus:ring-2 focus:ring-ring;
 }
 
 .settings-input {
-  @apply w-full max-w-md border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground;
+  @apply w-full max-w-md border rounded-md px-3 py-2 text-sm text-foreground;
+  border-color: hsl(var(--border));
+  background-color: var(--bg-muted);
   @apply focus:outline-none focus:ring-2 focus:ring-ring;
 }
 
@@ -95,11 +106,15 @@
   @apply bg-primary text-primary-foreground border-primary;
 }
 .settings-theme-btn--inactive {
-  @apply bg-background text-foreground border-border hover:bg-muted;
+  @apply text-foreground hover:bg-muted;
+  background-color: var(--bg-elevated);
+  border-color: hsl(var(--border));
 }
 
 .settings-action-btn {
-  @apply flex items-center gap-2 px-3 py-1.5 text-sm font-medium border border-border rounded-md bg-background text-foreground hover:bg-muted hover:text-destructive transition-colors;
+  @apply flex items-center gap-2 px-3 py-1.5 text-sm font-medium border rounded-md text-foreground hover:bg-muted hover:text-destructive transition-colors;
+  border-color: hsl(var(--border));
+  background-color: var(--bg-elevated);
 }
 
 .settings-checkbox-list {
@@ -111,7 +126,9 @@
 }
 
 .settings-checkbox {
-  @apply h-4 w-4 rounded border-border text-primary focus:ring-ring;
+  @apply h-4 w-4 rounded text-primary focus:ring-ring;
+  border-color: hsl(var(--border));
+  background-color: var(--bg-muted);
 }
 
 /* Project Accents */
@@ -136,7 +153,8 @@
 }
 
 .project-accents__swatch {
-  @apply h-5 w-5 rounded-full border border-border flex-shrink-0;
+  @apply h-5 w-5 rounded-full border flex-shrink-0;
+  border-color: hsl(var(--border));
 }
 
 .project-accents__field {
@@ -144,7 +162,9 @@
 }
 
 .project-accents__input {
-  @apply w-[7.5rem] px-2 py-1.5 text-sm font-mono border border-border rounded-md bg-background text-foreground;
+  @apply w-[7.5rem] px-2 py-1.5 text-sm font-mono border rounded-md text-foreground;
+  border-color: hsl(var(--border));
+  background-color: var(--bg-muted);
   @apply focus:outline-none focus:ring-2 focus:ring-ring;
 }
 
@@ -153,7 +173,10 @@
 }
 
 .project-accents__icon-btn {
-  @apply inline-flex items-center justify-center h-7 w-7 rounded-md border border-border bg-background text-muted-foreground flex-shrink-0 transition-colors;
+  @apply inline-flex items-center justify-center h-7 w-7 rounded-md border flex-shrink-0 transition-colors;
+  border-color: hsl(var(--border));
+  background-color: var(--bg-elevated);
+  color: var(--text-muted);
 }
 
 .project-accents__icon-btn:hover {
@@ -181,7 +204,9 @@
 }
 
 .project-accents__color-slider {
-  @apply h-7 w-7 cursor-pointer rounded-md border border-border bg-background p-0.5;
+  @apply h-7 w-7 cursor-pointer rounded-md border p-0.5;
+  border-color: hsl(var(--border));
+  background-color: var(--bg-muted);
   @apply appearance-none [-webkit-appearance:none];
 }
 
@@ -200,5 +225,6 @@
 }
 
 .project-accents__palette {
-  @apply flex flex-col gap-2.5 mt-1.5 pt-2.5 border-t border-gray-200 dark:border-gray-700;
+  @apply flex flex-col gap-2.5 mt-1.5 pt-2.5 border-t;
+  border-color: hsl(var(--border));
 }

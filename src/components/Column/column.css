@@ -7,15 +7,16 @@
  *   .column             — column wrapper (drop target states)
  *   .column__header     — column header gradient bar
  *   .column__count      — ticket count badge in header
+ *   .column--is-collapsed / .column__collapsed — collapsed 44px rail (v3 Pr.4)
+ *   .col-collapse-btn   — header chevron to collapse a column
  *   .column-drop-zone   — inner scrollable ticket list
- *   .draggable-ticket   — drag wrapper with drag/hover states
  */
 
 @layer components {
-  /* Board grid — responsive 1→2→3→4 columns */
+  /* Board layout — design3: flex row, fixed-width columns, horizontal scroll.
+     Collapsed columns (44px) let siblings shift left to reclaim space. */
   .board-container {
-    @apply grid w-full items-stretch p-1 overflow-hidden;
-    @apply grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
+    @apply flex w-full h-full items-stretch gap-3 p-2 overflow-x-auto overflow-y-hidden;
   }
 
   .board-container--loading {
@@ -27,28 +28,64 @@
   .column {
     @apply flex flex-col h-full min-h-0 relative;
     @apply transition-all duration-200 ease-out;
+    width: 300px;
+    flex-shrink: 0;
+    background: var(--bg-subtle);
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius-card);
+    overflow: hidden;
   }
 
-  /* Column drop-target highlight */
+  /* Column drop-target highlight — v3: primary-light tint + primary ring (no shadow) */
   .column--over {
-    @apply bg-blue-50/50 dark:bg-blue-950/30 ring-2 ring-blue-400/30;
+    background: var(--primary-light);
+    @apply ring-2 ring-primary/40;
   }
 
-  /* Column header — gradient bar */
+  /* Column header — border only, no shadow (v3 Doc 1 Pr.1) */
   .column__header {
-    @apply px-3 py-2 rounded-t-lg shadow-md z-10;
-    @apply border border-black/5 dark:border-white/10;
+    @apply px-3 py-2 z-10 flex-shrink-0;
+    border-bottom: 1px solid hsl(var(--border));
   }
+  .column__header h3 {
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: var(--fs-md);
+    font-weight: 600;
+  }
+  /* v3 Doc 2: column header flat status tint, driven by data-column-color.
+     Maps the BOARD column color-name to a v3 status token pair. */
+  .column__header[data-column-color="gray"]   { background: var(--status-backlog-bg);  border-top: 2px solid var(--status-backlog); }
+  .column__header[data-column-color="blue"]   { background: var(--status-open-bg);      border-top: 2px solid var(--status-open); }
+  .column__header[data-column-color="yellow"] { background: var(--status-progress-bg);  border-top: 2px solid var(--status-progress); }
+  .column__header[data-column-color="green"]  { background: var(--status-done-bg);      border-top: 2px solid var(--status-done); }
+  .column__header[data-column-color="orange"] { background: var(--status-deferred-bg);  border-top: 2px solid var(--status-deferred); }
+  .column__header[data-column-color="red"]    { background: var(--status-rejected-bg);  border-top: 2px solid var(--status-rejected); }
+  .column__header[data-column-color="teal"]   { background: var(--status-done-bg);      border-top: 2px solid var(--status-done); }
+  .column__header[data-column-color="indigo"] { background: var(--status-open-bg);      border-top: 2px solid var(--status-open); }
+  .column__header[data-column-color="purple"] { background: var(--status-hold-bg);      border-top: 2px solid var(--status-hold); }
+  .column__header[data-column-color="pink"]   { background: var(--status-open-bg);      border-top: 2px solid var(--status-open); }
 
   /* Ticket count badge in column header */
   .column__count {
-    @apply bg-primary/20 text-primary text-xs px-2 py-1 rounded-full;
-    @apply font-mono min-w-[2rem] text-center tabular-nums;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--fs-xs);
+    color: var(--text-subtle);
+    font-variant-numeric: tabular-nums;
+  }
+  /* Title cluster: status name + ticket count (design3 .col-title). */
+  .column__title {
+    display: flex;
+    align-items: center;
+    gap: 4px;
   }
 
   /* Inner drop zone / ticket list */
   .column-drop-zone {
     @apply px-3 py-2 space-y-2;
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
   }
 
   /* Draggable ticket wrapper */
@@ -56,11 +93,75 @@
     @apply transition-all duration-300 ease-out;
   }
 
+  /* Dragging source — v3: opacity only, no scale/rotate/shadow */
   .draggable-ticket--dragging {
-    @apply opacity-40 scale-95 rotate-2 shadow-2xl;
+    opacity: 0.35;
   }
 
+  /* Draggable affordance — cursor only; no hover transform (v3: border signals hover) */
   .draggable-ticket--draggable {
-    @apply hover:scale-[1.02] hover:-translate-y-1;
+    @apply cursor-grab active:cursor-grabbing;
+  }
+  /* ── Column collapse (v3 Pr.4) ──
+     Collapsed column renders a 44px rail inside its grid track. Sibling
+     tracks are not reclaimed (board stays a CSS grid). Click the rail to
+     re-expand; the header chevron collapses. */
+  .column--is-collapsed {
+    width: 44px;
+    max-width: 44px;
+    justify-self: start;
+    background: transparent;
+    border: 0;
+  }
+
+  .column__collapsed {
+    @apply flex flex-col items-center justify-start gap-2 cursor-pointer h-full w-full;
+    padding: 8px 4px;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-card);
+    transition: background-color 0.15s ease-out;
+  }
+  .column__collapsed:hover {
+    background: var(--bg-muted);
+  }
+
+  .collapsed-strip {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: var(--status-backlog);
+  }
+  .collapsed-strip[data-column-color="gray"]   { background: var(--status-backlog); }
+  .collapsed-strip[data-column-color="blue"]   { background: var(--status-open); }
+  .collapsed-strip[data-column-color="yellow"] { background: var(--status-progress); }
+  .collapsed-strip[data-column-color="green"]  { background: var(--status-done); }
+  .collapsed-strip[data-column-color="orange"] { background: var(--status-deferred); }
+  .collapsed-strip[data-column-color="red"]    { background: var(--status-rejected); }
+  .collapsed-strip[data-column-color="teal"]   { background: var(--status-done); }
+  .collapsed-strip[data-column-color="indigo"] { background: var(--status-open); }
+  .collapsed-strip[data-column-color="purple"] { background: var(--status-hold); }
+  .collapsed-strip[data-column-color="pink"]   { background: var(--status-open); }
+
+  /* Header collapse chevron */
+  .col-collapse-btn {
+    @apply p-1 rounded transition-colors;
+    color: var(--text-subtle);
+  }
+  .col-collapse-btn:hover {
+    background: var(--bg-muted);
+    color: hsl(var(--foreground));
+  }
+  /* Mobile: a single visible column fills the track width. */
+  @media (max-width: 767px) {
+    .column {
+      width: 100%;
+      flex-shrink: 1;
+    }
+    .column--is-collapsed {
+      width: 44px;
+      flex-shrink: 0;
+    }
   }
 }

@@ -1,0 +1,69 @@
+/**
+ * Board Filter Bar Styles
+ *
+ * v3 restyle of the header "Filter" trigger, its floating facet popover, and the
+ * active-filter chips. Layout/spacing stays in TSX per STYLING.md; this file owns
+ * only surface, border, and token-driven color — border-led depth, no shadows
+ * except on the floating popover (v3 Doc 1 Pr.1).
+ *
+ * Classes:
+ *   .filter-button          — header trigger (surface, hover, open ring, focus)
+ *   .filter-button--open    — active/open border + 1px primary ring
+ *   .filter-popover         — floating facet popover (elevated surface + shadow)
+ *   .filter-chip            — active-filter chip (flat recessed pill)
+ *   .filter-chip__remove    — chip remove (✕) hit target (hover bg)
+ *   .filter-clear-all       — "Clear all" link (muted → foreground on hover)
+ *
+ * Neutral surface tokens migrate to v3 (var(--bg-*), var(--text-muted));
+ * accent colors (primary / ring) stay on the HSL set via hsl(var(...)).
+ */
+
+@layer components {
+  /* Trigger button — border-led flat control on the header surface. */
+  .filter-button {
+    @apply inline-flex items-center gap-1.5 border rounded-md px-3 py-1.5 text-sm transition-colors;
+    background-color: var(--bg-elevated);
+    border-color: hsl(var(--border));
+  }
+  /* Hover = bg change only (v3 Pr.5: no lift, no gradient). */
+  .filter-button:hover {
+    background-color: var(--bg-muted);
+  }
+  .filter-button--open {
+    border-color: hsl(var(--primary));
+  }
+  /* Open + unfocused: 1px primary ring (replicates ring-1 ring-primary). */
+  .filter-button--open:not(:focus) {
+    box-shadow: 0 0 0 1px hsl(var(--primary));
+  }
+  /* Focus owns the ring (replicates focus:ring-2 focus:ring-ring, mouse + keyboard). */
+  .filter-button:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px hsl(var(--ring));
+  }
+
+  /* Floating popover — elevated surface, 1px border; shadow kept (v3 allows
+     shadows only on truly floating layers like popovers/dropdowns). */
+  .filter-popover {
+    background-color: var(--bg-elevated);
+    border-color: hsl(var(--border));
+  }
+
+  /* Active-filter chip — flat recessed pill on var(--bg-subtle), no shadow. */
+  .filter-chip {
+    background-color: var(--bg-subtle);
+    border: 1px solid hsl(var(--border));
+    color: var(--text-muted);
+  }
+  .filter-chip__remove:hover {
+    background-color: var(--bg-muted);
+  }
+
+  /* "Clear all" link — muted text, foreground on hover. */
+  .filter-clear-all {
+    color: var(--text-muted);
+  }
+  .filter-clear-all:hover {
+    color: hsl(var(--foreground));
+  }
+}

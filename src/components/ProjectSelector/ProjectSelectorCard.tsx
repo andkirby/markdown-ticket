@@ -187,15 +187,15 @@ const ProjectSelectorCard: React.FC<ProjectSelectorCardProps> = ({
         <HoverCardContent className="w-80 p-0">
           <div className="p-4 space-y-2">
             <div className="flex items-center gap-2">
-              <div className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
+              <div className="text-xs sm:text-sm font-medium project-hovercard__code">
                 {project.project.code || project.id}
               </div>
-              <div className="text-[10px] sm:text-xs font-bold text-gray-700 dark:text-gray-300 leading-tight">
+              <div className="text-[10px] sm:text-xs font-bold project-hovercard__name leading-tight">
                 {project.project.name}
               </div>
             </div>
             {project.project.description && (
-              <div className="text-xs text-gray-500 dark:text-gray-400 leading-tight mt-0.5 whitespace-pre-wrap">
+              <div className="text-xs project-hovercard__desc leading-tight mt-0.5 whitespace-pre-wrap">
                 {project.project.description}
               </div>
             )}

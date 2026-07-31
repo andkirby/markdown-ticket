@@ -13,6 +13,7 @@ export type { ContextBadgeProps } from './ContextBadge'
 
 export { PriorityBadge } from './PriorityBadge'
 export type { PriorityBadgeProps } from './PriorityBadge'
+export { PriorityIcon } from './PriorityIcon'
 
 export { RelationshipBadge } from './RelationshipBadge'
 export type { RelationshipBadgeProps } from './RelationshipBadge'

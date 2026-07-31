@@ -34,7 +34,7 @@ priority: Medium
 | Cmd+K scope-tab strip given bg-subtle band (parity with ticket-view tabs) | Done | design3.html |
 | Priority icon is a flex child of .card-code (matches app TicketCard .ticket-card__code + .priority-icon); scales with key font (--fs-xs); 4px gap, no overlap | Done | design3.html card-top, 05-components.css |
 | Border-led depth, background tiers, mono ticket codes | Established | inherent Design3 grammar |
-| Token bridge to app: v3 tokens already present in app | Partial | src/styles/design-tokens.css |
+| Token bridge to app: tuned dark-theme ramp propagated to src/styles/design-tokens.css .dark (--bg-subtle #1a1f2b / --bg-muted #232b3a / --bg-elevated #2c3848, matching the prototype) | Done | src/styles/design-tokens.css |
 | Density matrix: 3x3 (size x space) shipped in prototype | Open | strategy calls for one axis only |
 
 ### Border and Accent Refinement
@@ -45,6 +45,15 @@ priority: Medium
 - Rule (binding): accent color must map to data (priority or epic); never decorative
 - Deferred: selected-card indigo accent — no board selection state exists yet
 - Drift cleanup (Done): removed the floating col-header underline; collapsed-column border -> transparent to match expanded columns; avatar ring recolored to --bg-elevated to match the card surface; :active now preserves the accent stripe
+
+### Real-App Port (src/)
+
+- Status: implemented and verified — TypeScript passes all 6 packages; full frontend suite 826 pass / 0 fail across 84 files. 53 files changed, +923 / -597.
+- Priority icon before key (stable scan): `<PriorityIcon>` (lucide glyph, currentColor via data-priority) placed immediately before the ticket key on all four surfaces — board card (TicketCard.tsx), cloud-projected stub (CloudProjectionStub.tsx), list view desktop + mobile (ProjectView.tsx), ticket viewer header (CompactTicketHeader.tsx). Codified in STYLING.md "Stable Scanning Patterns".
+- Icon architecture: .ticket-card__code is inline-flex; .priority-icon is a flex child sized --sz-icon, colored by data-priority -> prio token. Same position on every surface (the pattern the prototype was aligned to).
+- PriorityBadge.tsx: added PRIORITY_ICON glyph map (critical=Flame, high=ChevronUp, medium=Equal, low=ChevronDown); new PriorityIcon.tsx component exported from Badge/index.
+- Card treatment (intentional divergence): src/ keeps border-led (.ticket-card 1px border + hover border-strong) with the icon before the key and NO accent stripe. The prototype's tier-led + restricted-stripe approach is prototype-only; production chose border-led + icon.
+- Also touched: Badge/badge.css, Board.tsx, Column/column.css + index, QuickSearch, Header, SettingsModal, ProjectSelector, DocumentsView, RelativeTimestamp, config (settingsPreferences, ticketCardBadges), ui/Modal, colorUtils removed.
 
 ### Functionality and Interactions
 

@@ -17,8 +17,10 @@
  * Coverage: BR-8
  */
 
+import type { LucideIcon } from 'lucide-react'
 import type { ElidedLink } from './relationshipLink'
 import type { RelationshipVariant } from './types'
+import { CornerDownRight, CornerLeftUp, Link as LinkIcon } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import {
@@ -54,10 +56,10 @@ export const INLINE_MAX = 3
 /**
  * Icon mapping for relationship types
  */
-const RELATIONSHIP_ICONS: Record<RelationshipVariant, string> = {
-  related: '🔗',
-  depends: '⬅️',
-  blocks: '➡️',
+const RELATIONSHIP_ICONS: Record<RelationshipVariant, LucideIcon> = {
+  related: LinkIcon,
+  depends: CornerDownRight,
+  blocks: CornerLeftUp,
 }
 
 /**
@@ -76,7 +78,7 @@ export function RelationshipBadge({
 }: RelationshipBadgeProps) {
   const { projectCode } = useParams<{ projectCode: string }>()
   const currentProject = projectCode || ''
-  const icon = RELATIONSHIP_ICONS[variant]
+  const Icon = RELATIONSHIP_ICONS[variant]
   const [overflowOpen, setOverflowOpen] = useState(false)
 
   // Elide when configured globally, or when this surface explicitly opts in.
@@ -110,7 +112,7 @@ export function RelationshipBadge({
       data-relationship={variant}
       title={badgeTitle}
     >
-      <span className="mr-1">{icon}</span>
+      <Icon className="mr-1 h-3 w-3 flex-shrink-0" aria-hidden="true" />
       {inlineItems.map((item, index) => (
         <span
           key={item.fullKey}
@@ -140,7 +142,7 @@ export function RelationshipBadge({
               type="button"
               className={cn(
                 'relationship-badge__overflow',
-                'ml-1 inline-flex items-center rounded-full px-1.5 py-0.5',
+                'ml-1 inline-flex items-center rounded px-1 leading-none',
                 'text-xs font-medium opacity-80 hover:opacity-100 hover:underline',
                 'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary',
               )}

@@ -13,6 +13,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import { getColumnForStatus, getVisibleColumns } from '../config'
+import { COLLAPSED_COLUMNS_CHANGE_EVENT, getCollapsedColumns, setCollapsedColumns } from '../config/settingsPreferences'
 import { getSortPreferences, setSortPreferences } from '../config/sorting'
 import { useBoardLayout } from '../hooks/useBoardLayout'
 import { useCloudProjections } from '../hooks/useCloudProjections'
@@ -78,6 +79,20 @@ const BoardContent: React.FC<BoardProps> = ({
 
   // Use custom hook for board layout management (mobile column switching)
   const { isMobile, setActiveColumnIndex, shouldShowColumn } = useBoardLayout()
+  // Column collapse (v3 Pr.4) — persisted set of primary-status ids.
+  const [collapsedColumns, setCollapsedColumnsState] = useState<string[]>(() => getCollapsedColumns())
+  useEffect(() => {
+    const sync = (): void => setCollapsedColumnsState(getCollapsedColumns())
+    window.addEventListener(COLLAPSED_COLUMNS_CHANGE_EVENT, sync)
+    return () => window.removeEventListener(COLLAPSED_COLUMNS_CHANGE_EVENT, sync)
+  }, [])
+  const toggleColumnCollapse = useCallback((columnId: string) => {
+    setCollapsedColumnsState((prev) => {
+      const next = prev.includes(columnId) ? prev.filter(id => id !== columnId) : [...prev, columnId]
+      setCollapsedColumns(next)
+      return next
+    })
+  }, [])
 
   // Only use the hook when no selectedProject prop is provided (multi-project mode)
   const hookData = useProjectManager({
@@ -586,6 +601,8 @@ const BoardContent: React.FC<BoardProps> = ({
                 onRemoveMobileFilter={onRemoveMobileFilter}
                 // MDT-200 U5: open a projected stub read-only (no edit controls).
                 onOpenProjection={(stub: ProjectedStubTicket) => onTicketClick(stub as unknown as Ticket)}
+                collapsed={collapsedColumns.includes(primaryStatus)}
+                onToggleCollapse={() => toggleColumnCollapse(primaryStatus)}
               />
             )
           })}

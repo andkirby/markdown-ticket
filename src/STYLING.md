@@ -23,6 +23,24 @@ Use this file for structure and conventions. Use [THEME.md](THEME.md) for the av
 
 ---
 
+## Stable Scanning Patterns (UX)
+
+For attributes users scan every day, render a **positionally-stable marker** on
+every surface so muscle-memory works across views. The marker must not move or
+change shape between the board, the list, and the ticket viewer.
+
+- **Priority** is always the `<PriorityIcon>` colored glyph placed immediately
+  **before the ticket key** — on the board card, the cloud-projected stub, the
+  list row (desktop table + mobile card), and the ticket viewer header. Same
+  glyph, same `data-priority` color mapping, same `--sz-icon` size, same
+  position (left of the key). Users find priority in one place regardless of view.
+
+When adding any new surface that shows a ticket key, prefix the key with
+`<PriorityIcon priority={ticket.priority} className="priority-icon" />`. Do not
+relocate priority to a badge or a different column — that breaks the scan.
+
+---
+
 ## Decision Tree
 
 ### Keep Styles Inline
@@ -423,7 +441,7 @@ Existing global classes in `src/index.css` and shared entity CSS include:
 | `.tab`, `.tab__*`, `.tab--*` | Shared Radix Tabs pattern | `components/SettingsModal/settings.css` |
 | `.ticket-card`, `.ticket-card--invalid` | Ticket card surface + hover | `components/TicketCard/ticket.css` |
 | `.ticket-card__title` | Ticket title typography | `components/TicketCard/ticket.css` |
-| `.ticket-card__edit` | Hover-reveal edit button | `components/TicketCard/ticket.css` |
+| `.ticket-card--projected` | Cloud-projected stub (dashed border) | `components/TicketCard/ticket.css` |
 | `.board-container` | Kanban grid layout | `components/Column/column.css` |
 | `.column`, `.column--over` | Board column + drop target | `components/Column/column.css` |
 | `.column__header` | Column gradient header bar | `components/Column/column.css` |

@@ -9,9 +9,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { authFetch } from '../auth/authFetch'
 import { useCloudProjectionFeed } from '../hooks/useCloudProjectionFeed'
 import { sortTickets } from '../utils/sorting'
-import { StatusBadge } from './Badge'
+import { PriorityIcon } from './Badge/PriorityIcon'
 import Board from './Board'
 import { DocumentsLayout } from './DocumentsView'
+import TicketAttributeTags from './TicketAttributeTags'
 import { TicketCode } from './TicketCode'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table'
 
@@ -186,7 +187,7 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
                         <TableRow>
                           <TableHead className="w-28">Code</TableHead>
                           <TableHead>Title</TableHead>
-                          <TableHead className="w-32">Status</TableHead>
+                          <TableHead>Attributes</TableHead>
                           <TableHead className="w-32">Modified</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -199,13 +200,14 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
                             data-testid={`ticket-row-${ticket.code}`}
                           >
                             <TableCell className="font-mono">
+                              <PriorityIcon priority={ticket.priority} className="priority-icon mr-1" />
                               <TicketCode code={ticket.code} />
                             </TableCell>
                             <TableCell className="font-medium" data-testid="ticket-title">
                               {ticket.title}
                             </TableCell>
                             <TableCell>
-                              <StatusBadge status={ticket.status} />
+                              <TicketAttributeTags ticket={ticket} />
                             </TableCell>
                             <TableCell className="text-muted-foreground">
                               {ticket.lastModified ? new Date(ticket.lastModified).toLocaleDateString() : 'Unknown'}
@@ -222,14 +224,17 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
                       <div
                         key={ticket.code}
                         onClick={() => onTicketClick(ticket)}
-                        className="p-3 border border-border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                        className="ticket-card"
                         data-testid={`ticket-card-${ticket.code}`}
                       >
-                        <div className="flex items-center justify-between mb-1">
-                          <TicketCode code={ticket.code} />
-                          <StatusBadge status={ticket.status} />
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="ticket-card__code">
+                            <PriorityIcon priority={ticket.priority} className="priority-icon" />
+                            <TicketCode code={ticket.code} />
+                          </span>
                         </div>
-                        <p className="font-medium text-sm truncate" data-testid="ticket-title">{ticket.title}</p>
+                        <h4 className="ticket-card__title" data-testid="ticket-title">{ticket.title}</h4>
+                        <TicketAttributeTags ticket={ticket} />
                       </div>
                     ))}
                   </div>

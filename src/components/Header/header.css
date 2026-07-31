@@ -1,13 +1,9 @@
 @layer components {
   .header {
-    @apply sticky top-0 z-50 backdrop-blur-xl border-b shadow-sm;
-    background-color: rgb(255 255 255 / 0.9);
-    border-color: rgb(229 231 235 / 0.5);
-  }
-
-  .dark .header {
-    background-color: rgb(17 24 39 / 0.9);
-    border-color: rgb(55 65 81 / 0.5);
+    /* v3 Doc 1 Pr.1: border-led depth — header is FLAT (not a floating layer), no shadow. */
+    @apply sticky top-0 z-50 backdrop-blur-xl border-b;
+    background-color: var(--bg-elevated);
+    border-color: hsl(var(--border));
   }
 
   .header__container {

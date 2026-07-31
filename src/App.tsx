@@ -40,6 +40,7 @@ import { Toaster } from './components/ui/sonner'
 import { ViewModeSwitcher } from './components/ViewModeSwitcher'
 import { getSortPreferences, setSortPreferences } from './config/sorting'
 import { useBoardFilters } from './hooks/useBoardFilters'
+import { useCardDensity } from './hooks/useCardDensity'
 import { useGlobalKeyboard } from './hooks/useGlobalKeyboard'
 import {
   formatRootViewPageTitle,
@@ -888,6 +889,7 @@ function exchangeInviteCode(code: string): Promise<InviteExchangeResult> {
 }
 
 function App() {
+  useCardDensity()
   return (
     <AuthSessionProvider>
       <BrowserRouter>

@@ -64,8 +64,6 @@ export function RelativeTimestamp({ createdAt, updatedAt, className = '' }: Rela
             )}
             aria-label={hasAlternate ? `Toggle timestamp display. Currently showing ${activeLabel.toLowerCase()}.` : `${activeLabel} timestamp`}
           >
-            {activeLabel}
-            {' '}
             {formatRelativeTime(activeDate)}
           </button>
         </TooltipTrigger>

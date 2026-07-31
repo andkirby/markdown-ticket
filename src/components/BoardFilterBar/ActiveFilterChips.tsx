@@ -97,14 +97,14 @@ export const ActiveFilterChips: React.FC<ActiveFilterChipsProps> = ({
             data-testid="active-filter-chip"
             data-facet={facet}
             data-value={value}
-            className="badge bg-muted text-foreground border-border inline-flex"
+            className="badge filter-chip"
           >
             <span className="mr-1">{label}</span>
             <button
               type="button"
               data-testid="active-filter-chip-remove"
               onClick={() => onRemove(facet, value)}
-              className="inline-flex items-center hover:bg-accent rounded-full p-0.5 -mr-1"
+              className="filter-chip__remove inline-flex items-center rounded-full p-0.5 -mr-1"
               aria-label={`Remove filter: ${FACET_LABELS[facet]} ${label}`}
             >
               <X className="h-3 w-3" aria-hidden="true" />
@@ -117,7 +117,7 @@ export const ActiveFilterChips: React.FC<ActiveFilterChipsProps> = ({
           type="button"
           data-testid="clear-all-filters"
           onClick={onClearAll}
-          className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline ml-1"
+          className="filter-clear-all text-xs underline-offset-2 hover:underline ml-1"
           aria-label="Clear all filters"
         >
           Clear all
