@@ -87,11 +87,11 @@ Choose granularity based on theming needs:
 ```css
 /* badge.css */
 
-/* Base class (single, shared by all badge types) */
+/* Base class (single, shared by all badge types) — FLAT: bg tint + colored text, NO border */
 .badge {
-  @apply inline-flex items-center px-2 py-1 text-xs font-medium;
-  @apply rounded-full border border-transparent;
+  @apply inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium;
   @apply transition-colors;
+  border-radius: 4px;
 }
 
 /* Status variants */

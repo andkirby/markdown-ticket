@@ -3,8 +3,11 @@
  *
  * Data attribute-based badge styling (replaces CVA approach).
  * This is the SINGLE SOURCE OF TRUTH for badge colors.
- * Status/priority badges use v3 flat semantic tokens (bg tint + colored text);
- * type/context/relationship badges use flat v3 tints (accent color-mix or neutral tiers).
+ * Badges are FLAT: a background tint + colored text, NO border. (design3: the
+ * card/modal badge is a flat bg-tint pill; borders were dropped with the card
+ * border-drop pass — the only surviving edges are data-driven card accents.)
+ * Status/priority badges use flat semantic tokens (bg tint + colored text);
+ * type/context/relationship badges use flat tints (accent color-mix or neutral tiers).
  *
  * Usage: <div className="badge" data-status="approved">Approved</div>
  *
@@ -22,8 +25,7 @@
 
   /* =====================================================
    * STATUS BADGE VARIANTS
-   * v3 Doc 2: flat v3 status tokens (bg tint + colored text).
-   * No gradient/border (base .badge has no border-width).
+   * Flat v3 status tokens (bg tint + colored text). No border.
    * Status → token: proposed→backlog, approved→open, in-progress→progress,
    * implemented→done, rejected→rejected, on-hold→hold,
    * partially-implemented→progress, invalid→rejected, others→backlog.
@@ -48,17 +50,17 @@
 
   /* =====================================================
    * PRIORITY BADGE VARIANTS
-   * v3 Doc 2: tinted bg derived from --prio-* via color-mix + colored text.
+   * Flat tinted bg derived from --prio-* via color-mix + colored text.
    * ===================================================== */
 
-  .badge[data-priority="critical"] { background: color-mix(in srgb, var(--prio-critical) 15%, transparent); color: var(--prio-critical); border-color: color-mix(in srgb, var(--prio-critical) 45%, transparent); }
-  .badge[data-priority="high"]     { background: color-mix(in srgb, var(--prio-high) 15%, transparent);     color: var(--prio-high);     border-color: color-mix(in srgb, var(--prio-high) 45%, transparent); }
-  .badge[data-priority="medium"]   { background: color-mix(in srgb, var(--prio-medium) 15%, transparent);   color: var(--prio-medium);   border-color: color-mix(in srgb, var(--prio-medium) 45%, transparent); }
-  .badge[data-priority="low"]      { background: color-mix(in srgb, var(--prio-low) 15%, transparent);      color: var(--prio-low);      border-color: color-mix(in srgb, var(--prio-low) 45%, transparent); }
+  .badge[data-priority="critical"] { background: color-mix(in srgb, var(--prio-critical) 15%, transparent); color: var(--prio-critical); }
+  .badge[data-priority="high"]     { background: color-mix(in srgb, var(--prio-high) 15%, transparent);     color: var(--prio-high); }
+  .badge[data-priority="medium"]   { background: color-mix(in srgb, var(--prio-medium) 15%, transparent);   color: var(--prio-medium); }
+  .badge[data-priority="low"]      { background: color-mix(in srgb, var(--prio-low) 15%, transparent);      color: var(--prio-low); }
 
   /* Fallback for unknown priority → medium */
   .badge[data-priority]:not([data-priority="critical"]):not([data-priority="high"]):not([data-priority="medium"]):not([data-priority="low"]) {
-    background: color-mix(in srgb, var(--prio-medium) 15%, transparent); color: var(--prio-medium); border-color: color-mix(in srgb, var(--prio-medium) 45%, transparent);
+    background: color-mix(in srgb, var(--prio-medium) 15%, transparent); color: var(--prio-medium);
   }
 
   /* =====================================================
@@ -76,108 +78,95 @@
 
   /* =====================================================
    * TYPE BADGE VARIANTS
-   * Flat v3 tints (accent color-mix or neutral tiers).
+   * Flat tints (accent color-mix or neutral tiers). No border.
    * ===================================================== */
 
   /* Type: Feature Enhancement (blue tint) */
   .badge[data-type="feature-enhancement"] {
     background: color-mix(in srgb, var(--type-feature) 12%, transparent);
     color: var(--type-feature);
-    border-color: color-mix(in srgb, var(--type-feature) 30%, hsl(var(--border)));
   }
 
   /* Type: Bug Fix (orange tint) */
   .badge[data-type="bug-fix"] {
     background: color-mix(in srgb, var(--type-bug) 12%, transparent);
     color: var(--type-bug);
-    border-color: color-mix(in srgb, var(--type-bug) 30%, hsl(var(--border)));
   }
 
   /* Type: Architecture (purple tint) */
   .badge[data-type="architecture"] {
     background: color-mix(in srgb, var(--type-architecture) 12%, transparent);
     color: var(--type-architecture);
-    border-color: color-mix(in srgb, var(--type-architecture) 30%, hsl(var(--border)));
   }
 
-  /* Type: Technical Debt (neutral slate tiers - no semantic accent) */
+  /* Type: Technical Debt (neutral slate tier - no semantic accent) */
   .badge[data-type="technical-debt"] {
     background: var(--bg-muted);
     color: var(--text-muted);
-    border-color: hsl(var(--border));
   }
 
   /* Type: Documentation (cyan tint) */
   .badge[data-type="documentation"] {
     background: color-mix(in srgb, var(--type-documentation) 12%, transparent);
     color: var(--type-documentation);
-    border-color: color-mix(in srgb, var(--type-documentation) 30%, hsl(var(--border)));
   }
 
   /* Type: Research (pink/rose tint) */
   .badge[data-type="research"] {
     background: color-mix(in srgb, var(--type-research) 12%, transparent);
     color: var(--type-research);
-    border-color: color-mix(in srgb, var(--type-research) 30%, hsl(var(--border)));
   }
 
   /* Fallback for unknown type (Feature Enhancement tint) */
   .badge[data-type]:not([data-type="feature-enhancement"]):not([data-type="bug-fix"]):not([data-type="architecture"]):not([data-type="technical-debt"]):not([data-type="documentation"]):not([data-type="research"]) {
     background: color-mix(in srgb, var(--type-feature) 12%, transparent);
     color: var(--type-feature);
-    border-color: color-mix(in srgb, var(--type-feature) 30%, hsl(var(--border)));
   }
 
   /* =====================================================
    * CONTEXT BADGE VARIANTS
-   * Flat v3 tints (accent color-mix or neutral tiers).
+   * Flat tints (accent color-mix or neutral tiers). No border.
    * ===================================================== */
 
-  /* Context: Phase/Epic (neutral gray tiers) */
+  /* Context: Phase/Epic (neutral gray tier) */
   .badge[data-context="phase"] {
     background: var(--bg-muted);
     color: var(--text-muted);
-    border-color: hsl(var(--border));
   }
 
   /* Context: Assignee (purple tint) */
   .badge[data-context="assignee"] {
     background: color-mix(in srgb, var(--status-hold) 12%, transparent);
     color: var(--status-hold);
-    border-color: color-mix(in srgb, var(--status-hold) 30%, hsl(var(--border)));
   }
 
   /* Context: Worktree (green tint) */
   .badge[data-context="worktree"] {
     background: color-mix(in srgb, var(--status-done) 12%, transparent);
     color: var(--status-done);
-    border-color: color-mix(in srgb, var(--status-done) 30%, hsl(var(--border)));
   }
 
   /* =====================================================
    * RELATIONSHIP BADGE VARIANTS
-   * Flat v3 tints (accent color-mix or neutral tiers).
+   * Flat tints (accent color-mix or neutral tiers). No border.
    * ===================================================== */
 
   /* Relationship: Related (slate tint - spline token) */
   .badge[data-relationship="related"] {
     background: color-mix(in srgb, var(--spline-related) 12%, transparent);
     color: var(--spline-related);
-    border-color: color-mix(in srgb, var(--spline-related) 30%, hsl(var(--border)));
   }
 
   /* Relationship: Depends (amber tint) */
   .badge[data-relationship="depends"] {
     background: color-mix(in srgb, var(--status-progress) 12%, transparent);
     color: var(--status-progress);
-    border-color: color-mix(in srgb, var(--status-progress) 30%, hsl(var(--border)));
   }
 
   /* Relationship: Blocks (red tint - spline token) */
   .badge[data-relationship="blocks"] {
     background: color-mix(in srgb, var(--spline-blocker) 12%, transparent);
     color: var(--spline-blocker);
-    border-color: color-mix(in srgb, var(--spline-blocker) 30%, hsl(var(--border)));
   }
 
   /* =====================================================

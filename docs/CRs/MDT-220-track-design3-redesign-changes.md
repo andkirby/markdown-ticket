@@ -45,6 +45,8 @@ priority: Medium
 - Rule (binding): accent color must map to data (priority or epic); never decorative
 - Deferred: selected-card indigo accent — no board selection state exists yet
 - Drift cleanup (Done): removed the floating col-header underline; collapsed-column border -> transparent to match expanded columns; avatar ring recolored to --bg-elevated to match the card surface; :active now preserves the accent stripe
+- Badges flat in src/ (Done): removed `border` from the shared shadcn `Badge` base (`ui/badge.tsx`) — the single source, since `Badge` is used only by the five `.badge` components — so every status/priority/type/context/relationship badge is now a flat bg-tint + colored text with no outline. Stripped the now-dead `border-color` tints from `badge.css`. Verified live: 472 board badges + viewer badges all `border-width: 0`.
+- Project cards/chips: borders KEPT (Deliberate hold) — ProjectSelector cards, the filter bar's trigger + active-filter chips, and the project dropdown items use the border as load-bearing structure/affordance (clickable surfaces, recessed pills); dropping it is low-value and high-risk. `MobileChipStrip` reuses `.badge`, so it is flat by inheritance.
 
 ### Real-App Port (src/)
 

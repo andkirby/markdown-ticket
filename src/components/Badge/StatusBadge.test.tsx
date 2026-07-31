@@ -40,11 +40,12 @@ describe('StatusBadge', () => {
       expect(badge).toHaveClass('rounded')
     })
 
-    it('should apply outline variant styling', () => {
+    it('should render a flat badge with no border', () => {
       const { container } = render(<StatusBadge status="Approved" />)
       const badge = container.firstChild as HTMLElement
 
-      expect(badge).toHaveClass('border')
+      expect(badge).toHaveClass('badge')
+      expect(badge).not.toHaveClass('border')
     })
   })
 
