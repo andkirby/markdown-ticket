@@ -15,6 +15,7 @@ import type { ScoredProject } from '@/hooks/useProjectSearch'
 import type { QueryMode } from '@/hooks/useQuickSearch'
 
 import type { Ticket } from '@/types/ticket'
+import { TicketCode } from '@/components/TicketCode'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { DocumentResultRow } from './DocumentResultRow'
 import { ProjectResultRow } from './ProjectResultRow'
@@ -86,9 +87,7 @@ function CrossProjectResultItem({ result, isSelected, onSelect }: CrossProjectRe
         onClick={onSelect}
       >
         <div className="flex items-center gap-3">
-          <span className="search-result__code">
-            {result.ticket.code}
-          </span>
+          <TicketCode code={result.ticket.code} priority={result.ticket.priority ?? undefined} className="search-result__code" />
           <span className="search-result__title truncate">
             {result.ticket.title}
           </span>
@@ -278,9 +277,7 @@ export function QuickSearchResults({
                     onClick={() => onSelect(ticket)}
                   >
                     <div className="flex items-center gap-3">
-                      <span className="search-result__code">
-                        {ticket.code}
-                      </span>
+                      <TicketCode code={ticket.code} priority={ticket.priority} className="search-result__code" />
                       <span className="search-result__title truncate">
                         {ticket.title}
                       </span>

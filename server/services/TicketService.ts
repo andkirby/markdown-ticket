@@ -23,7 +23,7 @@ export type CRData = Pick<TicketData, 'title' | 'type' | 'priority' | 'descripti
 
 /** Search result item with ticket and project context */
 interface SearchResultItem {
-  ticket: { code: string, title: string }
+  ticket: { code: string, title: string, priority: string | null }
   project: { code: string, name: string }
 }
 
@@ -327,7 +327,7 @@ export class TicketService {
 
     return {
       results: [{
-        ticket: { code: cr.code, title: cr.title },
+        ticket: { code: cr.code, title: cr.title, priority: cr.priority ?? null },
         project: { code: project.project.code || project.id, name: project.project.name },
       }],
       total: 1,
@@ -366,7 +366,7 @@ export class TicketService {
 
     return {
       results: limited.map(cr => ({
-        ticket: { code: cr.code, title: cr.title },
+        ticket: { code: cr.code, title: cr.title, priority: cr.priority ?? null },
         project: { code: project.project.code || project.id, name: project.project.name },
       })),
       total: limited.length,

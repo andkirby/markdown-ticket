@@ -23,7 +23,6 @@ import type { ProjectedStubTicket, Ticket } from '../types/ticket'
 import { Cloud } from 'lucide-react'
 import * as React from 'react'
 import { VALID_STATUSES } from '../utils/ticketStatus'
-import { PriorityIcon } from './Badge/PriorityIcon'
 import { RelativeTimestamp } from './shared/RelativeTimestamp'
 import TicketAttributeTags from './TicketAttributeTags'
 import { TicketCode } from './TicketCode'
@@ -71,8 +70,7 @@ export const CloudProjectionStub: React.FC<CloudProjectionStubProps> = ({ ticket
       {/* Row 1: priority glyph + code + cloud glyph (left) | elapsed time (right) */}
       <div className="flex items-center justify-between gap-2">
         <span className="ticket-card__code">
-          <PriorityIcon priority={ticket.priority} className="priority-icon" />
-          <TicketCode code={ticket.code} />
+          <TicketCode code={ticket.code} priority={ticket.priority} />
           <Cloud className="ticket-card__cloud-icon" aria-hidden="true" />
         </span>
         <RelativeTimestamp createdAt={ticket.dateCreated} updatedAt={ticket.lastModified} className="ticket-card__time" />

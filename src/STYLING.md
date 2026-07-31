@@ -29,15 +29,20 @@ For attributes users scan every day, render a **positionally-stable marker** on
 every surface so muscle-memory works across views. The marker must not move or
 change shape between the board, the list, and the ticket viewer.
 
-- **Priority** is always the `<PriorityIcon>` colored glyph placed immediately
-  **before the ticket key** — on the board card, the cloud-projected stub, the
-  list row (desktop table + mobile card), and the ticket viewer header. Same
-  glyph, same `data-priority` color mapping, same `--sz-icon` size, same
+- **Priority** is always the colored `<PriorityIcon>` glyph placed immediately
+  **before the ticket key** — board card, cloud-projected stub, list row
+  (desktop table + mobile card), ticket viewer header, and search results.
+  Same glyph, same `data-priority` color mapping, same `--sz-icon` size, same
   position (left of the key). Users find priority in one place regardless of view.
 
-When adding any new surface that shows a ticket key, prefix the key with
-`<PriorityIcon priority={ticket.priority} className="priority-icon" />`. Do not
-relocate priority to a badge or a different column — that breaks the scan.
+**Single source of truth.** The glyph-before-key invariant lives in exactly one
+place: `<TicketCode>` (`src/components/TicketCode.tsx`) renders the
+`<PriorityIcon>` then the code. Every surface that shows a ticket key MUST use
+`<TicketCode code={...} priority={...} />` (or pass `ticket`). **Never**
+hand-compose `<PriorityIcon>` + the code in a surface — that is how surfaces
+drift out of sync (QuickSearch rendered a bare `{ticket.code}` with no glyph
+until it was routed through `<TicketCode>`). Adding a surface? Use `<TicketCode>`;
+the glyph comes for free and can never be forgotten.
 
 ---
 

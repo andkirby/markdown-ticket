@@ -50,6 +50,7 @@ export const SearchResponseSchema = z.object({
       ticket: z.object({
         code: z.string(),
         title: z.string(),
+        priority: z.string().nullable().optional(),
       }),
       project: z.object({
         code: z.string(),
