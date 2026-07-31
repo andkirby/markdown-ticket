@@ -32,7 +32,7 @@ priority: Medium
 | Dark-theme background ramp tuned to match light's perceptual (CIE L*) steps | Done | 01-tokens.css `.dark` |
 | Priority indicators: colored dots replaced with icon glyphs | Done | assets/icons/priority/*.svg, 5 surfaces |
 | Cmd+K scope-tab strip given bg-subtle band (parity with ticket-view tabs) | Done | design3.html |
-| Priority icon relocated to left of ticket key, scaled with key font (--fs-xs); duplicate removed from card badges row | Done | design3.html card-top |
+| Priority icon is a flex child of .card-code (matches app TicketCard .ticket-card__code + .priority-icon); scales with key font (--fs-xs); 4px gap, no overlap | Done | design3.html card-top, 05-components.css |
 | Border-led depth, background tiers, mono ticket codes | Established | inherent Design3 grammar |
 | Token bridge to app: v3 tokens already present in app | Partial | src/styles/design-tokens.css |
 | Density matrix: 3x3 (size x space) shipped in prototype | Open | strategy calls for one axis only |
@@ -41,7 +41,7 @@ priority: Medium
 
 - Principle: drop decorative gray borders; whitespace and background tiers hold the layout. Borders survive only where they carry meaning — an accent stripe whose color maps to data.
 - Dropped (Done): card static gray border -> transparent, revealed on hover only (.kanban-card); column outer border removed, defined by bg-subtle tier + radius + gap (.board-col); modal badge outlines (priority/type/phase/sprint) -> flat bg-muted tint (design3.html)
-- Added (Done): priority accent stripe — 3px left edge in --prio-* (markup sets --accent; .kanban-card border-left); epic accent stripe in --epic-color under the same --accent rule; hover keeps the accent left edge while revealing the other three borders
+- Added (Done): priority accent stripe — 3px left edge, now restricted to critical/high tickets + epics only (importance landmark, not every card; low/medium have no stripe via unset --accent); epic stripe in --epic-color; hover keeps the accent left edge while revealing the other three borders
 - Rule (binding): accent color must map to data (priority or epic); never decorative
 - Deferred: selected-card indigo accent — no board selection state exists yet
 - Drift cleanup (Done): removed the floating col-header underline; collapsed-column border -> transparent to match expanded columns; avatar ring recolored to --bg-elevated to match the card surface; :active now preserves the accent stripe
