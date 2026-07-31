@@ -49,6 +49,7 @@ priority: Medium
 ### Real-App Port (src/)
 
 - Status: implemented and verified — TypeScript passes all 6 packages; full frontend suite 826 pass / 0 fail across 84 files. 53 files changed, +923 / -597.
+- Browser-verified live (`http://localhost:3075/prj/MDT`, dark mode): 185 board cards + 190 list rows render the priority glyph before the key on every surface — board card (`.ticket-card__code`), list table Key cell, and ticket-viewer header (`.modal__headline`). Full glyph map present (critical=Flame, high=ChevronUp, medium=Equal, low=ChevronDown) with `data-priority` coloring; the no-priority case renders no icon. Cards are border-led (uniform 1px, neutral `rgb(65,76,90)`, no `::before` accent stripe on any priority). Dark ramp resolves to `#1a1f2b / #232b3a / #2c3848`. CloudProjectionStub + ProjectView mobile card are code-verified (icon-before-code in JSX) but not locally triggerable (need cloud-projected tickets / mobile viewport).
 - Priority icon before key (stable scan): `<PriorityIcon>` (lucide glyph, currentColor via data-priority) placed immediately before the ticket key on all four surfaces — board card (TicketCard.tsx), cloud-projected stub (CloudProjectionStub.tsx), list view desktop + mobile (ProjectView.tsx), ticket viewer header (CompactTicketHeader.tsx). Codified in STYLING.md "Stable Scanning Patterns".
 - Icon architecture: .ticket-card__code is inline-flex; .priority-icon is a flex child sized --sz-icon, colored by data-priority -> prio token. Same position on every surface (the pattern the prototype was aligned to).
 - PriorityBadge.tsx: added PRIORITY_ICON glyph map (critical=Flame, high=ChevronUp, medium=Equal, low=ChevronDown); new PriorityIcon.tsx component exported from Badge/index.
@@ -92,8 +93,8 @@ priority: Medium
 
 | Item | Status | Note |
 | --- | --- | --- |
-| Propagate tuned dark-theme ramp into app `.dark` tokens | Next | src/styles/design-tokens.css |
-| Restyle app surfaces through existing data-* hooks (priority/status/type) | Next | per adoption strategy |
+| Propagate tuned dark-theme ramp into app `.dark` tokens | Done | src/styles/design-tokens.css `.dark` = #1a1f2b / #232b3a / #2c3848; browser-verified live |
+| Restyle app surfaces through existing data-* hooks (priority/status/type) | Done | PriorityIcon before key on all 4 surfaces; border-led cards; browser-verified |
 | Density: choose one axis over the 3x3 matrix | Open | needs evidence 9 combos are useful/testable |
 | Splines in app | Deferred | needs perf, a11y, clipping, scroll contract; uses canonical dependsOn |
 | Pin rail, epic rail, quick-add, subtasks in app | Deferred | await product/domain contracts |
