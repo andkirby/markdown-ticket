@@ -2,7 +2,6 @@ import type { CRStatus } from '@mdt/shared/models/Types'
 import type { Ticket } from '../types'
 import * as React from 'react'
 import { VALID_STATUSES } from '../utils/ticketStatus'
-import { PriorityIcon } from './Badge/PriorityIcon'
 import { formatDataAttr } from './Badge/utils'
 import { RelativeTimestamp } from './shared/RelativeTimestamp'
 import TicketAttributeTags from './TicketAttributeTags'
@@ -39,7 +38,6 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onMove: _onMove, onClic
       {/* Row 1: code (left) + timestamp (right) */}
       <div className="flex items-center justify-between gap-2">
         <span className="ticket-card__code">
-          <PriorityIcon priority={ticket.priority} className="priority-icon" />
           <TicketCode code={ticket.code} ticket={ticket} />
         </span>
         <RelativeTimestamp createdAt={ticket.dateCreated} updatedAt={ticket.lastModified} className="ticket-card__time" />

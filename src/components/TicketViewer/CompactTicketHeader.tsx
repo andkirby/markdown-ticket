@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react'
 import type { Ticket } from '../../types'
 import { ContextBadge, PriorityBadge, RelationshipBadge, StatusBadge, TypeBadge } from '../Badge'
-import { PriorityIcon } from '../Badge/PriorityIcon'
 import { TicketCode } from '../TicketCode'
 
 interface CompactTicketHeaderProps {
@@ -15,7 +14,6 @@ export function CompactTicketHeader({ ticket, className = '', action }: CompactT
     <div className={className}>
       <div className="modal__section pr-14">
         <h1 className="modal__headline min-w-0" data-testid="ticket-title">
-          <PriorityIcon priority={ticket.priority} className="priority-icon mr-1" />
           <TicketCode code={ticket.code} ticket={ticket} className="compact-ticket-header__code" />
           <span className="mx-1 text-gray-900 dark:text-white">•</span>
           <span className="break-words text-gray-900 dark:text-white">{ticket.title}</span>

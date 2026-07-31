@@ -9,7 +9,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { authFetch } from '../auth/authFetch'
 import { useCloudProjectionFeed } from '../hooks/useCloudProjectionFeed'
 import { sortTickets } from '../utils/sorting'
-import { PriorityIcon } from './Badge/PriorityIcon'
 import Board from './Board'
 import { DocumentsLayout } from './DocumentsView'
 import TicketAttributeTags from './TicketAttributeTags'
@@ -200,8 +199,7 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
                             data-testid={`ticket-row-${ticket.code}`}
                           >
                             <TableCell className="font-mono">
-                              <PriorityIcon priority={ticket.priority} className="priority-icon mr-1" />
-                              <TicketCode code={ticket.code} />
+                              <TicketCode code={ticket.code} priority={ticket.priority} />
                             </TableCell>
                             <TableCell className="font-medium" data-testid="ticket-title">
                               {ticket.title}
@@ -229,8 +227,7 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
                       >
                         <div className="flex items-center justify-between gap-2">
                           <span className="ticket-card__code">
-                            <PriorityIcon priority={ticket.priority} className="priority-icon" />
-                            <TicketCode code={ticket.code} />
+                            <TicketCode code={ticket.code} priority={ticket.priority} />
                           </span>
                         </div>
                         <h4 className="ticket-card__title" data-testid="ticket-title">{ticket.title}</h4>
