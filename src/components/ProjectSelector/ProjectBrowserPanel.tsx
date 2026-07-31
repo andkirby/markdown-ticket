@@ -295,7 +295,7 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
           {/* Search input (MDT-152) */}
           <div className="relative min-w-0 flex-1">
             <svg
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 project-browser__search-icon"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -338,7 +338,7 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
               ? (
                   <div
                     data-testid="project-browser-empty-state"
-                    className="text-center py-12 text-gray-500 dark:text-gray-400"
+                    className="text-center py-12 project-browser__empty-state"
                   >
                     {searchQuery.trim()
                       ? 'No projects match your search'

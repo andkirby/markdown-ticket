@@ -29,7 +29,7 @@ describe('PriorityBadge', () => {
       const badge = container.firstChild as HTMLElement
 
       expect(badge).toHaveClass('badge')
-      expect(badge).toHaveClass('rounded-full')
+      expect(badge).toHaveClass('rounded')
     })
   })
 

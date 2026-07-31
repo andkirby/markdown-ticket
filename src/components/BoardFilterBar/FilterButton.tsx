@@ -37,9 +37,7 @@ export const FilterButton: React.FC<FilterButtonProps> = ({
         aria-expanded={open}
         aria-haspopup="dialog"
         onClick={() => onOpenChange(!open)}
-        className={`inline-flex items-center gap-1.5 border rounded-md px-3 py-1.5 text-sm bg-background hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-ring ${
-          open ? 'border-primary ring-1 ring-primary' : 'border-border'
-        }`}
+        className={`filter-button ${open ? 'filter-button--open' : ''}`}
       >
         <Filter className="h-3.5 w-3.5" aria-hidden="true" />
         <span>{label}</span>
@@ -61,7 +59,7 @@ export const FilterButton: React.FC<FilterButtonProps> = ({
             role="dialog"
             aria-label="Filter tickets"
             data-testid="filter-popover"
-            className="absolute top-full right-0 mt-1 z-50 w-[440px] max-h-[70vh] overflow-y-auto bg-popover border border-border rounded-lg shadow-lg p-3"
+            className="filter-popover absolute top-full right-0 mt-1 z-50 w-[440px] max-h-[70vh] overflow-y-auto border rounded-lg shadow-lg p-3"
           >
             {children}
           </div>

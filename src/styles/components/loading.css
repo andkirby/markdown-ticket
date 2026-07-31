@@ -3,7 +3,7 @@
 @layer components {
   /* Count badges (small numbers in toggles/buttons) */
   .count-badge {
-    @apply flex items-center justify-center w-6 h-6 text-xs font-medium rounded-full transition-colors duration-200;
+    @apply flex items-center justify-center w-6 h-6 text-xs font-medium tabular-nums rounded-full transition-colors duration-200;
   }
 
   .count-badge--active {
@@ -32,33 +32,14 @@
     @apply inline-block h-4 w-4 rounded-full;
   }
 
-  .status-dot--inline[data-status="proposed"] {
-    @apply bg-gray-500 dark:bg-gray-400;
-  }
-
-  .status-dot--inline[data-status="approved"] {
-    @apply bg-green-500 dark:bg-green-400;
-  }
-
-  .status-dot--inline[data-status="in-progress"] {
-    @apply bg-blue-500 dark:bg-blue-400;
-  }
-
-  .status-dot--inline[data-status="implemented"] {
-    @apply bg-teal-500 dark:bg-teal-400;
-  }
-
-  .status-dot--inline[data-status="partially-implemented"] {
-    @apply bg-indigo-500 dark:bg-indigo-400;
-  }
-
-  .status-dot--inline[data-status="on-hold"] {
-    @apply bg-orange-500 dark:bg-orange-400;
-  }
-
-  .status-dot--inline[data-status="rejected"] {
-    @apply bg-red-500 dark:bg-red-400;
-  }
+  /* v3 status tokens (matches badge.css status map; token auto-adapts per mode) */
+  .status-dot--inline[data-status="proposed"]              { background: var(--status-backlog); }
+  .status-dot--inline[data-status="approved"]              { background: var(--status-open); }
+  .status-dot--inline[data-status="in-progress"]           { background: var(--status-progress); }
+  .status-dot--inline[data-status="implemented"]           { background: var(--status-done); }
+  .status-dot--inline[data-status="partially-implemented"] { background: var(--status-progress); }
+  .status-dot--inline[data-status="on-hold"]               { background: var(--status-hold); }
+  .status-dot--inline[data-status="rejected"]              { background: var(--status-rejected); }
 
   .skeleton {
     @apply animate-pulse rounded-md bg-muted;

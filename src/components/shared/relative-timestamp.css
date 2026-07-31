@@ -1,6 +1,8 @@
 @layer components {
   .relative-timestamp {
-    @apply text-xs text-gray-500 opacity-60 transition-[color,opacity] dark:text-gray-400;
+    @apply text-xs opacity-60 transition-[color,opacity];
+    font-variant-numeric: tabular-nums;
+    color: var(--text-subtle);
   }
 
   .relative-timestamp__floating {
@@ -16,7 +18,10 @@
   }
 
   .relative-timestamp--interactive {
-    @apply cursor-pointer hover:text-gray-800 dark:hover:text-gray-200;
+    @apply cursor-pointer;
+  }
+  .relative-timestamp--interactive:hover {
+    color: hsl(var(--foreground));
   }
 
   .relative-timestamp--static {
@@ -24,6 +29,16 @@
   }
 
   .relative-timestamp__tooltip {
-    @apply rounded border-border/70 px-2 py-1 text-xs leading-none shadow-sm;
+    @apply rounded px-2 py-1 leading-none;
+    /* v3 surface: elevated bg + 1px border, color text-muted.
+       !important overrides the shadcn Radix defaults (bg-popover /
+       text-popover-foreground / border) which live in the utilities layer. */
+    background-color: var(--bg-elevated) !important;
+    border: 1px solid hsl(var(--border)) !important;
+    color: var(--text-muted) !important;
+    /* Match the time block: Inter (inherit) + text-xs (0.75rem).
+       !important overrides the Radix text-sm default (utilities layer). */
+    font-family: inherit;
+    font-size: 0.75rem !important;
   }
 }

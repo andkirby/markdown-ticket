@@ -25,7 +25,7 @@ describe('RelativeTimestamp', () => {
     )
 
     const button = screen.getByRole('button')
-    expect(button).toHaveTextContent('Updated 2 days ago')
+    expect(button).toHaveTextContent('2 days ago')
     expect(button).toHaveClass('relative-timestamp', 'relative-timestamp--interactive')
   })
 
@@ -35,7 +35,7 @@ describe('RelativeTimestamp', () => {
     )
 
     const button = screen.getByRole('button')
-    expect(button).toHaveTextContent('Created 3 days ago')
+    expect(button).toHaveTextContent('3 days ago')
     expect(button).toHaveClass('relative-timestamp--static')
   })
 
@@ -48,13 +48,13 @@ describe('RelativeTimestamp', () => {
     )
 
     const button = screen.getByRole('button')
-    expect(button).toHaveTextContent('Updated 2 days ago')
+    expect(button).toHaveTextContent('2 days ago')
 
     fireEvent.click(button)
-    expect(button).toHaveTextContent('Created 3 days ago')
+    expect(button).toHaveTextContent('3 days ago')
 
     fireEvent.click(button)
-    expect(button).toHaveTextContent('Updated 2 days ago')
+    expect(button).toHaveTextContent('2 days ago')
   })
 
   it('does not toggle when only one timestamp exists', () => {
@@ -65,7 +65,7 @@ describe('RelativeTimestamp', () => {
     const button = screen.getByRole('button')
     fireEvent.click(button)
 
-    expect(button).toHaveTextContent('Created 3 days ago')
+    expect(button).toHaveTextContent('3 days ago')
   })
 
   it('shows a tooltip with the full localized datetime for the active timestamp', async () => {

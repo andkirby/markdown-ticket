@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
 import {
+  DEFAULT_VISIBLE_TICKET_CARD_BADGES,
   getVisibleTicketCardBadges,
   setVisibleTicketCardBadges,
   TICKET_CARD_BADGE_STORAGE_KEY,
   TicketCardBadge,
-  TicketCardBadgeIds,
 } from './ticketCardBadges'
 
 describe('ticketCardBadges preference', () => {
@@ -21,7 +21,7 @@ describe('ticketCardBadges preference', () => {
   })
 
   it('returns defaults when storage is missing', () => {
-    expect(getVisibleTicketCardBadges()).toEqual([...TicketCardBadgeIds])
+    expect(getVisibleTicketCardBadges()).toEqual([...DEFAULT_VISIBLE_TICKET_CARD_BADGES])
   })
 
   it('persists supported badge ids to the board localStorage key', () => {
@@ -55,14 +55,14 @@ describe('ticketCardBadges preference', () => {
   it('falls back to defaults when stored JSON is malformed', () => {
     localStorage.setItem(TICKET_CARD_BADGE_STORAGE_KEY, '{')
 
-    expect(getVisibleTicketCardBadges()).toEqual([...TicketCardBadgeIds])
+    expect(getVisibleTicketCardBadges()).toEqual([...DEFAULT_VISIBLE_TICKET_CARD_BADGES])
   })
 
   it('falls back to defaults when stored value is empty or unsupported', () => {
     localStorage.setItem(TICKET_CARD_BADGE_STORAGE_KEY, JSON.stringify([]))
-    expect(getVisibleTicketCardBadges()).toEqual([...TicketCardBadgeIds])
+    expect(getVisibleTicketCardBadges()).toEqual([...DEFAULT_VISIBLE_TICKET_CARD_BADGES])
 
     localStorage.setItem(TICKET_CARD_BADGE_STORAGE_KEY, JSON.stringify(['unsupported']))
-    expect(getVisibleTicketCardBadges()).toEqual([...TicketCardBadgeIds])
+    expect(getVisibleTicketCardBadges()).toEqual([...DEFAULT_VISIBLE_TICKET_CARD_BADGES])
   })
 })

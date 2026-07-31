@@ -17,7 +17,7 @@ const modalVariants = cva(
         full: 'sm:max-w-full',
       },
       variant: {
-        default: 'bg-white',
+        default: '',
         dark: 'bg-gray-800',
         success: 'bg-green-50',
         warning: 'bg-yellow-50',

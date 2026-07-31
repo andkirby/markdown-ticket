@@ -12,11 +12,14 @@
   }
 
   .documents-view__navigation-inner {
-    @apply flex h-full min-h-0 flex-col border-r border-border bg-muted/30;
+    @apply flex h-full min-h-0 flex-col border-r;
+    border-color: hsl(var(--border));
+    background-color: var(--bg-subtle);
   }
 
   .documents-view__navigation-header {
-    @apply flex-shrink-0 border-b border-border p-4;
+    @apply flex-shrink-0 border-b p-4;
+    border-color: hsl(var(--border));
   }
 
   .documents-view__navigation-primary-row {
@@ -32,11 +35,18 @@
   }
 
   .documents-view__sort-select {
-    @apply h-[38px] w-28 flex-shrink-0 rounded border border-border bg-background px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary;
+    @apply h-[38px] w-28 flex-shrink-0 rounded border px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary;
+    border-color: hsl(var(--border));
+    background-color: var(--bg-muted);
   }
 
   .documents-view__sort-direction-button {
-    @apply inline-flex h-[38px] w-8 flex-shrink-0 items-center justify-center rounded border border-border bg-background transition-colors hover:bg-muted;
+    @apply inline-flex h-[38px] w-8 flex-shrink-0 items-center justify-center rounded border transition-colors;
+    border-color: hsl(var(--border));
+    background-color: var(--bg-muted);
+  }
+  .documents-view__sort-direction-button:hover {
+    background-color: var(--bg-muted);
   }
 
   .documents-view__resize-handle {
@@ -48,7 +58,13 @@
   }
 
   .documents-view__navigation-expand {
-    @apply absolute left-3 top-3 z-20 inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-background text-muted-foreground shadow-sm transition-colors hover:bg-muted hover:text-foreground;
+    @apply absolute left-3 top-3 z-20 inline-flex h-8 w-8 items-center justify-center rounded-md border transition-colors hover:text-foreground;
+    border-color: hsl(var(--border));
+    background-color: var(--bg-elevated);
+    color: var(--text-muted);
+  }
+  .documents-view__navigation-expand:hover {
+    background-color: var(--bg-muted);
   }
 
   .documents-view__viewer-panel {
@@ -83,15 +99,19 @@
   }
 
   .document-frontmatter {
-    @apply mb-4 overflow-hidden rounded-md border border-border bg-muted/50;
+    @apply mb-4 overflow-hidden rounded-md border;
+    border-color: hsl(var(--border));
+    background-color: var(--bg-subtle);
   }
 
   .document-frontmatter__summary {
-    @apply cursor-pointer select-none px-3 py-2 text-sm font-medium text-muted-foreground;
+    @apply cursor-pointer select-none px-3 py-2 text-sm font-medium;
+    color: var(--text-muted);
   }
 
   .document-frontmatter[open] .document-frontmatter__summary {
-    @apply border-b border-border;
+    @apply border-b;
+    border-color: hsl(var(--border));
   }
 
   .document-frontmatter__code {
@@ -109,7 +129,7 @@
   }
 
   .document-viewer__center-message {
-    @apply text-muted-foreground;
+    color: var(--text-muted);
   }
 
   .document-viewer__center-message--error {
@@ -129,7 +149,8 @@
   }
 
   .document-viewer__deleted-help {
-    @apply text-sm text-muted-foreground;
+    @apply text-sm;
+    color: var(--text-muted);
   }
 
   /* ── Copy path button (inline, appears on row hover) ── */
@@ -156,7 +177,7 @@
   }
 
   .copy-path-btn__icon {
-    @apply text-muted-foreground;
+    color: var(--text-muted);
     width: 0.75rem;
     height: 0.75rem;
     flex-shrink: 0;

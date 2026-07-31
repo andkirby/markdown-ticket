@@ -41,7 +41,7 @@ function TestHarness({
 describe('RelationshipBadge', () => {
   describe('related variant', () => {
     it('should render related icon and links', () => {
-      render(
+      const { container } = render(
         <TestHarness projectCode="TEST">
           <RelationshipBadge
             variant="related"
@@ -50,7 +50,7 @@ describe('RelationshipBadge', () => {
         </TestHarness>,
       )
 
-      expect(screen.getByText('🔗')).toBeInTheDocument()
+      expect(container.querySelector('.badge[data-relationship="related"] svg')).toBeInTheDocument()
       // Global elision: same-project links render as bare numbers.
       expect(screen.getByText('100')).toBeInTheDocument()
       expect(screen.getByText('101')).toBeInTheDocument()
@@ -70,13 +70,13 @@ describe('RelationshipBadge', () => {
 
   describe('depends variant', () => {
     it('should render depends icon and links', () => {
-      render(
+      const { container } = render(
         <TestHarness projectCode="TEST">
           <RelationshipBadge variant="depends" links={['TEST-050']} />
         </TestHarness>,
       )
 
-      expect(screen.getByText('⬅️')).toBeInTheDocument()
+      expect(container.querySelector('.badge[data-relationship="depends"] svg')).toBeInTheDocument()
       // Global elision: bare number.
       expect(screen.getByText('050')).toBeInTheDocument()
     })
@@ -95,13 +95,13 @@ describe('RelationshipBadge', () => {
 
   describe('blocks variant', () => {
     it('should render blocks icon and links', () => {
-      render(
+      const { container } = render(
         <TestHarness projectCode="TEST">
           <RelationshipBadge variant="blocks" links={['TEST-200']} />
         </TestHarness>,
       )
 
-      expect(screen.getByText('➡️')).toBeInTheDocument()
+      expect(container.querySelector('.badge[data-relationship="blocks"] svg')).toBeInTheDocument()
       // Global elision: bare number.
       expect(screen.getByText('200')).toBeInTheDocument()
     })

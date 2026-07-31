@@ -2,6 +2,7 @@ const DEFAULT_VIEW_KEY = 'mdt-settings-default-view'
 const CARD_DENSITY_KEY = 'mdt-settings-card-density'
 export const MARKDOWN_DENSITY_KEY = 'markdown-ticket:settings:markdown-density'
 export const MARKDOWN_DENSITY_CHANGE_EVENT = 'markdown-ticket:settings:markdown-density-change'
+export const CARD_DENSITY_CHANGE_EVENT = 'markdown-ticket:settings:card-density-change'
 
 export type DefaultView = 'board' | 'list'
 export type CardDensity = 'comfortable' | 'compact'
@@ -41,6 +42,45 @@ export function getCardDensity(): CardDensity {
 
 export function setCardDensityPreference(density: CardDensity): void {
   writeStorageString(CARD_DENSITY_KEY, density)
+
+  try {
+    window.dispatchEvent(new CustomEvent(CARD_DENSITY_CHANGE_EVENT, {
+      detail: { density },
+    }))
+  }
+  catch {
+    // Non-browser callers only need persistence.
+  }
+}
+
+export const COLLAPSED_COLUMNS_KEY = 'mdt-settings-collapsed-columns'
+export const COLLAPSED_COLUMNS_CHANGE_EVENT = 'markdown-ticket:settings:collapsed-columns-change'
+
+/** Column ids (primary status strings) the user has collapsed on the board. */
+export function getCollapsedColumns(): string[] {
+  try {
+    const raw = localStorage.getItem(COLLAPSED_COLUMNS_KEY)
+    if (!raw)
+      return []
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed.filter((v): v is string => typeof v === 'string') : []
+  }
+  catch {
+    return []
+  }
+}
+
+export function setCollapsedColumns(ids: string[]): void {
+  writeStorageString(COLLAPSED_COLUMNS_KEY, JSON.stringify(ids))
+
+  try {
+    window.dispatchEvent(new CustomEvent(COLLAPSED_COLUMNS_CHANGE_EVENT, {
+      detail: { columns: ids },
+    }))
+  }
+  catch {
+    // Non-browser callers only need persistence.
+  }
 }
 
 function isMarkdownDensity(value: string): value is MarkdownDensity {

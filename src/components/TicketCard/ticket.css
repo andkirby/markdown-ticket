@@ -8,21 +8,34 @@
  *   .ticket-card          — base card (surface, border, shadow, hover)
  *   .ticket-card--invalid — red border/ring for unknown status
  *   .ticket-card__title   — title typography
- *   .ticket-card__edit    — hover-reveal edit button
  */
 
 @layer components {
   /* Base ticket card */
   .ticket-card {
-    @apply rounded-xl border px-3 py-4 cursor-pointer backdrop-blur-sm;
-    @apply transition-all duration-300 ease-out;
-    /* Surface gradient — light: white-to-gray, dark: slate-800-to-900 */
-    @apply bg-gradient-to-br from-white to-gray-50/80 dark:from-slate-800 dark:to-slate-900/80;
-    @apply border-gray-200/50 dark:border-slate-700/50;
-    /* Subtle resting shadow */
-    @apply shadow-[0_1px_3px_rgba(0,0,0,0.04)];
-    /* Hover lift — matches DraggableTicketCard visual feel */
-    @apply hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.15)] hover:-translate-y-0.5 hover:scale-[1.005];
+    /* v3 Doc 1 Pr.1 (Borders > Shadows) + Pr.3 (density): flat surface, 1px border, tighter radius/padding. */
+    @apply border cursor-pointer;
+    border-radius: var(--radius-card);
+    padding: var(--pad-y) var(--pad-x);
+    @apply transition-colors duration-150 ease-out;
+    background-color: var(--bg-elevated);
+    border-color: hsl(var(--border));
+    /* Hover = stronger border only — no lift, no shadow (v3). */
+  }
+  .ticket-card:hover {
+    border-color: var(--border-strong);
+  }
+  /* Cloud-projected stub — dashed border signals non-canonical (no local file yet). */
+  .ticket-card--projected {
+    border-style: dashed;
+    border-color: var(--border-strong);
+    opacity: 0.85;
+  }
+
+  /* v3 Doc 4 / Pr.5: pristine keyboard focus ring on cards */
+  .ticket-card:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px color-mix(in srgb, hsl(var(--primary)) 35%, transparent);
   }
 
   /* Invalid status — red border + ring */
@@ -30,17 +43,45 @@
     @apply border-red-500 dark:border-red-500 ring-2 ring-red-500/30;
   }
 
-  /* Title typography */
-  .ticket-card__title {
-    @apply font-semibold text-sm truncate;
-    @apply text-gray-900 dark:text-white;
+  /* Card typography — v3 Pr.3 density-driven slots */
+  .ticket-card__code {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--fs-xs, 11px);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-subtle);
   }
-
-  /* Hover-reveal edit button */
-  .ticket-card__edit {
-    @apply opacity-0 group-hover:opacity-100;
-    @apply text-gray-400 dark:text-gray-500;
-    @apply hover:text-gray-600 dark:hover:text-gray-300;
-    @apply transition-all duration-200 ease-out;
+  .priority-icon {
+    width: var(--sz-icon);
+    height: var(--sz-icon);
+    flex-shrink: 0;
+    vertical-align: middle;
+  }
+  .priority-icon[data-priority="critical"] { color: var(--prio-critical); }
+  .priority-icon[data-priority="high"]     { color: var(--prio-high); }
+  .priority-icon[data-priority="medium"]   { color: var(--prio-medium); }
+  .priority-icon[data-priority="low"]      { color: var(--prio-low); }
+  .priority-icon[data-priority]:not([data-priority="critical"]):not([data-priority="high"]):not([data-priority="medium"]):not([data-priority="low"]) { color: var(--prio-medium); }
+  /* Cloud glyph beside the ticket key on projected stubs (no ownership copy). */
+  .ticket-card__cloud-icon {
+    width: 1em;
+    height: 1em;
+    flex-shrink: 0;
+    color: var(--text-subtle);
+  }
+  .ticket-card__title {
+    @apply line-clamp-2;
+    font-size: var(--fs-md, 13px);
+    font-weight: 500;
+    line-height: 1.4;
+    color: hsl(var(--foreground));
+    margin: 2px 0;
+  }
+  .ticket-card__time {
+    font-size: var(--fs-xs, 11px);
+    color: var(--text-subtle);
   }
 }

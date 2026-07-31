@@ -121,7 +121,7 @@ describe('SettingsModal', () => {
     expect(localStorage.getItem('mdt-settings-card-density')).toBe('compact')
     expect(localStorage.getItem('markdown-ticket-link-config')).toBe('{"enableAutoLinking":false}')
     expect(localStorage.getItem(TICKET_CARD_BADGE_STORAGE_KEY)).toBe(
-      '["status","type","phase","related","depends","blocks","worktree"]',
+      '["status","priority","type","phase","related","depends","blocks","worktree"]',
     )
     expect(fetchMock).not.toHaveBeenCalled()
   })

@@ -1,27 +1,30 @@
 /* Design tokens — light and dark color scheme variables */
 /* Source of truth for all CSS custom properties consumed by components and Tailwind. */
+/* Both the shadcn HSL set and the v3 hex set are aligned to designs/board-zai v3,
+   so the design3 palette reads consistently whether a surface consumes
+   hsl(var(--x)) Tailwind utilities or bare var(--x) v3 tokens. */
 
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 222.2 47.4% 11.2%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 222.2 47.4% 11.2%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222.2 84% 4.9%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 222.2 47.4% 11.2%;
+    --primary: 243.4 75.4% 58.6%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 215 27.3% 91.4%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 215 27.3% 91.4%;
+    --muted-foreground: 215.3 19.3% 34.5%;
+    --accent: 215 27.3% 91.4%;
+    --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 218.8 16.5% 79.8%;
+    --input: 218.8 16.5% 79.8%;
+    --ring: 243.4 75.4% 58.6%;
     --radius: 0.75rem;
     --code-bg: 210 40% 98%;
     --code-fg: 222.2 84% 4.9%;
@@ -36,28 +39,54 @@
     --code-token-property: 0 84.2% 60.2%;
     --code-token-operator: 215.4 16.3% 46.9%;
     --code-token-important: 0 84.2% 60.2%;
+    /* ── v3 design-system semantic tokens (hex; consume via bare var()) ── */
+    /* Aligned 1:1 to designs/board-zai/assets/css/01-tokens.css :root. */
+    --bg-subtle: #eef1f5;
+    --bg-muted: #e3e8ef;
+    --bg-elevated: #ffffff;
+    --border-strong: #8a93a2;
+    --text-muted: #475569;
+    --text-subtle: #5b6675;
+    --primary-light: #eef2ff;
+    --status-backlog: #64748b; --status-backlog-bg: #f1f5f9;
+    --status-open: #3b82f6; --status-open-bg: #eff6ff;
+    --status-progress: #d97706; --status-progress-bg: #fffbeb;
+    --status-done: #059669; --status-done-bg: #ecfdf5;
+    --status-deferred: #ea580c; --status-deferred-bg: #fff7ed;
+    --status-rejected: #dc2626; --status-rejected-bg: #fef2f2;
+    --status-hold: #7c3aed; --status-hold-bg: #f5f3ff;
+    --prio-critical: #dc2626; --prio-high: #ea580c; --prio-medium: #d97706; --prio-low: #2563eb;
+    --epic-1: #4f46e5; --epic-2: #06b6d4; --epic-3: #f59e0b; --epic-4: #10b981;
+    --spline-blocker: #dc2626; --spline-related: #0d9488;
+    /* Type-badge accents (MDT-135 spec); decoupled from status tokens so type
+       and status palettes can evolve independently. */
+    --type-feature: #3b82f6; --type-bug: #ea580c; --type-architecture: #7c3aed; --type-documentation: #0891b2; --type-research: #db2777;
+    /* v3 card-density tokens (driven by CardDensity pref; see useCardDensity). Mode-independent px. */
+    --pad-y: 10px; --pad-x: 12px; --fs-xs: 11px; --fs-md: 13px; --radius-card: 8px;
+    /* Fixed lucide icon size (glyphs beside the ticket key). */
+    --sz-icon: 16px;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 84% 4.9%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --background: 220 29% 6.1%;
+    --foreground: 215 35.3% 93.3%;
+    --card: 214.3 24.1% 22.7%;
+    --card-foreground: 215 35.3% 93.3%;
+    --popover: 214.3 24.1% 22.7%;
+    --popover-foreground: 215 35.3% 93.3%;
+    --primary: 238.7 83.5% 66.7%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 219.1 24.7% 18.2%;
+    --secondary-foreground: 215 35.3% 93.3%;
+    --muted: 219.1 24.7% 18.2%;
+    --muted-foreground: 216 17.4% 66.3%;
+    --accent: 219.1 24.7% 18.2%;
+    --accent-foreground: 215 35.3% 93.3%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 94.1%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 213.6 16.1% 30.4%;
+    --input: 213.6 16.1% 30.4%;
+    --ring: 238.7 83.5% 66.7%;
     --code-bg: 222.2 47.4% 11.2%;
     --code-fg: 210 40% 98%;
     --code-inline-fg: 213 94% 78%;
@@ -71,5 +100,25 @@
     --code-token-property: 0 91.2% 71.8%;
     --code-token-operator: 215 20.2% 65.1%;
     --code-token-important: 0 91.2% 71.8%;
+    /* ── v3 design-system semantic tokens (hex; consume via bare var()) ── */
+    /* Aligned 1:1 to designs/board-zai/assets/css/01-tokens.css .dark. */
+    --bg-subtle: #1a1f2b;
+    --bg-muted: #232b3a;
+    --bg-elevated: #2c3848;
+    --border-strong: #6b7686;
+    --text-muted: #9aa6b8;
+    --text-subtle: #8b97ab;
+    --primary-light: #1e1b4b;
+    --status-backlog: #94a3b8; --status-backlog-bg: #1a2231;
+    --status-open: #60a5fa; --status-open-bg: #172554;
+    --status-progress: #fbbf24; --status-progress-bg: #422006;
+    --status-done: #34d399; --status-done-bg: #064e3b;
+    --status-deferred: #fb923c; --status-deferred-bg: #431407;
+    --status-rejected: #f87171; --status-rejected-bg: #450a0a;
+    --status-hold: #a78bfa; --status-hold-bg: #2e1065;
+    --prio-critical: #f87171; --prio-high: #fb923c; --prio-medium: #fbbf24; --prio-low: #60a5fa;
+    --epic-1: #818cf8; --epic-2: #22d3ee; --epic-3: #fbbf24; --epic-4: #34d399;
+    --spline-blocker: #f87171; --spline-related: #2dd4bf;
+    --type-feature: #60a5fa; --type-bug: #fb923c; --type-architecture: #a78bfa; --type-documentation: #22d3ee; --type-research: #f472b6;
   }
 }

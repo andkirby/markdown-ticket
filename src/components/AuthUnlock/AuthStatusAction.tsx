@@ -22,7 +22,7 @@ export function AuthStatusAction({ accessMode, onUnlockClick }: AuthStatusAction
 
   return (
     <div className="flex items-center gap-2">
-      <span data-testid="auth-status-chip" className="rounded-full border border-border px-2 py-1 text-xs">
+      <span data-testid="auth-status-chip" className="rounded border border-border px-2 py-1 text-xs">
         {label}
       </span>
       {canUnlock && (

@@ -61,6 +61,12 @@
   .project-selector-scroll:hover::-webkit-scrollbar-thumb {
     @apply bg-gray-400;
   }
+  /* v3 Doc 4 / Pr.5: standard focus ring — 2px bg offset + 2px primary @35%.
+     Consume via `ring-prim` class on any keyboard-navigable element. */
+  .ring-prim:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px color-mix(in srgb, hsl(var(--primary)) 35%, transparent);
+  }
 }
 
 /* Print styles */

@@ -10,7 +10,7 @@
   .modal__container {
     @apply flex min-h-[100dvh] justify-center p-4;
     align-items: flex-start;
-    padding-top: 4dvh;
+    padding-top: 10dvh; /* v3 Doc 3: 10vh top anchor (aligns MODALS.md spec) */
   }
 
   /* Opt-in centering for small static modals that don't change height (Pattern C).
@@ -26,11 +26,13 @@
   }
 
   .modal-content {
-    @apply relative w-full rounded-lg bg-white dark:bg-slate-900 shadow-xl transition-all sm:my-8;
+    @apply relative w-full rounded-lg shadow-xl transition-all sm:my-8;
+    background-color: var(--bg-elevated);
   }
 
   .modal__header {
-    @apply px-4 py-3 pr-14 border-b border-gray-200 dark:border-gray-700;
+    @apply px-4 py-3 pr-14 border-b;
+    border-color: hsl(var(--border));
   }
 
   .modal__body {
@@ -52,31 +54,37 @@
   }
 
   .modal__footer {
-    @apply flex items-center justify-end px-4 py-3 border-t border-gray-200 dark:border-gray-700;
+    @apply flex items-center justify-end px-4 py-3 border-t;
+    border-color: hsl(var(--border));
   }
 
   /* Canonical modal heading. All modal titles use <h1 class="modal__headline">.
    * This ensures consistent font size (18px), weight, and color across every modal. */
   .modal__headline {
-    @apply text-lg font-semibold leading-6 text-gray-900 dark:text-white;
+    @apply text-lg font-semibold leading-6;
+    color: hsl(var(--foreground));
   }
 
   /* Deprecated — use .modal__headline */
   .modal__title {
-    @apply text-lg font-semibold leading-6 text-gray-900 dark:text-white;
+    @apply text-lg font-semibold leading-6;
+    color: hsl(var(--foreground));
   }
 
   .modal__description {
-    @apply mt-1 text-sm text-gray-500 dark:text-gray-400;
+    @apply mt-1 text-sm;
+    color: var(--text-muted);
   }
 
   /* Modal content sections — for Pattern B (p-0 body, sections own padding) */
   .modal__section {
-    @apply px-4 py-3 border-b border-gray-200 dark:border-gray-700;
+    @apply px-4 py-3 border-b;
+    border-color: hsl(var(--border));
   }
 
   .modal__section--sm {
-    @apply px-4 py-2.5 border-b border-gray-200 dark:border-gray-700;
+    @apply px-4 py-2.5 border-b;
+    border-color: hsl(var(--border));
   }
 
   .modal__section--content {
@@ -84,7 +92,12 @@
   }
 
   .modal__close--absolute {
-    @apply absolute right-3 top-3 z-20 flex h-8 w-8 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-ring dark:text-gray-500 dark:hover:bg-slate-800 dark:hover:text-gray-200;
+    @apply absolute right-3 top-3 z-20 flex h-8 w-8 items-center justify-center rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-ring;
+    color: var(--text-subtle);
+  }
+  .modal__close--absolute:hover {
+    background-color: var(--bg-muted);
+    color: hsl(var(--foreground));
   }
 
   .modal__close--absolute svg {
@@ -93,7 +106,8 @@
 
   /* Legacy aliases (will be removed) */
   .modal-header {
-    @apply px-4 py-3 pr-14 border-b border-gray-200 dark:border-gray-700;
+    @apply px-4 py-3 pr-14 border-b;
+    border-color: hsl(var(--border));
   }
 
   .modal-body {
@@ -101,6 +115,7 @@
   }
 
   .modal-footer {
-    @apply flex items-center justify-end px-4 py-3 border-t border-gray-200 dark:border-gray-700;
+    @apply flex items-center justify-end px-4 py-3 border-t;
+    border-color: hsl(var(--border));
   }
 }

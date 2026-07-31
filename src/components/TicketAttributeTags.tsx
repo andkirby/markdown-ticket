@@ -8,11 +8,11 @@ import {
 } from '../config/ticketCardBadges'
 import {
   ContextBadge,
-  PriorityBadge,
   RelationshipBadge,
   StatusBadge,
   TypeBadge,
 } from './Badge'
+import { PriorityBadge } from './Badge/PriorityBadge'
 
 interface TicketAttributeTagsProps {
   ticket: Ticket
@@ -56,7 +56,7 @@ const TicketAttributeTags: React.FC<TicketAttributeTagsProps> = ({
       {isVisible(TicketCardBadge.STATUS) && (
         <StatusBadge status={ticket.status} isInvalid={isInvalidStatus} />
       )}
-      {isVisible(TicketCardBadge.PRIORITY) && (
+      {isVisible(TicketCardBadge.PRIORITY) && ticket.priority && (
         <PriorityBadge priority={ticket.priority} />
       )}
       {isVisible(TicketCardBadge.TYPE) && (

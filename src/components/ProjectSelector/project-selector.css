@@ -13,13 +13,9 @@
  */
 
 @layer components {
-  /* ── Shared transition (cards, chips, launcher all use the same lift) ── */
+  /* ── Shared transition (cards, chips, launcher) — v3: color-only, no lift/shadow ── */
   .project-lift {
-    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out, background 0.2s ease-out, border-color 0.2s ease-out;
-  }
-
-  .project-lift:hover {
-    transform: translateY(-2px) scale(1.02);
+    transition: background-color 0.15s ease-out, border-color 0.15s ease-out;
   }
 
   /* ── Project Card (rail active + panel cards) ── */
@@ -27,17 +23,14 @@
   .project-card {
     @apply relative flex items-center justify-center border rounded-xl px-2 sm:px-4 py-1.5 min-h-12 cursor-pointer;
 
-    background: linear-gradient(
-      135deg,
-      var(--project-card-bg-from),
-      var(--project-card-bg-to)
-    );
+    /* v3: flat recessed surface (bg-subtle) — separates from the elevated modal/header. */
+    background-color: var(--bg-subtle);
     border-color: var(--project-card-border);
-    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   }
 
   .project-card:hover {
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    /* v3: hover = stronger border only — no lift, no shadow. */
+    border-color: var(--border-strong);
   }
 
   .project-card:focus-visible {
@@ -52,19 +45,10 @@
     outline-offset: 2px;
   }
 
-  /* Active variant — highlighted gradient */
+  /* Active variant — flat primary-light surface, primary border (v3) */
   .project-card[data-active="true"] {
-    background: linear-gradient(
-      135deg,
-      var(--project-card-active-bg-from),
-      var(--project-card-active-bg-to)
-    );
+    background-color: var(--primary-light);
     border-color: var(--project-card-active-border);
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  }
-
-  .project-card[data-active="true"]:hover {
-    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   }
 
   /* Card child elements */
@@ -147,13 +131,13 @@
     color: var(--plate-fg-dark);
   }
 
-  /* Active card — accent tint (gradient style only) */
+  /* Active card — flat accent tint (gradient style only); v3: no gradient. */
   .project-card[data-active="true"][data-accent-enabled="true"][data-accent-style="gradient"] {
-    background: linear-gradient(to left, var(--project-card-active-bg-from), rgb(from var(--project-accent, #dbeafe) r g b / 0.15));
+    background-color: rgb(from var(--project-accent, #dbeafe) r g b / 0.12);
   }
 
   .dark .project-card[data-active="true"][data-accent-enabled="true"][data-accent-style="gradient"] {
-    background: linear-gradient(to left, var(--project-card-active-bg-from), rgb(from var(--project-accent, #1e3a5f) r g b / 0.15));
+    background-color: rgb(from var(--project-accent, #1e3a5f) r g b / 0.18);
   }
 
   /* Autocolor off — no accent when no user accent set */
@@ -176,6 +160,8 @@
 
   .project-card__code {
     @apply text-xs sm:text-sm font-medium flex-shrink-0;
+    font-family: 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
     color: var(--project-card-code-color);
   }
 
@@ -199,20 +185,15 @@
   .project-chip {
     @apply relative inline-flex items-center justify-center rounded-md px-2 py-1.5 h-12 cursor-pointer;
 
-    background: linear-gradient(
-      135deg,
-      var(--project-card-bg-from),
-      var(--project-card-bg-to)
-    );
+    /* v3: flat elevated surface, 1px border — no gradient, no shadow. */
+    background-color: var(--bg-elevated);
     border: 1px solid var(--project-card-border);
-    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   }
 
   .project-chip:hover {
-    background: var(--accent);
-    color: var(--accent-foreground);
+    /* v3: hover = muted bg + stronger border — no lift, no shadow. */
+    background-color: var(--bg-muted);
     border-color: var(--project-chip-hover-border);
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   }
 
   .project-chip:focus-visible {
@@ -294,6 +275,8 @@
 
   .project-chip__code {
     @apply text-sm font-medium leading-none;
+    font-family: 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
     color: var(--project-chip-code-color);
   }
 
@@ -352,24 +335,15 @@
   .project-launcher {
     @apply inline-flex items-center justify-center rounded-full w-10 h-10 cursor-pointer;
 
-    background: linear-gradient(
-      135deg,
-      var(--project-launcher-bg-from),
-      var(--project-launcher-bg-to)
-    );
+    /* v3: flat elevated surface, 1px border — no gradient, no shadow. */
+    background-color: var(--bg-elevated);
     border: 1px solid var(--project-launcher-border);
-    backdrop-filter: blur(4px);
-    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   }
 
   .project-launcher:hover {
-    background: linear-gradient(
-      135deg,
-      var(--project-launcher-hover-bg-from),
-      var(--project-launcher-hover-bg-to)
-    );
+    /* v3: hover = muted bg + stronger border — no lift, no shadow. */
+    background-color: var(--bg-muted);
     border-color: var(--project-launcher-hover-border);
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   }
 
   .project-launcher.active {
@@ -389,68 +363,76 @@
   .project-search::placeholder {
     color: var(--project-search-placeholder);
   }
+
+  /* ── Hover-card preview (rail card + chip) — v3 text tiers ── */
+  .project-hovercard__code {
+    color: hsl(var(--foreground));
+  }
+  .project-hovercard__name {
+    color: var(--text-muted);
+  }
+  .project-hovercard__desc {
+    color: var(--text-subtle);
+  }
+
+  /* ── Project browser: search icon + empty-state text (v3) ── */
+  .project-browser__search-icon {
+    color: var(--text-subtle);
+  }
+  .project-browser__empty-state {
+    color: var(--text-muted);
+  }
+
+  /* Launcher plus-icon color (v3) */
+  .project-launcher__icon {
+    color: var(--text-muted);
+  }
+}
+
+/* ── Project browser modal surface (v3) ──
+   The shared Modal (src/components/ui/Modal.tsx) applies a `bg-white` Tailwind
+   utility via its default variant. That utility lives in the Tailwind utilities
+   layer, which always wins over .modal-content's themed `var(--bg-elevated)`
+   (components layer) — yielding a white panel in dark mode. modal.css is shared
+   and must not be edited, so this UNLAYERED rule restores the themed elevated
+   surface, scoped to the project browser modal content only. Unlayered normal
+   declarations outrank every layered rule regardless of specificity. */
+[data-testid="project-browser-panel"] {
+  background-color: var(--bg-elevated);
 }
 
 /* ── CSS Variables — Light Mode ── */
 :root {
-  --project-card-bg-from: theme('colors.white');
-  --project-card-bg-to: rgb(249 250 251 / 0.8);
-  --project-card-border: rgb(229 231 235 / 0.5);
-  --project-card-code-color: theme('colors.gray.900');
-  --project-card-title-color: theme('colors.gray.700');
-  --project-card-desc-color: theme('colors.gray.500');
+  /* Card/chip surface — flat v3 tiers (no gradient/shadow). */
+  --project-card-border: hsl(var(--border));
 
-  --project-card-active-bg-from: theme('colors.blue.50');
-  --project-card-active-bg-to: theme('colors.indigo.50');
-  --project-card-active-border: theme('colors.blue.200');
+  /* Text tiers (v3) */
+  --project-card-code-color: hsl(var(--foreground));
+  --project-card-title-color: var(--text-muted);
+  --project-card-desc-color: var(--text-subtle);
 
-  --project-chip-code-color: theme('colors.gray.700');
-  --project-chip-hover-border: theme('colors.blue.300');
+  /* Active card — flat primary-light surface, primary border */
+  --project-card-active-border: hsl(var(--primary));
+
+  --project-chip-code-color: var(--text-muted);
+  --project-chip-hover-border: var(--border-strong);
 
   --plate-fg-light: theme('colors.white');
   --plate-fg-dark: theme('colors.gray.900');
 
-  --project-launcher-bg-from: theme('colors.gray.100');
-  --project-launcher-bg-to: rgb(229 231 235 / 0.8);
-  --project-launcher-border: rgb(209 213 219 / 0.5);
-  --project-launcher-hover-bg-from: theme('colors.blue.50');
-  --project-launcher-hover-bg-to: theme('colors.indigo.50');
-  --project-launcher-hover-border: theme('colors.blue.300');
+  --project-launcher-border: hsl(var(--border));
+  --project-launcher-hover-border: var(--border-strong);
 
-  --project-search-bg: theme('colors.gray.50');
-  --project-search-border: theme('colors.gray.200');
-  --project-search-text: theme('colors.gray.900');
-  --project-search-placeholder: theme('colors.gray.400');
+  --project-search-bg: var(--bg-muted);
+  --project-search-border: hsl(var(--border));
+  --project-search-text: hsl(var(--foreground));
+  --project-search-placeholder: var(--text-subtle);
 }
 
 /* ── CSS Variables — Dark Mode ── */
 .dark {
-  --project-card-bg-from: theme('colors.slate.800');
-  --project-card-bg-to: rgb(15 23 42 / 0.8);
-  --project-card-border: rgb(51 65 85 / 0.5);
-  --project-card-code-color: theme('colors.white');
-  --project-card-title-color: theme('colors.gray.300');
-  --project-card-desc-color: theme('colors.gray.400');
-
-  --project-card-active-bg-from: theme('colors.blue.950');
-  --project-card-active-bg-to: theme('colors.indigo.950');
-  --project-card-active-border: theme('colors.blue.800');
-
-  --project-chip-code-color: theme('colors.gray.300');
-  --project-chip-hover-border: theme('colors.blue.700');
-
+  /* Only accent-contrast text shades differ in dark mode; every surface/border/text
+     var above is v3-indirected and self-adapts via design-tokens.css dark overrides. */
   --plate-fg-light: theme('colors.gray.300');
   --plate-fg-dark: theme('colors.gray.700');
-
-  --project-launcher-bg-from: theme('colors.slate.700');
-  --project-launcher-bg-to: rgb(30 41 59 / 0.8);
-  --project-launcher-border: rgb(71 85 105 / 0.5);
-  --project-launcher-hover-bg-from: theme('colors.blue.950');
-  --project-launcher-hover-bg-to: theme('colors.indigo.950');
-  --project-launcher-hover-border: theme('colors.blue.700');
-
-  --project-search-bg: theme('colors.slate.800');
-  --project-search-border: theme('colors.slate.600');
-  --project-search-text: theme('colors.white');
-  --project-search-placeholder: theme('colors.slate.500');
 }
