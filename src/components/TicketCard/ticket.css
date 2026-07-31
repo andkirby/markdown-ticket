@@ -13,18 +13,25 @@
 @layer components {
   /* Base ticket card */
   .ticket-card {
-    /* v3 Doc 1 Pr.1 (Borders > Shadows) + Pr.3 (density): flat surface, 1px border, tighter radius/padding. */
-    @apply border cursor-pointer;
+    /* design3: flat surface, transparent border until hover; importance shown by a
+       data-driven accent stripe (critical/high). Background tiers + whitespace hold
+       the layout — no permanent gray box. */
+    cursor: pointer;
+    background-color: var(--bg-elevated);
+    border: 1px solid transparent;
+    border-left: 3px solid var(--card-accent, transparent);
     border-radius: var(--radius-card);
     padding: var(--pad-y) var(--pad-x);
-    @apply transition-colors duration-150 ease-out;
-    background-color: var(--bg-elevated);
-    border-color: hsl(var(--border));
-    /* Hover = stronger border only — no lift, no shadow (v3). */
+    padding-left: calc(var(--pad-x) - 3px);
+    transition: border-color 150ms ease-out;
   }
   .ticket-card:hover {
     border-color: var(--border-strong);
+    border-left-color: var(--card-accent, var(--border-strong));
   }
+  /* Accent stripe = importance landmark: critical/high only (low/medium unset → transparent). */
+  .ticket-card[data-priority="critical"] { --card-accent: var(--prio-critical); }
+  .ticket-card[data-priority="high"]     { --card-accent: var(--prio-high); }
   /* Cloud-projected stub — dashed border signals non-canonical (no local file yet). */
   .ticket-card--projected {
     border-style: dashed;

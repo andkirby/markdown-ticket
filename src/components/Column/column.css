@@ -31,7 +31,6 @@
     width: 300px;
     flex-shrink: 0;
     background: var(--bg-subtle);
-    border: 1px solid hsl(var(--border));
     border-radius: var(--radius-card);
     overflow: hidden;
   }
@@ -42,10 +41,9 @@
     @apply ring-2 ring-primary/40;
   }
 
-  /* Column header — border only, no shadow (v3 Doc 1 Pr.1) */
+  /* Column header — flat (design3): status tint + colored top border carry the data; no gray underline. */
   .column__header {
     @apply px-3 py-2 z-10 flex-shrink-0;
-    border-bottom: 1px solid hsl(var(--border));
   }
   .column__header h3 {
     text-transform: uppercase;
@@ -118,12 +116,13 @@
     @apply flex flex-col items-center justify-start gap-2 cursor-pointer h-full w-full;
     padding: 8px 4px;
     background: var(--bg-subtle);
-    border: 1px solid var(--border-strong);
+    border: 1px solid transparent;
     border-radius: var(--radius-card);
     transition: background-color 0.15s ease-out;
   }
   .column__collapsed:hover {
     background: var(--bg-muted);
+    border-color: var(--border-strong);
   }
 
   .collapsed-strip {
