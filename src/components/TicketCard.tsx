@@ -3,6 +3,7 @@ import type { Ticket } from '../types'
 import * as React from 'react'
 import { VALID_STATUSES } from '../utils/ticketStatus'
 import { PriorityIcon } from './Badge/PriorityIcon'
+import { formatDataAttr } from './Badge/utils'
 import { RelativeTimestamp } from './shared/RelativeTimestamp'
 import TicketAttributeTags from './TicketAttributeTags'
 import { TicketCode } from './TicketCode'
@@ -31,6 +32,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onMove: _onMove, onClic
       onClick={onEdit}
       data-testid={`ticket-card ticket-${ticket.code}`}
       data-ticket-key={ticket.code}
+      data-priority={ticket.priority ? formatDataAttr(ticket.priority) : undefined}
       data-invalid={hasInvalidStatus ? 'true' : undefined}
       title={hasInvalidStatus ? `Invalid status: "${ticket.status}"` : undefined}
     >
