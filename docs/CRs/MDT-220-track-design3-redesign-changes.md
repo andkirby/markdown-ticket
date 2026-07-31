@@ -44,6 +44,7 @@ priority: Medium
 - Added (Done): priority accent stripe — 3px left edge in --prio-* (markup sets --accent; .kanban-card border-left); epic accent stripe in --epic-color under the same --accent rule; hover keeps the accent left edge while revealing the other three borders
 - Rule (binding): accent color must map to data (priority or epic); never decorative
 - Deferred: selected-card indigo accent — no board selection state exists yet
+- Drift cleanup (Done): removed the floating col-header underline; collapsed-column border -> transparent to match expanded columns; avatar ring recolored to --bg-elevated to match the card surface; :active now preserves the accent stripe
 
 ### Functionality and Interactions
 
