@@ -151,6 +151,55 @@
     <div class="mono">JetBrains Mono — MDT-220 · var(--prio-critical)</div>
   </div>
 
+  <style>
+    .stage { background: var(--bg-subtle); border-radius: 10px; padding: 1rem; display: flex; gap: .75rem; flex-wrap: wrap; }
+    .surface-card { background: var(--bg-elevated); border: 1px solid transparent; border-radius: var(--radius-card); padding: .75rem 1rem; flex: 1; min-width: 150px; transition: border-color .15s; }
+    .surface-card:hover { border-color: var(--border-strong); }
+    .surface-card b { color: hsl(var(--foreground)); }
+    .tierbar { display: inline-flex; align-items: center; gap: .4rem; padding: .4rem .7rem; border-radius: 8px; font-size: .75rem; font-family: "JetBrains Mono", monospace; }
+    .form-row { display: flex; gap: .6rem; align-items: flex-end; flex-wrap: wrap; margin-top: .85rem; }
+    .field { display: flex; flex-direction: column; gap: .25rem; }
+    .field label { font-size: .7rem; color: var(--text-subtle); }
+    .btn { display: inline-flex; align-items: center; gap: .4rem; padding: .4rem .85rem; border-radius: 6px; font-size: .82rem; font-weight: 500; cursor: pointer; border: 1px solid transparent; transition: background-color .15s, border-color .15s; }
+    .btn-primary { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
+    .btn-primary:hover { filter: brightness(1.07); }
+    .btn-secondary { background: hsl(var(--secondary)); color: hsl(var(--secondary-foreground)); }
+    .btn-outline { background: var(--bg-elevated); border-color: var(--border-strong); color: hsl(var(--foreground)); }
+    .btn-outline:hover { background: var(--bg-muted); }
+    .btn-ghost { background: transparent; color: hsl(var(--foreground)); }
+    .btn-ghost:hover { background: var(--bg-muted); }
+    .input-demo, .select-demo { background: var(--bg-muted); border: 1px solid var(--border-strong); border-radius: 6px; padding: .4rem .6rem; color: hsl(var(--foreground)); font: inherit; font-size: .82rem; }
+    .input-demo:focus, .select-demo:focus { outline: none; border-color: hsl(var(--primary)); box-shadow: 0 0 0 2px hsl(var(--primary) / .3); }
+    .input-demo.error { border-color: hsl(var(--destructive)); }
+    .checkbox-demo { width: 16px; height: 16px; accent-color: hsl(var(--primary)); }
+  </style>
+
+  <h2>surfaces &amp; elevation — borderless, tier-led</h2>
+  <div class="stage">
+    <div class="surface-card"><b>Card on subtle</b><br><small class="src">bg-elevated over bg-subtle — tiers carry the structure, no border at rest; hover reveals border-strong</small></div>
+    <div class="surface-card"><b>Accent landmark</b><br><small class="src">a 3px left stripe (data-driven) is the only edge that isn't whitespace</small></div>
+  </div>
+  <div class="form-row" style="margin-top:.6rem;align-items:center">
+    <span class="tierbar" style="background:var(--bg-subtle);color:var(--text-muted)">bg-subtle</span>
+    <span class="tierbar" style="background:var(--bg-muted);color:var(--text-muted)">bg-muted</span>
+    <span class="tierbar" style="background:var(--bg-elevated);color:var(--text-muted);border:1px solid var(--border-strong)">bg-elevated</span>
+    <span class="tierbar" style="background:hsl(var(--primary));color:hsl(var(--primary-foreground))">primary</span>
+  </div>
+
+  <h2>form elements</h2>
+  <div class="form-row">
+    <button class="btn btn-primary">Primary</button>
+    <button class="btn btn-secondary">Secondary</button>
+    <button class="btn btn-outline">Outline</button>
+    <button class="btn btn-ghost">Ghost</button>
+  </div>
+  <div class="form-row">
+    <div class="field"><label>text input</label><input class="input-demo" value="MDT-220"></div>
+    <div class="field"><label>error state</label><input class="input-demo error" value="bad/path"></div>
+    <div class="field"><label>select</label><select class="select-demo"><option>Open</option><option>Done</option><option>On Hold</option></select></div>
+    <div class="field"><label>checkbox</label><input type="checkbox" class="checkbox-demo" checked></div>
+  </div>
+
   <p class="src" style="margin-top:2.5rem">Tokens: <code>src/styles/design-tokens.css</code> · Reference: <code>src/THEME.md</code></p>
 
   <script>

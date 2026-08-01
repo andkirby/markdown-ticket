@@ -313,3 +313,26 @@ const statusVariants = cva(baseBadgeClasses, {
 ```
 
 **One base class. Data attribute = semantic meaning. Size/state as modifiers.**
+
+---
+
+## Known improvements (WCAG) — badges keep current colors; tracked here
+
+A contrast audit (WCAG 2.2) measured badge label text against its tint background. In **light mode** the saturated-foreground-on-pale-tint pattern falls below the 4.5:1 text minimum; dark-mode badges pass (5–8:1).
+
+| surface | light fg→ratio | proven fix |
+|---|---|---|
+| status open / progress / done / deferred / rejected / backlog | 3.1–4.4 ✗ | one step darker (e.g. open `#3b82f6`→`#1d4ed8` = **6.16**) |
+| priority critical / high / medium / low | 2.7–4.2 ✗ | 800-step fg, or tint 15%→~22% |
+| type feature / bug / documentation | 3.1–3.2 ✗ | darker fg |
+
+Also: `--text-subtle` fails in dark on `--bg-elevated` (4.03; → `#9aa6b8` = 4.82).
+
+**Root cause — one token, two jobs.** `--status-open` etc. is a vivid mid-tone used for *both* the accent (icon/stripe, wants vivid) *and* the label text (wants dark). Best practice (Radix / Material 3) separates per-step pairs. The single-rule fix is to derive the text from the accent via OKLCH relative color:
+
+```css
+/* darker label, every hue, one declaration — requires oklch() tokens */
+.badge { color: oklch(from var(--accent) calc(l - 0.18) c h); }
+```
+
+That implies migrating `design-tokens.css` to `oklch()` (with sRGB hex fallbacks) — which also makes the dark tier ramp perceptually even and enables `calc(l - 0.1)` hover states. **Deferred** per MDT-220; badges retain their current colors until that migration.

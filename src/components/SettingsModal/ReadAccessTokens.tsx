@@ -196,7 +196,7 @@ export function ReadAccessTokens({ projects, linkOrigin, onLinkOriginChange }: R
       {status === 'error' && <p className="settings-desc text-destructive">Read access was not created.</p>}
 
       {creationResult && (
-        <div data-testid="sharing-creation-result" className="mt-3 rounded-md border border-border p-3">
+        <div data-testid="sharing-creation-result" className="mt-3 rounded-md bg-muted p-3">
           <p className="settings-label">{creationResult.name}</p>
           <input value={creationResult.rawToken} readOnly className="settings-input mt-2 font-mono text-xs" />
           <button
@@ -220,7 +220,7 @@ export function ReadAccessTokens({ projects, linkOrigin, onLinkOriginChange }: R
             key={token.id}
             data-testid="sharing-named-access-row"
             data-access-name={token.name}
-            className="rounded-md border border-border p-3"
+            className="rounded-md bg-muted p-3"
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
