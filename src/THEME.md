@@ -1,62 +1,141 @@
 # Design Tokens
 
-Reference for CSS custom properties (design tokens) used in this project.
+Reference for the CSS custom properties (design tokens) that drive theming, color, and density across the app.
 
-**Source of truth:** `src/index.css` lines 43-87
+**Source of truth:** [`src/styles/design-tokens.css`](styles/design-tokens.css) — imported first by `src/index.css`, so every other layer inherits these values. `THEME.md` is the human-readable mirror; if the two disagree, the CSS file wins. See [`src/styleguide.html`](styleguide.html) for a live rendered swatch page.
 
 ---
 
-## Colors
+## Two palettes
 
-Colors use HSL format for easy manipulation (opacity, etc.).
+The token file holds **two aligned palettes** (both retuned to the `designs/board-zai` v3 system):
 
-### Light Mode (Default)
+| Palette | Format | Consumed as | Used by |
+|---|---|---|---|
+| **shadcn HSL set** | bare HSL channels (`243.4 75.4% 58.6%`) | `hsl(var(--primary))` in CSS, or Tailwind `bg-primary` / `text-primary-foreground` | base surfaces, Tailwind utilities, shadcn primitives |
+| **v3 semantic set** | hex (`#dc2626`) | bare `var(--prio-critical)` in CSS | the design3 system: bg tiers, badges, card accents, splines |
 
-| Token | HSL Value | Usage |
-|-------|-----------|-------|
+Never wrap a v3 hex token in `hsl()` — it is already a color. Never use a shadcn token bare — it is raw channels, not a color.
+
+---
+
+## shadcn HSL palette
+
+### Light (`:root`)
+
+| Token | Value | Usage |
+|---|---|---|
 | `--background` | `0 0% 100%` | Page background |
-| `--foreground` | `222.2 84% 4.9%` | Primary text |
-| `--card` | `0 0% 100%` | Card backgrounds |
-| `--popover` | `0 0% 100%` | Dropdown/popover bg |
-| `--primary` | `221.2 83.2% 53.3%` | Primary actions (blue) |
-| `--secondary` | `210 40% 96%` | Secondary elements |
-| `--muted` | `210 40% 96%` | Muted backgrounds |
-| `--muted-foreground` | `215.4 16.3% 46.9%` | Muted text |
-| `--accent` | `210 40% 96%` | Accent backgrounds |
-| `--destructive` | `0 84.2% 60.2%` | Errors, danger (red) |
-| `--border` | `214.3 31.8% 91.4%` | Border color |
-| `--ring` | `221.2 83.2% 53.3%` | Focus ring |
+| `--foreground` | `222.2 47.4% 11.2%` | Primary text |
+| `--card` / `--card-foreground` | `0 0% 100%` / `222.2 47.4% 11.2%` | Card surface + text |
+| `--popover` / `--popover-foreground` | `0 0% 100%` / `222.2 47.4% 11.2%` | Dropdown/popover surface + text |
+| `--primary` / `--primary-foreground` | `243.4 75.4% 58.6%` (indigo) / `0 0% 100%` | Primary actions |
+| `--secondary` / `--secondary-foreground` | `215 27.3% 91.4%` / `222.2 47.4% 11.2%` | Secondary surface |
+| `--muted` / `--muted-foreground` | `215 27.3% 91.4%` / `215.3 19.3% 34.5%` | Muted surface / muted text |
+| `--accent` / `--accent-foreground` | `215 27.3% 91.4%` / `222.2 47.4% 11.2%` | Accent surface |
+| `--destructive` / `--destructive-foreground` | `0 84.2% 60.2%` / `0 0% 100%` | Errors, danger |
+| `--border` / `--input` | `218.8 16.5% 79.8%` | Borders / inputs (shared value) |
+| `--ring` | `243.4 75.4% 58.6%` | Focus ring |
 
-### Dark Mode
+### Dark (`.dark`)
 
-Applied via `.dark` class on root element. See `src/index.css` lines 67-87 for dark mode values.
+Applied via a `.dark` class on the root element. Background shifts near-black, text near-white, primary brightens.
 
-**Key differences:**
-- Background shifts to near-black (`222.2 84% 4.9%`)
-- Text shifts to near-white (`210 40% 98%`)
-- Primary becomes brighter (`217.2 91.2% 59.8%`)
+| Token | Value |
+|---|---|
+| `--background` | `220 29% 6.1%` |
+| `--foreground` | `215 35.3% 93.3%` |
+| `--card` / `--popover` | `214.3 24.1% 22.7%` |
+| `--primary` | `238.7 83.5% 66.7%` |
+| `--secondary` / `--muted` / `--accent` | `219.1 24.7% 18.2%` |
+| `--muted-foreground` | `216 17.4% 66.3%` |
+| `--destructive` | `0 62.8% 30.6%` |
+| `--border` / `--input` | `213.6 16.1% 30.4%` |
+| `--ring` | `238.7 83.5% 66.7%` |
+
+---
+
+## v3 semantic palette
+
+The design3 system. Consumed as bare `var(--x)`. These hold the bg-tier grammar (which replaces decorative borders), the badge/accent colors, and the density slots.
+
+### Surface tiers & structure
+
+| Token | Light | Dark | Usage |
+|---|---|---|---|
+| `--bg-subtle` | `#eef1f5` | `#1a1f2b` | Recessed tier (columns, chips, nav panes) |
+| `--bg-muted` | `#e3e8ef` | `#232b3a` | Mid tier |
+| `--bg-elevated` | `#ffffff` | `#2c3848` | Raised surface (cards, header, inputs) |
+| `--border-strong` | `#8a93a2` | `#6b7686` | The only structural border token (hover/active reveals) |
+| `--text-muted` | `#475569` | `#9aa6b8` | Secondary text |
+| `--text-subtle` | `#5b6675` | `#8b97ab` | Tertiary text |
+| `--primary-light` | `#eef2ff` | `#1e1b4b` | Primary tint (active project, selection) |
+
+### Status (badge fg / bg pairs)
+
+| Status | fg token | Light fg/bg | Dark fg/bg |
+|---|---|---|---|
+| backlog | `--status-backlog` | `#64748b` / `#f1f5f9` | `#94a3b8` / `#1a2231` |
+| open | `--status-open` | `#3b82f6` / `#eff6ff` | `#60a5fa` / `#172554` |
+| progress | `--status-progress` | `#d97706` / `#fffbeb` | `#fbbf24` / `#422006` |
+| done | `--status-done` | `#059669` / `#ecfdf5` | `#34d399` / `#064e3b` |
+| deferred | `--status-deferred` | `#ea580c` / `#fff7ed` | `#fb923c` / `#431407` |
+| rejected | `--status-rejected` | `#dc2626` / `#fef2f2` | `#f87171` / `#450a0a` |
+| hold | `--status-hold` | `#7c3aed` / `#f5f3ff` | `#a78bfa` / `#2e1065` |
+
+Status → token mapping (proposed→backlog, approved→open, in-progress→progress, implemented→done, rejected→rejected, on-hold→hold, invalid→rejected) lives in [`badge.css`](components/Badge/badge.css).
+
+### Priority (`--prio-*`)
+
+| Token | Light | Dark |
+|---|---|---|
+| `--prio-critical` | `#dc2626` | `#f87171` |
+| `--prio-high` | `#ea580c` | `#fb923c` |
+| `--prio-medium` | `#d97706` | `#fbbf24` |
+| `--prio-low` | `#2563eb` | `#60a5fa` |
+
+Drives the priority icon glyph color and the critical/high card accent stripe.
+
+### Epic (`--epic-*`), Spline (`--spline-*`), Type (`--type-*`)
+
+| Group | Light | Dark |
+|---|---|---|
+| `--epic-1..4` | `#4f46e5 #06b6d4 #f59e0b #10b981` | `#818cf8 #22d3ee #fbbf24 #34d399` |
+| `--spline-blocker` / `--spline-related` | `#dc2626` / `#0d9488` | `#f87171` / `#2dd4bf` |
+| `--type-feature/bug/architecture/documentation/research` | `#3b82f6 #ea580c #7c3aed #0891b2 #db2777` | `#60a5fa #fb923c #a78bfa #22d3ee #f472b6` |
+
+### Density slots (mode-independent px)
+
+| Token | Value | Usage |
+|---|---|---|
+| `--pad-y` / `--pad-x` | `10px` / `12px` | Card padding (driven by `CardDensity` pref) |
+| `--fs-xs` / `--fs-md` | `11px` / `13px` | Card font sizes |
+| `--radius-card` | `8px` | Card corner radius |
+| `--sz-icon` | `16px` | Fixed lucide glyph size beside the ticket key |
 
 ---
 
 ## Usage
 
 ```css
-/* In CSS */
-.my-element {
-  background: hsl(var(--primary));
-  border-color: hsl(var(--border));
-}
+/* shadcn HSL token — wrap in hsl() */
+.btn { background: hsl(var(--primary)); border-color: hsl(var(--border)); }
+.btn { background: hsl(var(--primary) / 0.5); } /* with opacity */
 
-/* With opacity */
-.my-element {
-  background: hsl(var(--primary) / 0.5);
+/* v3 semantic token — use bare */
+.ticket-card { border-left: 3px solid var(--card-accent, transparent); }
+.badge[data-priority="critical"] {
+  background: color-mix(in srgb, var(--prio-critical) 15%, transparent);
+  color: var(--prio-critical);
 }
 ```
 
 ```tsx
-/* In Tailwind */
+/* Tailwind utilities resolve to the shadcn HSL tokens */
 <div className="bg-primary text-primary-foreground border-border" />
 ```
+
+See also: [STYLING.md](STYLING.md) — theming contract & component patterns · [BADGE_ARCHITECTURE.md](BADGE_ARCHITECTURE.md) — badge color system.
 
 ---
 
@@ -71,7 +150,7 @@ Applied via `.dark` class on root element. See `src/index.css` lines 67-87 for d
 
 ### Heading Scale
 
-Defined in `@layer base` (index.css lines 104-130):
+Defined in `@layer base` (`src/styles/base.css` lines 17-43):
 
 | Element | Size | Responsive |
 |---------|------|------------|
