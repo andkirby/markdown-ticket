@@ -512,10 +512,10 @@ const BoardContent: React.FC<BoardProps> = ({
                             clearError()
                           }}
                           disabled={loading}
-                          className={`h-9 px-2 py-1 border rounded text-center transition-colors flex-shrink-0 ${
+                          className={`h-9 px-2 py-1 rounded text-center transition-colors flex-shrink-0 ${
                             selectedProject?.id === project.id
-                              ? 'bg-primary text-primary-foreground border-primary'
-                              : 'bg-background border-border hover:bg-muted'
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-muted text-muted-foreground hover:bg-muted/70'
                           } ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                         >
                           <div className="text-xs font-medium leading-tight whitespace-nowrap">{project.id}</div>

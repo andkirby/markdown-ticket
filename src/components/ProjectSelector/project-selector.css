@@ -25,7 +25,7 @@
 
     /* v3: flat recessed surface (bg-subtle) — separates from the elevated modal/header. */
     background-color: var(--bg-subtle);
-    border-color: var(--project-card-border);
+    border-color: transparent;
   }
 
   .project-card:hover {
@@ -115,8 +115,6 @@
     padding: var(--plate-px);
     color: var(--plate-fg-light);
     background: rgb(from var(--project-accent) r g b / var(--plate-opacity));
-    border: 1px solid var(--project-card-border);
-    border-left: none;
     border-radius: var(--plate-radius);
     box-shadow: none;
   }
@@ -186,8 +184,8 @@
     @apply relative inline-flex items-center justify-center rounded-md px-2 py-1.5 h-12 cursor-pointer;
 
     /* v3: flat elevated surface, 1px border — no gradient, no shadow. */
-    background-color: var(--bg-elevated);
-    border: 1px solid var(--project-card-border);
+    background-color: var(--bg-subtle);
+    border: 1px solid transparent;
   }
 
   .project-chip:hover {
@@ -256,8 +254,6 @@
     padding: var(--plate-px);
     color: var(--plate-fg-light);
     background: rgb(from var(--project-accent) r g b / var(--plate-opacity));
-    border: 1px solid var(--project-card-border);
-    border-left: none;
     border-radius: var(--plate-radius);
     box-shadow: none;
   }
@@ -336,8 +332,8 @@
     @apply inline-flex items-center justify-center rounded-full w-10 h-10 cursor-pointer;
 
     /* v3: flat elevated surface, 1px border — no gradient, no shadow. */
-    background-color: var(--bg-elevated);
-    border: 1px solid var(--project-launcher-border);
+    background-color: var(--bg-subtle);
+    border: 1px solid transparent;
   }
 
   .project-launcher:hover {

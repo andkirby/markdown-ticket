@@ -60,10 +60,9 @@ export const ResolutionDialog: React.FC<ResolutionDialogProps> = ({
                 onClick={() => onResolve(status)}
                 data-testid={getResolutionOptionTestId(status)}
                 className="
-                  w-full rounded-lg border-2 border-gray-200 bg-white p-4 text-left transition-all
-                  hover:border-blue-500 hover:bg-blue-50
-                  focus:outline-none focus:ring-2 focus:ring-blue-500
-                  dark:border-gray-600 dark:bg-gray-800 dark:hover:bg-blue-900/20
+                  w-full rounded-lg bg-muted p-4 text-left transition-colors
+                  hover:bg-primary/10
+                  focus:outline-none focus:ring-2 focus:ring-primary
                 "
               >
                 <div className="flex items-start justify-between">
