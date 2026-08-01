@@ -11,7 +11,7 @@
   }
 
   .header__content {
-    @apply flex justify-between h-16;
+    @apply flex justify-between h-16 gap-4;
   }
 
   /* overflow-hidden omitted so the hover-revealed chip strip (MDT-185) can
@@ -26,6 +26,6 @@
   }
 
   .header__right {
-    @apply flex items-center;
+    @apply flex items-center gap-3;
   }
 }

@@ -21,7 +21,7 @@
 @layer components {
   /* Trigger button — border-led flat control on the header surface. */
   .filter-button {
-    @apply inline-flex items-center gap-1.5 border rounded-md px-3 py-1.5 text-sm transition-colors;
+    @apply inline-flex items-center gap-1.5 border rounded-md px-3 h-9 text-sm transition-colors;
     background-color: var(--bg-elevated);
     border-color: oklch(var(--border));
   }
