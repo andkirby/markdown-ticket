@@ -231,19 +231,15 @@ Examples:
 ```
 
 ```css
+/* Flat: bg tint + colored text, NO border (border removed from the shared Badge base) */
 .badge {
-  @apply inline-flex items-center rounded-full px-2 py-1 text-xs font-medium;
+  @apply inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium;
+  @apply transition-colors;
+  border-radius: 4px;
 }
 
-.badge[data-status="approved"] {
-  background: var(--badge-approved-bg);
-  color: var(--badge-approved-text);
-}
-
-.badge[data-priority="critical"] {
-  background: var(--badge-critical-bg);
-  color: var(--badge-critical-text);
-}
+.badge[data-status="approved"] { background: var(--status-open-bg); color: var(--status-open); }
+.badge[data-priority="critical"] { background: color-mix(in srgb, var(--prio-critical) 15%, transparent); color: var(--prio-critical); }
 ```
 
 ### Use Modifiers For Structure
