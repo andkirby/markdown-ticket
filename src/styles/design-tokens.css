@@ -1,66 +1,64 @@
-/* Design tokens — light and dark color scheme variables */
+/* Design tokens — light and dark color scheme variables (OKLCH). */
 /* Source of truth for all CSS custom properties consumed by components and Tailwind. */
-/* Both the shadcn HSL set and the v3 hex set are aligned to designs/board-zai v3,
-   so the design3 palette reads consistently whether a surface consumes
-   hsl(var(--x)) Tailwind utilities or bare var(--x) v3 tokens. */
+/* All colors are OKLCH (perceptually uniform). Two aligned sets, both oklch:
+   - shadcn set: bare channels (L C H), consumed via oklch(var(--x)) or Tailwind bg-x.
+   - v3 semantic set: full oklch() colors, consumed via bare var(--x). */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 47.4% 11.2%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 47.4% 11.2%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 47.4% 11.2%;
-    --primary: 244.5 57.9% 50.6%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 213.3 29.7% 82.2%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 215 27.3% 91.4%;
-    --muted-foreground: 215.3 19.3% 34.5%;
-    --accent: 215 27.3% 91.4%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 218.8 16.5% 79.8%;
-    --input: 218.8 16.5% 79.8%;
-    --ring: 244.5 57.9% 50.6%;
+    --background: 1.0 0.0 89.9;
+    --foreground: 0.208 0.04 265.7;
+    --card: 1.0 0.0 89.9;
+    --card-foreground: 0.208 0.04 265.7;
+    --popover: 1.0 0.0 89.9;
+    --popover-foreground: 0.208 0.04 265.7;
+    --primary: 0.457 0.214 277.0;
+    --primary-foreground: 1.0 0.0 89.9;
+    --secondary: 0.853 0.025 253.9;
+    --secondary-foreground: 0.208 0.04 265.7;
+    --muted: 0.929 0.011 256.7;
+    --muted-foreground: 0.445 0.037 257.3;
+    --accent: 0.929 0.011 256.7;
+    --accent-foreground: 0.208 0.04 265.7;
+    --destructive: 0.637 0.208 25.3;
+    --destructive-foreground: 1.0 0.0 89.9;
+    --border: 0.835 0.017 262.7;
+    --input: 0.835 0.017 262.7;
+    --ring: 0.457 0.214 277.0;
     --radius: 0.75rem;
-    --code-bg: 210 40% 98%;
-    --code-fg: 222.2 84% 4.9%;
-    --code-inline-fg: 217 70% 38%;
-    --code-selection: 214.3 31.8% 91.4%;
-    --code-token-comment: 215.4 16.3% 46.9%;
-    --code-token-punctuation: 222.2 84% 4.9%;
-    --code-token-keyword: 262.1 83.3% 57.8%;
-    --code-token-string: 142.1 76.2% 36.3%;
-    --code-token-function: 221.2 83.2% 53.3%;
-    --code-token-number: 24.6 95% 53.1%;
-    --code-token-property: 0 84.2% 60.2%;
-    --code-token-operator: 215.4 16.3% 46.9%;
-    --code-token-important: 0 84.2% 60.2%;
-    /* ── v3 design-system semantic tokens (hex; consume via bare var()) ── */
-    /* Aligned 1:1 to designs/board-zai/assets/css/01-tokens.css :root. */
-    --bg-subtle: #eef1f5;
-    --bg-muted: #e3e8ef;
-    --bg-elevated: #ffffff;
-    --border-strong: #8a93a2;
-    --text-muted: #475569;
-    --text-subtle: #5b6675;
-    --primary-light: #eef2ff;
-    --status-backlog: #64748b; --status-backlog-bg: #f1f5f9;
-    --status-open: #3b82f6; --status-open-bg: #eff6ff;
-    --status-progress: #d97706; --status-progress-bg: #fffbeb;
-    --status-done: #059669; --status-done-bg: #ecfdf5;
-    --status-deferred: #ea580c; --status-deferred-bg: #fff7ed;
-    --status-rejected: #dc2626; --status-rejected-bg: #fef2f2;
-    --status-hold: #7c3aed; --status-hold-bg: #f5f3ff;
-    --prio-critical: #dc2626; --prio-high: #ea580c; --prio-medium: #d97706; --prio-low: #2563eb;
-    --epic-1: #4f46e5; --epic-2: #06b6d4; --epic-3: #f59e0b; --epic-4: #10b981;
-    --spline-blocker: #dc2626; --spline-related: #0d9488;
-    /* Type-badge accents (MDT-135 spec); decoupled from status tokens so type
-       and status palettes can evolve independently. */
-    --type-feature: #3b82f6; --type-bug: #ea580c; --type-architecture: #7c3aed; --type-documentation: #0891b2; --type-research: #db2777;
+    --code-bg: 0.984 0.003 247.9;
+    --code-fg: 0.137 0.036 258.5;
+    --code-inline-fg: 0.451 0.146 259.7;
+    --code-selection: 0.929 0.013 255.5;
+    --code-token-comment: 0.555 0.041 257.4;
+    --code-token-punctuation: 0.137 0.036 258.5;
+    --code-token-keyword: 0.541 0.247 293.0;
+    --code-token-string: 0.627 0.17 149.2;
+    --code-token-function: 0.546 0.215 262.9;
+    --code-token-number: 0.705 0.187 47.6;
+    --code-token-property: 0.637 0.208 25.3;
+    --code-token-operator: 0.555 0.041 257.4;
+    --code-token-important: 0.637 0.208 25.3;
+    /* ── v3 design-system semantic tokens (oklch; consume via bare var()) ── */
+    --bg-subtle: oklch(0.957 0.006 255.5);
+    --bg-muted: oklch(0.929 0.011 256.7);
+    --bg-elevated: oklch(1.0 0.0 89.9);
+    --border-strong: oklch(0.661 0.025 260.7);
+    --text-muted: oklch(0.446 0.037 257.3);
+    --text-subtle: oklch(0.506 0.027 256.2);
+    --primary-light: oklch(0.962 0.018 272.3);
+    --status-backlog: oklch(0.554 0.041 257.4); --status-backlog-bg: oklch(0.968 0.007 247.9);
+    --status-open: oklch(0.623 0.188 259.8); --status-open-bg: oklch(0.97 0.014 254.6);
+    --status-progress: oklch(0.666 0.157 58.3); --status-progress-bg: oklch(0.987 0.021 95.3);
+    --status-done: oklch(0.596 0.127 163.2); --status-done-bg: oklch(0.979 0.021 166.1);
+    --status-deferred: oklch(0.646 0.194 41.1); --status-deferred-bg: oklch(0.98 0.016 73.7);
+    --status-rejected: oklch(0.577 0.215 27.3); --status-rejected-bg: oklch(0.971 0.013 17.4);
+    --status-hold: oklch(0.541 0.247 293.0); --status-hold-bg: oklch(0.969 0.016 293.8);
+    --prio-critical: oklch(0.577 0.215 27.3); --prio-high: oklch(0.646 0.194 41.1); --prio-medium: oklch(0.666 0.157 58.3); --prio-low: oklch(0.546 0.215 262.9);
+    --epic-1: oklch(0.511 0.23 277.0); --epic-2: oklch(0.715 0.126 215.2); --epic-3: oklch(0.769 0.165 70.1); --epic-4: oklch(0.696 0.149 162.5);
+    --spline-blocker: oklch(0.577 0.215 27.3); --spline-related: oklch(0.6 0.104 184.7);
+    /* Type-badge accents (MDT-135); decoupled from status tokens. */
+    --type-feature: oklch(0.623 0.188 259.8); --type-bug: oklch(0.646 0.194 41.1); --type-architecture: oklch(0.541 0.247 293.0); --type-documentation: oklch(0.609 0.111 221.7); --type-research: oklch(0.592 0.218 0.6);
     /* v3 card-density tokens (driven by CardDensity pref; see useCardDensity). Mode-independent px. */
     --pad-y: 10px; --pad-x: 12px; --fs-xs: 11px; --fs-md: 13px; --radius-card: 8px;
     /* Fixed lucide icon size (glyphs beside the ticket key). */
@@ -68,57 +66,56 @@
   }
 
   .dark {
-    --background: 220 29% 6.1%;
-    --foreground: 215 35.3% 93.3%;
-    --card: 214.3 24.1% 22.7%;
-    --card-foreground: 215 35.3% 93.3%;
-    --popover: 214.3 24.1% 22.7%;
-    --popover-foreground: 215 35.3% 93.3%;
-    --primary: 243.4 75.4% 58.6%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 215.3 19.3% 34.5%;
-    --secondary-foreground: 215 35.3% 93.3%;
-    --muted: 219.1 24.7% 18.2%;
-    --muted-foreground: 216 17.4% 66.3%;
-    --accent: 219.1 24.7% 18.2%;
-    --accent-foreground: 215 35.3% 93.3%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 213.6 16.1% 30.4%;
-    --input: 213.6 16.1% 30.4%;
-    --ring: 243.4 75.4% 58.6%;
-    --code-bg: 222.2 47.4% 11.2%;
-    --code-fg: 210 40% 98%;
-    --code-inline-fg: 213 94% 78%;
-    --code-selection: 217.2 32.6% 17.5%;
-    --code-token-comment: 215 20.2% 65.1%;
-    --code-token-punctuation: 210 40% 98%;
-    --code-token-keyword: 280.4 89.1% 74.5%;
-    --code-token-string: 142.1 70.6% 45.3%;
-    --code-token-function: 217.2 91.2% 59.8%;
-    --code-token-number: 37.7 92.1% 50.2%;
-    --code-token-property: 0 91.2% 71.8%;
-    --code-token-operator: 215 20.2% 65.1%;
-    --code-token-important: 0 91.2% 71.8%;
-    /* ── v3 design-system semantic tokens (hex; consume via bare var()) ── */
-    /* Aligned 1:1 to designs/board-zai/assets/css/01-tokens.css .dark. */
-    --bg-subtle: #1a1f2b;
-    --bg-muted: #232b3a;
-    --bg-elevated: #2c3848;
-    --border-strong: #6b7686;
-    --text-muted: #9aa6b8;
-    --text-subtle: #8b97ab;
-    --primary-light: #1e1b4b;
-    --status-backlog: #94a3b8; --status-backlog-bg: #1a2231;
-    --status-open: #60a5fa; --status-open-bg: #172554;
-    --status-progress: #fbbf24; --status-progress-bg: #422006;
-    --status-done: #34d399; --status-done-bg: #064e3b;
-    --status-deferred: #fb923c; --status-deferred-bg: #431407;
-    --status-rejected: #f87171; --status-rejected-bg: #450a0a;
-    --status-hold: #a78bfa; --status-hold-bg: #2e1065;
-    --prio-critical: #f87171; --prio-high: #fb923c; --prio-medium: #fbbf24; --prio-low: #60a5fa;
-    --epic-1: #818cf8; --epic-2: #22d3ee; --epic-3: #fbbf24; --epic-4: #34d399;
-    --spline-blocker: #f87171; --spline-related: #2dd4bf;
-    --type-feature: #60a5fa; --type-bug: #fb923c; --type-architecture: #a78bfa; --type-documentation: #22d3ee; --type-research: #f472b6;
+    --background: 0.164 0.014 264.1;
+    --foreground: 0.944 0.011 256.7;
+    --card: 0.336 0.033 255.8;
+    --card-foreground: 0.944 0.011 256.7;
+    --popover: 0.336 0.033 255.8;
+    --popover-foreground: 0.944 0.011 256.7;
+    --primary: 0.51 0.23 276.9;
+    --primary-foreground: 1.0 0.0 89.9;
+    --secondary: 0.445 0.037 257.3;
+    --secondary-foreground: 0.944 0.011 256.7;
+    --muted: 0.288 0.03 262.7;
+    --muted-foreground: 0.722 0.029 258.4;
+    --accent: 0.288 0.03 262.7;
+    --accent-foreground: 0.944 0.011 256.7;
+    --destructive: 0.396 0.133 25.7;
+    --destructive-foreground: 1.0 0.0 89.9;
+    --border: 0.412 0.027 254.6;
+    --input: 0.412 0.027 254.6;
+    --ring: 0.51 0.23 276.9;
+    --code-bg: 0.208 0.04 265.7;
+    --code-fg: 0.984 0.003 247.9;
+    --code-inline-fg: 0.801 0.097 253.9;
+    --code-selection: 0.28 0.037 260.0;
+    --code-token-comment: 0.711 0.035 256.8;
+    --code-token-punctuation: 0.984 0.003 247.9;
+    --code-token-keyword: 0.738 0.178 313.8;
+    --code-token-string: 0.723 0.192 149.6;
+    --code-token-function: 0.623 0.188 259.8;
+    --code-token-number: 0.769 0.165 70.1;
+    --code-token-property: 0.719 0.161 21.9;
+    --code-token-operator: 0.711 0.035 256.8;
+    --code-token-important: 0.719 0.161 21.9;
+    /* ── v3 design-system semantic tokens (oklch; consume via bare var()) ── */
+    --bg-subtle: oklch(0.24 0.024 267.0);
+    --bg-muted: oklch(0.288 0.03 262.8);
+    --bg-elevated: oklch(0.337 0.033 255.7);
+    --border-strong: oklch(0.562 0.028 257.7);
+    --text-muted: oklch(0.722 0.03 258.4);
+    --text-subtle: oklch(0.674 0.033 260.7);
+    --primary-light: oklch(0.257 0.086 281.3);
+    --status-backlog: oklch(0.711 0.035 256.8); --status-backlog-bg: oklch(0.252 0.031 262.6);
+    --status-open: oklch(0.714 0.143 254.6); --status-open-bg: oklch(0.282 0.087 267.9);
+    --status-progress: oklch(0.837 0.164 84.4); --status-progress-bg: oklch(0.286 0.064 53.8);
+    --status-done: oklch(0.773 0.153 163.2); --status-done-bg: oklch(0.378 0.073 168.9);
+    --status-deferred: oklch(0.758 0.159 55.9); --status-deferred-bg: oklch(0.266 0.076 36.3);
+    --status-rejected: oklch(0.711 0.166 22.2); --status-rejected-bg: oklch(0.258 0.089 26.0);
+    --status-hold: oklch(0.709 0.159 293.5); --status-hold-bg: oklch(0.283 0.135 291.1);
+    --prio-critical: oklch(0.711 0.166 22.2); --prio-high: oklch(0.758 0.159 55.9); --prio-medium: oklch(0.837 0.164 84.4); --prio-low: oklch(0.714 0.143 254.6);
+    --epic-1: oklch(0.68 0.158 276.9); --epic-2: oklch(0.797 0.134 211.5); --epic-3: oklch(0.837 0.164 84.4); --epic-4: oklch(0.773 0.153 163.2);
+    --spline-blocker: oklch(0.711 0.166 22.2); --spline-related: oklch(0.785 0.133 181.9);
+    --type-feature: oklch(0.714 0.143 254.6); --type-bug: oklch(0.758 0.159 55.9); --type-architecture: oklch(0.709 0.159 293.5); --type-documentation: oklch(0.797 0.134 211.5); --type-research: oklch(0.725 0.175 349.8);
   }
 }

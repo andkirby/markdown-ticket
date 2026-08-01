@@ -23,7 +23,7 @@ export const TicketCode: React.FC<TicketCodeProps> = ({ code, className = '', ti
   const prio = priority ?? ticket?.priority
   return (
     <span
-      className={`ticket-code inline-flex items-center gap-1 font-medium text-primary dark:text-blue-400 ${className}`}
+      className={`ticket-code ${className}`}
       data-testid="ticket-code"
     >
       <PriorityIcon priority={prio} className="priority-icon" />

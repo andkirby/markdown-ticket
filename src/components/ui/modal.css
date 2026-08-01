@@ -32,7 +32,7 @@
 
   .modal__header {
     @apply px-4 py-3 pr-14 border-b;
-    border-color: hsl(var(--border));
+    border-color: oklch(var(--border));
   }
 
   .modal__body {
@@ -55,20 +55,20 @@
 
   .modal__footer {
     @apply flex items-center justify-end px-4 py-3 border-t;
-    border-color: hsl(var(--border));
+    border-color: oklch(var(--border));
   }
 
   /* Canonical modal heading. All modal titles use <h1 class="modal__headline">.
    * This ensures consistent font size (18px), weight, and color across every modal. */
   .modal__headline {
     @apply text-lg font-semibold leading-6;
-    color: hsl(var(--foreground));
+    color: oklch(var(--foreground));
   }
 
   /* Deprecated — use .modal__headline */
   .modal__title {
     @apply text-lg font-semibold leading-6;
-    color: hsl(var(--foreground));
+    color: oklch(var(--foreground));
   }
 
   .modal__description {
@@ -79,12 +79,12 @@
   /* Modal content sections — for Pattern B (p-0 body, sections own padding) */
   .modal__section {
     @apply px-4 py-3 border-b;
-    border-color: hsl(var(--border));
+    border-color: oklch(var(--border));
   }
 
   .modal__section--sm {
     @apply px-4 py-2.5 border-b;
-    border-color: hsl(var(--border));
+    border-color: oklch(var(--border));
   }
 
   .modal__section--content {
@@ -97,7 +97,7 @@
   }
   .modal__close--absolute:hover {
     background-color: var(--bg-muted);
-    color: hsl(var(--foreground));
+    color: oklch(var(--foreground));
   }
 
   .modal__close--absolute svg {
@@ -107,7 +107,7 @@
   /* Legacy aliases (will be removed) */
   .modal-header {
     @apply px-4 py-3 pr-14 border-b;
-    border-color: hsl(var(--border));
+    border-color: oklch(var(--border));
   }
 
   .modal-body {
@@ -116,6 +116,6 @@
 
   .modal-footer {
     @apply flex items-center justify-end px-4 py-3 border-t;
-    border-color: hsl(var(--border));
+    border-color: oklch(var(--border));
   }
 }

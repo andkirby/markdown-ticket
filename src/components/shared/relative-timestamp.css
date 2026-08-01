@@ -21,7 +21,7 @@
     @apply cursor-pointer;
   }
   .relative-timestamp--interactive:hover {
-    color: hsl(var(--foreground));
+    color: oklch(var(--foreground));
   }
 
   .relative-timestamp--static {
@@ -34,7 +34,7 @@
        !important overrides the shadcn Radix defaults (bg-popover /
        text-popover-foreground / border) which live in the utilities layer. */
     background-color: var(--bg-elevated) !important;
-    border: 1px solid hsl(var(--border)) !important;
+    border: 1px solid oklch(var(--border)) !important;
     color: var(--text-muted) !important;
     /* Match the time block: Inter (inherit) + text-xs (0.75rem).
        !important overrides the Radix text-sm default (utilities layer). */
