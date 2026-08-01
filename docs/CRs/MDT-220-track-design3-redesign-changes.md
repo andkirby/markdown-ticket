@@ -33,15 +33,15 @@ priority: Medium
 | Priority indicators: colored dots replaced with icon glyphs | Done | assets/icons/priority/*.svg, 5 surfaces |
 | Cmd+K scope-tab strip given bg-subtle band (parity with ticket-view tabs) | Done | design3.html |
 | Priority icon is a flex child of .card-code (matches app TicketCard .ticket-card__code + .priority-icon); scales with key font (--fs-xs); 4px gap, no overlap | Done | design3.html card-top, 05-components.css |
-| Border-led depth, background tiers, mono ticket codes | Established | inherent Design3 grammar |
+| Tier-led depth (borders dropped), background tiers, mono ticket codes | Established | inherent Design3 grammar; src/ port drops card/column/badge borders, keeps only the data-driven accent stripe |
 | Token bridge to app: tuned dark-theme ramp propagated to src/styles/design-tokens.css .dark (--bg-subtle #1a1f2b / --bg-muted #232b3a / --bg-elevated #2c3848, matching the prototype) | Done | src/styles/design-tokens.css |
 | Density matrix: 3x3 (size x space) shipped in prototype | Open | strategy calls for one axis only |
 
 ### Border and Accent Refinement
 
 - Principle: drop decorative gray borders; whitespace and background tiers hold the layout. Borders survive only where they carry meaning — an accent stripe whose color maps to data.
-- Dropped (Done): card static gray border -> transparent, revealed on hover only (.kanban-card); column outer border removed, defined by bg-subtle tier + radius + gap (.board-col); modal badge outlines (priority/type/phase/sprint) -> flat bg-muted tint (design3.html)
-- Added (Done): priority accent stripe — 3px left edge, now restricted to critical/high tickets + epics only (importance landmark, not every card; low/medium have no stripe via unset --accent); epic stripe in --epic-color; hover keeps the accent left edge while revealing the other three borders
+- Dropped (Done): card static gray border -> transparent, revealed on hover only (.kanban-card); column outer border removed, defined by bg-subtle tier + radius + gap (.board-col); modal badge outlines (priority/type/phase/sprint) -> flat bg-muted tint — design3.html, now ported to src/ (ticket.css, column.css, badge.css)
+- Added (Done): priority accent stripe — 3px left edge, now restricted to critical/high tickets + epics only (importance landmark, not every card; low/medium have no stripe via unset --card-accent); epic stripe in --epic-color; hover keeps the accent left edge while revealing the other three borders
 - Rule (binding): accent color must map to data (priority or epic); never decorative
 - Deferred: selected-card indigo accent — no board selection state exists yet
 - Drift cleanup (Done): removed the floating col-header underline; collapsed-column border -> transparent to match expanded columns; avatar ring recolored to --bg-elevated to match the card surface; :active now preserves the accent stripe
@@ -52,8 +52,8 @@ priority: Medium
 
 - Status: implemented and verified — TypeScript passes all 6 packages; full frontend suite 826 pass / 0 fail across 84 files. 53 files changed, +923 / -597.
 - Browser-verified live (`http://localhost:3075/prj/MDT`, dark mode): 185 board cards + 190 list rows render the priority glyph before the key on every surface — board card (`.ticket-card__code`), list table Key cell, ticket-viewer header (`.modal__headline`). Full glyph map (critical=Flame, high=ChevronUp, medium=Equal, low=ChevronDown); no-priority renders no icon. Card treatment now matches design3: `.ticket-card` border is transparent until hover (no permanent gray box) with a 3px left accent stripe on critical (red `#f87171`) / high (orange `#fb923c`) only; medium/low have a transparent stripe (importance landmark, not every card). Columns are borderless (bg-subtle tier holds them). Dark ramp resolves to `#1a1f2b / #232b3a / #2c3848`. Verified via computed styles after hard reload.
-- Priority icon before key (stable scan): `<PriorityIcon>` (lucide glyph, currentColor via data-priority) placed immediately before the ticket key on all four surfaces — board card (TicketCard.tsx), cloud-projected stub (CloudProjectionStub.tsx), list view desktop + mobile (ProjectView.tsx), ticket viewer header (CompactTicketHeader.tsx). Codified in STYLING.md "Stable Scanning Patterns".
-- Icon architecture: .ticket-card__code is inline-flex; .priority-icon is a flex child sized --sz-icon, colored by data-priority -> prio token. Same position on every surface (the pattern the prototype was aligned to).
+- Priority icon before key (stable scan): rendered by `<TicketCode>` (the single source, commit f501368f) on every surface — board card, cloud-projected stub, list (desktop + mobile), ticket-viewer header, and QuickSearch results. No surface hand-composes the glyph, so it can't be forgotten. Codified in STYLING.md "Stable Scanning Patterns".
+- Icon architecture: `<TicketCode>` owns the invariant — it renders `<PriorityIcon>` (currentColor via data-priority -> prio token) then the code; every surface renders `<TicketCode>`. The earlier per-surface `<PriorityIcon> + <TicketCode>` hand-composition was removed.
 - PriorityBadge.tsx: added PRIORITY_ICON glyph map (critical=Flame, high=ChevronUp, medium=Equal, low=ChevronDown); new PriorityIcon.tsx component exported from Badge/index.
 - Card treatment (now matches design3 — supersedes an earlier "border-led divergence" decision that left the old bordered look): `.ticket-card` = `border: 1px solid transparent` + `border-left: 3px solid var(--card-accent, transparent)`, revealed on hover; `--card-accent` is set to the priority token for critical/high only (low/medium unset → transparent stripe). Column `.column` border dropped (bg-subtle tier); column-header gray underline dropped; collapsed-column border transparent until hover. NOTE: the custom property is named `--card-accent`, NOT `--accent` — `--accent` is the global shadcn theme token (a raw HSL triplet like `219.1 24.7% 18.2%`, invalid as a bare color), and reusing it silently killed the stripe for unset priorities until renamed.
 - Also touched: Badge/badge.css, Board.tsx, Column/column.css + index, QuickSearch, Header, SettingsModal, ProjectSelector, DocumentsView, RelativeTimestamp, config (settingsPreferences, ticketCardBadges), ui/Modal, colorUtils removed.
@@ -96,7 +96,7 @@ priority: Medium
 | Item | Status | Note |
 | --- | --- | --- |
 | Propagate tuned dark-theme ramp into app `.dark` tokens | Done | src/styles/design-tokens.css `.dark` = #1a1f2b / #232b3a / #2c3848; browser-verified live |
-| Restyle app surfaces through existing data-* hooks (priority/status/type) | Done | PriorityIcon before key on all 4 surfaces; border-led cards; browser-verified |
+| Restyle app surfaces through existing data-* hooks (priority/status/type) | Done | `<TicketCode>` renders the glyph before the key on every surface; borderless cards + critical/high accent stripe; flat badges; browser-verified |
 | Density: choose one axis over the 3x3 matrix | Open | needs evidence 9 combos are useful/testable |
 | Splines in app | Deferred | needs perf, a11y, clipping, scroll contract; uses canonical dependsOn |
 | Pin rail, epic rail, quick-add, subtasks in app | Deferred | await product/domain contracts |
