@@ -108,3 +108,35 @@ de-risks the whole feature before any React is written. T3→T4 build the state
 layer on top of the predicate. T5–T8 are independent presentational components
 that can be built in any order. T9–T10 is the atomic switchover. T11–T12 close
 out.
+
+## UAT Round 1 (2026-08-01) — refinement slices
+
+Post-implementation UAT feedback. All three slices are complete and
+browser-verified.
+
+### U1 — Click outside filter popover closes it
+
+- **Files**: `src/components/BoardFilterBar/FilterButton.tsx`
+- **Change**: replace the broken `position:fixed` click-away overlay with an
+  event-based `mousedown` guard (reuses the `<Modal>` primitive's
+  `handleClickOutside` pattern). The header's `backdrop-filter` created a
+  containing block that trapped the fixed overlay to header bounds.
+- **Done when**: popover closes on outside click; stays open on inside click.
+  Verified: S26.
+
+### U2 — Filters apply to the list view
+
+- **Files**: `src/components/ProjectView.tsx`
+- **Change**: `sortedTickets` now sorts `propFilteredTickets` (the app-level
+  filtered set) instead of the raw `propTickets`, so the list table honors
+  faceted filters identically to the board.
+- **Done when**: applying a facet narrows both board and list to the same row
+  set. Verified: S27 (board 185→32, list 32 rows).
+
+### U3 — Proper spacing for active-filter-chips block
+
+- **Files**: `src/components/BoardFilterBar/ActiveFilterChips.tsx`
+- **Change**: inline variant gains `mt-3` top gap so the chips block is not
+  flush against the facet grid above it.
+- **Done when**: `[data-testid=active-filter-chips]` `marginTop` is 12px.
+  Verified: S28.

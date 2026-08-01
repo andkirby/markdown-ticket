@@ -13,11 +13,19 @@ export interface FilterButtonProps {
 
 /**
  * Compact "Filter · N" button that lives inline in the app header's single row.
- * Opens a Radix Popover with the facet sections. The button is the ONLY
- * header-level summary of facet state — chips and count live inside the
- * popover (surface spec: "never a second line").
+ * Opens a popover with the facet sections. The button is the ONLY header-level
+ * summary of facet state — chips and count live inside the popover (surface
+ * spec: "never a second line").
+ *
+ * Outside-click dismissal uses the same event-based guard as the shared
+ * `<Modal>` primitive (`src/components/ui/Modal.tsx`): a `mousedown` listener
+ * that closes when the target leaves the container. A `position: fixed`
+ * click-away overlay cannot be used here because the app header carries
+ * `backdrop-filter`, which establishes a containing block that traps fixed
+ * descendants to header bounds (MDT-196 UAT).
  *
  * @testid filter-button — the button trigger
+ * @testid filter-popover — the floating popover content
  */
 export const FilterButton: React.FC<FilterButtonProps> = ({
   activeCount,
@@ -25,11 +33,26 @@ export const FilterButton: React.FC<FilterButtonProps> = ({
   onOpenChange,
   children,
 }) => {
+  const containerRef = React.useRef<HTMLDivElement>(null)
   const label = activeCount > 0 ? `Filter · ${activeCount}` : 'Filter'
   const ariaLabel = activeCount > 0 ? `Filter, ${activeCount} active` : 'Filter'
 
+  // Close on outside click (mirrors Modal's handleClickOutside). Event-based
+  // so it is immune to the header's backdrop-filter containing block.
+  React.useEffect(() => {
+    if (!open)
+      return
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        onOpenChange(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [open, onOpenChange])
+
   return (
-    <div className="relative inline-flex">
+    <div ref={containerRef} className="relative inline-flex">
       <button
         type="button"
         data-testid="filter-button"
@@ -43,27 +66,14 @@ export const FilterButton: React.FC<FilterButtonProps> = ({
         <span>{label}</span>
       </button>
       {open && (
-        <>
-          {/* click-away overlay */}
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => onOpenChange(false)}
-            aria-hidden="true"
-          />
-          {/*
-            Right-aligned popover (surface spec: anchored below-right of the button).
-            w-[440px] fits the two-column facet grid. Scroll inherits the project-standard
-            global ::-webkit-scrollbar (6px, gray-400 thumb, gray-100 track) via overflow-y-auto.
-          */}
-          <div
-            role="dialog"
-            aria-label="Filter tickets"
-            data-testid="filter-popover"
-            className="filter-popover absolute top-full right-0 mt-1 z-50 w-[440px] max-h-[70vh] overflow-y-auto border rounded-lg shadow-lg p-3"
-          >
-            {children}
-          </div>
-        </>
+        <div
+          role="dialog"
+          aria-label="Filter tickets"
+          data-testid="filter-popover"
+          className="filter-popover absolute top-full right-0 mt-1 z-50 w-[440px] max-h-[70vh] overflow-y-auto border rounded-lg shadow-lg p-3"
+        >
+          {children}
+        </div>
       )}
     </div>
   )

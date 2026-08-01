@@ -120,13 +120,14 @@ Feature: Faceted filter predicate
 
 ```gherkin
 Feature: Desktop filter bar chrome
-  The bar shows active-filter affordances only when at least one value is selected.
+  The header shows a single compact "Filter" button (no count) when no values
+  are selected. Facets, chips, and the count live inside the button's popover.
 
   Scenario: No filters active on desktop
     Given the board renders on a desktop viewport (>= 768px)
     And TicketFilters is empty
     When the filter bar renders
-    Then the facet triggers show bare labels "Status", "Priority", "Assignee", "Type"
+    Then the header shows a bare "Filter" button with no count badge
     And no chip row is rendered
     And no Clear-all control is rendered
     And the result count reads "Showing all N tickets"
@@ -139,12 +140,12 @@ Feature: Desktop filter bar chrome
     Given the board renders on a desktop viewport
     And TicketFilters { status: ["In Progress", "Approved"], priority: ["High"] } is active
     When the filter bar renders
-    Then a chip row renders one chip per selected value
-    And the status trigger shows "Status: 2"
-    And the priority trigger shows "Priority: 1"
-    And a "Clear all" button is rendered
+    Then the header button shows "Filter · 3" (3 active values)
+    And opening the popover renders a chip row with one chip per selected value
+    And a "Clear all" button is rendered inside the popover
     And the result count reads "Showing N of M tickets"
 ```
+
 
 ### S13 — Removing a chip removes only that value
 
@@ -168,28 +169,30 @@ Feature: Desktop filter bar chrome
     And the board shows every ticket
 ```
 
-### S15 — Facet dropdown opens and toggles a value
+### S15 — Filter popover opens and toggles a value
 
 ```gherkin
-  Scenario: Open the priority dropdown and select a value
+  Scenario: Open the filter popover and toggle a priority value
     Given the desktop filter bar is rendered
-    When the user clicks the "Priority" trigger
-    Then a dropdown menu opens listing all CRPriorities values
+    When the user clicks the "Filter" button
+    Then a popover opens containing a two-column facet grid
+    (Type | Status, Priority | Assignee) with all v1 facets visible at once
     And the current selections are checked
-    When the user toggles "High"
+    When the user toggles "High" in the Priority section
     Then the priority filter becomes ["High"]
-    And the trigger label updates to "Priority: 1"
+    And the button label updates to "Filter · 1"
 ```
 
 ### S16 — Static facets draw values from enums, not the ticket set
 
 ```gherkin
-  Scenario: A status value with no tickets still appears in the menu
+  Scenario: A status value with no tickets still appears in the section
     Given the ticket set has no ticket with status "Rejected"
-    When the status facet dropdown opens
-    Then "Rejected" still appears as a selectable value
+    When the filter popover opens
+    Then "Rejected" still appears as a selectable value in the Status section
     And it is drawn from CRStatuses, not derived from the tickets
 ```
+
 
 ## Mobile chrome
 
@@ -304,3 +307,54 @@ Feature: Filter accessibility
     When the user changes a filter value
     Then the region announces the new count
 ```
+
+## UAT Round 1 (2026-08-01)
+
+### S26 — Click outside the filter popover closes it
+
+```gherkin
+Feature: Filter popover dismissal (UAT)
+  The desktop filter popover closes when the user clicks anywhere outside it,
+  reusing the event-based outside-click guard pattern from the shared <Modal>
+  primitive. A position:fixed click-away overlay cannot be used because the app
+  header's backdrop-filter creates a containing block that traps fixed
+  descendants to header bounds.
+
+  Scenario: Click outside closes the popover
+    Given the desktop filter popover is open
+    When the user clicks on the board area outside the popover
+    Then the popover closes
+    And the Filter button reflects the closed (not expanded) state
+  ```
+
+### S27 — Faceted filters apply to the list view, not only the board
+
+```gherkin
+Feature: Cross-view filter scope (UAT)
+  The app-level TicketFilters narrows every ticket surface — board AND list —
+  because filter state is lifted to App.tsx and both views consume the same
+  pre-filtered ticket set.
+
+  Scenario: Filter narrows the list view
+    Given the board renders with 185 tickets and TicketFilters is empty
+    And the user has switched to the list (table) view
+    When the user applies a status facet that matches 32 tickets
+    Then the list view shows exactly 32 rows
+    And the row set is identical to the board's filtered card set
+    And the "Showing 32 of 185 tickets" count is accurate
+  ```
+
+### S28 — Active-filter chips block has proper spacing
+
+```gherkin
+Feature: Filter chip layout (UAT)
+  The active-filter-chips block inside the popover/mobile sheet is visually
+  separated from the facet grid above it.
+
+  Scenario: Chips block is spaced below the facet grid
+    Given the filter popover is open with at least one active filter value
+    Then the active-filter-chips block has a top gap (mt-3) separating it
+    from the facet grid
+    And inter-chip spacing is consistent (gap-2)
+  ```
+

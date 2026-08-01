@@ -80,7 +80,10 @@ export const ActiveFilterChips: React.FC<ActiveFilterChipsProps> = ({
   if (entries.length === 0)
     return null
 
-  const marginClass = variant === 'inline' ? '' : 'mt-1.5'
+  // MDT-196 UAT: inline chips sit directly below the facet grid inside the
+  // popover/mobile sheet — give the block a top gap so it is not flush
+  // against the grid above it. gap-2 handles the inter-chip spacing.
+  const marginClass = variant === 'inline' ? 'mt-3' : 'mt-1.5'
 
   return (
     <div

@@ -101,17 +101,31 @@ Resolves Open Question "Assignee Unassigned" in the CR.
 ### D6 — Component structure under `BoardFilterBar/`
 
 Per the surface spec's Composition tree. One directory, thin presentational
-components; all state flows down from `Board.tsx` via the hook.
+components; filter state is lifted to **App.tsx** (not Board) so the controls
+render inline in the app header's single row (UAT: filters apply to board AND
+list views — both consume the same pre-filtered set).
 
 ```
 src/components/BoardFilterBar/
-├── index.tsx                  # BoardFilterBar — picks desktop vs mobile chrome
-├── DesktopFilterBar.tsx       # ≥ sm: FreeTextSearch + FacetDropdown×4 + chips + clear
-├── FacetDropdown.tsx          # Radix DropdownMenu trigger (desktop)
-├── FacetSection.tsx           # checkbox group inside mobile Popover
-├── ActiveFilterChips.tsx      # one removable chip per active value
-└── MobileChipStrip.tsx        # horizontal scroll strip for column header
+├── index.tsx              # BoardFilterBar — desktop inline bar OR mobile sheet
+├── FilterButton.tsx       # "Filter · N" trigger + popover (desktop)
+├── FacetSection.tsx       # checkbox group inside the popover/mobile sheet
+├── ActiveFilterChips.tsx  # one removable chip per active value
+└── MobileChipStrip.tsx    # horizontal scroll strip for column header
 ```
+
+**Drift note (UAT 2026-08-01):** the original design proposed per-facet
+`FacetDropdown` components (one Radix DropdownMenu per facet). The shipped
+implementation uses a single `FilterButton` that opens ONE popover containing
+a two-column `FacetGrid` (Type | Status, Priority | Assignee) — all v1 facets
+are visible at once. This is simpler and keeps the header to one row.
+
+**Outside-click dismissal (UAT 2026-08-01):** `FilterButton` uses an
+event-based `mousedown` guard (mirrors the shared `<Modal>` primitive) rather
+than a `position: fixed` click-away overlay. The app header carries
+`backdrop-filter: blur(24px)`, which establishes a containing block that traps
+fixed descendants to header bounds (64px) — a fixed overlay would only cover
+the header, not the full viewport.
 
 `FilterControls.tsx` is reused as-is (re-skinned via props) — it already renders
 the search input with clear button. It becomes the `query` control.
@@ -131,26 +145,37 @@ BoardFilterBar UI  ──────────────────  apply
         │  user interaction                     │  pure: exact-match facets
         ▼                                       │  + multi-term-AND query
 localStorage  ◀── persist on change             ▼
-                                        filteredTickets[]  ──▶  grouped by column
+                                        filteredTickets[]  ──▶  Board columns AND List rows
 ```
 
 The hook persists on every state change (debounce not needed — filter changes
 are user-paced, not high-frequency).
 
+**UAT (2026-08-01):** filter state is owned by **App.tsx**, not Board. Both the
+board (`Board.tsx` via `filteredTickets` prop) and the list (`ProjectView.tsx`
+via `sortedTickets` computed from the filtered set) consume the same
+`filteredTickets`. The filter controls render inline in the app header and are
+visible in both board and list view modes.
+
 ## Integration points
 
-### Board.tsx
+### App.tsx (filter state owner)
 
-Replaces the inline `filterQuery` useState + `filteredTickets` useMemo
-(`Board.tsx:51, 293-311`) with:
+The `useBoardFilters(tickets)` hook lives in **App.tsx** so the filter
+controls (`BoardFilterBar` desktop + mobile) can render inline in the app
+header's single row. App passes `filteredTickets` down to `ProjectView`, which
+forwards it to both `Board` (column grouping) and the list table (sorted rows).
 
 ```typescript
-const { filters, dispatch, filteredTickets } = useBoardFilters(tickets)
+// App.tsx
+const { filters, filteredTickets, facetOptions, toggleFilter, setQuery, clearAll }
+  = useBoardFilters(tickets)
 ```
 
-`filteredTickets` is computed inside the hook via `applyTicketFilters`. The
-existing `ticketsByColumn` grouping (Board.tsx:314-332) consumes
-`filteredTickets` unchanged.
+`Board.tsx` consumes `filteredTickets` via a prop (falls back to `tickets` when
+absent — backward compat). The existing `ticketsByColumn` grouping consumes the
+prop unchanged.
+
 
 ### HamburgerMenu.tsx
 

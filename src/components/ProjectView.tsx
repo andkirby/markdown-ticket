@@ -66,14 +66,16 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
 
   const loading = propLoading || false
 
-  // Memoize sorted tickets to avoid re-sorting on every render
+  // Memoize sorted tickets to avoid re-sorting on every render.
+  // MDT-196 UAT: sort the FILTERED set so the list view honors faceted
+  // filters identically to the board (filters are app-level, not board-only).
   const sortedTickets = useMemo(() => {
     return sortTickets(
-      propTickets || [],
+      propFilteredTickets || propTickets || [],
       sortPreferences?.selectedAttribute || 'title',
       sortPreferences?.selectedDirection || 'asc',
     )
-  }, [propTickets, sortPreferences?.selectedAttribute, sortPreferences?.selectedDirection])
+  }, [propFilteredTickets, propTickets, sortPreferences?.selectedAttribute, sortPreferences?.selectedDirection])
 
   // Use ref to prevent stale closure bug when switching projects
   const selectedProjectRef = useRef<Project | null>(selectedProject)
