@@ -54,7 +54,7 @@ export function AuthUnlockPanel({
           value={token}
           disabled={unlocking}
           onChange={event => setToken(event.target.value)}
-          className="w-full rounded-md border border-[hsl(var(--border))] bg-[var(--bg-muted)] px-3 py-2 text-[hsl(var(--foreground))]"
+          className="input"
           autoComplete="current-password"
         />
         {error && (

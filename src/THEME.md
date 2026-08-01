@@ -12,7 +12,7 @@ The token file holds **two aligned palettes** (both retuned to the `designs/boar
 
 | Palette | Format | Consumed as | Used by |
 |---|---|---|---|
-| **shadcn HSL set** | bare HSL channels (`244.5 57.9% 50.6%`) | `hsl(var(--primary))` in CSS, or Tailwind `bg-primary` / `text-primary-foreground` | base surfaces, Tailwind utilities, shadcn primitives |
+| **shadcn HSL set** | bare HSL channels (`244.5 57.9% 50.6%`) | `oklch(var(--primary))` in CSS, or Tailwind `bg-primary` / `text-primary-foreground` | base surfaces, Tailwind utilities, shadcn primitives |
 | **v3 semantic set** | hex (`#dc2626`) | bare `var(--prio-critical)` in CSS | the design3 system: bg tiers, badges, card accents, splines |
 
 Never wrap a v3 hex token in `hsl()` — it is already a color. Never use a shadcn token bare — it is raw channels, not a color.
@@ -120,8 +120,8 @@ Drives the priority icon glyph color and the critical/high card accent stripe.
 
 ```css
 /* shadcn HSL token — wrap in hsl() */
-.btn { background: hsl(var(--primary)); border-color: hsl(var(--border)); }
-.btn { background: hsl(var(--primary) / 0.5); } /* with opacity */
+.btn { background: oklch(var(--primary)); border-color: oklch(var(--border)); }
+.btn { background: oklch(var(--primary) / 0.5); } /* with opacity */
 
 /* v3 semantic token — use bare */
 .ticket-card { border-left: 3px solid var(--card-accent, transparent); }

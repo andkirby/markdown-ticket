@@ -42,7 +42,7 @@
   /* v3 Doc 4 / Pr.5: pristine keyboard focus ring on cards */
   .ticket-card:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px color-mix(in srgb, hsl(var(--primary)) 35%, transparent);
+    box-shadow: 0 0 0 2px oklch(var(--background)), 0 0 0 4px color-mix(in srgb, oklch(var(--primary)) 35%, transparent);
   }
 
   /* Invalid status — red border + ring */
@@ -60,6 +60,18 @@
     font-weight: 600;
     font-variant-numeric: tabular-nums;
     color: var(--text-subtle);
+  }
+  /* TicketCode — canonical ticket-key typography (mono, tabular, primary).
+     Used everywhere TicketCode renders (board, viewer, search). The card wrapper
+     (.ticket-card__code) layers density font-size on top. */
+  .ticket-code {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    color: oklch(var(--primary));
   }
   .priority-icon {
     width: var(--sz-icon);
@@ -84,7 +96,7 @@
     font-size: var(--fs-md, 13px);
     font-weight: 500;
     line-height: 1.4;
-    color: hsl(var(--foreground));
+    color: oklch(var(--foreground));
     margin: 2px 0;
   }
   .ticket-card__time {

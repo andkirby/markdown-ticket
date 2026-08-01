@@ -13,13 +13,13 @@
 
   .documents-view__navigation-inner {
     @apply flex h-full min-h-0 flex-col border-r;
-    border-color: hsl(var(--border));
+    border-color: oklch(var(--border));
     background-color: var(--bg-subtle);
   }
 
   .documents-view__navigation-header {
     @apply flex-shrink-0 border-b p-4;
-    border-color: hsl(var(--border));
+    border-color: oklch(var(--border));
   }
 
   .documents-view__navigation-primary-row {
@@ -35,14 +35,14 @@
   }
 
   .documents-view__sort-select {
-    @apply h-[38px] w-28 flex-shrink-0 rounded border px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary;
-    border-color: hsl(var(--border));
+    @apply h-10 w-28 flex-shrink-0 rounded-md border px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring;
+    border-color: oklch(var(--border));
     background-color: var(--bg-muted);
   }
 
   .documents-view__sort-direction-button {
-    @apply inline-flex h-[38px] w-8 flex-shrink-0 items-center justify-center rounded border transition-colors;
-    border-color: hsl(var(--border));
+    @apply inline-flex h-10 w-8 flex-shrink-0 items-center justify-center rounded-md border transition-colors;
+    border-color: oklch(var(--border));
     background-color: var(--bg-muted);
   }
   .documents-view__sort-direction-button:hover {
@@ -59,7 +59,7 @@
 
   .documents-view__navigation-expand {
     @apply absolute left-3 top-3 z-20 inline-flex h-8 w-8 items-center justify-center rounded-md border transition-colors hover:text-foreground;
-    border-color: hsl(var(--border));
+    border-color: oklch(var(--border));
     background-color: var(--bg-elevated);
     color: var(--text-muted);
   }
@@ -100,7 +100,7 @@
 
   .document-frontmatter {
     @apply mb-4 overflow-hidden rounded-md border;
-    border-color: hsl(var(--border));
+    border-color: oklch(var(--border));
     background-color: var(--bg-subtle);
   }
 
@@ -111,13 +111,13 @@
 
   .document-frontmatter[open] .document-frontmatter__summary {
     @apply border-b;
-    border-color: hsl(var(--border));
+    border-color: oklch(var(--border));
   }
 
   .document-frontmatter__code {
     @apply m-0 overflow-x-auto p-3 text-sm;
-    color: hsl(var(--code-fg));
-    background: hsl(var(--code-bg));
+    color: oklch(var(--code-fg));
+    background: oklch(var(--code-bg));
   }
 
   .document-frontmatter__code code {

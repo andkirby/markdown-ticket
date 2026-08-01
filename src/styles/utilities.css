@@ -65,7 +65,7 @@
      Consume via `ring-prim` class on any keyboard-navigable element. */
   .ring-prim:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px color-mix(in srgb, hsl(var(--primary)) 35%, transparent);
+    box-shadow: 0 0 0 2px oklch(var(--background)), 0 0 0 4px color-mix(in srgb, oklch(var(--primary)) 35%, transparent);
   }
 }
 

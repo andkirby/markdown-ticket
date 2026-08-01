@@ -41,7 +41,7 @@
      Uses outline (not ring/box-shadow) so it cannot be clobbered by the
      active card's own box-shadow and stays visible on every card. */
   .project-card[data-selected="true"] {
-    outline: 2px solid hsl(var(--ring));
+    outline: 2px solid oklch(var(--ring));
     outline-offset: 2px;
   }
 
@@ -362,7 +362,7 @@
 
   /* ── Hover-card preview (rail card + chip) — v3 text tiers ── */
   .project-hovercard__code {
-    color: hsl(var(--foreground));
+    color: oklch(var(--foreground));
   }
   .project-hovercard__name {
     color: var(--text-muted);
@@ -400,15 +400,15 @@
 /* ── CSS Variables — Light Mode ── */
 :root {
   /* Card/chip surface — flat v3 tiers (no gradient/shadow). */
-  --project-card-border: hsl(var(--border));
+  --project-card-border: oklch(var(--border));
 
   /* Text tiers (v3) */
-  --project-card-code-color: hsl(var(--foreground));
+  --project-card-code-color: oklch(var(--foreground));
   --project-card-title-color: var(--text-muted);
   --project-card-desc-color: var(--text-subtle);
 
   /* Active card — flat primary-light surface, primary border */
-  --project-card-active-border: hsl(var(--primary));
+  --project-card-active-border: oklch(var(--primary));
 
   --project-chip-code-color: var(--text-muted);
   --project-chip-hover-border: var(--border-strong);
@@ -416,12 +416,12 @@
   --plate-fg-light: theme('colors.white');
   --plate-fg-dark: theme('colors.gray.900');
 
-  --project-launcher-border: hsl(var(--border));
+  --project-launcher-border: oklch(var(--border));
   --project-launcher-hover-border: var(--border-strong);
 
   --project-search-bg: var(--bg-muted);
-  --project-search-border: hsl(var(--border));
-  --project-search-text: hsl(var(--foreground));
+  --project-search-border: oklch(var(--border));
+  --project-search-text: oklch(var(--foreground));
   --project-search-placeholder: var(--text-subtle);
 }
 

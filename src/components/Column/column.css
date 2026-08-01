@@ -150,7 +150,7 @@
   }
   .col-collapse-btn:hover {
     background: var(--bg-muted);
-    color: hsl(var(--foreground));
+    color: oklch(var(--foreground));
   }
   /* Mobile: a single visible column fills the track width. */
   @media (max-width: 767px) {

@@ -87,7 +87,7 @@
   .search-scope-bar {
     @apply flex items-center gap-1 px-4 py-1;
     background: var(--bg-subtle);
-    border-bottom: 1px solid hsl(var(--border));
+    border-bottom: 1px solid oklch(var(--border));
   }
 
   .search-scope-bar__tab {
@@ -143,15 +143,15 @@
   --search-result-selected-ring: var(--primary);
   --search-result-code-color: var(--text-subtle);
   --search-result-code-cross-color: var(--primary);
-  --search-result-title-color: hsl(var(--foreground));
+  --search-result-title-color: oklch(var(--foreground));
   --search-result-label-bg: var(--bg-muted);
   --search-result-label-color: var(--text-muted);
   --search-result-project-name-color: var(--text-subtle);
 
   /* Section headers + list dividers */
   --search-section-header-color: var(--text-muted);
-  --search-section-header-border: hsl(var(--border));
-  --search-results-divider: hsl(var(--border));
+  --search-section-header-border: oklch(var(--border));
+  --search-results-divider: oklch(var(--border));
 
   /* Mode badge + active scope tab — primary-light bg / primary text */
   --search-mode-badge-bg: var(--primary-light);

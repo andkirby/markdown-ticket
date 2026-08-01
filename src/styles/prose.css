@@ -2,7 +2,7 @@
 
 .prose {
   max-width: none;
-  color: hsl(var(--foreground));
+  color: oklch(var(--foreground));
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 0.9375rem;
   line-height: 1.62;
@@ -59,7 +59,7 @@
 .prose h5,
 .prose h6 {
   margin: 1.65em 0 0.55em;
-  color: hsl(var(--foreground));
+  color: oklch(var(--foreground));
   font-weight: 650;
   line-height: 1.25;
   letter-spacing: 0;
@@ -196,7 +196,7 @@
 }
 
 .prose a {
-  color: hsl(var(--primary));
+  color: oklch(var(--primary));
   text-decoration-thickness: 0.08em;
   text-underline-offset: 0.18em;
   overflow-wrap: anywhere;
@@ -207,7 +207,7 @@
 }
 
 .prose a:focus-visible {
-  outline: 2px solid hsl(var(--ring));
+  outline: 2px solid oklch(var(--ring));
   outline-offset: 2px;
   border-radius: 0.1875rem;
   text-decoration-line: underline;
@@ -250,13 +250,13 @@
   width: 1em;
   height: 1em;
   margin: 0;
-  accent-color: hsl(var(--primary));
+  accent-color: oklch(var(--primary));
 }
 
 .prose blockquote {
   padding: 0.1em 0 0.1em 1em;
-  border-left: 3px solid hsl(var(--border));
-  color: hsl(var(--muted-foreground));
+  border-left: 3px solid oklch(var(--border));
+  color: oklch(var(--muted-foreground));
 }
 
 .prose blockquote > :last-child {
@@ -267,7 +267,7 @@
   height: 1px;
   margin: 1.75em 0;
   border: 0;
-  background: hsl(var(--border));
+  background: oklch(var(--border));
 }
 
 .prose img {
@@ -281,7 +281,7 @@
   padding: 0 0.14em;
   border: 0;
   border-radius: 0.25rem;
-  color: hsl(var(--code-inline-fg));
+  color: oklch(var(--code-inline-fg));
   background: transparent;
   font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
   font-size: 0.89em;
@@ -301,10 +301,10 @@
 .document-frontmatter__code {
   max-width: 100%;
   overflow-x: auto;
-  border: 1px solid hsl(var(--border));
+  border: 1px solid oklch(var(--border));
   border-radius: 0.5rem;
-  color: hsl(var(--code-fg));
-  background: hsl(var(--code-bg));
+  color: oklch(var(--code-fg));
+  background: oklch(var(--code-bg));
   -webkit-overflow-scrolling: touch;
 }
 
@@ -345,7 +345,7 @@
 .prose pre *::selection,
 .document-frontmatter__code *::selection {
   color: inherit;
-  background: hsl(var(--code-selection));
+  background: oklch(var(--code-selection));
 }
 
 .prose table {
@@ -360,36 +360,36 @@
 .prose th,
 .prose td {
   padding: 0.55em 0.75em;
-  border: 1px solid hsl(var(--border));
+  border: 1px solid oklch(var(--border));
   text-align: left;
   vertical-align: top;
 }
 
 .prose th {
-  background: hsl(var(--muted) / 0.65);
-  color: hsl(var(--foreground));
+  background: oklch(var(--muted) / 0.65);
+  color: oklch(var(--foreground));
   font-weight: 600;
 }
 
 .prose tr:nth-child(even) td {
-  background: hsl(var(--muted) / 0.28);
+  background: oklch(var(--muted) / 0.28);
 }
 
 .token.comment,
 .token.prolog,
 .token.cdata {
-  color: hsl(var(--code-token-comment));
+  color: oklch(var(--code-token-comment));
 }
 
 .token.punctuation,
 .token.doctype,
 .token.entity {
-  color: hsl(var(--code-token-punctuation));
+  color: oklch(var(--code-token-punctuation));
 }
 
 .token.keyword,
 .token.atrule {
-  color: hsl(var(--code-token-keyword));
+  color: oklch(var(--code-token-keyword));
 }
 
 .token.string,
@@ -397,19 +397,19 @@
 .token.attr-value,
 .token.regex,
 .token.inserted {
-  color: hsl(var(--code-token-string));
+  color: oklch(var(--code-token-string));
 }
 
 .token.function,
 .token.builtin,
 .token.class-name {
-  color: hsl(var(--code-token-function));
+  color: oklch(var(--code-token-function));
 }
 
 .token.number,
 .token.boolean,
 .token.constant {
-  color: hsl(var(--code-token-number));
+  color: oklch(var(--code-token-number));
 }
 
 .token.property,
@@ -418,17 +418,17 @@
 .token.selector,
 .token.symbol,
 .token.deleted {
-  color: hsl(var(--code-token-property));
+  color: oklch(var(--code-token-property));
 }
 
 .token.operator,
 .token.url,
 .token.variable {
-  color: hsl(var(--code-token-operator));
+  color: oklch(var(--code-token-operator));
 }
 
 .token.important {
-  color: hsl(var(--code-token-important));
+  color: oklch(var(--code-token-important));
   font-weight: 600;
 }
 
@@ -450,7 +450,7 @@
   content: ' #';
   visibility: hidden;
   opacity: 0;
-  color: hsl(var(--primary));
+  color: oklch(var(--primary));
   transition: opacity 0.2s;
 }
 
@@ -474,11 +474,11 @@
   display: inline-flex;
   margin-bottom: -0.35rem;
   padding: 0.2rem 0.45rem;
-  border: 1px solid hsl(var(--border));
+  border: 1px solid oklch(var(--border));
   border-bottom: 0;
   border-radius: 0.375rem 0.375rem 0 0;
-  color: hsl(var(--muted-foreground));
-  background: hsl(var(--muted) / 0.55);
+  color: oklch(var(--muted-foreground));
+  background: oklch(var(--muted) / 0.55);
   font-size: 0.75em;
   font-family: 'JetBrains Mono', ui-monospace, monospace;
 }
@@ -487,9 +487,9 @@
   max-width: 100%;
   overflow-x: auto;
   padding: 0.75rem;
-  border: 1px solid hsl(var(--border));
+  border: 1px solid oklch(var(--border));
   border-radius: 0.5rem;
-  background: hsl(var(--muted) / 0.28);
+  background: oklch(var(--muted) / 0.28);
   -webkit-overflow-scrolling: touch;
 }
 
@@ -552,19 +552,19 @@
 
 .prose .wireloom-pending {
   padding: 1rem;
-  border: 1px dashed hsl(var(--border));
+  border: 1px dashed oklch(var(--border));
   border-radius: 0.375rem;
-  color: hsl(var(--muted-foreground));
-  background: hsl(var(--muted) / 0.45);
+  color: oklch(var(--muted-foreground));
+  background: oklch(var(--muted) / 0.45);
   font-size: 0.85em;
   text-align: center;
 }
 
 .prose .wireloom-error {
   padding: 0.5em 0.75em;
-  border-left: 3px solid hsl(var(--destructive));
-  color: hsl(var(--foreground));
-  background: hsl(var(--destructive) / 0.08);
+  border-left: 3px solid oklch(var(--destructive));
+  color: oklch(var(--foreground));
+  background: oklch(var(--destructive) / 0.08);
   font-family: 'JetBrains Mono', ui-monospace, monospace;
   font-size: 0.85em;
   overflow-x: auto;

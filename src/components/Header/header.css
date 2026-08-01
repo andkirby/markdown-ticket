@@ -3,7 +3,7 @@
     /* v3 Doc 1 Pr.1: border-led depth — header is FLAT (not a floating layer), no shadow. */
     @apply sticky top-0 z-50 backdrop-blur-xl border-b;
     background-color: var(--bg-elevated);
-    border-color: hsl(var(--border));
+    border-color: oklch(var(--border));
   }
 
   .header__container {

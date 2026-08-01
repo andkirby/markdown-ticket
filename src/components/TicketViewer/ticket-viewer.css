@@ -23,9 +23,9 @@
 
   .trace-graph-shell__back {
     @apply absolute left-4 top-4 z-20 inline-flex h-9 shrink-0 items-center gap-2 rounded-md px-3 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring;
-    border: 1px solid hsl(var(--border));
+    border: 1px solid oklch(var(--border));
     background-color: color-mix(in srgb, var(--bg-elevated) 60%, transparent);
-    color: hsl(var(--foreground));
+    color: oklch(var(--foreground));
   }
   .trace-graph-shell__back:hover {
     background-color: color-mix(in srgb, var(--bg-elevated) 80%, transparent);
@@ -59,7 +59,7 @@
 
   .trace-graph-action {
     @apply inline-flex h-8 items-center gap-2 rounded-md px-3 text-sm font-medium text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-ring;
-    border: 1px solid hsl(var(--border));
+    border: 1px solid oklch(var(--border));
     background-color: var(--bg-elevated);
   }
   .trace-graph-action:hover {
@@ -82,5 +82,5 @@
   background-color: var(--bg-subtle);
 }
 .ticket-document-tabs .tab__list {
-  border-bottom: 1px solid hsl(var(--border));
+  border-bottom: 1px solid oklch(var(--border));
 }

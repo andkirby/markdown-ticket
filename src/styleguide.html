@@ -24,7 +24,7 @@
       line-height: 1.5;
     }
     header { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
-    h1 { margin: 0; font-size: 1.75rem; font-weight: 600; letter-spacing: -0.02em; color: hsl(var(--foreground)); }
+    h1 { margin: 0; font-size: 1.75rem; font-weight: 600; letter-spacing: -0.02em; color: oklch(var(--foreground)); }
     h2 { margin: 2.5rem 0 .25rem; font-size: .95rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--text-subtle); }
     p.note { margin: .75rem 0 0; max-width: 60ch; }
     code { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: .82em; }
@@ -45,7 +45,7 @@
     .sw { border-radius: 8px; overflow: hidden; border: 1px solid var(--border-strong); }
     .sw__chip { height: 56px; }
     .sw__meta { padding: .35rem .5rem; background: var(--bg-elevated); }
-    .sw__name { color: hsl(var(--foreground)); font-weight: 500; font-size: .8rem; }
+    .sw__name { color: oklch(var(--foreground)); font-weight: 500; font-size: .8rem; }
     .sw__val  { color: var(--text-subtle); font-family: "JetBrains Mono", monospace; font-size: .7rem; }
 
     .chips { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .85rem; }
@@ -58,12 +58,12 @@
 
     .slots { display: flex; flex-wrap: wrap; gap: 1.25rem; margin-top: .85rem; }
     .slot { background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: 8px; padding: .5rem .75rem; }
-    .slot b { color: hsl(var(--foreground)); font-family: "JetBrains Mono", monospace; }
+    .slot b { color: oklch(var(--foreground)); font-family: "JetBrains Mono", monospace; }
     .slot small { color: var(--text-subtle); display: block; }
 
     .type-sample { background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: 8px; padding: 1rem 1.25rem; margin-top: .85rem; }
-    .type-sample .h1 { font-size: 1.875rem; font-weight: 600; letter-spacing: -0.02em; color: hsl(var(--foreground)); }
-    .type-sample .h2 { font-size: 1.5rem; font-weight: 600; color: hsl(var(--foreground)); margin-top: .5rem; }
+    .type-sample .h1 { font-size: 1.875rem; font-weight: 600; letter-spacing: -0.02em; color: oklch(var(--foreground)); }
+    .type-sample .h2 { font-size: 1.5rem; font-weight: 600; color: oklch(var(--foreground)); margin-top: .5rem; }
     .type-sample .body { color: var(--text-muted); margin-top: .5rem; }
     .type-sample .mono { font-family: "JetBrains Mono", monospace; color: var(--text-subtle); margin-top: .5rem; }
   </style>
@@ -77,17 +77,17 @@
 
   <h2>shadcn HSL palette · surfaces</h2>
   <div class="grid">
-    <div class="sw"><div class="sw__chip" data-token="background" data-fmt="hsl" style="background:hsl(var(--background))"></div><div class="sw__meta"><div class="sw__name">--background</div><div class="sw__val"></div></div></div>
-    <div class="sw"><div class="sw__chip" data-token="foreground" data-fmt="hsl" style="background:hsl(var(--foreground))"></div><div class="sw__meta"><div class="sw__name">--foreground</div><div class="sw__val"></div></div></div>
-    <div class="sw"><div class="sw__chip" data-token="card" data-fmt="hsl" style="background:hsl(var(--card))"></div><div class="sw__meta"><div class="sw__name">--card</div><div class="sw__val"></div></div></div>
-    <div class="sw"><div class="sw__chip" data-token="popover" data-fmt="hsl" style="background:hsl(var(--popover))"></div><div class="sw__meta"><div class="sw__name">--popover</div><div class="sw__val"></div></div></div>
-    <div class="sw"><div class="sw__chip" data-token="primary" data-fmt="hsl" style="background:hsl(var(--primary))"></div><div class="sw__meta"><div class="sw__name">--primary</div><div class="sw__val"></div></div></div>
-    <div class="sw"><div class="sw__chip" data-token="secondary" data-fmt="hsl" style="background:hsl(var(--secondary))"></div><div class="sw__meta"><div class="sw__name">--secondary</div><div class="sw__val"></div></div></div>
-    <div class="sw"><div class="sw__chip" data-token="muted" data-fmt="hsl" style="background:hsl(var(--muted))"></div><div class="sw__meta"><div class="sw__name">--muted</div><div class="sw__val"></div></div></div>
-    <div class="sw"><div class="sw__chip" data-token="accent" data-fmt="hsl" style="background:hsl(var(--accent))"></div><div class="sw__meta"><div class="sw__name">--accent</div><div class="sw__val"></div></div></div>
-    <div class="sw"><div class="sw__chip" data-token="destructive" data-fmt="hsl" style="background:hsl(var(--destructive))"></div><div class="sw__meta"><div class="sw__name">--destructive</div><div class="sw__val"></div></div></div>
-    <div class="sw"><div class="sw__chip" data-token="border" data-fmt="hsl" style="background:hsl(var(--border))"></div><div class="sw__meta"><div class="sw__name">--border / --input</div><div class="sw__val"></div></div></div>
-    <div class="sw"><div class="sw__chip" data-token="ring" data-fmt="hsl" style="background:hsl(var(--ring))"></div><div class="sw__meta"><div class="sw__name">--ring</div><div class="sw__val"></div></div></div>
+    <div class="sw"><div class="sw__chip" data-token="background" data-fmt="oklch" style="background:oklch(var(--background))"></div><div class="sw__meta"><div class="sw__name">--background</div><div class="sw__val"></div></div></div>
+    <div class="sw"><div class="sw__chip" data-token="foreground" data-fmt="oklch" style="background:oklch(var(--foreground))"></div><div class="sw__meta"><div class="sw__name">--foreground</div><div class="sw__val"></div></div></div>
+    <div class="sw"><div class="sw__chip" data-token="card" data-fmt="oklch" style="background:oklch(var(--card))"></div><div class="sw__meta"><div class="sw__name">--card</div><div class="sw__val"></div></div></div>
+    <div class="sw"><div class="sw__chip" data-token="popover" data-fmt="oklch" style="background:oklch(var(--popover))"></div><div class="sw__meta"><div class="sw__name">--popover</div><div class="sw__val"></div></div></div>
+    <div class="sw"><div class="sw__chip" data-token="primary" data-fmt="oklch" style="background:oklch(var(--primary))"></div><div class="sw__meta"><div class="sw__name">--primary</div><div class="sw__val"></div></div></div>
+    <div class="sw"><div class="sw__chip" data-token="secondary" data-fmt="oklch" style="background:oklch(var(--secondary))"></div><div class="sw__meta"><div class="sw__name">--secondary</div><div class="sw__val"></div></div></div>
+    <div class="sw"><div class="sw__chip" data-token="muted" data-fmt="oklch" style="background:oklch(var(--muted))"></div><div class="sw__meta"><div class="sw__name">--muted</div><div class="sw__val"></div></div></div>
+    <div class="sw"><div class="sw__chip" data-token="accent" data-fmt="oklch" style="background:oklch(var(--accent))"></div><div class="sw__meta"><div class="sw__name">--accent</div><div class="sw__val"></div></div></div>
+    <div class="sw"><div class="sw__chip" data-token="destructive" data-fmt="oklch" style="background:oklch(var(--destructive))"></div><div class="sw__meta"><div class="sw__name">--destructive</div><div class="sw__val"></div></div></div>
+    <div class="sw"><div class="sw__chip" data-token="border" data-fmt="oklch" style="background:oklch(var(--border))"></div><div class="sw__meta"><div class="sw__name">--border / --input</div><div class="sw__val"></div></div></div>
+    <div class="sw"><div class="sw__chip" data-token="ring" data-fmt="oklch" style="background:oklch(var(--ring))"></div><div class="sw__meta"><div class="sw__name">--ring</div><div class="sw__val"></div></div></div>
   </div>
 
   <h2>v3 surface tiers & structure</h2>
@@ -155,23 +155,23 @@
     .stage { background: var(--bg-subtle); border-radius: 10px; padding: 1rem; display: flex; gap: .75rem; flex-wrap: wrap; }
     .surface-card { background: var(--bg-elevated); border: 1px solid transparent; border-radius: var(--radius-card); padding: .75rem 1rem; flex: 1; min-width: 150px; transition: border-color .15s; }
     .surface-card:hover { border-color: var(--border-strong); }
-    .surface-card b { color: hsl(var(--foreground)); }
+    .surface-card b { color: oklch(var(--foreground)); }
     .tierbar { display: inline-flex; align-items: center; gap: .4rem; padding: .4rem .7rem; border-radius: 8px; font-size: .75rem; font-family: "JetBrains Mono", monospace; }
     .form-row { display: flex; gap: .6rem; align-items: flex-end; flex-wrap: wrap; margin-top: .85rem; }
     .field { display: flex; flex-direction: column; gap: .25rem; }
     .field label { font-size: .7rem; color: var(--text-subtle); }
     .btn { display: inline-flex; align-items: center; gap: .4rem; padding: .4rem .85rem; border-radius: 6px; font-size: .82rem; font-weight: 500; cursor: pointer; border: 1px solid transparent; transition: background-color .15s, border-color .15s; }
-    .btn-primary { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
+    .btn-primary { background: oklch(var(--primary)); color: oklch(var(--primary-foreground)); }
     .btn-primary:hover { filter: brightness(1.07); }
-    .btn-secondary { background: hsl(var(--secondary)); color: hsl(var(--secondary-foreground)); }
-    .btn-outline { background: var(--bg-elevated); border-color: var(--border-strong); color: hsl(var(--foreground)); }
+    .btn-secondary { background: oklch(var(--secondary)); color: oklch(var(--secondary-foreground)); }
+    .btn-outline { background: var(--bg-elevated); border-color: var(--border-strong); color: oklch(var(--foreground)); }
     .btn-outline:hover { background: var(--bg-muted); }
-    .btn-ghost { background: transparent; color: hsl(var(--foreground)); }
+    .btn-ghost { background: transparent; color: oklch(var(--foreground)); }
     .btn-ghost:hover { background: var(--bg-muted); }
-    .input-demo, .select-demo { background: var(--bg-muted); border: 1px solid var(--border-strong); border-radius: 6px; padding: .4rem .6rem; color: hsl(var(--foreground)); font: inherit; font-size: .82rem; }
-    .input-demo:focus, .select-demo:focus { outline: none; border-color: hsl(var(--primary)); box-shadow: 0 0 0 2px hsl(var(--primary) / .3); }
-    .input-demo.error { border-color: hsl(var(--destructive)); }
-    .checkbox-demo { width: 16px; height: 16px; accent-color: hsl(var(--primary)); }
+    .input-demo, .select-demo { background: var(--bg-muted); border: 1px solid var(--border-strong); border-radius: 6px; padding: .4rem .6rem; color: oklch(var(--foreground)); font: inherit; font-size: .82rem; }
+    .input-demo:focus, .select-demo:focus { outline: none; border-color: oklch(var(--primary)); box-shadow: 0 0 0 2px oklch(var(--primary) / .3); }
+    .input-demo.error { border-color: oklch(var(--destructive)); }
+    .checkbox-demo { width: 16px; height: 16px; accent-color: oklch(var(--primary)); }
   </style>
 
   <style>
@@ -179,10 +179,10 @@
     .contract { border-radius: 10px; padding: .5rem; margin-top: .85rem; }
     .contract-row { display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; padding: .75rem; border-radius: 8px; }
     .contract-label { font-size: .68rem; color: var(--text-subtle); font-family: "JetBrains Mono", monospace; min-width: 84px; }
-    .input-ghost { background: var(--bg-muted); border: none; border-radius: 6px; padding: .4rem .6rem; color: hsl(var(--foreground)); font: inherit; font-size: .82rem; }
+    .input-ghost { background: var(--bg-muted); border: none; border-radius: 6px; padding: .4rem .6rem; color: oklch(var(--foreground)); font: inherit; font-size: .82rem; }
     .input-recessed { background: #bcc7d4; border: none; border-radius: 6px; padding: .4rem .6rem; color: #1b2230; font: inherit; font-size: .82rem; }
     .dark .input-recessed { background: #384560; color: #dde3ec; }
-    .input-hairline { background: var(--bg-muted); border: 1px solid var(--border-strong); border-radius: 6px; padding: .4rem .6rem; color: hsl(var(--foreground)); font: inherit; font-size: .82rem; }
+    .input-hairline { background: var(--bg-muted); border: 1px solid var(--border-strong); border-radius: 6px; padding: .4rem .6rem; color: oklch(var(--foreground)); font: inherit; font-size: .82rem; }
     .tag { font-size: .65rem; font-weight: 600; }
     .tag-bad { color: var(--prio-critical); }
     .tag-ok { color: var(--status-done); }
@@ -197,7 +197,7 @@
     <span class="tierbar" style="background:var(--bg-subtle);color:var(--text-muted)">bg-subtle</span>
     <span class="tierbar" style="background:var(--bg-muted);color:var(--text-muted)">bg-muted</span>
     <span class="tierbar" style="background:var(--bg-elevated);color:var(--text-muted);border:1px solid var(--border-strong)">bg-elevated</span>
-    <span class="tierbar" style="background:hsl(var(--primary));color:hsl(var(--primary-foreground))">primary</span>
+    <span class="tierbar" style="background:oklch(var(--primary));color:oklch(var(--primary-foreground))">primary</span>
   </div>
 
   <h2>form controls &amp; the surface contract</h2>
@@ -232,7 +232,7 @@
         document.querySelectorAll('[data-token]').forEach(function (el) {
           var t = el.dataset.token, fmt = el.dataset.fmt;
           var v = root.getPropertyValue('--' + t).trim();
-          el.parentElement.querySelector('.sw__val').textContent = fmt === 'hsl' ? 'hsl(' + v + ')' : v;
+          el.parentElement.querySelector('.sw__val').textContent = fmt === 'oklch' ? 'oklch(' + v + ')' : v;
         });
       }
       document.getElementById('theme').addEventListener('click', function () {

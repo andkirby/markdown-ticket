@@ -78,12 +78,12 @@ export const FormField: React.FC<FormFieldProps> = ({
         ? (pathExists ? 'border-green-500 focus:ring-green-500 focus:border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-red-500 focus:ring-red-500 focus:border-red-500 bg-red-50 dark:bg-red-900/20')
         : showSuccessIndicator
           ? 'border-green-500 focus:ring-green-500 focus:border-green-500 bg-green-50 dark:bg-green-900/20'
-          : 'border-[hsl(var(--border))]'}
+          : 'border-[oklch(var(--border))]'}
     ${readOnly
       ? 'bg-gray-50 dark:bg-gray-700 cursor-not-allowed'
       : showPathStatus
         ? (pathExists ? 'bg-green-50 dark:bg-green-900/20 text-gray-900 dark:text-white' : 'bg-red-50 dark:bg-red-900/20 text-gray-900 dark:text-white')
-        : showSuccessIndicator ? 'bg-green-50 dark:bg-green-900/20 text-gray-900 dark:text-white' : 'bg-[var(--bg-muted)] text-[hsl(var(--foreground))]'}
+        : showSuccessIndicator ? 'bg-green-50 dark:bg-green-900/20 text-gray-900 dark:text-white' : 'bg-[var(--bg-muted)] text-[oklch(var(--foreground))]'}
     ${showFolderBrowser ? 'flex-1' : 'w-full'}
     ${className}
   `

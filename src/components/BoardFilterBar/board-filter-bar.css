@@ -15,7 +15,7 @@
  *   .filter-clear-all       — "Clear all" link (muted → foreground on hover)
  *
  * Neutral surface tokens migrate to v3 (var(--bg-*), var(--text-muted));
- * accent colors (primary / ring) stay on the HSL set via hsl(var(...)).
+ * accent colors (primary / ring) stay on the HSL set via oklch(var(...)).
  */
 
 @layer components {
@@ -23,36 +23,36 @@
   .filter-button {
     @apply inline-flex items-center gap-1.5 border rounded-md px-3 py-1.5 text-sm transition-colors;
     background-color: var(--bg-elevated);
-    border-color: hsl(var(--border));
+    border-color: oklch(var(--border));
   }
   /* Hover = bg change only (v3 Pr.5: no lift, no gradient). */
   .filter-button:hover {
     background-color: var(--bg-muted);
   }
   .filter-button--open {
-    border-color: hsl(var(--primary));
+    border-color: oklch(var(--primary));
   }
   /* Open + unfocused: 1px primary ring (replicates ring-1 ring-primary). */
   .filter-button--open:not(:focus) {
-    box-shadow: 0 0 0 1px hsl(var(--primary));
+    box-shadow: 0 0 0 1px oklch(var(--primary));
   }
   /* Focus owns the ring (replicates focus:ring-2 focus:ring-ring, mouse + keyboard). */
   .filter-button:focus {
     outline: none;
-    box-shadow: 0 0 0 2px hsl(var(--ring));
+    box-shadow: 0 0 0 2px oklch(var(--ring));
   }
 
   /* Floating popover — elevated surface, 1px border; shadow kept (v3 allows
      shadows only on truly floating layers like popovers/dropdowns). */
   .filter-popover {
     background-color: var(--bg-elevated);
-    border-color: hsl(var(--border));
+    border-color: oklch(var(--border));
   }
 
   /* Active-filter chip — flat recessed pill on var(--bg-subtle), no shadow. */
   .filter-chip {
     background-color: var(--bg-subtle);
-    border: 1px solid hsl(var(--border));
+    border: 1px solid oklch(var(--border));
     color: var(--text-muted);
   }
   .filter-chip__remove:hover {
@@ -64,6 +64,6 @@
     color: var(--text-muted);
   }
   .filter-clear-all:hover {
-    color: hsl(var(--foreground));
+    color: oklch(var(--foreground));
   }
 }
