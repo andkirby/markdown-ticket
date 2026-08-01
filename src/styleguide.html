@@ -174,10 +174,24 @@
     .checkbox-demo { width: 16px; height: 16px; accent-color: hsl(var(--primary)); }
   </style>
 
+  <style>
+    .surface-card--accent { border-left: 3px solid var(--prio-critical); }
+    .contract { border-radius: 10px; padding: .5rem; margin-top: .85rem; }
+    .contract-row { display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; padding: .75rem; border-radius: 8px; }
+    .contract-label { font-size: .68rem; color: var(--text-subtle); font-family: "JetBrains Mono", monospace; min-width: 84px; }
+    .input-ghost { background: var(--bg-muted); border: none; border-radius: 6px; padding: .4rem .6rem; color: hsl(var(--foreground)); font: inherit; font-size: .82rem; }
+    .input-recessed { background: #bcc7d4; border: none; border-radius: 6px; padding: .4rem .6rem; color: #1b2230; font: inherit; font-size: .82rem; }
+    .dark .input-recessed { background: #384560; color: #dde3ec; }
+    .input-hairline { background: var(--bg-muted); border: 1px solid var(--border-strong); border-radius: 6px; padding: .4rem .6rem; color: hsl(var(--foreground)); font: inherit; font-size: .82rem; }
+    .tag { font-size: .65rem; font-weight: 600; }
+    .tag-bad { color: var(--prio-critical); }
+    .tag-ok { color: var(--status-done); }
+  </style>
+
   <h2>surfaces &amp; elevation — borderless, tier-led</h2>
   <div class="stage">
-    <div class="surface-card"><b>Card on subtle</b><br><small class="src">bg-elevated over bg-subtle — tiers carry the structure, no border at rest; hover reveals border-strong</small></div>
-    <div class="surface-card"><b>Accent landmark</b><br><small class="src">a 3px left stripe (data-driven) is the only edge that isn't whitespace</small></div>
+    <div class="surface-card"><b>Card on subtle</b><br><small class="src">bg-elevated over bg-subtle — tiers carry the structure; hover reveals border-strong</small></div>
+    <div class="surface-card surface-card--accent"><b>Accent landmark</b><br><small class="src">3px left stripe (data-driven) — the only non-whitespace edge</small></div>
   </div>
   <div class="form-row" style="margin-top:.6rem;align-items:center">
     <span class="tierbar" style="background:var(--bg-subtle);color:var(--text-muted)">bg-subtle</span>
@@ -186,17 +200,26 @@
     <span class="tierbar" style="background:hsl(var(--primary));color:hsl(var(--primary-foreground))">primary</span>
   </div>
 
-  <h2>form elements</h2>
-  <div class="form-row">
-    <button class="btn btn-primary">Primary</button>
-    <button class="btn btn-secondary">Secondary</button>
-    <button class="btn btn-outline">Outline</button>
-    <button class="btn btn-ghost">Ghost</button>
+  <h2>form controls &amp; the surface contract</h2>
+  <p class="note" style="margin-top:.25rem"><b>Rule:</b> a control's fill must differ ≥3:1 from its container, <i>or</i> it is border-defined. A solid fill that matches its container is a ghost. Here <code>--bg-muted</code> is only ~1.2:1 from white — so a borderless muted input <b>ghosts</b>.</p>
+  <div class="contract">
+    <div class="contract-row" style="background:var(--bg-elevated)">
+      <span class="contract-label">on elevated</span>
+      <button class="btn btn-primary">Primary</button>
+      <button class="btn btn-secondary">Secondary</button>
+      <button class="btn btn-outline">Outline</button>
+      <input class="input-ghost" value="ghost input"> <span class="tag tag-bad">← 1.2:1 ghost</span>
+    </div>
+    <div class="contract-row" style="background:var(--bg-muted)">
+      <span class="contract-label">on muted</span>
+      <button class="btn btn-secondary">Secondary</button> <span class="tag tag-bad">← fill = container</span>
+      <button class="btn btn-primary">Primary</button> <span class="tag tag-ok">← safe anywhere</span>
+    </div>
   </div>
-  <div class="form-row">
-    <div class="field"><label>text input</label><input class="input-demo" value="MDT-220"></div>
-    <div class="field"><label>error state</label><input class="input-demo error" value="bad/path"></div>
-    <div class="field"><label>select</label><select class="select-demo"><option>Open</option><option>Done</option><option>On Hold</option></select></div>
+  <div class="form-row" style="margin-top:.85rem">
+    <div class="field"><label>borderless, recessed fill (reads)</label><input class="input-recessed" value="MDT-220"></div>
+    <div class="field"><label>hairline border (alternative)</label><input class="input-hairline" value="MDT-220"></div>
+    <div class="field"><label>select</label><select class="select-demo"><option>Open</option><option>Done</option></select></div>
     <div class="field"><label>checkbox</label><input type="checkbox" class="checkbox-demo" checked></div>
   </div>
 
