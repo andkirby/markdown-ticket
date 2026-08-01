@@ -157,3 +157,17 @@ Out of scope (deferred with evidence):
 
 - **v1**: 4 facets (status, priority, assignee, type) + free-text fold-in. Desktop inline `Filter · N` button + popover (facets/chips/count inside) + mobile hamburger/popover/chip-strip. localStorage persistence. One header row, always.
 - **v1.1**: 4 more facets (inWorktree, phaseEpic, impactAreas). UI-only addition inside the popover; data structure already supports them.
+
+## 8. Clarifications
+
+### UAT Session 2026-08-01
+
+- **Approved changes**:
+  - U1: Click-outside closes the desktop filter popover — replaced the broken `position:fixed` overlay (trapped by the header `backdrop-filter` containing block) with an event-based `mousedown` guard mirroring `<Modal>`.
+  - U2: Faceted filters now apply to the list view — `ProjectView.sortedTickets` sorts the filtered set instead of the raw ticket set.
+  - U3: Active-filter-chips block gains `mt-3` top gap (was flush against the facet grid).
+  - Spec drift fixed: bdd S11/S12/S15/S16 refined from per-facet dropdowns to the shipped single-popover + FacetGrid; architecture D6/integration points corrected for App.tsx ownership.
+- **Changed requirement IDs**: S11, S12, S15, S16 (refine-in-place); S26, S27, S28 (additive).
+- **Updated workflow documents**: `bdd.md`, `architecture.md`, `tests.md`, `tasks.md`, `uat.md`.
+- **`uat.md` written**: yes.
+- **Strict drift/lock**: no (no `spec-trace` store exists for this CR; trace lives in the human-owned docs).

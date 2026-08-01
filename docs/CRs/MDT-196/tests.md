@@ -137,3 +137,28 @@ facet value combination), defined inline in the test file. No shared fixture
 file needed — predicate tests are self-contained.
 
 E2E uses `buildScenario` which creates real tickets via the project factory.
+
+
+## UAT Round 1 (2026-08-01)
+
+### Drift corrections
+
+The original plan named `DesktopFilterBar.test.tsx` and `FacetDropdown.test.tsx`.
+The shipped implementation uses a single `FilterButton` + popover with a
+two-column `FacetGrid`, so those per-facet test files were not created.
+Actual component test files: `ActiveFilterChips.test.tsx`,
+`MobileChipStrip.test.tsx`. The desktop popover chrome is covered by the E2E
+spec (`tests/e2e/board/board-filter.spec.ts`).
+
+### New scenarios (S26–S28) and how they are verified
+
+| Scenario | Layer | How verified |
+|----------|-------|--------------|
+| S26 — click outside closes popover | browser smoke test | DOM-verified: popover `offsetParent` becomes null after `page.mouse.click` outside the popover. Root cause was the header `backdrop-filter` containing block trapping the `position:fixed` overlay to header bounds. Fix: event-based `mousedown` guard in `FilterButton` (mirrors `<Modal>`). |
+| S27 — filters apply to list view | browser smoke test | DOM-verified: board narrows 185→32 after a status facet; list view shows exactly 32 rows. Fix: `ProjectView.sortedTickets` now sorts `propFilteredTickets` instead of `propTickets`. |
+| S28 — chips block spacing | browser smoke test | DOM-verified: `[data-testid=active-filter-chips]` `marginTop` is `12px` (was `0px`). Fix: inline variant gains `mt-3`. |
+
+### Regression status (post-fix)
+
+- `bun test --isolate ./src/components/BoardFilterBar ./src/utils/ticketFilters.test.ts ./src/hooks/useBoardFilters.test.ts` — 78 pass, 0 fail.
+- `bun run validate:ts` — 4 changed files clean.
