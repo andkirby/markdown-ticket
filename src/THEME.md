@@ -12,7 +12,7 @@ The token file holds **two aligned palettes** (both retuned to the `designs/boar
 
 | Palette | Format | Consumed as | Used by |
 |---|---|---|---|
-| **shadcn HSL set** | bare HSL channels (`243.4 75.4% 58.6%`) | `hsl(var(--primary))` in CSS, or Tailwind `bg-primary` / `text-primary-foreground` | base surfaces, Tailwind utilities, shadcn primitives |
+| **shadcn HSL set** | bare HSL channels (`244.5 57.9% 50.6%`) | `hsl(var(--primary))` in CSS, or Tailwind `bg-primary` / `text-primary-foreground` | base surfaces, Tailwind utilities, shadcn primitives |
 | **v3 semantic set** | hex (`#dc2626`) | bare `var(--prio-critical)` in CSS | the design3 system: bg tiers, badges, card accents, splines |
 
 Never wrap a v3 hex token in `hsl()` — it is already a color. Never use a shadcn token bare — it is raw channels, not a color.
@@ -29,13 +29,13 @@ Never wrap a v3 hex token in `hsl()` — it is already a color. Never use a shad
 | `--foreground` | `222.2 47.4% 11.2%` | Primary text |
 | `--card` / `--card-foreground` | `0 0% 100%` / `222.2 47.4% 11.2%` | Card surface + text |
 | `--popover` / `--popover-foreground` | `0 0% 100%` / `222.2 47.4% 11.2%` | Dropdown/popover surface + text |
-| `--primary` / `--primary-foreground` | `243.4 75.4% 58.6%` (indigo) / `0 0% 100%` | Primary actions |
-| `--secondary` / `--secondary-foreground` | `215 27.3% 91.4%` / `222.2 47.4% 11.2%` | Secondary surface |
+| `--primary` / `--primary-foreground` | `244.5 57.9% 50.6%` (indigo-700) / `0 0% 100%` | Primary actions |
+| `--secondary` / `--secondary-foreground` | `213.3 29.7% 82.2%` (gray tonal) / `222.2 47.4% 11.2%` | Secondary button (medium emphasis) |
 | `--muted` / `--muted-foreground` | `215 27.3% 91.4%` / `215.3 19.3% 34.5%` | Muted surface / muted text |
 | `--accent` / `--accent-foreground` | `215 27.3% 91.4%` / `222.2 47.4% 11.2%` | Accent surface |
 | `--destructive` / `--destructive-foreground` | `0 84.2% 60.2%` / `0 0% 100%` | Errors, danger |
 | `--border` / `--input` | `218.8 16.5% 79.8%` | Borders / inputs (shared value) |
-| `--ring` | `243.4 75.4% 58.6%` | Focus ring |
+| `--ring` | `244.5 57.9% 50.6%` | Focus ring |
 
 ### Dark (`.dark`)
 
@@ -46,12 +46,13 @@ Applied via a `.dark` class on the root element. Background shifts near-black, t
 | `--background` | `220 29% 6.1%` |
 | `--foreground` | `215 35.3% 93.3%` |
 | `--card` / `--popover` | `214.3 24.1% 22.7%` |
-| `--primary` | `238.7 83.5% 66.7%` |
-| `--secondary` / `--muted` / `--accent` | `219.1 24.7% 18.2%` |
+| `--primary` | `243.4 75.4% 58.6%` |
+| `--secondary` | `215.3 19.3% 34.5%` |
+| `--muted` / `--accent` | `219.1 24.7% 18.2%` |
 | `--muted-foreground` | `216 17.4% 66.3%` |
 | `--destructive` | `0 62.8% 30.6%` |
 | `--border` / `--input` | `213.6 16.1% 30.4%` |
-| `--ring` | `238.7 83.5% 66.7%` |
+| `--ring` | `243.4 75.4% 58.6%` |
 
 ---
 
