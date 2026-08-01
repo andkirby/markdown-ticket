@@ -286,8 +286,8 @@ If a style expresses semantic color or a reusable visual token, it should use CS
 
 ```css
 .badge[data-status="approved"] {
-  background: var(--badge-approved-bg);
-  color: var(--badge-approved-text);
+  background: var(--status-open-bg);
+  color: var(--status-open);
 }
 ```
 
@@ -327,7 +327,7 @@ That pattern is acceptable only for non-themeable, purely structural class compo
 
 ### Token Source Of Truth
 
-Use [THEME.md](THEME.md) for the available token system and `src/index.css` as the source of truth for the actual values.
+Use [THEME.md](THEME.md) for the token system; the values live in [`src/styles/design-tokens.css`](styles/design-tokens.css) (imported first by `index.css`).
 
 ---
 

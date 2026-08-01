@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Markdown Ticket — Styleguide</title>
+  <!--
+    Minimal styleguide. Colors/typography/density are read LIVE from the real
+    token file — this page adds NO colors of its own, only layout. Toggle the
+    theme button to re-theme the whole page (the .dark block in design-tokens.css
+    takes over). Open directly or serve from src/.
+  -->
+  <link rel="stylesheet" href="styles/design-tokens.css" />
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      margin: 0;
+      padding: 2.5rem 2.5rem 6rem;
+      max-width: 1100px;
+      background: var(--bg-subtle);
+      color: var(--text-muted);
+      font-family: Inter, system-ui, -apple-system, Segoe UI, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    header { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+    h1 { margin: 0; font-size: 1.75rem; font-weight: 600; letter-spacing: -0.02em; color: hsl(var(--foreground)); }
+    h2 { margin: 2.5rem 0 .25rem; font-size: .95rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--text-subtle); }
+    p.note { margin: .75rem 0 0; max-width: 60ch; }
+    code { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: .82em; }
+    .src { color: var(--text-subtle); }
+
+    button#theme {
+      border: 1px solid var(--border-strong);
+      background: var(--bg-elevated);
+      color: var(--text-muted);
+      border-radius: 6px;
+      padding: .4rem .8rem;
+      font: inherit;
+      cursor: pointer;
+    }
+    button#theme:hover { background: var(--bg-muted); }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: .6rem; margin-top: .85rem; }
+    .sw { border-radius: 8px; overflow: hidden; border: 1px solid var(--border-strong); }
+    .sw__chip { height: 56px; }
+    .sw__meta { padding: .35rem .5rem; background: var(--bg-elevated); }
+    .sw__name { color: hsl(var(--foreground)); font-weight: 500; font-size: .8rem; }
+    .sw__val  { color: var(--text-subtle); font-family: "JetBrains Mono", monospace; font-size: .7rem; }
+
+    .chips { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .85rem; }
+    .chip {
+      display: inline-flex; align-items: center; gap: .35rem;
+      padding: .2rem .55rem; border-radius: 4px;
+      font-size: .78rem; font-weight: 500;
+    }
+    .chip code { font-size: .68rem; opacity: .8; }
+
+    .slots { display: flex; flex-wrap: wrap; gap: 1.25rem; margin-top: .85rem; }
+    .slot { background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: 8px; padding: .5rem .75rem; }
+    .slot b { color: hsl(var(--foreground)); font-family: "JetBrains Mono", monospace; }
+    .slot small { color: var(--text-subtle); display: block; }
+
+    .type-sample { background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: 8px; padding: 1rem 1.25rem; margin-top: .85rem; }
+    .type-sample .h1 { font-size: 1.875rem; font-weight: 600; letter-spacing: -0.02em; color: hsl(var(--foreground)); }
+    .type-sample .h2 { font-size: 1.5rem; font-weight: 600; color: hsl(var(--foreground)); margin-top: .5rem; }
+    .type-sample .body { color: var(--text-muted); margin-top: .5rem; }
+    .type-sample .mono { font-family: "JetBrains Mono", monospace; color: var(--text-subtle); margin-top: .5rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Styleguide</h1>
+    <button id="theme">◐ Toggle theme</button>
+  </header>
+  <p class="note">Swatches render <b>live</b> from <code>src/styles/design-tokens.css</code> — this file defines no colors of its own. Toggle re-themes the entire page via the token file's <code>.dark</code> block.</p>
+
+  <h2>shadcn HSL palette · surfaces</h2>
+  <div class="grid">
+    <div class="sw"><div class="sw__chip" data-token="background" data-fmt="hsl" style="background:hsl(var(--background))"></div><div class="sw__meta"><div class="sw__name">--background</div><div class="sw__val"></div></div></div>
+    <div class="sw"><div class="sw__chip" data-token="foreground" data-fmt="hsl" style="background:hsl(var(--foreground))"></div><div class="sw__meta"><div class="sw__name">--foreground</div><div class="sw__val"></div></div></div>
+    <div class="sw"><div class="sw__chip" data-token="card" data-fmt="hsl" style="background:hsl(var(--card))"></div><div class="sw__meta"><div class="sw__name">--card</div><div class="sw__val"></div></div></div>
+    <div class="sw"><div class="sw__chip" data-token="popover" data-fmt="hsl" style="background:hsl(var(--popover))"></div><div class="sw__meta"><div class="sw__name">--popover</div><div class="sw__val"></div></div></div>
+    <div class="sw"><div class="sw__chip" data-token="primary" data-fmt="hsl" style="background:hsl(var(--primary))"></div><div class="sw__meta"><div class="sw__name">--primary</div><div class="sw__val"></div></div></div>
+    <div class="sw"><div class="sw__chip" data-token="secondary" data-fmt="hsl" style="background:hsl(var(--secondary))"></div><div class="sw__meta"><div class="sw__name">--secondary</div><div class="sw__val"></div></div></div>
+    <div class="sw"><div class="sw__chip" data-token="muted" data-fmt="hsl" style="background:hsl(var(--muted))"></div><div class="sw__meta"><div class="sw__name">--muted</div><div class="sw__val"></div></div></div>
+    <div class="sw"><div class="sw__chip" data-token="accent" data-fmt="hsl" style="background:hsl(var(--accent))"></div><div class="sw__meta"><div class="sw__name">--accent</div><div class="sw__val"></div></div></div>
+    <div class="sw"><div class="sw__chip" data-token="destructive" data-fmt="hsl" style="background:hsl(var(--destructive))"></div><div class="sw__meta"><div class="sw__name">--destructive</div><div class="sw__val"></div></div></div>
+    <div class="sw"><div class="sw__chip" data-token="border" data-fmt="hsl" style="background:hsl(var(--border))"></div><div class="sw__meta"><div class="sw__name">--border / --input</div><div class="sw__val"></div></div></div>
+    <div class="sw"><div class="sw__chip" data-token="ring" data-fmt="hsl" style="background:hsl(var(--ring))"></div><div class="sw__meta"><div class="sw__name">--ring</div><div class="sw__val"></div></div></div>
+  </div>
+
+  <h2>v3 surface tiers & structure</h2>
+  <div class="grid">
+    <div class="sw"><div class="sw__chip" data-token="bg-subtle" data-fmt="raw" style="background:var(--bg-subtle)"></div><div class="sw__meta"><div class="sw__name">--bg-subtle</div><div class="sw__val"></div></div></div>
+    <div class="sw"><div class="sw__chip" data-token="bg-muted" data-fmt="raw" style="background:var(--bg-muted)"></div><div class="sw__meta"><div class="sw__name">--bg-muted</div><div class="sw__val"></div></div></div>
+    <div class="sw"><div class="sw__chip" data-token="bg-elevated" data-fmt="raw" style="background:var(--bg-elevated);border-bottom:1px solid var(--border-strong)"></div><div class="sw__meta"><div class="sw__name">--bg-elevated</div><div class="sw__val"></div></div></div>
+    <div class="sw"><div class="sw__chip" data-token="border-strong" data-fmt="raw" style="background:var(--border-strong)"></div><div class="sw__meta"><div class="sw__name">--border-strong</div><div class="sw__val"></div></div></div>
+    <div class="sw"><div class="sw__chip" data-token="text-muted" data-fmt="raw" style="background:var(--text-muted)"></div><div class="sw__meta"><div class="sw__name">--text-muted</div><div class="sw__val"></div></div></div>
+    <div class="sw"><div class="sw__chip" data-token="text-subtle" data-fmt="raw" style="background:var(--text-subtle)"></div><div class="sw__meta"><div class="sw__name">--text-subtle</div><div class="sw__val"></div></div></div>
+    <div class="sw"><div class="sw__chip" data-token="primary-light" data-fmt="raw" style="background:var(--primary-light)"></div><div class="sw__meta"><div class="sw__name">--primary-light</div><div class="sw__val"></div></div></div>
+  </div>
+
+  <h2>status badges (fg on bg)</h2>
+  <div class="chips">
+    <span class="chip" style="background:var(--status-backlog-bg);color:var(--status-backlog)">Backlog</span>
+    <span class="chip" style="background:var(--status-open-bg);color:var(--status-open)">Open</span>
+    <span class="chip" style="background:var(--status-progress-bg);color:var(--status-progress)">In Progress</span>
+    <span class="chip" style="background:var(--status-done-bg);color:var(--status-done)">Done</span>
+    <span class="chip" style="background:var(--status-deferred-bg);color:var(--status-deferred)">Deferred</span>
+    <span class="chip" style="background:var(--status-rejected-bg);color:var(--status-rejected)">Rejected</span>
+    <span class="chip" style="background:var(--status-hold-bg);color:var(--status-hold)">On Hold</span>
+  </div>
+
+  <h2>priority</h2>
+  <div class="chips">
+    <span class="chip" style="background:color-mix(in srgb,var(--prio-critical) 15%,transparent);color:var(--prio-critical)">Critical</span>
+    <span class="chip" style="background:color-mix(in srgb,var(--prio-high) 15%,transparent);color:var(--prio-high)">High</span>
+    <span class="chip" style="background:color-mix(in srgb,var(--prio-medium) 15%,transparent);color:var(--prio-medium)">Medium</span>
+    <span class="chip" style="background:color-mix(in srgb,var(--prio-low) 15%,transparent);color:var(--prio-low)">Low</span>
+  </div>
+
+  <h2>type · epic · spline</h2>
+  <div class="chips">
+    <span class="chip" style="background:color-mix(in srgb,var(--type-feature) 12%,transparent);color:var(--type-feature)">Feature</span>
+    <span class="chip" style="background:color-mix(in srgb,var(--type-bug) 12%,transparent);color:var(--type-bug)">Bug</span>
+    <span class="chip" style="background:color-mix(in srgb,var(--type-architecture) 12%,transparent);color:var(--type-architecture)">Architecture</span>
+    <span class="chip" style="background:color-mix(in srgb,var(--type-documentation) 12%,transparent);color:var(--type-documentation)">Documentation</span>
+    <span class="chip" style="background:color-mix(in srgb,var(--type-research) 12%,transparent);color:var(--type-research)">Research</span>
+    <span class="chip" style="background:color-mix(in srgb,var(--epic-1) 12%,transparent);color:var(--epic-1)">Epic 1</span>
+    <span class="chip" style="background:color-mix(in srgb,var(--epic-2) 12%,transparent);color:var(--epic-2)">Epic 2</span>
+    <span class="chip" style="background:color-mix(in srgb,var(--epic-3) 12%,transparent);color:var(--epic-3)">Epic 3</span>
+    <span class="chip" style="background:color-mix(in srgb,var(--epic-4) 12%,transparent);color:var(--epic-4)">Epic 4</span>
+    <span class="chip" style="background:color-mix(in srgb,var(--spline-blocker) 12%,transparent);color:var(--spline-blocker)">Blocker</span>
+    <span class="chip" style="background:color-mix(in srgb,var(--spline-related) 12%,transparent);color:var(--spline-related)">Related</span>
+  </div>
+
+  <h2>density slots</h2>
+  <div class="slots">
+    <div class="slot"><b>--pad-y/x</b><small>10 / 12 px</small></div>
+    <div class="slot"><b>--fs-xs / --fs-md</b><small>11 / 13 px</small></div>
+    <div class="slot"><b>--radius-card</b><small>8 px</small></div>
+    <div class="slot"><b>--sz-icon</b><small>16 px</small></div>
+  </div>
+
+  <h2>typography</h2>
+  <div class="type-sample">
+    <div class="h1">The quick brown ticket</div>
+    <div class="h2">Moved to Done</div>
+    <div class="body">Inter for UI text — 14 px base, 1.5 line height. Semantic color via tokens, never hardcoded.</div>
+    <div class="mono">JetBrains Mono — MDT-220 · var(--prio-critical)</div>
+  </div>
+
+  <p class="src" style="margin-top:2.5rem">Tokens: <code>src/styles/design-tokens.css</code> · Reference: <code>src/THEME.md</code></p>
+
+  <script>
+    (function () {
+      function fill() {
+        var root = getComputedStyle(document.documentElement);
+        document.querySelectorAll('[data-token]').forEach(function (el) {
+          var t = el.dataset.token, fmt = el.dataset.fmt;
+          var v = root.getPropertyValue('--' + t).trim();
+          el.parentElement.querySelector('.sw__val').textContent = fmt === 'hsl' ? 'hsl(' + v + ')' : v;
+        });
+      }
+      document.getElementById('theme').addEventListener('click', function () {
+        document.documentElement.classList.toggle('dark');
+        fill();
+      });
+      fill();
+    })();
+  </script>
+</body>
+</html>
