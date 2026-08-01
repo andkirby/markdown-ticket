@@ -329,6 +329,17 @@ That pattern is acceptable only for non-themeable, purely structural class compo
 
 Use [THEME.md](THEME.md) for the token system; the values live in [`src/styles/design-tokens.css`](styles/design-tokens.css) (imported first by `index.css`).
 
+### Surface Contract For Interactive Controls
+
+A control's fill must differ from its host surface, or the control ghosts (becomes invisible). This is why form-control borders are **affordance**, not decoration — they survive the border-drop.
+
+- **Solid fills** (primary, destructive): saturated — separate from every neutral tier; usable anywhere, border optional.
+- **Tonal / secondary fills**: must sit on a contrasting tier. `btn-secondary` uses `--secondary` (currently equal to `--muted`), so it matches a `bg-muted` container — it is **border-defined**; don't drop that border. (Fix path: make `--secondary` distinct from `--muted`, since only `btn-secondary` consumes it.)
+- **Borderless inputs**: a recessed-fill input reads only if its fill is ≥~1.7:1 from the container. `--bg-muted` is only ~1.2:1 from `--card`/`--bg-elevated` in light, so a borderless muted input **ghosts**. Borderless inputs need either a deeper recessed fill (Material-3 filled-field, e.g. `#bcc7d4` light / `#384560` dark) or a hairline border + focus ring. Pick one and apply it to *every* input class (`.input`, `.settings-input`, sort selects, project-search, FormField) — piecemeal looks broken.
+- **Outline / ghost**: transparent by design — exempt from the fill rule; rely on their border (outline) or ≥3:1 text (ghost).
+
+Measured (light): `--bg-muted` `#e3e8ef` on `--card` `#fff` = **1.23:1** (ghost); a `#bcc7d4` recessed fill = **1.71:1** (reads); `--primary` = 4.9–6:1 on every tier (safe). See [`styleguide.html`](styleguide.html) → "form controls & the surface contract" for a live demo.
+
 ---
 
 ## Tailwind Layers
