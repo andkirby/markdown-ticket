@@ -1,6 +1,10 @@
 # Wrangler local state and caches
 .wrangler/
 
+
+# wrangler.jsonc contains account IDs / secrets — only the sample is committed.
+# Copy wrangler.sample.jsonc to wrangler.jsonc and fill in your values.
+wrangler.jsonc
 # Local development secrets (never committed)
 .dev.vars
 .dev.vars.*
