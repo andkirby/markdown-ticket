@@ -18,6 +18,7 @@
  */
 
 import type { ContextVariant } from './types'
+import { Zap } from 'lucide-react'
 import { useParams } from 'react-router-dom'
 import { cn } from '../../lib/utils'
 import { classifyLink, LinkType } from '../../utils/linkProcessor'
@@ -73,13 +74,19 @@ export function ContextBadge({ variant, value, worktreePath, className }: Contex
   const isLinkable
     = parsedLink !== undefined && LINKABLE_TYPES.has(parsedLink.type)
 
+  // A whole-string ticket ref in the phase field is an EPIC — gold accent + Zap
+  // icon distinguish it from a free-text phase label (data-context: epic vs phase).
+  const isEpic = variant === 'phase' && isLinkable
+  const contextType = variant === 'phase' ? (isLinkable ? 'epic' : 'phase') : variant
+
   return (
     <Badge
       variant="outline"
       className={cn('badge', className)}
-      data-context={variant}
+      data-context={contextType}
       title={title}
     >
+      {isEpic && <Zap className="h-3 w-3" aria-hidden="true" />}
       {isLinkable && parsedLink
         ? (
             // Stop the parent card's viewer-open onClick from firing on navigation.

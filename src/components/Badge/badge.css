@@ -128,10 +128,17 @@
    * Flat tints (accent color-mix or neutral tiers). No border.
    * ===================================================== */
 
-  /* Context: Phase/Epic (neutral gray tier) */
+  /* Context: Phase — a free-text label (neutral gray tier) */
   .badge[data-context="phase"] {
     background: var(--bg-muted);
     color: var(--text-muted);
+  }
+
+  /* Context: Epic — a ticket-ref epic (gold accent + Zap icon), distinct from a
+     free-text phase. --epic-3 is the gold rung of the epic palette. */
+  .badge[data-context="epic"] {
+    background: color-mix(in srgb, var(--epic-3) 12%, transparent);
+    color: var(--epic-3);
   }
 
   /* Context: Assignee (purple tint) */

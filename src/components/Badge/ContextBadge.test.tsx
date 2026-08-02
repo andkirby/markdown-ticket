@@ -71,6 +71,17 @@ describe('ContextBadge', () => {
 
       expect(badge?.getAttribute('data-context')).toBe('phase')
     })
+
+    it('marks a ticket-ref phase value as an epic (data-context="epic" + Zap icon)', () => {
+      const { container } = render(
+        <TestHarness projectCode="TEST">
+          <ContextBadge variant="phase" value="TEST-012" />
+        </TestHarness>,
+      )
+      const badge = container.querySelector('.badge') as HTMLElement
+      expect(badge?.getAttribute('data-context')).toBe('epic')
+      expect(badge?.querySelector('svg')).not.toBeNull()
+    })
   })
 
   // ── MDT-193: phase variant ticket-link rendering ──────────────────────
