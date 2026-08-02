@@ -78,3 +78,54 @@ proper spacing. Fix spec drift accumulated during implementation.
   change in this round and is intentionally minimal (`mt-3`).
 - If the header's `backdrop-filter` is ever removed, the event-based guard still
   works — no regression risk.
+
+---
+
+# UAT Refinement Brief — Round 2 (2026-08-02)
+
+## Objective
+
+Cloud-projected stubs (MDT-200) bypass the faceted filter. Fix the architectural
+pipeline so the filter is the last transformation on the merged ticket stream.
+
+## Root cause (verified empirically)
+
+Board.tsx applied the filter BEFORE merging cloud stubs:
+
+```
+filter(locals)  →  merge(filtered locals, cloud stubs)  →  display
+```
+
+Two bugs resulted:
+- **Bug A** — cloud stubs bypassed the filter entirely (merged below it).
+- **Bug B** — `mergeProjections` suppresses a stub whose local exists, but it
+  received *pre-filtered* locals. Filtering a local out removed it from the
+  suppression set, so its stub *reappeared*. Observed: stub count went 7→8
+  after applying a status filter.
+
+## Approved change
+
+Reorder the pipeline so the filter is applied to the MERGED set:
+
+```
+merge(full locals, cloud stubs)  →  applyTicketFilters(merged)  →  display
+```
+
+- `Board.tsx`: `useCloudProjections({ localTickets: tickets })` (full locals),
+  then `displayTickets = applyTicketFilters(boardTickets, filters)`.
+- Thread `filters` state prop App → ProjectView → Board (previously Board only
+  received the pre-filtered result, not the filter state).
+- New pipeline unit test `src/hooks/useCloudProjections.test.ts` (6 cases
+  including a Bug B regression guard).
+
+## Changed requirement IDs
+
+- **S29** (new) — cloud stubs respect the status filter.
+- **S30** (new) — a filtered-out local's stub does not reappear.
+
+## Validation
+
+- Browser: 7 "Proposed" stubs → 0 visible when filtering by "Implemented"
+  (Bug A fixed); no stub reappearance (Bug B fixed).
+- `bun test --isolate ./src/hooks ./src/components/BoardFilterBar ./src/utils/ticketFilters.test.ts` — 181 pass.
+- `bun run validate:ts` — 5 files clean. `bun run build` — green.

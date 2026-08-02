@@ -41,6 +41,8 @@ interface ProjectViewProps {
   tickets?: Ticket[]
   /** Pre-filtered tickets from the app-level filter state (MDT-196). */
   filteredTickets?: Ticket[]
+  /** Active TicketFilters state, threaded to Board so cloud stubs respect it (MDT-196 UAT r2). */
+  filters?: TicketFilters
   /** Active filter state for the mobile chip strip (MDT-196). */
   mobileFilters?: TicketFilters
   /** Remove a filter value from the mobile chip strip (MDT-196). */
@@ -51,8 +53,7 @@ interface ProjectViewProps {
   sortPreferences?: SortPreferences
   canWrite?: boolean
 }
-
-export default function ProjectView({ onTicketClick, selectedProject, tickets: propTickets, filteredTickets: propFilteredTickets, mobileFilters, onRemoveMobileFilter, updateTicketOptimistic, viewMode: externalViewMode, loading: propLoading, sortPreferences, canWrite = true }: ProjectViewProps) {
+export default function ProjectView({ onTicketClick, selectedProject, tickets: propTickets, filteredTickets: propFilteredTickets, filters, mobileFilters, onRemoveMobileFilter, updateTicketOptimistic, viewMode: externalViewMode, loading: propLoading, sortPreferences, canWrite = true }: ProjectViewProps) {
   // Use external viewMode if provided, otherwise fall back to internal state
   const [internalViewMode] = useState<ViewMode>(() => {
     const saved = localStorage.getItem(VIEW_MODE_KEY)
@@ -170,6 +171,7 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
                 selectedProject={selectedProject}
                 tickets={propTickets || []}
                 filteredTickets={propFilteredTickets || propTickets || []}
+                filters={filters}
                 mobileFilters={mobileFilters}
                 onRemoveMobileFilter={onRemoveMobileFilter}
                 loading={loading}

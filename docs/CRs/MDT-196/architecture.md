@@ -157,6 +157,15 @@ via `sortedTickets` computed from the filtered set) consume the same
 `filteredTickets`. The filter controls render inline in the app header and are
 visible in both board and list view modes.
 
+**UAT r2 (2026-08-02) — cloud-projection pipeline ordering (critical fix):**
+The filter is applied to the **MERGED** set, not the local set alone. The
+pipeline in Board is: `merge(full locals, cloud stubs)` → `applyTicketFilters(merged)`.
+This was previously `filter(locals)` → `merge(filtered locals, stubs)`, which caused
+two bugs: (A) cloud stubs bypassed the filter entirely, and (B) filtering a local
+out made its stub reappear (the merge's suppression check received pre-filtered
+locals). Board now receives the `filters` state object and applies the predicate
+to `boardTickets` as the last transformation before column grouping.
+
 ## Integration points
 
 ### App.tsx (filter state owner)
