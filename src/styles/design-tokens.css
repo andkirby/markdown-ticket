@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    --background: 1.0 0.0 89.9;
+    --background: 1.0 0.0 89.9; /* base/canvas — reading surface (darkest in dark / white in light) */
     --foreground: 0.208 0.04 265.7;
     --card: 1.0 0.0 89.9;
     --card-foreground: 0.208 0.04 265.7;
@@ -40,9 +40,9 @@
     --code-token-operator: 0.555 0.041 257.4;
     --code-token-important: 0.637 0.208 25.3;
     /* ── v3 design-system semantic tokens (oklch; consume via bare var()) ── */
-    --bg-subtle: oklch(0.957 0.006 255.5);
-    --bg-muted: oklch(0.929 0.011 256.7);
-    --bg-elevated: oklch(1.0 0.0 89.9);
+    --bg-subtle: oklch(0.957 0.006 255.5); /* recessed-soft: tab bars, nav rails (chrome above content) */
+    --bg-muted: oklch(0.929 0.011 256.7); /* recessed: hover, inputs, secondary chrome */
+    --bg-elevated: oklch(1.0 0.0 89.9); /* raised: cards, modals, popovers, header (floating/grouping) */
     --border-strong: oklch(0.661 0.025 260.7);
     --text-muted: oklch(0.446 0.037 257.3);
     --text-subtle: oklch(0.506 0.027 256.2);

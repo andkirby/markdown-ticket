@@ -391,7 +391,9 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
       <Modal
         isOpen={isOpen}
         onClose={onClose}
-        size="xl"
+        size="full"
+        overlayClassName="modal--viewport"
+        className="ticket-viewer"
         closeOnEscape={!isTraceGraphOpen}
         closeOnOverlayClick={!isTraceGraphOpen}
         data-testid="ticket-detail"
@@ -417,7 +419,7 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
             />
           </svg>
         </button>
-        <ModalBody className="p-0">
+        <ModalBody className="ticket-viewer__scroll">
           {ticketError && !ticket
             ? (
                 <div data-testid="ticket-not-found" className="flex flex-col items-center justify-center py-16 px-6">
