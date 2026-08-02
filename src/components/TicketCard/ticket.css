@@ -61,16 +61,21 @@
     font-variant-numeric: tabular-nums;
     color: var(--text-subtle);
   }
-  /* TicketCode — canonical ticket-key typography (mono, tabular, primary).
-     Used everywhere TicketCode renders (board, viewer, search). The card wrapper
-     (.ticket-card__code) layers density font-size on top. */
+  /* .ticket-key — canonical ticket key/number typography (mono, tabular, 600).
+     Color-agnostic: the context sets color, so a key in a gold epic badge reads
+     gold while TicketCode sets --primary-text. Applied by TicketCode
+     (.ticket-code) and by key renderings in badges/links. */
+  .ticket-key {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+  }
+  /* TicketCode — glyph-before-key rendering; layers layout + primary-text color
+     on top of .ticket-key typography (the component applies both classes). */
   .ticket-code {
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
-    font-variant-numeric: tabular-nums;
-    font-weight: 600;
     color: var(--primary-text);
   }
   .priority-icon {
