@@ -163,14 +163,14 @@ requirements, BDD, test, task, implementation, and runtime trace work.
 
 - [x] Acknowledged tickets expose only the approved header projection, not ticket bodies.
 - [x] Stale projection writes are rejected through version/precondition semantics.
-- [ ] Another authorized client sees projected create and status changes within the configured polling interval.
+- [x] Another authorized client sees projected create and status changes within the configured polling interval.
 - [x] The board distinguishes cloud-projected state from canonical local ticket state without implying teammate ownership.
 
 ### Operations and Documentation
 
 - [x] Allocation, projection, membership, denial, and recovery actions produce structured audit records.
 - [x] Rate limits and failure telemetry cover runaway clients and abandoned reservations.
-- [ ] Backup, restore, export, disable, and vendor-exit procedures are exercised.
+- [ ] Backup, restore, export, disable, and vendor-exit procedures are exercised. _(Deferred to [MDT-222](MDT-222-exercise-cloud-sync-operational-drills.md); procedures are documented under `cloud/test/operations/` but the live drills have not been run and recorded.)_
 - [x] `docs/CONFIG_SPECIFICATION.md` documents cloud binding and exposure rules.
 - [x] `docs/CLOUD_COORDINATION_GUIDE.md` documents setup, onboarding, credentials, recovery, and disablement.
 - [x] MCP, CLI, and server architecture documentation is reconciled wherever behavior or ownership changes.

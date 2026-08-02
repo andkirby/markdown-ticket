@@ -215,3 +215,14 @@ unambiguously correct. The file-persistence discrepancy is a driver/`writeLocal`
 detail to investigate separately; it does not affect the connection proof —
 the cloud counter advanced and the reservations are `acknowledged` in prod D1
 regardless of the local file outcome.
+
+### Two-client projection visibility (BR-3.3, MDT-200 #15)
+
+Projected create and status changes were observed on a second authorized client
+within `pollIntervalSeconds` (15s). Client A created/acknowledged tickets
+through the cloud path; client B, bound to the same cloud project
+`35863af3-…` via its own CONFIG_DIR connection, polled
+`GET /v1/projects/{uuid}/projections` and rendered the projected header on the
+board before the next Git synchronization. The poll→render path is the same
+`useCloudProjections` hook covered by `tests/e2e/cloud-sync-board.spec.ts`.
+**MDT-200 acceptance criterion #15 closed.**
