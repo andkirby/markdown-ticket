@@ -547,6 +547,7 @@ function ProjectRouteHandler() {
                 selectedProject={selectedProject}
                 tickets={tickets}
                 filteredTickets={boardFilteredTickets}
+                filters={boardFilters}
                 mobileFilters={boardFilters}
                 onRemoveMobileFilter={(facet, value) => toggleBoardFilter(facet, value)}
                 viewMode={viewMode}

@@ -358,3 +358,38 @@ Feature: Filter chip layout (UAT)
     And inter-chip spacing is consistent (gap-2)
   ```
 
+
+## UAT Round 2 (2026-08-02) — cloud-projected stubs respect the filter
+
+### S29 — Cloud stubs are filtered alongside local tickets
+
+```gherkin
+Feature: Cloud-projection filter scope (UAT r2)
+  Cloud-projected stubs carry the same header fields as local tickets
+  (status, type, priority, assignee) and must respect the faceted filter.
+  The filter is applied to the MERGED set (local + cloud stubs), not to the
+  local set alone — otherwise stubs bypass the filter entirely.
+
+  Scenario: A status filter excludes non-matching cloud stubs
+    Given the board has 7 cloud stubs, all with status "Proposed"
+    When the user applies a status filter for "Implemented"
+    Then zero cloud stubs are visible
+    And only local tickets with status "Implemented" remain
+  ```
+
+### S30 — A filtered-out local does not make its cloud stub reappear
+
+```gherkin
+Feature: Cloud-projection suppression invariant (UAT r2)
+  A stub is suppressed when its local counterpart exists. The merge must
+  receive the FULL local set (not pre-filtered) so suppression holds even
+  when the local is filtered out. Otherwise filtering a local out makes its
+  stub reappear — the "tickets stream becomes unfiltered" bug.
+
+  Scenario: Local MDT-001 (Proposed) has a cloud stub; filter to Implemented
+    Given local MDT-001 has status "Proposed" and a cloud projection exists
+    When the user applies a status filter for "Implemented"
+    Then MDT-001 does not appear (local filtered out, stub suppressed)
+    And MDT-001's stub does not reappear
+  ```
+

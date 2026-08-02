@@ -171,3 +171,12 @@ Out of scope (deferred with evidence):
 - **Updated workflow documents**: `bdd.md`, `architecture.md`, `tests.md`, `tasks.md`, `uat.md`.
 - **`uat.md` written**: yes.
 - **Strict drift/lock**: no (no `spec-trace` store exists for this CR; trace lives in the human-owned docs).
+
+### UAT Session 2026-08-02 — cloud-projection filter pipeline
+
+- **Architectural problem fixed**: cloud-projected stubs bypassed the faceted filter because the filter ran BEFORE the cloud merge in Board.tsx. Two bugs: (A) stubs bypassed the filter; (B) filtering a local out made its stub reappear (merge received pre-filtered locals → suppression missed it). Empirically verified: stub count went 7→8 after applying a status filter.
+- **Approved change**: reorder pipeline to `merge(full locals, cloud stubs)` → `applyTicketFilters(merged)`. Board now receives the `filters` state object (threaded App → ProjectView → Board) and applies the predicate to the merged set as the last transformation. New pipeline unit test guards both bugs.
+- **Changed requirement IDs**: S29, S30 (additive).
+- **Updated workflow documents**: `bdd.md`, `architecture.md`, `tests.md`, `uat.md`.
+- **`uat.md` written**: yes (round 2 appended).
+- **Strict drift/lock**: no.

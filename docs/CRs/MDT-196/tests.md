@@ -162,3 +162,25 @@ spec (`tests/e2e/board/board-filter.spec.ts`).
 
 - `bun test --isolate ./src/components/BoardFilterBar ./src/utils/ticketFilters.test.ts ./src/hooks/useBoardFilters.test.ts` — 78 pass, 0 fail.
 - `bun run validate:ts` — 4 changed files clean.
+
+## UAT Round 2 (2026-08-02) — cloud-projection filter pipeline
+
+### New scenarios (S29–S30) and how they are verified
+
+| Scenario | Layer | How verified |
+|----------|-------|--------------|
+| S29 — cloud stubs respect status filter | browser smoke test + unit | Browser: 7 "Proposed" stubs → 0 visible when filtering by "Implemented". Unit: `src/hooks/useCloudProjections.test.ts` pipeline test asserts stubs excluded by filter. |
+| S30 — filtered-out local's stub does not reappear | unit (regression guard) | `src/hooks/useCloudProjections.test.ts` includes a Bug B regression test proving the OLD pipeline (merge filtered locals) leaks the stub back, while the fixed pipeline (merge full locals → filter) does not. |
+
+### Pipeline unit test (`src/hooks/useCloudProjections.test.ts`)
+
+Tests the architectural invariant: `mergeProjections(fullLocals)` then
+`applyTicketFilters(merged)`. Six cases cover empty filter, stub suppression,
+Bug A (stubs filtered), Bug B (no reappearance), a Bug B regression guard, and
+priority filtering across locals + stubs.
+
+### Regression status (post-fix r2)
+
+- `bun test --isolate ./src/hooks ./src/components/BoardFilterBar ./src/utils/ticketFilters.test.ts` — 181 pass, 0 fail.
+- `bun run validate:ts` — 5 files clean.
+- `bun run build` — green.

@@ -20,6 +20,7 @@ import { useCloudProjections } from '../hooks/useCloudProjections'
 import { useProjectManager } from '../hooks/useProjectManager'
 import { useToast } from '../hooks/useToast'
 import { sortTickets } from '../utils/sorting'
+import { applyTicketFilters } from '../utils/ticketFilters'
 // MDT-196: countActiveFilters + BoardFilterBar moved to App.tsx
 import Column from './Column'
 import { HamburgerMenu } from './HamburgerMenu'
@@ -35,8 +36,13 @@ interface BoardProps {
   showHeader?: boolean
   selectedProject?: Project | null
   tickets?: Ticket[]
-  /** Pre-filtered tickets from the app-level filter state (MDT-196). When omitted, Board falls back to `tickets`. */
   filteredTickets?: Ticket[]
+  /**
+   * Active TicketFilters state (MDT-196 UAT r2). Board applies this to the
+   * MERGED set (local + cloud stubs) so cloud-projected stubs respect the
+   * faceted filter too. When omitted, no filtering is applied to the merge.
+   */
+  filters?: TicketFilters
   /** Active filter state for the mobile chip strip (MDT-196). */
   mobileFilters?: TicketFilters
   /** Remove a filter value from the mobile chip strip (MDT-196). */
@@ -63,6 +69,7 @@ const BoardContent: React.FC<BoardProps> = ({
   selectedProject: propSelectedProject,
   tickets: propTickets,
   filteredTickets: propFilteredTickets,
+  filters,
   mobileFilters,
   onRemoveMobileFilter,
   loading: propLoading,
@@ -146,18 +153,25 @@ const BoardContent: React.FC<BoardProps> = ({
     }))
   }, [baseTickets, localTicketUpdates])
 
-  // MDT-196: filter state is now owned by App.tsx (rendered in the header).
-  // Board consumes pre-filtered tickets via the `filteredTickets` prop.
-  // Fallback to `tickets` when the prop is absent (backward compat / standalone use).
-  const filteredTickets = propFilteredTickets ?? tickets
-
-  // MDT-200 U5: merge cloud-projected stubs (read-only, non-draggable) for
-  // ticket numbers with no local file. Local tickets always win (BR-3.4, C2).
-  // Projected stubs are appended after local tickets and never auto-merged.
+  // MDT-196 UAT r2: cloud-projected stubs must respect the faceted filter.
+  // Previously the merge received PRE-FILTERED locals and ran BELOW the filter,
+  // so (a) cloud stubs bypassed the filter entirely and (b) filtering a local
+  // out made its stub reappear (mergeProjections no longer saw the local to
+  // suppress it). Fix: merge with the FULL local set (correct suppression),
+  // then apply the predicate to the merged set as the last transformation.
   const { boardTickets } = useCloudProjections({
-    localTickets: filteredTickets,
+    localTickets: tickets,
     feed: projectionFeed,
   })
+
+  // Apply the faceted filter to the MERGED set (local + cloud stubs). When
+  // `filters` is provided this is the single source of truth for what renders.
+  // Fallback to the legacy pre-filtered prop preserves standalone/test callers
+  // that pass `filteredTickets` without the `filters` state object.
+  const displayTickets = useMemo(
+    () => filters ? applyTicketFilters(boardTickets, filters) : (propFilteredTickets ?? boardTickets),
+    [boardTickets, filters, propFilteredTickets],
+  )
 
   // IMPORTANT: Always use hookData functions for state management operations
   // This ensures drag-and-drop operations work correctly even when using prop data
@@ -342,12 +356,10 @@ const BoardContent: React.FC<BoardProps> = ({
     }
   }, [refreshProjectTickets])
 
-  // Filter tickets based on faceted filters (MDT-196).
-  // `filteredTickets` is computed inside useBoardFilters via applyTicketFilters.
-
-  // Group filtered tickets by column with sorting.
-  // MDT-200 U5: iterate the merged board tickets (local + projected stubs) so
-  // stubs land in the correct column by status.
+  // Group the filtered merged tickets (local + cloud stubs) by column.
+  // MDT-196 UAT r2: `displayTickets` is the post-merge, post-filter set —
+  // iterating it (not `boardTickets`) ensures filtered-out tickets and stubs
+  // never reach a column.
   const ticketsByColumn: Record<string, BoardTicket[]> = {}
   const visibleColumns = getVisibleColumns()
 
@@ -356,8 +368,8 @@ const BoardContent: React.FC<BoardProps> = ({
     ticketsByColumn[column.label] = []
   })
 
-  // Group merged board tickets by their column
-  boardTickets.forEach((ticket) => {
+  // Group filtered merged tickets by their column
+  displayTickets.forEach((ticket) => {
     const column = getColumnForStatus(ticket.status as Status)
     if (ticketsByColumn[column.label]) {
       ticketsByColumn[column.label].push(ticket)
@@ -579,7 +591,7 @@ const BoardContent: React.FC<BoardProps> = ({
                 column={column}
                 isFirstColumn={actualColumnIndex === 0}
                 tickets={ticketsByColumn[column.label]}
-                allTickets={boardTickets}
+                allTickets={displayTickets}
                 sortAttribute={localSortPreferences.selectedAttribute}
                 sortDirection={localSortPreferences.selectedDirection}
                 onDrop={async (status: Status, ticket: Ticket, currentColumnIndex?: number, currentTicketIndex?: number) => {
