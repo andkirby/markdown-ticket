@@ -342,9 +342,9 @@ Background tokens encode a four-rung ladder. Each tier *signals* a role — pick
 
 Rules:
 
-- **Reading surfaces are base.** Anywhere long-form text is consumed (document viewer, ticket viewer, prose) sits on `--background` — the darkest tier in dark mode / white in light — for maximum contrast. Never put prose on a raised tier: that is the root cause of "the ticket reader looks lighter than the document reader." The ticket viewer is a full-screen pane (`.modal--viewport`), not a centered dialog, precisely so it can be base-tier without ghosting against a dimmed overlay.
+- **Reading surfaces are base.** Anywhere long-form text is consumed (document viewer, ticket viewer, prose) sits on `--background` — the darkest tier in dark mode / white in light — for maximum contrast. Never put prose on a raised tier: that is the root cause of "the ticket reader looks lighter than the document reader." The ticket viewer stays a centered modal but on the base tier (`.ticket-detail-modal`); a base fill has no step above the canvas and modal shadows are invisible in dark, so it is **border-defined** (1px `--border`) for separation from the dimmed overlay rather than fill-separated.
 - **Tab bars are recessed-soft (`--bg-subtle`).** A tab strip is chrome that *organises* content, not content — it sits one rung apart from the base content it switches (`.ticket-document-tabs`, `.documents-view__filename-tabs`).
-- **Cards / modals / popovers are raised.** They float or group; in dark mode they rely on the fill step above the canvas, because shadows are invisible on dark.
+- **Cards / popovers / dialogs are raised** — they float or group; in dark mode they rely on the fill step above the canvas (shadows are invisible on dark). A *reading* modal (the ticket viewer) is the exception: base-tier for reading contrast, border-defined instead of fill-separated.
 - **Inputs are recessed or border-defined** — see the Surface Contract below (`--bg-muted` is only ~1.2:1 from `--card` in light, so a borderless muted input ghosts).
 
 In light mode, base and raised are both white — distinguished by borders/shadows, not fill. The ladder only diverges in dark mode, which is why wrong-tier drift is invisible in light and glaring in dark.
