@@ -95,7 +95,7 @@ export function TicketDocumentTabs({
     <div
       ref={containerRef}
       data-testid="subdoc-tabs"
-      className="ticket-document-tabs sticky top-0 z-10 bg-background/50 backdrop-blur-sm"
+      className="ticket-document-tabs sticky top-0 z-10"
     >
       {rows.map(row => (
         <Tabs.Root
