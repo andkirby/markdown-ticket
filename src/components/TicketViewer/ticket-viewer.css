@@ -69,10 +69,6 @@
   .trace-graph-action svg {
     @apply h-4 w-4;
   }
-  /* v3 Doc 4: ticket code in monospace (scoped here; TicketCode.tsx is shared) */
-  .compact-ticket-header__code {
-    font-family: 'JetBrains Mono', monospace;
-  }
 }
 
 /* Ticket-detail tab strip — a solid bg-subtle band (the recessed-soft chrome
