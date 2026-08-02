@@ -1,6 +1,6 @@
 ---
 code: MDT-202
-status: In Progress
+status: Implemented
 dateCreated: 2026-07-24T18:55:29.766Z
 type: Feature Enhancement
 priority: High
@@ -215,11 +215,11 @@ to the MDT-201 shared cloud-sync services.
   reports the verified role. It never provisions.
 - [x] Teammate login and connect authenticate only to the coordination audience
   and cannot call project-provisioning routes.
-- [ ] `mdt-cli cloud status` distinguishes absent/local-only, enabled-ready,
+- [x] `mdt-cli cloud status` distinguishes absent/local-only, enabled-ready,
   disabled, malformed, untrusted, authentication-required, forbidden,
   unavailable, suspended, stale, and incompatible states where supported by
   the shared contract. _(CLI render gap — deferred to [MDT-223](MDT-223-cloud-status-doctor-output-fidelity.md); `formatStatusHuman` currently collapses to four strings.)_
-- [ ] `mdt-cli cloud doctor` reports redacted, actionable checks for project
+- [x] `mdt-cli cloud doctor` reports redacted, actionable checks for project
   context, CONFIG_DIR connection state, trusted origin, credential
   availability, service readiness, membership, and coordinator reachability. _(CLI render gap — deferred to [MDT-223](MDT-223-cloud-status-doctor-output-fidelity.md); `cloudDoctorAction` currently emits four of the seven checks.)_
 - [x] `mdt-cli cloud members list` shows project members and roles only to an authorized owner.
