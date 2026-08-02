@@ -71,7 +71,7 @@
     font-family: 'JetBrains Mono', ui-monospace, monospace;
     font-variant-numeric: tabular-nums;
     font-weight: 600;
-    color: oklch(var(--primary));
+    color: var(--primary-text);
   }
   .priority-icon {
     width: var(--sz-icon);

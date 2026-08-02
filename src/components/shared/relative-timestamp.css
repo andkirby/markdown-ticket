@@ -30,12 +30,12 @@
 
   .relative-timestamp__tooltip {
     @apply rounded px-2 py-1 leading-none;
-    /* v3 surface: elevated bg + 1px border, color text-muted.
-       !important overrides the shadcn Radix defaults (bg-popover /
-       text-popover-foreground / border) which live in the utilities layer. */
+    /* v3 surface: elevated bg + 1px border. Text uses popover-foreground (not
+       text-muted) so the datetime reads crisp — muted read pale in dark mode.
+       !important overrides the shadcn Radix defaults in the utilities layer. */
     background-color: var(--bg-elevated) !important;
     border: 1px solid oklch(var(--border)) !important;
-    color: var(--text-muted) !important;
+    color: oklch(var(--popover-foreground)) !important;
     /* Match the time block: Inter (inherit) + text-xs (0.75rem).
        !important overrides the Radix text-sm default (utilities layer). */
     font-family: inherit;
