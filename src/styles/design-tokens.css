@@ -47,6 +47,7 @@
     --text-muted: oklch(0.446 0.037 257.3);
     --text-subtle: oklch(0.506 0.027 256.2);
     --primary-light: oklch(0.962 0.018 272.3);
+    --primary-text: oklch(0.457 0.214 277); /* indigo accent for TEXT on surfaces; light == primary (7.9:1 on white) */
     --status-backlog: oklch(0.554 0.041 257.4); --status-backlog-bg: oklch(0.968 0.007 247.9);
     --status-open: oklch(0.623 0.188 259.8); --status-open-bg: oklch(0.97 0.014 254.6);
     --status-progress: oklch(0.666 0.157 58.3); --status-progress-bg: oklch(0.987 0.021 95.3);
@@ -106,6 +107,7 @@
     --text-muted: oklch(0.722 0.03 258.4);
     --text-subtle: oklch(0.674 0.033 260.7);
     --primary-light: oklch(0.257 0.086 281.3);
+    --primary-text: oklch(0.75 0.14 277); /* lighter indigo: --primary (#4f46e5) is 1.9:1 as text on card; this is ~5.2:1 (AA) */
     --status-backlog: oklch(0.711 0.035 256.8); --status-backlog-bg: oklch(0.252 0.031 262.6);
     --status-open: oklch(0.714 0.143 254.6); --status-open-bg: oklch(0.282 0.087 267.9);
     --status-progress: oklch(0.837 0.164 84.4); --status-progress-bg: oklch(0.286 0.064 53.8);
