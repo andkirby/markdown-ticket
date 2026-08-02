@@ -19,10 +19,12 @@
  */
 
 @layer components {
-  /* Trigger button — border-led flat control on the header surface. */
+  /* Trigger button — recessed to --background like the sibling search/sort
+     header controls, so it reads against the --bg-elevated header instead of
+     ghosting (bg-elevated == header surface in dark mode). */
   .filter-button {
     @apply inline-flex items-center gap-1.5 border rounded-md px-3 h-9 text-sm transition-colors;
-    background-color: var(--bg-elevated);
+    background-color: oklch(var(--background));
     border-color: oklch(var(--border));
   }
   /* Hover = bg change only (v3 Pr.5: no lift, no gradient). */
