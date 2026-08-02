@@ -190,40 +190,40 @@ to the MDT-201 shared cloud-sync services.
 ### Functional
 
 - [x] `mdt-cli cloud enable --owner <email>` detects the current project and refuses execution outside a configured project.
-- [ ] `mdt-cli cloud enable` resolves a trusted service profile, authenticates
+- [x] `mdt-cli cloud enable` resolves a trusted service profile, authenticates
   to the operator audience, and checks service readiness and compatible
   capabilities before provisioning or writing CONFIG_DIR connection state.
-- [ ] A real `503 service_not_ready` response leaves CONFIG_DIR connection
+- [x] A real `503 service_not_ready` response leaves CONFIG_DIR connection
   state unchanged and exits with an actionable message. (503 is a failure
   case, not the default Worker state — MDT-201 is implemented.)
-- [ ] Successful enablement launches interactive Access authentication without printing or persisting the human token.
-- [ ] Enablement requires operator-policy admission and reports a clear denial
+- [x] Successful enablement launches interactive Access authentication without printing or persisting the human token.
+- [x] Enablement requires operator-policy admission and reports a clear denial
   when a project owner lacks cloud-service operator authority.
-- [ ] Successful enablement provisions one cloud project using the project code, initial owner identity, and a next number above existing tickets.
-- [ ] The returned project identifier is validated as a cloud UUID and membership is probed before CONFIG_DIR connection state is written.
-- [ ] Successful enablement atomically writes the non-secret
+- [x] Successful enablement provisions one cloud project using the project code, initial owner identity, and a next number above existing tickets.
+- [x] The returned project identifier is validated as a cloud UUID and membership is probed before CONFIG_DIR connection state is written.
+- [x] Successful enablement atomically writes the non-secret
   `CONFIG_DIR/projects/{localProjectId}/cloud-sync.toml` connection. It never
   writes active cloud state, the UUID, or credentials to `.mdt-config.toml` or
   the global project registry.
-- [ ] Re-running `enable` for a valid connection reports the existing cloud project UUID and performs no second provisioning mutation.
-- [ ] `mdt-cli cloud login` obtains or refreshes the personal Access session
+- [x] Re-running `enable` for a valid connection reports the existing cloud project UUID and performs no second provisioning mutation.
+- [x] `mdt-cli cloud login` obtains or refreshes the personal Access session
   without modifying connection state or membership. **Login alone does not
   assign this clone to a project.**
-- [ ] `mdt-cli cloud connect <cloud-project-uuid>` is an explicit journey that
+- [x] `mdt-cli cloud connect <cloud-project-uuid>` is an explicit journey that
   consumes an existing UUID, authenticates to the coordination audience,
   verifies membership, writes CONFIG_DIR connection state commit-last, and
   reports the verified role. It never provisions.
-- [ ] Teammate login and connect authenticate only to the coordination audience
+- [x] Teammate login and connect authenticate only to the coordination audience
   and cannot call project-provisioning routes.
 - [ ] `mdt-cli cloud status` distinguishes absent/local-only, enabled-ready,
   disabled, malformed, untrusted, authentication-required, forbidden,
   unavailable, suspended, stale, and incompatible states where supported by
-  the shared contract.
+  the shared contract. _(CLI render gap — deferred to [MDT-223](MDT-223-cloud-status-doctor-output-fidelity.md); `formatStatusHuman` currently collapses to four strings.)_
 - [ ] `mdt-cli cloud doctor` reports redacted, actionable checks for project
   context, CONFIG_DIR connection state, trusted origin, credential
-  availability, service readiness, membership, and coordinator reachability.
-- [ ] `mdt-cli cloud members list` shows project members and roles only to an authorized owner.
-- [ ] `mdt-cli cloud members add <principal> --kind human|machine --role <role>`
+  availability, service readiness, membership, and coordinator reachability. _(CLI render gap — deferred to [MDT-223](MDT-223-cloud-status-doctor-output-fidelity.md); `cloudDoctorAction` currently emits four of the seven checks.)_
+- [x] `mdt-cli cloud members list` shows project members and roles only to an authorized owner.
+- [x] `mdt-cli cloud members add <principal> --kind human|machine --role <role>`
   adds or updates normalized membership without accepting a password or token.
   For `--kind machine` the principal is the non-secret machine principal ID;
   the client secret is never accepted here.
@@ -237,19 +237,19 @@ to the MDT-201 shared cloud-sync services.
   `mdt-cli cloud credentials remove <credential-ref> [--yes]` expose only
   redacted diagnostic views and require confirmation for removal unless
   `--yes` is supplied.
-- [ ] `mdt-cli cloud disable [--yes]` follows the approved disable procedure,
+- [x] `mdt-cli cloud disable [--yes]` follows the approved disable procedure,
   retains the connection as `disabled`, keeps ticket creation fail-closed,
   and never silently resumes local number allocation. There is no
   permanent-detach command in this ticket.
-- [ ] `mdt-cli cloud migrate-legacy [--yes]` explicitly imports a legacy
+- [x] `mdt-cli cloud migrate-legacy [--yes]` explicitly imports a legacy
   repository `[project.cloudSync]` binding into CONFIG_DIR, rejects conflicts,
   and leaves repository files unchanged unless a separate explicit cleanup is
   acknowledged. Requires confirmation unless `--yes` is supplied.
-- [ ] A teammate who clones a bound project authenticates, runs
+- [x] A teammate who clones a bound project authenticates, runs
   `mdt-cli cloud connect <uuid>`, and uses the existing cloud UUID without
   running `enable` or provisioning again.
-- [ ] Every command supports human, `--json`, and `--yaml` output conventions.
-- [ ] Every command provides stable non-zero exit codes for authentication,
+- [x] Every command supports human, `--json`, and `--yaml` output conventions.
+- [x] Every command provides stable non-zero exit codes for authentication,
   authorization, configuration, readiness, network, and coordinator failures
   through one centralized, documented exit-code mapping. `process.exit()`
   decisions are not scattered across command handlers.
