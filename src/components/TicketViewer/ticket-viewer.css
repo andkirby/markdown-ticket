@@ -84,3 +84,19 @@
 .ticket-document-tabs .tab__list {
   border-bottom: 1px solid oklch(var(--border));
 }
+
+/* Full-screen base-tier reading pane — matches the DocumentsView reader.
+   modal--viewport fills the viewport (no overlay, so no ghosting against a
+   dimmed backdrop); the body becomes the scroll container so long prose
+   scrolls within the fixed pane. Base tier (--background) maximises text
+   contrast instead of the raised --bg-elevated modal default. Declared
+   unlayered so it overrides .modal-content / .modal__body (components layer). */
+.ticket-viewer.modal-content {
+  background-color: var(--background);
+}
+.modal--viewport .ticket-viewer__scroll {
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  overflow-y: auto;
+}

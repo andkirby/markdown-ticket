@@ -188,6 +188,28 @@
     .tag-ok { color: var(--status-done); }
   </style>
 
+  <h2>surface tier model — colors as signals</h2>
+  <p class="note" style="margin-top:.25rem">Each background tier <b>signals a role</b> — pick by what the surface <i>does</i>, not by look. The ladder diverges only in dark mode (base &amp; raised are both white in light, separated by borders/shadows), so wrong-tier drift is invisible in light and glaring in dark.</p>
+  <div class="contract">
+    <div class="contract-row" style="background:oklch(var(--background));color:oklch(var(--foreground))">
+      <span class="contract-label">base</span>
+      <small class="src">page · document reader · ticket reader · prose — "read me" (max contrast)</small>
+    </div>
+    <div class="contract-row" style="background:var(--bg-subtle)">
+      <span class="contract-label">recessed-soft</span>
+      <small class="src">tab bars · nav rails — "chrome above content"</small>
+    </div>
+    <div class="contract-row" style="background:var(--bg-muted)">
+      <span class="contract-label">recessed</span>
+      <small class="src">inputs · hover fills — "inset / affordance"</small>
+    </div>
+    <div class="contract-row" style="background:var(--bg-elevated)">
+      <span class="contract-label">raised</span>
+      <small class="src">cards · dialogs · popovers · header — "a discrete unit / floating"</small>
+    </div>
+  </div>
+  <p class="note" style="margin-top:.5rem"><b>Rule:</b> reading surfaces are base. Prose on a raised tier reads lighter than the same prose on base — the bug behind "the ticket reader looks lighter than the document reader." Tab bars are recessed-soft (chrome, not content).</p>
+
   <h2>surfaces &amp; elevation — borderless, tier-led</h2>
   <div class="stage">
     <div class="surface-card"><b>Card on subtle</b><br><small class="src">bg-elevated over bg-subtle — tiers carry the structure; hover reveals border-strong</small></div>
