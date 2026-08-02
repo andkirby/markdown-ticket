@@ -14,7 +14,7 @@ export function CompactTicketHeader({ ticket, className = '', action }: CompactT
     <div className={className}>
       <div className="modal__section pr-14">
         <h1 className="modal__headline min-w-0" data-testid="ticket-title">
-          <TicketCode code={ticket.code} ticket={ticket} className="compact-ticket-header__code" />
+          <TicketCode code={ticket.code} ticket={ticket} />
           <span className="mx-1 text-gray-900 dark:text-white">•</span>
           <span className="break-words text-gray-900 dark:text-white">{ticket.title}</span>
         </h1>

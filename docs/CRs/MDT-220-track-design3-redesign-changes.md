@@ -1,6 +1,6 @@
 ---
 code: MDT-220
-status: Proposed
+status: Implemented
 dateCreated: 2026-07-31T16:17:05.949Z
 type: Documentation
 priority: Medium
@@ -107,6 +107,18 @@ priority: Medium
 | Density: choose one axis over the 3x3 matrix | Open | needs evidence 9 combos are useful/testable |
 | Splines in app | Deferred | needs perf, a11y, clipping, scroll contract; uses canonical dependsOn |
 | Pin rail, epic rail, quick-add, subtasks in app | Deferred | await product/domain contracts |
+
+### Session 2026-08-02: documents/ticket-view polish + epic badge
+
+| Change | Status | Evidence |
+ | --- | --- | --- |
+| Documents filename-tabs: stop duplicating `.tab__list` padding/bg/border (double padding + double border) | Done | documents-view.css → wrapper `flex-shrink-0`; commit 826685c3 |
+| FileTree selected title: `text-primary` (1.9:1 in dark) → `text-foreground font-medium` | Done | FileTree.tsx; commit 826685c3 |
+| FavDocuments section bottom padding (`pb-0` → `pb-2`) | Done | FavDocuments.tsx; commit 826685c3 |
+| Epic badge: lucide `Zap` + gold (`--epic-3`), split from phase via `data-context="epic"` | Done | ContextBadge.tsx, badge.css; commit 9a2284f8 |
+| Canonical `.ticket-key` typography (mono/tabular/600, color-agnostic); epic-link keys mono + inherit badge color | Done | ticket.css, TicketCode.tsx, ContextBadge.tsx; commit 3f558e69 |
+| Ticket-detail tab strip: solid `bg-subtle` band (dropped the translucent `bg-background/50` utility that was winning) | Done | TicketDocumentTabs.tsx, ticket-viewer.css; commit 95b5cfaa |
+| Removed redundant font declarations (`.ticket-card__code` slimmed to size+layout; `.compact-ticket-header__code` dropped) | Done | ticket.css, ticket-viewer.css, CompactTicketHeader.tsx; this commit |
 
 ### Update Protocol
 

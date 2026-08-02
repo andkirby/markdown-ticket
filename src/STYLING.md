@@ -44,6 +44,8 @@ drift out of sync (QuickSearch rendered a bare `{ticket.code}` with no glyph
 until it was routed through `<TicketCode>`). Adding a surface? Use `<TicketCode>`;
 the glyph comes for free and can never be forgotten.
 
+**Ticket-key typography** lives in `.ticket-key` (mono / tabular-nums / 600, color-agnostic). `.ticket-code` (TicketCode) layers primary-text color + glyph layout on top. Use `.ticket-key` for key renderings that need their own color — e.g. a key inside a gold epic badge inherits the badge color (`text-inherit`) instead of forcing primary-text. Never redeclare the JetBrains Mono family per-surface.
+
 ---
 
 ## Decision Tree
@@ -502,6 +504,7 @@ Rules:
 - Horizontal spacing between tab triggers belongs on the trigger (`mr-3 last:mr-0`), not as `gap-*` on `.tab__list`.
 - Use `.tab--fill` only for equal-width modal-style tabs. It must not redefine padding or gaps.
 - Add surface-specific tab row styling with a second class, for example `settings-tab-list`.
+- Surface wrappers (`.documents-view__filename-tabs`, `.ticket-document-tabs`) must NOT duplicate `.tab__list`'s padding/bg/border — `.tab__list` is the single owner. A wrapper sets its own bg only when it groups multiple tab rows (`.ticket-document-tabs` → solid bg-subtle band); a single-row wrapper stays `flex-shrink-0` only.
 
 ---
 

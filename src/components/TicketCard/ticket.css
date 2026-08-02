@@ -55,11 +55,7 @@
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
-    font-family: 'JetBrains Mono', monospace;
     font-size: var(--fs-xs, 11px);
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-    color: var(--text-subtle);
   }
   /* .ticket-key — canonical ticket key/number typography (mono, tabular, 600).
      Color-agnostic: the context sets color, so a key in a gold epic badge reads
