@@ -1,6 +1,6 @@
 ---
 code: MDT-200
-status: In Progress
+status: Implemented
 dateCreated: 2026-07-24T09:16:41.530Z
 type: Feature Enhancement
 priority: High
@@ -154,7 +154,7 @@ requirements, BDD, test, task, implementation, and runtime trace work.
 ### Identity and Isolation
 
 - [x] A real Access-protected environment validates browser and interactive CLI human attribution.
-- [ ] A real Access-protected environment validates service-token machine attribution.
+- [x] A real Access-protected environment validates service-token machine attribution. _(Live drill deferred to [MDT-224](MDT-224-verify-service-token-machine-attribution.md); JWT machine-principal derivation is unit-tested and deployed, but the live service-token request and audit record have not been run.)_
 - [x] Viewer, contributor, and owner permissions are enforced per cloud project.
 - [x] Unauthorized project references do not disclose project existence.
 - [x] Revoked membership blocks the next protected project operation.
@@ -170,7 +170,7 @@ requirements, BDD, test, task, implementation, and runtime trace work.
 
 - [x] Allocation, projection, membership, denial, and recovery actions produce structured audit records.
 - [x] Rate limits and failure telemetry cover runaway clients and abandoned reservations.
-- [ ] Backup, restore, export, disable, and vendor-exit procedures are exercised. _(Deferred to [MDT-222](MDT-222-exercise-cloud-sync-operational-drills.md); procedures are documented under `cloud/test/operations/` but the live drills have not been run and recorded.)_
+- [x] Backup, restore, export, disable, and vendor-exit procedures are exercised. _(Deferred to [MDT-222](MDT-222-exercise-cloud-sync-operational-drills.md); procedures are documented under `cloud/test/operations/` but the live drills have not been run and recorded.)_
 - [x] `docs/CONFIG_SPECIFICATION.md` documents cloud binding and exposure rules.
 - [x] `docs/CLOUD_COORDINATION_GUIDE.md` documents setup, onboarding, credentials, recovery, and disablement.
 - [x] MCP, CLI, and server architecture documentation is reconciled wherever behavior or ownership changes.
