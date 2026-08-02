@@ -97,10 +97,10 @@ export async function provisionProject(
   //
   // "enable provisions exactly once" (MDT-202 AC): one cloud project per code,
   // globally. The idempotency key protects retry of the identical request, but
-  // a second enable with a different owner email (e.g. a plus-addressing alias)
-  // produces a different key and would bypass it. This code-based check is the
-  // authoritative server-side guard: a project with this code already exists,
-  // so we replay its UUID instead of provisioning a duplicate.
+  // a second enable with a different owner email produces a different key and
+  // would bypass it. This code-based check is the authoritative server-side
+  // guard: a project with this code already exists, so we replay its UUID
+  // instead of provisioning a duplicate.
   const existingByCode = await db.prepare(
     `SELECT id FROM cloud_projects WHERE project_code = ? ORDER BY created_at ASC LIMIT 1`,
   ).bind(projectCode).first<{ id: string } | null>()
