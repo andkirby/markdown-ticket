@@ -1,8 +1,6 @@
 @layer components {
   .documents-view__filename-tabs {
-    @apply flex-shrink-0 px-4 py-2 sm:px-5;
-    background-color: var(--bg-subtle);
-    border-bottom: 1px solid oklch(var(--border));
+    @apply flex-shrink-0;
   }
 
   .documents-view__layout {
