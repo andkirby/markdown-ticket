@@ -41,7 +41,7 @@ export default function FavDocuments({
 
   return (
     <section
-      className="flex min-h-0 flex-col gap-1 border-b border-border px-2 pt-2 pb-0"
+      className="flex min-h-0 flex-col gap-1 border-b border-border px-2 pt-2 pb-2"
       style={{ maxHeight: 'var(--documents-favs-max-height, 33%)' }}
       aria-label="Favs"
       data-testid="document-favs"
