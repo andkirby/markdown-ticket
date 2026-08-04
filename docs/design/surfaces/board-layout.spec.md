@@ -155,7 +155,7 @@ On mobile (`< 768px`), only one column is visible at a time. The `useBoardLayout
 
 ## Sort & Filter
 
-- **Sort**: Applied per-column, not globally. `SortPreferences` stored in localStorage (`markdown-ticket-sort-preferences`). Attributes: Key (desc), Title (asc), Created Date (desc), Update Date (desc).
+- **Sort**: Applied per-column, not globally. `SortPreferences` stored in localStorage (`markdown-ticket-sort-preferences`). Attributes: Key (desc), Title (asc), Priority (desc), Created Date (desc), Update Date (desc). Priority sorts by urgency weight (Low→Critical = 0→3), not alphabetically.
 - **Filter**: Board-level text filter matching title, code, or description. Applied before column grouping.
 - Both controls in `showHeader` mode only (multi-project Board). In single-project mode, controls live in the app header.
 - Sort and filter remain available in read-only mode because they do not mutate server state.
