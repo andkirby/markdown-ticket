@@ -53,7 +53,14 @@ export function isApiAuthExemptRoute(method: string, path: string): boolean {
     return false
   }
 
-  return EXEMPT_API_ROUTES.has(path.split('?')[0] ?? path)
+  const pathWithoutQuery = path.split('?')[0] ?? path
+  return EXEMPT_API_ROUTES.has(pathWithoutQuery)
+    // MDT-221: raw-preview carries its own credential (the HMAC preview token)
+    // in the URL path, because the opaque sandboxed iframe cannot send the
+    // SameSite=Strict session cookie on subresource requests. The handler
+    // enforces the token before any file work. GET-only here is the
+    // method-creep guard (HEAD/OPTIONS/POST are not exempt).
+    || pathWithoutQuery.startsWith('/api/documents/raw-preview/')
 }
 
 export function extractApiCredential(req: Request): string | null {

@@ -1,5 +1,6 @@
 import type { TreeNode } from '../types/tree.js'
 import * as path from 'node:path'
+import { deriveDocumentKind } from '../types/tree.js'
 
 /**
  * Base strategy for tree building operations.
@@ -46,10 +47,12 @@ export class TreeBuildingStrategy {
    * @returns File object.
    */
   protected async processFile(_filePath: string, relativePath: string): Promise<TreeNode> {
+    const name = path.basename(relativePath)
     return {
-      name: path.basename(relativePath),
+      name,
       path: relativePath,
       type: 'file',
+      kind: deriveDocumentKind(name),
     }
   }
 }

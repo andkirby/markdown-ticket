@@ -13,6 +13,7 @@
 
 /// <reference types="jest" />
 
+import { Buffer } from 'node:buffer'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import request from 'supertest'
@@ -539,6 +540,78 @@ describe('documents API Tests (MDT-106)', () => {
       expect(allPaths).not.toContain('docs/empty-section')
       // Non-markdown files never appear in the navigation tree
       expect(allPaths).not.toContain('docs/assets/diagram.svg')
+    })
+  })
+
+  describe('HTML document discovery (MDT-221)', () => {
+    let htmlProjectCode: string
+    let htmlProjectPath: string
+
+    beforeAll(async () => {
+      // documentPaths includes ./ so the root-index.html exclusion is exercised
+      const project = await projectFactory.createProject('empty', {
+        name: 'HTML Discovery Project',
+        code: 'HTMLP',
+        documentPaths: ['docs', './'],
+      })
+      htmlProjectCode = project.key
+      htmlProjectPath = join(projectFactory.getProjectsDir(), project.key)
+
+      await mkdir(join(htmlProjectPath, 'docs/site'), { recursive: true })
+      await writeFile(join(htmlProjectPath, 'docs/site/index.html'), '<!doctype html><html><body><p>main</p></body></html>\n')
+      await writeFile(join(htmlProjectPath, 'docs/site/report.htm'), '<!doctype html><html><body><p>report</p></body></html>\n')
+      // sibling assets that must be servable but NOT appear in the tree
+      await writeFile(join(htmlProjectPath, 'docs/site/style.css'), 'body{color:red}\n')
+      await writeFile(join(htmlProjectPath, 'docs/site/app.js'), 'console.log(\'hi\')\n')
+      await writeFile(join(htmlProjectPath, 'docs/site/image.png'), Buffer.from([0x89, 0x50, 0x4E, 0x47]))
+      // the repo-root-style app shell that must be excluded even though ./ is a document path
+      await writeFile(join(htmlProjectPath, 'index.html'), '<!doctype html><html><body><p>shell</p></body></html>\n')
+    })
+
+    const walk = (nodes: Array<Record<string, unknown>>): Array<Record<string, unknown>> =>
+      nodes.flatMap(node => [node, ...(Array.isArray(node.children) ? walk(node.children as Array<Record<string, unknown>>) : [])])
+
+    it('discovers .html and .htm files with html kind', async () => {
+      const response = await request(app).get(`/api/documents?projectId=${htmlProjectCode}`)
+      assertSuccess(response, 200)
+
+      const all = walk(response.body as Array<Record<string, unknown>>)
+      const htmlFiles = all.filter(n => n.type === 'file' && typeof n.name === 'string' && /\.html?$/i.test(n.name))
+
+      expect(htmlFiles.map(n => n.path).sort()).toEqual(['docs/site/index.html', 'docs/site/report.htm'])
+      // every discovered html file carries kind='html'
+      expect(htmlFiles.every(n => n.kind === 'html')).toBe(true)
+    })
+
+    it('excludes the repo root index.html even when ./ is a document path', async () => {
+      const response = await request(app).get(`/api/documents?projectId=${htmlProjectCode}`)
+      assertSuccess(response, 200)
+
+      const all = walk(response.body as Array<Record<string, unknown>>)
+      const paths = all.map(n => n.path as string)
+      expect(paths).not.toContain('index.html')
+    })
+
+    it('keeps css/js/png assets out of the tree (servable but invisible)', async () => {
+      const response = await request(app).get(`/api/documents?projectId=${htmlProjectCode}`)
+      assertSuccess(response, 200)
+
+      const all = walk(response.body as Array<Record<string, unknown>>)
+      const paths = all.map(n => n.path as string)
+      expect(paths).not.toContain('docs/site/style.css')
+      expect(paths).not.toContain('docs/site/app.js')
+      expect(paths).not.toContain('docs/site/image.png')
+    })
+
+    it('still returns kind=markdown for .md files', async () => {
+      await createTestDocument(projectFactory, htmlProjectCode, 'docs/notes.md', documentFixtures.withFrontmatter)
+      const response = await request(app).get(`/api/documents?projectId=${htmlProjectCode}`)
+      assertSuccess(response, 200)
+
+      const all = walk(response.body as Array<Record<string, unknown>>)
+      const md = all.find(n => n.path === 'docs/notes.md')
+      expect(md).toBeDefined()
+      expect(md?.kind).toBe('markdown')
     })
   })
 

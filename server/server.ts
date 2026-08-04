@@ -188,7 +188,7 @@ const projectController = new ProjectController(
   ticketService, // Pass the ticketService for CR operations
 )
 
-const documentController = new DocumentController(documentService)
+const documentController = new DocumentController(documentService, runtimeConfig.previewTokenSecret)
 
 // =============================================================================
 // Initialize Multi-Project File Watchers

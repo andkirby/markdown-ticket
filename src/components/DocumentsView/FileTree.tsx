@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight, File, Folder } from 'lucide-react'
+import { ChevronDown, ChevronRight, File, FileCode, Folder } from 'lucide-react'
 import * as React from 'react'
 import { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
@@ -6,10 +6,14 @@ import { cn } from '@/lib/utils'
 import { Icon } from '../shared/Icon'
 import CopyPathButton from './CopyPathButton'
 
+export type DocumentKind = 'markdown' | 'html'
+
 export interface DocumentFile {
   name: string
   path: string
   type: 'file' | 'folder'
+  /** Server-derived document kind. Absent on folders and unclassified files. */
+  kind?: DocumentKind
   title?: string
   children?: DocumentFile[]
   dateCreated?: Date | string
@@ -218,9 +222,13 @@ const FileTree = React.forwardRef<FileTreeHandle, FileTreeProps>(({
                   <Folder className="w-4 h-4 text-muted-foreground" />
                 </>
               )
-            : (
-                <File className="w-4 h-4 text-muted-foreground" />
-              )}
+            : file.kind === 'html'
+              ? (
+                  <FileCode className="w-4 h-4 text-muted-foreground" />
+                )
+              : (
+                  <File className="w-4 h-4 text-muted-foreground" />
+                )}
           <div className="flex-1 min-w-0">
             <div className="text-sm truncate">
               {file.type === 'file' && file.title ? file.title : file.name}

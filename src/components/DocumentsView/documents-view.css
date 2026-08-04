@@ -75,6 +75,17 @@
     @apply min-h-0 flex-1;
   }
 
+  /* MDT-221 — sandboxed HTML preview fills the viewer panel like the markdown
+   * viewer. The iframe defaults to 300x150 without this; the design intent is
+   * full-width/height so "working" HTML files render at their real size. */
+  .html-sandbox-viewer {
+    @apply flex h-full min-h-0 w-full flex-col;
+  }
+
+  .html-sandbox-viewer__frame {
+    @apply h-full w-full flex-1 border-0;
+  }
+
   .document-viewer {
     @apply relative flex h-full min-h-0 flex-col;
   }

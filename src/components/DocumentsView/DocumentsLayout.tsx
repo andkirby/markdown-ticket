@@ -4,6 +4,7 @@ import {
   ChevronDown,
   ChevronUp,
   Crosshair,
+  FileX,
   ListCollapse,
   PanelLeftClose,
   PanelLeftOpen,
@@ -47,6 +48,7 @@ import {
 import DocumentFilenameTabs from './DocumentFilenameTabs'
 import FavDocuments from './FavDocuments'
 import FileTree from './FileTree'
+import HtmlSandboxViewer from './HtmlSandboxViewer'
 import MarkdownViewer from './MarkdownViewer'
 import PathSelector from './PathSelector'
 import RecentDocuments from './RecentDocuments'
@@ -1053,14 +1055,39 @@ export default function DocumentsLayout({
                     </div>
                   )}
                   <div className="documents-view__viewer-content">
-                    <MarkdownViewer
-                      projectId={projectId}
-                      filePath={selectedFile}
-                      fileInfo={selectedDocument}
-                      refreshToken={documentRefreshToken}
-                      fileDeleted={selectedFileDeleted}
-                      updateState={viewerUpdateState}
-                    />
+                    {selectedDocument?.kind === 'html'
+                      ? (
+                          <HtmlSandboxViewer
+                            projectId={projectId}
+                            filePath={selectedFile}
+                            fileInfo={selectedDocument}
+                            refreshToken={documentRefreshToken}
+                            fileDeleted={selectedFileDeleted}
+                            updateState={viewerUpdateState}
+                          />
+                        )
+                      : selectedDocument?.kind === 'markdown' || !selectedDocument
+                        ? (
+                            // No selectedDocument (e.g. transient resolution) or markdown:
+                            // MarkdownViewer handles both. Only an explicit
+                            // non-markdown/non-html kind renders the unsupported state below.
+                            <MarkdownViewer
+                              projectId={projectId}
+                              filePath={selectedFile}
+                              fileInfo={selectedDocument}
+                              refreshToken={documentRefreshToken}
+                              fileDeleted={selectedFileDeleted}
+                              updateState={viewerUpdateState}
+                            />
+                          )
+                        : (
+                            <div data-testid="unsupported-viewer" className="document-viewer__center">
+                              <FileX className="w-8 h-8 mx-auto mb-3 text-muted-foreground" />
+                              <div className="document-viewer__center-message">
+                                Preview not available for this file type.
+                              </div>
+                            </div>
+                          )}
                   </div>
                 </div>
               )

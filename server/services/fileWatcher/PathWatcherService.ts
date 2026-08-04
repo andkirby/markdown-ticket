@@ -454,7 +454,10 @@ export class PathWatcherService extends EventEmitter {
   }
 
   private handleDocumentEvent(et: string, fp: string, pid: string, projectRoot: string): void {
-    if (!fp.endsWith('.md'))
+    // MDT-221: emit document-change for .html/.htm too so selected HTML
+    // previews refresh on external edit (BR-1.9). Ticket files (.md only)
+    // are handled separately by handleFileEvent.
+    if (!/\.(?:md|html|htm)$/.test(fp))
       return
 
     const absoluteFilePath = path.resolve(fp)

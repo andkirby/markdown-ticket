@@ -391,7 +391,22 @@ export const schemas = {
     properties: {
       path: { type: 'string', description: 'Relative path from project root', example: 'docs/architecture.md' },
       name: { type: 'string', description: 'Document filename', example: 'architecture.md' },
+      kind: {
+        type: 'string',
+        enum: ['markdown', 'html'],
+        description: 'Server-derived document kind. Absent on folders and unclassified files; the client maps undefined to the unsupported state at the viewer boundary.',
+      },
       content: { type: 'string', description: 'Document content (when requested)' },
+    },
+  },
+
+  // MDT-221 — response shape for POST /api/documents/preview-token
+  PreviewTokenResponse: {
+    type: 'object',
+    required: ['token', 'expiresAt'],
+    properties: {
+      token: { type: 'string', description: 'Signed, directory-scoped preview token to embed in the iframe src path' },
+      expiresAt: { type: 'string', format: 'date-time', description: 'ISO8601 expiry (<=5 minutes from mint)' },
     },
   },
 

@@ -90,7 +90,15 @@ export class PathSelectionStrategy extends TreeBuildingStrategy {
             continue
           }
 
-          if (entry.isFile() && entry.name.endsWith('.md')) {
+          if (entry.isFile() && /\.(?:md|html|htm)$/.test(entry.name)) {
+            // MDT-221: exclude the repo-root app shell index.html. When
+            // project.document.paths includes ./, the Vite app shell at the
+            // project root would otherwise become previewable inside the app.
+            // Only the root level (relativeParts.length === 0) is excluded;
+            // docs/site/index.html is fine.
+            if (relativeParts.length === 0 && entry.name === 'index.html') {
+              continue
+            }
             const fileNode = await this.processFile(absolutePath, relativePath)
             if (relativeParts.length === 0) {
               rootFiles.push(fileNode)

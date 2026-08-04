@@ -42,16 +42,19 @@ export class TreeBuilder {
     config: ProjectConfig,
     maxDepth: number = PROJECT_DOCUMENT_CONFIG_DEFAULTS.maxDepth,
   ): Promise<unknown[]> {
-    // Get all markdown files
+    // Get markdown and HTML files (HTML preview support, MDT-221)
     // Use cwd instead of absolute path pattern for better compatibility
-    let filePaths = await glob('**/*.md', {
+    let filePaths = await glob('**/*.{md,html,htm}', {
       cwd: projectPath,
       maxDepth,
       absolute: true,
       dot: false, // don't include dot files
     })
 
-    // Apply ignore patterns
+    // Apply ignore patterns. (Root index.html exclusion for the app shell is
+    // enforced inside the walking strategies — PathSelectionStrategy/
+    // DocumentNavigationStrategy ignore this filePaths list and re-walk, so a
+    // filter here would be inert for them.)
     filePaths = filePaths.filter((filePath) => {
       const relativePath = path.relative(projectPath, filePath)
 

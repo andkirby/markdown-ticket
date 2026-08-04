@@ -156,17 +156,36 @@ The domain contracts validate the FORMAT of the `id` field (must be a non-empty 
 
 ## Document Discovery Configuration
 
-The document viewer integrates with project configuration to provide markdown file browsing.
+The document viewer integrates with project configuration to provide markdown and HTML file browsing.
 
 ### Discovery Behavior
 
 1. **Exclusion First**: Any path containing folder name in `excludeFolders` is excluded
 2. **Auto-Exclusion**: `ticketsPath` is automatically added to `excludeFolders` to prevent CR ticket files from appearing in documents view
-3. **Scanning**: System scans `paths` for `.md` files up to `maxDepth` levels (default 5)
-4. **Path Types**:
-   - **Files**: Direct path to specific markdown (depth doesn't apply)
-   - **Directories**: Recursively scanned for `.md` files
-   - **Globs**: Supports `*.md` patterns
+3. **Root `index.html` Exclusion** (MDT-221): the repo-root app shell `index.html` is excluded even when `./` is in `paths`, so the Vite app shell is not previewable inside the app. Non-root `index.html` files (e.g. `docs/site/index.html`) are discovered normally.
+4. **Scanning**: System scans `paths` for `.md`, `.html`, and `.htm` files up to `maxDepth` levels (default 5)
+5. **Path Types**:
+   - **Files**: Direct path to specific markdown/HTML (depth doesn't apply)
+   - **Directories**: Recursively scanned for `.md`/`.html`/`.htm` files
+   - **Globs**: Supports `*.md`, `*.html` patterns
+
+### Supported Document Kinds (MDT-221)
+
+| Extension | Server-derived `kind` | Viewer |
+|---|---|---|
+| `.md` | `markdown` | `MarkdownViewer` (existing markdown pipeline) |
+| `.html`, `.htm` | `html` | `HtmlSandboxViewer` (sandboxed iframe; read-only; executable but isolated) |
+| other | _(absent)_ | Unsupported placeholder (no preview) |
+
+Asset files referenced by HTML (`.css`, `.js`, `.png`, etc.) are **servable** via the raw-preview route but do **not** appear in the document tree. See `server/docs/ARCHITECTURE.md` → "HTML Document Preview" for the security boundary (preview-token credential, pinned CSP, `X-Frame-Options: SAMEORIGIN` override, `connect-src 'none'`).
+
+> **v1 CSP deviation:** the canonical CSP is strict (`default-src 'none'`, no
+> external origins, no `unsafe-eval`), but v1 ships a documented relaxation
+> (external CDN allowlist + `unsafe-eval`) so working HTML depending on
+> Tailwind/Alpine/Google Fonts renders. A per-project opt-in configuration
+> (`[project.document.preview]` with `allowedExternalDomains` and
+> `allowUnsafeEval`, strict by default) is the planned follow-up. See
+> `docs/CRs/MDT-221/security-tradeoffs.md`.
 
 ### Default Exclude Folders
 

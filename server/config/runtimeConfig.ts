@@ -2,6 +2,7 @@ import type { Request } from 'express'
 import path from 'node:path'
 import process from 'node:process'
 import { parseApiAuthConfig } from '../security/apiAuth.js'
+import { getPreviewTokenSecret } from '../security/documentPreviewToken.js'
 import { createAllowedOrigins, parsePublicOrigin } from '../security/originPolicy.js'
 import { getReadSessionSecret, parseReadTokenScopes } from '../security/readSession.js'
 
@@ -23,6 +24,8 @@ export interface RuntimeConfig {
   ownerSessions: {
     maxAgeSeconds: number
   }
+  /** MDT-221 — HMAC secret for short-lived HTML preview tokens. */
+  previewTokenSecret: string
   system: {
     devtoolsEnabled: boolean
     isProduction: boolean
@@ -53,6 +56,7 @@ export function buildRuntimeConfig(env: NodeJS.ProcessEnv = process.env): Runtim
     ownerSessions: {
       maxAgeSeconds: resolveOwnerSessionMaxAgeSeconds(env),
     },
+    previewTokenSecret: getPreviewTokenSecret(auth.token, env),
     system: {
       devtoolsEnabled: env.NODE_ENV !== 'production' || env.DEVTOOLS_ENABLED === 'true',
       isProduction: env.NODE_ENV === 'production',

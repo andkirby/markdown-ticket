@@ -181,7 +181,7 @@ export function createTestApp(): TestAppResult {
     ticketService,
   )
 
-  const documentController = new DocumentController(documentService)
+  const documentController = new DocumentController(documentService, runtimeConfig.previewTokenSecret)
 
   // Register Routes
   // Mirror production: auth session routes are before protected /api routers.

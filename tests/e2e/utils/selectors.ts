@@ -461,6 +461,14 @@ export const markdownSelectors = {
   codeBlock: 'pre code',
 } as const
 
+/** MDT-221 — HTML sandboxed preview selectors */
+export const htmlSandboxSelectors = {
+  /** The iframe element rendering the HTML preview */
+  iframe: '.html-sandbox-viewer__frame',
+  /** The unsupported-kind placeholder */
+  unsupportedViewer: '[data-testid="unsupported-viewer"]',
+} as const
+
 /**
  * Quick Search selectors (MDT-136)
  *
