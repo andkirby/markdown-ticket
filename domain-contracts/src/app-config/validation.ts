@@ -2,6 +2,7 @@ import {
   DOCUMENT_FAV_STATE_DEFAULTS,
   DocumentFavStateSchema,
   GlobalConfigSchema,
+  PinStateSchema,
   SELECTOR_ACCENT_HEX_PATTERN,
   SelectorStateEntrySchema,
   SelectorStateSchema,
@@ -89,6 +90,26 @@ export function parseDocumentFavStateOrDefault(data: unknown) {
 
   if (!result.success) {
     return { favItems: [...DOCUMENT_FAV_STATE_DEFAULTS.favItems] }
+  }
+
+  return result.data
+}
+
+// MDT-197: Pin rail validation. Same posture as document favs —
+// validate strict, safeParse for read paths, reset to empty on bad schema.
+export function validatePinState(data: unknown) {
+  return PinStateSchema.parse(data)
+}
+
+export function safeValidatePinState(data: unknown) {
+  return PinStateSchema.safeParse(data)
+}
+
+export function parsePinStateOrDefault(data: unknown) {
+  const result = safeValidatePinState(data)
+
+  if (!result.success) {
+    return { pins: [] }
   }
 
   return result.data

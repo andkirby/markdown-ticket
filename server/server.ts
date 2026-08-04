@@ -19,6 +19,7 @@ import express from 'express'
 import { buildRuntimeConfig } from './config/runtimeConfig.js'
 // Controllers
 import { DocumentController } from './controllers/DocumentController.js'
+import { PinController } from './controllers/PinController.js'
 import { ProjectController } from './controllers/ProjectController.js'
 import { SearchController } from './controllers/SearchController.js'
 // Middleware
@@ -28,6 +29,7 @@ import { createConfigRouter } from './routes/config.js'
 import { createDevToolsRouter, setupLogInterception } from './routes/devtools.js'
 import { createDocsRouter } from './routes/docs.js'
 import { createDocumentRouter } from './routes/documents.js'
+import { createPinRouter } from './routes/pins.js'
 // Routes
 import { createProjectRouter } from './routes/projects.js'
 import { createPublicReadTokensRouter, createReadTokensRouter } from './routes/readTokens.js'
@@ -39,6 +41,7 @@ import { createApiAuthMiddleware } from './security/apiAuth.js'
 import { createCorsOptions, createOriginPolicy, securityHeaders } from './security/originPolicy.js'
 import { DocumentService } from './services/DocumentService.js'
 import FileWatcherService from './services/fileWatcher/index.js'
+import { PinStateService } from './services/PinStateService.js'
 import { TicketService } from './services/TicketService.js'
 import { TreeService } from './services/TreeService.js'
 
@@ -171,6 +174,7 @@ const ticketService = new TicketService(projectDiscovery)
 
 const documentService = new DocumentService(projectDiscovery)
 const treeService = new TreeService(projectDiscovery)
+const pinStateService = new PinStateService(projectDiscovery)
 
 // Connect file watcher to document service for cache invalidation
 fileWatcher.setFileInvoker(documentService.fileInvoker as FileInvokerAdapter)
@@ -189,6 +193,9 @@ const projectController = new ProjectController(
 )
 
 const documentController = new DocumentController(documentService, runtimeConfig.previewTokenSecret)
+
+// MDT-197: Pin rail — cross-project pinned tickets, user-global persistence.
+const pinController = new PinController(pinStateService)
 
 // =============================================================================
 // Initialize Multi-Project File Watchers
@@ -308,6 +315,9 @@ app.use('/api/read-tokens', createReadTokensRouter())
 
 // Document routes
 app.use('/api/documents', createDocumentRouter(documentController, projectController))
+
+// Pin rail routes (MDT-197): cross-project pinned tickets, user-global state.
+app.use('/api/pins', createPinRouter(pinController))
 
 // SSE routes
 app.use('/api/events', createSSERouter(fileWatcher, originPolicy, projectServiceAdapter as ProjectServiceExtension))

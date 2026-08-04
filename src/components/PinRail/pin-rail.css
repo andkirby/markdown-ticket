@@ -1,0 +1,185 @@
+/**
+ * MDT-197: PinRail CSS.
+ *
+ * 48px vertical left rail of icon-only pinned tickets. Border-led, recessed
+ * surface (bg-subtle: "nav rails" per STYLING.md). Mirrors the column
+ * drop-hover pattern (primary-light + primary ring) for drag-to-pin.
+ *
+ * Tokens: --bg-subtle (rail), --bg-elevated (chip), --border / --border-strong
+ * (edges), --text-muted/--text-subtle (text). No new tokens.
+ */
+
+.pin-rail {
+  width: 48px;
+  flex-shrink: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 0;
+  gap: 6px;
+  background: var(--bg-subtle);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Desktop only: the rail is hidden below the md breakpoint. */
+@media (min-width: 768px) {
+  .pin-rail {
+    display: flex;
+  }
+}
+
+/* Drop-hover state — reuses the board's primary-light + primary ring pattern. */
+.pin-rail--drop-active {
+  background: var(--primary-light);
+  @apply ring-2 ring-primary/40;
+}
+
+.pin-rail__label {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-subtle);
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  line-height: 1;
+  padding: 2px 0;
+}
+
+.pin-rail__divider {
+  width: 20px;
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+  flex-shrink: 0;
+}
+
+.pin-rail__list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+/* Drop affordance: trailing dashed "+". Doubles as the empty-rail target. */
+.pin-rail__drop-affordance {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px dashed var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-subtle);
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.pin-rail__drop-affordance--active {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-light);
+}
+
+/* PinItem — 32px square icon chip. */
+.pin-item {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0;
+  transition: border-color 0.12s ease, color 0.12s ease;
+}
+
+.pin-item:hover,
+.pin-item:focus-visible {
+  border-color: var(--border-strong);
+  color: var(--text-foreground, var(--text-muted));
+  outline: none;
+}
+
+.pin-item:focus-visible {
+  @apply ring-2 ring-primary/40;
+}
+
+.pin-item__code {
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+/* Hover-reveal unpin ×. Hidden in read-only (not rendered). */
+.pin-item__unpin {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  cursor: pointer;
+}
+
+.pin-item:hover .pin-item__unpin,
+.pin-item:focus-visible .pin-item__unpin {
+  opacity: 1;
+}
+
+.pin-item__unpin:hover {
+  border-color: var(--border-strong);
+  color: var(--text-foreground, var(--text-muted));
+}
+
+/* Tooltip content (Radix portal). */
+.pin-tooltip {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 240px;
+  font-size: 12px;
+}
+
+.pin-tooltip__code {
+  font-weight: 600;
+  font-size: 11px;
+  color: var(--text-foreground, var(--text-muted));
+}
+
+.pin-tooltip__title {
+  color: var(--text-foreground, var(--text-muted));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 220px;
+}
+
+.pin-tooltip__status {
+  display: flex;
+  margin-top: 2px;
+}
+
+.pin-tooltip__status .badge {
+  font-size: 10px;
+}

@@ -1,0 +1,82 @@
+{
+  "ticket": "MDT-197",
+  "generatedAt": "2026-08-04T23:10:24.863Z",
+  "requirements": [
+    {
+      "id": "BR-1",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-5",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-6",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-7",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-8",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-9",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-10",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C-1",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-2",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-3",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-4",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-1",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-2",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-3",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-4",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-5",
+      "routePolicy": "tests"
+    }
+  ]
+}

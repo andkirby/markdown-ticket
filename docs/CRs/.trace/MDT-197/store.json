@@ -1,0 +1,779 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-197"
+  },
+  "requirements": [
+    {
+      "id": "BR-1",
+      "kind": "behavior",
+      "text": "User can drag a board card onto the left rail to pin the ticket; the ticket appears as an icon-only item.",
+      "sourceRef": "docs/CRs/MDT-197-pin-rail.md#L115",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2",
+      "kind": "behavior",
+      "text": "User can click a pinned item to open the ticket viewer for that ticket.",
+      "sourceRef": "docs/CRs/MDT-197-pin-rail.md#L116",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3",
+      "kind": "behavior",
+      "text": "User can unpin via an x that appears on hover over a pinned item.",
+      "sourceRef": "docs/CRs/MDT-197-pin-rail.md#L117",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4",
+      "kind": "behavior",
+      "text": "Pinned items persist across page reloads via the server endpoint (not browser-local only).",
+      "sourceRef": "docs/CRs/MDT-197-pin-rail.md#L118",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-5",
+      "kind": "behavior",
+      "text": "Pins from different projects render side by side in the same rail.",
+      "sourceRef": "docs/CRs/MDT-197-pin-rail.md#L119",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-6",
+      "kind": "behavior",
+      "text": "Hovering a pinned item shows a tooltip with project code, ticket code, title, and status.",
+      "sourceRef": "docs/CRs/MDT-197-pin-rail.md#L120",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-7",
+      "kind": "behavior",
+      "text": "Empty pin set: rail is absent (no horizontal space consumed).",
+      "sourceRef": "docs/CRs/MDT-197-pin-rail.md#L121",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-8",
+      "kind": "behavior",
+      "text": "Overflow pin set: rail scrolls vertically; items do not shrink, wrap, or overflow the viewport.",
+      "sourceRef": "docs/CRs/MDT-197-pin-rail.md#L122",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-9",
+      "kind": "behavior",
+      "text": "Rail is visible on board, list, and documents views (cross-view chrome).",
+      "sourceRef": "docs/CRs/MDT-197-pin-rail.md#L123",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-10",
+      "kind": "behavior",
+      "text": "Pinning and unpinning are blocked in read-only access modes; viewing pinned tickets remains available.",
+      "sourceRef": "docs/CRs/MDT-197-pin-rail.md#L124",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C-1",
+      "kind": "constraint",
+      "text": "Rail render has no perceivable lag with up to 50 pins.",
+      "sourceRef": "docs/CRs/MDT-197-pin-rail.md#L128",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-2",
+      "kind": "constraint",
+      "text": "Drag-to-pin does not regress the existing board drag-drop for status changes.",
+      "sourceRef": "docs/CRs/MDT-197-pin-rail.md#L129",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-3",
+      "kind": "constraint",
+      "text": "Server endpoint response time is consistent with the document-favorites endpoint.",
+      "sourceRef": "docs/CRs/MDT-197-pin-rail.md#L130",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-4",
+      "kind": "constraint",
+      "text": "No new runtime frontend dependencies added.",
+      "sourceRef": "docs/CRs/MDT-197-pin-rail.md#L131",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "Pinned ticket is deleted or moved out of scope: pin becomes stale; on next server sync it is dropped silently from the rail.",
+      "sourceRef": "docs/CRs/MDT-197-pin-rail.md#L135",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-2",
+      "kind": "edge_case",
+      "text": "Pinned ticket status changes: tooltip updates; the pin itself does not auto-remove (auto-unpin-on-done deferred).",
+      "sourceRef": "docs/CRs/MDT-197-pin-rail.md#L136",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-3",
+      "kind": "edge_case",
+      "text": "User pins a ticket while offline: mutation fails gracefully with a toast; rail does not show a phantom pin.",
+      "sourceRef": "docs/CRs/MDT-197-pin-rail.md#L137",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-4",
+      "kind": "edge_case",
+      "text": "Pin set in server is from an older schema: migrated or reset; never throws.",
+      "sourceRef": "docs/CRs/MDT-197-pin-rail.md#L138",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-5",
+      "kind": "edge_case",
+      "text": "Two tickets from different projects have the same numeric code (e.g. MDT-042 and OTHER-042): both render correctly; project code disambiguates.",
+      "sourceRef": "docs/CRs/MDT-197-pin-rail.md#L139",
+      "routePolicy": "tests"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "drag_to_pin_creates_icon_item",
+      "title": "Drag a board card onto the rail to pin it",
+      "covers": [
+        "BR-1"
+      ],
+      "given": "the board view is open with at least one ticket card and the user has write access",
+      "when": "the user drags a ticket card and drops it onto the pin rail",
+      "then": "the ticket appears as a new icon-only pin item at the top of the rail showing its numeric code",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "click_pin_opens_viewer",
+      "title": "Click a pinned item to open the ticket viewer",
+      "covers": [
+        "BR-2"
+      ],
+      "given": "the rail has at least one pinned item",
+      "when": "the user clicks the pinned item",
+      "then": "the ticket viewer opens for that ticket",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "hover_x_unpins",
+      "title": "Unpin via hover x button",
+      "covers": [
+        "BR-3"
+      ],
+      "given": "the rail has at least one pinned item",
+      "when": "the user hovers a pinned item and clicks the x that appears",
+      "then": "that pin is removed from the rail",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "pins_persist_across_reload",
+      "title": "Pinned items persist across page reloads via server",
+      "covers": [
+        "BR-4"
+      ],
+      "given": "the user has pinned at least one ticket and the server PUT /api/pins succeeded",
+      "when": "the user reloads the page",
+      "then": "the same pin set is restored from the server endpoint, not browser-local storage",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "cross_project_pins_render_side_by_side",
+      "title": "Pins from different projects render side by side",
+      "covers": [
+        "BR-5"
+      ],
+      "given": "the pin set contains tickets from two different project codes",
+      "when": "the rail renders",
+      "then": "both pins appear in the same rail in recency order, each disambiguated by project code in its tooltip",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "hover_tooltip_full_identity",
+      "title": "Hover shows tooltip with project code, ticket code, title, and status",
+      "covers": [
+        "BR-6"
+      ],
+      "given": "the rail has at least one pinned item",
+      "when": "the user hovers the pinned item",
+      "then": "a tooltip shows the project code, ticket code, ticket title, and a status badge",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "empty_rail_is_absent",
+      "title": "Empty pin set makes the rail absent",
+      "covers": [
+        "BR-7"
+      ],
+      "given": "the pin set is empty and no ticket drag is in progress",
+      "when": "the app renders",
+      "then": "the rail renders nothing and consumes zero horizontal space",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "overflow_rail_scrolls_vertically",
+      "title": "Overflow pin set scrolls the rail vertically",
+      "covers": [
+        "BR-8"
+      ],
+      "given": "the pin set exceeds the visible rail height",
+      "when": "the rail renders",
+      "then": "the rail scrolls vertically and items do not shrink, wrap, or overflow the viewport",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "rail_visible_across_views",
+      "title": "Rail is visible on board, list, and documents views",
+      "covers": [
+        "BR-9"
+      ],
+      "given": "the pin set has at least one item",
+      "when": "the user switches between board, list, and documents views",
+      "then": "the rail remains visible in all three views as app-level chrome",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "read_only_blocks_mutation",
+      "title": "Read-only blocks pin/unpin but keeps viewing",
+      "covers": [
+        "BR-10"
+      ],
+      "given": "the user is in a read-only access mode and the rail has pinned items",
+      "when": "the user attempts to pin (drag-drop) or unpin",
+      "then": "the mutation is blocked while clicking a pin still opens the ticket viewer",
+      "sourceRef": "CR:MDT-197"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-1",
+      "title": "Pin data model in domain-contracts (PinItem/PinState schemas, validation, types)",
+      "derivedFrom": [
+        "BR-4",
+        "BR-5",
+        "Edge-4",
+        "Edge-5"
+      ],
+      "artifactIds": [
+        "ART-1",
+        "ART-2"
+      ],
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "OBL-2",
+      "title": "Server persistence: PUT /api/pins whole-list replace, user-global pins.json, validate project codes",
+      "derivedFrom": [
+        "BR-4",
+        "C-3",
+        "Edge-1",
+        "Edge-4"
+      ],
+      "artifactIds": [
+        "ART-3",
+        "ART-4",
+        "ART-5",
+        "ART-6"
+      ],
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "OBL-3",
+      "title": "Frontend pin client + usePins hook (load, add, remove, persist via authFetch)",
+      "derivedFrom": [
+        "BR-1",
+        "BR-3",
+        "BR-4",
+        "Edge-3"
+      ],
+      "artifactIds": [
+        "ART-7",
+        "ART-8"
+      ],
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "OBL-4",
+      "title": "PinRail component: 48px left rail, icon-only items, recency order, drop target, empty-collapse, overflow scroll",
+      "derivedFrom": [
+        "BR-1",
+        "BR-5",
+        "BR-7",
+        "BR-8",
+        "BR-9",
+        "C-1"
+      ],
+      "artifactIds": [
+        "ART-9",
+        "ART-10",
+        "ART-11"
+      ],
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "OBL-5",
+      "title": "PinItem tooltip with project code + ticket code + title + status badge; hover-x unpin",
+      "derivedFrom": [
+        "BR-3",
+        "BR-6",
+        "Edge-2",
+        "Edge-5"
+      ],
+      "artifactIds": [
+        "ART-10",
+        "ART-11"
+      ],
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "OBL-6",
+      "title": "Lift DndProvider from Board.tsx to App.tsx so board drag source and rail drop target share one DnD context",
+      "derivedFrom": [
+        "BR-1",
+        "C-2"
+      ],
+      "artifactIds": [
+        "ART-12"
+      ],
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "OBL-7",
+      "title": "Mount PinRail as sibling of content in App.tsx content row (cross-view chrome, outside locked branch)",
+      "derivedFrom": [
+        "BR-9",
+        "BR-7"
+      ],
+      "artifactIds": [
+        "ART-12"
+      ],
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "OBL-8",
+      "title": "Read-only gating: block pin/unpin mutations, keep click-to-open and rail rendering",
+      "derivedFrom": [
+        "BR-10"
+      ],
+      "artifactIds": [
+        "ART-9",
+        "ART-10"
+      ],
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "OBL-0",
+      "title": "Design source of truth: pin-rail surface spec + mockups define the UX contract all behavior derives from",
+      "derivedFrom": [
+        "BR-1",
+        "BR-2",
+        "BR-3",
+        "BR-4",
+        "BR-5",
+        "BR-6",
+        "BR-7",
+        "BR-8",
+        "BR-9",
+        "BR-10"
+      ],
+      "artifactIds": [
+        "ART-13",
+        "ART-14"
+      ],
+      "sourceRef": "CR:MDT-197"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-1",
+      "path": "domain-contracts/src/app-config/schema.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "ART-2",
+      "path": "domain-contracts/src/app-config/validation.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "ART-3",
+      "path": "server/services/PinStateService.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "ART-4",
+      "path": "server/controllers/PinController.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "ART-5",
+      "path": "server/routes/pins.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "ART-6",
+      "path": "server/server.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "ART-7",
+      "path": "src/config/pins.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "ART-8",
+      "path": "src/hooks/usePins.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "ART-9",
+      "path": "src/components/PinRail/index.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "ART-10",
+      "path": "src/components/PinRail/PinItem.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "ART-11",
+      "path": "src/components/PinRail/pin-rail.css",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "ART-12",
+      "path": "src/App.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "ART-13",
+      "path": "docs/design/surfaces/pin-rail.spec.md",
+      "kind": "doc",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "ART-14",
+      "path": "docs/design/surfaces/pin-rail.mockups.md",
+      "kind": "doc",
+      "sourceRef": "CR:MDT-197"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-api-put-pins",
+      "kind": "unit",
+      "title": "PUT /api/pins persists whole pin set to user-global pins.json",
+      "covers": [
+        "BR-4",
+        "C-3",
+        "Edge-4"
+      ],
+      "file": "server/tests/api/pins.test.ts",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "TEST-api-validate-schema",
+      "kind": "unit",
+      "title": "PUT /api/pins rejects malformed pin state (bad project/ticket code, bad datetime) with 400",
+      "covers": [
+        "Edge-4"
+      ],
+      "file": "server/tests/api/pins.test.ts",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "TEST-api-reject-unknown-project",
+      "kind": "unit",
+      "title": "PUT /api/pins rejects pins referencing an unregistered project code",
+      "covers": [
+        "Edge-1"
+      ],
+      "file": "server/tests/api/pins.test.ts",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "TEST-api-reconcile-on-read",
+      "kind": "unit",
+      "title": "GET /api/pins reconciles: drops pins whose project is no longer registered",
+      "covers": [
+        "Edge-1",
+        "Edge-4"
+      ],
+      "file": "server/tests/api/pins.test.ts",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "TEST-api-cross-project",
+      "kind": "unit",
+      "title": "PUT /api/pins accepts pins from multiple project codes in one set",
+      "covers": [
+        "BR-5",
+        "Edge-5"
+      ],
+      "file": "server/tests/api/pins.test.ts",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "TEST-e2e-drag-to-pin",
+      "kind": "e2e",
+      "title": "Drag a board card onto the rail pins the ticket as an icon item",
+      "covers": [
+        "BR-1"
+      ],
+      "file": "tests/e2e/pin-rail/pin-rail.spec.ts",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "TEST-e2e-click-opens-viewer",
+      "kind": "e2e",
+      "title": "Clicking a pinned item opens the ticket viewer",
+      "covers": [
+        "BR-2"
+      ],
+      "file": "tests/e2e/pin-rail/pin-rail.spec.ts",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "TEST-e2e-hover-unpin",
+      "kind": "e2e",
+      "title": "Hovering a pin shows x; clicking it unpins",
+      "covers": [
+        "BR-3",
+        "BR-6"
+      ],
+      "file": "tests/e2e/pin-rail/pin-rail.spec.ts",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "TEST-e2e-persist-reload",
+      "kind": "e2e",
+      "title": "Pins persist across page reload from the server",
+      "covers": [
+        "BR-4"
+      ],
+      "file": "tests/e2e/pin-rail/pin-rail.spec.ts",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "TEST-e2e-empty-rail-absent",
+      "kind": "e2e",
+      "title": "Empty pin set renders no rail (zero width)",
+      "covers": [
+        "BR-7"
+      ],
+      "file": "tests/e2e/pin-rail/pin-rail.spec.ts",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "TEST-e2e-overflow-scroll",
+      "kind": "e2e",
+      "title": "Many pins scroll the rail vertically without wrap/shrink",
+      "covers": [
+        "BR-8",
+        "C-1"
+      ],
+      "file": "tests/e2e/pin-rail/pin-rail.spec.ts",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "TEST-e2e-cross-view",
+      "kind": "e2e",
+      "title": "Rail stays visible across board/list/documents views",
+      "covers": [
+        "BR-9"
+      ],
+      "file": "tests/e2e/pin-rail/pin-rail.spec.ts",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "TEST-e2e-read-only",
+      "kind": "e2e",
+      "title": "Read-only mode blocks pin/unpin but keeps click-to-open",
+      "covers": [
+        "BR-10"
+      ],
+      "file": "tests/e2e/pin-rail/pin-rail.spec.ts",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "TEST-e2e-board-dnd-regression",
+      "kind": "e2e",
+      "title": "Board status drag-drop still works after DndProvider lift (regression)",
+      "covers": [
+        "C-2"
+      ],
+      "file": "tests/e2e/pin-rail/pin-rail.spec.ts",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "TEST-no-new-deps",
+      "kind": "unit",
+      "title": "package.json dependency count unchanged by MDT-197 (no new runtime frontend deps)",
+      "covers": [
+        "C-4"
+      ],
+      "file": "scripts/check-no-new-deps.sh",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "TEST-e2e-status-updates-tooltip",
+      "kind": "e2e",
+      "title": "Pinned ticket status change updates the tooltip badge",
+      "covers": [
+        "Edge-2"
+      ],
+      "file": "tests/e2e/pin-rail/pin-rail.spec.ts",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "TEST-e2e-offline-mutation",
+      "kind": "e2e",
+      "title": "Pin/unpin while backend down fails gracefully with toast, no phantom pin",
+      "covers": [
+        "Edge-3"
+      ],
+      "file": "tests/e2e/pin-rail/pin-rail.spec.ts",
+      "sourceRef": "CR:MDT-197"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-1",
+      "title": "Add Pin model to domain-contracts (PinItem/PinState schema + types + validation)",
+      "ownsArtifactIds": [
+        "ART-1",
+        "ART-2"
+      ],
+      "makesGreenIds": [
+        "TEST-api-validate-schema"
+      ],
+      "skills": [
+        "typescript",
+        "zod-patterns"
+      ],
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Server: PinStateService + PinController + GET/PUT /api/pins route, user-global pins.json",
+      "ownsArtifactIds": [
+        "ART-3",
+        "ART-4",
+        "ART-5",
+        "ART-6"
+      ],
+      "makesGreenIds": [
+        "TEST-api-put-pins",
+        "TEST-api-reject-unknown-project",
+        "TEST-api-reconcile-on-read",
+        "TEST-api-cross-project"
+      ],
+      "skills": [
+        "express",
+        "server-layering"
+      ],
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Frontend: pins.ts client (authFetch PUT) + usePins hook (load/add/remove/persist)",
+      "ownsArtifactIds": [
+        "ART-7",
+        "ART-8"
+      ],
+      "makesGreenIds": [
+        "pins_persist_across_reload"
+      ],
+      "skills": [
+        "react-hooks",
+        "fetch"
+      ],
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "TASK-4",
+      "title": "PinRail component: 48px rail, PinItem icon chips, PinTooltip, hover-x unpin, empty-collapse, overflow scroll, CSS",
+      "ownsArtifactIds": [
+        "ART-9",
+        "ART-10",
+        "ART-11"
+      ],
+      "makesGreenIds": [
+        "drag_to_pin_creates_icon_item",
+        "click_pin_opens_viewer",
+        "hover_x_unpins",
+        "hover_tooltip_full_identity",
+        "empty_rail_is_absent",
+        "overflow_rail_scrolls_vertically",
+        "cross_project_pins_render_side_by_side"
+      ],
+      "skills": [
+        "react",
+        "css",
+        "react-dnd"
+      ],
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "TASK-5",
+      "title": "App.tsx: lift DndProvider from Board to App; mount PinRail as content sibling (cross-view, outside locked branch); read-only gating",
+      "ownsArtifactIds": [
+        "ART-12"
+      ],
+      "makesGreenIds": [
+        "rail_visible_across_views",
+        "read_only_blocks_mutation"
+      ],
+      "skills": [
+        "react",
+        "react-dnd"
+      ],
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "TASK-6",
+      "title": "Design + Tests: pin-rail spec/mockups (done); API tests mirroring document-favs; E2E pin-rail.spec.ts",
+      "ownsArtifactIds": [
+        "ART-13",
+        "ART-14"
+      ],
+      "makesGreenIds": [
+        "TEST-e2e-drag-to-pin",
+        "TEST-e2e-click-opens-viewer",
+        "TEST-e2e-hover-unpin",
+        "TEST-e2e-persist-reload",
+        "TEST-e2e-empty-rail-absent",
+        "TEST-e2e-overflow-scroll",
+        "TEST-e2e-cross-view",
+        "TEST-e2e-read-only",
+        "TEST-e2e-board-dnd-regression",
+        "TEST-e2e-status-updates-tooltip",
+        "TEST-e2e-offline-mutation",
+        "TEST-no-new-deps"
+      ],
+      "skills": [
+        "jest",
+        "playwright",
+        "ux-design"
+      ],
+      "sourceRef": "CR:MDT-197"
+    }
+  ]
+}
