@@ -55,7 +55,7 @@ relatedTickets: MDT-156,MDT-160,MDT-199
   - Put the preview token in the path prefix so relative asset URLs inherit the same token scope.
   - Reuse existing `..`, project-root containment, and configured `documentPaths` guards for every raw request.
   - Scope each preview token to one project, one HTML document directory, allowed raw paths, and a short TTL.
-  - Serve raw files with a hand-rolled MIME map, `X-Content-Type-Options: nosniff`, and a CSP that is strict by default with non-negotiable invariants (C-2.13; see §4 Pinned Headers for the canonical string and the recorded v1 deviation).
+  - Serve raw files with a hand-rolled MIME map, `X-Content-Type-Options: nosniff`, and a CSP that is strict by default with per-project opt-in relaxations via `[project.document.preview]` (C-2.13/C-2.23/C-2.24; see §4 Pinned Headers).
   - Render HTML through a dedicated iframe component with `sandbox` tokens that exclude `allow-same-origin`.
   - Support normal relative assets referenced by HTML when those assets remain inside the token-scoped document directory, configured document paths, and project containment.
   - Keep CSS, JavaScript, image, and font assets servable but invisible in the Documents View tree.
@@ -174,16 +174,22 @@ X-Frame-Options: SAMEORIGIN
 - Inline scripts and styles are allowed because the preview is already explicitly executable; network access remains blocked.
 - `X-Frame-Options: SAMEORIGIN` is a required override. The global `securityHeaders` middleware (`server/security/originPolicy.ts:103-107`, mounted at `server/server.ts:150`) sets `X-Frame-Options: DENY` on every response; DENY blocks even same-origin framing, so the preview iframe would be refused by the browser. The raw-preview handler must override to `SAMEORIGIN` on its responses. All other routes keep `DENY`. See `architecture.md` gate G10.
 
-> **⚠️ v1 deviation (recorded):** the strict CSP above is the canonical contract,
-> but browser validation against a real working HTML file (`designs/board-zai/
-> design3.html`) showed it cannot render Tailwind/Alpine/Google-Fonts-dependent
-> HTML. v1 ships a documented deviation (external CDN allowlist + `unsafe-eval`
-> in `script-src`). The deviation is recorded in
-> `docs/CRs/MDT-221/security-tradeoffs.md`, kept visible by a failing strict-CSP
-> integration test, and slated for a per-project opt-in configuration follow-up
-> CR. The directives that remain non-negotiable in any configuration
+> **Per-project CSP configuration (TASK-14, shipped):** the strict CSP above is
+> the canonical default. A project opts in to external CDNs and `unsafe-eval`
+> via `[project.document.preview]` in `.mdt-config.toml`:
+>
+> ```toml
+> [project.document.preview]
+> allowedExternalDomains = ["cdn.tailwindcss.com", "cdn.jsdelivr.net"]
+> allowUnsafeEval = true   # required for Alpine.js, Tailwind CDN JIT
+> ```
+>
+> Defaults are strict (`allowedExternalDomains = []`, `allowUnsafeEval = false`).
+> The directives that remain non-negotiable in any configuration
 > (`connect-src 'none'`, `img-src 'self' data:`, no `allow-same-origin`,
-> `default-src 'none'`) are asserted as invariants and still pass.
+> `default-src 'none'`) are asserted as invariants in the integration test and
+> hold regardless of config. See `docs/CRs/MDT-221/security-tradeoffs.md` for
+> the rationale and `docs/CONFIG_SPECIFICATION.md` for the full config reference.
 
 ## 5. Acceptance Criteria
 
@@ -221,7 +227,7 @@ X-Frame-Options: SAMEORIGIN
 - [x] Preview tokens cannot be used to read sibling files outside the token-scoped document directory.
 - [x] Raw preview route sets `X-Content-Type-Options: nosniff`.
 - [x] Raw preview route sets `X-Frame-Options: SAMEORIGIN` (overriding the global `DENY` from `securityHeaders`); all other routes keep `DENY`.
-- [x] Raw HTML responses set a CSP whose non-negotiable directives (`connect-src 'none'`, `img-src 'self' data:`, `default-src 'none'`, no `allow-same-origin`, `base-uri`/`form-action 'none'`) hold in every configuration (C-2.13). v1 ships a documented deviation (external CDN allowlist + `unsafe-eval`) recorded in §4 and `security-tradeoffs.md`; the per-project opt-in config (C-2.23/C-2.24, TASK-14/15) makes these relaxations conscious rather than global.
+- [x] Raw HTML responses set a CSP whose non-negotiable directives (`connect-src 'none'`, `img-src 'self' data:`, `default-src 'none'`, no `allow-same-origin`, `base-uri`/`form-action 'none'`) hold in every configuration (C-2.13). External domains and `unsafe-eval` are opt-in per project via `[project.document.preview]` config (C-2.23/C-2.24, TASK-14 shipped); strict by default.
 - [x] Previewed HTML cannot read parent `window`, parent DOM, or parent local storage in browser coverage.
 - [x] Previewed HTML cannot perform owner-only mutation without the existing owner-intent protections.
 - [x] Previewed HTML cannot `fetch('/api/*')` because `connect-src 'none'` blocks script network access.
@@ -316,9 +322,10 @@ X-Frame-Options: SAMEORIGIN
 
 **Trigger**: browser validation of `designs/board-zai/design3.html` showed the
 strict pinned CSP blocks the real use case — design HTML depending on Tailwind
-CDN, Alpine.js (jsDelivr), and Google Fonts cannot render. A stopgap relaxation
-(external CDN allowlist + `unsafe-eval`) was applied to make it work; this UAT
-session converts the stopgap into a proper per-project opt-in configuration.
+CDN, Alpine.js (jsDelivr), and Google Fonts cannot render. An initial stopgap
+relaxation (global CDN allowlist + `unsafe-eval`) was applied to make it work;
+this UAT session converted it into a per-project opt-in configuration, shipped
+as TASK-14. TASK-15 (surfacing dialog) remains.
 
 **Approved changes**:
 - C-2.13 refined in place: strict CSP is now the *default*, not the only option.
@@ -332,7 +339,8 @@ model), `uat.md` (execution brief), this section.
 **`uat.md` written**: yes.
 **Strict drift/lock used**: no (additive + refine-in-place; no removals).
 **Execution slices**: TASK-14 (config schema + dynamic CSP), TASK-15
-(scan + surfacing dialog). Implementation not yet started.
+(scan + surfacing dialog). TASK-14 (config schema + dynamic CSP) shipped;
+TASK-15 (scan + dialog) is the remaining slice.
 **Operator answer** ("how to configure per project"): see `uat.md` →
 "How to configure this per project" — `[project.document.preview]` in
 `.mdt-config.toml` with `allowedExternalDomains` and `allowUnsafeEval`, strict
