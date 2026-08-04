@@ -113,9 +113,9 @@ cookie on subresource requests, the preview is credentialled by a short-lived
   `X-Frame-Options: DENY` on every response; the raw-preview handler overrides
   to `SAMEORIGIN` so the iframe can load (DENY blocks same-origin framing too).
   The canonical pinned CSP is `sandbox allow-scripts; default-src 'none';
-  connect-src 'none'` (full strict string in `DocumentController.ts`
-  `PINNED_CSP_STRICT` in the test). `allow-same-origin` is forbidden in both the
-  CSP sandbox directive and the iframe sandbox attribute. **v1 ships a documented
+  connect-src 'none'` (full strict string asserted as `PINNED_CSP_STRICT` in
+  `server/tests/api/document-raw.test.ts`). `allow-same-origin` is forbidden in
+  both the CSP sandbox directive and the iframe sandbox attribute. **v1 ships a documented
   deviation** (external CDN allowlist + `unsafe-eval`) so working HTML depending
   on Tailwind/Alpine/Google Fonts can render; the non-negotiable directives
   (`connect-src 'none'`, `img-src 'self' data:`, `default-src 'none'`) are
