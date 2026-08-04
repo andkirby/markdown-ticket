@@ -1,6 +1,6 @@
 ---
 code: MDT-221
-status: In Progress
+status: Implemented
 dateCreated: 2026-08-02T14:26:12.184Z
 type: Feature Enhancement
 priority: High
@@ -55,7 +55,7 @@ relatedTickets: MDT-156,MDT-160,MDT-199
   - Put the preview token in the path prefix so relative asset URLs inherit the same token scope.
   - Reuse existing `..`, project-root containment, and configured `documentPaths` guards for every raw request.
   - Scope each preview token to one project, one HTML document directory, allowed raw paths, and a short TTL.
-  - Serve raw files with a hand-rolled MIME map, `X-Content-Type-Options: nosniff`, and the pinned CSP in this ticket.
+  - Serve raw files with a hand-rolled MIME map, `X-Content-Type-Options: nosniff`, and a CSP that is strict by default with non-negotiable invariants (C-2.13; see §4 Pinned Headers for the canonical string and the recorded v1 deviation).
   - Render HTML through a dedicated iframe component with `sandbox` tokens that exclude `allow-same-origin`.
   - Support normal relative assets referenced by HTML when those assets remain inside the token-scoped document directory, configured document paths, and project containment.
   - Keep CSS, JavaScript, image, and font assets servable but invisible in the Documents View tree.
@@ -189,50 +189,50 @@ X-Frame-Options: SAMEORIGIN
 
 ### Functional
 
-- [ ] `.html` and `.htm` files under configured document paths appear in Documents View.
-- [ ] Root `index.html` does not appear when `project.document.paths` includes `./`.
-- [ ] CSS, JavaScript, image, and font assets used by HTML are servable but do not appear as selectable Documents View files.
-- [ ] Existing `.md` discovery, selection, markdown rendering, tabs, favorites, and timestamps continue to work.
-- [ ] Selecting an HTML file renders an iframe preview instead of the markdown renderer.
-- [ ] Selecting an HTML file first mints an owner-only internal preview token.
-- [ ] HTML iframe `src` uses `/api/documents/raw-preview/:token/*documentPath`.
-- [ ] Relative subresources resolve under the same preview-token path prefix.
-- [ ] HTML files that reference relative CSS, JavaScript, and image assets load those assets when they remain inside the token-scoped directory and configured document paths.
-- [ ] External edits to a selected `.html` or `.htm` file refresh the HTML preview through the document-change path.
-- [ ] Raw requests for files outside configured document paths return `403`.
-- [ ] Raw requests using `..`, absolute paths, encoded traversal, or project-root escapes return `403`.
-- [ ] Raw requests for unknown projects return `404`.
-- [ ] Raw preview requests without a valid unexpired preview token do not disclose file contents.
-- [ ] Read-token and shared-session users cannot mint HTML preview tokens in v1.
-- [ ] Unknown file kinds render a non-preview state and do not call the markdown renderer.
-- [ ] `documentFilenameTabModel` remains markdown-only; HTML sibling tabs are out of scope.
-- [ ] The HTML preview iframe fills the documents-view preview panel (full width and height below the app header), matching the markdown viewer's panel-filling behavior; it must not collapse to its intrinsic 300×150 default. (BR-1.12)
+- [x] `.html` and `.htm` files under configured document paths appear in Documents View.
+- [x] Root `index.html` does not appear when `project.document.paths` includes `./`.
+- [x] CSS, JavaScript, image, and font assets used by HTML are servable but do not appear as selectable Documents View files.
+- [x] Existing `.md` discovery, selection, markdown rendering, tabs, favorites, and timestamps continue to work.
+- [x] Selecting an HTML file renders an iframe preview instead of the markdown renderer.
+- [x] Selecting an HTML file first mints an owner-only internal preview token.
+- [x] HTML iframe `src` uses `/api/documents/raw-preview/:token/*documentPath`.
+- [x] Relative subresources resolve under the same preview-token path prefix.
+- [x] HTML files that reference relative CSS, JavaScript, and image assets load those assets when they remain inside the token-scoped directory and configured document paths.
+- [x] External edits to a selected `.html` or `.htm` file refresh the HTML preview through the document-change path.
+- [x] Raw requests for files outside configured document paths return `403`.
+- [x] Raw requests using `..`, absolute paths, encoded traversal, or project-root escapes return `403`.
+- [x] Raw requests for unknown projects return `404`.
+- [x] Raw preview requests without a valid unexpired preview token do not disclose file contents.
+- [x] Read-token and shared-session users cannot mint HTML preview tokens in v1.
+- [x] Unknown file kinds render a non-preview state and do not call the markdown renderer.
+- [x] `documentFilenameTabModel` remains markdown-only; HTML sibling tabs are out of scope.
+- [x] The HTML preview iframe fills the documents-view preview panel (full width and height below the app header), matching the markdown viewer's panel-filling behavior; it must not collapse to its intrinsic 300×150 default. (BR-1.12)
 
 ### Security
 
-- [ ] `HtmlSandboxViewer` iframe uses `sandbox` without `allow-same-origin`.
-- [ ] Tests fail if `allow-same-origin` appears in a document preview iframe.
-- [ ] Preview-token minting stays behind owner-authenticated `/api` middleware.
-- [ ] Raw preview serving validates the internal preview token instead of relying on iframe cookies.
-- [ ] `server/security/apiAuth.ts` adds only a GET exemption for `/api/documents/raw-preview/*`.
-- [ ] The raw-preview handler rejects missing, expired, malformed, or tampered preview tokens before file resolution.
-- [ ] Preview tokens expire within 5 minutes or less.
-- [ ] Preview tokens are scoped to one project and one selected HTML document directory.
-- [ ] Preview tokens cannot be used to read sibling files outside the token-scoped document directory.
-- [ ] Raw preview route sets `X-Content-Type-Options: nosniff`.
-- [ ] Raw preview route sets `X-Frame-Options: SAMEORIGIN` (overriding the global `DENY` from `securityHeaders`); all other routes keep `DENY`.
-- [ ] Raw HTML responses set the pinned CSP from Section 4.
-- [ ] Previewed HTML cannot read parent `window`, parent DOM, or parent local storage in browser coverage.
-- [ ] Previewed HTML cannot perform owner-only mutation without the existing owner-intent protections.
-- [ ] Previewed HTML cannot `fetch('/api/*')` because `connect-src 'none'` blocks script network access.
+- [x] `HtmlSandboxViewer` iframe uses `sandbox` without `allow-same-origin`.
+- [x] Tests fail if `allow-same-origin` appears in a document preview iframe.
+- [x] Preview-token minting stays behind owner-authenticated `/api` middleware.
+- [x] Raw preview serving validates the internal preview token instead of relying on iframe cookies.
+- [x] `server/security/apiAuth.ts` adds only a GET exemption for `/api/documents/raw-preview/*`.
+- [x] The raw-preview handler rejects missing, expired, malformed, or tampered preview tokens before file resolution.
+- [x] Preview tokens expire within 5 minutes or less.
+- [x] Preview tokens are scoped to one project and one selected HTML document directory.
+- [x] Preview tokens cannot be used to read sibling files outside the token-scoped document directory.
+- [x] Raw preview route sets `X-Content-Type-Options: nosniff`.
+- [x] Raw preview route sets `X-Frame-Options: SAMEORIGIN` (overriding the global `DENY` from `securityHeaders`); all other routes keep `DENY`.
+- [x] Raw HTML responses set a CSP whose non-negotiable directives (`connect-src 'none'`, `img-src 'self' data:`, `default-src 'none'`, no `allow-same-origin`, `base-uri`/`form-action 'none'`) hold in every configuration (C-2.13). v1 ships a documented deviation (external CDN allowlist + `unsafe-eval`) recorded in §4 and `security-tradeoffs.md`; the per-project opt-in config (C-2.23/C-2.24, TASK-14/15) makes these relaxations conscious rather than global.
+- [x] Previewed HTML cannot read parent `window`, parent DOM, or parent local storage in browser coverage.
+- [x] Previewed HTML cannot perform owner-only mutation without the existing owner-intent protections.
+- [x] Previewed HTML cannot `fetch('/api/*')` because `connect-src 'none'` blocks script network access.
 
 ### Non-Functional
 
-- [ ] Raw serving is binary-safe and does not use UTF-8 string reads for non-markdown assets.
-- [ ] MIME handling uses a small local map, not a new dependency.
-- [ ] MIME map covers `.html`, `.htm`, `.css`, `.js`, `.mjs`, `.json`, `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`, `.svg`, `.ico`, `.woff`, and `.woff2` or rejects unsupported types explicitly.
-- [ ] Large raw files are streamed or otherwise handled without loading unnecessary duplicate string copies.
-- [ ] The implementation introduces no new runtime package.
+- [x] Raw serving is binary-safe and does not use UTF-8 string reads for non-markdown assets.
+- [x] MIME handling uses a small local map, not a new dependency.
+- [x] MIME map covers `.html`, `.htm`, `.css`, `.js`, `.mjs`, `.json`, `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`, `.svg`, `.ico`, `.woff`, and `.woff2` or rejects unsupported types explicitly.
+- [x] Large raw files are streamed or otherwise handled without loading unnecessary duplicate string copies.
+- [x] The implementation introduces no new runtime package.
 
 ### Testing
 
@@ -296,19 +296,19 @@ X-Frame-Options: SAMEORIGIN
 
 ## 8. Security Review Checklist
 
-- [ ] Confirm preview-token mint endpoint is mounted after `createApiAuthMiddleware` in `server/server.ts`.
-- [ ] Confirm raw-preview route has only a GET normal-API-auth exemption and performs preview-token validation before file resolution.
-- [ ] Confirm preview-token mint endpoint rejects read-token/shared-session users.
-- [ ] Confirm `ProjectController.ensureProjectVisible` or equivalent project visibility check gates preview-token mint requests.
-- [ ] Confirm every raw preview subresource request re-runs token validation, path normalization, configured document path checks, token directory scoping, and project-root containment.
-- [ ] Confirm raw preview route path parameters cannot consume or normalize outside the intended project-relative document path.
-- [ ] Confirm root `index.html` is excluded from HTML discovery.
-- [ ] Confirm assets are servable but invisible in the document tree.
-- [ ] Confirm CSP and iframe sandbox are both present; neither is treated as the only boundary.
-- [ ] Confirm `allow-same-origin` is absent from all executable document preview iframes.
-- [ ] Confirm raw HTML responses include `connect-src 'none'`.
-- [ ] Confirm no route returns filesystem absolute paths in errors.
-- [ ] Confirm tests include URL-encoded traversal strings.
+- [x] Confirm preview-token mint endpoint is mounted after `createApiAuthMiddleware` in `server/server.ts`.
+- [x] Confirm raw-preview route has only a GET normal-API-auth exemption and performs preview-token validation before file resolution.
+- [x] Confirm preview-token mint endpoint rejects read-token/shared-session users.
+- [x] Confirm `ProjectController.ensureProjectVisible` or equivalent project visibility check gates preview-token mint requests.
+- [x] Confirm every raw preview subresource request re-runs token validation, path normalization, configured document path checks, token directory scoping, and project-root containment.
+- [x] Confirm raw preview route path parameters cannot consume or normalize outside the intended project-relative document path.
+- [x] Confirm root `index.html` is excluded from HTML discovery.
+- [x] Confirm assets are servable but invisible in the document tree.
+- [x] Confirm CSP and iframe sandbox are both present; neither is treated as the only boundary.
+- [x] Confirm `allow-same-origin` is absent from all executable document preview iframes.
+- [x] Confirm raw HTML responses include `connect-src 'none'`.
+- [x] Confirm no route returns filesystem absolute paths in errors.
+- [x] Confirm tests include URL-encoded traversal strings.
 
 ## 9. Clarifications / UAT History
 

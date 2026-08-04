@@ -37,15 +37,21 @@ interface PreviewTokenRequest extends Request {
 }
 
 /**
- * MDT-221 — Pinned CSP for raw HTML preview responses (CR §4).
+ * MDT-221 — CSP for raw HTML preview responses.
  *
- * STOPGAP (to be replaced by a per-project external-domain whitelist + dialog
- * in a follow-up CR): allow a small set of common CDNs that "working" HTML
- * design files typically depend on — Tailwind (JIT), jsDelivr (Alpine.js),
- * Google Fonts. `unsafe-eval` is required because Alpine.js (`x-data` etc.)
- * and the Tailwind CDN JIT compiler both evaluate strings as JavaScript.
+ * DEVIATION from canonical contract (CR §4 / C-2.13). The canonical contract is
+ * STRICT: `default-src 'none'`, no external origins, no `unsafe-eval`. v1 ships
+ * a documented deviation so real working HTML (Tailwind CDN JIT, Alpine.js via
+ * jsDelivr, Google Fonts) renders. TASK-14 replaces this hardcoded constant
+ * with per-request CSP derived from `[project.document.preview]` config
+ * (`allowedExternalDomains`, `allowUnsafeEval`), strict by default — at which
+ * point this deviation becomes opt-in per project rather than global.
  *
- * What still holds regardless of these allowances:
+ * Full rationale, the config model, and the follow-up scope:
+ * `docs/CRs/MDT-221/security-tradeoffs.md`.
+ *
+ * Non-negotiable directives that hold in EVERY configuration (asserted as
+ * `CSP_INVARIANTS` in the integration test):
  * - `connect-src 'none'` — fetch/XHR/WebSocket blocked (no API credentialed
  *   channel, no programmatic data exfil).
  * - `img-src 'self' data:` — external image loads blocked (no img-beacon
@@ -54,13 +60,6 @@ interface PreviewTokenRequest extends Request {
  *   `<embed>` SVG script vectors.
  * - sandbox without `allow-same-origin` — the iframe stays opaque-origin; no
  *   parent DOM/localStorage access.
- *
- * Trade-off accepted for v1: `unsafe-eval` is a weaker CSP (a primary XSS
- * vector on paper), but in this sandbox configuration (opaque origin + no
- * network channel + owner-only mint of own files) the practical risk is
- * bounded to the owner's own design-doc scripts running eval-based
- * frameworks — which is the intent. The follow-up per-project whitelist CR
- * should make `unsafe-eval` opt-in per project rather than default.
  */
 const ALLOWED_CDN_SCRIPT_STYLES = 'https://cdn.tailwindcss.com https://cdn.jsdelivr.net'
 const ALLOWED_CDN_FONTS = 'https://fonts.googleapis.com https://fonts.gstatic.com'
