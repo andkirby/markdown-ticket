@@ -309,3 +309,31 @@ X-Frame-Options: SAMEORIGIN
 - [ ] Confirm raw HTML responses include `connect-src 'none'`.
 - [ ] Confirm no route returns filesystem absolute paths in errors.
 - [ ] Confirm tests include URL-encoded traversal strings.
+
+## 9. Clarifications / UAT History
+
+### UAT Session 2026-08-03
+
+**Trigger**: browser validation of `designs/board-zai/design3.html` showed the
+strict pinned CSP blocks the real use case — design HTML depending on Tailwind
+CDN, Alpine.js (jsDelivr), and Google Fonts cannot render. A stopgap relaxation
+(external CDN allowlist + `unsafe-eval`) was applied to make it work; this UAT
+session converts the stopgap into a proper per-project opt-in configuration.
+
+**Approved changes**:
+- C-2.13 refined in place: strict CSP is now the *default*, not the only option.
+- C-2.23 added: `[project.document.preview].allowedExternalDomains` config.
+- C-2.24 added: `[project.document.preview].allowUnsafeEval` config.
+- BR-1.13 added: surface unconfigured domains/capabilities to the user.
+
+**Changed requirement IDs**: C-2.13 (refine), C-2.23, C-2.24, BR-1.13 (add).
+**Updated workflow documents**: `security-tradeoffs.md` (rationale + config
+model), `uat.md` (execution brief), this section.
+**`uat.md` written**: yes.
+**Strict drift/lock used**: no (additive + refine-in-place; no removals).
+**Execution slices**: TASK-14 (config schema + dynamic CSP), TASK-15
+(scan + surfacing dialog). Implementation not yet started.
+**Operator answer** ("how to configure per project"): see `uat.md` →
+"How to configure this per project" — `[project.document.preview]` in
+`.mdt-config.toml` with `allowedExternalDomains` and `allowUnsafeEval`, strict
+defaults.
