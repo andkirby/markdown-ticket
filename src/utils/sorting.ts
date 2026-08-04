@@ -1,5 +1,4 @@
 import { CRPriorities } from '@mdt/domain-contracts'
-import type { CRPriorityValue } from '@mdt/domain-contracts'
 import type { Ticket } from '../types'
 
 export function sortTickets(
@@ -32,9 +31,11 @@ export function sortTickets(
       case 'priority':
         // Weight by canonical urgency order (Low→Critical = 0→3), not
         // alphabetically (Critical < High < Low < Medium is meaningless).
-        // Unknown values resolve to -1, sorting last on desc (least urgent).
-        aValue = CRPriorities.indexOf(a.priority as CRPriorityValue)
-        bValue = CRPriorities.indexOf(b.priority as CRPriorityValue)
+        // Unknown values resolve to indexOf -1, sorting last on desc (least
+        // urgent). Ticket.priority is permissive string (MDT-148); the enum
+        // array is the known set, so cast it for the lookup, not the ticket.
+        aValue = (CRPriorities as readonly string[]).indexOf(a.priority)
+        bValue = (CRPriorities as readonly string[]).indexOf(b.priority)
         break
       default:
         // For custom attributes, try to access them directly
