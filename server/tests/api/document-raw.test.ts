@@ -52,6 +52,9 @@ describe('document raw preview API (MDT-221)', () => {
   let projectFactory: ProjectFactory
   let projectCode: string
   let projectPath: string
+  // A second project with opt-in preview config (allowedExternalDomains + allowUnsafeEval)
+  let optInProjectCode: string
+  let optInProjectPath: string
 
   beforeAll(async () => {
     const context = await setupTestEnvironment()
@@ -75,6 +78,34 @@ describe('document raw preview API (MDT-221)', () => {
     // a sibling OUTSIDE the token-scoped dir, for the cross-dir gate test
     await mkdir(join(projectPath, 'docs/other'), { recursive: true })
     await writeFile(join(projectPath, 'docs/other/secret.html'), '<p>secret</p>\n')
+
+    // Second project: opts in to external CDNs + unsafe-eval via config
+    const optInProject = await projectFactory.createProject('empty', {
+      name: 'Opt-In Preview Project',
+      code: 'OPTP',
+      documentPaths: ['docs/site'],
+    })
+    optInProjectCode = optInProject.key
+    optInProjectPath = join(projectFactory.getProjectsDir(), optInProject.key)
+    await mkdir(join(optInProjectPath, 'docs/site'), { recursive: true })
+    await writeFile(join(optInProjectPath, 'docs/site/index.html'), '<p>opt-in</p>\n')
+    // Write the .mdt-config.toml with preview relaxations
+    await writeFile(
+      join(optInProjectPath, '.mdt-config.toml'),
+      [
+        'code = "OPTP"',
+        'name = "Opt-In Preview Project"',
+        'ticketsPath = "docs/CRs"',
+        '',
+        '[project.document]',
+        'paths = ["docs/site"]',
+        '',
+        '[project.document.preview]',
+        'allowedExternalDomains = ["cdn.tailwindcss.com", "cdn.jsdelivr.net", "fonts.googleapis.com"]',
+        'allowUnsafeEval = true',
+        '',
+      ].join('\n'),
+    )
   })
 
   afterAll(async () => {
@@ -124,29 +155,33 @@ describe('document raw preview API (MDT-221)', () => {
       }
     })
 
-    it('CSP matches the strict pinned contract OR reports the documented deviation', async () => {
-      // Canonical contract is the strict CSP (PINNED_CSP_STRICT). v1 ships with
-      // a documented deviation (external CDNs + unsafe-eval) pending the
-      // per-project configuration follow-up CR. This test does NOT silently
-      // re-baseline to the relaxed string — it asserts the strict contract and,
-      // on mismatch, points at the trade-offs doc so the gap stays visible.
+    it('CSP is strict by default (no external origins, no unsafe-eval)', async () => {
+      // The default-config project (RAWP) has no [project.document.preview]
+      // section, so it gets the strict canonical CSP.
       const token = await mintToken('docs/site')
       const response = await request(app).get(`/api/documents/raw-preview/${token}/docs/site/index.html`)
       const csp = String(response.headers['content-security-policy'])
 
-      if (csp !== PINNED_CSP_STRICT) {
-        // Deviation present. Record WHY rather than failing opaquely. The
-        // invariants test above still guards the non-negotiable directives.
-
-        console.warn(
-          '[MDT-221] CSP deviation from strict contract.\n'
-          + `  strict:  ${PINNED_CSP_STRICT}\n`
-          + `  served:  ${csp}\n`
-          + '  See docs/CRs/MDT-221/security-tradeoffs.md §1 for the recorded reason '
-          + '(external CDN allowlist + unsafe-eval stopgap) and §2/§4 for the config follow-up.',
-        )
-      }
       expect(csp).toBe(PINNED_CSP_STRICT)
+      expect(csp).not.toContain('unsafe-eval')
+      expect(csp).not.toContain('https://cdn')
+    })
+
+    it('CSP includes configured external domains + unsafe-eval when project opts in', async () => {
+      // The opt-in project (OPTP) has [project.document.preview] with CDNs + eval.
+      const { token } = mintPreviewToken(optInProjectCode, 'docs/site', SECRET)
+      const response = await request(app).get(`/api/documents/raw-preview/${token}/docs/site/index.html`)
+      assertSuccess(response, 200)
+      const csp = String(response.headers['content-security-policy'])
+
+      expect(csp).toContain('https://cdn.tailwindcss.com')
+      expect(csp).toContain('https://cdn.jsdelivr.net')
+      expect(csp).toContain('https://fonts.googleapis.com')
+      expect(csp).toContain('unsafe-eval')
+      // Non-negotiable invariants still hold
+      for (const invariant of CSP_INVARIANTS) {
+        expect(csp).toMatch(invariant)
+      }
     })
 
     it('serves a sibling CSS asset under the same token scope', async () => {

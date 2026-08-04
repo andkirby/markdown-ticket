@@ -156,7 +156,7 @@ export class DocumentService {
     projectId: string,
     docDir: string,
     requestedPath: string,
-  ): Promise<{ projectPath: string, resolvedPath: string, mime: string }> {
+  ): Promise<{ projectPath: string, resolvedPath: string, mime: string, preview: import('@mdt/domain-contracts').DocumentPreviewConfig }> {
     if (typeof requestedPath !== 'string' || requestedPath.includes('..')) {
       throw new Error('Invalid file path')
     }
@@ -195,7 +195,7 @@ export class DocumentService {
       throw new Error('Unsupported document type')
     }
 
-    return { projectPath, resolvedPath, mime }
+    return { projectPath, resolvedPath, mime, preview: config.preview }
   }
 
   /**

@@ -179,13 +179,23 @@ The document viewer integrates with project configuration to provide markdown an
 
 Asset files referenced by HTML (`.css`, `.js`, `.png`, etc.) are **servable** via the raw-preview route but do **not** appear in the document tree. See `server/docs/ARCHITECTURE.md` → "HTML Document Preview" for the security boundary (preview-token credential, pinned CSP, `X-Frame-Options: SAMEORIGIN` override, `connect-src 'none'`).
 
-> **v1 CSP deviation:** the canonical CSP is strict (`default-src 'none'`, no
-> external origins, no `unsafe-eval`), but v1 ships a documented relaxation
-> (external CDN allowlist + `unsafe-eval`) so working HTML depending on
-> Tailwind/Alpine/Google Fonts renders. A per-project opt-in configuration
-> (`[project.document.preview]` with `allowedExternalDomains` and
-> `allowUnsafeEval`, strict by default) is the planned follow-up. See
-> `docs/CRs/MDT-221/security-tradeoffs.md`.
+> **Per-project HTML preview CSP configuration (MDT-221):** the CSP is strict
+> by default (`default-src 'none'`, no external origins, no `unsafe-eval`). A
+> project opts in to relaxations for its working HTML via
+> `[project.document.preview]`:
+>
+> ```toml
+> [project.document.preview]
+> allowedExternalDomains = ["cdn.tailwindcss.com", "cdn.jsdelivr.net"]
+> allowUnsafeEval = true   # required for Alpine.js, Tailwind CDN JIT
+> ```
+>
+> `allowedExternalDomains` (array of hostnames, default empty) adds those
+> origins to `script-src`/`style-src`/`font-src`. `allowUnsafeEval` (boolean,
+> default false) adds `'unsafe-eval'` to `script-src`. Non-negotiable directives
+> (`connect-src 'none'`, `img-src 'self' data:`, `default-src 'none'`, no
+> `allow-same-origin`) hold in every configuration. See
+> `docs/CRs/MDT-221/security-tradeoffs.md` for the full rationale.
 
 ### Default Exclude Folders
 

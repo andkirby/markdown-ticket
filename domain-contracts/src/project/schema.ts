@@ -38,10 +38,31 @@ export interface DocumentConfig {
   maxDepth: number
 }
 
+/**
+ * MDT-221 — Per-project HTML preview CSP configuration.
+ *
+ * Strict by default: `allowedExternalDomains` empty (no external script/style/
+ * font origins), `allowUnsafeEval` false (no eval). The owner opts in
+ * consciously to relaxations for the specific external domains and capabilities
+ * their working HTML needs. See docs/CRs/MDT-221/security-tradeoffs.md.
+ */
+export interface DocumentPreviewConfig {
+  /** External hostnames allowed in script-src/style-src/font-src. Default empty. */
+  allowedExternalDomains: string[]
+  /** Whether 'unsafe-eval' is added to script-src. Default false. */
+  allowUnsafeEval: boolean
+}
+
+export const DOCUMENT_PREVIEW_CONFIG_DEFAULTS: DocumentPreviewConfig = {
+  allowedExternalDomains: [],
+  allowUnsafeEval: false,
+}
+
 export interface ProjectDocumentSettings {
   paths?: string[]
   excludeFolders?: string[]
   maxDepth?: number
+  preview?: Partial<DocumentPreviewConfig>
 }
 
 export const ProjectSharingMode = {
@@ -166,6 +187,11 @@ const DocumentConfigObjectSchema = z.object({
   excludeFolders: z.array(z.string()).default([]),
   // MDT-168: canonical default comes from config-management defaults (resolves drift: was 3).
   maxDepth: z.number().int().min(1).max(10).default(PROJECT_DOCUMENT_CONFIG_DEFAULTS.maxDepth),
+  // MDT-221: per-project HTML preview CSP relaxations (strict by default).
+  preview: z.object({
+    allowedExternalDomains: z.array(z.string()).default([]),
+    allowUnsafeEval: z.boolean().default(false),
+  }).default({ allowedExternalDomains: [], allowUnsafeEval: false }),
 }).strict()
 
 export const ProjectCodeSchema = z.string()
