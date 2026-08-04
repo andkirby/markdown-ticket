@@ -1,3 +1,5 @@
+import { CRPriorities } from '@mdt/domain-contracts'
+import type { CRPriorityValue } from '@mdt/domain-contracts'
 import type { Ticket } from '../types'
 
 export function sortTickets(
@@ -26,6 +28,13 @@ export function sortTickets(
       case 'lastModified':
         aValue = a.lastModified || a.dateCreated
         bValue = b.lastModified || b.dateCreated
+        break
+      case 'priority':
+        // Weight by canonical urgency order (Low→Critical = 0→3), not
+        // alphabetically (Critical < High < Low < Medium is meaningless).
+        // Unknown values resolve to -1, sorting last on desc (least urgent).
+        aValue = CRPriorities.indexOf(a.priority as CRPriorityValue)
+        bValue = CRPriorities.indexOf(b.priority as CRPriorityValue)
         break
       default:
         // For custom attributes, try to access them directly

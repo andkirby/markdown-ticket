@@ -13,6 +13,7 @@ export interface SortPreferences {
 export const DEFAULT_SORT_ATTRIBUTES: SortAttribute[] = [
   { name: 'code', label: 'Key', defaultDirection: 'desc', system: true },
   { name: 'title', label: 'Title', defaultDirection: 'asc', system: true },
+  { name: 'priority', label: 'Priority', defaultDirection: 'desc', system: true },
   { name: 'dateCreated', label: 'Created Date', defaultDirection: 'desc', system: true },
   { name: 'lastModified', label: 'Update Date', defaultDirection: 'desc', system: true },
 ]
