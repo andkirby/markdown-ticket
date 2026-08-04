@@ -1,14 +1,14 @@
 # MDT-221 — Security Trade-offs & Configuration Path
 
-> This document records the gap between MDT-221's approved strict security
-> contract and what was actually required to make real "working" HTML design
-> files render correctly. It is the basis for either (a) a follow-up
-> configuration CR that makes the relaxations opt-in per project, or (b) a full
-> UAT pass that delivers a validated "soft" configuration.
+> This document records the rationale for the per-project HTML preview CSP
+> configuration model. §1 explains what relaxations real "working" HTML design
+> files require and why. §2 describes the configuration model. §3 records that
+> the model shipped (TASK-14). §4 tracks the remaining surfacing-dialog work
+> (TASK-15).
 >
-> **Canonical contract remains the strict version.** The relaxations below are
-> deviations introduced under time pressure; they are recorded here, not
-> silently absorbed into the spec.
+> **Canonical contract is the strict CSP, and it is the default.** Relaxations
+> are opt-in per project via `[project.document.preview]` config — the owner
+> makes a conscious decision for each domain and capability.
 
 ## 1. The trade-offs we took to make it work
 
@@ -107,40 +107,43 @@ the preview fail with a clear "this document wants to load from X, Y, Z and use
 eval — configure `[project.document.preview]` to allow them." That surfacing
 (dialog or error) is what makes the trade-off conscious rather than implicit.
 
-## 3. Existing specs — keep the "right way," align everything to it
+## 3. Resolution — the "right way" shipped (TASK-14)
 
-This is the tricky part you flagged. The resolution:
+The strict CSP **is** the canonical contract, and it **is** the default. TASK-14
+shipped the per-project configuration model described in §2:
 
-- **The strict CSP remains the canonical contract** in CR §4, architecture.md,
-  the durable docs, and spec-trace requirement C-2.13. That is the "right way."
-- **The deviations (§1.1, §1.2 above) are recorded as explicit, temporary
-  deviations**, not folded into the contract. They are marked in:
-  - This document (the trade-off rationale).
-  - The close-report's "known trade-offs" section.
-  - A code comment on `RAW_PREVIEW_CSP` pointing here.
-- **The integration test (`document-raw.test.ts`) asserts the STRICT CSP** —
-  not the relaxed one. The test documents the contract; the deviation is
-  accepted as a known failure with a recorded reason until the follow-up CR
-  either (a) makes the relaxations configurable, or (b) a UAT pass validates a
-  shipped "soft" default.
+- **The hardcoded `RAW_PREVIEW_CSP` constant is deleted.** The CSP is derived
+  per-request from `[project.document.preview]` config via `buildPreviewCsp()`
+  in `DocumentController.ts`.
+- **Strict by default.** A project with no `[project.document.preview]` section
+  gets the canonical strict CSP (no external origins, no `unsafe-eval`). The
+  integration test "CSP is strict by default" passes.
+- **Opt-in relaxations.** `allowedExternalDomains` + `allowUnsafeEval` add
+  external origins and `'unsafe-eval'` to `script-src`/`style-src`/`font-src`.
+  The integration test "CSP includes configured external domains + unsafe-eval
+  when project opts in" passes.
+- **Non-negotiable invariants** (`connect-src 'none'`, `img-src 'self' data:`,
+  `default-src 'none'`, no `allow-same-origin`) hold in every configuration and
+  are asserted as `CSP_INVARIANTS`.
 
-This keeps the spec honest: anyone reading C-2.13 sees the intended strict
-policy, and anyone reading the close-report sees that v1 shipped with a
-documented deviation pending the configuration CR.
+The deviations in §1.1/§1.2 are no longer deviations — they are the documented
+opt-in model. The trade-off rationale in §1 still applies (the owner must
+understand what each relaxation means), which is why the surfacing dialog
+(TASK-15) remains valuable.
 
-## 4. Follow-up ticket scope (sketch)
+## 4. Remaining work — TASK-15 (surfacing dialog)
 
-Either a focused CR or a UAT-driven configuration delivery:
+TASK-14 shipped items 1-2 + 5-6 below. TASK-15 is the remaining work:
 
-1. Add `[project.document.preview]` config schema (allowedExternalDomains,
-   allowUnsafeEval) — strict defaults.
-2. Serving route derives CSP from config (replaces the hardcoded constant).
+1. ~~Add `[project.document.preview]` config schema (allowedExternalDomains,
+   allowUnsafeEval) — strict defaults.~~ **Shipped (TASK-14).**
+2. ~~Serving route derives CSP from config (replaces the hardcoded constant).~~ **Shipped (TASK-14).**
 3. Mint endpoint statically scans the selected HTML's external `src`/`href`
    and returns a "needs approval" list when the config doesn't cover them.
 4. Frontend dialog surfaces the list; user picks domains; persisted to config.
-5. `RAW_PREVIEW_CSP` constant deleted; CSP is always per-request.
-6. Re-tighten the integration test to assert the derived CSP matches config.
+5. ~~`RAW_PREVIEW_CSP` constant deleted; CSP is always per-request.~~ **Shipped (TASK-14).**
+6. ~~Re-tighten the integration test to assert the derived CSP matches config.~~ **Shipped (TASK-14).**
 7. Default-config projects get the strict CSP — design3.html fails to render
    its CDNs until the owner opts in, with the dialog explaining why.
 
-This is the proper version of what the stopgap approximated.
+This is the proper version of the initial stopgap; TASK-14 shipped it.

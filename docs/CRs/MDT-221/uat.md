@@ -2,8 +2,9 @@
 
 ## Objective
 
-Replace the hardcoded CSP stopgap (external CDN allowlist + `unsafe-eval` baked
-into `RAW_PREVIEW_CSP`) with a **per-project, opt-in configuration model** so
+Replace the hardcoded CSP constant (the original global CDN allowlist +
+`unsafe-eval` baked into `RAW_PREVIEW_CSP`) with a **per-project, opt-in
+configuration model** so
 each project's HTML preview security posture is a conscious owner decision,
 not a global default. Strict by default; relaxed only when the project config
 says so.
@@ -65,7 +66,7 @@ This is the configuration deliverable that the operator-facing question
 - **Direct GREEN targets**: TEST-csp-strict-by-default, TEST-csp-allowed-domains,
   TEST-csp-unsafe-eval-optin.
 - **Impacted canonical task IDs**: TASK-14 (this slice), and the strict-CSP
-  deviation test (currently red) turns green because the default-config project
+  deviation test turns green because the default-config project
   now legitimately gets the strict CSP.
 - **Why**: this is the core config model. Without it, the relaxations are a
   global default with no per-project control.
@@ -133,7 +134,7 @@ Behavior:
 - Slice 1 GREEN target: TEST-csp-strict-by-default (asserts default-config
   project gets the strict CSP string) + the two opt-in tests.
 - Slice 2 GREEN target: TEST-needs-approval-surfaced.
-- The currently-red strict-CSP deviation test (`PINNED_CSP_STRICT`) turns green
+- The strict-CSP test (`PINNED_CSP_STRICT`) passes because the default-config project
   once Slice 1 lands and the default-config project legitimately serves strict.
 
 ## Watchlist

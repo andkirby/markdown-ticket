@@ -115,12 +115,12 @@ cookie on subresource requests, the preview is credentialled by a short-lived
   The canonical pinned CSP is `sandbox allow-scripts; default-src 'none';
   connect-src 'none'` (full strict string asserted as `PINNED_CSP_STRICT` in
   `server/tests/api/document-raw.test.ts`). `allow-same-origin` is forbidden in
-  both the CSP sandbox directive and the iframe sandbox attribute. **v1 ships a documented
-  deviation** (external CDN allowlist + `unsafe-eval`) so working HTML depending
-  on Tailwind/Alpine/Google Fonts can render; the non-negotiable directives
-  (`connect-src 'none'`, `img-src 'self' data:`, `default-src 'none'`) are
-  unchanged. See `docs/CRs/MDT-221/security-tradeoffs.md` for the full rationale
-  and the per-project opt-in configuration follow-up.
+  both the CSP sandbox directive and the iframe sandbox attribute. The CSP is
+  strict by default; a project opts in to external domains and `unsafe-eval`
+  via `[project.document.preview]` config (`allowedExternalDomains`,
+  `allowUnsafeEval`). The non-negotiable directives (`connect-src 'none'`,
+  `img-src 'self' data:`, `default-src 'none'`) hold in every configuration.
+  See `docs/CRs/MDT-221/security-tradeoffs.md` for the full rationale.
 
 See `docs/CRs/MDT-221/architecture.md` for the gate-order rationale and the
 two-path (mint vs serve) security model.
