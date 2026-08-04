@@ -129,7 +129,7 @@ The menu is a positioned dropdown: `absolute right-0 top-full mt-1 w-48`, with c
 ## Extension notes
 
 - New header-level features MUST choose between nav-left, nav-right, or hamburger menu — no new floating elements.
-- **Spatial boundary with the planned pin rail (IDEA-002)**: the header hosts the board filter bar (`board-filter-bar.spec.md`) in `header__right`. The pinned-items surface lives in its own left rail, not the header. Do not add a second horizontal strip to `header__right` — see `board-filter-bar.spec.md` §"Spatial boundary" for the contract.
+- **Spatial boundary with the pin rail (`pin-rail.spec.md`, IDEA-002 / MDT-197)**: the header hosts the board filter bar (`board-filter-bar.spec.md`) in `header__right`. The pinned-items surface lives in its own left rail, not the header. Do not add a second horizontal strip to `header__right` — see `pin-rail.spec.md` §"Spatial boundary" for the contract.
 - If the hamburger menu grows beyond the current action set, consider splitting into a dedicated settings surface.
 - Access-token entry is owned by `AuthStatusAction` and `AuthUnlockPanel`; do not add a second persistent header form.
 - Owner lock/logout is owned by `HamburgerMenu`; do not render owner-session status text inside the action menu or as a second inline chip.

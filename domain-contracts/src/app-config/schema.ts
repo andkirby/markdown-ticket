@@ -221,6 +221,24 @@ export const DocumentFavStateSchema = z.object({
   favItems: z.array(DocumentFavItemSchema),
 }).strict()
 
+// MDT-197: Pin rail — cross-project pinned tickets. Each pin carries its own
+// project code, so the pin set is a single user-global list (unlike document
+// favs which are per-project). Mirrors the DocumentFav shape/semantics: one
+// whole-list PUT replaces the set, validated, reset-on-bad-schema.
+const ProjectCodeSchema = z.string().min(1).max(32).refine(code => /^[A-Z][A-Z0-9]*$/u.test(code), 'Project code must be uppercase alphanumeric')
+
+const TicketCodeSchema = z.string().min(1).max(64).refine(code => /^[A-Z][A-Z0-9]*-\d+$/u.test(code), 'Ticket code must be {PROJECT-CODE}-{NUMBER}')
+
+export const PinItemSchema = z.object({
+  projectCode: ProjectCodeSchema,
+  ticketCode: TicketCodeSchema,
+  favoritedAt: z.string().datetime({ offset: true }),
+}).strict()
+
+export const PinStateSchema = z.object({
+  pins: z.array(PinItemSchema),
+}).strict()
+
 export type GlobalConfig = z.output<typeof GlobalConfigSchema>
 export type GlobalConfigInput = z.input<typeof GlobalConfigSchema>
 export type UserConfig = z.output<typeof UserConfigSchema>
@@ -230,3 +248,5 @@ export type SelectorStateEntry = z.output<typeof SelectorStateEntrySchema>
 export type SelectorState = z.output<typeof SelectorStateSchema>
 export type DocumentFavItem = z.output<typeof DocumentFavItemSchema>
 export type DocumentFavState = z.output<typeof DocumentFavStateSchema>
+export type PinItem = z.output<typeof PinItemSchema>
+export type PinState = z.output<typeof PinStateSchema>

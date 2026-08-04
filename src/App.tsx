@@ -1,7 +1,9 @@
 import type { SortPreferences } from './config/sorting'
 import type { Ticket } from './types'
 import { getTicketsPath } from '@mdt/shared/models/Project'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { DndProvider } from 'react-dnd'
+import { HTML5Backend } from 'react-dnd-html5-backend'
 import {
   BrowserRouter,
   Route,
@@ -27,6 +29,7 @@ import { EventHistory } from './components/DevTools/EventHistory'
 import { useEventHistoryState } from './components/DevTools/useEventHistoryState'
 import { DirectTicketAccess } from './components/DirectTicketAccess'
 import { Header, HeaderContent } from './components/Header'
+import { PinRail } from './components/PinRail'
 import { ProjectSelector } from './components/ProjectSelector'
 import ProjectView from './components/ProjectView'
 import { QuickSearchModal } from './components/QuickSearch'
@@ -47,6 +50,7 @@ import {
   PageTitlePriority,
   usePageTitle,
 } from './hooks/usePageTitle'
+import { usePins } from './hooks/usePins'
 import { useProjectManager } from './hooks/useProjectManager'
 import {
   buildProjectPath,
@@ -121,6 +125,36 @@ function ProjectRouteHandler() {
     markLocked,
     markOwnerAdmin,
   } = useAuthSession()
+
+  // MDT-197: pin rail state. canWriteTickets gates mutations (read-only blocks
+  // pin/unpin). Pin metadata (title/status) is resolved from the current
+  // project's tickets; cross-project pins resolve when their project is viewed.
+  const pins = usePins(canWriteTickets)
+  const resolvePinMetadata = useCallback(
+    (pin: { projectCode: string, ticketCode: string }) => {
+      if (!projectCode || pin.projectCode !== projectCode) {
+        return null
+      }
+      const ticket = tickets.find(t => t.code === pin.ticketCode)
+      if (!ticket) {
+        return null
+      }
+      return { title: ticket.title, status: ticket.status }
+    },
+    [projectCode, tickets],
+  )
+  const handlePinOpen = useCallback(
+    (pin: { projectCode: string, ticketCode: string }) => {
+      // Open the ticket in its owning project. handleTicketClick takes the
+      // project code as the second arg; the ticket object is reconstructed
+      // minimally (only code/title/status are needed for the viewer route).
+      const targetProject = pin.projectCode
+      const code = pin.ticketCode.slice(pin.projectCode.length + 1)
+      const fullCode = `${pin.projectCode}-${code}`
+      navigate(`${buildTicketPath(targetProject, fullCode)}`)
+    },
+    [navigate],
+  )
 
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
   const [ticketError, setTicketError] = useState<string | null>(null)
@@ -542,22 +576,35 @@ function ProjectRouteHandler() {
               </div>
             )
           : (
-              <ProjectView
-                onTicketClick={handleTicketClick}
-                selectedProject={selectedProject}
-                tickets={tickets}
-                filteredTickets={boardFilteredTickets}
-                filters={boardFilters}
-                mobileFilters={boardFilters}
-                onRemoveMobileFilter={(facet, value) => toggleBoardFilter(facet, value)}
-                viewMode={viewMode}
-                sortPreferences={
-                  viewMode === 'board' || viewMode === 'list'
-                    ? localSortPreferences
-                    : undefined
-                }
-                canWrite={canWriteTickets}
-              />
+              <DndProvider backend={HTML5Backend}>
+                <div className="flex h-full min-w-0">
+                  <PinRail
+                    pins={pins.pins}
+                    canWrite={canWriteTickets}
+                    currentProjectCode={projectCode ?? null}
+                    resolveMetadata={resolvePinMetadata}
+                    onPin={pins.addPin}
+                    onUnpin={(pin) => { pins.removePin(pin.projectCode, pin.ticketCode) }}
+                    onOpen={handlePinOpen}
+                  />
+                  <ProjectView
+                    onTicketClick={handleTicketClick}
+                    selectedProject={selectedProject}
+                    tickets={tickets}
+                    filteredTickets={boardFilteredTickets}
+                    filters={boardFilters}
+                    mobileFilters={boardFilters}
+                    onRemoveMobileFilter={(facet, value) => toggleBoardFilter(facet, value)}
+                    viewMode={viewMode}
+                    sortPreferences={
+                      viewMode === 'board' || viewMode === 'list'
+                        ? localSortPreferences
+                        : undefined
+                    }
+                    canWrite={canWriteTickets}
+                  />
+                </div>
+              </DndProvider>
             )}
       </div>
 

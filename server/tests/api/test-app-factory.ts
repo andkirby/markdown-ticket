@@ -19,12 +19,14 @@ import cors from 'cors'
 import express from 'express'
 import { buildRuntimeConfig } from '../../config/runtimeConfig'
 import { DocumentController } from '../../controllers/DocumentController'
+import { PinController } from '../../controllers/PinController'
 import { ProjectController } from '../../controllers/ProjectController'
 import { SearchController } from '../../controllers/SearchController'
 import { errorHandler, notFoundHandler } from '../../middleware/errorHandler'
 import { createAuthRouter } from '../../routes/auth'
 import { createDevToolsRouter } from '../../routes/devtools'
 import { createDocumentRouter } from '../../routes/documents'
+import { createPinRouter } from '../../routes/pins'
 import { createProjectRouter } from '../../routes/projects'
 import { createPublicReadTokensRouter, createReadTokensRouter } from '../../routes/readTokens'
 import { createSearchRouter } from '../../routes/search'
@@ -35,6 +37,7 @@ import { createApiAuthMiddleware } from '../../security/apiAuth'
 import { createCorsOptions, createOriginPolicy, securityHeaders } from '../../security/originPolicy'
 import { DocumentService } from '../../services/DocumentService'
 import FileWatcherService from '../../services/fileWatcher/index.js'
+import { PinStateService } from '../../services/PinStateService'
 import { TicketService } from '../../services/TicketService'
 import { TreeService } from '../../services/TreeService'
 
@@ -183,6 +186,10 @@ export function createTestApp(): TestAppResult {
 
   const documentController = new DocumentController(documentService, runtimeConfig.previewTokenSecret)
 
+  // MDT-197: pin rail service + controller.
+  const pinStateService = new PinStateService(projectDiscovery)
+  const pinController = new PinController(pinStateService)
+
   // Register Routes
   // Mirror production: auth session routes are before protected /api routers.
   app.use('/api/auth', createAuthRouter())
@@ -205,6 +212,7 @@ export function createTestApp(): TestAppResult {
 
   app.use('/api/read-tokens', createReadTokensRouter())
   app.use('/api/documents', createDocumentRouter(documentController, projectController))
+  app.use('/api/pins', createPinRouter(pinController))
   app.use('/api/events', createSSERouter(fileWatcher, originPolicy, projectServiceAdapter as unknown as ProjectServiceExtension))
   app.use('/api', createSystemRouter(fileWatcher, projectController, projectDiscovery, documentService.fileInvoker as FileInvokerAdapter))
   app.use('/api/devtools', createDevToolsRouter(originPolicy, runtimeConfig.system.devtoolsEnabled))

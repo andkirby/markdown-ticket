@@ -7,7 +7,7 @@ Related artifacts:
 - Exploration / rejected alternatives: `../explorations/filtering-system.md`
 - Neighbor surface: `board-layout.spec.md`
 - Neighbor surface: `app-header.spec.md` (owns the header zone this surface renders into)
-- Neighbor surface: `pin-rail.spec.md` (planned, IDEA-002 — separate left rail, not the header)
+- Neighbor surface: `pin-rail.spec.md` (IDEA-002 / MDT-197 — separate left rail, not the header)
 - Data contract: `domain-contracts/src/ticket/input.ts` (`TicketFilters`)
 
 ## The one rule
@@ -30,7 +30,7 @@ Related artifacts:
 - Board column grouping, drag-drop, or per-column sort (`board-layout.spec.md`).
 - Mobile one-column-at-a-time layout or the column switcher (`board-layout.spec.md`).
 - Ticket badges shown inside cards (`ticket-card.spec.md`). Filter chips reuse badge styling but do not own it.
-- The pinned-items surface (IDEA-002 / MDT-197, planned `pin-rail.spec.md`).
+- The pinned-items surface (`pin-rail.spec.md`, IDEA-002 / MDT-197).
 - Backend filtering, MCP filtering, or saved/shared views.
 - A `Sheet`/`Drawer` primitive — mobile uses the existing `Popover`.
 

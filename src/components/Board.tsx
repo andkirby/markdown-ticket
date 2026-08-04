@@ -10,8 +10,6 @@ import type { FacetKey } from '../utils/ticketFilters'
 import { CRStatus } from '@mdt/domain-contracts'
 import * as React from 'react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { DndProvider } from 'react-dnd'
-import { HTML5Backend } from 'react-dnd-html5-backend'
 import { getColumnForStatus, getVisibleColumns } from '../config'
 import { COLLAPSED_COLUMNS_CHANGE_EVENT, getCollapsedColumns, setCollapsedColumns } from '../config/settingsPreferences'
 import { getSortPreferences, setSortPreferences } from '../config/sorting'
@@ -625,13 +623,13 @@ const BoardContent: React.FC<BoardProps> = ({
 
 /**
  * @testid kanban-board — board grid container (visible when a project is selected)
+ *
+ * MDT-197: DndProvider was lifted to App.tsx so the PinRail (a drop target
+ * mounted as a sibling of the content area) shares the same DnD context as
+ * the board's drag sources. Board no longer owns the provider.
  */
 const Board: React.FC<BoardProps> = (props) => {
-  return (
-    <DndProvider backend={HTML5Backend}>
-      <BoardContent {...props} />
-    </DndProvider>
-  )
+  return <BoardContent {...props} />
 }
 
 export default Board
