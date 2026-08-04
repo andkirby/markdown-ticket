@@ -21,6 +21,7 @@ interface DocumentFile {
   name: string
   path: string
   type: 'file' | 'folder'
+  kind?: 'markdown' | 'html'
   title?: string
   children?: DocumentFile[]
   dateCreated?: Date | string

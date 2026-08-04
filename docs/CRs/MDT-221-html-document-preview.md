@@ -1,6 +1,6 @@
 ---
 code: MDT-221
-status: Proposed
+status: In Progress
 dateCreated: 2026-08-02T14:26:12.184Z
 type: Feature Enhancement
 priority: High
@@ -25,7 +25,8 @@ relatedTickets: MDT-156,MDT-160,MDT-199
 
 ### Affected Artifacts
 
-- `server/builders/TreeBuilder.ts` — document discovery extension handling.
+- `server/builders/TreeBuilder.ts` — document discovery extension handling (glob-based path).
+- `server/strategies/PathSelectionStrategy.ts` — document discovery extension handling (directory-walk path used by the path-selection UI; same `.html`/`.htm` change as TreeBuilder, otherwise the PathSelector modal cannot offer HTML files to configure).
 - `server/services/DocumentService.ts` — path validation, configured document path checks, raw file resolution.
 - `server/controllers/DocumentController.ts` — raw document response handling.
 - `server/routes/documents.ts` — authenticated raw document route.
@@ -84,6 +85,7 @@ relatedTickets: MDT-156,MDT-160,MDT-199
 - Owner authentication gates token minting before any HTML iframe URL exists.
 - The raw preview route does not depend on SameSite cookies from the opaque iframe; it validates the path-scoped preview token instead.
 - The normal API auth exemption is GET-only, path-specific, and not sufficient by itself to read any file.
+- The raw-preview prefix is carved out of `isPublicReadRoute` in `server/security/accessPolicy.ts` so it does not inherit the broad `/api/documents` anonymous + read-session-readable grant. This is defense-in-depth: the handler's HMAC token check (gate G2) is the primary gate and works regardless; the carve-out prevents the route from being a quiet public-readable surface and prevents HEAD/OPTIONS method creep.
 - Server-side containment checks apply to the HTML file and every relative subresource request.
 - An iframe without `allow-same-origin` blocks previewed scripts from reading parent DOM, cookies, and local storage.
 - `connect-src 'none'` blocks previewed scripts from using the raw token to call arbitrary network endpoints.
@@ -120,6 +122,7 @@ relatedTickets: MDT-156,MDT-160,MDT-199
 |----------|-------------|--------------|
 | `server/builders/TreeBuilder.ts` | Discovery extended | Include `.html` and `.htm` files under configured document paths |
 | `server/builders/TreeBuilder.ts` | Discovery filtered | Exclude root `index.html` from Documents View HTML discovery |
+| `server/strategies/PathSelectionStrategy.ts` | Discovery extended | Apply the same `.html`/`.htm` file filter as TreeBuilder so the PathSelector modal can offer HTML files for configuration (otherwise HTML files are undiscoverable in the UI even after the TreeBuilder change) |
 | `server/types/tree.ts` | Contract extended | Add server-derived document kind metadata for file nodes |
 | `server/services/DocumentService.ts` | Method added | Resolve raw document files with shared containment and document-path validation |
 | `server/controllers/DocumentController.ts` | Handler added | Stream or send raw document bytes with headers |
@@ -132,6 +135,9 @@ relatedTickets: MDT-156,MDT-160,MDT-199
 | `src/components/DocumentsView/MarkdownViewer.tsx` | Responsibility narrowed | Keep markdown rendering unchanged and do not handle HTML |
 | `server/security/apiAuth.ts` | Policy extended | Add only a narrow GET exemption for `/api/documents/raw-preview/*` so token auth can run |
 | `docs/CONFIG_SPECIFICATION.md` | Documentation updated | Document supported document file kinds and raw-preview security boundary |
+| `server/docs/ARCHITECTURE.md` | Documentation updated | Reflect the new `/api/documents/raw-preview/*` prefix, its GET-only auth exemption, and the preview-token bridge in the auth-gate + route map (lines 13, 56-65, 90). This doc is the canonical "where do new `/api` routes go" reference future contributors use. |
+| `server/openapi/schemas.ts` | Contract extended | Add optional `kind` to the `Document` schema (line 388); declare `PreviewTokenResponse` schema and the two new operations (`POST /api/documents/preview-token`, `GET /api/documents/raw-preview/{token}/{path}`) so the Redoc spec at `/api-docs` does not drift from reality. |
+| `DEBUG.md` | Verified, no change | Confirmed during architecture: DEBUG.md is operational run/stop/observe procedures and does not enumerate routes or auth env vars, so the raw-preview prefix and preview-token secret do not require a doc update. |
 
 ### Integration Points
 
@@ -153,18 +159,31 @@ relatedTickets: MDT-156,MDT-160,MDT-199
 - Token-scoped virtual document-root proxy: raw route maps project-relative paths to guarded filesystem reads.
 - Defense in depth: owner-gated token minting, path-scoped raw token validation, client iframe sandbox, path containment, MIME, `nosniff`, and CSP.
 
-### Pinned CSP
+### Pinned Headers
 
 All raw HTML preview responses must set:
 
 ```text
 Content-Security-Policy: sandbox allow-scripts; default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'
+X-Frame-Options: SAMEORIGIN
 ```
 
-- `allow-same-origin` is forbidden.
+- `allow-same-origin` is forbidden (in both the CSP `sandbox` directive and the iframe `sandbox` attribute).
 - `connect-src 'none'` is required for v1.
 - External network access is out of scope.
 - Inline scripts and styles are allowed because the preview is already explicitly executable; network access remains blocked.
+- `X-Frame-Options: SAMEORIGIN` is a required override. The global `securityHeaders` middleware (`server/security/originPolicy.ts:103-107`, mounted at `server/server.ts:150`) sets `X-Frame-Options: DENY` on every response; DENY blocks even same-origin framing, so the preview iframe would be refused by the browser. The raw-preview handler must override to `SAMEORIGIN` on its responses. All other routes keep `DENY`. See `architecture.md` gate G10.
+
+> **⚠️ v1 deviation (recorded):** the strict CSP above is the canonical contract,
+> but browser validation against a real working HTML file (`designs/board-zai/
+> design3.html`) showed it cannot render Tailwind/Alpine/Google-Fonts-dependent
+> HTML. v1 ships a documented deviation (external CDN allowlist + `unsafe-eval`
+> in `script-src`). The deviation is recorded in
+> `docs/CRs/MDT-221/security-tradeoffs.md`, kept visible by a failing strict-CSP
+> integration test, and slated for a per-project opt-in configuration follow-up
+> CR. The directives that remain non-negotiable in any configuration
+> (`connect-src 'none'`, `img-src 'self' data:`, no `allow-same-origin`,
+> `default-src 'none'`) are asserted as invariants and still pass.
 
 ## 5. Acceptance Criteria
 
@@ -187,6 +206,7 @@ Content-Security-Policy: sandbox allow-scripts; default-src 'none'; script-src '
 - [ ] Read-token and shared-session users cannot mint HTML preview tokens in v1.
 - [ ] Unknown file kinds render a non-preview state and do not call the markdown renderer.
 - [ ] `documentFilenameTabModel` remains markdown-only; HTML sibling tabs are out of scope.
+- [ ] The HTML preview iframe fills the documents-view preview panel (full width and height below the app header), matching the markdown viewer's panel-filling behavior; it must not collapse to its intrinsic 300×150 default. (BR-1.12)
 
 ### Security
 
@@ -200,6 +220,7 @@ Content-Security-Policy: sandbox allow-scripts; default-src 'none'; script-src '
 - [ ] Preview tokens are scoped to one project and one selected HTML document directory.
 - [ ] Preview tokens cannot be used to read sibling files outside the token-scoped document directory.
 - [ ] Raw preview route sets `X-Content-Type-Options: nosniff`.
+- [ ] Raw preview route sets `X-Frame-Options: SAMEORIGIN` (overriding the global `DENY` from `securityHeaders`); all other routes keep `DENY`.
 - [ ] Raw HTML responses set the pinned CSP from Section 4.
 - [ ] Previewed HTML cannot read parent `window`, parent DOM, or parent local storage in browser coverage.
 - [ ] Previewed HTML cannot perform owner-only mutation without the existing owner-intent protections.

@@ -1,6 +1,7 @@
 /// <reference types="jest" />
 
 import type { Request } from 'express'
+import { isPublicReadRoute } from '../../security/accessPolicy'
 import {
   extractApiCredential,
   isApiAuthExemptRoute,
@@ -68,6 +69,41 @@ describe('backend API auth security utilities - MDT-157', () => {
       expect(isApiAuthExemptRoute('POST', '/api/status')).toBe(false)
       expect(isApiAuthExemptRoute('GET', '/api/projects')).toBe(false)
       expect(isApiAuthExemptRoute('GET', '/api/status/details')).toBe(false)
+    })
+
+    it('MDT-221: exempts GET /api/documents/raw-preview/* (token is the credential)', () => {
+      expect(isApiAuthExemptRoute('GET', '/api/documents/raw-preview/abc.docs/site/index.html')).toBe(true)
+      expect(isApiAuthExemptRoute('GET', '/api/documents/raw-preview/x/style.css')).toBe(true)
+    })
+
+    it('MDT-221: raw-preview exemption is GET-only (no HEAD/OPTIONS/POST method creep)', () => {
+      expect(isApiAuthExemptRoute('HEAD', '/api/documents/raw-preview/x')).toBe(false)
+      expect(isApiAuthExemptRoute('OPTIONS', '/api/documents/raw-preview/x')).toBe(false)
+      expect(isApiAuthExemptRoute('POST', '/api/documents/raw-preview/x')).toBe(false)
+    })
+
+    it('MDT-221: does NOT exempt /api/documents/preview-token (mint endpoint requires owner auth)', () => {
+      expect(isApiAuthExemptRoute('GET', '/api/documents/preview-token')).toBe(false)
+      expect(isApiAuthExemptRoute('POST', '/api/documents/preview-token')).toBe(false)
+    })
+  })
+
+  describe('MDT-221 public-read carve-out', () => {
+    it('raw-preview prefix is NOT public-read across GET/HEAD/OPTIONS (defense-in-depth)', () => {
+      expect(isPublicReadRoute('/api/documents/raw-preview/x', 'GET')).toBe(false)
+      expect(isPublicReadRoute('/api/documents/raw-preview/x', 'HEAD')).toBe(false)
+      expect(isPublicReadRoute('/api/documents/raw-preview/x', 'OPTIONS')).toBe(false)
+    })
+
+    it('the broad /api/documents public-read grant still covers other document routes', () => {
+      expect(isPublicReadRoute('/api/documents', 'GET')).toBe(true)
+      expect(isPublicReadRoute('/api/documents/content', 'GET')).toBe(true)
+      expect(isPublicReadRoute('/api/documents?projectId=P', 'GET')).toBe(true)
+    })
+
+    it('POST is never public-read (mutation candidate, not safe)', () => {
+      expect(isPublicReadRoute('/api/documents/raw-preview/x', 'POST')).toBe(false)
+      expect(isPublicReadRoute('/api/documents', 'POST')).toBe(false)
     })
   })
 })
