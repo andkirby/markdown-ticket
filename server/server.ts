@@ -137,6 +137,11 @@ class ProjectServiceAdapter {
 const app: Express = express()
 const runtimeConfig = buildRuntimeConfig()
 const PORT: number = Number(process.env.PORT) || 3001
+// MDT-157 UAT 2026-08-06: bind loopback by default so a disabled-auth or
+// local-bypass backend is unreachable from the LAN/internet. Docker compose
+// sets API_BIND_ADDRESS=0.0.0.0 so the frontend/nginx container can reach it.
+// Mirrors the existing MCP_BIND_ADDRESS pattern.
+const HOST: string = process.env.API_BIND_ADDRESS?.trim() || '127.0.0.1'
 app.locals.runtimeConfig = runtimeConfig
 app.locals.configDir = runtimeConfig.configDir
 
@@ -382,7 +387,7 @@ export { app }
 
 // Start server only when run directly (not when imported for testing)
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const _server = app.listen(PORT, async () => {
+  const _server = app.listen(PORT, HOST, async () => {
     // Disable server-level timeouts for SSE support.
     // Per-request req.setTimeout(0) in the SSE route works on Node.js but is a no-op on Bun.
     // This server-level fallback ensures SSE survives on both runtimes.
@@ -390,7 +395,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     _server.keepAliveTimeout = 0
     _server.requestTimeout = 0
     _server.headersTimeout = 0
-    logger.info(`🚀 Ticket board server running on port ${PORT}`)
+    logger.info(`🚀 Ticket board server running at http://${HOST}:${PORT}`)
     logger.info(`🌐 API endpoints:`)
     logger.info(`   GET  /api/events - Server-Sent Events for real-time updates`)
     logger.info(`   GET  /api/status - Server status`)

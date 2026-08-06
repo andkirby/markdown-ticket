@@ -23,14 +23,18 @@ flowchart TD
   C --> D["Backend API auth middleware"]
   D --> F{"Exempt route?"}
   F -->|"status or health"| H["Call next"]
-  F -->|"protected API route"| E{"Auth disabled?"}
-  E -->|"local or test no config"| H
-  E -->|"non-local no config"| W["Warn with migration guidance"]
+  F -->|"protected API route"| L{"Loopback Host AND bypass on?"}
+  L -->|"yes — local dev"| H
+  L -->|"no"| E{"Auth disabled?"}
+  E -->|"local or test, loopback host"| H
+  E -->|"non-local host, no config"| W["Warn + read-only/401 (not owner)"]
   W --> H
-  E -->|"auth enabled"| G{"Valid admin token?"}
+  E -->|"auth enabled"| G{"Valid admin token or owner session?"}
   G -->|"yes"| H
   G -->|"no"| I["401 generic auth error"]
 ```
+
+(UAT 2026-08-06) The loopback-host check is the new first decision after the exempt-route classification. It is the single shared authority for "is this a local request" and is reused by `GET /api/auth/session` so the frontend does not show a spurious unlock panel when the protected API would pass locally.
 
 Owner module: `server/security/apiAuth.ts` owns backend auth config parsing, credential extraction, timing-safe token matching, exempt-route classification, migration warning emission, and Express middleware creation.
 
@@ -50,7 +54,9 @@ Rejected credentials:
 - query-string tokens
 - HTTP Basic
 - cookies as an MDT-157 auth mechanism
-- `Origin`, `Referer`, `X-Forwarded-*`, IP address, or reverse-proxy identity headers as credentials
+- `Origin`, `Referer`, `X-Forwarded-*` (including `X-Forwarded-Host`), `CF-Connecting-IP`, IP address, or reverse-proxy identity headers as credentials
+
+(UAT 2026-08-06) The loopback-host no-auth carve-out trusts **only** the request `Host` header hostname (parsed, lowercased) against `API_LOCAL_HOSTS`. `X-Forwarded-Host`, `Origin`, `Referer`, `X-Forwarded-For`, `CF-Connecting-IP`, and `socket.remoteAddress` are explicitly NOT authorities for the bypass — they are client-supplied and/or spoofable. The Vite `/api` proxy must run with `changeOrigin: false` so the backend observes the real browser `Host`; nginx already uses `Host $host`, so dev and Docker agree.
 
 Token comparison must use length-checked `crypto.timingSafeEqual` semantics. Empty, malformed, missing, and different-length tokens all fail with HTTP 401 and a generic authentication message. Raw token values must never be logged.
 
@@ -152,6 +158,38 @@ The Vite middleware must reject non-loopback clients before reading request bodi
 
 Malformed JSON submitted to `POST /api/frontend/logs` must fail with a controlled 400 response instead of crashing middleware processing.
 
+## UAT: Loopback-Host No-Auth Scope (2026-08-06)
+
+Owner modules:
+
+- `server/security/apiAuth.ts` owns `isLocalHostRequest(req, localHosts)`, the `API_LOCAL_HOSTS`/`API_LOCAL_HOST_BYPASS` parsing in `parseApiAuthConfig`, and the narrowed `!config.enabled` branch.
+- `server/routes/auth.ts` owns reusing `isLocalHostRequest` in `GET /api/auth/session` so the session endpoint and the protected-API gate report a consistent local-exempt state.
+- `server/config/runtimeConfig.ts` carries `localHosts` and `localHostBypassEnabled` through runtime config.
+- `server/server.ts` owns `API_BIND_ADDRESS` (default `127.0.0.1`) and the `app.listen(PORT, HOST, …)` form.
+- `vite.config.ts` owns `changeOrigin: false` on the `/api`, `/api/events`, `/api-docs` proxy blocks and the `server.host`/`preview.host` loopback default.
+- `docker-compose*.yml` own the explicit `API_BIND_ADDRESS=0.0.0.0` and `API_LOCAL_HOST_BYPASS=false` for the containerized nginx path.
+
+Behavior contract (truth table):
+
+| Request `Host` hostname | `API_SECURITY_AUTH` | `API_LOCAL_HOST_BYPASS` | Existing read-only session? | Result |
+|---|---|---|---|---|
+| loopback (`localhost`/`127.0.0.1`/`::1`) | any | on | no | owner / `no-auth-dev`, no token, no unlock panel |
+| loopback | any | on | **yes (incl. empty/revoked scope)** | **read-only** — bypass does NOT escalate; keys on `readSession.authenticated`, not on non-empty scopes (C12) |
+| non-loopback (tunnel/public) | `true` | any | any | normal auth: token or MDT-176 owner-session; else MDT-172 policy (200 public-read / 401 / 403) |
+| non-loopback (tunnel/public) | `false`/unset | any | any | MDT-172 policy (public-read 200, read-only session honored, else 401/403) — **NOT owner** (closes the pre-UAT hole) |
+| loopback or non-loopback | any | `false` | no | normal auth (Docker default — no host grants bypass) |
+| missing / malformed / lookalike (e.g. `localhost.evil`) | any | any | any | fail closed |
+
+Read-only precedence (C12): an authenticated read-only session is a higher-specificity credential than the loopback bypass. The bypass decision keys on `readSession.authenticated` **alone**, not on whether `projectRefs`/`shareIds` are populated — so a valid-but-empty/revoked-scope session still blocks the bypass. The bypass never promotes a read-only request to owner, on any host. `GET /api/auth/session` reports `localExempt` only when no authenticated read session is present. A single shared helper `isLoopbackBypassEligible(req, config, readSession)` enforces this identically in the protected `/api` gate and the session endpoint so the two cannot diverge.
+
+Effective `authEnabled` for the UI: `GET /api/auth/session` reports an **effective** `authEnabled = runtimeConfig.auth.enabled || !localExempt`. A non-exempt caller on a disabled-auth backend (e.g. a tunnel `Host`) sees `authEnabled: true` so the UI shows locked — not `no-auth-dev`, which would offer owner controls that then fail on writes. Only genuinely loopback-exempt callers see `authEnabled: false`.
+
+Default `API_LOCAL_HOST_BYPASS`: on when `NODE_ENV` is unset/`development`/`local` (the documented `bunx tsx server.ts` path sets none); off in `production`, `test`, and Docker. `test` is off because the suite runs on loopback — bypass-on would make every auth test silently pass through the carve-out; tests opt in explicitly.
+
+Host parsing: parse with `new URL(\`http://${host}\`)`, take `.hostname`, lowercase, exact-match against `API_LOCAL_HOSTS`. This rejects lookalikes (`localhost.evil`, `127.0.0.1.evil`) because `.hostname` strips the port and the match is exact, and normalizes bracketed IPv6 (`[::1]:3001` → `::1`). Missing/malformed `Host` → fail closed.
+
+Residual-risk note (stated honestly, not hand-wavy): if an operator sets `API_BIND_ADDRESS=0.0.0.0` AND `API_LOCAL_HOST_BYPASS=true` on a hostile LAN, a LAN client can forge `Host: localhost`. That is an operator decision and is documented as such; it is not the default in any shipped compose file.
+
 ## Invariants
 
 - MDT-157 authenticates only; it does not authorize access levels or filter projects.
@@ -166,6 +204,14 @@ Malformed JSON submitted to `POST /api/frontend/logs` must fail with a controlle
 - Production Docker MCP HTTP defaults auth on via `MCP_SECURITY_AUTH=${MCP_SECURITY_AUTH:-true}` and must fail clearly when the token is missing.
 - Non-local deployments that explicitly run MCP HTTP with no token and auth disabled outside production Docker defaults keep the migration warning.
 - Vite-only frontend logging endpoints are localhost-only and are not exposed as unauthenticated LAN/tunnel APIs.
+- (UAT 2026-08-06) The backend no-auth/`no-auth-dev` owner grant applies only when the request `Host` hostname is loopback AND `API_LOCAL_HOST_BYPASS` is on; non-loopback hosts are never granted owner by the disabled-auth branch.
+- (UAT 2026-08-06) `X-Forwarded-Host`, `CF-Connecting-IP`, `Origin`, `Referer`, `X-Forwarded-For`, and `socket.remoteAddress` are not authorities for the loopback bypass; only the request `Host` is.
+- (UAT 2026-08-06) The backend binds loopback by default (`API_BIND_ADDRESS=127.0.0.1`); Docker compose opts into `0.0.0.0` and defaults `API_LOCAL_HOST_BYPASS=false`.
+- (UAT 2026-08-06) `GET /api/auth/session` and the protected `/api` gate share ONE helper (`isLoopbackBypassEligible`) for the loopback decision, so they cannot diverge on read-session scoping.
+- (UAT 2026-08-06) `GET /api/auth/session` reports an EFFECTIVE `authEnabled = config.enabled || !localExempt`, so a non-exempt caller on a disabled-auth backend sees locked UI (not `no-auth-dev`).
+- (UAT 2026-08-06) An authenticated read session — including the valid-but-empty/revoked-scope case — takes precedence over the loopback bypass on any host; the decision keys on `readSession.authenticated`, never on non-empty scopes (C12).
+- (UAT 2026-08-06) `API_LOCAL_HOST_BYPASS` defaults on for `NODE_ENV` unset/`development`/`local` (the `bunx tsx server.ts` dev path) and off for `production`/`test`/Docker.
+- (UAT 2026-08-06) Host parsing rejects lookalikes (`localhost.evil`) via exact-hostname match and normalizes bracketed IPv6/ports (Edge-5).
 
 ## BDD Scenario Carryover
 

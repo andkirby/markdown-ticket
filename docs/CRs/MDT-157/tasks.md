@@ -37,6 +37,8 @@
 | Edge-2 | Task 2, Task 3 |
 | Edge-3 | Task 1, Task 3 |
 | Edge-4 | Task 1, Task 3 |
+| C11 | Task 6 |
+| Edge-5 | Task 6 |
 
 ## Milestones
 
@@ -377,6 +379,67 @@ bun run test:e2e
 - [x] Non-loopback requests are rejected before logs are accepted or sessions start/stop.
 - [x] Spoofed forwarded headers do not bypass the loopback check.
 - [x] Malformed JSON does not crash middleware.
+
+### Task 6: UAT narrow backend no-auth to loopback-host + bind boundary
+
+**Milestone**: UAT — Loopback-host no-auth scope (2026-08-06)
+
+**Structure**: `server/security/apiAuth.ts`, `server/routes/auth.ts`, `server/config/runtimeConfig.ts`, `server/server.ts`, `vite.config.ts`, `docker-compose.yml`, `docker-compose.dev.yml`, `docker-compose.prod.yml`, `.env.example`, `docs/AUTH_SESSION_GUIDE.md`, `docs/ENVIRONMENT_VARIABLES.md`, `server/tests/security/apiAuth.test.ts`, `server/tests/api/api-auth.test.ts`
+
+**Makes GREEN (Automated Tests)**:
+- `TEST-backend-loopback-host-bypass` → `server/tests/security/apiAuth.test.ts` + `server/tests/api/api-auth.test.ts`: `isLocalHostRequest` accept/reject matrix; loopback `Host` grants owner without token (auth on/off); tunnel `Host` denied when auth off; forged `X-Forwarded-Host` ignored; `GET /api/auth/session` local-exempt consistency.
+
+**Makes GREEN (Behavior)**:
+- `backend_loopback_host_local_bypass` → `server/tests/api/api-auth.test.ts` (BR-1.6 narrowed, BR-1.8)
+- `loopback_bypass_does_not_escalate_readonly_session` → `server/tests/api/api-auth.test.ts` (BR-1.6, C12)
+
+**Scope**: Narrow the existing backend no-auth local-dev carve-out so it applies only to loopback-host requests, add `API_BIND_ADDRESS`/`API_LOCAL_HOSTS`/`API_LOCAL_HOST_BYPASS`, make the session endpoint share the loopback decision, and ensure read-only sessions take precedence over the bypass.
+
+**Boundary**: Do not add RBAC, per-user auth, mTLS, or change MCP transport auth. Do not change `originPolicy.ts` (CSRF/Origin logic is separate and correct). Do not let the loopback bypass escalate an existing read-only session (C12).
+
+**Creates**:
+- `isLocalHostRequest(req, localHosts)` exported from `server/security/apiAuth.ts`.
+- `isLoopbackBypassEligible(req, config, readSession)` exported from `server/security/apiAuth.ts` — shared by the `/api` gate and `GET /api/auth/session` so the two cannot diverge on read-session scoping (review-P2 fix). Keys on `readSession.authenticated` alone.
+
+**Modifies**:
+- `server/security/apiAuth.ts` — add `localHosts` + `localHostBypassEnabled` to config/parse; loopback branch after exempt-route check; narrow `!config.enabled` owner grant to loopback-host.
+- `server/routes/auth.ts` — reuse `isLoopbackBypassEligible` in `GET /api/auth/session`; report `localExempt` AND effective `authEnabled = config.enabled || !localExempt` so a non-exempt caller on a disabled-auth backend sees locked UI (review-P1 fix).
+- `server/config/runtimeConfig.ts` — carry `localHosts` + `localHostBypassEnabled`.
+- `server/server.ts` — `API_BIND_ADDRESS` (default `127.0.0.1`), `app.listen(PORT, HOST, …)`.
+- `vite.config.ts` — `changeOrigin: false` on `/api`, `/api/events`, `/api-docs`; `server.host`/`preview.host` default `127.0.0.1`.
+- `docker-compose*.yml` — `API_BIND_ADDRESS=0.0.0.0`, `API_LOCAL_HOST_BYPASS=false`.
+- `.env.example`, `docs/AUTH_SESSION_GUIDE.md`, `docs/ENVIRONMENT_VARIABLES.md` — document new env vars + bind default.
+- `server/tests/security/apiAuth.test.ts`, `server/tests/api/api-auth.test.ts` — add loopback cases.
+
+**Must Not Touch**:
+- `server/security/originPolicy.ts`
+- `mcp-server/**` (separate transport)
+- MDT-172 sharing implementation
+- `server/controllers/**`
+
+**Create/Move**:
+- One shared `isLocalHostRequest` helper is the single authority; do not duplicate the loopback check in routes or sessions.
+- `changeOrigin: false` aligns dev with `nginx.conf` `Host $host` (Docker already preserves Host).
+
+**Exclude**: IP/`X-Forwarded-For`/`CF-Connecting-IP` authority; per-user auth; proxy-auth layers.
+
+**Verify**:
+```bash
+bun run validate:ts
+bun run --cwd server jest tests/security/apiAuth.test.ts tests/api/api-auth.test.ts tests/api/reverse-proxy-compat.test.ts tests/api/auth-stress-matrix.test.ts
+bun run lint
+```
+
+**Done when**:
+- [x] `API_SECURITY_AUTH=true`, `Host: localhost:3075`, no token → protected route 200.
+- [x] `API_SECURITY_AUTH=true`, `Host: tunnel.trycloudflare.com`, no token → 403 (owner-only route).
+- [x] `API_SECURITY_AUTH=false`, `Host: localhost:3075` → owner (200).
+- [x] `API_SECURITY_AUTH=false`, `Host: tunnel.trycloudflare.com` → NOT owner (MDT-172 policy: public-read 200 / read-only honored / 401 / 403).
+- [x] `GET /api/auth/session` with `Host: localhost` reports local-exempt/no-auth-dev; with tunnel `Host` reports auth-enabled/locked.
+- [x] Loopback `Host` + valid read-only session cookie → stays read-only, NOT promoted to owner (C12); session reports read-only precedence over `localExempt`.
+- [x] Forged `X-Forwarded-Host: localhost` with non-local `Host` → rejected.
+- [x] Host lookalikes (`localhost.evil`, `127.0.0.1.evil`) → rejected; bracketed IPv6 (`[::1]:3001`) and ports normalized (Edge-5).
+- [x] `changeOrigin: false` does not break SSE `/api/events` or reverse-proxy-compat/stress-matrix suites.
 
 ## Architecture Coverage
 

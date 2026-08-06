@@ -11,6 +11,11 @@ interface SessionResponse {
   authEnabled?: boolean
   authenticated?: boolean
   readAuthenticated?: boolean
+  // MDT-157 UAT 2026-08-06: backend reports loopback-host local exemption.
+  // Read-only precedence is enforced server-side: localExempt is only true
+  // when no read-only session is active, so the readAuthenticated branch
+  // below already wins when it should.
+  localExempt?: boolean
 }
 
 export function AuthSessionProvider({ children }: { children: ReactNode }) {
@@ -213,7 +218,11 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
           return
         }
 
-        if (session.authEnabled === false) {
+        // MDT-157 UAT 2026-08-06: loopback-host local exemption maps to
+        // no-auth-dev so the UI shows owner-capable controls without an unlock
+        // panel. Evaluated after read-only (C12 precedence) and before the
+        // locked/authenticated branches.
+        if (session.localExempt || session.authEnabled === false) {
           markNoAuthDev()
           return
         }

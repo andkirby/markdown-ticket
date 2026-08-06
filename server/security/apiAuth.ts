@@ -25,11 +25,16 @@ interface ApiAuthConfig {
   enabled: boolean
   token?: string
   migrationWarningRequired: boolean
+  // MDT-157 UAT 2026-08-06: loopback-host no-auth carve-out.
+  localHosts: string[]
+  localHostBypassEnabled: boolean
 }
 
 interface ApiAuthLogger {
   warn: (message: string, meta?: Record<string, unknown>) => void
 }
+
+const DEFAULT_LOCAL_HOSTS = ['localhost', '127.0.0.1', '::1']
 
 export function parseApiAuthConfig(env: NodeJS.ProcessEnv): ApiAuthConfig {
   const authFlag = parseAuthFlag(env.API_SECURITY_AUTH)
@@ -45,7 +50,49 @@ export function parseApiAuthConfig(env: NodeJS.ProcessEnv): ApiAuthConfig {
     enabled,
     token: enabled ? token : undefined,
     migrationWarningRequired: !enabled && !isLocalOrTestEnv(env.NODE_ENV),
+    localHosts: parseLocalHosts(env.API_LOCAL_HOSTS),
+    // Native (non-Docker) runs default the bypass ON so local dev keeps no-token
+    // convenience. Docker is an intentional deployment posture and must opt in
+    // explicitly via API_LOCAL_HOST_BYPASS=true; default OFF there.
+    localHostBypassEnabled: parseLocalHostBypass(env.API_LOCAL_HOST_BYPASS, env.NODE_ENV),
   }
+}
+
+function parseLocalHosts(value: string | undefined): string[] {
+  if (!value || value.trim() === '') {
+    return DEFAULT_LOCAL_HOSTS
+  }
+
+  const parsed = value
+    .split(',')
+    .map(host => host.trim().toLowerCase())
+    .filter(Boolean)
+
+  // An explicit but empty/whitespace-only list would silently disable the
+  // carve-out in a confusing way; fall back to the default rather than [].
+  return parsed.length > 0 ? Array.from(new Set(parsed)) : DEFAULT_LOCAL_HOSTS
+}
+
+function parseLocalHostBypass(value: string | undefined, nodeEnv: string | undefined): boolean {
+  if (value === undefined || value.trim() === '') {
+    // Default ON for native local dev: undefined NODE_ENV (the documented
+    // `bunx tsx server.ts` path sets none), 'development', and 'local' all
+    // mean "interactive local developer" and keep no-token loopback owner.
+    // OFF in production and test: production is an intentional deployment;
+    // the test suite runs on loopback, so bypass-on would make every auth
+    // test silently pass through the carve-out. Tests opt in explicitly by
+    // setting API_LOCAL_HOST_BYPASS=true.
+    return !nodeEnv || nodeEnv === 'development' || nodeEnv === 'local'
+  }
+
+  const normalized = value.trim().toLowerCase()
+  if (['true', '1', 'yes', 'on'].includes(normalized)) {
+    return true
+  }
+  if (['false', '0', 'no', 'off'].includes(normalized)) {
+    return false
+  }
+  throw new Error('API_LOCAL_HOST_BYPASS must be true or false')
 }
 
 export function isApiAuthExemptRoute(method: string, path: string): boolean {
@@ -61,6 +108,75 @@ export function isApiAuthExemptRoute(method: string, path: string): boolean {
     // enforces the token before any file work. GET-only here is the
     // method-creep guard (HEAD/OPTIONS/POST are not exempt).
     || pathWithoutQuery.startsWith('/api/documents/raw-preview/')
+}
+
+/**
+ * MDT-157 UAT 2026-08-06 — single authority for "is this a local request".
+ *
+ * Trusts ONLY the request `Host` header hostname. `X-Forwarded-Host`,
+ * `CF-Connecting-IP`, `Origin`, `Referer`, `X-Forwarded-For`, and
+ * `socket.remoteAddress` are deliberately ignored — they are client-supplied
+ * and/or spoofable. The `Host` header is the one identifier a CDN/tunnel edge
+ * fixes into the request and cannot be forged by an internet client reaching
+ * a public-named tunnel.
+ *
+ * Used by both the protected `/api` gate and `GET /api/auth/session` so the
+ * two report a consistent local-exempt state.
+ *
+ * Parsing: `new URL(\`http://${host}\`)` strips the port and lowercases; exact
+ * membership match against `localHosts` rejects lookalikes (`localhost.evil`,
+ * `127.0.0.1.evil`) and normalizes bracketed IPv6 (`[::1]:3001` -> `::1`).
+ * Missing/malformed `Host` -> fail closed (false).
+ */
+export function isLocalHostRequest(req: Request, localHosts: string[]): boolean {
+  const host = req.headers.host
+  if (typeof host !== 'string' || host.trim() === '') {
+    return false
+  }
+
+  let hostname: string
+  try {
+    // Prepend a scheme so URL parses the host+port; .hostname strips the port
+    // and lowercases. WHATWG URL keeps the brackets on IPv6 hostnames
+    // (`[::1]`), so strip them to normalize to the bare address (`::1`) that
+    // matches API_LOCAL_HOSTS defaults.
+    hostname = new URL(`http://${host}`).hostname.replace(/^(\[)|(\])$/g, '')
+  }
+  catch {
+    // Malformed Host (spaces, control chars, no host) -> fail closed.
+    return false
+  }
+
+  if (!hostname) {
+    return false
+  }
+
+  return localHosts.includes(hostname)
+}
+
+/**
+ * MDT-157 UAT 2026-08-06 — single authority for "is this request eligible
+ * for the loopback-host no-auth bypass". Shared by the protected `/api` gate
+ * and `GET /api/auth/session` so the two cannot diverge (review P2 fix).
+ *
+ * Read-only precedence (C12): an authenticated read session blocks the bypass
+ * regardless of scope — keyed on `readSession.authenticated` alone, NOT on
+ * whether projectRefs/shareIds are non-empty. A valid-but-empty/revoked read
+ * session must still block bypass, or the UI would enter no-auth-dev while the
+ * protected gate denies owner.
+ */
+export interface LoopbackBypassReadSession {
+  authenticated: boolean
+}
+
+export function isLoopbackBypassEligible(
+  req: Request,
+  config: { localHostBypassEnabled: boolean, localHosts: string[] },
+  readSession: LoopbackBypassReadSession,
+): boolean {
+  return config.localHostBypassEnabled
+    && !readSession.authenticated
+    && isLocalHostRequest(req, config.localHosts)
 }
 
 export function extractApiCredential(req: Request): string | null {
@@ -108,26 +224,44 @@ export function createApiAuthMiddleware(
       return
     }
 
+    // MDT-157 UAT 2026-08-06: resolve the read session once up front so that
+    // read-only precedence (C12) holds across every branch — an authenticated
+    // read-only session is never escalated to owner by the loopback bypass.
+    const readSession = await resolveActiveReadSession(
+      getReadSessionState(req, options.readSessionSecret),
+      options,
+    )
+    const bypassEligible = isLoopbackBypassEligible(req, config, readSession)
+
     if (!config.enabled) {
-      const readSession = await resolveActiveReadSession(
-        getReadSessionState(req, options.readSessionSecret),
-        options,
-      )
-      if (readSession.authenticated) {
-        enforceReadOnlyAccess(req, res, next, readSession)
+      // Disabled-auth branch: owner only on loopback host AND no read-only
+      // session. Non-loopback hosts (e.g. a tunnel) fall through to the
+      // read-only/401 path instead of being granted owner (BR-1.8, closes
+      // the pre-UAT hole where auth-disabled granted owner to every host).
+      if (bypassEligible) {
+        if (config.migrationWarningRequired && !migrationWarningEmitted) {
+          migrationWarningEmitted = true
+          logger.warn('Backend API authentication is disabled. Set API_SECURITY_AUTH=true and API_AUTH_TOKEN to protect API routes.')
+        }
+
+        setRequestAccess(req, { canWrite: true, mode: 'no-auth-dev', projectRefs: [], shareIds: [] })
+        next()
         return
       }
 
-      if (config.migrationWarningRequired && !migrationWarningEmitted) {
+      // Non-loopback or read-only session present: read-only session honored,
+      // else migration warning + MDT-172 policy (public-read 200 / 401 / 403).
+      if (!readSession.authenticated && config.migrationWarningRequired && !migrationWarningEmitted) {
         migrationWarningEmitted = true
         logger.warn('Backend API authentication is disabled. Set API_SECURITY_AUTH=true and API_AUTH_TOKEN to protect API routes.')
       }
 
-      setRequestAccess(req, { canWrite: true, mode: 'no-auth-dev', projectRefs: [], shareIds: [] })
-      next()
+      enforceReadOnlyAccess(req, res, next, readSession)
       return
     }
 
+    // Auth enabled: explicit token/session always wins, loopback bypass is a
+    // fallback only when no credential and no read-only session is present.
     const credential = extractApiCredential(req)
     if (timingSafeTokenMatches(credential ?? undefined, config.token)) {
       setRequestAccess(req, { canWrite: true, mode: 'owner-admin', projectRefs: [], shareIds: [] })
@@ -148,10 +282,12 @@ export function createApiAuthMiddleware(
       return
     }
 
-    const readSession = await resolveActiveReadSession(
-      getReadSessionState(req, options.readSessionSecret),
-      options,
-    )
+    if (bypassEligible) {
+      setRequestAccess(req, { canWrite: true, mode: 'no-auth-dev', projectRefs: [], shareIds: [] })
+      next()
+      return
+    }
+
     enforceReadOnlyAccess(req, res, next, readSession)
   }
 }

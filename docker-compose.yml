@@ -43,6 +43,11 @@ services:
       - NODE_ENV=development
       - CHOKIDAR_USEPOLLING=true
       - PORT=3001
+      # MDT-157 UAT 2026-08-06: backend must bind 0.0.0.0 inside the container
+      # so the frontend/nginx service can reach it. Loopback-host no-auth bypass
+      # is OFF in Docker (intentional deployment posture — use auth tokens).
+      - API_BIND_ADDRESS=0.0.0.0
+      - API_LOCAL_HOST_BYPASS=false
     restart: unless-stopped
     healthcheck:
       test: [CMD, bun, -e, "fetch('http://localhost:3001/api/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]

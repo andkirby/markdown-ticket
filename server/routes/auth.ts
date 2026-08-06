@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express'
 import { Router } from 'express'
 import { getRuntimeConfig } from '../config/runtimeConfig.js'
-import { extractApiCredential, OWNER_INTENT_HEADER, resolveActiveReadSession, timingSafeTokenMatches } from '../security/apiAuth.js'
+import { extractApiCredential, isLoopbackBypassEligible, OWNER_INTENT_HEADER, resolveActiveReadSession, timingSafeTokenMatches } from '../security/apiAuth.js'
 import {
   appendClearOwnerSessionCookie,
   appendOwnerSessionCookie,
@@ -34,11 +34,26 @@ export function createAuthRouter(): Router {
     )
     const readAuthenticated = readSession.authenticated
       && (readSession.projectRefs.length > 0 || readSession.shareIds.length > 0)
+    // MDT-157 UAT 2026-08-06: localExempt mirrors the protected /api gate's
+    // loopback decision EXACTLY by sharing isLoopbackBypassEligible. Read-only
+    // precedence (C12) keys on readSession.authenticated (not on non-empty
+    // scopes), so a valid-but-empty/revoked read session still blocks bypass —
+    // otherwise the UI would enter no-auth-dev while the gate denies owner
+    // (review P2 fix).
+    const localExempt = isLoopbackBypassEligible(req, runtimeConfig.auth, readSession)
+
+    // Effective auth state for THIS caller. If backend auth is config-disabled
+    // but this request is not loopback-exempt (e.g. a tunnel Host on a
+    // disabled-auth instance), the caller still must authenticate — report
+    // authEnabled: true so the UI shows locked rather than misleadingly entering
+    // no-auth-dev and then failing on writes.
+    const authEnabled = runtimeConfig.auth.enabled || !localExempt
 
     res.json({
-      authEnabled: runtimeConfig.auth.enabled,
+      authEnabled,
       authenticated: session.authenticated,
       readAuthenticated,
+      localExempt,
     })
   })
 

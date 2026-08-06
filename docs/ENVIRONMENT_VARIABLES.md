@@ -149,6 +149,25 @@ Backend runtime variables are parsed by `server/config/runtimeConfig.ts`. The ca
   - Docker: `0.0.0.0`
 - **Usage**: `mcp-server/src/index.ts:132`
 
+#### API_BIND_ADDRESS
+- **Description**: Backend Express server bind interface. Mirrors `MCP_BIND_ADDRESS`. Loopback keeps `:3001` unreachable from the LAN/internet so the local no-auth carve-out is safe; Docker sets `0.0.0.0` so the frontend/nginx container can reach the backend.
+- **Defaults**:
+  - Native: `127.0.0.1`
+  - Docker: `0.0.0.0`
+- **Usage**: `server/server.ts` (MDT-157 UAT 2026-08-06)
+
+#### API_LOCAL_HOSTS
+- **Description**: CSV of request `Host` header hostnames treated as loopback for the local no-auth carve-out. Parsed hostname is exact-matched (rejects lookalikes like `localhost.evil`); bracketed IPv6 (`[::1]:3001`) and ports are normalized.
+- **Default**: `localhost,127.0.0.1,::1`
+- **Usage**: `server/security/apiAuth.ts` (MDT-157 UAT 2026-08-06)
+
+#### API_LOCAL_HOST_BYPASS
+- **Description**: Master switch for the loopback-host no-auth carve-out. When on, a loopback `Host` gets owner access without a token (read-only sessions still take precedence — never escalated). When off, every host must authenticate.
+- **Defaults**:
+  - Native local dev (`NODE_ENV` unset / `development` / `local`): `true`
+  - Production / test / Docker: `false`
+- **Usage**: `server/security/apiAuth.ts` (MDT-157 UAT 2026-08-06)
+
 #### MCP_LOG_LEVEL
 - **Description**: Logging level
 - **Values**: `debug`, `info`, `warn`, `error`
