@@ -154,8 +154,8 @@
     {
       "id": "C-5",
       "kind": "constraint",
-      "text": "Rail open/close animates via a slide (~140ms ease-out); content never jumps — when the feature is enabled the collapsed strip always reserves its width.",
-      "sourceRef": "docs/CRs/MDT-197-pin-rail.md",
+      "text": "Rail open/close animates via a slide (~140ms ease-out); the rail FLOATS over content (position: absolute, 0px layout footprint) so board columns never shift regardless of rail state (open/collapsed/disabled).",
+      "sourceRef": "docs/design/surfaces/pin-rail.spec.md",
       "routePolicy": "tests"
     }
   ],
