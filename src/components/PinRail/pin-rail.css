@@ -1,15 +1,17 @@
 /**
  * MDT-197: PinRail CSS — floating overlay rail.
  *
- * The rail FLOATS over the content (position: absolute), it never occupies
- * layout flow — so it never pushes board columns. Two states:
- * - collapsed: just a floating pin-icon button at the top-left edge (the
- *   container itself is 0-width; only the button shows).
- * - open: a 48px-wide rail overlaying the left edge of content, with a
- *   semi-opaque surface so the board beneath stays partially visible.
+ * ARCHITECTURE (flicker-free hover reveal):
+ * The nav box is ALWAYS 48px wide and NEVER changes position or size during a
+ * state transition. Collapsed and floating share position: absolute (overlay);
+ * only docked (pinned) is in flow (position: relative). On hover-in the surface
+ * (bg/border/shadow) FADES IN via transition — the hit box does not move, so
+ * the cursor never leaves the element mid-transition (no spurious mouseleave,
+ * no flicker, no cursor arrow↔hand oscillation).
  *
- * Border-led, recessed surface (bg-subtle: "nav rails" per STYLING.md). Mirrors
- * the column drop-hover pattern (primary-light + primary ring) for drag-to-pin.
+ * Collapsed: the 48px box is transparent and pointer-events: none (so it does
+ * not block the board column beneath); only the toggle button is hit-testable.
+ * Floating (unpinned + hovered/dragging): the visible surface appears.
  *
  * Tokens: --bg-subtle (rail), --bg-elevated (chip/button), --border /
  * --border-strong (edges), --text-muted/--text-subtle (text). No new tokens.
@@ -20,11 +22,15 @@
   display: none;
   flex-direction: column;
   align-items: center;
-  background: var(--bg-subtle);
-  border-right: 1px solid var(--border);
+  width: 48px;
+  padding: 12px 0;
+  gap: 6px;
   overflow-y: auto;
   overflow-x: hidden;
-  transition: width 140ms ease-out;
+  /* No width/transform transition: the hit box is stationary through every
+     state change. Only the surface appearance transitions (fade). */
+  transition: background-color 140ms ease-out, border-color 140ms ease-out,
+    box-shadow 140ms ease-out;
 }
 
 /* Desktop only: the rail is hidden below the md breakpoint. */
@@ -34,46 +40,50 @@
   }
 }
 
-/* Collapsed: 0-width overlay — only the floating pin button shows. Uses
-   position: absolute (NOT relative) so the floating→collapsed transition
-   doesn't flip position mid-animation (that flip was the column-jump cause).
-   Both floating and collapsed overlay content; only docked is in flow. */
-.pin-rail--collapsed {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 30;
-  width: 0;
-  padding: 0;
-  background: transparent;
-  border-right: none;
-  box-shadow: none;
-  overflow: visible;
-}
-
-/* Pinned/docked: IN LAYOUT FLOW — takes 48px and pushes board columns. This is
-   the "pinned = takes space" contract. position: relative keeps it in flow. */
-.pin-rail--docked {
-  position: relative;
-  width: 48px;
-  padding: 12px 0;
-  gap: 6px;
-  animation: pin-rail-slide-in 140ms ease-out;
-}
-
-/* Floating open (unpinned + hovered/dragging): FLOATS OVER content — does NOT
-   push columns. Transient reveal; reverts to collapsed on pointer-leave. */
+/* Collapsed + floating both OVERLAY content (position: absolute) — neither
+   pushes board columns. Shared edge coordinates. */
+.pin-rail--collapsed,
 .pin-rail--floating {
   position: absolute;
   top: 0;
   bottom: 0;
   left: 0;
   z-index: 30;
-  width: 48px;
-  padding: 12px 0;
-  gap: 6px;
+}
+
+/* Collapsed: invisible surface. The 48px box is transparent and transparent to
+   pointer events EXCEPT its children (the toggle button), so it does not block
+   the board column beneath. The box is already full-size — hovering the button
+   reveals the floating surface with ZERO geometry change (no flicker). */
+.pin-rail--collapsed {
+  background: transparent;
+  border-right: none;
+  box-shadow: none;
+  pointer-events: none;
+}
+
+/* The toggle button stays interactive even while the collapsed box is
+   pointer-events: none. */
+.pin-rail--collapsed > * {
+  pointer-events: auto;
+}
+
+/* Floating open (unpinned + hovered/dragging): the visible surface fades in.
+   No animation/translateX here — the box does not move (that was the flicker
+   cause). The surface transition is on .pin-rail above. */
+.pin-rail--floating {
+  background: var(--bg-subtle);
+  border-right: 1px solid var(--border);
   box-shadow: 2px 0 8px rgb(0 0 0 / 8%);
+}
+
+/* Pinned/docked: IN LAYOUT FLOW — takes 48px and pushes board columns. This is
+   the "pinned = takes space" contract. The slide-in animation only plays here
+   (a deliberate pin-toggle action, not a hover), so hit-box movement is fine. */
+.pin-rail--docked {
+  position: relative;
+  background: var(--bg-subtle);
+  border-right: 1px solid var(--border);
   animation: pin-rail-slide-in 140ms ease-out;
 }
 
@@ -107,7 +117,8 @@
   cursor: pointer;
   flex-shrink: 0;
   padding: 0;
-  transition: border-color 0.12s ease, color 0.12s ease, background-color 0.12s ease;
+  transition: border-color 0.12s ease, color 0.12s ease, background-color 0.12s ease,
+    opacity 0.12s ease;
 }
 
 .pin-rail__toggle:hover,
@@ -132,17 +143,12 @@
   height: 14px;
 }
 
-/* Collapsed toggle: floats at the top-left edge of content (the container is
-   0-width, so the button escapes it via absolute positioning). Slightly
-   transparent at rest so it recedes; solid on hover/focus to signal action. */
+/* Collapsed toggle: the button is a normal flex child at the SAME position as
+   when open (centered, rail top) — it does NOT move on reveal. Dimmed at rest
+   (opacity 0.85) so it recedes; solid on hover/focus to signal action. */
 .pin-rail__toggle--collapsed {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  margin: 0;
   opacity: 0.85;
   box-shadow: 0 1px 4px rgb(0 0 0 / 12%);
-  transition: opacity 0.12s ease, border-color 0.12s ease, color 0.12s ease, background-color 0.12s ease;
 }
 
 .pin-rail__toggle--collapsed:hover,
