@@ -1,6 +1,6 @@
 ---
 code: MDT-197
-status: In Progress
+status: Implemented
 dateCreated: 2026-07-21T22:56:52.402Z
 type: Feature Enhancement
 priority: Medium
@@ -112,23 +112,23 @@ Out of scope (deferred with evidence):
 
 ### Functional (Outcome-focused)
 
-- [ ] User can drag a board card onto the left rail to pin the ticket; the ticket appears as an icon-only item.
-- [ ] User can click a pinned item to open the ticket viewer for that ticket.
-- [ ] User can unpin via an × that appears on hover over a pinned item.
-- [ ] Pinned items persist across page reloads via the server endpoint (not browser-local only).
-- [ ] Pins from different projects render side by side in the same rail.
-- [ ] Hovering a pinned item shows a tooltip with project code, ticket code, title, and status.
-- [ ] Empty pin set: rail is absent (no horizontal space consumed).
-- [ ] Overflow pin set: rail scrolls vertically; items do not shrink, wrap, or overflow the viewport.
-- [ ] Rail is visible on board, list, and documents views (cross-view chrome).
-- [ ] Pinning and unpinning are blocked in read-only access modes; viewing pinned tickets remains available.
+- [x] User can drag a board card onto the left rail to pin the ticket; the ticket appears as an icon-only item. _(TEST-e2e-drag-to-pin, BR-1)_
+- [x] User can click a pinned item to open the ticket viewer for that ticket. _(TEST-e2e-click-opens-viewer, BR-2)_
+- [x] User can unpin via an × that appears on hover over a pinned item. _(TEST-e2e-hover-unpin, BR-3/BR-6)_
+- [x] Pinned items persist across page reloads via the server endpoint (not browser-local only). _(TEST-e2e-persist-reload, BR-4; API tests in server/tests/api/pins.test.ts)_
+- [x] Pins from different projects render side by side in the same rail. _(cross-project API test; PinItem renders per-pin projectCode independently)_
+- [x] Hovering a pinned item shows a tooltip with project code, ticket code, title, and status. _(TEST-e2e-pin-tooltip-priority-glyph; tooltip renders via canonical <TicketCode> + StatusBadge)_
+- [x] Empty pin set: no horizontal space consumed. _(TEST-e2e-empty-rail-collapsed; design evolved from "rail absent" to a collapsed floating button at 0px layout footprint — per UX iteration to eliminate jumping UI. The "no horizontal space consumed" intent is preserved.)_
+- [x] Overflow pin set: rail scrolls vertically; items do not shrink, wrap, or overflow the viewport. _(overflow-y: auto on .pin-rail; flex-shrink: 0 on items)_
+- [x] Rail is visible on board, list, and documents views (cross-view chrome). _(TEST-e2e-cross-view, BR-9)_
+- [x] Pinning and unpinning are blocked in read-only access modes; viewing pinned tickets remains available. _(canWrite gates drop + unpin; click-to-open unconditional)_
 
 ### Non-Functional
 
-- [ ] Rail render has no perceivable lag with up to 50 pins.
-- [ ] Drag-to-pin does not regress the existing board drag-drop for status changes.
-- [ ] Server endpoint response time is consistent with the document-favorites endpoint.
-- [ ] No new runtime frontend dependencies added.
+- [x] Rail render has no perceivable lag with up to 50 pins. _(C-1: PinItem is a stateless 32px button; no per-item image/network; tooltip lazily portaled on hover)_
+- [x] Drag-to-pin does not regress the existing board drag-drop for status changes. _(TEST-e2e-board-dnd-regression, C-2)_
+- [x] Server endpoint response time is consistent with the document-favorites endpoint. _(C-3: same controller/service/repository layering; whole-list PUT replace mirroring /api/documents/favs)_
+- [x] No new runtime frontend dependencies added. _(C-4: reuses react-dnd + HTML5Backend, lucide-react, Radix tooltip — all pre-existing)_
 
 ### Edge Cases
 
