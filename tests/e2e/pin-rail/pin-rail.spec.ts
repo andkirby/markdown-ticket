@@ -249,4 +249,39 @@ test.describe('Pin Rail (MDT-197)', () => {
 
     expect(await getTicketStatus(page, proposedTicketCode)).toBe('In Progress')
   })
+
+  test('TEST-e2e-visual-signals-only: no label/divider/"+" glyph; collapsed opacity 0.85; pin code uses ticket-card font token (C-6)', async ({ page, e2eContext }) => {
+    const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
+    const code = scenario.crCodes[0]
+    await seedPins(page, [{ projectCode: scenario.projectCode, ticketCode: code }])
+    await page.goto(`/prj/${scenario.projectCode}`)
+    await waitForBoardReady(page)
+
+    // Rail is pinned/docked by default → open. Assert visual-signals-only:
+    // no "Pinned" text label, no divider element, no "+" drop affordance.
+    const rail = page.getByTestId('pin-rail')
+    await expect(rail).toHaveAttribute('data-state', 'pinned')
+    await expect(rail.locator('.pin-rail__label')).toHaveCount(0)
+    await expect(rail.locator('.pin-rail__divider')).toHaveCount(0)
+    await expect(rail.locator('.pin-rail__drop-affordance')).toHaveCount(0)
+    // No literal "Pinned" word or "+" glyph rendered as text inside the rail.
+    await expect(rail).not.toContainText('Pinned')
+    await expect(rail).not.toContainText('+')
+
+    // The pin-item code uses the same font-size token as the board ticket card
+    // code: var(--fs-xs) resolves to 11px in the default comfortable density.
+    const pinCodeFont = await page.locator('.pin-item__code').first().evaluate(el => {
+      return window.getComputedStyle(el).fontSize
+    })
+    expect(pinCodeFont).toBe('11px')
+
+    // Collapse to the floating button and assert its opacity is 0.85 at rest.
+    await page.getByTestId('pin-rail-toggle').click()
+    await page.mouse.move(500, 500) // move away so it settles to collapsed
+    await page.waitForTimeout(400)
+    const collapsedBtn = page.locator('.pin-rail__toggle--collapsed')
+    await expect(collapsedBtn).toBeVisible()
+    const opacity = await collapsedBtn.evaluate(el => window.getComputedStyle(el).opacity)
+    expect(opacity).toBe('0.85')
+  })
 })

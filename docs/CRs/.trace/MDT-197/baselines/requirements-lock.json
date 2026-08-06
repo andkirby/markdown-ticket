@@ -1,6 +1,6 @@
 {
   "ticket": "MDT-197",
-  "generatedAt": "2026-08-06T05:12:27.348Z",
+  "generatedAt": "2026-08-06T05:23:18.513Z",
   "requirements": [
     {
       "id": "BR-1",
@@ -68,6 +68,10 @@
     },
     {
       "id": "C-5",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-6",
       "routePolicy": "tests"
     },
     {
