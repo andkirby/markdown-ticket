@@ -141,7 +141,7 @@ function ProjectRouteHandler() {
       if (!ticket) {
         return null
       }
-      return { title: ticket.title, status: ticket.status }
+      return { title: ticket.title, status: ticket.status, priority: ticket.priority }
     },
     [projectCode, tickets],
   )

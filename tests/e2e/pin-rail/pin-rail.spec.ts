@@ -17,6 +17,7 @@
  * - TEST-e2e-persist-reload      (BR-4)
  * - TEST-e2e-cross-view          (BR-9)
  * - TEST-e2e-board-dnd-regression (C-2)
+ * - TEST-e2e-pin-tooltip-priority-glyph (C-7)
  */
 
 import { expect, test } from '../fixtures/test-fixtures.js'
@@ -248,6 +249,33 @@ test.describe('Pin Rail (MDT-197)', () => {
     await page.waitForTimeout(500)
 
     expect(await getTicketStatus(page, proposedTicketCode)).toBe('In Progress')
+  })
+
+  test('TEST-e2e-pin-tooltip-priority-glyph: tooltip renders the key via <TicketCode> with the priority glyph (C-7)', async ({ page, e2eContext }) => {
+    const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
+    // 'simple' scenario crCodes[0] = "Setup Project Structure", priority: High.
+    const code = scenario.crCodes[0]
+    await seedPins(page, [{ projectCode: scenario.projectCode, ticketCode: code }])
+    await page.goto(`/prj/${scenario.projectCode}`)
+    await waitForBoardReady(page)
+
+    const pin = page.getByTestId('pin-item').first()
+    await expect(pin).toBeVisible()
+
+    // Hover the pin item to reveal the portaled tooltip.
+    await pin.hover()
+    // Scope to the OPEN tooltip via its ARIA role (Radix keeps a hidden sibling
+    // content node in the DOM; only the open one is exposed via role="tooltip").
+    // Filter by the ticket code to disambiguate from any other open tooltip.
+    const tooltip = page.getByRole('tooltip').filter({ hasText: code })
+    // The tooltip renders the canonical <TicketCode>, which applies .ticket-code
+    // and emits a <PriorityIcon> with class .priority-icon + data-priority.
+    const tooltipCode = tooltip.getByTestId('ticket-code')
+    await expect(tooltipCode).toBeVisible()
+    await expect(tooltipCode).toContainText(code)
+    // The priority glyph is present and carries the ticket's priority (High).
+    const glyph = tooltipCode.locator('.priority-icon[data-priority="high"]')
+    await expect(glyph).toBeVisible()
   })
 
   test('TEST-e2e-visual-signals-only: no label/divider/"+" glyph; collapsed opacity 0.85; pin code uses ticket-card font token (C-6)', async ({ page, e2eContext }) => {
