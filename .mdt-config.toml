@@ -9,19 +9,13 @@ description = "Kanban-style ticket board with markdown storage"
 repository = "https://github.com/andkirby/markdown-ticket"
 
 [project.document]
-paths = [
-  "research",
-  "docs",
-  "cli/mdt-cli",
-  "./",
-  "src/STYLING.md",
-  "src/THEME.md",
-  "incidents",
-  "src"
-]
-excludeFolders = [
-  "node_modules",
-  ".git",
-  "test-results"
-]
+paths = [ "research", "docs", "cli/mdt-cli", "./", "src/STYLING.md", "src/THEME.md", "incidents", "src", "designs/board-zai" ]
+excludeFolders = [ "node_modules", ".git", "test-results" ]
 maxDepth = 5
+
+# MDT-221 — HTML preview CSP relaxations for this project's working HTML files.
+# Strict by default; the domains below are a conscious opt-in for design3.html
+# which depends on Tailwind (CDN JIT), Alpine.js (jsDelivr), and Google Fonts.
+[project.document.preview]
+allowedExternalDomains = [ "cdn.tailwindcss.com", "cdn.jsdelivr.net", "fonts.googleapis.com", "fonts.gstatic.com" ]
+allowUnsafeEval = true
