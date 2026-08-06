@@ -1,4 +1,4 @@
-import type { PanelImperativeHandle, PanelSize } from 'react-resizable-panels'
+import type { Layout, PanelImperativeHandle } from 'react-resizable-panels'
 import type { DocumentFile, FileTreeHandle } from './FileTree'
 import {
   ChevronDown,
@@ -61,6 +61,7 @@ interface DocumentsLayoutProps {
 const DOCUMENT_NAVIGATION_PANEL_MIN_SIZE = 18
 const DOCUMENT_NAVIGATION_PANEL_MAX_SIZE = 45
 const DOCUMENT_NAVIGATION_PANEL_COLLAPSED_SIZE = 0
+const DOCUMENT_NAVIGATION_PANEL_ID = 'documents-navigation'
 
 export default function DocumentsLayout({
   projectId,
@@ -144,43 +145,41 @@ export default function DocumentsLayout({
     [projectId],
   )
 
-  const handleNavigationPanelResize = useCallback(
-    (
-      panelSize: PanelSize,
-      _id: string | number | undefined,
-      previousPanelSize: PanelSize | undefined,
-    ) => {
-      if (!previousPanelSize)
+  // Persist the panel layout once when a resize/collapse/expand settles — NOT on
+  // every drag tick. react-resizable-panels fires `onLayoutChanged` only after a
+  // drag ends (pointer release) or an imperative collapse/expand; persisting on the
+  // per-tick `Panel.onResize` instead re-rendered the layout mid-drag and caused the
+  // jittery resize. See MDT note + react-resizable-panels.d.ts (Group.onLayoutChanged).
+  // `layout` maps panel id → percentage (0..100); the nav panel's share is what we keep.
+  const handleNavigationLayoutChanged = useCallback(
+    (layout: Layout) => {
+      const size = layout[DOCUMENT_NAVIGATION_PANEL_ID]
+      if (size === undefined)
         return
 
       const isCollapsed
-        = panelSize.asPercentage <= DOCUMENT_NAVIGATION_PANEL_COLLAPSED_SIZE + 1
+        = size <= DOCUMENT_NAVIGATION_PANEL_COLLAPSED_SIZE + 1
       persistNavigationPreferences({
         ...navigationPreferences,
         navigationPanelCollapsed: isCollapsed,
         navigationPanelSize: isCollapsed
           ? navigationPreferences.navigationPanelSize
-          : panelSize.asPercentage,
+          : size,
       })
     },
     [navigationPreferences, persistNavigationPreferences],
   )
 
   const handleToggleNavigationPanel = useCallback(() => {
-    const nextCollapsed = !navigationPreferences.navigationPanelCollapsed
-
-    if (nextCollapsed) {
-      navigationPanelRef.current?.collapse()
-    }
-    else {
+    // Imperative collapse/expand fires onLayoutChanged, which persists the real
+    // resulting layout — so we don't persist here (avoids intent-vs-result races).
+    if (navigationPreferences.navigationPanelCollapsed) {
       navigationPanelRef.current?.expand()
     }
-
-    persistNavigationPreferences({
-      ...navigationPreferences,
-      navigationPanelCollapsed: nextCollapsed,
-    })
-  }, [navigationPreferences, persistNavigationPreferences])
+    else {
+      navigationPanelRef.current?.collapse()
+    }
+  }, [navigationPreferences.navigationPanelCollapsed])
 
   // Helper to sanitize and validate relative path (blocks .. traversal)
   const sanitizePath = (relativePath: string): string | null => {
@@ -874,9 +873,10 @@ export default function DocumentsLayout({
       <ResizablePanelGroup
         direction="horizontal"
         className="documents-view__layout"
+        onLayoutChanged={handleNavigationLayoutChanged}
       >
         <ResizablePanel
-          id="documents-navigation"
+          id={DOCUMENT_NAVIGATION_PANEL_ID}
           panelRef={navigationPanelRef}
           defaultSize={
             navigationPreferences.navigationPanelCollapsed
@@ -887,14 +887,57 @@ export default function DocumentsLayout({
           maxSize={`${DOCUMENT_NAVIGATION_PANEL_MAX_SIZE}%`}
           collapsedSize={`${DOCUMENT_NAVIGATION_PANEL_COLLAPSED_SIZE}%`}
           collapsible
-          onResize={handleNavigationPanelResize}
           className="documents-view__navigation-panel"
         >
           <div className="documents-view__navigation-inner">
             <div className="documents-view__navigation-header">
-              <div className="documents-view__navigation-primary-row">
-                <div className="flex min-w-0 items-center">
-                  <h3 className="font-semibold text-foreground">Documents</h3>
+              <div className="documents-view__search-field">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Search documents..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 text-sm border border-border rounded-md bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  data-testid="document-filter-input"
+                />
+              </div>
+              <div className="documents-view__navigation-toolbar">
+                <div className="flex items-center gap-2">
+                  <select
+                    value={sortBy}
+                    onChange={e =>
+                      setSortBy(
+                        e.target.value as
+                        | 'name'
+                        | 'title'
+                        | 'created'
+                        | 'modified',
+                      )}
+                    className="documents-view__sort-select"
+                    title="Sort by"
+                  >
+                    <option value="name">Filename</option>
+                    <option value="title">Title</option>
+                    <option value="created">Created Date</option>
+                    <option value="modified">Update Date</option>
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
+                    className="documents-view__sort-direction-button"
+                    title={`Sort ${sortDirection === 'asc' ? 'ascending' : 'descending'}`}
+                    aria-label={`Sort ${sortDirection === 'asc' ? 'ascending' : 'descending'}`}
+                  >
+                    {sortDirection === 'asc'
+                      ? (
+                          <ChevronUp className="h-3 w-3" />
+                        )
+                      : (
+                          <ChevronDown className="h-3 w-3" />
+                        )}
+                  </button>
                 </div>
                 <div className="flex items-center gap-1">
                   <button
@@ -941,53 +984,6 @@ export default function DocumentsLayout({
                     </button>
                   )}
                 </div>
-              </div>
-              <div className="documents-view__navigation-controls-row">
-                <div className="documents-view__search-field">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <input
-                    type="text"
-                    placeholder="Search documents..."
-                    value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 text-sm border border-border rounded-md bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                    data-testid="document-filter-input"
-                  />
-                </div>
-                <select
-                  value={sortBy}
-                  onChange={e =>
-                    setSortBy(
-                      e.target.value as
-                      | 'name'
-                      | 'title'
-                      | 'created'
-                      | 'modified',
-                    )}
-                  className="documents-view__sort-select"
-                  title="Sort by"
-                >
-                  <option value="name">Filename</option>
-                  <option value="title">Title</option>
-                  <option value="created">Created Date</option>
-                  <option value="modified">Update Date</option>
-                </select>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
-                  className="documents-view__sort-direction-button"
-                  title={`Sort ${sortDirection === 'asc' ? 'ascending' : 'descending'}`}
-                  aria-label={`Sort ${sortDirection === 'asc' ? 'ascending' : 'descending'}`}
-                >
-                  {sortDirection === 'asc'
-                    ? (
-                        <ChevronUp className="h-3 w-3" />
-                      )
-                    : (
-                        <ChevronDown className="h-3 w-3" />
-                      )}
-                </button>
               </div>
             </div>
             <FavDocuments

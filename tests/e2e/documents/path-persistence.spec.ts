@@ -24,12 +24,10 @@ test.describe('Document Path Persistence', () => {
     await page.goto(`/prj/${scenario.projectCode}/documents`)
     await page.waitForLoadState('load')
 
-    // Wait for documents to load - check for the documents header
-    await expect(page.locator('h3:has-text("Documents")')).toBeVisible({ timeout: 10000 })
-
-    // Click the configure paths button
+    // Wait for documents to load - the configure-paths button is the stable anchor
+    // (the old "Documents" h3 title was removed from the navigation header).
     const configureButton = page.locator(pathSelectorSelectors.configureButton)
-    await expect(configureButton).toBeVisible({ timeout: 5000 })
+    await expect(configureButton).toBeVisible({ timeout: 10000 })
     await configureButton.click()
 
     // Wait for modal to appear with heading

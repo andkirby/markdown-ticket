@@ -141,4 +141,22 @@ describe('documentNavigation preferences (MDT-162)', () => {
       navigationPanelCollapsed: true,
     })
   })
+
+  it('round-trips realistic mid-drag and minimum panel widths unchanged', () => {
+    // The resize handler persists the percentage reported by react-resizable-panels
+    // on release. Any in-range value must survive a round-trip so the width restores
+    // exactly on reload; clamping to the min is covered above, the max above.
+    for (const size of [18, 27, 33, 45]) {
+      setDocumentNavigationPreferences('MDT', {
+        recentDocuments: [],
+        favsExpanded: true,
+        favsShowAll: false,
+        recentExpanded: true,
+        navigationPanelSize: size,
+        navigationPanelCollapsed: false,
+      })
+
+      expect(getDocumentNavigationPreferences('MDT').navigationPanelSize).toBe(size)
+    }
+  })
 })

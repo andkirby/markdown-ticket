@@ -9,16 +9,15 @@ window "Documents View Navigation — Default":
   panel:
     row:
       col 520:
-        row:
-          text "Documents" bold
+        row id="nav-search":
+          input placeholder="Search documents..." type=search id="nav-search-input"
+        row id="nav-toolbar":
+          combo value="Update Date ▾" id="nav-sort"
+          button "↓" id="nav-direction"
           spacer
           icon name="check"
           icon name="star"
           icon name="gear"
-        row id="nav-controls":
-          input placeholder="Search documents..." type=search id="nav-search"
-          combo value="Update Date ▾" id="nav-sort"
-          button "↓" id="nav-direction"
         section "Favs":
           list:
             item "docs                                      ★" id="fav-folder"
@@ -40,7 +39,8 @@ window "Documents View Navigation — Default":
         text "# Selected document" bold id="doc-heading"
         text "Markdown content renders here." muted
 
-annotation "Header controls are [search flex] [sort] [direction] on the second row" target="nav-controls" position=right
+annotation "Header row 1 is the full-width search input (primary affordance)" target="nav-search" position=right
+annotation "Header row 2 toolbar: sort + direction on the left, action icons on the right; no panel title" target="nav-toolbar" position=right
 annotation "Favs render above Recent only when reconciled favs exist; expanded list scrolls within a relative height bound (~1/3 column, board-column style), header stays fixed" target="fav-folder" position=right
 annotation "Active star removes the fav; row opens document or locates folder" target="fav-document" position=right
 annotation "Recent section remains below Favs and keeps existing behavior" target="recent-1" position=right
@@ -72,16 +72,15 @@ window "Documents View Navigation — Filter Active":
   panel:
     row:
       col 520:
-        row:
-          text "Documents" bold
+        row id="active-filter-search":
+          input placeholder="navigation" type=search id="active-filter"
+        row id="active-filter-toolbar":
+          combo value="Title ▾"
+          button "↑"
           spacer
           icon name="check"
           icon name="star"
           icon name="gear"
-        row id="active-filter-row":
-          input placeholder="navigation" type=search id="active-filter"
-          combo value="Title ▾"
-          button "↑"
         section "Favs":
           list:
             item "docs                                      ★" id="fav-filtered"
@@ -100,7 +99,7 @@ window "Documents View Navigation — Filter Active":
         text "Markdown content renders here." muted
 
 annotation "Search narrows the tree only; Favs and Recent stay visible" target="active-filter" position=right
-annotation "Sort controls stay to the right of the search field" target="active-filter-row" position=right
+annotation "Sort controls and action icons share the toolbar row below search" target="active-filter-toolbar" position=right
 annotation "Favs are not removed by tree filtering" target="fav-filtered" position=right
 annotation "Selected file highlighted in filtered results" target="filtered-selected" position=right
 ```
@@ -112,14 +111,13 @@ window "Documents View Navigation — Read-only":
   panel:
     row:
       col 520:
-        row:
-          text "Documents" bold
-          spacer
-          icon name="check"
-        row id="readonly-nav-controls":
+        row id="readonly-nav-search":
           input placeholder="Search documents..." type=search
+        row id="readonly-nav-toolbar":
           combo value="Update Date ▾"
           button "↓"
+          spacer
+          icon name="check"
         section "Favs":
           list:
             item "docs" id="readonly-fav-folder"
@@ -135,7 +133,7 @@ window "Documents View Navigation — Read-only":
         text "# Selected document" bold
         text "Markdown content renders here." muted
 
-annotation "Configure paths and fav-star mutation controls are absent in read-only mode" target="readonly-nav-controls" position=right
+annotation "Configure paths and fav-star mutation controls are absent in read-only mode" target="readonly-nav-toolbar" position=right
 annotation "Existing Favs remain selectable shortcuts, without remove-star buttons" target="readonly-fav-doc" position=right
 ```
 
@@ -146,16 +144,15 @@ window "Documents View Navigation — Selected Hidden by Filter":
   panel:
     row:
       col 520:
-        row:
-          text "Documents" bold
+        row id="hide-filter-search":
+          input placeholder="docker" type=search id="hide-filter"
+        row id="hide-filter-toolbar":
+          combo value="Filename ▾"
+          button "↑"
           spacer
           icon name="check"
           icon name="star" id="scroll-clear"
           icon name="gear"
-        row:
-          input placeholder="docker" type=search id="hide-filter"
-          combo value="Filename ▾"
-          button "↑"
         section "Favs":
           list:
             item "docs                                      ★" id="folder-fav-hidden-filter"
@@ -178,15 +175,14 @@ window "Documents View Navigation — Restored Collapsed Sections":
     row:
       col 520:
         row:
-          text "Documents" bold
+          input placeholder="Search documents..." type=search
+        row:
+          combo value="Filename ▾"
+          button "↑"
           spacer
           icon name="check"
           icon name="star"
           icon name="gear"
-        row:
-          input placeholder="Search documents..." type=search
-          combo value="Filename ▾"
-          button "↑"
         section "Favs" id="favs-collapsed":
           text "collapsed" muted
         section "Recent" id="recent-collapsed":
@@ -212,15 +208,14 @@ window "Documents View Navigation — Fav Show All":
     row:
       col 520:
         row:
-          text "Documents" bold
+          input placeholder="Search documents..." type=search
+        row:
+          combo value="Filename ▾"
+          button "↑"
           spacer
           icon name="check"
           icon name="star"
           icon name="gear"
-        row:
-          input placeholder="Search documents..." type=search
-          combo value="Filename ▾"
-          button "↑"
         section "Favs                         Show all" id="fav-show-all":
           list:
             item "docs                                      ★"
@@ -251,15 +246,14 @@ window "Documents View Navigation — Fav Show Less":
     row:
       col 520:
         row:
-          text "Documents" bold
+          input placeholder="Search documents..." type=search
+        row:
+          combo value="Filename ▾"
+          button "↑"
           spacer
           icon name="check"
           icon name="star"
           icon name="gear"
-        row:
-          input placeholder="Search documents..." type=search
-          combo value="Filename ▾"
-          button "↑"
         section "Favs                         Show less" id="fav-show-less":
           list id="fav-scroll-body":
             item "docs                                      ★" id="fav-overflow-top"
@@ -312,15 +306,15 @@ annotation "Ticket directory automatically excluded from document browsing" targ
 ```wireloom
 window "Documents View Navigation — Mobile":
   panel:
-    text "Documents" bold
     row:
+      input placeholder="Search documents..." type=search
+    row:
+      combo value="Filename ▾"
+      button "↑"
+      spacer
       icon name="check"
       icon name="star"
       icon name="gear"
-    row:
-      input placeholder="Search documents..." type=search
-      combo value="Filename ▾"
-      button "↑"
     section "Favs":
       list:
         item "docs                         ★"
