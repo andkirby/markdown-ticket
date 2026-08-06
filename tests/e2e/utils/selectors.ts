@@ -303,6 +303,12 @@ export const documentSelectors = {
   collapseAllButton: '[data-testid="collapse-document-tree-button"]',
   /** Scroll to active document button */
   scrollToActiveButton: '[data-testid="scroll-to-active-document-button"]',
+  /** Resizable navigation panel (react-resizable-panels sets data-testid="<id>") */
+  navigationPanel: '[data-testid="documents-navigation"]',
+  /** Resizable preview panel */
+  previewPanel: '[data-testid="documents-preview"]',
+  /** Panel-group resize handle (Separator renders a bare data-separator attribute) */
+  panelResizeHandle: '.documents-view__layout [data-separator]',
   /** Pinned root shortcut, retained to assert the old unmanaged UX is absent */
   pinnedRoot: '[data-testid="document-pinned-root"]',
   /** Recent document shortcut */

@@ -10,14 +10,15 @@ DocumentsLayout
 │   └── ConfigureDocumentPathsCTA
 ├── DocumentsSidebar
 │   ├── SidebarHeader
-│   │   ├── TitleActionRow
-│   │   ├── CollapseTreeButton
-│   │   ├── ScrollToActiveDocumentButton
-│   │   ├── ConfigurePathsButton
-│   │   └── SearchSortRow
-│   │       ├── SearchInput
+│   │   ├── SearchRow
+│   │   │   └── SearchInput
+│   │   └── ToolbarRow
 │   │       ├── SortSelect
-│   │       └── SortDirectionButton
+│   │       ├── SortDirectionButton
+│   │       ├── CollapseTreeButton
+│   │       ├── ScrollToActiveDocumentButton
+│   │       ├── ConfigurePathsButton
+│   │       └── HideNavigationButton
 │   ├── FavDocuments
 │   ├── RecentDocuments
 │   └── FileTree
@@ -32,7 +33,8 @@ DocumentsLayout
 |-------|-----------|------|-------------|
 | DocumentsLayout | `src/components/DocumentsView/DocumentsLayout.tsx` | this spec | always in documents route |
 | SidebarHeader | `src/components/DocumentsView/DocumentsLayout.tsx` | this spec | always |
-| SearchSortRow | `src/components/DocumentsView/DocumentsLayout.tsx` | this spec | always |
+| SearchRow | `src/components/DocumentsView/DocumentsLayout.tsx` | this spec | always |
+| ToolbarRow | `src/components/DocumentsView/DocumentsLayout.tsx` | this spec | always |
 | SearchInput | `src/components/DocumentsView/DocumentsLayout.tsx` | this spec | always |
 | FavDocuments | `src/components/DocumentsView/FavDocuments.tsx` | this spec | when reconciled favs exist |
 | RecentDocuments | `src/components/DocumentsView/RecentDocuments.tsx` | this spec | when user has opened documents |
@@ -80,11 +82,12 @@ DocumentsLayout
 - Sidebar keeps the two-pane layout and muted background, but its desktop width is resizable and collapsible.
 - Sidebar default width is about one third of the Documents View; user-resized width and collapsed state persist per project.
 - Collapsing navigation removes the sidebar and exposes a compact show-navigation control in the viewer pane.
-- Header first row contains the `Documents` title on the left and navigation action icons on the right.
+- Header first row is the search input at full width — search is the primary affordance and gets the breathing room; it is not squeezed by sort controls or action icons.
+- Header second row is a toolbar: sort select and sort direction button on the left, navigation action icons on the right (justify-between).
+- The navigation panel has no title; its identity is established by the surrounding route (the Documents View) and its content.
 - The path configuration action uses a gear/settings icon, not an edit pencil, because it opens configuration rather than editing a document.
-- Header second row order is always: search input flexing left, sort select, sort direction button.
-- Search input uses the available row width before the fixed-width sort controls; sort controls must not squeeze title/actions into the first row.
-- Search, sort select, and sort direction button share a single visual row and equal control height.
+- Header padding matches board chrome tokens (`p-2`, 8px); inter-row gap is `gap-2` (8px) and the tight icon cluster is `gap-1` (4px), reusing the board spacing grammar rather than the larger content-reading padding.
+- Sort controls and action icons may share the toolbar row because search no longer competes for it.
 - Favs appear above Recent when reconciled favs exist.
 - Favs are collapsible, default to expanded, and initially show up to 5 rows.
 - Favs is an independently scrollable region: the section header stays fixed and the list body scrolls, borrowing the board column scroll pattern (shared shadcn `ScrollArea` primitive with `min-h-0` and an auto-hiding scrollbar).
@@ -129,7 +132,7 @@ DocumentsLayout
 | recent collapsed | user collapses Recent | recent shortcut rows are hidden; divider and tree stay visible |
 | recent collapse restored | user reloads Documents View in same browser/project | Recent restores the last expanded/collapsed state when recent documents exist |
 | recent default expanded | no browser section-state preference exists | Recent renders expanded when recent documents exist |
-| sidebar resized | user drags the pane handle | navigation width changes immediately; preview pane gets the remaining width |
+| sidebar resized | user drags the pane handle | navigation width changes immediately; preview pane gets the remaining width; the new width persists once on drag release (not on every drag tick) |
 | sidebar collapsed | user selects the hide-navigation action or drags to collapsed size | navigation panel is hidden; viewer pane expands; show-navigation control appears |
 | sidebar restored | user selects show-navigation | navigation panel returns to the last non-collapsed project width |
 | expand current | user clicks target action | selected document ancestors expand and row scrolls into view |
@@ -238,8 +241,8 @@ DocumentsLayout
 | Element | Class | Source |
 |---------|-------|--------|
 | navigation shell | `.documents-view__layout`, `.documents-view__navigation-panel`, `.documents-view__preview-panel` | resizable Documents View split |
-| navigation header | `.documents-view__navigation-header`, `.documents-view__navigation-primary-row`, `.documents-view__navigation-controls-row` | compact two-row sidebar header |
-| search and sort controls | `.documents-view__search-field`, `.documents-view__sort-select`, `.documents-view__sort-direction-button` | `[search flex] [sort] [direction]` control row |
+| navigation header | `.documents-view__navigation-header`, `.documents-view__search-field`, `.documents-view__navigation-toolbar` | compact two-row sidebar header: full-width search, then a sort+actions toolbar |
+| search and sort controls | `.documents-view__sort-select`, `.documents-view__sort-direction-button` | sort select + direction button grouped on the toolbar row's left side |
 | tree row state | `data-tree-state` proposed | semantic row state: `selected`, `muted`, `disabled`, `located` |
 | fav star | `.fav-star`, `.fav-star--document`, `.active` | shared star icon state for tree and Favs rows |
 | document fav star button | `.document-fav-star-button` | compact focus, hover, and opacity treatment |
