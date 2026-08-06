@@ -159,7 +159,7 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
   }, [canWrite]) // Removed selectedProject from deps - using ref instead
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col flex-1 min-w-0">
       <div className="flex-1 min-h-0 overflow-hidden">
         {viewMode === 'board'
           ? (
