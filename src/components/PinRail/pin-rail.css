@@ -34,11 +34,15 @@
   }
 }
 
-/* Collapsed: 0-width container — only the floating pin button shows. The
-   feature is enabled but unpinned; no layout space is taken. The container
-   still needs z-index so the floating button sits above the board content. */
+/* Collapsed: 0-width overlay — only the floating pin button shows. Uses
+   position: absolute (NOT relative) so the floating→collapsed transition
+   doesn't flip position mid-animation (that flip was the column-jump cause).
+   Both floating and collapsed overlay content; only docked is in flow. */
 .pin-rail--collapsed {
-  position: relative;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
   z-index: 30;
   width: 0;
   padding: 0;
