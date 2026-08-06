@@ -111,7 +111,21 @@ For local development, leave `API_SECURITY_AUTH` and `API_AUTH_TOKEN` unset, or 
 API_SECURITY_AUTH=false
 ```
 
-In local no-auth mode, the browser loads normally without the unlock panel and owner controls remain available for the local developer. Do not use local no-auth mode for exposed or production deployments.
+In local no-auth mode, the browser loads normally without the unlock panel and owner controls remain available for the local developer. **As of MDT-157 UAT 2026-08-06, "local" means loopback-host only:** the no-auth carve-out applies when the request `Host` hostname is in `API_LOCAL_HOSTS` (default `localhost`, `127.0.0.1`, `::1`). This means one running instance reached both locally **and** through a Cloudflare tunnel keeps local convenience (no token) while the tunnel path still requires auth — a non-loopback `Host` with auth disabled is no longer granted owner.
+
+This is safe because the backend binds loopback by default (`API_BIND_ADDRESS=127.0.0.1`), so the only non-local path is via a tunnel/CDN, and a CDN edge fixes the public hostname into the `Host` header — an internet client cannot make the tunnel deliver `Host: localhost`. `X-Forwarded-Host`, `CF-Connecting-IP`, `Origin`, and `socket.remoteAddress` are explicitly **not** trusted as bypass authorities.
+
+Master switch and tuning:
+
+| Variable | Default | Effect |
+|---|---|---|
+| `API_BIND_ADDRESS` | `127.0.0.1` (native) / `0.0.0.0` (Docker) | Backend listen interface. Loopback keeps `:3001` off the LAN/internet. |
+| `API_LOCAL_HOSTS` | `localhost,127.0.0.1,::1` | CSV of `Host` hostnames treated as loopback. |
+| `API_LOCAL_HOST_BYPASS` | on (native local dev: `NODE_ENV` unset/`development`/`local`) / off (production/test/Docker) | When off, no `Host` grants the bypass — every request authenticates. |
+
+Read-only precedence: a request carrying an existing read-only session (MDT-172 scoped read token) stays read-only even on a loopback host; the bypass never silently escalates it to owner. `GET /api/auth/session` reports `localExempt` only when no read-only session takes precedence.
+
+Do not combine `API_BIND_ADDRESS=0.0.0.0` with `API_LOCAL_HOST_BYPASS=true` on a hostile network — a LAN client could then forge `Host: localhost`. That is an operator decision; Docker defaults avoid it (`API_LOCAL_HOST_BYPASS=false`).
 
 If `API_AUTH_TOKEN` is set while `API_SECURITY_AUTH` is unset, backend auth is enabled. Remove the token or set `API_SECURITY_AUTH=false` when intentionally testing no-auth local mode.
 

@@ -15,7 +15,8 @@
   "scripts": {
     "install:all": "bun install && bun install --cwd shared && bun install --cwd server && bun install --cwd mcp-server && bun install --cwd domain-contracts && bun install --cwd cloud",
     "install:prod": "bun install --ci --omit=dev && bun pm cache clean --force && bun install --workspaces --omit=dev && bun pm cache clean --force",
-    "dev": "vite --host",
+    "dev": "vite",
+    "dev:lan": "VITE_SERVER_HOST=0.0.0.0 vite",
     "dev:server": "bun run --cwd server dev",
     "smart-server": "bash scripts/smart-server.sh",
     "smart-server:30": "bash scripts/smart-server.sh 1800",

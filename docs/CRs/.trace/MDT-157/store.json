@@ -55,16 +55,6 @@
       ]
     },
     {
-      "id": "BR-1.6",
-      "kind": "behavior",
-      "text": "WHEN backend API authentication configuration is absent in local development or test mode, the system shall preserve the existing no-auth request behavior.",
-      "sourceRef": "docs/CRs/MDT-157-api-auth.md#desired-outcome",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:in-ticket"
-      ]
-    },
-    {
       "id": "BR-1.7",
       "kind": "behavior",
       "text": "WHEN a curl or server-to-server request has no Origin header, the system shall authenticate the request using the same credential rules as any other request.",
@@ -139,16 +129,6 @@
       "kind": "constraint",
       "text": "The system shall keep authentication enforcement centralized so protected backend API route coverage can be verified without per-controller drift.",
       "sourceRef": "docs/CRs/MDT-157/assess.md#backend-express-request-pipeline",
-      "routePolicy": "tests",
-      "tags": [
-        "timing:in-ticket"
-      ]
-    },
-    {
-      "id": "C4",
-      "kind": "constraint",
-      "text": "The system shall not rely on Origin, Referer, or reverse-proxy identity headers as authentication credentials.",
-      "sourceRef": "docs/CRs/MDT-157/assess.md#reverse-proxy-auth-header-handling",
       "routePolicy": "tests",
       "tags": [
         "timing:in-ticket"
@@ -248,6 +228,48 @@
       "id": "C10",
       "kind": "constraint",
       "text": "The system shall allow Vite dev-server frontend logging endpoints under /api/frontend/logs only from localhost or loopback clients because those endpoints bypass backend API authentication.",
+      "sourceRef": "CR:MDT-157",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-1.6",
+      "kind": "behavior",
+      "text": "WHEN backend API authentication configuration is absent in local development or test mode, the system shall preserve no-auth request behavior ONLY for requests whose Host hostname is loopback (localhost, 127.0.0.1, ::1). Non-loopback hosts with auth disabled are not granted owner (see BR-1.8). UAT 2026-08-06 narrowed this from 'any host' to 'loopback-host only' so one instance reached both locally and via a tunnel keeps local convenience without exposing owner to the tunnel.",
+      "sourceRef": "CR:MDT-157",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "The system shall not rely on Origin, Referer, X-Forwarded-* (including X-Forwarded-Host), CF-Connecting-IP, IP address, or reverse-proxy identity headers as authentication credentials OR as authorities for the loopback-host no-auth bypass. Only the request Host header hostname is trusted for the local-dev carve-out. UAT 2026-08-06 strengthened this to cover X-Forwarded-Host/CF-Connecting-IP.",
+      "sourceRef": "CR:MDT-157",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-1.8",
+      "kind": "behavior",
+      "text": "WHEN backend API authentication is disabled (or unset) and a request arrives on a non-loopback Host (e.g. a Cloudflare tunnel hostname), the system shall NOT grant owner/no-auth-dev access; the request shall fall through to read-only or 401. UAT 2026-08-06 added to close the accidental-exposure hole where disabled-auth granted owner to every host.",
+      "sourceRef": "CR:MDT-157",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C11",
+      "kind": "constraint",
+      "text": "The backend Express server shall bind to loopback (API_BIND_ADDRESS default 127.0.0.1) in native runs; Docker compose shall explicitly set API_BIND_ADDRESS=0.0.0.0 and default API_LOCAL_HOST_BYPASS=false so the containerized nginx path requires auth. This is the bind boundary that contains forged Host:localhost from non-loopback connections. UAT 2026-08-06.",
+      "sourceRef": "CR:MDT-157",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-5",
+      "kind": "edge_case",
+      "text": "IF a non-loopback client forges a Host: localhost header (or X-Forwarded-Host: localhost) to gain the loopback no-auth carve-out, THEN the system shall not grant owner. The native loopback bind (API_BIND_ADDRESS=127.0.0.1) keeps non-loopback clients from reaching :3001 at all; X-Forwarded-Host/CF-Connecting-IP are ignored per C4. Host parsing must reject lookalikes (e.g. localhost.evil, localhost.evil.example, 127.0.0.1.evil) via exact-hostname match after parsing, and must normalize bracketed IPv6 (e.g. [::1]:3001 -> ::1) and strip ports before matching. UAT 2026-08-06.",
+      "sourceRef": "CR:MDT-157",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C12",
+      "kind": "constraint",
+      "text": "An existing read-only session (read-token / MDT-172 scoped read cookie) is a higher-specificity credential than the loopback-host no-auth bypass. A loopback-host request whose read session is authenticated must NOT be silently escalated to owner/no-auth-dev by the bypass, EVEN WHEN that read session has empty or revoked projectRefs/shareIds — the bypass decision keys on readSession.authenticated alone, not on non-empty scopes. The loopback exemption applies only when no authenticated read session is present and API_LOCAL_HOST_BYPASS is on. GET /api/auth/session reports localExempt only when no authenticated read session takes precedence. A single shared isLoopbackBypassEligible helper enforces this identically in the protected /api gate and the session endpoint so the two cannot diverge. UAT 2026-08-06.",
       "sourceRef": "CR:MDT-157",
       "routePolicy": "tests"
     }
@@ -353,6 +375,29 @@
       "when": "the backend or MCP HTTP deployment starts",
       "then": "it continues functioning and emits an observable migration warning with next-step guidance",
       "sourceRef": "requirements.trace.md#BR-2.4"
+    },
+    {
+      "id": "backend_loopback_host_local_bypass",
+      "title": "Loopback-host requests get local no-auth convenience; tunnel hosts do not",
+      "covers": [
+        "BR-1.6",
+        "BR-1.8"
+      ],
+      "given": "the backend is running and reachable both on a loopback Host (localhost) and on a public tunnel Host (e.g. *.trycloudflare.com)",
+      "when": "a browser or curl makes a protected /api request without a token",
+      "then": "the loopback Host request is granted owner/no-auth-dev access without a token or unlock panel, the tunnel Host request is NOT granted owner (auth-on: requires token/owner-session; auth-off: read-only or 401), GET /api/auth/session reports a local-exempt state consistent with the protected API gate, and a forged X-Forwarded-Host: localhost does not change the decision",
+      "sourceRef": "CR:MDT-157"
+    },
+    {
+      "id": "loopback_bypass_does_not_escalate_readonly_session",
+      "title": "Loopback bypass does not silently escalate an existing read-only session",
+      "covers": [
+        "BR-1.6"
+      ],
+      "given": "the backend is running with API_LOCAL_HOST_BYPASS=true and a request arrives on a loopback Host carrying an authenticated read-only session cookie (including the valid-but-empty/revoked-scope case)",
+      "when": "the request hits a protected /api route",
+      "then": "the request stays read-only (canWrite=false) regardless of whether the read session's projectRefs/shareIds are populated; the loopback exemption does not promote it to owner; GET /api/auth/session reports localExempt=false because readSession.authenticated alone blocks the bypass; this enforces C12",
+      "sourceRef": "CR:MDT-157"
     }
   ],
   "obligations": [
@@ -525,6 +570,28 @@
         "ART-vite-frontend-logging-tests"
       ],
       "sourceRef": "CR:MDT-157"
+    },
+    {
+      "id": "OBL-backend-loopback-host-bypass",
+      "title": "Backend no-auth local-dev carve-out is scoped to loopback-host requests via a single shared isLoopbackBypassEligible helper (wrapping isLocalHostRequest + read-session + bypass-flag checks) used identically by both the protected API gate and GET /api/auth/session, so the two cannot diverge on read-session scoping; non-loopback hosts are never granted owner when auth is disabled; an authenticated read session — including the valid-but-empty/revoked-scope case — takes precedence over the bypass (no silent escalation, keys on readSession.authenticated not on non-empty scopes); X-Forwarded-Host/CF-Connecting-IP are not bypass authorities; Host parsing rejects lookalikes and normalizes bracketed IPv6/ports; the session endpoint reports an EFFECTIVE authEnabled (config enabled OR not locally exempt) so a non-exempt caller on a disabled-auth backend sees locked UI rather than no-auth-dev",
+      "derivedFrom": [
+        "BR-1.6",
+        "BR-1.8",
+        "C4",
+        "C11",
+        "C12",
+        "Edge-5"
+      ],
+      "artifactIds": [
+        "ART-server-api-auth",
+        "ART-server-auth-router",
+        "ART-server-runtime-config",
+        "ART-server-bootstrap",
+        "ART-vite-frontend-logging",
+        "ART-server-api-auth-tests",
+        "ART-server-auth-unit-tests"
+      ],
+      "sourceRef": "CR:MDT-157"
     }
   ],
   "artifacts": [
@@ -653,6 +720,18 @@
       "path": "tests/vite-frontend-logs-security.test.ts",
       "kind": "test",
       "sourceRef": "CR:MDT-157"
+    },
+    {
+      "id": "ART-server-auth-router",
+      "path": "server/routes/auth.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-157"
+    },
+    {
+      "id": "ART-server-runtime-config",
+      "path": "server/config/runtimeConfig.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-157"
     }
   ],
   "testPlans": [
@@ -770,6 +849,22 @@
         "OBL-vite-frontend-logging-localhost"
       ],
       "sourceRef": "CR:MDT-157"
+    },
+    {
+      "id": "TEST-backend-loopback-host-bypass",
+      "kind": "integration",
+      "title": "Loopback-host bypass truth table: loopback owner w/o token; tunnel denied (auth on/off); session endpoint effective-authEnabled consistency; forged X-Forwarded-Host ignored; authenticated read session (incl empty/revoked scope) blocks localExempt via shared helper; Host lookalikes rejected; IPv6/ports normalized",
+      "covers": [
+        "BR-1.6",
+        "BR-1.8",
+        "C4",
+        "C11",
+        "C12",
+        "Edge-5",
+        "OBL-backend-loopback-host-bypass"
+      ],
+      "file": "server/tests/security/apiAuth.test.ts,server/tests/api/api-auth.test.ts",
+      "sourceRef": "CR:MDT-157"
     }
   ],
   "tasks": [
@@ -859,6 +954,32 @@
       ],
       "makesGreenIds": [
         "TEST-vite-frontend-logs-localhost"
+      ],
+      "sourceRef": "CR:MDT-157"
+    },
+    {
+      "id": "TASK-6",
+      "title": "UAT narrow backend no-auth to loopback-host + bind boundary + read-only precedence",
+      "ownsArtifactIds": [
+        "ART-server-api-auth",
+        "ART-server-auth-router",
+        "ART-server-runtime-config",
+        "ART-server-bootstrap",
+        "ART-vite-frontend-logging",
+        "ART-server-api-auth-tests",
+        "ART-server-auth-unit-tests"
+      ],
+      "makesGreenIds": [
+        "backend_loopback_host_local_bypass",
+        "loopback_bypass_does_not_escalate_readonly_session",
+        "TEST-backend-loopback-host-bypass"
+      ],
+      "skills": [
+        "typescript",
+        "security",
+        "express",
+        "vite",
+        "docker"
       ],
       "sourceRef": "CR:MDT-157"
     }

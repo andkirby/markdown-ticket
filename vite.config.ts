@@ -556,11 +556,16 @@ export default defineConfig(({ mode }) => {
   // In Docker, use backend service name; for E2E tests use VITE_BACKEND_URL; otherwise use localhost
   const backendUrl = env.VITE_BACKEND_URL || process.env.DOCKER_BACKEND_URL || 'http://localhost:3001'
 
-  // Shared API proxy — dev and preview both forward /api to the backend
+  // Shared API proxy — dev and preview both forward /api to the backend.
+  // MDT-157 UAT 2026-08-06: changeOrigin must be false so the backend sees the
+  // real browser Host header, which the loopback-host no-auth carve-out keys
+  // off. With changeOrigin:true the backend would see Host: localhost:3001 for
+  // every proxied request and could not distinguish local from tunnel. Aligns
+  // dev with nginx.conf (`Host $host`) used in Docker.
   const apiProxy = {
     '/api/events': {
       target: backendUrl,
-      changeOrigin: true,
+      changeOrigin: false,
       secure: false,
       // SSE connections must never timeout at the proxy level
       timeout: 0,
@@ -568,12 +573,12 @@ export default defineConfig(({ mode }) => {
     },
     '/api': {
       target: backendUrl,
-      changeOrigin: true,
+      changeOrigin: false,
       secure: false,
     },
     '/api-docs': {
       target: backendUrl,
-      changeOrigin: true,
+      changeOrigin: false,
       secure: false,
     },
   }
@@ -587,6 +592,13 @@ export default defineConfig(({ mode }) => {
     ...additionalHosts,
   ]
 
+  // MDT-157 UAT 2026-08-06: default the listen socket to loopback so a
+  // tunnel/LAN client cannot reach the frontend proxy and forge Host: localhost
+  // against the backend. Operators who want LAN/tunnel reach set
+  // VITE_SERVER_HOST=0.0.0.0 explicitly and accept that loopback bypass is
+  // then forgeable from that network.
+  const serverHost = env.VITE_SERVER_HOST || process.env.VITE_SERVER_HOST || '127.0.0.1'
+
   return {
     plugins: [react(), frontendLoggingPlugin(), envInjectionPlugin()],
     build: {
@@ -599,14 +611,14 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
-      host: '0.0.0.0',
+      host: serverHost,
       port: Number(process.env.PORT) || 3075,
       strictPort: true,
       allowedHosts,
       proxy: apiProxy,
     },
     preview: {
-      host: '0.0.0.0',
+      host: serverHost,
       port: Number(process.env.PORT) || 3070,
       strictPort: true,
       allowedHosts,
