@@ -1,0 +1,1545 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-221"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": ".html and .htm files under configured document paths appear in Documents View.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "Root index.html does not appear in Documents View when project.document.paths includes ./",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.3",
+      "kind": "behavior",
+      "text": "CSS, JavaScript, image, and font assets used by HTML are servable via the raw-preview route but do not appear as selectable Documents View files.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.4",
+      "kind": "behavior",
+      "text": "Existing .md discovery, selection, markdown rendering, tabs, favorites, and timestamps continue to work unchanged.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.5",
+      "kind": "behavior",
+      "text": "Selecting an HTML file renders an iframe preview instead of the markdown renderer.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.6",
+      "kind": "behavior",
+      "text": "Selecting an HTML file first mints an owner-only internal preview token before the iframe loads.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.7",
+      "kind": "behavior",
+      "text": "HTML iframe src uses /api/documents/raw-preview/:token/*documentPath and relative subresources resolve under the same preview-token path prefix.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.8",
+      "kind": "behavior",
+      "text": "HTML files that reference relative CSS, JavaScript, and image assets load those assets when they remain inside the token-scoped directory and configured document paths.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.9",
+      "kind": "behavior",
+      "text": "External edits to a selected .html or .htm file refresh the HTML preview through the document-change SSE path.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.10",
+      "kind": "behavior",
+      "text": "Unknown file kinds render a non-preview state and do not call the markdown renderer.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.11",
+      "kind": "behavior",
+      "text": "documentFilenameTabModel remains markdown-only; HTML sibling tabs are out of scope.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C-2.1",
+      "kind": "constraint",
+      "text": "Raw preview requests for files outside configured document paths return 403.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-2.2",
+      "kind": "constraint",
+      "text": "Raw requests using .., absolute paths, encoded traversal, or project-root escapes return 403.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-2.3",
+      "kind": "constraint",
+      "text": "Raw requests for unknown projects return 404.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-2.4",
+      "kind": "constraint",
+      "text": "Raw preview requests without a valid unexpired preview token do not disclose file contents.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-2.5",
+      "kind": "constraint",
+      "text": "Read-token and shared-session users cannot mint HTML preview tokens in v1.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-2.6",
+      "kind": "constraint",
+      "text": "HtmlSandboxViewer iframe uses sandbox without allow-same-origin.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-2.7",
+      "kind": "constraint",
+      "text": "Preview-token minting stays behind owner-authenticated /api middleware.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-2.8",
+      "kind": "constraint",
+      "text": "The raw-preview handler rejects missing, expired, malformed, or tampered preview tokens before file resolution.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-2.9",
+      "kind": "constraint",
+      "text": "Preview tokens expire within 5 minutes or less.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-2.10",
+      "kind": "constraint",
+      "text": "Preview tokens are scoped to one project and one selected HTML document directory.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-2.11",
+      "kind": "constraint",
+      "text": "Preview tokens cannot be used to read sibling files outside the token-scoped document directory.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-2.12",
+      "kind": "constraint",
+      "text": "Raw preview route sets X-Content-Type-Options: nosniff.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-2.14",
+      "kind": "constraint",
+      "text": "Previewed HTML cannot read parent window, parent DOM, or parent local storage in browser coverage.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-2.15",
+      "kind": "constraint",
+      "text": "Previewed HTML cannot perform owner-only mutation without the existing owner-intent protections.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-2.16",
+      "kind": "constraint",
+      "text": "Previewed HTML cannot fetch('/api/*') because connect-src 'none' blocks script network access.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-2.17",
+      "kind": "constraint",
+      "text": "The normal API auth exemption in apiAuth.ts adds only a GET exemption for /api/documents/raw-preview/*; no broad exemption.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-2.18",
+      "kind": "constraint",
+      "text": "Raw serving is binary-safe and does not use UTF-8 string reads for non-markdown assets.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-2.19",
+      "kind": "constraint",
+      "text": "MIME handling uses a small local map covering .html .htm .css .js .mjs .json .png .jpg .jpeg .gif .webp .svg .ico .woff .woff2, or rejects unsupported types explicitly; no new dependency.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-2.20",
+      "kind": "constraint",
+      "text": "Large raw files are streamed or otherwise handled without loading unnecessary duplicate string copies.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-2.21",
+      "kind": "constraint",
+      "text": "The implementation introduces no new runtime package.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-3.1",
+      "kind": "edge_case",
+      "text": "Raw preview request with expired token is rejected before file resolution.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-3.2",
+      "kind": "edge_case",
+      "text": "Raw preview request with tampered token signature is rejected before file resolution.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-3.3",
+      "kind": "edge_case",
+      "text": "Raw preview request with token scoped to project A used to request a path in project B is rejected.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-3.4",
+      "kind": "edge_case",
+      "text": "Raw preview request with token scoped to directory D used to request a sibling file outside D is rejected.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-3.5",
+      "kind": "edge_case",
+      "text": "URL-encoded path traversal payload (e.g. %2e%2e) in raw preview path is rejected with 403.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-3.6",
+      "kind": "edge_case",
+      "text": "iframe with allow-same-origin token present fails the unit test (token must never appear).",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-3.7",
+      "kind": "edge_case",
+      "text": "Query-param preview URL for iframe HTML preview is not used (token must be in path prefix).",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-3.8",
+      "kind": "edge_case",
+      "text": "Root index.html is excluded from discovery even when ./ is in document paths.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-3.9",
+      "kind": "edge_case",
+      "text": "ENOENT on a raw preview subresource returns 404 without leaking filesystem absolute paths.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-2.22",
+      "kind": "constraint",
+      "text": "Raw-preview responses set X-Frame-Options: SAMEORIGIN (overriding the global DENY set by securityHeaders middleware in originPolicy.ts:103-107, mounted globally at server.ts:150) so the sandboxed iframe can load; all other routes keep DENY.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-1.12",
+      "kind": "behavior",
+      "text": "The HTML preview iframe fills the documents-view preview panel (full width and height below the app header), matching the markdown viewer's panel-filling behavior. The iframe must not collapse to its intrinsic 300x150 default.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C-2.13",
+      "kind": "constraint",
+      "text": "Raw HTML responses set a CSP that is STRICT by default (sandbox allow-scripts; default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'). The non-negotiable directives (connect-src 'none', img-src 'self' data:, default-src 'none', no allow-same-origin, base-uri/form-action 'none') hold in EVERY configuration. External origins and unsafe-eval are added ONLY when the project opts in via [project.document.preview] config (C-2.23, C-2.24).",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-2.23",
+      "kind": "constraint",
+      "text": "A per-project config field [project.document.preview].allowedExternalDomains (array of hostnames, default empty) controls which external script/style/font origins the preview CSP allows. Default empty means no external origins — strict. Each entry is a conscious owner decision.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-2.24",
+      "kind": "constraint",
+      "text": "A per-project config field [project.document.preview].allowUnsafeEval (boolean, default false) controls whether 'unsafe-eval' is added to script-src. Default false. Required for eval-based frameworks (Alpine.js, Tailwind CDN JIT); the owner opts in consciously.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-1.13",
+      "kind": "behavior",
+      "text": "When a selected HTML file references external origins or capabilities (eval) not yet allowed by the project's preview config, the user is told which domains/capabilities need attention (via the mint response or a dialog), so the opt-in is conscious rather than implicit.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "bdd"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "html_files_discoverable",
+      "title": "html and htm files appear in document tree",
+      "covers": [
+        "BR-1.1"
+      ],
+      "given": "Given a configured document path contains index.html and report.htm",
+      "when": "When the documents tree is loaded",
+      "then": "Then both files appear as selectable HTML-kind nodes",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "md_discovery_unchanged",
+      "title": "markdown discovery unaffected by html support",
+      "covers": [
+        "BR-1.4"
+      ],
+      "given": "Given the repo has .md and .html files in a document path",
+      "when": "When the documents tree is loaded",
+      "then": "Then .md files render via MarkdownViewer exactly as before and .html files render via HtmlSandboxViewer",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "selecting_html_renders_iframe",
+      "title": "html selection shows iframe not markdown",
+      "covers": [
+        "BR-1.5"
+      ],
+      "given": "Given an HTML-kind file is visible in the tree",
+      "when": "When the user selects it",
+      "then": "Then an HtmlSandboxViewer iframe is rendered instead of the markdown viewer",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "owner_mints_token_before_load",
+      "title": "owner preview token minted before iframe src",
+      "covers": [
+        "BR-1.6"
+      ],
+      "given": "Given an owner-authenticated user selects an HTML file",
+      "when": "When the selection is activated",
+      "then": "Then the client first POSTs to /api/documents/preview-token and only sets the iframe src after receiving a token",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "iframe_uses_path_token_url",
+      "title": "iframe src uses path-style token URL",
+      "covers": [
+        "BR-1.7"
+      ],
+      "given": "Given an HTML file is selected and a preview token minted",
+      "when": "When the iframe src is constructed",
+      "then": "Then the src is /api/documents/raw-preview/:token/*documentPath with the token in the path prefix",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "relative_assets_load_under_token_prefix",
+      "title": "relative subresources resolve via token prefix",
+      "covers": [
+        "BR-1.8"
+      ],
+      "given": "Given an HTML file references relative style.css and app.js",
+      "when": "When the iframe loads",
+      "then": "Then the browser resolves those URLs to /api/documents/raw-preview/:token/<sibling> and they are served when inside the token-scoped directory",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "external_html_edit_refreshes_preview",
+      "title": "html external edit triggers refresh",
+      "covers": [
+        "BR-1.9"
+      ],
+      "given": "Given an HTML preview is open and the file is edited on disk",
+      "when": "When the file watcher emits a document-change event for .html",
+      "then": "Then the iframe reloads with the updated content",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "unknown_kind_shows_nonpreview",
+      "title": "unknown file kind renders non-preview state",
+      "covers": [
+        "BR-1.10"
+      ],
+      "given": "Given a file with a kind that is neither markdown nor html",
+      "when": "When the user selects it",
+      "then": "Then a non-preview placeholder is rendered and MarkdownViewer is not called",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "filename_tabs_stay_md_only",
+      "title": "filename tab grouping remains markdown only",
+      "covers": [
+        "BR-1.11"
+      ],
+      "given": "Given arch.html and arch.spec.html siblings",
+      "when": "When the filename tab model runs",
+      "then": "Then no html sibling tabs are produced (model stays markdown-only)",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "assets_invisible_in_tree",
+      "title": "assets servable but not visible",
+      "covers": [
+        "BR-1.3"
+      ],
+      "given": "Given a document directory contains style.css app.js image.png alongside index.html",
+      "when": "When the documents tree is rendered",
+      "then": "Then only the .html files appear; the css/js/png are servable via raw-preview but absent from the tree",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "root_index_html_excluded",
+      "title": "root app shell not previewable",
+      "covers": [
+        "BR-1.2"
+      ],
+      "given": "Given project.document.paths includes ./ and the repo root has index.html",
+      "when": "When discovery runs",
+      "then": "Then the root index.html does not appear as a document node",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "html_preview_fills_panel",
+      "title": "HTML preview iframe fills the panel",
+      "covers": [
+        "BR-1.12"
+      ],
+      "given": "Given an HTML file is selected and the iframe is rendered",
+      "when": "When the documents-view preview panel is measured",
+      "then": "Then the iframe bounding box equals the preview panel bounding box (full width and height)",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "unconfigured_domains_surfaced",
+      "title": "Unconfigured external domains are surfaced to the user",
+      "covers": [
+        "BR-1.13"
+      ],
+      "given": "Given a project with empty allowedExternalDomains and an HTML file referencing cdn.tailwindcss.com and cdn.jsdelivr.net",
+      "when": "When the user selects the HTML file and the mint endpoint scans its external references",
+      "then": "Then the user is shown the list of domains needing approval (cdn.tailwindcss.com, cdn.jsdelivr.net) and can opt in per-domain",
+      "sourceRef": "CR:MDT-221"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-2",
+      "title": "Discover .html/.htm in both TreeBuilder glob and PathSelectionStrategy walk",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2"
+      ],
+      "artifactIds": [
+        "ART-1",
+        "ART-16"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "OBL-3",
+      "title": "Exclude root index.html from discovery when ./ is a document path",
+      "derivedFrom": [
+        "BR-1.2",
+        "Edge-3.8"
+      ],
+      "artifactIds": [
+        "ART-1"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "OBL-4",
+      "title": "Assets servable but invisible in tree (discovery globs html/htm only)",
+      "derivedFrom": [
+        "BR-1.3"
+      ],
+      "artifactIds": [
+        "ART-1",
+        "ART-16"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "OBL-5",
+      "title": "Preview token: HMAC-SHA256 sign, docDir-scoped, <=5min TTL, v1 payload",
+      "derivedFrom": [
+        "C-2.8",
+        "C-2.9",
+        "C-2.10",
+        "C-2.11",
+        "Edge-3.1",
+        "Edge-3.2"
+      ],
+      "artifactIds": [
+        "ART-7"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "OBL-6",
+      "title": "Token mint endpoint behind owner auth; reject read-token/shared sessions",
+      "derivedFrom": [
+        "BR-1.6",
+        "C-2.5",
+        "C-2.7"
+      ],
+      "artifactIds": [
+        "ART-4",
+        "ART-5",
+        "ART-6"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "OBL-7",
+      "title": "Raw-preview GET exemption narrow to /api/documents/raw-preview/* only",
+      "derivedFrom": [
+        "C-2.17"
+      ],
+      "artifactIds": [
+        "ART-6"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "OBL-9",
+      "title": "Binary-safe streaming serve (createReadStream, no utf8 string read)",
+      "derivedFrom": [
+        "C-2.18",
+        "C-2.20"
+      ],
+      "artifactIds": [
+        "ART-3",
+        "ART-4"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "OBL-10",
+      "title": "Hand-rolled MIME map; unknown extension -> 415; no new dependency",
+      "derivedFrom": [
+        "C-2.19",
+        "C-2.21"
+      ],
+      "artifactIds": [
+        "ART-3"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "OBL-11",
+      "title": "Pinned CSP on every raw-preview response; connect-src none; base-uri none; form-action none",
+      "derivedFrom": [
+        "C-2.13",
+        "C-2.16"
+      ],
+      "artifactIds": [
+        "ART-3",
+        "ART-4"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "OBL-14",
+      "title": "DocumentsLayout viewer switch by kind: markdown/html/unsupported",
+      "derivedFrom": [
+        "BR-1.5",
+        "BR-1.10"
+      ],
+      "artifactIds": [
+        "ART-10"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "OBL-15",
+      "title": "HTML document-change SSE parity (.html/.htm emit refresh)",
+      "derivedFrom": [
+        "BR-1.9"
+      ],
+      "artifactIds": [
+        "ART-8"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "OBL-16",
+      "title": "MarkdownViewer stays markdown-only; no HTML branch",
+      "derivedFrom": [
+        "BR-1.4",
+        "BR-1.11"
+      ],
+      "artifactIds": [
+        "ART-11"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "OBL-1",
+      "title": "Server-owned kind derivation on TreeNode",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.10"
+      ],
+      "artifactIds": [
+        "ART-2",
+        "ART-1",
+        "ART-9"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "OBL-17",
+      "title": "Update durable docs: ARCHITECTURE.md auth-gate map + OpenAPI Document.kind and new operations + CONFIG_SPEC document kinds",
+      "derivedFrom": [
+        "C-2.17"
+      ],
+      "artifactIds": [
+        "ART-15",
+        "ART-17",
+        "ART-18"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "OBL-8",
+      "title": "Raw-preview gate order: signature->exp->project->docDir->docPaths->rootContainment->MIME",
+      "derivedFrom": [
+        "BR-1.8",
+        "C-2.1",
+        "C-2.2",
+        "C-2.3",
+        "C-2.4",
+        "C-2.8",
+        "C-2.11",
+        "Edge-3.3",
+        "Edge-3.4",
+        "Edge-3.5",
+        "Edge-3.9"
+      ],
+      "artifactIds": [
+        "ART-3",
+        "ART-4",
+        "ART-5",
+        "ART-7",
+        "ART-13"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "OBL-13",
+      "title": "HtmlSandboxViewer: hardcoded sandbox=allow-scripts, never allow-same-origin, token in path src",
+      "derivedFrom": [
+        "BR-1.5",
+        "BR-1.6",
+        "BR-1.7",
+        "C-2.6",
+        "C-2.14",
+        "Edge-3.6",
+        "Edge-3.7"
+      ],
+      "artifactIds": [
+        "ART-12",
+        "ART-14"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "OBL-18",
+      "title": "Preview cannot reach owner-only mutation channels",
+      "derivedFrom": [
+        "C-2.14",
+        "C-2.15",
+        "C-2.16"
+      ],
+      "artifactIds": [
+        "ART-4",
+        "ART-6",
+        "ART-12"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "OBL-12",
+      "title": "nosniff + X-Frame-Options: SAMEORIGIN on every raw-preview response (override global DENY)",
+      "derivedFrom": [
+        "C-2.12",
+        "C-2.22"
+      ],
+      "artifactIds": [
+        "ART-4"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "OBL-19",
+      "title": "Derive preview CSP per-request from project config (allowedExternalDomains + allowUnsafeEval); strict defaults",
+      "derivedFrom": [
+        "C-2.13",
+        "C-2.23",
+        "C-2.24"
+      ],
+      "artifactIds": [
+        "ART-4",
+        "ART-19"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "OBL-20",
+      "title": "Mint endpoint statically scans selected HTML external src/href and returns needs-approval list when config doesn't cover them",
+      "derivedFrom": [
+        "BR-1.13"
+      ],
+      "artifactIds": [
+        "ART-4"
+      ],
+      "sourceRef": "CR:MDT-221"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-1",
+      "path": "server/builders/TreeBuilder.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "ART-2",
+      "path": "server/types/tree.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "ART-3",
+      "path": "server/services/DocumentService.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "ART-4",
+      "path": "server/controllers/DocumentController.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "ART-5",
+      "path": "server/routes/documents.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "ART-6",
+      "path": "server/security/apiAuth.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "ART-7",
+      "path": "server/security/documentPreviewToken.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "ART-8",
+      "path": "server/services/fileWatcher/PathWatcherService.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "ART-9",
+      "path": "src/components/DocumentsView/FileTree.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "ART-10",
+      "path": "src/components/DocumentsView/DocumentsLayout.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "ART-11",
+      "path": "src/components/DocumentsView/MarkdownViewer.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "ART-12",
+      "path": "src/components/DocumentsView/HtmlSandboxViewer.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "ART-13",
+      "path": "server/tests/api/document-raw.test.ts",
+      "kind": "test",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "ART-14",
+      "path": "src/components/DocumentsView/HtmlSandboxViewer.test.tsx",
+      "kind": "test",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "ART-15",
+      "path": "docs/CONFIG_SPECIFICATION.md",
+      "kind": "doc",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "ART-16",
+      "path": "server/strategies/PathSelectionStrategy.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "ART-17",
+      "path": "server/docs/ARCHITECTURE.md",
+      "kind": "doc",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "ART-18",
+      "path": "server/openapi/schemas.ts",
+      "kind": "doc",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "ART-19",
+      "path": "domain-contracts/src/project/schema.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-221"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-gate2-signature",
+      "kind": "integration",
+      "title": "G2: HMAC signature fail -> 403 before fs work",
+      "covers": [
+        "C-2.8",
+        "Edge-3.2"
+      ],
+      "file": "server/tests/api/document-raw.test.ts",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-gate3-expired",
+      "kind": "integration",
+      "title": "G3: expired token -> 403 before file resolution",
+      "covers": [
+        "C-2.8",
+        "Edge-3.1"
+      ],
+      "file": "server/tests/api/document-raw.test.ts",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-gate4-unknown-project",
+      "kind": "integration",
+      "title": "G4: token projectId for unknown project -> 404",
+      "covers": [
+        "C-2.3"
+      ],
+      "file": "server/tests/api/document-raw.test.ts",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-gate6-docdir-scope",
+      "kind": "integration",
+      "title": "G6: requested path outside payload.docDir -> 403 (token-scope gate)",
+      "covers": [
+        "C-2.11",
+        "Edge-3.4"
+      ],
+      "file": "server/tests/api/document-raw.test.ts",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-gate6-cross-project",
+      "kind": "integration",
+      "title": "G6: token scoped to project A used for project B path -> 403",
+      "covers": [
+        "Edge-3.3"
+      ],
+      "file": "server/tests/api/document-raw.test.ts",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-gate7-docpaths",
+      "kind": "integration",
+      "title": "G7: path outside configured documentPaths -> 403",
+      "covers": [
+        "C-2.1"
+      ],
+      "file": "server/tests/api/document-raw.test.ts",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-gate8-traversal",
+      "kind": "integration",
+      "title": "G8: .. absolute and %2e%2e encoded traversal -> 403 (no abs paths in errors)",
+      "covers": [
+        "C-2.2",
+        "Edge-3.5",
+        "Edge-3.9"
+      ],
+      "file": "server/tests/api/document-raw.test.ts",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-gate9-mime-415",
+      "kind": "integration",
+      "title": "G9: unknown extension -> 415 Unsupported Media Type",
+      "covers": [
+        "C-2.19"
+      ],
+      "file": "server/tests/api/document-raw.test.ts",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-gate10-xfo-override",
+      "kind": "integration",
+      "title": "G10: raw-preview 200 sets X-Frame-Options SAMEORIGIN; /api/documents/content keeps DENY",
+      "covers": [
+        "C-2.22"
+      ],
+      "file": "server/tests/api/document-raw.test.ts",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-mint-owner-only",
+      "kind": "integration",
+      "title": "POST /preview-token requires owner auth; read-token/shared session -> 403",
+      "covers": [
+        "BR-1.6",
+        "C-2.5",
+        "C-2.7"
+      ],
+      "file": "server/tests/api/document-raw.test.ts",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-mint-malformed",
+      "kind": "integration",
+      "title": "mint rejects malformed/tampered/missing token body",
+      "covers": [
+        "C-2.8"
+      ],
+      "file": "server/tests/api/document-raw.test.ts",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-token-ttl",
+      "kind": "unit",
+      "title": "preview token TTL <= 300s; expiry enforced on verify",
+      "covers": [
+        "C-2.9"
+      ],
+      "file": "server/tests/security/documentPreviewToken.test.ts",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-token-scoping",
+      "kind": "unit",
+      "title": "token scoped to one project + one docDir; cross-project and cross-dir rejected",
+      "covers": [
+        "C-2.10",
+        "C-2.11",
+        "Edge-3.3",
+        "Edge-3.4"
+      ],
+      "file": "server/tests/security/documentPreviewToken.test.ts",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-relative-assets-load",
+      "kind": "integration",
+      "title": "valid token + sibling assets inside docDir resolve and serve",
+      "covers": [
+        "BR-1.8",
+        "C-2.18",
+        "C-2.20"
+      ],
+      "file": "server/tests/api/document-raw.test.ts",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-nosniff-header",
+      "kind": "integration",
+      "title": "raw-preview 200 sets X-Content-Type-Options nosniff",
+      "covers": [
+        "C-2.12"
+      ],
+      "file": "server/tests/api/document-raw.test.ts",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-csp-pinned",
+      "kind": "integration",
+      "title": "raw-preview 200 sets pinned CSP byte-for-byte",
+      "covers": [
+        "C-2.13",
+        "C-2.16"
+      ],
+      "file": "server/tests/api/document-raw.test.ts",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-streaming-binary",
+      "kind": "integration",
+      "title": "raw serve is binary-safe (png bytes round-trip; no utf8 decode)",
+      "covers": [
+        "C-2.18",
+        "C-2.20",
+        "C-2.21"
+      ],
+      "file": "server/tests/api/document-raw.test.ts",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-content-type-per-mime",
+      "kind": "integration",
+      "title": "Content-Type header matches MIME map for html/css/js/png/svg/woff2",
+      "covers": [
+        "C-2.19"
+      ],
+      "file": "server/tests/api/document-raw.test.ts",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-public-read-carveout",
+      "kind": "integration",
+      "title": "isPublicReadRoute false for raw-preview prefix (GET/HEAD/OPTIONS); isApiAuthExemptRoute GET-only (no method creep)",
+      "covers": [
+        "C-2.17"
+      ],
+      "file": "server/tests/security/apiAuth.test.ts",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-discovery-html",
+      "kind": "integration",
+      "title": ".html and .htm appear in tree; root index.html excluded when ./ in document paths",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "Edge-3.8"
+      ],
+      "file": "server/tests/api/documents.test.ts",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-discovery-assets-invisible",
+      "kind": "integration",
+      "title": "css/js/png servable via raw-preview but absent from document tree",
+      "covers": [
+        "BR-1.3"
+      ],
+      "file": "server/tests/api/documents.test.ts",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-pathselection-html",
+      "kind": "unit",
+      "title": "PathSelectionStrategy offers .html/.htm (the CR-missed artifact)",
+      "covers": [
+        "BR-1.1"
+      ],
+      "file": "server/tests/strategies/PathSelectionStrategy.test.ts",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-sse-html-parity",
+      "kind": "integration",
+      "title": "external .html edit emits document-change -> iframe reload",
+      "covers": [
+        "BR-1.9"
+      ],
+      "file": "server/tests/services/fileWatcher/PathWatcherService.test.ts",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-iframe-sandbox-hardcoded",
+      "kind": "unit",
+      "title": "HtmlSandboxViewer iframe sandbox excludes allow-same-origin; src is token URL; no sandbox prop accepted",
+      "covers": [
+        "BR-1.5",
+        "BR-1.7",
+        "C-2.6",
+        "Edge-3.6",
+        "Edge-3.7"
+      ],
+      "file": "src/components/DocumentsView/HtmlSandboxViewer.test.tsx",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-viewer-kind-routing",
+      "kind": "unit",
+      "title": "DocumentsLayout switches markdown/html/unsupported by kind; MarkdownViewer unchanged for .md",
+      "covers": [
+        "BR-1.4",
+        "BR-1.5",
+        "BR-1.10",
+        "BR-1.11"
+      ],
+      "file": "src/components/DocumentsView/DocumentsLayout.test.tsx",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-md-regression",
+      "kind": "unit",
+      "title": "MarkdownViewer still uses /api/documents/content; filename tabs stay md-only",
+      "covers": [
+        "BR-1.4",
+        "BR-1.11"
+      ],
+      "file": "src/components/DocumentsView/MarkdownViewer.test.tsx",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-e2e-html-render",
+      "kind": "e2e",
+      "title": "select HTML fixture -> iframe renders visible content; sibling assets load",
+      "covers": [
+        "BR-1.1",
+        "BR-1.5",
+        "BR-1.8"
+      ],
+      "file": "tests/e2e/documents/html-preview.spec.ts",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-e2e-parent-isolation",
+      "kind": "e2e",
+      "title": "preview script cannot read parent window/DOM/localStorage",
+      "covers": [
+        "C-2.14"
+      ],
+      "file": "tests/e2e/documents/html-preview.spec.ts",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-e2e-csp-fetch-blocked",
+      "kind": "e2e",
+      "title": "preview script fetch('/api/status') blocked by connect-src none",
+      "covers": [
+        "C-2.16"
+      ],
+      "file": "tests/e2e/documents/html-preview.spec.ts",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-e2e-owner-mutation-blocked",
+      "kind": "e2e",
+      "title": "preview script cannot perform owner-only mutation",
+      "covers": [
+        "C-2.15"
+      ],
+      "file": "tests/e2e/documents/html-preview.spec.ts",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-no-token-disclosure",
+      "kind": "integration",
+      "title": "raw-preview requests with missing/expired/tampered token return non-2xx with no file content in body",
+      "covers": [
+        "C-2.4"
+      ],
+      "file": "server/tests/api/document-raw.test.ts",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-iframe-fills-panel",
+      "kind": "unit",
+      "title": "HtmlSandboxViewer wrapper + iframe carry the panel-filling classes; CSS rule exists",
+      "covers": [
+        "BR-1.12"
+      ],
+      "file": "src/components/DocumentsView/HtmlSandboxViewer.test.tsx",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-csp-strict-by-default",
+      "kind": "integration",
+      "title": "Default-config project gets strict CSP (no external, no unsafe-eval)",
+      "covers": [
+        "C-2.13",
+        "C-2.23",
+        "C-2.24"
+      ],
+      "file": "server/tests/api/document-raw.test.ts",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-csp-allowed-domains",
+      "kind": "integration",
+      "title": "Project with allowedExternalDomains gets those domains in script-src/style-src/font-src",
+      "covers": [
+        "C-2.23"
+      ],
+      "file": "server/tests/api/document-raw.test.ts",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-csp-unsafe-eval-optin",
+      "kind": "integration",
+      "title": "Project with allowUnsafeEval=true gets unsafe-eval in script-src; default false omits it",
+      "covers": [
+        "C-2.24"
+      ],
+      "file": "server/tests/api/document-raw.test.ts",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-needs-approval-surfaced",
+      "kind": "integration",
+      "title": "Mint endpoint returns needsApproval list when HTML references unconfigured external origins",
+      "covers": [
+        "BR-1.13"
+      ],
+      "file": "server/tests/api/document-raw.test.ts",
+      "sourceRef": "CR:MDT-221"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-2",
+      "title": "documentPreviewToken.ts: HMAC-SHA256 sign/verify, docDir-scoped, <=300s TTL, v1 payload (duplicate crypto helpers)",
+      "ownsArtifactIds": [
+        "ART-7"
+      ],
+      "makesGreenIds": [
+        "TEST-token-ttl",
+        "TEST-token-scoping"
+      ],
+      "skills": [
+        "typescript",
+        "security"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Auth policy carve-outs: accessPolicy isPublicReadRoute exclusion + apiAuth GET-only exemption + tests (method-creep guard)",
+      "ownsArtifactIds": [
+        "ART-6"
+      ],
+      "makesGreenIds": [
+        "TEST-public-read-carveout"
+      ],
+      "skills": [
+        "typescript",
+        "security"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TASK-4",
+      "title": "DocumentService.resolveRawPreviewPath + MIME map (reuse path guards, docDir scope check, unknown -> Unsupported document type)",
+      "ownsArtifactIds": [
+        "ART-3"
+      ],
+      "makesGreenIds": [
+        "TEST-gate6-docdir-scope",
+        "TEST-gate6-cross-project",
+        "TEST-gate7-docpaths",
+        "TEST-gate8-traversal",
+        "TEST-gate9-mime-415",
+        "TEST-content-type-per-mime"
+      ],
+      "skills": [
+        "typescript",
+        "backend"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TASK-5",
+      "title": "Controller + routes + streaming: mintPreviewToken (owner-gated), serveRawPreview (gates G2-G10 incl XFO SAMEORIGIN override, CSP, nosniff, createReadStream); error switch 403/415",
+      "ownsArtifactIds": [
+        "ART-4",
+        "ART-5"
+      ],
+      "makesGreenIds": [
+        "TEST-gate2-signature",
+        "TEST-gate3-expired",
+        "TEST-gate4-unknown-project",
+        "TEST-mint-owner-only",
+        "TEST-mint-malformed",
+        "TEST-no-token-disclosure",
+        "TEST-relative-assets-load",
+        "TEST-nosniff-header",
+        "TEST-csp-pinned",
+        "TEST-gate10-xfo-override",
+        "TEST-streaming-binary"
+      ],
+      "skills": [
+        "typescript",
+        "security",
+        "backend"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TASK-6",
+      "title": "OpenAPI schemas: Document.kind + PreviewTokenResponse + both operations (no Redoc drift)",
+      "ownsArtifactIds": [
+        "ART-18"
+      ],
+      "skills": [
+        "typescript"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TASK-13",
+      "title": "Durable docs: server/docs/ARCHITECTURE.md (raw-preview prefix, GET exemption, token bridge, XFO override) + docs/CONFIG_SPECIFICATION.md (document kinds, raw-preview boundary)",
+      "ownsArtifactIds": [
+        "ART-17",
+        "ART-15"
+      ],
+      "skills": [
+        "docs"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TASK-1",
+      "title": "Server-owned kind + discovery (tree.ts, TreeBuilder glob, PathSelectionStrategy walk, root index.html exclude)",
+      "ownsArtifactIds": [
+        "ART-2",
+        "ART-1",
+        "ART-16"
+      ],
+      "makesGreenIds": [
+        "TEST-discovery-html",
+        "TEST-discovery-assets-invisible",
+        "TEST-pathselection-html",
+        "html_files_discoverable",
+        "md_discovery_unchanged",
+        "assets_invisible_in_tree",
+        "root_index_html_excluded"
+      ],
+      "skills": [
+        "typescript",
+        "backend"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TASK-7",
+      "title": "FileWatcher HTML parity: emit document-change for .html/.htm (PathWatcherService lines 419,457)",
+      "ownsArtifactIds": [
+        "ART-8"
+      ],
+      "makesGreenIds": [
+        "TEST-sse-html-parity",
+        "external_html_edit_refreshes_preview"
+      ],
+      "skills": [
+        "typescript",
+        "backend"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TASK-8",
+      "title": "Frontend types + icon: add kind? to DocumentFile (FileTree, MarkdownViewer, documentFilenameTabModel) + HTML icon branch (lucide FileCode)",
+      "ownsArtifactIds": [
+        "ART-9",
+        "ART-11"
+      ],
+      "makesGreenIds": [
+        "TEST-md-regression",
+        "filename_tabs_stay_md_only"
+      ],
+      "skills": [
+        "typescript",
+        "react"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TASK-10",
+      "title": "DocumentsLayout viewer switch by kind + HtmlSandboxViewer.test.tsx",
+      "ownsArtifactIds": [
+        "ART-10",
+        "ART-14"
+      ],
+      "makesGreenIds": [
+        "TEST-viewer-kind-routing",
+        "unknown_kind_shows_nonpreview"
+      ],
+      "skills": [
+        "typescript",
+        "react"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TASK-11",
+      "title": "document-raw.test.ts integration suite (all 10 gates + mint + headers + MIME + disclosure)",
+      "ownsArtifactIds": [
+        "ART-13"
+      ],
+      "makesGreenIds": [
+        "TEST-gate2-signature",
+        "TEST-gate3-expired",
+        "TEST-gate4-unknown-project",
+        "TEST-gate6-docdir-scope",
+        "TEST-gate6-cross-project",
+        "TEST-gate7-docpaths",
+        "TEST-gate8-traversal",
+        "TEST-gate9-mime-415",
+        "TEST-gate10-xfo-override",
+        "TEST-mint-owner-only",
+        "TEST-mint-malformed",
+        "TEST-no-token-disclosure",
+        "TEST-relative-assets-load",
+        "TEST-nosniff-header",
+        "TEST-csp-pinned",
+        "TEST-streaming-binary",
+        "TEST-content-type-per-mime",
+        "relative_assets_load_under_token_prefix"
+      ],
+      "skills": [
+        "typescript",
+        "testing",
+        "security"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TASK-12",
+      "title": "E2E: html-preview fixtures + spec + selectors (iframe render, sibling assets, parent isolation, CSP fetch block, owner-mutation block)",
+      "ownsArtifactIds": [
+        "ART-12"
+      ],
+      "makesGreenIds": [
+        "TEST-e2e-html-render",
+        "TEST-e2e-parent-isolation",
+        "TEST-e2e-csp-fetch-blocked",
+        "TEST-e2e-owner-mutation-blocked"
+      ],
+      "skills": [
+        "playwright",
+        "testing"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TASK-9",
+      "title": "HtmlSandboxViewer.tsx: POST /preview-token via authFetch, set iframe src, hardcoded sandbox=allow-scripts (no allow-same-origin, no sandbox prop), referrerpolicy no-referrer, deleted/failed states, panel-filling wrapper classes",
+      "ownsArtifactIds": [
+        "ART-12"
+      ],
+      "makesGreenIds": [
+        "TEST-iframe-sandbox-hardcoded",
+        "TEST-iframe-fills-panel",
+        "selecting_html_renders_iframe",
+        "owner_mints_token_before_load",
+        "iframe_uses_path_token_url",
+        "html_preview_fills_panel"
+      ],
+      "skills": [
+        "typescript",
+        "react",
+        "security"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TASK-14",
+      "title": "Per-project preview config schema + dynamic CSP derivation (replaces hardcoded RAW_PREVIEW_CSP)",
+      "ownsArtifactIds": [
+        "ART-19",
+        "ART-4"
+      ],
+      "makesGreenIds": [
+        "TEST-csp-strict-by-default",
+        "TEST-csp-allowed-domains",
+        "TEST-csp-unsafe-eval-optin"
+      ],
+      "skills": [
+        "typescript",
+        "backend",
+        "security"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TASK-15",
+      "title": "Mint endpoint scans HTML external src/href and returns needsApproval list; frontend dialog surfaces domains",
+      "ownsArtifactIds": [
+        "ART-4",
+        "ART-12"
+      ],
+      "makesGreenIds": [
+        "TEST-needs-approval-surfaced",
+        "unconfigured_domains_surfaced"
+      ],
+      "skills": [
+        "typescript",
+        "react",
+        "backend"
+      ],
+      "sourceRef": "CR:MDT-221"
+    }
+  ]
+}
