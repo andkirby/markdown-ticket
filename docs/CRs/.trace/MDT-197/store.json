@@ -164,6 +164,13 @@
       "text": "Rail uses visual signals only — no 'Pinned' text label, no divider, no '+' drop glyph. State is conveyed by the pin icon's fill/accent (filled --primary = pinned, outline = unpinned) and the collapsed floating button's opacity (0.85 at rest, 1 on hover/focus). The PinItem numeric code uses the same font-size token as the board ticket card code (var(--fs-xs, 11px)) so it tracks the density setting, not a hard-coded literal.",
       "sourceRef": "CR:MDT-197",
       "routePolicy": "tests"
+    },
+    {
+      "id": "C-7",
+      "kind": "constraint",
+      "text": "The pin tooltip renders the ticket key via the canonical <TicketCode> component (src/components/TicketCode.tsx) — the single source of the 'priority glyph before key' invariant shared with the board card, list row, viewer, and QuickSearch. The tooltip must NEVER hand-compose <PriorityIcon> + code. Passing metadata.priority drives the colored priority glyph (lucide icon + data-priority color token); an undefined priority renders no glyph (graceful degradation).",
+      "sourceRef": "CR:MDT-197",
+      "routePolicy": "tests"
     }
   ],
   "scenarios": [
@@ -799,6 +806,15 @@
         "C-6"
       ],
       "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "TEST-e2e-pin-tooltip-priority-glyph",
+      "kind": "e2e",
+      "title": "Pin tooltip renders the ticket key via <TicketCode>, showing the colored priority glyph before the key (C-7)",
+      "covers": [
+        "C-7"
+      ],
+      "sourceRef": "CR:MDT-197"
     }
   ],
   "tasks": [
@@ -961,6 +977,22 @@
         "css",
         "ux-design",
         "react"
+      ],
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "TASK-9",
+      "title": "Pin tooltip priority glyph: route tooltip key through canonical <TicketCode> (carries priority-before-key glyph); carry ticket.priority through resolvePinMetadata",
+      "ownsArtifactIds": [
+        "ART-10",
+        "ART-12"
+      ],
+      "makesGreenIds": [
+        "TEST-e2e-pin-tooltip-priority-glyph"
+      ],
+      "skills": [
+        "react",
+        "css"
       ],
       "sourceRef": "CR:MDT-197"
     }

@@ -233,11 +233,9 @@
   font-size: 12px;
 }
 
-.pin-tooltip__code {
-  font-weight: 600;
-  font-size: 11px;
-  color: var(--text-foreground, var(--text-muted));
-}
+/* The tooltip code is rendered via the canonical <TicketCode>, which brings its
+   own .ticket-code + .ticket-key + .priority-icon styling. No bespoke code rule
+   here (keeps the pin tooltip in sync with the card — see TicketCode.tsx). */
 
 .pin-tooltip__title {
   color: var(--text-foreground, var(--text-muted));

@@ -2,7 +2,9 @@
  * MDT-197: PinItem — a single icon-only pinned ticket in the rail.
  *
  * Shows the numeric part of the ticket code on a 32px square. On hover:
- * - a portaled Tooltip (Radix) with project code + ticket code + title + status
+ * - a portaled Tooltip (Radix) with the ticket key (rendered via the canonical
+ *   <TicketCode>, so the priority-before-key glyph matches the card/list/viewer)
+ *   + title + status badge
  * - a top-right × to unpin (hidden in read-only)
  *
  * The numeric code alone is intentionally ambiguous across projects (MDT-042
@@ -10,12 +12,15 @@
  */
 import type { PinItem as PinItemData } from '@mdt/domain-contracts'
 import { StatusBadge } from '../Badge/StatusBadge'
+import { TicketCode } from '../TicketCode'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip'
 
 /** Metadata needed for the tooltip; resolved by the rail from live ticket data. */
 export interface PinMetadata {
   title: string
   status: string
+  /** Priority label (e.g. "High"); drives the priority-before-key glyph via TicketCode. */
+  priority?: string
 }
 
 export interface PinItemProps {
@@ -34,9 +39,12 @@ function numericPart(ticketCode: string): string {
 
 export function PinItem({ pin, metadata, canWrite, onOpen, onUnpin }: PinItemProps) {
   const { projectCode, ticketCode } = pin
+  // Reconstruct the full human code (e.g. "MDT-042") from the stored parts.
+  // The ticketCode is stored as the full "{PROJECT}-{NUMBER}" string.
+  const fullCode = `${projectCode}-${ticketCode.slice(projectCode.length + 1)}`
   const ariaLabel = metadata
-    ? `${projectCode}-${ticketCode.slice(projectCode.length + 1)}: ${metadata.title} (${metadata.status})`
-    : `${projectCode}-${ticketCode.slice(projectCode.length + 1)}`
+    ? `${fullCode}: ${metadata.title} (${metadata.status})`
+    : fullCode
 
   const handleClick = () => onOpen(pin)
   const handleUnpin = (e: React.MouseEvent) => {
@@ -71,7 +79,7 @@ export function PinItem({ pin, metadata, canWrite, onOpen, onUnpin }: PinItemPro
                 role="button"
                 tabIndex={-1}
                 className="pin-item__unpin"
-                aria-label={`Unpin ${projectCode}-${ticketCode.slice(projectCode.length + 1)}`}
+                aria-label={`Unpin ${fullCode}`}
                 data-testid="pin-item-unpin"
                 onClick={handleUnpin}
               >
@@ -81,11 +89,12 @@ export function PinItem({ pin, metadata, canWrite, onOpen, onUnpin }: PinItemPro
           </button>
         </TooltipTrigger>
         <TooltipContent side="right" className="pin-tooltip">
-          <div className="pin-tooltip__code ticket-key">
-            {projectCode}
-            -
-            {ticketCode.slice(projectCode.length + 1)}
-          </div>
+          {/* Render the key via the canonical <TicketCode> (the single source
+              of the "priority glyph before key" invariant, TicketCode.tsx) so
+              the pin tooltip stays in sync with the card/list/viewer — never
+              hand-compose the code. Priority (metadata?.priority) drives the
+              colored glyph; undefined priority → no glyph (graceful). */}
+          <TicketCode code={fullCode} priority={metadata?.priority} />
           <div className="pin-tooltip__title">
             {metadata?.title ?? '(ticket not loaded)'}
           </div>

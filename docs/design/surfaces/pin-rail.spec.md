@@ -34,8 +34,8 @@ for the same pixels. This is non-negotiable and is restated in `board-filter-bar
   drag-hover is signaled by the board's drop-hover style (C-5).
 - Click-to-open: clicking a pin opens the ticket viewer for that ticket, same path as a board card
   click (cross-project pins open the owning project's viewer).
-- Hover tooltip: project code + ticket code + title + status badge — the minimum to disambiguate
-  cross-project pins and convey state at a glance.
+- Hover tooltip: priority glyph + ticket key (via the canonical `<TicketCode>`) + title + status
+  badge — the minimum to disambiguate cross-project pins and convey state at a glance.
 - Hover-× unpin: a small × revealed on each pin item on hover, removing that pin.
 - **Feature enable/disable (BR-11):** a browser-only "Pin rail" Switch in Settings → Board. When
   off, neither rail nor collapsed strip renders (0px; truly gone). Default on.
@@ -100,7 +100,7 @@ App content row (src/App.tsx)                  ← PinRail + content siblings
 │       └── PinItem[]                         (one per pin, recency-pinned-first)
 │           ├── PinCode "042"                 (numeric part only; mono; var(--fs-xs,11px) — same token as ticket card code)
 │           ├── PinTooltip (on hover)         (portal; NOT native :title)
-│           │   ├── ProjectCode + TicketCode  ("MDT-042")
+│           │   ├── TicketCode                (canonical <TicketCode> — priority glyph + "MDT-042"; NEVER hand-composed)
 │           │   ├── Title                     (ticket title)
 │           │   └── StatusBadge               (reuses Badge data-status)
 │           └── UnpinButton ×                 (hover-reveal, top-right of item)
@@ -234,15 +234,22 @@ button.pin-item (relative, w-8 h-8, rounded-md, border border-app, bg-app,
 ### PinTooltip
 
 A portaled hover tooltip (not a native `:title`). Native `:title` cannot carry the status badge and
-cannot be styled; the AC requires project code + ticket code + title + status, and status is a badge.
+cannot be styled; the AC requires priority + project code + ticket code + title + status, and status
+is a badge.
 
 ```text
 PinTooltip (portal to body; positioned beside the item)
-├── row: ProjectCode + TicketCode   ("MDT-042", mono, primary text)
+├── TicketCode                      (canonical <TicketCode>: PriorityIcon glyph + "MDT-042", mono, primary text)
 ├── Title                           (ticket title, primary text, one line + ellipsis)
 └── StatusBadge                     (reuses Badge data-status; same as card badge)
 ```
 
+- **The ticket key is rendered via the canonical `<TicketCode>` component**
+  (`src/components/TicketCode.tsx`) — the single source of the "priority glyph before key" invariant
+  shared with the board card, list row, viewer, and QuickSearch. The tooltip must **never**
+  hand-compose `<PriorityIcon> + code` (that is how surfaces drift out of sync — see the invariant
+  docstring in `TicketCode.tsx`). Passing `priority={metadata?.priority}` drives the colored glyph;
+  an undefined priority renders no glyph (graceful). This is constraint C-7.
 - Appears on pointer hover after the standard hover delay (~300ms), disappears on pointer leave.
 - Width: min-content up to ~`240px`; title truncates with ellipsis.
 - Reuse the project's existing tooltip/HoverCard primitive if one exists (e.g. the
