@@ -147,14 +147,14 @@
     {
       "id": "BR-12",
       "kind": "behavior",
-      "text": "User can pin (keep open) or unpin (auto-collapse to a thin strip) the rail via the pin icon; unpinned still reveals on drag-to-pin and on strip click.",
-      "sourceRef": "docs/CRs/MDT-197-pin-rail.md",
+      "text": "User can pin (docked — rail takes 48px layout space and pushes board columns) or unpin (rail collapses to a floating button taking no space) via the pin icon. An unpinned rail still reveals as a transient floating overlay on hover/drag-to-pin.",
+      "sourceRef": "docs/design/surfaces/pin-rail.spec.md",
       "routePolicy": "bdd"
     },
     {
       "id": "C-5",
       "kind": "constraint",
-      "text": "Rail open/close animates via a slide (~140ms ease-out); the rail FLOATS over content (position: absolute, 0px layout footprint) so board columns never shift regardless of rail state (open/collapsed/disabled).",
+      "text": "Rail open/close animates via a slide (~140ms ease-out). Pinned rail is docked (in layout flow, takes 48px, pushes columns). Unpinned rail floats over content (position: absolute, 0px layout footprint). Content only shifts when toggling between pinned and unpinned.",
       "sourceRef": "docs/design/surfaces/pin-rail.spec.md",
       "routePolicy": "tests"
     }
@@ -283,13 +283,13 @@
     },
     {
       "id": "pin_toggle_collapses_to_strip",
-      "title": "Pin icon toggles between open rail and collapsed strip",
+      "title": "Pin icon toggles between docked rail and floating button",
       "covers": [
         "BR-12"
       ],
-      "given": "the pin rail feature is enabled and the rail is open (pinned)",
-      "when": "the user clicks the pin icon at the top of the rail",
-      "then": "the rail slides closed to a thin strip that still reserves its width, and clicking the strip pin icon slides it open again; an unpinned rail still reveals during a drag-to-pin",
+      "given": "the pin rail feature is enabled and the rail is pinned (docked, taking 48px)",
+      "when": "the user clicks the pin icon",
+      "then": "the rail collapses to a floating button taking no layout space; board columns move left to full width. Clicking the floating button pins it again (docked, takes space). An unpinned rail still reveals as a transient overlay on drag-to-pin.",
       "sourceRef": "CR:MDT-197"
     }
   ],
@@ -772,6 +772,17 @@
       ],
       "file": "src/hooks/__tests__/usePinRailPref.test.ts",
       "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "TEST-e2e-pinned-takes-space",
+      "kind": "e2e",
+      "title": "Pinned rail pushes columns ~48px; collapsed takes none",
+      "covers": [
+        "BR-12",
+        "C-5"
+      ],
+      "file": "tests/e2e/pin-rail/pin-rail.spec.ts",
+      "sourceRef": "CR:MDT-197"
     }
   ],
   "tasks": [
@@ -898,7 +909,7 @@
     },
     {
       "id": "TASK-7",
-      "title": "Collapsible pin rail: Settings toggle (enabled) + pin-icon toggle (pinned) + slide animation + collapsed strip",
+      "title": "Collapsible pin rail: Settings toggle (enabled) + pin-icon toggle (pinned=docked / unpinned=floating) + slide animation",
       "ownsArtifactIds": [
         "ART-15",
         "ART-16",
@@ -909,6 +920,7 @@
         "pin_toggle_collapses_to_strip",
         "TEST-e2e-settings-disables-rail",
         "TEST-e2e-pin-toggle-collapse",
+        "TEST-e2e-pinned-takes-space",
         "TEST-hook-pin-rail-pref"
       ],
       "skills": [

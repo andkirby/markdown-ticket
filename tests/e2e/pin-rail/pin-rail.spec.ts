@@ -46,12 +46,11 @@ test.describe('Pin Rail (MDT-197)', () => {
     await page.goto(`/prj/${scenario.projectCode}`)
     await waitForBoardReady(page)
 
-    // No pins + feature enabled (default pinned=true) → rail is present (open,
-    // showing label + drop affordance). The rail reserves its width so content
-    // never jumps (C-5). Toggling the pin collapses it to the strip (covered by
-    // TEST-e2e-pin-toggle-collapse).
+    // No pins + feature enabled (default pinned=true) → rail is present (pinned
+    // / docked, taking its 48px). Toggling the pin collapses it to the floating
+    // button (covered by TEST-e2e-pin-toggle-collapse).
     await expect(page.getByTestId('pin-rail')).toBeVisible()
-    await expect(page.getByTestId('pin-rail')).toHaveAttribute('data-state', 'open')
+    await expect(page.getByTestId('pin-rail')).toHaveAttribute('data-state', 'pinned')
 
     // Collapse via the pin toggle → now the collapsed strip is present.
     await page.getByTestId('pin-rail-toggle').click()
@@ -92,22 +91,45 @@ test.describe('Pin Rail (MDT-197)', () => {
     await page.goto(`/prj/${scenario.projectCode}`)
     await waitForBoardReady(page)
 
-    // Default pinned → open rail with the pin item.
-    await expect(page.getByTestId('pin-rail')).toHaveAttribute('data-state', 'open')
+    // Default pinned → docked rail (takes space) with the pin item.
+    await expect(page.getByTestId('pin-rail')).toHaveAttribute('data-state', 'pinned')
     await expect(page.getByTestId('pin-item')).toHaveCount(1)
 
-    // Click the pin toggle → collapses to strip.
+    // Click the pin toggle → collapses to floating button (no space).
     await page.getByTestId('pin-rail-toggle').click()
     await page.waitForTimeout(400)
     await expect(page.getByTestId('pin-rail')).toHaveAttribute('data-state', 'collapsed')
     // Pin item not shown in collapsed state.
     await expect(page.getByTestId('pin-item')).toHaveCount(0)
 
-    // Click the collapsed strip's toggle → slides open again.
+    // Click the floating button → pins again (docked, takes space).
     await page.getByTestId('pin-rail-toggle').click()
     await page.waitForTimeout(400)
-    await expect(page.getByTestId('pin-rail')).toHaveAttribute('data-state', 'open')
+    await expect(page.getByTestId('pin-rail')).toHaveAttribute('data-state', 'pinned')
     await expect(page.getByTestId('pin-item')).toHaveCount(1)
+  })
+
+  test('TEST-e2e-pinned-takes-space: pinned rail pushes columns; collapsed does not (BR-12)', async ({ page, e2eContext }) => {
+    const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
+    const code = scenario.crCodes[0]
+    await seedPins(page, [{ projectCode: scenario.projectCode, ticketCode: code }])
+    await page.goto(`/prj/${scenario.projectCode}`)
+    await waitForBoardReady(page)
+
+    // Pinned (docked) → first column pushed right by ~48px.
+    const colLeftPinned = await page.evaluate(() =>
+      Math.round(document.querySelector('[data-testid^="column-"]')!.getBoundingClientRect().left),
+    )
+
+    // Unpin → collapsed (floating button, no space). Column moves left.
+    await page.getByTestId('pin-rail-toggle').click()
+    await page.waitForTimeout(500)
+    const colLeftCollapsed = await page.evaluate(() =>
+      Math.round(document.querySelector('[data-testid^="column-"]')!.getBoundingClientRect().left),
+    )
+
+    // Pinned takes ~48px of layout space; collapsed takes none.
+    expect(colLeftPinned - colLeftCollapsed).toBeGreaterThan(40)
   })
 
   test('TEST-e2e-drag-to-pin: drag a board card onto the rail pins it (BR-1)', async ({ page, e2eContext }) => {
