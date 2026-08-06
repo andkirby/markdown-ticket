@@ -10,17 +10,15 @@
  */
 
 .pin-rail {
-  width: 48px;
   flex-shrink: 0;
   display: none;
   flex-direction: column;
   align-items: center;
-  padding: 12px 0;
-  gap: 6px;
   background: var(--bg-subtle);
   border-right: 1px solid var(--border);
   overflow-y: auto;
   overflow-x: hidden;
+  transition: width 140ms ease-out;
 }
 
 /* Desktop only: the rail is hidden below the md breakpoint. */
@@ -28,6 +26,22 @@
   .pin-rail {
     display: flex;
   }
+}
+
+/* Collapsed strip: thin, just the pin-icon toggle. Always present when the
+   feature is enabled (so content never jumps — width trades 28px↔48px). */
+.pin-rail--collapsed {
+  width: 28px;
+  padding: 8px 0;
+  justify-content: flex-start;
+}
+
+/* Open rail: full width with label + items + drop affordance. */
+.pin-rail--open {
+  width: 48px;
+  padding: 12px 0;
+  gap: 6px;
+  animation: pin-rail-slide-in 140ms ease-out;
 }
 
 /* Drop-hover state — reuses the board's primary-light + primary ring pattern. */
@@ -84,6 +98,52 @@
   border-color: var(--primary);
   color: var(--primary);
   background: var(--primary-light);
+}
+
+/* Pin-icon toggle button (rail top in open state; sole content when collapsed).
+   Outline (unpinned) vs filled accent (pinned). Mirrors the project's icon-only
+   button pattern (HamburgerMenu): border-led, transition-colors. */
+.pin-rail__toggle {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0;
+  transition: border-color 0.12s ease, color 0.12s ease, background-color 0.12s ease;
+}
+
+.pin-rail__toggle:hover,
+.pin-rail__toggle:focus-visible {
+  border-color: var(--border-strong);
+  color: var(--text-foreground, var(--text-muted));
+  outline: none;
+}
+
+.pin-rail__toggle:focus-visible {
+  @apply ring-2 ring-primary/40;
+}
+
+/* Pinned state: filled accent so the "stays open" affordance is unmistakable. */
+.pin-rail__toggle--pinned {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.pin-rail__toggle-icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* Collapsed toggle is the only content; center it. */
+.pin-rail__toggle--collapsed {
+  margin: 0 auto;
 }
 
 /* PinItem — 32px square icon chip. */

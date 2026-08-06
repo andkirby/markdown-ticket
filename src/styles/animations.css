@@ -42,6 +42,21 @@
   }
 }
 
+/* MDT-197: pin rail slide open/closed. The rail width animates 28px↔48px and
+   content slides in from the left. Duration matches the project's 120–150ms
+   vocabulary (ease-out). */
+@keyframes pin-rail-slide-in {
+  from {
+    transform: translateX(-100%);
+    opacity: 0.4;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+
 .animate-spin {
   animation: spin 1s linear infinite;
 }

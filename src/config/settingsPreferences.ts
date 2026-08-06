@@ -1,8 +1,12 @@
 const DEFAULT_VIEW_KEY = 'mdt-settings-default-view'
 const CARD_DENSITY_KEY = 'mdt-settings-card-density'
+const PIN_RAIL_ENABLED_KEY = 'mdt-settings-pin-rail-enabled'
+const PIN_RAIL_PINNED_KEY = 'mdt-settings-pin-rail-pinned'
 export const MARKDOWN_DENSITY_KEY = 'markdown-ticket:settings:markdown-density'
 export const MARKDOWN_DENSITY_CHANGE_EVENT = 'markdown-ticket:settings:markdown-density-change'
 export const CARD_DENSITY_CHANGE_EVENT = 'markdown-ticket:settings:card-density-change'
+export const PIN_RAIL_ENABLED_CHANGE_EVENT = 'markdown-ticket:settings:pin-rail-enabled-change'
+export const PIN_RAIL_PINNED_CHANGE_EVENT = 'markdown-ticket:settings:pin-rail-pinned-change'
 
 export type DefaultView = 'board' | 'list'
 export type CardDensity = 'comfortable' | 'compact'
@@ -17,6 +21,11 @@ export function readStorageString(key: string, fallback: string): string {
   catch {
     return fallback
   }
+}
+
+export function readStorageBool(key: string, fallback: boolean): boolean {
+  const raw = readStorageString(key, fallback ? '1' : '0')
+  return raw === '1' || raw === 'true'
 }
 
 export function writeStorageString(key: string, value: string): void {
@@ -46,6 +55,44 @@ export function setCardDensityPreference(density: CardDensity): void {
   try {
     window.dispatchEvent(new CustomEvent(CARD_DENSITY_CHANGE_EVENT, {
       detail: { density },
+    }))
+  }
+  catch {
+    // Non-browser callers only need persistence.
+  }
+}
+
+// MDT-197: pin rail browser-only preferences. Two independent toggles:
+// - enabled: whether the feature exists at all (rail + collapsed strip). Default true.
+// - pinned: whether the rail stays open (true) or auto-collapses to the strip (false). Default true.
+// Both persist to localStorage and broadcast a change event (mirrors CardDensity).
+export function getPinRailEnabled(): boolean {
+  return readStorageBool(PIN_RAIL_ENABLED_KEY, true)
+}
+
+export function setPinRailEnabledPreference(enabled: boolean): void {
+  writeStorageString(PIN_RAIL_ENABLED_KEY, enabled ? '1' : '0')
+
+  try {
+    window.dispatchEvent(new CustomEvent(PIN_RAIL_ENABLED_CHANGE_EVENT, {
+      detail: { enabled },
+    }))
+  }
+  catch {
+    // Non-browser callers only need persistence.
+  }
+}
+
+export function getPinRailPinned(): boolean {
+  return readStorageBool(PIN_RAIL_PINNED_KEY, true)
+}
+
+export function setPinRailPinnedPreference(pinned: boolean): void {
+  writeStorageString(PIN_RAIL_PINNED_KEY, pinned ? '1' : '0')
+
+  try {
+    window.dispatchEvent(new CustomEvent(PIN_RAIL_PINNED_CHANGE_EVENT, {
+      detail: { pinned },
     }))
   }
   catch {

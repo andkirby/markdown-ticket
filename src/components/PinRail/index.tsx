@@ -1,30 +1,41 @@
 /**
- * MDT-197: PinRail — vertical left rail of icon-only pinned tickets.
+ * MDT-197: PinRail — collapsible vertical left rail of icon-only pinned tickets.
  *
- * Sibling of the content area in App.tsx. Owns the 48px left rail zone;
- * never a tenant of the header (board-filter-bar.spec.md owns the header).
+ * Sibling of the content area in App.tsx. Owns the left rail zone; never a
+ * tenant of the header (board-filter-bar.spec.md owns the header).
  *
- * Visibility rules:
- * - empty pin set + no drag in progress → renders nothing (0px footprint)
- * - empty + a ticket drag in progress → reveals as a drop target (first-pin)
- * - ≥1 pin → full rail: label + divider + items + drop affordance
+ * Three render states (gated by the browser-only `enabled` + `pinned` prefs):
+ * - !enabled → renders nothing (0px; feature fully disabled in Settings).
+ * - enabled && collapsed → a thin (~28px) strip with a Pin icon button. Always
+ *   present when enabled, so content never "jumps" — it smoothly trades width.
+ *   The strip is ALSO a drop target, so drag-to-pin works from collapsed.
+ * - enabled && open → full 48px rail: pin-icon toggle + label + items + drop
+ *   affordance.
  *
- * Drop target: reuses the board's 'ticket' drag type. The whole rail accepts
- * drops; on drop, onPin(ticket) builds a PinItem using the current project
- * code (provided by App, since the Ticket model has no projectCode field).
+ * "Open" is true when: pinned (user toggled the pin icon on) OR a drag is in
+ * progress (drag-reveal) OR the rail is hovered/focused. When unpinned and the
+ * pointer leaves / focus moves away, it auto-collapses back to the strip.
  *
- * Read-only: drop is a no-op; click-to-open still works.
+ * Drop target: reuses the board's 'ticket' drag type. On drop, onPin(ticket)
+ * builds a PinItem using the current project code (provided by App, since the
+ * Ticket model has no projectCode field). Read-only: drop is a no-op;
+ * click-to-open still works.
  */
 import type { PinItem as PinItemData } from '@mdt/domain-contracts'
 import type { Ticket } from '../../types'
 import type { PinMetadata } from './PinItem'
-import { useMemo } from 'react'
+import { Pin, PinOff } from 'lucide-react'
+import { useMemo, useState } from 'react'
 import { useDragLayer, useDrop } from 'react-dnd'
 import { PinItem } from './PinItem'
 
 export interface PinRailProps {
   pins: PinItemData[]
   canWrite: boolean
+  /** Feature enabled (Settings → Board → Pin rail). When false, renders null. */
+  enabled: boolean
+  /** Pinned open (stays at 48px). When false, auto-collapses on blur/leave. */
+  pinned: boolean
   /** Current project code — attached to dropped tickets (Ticket has no projectCode). */
   currentProjectCode: string | null
   /** Resolve metadata (title/status) for a pin, from live ticket data. */
@@ -32,19 +43,27 @@ export interface PinRailProps {
   onPin: (projectCode: string, ticketCode: string) => void
   onUnpin: (pin: PinItemData) => void
   onOpen: (pin: PinItemData) => void
+  onTogglePinned: () => void
 }
 
 export function PinRail({
   pins,
   canWrite,
+  enabled,
+  pinned,
   currentProjectCode,
   resolveMetadata,
   onPin,
   onUnpin,
   onOpen,
+  onTogglePinned,
 }: PinRailProps) {
-  // Whether any drag is in progress. Drives the empty-rail drop-target reveal
-  // (the first-pin case). Non-ticket drags are rejected by accept:'ticket'.
+  // Hover/focus keeps an unpinned rail open; pointer leave collapses it again.
+  const [hovered, setHovered] = useState(false)
+
+  // Whether any drag is in progress. Reveals the rail from collapsed (drag-to-pin
+  // works even when the rail is collapsed to the strip). Non-ticket drags are
+  // rejected by accept:'ticket'.
   const isDragging = useDragLayer(monitor => monitor.isDragging())
 
   const [{ isOver, canDrop }, dropRef] = useDrop(() => ({
@@ -62,11 +81,6 @@ export function PinRail({
     }),
   }), [canWrite, currentProjectCode, onPin])
 
-  const isEmpty = pins.length === 0
-  // Render the rail when there are pins, OR when a drag is in progress (so
-  // the user has a drop target for the very first pin). Otherwise: nothing.
-  const visible = !isEmpty || (isDragging && canWrite)
-
   const dropActive = isOver && canDrop
 
   // Stable metadata map; recomputed only when pins change.
@@ -78,24 +92,67 @@ export function PinRail({
     return m
   }, [pins, resolveMetadata])
 
-  if (!visible) {
+  // Feature fully disabled → no rail, no strip, 0px.
+  if (!enabled) {
     return null
   }
 
+  // Open when pinned (user toggle), hovered/focused, or a drag is in progress.
+  const open = pinned || hovered || (isDragging && canWrite)
+
+  // Collapsed strip: thin rail with just the pin-icon toggle. Still a drop target
+  // (dropRef attached) so drag-to-pin works from collapsed.
+  if (!open) {
+    return (
+      <nav
+        ref={dropRef}
+        className={`pin-rail pin-rail--collapsed${dropActive ? ' pin-rail--drop-active' : ''}`}
+        aria-label="Pinned tickets (collapsed)"
+        data-testid="pin-rail"
+        data-state="collapsed"
+      >
+        <button
+          type="button"
+          className="pin-rail__toggle pin-rail__toggle--collapsed"
+          aria-label="Show pinned tickets"
+          aria-pressed={false}
+          data-testid="pin-rail-toggle"
+          onClick={onTogglePinned}
+          onMouseEnter={() => setHovered(true)}
+          onFocus={() => setHovered(true)}
+        >
+          <Pin className="pin-rail__toggle-icon" aria-hidden="true" />
+        </button>
+      </nav>
+    )
+  }
+
+  // Open rail: toggle (filled, pinned) + label + items + drop affordance.
   return (
     <nav
       ref={dropRef}
-      className={`pin-rail${dropActive ? ' pin-rail--drop-active' : ''}`}
+      className={`pin-rail pin-rail--open${dropActive ? ' pin-rail--drop-active' : ''}`}
       aria-label="Pinned tickets"
       data-testid="pin-rail"
-      data-empty={isEmpty ? 'true' : 'false'}
+      data-state="open"
+      onMouseLeave={() => {
+        if (!pinned)
+          setHovered(false)
+      }}
     >
-      {!isEmpty && (
-        <>
-          <div className="pin-rail__label">Pinned</div>
-          <div className="pin-rail__divider" />
-        </>
-      )}
+      <button
+        type="button"
+        className={`pin-rail__toggle pin-rail__toggle--open${pinned ? ' pin-rail__toggle--pinned' : ''}`}
+        aria-label={pinned ? 'Unpin — collapse rail to strip' : 'Pin — keep rail open'}
+        aria-pressed={pinned}
+        data-testid="pin-rail-toggle"
+        onClick={onTogglePinned}
+      >
+        {pinned ? <Pin className="pin-rail__toggle-icon" aria-hidden="true" fill="currentColor" /> : <PinOff className="pin-rail__toggle-icon" aria-hidden="true" />}
+      </button>
+
+      <div className="pin-rail__label">Pinned</div>
+      <div className="pin-rail__divider" />
 
       <div className="pin-rail__list">
         {pins.map(pin => (

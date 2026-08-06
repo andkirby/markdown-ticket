@@ -36,10 +36,15 @@ for the same pixels. This is non-negotiable and is restated in `board-filter-bar
 - Hover tooltip: project code + ticket code + title + status badge — the minimum to disambiguate
   cross-project pins and convey state at a glance.
 - Hover-× unpin: a small × revealed on each pin item on hover, removing that pin.
-- Empty-state collapse: when there are zero pins, the rail renders nothing and consumes **0px** of
-  horizontal space — except during an active board-card drag, where it reveals itself as a drop
-  target (the "first-pin" case; see States).
-- Overflow behavior: vertical scroll inside the rail. No cap, no wrap, no shrink-to-fit.
+- **Feature enable/disable (BR-11):** a browser-only "Pin rail" Switch in Settings → Board. When
+  off, neither rail nor collapsed strip renders (0px; truly gone). Default on.
+- **Pinned/collapsed toggle (BR-12):** a pin-icon button (lucide `Pin`/`PinOff`) at the rail top.
+  - **Pinned** (icon filled `--primary`): rail stays open at `48px`. Default.
+  - **Unpinned** (icon outline): rail auto-collapses to a thin `~28px` strip on pointer-leave/blur.
+    The strip is **always present when the feature is enabled** — so content never "jumps"; it
+    smoothly trades `28px↔48px` (slide animation, `~140ms ease-out`, C-5). An unpinned rail still
+    reveals (slides open) during a drag-to-pin and on strip click.
+- Overflow behavior: vertical scroll inside the open rail. No cap, no wrap, no shrink-to-fit.
 
 ## Does Not Own
 
@@ -60,16 +65,19 @@ for the same pixels. This is non-negotiable and is restated in `board-filter-bar
 
 ## Spatial boundary
 
-The rail owns the **left rail zone**. Measured from a 1280px-wide viewport with ≥1 pin:
+The rail owns the **left rail zone**. Measured from a 1280px-wide viewport, feature enabled:
 
-| Zone | Width | Owner | Contents |
+| Zone | Width | State | Contents |
 |------|-------|-------|----------|
-| left rail | `48px` (`w-12`) | **PinRail** (this spec) | "Pinned" label + divider + scrollable pin items + drop affordance |
-| content | remaining (`flex-1 min-w-0`) | `ProjectView` / `<main>` | board / list / documents |
+| left rail (open) | `48px` (`w-12`) | pinned, or hovered/focused, or drag in progress | pin-icon toggle (filled) + "Pinned" label + divider + scrollable pin items + drop affordance |
+| left rail (collapsed) | `~28px` | unpinned, not hovered, no drag | pin-icon toggle (outline) only — the reveal affordance |
+| left rail (disabled) | `0px` | Settings → Board → Pin rail off | nothing (feature fully removed) |
+| content | remaining (`flex-1 min-w-0`) | always | board / list / documents |
 
 The two zones are siblings inside `App.tsx`'s content row: `PinRail + content`. The rail is
 `flex-shrink-0`; the content keeps the existing `flex-1 overflow-hidden min-w-0` behavior. No
-existing surface is evicted.
+existing surface is evicted. **The collapsed strip always reserves its `~28px` when the feature is
+enabled, so content never jumps** — it smoothly trades `28px↔48px` on open/close (C-5).
 
 This boundary is the counterpart of the filter bar's: filter owns the header (`header__left`/`right`),
 pin owns the left rail. Stated from both sides in `board-filter-bar.spec.md` §"Spatial boundary" and
@@ -266,9 +274,11 @@ green (regression gate).
 
 | State | Trigger | Visual Change |
 |-------|---------|---------------|
-| absent | `pins.length === 0` AND no board card being dragged | rail renders nothing; `0px` horizontal footprint |
-| empty-drop-target | a board card drag begins while `pins.length === 0` | rail reveals at `48px`; shows `DropAffordance` dashed "+" as the target; no items, no header |
-| populated | `pins.length > 0` | full rail: header ("Pinned" + divider) + PinList + trailing DropAffordance |
+| disabled | Settings → Board → Pin rail off | rail + collapsed strip render nothing; `0px` footprint (feature removed) |
+| collapsed | feature enabled, unpinned, pointer not over, no drag | thin `~28px` strip with pin-icon toggle (outline); drop target still active |
+| open (pinned) | feature enabled, pin toggle on (default) | full `48px` rail: pin-icon toggle (filled `--primary`) + label + items + drop affordance |
+| open (hover/drag) | unpinned but pointer hovered/focused, or a drag in progress | slides open to `48px`; reverts to collapsed on pointer-leave/blur (unless dropped → pins + stays open) |
+| empty-drop-target | a board card drag begins while collapsed + `pins.length === 0` | slides open at `48px`; shows `DropAffordance` dashed "+" as the target |
 | drag-hover | a ticket is dragged over the rail/affordance | rail/affordance gains `bg-blue-50/50 ring-2 ring-blue-400/30` (board drop-hover pattern) |
 | item-hover | pointer over a PinItem | item border → `--border-strong`, text → primary; UnpinButton × fades in; PinTooltip appears after delay |
 | item-active (pinned) | successful drop → pin added | new PinItem inserts at top (recency-first), short highlight then settles |

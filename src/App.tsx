@@ -50,6 +50,7 @@ import {
   PageTitlePriority,
   usePageTitle,
 } from './hooks/usePageTitle'
+import { usePinRailPref } from './hooks/usePinRailPref'
 import { usePins } from './hooks/usePins'
 import { useProjectManager } from './hooks/useProjectManager'
 import {
@@ -130,6 +131,7 @@ function ProjectRouteHandler() {
   // pin/unpin). Pin metadata (title/status) is resolved from the current
   // project's tickets; cross-project pins resolve when their project is viewed.
   const pins = usePins(canWriteTickets)
+  const pinRailPref = usePinRailPref()
   const resolvePinMetadata = useCallback(
     (pin: { projectCode: string, ticketCode: string }) => {
       if (!projectCode || pin.projectCode !== projectCode) {
@@ -581,11 +583,14 @@ function ProjectRouteHandler() {
                   <PinRail
                     pins={pins.pins}
                     canWrite={canWriteTickets}
+                    enabled={pinRailPref.enabled}
+                    pinned={pinRailPref.pinned}
                     currentProjectCode={projectCode ?? null}
                     resolveMetadata={resolvePinMetadata}
                     onPin={pins.addPin}
                     onUnpin={(pin) => { pins.removePin(pin.projectCode, pin.ticketCode) }}
                     onOpen={handlePinOpen}
+                    onTogglePinned={() => pinRailPref.setPinned(!pinRailPref.pinned)}
                   />
                   <ProjectView
                     onTicketClick={handleTicketClick}
