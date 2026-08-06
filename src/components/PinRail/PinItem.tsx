@@ -10,7 +10,7 @@
  */
 import type { PinItem as PinItemData } from '@mdt/domain-contracts'
 import { StatusBadge } from '../Badge/StatusBadge'
-import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip'
 
 /** Metadata needed for the tooltip; resolved by the rail from live ticket data. */
 export interface PinMetadata {
@@ -53,47 +53,49 @@ export function PinItem({ pin, metadata, canWrite, onOpen, onUnpin }: PinItemPro
   }
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <button
-          type="button"
-          className="pin-item ticket-key"
-          data-testid="pin-item"
-          data-pin-key={`${projectCode}/${ticketCode}`}
-          aria-label={ariaLabel}
-          onClick={handleClick}
-          onKeyDown={handleKeyDown}
-        >
-          <span className="pin-item__code">{numericPart(ticketCode)}</span>
-          {canWrite && (
-            <span
-              role="button"
-              tabIndex={-1}
-              className="pin-item__unpin"
-              aria-label={`Unpin ${projectCode}-${ticketCode.slice(projectCode.length + 1)}`}
-              data-testid="pin-item-unpin"
-              onClick={handleUnpin}
-            >
-              ×
-            </span>
-          )}
-        </button>
-      </TooltipTrigger>
-      <TooltipContent side="right" className="pin-tooltip">
-        <div className="pin-tooltip__code ticket-key">
-          {projectCode}
-          -
-          {ticketCode.slice(projectCode.length + 1)}
-        </div>
-        <div className="pin-tooltip__title">
-          {metadata?.title ?? '(ticket not loaded)'}
-        </div>
-        {metadata && (
-          <div className="pin-tooltip__status">
-            <StatusBadge status={metadata.status} />
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            className="pin-item ticket-key"
+            data-testid="pin-item"
+            data-pin-key={`${projectCode}/${ticketCode}`}
+            aria-label={ariaLabel}
+            onClick={handleClick}
+            onKeyDown={handleKeyDown}
+          >
+            <span className="pin-item__code">{numericPart(ticketCode)}</span>
+            {canWrite && (
+              <span
+                role="button"
+                tabIndex={-1}
+                className="pin-item__unpin"
+                aria-label={`Unpin ${projectCode}-${ticketCode.slice(projectCode.length + 1)}`}
+                data-testid="pin-item-unpin"
+                onClick={handleUnpin}
+              >
+                ×
+              </span>
+            )}
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="right" className="pin-tooltip">
+          <div className="pin-tooltip__code ticket-key">
+            {projectCode}
+            -
+            {ticketCode.slice(projectCode.length + 1)}
           </div>
-        )}
-      </TooltipContent>
-    </Tooltip>
+          <div className="pin-tooltip__title">
+            {metadata?.title ?? '(ticket not loaded)'}
+          </div>
+          {metadata && (
+            <div className="pin-tooltip__status">
+              <StatusBadge status={metadata.status} />
+            </div>
+          )}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   )
 }
