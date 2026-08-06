@@ -1,24 +1,35 @@
 /**
- * MDT-197: PinRail CSS.
+ * MDT-197: PinRail CSS — floating overlay rail.
  *
- * 48px vertical left rail of icon-only pinned tickets. Border-led, recessed
- * surface (bg-subtle: "nav rails" per STYLING.md). Mirrors the column
- * drop-hover pattern (primary-light + primary ring) for drag-to-pin.
+ * The rail FLOATS over the content (position: absolute), it never occupies
+ * layout flow — so it never pushes board columns. Two states:
+ * - collapsed: just a floating pin-icon button at the top-left edge (the
+ *   container itself is 0-width; only the button shows).
+ * - open: a 48px-wide rail overlaying the left edge of content, with a
+ *   semi-opaque surface so the board beneath stays partially visible.
  *
- * Tokens: --bg-subtle (rail), --bg-elevated (chip), --border / --border-strong
- * (edges), --text-muted/--text-subtle (text). No new tokens.
+ * Border-led, recessed surface (bg-subtle: "nav rails" per STYLING.md). Mirrors
+ * the column drop-hover pattern (primary-light + primary ring) for drag-to-pin.
+ *
+ * Tokens: --bg-subtle (rail), --bg-elevated (chip/button), --border /
+ * --border-strong (edges), --text-muted/--text-subtle (text). No new tokens.
  */
 
 .pin-rail {
-  flex-shrink: 0;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 30;
   display: none;
   flex-direction: column;
   align-items: center;
   background: var(--bg-subtle);
   border-right: 1px solid var(--border);
+  box-shadow: 2px 0 8px rgb(0 0 0 / 8%);
   overflow-y: auto;
   overflow-x: hidden;
-  transition: width 140ms ease-out;
+  transition: width 140ms ease-out, opacity 140ms ease-out;
 }
 
 /* Desktop only: the rail is hidden below the md breakpoint. */
@@ -28,15 +39,17 @@
   }
 }
 
-/* Collapsed strip: thin, just the pin-icon toggle. Always present when the
-   feature is enabled (so content never jumps — width trades 28px↔48px). */
+/* Collapsed: 0-width container — only the floating pin button shows. */
 .pin-rail--collapsed {
-  width: 28px;
-  padding: 8px 0;
-  justify-content: flex-start;
+  width: 0;
+  padding: 0;
+  background: transparent;
+  border-right: none;
+  box-shadow: none;
+  overflow: visible;
 }
 
-/* Open rail: full width with label + items + drop affordance. */
+/* Open rail: 48px overlay with label + items + drop affordance. */
 .pin-rail--open {
   width: 48px;
   padding: 12px 0;
@@ -141,9 +154,14 @@
   height: 14px;
 }
 
-/* Collapsed toggle is the only content; center it. */
+/* Collapsed toggle: floats at the top-left edge of content (the container is
+   0-width, so the button escapes it via absolute positioning). */
 .pin-rail__toggle--collapsed {
-  margin: 0 auto;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  margin: 0;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 12%);
 }
 
 /* PinItem — 32px square icon chip. */

@@ -579,7 +579,7 @@ function ProjectRouteHandler() {
             )
           : (
               <DndProvider backend={HTML5Backend}>
-                <div className="flex h-full min-w-0">
+                <div className="relative flex h-full min-w-0">
                   <PinRail
                     pins={pins.pins}
                     canWrite={canWriteTickets}

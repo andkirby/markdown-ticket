@@ -65,19 +65,21 @@ for the same pixels. This is non-negotiable and is restated in `board-filter-bar
 
 ## Spatial boundary
 
-The rail owns the **left rail zone**. Measured from a 1280px-wide viewport, feature enabled:
+The rail owns the **left rail zone** — but as a **floating overlay**, not layout flow. The rail is
+`position: absolute` over the content area; it never pushes board columns and never reserves layout
+width. Measured from a 1280px-wide viewport, feature enabled:
 
-| Zone | Width | State | Contents |
-|------|-------|-------|----------|
-| left rail (open) | `48px` (`w-12`) | pinned, or hovered/focused, or drag in progress | pin-icon toggle (filled) + "Pinned" label + divider + scrollable pin items + drop affordance |
-| left rail (collapsed) | `~28px` | unpinned, not hovered, no drag | pin-icon toggle (outline) only — the reveal affordance |
-| left rail (disabled) | `0px` | Settings → Board → Pin rail off | nothing (feature fully removed) |
-| content | remaining (`flex-1 min-w-0`) | always | board / list / documents |
+| Zone | Layout footprint | State | Visual |
+|------|------------------|-------|--------|
+| rail (open) | `0px` (floats over content) | pinned, or hovered/focused, or drag in progress | `48px`-wide overlay at the left edge: pin-icon toggle (filled) + "Pinned" label + divider + scrollable pin items + drop affordance; semi-opaque surface + shadow so the board beneath reads as "under" the rail |
+| rail (collapsed) | `0px` (just a floating button) | unpinned, not hovered, no drag | a single floating pin-icon button (outline) at the top-left corner; no strip, no reserved width |
+| rail (disabled) | `0px` | Settings → Board → Pin rail off | nothing (feature fully removed) |
+| content | full width (`flex-1 min-w-0`) | always | board / list / documents — occupies the full content width in all rail states |
 
-The two zones are siblings inside `App.tsx`'s content row: `PinRail + content`. The rail is
-`flex-shrink-0`; the content keeps the existing `flex-1 overflow-hidden min-w-0` behavior. No
-existing surface is evicted. **The collapsed strip always reserves its `~28px` when the feature is
-enabled, so content never jumps** — it smoothly trades `28px↔48px` on open/close (C-5).
+The rail is `position: absolute; z-index: 30` inside a `relative` content row in `App.tsx`. Because
+it floats, **content never shifts** regardless of rail state (open/collapsed/disabled) — the board
+columns stay at their full-width positions. The open rail overlays the leftmost ~48px of content;
+the collapsed state overlays nothing but a small button.
 
 This boundary is the counterpart of the filter bar's: filter owns the header (`header__left`/`right`),
 pin owns the left rail. Stated from both sides in `board-filter-bar.spec.md` §"Spatial boundary" and
