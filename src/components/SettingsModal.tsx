@@ -14,9 +14,11 @@ import {
   getCardDensity,
   getDefaultView,
   getMarkdownDensity,
+  getPinRailEnabled,
   setCardDensityPreference,
   setDefaultViewPreference,
   setMarkdownDensityPreference,
+  setPinRailEnabledPreference,
 } from '../config/settingsPreferences'
 import {
   getVisibleTicketCardBadges,
@@ -152,6 +154,7 @@ export function SettingsModal({
   // Board
   const [cardDensity, setCardDensity] = useState<CardDensity>(getCardDensity)
   const [autoLinking, setAutoLinking] = useState(readAutoLinking)
+  const [pinRailEnabled, setPinRailEnabled] = useState<boolean>(getPinRailEnabled)
   const [visibleBadgeIds, setVisibleBadgeIds] = useState(
     getVisibleTicketCardBadges,
   )
@@ -344,6 +347,11 @@ export function SettingsModal({
   const handleAutoLinkingChange = useCallback((checked: boolean) => {
     setAutoLinking(checked)
     writeAutoLinking(checked)
+  }, [])
+
+  const handlePinRailEnabledChange = useCallback((checked: boolean) => {
+    setPinRailEnabled(checked)
+    setPinRailEnabledPreference(checked)
   }, [])
 
   const handleVisibleBadgeChange = useCallback(
@@ -641,6 +649,23 @@ export function SettingsModal({
                 checked={autoLinking}
                 onCheckedChange={handleAutoLinkingChange}
                 data-testid="settings-auto-linking"
+              />
+            </div>
+
+            {/* MDT-197: pin rail enable/disable. When off, neither rail nor
+                collapsed strip occupies space. The rail's own pin icon handles
+                day-to-day open/close. */}
+            <div className="settings-group-row">
+              <div>
+                <label className="settings-label">Pin rail</label>
+                <p className="settings-desc">
+                  Show the pinned-tickets left rail for quick access
+                </p>
+              </div>
+              <Switch
+                checked={pinRailEnabled}
+                onCheckedChange={handlePinRailEnabledChange}
+                data-testid="settings-pin-rail"
               />
             </div>
 

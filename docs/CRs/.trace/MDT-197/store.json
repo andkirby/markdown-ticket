@@ -136,6 +136,27 @@
       "text": "Two tickets from different projects have the same numeric code (e.g. MDT-042 and OTHER-042): both render correctly; project code disambiguates.",
       "sourceRef": "docs/CRs/MDT-197-pin-rail.md#L139",
       "routePolicy": "tests"
+    },
+    {
+      "id": "BR-11",
+      "kind": "behavior",
+      "text": "User can enable/disable the pin rail in Settings; when disabled, neither the rail nor the collapsed strip occupies any space.",
+      "sourceRef": "docs/CRs/MDT-197-pin-rail.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-12",
+      "kind": "behavior",
+      "text": "User can pin (keep open) or unpin (auto-collapse to a thin strip) the rail via the pin icon; unpinned still reveals on drag-to-pin and on strip click.",
+      "sourceRef": "docs/CRs/MDT-197-pin-rail.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C-5",
+      "kind": "constraint",
+      "text": "Rail open/close animates via a slide (~140ms ease-out); content never jumps — when the feature is enabled the collapsed strip always reserves its width.",
+      "sourceRef": "docs/CRs/MDT-197-pin-rail.md",
+      "routePolicy": "tests"
     }
   ],
   "scenarios": [
@@ -247,6 +268,28 @@
       "given": "the user is in a read-only access mode and the rail has pinned items",
       "when": "the user attempts to pin (drag-drop) or unpin",
       "then": "the mutation is blocked while clicking a pin still opens the ticket viewer",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "settings_disables_rail_entirely",
+      "title": "Settings toggle disables the pin rail entirely",
+      "covers": [
+        "BR-11"
+      ],
+      "given": "the pin rail feature is enabled and the rail or collapsed strip is visible",
+      "when": "the user turns off the Pin rail switch in Settings → Board",
+      "then": "neither the rail nor the collapsed strip renders; the content occupies the full width with zero reserved space",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "pin_toggle_collapses_to_strip",
+      "title": "Pin icon toggles between open rail and collapsed strip",
+      "covers": [
+        "BR-12"
+      ],
+      "given": "the pin rail feature is enabled and the rail is open (pinned)",
+      "when": "the user clicks the pin icon at the top of the rail",
+      "then": "the rail slides closed to a thin strip that still reserves its width, and clicking the strip pin icon slides it open again; an unpinned rail still reveals during a drag-to-pin",
       "sourceRef": "CR:MDT-197"
     }
   ],
@@ -387,6 +430,35 @@
         "ART-14"
       ],
       "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "OBL-9",
+      "title": "Browser-only pin-rail preferences (enabled + pinned) with localStorage + event broadcast",
+      "derivedFrom": [
+        "BR-11",
+        "BR-12",
+        "C-5"
+      ],
+      "artifactIds": [
+        "ART-15",
+        "ART-16"
+      ],
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "OBL-10",
+      "title": "Collapsible rail states: feature-off (0px), collapsed strip (~28px), open rail (48px) with slide animation",
+      "derivedFrom": [
+        "BR-11",
+        "BR-12",
+        "C-5"
+      ],
+      "artifactIds": [
+        "ART-9",
+        "ART-11",
+        "ART-17"
+      ],
+      "sourceRef": "CR:MDT-197"
     }
   ],
   "artifacts": [
@@ -472,6 +544,24 @@
       "id": "ART-14",
       "path": "docs/design/surfaces/pin-rail.mockups.md",
       "kind": "doc",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "ART-15",
+      "path": "src/config/settingsPreferences.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "ART-16",
+      "path": "src/hooks/usePinRailPref.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "ART-17",
+      "path": "src/styles/animations.css",
+      "kind": "runtime",
       "sourceRef": "CR:MDT-197"
     }
   ],
@@ -651,6 +741,37 @@
       ],
       "file": "tests/e2e/pin-rail/pin-rail.spec.ts",
       "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "TEST-e2e-settings-disables-rail",
+      "kind": "e2e",
+      "title": "Settings Pin rail switch off removes rail + strip entirely",
+      "covers": [
+        "BR-11"
+      ],
+      "file": "tests/e2e/pin-rail/pin-rail.spec.ts",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "TEST-e2e-pin-toggle-collapse",
+      "kind": "e2e",
+      "title": "Pin icon toggles rail open/closed; collapsed strip remains",
+      "covers": [
+        "BR-12",
+        "C-5"
+      ],
+      "file": "tests/e2e/pin-rail/pin-rail.spec.ts",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "TEST-hook-pin-rail-pref",
+      "kind": "unit",
+      "title": "usePinRailPref: default enabled, toggle persists, event broadcast",
+      "covers": [
+        "BR-11"
+      ],
+      "file": "src/hooks/__tests__/usePinRailPref.test.ts",
+      "sourceRef": "CR:MDT-197"
     }
   ],
   "tasks": [
@@ -771,6 +892,29 @@
       "skills": [
         "jest",
         "playwright",
+        "ux-design"
+      ],
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "TASK-7",
+      "title": "Collapsible pin rail: Settings toggle (enabled) + pin-icon toggle (pinned) + slide animation + collapsed strip",
+      "ownsArtifactIds": [
+        "ART-15",
+        "ART-16",
+        "ART-17"
+      ],
+      "makesGreenIds": [
+        "settings_disables_rail_entirely",
+        "pin_toggle_collapses_to_strip",
+        "TEST-e2e-settings-disables-rail",
+        "TEST-e2e-pin-toggle-collapse",
+        "TEST-hook-pin-rail-pref"
+      ],
+      "skills": [
+        "react",
+        "css",
+        "localStorage",
         "ux-design"
       ],
       "sourceRef": "CR:MDT-197"

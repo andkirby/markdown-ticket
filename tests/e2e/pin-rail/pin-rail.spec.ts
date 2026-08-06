@@ -41,13 +41,73 @@ test.describe('Pin Rail (MDT-197)', () => {
     await clearPins(page)
   })
 
-  test('TEST-e2e-empty-rail-absent: empty pin set renders no rail (BR-7)', async ({ page, e2eContext }) => {
+  test('TEST-e2e-empty-rail-collapsed: empty pin set keeps the rail present (BR-7/BR-12)', async ({ page, e2eContext }) => {
     const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
     await page.goto(`/prj/${scenario.projectCode}`)
     await waitForBoardReady(page)
 
-    // No pins → rail is absent (0px footprint).
+    // No pins + feature enabled (default pinned=true) → rail is present (open,
+    // showing label + drop affordance). The rail reserves its width so content
+    // never jumps (C-5). Toggling the pin collapses it to the strip (covered by
+    // TEST-e2e-pin-toggle-collapse).
+    await expect(page.getByTestId('pin-rail')).toBeVisible()
+    await expect(page.getByTestId('pin-rail')).toHaveAttribute('data-state', 'open')
+
+    // Collapse via the pin toggle → now the collapsed strip is present.
+    await page.getByTestId('pin-rail-toggle').click()
+    await page.waitForTimeout(400)
+    await expect(page.getByTestId('pin-rail')).toHaveAttribute('data-state', 'collapsed')
+  })
+
+  test('TEST-e2e-settings-disables-rail: Settings off removes rail + strip entirely (BR-11)', async ({ page, e2eContext }) => {
+    const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
+    await page.goto(`/prj/${scenario.projectCode}`)
+    await waitForBoardReady(page)
+
+    // Rail/strip present by default.
+    await expect(page.getByTestId('pin-rail')).toBeVisible()
+
+    // Disable via Settings: evaluate localStorage directly (the Settings modal
+    // UI toggle is covered by the hook test; here we verify the effect).
+    await page.evaluate(() => {
+      localStorage.setItem('mdt-settings-pin-rail-enabled', '0')
+      window.dispatchEvent(new Event('markdown-ticket:settings:pin-rail-enabled-change'))
+    })
+    await page.waitForTimeout(500)
+
+    // Neither rail nor strip renders — 0px.
     await expect(page.getByTestId('pin-rail')).toHaveCount(0)
+
+    // Re-enable to restore for subsequent tests.
+    await page.evaluate(() => {
+      localStorage.setItem('mdt-settings-pin-rail-enabled', '1')
+      window.dispatchEvent(new Event('markdown-ticket:settings:pin-rail-enabled-change'))
+    })
+  })
+
+  test('TEST-e2e-pin-toggle-collapse: pin icon toggles rail open/closed (BR-12)', async ({ page, e2eContext }) => {
+    const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
+    const code = scenario.crCodes[0]
+    await seedPins(page, [{ projectCode: scenario.projectCode, ticketCode: code }])
+    await page.goto(`/prj/${scenario.projectCode}`)
+    await waitForBoardReady(page)
+
+    // Default pinned → open rail with the pin item.
+    await expect(page.getByTestId('pin-rail')).toHaveAttribute('data-state', 'open')
+    await expect(page.getByTestId('pin-item')).toHaveCount(1)
+
+    // Click the pin toggle → collapses to strip.
+    await page.getByTestId('pin-rail-toggle').click()
+    await page.waitForTimeout(400)
+    await expect(page.getByTestId('pin-rail')).toHaveAttribute('data-state', 'collapsed')
+    // Pin item not shown in collapsed state.
+    await expect(page.getByTestId('pin-item')).toHaveCount(0)
+
+    // Click the collapsed strip's toggle → slides open again.
+    await page.getByTestId('pin-rail-toggle').click()
+    await page.waitForTimeout(400)
+    await expect(page.getByTestId('pin-rail')).toHaveAttribute('data-state', 'open')
+    await expect(page.getByTestId('pin-item')).toHaveCount(1)
   })
 
   test('TEST-e2e-drag-to-pin: drag a board card onto the rail pins it (BR-1)', async ({ page, e2eContext }) => {
