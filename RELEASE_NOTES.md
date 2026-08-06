@@ -1,5 +1,42 @@
 # Release Notes
 
+## v0.28.0 (2026-08-06)
+
+### New Features
+
+**Vertical Pin Rail (MDT-197)**
+- A new left rail gives you one-click access to the tickets you're actively working on, so you no longer have to navigate back to the board every time you switch context
+- Drag any board card onto the rail to pin it; click a pinned item to reopen the ticket; unpin via the hover × on each item
+- Pins are server-backed and cross-project — pinned tickets from different projects sit side by side, each carrying its project code
+- The rail collapses out of the way when empty (taking no horizontal space), and you can toggle it pinned (docked) or unpinned (floating) per your preference; the choice persists across reloads
+- Hover a pin to see the full identity: project code, ticket code, title, status, and priority
+
+**Safe HTML Document Preview (MDT-221)**
+- `.html` and `.htm` files under your configured document paths are now discovered and previewable alongside markdown, instead of being invisible
+- Executable HTML renders in a sandboxed viewer so same-origin scripts can't reach your credentialed `/api/*` requests — multi-file HTML resolves relative `href`, `src`, `img`, and `fetch` URLs against a stable document root
+- Each project opts into HTML preview explicitly through a per-project CSP config, so the relaxed content security policy only applies where you intend it
+
+**Priority in Board and List Sorting (MDT-047)**
+- You can now sort the board and list by priority, in addition to the existing sort attributes — useful for triage and to surface what's most important
+
+### Improvements
+
+**Design Refresh Across the Board (MDT-220)**
+- The priority icon now sits before the ticket key everywhere, and the dark-theme color ramp has been rebuilt for better contrast
+- Color tokens migrated to OKLCH, form controls unified, and the shared `.ticket-key` / `.ticket-code` typography is now canonical — ticket keys read consistently across the board, list, epics, and tooltips
+- Badges flattened (border dropped from the shared base), the Epic badge gained a Zap icon with a gold accent, and the header Filter button no longer ghosts in dark mode
+- The ticket viewer is back to a centered base-tier modal, and a live `styleguide.html` documents the surface contract for controls
+
+**Local-First Auth Convenience (MDT-157)**
+- The loopback host is now exempt from API auth, and the server binds to its configured boundary — so single-machine local development stays passwordless while remote access remains protected
+
+### Bug Fixes
+
+**Cloud Sync Correctness**
+- Fixed the projection sync dropping delete tombstones, so a deletion now propagates correctly instead of silently reappearing
+- The `reaches` operator now resolves its audience correctly, and a project is limited to one entry per code
+- Closed several review defects in the cloud CLI command group
+
 ## v0.27.0 (2026-07-27)
 
 ### New Features

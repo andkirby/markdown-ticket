@@ -88,7 +88,9 @@ AI-powered commands for the entire development lifecycle:
 
 - Drag-drop ticket management
 - Faceted filtering by status, priority, assignee, and type (inline in the header, never a second row)
+- Pin rail for one-click access to the tickets you're actively working on (drag-to-pin, cross-project)
 - Markdown rendering with Mermaid diagrams and Wireloom wireframes
+- Sandboxed HTML document preview alongside markdown in the documents view
 - Per-user project accent colors (solid or gradient)
 - Scoped global search across all projects
 - Multi-project support
