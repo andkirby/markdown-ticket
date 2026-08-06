@@ -154,7 +154,7 @@
     {
       "id": "C-5",
       "kind": "constraint",
-      "text": "Rail open/close animates via a slide (~140ms ease-out). Pinned rail is docked (in layout flow, takes 48px, pushes columns). Unpinned rail floats over content (position: absolute, 0px layout footprint). Content only shifts when toggling between pinned and unpinned.",
+      "text": "Rail open/close animates via a slide (~140ms ease-out) with NO column jump during the transition: collapsed and floating both use position: absolute (overlay), so the floating→collapsed transition never flips position mid-animation. Pinned rail is docked (in flow, 48px). Content only shifts on the deliberate pinned↔unpinned toggle, never on hover/drag slide.",
       "sourceRef": "docs/design/surfaces/pin-rail.spec.md",
       "routePolicy": "tests"
     }

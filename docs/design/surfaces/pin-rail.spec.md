@@ -78,9 +78,10 @@ layout flow depends on the pin state:
 
 The rail is a sibling of content inside a `relative` content row in `App.tsx`. **Pinned = docked
 (takes 48px, pushes board columns ~48px right). Unpinned = floating (0px footprint; transient hover
-reveal overlays content without pushing).** Measured: first board column left edge is 56px when
-pinned, 8px when collapsed/disabled — a 48px shift only on the pinned↔unpinned toggle, never on
-hover/drag/disabled.
+reveal overlays content without pushing).** Both collapsed and floating use `position: absolute`
+(overlay) so the floating→collapsed slide never flips position mid-animation — **no column jump
+during the slide-out** (C-5). Measured: first board column left edge is 56px when pinned, 8px in
+collapsed/floating/disabled, and 8px at every sample during the slide-out transition.
 
 This boundary is the counterpart of the filter bar's: filter owns the header (`header__left`/`right`),
 pin owns the left rail. Stated from both sides in `board-filter-bar.spec.md` §"Spatial boundary" and
