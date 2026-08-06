@@ -4,6 +4,7 @@ status: Implemented
 dateCreated: 2026-05-22T21:39:55.803Z
 type: Feature Enhancement
 priority: High
+relatedTickets: MDT-157
 ---
 
 # Add browser auth session unlock

@@ -4,7 +4,7 @@ status: Implemented
 dateCreated: 2026-05-01T01:22:53.430Z
 type: Feature Enhancement
 priority: High
-relatedTickets: MDT-156, MDT-172
+relatedTickets: MDT-156,MDT-172,MDT-176
 ---
 
 # Add authentication to backend API and MCP HTTP transport
