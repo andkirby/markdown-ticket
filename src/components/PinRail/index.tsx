@@ -97,12 +97,14 @@ export function PinRail({
     return null
   }
 
-  // Open when pinned (user toggle), hovered/focused, or a drag is in progress.
-  const open = pinned || hovered || (isDragging && canWrite)
+  // Three render modes:
+  // - pinned → docked (in flow, takes 48px, pushes columns) — the "takes space" state.
+  // - unpinned + (hovered/focus or drag) → floating overlay (transient, doesn't push).
+  // - unpinned + nothing → collapsed (0-width + floating pin button).
+  const transientOpen = !pinned && (hovered || (isDragging && canWrite))
 
-  // Collapsed strip: thin rail with just the pin-icon toggle. Still a drop target
-  // (dropRef attached) so drag-to-pin works from collapsed.
-  if (!open) {
+  // Collapsed: 0-width container + floating pin button. Still a drop target.
+  if (!pinned && !transientOpen) {
     return (
       <nav
         ref={dropRef}
@@ -127,17 +129,19 @@ export function PinRail({
     )
   }
 
-  // Open rail: toggle (filled, pinned) + label + items + drop affordance.
+  // Open rail (pinned = docked in flow; unpinned = floating overlay).
+  const modeClass = pinned ? 'pin-rail--docked' : 'pin-rail--floating'
   return (
     <nav
       ref={dropRef}
-      className={`pin-rail pin-rail--open${dropActive ? ' pin-rail--drop-active' : ''}`}
+      className={`pin-rail ${modeClass}${dropActive ? ' pin-rail--drop-active' : ''}`}
       aria-label="Pinned tickets"
       data-testid="pin-rail"
-      data-state="open"
+      data-state={pinned ? 'pinned' : 'open'}
       onMouseLeave={() => {
-        if (!pinned)
+        if (!pinned) {
           setHovered(false)
+        }
       }}
     >
       <button

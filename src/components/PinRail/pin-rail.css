@@ -16,20 +16,15 @@
  */
 
 .pin-rail {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 30;
+  flex-shrink: 0;
   display: none;
   flex-direction: column;
   align-items: center;
   background: var(--bg-subtle);
   border-right: 1px solid var(--border);
-  box-shadow: 2px 0 8px rgb(0 0 0 / 8%);
   overflow-y: auto;
   overflow-x: hidden;
-  transition: width 140ms ease-out, opacity 140ms ease-out;
+  transition: width 140ms ease-out;
 }
 
 /* Desktop only: the rail is hidden below the md breakpoint. */
@@ -39,8 +34,12 @@
   }
 }
 
-/* Collapsed: 0-width container — only the floating pin button shows. */
+/* Collapsed: 0-width container — only the floating pin button shows. The
+   feature is enabled but unpinned; no layout space is taken. The container
+   still needs z-index so the floating button sits above the board content. */
 .pin-rail--collapsed {
+  position: relative;
+  z-index: 30;
   width: 0;
   padding: 0;
   background: transparent;
@@ -49,11 +48,28 @@
   overflow: visible;
 }
 
-/* Open rail: 48px overlay with label + items + drop affordance. */
-.pin-rail--open {
+/* Pinned/docked: IN LAYOUT FLOW — takes 48px and pushes board columns. This is
+   the "pinned = takes space" contract. position: relative keeps it in flow. */
+.pin-rail--docked {
+  position: relative;
   width: 48px;
   padding: 12px 0;
   gap: 6px;
+  animation: pin-rail-slide-in 140ms ease-out;
+}
+
+/* Floating open (unpinned + hovered/dragging): FLOATS OVER content — does NOT
+   push columns. Transient reveal; reverts to collapsed on pointer-leave. */
+.pin-rail--floating {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 30;
+  width: 48px;
+  padding: 12px 0;
+  gap: 6px;
+  box-shadow: 2px 0 8px rgb(0 0 0 / 8%);
   animation: pin-rail-slide-in 140ms ease-out;
 }
 
