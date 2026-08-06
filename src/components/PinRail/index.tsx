@@ -9,8 +9,8 @@
  * - enabled && collapsed → a thin (~28px) strip with a Pin icon button. Always
  *   present when enabled, so content never "jumps" — it smoothly trades width.
  *   The strip is ALSO a drop target, so drag-to-pin works from collapsed.
- * - enabled && open → full 48px rail: pin-icon toggle + label + items + drop
- *   affordance.
+ * - enabled && open → full 48px rail: pin-icon toggle + items. Visual signals
+ *   only (filled accent = pinned); no text label, no drop affordance glyph.
  *
  * "Open" is true when: pinned (user toggled the pin icon on) OR a drag is in
  * progress (drag-reveal) OR the rail is hovered/focused. When unpinned and the
@@ -155,9 +155,6 @@ export function PinRail({
         {pinned ? <Pin className="pin-rail__toggle-icon" aria-hidden="true" fill="currentColor" /> : <PinOff className="pin-rail__toggle-icon" aria-hidden="true" />}
       </button>
 
-      <div className="pin-rail__label">Pinned</div>
-      <div className="pin-rail__divider" />
-
       <div className="pin-rail__list">
         {pins.map(pin => (
           <PinItem
@@ -169,13 +166,6 @@ export function PinRail({
             onUnpin={onUnpin}
           />
         ))}
-        <div
-          className={`pin-rail__drop-affordance${dropActive ? ' pin-rail__drop-affordance--active' : ''}`}
-          aria-label="Drop a ticket here to pin it"
-          data-testid="pin-drop-affordance"
-        >
-          +
-        </div>
       </div>
     </nav>
   )

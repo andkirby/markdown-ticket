@@ -157,6 +157,13 @@
       "text": "Rail open/close animates via a slide (~140ms ease-out) with NO column jump during the transition: collapsed and floating both use position: absolute (overlay), so the floating→collapsed transition never flips position mid-animation. Pinned rail is docked (in flow, 48px). Content only shifts on the deliberate pinned↔unpinned toggle, never on hover/drag slide.",
       "sourceRef": "docs/design/surfaces/pin-rail.spec.md",
       "routePolicy": "tests"
+    },
+    {
+      "id": "C-6",
+      "kind": "constraint",
+      "text": "Rail uses visual signals only — no 'Pinned' text label, no divider, no '+' drop glyph. State is conveyed by the pin icon's fill/accent (filled --primary = pinned, outline = unpinned) and the collapsed floating button's opacity (0.85 at rest, 1 on hover/focus). The PinItem numeric code uses the same font-size token as the board ticket card code (var(--fs-xs, 11px)) so it tracks the density setting, not a hard-coded literal.",
+      "sourceRef": "CR:MDT-197",
+      "routePolicy": "tests"
     }
   ],
   "scenarios": [
@@ -783,6 +790,15 @@
       ],
       "file": "tests/e2e/pin-rail/pin-rail.spec.ts",
       "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "TEST-e2e-visual-signals-only",
+      "kind": "e2e",
+      "title": "Rail shows no text label/divider/drop-glyph; pin button uses opacity 0.85; pin code uses ticket-card font token (C-6)",
+      "covers": [
+        "C-6"
+      ],
+      "sourceRef": "CR:MDT-197"
     }
   ],
   "tasks": [
@@ -928,6 +944,23 @@
         "css",
         "localStorage",
         "ux-design"
+      ],
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "TASK-8",
+      "title": "Visual-signals-only rail: drop 'Pinned' label/divider/'+' glyph; collapsed button opacity 0.85; pin code uses ticket-card font token (var(--fs-xs))",
+      "ownsArtifactIds": [
+        "ART-9",
+        "ART-11"
+      ],
+      "makesGreenIds": [
+        "TEST-e2e-visual-signals-only"
+      ],
+      "skills": [
+        "css",
+        "ux-design",
+        "react"
       ],
       "sourceRef": "CR:MDT-197"
     }
