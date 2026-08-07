@@ -177,6 +177,20 @@
   }
 
   /* =====================================================
+   * LINKS INSIDE BADGES
+   * A ticket-key link rendered inside a badge adopts the badge's color — the
+   * badge is the semantic color container, so the standalone smart-link purple
+   * (smart-link.css) must not win. The standalone rule is .smart-link[data-link-type]
+   * in light (0,2,0), but Tailwind's dark: variant makes it .dark .smart-link[…]
+   * (0,3,0) — so the anchor selector bumps this to .badge a.smart-link[…] (0,3,1),
+   * winning in both modes. Mono typography comes from .ticket-key on the link.
+   * ===================================================== */
+
+  .badge a.smart-link[data-link-type] {
+    color: inherit;
+  }
+
+  /* =====================================================
    * SIZE MODIFIERS
    * Use --modifier suffix for size variations
    * ===================================================== */

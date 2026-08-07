@@ -100,7 +100,7 @@ export function ContextBadge({ variant, value, worktreePath, className }: Contex
                 link={parsedLink}
                 currentProject={currentProject}
                 showIcon={false}
-                className="ticket-key text-inherit hover:underline"
+                className="ticket-key hover:underline"
               >
                 {displayValue}
               </SmartLink>

@@ -126,7 +126,7 @@ export function RelationshipBadge({
             link={classifyLink(item.fullKey, currentProject)}
             currentProject={currentProject}
             showIcon={false}
-            className="hover:underline"
+            className="ticket-key hover:underline"
           >
             {item.display}
           </SmartLink>
@@ -186,7 +186,7 @@ export function RelationshipBadge({
                     link={classifyLink(item.fullKey, currentProject)}
                     currentProject={currentProject}
                     showIcon={false}
-                    className="inline-flex w-full items-center rounded px-1.5 py-1 text-xs hover:bg-accent hover:underline"
+                    className="ticket-key inline-flex w-full items-center rounded px-1.5 py-1 text-xs hover:bg-accent hover:underline"
                   >
                     {item.fullKey}
                   </SmartLink>
