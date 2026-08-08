@@ -179,6 +179,7 @@ export function SwimlaneBoard({
         <label className="swimlane-board__toggle">
           <input
             type="checkbox"
+            className="settings-checkbox"
             checked={hideEmpty}
             onChange={event => setHideEmpty(event.currentTarget.checked)}
             data-testid="swimlane-hide-empty"
@@ -188,6 +189,7 @@ export function SwimlaneBoard({
         <label className="swimlane-board__toggle">
           <input
             type="checkbox"
+            className="settings-checkbox"
             checked={showBadges}
             onChange={event => setShowBadges(event.currentTarget.checked)}
             data-testid="swimlane-show-badges"

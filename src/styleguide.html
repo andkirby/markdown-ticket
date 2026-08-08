@@ -34,7 +34,7 @@
       border: 1px solid var(--border-strong);
       background: var(--bg-elevated);
       color: var(--text-muted);
-      border-radius: 6px;
+      border-radius: var(--radius-input);
       padding: .4rem .8rem;
       font: inherit;
       cursor: pointer;
@@ -139,8 +139,16 @@
   <div class="slots">
     <div class="slot"><b>--pad-y/x</b><small>10 / 12 px</small></div>
     <div class="slot"><b>--fs-xs / --fs-md</b><small>11 / 13 px</small></div>
-    <div class="slot"><b>--radius-card</b><small>8 px</small></div>
     <div class="slot"><b>--sz-icon</b><small>16 px</small></div>
+  </div>
+
+  <h2>radius scale · pick by role</h2>
+  <p class="note" style="margin-top:.25rem">Four semantic corners. Inputs, buttons, cards, and control groups share <code>--radius-input</code> so the header controls line up. Use the bare <code>var()</code> in app CSS — never a hardcoded px or a Tailwind <code>rounded-*</code> class (shadcn vendor components excepted).</p>
+  <div class="slots">
+    <div class="slot"><b>--radius-input</b><small>8 px · inputs, selects, checkboxes, buttons, cards, control groups</small></div>
+    <div class="slot"><b>--radius-card</b><small>8 px · ticket cards, lane cards, frontmatter boxes</small></div>
+    <div class="slot"><b>--radius-xs</b><small>4 px · badges, inline code pills</small></div>
+    <div class="slot"><b>--radius-pill</b><small>999 px · circular: launcher, dots</small></div>
   </div>
 
   <h2>typography</h2>
@@ -160,7 +168,7 @@
     .form-row { display: flex; gap: .6rem; align-items: flex-end; flex-wrap: wrap; margin-top: .85rem; }
     .field { display: flex; flex-direction: column; gap: .25rem; }
     .field label { font-size: .7rem; color: var(--text-subtle); }
-    .btn { display: inline-flex; align-items: center; gap: .4rem; padding: .4rem .85rem; border-radius: 6px; font-size: .82rem; font-weight: 500; cursor: pointer; border: 1px solid transparent; transition: background-color .15s, border-color .15s; }
+    .btn { display: inline-flex; align-items: center; gap: .4rem; padding: .4rem .85rem; border-radius: var(--radius-input); font-size: .82rem; font-weight: 500; cursor: pointer; border: 1px solid transparent; transition: background-color .15s, border-color .15s; }
     .btn-primary { background: oklch(var(--primary)); color: oklch(var(--primary-foreground)); }
     .btn-primary:hover { filter: brightness(1.07); }
     .btn-secondary { background: oklch(var(--secondary)); color: oklch(var(--secondary-foreground)); }
@@ -168,7 +176,7 @@
     .btn-outline:hover { background: var(--bg-muted); }
     .btn-ghost { background: transparent; color: oklch(var(--foreground)); }
     .btn-ghost:hover { background: var(--bg-muted); }
-    .input-demo, .select-demo { background: var(--bg-muted); border: 1px solid var(--border-strong); border-radius: 6px; padding: .4rem .6rem; color: oklch(var(--foreground)); font: inherit; font-size: .82rem; }
+    .input-demo, .select-demo { background: var(--bg-muted); border: 1px solid var(--border-strong); border-radius: var(--radius-input); padding: .4rem .6rem; color: oklch(var(--foreground)); font: inherit; font-size: .82rem; }
     .input-demo:focus, .select-demo:focus { outline: none; border-color: oklch(var(--primary)); box-shadow: 0 0 0 2px oklch(var(--primary) / .3); }
     .input-demo.error { border-color: oklch(var(--destructive)); }
     .checkbox-demo { width: 16px; height: 16px; accent-color: oklch(var(--primary)); }
@@ -179,10 +187,10 @@
     .contract { border-radius: 10px; padding: .5rem; margin-top: .85rem; }
     .contract-row { display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; padding: .75rem; border-radius: 8px; }
     .contract-label { font-size: .68rem; color: var(--text-subtle); font-family: "JetBrains Mono", monospace; min-width: 84px; }
-    .input-ghost { background: var(--bg-muted); border: none; border-radius: 6px; padding: .4rem .6rem; color: oklch(var(--foreground)); font: inherit; font-size: .82rem; }
-    .input-recessed { background: #bcc7d4; border: none; border-radius: 6px; padding: .4rem .6rem; color: #1b2230; font: inherit; font-size: .82rem; }
+    .input-ghost { background: var(--bg-muted); border: none; border-radius: var(--radius-input); padding: .4rem .6rem; color: oklch(var(--foreground)); font: inherit; font-size: .82rem; }
+    .input-recessed { background: #bcc7d4; border: none; border-radius: var(--radius-input); padding: .4rem .6rem; color: #1b2230; font: inherit; font-size: .82rem; }
     .dark .input-recessed { background: #384560; color: #dde3ec; }
-    .input-hairline { background: var(--bg-muted); border: 1px solid var(--border-strong); border-radius: 6px; padding: .4rem .6rem; color: oklch(var(--foreground)); font: inherit; font-size: .82rem; }
+    .input-hairline { background: var(--bg-muted); border: 1px solid var(--border-strong); border-radius: var(--radius-input); padding: .4rem .6rem; color: oklch(var(--foreground)); font: inherit; font-size: .82rem; }
     .tag { font-size: .65rem; font-weight: 600; }
     .tag-bad { color: var(--prio-critical); }
     .tag-ok { color: var(--status-done); }

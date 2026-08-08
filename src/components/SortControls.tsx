@@ -41,7 +41,7 @@ export const SortControls: React.FC<SortControlsProps> = ({
       <select
         value={preferences.selectedAttribute}
         onChange={e => handleAttributeChange(e.target.value)}
-        className="h-9 border border-border rounded-md px-3 pr-8 text-sm bg-background focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 appearance-none"
+        className="h-9 border border-border px-3 pr-8 text-sm bg-background focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 appearance-none [border-radius:var(--radius-input)]"
       >
         {DEFAULT_SORT_ATTRIBUTES.map(attr => (
           <option key={attr.name} value={attr.name}>
@@ -51,7 +51,7 @@ export const SortControls: React.FC<SortControlsProps> = ({
       </select>
       <button
         onClick={handleDirectionToggle}
-        className="h-9 w-9 flex items-center justify-center border border-border rounded-md bg-background hover:bg-muted transition-colors"
+        className="h-9 w-9 flex items-center justify-center border border-border bg-background hover:bg-muted transition-colors [border-radius:var(--radius-input)]"
         title={`Sort ${preferences.selectedDirection === 'asc' ? 'ascending' : 'descending'}`}
       >
         {preferences.selectedDirection === 'asc'

@@ -109,6 +109,7 @@ export function BackendConfigSection({ enabled }: { enabled: boolean }) {
                   <input
                     id={`backend-cfg-${s.selector}`}
                     type="checkbox"
+                    className="settings-checkbox"
                     checked={Boolean(displayValue)}
                     onChange={(e: ChangeEvent<HTMLInputElement>) =>
                       stageEdit(s.selector, e.target.checked)}
