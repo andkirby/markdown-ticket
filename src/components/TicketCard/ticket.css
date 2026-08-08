@@ -42,7 +42,7 @@
   /* v3 Doc 4 / Pr.5: pristine keyboard focus ring on cards */
   .ticket-card:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 2px oklch(var(--background)), 0 0 0 4px color-mix(in srgb, oklch(var(--primary)) 35%, transparent);
+    box-shadow: 0 0 0 2px oklch(var(--background)), 0 0 0 4px color-mix(in srgb, oklch(var(--primary)) 20%, transparent);
   }
 
   /* Invalid status — red border + ring */

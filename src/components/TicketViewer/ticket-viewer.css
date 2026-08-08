@@ -22,7 +22,7 @@
   }
 
   .trace-graph-shell__back {
-    @apply absolute left-4 top-4 z-20 inline-flex h-9 shrink-0 items-center gap-2 rounded-md px-3 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring;
+    @apply absolute left-4 top-4 z-20 inline-flex h-9 shrink-0 items-center gap-2 rounded-md px-3 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50;
     border: 1px solid oklch(var(--border));
     background-color: color-mix(in srgb, var(--bg-elevated) 60%, transparent);
     color: oklch(var(--foreground));
@@ -58,7 +58,7 @@
   }
 
   .trace-graph-action {
-    @apply inline-flex h-8 items-center gap-2 rounded-md px-3 text-sm font-medium text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-ring;
+    @apply inline-flex h-8 items-center gap-2 rounded-md px-3 text-sm font-medium text-foreground transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50;
     border: 1px solid oklch(var(--border));
     background-color: var(--bg-elevated);
   }

@@ -62,7 +62,7 @@ export const ResolutionDialog: React.FC<ResolutionDialogProps> = ({
                 className="
                   w-full rounded-lg bg-muted p-4 text-left transition-colors
                   hover:bg-primary/10
-                  focus:outline-none focus:ring-2 focus:ring-primary
+                  focus:outline-none focus-visible:ring-1 focus-visible:ring-primary/50
                 "
               >
                 <div className="flex items-start justify-between">
