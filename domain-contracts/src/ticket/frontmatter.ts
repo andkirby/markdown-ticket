@@ -1,10 +1,5 @@
 import { z } from 'zod'
-import {
-  CRLevelSchema,
-  CRPrioritySchema,
-  CRStatusSchema,
-  CRTypeSchema,
-} from '../types/schema'
+import { CRLevelSchema, CRPrioritySchema, CRStatusSchema, CRTypeSchema } from '../types/schema'
 
 /**
  * CR code pattern for validation and OpenAPI schemas
@@ -26,31 +21,21 @@ export const TICKET_KEY_INPUT_PATTERN = /^([A-Z][A-Z0-9]{1,4})-(\d{1,5})$/i
  *   [1] = project code (e.g. "MDT")
  *   [2] = search text after the space
  */
+// eslint-disable-next-line regexp/no-super-linear-backtracking
+export const PROJECT_SCOPE_INPUT_PATTERN = /^@([A-Z][A-Z0-9]{1,4})\s+([^\n]*)$/i
 
-export const PROJECT_SCOPE_INPUT_PATTERN
-  = /^@([A-Z][A-Z0-9]{1,4})\s+([^\n]*)$/i
-
-const TrimmedTitleSchema = z
-  .string()
+const TrimmedTitleSchema = z.string()
   .min(1, 'Title is required')
   .max(200, 'Title must be 200 characters or less')
-  .refine(
-    title => title.trim().length > 0,
-    'Title cannot be empty or whitespace-only',
-  )
+  .refine(title => title.trim().length > 0, 'Title cannot be empty or whitespace-only')
   .transform(title => title.trim())
 
-const ISODateSchema = z
-  .string()
+const ISODateSchema = z.string()
   .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format, use YYYY-MM-DD')
 
 export const TicketFrontmatterSchema = z.object({
-  code: z
-    .string()
-    .regex(
-      CR_CODE_PATTERN,
-      'CR code must be in format PREFIX-123 (e.g., MDT-101)',
-    ),
+  code: z.string()
+    .regex(CR_CODE_PATTERN, 'CR code must be in format PREFIX-123 (e.g., MDT-101)'),
   title: TrimmedTitleSchema,
   status: CRStatusSchema,
   type: CRTypeSchema,
