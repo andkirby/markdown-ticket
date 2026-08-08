@@ -3,7 +3,6 @@
 @layer base {
   * {
     @apply border-border;
-    overscroll-behavior: none;
   }
 
   body {
@@ -11,6 +10,11 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
+  /* `overscroll-behavior: none` belongs here — on the document root — not on
+     the universal selector. Setting it on `*` propagates it to every nested
+     overflow container and defeats wheel-scrolling inside them (board columns,
+     list, swimlanes all stopped responding to the mouse wheel). The root
+     still prevents scroll chaining to the viewport / pull-to-refresh. */
   html {
     @apply scroll-smooth;
     overscroll-behavior: none;

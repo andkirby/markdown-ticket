@@ -292,9 +292,12 @@
     padding: 10px;
     min-height: 124px;
     /* Each column scrolls independently so a long list in one status does not
-       force the whole lane to grow. */
+       force the whole lane to grow. overscroll-behavior is left at the default
+       (auto) deliberately: `contain`/`none` swallow the wheel event when this
+       column can't scroll, which traps the pointer and stops wheel events from
+       chaining to the outer .swimlane-board__scroll — so the board could not be
+       scrolled with the mouse wheel from over a non-overflowing lane column. */
     overflow-y: auto;
-    overscroll-behavior: contain;
     background: color-mix(in srgb, var(--bg-subtle) 78%, var(--bg-elevated));
     transition: background-color 150ms ease-out, box-shadow 150ms ease-out;
   }
