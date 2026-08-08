@@ -15,6 +15,7 @@
 
 /// <reference types="jest" />
 
+import { readFile, writeFile } from 'node:fs/promises'
 import { assertBodyHasProperties, assertSuccess, projectApi } from '../api/helpers'
 import { cleanupTestEnvironment, createTestProjectWithCR, setupTestEnvironment } from '../api/setup'
 
@@ -24,11 +25,13 @@ describe('API Metadata Tests - MDT-094', () => {
   let app: Awaited<ReturnType<typeof setupTestEnvironment>>['app']
   let projectCode: string
   let crCode: string
+  let previousLocalHostBypass: string | undefined
 
   beforeAll(async () => {
-    console.log('[TEST] Starting MDT-094 metadata test setup...')
-
     try {
+      previousLocalHostBypass = process.env.API_LOCAL_HOST_BYPASS
+      process.env.API_LOCAL_HOST_BYPASS = 'true'
+
       const context = await setupTestEnvironment()
 
       tempDir = context.tempDir
@@ -43,8 +46,6 @@ describe('API Metadata Tests - MDT-094', () => {
 
       projectCode = testData.projectCode
       crCode = testData.crCode
-
-      console.log('[TEST] MDT-094 setup complete:', { projectCode, crCode })
     }
     catch (error) {
       console.error('[TEST] Error in MDT-094 setup:', error)
@@ -54,6 +55,10 @@ describe('API Metadata Tests - MDT-094', () => {
 
   afterAll(async () => {
     await cleanupTestEnvironment(tempDir)
+    if (previousLocalHostBypass === undefined)
+      delete process.env.API_LOCAL_HOST_BYPASS
+    else
+      process.env.API_LOCAL_HOST_BYPASS = previousLocalHostBypass
   })
 
   describe('GET /api/projects/:projectId/crs (Metadata Response)', () => {
@@ -82,6 +87,7 @@ describe('API Metadata Tests - MDT-094', () => {
         'status',
         'type',
         'priority',
+        'level',
         'dateCreated',
         'lastModified',
       ]
@@ -91,6 +97,29 @@ describe('API Metadata Tests - MDT-094', () => {
           expect(item).toHaveProperty(field)
         })
       })
+    })
+
+    it('should preserve level: epic in metadata list responses', async () => {
+      const epic = await projectFactory.createTestCR(projectCode, {
+        title: 'Metadata Epic',
+        type: 'Feature Enhancement',
+        status: 'Approved',
+        priority: 'Medium',
+        content: 'Epic metadata should preserve level.',
+      })
+      if (!epic.filePath || !epic.crCode)
+        throw new Error('Failed to create metadata epic fixture')
+
+      const content = await readFile(epic.filePath, 'utf8')
+      await writeFile(epic.filePath, content.replace('priority: Medium\n', 'priority: Medium\nlevel: epic\n'), 'utf8')
+
+      const response = await projectApi.listCRs(app, projectCode)
+      assertSuccess(response, 200)
+
+      const metadataEpic = response.body.find((item: Record<string, unknown>) => item.code === epic.crCode)
+      expect(metadataEpic).toBeDefined()
+      expect(metadataEpic).toHaveProperty('level', 'epic')
+      expect(metadataEpic).not.toHaveProperty('content')
     })
 
     it('should include relationship arrays', async () => {
@@ -208,14 +237,6 @@ describe('API Metadata Tests - MDT-094', () => {
       // Calculate reduction
       const reduction = ((estimatedFullSize - listSize) / estimatedFullSize) * 100
 
-      console.log('[MDT-094] Payload analysis:', {
-        listSize,
-        singleDetailSize,
-        ticketCount: listResponse.body.length,
-        estimatedFullSize,
-        reduction: `${reduction.toFixed(1)}%`,
-      })
-
       // Should achieve >80% reduction
       expect(reduction).toBeGreaterThan(80)
     })
@@ -226,8 +247,6 @@ describe('API Metadata Tests - MDT-094', () => {
       const elapsed = performance.now() - startTime
 
       assertSuccess(response, 200)
-
-      console.log('[MDT-094] Response time:', `${elapsed.toFixed(1)}ms`)
 
       // Should respond within 200ms
       expect(elapsed).toBeLessThan(200)

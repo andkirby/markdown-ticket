@@ -3,6 +3,8 @@
  *
  * MDT-094: Added TicketMetadata and normalizeTicketMetadata
  */
+import type { CRLevelValue } from '@mdt/domain-contracts'
+import { CRLevel, CRLevels } from '@mdt/domain-contracts'
 import { TICKET_UPDATE_ALLOWED_ATTRS } from '@mdt/shared/models/Ticket.js'
 
 export type {
@@ -50,6 +52,13 @@ function getString(value: unknown, fallback = ''): string {
   return typeof value === 'string' ? value : fallback
 }
 
+function normalizeLevel(value: unknown): CRLevelValue {
+  return typeof value === 'string'
+    && (CRLevels as readonly string[]).includes(value)
+    ? (value as CRLevelValue)
+    : CRLevel.TICKET
+}
+
 /**
  * Normalize ticket data to ensure consistent structure
  */
@@ -61,6 +70,7 @@ export function normalizeTicket(rawTicket: unknown): Ticket {
     status: getString(ticket.status, 'Proposed'),
     type: getString(ticket.type, 'Feature Enhancement'),
     priority: getString(ticket.priority, 'Medium'),
+    level: normalizeLevel(ticket.level),
     content: getString(ticket.content),
     filePath: getString(ticket.filePath) || getString(ticket.path),
     dateCreated: parseDate(ticket.dateCreated),
@@ -95,6 +105,7 @@ export function normalizeTicketMetadata(rawTicket: unknown): TicketMetadata {
     status: getString(ticket.status, 'Proposed'),
     type: getString(ticket.type, 'Feature Enhancement'),
     priority: getString(ticket.priority, 'Medium'),
+    level: normalizeLevel(ticket.level),
     // content is intentionally excluded
     filePath: getString(ticket.filePath) || getString(ticket.path),
     dateCreated: parseDate(ticket.dateCreated),

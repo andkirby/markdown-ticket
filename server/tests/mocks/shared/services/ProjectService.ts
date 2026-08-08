@@ -66,6 +66,7 @@ interface ProjectCR {
   status: string
   type: string
   priority: string
+  level: string
   filename: string
   path: string
   // MDT-094: Additional metadata fields
@@ -367,6 +368,7 @@ export class ProjectService {
             const statusMatch = yaml.match(/status:\s*["']?([^"'\n]+)["']?/)
             const typeMatch = yaml.match(/type:\s*["']?([^"'\n]+)["']?/)
             const priorityMatch = yaml.match(/priority:\s*["']?([^"'\n]+)["']?/)
+            const levelMatch = yaml.match(/level:\s*["']?([^"'\n]+)["']?/)
 
             // Extract code from filename or YAML
             const code = codeMatch ? codeMatch[1].trim() : entry.name.replace('.md', '')
@@ -380,6 +382,7 @@ export class ProjectService {
               status: statusMatch ? statusMatch[1].trim() : 'Proposed',
               type: typeMatch ? typeMatch[1].trim() : 'Feature Enhancement',
               priority: priorityMatch ? priorityMatch[1].trim() : 'Medium',
+              level: levelMatch ? levelMatch[1].trim() : 'ticket',
               filename: entry.name,
               path: mdPath,
               // MDT-094: Additional metadata fields
