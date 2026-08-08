@@ -14,13 +14,14 @@ interface TicketCardProps {
   onDragStart?: (e: React.DragEvent) => void // Used for testing
   onEdit: () => void
   canEdit?: boolean
+  showBadges?: boolean
 }
 
 /**
  * @testid ticket-card — Ticket card container
  * @testid ticket-{code} — Ticket card by code (e.g., ticket-MDT-001)
  */
-const TicketCard: React.FC<TicketCardProps> = ({ ticket, onMove: _onMove, onClick: _onClick, onDragStart: _onDragStart, onEdit }) => {
+const TicketCard: React.FC<TicketCardProps> = ({ ticket, onMove: _onMove, onClick: _onClick, onDragStart: _onDragStart, onEdit, showBadges = true }) => {
   const hasInvalidStatus = !VALID_STATUSES.includes(ticket.status as CRStatus)
 
   return (
@@ -46,12 +47,13 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onMove: _onMove, onClic
       {/* Row 2: title */}
       <h4 className="ticket-card__title">{ticket.title}</h4>
 
-      {/* Row 3: badges */}
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex-1">
-          <TicketAttributeTags ticket={ticket} isInvalidStatus={hasInvalidStatus} />
+      {showBadges && (
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1">
+            <TicketAttributeTags ticket={ticket} isInvalidStatus={hasInvalidStatus} />
+          </div>
         </div>
-      </div>
+      )}
 
     </div>
   )

@@ -1,6 +1,6 @@
 import type { BoardTicket, Status, Ticket } from '../../types'
 import { CRStatus } from '@mdt/domain-contracts'
-import { Check, ChevronDown } from 'lucide-react'
+import { Check, ChevronDown, FileText } from 'lucide-react'
 import * as React from 'react'
 import { useMemo, useState } from 'react'
 import { useDrag } from 'react-dnd'
@@ -29,6 +29,7 @@ interface SwimlaneBoardProps {
 interface DraggableLaneTicketProps {
   ticket: Ticket
   canWrite: boolean
+  showBadges: boolean
   onTicketEdit: (ticket: Ticket) => void
 }
 
@@ -37,6 +38,7 @@ interface LaneColumnProps {
   status: Status
   tickets: Ticket[]
   canWrite: boolean
+  showBadges: boolean
   epicKeys: Set<string>
   onTicketEdit: (ticket: Ticket) => void
   onTicketDrop: (status: Status, ticket: Ticket) => void | Promise<void>
@@ -46,7 +48,7 @@ function isLocalTicket(ticket: BoardTicket): ticket is Ticket {
   return !('kind' in ticket && ticket.kind === 'projected')
 }
 
-function DraggableLaneTicket({ ticket, canWrite, onTicketEdit }: DraggableLaneTicketProps) {
+function DraggableLaneTicket({ ticket, canWrite, showBadges, onTicketEdit }: DraggableLaneTicketProps) {
   const [{ isDragging }, drag] = useDrag(() => ({
     type: 'ticket',
     item: { ticket },
@@ -62,7 +64,7 @@ function DraggableLaneTicket({ ticket, canWrite, onTicketEdit }: DraggableLaneTi
       className={`draggable-ticket ${isDragging ? 'draggable-ticket--dragging' : canWrite ? 'draggable-ticket--draggable' : ''}`}
       data-testid={canWrite ? 'drag-handle' : undefined}
     >
-      <TicketCard ticket={ticket} onEdit={() => onTicketEdit(ticket)} canEdit={canWrite} />
+      <TicketCard ticket={ticket} onEdit={() => onTicketEdit(ticket)} canEdit={canWrite} showBadges={showBadges} />
     </div>
   )
 }
@@ -72,6 +74,7 @@ function LaneColumn({
   status,
   tickets,
   canWrite,
+  showBadges,
   epicKeys,
   onTicketEdit,
   onTicketDrop,
@@ -102,6 +105,7 @@ function LaneColumn({
           key={ticket.code}
           ticket={ticket}
           canWrite={canWrite}
+          showBadges={showBadges}
           onTicketEdit={onTicketEdit}
         />
       ))}
@@ -146,6 +150,7 @@ export function SwimlaneBoard({
   onEpicStatusChange,
 }: SwimlaneBoardProps) {
   const [hideEmpty, setHideEmpty] = useState(false)
+  const [showBadges, setShowBadges] = useState(false)
   const [collapsedLaneKeys, setCollapsedLaneKeys] = useState<Set<string>>(() => new Set())
   const { lanes } = useMemo(() => buildSwimlaneModel(tickets, laneSourceTickets), [laneSourceTickets, tickets])
   const epicKeys = useMemo(() => new Set(lanes.filter(lane => lane.epic).map(lane => lane.key)), [lanes])
@@ -178,6 +183,15 @@ export function SwimlaneBoard({
             data-testid="swimlane-hide-empty"
           />
           <span>Hide empty</span>
+        </label>
+        <label className="swimlane-board__toggle">
+          <input
+            type="checkbox"
+            checked={showBadges}
+            onChange={event => setShowBadges(event.currentTarget.checked)}
+            data-testid="swimlane-show-badges"
+          />
+          <span>Show badges</span>
         </label>
         <Button type="button" variant="ghost" size="sm" onClick={collapseAll} data-testid="swimlane-collapse-all">Collapse all</Button>
         <Button type="button" variant="ghost" size="sm" onClick={expandAll} data-testid="swimlane-expand-all">Expand all</Button>
@@ -262,36 +276,49 @@ export function SwimlaneBoard({
                 )}
 
                 {lane.epic && lifecycle && (
-                  <div className="swimlane-board__lifecycle">
-                    {lifecycle.targetStatus
-                      ? (
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant={lifecycle.text === 'Activate' ? 'default' : 'outline'}
-                            disabled={!canWrite || closeBlocked}
-                            title={closeBlocked ? blockedTitle : undefined}
-                            aria-label={`${lifecycle.text} ${lane.title}`}
-                            onClick={() => {
-                              if (lifecycle.targetStatus)
-                                void onEpicStatusChange(lane.epic as Ticket, lifecycle.targetStatus)
-                            }}
-                            data-testid="swimlane-lifecycle-action"
-                            data-lane-key={lane.key}
-                          >
-                            {lifecycle.text}
-                          </Button>
-                        )
-                      : (
-                          <span
-                            className="swimlane-board__closed"
-                            data-testid="swimlane-lifecycle-action"
-                            data-lane-key={lane.key}
-                          >
-                            <Check aria-hidden="true" size={14} />
-                            Closed
-                          </span>
-                        )}
+                  <div className="swimlane-board__lane-footer">
+                    <div className="swimlane-board__lifecycle">
+                      {lifecycle.targetStatus
+                        ? (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant={lifecycle.text === 'Activate' ? 'default' : 'outline'}
+                              disabled={!canWrite || closeBlocked}
+                              title={closeBlocked ? blockedTitle : undefined}
+                              aria-label={`${lifecycle.text} ${lane.title}`}
+                              onClick={() => {
+                                if (lifecycle.targetStatus)
+                                  void onEpicStatusChange(lane.epic as Ticket, lifecycle.targetStatus)
+                              }}
+                              data-testid="swimlane-lifecycle-action"
+                              data-lane-key={lane.key}
+                            >
+                              {lifecycle.text}
+                            </Button>
+                          )
+                        : (
+                            <span
+                              className="swimlane-board__closed"
+                              data-testid="swimlane-lifecycle-action"
+                              data-lane-key={lane.key}
+                            >
+                              <Check aria-hidden="true" size={14} />
+                              Closed
+                            </span>
+                          )}
+                    </div>
+                    <button
+                      type="button"
+                      className="swimlane-board__open-epic"
+                      aria-label={`Open epic ticket ${lane.title}`}
+                      title={`Open ${lane.key}`}
+                      onClick={() => onTicketEdit(lane.epic as Ticket)}
+                      data-testid="swimlane-open-epic"
+                      data-lane-key={lane.key}
+                    >
+                      <FileText aria-hidden="true" size={14} />
+                    </button>
                   </div>
                 )}
               </div>
@@ -318,6 +345,7 @@ export function SwimlaneBoard({
                       status={primaryStatus}
                       tickets={columnTickets}
                       canWrite={canWrite}
+                      showBadges={showBadges}
                       epicKeys={epicKeys}
                       onTicketEdit={onTicketEdit}
                       onTicketDrop={onTicketDrop}

@@ -79,6 +79,8 @@ export const swimlaneSelectors = {
   toolbar: '[data-testid="swimlane-toolbar"]',
   /** Hide empty lanes toggle */
   hideEmptyToggle: '[data-testid="swimlane-hide-empty"]',
+  /** Show ticket-card badges toggle */
+  showBadgesToggle: '[data-testid="swimlane-show-badges"]',
   /** Collapse all lanes action */
   collapseAll: '[data-testid="swimlane-collapse-all"]',
   /** Expand all lanes action */
@@ -95,6 +97,8 @@ export const swimlaneSelectors = {
   laneProgressByKey: (key: string) => `[data-testid="swimlane-progress"][data-lane-key="${key}"]`,
   /** Lane lifecycle action by key */
   laneActionByKey: (key: string) => `[data-testid="swimlane-lifecycle-action"][data-lane-key="${key}"]`,
+  /** Lane epic ticket open action by key */
+  laneOpenEpicByKey: (key: string) => `[data-testid="swimlane-open-epic"][data-lane-key="${key}"]`,
   /** Lane collapse button by key */
   laneCollapseByKey: (key: string) => `[data-testid="swimlane-collapse"][data-lane-key="${key}"]`,
   /** Lane column by lane key and status */

@@ -6,9 +6,8 @@
     height: 2.25rem;
     gap: 2px;
     padding: 2px;
-    border: 1px solid oklch(var(--border));
     border-radius: 6px;
-    background: oklch(var(--background));
+    background: var(--bg-muted);
     font-size: var(--fs-xs);
   }
 
@@ -17,20 +16,15 @@
     align-items: center;
     justify-content: center;
     width: 30px;
-    height: 100%;
-    border-radius: 4px;
+    height: 28px;
+    border-radius: 5px;
     color: var(--text-muted);
     font-weight: 600;
     transition: background-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
   }
 
-  .view-mode-switcher__button svg {
-    width: var(--sz-icon);
-    height: var(--sz-icon);
-  }
-
   .view-mode-switcher__button:hover {
-    background: var(--bg-muted);
+    background: color-mix(in srgb, oklch(var(--background)) 60%, transparent);
     color: oklch(var(--foreground));
   }
 
@@ -40,7 +34,7 @@
   }
 
   .view-mode-switcher__button[data-active="true"] {
-    background: var(--bg-muted);
+    background: oklch(var(--background));
     color: oklch(var(--foreground));
     box-shadow: 0 1px 2px color-mix(in srgb, black 8%, transparent);
   }
