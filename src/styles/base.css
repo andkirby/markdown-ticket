@@ -3,6 +3,7 @@
 @layer base {
   * {
     @apply border-border;
+    overscroll-behavior: none;
   }
 
   body {
@@ -12,6 +13,7 @@
 
   html {
     @apply scroll-smooth;
+    overscroll-behavior: none;
   }
 
   h1, h2, h3, h4, h5, h6 {
