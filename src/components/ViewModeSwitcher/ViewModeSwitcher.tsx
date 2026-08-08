@@ -1,73 +1,57 @@
-/**
- * MDT-131: ViewModeSwitcher Component
- *
- * Container component for view mode switching.
- * Composes BoardListToggle and Documents button with responsive behavior.
- */
-
-import type { ViewMode } from './types'
-import { useEffect, useState } from 'react'
-import { BoardListToggle } from './BoardListToggle'
-
-const DESKTOP_BREAKPOINT = 768
+import type { LucideIcon } from 'lucide-react'
+import type { ViewSwitcherMode } from './types'
+import { Columns3, FileText, List, Rows3 } from 'lucide-react'
 
 interface ViewModeSwitcherProps {
-  currentMode: 'board' | 'list' // Always board or list, never documents
-  onModeChange: (mode: ViewMode) => void
-  isDocumentsView: boolean // Whether currently in documents view
+  currentMode: ViewSwitcherMode
+  onModeChange: (mode: ViewSwitcherMode) => void
 }
+
+interface ViewSwitcherItem {
+  id: ViewSwitcherMode
+  label: string
+  testId: string
+  icon: LucideIcon
+}
+
+const VIEW_SWITCHER_ITEMS: ViewSwitcherItem[] = [
+  { id: 'board', label: 'Board', testId: 'board-mode-flat-toggle', icon: Columns3 },
+  { id: 'swimlanes', label: 'Swimlanes', testId: 'board-mode-epics-toggle', icon: Rows3 },
+  { id: 'list', label: 'List', testId: 'view-mode-list-toggle', icon: List },
+  { id: 'documents', label: 'Docs', testId: 'documents-button', icon: FileText },
+]
 
 export function ViewModeSwitcher({
   currentMode,
   onModeChange,
-  isDocumentsView,
 }: ViewModeSwitcherProps) {
-  const [isDesktop, setIsDesktop] = useState(() =>
-    typeof window !== 'undefined' && window.innerWidth >= DESKTOP_BREAKPOINT,
-  )
-
-  useEffect(() => {
-    const checkViewport = () => {
-      setIsDesktop(window.innerWidth >= DESKTOP_BREAKPOINT)
-    }
-
-    // Initial check
-    checkViewport()
-
-    // Listen for resize
-    window.addEventListener('resize', checkViewport)
-    return () => window.removeEventListener('resize', checkViewport)
-  }, [])
-
   return (
-    <div className="flex items-center gap-2">
-      {/* Board/List Toggle - always visible */}
-      <BoardListToggle
-        currentMode={currentMode}
-        onModeChange={onModeChange}
-        isDocumentsView={isDocumentsView}
-      />
-
-      {/* Documents button - desktop only (>= 768px) */}
-      {isDesktop && (
-        <button
-          data-testid="documents-button"
-          onClick={() => onModeChange('documents')}
-          className={`h-12 w-12 rounded-md transition-all border ${
-            isDocumentsView
-              ? 'border-primary'
-              : 'border-transparent hover:border-muted-foreground/30'
-          }`}
-          type="button"
-          title="Documents View"
-        >
-          <img
-            src="/icon_docs_64.webp"
-            alt="Documents"
-            className="w-8 h-8 mx-auto dark:invert"
-          />
-        </button>
-      )}
+    <div
+      className="view-mode-switcher"
+      data-testid="view-mode-switcher"
+      role="group"
+      aria-label="View mode"
+    >
+      {VIEW_SWITCHER_ITEMS.map((item) => {
+        const Icon = item.icon
+        const isActive = currentMode === item.id
+        return (
+          <button
+            key={item.id}
+            type="button"
+            className="view-mode-switcher__button"
+            data-testid={item.testId}
+            data-view-mode={item.id}
+            data-active={isActive ? 'true' : 'false'}
+            aria-pressed={isActive}
+            aria-label={item.label}
+            title={item.label}
+            onClick={() => onModeChange(item.id)}
+          >
+            <Icon strokeWidth={2.2} aria-hidden />
+          </button>
+        )
+      })}
     </div>
   )
 }

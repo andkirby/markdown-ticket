@@ -1,6 +1,6 @@
 /**
  * ViewMode type-safe enum following MDT pattern
- * Provides BOARD, LIST, and DOCUMENTS view modes
+ * Provides BOARD, LIST, and DOCUMENTS route-level view modes
  */
 
 // 1. Const object with named keys (single source of truth)
@@ -22,3 +22,5 @@ export const ViewModes = [
   ViewModeEnum.LIST,
   ViewModeEnum.DOCUMENTS,
 ] as const
+
+export type ViewSwitcherMode = ViewMode | 'swimlanes'

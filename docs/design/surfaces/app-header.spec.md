@@ -64,7 +64,7 @@ Header (nav.header)
 
 1. **header__left-section** — `flex-shrink-0`, contains MobileLogo only
 2. **centerSection** (inline in header__left after left-section)
-   - **ViewModeSwitcher** — toggles between board/list/documents
+   - **ViewModeSwitcher** — icon-only peer group for Board, Swimlanes, List, and Docs; height matches the header input controls
    - **ProjectSelector** — `min-w-0 flex-1`, fills remaining space
 
 ### Header__right slot (flex, items-center)
@@ -78,7 +78,8 @@ Header (nav.header)
 | State | Trigger | Visual Change |
 |-------|---------|---------------|
 | default | page load | blurred translucent bar |
-| board view | viewMode=board | SortControls visible (desktop), ViewModeSwitcher shows board active |
+| board view | viewMode=board, boardLayoutMode=flat | SortControls visible (desktop), ViewModeSwitcher shows board active |
+| swimlanes view | viewMode=board, boardLayoutMode=swimlanes | SortControls visible (desktop), ViewModeSwitcher shows swimlanes active |
 | list view | viewMode=list | SortControls visible (desktop), ViewModeSwitcher shows list active |
 | documents view | viewMode=documents | SortControls hidden, ViewModeSwitcher shows documents active |
 | public read-only | anonymous visitor opens public project | no header dot; hamburger menu includes `Read only` row and `Unlock access`; owner/admin menu items are not mounted |
@@ -138,4 +139,4 @@ The menu is a positioned dropdown: `absolute right-0 top-full mt-1 w-48`, with c
 - Owner/admin-only actions must not be mounted in read-only mode. Backend authorization remains authoritative, but hidden components must not run owner-only effects.
 - Frontend API calls to `/api/*` must go through `authFetch` or an approved API wrapper so session cookies and owner-intent headers are applied consistently.
 - Future settings entry point: Settings item in the hamburger menu opens the dedicated Settings modal. See `settings.spec.md`.
-- ViewModeSwitcher does not persist its own state — persistence is handled by `App.tsx` via localStorage keys `lastBoardListMode` and `lastViewMode`.
+- ViewModeSwitcher does not persist its own state — persistence is handled by `App.tsx` via localStorage keys `lastBoardListMode`, `lastViewMode`, and `mdt-board-mode`.

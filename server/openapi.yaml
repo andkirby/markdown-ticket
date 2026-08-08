@@ -1691,9 +1691,7 @@ paths:
                 type: string
                 format: binary
         '403':
-          description: Invalid
-          expired: null
-          or out-of-scope token; traversal attempt: null
+          description: 'Invalid, expired, or out-of-scope token; traversal attempt'
         '404':
           description: Unknown project or file
         '415':

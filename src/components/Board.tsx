@@ -3,6 +3,7 @@ import type { Project } from '@mdt/shared/models/Project'
 // MDT-196: BoardFilterBar + useBoardFilters + countActiveFilters moved to App.tsx header.
 // Board now consumes pre-filtered tickets via the `filteredTickets` prop.
 // MDT-200 U5: useCloudProjections merges cloud-projected stubs (read-only).
+import type { BoardLayoutModeValue } from '../config/boardLayoutMode'
 import type { SortPreferences } from '../config/sorting'
 import type { ProjectionFeed } from '../hooks/useCloudProjections'
 import type { BoardTicket, ProjectedStubTicket, Status, Ticket } from '../types'
@@ -11,7 +12,8 @@ import { CRStatus } from '@mdt/domain-contracts'
 import * as React from 'react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { getColumnForStatus, getVisibleColumns } from '../config'
-import { COLLAPSED_COLUMNS_CHANGE_EVENT, getCollapsedColumns, setCollapsedColumns } from '../config/settingsPreferences'
+import { BoardLayoutMode } from '../config/boardLayoutMode'
+import { COLLAPSED_COLUMNS_CHANGE_EVENT, getCollapsedColumns, setCollapsedColumns as persistCollapsedColumns } from '../config/settingsPreferences'
 import { getSortPreferences, setSortPreferences } from '../config/sorting'
 import { useBoardLayout } from '../hooks/useBoardLayout'
 import { useCloudProjections } from '../hooks/useCloudProjections'
@@ -19,10 +21,12 @@ import { useProjectManager } from '../hooks/useProjectManager'
 import { useToast } from '../hooks/useToast'
 import { sortTickets } from '../utils/sorting'
 import { applyTicketFilters } from '../utils/ticketFilters'
+import { isEpicTicket } from '../utils/ticketLevels'
 // MDT-196: countActiveFilters + BoardFilterBar moved to App.tsx
 import Column from './Column'
 import { HamburgerMenu } from './HamburgerMenu'
 import { SortControls } from './SortControls'
+import { SwimlaneBoard } from './SwimlaneBoard'
 import { Alert, AlertDescription, AlertTitle } from './ui/alert'
 import { Button } from './ui/index'
 import { ScrollArea } from './ui/scroll-area'
@@ -46,6 +50,7 @@ interface BoardProps {
   /** Remove a filter value from the mobile chip strip (MDT-196). */
   onRemoveMobileFilter?: (facet: FacetKey, value: string) => void
   loading?: boolean
+  boardLayoutMode?: BoardLayoutModeValue
   sortPreferences?: SortPreferences
   canWrite?: boolean
   /**
@@ -56,8 +61,6 @@ interface BoardProps {
    */
   projectionFeed?: ProjectionFeed | null
 }
-
-// Note: TicketItem removed - drag functionality handled in Column.tsx
 
 const BoardContent: React.FC<BoardProps> = ({
   onTicketClick,
@@ -71,6 +74,7 @@ const BoardContent: React.FC<BoardProps> = ({
   mobileFilters,
   onRemoveMobileFilter,
   loading: propLoading,
+  boardLayoutMode = BoardLayoutMode.FLAT,
   sortPreferences: propSortPreferences,
   canWrite = true,
   projectionFeed = null,
@@ -85,16 +89,16 @@ const BoardContent: React.FC<BoardProps> = ({
   // Use custom hook for board layout management (mobile column switching)
   const { isMobile, setActiveColumnIndex, shouldShowColumn } = useBoardLayout()
   // Column collapse (v3 Pr.4) — persisted set of primary-status ids.
-  const [collapsedColumns, setCollapsedColumnsState] = useState<string[]>(() => getCollapsedColumns())
+  const [collapsedColumns, setCollapsedColumns] = useState<string[]>(() => getCollapsedColumns())
   useEffect(() => {
-    const sync = (): void => setCollapsedColumnsState(getCollapsedColumns())
+    const sync = (): void => setCollapsedColumns(getCollapsedColumns())
     window.addEventListener(COLLAPSED_COLUMNS_CHANGE_EVENT, sync)
     return () => window.removeEventListener(COLLAPSED_COLUMNS_CHANGE_EVENT, sync)
   }, [])
   const toggleColumnCollapse = useCallback((columnId: string) => {
-    setCollapsedColumnsState((prev) => {
+    setCollapsedColumns((prev) => {
       const next = prev.includes(columnId) ? prev.filter(id => id !== columnId) : [...prev, columnId]
-      setCollapsedColumns(next)
+      persistCollapsedColumns(next)
       return next
     })
   }, [])
@@ -367,7 +371,7 @@ const BoardContent: React.FC<BoardProps> = ({
   })
 
   // Group filtered merged tickets by their column
-  displayTickets.forEach((ticket) => {
+  displayTickets.filter(ticket => !isEpicTicket(ticket)).forEach((ticket) => {
     const column = getColumnForStatus(ticket.status as Status)
     if (ticketsByColumn[column.label]) {
       ticketsByColumn[column.label].push(ticket)
@@ -572,51 +576,70 @@ const BoardContent: React.FC<BoardProps> = ({
       {/* MDT-196: filter UI moved to App.tsx header — Board no longer renders
           filter controls. The board consumes pre-filtered tickets via props. */}
 
-      {/* Board Grid - render regardless of showHeader */}
-      <div data-testid="kanban-board" className="board-container flex-1 min-h-0">
-        {visibleColumns
-          // On mobile, only show the active column; on desktop+, show all columns
-          .filter((_, index) => shouldShowColumn(index))
-          .map((column) => {
-          // Get the primary status for this column (for testid)
-          // Each column has at least one status in its statuses array
-            const primaryStatus = column.statuses[0]
-            // Calculate actual column index in the full array
-            const actualColumnIndex = visibleColumns.findIndex(col => col.label === column.label)
-            return (
-              <Column
-                key={column.label}
-                column={column}
-                isFirstColumn={actualColumnIndex === 0}
-                tickets={ticketsByColumn[column.label]}
-                allTickets={displayTickets}
-                sortAttribute={localSortPreferences.selectedAttribute}
-                sortDirection={localSortPreferences.selectedDirection}
-                onDrop={async (status: Status, ticket: Ticket, currentColumnIndex?: number, currentTicketIndex?: number) => {
-                  console.warn('Board: Column onDrop called with:', { status, ticketKey: ticket.code, currentColumnIndex, currentTicketIndex })
-                  await handleDrop(status, ticket, currentColumnIndex, currentTicketIndex)
-                }}
-                onTicketEdit={handleTicketEdit}
-                getTicketPosition={getTicketPosition}
-                clearTicketPosition={clearTicketPosition}
-                status={primaryStatus}
-                canWrite={canWrite}
-                // Mobile column switcher props
-                allColumns={visibleColumns}
-                currentColumnIndex={actualColumnIndex}
-                onColumnSwitch={setActiveColumnIndex}
-                isMobileView={isMobile}
-                // MDT-196: mobile chip strip filter props (from App header)
-                mobileFilters={mobileFilters}
-                onRemoveMobileFilter={onRemoveMobileFilter}
-                // MDT-200 U5: open a projected stub read-only (no edit controls).
-                onOpenProjection={(stub: ProjectedStubTicket) => onTicketClick(stub as unknown as Ticket)}
-                collapsed={collapsedColumns.includes(primaryStatus)}
-                onToggleCollapse={() => toggleColumnCollapse(primaryStatus)}
-              />
-            )
-          })}
-      </div>
+      {boardLayoutMode === BoardLayoutMode.SWIMLANES
+        ? (
+            <SwimlaneBoard
+              tickets={displayTickets}
+              laneSourceTickets={boardTickets}
+              columns={visibleColumns}
+              sortAttribute={localSortPreferences.selectedAttribute}
+              sortDirection={localSortPreferences.selectedDirection}
+              canWrite={canWrite}
+              onTicketEdit={handleTicketEdit}
+              onTicketDrop={async (status: Status, ticket: Ticket) => {
+                await handleDrop(status, ticket)
+              }}
+              onEpicStatusChange={async (epic: Ticket, status: Status) => {
+                await handleDrop(status, epic)
+              }}
+            />
+          )
+        : (
+            <div data-testid="kanban-board" className="board-container flex-1 min-h-0">
+              {visibleColumns
+                // On mobile, only show the active column; on desktop+, show all columns
+                .filter((_, index) => shouldShowColumn(index))
+                .map((column) => {
+                // Get the primary status for this column (for testid)
+                // Each column has at least one status in its statuses array
+                  const primaryStatus = column.statuses[0]
+                  // Calculate actual column index in the full array
+                  const actualColumnIndex = visibleColumns.findIndex(col => col.label === column.label)
+                  return (
+                    <Column
+                      key={column.label}
+                      column={column}
+                      isFirstColumn={actualColumnIndex === 0}
+                      tickets={ticketsByColumn[column.label]}
+                      allTickets={displayTickets.filter(ticket => !isEpicTicket(ticket))}
+                      sortAttribute={localSortPreferences.selectedAttribute}
+                      sortDirection={localSortPreferences.selectedDirection}
+                      onDrop={async (status: Status, ticket: Ticket, currentColumnIndex?: number, currentTicketIndex?: number) => {
+                        console.warn('Board: Column onDrop called with:', { status, ticketKey: ticket.code, currentColumnIndex, currentTicketIndex })
+                        await handleDrop(status, ticket, currentColumnIndex, currentTicketIndex)
+                      }}
+                      onTicketEdit={handleTicketEdit}
+                      getTicketPosition={getTicketPosition}
+                      clearTicketPosition={clearTicketPosition}
+                      status={primaryStatus}
+                      canWrite={canWrite}
+                      // Mobile column switcher props
+                      allColumns={visibleColumns}
+                      currentColumnIndex={actualColumnIndex}
+                      onColumnSwitch={setActiveColumnIndex}
+                      isMobileView={isMobile}
+                      // MDT-196: mobile chip strip filter props (from App header)
+                      mobileFilters={mobileFilters}
+                      onRemoveMobileFilter={onRemoveMobileFilter}
+                      // MDT-200 U5: open a projected stub read-only (no edit controls).
+                      onOpenProjection={(stub: ProjectedStubTicket) => onTicketClick(stub as unknown as Ticket)}
+                      collapsed={collapsedColumns.includes(primaryStatus)}
+                      onToggleCollapse={() => toggleColumnCollapse(primaryStatus)}
+                    />
+                  )
+                })}
+            </div>
+          )}
     </div>
   )
 }

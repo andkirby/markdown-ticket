@@ -1,3 +1,4 @@
+import type { ViewSwitcherMode } from './components/ViewModeSwitcher'
 import type { SortPreferences } from './config/sorting'
 import type { Ticket } from './types'
 import { getTicketsPath } from '@mdt/shared/models/Project'
@@ -41,6 +42,11 @@ import TicketViewer from './components/TicketViewer'
 import { Modal, ModalBody } from './components/ui/Modal'
 import { Toaster } from './components/ui/sonner'
 import { ViewModeSwitcher } from './components/ViewModeSwitcher'
+import {
+  BoardLayoutMode,
+  getBoardLayoutModePreference,
+  setBoardLayoutModePreference,
+} from './config/boardLayoutMode'
 import { getSortPreferences, setSortPreferences } from './config/sorting'
 import { useBoardFilters } from './hooks/useBoardFilters'
 import { useCardDensity } from './hooks/useCardDensity'
@@ -169,11 +175,7 @@ function ProjectRouteHandler() {
     = useState<SortPreferences>(getSortPreferences)
   const [showAddProjectModal, setShowAddProjectModal] = useState(false)
   const [showEditProjectModal, setShowEditProjectModal] = useState(false)
-  const [lastBoardListMode, setLastBoardListMode] = useState<'board' | 'list'>(
-    () =>
-      (localStorage.getItem('lastBoardListMode') as 'board' | 'list')
-      || 'board',
-  )
+  const [boardLayoutMode, setBoardLayoutMode] = useState(getBoardLayoutModePreference)
   const [showQuickSearch, setShowQuickSearch] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [showOwnerUnlock, setShowOwnerUnlock] = useState(false)
@@ -424,17 +426,26 @@ function ProjectRouteHandler() {
     }
   }, [location.pathname, tickets, projectsLoading, selectedProject])
 
-  const handleViewModeChange = (mode: 'board' | 'list' | 'documents') => {
+  const handleViewModeChange = (mode: ViewSwitcherMode) => {
     const basePath = buildProjectPath(projectCode!)
-    const newPath = mode === 'board' ? basePath : `${basePath}/${mode}`
+    const routeMode = mode === 'swimlanes' ? 'board' : mode
+    const newPath = routeMode === 'board' ? basePath : `${basePath}/${routeMode}`
+
+    if (mode === 'swimlanes') {
+      setBoardLayoutMode(BoardLayoutMode.SWIMLANES)
+      setBoardLayoutModePreference(BoardLayoutMode.SWIMLANES)
+    }
+    else if (mode === 'board') {
+      setBoardLayoutMode(BoardLayoutMode.FLAT)
+      setBoardLayoutModePreference(BoardLayoutMode.FLAT)
+    }
 
     // Store view mode preferences
-    if (mode === 'board' || mode === 'list') {
+    if (routeMode === 'board' || routeMode === 'list') {
       // Store the last board/list mode separately
-      localStorage.setItem('lastBoardListMode', mode)
-      setLastBoardListMode(mode)
+      localStorage.setItem('lastBoardListMode', routeMode)
     }
-    localStorage.setItem('lastViewMode', mode)
+    localStorage.setItem('lastViewMode', routeMode)
 
     navigate(newPath)
   }
@@ -485,10 +496,11 @@ function ProjectRouteHandler() {
             <>
               <ViewModeSwitcher
                 currentMode={
-                  viewMode === 'documents' ? lastBoardListMode : viewMode
+                  viewMode === 'board'
+                    ? boardLayoutMode === BoardLayoutMode.SWIMLANES ? 'swimlanes' : 'board'
+                    : viewMode
                 }
                 onModeChange={handleViewModeChange}
-                isDocumentsView={viewMode === 'documents'}
               />
               <div className="min-w-0 flex-shrink-0">
                 <ProjectSelector />
@@ -601,6 +613,7 @@ function ProjectRouteHandler() {
                     mobileFilters={boardFilters}
                     onRemoveMobileFilter={(facet, value) => toggleBoardFilter(facet, value)}
                     viewMode={viewMode}
+                    boardLayoutMode={boardLayoutMode}
                     sortPreferences={
                       viewMode === 'board' || viewMode === 'list'
                         ? localSortPreferences

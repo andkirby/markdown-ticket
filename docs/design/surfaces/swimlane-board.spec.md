@@ -5,15 +5,15 @@ An alternate layout of the board that groups tickets into one row per epic, with
 ## Owns
 
 - The swimlane container, lane construction, lane-label rendering, and epic lifecycle control on the lane header.
-- Board-mode state (`flat` | `swimlane`) and its persistence.
 - Status-only drag-and-drop within a ticket's own epic lane; the cross-epic drop guard.
 - Epic progress computation (terminal children / total children).
-- The "Epics" toggle in the board header.
+- Rendering when App selects the persisted swimlane board layout.
 
 ## Does Not Own
 
 - The flat board, columns, or ticket cards — see `board-layout.spec.md` and `ticket-card.spec.md`. Swimlanes reuses `DraggableTicketCard` and `useDropZone`, not `Column`.
 - Epic detail modal, side-rail, and zoom-filter (design3 §3/§4/§5 — deferred).
+- The app-header view switcher and board-layout persistence — see `app-header.spec.md`.
 - The epic lifecycle rules themselves (the close guard, the reference guard) — those are data-layer rules owned by MDT-205. This surface only renders their state and surfaces their errors.
 - Status resolution semantics — terminal statuses for the progress calc are defined by the data layer (Implemented / Rejected / Partially Implemented).
 
@@ -48,23 +48,20 @@ SwimlaneBoard
 
 | Child | Component | Spec | Conditional |
 |---|---|---|---|
-| SwimlaneBoard | `src/components/SwimlaneBoard/SwimlaneBoard.tsx` | this file | board mode = swimlane |
-| Lane | `src/components/SwimlaneBoard/Lane.tsx` | this file | per epic + trailing __none |
-| EpicLifecycleControl | `src/components/SwimlaneBoard/EpicLifecycleControl.tsx` | this file | epic lanes only (not __none) |
+| SwimlaneBoard | `src/components/SwimlaneBoard/index.tsx` | this file | board layout mode = swimlanes |
+| Lane | inline in `src/components/SwimlaneBoard/index.tsx` | this file | per epic + trailing __none |
+| EpicLifecycleControl | inline in `src/components/SwimlaneBoard/index.tsx` | this file | epic lanes only (not __none) |
 | DraggableTicketCard | `src/components/Column/index.tsx` | `ticket-card.spec.md` | reused unchanged |
 | Drop zone hook | `src/components/Column/useDropZone.ts` | — | reused, with epic-match `canDrop` |
-| Epics toggle | (in App header) | `app-header.spec.md` | viewMode = board |
 
 ## Source files
 
 | Type | Path |
 |---|---|
-| SwimlaneBoard | `src/components/SwimlaneBoard/SwimlaneBoard.tsx` |
-| Lane | `src/components/SwimlaneBoard/Lane.tsx` |
-| EpicLifecycleControl | `src/components/SwimlaneBoard/EpicLifecycleControl.tsx` |
-| CSS | `src/components/SwimlaneBoard/swimlane.css` |
-| Progress hook | `src/hooks/useEpicProgress.ts` |
-| Board mode pref | `src/config/settingsPreferences.ts` (new entry, mirror `collapsedColumns`) |
+| SwimlaneBoard | `src/components/SwimlaneBoard/index.tsx` |
+| Lane model helpers | `src/components/SwimlaneBoard/helpers.ts` |
+| CSS | `src/components/SwimlaneBoard/swimlane-board.css` |
+| Board layout pref | `src/config/boardLayoutMode.ts` |
 | Design source | `designs/board-zai/design3-epics.md` §8 |
 
 ## Lanes
@@ -154,7 +151,7 @@ An epic's status is a publish/close gate, not a spatial workflow — so it rende
 | ticket code | `.ticket-code` (via `<TicketCode>`) | reused — see `STYLING.md` |
 | badge row | `.badge[data-status=…]` | reused — see `BADGE_ARCHITECTURE.md` |
 
-New classes (proposed, in `swimlane.css`): `.swimlane-board`, `.swimlane-head`, `.swimlane-corner`, `.swimlane-col-header`, `.swimlane-toolbar`, `.lane`, `.lane-label`, `.lane-label--none`, `.lane-track`, `.lane-col`, `.lane-col.drag-over`, `.lane-empty`, `.lane--collapsed`, `.lane-progress`, `.lane-count-pill`, `.epic-indicator`, `.epic-lifecycle-control`. These mirror the design3 mock (`designs/board-zai/assets/css/05-components.css` lines 76-111) and have no existing equivalent.
+New classes (in `swimlane-board.css`): `.swimlane-board`, `.swimlane-board__head`, `.swimlane-board__corner`, `.swimlane-board__col-head`, `.swimlane-board__toolbar`, `.swimlane-board__lane`, `.swimlane-board__lane-label`, `.swimlane-board__lane-label--none`, `.swimlane-board__lane-track`, `.swimlane-board__lane-col`, `.swimlane-board__lane-col.drag-over`, `.swimlane-board__lane-empty`, `.swimlane-board__lane--collapsed`, `.swimlane-board__progress`, `.swimlane-board__lane-count`, `.swimlane-board__epic-dot`, `.swimlane-board__lifecycle`. These mirror the Design 3 swimlane concept without copying Alpine/mock-data architecture.
 
 ## Accessibility
 
