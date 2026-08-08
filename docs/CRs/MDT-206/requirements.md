@@ -29,6 +29,7 @@ MDT-206 adds an epic swimlane board layout selected from the existing app header
 | Epic ticket opening | An icon button beside the lifecycle action and the clickable epic key both open the existing epic ticket viewer. | Add a new epic detail modal. | Reusing the ticket viewer avoids a parallel epic surface in this pass. |
 | Lane label layout | The lifecycle action sits directly under the progress bar; the collapse chevron sits on the status-and-count row aligned right; the title word-wraps; no color dot precedes the title; the epic key uses the shared TicketCode component. | Pin actions to the lane bottom, ellipsis the title, or render a bespoke lane key. | A dense, scannable lane header that matches ticket-card key typography. |
 | Lane scroll model | The outer board provides synchronized two-axis scroll; each lane column scrolls independently within a per-lane max-height. | A single synchronized surface that forces the whole lane to grow with the longest column. | Long lists in one status must not stretch the lane or the board. |
+| Lane collapse | Clicking the whole lane label toggles collapse; collapsed lanes reflow to a horizontal full-width summary bar (title + key + status + count + progress + actions) with the body hidden. | A dedicated chevron-only button, or a collapsed lane that leaves a tall sticky label column behind. | A dense, scannable list of collapsed epic summaries (design3 §8). |
 
 ---
 Use `requirements.trace.md` for canonical requirement rows and route summaries.

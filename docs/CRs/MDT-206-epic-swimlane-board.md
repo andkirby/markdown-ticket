@@ -149,7 +149,7 @@ dependsOn: MDT-205
 
 ## 8. Clarifications
 
-### UAT Session 2026-08-08
+### UAT Session 2026-08-08 (round 1)
 
 Approved lane-label refinement round (9 changes). Execution brief: [uat.md](./MDT-206/uat.md).
 
@@ -170,3 +170,21 @@ Approved lane-label refinement round (9 changes). Execution brief: [uat.md](./MD
 **Strict drift/lock:** not used (standard validate + render per stage).
 
 **More implementation required:** no — all 9 changes implemented, tested (6 component + 7 E2E + 862 frontend green), and trace-validated.
+
+### UAT Session 2026-08-08 (round 2 — collapse approach)
+
+Extended the epic-lane collapse to match `designs/board-zai/design3.html` §8. Execution brief: [uat.md](./MDT-206/uat.md).
+
+**Approved changes:**
+- The whole lane label is now the collapse toggle (`div[role=button][tabindex=0][aria-expanded]`, Enter/Space + click), not a dedicated chevron button. (design3 used a clickable div; we add role/tabindex/keyboard for a11y.)
+- A collapsed lane **reflows** from the vertical 220px sticky column to a horizontal full-width summary bar (title + key + status + count + progress + actions on one row); the lane body is hidden.
+- Interactive children (epic key, lifecycle action, open-epic icon) `stopPropagation` so they do not toggle collapse.
+- The collapse chevron is now an `aria-hidden` glyph (visual affordance only).
+
+**Changed requirement IDs:** `BR-5.1` (refined in place — whole-label toggle, not a chevron button), `C6` (new — collapsed horizontal reflow), `lane_collapses_via_whole_label` (new BDD scenario).
+
+**Updated workflow documents:** `requirements.md`, `tests.md`, `uat.md`, design surface `swimlane-board.spec.md` + `swimlane-board.mockups.md` (new §7 collapsed mockup); all `*.trace.md` projections re-rendered.
+
+**Strict drift/lock:** not used (standard validate + render per stage).
+
+**More implementation required:** no — collapse extension implemented, tested (10 component + 8 E2E + 866 frontend green), and trace-validated.

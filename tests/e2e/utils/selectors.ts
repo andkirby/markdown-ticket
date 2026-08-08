@@ -101,6 +101,8 @@ export const swimlaneSelectors = {
   laneOpenEpicByKey: (key: string) => `[data-testid="swimlane-open-epic"][data-lane-key="${key}"]`,
   /** Lane collapse button by key */
   laneCollapseByKey: (key: string) => `[data-testid="swimlane-collapse"][data-lane-key="${key}"]`,
+  /** Whole-label collapse toggle by key (role=button container) */
+  laneLabelByKey: (key: string) => `[data-testid="swimlane-lane-label"][data-lane-key="${key}"]`,
   /** Clickable epic key (opens the epic ticket) by key */
   laneKeyByKey: (key: string) => `[data-testid="swimlane-lane-key"][data-lane-key="${key}"]`,
   /** Lane column by lane key and status */

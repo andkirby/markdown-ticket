@@ -306,6 +306,54 @@ window "Atlas — Board / Epics":
 | lane label as full-width `text` | mobile lane header | sticky-left disabled below md per spec |
 | horizontal `row` of column titles | per-lane column header | repeats per lane since there's no shared sticky header |
 
+## 7. Collapsed lanes — horizontal summary bars
+
+Clicking a lane label (the whole label, not just a chevron) collapses the lane: the track hides and the label reflows from the vertical 220px sticky column into a horizontal full-width summary bar. Collapse all / Expand all do this for every lane. This lets many epics be scanned as a compact list of one-line summaries.
+
+```wireloom
+window "Atlas — Board / Epics":
+  panel:
+    row:
+      segmented:
+        segment "Flat"
+        segment "Epics" selected
+      button "Collapse all"
+      button "Expand all"
+      spacer
+      text "3 lanes"
+    row:
+      button row id="lane-auth-collapsed":
+        text "Auth Overhaul"
+        button "MDT-180" id="auth-key-c"
+        chip "Proposed"
+        text "0"
+        progress value=0 max=5 label="0/5"
+        button "Activate" id="auth-action-c"
+        text "▾" rotated
+    row:
+      button row id="lane-sync-collapsed":
+        text "Cloud Sync"
+        button "MDT-012" id="sync-key-c"
+        chip "Approved"
+        text "3"
+        progress value=3 max=5 label="3/5"
+        button "Close" id="sync-action-c"
+        text "▾" rotated
+    row:
+      button row id="lane-none-collapsed":
+        text "No epic"
+        text "1"
+        text "▾" rotated
+```
+
+| Element | Semantic Pattern | Notes |
+|---|---|---|
+| `button row` (whole lane) | collapse toggle | the entire bar is the toggle; `aria-expanded=false` |
+| inline `button "MDT-180"` | clickable epic key | opens the epic ticket; `stopPropagation` so it does not toggle collapse |
+| inline `button "Activate"` / `button "Close"` | lifecycle action | sits inline on the collapsed bar; `stopPropagation` |
+| `progress` inline | mini progress bar | shrinks to the available row width |
+| rotated `▾` | collapsed affordance | aria-hidden glyph; not a separate control |
+
 ## Notes
 
 - Epic colors are a fixed `--epic-1..4` rotation carried on the lane left border and progress fill; there is no color dot before the title.

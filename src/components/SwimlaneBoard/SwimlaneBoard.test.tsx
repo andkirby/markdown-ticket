@@ -117,15 +117,15 @@ describe('SwimlaneBoard lane label (MDT-206 UAT round)', () => {
     expect(progressRow!.nextElementSibling?.contains(lifecycle as Element)).toBe(true)
   })
 
-  it('places the collapse chevron on the same row as the status + count, aligned to the right', () => {
+  it('places the collapse chevron glyph on the same row as the status + count, aligned to the right', () => {
     const { container } = renderBoard()
     const lane = container.querySelector('[data-testid="swimlane-lane"][data-lane-key="MDT-100"]')
     expect(lane).not.toBeNull()
     const meta = lane!.querySelector('.swimlane-board__lane-meta')
-    const chevron = lane!.querySelector('[data-testid="swimlane-collapse"]')
+    const chevron = lane!.querySelector('.swimlane-board__collapse')
     expect(meta).not.toBeNull()
     expect(chevron).not.toBeNull()
-    // chevron is the last child of the meta row (right-aligned)
+    // chevron glyph is the last child of the meta row (right-aligned)
     expect(meta!.lastElementChild).toBe(chevron)
   })
 
@@ -138,5 +138,65 @@ describe('SwimlaneBoard lane label (MDT-206 UAT round)', () => {
     const title = container.querySelector('.swimlane-board__lane-title-text')
     expect(title).not.toBeNull()
     expect(title!.textContent).toContain('Auth Overhaul')
+  })
+
+  // --- Collapse approach (design3 §8): whole-label toggle + horizontal reflow ---
+
+  it('toggles collapse when the whole lane label is clicked (not just the chevron)', () => {
+    const { container } = renderBoard()
+    const label = container.querySelector('[data-testid="swimlane-lane-label"]') as HTMLElement
+    expect(label).not.toBeNull()
+    const lane = label.closest('[data-testid="swimlane-lane"]')
+    expect(lane?.classList.contains('swimlane-board__lane--collapsed')).toBe(false)
+
+    fireEvent.click(label)
+    expect(lane?.classList.contains('swimlane-board__lane--collapsed')).toBe(true)
+
+    fireEvent.click(label)
+    expect(lane?.classList.contains('swimlane-board__lane--collapsed')).toBe(false)
+  })
+
+  it('carries the lane label as a button role with aria-expanded reflecting collapse state', () => {
+    const { container } = renderBoard()
+    const label = container.querySelector('[data-testid="swimlane-lane-label"]') as HTMLElement
+    // role=button container (not a <button> element) so real <button> children
+    // stay HTML-valid inside it.
+    expect(label.getAttribute('role')).toBe('button')
+    expect(label.tabIndex).toBe(0)
+    expect(label.getAttribute('aria-expanded')).toBe('true')
+
+    fireEvent.click(label)
+    expect(label.getAttribute('aria-expanded')).toBe('false')
+  })
+
+  it('hides the lane body when collapsed', () => {
+    const { container } = renderBoard()
+    const label = container.querySelector('[data-testid="swimlane-lane-label"]') as HTMLElement
+    const body = container.querySelector('[data-testid="swimlane-lane-body"]') as HTMLElement
+    expect(body.hidden).toBe(false)
+
+    fireEvent.click(label)
+    expect(body.hidden).toBe(true)
+  })
+
+  it('does not toggle collapse when an interactive child (key, lifecycle, open-epic) is clicked', () => {
+    const { container } = renderBoard()
+    const lane = container.querySelector('[data-testid="swimlane-lane"]')
+    const laneBefore = lane?.classList.contains('swimlane-board__lane--collapsed')
+
+    // Epic key opens the ticket, not a collapse toggle.
+    const key = screen.getByTestId('swimlane-lane-key')
+    fireEvent.click(key)
+    expect(lane?.classList.contains('swimlane-board__lane--collapsed')).toBe(laneBefore)
+
+    // Lifecycle action does its own thing, not a collapse toggle.
+    const lifecycle = screen.getByTestId('swimlane-lifecycle-action')
+    fireEvent.click(lifecycle)
+    expect(lane?.classList.contains('swimlane-board__lane--collapsed')).toBe(laneBefore)
+
+    // Open-epic icon opens the ticket, not a collapse toggle.
+    const openEpic = screen.getByTestId('swimlane-open-epic')
+    fireEvent.click(openEpic)
+    expect(lane?.classList.contains('swimlane-board__lane--collapsed')).toBe(laneBefore)
   })
 })

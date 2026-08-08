@@ -155,13 +155,6 @@
       ]
     },
     {
-      "id": "BR-5.1",
-      "kind": "behavior",
-      "text": "WHEN Hide empty, Show badges, Collapse all, Expand all, or an individual lane collapse control is used, the system shall update swimlane presentation without changing ticket data.",
-      "sourceRef": "CR:MDT-206",
-      "routePolicy": "bdd"
-    },
-    {
       "id": "BR-2.4",
       "kind": "behavior",
       "text": "WHEN the user activates an epic lane's open-ticket icon, the system shall open that epic ticket in the existing ticket viewer.",
@@ -186,6 +179,20 @@
       "id": "C5",
       "kind": "constraint",
       "text": "The epic lane label shall render the lifecycle action directly beneath the progress bar (not pinned to the lane bottom), the collapse chevron on the status-and-count row aligned to the right, the title with word-wrapping, and no color dot preceding the title; the epic key is the only color/glyph cue beside the title.",
+      "sourceRef": "CR:MDT-206",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-5.1",
+      "kind": "behavior",
+      "text": "WHEN Hide empty, Show badges, Collapse all, Expand all, or an individual lane collapse control is used, the system shall update swimlane presentation without changing ticket data. An individual lane is collapsed by clicking its whole lane label (not just a chevron); the label acts as the toggle (role=button, aria-expanded).",
+      "sourceRef": "CR:MDT-206",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C6",
+      "kind": "constraint",
+      "text": "When a lane is collapsed, its label shall reflow from the vertical sticky column to a horizontal full-width summary bar (title, key, status, count, progress, and actions on one row) and the lane body shall be hidden, so multiple collapsed epics scan as a compact list.",
       "sourceRef": "CR:MDT-206",
       "routePolicy": "tests"
     }
@@ -302,6 +309,17 @@
       "given": "the user is on the board in swimlane mode with at least one epic lane",
       "when": "the user clicks the epic key rendered in the lane label",
       "then": "the epic ticket opens in the existing ticket viewer",
+      "sourceRef": "CR:MDT-206"
+    },
+    {
+      "id": "lane_collapses_via_whole_label",
+      "title": "Lane collapses to a horizontal summary bar via whole-label click",
+      "covers": [
+        "BR-5.1"
+      ],
+      "given": "the user is on the board in swimlane mode with at least one expanded epic lane",
+      "when": "the user clicks the lane label (the whole label, not a dedicated chevron button)",
+      "then": "the lane body is hidden and the label reflows to a horizontal full-width summary bar",
       "sourceRef": "CR:MDT-206"
     }
   ],
@@ -424,11 +442,12 @@
     },
     {
       "id": "OBL-semantic-css",
-      "title": "Swimlane and switcher styling uses Design 3 semantic classes, aligned sizing, per-column scroll within a lane max-height, lane-label layout (lifecycle under progress, chevron on status/count row, no color dot, wrapped title), and token-based colors",
+      "title": "Swimlane and switcher styling uses Design 3 semantic classes, aligned sizing, per-column scroll within a lane max-height, lane-label layout (lifecycle under progress, chevron on status/count row, no color dot, wrapped title), collapsed horizontal reflow, and token-based colors",
       "derivedFrom": [
         "C1",
         "C4",
-        "C5"
+        "C5",
+        "C6"
       ],
       "artifactIds": [
         "ART-swimlane-css",
@@ -577,6 +596,7 @@
       "covers": [
         "BR-2.5",
         "C5",
+        "C6",
         "OBL-epic-key"
       ],
       "sourceRef": "CR:MDT-206"
@@ -601,6 +621,7 @@
         "C1",
         "C4",
         "C5",
+        "C6",
         "OBL-board-mode-owner",
         "OBL-status-only-drop",
         "OBL-epic-lifecycle",
@@ -682,6 +703,7 @@
         "lane_headers_show_progress_and_lifecycle",
         "swimlane_badges_toggle_and_epic_open",
         "epic_lane_key_opens_ticket",
+        "lane_collapses_via_whole_label",
         "same_epic_drag_updates_status_only",
         "cross_epic_drag_is_rejected",
         "blocked_epic_close_surfaces_children",
