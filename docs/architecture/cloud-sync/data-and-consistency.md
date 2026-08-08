@@ -409,7 +409,9 @@ Subscription and projection mutations pass through the same per-project hub
 operation queue, which removes the race between a final catch-up read and live
 registration. D1 remains the authority and primary binding. The Durable Object
 persists only delivery cursor/socket metadata and uses hibernating WebSockets
-plus alarms; it is not a read replica or projection store.
+plus alarms; it is not a read replica or projection store. The hub's metadata
+lives in the DO's own SQLite-backed storage (`new_sqlite_classes` migration), a
+separate database from the `DB` D1 binding.
 
 Healthy idle connections perform no D1 reads. D1 reads occur only for
 handshake/authorization, catch-up or gaps, actual mutations, membership
@@ -533,7 +535,7 @@ Re-enabling preserves the cloud counter and requires a fresh membership probe.
 | Idempotency keys | Lifetime of the cloud project |
 | Active projections and tombstones | Lifetime of the cloud project |
 | Audit events | 180 days in D1, then delete in bounded batches |
-| Durable Object per-socket acknowledged cursor and attachments | Until project decommission; attachments only while sockets exist |
+| Durable Object per-socket acknowledged cursor and attachments (DO SQLite-backed storage, not D1) | Until project decommission; attachments only while sockets exist |
 | Local applied projection cursor | Until connection removal or explicit repair |
 | Local completed journal entries | Removed immediately after confirmed success |
 | Local failed journal entries | Until recovery or explicit operator retirement |

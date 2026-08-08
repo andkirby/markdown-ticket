@@ -72,15 +72,29 @@ describe('cloud package boundary (C1)', () => {
     expect(violations).toEqual([])
   })
 
-  test('exclusions (C8): no presence/websocket/durable-object surface in cloud/src', () => {
+  test('exclusions: no presence surface anywhere; websocket/durable-object only in the approved MDT-226 delivery surface', () => {
     const files = existsSync(CLOUD_SRC) ? listTsFiles(CLOUD_SRC) : []
-    const forbiddenTokens = ['WebSocket', 'DurableObject', 'presence', 'Presence']
+    // MDT-226 introduces the hibernating ProjectProjectionHub Durable Object and
+    // the projection-stream WebSocket upgrade by approved design. Those surfaces
+    // live only in durable/ and the worker stream-upgrade handler; no other
+    // cloud code references WebSocket or DurableObject. Presence remains
+    // permanently out of scope.
+    const MDT226_DELIVERY = (file: string): boolean =>
+      file.includes('/durable/') || file.endsWith('/worker.ts') || file.endsWith('/http/router.ts')
     const violations: string[] = []
     for (const file of files) {
       const src = readFileSync(file, 'utf8')
-      for (const token of forbiddenTokens) {
-        if (src.includes(token)) {
-          violations.push(`${file}: references ${token}`)
+      // Presence is forbidden everywhere.
+      if (src.includes('presence') || src.includes('Presence')) {
+        violations.push(`${file}: references presence`)
+      }
+      // WebSocket/DurableObject only in the approved MDT-226 delivery surface.
+      if (!MDT226_DELIVERY(file)) {
+        if (src.includes('WebSocket')) {
+          violations.push(`${file}: references WebSocket outside MDT-226 delivery surface`)
+        }
+        if (src.includes('DurableObject')) {
+          violations.push(`${file}: references DurableObject outside MDT-226 delivery surface`)
         }
       }
     }

@@ -491,8 +491,9 @@ describe('CloudProjectManagementService enable + connect (TEST-pm-enable-commit-
       if (readA.kind === 'enabled' && readB.kind === 'enabled') {
         expect(readA.connection.cloudProjectId).toBe('uuid-A')
         expect(readB.connection.cloudProjectId).toBe('uuid-B')
-        expect(readA.connection.pollIntervalSeconds).toBe(15)
-        expect(readB.connection.pollIntervalSeconds).toBe(30)
+        // pollIntervalSeconds is discarded by version 2 (MDT-226).
+        expect(readA.connection.pollIntervalSeconds).toBeUndefined()
+        expect(readB.connection.pollIntervalSeconds).toBeUndefined()
       }
 
       // Disabling one project does NOT affect the other.

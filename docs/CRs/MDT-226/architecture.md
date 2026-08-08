@@ -186,10 +186,14 @@ selection do not change.
 
 ### Cloudflare infrastructure
 
-`cloud/wrangler.jsonc` adds a `ProjectProjectionHub` Durable Object binding and
-the required class migration. The hub uses the Hibernation WebSocket API and
-Durable Object alarms. The existing D1 binding remains the only projection
-database; no D1 schema migration is required for delivery.
+`cloud/wrangler.jsonc` adds a `PROJECT_HUB` Durable Object binding and a
+`new_sqlite_classes` class migration for `ProjectProjectionHub`. The hub uses
+the Hibernation WebSocket API and Durable Object alarms. The SQLite-backed class
+storage holds only alarm and socket metadata — it is a separate database from
+the `DB` D1 binding and is not a second projection authority. The existing D1
+binding remains the only projection database; no D1 schema migration is required
+for delivery. A hibernated, armed alarm makes no D1 request, so an idle
+connected project performs zero D1 reads.
 
 ## Security and Revocation
 

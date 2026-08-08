@@ -18,6 +18,7 @@
 import type { RouteContext } from './http/router'
 import { CoordinationError } from '@mdt/domain-contracts'
 import { AccessValidator } from './access/jwt'
+import { requireProjectRole } from './application/authorization'
 import {
   getMembers,
   probeProject,
@@ -33,10 +34,14 @@ import {
 import { provisionProject } from './application/provisioning'
 import { acknowledge, createReservation, getReservation } from './application/reservation'
 import { recordAudit } from './d1/audit'
+import { ProjectProjectionHub } from './durable/ProjectProjectionHub'
 import { readJsonObject } from './http/body'
 import { CoordinationRouter } from './http/router'
 import { rateLimitKey, withinRateLimit } from './rate-limit/guard'
 import { expireStaleReservations } from './scheduled/maintenance'
+
+// Export the Durable Object class so Wrangler can bind it (MDT-226).
+export { ProjectProjectionHub }
 
 // `wrangler types` generates worker-configuration.d.ts, which declares the
 // global Env covering D1, vars, and version metadata. See cloud/README.md.
@@ -68,7 +73,7 @@ function buildRouter(env: Env): CoordinationRouter {
   const router = new CoordinationRouter(validator, env.DB, {
     RATE_LIMIT_READ: env.RATE_LIMIT_READ,
     RATE_LIMIT_MUTATE: env.RATE_LIMIT_MUTATE,
-  })
+  }, env.PROJECT_HUB as unknown as DurableObjectNamespace)
 
   // Slice 2: coordination routes (membership enforced inside each use case).
   router.coordination(
@@ -141,6 +146,13 @@ function buildRouter(env: Env): CoordinationRouter {
         ctx.params.principalId,
         ctx.requestId,
       )
+      // MDT-226 (Edge-4): exclude and close the revoked member's active sockets
+      // before any later projection delivery, routed through the project hub.
+      if (ctx.projectHub) {
+        const id = ctx.projectHub.idFromName(ctx.params.projectId)
+        const stub = ctx.projectHub.get(id) as DurableObjectStub<ProjectProjectionHub>
+        await stub.revokeSockets(ctx.params.principalId)
+      }
       return new Response(null, { status: 204 })
     },
   )
@@ -228,12 +240,33 @@ function buildRouter(env: Env): CoordinationRouter {
       const body = await readJsonObject(ctx.request, ctx.requestId)
       const expectedProjectionVersion = parseIfMatch(ctx.request.headers.get('If-Match'))
       const requestedLifecycle = body.lifecycle === 'deleted' ? 'deleted' : 'active'
-      const result = await publishProjection(ctx.db, ctx.principal, ctx.params.projectId, {
+      const publishBody = {
         ...body,
         ticketNumber: Number.parseInt(ctx.params.ticketNumber, 10),
         expectedProjectionVersion,
         lifecycle: ctx.params.operation === 'lifecycle' ? requestedLifecycle : 'active',
-      }, ctx.requestId)
+      }
+      // MDT-226: route the projection mutation through the deterministic project
+      // hub so the hub arms its alarm before the D1 commit and broadcasts the
+      // committed delta (commit-before-broadcast, OBL-commit-before-delivery).
+      if (ctx.projectHub) {
+        const id = ctx.projectHub.idFromName(ctx.params.projectId)
+        const stub = ctx.projectHub.get(id) as DurableObjectStub<ProjectProjectionHub>
+        const result = await stub.commitAndDeliver(ctx.params.projectId, {
+          principal: ctx.principal,
+          body: publishBody,
+          requestId: ctx.requestId,
+        })
+        return new Response(JSON.stringify({ requestId: ctx.requestId, data: result }), {
+          status: 200,
+          headers: {
+            'content-type': 'application/json',
+            'etag': `"${result.projectionVersion}"`,
+          },
+        })
+      }
+      // Fallback (router unit tests without the binding): commit directly.
+      const result = await publishProjection(ctx.db, ctx.principal, ctx.params.projectId, publishBody, ctx.requestId)
       return new Response(JSON.stringify({ requestId: ctx.requestId, data: result }), {
         status: 200,
         headers: {
@@ -344,7 +377,24 @@ const fetch: ExportedHandler<Env>['fetch'] = async (
 ): Promise<Response> => {
   const startedAt = Date.now()
   const router = buildRouter(env)
+
+  // MDT-226: projection-stream WebSocket upgrade — backend-only, never browser.
+  // Validates the Access assertion and current membership, then routes by exact
+  // cloud project UUID to the deterministic ProjectProjectionHub.
+  const streamMatch = matchProjectionStream(request)
+  if (streamMatch) {
+    const response = await handleProjectionStreamUpgrade(request, env, router, streamMatch)
+    logRequest(request, response, env)
+    return response
+  }
+
   const response = await router.handle(request)
+  logRequest(request, response, env, startedAt)
+  return response
+}
+
+/** Structured request-completion telemetry (MDT-200 + MDT-226 stream upgrades). */
+function logRequest(request: Request, response: Response, env: Env, startedAt = Date.now()): void {
   // eslint-disable-next-line no-console -- structured request-completion telemetry
   console.info(JSON.stringify({
     event: 'cloud_sync_request',
@@ -354,7 +404,75 @@ const fetch: ExportedHandler<Env>['fetch'] = async (
     status: response.status,
     durationMs: Date.now() - startedAt,
   }))
-  return response
+}
+
+/**
+ * Match a projection-stream WebSocket upgrade request. Returns the parsed cloud
+ * project id, or null if this is not a stream upgrade. The endpoint is a cloud
+ * service endpoint used only by the local backend (C-11).
+ */
+function matchProjectionStream(request: Request): string | null {
+  if (request.headers.get('upgrade') !== 'websocket') {
+    return null
+  }
+  const url = new URL(request.url)
+  const match = /^\/v1\/projects\/(?<projectId>[^/]+)\/projection-stream$/.exec(url.pathname)
+  return match?.groups?.projectId ?? null
+}
+
+/**
+ * Handle the projection-stream upgrade: validate Access, check current
+ * membership without revealing hidden projects, then route to the deterministic
+ * project hub (C-5). The hub owns hibernation, catch-up, and delivery.
+ */
+async function handleProjectionStreamUpgrade(
+  request: Request,
+  env: Env,
+  router: CoordinationRouter,
+  cloudProjectId: string,
+): Promise<Response> {
+  const validated = await router.validateUpgrade(request, 'coordination')
+  if (!validated.ok) {
+    return validated.response
+  }
+  const { principal, requestId } = validated
+  try {
+    await requireProjectRole(env.DB, principal, cloudProjectId, 'viewer', 'projection.stream', requestId)
+  }
+  catch (err) {
+    return errorEnvelopeResponse(err, requestId)
+  }
+
+  // Route by exact cloud project UUID to the deterministic hub (C-5).
+  const id = env.PROJECT_HUB.idFromName(cloudProjectId)
+  const stub = env.PROJECT_HUB.get(id)
+
+  // Forward the verified principal tag, token expiry, and afterRevision cursor
+  // to the hub via headers. The hub stores only delivery metadata (C-3).
+  const hubRequest = new Request(request, {
+    headers: new Headers({
+      'x-mdt-cloud-project-id': cloudProjectId,
+      'x-mdt-principal-kind': principal.kind,
+      'x-mdt-principal-id': principal.id,
+      'x-mdt-token-expiry': request.headers.get('x-mdt-token-expiry') ?? '0',
+      'x-mdt-after-revision': request.headers.get('x-mdt-after-revision') ?? '0',
+    }),
+  })
+  return stub.fetch(hubRequest)
+}
+
+/** Map a CoordinationError to the typed error envelope Response. */
+function errorEnvelopeResponse(err: unknown, requestId: string): Response {
+  if (err instanceof CoordinationError) {
+    return new Response(
+      JSON.stringify({ error: { code: err.code, message: err.message, requestId, retryable: false } }),
+      { status: err.status, headers: { 'content-type': 'application/json' } },
+    )
+  }
+  return new Response(
+    JSON.stringify({ error: { code: 'internal_error', message: 'internal_error', requestId, retryable: false } }),
+    { status: 500, headers: { 'content-type': 'application/json' } },
+  )
 }
 
 function routeName(request: Request): string {

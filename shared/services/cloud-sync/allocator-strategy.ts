@@ -141,7 +141,9 @@ export function bindingFromEnabledConnection(connection: CloudSyncConnection): P
     enabled: true,
     projectId: connection.cloudProjectId,
     serviceUrl: connection.serviceOrigin,
-    pollIntervalSeconds: connection.pollIntervalSeconds,
+    // Version 2 connections (MDT-226) discard pollIntervalSeconds; the legacy
+    // binding shape still requires it, so fall back to the documented default.
+    pollIntervalSeconds: connection.pollIntervalSeconds ?? 15,
   }
 }
 

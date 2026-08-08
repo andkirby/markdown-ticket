@@ -71,12 +71,13 @@ export class LegacyBindingMigration {
 
     // Map the legacy binding to the new connection shape. The serviceUrl must
     // be in the trusted profile; the state store re-checks trust on write.
+    // pollIntervalSeconds is intentionally dropped: version 2 (MDT-226) is
+    // event-driven and discards it from active use.
     const candidate: CloudSyncConnection = {
       version: CLOUD_SYNC_CONNECTION_VERSION,
       state: CloudSyncConnectionState.ENABLED,
       cloudProjectId: legacy.projectId,
       serviceOrigin: legacy.serviceUrl,
-      pollIntervalSeconds: legacy.pollIntervalSeconds,
     }
 
     // Compare against any existing connection.
@@ -121,6 +122,5 @@ function sameConnection(a: CloudSyncConnection, b: CloudSyncConnection): boolean
   return a.cloudProjectId === b.cloudProjectId
     && a.serviceOrigin === b.serviceOrigin
     && a.state === b.state
-    && a.pollIntervalSeconds === b.pollIntervalSeconds
     && a.version === b.version
 }

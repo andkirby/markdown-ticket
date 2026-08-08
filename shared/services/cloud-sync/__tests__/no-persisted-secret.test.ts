@@ -60,8 +60,9 @@ describe('no persisted cloud secret (TEST-binding-no-persisted-secret)', () => {
 
     const file = join(root, 'projects', PROJECT_ID, 'cloud-sync.toml')
     const content = await readFile(file, 'utf8')
-    // The exact non-secret connection fields only.
-    expect(content).toContain('version = 1')
+    // The exact non-secret connection fields only. Version 2 (MDT-226) omits
+    // pollIntervalSeconds from active use.
+    expect(content).toContain('version = 2')
     expect(content).toContain('cloudProjectId = "uuid-1"')
     // Forbidden secret-like keys are absent.
     const parsed = parseTomlSafe(content)

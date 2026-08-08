@@ -174,7 +174,6 @@ describe('createManagementService (TEST-factory-wiring)', () => {
       state: CloudSyncConnectionState.ENABLED,
       cloudProjectId: 'legacy-uuid',
       serviceOrigin: DISTRIBUTION_ORIGIN,
-      pollIntervalSeconds: 15,
     })
   })
 })

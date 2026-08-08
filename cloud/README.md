@@ -5,12 +5,14 @@ Markdown Ticket cloud coordination. Its package boundary and rationale are
 owned by
 [`docs/CRs/MDT-200/cloud-package-boundary.md`](../docs/CRs/MDT-200/cloud-package-boundary.md).
 
-> **Current versus target:** this file describes the implemented MDT-200
-> HTTP/D1 polling runtime. The approved MDT-226 target adds the
-> `ProjectProjectionHub` Durable Object, hibernating WebSocket delivery, and
-> alarm recovery. The permanent target package boundary is
-> [`docs/architecture/cloud-sync/README.md`](../docs/architecture/cloud-sync/README.md);
-> update this runtime README when that implementation lands.
+> **MDT-226 delivery surface:** the `ProjectProjectionHub` Durable Object,
+> hibernating WebSocket delivery (`/v1/projects/{id}/projection-stream`), and
+> alarm recovery now land alongside the MDT-200 HTTP/D1 polling runtime. The
+> legacy cursor endpoint (`GET .../projections`) remains a bounded
+> recovery/rollout-compatibility surface during the migration window; it is not
+> a timer-driven client loop in the push path. The permanent target package
+> boundary is
+> [`docs/architecture/cloud-sync/README.md`](../docs/architecture/cloud-sync/README.md).
 
 ## Layout
 
@@ -28,6 +30,7 @@ cloud/
     access/                 Access JWT validation + principal mapping (Slice 1)
     application/            allocation, membership, projection use cases (Slice 2+)
     d1/                     prepared statements + transactional batches (Slice 2)
+    durable/                ProjectProjectionHub + stream helpers (MDT-226)
     rate-limit/             Workers rate-limit adapter     (Slice 1)
     scheduled/              reservation + audit maintenance dispatch (Slice 2)
   test/                     unit, Workers-runtime, and D1 integration tests

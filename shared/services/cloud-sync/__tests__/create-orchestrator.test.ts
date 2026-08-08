@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { mkdtempSync } from 'node:fs'
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals'
-import { CoordinatorError } from '@mdt/domain-contracts'
+import { CLOUD_SYNC_CONNECTION_VERSION, CoordinatorError } from '@mdt/domain-contracts'
 import { TicketService } from '../../TicketService'
 import { ProjectStateStore } from '../project-state-store'
 import { resolveTrustedServiceProfile } from '../trusted-service-profile'
@@ -43,11 +43,10 @@ startNumber = 1
     profile: resolveTrustedServiceProfile({ operatorOrigins: [] }),
   })
   await store.write('local-project', {
-    version: 1,
+    version: CLOUD_SYNC_CONNECTION_VERSION,
     state: 'enabled',
     cloudProjectId: 'cloud-project-1',
     serviceOrigin: DISTRIBUTION_CLOUD_SYNC_ORIGINS[0],
-    pollIntervalSeconds: 15,
   })
 })
 

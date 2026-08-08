@@ -74,6 +74,13 @@ export function createProjectRouter(projectController: ProjectController): Route
   router.get('/:projectId/crs', (req, res) => projectController.getProjectCRs(req, res))
 
   /**
+   * MDT-226: unified ticket view — canonical local tickets plus projection-only
+   * read-only entries with kind/readOnly/stale capability metadata. The browser
+   * consumes this instead of a separate /cloud-projections request (C-11).
+   */
+  router.get('/:projectId/tickets/unified', (req, res) => projectController.getUnifiedTickets(req, res))
+
+  /**
    * Owner-only, header-only cloud projection feed. Registered before the
    * generic CR routes so no ticket wildcard can consume it.
    */

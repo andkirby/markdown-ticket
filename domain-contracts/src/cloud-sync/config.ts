@@ -17,8 +17,16 @@
  *     only — never written by normal lifecycle operations (BR-1.5, C3).
  */
 
-/** Connection schema version written to `cloud-sync.toml`. Currently `1`. */
-export const CLOUD_SYNC_CONNECTION_VERSION = 1 as const
+/**
+ * Connection schema version written to `cloud-sync.toml`. Currently `2`.
+ *
+ * Version 2 (MDT-226) removes `pollIntervalSeconds` from active use — delivery
+ * is event-driven, not timer-polled. Version 1 files are accepted on read and
+ * migrated atomically to version 2 (Edge-3); `pollIntervalSeconds` is discarded
+ * by the version 2 rewrite without changing project identity, origin trust, or
+ * credential reference.
+ */
+export const CLOUD_SYNC_CONNECTION_VERSION = 2 as const
 
 /**
  * Connection state written under CONFIG_DIR. `disabled` is retained and
@@ -49,8 +57,12 @@ export interface CloudSyncConnection {
   cloudProjectId: string
   /** Absolute HTTPS coordination origin; exact trusted-profile match (C4). */
   serviceOrigin: string
-  /** Integer 5–300; default 15. */
-  pollIntervalSeconds: number
+  /**
+   * Version 1 polling cadence. Superseded by version 2 event-driven delivery
+   * (MDT-226): accepted only when reading version 1 and discarded by the atomic
+   * version 2 rewrite. Undefined for version 2 connections.
+   */
+  pollIntervalSeconds?: number
 }
 
 /**

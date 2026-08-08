@@ -142,12 +142,12 @@ export class ProjectStateStore {
 
 /** Serialize a connection to canonical TOML (round-trip verified). */
 function serializeConnection(connection: CloudSyncConnection): string {
+  // Version 2 omits pollIntervalSeconds from active use (MDT-226 Edge-3).
   const obj = {
     version: connection.version,
     state: connection.state,
     cloudProjectId: connection.cloudProjectId,
     serviceOrigin: connection.serviceOrigin,
-    pollIntervalSeconds: connection.pollIntervalSeconds,
   }
   const out = stringifyToml(obj)
   // Round-trip verify so a serialization bug never writes a partial record.
@@ -157,14 +157,18 @@ function serializeConnection(connection: CloudSyncConnection): string {
     || reparsed.state !== connection.state
     || reparsed.cloudProjectId !== connection.cloudProjectId
     || reparsed.serviceOrigin !== connection.serviceOrigin
-    || reparsed.pollIntervalSeconds !== connection.pollIntervalSeconds
   ) {
     throw new ProjectStateFormatError('connection TOML round-trip verification failed')
   }
   return out
 }
 
-/** Parse a connection file. Throws on any malformed field. */
+/**
+ * Parse a connection file. Accepts version 1 (with `pollIntervalSeconds`) and
+ * version 2. Version 1 is migrated atomically to version 2 in memory;
+ * `pollIntervalSeconds` is discarded from active use (Edge-3). Throws on any
+ * malformed field.
+ */
 function parseConnection(raw: string): CloudSyncConnection {
   let parsed: unknown
   try {
@@ -173,9 +177,12 @@ function parseConnection(raw: string): CloudSyncConnection {
   catch {
     throw new ProjectStateFormatError()
   }
-  const obj = parsed as Partial<CloudSyncConnection> & Record<string, unknown>
-  const { version, state, cloudProjectId, serviceOrigin, pollIntervalSeconds } = obj
-  if (version !== CLOUD_SYNC_CONNECTION_VERSION) {
+  const obj = parsed as Record<string, unknown>
+  const { state, cloudProjectId, serviceOrigin } = obj
+  const rawVersion = obj.version as unknown
+  // Accept version 1 (legacy) and version 2 (active). Anything else is malformed.
+  // Read version as a plain number so legacy v1 files are not narrowed away.
+  if (rawVersion !== 1 && rawVersion !== 2) {
     throw new ProjectStateFormatError()
   }
   if (state !== CloudSyncConnectionState.ENABLED && state !== CloudSyncConnectionState.DISABLED) {
@@ -187,18 +194,23 @@ function parseConnection(raw: string): CloudSyncConnection {
   if (typeof serviceOrigin !== 'string' || serviceOrigin.length === 0) {
     throw new ProjectStateFormatError()
   }
-  if (typeof pollIntervalSeconds !== 'number'
-    || !Number.isInteger(pollIntervalSeconds)
-    || pollIntervalSeconds < 5
-    || pollIntervalSeconds > 300) {
-    throw new ProjectStateFormatError()
+  // Version 1 required a valid pollIntervalSeconds; validate it on read so a
+  // corrupt legacy file fails closed. Version 2 never carries it.
+  if (rawVersion === 1) {
+    const pollIntervalSeconds = obj.pollIntervalSeconds
+    if (typeof pollIntervalSeconds !== 'number'
+      || !Number.isInteger(pollIntervalSeconds)
+      || pollIntervalSeconds < 5
+      || pollIntervalSeconds > 300) {
+      throw new ProjectStateFormatError()
+    }
   }
+  // Migrate to version 2: discard pollIntervalSeconds from active use.
   return {
-    version,
+    version: CLOUD_SYNC_CONNECTION_VERSION,
     state,
     cloudProjectId,
     serviceOrigin,
-    pollIntervalSeconds,
   }
 }
 
@@ -214,9 +226,6 @@ function validateConnection(connection: CloudSyncConnection): void {
   }
   if (typeof connection.serviceOrigin !== 'string' || connection.serviceOrigin.length === 0) {
     throw new ProjectStateFormatError('serviceOrigin is required')
-  }
-  if (!Number.isInteger(connection.pollIntervalSeconds) || connection.pollIntervalSeconds < 5 || connection.pollIntervalSeconds > 300) {
-    throw new ProjectStateFormatError('pollIntervalSeconds must be an integer from 5 through 300')
   }
 }
 

@@ -25,7 +25,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals'
-import { CoordinatorError } from '@mdt/domain-contracts'
+import { CLOUD_SYNC_CONNECTION_VERSION, CoordinatorError } from '@mdt/domain-contracts'
 
 import { TicketService } from '../../TicketService'
 import { DISTRIBUTION_CLOUD_SYNC_ORIGINS } from '../config'
@@ -85,11 +85,10 @@ describe('TicketService CONFIG_DIR cutover (TEST-ticketservice-config-dir-cutove
       profile: resolveTrustedServiceProfile({ operatorOrigins: [] }),
     })
     await store.write(PROJECT_ID, {
-      version: 1,
+      version: CLOUD_SYNC_CONNECTION_VERSION,
       state,
       cloudProjectId: 'cloud-uuid-1',
       serviceOrigin: TRUSTED_ORIGIN,
-      pollIntervalSeconds: 15,
     })
   }
 

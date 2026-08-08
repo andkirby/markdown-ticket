@@ -253,6 +253,9 @@ Credentials remain in the owner-only CONFIG_DIR credential store or
 
 `MDT-198` proved the allocation lifecycle and a production-shaped static D1
 batch locally. It did not prove production capacity or Access behavior.
-`MDT-226` defines the projection delivery architecture; it does not claim the
-current polling implementation already satisfies it. Production acceptance
-requires the deployed evidence in [Operations](operations.md).
+`MDT-226` implements the event-driven projection delivery architecture (the
+`ProjectProjectionHub`, hibernating WebSocket stream, and alarm recovery); the
+bounded `/projections` cursor endpoint remains a recovery and rollout-
+compatibility surface, not the delivery path. The idle-D1 and latency acceptance
+gates require the deployed evidence in [Operations](operations.md); local unit
+and integration tests do not alone accept those external SLOs.

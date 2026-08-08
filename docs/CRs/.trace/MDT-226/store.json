@@ -692,6 +692,353 @@
       "sourceRef": "docs/CRs/MDT-226/architecture.md#browser-facing-ticket-contract"
     }
   ],
-  "testPlans": [],
-  "tasks": []
+  "testPlans": [
+    {
+      "id": "TEST-hub-operation-serialization",
+      "kind": "integration",
+      "title": "Hub explicit operation queue serializes subscribe/mutate across forced async D1 waits; sparse catch-up advances only to ready high-water",
+      "covers": [
+        "C-5",
+        "C-6",
+        "Edge-2"
+      ],
+      "file": "cloud/test/project-projection-hub.test.ts",
+      "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "TEST-hub-commit-before-broadcast",
+      "kind": "integration",
+      "title": "D1 mutation failure broadcasts nothing; commit success broadcasts one complete header-only delta (no body)",
+      "covers": [
+        "C-2",
+        "C-4"
+      ],
+      "file": "cloud/test/project-projection-hub.test.ts",
+      "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "TEST-hub-ack-and-alarm",
+      "kind": "integration",
+      "title": "Two sockets one acks; pre-armed alarm replays bounded catch-up to lagging socket; hibernation restore and alarm recovery",
+      "covers": [
+        "Edge-1",
+        "C-7"
+      ],
+      "file": "cloud/test/project-projection-hub.test.ts",
+      "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "TEST-hub-revocation-redaction",
+      "kind": "integration",
+      "title": "Revoke closes socket before later delivery; close/error envelopes redact secrets/body; token expiry bounded reauth",
+      "covers": [
+        "C-10",
+        "Edge-4",
+        "C-3"
+      ],
+      "file": "cloud/test/project-projection-hub.test.ts",
+      "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "TEST-stream-contract-shape",
+      "kind": "unit",
+      "title": "Envelope discriminated union validates catchup/delta/ready/ack/stale/error and rejects body/credential fields",
+      "covers": [
+        "C-4",
+        "C-2"
+      ],
+      "file": "domain-contracts/src/cloud-sync/__tests__/projection-stream.test.ts",
+      "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "TEST-read-model-merge",
+      "kind": "unit",
+      "title": "Read model local-wins merge, projection-only entries, dup/old ignored, sparse accepted, live gap resync",
+      "covers": [
+        "BR-1.9"
+      ],
+      "file": "shared/services/cloud-sync/__tests__/CloudProjectionReadModel.test.ts",
+      "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "TEST-ticket-view-contract",
+      "kind": "unit",
+      "title": "Unified ticket item has kind/readOnly/stale and no cloud revision/transport/credential fields",
+      "covers": [
+        "C-11",
+        "C-3"
+      ],
+      "file": "domain-contracts/src/ticket/__tests__/view.test.ts",
+      "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "TEST-stream-client-transport",
+      "kind": "integration",
+      "title": "Stream client Access headers on upgrade, bounded backoff+jitter, token refresh, catch-up from cursor, envelope validation, ping does not wake hub",
+      "covers": [
+        "C-6",
+        "C-10",
+        "C-3"
+      ],
+      "file": "shared/services/cloud-sync/__tests__/CloudProjectionStreamClient.test.ts",
+      "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "TEST-stream-manager-single-flight",
+      "kind": "integration",
+      "title": "Exactly one client per enabled project; tab mounts add no streams; single-flight reconnect; clean stop",
+      "covers": [
+        "BR-1.6"
+      ],
+      "file": "server/tests/services/cloud-sync/ProjectionStreamManager.test.ts",
+      "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "TEST-stream-manager-ack-persistence",
+      "kind": "integration",
+      "title": "Read-model + cursor persisted atomically before ack; failed apply does not ack or advance",
+      "covers": [
+        "C-6",
+        "Edge-1"
+      ],
+      "file": "server/tests/services/cloud-sync/ProjectionStreamManager.test.ts",
+      "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "TEST-stream-manager-stale",
+      "kind": "integration",
+      "title": "Disconnect keeps last projection + marks stale; bounded reconnect; catch-up in revision order before live",
+      "covers": [
+        "BR-1.5"
+      ],
+      "file": "server/tests/services/cloud-sync/ProjectionStreamManager.test.ts",
+      "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "TEST-config-v2-migration",
+      "kind": "unit",
+      "title": "v1 pollIntervalSeconds migrates atomically to v2; identity/origin/credential unchanged; pollIntervalSeconds discarded",
+      "covers": [
+        "Edge-3",
+        "C-9"
+      ],
+      "file": "shared/services/cloud-sync/__tests__/project-state-store.test.ts",
+      "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "TEST-sse-fanout",
+      "kind": "integration",
+      "title": "Read-model change emits an ordinary ticket-view change via existing SSEBroadcaster; no projection protocol to browser",
+      "covers": [
+        "BR-1.3",
+        "C-11"
+      ],
+      "file": "server/tests/services/cloud-sync/SSEProjectionFanout.test.ts",
+      "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "TEST-e2e-no-polling-push",
+      "kind": "e2e",
+      "title": "Remote projection appears without any /cloud-projections request; ordinary ticket update; extra tabs add no cloud traffic; no browser cloud socket",
+      "covers": [
+        "BR-1.3"
+      ],
+      "file": "tests/e2e/cloud-sync-board.spec.ts",
+      "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "TEST-e2e-local-wins-stale",
+      "kind": "e2e",
+      "title": "Same-number local ticket wins; disconnected board keeps projection visible + stale; local use unblocked",
+      "covers": [
+        "BR-1.9",
+        "BR-1.5"
+      ],
+      "file": "tests/e2e/cloud-sync-board.spec.ts",
+      "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "TEST-idle-zero-d1",
+      "kind": "manual",
+      "title": "Connected idle project for 5+ former poll intervals observes zero timer-caused projection/membership D1 reads (statement counts)",
+      "covers": [
+        "C-1",
+        "C-7"
+      ],
+      "file": "cloud/test/operations/idle-zero-d1.md",
+      "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "TEST-delivery-latency-slo",
+      "kind": "manual",
+      "title": "p50/p95/p99 commit-to-rendered-browser under load <=2s p95; reconnect catch-up <=5s p95",
+      "covers": [
+        "C-8"
+      ],
+      "file": "cloud/test/operations/delivery-latency.md",
+      "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "TEST-deployed-hibernation-alarm",
+      "kind": "manual",
+      "title": "Live hibernation restore + alarm replay + reconnect catch-up on a deployed Worker",
+      "covers": [
+        "C-7",
+        "Edge-1"
+      ],
+      "file": "cloud/test/operations/hub-recovery.md",
+      "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "TEST-deployed-revocation",
+      "kind": "manual",
+      "title": "Live membership revoke closes socket before next delivery",
+      "covers": [
+        "Edge-4",
+        "C-10"
+      ],
+      "file": "cloud/test/operations/revocation.md",
+      "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "TEST-unified-ticket-api",
+      "kind": "integration",
+      "title": "Unified ticket endpoint returns canonical + projection-only read-only entries with kind/readOnly/stale; local wins on number; no cloud transport fields",
+      "covers": [
+        "BR-1.9",
+        "C-11",
+        "C-2"
+      ],
+      "file": "server/tests/services/cloud-sync/SSEProjectionFanout.test.ts",
+      "sourceRef": "CR:MDT-226"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-contracts-migration",
+      "title": "Slice 1: stream envelopes, unified ticket-view contract, schema-v2 migration, validation, and compatibility behavior",
+      "ownsArtifactIds": [
+        "ART-stream-contract",
+        "ART-ticket-view-contract",
+        "ART-project-state"
+      ],
+      "makesGreenIds": [
+        "TEST-stream-contract-shape",
+        "TEST-ticket-view-contract",
+        "TEST-config-v2-migration"
+      ],
+      "skills": [
+        "domain-contracts",
+        "shared",
+        "spec-trace-cli"
+      ],
+      "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "TASK-project-hub",
+      "title": "Slice 2: ProjectProjectionHub DO - deterministic routing, operation queue, catch-up/high-water, commit-before-broadcast, per-socket ack, alarm recovery, hibernation, revocation",
+      "ownsArtifactIds": [
+        "ART-project-hub",
+        "ART-worker-router",
+        "ART-worker-config",
+        "ART-projection-usecase",
+        "ART-projection-repository"
+      ],
+      "makesGreenIds": [
+        "TEST-hub-operation-serialization",
+        "TEST-hub-commit-before-broadcast",
+        "TEST-hub-ack-and-alarm",
+        "TEST-hub-revocation-redaction",
+        "project_stream_live_after_catchup",
+        "committed_projection_without_polling",
+        "reconnect_catches_up",
+        "revoked_member_disconnected",
+        "post_commit_delivery_recovers"
+      ],
+      "skills": [
+        "cloudflare",
+        "durable-objects",
+        "workers-best-practices"
+      ],
+      "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "TASK-local-runtime",
+      "title": "Slice 3: WebSocket stream client, credential/token handling, single-flight reconnect, stream manager, persistent read model, sparse catch-up, live-gap, stale state",
+      "ownsArtifactIds": [
+        "ART-stream-client",
+        "ART-stream-manager",
+        "ART-projection-read-model"
+      ],
+      "makesGreenIds": [
+        "TEST-stream-client-transport",
+        "TEST-stream-manager-single-flight",
+        "TEST-stream-manager-ack-persistence",
+        "TEST-stream-manager-stale",
+        "TEST-read-model-merge",
+        "project_stream_live_after_catchup",
+        "tabs_share_cloud_stream",
+        "reconnect_catches_up",
+        "disconnected_board_stale",
+        "post_commit_delivery_recovers",
+        "local_ticket_wins"
+      ],
+      "skills": [
+        "shared",
+        "server",
+        "durable-objects"
+      ],
+      "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "TASK-unified-delivery",
+      "title": "Slice 4: local-wins ticket merge, existing ticket route, ordinary SSE fan-out, browser capability rendering, remove browser projection polling ownership",
+      "ownsArtifactIds": [
+        "ART-ticket-service",
+        "ART-local-sse",
+        "ART-sse-client",
+        "ART-use-sse-events"
+      ],
+      "makesGreenIds": [
+        "TEST-unified-ticket-api",
+        "TEST-sse-fanout",
+        "TEST-e2e-local-wins-stale",
+        "committed_projection_without_polling",
+        "tabs_share_cloud_stream",
+        "disconnected_board_stale",
+        "local_ticket_wins"
+      ],
+      "skills": [
+        "mdt-frontend",
+        "server"
+      ],
+      "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "TASK-rollout-proof",
+      "title": "Slice 5: feature flag, compatibility removal gate, observability, idle-D1 test, browser-visible latency probe, owner docs, rollback verification",
+      "ownsArtifactIds": [
+        "ART-cloud-tests",
+        "ART-local-tests",
+        "ART-e2e-tests",
+        "ART-owner-docs",
+        "ART-data-doc",
+        "ART-identity-doc",
+        "ART-operations-doc"
+      ],
+      "makesGreenIds": [
+        "TEST-e2e-no-polling-push",
+        "TEST-idle-zero-d1",
+        "TEST-delivery-latency-slo",
+        "TEST-deployed-hibernation-alarm",
+        "TEST-deployed-revocation"
+      ],
+      "skills": [
+        "mdt-frontend",
+        "security-best-practices",
+        "mdt-release"
+      ],
+      "sourceRef": "CR:MDT-226"
+    }
+  ]
 }
