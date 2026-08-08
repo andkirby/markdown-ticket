@@ -1,0 +1,557 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-206"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "WHEN the user is on the board view, the system shall expose an Epics board-mode control that switches between flat and swimlane layouts.",
+      "sourceRef": "MDT-206 Section 4 Functional",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "WHEN the board mode is changed, the system shall persist the selected mode across board navigation and page reloads.",
+      "sourceRef": "MDT-206 Section 4 Functional",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-2.1",
+      "kind": "behavior",
+      "text": "WHILE swimlane mode is active, the system shall render one visible lane per usable epic plus a trailing No epic lane for tickets without a valid epic.",
+      "sourceRef": "MDT-206 Section 4 Functional and Edge Cases",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-2.2",
+      "kind": "behavior",
+      "text": "WHILE swimlane mode is active, the system shall render each lane header with epic identity, progress, ticket count, lifecycle state, and the available lifecycle action.",
+      "sourceRef": "MDT-206 Section 4 Functional",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-2.3",
+      "kind": "behavior",
+      "text": "WHILE swimlane mode is active, the system shall exclude epic tickets from draggable card content because the epic is represented by the lane.",
+      "sourceRef": "MDT-206 Section 4 Functional",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-3.1",
+      "kind": "behavior",
+      "text": "WHEN a ticket is dragged to a column in its own epic lane, the system shall update only that ticket's status.",
+      "sourceRef": "MDT-206 Section 4 Functional",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-3.2",
+      "kind": "behavior",
+      "text": "WHEN a ticket is dragged toward a different epic lane, the system shall not highlight, accept, update status, or change epic assignment.",
+      "sourceRef": "MDT-206 Section 4 Functional",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-4.1",
+      "kind": "behavior",
+      "text": "WHEN the user activates a Proposed epic from a lane header, the system shall move the epic to Approved through the existing ticket update path.",
+      "sourceRef": "MDT-206 Section 4 Functional",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-4.2",
+      "kind": "behavior",
+      "text": "WHEN the user closes an Approved epic from a lane header and MDT-205 reports open children, the system shall surface a clear error naming the blocking children.",
+      "sourceRef": "MDT-206 Section 4 Functional",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-5.1",
+      "kind": "behavior",
+      "text": "WHEN Hide empty, Collapse all, Expand all, or an individual lane collapse control is used, the system shall update lane visibility without changing ticket data.",
+      "sourceRef": "MDT-206 Section 4 Functional and Edge Cases",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "The swimlane layout shall use one synchronized scroll surface for both axes, with status columns aligned across every lane.",
+      "sourceRef": "MDT-206 Section 4 Non-Functional",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "Epic progress shall equal terminal child tickets divided by total child tickets, where terminal statuses are Implemented, Rejected, and Partially Implemented.",
+      "sourceRef": "MDT-206 Section 4 Non-Functional",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "Explicit level: epic shall be the primary epic signal while legacy inferred epic badge rendering continues to work.",
+      "sourceRef": "MDT-206 Section 4 Non-Functional",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "Swimlane runtime styling shall use semantic CSS classes and existing design3 tokens without copying Alpine mock architecture.",
+      "sourceRef": "User request and design3 references",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "IF a project has no visible usable epics, THEN swimlane mode shall still render the No epic lane without breaking the board.",
+      "sourceRef": "MDT-206 Section 4 Edge Cases",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-2",
+      "kind": "edge_case",
+      "text": "IF a ticket's phaseEpic points to a missing or unusable epic, THEN the system shall place that ticket in the No epic lane.",
+      "sourceRef": "MDT-206 Section 4 Edge Cases",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-3",
+      "kind": "edge_case",
+      "text": "IF filtering changes lane contents, THEN collapsed lane state shall be preserved.",
+      "sourceRef": "MDT-206 Section 4 Edge Cases",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "board_mode_switches_to_swimlanes",
+      "title": "Board mode switches between flat and swimlanes",
+      "covers": [
+        "BR-1.1"
+      ],
+      "given": "I am viewing a project on the board",
+      "when": "I activate the Epics board-mode control",
+      "then": "I see the swimlane board, and when I deactivate it I see the flat board again",
+      "sourceRef": "requirements:BR-1.1"
+    },
+    {
+      "id": "board_mode_persists_after_reload",
+      "title": "Board mode persists after navigation and reload",
+      "covers": [
+        "BR-1.2"
+      ],
+      "given": "I selected swimlane board mode",
+      "when": "I navigate away from the board and reload the project",
+      "then": "The board opens in swimlane mode again",
+      "sourceRef": "requirements:BR-1.2"
+    },
+    {
+      "id": "swimlanes_show_epic_rows_and_no_epic",
+      "title": "Swimlanes show epic rows plus No epic",
+      "covers": [
+        "BR-2.1",
+        "BR-2.3"
+      ],
+      "given": "A project has explicit epic tickets, child tickets, and tickets without a valid epic",
+      "when": "I open swimlane board mode",
+      "then": "I see one lane for each epic, a No epic lane, child ticket cards in status columns, and no epic ticket rendered as a card",
+      "sourceRef": "requirements:BR-2.1,BR-2.3"
+    },
+    {
+      "id": "lane_headers_show_progress_and_lifecycle",
+      "title": "Lane headers show progress and lifecycle actions",
+      "covers": [
+        "BR-2.2",
+        "BR-4.1"
+      ],
+      "given": "A project has Proposed, Approved, and Implemented epics with child tickets",
+      "when": "I inspect the swimlane headers and activate a Proposed epic",
+      "then": "Each lane shows identity, progress, count, state, and the Proposed epic changes to Approved",
+      "sourceRef": "requirements:BR-2.2,BR-4.1"
+    },
+    {
+      "id": "same_epic_drag_updates_status_only",
+      "title": "Same-epic drag updates status only",
+      "covers": [
+        "BR-3.1"
+      ],
+      "given": "A ticket belongs to an epic lane",
+      "when": "I drag the ticket to another status column in the same lane",
+      "then": "The ticket moves to that status while remaining in the same epic lane",
+      "sourceRef": "requirements:BR-3.1"
+    },
+    {
+      "id": "cross_epic_drag_is_rejected",
+      "title": "Cross-epic drag is rejected",
+      "covers": [
+        "BR-3.2"
+      ],
+      "given": "A ticket belongs to one epic lane and another epic lane is visible",
+      "when": "I drag the ticket toward a column in the other epic lane",
+      "then": "The other lane does not show a valid drop target and the ticket status and epic assignment do not change",
+      "sourceRef": "requirements:BR-3.2"
+    },
+    {
+      "id": "blocked_epic_close_surfaces_children",
+      "title": "Blocked epic close names children",
+      "covers": [
+        "BR-4.2"
+      ],
+      "given": "An Approved epic has non-terminal child tickets",
+      "when": "I try to close the epic from the lane header",
+      "then": "The close action remains blocked and I see an error naming the open child tickets",
+      "sourceRef": "requirements:BR-4.2"
+    },
+    {
+      "id": "lane_visibility_controls_do_not_mutate_tickets",
+      "title": "Lane visibility controls change only lane visibility",
+      "covers": [
+        "BR-5.1"
+      ],
+      "given": "The swimlane board has empty and populated lanes",
+      "when": "I use Hide empty, Collapse all, Expand all, and an individual lane collapse control",
+      "then": "The visible lanes and lane bodies update without changing ticket status or epic assignment",
+      "sourceRef": "requirements:BR-5.1"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-board-mode-owner",
+      "title": "Board owns flat versus swimlane mode and persists it as Board-local state",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2"
+      ],
+      "artifactIds": [
+        "ART-board",
+        "ART-swimlane-component"
+      ],
+      "sourceRef": "architecture:Board Mode Ownership"
+    },
+    {
+      "id": "OBL-lane-model",
+      "title": "SwimlaneBoard owns epic lane construction, No epic fallback, epic-card exclusion, and terminal progress math",
+      "derivedFrom": [
+        "BR-2.1",
+        "BR-2.2",
+        "BR-2.3",
+        "C2",
+        "C3",
+        "Edge-1",
+        "Edge-2",
+        "Edge-3"
+      ],
+      "artifactIds": [
+        "ART-swimlane-component",
+        "ART-swimlane-helpers",
+        "ART-component-tests"
+      ],
+      "sourceRef": "architecture:Lane Model"
+    },
+    {
+      "id": "OBL-status-only-drop",
+      "title": "Swimlane lane columns accept drops only for the dragged ticket's existing lane key and update status only",
+      "derivedFrom": [
+        "BR-3.1",
+        "BR-3.2"
+      ],
+      "artifactIds": [
+        "ART-swimlane-component",
+        "ART-board-e2e",
+        "ART-selectors"
+      ],
+      "sourceRef": "architecture:Drop Guard"
+    },
+    {
+      "id": "OBL-epic-lifecycle",
+      "title": "Lane header lifecycle controls use the existing ticket update path and surface MDT-205 close-guard errors",
+      "derivedFrom": [
+        "BR-4.1",
+        "BR-4.2"
+      ],
+      "artifactIds": [
+        "ART-board",
+        "ART-swimlane-component",
+        "ART-board-e2e",
+        "ART-selectors"
+      ],
+      "sourceRef": "architecture:Epic Lifecycle"
+    },
+    {
+      "id": "OBL-lane-controls",
+      "title": "Lane visibility controls update only local lane UI state and never mutate ticket data",
+      "derivedFrom": [
+        "BR-5.1"
+      ],
+      "artifactIds": [
+        "ART-swimlane-component",
+        "ART-board-e2e",
+        "ART-selectors"
+      ],
+      "sourceRef": "architecture:Lane Controls"
+    },
+    {
+      "id": "OBL-semantic-css",
+      "title": "Swimlane styling uses Design 3 semantic classes, synchronized scrolling, aligned column widths, and token-based colors",
+      "derivedFrom": [
+        "C1",
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-swimlane-css",
+        "ART-index-css",
+        "ART-board-e2e"
+      ],
+      "sourceRef": "architecture:CSS Contract"
+    },
+    {
+      "id": "OBL-trace-docs",
+      "title": "Ticket-local workflow artifacts record architecture, UX, tests, tasks, and review evidence",
+      "derivedFrom": [
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-ticket-docs"
+      ],
+      "sourceRef": "architecture:Workflow Documentation"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-board",
+      "path": "src/components/Board.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture:Board orchestration"
+    },
+    {
+      "id": "ART-swimlane-component",
+      "path": "src/components/SwimlaneBoard/index.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture:SwimlaneBoard component"
+    },
+    {
+      "id": "ART-swimlane-helpers",
+      "path": "src/components/SwimlaneBoard/helpers.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:grouping and progress helpers"
+    },
+    {
+      "id": "ART-swimlane-css",
+      "path": "src/components/SwimlaneBoard/swimlane-board.css",
+      "kind": "runtime",
+      "sourceRef": "architecture:semantic CSS"
+    },
+    {
+      "id": "ART-index-css",
+      "path": "src/index.css",
+      "kind": "runtime",
+      "sourceRef": "architecture:CSS import hub"
+    },
+    {
+      "id": "ART-board-e2e",
+      "path": "tests/e2e/board/swimlane-board.spec.ts",
+      "kind": "test",
+      "sourceRef": "architecture:E2E coverage"
+    },
+    {
+      "id": "ART-selectors",
+      "path": "tests/e2e/utils/selectors.ts",
+      "kind": "test",
+      "sourceRef": "architecture:E2E selectors"
+    },
+    {
+      "id": "ART-component-tests",
+      "path": "src/components/SwimlaneBoard/helpers.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture:helper tests"
+    },
+    {
+      "id": "ART-ticket-docs",
+      "path": "docs/CRs/MDT-206/architecture.md",
+      "kind": "doc",
+      "sourceRef": "architecture:narrative artifact"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-swimlane-helpers",
+      "kind": "unit",
+      "title": "Swimlane lane model and progress helpers",
+      "covers": [
+        "C2",
+        "C3",
+        "Edge-1",
+        "Edge-2",
+        "Edge-3",
+        "OBL-lane-model"
+      ],
+      "file": "src/components/SwimlaneBoard/helpers.test.ts",
+      "sourceRef": "tests:TDD helper RED"
+    },
+    {
+      "id": "TEST-swimlane-board-e2e",
+      "kind": "e2e",
+      "title": "Epic swimlane board user-visible behavior",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-2.1",
+        "BR-2.2",
+        "BR-2.3",
+        "BR-3.1",
+        "BR-3.2",
+        "BR-4.1",
+        "BR-4.2",
+        "BR-5.1",
+        "C1",
+        "C4",
+        "OBL-board-mode-owner",
+        "OBL-status-only-drop",
+        "OBL-epic-lifecycle",
+        "OBL-lane-controls",
+        "OBL-semantic-css"
+      ],
+      "file": "tests/e2e/board/swimlane-board.spec.ts",
+      "sourceRef": "tests:TDD E2E RED"
+    },
+    {
+      "id": "TEST-ticket-level-api-metadata",
+      "kind": "integration",
+      "title": "Ticket metadata preserves explicit epic level for board filtering",
+      "covers": [
+        "C3",
+        "OBL-lane-model"
+      ],
+      "file": "server/tests/integration/api.metadata.test.ts",
+      "sourceRef": "UAT:MDT-225-visible-on-board"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-1",
+      "title": "Build swimlane lane model helpers",
+      "ownsArtifactIds": [
+        "ART-swimlane-helpers",
+        "ART-component-tests"
+      ],
+      "makesGreenIds": [
+        "TEST-swimlane-helpers"
+      ],
+      "skills": [
+        "frontend-react-component"
+      ],
+      "sourceRef": "tasks.md#task-1"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Wire stable E2E selectors and acceptance coverage",
+      "ownsArtifactIds": [
+        "ART-board-e2e",
+        "ART-selectors"
+      ],
+      "makesGreenIds": [
+        "TEST-swimlane-board-e2e"
+      ],
+      "skills": [
+        "playwright-cli"
+      ],
+      "sourceRef": "tasks.md#task-3"
+    },
+    {
+      "id": "TASK-4",
+      "title": "Maintain ticket-local workflow artifacts",
+      "ownsArtifactIds": [
+        "ART-ticket-docs"
+      ],
+      "makesGreenIds": [
+        "TEST-swimlane-helpers",
+        "TEST-swimlane-board-e2e"
+      ],
+      "skills": [
+        "mdt-pipeline-e2e",
+        "mdt:spec-trace-cli"
+      ],
+      "sourceRef": "tasks.md#task-4"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Integrate Board mode and SwimlaneBoard runtime",
+      "ownsArtifactIds": [
+        "ART-board",
+        "ART-swimlane-component",
+        "ART-swimlane-css",
+        "ART-index-css"
+      ],
+      "makesGreenIds": [
+        "board_mode_switches_to_swimlanes",
+        "board_mode_persists_after_reload",
+        "swimlanes_show_epic_rows_and_no_epic",
+        "lane_headers_show_progress_and_lifecycle",
+        "same_epic_drag_updates_status_only",
+        "cross_epic_drag_is_rejected",
+        "blocked_epic_close_surfaces_children",
+        "lane_visibility_controls_do_not_mutate_tickets",
+        "TEST-swimlane-board-e2e",
+        "TEST-ticket-level-api-metadata"
+      ],
+      "skills": [
+        "frontend-react-component",
+        "mdt-ux-designer"
+      ],
+      "sourceRef": "tasks.md#task-2"
+    }
+  ]
+}

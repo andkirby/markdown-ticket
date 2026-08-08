@@ -206,7 +206,8 @@ export function createDocumentRouter(
    *           text/css: { schema: { type: string, format: binary } }
    *           text/javascript: { schema: { type: string, format: binary } }
    *           image/png: { schema: { type: string, format: binary } }
-   *       403: { description: Invalid, expired, or out-of-scope token; traversal attempt }
+   *       403:
+   *         description: Invalid, expired, or out-of-scope token; traversal attempt
    *       404: { description: Unknown project or file }
    *       415: { description: Unsupported document type }
    */

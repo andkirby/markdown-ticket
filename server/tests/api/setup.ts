@@ -11,10 +11,9 @@
 import type { ProjectFactory, TestEnvironment } from '@mdt/shared/test-lib'
 import type { Express } from 'express'
 import type FileWatcherService from '../../services/fileWatcher/index.js'
-import { existsSync, promises as fs, mkdirSync, mkdtempSync, rmSync } from 'node:fs'
+import { existsSync, promises as fs, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import process from 'node:process'
 import { parseToml, stringify } from '@mdt/shared/utils/toml.js'
 import jestOpenAPI from 'jest-openapi'
 
@@ -43,10 +42,23 @@ interface TestContext {
   projectFactory: ProjectFactory
 }
 
+interface MutableProjectConfig {
+  project?: {
+    document?: {
+      maxDepth?: number
+      paths?: string[]
+      [key: string]: unknown
+    }
+    [key: string]: unknown
+  }
+  [key: string]: unknown
+}
+
 // Global cache (shared across all test runs)
 let cachedApp: Express | null = null
 let cachedConfigDir: string | null = null
 let cachedFileWatcher: FileWatcherService | null = null
+let cachedTestEnv: TestEnvironment | null = null
 
 /**
  * Setup test environment with isolated temporary directory and Express app.
@@ -54,13 +66,13 @@ let cachedFileWatcher: FileWatcherService | null = null
  * The CONFIG_DIR is set before creating the Express app.
  */
 export async function setupTestEnvironment(): Promise<TestContext> {
-  const tempDir = mkdtempSync(join(tmpdir(), 'mdt-test-'))
-  const configDir = join(tempDir, 'config')
+  const { TestEnvironment, ProjectFactory } = await import('@mdt/shared/test-lib')
+  const testEnv = new TestEnvironment()
+  await testEnv.setup()
 
-  mkdirSync(join(configDir, 'projects'), { recursive: true })
-
-  // CRITICAL: Set CONFIG_DIR BEFORE creating the app
-  process.env.CONFIG_DIR = configDir
+  const tempDir = testEnv.getTempDirectory()
+  const configDir = testEnv.getConfigDirectory()
+  cachedTestEnv = testEnv
 
   let app: Express
 
@@ -82,10 +94,6 @@ export async function setupTestEnvironment(): Promise<TestContext> {
     throw new Error('Test file watcher was not initialized')
   }
 
-  const { TestEnvironment, ProjectFactory } = await import('@mdt/shared/test-lib')
-  const testEnv = new TestEnvironment()
-
-  await testEnv.setup()
   const projectFactory = new ProjectFactory(testEnv)
 
   return { tempDir, configDir, app, fileWatcher: cachedFileWatcher, testEnv, projectFactory }
@@ -97,6 +105,13 @@ export async function cleanupTestEnvironment(tempDir: string): Promise<void> {
   cachedFileWatcher = null
   cachedApp = null
   cachedConfigDir = null
+  const testEnv = cachedTestEnv
+  cachedTestEnv = null
+
+  if (testEnv) {
+    await testEnv.cleanup()
+    return
+  }
 
   if (existsSync(tempDir) && tempDir.startsWith(tmpdir())) {
     rmSync(tempDir, { recursive: true, force: true })
@@ -129,7 +144,7 @@ export async function setProjectDocumentMaxDepth(
 ): Promise<void> {
   const configPath = join(projectFactory.getProjectsDir(), projectCode, '.mdt-config.toml')
   const content = await fs.readFile(configPath, 'utf8')
-  const config = parseToml(content) as any
+  const config = parseToml(content) as MutableProjectConfig
 
   if (!config.project) {
     config.project = {}
@@ -150,7 +165,7 @@ export async function setProjectDocumentPaths(
 ): Promise<void> {
   const configPath = join(projectFactory.getProjectsDir(), projectCode, '.mdt-config.toml')
   const content = await fs.readFile(configPath, 'utf8')
-  const config = parseToml(content) as any
+  const config = parseToml(content) as MutableProjectConfig
 
   if (!config.project) {
     config.project = {}
@@ -170,4 +185,5 @@ function _resetTestSetupCache(): void {
   cachedFileWatcher = null
   cachedApp = null
   cachedConfigDir = null
+  cachedTestEnv = null
 }

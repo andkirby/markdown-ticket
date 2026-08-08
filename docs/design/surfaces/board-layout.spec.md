@@ -2,7 +2,7 @@
 
 Kanban board — the primary surface for viewing tickets as columns. In owner/admin mode it supports management actions; in read-only mode it preserves viewing, sorting, filtering, and responsive mobile column switching while blocking all mutations.
 
-This spec covers the **flat** board (the default). An alternate **swimlane** layout — one row per epic, shared status columns across rows — is specified in `swimlane-board.spec.md`. The two share the same ticket pipeline and drag-drop backend; they differ only in layout. Board mode (`flat` | `swimlane`) is toggled by an "Epics" control in the board header.
+This spec covers the **flat** board (the default). An alternate **swimlane** layout — one row per epic, shared status columns across rows — is specified in `swimlane-board.spec.md`. The two share the same ticket pipeline and drag-drop backend; they differ only in layout. App owns the icon-only peer view switcher (`Board`, `Swimlanes`, `List`, `Docs` as accessible names); `Board.tsx` receives the selected board layout mode.
 
 ## Composition
 

@@ -67,6 +67,40 @@ export const boardSelectors = {
   cloudBadge: '[data-testid="cloud-badge"]',
 } as const
 
+/** MDT-206 — Epic swimlane board selectors */
+export const swimlaneSelectors = {
+  /** Board mode toggle that switches between flat and epic swimlane layouts */
+  modeToggle: '[data-testid="board-mode-epics-toggle"]',
+  /** Flat board mode control */
+  flatModeToggle: '[data-testid="board-mode-flat-toggle"]',
+  /** Swimlane board container */
+  board: '[data-testid="swimlane-board"]',
+  /** Swimlane toolbar */
+  toolbar: '[data-testid="swimlane-toolbar"]',
+  /** Hide empty lanes toggle */
+  hideEmptyToggle: '[data-testid="swimlane-hide-empty"]',
+  /** Collapse all lanes action */
+  collapseAll: '[data-testid="swimlane-collapse-all"]',
+  /** Expand all lanes action */
+  expandAll: '[data-testid="swimlane-expand-all"]',
+  /** Lane count text */
+  laneCount: '[data-testid="swimlane-lane-count"]',
+  /** Any swimlane lane */
+  lane: '[data-testid="swimlane-lane"]',
+  /** Lane by key */
+  laneByKey: (key: string) => `[data-testid="swimlane-lane"][data-lane-key="${key}"]`,
+  /** Lane body by key */
+  laneBodyByKey: (key: string) => `[data-testid="swimlane-lane-body"][data-lane-key="${key}"]`,
+  /** Lane progress bar by key */
+  laneProgressByKey: (key: string) => `[data-testid="swimlane-progress"][data-lane-key="${key}"]`,
+  /** Lane lifecycle action by key */
+  laneActionByKey: (key: string) => `[data-testid="swimlane-lifecycle-action"][data-lane-key="${key}"]`,
+  /** Lane collapse button by key */
+  laneCollapseByKey: (key: string) => `[data-testid="swimlane-collapse"][data-lane-key="${key}"]`,
+  /** Lane column by lane key and status */
+  laneColumn: (key: string, status: string) => `[data-testid="swimlane-lane-col"][data-lane-key="${key}"][data-status="${status}"]`,
+} as const
+
 /**
  * Ticket selectors
  */

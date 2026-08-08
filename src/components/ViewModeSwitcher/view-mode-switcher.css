@@ -1,0 +1,48 @@
+@layer components {
+  .view-mode-switcher {
+    display: inline-flex;
+    align-items: center;
+    width: max-content;
+    height: 2.25rem;
+    gap: 2px;
+    padding: 2px;
+    border: 1px solid oklch(var(--border));
+    border-radius: 6px;
+    background: oklch(var(--background));
+    font-size: var(--fs-xs);
+  }
+
+  .view-mode-switcher__button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 100%;
+    border-radius: 4px;
+    color: var(--text-muted);
+    font-weight: 600;
+    transition: background-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
+  }
+
+  .view-mode-switcher__button svg {
+    width: var(--sz-icon);
+    height: var(--sz-icon);
+  }
+
+  .view-mode-switcher__button:hover {
+    background: var(--bg-muted);
+    color: oklch(var(--foreground));
+  }
+
+  .view-mode-switcher__button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px oklch(var(--ring));
+  }
+
+  .view-mode-switcher__button[data-active="true"] {
+    background: var(--bg-muted);
+    color: oklch(var(--foreground));
+    box-shadow: 0 1px 2px color-mix(in srgb, black 8%, transparent);
+  }
+
+}
