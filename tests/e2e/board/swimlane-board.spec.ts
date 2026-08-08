@@ -251,4 +251,41 @@ test.describe('Epic swimlane board (MDT-206)', () => {
     await key.click()
     await expect(page).toHaveURL(new RegExp(`/prj/${scenario.projectCode}/ticket/${scenario.alphaEpic}`))
   })
+
+  test('UAT: collapses a lane to a horizontal summary bar via whole-label click', async ({ page, e2eContext }) => {
+    const scenario = await createEpicProject(e2eContext.projectFactory)
+
+    await page.goto(`/prj/${scenario.projectCode}`)
+    await waitForBoardReady(page)
+    await page.click(swimlaneSelectors.modeToggle)
+
+    const lane = page.locator(swimlaneSelectors.laneByKey(scenario.alphaEpic))
+    const label = page.locator(swimlaneSelectors.laneLabelByKey(scenario.alphaEpic))
+    const body = page.locator(swimlaneSelectors.laneBodyByKey(scenario.alphaEpic))
+
+    // The whole label is the toggle (role=button), expanded by default.
+    await expect(label).toHaveAttribute('role', 'button')
+    await expect(label).toHaveAttribute('aria-expanded', 'true')
+    await expect(body).toBeVisible()
+
+    // Expanded: the label is a vertical sticky column.
+    await expect(label).toHaveCSS('flex-direction', 'column')
+
+    // Clicking the label (not a chevron) collapses the lane.
+    await label.click()
+    await expect(label).toHaveAttribute('aria-expanded', 'false')
+    await expect(body).toBeHidden()
+
+    // Collapsed: the label reflows to a horizontal full-width summary bar.
+    await expect(label).toHaveCSS('flex-direction', 'row')
+
+    // Collapse-all and expand-all still drive the same reflow.
+    await page.click(swimlaneSelectors.expandAll)
+    await expect(label).toHaveAttribute('aria-expanded', 'true')
+    await expect(label).toHaveCSS('flex-direction', 'column')
+
+    await page.click(swimlaneSelectors.collapseAll)
+    await expect(label).toHaveAttribute('aria-expanded', 'false')
+    await expect(label).toHaveCSS('flex-direction', 'row')
+  })
 })

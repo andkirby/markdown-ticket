@@ -139,6 +139,16 @@ function getLifecycleLabel(epic: Ticket): { text: string, targetStatus: Status |
   return { text: 'Activate', targetStatus: CRStatus.APPROVED, disabled: false }
 }
 
+/**
+ * Stop an event bubbling to the lane-label collapse toggle, then run the child
+ * action (open epic ticket, advance lifecycle). The whole lane label is the
+ * collapse trigger (design3 §8); interactive children opt out via this helper.
+ */
+function stopAndRun(event: React.MouseEvent, action: () => void): void {
+  event.stopPropagation()
+  action()
+}
+
 export function SwimlaneBoard({
   tickets,
   laneSourceTickets,
@@ -231,7 +241,22 @@ export function SwimlaneBoard({
               data-testid="swimlane-lane"
               data-lane-key={lane.key}
             >
-              <div className={`swimlane-board__lane-label ${lane.isNone ? 'swimlane-board__lane-label--none' : ''}`}>
+              <div
+                role="button"
+                tabIndex={0}
+                className={`swimlane-board__lane-label ${lane.isNone ? 'swimlane-board__lane-label--none' : ''}`}
+                aria-label={`${isCollapsed ? 'Expand' : 'Collapse'} lane ${lane.title}`}
+                aria-expanded={!isCollapsed}
+                onClick={() => toggleLane(lane.key)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    toggleLane(lane.key)
+                  }
+                }}
+                data-testid="swimlane-lane-label"
+                data-lane-key={lane.key}
+              >
                 <div className="swimlane-board__lane-title">
                   <strong className="swimlane-board__lane-title-text">{lane.title}</strong>
                   {!lane.isNone && lane.epic && (
@@ -240,7 +265,7 @@ export function SwimlaneBoard({
                       className="swimlane-board__lane-key"
                       aria-label={`Open epic ticket ${lane.key} ${lane.title}`}
                       title={`Open ${lane.key}`}
-                      onClick={() => onTicketEdit(lane.epic as Ticket)}
+                      onClick={event => stopAndRun(event, () => onTicketEdit(lane.epic as Ticket))}
                       data-testid="swimlane-lane-key"
                       data-lane-key={lane.key}
                     >
@@ -252,17 +277,9 @@ export function SwimlaneBoard({
                 <div className="swimlane-board__lane-meta">
                   {lane.epic && <StatusBadge status={lane.epic.status} />}
                   <span className="swimlane-board__count-pill">{lane.tickets.length}</span>
-                  <button
-                    type="button"
-                    className="swimlane-board__collapse"
-                    aria-label={`${isCollapsed ? 'Expand' : 'Collapse'} lane ${lane.title}`}
-                    aria-expanded={!isCollapsed}
-                    onClick={() => toggleLane(lane.key)}
-                    data-testid="swimlane-collapse"
-                    data-lane-key={lane.key}
-                  >
-                    <ChevronDown aria-hidden="true" size={14} />
-                  </button>
+                  <span className="swimlane-board__collapse" aria-hidden="true">
+                    <ChevronDown size={14} />
+                  </span>
                 </div>
 
                 {!lane.isNone && (
@@ -289,7 +306,7 @@ export function SwimlaneBoard({
 
                 {lane.epic && lifecycle && (
                   <div className="swimlane-board__lane-actions">
-                    <div className="swimlane-board__lifecycle">
+                    <span className="swimlane-board__lifecycle">
                       {lifecycle.targetStatus
                         ? (
                             <Button
@@ -299,10 +316,10 @@ export function SwimlaneBoard({
                               disabled={!canWrite || closeBlocked}
                               title={closeBlocked ? blockedTitle : undefined}
                               aria-label={`${lifecycle.text} ${lane.title}`}
-                              onClick={() => {
+                              onClick={event => stopAndRun(event, () => {
                                 if (lifecycle.targetStatus)
                                   void onEpicStatusChange(lane.epic as Ticket, lifecycle.targetStatus)
-                              }}
+                              })}
                               data-testid="swimlane-lifecycle-action"
                               data-lane-key={lane.key}
                             >
@@ -319,13 +336,13 @@ export function SwimlaneBoard({
                               Closed
                             </span>
                           )}
-                    </div>
+                    </span>
                     <button
                       type="button"
                       className="swimlane-board__open-epic"
                       aria-label={`Open epic ticket ${lane.title}`}
                       title={`Open ${lane.key}`}
-                      onClick={() => onTicketEdit(lane.epic as Ticket)}
+                      onClick={event => stopAndRun(event, () => onTicketEdit(lane.epic as Ticket))}
                       data-testid="swimlane-open-epic"
                       data-lane-key={lane.key}
                     >

@@ -109,6 +109,10 @@
     border-bottom: 1px solid color-mix(in srgb, var(--border-strong) 20%, transparent);
   }
 
+  /* The whole lane label is the collapse toggle (design3 §8): a role=button
+     container that reflows from a vertical sticky column (expanded) to a
+     horizontal full-width summary bar (collapsed). Interactive children are
+     real <button>s that stopPropagation so they don't trigger the toggle. */
   .swimlane-board__lane-label {
     position: sticky;
     left: 0;
@@ -123,10 +127,59 @@
     padding: 10px;
     background: var(--bg-elevated);
     border-left: 3px solid var(--epic-color, var(--border-strong));
+    cursor: pointer;
+  }
+
+  .swimlane-board__lane-label:hover {
+    background: color-mix(in srgb, var(--bg-elevated) 92%, var(--bg-muted));
+  }
+
+  .swimlane-board__lane-label:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px color-mix(in srgb, oklch(var(--primary)) 35%, transparent);
   }
 
   .swimlane-board__lane-label--none {
     background: var(--bg-muted);
+  }
+
+  /* Collapsed: the label becomes a horizontal full-width summary row (design3
+     `lane--collapsed .lane-label`). The vertical 220px column layout is dropped
+     in favor of a single-line bar that spans the board width, so many epics
+     can be scanned at once. */
+  .swimlane-board__lane--collapsed .swimlane-board__lane-label {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    width: 100%;
+    min-height: 0;
+    max-height: none;
+    gap: 10px;
+    padding: 6px 12px;
+  }
+
+  .swimlane-board__lane--collapsed .swimlane-board__lane-title {
+    flex: 1 1 160px;
+    min-width: 0;
+  }
+
+  .swimlane-board__lane--collapsed .swimlane-board__lane-title-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .swimlane-board__lane--collapsed .swimlane-board__lane-meta {
+    flex: 0 0 auto;
+  }
+
+  .swimlane-board__lane--collapsed .swimlane-board__progress-row {
+    flex: 1 1 140px;
+    min-width: 80px;
+  }
+
+  .swimlane-board__lane--collapsed .swimlane-board__lane-actions {
+    flex: 0 0 auto;
   }
 
   .swimlane-board__lane-title {
@@ -165,20 +218,14 @@
     background: var(--bg-muted);
   }
 
+  /* Collapse chevron glyph (aria-hidden) — the whole label is the toggle, so
+     this is a visual affordance only, right-aligned on the status/count row. */
   .swimlane-board__collapse {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
-    border-radius: 6px;
     color: var(--text-subtle);
-  }
-
-  .swimlane-board__collapse:hover,
-  .swimlane-board__collapse:focus-visible {
-    background: var(--bg-muted);
-    color: oklch(var(--foreground));
+    transition: transform 150ms ease-out;
   }
 
   .swimlane-board__lane--collapsed .swimlane-board__collapse svg {

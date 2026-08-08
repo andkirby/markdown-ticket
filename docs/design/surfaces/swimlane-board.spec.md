@@ -32,14 +32,14 @@ SwimlaneBoard
     │   ├── div.swimlane-corner (sticky left+top)
     │   └── div.swimlane-col-header × N columns
     ├── Lane × M epics
-    │   ├── div.lane-label (sticky left)
+    │   ├── div.lane-label[role=button] (sticky left; whole-label collapse toggle)
     │   │   ├── div.lane-title (title text + clickable key)
-    │   │   ├── div.lane-meta (status + count pill + collapse chevron)
+    │   │   ├── div.lane-meta (status + count pill + collapse chevron glyph)
     │   │   ├── div.lane-progress (mini bar + count text)
     │   │   └── div.lane-actions
     │   │       ├── EpicLifecycleControl (Activate | Close | Closed)
     │   │       └── Button[Open epic ticket]
-    │   └── div.lane-track
+    │   └── div.lane-body (hidden when collapsed)
     │       └── div.lane-col × N columns (drop target, independently scrollable)
     │           ├── TicketCard × K
     │           └── div.lane-empty (when 0)
@@ -84,7 +84,7 @@ The lane label is a sticky-left column (md+) showing the epic identity and lifec
 | Epic key | code via `<TicketCode>` | clickable button opening the epic ticket viewer; same font/color/glyph as the ticket-card key for scan parity |
 | Status badge | `StatusBadge` | lifecycle state chip, sits on the meta row |
 | Count pill | `N` | total child tickets, on the meta row |
-| Collapse chevron | rotates on toggle | right-aligned on the meta row (status + count + chevron), collapses the lane-track only |
+| Collapse chevron | rotates on toggle | aria-hidden glyph, right-aligned on the meta row; the **whole lane label** is the toggle (role=button, aria-expanded) |
 | Mini progress bar | `epicProgress()` width | bar + `done/total` text; `--epic-N` fill on `--bg-muted` track |
 | EpicLifecycleControl | Activate / Close / Closed | sits directly under the progress bar (not pinned to the lane bottom); see States table below |
 | Open epic ticket | icon button | beside the lifecycle action; opens the existing ticket viewer for the epic |
@@ -107,7 +107,7 @@ An epic's status is a publish/close gate, not a spatial workflow — so it rende
 | default | swimlane mode on | lanes render, first lane expanded |
 | drag hover (valid lane-col) | dragging over a lane-col whose epic matches the dragged ticket | `.drag-over` — `--bg-muted` tint |
 | drag hover (wrong epic) | dragging over a lane-col of a different epic | no highlight; drop not accepted |
-| lane collapsed | chevron click / Collapse all | `.lane-track` hidden; label switches to row layout |
+| lane collapsed | whole-label click / Collapse all | lane-body hidden; **label reflows from vertical 220px sticky column to a horizontal full-width summary bar** (title + key + status + count + progress + actions on one row); chevron rotates -90° |
 | card badges hidden | swimlane mode default | ticket cards omit attribute badges for compact scanning |
 | card badges shown | Show badges checked | ticket cards render the normal `TicketAttributeTags` row |
 | empty lane | 0 tickets in lane after filters | `.lane-empty` dashed placeholder per col |
@@ -134,6 +134,12 @@ An epic's status is a publish/close gate, not a spatial workflow — so it rende
 - `.lane-body`: `max-height: 60vh` — mirrors the lane-label cap so a lane does not grow unbounded.
 - `.lane-col`: `width: 300px; flex-shrink: 0; min-height: 124px; overflow-y: auto; overscroll-behavior: contain`. Each column scrolls **independently**, so a long list in one status does not push the whole lane. The outer board surface still provides synchronized two-axis scroll for the header/labels.
 - Column widths and order are shared across all lanes so a single status aligns vertically.
+
+### Collapsed lane layout (design3 §8)
+
+- `.lane--collapsed .lane-body`: `display: none` — the track is hidden.
+- `.lane--collapsed .lane-label`: **reflows** from the vertical 220px sticky column to a horizontal full-width summary bar — `flex-direction: row; width: 100%; flex-wrap: wrap; padding: 6px 12px`. Title + key + status + count + progress + actions sit on one row so many collapsed epics scan as a compact list.
+- The whole `.lane-label` is the toggle (`role=button`); interactive children `stopPropagation`.
 
 ## Responsive
 
@@ -164,7 +170,9 @@ New classes (in `swimlane-board.css`): `.swimlane-board`, `.swimlane-board__head
 
 ## Accessibility
 
-- Lane collapse chevron is a `button[aria-expanded]`, right-aligned on the status/count row.
+- The whole lane label is the collapse toggle: a `div[role=button][tabindex=0][aria-expanded]` (not a `<button>` element, so the real `<button>` children it contains stay HTML-valid). Enter/Space toggles collapse.
+- The collapse chevron is an `aria-hidden` glyph; it is a visual affordance only, not a separate control.
+- Interactive children inside the label (epic key, lifecycle action, open-epic icon) are real `<button>`s that `stopPropagation` so they perform their own action without toggling collapse.
 - The epic key is a `button` wrapping `<TicketCode>`; it opens the epic ticket viewer and carries an `aria-label` and `title` naming the epic.
 - EpicLifecycleControl actions are real buttons with `aria-label` naming the epic.
 - Open epic ticket is an icon-only `button` with `aria-label` and `title`.
