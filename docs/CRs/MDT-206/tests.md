@@ -7,13 +7,15 @@
 | `src/components/SwimlaneBoard/helpers.test.ts` | Failed: missing `./helpers` module; later failed for childless Proposed epic lane omission | `6 pass / 0 fail` |
 | `src/components/ViewModeSwitcher/ViewModeSwitcher.test.tsx` | Failed against old Board/List toggle; missing icon-only peer buttons | `4 pass / 0 fail` |
 | `src/components/TicketCard.test.tsx` | Failed: `showBadges={false}` still rendered `.badge` rows | `2 pass / 0 fail` |
-| `tests/e2e/board/swimlane-board.spec.ts` | `3 failed`: missing `board-mode-epics-toggle`; later failed for childless Proposed epic lane omission and visible default swimlane badges | `6 passed` |
+| `src/components/SwimlaneBoard/SwimlaneBoard.test.tsx` | Failed: epic key was a bare `<span>` (no TicketCode glyph); epic-dot present; chevron on title row; lifecycle pinned to bottom | `6 pass / 0 fail` |
+| `tests/e2e/board/swimlane-board.spec.ts` | `3 failed`: missing `board-mode-epics-toggle`; later failed for childless Proposed epic lane omission and visible default swimlane badges | `7 passed` |
 | `server/tests/integration/api.metadata.test.ts` | Failed: metadata list response omitted `level` for explicit epics | `14 passed` |
 
 ## Verification Commands
 
 ```bash
 bun test --isolate src/components/SwimlaneBoard/helpers.test.ts
+bun test --isolate src/components/SwimlaneBoard/SwimlaneBoard.test.tsx
 bun test --isolate src/components/ViewModeSwitcher/ViewModeSwitcher.test.tsx
 bun test --isolate src/components/TicketCard.test.tsx
 bunx playwright test tests/e2e/board/swimlane-board.spec.ts --project=chromium

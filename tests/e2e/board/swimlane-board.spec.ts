@@ -215,4 +215,40 @@ test.describe('Epic swimlane board (MDT-206)', () => {
     await page.click(swimlaneSelectors.laneOpenEpicByKey(scenario.alphaEpic))
     await expect(page).toHaveURL(new RegExp(`/prj/${scenario.projectCode}/ticket/${scenario.alphaEpic}`))
   })
+
+  test('UAT: removes the color dot, renders a clickable epic key, and wraps lane titles', async ({ page, e2eContext }) => {
+    const scenario = await createEpicProject(e2eContext.projectFactory)
+
+    await page.goto(`/prj/${scenario.projectCode}`)
+    await waitForBoardReady(page)
+    await page.click(swimlaneSelectors.modeToggle)
+
+    const lane = page.locator(swimlaneSelectors.laneByKey(scenario.alphaEpic))
+
+    // No color dot before the title.
+    await expect(lane.locator('.swimlane-board__epic-dot')).toHaveCount(0)
+
+    // Title wraps (overflow-wrap applied), not single-line ellipsis.
+    const titleText = lane.locator('.swimlane-board__lane-title-text')
+    await expect(titleText).toHaveCSS('overflow-wrap', 'break-word')
+
+    // Lane label is height-capped so long lists don't stretch it unbounded.
+    const label = lane.locator('.swimlane-board__lane-label')
+    const labelMaxHeight = await label.evaluate(el => getComputedStyle(el).maxHeight)
+    expect(labelMaxHeight).not.toBe('none')
+
+    // Each column scrolls independently.
+    const col = page.locator(swimlaneSelectors.laneColumn(scenario.alphaEpic, 'Approved')).first()
+    const colOverflow = await col.evaluate(el => getComputedStyle(el).overflowY)
+    expect(['auto', 'scroll']).toContain(colOverflow)
+
+    // Epic key is rendered through TicketCode (priority glyph + key) and is
+    // clickable — opens the epic ticket viewer. Checked last because it navigates away.
+    const key = lane.locator(swimlaneSelectors.laneKeyByKey(scenario.alphaEpic))
+    await expect(key).toBeVisible()
+    await expect(key.locator('.ticket-code.ticket-key')).toHaveCount(1)
+    await expect(key.locator('.priority-icon')).toHaveCount(1)
+    await key.click()
+    await expect(page).toHaveURL(new RegExp(`/prj/${scenario.projectCode}/ticket/${scenario.alphaEpic}`))
+  })
 })

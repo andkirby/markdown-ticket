@@ -33,15 +33,14 @@ SwimlaneBoard
     │   └── div.swimlane-col-header × N columns
     ├── Lane × M epics
     │   ├── div.lane-label (sticky left)
-    │   │   ├── EpicIndicator (color dot + status ring)
-    │   │   ├── div.lane-title (epic title + code)
-    │   │   ├── div.lane-progress (mini bar + count pill)
-    │   │   ├── Button[Collapse chevron]
-    │   │   └── div.lane-footer
+    │   │   ├── div.lane-title (title text + clickable key)
+    │   │   ├── div.lane-meta (status + count pill + collapse chevron)
+    │   │   ├── div.lane-progress (mini bar + count text)
+    │   │   └── div.lane-actions
     │   │       ├── EpicLifecycleControl (Activate | Close | Closed)
     │   │       └── Button[Open epic ticket]
     │   └── div.lane-track
-    │       └── div.lane-col × N columns (drop target)
+    │       └── div.lane-col × N columns (drop target, independently scrollable)
     │           ├── TicketCard × K
     │           └── div.lane-empty (when 0)
     └── Lane[__none] (trailing "No epic" lane)
@@ -81,13 +80,14 @@ The lane label is a sticky-left column (md+) showing the epic identity and lifec
 
 | Element | Content | Notes |
 |---|---|---|
-| EpicIndicator | color dot (`--epic-N`) | ring fill reflects lifecycle: hollow=Proposed, half=Approved, full=Implemented |
-| Lane title | epic title + code | code via `<TicketCode>` for priority glyph consistency |
-| EpicLifecycleControl | Activate / Close / Closed | see States table below |
-| Mini progress bar | `epicProgress()` width | 2px bar, `--epic-N` fill on `--bg-muted` track |
-| Count pill | `N` | total child tickets |
-| Collapse chevron | rotates on toggle | collapses the lane-track only |
-| Open epic ticket | icon button | bottom-right lane footer action; opens the existing ticket viewer for the epic |
+| Lane title text | epic title | word-wraps (`overflow-wrap: break-word`); no color dot precedes it |
+| Epic key | code via `<TicketCode>` | clickable button opening the epic ticket viewer; same font/color/glyph as the ticket-card key for scan parity |
+| Status badge | `StatusBadge` | lifecycle state chip, sits on the meta row |
+| Count pill | `N` | total child tickets, on the meta row |
+| Collapse chevron | rotates on toggle | right-aligned on the meta row (status + count + chevron), collapses the lane-track only |
+| Mini progress bar | `epicProgress()` width | bar + `done/total` text; `--epic-N` fill on `--bg-muted` track |
+| EpicLifecycleControl | Activate / Close / Closed | sits directly under the progress bar (not pinned to the lane bottom); see States table below |
+| Open epic ticket | icon button | beside the lifecycle action; opens the existing ticket viewer for the epic |
 
 ## Epic lifecycle control (lane header)
 
@@ -127,11 +127,12 @@ An epic's status is a publish/close gate, not a spatial workflow — so it rende
 
 ## Layout
 
-- `.swimlane-board`: `height: 100%; overflow: auto` (both axes, synchronized scroll). Single scrolling surface, unlike the flat board's per-column scroll.
+- `.swimlane-board`: `height: 100%; overflow: auto` (both axes, the outer synchronized scroll surface for the header and lane labels).
 - `.swimlane-head`: `position: sticky; top: 0; z-index: 8; min-width: max-content`.
 - `.swimlane-corner`: `position: sticky; left: 0; top: 0; z-index: 9` (both axes).
-- `.lane-label`: `width: 200px; position: sticky; left: 0; z-index: 4; border-left: 3px solid var(--epic-color, --border-strong)`.
-- `.lane-col`: `width: 300px; flex-shrink: 0; min-height: 48px`.
+- `.lane-label`: `width: 220px; position: sticky; left: 0; z-index: 4; max-height: 60vh; border-left: 3px solid var(--epic-color, --border-strong)`. A `max-height` keeps long lists from stretching the lane; the sticky label scrolls within that cap.
+- `.lane-body`: `max-height: 60vh` — mirrors the lane-label cap so a lane does not grow unbounded.
+- `.lane-col`: `width: 300px; flex-shrink: 0; min-height: 124px; overflow-y: auto; overscroll-behavior: contain`. Each column scrolls **independently**, so a long list in one status does not push the whole lane. The outer board surface still provides synchronized two-axis scroll for the header/labels.
 - Column widths and order are shared across all lanes so a single status aligns vertically.
 
 ## Responsive
@@ -145,7 +146,7 @@ An epic's status is a publish/close gate, not a spatial workflow — so it rende
 
 | Element | Token | Usage |
 |---|---|---|
-| epic color | `--epic-1` … `--epic-4` | 4-color rotation per epic; lane left border, indicator dot, progress fill |
+| epic color | `--epic-1` … `--epic-4` | 4-color rotation per epic; lane left border, progress fill |
 | lane track bg | `--bg-subtle` | recessed tier behind lane-cols |
 | empty placeholder | `--border-strong` (dashed) | `.lane-empty` outline |
 | drop highlight | `--bg-muted` | `.drag-over` tint |
@@ -159,11 +160,12 @@ An epic's status is a publish/close gate, not a spatial workflow — so it rende
 | ticket code | `.ticket-code` (via `<TicketCode>`) | reused — see `STYLING.md` |
 | badge row | `.badge[data-status=…]` | reused — see `BADGE_ARCHITECTURE.md` |
 
-New classes (in `swimlane-board.css`): `.swimlane-board`, `.swimlane-board__head`, `.swimlane-board__corner`, `.swimlane-board__col-head`, `.swimlane-board__toolbar`, `.swimlane-board__lane`, `.swimlane-board__lane-label`, `.swimlane-board__lane-label--none`, `.swimlane-board__lane-track`, `.swimlane-board__lane-col`, `.swimlane-board__lane-col.drag-over`, `.swimlane-board__lane-empty`, `.swimlane-board__lane--collapsed`, `.swimlane-board__progress`, `.swimlane-board__lane-count`, `.swimlane-board__lane-footer`, `.swimlane-board__epic-dot`, `.swimlane-board__lifecycle`, `.swimlane-board__open-epic`. These mirror the Design 3 swimlane concept without copying Alpine/mock-data architecture.
+New classes (in `swimlane-board.css`): `.swimlane-board`, `.swimlane-board__head`, `.swimlane-board__corner`, `.swimlane-board__col-head`, `.swimlane-board__toolbar`, `.swimlane-board__lane`, `.swimlane-board__lane-label`, `.swimlane-board__lane-label--none`, `.swimlane-board__lane-title`, `.swimlane-board__lane-title-text`, `.swimlane-board__lane-key`, `.swimlane-board__lane-meta`, `.swimlane-board__lane-col`, `.swimlane-board__lane-col.drag-over`, `.swimlane-board__lane-empty`, `.swimlane-board__lane--collapsed`, `.swimlane-board__progress`, `.swimlane-board__lane-count`, `.swimlane-board__lane-actions`, `.swimlane-board__lifecycle`, `.swimlane-board__open-epic`. These mirror the Design 3 swimlane concept without copying Alpine/mock-data architecture.
 
 ## Accessibility
 
-- Lane collapse chevron is a `button[aria-expanded]`.
+- Lane collapse chevron is a `button[aria-expanded]`, right-aligned on the status/count row.
+- The epic key is a `button` wrapping `<TicketCode>`; it opens the epic ticket viewer and carries an `aria-label` and `title` naming the epic.
 - EpicLifecycleControl actions are real buttons with `aria-label` naming the epic.
 - Open epic ticket is an icon-only `button` with `aria-label` and `title`.
 - Disabled Close carries `aria-disabled` and a tooltip (title) listing the blockers.
