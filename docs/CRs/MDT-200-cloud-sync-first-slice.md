@@ -6,6 +6,7 @@ type: Feature Enhancement
 priority: High
 dependsOn: MDT-199
 relatedTickets: MDT-201,MDT-202,MDT-203,MDT-226
+phaseEpic: MDT-227
 ---
 
 # Implement cloud sync first slice

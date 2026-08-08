@@ -6,6 +6,7 @@ type: Feature Enhancement
 priority: High
 relatedTickets: MDT-200,MDT-201,MDT-203
 dependsOn: MDT-200,MDT-201
+phaseEpic: MDT-227
 ---
 
 # Add cloud project management CLI

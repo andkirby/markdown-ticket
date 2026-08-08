@@ -6,6 +6,7 @@ type: Feature Enhancement
 priority: Medium
 relatedTickets: MDT-200
 dependsOn: MDT-200
+phaseEpic: MDT-227
 ---
 
 # Verify service-token machine attribution live

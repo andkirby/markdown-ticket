@@ -5,6 +5,7 @@ dateCreated: 2026-08-08T08:57:32.826Z
 type: Feature Enhancement
 priority: High
 relatedTickets: MDT-200,MDT-222,MDT-223
+phaseEpic: MDT-227
 ---
 
 # Replace cloud projection polling with push delivery
