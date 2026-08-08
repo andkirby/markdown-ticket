@@ -6,6 +6,7 @@ type: Technical Debt
 priority: Medium
 relatedTickets: MDT-201,MDT-202
 dependsOn: MDT-202
+phaseEpic: MDT-227
 ---
 
 # Harden and complete multi-user cloud onboarding verification

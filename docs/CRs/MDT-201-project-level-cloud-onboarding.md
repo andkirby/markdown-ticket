@@ -8,6 +8,7 @@ relatedTickets: MDT-200,MDT-202,MDT-203,MDT-212
 dependsOn: MDT-200
 implementationDate: 2026-07-26
 implementationNotes: Cloud onboarding implemented and integrated with the live coordinator; identity-aware multi-client hardening and second-human Access UAT deferred to MDT-212.
+phaseEpic: MDT-227
 ---
 
 # Establish project-level cloud onboarding

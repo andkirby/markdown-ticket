@@ -6,6 +6,7 @@ type: Feature Enhancement
 priority: Medium
 relatedTickets: MDT-202
 dependsOn: MDT-202
+phaseEpic: MDT-227
 ---
 
 # Surface full connection state in `cloud status` and `cloud doctor`
