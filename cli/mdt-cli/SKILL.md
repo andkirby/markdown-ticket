@@ -1,6 +1,6 @@
 ---
 name: mdt-cli
-description: Use the `mdt-cli` CLI for quick ticket and project lookups from the terminal. This skill should be used when the user wants to inspect tickets, list projects, create tickets, or update attributes without MCP tools. Prefer `mdt-cli` over MCP read operations for single-entity lookups.
+description: Use the `mdt-cli` CLI for quick ticket and project lookups from the terminal. This skill should be used when the user wants to inspect tickets, list projects, create tickets, or update attributes without MCP tools. Prefer `mdt-cli` over MCP read operations for single-entity lookups. Covers epic-level tickets (level=epic), the phaseEpic child→epic link, the epic close guard, and lifecycle (Proposed→Approved→Implemented).
 ---
 
 # mdt-cli CLI
@@ -52,7 +52,7 @@ Filters — positional `key=value` args with AND across fields, comma-separated 
 mdt-cli list status=impl priority=high,critical
 ```
 
-Filterable fields: `status`, `priority`, `type`, `assignee`, `epic`.
+Filterable fields: `status`, `priority`, `type`, `level`, `assignee`, `epic`/`phase`. (`level` accepts aliases: `e`→epic, `t`→ticket.)
 
 ## Create
 
@@ -109,15 +109,82 @@ mdt-cli attr <key> related+=MDT-100 related-=MDT-050
 
 Updates ticket attributes. Normalizes aliases (e.g. `in-progress` → `In Progress`). Prints old→new confirmation per field.
 
-Keys: `status`, `priority`, `phase`, `assignee`, `related`, `depends`, `blocks`, `impl-date`, `impl-notes`.
+Keys: `status`, `priority`, `level`, `phase`, `assignee`, `related`, `depends`, `blocks`, `impl-date`, `impl-notes`.
 
 Relations (`related`, `depends`, `blocks`) support `=` (replace), `+=` (add), `-=` (remove). All others use `=` only.
 
 **Validation:** unknown keys and unknown enum values are rejected with the valid set printed. Enum fields:
 - `status` ∈ Proposed · Approved · In Progress · Implemented · Rejected · On Hold · Partially Implemented. Column/synonym aliases map: `backlog`→Proposed, `open`→Approved, `done`/`complete`/`completed`/`d`→Implemented, `in-progress`→In Progress, `partial`→Partially Implemented, `deferred`→On Hold.
 - `priority` ∈ Low · Medium · High · Critical. Aliases: `p1`–`p4`.
+- `level` ∈ ticket · epic. Aliases: `e`→epic, `t`→ticket.
+- `phase` (phaseEpic) — when set to a ticket key, the target must exist, be `level: epic`, and be `Approved` or `Implemented`. Free-text (non-key) values pass through unvalidated. See **Epics** below.
 
 Run `mdt-cli ticket attr --help` for the full field/value reference.
+
+## Epics
+
+An epic is a ticket with `level: epic` (default is `ticket`). Epics group child
+tickets via the existing `phaseEpic` field (the child→epic up-pointer). There is
+no `epicId` and no stored `children[]` — children are derived in-memory from
+`phaseEpic`. Adding `level` to an existing ticket promotes it; no migration.
+
+### Lifecycle
+
+Epics follow **Proposed → Approved → Implemented**. An epic must be `Approved`
+before any child can reference it. Moving an epic to `Implemented` is the epic
+"close" and is guarded (below).
+
+```bash
+mdt-cli create feature 'Auth overhaul' auth-overhaul   # creates a regular ticket
+mdt-cli attr <key> level=epic                           # promote to epic
+mdt-cli attr <key> status=Approved                      # make it referenceable
+```
+
+### Linking children (phaseEpic validation)
+
+Setting `phase` to a **ticket key** validates the target on write:
+- target must **exist** — else `EPIC_TARGET_NOT_FOUND`
+- target must be `level: epic` — else `EPIC_TARGET_NOT_EPIC`
+- target must be `Approved` or `Implemented` — else `EPIC_NOT_USABLE`
+
+```bash
+mdt-cli attr MDT-010 level=epic status=Approved         # the epic
+mdt-cli attr MDT-020 phase=MDT-010                      # child link — accepted
+mdt-cli attr MDT-020 phase=MDT-999                      # rejected: target missing
+```
+
+Free-text values that aren't ticket keys (e.g. `Q3 cleanup`) are **not**
+validated — they pass through unchanged. Cross-project keys (`ABC-012`) are
+validated against the target project's ticket.
+
+### Epic close guard
+
+An epic cannot move to `Implemented` while it has non-terminal children. The
+error names the blocking children. Terminal statuses: `Implemented`, `Rejected`,
+`Partially Implemented`. An epic with zero children closes freely; reopening
+(`Implemented`→`Approved`) is always allowed.
+
+```bash
+mdt-cli attr MDT-010 status=Implemented                 # rejected if children open
+```
+
+### Listing epics and children
+
+```bash
+mdt-cli list level=epic                  # all epics
+mdt-cli list phase=MDT-010               # children of one epic
+```
+
+### Workflow pattern: creating a parent epic
+
+```bash
+mdt-cli create feature '<epic title>' <slug>            # 1. create as ticket
+mdt-cli attr <key> level=epic status=Approved            # 2. promote + approve
+mdt-cli attr <child> phase=<key>                         # 3. link each child
+```
+
+Note: `create` does not accept a `level` token — promote with `attr` after
+creation. Alias `e`/`t` work everywhere `level` is resolved.
 
 ## Project
 
