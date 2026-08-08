@@ -1,10 +1,10 @@
 ---
 code: MDT-206
-status: Approved
+status: In Progress
 dateCreated: 2026-08-08T00:00:00.000Z
 type: Feature Enhancement
 priority: Medium
-phaseEpic: MDT-205
+phaseEpic: MDT-225
 dependsOn: MDT-205
 ---
 
@@ -136,3 +136,13 @@ dependsOn: MDT-205
 - `designs/board-zai/design3-epics.md` §8 (swimlanes), §6 (progress) — primary UX spec
 - `designs/board-zai/design3.html` — swimlane mock (HTML structure, CSS classes, drag/drop guards)
 - Depends on: MDT-205 (epic level field + validation)
+- Requirements trace projection: [requirements.trace.md](./MDT-206/requirements.trace.md)
+- Requirements notes: [requirements.md](./MDT-206/requirements.md)
+- BDD trace projection: [bdd.trace.md](./MDT-206/bdd.trace.md)
+- BDD notes: [bdd.md](./MDT-206/bdd.md)
+- Architecture trace projection: [architecture.trace.md](./MDT-206/architecture.trace.md)
+- Architecture notes: [architecture.md](./MDT-206/architecture.md)
+- Tests trace projection: [tests.trace.md](./MDT-206/tests.trace.md)
+- Tests notes: [tests.md](./MDT-206/tests.md)
+- Tasks trace projection: [tasks.trace.md](./MDT-206/tasks.trace.md)
+- Tasks notes: [tasks.md](./MDT-206/tasks.md)
