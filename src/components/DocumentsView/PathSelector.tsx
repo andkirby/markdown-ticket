@@ -262,7 +262,7 @@ export default function PathSelector({
                 <button
                   type="button"
                   onClick={() => toggleExpansion(item.path)}
-                  className="mr-1 inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="mr-1 inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
                   aria-expanded={isExpanded}
                   aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${item.name}`}
                   data-testid={`path-toggle-${safeTestId}`}
@@ -448,7 +448,7 @@ export default function PathSelector({
               <TooltipTrigger asChild>
                 <button
                   type="button"
-                  className="inline-flex h-5 w-5 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="inline-flex h-5 w-5 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
                   aria-label="Ticket path exclusion details"
                   data-testid="path-selector-info"
                 >

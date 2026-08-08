@@ -34,7 +34,7 @@
   }
 
   .project-card:focus-visible {
-    @apply outline-none ring-2 ring-ring;
+    @apply outline-none ring-1 ring-ring/50;
   }
 
   /* Active-descendant highlight in the project browser listbox (BR-11).
@@ -210,7 +210,7 @@
   }
 
   .project-chip:focus-visible {
-    @apply outline-none ring-2 ring-ring;
+    @apply outline-none ring-1 ring-ring/50;
   }
 
   .project-chip__surface {
@@ -364,7 +364,7 @@
   /* ── Search Input (panel header) ── */
 
   .project-search {
-    @apply w-full pl-10 pr-4 py-2 text-sm rounded-lg border focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent;
+    @apply w-full pl-10 pr-4 py-2 text-sm rounded-lg border focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 focus:border-transparent;
 
     background: var(--project-search-bg);
     border-color: var(--project-search-border);

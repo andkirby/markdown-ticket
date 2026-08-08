@@ -138,11 +138,11 @@ const StatusToggle: React.FC<StatusToggleProps> = ({
 
     if (mergeMode && canWrite) {
       // Orange theme when checked (merge mode active)
-      return `${baseClasses} text-orange-600 bg-orange-100 border-orange-400 focus:ring-orange-500 focus:ring-2 focus:ring-offset-1 dark:focus:ring-offset-gray-800`
+      return `${baseClasses} text-orange-600 bg-orange-100 border-orange-400 focus:outline-none focus-visible:ring-1 focus-visible:ring-orange-500/50`
     }
 
     // Gray theme when not checked
-    return `${baseClasses} text-gray-600 bg-gray-50 border-gray-300 focus:ring-gray-500 focus:ring-2 focus:ring-offset-1 dark:focus:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-500 dark:text-gray-300`
+    return `${baseClasses} text-gray-600 bg-gray-50 border-gray-300 focus:outline-none focus-visible:ring-1 focus-visible:ring-gray-500/50 dark:bg-gray-700 dark:border-gray-500 dark:text-gray-300`
   }
 
   // Determine button styling based on active state

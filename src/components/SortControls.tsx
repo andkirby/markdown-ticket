@@ -41,7 +41,7 @@ export const SortControls: React.FC<SortControlsProps> = ({
       <select
         value={preferences.selectedAttribute}
         onChange={e => handleAttributeChange(e.target.value)}
-        className="h-9 border border-border rounded-md px-3 pr-8 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring appearance-none"
+        className="h-9 border border-border rounded-md px-3 pr-8 text-sm bg-background focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 appearance-none"
       >
         {DEFAULT_SORT_ATTRIBUTES.map(attr => (
           <option key={attr.name} value={attr.name}>

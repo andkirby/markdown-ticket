@@ -30,7 +30,7 @@
 
   .view-mode-switcher__button:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 2px oklch(var(--ring));
+    box-shadow: 0 0 0 1px color-mix(in srgb, oklch(var(--ring)) 50%, transparent);
   }
 
   .view-mode-switcher__button[data-active="true"] {

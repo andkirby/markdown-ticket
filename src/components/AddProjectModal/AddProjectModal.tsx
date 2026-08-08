@@ -316,7 +316,7 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
                         id="globalConfigOnly"
                         checked={formData.useGlobalConfigOnly}
                         onChange={e => updateField('useGlobalConfigOnly', e.target.checked)}
-                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus-visible:ring-1 focus-visible:ring-blue-500/50"
                       />
                       <label htmlFor="globalConfigOnly" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                         Global Config Only

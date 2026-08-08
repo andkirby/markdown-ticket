@@ -35,13 +35,13 @@
     border-color: oklch(var(--primary));
   }
   /* Open + unfocused: 1px primary ring (replicates ring-1 ring-primary). */
-  .filter-button--open:not(:focus) {
+  .filter-button--open:not(:focus-visible) {
     box-shadow: 0 0 0 1px oklch(var(--primary));
   }
-  /* Focus owns the ring (replicates focus:ring-2 focus:ring-ring, mouse + keyboard). */
-  .filter-button:focus {
+  /* Keyboard focus owns the ring — keyboard-only, thin, low-opacity. */
+  .filter-button:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 2px oklch(var(--ring));
+    box-shadow: 0 0 0 1px color-mix(in srgb, oklch(var(--ring)) 50%, transparent);
   }
 
   /* Floating popover — elevated surface, 1px border; shadow kept (v3 allows

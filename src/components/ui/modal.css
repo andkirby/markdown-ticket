@@ -92,7 +92,7 @@
   }
 
   .modal__close--absolute {
-    @apply absolute right-3 top-3 z-20 flex h-8 w-8 items-center justify-center rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-ring;
+    @apply absolute right-3 top-3 z-20 flex h-8 w-8 items-center justify-center rounded-md transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50;
     color: var(--text-subtle);
   }
   .modal__close--absolute:hover {
