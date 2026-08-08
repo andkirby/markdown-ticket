@@ -150,6 +150,13 @@
       "text": "Setting phaseEpic to a ticket key whose target does not exist is rejected with a clear error.",
       "sourceRef": "CR:MDT-205",
       "routePolicy": "tests"
+    },
+    {
+      "id": "BR-8",
+      "kind": "behavior",
+      "text": "The metadata-only CR list endpoint (GET /api/projects/:projectId/crs, served by getProjectCRsMetadata -> scanTicketMetadata -> normalizeTicketMetadata) preserves the level field: a ticket with level: epic returns level 'epic', and a legacy ticket without level returns 'ticket'. The metadata response must not include content.",
+      "sourceRef": "CR:MDT-205",
+      "routePolicy": "bdd"
     }
   ],
   "scenarios": [
@@ -338,6 +345,18 @@
       "given": "A user supplies the shorthand e or t for the level field",
       "when": "The alias is resolved through the shared resolver",
       "then": "It canonicalizes to epic or ticket respectively across CLI and MCP",
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "metadata_list_preserves_level",
+      "title": "Metadata list endpoint preserves level and excludes content",
+      "covers": [
+        "BR-8",
+        "BR-1"
+      ],
+      "given": "A project with one ticket whose frontmatter has level: epic and one legacy ticket without a level field",
+      "when": "the Board consumer calls GET /api/projects/:projectId/crs (the metadata-only list path)",
+      "then": "the epic ticket returns level 'epic', the legacy ticket returns level 'ticket', and no item includes a content field",
       "sourceRef": "CR:MDT-205"
     }
   ],
@@ -573,6 +592,19 @@
         "ART-shared-service-test"
       ],
       "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "OBL-19",
+      "title": "Metadata list API preserves level across the scanTicketMetadata -> normalizeTicketMetadata path and the server mocks do not mask it",
+      "derivedFrom": [
+        "BR-8",
+        "BR-1",
+        "C-1"
+      ],
+      "artifactIds": [
+        "ART-metadata-list-api"
+      ],
+      "sourceRef": "CR:MDT-205"
     }
   ],
   "artifacts": [
@@ -681,6 +713,12 @@
     {
       "id": "ART-shared-service-test",
       "path": "shared/tests/services/epicValidation.test.ts",
+      "kind": "test",
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "ART-metadata-list-api",
+      "path": "server/tests/integration/api.metadata.test.ts",
       "kind": "test",
       "sourceRef": "CR:MDT-205"
     }
@@ -815,6 +853,17 @@
       "covers": [
         "C-2",
         "C-5"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "TEST-metadata-list-api",
+      "kind": "integration",
+      "title": "Metadata list API (GET /api/projects/:projectId/crs) and the underlying shared getProjectCRsMetadata path preserve level (epic and default ticket) and exclude content; covers both the server integration test and a direct production-path regression so the mock cannot mask a real gap",
+      "covers": [
+        "BR-8",
+        "BR-1",
+        "C-1"
       ],
       "sourceRef": "CR:MDT-205"
     }
@@ -992,6 +1041,23 @@
       "skills": [
         "typescript",
         "type-safe-enum"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "TASK-11",
+      "title": "Preserve level on the metadata list API path: fix server mocks that mask the gap, add a production-path regression, and assert the GET /api/projects/:projectId/crs integration returns level without content",
+      "ownsArtifactIds": [
+        "ART-metadata-list-api"
+      ],
+      "makesGreenIds": [
+        "metadata_list_preserves_level",
+        "TEST-metadata-list-api"
+      ],
+      "skills": [
+        "typescript",
+        "jest",
+        "integration-testing"
       ],
       "sourceRef": "CR:MDT-205"
     }
