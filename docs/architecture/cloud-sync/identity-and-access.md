@@ -14,12 +14,12 @@ for one cloud project. Passing Access alone never grants project access.
 
 ```mermaid
 flowchart LR
-  Client["Local MDT client"] -->|"Access credential over HTTPS"| Edge["Cloudflare Access policy"]
+  Client["Local MDT server"] -->|"Access credential over HTTPS or WebSocket upgrade"| Edge["Cloudflare Access policy"]
   Edge -->|"Cf-Access-Jwt-Assertion"| Worker["Coordination Worker"]
   Worker -->|"JWKS, pinned issuer and audience"| Verify["Assertion verifier"]
   Verify --> Principal["Human or machine principal"]
   Principal --> Membership["D1 project membership check"]
-  Membership --> UseCase["Authorized use case"]
+  Membership --> UseCase["Authorized request or project stream"]
 ```
 
 There are three independent checks:
@@ -98,7 +98,7 @@ Membership is keyed by `(cloud_project_id, principal_kind, principal_id)`.
 | Capability | Viewer | Contributor | Owner |
 | --- | --- | --- | --- |
 | Read own membership | Yes | Yes | Yes |
-| Poll header projections | Yes | Yes | Yes |
+| Subscribe to header projections and perform bounded catch-up | Yes | Yes | Yes |
 | Reserve and acknowledge a ticket number | No | Yes | Yes |
 | Publish, tombstone, or restore a projection | No | Yes | Yes |
 | List project members | No | No | Yes |
@@ -114,8 +114,13 @@ Authorization rules:
 - Unknown projects and projects hidden from the caller both return the same
   `404 project_not_found` response.
 - A known member with an insufficient role receives `403 forbidden`.
-- Membership revocation takes effect on the next Worker request; there is no
-  authorization cache in the first slice.
+- A new project stream is authorized at its WebSocket handshake.
+- An open stream does not turn authorization into an indefinite cache: the
+  local server reconnects no later than token expiry, and a hibernated hub
+  rechecks current membership before later delivery.
+- Membership revoke/suspend is routed through the project hub. After the D1
+  mutation commits, matching sockets are marked unauthorized and closed before
+  a later projection can be delivered.
 - The final owner cannot be removed or demoted.
 - A principal cannot grant a role higher than its own role.
 
@@ -196,6 +201,34 @@ array, never through a shell. The origin comes from the trusted service profile
 or validated CONFIG_DIR connection, not repository or request input. The server
 holds the returned token in memory only for its remaining lifetime.
 
+The same provider supplies credentials for the project WebSocket handshake.
+The local server derives `wss` only from the exact trusted HTTPS service origin,
+opens one stream per enabled project once a valid credential is available, and
+refreshes/reconnects no later than the token's expiry. Server startup never
+launches an unsolicited interactive login; until an owner action obtains a
+human token, status is `authentication_required`. The browser sees only the
+existing local ticket API/event stream and typed project sync status. It does
+not receive the cloud projection endpoint, cursor, revision, or reconnect state.
+
+```mermaid
+sequenceDiagram
+  participant B as Local browser tabs
+  participant S as Local MDT server
+  participant A as Cloudflare Access
+  participant W as Coordination Worker
+  participant H as ProjectProjectionHub
+  participant D as D1
+
+  S->>A: WebSocket upgrade with Access credential
+  A->>W: Forward verified-edge request with assertion
+  W->>W: Validate JWT
+  W->>D: Check current project membership
+  W->>H: Route authorized project stream
+  H-->>S: catchup, ready, and committed deltas
+  S->>S: Update unified local ticket read model
+  S-->>B: Ordinary local ticket events
+```
+
 ### Interactive CLI and Local MCP
 
 CLI and stdio MCP use the same human credential provider:
@@ -237,6 +270,10 @@ requests use redirect mode `error`.
 - Browser storage contains no cloud token or service secret.
 - Human application tokens are short-lived and retained in process memory only;
   `cloudflared` owns its own authenticated session storage.
+- WebSocket socket attachments contain only the minimum stable principal tag,
+  project ID, token expiry, and acknowledged revision needed for hibernation,
+  replay, and revocation. They contain no token, assertion, email display value,
+  or ticket header.
 - Machine Access credentials are atomically stored only in owner-only CONFIG_DIR
   credential files and are never returned by browser-facing DTOs.
 - Service tokens have named owners, explicit expiry, least-privilege
@@ -264,11 +301,14 @@ edge and Worker failures:
 | Insufficient project role | `forbidden` | No automatic retry |
 | Revoked or expired service token | `machine_authentication_failed` | Stop automation and alert |
 | JWKS unavailable with no usable cached key | `identity_validation_unavailable` | Bounded backoff; no fail-open |
+| Projection stream token approaches expiry | `connecting`/`stale` locally | Refresh credential and reconnect with the applied cursor |
+| Project stream membership revoked | `forbidden` close; local state becomes stale | No automatic authorization retry until explicit state/credential change |
+| Project stream transport failure | Local projected state remains stale | Bounded reconnect with jitter; never periodic D1 polling |
 
 Authentication failures never cause local-number allocation for a cloud-bound
 project.
 
-## Required MDT-200 Validation
+## Required MDT-200 and MDT-226 Validation
 
 Unit tests with fabricated tokens are insufficient for closure. Staging must
 prove all of the following against a real Access-protected Worker:
@@ -279,5 +319,8 @@ prove all of the following against a real Access-protected Worker:
 - unknown `kid` refresh behavior;
 - viewer/contributor/owner authorization;
 - cross-project non-disclosure;
-- membership and service-token revocation;
+- membership and service-token revocation for both requests and active,
+  hibernated project streams;
+- token-expiry reconnect, project-hub reauthorization, and browser isolation
+  from cloud credentials;
 - no secret or raw assertion in Worker, server, CLI, or MCP logs.

@@ -5,6 +5,13 @@ Markdown Ticket cloud coordination. Its package boundary and rationale are
 owned by
 [`docs/CRs/MDT-200/cloud-package-boundary.md`](../docs/CRs/MDT-200/cloud-package-boundary.md).
 
+> **Current versus target:** this file describes the implemented MDT-200
+> HTTP/D1 polling runtime. The approved MDT-226 target adds the
+> `ProjectProjectionHub` Durable Object, hibernating WebSocket delivery, and
+> alarm recovery. The permanent target package boundary is
+> [`docs/architecture/cloud-sync/README.md`](../docs/architecture/cloud-sync/README.md);
+> update this runtime README when that implementation lands.
+
 ## Layout
 
 Runtime implementation lives under `src/cloudflare/`, visibly provider-specific.

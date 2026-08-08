@@ -5,10 +5,16 @@ dateCreated: 2026-07-24T09:16:41.530Z
 type: Feature Enhancement
 priority: High
 dependsOn: MDT-199
-relatedTickets: MDT-201,MDT-202,MDT-203
+relatedTickets: MDT-201,MDT-202,MDT-203,MDT-226
 ---
 
 # Implement cloud sync first slice
+
+> **Historical implementation baseline.** MDT-200 records the polling-based
+> slice that was implemented. `MDT-226` supersedes only its projection-delivery
+> and browser-feed architecture with a backend-managed Durable Object stream and
+> unified local ticket API/events. MDT-200's allocation, authority, identity,
+> membership, projection-write, and audit decisions remain in force.
 
 ## 1. Description
 
