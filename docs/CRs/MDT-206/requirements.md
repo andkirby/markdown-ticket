@@ -25,6 +25,8 @@ MDT-206 adds an epic swimlane board layout selected from the existing app header
 | Ticket lane key | A child ticket belongs to the matching explicit epic by `phaseEpic` ticket code; missing/unusable targets fall to `No epic`. | Dragging a ticket can reassign `phaseEpic`. | Cross-epic reassignment is out of scope and must be intentional. |
 | Epic progress | Terminal children are `Implemented`, `Rejected`, and `Partially Implemented`. | Only `Implemented` counts as terminal. | The CR names all three statuses as terminal for progress. |
 | Epic lifecycle | Lane header actions update the epic ticket status through the existing update path. | Epics are dragged as cards in swimlane mode. | In swimlane mode the epic is the lane, not card content. |
+| Swimlane card badges | Swimlane cards hide attribute badges by default and expose a local Show badges toggle. | Force the global board badge settings to hide badges everywhere. | The compact swimlane scan is local to swimlanes; flat board cards keep existing behavior. |
+| Epic ticket opening | An icon button in the lane footer opens the existing epic ticket viewer. | Add a new epic detail modal. | Reusing the ticket viewer avoids a parallel epic surface in this pass. |
 
 ---
 Use `requirements.trace.md` for canonical requirement rows and route summaries.

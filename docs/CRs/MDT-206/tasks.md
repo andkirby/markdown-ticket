@@ -6,7 +6,7 @@
 
 - Board layout mode: `src/App.tsx` owns persistence and switching; `Board.tsx` receives the selected layout.
 - Swimlane runtime: `src/components/SwimlaneBoard/` owns lane model, lane UI, guarded drops, lifecycle controls, and semantic CSS.
-- Testing: `src/components/SwimlaneBoard/helpers.test.ts` and `tests/e2e/board/swimlane-board.spec.ts` own MDT-206 regression coverage.
+- Testing: `src/components/SwimlaneBoard/helpers.test.ts`, `src/components/TicketCard.test.tsx`, and `tests/e2e/board/swimlane-board.spec.ts` own MDT-206 regression coverage.
 
 ## Architecture Coverage
 
@@ -63,8 +63,10 @@ bun test --isolate src/components/SwimlaneBoard/helpers.test.ts
 - `cross_epic_drag_is_rejected`
 - `blocked_epic_close_surfaces_children`
 - `lane_visibility_controls_do_not_mutate_tickets`
+- `swimlane_badges_toggle_and_epic_open`
+- `TEST-ticket-card-badge-visibility`
 
-**Scope**: board layout persistence, header switcher integration, swimlane component rendering, lane controls, guarded drops, lifecycle actions, and semantic CSS.
+**Scope**: board layout persistence, header switcher integration, swimlane component rendering, lane controls, guarded drops, lifecycle actions, compact card-badge presentation, epic open action, and semantic CSS.
 **Boundary**: no backend rule changes and no main view-mode route refactor.
 
 **Creates**:
@@ -73,12 +75,12 @@ bun test --isolate src/components/SwimlaneBoard/helpers.test.ts
 
 **Modifies**:
 - `src/components/Board.tsx`
+- `src/components/TicketCard.tsx`
+- `src/components/ViewModeSwitcher/`
 - `src/index.css`
 
 **Must Not Touch**:
 - `src/components/Column/index.tsx`
-- `src/components/TicketCard.tsx`
-- `src/components/ViewModeSwitcher/`
 
 **Duplication Guard**:
 - Reuse `TicketCard`, `useDropZone`, `sortTickets`, status config, and design tokens; do not copy the Alpine implementation from `design3.html`.
@@ -96,12 +98,14 @@ bunx playwright test tests/e2e/board/swimlane-board.spec.ts --project=chromium
 
 **Makes GREEN (Automated Tests)**:
 - `TEST-swimlane-board-e2e` -> `tests/e2e/board/swimlane-board.spec.ts`
+- `TEST-ticket-card-badge-visibility` -> `src/components/TicketCard.test.tsx`
 
 **Scope**: selector registry and E2E test file.
 **Boundary**: tests must use selector registry, not guessed runtime class names.
 
 **Creates**:
 - `tests/e2e/board/swimlane-board.spec.ts`
+- `src/components/TicketCard.test.tsx`
 
 **Modifies**:
 - `tests/e2e/utils/selectors.ts`
@@ -115,6 +119,7 @@ bunx playwright test tests/e2e/board/swimlane-board.spec.ts --project=chromium
 **Verify**:
 ```bash
 bunx playwright test tests/e2e/board/swimlane-board.spec.ts --project=chromium
+bun test --isolate src/components/TicketCard.test.tsx
 ```
 
 **Status**: done.
@@ -155,5 +160,6 @@ spec-trace validate MDT-206 --stage all --format json
 
 - [x] No duplicated runtime owner introduced.
 - [x] Unit helper tests GREEN.
+- [x] Ticket card badge visibility tests GREEN.
 - [x] Swimlane E2E GREEN.
 - [x] Spec Trace requirements, BDD, architecture, tests, and tasks validate.

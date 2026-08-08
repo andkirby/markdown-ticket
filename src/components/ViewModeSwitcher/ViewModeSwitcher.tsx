@@ -48,7 +48,7 @@ export function ViewModeSwitcher({
             title={item.label}
             onClick={() => onModeChange(item.id)}
           >
-            <Icon strokeWidth={2.2} aria-hidden />
+            <Icon size={14} strokeWidth={2.2} aria-hidden />
           </button>
         )
       })}

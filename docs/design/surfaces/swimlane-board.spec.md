@@ -11,7 +11,7 @@ An alternate layout of the board that groups tickets into one row per epic, with
 
 ## Does Not Own
 
-- The flat board, columns, or ticket cards — see `board-layout.spec.md` and `ticket-card.spec.md`. Swimlanes reuses `DraggableTicketCard` and `useDropZone`, not `Column`.
+- The flat board, columns, or ticket-card identity — see `board-layout.spec.md` and `ticket-card.spec.md`. Swimlanes reuses `TicketCard` and `useDropZone`, not `Column`.
 - Epic detail modal, side-rail, and zoom-filter (design3 §3/§4/§5 — deferred).
 - The app-header view switcher and board-layout persistence — see `app-header.spec.md`.
 - The epic lifecycle rules themselves (the close guard, the reference guard) — those are data-layer rules owned by MDT-205. This surface only renders their state and surfaces their errors.
@@ -23,6 +23,7 @@ An alternate layout of the board that groups tickets into one row per epic, with
 SwimlaneBoard
 ├── div.swimlane-toolbar
 │   ├── Button[Hide empty]
+│   ├── Button[Show badges]
 │   ├── Button[Collapse all]
 │   ├── Button[Expand all]
 │   └── span[lane-count]
@@ -34,12 +35,14 @@ SwimlaneBoard
     │   ├── div.lane-label (sticky left)
     │   │   ├── EpicIndicator (color dot + status ring)
     │   │   ├── div.lane-title (epic title + code)
-    │   │   ├── EpicLifecycleControl (Activate | Close | Closed)
     │   │   ├── div.lane-progress (mini bar + count pill)
-    │   │   └── Button[Collapse chevron]
+    │   │   ├── Button[Collapse chevron]
+    │   │   └── div.lane-footer
+    │   │       ├── EpicLifecycleControl (Activate | Close | Closed)
+    │   │       └── Button[Open epic ticket]
     │   └── div.lane-track
     │       └── div.lane-col × N columns (drop target)
-    │           ├── DraggableTicketCard × K
+    │           ├── TicketCard × K
     │           └── div.lane-empty (when 0)
     └── Lane[__none] (trailing "No epic" lane)
 ```
@@ -51,7 +54,7 @@ SwimlaneBoard
 | SwimlaneBoard | `src/components/SwimlaneBoard/index.tsx` | this file | board layout mode = swimlanes |
 | Lane | inline in `src/components/SwimlaneBoard/index.tsx` | this file | per epic + trailing __none |
 | EpicLifecycleControl | inline in `src/components/SwimlaneBoard/index.tsx` | this file | epic lanes only (not __none) |
-| DraggableTicketCard | `src/components/Column/index.tsx` | `ticket-card.spec.md` | reused unchanged |
+| TicketCard | `src/components/TicketCard.tsx` | `ticket-card.spec.md` | reused with badges hidden unless Show badges is on |
 | Drop zone hook | `src/components/Column/useDropZone.ts` | — | reused, with epic-match `canDrop` |
 
 ## Source files
@@ -61,6 +64,7 @@ SwimlaneBoard
 | SwimlaneBoard | `src/components/SwimlaneBoard/index.tsx` |
 | Lane model helpers | `src/components/SwimlaneBoard/helpers.ts` |
 | CSS | `src/components/SwimlaneBoard/swimlane-board.css` |
+| Ticket card | `src/components/TicketCard.tsx` |
 | Board layout pref | `src/config/boardLayoutMode.ts` |
 | Design source | `designs/board-zai/design3-epics.md` §8 |
 
@@ -69,6 +73,7 @@ SwimlaneBoard
 - One lane per epic (`ticket.level === 'epic'`), in epic declaration order.
 - A trailing **"No epic"** lane (key `__none`) collects tickets with no `phaseEpic` or whose `phaseEpic` does not resolve to a visible epic. Neutral accent (`--border-strong`), no EpicLifecycleControl, no progress bar.
 - "Hide empty" omits lanes with zero tickets after filters. The `__none` lane is never hidden by this toggle (it's the safety net).
+- "Show badges" is off by default in swimlanes. Child ticket cards render code, title, and timestamp only until this toggle is enabled.
 
 ## Lane label
 
@@ -82,6 +87,7 @@ The lane label is a sticky-left column (md+) showing the epic identity and lifec
 | Mini progress bar | `epicProgress()` width | 2px bar, `--epic-N` fill on `--bg-muted` track |
 | Count pill | `N` | total child tickets |
 | Collapse chevron | rotates on toggle | collapses the lane-track only |
+| Open epic ticket | icon button | bottom-right lane footer action; opens the existing ticket viewer for the epic |
 
 ## Epic lifecycle control (lane header)
 
@@ -102,6 +108,8 @@ An epic's status is a publish/close gate, not a spatial workflow — so it rende
 | drag hover (valid lane-col) | dragging over a lane-col whose epic matches the dragged ticket | `.drag-over` — `--bg-muted` tint |
 | drag hover (wrong epic) | dragging over a lane-col of a different epic | no highlight; drop not accepted |
 | lane collapsed | chevron click / Collapse all | `.lane-track` hidden; label switches to row layout |
+| card badges hidden | swimlane mode default | ticket cards omit attribute badges for compact scanning |
+| card badges shown | Show badges checked | ticket cards render the normal `TicketAttributeTags` row |
 | empty lane | 0 tickets in lane after filters | `.lane-empty` dashed placeholder per col |
 | close blocked | Close clicked with open children | button disabled; tooltip names blockers; toast on click attempt |
 | close error | server rejects close (MDT-205 guard) | toast with blocking children; optimistic state reverts |
@@ -147,16 +155,17 @@ An epic's status is a publish/close gate, not a spatial workflow — so it rende
 
 | Element | Class | Source |
 |---|---|---|
-| ticket card | `.kanban-card` (via DraggableTicketCard) | reused — see `ticket-card.spec.md` |
+| ticket card | `.kanban-card` (via `TicketCard`) | reused — see `ticket-card.spec.md` |
 | ticket code | `.ticket-code` (via `<TicketCode>`) | reused — see `STYLING.md` |
 | badge row | `.badge[data-status=…]` | reused — see `BADGE_ARCHITECTURE.md` |
 
-New classes (in `swimlane-board.css`): `.swimlane-board`, `.swimlane-board__head`, `.swimlane-board__corner`, `.swimlane-board__col-head`, `.swimlane-board__toolbar`, `.swimlane-board__lane`, `.swimlane-board__lane-label`, `.swimlane-board__lane-label--none`, `.swimlane-board__lane-track`, `.swimlane-board__lane-col`, `.swimlane-board__lane-col.drag-over`, `.swimlane-board__lane-empty`, `.swimlane-board__lane--collapsed`, `.swimlane-board__progress`, `.swimlane-board__lane-count`, `.swimlane-board__epic-dot`, `.swimlane-board__lifecycle`. These mirror the Design 3 swimlane concept without copying Alpine/mock-data architecture.
+New classes (in `swimlane-board.css`): `.swimlane-board`, `.swimlane-board__head`, `.swimlane-board__corner`, `.swimlane-board__col-head`, `.swimlane-board__toolbar`, `.swimlane-board__lane`, `.swimlane-board__lane-label`, `.swimlane-board__lane-label--none`, `.swimlane-board__lane-track`, `.swimlane-board__lane-col`, `.swimlane-board__lane-col.drag-over`, `.swimlane-board__lane-empty`, `.swimlane-board__lane--collapsed`, `.swimlane-board__progress`, `.swimlane-board__lane-count`, `.swimlane-board__lane-footer`, `.swimlane-board__epic-dot`, `.swimlane-board__lifecycle`, `.swimlane-board__open-epic`. These mirror the Design 3 swimlane concept without copying Alpine/mock-data architecture.
 
 ## Accessibility
 
 - Lane collapse chevron is a `button[aria-expanded]`.
 - EpicLifecycleControl actions are real buttons with `aria-label` naming the epic.
+- Open epic ticket is an icon-only `button` with `aria-label` and `title`.
 - Disabled Close carries `aria-disabled` and a tooltip (title) listing the blockers.
 - Drag-and-drop keyboard alternative: status change via the ticket viewer (existing). Swimlanes does not add a new keyboard DnD mode this pass.
 

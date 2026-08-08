@@ -195,4 +195,24 @@ test.describe('Epic swimlane board (MDT-206)', () => {
     await page.click(swimlaneSelectors.expandAll)
     await expect(page.locator(swimlaneSelectors.laneBodyByKey(scenario.alphaEpic))).toBeVisible()
   })
+
+  test('hides swimlane card badges by default, toggles them, and opens the epic ticket', async ({ page, e2eContext }) => {
+    const scenario = await createEpicProject(e2eContext.projectFactory)
+
+    await page.goto(`/prj/${scenario.projectCode}`)
+    await waitForBoardReady(page)
+    await page.click(swimlaneSelectors.modeToggle)
+
+    const alphaOpenCard = page
+      .locator(swimlaneSelectors.laneByKey(scenario.alphaEpic))
+      .locator(boardSelectors.ticketByCode(scenario.alphaOpen))
+
+    await expect(alphaOpenCard.locator('.badge')).toHaveCount(0)
+
+    await page.click(swimlaneSelectors.showBadgesToggle)
+    await expect(alphaOpenCard.locator('.badge')).not.toHaveCount(0)
+
+    await page.click(swimlaneSelectors.laneOpenEpicByKey(scenario.alphaEpic))
+    await expect(page).toHaveURL(new RegExp(`/prj/${scenario.projectCode}/ticket/${scenario.alphaEpic}`))
+  })
 })

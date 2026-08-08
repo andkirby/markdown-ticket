@@ -21,6 +21,9 @@ flowchart LR
   Tickets --> Swimlane["SwimlaneBoard"]
   Swimlane --> Helpers["helpers.ts lane model"]
   Swimlane --> Cards["TicketCard via local draggable wrapper"]
+  Swimlane --> BadgeToggle["local Show badges state"]
+  Swimlane --> EpicOpen["open epic ticket icon"]
+  EpicOpen --> Viewer["existing ticket viewer route"]
   Swimlane --> Drop["lane-column useDropZone"]
   Drop --> BoardDrop["Board handleDrop(status, ticket)"]
   Swimlane --> EpicAction["lane lifecycle action"]
@@ -35,6 +38,7 @@ flowchart LR
 - `src/components/SwimlaneBoard/index.tsx`: owns rendered swimlane UI, lane controls, lifecycle controls, and lane-column drop targets.
 - `src/components/SwimlaneBoard/helpers.ts`: owns pure epic classification, lane-key resolution, progress calculation, and lane visibility helpers.
 - `src/components/SwimlaneBoard/swimlane-board.css`: owns semantic swimlane classes and Design 3 token consumption.
+- `src/components/TicketCard.tsx`: owns optional badge-row rendering; default remains visible for existing flat-board callers, swimlanes pass `showBadges=false` until the local toolbar toggle is enabled.
 - `tests/e2e/utils/selectors.ts`: owns stable test selectors for swimlane controls and lanes.
 - `tests/e2e/board/swimlane-board.spec.ts`: owns user-visible acceptance coverage.
 
@@ -44,6 +48,8 @@ flowchart LR
 - Cross-epic drops must fail in both `canDrop` and the drop handler.
 - Lane progress uses `Implemented`, `Rejected`, and `Partially Implemented` as terminal statuses.
 - `No epic` is the trailing fallback lane for tickets with no valid explicit epic target.
+- Swimlane ticket-card badges are hidden by default and toggled only through swimlane-local presentation state.
+- The epic open icon calls the existing ticket open path; it does not introduce a second epic detail surface.
 - Flat board behavior is unchanged when board mode is `flat`.
 - Styling uses semantic classes and existing tokens; no Alpine/mock-data architecture is copied from `design3.html`.
 

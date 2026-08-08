@@ -181,10 +181,16 @@
 
   .swimlane-board__lane-meta,
   .swimlane-board__progress-row,
+  .swimlane-board__lane-footer,
   .swimlane-board__lifecycle {
     display: flex;
     align-items: center;
     gap: 8px;
+  }
+
+  .swimlane-board__lane-footer {
+    margin-top: auto;
+    justify-content: space-between;
   }
 
   .swimlane-board__count-pill {
@@ -227,6 +233,25 @@
     color: var(--status-done);
     font-size: var(--fs-xs);
     font-weight: 700;
+  }
+
+  .swimlane-board__open-epic {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    margin-left: auto;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-subtle);
+  }
+
+  .swimlane-board__open-epic:hover,
+  .swimlane-board__open-epic:focus-visible {
+    background: var(--bg-muted);
+    color: oklch(var(--foreground));
   }
 
   .swimlane-board__lane-body {
