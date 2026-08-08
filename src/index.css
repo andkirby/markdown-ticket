@@ -22,6 +22,7 @@
 @import './styles/utilities.css';
 
 /* Component-local CSS (follows STYLING.md component-folder pattern) */
+@import './components/AppHeader/mobile-logo.css';
 @import './components/Header/header.css';
 @import './components/Badge/badge.css';
 @import './components/SmartLink/smart-link.css';
