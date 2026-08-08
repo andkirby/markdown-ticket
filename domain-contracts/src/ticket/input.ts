@@ -1,3 +1,4 @@
+import type { CRLevelValue } from '../types/schema'
 import { z } from 'zod'
 import { TicketFrontmatterSchema } from './frontmatter'
 
@@ -5,6 +6,7 @@ export interface TicketData {
   title: string
   type: string
   priority?: string
+  level?: CRLevelValue
   phaseEpic?: string
   impactAreas?: string[]
   relatedTickets?: string | string[]
@@ -20,6 +22,7 @@ export interface TicketData {
 
 export interface TicketUpdateAttrs {
   priority?: string
+  level?: CRLevelValue
   phaseEpic?: string
   relatedTickets?: string | string[]
   dependsOn?: string | string[]
@@ -33,6 +36,7 @@ export interface TicketFilters {
   status?: string | string[]
   type?: string | string[]
   priority?: string | string[]
+  level?: CRLevelValue | CRLevelValue[]
   assignee?: string | string[]
   phaseEpic?: string | string[]
   /** Derived multi-select; v1.1 facet. Each value OR-combines within the facet. */
@@ -49,6 +53,7 @@ export interface TicketFilters {
 
 export const TICKET_UPDATE_ATTRS = [
   'priority',
+  'level',
   'phaseEpic',
   'relatedTickets',
   'dependsOn',
@@ -58,7 +63,9 @@ export const TICKET_UPDATE_ATTRS = [
   'implementationNotes',
 ] as const satisfies readonly (keyof TicketUpdateAttrs)[]
 
-export const TICKET_UPDATE_ALLOWED_ATTRS = new Set<keyof TicketUpdateAttrs>(TICKET_UPDATE_ATTRS)
+export const TICKET_UPDATE_ALLOWED_ATTRS = new Set<keyof TicketUpdateAttrs>(
+  TICKET_UPDATE_ATTRS,
+)
 
 const RelationshipInputSchema = z.union([z.string(), z.array(z.string())])
 
@@ -66,6 +73,7 @@ export const CreateTicketInputSchema = TicketFrontmatterSchema.pick({
   title: true,
   type: true,
   priority: true,
+  level: true,
   phaseEpic: true,
   impactAreas: true,
   assignee: true,
@@ -78,21 +86,24 @@ export const CreateTicketInputSchema = TicketFrontmatterSchema.pick({
   rationale: z.string().optional(),
 })
 
-export const UpdateTicketInputSchema = z.object({
-  priority: TicketFrontmatterSchema.shape.priority.optional(),
-  phaseEpic: TicketFrontmatterSchema.shape.phaseEpic,
-  relatedTickets: RelationshipInputSchema.optional(),
-  dependsOn: RelationshipInputSchema.optional(),
-  blocks: RelationshipInputSchema.optional(),
-  assignee: TicketFrontmatterSchema.shape.assignee,
-  implementationDate: z.string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format, use YYYY-MM-DD')
-    .optional(),
-  implementationNotes: z.string().optional(),
-}).refine(
-  data => Object.keys(data).length > 0,
-  { message: 'At least one field must be provided for update' },
-)
+export const UpdateTicketInputSchema = z
+  .object({
+    priority: TicketFrontmatterSchema.shape.priority.optional(),
+    level: TicketFrontmatterSchema.shape.level,
+    phaseEpic: TicketFrontmatterSchema.shape.phaseEpic,
+    relatedTickets: RelationshipInputSchema.optional(),
+    dependsOn: RelationshipInputSchema.optional(),
+    blocks: RelationshipInputSchema.optional(),
+    assignee: TicketFrontmatterSchema.shape.assignee,
+    implementationDate: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format, use YYYY-MM-DD')
+      .optional(),
+    implementationNotes: z.string().optional(),
+  })
+  .refine(data => Object.keys(data).length > 0, {
+    message: 'At least one field must be provided for update',
+  })
 
 export type CreateTicketInput = z.infer<typeof CreateTicketInputSchema>
 export type UpdateTicketInput = z.infer<typeof UpdateTicketInputSchema>

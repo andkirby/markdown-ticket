@@ -1,8 +1,9 @@
 import type {
+  CRLevelValue,
   Ticket,
   TicketMetadata,
 } from '@mdt/domain-contracts'
-import { CRType } from '@mdt/domain-contracts'
+import { CRLevel, CRLevels, CRType } from '@mdt/domain-contracts'
 
 export type {
   Ticket,
@@ -21,7 +22,9 @@ export {
  * Helper function to safely parse date values
  */
 function asRecord(value: unknown): Record<string, unknown> {
-  return typeof value === 'object' && value !== null ? value as Record<string, unknown> : {}
+  return typeof value === 'object' && value !== null
+    ? (value as Record<string, unknown>)
+    : {}
 }
 
 function getString(value: unknown, fallback = ''): string {
@@ -41,13 +44,32 @@ function parseDate(dateValue: unknown): Date | null {
 }
 
 /**
+ * Normalize a ticket hierarchy level (MDT-205).
+ *
+ * Returns the level when it is a known value; otherwise falls back to `ticket`
+ * so legacy/unknown files read as regular tickets (no migration — C-1).
+ */
+function normalizeLevel(value: unknown): CRLevelValue {
+  return typeof value === 'string'
+    && (CRLevels as readonly string[]).includes(value)
+    ? (value as CRLevelValue)
+    : CRLevel.TICKET
+}
+
+/**
  * Helper function to normalize array fields
  */
 function normalizeArray(value: unknown): string[] {
-  if (Array.isArray(value))
-    return value.filter((item): item is string => typeof item === 'string' && item.length > 0)
+  if (Array.isArray(value)) {
+    return value.filter(
+      (item): item is string => typeof item === 'string' && item.length > 0,
+    )
+  }
   if (typeof value === 'string' && value.trim()) {
-    return value.split(',').map(s => s.trim()).filter(Boolean)
+    return value
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean)
   }
   return []
 }
@@ -64,6 +86,7 @@ export function normalizeTicket(rawTicket: unknown): Ticket {
     status: getString(ticket.status, 'Proposed'),
     type: getString(ticket.type, CRType.FEATURE_ENHANCEMENT),
     priority: getString(ticket.priority, 'Medium'),
+    level: normalizeLevel(ticket.level),
     content: getString(ticket.content),
     filePath: getString(ticket.filePath) || getString(ticket.path),
 
@@ -121,6 +144,7 @@ export function normalizeTicketMetadata(rawTicket: unknown): TicketMetadata {
     status: getString(ticket.status, 'Proposed'),
     type: getString(ticket.type, CRType.FEATURE_ENHANCEMENT),
     priority: getString(ticket.priority, 'Medium'),
+    level: normalizeLevel(ticket.level),
     // content is intentionally excluded
     filePath: getString(ticket.filePath) || getString(ticket.path),
 

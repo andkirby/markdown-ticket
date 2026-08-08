@@ -17,7 +17,14 @@
  * change). Re-align here if columns are ever reconfigured.
  */
 
-import { CRPriorities, CRPriority, CRStatus, CRStatuses } from '@mdt/domain-contracts'
+import {
+  CRLevel,
+  CRLevels,
+  CRPriorities,
+  CRPriority,
+  CRStatus,
+  CRStatuses,
+} from '@mdt/domain-contracts'
 import { ServiceError } from '../ServiceError.js'
 
 // --- Status ---------------------------------------------------------------
@@ -99,6 +106,42 @@ export function resolvePriorityToken(token: string): string {
   return resolved
 }
 
+// --- Level (MDT-205) ------------------------------------------------------
+
+/**
+ * Shorthand aliases → canonical CRLevel (lowercased keys).
+ * `e`→epic, `t`→ticket, plus canonical self-maps. Mirrors the priority alias
+ * pattern so CLI, MCP, and any future consumer apply identical rules (C-6).
+ */
+const LEVEL_ALIASES: Record<string, string> = {
+  e: CRLevel.EPIC,
+  t: CRLevel.TICKET,
+}
+for (const canonical of CRLevels) {
+  LEVEL_ALIASES[canonical.toLowerCase()] = canonical
+}
+
+export function resolveLevelToken(token: string): string {
+  const key = token.trim().toLowerCase()
+  const resolved = LEVEL_ALIASES[key]
+  if (!resolved) {
+    throw ServiceError.invalidOperation(
+      `Invalid level '${token}'. Valid: ${CRLevels.join(', ')} (aliases: e→epic, t→ticket).`,
+    )
+  }
+  return resolved
+}
+
+/**
+ * Lenient lookup: canonical CRLevel for a token, or undefined when unknown.
+ * Non-throwing variant for list filters / read-paths that prefer silent
+ * pass-through over hard rejection (mirrors lookupStatusToken).
+ */
+export function lookupLevelToken(token: string): string | undefined {
+  const key = token.trim().toLowerCase()
+  return LEVEL_ALIASES[key]
+}
+
 // --- Generic dispatch -----------------------------------------------------
 
 /**
@@ -111,5 +154,7 @@ export function resolveAttrValue(field: string, value: string): string {
     return resolveStatusToken(value)
   if (field === 'priority')
     return resolvePriorityToken(value)
+  if (field === 'level')
+    return resolveLevelToken(value)
   return value
 }

@@ -11,23 +11,25 @@
 
 // Import and re-export enum objects and value types from domain-contracts
 import type {
+  CRLevelValue,
   CRPriorityValue,
   CRTypeValue,
 } from '@mdt/domain-contracts'
 import {
+  CRLevel,
   CRPriority,
   CRType,
   CRStatus as DomainCRStatus,
 } from '@mdt/domain-contracts'
 
 // Re-export the enum objects (for accessing values like CRType.ARCHITECTURE)
-export { CRPriority, DomainCRStatus as CRStatus, CRType }
+export { CRLevel, CRPriority, DomainCRStatus as CRStatus, CRType }
 
 // Re-export the value types (for type annotations like CRTypeValue)
-export type { CRPriorityValue, CRTypeValue }
+export type { CRLevelValue, CRPriorityValue, CRTypeValue }
 
 // Re-export CRStatus type
-export type CRStatus = typeof DomainCRStatus[keyof typeof DomainCRStatus]
+export type CRStatus = (typeof DomainCRStatus)[keyof typeof DomainCRStatus]
 
 // Runtime validation array (re-exported from domain-contracts)
 export const CR_STATUSES = [

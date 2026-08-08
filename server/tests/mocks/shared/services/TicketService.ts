@@ -15,6 +15,7 @@ export interface Ticket {
   status: string
   type: string
   priority: string
+  level?: string
   filename?: string
   filePath?: string // Changed from 'path' to 'filePath' to match real service
   content?: string
@@ -69,8 +70,13 @@ export class TicketService {
   /**
    * List all CRs for a project
    */
-  async listCRs(project: ServiceProject, filters?: TicketFilters): Promise<Ticket[]> {
-    const crs: Ticket[] = await this.projectService.getProjectCRs(project.project.path)
+  async listCRs(
+    project: ServiceProject,
+    filters?: TicketFilters,
+  ): Promise<Ticket[]> {
+    const crs: Ticket[] = await this.projectService.getProjectCRs(
+      project.project.path,
+    )
 
     if (!filters) {
       return crs
@@ -79,7 +85,9 @@ export class TicketService {
     // Apply filters
     let filtered = crs
     if (filters.status) {
-      const statuses = Array.isArray(filters.status) ? filters.status : [filters.status]
+      const statuses = Array.isArray(filters.status)
+        ? filters.status
+        : [filters.status]
       filtered = filtered.filter((cr: Ticket) => statuses.includes(cr.status))
     }
     if (filters.type) {
@@ -87,11 +95,17 @@ export class TicketService {
       filtered = filtered.filter((cr: Ticket) => types.includes(cr.type))
     }
     if (filters.priority) {
-      const priorities = Array.isArray(filters.priority) ? filters.priority : [filters.priority]
-      filtered = filtered.filter((cr: Ticket) => priorities.includes(cr.priority))
+      const priorities = Array.isArray(filters.priority)
+        ? filters.priority
+        : [filters.priority]
+      filtered = filtered.filter((cr: Ticket) =>
+        priorities.includes(cr.priority),
+      )
     }
     if (filters.assignee) {
-      filtered = filtered.filter((cr: Ticket) => cr.assignee === filters.assignee)
+      filtered = filtered.filter(
+        (cr: Ticket) => cr.assignee === filters.assignee,
+      )
     }
 
     return filtered
@@ -115,7 +129,9 @@ export class TicketService {
     }
     else {
       // Flat file pattern: docs/CRs/API-001-test-cr-for-api-testing.md
-      files = fs.readdirSync(crPath).filter(f => f.startsWith(crId) && f.endsWith('.md'))
+      files = fs
+        .readdirSync(crPath)
+        .filter(f => f.startsWith(crId) && f.endsWith('.md'))
       if (files.length === 0) {
         throw new Error('CR not found')
       }
@@ -153,16 +169,26 @@ export class TicketService {
       content,
       dateCreated: stats.birthtime || stats.ctime,
       lastModified: stats.mtime,
-      relatedTickets: relatedTicketsMatch ? relatedTicketsMatch[1].trim().split(',').filter(Boolean) : [],
-      dependsOn: dependsOnMatch ? dependsOnMatch[1].trim().split(',').filter(Boolean) : [],
-      blocks: blocksMatch ? blocksMatch[1].trim().split(',').filter(Boolean) : [],
+      relatedTickets: relatedTicketsMatch
+        ? relatedTicketsMatch[1].trim().split(',').filter(Boolean)
+        : [],
+      dependsOn: dependsOnMatch
+        ? dependsOnMatch[1].trim().split(',').filter(Boolean)
+        : [],
+      blocks: blocksMatch
+        ? blocksMatch[1].trim().split(',').filter(Boolean)
+        : [],
     }
   }
 
   /**
    * Create a new CR
    */
-  async createCR(project: ServiceProject, type: string, data: Partial<Ticket>): Promise<Ticket> {
+  async createCR(
+    project: ServiceProject,
+    type: string,
+    data: Partial<Ticket>,
+  ): Promise<Ticket> {
     const crPath = await this.getCRPath(project)
 
     // Get next CR number
@@ -194,15 +220,20 @@ export class TicketService {
       `type: ${type}`,
       `priority: ${data.priority || 'Medium'}`,
       data.description ? `description: ${data.description}` : '',
+      data.level ? `level: ${data.level}` : '',
       data.phaseEpic ? `phaseEpic: ${data.phaseEpic}` : '',
       data.assignee ? `assignee: ${data.assignee}` : '',
-      data.relatedTickets ? `relatedTickets: ${data.relatedTickets.join(',')}` : '',
+      data.relatedTickets
+        ? `relatedTickets: ${data.relatedTickets.join(',')}`
+        : '',
       data.dependsOn ? `dependsOn: ${data.dependsOn}` : '',
       data.blocks ? `blocks: ${data.blocks}` : '',
       '---',
       '',
       data.content || data.description || '',
-    ].filter(Boolean).join('\n')
+    ]
+      .filter(Boolean)
+      .join('\n')
 
     fs.writeFileSync(mdPath, yaml, 'utf-8')
 
@@ -213,6 +244,7 @@ export class TicketService {
       type,
       priority: data.priority || 'Medium',
       description: data.description,
+      level: data.level,
       phaseEpic: data.phaseEpic,
       assignee: data.assignee,
       relatedTickets: data.relatedTickets,
@@ -227,7 +259,10 @@ export class TicketService {
   /**
    * Validate status transitions
    */
-  private validateStatusTransition(currentStatus: string, newStatus: string): void {
+  private validateStatusTransition(
+    currentStatus: string,
+    newStatus: string,
+  ): void {
     // Allow same status (no-op updates)
     if (currentStatus === newStatus) {
       return
@@ -235,27 +270,81 @@ export class TicketService {
 
     // Define valid status transitions
     const validTransitions: Record<string, string[]> = {
-      'Proposed': ['Approved', 'Rejected', 'In Progress', 'On Hold', 'Implemented', 'Partially Implemented'],
-      'Approved': ['In Progress', 'Rejected', 'On Hold', 'Implemented', 'Proposed', 'Partially Implemented'],
-      'In Progress': ['Implemented', 'Approved', 'On Hold', 'Rejected', 'Proposed', 'Partially Implemented'],
-      'Implemented': ['In Progress', 'Approved', 'Rejected', 'Proposed', 'On Hold', 'Partially Implemented'],
-      'Rejected': ['Proposed', 'Approved', 'Implemented', 'On Hold', 'In Progress', 'Partially Implemented'],
-      'On Hold': ['In Progress', 'Approved', 'Rejected', 'Proposed', 'Implemented', 'Partially Implemented'],
-      'Partially Implemented': ['Implemented', 'In Progress', 'On Hold', 'Rejected', 'Proposed'],
+      'Proposed': [
+        'Approved',
+        'Rejected',
+        'In Progress',
+        'On Hold',
+        'Implemented',
+        'Partially Implemented',
+      ],
+      'Approved': [
+        'In Progress',
+        'Rejected',
+        'On Hold',
+        'Implemented',
+        'Proposed',
+        'Partially Implemented',
+      ],
+      'In Progress': [
+        'Implemented',
+        'Approved',
+        'On Hold',
+        'Rejected',
+        'Proposed',
+        'Partially Implemented',
+      ],
+      'Implemented': [
+        'In Progress',
+        'Approved',
+        'Rejected',
+        'Proposed',
+        'On Hold',
+        'Partially Implemented',
+      ],
+      'Rejected': [
+        'Proposed',
+        'Approved',
+        'Implemented',
+        'On Hold',
+        'In Progress',
+        'Partially Implemented',
+      ],
+      'On Hold': [
+        'In Progress',
+        'Approved',
+        'Rejected',
+        'Proposed',
+        'Implemented',
+        'Partially Implemented',
+      ],
+      'Partially Implemented': [
+        'Implemented',
+        'In Progress',
+        'On Hold',
+        'Rejected',
+        'Proposed',
+      ],
     }
 
     const allowedTransitions = validTransitions[currentStatus] || []
 
     if (!allowedTransitions.includes(newStatus)) {
       const validOptions = allowedTransitions.join(', ')
-      throw new Error(`Invalid status transition from '${currentStatus}' to '${newStatus}'. Valid transitions from '${currentStatus}': ${validOptions}`)
+      throw new Error(
+        `Invalid status transition from '${currentStatus}' to '${newStatus}'. Valid transitions from '${currentStatus}': ${validOptions}`,
+      )
     }
   }
 
   /**
    * Update CR status
    */
-  async updateCRStatus(project: ServiceProject, crId: string, status: string): Promise<void> {
+  async updateCRStatus(
+    project: ServiceProject,
+    crId: string,
+    status: string,
+  ): Promise<void> {
     const cr = await this.getCR(project, crId)
     if (!cr.filePath) {
       throw new Error('CR file not found')
@@ -272,7 +361,11 @@ export class TicketService {
   /**
    * Update CR attributes
    */
-  async updateCRAttrs(project: ServiceProject, crId: string, updates: Partial<Ticket>): Promise<void> {
+  async updateCRAttrs(
+    project: ServiceProject,
+    crId: string,
+    updates: Partial<Ticket>,
+  ): Promise<void> {
     const cr = await this.getCR(project, crId)
     if (!cr.filePath) {
       throw new Error('CR file not found')
@@ -288,7 +381,12 @@ export class TicketService {
 
     // Update each attribute
     for (const [key, value] of Object.entries(updates)) {
-      if (value === undefined || key === 'code' || key === 'filename' || key === 'filePath') {
+      if (
+        value === undefined
+        || key === 'code'
+        || key === 'filename'
+        || key === 'filePath'
+      ) {
         continue
       }
 
@@ -330,7 +428,9 @@ export class TicketService {
     }
     else {
       // Flat file pattern: docs/CRs/API-001-title.md
-      const files = fs.readdirSync(crPath).filter(f => f.startsWith(crId) && f.endsWith('.md'))
+      const files = fs
+        .readdirSync(crPath)
+        .filter(f => f.startsWith(crId) && f.endsWith('.md'))
       if (files.length === 0) {
         throw new Error('CR not found')
       }

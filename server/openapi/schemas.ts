@@ -38,7 +38,9 @@ interface ZodLikeSchema {
     schema?: ZodLikeSchema
     getter?: () => ZodLikeSchema
     type?: ZodLikeSchema
-    shape?: (() => Record<string, ZodLikeSchema>) | Record<string, ZodLikeSchema>
+    shape?:
+      | (() => Record<string, ZodLikeSchema>)
+      | Record<string, ZodLikeSchema>
     options?: ZodLikeSchema[]
     values?: readonly unknown[]
     checks?: Array<Record<string, unknown>>
@@ -50,11 +52,21 @@ interface ZodLikeSchema {
 const schemaRefs = new Map<ZodLikeSchema, string>([
   [CRStatusSchema as unknown as ZodLikeSchema, '#/components/schemas/CRStatus'],
   [CRTypeSchema as unknown as ZodLikeSchema, '#/components/schemas/CRType'],
-  [CRPrioritySchema as unknown as ZodLikeSchema, '#/components/schemas/CRPriority'],
-  [SubDocumentSchema as unknown as ZodLikeSchema, '#/components/schemas/SubDocument'],
+  [
+    CRPrioritySchema as unknown as ZodLikeSchema,
+    '#/components/schemas/CRPriority',
+  ],
+  [
+    SubDocumentSchema as unknown as ZodLikeSchema,
+    '#/components/schemas/SubDocument',
+  ],
 ])
 
-function unwrapZodSchema(schema: ZodLikeSchema): { schema: ZodLikeSchema, nullable: boolean, optional: boolean } {
+function unwrapZodSchema(schema: ZodLikeSchema): {
+  schema: ZodLikeSchema
+  nullable: boolean
+  optional: boolean
+} {
   let current = schema
   let nullable = false
   let optional = false
@@ -96,7 +108,10 @@ function getObjectShape(schema: ZodLikeSchema): Record<string, ZodLikeSchema> {
   return typeof shape === 'function' ? shape() : shape
 }
 
-function applyOpenApiDocs(schema: OpenApiSchema, docs?: OpenApiSchema): OpenApiSchema {
+function applyOpenApiDocs(
+  schema: OpenApiSchema,
+  docs?: OpenApiSchema,
+): OpenApiSchema {
   if (!docs) {
     return schema
   }
@@ -169,9 +184,14 @@ function numberSchemaFromChecks(schema: ZodLikeSchema): OpenApiSchema {
   return result
 }
 
-function zodSchemaToOpenApi(schema: ZodLikeSchema, options: { ignoreRef?: boolean } = {}): OpenApiSchema {
+function zodSchemaToOpenApi(
+  schema: ZodLikeSchema,
+  options: { ignoreRef?: boolean } = {},
+): OpenApiSchema {
   const unwrapped = unwrapZodSchema(schema)
-  const ref = options.ignoreRef ? undefined : (schemaRefs.get(schema) ?? schemaRefs.get(unwrapped.schema))
+  const ref = options.ignoreRef
+    ? undefined
+    : (schemaRefs.get(schema) ?? schemaRefs.get(unwrapped.schema))
   if (ref) {
     return { $ref: ref }
   }
@@ -200,7 +220,9 @@ function zodSchemaToOpenApi(schema: ZodLikeSchema, options: { ignoreRef?: boolea
     case 'ZodEnum':
       result = {
         type: 'string',
-        enum: Array.isArray(unwrapped.schema._def.values) ? [...unwrapped.schema._def.values] : [],
+        enum: Array.isArray(unwrapped.schema._def.values)
+          ? [...unwrapped.schema._def.values]
+          : [],
       }
       break
     case 'ZodLiteral': {
@@ -213,7 +235,9 @@ function zodSchemaToOpenApi(schema: ZodLikeSchema, options: { ignoreRef?: boolea
     }
     case 'ZodUnion':
       result = {
-        oneOf: (unwrapped.schema._def.options ?? []).map(option => zodSchemaToOpenApi(option)),
+        oneOf: (unwrapped.schema._def.options ?? []).map(option =>
+          zodSchemaToOpenApi(option),
+        ),
       }
       break
     case 'ZodLazy': {
@@ -257,7 +281,10 @@ function zodObjectToOpenApi(
   const required: string[] = []
 
   for (const [key, value] of Object.entries(shape)) {
-    properties[key] = applyOpenApiDocs(zodSchemaToOpenApi(value), propertyDocs[key])
+    properties[key] = applyOpenApiDocs(
+      zodSchemaToOpenApi(value),
+      propertyDocs[key],
+    )
     const isOptional = value.isOptional?.() ?? unwrapZodSchema(value).optional
     if (!isOptional) {
       required.push(key)
@@ -272,7 +299,11 @@ function zodObjectToOpenApi(
 }
 
 const ticketPropertyDocs: Record<string, OpenApiSchema> = {
-  code: { description: 'Unique CR identifier', example: 'MDT-001', pattern: CR_CODE_PATTERN_STRING },
+  code: {
+    description: 'Unique CR identifier',
+    example: 'MDT-001',
+    pattern: CR_CODE_PATTERN_STRING,
+  },
   title: { description: 'CR title', example: 'Implement user authentication' },
   status: { $ref: '#/components/schemas/CRStatus' },
   type: { $ref: '#/components/schemas/CRType' },
@@ -281,18 +312,36 @@ const ticketPropertyDocs: Record<string, OpenApiSchema> = {
   filePath: { description: 'Absolute path to the CR markdown file' },
   dateCreated: { description: 'File creation date' },
   lastModified: { description: 'File last modified date' },
-  phaseEpic: { description: 'Phase or epic this CR belongs to', example: 'Phase 1' },
+  phaseEpic: {
+    description: 'Phase or epic this CR belongs to',
+    example: 'Phase 1',
+  },
   description: { description: 'Short CR description' },
   rationale: { description: 'Rationale for the CR' },
-  dependsOn: { description: 'CR codes this depends on', example: ['MDT-001', 'MDT-002'] },
+  dependsOn: {
+    description: 'CR codes this depends on',
+    example: ['MDT-001', 'MDT-002'],
+  },
   blocks: { description: 'CR codes blocked by this', example: ['MDT-010'] },
-  assignee: { description: 'Person assigned to implement this CR', example: 'john.doe@example.com' },
+  assignee: {
+    description: 'Person assigned to implement this CR',
+    example: 'john.doe@example.com',
+  },
   relatedTickets: { description: 'Related CR codes', example: ['MDT-003'] },
-  impactAreas: { description: 'System areas impacted', example: ['backend', 'api'] },
-  implementationDate: { description: 'Date implementation completed (ISO 8601)', format: 'date', example: '2025-09-20' },
+  impactAreas: {
+    description: 'System areas impacted',
+    example: ['backend', 'api'],
+  },
+  implementationDate: {
+    description: 'Date implementation completed (ISO 8601)',
+    format: 'date',
+    example: '2025-09-20',
+  },
   implementationNotes: { description: 'Notes about the implementation' },
   inWorktree: { description: 'Whether this CR is being read from a worktree' },
-  worktreePath: { description: 'Resolved worktree path when the CR is in a worktree' },
+  worktreePath: {
+    description: 'Resolved worktree path when the CR is in a worktree',
+  },
   subdocuments: { description: 'Ticket-owned sub-documents' },
 }
 
@@ -300,33 +349,60 @@ const ticketInputPropertyDocs: Record<string, OpenApiSchema> = {
   title: { description: 'CR title', example: 'Implement user authentication' },
   type: { $ref: '#/components/schemas/CRType' },
   priority: { $ref: '#/components/schemas/CRPriority' },
-  content: { description: 'Full markdown content (template auto-generated if omitted)' },
-  phaseEpic: { description: 'Phase or epic this CR belongs to', example: 'Phase 1' },
+  content: {
+    description: 'Full markdown content (template auto-generated if omitted)',
+  },
+  phaseEpic: {
+    description: 'Phase or epic this CR belongs to',
+    example: 'Phase 1',
+  },
   description: { description: 'Short CR description' },
   rationale: { description: 'Rationale for the CR' },
   dependsOn: { description: 'CR dependencies' },
   blocks: { description: 'CRs blocked by this ticket' },
-  assignee: { description: 'Person assigned to implement this CR', example: 'john.doe@example.com' },
+  assignee: {
+    description: 'Person assigned to implement this CR',
+    example: 'john.doe@example.com',
+  },
   relatedTickets: { description: 'Related CR codes' },
-  impactAreas: { description: 'System areas impacted', example: ['backend', 'api'] },
+  impactAreas: {
+    description: 'System areas impacted',
+    example: ['backend', 'api'],
+  },
 }
 
 const ticketUpdatePropertyDocs: Record<string, OpenApiSchema> = {
   priority: { $ref: '#/components/schemas/CRPriority' },
-  phaseEpic: { description: 'Phase or epic this CR belongs to', example: 'Phase 1' },
+  phaseEpic: {
+    description: 'Phase or epic this CR belongs to',
+    example: 'Phase 1',
+  },
   relatedTickets: { description: 'Related CR codes' },
   dependsOn: { description: 'CR dependencies' },
   blocks: { description: 'CRs blocked by this ticket' },
-  assignee: { description: 'Person assigned to implement this CR', example: 'john.doe@example.com' },
-  implementationDate: { description: 'Date implementation completed (ISO 8601)', format: 'date', example: '2025-09-20' },
+  assignee: {
+    description: 'Person assigned to implement this CR',
+    example: 'john.doe@example.com',
+  },
+  implementationDate: {
+    description: 'Date implementation completed (ISO 8601)',
+    format: 'date',
+    example: '2025-09-20',
+  },
   implementationNotes: { description: 'Notes about the implementation' },
 }
 
 const subDocumentPropertyDocs: Record<string, OpenApiSchema> = {
-  name: { description: 'Sub-document identifier (name without extension)', example: 'requirements' },
+  name: {
+    description: 'Sub-document identifier (name without extension)',
+    example: 'requirements',
+  },
   kind: { description: 'Entry kind' },
   children: { description: 'Nested entries (populated for folders)' },
-  isVirtual: { description: 'Whether the folder is virtual and derived from namespaced files' },
+  isVirtual: {
+    description:
+      'Whether the folder is virtual and derived from namespaced files',
+  },
   filePath: { description: 'Relative path to the represented markdown file' },
 }
 
@@ -336,45 +412,77 @@ const projectPropertyDocs: Record<string, OpenApiSchema> = {
   metadata: { description: 'Project registry metadata' },
   tickets: { description: 'Ticket-related project settings' },
   document: { description: 'Project-level document discovery settings' },
-  autoDiscovered: { description: 'Whether the project was found by auto-discovery', example: false },
-  configPath: { description: 'Path to the local project config file, if available' },
-  registryFile: { description: 'Path to the global registry file, if registered' },
+  autoDiscovered: {
+    description: 'Whether the project was found by auto-discovery',
+    example: false,
+  },
+  configPath: {
+    description: 'Path to the local project config file, if available',
+  },
+  registryFile: {
+    description: 'Path to the global registry file, if registered',
+  },
 }
 
 const localProjectConfigPropertyDocs: Record<string, OpenApiSchema> = {
-  project: { description: 'Local project configuration stored in `.mdt-config.toml`' },
+  project: {
+    description: 'Local project configuration stored in `.mdt-config.toml`',
+  },
   worktree: { description: 'Optional worktree settings for the project' },
 }
 
-const ticketSchema = zodObjectToOpenApi(TicketSchema as unknown as ZodLikeSchema, ticketPropertyDocs)
-const ticketInputSchema = zodObjectToOpenApi(CreateTicketInputSchema as unknown as ZodLikeSchema, ticketInputPropertyDocs)
-const ticketUpdateSchema = zodObjectToOpenApi(UpdateTicketInputSchema as unknown as ZodLikeSchema, ticketUpdatePropertyDocs)
-const subDocumentSchema = zodObjectToOpenApi(SubDocumentSchema as unknown as ZodLikeSchema, subDocumentPropertyDocs)
-const projectSchema = zodObjectToOpenApi(ProjectSchema as unknown as ZodLikeSchema, projectPropertyDocs)
-const localProjectConfigSchema = zodObjectToOpenApi(LocalProjectConfigSchema as unknown as ZodLikeSchema, localProjectConfigPropertyDocs)
-
-export const crPatchProperties = TICKET_UPDATE_ATTRS.reduce<Record<string, unknown>>(
-  (properties: Record<string, unknown>, field: keyof TicketUpdateAttrs) => {
-    const fieldName = field as string
-    properties[fieldName] = ticketUpdateSchema.properties[fieldName]
-    return properties
-  },
-  {},
+const ticketSchema = zodObjectToOpenApi(
+  TicketSchema as unknown as ZodLikeSchema,
+  ticketPropertyDocs,
 )
+const ticketInputSchema = zodObjectToOpenApi(
+  CreateTicketInputSchema as unknown as ZodLikeSchema,
+  ticketInputPropertyDocs,
+)
+const ticketUpdateSchema = zodObjectToOpenApi(
+  UpdateTicketInputSchema as unknown as ZodLikeSchema,
+  ticketUpdatePropertyDocs,
+)
+const subDocumentSchema = zodObjectToOpenApi(
+  SubDocumentSchema as unknown as ZodLikeSchema,
+  subDocumentPropertyDocs,
+)
+const projectSchema = zodObjectToOpenApi(
+  ProjectSchema as unknown as ZodLikeSchema,
+  projectPropertyDocs,
+)
+const localProjectConfigSchema = zodObjectToOpenApi(
+  LocalProjectConfigSchema as unknown as ZodLikeSchema,
+  localProjectConfigPropertyDocs,
+)
+
+export const crPatchProperties = TICKET_UPDATE_ATTRS.reduce<
+  Record<string, unknown>
+>((properties: Record<string, unknown>, field: keyof TicketUpdateAttrs) => {
+  const fieldName = field as string
+  properties[fieldName] = ticketUpdateSchema.properties[fieldName]
+  return properties
+}, {})
 
 export const schemas = {
   CRStatus: {
-    ...zodSchemaToOpenApi(CRStatusSchema as unknown as ZodLikeSchema, { ignoreRef: true }),
+    ...zodSchemaToOpenApi(CRStatusSchema as unknown as ZodLikeSchema, {
+      ignoreRef: true,
+    }),
     description: 'Change Request status',
     example: 'Proposed',
   },
   CRType: {
-    ...zodSchemaToOpenApi(CRTypeSchema as unknown as ZodLikeSchema, { ignoreRef: true }),
+    ...zodSchemaToOpenApi(CRTypeSchema as unknown as ZodLikeSchema, {
+      ignoreRef: true,
+    }),
     description: 'Change Request type',
     example: 'Feature Enhancement',
   },
   CRPriority: {
-    ...zodSchemaToOpenApi(CRPrioritySchema as unknown as ZodLikeSchema, { ignoreRef: true }),
+    ...zodSchemaToOpenApi(CRPrioritySchema as unknown as ZodLikeSchema, {
+      ignoreRef: true,
+    }),
     description: 'Change Request priority level',
     example: 'Medium',
   },
@@ -389,14 +497,26 @@ export const schemas = {
     type: 'object',
     required: ['path', 'name'],
     properties: {
-      path: { type: 'string', description: 'Relative path from project root', example: 'docs/architecture.md' },
-      name: { type: 'string', description: 'Document filename', example: 'architecture.md' },
+      path: {
+        type: 'string',
+        description: 'Relative path from project root',
+        example: 'docs/architecture.md',
+      },
+      name: {
+        type: 'string',
+        description: 'Document filename',
+        example: 'architecture.md',
+      },
       kind: {
         type: 'string',
         enum: ['markdown', 'html'],
-        description: 'Server-derived document kind. Absent on folders and unclassified files; the client maps undefined to the unsupported state at the viewer boundary.',
+        description:
+          'Server-derived document kind. Absent on folders and unclassified files; the client maps undefined to the unsupported state at the viewer boundary.',
       },
-      content: { type: 'string', description: 'Document content (when requested)' },
+      content: {
+        type: 'string',
+        description: 'Document content (when requested)',
+      },
     },
   },
 
@@ -405,8 +525,16 @@ export const schemas = {
     type: 'object',
     required: ['token', 'expiresAt'],
     properties: {
-      token: { type: 'string', description: 'Signed, directory-scoped preview token to embed in the iframe src path' },
-      expiresAt: { type: 'string', format: 'date-time', description: 'ISO8601 expiry (<=5 minutes from mint)' },
+      token: {
+        type: 'string',
+        description:
+          'Signed, directory-scoped preview token to embed in the iframe src path',
+      },
+      expiresAt: {
+        type: 'string',
+        format: 'date-time',
+        description: 'ISO8601 expiry (<=5 minutes from mint)',
+      },
     },
   },
 
@@ -416,10 +544,24 @@ export const schemas = {
     type: 'object',
     required: ['code', 'content', 'dateCreated', 'lastModified'],
     properties: {
-      code: { type: 'string', description: 'Sub-document identifier (name without extension)', example: 'requirements' },
+      code: {
+        type: 'string',
+        description: 'Sub-document identifier (name without extension)',
+        example: 'requirements',
+      },
       content: { type: 'string', description: 'Markdown content' },
-      dateCreated: { type: 'string', format: 'date-time', nullable: true, description: 'File creation date' },
-      lastModified: { type: 'string', format: 'date-time', nullable: true, description: 'File last modified date' },
+      dateCreated: {
+        type: 'string',
+        format: 'date-time',
+        nullable: true,
+        description: 'File creation date',
+      },
+      lastModified: {
+        type: 'string',
+        format: 'date-time',
+        nullable: true,
+        description: 'File last modified date',
+      },
     },
   },
 
@@ -429,7 +571,16 @@ export const schemas = {
     properties: {
       error: { type: 'string', example: 'Bad Request' },
       message: { type: 'string', example: 'Invalid request parameters' },
-      details: { type: 'array', items: { type: 'object', properties: { field: { type: 'string' }, message: { type: 'string' } } } },
+      details: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            field: { type: 'string' },
+            message: { type: 'string' },
+          },
+        },
+      },
     },
   },
 
@@ -465,8 +616,12 @@ export const schemas = {
     description: 'Project plus local configuration from `.mdt-config.toml`',
     required: ['project', 'config'],
     properties: {
-      project: applyOpenApiDocs(projectSchema, { description: 'Normalized runtime project' }),
-      config: applyOpenApiDocs(localProjectConfigSchema, { description: 'Project-local configuration file' }),
+      project: applyOpenApiDocs(projectSchema, {
+        description: 'Normalized runtime project',
+      }),
+      config: applyOpenApiDocs(localProjectConfigSchema, {
+        description: 'Project-local configuration file',
+      }),
     },
   },
 
@@ -475,7 +630,11 @@ export const schemas = {
     type: 'object',
     properties: {
       timestamp: { type: 'integer', example: 1701234567890 },
-      level: { type: 'string', enum: ['info', 'warn', 'error'], example: 'info' },
+      level: {
+        type: 'string',
+        enum: ['info', 'warn', 'error'],
+        example: 'info',
+      },
       message: { type: 'string', example: 'Server started on port 3001' },
     },
   },
@@ -506,7 +665,10 @@ export const schemas = {
   FrontendLogsResponse: {
     type: 'object',
     properties: {
-      logs: { type: 'array', items: { $ref: '#/components/schemas/FrontendLogEntry' } },
+      logs: {
+        type: 'array',
+        items: { $ref: '#/components/schemas/FrontendLogEntry' },
+      },
       total: { type: 'integer', example: 150 },
     },
   },
@@ -545,7 +707,10 @@ export const schemas = {
   DevModeLogsResponse: {
     type: 'object',
     properties: {
-      logs: { type: 'array', items: { $ref: '#/components/schemas/FrontendLogEntry' } },
+      logs: {
+        type: 'array',
+        items: { $ref: '#/components/schemas/FrontendLogEntry' },
+      },
       total: { type: 'integer', example: 150 },
       devMode: { type: 'boolean', example: true },
       timeRemaining: { type: 'integer', nullable: true, example: 3600000 },

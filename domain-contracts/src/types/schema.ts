@@ -16,7 +16,7 @@ export const CRStatus = {
   PARTIALLY_IMPLEMENTED: 'Partially Implemented',
 } as const
 
-export type CRStatusValue = typeof CRStatus[keyof typeof CRStatus]
+export type CRStatusValue = (typeof CRStatus)[keyof typeof CRStatus]
 
 export const CRStatuses = [
   CRStatus.PROPOSED,
@@ -40,7 +40,7 @@ export const CRType = {
   RESEARCH: 'Research',
 } as const
 
-export type CRTypeValue = typeof CRType[keyof typeof CRType]
+export type CRTypeValue = (typeof CRType)[keyof typeof CRType]
 
 export const CRTypes = [
   CRType.ARCHITECTURE,
@@ -61,7 +61,7 @@ export const CRPriority = {
   CRITICAL: 'Critical',
 } as const
 
-export type CRPriorityValue = typeof CRPriority[keyof typeof CRPriority]
+export type CRPriorityValue = (typeof CRPriority)[keyof typeof CRPriority]
 
 export const CRPriorities = [
   CRPriority.LOW,
@@ -73,12 +73,36 @@ export const CRPriorities = [
 export const CRPrioritySchema = z.enum(CRPriorities)
 
 /**
+ * CR Level enumeration (MDT-205).
+ *
+ * `level` is an axis orthogonal to status/type/priority: it distinguishes a
+ * regular ticket from an epic. A ticket whose `phaseEpic` points at another
+ * ticket requires that target to be an epic in a usable state (Approved or
+ * Implemented). Epics additionally follow a close guard before they may move
+ * to Implemented.
+ *
+ * Defaults to `ticket` on read (no migration — existing files without `level`
+ * are treated as regular tickets).
+ */
+export const CRLevel = {
+  TICKET: 'ticket',
+  EPIC: 'epic',
+} as const
+
+export type CRLevelValue = (typeof CRLevel)[keyof typeof CRLevel]
+
+export const CRLevels = [CRLevel.TICKET, CRLevel.EPIC] as const
+
+export const CRLevelSchema = z.enum(CRLevels)
+
+/**
  * Inferred TypeScript types from Zod schemas
  * These can be used when you need types that are guaranteed to match the schemas
  */
 export type CRStatusFromSchema = z.infer<typeof CRStatusSchema>
 export type CRTypeFromSchema = z.infer<typeof CRTypeSchema>
 export type CRPriorityFromSchema = z.infer<typeof CRPrioritySchema>
+export type CRLevelFromSchema = z.infer<typeof CRLevelSchema>
 
 /**
  * Export the schemas for use in other domain contracts
@@ -87,4 +111,5 @@ export const CREnumSchemas = {
   status: CRStatusSchema,
   type: CRTypeSchema,
   priority: CRPrioritySchema,
+  level: CRLevelSchema,
 } as const

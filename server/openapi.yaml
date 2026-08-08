@@ -12,7 +12,9 @@ info:
     - **Git integration**: Version control for all ticket changes
 
     ## Authentication
-    Currently, the API does not require authentication. Future versions may add API key or OAuth support.
+    Protected backend API routes require an admin token when API authentication is enabled.
+    Send either `Authorization: Bearer <token>` or `X-API-Key: <token>`.
+    `GET /api/status` and `GET /api/health` are public health/status endpoints.
 
     ## Error Handling
     All endpoints return consistent error responses with `error` and `message` fields.
@@ -90,6 +92,11 @@ components:
           $ref: '#/components/schemas/CRType'
         priority:
           $ref: '#/components/schemas/CRPriority'
+        level:
+          type: string
+          enum:
+            - ticket
+            - epic
         dateCreated:
           type: string
           format: date-time
@@ -125,7 +132,7 @@ components:
           format: date
           nullable: true
           description: Date implementation completed (ISO 8601)
-          example: 2025-09-20
+          example: '2025-09-20'
         implementationNotes:
           type: string
           description: Notes about the implementation
@@ -196,6 +203,11 @@ components:
           $ref: '#/components/schemas/CRType'
         priority:
           $ref: '#/components/schemas/CRPriority'
+        level:
+          type: string
+          enum:
+            - ticket
+            - epic
         phaseEpic:
           type: string
           description: Phase or epic this CR belongs to
@@ -249,51 +261,138 @@ components:
         - priority
     Project:
       type: object
-      required:
-        - id
-        - name
-        - code
-        - path
-        - enabled
       properties:
         id:
           type: string
-          description: Unique project identifier
-          example: mdt
-        name:
-          type: string
-          description: Project display name
-          example: Markdown Ticket
-        code:
-          type: string
-          description: Project code used in CR identifiers
-          example: MDT
-        path:
-          type: string
-          description: Absolute path to project directory
-          example: /Users/dev/project
-        enabled:
+          minLength: 1
+          description: Project identifier
+          example: markdown-ticket
+        project:
+          type: object
+          properties:
+            id:
+              type: string
+              minLength: 1
+            name:
+              type: string
+              minLength: 1
+              maxLength: 512
+            code:
+              type: string
+              minLength: 2
+              maxLength: 5
+              pattern: '^[A-Z][A-Z0-9]{1,4}$'
+            path:
+              type: string
+              minLength: 1
+            configFile:
+              type: string
+            counterFile:
+              type: string
+              minLength: 1
+            startNumber:
+              type: integer
+              minimum: 1
+            active:
+              type: boolean
+            description:
+              type: string
+            repository:
+              type: string
+            ticketsPath:
+              type: string
+              minLength: 1
+          required:
+            - id
+            - name
+            - code
+            - path
+            - configFile
+            - active
+            - description
+            - repository
+            - ticketsPath
+          description: Normalized runtime project fields
+        metadata:
+          type: object
+          properties:
+            dateRegistered:
+              type: string
+              pattern: '^\d{4}-\d{2}-\d{2}$'
+            lastAccessed:
+              type: string
+              pattern: '^\d{4}-\d{2}-\d{2}$'
+            version:
+              type: string
+              minLength: 1
+            globalOnly:
+              type: boolean
+            sharing:
+              type: object
+              properties:
+                mode:
+                  type: string
+                  enum:
+                    - private
+                    - unlisted-readonly
+                    - public-readonly
+                shareId:
+                  type: string
+                  minLength: 12
+                  maxLength: 128
+                  pattern: '^[\w-]+$'
+                updatedAt:
+                  type: string
+          required:
+            - dateRegistered
+            - lastAccessed
+            - version
+          description: Project registry metadata
+        tickets:
+          type: object
+          properties:
+            codePattern:
+              type: string
+          description: Ticket-related project settings
+        document:
+          type: object
+          properties:
+            paths:
+              type: array
+              items:
+                type: string
+            excludeFolders:
+              type: array
+              items:
+                type: string
+            maxDepth:
+              type: integer
+              minimum: 1
+              maximum: 10
+            preview:
+              type: object
+              properties:
+                allowedExternalDomains:
+                  type: array
+                  items:
+                    type: string
+                allowUnsafeEval:
+                  type: boolean
+          description: Project-level document discovery settings
+        autoDiscovered:
           type: boolean
-          description: Whether the project is active
-          example: true
-        crPath:
+          description: Whether the project was found by auto-discovery
+          example: false
+        configPath:
           type: string
-          description: Path to CR directory relative to project root
-          example: docs/CRs
-        documentPaths:
-          type: array
-          items:
-            type: string
-          description: Paths for document discovery
-          example:
-            - docs
-        excludeFolders:
-          type: array
-          items:
-            type: string
-          description: Folders to exclude
-          example:
-            - node_modules
+          description: 'Path to the local project config file, if available'
+        registryFile:
+          type: string
+          description: 'Path to the global registry file, if registered'
+      required:
+        - id
+        - project
+        - metadata
     Document:
       type: object
       required:
@@ -308,9 +407,30 @@ components:
           type: string
           description: Document filename
           example: architecture.md
+        kind:
+          type: string
+          enum:
+            - markdown
+            - html
+          description: >-
+            Server-derived document kind. Absent on folders and unclassified files; the client maps undefined to the
+            unsupported state at the viewer boundary.
         content:
           type: string
           description: Document content (when requested)
+    PreviewTokenResponse:
+      type: object
+      required:
+        - token
+        - expiresAt
+      properties:
+        token:
+          type: string
+          description: 'Signed, directory-scoped preview token to embed in the iframe src path'
+        expiresAt:
+          type: string
+          format: date-time
+          description: ISO8601 expiry (<=5 minutes from mint)
     SubDocument:
       type: object
       properties:
@@ -423,32 +543,231 @@ components:
           example: An error occurred
     ProjectConfig:
       type: object
-      description: Project configuration from .mdt-config.toml
+      description: Project plus local configuration from `.mdt-config.toml`
+      required:
+        - project
+        - config
       properties:
         project:
           type: object
           properties:
-            name:
+            id:
               type: string
-              example: Markdown Ticket
-            code:
+              minLength: 1
+              description: Project identifier
+              example: markdown-ticket
+            project:
+              type: object
+              properties:
+                id:
+                  type: string
+                  minLength: 1
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 512
+                code:
+                  type: string
+                  minLength: 2
+                  maxLength: 5
+                  pattern: '^[A-Z][A-Z0-9]{1,4}$'
+                path:
+                  type: string
+                  minLength: 1
+                configFile:
+                  type: string
+                counterFile:
+                  type: string
+                  minLength: 1
+                startNumber:
+                  type: integer
+                  minimum: 1
+                active:
+                  type: boolean
+                description:
+                  type: string
+                repository:
+                  type: string
+                ticketsPath:
+                  type: string
+                  minLength: 1
+              required:
+                - id
+                - name
+                - code
+                - path
+                - configFile
+                - active
+                - description
+                - repository
+                - ticketsPath
+              description: Normalized runtime project fields
+            metadata:
+              type: object
+              properties:
+                dateRegistered:
+                  type: string
+                  pattern: '^\d{4}-\d{2}-\d{2}$'
+                lastAccessed:
+                  type: string
+                  pattern: '^\d{4}-\d{2}-\d{2}$'
+                version:
+                  type: string
+                  minLength: 1
+                globalOnly:
+                  type: boolean
+                sharing:
+                  type: object
+                  properties:
+                    mode:
+                      type: string
+                      enum:
+                        - private
+                        - unlisted-readonly
+                        - public-readonly
+                    shareId:
+                      type: string
+                      minLength: 12
+                      maxLength: 128
+                      pattern: '^[\w-]+$'
+                    updatedAt:
+                      type: string
+              required:
+                - dateRegistered
+                - lastAccessed
+                - version
+              description: Project registry metadata
+            tickets:
+              type: object
+              properties:
+                codePattern:
+                  type: string
+              description: Ticket-related project settings
+            document:
+              type: object
+              properties:
+                paths:
+                  type: array
+                  items:
+                    type: string
+                excludeFolders:
+                  type: array
+                  items:
+                    type: string
+                maxDepth:
+                  type: integer
+                  minimum: 1
+                  maximum: 10
+                preview:
+                  type: object
+                  properties:
+                    allowedExternalDomains:
+                      type: array
+                      items:
+                        type: string
+                    allowUnsafeEval:
+                      type: boolean
+              description: Project-level document discovery settings
+            autoDiscovered:
+              type: boolean
+              description: Whether the project was found by auto-discovery
+              example: false
+            configPath:
               type: string
-              example: MDT
-            crPath:
+              description: 'Path to the local project config file, if available'
+            registryFile:
               type: string
-              example: docs/CRs
-        documentPaths:
-          type: array
-          items:
-            type: string
-          example:
-            - docs
-        excludeFolders:
-          type: array
-          items:
-            type: string
-          example:
-            - node_modules
+              description: 'Path to the global registry file, if registered'
+          required:
+            - id
+            - project
+            - metadata
+          description: Normalized runtime project
+        config:
+          type: object
+          properties:
+            project:
+              type: object
+              properties:
+                code:
+                  type: string
+                  minLength: 2
+                  maxLength: 5
+                  pattern: '^[A-Z][A-Z0-9]{1,4}$'
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 512
+                id:
+                  type: string
+                  minLength: 1
+                ticketsPath:
+                  type: string
+                  minLength: 1
+                description:
+                  oneOf:
+                    - type: string
+                      minLength: 1
+                      maxLength: 512
+                    - type: string
+                      enum:
+                        - ''
+                repository:
+                  oneOf:
+                    - type: string
+                      minLength: 1
+                      maxLength: 512
+                    - type: string
+                      enum:
+                        - ''
+                active:
+                  type: boolean
+                path:
+                  type: string
+                  minLength: 1
+                startNumber:
+                  type: integer
+                  minimum: 1
+                counterFile:
+                  type: string
+                  minLength: 1
+                document:
+                  type: object
+                  properties:
+                    paths:
+                      type: array
+                      items:
+                        type: string
+                    excludeFolders:
+                      type: array
+                      items:
+                        type: string
+                    maxDepth:
+                      type: integer
+                      minimum: 1
+                      maximum: 10
+                    preview:
+                      type: object
+                      properties:
+                        allowedExternalDomains:
+                          type: array
+                          items:
+                            type: string
+                        allowUnsafeEval:
+                          type: boolean
+              required:
+                - code
+                - name
+              description: Local project configuration stored in `.mdt-config.toml`
+            worktree:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+              description: Optional worktree settings for the project
+          required:
+            - project
+          description: Project-local configuration file
     LogEntry:
       type: object
       properties:
@@ -688,6 +1007,11 @@ components:
                 $ref: '#/components/schemas/CRStatus'
               priority:
                 $ref: '#/components/schemas/CRPriority'
+              level:
+                type: string
+                enum:
+                  - ticket
+                  - epic
               phaseEpic:
                 type: string
                 description: Phase or epic this CR belongs to
@@ -723,7 +1047,7 @@ components:
                 pattern: '^\d{4}-\d{2}-\d{2}$'
                 description: Date implementation completed (ISO 8601)
                 format: date
-                example: 2025-09-20
+                example: '2025-09-20'
               implementationNotes:
                 type: string
                 description: Notes about the implementation
@@ -776,6 +1100,148 @@ components:
                 items:
                   type: string
 paths:
+  /api/config/selectors:
+    get:
+      tags:
+        - Config
+      summary: Read configuration selectors with exposure metadata
+      description: >-
+        Returns every allowlisted, readable selector with its scope, exposure classification, owner surface, validation
+        constraints, and current effective value. File-only selectors are omitted. Owner/admin only.
+      responses:
+        '200':
+          description: Selector descriptors with effective values
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  selectors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        selector:
+                          type: string
+                          example: project.document.maxDepth
+                        scope:
+                          type: string
+                          enum:
+                            - project
+                            - global
+                            - user
+                            - registry
+                        exposure:
+                          type: string
+                          enum:
+                            - editable
+                            - guarded
+                            - readOnly
+                            - fileOnly
+                        ownerSurface:
+                          type: string
+                        validation:
+                          type: string
+                        value: {}
+        '403':
+          description: Read-only or anonymous denied
+        '500':
+          $ref: '#/components/schemas/Error500'
+  /api/config:
+    patch:
+      tags:
+        - Config
+      summary: Apply a configuration selector mutation
+      description: >-
+        Validates the full candidate change against strict patch schemas (never converts invalid input to a default),
+        writes exactly one atomic write to the target config file, preserves unrelated fields, runs injected post-write
+        side effects, and returns the effective saved value. Default-deny; unknown/guarded/read-only/file-only selectors
+        are rejected with a field-level error before any write. Owner/admin only.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - selector
+                - value
+              properties:
+                selector:
+                  type: string
+                  example: links.enableTicketLinks
+                value:
+                  description: Strictly validated per selector
+      responses:
+        '200':
+          description: Effective saved value and side-effect report
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  selector:
+                    type: string
+                  effective: {}
+                  filePath:
+                    type: string
+                  sideEffects:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        ok:
+                          type: boolean
+                        message:
+                          type: string
+        '400':
+          description: Field-level validation error naming the offending selector
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Validation Error
+                  selector:
+                    type: string
+                  field:
+                    type: string
+                  message:
+                    type: string
+        '403':
+          description: Read-only or anonymous denied
+        '500':
+          $ref: '#/components/schemas/Error500'
+    get:
+      tags:
+        - System
+      summary: Get frontend configuration
+      description: Returns discovery settings for frontend display
+      responses:
+        '200':
+          description: Config settings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  configDir:
+                    type: string
+                  discovery:
+                    type: object
+                    properties:
+                      autoDiscover:
+                        type: boolean
+                      searchPaths:
+                        type: array
+                        items:
+                          type: string
+                      maxDepth:
+                        type: integer
   /api/devtools/logs:
     get:
       tags:
@@ -1063,6 +1529,49 @@ paths:
           description: Access denied or invalid file path
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/documents/favs:
+    put:
+      summary: Persist document fav state
+      tags:
+        - Documents
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - projectId
+                - favItems
+              properties:
+                projectId:
+                  type: string
+                favItems:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - path
+                      - type
+                      - favoritedAt
+                    properties:
+                      path:
+                        type: string
+                      type:
+                        type: string
+                        enum:
+                          - file
+                          - folder
+                      favoritedAt:
+                        type: string
+                        format: date-time
+      responses:
+        '200':
+          description: Fav state persisted
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/documents/configure:
     post:
       summary: Configure document paths for a project
@@ -1098,6 +1607,163 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/documents/preview-token:
+    post:
+      summary: Mint a short-lived preview token for an HTML document
+      tags:
+        - Documents
+      description: |
+        Owner-only. Mints a short-lived (<=300s), directory-scoped HMAC token
+        that the sandboxed HTML preview iframe uses as its credential. The
+        token is placed in the iframe src PATH (not a query param) so that
+        relative subresources inherit the same credential. Read-token and
+        shared sessions are rejected in v1.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - projectId
+                - filePath
+              properties:
+                projectId:
+                  type: string
+                filePath:
+                  type: string
+                  description: Project-relative path to the HTML file
+      responses:
+        '200':
+          description: Preview token minted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreviewTokenResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          description: Read-only or shared session cannot mint preview tokens
+  '/api/documents/raw-preview/{token}/{documentPath}':
+    get:
+      summary: Serve a raw document asset from a token-scoped virtual root
+      tags:
+        - Documents
+      description: |
+        Serves raw bytes for HTML preview and its relative subresources. The
+        token is the credential (the opaque sandboxed iframe cannot send the
+        SameSite=Strict session cookie). Responses carry the pinned CSP
+        (sandbox allow-scripts; default-src 'none'; connect-src 'none'),
+        X-Content-Type-Options nosniff, and X-Frame-Options SAMEORIGIN
+        (overriding the global DENY so the iframe can load). Every request
+        re-runs HMAC signature verification, token-scope, configured-paths,
+        and project-root containment checks.
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: documentPath
+          in: path
+          required: true
+          schema:
+            type: string
+            format: path
+      responses:
+        '200':
+          description: Raw document bytes
+          content:
+            text/html:
+              schema:
+                type: string
+                format: binary
+            text/css:
+              schema:
+                type: string
+                format: binary
+            text/javascript:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+        '403':
+          description: Invalid
+          expired: null
+          or out-of-scope token; traversal attempt: null
+        '404':
+          description: Unknown project or file
+        '415':
+          description: Unsupported document type
+  /api/pins:
+    get:
+      summary: 'Read the user''s pinned tickets (cross-project, reconciled)'
+      tags:
+        - Pins
+      responses:
+        '200':
+          description: Reconciled pin state (stale project codes dropped)
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - pins
+                properties:
+                  pins:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - projectCode
+                        - ticketCode
+                        - favoritedAt
+                      properties:
+                        projectCode:
+                          type: string
+                        ticketCode:
+                          type: string
+                          pattern: '^[A-Z][A-Z0-9]*-[0-9]+$'
+                        favoritedAt:
+                          type: string
+                          format: date-time
+    put:
+      summary: Replace the user's entire pin set (whole-list replace)
+      tags:
+        - Pins
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - pins
+              properties:
+                pins:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - projectCode
+                      - ticketCode
+                      - favoritedAt
+                    properties:
+                      projectCode:
+                        type: string
+                      ticketCode:
+                        type: string
+                      favoritedAt:
+                        type: string
+                        format: date-time
+      responses:
+        '200':
+          description: Pin state persisted
+        '400':
+          $ref: '#/components/responses/BadRequest'
   /api/projects:
     get:
       summary: List all projects
@@ -1305,6 +1971,44 @@ paths:
                 $ref: '#/components/schemas/Project'
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/search:
+    post:
+      summary: 'Unified search across projects, tickets, and documents'
+      tags:
+        - Search
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - query
+              properties:
+                query:
+                  type: string
+                  minLength: 1
+                scope:
+                  type: string
+                  enum:
+                    - global
+                    - tickets
+                    - projects
+                    - documents
+                  default: global
+                limitPerGroup:
+                  type: integer
+                  minimum: 1
+                  maximum: 10
+                  default: 5
+                limitTotal:
+                  type: integer
+                  minimum: 1
+                  maximum: 30
+                  default: 15
+      responses:
+        '200':
+          description: Search results grouped by entity type
   /api/events:
     get:
       summary: Server-Sent Events stream
@@ -1483,33 +2187,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error500'
-  /api/config:
-    get:
-      tags:
-        - System
-      summary: Get frontend configuration
-      description: Returns discovery settings for frontend display
-      responses:
-        '200':
-          description: Config settings
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  configDir:
-                    type: string
-                  discovery:
-                    type: object
-                    properties:
-                      autoDiscover:
-                        type: boolean
-                      searchPaths:
-                        type: array
-                        items:
-                          type: string
-                      maxDepth:
-                        type: integer
   /api/config/global:
     get:
       tags:

@@ -20,6 +20,7 @@ import type {
 } from '../models/Ticket.js'
 import type { CRStatus } from '../models/Types.js'
 import type { ProjectionClientPort } from './cloud-sync/projection-sync.js'
+import type { RuleTicket } from './epicRules.js'
 import type { ReadResult } from './project/types.js'
 import type {
   AttrOperation,
@@ -31,26 +32,39 @@ import type {
 } from './ticket/types.js'
 import { readdir, readFile } from 'node:fs/promises'
 import * as path from 'node:path'
-import { CoordinatorError, CRStatus as CRStatusEnum } from '@mdt/domain-contracts'
+import {
+  CoordinatorError,
+  CRStatus as CRStatusEnum,
+} from '@mdt/domain-contracts'
 import * as fs from 'fs-extra'
 import { getTicketsPath } from '../models/Project.js'
 import {
   arrayToString,
   TICKET_UPDATE_ALLOWED_ATTRS,
 } from '../models/Ticket.js'
+import { CRLevel } from '../models/Types.js'
 import { DEFAULTS, getDefaultPaths } from '../utils/constants.js'
 import { formatCrKey } from '../utils/keyNormalizer.js'
 import { logQuiet } from '../utils/logger.js'
 import { bindingFromEnabledConnection } from './cloud-sync/allocator-strategy.js'
 import { CloudProjectionClient as HttpCloudProjectionClient } from './cloud-sync/CloudProjectionClient.js'
 import { buildEffectiveCloudSyncConfig } from './cloud-sync/config.js'
-import { CloudCreateOrchestrator, projectedHeaderHash } from './cloud-sync/create-orchestrator.js'
+import {
+  CloudCreateOrchestrator,
+  projectedHeaderHash,
+} from './cloud-sync/create-orchestrator.js'
 import { RuntimeCloudCredentialProvider } from './cloud-sync/credential-providers.js'
 import { CloudOperationJournal } from './cloud-sync/operation-journal.js'
 import { ProjectStateStore } from './cloud-sync/project-state-store.js'
 import { CloudProjectionSync } from './cloud-sync/projection-sync.js'
 import { resolveTrustedServiceProfile } from './cloud-sync/trusted-service-profile.js'
 import { CRService as SharedCRService } from './CRService.js'
+import {
+  assertEpicClosable,
+  EpicRuleError,
+  resolvePhaseEpicTarget,
+
+} from './epicRules.js'
 import { ProjectService } from './ProjectService.js'
 import { ServiceError } from './ServiceError.js'
 import { TemplateService } from './TemplateService.js'
@@ -65,8 +79,12 @@ import { TicketLocationResolver } from './ticket/TicketLocationResolver.js'
  */
 export interface CloudRuntimeDependencies {
   credentialProvider?: CloudCredentialProvider
-  coordinatorFactory?: (binding: ProjectCloudSyncBinding) => CloudSyncCoordinator
-  projectionClientFactory?: (binding: ProjectCloudSyncBinding) => ProjectionClientPort
+  coordinatorFactory?: (
+    binding: ProjectCloudSyncBinding,
+  ) => CloudSyncCoordinator
+  projectionClientFactory?: (
+    binding: ProjectCloudSyncBinding,
+  ) => ProjectionClientPort
   journalRoot?: string
   /**
    * CONFIG_DIR root for the cloud connection store
@@ -110,15 +128,22 @@ export class TicketService {
   private readonly quiet: boolean
   private readonly cloudRuntime: CloudRuntimeDependencies
 
-  constructor(quiet: boolean = false, cloudRuntime: CloudRuntimeDependencies = {}) {
+  constructor(
+    quiet: boolean = false,
+    cloudRuntime: CloudRuntimeDependencies = {},
+  ) {
     this.projectService = new ProjectService(quiet)
     this.templateService = new TemplateService(undefined, quiet)
-    this.ticketLocationResolver = new TicketLocationResolver(this.projectService)
+    this.ticketLocationResolver = new TicketLocationResolver(
+      this.projectService,
+    )
     this.quiet = quiet
     this.cloudRuntime = cloudRuntime
   }
 
-  async listTickets(request: ListTicketsRequest): Promise<ReadResult<Ticket[]>> {
+  async listTickets(
+    request: ListTicketsRequest,
+  ): Promise<ReadResult<Ticket[]>> {
     const project = await this.requireProject(request.projectRef)
     let tickets = await this.listCRs(project, request.filters)
 
@@ -130,7 +155,10 @@ export class TicketService {
     const offset = request.offset ?? 0
     const limit = request.limit
     if (limit !== undefined || offset > 0) {
-      tickets = tickets.slice(offset, limit !== undefined ? offset + limit : undefined)
+      tickets = tickets.slice(
+        offset,
+        limit !== undefined ? offset + limit : undefined,
+      )
     }
 
     return { data: tickets }
@@ -179,8 +207,9 @@ export class TicketService {
       const effectiveConfig = buildEffectiveCloudSyncConfig(
         this.projectService.getGlobalConfig().cloudSync,
       )
-      const credentialProvider = this.cloudRuntime.credentialProvider
-        ?? new RuntimeCloudCredentialProvider()
+      const credentialProvider
+        = this.cloudRuntime.credentialProvider
+          ?? new RuntimeCloudCredentialProvider()
       const credential = await credentialProvider.resolve(binding.serviceUrl)
       if (!credential) {
         return {
@@ -193,11 +222,16 @@ export class TicketService {
           error: 'authentication_required',
         }
       }
-      const client = this.cloudRuntime.projectionClientFactory?.(binding)
-        ?? new HttpCloudProjectionClient({
-          serviceUrl: binding.serviceUrl,
-          globalConfig: effectiveConfig,
-        }, binding.projectId, after)
+      const client
+        = this.cloudRuntime.projectionClientFactory?.(binding)
+          ?? new HttpCloudProjectionClient(
+            {
+              serviceUrl: binding.serviceUrl,
+              globalConfig: effectiveConfig,
+            },
+            binding.projectId,
+            after,
+          )
       const sync = new CloudProjectionSync({
         binding,
         allowedOrigins: effectiveConfig.allowedOrigins,
@@ -240,7 +274,10 @@ export class TicketService {
         nextCursor: after,
         hasMore: false,
         stale: true,
-        error: error instanceof CoordinatorError ? error.code : 'coordination_unavailable',
+        error:
+          error instanceof CoordinatorError
+            ? error.code
+            : 'coordination_unavailable',
       }
     }
   }
@@ -256,7 +293,9 @@ export class TicketService {
     return { data: ticket }
   }
 
-  async updateTicketAttributes(request: UpdateTicketAttributesRequest): Promise<TicketWriteResult<AttrOperation[]>> {
+  async updateTicketAttributes(
+    request: UpdateTicketAttributesRequest,
+  ): Promise<TicketWriteResult<AttrOperation[]>> {
     const project = await this.requireProject(request.projectRef)
     const currentTicket = await this.getCR(project, request.ticketKey)
 
@@ -283,8 +322,12 @@ export class TicketService {
         const pending = updates[field]
         if (Array.isArray(pending))
           return pending
-        if (typeof pending === 'string' && pending)
-          return pending.split(',').map(item => item.trim()).filter(Boolean)
+        if (typeof pending === 'string' && pending) {
+          return pending
+            .split(',')
+            .map(item => item.trim())
+            .filter(Boolean)
+        }
         return this.getRelationField(currentTicket, field)
       }
 
@@ -292,18 +335,27 @@ export class TicketService {
         if (this.isRelationField(operation.field)) {
           const nextValue = Array.isArray(operation.value)
             ? operation.value
-            : (operation.value ? [operation.value] : [])
+            : operation.value
+              ? [operation.value]
+              : []
           const currentRelationValue = resolveRelationValue(operation.field)
 
-          if (JSON.stringify(currentRelationValue) !== JSON.stringify(nextValue)) {
+          if (
+            JSON.stringify(currentRelationValue) !== JSON.stringify(nextValue)
+          ) {
             updates[operation.field] = nextValue
             changedFields.push(operation.field)
           }
           continue
         }
 
-        const currentValue = this.getTicketField(currentTicket, operation.field)
-        const nextValue = Array.isArray(operation.value) ? operation.value.join(',') : operation.value
+        const currentValue = this.getTicketField(
+          currentTicket,
+          operation.field,
+        )
+        const nextValue = Array.isArray(operation.value)
+          ? operation.value.join(',')
+          : operation.value
         if (currentValue !== nextValue) {
           updates[operation.field] = nextValue
           changedFields.push(operation.field)
@@ -312,11 +364,17 @@ export class TicketService {
       }
 
       const currentRelationValue = resolveRelationValue(operation.field)
-      const normalizedValues = Array.isArray(operation.value) ? operation.value : [operation.value]
+      const normalizedValues = Array.isArray(operation.value)
+        ? operation.value
+        : [operation.value]
 
       if (operation.op === 'add') {
-        const nextValue = [...new Set([...currentRelationValue, ...normalizedValues])]
-        if (JSON.stringify(currentRelationValue) !== JSON.stringify(nextValue)) {
+        const nextValue = [
+          ...new Set([...currentRelationValue, ...normalizedValues]),
+        ]
+        if (
+          JSON.stringify(currentRelationValue) !== JSON.stringify(nextValue)
+        ) {
           updates[operation.field] = nextValue
           changedFields.push(operation.field)
         }
@@ -324,7 +382,9 @@ export class TicketService {
       }
 
       const valuesToRemove = new Set(normalizedValues)
-      const nextValue = currentRelationValue.filter(value => !valuesToRemove.has(value))
+      const nextValue = currentRelationValue.filter(
+        value => !valuesToRemove.has(value),
+      )
       if (JSON.stringify(currentRelationValue) !== JSON.stringify(nextValue)) {
         updates[operation.field] = nextValue
         changedFields.push(operation.field)
@@ -344,7 +404,9 @@ export class TicketService {
 
     const updatedTicket = await this.getCR(project, request.ticketKey)
     if (!updatedTicket) {
-      throw ServiceError.persistenceError(`Ticket ${request.ticketKey} disappeared after update`)
+      throw ServiceError.persistenceError(
+        `Ticket ${request.ticketKey} disappeared after update`,
+      )
     }
 
     return {
@@ -439,10 +501,13 @@ export class TicketService {
 
       // Use MarkdownService to scan only the resolved directory
       const { MarkdownService } = await import('./MarkdownService.js')
-      const tickets = await MarkdownService.scanMarkdownFiles(fullCRPath, location.projectRoot)
+      const tickets = await MarkdownService.scanMarkdownFiles(
+        fullCRPath,
+        location.projectRoot,
+      )
 
-      const targetCR = tickets.find(cr =>
-        cr.code.toUpperCase() === key.toUpperCase(),
+      const targetCR = tickets.find(
+        cr => cr.code.toUpperCase() === key.toUpperCase(),
       )
 
       if (!targetCR) {
@@ -474,8 +539,15 @@ export class TicketService {
    *   - Disabled / malformed / untrusted connection: fail closed (BR-4.2). A
    *     disabled connection never resumes local numbering.
    */
-  async createCR(project: Project, crType: string, data: TicketData): Promise<Ticket> {
+  async createCR(
+    project: Project,
+    crType: string,
+    data: TicketData,
+  ): Promise<Ticket> {
     try {
+      // MDT-205: validate a key-shaped phaseEpic target on create too.
+      await this.assertPhaseEpicTarget(project, data.phaseEpic)
+
       const connection = await this.resolveCloudConnection(project)
       if (connection.kind === 'absent') {
         return this.createLocalTicketWithNumber(
@@ -495,9 +567,12 @@ export class TicketService {
       const binding = bindingFromEnabledConnection(connection.connection)
 
       const globalConfig = this.projectService.getGlobalConfig()
-      const effectiveConfig = buildEffectiveCloudSyncConfig(globalConfig.cloudSync)
+      const effectiveConfig = buildEffectiveCloudSyncConfig(
+        globalConfig.cloudSync,
+      )
       const journal = new CloudOperationJournal({
-        rootDir: this.cloudRuntime.journalRoot
+        rootDir:
+          this.cloudRuntime.journalRoot
           ?? path.join(getDefaultPaths().CONFIG_DIR, 'cloud-sync', 'journals'),
         physicalRepoPath: project.project.path,
       })
@@ -505,7 +580,8 @@ export class TicketService {
         binding,
         allowedOrigins: effectiveConfig.allowedOrigins,
         journal,
-        credentialProvider: this.cloudRuntime.credentialProvider
+        credentialProvider:
+          this.cloudRuntime.credentialProvider
           ?? new RuntimeCloudCredentialProvider(),
         coordinator: this.cloudRuntime.coordinatorFactory?.(binding),
       })
@@ -569,7 +645,10 @@ export class TicketService {
     ticket.content = markdownContent
     if (exclusive) {
       try {
-        await fs.outputFile(filePath, markdownContent, { encoding: 'utf8', flag: 'wx' })
+        await fs.outputFile(filePath, markdownContent, {
+          encoding: 'utf8',
+          flag: 'wx',
+        })
       }
       catch (error) {
         if ((error as NodeJS.ErrnoException).code !== 'EEXIST') {
@@ -608,19 +687,134 @@ export class TicketService {
       priority: ticket.priority || null,
       assignee: ticket.assignee || null,
       date_created: ticket.dateCreated?.toISOString() ?? null,
-      last_modified: ticket.lastModified?.toISOString() ?? new Date().toISOString(),
+      last_modified:
+        ticket.lastModified?.toISOString() ?? new Date().toISOString(),
+    }
+  }
+
+  /**
+   * MDT-205: resolve a ticket-key-shaped phaseEpic value to its target ticket,
+   * including cross-project keys (e.g. ABC-012). Returns null when the target
+   * is absent. Free-text (non-key) values are never looked up here.
+   */
+  private async resolvePhaseEpicTargetTicket(
+    project: Project,
+    value: string,
+  ): Promise<Ticket | null> {
+    const match = value.trim().match(/^([A-Z][A-Z0-9]{1,4})-(\d{1,5})$/i)
+    if (!match) {
+      return null
+    }
+    const targetCode = match[0].toUpperCase()
+    const targetProjectCode = match[1].toUpperCase()
+    const activeProjectCode = project.project.code?.toUpperCase()
+
+    // Same project: resolve within the active project.
+    if (!activeProjectCode || targetProjectCode === activeProjectCode) {
+      return this.getCR(project, targetCode)
+    }
+
+    // Cross-project key (Edge-1): locate the target project by code and look there.
+    const targetProject
+      = await this.projectService.getProjectByCodeOrId(targetProjectCode)
+    if (!targetProject) {
+      return null
+    }
+    return this.getCR(targetProject, targetCode)
+  }
+
+  /**
+   * MDT-205: enforce phaseEpic target validation on a write.
+   * Key-shaped values must point at a usable epic (Approved / Implemented);
+   * free text and clears are allowed untouched (Edge-2, Edge-6).
+   */
+  private async assertPhaseEpicTarget(
+    project: Project,
+    value: string | undefined | null,
+  ): Promise<void> {
+    const resolution = resolvePhaseEpicTarget(value, undefined)
+    // ok (clear) and skipped (free text) need no lookup.
+    if (resolution.outcome === 'ok' || resolution.outcome === 'skipped') {
+      return
+    }
+
+    const target = await this.resolvePhaseEpicTargetTicket(
+      project,
+      (value ?? '').trim(),
+    )
+    const finalResolution = resolvePhaseEpicTarget(value, target ?? null)
+    if (finalResolution.outcome === 'reject') {
+      throw ServiceError.invalidOperation(finalResolution.message, {
+        epicErrorCode: finalResolution.code,
+        target: (value ?? '').trim(),
+      })
+    }
+  }
+
+  /**
+   * MDT-205: enforce the epic close guard. An epic may not move to Implemented
+   * while it has non-terminal children. Scoped to epics only (C-4); non-epic
+   * tickets and all other transitions are unaffected.
+   *
+   * Scans the project-local ticket directory via the same resolver + scan path
+   * that getCR uses, so it works for any project (registered or not) and needs
+   * no global-registry lookup.
+   */
+  private async assertEpicCloseAllowed(
+    project: Project,
+    epic: Ticket,
+    newStatus: string,
+  ): Promise<void> {
+    if (epic.level !== CRLevel.EPIC || newStatus !== CRStatusEnum.IMPLEMENTED) {
+      return
+    }
+    const location = await this.ticketLocationResolver.resolve(
+      project,
+      epic.code,
+    )
+    const fullCRPath = path.join(location.projectRoot, location.ticketsPath)
+    const { MarkdownService } = await import('./MarkdownService.js')
+    const allTickets = await MarkdownService.scanMarkdownFiles(
+      fullCRPath,
+      location.projectRoot,
+    )
+    const children: RuleTicket[] = allTickets.filter(
+      t =>
+        t.phaseEpic && t.phaseEpic.toUpperCase() === epic.code.toUpperCase(),
+    )
+    try {
+      assertEpicClosable(
+        { code: epic.code, level: epic.level, status: epic.status },
+        children,
+      )
+    }
+    catch (e) {
+      if (e instanceof EpicRuleError) {
+        throw ServiceError.invalidOperation(e.message, {
+          epicErrorCode: e.code,
+          ...(e.details as Record<string, unknown>),
+        })
+      }
+      throw e
     }
   }
 
   /**
    * Update CR status with validation
    */
-  async updateCRStatus(project: Project, key: string, status: CRStatus): Promise<boolean> {
+  async updateCRStatus(
+    project: Project,
+    key: string,
+    status: CRStatus,
+  ): Promise<boolean> {
     try {
       const cr = await this.getCR(project, key)
       if (!cr) {
         throw new Error(`CR '${key}' not found in project '${project.id}'`)
       }
+
+      // MDT-205: epic close guard — epics to Implemented need all children terminal.
+      await this.assertEpicCloseAllowed(project, cr, status)
 
       // Note: Status transition validation removed to allow free movement
       // This accommodates legacy/unknown status values in existing tickets
@@ -636,22 +830,44 @@ export class TicketService {
       await fs.outputFile(cr.filePath, updatedContent, 'utf-8')
       const updated = await this.getCR(project, key)
       if (updated) {
-        await this.syncTicketProjectionBestEffort(project, cr, updated, 'active')
+        await this.syncTicketProjectionBestEffort(
+          project,
+          cr,
+          updated,
+          'active',
+        )
       }
 
       return true
     }
     catch (error) {
+      // MDT-205: preserve typed domain errors (epic close guard) so callers can
+      // map epicErrorCode to actionable user-facing text across surfaces.
+      if (error instanceof ServiceError) {
+        throw error
+      }
       // Enhanced error handling with specific failure types
       if (error instanceof Error) {
         if (error.message.includes('ENOENT')) {
-          throw new Error(`Failed to update CR '${key}': File not found or deleted`)
+          throw new Error(
+            `Failed to update CR '${key}': File not found or deleted`,
+          )
         }
-        if (error.message.includes('EACCES') || error.message.includes('EPERM')) {
-          throw new Error(`Failed to update CR '${key}': Permission denied. Check file permissions`)
+        if (
+          error.message.includes('EACCES')
+          || error.message.includes('EPERM')
+        ) {
+          throw new Error(
+            `Failed to update CR '${key}': Permission denied. Check file permissions`,
+          )
         }
-        if (error.message.includes('EBUSY') || error.message.includes('EMFILE')) {
-          throw new Error(`Failed to update CR '${key}': File locked or in use by another process`)
+        if (
+          error.message.includes('EBUSY')
+          || error.message.includes('EMFILE')
+        ) {
+          throw new Error(
+            `Failed to update CR '${key}': File locked or in use by another process`,
+          )
         }
         if (error.message.includes('Invalid status transition')) {
           throw error // Re-throw validation errors as-is
@@ -669,7 +885,11 @@ export class TicketService {
   /**
    * Update CR attributes (partial update)
    */
-  async updateCRAttrs(project: Project, key: string, attributes: Partial<TicketData>): Promise<boolean> {
+  async updateCRAttrs(
+    project: Project,
+    key: string,
+    attributes: Partial<TicketData>,
+  ): Promise<boolean> {
     try {
       const cr = await this.getCR(project, key)
       if (!cr) {
@@ -678,7 +898,8 @@ export class TicketService {
 
       // Validate that only allowed attributes are being updated
       const invalidAttributes = Object.keys(attributes).filter(
-        field => !TICKET_UPDATE_ALLOWED_ATTRS.has(field as keyof TicketUpdateAttrs),
+        field =>
+          !TICKET_UPDATE_ALLOWED_ATTRS.has(field as keyof TicketUpdateAttrs),
       )
 
       if (invalidAttributes.length > 0) {
@@ -689,6 +910,11 @@ export class TicketService {
         )
       }
 
+      // MDT-205: validate a key-shaped phaseEpic target before persisting.
+      if ('phaseEpic' in attributes) {
+        await this.assertPhaseEpicTarget(project, attributes.phaseEpic)
+      }
+
       // Read current file content
       const content = await readFile(cr.filePath, 'utf-8')
       let updatedContent = content
@@ -697,8 +923,14 @@ export class TicketService {
       for (const [field, value] of Object.entries(attributes)) {
         if (value !== undefined && value !== null) {
           // Convert arrays to comma-separated strings for YAML
-          const stringValue = Array.isArray(value) ? value.join(',') : String(value)
-          updatedContent = this.updateYAMLField(updatedContent, field, stringValue)
+          const stringValue = Array.isArray(value)
+            ? value.join(',')
+            : String(value)
+          updatedContent = this.updateYAMLField(
+            updatedContent,
+            field,
+            stringValue,
+          )
         }
       }
 
@@ -706,18 +938,35 @@ export class TicketService {
       await fs.outputFile(cr.filePath, updatedContent, 'utf-8')
       const updated = await this.getCR(project, key)
       if (updated) {
-        await this.syncTicketProjectionBestEffort(project, cr, updated, 'active')
+        await this.syncTicketProjectionBestEffort(
+          project,
+          cr,
+          updated,
+          'active',
+        )
       }
 
       return true
     }
     catch (error) {
+      // MDT-205: preserve typed domain errors (phaseEpic target validation) so
+      // callers can map epicErrorCode to actionable user-facing text.
+      if (error instanceof ServiceError) {
+        throw error
+      }
       if (error instanceof Error) {
         if (error.message.includes('ENOENT')) {
-          throw new Error(`Failed to update CR '${key}': File not found or deleted`)
+          throw new Error(
+            `Failed to update CR '${key}': File not found or deleted`,
+          )
         }
-        if (error.message.includes('EACCES') || error.message.includes('EPERM')) {
-          throw new Error(`Failed to update CR '${key}': Permission denied. Check file permissions`)
+        if (
+          error.message.includes('EACCES')
+          || error.message.includes('EPERM')
+        ) {
+          throw new Error(
+            `Failed to update CR '${key}': Permission denied. Check file permissions`,
+          )
         }
         if (error.message.includes('not found')) {
           throw error // Re-throw CR not found errors as-is
@@ -731,7 +980,10 @@ export class TicketService {
   /**
    * Validate status transitions
    */
-  private validateStatusTransition(currentStatus: string, newStatus: string): void {
+  private validateStatusTransition(
+    currentStatus: string,
+    newStatus: string,
+  ): void {
     // Allow same status (no-op updates)
     if (currentStatus === newStatus) {
       return
@@ -801,7 +1053,9 @@ export class TicketService {
 
     if (!allowedTransitions.includes(newStatus)) {
       const validOptions = allowedTransitions.join(', ')
-      throw new Error(`Invalid status transition from '${currentStatus}' to '${newStatus}'. Valid transitions from '${currentStatus}': ${validOptions}`)
+      throw new Error(
+        `Invalid status transition from '${currentStatus}' to '${newStatus}'. Valid transitions from '${currentStatus}': ${validOptions}`,
+      )
     }
   }
 
@@ -811,7 +1065,7 @@ export class TicketService {
   }
 
   private isRelationField(field: string): boolean {
-    return RELATION_FIELDS.includes(field as typeof RELATION_FIELDS[number])
+    return RELATION_FIELDS.includes(field as (typeof RELATION_FIELDS)[number])
   }
 
   private validateAttrOperations(operations: AttrOperation[]): void {
@@ -822,7 +1076,10 @@ export class TicketService {
       // dependsOn instead; the migration + derivation hook keeps blocks in
       // sync. See architecture.md D3 and bdd.md S14.
       assertNotDerivedField(operation.field, operation.op)
-      if ((operation.op === 'add' || operation.op === 'remove') && !this.isRelationField(operation.field)) {
+      if (
+        (operation.op === 'add' || operation.op === 'remove')
+        && !this.isRelationField(operation.field)
+      ) {
         throw ServiceError.invalidOperation(
           `Cannot use '${operation.op}' operation on non-relation field '${operation.field}'. Only relation fields (${RELATION_FIELDS.join(', ')}) support add/remove operations.`,
           { field: operation.field, op: operation.op },
@@ -837,7 +1094,10 @@ export class TicketService {
       return value.filter((item): item is string => typeof item === 'string')
     }
     if (typeof value === 'string' && value) {
-      return value.split(',').map(item => item.trim()).filter(Boolean)
+      return value
+        .split(',')
+        .map(item => item.trim())
+        .filter(Boolean)
     }
     return []
   }
@@ -883,7 +1143,9 @@ export class TicketService {
    * CONFIG_DIR state never grants identity — the cloud re-verifies membership
    * per operation (BR-3.1, TASK-8).
    */
-  private async resolveCloudConnection(project: Project): Promise<ProjectConnectionRead> {
+  private async resolveCloudConnection(
+    project: Project,
+  ): Promise<ProjectConnectionRead> {
     const globalConfig = this.projectService.getGlobalConfig()
     const profile = resolveTrustedServiceProfile({
       operatorOrigins: globalConfig.cloudSync.allowedOrigins,
@@ -909,7 +1171,10 @@ export class TicketService {
         return
       }
       const binding = bindingFromEnabledConnection(connection.connection)
-      const ticketNumber = Number.parseInt(next.code.split('-').pop() ?? '', 10)
+      const ticketNumber = Number.parseInt(
+        next.code.split('-').pop() ?? '',
+        10,
+      )
       if (!Number.isSafeInteger(ticketNumber))
         return
 
@@ -925,7 +1190,8 @@ export class TicketService {
           'projection-journal',
         ),
         physicalRepoPath: project.project.path,
-        credentialProvider: this.cloudRuntime.credentialProvider
+        credentialProvider:
+          this.cloudRuntime.credentialProvider
           ?? new RuntimeCloudCredentialProvider(),
         client: this.cloudRuntime.projectionClientFactory?.(binding),
       })
@@ -958,7 +1224,9 @@ export class TicketService {
       let highestExistingNumber = 0
 
       for (const filename of crFiles) {
-        const match = filename.match(new RegExp(`${project.project.code}-(\\d+)-`, 'i'))
+        const match = filename.match(
+          new RegExp(`${project.project.code}-(\\d+)-`, 'i'),
+        )
         if (match) {
           const number = Number.parseInt(match[1], 10)
           if (!Number.isNaN(number) && number > highestExistingNumber) {
@@ -968,7 +1236,10 @@ export class TicketService {
       }
 
       // Use file scanning only (counter file dependency removed per MDT-071)
-      const nextNumber = Math.max(highestExistingNumber + 1, project.project.startNumber || 1)
+      const nextNumber = Math.max(
+        highestExistingNumber + 1,
+        project.project.startNumber || 1,
+      )
 
       return nextNumber
     }
@@ -990,40 +1261,60 @@ export class TicketService {
       return true
 
     if (filters.status) {
-      const values = Array.isArray(filters.status) ? filters.status : [filters.status]
+      const values = Array.isArray(filters.status)
+        ? filters.status
+        : [filters.status]
       if (!values.some(v => fuzzyMatch(ticket.status, v)))
         return false
     }
 
     if (filters.type) {
-      const values = Array.isArray(filters.type) ? filters.type : [filters.type]
+      const values = Array.isArray(filters.type)
+        ? filters.type
+        : [filters.type]
       if (!values.some(v => fuzzyMatch(ticket.type, v)))
         return false
     }
 
     if (filters.priority) {
-      const values = Array.isArray(filters.priority) ? filters.priority : [filters.priority]
+      const values = Array.isArray(filters.priority)
+        ? filters.priority
+        : [filters.priority]
       if (!values.some(v => fuzzyMatch(ticket.priority, v)))
         return false
     }
 
     if (filters.assignee) {
-      const values = Array.isArray(filters.assignee) ? filters.assignee : [filters.assignee]
+      const values = Array.isArray(filters.assignee)
+        ? filters.assignee
+        : [filters.assignee]
       if (!values.some(v => fuzzyMatch(ticket.assignee || '', v)))
         return false
     }
 
     if (filters.phaseEpic) {
-      const values = Array.isArray(filters.phaseEpic) ? filters.phaseEpic : [filters.phaseEpic]
+      const values = Array.isArray(filters.phaseEpic)
+        ? filters.phaseEpic
+        : [filters.phaseEpic]
       if (!values.some(v => fuzzyMatch(ticket.phaseEpic || '', v)))
         return false
     }
 
     if (filters.dateRange) {
-      if (filters.dateRange.start && ticket.dateCreated && ticket.dateCreated < filters.dateRange.start)
+      if (
+        filters.dateRange.start
+        && ticket.dateCreated
+        && ticket.dateCreated < filters.dateRange.start
+      ) {
         return false
-      if (filters.dateRange.end && ticket.dateCreated && ticket.dateCreated > filters.dateRange.end)
+      }
+      if (
+        filters.dateRange.end
+        && ticket.dateCreated
+        && ticket.dateCreated > filters.dateRange.end
+      ) {
         return false
+      }
     }
 
     return true
@@ -1064,9 +1355,13 @@ export class TicketService {
     sections.push('---')
     sections.push(`code: ${ticket.code}`)
     sections.push(`status: ${ticket.status}`)
-    sections.push(`dateCreated: ${ticket.dateCreated?.toISOString() || new Date().toISOString()}`)
+    sections.push(
+      `dateCreated: ${ticket.dateCreated?.toISOString() || new Date().toISOString()}`,
+    )
     sections.push(`type: ${ticket.type}`)
     sections.push(`priority: ${ticket.priority}`)
+    if (ticket.level)
+      sections.push(`level: ${ticket.level}`)
 
     // Optional fields - only include if they have values
     if (ticket.phaseEpic)
@@ -1079,8 +1374,11 @@ export class TicketService {
       sections.push(`blocks: ${arrayToString(ticket.blocks)}`)
     if (ticket.assignee)
       sections.push(`assignee: ${ticket.assignee}`)
-    if (ticket.implementationDate)
-      sections.push(`implementationDate: ${ticket.implementationDate.toISOString()}`)
+    if (ticket.implementationDate) {
+      sections.push(
+        `implementationDate: ${ticket.implementationDate.toISOString()}`,
+      )
+    }
     if (ticket.implementationNotes)
       sections.push(`implementationNotes: ${ticket.implementationNotes}`)
 
@@ -1101,7 +1399,8 @@ export class TicketService {
       const template = this.templateService.getTemplate(ticket.type)
 
       // Replace placeholder title in template
-      const templateContent = template.template.replace('[Research Title]', ticket.title)
+      const templateContent = template.template
+        .replace('[Research Title]', ticket.title)
         .replace('[Bug Title]', ticket.title)
         .replace('[Feature Title]', ticket.title)
         .replace('[Architecture Title]', ticket.title)
@@ -1126,7 +1425,11 @@ export class TicketService {
   /**
    * Update a single YAML field in markdown content
    */
-  private updateYAMLField(content: string, field: string, value: string): string {
+  private updateYAMLField(
+    content: string,
+    field: string,
+    value: string,
+  ): string {
     const lines = content.split('\n')
 
     // Find the YAML frontmatter section
@@ -1170,7 +1473,12 @@ export class TicketService {
    * @param newSlug - Optional explicit slug. If omitted, derived from newTitle.
    * @returns The updated ticket (with new filePath if renamed)
    */
-  async renameTicket(project: Project, key: string, newTitle: string, newSlug?: string): Promise<Ticket> {
+  async renameTicket(
+    project: Project,
+    key: string,
+    newTitle: string,
+    newSlug?: string,
+  ): Promise<Ticket> {
     const ticket = await this.getCR(project, key)
     if (!ticket) {
       throw ServiceError.ticketNotFound(key)
@@ -1204,10 +1512,17 @@ export class TicketService {
     const location = await this.ticketLocationResolver.resolve(project, key)
     const fullCRPath = path.join(location.projectRoot, location.ticketsPath)
     const { MarkdownService } = await import('./MarkdownService.js')
-    const tickets = await MarkdownService.scanMarkdownFiles(fullCRPath, location.projectRoot)
-    const updated = tickets.find(t => t.code.toUpperCase() === key.toUpperCase())
+    const tickets = await MarkdownService.scanMarkdownFiles(
+      fullCRPath,
+      location.projectRoot,
+    )
+    const updated = tickets.find(
+      t => t.code.toUpperCase() === key.toUpperCase(),
+    )
     if (!updated) {
-      throw ServiceError.persistenceError(`Ticket ${key} disappeared after rename`)
+      throw ServiceError.persistenceError(
+        `Ticket ${key} disappeared after rename`,
+      )
     }
 
     return {
