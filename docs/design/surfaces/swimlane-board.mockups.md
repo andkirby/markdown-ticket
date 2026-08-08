@@ -47,12 +47,15 @@ window "Atlas — Board / Epics":
       text "3 lanes"
     row:
       col:
-        text "EPIC LANE · Auth Overhaul · MDT-180"
+        text "EPIC LANE · Auth Overhaul"
+        button "MDT-180" id="ep1-key"
         row:
           chip "Proposed" id="ep1-status"
-          button "Activate" primary id="ep1-action"
-          progress value=0 max=5 label="0/5" id="ep1-progress"
+          text "0"
           button "▾" id="ep1-chevron"
+        progress value=0 max=5 label="0/5" id="ep1-progress"
+        row:
+          button "Activate" primary id="ep1-action"
         row:
           text "Backlog"
           text "Open"
@@ -70,12 +73,15 @@ window "Atlas — Board / Epics":
             item "—"
     row:
       col:
-        text "EPIC LANE · Cloud Sync · MDT-012"
+        text "EPIC LANE · Cloud Sync"
+        button "MDT-012" id="ep2-key"
         row:
           chip "Approved" id="ep2-status"
-          button "Close" id="ep2-action"
-          progress value=3 max=5 label="3/5" id="ep2-progress"
+          text "3"
           button "▾" id="ep2-chevron"
+        progress value=3 max=5 label="3/5" id="ep2-progress"
+        row:
+          button "Close" id="ep2-action"
         row:
           list:
             item "MDT-200  First slice"
@@ -107,13 +113,14 @@ window "Atlas — Board / Epics":
 
 | Element | Semantic Pattern | Notes |
 |---|---|---|
-| `chip "Proposed"` (Auth lane) | EpicLifecycleControl, Proposed state | hollow indicator; Activate is the primary action |
-| `button "Activate" primary` | Proposed→Approved transition | moves the epic to Approved |
+| `button "MDT-180"` (Auth key) | clickable epic key | `<TicketCode>` glyph-before-key; opens the epic ticket viewer |
+| `chip "Proposed"` (Auth lane) | EpicLifecycleControl, Proposed state | on the status/count row |
+| `button "Activate" primary` | Proposed→Approved transition | sits directly under the progress bar |
 | `button "Close"` (Cloud Sync lane) | Approved→Implemented transition | enabled here because all children terminal |
-| `chip "Approved"` | EpicLifecycleControl, Approved state | half-fill indicator |
+| `chip "Approved"` | EpicLifecycleControl, Approved state | on the status/count row |
 | `progress "3 of 5" percent=60` | mini progress bar | `--epic-N` fill on `--bg-muted` track |
-| `chevron down` | lane collapse toggle | `aria-expanded` |
-| "NO EPIC" lane | `__none` trailing lane | neutral accent, no lifecycle control, no progress |
+| `chevron down` | lane collapse toggle | right-aligned on the status/count row; `aria-expanded` |
+| "NO EPIC" lane | `__none` trailing lane | neutral accent, no lifecycle control, no progress, no key |
 
 ## 3. Lane lifecycle — blocked Close
 
@@ -124,12 +131,15 @@ window "Atlas — Board / Epics":
   panel:
     row:
       col:
-        text "EPIC LANE · Cloud Sync · MDT-012"
+        text "EPIC LANE · Cloud Sync"
+        button "MDT-012" id="ep3-key"
         row:
           chip "Approved" id="ep3-status"
-          button "Close" disabled id="ep3-action"
-          progress value=3 max=5 label="3/5" id="ep3-progress"
+          text "5"
           button "▾"
+        progress value=3 max=5 label="3/5" id="ep3-progress"
+        row:
+          button "Close" disabled id="ep3-action"
         row:
           list:
             item "MDT-200  First slice"
@@ -156,12 +166,15 @@ window "Atlas — Board / Epics":
   panel:
     row:
       col:
-        text "EPIC LANE · Cloud Sync · MDT-012"
+        text "EPIC LANE · Cloud Sync"
+        button "MDT-012" id="ep4-key"
         row:
           chip "Implemented" id="ep4-status"
-          text "✓ Closed" id="ep4-closed"
-          progress value=5 max=5 label="5/5" id="ep4-progress"
+          text "5"
           button "▾"
+        progress value=5 max=5 label="5/5" id="ep4-progress"
+        row:
+          text "✓ Closed" id="ep4-closed"
         row:
           list:
             item "—"
@@ -188,12 +201,15 @@ window "Atlas — Board / Epics":
   panel:
     row:
       col:
-        text "EPIC LANE · Auth Overhaul · MDT-180"
+        text "EPIC LANE · Auth Overhaul"
+        button "MDT-180"
         row:
           chip "Approved"
-          button "Close"
-          progress value=2 max=5 label="2/5"
+          text "2"
           button "▾"
+        progress value=2 max=5 label="2/5"
+        row:
+          button "Close"
         row:
           list:
             item "no highlight"
@@ -205,12 +221,15 @@ window "Atlas — Board / Epics":
             item "no highlight"
     row:
       col:
-        text "EPIC LANE · Cloud Sync · MDT-012"
+        text "EPIC LANE · Cloud Sync"
+        button "MDT-012"
         row:
           chip "Approved"
-          button "Close"
-          progress value=3 max=5 label="3/5"
+          text "3"
           button "▾"
+        progress value=3 max=5 label="3/5"
+        row:
+          button "Close"
         row:
           list:
             item "—"
@@ -239,11 +258,12 @@ window "Atlas — Board / Epics":
       spacer
       button "☰"
     col:
-      text "● Auth Overhaul · MDT-180"
+      text "Auth Overhaul"
+      button "MDT-180"
       row:
         chip "Proposed"
+        text "0"
         button "Activate" primary
-        text "0/5"
       row:
         text "Backlog"
         text "Open"
@@ -259,11 +279,12 @@ window "Atlas — Board / Epics":
         list:
           item "—"
     col:
-      text "● Cloud Sync · MDT-012"
+      text "Cloud Sync"
+      button "MDT-012"
       row:
         chip "Approved"
+        text "3"
         button "Close"
-        text "3/5"
       row:
         text "Backlog"
         text "Open"
@@ -287,7 +308,7 @@ window "Atlas — Board / Epics":
 
 ## Notes
 
-- Epic colors are a fixed `--epic-1..4` rotation; the dot is the only color cue in wireframe (rendered as `●`).
+- Epic colors are a fixed `--epic-1..4` rotation carried on the lane left border and progress fill; there is no color dot before the title.
 - The "Epics" segmented control is shown in the board header. The spec's composition puts it next to sort/refresh; the final App-header placement is owned by `app-header.spec.md`.
 - The flat board is unchanged when "Epics" is off — see `board-layout.spec.md`.
 - Epics never appear as cards in any board mode. This diverges from `designs/board-zai/design3-epics.md` §2 and is documented in MDT-205/MDT-206.

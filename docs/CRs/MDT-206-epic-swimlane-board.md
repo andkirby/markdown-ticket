@@ -146,3 +146,27 @@ dependsOn: MDT-205
 - Tests notes: [tests.md](./MDT-206/tests.md)
 - Tasks trace projection: [tasks.trace.md](./MDT-206/tasks.trace.md)
 - Tasks notes: [tasks.md](./MDT-206/tasks.md)
+
+## 8. Clarifications
+
+### UAT Session 2026-08-08
+
+Approved lane-label refinement round (9 changes). Execution brief: [uat.md](./MDT-206/uat.md).
+
+**Approved changes:**
+- Lifecycle action (`[Activate]`/`[Close]`/`✓ Closed`) moved directly under the progress bar (no longer pinned to the lane bottom).
+- Epic lane key rendered through the shared `<TicketCode>` component (priority glyph + key) — same typography/color as the ticket-card key; clickable, opens the epic ticket viewer.
+- Removed the color dot preceding the lane title.
+- Lane label and lane body capped at `60vh` so long lists do not stretch the lane.
+- Each lane column scrolls independently (`overflow-y: auto`); the outer board still provides synchronized two-axis scroll.
+- Collapse chevron moved to the status-and-count row, aligned right.
+- Lane title word-wraps instead of single-line ellipsis.
+- Design specs (`swimlane-board.spec.md`, `swimlane-board.mockups.md`) aligned to the new structure and scroll model.
+
+**Changed requirement IDs:** `C1` (refined in place — synchronized outer scroll **plus** independent per-column scroll within a lane max-height), `C5` (new — lane-label layout), `BR-2.5` (new — clickable epic key via TicketCode), `epic_lane_key_opens_ticket` (new BDD scenario).
+
+**Updated workflow documents:** `requirements.md`, `tests.md`, `uat.md`, design surface `swimlane-board.spec.md` + `swimlane-board.mockups.md`; all `*.trace.md` projections re-rendered.
+
+**Strict drift/lock:** not used (standard validate + render per stage).
+
+**More implementation required:** no — all 9 changes implemented, tested (6 component + 7 E2E + 862 frontend green), and trace-validated.

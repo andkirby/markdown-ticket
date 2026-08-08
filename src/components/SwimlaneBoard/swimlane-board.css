@@ -119,6 +119,7 @@
     width: 220px;
     flex-shrink: 0;
     min-height: 124px;
+    max-height: 60vh;
     padding: 10px;
     background: var(--bg-elevated);
     border-left: 3px solid var(--epic-color, var(--border-strong));
@@ -128,35 +129,40 @@
     background: var(--bg-muted);
   }
 
-  .swimlane-board__lane-heading {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    min-width: 0;
-  }
-
-  .swimlane-board__epic-dot {
-    width: 9px;
-    height: 9px;
-    margin-top: 4px;
-    border-radius: 999px;
-    background: var(--epic-color, var(--border-strong));
-    flex-shrink: 0;
-  }
-
   .swimlane-board__lane-title {
     display: flex;
     flex-direction: column;
     min-width: 0;
-    flex: 1;
     gap: 2px;
     font-size: var(--fs-md);
   }
 
-  .swimlane-board__lane-title strong {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  .swimlane-board__lane-title-text {
+    overflow-wrap: break-word;
+    word-break: break-word;
+    line-height: 1.3;
+    color: oklch(var(--foreground));
+    font-weight: 600;
+  }
+
+  /* Epic key is a clickable button rendering <TicketCode> (priority glyph +
+     key) so the lane key matches ticket-card key typography/color exactly. */
+  .swimlane-board__lane-key {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    max-width: 100%;
+    padding: 0;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .swimlane-board__lane-key:hover,
+  .swimlane-board__lane-key:focus-visible {
+    background: var(--bg-muted);
   }
 
   .swimlane-board__collapse {
@@ -181,15 +187,25 @@
 
   .swimlane-board__lane-meta,
   .swimlane-board__progress-row,
-  .swimlane-board__lane-footer,
+  .swimlane-board__lane-actions,
   .swimlane-board__lifecycle {
     display: flex;
     align-items: center;
     gap: 8px;
   }
 
-  .swimlane-board__lane-footer {
-    margin-top: auto;
+  /* Status + count + collapse chevron share one row; chevron pushed right. */
+  .swimlane-board__lane-meta {
+    justify-content: flex-start;
+  }
+
+  .swimlane-board__lane-meta .swimlane-board__collapse {
+    margin-left: auto;
+  }
+
+  /* Lifecycle action sits directly under the progress bar, not pinned to the
+     lane label bottom. */
+  .swimlane-board__lane-actions {
     justify-content: space-between;
   }
 
@@ -257,6 +273,10 @@
   .swimlane-board__lane-body {
     display: flex;
     min-height: 124px;
+    /* Cap the lane body so long lists scroll inside each column instead of
+       stretching the lane indefinitely. The sticky lane-label shares this cap
+       via its own max-height. */
+    max-height: 60vh;
   }
 
   .swimlane-board__lane-body[hidden] {
@@ -271,6 +291,10 @@
     gap: 8px;
     padding: 10px;
     min-height: 124px;
+    /* Each column scrolls independently so a long list in one status does not
+       force the whole lane to grow. */
+    overflow-y: auto;
+    overscroll-behavior: contain;
     background: color-mix(in srgb, var(--bg-subtle) 78%, var(--bg-elevated));
     transition: background-color 150ms ease-out, box-shadow 150ms ease-out;
   }

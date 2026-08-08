@@ -8,6 +8,7 @@ import { sortTickets } from '../../utils/sorting'
 import { StatusBadge } from '../Badge/StatusBadge'
 import { useDropZone } from '../Column/useDropZone'
 import TicketCard from '../TicketCard'
+import { TicketCode } from '../TicketCode'
 import { Button } from '../ui/index'
 import {
   buildSwimlaneModel,
@@ -229,12 +230,26 @@ export function SwimlaneBoard({
               data-lane-key={lane.key}
             >
               <div className={`swimlane-board__lane-label ${lane.isNone ? 'swimlane-board__lane-label--none' : ''}`}>
-                <div className="swimlane-board__lane-heading">
-                  <span className="swimlane-board__epic-dot" aria-hidden="true" />
-                  <div className="swimlane-board__lane-title">
-                    <strong>{lane.title}</strong>
-                    {!lane.isNone && <span className="ticket-key">{lane.key}</span>}
-                  </div>
+                <div className="swimlane-board__lane-title">
+                  <strong className="swimlane-board__lane-title-text">{lane.title}</strong>
+                  {!lane.isNone && lane.epic && (
+                    <button
+                      type="button"
+                      className="swimlane-board__lane-key"
+                      aria-label={`Open epic ticket ${lane.key} ${lane.title}`}
+                      title={`Open ${lane.key}`}
+                      onClick={() => onTicketEdit(lane.epic as Ticket)}
+                      data-testid="swimlane-lane-key"
+                      data-lane-key={lane.key}
+                    >
+                      <TicketCode code={lane.key} ticket={lane.epic} />
+                    </button>
+                  )}
+                </div>
+
+                <div className="swimlane-board__lane-meta">
+                  {lane.epic && <StatusBadge status={lane.epic.status} />}
+                  <span className="swimlane-board__count-pill">{lane.tickets.length}</span>
                   <button
                     type="button"
                     className="swimlane-board__collapse"
@@ -246,11 +261,6 @@ export function SwimlaneBoard({
                   >
                     <ChevronDown aria-hidden="true" size={14} />
                   </button>
-                </div>
-
-                <div className="swimlane-board__lane-meta">
-                  {lane.epic && <StatusBadge status={lane.epic.status} />}
-                  <span className="swimlane-board__count-pill">{lane.tickets.length}</span>
                 </div>
 
                 {!lane.isNone && (
@@ -276,7 +286,7 @@ export function SwimlaneBoard({
                 )}
 
                 {lane.epic && lifecycle && (
-                  <div className="swimlane-board__lane-footer">
+                  <div className="swimlane-board__lane-actions">
                     <div className="swimlane-board__lifecycle">
                       {lifecycle.targetStatus
                         ? (
