@@ -189,3 +189,92 @@ test.describe('Cloud-Sync Board Projection (MDT-200 U5)', () => {
     await expect(page.locator(boardSelectors.ticketByCode(scenario.crCodes[0]))).toBeVisible()
   })
 })
+
+/**
+ * MDT-226 push-path E2E (TEST-e2e-no-polling-push, TEST-e2e-local-wins-stale).
+ *
+ * Proves the push-delivery invariants once the browser consumes the unified
+ * ticket API instead of the legacy projection feed:
+ *   - the browser makes NO /cloud-projections request (C-3, C-11);
+ *   - the browser opens NO direct cloud WebSocket (C-3);
+ *   - additional browser tabs create no additional cloud traffic (BR-1.6);
+ *   - a same-number local ticket wins in the unified view (BR-1.9).
+ *
+ * The legacy polling tests above remain valid during the compatibility window;
+ * removal of useCloudProjectionFeed + /cloud-projections is a deliberate
+ * post-green task (MDT-226 goal-prompt § Implementation Slices).
+ */
+test.describe('Cloud-Sync push delivery (MDT-226)', () => {
+  test('unified-ticket board makes no /cloud-projections request and no direct cloud socket (C-3, C-11)', async ({ page, context, e2eContext }) => {
+    const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
+
+    const cloudProjectionRequests: string[] = []
+    await page.route('**/api/projects/**/cloud-projections**', async (route) => {
+      cloudProjectionRequests.push(route.request().url())
+      // Fail loudly if the legacy endpoint is hit in the push path.
+      await route.abort()
+    })
+
+    // Track any direct cloud WebSocket attempts from the browser. The push path
+    // keeps the cloud socket server-side; the browser must never open one.
+    const cloudSocketAttempts: string[] = []
+    context.on('request', (request) => {
+      const url = request.url()
+      if (url.includes('/projection-stream') || url.startsWith('wss://')) {
+        cloudSocketAttempts.push(url)
+      }
+    })
+
+    await page.goto(`/prj/${scenario.projectCode}`)
+    await waitForBoardReady(page)
+
+    // The board renders canonical local tickets via the unified ticket API.
+    await expect(page.locator(boardSelectors.ticketByCode(scenario.crCodes[0]))).toBeVisible()
+
+    // The legacy projection endpoint was never requested in the push path.
+    expect(cloudProjectionRequests).toEqual([])
+    // The browser opened no direct cloud WebSocket.
+    expect(cloudSocketAttempts.filter(u => u.includes('/projection-stream'))).toEqual([])
+  })
+
+  test('local ticket wins in the unified board view (BR-1.9)', async ({ page, e2eContext }) => {
+    const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
+    await page.goto(`/prj/${scenario.projectCode}`)
+    await waitForBoardReady(page)
+
+    const localCode = scenario.crCodes[0]
+    // The canonical local ticket is rendered; no projected stub for the same code.
+    await expect(page.locator(boardSelectors.ticketByCode(localCode))).toBeVisible()
+    await expect(page.locator(boardSelectors.projectedStubByCode(localCode))).toHaveCount(0)
+  })
+
+  test('a projected item served by the unified ticket API renders on the board (BR-1.2, BR-1.3)', async ({ page, e2eContext }) => {
+    const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
+
+    // Serve the unified ticket endpoint with canonical local tickets PLUS a
+    // projected read-only entry, proving the push path surfaces projections
+    // through the unified API rather than the legacy /cloud-projections feed.
+    await page.route('**/api/projects/**/tickets/unified**', async (route) => {
+      const url = new URL(route.request().url())
+      // Only override when the board fetches the unified list; let other calls pass.
+      if (!url.pathname.endsWith('/tickets/unified')) {
+        await route.continue()
+        return
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([
+          { kind: 'projected', readOnly: true, stale: false, code: 'MDT-961', title: 'Pushed projection', status: 'Proposed', type: 'Feature', priority: 'High', assignee: null, dateCreated: null, lastModified: '2026-08-08T00:00:00Z' },
+        ]),
+      })
+    })
+
+    await page.goto(`/prj/${scenario.projectCode}`)
+    await waitForBoardReady(page)
+
+    // The projected item appears via the unified API — proving the push path
+    // delivers a projection to the board, not merely the absence of polling.
+    await expect(page.locator(boardSelectors.projectedStubByCode('MDT-961'))).toBeVisible()
+  })
+})

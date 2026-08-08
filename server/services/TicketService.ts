@@ -5,7 +5,7 @@
  * Per MDT-082: Uses consolidated CRUD operations from shared layer.
  */
 
-import type { TicketUpdateAttrs } from '@mdt/domain-contracts'
+import type { TicketUpdateAttrs, UnifiedTicketItem } from '@mdt/domain-contracts'
 import type { Project } from '@mdt/shared/models/Project.js'
 import type { Ticket, TicketData } from '@mdt/shared/models/Ticket.js'
 import type { CRStatus } from '@mdt/shared/models/Types.js'
@@ -77,12 +77,45 @@ interface ProjectDiscovery {
  * Web Server Ticket Service
  * Adapts shared TicketService for web API use (string projectIds vs Project objects).
  */
+/**
+ * Projection read-model entry for the unified ticket view (MDT-226). A minimal,
+ * transport-free shape so the server TicketService does not import the stream
+ * manager directly.
+ */
+export interface ProjectionReadModelEntry {
+  ticketNumber: number
+  projectionVersion: number
+  projectRevision: number
+  lifecycle: 'active' | 'deleted'
+  header: {
+    code: string
+    title: string
+    status: string
+    type: string | null
+    priority: string | null
+    assignee: string | null
+    date_created: string | null
+    last_modified: string
+  }
+}
+
+/**
+ * Optional provider that returns the projection-only entries for a project from
+ * the stream manager's read model. When absent, the unified ticket endpoint
+ * returns canonical local tickets only (local-only behavior preserved).
+ */
+export type ProjectionReadModelProvider = (projectId: string) => {
+  entries: (localCodes: Set<string>) => ProjectionReadModelEntry[]
+  stale: boolean
+} | undefined
+
 export class TicketService {
   private readonly projectDiscovery: ProjectDiscovery
   private readonly sharedTicketService: SharedTicketService
   private readonly ticketLocationResolver: TicketLocationResolver
   private readonly subdocumentService: SubdocumentService
   private readonly traceStoreService: TraceStoreService
+  private projectionProvider?: ProjectionReadModelProvider
 
   constructor(projectDiscovery: ProjectDiscovery) {
     this.projectDiscovery = projectDiscovery
@@ -90,6 +123,15 @@ export class TicketService {
     this.ticketLocationResolver = new TicketLocationResolver()
     this.subdocumentService = new SubdocumentService()
     this.traceStoreService = new TraceStoreService()
+  }
+
+  /**
+   * Wire the projection read-model provider (MDT-226). The server bootstrap
+   * injects the stream manager's read model here. When unset, the unified ticket
+   * endpoint returns canonical local tickets only.
+   */
+  setProjectionReadModelProvider(provider: ProjectionReadModelProvider): void {
+    this.projectionProvider = provider
   }
 
   /**
@@ -116,6 +158,60 @@ export class TicketService {
     const project = await this.getProject(projectId)
 
     return await this.sharedTicketService.listCRs(project)
+  }
+
+  /**
+   * Get the unified ticket view for a project (MDT-226): canonical local
+   * Markdown tickets plus projection-only read-only entries from the cloud
+   * stream read model. Each item carries `kind`/`readOnly`/`stale` capability
+   * metadata so the browser can render honestly (C-11, §Browser-facing ticket
+   * contract). Local tickets win on duplicate ticket number (BR-1.9).
+   *
+   * When no projection provider is wired, returns canonical items only.
+   */
+  async getUnifiedTickets(projectId: string): Promise<UnifiedTicketItem[]> {
+    const project = await this.getProject(projectId)
+    const localTickets = await this.sharedTicketService.listCRs(project)
+
+    const readModel = this.projectionProvider?.(projectId)
+    const stale = readModel?.stale ?? false
+
+    const canonical: UnifiedTicketItem[] = localTickets.map(t => ({
+      kind: 'canonical',
+      readOnly: false,
+      stale: false,
+      code: t.code,
+      title: t.title,
+      status: t.status,
+      type: t.type,
+      priority: t.priority,
+      assignee: t.assignee ?? null,
+      dateCreated: t.dateCreated ? t.dateCreated.toISOString() : null,
+      lastModified: t.lastModified ? t.lastModified.toISOString() : null,
+    }))
+
+    if (!readModel) {
+      return canonical
+    }
+
+    const localCodes = new Set(localTickets.map(t => t.code))
+    const projectionOnly = readModel.entries(localCodes)
+      .filter(entry => entry.lifecycle === 'active')
+      .map<UnifiedTicketItem>(entry => ({
+        kind: 'projected',
+        readOnly: true,
+        stale,
+        code: entry.header.code,
+        title: entry.header.title,
+        status: entry.header.status,
+        type: entry.header.type,
+        priority: entry.header.priority,
+        assignee: entry.header.assignee,
+        dateCreated: entry.header.date_created,
+        lastModified: entry.header.last_modified,
+      }))
+
+    return [...canonical, ...projectionOnly]
   }
 
   /**

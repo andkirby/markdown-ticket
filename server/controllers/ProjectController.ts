@@ -651,6 +651,36 @@ export class ProjectController {
     }
   }
 
+  /**
+   * Get the unified ticket view (MDT-226): canonical local tickets plus
+   * projection-only read-only entries from the cloud stream read model. Each
+   * item carries kind/readOnly/stale capability metadata (C-11). The browser
+   * consumes this instead of a separate /cloud-projections request.
+   */
+  async getUnifiedTickets(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const { projectId } = req.params
+      if (!projectId) {
+        res.status(400).json({ error: 'Bad Request', message: 'Project ID is required' })
+        return
+      }
+      const project = await this.resolveVisibleProject(projectId, req, res)
+      if (!project) {
+        return
+      }
+      if (!this.ticketService) {
+        res.status(503).json({ error: 'Service Unavailable', message: 'Ticket service not initialized' })
+        return
+      }
+      const items = await this.ticketService.getUnifiedTickets(projectId)
+      res.json(items)
+    }
+    catch (error: unknown) {
+      console.error('Error getting unified tickets:', error)
+      res.status(500).json({ error: 'Internal Server Error', message: 'Failed to get unified tickets' })
+    }
+  }
+
   async getCloudProjections(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { projectId } = req.params

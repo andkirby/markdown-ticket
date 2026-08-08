@@ -43,8 +43,8 @@ Cloudflare implementation are under `cloud/src/cloudflare/`.
 `cloud/wrangler.jsonc` is the deployment source of truth. It uses:
 
 - one D1 binding named `DB`;
-- one Durable Object binding named `PROJECT_PROJECTION_HUB`, backed by the
-  `ProjectProjectionHub` class and an ordered class migration;
+- one Durable Object binding named `PROJECT_HUB`, backed by the
+  `ProjectProjectionHub` class and a `new_sqlite_classes` migration;
 - separate read and mutation rate-limit bindings;
 - one UTC Cron Trigger, every 15 minutes, invoking the Worker's `scheduled()`
   handler for bounded reservation expiry and audit-retention batches;
@@ -55,7 +55,11 @@ Cloudflare implementation are under `cloud/src/cloudflare/`.
 The project hub uses the Hibernation WebSocket API and alarms. It must not use
 `setInterval`, application-level heartbeat requests, or another mechanism that
 keeps an idle object active. Protocol auto-response may handle liveness without
-waking the object. Binding types are generated with `wrangler types`; the implementation does not
+waking the object. The Durable Object migration uses `new_sqlite_classes` so the
+hub's own alarm and socket metadata are backed by SQLite-backed transactional
+storage; this is the DO's private storage and is distinct from the `DB` D1
+binding. The hub never queries D1 while an idle project is connected — a hibernated,
+armed alarm makes no D1 request. Binding types are generated with `wrangler types`; the implementation does not
 hand-write a duplicate `Env` interface.
 
 The Cron Trigger is declared only in `wrangler.jsonc`. Deployment validation
@@ -83,10 +87,12 @@ required. Production secrets use encrypted secret channels, never Wrangler
 Every schema change is an ordered SQL migration under `cloud/migrations/`. Use
 the immutable D1 database name, not only the binding name, in operator commands.
 
-`MDT-226` adds a Durable Object class migration in `cloud/wrangler.jsonc` but no
-D1 delivery table. Deploy the new class and binding before enabling version 2
-local streams. Never delete a Durable Object class migration after production
-deployment.
+`MDT-226` adds a Durable Object `new_sqlite_classes` migration in
+`cloud/wrangler.jsonc` but no D1 delivery table. The SQLite-backed class storage
+holds alarm and socket metadata only — it is not a second projection authority
+and does not change D1 idle-traffic behavior. Deploy the new class and binding
+before enabling version 2 local streams. Never delete a Durable Object class
+migration after production deployment.
 
 Before production:
 

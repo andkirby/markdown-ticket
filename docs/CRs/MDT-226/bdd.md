@@ -1,8 +1,10 @@
 # MDT-226 BDD Acceptance
 
-These scenarios define observable acceptance behavior. Executable tests are
-generated in the later test-specification stage; this document does not claim
-that the current polling implementation satisfies them.
+These scenarios define observable acceptance behavior. They are covered by the
+test plans in [`tests.md`](tests.md); the push implementation
+(`ProjectProjectionHub` + local stream manager + unified ticket API) is the
+delivery path, while the bounded `/projections` cursor endpoint remains a
+recovery and rollout-compatibility surface.
 
 ## SC-1 Project stream becomes live after catch-up
 

@@ -42,6 +42,12 @@ export interface RouteContext {
    * working; mutation/polling handlers opt in.
    */
   rateLimit?: RateLimitEnv
+  /**
+   * ProjectProjectionHub namespace (MDT-226). Optional so router unit tests
+   * without the binding keep working; the projection-publish route routes
+   * mutations through the hub for commit-before-broadcast.
+   */
+  projectHub?: DurableObjectNamespace
 }
 
 type RouteHandler = (ctx: RouteContext) => Promise<Response>
@@ -58,6 +64,7 @@ export class CoordinationRouter {
   private readonly validator: AccessValidator
   private readonly db: D1Database
   private readonly rateLimit?: RateLimitEnv
+  private readonly projectHub?: DurableObjectNamespace
   private readonly routes: Map<'coordination' | 'operator', RouteDefinition[]> = new Map([
     ['coordination', []],
     ['operator', []],
@@ -67,10 +74,12 @@ export class CoordinationRouter {
     validator: AccessValidator,
     db: D1Database,
     rateLimit?: RateLimitEnv,
+    projectHub?: DurableObjectNamespace,
   ) {
     this.validator = validator
     this.db = db
     this.rateLimit = rateLimit
+    this.projectHub = projectHub
   }
 
   /** Register a coordination-audience route under /v1/projects. */
@@ -83,6 +92,38 @@ export class CoordinationRouter {
   operator(method: RouteMethod, pattern: RegExp, handler: RouteHandler): this {
     this.routes.get('operator')!.push({ method, pattern, handler })
     return this
+  }
+
+  /**
+   * Validate the Access assertion for a WebSocket upgrade without dispatching a
+   * JSON route (MDT-226). Used by the projection-stream upgrade path, which
+   * needs the verified principal to route to the project hub. Membership is
+   * checked by the caller against the project id parsed from the URL.
+   *
+   * Returns the principal on success, or a typed error Response on failure.
+   */
+  async validateUpgrade(
+    request: Request,
+    audience: 'coordination' | 'operator',
+  ): Promise<{ ok: true, principal: CloudPrincipal, requestId: string } | { ok: false, response: Response }> {
+    const requestId = crypto.randomUUID()
+    const assertion = request.headers.get('Cf-Access-Jwt-Assertion')
+    if (!assertion) {
+      return {
+        ok: false,
+        response: this.toErrorResponse(
+          new CoordinationError('authentication_required', { requestId }),
+          requestId,
+        ),
+      }
+    }
+    try {
+      const principal = await this.validator.validate(assertion, audience)
+      return { ok: true, principal, requestId }
+    }
+    catch (err) {
+      return { ok: false, response: this.toValidationErrorResponse(err, requestId) }
+    }
   }
 
   /** Main entry: dispatch a request, returning the typed envelope on failure. */
@@ -137,6 +178,7 @@ export class CoordinationRouter {
         db: this.db,
         requestId,
         rateLimit: this.rateLimit,
+        projectHub: this.projectHub,
       }), requestId)
     }
     catch (err) {

@@ -76,7 +76,8 @@ describe('ProjectStateStore (TEST-binding-writer)', () => {
       expect(content).toContain('state = "enabled"')
       expect(content).toContain(`cloudProjectId = "${connection.cloudProjectId}"`)
       expect(content).toContain(`serviceOrigin = "${DISTRIBUTION_ORIGIN}"`)
-      expect(content).toContain('pollIntervalSeconds = 15')
+      // Version 2 (MDT-226) discards pollIntervalSeconds from active use.
+      expect(content).not.toContain('pollIntervalSeconds')
     })
 
     it('reads back an enabled connection exactly', async () => {
@@ -85,7 +86,9 @@ describe('ProjectStateStore (TEST-binding-writer)', () => {
       const read = await store.read(PROJECT_ID)
       expect(read.kind).toBe('enabled')
       if (read.kind === 'enabled') {
-        expect(read.connection).toEqual(connection)
+        // pollIntervalSeconds is discarded by the v2 write (MDT-226).
+        const { pollIntervalSeconds: _omitted, ...v2Connection } = connection
+        expect(read.connection).toEqual(v2Connection)
       }
     })
 
@@ -211,5 +214,94 @@ describe('ProjectStateStore (TEST-binding-writer)', () => {
       const read = await store.read(PROJECT_ID)
       expect(read.kind).toBe('enabled')
     })
+  })
+})
+
+const MIGRATION_CLOUD_PROJECT_ID = '018f5e6c-6f32-7c5b-9e76-97c7c769c123'
+
+describe('ProjectStateStore v1→v2 migration (TEST-config-v2-migration: Edge-3, C-9)', () => {
+  let root: string
+  let store: ProjectStateStore
+
+  beforeEach(async () => {
+    root = await mkdtemp(join(tmpdir(), 'mdt-state-v2-'))
+    store = new ProjectStateStore({
+      rootDir: root,
+      profile: resolveTrustedServiceProfile({ operatorOrigins: [] }),
+    } satisfies ProjectStateStoreOptions)
+  })
+
+  afterEach(async () => {
+    await rm(root, { recursive: true, force: true })
+  })
+
+  it('active connection version is 2', () => {
+    expect(CLOUD_SYNC_CONNECTION_VERSION).toBe(2)
+  })
+
+  it('reads a version 1 file with pollIntervalSeconds and migrates to version 2', async () => {
+    await mkdir(join(root, 'projects', PROJECT_ID), { recursive: true })
+    await writeFile(
+      join(root, 'projects', PROJECT_ID, 'cloud-sync.toml'),
+      `version = 1\nstate = "enabled"\ncloudProjectId = "${MIGRATION_CLOUD_PROJECT_ID}"\nserviceOrigin = "${DISTRIBUTION_ORIGIN}"\npollIntervalSeconds = 15\n`,
+    )
+
+    const read = await store.read(PROJECT_ID)
+    expect(read.kind).toBe('enabled')
+    if (read.kind !== 'enabled') return
+    expect(read.connection.version).toBe(2)
+    expect(read.connection.cloudProjectId).toBe(MIGRATION_CLOUD_PROJECT_ID)
+    expect(read.connection.serviceOrigin).toBe(DISTRIBUTION_ORIGIN)
+  })
+
+  it('re-writing a migrated connection discards pollIntervalSeconds from the file', async () => {
+    await mkdir(join(root, 'projects', PROJECT_ID), { recursive: true })
+    await writeFile(
+      join(root, 'projects', PROJECT_ID, 'cloud-sync.toml'),
+      `version = 1\nstate = "enabled"\ncloudProjectId = "${MIGRATION_CLOUD_PROJECT_ID}"\nserviceOrigin = "${DISTRIBUTION_ORIGIN}"\npollIntervalSeconds = 30\n`,
+    )
+
+    const migrated = await store.read(PROJECT_ID)
+    expect(migrated.kind).toBe('enabled')
+    if (migrated.kind !== 'enabled') return
+    await store.write(PROJECT_ID, migrated.connection)
+
+    const content = await readFile(join(root, 'projects', PROJECT_ID, 'cloud-sync.toml'), 'utf8')
+    expect(content).toContain('version = 2')
+    expect(content).not.toContain('pollIntervalSeconds')
+    expect(content).toContain(`cloudProjectId = "${MIGRATION_CLOUD_PROJECT_ID}"`)
+  })
+
+  it('a v2 round-trip write+read is stable and carries no pollIntervalSeconds', async () => {
+    const connection = {
+      version: CLOUD_SYNC_CONNECTION_VERSION,
+      state: CloudSyncConnectionState.ENABLED,
+      cloudProjectId: MIGRATION_CLOUD_PROJECT_ID,
+      serviceOrigin: DISTRIBUTION_ORIGIN,
+    } as const
+
+    await store.write(PROJECT_ID, connection)
+    const read = await store.read(PROJECT_ID)
+    expect(read.kind).toBe('enabled')
+    if (read.kind !== 'enabled') return
+    expect(read.connection.version).toBe(2)
+    expect(read.connection.cloudProjectId).toBe(MIGRATION_CLOUD_PROJECT_ID)
+
+    const content = await readFile(join(root, 'projects', PROJECT_ID, 'cloud-sync.toml'), 'utf8')
+    expect(content).not.toContain('pollIntervalSeconds')
+  })
+
+  it('a version 1 disabled connection migrates to v2 without changing identity', async () => {
+    await mkdir(join(root, 'projects', PROJECT_ID), { recursive: true })
+    await writeFile(
+      join(root, 'projects', PROJECT_ID, 'cloud-sync.toml'),
+      `version = 1\nstate = "disabled"\ncloudProjectId = "${MIGRATION_CLOUD_PROJECT_ID}"\nserviceOrigin = "${DISTRIBUTION_ORIGIN}"\npollIntervalSeconds = 60\n`,
+    )
+    const read = await store.read(PROJECT_ID)
+    expect(read.kind).toBe('disabled')
+    if (read.kind !== 'disabled') return
+    expect(read.connection.version).toBe(2)
+    expect(read.connection.state).toBe(CloudSyncConnectionState.DISABLED)
+    expect(read.connection.cloudProjectId).toBe(MIGRATION_CLOUD_PROJECT_ID)
   })
 })

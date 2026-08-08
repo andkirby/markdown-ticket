@@ -118,9 +118,6 @@ export interface CloudProjectManagementServiceOptions {
   legacyMigration?: { migrate: () => Promise<{ migrated: boolean, connection: CloudSyncConnection | null }> }
 }
 
-/** Default poll interval (seconds) for a new connection. */
-const DEFAULT_POLL_INTERVAL_SECONDS = 15
-
 export class CloudProjectManagementService {
   private readonly opts: CloudProjectManagementServiceOptions
 
@@ -272,7 +269,6 @@ export class CloudProjectManagementService {
       state: CloudSyncConnectionState.DISABLED,
       cloudProjectId: current.cloudProjectId,
       serviceOrigin: current.serviceOrigin,
-      pollIntervalSeconds: current.pollIntervalSeconds,
     }
     await this.opts.stateStore.write(this.opts.localProjectId, disabled)
     return disabled
@@ -327,7 +323,6 @@ export class CloudProjectManagementService {
       state: CloudSyncConnectionState.ENABLED,
       cloudProjectId,
       serviceOrigin: this.opts.coordinationOrigin,
-      pollIntervalSeconds: DEFAULT_POLL_INTERVAL_SECONDS,
     }
     await this.opts.stateStore.write(this.opts.localProjectId, connection)
   }
