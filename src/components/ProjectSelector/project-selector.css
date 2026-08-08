@@ -21,10 +21,12 @@
   /* ── Project Card (rail active + panel cards) ── */
 
   .project-card {
-    @apply relative flex items-center justify-center border rounded-xl px-2 sm:px-4 py-1.5 min-h-12 cursor-pointer;
+    @apply relative flex items-center justify-center border px-2 sm:px-4 py-1.5 min-h-12 cursor-pointer;
+    border-radius: var(--radius-input);
 
-    /* v3: flat recessed surface (bg-subtle) — separates from the elevated modal/header. */
-    background-color: var(--bg-subtle);
+    /* Matches the ViewModeSwitcher tray (bg-muted) so the rail controls read as
+       one chrome group. */
+    background-color: var(--bg-muted);
     border-color: transparent;
   }
 
@@ -196,10 +198,11 @@
   /* ── Project Chip (compact inactive projects in rail) ── */
 
   .project-chip {
-    @apply relative inline-flex items-center justify-center rounded-md px-2 py-1.5 h-9 cursor-pointer;
+    @apply relative inline-flex items-center justify-center px-2 py-1.5 h-9 cursor-pointer;
+    border-radius: var(--radius-input);
 
-    /* v3: flat elevated surface, 1px border — no gradient, no shadow. */
-    background-color: var(--bg-subtle);
+    /* Matches the active card + ViewModeSwitcher tray (bg-muted). */
+    background-color: var(--bg-muted);
     border: 1px solid transparent;
   }
 
@@ -344,10 +347,11 @@
   /* ── Launcher Button ── */
 
   .project-launcher {
-    @apply inline-flex items-center justify-center rounded-full w-10 h-10 cursor-pointer;
+    @apply inline-flex items-center justify-center w-10 h-10 cursor-pointer;
+    border-radius: var(--radius-pill);
 
-    /* v3: flat elevated surface, 1px border — no gradient, no shadow. */
-    background-color: var(--bg-subtle);
+    /* Matches the active card + chips (bg-muted). */
+    background-color: var(--bg-muted);
     border: 1px solid transparent;
   }
 
@@ -364,7 +368,8 @@
   /* ── Search Input (panel header) ── */
 
   .project-search {
-    @apply w-full pl-10 pr-4 py-2 text-sm rounded-lg border focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 focus:border-transparent;
+    @apply w-full pl-10 pr-4 py-2 text-sm border focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 focus:border-transparent;
+    border-radius: var(--radius-input);
 
     background: var(--project-search-bg);
     border-color: var(--project-search-border);

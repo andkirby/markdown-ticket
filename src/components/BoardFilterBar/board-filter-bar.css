@@ -23,7 +23,8 @@
      header controls, so it reads against the --bg-elevated header instead of
      ghosting (bg-elevated == header surface in dark mode). */
   .filter-button {
-    @apply inline-flex items-center gap-1.5 border rounded-md px-3 h-9 text-sm transition-colors;
+    @apply inline-flex items-center gap-1.5 border px-3 h-9 text-sm transition-colors;
+    border-radius: var(--radius-input);
     background-color: oklch(var(--background));
     border-color: oklch(var(--border));
   }

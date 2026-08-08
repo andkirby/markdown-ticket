@@ -28,7 +28,7 @@ export const FilterControls: React.FC<FilterControlsProps> = ({
         placeholder={placeholder}
         value={searchQuery}
         onChange={e => onSearchChange(e.target.value)}
-        className="h-9 pl-10 pr-10 text-sm border border-border rounded-md bg-background text-foreground placeholder-muted-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 min-w-[200px]"
+        className="h-9 pl-10 pr-10 text-sm border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 min-w-[200px] [border-radius:var(--radius-input)]"
         data-testid="search-input"
       />
       {searchQuery && (

@@ -6,7 +6,7 @@
     height: 2.25rem;
     gap: 2px;
     padding: 2px;
-    border-radius: 6px;
+    border-radius: var(--radius-input);
     background: var(--bg-muted);
     font-size: var(--fs-xs);
   }
@@ -17,7 +17,9 @@
     justify-content: center;
     width: 30px;
     height: 28px;
-    border-radius: 5px;
+    /* Inner corners sit 2px inside the tray (matches the 2px padding), so the
+       active-button fill nests cleanly within the outer --radius-input. */
+    border-radius: calc(var(--radius-input) - 2px);
     color: var(--text-muted);
     font-weight: 600;
     transition: background-color 150ms ease, color 150ms ease, box-shadow 150ms ease;

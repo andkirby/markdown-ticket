@@ -289,7 +289,7 @@ export default function PathSelector({
               checked={isSelected}
               onChange={() =>
                 toggleSelection(item.path, item.type === 'folder', item)}
-              className="mr-2 cursor-pointer"
+              className="settings-checkbox mr-2 cursor-pointer"
               data-testid={`path-checkbox-${safeTestId}`}
             />
             {isFolder

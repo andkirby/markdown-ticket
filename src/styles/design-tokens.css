@@ -62,9 +62,18 @@
     /* Type-badge accents (MDT-135); decoupled from status tokens. */
     --type-feature: oklch(0.623 0.188 259.8); --type-bug: oklch(0.646 0.194 41.1); --type-architecture: oklch(0.541 0.247 293.0); --type-documentation: oklch(0.609 0.111 221.7); --type-research: oklch(0.592 0.218 0.6);
     /* v3 card-density tokens (driven by CardDensity pref; see useCardDensity). Mode-independent px. */
-    --pad-y: 10px; --pad-x: 12px; --fs-xs: 11px; --fs-md: 13px; --radius-card: 8px;
+    --pad-y: 10px; --pad-x: 12px; --fs-xs: 11px; --fs-md: 13px;
     /* Fixed lucide icon size (glyphs beside the ticket key). */
     --sz-icon: 16px;
+    /* ── Radius scale — pick by ROLE, not by look ──
+       Four semantic corners. Inputs, buttons, cards, and control groups share
+       --radius-input so the header controls line up. Use bare var(), never a
+       hardcoded px or a Tailwind rounded-* class in app-owned CSS (shadcn
+       vendor components may keep rounded-md/lg). */
+    --radius-input: 8px;  /* inputs, selects, checkboxes, buttons, project cards/chips, control groups (ViewModeSwitcher) */
+    --radius-card: 8px;   /* ticket cards, lane cards, modal-content edges */
+    --radius-xs: 4px;     /* badges, inline code pills, tiny inline marks */
+    --radius-pill: 999px; /* circular controls: launcher, info trigger, status dots */
   }
 
   .dark {

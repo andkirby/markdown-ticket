@@ -86,14 +86,16 @@
 }
 
 .settings-select {
-  @apply w-full max-w-xs h-10 border rounded-md px-3 py-2 text-sm text-foreground;
+  @apply w-full max-w-xs h-10 border px-3 py-2 text-sm text-foreground;
+  border-radius: var(--radius-input);
   border-color: oklch(var(--border));
   background-color: var(--bg-muted);
   @apply focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50;
 }
 
 .settings-input {
-  @apply w-full max-w-md h-10 border rounded-md px-3 py-2 text-sm text-foreground;
+  @apply w-full max-w-md h-10 border px-3 py-2 text-sm text-foreground;
+  border-radius: var(--radius-input);
   border-color: oklch(var(--border));
   background-color: var(--bg-muted);
   @apply focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50;
@@ -112,7 +114,8 @@
 }
 
 .settings-action-btn {
-  @apply flex items-center gap-2 px-3 py-1.5 text-sm font-medium border rounded-md text-foreground hover:bg-muted hover:text-destructive transition-colors;
+  @apply flex items-center gap-2 px-3 py-1.5 text-sm font-medium border text-foreground hover:bg-muted hover:text-destructive transition-colors;
+  border-radius: var(--radius-input);
   border-color: oklch(var(--border));
   background-color: var(--bg-elevated);
 }
@@ -126,7 +129,8 @@
 }
 
 .settings-checkbox {
-  @apply h-4 w-4 rounded text-primary focus-visible:ring-1 focus-visible:ring-ring/50;
+  @apply h-4 w-4 text-primary focus-visible:ring-1 focus-visible:ring-ring/50;
+  border-radius: var(--radius-input);
   border-color: oklch(var(--border));
   background-color: var(--bg-muted);
 }
@@ -162,7 +166,8 @@
 }
 
 .project-accents__input {
-  @apply w-[7.5rem] px-2 py-1.5 text-sm font-mono border rounded-md text-foreground;
+  @apply w-[7.5rem] px-2 py-1.5 text-sm font-mono border text-foreground;
+  border-radius: var(--radius-input);
   border-color: oklch(var(--border));
   background-color: var(--bg-muted);
   @apply focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50;
@@ -173,7 +178,8 @@
 }
 
 .project-accents__icon-btn {
-  @apply inline-flex items-center justify-center h-7 w-7 rounded-md border flex-shrink-0 transition-colors;
+  @apply inline-flex items-center justify-center h-7 w-7 border flex-shrink-0 transition-colors;
+  border-radius: var(--radius-input);
   border-color: oklch(var(--border));
   background-color: var(--bg-elevated);
   color: var(--text-muted);
@@ -204,7 +210,8 @@
 }
 
 .project-accents__color-slider {
-  @apply h-7 w-7 cursor-pointer rounded-md border p-0.5;
+  @apply h-7 w-7 cursor-pointer border p-0.5;
+  border-radius: var(--radius-input);
   border-color: oklch(var(--border));
   background-color: var(--bg-muted);
   @apply appearance-none [-webkit-appearance:none];

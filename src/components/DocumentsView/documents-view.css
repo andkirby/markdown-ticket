@@ -33,13 +33,15 @@
   }
 
   .documents-view__sort-select {
-    @apply h-8 w-24 flex-shrink-0 rounded-md border px-2 py-1 text-xs text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50;
+    @apply h-8 w-24 flex-shrink-0 border px-2 py-1 text-xs text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50;
+    border-radius: var(--radius-input);
     border-color: oklch(var(--border));
     background-color: var(--bg-muted);
   }
 
   .documents-view__sort-direction-button {
-    @apply inline-flex h-8 w-7 flex-shrink-0 items-center justify-center rounded-md border transition-colors;
+    @apply inline-flex h-8 w-7 flex-shrink-0 items-center justify-center border transition-colors;
+    border-radius: var(--radius-input);
     border-color: oklch(var(--border));
     background-color: var(--bg-muted);
   }
@@ -56,7 +58,8 @@
   }
 
   .documents-view__navigation-expand {
-    @apply absolute left-3 top-3 z-20 inline-flex h-8 w-8 items-center justify-center rounded-md border transition-colors hover:text-foreground;
+    @apply absolute left-3 top-3 z-20 inline-flex h-8 w-8 items-center justify-center border transition-colors hover:text-foreground;
+    border-radius: var(--radius-input);
     border-color: oklch(var(--border));
     background-color: var(--bg-elevated);
     color: var(--text-muted);
@@ -108,7 +111,8 @@
   }
 
   .document-frontmatter {
-    @apply mb-4 overflow-hidden rounded-md border;
+    @apply mb-4 overflow-hidden border;
+    border-radius: var(--radius-card);
     border-color: oklch(var(--border));
     background-color: var(--bg-subtle);
   }
