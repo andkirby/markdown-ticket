@@ -1,6 +1,14 @@
+import type {
+  CRLevelValue,
+} from '../types/schema'
 import type { SubDocument } from './subdocument'
 import { z } from 'zod'
-import { CRPrioritySchema, CRStatusSchema, CRTypeSchema } from '../types/schema'
+import {
+  CRLevelSchema,
+  CRPrioritySchema,
+  CRStatusSchema,
+  CRTypeSchema,
+} from '../types/schema'
 import { CR_CODE_PATTERN } from './frontmatter'
 import { SubDocumentSchema } from './subdocument'
 
@@ -10,6 +18,8 @@ export interface Ticket {
   status: string
   type: string
   priority: string
+  /** Ticket hierarchy level: `ticket` (default) or `epic` (MDT-205). */
+  level?: CRLevelValue
   dateCreated: Date | null
   lastModified: Date | null
   content: string
@@ -34,11 +44,20 @@ export type TicketMetadata = Omit<Ticket, 'content'>
 const NullableDateSchema = z.date().nullable()
 
 export const TicketSchema: z.ZodType<Ticket> = z.object({
-  code: z.string().regex(CR_CODE_PATTERN, 'CR code must be in format PREFIX-123 (e.g., MDT-101)'),
-  title: z.string().min(1, 'Title is required').max(200, 'Title must be 200 characters or less'),
+  code: z
+    .string()
+    .regex(
+      CR_CODE_PATTERN,
+      'CR code must be in format PREFIX-123 (e.g., MDT-101)',
+    ),
+  title: z
+    .string()
+    .min(1, 'Title is required')
+    .max(200, 'Title must be 200 characters or less'),
   status: CRStatusSchema,
   type: CRTypeSchema,
   priority: CRPrioritySchema,
+  level: CRLevelSchema.optional(),
   dateCreated: NullableDateSchema,
   lastModified: NullableDateSchema,
   content: z.string(),

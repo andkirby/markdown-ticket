@@ -1,0 +1,999 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-205"
+  },
+  "requirements": [
+    {
+      "id": "BR-1",
+      "kind": "behavior",
+      "text": "A ticket carries a level field with values ticket or epic; when no level is present the ticket reads as ticket without on-disk migration.",
+      "sourceRef": "CR:MDT-205",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2",
+      "kind": "behavior",
+      "text": "Setting level works identically through the CLI, MCP, and backend REST API.",
+      "sourceRef": "CR:MDT-205",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3",
+      "kind": "behavior",
+      "text": "An epic moves through three lifecycle states: Proposed then Approved then Implemented.",
+      "sourceRef": "CR:MDT-205",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4",
+      "kind": "behavior",
+      "text": "When a user sets phaseEpic to a ticket key, the system requires the target to exist, be an epic, and be in a usable state (Approved or Implemented); otherwise the write is rejected with an actionable error naming the target and remediation.",
+      "sourceRef": "CR:MDT-205",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-5",
+      "kind": "behavior",
+      "text": "When a user moves an epic to Implemented while it has one or more non-terminal children, the system blocks the move and lists the blocking children; when all children are terminal the move succeeds.",
+      "sourceRef": "CR:MDT-205",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-6",
+      "kind": "behavior",
+      "text": "The level field is queryable and filterable through the ticket list surface (e.g. ticket list level=epic).",
+      "sourceRef": "CR:MDT-205",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-7",
+      "kind": "behavior",
+      "text": "Alias shorthand for level (e to epic, t to ticket) resolves consistently across CLI and MCP via the shared layer.",
+      "sourceRef": "CR:MDT-205",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C-1",
+      "kind": "constraint",
+      "text": "No migration: existing tickets without a level field read as ticket on read; no on-disk rewrite.",
+      "sourceRef": "CR:MDT-205",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-2",
+      "kind": "constraint",
+      "text": "phaseEpic remains the child-to-epic link field; no epicId and no stored children array is introduced.",
+      "sourceRef": "CR:MDT-205",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-3",
+      "kind": "constraint",
+      "text": "For the epic close guard, terminal statuses are Implemented, Rejected, and Partially Implemented; all other statuses count as non-terminal.",
+      "sourceRef": "CR:MDT-205",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-4",
+      "kind": "constraint",
+      "text": "The epic close guard is scoped narrowly to epics moving to Implemented; free status movement is preserved for all non-epic tickets and for all other transitions.",
+      "sourceRef": "CR:MDT-205",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-5",
+      "kind": "constraint",
+      "text": "Epics are never rendered as cards on the flat board; this is a documented divergence from designs/board-zai/design3-epics.md section 2 (board UI itself is MDT-206).",
+      "sourceRef": "CR:MDT-205",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-6",
+      "kind": "constraint",
+      "text": "Level alias resolution lives in the shared layer (shared/services/ticket/attrResolver) so CLI, MCP, and any future consumer apply identical rules with no drift; mirrors the existing status alias precedent.",
+      "sourceRef": "CR:MDT-205",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-7",
+      "kind": "constraint",
+      "text": "The backend OpenAPI documentation describes the new level field (derived from the zod schema plus property docs).",
+      "sourceRef": "CR:MDT-205",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "A phaseEpic value in a cross-project key format (e.g. ABC-012) is validated against the target project's ticket (must exist, be an epic, be usable).",
+      "sourceRef": "CR:MDT-205",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-2",
+      "kind": "edge_case",
+      "text": "Clearing phaseEpic on a ticket is always allowed regardless of the referenced epic's state.",
+      "sourceRef": "CR:MDT-205",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-3",
+      "kind": "edge_case",
+      "text": "An epic with zero children can be moved freely; the close guard only applies when children exist and are non-terminal.",
+      "sourceRef": "CR:MDT-205",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-4",
+      "kind": "edge_case",
+      "text": "Existing children already pointing at an epic are not retroactively rejected when that epic is moved back to Proposed; the reference guard applies to new writes only.",
+      "sourceRef": "CR:MDT-205",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-5",
+      "kind": "edge_case",
+      "text": "Reopening an epic from Implemented back to Approved is allowed; closes are not permanent.",
+      "sourceRef": "CR:MDT-205",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-6",
+      "kind": "edge_case",
+      "text": "Setting phaseEpic to a value that is not a ticket key (free text) succeeds unchanged; only ticket-key-shaped values are validated.",
+      "sourceRef": "CR:MDT-205",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-7",
+      "kind": "edge_case",
+      "text": "Setting phaseEpic to a ticket key whose target does not exist is rejected with a clear error.",
+      "sourceRef": "CR:MDT-205",
+      "routePolicy": "tests"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "level_defaults_to_ticket_on_read",
+      "title": "Ticket without explicit level reads as ticket",
+      "covers": [
+        "BR-1"
+      ],
+      "given": "A markdown ticket file with no level field in its frontmatter",
+      "when": "The ticket is parsed and normalized",
+      "then": "The resulting ticket has level equal to ticket with no on-disk rewrite",
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "level_epic_round_trips",
+      "title": "Ticket with level epic round-trips through YAML",
+      "covers": [
+        "BR-1"
+      ],
+      "given": "A ticket whose frontmatter contains level: epic",
+      "when": "The ticket is written and re-read",
+      "then": "The level reads back as epic and the YAML contains the level key",
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "level_settable_via_cli",
+      "title": "Setting level via CLI persists the field",
+      "covers": [
+        "BR-2"
+      ],
+      "given": "A ticket exists and a user runs the CLI attribute mutation with level=epic",
+      "when": "The CLI attr command runs",
+      "then": "The shared service persists level and a subsequent get reads level epic",
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "level_settable_via_mcp",
+      "title": "Setting level via MCP update_cr_attrs persists the field",
+      "covers": [
+        "BR-2"
+      ],
+      "given": "A ticket exists and an MCP client calls update_cr_attrs with level=epic",
+      "when": "The MCP handler runs",
+      "then": "The shared service persists level and a get returns level epic",
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "level_settable_via_rest",
+      "title": "Setting level via REST PATCH persists the field",
+      "covers": [
+        "BR-2"
+      ],
+      "given": "A ticket exists and a client PATCHes the cr endpoint with level=epic",
+      "when": "The server adapter forwards the update",
+      "then": "The shared service persists level and the response reflects level epic",
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "epic_lifecycle_three_states",
+      "title": "An epic moves Proposed to Approved to Implemented",
+      "covers": [
+        "BR-3"
+      ],
+      "given": "An epic ticket in Proposed",
+      "when": "The user advances its status to Approved then Implemented",
+      "then": "Both transitions succeed and the status reads back accordingly",
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "phase_epic_target_must_be_epic",
+      "title": "Setting phaseEpic to a non-epic ticket key is rejected",
+      "covers": [
+        "BR-4"
+      ],
+      "given": "A target ticket exists with level ticket",
+      "when": "The user sets phaseEpic on a child to that target key",
+      "then": "The write is rejected with an error naming the target and stating it must be an epic",
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "phase_epic_target_must_exist",
+      "title": "Setting phaseEpic to a missing ticket key is rejected",
+      "covers": [
+        "BR-4"
+      ],
+      "given": "No ticket exists with the given key",
+      "when": "The user sets phaseEpic to that key",
+      "then": "The write is rejected with a clear error stating the target does not exist",
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "phase_epic_target_proposed_rejected",
+      "title": "Setting phaseEpic to a Proposed epic is rejected",
+      "covers": [
+        "BR-4"
+      ],
+      "given": "The target ticket is an epic in Proposed status",
+      "when": "The user sets phaseEpic to that epic key",
+      "then": "The write is rejected stating the epic must be Approved first",
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "phase_epic_target_approved_succeeds",
+      "title": "Setting phaseEpic to an Approved epic succeeds",
+      "covers": [
+        "BR-4"
+      ],
+      "given": "The target ticket is an epic in Approved status",
+      "when": "The user sets phaseEpic to that epic key",
+      "then": "The write succeeds",
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "phase_epic_target_implemented_succeeds",
+      "title": "Setting phaseEpic to an Implemented epic succeeds",
+      "covers": [
+        "BR-4"
+      ],
+      "given": "The target ticket is an epic in Implemented status",
+      "when": "The user sets phaseEpic to that epic key",
+      "then": "The write succeeds",
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "phase_epic_free_text_succeeds",
+      "title": "Setting phaseEpic to free non-key text succeeds unchanged",
+      "covers": [
+        "BR-4"
+      ],
+      "given": "The phaseEpic value is not ticket-key shaped",
+      "when": "The user sets phaseEpic to that free text",
+      "then": "The write succeeds with no target lookup",
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "epic_close_guard_blocks_non_terminal_children",
+      "title": "Closing an epic with non-terminal children is blocked",
+      "covers": [
+        "BR-5"
+      ],
+      "given": "An epic has at least one child in a non-terminal status",
+      "when": "The user moves the epic to Implemented",
+      "then": "The move is rejected and the error lists the blocking children",
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "epic_close_guard_allows_all_terminal_children",
+      "title": "Closing an epic with all-terminal children succeeds",
+      "covers": [
+        "BR-5"
+      ],
+      "given": "An epic whose children are all in terminal statuses",
+      "when": "The user moves the epic to Implemented",
+      "then": "The move succeeds",
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "non_epic_implemented_unaffected",
+      "title": "Non-epic tickets move to Implemented freely",
+      "covers": [
+        "BR-5"
+      ],
+      "given": "C-4",
+      "when": "A ticket with level ticket has children or none",
+      "then": "The user moves it to Implemented\tThe move succeeds without the close guard applying",
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "level_filterable",
+      "title": "Tickets can be listed and filtered by level",
+      "covers": [
+        "BR-6"
+      ],
+      "given": "Multiple tickets exist with mixed levels",
+      "when": "The user runs ticket list level=epic",
+      "then": "Only epic-level tickets are returned",
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "level_alias_resolution",
+      "title": "Alias shorthand resolves consistently",
+      "covers": [
+        "BR-7"
+      ],
+      "given": "A user supplies the shorthand e or t for the level field",
+      "when": "The alias is resolved through the shared resolver",
+      "then": "It canonicalizes to epic or ticket respectively across CLI and MCP",
+      "sourceRef": "CR:MDT-205"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-1",
+      "title": "Define CRLevel enum and zod schema (ticket, epic)",
+      "derivedFrom": [
+        "BR-1",
+        "C-6"
+      ],
+      "artifactIds": [
+        "ART-level-enum"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "OBL-2",
+      "title": "Add level field to Ticket entity and TicketSchema",
+      "derivedFrom": [
+        "BR-1"
+      ],
+      "artifactIds": [
+        "ART-level-entity"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "OBL-3",
+      "title": "Add level to frontmatter, create/update input schemas and TICKET_UPDATE_ATTRS",
+      "derivedFrom": [
+        "BR-1",
+        "BR-2",
+        "BR-6"
+      ],
+      "artifactIds": [
+        "ART-level-frontmatter",
+        "ART-level-input"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "OBL-4",
+      "title": "Normalize level to ticket default on read (no migration)",
+      "derivedFrom": [
+        "BR-1",
+        "C-1"
+      ],
+      "artifactIds": [
+        "ART-normalize"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "OBL-5",
+      "title": "Serialize level to YAML on write and create",
+      "derivedFrom": [
+        "BR-1"
+      ],
+      "artifactIds": [
+        "ART-markdown-service",
+        "ART-ticket-service"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "OBL-6",
+      "title": "Implement pure epic rules: ticket-key shape, usable state, close-terminal, phaseEpic target resolution, close guard",
+      "derivedFrom": [
+        "BR-4",
+        "BR-5",
+        "C-3"
+      ],
+      "artifactIds": [
+        "ART-epic-rules"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "OBL-7",
+      "title": "Wire phaseEpic target validation into updateCRAttrs and createCR (orchestration)",
+      "derivedFrom": [
+        "BR-4",
+        "Edge-1",
+        "Edge-2",
+        "Edge-6",
+        "Edge-7"
+      ],
+      "artifactIds": [
+        "ART-ticket-service"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "OBL-8",
+      "title": "Wire epic close guard into updateCRStatus (epics to Implemented only)",
+      "derivedFrom": [
+        "BR-5",
+        "C-4",
+        "Edge-3",
+        "Edge-5"
+      ],
+      "artifactIds": [
+        "ART-ticket-service"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "OBL-9",
+      "title": "Add level aliases to shared attrResolver and dispatch from resolveAttrValue",
+      "derivedFrom": [
+        "BR-7",
+        "C-6"
+      ],
+      "artifactIds": [
+        "ART-attr-resolver"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "OBL-10",
+      "title": "Expose level in CLI attr tokens and list filters with alias resolution",
+      "derivedFrom": [
+        "BR-2",
+        "BR-6",
+        "BR-7"
+      ],
+      "artifactIds": [
+        "ART-cli-attr",
+        "ART-cli-list"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "OBL-11",
+      "title": "Expose level in MCP create_cr and update_cr_attrs schemas and handler type",
+      "derivedFrom": [
+        "BR-2"
+      ],
+      "artifactIds": [
+        "ART-mcp-schema",
+        "ART-mcp-handler"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "OBL-12",
+      "title": "Forward level through REST create and patch adapters with alias resolution",
+      "derivedFrom": [
+        "BR-2"
+      ],
+      "artifactIds": [
+        "ART-rest-adapter"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "OBL-13",
+      "title": "Document level in OpenAPI property descriptions (schemas auto-derive from zod)",
+      "derivedFrom": [
+        "C-7"
+      ],
+      "artifactIds": [
+        "ART-openapi"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "OBL-14",
+      "title": "Expose usable-state and close-terminal constants for frontend reuse",
+      "derivedFrom": [
+        "BR-4",
+        "BR-5"
+      ],
+      "artifactIds": [
+        "ART-epic-rules"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "OBL-15",
+      "title": "Structured EPIC_* ServiceError codes for actionable cross-surface errors",
+      "derivedFrom": [
+        "BR-4",
+        "BR-5"
+      ],
+      "artifactIds": [
+        "ART-epic-rules",
+        "ART-ticket-service"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "OBL-16",
+      "title": "Unit tests for pure epic rules (key shape, usable state, close terminal, target resolution, close guard) and structured error codes",
+      "derivedFrom": [
+        "BR-4",
+        "BR-5",
+        "C-3",
+        "Edge-1",
+        "Edge-6",
+        "Edge-7"
+      ],
+      "artifactIds": [
+        "ART-epic-rules-test"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "OBL-17",
+      "title": "Domain-contracts schema tests for level field and enum (defaults, round-trip, invalid values)",
+      "derivedFrom": [
+        "BR-1",
+        "BR-2",
+        "C-1"
+      ],
+      "artifactIds": [
+        "ART-domain-test"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "OBL-18",
+      "title": "Shared service tests for phaseEpic target validation and epic close guard orchestration across the write paths",
+      "derivedFrom": [
+        "BR-4",
+        "BR-5",
+        "Edge-2",
+        "Edge-3",
+        "Edge-5"
+      ],
+      "artifactIds": [
+        "ART-shared-service-test"
+      ],
+      "sourceRef": "CR:MDT-205"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-level-enum",
+      "path": "domain-contracts/src/types/schema.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "ART-level-entity",
+      "path": "domain-contracts/src/ticket/entity.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "ART-level-frontmatter",
+      "path": "domain-contracts/src/ticket/frontmatter.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "ART-level-input",
+      "path": "domain-contracts/src/ticket/input.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "ART-normalize",
+      "path": "shared/models/Ticket.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "ART-markdown-service",
+      "path": "shared/services/MarkdownService.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "ART-epic-rules",
+      "path": "shared/services/epicRules.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "ART-attr-resolver",
+      "path": "shared/services/ticket/attrResolver.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "ART-ticket-service",
+      "path": "shared/services/TicketService.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "ART-cli-attr",
+      "path": "cli/src/commands/attrMeta.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "ART-cli-list",
+      "path": "cli/src/commands/list.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "ART-mcp-schema",
+      "path": "mcp-server/src/tools/config/allTools.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "ART-mcp-handler",
+      "path": "mcp-server/src/tools/handlers/crHandlers.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "ART-rest-adapter",
+      "path": "server/services/TicketService.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "ART-openapi",
+      "path": "server/openapi/schemas.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "ART-epic-rules-test",
+      "path": "shared/services/__tests__/epicRules.test.ts",
+      "kind": "test",
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "ART-domain-test",
+      "path": "domain-contracts/src/ticket/__tests__/schema.test.ts",
+      "kind": "test",
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "ART-shared-service-test",
+      "path": "shared/tests/services/epicValidation.test.ts",
+      "kind": "test",
+      "sourceRef": "CR:MDT-205"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-epic-rules",
+      "kind": "unit",
+      "title": "Pure epic rules: ticket-key shape, usable epic state, close-terminal set, phaseEpic target resolution (all four outcomes), close guard with mixed/terminal children, structured error codes",
+      "covers": [
+        "BR-4",
+        "BR-5",
+        "C-3",
+        "Edge-1",
+        "Edge-6",
+        "Edge-7"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "TEST-domain-level",
+      "kind": "unit",
+      "title": "domain-contracts: CRLevel enum shape, level on TicketSchema defaults/accepts/rejects, frontmatter schema, create/update input schemas, level in TICKET_UPDATE_ATTRS",
+      "covers": [
+        "BR-1",
+        "BR-2",
+        "C-1",
+        "C-6"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "TEST-normalize-default",
+      "kind": "unit",
+      "title": "shared normalizeTicket/normalizeTicketMetadata: level defaults to ticket when absent, preserves epic when present, round-trips through YAML serialization",
+      "covers": [
+        "BR-1",
+        "C-1"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "TEST-phase-epic-validation",
+      "kind": "unit",
+      "title": "shared TicketService: phaseEpic write validation rejects non-epic/missing/proposed targets, accepts approved/implemented/free-text, allows clear; createCR path same rules",
+      "covers": [
+        "BR-4",
+        "Edge-2",
+        "Edge-6",
+        "Edge-7"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "TEST-level-alias",
+      "kind": "unit",
+      "title": "shared attrResolver: LEVEL_ALIASES resolve e/t/canonical, resolveLevelToken throws on unknown, resolveAttrValue dispatches level",
+      "covers": [
+        "BR-7",
+        "C-6"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "TEST-cli-surface",
+      "kind": "unit",
+      "title": "CLI: level token in ATTR_FIELDS, level in FILTER_FIELD_MAPPING, alias resolution routes through shared resolver",
+      "covers": [
+        "BR-2",
+        "BR-6",
+        "BR-7"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "TEST-rest-surface",
+      "kind": "integration",
+      "title": "REST: PATCH forwards level (round-trip), create forwards level, EPIC_* errors map to 4xx with actionable messages, OpenAPI documents level",
+      "covers": [
+        "BR-2",
+        "C-7"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "TEST-list-filter",
+      "kind": "unit",
+      "title": "shared listCRs + CLI list: filtering by level returns only matching tickets; default level on legacy tickets keeps them in ticket set",
+      "covers": [
+        "BR-6",
+        "C-1"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "TEST-regression-status",
+      "kind": "unit",
+      "title": "Regression: non-epic status movement to Implemented remains free and unguarded after epic rules land",
+      "covers": [
+        "C-4"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "TEST-mcp-surface",
+      "kind": "integration",
+      "title": "MCP: level property present in create_cr and update_cr_attrs schemas, CRAttributes type includes level, handler forwards level, EPIC_* errors surface as JSON-RPC errors",
+      "covers": [
+        "BR-2",
+        "BR-4",
+        "BR-5"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "TEST-close-guard",
+      "kind": "unit",
+      "title": "shared TicketService.updateCRStatus: epic to Implemented blocked by non-terminal children (lists them), allowed when all terminal or no children; non-epic unaffected; reopen allowed; existing children not retroactively rejected when epic moves to Proposed",
+      "covers": [
+        "BR-5",
+        "C-4",
+        "Edge-3",
+        "Edge-4",
+        "Edge-5"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "TEST-data-model-invariants",
+      "kind": "unit",
+      "title": "Data-model invariants: no epicId or children[] field introduced (phaseEpic remains the link), and MDT-205 introduces no board card-render flag (epic card exclusion belongs to MDT-206)",
+      "covers": [
+        "C-2",
+        "C-5"
+      ],
+      "sourceRef": "CR:MDT-205"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-2",
+      "title": "Add level field to entity, frontmatter, input schemas, TICKET_UPDATE_ATTRS, and domain schema tests",
+      "ownsArtifactIds": [
+        "ART-level-entity",
+        "ART-level-frontmatter",
+        "ART-level-input",
+        "ART-domain-test"
+      ],
+      "makesGreenIds": [
+        "TEST-domain-level"
+      ],
+      "skills": [
+        "typescript",
+        "zod"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Normalize level to ticket default on read in both normalizers; serialize level to YAML in both writers",
+      "ownsArtifactIds": [
+        "ART-normalize",
+        "ART-markdown-service"
+      ],
+      "makesGreenIds": [
+        "level_defaults_to_ticket_on_read",
+        "level_epic_round_trips",
+        "TEST-normalize-default"
+      ],
+      "skills": [
+        "typescript"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "TASK-4",
+      "title": "Implement pure epic rules module with EPIC_* error codes and unit tests",
+      "ownsArtifactIds": [
+        "ART-epic-rules",
+        "ART-epic-rules-test"
+      ],
+      "makesGreenIds": [
+        "TEST-epic-rules"
+      ],
+      "skills": [
+        "typescript",
+        "pure-functions"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "TASK-5",
+      "title": "Add LEVEL_ALIASES to shared attrResolver and dispatch from resolveAttrValue",
+      "ownsArtifactIds": [
+        "ART-attr-resolver"
+      ],
+      "makesGreenIds": [
+        "level_alias_resolution",
+        "TEST-level-alias"
+      ],
+      "skills": [
+        "typescript"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "TASK-6",
+      "title": "Wire phaseEpic target validation into updateCRAttrs and createCR orchestration with service tests",
+      "ownsArtifactIds": [
+        "ART-ticket-service",
+        "ART-shared-service-test"
+      ],
+      "makesGreenIds": [
+        "phase_epic_target_must_be_epic",
+        "phase_epic_target_must_exist",
+        "phase_epic_target_proposed_rejected",
+        "phase_epic_target_approved_succeeds",
+        "phase_epic_target_implemented_succeeds",
+        "phase_epic_free_text_succeeds",
+        "TEST-phase-epic-validation"
+      ],
+      "skills": [
+        "typescript"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "TASK-7",
+      "title": "Wire epic close guard into updateCRStatus (epics to Implemented only); lifecycle free for empty epics",
+      "ownsArtifactIds": [
+        "ART-ticket-service"
+      ],
+      "makesGreenIds": [
+        "epic_lifecycle_three_states",
+        "epic_close_guard_blocks_non_terminal_children",
+        "epic_close_guard_allows_all_terminal_children",
+        "non_epic_implemented_unaffected",
+        "TEST-close-guard",
+        "TEST-regression-status"
+      ],
+      "skills": [
+        "typescript"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "TASK-8",
+      "title": "Expose level in CLI attr tokens and list filters with alias resolution",
+      "ownsArtifactIds": [
+        "ART-cli-attr",
+        "ART-cli-list"
+      ],
+      "makesGreenIds": [
+        "level_settable_via_cli",
+        "level_filterable",
+        "TEST-cli-surface",
+        "TEST-list-filter"
+      ],
+      "skills": [
+        "typescript",
+        "cli"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "TASK-9",
+      "title": "Expose level in MCP schemas and handler; surface EPIC_* errors as JSON-RPC",
+      "ownsArtifactIds": [
+        "ART-mcp-schema",
+        "ART-mcp-handler"
+      ],
+      "makesGreenIds": [
+        "level_settable_via_mcp",
+        "TEST-mcp-surface"
+      ],
+      "skills": [
+        "typescript",
+        "mcp"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "TASK-10",
+      "title": "Forward level through REST create and patch adapters with alias resolution; document level in OpenAPI",
+      "ownsArtifactIds": [
+        "ART-rest-adapter",
+        "ART-openapi"
+      ],
+      "makesGreenIds": [
+        "level_settable_via_rest",
+        "TEST-rest-surface",
+        "TEST-data-model-invariants"
+      ],
+      "skills": [
+        "typescript",
+        "openapi"
+      ],
+      "sourceRef": "CR:MDT-205"
+    },
+    {
+      "id": "TASK-1",
+      "title": "Add CRLevel enum and zod schema to domain-contracts",
+      "ownsArtifactIds": [
+        "ART-level-enum"
+      ],
+      "makesGreenIds": [
+        "TEST-domain-level"
+      ],
+      "skills": [
+        "typescript",
+        "type-safe-enum"
+      ],
+      "sourceRef": "CR:MDT-205"
+    }
+  ]
+}

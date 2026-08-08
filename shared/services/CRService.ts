@@ -8,7 +8,12 @@ export class CRService {
   /**
    * Create a new ticket object from input data
    */
-  static createTicket(data: TicketData, ticketCode: string, ticketType: string, filePath: string) {
+  static createTicket(
+    data: TicketData,
+    ticketCode: string,
+    ticketType: string,
+    filePath: string,
+  ) {
     const now = new Date()
     return {
       code: ticketCode,
@@ -16,6 +21,7 @@ export class CRService {
       status: CRStatus.PROPOSED,
       type: ticketType,
       priority: data.priority || 'Medium',
+      level: data.level,
       dateCreated: now,
       lastModified: now,
       content: data.content || '',
@@ -37,7 +43,11 @@ export class CRService {
    * @param content Optional file content
    * @returns Extracted title
    */
-  static async extractTitle(projectPath: string, filePath: string, content?: string): Promise<string> {
+  static async extractTitle(
+    projectPath: string,
+    filePath: string,
+    content?: string,
+  ): Promise<string> {
     return await this.titleService.extractTitle(projectPath, filePath, content)
   }
 
@@ -66,10 +76,19 @@ export class CRService {
    * Parse comma-separated string or array into array
    */
   static parseArrayField(field: string | string[] | undefined): string[] {
-    if (Array.isArray(field))
-      return field.filter((item: string) => !/^(?:none|n\/a|null|undefined)$/i.test(item.trim()))
+    if (Array.isArray(field)) {
+      return field.filter(
+        (item: string) => !/^(?:none|n\/a|null|undefined)$/i.test(item.trim()),
+      )
+    }
     if (typeof field === 'string' && field.trim()) {
-      return field.split(',').map(item => item.trim()).filter(Boolean).filter((item: string) => !/^(?:none|n\/a|null|undefined)$/i.test(item))
+      return field
+        .split(',')
+        .map(item => item.trim())
+        .filter(Boolean)
+        .filter(
+          (item: string) => !/^(?:none|n\/a|null|undefined)$/i.test(item),
+        )
     }
     return []
   }

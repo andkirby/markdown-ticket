@@ -25,25 +25,35 @@ import { Sanitizer } from '../../utils/sanitizer.js'
 import { JsonRpcErrorCode, ToolError } from '../../utils/toolError.js'
 import { validateOperation, validateRequired } from '../../utils/validation.js'
 
-type CRAttributes
-  = Pick<Ticket, 'code' | 'title' | 'status' | 'type' | 'priority'>
-    & Partial<Pick<
-      Ticket,
-      | 'phaseEpic'
-      | 'assignee'
-      | 'dependsOn'
-      | 'blocks'
-      | 'relatedTickets'
-      | 'impactAreas'
-      | 'implementationDate'
-      | 'implementationNotes'
-    >>
+type CRAttributes = Pick<
+  Ticket,
+  'code' | 'title' | 'status' | 'type' | 'priority'
+>
+& Partial<
+  Pick<
+    Ticket,
+    | 'level'
+    | 'phaseEpic'
+    | 'assignee'
+    | 'dependsOn'
+    | 'blocks'
+    | 'relatedTickets'
+    | 'impactAreas'
+    | 'implementationDate'
+    | 'implementationNotes'
+  >
+>
 
-function hasServiceErrorCode(error: unknown, code: string): error is { code: string, message: string } {
-  return typeof error === 'object'
+function hasServiceErrorCode(
+  error: unknown,
+  code: string,
+): error is { code: string, message: string } {
+  return (
+    typeof error === 'object'
     && error !== null
     && 'code' in error
     && (error as { code?: unknown }).code === code
+  )
 }
 
 /**
@@ -64,22 +74,34 @@ export class CRHandlers {
   /**
    * Handler for list_crs tool
    */
-  async handleListCRs(project: Project, filters?: TicketFilters): Promise<string> {
+  async handleListCRs(
+    project: Project,
+    filters?: TicketFilters,
+  ): Promise<string> {
     const crs = await this.crService.listCRs(project, filters)
 
     if (crs.length === 0) {
       if (filters) {
-        return Sanitizer.sanitizeText(`🎫 No CRs found matching the specified filters in project ${project.project.code || project.id}.`)
+        return Sanitizer.sanitizeText(
+          `🎫 No CRs found matching the specified filters in project ${project.project.code || project.id}.`,
+        )
       }
-      return Sanitizer.sanitizeText(`🎫 No CRs found in project ${project.project.code || project.id}.`)
+      return Sanitizer.sanitizeText(
+        `🎫 No CRs found in project ${project.project.code || project.id}.`,
+      )
     }
 
-    const lines = [`🎫 Found ${crs.length} CR${crs.length === 1 ? '' : 's'}${filters ? ' matching filters' : ''}:`, '']
+    const lines = [
+      `🎫 Found ${crs.length} CR${crs.length === 1 ? '' : 's'}${filters ? ' matching filters' : ''}:`,
+      '',
+    ]
 
     for (const ticket of crs) {
       // Sanitize ticket data before output
       const safeTitle = Sanitizer.sanitizeText(ticket.title)
-      const safePhase = ticket.phaseEpic ? Sanitizer.sanitizeText(ticket.phaseEpic) : null
+      const safePhase = ticket.phaseEpic
+        ? Sanitizer.sanitizeText(ticket.phaseEpic)
+        : null
 
       lines.push(`**${ticket.code}** - ${safeTitle}`)
       lines.push(`- Status: ${ticket.status}`)
@@ -98,22 +120,35 @@ export class CRHandlers {
   /**
    * Handler for get_cr tool
    */
-  async handleGetCR(project: Project, key: string, mode: string = 'full'): Promise<string> {
+  async handleGetCR(
+    project: Project,
+    key: string,
+    mode: string = 'full',
+  ): Promise<string> {
     // Normalize key (MDT-121: supports numeric shorthand and lowercase prefixes)
     const projectCode = project.project.code || project.id
     const normalizedKey = normalizeKey(key, projectCode)
 
     // Validate mode parameter - this is a protocol error (invalid parameter)
-    const modeValidation = validateOperation(mode, ['full', 'attributes', 'metadata'], 'mode')
+    const modeValidation = validateOperation(
+      mode,
+      ['full', 'attributes', 'metadata'],
+      'mode',
+    )
     if (!modeValidation.valid) {
-      throw ToolError.protocol(modeValidation.message || 'Invalid mode parameter', JsonRpcErrorCode.InvalidParams)
+      throw ToolError.protocol(
+        modeValidation.message || 'Invalid mode parameter',
+        JsonRpcErrorCode.InvalidParams,
+      )
     }
 
     // TicketService now handles worktree resolution internally (MDT-095)
     const ticket = await this.crService.getCR(project, normalizedKey)
     if (!ticket) {
       // CR not found is a business logic failure (tool execution error)
-      throw ToolError.toolExecution(`CR '${normalizedKey}' not found in project '${project.project.code || project.id}'`)
+      throw ToolError.toolExecution(
+        `CR '${normalizedKey}' not found in project '${project.project.code || project.id}'`,
+      )
     }
 
     switch (modeValidation.value) {
@@ -130,20 +165,27 @@ export class CRHandlers {
           const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---/)
           if (!frontmatterMatch) {
             // Invalid file format is a business logic error (tool execution error)
-            throw ToolError.toolExecution(`Invalid CR file format for ${normalizedKey}: No YAML frontmatter found`)
+            throw ToolError.toolExecution(
+              `Invalid CR file format for ${normalizedKey}: No YAML frontmatter found`,
+            )
           }
 
           const _yamlContent = frontmatterMatch[1]
 
           // Use MarkdownService to parse YAML (anti-duplication)
-          const parsedTicket = await MarkdownService.parseMarkdownContent(fileContent)
+          const parsedTicket
+            = await MarkdownService.parseMarkdownContent(fileContent)
           if (!parsedTicket) {
-            throw ToolError.toolExecution(`Failed to parse CR file for ${normalizedKey}`)
+            throw ToolError.toolExecution(
+              `Failed to parse CR file for ${normalizedKey}`,
+            )
           }
 
           const attributes: CRAttributes = {
             code: parsedTicket.code || normalizedKey,
-            title: Sanitizer.sanitizeText(ticket.title || parsedTicket.title || 'Untitled'),
+            title: Sanitizer.sanitizeText(
+              ticket.title || parsedTicket.title || 'Untitled',
+            ),
             status: parsedTicket.status || 'Unknown',
             type: parsedTicket.type || 'Unknown',
             priority: parsedTicket.priority || 'Medium',
@@ -162,17 +204,22 @@ export class CRHandlers {
           ]
 
           for (const field of optionalFields) {
-            const value = (parsedTicket as unknown as Record<string, unknown>)[field as string]
+            const value = (parsedTicket as unknown as Record<string, unknown>)[
+              field as string
+            ]
             if (value !== undefined && value !== null) {
               // Type-safe assignment based on the expected type
               if (typeof value === 'string') {
-                (attributes as unknown as Record<string, unknown>)[field] = Sanitizer.sanitizeText(value)
+                (attributes as unknown as Record<string, unknown>)[field]
+                  = Sanitizer.sanitizeText(value)
               }
               else if (Array.isArray(value)) {
-                (attributes as unknown as Record<string, unknown>)[field] = value as string[]
+                (attributes as unknown as Record<string, unknown>)[field]
+                  = value as string[]
               }
               else {
-                (attributes as unknown as Record<string, unknown>)[field] = value
+                (attributes as unknown as Record<string, unknown>)[field]
+                  = value
               }
             }
           }
@@ -181,7 +228,9 @@ export class CRHandlers {
           return Sanitizer.sanitizeText(JSON.stringify(attributes, null, 2))
         }
         catch (fileError) {
-          throw ToolError.toolExecution(`Failed to read CR file for ${normalizedKey}: ${(fileError as Error).message}`)
+          throw ToolError.toolExecution(
+            `Failed to read CR file for ${normalizedKey}: ${(fileError as Error).message}`,
+          )
         }
       }
 
@@ -194,36 +243,58 @@ export class CRHandlers {
             status: ticket.status,
             type: ticket.type,
             priority: ticket.priority,
-            phaseEpic: ticket.phaseEpic ? Sanitizer.sanitizeText(ticket.phaseEpic) : undefined,
+            phaseEpic: ticket.phaseEpic
+              ? Sanitizer.sanitizeText(ticket.phaseEpic)
+              : undefined,
             filePath: ticket.filePath,
           }
 
           return Sanitizer.sanitizeText(JSON.stringify(metadata, null, 2))
         }
         catch (fileError) {
-          throw ToolError.toolExecution(`Failed to get metadata for ${normalizedKey}: ${(fileError as Error).message}`)
+          throw ToolError.toolExecution(
+            `Failed to get metadata for ${normalizedKey}: ${(fileError as Error).message}`,
+          )
         }
 
       default:
-        throw ToolError.protocol(`Invalid mode '${mode}'. Must be: full, attributes, or metadata`, JsonRpcErrorCode.InvalidParams)
+        throw ToolError.protocol(
+          `Invalid mode '${mode}'. Must be: full, attributes, or metadata`,
+          JsonRpcErrorCode.InvalidParams,
+        )
     }
   }
 
   /**
    * Handler for create_cr tool
    */
-  async handleCreateCR(project: Project, type: string, data: TicketData): Promise<string> {
+  async handleCreateCR(
+    project: Project,
+    type: string,
+    data: TicketData,
+  ): Promise<string> {
     // Validate type parameter - this is a protocol error (invalid parameter)
     const typeValidation = validateOperation(type, CRTypes, 'type')
     if (!typeValidation.valid) {
-      throw ToolError.protocol(typeValidation.message || 'Validation error', JsonRpcErrorCode.InvalidParams)
+      throw ToolError.protocol(
+        typeValidation.message || 'Validation error',
+        JsonRpcErrorCode.InvalidParams,
+      )
     }
 
     // Validate data first - this is a protocol error (invalid parameter)
-    const validation = this.templateService.validateTicketData(data, typeValidation.value)
+    const validation = this.templateService.validateTicketData(
+      data,
+      typeValidation.value,
+    )
     if (!validation.valid) {
-      const errors = validation.errors.map(e => `- ❌ ${e.field}: ${e.message}`).join('\n')
-      throw ToolError.protocol(`CR data validation failed:\n${errors}`, JsonRpcErrorCode.InvalidParams)
+      const errors = validation.errors
+        .map(e => `- ❌ ${e.field}: ${e.message}`)
+        .join('\n')
+      throw ToolError.protocol(
+        `CR data validation failed:\n${errors}`,
+        JsonRpcErrorCode.InvalidParams,
+      )
     }
 
     // Process content if provided
@@ -245,14 +316,21 @@ export class CRHandlers {
 
       // Show warnings if any
       if (contentProcessingResult.warnings.length > 0) {
-        console.warn(`Content processing warnings for new CR:`, contentProcessingResult.warnings)
+        console.warn(
+          `Content processing warnings for new CR:`,
+          contentProcessingResult.warnings,
+        )
       }
 
       // Use processed content
       processedData.content = contentProcessingResult.content
     }
 
-    const ticket = await this.crService.createCR(project, typeValidation.value as string, processedData)
+    const ticket = await this.crService.createCR(
+      project,
+      typeValidation.value as string,
+      processedData,
+    )
 
     const lines = [
       `✅ **Created CR ${ticket.code}**: ${ticket.title}`,
@@ -275,12 +353,18 @@ export class CRHandlers {
     }
 
     // Add processing information if content was provided and processed
-    if (data.content && processedData.content !== data.content && contentProcessingResult) {
+    if (
+      data.content
+      && processedData.content !== data.content
+      && contentProcessingResult
+    ) {
       lines.push('')
       lines.push('**Content Processing:**')
       lines.push('- Applied content sanitization and formatting')
       if (contentProcessingResult.warnings.length > 0) {
-        lines.push(`- ${contentProcessingResult.warnings.length} warning(s) logged to console`)
+        lines.push(
+          `- ${contentProcessingResult.warnings.length} warning(s) logged to console`,
+        )
       }
     }
 
@@ -294,7 +378,9 @@ export class CRHandlers {
       lines.push('- Standard CR sections ready for completion')
       lines.push('- YAML frontmatter with all metadata')
       lines.push('')
-      lines.push('Next step: Update the CR with detailed implementation specifications.')
+      lines.push(
+        'Next step: Update the CR with detailed implementation specifications.',
+      )
     }
 
     return lines.join('\n')
@@ -303,35 +389,52 @@ export class CRHandlers {
   /**
    * Handler for update_cr_status tool
    */
-  async handleUpdateCRStatus(project: Project, key: string, status: CRStatus): Promise<string> {
+  async handleUpdateCRStatus(
+    project: Project,
+    key: string,
+    status: CRStatus,
+  ): Promise<string> {
     // Normalize key (MDT-121: supports numeric shorthand and lowercase prefixes)
     const projectCode = project.project.code || project.id
     const normalizedKey = normalizeKey(key, projectCode)
 
     // Validate status parameter
-    const statusValidation = validateOperation(status, [
-      CRStatusEnum.PROPOSED,
-      CRStatusEnum.APPROVED,
-      CRStatusEnum.IN_PROGRESS,
-      CRStatusEnum.IMPLEMENTED,
-      CRStatusEnum.REJECTED,
-      CRStatusEnum.ON_HOLD,
-      CRStatusEnum.PARTIALLY_IMPLEMENTED,
-    ] as string[], 'status')
+    const statusValidation = validateOperation(
+      status,
+      [
+        CRStatusEnum.PROPOSED,
+        CRStatusEnum.APPROVED,
+        CRStatusEnum.IN_PROGRESS,
+        CRStatusEnum.IMPLEMENTED,
+        CRStatusEnum.REJECTED,
+        CRStatusEnum.ON_HOLD,
+        CRStatusEnum.PARTIALLY_IMPLEMENTED,
+      ] as string[],
+      'status',
+    )
     if (!statusValidation.valid) {
-      throw ToolError.protocol(statusValidation.message || 'Validation error', JsonRpcErrorCode.InvalidParams)
+      throw ToolError.protocol(
+        statusValidation.message || 'Validation error',
+        JsonRpcErrorCode.InvalidParams,
+      )
     }
 
     // TicketService now handles worktree resolution internally (MDT-095)
     const ticket = await this.crService.getCR(project, normalizedKey)
     if (!ticket) {
-      throw ToolError.toolExecution(`CR '${normalizedKey}' not found in project '${project.project.code || project.id}'`)
+      throw ToolError.toolExecution(
+        `CR '${normalizedKey}' not found in project '${project.project.code || project.id}'`,
+      )
     }
 
     const oldStatus = ticket.status
 
     // The service now throws specific errors instead of returning false
-    await this.crService.updateCRStatus(project, normalizedKey, statusValidation.value as CRStatus)
+    await this.crService.updateCRStatus(
+      project,
+      normalizedKey,
+      statusValidation.value as CRStatus,
+    )
 
     const lines = [
       `✅ **Updated CR ${normalizedKey}** status`,
@@ -348,7 +451,9 @@ export class CRHandlers {
     else if (statusValidation.value === 'Implemented') {
       lines.push('', 'The CR has been marked as implemented.')
       if (ticket.type === 'Bug Fix') {
-        lines.push('Consider deleting this bug fix CR after verification period.')
+        lines.push(
+          'Consider deleting this bug fix CR after verification period.',
+        )
       }
     }
 
@@ -359,7 +464,11 @@ export class CRHandlers {
    * Handler for update_cr_attrs tool
    * Uses shared TicketService attribute capability (MDT-145)
    */
-  async handleUpdateCRAttrs(project: Project, key: string, attributes: Record<string, unknown>): Promise<string> {
+  async handleUpdateCRAttrs(
+    project: Project,
+    key: string,
+    attributes: Record<string, unknown>,
+  ): Promise<string> {
     // Normalize key (MDT-121: supports numeric shorthand and lowercase prefixes)
     const projectCode = project.project.code || project.id
     const normalizedKey = normalizeKey(key, projectCode)
@@ -367,7 +476,10 @@ export class CRHandlers {
     // Validate attributes parameter
     const attrsValidation = validateRequired(attributes, 'attributes')
     if (!attrsValidation.valid) {
-      throw ToolError.protocol(attrsValidation.message || 'Validation error', JsonRpcErrorCode.InvalidParams)
+      throw ToolError.protocol(
+        attrsValidation.message || 'Validation error',
+        JsonRpcErrorCode.InvalidParams,
+      )
     }
 
     // Convert attributes to replace operations for shared TicketService attribute updates
@@ -396,7 +508,10 @@ export class CRHandlers {
       ]
 
       for (const field of result.changedFields || []) {
-        const ticketAsRecord = result.ticket as unknown as Record<string, unknown>
+        const ticketAsRecord = result.ticket as unknown as Record<
+          string,
+          unknown
+        >
         const value = ticketAsRecord[field]
         if (value !== undefined) {
           let formattedValue: string
@@ -421,12 +536,16 @@ export class CRHandlers {
     }
     catch (error) {
       if (hasServiceErrorCode(error, 'TICKET_NOT_FOUND')) {
-        throw ToolError.toolExecution(`CR '${normalizedKey}' not found in project '${project.project.code || project.id}'`)
+        throw ToolError.toolExecution(
+          `CR '${normalizedKey}' not found in project '${project.project.code || project.id}'`,
+        )
       }
       if (hasServiceErrorCode(error, 'INVALID_OPERATION')) {
         throw ToolError.protocol(error.message, JsonRpcErrorCode.InvalidParams)
       }
-      throw ToolError.toolExecution(`Failed to update CR '${normalizedKey}': ${error instanceof Error ? error.message : String(error)}`)
+      throw ToolError.toolExecution(
+        `Failed to update CR '${normalizedKey}': ${error instanceof Error ? error.message : String(error)}`,
+      )
     }
   }
 
@@ -441,7 +560,9 @@ export class CRHandlers {
     // TicketService now handles worktree resolution internally (MDT-095)
     const ticket = await this.crService.getCR(project, normalizedKey)
     if (!ticket) {
-      throw ToolError.toolExecution(`CR '${normalizedKey}' not found in project '${project.project.code || project.id}'`)
+      throw ToolError.toolExecution(
+        `CR '${normalizedKey}' not found in project '${project.project.code || project.id}'`,
+      )
     }
 
     const success = await this.crService.deleteCR(project, normalizedKey)
@@ -458,7 +579,10 @@ export class CRHandlers {
     ]
 
     if (ticket.type === 'Bug Fix') {
-      lines.push('', 'The bug fix CR has been deleted as it was implemented and verified. Bug CRs are typically removed after successful implementation to reduce clutter, as documented in the CR lifecycle.')
+      lines.push(
+        '',
+        'The bug fix CR has been deleted as it was implemented and verified. Bug CRs are typically removed after successful implementation to reduce clutter, as documented in the CR lifecycle.',
+      )
     }
 
     return lines.join('\n')
@@ -467,7 +591,10 @@ export class CRHandlers {
   /**
    * Handler for suggest_cr_improvements tool
    */
-  async handleSuggestCRImprovements(project: Project, key: string): Promise<string> {
+  async handleSuggestCRImprovements(
+    project: Project,
+    key: string,
+  ): Promise<string> {
     // Normalize key (MDT-121: supports numeric shorthand and lowercase prefixes)
     const projectCode = project.project.code || project.id
     const normalizedKey = normalizeKey(key, projectCode)
@@ -475,7 +602,9 @@ export class CRHandlers {
     // TicketService now handles worktree resolution internally (MDT-095)
     const ticket = await this.crService.getCR(project, normalizedKey)
     if (!ticket) {
-      throw ToolError.toolExecution(`CR '${normalizedKey}' not found in project '${project.project.code || project.id}'`)
+      throw ToolError.toolExecution(
+        `CR '${normalizedKey}' not found in project '${project.project.code || project.id}'`,
+      )
     }
 
     const suggestions = this.templateService.suggestImprovements(ticket)
@@ -486,7 +615,12 @@ export class CRHandlers {
       `**Current CR:** ${ticket.title}`,
       '',
       ...suggestions.map((suggestion, index) => {
-        const priority = index < 3 ? 'High-Priority' : index < 6 ? 'Medium-Priority' : 'Low-Priority'
+        const priority
+          = index < 3
+            ? 'High-Priority'
+            : index < 6
+              ? 'Medium-Priority'
+              : 'Low-Priority'
         return [
           `**${priority} Improvement:**`,
           '',

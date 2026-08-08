@@ -10,11 +10,24 @@ import type { ListTicketsSort } from '@mdt/shared/services/ticket/types.js'
 import type { StructuredOutputOptions } from '../output/structured.js'
 import { ProjectService } from '@mdt/shared/services/ProjectService.js'
 import { ServiceError } from '@mdt/shared/services/ServiceError.js'
-import { lookupStatusToken } from '@mdt/shared/services/ticket/attrResolver.js'
+import {
+  lookupLevelToken,
+  lookupStatusToken,
+} from '@mdt/shared/services/ticket/attrResolver.js'
 import { DEFAULT_LIST_LIMIT } from '@mdt/shared/services/ticket/types.js'
 import { TicketService } from '@mdt/shared/services/TicketService.js'
-import { formatTicketListFiles, formatTicketList as formatTicketListFormatter, formatTicketListInfo } from '../output/formatter.js'
-import { CliCommandError, formatProjectForStructured, formatTicketForStructured, getOutputFormat, writeStructuredSuccess } from '../output/structured.js'
+import {
+  formatTicketListFiles,
+  formatTicketList as formatTicketListFormatter,
+  formatTicketListInfo,
+} from '../output/formatter.js'
+import {
+  CliCommandError,
+  formatProjectForStructured,
+  formatTicketForStructured,
+  getOutputFormat,
+  writeStructuredSuccess,
+} from '../output/structured.js'
 import { PRIORITY_TOKENS, TYPE_TOKENS } from '../utils/aliases.js'
 
 /**
@@ -36,6 +49,7 @@ const FILTER_FIELD_MAPPING: Record<string, string> = {
   status: 'status',
   priority: 'priority',
   type: 'type',
+  level: 'level',
   assignee: 'assignee',
   phase: 'phaseEpic',
   epic: 'phaseEpic',
@@ -72,7 +86,9 @@ function parseFilters(filterArgs: string[]): Record<string, string | string[]> {
     // Status tokens resolve through the shared attr gate so list filtering
     // and attr mutation agree on the same alias meaning (MDT-143 UAT).
     if (filterField === 'status') {
-      const values = value.split(',').map(v => lookupStatusToken(v) ?? v.trim())
+      const values = value
+        .split(',')
+        .map(v => lookupStatusToken(v) ?? v.trim())
       filters[filterField] = values
     }
     else if (filterField === 'priority') {
@@ -89,9 +105,19 @@ function parseFilters(filterArgs: string[]): Record<string, string | string[]> {
       })
       filters[filterField] = values
     }
+    else if (filterField === 'level') {
+      // Level tokens resolve through the shared gate (e→epic, t→ticket).
+      const values = value
+        .split(',')
+        .map(v => lookupLevelToken(v) ?? v.trim())
+      filters[filterField] = values
+    }
     else {
       // assignee, phaseEpic — pass through as-is (fuzzy matching in shared)
-      const values = value.split(',').map(v => v.trim()).filter(Boolean)
+      const values = value
+        .split(',')
+        .map(v => v.trim())
+        .filter(Boolean)
       filters[filterField] = values.length === 1 ? values[0]! : values
     }
   }
@@ -106,7 +132,10 @@ function parseFilters(filterArgs: string[]): Record<string, string | string[]> {
  * @param options - Command options
  * @throws Process.exit(1) on error
  */
-export async function ticketListAction(filterArgs: string[] = [], options: ListCommandOptions = {}): Promise<void> {
+export async function ticketListAction(
+  filterArgs: string[] = [],
+  options: ListCommandOptions = {},
+): Promise<void> {
   // Resolve project: explicit --project wins, otherwise cwd detection
   const projectService = new ProjectService(true) // quiet=true
   const ticketService = new TicketService(true)
@@ -116,7 +145,11 @@ export async function ticketListAction(filterArgs: string[] = [], options: ListC
   if (options.project) {
     const resolved = await projectService.getProjectByCodeOrId(options.project)
     if (!resolved) {
-      throw new CliCommandError('PROJECT_NOT_FOUND', `Project ${options.project} not found`, { projectCode: options.project })
+      throw new CliCommandError(
+        'PROJECT_NOT_FOUND',
+        `Project ${options.project} not found`,
+        { projectCode: options.project },
+      )
     }
     projectCode = resolved.project.code
     projectPath = resolved.project.path
@@ -124,7 +157,10 @@ export async function ticketListAction(filterArgs: string[] = [], options: ListC
   else {
     const projectResult = await projectService.resolveCurrentProject()
     if (!projectResult.data) {
-      throw new CliCommandError('NO_PROJECT_CONTEXT', 'No project context. Run from a project directory.')
+      throw new CliCommandError(
+        'NO_PROJECT_CONTEXT',
+        'No project context. Run from a project directory.',
+      )
     }
     projectCode = projectResult.data.project.code
     projectPath = projectResult.data.project.path
@@ -178,7 +214,9 @@ export async function ticketListAction(filterArgs: string[] = [], options: ListC
       outputFormat,
       'ticket.list',
       {
-        items: tickets.map(ticket => formatTicketForStructured(ticket, projectPath)),
+        items: tickets.map(ticket =>
+          formatTicketForStructured(ticket, projectPath),
+        ),
         count: {
           total: totalResult.data.length,
           returned: tickets.length,

@@ -4,6 +4,7 @@ status: In Progress
 dateCreated: 2026-08-08T00:00:00.000Z
 type: Feature Enhancement
 priority: High
+level: ticket
 ---
 
 # Add epic level field with phaseEpic validation

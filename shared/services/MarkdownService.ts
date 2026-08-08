@@ -13,14 +13,21 @@ export class MarkdownService {
   /**
    * Parse markdown file with YAML frontmatter
    */
-  static async parseMarkdownFile(filePath: string, projectPath?: string): Promise<Ticket | null> {
+  static async parseMarkdownFile(
+    filePath: string,
+    projectPath?: string,
+  ): Promise<Ticket | null> {
     try {
       if (!fs.existsSync(filePath)) {
         return null
       }
 
       const content = fs.readFileSync(filePath, 'utf8')
-      const ticket = await this.parseMarkdownContent(content, filePath, projectPath)
+      const ticket = await this.parseMarkdownContent(
+        content,
+        filePath,
+        projectPath,
+      )
 
       if (ticket) {
         // Get file stats for dates if not in frontmatter
@@ -45,7 +52,11 @@ export class MarkdownService {
   /**
    * Parse markdown content with YAML frontmatter
    */
-  static async parseMarkdownContent(content: string, filePath?: string, projectPath?: string): Promise<Ticket | null> {
+  static async parseMarkdownContent(
+    content: string,
+    filePath?: string,
+    projectPath?: string,
+  ): Promise<Ticket | null> {
     try {
       const frontmatterMatch = content.match(PATTERNS.YAML_FRONTMATTER)
 
@@ -68,16 +79,25 @@ export class MarkdownService {
       let extractedTitle = metadata.title || 'Untitled'
       if (projectPath && filePath) {
         try {
-          extractedTitle = await CRService.extractTitle(projectPath, filePath, markdownContent)
+          extractedTitle = await CRService.extractTitle(
+            projectPath,
+            filePath,
+            markdownContent,
+          )
         }
         catch (error) {
-          console.warn(`Failed to extract title from H1 for ${filePath}:`, error)
+          console.warn(
+            `Failed to extract title from H1 for ${filePath}:`,
+            error,
+          )
           // Fallback to frontmatter title
         }
       }
 
       // Process content to hide additional H1 headers (keep only first)
-      const processedContent = CRService.processContentForDisplay(markdownContent.trim())
+      const processedContent = CRService.processContentForDisplay(
+        markdownContent.trim(),
+      )
 
       // Create raw ticket object
       const rawTicket = {
@@ -137,7 +157,9 @@ export class MarkdownService {
       return await fs.readFile(filePath, 'utf-8')
     }
     catch (error) {
-      throw new Error(`Failed to read file ${filePath}: ${(error as Error).message}`)
+      throw new Error(
+        `Failed to read file ${filePath}: ${(error as Error).message}`,
+      )
     }
   }
 
@@ -153,14 +175,18 @@ export class MarkdownService {
       await fs.writeFile(filePath, content, 'utf-8')
     }
     catch (error) {
-      throw new Error(`Failed to write file ${filePath}: ${(error as Error).message}`)
+      throw new Error(
+        `Failed to write file ${filePath}: ${(error as Error).message}`,
+      )
     }
   }
 
   /**
    * Simple YAML frontmatter parser
    */
-  private static parseYamlFrontmatter(yamlContent: string): Record<string, unknown> | null {
+  private static parseYamlFrontmatter(
+    yamlContent: string,
+  ): Record<string, unknown> | null {
     try {
       const result: Record<string, unknown> = {}
       const lines = yamlContent.split('\n')
@@ -178,13 +204,19 @@ export class MarkdownService {
         let value = trimmed.substring(colonIndex + 1).trim()
 
         // Remove quotes if present
-        if ((value.startsWith('"') && value.endsWith('"'))
-          || (value.startsWith('\'') && value.endsWith('\''))) {
+        if (
+          (value.startsWith('"') && value.endsWith('"'))
+          || (value.startsWith('\'') && value.endsWith('\''))
+        ) {
           value = value.slice(1, -1)
         }
 
         // Parse dates
-        if (key.includes('Date') || key.includes('Modified') || key.includes('Created')) {
+        if (
+          key.includes('Date')
+          || key.includes('Modified')
+          || key.includes('Created')
+        ) {
           const dateValue = new Date(value)
           result[key] = Number.isNaN(dateValue.getTime()) ? value : dateValue
         }
@@ -216,6 +248,8 @@ export class MarkdownService {
       lines.push(`type: ${ticket.type}`)
     if (ticket.priority)
       lines.push(`priority: ${ticket.priority}`)
+    if (ticket.level)
+      lines.push(`level: ${ticket.level}`)
 
     // Dates
     if (ticket.dateCreated) {
@@ -225,7 +259,9 @@ export class MarkdownService {
       lines.push(`lastModified: ${ticket.lastModified.toISOString()}`)
     }
     if (ticket.implementationDate) {
-      lines.push(`implementationDate: ${ticket.implementationDate.toISOString()}`)
+      lines.push(
+        `implementationDate: ${ticket.implementationDate.toISOString()}`,
+      )
     }
 
     // Optional fields
@@ -253,13 +289,17 @@ export class MarkdownService {
   /**
    * Scan directory for markdown files
    */
-  static async scanMarkdownFiles(dirPath: string, projectPath?: string): Promise<Ticket[]> {
+  static async scanMarkdownFiles(
+    dirPath: string,
+    projectPath?: string,
+  ): Promise<Ticket[]> {
     try {
       if (!fs.existsSync(dirPath)) {
         return []
       }
 
-      const files = fs.readdirSync(dirPath)
+      const files = fs
+        .readdirSync(dirPath)
         .filter(file => file.endsWith('.md'))
         .map(file => path.join(dirPath, file))
 
@@ -292,13 +332,17 @@ export class MarkdownService {
    * @param projectPath - Optional project path for H1 title extraction
    * @returns Array of TicketMetadata (without content)
    */
-  static async scanTicketMetadata(dirPath: string, projectPath?: string): Promise<TicketMetadata[]> {
+  static async scanTicketMetadata(
+    dirPath: string,
+    projectPath?: string,
+  ): Promise<TicketMetadata[]> {
     try {
       if (!fs.existsSync(dirPath)) {
         return []
       }
 
-      const files = fs.readdirSync(dirPath)
+      const files = fs
+        .readdirSync(dirPath)
         .filter(file => file.endsWith('.md'))
         .map(file => path.join(dirPath, file))
 
@@ -306,21 +350,30 @@ export class MarkdownService {
 
       for (const filePath of files) {
         try {
-          const metadata = await this.extractTicketMetadata(filePath, projectPath)
+          const metadata = await this.extractTicketMetadata(
+            filePath,
+            projectPath,
+          )
           if (metadata) {
             metadataList.push(metadata)
           }
         }
         catch (error) {
           // Log warning and skip problematic files, continue with others
-          console.warn(`[MDT-094] Warning: Failed to extract metadata from ${filePath}:`, error)
+          console.warn(
+            `[MDT-094] Warning: Failed to extract metadata from ${filePath}:`,
+            error,
+          )
         }
       }
 
       return metadataList
     }
     catch (error) {
-      console.error(`[MDT-094] Error scanning ticket metadata in ${dirPath}:`, error)
+      console.error(
+        `[MDT-094] Error scanning ticket metadata in ${dirPath}:`,
+        error,
+      )
       return []
     }
   }
@@ -335,7 +388,10 @@ export class MarkdownService {
    * @param projectPath - Optional project path for H1 title extraction
    * @returns TicketMetadata or null if file has no valid frontmatter
    */
-  static async extractTicketMetadata(filePath: string, projectPath?: string): Promise<TicketMetadata | null> {
+  static async extractTicketMetadata(
+    filePath: string,
+    projectPath?: string,
+  ): Promise<TicketMetadata | null> {
     try {
       if (!fs.existsSync(filePath)) {
         return null
@@ -366,7 +422,11 @@ export class MarkdownService {
       let extractedTitle = parsedYaml.title || 'Untitled'
       if (projectPath) {
         try {
-          extractedTitle = await CRService.extractTitle(projectPath, filePath, markdownBody)
+          extractedTitle = await CRService.extractTitle(
+            projectPath,
+            filePath,
+            markdownBody,
+          )
         }
         catch {
           // Fallback to frontmatter title
@@ -390,7 +450,10 @@ export class MarkdownService {
       return normalizeTicketMetadata(rawMetadata)
     }
     catch (error) {
-      console.warn(`[MDT-094] Error extracting metadata from ${filePath}:`, error)
+      console.warn(
+        `[MDT-094] Error extracting metadata from ${filePath}:`,
+        error,
+      )
       return null
     }
   }

@@ -10,14 +10,21 @@ import type { Project } from '@mdt/shared/models/Project.js'
 import type { Ticket, TicketData } from '@mdt/shared/models/Ticket.js'
 import type { CRStatus } from '@mdt/shared/models/Types.js'
 import { TICKET_KEY_INPUT_PATTERN } from '@mdt/domain-contracts'
-import { groupNamespacedFiles, parseNamespace } from '@mdt/shared/services/ticket/subdocuments/namespace.js'
+import { resolveAttrValue } from '@mdt/shared/services/ticket/attrResolver.js'
+import {
+  groupNamespacedFiles,
+  parseNamespace,
+} from '@mdt/shared/services/ticket/subdocuments/namespace.js'
 import { SubdocumentService } from '@mdt/shared/services/ticket/SubdocumentService.js'
 import { TicketLocationResolver } from '@mdt/shared/services/ticket/TicketLocationResolver.js'
 import { TicketService as SharedTicketService } from '@mdt/shared/services/TicketService.js'
 import { normalizeKey } from '@mdt/shared/utils/keyNormalizer.js'
 import { TraceStoreService } from './TraceStoreService.js'
 
-export type CRData = Pick<TicketData, 'title' | 'type' | 'priority' | 'description'> & {
+export type CRData = Pick<
+  TicketData,
+  'title' | 'type' | 'priority' | 'level' | 'description'
+> & {
   code?: string
 }
 
@@ -91,7 +98,9 @@ export class TicketService {
    */
   private async getProject(projectId: string): Promise<Project> {
     const projects = await this.projectDiscovery.getAllProjects()
-    const project = projects.find(p => p.id === projectId || p.project.code === projectId)
+    const project = projects.find(
+      p => p.id === projectId || p.project.code === projectId,
+    )
 
     if (!project) {
       throw new Error('Project not found')
@@ -144,7 +153,12 @@ export class TicketService {
     projectId: string,
     crId: string,
     subDocName: string,
-  ): Promise<{ code: string, content: string, dateCreated: Date | null, lastModified: Date | null }> {
+  ): Promise<{
+    code: string
+    content: string
+    dateCreated: Date | null
+    lastModified: Date | null
+  }> {
     const project = await this.getProject(projectId)
     const location = await this.ticketLocationResolver.resolve(project, crId)
     return this.subdocumentService.read(location, subDocName)
@@ -168,7 +182,10 @@ export class TicketService {
   async getTraceStore(
     projectId: string,
     crId: string,
-  ): Promise<{ metadata: { exists: boolean, ticketCode: string, label: string }, store: unknown }> {
+  ): Promise<{
+    metadata: { exists: boolean, ticketCode: string, label: string }
+    store: unknown
+  }> {
     const project = await this.getProject(projectId)
     const cr = await this.sharedTicketService.getCR(project, crId)
 
@@ -184,7 +201,7 @@ export class TicketService {
    * Create new CR in a project.
    */
   async createCR(projectId: string, crData: CRData): Promise<CreateCRResult> {
-    const { title, type, priority, description } = crData
+    const { title, type, priority, level, description } = crData
 
     if (!title || !type) {
       throw new Error('Title and type are required')
@@ -197,11 +214,18 @@ export class TicketService {
       title,
       type,
       priority: priority || 'Medium',
-      content: description ? `## 1. Description\n\n${description}\n\n` : undefined,
+      level: level || undefined,
+      content: description
+        ? `## 1. Description\n\n${description}\n\n`
+        : undefined,
     }
 
     // Use shared service to create CR
-    const ticket = await this.sharedTicketService.createCR(project, type, ticketData)
+    const ticket = await this.sharedTicketService.createCR(
+      project,
+      type,
+      ticketData,
+    )
 
     return {
       success: true,
@@ -215,7 +239,11 @@ export class TicketService {
   /**
    * Update CR partially (specific fields).
    */
-  async updateCRPartial(projectId: string, crId: string, updates: CRPartialUpdates): Promise<UpdateCRResult> {
+  async updateCRPartial(
+    projectId: string,
+    crId: string,
+    updates: CRPartialUpdates,
+  ): Promise<UpdateCRResult> {
     if (!updates || Object.keys(updates).length === 0) {
       throw new Error('No fields provided for update')
     }
@@ -225,7 +253,11 @@ export class TicketService {
 
     // Handle status update separately using the dedicated method
     if (updates.status !== undefined) {
-      await this.sharedTicketService.updateCRStatus(project, crId, updates.status as CRStatus)
+      await this.sharedTicketService.updateCRStatus(
+        project,
+        crId,
+        updates.status as CRStatus,
+      )
       updatedFields.push('status')
     }
 
@@ -235,6 +267,14 @@ export class TicketService {
     // Map allowed fields (excluding status which is handled above)
     if (updates.priority !== undefined) {
       ticketUpdates.priority = updates.priority
+    }
+    if (updates.level !== undefined) {
+      // Resolve aliases (e→epic, t→ticket) through the shared gate so REST
+      // accepts the same shorthand as the CLI (BR-2 / C-6).
+      ticketUpdates.level = resolveAttrValue(
+        'level',
+        String(updates.level),
+      ) as TicketUpdateAttrs['level']
     }
     if (updates.phaseEpic !== undefined) {
       ticketUpdates.phaseEpic = updates.phaseEpic
@@ -254,7 +294,11 @@ export class TicketService {
 
     // Use shared service to update attributes if there are any remaining fields
     if (Object.keys(ticketUpdates).length > 0) {
-      await this.sharedTicketService.updateCRAttrs(project, crId, ticketUpdates)
+      await this.sharedTicketService.updateCRAttrs(
+        project,
+        crId,
+        ticketUpdates,
+      )
       updatedFields.push(...Object.keys(ticketUpdates))
     }
 
@@ -285,14 +329,22 @@ export class TicketService {
     if (mode === 'ticket_key') {
       return this.searchByTicketKey(query, options.limitTotal)
     }
-    return this.searchByProjectScope(query, options.projectCode!, options.limitPerProject, options.limitTotal)
+    return this.searchByProjectScope(
+      query,
+      options.projectCode!,
+      options.limitPerProject,
+      options.limitTotal,
+    )
   }
 
   /**
    * ticket_key mode: extract project code from ticket key prefix,
    * resolve project, look up ticket.
    */
-  private async searchByTicketKey(query: string, limitTotal: number): Promise<SearchResponse> {
+  private async searchByTicketKey(
+    query: string,
+    limitTotal: number,
+  ): Promise<SearchResponse> {
     if (limitTotal < 1) {
       return { results: [], total: 0 }
     }
@@ -305,7 +357,9 @@ export class TicketService {
 
     const projectCode = match[1].toUpperCase()
     const projects = await this.projectDiscovery.getAllProjects()
-    const project = projects.find(p => p.project.code === projectCode || p.id === projectCode)
+    const project = projects.find(
+      p => p.project.code === projectCode || p.id === projectCode,
+    )
 
     if (!project) {
       return { results: [], total: 0 }
@@ -326,10 +380,19 @@ export class TicketService {
     }
 
     return {
-      results: [{
-        ticket: { code: cr.code, title: cr.title, priority: cr.priority ?? null },
-        project: { code: project.project.code || project.id, name: project.project.name },
-      }],
+      results: [
+        {
+          ticket: {
+            code: cr.code,
+            title: cr.title,
+            priority: cr.priority ?? null,
+          },
+          project: {
+            code: project.project.code || project.id,
+            name: project.project.name,
+          },
+        },
+      ],
       total: 1,
     }
   }
@@ -345,7 +408,9 @@ export class TicketService {
     limitTotal: number,
   ): Promise<SearchResponse> {
     const projects = await this.projectDiscovery.getAllProjects()
-    const project = projects.find(p => p.project.code === projectCode || p.id === projectCode)
+    const project = projects.find(
+      p => p.project.code === projectCode || p.id === projectCode,
+    )
 
     if (!project) {
       throw new Error('Project not found')
@@ -355,9 +420,10 @@ export class TicketService {
 
     // Filter by query — case-insensitive substring match on title or code
     const filtered = query
-      ? allCRs.filter(cr =>
-          cr.title.toLowerCase().includes(query.toLowerCase())
-          || cr.code.toLowerCase().includes(query.toLowerCase()),
+      ? allCRs.filter(
+          cr =>
+            cr.title.toLowerCase().includes(query.toLowerCase())
+            || cr.code.toLowerCase().includes(query.toLowerCase()),
         )
       : allCRs
 
@@ -366,8 +432,15 @@ export class TicketService {
 
     return {
       results: limited.map(cr => ({
-        ticket: { code: cr.code, title: cr.title, priority: cr.priority ?? null },
-        project: { code: project.project.code || project.id, name: project.project.name },
+        ticket: {
+          code: cr.code,
+          title: cr.title,
+          priority: cr.priority ?? null,
+        },
+        project: {
+          code: project.project.code || project.id,
+          name: project.project.name,
+        },
       })),
       total: limited.length,
     }

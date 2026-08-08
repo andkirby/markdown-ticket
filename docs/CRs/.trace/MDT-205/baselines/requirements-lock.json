@@ -1,0 +1,90 @@
+{
+  "ticket": "MDT-205",
+  "generatedAt": "2026-08-07T23:17:21.711Z",
+  "requirements": [
+    {
+      "id": "BR-1",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-5",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-6",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-7",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C-1",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-2",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-3",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-4",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-5",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-6",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-7",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-1",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-2",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-3",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-4",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-5",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-6",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-7",
+      "routePolicy": "tests"
+    }
+  ]
+}

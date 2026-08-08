@@ -10,7 +10,12 @@
  */
 
 import type { Tool } from '@modelcontextprotocol/sdk/types.js'
-import { CRPriorities, CRStatus, CRTypes } from '@mdt/domain-contracts'
+import {
+  CRLevels,
+  CRPriorities,
+  CRStatus,
+  CRTypes,
+} from '@mdt/domain-contracts'
 
 // =========================
 // Project Tool Definitions
@@ -63,6 +68,7 @@ const CR_STATUS_ENUM = [
 ] as const satisfies readonly string[]
 const CR_TYPE_ENUM = CRTypes as readonly string[]
 const CR_PRIORITY_ENUM = CRPriorities as readonly string[]
+const CR_LEVEL_ENUM = CRLevels as readonly string[]
 
 /**
  * Tools for CR and section management operations
@@ -85,21 +91,30 @@ export const CR_SECTION_TOOLS: Tool[] = [
             status: {
               oneOf: [
                 { type: 'string', enum: CR_STATUS_ENUM },
-                { type: 'array', items: { type: 'string', enum: CR_STATUS_ENUM } },
+                {
+                  type: 'array',
+                  items: { type: 'string', enum: CR_STATUS_ENUM },
+                },
               ],
               description: 'Filter by status',
             },
             type: {
               oneOf: [
                 { type: 'string', enum: CR_TYPE_ENUM },
-                { type: 'array', items: { type: 'string', enum: CR_TYPE_ENUM } },
+                {
+                  type: 'array',
+                  items: { type: 'string', enum: CR_TYPE_ENUM },
+                },
               ],
               description: 'Filter by type',
             },
             priority: {
               oneOf: [
                 { type: 'string', enum: CR_PRIORITY_ENUM },
-                { type: 'array', items: { type: 'string', enum: CR_PRIORITY_ENUM } },
+                {
+                  type: 'array',
+                  items: { type: 'string', enum: CR_PRIORITY_ENUM },
+                },
               ],
               description: 'Filter by priority',
             },
@@ -111,7 +126,8 @@ export const CR_SECTION_TOOLS: Tool[] = [
   },
   {
     name: 'create_cr',
-    description: 'Create a new CR. Available types: Architecture (system design), Feature Enhancement (new functionality), Bug Fix (defect resolution), Technical Debt (code quality), Documentation (project docs), Research (technical validation)',
+    description:
+      'Create a new CR. Available types: Architecture (system design), Feature Enhancement (new functionality), Bug Fix (defect resolution), Technical Debt (code quality), Documentation (project docs), Research (technical validation)',
     inputSchema: {
       type: 'object',
       properties: {
@@ -136,9 +152,16 @@ export const CR_SECTION_TOOLS: Tool[] = [
               enum: CR_PRIORITY_ENUM,
               description: 'CR priority (default: Medium)',
             },
+            level: {
+              type: 'string',
+              enum: CR_LEVEL_ENUM,
+              description:
+                'Ticket hierarchy level: ticket (default) or epic. An epic groups child tickets and follows a close guard before moving to Implemented.',
+            },
             phaseEpic: {
               type: 'string',
-              description: 'Phase or epic',
+              description:
+                'Phase or epic. When set to a ticket key, the target must be an epic in Approved or Implemented status.',
             },
             impactAreas: {
               type: 'array',
@@ -200,7 +223,8 @@ export const CR_SECTION_TOOLS: Tool[] = [
   },
   {
     name: 'get_cr',
-    description: 'Get CR (consolidated - replaces get_cr_full_content + get_cr_attributes)',
+    description:
+      'Get CR (consolidated - replaces get_cr_full_content + get_cr_attributes)',
     inputSchema: {
       type: 'object',
       properties: {
@@ -215,7 +239,8 @@ export const CR_SECTION_TOOLS: Tool[] = [
         mode: {
           type: 'string',
           enum: ['full', 'attributes', 'metadata'],
-          description: 'Return mode: full=CR+markdown, attributes=YAML only, metadata=key info only',
+          description:
+            'Return mode: full=CR+markdown, attributes=YAML only, metadata=key info only',
           default: 'full',
         },
       },
@@ -247,7 +272,8 @@ export const CR_SECTION_TOOLS: Tool[] = [
   },
   {
     name: 'update_cr_attrs',
-    description: 'Update CR attributes. Only the following attributes can be updated: priority, phaseEpic, assignee, relatedTickets, dependsOn, blocks, implementationDate, implementationNotes. To update CR title, use manage_cr_sections (edit the H1 header - MDT-064). To update CR status, use update_cr_status. To update CR content/sections, use manage_cr_sections.',
+    description:
+      'Update CR attributes. Only the following attributes can be updated: level, priority, phaseEpic, assignee, relatedTickets, dependsOn, blocks, implementationDate, implementationNotes. To update CR title, use manage_cr_sections (edit the H1 header - MDT-064). To update CR status, use update_cr_status. To update CR content/sections, use manage_cr_sections.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -261,16 +287,50 @@ export const CR_SECTION_TOOLS: Tool[] = [
         },
         attributes: {
           type: 'object',
-          description: 'Attributes to update. Only these fields are allowed: priority, phaseEpic, assignee, relatedTickets, dependsOn, blocks, implementationDate, implementationNotes. Do NOT update title directly - update the H1 header in the CR content using manage_cr_sections instead (MDT-064: H1 as Single Source of Truth).',
+          description:
+            'Attributes to update. Only these fields are allowed: level, priority, phaseEpic, assignee, relatedTickets, dependsOn, blocks, implementationDate, implementationNotes. Do NOT update title directly - update the H1 header in the CR content using manage_cr_sections instead (MDT-064: H1 as Single Source of Truth).',
           properties: {
-            priority: { type: 'string', enum: CR_PRIORITY_ENUM, description: 'CR priority' },
-            phaseEpic: { type: 'string', description: 'Phase or epic' },
-            relatedTickets: { type: 'string', description: 'Related CR codes (comma-separated)' },
-            dependsOn: { type: 'string', description: 'CR dependencies (comma-separated)' },
-            blocks: { type: 'string', description: 'CRs blocked by this (comma-separated)' },
-            assignee: { type: 'string', description: 'Implementation assignee' },
-            implementationDate: { type: 'string', description: 'Date when implementation was completed (ISO 8601 format, e.g., "2025-09-20")' },
-            implementationNotes: { type: 'string', description: 'Notes about implementation completion' },
+            level: {
+              type: 'string',
+              enum: CR_LEVEL_ENUM,
+              description:
+                'Ticket hierarchy level: ticket or epic (aliases accepted by the CLI)',
+            },
+            priority: {
+              type: 'string',
+              enum: CR_PRIORITY_ENUM,
+              description: 'CR priority',
+            },
+            phaseEpic: {
+              type: 'string',
+              description:
+                'Phase or epic. When set to a ticket key, the target must be an epic in Approved or Implemented status.',
+            },
+            relatedTickets: {
+              type: 'string',
+              description: 'Related CR codes (comma-separated)',
+            },
+            dependsOn: {
+              type: 'string',
+              description: 'CR dependencies (comma-separated)',
+            },
+            blocks: {
+              type: 'string',
+              description: 'CRs blocked by this (comma-separated)',
+            },
+            assignee: {
+              type: 'string',
+              description: 'Implementation assignee',
+            },
+            implementationDate: {
+              type: 'string',
+              description:
+                'Date when implementation was completed (ISO 8601 format, e.g., "2025-09-20")',
+            },
+            implementationNotes: {
+              type: 'string',
+              description: 'Notes about implementation completion',
+            },
           },
         },
       },
@@ -312,15 +372,18 @@ export const CR_SECTION_TOOLS: Tool[] = [
         operation: {
           type: 'string',
           enum: ['list', 'get', 'replace', 'append', 'prepend'],
-          description: 'Operation: list=all sections with structure, get=read specific section, replace=entire content, append=add to end, prepend=add to beginning',
+          description:
+            'Operation: list=all sections with structure, get=read specific section, replace=entire content, append=add to end, prepend=add to beginning',
         },
         section: {
           type: 'string',
-          description: 'Section identifier (supports flexible formats: "1. Description", "Description", exact "## 1. Description", or hierarchical "## Parent / ### Child"). Required for get/replace/append/prepend operations.',
+          description:
+            'Section identifier (supports flexible formats: "1. Description", "Description", exact "## 1. Description", or hierarchical "## Parent / ### Child"). Required for get/replace/append/prepend operations.',
         },
         content: {
           type: 'string',
-          description: 'Content to apply (required for replace/append/prepend operations). To rename/restructure: start with new header at same level. To preserve header: provide only body content.',
+          description:
+            'Content to apply (required for replace/append/prepend operations). To rename/restructure: start with new header at same level. To preserve header: provide only body content.',
         },
       },
       required: ['key', 'operation'],
@@ -328,7 +391,8 @@ export const CR_SECTION_TOOLS: Tool[] = [
   },
   {
     name: 'suggest_cr_improvements',
-    description: 'Get CR improvement suggestions (analyzes structure/completeness)',
+    description:
+      'Get CR improvement suggestions (analyzes structure/completeness)',
     inputSchema: {
       type: 'object',
       properties: {
@@ -354,10 +418,7 @@ export const CR_SECTION_TOOLS: Tool[] = [
  * All MCP tools in a single array
  * This is the main export used by the index.ts file
  */
-export const ALL_TOOLS: Tool[] = [
-  ...PROJECT_TOOLS,
-  ...CR_SECTION_TOOLS,
-]
+export const ALL_TOOLS: Tool[] = [...PROJECT_TOOLS, ...CR_SECTION_TOOLS]
 
 // ==========================
 // Tool Categories
