@@ -1,6 +1,6 @@
 ---
 code: MDT-205
-status: In Progress
+status: Implemented
 dateCreated: 2026-08-08T00:00:00.000Z
 type: Feature Enhancement
 priority: High
@@ -86,26 +86,26 @@ level: ticket
 
 ### Functional
 
-- [ ] A ticket can be created or updated with `level: epic`.
-- [ ] A ticket created without an explicit `level` reads back as a regular ticket (no on-disk migration required).
-- [ ] Setting `level` works identically through the CLI, MCP, and the backend API.
-- [ ] An epic moves through three states: `Proposed` → `Approved` → `Implemented`.
-- [ ] Setting `phaseEpic` to a ticket key whose target is NOT an epic is rejected, with an error that names the target and states the remediation.
-- [ ] Setting `phaseEpic` to a ticket key whose target does not exist is rejected with a clear error.
-- [ ] Setting `phaseEpic` to a `Proposed` epic is rejected with an error stating the epic must be `Approved` first.
-- [ ] Setting `phaseEpic` to an `Approved` or `Implemented` epic succeeds.
-- [ ] Setting `phaseEpic` to a value that is NOT a ticket key (free text) succeeds unchanged.
-- [ ] Moving an epic to `Implemented` while it has one or more non-terminal children is rejected; the error lists the blocking children.
-- [ ] Moving an epic to `Implemented` when all its children are terminal succeeds.
-- [ ] Moving a non-epic ticket to `Implemented` is unaffected (free movement preserved).
-- [ ] `level` is queryable/filterable (e.g. `ticket list level=epic`).
-- [ ] Alias shorthand (`e`→`epic`, `t`→`ticket`) resolves consistently across CLI and MCP.
+- [x] A ticket can be created or updated with `level: epic`.
+- [x] A ticket created without an explicit `level` reads back as a regular ticket (no on-disk migration required).
+- [x] Setting `level` works identically through the CLI, MCP, and the backend API.
+- [x] An epic moves through three states: `Proposed` → `Approved` → `Implemented`.
+- [x] Setting `phaseEpic` to a ticket key whose target is NOT an epic is rejected, with an error that names the target and states the remediation.
+- [x] Setting `phaseEpic` to a ticket key whose target does not exist is rejected with a clear error.
+- [x] Setting `phaseEpic` to a `Proposed` epic is rejected with an error stating the epic must be `Approved` first.
+- [x] Setting `phaseEpic` to an `Approved` or `Implemented` epic succeeds.
+- [x] Setting `phaseEpic` to a value that is NOT a ticket key (free text) succeeds unchanged.
+- [x] Moving an epic to `Implemented` while it has one or more non-terminal children is rejected; the error lists the blocking children.
+- [x] Moving an epic to `Implemented` when all its children are terminal succeeds.
+- [x] Moving a non-epic ticket to `Implemented` is unaffected (free movement preserved).
+- [x] `level` is queryable/filterable (e.g. `ticket list level=epic`).
+- [x] Alias shorthand (`e`→`epic`, `t`→`ticket`) resolves consistently across CLI and MCP.
 
 ### Non-Functional
 
-- [ ] `level` round-trips through YAML frontmatter — read, write, re-read yields the same value.
-- [ ] Alias resolution lives in the shared layer so CLI, MCP, and any future consumer apply identical rules (no drift).
-- [ ] API documentation (OpenAPI) describes the new field.
+- [x] `level` round-trips through YAML frontmatter — read, write, re-read yields the same value.
+- [x] Alias resolution lives in the shared layer so CLI, MCP, and any future consumer apply identical rules (no drift).
+- [x] API documentation (OpenAPI) describes the new field.
 
 ### Edge Cases
 
