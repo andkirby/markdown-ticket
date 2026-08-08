@@ -110,7 +110,7 @@ const ProjectSelectorCard: React.FC<ProjectSelectorCardProps> = ({
   })
 
   const cardClasses = cn(
-    'project-card project-lift group min-h-12',
+    'project-card project-lift group',
     useRailWidthConstraints && 'project-card--rail',
   )
 

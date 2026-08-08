@@ -62,7 +62,7 @@ const ProjectSelectorChip: React.FC<ProjectSelectorChipProps> = ({
     onSelect(project.project.code || project.id)
   }
 
-  const chipClasses = cn('project-chip project-lift group h-12')
+  const chipClasses = cn('project-chip project-lift group h-9')
 
   const { style: chipStyle, accentBrightness } = getAccentStyle({
     project,

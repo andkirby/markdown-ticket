@@ -173,15 +173,30 @@
     color: var(--project-card-desc-color);
   }
 
-  /* Rail width constraints */
+  /* Rail width constraints — header active card.
+     Collapses to a single-line h-9 control so it aligns with the header's
+     other h-9 inputs (board filter, logo) instead of the taller min-h-12
+     used by the multi-line browser-panel cards. The single line means the
+     project description has no room, so it is hidden here (the browser panel
+     still shows it). The header card is borderless — the surface fill alone
+     separates it from the chrome. */
   .project-card--rail {
-    @apply min-w-[100px] sm:min-w-[150px] max-w-[280px] flex-1;
+    @apply min-w-[100px] sm:min-w-[150px] max-w-[280px] flex-1 h-9;
+    /* h-9 (fixed) overrides the base .project-card min-h-12. */
+    min-height: 0;
+    /* border: none sets border-style:none, which hides the border regardless of
+       the active/hover border-color rules (they only set color, not style). */
+    border: none;
+  }
+
+  .project-card--rail .project-card__desc {
+    @apply hidden;
   }
 
   /* ── Project Chip (compact inactive projects in rail) ── */
 
   .project-chip {
-    @apply relative inline-flex items-center justify-center rounded-md px-2 py-1.5 h-12 cursor-pointer;
+    @apply relative inline-flex items-center justify-center rounded-md px-2 py-1.5 h-9 cursor-pointer;
 
     /* v3: flat elevated surface, 1px border — no gradient, no shadow. */
     background-color: var(--bg-subtle);
