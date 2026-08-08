@@ -1,73 +1,49 @@
 /**
- * MDT-131: MobileLogo Component Unit Tests
+ * MobileLogo Component Unit Tests
  *
- * Tests conditional logo rendering based on viewport.
- * Coverage: BR-7.2
+ * The logo is now a single theme-aware masked element (`.app-logo`); there is
+ * no longer a per-viewport asset swap. These tests assert the rendered element
+ * and its accessibility contract.
  */
 
 import { cleanup, render, screen } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test'
+import { afterEach, describe, expect, it } from 'bun:test'
 import { MobileLogo } from './MobileLogo'
-
-function createMatchMedia(matches: boolean) {
-  return mock().mockImplementation((query: string) => ({
-    matches,
-    media: query,
-    onchange: null,
-    addListener: mock(),
-    removeListener: mock(),
-    addEventListener: mock(),
-    removeEventListener: mock(),
-    dispatchEvent: mock(),
-  }))
-}
 
 describe('MobileLogo', () => {
   afterEach(() => {
     cleanup()
-    // @ts-expect-error - resetting mock
-    delete window.matchMedia
   })
 
-  describe('desktop view', () => {
-    beforeEach(() => {
-      // Mock desktop viewport
-      Object.defineProperty(window, 'innerWidth', {
-        writable: true,
-        configurable: true,
-        value: 1200,
-      })
+  it('renders the masked logo element', () => {
+    render(<MobileLogo />)
 
-      window.matchMedia = createMatchMedia(true)
-    })
-
-    it('should display default logo on desktop (≥768px)', () => {
-      render(<MobileLogo />)
-
-      const logo = screen.getByTestId('app-logo')
-      expect(logo).toBeInTheDocument()
-      expect(logo).not.toHaveAttribute('src', 'logo-mdt-m-dark_64x64.png')
-    })
+    const logo = screen.getByTestId('app-logo')
+    expect(logo).toBeInTheDocument()
+    // The colour/asset lives in CSS (.app-logo), not on a per-instance basis.
+    expect(logo).toHaveClass('app-logo')
   })
 
-  describe('mobile view', () => {
-    beforeEach(() => {
-      // Mock mobile viewport
-      Object.defineProperty(window, 'innerWidth', {
-        writable: true,
-        configurable: true,
-        value: 375,
-      })
-
-      window.matchMedia = createMatchMedia(false)
+  it('uses the same element at any viewport (no per-size asset swap)', () => {
+    // Simulate a mobile viewport width; the component must not branch.
+    Object.defineProperty(window, 'innerWidth', {
+      writable: true,
+      configurable: true,
+      value: 375,
     })
 
-    it('should display mobile logo on mobile (<768px) (BR-7.2)', () => {
-      render(<MobileLogo />)
+    render(<MobileLogo />)
 
-      const logo = screen.getByTestId('app-logo')
-      expect(logo).toBeInTheDocument()
-      expect(logo).toHaveAttribute('src', '/logo-mdt-m-dark_64x64.png')
-    })
+    const logo = screen.getByTestId('app-logo')
+    expect(logo).toBeInTheDocument()
+    expect(logo).toHaveClass('app-logo')
+  })
+
+  it('exposes an accessible label', () => {
+    render(<MobileLogo />)
+
+    const logo = screen.getByTestId('app-logo')
+    expect(logo).toHaveAttribute('role', 'img')
+    expect(logo).toHaveAttribute('aria-label', 'Markdown Ticket')
   })
 })

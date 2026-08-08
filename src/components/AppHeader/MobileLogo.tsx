@@ -1,32 +1,17 @@
-import { useEffect, useState } from 'react'
-
+/**
+ * MobileLogo — the MDT wordmark shown in the header.
+ *
+ * The logo is a single monochrome asset rendered as a CSS mask (`.app-logo`),
+ * so its colour is driven entirely by the theme-aware `--logo-fg` token: deep
+ * blue in light mode and a soft light-blue in dark mode. No per-viewport asset
+ * swap is needed — one masked element scales crisply at any size.
+ */
 export function MobileLogo() {
-  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768)
-
-  useEffect(() => {
-    const checkViewport = () => {
-      setIsMobile(window.innerWidth < 768)
-    }
-
-    // Initial check
-    checkViewport()
-
-    // Listen for resize events
-    const mediaQuery = window.matchMedia('(min-width: 768px)')
-    mediaQuery.addEventListener('change', checkViewport)
-
-    return () => {
-      mediaQuery.removeEventListener('change', checkViewport)
-    }
-  }, [])
-
-  const logoSrc = isMobile ? '/logo-mdt-m-dark_64x64.png' : '/logo.jpeg'
-
   return (
-    <img
-      src={logoSrc}
-      alt="Logo"
-      className="h-14 w-auto dark:invert"
+    <span
+      className="app-logo"
+      role="img"
+      aria-label="Markdown Ticket"
       data-testid="app-logo"
     />
   )
