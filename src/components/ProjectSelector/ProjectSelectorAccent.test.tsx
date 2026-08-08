@@ -51,7 +51,7 @@ describe('Project selector accent rendering', () => {
     const chip = screen.getByTestId('project-selector-chip-MDT')
 
     expect(chip).toHaveClass('project-chip')
-    expect(chip).toHaveClass('h-12')
+    expect(chip).toHaveClass('h-9')
     expect(chip.style.getPropertyValue('--project-accent')).toBe('#2563eb')
     expect(chip.querySelector('.project-chip__accent-mark')).toBeInTheDocument()
   })
@@ -71,7 +71,10 @@ describe('Project selector accent rendering', () => {
     const identity = card.querySelector('.project-card__identity') as HTMLElement | null
 
     expect(card).toHaveClass('project-card')
-    expect(card).toHaveClass('min-h-12')
+    // Browser cards are NOT rail cards — they keep the base multi-line height
+    // (min-h-12 comes from the .project-card CSS, not a utility class) and are
+    // not collapsed to h-9 by .project-card--rail.
+    expect(card).not.toHaveClass('project-card--rail')
     expect(card.style.getPropertyValue('--project-accent')).toBe('#dc2626')
     expect(identity).toBeInTheDocument()
     expect(identity?.querySelector('img')).not.toBeInTheDocument()
