@@ -87,7 +87,7 @@ Vite middleware endpoints, such as `/api/frontend/logs*`, are not backend Expres
 |-------|------------|
 | `/api/projects` | ProjectController |
 | `/api/projects/:id/crs` | TicketController |
-| `/api/projects/:id/cloud-projections` | ProjectController (owner-only, header-only cloud feed) |
+| `/api/projects/:id/cloud-projections` | ProjectController (current legacy owner-only feed; removal target in MDT-226) |
 | `/api/documents` | DocumentController |
 | `/api/documents/preview-token` | DocumentController (MDT-221, owner-only mint of short-lived HTML preview tokens) |
 | `/api/documents/raw-preview/:token/*` | DocumentController (MDT-221, token-gated raw byte stream for sandboxed HTML preview) |
@@ -127,4 +127,11 @@ two-path (mint vs serve) security model.
 
 Cloud-bound ticket creation and projection publishing stay in the shared
 `TicketService`; the server is a thin HTTP adapter. Cloudflare credentials
-remain server-side. The frontend polls only the owner-only header feed above.
+remain server-side.
+
+The current implementation has the frontend poll the owner-only header feed
+above. The approved `MDT-226` target moves projection stream, cursor, catch-up,
+reconnect, persistence, and canonical/projected merge ownership into the local
+backend. The browser will then consume only the unified
+`/api/projects/:id/crs` ticket list and `/api/events` ticket stream. Keep this
+current-code note until MDT-226 removes the legacy route and hook.

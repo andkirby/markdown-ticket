@@ -101,13 +101,18 @@ the global project registry. Each installation stores its connection in:
 CONFIG_DIR/projects/{localProjectId}/cloud-sync.toml
 ```
 
+The following table documents the implemented version 1 schema. MDT-226's
+target version 2 schema removes `pollIntervalSeconds` through an atomic
+migration when the push runtime ships; version 2 must not be written before
+that runtime is available.
+
 | Field | Type | Required | Default | Range | Description |
 |-------|------|----------|---------|-------|-------------|
-| `version` | integer | Required | `1` | `1` | Connection schema version. |
+| `version` | integer | Required | `1` | `1` | Current implemented connection schema version. |
 | `state` | string | Required | - | `enabled`, `disabled` | Enabled selects cloud coordination; disabled remains fail-closed. Only an absent connection is local-only. |
 | `cloudProjectId` | string | Required | - | UUID | Cloud project UUID issued by the coordination service. |
 | `serviceOrigin` | string | Required | - | absolute HTTPS origin | Coordination origin from the effective trusted service profile. |
-| `pollIntervalSeconds` | integer | Optional | 15 | 5–300 | Teammate projection polling interval. |
+| `pollIntervalSeconds` | integer | Optional | 15 | 5–300 | Legacy version 1 teammate projection polling interval; removal is owned by MDT-226. |
 
 Machine credentials live at
 `CONFIG_DIR/cloud-sync/credentials/{credentialRef}.toml`. Credential files use

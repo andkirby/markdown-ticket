@@ -22,7 +22,8 @@ C4Deployment
 
   Deployment_Node(edge, "Cloudflare edge", "Global network") {
     Container(access, "Access Application", "Cloudflare Access", "Applies identity-aware admission policy")
-    Container(worker, "Coordination API", "Cloudflare Worker", "Runs authorization and coordination use cases")
+    Container(worker, "Coordination API", "Cloudflare Worker", "Runs authorization and routes project operations")
+    Container(hub, "ProjectProjectionHub", "Hibernating Durable Object", "Coordinates project streams, delivery, and alarm recovery")
   }
 
   Deployment_Node(data, "Cloudflare managed data", "Production environment") {
@@ -30,9 +31,11 @@ C4Deployment
   }
 
   Rel(localMdt, localJournal, "Persists pending operation before network calls", "Filesystem")
-  Rel(localMdt, access, "Calls protected API", "HTTPS")
-  Rel(access, worker, "Forwards admitted request with application assertion", "HTTPS")
+  Rel(localMdt, access, "Calls protected API and opens one project stream", "HTTPS and WebSocket")
+  Rel(access, worker, "Forwards admitted request with application assertion", "HTTPS and WebSocket")
+  Rel(worker, hub, "Routes by cloud project UUID")
   Rel(worker, d1, "Runs prepared statements and batches", "D1 binding")
+  Rel(hub, d1, "Commits and catches up projection state", "D1 binding")
 ```
 
 The cloud service is the root `cloud/` workspace. Its Worker entry point and
@@ -40,6 +43,8 @@ Cloudflare implementation are under `cloud/src/cloudflare/`.
 `cloud/wrangler.jsonc` is the deployment source of truth. It uses:
 
 - one D1 binding named `DB`;
+- one Durable Object binding named `PROJECT_PROJECTION_HUB`, backed by the
+  `ProjectProjectionHub` class and an ordered class migration;
 - separate read and mutation rate-limit bindings;
 - one UTC Cron Trigger, every 15 minutes, invoking the Worker's `scheduled()`
   handler for bounded reservation expiry and audit-retention batches;
@@ -47,7 +52,10 @@ Cloudflare implementation are under `cloud/src/cloudflare/`.
 - non-secret `TEAM_DOMAIN`, `COORDINATION_AUD`, and `OPERATOR_AUD` variables;
 - a version metadata binding for diagnostic responses and logs.
 
-Binding types are generated with `wrangler types`; the implementation does not
+The project hub uses the Hibernation WebSocket API and alarms. It must not use
+`setInterval`, application-level heartbeat requests, or another mechanism that
+keeps an idle object active. Protocol auto-response may handle liveness without
+waking the object. Binding types are generated with `wrangler types`; the implementation does not
 hand-write a duplicate `Env` interface.
 
 The Cron Trigger is declared only in `wrangler.jsonc`. Deployment validation
@@ -75,6 +83,11 @@ required. Production secrets use encrypted secret channels, never Wrangler
 Every schema change is an ordered SQL migration under `cloud/migrations/`. Use
 the immutable D1 database name, not only the binding name, in operator commands.
 
+`MDT-226` adds a Durable Object class migration in `cloud/wrangler.jsonc` but no
+D1 delivery table. Deploy the new class and binding before enabling version 2
+local streams. Never delete a Durable Object class migration after production
+deployment.
+
 Before production:
 
 1. apply and test the migration against a fresh local D1 database;
@@ -100,10 +113,13 @@ rewrites data must use expand/migrate/contract across separate releases.
 4. Record a production Time Travel bookmark.
 5. Apply required production migrations.
 6. Upload and inspect a Worker version or protected preview where available.
-7. Deploy to the selected-project production rollout.
-8. Monitor errors, denials, D1 latency,
-   conflicts, and allocation outcomes.
-9. Record Worker version ID, migration versions, bookmark, source revision,
+7. Verify the Durable Object binding/migration, WebSocket upgrade, hibernation,
+   alarm recovery, and version 1 cursor compatibility.
+8. Deploy to the selected-project production rollout with push delivery behind
+   the local feature flag.
+9. Monitor errors, denials, active streams, reconnect/catch-up, delivery
+   latency, idle D1 reads, conflicts, and allocation outcomes.
+10. Record Worker version ID, D1 and Durable Object migration versions, bookmark, source revision,
    operator, and verification result.
 
 ### Code Rollback
@@ -111,6 +127,11 @@ rewrites data must use expand/migrate/contract across separate releases.
 A Worker version rollback does not roll back D1. Roll back code only when the
 previous Worker version is compatible with the current schema. Otherwise deploy
 a forward fix.
+
+For projection-delivery rollback, disable push in local connection rollout
+state and use the compatible HTTPS cursor endpoint temporarily. Drain active
+sockets and pending alarms before removing a binding. Do not attempt to roll
+back or reuse D1 project revisions.
 
 ### Database Restore
 
@@ -163,15 +184,15 @@ class:
 
 | Route class | Initial limit per principal/project | Response |
 | --- | --- | --- |
-| Projection polling | 600 requests per 60 seconds | `429 rate_limited` |
+| Projection stream handshakes and cursor catch-up | 60 requests per 60 seconds | `429 rate_limited` or rejected upgrade |
 | Mutations | 60 requests per 60 seconds | `429 rate_limited` |
 | Operator mutations | Shared mutation budget: 60 requests per 60 seconds | `429 rate_limited` |
 
 Workers rate limits are location-local, permissive, and eventually consistent.
 They must not be used to issue numbers, enforce quotas, or replace D1 unique
 constraints. Tune initial limits from measured limited-production traffic;
-do not lower them below the documented client polling envelope without a
-compatibility review.
+reconnect storms must use bounded client backoff and jitter. WebSocket messages
+are not an allocation or quota enforcement boundary.
 
 ## Observability
 
@@ -217,7 +238,15 @@ Track:
 - authentication and authorization denials;
 - allocation success, replay, and batch failure;
 - reservation age and count by state;
-- projection writes, conflicts, and polling lag;
+- projection writes, conflicts, stream handshakes, closes, active hibernating
+  sockets, reconnects, and catch-up pages;
+- commit-to-browser delivery p50/p95/p99 and reconnect-catch-up p50/p95/p99;
+- per-socket acknowledgement lag plus Durable Object alarm schedules, retries,
+  recovered revisions, and failures;
+- project-stream count compared with enabled local project count;
+- D1 reads during tagged idle windows, with zero as the required result;
+- browser requests to the legacy local `/cloud-projections` endpoint, with zero
+  required before compatibility retirement;
 - D1 read/write query count, rows read/written, latency, response bytes, and
   database size;
 - rate-limited requests;
@@ -241,14 +270,20 @@ evidence:
 | D1 overloaded errors | Any sustained occurrence for 5 minutes |
 | Oldest `reserved` operation | More than 30 minutes warns; more than 24 hours alerts |
 | Projection conflict rate | More than 5% for 15 minutes |
-| Polling freshness | No successful poll for three configured intervals |
+| Connected projection delivery | p95 exceeds 2 seconds for 10 minutes |
+| Projection reconnect catch-up | p95 exceeds 5 seconds for 10 minutes |
+| Idle D1 projection/membership reads | Any sustained read caused only by elapsed time |
+| Project stream reconnect rate | More than 5 reconnects/project in 5 minutes |
+| Project hub acknowledgement/alarm recovery | Any active socket behind after exhausted alarm retry |
+| Browser projection endpoint use | Any request after the selected client is migrated to the unified ticket API |
 | Service-token expiry | Warn 30 days and 7 days before expiry |
 | Database size | Warn at 60%, alert at 75% of the current D1 per-database limit |
 | Export or restore drill | Any missed weekly export or failed quarterly restore |
 
 The first production rollout is limited to explicitly selected projects. Do not
-broaden adoption until deployed tests record p50, p95, and p99 allocation
-latency, error/overload behavior, D1 rows read/written, and recovery outcomes.
+broaden adoption until deployed tests record allocation and projection-delivery
+p50/p95/p99, error/overload behavior, D1 rows read/written, active stream and
+reconnect counts, idle-window request shape, revocation, and alarm recovery.
 The local POC is correctness evidence, not a capacity result.
 
 ## Incident Runbooks
@@ -261,7 +296,23 @@ The local POC is correctness evidence, not a capacity result.
    stale.
 4. Inspect journal backlog and reservation age.
 5. Recover the dependency, replay idempotent operations, and verify counters.
-6. Resume normal polling before new allocation.
+6. Resume project streams and verify cursor catch-up before new allocation.
+
+### Projection Stream or Hub Failure
+
+1. Separate Access upgrade failures, Worker errors, Durable Object errors, and
+   D1 errors in telemetry.
+2. Keep last applied projections visible as stale; do not enable a tight polling
+   fallback.
+3. Inspect D1 project revision, each active socket's acknowledged revision,
+   reconnect rate, and alarm retry state.
+4. If an active socket is behind, allow the armed alarm to send bounded catch-up
+   from its acknowledged cursor; if disconnected, verify reconnect catch-up.
+   Duplicate delivery is safe and sparse catch-up revisions are expected.
+5. If reconnects are storming, keep bounded backoff/jitter and correct the
+   dependency rather than raising the handshake limit blindly.
+6. Verify one stream per local server/project, zero idle D1 reads, and current
+   membership before restoring the rollout flag.
 
 ### Suspected Duplicate Number
 
@@ -322,7 +373,7 @@ decommissioning.
 ## Official Platform Sources
 
 Platform behavior is mutable. These primary sources were checked on
-2026-07-24 and must be rechecked during `MDT-200` implementation:
+2026-08-08 and must be rechecked during `MDT-226` implementation:
 
 - [D1 batch transaction and Worker API](https://developers.cloudflare.com/d1/worker-api/d1-database/)
 - [D1 migrations](https://developers.cloudflare.com/d1/reference/migrations/)
@@ -335,6 +386,11 @@ Platform behavior is mutable. These primary sources were checked on
 - [Interactive Access CLI tokens](https://developers.cloudflare.com/cloudflare-one/tutorials/cli/)
 - [Workers rate-limit binding](https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/)
 - [Workers Cron Triggers](https://developers.cloudflare.com/workers/configuration/cron-triggers/)
+- [Durable Objects WebSocket hibernation](https://developers.cloudflare.com/durable-objects/best-practices/websockets/)
+- [Durable Objects alarms](https://developers.cloudflare.com/durable-objects/api/alarms/)
+- [Durable Objects pricing](https://developers.cloudflare.com/durable-objects/platform/pricing/)
+- [Workers WebSockets](https://developers.cloudflare.com/workers/examples/websockets/)
+- [Bun WebSocket client](https://bun.sh/docs/runtime/http/websockets)
 - [Workers secrets](https://developers.cloudflare.com/workers/configuration/secrets/)
 - [Workers versions and deployments](https://developers.cloudflare.com/workers/versions-and-deployments/)
 - [Workers Logs](https://developers.cloudflare.com/workers/observability/logs/workers-logs/)

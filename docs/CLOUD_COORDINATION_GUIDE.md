@@ -6,6 +6,13 @@ architecture lives in
 [`docs/architecture/cloud-sync/`](architecture/cloud-sync/README.md); this is the
 operator and user-facing how-to.
 
+> **Runtime status:** The commands and version 1 configuration below describe
+> the implemented MDT-200 polling runtime. MDT-226 replaces only projection
+> delivery with a backend-managed project stream and the unified local ticket
+> API/events. Keep version 1 configuration until that migration ships; the
+> target architecture is defined in the permanent architecture package linked
+> above.
+
 ## What cloud coordination does
 
 Two outcomes only:
@@ -224,8 +231,9 @@ succeeds.
 - **Machine**: an Access administrator creates a named, expiring service token;
   an owner adds its verified client ID (`common_name`) as a machine member.
 
-Roles: `viewer` (read + poll), `contributor` (reserve + publish), `owner`
-(membership management). The final owner cannot be removed or demoted.
+Roles: `viewer` (read + current projection feed), `contributor` (reserve +
+publish), `owner` (membership management). The final owner cannot be removed
+or demoted.
 
 ## Credentials
 
@@ -246,9 +254,16 @@ shared `TicketService` orchestration. MDT-202 adds dedicated `mdt cloud`
 management commands; it is not required for normal ticket creation once the
 CONFIG_DIR connection exists.
 
-The browser polls header projections through
+In the current runtime, the browser polls header projections through
 `GET /api/projects/{projectId}/cloud-projections`. That local endpoint is
 owner-only and keeps Access credentials on the server side.
+
+MDT-226 retires that browser projection endpoint and polling interval. Its
+target local backend opens the cloud project stream, owns credentials, cursor,
+catch-up, reconnect, and the merged ticket read model, then fans ordinary
+ticket changes to browsers. Browser tabs continue to use
+`GET /api/projects/:id/crs` and `/api/events`; they do not know the cloud stream
+protocol.
 
 ## Recovery
 

@@ -7,7 +7,7 @@ The coordination database is authoritative for:
 - cloud project UUID, coordination state, and membership;
 - the next ticket number and every reservation;
 - idempotency outcomes;
-- projection versions and polling order;
+- projection versions and project-revision delivery order;
 - cloud audit records.
 
 Markdown/Git is authoritative for:
@@ -256,8 +256,8 @@ A replay with the same reservation and `contentHash` returns the existing
 projection. A replay with different content is not an acknowledgement; the
 client must use the versioned projection endpoint.
 
-The cloud must not expose a reserved ticket on the normal projection feed
-before acknowledgement.
+The cloud must not expose a reserved ticket through normal projection delivery
+or catch-up before acknowledgement.
 
 ## Projection Write Transaction
 
@@ -267,6 +267,12 @@ Every projection mutation provides:
 - the last observed `projectionVersion` in `If-Match`;
 - a SHA-256 `contentHash` over the canonical projected fields;
 - the complete projected header, not a partial patch.
+
+Every supported projection mutation is routed through the cloud project's
+deterministically named `ProjectProjectionHub`. An explicit per-instance async
+operation queue serializes mutations with stream subscription/catch-up across
+D1 awaits. The hub arms a recovery alarm and invokes the D1 use case. It never
+broadcasts an uncommitted request body.
 
 The D1 batch:
 
@@ -283,6 +289,17 @@ do not advance for a rejected write.
 
 An `operationId` replay returns the existing result. A fresh operation with a
 stale version never overwrites the mirror.
+
+After the batch commits, the hub broadcasts the returned complete projection
+and `project_revision`. A send does not count as delivery. Each active socket
+acknowledges only after its local read model applies and persists state; the hub
+stores that cursor in the socket attachment. The alarm stays armed while an
+active authorized socket is behind and replays a bounded catch-up from its
+acknowledged cursor. A disconnected server catches up when it reconnects.
+
+Recovery promises final-state convergence. The latest-row projection table is
+not an event log of every intermediate edit, so catch-up can contain sparse
+project revisions.
 
 ## Projection Conflicts
 
@@ -302,8 +319,8 @@ Git remains the place where divergent canonical edits are reconciled.
 
 Deleting a local ticket publishes a `deleted` tombstone with an expected
 projection version. The tombstone retains the ticket number, code, last known
-header hash, actor, and revision. Polling clients remove the projection stub but
-retain the revision cursor.
+header hash, actor, and revision. Stream clients remove the projection stub but
+retain the applied revision cursor.
 
 An old clone that still has the file receives a version conflict and cannot
 silently resurrect it. Restore is an explicit `lifecycle = active` mutation
@@ -313,50 +330,97 @@ exist.
 Tombstones are retained while the cloud project exists so ticket numbers cannot
 be mistaken for reusable.
 
-## Polling Contract
+## Projection Stream and Catch-Up Contract
 
-`GET /v1/projects/{projectId}/projections` accepts:
+The local server opens:
 
 ```text
-after=<projectRevision>&limit=<1..500>
+GET /v1/projects/{projectId}/projection-stream?after=<projectRevision>
+Upgrade: websocket
 ```
 
-The response is:
+The Worker validates Access and current membership, routes the upgrade to the
+project's `ProjectProjectionHub`, and accepts one logical stream per local
+server/project instance. Browser tabs do not open cloud streams.
+
+The versioned server envelopes are:
 
 ```json
 {
-  "projectId": "018f5e6c-6f32-7c5b-9e76-97c7c769c123",
-  "items": [],
-  "nextCursor": 42,
-  "hasMore": false,
-  "polledAt": "2026-07-24T10:00:00.000Z"
+  "type": "delta",
+  "cloudProjectId": "018f5e6c-6f32-7c5b-9e76-97c7c769c123",
+  "projectRevision": 43,
+  "projection": {
+    "ticketNumber": 226,
+    "projectionVersion": 4,
+    "lifecycle": "active",
+    "header": {}
+  }
 }
 ```
 
-Items are ordered by `(project_revision, ticket_number)` and include active
-projections and tombstones. The client drains all pages before waiting for the
-next interval. The cursor is persisted only after the page is merged.
+`catchup` carries the same complete projection shape. The hub first captures an
+authoritative high-water project revision, sends every applicable latest row
+whose revision is above the requested cursor and at or below that high-water
+revision, then sends `ready(highWaterRevision)`. Stable typed `stale` and `error`
+envelopes contain no raw dependency response. The client sends
+`ack(projectRevision)` only after applying and persisting either a completed
+catch-up cursor or live delta.
 
-Merge rules:
+Catch-up uses the existing bounded cursor query:
+
+```text
+GET /v1/projects/{projectId}/projections?after=<projectRevision>&limit=<1..500>
+```
+
+The hub normally performs this D1 read internally. The HTTPS endpoint remains
+available for bounded reconnect/repair and rolling compatibility, but version 2
+clients never call it periodically. Items are ordered by
+`(project_revision, ticket_number)` and include active projections and
+tombstones. The backend projection read-model cursor is persisted only after
+the received projection state is applied. It is never returned to the browser.
+
+Catch-up rows may skip historical revisions because multiple mutations of one
+ticket collapse into that ticket's latest row. The read model accepts sparse
+catch-up rows and advances atomically to the `ready` high-water cursor. After
+`ready`, live deltas are contiguous.
+
+Backend read-model merge rules:
 
 - a local canonical ticket always supplies the displayed body and header;
 - a cloud projection with no local file appears as a clearly labeled,
   read-only projection stub;
 - a tombstone removes only the cloud stub;
 - cloud data never overwrites a local ticket object;
-- polling failures keep the last projection and expose stale status;
-- exponential retry is capped at 60 seconds, while a healthy client returns to
-  the configured interval.
+- stream failures keep the last projection and expose stale status;
+- duplicate or older revisions are ignored;
+- a non-contiguous **live** revision pauses live application and triggers one
+  cursor catch-up from the last applied revision;
+- reconnect uses bounded exponential backoff with jitter and never becomes a
+  background D1 polling loop.
 
-The first slice does not use D1 read replication. Reads and writes use the
-primary binding so projection cursors do not require a Sessions consistency
-design.
+The projection read model is atomically persisted under owner-only CONFIG_DIR
+state for the local project. It contains approved projected headers, lifecycle,
+the applied revision, and high-level stale state. It contains no credential or
+ticket body. On browser refresh, the server merges that state with the current
+Markdown scan before returning the ticket list.
 
-## HTTP API
+Subscription and projection mutations pass through the same per-project hub
+operation queue, which removes the race between a final catch-up read and live
+registration. D1 remains the authority and primary binding. The Durable Object
+persists only delivery cursor/socket metadata and uses hibernating WebSockets
+plus alarms; it is not a read replica or projection store.
 
-All success and error bodies use `application/json`. IDs in paths are validated
-before repository access. Request bodies are strictly validated and size
-bounded.
+Healthy idle connections perform no D1 reads. D1 reads occur only for
+handshake/authorization, catch-up or gaps, actual mutations, membership
+changes, and alarm recovery.
+
+## Cloud Service API
+
+This contract is consumed by local backends and other trusted adapters, not by
+React. All success and error bodies use `application/json`. IDs in paths are
+validated before repository access. Request bodies are strictly validated and
+size bounded.
 
 | Method and path | Minimum role | Success |
 | --- | --- | --- |
@@ -371,13 +435,29 @@ bounded.
 | `PUT /v1/projects/{projectId}/reservations/{reservationId}/acknowledgement` | Contributor | `200` projection |
 | `PUT /v1/projects/{projectId}/tickets/{ticketNumber}/projection` | Contributor | `200` projection |
 | `PUT /v1/projects/{projectId}/tickets/{ticketNumber}/lifecycle` | Contributor | `200` projection or tombstone |
-| `GET /v1/projects/{projectId}/projections` | Viewer | `200` cursor page |
+| `GET /v1/projects/{projectId}/projection-stream` | Viewer | `101` authenticated WebSocket upgrade |
+| `GET /v1/projects/{projectId}/projections` | Viewer | `200` bounded cursor page for catch-up/compatibility |
 
 Mutation responses include `requestId`; projection responses include
 `ETag: "<projectionVersion>"`. No endpoint accepts or returns a ticket body.
 Project provisioning requires an `Idempotency-Key`; the Worker stores its hash
 with a canonical request hash and returns `idempotency_conflict` when the same
 key is reused with different content.
+
+## Browser-Facing Local Contract
+
+The browser uses only local application contracts:
+
+| Method and path | Purpose |
+| --- | --- |
+| `GET /api/projects/{localProjectId}/crs` | Unified canonical and projection-only ticket views |
+| `GET /api/events` | Ordinary local ticket changes plus high-level project sync status |
+
+A projection-only ticket view includes `kind = projected`, `readOnly = true`,
+and `stale`; these fields describe UI capability. It does not include cloud
+project ID, projection/project revision, stream cursor, catch-up state, cloud
+origin, or credential data. The target architecture removes the browser
+`/api/projects/{id}/cloud-projections` call after the bounded legacy rollout.
 
 ## Error Contract
 
@@ -421,11 +501,12 @@ When coordination is unavailable:
 - local-only projects continue current behavior;
 - cloud-bound creation is blocked and keeps its journaled intent;
 - projection pushes remain queued in the local journal;
-- polling shows the last projection as stale;
+- the projection stream shows the last applied projection as stale and
+  reconnects with bounded backoff;
 - no caller allocates a local fallback number.
 
 Changing the CONFIG_DIR connection to `state = "disabled"` detaches one
-installation from polling and publishing but does not make local allocation
+installation from projection delivery and publishing but does not make local allocation
 safe. The connection remains present, existing Markdown remains usable, and new
 ticket creation fails closed.
 
@@ -452,6 +533,8 @@ Re-enabling preserves the cloud counter and requires a fresh membership probe.
 | Idempotency keys | Lifetime of the cloud project |
 | Active projections and tombstones | Lifetime of the cloud project |
 | Audit events | 180 days in D1, then delete in bounded batches |
+| Durable Object per-socket acknowledged cursor and attachments | Until project decommission; attachments only while sockets exist |
+| Local applied projection cursor | Until connection removal or explicit repair |
 | Local completed journal entries | Removed immediately after confirmed success |
 | Local failed journal entries | Until recovery or explicit operator retirement |
 

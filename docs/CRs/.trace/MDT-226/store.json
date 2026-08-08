@@ -1,0 +1,697 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-226"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "WHEN a projection mutation commits in D1, THE SYSTEM SHALL deliver a complete approved projection delta to every authorized connected local server without waiting for a periodic poll.",
+      "sourceRef": "docs/CRs/MDT-226/requirements.md#br-12-commit-triggered-delivery",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket",
+        "delivery"
+      ]
+    },
+    {
+      "id": "BR-1.4",
+      "kind": "behavior",
+      "text": "WHEN a projection stream connects or reconnects with an afterRevision cursor, THE SYSTEM SHALL deliver the missing projection state before marking the stream live.",
+      "sourceRef": "docs/CRs/MDT-226/requirements.md#br-14-cursor-catch-up",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket",
+        "recovery"
+      ]
+    },
+    {
+      "id": "BR-1.5",
+      "kind": "behavior",
+      "text": "WHILE the projection stream is unavailable, THE SYSTEM SHALL keep the last applied projection visible as stale and reconnect with bounded backoff.",
+      "sourceRef": "docs/CRs/MDT-226/requirements.md#br-15-disconnected-state",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket",
+        "recovery"
+      ]
+    },
+    {
+      "id": "BR-1.6",
+      "kind": "behavior",
+      "text": "WHEN another browser tab opens for the same local project, THE SYSTEM SHALL reuse the local server projection stream and SHALL NOT open another cloud connection.",
+      "sourceRef": "docs/CRs/MDT-226/requirements.md#br-16-tab-independent-cloud-traffic",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket",
+        "delivery"
+      ]
+    },
+    {
+      "id": "BR-1.7",
+      "kind": "behavior",
+      "text": "WHEN a project membership is revoked or suspended, THE SYSTEM SHALL stop delivering new projection events to that principal's active project streams.",
+      "sourceRef": "docs/CRs/MDT-226/requirements.md#br-17-revocation",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket",
+        "security"
+      ]
+    },
+    {
+      "id": "BR-1.8",
+      "kind": "behavior",
+      "text": "WHEN D1 commits a projection but immediate stream delivery fails, THE SYSTEM SHALL retry delivery from the committed revision without requiring client polling.",
+      "sourceRef": "docs/CRs/MDT-226/requirements.md#br-18-post-commit-recovery",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket",
+        "recovery"
+      ]
+    },
+    {
+      "id": "BR-1.9",
+      "kind": "behavior",
+      "text": "WHEN a cloud projection and a canonical local ticket have the same ticket number, THE SYSTEM SHALL keep local Markdown authoritative and SHALL NOT overwrite the local ticket from the projection.",
+      "sourceRef": "docs/CRs/MDT-226/requirements.md#br-19-local-authority",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket",
+        "authority"
+      ]
+    },
+    {
+      "id": "C-1",
+      "kind": "constraint",
+      "text": "A healthy connected local server SHALL perform zero D1 reads solely because time passes without project changes, reconnects, or authorization changes.",
+      "sourceRef": "docs/CRs/MDT-226/requirements.md#c-1-zero-idle-d1-reads",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket",
+        "performance"
+      ]
+    },
+    {
+      "id": "C-2",
+      "kind": "constraint",
+      "text": "D1 SHALL remain authoritative for memberships, projection versions, and project revisions; the Durable Object SHALL coordinate ordering and delivery only.",
+      "sourceRef": "docs/CRs/MDT-226/requirements.md#c-2-authority-boundary",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket",
+        "architecture"
+      ]
+    },
+    {
+      "id": "C-3",
+      "kind": "constraint",
+      "text": "The browser SHALL NOT receive Cloudflare credentials or open a direct cloud projection connection.",
+      "sourceRef": "docs/CRs/MDT-226/requirements.md#c-3-credential-boundary",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket",
+        "security"
+      ]
+    },
+    {
+      "id": "C-4",
+      "kind": "constraint",
+      "text": "Projection stream messages SHALL contain only the approved complete projection header and delivery metadata; they SHALL NOT contain ticket bodies.",
+      "sourceRef": "docs/CRs/MDT-226/requirements.md#c-4-projection-payload",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket",
+        "privacy"
+      ]
+    },
+    {
+      "id": "C-5",
+      "kind": "constraint",
+      "text": "The Worker SHALL route every project stream and projection mutation through one deterministically named ProjectProjectionHub Durable Object per cloud project.",
+      "sourceRef": "docs/CRs/MDT-226/requirements.md#c-5-single-project-sequencer",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket",
+        "architecture"
+      ]
+    },
+    {
+      "id": "C-7",
+      "kind": "constraint",
+      "text": "ProjectProjectionHub SHALL use the Durable Objects Hibernation WebSocket API and alarms; it SHALL NOT stay active through polling timers or application-level keepalive loops.",
+      "sourceRef": "docs/CRs/MDT-226/requirements.md#c-7-hibernation",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket",
+        "performance"
+      ]
+    },
+    {
+      "id": "C-9",
+      "kind": "constraint",
+      "text": "The design SHALL add no KV, Queue, D1 replica, ticket-body store, or second projection authority.",
+      "sourceRef": "docs/CRs/MDT-226/requirements.md#c-9-storage-scope",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket",
+        "scope"
+      ]
+    },
+    {
+      "id": "C-10",
+      "kind": "constraint",
+      "text": "A stream SHALL be authorized at handshake, re-authorized after Durable Object hibernation before delivery, and reconnected no later than Access token expiry.",
+      "sourceRef": "docs/CRs/MDT-226/requirements.md#c-10-stream-authorization",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket",
+        "security"
+      ]
+    },
+    {
+      "id": "Edge-3",
+      "kind": "edge_case",
+      "text": "Existing version 1 cloud connections with pollIntervalSeconds SHALL migrate to version 2 push configuration without changing cloud project identity or credentials.",
+      "sourceRef": "docs/CRs/MDT-226/requirements.md#edge-3-connection-migration",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket",
+        "migration"
+      ]
+    },
+    {
+      "id": "Edge-4",
+      "kind": "edge_case",
+      "text": "If membership changes while a stream is open, the project hub SHALL exclude and close unauthorized sockets before delivering a later projection.",
+      "sourceRef": "docs/CRs/MDT-226/requirements.md#edge-4-open-stream-revocation",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket",
+        "security"
+      ]
+    },
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "WHEN an enabled cloud project has a valid cloud credential available to the local server, THE SYSTEM SHALL establish exactly one authenticated projection stream for that local server and cloud project.",
+      "sourceRef": "docs/CRs/MDT-226/requirements.md#br-11-one-project-stream",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket",
+        "delivery"
+      ]
+    },
+    {
+      "id": "BR-1.3",
+      "kind": "behavior",
+      "text": "WHEN the local server applies a cloud projection delta, THE SYSTEM SHALL update its unified ticket read model and publish an ordinary local ticket change to connected browser tabs through the existing event stream.",
+      "sourceRef": "docs/CRs/MDT-226/requirements.md#br-13-unified-local-ticket-delivery",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket",
+        "delivery"
+      ]
+    },
+    {
+      "id": "C-11",
+      "kind": "constraint",
+      "text": "The browser-facing API SHALL expose one unified ticket read model and local ticket event stream; it SHALL NOT expose cloud projection cursors, revisions, catch-up, reconnect, or the cloud projection stream endpoint.",
+      "sourceRef": "docs/CRs/MDT-226/requirements.md#c-11-browser-read-model-boundary",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket",
+        "architecture"
+      ]
+    },
+    {
+      "id": "C-6",
+      "kind": "constraint",
+      "text": "Cloud projection transport SHALL be at-least-once: sparse revisions are valid during catch-up and advance only to the ready cursor after the batch is applied; during live delivery the local read model SHALL ignore revisions at or below its cursor, resynchronize on a non-contiguous revision, and acknowledge a revision only after applying and persisting it.",
+      "sourceRef": "docs/CRs/MDT-226/requirements.md#c-6-cursor-acknowledgement-and-gap-semantics",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket",
+        "consistency"
+      ]
+    },
+    {
+      "id": "C-8",
+      "kind": "constraint",
+      "text": "For a healthy connected stream, a committed projection change SHALL appear in the unified local ticket read model and connected browser within 2 seconds at p95; reconnect catch-up SHALL complete within 5 seconds at p95 under the documented test load.",
+      "sourceRef": "docs/CRs/MDT-226/requirements.md#c-8-end-to-end-freshness-slo",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket",
+        "performance"
+      ]
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "If the Worker or Durable Object fails after the D1 commit and before an active local server acknowledges the revision, a pre-armed alarm SHALL replay committed state to each still-active lagging socket; disconnected servers SHALL recover from their persisted cursor on reconnect.",
+      "sourceRef": "docs/CRs/MDT-226/requirements.md#edge-1-commit-acknowledgement-gap",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket",
+        "recovery"
+      ]
+    },
+    {
+      "id": "Edge-2",
+      "kind": "edge_case",
+      "text": "Sparse project revisions SHALL be accepted during a bounded catch-up batch; a duplicate or older revision SHALL be ignored, and only a non-contiguous live revision SHALL trigger one catch-up from the last applied cursor.",
+      "sourceRef": "docs/CRs/MDT-226/requirements.md#edge-2-sparse-catch-up-and-live-gap",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket",
+        "recovery"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "project_stream_live_after_catchup",
+      "title": "Project stream becomes live after catch-up",
+      "covers": [
+        "BR-1.1",
+        "BR-1.4"
+      ],
+      "given": "an authorized local server has an enabled cloud project and a persisted project revision",
+      "when": "the cloud projection stream connects",
+      "then": "one project stream catches up after that revision and reports live only after the catch-up completes",
+      "sourceRef": "docs/CRs/MDT-226/bdd.md#sc-1-project-stream-becomes-live-after-catch-up"
+    },
+    {
+      "id": "reconnect_catches_up",
+      "title": "Reconnect catches up before live delivery",
+      "covers": [
+        "BR-1.4",
+        "BR-1.5"
+      ],
+      "given": "a local server is disconnected while projection revisions commit",
+      "when": "its bounded reconnect succeeds with the last applied revision",
+      "then": "the missing projection state is applied in revision order before the stream returns to live",
+      "sourceRef": "docs/CRs/MDT-226/bdd.md#sc-4-reconnect-catches-up-before-live-delivery"
+    },
+    {
+      "id": "disconnected_board_stale",
+      "title": "Disconnected board remains usable and visibly stale",
+      "covers": [
+        "BR-1.5"
+      ],
+      "given": "the board has a previously applied cloud projection",
+      "when": "the cloud projection stream becomes unavailable",
+      "then": "the board keeps that projection visible, marks cloud state stale, and retries without blocking local ticket use",
+      "sourceRef": "docs/CRs/MDT-226/bdd.md#sc-5-disconnected-board-remains-usable-and-visibly-stale"
+    },
+    {
+      "id": "revoked_member_disconnected",
+      "title": "Revoked member stops receiving projections",
+      "covers": [
+        "BR-1.7"
+      ],
+      "given": "a member has an active project stream",
+      "when": "an owner revokes or suspends that membership",
+      "then": "the member's project socket closes and no later projection is delivered through it",
+      "sourceRef": "docs/CRs/MDT-226/bdd.md#sc-6-revoked-member-stops-receiving-projections"
+    },
+    {
+      "id": "committed_projection_without_polling",
+      "title": "Committed projection appears as a ticket update",
+      "covers": [
+        "BR-1.2",
+        "BR-1.3"
+      ],
+      "given": "an authorized local server has a healthy cloud project stream and a browser is connected to the local ticket stream",
+      "when": "another member commits a projection change",
+      "then": "the backend updates its unified ticket read model and the browser receives an ordinary local ticket change without a refresh or cloud poll",
+      "sourceRef": "docs/CRs/MDT-226/bdd.md#sc-2-committed-projection-appears-as-a-ticket-update"
+    },
+    {
+      "id": "tabs_share_cloud_stream",
+      "title": "Browser tabs share one backend-managed cloud stream",
+      "covers": [
+        "BR-1.6"
+      ],
+      "given": "one browser tab is observing a project through the local ticket API and event stream",
+      "when": "additional browser tabs open the same project",
+      "then": "all tabs receive local ticket updates while the backend keeps exactly one cloud project stream",
+      "sourceRef": "docs/CRs/MDT-226/bdd.md#sc-3-browser-tabs-share-one-backend-managed-cloud-stream"
+    },
+    {
+      "id": "local_ticket_wins",
+      "title": "Canonical local ticket wins in the unified read model",
+      "covers": [
+        "BR-1.9"
+      ],
+      "given": "a canonical local ticket and cloud projection share a ticket number",
+      "when": "the backend builds the unified ticket read model",
+      "then": "the returned item is the canonical local ticket and no projected duplicate is exposed",
+      "sourceRef": "docs/CRs/MDT-226/bdd.md#sc-8-canonical-local-ticket-wins-in-the-unified-read-model"
+    },
+    {
+      "id": "post_commit_delivery_recovers",
+      "title": "Post-commit delivery failure converges",
+      "covers": [
+        "BR-1.8"
+      ],
+      "given": "a projection revision commits but an active local backend does not acknowledge it",
+      "when": "the project hub alarm runs or the backend reconnects",
+      "then": "the backend receives committed projection state from its last acknowledged or persisted revision without periodic polling",
+      "sourceRef": "docs/CRs/MDT-226/bdd.md#sc-7-post-commit-delivery-failure-converges"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-single-project-stream",
+      "title": "Route each local project through one hibernating project hub stream",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.6",
+        "C-5",
+        "C-7"
+      ],
+      "artifactIds": [
+        "ART-worker-router",
+        "ART-project-hub",
+        "ART-stream-contract",
+        "ART-stream-client",
+        "ART-stream-manager",
+        "ART-worker-config"
+      ],
+      "sourceRef": "docs/CRs/MDT-226/architecture.md#obl-single-project-stream"
+    },
+    {
+      "id": "OBL-commit-before-delivery",
+      "title": "Commit authoritative D1 projection state before broadcasting a complete delta",
+      "derivedFrom": [
+        "BR-1.2",
+        "C-2",
+        "C-4"
+      ],
+      "artifactIds": [
+        "ART-project-hub",
+        "ART-projection-usecase",
+        "ART-projection-repository",
+        "ART-stream-contract"
+      ],
+      "sourceRef": "docs/CRs/MDT-226/architecture.md#obl-commit-before-delivery"
+    },
+    {
+      "id": "OBL-stream-authorization",
+      "title": "Authorize stream handshakes and stop delivery after revocation or token expiry",
+      "derivedFrom": [
+        "BR-1.7",
+        "C-10",
+        "Edge-4"
+      ],
+      "artifactIds": [
+        "ART-worker-router",
+        "ART-project-hub",
+        "ART-stream-client",
+        "ART-stream-manager"
+      ],
+      "sourceRef": "docs/CRs/MDT-226/architecture.md#obl-stream-authorization"
+    },
+    {
+      "id": "OBL-zero-idle-reads",
+      "title": "Eliminate timer-driven D1 reads and bound delivery freshness",
+      "derivedFrom": [
+        "C-1",
+        "C-7",
+        "C-8",
+        "C-9"
+      ],
+      "artifactIds": [
+        "ART-project-hub",
+        "ART-stream-manager",
+        "ART-worker-config"
+      ],
+      "sourceRef": "docs/CRs/MDT-226/architecture.md#obl-zero-idle-reads"
+    },
+    {
+      "id": "OBL-local-fanout",
+      "title": "Expose cloud-derived changes only through the unified local ticket API and event stream",
+      "derivedFrom": [
+        "BR-1.3",
+        "BR-1.6",
+        "C-3",
+        "C-11"
+      ],
+      "artifactIds": [
+        "ART-projection-read-model",
+        "ART-ticket-view-contract",
+        "ART-ticket-service",
+        "ART-stream-manager",
+        "ART-local-sse",
+        "ART-sse-client",
+        "ART-use-sse-events"
+      ],
+      "sourceRef": "docs/CRs/MDT-226/architecture.md#obl-local-fanout"
+    },
+    {
+      "id": "OBL-local-authority",
+      "title": "Build the unified ticket read model with canonical local tickets winning over projected entries",
+      "derivedFrom": [
+        "BR-1.9",
+        "C-2",
+        "C-4",
+        "C-11"
+      ],
+      "artifactIds": [
+        "ART-projection-usecase",
+        "ART-stream-contract",
+        "ART-projection-read-model",
+        "ART-ticket-view-contract",
+        "ART-ticket-service"
+      ],
+      "sourceRef": "docs/CRs/MDT-226/architecture.md#obl-local-authority"
+    },
+    {
+      "id": "OBL-config-cutover",
+      "title": "Migrate version 1 polling connections to version 2 backend-managed push connections",
+      "derivedFrom": [
+        "Edge-3"
+      ],
+      "artifactIds": [
+        "ART-project-state",
+        "ART-stream-manager"
+      ],
+      "sourceRef": "docs/CRs/MDT-226/architecture.md#obl-config-cutover"
+    },
+    {
+      "id": "OBL-verification",
+      "title": "Verify hub behavior, backend ticket projection, local fan-out, security, recovery, and D1 request shape",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.5",
+        "BR-1.6",
+        "BR-1.7",
+        "BR-1.8",
+        "BR-1.9",
+        "C-1",
+        "C-2",
+        "C-3",
+        "C-4",
+        "C-5",
+        "C-6",
+        "C-7",
+        "C-8",
+        "C-9",
+        "C-10",
+        "C-11",
+        "Edge-1",
+        "Edge-2",
+        "Edge-3",
+        "Edge-4"
+      ],
+      "artifactIds": [
+        "ART-cloud-tests",
+        "ART-local-tests",
+        "ART-e2e-tests",
+        "ART-owner-docs",
+        "ART-data-doc",
+        "ART-identity-doc",
+        "ART-operations-doc"
+      ],
+      "sourceRef": "docs/CRs/MDT-226/architecture.md#obl-verification"
+    },
+    {
+      "id": "OBL-race-free-catchup",
+      "title": "Serialize project operations, accept sparse catch-up, and persist and acknowledge applied cursors",
+      "derivedFrom": [
+        "BR-1.4",
+        "C-6",
+        "Edge-2"
+      ],
+      "artifactIds": [
+        "ART-project-hub",
+        "ART-projection-repository",
+        "ART-stream-contract",
+        "ART-stream-client",
+        "ART-stream-manager",
+        "ART-projection-read-model"
+      ],
+      "sourceRef": "docs/CRs/MDT-226/architecture.md#obl-race-free-catchup"
+    },
+    {
+      "id": "OBL-post-commit-recovery",
+      "title": "Recover committed but unacknowledged revisions with alarms and reconnect catch-up",
+      "derivedFrom": [
+        "BR-1.5",
+        "BR-1.8",
+        "C-7",
+        "Edge-1"
+      ],
+      "artifactIds": [
+        "ART-project-hub",
+        "ART-projection-repository",
+        "ART-stream-contract",
+        "ART-stream-client",
+        "ART-stream-manager",
+        "ART-projection-read-model"
+      ],
+      "sourceRef": "docs/CRs/MDT-226/architecture.md#obl-post-commit-recovery"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-project-hub",
+      "path": "cloud/src/cloudflare/durable/ProjectProjectionHub.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-226/architecture.md#cloud-project-hub"
+    },
+    {
+      "id": "ART-worker-router",
+      "path": "cloud/src/cloudflare/worker.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-226/architecture.md#worker-routing"
+    },
+    {
+      "id": "ART-projection-usecase",
+      "path": "cloud/src/cloudflare/application/projection-usecase.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-226/architecture.md#mutation-and-delivery"
+    },
+    {
+      "id": "ART-projection-repository",
+      "path": "cloud/src/cloudflare/d1/projection.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-226/architecture.md#d1-cursor-catch-up"
+    },
+    {
+      "id": "ART-stream-contract",
+      "path": "domain-contracts/src/cloud-sync/projection-stream.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-226/architecture.md#wire-contract"
+    },
+    {
+      "id": "ART-stream-client",
+      "path": "shared/services/cloud-sync/CloudProjectionStreamClient.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-226/architecture.md#local-stream-client"
+    },
+    {
+      "id": "ART-stream-manager",
+      "path": "server/services/cloud-sync/ProjectionStreamManager.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-226/architecture.md#local-stream-manager"
+    },
+    {
+      "id": "ART-local-sse",
+      "path": "server/services/fileWatcher/SSEBroadcaster.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-226/architecture.md#local-event-fan-out"
+    },
+    {
+      "id": "ART-project-state",
+      "path": "shared/services/cloud-sync/project-state-store.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-226/architecture.md#connection-schema-v2"
+    },
+    {
+      "id": "ART-worker-config",
+      "path": "cloud/wrangler.jsonc",
+      "kind": "config",
+      "sourceRef": "docs/CRs/MDT-226/architecture.md#cloudflare-infrastructure"
+    },
+    {
+      "id": "ART-cloud-tests",
+      "path": "cloud/test/project-projection-hub.test.ts",
+      "kind": "test",
+      "sourceRef": "docs/CRs/MDT-226/architecture.md#verification-architecture"
+    },
+    {
+      "id": "ART-local-tests",
+      "path": "server/tests/services/cloud-sync/ProjectionStreamManager.test.ts",
+      "kind": "test",
+      "sourceRef": "docs/CRs/MDT-226/architecture.md#verification-architecture"
+    },
+    {
+      "id": "ART-e2e-tests",
+      "path": "tests/e2e/cloud-sync-board.spec.ts",
+      "kind": "test",
+      "sourceRef": "docs/CRs/MDT-226/architecture.md#verification-architecture"
+    },
+    {
+      "id": "ART-owner-docs",
+      "path": "docs/architecture/cloud-sync/README.md",
+      "kind": "doc",
+      "sourceRef": "docs/CRs/MDT-226/architecture.md#documentation-ownership"
+    },
+    {
+      "id": "ART-data-doc",
+      "path": "docs/architecture/cloud-sync/data-and-consistency.md",
+      "kind": "doc",
+      "sourceRef": "docs/CRs/MDT-226/architecture.md#documentation-ownership"
+    },
+    {
+      "id": "ART-identity-doc",
+      "path": "docs/architecture/cloud-sync/identity-and-access.md",
+      "kind": "doc",
+      "sourceRef": "docs/CRs/MDT-226/architecture.md#documentation-ownership"
+    },
+    {
+      "id": "ART-operations-doc",
+      "path": "docs/architecture/cloud-sync/operations.md",
+      "kind": "doc",
+      "sourceRef": "docs/CRs/MDT-226/architecture.md#documentation-ownership"
+    },
+    {
+      "id": "ART-projection-read-model",
+      "path": "shared/services/cloud-sync/CloudProjectionReadModel.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-226/architecture.md#local-projection-read-model"
+    },
+    {
+      "id": "ART-ticket-service",
+      "path": "server/services/TicketService.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-226/architecture.md#unified-ticket-api"
+    },
+    {
+      "id": "ART-sse-client",
+      "path": "src/services/sseClient.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-226/architecture.md#browser-ticket-events"
+    },
+    {
+      "id": "ART-use-sse-events",
+      "path": "src/hooks/useSSEEvents.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-226/architecture.md#browser-ticket-events"
+    },
+    {
+      "id": "ART-ticket-view-contract",
+      "path": "domain-contracts/src/ticket/view.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-226/architecture.md#browser-facing-ticket-contract"
+    }
+  ],
+  "testPlans": [],
+  "tasks": []
+}
