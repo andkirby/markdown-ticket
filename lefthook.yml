@@ -20,5 +20,8 @@ remotes:
       - configs/typescript/run-eslint-staged.yml
       # Monorepo — enforces @mdt/shared alias
       - configs/monorepo/block-shared-imports.yml
+      # Semantic class enforcement — block utility classes shadowing @layer components
+      # See docs/semantic-classes.md in agent-commit-hooks for the full concept.
+      - configs/general/enforce-semantic-classes.yml
 
 # Override: remove glob restriction for testing
