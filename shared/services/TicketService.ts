@@ -232,19 +232,9 @@ export class TicketService {
             binding.projectId,
             after,
           )
-      const sync = new CloudProjectionSync({
-        binding,
-        allowedOrigins: effectiveConfig.allowedOrigins,
-        journalRoot: path.join(
-          this.cloudRuntime.journalRoot ?? getDefaultPaths().CONFIG_DIR,
-          'cloud-sync',
-          'projection-journal',
-        ),
-        physicalRepoPath: project.project.path,
-        credentialProvider,
-        client,
-      })
-      await sync.flush()
+      // MDT-226: the write journal is NOT drained on the read path. Coupling
+      // retry to every read poll caused a per-ticket read amplification loop for
+      // stuck entries. The journal flushes through its own bounded lifecycle.
       const result = await client.poll(credential, limit)
       return {
         enabled: true,

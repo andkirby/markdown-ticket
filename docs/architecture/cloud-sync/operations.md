@@ -256,7 +256,8 @@ Track:
 - D1 read/write query count, rows read/written, latency, response bytes, and
   database size;
 - rate-limited requests;
-- client journal backlog and oldest pending operation;
+- client projection-journal count by state, oldest due operation, retry rate,
+  and terminal/unmanaged count;
 - Worker version and migration version.
 
 Cloudflare D1 metrics are retained for 31 days according to current
@@ -276,6 +277,8 @@ evidence:
 | D1 overloaded errors | Any sustained occurrence for 5 minutes |
 | Oldest `reserved` operation | More than 30 minutes warns; more than 24 hours alerts |
 | Projection conflict rate | More than 5% for 15 minutes |
+| Projection write retry amplification | Any drain triggered by a browser/read request, or any attempt before `nextAttemptAt` |
+| Unmanaged projection journal | Any new entry or growth without an explicit import/recovery operation |
 | Connected projection delivery | p95 exceeds 2 seconds for 10 minutes |
 | Projection reconnect catch-up | p95 exceeds 5 seconds for 10 minutes |
 | Idle D1 projection/membership reads | Any sustained read caused only by elapsed time |
@@ -319,6 +322,23 @@ The local POC is correctness evidence, not a capacity result.
    dependency rather than raising the handshake limit blindly.
 6. Verify one stream per local server/project, zero idle D1 reads, and current
    membership before restoring the rollout flag.
+
+> **C-1 status:** "Zero idle D1 reads" (C-1) holds **vacuously** until the
+> local-server stream is wired — no `ProjectionStreamManager` is instantiated in
+> the current server, so no stream path exists to poll. This runbook step
+> becomes a live invariant only after the push-delivery server wiring lands; it
+> is not a property the current runtime can violate or prove.
+
+### Projection Journal Amplification
+
+1. Disable the read-triggered drain; do not delete journal files blindly.
+2. Snapshot the journal and group entries by typed state/error.
+3. Pause project-wide retries for authentication, membership, or project errors.
+4. Quarantine missing projections as `unmanaged`; recover only from an original
+   reservation or an explicit import.
+5. Resume the bounded runner and verify attempts respect `nextAttemptAt`.
+6. Hold the project through five former poll intervals and confirm zero
+   timer/read-triggered projection or membership D1 reads.
 
 ### Suspected Duplicate Number
 

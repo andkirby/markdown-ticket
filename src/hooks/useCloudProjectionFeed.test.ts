@@ -1,6 +1,6 @@
 import type { ProjectionFeed } from './useCloudProjections'
-import { act, renderHook, waitFor } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test'
+import { act, renderHook } from '@testing-library/react'
+import { describe, expect, it, mock } from 'bun:test'
 
 const authFetch = mock(async (): Promise<Response> => new Response(null, { status: 500 }))
 
@@ -22,75 +22,36 @@ const projection = {
   last_modified: '2026-07-25T00:00:00.000Z',
 }
 
-describe('useCloudProjectionFeed', () => {
-  beforeEach(() => {
-    authFetch.mockReset()
-  })
+describe('useCloudProjectionFeed (MDT-226: production polling disabled)', () => {
+  it('does not poll the cloud-projections endpoint for an enabled session', async () => {
+    const { result } = renderHook(() =>
+      useCloudProjectionFeed({ projectId: 'MDT', enabled: true }),
+    )
 
-  afterEach(() => {
-    authFetch.mockReset()
-  })
-
-  it('polls the local owner endpoint and exposes only the returned projection feed', async () => {
-    authFetch.mockResolvedValueOnce(Response.json({
-      enabled: true,
-      pollIntervalSeconds: 60,
-      items: [projection],
-      nextCursor: 1,
-      hasMore: false,
-      stale: false,
-    }))
-
-    const { result, unmount } = renderHook(() => useCloudProjectionFeed({
-      projectId: 'MDT',
-      enabled: true,
-    }))
-
-    await waitFor(() => expect(result.current?.items).toEqual([projection]))
-    expect(String(authFetch.mock.calls[0]?.[0])).toContain('/api/projects/MDT/cloud-projections?after=0')
-    unmount()
-  })
-
-  it('does not poll for a read-only session', async () => {
-    const { result } = renderHook(() => useCloudProjectionFeed({
-      projectId: 'MDT',
-      enabled: false,
-    }))
-
+    await act(async () => {})
+    // Production polling is disabled; the browser consumes the unified ticket API.
     expect(result.current).toBeNull()
     expect(authFetch).not.toHaveBeenCalled()
   })
 
-  it('uses an injected feed without a network request', async () => {
+  it('does not poll for a read-only session', async () => {
+    const { result } = renderHook(() =>
+      useCloudProjectionFeed({ projectId: 'MDT', enabled: false }),
+    )
+
+    await act(async () => {})
+    expect(result.current).toBeNull()
+    expect(authFetch).not.toHaveBeenCalled()
+  })
+
+  it('uses an injected feed without a network request (test seam)', async () => {
     const injected: ProjectionFeed = { items: [projection], stale: false }
-    const { result } = renderHook(() => useCloudProjectionFeed({
-      projectId: 'MDT',
-      enabled: true,
-      injectedFeed: injected,
-    }))
+    const { result } = renderHook(() =>
+      useCloudProjectionFeed({ projectId: 'MDT', enabled: true, injectedFeed: injected }),
+    )
 
     await act(async () => {})
     expect(result.current).toEqual(injected)
     expect(authFetch).not.toHaveBeenCalled()
-  })
-
-  it('keeps returned projection headers visible when the server marks them stale', async () => {
-    authFetch.mockResolvedValueOnce(Response.json({
-      enabled: true,
-      pollIntervalSeconds: 60,
-      items: [projection],
-      nextCursor: 1,
-      hasMore: false,
-      stale: true,
-    }))
-
-    const { result, unmount } = renderHook(() => useCloudProjectionFeed({
-      projectId: 'MDT',
-      enabled: true,
-    }))
-
-    await waitFor(() => expect(result.current?.stale).toBe(true))
-    expect(result.current?.items).toEqual([projection])
-    unmount()
   })
 })

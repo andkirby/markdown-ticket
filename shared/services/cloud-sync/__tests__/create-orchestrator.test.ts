@@ -204,13 +204,17 @@ describe('TicketService cloud-bound create orchestration', () => {
       type: 'Feature Enhancement',
       content: 'Body remains local.',
     })
-    projectionClient.get.mockRejectedValueOnce(new CoordinatorError('coordination_unavailable'))
+    // MDT-226: the journal sends a conditional PUT directly (no read-before-
+    // write). When coordination is unavailable the publish fails transient, but
+    // the local Markdown edit still succeeds and the entry stays for retry.
+    projectionClient.publish.mockRejectedValueOnce(new CoordinatorError('coordination_unavailable'))
 
     await expect(service.updateCRStatus(project(), 'MDT-042', 'In Progress'))
       .resolves
       .toBe(true)
     const updated = await service.getCR(project(), 'MDT-042')
     expect(updated?.status).toBe('In Progress')
-    expect(projectionClient.publish).not.toHaveBeenCalled()
+    // The publish was attempted (and failed); Markdown authority is unaffected.
+    expect(projectionClient.publish).toHaveBeenCalled()
   })
 })

@@ -13,6 +13,7 @@ export const COORDINATION_ERRORS = {
   authentication_required: { status: 401, code: 'authentication_required' },
   forbidden: { status: 403, code: 'forbidden' },
   project_not_found: { status: 404, code: 'project_not_found' },
+  projection_not_found: { status: 404, code: 'projection_not_found' },
   reservation_not_found: { status: 404, code: 'reservation_not_found' },
   idempotency_key_reused: { status: 409, code: 'idempotency_key_reused' },
   reservation_state_conflict: { status: 409, code: 'reservation_state_conflict' },

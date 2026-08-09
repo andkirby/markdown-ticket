@@ -1,6 +1,6 @@
 {
   "ticket": "MDT-226",
-  "generatedAt": "2026-08-08T11:23:20.467Z",
+  "generatedAt": "2026-08-08T20:31:38.303Z",
   "requirements": [
     {
       "id": "BR-1.1",
@@ -83,6 +83,10 @@
       "routePolicy": "tests"
     },
     {
+      "id": "C-12",
+      "routePolicy": "tests"
+    },
+    {
       "id": "Edge-1",
       "routePolicy": "tests"
     },
@@ -96,6 +100,10 @@
     },
     {
       "id": "Edge-4",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-5",
       "routePolicy": "tests"
     }
   ]

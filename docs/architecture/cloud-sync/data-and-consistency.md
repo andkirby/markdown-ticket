@@ -301,6 +301,36 @@ Recovery promises final-state convergence. The latest-row projection table is
 not an event log of every intermediate edit, so catch-up can contain sparse
 project revisions.
 
+## Local Projection Write Journal
+
+The device-local write journal is not a read-side cache. It is drained only on
+enqueue, server startup, or when a persisted `nextAttemptAt` is due. One
+single-flight runner per project processes a bounded batch; browser requests,
+ticket reads, projection reads, and stream delivery never trigger a drain.
+
+Each entry persists its operation ID, base/desired hashes, lifecycle, known
+projection version, attempt count, `nextAttemptAt`, and last typed error. States
+are:
+
+| State | Meaning |
+| --- | --- |
+| `pending` / `retry_scheduled` | Eligible write; transient failure retries with capped exponential backoff and jitter |
+| `authentication_paused` | Project credential, membership, or coordination state must recover before any ticket retry |
+| `conflict` | Conditional write lost optimistic concurrency; requires reconciliation |
+| `unmanaged` | Authorized project has no projection for this ticket; automatic retries stop |
+| `synced` | Conditional write succeeded; remove the entry |
+
+An update uses the persisted projection version in one conditional `PUT`; it
+does not issue a per-attempt read first. A conflict may fetch current state once
+for reconciliation. `project_not_found` remains the non-disclosing project or
+membership failure. Only after project membership succeeds may an absent ticket
+return `projection_not_found`.
+
+`projection_not_found` never means "create automatically." Initial projection
+creation must recover its original reservation/acknowledgement, or an operator
+must run an explicit legacy import. A later local edit must not reactivate an
+`unmanaged` entry until that eligibility exists.
+
 ## Projection Conflicts
 
 A cloud conflict does not change the local file. The client:
@@ -483,6 +513,7 @@ Worker-generated errors use:
 | `401` | `authentication_required` | Assertion missing or invalid after Access |
 | `403` | `forbidden` | Authenticated member lacks the role |
 | `404` | `project_not_found` | Unknown project or caller is not a member |
+| `404` | `projection_not_found` | Authorized project has no projection for the ticket |
 | `404` | `reservation_not_found` | Member cannot find the scoped reservation |
 | `409` | `idempotency_key_reused` | Same key, different request hash |
 | `409` | `reservation_state_conflict` | Operation is invalid for reservation state |
@@ -502,7 +533,8 @@ When coordination is unavailable:
 - existing Markdown files remain readable and editable;
 - local-only projects continue current behavior;
 - cloud-bound creation is blocked and keeps its journaled intent;
-- projection pushes remain queued in the local journal;
+- eligible projection pushes remain queued with bounded backoff; terminal,
+  conflict, and authentication-paused entries do not spin;
 - the projection stream shows the last applied projection as stale and
   reconnects with bounded backoff;
 - no caller allocates a local fallback number.

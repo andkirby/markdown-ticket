@@ -189,7 +189,10 @@ fails closed.
 
 `CloudProjectionSync` continues to journal failed local-to-cloud header
 mutations. Its write retry lifecycle is independent of reads and browser
-activity. `CloudProjectionStreamClient` receives cloud-to-local projection
+activity: enqueue, server startup, and a due retry may schedule one bounded,
+single-flight drain per project; ticket reads and projection-feed reads never
+drain it. Empty or terminal journals generate no cloud requests.
+`CloudProjectionStreamClient` receives cloud-to-local projection
 state; `ProjectionStreamManager` passes it to `CloudProjectionReadModel`, which
 persists the cursor/state and merges against canonical tickets. The existing
 project-ticket endpoint and local SSE expose ordinary ticket views/events. The

@@ -267,6 +267,20 @@
         "timing:in-ticket",
         "recovery"
       ]
+    },
+    {
+      "id": "C-12",
+      "kind": "constraint",
+      "text": "Projection write retries SHALL run independently of browser and read requests, with one bounded single-flight runner per project, persisted capped backoff, and no request when no eligible operation is due.",
+      "sourceRef": "CR:MDT-226",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-5",
+      "kind": "edge_case",
+      "text": "If an authorized project has no projection for a journaled ticket, the system SHALL stop automatic retries and classify it as unmanaged; only recovery of its original reservation/acknowledgement or an explicit import may create it.",
+      "sourceRef": "CR:MDT-226",
+      "routePolicy": "tests"
     }
   ],
   "scenarios": [
@@ -556,6 +570,19 @@
         "ART-projection-read-model"
       ],
       "sourceRef": "docs/CRs/MDT-226/architecture.md#obl-post-commit-recovery"
+    },
+    {
+      "id": "OBL-write-retry-isolation",
+      "title": "Isolate and classify projection write retries",
+      "derivedFrom": [
+        "C-12",
+        "Edge-5"
+      ],
+      "artifactIds": [
+        "ART-projection-write-journal",
+        "ART-shared-ticket-service"
+      ],
+      "sourceRef": "CR:MDT-226"
     }
   ],
   "artifacts": [
@@ -690,6 +717,18 @@
       "path": "domain-contracts/src/ticket/view.ts",
       "kind": "runtime",
       "sourceRef": "docs/CRs/MDT-226/architecture.md#browser-facing-ticket-contract"
+    },
+    {
+      "id": "ART-projection-write-journal",
+      "path": "shared/services/cloud-sync/projection-sync.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "ART-shared-ticket-service",
+      "path": "shared/services/TicketService.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-226"
     }
   ],
   "testPlans": [
@@ -911,6 +950,17 @@
       ],
       "file": "server/tests/services/cloud-sync/SSEProjectionFanout.test.ts",
       "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "TEST-write-journal-retry-classification",
+      "kind": "integration",
+      "title": "Projection write journal retries are due-only and terminal outcomes stop",
+      "covers": [
+        "C-12",
+        "Edge-5"
+      ],
+      "file": "shared/services/cloud-sync/__tests__/projection-sync.test.ts",
+      "sourceRef": "CR:MDT-226"
     }
   ],
   "tasks": [
@@ -1037,6 +1087,23 @@
         "mdt-frontend",
         "security-best-practices",
         "mdt-release"
+      ],
+      "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "TASK-write-journal-retry",
+      "title": "Isolate and classify projection write journal retries",
+      "ownsArtifactIds": [
+        "ART-projection-write-journal",
+        "ART-shared-ticket-service"
+      ],
+      "makesGreenIds": [
+        "TEST-write-journal-retry-classification",
+        "TEST-idle-zero-d1"
+      ],
+      "skills": [
+        "cloudflare",
+        "typescript"
       ],
       "sourceRef": "CR:MDT-226"
     }

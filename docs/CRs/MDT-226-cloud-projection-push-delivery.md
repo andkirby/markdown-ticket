@@ -260,6 +260,8 @@ flowchart LR
   tabs create no cloud traffic.
 - [ ] An idle-traffic test holds a connected project open for at least five
   former poll intervals and observes zero projection or membership D1 reads.
+- [ ] A write-journal test proves reads never trigger drains, retries honor
+  persisted backoff, and missing projections become terminal `unmanaged`.
 - [ ] A load test records p50/p95/p99 delivery and reconnect catch-up latency.
 - [ ] `spec-trace validate MDT-226 --stage architecture --strict` passes.
 
@@ -347,6 +349,29 @@ Durable Object binding is removed only after all sockets and alarms are drained.
 **Strict validation result**
 
 - Requirements, BDD, and architecture: passed.
+
+### UAT Session 2026-08-08 - Projection write journal isolation
+
+**Approved changes**
+
+- Projection write retries are scheduled independently of browser/read paths.
+- Retry state is explicit and persisted; missing projections stop as
+  `unmanaged` rather than retrying forever or being created implicitly.
+- Eligible updates use one conditional write without a preflight projection
+  read. Initial creation still requires reservation recovery or explicit import.
+
+**Changed requirement IDs**
+
+- Added `C-12` and `Edge-5`.
+
+**Updated workflow documents**
+
+- Requirements, architecture, tests, tasks, current `uat.md`, permanent
+  cloud-sync owners, and operator recovery guidance.
+
+**Strict validation target**
+
+- Requirements, BDD, architecture, tests, and tasks.
 
 ### UAT Session 2026-08-08 - Protocol drift review
 

@@ -118,6 +118,7 @@ function envelopeToCode(status: number, envelope?: Partial<CoordinationErrorEnve
     'authentication_required',
     'forbidden',
     'project_not_found',
+    'projection_not_found',
     'rate_limited',
     'coordination_unavailable',
     'coordination_suspended',

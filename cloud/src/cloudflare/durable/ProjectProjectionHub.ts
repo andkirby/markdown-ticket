@@ -269,7 +269,11 @@ export class ProjectProjectionHub extends DurableObject<ProjectProjectionHubEnv>
    * (Edge-4). Called by the Worker after a membership mutation commits in D1.
    */
   async revokeSockets(unauthorizedPrincipalId: string): Promise<void> {
-    this.enqueue(async () => {
+    // Return the queued work so the caller's await resolves only after the
+    // sockets are closed, matching commitAndDeliver's enqueueResult contract.
+    // Without this, revocation completes before the close-before-deliver work
+    // runs and Edge-4 becomes a timing assumption rather than a guarantee.
+    return this.enqueueResult(async () => {
       const sockets = this.ctx.getWebSockets() as HibernationWebSocket[]
       for (const socket of sockets) {
         const attachment = socket.deserializeAttachment<SocketAttachment | null>()
@@ -357,7 +361,15 @@ export class ProjectProjectionHub extends DurableObject<ProjectProjectionHubEnv>
       if (!page.hasMore) {
         break
       }
+      // Termination invariant: pollProjections advances nextCursor to the last
+      // item's strictly-greater revision. Enforce it locally rather than trust
+      // the repository contract — a stuck or regressing cursor would otherwise
+      // re-read the same page forever.
+      const previousCursor = cursor
       cursor = page.nextCursor ?? cursor
+      if (cursor <= previousCursor) {
+        break
+      }
       if (page.items.length === 0) {
         break
       }

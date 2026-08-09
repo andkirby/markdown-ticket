@@ -143,6 +143,18 @@ the rule that a canonical local ticket suppresses the same-number projection.
 It publishes a backend ticket-view change only after state and cursor are
 applied. It exposes no cloud transport state to React.
 
+### Local projection write journal
+
+`CloudProjectionSync` is drained by enqueue, server startup, or a persisted due
+retry—never by browser, ticket, or projection reads. One bounded single-flight
+runner per project persists attempt/backoff/error state. Transient errors retry;
+authorization failures pause the project; version mismatches conflict; and an
+authorized missing projection becomes terminal `unmanaged`.
+
+Eligible updates persist the known projection version and issue one conditional
+`PUT` without a preflight `GET`. Missing projections are created only by the
+original reservation/acknowledgement recovery or an explicit legacy import.
+
 ### Browser-facing ticket contract
 
 `domain-contracts/src/ticket/view.ts` defines the browser-facing list item. A
@@ -265,6 +277,11 @@ projected entries. Derived from `BR-1.9`, `C-2`, `C-4`, and `C-11`.
 Eliminate timer-driven D1 reads and bound delivery freshness. Derived from
 `C-1`, `C-7`, `C-8`, and `C-9`.
 
+### OBL-write-retry-isolation
+
+Drain eligible projection writes independently with bounded backoff and stop
+automatic retries for missing projections. Derived from `C-12` and `Edge-5`.
+
 ### OBL-config-cutover
 
 Migrate polling connections to version 2 backend-managed push connections.
@@ -277,9 +294,15 @@ against all current requirements before implementation acceptance.
 
 ## Verification Architecture
 
-- Worker runtime tests use Miniflare/Workers test support with D1 and Durable
-  Object bindings to prove explicit operation serialization, hibernation,
-  per-socket acknowledgement, alarm replay, and revocation.
+- Worker runtime tests cover the projection repository (versioned publish,
+  stale-write conflict, polling, acknowledgement wiring) against real SQLite via
+  a D1 adapter, and the hub's pure logic (envelope mapping, ack parsing) plus
+  its operation-queue serialization pattern. The hibernation runtime behaviors —
+  per-socket acknowledgement under isolation eviction, alarm replay, and
+  revocation-before-delivery (Edge-1, Edge-4) — are **not** exercised by the
+  automated suite; they are verified by the manual deployed gates C-7/Edge-1 and
+  the operator runbooks under `cloud/test/operations/`, which document the
+  procedure but do not assert it has run.
 - Local server tests use a controllable WebSocket peer and fake clock to prove
   lifecycle ownership, sparse catch-up, live-gap resync, acknowledgement after
   cursor persistence, single-flight reconnect, and SSE.
