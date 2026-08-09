@@ -15,6 +15,24 @@ export function requireText(
   return value
 }
 
+/**
+ * Like {@link requireText}, but tolerates an absent or empty value — resolving
+ * it to `''` — and only validates when a non-empty value is supplied. Used for
+ * fields that are load-bearing on one write path but unused on another (e.g.
+ * `reservationId` is the INSERT/reservation FK but is never bound by the
+ * versioned UPDATE in {@link publishProjection}).
+ */
+export function optionalText(
+  value: unknown,
+  field: string,
+  requestId: string,
+  maxLength = 500,
+): string {
+  if (value === undefined || value === null || value === '')
+    return ''
+  return requireText(value, field, requestId, maxLength)
+}
+
 export function requireSha256(value: unknown, field: string, requestId: string): string {
   const text = requireText(value, field, requestId, 64)
   if (!SHA256_PATTERN.test(text)) {
@@ -25,6 +43,21 @@ export function requireSha256(value: unknown, field: string, requestId: string):
 
 export function requirePositiveSafeInteger(value: unknown, field: string, requestId: string): number {
   if (!Number.isSafeInteger(value) || (value as number) < 1) {
+    throw new CoordinationError('invalid_request', { requestId, message: `invalid ${field}` })
+  }
+  return value as number
+}
+
+/**
+ * Like {@link requirePositiveSafeInteger}, but allows `0`. Used for
+ * `expectedProjectionVersion`, where `0` is a valid sentinel: the local write
+ * journal has never observed a cloud projection for this ticket (a pre-cloud
+ * ticket), so the conditional PUT carries version 0. The D1 UPDATE then matches
+ * 0 rows whether the row is absent (→ projection_not_found) or exists at a later
+ * version (→ projection_version_conflict) — both correct classifications.
+ */
+export function requireNonNegativeSafeInteger(value: unknown, field: string, requestId: string): number {
+  if (!Number.isSafeInteger(value) || (value as number) < 0) {
     throw new CoordinationError('invalid_request', { requestId, message: `invalid ${field}` })
   }
   return value as number

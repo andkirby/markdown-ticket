@@ -78,3 +78,55 @@ ticket read model.
 - Operation-queue tests must force D1 awaits to interleave without the queue.
 - Browser timing must start at committed D1 revision and end after the unified
   ticket update renders.
+
+---
+
+## Round 2 — Projection write journal isolation
+
+### Objective
+
+Stop projection write-journal read amplification and define terminal behavior
+for an authorized project with no projection for a journaled ticket.
+
+### Approved Changes
+
+- Reads and browser activity never drain the write journal.
+- One bounded single-flight runner retries only due transient work with
+  persisted capped backoff and jitter.
+- Authorization failures pause the project; conflicts and missing projections
+  stop as terminal states.
+- Missing projections require reservation recovery or explicit import; they are
+  never created implicitly during retry.
+- Eligible updates use one conditional write without a preflight projection read.
+
+### Changed Requirement IDs
+
+- Added `C-12` and `Edge-5`.
+
+### Affected Downstream Trace
+
+- BDD scenarios are unchanged.
+- Architecture, one focused test plan, and one implementation task are added.
+
+### Execution Slices
+
+1. **Projection write retry isolation**
+   - Objective: classify and schedule journal work without read amplification.
+   - Direct artifacts: `projection-sync.ts`, shared `TicketService.ts`.
+   - Direct GREEN targets: no read-triggered drain, due-only backoff, terminal
+     conflict/unmanaged, project auth pause, no preflight GET.
+   - Canonical task: `TASK-write-journal-retry`.
+   - Why: missing projections currently retry forever from the read path,
+     causing per-ticket D1 read amplification on every poll.
+
+### Validation
+
+- Strict Spec Trace validation is required through Tasks.
+- Runtime implementation remains required.
+
+### Watchlist
+
+- Do not map non-disclosing `project_not_found` (hidden project) to a missing
+  ticket — they are distinct error codes (`projection_not_found`).
+- Do not delete existing journal entries before snapshot/classification.
+- A later edit must not reactivate `unmanaged` without eligibility.

@@ -281,6 +281,13 @@ atomic write-and-rename) survives these boundaries:
 | Local file exists, no acknowledgement | Re-read header and retry acknowledgement |
 | Acknowledgement done, journal not cleared | Replay acknowledgement, then clear |
 
+Projection updates use a separate device-local write journal. Its runner is
+independent of browser and ticket reads, retries transient failures with bounded
+backoff, and stops on conflicts, authorization pauses, or an unmanaged ticket.
+Before retiring entries, snapshot them and distinguish reservation recovery
+from pre-cloud tickets that require explicit import; never delete or republish a
+missing projection blindly.
+
 ## Disable a project
 
 Ordinary disable suspends project coordination and retains the installation's

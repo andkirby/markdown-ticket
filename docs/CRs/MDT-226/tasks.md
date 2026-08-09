@@ -97,6 +97,19 @@ the cloud runtime README. Records the idle-D1 and latency evidence as external
 manual gates; removal of legacy polling and v1 retirement happen only after
 telemetry confirms the migration gate.
 
+## Slice 6 — Projection write retry isolation
+
+Exit gate: projection writes never drain from a read path, retry only when due,
+and stop safely for authorization, conflict, and missing-projection outcomes.
+
+| Task | Owns | Makes green |
+| --- | --- | --- |
+| **TASK-write-journal-retry** | `ART-projection-write-journal`, `ART-shared-ticket-service` | TEST-write-journal-retry-classification, TEST-idle-zero-d1 |
+
+Persists retry state/backoff, uses the known projection version for one
+conditional write, distinguishes `projection_not_found`, and quarantines
+unmanaged tickets until reservation recovery or explicit import.
+
 ## Scenario closure
 
 All eight BDD scenarios are made green by these tasks:

@@ -146,6 +146,12 @@ The browser-facing API SHALL expose one unified ticket read model and local
 ticket event stream; it SHALL NOT expose cloud projection cursors, revisions,
 catch-up, reconnect, or the cloud projection stream endpoint.
 
+### C-12 Projection write retry isolation
+
+Projection write retries SHALL run independently of browser and read requests,
+with one bounded single-flight runner per project, persisted capped backoff, and
+no request when no eligible operation is due.
+
 ## Edge Cases
 
 ### Edge-1 Commit-acknowledgement gap
@@ -171,6 +177,12 @@ credentials.
 
 If membership changes while a stream is open, the project hub SHALL exclude and
 close unauthorized sockets before delivering a later projection.
+
+### Edge-5 Missing projection during write recovery
+
+If an authorized project has no projection for a journaled ticket, the system
+SHALL stop automatic retries and classify it as unmanaged; only recovery of its
+original reservation/acknowledgement or an explicit import may create it.
 
 ## Assumptions
 

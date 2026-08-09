@@ -37,6 +37,7 @@ deterministic.
 | TEST-config-v2-migration | Edge-3, C-9 | `shared/services/cloud-sync/__tests__/project-state-store.test.ts` — v1 with pollIntervalSeconds migrates atomically to v2; identity/origin/credential unchanged; pollIntervalSeconds discarded from active use |
 | TEST-unified-ticket-api | BR-1.9, C-11, C-2 | `server/tests/services/cloud-sync/SSEProjectionFanout.test.ts` — unified ticket endpoint returns canonical + projection-only read-only entries with kind/readOnly/stale; local wins on number; no cloud transport fields |
 | TEST-sse-fanout | BR-1.3, C-11 | `server/tests/services/cloud-sync/SSEProjectionFanout.test.ts` — read-model change emits an ordinary ticket-view change via existing SSEBroadcaster; browser gets no projection protocol |
+| TEST-write-journal-retry-classification | C-12, Edge-5 | `shared/services/cloud-sync/__tests__/projection-sync.test.ts` — reads never drain; due transient work backs off; auth pauses project; conflict/unmanaged stop; no preflight GET; explicit recovery/import required for missing projection |
 
 ## E2E (Playwright, real board + local server)
 
@@ -60,7 +61,7 @@ latency measurement. They are the runtime gates for slice exit.
 
 ## Coverage invariant
 
-Every tests-routed requirement (C-1..C-11, Edge-1..Edge-4) has at least one
+Every tests-routed requirement (C-1..C-12, Edge-1..Edge-5) has at least one
 test-plan coverage entry, validated by
 `spec-trace validate MDT-226 --stage tests --strict`. The `manual` plans are
 the deployment/idle/latency evidence gates; the rest run in CI against the
