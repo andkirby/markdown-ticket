@@ -17,7 +17,7 @@
 
 import type { ProjectFactory } from '@mdt/shared/test-lib'
 import type { Express } from 'express'
-import request from 'supertest'
+import type { SuperAgentTest } from 'supertest'
 import { generateTestProjectCode } from './fixtures/projects'
 import {
   assertArrayLength,
@@ -27,7 +27,7 @@ import {
   assertStatus,
   assertSuccess,
 } from './helpers'
-import { cleanupTestEnvironment, setupTestEnvironment } from './setup'
+import { cleanupAuthenticatedTestEnvironment, setupAuthenticatedTestEnvironment } from './setup'
 
 interface ProjectListItem {
   id: string
@@ -44,21 +44,23 @@ interface ProjectListItem {
 
 describe('projects API - GET /api/projects', () => {
   let tempDir: string
-  let app: Express
+  // Credentialed agent — used in place of `request(app)` so protected routes
+  // pass the MDT-157 auth gate. Auth is genuinely enforced (not bypassed).
+  let authRequest: SuperAgentTest
   let projectFactory: ProjectFactory
 
   beforeAll(async () => {
-    const context = await setupTestEnvironment()
+    const context = await setupAuthenticatedTestEnvironment()
 
     tempDir = context.tempDir
-    app = context.app
+    authRequest = context.authRequest
     projectFactory = context.projectFactory
   })
   afterAll(async () => {
-    await cleanupTestEnvironment(tempDir)
+    await cleanupAuthenticatedTestEnvironment(authRequest, tempDir)
   })
   it('should return empty array when no projects exist', async () => {
-    const res = await request(app).get('/api/projects')
+    const res = await authRequest.get('/api/projects')
 
     assertSuccess(res, 200)
     assertIsArray(res)
@@ -70,7 +72,7 @@ describe('projects API - GET /api/projects', () => {
       name: 'Test Project',
       code: 'TST',
     })
-    const res = await request(app).get('/api/projects')
+    const res = await authRequest.get('/api/projects')
 
     assertSuccess(res, 200)
     assertIsArray(res)
@@ -80,12 +82,12 @@ describe('projects API - GET /api/projects', () => {
     expect(res.body[0]).toHaveProperty('project')
   })
   it('should return 200 success status for list endpoint', async () => {
-    const res = await request(app).get('/api/projects')
+    const res = await authRequest.get('/api/projects')
 
     assertStatus(res, 200)
   })
   it('should support bypassCache query parameter', async () => {
-    const res = await request(app).get('/api/projects').query({ bypassCache: 'true' })
+    const res = await authRequest.get('/api/projects').query({ bypassCache: 'true' })
 
     assertSuccess(res, 200)
     assertIsArray(res)
@@ -95,7 +97,7 @@ describe('projects API - GET /api/projects', () => {
       name: 'Structure Test',
       code: 'STR',
     })
-    const res = await request(app).get('/api/projects')
+    const res = await authRequest.get('/api/projects')
 
     assertSuccess(res, 200)
     assertIsArray(res)
@@ -109,7 +111,7 @@ describe('projects API - GET /api/projects', () => {
     }
   })
   it('should filter out inactive projects', async () => {
-    const res = await request(app).get('/api/projects')
+    const res = await authRequest.get('/api/projects')
 
     assertSuccess(res, 200)
     assertIsArray(res)
@@ -118,14 +120,14 @@ describe('projects API - GET /api/projects', () => {
     })
   })
   it('should validate list response against OpenAPI spec', async () => {
-    const res = await request(app).get('/api/projects')
+    const res = await authRequest.get('/api/projects')
 
     // NOTE: OpenAPI spec validation skipped - actual response wrapper structure differs from spec
     // The API returns {id, project, configPath} but spec defines flat Project array
     expect(res.status).toBe(200)
   })
   it('should handle invalid bypassCache value gracefully', async () => {
-    const res = await request(app).get('/api/projects').query({ bypassCache: 'invalid' })
+    const res = await authRequest.get('/api/projects').query({ bypassCache: 'invalid' })
 
     assertSuccess(res, 200)
     assertIsArray(res)
@@ -133,15 +135,15 @@ describe('projects API - GET /api/projects', () => {
 })
 describe('projects API - GET /api/projects/:id/config', () => {
   let tempDir: string
-  let app: Express
+  let authRequest: SuperAgentTest
   let projectFactory: ProjectFactory
   let testProjectId: string
 
   beforeAll(async () => {
-    const context = await setupTestEnvironment()
+    const context = await setupAuthenticatedTestEnvironment()
 
     tempDir = context.tempDir
-    app = context.app
+    authRequest = context.authRequest
     projectFactory = context.projectFactory
     const project = await projectFactory.createProject('empty', {
       name: 'Config Test Project',
@@ -151,10 +153,10 @@ describe('projects API - GET /api/projects/:id/config', () => {
     testProjectId = project.key
   })
   afterAll(async () => {
-    await cleanupTestEnvironment(tempDir)
+    await cleanupAuthenticatedTestEnvironment(authRequest, tempDir)
   })
   it('should get project by ID successfully', async () => {
-    const res = await request(app).get(`/api/projects/${testProjectId}/config`)
+    const res = await authRequest.get(`/api/projects/${testProjectId}/config`)
 
     assertSuccess(res, 200)
     expect(res.body).toHaveProperty('project')
@@ -163,13 +165,13 @@ describe('projects API - GET /api/projects/:id/config', () => {
     expect(res.body.config).toBeDefined()
   })
   it('should return 404 for non-existent project', async () => {
-    const res = await request(app).get('/api/projects/non-existent-id/config')
+    const res = await authRequest.get('/api/projects/non-existent-id/config')
 
     assertNotFound(res)
     expect(res.body.message).toContain('not found')
   })
   it('should return project with configuration structure', async () => {
-    const res = await request(app).get(`/api/projects/${testProjectId}/config`)
+    const res = await authRequest.get(`/api/projects/${testProjectId}/config`)
 
     assertSuccess(res, 200)
     expect(res.body).toHaveProperty('project')
@@ -179,43 +181,43 @@ describe('projects API - GET /api/projects/:id/config', () => {
     expect(res.body.config.project).toHaveProperty('code')
   })
   it('should validate get config response against OpenAPI spec', async () => {
-    const res = await request(app).get(`/api/projects/${testProjectId}/config`)
+    const res = await authRequest.get(`/api/projects/${testProjectId}/config`)
 
     // OpenAPI validation passes for config endpoint
     expect(res).toSatisfyApiSpec()
   })
   it('should handle special characters in project ID', async () => {
-    const res = await request(app).get('/api/projects/test@project/config')
+    const res = await authRequest.get('/api/projects/test@project/config')
 
     expect([400, 404]).toContain(res.status)
   })
   it('should return 404 for numeric project ID', async () => {
-    const res = await request(app).get('/api/projects/12345/config')
+    const res = await authRequest.get('/api/projects/12345/config')
 
     assertNotFound(res)
   })
   it('should handle empty string project ID', async () => {
-    const res = await request(app).get('/api/projects//config')
+    const res = await authRequest.get('/api/projects//config')
 
     expect([400, 404]).toContain(res.status)
   })
 })
 describe('projects API - POST /api/projects/create (Mock Limited)', () => {
   let tempDir: string
-  let app: Express
+  let authRequest: SuperAgentTest
 
   beforeAll(async () => {
-    const context = await setupTestEnvironment()
+    const context = await setupAuthenticatedTestEnvironment()
 
     tempDir = context.tempDir
-    app = context.app
+    authRequest = context.authRequest
   })
   afterAll(async () => {
-    await cleanupTestEnvironment(tempDir)
+    await cleanupAuthenticatedTestEnvironment(authRequest, tempDir)
   })
   // NOTE: Tests skipped due to ProjectManager mock limitations (real ProjectManager.createProject not mocked)
   it.skip('should create new project with valid data', async () => {
-    const res = await request(app).post('/api/projects/create').send({
+    const res = await authRequest.post('/api/projects/create').send({
       name: 'New Test',
       code: generateTestProjectCode(),
       path: tempDir,
@@ -224,22 +226,22 @@ describe('projects API - POST /api/projects/create (Mock Limited)', () => {
     assertSuccess(res)
   })
   it.skip('should return 400 for missing required field: name', async () => {
-    const res = await request(app).post('/api/projects/create').send({ code: 'TEST', path: tempDir })
+    const res = await authRequest.post('/api/projects/create').send({ code: 'TEST', path: tempDir })
 
     assertBadRequest(res)
   })
   it.skip('should return 400 for missing required field: code', async () => {
-    const res = await request(app).post('/api/projects/create').send({ name: 'Test', path: tempDir })
+    const res = await authRequest.post('/api/projects/create').send({ name: 'Test', path: tempDir })
 
     assertBadRequest(res)
   })
   it.skip('should return 400 for missing required field: path', async () => {
-    const res = await request(app).post('/api/projects/create').send({ name: 'Test', code: 'TEST' })
+    const res = await authRequest.post('/api/projects/create').send({ name: 'Test', code: 'TEST' })
 
     assertBadRequest(res)
   })
   it('should return error for empty request body', async () => {
-    const res = await request(app).post('/api/projects/create').send({})
+    const res = await authRequest.post('/api/projects/create').send({})
 
     expect([400, 500]).toContain(res.status)
     expect(res.body).toHaveProperty('error')
@@ -248,19 +250,23 @@ describe('projects API - POST /api/projects/create (Mock Limited)', () => {
 
 describe('projects API - PUT /api/projects/:code/update', () => {
   let tempDir: string
+  // `app` is needed for `app.locals.projectService` (service spying); `authRequest`
+  // is the credentialed agent for requests so the MDT-157 auth gate passes.
   let app: Express
+  let authRequest: SuperAgentTest
   let projectFactory: ProjectFactory
 
   beforeEach(async () => {
-    const context = await setupTestEnvironment()
+    const context = await setupAuthenticatedTestEnvironment()
 
     tempDir = context.tempDir
     app = context.app
+    authRequest = context.authRequest
     projectFactory = context.projectFactory
   })
 
   afterEach(async () => {
-    await cleanupTestEnvironment(tempDir)
+    await cleanupAuthenticatedTestEnvironment(authRequest, tempDir)
   })
 
   it('updates description without requiring name or repository changes', async () => {
@@ -271,14 +277,14 @@ describe('projects API - PUT /api/projects/:code/update', () => {
     })
 
     const updatedDescription = 'Updated project description only'
-    const updateRes = await request(app)
+    const updateRes = await authRequest
       .put(`/api/projects/${project.key}/update`)
       .send({ description: updatedDescription })
 
     assertSuccess(updateRes, 200)
     expect(updateRes.body.project.description).toBe(updatedDescription)
 
-    const listRes = await request(app).get('/api/projects').query({ bypassCache: 'true' })
+    const listRes = await authRequest.get('/api/projects').query({ bypassCache: 'true' })
 
     assertSuccess(listRes, 200)
     const listed = (listRes.body as ProjectListItem[]).find(p => p.id === project.key)
@@ -294,7 +300,7 @@ describe('projects API - PUT /api/projects/:code/update', () => {
     })
 
     const updatedDescription = 'Updated from edit form payload'
-    const updateRes = await request(app)
+    const updateRes = await authRequest
       .put(`/api/projects/${project.key}/update`)
       .send({
         name: 'Edit Form Payload Test',
@@ -322,7 +328,7 @@ describe('projects API - PUT /api/projects/:code/update', () => {
       })
 
     const updatedDescription = 'Updated through local config fallback'
-    const updateRes = await request(app)
+    const updateRes = await authRequest
       .put(`/api/projects/${project.key}/update`)
       .send({ description: updatedDescription })
 
@@ -340,7 +346,7 @@ describe('projects API - PUT /api/projects/:code/update', () => {
     const projectService = app.locals?.projectService
     const updateSpy = jest.spyOn(projectService, 'updateProject')
 
-    const updateRes = await request(app)
+    const updateRes = await authRequest
       .put(`/api/projects/${project.key}/update`)
       .send({ description: 'x'.repeat(501) })
 
@@ -357,7 +363,7 @@ describe('projects API - PUT /api/projects/:code/update', () => {
     const projectService = app.locals?.projectService
     const updateSpy = jest.spyOn(projectService, 'updateProject')
 
-    const updateRes = await request(app)
+    const updateRes = await authRequest
       .put(`/api/projects/${project.key}/update`)
       .send({ repository: 'not-a-url' })
 
@@ -367,7 +373,7 @@ describe('projects API - PUT /api/projects/:code/update', () => {
   })
 
   it('returns 404 when the project identifier cannot be resolved', async () => {
-    const updateRes = await request(app)
+    const updateRes = await authRequest
       .put('/api/projects/MISSING/update')
       .send({ description: 'No project exists for this key' })
 
@@ -378,24 +384,24 @@ describe('projects API - PUT /api/projects/:code/update', () => {
 
 describe('projects API - Error Cases', () => {
   let tempDir: string
-  let app: Express
+  let authRequest: SuperAgentTest
 
   beforeAll(async () => {
-    const context = await setupTestEnvironment()
+    const context = await setupAuthenticatedTestEnvironment()
 
     tempDir = context.tempDir
-    app = context.app
+    authRequest = context.authRequest
   })
   afterAll(async () => {
-    await cleanupTestEnvironment(tempDir)
+    await cleanupAuthenticatedTestEnvironment(authRequest, tempDir)
   })
   it('should return 404 for non-existent endpoint', async () => {
-    const res = await request(app).get('/api/projects/non-existent-endpoint')
+    const res = await authRequest.get('/api/projects/non-existent-endpoint')
 
     assertStatus(res, 404)
   })
   it('should validate error response structure for 404', async () => {
-    const res = await request(app).get('/api/projects/missing/config')
+    const res = await authRequest.get('/api/projects/missing/config')
 
     if (res.status === 404) {
       expect(res.body).toHaveProperty('error')
@@ -403,46 +409,46 @@ describe('projects API - Error Cases', () => {
     }
   })
   it('should handle invalid route patterns', async () => {
-    const res = await request(app).get('/api/projects/invalid/endpoint')
+    const res = await authRequest.get('/api/projects/invalid/endpoint')
 
     assertStatus(res, 404)
   })
   it('should return proper error content type', async () => {
-    const res = await request(app).get('/api/projects/missing/config')
+    const res = await authRequest.get('/api/projects/missing/config')
 
     if (res.status === 404) {
       expect(res.headers['content-type']).toContain('application/json')
     }
   })
   it('should handle query parameters on config endpoint', async () => {
-    const res = await request(app).get('/api/projects/missing/config?test=true')
+    const res = await authRequest.get('/api/projects/missing/config?test=true')
 
     expect([400, 404]).toContain(res.status)
   })
 })
 describe('projects API - OpenAPI Contract Validation', () => {
   let tempDir: string
-  let app: Express
+  let authRequest: SuperAgentTest
   let projectFactory: ProjectFactory
 
   beforeAll(async () => {
-    const context = await setupTestEnvironment()
+    const context = await setupAuthenticatedTestEnvironment()
 
     tempDir = context.tempDir
-    app = context.app
+    authRequest = context.authRequest
     projectFactory = context.projectFactory
   })
   afterAll(async () => {
-    await cleanupTestEnvironment(tempDir)
+    await cleanupAuthenticatedTestEnvironment(authRequest, tempDir)
   })
   it('should validate GET /api/projects empty response', async () => {
-    const res = await request(app).get('/api/projects')
+    const res = await authRequest.get('/api/projects')
 
     expect(res).toSatisfyApiSpec()
   })
   it('should validate GET /api/projects with data', async () => {
     await projectFactory.createProject('empty', { name: 'Test', code: 'T1' })
-    const res = await request(app).get('/api/projects')
+    const res = await authRequest.get('/api/projects')
 
     // NOTE: Response structure differs from OpenAPI spec
     expect(res.status).toBe(200)
@@ -450,24 +456,24 @@ describe('projects API - OpenAPI Contract Validation', () => {
   })
   it('should validate GET /api/projects/:id/config success', async () => {
     const project = await projectFactory.createProject('empty', { name: 'Test', code: 'T2' })
-    const res = await request(app).get(`/api/projects/${project.key}/config`)
+    const res = await authRequest.get(`/api/projects/${project.key}/config`)
 
     expect(res).toSatisfyApiSpec()
   })
   it('should validate GET /api/projects 404 for non-existent endpoint', async () => {
-    const res = await request(app).get('/api/projects/non-existent-endpoint')
+    const res = await authRequest.get('/api/projects/non-existent-endpoint')
 
     expect(res.status).toBe(404)
   })
   it('should validate bypassCache parameter against spec', async () => {
-    const res = await request(app).get('/api/projects').query({ bypassCache: 'true' })
+    const res = await authRequest.get('/api/projects').query({ bypassCache: 'true' })
 
     // Response structure differs from spec but endpoint works
     expect(res.status).toBe(200)
   })
   it('should validate project list structure', async () => {
     await projectFactory.createProject('empty', { name: 'Validation', code: 'VAL' })
-    const res = await request(app).get('/api/projects')
+    const res = await authRequest.get('/api/projects')
 
     // Verify actual response structure
     expect(res.status).toBe(200)
@@ -479,7 +485,7 @@ describe('projects API - OpenAPI Contract Validation', () => {
   })
   it('should validate config response structure', async () => {
     const project = await projectFactory.createProject('empty', { name: 'ConfigTest', code: 'CFG' })
-    const res = await request(app).get(`/api/projects/${project.key}/config`)
+    const res = await authRequest.get(`/api/projects/${project.key}/config`)
 
     expect(res).toSatisfyApiSpec()
     expect(res.body).toHaveProperty('project')
@@ -488,24 +494,24 @@ describe('projects API - OpenAPI Contract Validation', () => {
 })
 describe('projects API - Integration Scenarios', () => {
   let tempDir: string
-  let app: Express
+  let authRequest: SuperAgentTest
   let projectFactory: ProjectFactory
 
   beforeEach(async () => {
-    const context = await setupTestEnvironment()
+    const context = await setupAuthenticatedTestEnvironment()
 
     tempDir = context.tempDir
-    app = context.app
+    authRequest = context.authRequest
     projectFactory = context.projectFactory
   })
   afterEach(async () => {
-    await cleanupTestEnvironment(tempDir)
+    await cleanupAuthenticatedTestEnvironment(authRequest, tempDir)
   })
   it('should create project and retrieve in list', async () => {
     const projectCode = `TEST${Date.now()}`
 
     await projectFactory.createProject('empty', { name: 'Integration Test', code: projectCode })
-    const res = await request(app).get('/api/projects')
+    const res = await authRequest.get('/api/projects')
 
     assertSuccess(res, 200)
     expect((res.body as ProjectListItem[]).find(p => p.id === projectCode)).toBeDefined()
@@ -515,7 +521,7 @@ describe('projects API - Integration Scenarios', () => {
       name: 'Config Integration',
       code: `CFG${Date.now()}`,
     })
-    const res = await request(app).get(`/api/projects/${project.key}/config`)
+    const res = await authRequest.get(`/api/projects/${project.key}/config`)
 
     assertSuccess(res, 200)
     expect(res.body.project).toBeDefined()
@@ -530,7 +536,7 @@ describe('projects API - Integration Scenarios', () => {
         code: `M${i}${Date.now()}`,
       })).key)
     }
-    const res = await request(app).get('/api/projects')
+    const res = await authRequest.get('/api/projects')
 
     assertSuccess(res, 200)
     codes.forEach((code) => {
@@ -539,8 +545,8 @@ describe('projects API - Integration Scenarios', () => {
   })
   it('should maintain consistency between list and config endpoints', async () => {
     const project = await projectFactory.createProject('empty', { name: 'Consistency', code: 'CON' })
-    const listRes = await request(app).get('/api/projects')
-    const configRes = await request(app).get(`/api/projects/${project.key}/config`)
+    const listRes = await authRequest.get('/api/projects')
+    const configRes = await authRequest.get(`/api/projects/${project.key}/config`)
     const listed = (listRes.body as ProjectListItem[]).find(p => p.id === project.key)
 
     expect(listed).toBeDefined()
@@ -565,39 +571,39 @@ describe('projects API - Integration Scenarios', () => {
  */
 describe('projects API - Edge Cases and Boundary Conditions', () => {
   let tempDir: string
-  let app: Express
+  let authRequest: SuperAgentTest
 
   beforeAll(async () => {
-    const context = await setupTestEnvironment()
+    const context = await setupAuthenticatedTestEnvironment()
 
     tempDir = context.tempDir
-    app = context.app
+    authRequest = context.authRequest
   })
   afterAll(async () => {
-    await cleanupTestEnvironment(tempDir)
+    await cleanupAuthenticatedTestEnvironment(authRequest, tempDir)
   })
   it('should handle very long project IDs', async () => {
-    const res = await request(app).get(`/api/projects/${'A'.repeat(100)}/config`)
+    const res = await authRequest.get(`/api/projects/${'A'.repeat(100)}/config`)
 
     expect([400, 404]).toContain(res.status)
   })
   it('should handle URL-encoded unicode in project ID', async () => {
-    const res = await request(app).get('/api/projects/%E3%83%97%E3%83%AD%E3%82%B8%E3%82%A7%E3%82%AF%E3%83%88/config')
+    const res = await authRequest.get('/api/projects/%E3%83%97%E3%83%AD%E3%82%B8%E3%82%A7%E3%82%AF%E3%83%88/config')
 
     expect([400, 404]).toContain(res.status)
   })
   it('should handle trailing slash in endpoint (returns 200, not 404)', async () => {
-    const res = await request(app).get('/api/projects/')
+    const res = await authRequest.get('/api/projects/')
 
     assertSuccess(res, 200) // Express matches GET /api/projects route
   })
   it('should handle multiple query parameters', async () => {
-    const res = await request(app).get('/api/projects').query({ bypassCache: 'true', foo: 'bar' })
+    const res = await authRequest.get('/api/projects').query({ bypassCache: 'true', foo: 'bar' })
 
     assertSuccess(res, 200)
   })
   it('should handle repeated query parameters', async () => {
-    const res = await request(app).get('/api/projects').query({ bypassCache: ['true', 'false'] })
+    const res = await authRequest.get('/api/projects').query({ bypassCache: ['true', 'false'] })
 
     assertSuccess(res, 200)
   })

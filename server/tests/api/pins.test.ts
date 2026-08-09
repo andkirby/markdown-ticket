@@ -1,29 +1,34 @@
 /// <reference types="jest" />
 
 import type { Express } from 'express'
+import type { SuperAgentTest } from 'supertest'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import request from 'supertest'
 import { PinStateService } from '../../services/PinStateService'
 import { assertBadRequest, assertSuccess } from './helpers'
 import {
-  cleanupTestEnvironment,
+  cleanupAuthenticatedTestEnvironment,
   createTestProjectWithCR,
-  setupTestEnvironment,
+  setupAuthenticatedTestEnvironment,
 } from './setup'
 
 describe('pins API (MDT-197)', () => {
   let tempDir: string
+  // `app` is needed for `app.locals.projectService` (service path test);
+  // `authRequest` is the credentialed agent for requests so the MDT-157 auth
+  // gate passes (auth is genuinely enforced, not bypassed).
   let app: Express
-  let projectFactory: Awaited<ReturnType<typeof setupTestEnvironment>>['projectFactory']
+  let authRequest: SuperAgentTest
+  let projectFactory: Awaited<ReturnType<typeof setupAuthenticatedTestEnvironment>>['projectFactory']
   let projectCodeA: string
   let projectCodeB: string
 
   beforeAll(async () => {
-    const context = await setupTestEnvironment()
+    const context = await setupAuthenticatedTestEnvironment()
 
     tempDir = context.tempDir
     app = context.app
+    authRequest = context.authRequest
     projectFactory = context.projectFactory
 
     const projectA = await createTestProjectWithCR(projectFactory, {
@@ -40,7 +45,7 @@ describe('pins API (MDT-197)', () => {
   })
 
   afterAll(async () => {
-    await cleanupTestEnvironment(tempDir)
+    await cleanupAuthenticatedTestEnvironment(authRequest, tempDir)
   })
 
   function pinPath(): string {
@@ -52,7 +57,7 @@ describe('pins API (MDT-197)', () => {
   }
 
   it('TEST-api-put-pins: persists the whole pin set to user-global pins.json', async () => {
-    const response = await request(app)
+    const response = await authRequest
       .put('/api/pins')
       .send({
         pins: [
@@ -76,32 +81,32 @@ describe('pins API (MDT-197)', () => {
 
   it('TEST-api-validate-schema: rejects malformed pin state with 400', async () => {
     // Bad project code (lowercase)
-    const badProject = await request(app)
+    const badProject = await authRequest
       .put('/api/pins')
       .send({ pins: [{ projectCode: 'lower', ticketCode: 'lower-1', favoritedAt: iso() }] })
     assertBadRequest(badProject)
 
     // Bad ticket code (no dash-number)
-    const badTicket = await request(app)
+    const badTicket = await authRequest
       .put('/api/pins')
       .send({ pins: [{ projectCode: projectCodeA, ticketCode: 'not-a-code', favoritedAt: iso() }] })
     assertBadRequest(badTicket)
 
     // Bad datetime
-    const badDate = await request(app)
+    const badDate = await authRequest
       .put('/api/pins')
       .send({ pins: [{ projectCode: projectCodeA, ticketCode: `${projectCodeA}-1`, favoritedAt: 'yesterday' }] })
     assertBadRequest(badDate)
 
     // Extra field (strict schema)
-    const extraField = await request(app)
+    const extraField = await authRequest
       .put('/api/pins')
       .send({ pins: [{ projectCode: projectCodeA, ticketCode: `${projectCodeA}-1`, favoritedAt: iso(), extra: true }] })
     assertBadRequest(extraField)
   })
 
   it('TEST-api-reject-unknown-project: rejects pins referencing an unregistered project', async () => {
-    const response = await request(app)
+    const response = await authRequest
       .put('/api/pins')
       .send({
         pins: [
@@ -130,14 +135,14 @@ describe('pins API (MDT-197)', () => {
     )
 
     // GET should drop the STALE pin during reconciliation.
-    const response = await request(app).get('/api/pins')
+    const response = await authRequest.get('/api/pins')
     assertSuccess(response, 200)
     expect(response.body.pins).toHaveLength(1)
     expect(response.body.pins[0].projectCode).toBe(projectCodeA)
   })
 
   it('TEST-api-cross-project: accepts pins from multiple project codes in one set', async () => {
-    const response = await request(app)
+    const response = await authRequest
       .put('/api/pins')
       .send({
         pins: [
@@ -157,7 +162,7 @@ describe('pins API (MDT-197)', () => {
     // Corrupt the file on disk.
     writeFileSync(pinPath(), '{ "pins": "not-an-array" }', 'utf8')
 
-    const response = await request(app).get('/api/pins')
+    const response = await authRequest.get('/api/pins')
     assertSuccess(response, 200)
     expect(response.body.pins).toEqual([])
   })

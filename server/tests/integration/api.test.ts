@@ -15,32 +15,30 @@
 
 /// <reference types="jest" />
 
+import type { SuperAgentTest } from 'supertest'
 import { crFixtures, crUpdateFixtures, errorFixtures } from '../api/fixtures/projects'
 import { assertBadRequest, assertCRStructure, assertCRUDSuccess, assertErrorMessage, assertNotFound, assertSuccess, projectApi } from '../api/helpers'
-import { cleanupTestEnvironment, createTestProjectWithCR, setupTestEnvironment } from '../api/setup'
+import { cleanupAuthenticatedTestEnvironment, createTestProjectWithCR, setupAuthenticatedTestEnvironment } from '../api/setup'
 
 describe('aPI Integration Tests - CRUD Endpoints (MDT-106)', () => {
   let tempDir: string
-  let projectFactory: Awaited<ReturnType<typeof setupTestEnvironment>>['projectFactory']
-  let app: Awaited<ReturnType<typeof setupTestEnvironment>>['app']
+  let projectFactory: Awaited<ReturnType<typeof setupAuthenticatedTestEnvironment>>['projectFactory']
+  // Credentialed agent — passed to request helpers so protected routes pass the
+  // MDT-157 auth gate. Auth is genuinely enforced (not bypassed) in NODE_ENV=test.
+  let authRequest: SuperAgentTest
   let projectCode: string
   let crCode: string
 
   beforeAll(async () => {
-    console.log('[TEST] Starting beforeAll hook...')
-
     try {
       // Setup isolated test environment with temporary directory
-      const context = await setupTestEnvironment()
-
-      console.log('[TEST] Setup complete, tempDir:', context.tempDir)
+      const context = await setupAuthenticatedTestEnvironment()
 
       tempDir = context.tempDir
       projectFactory = context.projectFactory
-      app = context.app
+      authRequest = context.authRequest
 
-      console.log('[TEST] Creating test project and CR...')
-      // Create test project with CR for testing
+      // Create test project and CR for testing
       const testData = await createTestProjectWithCR(projectFactory, {
         name: 'API Integration Test Project',
         code: 'API',
@@ -48,8 +46,6 @@ describe('aPI Integration Tests - CRUD Endpoints (MDT-106)', () => {
 
       projectCode = testData.projectCode
       crCode = testData.crCode
-
-      console.log('[TEST] Project created:', projectCode, 'CR created:', crCode)
     }
     catch (error) {
       console.error('[TEST] Error in beforeAll:', error)
@@ -59,12 +55,12 @@ describe('aPI Integration Tests - CRUD Endpoints (MDT-106)', () => {
 
   afterAll(async () => {
     // Cleanup test environment
-    await cleanupTestEnvironment(tempDir)
+    await cleanupAuthenticatedTestEnvironment(authRequest, tempDir)
   })
 
   describe('gET /api/projects/:projectId/crs/:crId', () => {
     it('should return 200 with CR data for valid request', async () => {
-      const response = await projectApi.getCR(app, projectCode, crCode)
+      const response = await projectApi.getCR(authRequest, projectCode, crCode)
 
       assertSuccess(response, 200)
       assertCRStructure(response)
@@ -73,14 +69,14 @@ describe('aPI Integration Tests - CRUD Endpoints (MDT-106)', () => {
     })
 
     it('should return 404 when CR does not exist', async () => {
-      const response = await projectApi.getCR(app, projectCode, 'NONEXISTENT-999')
+      const response = await projectApi.getCR(authRequest, projectCode, 'NONEXISTENT-999')
 
       assertNotFound(response)
       assertErrorMessage(response, 'not found')
     })
 
     it('should return 404 when project does not exist', async () => {
-      const response = await projectApi.getCR(app, 'NONEXISTENT', crCode)
+      const response = await projectApi.getCR(authRequest, 'NONEXISTENT', crCode)
 
       assertNotFound(response)
       assertErrorMessage(response, 'not found')
@@ -89,7 +85,7 @@ describe('aPI Integration Tests - CRUD Endpoints (MDT-106)', () => {
 
   describe('pOST /api/projects/:projectId/crs', () => {
     it('should create a new CR with valid data', async () => {
-      const response = await projectApi.createCR(app, projectCode, crFixtures.feature)
+      const response = await projectApi.createCR(authRequest, projectCode, crFixtures.feature)
 
       assertCRUDSuccess(response, 'create')
       expect(response.body.crCode).toMatch(/^API-\d+$/)
@@ -97,28 +93,28 @@ describe('aPI Integration Tests - CRUD Endpoints (MDT-106)', () => {
     })
 
     it('should create CR with bug type', async () => {
-      const response = await projectApi.createCR(app, projectCode, crFixtures.bug)
+      const response = await projectApi.createCR(authRequest, projectCode, crFixtures.bug)
 
       assertCRUDSuccess(response, 'create')
       expect(response.body.message).toContain('created successfully')
     })
 
     it('should return 400 when title is missing', async () => {
-      const response = await projectApi.createCR(app, projectCode, errorFixtures.missingTitle)
+      const response = await projectApi.createCR(authRequest, projectCode, errorFixtures.missingTitle)
 
       assertBadRequest(response)
       assertErrorMessage(response, 'required')
     })
 
     it('should return 400 when type is missing', async () => {
-      const response = await projectApi.createCR(app, projectCode, errorFixtures.missingType)
+      const response = await projectApi.createCR(authRequest, projectCode, errorFixtures.missingType)
 
       assertBadRequest(response)
       assertErrorMessage(response, 'required')
     })
 
     it('should return 404 when project does not exist', async () => {
-      const response = await projectApi.createCR(app, 'NONEXISTENT', crFixtures.feature)
+      const response = await projectApi.createCR(authRequest, 'NONEXISTENT', crFixtures.feature)
 
       assertNotFound(response)
       assertErrorMessage(response, 'not found')
@@ -127,42 +123,42 @@ describe('aPI Integration Tests - CRUD Endpoints (MDT-106)', () => {
 
   describe('pATCH /api/projects/:projectId/crs/:crId', () => {
     it('should update CR status partially', async () => {
-      const response = await projectApi.patchCR(app, projectCode, crCode, crUpdateFixtures.statusChange)
+      const response = await projectApi.patchCR(authRequest, projectCode, crCode, crUpdateFixtures.statusChange)
 
       assertCRUDSuccess(response, 'update')
       expect(response.body.updatedFields).toContain('status')
     })
 
     it('should update CR priority', async () => {
-      const response = await projectApi.patchCR(app, projectCode, crCode, crUpdateFixtures.priorityChange)
+      const response = await projectApi.patchCR(authRequest, projectCode, crCode, crUpdateFixtures.priorityChange)
 
       assertCRUDSuccess(response, 'update')
       expect(response.body.updatedFields).toContain('priority')
     })
 
     it('should update multiple fields at once', async () => {
-      const response = await projectApi.patchCR(app, projectCode, crCode, crUpdateFixtures.multipleFields)
+      const response = await projectApi.patchCR(authRequest, projectCode, crCode, crUpdateFixtures.multipleFields)
 
       assertCRUDSuccess(response, 'update')
       expect(response.body.updatedFields.length).toBeGreaterThan(1)
     })
 
     it('should return 400 for invalid status transition', async () => {
-      const response = await projectApi.patchCR(app, projectCode, crCode, crUpdateFixtures.invalidStatus)
+      const response = await projectApi.patchCR(authRequest, projectCode, crCode, crUpdateFixtures.invalidStatus)
 
       assertBadRequest(response)
       assertErrorMessage(response, 'Invalid')
     })
 
     it('should return 400 when no update data provided', async () => {
-      const response = await projectApi.patchCR(app, projectCode, crCode, crUpdateFixtures.empty)
+      const response = await projectApi.patchCR(authRequest, projectCode, crCode, crUpdateFixtures.empty)
 
       assertBadRequest(response)
       assertErrorMessage(response, 'No update data')
     })
 
     it('should return 404 when CR does not exist', async () => {
-      const response = await projectApi.patchCR(app, projectCode, 'NONEXISTENT-999', crUpdateFixtures.statusChange)
+      const response = await projectApi.patchCR(authRequest, projectCode, 'NONEXISTENT-999', crUpdateFixtures.statusChange)
 
       assertNotFound(response)
       assertErrorMessage(response, 'not found')
@@ -187,7 +183,7 @@ describe('aPI Integration Tests - CRUD Endpoints (MDT-106)', () => {
     })
 
     it('should update CR fully (delegates to updateCRPartial)', async () => {
-      const response = await projectApi.updateCR(app, projectCode, putTestCRCode, {
+      const response = await projectApi.updateCR(authRequest, projectCode, putTestCRCode, {
         priority: 'Critical',
         status: 'Approved',
       })
@@ -198,7 +194,7 @@ describe('aPI Integration Tests - CRUD Endpoints (MDT-106)', () => {
     })
 
     it('should return 404 when CR does not exist', async () => {
-      const response = await projectApi.updateCR(app, projectCode, 'NONEXISTENT-999', {
+      const response = await projectApi.updateCR(authRequest, projectCode, 'NONEXISTENT-999', {
         status: 'In Progress',
       })
 
@@ -225,21 +221,21 @@ describe('aPI Integration Tests - CRUD Endpoints (MDT-106)', () => {
     })
 
     it('should delete CR successfully', async () => {
-      const response = await projectApi.deleteCR(app, projectCode, crToDelete)
+      const response = await projectApi.deleteCR(authRequest, projectCode, crToDelete)
 
       assertCRUDSuccess(response, 'delete')
       expect(response.body.message).toContain('deleted')
     })
 
     it('should return 404 when trying to delete non-existent CR', async () => {
-      const response = await projectApi.deleteCR(app, projectCode, 'ALREADY-DELETED-999')
+      const response = await projectApi.deleteCR(authRequest, projectCode, 'ALREADY-DELETED-999')
 
       assertNotFound(response)
       assertErrorMessage(response, 'not found')
     })
 
     it('should return 404 when project does not exist', async () => {
-      const response = await projectApi.deleteCR(app, 'NONEXISTENT', crToDelete)
+      const response = await projectApi.deleteCR(authRequest, 'NONEXISTENT', crToDelete)
 
       assertNotFound(response)
       assertErrorMessage(response, 'not found')
@@ -248,20 +244,20 @@ describe('aPI Integration Tests - CRUD Endpoints (MDT-106)', () => {
 
   describe('aPI Error Handling', () => {
     it('should handle malformed request body', async () => {
-      const response = await projectApi.createCR(app, projectCode, errorFixtures.emptyCR)
+      const response = await projectApi.createCR(authRequest, projectCode, errorFixtures.emptyCR)
 
       assertBadRequest(response)
     })
 
     it('should handle missing projectId parameter', async () => {
-      const response = await projectApi.getCR(app, '', crCode)
+      const response = await projectApi.getCR(authRequest, '', crCode)
 
       // Empty projectId results in 404 or 400 depending on routing
       expect([400, 404]).toContain(response.status)
     })
 
     it('should handle missing crId parameter', async () => {
-      const response = await projectApi.getCR(app, projectCode, '')
+      const response = await projectApi.getCR(authRequest, projectCode, '')
 
       // Empty crId matches the listCRs route instead of getCR due to Express routing
       expect(response.status).toBe(200)
@@ -271,7 +267,7 @@ describe('aPI Integration Tests - CRUD Endpoints (MDT-106)', () => {
 
   describe('gET /api/projects/:projectId/crs (List CRs)', () => {
     it('should return list of CRs for project', async () => {
-      const response = await projectApi.listCRs(app, projectCode)
+      const response = await projectApi.listCRs(authRequest, projectCode)
 
       assertSuccess(response, 200)
       expect(Array.isArray(response.body)).toBe(true)
@@ -291,7 +287,7 @@ describe('aPI Integration Tests - CRUD Endpoints (MDT-106)', () => {
         code: 'EMPTY',
       })
 
-      const response = await projectApi.listCRs(app, emptyProject.key)
+      const response = await projectApi.listCRs(authRequest, emptyProject.key)
 
       assertSuccess(response, 200)
       expect(Array.isArray(response.body)).toBe(true)
@@ -299,7 +295,7 @@ describe('aPI Integration Tests - CRUD Endpoints (MDT-106)', () => {
     })
 
     it('should support bypassCache query parameter', async () => {
-      const response = await projectApi.listCRs(app, projectCode, true)
+      const response = await projectApi.listCRs(authRequest, projectCode, true)
 
       assertSuccess(response, 200)
       expect(Array.isArray(response.body)).toBe(true)
@@ -308,7 +304,7 @@ describe('aPI Integration Tests - CRUD Endpoints (MDT-106)', () => {
 
   describe('gET /api/projects (List Projects)', () => {
     it('should return list of all active projects', async () => {
-      const response = await projectApi.listProjects(app)
+      const response = await projectApi.listProjects(authRequest)
 
       assertSuccess(response, 200)
       expect(Array.isArray(response.body)).toBe(true)
@@ -322,7 +318,7 @@ describe('aPI Integration Tests - CRUD Endpoints (MDT-106)', () => {
     })
 
     it('should support bypassCache query parameter', async () => {
-      const response = await projectApi.listProjects(app, true)
+      const response = await projectApi.listProjects(authRequest, true)
 
       assertSuccess(response, 200)
       expect(Array.isArray(response.body)).toBe(true)

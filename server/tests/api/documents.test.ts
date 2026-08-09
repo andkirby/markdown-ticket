@@ -13,18 +13,18 @@
 
 /// <reference types="jest" />
 
+import type { SuperAgentTest } from 'supertest'
 import { Buffer } from 'node:buffer'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import request from 'supertest'
 import { createTestDocument, createTestDocumentSet, documentFixtures, documentPaths } from './fixtures/documents'
 import { assertBadRequest, assertErrorMessage, assertIsArray, assertNotFound, assertSuccess } from './helpers'
 import {
-  cleanupTestEnvironment,
+  cleanupAuthenticatedTestEnvironment,
   createTestProjectWithCR,
   setProjectDocumentMaxDepth,
   setProjectDocumentPaths,
-  setupTestEnvironment,
+  setupAuthenticatedTestEnvironment,
 } from './setup'
 
 interface DocumentNode {
@@ -34,16 +34,21 @@ interface DocumentNode {
 
 describe('documents API Tests (MDT-106)', () => {
   let tempDir: string
-  let projectFactory: Awaited<ReturnType<typeof setupTestEnvironment>>['projectFactory']
-  let app: Awaited<ReturnType<typeof setupTestEnvironment>>['app']
+  // `app` is needed for `app.locals.projectService` (fav enrichment test);
+  // `authRequest` is the credentialed agent passed to requests so the MDT-157
+  // auth gate passes (auth is genuinely enforced, not bypassed).
+  let app: Awaited<ReturnType<typeof setupAuthenticatedTestEnvironment>>['app']
+  let authRequest: SuperAgentTest
+  let projectFactory: Awaited<ReturnType<typeof setupAuthenticatedTestEnvironment>>['projectFactory']
   let projectCode: string
 
   beforeAll(async () => {
-    const context = await setupTestEnvironment()
+    const context = await setupAuthenticatedTestEnvironment()
 
     tempDir = context.tempDir
     projectFactory = context.projectFactory
     app = context.app
+    authRequest = context.authRequest
 
     // Create test project with document paths pre-configured
     const testData = await createTestProjectWithCR(projectFactory, {
@@ -56,19 +61,19 @@ describe('documents API Tests (MDT-106)', () => {
   })
 
   afterAll(async () => {
-    await cleanupTestEnvironment(tempDir)
+    await cleanupAuthenticatedTestEnvironment(authRequest, tempDir)
   })
 
   describe('gET /api/documents', () => {
     it('should return 400 for missing projectId', async () => {
-      const response = await request(app).get('/api/documents')
+      const response = await authRequest.get('/api/documents')
 
       assertBadRequest(response)
       assertErrorMessage(response, 'Project ID')
     })
 
     it('should return 404 for non-existent project', async () => {
-      const response = await request(app).get('/api/documents?projectId=NONEXISTENT')
+      const response = await authRequest.get('/api/documents?projectId=NONEXISTENT')
 
       assertNotFound(response)
     })
@@ -77,7 +82,7 @@ describe('documents API Tests (MDT-106)', () => {
       // Create test documents
       await createTestDocumentSet(projectFactory, projectCode)
 
-      const response = await request(app).get(`/api/documents?projectId=${projectCode}`)
+      const response = await authRequest.get(`/api/documents?projectId=${projectCode}`)
 
       assertSuccess(response, 200)
       assertIsArray(response)
@@ -96,7 +101,7 @@ describe('documents API Tests (MDT-106)', () => {
       await createTestDocument(projectFactory, depthLimitedProject.key, 'docs/overview.md', documentFixtures.withFrontmatter)
       await createTestDocument(projectFactory, depthLimitedProject.key, 'docs/guide/getting-started.md', documentFixtures.complexFrontmatter)
 
-      const response = await request(app).get(`/api/documents?projectId=${depthLimitedProject.key}`)
+      const response = await authRequest.get(`/api/documents?projectId=${depthLimitedProject.key}`)
 
       assertSuccess(response, 200)
       assertIsArray(response)
@@ -115,7 +120,7 @@ describe('documents API Tests (MDT-106)', () => {
     })
 
     it('should return documents with correct structure', async () => {
-      const response = await request(app).get(`/api/documents?projectId=${projectCode}`)
+      const response = await authRequest.get(`/api/documents?projectId=${projectCode}`)
 
       assertSuccess(response, 200)
       assertIsArray(response)
@@ -133,7 +138,7 @@ describe('documents API Tests (MDT-106)', () => {
     it('should include metadata for nested document files', async () => {
       await createTestDocumentSet(projectFactory, projectCode)
 
-      const response = await request(app).get(`/api/documents?projectId=${projectCode}`)
+      const response = await authRequest.get(`/api/documents?projectId=${projectCode}`)
 
       assertSuccess(response, 200)
       assertIsArray(response)
@@ -153,7 +158,7 @@ describe('documents API Tests (MDT-106)', () => {
     })
 
     it('should include nested documents in tree structure', async () => {
-      const response = await request(app).get(`/api/documents?projectId=${projectCode}`)
+      const response = await authRequest.get(`/api/documents?projectId=${projectCode}`)
 
       assertSuccess(response, 200)
       assertIsArray(response)
@@ -167,13 +172,13 @@ describe('documents API Tests (MDT-106)', () => {
     })
 
     it('should validate 200 response against OpenAPI spec', async () => {
-      const response = await request(app).get(`/api/documents?projectId=${projectCode}`)
+      const response = await authRequest.get(`/api/documents?projectId=${projectCode}`)
 
       expect(response).toSatisfyApiSpec()
     })
 
     it('should validate 400 response against OpenAPI spec', async () => {
-      const response = await request(app).get('/api/documents')
+      const response = await authRequest.get('/api/documents')
 
       expect(response).toSatisfyApiSpec()
     })
@@ -186,33 +191,33 @@ describe('documents API Tests (MDT-106)', () => {
     })
 
     it('should return 400 for missing projectId', async () => {
-      const response = await request(app).get('/api/documents/content?filePath=README.md')
+      const response = await authRequest.get('/api/documents/content?filePath=README.md')
 
       assertBadRequest(response)
       assertErrorMessage(response, 'Project ID')
     })
 
     it('should return 400 for missing filePath', async () => {
-      const response = await request(app).get(`/api/documents/content?projectId=${projectCode}`)
+      const response = await authRequest.get(`/api/documents/content?projectId=${projectCode}`)
 
       assertBadRequest(response)
       assertErrorMessage(response, 'file path')
     })
 
     it('should return 404 for non-existent project', async () => {
-      const response = await request(app).get('/api/documents/content?projectId=NONEXISTENT&filePath=README.md')
+      const response = await authRequest.get('/api/documents/content?projectId=NONEXISTENT&filePath=README.md')
 
       assertNotFound(response)
     })
 
     it('should return 404 for non-existent document', async () => {
-      const response = await request(app).get(`/api/documents/content?projectId=${projectCode}&filePath=docs/nonexistent.md`)
+      const response = await authRequest.get(`/api/documents/content?projectId=${projectCode}&filePath=docs/nonexistent.md`)
 
       expect(response.status).toBe(404)
     })
 
     it('should return document content for valid request', async () => {
-      const response = await request(app).get(`/api/documents/content?projectId=${projectCode}&filePath=${documentPaths.readme}`)
+      const response = await authRequest.get(`/api/documents/content?projectId=${projectCode}&filePath=${documentPaths.readme}`)
 
       assertSuccess(response, 200)
       expect(typeof response.text).toBe('string')
@@ -224,7 +229,7 @@ describe('documents API Tests (MDT-106)', () => {
       await setProjectDocumentPaths(projectFactory, projectCode, ['docs', './'])
 
       try {
-        const response = await request(app).get(`/api/documents/content?projectId=${projectCode}&filePath=AGENTS.md`)
+        const response = await authRequest.get(`/api/documents/content?projectId=${projectCode}&filePath=AGENTS.md`)
 
         assertSuccess(response, 200)
         expect(response.text).toContain('Root file marker')
@@ -235,7 +240,7 @@ describe('documents API Tests (MDT-106)', () => {
     })
 
     it('should return markdown content with frontmatter', async () => {
-      const response = await request(app).get(`/api/documents/content?projectId=${projectCode}&filePath=${documentPaths.api}`)
+      const response = await authRequest.get(`/api/documents/content?projectId=${projectCode}&filePath=${documentPaths.api}`)
 
       assertSuccess(response, 200)
       expect(response.text).toContain('---')
@@ -243,14 +248,14 @@ describe('documents API Tests (MDT-106)', () => {
     })
 
     it('should reject paths with .. (path traversal)', async () => {
-      const response = await request(app).get(`/api/documents/content?projectId=${projectCode}&filePath=../../etc/passwd`)
+      const response = await authRequest.get(`/api/documents/content?projectId=${projectCode}&filePath=../../etc/passwd`)
 
       expect([400, 403]).toContain(response.status)
       assertErrorMessage(response, 'Invalid')
     })
 
     it('should reject non-markdown files', async () => {
-      const response = await request(app).get(`/api/documents/content?projectId=${projectCode}&filePath=config.json`)
+      const response = await authRequest.get(`/api/documents/content?projectId=${projectCode}&filePath=config.json`)
 
       expect([400, 403]).toContain(response.status)
       assertErrorMessage(response, 'markdown')
@@ -260,7 +265,7 @@ describe('documents API Tests (MDT-106)', () => {
       await createTestDocument(projectFactory, projectCode, 'research/hidden.md', '# Hidden\n\nHidden marker')
       await setProjectDocumentPaths(projectFactory, projectCode, ['docs'])
 
-      const response = await request(app).get(`/api/documents/content?projectId=${projectCode}&filePath=research/hidden.md`)
+      const response = await authRequest.get(`/api/documents/content?projectId=${projectCode}&filePath=research/hidden.md`)
 
       expect([400, 403, 404]).toContain(response.status)
       assertErrorMessage(response, 'document path')
@@ -271,7 +276,7 @@ describe('documents API Tests (MDT-106)', () => {
     it('should handle special characters in document content', async () => {
       await createTestDocument(projectFactory, projectCode, 'docs/special.md', documentFixtures.specialChars)
 
-      const response = await request(app).get(`/api/documents/content?projectId=${projectCode}&filePath=docs/special.md`)
+      const response = await authRequest.get(`/api/documents/content?projectId=${projectCode}&filePath=docs/special.md`)
 
       assertSuccess(response, 200)
       expect(response.text).toContain('&')
@@ -280,13 +285,13 @@ describe('documents API Tests (MDT-106)', () => {
     })
 
     it('should validate 200 response against OpenAPI spec', async () => {
-      const response = await request(app).get(`/api/documents/content?projectId=${projectCode}&filePath=${documentPaths.readme}`)
+      const response = await authRequest.get(`/api/documents/content?projectId=${projectCode}&filePath=${documentPaths.readme}`)
 
       expect(response).toSatisfyApiSpec()
     })
 
     it('should validate 400 response against OpenAPI spec', async () => {
-      const response = await request(app).get('/api/documents/content?projectId=TEST')
+      const response = await authRequest.get('/api/documents/content?projectId=TEST')
 
       expect(response).toSatisfyApiSpec()
     })
@@ -298,7 +303,7 @@ describe('documents API Tests (MDT-106)', () => {
     })
 
     it('should list documents for valid project', async () => {
-      const response = await request(app).get(`/api/documents?projectId=${projectCode}`)
+      const response = await authRequest.get(`/api/documents?projectId=${projectCode}`)
 
       assertSuccess(response, 200)
       assertIsArray(response)
@@ -306,7 +311,7 @@ describe('documents API Tests (MDT-106)', () => {
     })
 
     it('should get specific document content', async () => {
-      const response = await request(app).get(`/api/documents/content?projectId=${projectCode}&filePath=${documentPaths.guide}`)
+      const response = await authRequest.get(`/api/documents/content?projectId=${projectCode}&filePath=${documentPaths.guide}`)
 
       assertSuccess(response, 200)
       expect(response.text).toContain('#')
@@ -316,7 +321,7 @@ describe('documents API Tests (MDT-106)', () => {
     it('should handle documents with code blocks', async () => {
       await createTestDocument(projectFactory, projectCode, 'docs/code.md', documentFixtures.codeBlocks)
 
-      const response = await request(app).get(`/api/documents/content?projectId=${projectCode}&filePath=docs/code.md`)
+      const response = await authRequest.get(`/api/documents/content?projectId=${projectCode}&filePath=docs/code.md`)
 
       assertSuccess(response, 200)
       expect(response.text).toContain('```')
@@ -326,7 +331,7 @@ describe('documents API Tests (MDT-106)', () => {
     it('should handle documents with tables', async () => {
       await createTestDocument(projectFactory, projectCode, 'docs/tables.md', documentFixtures.tables)
 
-      const response = await request(app).get(`/api/documents/content?projectId=${projectCode}&filePath=docs/tables.md`)
+      const response = await authRequest.get(`/api/documents/content?projectId=${projectCode}&filePath=docs/tables.md`)
 
       assertSuccess(response, 200)
       expect(response.text).toContain('|')
@@ -336,7 +341,7 @@ describe('documents API Tests (MDT-106)', () => {
 
   describe('excludeFolders behavior', () => {
     it('should exclude tickets path from document tree', async () => {
-      const response = await request(app).get(`/api/documents?projectId=${projectCode}`)
+      const response = await authRequest.get(`/api/documents?projectId=${projectCode}`)
 
       assertSuccess(response, 200)
       assertIsArray(response)
@@ -356,7 +361,7 @@ describe('documents API Tests (MDT-106)', () => {
     })
 
     it('should not include CR ticket files in document listing', async () => {
-      const response = await request(app).get(`/api/documents?projectId=${projectCode}`)
+      const response = await authRequest.get(`/api/documents?projectId=${projectCode}`)
 
       assertSuccess(response, 200)
 
@@ -404,7 +409,7 @@ describe('documents API Tests (MDT-106)', () => {
         ],
       }), 'utf8')
 
-      const response = await request(app).get(`/api/documents?projectId=${favProject.key}`)
+      const response = await authRequest.get(`/api/documents?projectId=${favProject.key}`)
 
       assertSuccess(response, 200)
 
@@ -425,7 +430,7 @@ describe('documents API Tests (MDT-106)', () => {
 
       await writeFile(join(stateDir, 'document-favs.json'), 'invalid json {{{', 'utf8')
 
-      const malformedResponse = await request(app).get(`/api/documents?projectId=${favProject.key}`)
+      const malformedResponse = await authRequest.get(`/api/documents?projectId=${favProject.key}`)
       const malformedNodes = walk(malformedResponse.body as Array<Record<string, unknown>>)
 
       assertSuccess(malformedResponse, 200)
@@ -458,7 +463,7 @@ describe('documents API Tests (MDT-106)', () => {
     })
 
     it('should merge duplicate folder paths into single folder node', async () => {
-      const response = await request(app).get(`/api/documents?projectId=${mergedProjectCode}`)
+      const response = await authRequest.get(`/api/documents?projectId=${mergedProjectCode}`)
 
       assertSuccess(response, 200)
       assertIsArray(response)
@@ -484,7 +489,7 @@ describe('documents API Tests (MDT-106)', () => {
     })
 
     it('should include both docs folder and research folder', async () => {
-      const response = await request(app).get(`/api/documents?projectId=${mergedProjectCode}`)
+      const response = await authRequest.get(`/api/documents?projectId=${mergedProjectCode}`)
 
       assertSuccess(response, 200)
       assertIsArray(response)
@@ -524,7 +529,7 @@ describe('documents API Tests (MDT-106)', () => {
       ])
 
     it('excludes folders whose subtree has no markdown documents', async () => {
-      const response = await request(app).get(`/api/documents?projectId=${pruneProjectCode}`)
+      const response = await authRequest.get(`/api/documents?projectId=${pruneProjectCode}`)
 
       assertSuccess(response, 200)
       assertIsArray(response)
@@ -572,7 +577,7 @@ describe('documents API Tests (MDT-106)', () => {
       nodes.flatMap(node => [node, ...(Array.isArray(node.children) ? walk(node.children as Array<Record<string, unknown>>) : [])])
 
     it('discovers .html and .htm files with html kind', async () => {
-      const response = await request(app).get(`/api/documents?projectId=${htmlProjectCode}`)
+      const response = await authRequest.get(`/api/documents?projectId=${htmlProjectCode}`)
       assertSuccess(response, 200)
 
       const all = walk(response.body as Array<Record<string, unknown>>)
@@ -584,7 +589,7 @@ describe('documents API Tests (MDT-106)', () => {
     })
 
     it('excludes the repo root index.html even when ./ is a document path', async () => {
-      const response = await request(app).get(`/api/documents?projectId=${htmlProjectCode}`)
+      const response = await authRequest.get(`/api/documents?projectId=${htmlProjectCode}`)
       assertSuccess(response, 200)
 
       const all = walk(response.body as Array<Record<string, unknown>>)
@@ -593,7 +598,7 @@ describe('documents API Tests (MDT-106)', () => {
     })
 
     it('keeps css/js/png assets out of the tree (servable but invisible)', async () => {
-      const response = await request(app).get(`/api/documents?projectId=${htmlProjectCode}`)
+      const response = await authRequest.get(`/api/documents?projectId=${htmlProjectCode}`)
       assertSuccess(response, 200)
 
       const all = walk(response.body as Array<Record<string, unknown>>)
@@ -605,7 +610,7 @@ describe('documents API Tests (MDT-106)', () => {
 
     it('still returns kind=markdown for .md files', async () => {
       await createTestDocument(projectFactory, htmlProjectCode, 'docs/notes.md', documentFixtures.withFrontmatter)
-      const response = await request(app).get(`/api/documents?projectId=${htmlProjectCode}`)
+      const response = await authRequest.get(`/api/documents?projectId=${htmlProjectCode}`)
       assertSuccess(response, 200)
 
       const all = walk(response.body as Array<Record<string, unknown>>)
@@ -617,25 +622,25 @@ describe('documents API Tests (MDT-106)', () => {
 
   describe('error cases', () => {
     it('should return 400 for missing projectId in discovery', async () => {
-      const response = await request(app).get('/api/documents')
+      const response = await authRequest.get('/api/documents')
 
       assertBadRequest(response)
     })
 
     it('should return 400 for missing projectId in content retrieval', async () => {
-      const response = await request(app).get('/api/documents/content?filePath=test.md')
+      const response = await authRequest.get('/api/documents/content?filePath=test.md')
 
       assertBadRequest(response)
     })
 
     it('should return 404 for non-existent project in discovery', async () => {
-      const response = await request(app).get('/api/documents?projectId=FAKE-PROJECT')
+      const response = await authRequest.get('/api/documents?projectId=FAKE-PROJECT')
 
       assertNotFound(response)
     })
 
     it('should return 404 for non-existent project in content retrieval', async () => {
-      const response = await request(app).get('/api/documents/content?projectId=FAKE-PROJECT&filePath=test.md')
+      const response = await authRequest.get('/api/documents/content?projectId=FAKE-PROJECT&filePath=test.md')
 
       assertNotFound(response)
     })
@@ -647,14 +652,14 @@ describe('documents API Tests (MDT-106)', () => {
     })
 
     it('should validate GET /api/documents success response', async () => {
-      const response = await request(app).get(`/api/documents?projectId=${projectCode}`)
+      const response = await authRequest.get(`/api/documents?projectId=${projectCode}`)
 
       expect(response.status).toBe(200)
       expect(response).toSatisfyApiSpec()
     })
 
     it('should validate GET /api/documents 400 error response', async () => {
-      const response = await request(app).get('/api/documents')
+      const response = await authRequest.get('/api/documents')
 
       expect(response.status).toBe(400)
       expect(response.body).toHaveProperty('error')
@@ -662,20 +667,20 @@ describe('documents API Tests (MDT-106)', () => {
     })
 
     it('should validate GET /api/documents 404 error response', async () => {
-      const response = await request(app).get('/api/documents?projectId=NONEXISTENT')
+      const response = await authRequest.get('/api/documents?projectId=NONEXISTENT')
 
       expect([404, 500]).toContain(response.status)
     })
 
     it('should validate GET /api/documents/content success response', async () => {
-      const response = await request(app).get(`/api/documents/content?projectId=${projectCode}&filePath=${documentPaths.readme}`)
+      const response = await authRequest.get(`/api/documents/content?projectId=${projectCode}&filePath=${documentPaths.readme}`)
 
       expect(response.status).toBe(200)
       expect(response).toSatisfyApiSpec()
     })
 
     it('should validate GET /api/documents/content 400 error response', async () => {
-      const response = await request(app).get(`/api/documents/content?projectId=${projectCode}`)
+      const response = await authRequest.get(`/api/documents/content?projectId=${projectCode}`)
 
       expect(response.status).toBe(400)
       expect(response.body).toHaveProperty('error')
@@ -683,13 +688,13 @@ describe('documents API Tests (MDT-106)', () => {
     })
 
     it('should validate GET /api/documents/content 404 error response', async () => {
-      const response = await request(app).get('/api/documents/content?projectId=NONEXISTENT&filePath=test.md')
+      const response = await authRequest.get('/api/documents/content?projectId=NONEXISTENT&filePath=test.md')
 
       expect([404, 500]).toContain(response.status)
     })
 
     it('should reject response that violates schema', async () => {
-      const response = await request(app).get(`/api/documents?projectId=${projectCode}`)
+      const response = await authRequest.get(`/api/documents?projectId=${projectCode}`)
       // Clone response body to avoid modifying original
       const modifiedResponse = {
         ...response,

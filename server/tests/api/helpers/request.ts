@@ -6,8 +6,24 @@
  */
 
 import type { Express } from 'express'
-import type { Response } from 'supertest'
+import type { Response, SuperAgentTest } from 'supertest'
 import request from 'supertest'
+
+/**
+ * Request target: either a bare Express app or a credentialed supertest agent
+ * (from `setupAuthenticatedTestEnvironment().authRequest`). The helpers branch
+ * on this so suites can opt into authenticated requests without changing call
+ * sites — just pass `authRequest` instead of `app`.
+ */
+type RequestTarget = Express | SuperAgentTest
+
+/**
+ * Express apps are callable functions; supertest agents are plain objects.
+ * Use this to normalize either into something `.get()/.post()` can chain on.
+ */
+function requestBuilder(target: RequestTarget) {
+  return typeof target === 'function' ? request(target as Express) : target
+}
 
 /**
  * Request options for customizing requests.
@@ -18,30 +34,30 @@ interface RequestOptions {
 }
 
 /**
- * Create a Supertest request builder for the given Express app.
+ * Create a Supertest request builder for the given Express app or agent.
  *
- * @param app - Express application instance.
+ * @param target - Express app or credentialed agent.
  * @returns Supertest Test instance
  */
-function _createTestRequest(app: Express): ReturnType<typeof request> {
-  return request(app)
+function _createTestRequest(target: RequestTarget): ReturnType<typeof request> {
+  return requestBuilder(target)
 }
 
 /**
  * Build a GET request with optional query parameters
  * Returns a Promise that resolves to the Response.
  *
- * @param app - Express application instance.
+ * @param target - Express app or credentialed agent.
  * @param path - Request path
  * @param options - Optional request configuration
  * @returns Promise resolving to Supertest Response
  */
 export function createGetRequest(
-  app: Express,
+  target: RequestTarget,
   path: string,
   options?: RequestOptions,
 ): Promise<Response> {
-  let req = request(app).get(path)
+  let req = requestBuilder(target).get(path)
 
   if (options?.query) {
     req = req.query(options.query)
@@ -57,19 +73,19 @@ export function createGetRequest(
  * Build a POST request with JSON body
  * Returns a Promise that resolves to the Response.
  *
- * @param app - Express application instance.
+ * @param target - Express app or credentialed agent.
  * @param path - Request path
  * @param body - Request body
  * @param options - Optional request configuration
  * @returns Promise resolving to Supertest Response
  */
 export function createPostRequest<T extends string | object | undefined = object>(
-  app: Express,
+  target: RequestTarget,
   path: string,
   body: T,
   options?: RequestOptions,
 ): Promise<Response> {
-  let req = request(app).post(path).send(body)
+  let req = requestBuilder(target).post(path).send(body)
 
   if (options?.headers) {
     req = req.set(options.headers)
@@ -82,19 +98,19 @@ export function createPostRequest<T extends string | object | undefined = object
  * Build a PATCH request with JSON body
  * Returns a Promise that resolves to the Response.
  *
- * @param app - Express application instance.
+ * @param target - Express app or credentialed agent.
  * @param path - Request path
  * @param body - Request body
  * @param options - Optional request configuration
  * @returns Promise resolving to Supertest Response
  */
 function createPatchRequest<T extends string | object | undefined = object>(
-  app: Express,
+  target: RequestTarget,
   path: string,
   body: T,
   options?: RequestOptions,
 ): Promise<Response> {
-  let req = request(app).patch(path).send(body)
+  let req = requestBuilder(target).patch(path).send(body)
 
   if (options?.headers) {
     req = req.set(options.headers)
@@ -107,19 +123,19 @@ function createPatchRequest<T extends string | object | undefined = object>(
  * Build a PUT request with JSON body
  * Returns a Promise that resolves to the Response.
  *
- * @param app - Express application instance.
+ * @param target - Express app or credentialed agent.
  * @param path - Request path
  * @param body - Request body
  * @param options - Optional request configuration
  * @returns Promise resolving to Supertest Response
  */
 function createPutRequest<T extends string | object | undefined = object>(
-  app: Express,
+  target: RequestTarget,
   path: string,
   body: T,
   options?: RequestOptions,
 ): Promise<Response> {
-  let req = request(app).put(path).send(body)
+  let req = requestBuilder(target).put(path).send(body)
 
   if (options?.headers) {
     req = req.set(options.headers)
@@ -132,17 +148,17 @@ function createPutRequest<T extends string | object | undefined = object>(
  * Build a DELETE request
  * Returns a Promise that resolves to the Response.
  *
- * @param app - Express application instance.
+ * @param target - Express app or credentialed agent.
  * @param path - Request path
  * @param options - Optional request configuration
  * @returns Promise resolving to Supertest Response
  */
 function createDeleteRequest(
-  app: Express,
+  target: RequestTarget,
   path: string,
   options?: RequestOptions,
 ): Promise<Response> {
-  let req = request(app).delete(path)
+  let req = requestBuilder(target).delete(path)
 
   if (options?.headers) {
     req = req.set(options.headers)
@@ -158,42 +174,42 @@ export const projectApi = {
   /**
    * GET /api/projects - List all projects.
    */
-  listProjects: (app: Express, bypassCache = false) => { return createGetRequest(app, '/api/projects', { query: { bypassCache } }) },
+  listProjects: (target: RequestTarget, bypassCache = false) => { return createGetRequest(target, '/api/projects', { query: { bypassCache } }) },
 
   /**
    * GET /api/projects/:projectId - Get project configuration.
    */
-  getProjectConfig: (app: Express, projectId: string) => { return createGetRequest(app, `/api/projects/${projectId}/config`) },
+  getProjectConfig: (target: RequestTarget, projectId: string) => { return createGetRequest(target, `/api/projects/${projectId}/config`) },
 
   /**
    * GET /api/projects/:projectId/crs - List CRs for project.
    */
-  listCRs: (app: Express, projectId: string, bypassCache = false) => { return createGetRequest(app, `/api/projects/${projectId}/crs`, { query: { bypassCache } }) },
+  listCRs: (target: RequestTarget, projectId: string, bypassCache = false) => { return createGetRequest(target, `/api/projects/${projectId}/crs`, { query: { bypassCache } }) },
 
   /**
    * GET /api/projects/:projectId/crs/:crId - Get specific CR.
    */
-  getCR: (app: Express, projectId: string, crId: string) => { return createGetRequest(app, `/api/projects/${projectId}/crs/${crId}`) },
+  getCR: (target: RequestTarget, projectId: string, crId: string) => { return createGetRequest(target, `/api/projects/${projectId}/crs/${crId}`) },
 
   /**
    * POST /api/projects/:projectId/crs - Create new CR.
    */
-  createCR: <T extends string | object | undefined = object>(app: Express, projectId: string, crData: T) => { return createPostRequest(app, `/api/projects/${projectId}/crs`, crData) },
+  createCR: <T extends string | object | undefined = object>(target: RequestTarget, projectId: string, crData: T) => { return createPostRequest(target, `/api/projects/${projectId}/crs`, crData) },
 
   /**
    * PATCH /api/projects/:projectId/crs/:crId - Partial update CR.
    */
-  patchCR: <T extends string | object | undefined = object>(app: Express, projectId: string, crId: string, updates: T) => { return createPatchRequest(app, `/api/projects/${projectId}/crs/${crId}`, updates) },
+  patchCR: <T extends string | object | undefined = object>(target: RequestTarget, projectId: string, crId: string, updates: T) => { return createPatchRequest(target, `/api/projects/${projectId}/crs/${crId}`, updates) },
 
   /**
    * PUT /api/projects/:projectId/crs/:crId - Full update CR.
    */
-  updateCR: <T extends string | object | undefined = object>(app: Express, projectId: string, crId: string, crData: T) => { return createPutRequest(app, `/api/projects/${projectId}/crs/${crId}`, crData) },
+  updateCR: <T extends string | object | undefined = object>(target: RequestTarget, projectId: string, crId: string, crData: T) => { return createPutRequest(target, `/api/projects/${projectId}/crs/${crId}`, crData) },
 
   /**
    * DELETE /api/projects/:projectId/crs/:crId - Delete CR.
    */
-  deleteCR: (app: Express, projectId: string, crId: string) => { return createDeleteRequest(app, `/api/projects/${projectId}/crs/${crId}`) },
+  deleteCR: (target: RequestTarget, projectId: string, crId: string) => { return createDeleteRequest(target, `/api/projects/${projectId}/crs/${crId}`) },
 }
 
 /**
@@ -203,20 +219,20 @@ const _systemApi = {
   /**
    * GET /api/status - Get server status.
    */
-  getStatus: (app: Express) => createGetRequest(app, '/api/status'),
+  getStatus: (target: RequestTarget) => createGetRequest(target, '/api/status'),
 
   /**
    * GET /api/filesystem - Get file system tree.
    */
-  getFileSystem: (app: Express, projectId: string) => { return createGetRequest(app, '/api/filesystem', { query: { projectId } }) },
+  getFileSystem: (target: RequestTarget, projectId: string) => { return createGetRequest(target, '/api/filesystem', { query: { projectId } }) },
 
   /**
    * POST /api/check-directory - Check if directory exists.
    */
-  checkDirectory: (app: Express, path: string) => { return createPostRequest(app, '/api/check-directory', { path }) },
+  checkDirectory: (target: RequestTarget, path: string) => { return createPostRequest(target, '/api/check-directory', { path }) },
 
   /**
    * POST /api/configure-documents - Configure document paths.
    */
-  configureDocuments: (app: Express, projectId: string, documentPaths: string[]) => { return createPostRequest(app, '/api/configure-documents', { projectId, documentPaths }) },
+  configureDocuments: (target: RequestTarget, projectId: string, documentPaths: string[]) => { return createPostRequest(target, '/api/configure-documents', { projectId, documentPaths }) },
 }

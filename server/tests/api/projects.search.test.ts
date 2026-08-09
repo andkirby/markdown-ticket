@@ -9,30 +9,31 @@
 /// <reference types="jest" />
 
 import type { ProjectFactory } from '@mdt/shared/test-lib'
-import type { Express } from 'express'
-import request from 'supertest'
+import type { SuperAgentTest } from 'supertest'
 import { generateTestProjectCode } from './fixtures/projects'
 import {
   assertBadRequest,
   assertNotFound,
   assertSuccess,
 } from './helpers'
-import { cleanupTestEnvironment, setupTestEnvironment } from './setup'
+import { cleanupAuthenticatedTestEnvironment, setupAuthenticatedTestEnvironment } from './setup'
 
 describe('POST /api/projects/search — MDT-152', () => {
   let tempDir: string
-  let app: Express
+  // Credentialed agent — used in place of `authRequest` so protected routes
+  // pass the MDT-157 auth gate. Auth is genuinely enforced (not bypassed).
+  let authRequest: SuperAgentTest
   let projectFactory: ProjectFactory
 
   beforeAll(async () => {
-    const context = await setupTestEnvironment()
+    const context = await setupAuthenticatedTestEnvironment()
     tempDir = context.tempDir
-    app = context.app
+    authRequest = context.authRequest
     projectFactory = context.projectFactory
   })
 
   afterAll(async () => {
-    await cleanupTestEnvironment(tempDir)
+    await cleanupAuthenticatedTestEnvironment(authRequest, tempDir)
   })
 
   describe('ticket_key mode', () => {
@@ -49,7 +50,7 @@ describe('POST /api/projects/search — MDT-152', () => {
       if (!crResult.success)
         return
 
-      const res = await request(app)
+      const res = await authRequest
         .post('/api/projects/search')
         .send({
           mode: 'ticket_key',
@@ -65,7 +66,7 @@ describe('POST /api/projects/search — MDT-152', () => {
     })
 
     it('returns 200 with empty results for non-existent ticket key', async () => {
-      const res = await request(app)
+      const res = await authRequest
         .post('/api/projects/search')
         .send({
           mode: 'ticket_key',
@@ -92,7 +93,7 @@ describe('POST /api/projects/search — MDT-152', () => {
       if (!crResult.success)
         return
 
-      const res = await request(app)
+      const res = await authRequest
         .post('/api/projects/search')
         .send({
           mode: 'ticket_key',
@@ -133,7 +134,7 @@ describe('POST /api/projects/search — MDT-152', () => {
         return
       const simplifiedKey = `${match[1]}-${match[2]}`
 
-      const res = await request(app)
+      const res = await authRequest
         .post('/api/projects/search')
         .send({
           mode: 'ticket_key',
@@ -155,7 +156,7 @@ describe('POST /api/projects/search — MDT-152', () => {
         code: generateTestProjectCode(),
       })
 
-      const res = await request(app)
+      const res = await authRequest
         .post('/api/projects/search')
         .send({
           mode: 'project_scope',
@@ -176,7 +177,7 @@ describe('POST /api/projects/search — MDT-152', () => {
         code: generateTestProjectCode(),
       })
 
-      const res = await request(app)
+      const res = await authRequest
         .post('/api/projects/search')
         .send({
           mode: 'project_scope',
@@ -195,7 +196,7 @@ describe('POST /api/projects/search — MDT-152', () => {
     })
 
     it('returns 404 for invalid project code', async () => {
-      const res = await request(app)
+      const res = await authRequest
         .post('/api/projects/search')
         .send({
           mode: 'project_scope',
@@ -212,7 +213,7 @@ describe('POST /api/projects/search — MDT-152', () => {
 
   describe('request validation', () => {
     it('returns 400 when mode is missing', async () => {
-      const res = await request(app)
+      const res = await authRequest
         .post('/api/projects/search')
         .send({
           query: 'ABC-42',
@@ -222,7 +223,7 @@ describe('POST /api/projects/search — MDT-152', () => {
     })
 
     it('returns 400 when query is missing', async () => {
-      const res = await request(app)
+      const res = await authRequest
         .post('/api/projects/search')
         .send({
           mode: 'ticket_key',
@@ -232,7 +233,7 @@ describe('POST /api/projects/search — MDT-152', () => {
     })
 
     it('returns 400 for invalid mode value', async () => {
-      const res = await request(app)
+      const res = await authRequest
         .post('/api/projects/search')
         .send({
           mode: 'invalid',
@@ -243,7 +244,7 @@ describe('POST /api/projects/search — MDT-152', () => {
     })
 
     it('returns 400 when project_scope mode is missing projectCode', async () => {
-      const res = await request(app)
+      const res = await authRequest
         .post('/api/projects/search')
         .send({
           mode: 'project_scope',
@@ -254,7 +255,7 @@ describe('POST /api/projects/search — MDT-152', () => {
     })
 
     it('returns 400 when limitPerProject exceeds 5', async () => {
-      const res = await request(app)
+      const res = await authRequest
         .post('/api/projects/search')
         .send({
           mode: 'ticket_key',
@@ -266,7 +267,7 @@ describe('POST /api/projects/search — MDT-152', () => {
     })
 
     it('returns 400 when limitTotal exceeds 15', async () => {
-      const res = await request(app)
+      const res = await authRequest
         .post('/api/projects/search')
         .send({
           mode: 'ticket_key',
@@ -285,7 +286,7 @@ describe('POST /api/projects/search — MDT-152', () => {
         code: generateTestProjectCode(),
       })
 
-      const res = await request(app)
+      const res = await authRequest
         .post('/api/projects/search')
         .send({
           mode: 'project_scope',
@@ -303,7 +304,7 @@ describe('POST /api/projects/search — MDT-152', () => {
         code: generateTestProjectCode(),
       })
 
-      const res = await request(app)
+      const res = await authRequest
         .post('/api/projects/search')
         .send({
           mode: 'project_scope',
@@ -322,7 +323,7 @@ describe('POST /api/projects/search — MDT-152', () => {
         code: generateTestProjectCode(),
       })
 
-      const res = await request(app)
+      const res = await authRequest
         .post('/api/projects/search')
         .send({
           mode: 'project_scope',
@@ -343,7 +344,7 @@ describe('POST /api/projects/search — MDT-152', () => {
         code: generateTestProjectCode(),
       })
 
-      const res = await request(app)
+      const res = await authRequest
         .post('/api/projects/search')
         .send({
           mode: 'project_scope',
@@ -370,7 +371,7 @@ describe('POST /api/projects/search — MDT-152', () => {
         content: 'Test content',
       })
 
-      const res = await request(app)
+      const res = await authRequest
         .post('/api/projects/search')
         .send({
           mode: 'project_scope',

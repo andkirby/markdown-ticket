@@ -13,12 +13,11 @@
 /// <reference types="jest" />
 
 import type { ProjectFactory } from '@mdt/shared/test-lib'
-import type { Express } from 'express'
+import type { SuperAgentTest } from 'supertest'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import supertest from 'supertest'
 import { assertNotFound, assertSuccess } from './helpers'
-import { cleanupTestEnvironment, setupTestEnvironment } from './setup'
+import { cleanupAuthenticatedTestEnvironment, setupAuthenticatedTestEnvironment } from './setup'
 
 interface SubDocument {
   name: string
@@ -29,19 +28,21 @@ interface SubDocument {
 }
 
 describe('Namespace API (MDT-138)', () => {
-  let app: Express
+  // Credentialed agent — used in place of `authRequest` so protected routes
+  // pass the MDT-157 auth gate. Auth is genuinely enforced (not bypassed).
+  let authRequest: SuperAgentTest
   let tempDir: string
   let projectFactory: ProjectFactory
 
   beforeAll(async () => {
-    const ctx = await setupTestEnvironment()
-    app = ctx.app
+    const ctx = await setupAuthenticatedTestEnvironment()
+    authRequest = ctx.authRequest
     tempDir = ctx.tempDir
     projectFactory = ctx.projectFactory
   })
 
   afterAll(async () => {
-    await cleanupTestEnvironment(tempDir)
+    await cleanupAuthenticatedTestEnvironment(authRequest, tempDir)
   })
 
   // ─── Helper ──────────────────────────────────────────────────────────────
@@ -97,7 +98,7 @@ describe('Namespace API (MDT-138)', () => {
         'architecture.update.v2.md': '# Update v2',
       })
 
-      const response = await supertest(app).get(`/api/projects/${projectCode}/crs/${crCode}`)
+      const response = await authRequest.get(`/api/projects/${projectCode}/crs/${crCode}`)
       assertSuccess(response)
 
       const subdocs = response.body.subdocuments as SubDocument[]
@@ -122,7 +123,7 @@ describe('Namespace API (MDT-138)', () => {
         'architecture.beta.md': '# Beta',
       })
 
-      const response = await supertest(app).get(`/api/projects/${projectCode}/crs/${crCode}`)
+      const response = await authRequest.get(`/api/projects/${projectCode}/crs/${crCode}`)
       assertSuccess(response)
 
       const subdocs = response.body.subdocuments as SubDocument[]
@@ -137,7 +138,7 @@ describe('Namespace API (MDT-138)', () => {
         'tests.two.md': '# Tests Two',
       })
 
-      const response = await supertest(app).get(`/api/projects/${projectCode}/crs/${crCode}`)
+      const response = await authRequest.get(`/api/projects/${projectCode}/crs/${crCode}`)
       assertSuccess(response)
 
       const subdocs = response.body.subdocuments as SubDocument[]
@@ -152,7 +153,7 @@ describe('Namespace API (MDT-138)', () => {
         'a.b.c.md': '# A.B.C',
       })
 
-      const response = await supertest(app).get(`/api/projects/${projectCode}/crs/${crCode}`)
+      const response = await authRequest.get(`/api/projects/${projectCode}/crs/${crCode}`)
       assertSuccess(response)
 
       const subdocs = response.body.subdocuments as SubDocument[]
@@ -170,7 +171,7 @@ describe('Namespace API (MDT-138)', () => {
         'architecture.beta.md': '# Beta',
       })
 
-      const response = await supertest(app).get(`/api/projects/${projectCode}/crs/${crCode}`)
+      const response = await authRequest.get(`/api/projects/${projectCode}/crs/${crCode}`)
       assertSuccess(response)
 
       const subdocs = response.body.subdocuments as SubDocument[]
@@ -184,7 +185,7 @@ describe('Namespace API (MDT-138)', () => {
         'tests.e2e-smoke.md': '# E2E Smoke',
       })
 
-      const response = await supertest(app).get(`/api/projects/${projectCode}/crs/${crCode}`)
+      const response = await authRequest.get(`/api/projects/${projectCode}/crs/${crCode}`)
       assertSuccess(response)
 
       const subdocs = response.body.subdocuments as SubDocument[]
@@ -203,7 +204,7 @@ describe('Namespace API (MDT-138)', () => {
         { bdd: { 'legacy.md': '# Legacy' } },
       )
 
-      const response = await supertest(app).get(`/api/projects/${projectCode}/crs/${crCode}`)
+      const response = await authRequest.get(`/api/projects/${projectCode}/crs/${crCode}`)
       assertSuccess(response)
 
       const subdocs = response.body.subdocuments as SubDocument[]
@@ -228,7 +229,7 @@ describe('Namespace API (MDT-138)', () => {
         'a.b.c.d.md': '# A.B.C.D',
       })
 
-      const response = await supertest(app).get(`/api/projects/${projectCode}/crs/${crCode}`)
+      const response = await authRequest.get(`/api/projects/${projectCode}/crs/${crCode}`)
       assertSuccess(response)
 
       const subdocs = response.body.subdocuments as SubDocument[]
@@ -248,7 +249,7 @@ describe('Namespace API (MDT-138)', () => {
         'tasks.md': '# Tasks',
       })
 
-      const response = await supertest(app).get(`/api/projects/${projectCode}/crs/${crCode}`)
+      const response = await authRequest.get(`/api/projects/${projectCode}/crs/${crCode}`)
       assertSuccess(response)
 
       const subdocs = response.body.subdocuments as SubDocument[]
@@ -270,7 +271,7 @@ describe('Namespace API (MDT-138)', () => {
         },
       )
 
-      const response = await supertest(app).get(`/api/projects/${projectCode}/crs/${crCode}`)
+      const response = await authRequest.get(`/api/projects/${projectCode}/crs/${crCode}`)
       assertSuccess(response)
 
       const subdocs = response.body.subdocuments as SubDocument[]
@@ -295,7 +296,7 @@ describe('Namespace API (MDT-138)', () => {
         'architecture.approve-it.md': '# Approve It\n\nContent here.',
       })
 
-      const response = await supertest(app)
+      const response = await authRequest
         .get(`/api/projects/${projectCode}/crs/${crCode}/subdocuments/approve-it`)
 
       assertSuccess(response)
@@ -307,7 +308,7 @@ describe('Namespace API (MDT-138)', () => {
         'architecture.md': '# Architecture',
       })
 
-      const response = await supertest(app)
+      const response = await authRequest
         .get(`/api/projects/${projectCode}/crs/${crCode}/subdocuments/nonexistent`)
 
       assertNotFound(response)
@@ -326,7 +327,7 @@ describe('Namespace API (MDT-138)', () => {
       const { projectCode, crCode } = await createProjectWithNamespaceFiles(files)
 
       const start = performance.now()
-      const response = await supertest(app).get(`/api/projects/${projectCode}/crs/${crCode}`)
+      const response = await authRequest.get(`/api/projects/${projectCode}/crs/${crCode}`)
       const duration = performance.now() - start
 
       assertSuccess(response)

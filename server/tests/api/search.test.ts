@@ -5,29 +5,39 @@
  * Covering: BR-4.1, BR-4.2, BR-4.3, BR-6.2, C4, C5
  */
 
-import type { Express } from 'express'
+import type { SuperAgentTest } from 'supertest'
 import { afterAll, beforeAll, describe, expect, it } from '@jest/globals'
-import request from 'supertest'
+import { API_TEST_ADMIN_TOKEN, withAuth } from './setup'
 import { createTestApp } from './test-app-factory'
 
 describe('POST /api/search — unified search (MDT-179)', () => {
-  let app: Express
+  // Credentialed agent — auth (MDT-157) is ON for this suite, with the admin
+  // Bearer token carried on every request. Auth is genuinely enforced.
+  let authRequest: SuperAgentTest
   let fileWatcher: any
+  let originalEnv: NodeJS.ProcessEnv | undefined
 
   beforeAll(async () => {
+    // Set auth env BEFORE createTestApp() so buildRuntimeConfig captures it.
+    originalEnv = { ...process.env }
+    process.env.NODE_ENV = 'test'
+    process.env.API_SECURITY_AUTH = 'true'
+    process.env.API_AUTH_TOKEN = API_TEST_ADMIN_TOKEN
     process.env.CONFIG_DIR = process.env.CONFIG_DIR || '/tmp/mdt-test-search-config'
     const result = await createTestApp()
-    app = result.app
+    authRequest = withAuth(result.app)
     fileWatcher = result.fileWatcher
   })
 
   afterAll(() => {
     fileWatcher?.close?.()
-    delete process.env.CONFIG_DIR
+    if (originalEnv) {
+      process.env = originalEnv
+    }
   })
 
   it('accepts a valid search request', async () => {
-    const response = await request(app)
+    const response = await authRequest
       .post('/api/search')
       .send({ query: 'test' })
 
@@ -38,7 +48,7 @@ describe('POST /api/search — unified search (MDT-179)', () => {
   })
 
   it('rejects empty query', async () => {
-    const response = await request(app)
+    const response = await authRequest
       .post('/api/search')
       .send({ query: '' })
 
@@ -47,7 +57,7 @@ describe('POST /api/search — unified search (MDT-179)', () => {
   })
 
   it('rejects invalid scope', async () => {
-    const response = await request(app)
+    const response = await authRequest
       .post('/api/search')
       .send({ query: 'test', scope: 'invalid' })
 
@@ -55,7 +65,7 @@ describe('POST /api/search — unified search (MDT-179)', () => {
   })
 
   it('uses global as default scope', async () => {
-    const response = await request(app)
+    const response = await authRequest
       .post('/api/search')
       .send({ query: 'test' })
 
@@ -64,7 +74,7 @@ describe('POST /api/search — unified search (MDT-179)', () => {
   })
 
   it('respects scope=tickets (BR-4.2)', async () => {
-    const response = await request(app)
+    const response = await authRequest
       .post('/api/search')
       .send({ query: 'test', scope: 'tickets' })
 
@@ -77,7 +87,7 @@ describe('POST /api/search — unified search (MDT-179)', () => {
   })
 
   it('respects scope=projects (BR-4.1)', async () => {
-    const response = await request(app)
+    const response = await authRequest
       .post('/api/search')
       .send({ query: 'test', scope: 'projects' })
 
@@ -88,7 +98,7 @@ describe('POST /api/search — unified search (MDT-179)', () => {
   })
 
   it('respects scope=documents (BR-4.3)', async () => {
-    const response = await request(app)
+    const response = await authRequest
       .post('/api/search')
       .send({ query: 'test', scope: 'documents' })
 
@@ -97,7 +107,7 @@ describe('POST /api/search — unified search (MDT-179)', () => {
   })
 
   it('returns results in grouped format (BR-2.1)', async () => {
-    const response = await request(app)
+    const response = await authRequest
       .post('/api/search')
       .send({ query: 'test' })
 
@@ -109,7 +119,7 @@ describe('POST /api/search — unified search (MDT-179)', () => {
 
   it('preserves existing /api/projects/search (C5)', async () => {
     // Existing search endpoint should still work
-    const response = await request(app)
+    const response = await authRequest
       .post('/api/projects/search')
       .send({ mode: 'ticket_key', query: 'MDT-001' })
 
@@ -118,7 +128,7 @@ describe('POST /api/search — unified search (MDT-179)', () => {
   })
 
   it('respects limitTotal parameter', async () => {
-    const response = await request(app)
+    const response = await authRequest
       .post('/api/search')
       .send({ query: 'test', limitTotal: 2 })
 
@@ -127,7 +137,7 @@ describe('POST /api/search — unified search (MDT-179)', () => {
   })
 
   it('handles missing request body gracefully', async () => {
-    const response = await request(app)
+    const response = await authRequest
       .post('/api/search')
       .send({})
 

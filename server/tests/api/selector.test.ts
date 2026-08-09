@@ -12,31 +12,36 @@
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { assertBodyHasProperties, assertSuccess, createGetRequest, createPostRequest } from './helpers'
-import { cleanupTestEnvironment, setupTestEnvironment } from './setup'
+import { cleanupAuthenticatedTestEnvironment, setupAuthenticatedTestEnvironment } from './setup'
 
 describe('Selector Config Endpoint Tests (MDT-129)', () => {
   let tempDir: string
   let configDir: string
-  let app: Awaited<ReturnType<typeof setupTestEnvironment>>['app']
+  // The Express app is needed for `app.locals.runtimeConfig` (config-dir access);
+  // `authRequest` is the credentialed agent passed to request helpers so the
+  // MDT-157 auth gate passes (auth is genuinely enforced, not bypassed).
+  let app: Awaited<ReturnType<typeof setupAuthenticatedTestEnvironment>>['app']
+  let authRequest: Awaited<ReturnType<typeof setupAuthenticatedTestEnvironment>>['authRequest']
 
   beforeAll(async () => {
-    const context = await setupTestEnvironment()
+    const context = await setupAuthenticatedTestEnvironment()
     tempDir = context.tempDir
     configDir = context.configDir
     app = context.app
+    authRequest = context.authRequest
   })
 
   // Use the app runtime config dir so test file I/O matches the server under test
   const getCurrentConfigDir = () => app?.locals?.runtimeConfig?.configDir || configDir
 
   afterAll(async () => {
-    await cleanupTestEnvironment(tempDir)
+    await cleanupAuthenticatedTestEnvironment(authRequest, tempDir)
   })
 
   describe('GET /api/config/selector', () => {
     describe('BR-7.3: Fallback to defaults when config missing', () => {
       it('returns default preferences when user.toml does not exist', async () => {
-        const response = await createGetRequest(app, '/api/config/selector')
+        const response = await createGetRequest(authRequest, '/api/config/selector')
 
         assertSuccess(response, 200)
         assertBodyHasProperties(response, ['preferences', 'selectorState'])
@@ -82,21 +87,21 @@ compactInactive = false
       })
 
       it('returns visibleCount from user.toml', async () => {
-        const response = await createGetRequest(app, '/api/config/selector')
+        const response = await createGetRequest(authRequest, '/api/config/selector')
 
         assertSuccess(response, 200)
         expect(response.body.preferences.visibleCount).toBe(10)
       })
 
       it('returns compactInactive from user.toml', async () => {
-        const response = await createGetRequest(app, '/api/config/selector')
+        const response = await createGetRequest(authRequest, '/api/config/selector')
 
         assertSuccess(response, 200)
         expect(response.body.preferences.compactInactive).toBe(false)
       })
 
       it('returns both preferences when both are set', async () => {
-        const response = await createGetRequest(app, '/api/config/selector')
+        const response = await createGetRequest(authRequest, '/api/config/selector')
 
         assertSuccess(response, 200)
         expect(response.body.preferences).toEqual({
@@ -128,7 +133,7 @@ compactInactive = true
 `
         writeFileSync(join(getCurrentConfigDir(), 'user.toml'), userTomlContent, 'utf-8')
 
-        const response = await createGetRequest(app, '/api/config/selector')
+        const response = await createGetRequest(authRequest, '/api/config/selector')
 
         assertSuccess(response, 200)
         expect(response.body.preferences.visibleCount).toBe(7) // default
@@ -142,7 +147,7 @@ compactInactive = true
 `
         writeFileSync(join(getCurrentConfigDir(), 'user.toml'), userTomlContent, 'utf-8')
 
-        const response = await createGetRequest(app, '/api/config/selector')
+        const response = await createGetRequest(authRequest, '/api/config/selector')
 
         assertSuccess(response, 200)
         expect(response.body.preferences.visibleCount).toBe(7) // default
@@ -156,7 +161,7 @@ compactInactive = true
 `
         writeFileSync(join(getCurrentConfigDir(), 'user.toml'), userTomlContent, 'utf-8')
 
-        const response = await createGetRequest(app, '/api/config/selector')
+        const response = await createGetRequest(authRequest, '/api/config/selector')
 
         assertSuccess(response, 200)
         expect(response.body.preferences.visibleCount).toBe(7) // default
@@ -170,7 +175,7 @@ compactInactive = "yes"
 `
         writeFileSync(join(getCurrentConfigDir(), 'user.toml'), userTomlContent, 'utf-8')
 
-        const response = await createGetRequest(app, '/api/config/selector')
+        const response = await createGetRequest(authRequest, '/api/config/selector')
 
         assertSuccess(response, 200)
         expect(response.body.preferences.compactInactive).toBe(true) // default
@@ -189,7 +194,7 @@ compactInactive = "yes"
       })
 
       it('returns empty state when project-selector.json does not exist', async () => {
-        const response = await createGetRequest(app, '/api/config/selector')
+        const response = await createGetRequest(authRequest, '/api/config/selector')
 
         assertSuccess(response, 200)
         expect(response.body.selectorState).toEqual({})
@@ -205,7 +210,7 @@ compactInactive = "yes"
         }, null, 2)
         writeFileSync(join(getCurrentConfigDir(), 'project-selector.json'), stateContent, 'utf-8')
 
-        const response = await createGetRequest(app, '/api/config/selector')
+        const response = await createGetRequest(authRequest, '/api/config/selector')
 
         assertSuccess(response, 200)
         expect(response.body.selectorState).toEqual({
@@ -220,7 +225,7 @@ compactInactive = "yes"
       it('falls back to empty state when JSON is invalid', async () => {
         writeFileSync(join(configDir, 'project-selector.json'), 'invalid json {{{', 'utf-8')
 
-        const response = await createGetRequest(app, '/api/config/selector')
+        const response = await createGetRequest(authRequest, '/api/config/selector')
 
         assertSuccess(response, 200)
         expect(response.body.selectorState).toEqual({})
@@ -253,7 +258,7 @@ compactInactive = "yes"
         }, null, 2)
         writeFileSync(join(getCurrentConfigDir(), 'project-selector.json'), stateContent, 'utf-8')
 
-        const response = await createGetRequest(app, '/api/config/selector')
+        const response = await createGetRequest(authRequest, '/api/config/selector')
 
         assertSuccess(response, 200)
 
@@ -287,7 +292,7 @@ compactInactive = "yes"
         }, null, 2)
         writeFileSync(join(getCurrentConfigDir(), 'project-selector.json'), stateContent, 'utf-8')
 
-        const response = await createGetRequest(app, '/api/config/selector')
+        const response = await createGetRequest(authRequest, '/api/config/selector')
 
         assertSuccess(response, 200)
         expect(response.body.selectorState['PROJ-A'].favorite).toBe(false)
@@ -303,7 +308,7 @@ compactInactive = "yes"
         }, null, 2)
         writeFileSync(join(getCurrentConfigDir(), 'project-selector.json'), stateContent, 'utf-8')
 
-        const response = await createGetRequest(app, '/api/config/selector')
+        const response = await createGetRequest(authRequest, '/api/config/selector')
 
         assertSuccess(response, 200)
         expect(response.body.selectorState['PROJ-A'].lastUsedAt).toBeNull()
@@ -319,7 +324,7 @@ compactInactive = "yes"
         }, null, 2)
         writeFileSync(join(getCurrentConfigDir(), 'project-selector.json'), stateContent, 'utf-8')
 
-        const response = await createGetRequest(app, '/api/config/selector')
+        const response = await createGetRequest(authRequest, '/api/config/selector')
 
         assertSuccess(response, 200)
         expect(response.body.selectorState['PROJ-A'].count).toBe(0)
@@ -335,7 +340,7 @@ compactInactive = "yes"
         }, null, 2)
         writeFileSync(join(getCurrentConfigDir(), 'project-selector.json'), stateContent, 'utf-8')
 
-        const response = await createGetRequest(app, '/api/config/selector')
+        const response = await createGetRequest(authRequest, '/api/config/selector')
 
         assertSuccess(response, 200)
         expect(response.body.selectorState['PROJ-A'].count).toBe(0)
@@ -351,7 +356,7 @@ anotherUnknown = 123
 `
         writeFileSync(join(getCurrentConfigDir(), 'user.toml'), userTomlContent, 'utf-8')
 
-        const response = await createGetRequest(app, '/api/config/selector')
+        const response = await createGetRequest(authRequest, '/api/config/selector')
 
         assertSuccess(response, 200)
         expect(response.body.preferences).toEqual({
@@ -377,7 +382,7 @@ anotherUnknown = 123
         }, null, 2)
         writeFileSync(join(getCurrentConfigDir(), 'project-selector.json'), stateContent, 'utf-8')
 
-        const response = await createGetRequest(app, '/api/config/selector')
+        const response = await createGetRequest(authRequest, '/api/config/selector')
 
         assertSuccess(response, 200)
         expect(response.body.selectorState['PROJ-A']).toEqual({
@@ -412,7 +417,7 @@ anotherUnknown = 123
           },
         }
 
-        const response = await createPostRequest(app, '/api/config/selector', stateUpdate)
+        const response = await createPostRequest(authRequest, '/api/config/selector', stateUpdate)
 
         assertSuccess(response, 200)
 
@@ -438,7 +443,7 @@ anotherUnknown = 123
           },
         }
 
-        const response = await createPostRequest(app, '/api/config/selector', stateUpdate)
+        const response = await createPostRequest(authRequest, '/api/config/selector', stateUpdate)
 
         assertSuccess(response, 200)
 
@@ -460,7 +465,7 @@ anotherUnknown = 123
           },
         }
 
-        const response = await createPostRequest(app, '/api/config/selector', stateUpdate)
+        const response = await createPostRequest(authRequest, '/api/config/selector', stateUpdate)
 
         assertSuccess(response, 200)
 
@@ -484,7 +489,7 @@ anotherUnknown = 123
           },
         }
 
-        const response = await createPostRequest(app, '/api/config/selector', stateUpdate)
+        const response = await createPostRequest(authRequest, '/api/config/selector', stateUpdate)
 
         assertSuccess(response, 200)
 
@@ -525,7 +530,7 @@ anotherUnknown = 123
       }, null, 2)
       writeFileSync(join(getCurrentConfigDir(), 'project-selector.json'), stateContent, 'utf-8')
 
-      const response = await createGetRequest(app, '/api/config/selector')
+      const response = await createGetRequest(authRequest, '/api/config/selector')
 
       assertSuccess(response, 200)
       expect(response.body.selectorState['PROJ-A'].accent).toBe('#2563eb')
@@ -542,7 +547,7 @@ anotherUnknown = 123
         },
       }
 
-      const response = await createPostRequest(app, '/api/config/selector', stateUpdate)
+      const response = await createPostRequest(authRequest, '/api/config/selector', stateUpdate)
       assertSuccess(response, 200)
 
       const filePath = join(getCurrentConfigDir(), 'project-selector.json')
@@ -566,7 +571,7 @@ anotherUnknown = 123
       const invalidAccents = ['#f00', 'blue', '3b82f6', '#ffffff00']
 
       for (const accent of invalidAccents) {
-        const response = await createPostRequest(app, '/api/config/selector', {
+        const response = await createPostRequest(authRequest, '/api/config/selector', {
           'PROJ-A': {
             favorite: false,
             lastUsedAt: null,

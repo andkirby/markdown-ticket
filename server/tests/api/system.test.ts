@@ -11,23 +11,25 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { createTestDocument, documentFixtures } from './fixtures/documents'
 import { assertBadRequest, assertBodyHasProperties, assertErrorMessage, assertIsArray, assertNotFound, assertSuccess, createGetRequest, createPostRequest } from './helpers'
-import { cleanupTestEnvironment, setProjectDocumentMaxDepth, setupTestEnvironment } from './setup'
+import { cleanupAuthenticatedTestEnvironment, setProjectDocumentMaxDepth, setupAuthenticatedTestEnvironment } from './setup'
 
 describe('system Endpoint Tests (MDT-106)', () => {
   let tempDir: string
-  let app: Awaited<ReturnType<typeof setupTestEnvironment>>['app']
-  let projectFactory: Awaited<ReturnType<typeof setupTestEnvironment>>['projectFactory']
+  // Credentialed agent — passed to request helpers so protected routes pass the
+  // MDT-157 auth gate. Auth is genuinely enforced (not bypassed) in NODE_ENV=test.
+  let app: Awaited<ReturnType<typeof setupAuthenticatedTestEnvironment>>['authRequest']
+  let projectFactory: Awaited<ReturnType<typeof setupAuthenticatedTestEnvironment>>['projectFactory']
 
   beforeAll(async () => {
-    const context = await setupTestEnvironment()
+    const context = await setupAuthenticatedTestEnvironment()
 
     tempDir = context.tempDir
-    app = context.app
+    app = context.authRequest
     projectFactory = context.projectFactory
   })
 
   afterAll(async () => {
-    await cleanupTestEnvironment(tempDir)
+    await cleanupAuthenticatedTestEnvironment(app, tempDir)
   })
 
   describe('gET /api/status', () => {

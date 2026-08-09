@@ -1,4 +1,4 @@
-import { fileExists, readFile, writeFile } from '../../../utils/file-utils'
+import { fileExists, readFile, writeFileAtomic } from '../../../utils/file-utils'
 import { buildConfigFilePath, buildRegistryFilePath } from '../../../utils/path-resolver'
 import { parseToml, stringify } from '../../../utils/toml'
 import { ProjectConfigService } from '../ProjectConfigService'
@@ -57,7 +57,7 @@ describe('projectConfigService', () => {
   describe('createOrUpdateLocalConfig', () => {
     it('should skip creation in global-only mode', () => {
       service.createOrUpdateLocalConfig('proj', '/path', 'Name', 'CODE', undefined, undefined, true)
-      expect(writeFile).not.toHaveBeenCalled()
+      expect(writeFileAtomic).not.toHaveBeenCalled()
     })
   })
 
@@ -77,7 +77,7 @@ describe('projectConfigService', () => {
       ;(readFile as jest.Mock).mockReturnValue('[project]\npath = "/proj"\n\n[metadata]\nlastAccessed = "2024-01-01"')
       ;(parseToml as jest.Mock).mockReturnValue(data)
       service.updateProject('proj', { name: 'New' })
-      expect(writeFile).toHaveBeenCalledTimes(2)
+      expect(writeFileAtomic).toHaveBeenCalledTimes(2)
     })
 
     it('updates global-only projects in the registry only', () => {
@@ -106,8 +106,8 @@ describe('projectConfigService', () => {
       })
 
       expect(buildConfigFilePath).not.toHaveBeenCalled()
-      expect(writeFile).toHaveBeenCalledTimes(1)
-      expect(writeFile).toHaveBeenCalledWith('/registry/GLOB.toml', expect.any(String))
+      expect(writeFileAtomic).toHaveBeenCalledTimes(1)
+      expect(writeFileAtomic).toHaveBeenCalledWith('/registry/GLOB.toml', expect.any(String))
       expect(registryData.project.description).toBe('New description')
       expect(registryData.project.repository).toBe('https://example.com/repo.git')
     })
@@ -148,9 +148,9 @@ describe('projectConfigService', () => {
         repository: 'https://example.com/local.git',
       })
 
-      expect(writeFile).toHaveBeenCalledTimes(2)
-      expect(writeFile).toHaveBeenNthCalledWith(1, '/registry/LOCL.toml', expect.any(String))
-      expect(writeFile).toHaveBeenNthCalledWith(2, '/local/.mdt-config.toml', expect.any(String))
+      expect(writeFileAtomic).toHaveBeenCalledTimes(2)
+      expect(writeFileAtomic).toHaveBeenNthCalledWith(1, '/registry/LOCL.toml', expect.any(String))
+      expect(writeFileAtomic).toHaveBeenNthCalledWith(2, '/local/.mdt-config.toml', expect.any(String))
       expect(registryData.project).not.toHaveProperty('name')
       expect(registryData.project).not.toHaveProperty('description')
       expect(registryData.project).not.toHaveProperty('repository')
@@ -181,8 +181,8 @@ describe('projectConfigService', () => {
       })
 
       expect(buildRegistryFilePath).not.toHaveBeenCalled()
-      expect(writeFile).toHaveBeenCalledTimes(1)
-      expect(writeFile).toHaveBeenCalledWith('/auto/.mdt-config.toml', expect.any(String))
+      expect(writeFileAtomic).toHaveBeenCalledTimes(1)
+      expect(writeFileAtomic).toHaveBeenCalledWith('/auto/.mdt-config.toml', expect.any(String))
       expect(localConfig.project.description).toBe('Updated auto description')
     })
 
@@ -192,7 +192,7 @@ describe('projectConfigService', () => {
 
       expect(() => service.updateProjectByPath('MISS', '/missing', { description: 'Nope' }))
         .toThrow('local config not found')
-      expect(writeFile).not.toHaveBeenCalled()
+      expect(writeFileAtomic).not.toHaveBeenCalled()
     })
   })
 
@@ -276,9 +276,9 @@ describe('projectConfigService', () => {
 
       service.updateProject(projectId, { description: 'Matrix update' })
 
-      expect(writeFile).toHaveBeenCalledTimes(expectedWriteTargets.length)
+      expect(writeFileAtomic).toHaveBeenCalledTimes(expectedWriteTargets.length)
       expectedWriteTargets.forEach((target, index) => {
-        expect(writeFile).toHaveBeenNthCalledWith(index + 1, target, expect.any(String))
+        expect(writeFileAtomic).toHaveBeenNthCalledWith(index + 1, target, expect.any(String))
       })
     })
 
