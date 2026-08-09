@@ -3,28 +3,29 @@
  *
  * Covers the full gate chain (architecture.md §3 gates G2-G10), the mint
  * endpoint, headers (CSP/nosniff/XFO), MIME, and disclosure (no file content
- * on token failure). Runs in no-auth local-test mode (canWrite=true), so the
- * mint endpoint is reachable; access-policy-level read-session rejection is
- * covered in apiAuth.test.ts.
+ * on token failure). Runs with MDT-157 auth ON (canWrite=true via the admin
+ * bearer token), so the mint endpoint is reachable; access-policy-level
+ * read-session rejection is covered in apiAuth.test.ts.
  */
 
 /// <reference types="jest" />
 
 import type { ProjectFactory } from '@mdt/shared/test-lib'
 
-import type { Express } from 'express'
+import type { SuperAgentTest } from 'supertest'
 import { Buffer } from 'node:buffer'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import request from 'supertest'
 import { getPreviewTokenSecret, mintPreviewToken } from '../../security/documentPreviewToken'
 import { assertSuccess } from './helpers'
-import { cleanupTestEnvironment, setupTestEnvironment } from './setup'
+import { API_TEST_ADMIN_TOKEN, cleanupAuthenticatedTestEnvironment, setupAuthenticatedTestEnvironment } from './setup'
 
-// In test mode (no owner token, no MDT_PREVIEW_TOKEN_SECRET env), the runtime
-// config resolves the secret to the local default. Tests must mint with the
-// SAME secret the app uses, so derive it via the public helper.
-const SECRET = getPreviewTokenSecret(undefined, process.env)
+// With MDT-157 auth ON, buildRuntimeConfig derives the preview-token secret
+// from the owner (API_AUTH) token — see runtimeConfig.ts:
+// `previewTokenSecret: getPreviewTokenSecret(auth.token, env)`. Tests must mint
+// with the SAME secret the app verifies against, so derive it the same way
+// (auth.token = API_TEST_ADMIN_TOKEN in the authenticated test environment).
+const SECRET = getPreviewTokenSecret(API_TEST_ADMIN_TOKEN, process.env)
 
 // The STRICT pinned CSP from CR §4 / architecture.md §5. This is the canonical
 // contract. The live server currently serves a DEViation (see
@@ -48,7 +49,9 @@ const CSP_INVARIANTS = [
 
 describe('document raw preview API (MDT-221)', () => {
   let tempDir: string
-  let app: Express
+  // Credentialed agent — used in place of `authRequest` so protected routes
+  // pass the MDT-157 auth gate. Auth is genuinely enforced (not bypassed).
+  let authRequest: SuperAgentTest
   let projectFactory: ProjectFactory
   let projectCode: string
   let projectPath: string
@@ -57,9 +60,9 @@ describe('document raw preview API (MDT-221)', () => {
   let optInProjectPath: string
 
   beforeAll(async () => {
-    const context = await setupTestEnvironment()
+    const context = await setupAuthenticatedTestEnvironment()
     tempDir = context.tempDir
-    app = context.app
+    authRequest = context.authRequest
     projectFactory = context.projectFactory
 
     const project = await projectFactory.createProject('empty', {
@@ -109,7 +112,7 @@ describe('document raw preview API (MDT-221)', () => {
   })
 
   afterAll(async () => {
-    await cleanupTestEnvironment(tempDir)
+    await cleanupAuthenticatedTestEnvironment(authRequest, tempDir)
   })
 
   async function mintToken(docDir: string, projectId = projectCode) {
@@ -119,7 +122,7 @@ describe('document raw preview API (MDT-221)', () => {
 
   describe('POST /api/documents/preview-token — mint', () => {
     it('mints a token for a project + file path (owner mode)', async () => {
-      const response = await request(app)
+      const response = await authRequest
         .post('/api/documents/preview-token')
         .send({ projectId: projectCode, filePath: 'docs/site/index.html' })
 
@@ -130,10 +133,10 @@ describe('document raw preview API (MDT-221)', () => {
     })
 
     it('rejects 400 when projectId or filePath is missing', async () => {
-      const noPath = await request(app).post('/api/documents/preview-token').send({ projectId: projectCode })
+      const noPath = await authRequest.post('/api/documents/preview-token').send({ projectId: projectCode })
       expect(noPath.status).toBe(400)
 
-      const noProject = await request(app).post('/api/documents/preview-token').send({ filePath: 'docs/site/index.html' })
+      const noProject = await authRequest.post('/api/documents/preview-token').send({ filePath: 'docs/site/index.html' })
       expect(noProject.status).toBe(400)
     })
   })
@@ -141,7 +144,7 @@ describe('document raw preview API (MDT-221)', () => {
   describe('GET /raw-preview/:token/* — valid serve', () => {
     it('serves the HTML file with correct Content-Type and headers', async () => {
       const token = await mintToken('docs/site')
-      const response = await request(app).get(`/api/documents/raw-preview/${token}/docs/site/index.html`)
+      const response = await authRequest.get(`/api/documents/raw-preview/${token}/docs/site/index.html`)
 
       assertSuccess(response, 200)
       expect(response.headers['content-type']).toMatch(/text\/html/)
@@ -159,7 +162,7 @@ describe('document raw preview API (MDT-221)', () => {
       // The default-config project (RAWP) has no [project.document.preview]
       // section, so it gets the strict canonical CSP.
       const token = await mintToken('docs/site')
-      const response = await request(app).get(`/api/documents/raw-preview/${token}/docs/site/index.html`)
+      const response = await authRequest.get(`/api/documents/raw-preview/${token}/docs/site/index.html`)
       const csp = String(response.headers['content-security-policy'])
 
       expect(csp).toBe(PINNED_CSP_STRICT)
@@ -170,7 +173,7 @@ describe('document raw preview API (MDT-221)', () => {
     it('CSP includes configured external domains + unsafe-eval when project opts in', async () => {
       // The opt-in project (OPTP) has [project.document.preview] with CDNs + eval.
       const { token } = mintPreviewToken(optInProjectCode, 'docs/site', SECRET)
-      const response = await request(app).get(`/api/documents/raw-preview/${token}/docs/site/index.html`)
+      const response = await authRequest.get(`/api/documents/raw-preview/${token}/docs/site/index.html`)
       assertSuccess(response, 200)
       const csp = String(response.headers['content-security-policy'])
 
@@ -186,7 +189,7 @@ describe('document raw preview API (MDT-221)', () => {
 
     it('serves a sibling CSS asset under the same token scope', async () => {
       const token = await mintToken('docs/site')
-      const response = await request(app).get(`/api/documents/raw-preview/${token}/docs/site/style.css`)
+      const response = await authRequest.get(`/api/documents/raw-preview/${token}/docs/site/style.css`)
 
       assertSuccess(response, 200)
       expect(response.headers['content-type']).toMatch(/text\/css/)
@@ -195,7 +198,7 @@ describe('document raw preview API (MDT-221)', () => {
 
     it('serves a PNG asset binary-safe (bytes round-trip, no utf8 decode)', async () => {
       const token = await mintToken('docs/site')
-      const response = await request(app).get(`/api/documents/raw-preview/${token}/docs/site/image.png`)
+      const response = await authRequest.get(`/api/documents/raw-preview/${token}/docs/site/image.png`)
 
       assertSuccess(response, 200)
       expect(response.headers['content-type']).toBe('image/png')
@@ -213,7 +216,7 @@ describe('document raw preview API (MDT-221)', () => {
       const token = await mintToken('docs/site')
       const [payload, sig] = token.split('.')
       const tampered = `${payload}.${sig!.endsWith('A') ? `${sig!.slice(0, -1)}B` : `${sig!.slice(0, -1)}A`}`
-      const response = await request(app).get(`/api/documents/raw-preview/${tampered}/docs/site/index.html`)
+      const response = await authRequest.get(`/api/documents/raw-preview/${tampered}/docs/site/index.html`)
       expect(response.status).toBe(403)
       // no file content disclosed
       expect(response.text).not.toContain('<body')
@@ -223,7 +226,7 @@ describe('document raw preview API (MDT-221)', () => {
   describe('Gate G3 — expiry', () => {
     it('rejects an expired token with 403', async () => {
       const { token } = mintPreviewToken(projectCode, 'docs/site', SECRET, 60, Date.now() - 120_000)
-      const response = await request(app).get(`/api/documents/raw-preview/${token}/docs/site/index.html`)
+      const response = await authRequest.get(`/api/documents/raw-preview/${token}/docs/site/index.html`)
       expect(response.status).toBe(403)
       expect(response.text).not.toContain('<body')
     })
@@ -232,7 +235,7 @@ describe('document raw preview API (MDT-221)', () => {
   describe('Gate G4 — project lookup', () => {
     it('rejects a token whose projectId does not resolve (404)', async () => {
       const { token } = mintPreviewToken('NONEXISTENT', 'docs/site', SECRET)
-      const response = await request(app).get(`/api/documents/raw-preview/${token}/docs/site/index.html`)
+      const response = await authRequest.get(`/api/documents/raw-preview/${token}/docs/site/index.html`)
       expect(response.status).toBe(404)
     })
   })
@@ -241,7 +244,7 @@ describe('document raw preview API (MDT-221)', () => {
     it('rejects a request for a path outside the token docDir (403)', async () => {
       // token scoped to docs/site; request a file in docs/other
       const token = await mintToken('docs/site')
-      const response = await request(app).get(`/api/documents/raw-preview/${token}/docs/other/secret.html`)
+      const response = await authRequest.get(`/api/documents/raw-preview/${token}/docs/other/secret.html`)
       expect(response.status).toBe(403)
     })
 
@@ -251,7 +254,7 @@ describe('document raw preview API (MDT-221)', () => {
       // because the lookup returns the OTHER project (or none). Here we mint for
       // a projectId that does not exist and expect 404 (G4 path).
       const { token } = mintPreviewToken('DIFFERENT-PROJECT', 'docs/site', SECRET)
-      const response = await request(app).get(`/api/documents/raw-preview/${token}/docs/site/index.html`)
+      const response = await authRequest.get(`/api/documents/raw-preview/${token}/docs/site/index.html`)
       expect([403, 404]).toContain(response.status)
     })
   })
@@ -259,19 +262,19 @@ describe('document raw preview API (MDT-221)', () => {
   describe('Gate G8 — traversal', () => {
     it('rejects a literal .. traversal with 403', async () => {
       const token = await mintToken('docs/site')
-      const response = await request(app).get(`/api/documents/raw-preview/${token}/docs/site/../../../etc/passwd`)
+      const response = await authRequest.get(`/api/documents/raw-preview/${token}/docs/site/../../../etc/passwd`)
       expect([400, 403]).toContain(response.status)
     })
 
     it('rejects a URL-encoded %2e%2e traversal with 403', async () => {
       const token = await mintToken('docs/site')
-      const response = await request(app).get(`/api/documents/raw-preview/${token}/docs/site/%2e%2e/%2e%2e/etc/passwd`)
+      const response = await authRequest.get(`/api/documents/raw-preview/${token}/docs/site/%2e%2e/%2e%2e/etc/passwd`)
       expect([400, 403]).toContain(response.status)
     })
 
     it('does not leak filesystem absolute paths in error bodies', async () => {
       const token = await mintToken('docs/site')
-      const response = await request(app).get(`/api/documents/raw-preview/${token}/docs/site/../../../etc/passwd`)
+      const response = await authRequest.get(`/api/documents/raw-preview/${token}/docs/site/../../../etc/passwd`)
       expect(response.text).not.toContain(projectPath)
       expect(response.text).not.toContain('/Users/')
     })
@@ -282,7 +285,7 @@ describe('document raw preview API (MDT-221)', () => {
       // .bin is not in the MIME map. Write one inside the scoped dir.
       await writeFile(join(projectPath, 'docs/site/data.bin'), Buffer.from([0x00, 0x01]))
       const token = await mintToken('docs/site')
-      const response = await request(app).get(`/api/documents/raw-preview/${token}/docs/site/data.bin`)
+      const response = await authRequest.get(`/api/documents/raw-preview/${token}/docs/site/data.bin`)
       expect(response.status).toBe(415)
     })
   })
@@ -290,12 +293,12 @@ describe('document raw preview API (MDT-221)', () => {
   describe('Gate G10 — X-Frame-Options override', () => {
     it('raw-preview returns SAMEORIGIN', async () => {
       const token = await mintToken('docs/site')
-      const response = await request(app).get(`/api/documents/raw-preview/${token}/docs/site/index.html`)
+      const response = await authRequest.get(`/api/documents/raw-preview/${token}/docs/site/index.html`)
       expect(response.headers['x-frame-options']).toBe('SAMEORIGIN')
     })
 
     it('other document routes keep the global DENY', async () => {
-      const response = await request(app).get(`/api/documents/content?projectId=${projectCode}&filePath=docs/site/index.html`)
+      const response = await authRequest.get(`/api/documents/content?projectId=${projectCode}&filePath=docs/site/index.html`)
       // 400 because content endpoint is md-only; the header check is what matters
       expect(response.headers['x-frame-options']).toBe('DENY')
     })
@@ -303,14 +306,14 @@ describe('document raw preview API (MDT-221)', () => {
 
   describe('disclosure (C-2.4)', () => {
     it('a malformed token (no dot) returns 403 with no file body', async () => {
-      const response = await request(app).get('/api/documents/raw-preview/notadottoken/docs/site/index.html')
+      const response = await authRequest.get('/api/documents/raw-preview/notadottoken/docs/site/index.html')
       expect(response.status).toBe(403)
       expect(response.text).not.toContain('<body')
     })
 
     it('a missing documentPath returns 400 with no file body', async () => {
       const token = await mintToken('docs/site')
-      const response = await request(app).get(`/api/documents/raw-preview/${token}/`)
+      const response = await authRequest.get(`/api/documents/raw-preview/${token}/`)
       expect([400, 403, 404]).toContain(response.status)
     })
   })
@@ -319,7 +322,7 @@ describe('document raw preview API (MDT-221)', () => {
     it('the route requires the token in the path; a query-param token does not authenticate', async () => {
       // The route is /raw-preview/:token/*documentPath — a bare request to the
       // prefix without a path token should not match the route or should fail.
-      const response = await request(app).get('/api/documents/raw-preview/?token=anything')
+      const response = await authRequest.get('/api/documents/raw-preview/?token=anything')
       // Without a :token segment the route does not match; falls to 404.
       expect(response.status).toBeGreaterThanOrEqual(400)
     })

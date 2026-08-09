@@ -9,26 +9,27 @@
 
 import type { ProjectConfig } from '@mdt/domain-contracts'
 import type { ProjectFactory } from '@mdt/shared/test-lib'
-import type { Express } from 'express'
+import type { SuperAgentTest } from 'supertest'
 import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import supertest from 'supertest'
-import { cleanupTestEnvironment, setupTestEnvironment } from './setup'
+import { cleanupAuthenticatedTestEnvironment, setupAuthenticatedTestEnvironment } from './setup'
 
 describe('Subdocument Security API (MDT-151)', () => {
-  let app: Express
+  // Credentialed agent — used in place of `authRequest` so protected routes
+  // pass the MDT-157 auth gate. Auth is genuinely enforced (not bypassed).
+  let authRequest: SuperAgentTest
   let tempDir: string
   let projectFactory: ProjectFactory
 
   beforeAll(async () => {
-    const ctx = await setupTestEnvironment()
-    app = ctx.app
+    const ctx = await setupAuthenticatedTestEnvironment()
+    authRequest = ctx.authRequest
     tempDir = ctx.tempDir
     projectFactory = ctx.projectFactory
   })
 
   afterAll(async () => {
-    await cleanupTestEnvironment(tempDir)
+    await cleanupAuthenticatedTestEnvironment(authRequest, tempDir)
   })
 
   async function createProjectWithSubdoc() {
@@ -55,7 +56,7 @@ describe('Subdocument Security API (MDT-151)', () => {
     it('shall return 404 for literal ../ in subDocName', async () => {
       const { project, crCode } = await createProjectWithSubdoc()
 
-      const res = await supertest(app)
+      const res = await authRequest
         .get(`/api/projects/${project.key}/crs/${crCode}/subdocuments/../etc/passwd`)
 
       expect(res.status).toBe(404)
@@ -67,7 +68,7 @@ describe('Subdocument Security API (MDT-151)', () => {
       const { project, crCode } = await createProjectWithSubdoc()
 
       // Express will decode %2F to / before handler
-      const res = await supertest(app)
+      const res = await authRequest
         .get(`/api/projects/${project.key}/crs/${crCode}/subdocuments/..%2Fsomething`)
 
       expect(res.status).toBe(404)
@@ -77,7 +78,7 @@ describe('Subdocument Security API (MDT-151)', () => {
     it('shall return 200 for valid subdocument', async () => {
       const { project, crCode } = await createProjectWithSubdoc()
 
-      const res = await supertest(app)
+      const res = await authRequest
         .get(`/api/projects/${project.key}/crs/${crCode}/subdocuments/architecture`)
 
       expect(res.status).toBe(200)
@@ -88,10 +89,10 @@ describe('Subdocument Security API (MDT-151)', () => {
     it('shall return same 404 body for traversal as for legitimate not-found', async () => {
       const { project, crCode } = await createProjectWithSubdoc()
 
-      const traversalRes = await supertest(app)
+      const traversalRes = await authRequest
         .get(`/api/projects/${project.key}/crs/${crCode}/subdocuments/..%2Fetc`)
 
-      const notFoundRes = await supertest(app)
+      const notFoundRes = await authRequest
         .get(`/api/projects/${project.key}/crs/${crCode}/subdocuments/nonexistent`)
 
       // Both must have same status
@@ -107,7 +108,7 @@ describe('Subdocument Security API (MDT-151)', () => {
     it('shall return 404 for whitespace-only subDocName', async () => {
       const { project, crCode } = await createProjectWithSubdoc()
 
-      const res = await supertest(app)
+      const res = await authRequest
         .get(`/api/projects/${project.key}/crs/${crCode}/subdocuments/%20%20%20`)
 
       expect(res.status).toBe(404)
@@ -117,7 +118,7 @@ describe('Subdocument Security API (MDT-151)', () => {
       const { project, crCode } = await createProjectWithSubdoc()
       const longName = 'a'.repeat(300)
 
-      const res = await supertest(app)
+      const res = await authRequest
         .get(`/api/projects/${project.key}/crs/${crCode}/subdocuments/${longName}`)
 
       expect(res.status).toBe(404)
@@ -148,7 +149,7 @@ describe('Subdocument Security API (MDT-151)', () => {
       // Symlink inside ticketDir → external file
       symlinkSync(join(externalDir, 'secret.md'), join(subdocDir, 'linked.md'))
 
-      const res = await supertest(app)
+      const res = await authRequest
         .get(`/api/projects/${project.key}/crs/${crResult.crCode}/subdocuments/linked`)
 
       expect(res.status).toBe(404)
@@ -183,7 +184,7 @@ describe('Subdocument Security API (MDT-151)', () => {
       config.project.allowSymlinks = true
       await import('node:fs').then(fs => fs.writeFileSync(configPath, stringify(config)))
 
-      const res = await supertest(app)
+      const res = await authRequest
         .get(`/api/projects/${project.key}/crs/${crResult.crCode}/subdocuments/linked`)
 
       expect(res.status).toBe(200)
@@ -219,7 +220,7 @@ describe('Subdocument Security API (MDT-151)', () => {
       config.project.allowSymlinks = true
       await import('node:fs').then(fs => fs.writeFileSync(configPath, stringify(config)))
 
-      const res = await supertest(app)
+      const res = await authRequest
         .get(`/api/projects/${project.key}/crs/${crResult.crCode}/subdocuments/linked`)
 
       expect(res.status).toBe(404)

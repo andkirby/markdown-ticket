@@ -16,27 +16,28 @@
 /// <reference types="jest" />
 
 import type { ProjectFactory } from '@mdt/shared/test-lib'
-import type { Express } from 'express'
+import type { SuperAgentTest } from 'supertest'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import supertest from 'supertest'
 import { assertNotFound, assertSuccess } from './helpers'
-import { cleanupTestEnvironment, setupTestEnvironment } from './setup'
+import { cleanupAuthenticatedTestEnvironment, setupAuthenticatedTestEnvironment } from './setup'
 
 describe('Sub-Document API (MDT-093)', () => {
-  let app: Express
+  // Credentialed agent — used in place of `authRequest` so protected routes
+  // pass the MDT-157 auth gate. Auth is genuinely enforced (not bypassed).
+  let authRequest: SuperAgentTest
   let tempDir: string
   let projectFactory: ProjectFactory
 
   beforeAll(async () => {
-    const ctx = await setupTestEnvironment()
-    app = ctx.app
+    const ctx = await setupAuthenticatedTestEnvironment()
+    authRequest = ctx.authRequest
     tempDir = ctx.tempDir
     projectFactory = ctx.projectFactory
   })
 
   afterAll(async () => {
-    await cleanupTestEnvironment(tempDir)
+    await cleanupAuthenticatedTestEnvironment(authRequest, tempDir)
   })
 
   // ─── Helper ──────────────────────────────────────────────────────────────
@@ -66,7 +67,7 @@ describe('Sub-Document API (MDT-093)', () => {
   describe('GET /api/projects/:projectId/crs/:crId', () => {
     it('returns no subdocuments or empty array when ticket has no sub-document directory (BR-1.5, C1)', async () => {
       const { projectCode, crCode } = await createProjectWithCR()
-      const response = await supertest(app).get(`/api/projects/${projectCode}/crs/${crCode}`)
+      const response = await authRequest.get(`/api/projects/${projectCode}/crs/${crCode}`)
       assertSuccess(response)
       const subdocs = response.body.subdocuments
       expect(!subdocs || subdocs.length === 0).toBe(true)
@@ -78,7 +79,7 @@ describe('Sub-Document API (MDT-093)', () => {
         'requirements.md': '# Requirements',
         'architecture.md': '# Architecture',
       })
-      const response = await supertest(app).get(`/api/projects/${projectCode}/crs/${crCode}`)
+      const response = await authRequest.get(`/api/projects/${projectCode}/crs/${crCode}`)
       assertSuccess(response)
 
       const subdocs = response.body.subdocuments as Array<{ name: string }>
@@ -97,7 +98,7 @@ describe('Sub-Document API (MDT-093)', () => {
         'zebra.md': '# Zebra',
         'alpha.md': '# Alpha',
       })
-      const response = await supertest(app).get(`/api/projects/${projectCode}/crs/${crCode}`)
+      const response = await authRequest.get(`/api/projects/${projectCode}/crs/${crCode}`)
       assertSuccess(response)
 
       const names = (response.body.subdocuments as Array<{ name: string }>).map(s => s.name)
@@ -113,7 +114,7 @@ describe('Sub-Document API (MDT-093)', () => {
       const { projectCode, crCode } = await createProjectWithCR({
         'requirements.md': '# Requirements\n\nContent here.',
       })
-      const response = await supertest(app)
+      const response = await authRequest
         .get(`/api/projects/${projectCode}/crs/${crCode}/subdocuments/requirements`)
       assertSuccess(response)
 
@@ -128,7 +129,7 @@ describe('Sub-Document API (MDT-093)', () => {
       const { projectCode, crCode } = await createProjectWithCR({
         'requirements.md': '# Requirements',
       })
-      const response = await supertest(app)
+      const response = await authRequest
         .get(`/api/projects/${projectCode}/crs/${crCode}/subdocuments/nonexistent-doc`)
       assertNotFound(response)
     })
@@ -138,7 +139,7 @@ describe('Sub-Document API (MDT-093)', () => {
       const { projectCode, crCode } = await createProjectWithCR({
         'large.md': largeContent,
       })
-      const response = await supertest(app)
+      const response = await authRequest
         .get(`/api/projects/${projectCode}/crs/${crCode}/subdocuments/large`)
       assertSuccess(response)
       expect(response.body.content.length).toBeGreaterThan(1024 * 1024 - 100)
@@ -150,7 +151,7 @@ describe('Sub-Document API (MDT-093)', () => {
   describe('OpenAPI contract (BR-6.3, C10)', () => {
     it('GET /crs/:crId response satisfies OpenAPI spec', async () => {
       const { projectCode, crCode } = await createProjectWithCR()
-      const response = await supertest(app)
+      const response = await authRequest
         .get(`/api/projects/${projectCode}/crs/${crCode}`)
       assertSuccess(response)
       expect(response).toSatisfyApiSpec()

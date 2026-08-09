@@ -1,29 +1,34 @@
 /// <reference types="jest" />
 
 import type { Express } from 'express'
+import type { SuperAgentTest } from 'supertest'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import request from 'supertest'
 import { DocumentFavStateService } from '../../services/DocumentFavStateService'
 import { createTestDocument, documentFixtures } from './fixtures/documents'
 import { assertBadRequest, assertNotFound, assertSuccess } from './helpers'
 import {
-  cleanupTestEnvironment,
+  cleanupAuthenticatedTestEnvironment,
   createTestProjectWithCR,
-  setupTestEnvironment,
+  setupAuthenticatedTestEnvironment,
 } from './setup'
 
 describe('document favs API (MDT-171)', () => {
   let tempDir: string
+  // `app` is needed for `app.locals.projectService` (id resolution + service
+  // construction); `authRequest` is the credentialed agent for requests so the
+  // MDT-157 auth gate passes (auth is genuinely enforced, not bypassed).
   let app: Express
-  let projectFactory: Awaited<ReturnType<typeof setupTestEnvironment>>['projectFactory']
+  let authRequest: SuperAgentTest
+  let projectFactory: Awaited<ReturnType<typeof setupAuthenticatedTestEnvironment>>['projectFactory']
   let projectCode: string
 
   beforeAll(async () => {
-    const context = await setupTestEnvironment()
+    const context = await setupAuthenticatedTestEnvironment()
 
     tempDir = context.tempDir
     app = context.app
+    authRequest = context.authRequest
     projectFactory = context.projectFactory
 
     const testData = await createTestProjectWithCR(projectFactory, {
@@ -38,7 +43,7 @@ describe('document favs API (MDT-171)', () => {
   })
 
   afterAll(async () => {
-    await cleanupTestEnvironment(tempDir)
+    await cleanupAuthenticatedTestEnvironment(authRequest, tempDir)
   })
 
   async function getProjectId(): Promise<string> {
@@ -57,7 +62,7 @@ describe('document favs API (MDT-171)', () => {
   }
 
   it('persists only CONFIG_DIR project fav state and resolves project code to canonical project id', async () => {
-    const response = await request(app)
+    const response = await authRequest
       .put('/api/documents/favs')
       .send({
         projectId: projectCode,
@@ -79,7 +84,7 @@ describe('document favs API (MDT-171)', () => {
   })
 
   it('rejects unsafe paths and unknown projects without creating unresolved state', async () => {
-    const unsafeResponse = await request(app)
+    const unsafeResponse = await authRequest
       .put('/api/documents/favs')
       .send({
         projectId: projectCode,
@@ -90,7 +95,7 @@ describe('document favs API (MDT-171)', () => {
 
     assertBadRequest(unsafeResponse)
 
-    const unknownResponse = await request(app)
+    const unknownResponse = await authRequest
       .put('/api/documents/favs')
       .send({
         projectId: 'NOPE',
@@ -102,7 +107,7 @@ describe('document favs API (MDT-171)', () => {
   })
 
   it('rejects fav targets that are not present in the eligible document tree', async () => {
-    const response = await request(app)
+    const response = await authRequest
       .put('/api/documents/favs')
       .send({
         projectId: projectCode,
@@ -121,7 +126,7 @@ describe('document favs API (MDT-171)', () => {
         { path: 'docs', type: 'folder', favoritedAt: '2026-05-18T10:00:00.000Z' },
       ],
     }
-    const seedResponse = await request(app)
+    const seedResponse = await authRequest
       .put('/api/documents/favs')
       .send(canonicalState)
 
@@ -130,7 +135,7 @@ describe('document favs API (MDT-171)', () => {
     const statePath = await getDocumentFavStatePath()
     const before = readFileSync(statePath, 'utf8')
 
-    const configureResponse = await request(app)
+    const configureResponse = await authRequest
       .post('/api/documents/configure')
       .send({
         projectId: projectCode,
@@ -143,7 +148,7 @@ describe('document favs API (MDT-171)', () => {
     assertSuccess(configureResponse, 200)
     expect(readFileSync(statePath, 'utf8')).toBe(before)
 
-    const contentResponse = await request(app)
+    const contentResponse = await authRequest
       .get(`/api/documents/content?projectId=${projectCode}&filePath=docs%2Fguide.md`)
       .send({
         favItems: [
@@ -154,7 +159,7 @@ describe('document favs API (MDT-171)', () => {
     assertSuccess(contentResponse, 200)
     expect(readFileSync(statePath, 'utf8')).toBe(before)
 
-    const projectConfigResponse = await request(app)
+    const projectConfigResponse = await authRequest
       .get(`/api/projects/${projectCode}/config`)
       .send({
         favItems: [
@@ -165,7 +170,7 @@ describe('document favs API (MDT-171)', () => {
     assertSuccess(projectConfigResponse, 200)
     expect(readFileSync(statePath, 'utf8')).toBe(before)
 
-    const selectorResponse = await request(app)
+    const selectorResponse = await authRequest
       .post('/api/config/selector')
       .send({
         [projectCode]: {
