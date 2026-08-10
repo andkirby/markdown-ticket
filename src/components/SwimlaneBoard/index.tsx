@@ -1,9 +1,14 @@
 import type { BoardTicket, Status, Ticket } from '../../types'
 import { CRStatus } from '@mdt/domain-contracts'
-import { Check, ChevronDown, FileText } from 'lucide-react'
+import { Check, ChevronDown, ChevronLeft, FileText } from 'lucide-react'
 import * as React from 'react'
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useDrag } from 'react-dnd'
+import {
+  COLLAPSED_COLUMNS_CHANGE_EVENT,
+  getCollapsedColumns,
+  setCollapsedColumns as persistCollapsedColumns,
+} from '../../config/settingsPreferences'
 import { sortTickets } from '../../utils/sorting'
 import { StatusBadge } from '../Badge/StatusBadge'
 import { useDropZone } from '../Column/useDropZone'
@@ -191,6 +196,22 @@ export function SwimlaneBoard({
   // Default is collapsed-by-default: the set tracks EXPANDED lanes (the ones the
   // user explicitly opened), persisted to localStorage. An empty set = all collapsed.
   const [expandedLaneKeys, setExpandedLaneKeys] = useState<Set<string>>(() => readExpandedLanes())
+  // Column collapse shares the flat Board's mdt-settings-collapsed-columns key
+  // (keyed by primary status), so a status collapsed in one view collapses in
+  // the other. The change event keeps multiple Board instances/tabs in sync.
+  const [collapsedColumns, setCollapsedColumns] = useState<string[]>(() => getCollapsedColumns())
+  useEffect(() => {
+    const sync = (): void => setCollapsedColumns(getCollapsedColumns())
+    window.addEventListener(COLLAPSED_COLUMNS_CHANGE_EVENT, sync)
+    return () => window.removeEventListener(COLLAPSED_COLUMNS_CHANGE_EVENT, sync)
+  }, [])
+  const toggleColumnCollapse = useCallback((columnId: string) => {
+    setCollapsedColumns((prev) => {
+      const next = prev.includes(columnId) ? prev.filter(id => id !== columnId) : [...prev, columnId]
+      persistCollapsedColumns(next)
+      return next
+    })
+  }, [])
   const { lanes } = useMemo(() => buildSwimlaneModel(tickets, laneSourceTickets), [laneSourceTickets, tickets])
   const epicKeys = useMemo(() => new Set(lanes.filter(lane => lane.epic).map(lane => lane.key)), [lanes])
   const visibleLanes = useMemo(
@@ -266,12 +287,50 @@ export function SwimlaneBoard({
       <div className="swimlane-board__scroll">
         <div className="swimlane-board__head">
           <div className="swimlane-board__corner">Epics</div>
-          {columns.map(column => (
-            <div key={column.label} className="swimlane-board__col-head" data-column-color={column.color}>
-              <span className="swimlane-board__status-dot" />
-              <span>{column.label}</span>
-            </div>
-          ))}
+          {columns.map((column) => {
+            const primaryStatus = column.statuses[0]
+            const isColCollapsed = collapsedColumns.includes(primaryStatus)
+            return (
+              <div
+                key={column.label}
+                className={`swimlane-board__col-head ${isColCollapsed ? 'swimlane-board__col-head--collapsed' : ''}`}
+                data-column-color={column.color}
+                data-status={primaryStatus}
+              >
+                {isColCollapsed
+                  ? (
+                      <button
+                        type="button"
+                        className="swimlane-board__col-expand"
+                        aria-label={`Expand column ${column.label}`}
+                        title={`Expand ${column.label}`}
+                        onClick={() => toggleColumnCollapse(primaryStatus)}
+                        data-testid="swimlane-col-expand"
+                        data-status={primaryStatus}
+                      >
+                        <span className="swimlane-board__status-dot" aria-hidden="true" />
+                      </button>
+                    )
+                  : (
+                      <>
+                        <span className="swimlane-board__status-dot" aria-hidden="true" />
+                        <span className="swimlane-board__col-label">{column.label}</span>
+                        <button
+                          type="button"
+                          className="swimlane-board__col-collapse"
+                          aria-label={`Collapse column ${column.label}`}
+                          title="Collapse column"
+                          onClick={() => toggleColumnCollapse(primaryStatus)}
+                          data-testid="swimlane-col-collapse"
+                          data-status={primaryStatus}
+                        >
+                          <ChevronLeft aria-hidden="true" size={14} />
+                        </button>
+                      </>
+                    )}
+              </div>
+            )
+          })}
         </div>
 
         {visibleLanes.map((lane) => {
@@ -407,6 +466,23 @@ export function SwimlaneBoard({
                 data-lane-key={lane.key}
               >
                 {columns.map((column) => {
+                  const primaryStatus = column.statuses[0]
+                  // Collapsed column → narrow strip rail (no drop zone), mirroring
+                  // the flat Board's 44px collapsed column. The rail still reports
+                  // its lane+status so tests can assert the cell is present.
+                  if (collapsedColumns.includes(primaryStatus)) {
+                    return (
+                      <div
+                        key={column.label}
+                        className="swimlane-board__lane-col-rail"
+                        data-column-color={column.color}
+                        data-testid="swimlane-lane-col-rail"
+                        data-lane-key={lane.key}
+                        data-status={primaryStatus}
+                        aria-hidden="true"
+                      />
+                    )
+                  }
                   const columnTickets = sortTickets(
                     lane.tickets
                       .filter(isLocalTicket)
@@ -414,7 +490,6 @@ export function SwimlaneBoard({
                     sortAttribute,
                     sortDirection,
                   )
-                  const primaryStatus = column.statuses[0]
                   return (
                     <LaneColumn
                       key={column.label}

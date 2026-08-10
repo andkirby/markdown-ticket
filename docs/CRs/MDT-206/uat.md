@@ -2,72 +2,60 @@
 
 ## Objective
 
-Give the swimlane board a deep-linkable `/epics` URL (like List has `/list`), fix the orphaned "Default View" setting and add Epics to it, and standardize the ViewModeSwitcher button/icon sizing via tokens + the styleguide.
+Make the swimlane board's status columns collapsible like the flat Board page: a per-column collapse chevron in the header collapses a status column into a 44px rail (status dot + click-to-expand), hiding that column's drop zones in every lane.
 
 ## Approved Changes
 
-1. **`/epics` deep-link route**: swimlanes gets its own URL segment (`/prj/:code/epics`), mirroring `/list`. The board layout is derived from the URL at render time (no racing effect). Toggling Epics navigates to `/epics`; toggling Board returns to the bare path.
-2. **Epics label**: the ViewModeSwitcher swimlanes button is labeled "Epics" (matches the route + domain noun).
-3. **Default View fix + Epics option**: the previously orphaned `getDefaultView()` preference now drives the bare-project-path landing redirect. Settings → Default View offers Board, Epics, List. The switcher keeps it in sync (last-used view = landing view).
-4. **Control-size token**: new `--sz-control: 32px` token for square icon-button hit targets; ViewModeSwitcher buttons now use `var(--sz-control)` (was hardcoded 30×28px).
-5. **Icon-size token adoption**: ViewModeSwitcher glyphs now use `var(--sz-icon)` = 16px (was hardcoded 14px). The CSS rule on `.view-mode-switcher__button svg` is the token source of truth.
-6. **Styleguide**: `--sz-control` documented in the density-slots section.
+1. **Column collapse (shared with flat Board)**: each swimlane column header renders a collapse chevron. Collapsing replaces the header with a 44px click-to-expand rail (status dot only) and replaces that column's lane-body cells with a narrow strip (no drop zone, matching the flat Board).
+2. **Shared collapse memory**: swimlane column collapse reuses the flat Board's `mdt-settings-collapsed-columns` key (keyed by primary status) + the `COLLAPSED_COLUMNS_CHANGE_EVENT` cross-tab sync. A status collapsed in one view is collapsed in the other.
+3. **Independent axes**: column collapse (status axis) and lane collapse (epic axis) are independent — toggling one does not affect the other.
 
 ## Changed Requirement IDs
 
-- `BR-1.1` — refined: Epics selection navigates to the deep-linkable `/epics` route.
-- `BR-1.3` — **new** behavior: the bare project path redirects to the chosen Default View.
-- `C7` — **new** constraint: icon-button controls use `--sz-control` + `--sz-icon` tokens, not hardcoded px.
-- `epics_route_is_deep_linkable`, `default_view_drives_landing` — **new** BDD scenarios.
+- `BR-5.3` — **new** behavior: swimlane column collapse to a 44px rail, shared key, independent from lane collapse.
+- `column_collapses_to_rail_shared_with_flat_board` — **new** BDD scenario.
+- `TEST-swimlane-board-e2e`, `TEST-swimlane-component` — extended to cover BR-5.3.
 
 ## Affected Downstream Trace
 
-- **requirements** — BR-1.1 refined; BR-1.3 + C7 added; validated + rendered.
-- **bdd** — two new scenarios; validated + rendered.
-- **architecture** — new artifacts (ART-routes, ART-settings-preferences, ART-settings-modal, ART-design-tokens); OBL-board-mode-owner refined; OBL-default-view added; OBL-semantic-css covers C7; validated + rendered.
-- **tests** — TEST-swimlane-board-e2e extended to cover BR-1.1/BR-1.3/C7; validated + rendered.
-- **tasks** — TASK-2 owns the new artifacts + scenarios; validated + rendered.
+- **requirements** — BR-5.3 added; non-ambiguity row added; validated + rendered.
+- **bdd** — one new scenario; validated + rendered.
+- **tests** — TEST-swimlane-board-e2e + TEST-swimlane-component extended (covers += BR-5.3); validated + rendered.
 
 ## Execution Slices
 
-### Slice 1: `/epics` route + Default View fix + switcher standardization (TDD)
+### Slice 1: Swimlane column collapse (TDD)
 
-- **Objective**: URL-back the swimlane layout, make Default View authoritative, tokenize control sizing.
+- **Objective**: per-column collapse to a 44px rail, reusing the flat Board's collapse memory.
 - **Direct artifacts/files**:
-  - `src/routes.ts` (ROUTE_PROJECT_EPICS + buildProjectPath 'epics')
-  - `src/App.tsx` (route registration, URL-derived `effectiveBoardLayoutMode`, handleViewModeChange → /epics, landing redirect via getDefaultView, ticket round-trip ?view=epics)
-  - `src/config/settingsPreferences.ts` (DefaultView += 'epics')
-  - `src/components/SettingsModal.tsx` (Epics option)
-  - `src/components/ViewModeSwitcher/ViewModeSwitcher.tsx` (Epics label, --sz-icon glyph)
-  - `src/components/ViewModeSwitcher/view-mode-switcher.css` (--sz-control box, --sz-icon glyph, tray height)
-  - `src/styles/design-tokens.css` (--sz-control: 32px)
-  - `src/styleguide.html` (--sz-control slot)
-  - tests: routes.test.ts, ViewModeSwitcher.test.tsx, SettingsModal.test.tsx, swimlane-board.spec.ts
+  - `src/components/SwimlaneBoard/index.tsx` (collapsedColumns state + COLLAPSED_COLUMNS_CHANGE_EVENT sync + toggleColumnCollapse; header rail/chevron; lane-body cell strip when collapsed)
+  - `src/components/SwimlaneBoard/swimlane-board.css` (.swimlane-board__col-collapse, .swimlane-board__col-head--collapsed, .swimlane-board__col-expand, .swimlane-board__lane-col-rail)
+  - tests: `src/components/SwimlaneBoard/SwimlaneBoard.test.tsx` (6 new column-collapse cases), `tests/e2e/board/swimlane-board.spec.ts` (column-collapse E2E), `tests/e2e/utils/selectors.ts` (colCollapseByStatus, colExpandByStatus, laneColRail)
 - **Direct GREEN targets**:
-  - routes.test.ts (buildProjectPath 'epics'), ViewModeSwitcher.test.tsx (Epics label), SettingsModal.test.tsx (Epics option)
-  - `epics_route_is_deep_linkable`, `default_view_drives_landing` → swimlane-board.spec.ts
-- **Impacted canonical task IDs**: `TASK-2`.
-- **Why**: swimlanes was a localStorage-only layout with no URL; Default View was write-only; switcher sizing was magic numbers.
+  - 6 unit cases: render chevron, collapse→rail+persist shared key, expand from rail, restore from localStorage, independence from lane collapse, cross-view event sync.
+  - 1 E2E case: collapse Done column → 44px rail + strip cell + shared key + re-expand.
+- **Impacted canonical task IDs**: `TEST-swimlane-board-e2e`, `TEST-swimlane-component` (covers extended).
+- **Why**: "collapsible like the Board page" — the swimlane had lane collapse but no column collapse; the flat Board already has the canonical column-collapse mechanism and memory.
 
 ## Validation
 
 ```bash
-bun run fe:test
-bunx playwright test tests/e2e/board/swimlane-board.spec.ts --project=chromium
-bun run validate:ts src/App.tsx src/routes.ts
+bun test src/components/SwimlaneBoard/SwimlaneBoard.test.tsx
+PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/board/swimlane-board.spec.ts --project=chromium
+bun run validate:ts src/components/SwimlaneBoard/index.tsx src/components/SwimlaneBoard/SwimlaneBoard.test.tsx
 spec-trace validate MDT-206 --stage all
 ```
 
-All green at completion: 868/868 frontend, 9/9 swimlane E2E, all trace stages valid.
+All green at completion: 21/21 swimlane component (15 lane + 6 column), 10/10 swimlane E2E, all trace stages valid.
 
 ## Watchlist
 
-- The stale `tests/e2e/navigation/view-mode-switcher.spec.ts` references the old single-toggle (`board-list-toggle`) that no longer exists — pre-existing breakage, flagged but not fixed in this round.
-- `effectiveBoardLayoutMode` is derived at render time (URL-driven for /epics, persisted pref otherwise). The `boardLayoutMode` state + `setBoardLayoutMode` are still used for the flat/swimlanes toggle writes; the render-time derivation is the single read path into Board/switcher.
+- Column collapse is keyed by primary status string (e.g. `"Implemented"`), shared with the flat Board. If a future column-config change makes two columns share a primary status, collapse would affect both — but the flat Board has the same constraint, so this is the canonical behavior, not a regression.
+- `act()` wraps the cross-view event-sync unit test because a raw `window.dispatchEvent` triggers a setState outside React's batching boundary. The production listener is identical to the flat Board's verified pattern.
 
 ## Prior rounds
 
-- Round 1 (lane-label restructure + scroll model) and round 2 (collapse approach) are recorded in CR §8.
+- Rounds 1–4 (lane-label restructure, collapse approach, `/epics` route + Default View + switcher sizing, collapse persistence/Show-closed/key-before-title) are recorded in CR §8.
 
 ## Open Decisions
 

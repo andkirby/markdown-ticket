@@ -335,4 +335,55 @@ test.describe('Epic swimlane board (MDT-206)', () => {
     await expect(page.locator(boardSelectors.board)).toBeVisible()
     await expect(page.locator(swimlaneSelectors.board)).toHaveCount(0)
   })
+
+  test('UAT: swimlane status columns collapse to a 44px rail (shared with flat board)', async ({ page, e2eContext }) => {
+    const scenario = await createEpicProject(e2eContext.projectFactory)
+
+    await page.goto(`/prj/${scenario.projectCode}/epics`)
+    await expect(page.locator(swimlaneSelectors.board)).toBeVisible()
+    // Lanes are collapsed by default; expand so lane-body cells are present.
+    await page.click(swimlaneSelectors.expandAll)
+
+    // Clear any shared column-collapse state so the test starts from a clean
+    // baseline (the key is shared with the flat board).
+    await page.evaluate(() => {
+      window.localStorage.removeItem('mdt-settings-collapsed-columns')
+      window.dispatchEvent(new CustomEvent('markdown-ticket:settings:collapsed-columns-change', { detail: { columns: [] } }))
+    })
+    // Re-expand lanes (the evaluate above re-rendered the board).
+    await page.click(swimlaneSelectors.expandAll)
+
+    // The "Done" column (Implemented status) has a collapse chevron.
+    const doneCollapse = page.locator(swimlaneSelectors.colCollapseByStatus('Implemented'))
+    await expect(doneCollapse).toBeVisible()
+
+    // Before collapse, a drop-zone cell exists for the Done column in the lane.
+    await expect(page.locator(swimlaneSelectors.laneColumn(scenario.alphaEpic, 'Implemented'))).toBeVisible()
+
+    // Collapse the Done column.
+    await doneCollapse.click()
+
+    // Header is replaced by a click-to-expand rail.
+    await expect(page.locator(swimlaneSelectors.colExpandByStatus('Implemented'))).toBeVisible()
+    await expect(doneCollapse).toHaveCount(0)
+
+    // The lane-body cell for Done is now a narrow strip, not a drop zone.
+    await expect(page.locator(swimlaneSelectors.laneColRail(scenario.alphaEpic, 'Implemented'))).toBeVisible()
+    await expect(page.locator(swimlaneSelectors.laneColumn(scenario.alphaEpic, 'Implemented'))).toHaveCount(0)
+
+    // The collapsed header rail is 44px wide (matches the flat Board standard).
+    const railWidth = await page.locator(swimlaneSelectors.colExpandByStatus('Implemented')).evaluate(
+      el => window.getComputedStyle(el.parentElement!).width,
+    )
+    expect(railWidth).toBe('44px')
+
+    // Collapse state is shared with the flat board key.
+    const stored = await page.evaluate(() => window.localStorage.getItem('mdt-settings-collapsed-columns'))
+    expect(JSON.parse(stored!)).toContain('Implemented')
+
+    // Click the rail to re-expand.
+    await page.click(swimlaneSelectors.colExpandByStatus('Implemented'))
+    await expect(page.locator(swimlaneSelectors.colCollapseByStatus('Implemented'))).toBeVisible()
+    await expect(page.locator(swimlaneSelectors.laneColumn(scenario.alphaEpic, 'Implemented'))).toBeVisible()
+  })
 })

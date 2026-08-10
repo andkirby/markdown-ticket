@@ -229,3 +229,35 @@ Four collapse/visibility refinements. Execution brief: [uat.md](./MDT-206/uat.md
 **Strict drift/lock:** not used.
 
 **More implementation required:** no — implemented, tested (877 frontend + 9 swimlane E2E green), and trace-validated.
+
+### UAT Session 2026-08-08 (round 5 — collapsed bar vertical alignment)
+
+Minor alignment fix. Execution brief: [uat.md](./MDT-206/uat.md).
+
+**Approved changes:**
+- In the collapsed lane bar, all elements are vertically centered. The epic key (`.swimlane-board__lane-key`) had an expanded-column rule (`align-self: flex-start`) that persisted into the collapsed row layout and pinned it to the top; overridden with `align-self: center` in the collapsed context so it matches the label row's `align-items: center`.
+
+**Changed requirement IDs:** none new (C6 in-place refinement — collapsed bar elements are vertically centered).
+
+**Updated workflow documents:** `uat.md`; E2E alignment assertions added to `swimlane-board.spec.ts`.
+
+**Strict drift/lock:** not used.
+
+**More implementation required:** no — implemented, tested (25/25 swimlane unit + E2E alignment assertions in real browser), committed as `6f555c01`.
+
+### UAT Session 2026-08-08 (round 6 — swimlane column collapse, shared with flat Board)
+
+Made the swimlane status columns collapsible like the flat Board page. Execution brief: [uat.md](./MDT-206/uat.md).
+
+**Approved changes:**
+- Each swimlane column header renders a collapse chevron (`ChevronLeft`). Collapsing a status column replaces its header with a 44px click-to-expand rail (status dot only) and replaces that column's lane-body cells with a narrow status-tinted strip (no drop zone) — mirroring the flat Board's collapsed column.
+- Column collapse reuses the flat Board's `mdt-settings-collapsed-columns` key (keyed by primary status) and the `COLLAPSED_COLUMNS_CHANGE_EVENT` cross-tab sync. A status collapsed in one view is collapsed in the other.
+- Column collapse (status axis) and lane collapse (epic axis) are independent.
+
+**Changed requirement IDs:** `BR-5.3` (new — column collapse to rail, shared key, independent from lane collapse), `column_collapses_to_rail_shared_with_flat_board` (new BDD scenario); `TEST-swimlane-board-e2e` + `TEST-swimlane-component` extended to cover BR-5.3.
+
+**Updated workflow documents:** `requirements.md` (BR-5.3 + non-ambiguity row), `uat.md`; all `*.trace.md` projections re-rendered.
+
+**Strict drift/lock:** not used.
+
+**More implementation required:** no — implemented, tested (21/21 swimlane component = 15 lane + 6 column; 10/10 swimlane E2E), and trace-validated.

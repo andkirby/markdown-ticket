@@ -109,6 +109,12 @@ export const swimlaneSelectors = {
   laneKeyByKey: (key: string) => `[data-testid="swimlane-lane-key"][data-lane-key="${key}"]`,
   /** Lane column by lane key and status */
   laneColumn: (key: string, status: string) => `[data-testid="swimlane-lane-col"][data-lane-key="${key}"][data-status="${status}"]`,
+  /** Column collapse chevron in the swimlane header, by primary status */
+  colCollapseByStatus: (status: string) => `[data-testid="swimlane-col-collapse"][data-status="${status}"]`,
+  /** Collapsed column expand rail in the swimlane header, by primary status */
+  colExpandByStatus: (status: string) => `[data-testid="swimlane-col-expand"][data-status="${status}"]`,
+  /** Collapsed-column lane cell strip (no drop zone), by lane key and status */
+  laneColRail: (key: string, status: string) => `[data-testid="swimlane-lane-col-rail"][data-lane-key="${key}"][data-status="${status}"]`,
 } as const
 
 /**
