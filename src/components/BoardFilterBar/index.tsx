@@ -116,15 +116,17 @@ function DesktopInlineFilterBar({
     : `Showing ${filteredCount} of ${totalCount} tickets`
 
   return (
-    <div data-testid="board-filter-bar" className="flex items-center gap-2 flex-shrink-0">
+    <div data-testid="board-filter-bar" className="board-filter-bar control-group">
       <FilterControls
         searchQuery={filters.query ?? ''}
         onSearchChange={onQueryChange}
+        groupItem
       />
       <FilterButton
         activeCount={activeCount}
         open={popoverOpen}
         onOpenChange={setPopoverOpen}
+        groupItem
       >
         <FilterPopoverContent
           countText={countText}
@@ -154,11 +156,11 @@ function useSelectedFor(filters: TicketFilters) {
 /** The "Showing N of M tickets" count (left) + Clear all button (right). */
 function ResultCountRow({ countText, onClearAll }: { countText: string, onClearAll: () => void }) {
   return (
-    <div className="flex items-center justify-between m-2">
+    <div className="filter-result-row">
       <span
         data-testid="filter-result-count"
         aria-live="polite"
-        className="text-xs text-muted-foreground"
+        className="filter-result-count"
       >
         {countText}
       </span>
@@ -166,7 +168,7 @@ function ResultCountRow({ countText, onClearAll }: { countText: string, onClearA
         type="button"
         data-testid="clear-all-filters"
         onClick={onClearAll}
-        className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
+        className="filter-clear-all-link"
         aria-label="Clear all filters"
       >
         Clear all
@@ -195,7 +197,7 @@ function FacetGrid({
   }))
 
   return (
-    <div className="grid grid-cols-2 gap-x-4">
+    <div className="filter-facet-grid">
       <FacetSection facet="type" label="Type" options={TYPE_OPTIONS} selected={selectedFor('type')} onToggle={onToggle} />
       <FacetSection facet="status" label="Status" options={STATUS_OPTIONS} selected={selectedFor('status')} onToggle={onToggle} />
       <FacetSection facet="priority" label="Priority" options={PRIORITY_OPTIONS} selected={selectedFor('priority')} onToggle={onToggle} />
@@ -274,25 +276,25 @@ function MobileFilterSheet({
         <ModalHeader
           onClose={() => onOpenChange(false)}
           closeTestId="mobile-filter-done"
-          className="flex items-center gap-3"
+          className="filter-sheet-header"
         >
-          <h1 className="modal__headline shrink-0">Filter</h1>
-          <div className="relative min-w-0 flex-1">
+          <h1 className="modal__headline filter-sheet-headline">Filter</h1>
+          <div className="filter-sheet-search">
             <input
               type="text"
               placeholder="Filter tickets..."
               value={filters.query ?? ''}
               onChange={e => onQueryChange(e.target.value)}
               data-testid="mobile-filter-query"
-              className="project-search w-full"
+              className="project-search filter-sheet-search-input"
             />
           </div>
         </ModalHeader>
         {/* Result-count row (single Clear-all — no duplication) */}
         <ResultCountRow countText={countText} onClearAll={onClearAll} />
         {/* Facet grid + chips scroll inside the constrained body */}
-        <ScrollArea type="hover" scrollHideDelay={600} className="flex-1 min-h-0 overflow-hidden">
-          <div className="p-4">
+        <ScrollArea type="hover" scrollHideDelay={600} className="filter-sheet-scroll">
+          <div className="filter-sheet-body">
             <FacetGrid filters={filters} facetOptions={facetOptions} onToggle={onToggle} />
             <ActiveFilterChips filters={filters} onRemove={() => {}} variant="inline" />
           </div>
