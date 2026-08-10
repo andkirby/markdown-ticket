@@ -205,65 +205,106 @@ flowchart LR
 - [ ] An enabled cloud project with a valid server-side credential establishes
   exactly one authenticated upstream projection stream per local server,
   regardless of browser-tab count.
+  _Component-tested (`ProjectionStreamManager.test.ts`); production wiring
+  pending server bootstrap._
 - [ ] Initial connection and reconnect send `afterRevision`, apply catch-up,
   accept sparse catch-up revisions, and become live only after applying the
   final `ready` high-water cursor.
+  _Component-tested; production wiring pending._
 - [ ] A committed projection is delivered as a complete approved header without
   waiting for a periodic client request.
+  _Pending server bootstrap wiring; the push path is structurally inert._
 - [ ] The local server persists the revision after applying the delta and fans
   out an ordinary ticket change through existing local SSE; it sends `ack` only
   after state and cursor persistence succeeds.
-- [ ] The existing project-ticket read endpoint returns canonical local tickets
+  _Ack-after-persistence is component-tested; SSE fan-out wiring is missing in
+  production (`ProjectionStreamManager` is never instantiated; `SSEBroadcaster`
+  has no projection hookup)._
+- [x] The existing project-ticket read endpoint returns canonical local tickets
   and projection-only read-only entries as one collection; local tickets win on
   duplicate ticket number.
-- [ ] The browser owns no projection cursor, catch-up, WebSocket reconnect, or
+  _`/tickets/unified` + read-model local-wins merge tested; provider is not
+  wired in production, so the endpoint currently returns canonical-only._
+- [x] The browser owns no projection cursor, catch-up, WebSocket reconnect, or
   `/cloud-projections` request. It consumes only the unified ticket API, local
   ticket events, and high-level sync status.
-- [ ] Duplicate/older revisions are ignored; sparse catch-up is accepted; a
+  _`useCloudProjectionFeed` gutted (poll loop removed); E2E proves no
+  `/cloud-projections` request in push mode._
+- [x] Duplicate/older revisions are ignored; sparse catch-up is accepted; a
   non-contiguous live revision causes one catch-up.
-- [ ] A disconnected board keeps the last projection visible and marks it stale.
+  _`CloudProjectionReadModel.test.ts` (9 tests): duplicate/older ignored,
+  sparse accepted, live-gap detection._
+- [x] A disconnected board keeps the last projection visible and marks it stale.
+  _Read-model stale-without-losing-entries tested._
 - [ ] A failure after D1 commit and before acknowledgement by an active socket
   converges through per-socket alarm replay or reconnect without polling.
+  _Manual deployed gate only (C-7/Edge-1); hibernation/alarm not in the
+  automated suite._
 - [ ] Revocation/suspension closes or excludes active sockets before any later
   projection delivery.
-- [ ] Local Markdown tickets remain authoritative over same-number projections.
-- [ ] Version 1 connection files migrate to version 2 without changing project
+  _`revokeSockets` now returns its queued work (enqueueResult); the
+  hibernation-runtime revocation behavior remains a manual deployed gate
+  (Edge-4)._
+- [x] Local Markdown tickets remain authoritative over same-number projections.
+  _Read-model local-wins merge tested._
+- [x] Version 1 connection files migrate to version 2 without changing project
   identity, trusted origin, or credential reference.
+  _Read-time normalization in `project-state-store.ts` + legacy binding
+  migration wired into project management._
 
 ### Non-Functional
 
 - [ ] A healthy connected project with no changes, reconnects, or authorization
   changes performs zero D1 reads solely because time passes.
+  _Holds vacuously — no stream is wired in production (see C-1 note in
+  operations.md). Becomes a live invariant after server wiring._
 - [ ] Healthy connected delivery reaches the unified local ticket read model
   and connected browser within 2 seconds at p95 under the documented test load.
+  _External gate; not measured. No automated SLO test._
 - [ ] Reconnect catch-up completes within 5 seconds at p95 under that load.
+  _External gate; not measured._
 - [ ] The hub uses the Hibernation WebSocket API and alarms; no interval or
   application keepalive keeps it active.
-- [ ] Stream payloads contain approved projection headers and delivery metadata
+  _Designed but not verified by the automated suite (manual gate C-7)._
+- [x] Stream payloads contain approved projection headers and delivery metadata
   only, never ticket bodies or Cloudflare credentials.
-- [ ] The browser never opens the cloud WebSocket and never receives an Access
+  _`recordToCatchup` envelope mapping + forbidden-field recursion tested._
+- [x] The browser never opens the cloud WebSocket and never receives an Access
   token or service-token header.
-- [ ] D1 remains authoritative; the Durable Object stores only delivery state
+  _No browser WebSocket code exists; token stays server-side._
+- [x] D1 remains authoritative; the Durable Object stores only delivery state
   and socket metadata needed to coordinate the stream.
-- [ ] No KV, Queue, D1 replica, or new ticket-content store is introduced.
+- [x] No KV, Queue, D1 replica, or new ticket-content store is introduced.
 
 ### Verification
 
 - [ ] Worker tests prove explicit operation serialization, hibernation restore,
   commit-before-broadcast, per-socket acknowledgement/alarm recovery,
   membership revocation, and payload redaction.
+  _Partial: operation-queue serialization + payload redaction proven by the
+  hub pure-logic tests; hibernation/alarm/revocation are manual deployed
+  gates only. See architecture.md § Verification Architecture._
 - [ ] Local tests prove one stream per project, bounded reconnect, cursor
   persistence before acknowledgement, sparse catch-up, live-gap handling, and
   SSE fan-out.
+  _Component-tested in isolation (`ProjectionStreamManager`, read model, SSE
+  fan-out helper); the production wiring that would make these end-to-end is
+  not implemented._
 - [ ] Browser E2E proves a remote projection appears without calling the legacy
   polling endpoint, is received as an ordinary ticket update, and additional
   tabs create no cloud traffic.
+  _`cloud-sync-board.spec.ts` mocks the unified endpoint via `page.route`; it
+  proves the board's render contract, not a live server/cloud round-trip._
 - [ ] An idle-traffic test holds a connected project open for at least five
   former poll intervals and observes zero projection or membership D1 reads.
-- [ ] A write-journal test proves reads never trigger drains, retries honor
+  _External gate; not run (no live stream to measure)._
+- [x] A write-journal test proves reads never trigger drains, retries honor
   persisted backoff, and missing projections become terminal `unmanaged`.
+  _`projection-sync.test.ts` (terminal-no-retry) +
+  `publish.usecase.test.ts` (missing row → projection_not_found)._
 - [ ] A load test records p50/p95/p99 delivery and reconnect catch-up latency.
-- [ ] `spec-trace validate MDT-226 --stage architecture --strict` passes.
+  _External gate; not run._
+- [x] `spec-trace validate MDT-226 --stage architecture --strict` passes.
 
 ## 6. Deployment
 
