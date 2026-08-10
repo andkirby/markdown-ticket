@@ -82,13 +82,13 @@ export const ActiveFilterChips: React.FC<ActiveFilterChipsProps> = ({
 
   // MDT-196 UAT: inline chips sit directly below the facet grid inside the
   // popover/mobile sheet — give the block a top gap so it is not flush
-  // against the grid above it. gap-2 handles the inter-chip spacing.
-  const marginClass = variant === 'inline' ? 'mt-3' : 'mt-1.5'
+  // against the grid above it.
+  const variantClass = variant === 'inline' ? 'active-filter-chips--inline' : 'active-filter-chips--standalone'
 
   return (
     <div
       data-testid="active-filter-chips"
-      className={`flex flex-wrap items-center gap-2 ${marginClass}`}
+      className={`active-filter-chips ${variantClass}`}
       role="group"
       aria-label="Active filters"
     >
@@ -102,15 +102,15 @@ export const ActiveFilterChips: React.FC<ActiveFilterChipsProps> = ({
             data-value={value}
             className="badge filter-chip"
           >
-            <span className="mr-1">{label}</span>
+            <span className="filter-chip__label">{label}</span>
             <button
               type="button"
               data-testid="active-filter-chip-remove"
               onClick={() => onRemove(facet, value)}
-              className="filter-chip__remove inline-flex items-center rounded-full p-0.5 -mr-1"
+              className="filter-chip__remove"
               aria-label={`Remove filter: ${FACET_LABELS[facet]} ${label}`}
             >
-              <X className="h-3 w-3" aria-hidden="true" />
+              <X className="filter-chip__remove-icon" aria-hidden="true" />
             </button>
           </span>
         )
@@ -120,7 +120,7 @@ export const ActiveFilterChips: React.FC<ActiveFilterChipsProps> = ({
           type="button"
           data-testid="clear-all-filters"
           onClick={onClearAll}
-          className="filter-clear-all text-xs underline-offset-2 hover:underline ml-1"
+          className="active-filter-clear-all"
           aria-label="Clear all filters"
         >
           Clear all

@@ -73,7 +73,7 @@
    cause). The surface transition is on .pin-rail above. */
 .pin-rail--floating {
   background: var(--bg-subtle);
-  border-right: 1px solid var(--border);
+  border-right: 1px solid oklch(var(--border));
   box-shadow: 2px 0 8px rgb(0 0 0 / 8%);
 }
 
@@ -83,7 +83,7 @@
 .pin-rail--docked {
   position: relative;
   background: var(--bg-subtle);
-  border-right: 1px solid var(--border);
+  border-right: 1px solid oklch(var(--border));
   animation: pin-rail-slide-in 140ms ease-out;
 }
 

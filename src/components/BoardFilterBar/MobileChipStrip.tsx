@@ -28,7 +28,7 @@ export const MobileChipStrip: React.FC<MobileChipStripProps> = ({ filters, onRem
   return (
     <div
       data-testid="mobile-chip-strip"
-      className="flex items-center gap-1.5 overflow-x-auto py-1 -mx-1 px-1"
+      className="mobile-chip-strip"
       role="group"
       aria-label="Active filters"
     >
@@ -38,17 +38,17 @@ export const MobileChipStrip: React.FC<MobileChipStripProps> = ({ filters, onRem
           data-testid="mobile-filter-chip"
           data-facet={facet}
           data-value={value}
-          className="badge bg-muted text-foreground border-border inline-flex shrink-0"
+          className="mobile-filter-chip"
         >
-          <span className="mr-0.5 truncate max-w-[10rem]">{value === '__none__' ? 'Unassigned' : value}</span>
+          <span className="mobile-filter-chip__label">{value === '__none__' ? 'Unassigned' : value}</span>
           <button
             type="button"
             data-testid="mobile-filter-chip-remove"
             onClick={() => onRemove(facet, value)}
-            className="inline-flex items-center hover:bg-accent rounded-full p-0.5"
+            className="mobile-filter-chip__remove"
             aria-label={`Remove filter: ${facet} ${value}`}
           >
-            <X className="h-3 w-3" aria-hidden="true" />
+            <X className="mobile-filter-chip__remove-icon" aria-hidden="true" />
           </button>
         </span>
       ))}

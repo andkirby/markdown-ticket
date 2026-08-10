@@ -142,4 +142,83 @@
   .filter-sheet-body {
     @apply p-4;
   }
+
+  /* ── Facet section (checkbox group, collapsible) ── */
+  .facet-section {
+    @apply border-b last:border-0 py-1;
+    border-color: oklch(var(--border));
+  }
+  .facet-section__header {
+    @apply w-full flex items-center justify-between px-1 py-1.5 text-sm font-medium;
+  }
+  .facet-section__chevron {
+    color: var(--text-muted);
+  }
+  .facet-section__options {
+    @apply px-1 pb-1 space-y-0.5;
+  }
+  .facet-section__empty {
+    @apply text-sm px-1 py-1;
+    color: var(--text-muted);
+  }
+  .facet-option {
+    @apply flex items-center gap-2 px-1 py-1 text-sm cursor-pointer rounded;
+  }
+  .facet-option:hover {
+    background-color: oklch(var(--accent));
+  }
+  .facet-option__checkbox {
+    @apply h-4 w-4 rounded;
+    border-color: oklch(var(--border));
+  }
+
+  /* ── Active filter chips (popover/sheet variant) ── */
+  .active-filter-chips {
+    @apply flex flex-wrap items-center gap-2;
+  }
+  .active-filter-chips--standalone {
+    @apply mt-1.5;
+  }
+  .active-filter-chips--inline {
+    @apply mt-3;
+  }
+  .filter-chip__label {
+    @apply mr-1;
+  }
+  .filter-chip__remove {
+    @apply inline-flex items-center rounded-full p-0.5 -mr-1;
+  }
+  .filter-chip__remove-icon {
+    @apply h-3 w-3;
+  }
+  .active-filter-clear-all {
+    @apply text-xs underline-offset-2 hover:underline ml-1;
+    color: var(--text-muted);
+  }
+  .active-filter-clear-all:hover {
+    color: oklch(var(--foreground));
+  }
+
+  /* ── Mobile chip strip (horizontal scroll) ── */
+  .mobile-chip-strip {
+    @apply flex items-center gap-1.5 overflow-x-auto py-1 -mx-1 px-1;
+  }
+  .mobile-filter-chip {
+    @apply badge inline-flex shrink-0;
+    background-color: var(--bg-muted);
+    color: oklch(var(--foreground));
+    border-color: oklch(var(--border));
+  }
+  .mobile-filter-chip__label {
+    @apply mr-0.5 truncate max-w-[10rem];
+  }
+  .mobile-filter-chip__remove {
+    @apply inline-flex items-center rounded-full p-0.5;
+  }
+  .mobile-filter-chip__remove:hover {
+    background-color: oklch(var(--accent));
+  }
+  .mobile-filter-chip__remove-icon {
+    @apply h-3 w-3;
+  }
 }

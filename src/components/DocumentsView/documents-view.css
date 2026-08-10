@@ -103,9 +103,6 @@
   .documents-view__toolbar-group {
     @apply flex items-center;
   }
-  .documents-view__toolbar-group--sort {
-    @apply gap-2;
-  }
   .documents-view__toolbar-group--actions {
     @apply gap-1;
   }
