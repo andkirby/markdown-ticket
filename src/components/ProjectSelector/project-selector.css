@@ -272,8 +272,8 @@
   /* Gradient style — wider gradient fade */
   .project-chip[data-accent-style="gradient"] .project-chip__accent-mark {
     width: 25px;
-    background: linear-gradient(270deg, rgb(from var(--project-accent, rgb(148 163 184)) r g b / 0) 40%, rgb(from var(--project-accent, rgb(148 163 184)) r g b / 1) 100%);
-    opacity: 0.3;
+    background: linear-gradient(250deg, rgb(from var(--project-accent, rgb(148 163 184)) r g b / 0) 40%, rgb(from var(--project-accent, rgb(148 163 184)) r g b / 1) 100%);
+    opacity: 0.5;
   }
 
   /* Plate style — hide accent mark, flush badge to left edge */
@@ -285,7 +285,7 @@
     padding-left: 0;
     padding-inline: 0 0.25rem;
     justify-content: flex-start;
-    --plate-opacity: 0.5;
+    --plate-opacity: 0.8;
     --plate-radius: 0 13px 13px 0;
     --plate-px: 0 0.25rem 0 0.5rem;
   }

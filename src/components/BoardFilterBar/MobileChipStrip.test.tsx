@@ -52,7 +52,7 @@ describe('MobileChipStrip', () => {
   })
 
   describe('layout', () => {
-    it('strip is horizontally scrollable', () => {
+    it('strip carries the scrollable semantic class', () => {
       render(
         <MobileChipStrip
           filters={{ priority: ['High'] }}
@@ -60,7 +60,8 @@ describe('MobileChipStrip', () => {
         />,
       )
       const strip = screen.getByTestId('mobile-chip-strip')
-      expect(strip.className).toContain('overflow-x-auto')
+      // overflow-x-auto lives in the .mobile-chip-strip CSS class, not inline.
+      expect(strip).toHaveClass('mobile-chip-strip')
     })
   })
 })

@@ -903,7 +903,7 @@ export default function DocumentsLayout({
                 />
               </div>
               <div className="documents-view__navigation-toolbar">
-                <div className="documents-view__toolbar-group documents-view__toolbar-group--sort control-group">
+                <div className="documents-view__toolbar-group control-group">
                   <select
                     value={sortBy}
                     onChange={e =>
