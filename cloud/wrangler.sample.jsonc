@@ -21,6 +21,35 @@
     }
   ],
 
+  // Durable Object binding — one hibernating ProjectProjectionHub per cloud
+  // project (MDT-226). The hub serializes projection delivery and coordinates
+  // sockets; it is NOT a second projection authority (D1 stays authoritative).
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "PROJECT_HUB",
+        "class_name": "ProjectProjectionHub"
+      }
+    ]
+  },
+
+  // First Durable Object class migration (MDT-226). The tag sequence is
+  // independent of the D1 SQL migrations above. The hub stores delivery
+  // metadata and uses alarms; SQLite-backed storage keeps it recoverable.
+  //
+  // TAG DISCIPLINE: the tag must match the deployed script's applied migration
+  // tag. Production created the class under "v3"; a fresh environment may start
+  // at "v1". If you see Cloudflare error 10074 ("class already depended on by
+  // existing Durable Objects"), the local tag is behind the deployed one — align
+  // it, do NOT lower it. Bump the tag (e.g. v3 -> v4) only when a new DO storage
+  // migration is needed, and add a new migrations entry for the increment.
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["ProjectProjectionHub"]
+    }
+  ],
+
   // Rate-limit bindings — abuse/ runaway-client guards, NOT allocation correctness.
   // See operations.md "Rate Limits". Two classes: read (projection polling)
   // and mutation (writes). Operator-mutation limiting is enforced in-app on the
