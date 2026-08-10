@@ -47,6 +47,10 @@ import {
   getBoardLayoutModePreference,
   setBoardLayoutModePreference,
 } from './config/boardLayoutMode'
+import {
+  getDefaultView,
+  setDefaultViewPreference,
+} from './config/settingsPreferences'
 import { getSortPreferences, setSortPreferences } from './config/sorting'
 import { useBoardFilters } from './hooks/useBoardFilters'
 import { useCardDensity } from './hooks/useCardDensity'
@@ -67,6 +71,7 @@ import {
   ROUTE_PROJECT,
   ROUTE_PROJECT_DOCUMENTS,
   ROUTE_PROJECT_DOCUMENTS_WILDCARD,
+  ROUTE_PROJECT_EPICS,
   ROUTE_PROJECT_LIST,
   ROUTE_TICKET,
   ROUTE_TICKET_SUBDOC,
@@ -200,19 +205,29 @@ function ProjectRouteHandler() {
 
   // Determine current view mode from URL
   const getCurrentViewMode = (): 'board' | 'list' | 'documents' => {
-    // Check pathname first (for /prj/MDT/list, /prj/MDT/documents)
+    // Check pathname first (for /prj/MDT/list, /prj/MDT/epics, /prj/MDT/documents).
+    // /epics is a board-layout variant (swimlanes), so it still reports 'board'
+    // as the view; the boardLayoutMode effect below reads the /epics segment.
     if (location.pathname.includes('/list'))
       return 'list'
     if (location.pathname.includes('/documents'))
       return 'documents'
     // Check query param when on ticket route (e.g., /prj/MDT/ticket/MDT-130?view=list)
     const viewParam = searchParams.get('view')
-    if (viewParam === 'list' || viewParam === 'documents')
-      return viewParam
+    if (viewParam === 'list' || viewParam === 'documents' || viewParam === 'epics')
+      return viewParam === 'epics' ? 'board' : viewParam
     return 'board'
   }
 
+  // MDT-206: derive board layout from the URL so /epics is a deep-linkable route.
+  // When the URL carries /epics, the layout is swimlanes; the bare board path falls
+  // back to the persisted preference. Derived at render time (no effect) to avoid
+  // racing the flat-toggle's setBoardLayoutMode(FLAT) before navigation completes.
   const viewMode = getCurrentViewMode()
+  const onEpicsRoute = location.pathname.includes('/epics')
+  const effectiveBoardLayoutMode = onEpicsRoute
+    ? BoardLayoutMode.SWIMLANES
+    : boardLayoutMode
   const rootTitleArea
     = viewMode === 'list'
       ? 'Listing'
@@ -394,13 +409,17 @@ function ProjectRouteHandler() {
     )
 
     if (isRootProjectPath) {
-      const lastBoardListMode = localStorage.getItem('lastBoardListMode')
-
-      // If user's last preference was list view, navigate to it
-      if (lastBoardListMode === 'list') {
+      // MDT-206: the bare /prj/:code path redirects to the user's Default View
+      // (Settings → Default View). This is the authoritative landing preference;
+      // the switcher keeps it in sync on every view change.
+      const defaultView = getDefaultView()
+      if (defaultView === 'list') {
         navigate(buildProjectPath(projectCode, 'list'), { replace: true })
       }
-      // Otherwise stay on board view (default)
+      else if (defaultView === 'epics') {
+        navigate(buildProjectPath(projectCode, 'epics'), { replace: true })
+      }
+      // Otherwise stay on flat board view (default)
     }
   }, [projectCode, location.pathname, navigate])
 
@@ -428,8 +447,9 @@ function ProjectRouteHandler() {
 
   const handleViewModeChange = (mode: ViewSwitcherMode) => {
     const basePath = buildProjectPath(projectCode!)
-    const routeMode = mode === 'swimlanes' ? 'board' : mode
-    const newPath = routeMode === 'board' ? basePath : `${basePath}/${routeMode}`
+    // MDT-206: swimlanes now has its own /epics route (deep-linkable), mirroring /list.
+    const pathView = mode === 'swimlanes' ? 'epics' : mode
+    const newPath = mode === 'board' ? basePath : buildProjectPath(projectCode!, pathView)
 
     if (mode === 'swimlanes') {
       setBoardLayoutMode(BoardLayoutMode.SWIMLANES)
@@ -440,27 +460,39 @@ function ProjectRouteHandler() {
       setBoardLayoutModePreference(BoardLayoutMode.FLAT)
     }
 
-    // Store view mode preferences
-    if (routeMode === 'board' || routeMode === 'list') {
-      // Store the last board/list mode separately
-      localStorage.setItem('lastBoardListMode', routeMode)
+    // MDT-206: "Default View" = the view a user lands on. Persist the chosen
+    // board/list/epics view as the default so the bare /prj/:code redirect
+    // (below) lands on the last-used view. This unifies the previously orphaned
+    // settings preference with the actual landing behavior.
+    if (mode === 'board' || mode === 'list' || mode === 'swimlanes') {
+      const defaultView = mode === 'swimlanes' ? 'epics' : mode
+      setDefaultViewPreference(defaultView)
+      // Keep the legacy key in sync for any reader still on it.
+      localStorage.setItem('lastBoardListMode', mode === 'list' ? 'list' : 'board')
     }
-    localStorage.setItem('lastViewMode', routeMode)
+    localStorage.setItem('lastViewMode', mode === 'swimlanes' ? 'epics' : mode)
 
     navigate(newPath)
   }
 
   const handleTicketClick = (ticket: Ticket, targetProjectCode?: string) => {
     const ticketProject = targetProjectCode || projectCode!
-    const viewParam = viewMode !== 'board' ? `?view=${viewMode}` : ''
+    // Carry the originating view in ?view= so closing the ticket returns to it.
+    // /epics reports viewMode 'board' but needs its own param to round-trip.
+    const onEpicsRoute = location.pathname.includes('/epics')
+    const viewContext = onEpicsRoute ? 'epics' : viewMode
+    const viewParam = viewContext !== 'board' ? `?view=${viewContext}` : ''
     navigate(`${buildTicketPath(ticketProject, ticket.code)}${viewParam}`)
   }
 
   const handleTicketClose = () => {
     const viewContext = searchParams.get('view') || 'board'
     const basePath = buildProjectPath(projectCode!)
+    // viewContext 'epics' maps to the /epics route; others map directly.
     const targetPath
-      = viewContext === 'board' ? basePath : `${basePath}/${viewContext}`
+      = viewContext === 'board' || viewContext === 'epics'
+        ? (viewContext === 'epics' ? `${basePath}/epics` : basePath)
+        : `${basePath}/${viewContext}`
     navigate(targetPath)
   }
 
@@ -497,7 +529,7 @@ function ProjectRouteHandler() {
               <ViewModeSwitcher
                 currentMode={
                   viewMode === 'board'
-                    ? boardLayoutMode === BoardLayoutMode.SWIMLANES ? 'swimlanes' : 'board'
+                    ? effectiveBoardLayoutMode === BoardLayoutMode.SWIMLANES ? 'swimlanes' : 'board'
                     : viewMode
                 }
                 onModeChange={handleViewModeChange}
@@ -613,7 +645,7 @@ function ProjectRouteHandler() {
                     mobileFilters={boardFilters}
                     onRemoveMobileFilter={(facet, value) => toggleBoardFilter(facet, value)}
                     viewMode={viewMode}
-                    boardLayoutMode={boardLayoutMode}
+                    boardLayoutMode={effectiveBoardLayoutMode}
                     sortPreferences={
                       viewMode === 'board' || viewMode === 'list'
                         ? localSortPreferences
@@ -966,6 +998,7 @@ function App() {
           <Route path="/:ticketKey" element={<DirectTicketAccess />} />
           <Route path={ROUTE_PROJECT} element={<ProjectRouteHandler />} />
           <Route path={ROUTE_PROJECT_LIST} element={<ProjectRouteHandler />} />
+          <Route path={ROUTE_PROJECT_EPICS} element={<ProjectRouteHandler />} />
           <Route
             path={ROUTE_PROJECT_DOCUMENTS}
             element={<ProjectRouteHandler />}

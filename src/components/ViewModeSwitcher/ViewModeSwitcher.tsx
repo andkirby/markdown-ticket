@@ -16,7 +16,7 @@ interface ViewSwitcherItem {
 
 const VIEW_SWITCHER_ITEMS: ViewSwitcherItem[] = [
   { id: 'board', label: 'Board', testId: 'board-mode-flat-toggle', icon: Columns3 },
-  { id: 'swimlanes', label: 'Swimlanes', testId: 'board-mode-epics-toggle', icon: Rows3 },
+  { id: 'swimlanes', label: 'Epics', testId: 'board-mode-epics-toggle', icon: Rows3 },
   { id: 'list', label: 'List', testId: 'view-mode-list-toggle', icon: List },
   { id: 'documents', label: 'Docs', testId: 'documents-button', icon: FileText },
 ]
@@ -48,7 +48,9 @@ export function ViewModeSwitcher({
             title={item.label}
             onClick={() => onModeChange(item.id)}
           >
-            <Icon size={14} strokeWidth={2.2} aria-hidden />
+            {/* size matches --sz-icon (16px); the CSS rule on
+                .view-mode-switcher__button svg is the token source of truth. */}
+            <Icon size={16} strokeWidth={2.2} aria-hidden />
           </button>
         )
       })}

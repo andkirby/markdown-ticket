@@ -2,82 +2,73 @@
 
 ## Objective
 
-Extend the epic-lane collapse approach to match `designs/board-zai/design3.html` §8: the whole lane label is the collapse toggle, and a collapsed lane reflows from a vertical sticky column into a horizontal full-width summary bar.
-
-## Background — design3 collapse model
-
-Investigated in `designs/board-zai/design3.html` + `assets/css/05-components.css` + `assets/js/app.js`:
-
-- **Whole-label toggle**: the entire `.lane-label` is the click target (`@click="toggleLaneCollapse(lane)"`); the chevron is a visual affordance only.
-- **Collapsed = horizontal summary bar**: `.lane--collapsed .lane-label { flex-direction: row; align-items: center; width: auto; flex: 1; border-right: none }` — the label stops being a 168px sticky column and becomes a full-width one-line bar.
-- **Body hidden**: `.lane--collapsed .lane-track { display: none }`.
-- **Interactive children opt out**: epic-open uses `@click.stop` so it does not toggle collapse.
-- State: `collapsedLanes` map; Collapse all sets every lane true, Expand all clears it.
+Give the swimlane board a deep-linkable `/epics` URL (like List has `/list`), fix the orphaned "Default View" setting and add Epics to it, and standardize the ViewModeSwitcher button/icon sizing via tokens + the styleguide.
 
 ## Approved Changes
 
-1. **Whole-label toggle**: the lane label is a `div[role=button][tabindex=0][aria-expanded]` (not a `<button>` element, so the real `<button>` children it contains stay HTML-valid); Enter/Space and click both toggle. (design3 used a clickable div; we add role/tabindex/keyboard for a11y.)
-2. **Collapsed horizontal reflow**: when collapsed, the label reflows to `flex-direction: row; width: 100%; flex-wrap: wrap` so title + key + status + count + progress + actions sit on one row; the lane body is hidden.
-3. **Interactive children stop propagation**: the epic key, lifecycle action, and open-epic icon call `stopPropagation` so they perform their own action without toggling collapse.
-4. **Chevron is aria-hidden**: it is a glyph only, no longer a separate button.
+1. **`/epics` deep-link route**: swimlanes gets its own URL segment (`/prj/:code/epics`), mirroring `/list`. The board layout is derived from the URL at render time (no racing effect). Toggling Epics navigates to `/epics`; toggling Board returns to the bare path.
+2. **Epics label**: the ViewModeSwitcher swimlanes button is labeled "Epics" (matches the route + domain noun).
+3. **Default View fix + Epics option**: the previously orphaned `getDefaultView()` preference now drives the bare-project-path landing redirect. Settings → Default View offers Board, Epics, List. The switcher keeps it in sync (last-used view = landing view).
+4. **Control-size token**: new `--sz-control: 32px` token for square icon-button hit targets; ViewModeSwitcher buttons now use `var(--sz-control)` (was hardcoded 30×28px).
+5. **Icon-size token adoption**: ViewModeSwitcher glyphs now use `var(--sz-icon)` = 16px (was hardcoded 14px). The CSS rule on `.view-mode-switcher__button svg` is the token source of truth.
+6. **Styleguide**: `--sz-control` documented in the density-slots section.
 
 ## Changed Requirement IDs
 
-- `BR-5.1` — refined in place: an individual lane is collapsed by clicking its whole lane label (role=button, aria-expanded), not a dedicated chevron button.
-- `C6` — **new** constraint: collapsed lane label reflows to a horizontal full-width summary bar; body hidden.
-- `lane_collapses_via_whole_label` — **new** BDD scenario covering BR-5.1.
+- `BR-1.1` — refined: Epics selection navigates to the deep-linkable `/epics` route.
+- `BR-1.3` — **new** behavior: the bare project path redirects to the chosen Default View.
+- `C7` — **new** constraint: icon-button controls use `--sz-control` + `--sz-icon` tokens, not hardcoded px.
+- `epics_route_is_deep_linkable`, `default_view_drives_landing` — **new** BDD scenarios.
 
 ## Affected Downstream Trace
 
-- **requirements** — BR-5.1 refined; C6 added; validated + rendered.
-- **bdd** — `lane_collapses_via_whole_label` added; validated + rendered.
-- **architecture** — `OBL-semantic-css` updated to cover C6 (collapsed reflow); validated + rendered.
-- **tests** — `TEST-swimlane-component` + `TEST-swimlane-board-e2e` extended to cover C6; validated + rendered.
-- **tasks** — `TASK-2` makes-green the new scenario; validated + rendered.
+- **requirements** — BR-1.1 refined; BR-1.3 + C7 added; validated + rendered.
+- **bdd** — two new scenarios; validated + rendered.
+- **architecture** — new artifacts (ART-routes, ART-settings-preferences, ART-settings-modal, ART-design-tokens); OBL-board-mode-owner refined; OBL-default-view added; OBL-semantic-css covers C7; validated + rendered.
+- **tests** — TEST-swimlane-board-e2e extended to cover BR-1.1/BR-1.3/C7; validated + rendered.
+- **tasks** — TASK-2 owns the new artifacts + scenarios; validated + rendered.
 
 ## Execution Slices
 
-### Slice 1: Whole-label collapse toggle + horizontal reflow (TDD)
+### Slice 1: `/epics` route + Default View fix + switcher standardization (TDD)
 
-- **Objective**: make the whole lane label the collapse toggle and reflow collapsed lanes to a horizontal summary bar.
+- **Objective**: URL-back the swimlane layout, make Default View authoritative, tokenize control sizing.
 - **Direct artifacts/files**:
-  - `src/components/SwimlaneBoard/index.tsx` (label → role=button container; `stopAndRun` helper; chevron → aria-hidden glyph)
-  - `src/components/SwimlaneBoard/swimlane-board.css` (collapsed horizontal reflow; label hover/focus; chevron glyph)
-  - `src/components/SwimlaneBoard/SwimlaneBoard.test.tsx` (+4 collapse cases)
-  - `tests/e2e/board/swimlane-board.spec.ts` (collapse reflow E2E)
-  - `tests/e2e/utils/selectors.ts` (`laneLabelByKey`)
-  - `docs/design/surfaces/swimlane-board.spec.md`, `swimlane-board.mockups.md` (collapse model + §7 collapsed mockup)
+  - `src/routes.ts` (ROUTE_PROJECT_EPICS + buildProjectPath 'epics')
+  - `src/App.tsx` (route registration, URL-derived `effectiveBoardLayoutMode`, handleViewModeChange → /epics, landing redirect via getDefaultView, ticket round-trip ?view=epics)
+  - `src/config/settingsPreferences.ts` (DefaultView += 'epics')
+  - `src/components/SettingsModal.tsx` (Epics option)
+  - `src/components/ViewModeSwitcher/ViewModeSwitcher.tsx` (Epics label, --sz-icon glyph)
+  - `src/components/ViewModeSwitcher/view-mode-switcher.css` (--sz-control box, --sz-icon glyph, tray height)
+  - `src/styles/design-tokens.css` (--sz-control: 32px)
+  - `src/styleguide.html` (--sz-control slot)
+  - tests: routes.test.ts, ViewModeSwitcher.test.tsx, SettingsModal.test.tsx, swimlane-board.spec.ts
 - **Direct GREEN targets**:
-  - `TEST-swimlane-component` -> `src/components/SwimlaneBoard/SwimlaneBoard.test.tsx`
-  - `lane_collapses_via_whole_label`, `lane_visibility_controls_do_not_mutate_tickets` -> `tests/e2e/board/swimlane-board.spec.ts`
+  - routes.test.ts (buildProjectPath 'epics'), ViewModeSwitcher.test.tsx (Epics label), SettingsModal.test.tsx (Epics option)
+  - `epics_route_is_deep_linkable`, `default_view_drives_landing` → swimlane-board.spec.ts
 - **Impacted canonical task IDs**: `TASK-2`.
-- **Why**: the prior collapse only hid the body and left a tall sticky label; design3 collapses to a scannable one-line summary.
+- **Why**: swimlanes was a localStorage-only layout with no URL; Default View was write-only; switcher sizing was magic numbers.
 
 ## Validation
 
 ```bash
-# unit
-bun test --isolate src/components/SwimlaneBoard/SwimlaneBoard.test.tsx
-bun test --isolate src/components/SwimlaneBoard/helpers.test.ts
 bun run fe:test
-# e2e
 bunx playwright test tests/e2e/board/swimlane-board.spec.ts --project=chromium
-# types + trace
-bun run validate:ts src/components/SwimlaneBoard/index.tsx src/components/SwimlaneBoard/SwimlaneBoard.test.tsx
+bun run validate:ts src/App.tsx src/routes.ts
 spec-trace validate MDT-206 --stage all
 ```
 
-All green at completion: 10/10 component, 16/16 swimlane unit, 8/8 swimlane E2E, 866/866 frontend, all trace stages valid.
+All green at completion: 868/868 frontend, 9/9 swimlane E2E, all trace stages valid.
 
 ## Watchlist
 
-- A `div[role=button]` containing real `<button>` children is HTML-valid; screen readers announce the label as a button with children. Verify with a screen reader pass if accessibility-compliance sign-off is required.
-- The collapsed bar uses `flex-wrap: wrap`; on very narrow desktop widths the actions may wrap to a second line. Acceptable; revisit if UAT finds it noisy.
+- The stale `tests/e2e/navigation/view-mode-switcher.spec.ts` references the old single-toggle (`board-list-toggle`) that no longer exists — pre-existing breakage, flagged but not fixed in this round.
+- `effectiveBoardLayoutMode` is derived at render time (URL-driven for /epics, persisted pref otherwise). The `boardLayoutMode` state + `setBoardLayoutMode` are still used for the flat/swimlanes toggle writes; the render-time derivation is the single read path into Board/switcher.
 
-## Prior round (lane-label restructure + scroll model)
+## Prior rounds
 
-The previous UAT round (lifecycle under progress, TicketCode key, no color dot, lane max-height, independent column scroll, chevron on meta row, title word-wrap, clickable key, design-spec alignment) is recorded in CR §8 under `### UAT Session 2026-08-08 (round 1)`.
+- Round 1 (lane-label restructure + scroll model) and round 2 (collapse approach) are recorded in CR §8.
 
 ## Open Decisions
 
-None — the collapse extension was approved as a single change set.
+None.

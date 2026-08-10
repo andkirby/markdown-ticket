@@ -1,9 +1,11 @@
 @layer components {
+  /* Tray wraps the icon-button group. Height derives from the --sz-control
+     token + the 2px padding so there is no overhang (old 2.25rem left a gap). */
   .view-mode-switcher {
     display: inline-flex;
     align-items: center;
     width: max-content;
-    height: 2.25rem;
+    height: calc(var(--sz-control) + 4px);
     gap: 2px;
     padding: 2px;
     border-radius: var(--radius-input);
@@ -11,18 +13,27 @@
     font-size: var(--fs-xs);
   }
 
+  /* Square icon-button hit target — tokenized via --sz-control. The glyph
+     inside is --sz-icon (16px), the canonical lucide glyph size. */
   .view-mode-switcher__button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 30px;
-    height: 28px;
+    width: var(--sz-control);
+    height: var(--sz-control);
     /* Inner corners sit 2px inside the tray (matches the 2px padding), so the
        active-button fill nests cleanly within the outer --radius-input. */
     border-radius: calc(var(--radius-input) - 2px);
     color: var(--text-muted);
     font-weight: 600;
     transition: background-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
+  }
+
+  /* The lucide glyph is sized by the --sz-icon token (overrides the size
+     attribute set in TSX; CSS wins over the width/height attributes). */
+  .view-mode-switcher__button svg {
+    width: var(--sz-icon);
+    height: var(--sz-icon);
   }
 
   .view-mode-switcher__button:hover {

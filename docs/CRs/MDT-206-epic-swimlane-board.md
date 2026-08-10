@@ -1,6 +1,6 @@
 ---
 code: MDT-206
-status: In Progress
+status: Implemented
 dateCreated: 2026-08-08T00:00:00.000Z
 type: Feature Enhancement
 priority: Medium
@@ -89,29 +89,29 @@ dependsOn: MDT-205
 
 ### Functional
 
-- [ ] When on the board view, an "Epics" toggle is visible; activating it switches to swimlane mode, deactivating returns to flat.
-- [ ] Board mode choice persists across navigation (board → list → board) and across page reload.
-- [ ] Swimlane mode renders one lane per epic (`level: epic`) plus a trailing "No epic" lane collecting tickets with no `phaseEpic`.
-- [ ] Each lane shows the epic's color dot, title, code, a mini progress bar, and a ticket count.
-- [ ] Each lane header shows the epic's lifecycle state and the available transition:
+- [x] When on the board view, an "Epics" toggle is visible; activating it switches to swimlane mode, deactivating returns to flat.
+- [x] Board mode choice persists across navigation (board → list → board) and across page reload.
+- [x] Swimlane mode renders one lane per epic (`level: epic`) plus a trailing "No epic" lane collecting tickets with no `phaseEpic`.
+- [x] Each lane shows the epic's title, code (via TicketCode), a mini progress bar, and a ticket count. *(UAT round 1: the color dot was removed; the epic key is the color/glyph cue.)*
+- [x] Each lane header shows the epic's lifecycle state and the available transition:
   - `Proposed` → an **Activate** action moves it to `Approved`.
   - `Approved` → a **Close** action moves it to `Implemented` (disabled with a tooltip naming the blocking children when the close guard fails).
   - `Implemented` → shows a **Closed** indicator (no primary action; reopening happens via the ticket viewer).
-- [ ] Epics are never rendered as cards and are never dragged across columns in any board mode.
-- [ ] Columns (status) share the same widths and order across all lanes, so a single status aligns vertically down through every epic.
-- [ ] Dragging a ticket to a lane-column in the same epic updates the ticket's status.
-- [ ] Dragging a ticket toward a lane-column of a different epic does not accept the drop (no highlight, no status change, no epic change).
-- [ ] The flat board's drag-and-drop behavior is unchanged when swimlanes is off.
-- [ ] Attempting to close an epic (via the lane Close action) with open children surfaces a clear error naming the blocking children (via MDT-205's guard).
-- [ ] A "Hide empty" control omits lanes with zero tickets after filters.
-- [ ] "Collapse all" / "Expand all" controls work, and individual lanes can be collapsed/expanded.
-- [ ] Filters, search, density, and theme all apply in swimlane mode exactly as in flat mode.
+- [x] Epics are never rendered as cards and are never dragged across columns in any board mode.
+- [x] Columns (status) share the same widths and order across all lanes, so a single status aligns vertically down through every epic.
+- [x] Dragging a ticket to a lane-column in the same epic updates the ticket's status.
+- [x] Dragging a ticket toward a lane-column of a different epic does not accept the drop (no highlight, no status change, no epic change).
+- [x] The flat board's drag-and-drop behavior is unchanged when swimlanes is off.
+- [x] Attempting to close an epic (via the lane Close action) with open children surfaces a clear error naming the blocking children (via MDT-205's guard).
+- [x] A "Hide empty" control omits lanes with zero tickets after filters.
+- [x] "Collapse all" / "Expand all" controls work, and individual lanes can be collapsed/expanded.
+- [x] Filters, search, density, and theme all apply in swimlane mode exactly as in flat mode.
 
 ### Non-Functional
 
-- [ ] Swimlane mode is a single synchronized-scroll surface (both axes), not per-column scroll.
-- [ ] Epic progress = `(terminal children) / (total children) * 100`, computed live; terminal statuses are `Implemented`, `Rejected`, `Partially Implemented`.
-- [ ] Existing inferred-epic badge rendering continues to work for legacy data; explicit `level: epic` is the primary signal once present.
+- [x] Swimlane mode uses an outer synchronized-scroll surface (both axes) **plus** independent per-column scroll within a per-lane max-height. *(UAT round 1: diverged from the original "not per-column scroll" so a long list in one status does not stretch the lane — see C1.)*
+- [x] Epic progress = `(terminal children) / (total children) * 100`, computed live; terminal statuses are `Implemented`, `Rejected`, `Partially Implemented`.
+- [x] Existing inferred-epic badge rendering continues to work for legacy data; explicit `level: epic` is the primary signal once present.
 
 ### Edge Cases
 
@@ -188,3 +188,25 @@ Extended the epic-lane collapse to match `designs/board-zai/design3.html` §8. E
 **Strict drift/lock:** not used (standard validate + render per stage).
 
 **More implementation required:** no — collapse extension implemented, tested (10 component + 8 E2E + 866 frontend green), and trace-validated.
+
+### UAT Session 2026-08-10 (round 3 — `/epics` route + Default View fix + switcher standardization)
+
+Gave swimlanes a deep-linkable URL, fixed the orphaned Default View setting, and tokenized the switcher sizing. Execution brief: [uat.md](./MDT-206/uat.md).
+
+**Approved changes:**
+- Swimlanes now has a deep-linkable `/prj/:code/epics` route (mirrors `/list`); the board layout is derived from the URL at render time (`effectiveBoardLayoutMode`), avoiding the effect-vs-toggle race.
+- The ViewModeSwitcher swimlanes button is labeled **"Epics"** (matches the route + domain noun).
+- The previously orphaned `getDefaultView()` preference now drives the bare-project-path landing redirect; Settings → Default View offers **Board, Epics, List**. The switcher keeps it in sync (last-used view = landing view).
+- New `--sz-control: 32px` token for square icon-button hit targets; ViewModeSwitcher buttons now use `var(--sz-control)` (was hardcoded 30×28px).
+- ViewModeSwitcher glyphs now use `var(--sz-icon)` = 16px (was hardcoded 14px).
+- Styleguide documents `--sz-control` in the density-slots section.
+
+**Changed requirement IDs:** `BR-1.1` (refined — Epics navigates to `/epics`), `BR-1.3` (new — Default View drives landing), `C7` (new — tokenized control size), `epics_route_is_deep_linkable` + `default_view_drives_landing` (new BDD scenarios).
+
+**Updated workflow documents:** `requirements.md`, `tests.md`, `uat.md`, `src/styleguide.html`; all `*.trace.md` projections re-rendered.
+
+**Strict drift/lock:** not used (standard validate + render per stage).
+
+**Known follow-up (out of scope):** `tests/e2e/navigation/view-mode-switcher.spec.ts` is stale — it references the old single-toggle `board-list-toggle` that no longer exists. Pre-existing breakage, flagged for a separate cleanup.
+
+**More implementation required:** no — implemented, tested (868 frontend + 9 swimlane E2E green), and trace-validated.

@@ -24,7 +24,7 @@ describe('ViewModeSwitcher', () => {
 
       expect(screen.getByTestId('view-mode-switcher')).toHaveAttribute('role', 'group')
       expect(screen.getByTestId('board-mode-flat-toggle')).toHaveAccessibleName('Board')
-      expect(screen.getByTestId('board-mode-epics-toggle')).toHaveAccessibleName('Swimlanes')
+      expect(screen.getByTestId('board-mode-epics-toggle')).toHaveAccessibleName('Epics')
       expect(screen.getByTestId('view-mode-list-toggle')).toHaveAccessibleName('List')
       expect(screen.getByTestId('documents-button')).toHaveAccessibleName('Docs')
       expect(screen.getByTestId('board-mode-flat-toggle')).toHaveTextContent('')

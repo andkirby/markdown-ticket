@@ -126,3 +126,4 @@ nohup.out
 
 # pipeline json
 **/*.pipeline-state.json
+lefthook-local.yml

@@ -12,6 +12,7 @@ import {
   buildDocumentPath,
   ROUTE_PROJECT,
   ROUTE_PROJECT_LIST,
+  ROUTE_PROJECT_EPICS,
   ROUTE_PROJECT_DOCUMENTS,
   ROUTE_TICKET,
   ROUTE_TICKET_SUBDOC,
@@ -30,6 +31,10 @@ describe('MDT-184: routes.ts — pattern constants', () => {
 
   it('defines ROUTE_PROJECT_LIST pattern', () => {
     expect(ROUTE_PROJECT_LIST).toBe('/prj/:projectCode/list')
+  })
+
+  it('defines ROUTE_PROJECT_EPICS pattern', () => {
+    expect(ROUTE_PROJECT_EPICS).toBe('/prj/:projectCode/epics')
   })
 
   it('defines ROUTE_PROJECT_DOCUMENTS pattern', () => {
@@ -57,6 +62,10 @@ describe('MDT-184: routes.ts — builder functions', () => {
 
     it('builds list view path', () => {
       expect(buildProjectPath('MDT', 'list')).toBe('/prj/MDT/list')
+    })
+
+    it('builds epics view path', () => {
+      expect(buildProjectPath('MDT', 'epics')).toBe('/prj/MDT/epics')
     })
 
     it('builds documents view path', () => {

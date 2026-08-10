@@ -37,6 +37,7 @@ export function routePatternToRegex(pattern: string): RegExp {
 
 export const ROUTE_PROJECT = '/prj/:projectCode' as const
 export const ROUTE_PROJECT_LIST = '/prj/:projectCode/list' as const
+export const ROUTE_PROJECT_EPICS = '/prj/:projectCode/epics' as const
 export const ROUTE_PROJECT_DOCUMENTS = '/prj/:projectCode/documents' as const
 export const ROUTE_PROJECT_DOCUMENTS_WILDCARD = '/prj/:projectCode/documents/*' as const
 export const ROUTE_TICKET = '/prj/:projectCode/ticket/:ticketKey' as const
@@ -61,10 +62,12 @@ export function isTraceGraphHash(hash: string): boolean {
 
 // ── Builders (derive from pattern constants via generatePath) ─────────────
 
-export function buildProjectPath(projectCode: string, view: 'board' | 'list' | 'documents' = 'board'): string {
+export function buildProjectPath(projectCode: string, view: 'board' | 'list' | 'epics' | 'documents' = 'board'): string {
   switch (view) {
     case 'list':
       return generatePath(ROUTE_PROJECT_LIST, { projectCode })
+    case 'epics':
+      return generatePath(ROUTE_PROJECT_EPICS, { projectCode })
     case 'documents':
       return generatePath(ROUTE_PROJECT_DOCUMENTS, { projectCode })
     default:
