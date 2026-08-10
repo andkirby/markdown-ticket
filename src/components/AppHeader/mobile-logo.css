@@ -1,34 +1,30 @@
-/* MobileLogo — monochrome wordmark rendered as a CSS mask so the colour is
-   driven entirely by the theme-aware --logo-fg token (deep-blue ink in light
-   mode, soft light-blue in dark). One asset, recoloured via CSS. */
+/* MobileLogo — logo silhouette rendered as a CSS mask so the colour is an
+   accent tint of primary: --primary-text (indigo in light mode, lighter
+   indigo in dark — the same token used for indigo TEXT on surfaces, so it
+   stays legible on both themes; bare --primary is too dark in dark mode). The
+   asset is a blue ticket-stub with the "#" glyph and "MDT" mark punched out as
+   transparent holes; the mask paints the whole silhouette in one uniform
+   colour. One asset, recoloured via CSS. */
 
 @layer components {
   .app-logo {
-    /* h-9 (2.25rem / 36px) display height; the 2x asset (72px) provides retina
+    /* h-9 (2.25rem / 36px) display height; the 2x-class asset provides retina
        sharpness. A masked <span> has no intrinsic size, so the box must be
        sized explicitly: height drives the layout, and aspect-ratio derives the
-       width from the asset's 128:72 (16:9) proportions. display: block (not
+       width from the asset's 111:100 proportions. display: block (not
        inline-block) avoids the baseline/line-box shift — the element box is
        exactly 36px tall so the parent flex row (items-center) centres it. */
     @apply h-9 w-auto;
-    aspect-ratio: 16 / 9;
+    aspect-ratio: 111 / 100;
     display: block;
-    background-color: var(--logo-fg);
-    mask-image: url('/logo-mdt-simple.webp');
+    background-color: var(--primary-text);
+    mask-image: url('/logo_hash.webp');
     mask-repeat: no-repeat;
     mask-position: center;
     mask-size: contain;
-    -webkit-mask-image: url('/logo-mdt-simple.webp');
+    -webkit-mask-image: url('/logo_hash.webp');
     -webkit-mask-repeat: no-repeat;
     -webkit-mask-position: center;
     -webkit-mask-size: contain;
-  }
-
-  /* Respect users who reduce motion / contrast: keep the mask but ensure the
-     shape is still legible by falling back to the foreground ink token. */
-  @media (prefers-reduced-transparency: reduce) {
-    .app-logo {
-      background-color: oklch(var(--foreground));
-    }
   }
 }
