@@ -33,7 +33,10 @@ export function Header({ children, className }: HeaderProps) {
  * HeaderContent - single-row flex layout
  *
  * Layout:
- * [ leftSection ][ centerSection ] [ rightSection ]
+ * [ leftSection | centerSection ] ← space → [ rightSection ]
+ *
+ * justify-between creates the "virtual divider" — left items align left, right
+ * items align right. Both clusters use --gap-md (1rem) between their children.
  */
 export function HeaderContent({
   leftSection,

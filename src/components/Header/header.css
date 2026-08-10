@@ -10,25 +10,63 @@
   }
 
   .header__container {
-    @apply px-1 sm:px-2 lg:px-2;
+    padding-left: var(--gap-md);
+    padding-right: var(--gap-md);
   }
 
+  /* Single-row header: [left cluster] ← space → [right cluster].
+     justify-between creates the "virtual divider" — left items align left,
+     right items align right, the gap between them absorbs slack. Both clusters
+     use --gap-md (1rem) between their own children. */
   .header__content {
-    @apply flex justify-between h-16 gap-4;
+    @apply flex items-center justify-between h-16;
+    gap: var(--gap-md);
   }
 
-  /* overflow-hidden omitted so the hover-revealed chip strip (MDT-185) can
-     overlay subsequent header elements. The active card truncates via its
-     own min-w-0 + max-w constraints. */
+  /* Left cluster: logo + view switcher + project selector + pin toggle + filter.
+     overflow visible so the hover-revealed chip strip (MDT-185) can overlay
+     subsequent header elements. flex-1 so it absorbs slack; min-w-0 so the
+     project selector can truncate. */
   .header__left {
-    @apply flex items-center gap-2 min-w-0 flex-1;
+    @apply flex items-center min-w-0 flex-1;
+    gap: var(--gap-md);
   }
 
   .header__left-section {
     @apply flex-shrink-0;
   }
 
+  /* Right cluster: auth + sort + hamburger. flex-shrink-0 — takes only what
+     it needs. */
   .header__right {
-    @apply flex items-center gap-3;
+    @apply flex items-center flex-shrink-0;
+    gap: var(--gap-md);
+  }
+
+  /* ── Header pin-rail toggle ──
+     Icon-only toggle placed before the filter search. Same h-9 + border-led
+     treatment as the other header controls. Filled accent = pinned open. */
+  .header__pin-toggle {
+    @apply inline-flex h-9 w-9 items-center justify-center border transition-colors;
+    border-radius: var(--radius-input);
+    border-color: oklch(var(--border));
+    background-color: oklch(var(--background));
+    color: var(--text-muted);
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+  .header__pin-toggle:hover {
+    border-color: var(--border-strong);
+    color: oklch(var(--foreground));
+  }
+  .header__pin-toggle:focus-visible {
+    @apply outline-none ring-1 ring-ring/50;
+  }
+  .header__pin-toggle--pinned {
+    color: oklch(var(--primary));
+    border-color: oklch(var(--primary));
+  }
+  .header__pin-toggle-icon {
+    @apply h-4 w-4;
   }
 }

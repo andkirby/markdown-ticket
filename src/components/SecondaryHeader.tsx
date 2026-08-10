@@ -47,7 +47,7 @@ export const SecondaryHeader: React.FC<SecondaryHeaderProps> = ({
   onOpenFilters,
 }) => {
   return (
-    <div className="flex items-center space-x-1 sm:space-x-4">
+    <div className="secondary-header">
       {/* Sort Controls - desktop only (mobile inside hamburger menu) */}
       {(viewMode === 'board' || viewMode === 'list') && sortPreferences && onSortPreferencesChange && (
         <SortControls

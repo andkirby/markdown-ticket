@@ -51,21 +51,14 @@
   z-index: 30;
 }
 
-/* Collapsed: invisible surface. The 48px box is transparent and transparent to
-   pointer events EXCEPT its children (the toggle button), so it does not block
-   the board column beneath. The box is already full-size — hovering the button
-   reveals the floating surface with ZERO geometry change (no flicker). */
+/* Collapsed: invisible surface — a pure drop-target zone. No visible button
+   (the toggle lives in the header). pointer-events: none on the box, but
+   react-dnd's drop ref still receives programmatic drag events. */
 .pin-rail--collapsed {
   background: transparent;
   border-right: none;
   box-shadow: none;
   pointer-events: none;
-}
-
-/* The toggle button stays interactive even while the collapsed box is
-   pointer-events: none. */
-.pin-rail--collapsed > * {
-  pointer-events: auto;
 }
 
 /* Floating open (unpinned + hovered/dragging): the visible surface fades in.
@@ -101,9 +94,9 @@
   width: 100%;
 }
 
-/* Pin-icon toggle button (rail top in open state; sole content when collapsed).
-   Outline (unpinned) vs filled accent (pinned). Mirrors the project's icon-only
-   button pattern (HamburgerMenu): border-led, transition-colors. */
+/* Pin-icon toggle button — visible only in the OPEN (floating/docked) state,
+   at the rail top. Outline (unpinned) vs filled accent (pinned). Mirrors the
+   project's icon-only button pattern: border-led, transition-colors. */
 .pin-rail__toggle {
   width: 28px;
   height: 28px;
@@ -117,8 +110,7 @@
   cursor: pointer;
   flex-shrink: 0;
   padding: 0;
-  transition: border-color 0.12s ease, color 0.12s ease, background-color 0.12s ease,
-    opacity 0.12s ease;
+  transition: border-color 0.12s ease, color 0.12s ease, background-color 0.12s ease;
 }
 
 .pin-rail__toggle:hover,
@@ -141,19 +133,6 @@
 .pin-rail__toggle-icon {
   width: 14px;
   height: 14px;
-}
-
-/* Collapsed toggle: the button is a normal flex child at the SAME position as
-   when open (centered, rail top) — it does NOT move on reveal. Dimmed at rest
-   (opacity 0.85) so it recedes; solid on hover/focus to signal action. */
-.pin-rail__toggle--collapsed {
-  opacity: 0.85;
-  box-shadow: 0 1px 4px rgb(0 0 0 / 12%);
-}
-
-.pin-rail__toggle--collapsed:hover,
-.pin-rail__toggle--collapsed:focus-visible {
-  opacity: 1;
 }
 
 /* PinItem — 32px square icon chip. */

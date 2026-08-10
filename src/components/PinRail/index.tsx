@@ -6,15 +6,16 @@
  *
  * Three render states (gated by the browser-only `enabled` + `pinned` prefs):
  * - !enabled → renders nothing (0px; feature fully disabled in Settings).
- * - enabled && collapsed → a thin (~28px) strip with a Pin icon button. Always
- *   present when enabled, so content never "jumps" — it smoothly trades width.
- *   The strip is ALSO a drop target, so drag-to-pin works from collapsed.
- * - enabled && open → full 48px rail: pin-icon toggle + items. Visual signals
- *   only (filled accent = pinned); no text label, no drop affordance glyph.
+ * - enabled && collapsed → an invisible drop-target zone (no visible button).
+ *   The collapsed toggle lives in the header (SecondaryHeader) so it never
+ *   collides with content at the top-left corner. The nav exists solely as a
+ *   react-dnd drop target so drag-to-pin works from collapsed.
+ * - enabled && open → full 48px rail: items + an inline pin-icon toggle.
+ *   Visual signals only (filled accent = pinned); no text label.
  *
  * "Open" is true when: pinned (user toggled the pin icon on) OR a drag is in
- * progress (drag-reveal) OR the rail is hovered/focused. When unpinned and the
- * pointer leaves / focus moves away, it auto-collapses back to the strip.
+ * progress (drag-reveal) OR the rail is hovered/focus. When unpinned and the
+ * pointer leaves / focus moves away, it auto-collapses back to the drop zone.
  *
  * Drop target: reuses the board's 'ticket' drag type. On drop, onPin(ticket)
  * builds a PinItem using the current project code (provided by App, since the
@@ -103,7 +104,10 @@ export function PinRail({
   // - unpinned + nothing → collapsed (0-width + floating pin button).
   const transientOpen = !pinned && (hovered || (isDragging && canWrite))
 
-  // Collapsed: 0-width container + floating pin button. Still a drop target.
+  // Collapsed: invisible drop-target zone only. The toggle lives in the header
+  // (SecondaryHeader) so it never collides with content at the top-left corner.
+  // This nav exists solely so react-dnd has a drop target when the rail is
+  // collapsed — it renders no visible children.
   if (!pinned && !transientOpen) {
     return (
       <nav
@@ -112,20 +116,7 @@ export function PinRail({
         aria-label="Pinned tickets (collapsed)"
         data-testid="pin-rail"
         data-state="collapsed"
-      >
-        <button
-          type="button"
-          className="pin-rail__toggle pin-rail__toggle--collapsed"
-          aria-label="Show pinned tickets"
-          aria-pressed={false}
-          data-testid="pin-rail-toggle"
-          onClick={onTogglePinned}
-          onMouseEnter={() => setHovered(true)}
-          onFocus={() => setHovered(true)}
-        >
-          <Pin className="pin-rail__toggle-icon" aria-hidden="true" />
-        </button>
-      </nav>
+      />
     )
   }
 
