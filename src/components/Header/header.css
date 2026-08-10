@@ -1,8 +1,11 @@
 @layer components {
   .header {
-    /* v3 Doc 1 Pr.1: border-led depth — header is FLAT (not a floating layer), no shadow. */
+    /* v3 Doc 1 Pr.1: border-led depth — header is FLAT (not a floating layer),
+       no shadow, no fill: transparent so the page --background shows through
+       and the rail card's --bg-elevated surface separates it from the chrome.
+       backdrop-blur survives the transparency. */
     @apply sticky top-0 z-50 backdrop-blur-xl border-b;
-    background-color: var(--bg-elevated);
+    background-color: transparent;
     border-color: oklch(var(--border));
   }
 

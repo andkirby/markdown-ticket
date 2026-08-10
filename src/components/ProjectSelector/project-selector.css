@@ -180,15 +180,33 @@
      other h-9 inputs (board filter, logo) instead of the taller min-h-12
      used by the multi-line browser-panel cards. The single line means the
      project description has no room, so it is hidden here (the browser panel
-     still shows it). The header card is borderless — the surface fill alone
-     separates it from the chrome. */
+     still shows it). */
   .project-card--rail {
-    @apply min-w-[100px] sm:min-w-[150px] max-w-[280px] flex-1 h-9;
+    @apply min-w-[100px] sm:min-w-[150px] max-w-[150px] sm:max-w-[280px] flex-1 h-9;
     /* h-9 (fixed) overrides the base .project-card min-h-12. */
     min-height: 0;
-    /* border: none sets border-style:none, which hides the border regardless of
-       the active/hover border-color rules (they only set color, not style). */
-    border: none;
+  }
+
+  /* The rail active card reads as the same surface as a ticket card — flat
+     --bg-elevated fill, transparent border turning --border-strong on hover.
+     These compound selectors outweigh the accent-tint active rules above
+     (.project-card[data-active="true"]…) and the default .project-card--rail
+     bg, so the card matches the ticket card exactly. */
+  .project-card--rail,
+  .project-card--rail[data-active="true"],
+  .project-card--rail[data-active="true"][data-accent-enabled="true"][data-accent-style="gradient"],
+  .dark .project-card--rail[data-active="true"][data-accent-enabled="true"][data-accent-style="gradient"] {
+    background-color: var(--bg-elevated);
+    border: 1px solid transparent;
+  }
+  .project-card--rail:hover {
+    border-color: var(--border-strong);
+  }
+
+  /* Reserve room on the right for the overlay fav star (top-1 right-1, ~24px
+     footprint) so the truncated title never sits under it. */
+  .project-card--rail .project-card__content {
+    padding-right: 1.25rem;
   }
 
   .project-card--rail .project-card__desc {
