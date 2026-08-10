@@ -389,7 +389,7 @@ test.describe('Project Selector - Responsive Behavior', () => {
 })
 
 test.describe('Project Selector - Hover-Reveal (MDT-185)', () => {
-  test('chips are hidden by default when above threshold, chevron hint shown', async ({ page, e2eContext }) => {
+  test('chips are hidden by default when above threshold', async ({ page, e2eContext }) => {
     const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
 
     // Create 5+ extra projects to exceed the collapse threshold (3)
@@ -405,10 +405,6 @@ test.describe('Project Selector - Hover-Reveal (MDT-185)', () => {
     // Inactive chips are ALWAYS hidden by default (MDT-185)
     const inactiveCards = page.locator(selectorSelectors.inactiveProjectCard)
     await expect(inactiveCards).toHaveCount(0)
-
-    // The hover affordance chevron should be visible on the active card
-    const hint = page.locator('[data-testid="rail-expand-hint"]')
-    await expect(hint).toBeVisible()
   })
 
   test('hovering the active card reveals chips inline to the right', async ({ page, e2eContext }) => {

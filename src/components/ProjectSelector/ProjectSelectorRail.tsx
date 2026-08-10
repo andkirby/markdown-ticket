@@ -51,7 +51,6 @@ export interface ProjectSelectorRailProps {
  * @testid project-selector-rail — Rail container
  * @testid project-selector-rail-active — Active project card slot
  * @testid collapsed-chips-overlay — Hover-revealed inactive chips strip
- * @testid rail-expand-hint — Chevron hint on the active card edge
  */
 const ProjectSelectorRail: React.FC<ProjectSelectorRailProps> = ({
   projects,
@@ -107,13 +106,13 @@ const ProjectSelectorRail: React.FC<ProjectSelectorRailProps> = ({
 
   return (
     <div
-      className="flex items-center gap-2"
+      className="project-selector-rail"
       data-testid="project-selector-rail"
     >
       {/* Active project card (always visible, click to open browser) */}
       {activeProject && (
         <div
-          className="relative"
+          className="project-selector-rail-active"
           data-testid="project-selector-rail-active"
           onClick={handleActiveCardClick}
           onPointerEnter={hasChips ? () => setIsExpanded(true) : undefined}
@@ -130,17 +129,6 @@ const ProjectSelectorRail: React.FC<ProjectSelectorRailProps> = ({
             autocolor={preferences.autocolor}
             hasAccent={!!activeProject.selectorState.accent}
           />
-
-          {/* Hover affordance: hint that more projects reveal on hover */}
-          {hasChips && !isExpanded && (
-            <span
-              className="project-expand-hint"
-              aria-hidden="true"
-              data-testid="rail-expand-hint"
-            >
-              ‹
-            </span>
-          )}
 
           {/* Inactive chips — revealed to the right of the active card on hover (MDT-185) */}
           {hasChips && isExpanded && (

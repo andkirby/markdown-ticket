@@ -18,6 +18,15 @@
     transition: background-color 0.15s ease-out, border-color 0.15s ease-out;
   }
 
+  /* Rail container — the active card + hover-revealed chips strip. */
+  .project-selector-rail {
+    @apply flex items-center gap-2;
+  }
+  /* Wrapper around the active card; anchors the hover-revealed chips overlay. */
+  .project-selector-rail-active {
+    @apply relative;
+  }
+
   /* ── Project Card (rail active + panel cards) ── */
 
   .project-card {
@@ -314,25 +323,6 @@
 
   /* ── Collapsed Chips Overlay (MDT-185) ── */
   /* Hover-reveal strip shown to the right of the active card, inline in the header. */
-
-  /* Subtle hover affordance on the active card edge */
-  .project-expand-hint {
-    position: absolute;
-    top: 50%;
-    right: -4px;
-    transform: translateY(-50%);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 14px;
-    height: 14px;
-    font-size: 14px;
-    line-height: 1;
-    color: var(--project-card-title-color);
-    opacity: 0.4;
-    pointer-events: none;
-    transition: opacity 120ms ease-out;
-  }
 
   /* Overlay container — transparent inline strip to the right of the active
      card. Absolutely positioned (not portaled): a DOM child of the active card
