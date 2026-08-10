@@ -294,6 +294,14 @@ test.describe('Epic swimlane board (MDT-206)', () => {
     await expect(label).toHaveAttribute('aria-expanded', 'false')
     await expect(label).toHaveCSS('flex-direction', 'row')
 
+    // In the collapsed bar, all elements are vertically centered.
+    const labelAlign = await label.evaluate(el => getComputedStyle(el).alignItems)
+    expect(labelAlign).toBe('center')
+    const keyAlign = await page
+      .locator(swimlaneSelectors.laneKeyByKey(scenario.alphaEpic))
+      .evaluate(el => getComputedStyle(el).alignSelf)
+    expect(keyAlign).toBe('center')
+
     await page.click(swimlaneSelectors.expandAll)
     await expect(label).toHaveAttribute('aria-expanded', 'true')
     await expect(label).toHaveCSS('flex-direction', 'column')
