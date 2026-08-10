@@ -33,6 +33,9 @@ MDT-206 adds an epic swimlane board layout selected from the existing app header
 | Epics URL | Swimlanes has a deep-linkable `/prj/:code/epics` route, mirroring `/list`. The layout is derived from the URL at render time. | A localStorage-only layout with no URL; or `/swimlanes` (internal name users never see). | `/epics` matches the user-facing label and the domain noun (the lane axis is epics). |
 | Default View | The Settings → Default View preference (Board, Epics, List) is the authoritative source for the bare-project-path landing redirect; the switcher keeps it in sync. | A write-only preference ignored by routing, or a separate `lastBoardListMode` key that drifts. | "Default View" = "the view I land on", which is what users expect. |
 | Control sizing | Icon-button controls use the `--sz-control` (32px) token for the hit target and `--sz-icon` (16px) for the glyph. | Hardcoded px per component (30×28px button, 14px icon). | One tokenized standard, documented in the styleguide. |
+| Collapse default + persistence | All lanes are collapsed by default; the expanded-lane set persists to localStorage across reloads. | Expanded-by-default with no persistence, or a collapsed-set that grows stale. | A compact first-load view; the user's expand choices survive reload. |
+| Show closed | A toolbar toggle (off by default) hides epic lanes whose epic is Implemented so the board focuses on active work. | Always showing closed epics, or hiding them with no way to reveal. | Active work is the default; closed epics are opt-in. |
+| Collapsed key-before-title | In the collapsed bar, the epic key block sits before the title on a single line. | Title-then-key inside a column, forcing two lines. | A scannable one-line summary per collapsed epic. |
 
 ---
 Use `requirements.trace.md` for canonical requirement rows and route summaries.

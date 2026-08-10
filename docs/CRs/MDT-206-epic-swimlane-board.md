@@ -211,3 +211,21 @@ Gave swimlanes a deep-linkable URL, fixed the orphaned Default View setting, and
 **Known follow-up (out of scope):** `tests/e2e/navigation/view-mode-switcher.spec.ts` is stale — it references the old single-toggle `board-list-toggle` that no longer exists. Pre-existing breakage, flagged for a separate cleanup.
 
 **More implementation required:** no — implemented, tested (868 frontend + 9 swimlane E2E green), and trace-validated.
+
+### UAT Session 2026-08-10 (round 4 — collapse persistence, default-collapsed, Show closed, key-before-title)
+
+Four collapse/visibility refinements. Execution brief: [uat.md](./MDT-206/uat.md).
+
+**Approved changes:**
+- Collapse/expand state now persists to `localStorage` (`mdt-settings-swimlane-expanded-lanes`) across reloads. The set tracks **expanded** lanes (inverted from the prior collapsed-set).
+- All lanes are **collapsed by default** on first load (empty expanded set).
+- New **"Show closed"** toolbar toggle (off by default): when off, epic lanes whose epic is `Implemented` are hidden so the board focuses on active work. The `__none` lane is never hidden by this filter.
+- In the collapsed layout, the epic key block now sits **before the title** on a single line (was title-then-key inside the title column).
+
+**Changed requirement IDs:** `BR-5.1` (refined — persistence + default-collapsed), `BR-5.2` (new — Show closed toggle), `collapse_state_persists` + `show_closed_hides_implemented_lanes` (new BDD scenarios).
+
+**Updated workflow documents:** `requirements.md`, `tests.md`, `uat.md`, design surface `swimlane-board.spec.md`; all `*.trace.md` projections re-rendered.
+
+**Strict drift/lock:** not used.
+
+**More implementation required:** no — implemented, tested (877 frontend + 9 swimlane E2E green), and trace-validated.

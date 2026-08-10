@@ -13,7 +13,32 @@ import { Button } from '../ui/index'
 import {
   buildSwimlaneModel,
   canDropTicketInLane,
+  filterLanesByVisibility,
 } from './helpers'
+
+const EXPANDED_LANES_KEY = 'mdt-settings-swimlane-expanded-lanes'
+
+function readExpandedLanes(): Set<string> {
+  try {
+    const raw = localStorage.getItem(EXPANDED_LANES_KEY)
+    if (!raw)
+      return new Set()
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? new Set(parsed.filter((v: unknown): v is string => typeof v === 'string')) : new Set()
+  }
+  catch {
+    return new Set()
+  }
+}
+
+function writeExpandedLanes(keys: Set<string>): void {
+  try {
+    localStorage.setItem(EXPANDED_LANES_KEY, JSON.stringify([...keys]))
+  }
+  catch {
+    // Non-browser callers only need in-memory state.
+  }
+}
 
 interface SwimlaneBoardProps {
   tickets: BoardTicket[]
@@ -162,26 +187,39 @@ export function SwimlaneBoard({
 }: SwimlaneBoardProps) {
   const [hideEmpty, setHideEmpty] = useState(false)
   const [showBadges, setShowBadges] = useState(false)
-  const [collapsedLaneKeys, setCollapsedLaneKeys] = useState<Set<string>>(() => new Set())
+  const [showClosed, setShowClosed] = useState(false)
+  // Default is collapsed-by-default: the set tracks EXPANDED lanes (the ones the
+  // user explicitly opened), persisted to localStorage. An empty set = all collapsed.
+  const [expandedLaneKeys, setExpandedLaneKeys] = useState<Set<string>>(() => readExpandedLanes())
   const { lanes } = useMemo(() => buildSwimlaneModel(tickets, laneSourceTickets), [laneSourceTickets, tickets])
   const epicKeys = useMemo(() => new Set(lanes.filter(lane => lane.epic).map(lane => lane.key)), [lanes])
-  const visibleLanes = hideEmpty
-    ? lanes.filter(lane => lane.isNone || lane.tickets.length > 0)
-    : lanes
+  const visibleLanes = useMemo(
+    () => filterLanesByVisibility(lanes, { hideEmpty, showClosed }),
+    [lanes, hideEmpty, showClosed],
+  )
 
   const toggleLane = (laneKey: string): void => {
-    setCollapsedLaneKeys((prev) => {
+    setExpandedLaneKeys((prev) => {
       const next = new Set(prev)
       if (next.has(laneKey))
         next.delete(laneKey)
       else
         next.add(laneKey)
+      writeExpandedLanes(next)
       return next
     })
   }
 
-  const collapseAll = (): void => setCollapsedLaneKeys(new Set(lanes.map(lane => lane.key)))
-  const expandAll = (): void => setCollapsedLaneKeys(new Set())
+  const collapseAll = (): void => {
+    const next = new Set<string>()
+    writeExpandedLanes(next)
+    setExpandedLaneKeys(next)
+  }
+  const expandAll = (): void => {
+    const next = new Set(lanes.map(lane => lane.key))
+    writeExpandedLanes(next)
+    setExpandedLaneKeys(next)
+  }
 
   return (
     <div className="swimlane-board" data-testid="swimlane-board">
@@ -206,6 +244,16 @@ export function SwimlaneBoard({
           />
           <span>Show badges</span>
         </label>
+        <label className="swimlane-board__toggle">
+          <input
+            type="checkbox"
+            className="settings-checkbox"
+            checked={showClosed}
+            onChange={event => setShowClosed(event.currentTarget.checked)}
+            data-testid="swimlane-show-closed"
+          />
+          <span>Show closed</span>
+        </label>
         <Button type="button" variant="ghost" size="sm" onClick={collapseAll} data-testid="swimlane-collapse-all">Collapse all</Button>
         <Button type="button" variant="ghost" size="sm" onClick={expandAll} data-testid="swimlane-expand-all">Expand all</Button>
         <span className="swimlane-board__lane-count" data-testid="swimlane-lane-count">
@@ -227,7 +275,7 @@ export function SwimlaneBoard({
         </div>
 
         {visibleLanes.map((lane) => {
-          const isCollapsed = collapsedLaneKeys.has(lane.key)
+          const isCollapsed = !expandedLaneKeys.has(lane.key)
           const blockers = lane.epic ? getBlockers(lane.tickets) : []
           const lifecycle = lane.epic ? getLifecycleLabel(lane.epic) : null
           const closeBlocked = lane.epic?.status === CRStatus.APPROVED && blockers.length > 0
@@ -257,21 +305,21 @@ export function SwimlaneBoard({
                 data-testid="swimlane-lane-label"
                 data-lane-key={lane.key}
               >
+                {!lane.isNone && lane.epic && (
+                  <button
+                    type="button"
+                    className="swimlane-board__lane-key"
+                    aria-label={`Open epic ticket ${lane.key} ${lane.title}`}
+                    title={`Open ${lane.key}`}
+                    onClick={event => stopAndRun(event, () => onTicketEdit(lane.epic as Ticket))}
+                    data-testid="swimlane-lane-key"
+                    data-lane-key={lane.key}
+                  >
+                    <TicketCode code={lane.key} ticket={lane.epic} />
+                  </button>
+                )}
                 <div className="swimlane-board__lane-title">
                   <strong className="swimlane-board__lane-title-text">{lane.title}</strong>
-                  {!lane.isNone && lane.epic && (
-                    <button
-                      type="button"
-                      className="swimlane-board__lane-key"
-                      aria-label={`Open epic ticket ${lane.key} ${lane.title}`}
-                      title={`Open ${lane.key}`}
-                      onClick={event => stopAndRun(event, () => onTicketEdit(lane.epic as Ticket))}
-                      data-testid="swimlane-lane-key"
-                      data-lane-key={lane.key}
-                    >
-                      <TicketCode code={lane.key} ticket={lane.epic} />
-                    </button>
-                  )}
                 </div>
 
                 <div className="swimlane-board__lane-meta">

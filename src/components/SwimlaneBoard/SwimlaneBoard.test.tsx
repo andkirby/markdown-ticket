@@ -1,6 +1,7 @@
 import type { Ticket } from '../../types'
+import { CRStatus } from '@mdt/domain-contracts'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it, mock } from 'bun:test'
+import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
@@ -74,6 +75,10 @@ function renderBoard(overrides: { tickets?: Ticket[], onTicketEdit?: (t: Ticket)
 }
 
 describe('SwimlaneBoard lane label (MDT-206 UAT round)', () => {
+  beforeEach(() => {
+    localStorage.clear()
+  })
+
   afterEach(() => {
     cleanup()
   })
@@ -141,42 +146,72 @@ describe('SwimlaneBoard lane label (MDT-206 UAT round)', () => {
   })
 
   // --- Collapse approach (design3 §8): whole-label toggle + horizontal reflow ---
+  // Default is now collapsed-by-default (UAT round 4). Tests that need an
+  // expanded lane persist {} to localStorage first, or click to expand.
+
+  it('collapses all lanes by default on first load', () => {
+    const { container } = renderBoard()
+    const lanes = container.querySelectorAll('[data-testid="swimlane-lane"]')
+    expect(lanes.length).toBeGreaterThan(0)
+    lanes.forEach((lane) => {
+      expect(lane.classList.contains('swimlane-board__lane--collapsed')).toBe(true)
+    })
+  })
+
+  it('persists collapsed/expanded lane state to localStorage', () => {
+    const { container } = renderBoard()
+    const label = container.querySelector('[data-testid="swimlane-lane-label"][data-lane-key="MDT-100"]') as HTMLElement
+    // default-collapsed; expand it
+    fireEvent.click(label)
+    const stored = localStorage.getItem('mdt-settings-swimlane-expanded-lanes')
+    expect(stored).not.toBeNull()
+    const expanded = JSON.parse(stored!) as string[]
+    expect(expanded).toContain('MDT-100')
+  })
+
+  it('restores expanded lanes from localStorage on load', () => {
+    localStorage.setItem('mdt-settings-swimlane-expanded-lanes', JSON.stringify(['MDT-100']))
+    const { container } = renderBoard()
+    const lane = container.querySelector('[data-testid="swimlane-lane"][data-lane-key="MDT-100"]')
+    expect(lane?.classList.contains('swimlane-board__lane--collapsed')).toBe(false)
+  })
 
   it('toggles collapse when the whole lane label is clicked (not just the chevron)', () => {
     const { container } = renderBoard()
     const label = container.querySelector('[data-testid="swimlane-lane-label"]') as HTMLElement
     expect(label).not.toBeNull()
     const lane = label.closest('[data-testid="swimlane-lane"]')
-    expect(lane?.classList.contains('swimlane-board__lane--collapsed')).toBe(false)
-
-    fireEvent.click(label)
+    // starts collapsed (default); first click expands
     expect(lane?.classList.contains('swimlane-board__lane--collapsed')).toBe(true)
 
     fireEvent.click(label)
     expect(lane?.classList.contains('swimlane-board__lane--collapsed')).toBe(false)
+
+    fireEvent.click(label)
+    expect(lane?.classList.contains('swimlane-board__lane--collapsed')).toBe(true)
   })
 
   it('carries the lane label as a button role with aria-expanded reflecting collapse state', () => {
     const { container } = renderBoard()
     const label = container.querySelector('[data-testid="swimlane-lane-label"]') as HTMLElement
-    // role=button container (not a <button> element) so real <button> children
-    // stay HTML-valid inside it.
     expect(label.getAttribute('role')).toBe('button')
     expect(label.tabIndex).toBe(0)
-    expect(label.getAttribute('aria-expanded')).toBe('true')
+    // default-collapsed
+    expect(label.getAttribute('aria-expanded')).toBe('false')
 
     fireEvent.click(label)
-    expect(label.getAttribute('aria-expanded')).toBe('false')
+    expect(label.getAttribute('aria-expanded')).toBe('true')
   })
 
-  it('hides the lane body when collapsed', () => {
+  it('hides the lane body when collapsed (default state)', () => {
     const { container } = renderBoard()
-    const label = container.querySelector('[data-testid="swimlane-lane-label"]') as HTMLElement
     const body = container.querySelector('[data-testid="swimlane-lane-body"]') as HTMLElement
-    expect(body.hidden).toBe(false)
-
-    fireEvent.click(label)
+    // default-collapsed
     expect(body.hidden).toBe(true)
+
+    const label = container.querySelector('[data-testid="swimlane-lane-label"]') as HTMLElement
+    fireEvent.click(label)
+    expect(body.hidden).toBe(false)
   })
 
   it('does not toggle collapse when an interactive child (key, lifecycle, open-epic) is clicked', () => {
@@ -198,5 +233,49 @@ describe('SwimlaneBoard lane label (MDT-206 UAT round)', () => {
     const openEpic = screen.getByTestId('swimlane-open-epic')
     fireEvent.click(openEpic)
     expect(lane?.classList.contains('swimlane-board__lane--collapsed')).toBe(laneBefore)
+  })
+
+  // --- UAT round 4: Show closed toggle + collapsed key-before-title ---
+
+  it('hides closed (Implemented) epic lanes by default and shows them when Show closed is on', () => {
+    const closedEpic = ticket({
+      code: 'MDT-200',
+      title: 'Closed Epic',
+      status: CRStatus.IMPLEMENTED,
+      level: 'epic',
+      priority: 'Medium',
+    })
+    const closedChild = ticket({
+      code: 'MDT-201',
+      title: 'Closed child',
+      status: CRStatus.IMPLEMENTED,
+      phaseEpic: 'MDT-200',
+      priority: 'Medium',
+    })
+    const all = [closedEpic, closedChild]
+    const { container } = renderBoard({ tickets: all })
+
+    // Closed epic lane is hidden by default.
+    expect(container.querySelector('[data-testid="swimlane-lane"][data-lane-key="MDT-200"]')).toBeNull()
+
+    // Toggle Show closed on.
+    fireEvent.click(screen.getByTestId('swimlane-show-closed'))
+    expect(container.querySelector('[data-testid="swimlane-lane"][data-lane-key="MDT-200"]')).not.toBeNull()
+  })
+
+  it('places the epic key block before the title in the collapsed layout (single line)', () => {
+    const { container } = renderBoard()
+    // Default is collapsed, so the collapsed layout is active.
+    const label = container.querySelector('[data-testid="swimlane-lane-label"][data-lane-key="MDT-100"]') as HTMLElement
+    const key = label.querySelector('[data-testid="swimlane-lane-key"]') as HTMLElement
+    const title = label.querySelector('.swimlane-board__lane-title-text') as HTMLElement
+
+    // Both exist and the key precedes the title in DOM order.
+    expect(key).not.toBeNull()
+    expect(title).not.toBeNull()
+    const keyPos = Array.prototype.indexOf.call(label.querySelectorAll('*'), key)
+    const titlePos = Array.prototype.indexOf.call(label.querySelectorAll('*'), title)
+    // In the collapsed layout, the key comes before the title text.
+    expect(keyPos).toBeLessThan(titlePos)
   })
 })

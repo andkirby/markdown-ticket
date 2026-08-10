@@ -124,3 +124,31 @@ export function buildSwimlaneModel(
 export function canDropTicketInLane(ticket: Pick<Ticket, 'phaseEpic'>, laneKey: string, epicKeys: Set<string>): boolean {
   return getTicketLaneKey(ticket, epicKeys) === laneKey
 }
+
+export interface LaneVisibilityOptions {
+  hideEmpty: boolean
+  showClosed: boolean
+}
+
+/**
+ * Apply the toolbar visibility filters to the lane list:
+ * - `hideEmpty`: omit lanes with zero tickets (the `__none` lane is never hidden).
+ * - `showClosed`: when false, omit epic lanes whose epic is in a terminal
+ *   (Implemented) status — closed epics are hidden by default so the board
+ *   focuses on active work. The `__none` lane is never hidden by this filter.
+ */
+export function filterLanesByVisibility(
+  lanes: SwimlaneLane[],
+  options: LaneVisibilityOptions,
+): SwimlaneLane[] {
+  const { hideEmpty, showClosed } = options
+  return lanes.filter((lane) => {
+    if (lane.isNone)
+      return true
+    if (!showClosed && lane.epic?.status === CRStatus.IMPLEMENTED)
+      return false
+    if (hideEmpty && lane.tickets.length === 0)
+      return false
+    return true
+  })
+}

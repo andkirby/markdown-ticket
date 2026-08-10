@@ -146,7 +146,8 @@
   /* Collapsed: the label becomes a horizontal full-width summary row (design3
      `lane--collapsed .lane-label`). The vertical 220px column layout is dropped
      in favor of a single-line bar that spans the board width, so many epics
-     can be scanned at once. */
+     can be scanned at once. The epic key sits before the title on the same
+     line. */
   .swimlane-board__lane--collapsed .swimlane-board__lane-label {
     flex-direction: row;
     align-items: center;
@@ -156,6 +157,12 @@
     max-height: none;
     gap: 10px;
     padding: 6px 12px;
+  }
+
+  /* In the collapsed bar, the key is a fixed-width inline block before the
+     title, keeping the lane summary on a single line. */
+  .swimlane-board__lane--collapsed .swimlane-board__lane-key {
+    flex: 0 0 auto;
   }
 
   .swimlane-board__lane--collapsed .swimlane-board__lane-title {
