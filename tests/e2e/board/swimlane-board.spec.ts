@@ -288,4 +288,28 @@ test.describe('Epic swimlane board (MDT-206)', () => {
     await expect(label).toHaveAttribute('aria-expanded', 'false')
     await expect(label).toHaveCSS('flex-direction', 'row')
   })
+
+  test('UAT: /epics is a deep-linkable route and toggling Epics updates the URL', async ({ page, e2eContext }) => {
+    const scenario = await createEpicProject(e2eContext.projectFactory)
+
+    // Toggling Epics from the board navigates to the /epics URL.
+    await page.goto(`/prj/${scenario.projectCode}`)
+    await waitForBoardReady(page)
+    await page.click(swimlaneSelectors.modeToggle)
+    await expect(page).toHaveURL(new RegExp(`/prj/${scenario.projectCode}/epics`))
+    await expect(page.locator(swimlaneSelectors.board)).toBeVisible()
+    await expect(page.locator(swimlaneSelectors.laneByKey(scenario.alphaEpic))).toBeVisible()
+
+    // The /epics URL is a deep link: navigating directly renders the swimlane board.
+    await page.goto(`/prj/${scenario.projectCode}/epics`)
+    await expect(page.locator(swimlaneSelectors.board)).toBeVisible()
+    await expect(page.locator(swimlaneSelectors.laneByKey(scenario.alphaEpic))).toBeVisible()
+
+    // Toggling back to flat board returns to the bare project URL.
+    await page.click(swimlaneSelectors.flatModeToggle)
+    await expect(page).toHaveURL(new RegExp(`/prj/${scenario.projectCode}/?$`))
+    // Flat board renders (swimlane board is gone).
+    await expect(page.locator(boardSelectors.board)).toBeVisible()
+    await expect(page.locator(swimlaneSelectors.board)).toHaveCount(0)
+  })
 })

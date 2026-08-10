@@ -5,16 +5,6 @@
   },
   "requirements": [
     {
-      "id": "BR-1.1",
-      "kind": "behavior",
-      "text": "WHEN the user is on the board view, the system shall expose an Epics board-mode control that switches between flat and swimlane layouts.",
-      "sourceRef": "MDT-206 Section 4 Functional",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:in-ticket"
-      ]
-    },
-    {
       "id": "BR-1.2",
       "kind": "behavior",
       "text": "WHEN the board mode is changed, the system shall persist the selected mode across board navigation and page reloads.",
@@ -195,6 +185,27 @@
       "text": "When a lane is collapsed, its label shall reflow from the vertical sticky column to a horizontal full-width summary bar (title, key, status, count, progress, and actions on one row) and the lane body shall be hidden, so multiple collapsed epics scan as a compact list.",
       "sourceRef": "CR:MDT-206",
       "routePolicy": "tests"
+    },
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "WHEN the user is on the board view, the system shall expose an Epics board-mode control that switches between flat and swimlane layouts. Selecting Epics navigates to the deep-linkable /epics route; selecting Board returns to the bare project path.",
+      "sourceRef": "CR:MDT-206",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.3",
+      "kind": "behavior",
+      "text": "WHEN a user navigates to a project's bare path, the system shall redirect to their chosen Default View (Board, Epics, or List) so the landing view matches the user's preference.",
+      "sourceRef": "CR:MDT-206",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C7",
+      "kind": "constraint",
+      "text": "Icon-button controls (ViewModeSwitcher) shall use the --sz-control token (32px) for their hit-target box and --sz-icon (16px) for the glyph, instead of hardcoded px, so control sizing is a tokenized standard documented in the styleguide.",
+      "sourceRef": "CR:MDT-206",
+      "routePolicy": "tests"
     }
   ],
   "scenarios": [
@@ -321,6 +332,28 @@
       "when": "the user clicks the lane label (the whole label, not a dedicated chevron button)",
       "then": "the lane body is hidden and the label reflows to a horizontal full-width summary bar",
       "sourceRef": "CR:MDT-206"
+    },
+    {
+      "id": "epics_route_is_deep_linkable",
+      "title": "Epics view has a deep-linkable /epics route",
+      "covers": [
+        "BR-1.1"
+      ],
+      "given": "the user is on the board in any view",
+      "when": "the user selects Epics, or navigates directly to /prj/:code/epics",
+      "then": "the swimlane board renders at the /epics URL and survives reload",
+      "sourceRef": "CR:MDT-206"
+    },
+    {
+      "id": "default_view_drives_landing",
+      "title": "Default View setting drives the project landing view",
+      "covers": [
+        "BR-1.3"
+      ],
+      "given": "the user has chosen Epics (or List) as their Default View in Settings",
+      "when": "the user navigates to the bare project path",
+      "then": "the system redirects to the /epics (or /list) route",
+      "sourceRef": "CR:MDT-206"
     }
   ],
   "obligations": [
@@ -385,21 +418,6 @@
       "sourceRef": "architecture:Workflow Documentation"
     },
     {
-      "id": "OBL-board-mode-owner",
-      "title": "App owns Board and Swimlanes selection and persists flat versus swimlanes layout mode",
-      "derivedFrom": [
-        "BR-1.1",
-        "BR-1.2"
-      ],
-      "artifactIds": [
-        "ART-app",
-        "ART-view-mode-switcher",
-        "ART-board",
-        "ART-swimlane-component"
-      ],
-      "sourceRef": "CR:MDT-206"
-    },
-    {
       "id": "OBL-epic-open",
       "title": "Epic lane open-ticket icon uses the existing ticket viewer path",
       "derivedFrom": [
@@ -441,20 +459,53 @@
       "sourceRef": "CR:MDT-206"
     },
     {
+      "id": "OBL-board-mode-owner",
+      "title": "App owns Board, Epics, List, and Docs selection via deep-linkable routes (/epics mirrors /list); the bare project path redirects to the Default View preference",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3"
+      ],
+      "artifactIds": [
+        "ART-app",
+        "ART-routes",
+        "ART-view-mode-switcher",
+        "ART-board",
+        "ART-swimlane-component"
+      ],
+      "sourceRef": "CR:MDT-206"
+    },
+    {
       "id": "OBL-semantic-css",
-      "title": "Swimlane and switcher styling uses Design 3 semantic classes, aligned sizing, per-column scroll within a lane max-height, lane-label layout (lifecycle under progress, chevron on status/count row, no color dot, wrapped title), collapsed horizontal reflow, and token-based colors",
+      "title": "Swimlane and switcher styling uses Design 3 semantic classes, aligned sizing, per-column scroll within a lane max-height, lane-label layout, collapsed horizontal reflow, tokenized control size (--sz-control + --sz-icon), and token-based colors",
       "derivedFrom": [
         "C1",
         "C4",
         "C5",
-        "C6"
+        "C6",
+        "C7"
       ],
       "artifactIds": [
         "ART-swimlane-css",
         "ART-view-mode-switcher-css",
+        "ART-design-tokens",
         "ART-index-css",
         "ART-swimlane-component-test",
         "ART-board-e2e"
+      ],
+      "sourceRef": "CR:MDT-206"
+    },
+    {
+      "id": "OBL-default-view",
+      "title": "Default View setting (Board, Epics, List) drives the bare-project-path landing redirect; the switcher keeps it in sync with the last-used view",
+      "derivedFrom": [
+        "BR-1.3"
+      ],
+      "artifactIds": [
+        "ART-settings-preferences",
+        "ART-settings-modal",
+        "ART-app",
+        "ART-routes"
       ],
       "sourceRef": "CR:MDT-206"
     }
@@ -549,6 +600,30 @@
       "path": "src/components/SwimlaneBoard/SwimlaneBoard.test.tsx",
       "kind": "test",
       "sourceRef": "CR:MDT-206"
+    },
+    {
+      "id": "ART-routes",
+      "path": "src/routes.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-206"
+    },
+    {
+      "id": "ART-settings-preferences",
+      "path": "src/config/settingsPreferences.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-206"
+    },
+    {
+      "id": "ART-design-tokens",
+      "path": "src/styles/design-tokens.css",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-206"
+    },
+    {
+      "id": "ART-settings-modal",
+      "path": "src/components/SettingsModal.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-206"
     }
   ],
   "testPlans": [
@@ -608,6 +683,7 @@
       "covers": [
         "BR-1.1",
         "BR-1.2",
+        "BR-1.3",
         "BR-2.1",
         "BR-2.2",
         "BR-2.3",
@@ -622,6 +698,7 @@
         "C4",
         "C5",
         "C6",
+        "C7",
         "OBL-board-mode-owner",
         "OBL-status-only-drop",
         "OBL-epic-lifecycle",
@@ -687,9 +764,13 @@
       "title": "Integrate board layout mode and SwimlaneBoard runtime",
       "ownsArtifactIds": [
         "ART-app",
+        "ART-routes",
         "ART-board",
         "ART-view-mode-switcher",
         "ART-view-mode-switcher-css",
+        "ART-design-tokens",
+        "ART-settings-preferences",
+        "ART-settings-modal",
         "ART-ticket-card",
         "ART-swimlane-component",
         "ART-swimlane-css",
@@ -699,6 +780,8 @@
       "makesGreenIds": [
         "board_mode_switches_to_swimlanes",
         "board_mode_persists_after_reload",
+        "epics_route_is_deep_linkable",
+        "default_view_drives_landing",
         "swimlanes_show_epic_rows_and_no_epic",
         "lane_headers_show_progress_and_lifecycle",
         "swimlane_badges_toggle_and_epic_open",

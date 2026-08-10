@@ -8,7 +8,7 @@ export const CARD_DENSITY_CHANGE_EVENT = 'markdown-ticket:settings:card-density-
 export const PIN_RAIL_ENABLED_CHANGE_EVENT = 'markdown-ticket:settings:pin-rail-enabled-change'
 export const PIN_RAIL_PINNED_CHANGE_EVENT = 'markdown-ticket:settings:pin-rail-pinned-change'
 
-export type DefaultView = 'board' | 'list'
+export type DefaultView = 'board' | 'list' | 'epics'
 export type CardDensity = 'comfortable' | 'compact'
 export type MarkdownDensity = 'compact' | 'default' | 'comfortable'
 
