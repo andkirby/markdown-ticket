@@ -173,13 +173,6 @@
       "routePolicy": "tests"
     },
     {
-      "id": "BR-5.1",
-      "kind": "behavior",
-      "text": "WHEN Hide empty, Show badges, Collapse all, Expand all, or an individual lane collapse control is used, the system shall update swimlane presentation without changing ticket data. An individual lane is collapsed by clicking its whole lane label (not just a chevron); the label acts as the toggle (role=button, aria-expanded).",
-      "sourceRef": "CR:MDT-206",
-      "routePolicy": "bdd"
-    },
-    {
       "id": "C6",
       "kind": "constraint",
       "text": "When a lane is collapsed, its label shall reflow from the vertical sticky column to a horizontal full-width summary bar (title, key, status, count, progress, and actions on one row) and the lane body shall be hidden, so multiple collapsed epics scan as a compact list.",
@@ -206,6 +199,20 @@
       "text": "Icon-button controls (ViewModeSwitcher) shall use the --sz-control token (32px) for their hit-target box and --sz-icon (16px) for the glyph, instead of hardcoded px, so control sizing is a tokenized standard documented in the styleguide.",
       "sourceRef": "CR:MDT-206",
       "routePolicy": "tests"
+    },
+    {
+      "id": "BR-5.1",
+      "kind": "behavior",
+      "text": "WHEN Hide empty, Show closed, Show badges, Collapse all, Expand all, or an individual lane collapse control is used, the system shall update swimlane presentation without changing ticket data. An individual lane is collapsed by clicking its whole lane label (role=button, aria-expanded). All lanes are collapsed by default; the expanded-lane set persists to localStorage across reloads.",
+      "sourceRef": "CR:MDT-206",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-5.2",
+      "kind": "behavior",
+      "text": "WHEN the Show closed toggle is off, the system shall hide epic lanes whose epic is in a terminal (Implemented) status so the board focuses on active work; the No-epic lane is never hidden by this toggle.",
+      "sourceRef": "CR:MDT-206",
+      "routePolicy": "bdd"
     }
   ],
   "scenarios": [
@@ -353,6 +360,28 @@
       "given": "the user has chosen Epics (or List) as their Default View in Settings",
       "when": "the user navigates to the bare project path",
       "then": "the system redirects to the /epics (or /list) route",
+      "sourceRef": "CR:MDT-206"
+    },
+    {
+      "id": "show_closed_hides_implemented_lanes",
+      "title": "Show closed toggle hides Implemented epic lanes by default",
+      "covers": [
+        "BR-5.2"
+      ],
+      "given": "the user is on the board in swimlane mode with at least one Implemented epic lane",
+      "when": "Show closed is off (default)",
+      "then": "the Implemented epic lane is hidden; turning Show closed on reveals it",
+      "sourceRef": "CR:MDT-206"
+    },
+    {
+      "id": "collapse_state_persists",
+      "title": "Expanded lane state persists across reload",
+      "covers": [
+        "BR-5.1"
+      ],
+      "given": "the user has expanded one or more lanes in swimlane mode",
+      "when": "the page is reloaded",
+      "then": "the previously expanded lanes are restored from localStorage",
       "sourceRef": "CR:MDT-206"
     }
   ],
@@ -670,6 +699,7 @@
       "title": "Swimlane lane label structure and clickable epic key",
       "covers": [
         "BR-2.5",
+        "BR-5.2",
         "C5",
         "C6",
         "OBL-epic-key"
@@ -694,6 +724,7 @@
         "BR-4.1",
         "BR-4.2",
         "BR-5.1",
+        "BR-5.2",
         "C1",
         "C4",
         "C5",
@@ -787,6 +818,8 @@
         "swimlane_badges_toggle_and_epic_open",
         "epic_lane_key_opens_ticket",
         "lane_collapses_via_whole_label",
+        "collapse_state_persists",
+        "show_closed_hides_implemented_lanes",
         "same_epic_drag_updates_status_only",
         "cross_epic_drag_is_rejected",
         "blocked_epic_close_surfaces_children",

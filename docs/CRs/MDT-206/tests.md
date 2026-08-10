@@ -4,10 +4,10 @@
 
 | Test | RED Before Implementation | GREEN After Implementation |
 |------|---------------------------|----------------------------|
-| `src/components/SwimlaneBoard/helpers.test.ts` | Failed: missing `./helpers` module; later failed for childless Proposed epic lane omission | `6 pass / 0 fail` |
+| `src/components/SwimlaneBoard/helpers.test.ts` | Failed: missing `./helpers` module; later failed for childless Proposed epic lane omission; later failed for missing `filterLanesByVisibility` export | `10 pass / 0 fail` |
 | `src/components/ViewModeSwitcher/ViewModeSwitcher.test.tsx` | Failed against old Board/List toggle; missing icon-only peer buttons; later failed for "Swimlanes" label (renamed to "Epics") | `4 pass / 0 fail` |
 | `src/components/TicketCard.test.tsx` | Failed: `showBadges={false}` still rendered `.badge` rows | `2 pass / 0 fail` |
-| `src/components/SwimlaneBoard/SwimlaneBoard.test.tsx` | Failed: epic key was a bare `<span>` (no TicketCode glyph); epic-dot present; chevron on title row; lifecycle pinned to bottom; later failed for non-toggleable label and missing role=button | `10 pass / 0 fail` |
+| `src/components/SwimlaneBoard/SwimlaneBoard.test.tsx` | Failed: epic key was a bare `<span>` (no TicketCode glyph); epic-dot present; chevron on title row; lifecycle pinned to bottom; later failed for non-toggleable label, missing role=button, default-expanded assumption, missing persistence, and key-after-title | `15 pass / 0 fail` |
 | `src/__tests__/routes.test.ts` | Failed: missing `ROUTE_PROJECT_EPICS` export + `buildProjectPath('epics')` | `24 pass / 0 fail` |
 | `src/components/SettingsModal.test.tsx` | Failed: Default View select had no "epics" option | `7 pass / 0 fail` |
 | `tests/e2e/board/swimlane-board.spec.ts` | `3 failed`: missing `board-mode-epics-toggle`; later failed for childless Proposed epic lane omission and visible default swimlane badges; later failed for `/epics` deep-link + flat-toggle race | `9 passed` |

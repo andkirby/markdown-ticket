@@ -71,7 +71,9 @@ SwimlaneBoard
 
 - One lane per epic (`ticket.level === 'epic'`), in epic declaration order.
 - A trailing **"No epic"** lane (key `__none`) collects tickets with no `phaseEpic` or whose `phaseEpic` does not resolve to a visible epic. Neutral accent (`--border-strong`), no EpicLifecycleControl, no progress bar.
+- **All lanes are collapsed by default.** The set of expanded lanes persists to `localStorage` (`mdt-settings-swimlane-expanded-lanes`) across reloads. Collapse all / Expand all overwrite the set.
 - "Hide empty" omits lanes with zero tickets after filters. The `__none` lane is never hidden by this toggle (it's the safety net).
+- "Show closed" is off by default. When off, epic lanes whose epic is in a terminal (`Implemented`) status are hidden so the board focuses on active work. The `__none` lane is never hidden by this toggle.
 - "Show badges" is off by default in swimlanes. Child ticket cards render code, title, and timestamp only until this toggle is enabled.
 
 ## Lane label
@@ -104,7 +106,7 @@ An epic's status is a publish/close gate, not a spatial workflow — so it rende
 
 | State | Trigger | Visual Change |
 |---|---|---|
-| default | swimlane mode on | lanes render, first lane expanded |
+| default | swimlane mode on | lanes render, **all collapsed** (expanded set restored from localStorage if present) |
 | drag hover (valid lane-col) | dragging over a lane-col whose epic matches the dragged ticket | `.drag-over` — `--bg-muted` tint |
 | drag hover (wrong epic) | dragging over a lane-col of a different epic | no highlight; drop not accepted |
 | lane collapsed | whole-label click / Collapse all | lane-body hidden; **label reflows from vertical 220px sticky column to a horizontal full-width summary bar** (title + key + status + count + progress + actions on one row); chevron rotates -90° |
@@ -138,8 +140,9 @@ An epic's status is a publish/close gate, not a spatial workflow — so it rende
 ### Collapsed lane layout (design3 §8)
 
 - `.lane--collapsed .lane-body`: `display: none` — the track is hidden.
-- `.lane--collapsed .lane-label`: **reflows** from the vertical 220px sticky column to a horizontal full-width summary bar — `flex-direction: row; width: 100%; flex-wrap: wrap; padding: 6px 12px`. Title + key + status + count + progress + actions sit on one row so many collapsed epics scan as a compact list.
+- `.lane--collapsed .lane-label`: **reflows** from the vertical 220px sticky column to a horizontal full-width summary bar — `flex-direction: row; width: 100%; flex-wrap: wrap; padding: 6px 12px`. The epic key sits **before** the title on the same line, followed by status + count + progress + actions, so many collapsed epics scan as a compact one-line list.
 - The whole `.lane-label` is the toggle (`role=button`); interactive children `stopPropagation`.
+- The expanded-lane set persists to `localStorage` (`mdt-settings-swimlane-expanded-lanes`); default is empty (all collapsed).
 
 ## Responsive
 

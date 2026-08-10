@@ -2,6 +2,7 @@ import type { Ticket } from '../../types'
 import { CRLevel, CRStatus } from '@mdt/domain-contracts'
 import {
   buildSwimlaneModel,
+  filterLanesByVisibility,
   getEpicProgress,
   getTicketLaneKey,
   isEpicTicket,
@@ -122,5 +123,36 @@ describe('SwimlaneBoard helpers', () => {
     expect(getTicketLaneKey(ticket({ phaseEpic: 'mdt-100' }), epics)).toBe('MDT-100')
     expect(getTicketLaneKey(ticket({ phaseEpic: 'MDT-999' }), epics)).toBe(NO_EPIC_LANE_KEY)
     expect(getTicketLaneKey(ticket({ phaseEpic: '' }), epics)).toBe(NO_EPIC_LANE_KEY)
+  })
+
+  describe('filterLanesByVisibility', () => {
+    const openEpic = { key: 'MDT-100', title: 'Open Epic', isNone: false, epic: { status: CRStatus.APPROVED }, tickets: [{ code: 'MDT-101' }] } as never
+    const closedEpic = { key: 'MDT-200', title: 'Closed Epic', isNone: false, epic: { status: CRStatus.IMPLEMENTED }, tickets: [{ code: 'MDT-201' }] } as never
+    const noEpicLane = { key: NO_EPIC_LANE_KEY, title: 'No epic', isNone: true, epic: null, tickets: [{ code: 'MDT-001' }] } as never
+
+    it('hides closed (Implemented) epic lanes when showClosed is false', () => {
+      const lanes = [openEpic, closedEpic, noEpicLane] as never
+      const result = filterLanesByVisibility(lanes, { hideEmpty: false, showClosed: false })
+      expect(result.map(l => l.key)).toEqual(['MDT-100', NO_EPIC_LANE_KEY])
+    })
+
+    it('keeps closed epic lanes when showClosed is true', () => {
+      const lanes = [openEpic, closedEpic, noEpicLane] as never
+      const result = filterLanesByVisibility(lanes, { hideEmpty: false, showClosed: true })
+      expect(result.map(l => l.key)).toEqual(['MDT-100', 'MDT-200', NO_EPIC_LANE_KEY])
+    })
+
+    it('the No-epic lane is never hidden by the show-closed filter', () => {
+      const lanes = [noEpicLane] as never
+      const result = filterLanesByVisibility(lanes, { hideEmpty: false, showClosed: false })
+      expect(result.map(l => l.key)).toEqual([NO_EPIC_LANE_KEY])
+    })
+
+    it('hide-empty still omits zero-ticket lanes (in addition to show-closed)', () => {
+      const emptyOpen = { ...openEpic, tickets: [] } as never
+      const lanes = [emptyOpen, openEpic, noEpicLane] as never
+      const result = filterLanesByVisibility(lanes, { hideEmpty: true, showClosed: false })
+      expect(result.map(l => l.key)).toEqual(['MDT-100', NO_EPIC_LANE_KEY])
+    })
   })
 })

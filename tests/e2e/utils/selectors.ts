@@ -81,6 +81,8 @@ export const swimlaneSelectors = {
   hideEmptyToggle: '[data-testid="swimlane-hide-empty"]',
   /** Show ticket-card badges toggle */
   showBadgesToggle: '[data-testid="swimlane-show-badges"]',
+  /** Show closed (Implemented) epic lanes toggle */
+  showClosedToggle: '[data-testid="swimlane-show-closed"]',
   /** Collapse all lanes action */
   collapseAll: '[data-testid="swimlane-collapse-all"]',
   /** Expand all lanes action */
