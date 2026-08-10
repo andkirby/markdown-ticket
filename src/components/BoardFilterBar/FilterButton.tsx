@@ -1,5 +1,6 @@
 import { Filter } from 'lucide-react'
 import * as React from 'react'
+import { cn } from '../../lib/utils'
 
 export interface FilterButtonProps {
   /** Number of active facet values (not counting the free-text query). */
@@ -9,6 +10,8 @@ export interface FilterButtonProps {
   onOpenChange: (open: boolean) => void
   /** Render-prop for the popover content. */
   children: React.ReactNode
+  /** When true, joins this control to its neighbours in a `.control-group`. */
+  groupItem?: boolean
 }
 
 /**
@@ -32,6 +35,7 @@ export const FilterButton: React.FC<FilterButtonProps> = ({
   open,
   onOpenChange,
   children,
+  groupItem = false,
 }) => {
   const containerRef = React.useRef<HTMLDivElement>(null)
   const label = activeCount > 0 ? `Filter · ${activeCount}` : 'Filter'
@@ -52,7 +56,7 @@ export const FilterButton: React.FC<FilterButtonProps> = ({
   }, [open, onOpenChange])
 
   return (
-    <div ref={containerRef} className="relative inline-flex">
+    <div ref={containerRef} className={cn('filter-button-wrapper', groupItem && 'control-group__item')}>
       <button
         type="button"
         data-testid="filter-button"
@@ -60,9 +64,9 @@ export const FilterButton: React.FC<FilterButtonProps> = ({
         aria-expanded={open}
         aria-haspopup="dialog"
         onClick={() => onOpenChange(!open)}
-        className={`filter-button ${open ? 'filter-button--open' : ''}`}
+        className={`filter-button ${open ? 'filter-button--open' : ''} ${groupItem ? 'filter-button--grouped' : ''}`}
       >
-        <Filter className="h-3.5 w-3.5" aria-hidden="true" />
+        <Filter className="filter-button__icon" aria-hidden="true" />
         <span>{label}</span>
       </button>
       {open && (
@@ -70,7 +74,7 @@ export const FilterButton: React.FC<FilterButtonProps> = ({
           role="dialog"
           aria-label="Filter tickets"
           data-testid="filter-popover"
-          className="filter-popover absolute top-full right-0 mt-1 z-50 w-[440px] max-h-[70vh] overflow-y-auto border rounded-lg shadow-lg p-3"
+          className="filter-popover"
         >
           {children}
         </div>

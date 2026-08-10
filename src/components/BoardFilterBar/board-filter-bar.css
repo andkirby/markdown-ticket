@@ -19,6 +19,14 @@
  */
 
 @layer components {
+  /* Wrapper around the trigger + its floating popover. Inline-flex so the
+     popover anchors to the trigger's box. When `--grouped`, it also opts into
+     a `.control-group__item` (added in the JSX via cn()) so it joins its
+     neighbours. */
+  .filter-button-wrapper {
+    @apply relative inline-flex;
+  }
+
   /* Trigger button — recessed to --background like the sibling search/sort
      header controls, so it reads against the --bg-elevated header instead of
      ghosting (bg-elevated == header surface in dark mode). */
@@ -45,9 +53,22 @@
     box-shadow: 0 0 0 1px color-mix(in srgb, oklch(var(--ring)) 50%, transparent);
   }
 
+  /* When joined in a .control-group, cede the border-radius to the group
+     (.control-group__item > * { border-radius: inherit }) so the trigger's
+     corners follow the flattened silhouette. */
+  .filter-button--grouped {
+    border-radius: inherit;
+  }
+
+  /* Trigger icon glyph. */
+  .filter-button__icon {
+    @apply h-3.5 w-3.5;
+  }
+
   /* Floating popover — elevated surface, 1px border; shadow kept (v3 allows
      shadows only on truly floating layers like popovers/dropdowns). */
   .filter-popover {
+    @apply absolute top-full right-0 mt-1 z-50 w-[440px] max-h-[70vh] overflow-y-auto border rounded-lg shadow-lg p-3;
     background-color: var(--bg-elevated);
     border-color: oklch(var(--border));
   }
@@ -68,5 +89,57 @@
   }
   .filter-clear-all:hover {
     color: oklch(var(--foreground));
+  }
+
+  /* Desktop inline cluster wrapper — now a .control-group so its search +
+     filter-button members join into one segmented control. flex-shrink-0 keeps
+     the cluster from collapsing inside the header flex row. */
+  .board-filter-bar {
+    @apply flex-shrink-0;
+  }
+
+  /* Result-count row: count (left) + Clear-all (right), inset by the popover
+     padding. */
+  .filter-result-row {
+    @apply flex items-center justify-between m-2;
+  }
+  .filter-result-count {
+    @apply text-xs;
+    color: var(--text-muted);
+  }
+  .filter-clear-all-link {
+    @apply text-xs underline-offset-2 hover:underline;
+    color: var(--text-muted);
+  }
+  .filter-clear-all-link:hover {
+    color: oklch(var(--foreground));
+  }
+
+  /* Two-column facet grid (surface spec §"Facet grid order"). */
+  .filter-facet-grid {
+    @apply grid grid-cols-2 gap-x-4;
+  }
+
+  /* Mobile filter sheet header — headline + search input. */
+  .filter-sheet-header {
+    @apply flex items-center gap-3;
+  }
+  /* Headline stays fixed; the search field flexes to fill the header. */
+  .filter-sheet-headline {
+    @apply shrink-0;
+  }
+  .filter-sheet-search {
+    @apply relative min-w-0 flex-1;
+  }
+  .filter-sheet-search-input {
+    @apply w-full;
+  }
+  /* ScrollArea recipe (STYLING.md): flex-1 + min-h-0 + overflow-hidden are the
+     required triple so the Radix viewport detects scrollable content. */
+  .filter-sheet-scroll {
+    @apply flex-1 min-h-0 overflow-hidden;
+  }
+  .filter-sheet-body {
+    @apply p-4;
   }
 }
