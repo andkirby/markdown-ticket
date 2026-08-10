@@ -27,21 +27,118 @@
   .documents-view__search-field {
     @apply relative w-full;
   }
+  .documents-view__search-icon {
+    @apply absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4;
+    color: var(--text-muted);
+  }
+  .documents-view__search-input {
+    @apply w-full pl-10 pr-4 py-2 text-sm border rounded-md focus:outline-none focus-visible:ring-1 focus:border-transparent;
+    border-color: oklch(var(--border));
+    background-color: oklch(var(--background));
+    color: oklch(var(--foreground));
+  }
+  .documents-view__search-input::placeholder {
+    color: var(--text-muted);
+  }
+  .documents-view__search-input:focus-visible {
+    border-color: color-mix(in srgb, oklch(var(--primary)) 50%, transparent);
+  }
+
+  /* ── Empty / loading / error states ── */
+  .documents-view__state {
+    @apply flex h-64 items-center justify-center;
+  }
+  .documents-view__state--pad {
+    @apply px-4;
+  }
+  .documents-view__state-body {
+    @apply max-w-sm text-center;
+  }
+  .documents-view__state-title {
+    @apply text-base font-semibold mt-2;
+    color: oklch(var(--foreground));
+  }
+  .documents-view__state-title--destructive {
+    @apply mb-2;
+    color: oklch(var(--destructive));
+  }
+  .documents-view__state-text {
+    @apply text-sm;
+    color: var(--text-muted);
+  }
+  .documents-view__state-loading {
+    color: var(--text-muted);
+  }
+  .documents-view__state-action {
+    @apply mt-4;
+  }
+  .documents-view__state-action-icon {
+    @apply h-4 w-4;
+  }
+
+  /* ── Navigation tree footer + scroll area ── */
+  .documents-view__recent-section {
+    @apply flex-shrink-0 p-2 pb-0;
+  }
+  .documents-view__tree-scroll {
+    @apply min-h-0 flex-1;
+  }
+  .documents-view__tree-scroll-body {
+    @apply p-2;
+  }
+
+  /* ── Preview empty state ── */
+  .documents-view__preview-empty {
+    @apply flex items-center justify-center h-full;
+    color: var(--text-muted);
+  }
+  .documents-view__unsupported-icon {
+    @apply w-8 h-8 mx-auto mb-3;
+    color: var(--text-muted);
+  }
 
   .documents-view__navigation-toolbar {
     @apply flex items-center justify-between gap-2;
   }
+  .documents-view__toolbar-group {
+    @apply flex items-center;
+  }
+  .documents-view__toolbar-group--sort {
+    @apply gap-2;
+  }
+  .documents-view__toolbar-group--actions {
+    @apply gap-1;
+  }
+  /* Toolbar icon button — square, muted, hover-fill. Shared by the hide/collapse/
+     scroll/configure actions in the navigation toolbar. */
+  .documents-view__icon-button {
+    @apply p-1 rounded transition-colors;
+  }
+  .documents-view__icon-button:hover {
+    background-color: var(--bg-muted);
+  }
+  .documents-view__icon-button:disabled {
+    @apply cursor-not-allowed opacity-40;
+  }
+  .documents-view__icon-button-icon {
+    @apply h-4 w-4;
+    color: var(--text-muted);
+  }
+  .documents-view__icon-button:hover .documents-view__icon-button-icon {
+    color: oklch(var(--foreground));
+  }
+  .documents-view__sort-chevron {
+    @apply h-3 w-3;
+  }
 
   .documents-view__sort-select {
     @apply h-8 w-24 flex-shrink-0 border px-2 py-1 text-xs text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50;
-    border-radius: var(--radius-input);
     border-color: oklch(var(--border));
     background-color: var(--bg-muted);
   }
 
   .documents-view__sort-direction-button {
     @apply inline-flex h-8 w-7 flex-shrink-0 items-center justify-center border transition-colors;
-    border-radius: var(--radius-input);
     border-color: oklch(var(--border));
     background-color: var(--bg-muted);
   }

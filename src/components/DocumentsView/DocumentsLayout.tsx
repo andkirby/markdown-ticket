@@ -816,18 +816,18 @@ export default function DocumentsLayout({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-muted-foreground">Loading documents...</div>
+      <div className="documents-view__state">
+        <div className="documents-view__state-loading">Loading documents...</div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="text-destructive mb-2">Error loading documents</div>
-          <div className="text-sm text-muted-foreground">{error}</div>
+      <div className="documents-view__state">
+        <div className="documents-view__state-body">
+          <div className="documents-view__state-title documents-view__state-title--destructive">Error loading documents</div>
+          <div className="documents-view__state-text">{error}</div>
         </div>
       </div>
     )
@@ -838,13 +838,13 @@ export default function DocumentsLayout({
       <>
         <div
           data-testid="document-tree"
-          className="flex h-64 items-center justify-center px-4"
+          className="documents-view__state documents-view__state--pad"
         >
-          <div className="max-w-sm text-center">
-            <h3 className="text-base font-semibold text-foreground">
+          <div className="documents-view__state-body">
+            <h3 className="documents-view__state-title">
               No document paths configured
             </h3>
-            <p className="mt-2 text-sm text-muted-foreground">
+            <p className="documents-view__state-text">
               Choose which folders or Markdown files should appear in Documents
               View.
             </p>
@@ -854,8 +854,8 @@ export default function DocumentsLayout({
                 onClick={() => setShowPathSelector(true)}
                 variant="outline"
                 size="sm"
-                className="mt-4"
-                leftIcon={<Settings className="h-4 w-4" aria-hidden="true" />}
+                className="documents-view__state-action"
+                leftIcon={<Settings className="documents-view__state-action-icon" aria-hidden="true" />}
                 data-testid="configure-paths-empty-button"
               >
                 Configure document paths
@@ -892,18 +892,18 @@ export default function DocumentsLayout({
           <div className="documents-view__navigation-inner">
             <div className="documents-view__navigation-header">
               <div className="documents-view__search-field">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="documents-view__search-icon" />
                 <input
                   type="text"
                   placeholder="Search documents..."
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 text-sm border border-border rounded-md bg-background text-foreground placeholder-muted-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-primary/50 focus:border-transparent"
+                  className="documents-view__search-input"
                   data-testid="document-filter-input"
                 />
               </div>
               <div className="documents-view__navigation-toolbar">
-                <div className="flex items-center gap-2">
+                <div className="documents-view__toolbar-group documents-view__toolbar-group--sort control-group">
                   <select
                     value={sortBy}
                     onChange={e =>
@@ -914,7 +914,7 @@ export default function DocumentsLayout({
                         | 'created'
                         | 'modified',
                       )}
-                    className="documents-view__sort-select"
+                    className="documents-view__sort-select control-group__item"
                     title="Sort by"
                   >
                     <option value="name">Filename</option>
@@ -926,61 +926,61 @@ export default function DocumentsLayout({
                     type="button"
                     onClick={() =>
                       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
-                    className="documents-view__sort-direction-button"
+                    className="documents-view__sort-direction-button control-group__item"
                     title={`Sort ${sortDirection === 'asc' ? 'ascending' : 'descending'}`}
                     aria-label={`Sort ${sortDirection === 'asc' ? 'ascending' : 'descending'}`}
                   >
                     {sortDirection === 'asc'
                       ? (
-                          <ChevronUp className="h-3 w-3" />
+                          <ChevronUp className="documents-view__sort-chevron" />
                         )
                       : (
-                          <ChevronDown className="h-3 w-3" />
+                          <ChevronDown className="documents-view__sort-chevron" />
                         )}
                   </button>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="documents-view__toolbar-group documents-view__toolbar-group--actions">
                   <button
                     type="button"
                     onClick={handleToggleNavigationPanel}
-                    className="p-1 hover:bg-muted rounded transition-colors"
+                    className="documents-view__icon-button"
                     title="Hide document navigation"
                     aria-label="Hide document navigation"
                     data-testid="toggle-document-navigation-button"
                   >
-                    <PanelLeftClose className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                    <PanelLeftClose className="documents-view__icon-button-icon" />
                   </button>
                   <button
                     type="button"
                     onClick={handleCollapseTree}
-                    className="p-1 hover:bg-muted rounded transition-colors"
+                    className="documents-view__icon-button"
                     title="Collapse document tree"
                     aria-label="Collapse document tree"
                     data-testid="collapse-document-tree-button"
                   >
-                    <ListCollapse className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                    <ListCollapse className="documents-view__icon-button-icon" />
                   </button>
                   <button
                     type="button"
                     onClick={handleScrollToSelectedFile}
                     disabled={!selectedFile}
-                    className="p-1 hover:bg-muted rounded transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+                    className="documents-view__icon-button"
                     title="Scroll to active document"
                     aria-label="Scroll to active document"
                     data-testid="scroll-to-active-document-button"
                   >
-                    <Crosshair className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                    <Crosshair className="documents-view__icon-button-icon" />
                   </button>
                   {canWrite && (
                     <button
                       type="button"
                       onClick={() => setShowPathSelector(true)}
-                      className="p-1 hover:bg-muted rounded transition-colors"
+                      className="documents-view__icon-button"
                       title="Configure document paths"
                       aria-label="Configure document paths"
                       data-testid="configure-paths-button"
                     >
-                      <Settings className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                      <Settings className="documents-view__icon-button-icon" />
                     </button>
                   )}
                 </div>
@@ -995,7 +995,7 @@ export default function DocumentsLayout({
               onExpandedChange={handleFavsExpandedChange}
               onShowAllChange={handleFavsShowAllChange}
             />
-            <div className="flex-shrink-0 p-2 pb-0">
+            <div className="documents-view__recent-section">
               <RecentDocuments
                 documents={recentDocuments}
                 isExpanded={navigationPreferences.recentExpanded}
@@ -1004,10 +1004,10 @@ export default function DocumentsLayout({
               />
             </div>
             <ScrollArea
-              className="min-h-0 flex-1"
+              className="documents-view__tree-scroll"
               data-testid="document-tree-scroll-area"
             >
-              <div className="p-2">
+              <div className="documents-view__tree-scroll-body">
                 <FileTree
                   ref={fileTreeRef}
                   files={filteredFiles}
@@ -1035,7 +1035,7 @@ export default function DocumentsLayout({
               aria-label="Show document navigation"
               data-testid="show-document-navigation-button"
             >
-              <PanelLeftOpen className="h-4 w-4" />
+              <PanelLeftOpen className="documents-view__icon-button-icon" />
             </button>
           )}
           {selectedFile
@@ -1078,7 +1078,7 @@ export default function DocumentsLayout({
                           )
                         : (
                             <div data-testid="unsupported-viewer" className="document-viewer__center">
-                              <FileX className="w-8 h-8 mx-auto mb-3 text-muted-foreground" />
+                              <FileX className="documents-view__unsupported-icon" />
                               <div className="document-viewer__center-message">
                                 Preview not available for this file type.
                               </div>
@@ -1088,7 +1088,7 @@ export default function DocumentsLayout({
                 </div>
               )
             : (
-                <div className="flex items-center justify-center h-full text-muted-foreground">
+                <div className="documents-view__preview-empty">
                   Select a document to view
                 </div>
               )}
