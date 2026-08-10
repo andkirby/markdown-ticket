@@ -31,6 +31,7 @@ import { useEventHistoryState } from './components/DevTools/useEventHistoryState
 import { DirectTicketAccess } from './components/DirectTicketAccess'
 import { Header, HeaderContent } from './components/Header'
 import { PinRail } from './components/PinRail'
+import { PinRailToggle } from './components/PinRail/PinRailToggle'
 import { ProjectSelector } from './components/ProjectSelector'
 import ProjectView from './components/ProjectView'
 import { QuickSearchModal } from './components/QuickSearch'
@@ -537,6 +538,12 @@ function ProjectRouteHandler() {
               <div className="min-w-0 flex-shrink-0">
                 <ProjectSelector />
               </div>
+              {pinRailPref.enabled && (
+                <PinRailToggle
+                  pinned={pinRailPref.pinned}
+                  onToggle={() => pinRailPref.setPinned(!pinRailPref.pinned)}
+                />
+              )}
               {(viewMode === 'board' || viewMode === 'list') && (
                 <div className="hidden sm:flex flex-1 items-center justify-end min-w-0">
                   <BoardFilterBar

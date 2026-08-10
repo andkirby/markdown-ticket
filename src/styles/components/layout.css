@@ -43,6 +43,12 @@
     border-radius: inherit;
   }
 
+  /* SecondaryHeader right-cluster container. */
+  .secondary-header {
+    @apply flex items-center;
+    gap: var(--gap-md);
+  }
+
   .card-header {
     @apply flex items-center justify-between p-6 border-b;
   }

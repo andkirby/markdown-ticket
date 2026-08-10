@@ -77,6 +77,16 @@
     --radius-card: 8px;   /* ticket cards, lane cards, modal-content edges */
     --radius-xs: 4px;     /* badges, inline code pills, tiny inline marks */
     --radius-pill: 999px; /* circular controls: launcher, info trigger, status dots */
+
+    /* ── Gap scale — pick by ROLE, not by look ──
+       Four semantic gaps for flex/grid children. Use gap (not padding/margin)
+       between siblings. The default between header-level elements is --gap-md
+       (1rem / 16px). Tighter values are for intra-group grouping. Consume via
+       bare var(), never a Tailwind gap-* utility in app-owned CSS. */
+    --gap-xs: 0.25rem; /* 4px — icon+label pairs, chip internals */
+    --gap-sm: 0.5rem;  /* 8px — related controls within a group */
+    --gap-md: 1rem;    /* 16px — between groups / header elements (DEFAULT) */
+    --gap-lg: 1.5rem;  /* 24px — major section separation */
   }
 
   .dark {
