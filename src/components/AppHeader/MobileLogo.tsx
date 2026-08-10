@@ -1,10 +1,11 @@
 /**
- * MobileLogo — the MDT wordmark shown in the header.
+ * MobileLogo — the MDT logo shown in the header.
  *
- * The logo is a single monochrome asset rendered as a CSS mask (`.app-logo`),
- * so its colour is driven entirely by the theme-aware `--logo-fg` token: deep
- * blue in light mode and a soft light-blue in dark mode. No per-viewport asset
- * swap is needed — one masked element scales crisply at any size.
+ * The logo asset is a blue silhouette with the "#" glyph and "MDT" mark cut out
+ * as transparent holes, rendered as a CSS mask (`.app-logo`). Its colour is
+ * driven entirely by the `--primary-text` token — an accent tint of primary
+ * (indigo in light mode, lighter indigo in dark mode). One masked element
+ * scales crisply at any size.
  */
 export function MobileLogo() {
   return (

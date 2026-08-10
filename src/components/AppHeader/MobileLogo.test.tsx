@@ -1,9 +1,9 @@
 /**
  * MobileLogo Component Unit Tests
  *
- * The logo is now a single theme-aware masked element (`.app-logo`); there is
- * no longer a per-viewport asset swap. These tests assert the rendered element
- * and its accessibility contract.
+ * The logo is a single theme-aware masked element (`.app-logo`); there is no
+ * per-viewport asset swap. These tests assert the rendered element and its
+ * accessibility contract.
  */
 
 import { cleanup, render, screen } from '@testing-library/react'
