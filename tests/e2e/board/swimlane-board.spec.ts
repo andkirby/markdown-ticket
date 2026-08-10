@@ -385,5 +385,12 @@ test.describe('Epic swimlane board (MDT-206)', () => {
     await page.click(swimlaneSelectors.colExpandByStatus('Implemented'))
     await expect(page.locator(swimlaneSelectors.colCollapseByStatus('Implemented'))).toBeVisible()
     await expect(page.locator(swimlaneSelectors.laneColumn(scenario.alphaEpic, 'Implemented'))).toBeVisible()
+
+    // Board parity: clicking any lane strip in a collapsed column also expands it.
+    await page.click(swimlaneSelectors.colCollapseByStatus('Implemented'))
+    await expect(page.locator(swimlaneSelectors.laneColRail(scenario.alphaEpic, 'Implemented'))).toBeVisible()
+    await page.click(swimlaneSelectors.laneColRail(scenario.alphaEpic, 'Implemented'))
+    await expect(page.locator(swimlaneSelectors.colCollapseByStatus('Implemented'))).toBeVisible()
+    await expect(page.locator(swimlaneSelectors.laneColumn(scenario.alphaEpic, 'Implemented'))).toBeVisible()
   })
 })

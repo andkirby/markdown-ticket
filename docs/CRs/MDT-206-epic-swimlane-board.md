@@ -251,13 +251,14 @@ Made the swimlane status columns collapsible like the flat Board page. Execution
 
 **Approved changes:**
 - Each swimlane column header renders a collapse chevron (`ChevronLeft`). Collapsing a status column replaces its header with a 44px click-to-expand rail (status dot only) and replaces that column's lane-body cells with a narrow status-tinted strip (no drop zone) — mirroring the flat Board's collapsed column.
+- **Board parity:** the whole collapsed column is one expand surface — the lane strips are real `<button>`s (`aria-label="Expand column …"`, `title`), so clicking the header rail *or* any lane strip re-expands the column (not dead divs).
 - Column collapse reuses the flat Board's `mdt-settings-collapsed-columns` key (keyed by primary status) and the `COLLAPSED_COLUMNS_CHANGE_EVENT` cross-tab sync. A status collapsed in one view is collapsed in the other.
 - Column collapse (status axis) and lane collapse (epic axis) are independent.
 
-**Changed requirement IDs:** `BR-5.3` (new — column collapse to rail, shared key, independent from lane collapse), `column_collapses_to_rail_shared_with_flat_board` (new BDD scenario); `TEST-swimlane-board-e2e` + `TEST-swimlane-component` extended to cover BR-5.3.
+**Changed requirement IDs:** `BR-5.3` (new — column collapse to rail, clickable strips, shared key, independent from lane collapse), `column_collapses_to_rail_shared_with_flat_board` (new BDD scenario); `TEST-swimlane-board-e2e` + `TEST-swimlane-component` extended to cover BR-5.3.
 
-**Updated workflow documents:** `requirements.md` (BR-5.3 + non-ambiguity row), `uat.md`; all `*.trace.md` projections re-rendered.
+**Updated workflow documents:** `requirements.md` (BR-5.3 + non-ambiguity row), `tests.md`, `uat.md`; all `*.trace.md` projections re-rendered.
 
 **Strict drift/lock:** not used.
 
-**More implementation required:** no — implemented, tested (21/21 swimlane component = 15 lane + 6 column; 10/10 swimlane E2E), and trace-validated.
+**More implementation required:** no — implemented, tested (22/22 swimlane component = 15 lane + 7 column; 10/10 swimlane E2E), and trace-validated.

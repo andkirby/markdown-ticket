@@ -217,7 +217,7 @@
     {
       "id": "BR-5.3",
       "kind": "behavior",
-      "text": "WHILE swimlane mode is active, the system shall let the user collapse any status column from its header into a 44px rail (status dot + click-to-expand), hiding that column's drop zones in every lane. Column collapse state is keyed by primary status and persisted in the shared mdt-settings-collapsed-columns key used by the flat Board, so a status collapsed in one view is collapsed in the other and stays in sync across tabs via the collapsed-columns-change event. Column collapse and lane collapse are independent axes.",
+      "text": "WHILE swimlane mode is active, the system shall let the user collapse any status column from its header into a 44px rail (status dot + click-to-expand), hiding that column's drop zones in every lane. The collapsed column's lane-body cells are narrow strips that are also click targets to re-expand the column (Board parity: the whole collapsed column is one expand surface). Column collapse state is keyed by primary status and persisted in the shared mdt-settings-collapsed-columns key used by the flat Board, so a status collapsed in one view is collapsed in the other and stays in sync across tabs via the collapsed-columns-change event. Column collapse and lane collapse are independent axes.",
       "sourceRef": "CR:MDT-206",
       "routePolicy": "bdd"
     }
@@ -399,7 +399,7 @@
       ],
       "given": "the user is on the swimlane board with lanes expanded",
       "when": "the user clicks the collapse chevron on a status column header",
-      "then": "the column header becomes a 44px click-to-expand rail, that status's lane-body cells become narrow strips with no drop zones, the collapse is persisted to mdt-settings-collapsed-columns (shared with the flat Board), and clicking the rail re-expands the column",
+      "then": "the column header becomes a 44px click-to-expand rail, that status's lane-body cells become narrow click-to-expand strips with no drop zones, the collapse is persisted to mdt-settings-collapsed-columns (shared with the flat Board), and clicking either the header rail or any lane strip re-expands the column",
       "sourceRef": "CR:MDT-206"
     }
   ],

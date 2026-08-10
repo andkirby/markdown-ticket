@@ -413,13 +413,24 @@
   /* Collapsed-column lane cell: a narrow 44px strip aligned to the collapsed
      header rail. Not a drop zone (matches the flat Board, where a collapsed
      column holds no tickets). Tinted by the status color so the rail reads as
-     a continuation of its column. */
+     a continuation of its column. The whole strip is a button (click to
+     re-expand the column — Board parity). */
   .swimlane-board__lane-col-rail {
+    display: block;
     width: 44px;
     flex-shrink: 0;
     min-height: 124px;
+    margin: 0;
+    padding: 0;
+    border: 0;
     border-left: 2px solid color-mix(in srgb, var(--status-backlog) 45%, transparent);
     background: color-mix(in srgb, var(--bg-subtle) 70%, transparent);
+    cursor: pointer;
+    transition: background-color 0.15s ease-out;
+  }
+
+  .swimlane-board__lane-col-rail:hover {
+    background: color-mix(in srgb, var(--bg-muted) 75%, transparent);
   }
 
   .swimlane-board__lane-col-rail[data-column-color="blue"] { border-left-color: color-mix(in srgb, var(--status-open) 45%, transparent); }

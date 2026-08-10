@@ -7,8 +7,9 @@ Make the swimlane board's status columns collapsible like the flat Board page: a
 ## Approved Changes
 
 1. **Column collapse (shared with flat Board)**: each swimlane column header renders a collapse chevron. Collapsing replaces the header with a 44px click-to-expand rail (status dot only) and replaces that column's lane-body cells with a narrow strip (no drop zone, matching the flat Board).
-2. **Shared collapse memory**: swimlane column collapse reuses the flat Board's `mdt-settings-collapsed-columns` key (keyed by primary status) + the `COLLAPSED_COLUMNS_CHANGE_EVENT` cross-tab sync. A status collapsed in one view is collapsed in the other.
-3. **Independent axes**: column collapse (status axis) and lane collapse (epic axis) are independent — toggling one does not affect the other.
+2. **Clickable collapsed columns (Board parity)**: the collapsed column is one big expand surface — clicking the header rail *or* any lane strip re-expands the column. The strips are real `<button>`s (`aria-label="Expand column …"`), not dead divs.
+3. **Shared collapse memory**: swimlane column collapse reuses the flat Board's `mdt-settings-collapsed-columns` key (keyed by primary status) + the `COLLAPSED_COLUMNS_CHANGE_EVENT` cross-tab sync. A status collapsed in one view is collapsed in the other.
+4. **Independent axes**: column collapse (status axis) and lane collapse (epic axis) are independent — toggling one does not affect the other.
 
 ## Changed Requirement IDs
 
@@ -32,10 +33,10 @@ Make the swimlane board's status columns collapsible like the flat Board page: a
   - `src/components/SwimlaneBoard/swimlane-board.css` (.swimlane-board__col-collapse, .swimlane-board__col-head--collapsed, .swimlane-board__col-expand, .swimlane-board__lane-col-rail)
   - tests: `src/components/SwimlaneBoard/SwimlaneBoard.test.tsx` (6 new column-collapse cases), `tests/e2e/board/swimlane-board.spec.ts` (column-collapse E2E), `tests/e2e/utils/selectors.ts` (colCollapseByStatus, colExpandByStatus, laneColRail)
 - **Direct GREEN targets**:
-  - 6 unit cases: render chevron, collapse→rail+persist shared key, expand from rail, restore from localStorage, independence from lane collapse, cross-view event sync.
-  - 1 E2E case: collapse Done column → 44px rail + strip cell + shared key + re-expand.
+  - 7 unit cases: render chevron, collapse→rail+persist shared key, expand from rail, **expand by clicking a lane strip (Board parity)**, restore from localStorage, independence from lane collapse, cross-view event sync.
+  - 1 E2E case: collapse Done column → 44px rail + strip cell + shared key + re-expand via header rail **and via a lane strip**.
 - **Impacted canonical task IDs**: `TEST-swimlane-board-e2e`, `TEST-swimlane-component` (covers extended).
-- **Why**: "collapsible like the Board page" — the swimlane had lane collapse but no column collapse; the flat Board already has the canonical column-collapse mechanism and memory.
+- **Why**: "collapsible like the Board page" — the swimlane had lane collapse but no column collapse; the flat Board already has the canonical column-collapse mechanism and memory. Board parity also means the whole collapsed column is clickable, not just the header.
 
 ## Validation
 
@@ -46,7 +47,7 @@ bun run validate:ts src/components/SwimlaneBoard/index.tsx src/components/Swimla
 spec-trace validate MDT-206 --stage all
 ```
 
-All green at completion: 21/21 swimlane component (15 lane + 6 column), 10/10 swimlane E2E, all trace stages valid.
+All green at completion: 22/22 swimlane component (15 lane + 7 column), 10/10 swimlane E2E, all trace stages valid.
 
 ## Watchlist
 
