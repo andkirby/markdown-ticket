@@ -451,7 +451,7 @@ export function SettingsModal({
         onClose={onClose}
         closeTestId="settings-close"
       />
-      <ModalBody className="p-0">
+      <ModalBody className="settings-modal-body">
         <Tabs.Root
           value={activeTab}
           onValueChange={value => setActiveTab(value as SettingsTab)}
@@ -499,7 +499,7 @@ export function SettingsModal({
               <p className="settings-desc">
                 Choose light, dark, or system theme
               </p>
-              <ButtonGroup orientation="horizontal" className="mt-3 w-full">
+              <ButtonGroup orientation="horizontal" className="settings-theme-group">
                 <button
                   data-testid="settings-theme-light"
                   onClick={() => handleThemeChange('light')}
@@ -509,7 +509,7 @@ export function SettingsModal({
                       : 'settings-theme-btn--inactive'
                   }`}
                 >
-                  <Sun className="h-4 w-4" />
+                  <Sun className="settings-icon" />
                   Light
                 </button>
                 <button
@@ -521,7 +521,7 @@ export function SettingsModal({
                       : 'settings-theme-btn--inactive'
                   }`}
                 >
-                  <Moon className="h-4 w-4" />
+                  <Moon className="settings-icon" />
                   Dark
                 </button>
                 <button
@@ -533,7 +533,7 @@ export function SettingsModal({
                       : 'settings-theme-btn--inactive'
                   }`}
                 >
-                  <Monitor className="h-4 w-4" />
+                  <Monitor className="settings-icon" />
                   System
                 </button>
               </ButtonGroup>
@@ -550,9 +550,10 @@ export function SettingsModal({
                 value={defaultView}
                 onChange={e =>
                   handleDefaultViewChange(e.target.value as DefaultView)}
-                className="settings-select mt-2"
+                className="settings-select settings-select--spaced"
               >
                 <option value="board">Board</option>
+                <option value="epics">Epics</option>
                 <option value="list">List</option>
               </select>
             </div>
@@ -567,7 +568,7 @@ export function SettingsModal({
                 value={markdownDensity}
                 onChange={e =>
                   handleMarkdownDensityChange(e.target.value as MarkdownDensity)}
-                className="settings-select mt-2"
+                className="settings-select settings-select--spaced"
               >
                 <option value="compact">Compact</option>
                 <option value="default">Default</option>
@@ -587,16 +588,16 @@ export function SettingsModal({
                         aria-label="Project accent details"
                         className="settings-info-trigger"
                       >
-                        <Info className="h-4 w-4" aria-hidden="true" />
+                        <Info className="settings-icon" aria-hidden="true" />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent className="max-w-xs">
+                    <TooltipContent className="settings-tooltip">
                       <p>Personal preference, not shared with other users.</p>
-                      <p className="mt-1">
+                      <p className="settings-tooltip-note">
                         Choose a Style: Gradient (fade), Flat (stripe), or Plate
                         (colored code badge).
                       </p>
-                      <p className="mt-1">
+                      <p className="settings-tooltip-note">
                         Autocolor assigns deterministic fallback colors to
                         projects you haven’t customized.
                       </p>
@@ -630,7 +631,7 @@ export function SettingsModal({
                 value={cardDensity}
                 onChange={e =>
                   handleCardDensityChange(e.target.value as CardDensity)}
-                className="settings-select mt-2"
+                className="settings-select settings-select--spaced"
               >
                 <option value="comfortable">Comfortable</option>
                 <option value="compact">Compact</option>
@@ -714,10 +715,10 @@ export function SettingsModal({
                           aria-label="Project access mode details"
                           className="settings-info-trigger"
                         >
-                          <Info className="h-4 w-4" aria-hidden="true" />
+                          <Info className="settings-icon" aria-hidden="true" />
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent className="max-w-xs">
+                      <TooltipContent className="settings-tooltip">
                         <p>
                           Private hides the project. Unlisted creates a direct
                           read-only link. Public also lists the project for
@@ -733,7 +734,7 @@ export function SettingsModal({
                   value={sharingMode}
                   onChange={event =>
                     setSharingMode(event.target.value as SharingMode)}
-                  className="settings-select mt-2"
+                  className="settings-select settings-select--spaced"
                 >
                   {SHARING_MODES.map(option => (
                     <option key={option.value} value={option.value}>
@@ -757,11 +758,11 @@ export function SettingsModal({
                       data-testid="settings-share-url"
                       value={shareUrl}
                       readOnly
-                      className="settings-input mt-2 font-mono text-xs"
+                      className="settings-input settings-input--spaced settings-input--mono"
                     />
                   )}
                   {!shareUrl && (
-                    <p className="settings-desc mt-2">
+                    <p className="settings-desc settings-desc--spaced">
                       {shareId
                         ? 'No allowed public origin is available for share links.'
                         : 'Save to generate a share link.'}
@@ -782,13 +783,13 @@ export function SettingsModal({
                     <p className="settings-desc">Sharing updated.</p>
                   )}
                 </div>
-                <div className="flex gap-2">
+                <div className="settings-action-row">
                   {sharingMode !== 'private' && shareId && (
                     <button
                       data-testid="settings-rotate-share-id"
                       onClick={handleRotateShareId}
                       disabled={sharingStatus === 'saving'}
-                      className="settings-action-btn disabled:cursor-not-allowed disabled:opacity-60"
+                      className="settings-action-btn"
                     >
                       Rotate
                     </button>
@@ -797,7 +798,7 @@ export function SettingsModal({
                     data-testid="settings-save-sharing"
                     onClick={handleSaveSharing}
                     disabled={sharingStatus === 'saving'}
-                    className="settings-action-btn disabled:cursor-not-allowed disabled:opacity-60"
+                    className="settings-action-btn"
                   >
                     {sharingStatus === 'saving' ? 'Saving...' : 'Save'}
                   </button>
@@ -842,7 +843,7 @@ export function SettingsModal({
                 onClick={handleClearCache}
                 className="settings-action-btn"
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="settings-icon" />
                 Clear Cache
               </button>
             </div>

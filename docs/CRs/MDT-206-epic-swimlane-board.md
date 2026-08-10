@@ -200,6 +200,7 @@ Gave swimlanes a deep-linkable URL, fixed the orphaned Default View setting, and
 - New `--sz-control: 32px` token for square icon-button hit targets; ViewModeSwitcher buttons now use `var(--sz-control)` (was hardcoded 30×28px).
 - ViewModeSwitcher glyphs now use `var(--sz-icon)` = 16px (was hardcoded 14px).
 - Styleguide documents `--sz-control` in the density-slots section.
+- Settings → Default View `<option value="epics">` added; the 33 pre-existing Tailwind utility classes in `SettingsModal.tsx` were migrated to semantic classes in `settings.css` (`.settings-icon`, `.settings-modal-body`, `.settings-theme-group`, `.settings-tooltip`, `.settings-tooltip-note`, `.settings-input--mono`, `.settings-action-row`, `.settings-action-btn:disabled`, `.settings-select--spaced` etc.) to clear the `enforce-semantic-classes` contract.
 
 **Changed requirement IDs:** `BR-1.1` (refined — Epics navigates to `/epics`), `BR-1.3` (new — Default View drives landing), `C7` (new — tokenized control size), `epics_route_is_deep_linkable` + `default_view_drives_landing` (new BDD scenarios).
 

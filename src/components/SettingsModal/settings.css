@@ -120,6 +120,53 @@
   background-color: var(--bg-elevated);
 }
 
+/* Disabled state for action buttons (was disabled:cursor-not-allowed disabled:opacity-60 in markup). */
+.settings-action-btn:disabled {
+  @apply cursor-not-allowed opacity-60;
+}
+
+/* Inline icon inside a settings control (was h-4 w-4 on lucide icons in markup). */
+.settings-icon {
+  @apply h-4 w-4;
+}
+
+/* ModalBody with no padding (tabs own their padding). Was p-0 in markup. */
+.settings-modal-body {
+  @apply p-0;
+}
+
+/* Theme ButtonGroup spans full width with top margin. Was mt-3 w-full in markup. */
+.settings-theme-group {
+  @apply mt-3 w-full;
+}
+
+/* Tooltip content max width. Was max-w-xs in markup. */
+.settings-tooltip {
+  @apply max-w-xs;
+}
+
+/* Secondary paragraph inside a tooltip. Was mt-1 in markup. */
+.settings-tooltip-note {
+  @apply mt-1;
+}
+
+/* Monospace share-URL input. Was font-mono text-xs on .settings-input in markup. */
+.settings-input--mono {
+  @apply font-mono text-xs;
+}
+
+/* Row of action buttons. Was flex gap-2 in markup. */
+.settings-action-row {
+  @apply flex gap-2;
+}
+
+/* Spacing modifier: element sits with top margin (was mt-2 in markup on selects/descs). */
+.settings-select--spaced,
+.settings-input--spaced,
+.settings-desc--spaced {
+  @apply mt-2;
+}
+
 .settings-checkbox-list {
   @apply mt-2 grid grid-cols-2 gap-2;
 }

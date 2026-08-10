@@ -99,6 +99,19 @@ describe('SettingsModal', () => {
     expect(localStorage.getItem(MARKDOWN_DENSITY_KEY)).toBe('comfortable')
   })
 
+  it('offers Epics as a default view and persists the choice', () => {
+    render(<SettingsModal isOpen={true} onClose={onClose} />)
+
+    const select = screen.getByTestId('settings-default-view') as HTMLSelectElement
+    const optionValues = Array.from(select.options).map(o => o.value)
+    expect(optionValues).toContain('board')
+    expect(optionValues).toContain('list')
+    expect(optionValues).toContain('epics')
+
+    fireEvent.change(select, { target: { value: 'epics' } })
+    expect(localStorage.getItem('mdt-settings-default-view')).toBe('epics')
+  })
+
   it('persists board preferences without backend requests', async () => {
     const fetchMock = mock(() => Promise.resolve(new Response('{}')))
     globalThis.fetch = fetchMock as unknown as typeof fetch
