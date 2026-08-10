@@ -1,5 +1,40 @@
 # Release Notes
 
+## v0.29.0 (2026-08-10)
+
+### New Features
+
+**Epic Swimlane Board (MDT-206, MDT-225)**
+- A new board layout groups your tickets by epic: one lane per epic, with the shared status columns running across them — so you can scan a single status down through every epic at once, and see at a glance which epics are moving and which are stuck
+- Each lane carries a live progress bar computed from its child tickets, plus a lifecycle control right on the lane header — advance an epic (Proposed → Approved → Implemented) without opening the ticket or dragging it across columns
+- An "Epics" toggle switches the board between flat and swimlane layouts, the choice persists across navigation and reloads, and `/epics` is a deep-link straight into swimlane mode
+- Swimlane columns collapse just like the flat board, and the collapsed header bar is clickable to expand; you can also set swimlanes as your default view
+- A trailing "No epic" lane collects tickets that don't belong to an epic yet
+
+**Epics as First-Class Tickets (MDT-205)**
+- Tickets now carry an optional `level` (`ticket` | `epic`, default `ticket`); an epic is simply a ticket with `level: epic`
+- Existing tickets stay as-is — no migration — and the familiar `phaseEpic` field is still how a child points up to its epic
+- Epics live by a three-state lifecycle (Proposed → Approved → Implemented) rather than a kanban workflow: they're never dragged, and an epic can't be closed while it has open children, so a closed epic always means its work is actually done
+- An epic must be Approved or Implemented before another ticket can reference it, keeping the link trustworthy
+
+### Improvements
+
+**Header Refresh and Control Grouping**
+- Related header controls — sort, filter search, filter button, documents sort — are now grouped into joined control groups instead of floating as separate pieces, so the top bar reads as a small number of clear actions
+- The Pin Rail toggle moved into the header next to the filter, the active project card and nav align with the ticket-card surface, and the logo is now a masked wordmark that adapts to your theme
+
+**Design System Polish**
+- A radius token scale now unifies inputs, cards, and the nav group; gap tokens standardize spacing between header elements
+- Focus rings are keyboard-only and noticeably thinner — you no longer get a bold ring after a mouse click, but keyboard navigation still gets a clear indicator
+- Status icons, accent-opacity parity, and badge key typography round out a calmer, more consistent surface across the board, list, and epics
+
+### Bug Fixes
+
+- Restored mouse-wheel scrolling on the board, list, and swimlanes — an over-broad `overscroll-behavior` rule had been trapping wheel events
+- Disabled global overscroll chaining so scrolling a container no longer drags the page beneath it
+- Fixed a list-API path that was dropping the `level` field from ticket metadata
+- Badge ticket-key links (relation and epic badges) now render in monospace and inherit the badge color
+
 ## v0.28.0 (2026-08-06)
 
 ### New Features

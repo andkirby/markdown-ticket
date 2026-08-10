@@ -88,6 +88,7 @@ AI-powered commands for the entire development lifecycle:
 
 - Drag-drop ticket management
 - Faceted filtering by status, priority, assignee, and type (inline in the header, never a second row)
+- Epic swimlane board — group tickets by epic to compare progress across epics at a glance, with per-epic progress and a lane-level lifecycle control
 - Pin rail for one-click access to the tickets you're actively working on (drag-to-pin, cross-project)
 - Markdown rendering with Mermaid diagrams and Wireloom wireframes
 - Sandboxed HTML document preview alongside markdown in the documents view
@@ -242,6 +243,7 @@ markdown-ticket/
 
 ## What's New
 
+- **v0.29.0** (2026-08-10): Epic swimlane board, epics as first-class tickets, header refresh with grouped controls, radius/gap design tokens, keyboard-only focus rings
 - **v0.27.0** (2026-07-27): Project-level cloud onboarding, multi-hop trace graph traversal, +/- array edits in the config CLI
 - **v0.24.0** (2026-06-13): Calmer project switcher — inactive projects reveal on hover
 - **v0.16.0** (2026-05-05): Cross-project ticket search from QuickSearch
