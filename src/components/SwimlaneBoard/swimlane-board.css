@@ -160,9 +160,12 @@
   }
 
   /* In the collapsed bar, the key is a fixed-width inline block before the
-     title, keeping the lane summary on a single line. */
+     title, keeping the lane summary on a single line. Override the expanded
+     align-self: flex-start (a column-axis rule) so the key centers vertically
+     with the rest of the row. */
   .swimlane-board__lane--collapsed .swimlane-board__lane-key {
     flex: 0 0 auto;
+    align-self: center;
   }
 
   .swimlane-board__lane--collapsed .swimlane-board__lane-title {
