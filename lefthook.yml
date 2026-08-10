@@ -24,4 +24,12 @@ remotes:
       # See docs/semantic-classes.md in agent-commit-hooks for the full concept.
       - configs/general/enforce-semantic-classes.yml
 
+# NOTE: the parse-css gate lives in lefthook-local.yml (not here).
+# A local pre-commit > commands block in lefthook.yml is OVERRIDDEN by the
+# remote pre-commit > scripts brought in above (lefthook 2.1.10 does not
+# deep-merge local commands into the same key as remote scripts). However,
+# a commands block in lefthook-local.yml DOES merge alongside the remote
+# scripts. lefthook-local.yml is gitignored, so each clone must recreate it
+# — see scripts/parse-css.mjs header comment for the one-line setup.
+
 # Override: remove glob restriction for testing

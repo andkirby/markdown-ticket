@@ -6,6 +6,8 @@ Guide for organizing CSS, class naming, and themeable styling in this project.
 - [THEME.md](THEME.md) - Design tokens (colors, typography)
 - [BADGE_ARCHITECTURE.md](BADGE_ARCHITECTURE.md) - Data attribute pattern for badges
 - [MODALS.md](MODALS.md) - Modal and overlay standards
+- [PRIMITIVES.md](PRIMITIVES.md) - Inventory of shared CSS classes (the "what exists")
+- [ITCSS.md](ITCSS.md) - ITCSS layer architecture (the "which layer")
 
 ---
 
@@ -438,53 +440,14 @@ This is usually the right balance.
 
 ---
 
-## Current Shared Primitives
+## Shared Primitives
 
-Existing global classes in `src/index.css` and shared entity CSS include:
+The catalog of existing global classes lives in [PRIMITIVES.md](PRIMITIVES.md),
+kept accurate by a nightly drift check. This file defines the *rules* for naming
+and extracting classes; PRIMITIVES.md is the *inventory* of what exists.
 
-| Class | Purpose | File |
-|-------|---------|------|
-| `.btn`, `.btn-*` | Button variants | `styles/components/buttons.css` |
-| `.badge`, `.badge[*]` | Ticket attribute badges | `components/Badge/badge.css` |
-| `.card`, `.card-*` | Card structure | `styles/components/layout.css` |
-| `.input`, `.input-error` | Form inputs | `styles/components/forms.css` |
-| `.label` | Form labels | `styles/components/forms.css` |
-| `.dropdown`, `.dropdown-*` | Dropdown menus | `styles/components/overlays.css` |
-| `.modal`, `.modal-*` | Modal dialogs | `components/ui/modal.css` |
-| `.modal__headline` | Canonical modal `<h1>` title | `components/ui/modal.css` |
-| `.tooltip`, `.tooltip-*` | Tooltips | `styles/components/overlays.css` |
-| `.skeleton`, `.skeleton-*` | Loading placeholders | `styles/components/loading.css` |
-| `.fav-star`, `.fav-star--*` | Favorite star indicator | `styles/entities/fav-star.css` |
-| `.fav-star-btn`, `.fav-star-btn--*` | Star toggle button wrapper | `styles/entities/fav-star.css` |
-| `.project-card`, `.project-card--*` | Project selector card (rail + panel) | `components/ProjectSelector/project-selector.css` |
-| `.project-chip`, `.project-chip__*` | Compact project chip (rail inactive) | `components/ProjectSelector/project-selector.css` |
-| `.project-launcher` | Panel launcher button | `components/ProjectSelector/project-selector.css` |
-| `.project-chips-overlay`, `.project-chips-overlay__*` | Hover-revealed inactive chip strip (MDT-185) | `components/ProjectSelector/project-selector.css` |
-| `.project-expand-hint` | Chevron hint on active card edge (MDT-185) | `components/ProjectSelector/project-selector.css` |
-| `.project-search` | Panel search input | `components/ProjectSelector/project-selector.css` |
-| `.project-lift` | Shared hover lift transition | `components/ProjectSelector/project-selector.css` |
-| `.search-result`, `.search-result__*` | Quick search result items | `components/QuickSearch/quick-search.css` |
-| `.search-results-list` | Result list container with dividers | `components/QuickSearch/quick-search.css` |
-| `.search-section-header` | Section header in results | `components/QuickSearch/quick-search.css` |
-| `.search-mode-badge` | Mode indicator pill (In: CODE) | `components/QuickSearch/quick-search.css` |
-| `.search-skeleton-bar` | Loading skeleton bar | `components/QuickSearch/quick-search.css` |
-| `.count-badge`, `.count-badge--*` | Count indicators | `styles/components/loading.css` |
-| `.status-dot`, `.status-dot--*` | Pulsing status dots | `styles/components/loading.css` |
-| `.avatar`, `.avatar-*` | Avatar sizes | `styles/components/layout.css` |
-| `.settings-*` | Settings modal | `components/SettingsModal/settings.css` |
-| `.tab`, `.tab__*`, `.tab--*` | Shared Radix Tabs pattern | `components/SettingsModal/settings.css` |
-| `.ticket-card`, `.ticket-card--invalid` | Ticket card surface + hover | `components/TicketCard/ticket.css` |
-| `.ticket-card__title` | Ticket title typography | `components/TicketCard/ticket.css` |
-| `.ticket-card--projected` | Cloud-projected stub (dashed border) | `components/TicketCard/ticket.css` |
-| `.board-container` | Kanban grid layout | `components/Column/column.css` |
-| `.column`, `.column--over` | Board column + drop target | `components/Column/column.css` |
-| `.column__header` | Column gradient header bar | `components/Column/column.css` |
-| `.column__count` | Ticket count badge in header | `components/Column/column.css` |
-| `.column-drop-zone` | Inner scrollable ticket list | `components/Column/column.css` |
-| `.draggable-ticket`, `.draggable-ticket--*` | Drag wrapper states | `components/Column/column.css` |
-| `.header`, `.header__*` | Sticky navigation bar | `components/Header/header.css` |
-
-This section is a snapshot, not the source of truth for naming rules.
+Rules for adding to the inventory are above (§Class Taxonomy, §Semantic
+Variants). When you extract a new shared primitive, add a row to PRIMITIVES.md.
 
 ### Shared Tabs
 
