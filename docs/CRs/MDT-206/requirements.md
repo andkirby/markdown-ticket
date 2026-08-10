@@ -36,6 +36,7 @@ MDT-206 adds an epic swimlane board layout selected from the existing app header
 | Collapse default + persistence | All lanes are collapsed by default; the expanded-lane set persists to localStorage across reloads. | Expanded-by-default with no persistence, or a collapsed-set that grows stale. | A compact first-load view; the user's expand choices survive reload. |
 | Show closed | A toolbar toggle (off by default) hides epic lanes whose epic is Implemented so the board focuses on active work. | Always showing closed epics, or hiding them with no way to reveal. | Active work is the default; closed epics are opt-in. |
 | Collapsed key-before-title | In the collapsed bar, the epic key block sits before the title on a single line. | Title-then-key inside a column, forcing two lines. | A scannable one-line summary per collapsed epic. |
+| Column collapse (swimlane) | Swimlane status columns collapse from their header into a 44px rail (status dot + click-to-expand), hiding that column's drop zones in every lane. State is keyed by primary status in the shared `mdt-settings-collapsed-columns` key, so a status collapsed in one view collapses in the other. Column collapse and lane collapse are independent. | A per-view column-collapse key, or a collapsed column that keeps accepting drops. | "Collapsible like the Board page" means the same memory and mechanism — no second source of truth. |
 
 ---
 Use `requirements.trace.md` for canonical requirement rows and route summaries.

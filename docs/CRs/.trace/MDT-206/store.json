@@ -213,6 +213,13 @@
       "text": "WHEN the Show closed toggle is off, the system shall hide epic lanes whose epic is in a terminal (Implemented) status so the board focuses on active work; the No-epic lane is never hidden by this toggle.",
       "sourceRef": "CR:MDT-206",
       "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-5.3",
+      "kind": "behavior",
+      "text": "WHILE swimlane mode is active, the system shall let the user collapse any status column from its header into a 44px rail (status dot + click-to-expand), hiding that column's drop zones in every lane. Column collapse state is keyed by primary status and persisted in the shared mdt-settings-collapsed-columns key used by the flat Board, so a status collapsed in one view is collapsed in the other and stays in sync across tabs via the collapsed-columns-change event. Column collapse and lane collapse are independent axes.",
+      "sourceRef": "CR:MDT-206",
+      "routePolicy": "bdd"
     }
   ],
   "scenarios": [
@@ -382,6 +389,17 @@
       "given": "the user has expanded one or more lanes in swimlane mode",
       "when": "the page is reloaded",
       "then": "the previously expanded lanes are restored from localStorage",
+      "sourceRef": "CR:MDT-206"
+    },
+    {
+      "id": "column_collapses_to_rail_shared_with_flat_board",
+      "title": "Swimlane column collapses to a rail, shared with flat board",
+      "covers": [
+        "BR-5.3"
+      ],
+      "given": "the user is on the swimlane board with lanes expanded",
+      "when": "the user clicks the collapse chevron on a status column header",
+      "then": "the column header becomes a 44px click-to-expand rail, that status's lane-body cells become narrow strips with no drop zones, the collapse is persisted to mdt-settings-collapsed-columns (shared with the flat Board), and clicking the rail re-expands the column",
       "sourceRef": "CR:MDT-206"
     }
   ],
@@ -694,19 +712,6 @@
       "sourceRef": "CR:MDT-206"
     },
     {
-      "id": "TEST-swimlane-component",
-      "kind": "unit",
-      "title": "Swimlane lane label structure and clickable epic key",
-      "covers": [
-        "BR-2.5",
-        "BR-5.2",
-        "C5",
-        "C6",
-        "OBL-epic-key"
-      ],
-      "sourceRef": "CR:MDT-206"
-    },
-    {
       "id": "TEST-swimlane-board-e2e",
       "kind": "e2e",
       "title": "Epic swimlane board user-visible behavior",
@@ -725,19 +730,29 @@
         "BR-4.2",
         "BR-5.1",
         "BR-5.2",
+        "BR-5.3",
         "C1",
         "C4",
         "C5",
         "C6",
-        "C7",
-        "OBL-board-mode-owner",
-        "OBL-status-only-drop",
-        "OBL-epic-lifecycle",
-        "OBL-lane-controls",
-        "OBL-epic-open",
-        "OBL-epic-key",
-        "OBL-semantic-css"
+        "C7"
       ],
+      "file": "tests/e2e/board/swimlane-board.spec.ts",
+      "sourceRef": "CR:MDT-206"
+    },
+    {
+      "id": "TEST-swimlane-component",
+      "kind": "unit",
+      "title": "Swimlane lane label structure, clickable epic key, and column collapse",
+      "covers": [
+        "BR-2.5",
+        "BR-5.1",
+        "BR-5.2",
+        "BR-5.3",
+        "C5",
+        "C6"
+      ],
+      "file": "src/components/SwimlaneBoard/SwimlaneBoard.test.tsx",
       "sourceRef": "CR:MDT-206"
     }
   ],
@@ -820,6 +835,7 @@
         "lane_collapses_via_whole_label",
         "collapse_state_persists",
         "show_closed_hides_implemented_lanes",
+        "column_collapses_to_rail_shared_with_flat_board",
         "same_epic_drag_updates_status_only",
         "cross_epic_drag_is_rejected",
         "blocked_epic_close_surfaces_children",

@@ -10,7 +10,7 @@
 | `src/components/SwimlaneBoard/SwimlaneBoard.test.tsx` | Failed: epic key was a bare `<span>` (no TicketCode glyph); epic-dot present; chevron on title row; lifecycle pinned to bottom; later failed for non-toggleable label, missing role=button, default-expanded assumption, missing persistence, and key-after-title | `15 pass / 0 fail` |
 | `src/__tests__/routes.test.ts` | Failed: missing `ROUTE_PROJECT_EPICS` export + `buildProjectPath('epics')` | `24 pass / 0 fail` |
 | `src/components/SettingsModal.test.tsx` | Failed: Default View select had no "epics" option | `7 pass / 0 fail` |
-| `tests/e2e/board/swimlane-board.spec.ts` | `3 failed`: missing `board-mode-epics-toggle`; later failed for childless Proposed epic lane omission and visible default swimlane badges; later failed for `/epics` deep-link + flat-toggle race | `9 passed` |
+| `tests/e2e/board/swimlane-board.spec.ts` | `3 failed`: missing `board-mode-epics-toggle`; later failed for childless Proposed epic lane omission and visible default swimlane badges; later failed for `/epics` deep-link + flat-toggle race; round 6 added the column-collapse case | `10 passed` |
 | `server/tests/integration/api.metadata.test.ts` | Failed: metadata list response omitted `level` for explicit epics | `14 passed` |
 
 ## Verification Commands
@@ -32,5 +32,6 @@ bun run --cwd server jest tests/integration/api.metadata.test.ts --runInBand
 - ViewModeSwitcher tests cover the icon-only Board / Swimlanes / List / Docs peer group, accessible names, active state, and mode callbacks.
 - TicketCard tests cover default badge visibility for existing callers and explicit badge suppression for compact swimlane cards.
 - E2E tests cover mode switching, persistence, lane rendering, childless epic lanes, epic-card exclusion in flat/swimlane modes, same-epic drag, cross-epic rejection, progress, blocked close tooltips, collapse/expand controls, swimlane badge toggling, and epic ticket opening.
+- Component + E2E tests cover swimlane **column collapse**: a status column collapses from its header chevron into a 44px click-to-expand rail, that column's lane-body cells become drop-zone-free strips, the collapse persists to the shared `mdt-settings-collapsed-columns` key (same as the flat Board), it restores from localStorage, syncs via the collapsed-columns-change event, and is independent from lane collapse.
 - API metadata tests cover `level` preservation so flat Board filtering and swimlane lane construction receive explicit epic metadata.
 - Constraint coverage is canonical in `tests.trace.md`.

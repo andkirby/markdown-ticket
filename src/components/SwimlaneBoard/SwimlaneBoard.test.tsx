@@ -2,6 +2,7 @@ import type { Ticket } from '../../types'
 import { CRStatus } from '@mdt/domain-contracts'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test'
+import { act } from 'react'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
@@ -277,5 +278,104 @@ describe('SwimlaneBoard lane label (MDT-206 UAT round)', () => {
     const titlePos = Array.prototype.indexOf.call(label.querySelectorAll('*'), title)
     // In the collapsed layout, the key comes before the title text.
     expect(keyPos).toBeLessThan(titlePos)
+  })
+})
+
+// --- UAT round 6: swimlane status columns are collapsible (like the Board) ---
+// Column collapse shares the Board's mdt-settings-collapsed-columns key (keyed
+// by primary status), so collapsing a status in one view collapses it in the
+// other. Lane collapse (above) is a separate, independent mechanism.
+
+describe('SwimlaneBoard column collapse (MDT-206 UAT round 6)', () => {
+  beforeEach(() => {
+    localStorage.clear()
+  })
+
+  afterEach(() => {
+    cleanup()
+  })
+
+  it('renders a collapse control on each swimlane column header', () => {
+    renderBoard()
+    // Three columns → three collapse chevrons, each tagged by primary status.
+    const chevrons = screen.getAllByTestId('swimlane-col-collapse')
+    expect(chevrons.length).toBe(columns.length)
+    expect(chevrons.some(c => c.getAttribute('data-status') === 'Approved')).toBe(true)
+  })
+
+  it('collapses a swimlane column into a narrow rail and persists to the shared board key', () => {
+    const { container } = renderBoard()
+    // Collapse the "Open" (Approved) column. The chevron button carries the testid.
+    const openChevron = container.querySelector('[data-testid="swimlane-col-collapse"][data-status="Approved"]') as HTMLElement
+    expect(openChevron).not.toBeNull()
+    fireEvent.click(openChevron)
+
+    // Shared key (same one the flat Board uses) now contains the primary status.
+    const stored = localStorage.getItem('mdt-settings-collapsed-columns')
+    expect(stored).not.toBeNull()
+    expect(JSON.parse(stored!)).toContain('Approved')
+
+    // The header is replaced by a click-to-expand rail.
+    expect(container.querySelector('[data-testid="swimlane-col-expand"][data-status="Approved"]')).not.toBeNull()
+
+    // The lane-body cell for that column is a narrow strip, not a drop zone.
+    expect(container.querySelector('[data-testid="swimlane-lane-col-rail"][data-status="Approved"]')).not.toBeNull()
+    // No active drop zone for the collapsed column in any lane.
+    expect(container.querySelectorAll('[data-testid="swimlane-lane-col"][data-status="Approved"]').length).toBe(0)
+  })
+
+  it('expands a collapsed column from the rail', () => {
+    localStorage.setItem('mdt-settings-collapsed-columns', JSON.stringify(['Approved']))
+    const { container } = renderBoard()
+
+    // Collapsed header renders the expand rail.
+    const expandRail = container.querySelector('[data-testid="swimlane-col-expand"][data-status="Approved"]') as HTMLElement
+    expect(expandRail).not.toBeNull()
+    // No chevron for the collapsed column.
+    expect(container.querySelector('[data-testid="swimlane-col-collapse"][data-status="Approved"]')).toBeNull()
+
+    // Click the rail to expand.
+    fireEvent.click(expandRail)
+    expect(container.querySelector('[data-testid="swimlane-col-collapse"][data-status="Approved"]')).not.toBeNull()
+    expect(JSON.parse(localStorage.getItem('mdt-settings-collapsed-columns')!)).not.toContain('Approved')
+  })
+
+  it('restores collapsed columns from the shared localStorage key on load', () => {
+    localStorage.setItem('mdt-settings-collapsed-columns', JSON.stringify(['Approved']))
+    const { container } = renderBoard()
+    expect(container.querySelector('[data-testid="swimlane-col-expand"][data-status="Approved"]')).not.toBeNull()
+  })
+
+  it('keeps lane collapse and column collapse independent', () => {
+    const { container } = renderBoard()
+    // Expand the lane (default-collapsed) and collapse the column.
+    const label = container.querySelector('[data-testid="swimlane-lane-label"]') as HTMLElement
+    fireEvent.click(label)
+    expect(container.querySelector('[data-testid="swimlane-lane"]')?.classList.contains('swimlane-board__lane--collapsed')).toBe(false)
+
+    const openChevron = container.querySelector('[data-testid="swimlane-col-collapse"][data-status="Approved"]') as HTMLElement
+    fireEvent.click(openChevron)
+
+    // Lane stays expanded; column is now collapsed.
+    expect(container.querySelector('[data-testid="swimlane-lane"]')?.classList.contains('swimlane-board__lane--collapsed')).toBe(false)
+    expect(container.querySelector('[data-testid="swimlane-col-expand"][data-status="Approved"]')).not.toBeNull()
+  })
+
+  it('syncs column collapse when the shared change event fires (cross-view/tab contract)', async () => {
+    const { container } = renderBoard()
+    expect(container.querySelector('[data-testid="swimlane-col-expand"][data-status="Approved"]')).toBeNull()
+
+    // Simulate the Board (or another tab) writing the setting + dispatching.
+    // Wrapped in act() because a raw dispatchEvent triggers a setState outside
+    // React's batching boundary (the production listener is identical to the
+    // flat Board's verified pattern).
+    localStorage.setItem('mdt-settings-collapsed-columns', JSON.stringify(['Approved']))
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent('markdown-ticket:settings:collapsed-columns-change', {
+        detail: { columns: ['Approved'] },
+      }))
+    })
+
+    expect(container.querySelector('[data-testid="swimlane-col-expand"][data-status="Approved"]')).not.toBeNull()
   })
 })
