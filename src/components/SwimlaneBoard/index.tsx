@@ -468,18 +468,22 @@ export function SwimlaneBoard({
                 {columns.map((column) => {
                   const primaryStatus = column.statuses[0]
                   // Collapsed column → narrow strip rail (no drop zone), mirroring
-                  // the flat Board's 44px collapsed column. The rail still reports
-                  // its lane+status so tests can assert the cell is present.
+                  // the flat Board's 44px collapsed column. The whole strip is a
+                  // click target to re-expand the column (Board parity: the entire
+                  // collapsed column is one big expand button).
                   if (collapsedColumns.includes(primaryStatus)) {
                     return (
-                      <div
+                      <button
+                        type="button"
                         key={column.label}
                         className="swimlane-board__lane-col-rail"
                         data-column-color={column.color}
                         data-testid="swimlane-lane-col-rail"
                         data-lane-key={lane.key}
                         data-status={primaryStatus}
-                        aria-hidden="true"
+                        aria-label={`Expand column ${column.label}`}
+                        title={`Expand ${column.label}`}
+                        onClick={() => toggleColumnCollapse(primaryStatus)}
                       />
                     )
                   }

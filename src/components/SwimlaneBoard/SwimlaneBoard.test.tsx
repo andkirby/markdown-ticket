@@ -340,6 +340,25 @@ describe('SwimlaneBoard column collapse (MDT-206 UAT round 6)', () => {
     expect(JSON.parse(localStorage.getItem('mdt-settings-collapsed-columns')!)).not.toContain('Approved')
   })
 
+  it('expands a collapsed column by clicking any lane strip in that column (Board parity)', () => {
+    localStorage.setItem('mdt-settings-collapsed-columns', JSON.stringify(['Approved']))
+    const { container } = renderBoard()
+
+    // A collapsed column renders a strip per lane; the strip is clickable (a
+    // button), not a dead div — matching the flat Board where the whole
+    // collapsed column is one click target.
+    const strip = container.querySelector('[data-testid="swimlane-lane-col-rail"][data-status="Approved"]') as HTMLElement
+    expect(strip).not.toBeNull()
+    expect(strip.tagName).toBe('BUTTON')
+    expect(strip.getAttribute('aria-label')).toContain('Expand')
+
+    // Clicking the strip expands the column (chevron returns, key cleared).
+    fireEvent.click(strip)
+    expect(container.querySelector('[data-testid="swimlane-col-collapse"][data-status="Approved"]')).not.toBeNull()
+    expect(container.querySelector('[data-testid="swimlane-lane-col-rail"][data-status="Approved"]')).toBeNull()
+    expect(JSON.parse(localStorage.getItem('mdt-settings-collapsed-columns')!)).not.toContain('Approved')
+  })
+
   it('restores collapsed columns from the shared localStorage key on load', () => {
     localStorage.setItem('mdt-settings-collapsed-columns', JSON.stringify(['Approved']))
     const { container } = renderBoard()
