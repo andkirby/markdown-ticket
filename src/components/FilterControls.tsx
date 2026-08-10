@@ -5,6 +5,8 @@ interface FilterControlsProps {
   searchQuery: string
   onSearchChange: (query: string) => void
   placeholder?: string
+  /** When true, joins this control to its neighbours in a `.control-group`. */
+  groupItem?: boolean
 }
 
 /**
@@ -15,20 +17,21 @@ export const FilterControls: React.FC<FilterControlsProps> = ({
   searchQuery,
   onSearchChange,
   placeholder = 'Filter tickets...',
+  groupItem = false,
 }) => {
   const handleClear = () => {
     onSearchChange('')
   }
 
   return (
-    <div data-testid="filter-controls" className="relative">
+    <div data-testid="filter-controls" className={groupItem ? 'control-group__item relative' : 'relative'}>
       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
       <input
         type="text"
         placeholder={placeholder}
         value={searchQuery}
         onChange={e => onSearchChange(e.target.value)}
-        className="h-9 pl-10 pr-10 text-sm border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 min-w-[200px] [border-radius:var(--radius-input)]"
+        className="h-9 pl-10 pr-10 text-sm border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 min-w-[200px]"
         data-testid="search-input"
       />
       {searchQuery && (

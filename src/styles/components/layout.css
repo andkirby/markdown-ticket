@@ -1,8 +1,46 @@
-/* Layout primitives — cards, avatars */
+/* Layout primitives — cards, avatars, control groups */
 
 @layer components {
   .card {
     @apply rounded-lg border bg-card text-card-foreground shadow-sm;
+  }
+
+  /* ── Control group ──
+     Visually joins adjacent header controls into one segmented cluster
+     (e.g. [search | filter] or [sort | asc]). The wrapper only collapses
+     the inner edges and the gap between members; each control keeps its
+     own surface and border styling.
+
+     A local class instead of the shadcn <ButtonGroup>: ButtonGroup only
+     flattens direct children, but header controls are nested in positioning
+     wrappers (FilterControls' icon wrapper, FilterButton's popover wrapper).
+     This class carries the corner-flattening on the .control-group__item
+     wrapper itself and forces the wrapped control to inherit those corners
+     via border-radius: inherit, so it works for any DOM depth. */
+  .control-group {
+    @apply inline-flex items-stretch;
+  }
+
+  /* Each member opts in with .control-group__item. The first keeps its left
+     corners, the last keeps its right corners, the middle is square. The
+     negative margin collapses the adjacent borders so no double-border shows. */
+  .control-group .control-group__item {
+    border-radius: var(--radius-input);
+  }
+  .control-group .control-group__item:not(:first-child) {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    margin-left: -1px;
+  }
+  .control-group .control-group__item:not(:last-child) {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  /* The wrapped control (input/button/select) adopts the member's corners so
+     its border follows the flattened silhouette. */
+  .control-group .control-group__item > * {
+    border-radius: inherit;
   }
 
   .card-header {
