@@ -41,6 +41,53 @@
   .settings-tab-content {
     @apply p-4 outline-none;
   }
+
+  /* TW→semantic migrations (see src/ITCSS-migration-map.md) */
+  .settings-row {
+    @apply flex items-center justify-between gap-2;
+  }
+  .settings-row--tight {
+    @apply flex items-center gap-2;
+  }
+  .settings-row--wrap {
+    @apply flex flex-wrap items-center justify-between gap-2;
+  }
+  .token-grid {
+    @apply grid gap-2 sm:grid-cols-[1fr_120px];
+  }
+  .settings-token {
+    @apply font-mono text-xs;
+  }
+  .settings-box {
+    @apply rounded-md p-3;
+  }
+  .settings-icon--sm {
+    @apply h-3.5 w-3.5;
+  }
+
+  /* Spacing: mt-3 section separation (extends the --spaced pattern at line ~206). */
+  .settings-section {
+    @apply mt-3;
+  }
+  .settings-action-btn--spaced {
+    @apply mt-2;
+  }
+  .settings-desc--hint {
+    @apply mt-1;
+  }
+
+  /* Vertical stack with gap (was space-y-2 in markup). */
+  .settings-stack {
+    @apply space-y-2;
+  }
+
+  /* Chevron rotate icon (was transition-transform + conditional rotate-180 in markup). */
+  .settings-icon--rotate {
+    @apply transition-transform;
+  }
+  .settings-icon--rotate[data-state="open"] {
+    @apply rotate-180;
+  }
 }
 
 .settings-group {

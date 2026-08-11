@@ -11,8 +11,10 @@ Project-specific conventions for writing frontend code in `src/`. Generic React/
 
 Before touching CSS or a modal component, read these files:
 
-1. `src/STYLING.md` — CSS architecture, BEM naming, inline-vs-extract decision tree
-2. `src/MODALS.md` — three modal patterns, spacing standard, close button rules
+1. `src/STYLING.md` — CSS rules: BEM naming, inline-vs-extract decision tree, surface contract
+2. `src/PRIMITIVES.md` — shared CSS class inventory (what already exists; check before inventing)
+3. `src/ITCSS.md` — ITCSS layer architecture, nesting contract, token-gap registry
+4. `src/MODALS.md` — three modal patterns, spacing standard, close button rules
 
 ## Critical rules
 
@@ -30,13 +32,27 @@ Before touching CSS or a modal component, read these files:
 .btn-primary {
   @apply inline-flex items-center justify-center rounded-md text-sm font-medium
     bg-primary text-primary-foreground;
-  border: 1px solid hsl(var(--border));
+  border: 1px solid oklch(var(--border));
 }
 ```
 
 Only Tailwind utility classes work in `@apply`. If you need to "extend" a base class, copy the utilities and add your own.
 
-### 2. Always run `bun run build` after CSS changes
+### 2. No Tailwind utilities in contracted `.tsx` files
+
+A lefthook hook (`enforce-semantic-classes`, `CONTRACT_ONLY=1`) **blocks commits** on any `.tsx` that has a colocated `@layer components` CSS file AND contains Tailwind utility classes (`flex`, `mt-2`, `gap-2`, etc.). The hook scans the entire staged file — you inherit all pre-existing violations on touch.
+
+- **A file is "contracted"** if a `.css` with `@layer components` lives in the same directory or a same-named subdirectory.
+- **If you need a visual style, put it in the CSS** as a semantic class (`@apply` utilities inside `@layer components`), then reference only the class name in JSX.
+- **Before staging a contracted `.tsx`**, run:
+  ```bash
+  CONTRACT_ONLY=1 node .git/info/lefthook-remotes/agent-commit-hooks/scripts/enforce-semantic-classes.mjs <file>
+  ```
+  If it reports violations, migrate them to `@apply` semantic classes before committing. Never leave a file partially migrated — the hook requires zero.
+
+**CSS nesting:** native `&` nesting is allowed in `.css` files (max 2 levels deep — see ITCSS.md §Nesting). Keep `__element` selectors flat; nest only pseudo-states (`&:hover`, `&:focus-visible`, `&[data-x]`) and direct child combinators (`& > .child`). Never use `@nest`.
+
+### 3. Always run `bun run build` after CSS changes
 
 PostCSS/Tailwind crashes produce unhelpful errors like `Cannot read properties of undefined (reading 'insertAfter')`. The root cause is usually:
 
@@ -52,7 +68,7 @@ bun run build
 # then narrow down to the specific malformed rule.
 ```
 
-### 3. Modals: always use `<Modal>` from `ui/Modal.tsx`
+### 4. Modals: always use `<Modal>` from `ui/Modal.tsx`
 
 Never hand-roll `fixed inset-0` overlays. Three patterns exist:
 
@@ -64,7 +80,7 @@ Never hand-roll `fixed inset-0` overlays. Three patterns exist:
 
 See `src/MODALS.md` for full details.
 
-### 4. Close button: single pattern
+### 5. Close button: single pattern
 
 All close buttons use `modal__close--absolute` (absolutely positioned, SVG sizing in CSS). The `ModalHeader` component renders this automatically. Pattern B modals place it manually.
 
@@ -82,7 +98,7 @@ All close buttons use `modal__close--absolute` (absolutely positioned, SVG sizin
 
 SVG sizing is controlled by CSS (`.modal__close--absolute svg { h-5 w-5 }`), never inline.
 
-### 5. Modal spacing: tight layout
+### 6. Modal spacing: tight layout
 
 | Part | Padding | Border |
 |------|---------|--------|
@@ -91,20 +107,19 @@ SVG sizing is controlled by CSS (`.modal__close--absolute svg { h-5 w-5 }`), nev
 | Footer | `px-4 py-3` | `border-t` |
 | Sections | `px-4 py-3` | `border-b` |
 
-Never use `p-6`. Border color is always `border-gray-200 dark:border-gray-700`.
+Never use `p-6`. Border color is `oklch(var(--border))` — never hardcoded gray.
 
-### 6. z-index hierarchy
+### 7. z-index hierarchy
 
 | Level | Element |
 |-------|---------|
 | `z-40` | ToC (fixed overlay) |
 | `z-50` | Sticky header, modals |
 | `z-[60]` | Dropdowns portaled to body (hamburger menu) |
-| `z-[100]` | Toast notifications |
 
-Dropdown menus that need to appear above modals must use `createPortal` to `document.body` with `z-[60]`.
+Dropdown menus that need to appear above modals must use `createPortal` to `document.body` with `z-[60]`. Toasts (Sonner) manage their own stacking — no z-index needed.
 
-### 7. CSS class naming: BEM with `data-*` variants
+### 8. CSS class naming: BEM with `data-*` variants
 
 Follow `src/STYLING.md` taxonomy:
 
@@ -116,7 +131,7 @@ Follow `src/STYLING.md` taxonomy:
 | Semantic meaning | `data-*` attribute | `.badge[data-status="approved"]` |
 | Behavioral state | `.state` class | `.active`, `.loading` |
 
-### 8. Use `cn()` for dynamic classNames
+### 9. Use `cn()` for dynamic classNames
 
 ```tsx
 // ✅ Correct — handles undefined gracefully
@@ -126,7 +141,7 @@ Follow `src/STYLING.md` taxonomy:
 <div className={`modal__header ${className}`}>
 ```
 
-### 9. CSS imports go through `src/index.css`
+### 10. CSS imports go through `src/index.css`
 
 Extracted CSS files are imported from `src/index.css`, not from individual components:
 
@@ -137,7 +152,7 @@ Extracted CSS files are imported from `src/index.css`, not from individual compo
 @import './styles/entities/fav-star.css';
 ```
 
-### 10. Tabs: shared `.tab` base class
+### 11. Tabs: shared `.tab` base class
 
 Radix Tabs triggers use the `.tab` base class with modifiers:
 
@@ -159,15 +174,18 @@ Before submitting any frontend change:
 
 1. `bun run validate:ts` — TypeScript check
 2. `bun run build` — catches CSS/PostCSS errors
-3. Verify no `@apply` references custom classes: `grep '@apply' src/index.css | grep -v '^[^@]*@apply [a-z]*-'`
-4. Verify no hand-rolled overlays: `grep -r "fixed inset-0" src/components --include="*.tsx"` should only match `ui/Modal.tsx`
-5. Check `data-testid` attributes are preserved
+3. **For contracted `.tsx` files** — run the semantic-classes linter (see rule 2)
+4. Verify no `@apply` references custom classes: `grep '@apply' src/index.css | grep -v '^[^@]*@apply [a-z]*-'`
+5. Verify no hand-rolled overlays: `grep -r "fixed inset-0" src/components --include="*.tsx"` should only match `ui/Modal.tsx`
+6. Check `data-testid` attributes are preserved
 
 ## Anti-patterns
 
 ❌ `@apply modal__header` or `@apply btn` — custom class chains
+❌ Tailwind utilities in a contracted `.tsx` — commit will be blocked; use semantic classes
 ❌ Hand-rolling `fixed inset-0 bg-black/50` — use `<Modal>`
 ❌ `p-6` in modal components — use tight spacing
+❌ Hardcoded border colors — use `oklch(var(--border))`
 ❌ Inline SVG sizing (`<svg className="h-5 w-5">`) on close buttons — CSS handles it
 ❌ Template literals for dynamic className — use `cn()`
 ❌ `focus:ring-primary-500` in `@apply` — use `focus:ring-ring`

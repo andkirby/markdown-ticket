@@ -1,3 +1,5 @@
+@layer components {
+
 .accent-color-picker {
   display: flex;
   flex-direction: column;
@@ -56,41 +58,41 @@
   color: rgb(17 24 39);
   text-align: left;
   transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
-}
 
-.accent-color-picker__preset:hover:not(:disabled) {
-  border-color: rgb(148 163 184);
-  transform: translateY(-1px);
-}
+  &:hover:not(:disabled) {
+    border-color: rgb(148 163 184);
+    transform: translateY(-1px);
+  }
 
-.accent-color-picker__preset:focus-visible {
-  outline: 2px solid rgb(59 130 246);
-  outline-offset: 2px;
-}
+  &:focus-visible {
+    outline: 2px solid rgb(59 130 246);
+    outline-offset: 2px;
+  }
 
-.accent-color-picker__preset[data-selected="true"] {
-  border-color: rgb(37 99 235);
-  box-shadow: 0 0 0 1px rgb(37 99 235 / 0.35);
+  &[data-selected="true"] {
+    border-color: rgb(37 99 235);
+    box-shadow: 0 0 0 1px rgb(37 99 235 / 0.35);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
 }
 
 .dark .accent-color-picker__preset {
   border-color: rgb(71 85 105);
   background: rgb(15 23 42);
   color: rgb(226 232 240);
-}
 
-.dark .accent-color-picker__preset:hover:not(:disabled) {
-  border-color: rgb(148 163 184);
-}
+  &:hover:not(:disabled) {
+    border-color: rgb(148 163 184);
+  }
 
-.dark .accent-color-picker__preset[data-selected="true"] {
-  border-color: rgb(96 165 250);
-  box-shadow: 0 0 0 1px rgb(96 165 250 / 0.4);
-}
-
-.accent-color-picker__preset:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
+  &[data-selected="true"] {
+    border-color: rgb(96 165 250);
+    box-shadow: 0 0 0 1px rgb(96 165 250 / 0.4);
+  }
 }
 
 .accent-color-picker__preset-swatch {
@@ -130,11 +132,11 @@
   border-radius: 0.75rem;
   background: rgb(255 255 255);
   color: rgb(17 24 39);
-}
 
-.accent-color-picker__custom-input:focus {
-  outline: 2px solid rgb(59 130 246);
-  outline-offset: 1px;
+  &:focus {
+    outline: 2px solid rgb(59 130 246);
+    outline-offset: 1px;
+  }
 }
 
 .dark .accent-color-picker__custom-input {
@@ -162,29 +164,31 @@
   color: rgb(107 114 128);
   cursor: pointer;
   transition: color 160ms ease, border-color 160ms ease;
-}
 
-.accent-color-picker__reset:hover:not(:disabled) {
-  color: rgb(220 38 38);
-  border-color: rgb(220 38 38);
-}
+  &:hover:not(:disabled) {
+    color: rgb(220 38 38);
+    border-color: rgb(220 38 38);
+  }
 
-.accent-color-picker__reset:focus-visible {
-  outline: 2px solid rgb(59 130 246);
-  outline-offset: 2px;
-}
+  &:focus-visible {
+    outline: 2px solid rgb(59 130 246);
+    outline-offset: 2px;
+  }
 
-.accent-color-picker__reset:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
 
 .dark .accent-color-picker__reset {
   border-color: rgb(71 85 105);
   color: rgb(156 163 175);
+
+  &:hover:not(:disabled) {
+    color: rgb(248 113 113);
+    border-color: rgb(248 113 113);
+  }
 }
 
-.dark .accent-color-picker__reset:hover:not(:disabled) {
-  color: rgb(248 113 113);
-  border-color: rgb(248 113 113);
-}
+} /* end @layer components */

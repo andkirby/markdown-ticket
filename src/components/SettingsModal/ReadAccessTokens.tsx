@@ -151,7 +151,7 @@ export function ReadAccessTokens({ projects, linkOrigin, onLinkOriginChange }: R
         <p data-testid="sharing-link-origin-fallback-notice" className="settings-desc">{originNotice}</p>
       )}
 
-      <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_120px]">
+      <div className="settings-section token-grid">
         <input
           data-testid="sharing-named-access-name-input"
           value={name}
@@ -189,21 +189,21 @@ export function ReadAccessTokens({ projects, linkOrigin, onLinkOriginChange }: R
         type="button"
         onClick={createNamedAccess}
         disabled={status === 'saving' || !name.trim() || selectedProjects.length === 0}
-        className="settings-action-btn mt-3 disabled:cursor-not-allowed disabled:opacity-60"
+        className="settings-action-btn settings-section"
       >
         {status === 'saving' ? 'Creating...' : 'Create'}
       </button>
       {status === 'error' && <p className="settings-desc text-destructive">Read access was not created.</p>}
 
       {creationResult && (
-        <div data-testid="sharing-creation-result" className="mt-3 rounded-md bg-muted p-3">
+        <div data-testid="sharing-creation-result" className="settings-section settings-box bg-muted">
           <p className="settings-label">{creationResult.name}</p>
-          <input value={creationResult.rawToken} readOnly className="settings-input mt-2 font-mono text-xs" />
+          <input value={creationResult.rawToken} readOnly className="settings-input settings-input--spaced settings-token" />
           <button
             type="button"
             data-testid="sharing-dismiss-creation-result"
             onClick={() => setCreationResult(null)}
-            className="settings-action-btn mt-2"
+            className="settings-action-btn settings-action-btn--spaced"
           >
             Dismiss
           </button>
@@ -211,18 +211,18 @@ export function ReadAccessTokens({ projects, linkOrigin, onLinkOriginChange }: R
       )}
 
       {inviteUrl && (
-        <input data-testid="sharing-invite-url" value={inviteUrl} readOnly className="settings-input mt-3 font-mono text-xs" />
+        <input data-testid="sharing-invite-url" value={inviteUrl} readOnly className="settings-input settings-section settings-token" />
       )}
 
-      <div data-testid="sharing-named-access-list" className="mt-3 space-y-2">
+      <div data-testid="sharing-named-access-list" className="settings-section settings-stack">
         {tokens.map(token => (
           <div
             key={token.id}
             data-testid="sharing-named-access-row"
             data-access-name={token.name}
-            className="rounded-md bg-muted p-3"
+            className="settings-box bg-muted"
           >
-            <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="settings-row--wrap">
               <div>
                 <p className="settings-label">{token.name}</p>
                 <p className="settings-desc">
@@ -231,7 +231,7 @@ export function ReadAccessTokens({ projects, linkOrigin, onLinkOriginChange }: R
                   {token.status}
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="settings-action-row">
                 <button
                   type="button"
                   data-testid="sharing-generate-invite"
@@ -258,7 +258,7 @@ export function ReadAccessTokens({ projects, linkOrigin, onLinkOriginChange }: R
                 type="button"
                 data-testid="confirm-button"
                 onClick={() => void revokeToken(token.id)}
-                className="settings-action-btn mt-2"
+                className="settings-action-btn settings-action-btn--spaced"
               >
                 Confirm revoke
               </button>
