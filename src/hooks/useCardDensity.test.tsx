@@ -24,9 +24,9 @@ describe('useCardDensity', () => {
     document.documentElement.style.cssText = ''
   })
 
-  it('applies comfortable density tokens by default', () => {
+  it('applies regular density tokens by default', () => {
     render(<Harness />)
-    expect(getCardDensity()).toBe('comfortable')
+    expect(getCardDensity()).toBe('regular')
     expect(document.documentElement.style.getPropertyValue('--pad-y')).toBe('10px')
     expect(document.documentElement.style.getPropertyValue('--pad-x')).toBe('12px')
     expect(document.documentElement.style.getPropertyValue('--fs-md')).toBe('13px')

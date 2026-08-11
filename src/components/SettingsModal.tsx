@@ -633,7 +633,7 @@ export function SettingsModal({
                   handleCardDensityChange(e.target.value as CardDensity)}
                 className="settings-select settings-select--spaced"
               >
-                <option value="comfortable">Comfortable</option>
+                <option value="regular">Regular</option>
                 <option value="compact">Compact</option>
               </select>
             </div>
