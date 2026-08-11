@@ -12,9 +12,10 @@ Project-specific conventions for writing frontend code in `src/`. Generic React/
 Before touching CSS or a modal component, read these files:
 
 1. `src/STYLING.md` — CSS rules: BEM naming, inline-vs-extract decision tree, surface contract
-2. `src/PRIMITIVES.md` — shared CSS class inventory (what already exists; check before inventing)
-3. `src/ITCSS.md` — ITCSS layer architecture, nesting contract, token-gap registry
-4. `src/MODALS.md` — three modal patterns, spacing standard, close button rules
+2. `src/THEME.md` — token reference (colors, spacing, radius, gap, typography, z-index)
+3. `src/PRIMITIVES.md` — shared CSS class inventory (what already exists; check before inventing)
+4. `src/ITCSS.md` — ITCSS layer architecture, nesting contract, token-gap registry
+5. `src/MODALS.md` — three modal patterns, spacing standard, close button rules
 
 ## Critical rules
 
@@ -38,7 +39,34 @@ Before touching CSS or a modal component, read these files:
 
 Only Tailwind utility classes work in `@apply`. If you need to "extend" a base class, copy the utilities and add your own.
 
-### 2. No Tailwind utilities in contracted `.tsx` files
+### 2. Use tokens — never invent sizes, colors, spacing, or radii
+
+**Tokens are the single source of truth.** Before writing any hardcoded value (`8px`, `0.5rem`, `#hex`, `oklch(0.5 …)`), check `src/THEME.md` for an existing token. If a token exists, use it. If you need a value that doesn't exist as a token, add the token to `src/styles/design-tokens.css` (both `:root` and `.dark`) — don't hardcode it where you need it.
+
+| Concern | Token scale (consume via bare `var()`) | Examples |
+|---|---|---|
+| **Spacing / gap** | `--gap-xs` (4px), `--gap-sm` (8px), `--gap-md` (16px default), `--gap-lg` (24px) | `gap: var(--gap-md);` between header elements |
+| **Border radius** | `--radius-input` (8px), `--radius-card` (8px), `--radius-xs` (4px), `--radius-pill` (999px) | `border-radius: var(--radius-input);` |
+| **Card density** | `--pad-y`, `--pad-x`, `--fs-xs`, `--fs-md` (driven by CardDensity pref) | driven by `useCardDensity` — don't hardcode card padding |
+| **Icon / control sizing** | `--sz-icon` (16px glyph), `--sz-control` (32px hit target) | glyph beside ticket key |
+| **Colors** | `--bg-subtle/muted/elevated`, `--text-muted/subtle`, `--primary-text`, `--border-strong`, status/priority/type tokens | `background: var(--bg-elevated);` |
+| **Border** | `oklch(var(--border))` (shadcn channel set) | `border-color: oklch(var(--border));` |
+
+```css
+/* ❌ DRIFT — hardcoded values invent a new scale */
+.card { padding: 8px; gap: 16px; border-radius: 6px; border: 1px solid #ccc; }
+
+/* ✅ CORRECT — tokens keep the system coherent */
+.card { padding: var(--pad-y) var(--pad-x); gap: var(--gap-md); border-radius: var(--radius-card); border-color: oklch(var(--border)); }
+```
+
+**Two consumption patterns** — know the difference:
+- **shadcn bare-channel set** (`--background`, `--primary`, `--border`, …): `L C H` triplets, consume via `oklch(var(--x))` or Tailwind `bg-x`.
+- **v3 semantic set** (`--bg-subtle`, `--gap-md`, `--radius-input`, …): full values, consume via bare `var(--x)`.
+
+See `src/THEME.md` for the full token reference. When extracting a new semantic class, always check `src/PRIMITIVES.md` first — a shared class for your pattern may already exist.
+
+### 3. No Tailwind utilities in contracted `.tsx` files
 
 A lefthook hook (`enforce-semantic-classes`, `CONTRACT_ONLY=1`) **blocks commits** on any `.tsx` that has a colocated `@layer components` CSS file AND contains Tailwind utility classes (`flex`, `mt-2`, `gap-2`, etc.). The hook scans the entire staged file — you inherit all pre-existing violations on touch.
 
@@ -52,7 +80,7 @@ A lefthook hook (`enforce-semantic-classes`, `CONTRACT_ONLY=1`) **blocks commits
 
 **CSS nesting:** native `&` nesting is allowed in `.css` files (max 2 levels deep — see ITCSS.md §Nesting). Keep `__element` selectors flat; nest only pseudo-states (`&:hover`, `&:focus-visible`, `&[data-x]`) and direct child combinators (`& > .child`). Never use `@nest`.
 
-### 3. Always run `bun run build` after CSS changes
+### 4. Always run `bun run build` after CSS changes
 
 PostCSS/Tailwind crashes produce unhelpful errors like `Cannot read properties of undefined (reading 'insertAfter')`. The root cause is usually:
 
@@ -68,7 +96,7 @@ bun run build
 # then narrow down to the specific malformed rule.
 ```
 
-### 4. Modals: always use `<Modal>` from `ui/Modal.tsx`
+### 5. Modals: always use `<Modal>` from `ui/Modal.tsx`
 
 Never hand-roll `fixed inset-0` overlays. Three patterns exist:
 
@@ -80,7 +108,7 @@ Never hand-roll `fixed inset-0` overlays. Three patterns exist:
 
 See `src/MODALS.md` for full details.
 
-### 5. Close button: single pattern
+### 6. Close button: single pattern
 
 All close buttons use `modal__close--absolute` (absolutely positioned, SVG sizing in CSS). The `ModalHeader` component renders this automatically. Pattern B modals place it manually.
 
@@ -98,7 +126,7 @@ All close buttons use `modal__close--absolute` (absolutely positioned, SVG sizin
 
 SVG sizing is controlled by CSS (`.modal__close--absolute svg { h-5 w-5 }`), never inline.
 
-### 6. Modal spacing: tight layout
+### 7. Modal spacing: tight layout
 
 | Part | Padding | Border |
 |------|---------|--------|
@@ -109,7 +137,7 @@ SVG sizing is controlled by CSS (`.modal__close--absolute svg { h-5 w-5 }`), nev
 
 Never use `p-6`. Border color is `oklch(var(--border))` — never hardcoded gray.
 
-### 7. z-index hierarchy
+### 8. z-index hierarchy
 
 | Level | Element |
 |-------|---------|
@@ -119,7 +147,7 @@ Never use `p-6`. Border color is `oklch(var(--border))` — never hardcoded gray
 
 Dropdown menus that need to appear above modals must use `createPortal` to `document.body` with `z-[60]`. Toasts (Sonner) manage their own stacking — no z-index needed.
 
-### 8. CSS class naming: BEM with `data-*` variants
+### 9. CSS class naming: BEM with `data-*` variants
 
 Follow `src/STYLING.md` taxonomy:
 
@@ -131,7 +159,7 @@ Follow `src/STYLING.md` taxonomy:
 | Semantic meaning | `data-*` attribute | `.badge[data-status="approved"]` |
 | Behavioral state | `.state` class | `.active`, `.loading` |
 
-### 9. Use `cn()` for dynamic classNames
+### 10. Use `cn()` for dynamic classNames
 
 ```tsx
 // ✅ Correct — handles undefined gracefully
@@ -141,7 +169,7 @@ Follow `src/STYLING.md` taxonomy:
 <div className={`modal__header ${className}`}>
 ```
 
-### 10. CSS imports go through `src/index.css`
+### 11. CSS imports go through `src/index.css`
 
 Extracted CSS files are imported from `src/index.css`, not from individual components:
 
@@ -152,7 +180,7 @@ Extracted CSS files are imported from `src/index.css`, not from individual compo
 @import './styles/entities/fav-star.css';
 ```
 
-### 11. Tabs: shared `.tab` base class
+### 12. Tabs: shared `.tab` base class
 
 Radix Tabs triggers use the `.tab` base class with modifiers:
 
@@ -174,7 +202,7 @@ Before submitting any frontend change:
 
 1. `bun run validate:ts` — TypeScript check
 2. `bun run build` — catches CSS/PostCSS errors
-3. **For contracted `.tsx` files** — run the semantic-classes linter (see rule 2)
+3. **For contracted `.tsx` files** — run the semantic-classes linter (see rule 3)
 4. Verify no `@apply` references custom classes: `grep '@apply' src/index.css | grep -v '^[^@]*@apply [a-z]*-'`
 5. Verify no hand-rolled overlays: `grep -r "fixed inset-0" src/components --include="*.tsx"` should only match `ui/Modal.tsx`
 6. Check `data-testid` attributes are preserved
@@ -182,6 +210,7 @@ Before submitting any frontend change:
 ## Anti-patterns
 
 ❌ `@apply modal__header` or `@apply btn` — custom class chains
+❌ Hardcoded sizes/spacing/colors/radii — use tokens (see rule 2)
 ❌ Tailwind utilities in a contracted `.tsx` — commit will be blocked; use semantic classes
 ❌ Hand-rolling `fixed inset-0 bg-black/50` — use `<Modal>`
 ❌ `p-6` in modal components — use tight spacing
