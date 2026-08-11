@@ -21,7 +21,7 @@ const DENSITY_VARS: Record<CardDensity, Record<string, string>> = {
     '--fs-md': '12px',
     '--radius-card': '4px',
   },
-  comfortable: {
+  regular: {
     '--pad-y': '10px',
     '--pad-x': '12px',
     '--fs-xs': '11px',
@@ -34,7 +34,7 @@ export function useCardDensity(): void {
   useEffect(() => {
     const apply = (): void => {
       const density = getCardDensity()
-      const vars = DENSITY_VARS[density] ?? DENSITY_VARS.comfortable
+      const vars = DENSITY_VARS[density] ?? DENSITY_VARS.regular
       for (const [prop, value] of Object.entries(vars)) {
         document.documentElement.style.setProperty(prop, value)
       }

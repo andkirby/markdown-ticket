@@ -9,7 +9,7 @@ export const PIN_RAIL_ENABLED_CHANGE_EVENT = 'markdown-ticket:settings:pin-rail-
 export const PIN_RAIL_PINNED_CHANGE_EVENT = 'markdown-ticket:settings:pin-rail-pinned-change'
 
 export type DefaultView = 'board' | 'list' | 'epics'
-export type CardDensity = 'comfortable' | 'compact'
+export type CardDensity = 'regular' | 'compact'
 export type MarkdownDensity = 'compact' | 'default' | 'comfortable'
 
 export const MarkdownDensities = ['compact', 'default', 'comfortable'] as const
@@ -46,7 +46,7 @@ export function setDefaultViewPreference(view: DefaultView): void {
 }
 
 export function getCardDensity(): CardDensity {
-  return readStorageString(CARD_DENSITY_KEY, 'comfortable') as CardDensity
+  return readStorageString(CARD_DENSITY_KEY, 'regular') as CardDensity
 }
 
 export function setCardDensityPreference(density: CardDensity): void {
