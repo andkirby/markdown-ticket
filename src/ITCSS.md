@@ -15,6 +15,38 @@ tokens exist*. They answer different questions — read accordingly.
 
 ---
 
+## Token-first rule
+
+**Before writing any hardcoded value (`8px`, `0.5rem`, `#hex`, `oklch(0.5 …)`),
+check [THEME.md](THEME.md) for an existing token. If a token exists, use it. If
+you need a value that doesn't exist as a token, add it to `design-tokens.css`
+(both `:root` and `.dark`) — don't hardcode it where you need it.**
+
+The token scales (from `design-tokens.css`):
+
+| Concern | Tokens | Consume via |
+|---|---|---|
+| Spacing / gap | `--gap-xs` (4px), `--gap-sm` (8px), `--gap-md` (16px), `--gap-lg` (24px) | bare `var(--gap-md)` |
+| Border radius | `--radius-input` (8px), `--radius-card` (8px), `--radius-xs` (4px), `--radius-pill` (999px) | bare `var(--radius-card)` |
+| Card density | `--pad-y`, `--pad-x`, `--fs-xs`, `--fs-md` | driven by `useCardDensity` |
+| Icon / control | `--sz-icon` (16px), `--sz-control` (32px) | glyph + hit target |
+| Colors (v3 semantic) | `--bg-subtle/muted/elevated`, `--text-muted/subtle`, `--primary-text`, `--border-strong`, status/priority/type tokens | bare `var(--bg-elevated)` |
+| Colors (shadcn channel) | `--background`, `--primary`, `--border`, … | `oklch(var(--border))` |
+
+```css
+/* ❌ DRIFT — invents a new scale */
+.card { padding: 8px; gap: 16px; border-radius: 6px; border: 1px solid #ccc; }
+
+/* ✅ CORRECT — tokens keep the system coherent */
+.card { padding: var(--pad-y) var(--pad-x); gap: var(--gap-md); border-radius: var(--radius-card); border-color: oklch(var(--border)); }
+```
+
+Two consumption patterns — know the difference:
+- **shadcn bare-channel set** (`--background`, `--primary`, `--border`): `L C H` triplets → `oklch(var(--x))`
+- **v3 semantic set** (`--bg-subtle`, `--gap-md`, `--radius-input`): full values → bare `var(--x)`
+
+---
+
 ## The Inverted Triangle
 
 ITCSS organizes CSS by **specificity and reach**, broadest/least-specific at the
