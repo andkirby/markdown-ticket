@@ -152,7 +152,7 @@ export function ProjectAccents({
   }, [autocolor, selectedCode, onAccentChange, onAccentReset])
 
   if (!loaded) {
-    return <p className="settings-desc mt-1">Loading…</p>
+    return <p className="settings-desc settings-desc--hint">Loading…</p>
   }
 
   return (
@@ -257,7 +257,7 @@ export function ProjectAccents({
                 title="Reset to default"
                 onClick={handleReset}
               >
-                <RotateCcw className="h-3.5 w-3.5" />
+                <RotateCcw className="settings-icon--sm" />
               </button>
             )}
             {hasUnsavedChanges && (
@@ -268,7 +268,7 @@ export function ProjectAccents({
                 title="Save changes"
                 onClick={onSave}
               >
-                <Check className="h-3.5 w-3.5" />
+                <Check className="settings-icon--sm" />
               </button>
             )}
             <a
@@ -288,7 +288,7 @@ export function ProjectAccents({
               title="Color palette"
               onClick={() => setPaletteOpen(prev => !prev)}
             >
-              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${paletteOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className="settings-icon--sm settings-icon--rotate" data-state={paletteOpen ? 'open' : 'closed'} />
             </button>
           </div>
 

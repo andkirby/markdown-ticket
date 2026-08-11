@@ -17,6 +17,8 @@
  * --border-strong (edges), --text-muted/--text-subtle (text). No new tokens.
  */
 
+@layer components {
+
 .pin-rail {
   flex-shrink: 0;
   display: none;
@@ -232,3 +234,5 @@
 .pin-tooltip__status .badge {
   font-size: 10px;
 }
+
+} /* end @layer components */

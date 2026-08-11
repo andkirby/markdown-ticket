@@ -12,6 +12,8 @@
 
 /* ── Star button wrapper ── */
 
+@layer components {
+
 .fav-star-btn {
   @apply inline-flex items-center justify-center cursor-pointer transition-all;
   background: none;
@@ -139,6 +141,8 @@
   height: 1rem;
   flex-shrink: 0;
 }
+
+} /* end @layer components */
 
 /* CSS Variables - Light Mode (default) */
 :root {
