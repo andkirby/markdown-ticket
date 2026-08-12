@@ -463,35 +463,22 @@ class SSEClient {
    * Get full URL for SSE endpoint
    */
   private getFullUrl(path: string): string {
-    // Use backend URL from environment variable or fall back to same origin
+    // Explicit cross-origin backend override takes precedence.
     const backendUrl = import.meta.env.VITE_BACKEND_URL || ''
 
-    if (typeof window === 'undefined') {
-      // SSR context - use backend URL or fallback to localhost
-      return backendUrl ? `${backendUrl}${path}` : `http://localhost:3001${path}`
-    }
-
-    // If backend URL is explicitly configured, use it
     if (backendUrl) {
       return `${backendUrl}${path}`
     }
 
-    // Check if we're in Docker environment by looking at port
-    const currentPort = window.location.port
-
-    // In Docker environment (port 5174), use same origin to go through Vite proxy
-    // In local development (port 5173), use same origin to go through Vite proxy
-    // The Vite proxy will handle routing /api requests to the backend
-    if (currentPort === '5173' || currentPort === '5174') {
-      return `${window.location.origin}${path}`
+    // No window (SSR / build): no proxy available, so target the backend port
+    // injected at build time (VITE_BACKEND_PORT; defaults to the canonical port).
+    if (typeof window === 'undefined') {
+      return `http://localhost:${import.meta.env.VITE_BACKEND_PORT || '3001'}${path}`
     }
 
-    // In development with same host but different port, use backend port
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      return `http://localhost:3001${path}`
-    }
-
-    // In production or other environments, use same origin (goes through Vite proxy)
+    // Browser: use same origin. The Vite dev proxy (or a production reverse proxy)
+    // routes /api to the backend, whose port is resolved from BACKEND_PORT — so the
+    // frontend never needs to know it. (MDT-117)
     return `${window.location.origin}${path}`
   }
 }

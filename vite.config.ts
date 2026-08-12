@@ -677,6 +677,12 @@ export default defineConfig(({ mode }) => {
     build: {
       chunkSizeWarningLimit: 1500,
     },
+    define: {
+      // Inject the resolved backend port so non-browser code can build an absolute
+      // backend URL without hardcoding it. Browser code uses same-origin through the
+      // /api proxy (which tracks BACKEND_PORT) and never needs this. (MDT-117)
+      'import.meta.env.VITE_BACKEND_PORT': JSON.stringify(resolveBackendPort(VITE_DEFAULT_PORTS.BACKEND)),
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
