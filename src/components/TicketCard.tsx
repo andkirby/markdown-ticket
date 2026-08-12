@@ -37,7 +37,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onMove: _onMove, onClic
       title={hasInvalidStatus ? `Invalid status: "${ticket.status}"` : undefined}
     >
       {/* Row 1: code (left) + timestamp (right) */}
-      <div className="flex items-center justify-between gap-2">
+      <div className="ticket-card__row">
         <span className="ticket-card__code">
           <TicketCode code={ticket.code} ticket={ticket} />
         </span>
@@ -48,8 +48,8 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onMove: _onMove, onClic
       <h4 className="ticket-card__title">{ticket.title}</h4>
 
       {showBadges && (
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1">
+        <div className="ticket-card__row--top">
+          <div className="ticket-card__body">
             <TicketAttributeTags ticket={ticket} isInvalidStatus={hasInvalidStatus} />
           </div>
         </div>

@@ -104,4 +104,15 @@
     font-size: var(--fs-xs, 11px);
     color: var(--text-subtle);
   }
+
+  /* Layout rows (was utility classes in JSX) */
+  .ticket-card__row {
+    @apply flex items-center justify-between gap-2;
+  }
+  .ticket-card__row--top {
+    @apply flex items-start justify-between gap-2;
+  }
+  .ticket-card__body {
+    @apply flex-1;
+  }
 }

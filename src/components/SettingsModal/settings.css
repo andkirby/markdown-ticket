@@ -43,6 +43,13 @@
   }
 
   /* TW→semantic migrations (see src/ITCSS-migration-map.md) */
+  .settings-input--compact {
+    @apply w-20 border px-2 py-1 text-sm;
+    border-radius: var(--radius-input);
+    border-color: oklch(var(--border));
+    background-color: var(--bg-muted);
+    color: oklch(var(--foreground));
+  }
   .settings-row {
     @apply flex items-center justify-between gap-2;
   }

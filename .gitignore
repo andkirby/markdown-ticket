@@ -153,3 +153,4 @@ build-bun-binary.sh
 logs/security/
 # Local-only design mockups (board-zai parallel design system — design artifact)
 docs/design/mockups/wireloom/
+scripts/
