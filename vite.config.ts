@@ -5,6 +5,71 @@ import path from 'node:path'
 import react from '@vitejs/plugin-react'
 import { defineConfig, loadEnv } from 'vite'
 
+// Canonical dev port defaults (mirror of shared/utils/constants.ts DEFAULT_PORTS).
+// Inlined here to avoid a build-time dependency on the @mdt/shared build artifact.
+const VITE_DEFAULT_PORTS = { FRONTEND: 3075, FRONTEND_PREVIEW: 3070, BACKEND: 3001 } as const
+
+// Deprecation warnings fire from both `server.port` and `preview.port` branches;
+// dedupe so each distinct scope prints at most once per process.
+const portWarnings: Record<'frontend' | 'backend', boolean> = { frontend: false, backend: false }
+function warnDeprecatedPort(scope: 'frontend' | 'backend', primary: string, value: number): void {
+  if (portWarnings[scope])
+    return
+  portWarnings[scope] = true
+
+  console.warn(
+    `\n⚠️  Environment variable \`PORT\` is deprecated for the ${scope}; use \`${primary}\` instead.`
+    + ` Reading ${value} from \`PORT\` for now.\n`,
+  )
+}
+
+/**
+ * Resolve a port from FRONTEND_PORT, falling back to a one-time deprecation
+ * warning when the legacy PORT env var is set. Mirrors shared/utils/env.ts
+ * `parsePortEnv` — kept local because this config loads before `shared` is built.
+ */
+function resolveFrontendPort(defaultValue: number): number {
+  const primary = process.env.FRONTEND_PORT
+  if (primary !== undefined && primary !== '') {
+    const parsed = Number.parseInt(primary, 10)
+    if (!Number.isNaN(parsed))
+      return parsed
+  }
+  const legacy = process.env.PORT
+  if (legacy !== undefined && legacy !== '') {
+    const parsed = Number.parseInt(legacy, 10)
+    if (!Number.isNaN(parsed)) {
+      warnDeprecatedPort('frontend', 'FRONTEND_PORT', parsed)
+      return parsed
+    }
+  }
+  return defaultValue
+}
+
+/**
+ * Resolve the backend port from BACKEND_PORT, with a one-time deprecation
+ * warning when only the legacy PORT is set. Mirrors `parsePortEnv` from
+ * shared/utils/env.ts. Used to drive the dev-server `/api` proxy target so
+ * the proxy tracks BACKEND_PORT automatically (MDT-117).
+ */
+function resolveBackendPort(defaultValue: number): number {
+  const primary = process.env.BACKEND_PORT
+  if (primary !== undefined && primary !== '') {
+    const parsed = Number.parseInt(primary, 10)
+    if (!Number.isNaN(parsed))
+      return parsed
+  }
+  const legacy = process.env.PORT
+  if (legacy !== undefined && legacy !== '') {
+    const parsed = Number.parseInt(legacy, 10)
+    if (!Number.isNaN(parsed)) {
+      warnDeprecatedPort('backend', 'BACKEND_PORT', parsed)
+      return parsed
+    }
+  }
+  return defaultValue
+}
+
 // Frontend logging state
 let frontendSessionActive = false
 let frontendSessionStart = null
@@ -279,7 +344,7 @@ function frontendLoggingPlugin() {
       server.middlewares.use('/api/cache/clear', (req, res, next) => {
         if (req.method === 'POST') {
         // Call backend to clear cache
-          const backendUrl = process.env.DOCKER_BACKEND_URL || 'http://localhost:3001'
+          const backendUrl = process.env.DOCKER_BACKEND_URL || `http://localhost:${resolveBackendPort(VITE_DEFAULT_PORTS.BACKEND)}`
           fetch(`${backendUrl}/api/cache/clear`, { method: 'POST' })
             .then(response => response.json())
             .then(() => {
@@ -550,11 +615,19 @@ ${scriptTag}
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  // Load env vars from .env.local (Vite doesn't auto-load for config)
+  // Load env vars from .env and .env.local (Vite's loadEnv returns an object but
+  // does not populate process.env). Mirror file-only values into process.env
+  // without overriding real env (e.g. Docker compose) so the port resolvers
+  // resolveFrontendPort/resolveBackendPort honor .env. (MDT-117)
   const env = loadEnv(mode, process.cwd(), '')
+  for (const [k, v] of Object.entries(env)) {
+    if (process.env[k] === undefined)
+      process.env[k] = v
+  }
 
-  // In Docker, use backend service name; for E2E tests use VITE_BACKEND_URL; otherwise use localhost
-  const backendUrl = env.VITE_BACKEND_URL || process.env.DOCKER_BACKEND_URL || 'http://localhost:3001'
+  // Precedence: explicit VITE_BACKEND_URL → DOCKER_BACKEND_URL → localhost on the
+  // resolved backend port (BACKEND_PORT, falling back to legacy PORT, then 3001).
+  const backendUrl = env.VITE_BACKEND_URL || process.env.DOCKER_BACKEND_URL || `http://localhost:${resolveBackendPort(VITE_DEFAULT_PORTS.BACKEND)}`
 
   // Shared API proxy — dev and preview both forward /api to the backend.
   // MDT-157 UAT 2026-08-06: changeOrigin must be false so the backend sees the
@@ -612,14 +685,14 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       host: serverHost,
-      port: Number(process.env.PORT) || 3075,
+      port: resolveFrontendPort(VITE_DEFAULT_PORTS.FRONTEND),
       strictPort: true,
       allowedHosts,
       proxy: apiProxy,
     },
     preview: {
       host: serverHost,
-      port: Number(process.env.PORT) || 3070,
+      port: resolveFrontendPort(VITE_DEFAULT_PORTS.FRONTEND_PREVIEW),
       strictPort: true,
       allowedHosts,
       proxy: apiProxy,

@@ -42,7 +42,7 @@ services:
     environment:
       - NODE_ENV=development
       - CHOKIDAR_USEPOLLING=true
-      - PORT=3001
+      - BACKEND_PORT=3001
       # MDT-157 UAT 2026-08-06: backend must bind 0.0.0.0 inside the container
       # so the frontend/nginx service can reach it. Loopback-host no-auth bypass
       # is OFF in Docker (intentional deployment posture — use auth tokens).

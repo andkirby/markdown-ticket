@@ -131,6 +131,25 @@ export const DEFAULTS = {
   CODE_PADDING: 3,
 } as const
 
+/**
+ * Canonical default port allocation for development servers.
+ * Single source of truth for port defaults across services (MDT-117 §5.1).
+ *
+ * - BACKEND: backend Express API (server/server.ts)
+ * - FRONTEND: Vite dev server in development mode (vite.config.ts)
+ * - FRONTEND_PREVIEW: Vite preview / non-dev mode (vite.config.ts)
+ * - MCP: MCP HTTP transport (mcp-server/src/index.ts)
+ *
+ * Test ports live in `shared/test-lib/config/ports.ts` (`DEFAULT_TEST_PORTS`)
+ * to keep the test environment self-contained.
+ */
+export const DEFAULT_PORTS = {
+  BACKEND: 3001,
+  FRONTEND: 3075,
+  FRONTEND_PREVIEW: 3070,
+  MCP: 3002,
+} as const
+
 // Validation Patterns
 export const PATTERNS = {
   YAML_FRONTMATTER: /^---[ \t]*\r?\n([\s\S]*?)\r?\n---[ \t]*\r?\n([\s\S]*)$/,

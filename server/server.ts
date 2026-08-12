@@ -18,7 +18,8 @@ import { resolveTrustedServiceProfile } from '@mdt/shared/services/cloud-sync/tr
 // Services
 import { ProjectService as SharedProjectService } from '@mdt/shared/services/ProjectService.js'
 import { ProjectManager } from '@mdt/shared/tools/ProjectManager.js'
-import { DEFAULTS, getDefaultPaths } from '@mdt/shared/utils/constants.js'
+import { DEFAULT_PORTS, DEFAULTS, getDefaultPaths } from '@mdt/shared/utils/constants.js'
+import { parsePortEnv } from '@mdt/shared/utils/env.js'
 import { logger } from '@mdt/shared/utils/server-logger.js'
 import cors from 'cors'
 // Load environment variables from root .env.local.
@@ -55,7 +56,14 @@ import { TicketService } from './services/TicketService.js'
 import { TreeService } from './services/TreeService.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-config({ path: path.resolve(__dirname, '../.env.local') })
+// Load environment variables. dotenv does not override by default, so load
+// .env.local first (it claims values and wins over .env), then .env (fills
+// remaining gaps). Real process.env — e.g. Docker compose `environment:` —
+// always takes precedence. This makes .env authoritative for shared defaults
+// while .env.local remains the per-dev override (never committed). (MDT-117)
+const rootDir = path.resolve(__dirname, '..')
+config({ path: path.resolve(rootDir, '.env.local') })
+config({ path: path.resolve(rootDir, '.env') })
 
 // Extended project type for server use
 interface ServerProject {
@@ -145,7 +153,7 @@ class ProjectServiceAdapter {
 
 const app: Express = express()
 const runtimeConfig = buildRuntimeConfig()
-const PORT: number = Number(process.env.PORT) || 3001
+const PORT: number = parsePortEnv('BACKEND_PORT', 'PORT', DEFAULT_PORTS.BACKEND)
 // MDT-157 UAT 2026-08-06: bind loopback by default so a disabled-auth or
 // local-bypass backend is unreachable from the LAN/internet. Docker compose
 // sets API_BIND_ADDRESS=0.0.0.0 so the frontend/nginx container can reach it.
