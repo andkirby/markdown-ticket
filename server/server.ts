@@ -8,10 +8,12 @@ import { fileURLToPath } from 'node:url'
 
 import { getTicketsPath } from '@mdt/shared/models/Project.js'
 
+import { bindingFromEnabledConnection } from '@mdt/shared/services/cloud-sync/allocator-strategy.js'
 import { CloudProjectionReadModel } from '@mdt/shared/services/cloud-sync/CloudProjectionReadModel.js'
 import { CloudProjectionStreamClient } from '@mdt/shared/services/cloud-sync/CloudProjectionStreamClient.js'
 import { RuntimeCloudCredentialProvider } from '@mdt/shared/services/cloud-sync/credential-providers.js'
 import { ProjectStateStore } from '@mdt/shared/services/cloud-sync/project-state-store.js'
+import { CloudProjectionSync } from '@mdt/shared/services/cloud-sync/projection-sync.js'
 import { resolveTrustedServiceProfile } from '@mdt/shared/services/cloud-sync/trusted-service-profile.js'
 // Services
 import { ProjectService as SharedProjectService } from '@mdt/shared/services/ProjectService.js'
@@ -191,6 +193,8 @@ const cloudConfigDir = getDefaultPaths().CONFIG_DIR
 const cloudCredentialProvider = new RuntimeCloudCredentialProvider()
 /** Reverse map: cloudProjectId → localProjectId (for SSE fan-out lookup). */
 const cloudToLocalProject = new Map<string, string>()
+/** Persistent projection-write-journal instances (one per enabled project). */
+const projectionSyncs: CloudProjectionSync[] = []
 
 /**
  * Decode the `exp` claim from a CF Access JWT. Returns a conservative
@@ -408,6 +412,20 @@ async function startProjectionStreams(): Promise<void> {
           rootDir: cloudConfigDir,
         })
         logger.info(`[MDT-226] Projection stream started for ${project.id} → ${cloudProjectId}`)
+
+        // Start the bounded write-journal retry runner so stuck entries
+        // (authentication_paused, transient) are retried on a fixed interval
+        // instead of waiting forever (C-12).
+        const binding = bindingFromEnabledConnection(connection.connection)
+        const sync = new CloudProjectionSync({
+          binding,
+          allowedOrigins: globalConfig.cloudSync?.allowedOrigins ?? [],
+          journalRoot: path.join(cloudConfigDir, 'cloud-sync', 'projection-journal'),
+          physicalRepoPath: project.project.path,
+          credentialProvider: cloudCredentialProvider,
+        })
+        sync.startRetryRunner(60_000)
+        projectionSyncs.push(sync)
       }
       catch (error) {
         const message = error instanceof Error ? error.message : String(error)
@@ -547,6 +565,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 process.on('SIGTERM', () => {
   logger.info('Received SIGTERM, shutting down gracefully...')
   projectionStreamManager.stopAll()
+  projectionSyncs.forEach(s => s.stopRetryRunner())
   fileWatcher.stop()
   process.exit(0)
 })
@@ -554,6 +573,7 @@ process.on('SIGTERM', () => {
 process.on('SIGINT', () => {
   logger.info('Received SIGINT, shutting down gracefully...')
   projectionStreamManager.stopAll()
+  projectionSyncs.forEach(s => s.stopRetryRunner())
   fileWatcher.stop()
   process.exit(0)
 })

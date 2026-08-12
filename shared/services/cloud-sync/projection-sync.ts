@@ -66,6 +66,8 @@ export type ProjectionClientPort = Pick<CloudProjectionClient, 'get' | 'poll' | 
 export class CloudProjectionSync {
   private readonly dir: string
   private readonly client: ProjectionClientPort
+  /** Bounded retry runner timer (one per project). */
+  private retryTimer: ReturnType<typeof setInterval> | undefined
 
   constructor(private readonly options: ProjectionSyncOptions) {
     this.dir = join(
@@ -95,14 +97,16 @@ export class CloudProjectionSync {
       operationId: existing?.operationId ?? randomUUID(),
       // Preserve the last known cloud version; 0 for a pre-cloud ticket.
       projectionVersion: existing?.projectionVersion ?? 0,
-      state: existing?.state === 'unmanaged' || existing?.state === 'conflict'
+      // Only `unmanaged` is truly terminal (no projection exists). `conflict`
+      // resets to `pending` so a new edit retries with the adopted version.
+      state: existing?.state === 'unmanaged'
         ? existing.state
         : 'pending',
       updatedAt: new Date().toISOString(),
     }
     await this.write(pending)
-    // Terminal states do not retry automatically.
-    if (pending.state === 'unmanaged' || pending.state === 'conflict') {
+    // unmanaged is terminal: no projection to update.
+    if (pending.state === 'unmanaged') {
       return pending.state
     }
     return this.attempt(pending)
@@ -190,7 +194,56 @@ export class CloudProjectionSync {
       return 'synced'
     }
     catch (error) {
+      // Optimistic concurrency recovery: if the version was stale, adopt the
+      // server's currentVersion and retry once. This handles the cold-start case
+      // where the journal held version 0 but D1 has a real projection at vN.
+      if (error instanceof CoordinatorError
+        && error.code === 'projection_version_conflict'
+        && typeof error.currentVersion === 'number'
+        && error.currentVersion > 0
+        && error.currentVersion !== pending.projectionVersion) {
+        const updated = { ...pending, projectionVersion: error.currentVersion }
+        const recovered = await this.retryWithVersion(updated, credential)
+        if (recovered)
+          return 'synced'
+        // Retry also failed — classify the UPDATED pending so the adopted
+        // version is preserved in the stored entry for the next edit.
+        return this.classifyError(updated, error)
+      }
       return this.classifyError(pending, error)
+    }
+  }
+
+  /**
+   * Retry the PUT with the adopted server version. Called once from
+   * {@link attempt} on a recoverable version conflict. Returns true on success
+   * (entry cleared); false on any second failure (caller classifies).
+   */
+  private async retryWithVersion(
+    pending: PendingProjection,
+    credential: NonNullable<Awaited<ReturnType<CloudCredentialProvider['resolve']>>>,
+  ): Promise<boolean> {
+    try {
+      await this.client.publish(
+        {
+          ticketNumber: pending.ticketNumber,
+          reservationId: '',
+          expectedProjectionVersion: pending.projectionVersion,
+          operationId: pending.operationId,
+          contentHash: pending.contentHash,
+          header: pending.header,
+          lifecycle: pending.lifecycle,
+        },
+        credential,
+      )
+      await this.clear(pending.ticketNumber)
+      return true
+    }
+    catch {
+      // Persist the adopted version so a later retry starts from the server's
+      // version rather than the stale 0.
+      await this.write(pending)
+      return false
     }
   }
 
@@ -253,6 +306,30 @@ export class CloudProjectionSync {
 
   private async clear(ticketNumber: number): Promise<void> {
     await unlink(this.file(ticketNumber)).catch(() => undefined)
+  }
+
+  /**
+   * Start a bounded retry runner that flushes non-terminal journal entries on
+   * a fixed interval (MDT-226 C-12). This replaces the old read-path flush that
+   * caused per-poll D1 amplification. One timer per project; terminal states
+   * (`unmanaged`, `conflict`) are skipped and produce zero traffic.
+   */
+  startRetryRunner(intervalMs = 60_000): void {
+    if (this.retryTimer)
+      return
+    this.retryTimer = setInterval(() => {
+      void this.flush().catch(() => {
+        // Swallow — the runner must never crash the process.
+      })
+    }, intervalMs)
+  }
+
+  /** Stop the bounded retry runner (graceful shutdown). */
+  stopRetryRunner(): void {
+    if (this.retryTimer) {
+      clearInterval(this.retryTimer)
+      this.retryTimer = undefined
+    }
   }
 
   private file(ticketNumber: number): string {
