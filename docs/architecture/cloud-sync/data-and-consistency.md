@@ -331,15 +331,40 @@ creation must recover its original reservation/acknowledgement, or an operator
 must run an explicit legacy import. A later local edit must not reactivate an
 `unmanaged` entry until that eligibility exists.
 
+A cold-start `projection_version_conflict` with a positive `currentVersion` may
+adopt that version and retry the same operation once. This is not
+last-writer-wins. If the retry fails, or if the conflict cannot be proven to be
+only a stale local version, the entry becomes `conflict` and requires explicit
+reconciliation.
+
+## Legacy Projection Import
+
+Existing local tickets that predate cloud sync have no original reservation or
+projection row. The write journal must not create those rows implicitly. The
+only supported bootstrap is an explicit operator import/backfill operation that:
+
+1. scans canonical Markdown tickets for a selected cloud-bound project;
+2. probes D1 for missing projections without disclosing hidden projects to
+   normal callers;
+3. reserves or reuses each ticket number through the coordinator contract;
+4. acknowledges the canonical header as projection version 1;
+5. records idempotency, audit outcome, skipped tickets, and failures; and
+6. leaves local ticket bodies entirely in Markdown/Git.
+
+The import is a CLI/operator workflow, not a runtime retry path. It must be
+idempotent, bounded, and safe to resume after partial failure.
+
 ## Projection Conflicts
 
 A cloud conflict does not change the local file. The client:
 
-1. fetches the current projection;
-2. treats an equal content hash as a completed replay;
-3. otherwise records a sync conflict and shows the current cloud and local
-   header versions;
-4. requires explicit user confirmation before republishing the authoritative
+1. may adopt a positive `currentVersion` and retry once when the only known
+   defect is a cold-start stale local version;
+2. fetches the current projection for any remaining conflict;
+3. treats an equal content hash as a completed replay;
+4. otherwise records a sync conflict and shows the current cloud and local
+   header versions; and
+5. requires explicit user confirmation before republishing the authoritative
    local header against the newly observed version.
 
 There is no automatic last-writer-wins retry and no cloud-to-Markdown merge.
@@ -482,7 +507,7 @@ The browser uses only local application contracts:
 
 | Method and path | Purpose |
 | --- | --- |
-| `GET /api/projects/{localProjectId}/crs` | Unified canonical and projection-only ticket views |
+| `GET /api/projects/{localProjectId}/tickets/unified` | Unified canonical and projection-only ticket views |
 | `GET /api/events` | Ordinary local ticket changes plus high-level project sync status |
 
 A projection-only ticket view includes `kind = projected`, `readOnly = true`,
@@ -490,6 +515,8 @@ and `stale`; these fields describe UI capability. It does not include cloud
 project ID, projection/project revision, stream cursor, catch-up state, cloud
 origin, or credential data. The target architecture removes the browser
 `/api/projects/{id}/cloud-projections` call after the bounded legacy rollout.
+`/api/projects/{id}/crs` remains the canonical Markdown list endpoint; it is not
+the browser's cloud projection surface.
 
 ## Error Contract
 
