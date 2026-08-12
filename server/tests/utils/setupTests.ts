@@ -35,7 +35,7 @@ globalThis.console = {
 
 // Mock process.env for consistent test environment
 process.env.NODE_ENV = 'test'
-process.env.PORT = '3001'
+process.env.BACKEND_PORT = '3001'
 
 /**
  * Create test fixtures.

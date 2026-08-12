@@ -36,7 +36,7 @@ services:
     environment:
       - NODE_ENV=production
       - CHOKIDAR_USEPOLLING=true
-      - PORT=3001
+      - BACKEND_PORT=3001
       # MDT-157 UAT 2026-08-06: backend binds 0.0.0.0 in Docker; loopback bypass off.
       - API_BIND_ADDRESS=0.0.0.0
       - API_LOCAL_HOST_BYPASS=false

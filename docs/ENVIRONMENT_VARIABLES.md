@@ -16,6 +16,14 @@ Complete reference of all environment variables used in the Markdown Ticket proj
 
 ## Frontend Variables (Vite)
 
+### FRONTEND_PORT
+- **Description**: Vite dev / preview server port
+- **Defaults**: `3075` (dev server), `3070` (preview)
+- **Usage**: `vite.config.ts` (resolved by the local `resolveFrontendPort` helper)
+- **Notes**: Canonical name as of MDT-117. The legacy `PORT` env var is still read
+  with a one-time deprecation warning; `FRONTEND_PORT` takes precedence when both
+  are set. Distinct from `VITE_HMR_PORT` (the HMR client port) and `BACKEND_PORT`.
+
 ### VITE_BACKEND_URL
 - **Description**: Backend URL for API and SSE connections
 - **Default**: Empty (uses Vite proxy or `localhost:3001`)
@@ -57,10 +65,22 @@ Complete reference of all environment variables used in the Markdown Ticket proj
 
 Backend runtime variables are parsed by `server/config/runtimeConfig.ts`. The canonical architecture guide is [Runtime Configuration Architecture](architecture/runtime-configuration-architecture.md).
 
-### PORT
-- **Description**: Backend server port
+### BACKEND_PORT
+- **Description**: Backend Express API server port
 - **Default**: `3001`
-- **Usage**: `server/server.ts:98`
+- **Usage**: `server/server.ts:137` (parsed via `parsePortEnv` from `@mdt/shared/utils/env.js`)
+- **Also read by**: `vite.config.ts` — when neither `VITE_BACKEND_URL` nor `DOCKER_BACKEND_URL`
+  is set, the Vite dev-server `/api` proxy targets `http://localhost:${BACKEND_PORT}`, so the
+  frontend tracks a custom backend port automatically. Set `VITE_BACKEND_URL` to override.
+- **Notes**: Canonical name as of MDT-117. The legacy `PORT` env var is still read
+  with a one-time deprecation warning to avoid silently breaking stale `.env.local`
+  files; `BACKEND_PORT` takes precedence when both are set.
+
+### PORT
+- **Status**: **Deprecated** — use `BACKEND_PORT` (backend) or `FRONTEND_PORT` (frontend).
+- **Description**: Previously read by both the backend and the Vite dev server, which
+  caused a port collision under `dev:full` (a single `PORT=` value would be applied to
+  both services). Now read only as a fallback with a startup warning.
 
 ### NODE_ENV
 - **Description**: Environment mode
@@ -379,7 +399,7 @@ MCP_AUTH_TOKEN=<secure-token>
 ### docker-compose.yml (Base)
 - `NODE_ENV=development`
 - `CHOKIDAR_USEPOLLING=true`
-- `PORT=3001`
+- `BACKEND_PORT=3001`
 - `MCP_HTTP_ENABLED=true`
 - `MCP_HTTP_PORT=3002`
 - `MCP_BIND_ADDRESS=0.0.0.0`
