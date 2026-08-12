@@ -117,8 +117,13 @@ function envelopeToCode(status: number, envelope?: Partial<CoordinationErrorEnve
   const known: ReadonlySet<CoordinatorErrorCode> = new Set<CoordinatorErrorCode>([
     'authentication_required',
     'forbidden',
+    'invalid_request',
     'project_not_found',
     'projection_not_found',
+    'projection_version_conflict',
+    'reservation_not_found',
+    'reservation_state_conflict',
+    'idempotency_key_reused',
     'rate_limited',
     'coordination_unavailable',
     'coordination_suspended',
