@@ -216,23 +216,20 @@ export class CloudProjectionStreamClient {
 }
 
 /**
- * Default transport using the runtime WebSocket. The local server attaches
- * Access headers via a per-platform mechanism (e.g. a custom WebSocket subclass
- * or fetch-based upgrade). In Node/Bun, headers on the handshake require a
- * WebSocket implementation that accepts them; the server resolves the credential
- * and passes headers before constructing the client.
+ * Default transport using the runtime WebSocket. Bun's WebSocket accepts
+ * handshake headers as a Bun-specific extension: the SECOND constructor
+ * argument is an options object with a `headers` field. (The `ws`-module
+ * convention of a third argument is a silent no-op in Bun — the headers are
+ * dropped and the CF Access handshake fails.) Verified by round-trip POC.
  */
 const defaultTransport: StreamTransport = {
   connect(url, headers) {
-    // The runtime WebSocket is constructed with handshake headers where
-    // supported. This indirection keeps the client testable.
-    type HeaderedWebSocketCtor = new (
+    type BunHeaderedWebSocketCtor = new (
       url: string,
-      protocols?: string | string[],
       opts?: { headers?: Record<string, string> },
     ) => WebSocket
-    const WS = (globalThis as unknown as { WebSocket: HeaderedWebSocketCtor }).WebSocket
-    const ws = new WS(url, undefined, { headers })
+    const WS = (globalThis as unknown as { WebSocket: BunHeaderedWebSocketCtor }).WebSocket
+    const ws = new WS(url, { headers })
     const conn: StreamConnection = {
       onMessage(handler) { ws.addEventListener('message', e => handler(String(e.data))) },
       onClose(handler) { ws.addEventListener('close', e => handler(e.code, e.reason)) },

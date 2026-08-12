@@ -116,6 +116,16 @@ export class CloudProjectionReadModel {
   }
 
   /**
+   * Whether the read model is stale (not currently live). Inverse of
+   * {@link live}; exposed so the unified-ticket provider contract
+   * (`{ entries, stale }`) can be satisfied without the adapter negating
+   * `live` at every read.
+   */
+  get stale(): boolean {
+    return !this.state.live
+  }
+
+  /**
    * Apply a projection delta. Revision-aware application is idempotent:
    * duplicate/older revisions are ignored; a tombstone removes the entry.
    * Returns true if state changed.
