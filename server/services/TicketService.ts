@@ -186,6 +186,8 @@ export class TicketService {
       type: t.type,
       priority: t.priority,
       assignee: t.assignee ?? null,
+      level: t.level ?? null,
+      phaseEpic: t.phaseEpic ?? null,
       dateCreated: t.dateCreated ? t.dateCreated.toISOString() : null,
       lastModified: t.lastModified ? t.lastModified.toISOString() : null,
     }))
@@ -207,6 +209,8 @@ export class TicketService {
         type: entry.header.type,
         priority: entry.header.priority,
         assignee: entry.header.assignee,
+        level: null,
+        phaseEpic: null,
         dateCreated: entry.header.date_created,
         lastModified: entry.header.last_modified,
       }))

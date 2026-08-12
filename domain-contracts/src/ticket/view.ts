@@ -37,6 +37,20 @@ export interface UnifiedTicketItem {
   type: string | null
   priority: string | null
   assignee: string | null
+  /**
+   * Ticket level (`ticket` | `epic`). Canonical local tickets carry the level
+   * parsed from frontmatter (defaulting to `ticket`); the frontend needs this to
+   * detect epics (flat board excludes them; swimlanes render them as lanes).
+   * Projected entries do not yet carry level and report `null` (a projected
+   * stub is not treated as an epic).
+   */
+  level: string | null
+  /**
+   * For a child ticket, the epic ticket code it belongs to (`phaseEpic`). The
+   * swimlane board needs this to place child tickets under their epic lane.
+   * Projected entries do not carry it and report `null`.
+   */
+  phaseEpic: string | null
   dateCreated: string | null
   lastModified: string | null
 }
