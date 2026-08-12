@@ -85,6 +85,16 @@
   .priority-icon[data-priority="medium"]   { color: var(--prio-medium); }
   .priority-icon[data-priority="low"]      { color: var(--prio-low); }
   .priority-icon[data-priority]:not([data-priority="critical"]):not([data-priority="high"]):not([data-priority="medium"]):not([data-priority="low"]) { color: var(--prio-medium); }
+  /* Epic lightning after the key — same gold (`--epic-3`) the epic badge uses,
+     just the icon (no badge background). Sized to the priority glyph so the
+     `{priority}{key}{lightning}` row reads balanced. */
+  .ticket-code__epic-icon {
+    width: var(--sz-icon);
+    height: var(--sz-icon);
+    flex-shrink: 0;
+    vertical-align: middle;
+    color: var(--epic-3);
+  }
   /* Cloud glyph beside the ticket key on projected stubs (no ownership copy). */
   .ticket-card__cloud-icon {
     width: 1em;
