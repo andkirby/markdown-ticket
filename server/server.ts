@@ -1,16 +1,22 @@
 import type { Express } from 'express'
 import type { ProjectServiceExtension } from './controllers/ProjectController.js'
 import type { ProjectRegistration } from './services/fileWatcher/WatcherLifecycleManager.js'
+import { Buffer } from 'node:buffer'
 import * as path from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 
 import { getTicketsPath } from '@mdt/shared/models/Project.js'
 
+import { CloudProjectionReadModel } from '@mdt/shared/services/cloud-sync/CloudProjectionReadModel.js'
+import { CloudProjectionStreamClient } from '@mdt/shared/services/cloud-sync/CloudProjectionStreamClient.js'
+import { RuntimeCloudCredentialProvider } from '@mdt/shared/services/cloud-sync/credential-providers.js'
+import { ProjectStateStore } from '@mdt/shared/services/cloud-sync/project-state-store.js'
+import { resolveTrustedServiceProfile } from '@mdt/shared/services/cloud-sync/trusted-service-profile.js'
 // Services
 import { ProjectService as SharedProjectService } from '@mdt/shared/services/ProjectService.js'
 import { ProjectManager } from '@mdt/shared/tools/ProjectManager.js'
-import { DEFAULTS } from '@mdt/shared/utils/constants.js'
+import { DEFAULTS, getDefaultPaths } from '@mdt/shared/utils/constants.js'
 import { logger } from '@mdt/shared/utils/server-logger.js'
 import cors from 'cors'
 // Load environment variables from root .env.local.
@@ -39,6 +45,7 @@ import { createSSERouter } from './routes/sse.js'
 import { createSystemRouter } from './routes/system.js'
 import { createApiAuthMiddleware } from './security/apiAuth.js'
 import { createCorsOptions, createOriginPolicy, securityHeaders } from './security/originPolicy.js'
+import { ProjectionStreamManager } from './services/cloud-sync/ProjectionStreamManager.js'
 import { DocumentService } from './services/DocumentService.js'
 import FileWatcherService from './services/fileWatcher/index.js'
 import { PinStateService } from './services/PinStateService.js'
@@ -173,6 +180,71 @@ const projectDiscovery = new SharedProjectService()
 // Business logic services
 const projectServiceAdapter = new ProjectServiceAdapter(projectDiscovery)
 const ticketService = new TicketService(projectDiscovery)
+
+// =============================================================================
+// MDT-226: Cloud projection stream — one backend-owned WebSocket per enabled
+// cloud project. The browser never opens a cloud socket; it consumes the
+// unified ticket API and ordinary SSE events.
+// =============================================================================
+
+const cloudConfigDir = getDefaultPaths().CONFIG_DIR
+const cloudCredentialProvider = new RuntimeCloudCredentialProvider()
+/** Reverse map: cloudProjectId → localProjectId (for SSE fan-out lookup). */
+const cloudToLocalProject = new Map<string, string>()
+
+/**
+ * Decode the `exp` claim from a CF Access JWT. Returns a conservative
+ * fallback (now + 5 min) if the token is not a decodable JWT, so the stream
+ * client reconnects with a refreshed token rather than holding a stale one.
+ */
+function decodeTokenExpiry(token: string): number {
+  try {
+    const payload = JSON.parse(
+      Buffer.from(token.split('.')[1], 'base64').toString('utf8'),
+    )
+    return typeof payload.exp === 'number' ? payload.exp * 1000 : Date.now() + 300_000
+  }
+  catch {
+    return Date.now() + 300_000
+  }
+}
+
+const projectionStreamManager = new ProjectionStreamManager({
+  clientFactory: opts => new CloudProjectionStreamClient({
+    ...opts,
+    // Refresh the Access token on every reconnect so a long-lived stream does
+    // not hold a stale credential (C-10).
+    refreshHeaders: async () => {
+      const cred = await cloudCredentialProvider.resolve(opts.serviceOrigin)
+      if (cred && 'cfAccessToken' in cred && cred.cfAccessToken) {
+        return { 'cf-access-token': cred.cfAccessToken }
+      }
+      return opts.headers
+    },
+  }),
+  readModelFactory: (localProjectId, rootDir) =>
+    new CloudProjectionReadModel({ localProjectId, rootDir: rootDir ?? cloudConfigDir }),
+  onChange: (cloudProjectId) => {
+    const localProjectId = cloudToLocalProject.get(cloudProjectId)
+    if (!localProjectId)
+      return
+    // Fan out as an ordinary file-change so browsers refetch unified tickets.
+    fileWatcher.broadcastProjectionChange(localProjectId)
+  },
+})
+
+// Wire the read-model provider so /tickets/unified merges cloud projections
+// with canonical local tickets (local wins on duplicate code, BR-1.9).
+ticketService.setProjectionReadModelProvider((localProjectId: string) => {
+  const rm = projectionStreamManager.getReadModel(localProjectId)
+  if (!rm)
+    return undefined
+  return {
+    entries: (localCodes: Set<string>) => rm.unifiedView(localCodes),
+    stale: rm.stale,
+  }
+})
+
 /**
  * Type cast for compatibility.
  */
@@ -293,6 +365,63 @@ async function initializeMultiProjectWatchers(): Promise<void> {
   }
 }
 
+/**
+ * MDT-226: Start one projection stream per enabled cloud-sync project. Mirrors
+ * the per-project connection resolution used by the poll path (resolveTrusted
+ * profile → ProjectStateStore.read → filter enabled). Each stream is a backend-
+ * owned WebSocket; the browser never opens one.
+ */
+async function startProjectionStreams(): Promise<void> {
+  try {
+    const projects = await projectDiscovery.getAllProjects()
+    const globalConfig = projectDiscovery.getGlobalConfig()
+    const profile = resolveTrustedServiceProfile({
+      operatorOrigins: globalConfig.cloudSync?.allowedOrigins ?? [],
+    })
+    const stateStore = new ProjectStateStore({ rootDir: cloudConfigDir, profile })
+
+    for (const project of projects) {
+      try {
+        const connection = await stateStore.read(project.id)
+        if (connection.kind !== 'enabled')
+          continue
+
+        const { cloudProjectId, serviceOrigin } = connection.connection
+        cloudToLocalProject.set(cloudProjectId, project.id)
+
+        // Resolve an initial Access token for the handshake.
+        const credential = await cloudCredentialProvider.resolve(serviceOrigin)
+        if (!credential || !('cfAccessToken' in credential) || !credential.cfAccessToken) {
+          logger.warn(`[MDT-226] No cloud credential for ${project.id}; projection stream paused`)
+          continue
+        }
+
+        const headers = { 'cf-access-token': credential.cfAccessToken }
+        const tokenExpiry = decodeTokenExpiry(credential.cfAccessToken)
+
+        await projectionStreamManager.start({
+          localProjectId: project.id,
+          cloudProjectId,
+          serviceOrigin,
+          headers,
+          tokenExpiry,
+          rootDir: cloudConfigDir,
+        })
+        logger.info(`[MDT-226] Projection stream started for ${project.id} → ${cloudProjectId}`)
+      }
+      catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        logger.warn(`[MDT-226] Failed to start projection stream for ${project.id}: ${message}`)
+      }
+    }
+    logger.info(`[MDT-226] ${projectionStreamManager.openStreamCount} projection stream(s) active`)
+  }
+  catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    logger.warn(`[MDT-226] Projection stream initialization failed: ${message}`)
+  }
+}
+
 // =============================================================================
 // Register Routes
 // =============================================================================
@@ -409,18 +538,22 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     // Initialize the server
     await initializeMultiProjectWatchers()
     fileWatcher.startHeartbeat()
+    // MDT-226: open backend-owned projection streams for enabled cloud projects.
+    await startProjectionStreams()
   })
 }
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
   logger.info('Received SIGTERM, shutting down gracefully...')
+  projectionStreamManager.stopAll()
   fileWatcher.stop()
   process.exit(0)
 })
 
 process.on('SIGINT', () => {
   logger.info('Received SIGINT, shutting down gracefully...')
+  projectionStreamManager.stopAll()
   fileWatcher.stop()
   process.exit(0)
 })

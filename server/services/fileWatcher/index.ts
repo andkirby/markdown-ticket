@@ -224,6 +224,32 @@ class FileWatcherService extends EventEmitter {
     }, 100)
   }
 
+  /**
+   * MDT-226: Broadcast a projection-change event so connected browsers refetch
+   * the unified ticket list. Triggered by the projection stream manager when a
+   * cloud projection delta is applied to the local read model. Reuses the
+   * `file-change` SSE channel so the existing browser refresh path applies
+   * without a new event type.
+   */
+  broadcastProjectionChange(projectId: string): void {
+    this.sseBroadcaster.debouncedBroadcast(
+      `cloud-projection:${projectId}`,
+      () => {
+        const event: FileChangeEvent = {
+          type: 'file-change',
+          data: {
+            eventType: 'change',
+            filename: 'cloud-projection',
+            projectId,
+            timestamp: Date.now(),
+          },
+        }
+        this.sseBroadcaster.broadcast(event)
+      },
+      100,
+    )
+  }
+
   private handleDocumentChangeForSSE(data: DocumentChangeEventPayload): void {
     const { eventType, filePath, absoluteFilePath, projectId, timestamp } = data
 

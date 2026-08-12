@@ -132,7 +132,9 @@ class DataLayer {
   async fetchTickets(projectId: string): Promise<Ticket[]> {
     return this.dedupe(`tickets-${projectId}`, async () => {
       try {
-        const response = await authFetch(`${this.baseUrl}/projects/${projectId}/crs`)
+        // MDT-226: unified endpoint merges canonical local tickets with
+        // projection-only read-only cloud entries (local wins on duplicate).
+        const response = await authFetch(`${this.baseUrl}/projects/${projectId}/tickets/unified`)
 
         if (!response.ok) {
           throw new Error(`Failed to fetch tickets: ${response.statusText}`)
@@ -161,7 +163,8 @@ class DataLayer {
    */
   async fetchTicketsMetadata(projectId: string): Promise<TicketMetadata[]> {
     try {
-      const response = await authFetch(`${this.baseUrl}/projects/${projectId}/crs`)
+      // MDT-226: unified endpoint includes cloud projections alongside canonical.
+      const response = await authFetch(`${this.baseUrl}/projects/${projectId}/tickets/unified`)
 
       if (!response.ok) {
         throw new Error(`Failed to fetch ticket metadata: ${response.statusText}`)
