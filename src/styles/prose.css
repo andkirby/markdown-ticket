@@ -1,5 +1,7 @@
 /* Markdown / prose rendering - typography, tables, code, mermaid, wireloom */
 
+@layer components {
+
 .prose {
   max-width: none;
   color: oklch(var(--foreground));
@@ -591,3 +593,5 @@
     font-size: 1.15em;
   }
 }
+
+} /* end @layer components */

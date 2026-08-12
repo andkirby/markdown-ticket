@@ -124,7 +124,7 @@ export function BackendConfigSection({ enabled }: { enabled: boolean }) {
                       value={Number(displayValue ?? 0)}
                       onChange={e =>
                         stageEdit(s.selector, Number(e.target.value))}
-                      className="w-20 rounded border border-gray-300 px-2 py-1 text-sm dark:border-gray-600 dark:bg-gray-800"
+                      className="settings-input--compact"
                       data-testid={`backend-cfg-input-${s.selector}`}
                     />
                   )

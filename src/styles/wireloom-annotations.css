@@ -12,6 +12,8 @@
  *   --wl-text      — callout text color
  * ========================================================================= */
 
+@layer components {
+
 /* Toggle button — co-located with fullscreen button */
 .wireloom__annotation-toggle {
   position: absolute;
@@ -132,3 +134,5 @@
   opacity: 1;
   visibility: visible;
 }
+
+} /* end @layer components */
