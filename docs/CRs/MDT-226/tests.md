@@ -35,9 +35,9 @@ deterministic.
 | TEST-stream-manager-ack-persistence | C-6, Edge-1 | `server/tests/services/cloud-sync/ProjectionStreamManager.test.ts` — read-model + cursor persisted atomically before ack; failed apply does not ack or advance |
 | TEST-stream-manager-stale | BR-1.5, SC-5 | `server/tests/services/cloud-sync/ProjectionStreamManager.test.ts` — disconnect keeps last projection + marks stale; bounded reconnect; catch-up in revision order before live |
 | TEST-config-v2-migration | Edge-3, C-9 | `shared/services/cloud-sync/__tests__/project-state-store.test.ts` — v1 with pollIntervalSeconds migrates atomically to v2; identity/origin/credential unchanged; pollIntervalSeconds discarded from active use |
-| TEST-unified-ticket-api | BR-1.9, C-11, C-2 | `server/tests/services/cloud-sync/SSEProjectionFanout.test.ts` — unified ticket endpoint returns canonical + projection-only read-only entries with kind/readOnly/stale; local wins on number; no cloud transport fields |
+| TEST-unified-ticket-api | BR-1.9, C-11, C-2 | `server/tests/services/cloud-sync/SSEProjectionFanout.test.ts` plus a frontend/data-layer regression — `/tickets/unified` returns canonical + projection-only read-only entries with kind/readOnly/stale, the browser preserves those capability fields, local wins on number, and no cloud transport fields leak |
 | TEST-sse-fanout | BR-1.3, C-11 | `server/tests/services/cloud-sync/SSEProjectionFanout.test.ts` — read-model change emits an ordinary ticket-view change via existing SSEBroadcaster; browser gets no projection protocol |
-| TEST-write-journal-retry-classification | C-12, Edge-5 | `shared/services/cloud-sync/__tests__/projection-sync.test.ts` — reads never drain; due transient work backs off; auth pauses project; conflict/unmanaged stop; no preflight GET; explicit recovery/import required for missing projection |
+| TEST-write-journal-retry-classification | C-12, Edge-5 | `shared/services/cloud-sync/__tests__/projection-sync.test.ts` — reads never drain; retry state persists `attemptCount`, `nextAttemptAt`, and typed last error; non-due work is skipped; due transient work backs off; auth pauses project; conflict/unmanaged stop; no preflight GET; explicit recovery/import required for missing projection |
 
 ## E2E (Playwright, real board + local server)
 

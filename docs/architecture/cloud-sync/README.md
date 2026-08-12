@@ -194,10 +194,10 @@ single-flight drain per project; ticket reads and projection-feed reads never
 drain it. Empty or terminal journals generate no cloud requests.
 `CloudProjectionStreamClient` receives cloud-to-local projection
 state; `ProjectionStreamManager` passes it to `CloudProjectionReadModel`, which
-persists the cursor/state and merges against canonical tickets. The existing
-project-ticket endpoint and local SSE expose ordinary ticket views/events. The
-browser never receives Cloudflare credentials, project revisions, or a separate
-projection feed.
+persists the cursor/state and merges against canonical tickets. The local
+`/api/projects/:id/tickets/unified` endpoint and local SSE expose ordinary
+ticket views/events. The browser never receives Cloudflare credentials, project
+revisions, or a separate projection feed.
 
 The stream manager never launches an interactive login merely because the
 server started. A machine credential can connect headlessly; a human connection

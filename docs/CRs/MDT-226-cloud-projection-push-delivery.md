@@ -1,6 +1,6 @@
 ---
 code: MDT-226
-status: In Progress
+status: Approved
 dateCreated: 2026-08-08T08:57:32.826Z
 type: Feature Enhancement
 priority: High
@@ -106,7 +106,7 @@ flowchart LR
    an ordinary local ticket change.
 6. Duplicate or older revisions are ignored. Sparse revisions are valid inside
    catch-up; only a gap during live delivery triggers one cursor catch-up.
-7. Browser reads use the existing project-ticket endpoint, which returns local
+7. Browser reads use `/api/projects/:id/tickets/unified`, which returns local
    Markdown tickets plus projection-only read-only entries. The browser never
    calls a projection endpoint or manages projection state.
 
@@ -182,7 +182,7 @@ flowchart LR
 - `domain-contracts/src/ticket/view.ts` defines the unified browser-facing
   ticket item with capability metadata but no cloud revision/transport fields.
 - `server/services/TicketService.ts` returns the unified ticket list through
-  the existing project-ticket endpoint.
+  `/api/projects/:id/tickets/unified`.
 - `SSEBroadcaster`, `src/services/sseClient.ts`, and `useSSEEvents` deliver
   ordinary local ticket changes. `useCloudProjectionFeed.ts` and the browser
   `/cloud-projections` request are removed after compatibility rollout.
@@ -205,26 +205,31 @@ flowchart LR
 - [ ] An enabled cloud project with a valid server-side credential establishes
   exactly one authenticated upstream projection stream per local server,
   regardless of browser-tab count.
-  _Component-tested (`ProjectionStreamManager.test.ts`); production wiring
-  pending server bootstrap._
+  _Component-tested (`ProjectionStreamManager.test.ts`); server bootstrap wiring
+  exists in `server/server.ts`; deployed credential/Worker round-trip still needs
+  UAT evidence._
 - [ ] Initial connection and reconnect send `afterRevision`, apply catch-up,
   accept sparse catch-up revisions, and become live only after applying the
   final `ready` high-water cursor.
-  _Component-tested; production wiring pending._
+  _Component-tested; server bootstrap wiring exists; deployed catch-up evidence
+  remains pending._
 - [ ] A committed projection is delivered as a complete approved header without
   waiting for a periodic client request.
-  _Pending server bootstrap wiring; the push path is structurally inert._
+  _Server path is wired; deployed commit-to-local-read-model/browser evidence is
+  still pending._
 - [ ] The local server persists the revision after applying the delta and fans
   out an ordinary ticket change through existing local SSE; it sends `ack` only
   after state and cursor persistence succeeds.
-  _Ack-after-persistence is component-tested; SSE fan-out wiring is missing in
-  production (`ProjectionStreamManager` is never instantiated; `SSEBroadcaster`
-  has no projection hookup)._
-- [x] The existing project-ticket read endpoint returns canonical local tickets
-  and projection-only read-only entries as one collection; local tickets win on
+  _Ack-after-persistence is component-tested; `server/server.ts` wires
+  `ProjectionStreamManager`, the read-model provider, and
+  `FileWatcherService.broadcastProjectionChange`; live deployed evidence remains
+  pending._
+- [x] `/api/projects/:id/tickets/unified` returns canonical local tickets and
+  projection-only read-only entries as one collection; local tickets win on
   duplicate ticket number.
-  _`/tickets/unified` + read-model local-wins merge tested; provider is not
-  wired in production, so the endpoint currently returns canonical-only._
+  _`/tickets/unified` + read-model local-wins merge tested; the provider is wired
+  in `server/server.ts`. Frontend normalization still needs a regression proving
+  projected `kind/readOnly/stale` are preserved into board rendering._
 - [x] The browser owns no projection cursor, catch-up, WebSocket reconnect, or
   `/cloud-projections` request. It consumes only the unified ticket API, local
   ticket events, and high-level sync status.
@@ -256,8 +261,8 @@ flowchart LR
 
 - [ ] A healthy connected project with no changes, reconnects, or authorization
   changes performs zero D1 reads solely because time passes.
-  _Holds vacuously — no stream is wired in production (see C-1 note in
-  operations.md). Becomes a live invariant after server wiring._
+  _No longer vacuous after local-server stream wiring; external deployed D1
+  statement/request evidence is still required._
 - [ ] Healthy connected delivery reaches the unified local ticket read model
   and connected browser within 2 seconds at p95 under the documented test load.
   _External gate; not measured. No automated SLO test._
@@ -288,8 +293,8 @@ flowchart LR
   persistence before acknowledgement, sparse catch-up, live-gap handling, and
   SSE fan-out.
   _Component-tested in isolation (`ProjectionStreamManager`, read model, SSE
-  fan-out helper); the production wiring that would make these end-to-end is
-  not implemented._
+  fan-out helper); server bootstrap wiring exists, but the live Worker/D1/browser
+  round-trip remains unproven._
 - [ ] Browser E2E proves a remote projection appears without calling the legacy
   polling endpoint, is received as an ordinary ticket update, and additional
   tabs create no cloud traffic.

@@ -72,12 +72,12 @@ rendering; no browser projection polling ownership.
 | --- | --- | --- |
 | **TASK-unified-delivery** | `ART-ticket-service`, `ART-local-sse`, `ART-sse-client`, `ART-use-sse-events` | TEST-unified-ticket-api, TEST-sse-fanout, TEST-e2e-local-wins-stale |
 
-Wires `server/services/TicketService.ts` to return the unified list from the
-existing project-ticket endpoint (canonical Markdown + read-model entries with
-no canonical match). The read model publishes an ordinary ticket-view change
-through the existing `SSEBroadcaster`; `src/services/sseClient.ts` and
+Wires `server/services/TicketService.ts` to return the unified list from
+`GET /api/projects/:id/tickets/unified` (canonical Markdown + read-model entries
+with no canonical match). The read model publishes an ordinary ticket-view
+change through the existing `SSEBroadcaster`; `src/services/sseClient.ts` and
 `src/hooks/useSSEEvents.ts` map it to the existing ticket bus. The browser
-renders `kind/readOnly/stale` + the project sync-status chip per
+preserves and renders `kind/readOnly/stale` + the project sync-status chip per
 [`ux-design.md`](ux-design.md).
 
 ## Slice 5 — Rollout and proof
@@ -106,7 +106,8 @@ and stop safely for authorization, conflict, and missing-projection outcomes.
 | --- | --- | --- |
 | **TASK-write-journal-retry** | `ART-projection-write-journal`, `ART-shared-ticket-service` | TEST-write-journal-retry-classification, TEST-idle-zero-d1 |
 
-Persists retry state/backoff, uses the known projection version for one
+Persists retry state/backoff (`attemptCount`, `nextAttemptAt`, typed last
+error), attempts only due entries, uses the known projection version for one
 conditional write, distinguishes `projection_not_found`, and quarantines
 unmanaged tickets until reservation recovery or explicit import.
 

@@ -93,8 +93,9 @@ for an authorized project with no projection for a journaled ticket.
 - Reads and browser activity never drain the write journal.
 - One bounded single-flight runner retries only due transient work with
   persisted capped backoff and jitter.
-- Authorization failures pause the project; conflicts and missing projections
-  stop as terminal states.
+- Authorization failures pause the project; a stale local version may adopt a
+  positive `currentVersion` and retry once; conflicts that remain after that and
+  missing projections stop as terminal states.
 - Missing projections require reservation recovery or explicit import; they are
   never created implicitly during retry.
 - Eligible updates use one conditional write without a preflight projection read.
@@ -122,7 +123,8 @@ for an authorized project with no projection for a journaled ticket.
 ### Validation
 
 - Strict Spec Trace validation is required through Tasks.
-- Runtime implementation remains required.
+- Runtime implementation remains required for due-only persisted backoff and
+  browser preservation of projected `kind/readOnly/stale`.
 
 ### Watchlist
 

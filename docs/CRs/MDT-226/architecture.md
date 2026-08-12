@@ -148,8 +148,9 @@ applied. It exposes no cloud transport state to React.
 `CloudProjectionSync` is drained by enqueue, server startup, or a persisted due
 retry—never by browser, ticket, or projection reads. One bounded single-flight
 runner per project persists attempt/backoff/error state. Transient errors retry;
-authorization failures pause the project; version mismatches conflict; and an
-authorized missing projection becomes terminal `unmanaged`.
+authorization failures pause the project; a stale local version may adopt the
+server's positive `currentVersion` and retry once; remaining version mismatches
+conflict; and an authorized missing projection becomes terminal `unmanaged`.
 
 Eligible updates persist the known projection version and issue one conditional
 `PUT` without a preflight `GET`. Missing projections are created only by the
@@ -165,10 +166,12 @@ or credential.
 
 ### Unified ticket API
 
-`server/services/TicketService.ts` returns the unified list from the existing
-project-ticket endpoint: canonical Markdown tickets plus read-model entries
-that have no canonical local match. A browser refresh therefore obtains the
-complete current board without a separate `/cloud-projections` request.
+`server/services/TicketService.ts` returns the unified list from
+`GET /api/projects/:id/tickets/unified`: canonical Markdown tickets plus
+read-model entries that have no canonical local match. A browser refresh
+therefore obtains the complete current board without a separate
+`/cloud-projections` request. `/api/projects/:id/crs` remains the canonical
+Markdown list endpoint, not the cloud projection surface.
 
 ### Browser ticket events
 

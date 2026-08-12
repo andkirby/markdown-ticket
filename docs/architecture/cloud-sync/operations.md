@@ -323,11 +323,10 @@ The local POC is correctness evidence, not a capacity result.
 6. Verify one stream per local server/project, zero idle D1 reads, and current
    membership before restoring the rollout flag.
 
-> **C-1 status:** "Zero idle D1 reads" (C-1) holds **vacuously** until the
-> local-server stream is wired — no `ProjectionStreamManager` is instantiated in
-> the current server, so no stream path exists to poll. This runbook step
-> becomes a live invariant only after the push-delivery server wiring lands; it
-> is not a property the current runtime can violate or prove.
+> **C-1 status:** "Zero idle D1 reads" (C-1) is no longer a vacuous claim once
+> the local-server stream is wired. It remains an external release gate until a
+> deployed connected project is held idle and D1 statement/request counts prove
+> that elapsed time alone causes zero projection or membership reads.
 
 ### Projection Journal Amplification
 
