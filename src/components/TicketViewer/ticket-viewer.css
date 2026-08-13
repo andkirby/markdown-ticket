@@ -76,20 +76,24 @@
 /* Ticket-detail tab strip — a solid bg-subtle band (the recessed-soft chrome
    tier, same surface as the DocumentsView filename-tabs), so the tab block
    carries a clear background signal against the base-tier reading pane. The
-   translucent backdrop utility was removed from the component; this unlayered
-   rule is the single bg source on the wrapper. .tab__list owns its own
-   border-bottom (settings.css), so no duplicate here. */
-.ticket-document-tabs {
-  background-color: var(--bg-subtle);
-}
+   translucent backdrop utility was removed from the component; this rule is the
+   single bg source on the wrapper. .tab__list owns its own border-bottom
+   (settings.css), so no duplicate here. Sticky positioning keeps the tab row
+   pinned above the reading pane on scroll. */
+@layer components {
+  .ticket-document-tabs {
+    @apply sticky top-0 z-10;
+    background-color: var(--bg-subtle);
+  }
 
-/* Ticket-detail stays a centered MODAL (not a full-screen pane) on the base
-   reading tier (--background) for maximum text contrast — same surface as the
-   DocumentsView reader. A base-tier fill has no step above the canvas, and modal
-   shadows are invisible in dark mode, so the pane is border-defined (1px --border)
-   for separation from the dimmed overlay. .modal-content is imported after this
-   file, so the compound selector raises specificity (0,2,0 > 0,1,0) to win. */
-.modal-content.ticket-detail-modal {
-  background-color: oklch(var(--background));
-  border: 1px solid oklch(var(--border));
+  /* Ticket-detail stays a centered MODAL (not a full-screen pane) on the base
+     reading tier (--background) for maximum text contrast — same surface as the
+     DocumentsView reader. A base-tier fill has no step above the canvas, and modal
+     shadows are invisible in dark mode, so the pane is border-defined (1px --border)
+     for separation from the dimmed overlay. .modal-content is imported after this
+     file, so the compound selector raises specificity (0,2,0 > 0,1,0) to win. */
+  .modal-content.ticket-detail-modal {
+    background-color: oklch(var(--background));
+    border: 1px solid oklch(var(--border));
+  }
 }

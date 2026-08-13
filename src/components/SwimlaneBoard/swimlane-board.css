@@ -28,11 +28,11 @@
     font-size: var(--fs-xs);
     font-weight: 600;
     cursor: pointer;
-  }
 
-  .swimlane-board__toggle:hover {
-    background: var(--bg-muted);
-    color: oklch(var(--foreground));
+    &:hover {
+      background: var(--bg-muted);
+      color: oklch(var(--foreground));
+    }
   }
 
   .swimlane-board__lane-count {
@@ -107,11 +107,11 @@
     color: var(--text-subtle);
     cursor: pointer;
     transition: background-color 0.15s ease-out, color 0.15s ease-out;
-  }
 
-  .swimlane-board__col-collapse:hover {
-    background: color-mix(in srgb, var(--bg-elevated) 80%, transparent);
-    color: oklch(var(--foreground));
+    &:hover {
+      background: color-mix(in srgb, var(--bg-elevated) 80%, transparent);
+      color: oklch(var(--foreground));
+    }
   }
 
   /* Collapsed column header shrinks to a 44px rail (matches the flat Board's
@@ -174,15 +174,15 @@
     background: var(--bg-elevated);
     border-left: 3px solid var(--epic-color, var(--border-strong));
     cursor: pointer;
-  }
 
-  .swimlane-board__lane-label:hover {
-    background: color-mix(in srgb, var(--bg-elevated) 92%, var(--bg-muted));
-  }
+    &:hover {
+      background: color-mix(in srgb, var(--bg-elevated) 92%, var(--bg-muted));
+    }
 
-  .swimlane-board__lane-label:focus-visible {
-    outline: none;
-    box-shadow: inset 0 0 0 2px color-mix(in srgb, oklch(var(--primary)) 35%, transparent);
+    &:focus-visible {
+      outline: none;
+      box-shadow: inset 0 0 0 2px color-mix(in srgb, oklch(var(--primary)) 35%, transparent);
+    }
   }
 
   .swimlane-board__lane-label--none {
@@ -270,11 +270,11 @@
     background: transparent;
     cursor: pointer;
     text-align: left;
-  }
 
-  .swimlane-board__lane-key:hover,
-  .swimlane-board__lane-key:focus-visible {
-    background: var(--bg-muted);
+    &:hover,
+    &:focus-visible {
+      background: var(--bg-muted);
+    }
   }
 
   /* Collapse chevron glyph (aria-hidden) — the whole label is the toggle, so
@@ -368,12 +368,12 @@
     border-radius: 6px;
     background: transparent;
     color: var(--text-subtle);
-  }
 
-  .swimlane-board__open-epic:hover,
-  .swimlane-board__open-epic:focus-visible {
-    background: var(--bg-muted);
-    color: oklch(var(--foreground));
+    &:hover,
+    &:focus-visible {
+      background: var(--bg-muted);
+      color: oklch(var(--foreground));
+    }
   }
 
   .swimlane-board__lane-body {
@@ -430,10 +430,10 @@
     background: color-mix(in srgb, var(--bg-subtle) 70%, transparent);
     cursor: pointer;
     transition: background-color 0.15s ease-out;
-  }
 
-  .swimlane-board__lane-col-rail:hover {
-    background: color-mix(in srgb, var(--bg-muted) 75%, transparent);
+    &:hover {
+      background: color-mix(in srgb, var(--bg-muted) 75%, transparent);
+    }
   }
 
   .swimlane-board__lane-col-rail[data-column-color="blue"] { border-left-color: color-mix(in srgb, var(--status-open) 45%, transparent); }

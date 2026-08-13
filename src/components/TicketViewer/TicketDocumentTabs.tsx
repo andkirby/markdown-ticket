@@ -95,7 +95,7 @@ export function TicketDocumentTabs({
     <div
       ref={containerRef}
       data-testid="subdoc-tabs"
-      className="ticket-document-tabs sticky top-0 z-10"
+      className="ticket-document-tabs"
     >
       {rows.map(row => (
         <Tabs.Root
@@ -107,7 +107,7 @@ export function TicketDocumentTabs({
         >
           <Tabs.List
             data-testid="subdoc-tab-row"
-            className="tab__list overflow-x-auto scrollbar-hide"
+            className="tab__list scrollbar-hide"
           >
             {row.entries.map(entry => (
               <Tabs.Trigger
