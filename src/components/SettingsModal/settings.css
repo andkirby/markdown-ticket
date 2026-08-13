@@ -3,7 +3,7 @@
 @layer components {
   /* Tabs — shared Radix Tabs pattern */
   .tab__list {
-    @apply flex px-4 py-0;
+    @apply flex overflow-x-auto px-4 py-0;
     background-color: var(--bg-subtle);
     border-bottom: 1px solid oklch(var(--border));
   }
@@ -97,6 +97,7 @@
   }
 }
 
+@layer components {
 .settings-group {
   @apply flex flex-col gap-1;
 }
@@ -335,4 +336,5 @@
 .project-accents__palette {
   @apply flex flex-col gap-2.5 mt-1.5 pt-2.5 border-t;
   border-color: oklch(var(--border));
+}
 }

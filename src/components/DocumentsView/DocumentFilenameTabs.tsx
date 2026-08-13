@@ -28,7 +28,7 @@ export default function DocumentFilenameTabs({
     >
       <Tabs.List
         data-testid="document-filename-tabs"
-        className="tab__list overflow-x-auto scrollbar-hide"
+        className="tab__list scrollbar-hide"
       >
         {tabs.map(tab => (
           <Tabs.Trigger
