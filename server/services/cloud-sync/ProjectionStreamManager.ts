@@ -6,9 +6,10 @@
  *
  * Owns:
  *   - at most one CloudProjectionStreamClient per enabled cloud project;
+ *   - coalescing concurrent starts before asynchronous read-model loading;
  *   - passing deltas to the CloudProjectionReadModel in order;
  *   - ack only after the read model confirms atomic state/cursor persistence;
- *   - reconnect/catch-up;
+ *   - requesting catch-up while the client owns connection/reconnect state;
  *   - browser mounts do not change upstream connection count.
  *
  * It does NOT own ticket-list presentation or browser state.
@@ -45,6 +46,11 @@ interface ManagedProject {
   readModel: CloudProjectionReadModel
 }
 
+interface PendingStart {
+  promise: Promise<void>
+  cancelled: boolean
+}
+
 export interface ProjectionStreamManagerOptions {
   /** Builds the stream client (production: credential + transport). */
   clientFactory: StreamClientFactory
@@ -58,6 +64,7 @@ export interface ProjectionStreamManagerOptions {
 
 export class ProjectionStreamManager {
   private readonly projects: Map<string, ManagedProject> // keyed by localProjectId
+  private readonly starting = new Map<string, PendingStart>()
   private readonly clientFactory: StreamClientFactory
   private readonly readModelFactory: ReadModelFactory
   private readonly onChange: ReadModelChangeCallback
@@ -73,7 +80,7 @@ export class ProjectionStreamManager {
    * Ensure exactly one stream is open for an enabled cloud project. Browser
    * mounts do NOT add streams (C-5, BR-1.6).
    */
-  async start(opts: {
+  start(opts: {
     localProjectId: string
     cloudProjectId: string
     serviceOrigin: string
@@ -83,10 +90,36 @@ export class ProjectionStreamManager {
   }): Promise<void> {
     if (this.projects.has(opts.localProjectId)) {
       // Exactly one stream per project; reuse the existing client.
-      return
+      return Promise.resolve()
     }
+    const active = this.starting.get(opts.localProjectId)
+    if (active)
+      return active.promise
+
+    const pending: PendingStart = {
+      promise: Promise.resolve(),
+      cancelled: false,
+    }
+    pending.promise = this.startProject(opts, pending).finally(() => {
+      if (this.starting.get(opts.localProjectId) === pending)
+        this.starting.delete(opts.localProjectId)
+    })
+    this.starting.set(opts.localProjectId, pending)
+    return pending.promise
+  }
+
+  private async startProject(opts: {
+    localProjectId: string
+    cloudProjectId: string
+    serviceOrigin: string
+    headers: Record<string, string>
+    tokenExpiry: number
+    rootDir?: string
+  }, pending: PendingStart): Promise<void> {
     const readModel = this.readModelFactory(opts.localProjectId, opts.rootDir)
     await readModel.load(opts.cloudProjectId)
+    if (pending.cancelled || this.projects.has(opts.localProjectId))
+      return
 
     // AfterRevision is the read model's persisted cursor (catch-up request).
     const afterRevision = readModel.appliedCursor
@@ -119,6 +152,9 @@ export class ProjectionStreamManager {
 
   /** Stop the stream for one project and remove it. */
   stop(localProjectId: string): void {
+    const pending = this.starting.get(localProjectId)
+    if (pending)
+      pending.cancelled = true
     const managed = this.projects.get(localProjectId)
     if (!managed)
       return
@@ -128,6 +164,8 @@ export class ProjectionStreamManager {
 
   /** Stop all streams (graceful shutdown). */
   stopAll(): void {
+    for (const pending of this.starting.values())
+      pending.cancelled = true
     for (const managed of this.projects.values()) {
       managed.client.stop()
     }

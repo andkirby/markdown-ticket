@@ -1,13 +1,16 @@
 import type { Express } from 'express'
 import type { ProjectServiceExtension } from './controllers/ProjectController.js'
 import type { ProjectRegistration } from './services/fileWatcher/WatcherLifecycleManager.js'
-import { Buffer } from 'node:buffer'
 import * as path from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 
 import { getTicketsPath } from '@mdt/shared/models/Project.js'
 
+import {
+  AccessCredentialBroker,
+  streamAuthorizationFromCredential,
+} from '@mdt/shared/services/cloud-sync/access-credential-broker.js'
 import { bindingFromEnabledConnection } from '@mdt/shared/services/cloud-sync/allocator-strategy.js'
 import { CloudProjectionReadModel } from '@mdt/shared/services/cloud-sync/CloudProjectionReadModel.js'
 import { CloudProjectionStreamClient } from '@mdt/shared/services/cloud-sync/CloudProjectionStreamClient.js'
@@ -186,10 +189,16 @@ setupLogInterception()
 // Core services
 const fileWatcher = new FileWatcherService()
 const projectDiscovery = new SharedProjectService()
+const cloudConfigDir = getDefaultPaths().CONFIG_DIR
+const cloudCredentialProvider = new AccessCredentialBroker({
+  provider: new RuntimeCloudCredentialProvider(),
+})
 
 // Business logic services
 const projectServiceAdapter = new ProjectServiceAdapter(projectDiscovery)
-const ticketService = new TicketService(projectDiscovery)
+const ticketService = new TicketService(projectDiscovery, {
+  credentialProvider: cloudCredentialProvider,
+})
 
 // =============================================================================
 // MDT-226: Cloud projection stream — one backend-owned WebSocket per enabled
@@ -197,41 +206,21 @@ const ticketService = new TicketService(projectDiscovery)
 // unified ticket API and ordinary SSE events.
 // =============================================================================
 
-const cloudConfigDir = getDefaultPaths().CONFIG_DIR
-const cloudCredentialProvider = new RuntimeCloudCredentialProvider()
 /** Reverse map: cloudProjectId → localProjectId (for SSE fan-out lookup). */
 const cloudToLocalProject = new Map<string, string>()
 /** Persistent projection-write-journal instances (one per enabled project). */
 const projectionSyncs: CloudProjectionSync[] = []
 
-/**
- * Decode the `exp` claim from a CF Access JWT. Returns a conservative
- * fallback (now + 5 min) if the token is not a decodable JWT, so the stream
- * client reconnects with a refreshed token rather than holding a stale one.
- */
-function decodeTokenExpiry(token: string): number {
-  try {
-    const payload = JSON.parse(
-      Buffer.from(token.split('.')[1], 'base64').toString('utf8'),
-    )
-    return typeof payload.exp === 'number' ? payload.exp * 1000 : Date.now() + 300_000
-  }
-  catch {
-    return Date.now() + 300_000
-  }
-}
-
 const projectionStreamManager = new ProjectionStreamManager({
   clientFactory: opts => new CloudProjectionStreamClient({
     ...opts,
-    // Refresh the Access token on every reconnect so a long-lived stream does
-    // not hold a stale credential (C-10).
-    refreshHeaders: async () => {
-      const cred = await cloudCredentialProvider.resolve(opts.serviceOrigin)
-      if (cred && 'cfAccessToken' in cred && cred.cfAccessToken) {
-        return { 'cf-access-token': cred.cfAccessToken }
-      }
-      return opts.headers
+    // Resolve authorization on every reconnect. The process broker reuses a
+    // still-valid token and refreshes it only inside its expiry window (C-10).
+    refreshAuthorization: async () => {
+      const cred = await cloudCredentialProvider.resolveNonInteractive(opts.serviceOrigin)
+      if (cred)
+        return streamAuthorizationFromCredential(cred)
+      throw new Error('authentication_required')
     },
   }),
   readModelFactory: (localProjectId, rootDir) =>
@@ -401,25 +390,18 @@ async function startProjectionStreams(): Promise<void> {
         const { cloudProjectId, serviceOrigin } = connection.connection
         cloudToLocalProject.set(cloudProjectId, project.id)
 
-        // Resolve an initial Access token for the handshake.
-        const credential = await cloudCredentialProvider.resolve(serviceOrigin)
-        if (!credential || !('cfAccessToken' in credential) || !credential.cfAccessToken) {
-          logger.warn(`[MDT-226] No cloud credential for ${project.id}; projection stream paused`)
-          continue
-        }
-
-        const headers = { 'cf-access-token': credential.cfAccessToken }
-        const tokenExpiry = decodeTokenExpiry(credential.cfAccessToken)
-
+        // Register the read model and reconnect owner even when authentication
+        // is currently unavailable. Background attempts never launch login;
+        // they reuse a cached human token or resolve a service credential.
         await projectionStreamManager.start({
           localProjectId: project.id,
           cloudProjectId,
           serviceOrigin,
-          headers,
-          tokenExpiry,
+          headers: {},
+          tokenExpiry: 0,
           rootDir: cloudConfigDir,
         })
-        logger.info(`[MDT-226] Projection stream started for ${project.id} → ${cloudProjectId}`)
+        logger.info(`[MDT-226] Projection stream manager started for ${project.id} → ${cloudProjectId}`)
 
         // Start the bounded write-journal retry runner so stuck entries
         // (authentication_paused, transient) are retried on a fixed interval

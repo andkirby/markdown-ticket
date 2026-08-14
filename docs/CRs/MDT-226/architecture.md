@@ -121,18 +121,34 @@ filesystem path, or raw principal identifier is allowed.
 
 ### Local stream client
 
-`CloudProjectionStreamClient` uses the existing credential provider to attach
-Access headers during the WebSocket handshake. It validates envelopes, performs
-bounded exponential reconnect with jitter, refreshes credentials, and requests
-catch-up from the last applied cursor. Transport ping uses protocol behavior
-that does not wake the hub for an application request.
+`CloudProjectionStreamClient` is the sole owner of the per-project connection
+state machine. It allows one in-flight handshake and one reconnect/expiry timer,
+coalesces `error` plus `close`, ignores callbacks from replaced transports, and
+performs an intentional catch-up close without creating a second reconnect
+lane. It validates envelopes, performs bounded exponential reconnect with
+jitter, refreshes authorization and token expiry together, and requests
+catch-up from the last applied cursor.
+
+### Access credential broker
+
+One process-scoped `AccessCredentialBroker` supplies every server cloud path.
+It keys human Access credentials by trusted service origin, reuses a token until
+the expiry refresh window, and shares one in-flight resolution among concurrent
+callers. `CloudflaredCredentialProvider` is the only child-process owner; it
+serializes acquisitions, enforces a caller deadline, signals a timed-out child,
+and blocks later acquisition until that child reports exit. Background startup
+and reconnect use a non-interactive broker path: a cached human token or service
+credential only. Tokens remain in memory only and are never logged or persisted.
 
 ### Local stream manager
 
 `ProjectionStreamManager` is server-lifecycle owned and keyed by local project
 identity. It starts at most one client per enabled cloud project, stops cleanly,
-passes deltas to the projection read model in order, and owns reconnect/catch-up.
-It sends `ack` only after the read model confirms atomic state/cursor
+coalesces concurrent starts before asynchronous read-model loading, passes
+deltas to the projection read model in order, and requests catch-up by advancing
+the client's cursor. It registers the stale read model even when authentication
+is unavailable. The client—not the manager—owns connection and reconnect state.
+The manager sends `ack` only after the read model confirms atomic state/cursor
 persistence. Browser mounts do not change upstream connection count.
 
 ### Local projection read model
@@ -230,6 +246,9 @@ connected project performs zero D1 reads.
 | --- | --- |
 | Access or membership denied at handshake | Reject without disclosing hidden-project existence |
 | Connection lost | Keep last projection, mark stale, reconnect with bounded backoff |
+| One transport emits `error` and `close` | Coalesce both into one reconnect schedule |
+| Catch-up intentionally closes a transport | Replace it once from the applied cursor; ignore the old close callback |
+| Credential acquisition hangs | Terminate the child at its deadline; keep stale and retry through the existing bounded reconnect lane |
 | Sparse revisions inside catch-up | Apply rows and advance only to the final `ready` high-water cursor |
 | Duplicate or old revision | Ignore without advancing or rewinding state |
 | Revision gap during live delivery | Pause live application and perform one cursor catch-up |
@@ -285,6 +304,13 @@ Eliminate timer-driven D1 reads and bound delivery freshness. Derived from
 Drain eligible projection writes independently with bounded backoff and stop
 automatic retries for missing projections. Derived from `C-12` and `Edge-5`.
 
+### OBL-local-resource-bounds
+
+Bound local WebSocket and credential acquisition concurrency with one
+connection state machine per project, one process-scoped credential broker, and
+a non-interactive startup/reconnect credential path. Derived from `C-13`,
+`Edge-6`, and `Edge-7`.
+
 ### OBL-config-cutover
 
 Migrate polling connections to version 2 backend-managed push connections.
@@ -308,7 +334,10 @@ against all current requirements before implementation acceptance.
   procedure but do not assert it has run.
 - Local server tests use a controllable WebSocket peer and fake clock to prove
   lifecycle ownership, sparse catch-up, live-gap resync, acknowledgement after
-  cursor persistence, single-flight reconnect, and SSE.
+  cursor persistence, compound-termination coalescing, catch-up replacement,
+  token-expiry refresh, and SSE. Credential-provider tests prove origin-keyed
+  cache reuse, concurrent single-flight, serialized child processes, and
+  timeout signaling with replacement blocked until exit.
 - Browser E2E observes the real board and local server, asserts that the browser
   uses only the unified ticket API plus local event stream, and opens multiple
   tabs without any `/cloud-projections` request.

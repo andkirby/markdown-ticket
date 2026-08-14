@@ -281,6 +281,27 @@
       "text": "If an authorized project has no projection for a journaled ticket, the system SHALL stop automatic retries and classify it as unmanaged; only recovery of its original reservation/acknowledgement or an explicit import may create it.",
       "sourceRef": "CR:MDT-226",
       "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-6",
+      "kind": "edge_case",
+      "text": "If one transport emits both error and close, an intentional catch-up close also emits close, or a stale transport callback arrives after replacement, the local client SHALL coalesce those signals into at most one next connection attempt.",
+      "sourceRef": "docs/CRs/MDT-226/requirements.md#edge-6-compound-stream-termination",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-13",
+      "kind": "constraint",
+      "text": "Each enabled project SHALL have at most one WebSocket connection attempt and one scheduled reconnect, including concurrent manager starts. Human Access credential acquisition SHALL be process-scoped and origin-keyed: reuse a token until its refresh window, share concurrent acquisition, and run at most one cloudflared child at a time. Startup and background reconnect SHALL never launch interactive login; they may use only a cached human token or a configured service credential.",
+      "sourceRef": "docs/CRs/MDT-226/requirements.md#c-13-local-connection-and-credential-resource-bounds",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-7",
+      "kind": "edge_case",
+      "text": "If cloudflared access token does not complete by its deadline, the local server SHALL signal that child to terminate, resolve the caller as unavailable, and SHALL NOT spawn another credential child until the prior child reports exit. The registered projection read model remains stale and its one background reconnect lane checks only cached human or configured service credentials.",
+      "sourceRef": "docs/CRs/MDT-226/requirements.md#edge-7-hung-credential-acquisition",
+      "routePolicy": "tests"
     }
   ],
   "scenarios": [
@@ -583,6 +604,23 @@
         "ART-shared-ticket-service"
       ],
       "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "OBL-local-resource-bounds",
+      "title": "Bound local connection and credential acquisition concurrency",
+      "derivedFrom": [
+        "C-13",
+        "Edge-6",
+        "Edge-7"
+      ],
+      "artifactIds": [
+        "ART-stream-client",
+        "ART-stream-manager",
+        "ART-access-credential-broker",
+        "ART-credential-provider",
+        "ART-server-bootstrap"
+      ],
+      "sourceRef": "architecture.md § Local stream client, manager, and Access credential broker"
     }
   ],
   "artifacts": [
@@ -729,6 +767,24 @@
       "path": "shared/services/TicketService.ts",
       "kind": "runtime",
       "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "ART-access-credential-broker",
+      "path": "shared/services/cloud-sync/access-credential-broker.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md § Access credential broker"
+    },
+    {
+      "id": "ART-credential-provider",
+      "path": "shared/services/cloud-sync/credential-providers.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md § Access credential broker"
+    },
+    {
+      "id": "ART-server-bootstrap",
+      "path": "server/server.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md § Access credential broker"
     }
   ],
   "testPlans": [
@@ -811,44 +867,12 @@
       "sourceRef": "CR:MDT-226"
     },
     {
-      "id": "TEST-stream-client-transport",
-      "kind": "integration",
-      "title": "Stream client Access headers on upgrade, bounded backoff+jitter, token refresh, catch-up from cursor, envelope validation, ping does not wake hub",
-      "covers": [
-        "C-6",
-        "C-10",
-        "C-3"
-      ],
-      "file": "shared/services/cloud-sync/__tests__/CloudProjectionStreamClient.test.ts",
-      "sourceRef": "CR:MDT-226"
-    },
-    {
-      "id": "TEST-stream-manager-single-flight",
-      "kind": "integration",
-      "title": "Exactly one client per enabled project; tab mounts add no streams; single-flight reconnect; clean stop",
-      "covers": [
-        "BR-1.6"
-      ],
-      "file": "server/tests/services/cloud-sync/ProjectionStreamManager.test.ts",
-      "sourceRef": "CR:MDT-226"
-    },
-    {
       "id": "TEST-stream-manager-ack-persistence",
       "kind": "integration",
       "title": "Read-model + cursor persisted atomically before ack; failed apply does not ack or advance",
       "covers": [
         "C-6",
         "Edge-1"
-      ],
-      "file": "server/tests/services/cloud-sync/ProjectionStreamManager.test.ts",
-      "sourceRef": "CR:MDT-226"
-    },
-    {
-      "id": "TEST-stream-manager-stale",
-      "kind": "integration",
-      "title": "Disconnect keeps last projection + marks stale; bounded reconnect; catch-up in revision order before live",
-      "covers": [
-        "BR-1.5"
       ],
       "file": "server/tests/services/cloud-sync/ProjectionStreamManager.test.ts",
       "sourceRef": "CR:MDT-226"
@@ -960,6 +984,52 @@
         "Edge-5"
       ],
       "file": "shared/services/cloud-sync/__tests__/projection-sync.test.ts",
+      "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "TEST-credential-broker-resource-bounds",
+      "kind": "integration",
+      "title": "Bound credential cache and cloudflared subprocess lifecycle",
+      "covers": [
+        "C-13",
+        "Edge-7"
+      ],
+      "file": "shared/services/cloud-sync/__tests__/credential-providers.test.ts",
+      "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "TEST-stream-manager-stale",
+      "kind": "integration",
+      "title": "Keep the last projection visible as stale after disconnect",
+      "covers": [
+        "BR-1.5"
+      ],
+      "file": "server/tests/services/cloud-sync/ProjectionStreamManager.test.ts",
+      "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "TEST-stream-client-transport",
+      "kind": "integration",
+      "title": "Coalesce stream lifecycle and refresh authorization atomically",
+      "covers": [
+        "C-6",
+        "C-10",
+        "C-13",
+        "Edge-6",
+        "C-3"
+      ],
+      "file": "shared/services/cloud-sync/tests/CloudProjectionStreamClient.test.ts",
+      "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "TEST-stream-manager-single-flight",
+      "kind": "integration",
+      "title": "Keep one stream client per enabled project across concurrent starts and browser tabs",
+      "covers": [
+        "BR-1.6",
+        "C-13"
+      ],
+      "file": "server/tests/services/cloud-sync/ProjectionStreamManager.test.ts",
       "sourceRef": "CR:MDT-226"
     }
   ],
@@ -1100,6 +1170,27 @@
       "makesGreenIds": [
         "TEST-write-journal-retry-classification",
         "TEST-idle-zero-d1"
+      ],
+      "skills": [
+        "cloudflare",
+        "typescript"
+      ],
+      "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "TASK-local-resource-bounds",
+      "title": "Bound local stream and credential resources",
+      "ownsArtifactIds": [
+        "ART-stream-client",
+        "ART-stream-manager",
+        "ART-access-credential-broker",
+        "ART-credential-provider",
+        "ART-server-bootstrap"
+      ],
+      "makesGreenIds": [
+        "TEST-stream-client-transport",
+        "TEST-stream-manager-single-flight",
+        "TEST-credential-broker-resource-bounds"
       ],
       "skills": [
         "cloudflare",

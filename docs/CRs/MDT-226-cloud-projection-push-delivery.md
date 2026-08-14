@@ -1,6 +1,6 @@
 ---
 code: MDT-226
-status: Approved
+status: In Progress
 dateCreated: 2026-08-08T08:57:32.826Z
 type: Feature Enhancement
 priority: High
@@ -213,6 +213,14 @@ flowchart LR
   final `ready` high-water cursor.
   _Component-tested; server bootstrap wiring exists; deployed catch-up evidence
   remains pending._
+- [x] Each project has at most one in-flight connection attempt and one
+  reconnect/expiry timer; `error` plus `close`, catch-up close, and stale
+  callbacks cannot create parallel reconnect lanes.
+- [x] One process-scoped credential broker serves all server cloud paths,
+  reuses valid human tokens by trusted origin, shares concurrent resolution,
+  keeps startup/reconnect non-interactive, supports service-token stream headers,
+  serializes `cloudflared` children, and signals deadline overruns without
+  spawning a replacement before exit.
 - [ ] A committed projection is delivered as a complete approved header without
   waiting for a periodic client request.
   _Server path is wired; deployed commit-to-local-read-model/browser evidence is
@@ -295,6 +303,11 @@ flowchart LR
   _Component-tested in isolation (`ProjectionStreamManager`, read model, SSE
   fan-out helper); server bootstrap wiring exists, but the live Worker/D1/browser
   round-trip remains unproven._
+- [x] Local resource-bound tests prove compound transport termination and
+  catch-up replacement and concurrent manager starts create one connection,
+  concurrent credential callers share one acquisition, background refresh is
+  non-interactive, and a hung `cloudflared` child is signalled without spawning
+  another before exit.
 - [ ] Browser E2E proves a remote projection appears without calling the legacy
   polling endpoint, is received as an ordinary ticket update, and additional
   tabs create no cloud traffic.
@@ -446,3 +459,31 @@ Durable Object binding is removed only after all sockets and alarms are drained.
 **Strict validation result**
 
 - Requirements, BDD, and architecture: passed.
+
+### UAT Session 2026-08-14 - Local stream and credential resource bounds
+
+**Approved changes**
+
+- One project connection state machine owns handshake, reconnect, expiry, and
+  transport replacement with one attempt and one timer.
+- One process-scoped credential broker caches by trusted origin and shares
+  concurrent acquisition across every server cloud path.
+- The `cloudflared` adapter serializes children, signals deadline overruns, and
+  blocks replacement acquisition until the child exits.
+- Startup/reconnect never invokes interactive login; cached human and machine
+  credentials map to headers plus expiry as one value.
+
+**Changed requirement IDs**
+
+- Added `C-13`, `Edge-6`, and `Edge-7`.
+
+**Updated workflow documents**
+
+- Requirements, architecture, tests, tasks, current `uat.md`, permanent
+  cloud-sync owner docs, and operations guidance.
+
+**Validation result**
+
+- Strict requirements, unchanged BDD, architecture, tests, and tasks: passed.
+- Focused shared/server tests, TypeScript validation, package lint, and full
+  build: passed.

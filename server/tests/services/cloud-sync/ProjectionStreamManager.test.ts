@@ -1,5 +1,5 @@
 /**
- * TEST-stream-manager-* — covers C-5, C-1, BR-1.6 (single-flight), C-6/Edge-1
+ * TEST-stream-manager-* — covers C-5, C-13, BR-1.6 (single-flight), C-6/Edge-1
  * (ack after persistence), BR-1.5/SC-5 (stale).
  *
  * Source: docs/CRs/MDT-226/architecture.md § Local stream manager.
@@ -120,6 +120,50 @@ describe('ProjectionStreamManager', () => {
     await manager.start(startOpts)
     // A second "tab mount" calls start again for the same project.
     await manager.start(startOpts)
+    expect(manager.openStreamCount).toBe(1)
+    expect(connections).toHaveLength(1)
+  })
+
+  it('coalesces concurrent starts before read-model load completes (C-13)', async () => {
+    const { transport, connections } = makeMockTransport()
+    let releaseLoad!: () => void
+    const loadGate = new Promise<void>((resolve) => {
+      releaseLoad = resolve
+    })
+    const manager = new ProjectionStreamManager({
+      clientFactory: opts => new CloudProjectionStreamClient({
+        ...opts,
+        transport,
+        scheduler: () => {},
+      }),
+      readModelFactory: (localProjectId, rootDir) => {
+        const readModel = new CloudProjectionReadModel({
+          rootDir: rootDir ?? root,
+          localProjectId,
+        })
+        const load = readModel.load.bind(readModel)
+        readModel.load = async (cloudProjectId: string) => {
+          await loadGate
+          await load(cloudProjectId)
+        }
+        return readModel
+      },
+      onChange: () => {},
+    })
+    const startOpts = {
+      localProjectId: 'project-a',
+      cloudProjectId: 'cloud-a',
+      serviceOrigin: 'https://mdt-sync.example.com',
+      headers: {},
+      tokenExpiry: 0,
+      root,
+    }
+
+    const first = manager.start(startOpts)
+    const second = manager.start(startOpts)
+    releaseLoad()
+    await Promise.all([first, second])
+
     expect(manager.openStreamCount).toBe(1)
     expect(connections).toHaveLength(1)
   })
