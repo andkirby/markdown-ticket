@@ -4,11 +4,10 @@
  *
  * Source: docs/CRs/MDT-226/architecture.md § Local stream client.
  *
- * Uses the existing credential provider to attach Access headers during the
- * WebSocket handshake. Validates envelopes, performs bounded exponential
- * reconnect with jitter, refreshes credentials, and requests catch-up from the
- * last applied cursor. Transport ping uses protocol behavior that does not wake
- * the hub for an application request.
+ * Receives authorization from the process-scoped credential broker for each
+ * handshake. It validates envelopes, coalesces transport termination, performs
+ * bounded reconnect with jitter, refreshes token+expiry together, and requests
+ * catch-up from the last applied cursor.
  *
  * The transport is injectable so tests can use a controllable peer instead of a
  * real network WebSocket.
@@ -23,6 +22,12 @@ import { parseStreamEnvelope } from '@mdt/domain-contracts'
 /** Bounded exponential backoff bounds (seconds). */
 export const MIN_RECONNECT_SECONDS = 1
 export const MAX_RECONNECT_SECONDS = 30
+export const DEFAULT_TOKEN_REFRESH_SKEW_MS = 60_000
+
+export interface StreamAuthorization {
+  headers: Record<string, string>
+  tokenExpiry: number
+}
 
 export interface StreamClientOptions {
   cloudProjectId: string
@@ -31,21 +36,23 @@ export interface StreamClientOptions {
   afterRevision: number
   /** Token expiry epoch-ms, forwarded to the hub for reauthorization. */
   tokenExpiry: number
-  /** Resolved Access credential, attached to the handshake headers. */
+  /** Initial resolved Access credential, attached to the handshake headers. */
   headers: Record<string, string>
   /**
-   * Optional credential refresh invoked before each handshake (connect +
-   * reconnect), so a long-lived client reconnects with a fresh Access token
-   * rather than the static construction-time headers (C-10, §Local stream
-   * client). When omitted, the construction-time headers are reused.
+   * Credential refresh invoked before each handshake. Headers and expiry are
+   * one value so a refreshed token cannot retain stale scheduling metadata.
    */
-  refreshHeaders?: () => Promise<Record<string, string>>
+  refreshAuthorization?: () => Promise<StreamAuthorization>
   /** Injectable transport (tests); defaults to the runtime WebSocket. */
   transport?: StreamTransport
   /** Injectable scheduler (tests); defaults to setTimeout. */
-  scheduler?: (ms: number, fn: () => void) => void
+  scheduler?: (ms: number, fn: () => void) => unknown
+  /** Injectable timer cancellation (tests); defaults to clearTimeout. */
+  cancelScheduled?: (handle: unknown) => void
   /** Clock for jitter/backoff (tests); defaults to Date.now. */
   now?: () => number
+  /** Refresh before token expiry; defaults to 60 seconds. */
+  tokenRefreshSkewMs?: number
 }
 
 /**
@@ -82,17 +89,26 @@ export function streamWebSocketUrl(serviceOrigin: string, cloudProjectId: string
 export class CloudProjectionStreamClient {
   /** Mutable so reconnectForCatchup can advance the afterRevision cursor. */
   private opts: StreamClientOptions
-  private readonly scheduler: (ms: number, fn: () => void) => void
+  private readonly scheduler: (ms: number, fn: () => void) => unknown
+  private readonly cancelScheduled: (handle: unknown) => void
   private readonly now: () => number
+  private readonly tokenRefreshSkewMs: number
   private handlers?: StreamClientHandlers
   private connection?: StreamConnection
+  private connectPromise?: Promise<void>
+  private reconnectScheduled = false
+  private reconnectHandle?: unknown
+  private reconnectGeneration = 0
   private attempt = 0
   private stopped = false
 
   constructor(opts: StreamClientOptions) {
     this.opts = opts
     this.scheduler = opts.scheduler ?? ((ms, fn) => setTimeout(fn, ms))
+    this.cancelScheduled = opts.cancelScheduled
+      ?? (handle => clearTimeout(handle as ReturnType<typeof setTimeout>))
     this.now = opts.now ?? Date.now
+    this.tokenRefreshSkewMs = opts.tokenRefreshSkewMs ?? DEFAULT_TOKEN_REFRESH_SKEW_MS
   }
 
   setHandlers(handlers: StreamClientHandlers): void {
@@ -100,53 +116,28 @@ export class CloudProjectionStreamClient {
   }
 
   /** Open the stream connection. Refreshes credentials before each handshake. */
-  async connect(): Promise<void> {
-    if (this.stopped)
-      return
-    // Refresh credentials on every connect/reconnect so a long-lived client
-    // reconnects with a fresh Access token, not the static construction headers
-    // (C-10, §Local stream client "refreshes credentials").
-    const baseHeaders = this.opts.refreshHeaders
-      ? await this.opts.refreshHeaders().catch(() => this.opts.headers)
-      : this.opts.headers
-    const url = streamWebSocketUrl(this.opts.serviceOrigin, this.opts.cloudProjectId)
-    const headers: Record<string, string> = {
-      ...baseHeaders,
-      'x-mdt-cloud-project-id': this.opts.cloudProjectId,
-      'x-mdt-after-revision': String(this.opts.afterRevision),
-      'x-mdt-token-expiry': String(this.opts.tokenExpiry),
-    }
-    const transport = this.opts.transport ?? getDefaultTransport()
-    const conn = transport.connect(url, headers)
-    this.connection = conn
+  connect(): Promise<void> {
+    if (this.stopped || this.connection)
+      return Promise.resolve()
+    if (this.connectPromise)
+      return this.connectPromise
 
-    conn.onMessage((raw) => {
-      const result = parseStreamEnvelope(raw)
-      if (!result.ok) {
-        // Malformed envelope — ignore rather than crash the stream.
-        return
-      }
-      this.handleEnvelope(result.value)
+    const pending = this.openConnection()
+    this.connectPromise = pending
+    void pending.finally(() => {
+      if (this.connectPromise === pending)
+        this.connectPromise = undefined
     })
-
-    conn.onClose((_code, _reason) => {
-      this.connection = undefined
-      this.handlers?.onStale('stream_closed')
-      this.scheduleReconnect()
-    })
-
-    conn.onError((_err) => {
-      this.connection = undefined
-      this.handlers?.onError('transport_error')
-      this.scheduleReconnect()
-    })
+    return pending
   }
 
   /** Permanently stop the client (no reconnect). */
   stop(): void {
     this.stopped = true
-    this.connection?.close()
+    this.cancelReconnect()
+    const connection = this.connection
     this.connection = undefined
+    connection?.close()
   }
 
   /**
@@ -157,15 +148,19 @@ export class CloudProjectionStreamClient {
   reconnectForCatchup(afterRevision: number): void {
     if (this.stopped)
       return
-    this.connection?.close()
+    this.cancelReconnect()
+    const connection = this.connection
     this.connection = undefined
     this.opts = { ...this.opts, afterRevision }
     this.attempt = 0
+    connection?.close()
     void this.connect()
   }
 
   /** Send an ack for an applied+persisted revision (C-6). */
   sendAck(revision: number): void {
+    if (revision > this.opts.afterRevision)
+      this.opts = { ...this.opts, afterRevision: revision }
     const ack: ClientAck = {
       kind: 'ack',
       cloudProjectId: this.opts.cloudProjectId,
@@ -182,6 +177,7 @@ export class CloudProjectionStreamClient {
         break
       case 'ready':
         // Catch-up complete; the manager advances the cursor then acks.
+        this.attempt = 0
         this.handlers?.onEnvelope(envelope)
         break
       case 'stale':
@@ -208,10 +204,123 @@ export class CloudProjectionStreamClient {
     return Math.max(MIN_RECONNECT_SECONDS * 1000, jitter)
   }
 
-  private scheduleReconnect(): void {
-    if (this.stopped)
+  private async openConnection(): Promise<void> {
+    let authorization: StreamAuthorization
+    try {
+      authorization = this.opts.refreshAuthorization
+        ? await this.opts.refreshAuthorization()
+        : { headers: this.opts.headers, tokenExpiry: this.opts.tokenExpiry }
+    }
+    catch {
+      this.handlers?.onError('authentication_required')
+      this.scheduleBackoff()
       return
-    this.scheduler(this.backoffDelayMs(), () => this.connect())
+    }
+
+    if (this.stopped || this.connection)
+      return
+
+    this.opts = {
+      ...this.opts,
+      headers: authorization.headers,
+      tokenExpiry: authorization.tokenExpiry,
+    }
+    const headers: Record<string, string> = {
+      ...authorization.headers,
+      'x-mdt-cloud-project-id': this.opts.cloudProjectId,
+      'x-mdt-after-revision': String(this.opts.afterRevision),
+      'x-mdt-token-expiry': String(authorization.tokenExpiry),
+    }
+
+    let connection: StreamConnection
+    try {
+      const transport = this.opts.transport ?? getDefaultTransport()
+      connection = transport.connect(
+        streamWebSocketUrl(this.opts.serviceOrigin, this.opts.cloudProjectId),
+        headers,
+      )
+    }
+    catch {
+      this.handlers?.onError('transport_error')
+      this.scheduleBackoff()
+      return
+    }
+
+    if (this.stopped) {
+      connection.close()
+      return
+    }
+
+    this.connection = connection
+    let terminated = false
+    const terminate = (kind: 'close' | 'error') => {
+      if (terminated || this.stopped || this.connection !== connection)
+        return
+      terminated = true
+      this.connection = undefined
+      this.cancelReconnect()
+      if (kind === 'close') {
+        this.handlers?.onStale('stream_closed')
+      }
+      else {
+        this.handlers?.onError('transport_error')
+      }
+      this.scheduleBackoff()
+    }
+
+    connection.onMessage((raw) => {
+      if (this.connection !== connection)
+        return
+      const result = parseStreamEnvelope(raw)
+      if (result.ok)
+        this.handleEnvelope(result.value)
+    })
+    connection.onClose(() => terminate('close'))
+    connection.onError(() => terminate('error'))
+    this.scheduleExpiryReconnect(authorization.tokenExpiry)
+  }
+
+  private scheduleBackoff(): void {
+    this.scheduleReconnect(this.backoffDelayMs(), false)
+  }
+
+  private scheduleExpiryReconnect(tokenExpiry: number): void {
+    if (tokenExpiry <= 0)
+      return
+    const delay = Math.max(
+      MIN_RECONNECT_SECONDS * 1000,
+      tokenExpiry - this.now() - this.tokenRefreshSkewMs,
+    )
+    this.scheduleReconnect(delay, true)
+  }
+
+  private scheduleReconnect(delayMs: number, replaceConnection: boolean): void {
+    if (this.stopped || this.reconnectScheduled)
+      return
+    this.reconnectScheduled = true
+    const generation = ++this.reconnectGeneration
+    this.reconnectHandle = this.scheduler(delayMs, () => {
+      if (this.stopped || generation !== this.reconnectGeneration)
+        return
+      this.reconnectScheduled = false
+      this.reconnectHandle = undefined
+      if (replaceConnection) {
+        const connection = this.connection
+        this.connection = undefined
+        connection?.close()
+      }
+      void this.connect()
+    })
+  }
+
+  private cancelReconnect(): void {
+    if (!this.reconnectScheduled)
+      return
+    this.reconnectGeneration += 1
+    this.reconnectScheduled = false
+    if (this.reconnectHandle !== undefined)
+      this.cancelScheduled(this.reconnectHandle)
+    this.reconnectHandle = undefined
   }
 }
 

@@ -13,6 +13,7 @@
  */
 
 import type { ChildProcess } from 'node:child_process'
+import { Buffer } from 'node:buffer'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -20,9 +21,14 @@ import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals
 
 import {
   CloudflaredCredentialProvider,
+  RuntimeCloudCredentialProvider,
   ServiceTokenCredentialProvider,
   buildServiceTokenHeaders,
 } from '../credential-providers'
+import {
+  AccessCredentialBroker,
+  streamAuthorizationFromCredential,
+} from '../access-credential-broker'
 import { MachineCredentialStore } from '../credential-store'
 
 const ALLOWED = 'https://mdt-sync.example.com'
@@ -87,6 +93,154 @@ describe('CloudflaredCredentialProvider (human)', () => {
     expect(errSpy).not.toHaveBeenCalledWith(expect.stringContaining('super-secret-token'))
     consoleSpy.mockRestore()
     errSpy.mockRestore()
+  })
+
+  it('serializes acquisitions so only one cloudflared child is active (C-13)', async () => {
+    const callbacks: ExecCallback[] = []
+    spawn.mockImplementation((_file: string, _args: readonly string[], cb: ExecCallback) => {
+      callbacks.push(cb)
+      return minimalChild()
+    })
+    const provider = new CloudflaredCredentialProvider({ spawn: spawn as any })
+
+    const first = provider.resolve(ALLOWED)
+    const second = provider.resolve('https://other.example.com')
+    await Promise.resolve()
+    expect(spawn).toHaveBeenCalledTimes(1)
+
+    callbacks[0]!(null, 'token-a', '')
+    await first
+    await Promise.resolve()
+    expect(spawn).toHaveBeenCalledTimes(2)
+
+    callbacks[1]!(null, 'token-b', '')
+    await second
+  })
+
+  it('signals a timed-out child and blocks replacement until exit (Edge-7)', async () => {
+    const kill = jest.fn(() => true)
+    const callbacks: ExecCallback[] = []
+    spawn.mockImplementation((_file: string, _args: readonly string[], cb: ExecCallback) => {
+      callbacks.push(cb)
+      return minimalChild(kill)
+    })
+    const provider = new CloudflaredCredentialProvider({
+      spawn: spawn as any,
+      timeoutMs: 5,
+    })
+
+    await expect(provider.resolve(ALLOWED)).resolves.toBeNull()
+    expect(kill).toHaveBeenCalledWith('SIGTERM')
+
+    const queued = provider.resolve('https://other.example.com')
+    await Promise.resolve()
+    expect(spawn).toHaveBeenCalledTimes(1)
+
+    callbacks[0]!(new Error('terminated') as NodeJS.ErrnoException, '', '')
+    await Promise.resolve()
+    await Promise.resolve()
+    expect(spawn).toHaveBeenCalledTimes(2)
+    callbacks[1]!(null, 'token-b', '')
+    await expect(queued).resolves.toEqual({
+      kind: 'human',
+      cfAccessToken: 'token-b',
+    })
+  })
+})
+
+describe('AccessCredentialBroker (TEST-credential-broker-resource-bounds)', () => {
+  it('shares one origin acquisition and reuses the valid token (C-13)', async () => {
+    let complete!: (credential: {
+      kind: 'human'
+      cfAccessToken: string
+    }) => void
+    const provider = {
+      resolve: jest.fn(() => new Promise<{
+        kind: 'human'
+        cfAccessToken: string
+      }>((resolve) => {
+        complete = resolve
+      })),
+    }
+    const broker = new AccessCredentialBroker({
+      provider,
+      now: () => 1_000_000,
+      refreshSkewMs: 60_000,
+    })
+
+    const first = broker.resolve(ALLOWED)
+    const second = broker.resolve(ALLOWED)
+    expect(provider.resolve).toHaveBeenCalledTimes(1)
+
+    const credential = {
+      kind: 'human' as const,
+      cfAccessToken: jwtWithExpiry(2_000),
+    }
+    complete(credential)
+    await expect(Promise.all([first, second])).resolves.toEqual([
+      credential,
+      credential,
+    ])
+    await expect(broker.resolve(ALLOWED)).resolves.toEqual(credential)
+    expect(provider.resolve).toHaveBeenCalledTimes(1)
+  })
+
+  it('uses only the non-interactive provider path for background refresh (C-13, Edge-7)', async () => {
+    const provider = {
+      resolve: jest.fn(async () => ({
+        kind: 'human' as const,
+        cfAccessToken: 'interactive-token',
+      })),
+      resolveNonInteractive: jest.fn(async () => null),
+    }
+    const broker = new AccessCredentialBroker({ provider })
+
+    await expect(broker.resolveNonInteractive(ALLOWED)).resolves.toBeNull()
+    expect(provider.resolveNonInteractive).toHaveBeenCalledTimes(1)
+    expect(provider.resolve).not.toHaveBeenCalled()
+  })
+
+  it('reuses a human token acquired by an explicit operation for background refresh', async () => {
+    const credential = {
+      kind: 'human' as const,
+      cfAccessToken: jwtWithExpiry(2_000),
+    }
+    const provider = {
+      resolve: jest.fn(async () => credential),
+      resolveNonInteractive: jest.fn(async () => null),
+    }
+    const broker = new AccessCredentialBroker({
+      provider,
+      now: () => 1_000_000,
+    })
+
+    await expect(broker.resolve(ALLOWED)).resolves.toEqual(credential)
+    await expect(broker.resolveNonInteractive(ALLOWED)).resolves.toEqual(credential)
+    expect(provider.resolveNonInteractive).not.toHaveBeenCalled()
+  })
+})
+
+describe('RuntimeCloudCredentialProvider', () => {
+  it('resolves service credentials without invoking the human provider', async () => {
+    const serviceCredential = {
+      kind: 'service' as const,
+      clientId: 'machine-id',
+      clientSecret: 'machine-secret',
+    }
+    const service = { resolve: jest.fn(async () => serviceCredential) }
+    const human = { resolve: jest.fn(async () => null) }
+    const provider = new RuntimeCloudCredentialProvider(service, human)
+
+    await expect(provider.resolveNonInteractive(ALLOWED)).resolves.toEqual(serviceCredential)
+    expect(human.resolve).not.toHaveBeenCalled()
+
+    expect(streamAuthorizationFromCredential(serviceCredential, 1_000_000)).toEqual({
+      headers: {
+        'CF-Access-Client-Id': 'machine-id',
+        'CF-Access-Client-Secret': 'machine-secret',
+      },
+      tokenExpiry: 1_300_000,
+    })
   })
 })
 
@@ -262,7 +416,7 @@ describe('ServiceTokenCredentialProvider via CONFIG_DIR store (TEST-machine-cred
 type ExecCallback = (err: NodeJS.ErrnoException | null, stdout: string, stderr: string) => void
 
 /** Minimal Node EventEmitter-based fake ChildProcess (returned, never streamed). */
-function minimalChild(): ChildProcess {
+function minimalChild(kill: (signal?: NodeJS.Signals | number) => boolean = () => true): ChildProcess {
   const handlers: Record<string, Array<(...args: any[]) => void>> = {}
   const cp = {
     on(event: string, fn: (...args: any[]) => void) {
@@ -273,10 +427,15 @@ function minimalChild(): ChildProcess {
       for (const fn of handlers[event] ?? [])
         fn(...args)
     },
-    kill() { return true },
+    kill,
     stdin: { end() {} },
   }
   return cp as unknown as ChildProcess
+}
+
+function jwtWithExpiry(exp: number): string {
+  const payload = Buffer.from(JSON.stringify({ exp })).toString('base64url')
+  return `header.${payload}.signature`
 }
 
 /** A fake execFile that yields a successful token (deferred, async-safe). */

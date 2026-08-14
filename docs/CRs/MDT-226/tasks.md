@@ -45,7 +45,7 @@ the hub for D1 transactions.
 
 ## Slice 3 — Local projection runtime
 
-Exit gate: one stream per project, single-flight reconnect, atomic
+Exit gate: one stream client per project, atomic
 read-model/cursor persistence before ack, sparse catch-up, live-gap resync,
 duplicate/old ignored, and stale state all pass against the controllable WS peer.
 
@@ -57,7 +57,7 @@ Lands `shared/services/cloud-sync/CloudProjectionStreamClient.ts` (Access header
 on upgrade, bounded backoff + jitter, token refresh, catch-up from cursor,
 envelope validation, ping that does not wake the hub for an app request),
 `server/services/cloud-sync/ProjectionStreamManager.ts` (exactly one client per
-enabled project, server-lifecycle owned, single-flight reconnect, ack only after
+enabled project, server-lifecycle owned, catch-up intent, ack only after
 atomic persistence), and `shared/services/cloud-sync/CloudProjectionReadModel.ts`
 (projected header cache, applied cursor, atomic persistence, local-wins merge,
 duplicate/gap decisions, no transport state to React).
@@ -110,6 +110,26 @@ Persists retry state/backoff (`attemptCount`, `nextAttemptAt`, typed last
 error), attempts only due entries, uses the known projection version for one
 conditional write, distinguishes `projection_not_found`, and quarantines
 unmanaged tickets until reservation recovery or explicit import.
+
+## Slice 7 — Local stream and credential resource bounds
+
+Status: completed 2026-08-14.
+
+Exit gate: compound transport termination, catch-up replacement, and concurrent
+connect/manager-start calls produce one connection lane; background refresh is
+non-interactive and accepts service credentials; valid human credentials are
+reused; child acquisition is serialized and timeout-bounded.
+
+| Task | Owns | Makes green |
+| --- | --- | --- |
+| **TASK-local-resource-bounds** | `ART-stream-client`, `ART-stream-manager`, `ART-access-credential-broker`, `ART-credential-provider`, `ART-server-bootstrap` | TEST-stream-client-transport, TEST-stream-manager-single-flight, TEST-credential-broker-resource-bounds |
+
+Make `CloudProjectionStreamClient` the sole per-project connection state
+machine. Add a process-scoped `AccessCredentialBroker`, inject it into every
+server cloud path, serialize `cloudflared` children, signal deadline overruns
+without admitting a replacement before exit, keep background refresh
+non-interactive, support service credentials, and refresh headers plus expiry
+together.
 
 ## Scenario closure
 

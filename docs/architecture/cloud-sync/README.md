@@ -175,7 +175,10 @@ allocation, journal, authorization, cursor, or projection-conflict rules.
 | `ProjectProjectionHub` | Hibernating sockets, ordering, catch-up, broadcast, alarm recovery, revocation disconnect | Ticket bodies or authoritative projection data |
 | Projection use case | Version checks, operation idempotency, D1 transaction result | Pre-commit broadcast |
 | D1 repositories | Prepared project-scoped reads and atomic mutation batches | Transport/session ownership |
-| Local stream manager | One upstream stream/project and cloud reconnect/catch-up | Ticket-list presentation or browser state |
+| Local stream manager | One client/project, read-model delivery, and catch-up intent | Connection timers, credential subprocesses, ticket-list presentation, or browser state |
+| Local stream client | One project connection state machine: handshake, expiry, reconnect, and transport replacement | Credential subprocesses or project/read-model ownership |
+| Access credential broker | Process-scoped origin cache, concurrent single-flight, and shared server credential resolution | WebSocket lifecycle or credential persistence |
+| `CloudflaredCredentialProvider` | Serialized fixed-argument child process with deadline signal and exit barrier | Token caching, retry scheduling, or more than one active child |
 | Local projection read model | Projected header cache, applied cursor, local-wins merge | Cloud transport or React state |
 | Server ticket service | Unified browser ticket list and ordinary local ticket changes | Cloud cursor or projection protocol exposure |
 
@@ -199,11 +202,22 @@ persists the cursor/state and merges against canonical tickets. The local
 ticket views/events. The browser never receives Cloudflare credentials, project
 revisions, or a separate projection feed.
 
+The stream client permits one handshake and one reconnect/expiry timer per
+project. One process-scoped `AccessCredentialBroker` serves stream, journal,
+and ticket operations: valid human tokens are reused by trusted origin and
+concurrent callers share one resolution. Its `cloudflared` adapter serializes
+children, signals a child that exceeds its deadline, and does not admit another
+child until the prior child reports exit. Transport
+`error`/`close`, intentional catch-up close, and stale callbacks cannot create
+parallel reconnect lanes.
+
 The stream manager never launches an interactive login merely because the
-server started. A machine credential can connect headlessly; a human connection
-remains `authentication_required` until an owner action makes a valid
-`cloudflared` application token available. Once a credential is available, the
-manager owns the stream independently of browser-tab mounts.
+server started. It registers one stale read model/reconnect owner immediately. A
+machine credential can connect headlessly; a human connection remains
+`authentication_required` until an owner action makes a valid `cloudflared`
+application token available in the process broker. Background reconnect checks
+that cache and never spawns `cloudflared`. Concurrent manager starts and browser
+mounts do not add clients.
 
 Journal and connection files use a device-local routing hash derived from the
 physical Git common directory or canonical non-Git root plus cloud project UUID.

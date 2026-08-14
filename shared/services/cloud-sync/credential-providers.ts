@@ -9,7 +9,9 @@
  *
  *   - CloudflaredCredentialProvider (human, interactive CLI / local MCP):
  *     spawns `cloudflared access token -app=<origin>` with a fixed arg array
- *     (no shell). The origin comes from validated config, never request input.
+ *     (no shell), serializes children, and signals deadline overruns. No later
+ *     child starts until the prior child reports exit. The
+ *     origin comes from validated config, never request input.
  *     Returns the short-lived application token or null on no session. The token
  *     is held in memory only — it is never printed, persisted, or logged.
  *
@@ -71,6 +73,8 @@ export interface CloudflaredCredentialProviderOptions {
   spawn?: ExecFile
   /** Override the executable name (tests/dev only). Defaults to `cloudflared`. */
   executable?: string
+  /** Caller deadline before SIGTERM. Defaults to 10 seconds. */
+  timeoutMs?: number
 }
 
 /**
@@ -83,34 +87,83 @@ export interface CloudflaredCredentialProviderOptions {
 export class CloudflaredCredentialProvider implements CloudCredentialProvider {
   private readonly spawn: ExecFile
   private readonly executable: string
+  private readonly timeoutMs: number
+  /** Serializes child lifecycles; a timed-out child blocks later spawns until exit. */
+  private childTail: Promise<void> = Promise.resolve()
 
   constructor(opts: CloudflaredCredentialProviderOptions = {}) {
     this.spawn = opts.spawn ?? defaultExecFile
     this.executable = opts.executable ?? 'cloudflared'
+    this.timeoutMs = Math.max(1, opts.timeoutMs ?? 10_000)
   }
 
   async resolve(serviceUrl: string): Promise<CloudCredential | null> {
-    // Fixed arg array — no shell, no request-derived input beyond the origin.
+    const turn = this.childTail.then(
+      () => this.spawnAttempt(serviceUrl),
+      () => this.spawnAttempt(serviceUrl),
+    )
+    this.childTail = turn.then(attempt => attempt.done, () => undefined)
+    const attempt = await turn
+    return attempt.result
+  }
+
+  private spawnAttempt(serviceUrl: string): {
+    result: Promise<CloudCredential | null>
+    done: Promise<void>
+  } {
     const args = ['access', 'token', `-app=${serviceUrl}`]
-    return new Promise((resolve) => {
-      try {
-        this.spawn(this.executable, args, (err, stdout) => {
-          // Non-zero exit / spawn error (ENOENT) → no human session. Return null
-          // so the caller surfaces authentication_required WITHOUT a local
-          // fallback (BR-1.5). Never throw on "no session".
-          if (err)
-            return resolve(null)
-          const token = stdout.trim()
-          if (!token)
-            return resolve(null)
-          resolve({ kind: 'human', cfAccessToken: token })
-        })
-      }
-      catch {
-        // Defensive: any synchronous spawn failure is treated as no session.
-        resolve(null)
+    let finishResult!: (credential: CloudCredential | null) => void
+    let finishDone!: () => void
+    let resultSettled = false
+    let doneSettled = false
+    let timeout: ReturnType<typeof setTimeout> | undefined
+
+    const result = new Promise<CloudCredential | null>((resolve) => {
+      finishResult = (credential) => {
+        if (resultSettled)
+          return
+        resultSettled = true
+        resolve(credential)
       }
     })
+    const done = new Promise<void>((resolve) => {
+      finishDone = () => {
+        if (doneSettled)
+          return
+        doneSettled = true
+        if (timeout)
+          clearTimeout(timeout)
+        resolve()
+      }
+    })
+
+    try {
+      const child = this.spawn(this.executable, args, (err, stdout) => {
+        const token = stdout.trim()
+        finishResult(err || !token
+          ? null
+          : { kind: 'human', cfAccessToken: token })
+        finishDone()
+      })
+      if (!resultSettled) {
+        timeout = setTimeout(() => {
+          try {
+            child.kill('SIGTERM')
+          }
+          catch {
+            // The deadline still resolves unavailable; the serialized queue
+            // remains blocked until the process callback confirms termination.
+          }
+          finishResult(null)
+        }, this.timeoutMs)
+      }
+    }
+    catch {
+      finishResult(null)
+      finishDone()
+    }
+
+    return { result, done }
   }
 }
 
@@ -220,12 +273,17 @@ function isOptionsObject(
  */
 export class RuntimeCloudCredentialProvider implements CloudCredentialProvider {
   constructor(
-    private readonly service = new ServiceTokenCredentialProvider(),
-    private readonly human = new CloudflaredCredentialProvider(),
+    private readonly service: CloudCredentialProvider = new ServiceTokenCredentialProvider(),
+    private readonly human: CloudCredentialProvider = new CloudflaredCredentialProvider(),
   ) {}
 
   async resolve(serviceUrl: string): Promise<CloudCredential | null> {
     return await this.service.resolve(serviceUrl) ?? await this.human.resolve(serviceUrl)
+  }
+
+  /** Background startup/reconnect path: service credentials only, never login. */
+  async resolveNonInteractive(serviceUrl: string): Promise<CloudCredential | null> {
+    return this.service.resolve(serviceUrl)
   }
 }
 

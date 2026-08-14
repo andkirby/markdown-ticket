@@ -9,6 +9,7 @@ import type { TicketUpdateAttrs, UnifiedTicketItem } from '@mdt/domain-contracts
 import type { Project } from '@mdt/shared/models/Project.js'
 import type { Ticket, TicketData } from '@mdt/shared/models/Ticket.js'
 import type { CRStatus } from '@mdt/shared/models/Types.js'
+import type { CloudRuntimeDependencies } from '@mdt/shared/services/TicketService.js'
 import { TICKET_KEY_INPUT_PATTERN } from '@mdt/domain-contracts'
 import { resolveAttrValue } from '@mdt/shared/services/ticket/attrResolver.js'
 import {
@@ -117,9 +118,12 @@ export class TicketService {
   private readonly traceStoreService: TraceStoreService
   private projectionProvider?: ProjectionReadModelProvider
 
-  constructor(projectDiscovery: ProjectDiscovery) {
+  constructor(
+    projectDiscovery: ProjectDiscovery,
+    cloudRuntime: CloudRuntimeDependencies = {},
+  ) {
     this.projectDiscovery = projectDiscovery
-    this.sharedTicketService = new SharedTicketService(false)
+    this.sharedTicketService = new SharedTicketService(false, cloudRuntime)
     this.ticketLocationResolver = new TicketLocationResolver()
     this.subdocumentService = new SubdocumentService()
     this.traceStoreService = new TraceStoreService()

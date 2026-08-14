@@ -250,6 +250,9 @@ Track:
 - per-socket acknowledgement lag plus Durable Object alarm schedules, retries,
   recovered revisions, and failures;
 - project-stream count compared with enabled local project count;
+- local connection attempts, pending reconnect timers, credential resolutions,
+  active `cloudflared` children, resolution timeouts, and token-cache hits by
+  trusted origin;
 - D1 reads during tagged idle windows, with zero as the required result;
 - browser requests to the legacy local `/cloud-projections` endpoint, with zero
   required before compatibility retirement;
@@ -283,6 +286,8 @@ evidence:
 | Projection reconnect catch-up | p95 exceeds 5 seconds for 10 minutes |
 | Idle D1 projection/membership reads | Any sustained read caused only by elapsed time |
 | Project stream reconnect rate | More than 5 reconnects/project in 5 minutes |
+| Local connection single-flight | More than one handshake or reconnect timer for one project |
+| Credential subprocess bound | More than one active `cloudflared` child, or a signalled child that does not exit |
 | Project hub acknowledgement/alarm recovery | Any active socket behind after exhausted alarm retry |
 | Browser projection endpoint use | Any request after the selected client is migrated to the unified ticket API |
 | Service-token expiry | Warn 30 days and 7 days before expiry |
@@ -322,6 +327,23 @@ The local POC is correctness evidence, not a capacity result.
    dependency rather than raising the handshake limit blindly.
 6. Verify one stream per local server/project, zero idle D1 reads, and current
    membership before restoring the rollout flag.
+
+### Local Credential or Reconnect Amplification
+
+1. Stop the affected local server process tree; do not treat DNS failures after
+   process exhaustion as the primary cause.
+2. Record parent/child process counts and group `cloudflared access token`
+   children by server PID and trusted origin without logging tokens.
+3. Keep cloud projection streams disabled for that runtime until child count
+   returns to zero and the shell can fork normally.
+4. Verify each project has at most one connection attempt and one reconnect
+   timer; coalesce `error` plus `close` and intentional catch-up close.
+5. Verify credential cache hits, non-interactive background refresh, one
+   in-flight resolution per origin, one active child process globally, and that
+   a timed-out child blocks replacement acquisition until exit.
+6. Re-enable one project and force transport failure, compound `error`/`close`,
+   catch-up replacement, and credential timeout. Child and reconnect counts
+   must remain bounded before broader rollout.
 
 > **C-1 status:** "Zero idle D1 reads" (C-1) is no longer a vacuous claim once
 > the local-server stream is wired. It remains an external release gate until a

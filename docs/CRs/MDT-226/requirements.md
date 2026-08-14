@@ -22,6 +22,12 @@ existing SSE.
 - **Live**: catch-up through the hub's current committed revision completed.
 - **Stale**: the last applied projection is available, but the stream is not
   currently live.
+- **Connection attempt**: one credential resolution followed by at most one
+  WebSocket handshake for a project. Error and close notifications for the same
+  transport are one termination event.
+- **Credential acquisition**: one process-scoped, origin-keyed resolution. A
+  still-valid human Access token is reused; concurrent callers share one
+  in-flight acquisition.
 - **Delivery semantics**: transport is at-least-once; revision-aware application
   is idempotent and converges to the latest D1 projection state.
 - **In time**: commit-to-rendered-ticket delivery is at most 2 seconds at p95 for
@@ -152,6 +158,16 @@ Projection write retries SHALL run independently of browser and read requests,
 with one bounded single-flight runner per project, persisted capped backoff, and
 no request when no eligible operation is due.
 
+### C-13 Local connection and credential resource bounds
+
+Each enabled project SHALL have at most one WebSocket connection attempt and
+one scheduled reconnect, including concurrent manager starts. Human Access
+credential acquisition SHALL be process-scoped and origin-keyed: reuse a token
+until its refresh window, share concurrent acquisition, and run at most one
+`cloudflared` child at a time. Startup and background reconnect SHALL never
+launch interactive login; they may use only a cached human token or a configured
+service credential.
+
 ## Edge Cases
 
 ### Edge-1 Commit-acknowledgement gap
@@ -183,6 +199,21 @@ close unauthorized sockets before delivering a later projection.
 If an authorized project has no projection for a journaled ticket, the system
 SHALL stop automatic retries and classify it as unmanaged; only recovery of its
 original reservation/acknowledgement or an explicit import may create it.
+
+### Edge-6 Compound stream termination
+
+If one transport emits both `error` and `close`, an intentional catch-up close
+also emits `close`, or a stale transport callback arrives after replacement,
+the local client SHALL coalesce those signals into at most one next connection
+attempt.
+
+### Edge-7 Hung credential acquisition
+
+If `cloudflared access token` does not complete by its deadline, the local
+server SHALL signal that child to terminate, resolve the caller as unavailable,
+and SHALL NOT spawn another credential child until the prior child reports exit.
+The registered projection read model remains stale and its one background
+reconnect lane checks only cached human or configured service credentials.
 
 ## Assumptions
 

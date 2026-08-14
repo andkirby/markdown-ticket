@@ -30,10 +30,11 @@ deterministic.
 
 | Plan | Covers | File |
 | --- | --- | --- |
-| TEST-stream-client-transport | C-6, C-10, C-3 | `shared/services/cloud-sync/__tests__/CloudProjectionStreamClient.test.ts` — Access headers on upgrade, bounded exponential backoff + jitter, token refresh, catch-up request from last cursor, envelope validation, ping does not wake hub for app request |
-| TEST-stream-manager-single-flight | C-5, C-1, BR-1.6 | `server/tests/services/cloud-sync/ProjectionStreamManager.test.ts` — exactly one client per enabled project; tab mounts do not add streams; single-flight reconnect; stop is clean |
+| TEST-stream-client-transport | C-6, C-10, C-13, Edge-6, C-3 | `shared/services/cloud-sync/tests/CloudProjectionStreamClient.test.ts` — concurrent connect calls share one handshake; error+close and catch-up close create one replacement; stale callbacks are ignored; authorization refresh updates token+expiry together; expiry reconnect and bounded backoff use one timer |
+| TEST-credential-broker-resource-bounds | C-13, Edge-7 | `shared/services/cloud-sync/__tests__/credential-providers.test.ts` — valid origin token is reused; background refresh never invokes human login and supports service-token headers; different origins serialize to one child; timeout signals the child and blocks the next spawn until exit |
+| TEST-stream-manager-single-flight | BR-1.6, C-13 | `server/tests/services/cloud-sync/ProjectionStreamManager.test.ts` — exactly one client per enabled project, including concurrent starts before read-model load; tab mounts do not add clients; stop is clean |
 | TEST-stream-manager-ack-persistence | C-6, Edge-1 | `server/tests/services/cloud-sync/ProjectionStreamManager.test.ts` — read-model + cursor persisted atomically before ack; failed apply does not ack or advance |
-| TEST-stream-manager-stale | BR-1.5, SC-5 | `server/tests/services/cloud-sync/ProjectionStreamManager.test.ts` — disconnect keeps last projection + marks stale; bounded reconnect; catch-up in revision order before live |
+| TEST-stream-manager-stale | BR-1.5 | `server/tests/services/cloud-sync/ProjectionStreamManager.test.ts` — disconnect marks the read model stale without discarding its last projection |
 | TEST-config-v2-migration | Edge-3, C-9 | `shared/services/cloud-sync/__tests__/project-state-store.test.ts` — v1 with pollIntervalSeconds migrates atomically to v2; identity/origin/credential unchanged; pollIntervalSeconds discarded from active use |
 | TEST-unified-ticket-api | BR-1.9, C-11, C-2 | `server/tests/services/cloud-sync/SSEProjectionFanout.test.ts` plus a frontend/data-layer regression — `/tickets/unified` returns canonical + projection-only read-only entries with kind/readOnly/stale, the browser preserves those capability fields, local wins on number, and no cloud transport fields leak |
 | TEST-sse-fanout | BR-1.3, C-11 | `server/tests/services/cloud-sync/SSEProjectionFanout.test.ts` — read-model change emits an ordinary ticket-view change via existing SSEBroadcaster; browser gets no projection protocol |
@@ -61,7 +62,7 @@ latency measurement. They are the runtime gates for slice exit.
 
 ## Coverage invariant
 
-Every tests-routed requirement (C-1..C-12, Edge-1..Edge-5) has at least one
+Every tests-routed requirement (C-1..C-13, Edge-1..Edge-7) has at least one
 test-plan coverage entry, validated by
 `spec-trace validate MDT-226 --stage tests --strict`. The `manual` plans are
 the deployment/idle/latency evidence gates; the rest run in CI against the
