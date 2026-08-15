@@ -358,6 +358,30 @@ typed `CommitProjectionOutcome`; the Worker re-throws a `CoordinationError`
 with `currentVersion`. Observed post-fix: 5× typed 409 → journal adopted →
 6× 200 → journal fully drained and revisions streamed back live.
 
+### I6. Recovery alarm replay was unbounded against never-acking sockets — FIXED (2026-08-15 night)
+
+D1 insights showed `SELECT projection_revision FROM cloud_projects` at ~29
+requests/minute (352 in the user's 30-minute window; measured +86 in a 3-minute
+"idle" window) while the local status said live. Three stacked causes in
+`ProjectProjectionHub`:
+
+1. **Unbounded replay**: a connected socket that never acknowledges keeps the
+   5s recovery alarm cycling forever — each pass re-reads the current revision
+   and replays catch-up. "Bounded catch-up replay" was never bounded in count;
+   any stuck client (e.g. the pre-I4 era whose applies failed) turned the
+   alarm into a D1 poller.
+2. **Double read per pass**: `alarm()` read the current revision, then
+   `sendCatchup` read it again as its ceiling.
+3. **Per-ack reads**: every ack queued a `maybeClearAlarm` D1 read — a
+   19-envelope catch-up burst cost 19 identical reads.
+
+Fixes: sockets making no ack progress across 3 alarm passes are closed
+(`ack_timeout`, reconnect catches up fresh); the alarm passes its already-read
+revision as the catch-up ceiling; ack-close/error checks coalesce behind a
+pending flag. Measured after deploy (`fc383338`): **2 reads over 5 live
+minutes** (catch-up high-water + rotation check) versus ~145 in the same
+window before.
+
 ## G. Root Cause Pattern
 
 Every defect in this log shares one root cause: **components designed and tested
