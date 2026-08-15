@@ -66,6 +66,11 @@
     font-variant-numeric: tabular-nums;
     font-weight: 600;
   }
+  /* Ticket-key rendered as a link (SmartLink in badges) — underline on hover.
+     Scoped to <a> so non-link .ticket-key (TicketCode span, PinItem) is unaffected. */
+  a.ticket-key:hover {
+    text-decoration: underline;
+  }
   /* TicketCode — glyph-before-key rendering; layers layout + primary-text color
      on top of .ticket-key typography (the component applies both classes). */
   .ticket-code {

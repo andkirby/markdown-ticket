@@ -86,7 +86,7 @@ export function ContextBadge({ variant, value, worktreePath, className }: Contex
       data-context={contextType}
       title={title}
     >
-      {isEpic && <Zap className="h-3 w-3" aria-hidden="true" />}
+      {isEpic && <Zap className="badge__icon" aria-hidden="true" />}
       {isLinkable && parsedLink
         ? (
             // Stop the parent card's viewer-open onClick from firing on navigation.
@@ -100,7 +100,7 @@ export function ContextBadge({ variant, value, worktreePath, className }: Contex
                 link={parsedLink}
                 currentProject={currentProject}
                 showIcon={false}
-                className="ticket-key hover:underline"
+                className="ticket-key"
               >
                 {displayValue}
               </SmartLink>

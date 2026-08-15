@@ -26,7 +26,7 @@ export interface PriorityBadgeProps extends PriorityVariantProps {
  *
  * @example
  * <PriorityBadge priority="High" />
- * <PriorityBadge priority="Critical" className="ml-2" />
+ * <PriorityBadge priority="Critical" className="custom-class" />
  */
 export function PriorityBadge({ priority, className, ...props }: PriorityBadgeProps & React.HTMLAttributes<HTMLDivElement>) {
   const key = formatDataAttr(priority)
@@ -38,7 +38,7 @@ export function PriorityBadge({ priority, className, ...props }: PriorityBadgePr
       data-priority={key}
       {...props}
     >
-      <Icon className="h-3 w-3" strokeWidth={2.5} aria-hidden="true" />
+      <Icon className="badge__icon" strokeWidth={2.5} aria-hidden="true" />
       {priority}
     </Badge>
   )

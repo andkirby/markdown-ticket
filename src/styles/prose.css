@@ -202,17 +202,17 @@
   text-decoration-thickness: 0.08em;
   text-underline-offset: 0.18em;
   overflow-wrap: anywhere;
-}
 
-.prose a:hover {
-  text-decoration-line: underline;
-}
+  &:hover {
+    text-decoration-line: underline;
+  }
 
-.prose a:focus-visible {
-  outline: 2px solid oklch(var(--ring));
-  outline-offset: 2px;
-  border-radius: 0.1875rem;
-  text-decoration-line: underline;
+  &:focus-visible {
+    outline: 2px solid oklch(var(--ring));
+    outline-offset: 2px;
+    border-radius: 0.1875rem;
+    text-decoration-line: underline;
+  }
 }
 
 .prose ul,
@@ -292,11 +292,11 @@
   overflow-wrap: break-word;
   word-break: normal;
   white-space: normal;
-}
 
-.prose :not(pre) > code::before,
-.prose :not(pre) > code::after {
-  content: none;
+  &::before,
+  &::after {
+    content: none;
+  }
 }
 
 .prose pre,
@@ -495,15 +495,15 @@
   -webkit-overflow-scrolling: touch;
 }
 
-.prose .mermaid::before,
-.prose .mermaid::after {
-  content: none !important;
-}
-
 .prose .mermaid {
   padding: 0 !important;
   border: 0;
   background: transparent;
+
+  &::before,
+  &::after {
+    content: none !important;
+  }
 }
 
 .prose svg[id^="mermaid-"] {
@@ -545,11 +545,11 @@
   line-height: 1rem;
   transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
   transition-duration: 200ms;
-}
 
-.prose .diagram-fullscreen-btn:hover,
-.prose .diagram-fullscreen-btn:focus-visible {
-  background: rgb(0 0 0 / 0.3);
+  &:hover,
+  &:focus-visible {
+    background: rgb(0 0 0 / 0.3);
+  }
 }
 
 .prose .wireloom-pending {

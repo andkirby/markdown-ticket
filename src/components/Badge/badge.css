@@ -23,6 +23,11 @@
     border-radius: 4px;
   }
 
+  /* Inline glyph inside a badge (was h-3 w-3 on lucide icons in markup). */
+  .badge__icon {
+    @apply h-3 w-3;
+  }
+
   /* =====================================================
    * STATUS BADGE VARIANTS
    * Flat v3 status tokens (bg tint + colored text). No border.
