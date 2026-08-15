@@ -29,6 +29,9 @@ export default {
     // MDT-226: use real cloud-sync stream/read-model source during server tests
     '^@mdt/shared/services/cloud-sync/CloudProjectionReadModel\\.js$': '<rootDir>/../shared/services/cloud-sync/CloudProjectionReadModel.ts',
     '^@mdt/shared/services/cloud-sync/CloudProjectionStreamClient\\.js$': '<rootDir>/../shared/services/cloud-sync/CloudProjectionStreamClient.ts',
+    // MDT-226 incident recovery: real session client + activation state store
+    '^@mdt/shared/services/cloud-sync/CloudProjectionSessionClient\\.js$': '<rootDir>/../shared/services/cloud-sync/CloudProjectionSessionClient.ts',
+    '^@mdt/shared/services/cloud-sync/projection-stream-state-store\\.js$': '<rootDir>/../shared/services/cloud-sync/projection-stream-state-store.ts',
     // Use real shared ticket-subdocument services during server tests
     '^@mdt/shared/services/ticket/(.*)\\.js$': '<rootDir>/../shared/services/ticket/$1',
     '^@mdt/shared/services/ticket/(.*)$': '<rootDir>/../shared/services/ticket/$1',

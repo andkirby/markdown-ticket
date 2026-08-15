@@ -30,11 +30,15 @@ deterministic.
 
 | Plan | Covers | File |
 | --- | --- | --- |
-| TEST-stream-client-transport | C-6, C-10, C-13, Edge-6, C-3 | `shared/services/cloud-sync/tests/CloudProjectionStreamClient.test.ts` — concurrent connect calls share one handshake; error+close and catch-up close create one replacement; stale callbacks are ignored; authorization refresh updates token+expiry together; expiry reconnect and bounded backoff use one timer |
+| TEST-stream-client-transport | C-6, C-10, C-13, Edge-6, C-3 | `shared/services/cloud-sync/tests/CloudProjectionStreamClient.test.ts` — concurrent connect calls share one grant-bearing handshake; error+close is one termination; stale callbacks are ignored; the transport schedules no autonomous retry |
+| TEST-stream-session-client | C-10, C-14, C-15 | `shared/services/cloud-sync/tests/CloudProjectionSessionClient.test.ts` — one typed HTTPS grant request maps Access/Worker outcomes without retry, holds the grant in memory only, and renews no later than credential expiry |
+| TEST-stream-handshake-failure-classification | BR-1.5, C-14, C-15 | session-client + manager tests — typed `401`/`403`/`404` persist authorization pause; `426` persists incompatible; fake-clock, browser activity, and restart produce no request until an approved re-arm event |
+| TEST-worker-hub-upgrade-forwarding | C-10, C-14, C-15, Edge-8 | `cloud/test/projection-stream-upgrade.test.ts` — session issue performs one membership decision; the hub stores a grant digest; upgrade preserves headers and adds no membership read; revoke invalidates grant and socket |
 | TEST-credential-broker-resource-bounds | C-13, Edge-7 | `shared/services/cloud-sync/__tests__/credential-providers.test.ts` — valid origin token is reused; background refresh never invokes human login and supports service-token headers; different origins serialize to one child; timeout signals the child and blocks the next spawn until exit |
-| TEST-stream-manager-single-flight | BR-1.6, C-13 | `server/tests/services/cloud-sync/ProjectionStreamManager.test.ts` — exactly one client per enabled project, including concurrent starts before read-model load; tab mounts do not add clients; stop is clean |
+| TEST-stream-manager-single-flight | BR-1.6, C-13, C-15 | `server/tests/services/cloud-sync/ProjectionStreamManager.test.ts` — exactly one activation per enabled project; concurrent starts and tabs add no session/client; persisted terminal state survives restart; stop is clean |
 | TEST-stream-manager-ack-persistence | C-6, Edge-1 | `server/tests/services/cloud-sync/ProjectionStreamManager.test.ts` — read-model + cursor persisted atomically before ack; failed apply does not ack or advance |
 | TEST-stream-manager-stale | BR-1.5 | `server/tests/services/cloud-sync/ProjectionStreamManager.test.ts` — disconnect marks the read model stale without discarding its last projection |
+| TEST-stream-status-local-only | BR-1.5, C-11, C-15 | server manager/route tests — status returns live/paused/failed reason, timestamps, and next action from local state; repeated reads and browser tabs perform no cloud request |
 | TEST-config-v2-migration | Edge-3, C-9 | `shared/services/cloud-sync/__tests__/project-state-store.test.ts` — v1 with pollIntervalSeconds migrates atomically to v2; identity/origin/credential unchanged; pollIntervalSeconds discarded from active use |
 | TEST-unified-ticket-api | BR-1.9, C-11, C-2 | `server/tests/services/cloud-sync/SSEProjectionFanout.test.ts` plus a frontend/data-layer regression — `/tickets/unified` returns canonical + projection-only read-only entries with kind/readOnly/stale, the browser preserves those capability fields, local wins on number, and no cloud transport fields leak |
 | TEST-sse-fanout | BR-1.3, C-11 | `server/tests/services/cloud-sync/SSEProjectionFanout.test.ts` — read-model change emits an ordinary ticket-view change via existing SSEBroadcaster; browser gets no projection protocol |
@@ -55,14 +59,15 @@ latency measurement. They are the runtime gates for slice exit.
 
 | Plan | Covers | Evidence file |
 | --- | --- | --- |
-| TEST-idle-zero-d1 | C-1, C-7 | `cloud/test/operations/idle-zero-d1.md` — hold a connected project idle for ≥5 former poll intervals; observe zero timer-caused projection/membership D1 reads (statement/request counts, not absence of logs) |
+| TEST-idle-zero-d1 | C-1, C-7, C-15 | `cloud/test/operations/idle-zero-d1.md` — hold live and terminal projects idle for 30 minutes; observe zero timer/browser/restart-caused D1 statements after the one allowed session decision |
+| TEST-deployed-stream-handshake | C-10, C-14, C-15, Edge-8 | `cloud/test/operations/projection-stream-handshake.md` — one session membership decision, grant-bearing `101`, `ready`, reconnect without membership read, correct route telemetry, and terminal pause with zero further traffic for 30 minutes |
 | TEST-delivery-latency-slo | C-8 | `cloud/test/operations/delivery-latency.md` — p50/p95/p99 commit-to-rendered-browser under documented load ≤2s p95; reconnect catch-up ≤5s p95 |
 | TEST-deployed-hibernation-alarm | C-7, Edge-1 | `cloud/test/operations/hub-recovery.md` — live hibernation restore + alarm replay + reconnect catch-up on a deployed Worker |
 | TEST-deployed-revocation | Edge-4, C-10 | `cloud/test/operations/revocation.md` — live membership revoke closes socket before next delivery |
 
 ## Coverage invariant
 
-Every tests-routed requirement (C-1..C-13, Edge-1..Edge-7) has at least one
+Every tests-routed requirement (C-1..C-15, Edge-1..Edge-8) has at least one
 test-plan coverage entry, validated by
 `spec-trace validate MDT-226 --stage tests --strict`. The `manual` plans are
 the deployment/idle/latency evidence gates; the rest run in CI against the

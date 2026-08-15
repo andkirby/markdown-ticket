@@ -131,6 +131,28 @@ without admitting a replacement before exit, keep background refresh
 non-interactive, support service credentials, and refresh headers plus expiry
 together.
 
+## Slice 8 — Incident recovery: failed stream containment
+
+Status: implemented 2026-08-15, pending User Review. Automated incident tests
+green; deployed gates below remain explicitly UNVERIFIED.
+
+Exit gate: one typed session request performs one membership decision and
+creates a short-lived hub grant; grant-bearing upgrade returns `101`; reconnect
+adds no membership read; terminal state persists across restart; route
+telemetry is accurate; rollout can be disabled; and 30 idle minutes produce
+zero retry-driven D1 statements.
+
+| Task | Owns | Makes green |
+| --- | --- | --- |
+| **TASK-stream-incident-recovery** | `ART-stream-contract`, `ART-worker-router`, `ART-project-hub`, `ART-stream-session-client`, `ART-stream-client`, `ART-stream-state-store`, `ART-stream-manager`, `ART-server-bootstrap`, `ART-cloud-tests`, `ART-local-tests`, `ART-owner-docs`, `ART-data-doc`, `ART-identity-doc`, `ART-operations-doc` | TEST-stream-session-client, TEST-stream-handshake-failure-classification, TEST-stream-status-local-only, TEST-worker-hub-upgrade-forwarding, TEST-deployed-stream-handshake, TEST-idle-zero-d1 |
+
+Split typed HTTPS session authorization from the WebSocket data plane. Store
+short-lived grant digests in the hub, persist local activation state, move all
+retry policy into the manager, preserve upgrade headers, add the rollout flag
+and accurate route telemetry, and expose the state through backend diagnostics.
+Do not re-enable automatic streams until the deployed grant/handshake and
+idle-D1 gates pass.
+
 ## Scenario closure
 
 All eight BDD scenarios are made green by these tasks:

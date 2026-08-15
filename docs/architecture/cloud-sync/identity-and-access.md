@@ -114,7 +114,8 @@ Authorization rules:
 - Unknown projects and projects hidden from the caller both return the same
   `404 project_not_found` response.
 - A known member with an insufficient role receives `403 forbidden`.
-- A new project stream is authorized at its WebSocket handshake.
+- A new project stream is authorized by a typed HTTPS session decision; the hub
+  validates its short-lived grant at WebSocket handshake.
 - An open stream does not turn authorization into an indefinite cache: the
   local server reconnects no later than token expiry, and a hibernated hub
   rechecks current membership before later delivery.
@@ -209,12 +210,11 @@ across origins, runs at most one child at once, signals a child that exceeds its
 configured deadline, and blocks later acquisition until that child reports exit.
 Failure returns no credential.
 
-The same provider supplies credentials for the project WebSocket handshake.
+The same provider supplies credentials for the typed stream-session request.
 The local server derives `wss` only from the exact trusted HTTPS service origin,
-opens one stream per enabled project once a valid credential is available, and
-refreshes authorization headers and token expiry as one value, reconnecting
-before the active token expires. Server startup registers the stale read model
-and reconnect owner but never launches an unsolicited interactive login.
+opens one grant-bearing stream per enabled project, and renews the session no
+later than token expiry. Server startup registers the stale read model and
+activation owner but never launches an unsolicited interactive login.
 Background attempts use only a cached human token or configured service token;
 until either exists, status is `authentication_required`. The browser sees the
 existing local ticket API/event stream and typed project sync status. It does
@@ -229,11 +229,15 @@ sequenceDiagram
   participant H as ProjectProjectionHub
   participant D as D1
 
-  S->>A: WebSocket upgrade with Access credential
+  S->>A: HTTPS stream-session request with Access credential
   A->>W: Forward verified-edge request with assertion
   W->>W: Validate JWT
-  W->>D: Check current project membership
-  W->>H: Route authorized project stream
+  W->>D: Check current project membership once
+  W->>H: Create short-lived stream grant
+  H-->>S: Typed grant and expiry
+  S->>W: WebSocket upgrade with grant and cursor
+  W->>H: Route without D1 membership read
+  H->>H: Validate grant and accept socket
   H-->>S: catchup, ready, and committed deltas
   S->>S: Update unified local ticket read model
   S-->>B: Ordinary local ticket events
@@ -280,6 +284,10 @@ requests use redirect mode `error`.
 - Browser storage contains no cloud token or service secret.
 - Human application tokens are short-lived and retained in process memory only;
   `cloudflared` owns its own authenticated session storage.
+- Stream grants are opaque, scoped to one project/principal, held in local
+  process memory only, stored as digests in the project hub, and expire no later
+  than their Access credential. Membership mutation revokes matching grants and
+  sockets.
 - WebSocket socket attachments contain only the minimum stable principal tag,
   project ID, token expiry, and acknowledged revision needed for hibernation,
   replay, and revocation. They contain no token, assertion, email display value,
@@ -313,7 +321,9 @@ edge and Worker failures:
 | JWKS unavailable with no usable cached key | `identity_validation_unavailable` | Bounded backoff; no fail-open |
 | Projection stream token approaches expiry | `connecting`/`stale` locally | Refresh credential and reconnect with the applied cursor |
 | Project stream membership revoked | `forbidden` close; local state becomes stale | No automatic authorization retry until explicit state/credential change |
-| Project stream transport failure | Local projected state remains stale | Bounded reconnect with jitter; never periodic D1 polling |
+| Project stream transport failure with valid grant | Local projected state remains stale | Bounded reconnect budget reusing the grant; no D1 membership read |
+| Stream-session `401`/`403`/`404` | Persist authentication/authorization pause | No timer or restart retry; explicit re-arm only |
+| Stream upgrade `426`/protocol mismatch | Persist incompatible state | Disable rollout until repaired and explicitly retried |
 | `cloudflared` exceeds its deadline | Caller gets `authentication_required`; projection stays stale | Signal the child; block replacement acquisition until exit; background reconnect never launches login |
 
 Authentication failures never cause local-number allocation for a cloud-bound

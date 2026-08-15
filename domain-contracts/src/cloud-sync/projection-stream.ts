@@ -14,6 +14,71 @@
 import type { ProjectedHeader } from './projection'
 
 /**
+ * The stream-session control-plane protocol version. The typed session
+ * response carries it so a local client can detect a deployed protocol or
+ * version mismatch and pause as incompatible instead of retrying (C-14).
+ */
+export const PROJECTION_STREAM_PROTOCOL_VERSION = 2
+
+/**
+ * Typed outcome of one stream-session authorization request (MDT-226 incident
+ * recovery). `granted` carries the opaque server-only grant; every failure
+ * carries a stable non-secret reason code. The kinds mirror the manager's
+ * durable pause classification: authentication/authorization outcomes pause
+ * durably, incompatibility pauses durably, and transient failures fall inside
+ * the bounded reconnect budget (C-14, C-15).
+ */
+export const PROJECTION_STREAM_SESSION_OUTCOMES = [
+  'granted',
+  'authentication_required',
+  'authorization_required',
+  'incompatible',
+  'transient_failure',
+] as const
+
+export type ProjectionStreamSessionOutcomeKind
+  = (typeof PROJECTION_STREAM_SESSION_OUTCOMES)[number]
+
+/** A short-lived stream grant plus its effective expiry (epoch-ms). */
+export interface ProjectionStreamSessionGrant {
+  kind: 'granted'
+  /**
+   * Opaque server-only capability. Held in local process memory only — never
+   * persisted, logged, or exposed to the browser (C-3, C-10).
+   */
+  grant: string
+  /**
+   * Epoch-ms after which the grant must not be reused. Bounded by the issuing
+   * Access credential expiry (C-10).
+   */
+  grantExpiresAt: number
+}
+
+/** Stable non-secret reason codes for session authorization failures. */
+export const ProjectionStreamSessionReason = {
+  AUTHENTICATION_REQUIRED: 'authentication_required',
+  FORBIDDEN: 'forbidden',
+  PROJECT_NOT_FOUND: 'project_not_found',
+  INCOMPATIBLE_PROTOCOL: 'incompatible_protocol',
+  ROUTE_NOT_FOUND: 'route_not_found',
+  RATE_LIMITED: 'rate_limited',
+  COORDINATION_UNAVAILABLE: 'coordination_unavailable',
+  NETWORK_ERROR: 'network_error',
+} as const
+
+export type ProjectionStreamSessionReasonCode
+  = (typeof ProjectionStreamSessionReason)[keyof typeof ProjectionStreamSessionReason]
+
+export interface ProjectionStreamSessionFailure {
+  kind: Exclude<ProjectionStreamSessionOutcomeKind, 'granted'>
+  reasonCode: ProjectionStreamSessionReasonCode
+}
+
+export type ProjectionStreamSessionResult
+  = | ProjectionStreamSessionGrant
+    | ProjectionStreamSessionFailure
+
+/**
  * Server-to-client envelope kinds.
  *
  * - `catchup`: complete projection delta emitted before `ready`;

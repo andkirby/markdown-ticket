@@ -190,14 +190,16 @@ class:
 
 | Route class | Initial limit per principal/project | Response |
 | --- | --- | --- |
-| Projection stream handshakes and cursor catch-up | 60 requests per 60 seconds | `429 rate_limited` or rejected upgrade |
+| Projection stream-session authorization | 5 requests per 60 seconds | `429 rate_limited` before D1; repeated activation IDs use the hub decision cache |
+| Grant-bearing stream upgrades and cursor catch-up | 60 requests per 60 seconds | `429 rate_limited` or rejected upgrade; no membership query |
 | Mutations | 60 requests per 60 seconds | `429 rate_limited` |
 | Operator mutations | Shared mutation budget: 60 requests per 60 seconds | `429 rate_limited` |
 
 Workers rate limits are location-local, permissive, and eventually consistent.
 They must not be used to issue numbers, enforce quotas, or replace D1 unique
 constraints. Tune initial limits from measured limited-production traffic;
-reconnect storms must use bounded client backoff and jitter. WebSocket messages
+reconnect storms must open the local activation circuit and reuse a valid grant.
+WebSocket messages
 are not an allocation or quota enforcement boundary.
 
 ## Observability
@@ -284,8 +286,9 @@ evidence:
 | Unmanaged projection journal | Any new entry or growth without an explicit import/recovery operation |
 | Connected projection delivery | p95 exceeds 2 seconds for 10 minutes |
 | Projection reconnect catch-up | p95 exceeds 5 seconds for 10 minutes |
-| Idle D1 projection/membership reads | Any sustained read caused only by elapsed time |
+| Idle D1 statements after live/terminal settlement | Any statement caused only by elapsed time |
 | Project stream reconnect rate | More than 5 reconnects/project in 5 minutes |
+| Stream authorization request budget | More than one D1 membership decision or denial audit for one unchanged non-live activation fingerprint |
 | Local connection single-flight | More than one handshake or reconnect timer for one project |
 | Credential subprocess bound | More than one active `cloudflared` child, or a signalled child that does not exit |
 | Project hub acknowledgement/alarm recovery | Any active socket behind after exhausted alarm retry |
@@ -323,10 +326,31 @@ The local POC is correctness evidence, not a capacity result.
 4. If an active socket is behind, allow the armed alarm to send bounded catch-up
    from its acknowledged cursor; if disconnected, verify reconnect catch-up.
    Duplicate delivery is safe and sparse catch-up revisions are expected.
-5. If reconnects are storming, keep bounded backoff/jitter and correct the
-   dependency rather than raising the handshake limit blindly.
-6. Verify one stream per local server/project, zero idle D1 reads, and current
-   membership before restoring the rollout flag.
+5. If reconnects are storming, open the activation circuit. Do not rely on
+   backoff to contain request volume.
+6. Verify one typed session decision, grant reuse without membership reads, one
+   stream per local server/project, and zero idle D1 reads before restoring the
+   rollout flag.
+
+### Projection Session or Reconnect Amplification
+
+1. Disable the local rollout flag for the affected installation (automatic
+   streams are off unless the local server runs with
+   `MDT_PROJECTION_STREAM_ROLLOUT=true`); keep the last projection visible as
+   stale, and read the pause reason from
+   `GET /api/projects/{localProjectId}/cloud-sync/status`.
+2. Group Worker telemetry by activation fingerprint and distinguish
+   `projection.stream.session` from `projection.stream`.
+3. A `401`/`403`/`404` session result must persist authorization pause. A `426`
+   upgrade must persist incompatible state. Neither may schedule a timer.
+4. Verify the same paused state survives server restart and browser activity.
+5. Re-arm only after a connection/credential/protocol change, explicit
+   membership reconciliation, successful explicit cloud operation after a
+   transport-only failure, or operator retry. Routine token refresh is not a
+   re-arm event.
+6. Canary one project: expect one membership decision at session issue, no D1
+   membership reads on grant reconnect, `101`, `ready`, and zero idle statements
+   for at least 30 minutes.
 
 ### Local Credential or Reconnect Amplification
 
@@ -345,10 +369,11 @@ The local POC is correctness evidence, not a capacity result.
    catch-up replacement, and credential timeout. Child and reconnect counts
    must remain bounded before broader rollout.
 
-> **C-1 status:** "Zero idle D1 reads" (C-1) is no longer a vacuous claim once
-> the local-server stream is wired. It remains an external release gate until a
-> deployed connected project is held idle and D1 statement/request counts prove
-> that elapsed time alone causes zero projection or membership reads.
+> **C-1 status:** failed in the 2026-08-15 incident. An idle 30-minute window
+> recorded 238 membership reads and 111 denied-audit inserts. It remains a
+> release blocker until live and terminal grant-gated canaries record zero
+> elapsed-time D1
+> statements and terminal outcomes remain paused for the full window.
 
 ### Projection Journal Amplification
 
@@ -420,7 +445,7 @@ decommissioning.
 ## Official Platform Sources
 
 Platform behavior is mutable. These primary sources were checked on
-2026-08-08 and must be rechecked during `MDT-226` implementation:
+2026-08-15 and must be rechecked during `MDT-226` implementation:
 
 - [D1 batch transaction and Worker API](https://developers.cloudflare.com/d1/worker-api/d1-database/)
 - [D1 migrations](https://developers.cloudflare.com/d1/reference/migrations/)
@@ -437,6 +462,7 @@ Platform behavior is mutable. These primary sources were checked on
 - [Durable Objects alarms](https://developers.cloudflare.com/durable-objects/api/alarms/)
 - [Durable Objects pricing](https://developers.cloudflare.com/durable-objects/platform/pricing/)
 - [Workers WebSockets](https://developers.cloudflare.com/workers/examples/websockets/)
+- [Workers Request API](https://developers.cloudflare.com/workers/runtime-apis/request/)
 - [Bun WebSocket client](https://bun.sh/docs/runtime/http/websockets)
 - [Workers secrets](https://developers.cloudflare.com/workers/configuration/secrets/)
 - [Workers versions and deployments](https://developers.cloudflare.com/workers/versions-and-deployments/)

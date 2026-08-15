@@ -80,7 +80,10 @@ Excluded:
 flowchart LR
   Browser["Browser tabs"] <-->|"unified ticket API and local ticket events"| Local["Local MDT server"]
   Local --> ReadModel["Unified local ticket read model"]
-  Local -->|"one Access-authenticated WebSocket\nafterRevision cursor"| Worker["Cloudflare Worker"]
+  Local -->|"typed HTTPS session request"| Worker["Cloudflare Worker"]
+  Worker -->|"one membership decision"| D1
+  Worker -->|"create short-lived grant"| Hub["ProjectProjectionHub\none Durable Object per project"]
+  Local -->|"grant-authenticated WebSocket\nafterRevision cursor"| Worker
   Worker --> Hub["ProjectProjectionHub\none Durable Object per project"]
   Hub -->|"authorized reads and mutations"| D1[("D1 authoritative projections")]
   Hub -->|"complete projection delta"| Local
@@ -89,10 +92,12 @@ flowchart LR
 
 ### Delivery Flow
 
-1. The local server reads the last applied `projectRevision` and opens one
-   project WebSocket through the Worker.
-2. The Worker validates the Access assertion and current project membership,
-   then routes by deterministic cloud project ID to `ProjectProjectionHub`.
+1. The local server requests a typed stream session. The Worker validates
+   Access and current membership once; the project hub issues a short-lived,
+   server-only stream grant.
+2. The local server opens one WebSocket with the grant and last applied
+   `projectRevision`. The Worker routes it to the same hub without another D1
+   membership query; reconnects reuse the grant until expiry or revocation.
 3. The hub reads projections newer than `afterRevision`, sends catch-up deltas,
    and sends `ready(highWaterRevision)` only after catch-up. Catch-up revisions
    may be sparse because D1 retains only the latest row per ticket. An explicit
@@ -124,8 +129,15 @@ flowchart LR
   final-state convergence, not delivery of every intermediate edit.
 - A disconnected board retains the last projection and marks it stale. Local
   Markdown remains usable.
-- The stream is authorized at handshake, re-authorized after hibernation before
-  delivery, and reconnected no later than Access-token expiry.
+- Session authorization is a typed HTTPS control-plane decision. The hub
+  validates the resulting grant at WebSocket handshake, re-authorizes after
+  hibernation before delivery, and expires the grant no later than the Access
+  credential.
+- Authorization/protocol failures persist locally and do not retry on a timer or
+  server restart. Only a changed connection/credential/protocol fingerprint,
+  membership reconciliation, successful explicit cloud operation after a
+  transport-only failure, or operator retry can re-arm activation. Routine
+  refresh of the same token does not change the fingerprint.
 - Membership mutation and delivery share the project hub. Revoked or suspended
   principals are excluded and their sockets are closed before later delivery.
 - Protocol-level WebSocket auto-response may maintain transport liveness; it
@@ -137,8 +149,10 @@ flowchart LR
 | --- | --- | --- |
 | Healthy project, no changes | Four polls/minute/client plus D1 auth and cursor reads | Zero D1 reads and no repeated Worker requests |
 | Additional browser tab | Another browser poll loop | Same backend ticket API/event stream; no additional cloud connection or D1 traffic |
+| Unauthorized or incompatible project | Repeated membership read and denied audit write | One typed session decision per activation fingerprint, then persisted pause |
 | Projection commit | Visible at next poll | One D1 mutation plus broadcast |
-| Reconnect or detected gap | Next periodic poll | One bounded cursor catch-up |
+| Transport reconnect | Next periodic poll | Reuse current grant; no membership read; bounded attempt budget |
+| Detected revision gap | Next periodic poll | One bounded cursor catch-up |
 | Stuck local projection write | Retried from every read poll | Retried only by the independent persisted write journal |
 
 ## 3. Alternatives Considered
@@ -146,7 +160,8 @@ flowchart LR
 | Approach | Decision |
 | --- | --- |
 | Increase polling interval | Rejected: trades traffic for freshness and still reads while idle |
-| Cache membership/projection reads | Rejected: masks the pull model and complicates revocation |
+| General membership/projection cache | Rejected: masks the pull model and complicates revocation |
+| Short-lived hub-owned stream grant | Accepted: one explicit D1 authorization decision can safely serve reconnects; membership mutation revokes grants and sockets |
 | Decouple retries but preserve polling | Rejected: fixes one amplifier but keeps baseline D1 traffic |
 | Worker WebSocket without Durable Object | Rejected: no project-scoped serialized coordinator or hibernating connection owner |
 | Queue or KV notification layer | Rejected: adds products without removing the need for project connection coordination |
@@ -157,10 +172,11 @@ flowchart LR
 ### Cloud
 
 - `cloud/src/cloudflare/durable/ProjectProjectionHub.ts` owns the hibernating
-  project sockets, serialized catch-up/mutation flow, socket attachments, and
-  alarm recovery.
-- `cloud/src/cloudflare/worker.ts` authenticates WebSocket upgrades and routes
-  stream plus projection mutations to the deterministic project hub.
+  project sockets, short-lived grant digests/revocation, serialized catch-up and
+  mutation flow, socket attachments, and alarm recovery.
+- `cloud/src/cloudflare/worker.ts` authenticates typed session requests,
+  preserves grant-bearing upgrades, and routes stream plus projection mutations
+  to the deterministic project hub.
 - `cloud/src/cloudflare/application/projection-usecase.ts` and
   `cloud/src/cloudflare/d1/projection.ts` retain D1 transaction and cursor-query
   ownership behind the hub.
@@ -169,13 +185,18 @@ flowchart LR
 
 ### Contracts and Local Runtime
 
-- `domain-contracts/src/cloud-sync/projection-stream.ts` defines `catchup`,
-  `delta`, `ready`, client `ack`, `stale`, and typed close/error envelopes.
-- `shared/services/cloud-sync/CloudProjectionStreamClient.ts` owns WebSocket
-  transport, Access headers, backoff, token refresh, cursor requests, and
-  protocol validation.
-- `server/services/cloud-sync/ProjectionStreamManager.ts` owns exactly one
-  client per enabled local project and applies deltas to the backend read model.
+- `domain-contracts/src/cloud-sync/projection-stream.ts` defines typed session
+  outcomes, grant metadata, `catchup`, `delta`, `ready`, client `ack`, `stale`,
+  and error envelopes.
+- `shared/services/cloud-sync/CloudProjectionSessionClient.ts` owns one typed
+  HTTPS grant request and no retry policy.
+- `shared/services/cloud-sync/CloudProjectionStreamClient.ts` owns one
+  grant-bearing WebSocket transport and no autonomous retry timer.
+- `shared/services/cloud-sync/projection-stream-state-store.ts` persists phase,
+  reason, activation fingerprint, and attempt budget without secrets.
+- `server/services/cloud-sync/ProjectionStreamManager.ts` solely owns
+  activation/re-arm policy, grant renewal, bounded transient reconnect, and
+  delta application.
 - `shared/services/cloud-sync/CloudProjectionReadModel.ts` persists approved
   projected headers and the applied revision, and merges them with canonical
   local tickets using local-wins semantics.
@@ -216,6 +237,8 @@ flowchart LR
 - [x] Each project has at most one in-flight connection attempt and one
   reconnect/expiry timer; `error` plus `close`, catch-up close, and stale
   callbacks cannot create parallel reconnect lanes.
+  _This bounds local concurrency only. The 2026-08-15 incident proved that one
+  bounded lane can still retry a terminal handshake forever and amplify D1._
 - [x] One process-scoped credential broker serves all server cloud paths,
   reuses valid human tokens by trusted origin, shares concurrent resolution,
   keeps startup/reconnect non-interactive, supports service-token stream headers,
@@ -267,10 +290,23 @@ flowchart LR
 
 ### Non-Functional
 
-- [ ] A healthy connected project with no changes, reconnects, or authorization
-  changes performs zero D1 reads solely because time passes.
-  _No longer vacuous after local-server stream wiring; external deployed D1
-  statement/request evidence is still required._
+- [ ] After activation settles into live or a terminal paused state, a project
+  with no external state change performs zero D1 statements as time passes.
+  _FAILED in production on 2026-08-15; containment implemented 2026-08-15
+  (session/grant split, terminal pause persistence, no timer-driven retry;
+  automatic streams behind the rollout flag, default off). Local incident tests
+  green; the deployed 30-minute TEST-idle-zero-d1 statement count remains the
+  accepting evidence._
+- [ ] One unchanged non-live activation performs at most one D1 membership
+  decision and one denial audit; grant reconnect, elapsed time, browser activity,
+  and server restart add no D1 statement.
+  _FAILED in the 2026-08-15 incident (238 membership reads + 111 denied-audit
+  inserts in an idle 30-minute sample); enforced locally since 2026-08-15 by
+  hub-cached session decisions, digest-stored grants, the persisted activation
+  fingerprint, and the manager-owned re-arm policy. Proven by
+  TEST-stream-session-client, TEST-worker-hub-upgrade-forwarding, and
+  TEST-stream-handshake-failure-classification; deployed confirmation is the
+  TEST-deployed-stream-handshake gate._
 - [ ] Healthy connected delivery reaches the unified local ticket read model
   and connected browser within 2 seconds at p95 under the documented test load.
   _External gate; not measured. No automated SLO test._
@@ -285,8 +321,8 @@ flowchart LR
 - [x] The browser never opens the cloud WebSocket and never receives an Access
   token or service-token header.
   _No browser WebSocket code exists; token stays server-side._
-- [x] D1 remains authoritative; the Durable Object stores only delivery state
-  and socket metadata needed to coordinate the stream.
+- [x] D1 remains authoritative; the Durable Object stores only bounded grant,
+  delivery, and socket metadata needed to coordinate the stream.
 - [x] No KV, Queue, D1 replica, or new ticket-content store is introduced.
 
 ### Verification
@@ -301,8 +337,10 @@ flowchart LR
   persistence before acknowledgement, sparse catch-up, live-gap handling, and
   SSE fan-out.
   _Component-tested in isolation (`ProjectionStreamManager`, read model, SSE
-  fan-out helper); server bootstrap wiring exists, but the live Worker/D1/browser
-  round-trip remains unproven._
+  fan-out helper). The incident-recovery slice adds the automated incident
+  tests (session client, upgrade forwarding, failure classification,
+  local-only status); the deployed Worker-to-hub round-trip remains unproven
+  until the TEST-deployed-stream-handshake probe runs._
 - [x] Local resource-bound tests prove compound transport termination and
   catch-up replacement and concurrent manager starts create one connection,
   concurrent credential callers share one acquisition, background refresh is
@@ -315,7 +353,8 @@ flowchart LR
   proves the board's render contract, not a live server/cloud round-trip._
 - [ ] An idle-traffic test holds a connected project open for at least five
   former poll intervals and observes zero projection or membership D1 reads.
-  _External gate; not run (no live stream to measure)._
+  _FAILED 2026-08-15: approximately 170 D1 statements per 15 minutes while two
+  configured streams repeatedly failed to upgrade._
 - [x] A write-journal test proves reads never trigger drains, retries honor
   persisted backoff, and missing projections become terminal `unmanaged`.
   _`projection-sync.test.ts` (terminal-no-retry) +
@@ -487,3 +526,58 @@ Durable Object binding is removed only after all sockets and alarms are drained.
 - Strict requirements, unchanged BDD, architecture, tests, and tasks: passed.
 - Focused shared/server tests, TypeScript validation, package lint, and full
   build: passed.
+
+### UAT Session 2026-08-15 - Production D1 amplification incident
+
+**Incident report**
+
+- Impact: automatic projection delivery was unavailable for both configured
+  projects and the retry loops generated approximately 170 D1 statements per
+  15 minutes. No ticket or projection data loss was observed.
+- MDT reached the Worker with valid membership, but the Worker replaced the
+  request headers while adding principal context and dropped
+  `Upgrade: websocket`; the Durable Object returned `426 Expected WebSocket`.
+- VOC had no current membership and returned `404`. The local client classified
+  both `404` and `426` as retryable transport failures and retried forever with
+  full jitter capped at 30 seconds.
+- From 09:08:55 to 09:23:20 CEST, VOC alone recorded 54 denied stream attempts:
+  54 membership `SELECT`s and 54 audit `INSERT`s. MDT retried at a similar
+  cadence with one membership `SELECT` before each `426`.
+- A later idle 30-minute window recorded 238 membership `SELECT`s and 111 audit
+  `INSERT`s: 349 D1 statements without project activity. The ratio supports the
+  same two-loop diagnosis and confirms the incident remained active.
+
+**Control and detection failures**
+
+- The required per-installation rollout flag, deployed `101` handshake gate,
+  and idle-D1 gate were not delivered before automatic stream startup.
+- Stream attempts were logged as `project.probe`, not `projection.stream`.
+- Existing status checks proved configuration, credentials, membership, and
+  Worker reachability; they did not report live/paused/failed stream state.
+  MDT-203 owns the settings surface and MDT-223 owns CLI output fidelity; this
+  ticket must supply the backend runtime state they consume.
+- The 2026-08-14 update proved local process bounds only. It overstated
+  readiness because mocked tests and build success did not exercise the
+  deployed Worker-to-Durable-Object upgrade or cloud request budget.
+
+**Changed requirement IDs**
+
+- Refined `BR-1.5`, `C-1`, `C-10`, and `C-14`; added `C-15` and retained
+  `Edge-8` as the concrete upgrade-preservation failure. `C-1` now covers
+  settled live and terminal states and carries failed production evidence.
+- Refined `disconnected_board_stale` so the user sees reconnecting versus
+  paused state and the required next action.
+- Added `OBL-stream-failure-containment`, five incident test plans, and
+  `TASK-stream-incident-recovery`.
+
+**Containment and recovery**
+
+- No runtime containment was performed during this documentation update.
+  Stopping the server or disabling the affected bindings stops the traffic but
+  also disables cloud delivery and remains an explicit operator decision.
+- Recovery uses a typed HTTPS session request for one D1 membership decision,
+  then a short-lived hub grant for WebSocket upgrade and reconnect without
+  further membership reads. Terminal activation state persists across restart;
+  the WebSocket transport owns no retry timer. Restore the rollout flag and
+  accurate route telemetry, then pass deployed grant/`101`, catch-up, and
+  30-minute idle-D1 gates before automatic streams are re-enabled.
