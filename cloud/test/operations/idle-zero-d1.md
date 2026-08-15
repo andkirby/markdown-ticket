@@ -58,6 +58,12 @@ per-fingerprint authorization budget (C-15).
 
 ## Result
 
-UNVERIFIED — requires an explicitly authorized deployed limited-production
-probe with D1 statement instrumentation. Local tests cannot prove the absence
-of timer-driven reads; this is an external gate.
+PARTIAL (2026-08-15 evening): with the rollout flag enabled, one project LIVE
+(`live/stream_live`, cursor advancing via push deltas) and one project
+TERMINALLY PAUSED (`authorization_required/project_not_found`), the deployed
+Worker received ZERO requests over an observed 3-minute idle window, and ZERO
+requests for 70+ seconds after a real local-server restart (unchanged
+fingerprint, no re-arm traffic). The pre-fix incident produced 349 D1
+statements in a comparable window. Remaining for formal sign-off: the
+instrumented 30-minute D1 statement count from Workers Analytics/D1 telemetry
+(the request-level zero windows above are necessary but informal).

@@ -32,6 +32,7 @@ import type {
   StreamGrantPrincipal,
   StreamGrantRegistryState,
 } from './projection-hub-helpers'
+import { CoordinationError } from '@mdt/domain-contracts'
 import { DurableObject } from 'cloudflare:workers'
 import { publish as publishProjectionUseCase } from '../application/projection-usecase'
 import {
@@ -97,6 +98,14 @@ export interface CommitProjectionRequest {
   body: PublishBody
   requestId: string
 }
+
+/**
+ * Typed commit outcome: RPC-safe (no error classes cross the Durable Object
+ * boundary). `currentVersion` rides along for version-conflict adoption.
+ */
+export type CommitProjectionOutcome
+  = | { ok: true, projectionVersion: number, projectRevision: number }
+    | { ok: false, code: CoordinatorErrorCode, currentVersion?: number }
 
 /** Catch-up page size for bounded cursor reads. */
 const CATCHUP_PAGE_SIZE = 500
@@ -288,26 +297,42 @@ export class ProjectProjectionHub extends DurableObject<ProjectProjectionHubEnv>
    * Commit a projection mutation through the hub (OBL-commit-before-delivery).
    * Arms the recovery alarm BEFORE invoking the projection use case, so a crash
    * after the D1 commit still triggers bounded catch-up replay. Only the
-   * committed result becomes a stream delta; a mutation conflict throws the
-   * typed error without broadcasting anything (architecture §Failure Semantics).
+   * committed result becomes a stream delta (architecture §Failure Semantics).
    *
    * Serialized through the operation queue so it cannot interleave with
    * subscription or membership work across D1 awaits (C-6).
    *
-   * Returns the committed `{ projectionVersion, projectRevision }` to the Worker.
+   * Returns a TYPED outcome instead of throwing: Durable Object RPC rejections
+   * lose the error class on the Worker side, which turned
+   * `projection_version_conflict` into an untyped 503 and hid `currentVersion`
+   * from the journal's adopt-and-retry recovery (found on the deployed
+   * 2026-08-15 probe).
    */
-  async commitAndDeliver(cloudProjectId: string, req: CommitProjectionRequest): Promise<{ projectionVersion: number, projectRevision: number }> {
+  async commitAndDeliver(cloudProjectId: string, req: CommitProjectionRequest): Promise<CommitProjectionOutcome> {
     return this.enqueueResult(async () => {
       // Arm the alarm before the D1 commit so post-commit failure can replay.
       await this.armAlarmIfNotSet()
       // The projection use case authorizes, validates, and commits in D1.
-      const committed = await publishProjectionUseCase(
-        this.env.DB,
-        req.principal,
-        cloudProjectId,
-        req.body,
-        req.requestId,
-      )
+      let committed: { projectionVersion: number, projectRevision: number }
+      try {
+        committed = await publishProjectionUseCase(
+          this.env.DB,
+          req.principal,
+          cloudProjectId,
+          req.body,
+          req.requestId,
+        )
+      }
+      catch (err) {
+        if (err instanceof CoordinationError) {
+          return {
+            ok: false as const,
+            code: err.code,
+            ...(err.currentVersion !== undefined ? { currentVersion: err.currentVersion } : {}),
+          }
+        }
+        throw err
+      }
       // Commit-before-broadcast: build the delta from the committed D1 row, then
       // broadcast. The delta is never built from the request body (C-2, C-4).
       const ticketNumber = Number.parseInt(String(req.body.ticketNumber ?? ''), 10)
@@ -317,7 +342,7 @@ export class ProjectProjectionHub extends DurableObject<ProjectProjectionHubEnv>
         const liveDelta: LiveDelta = { ...delta, kind: 'delta' }
         await this.broadcastDelta(liveDelta)
       }
-      return committed
+      return { ok: true as const, ...committed }
     })
   }
 

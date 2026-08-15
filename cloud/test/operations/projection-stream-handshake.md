@@ -75,7 +75,48 @@ local server restart with zero further traffic; and route telemetry records
 
 ## Result
 
-UNVERIFIED — requires an explicitly authorized deployed probe. Local
-integration tests (`cloud/test/projection-stream-upgrade.test.ts`,
-`server/tests/services/cloud-sync/ProjectionStreamManager.test.ts`) prove the
-component contracts only; they are NOT evidence for this gate.
+PARTIAL → substantially verified 2026-08-15 (~21:20 CEST) against version
+`abc75d0f-01f0-4249-b710-6603f30c13c4`, via curl/bun probes AND the real
+local server (`MDT_PROJECTION_STREAM_ROLLOUT=true bash start-dev.sh`):
+
+- [x] `GET /healthz` through Access → `200 {"status":"ok"}`.
+- [x] One typed session authorization per activation fingerprint → `201`
+      with an opaque grant, `grantExpiresAt`, `streamProtocol: 2`; wrangler
+      tail showed `projection.stream.session` (distinct from
+      `projection.stream` and `projection.publish`).
+- [x] Grant-bearing WebSocket upgrade → `101`; catch-up delivered complete
+      deltas followed by `ready` → local status `live/stream_live` (Edge-8).
+- [x] Push delivery: journal publishes committed in D1 arrived as live
+      deltas; the local read-model cursor advanced 39→44 with the stream
+      continuously live.
+- [x] Terminal pause persistence: after a REAL server restart, the paused
+      project produced ZERO cloud requests for 70+ s; one owner action
+      (ticket edit → credential resolution) re-armed to live. The
+      authorization-paused project (no D1 membership) stayed terminal across
+      restarts with zero traffic.
+- [x] Idle containment: 3-minute window with one live and one terminal
+      project → ZERO worker requests (the 2026-08-15 incident produced ~349
+      D1 statements in the same shape of window).
+- [x] Route telemetry: `projection.stream.session`, `projection.stream`
+      (101s), `projection.publish` (200/409-typed/503-pre-fix) all distinct.
+- [x] Reconnect: multiple 101 upgrades observed across transport drops and
+      re-arms; the hub answered renewed sessions from its cached decision
+      (component-tested zero-D1 path; exact D1 statement counts still need
+      the observability dashboard for formal sign-off).
+- [ ] Formal 30-minute zero-idle-D1 statement count from D1 observability
+      (TEST-idle-zero-d1) — the local zero-request windows are necessary but
+      not the formal instrumented count.
+- [ ] Operator re-arm via the future dedicated surface (currently exercised
+      through the credential-resolution owner action).
+
+Issues found during the deployed validation and fixed (see
+issues-found.md §I): missing credential re-arm hook; empty-allowlist wiring
+crashing the server; 201-vs-200 session response mismatch; concurrent
+read-model persist ENOENT; DO RPC dropping typed publish errors.
+
+## Live local-server validation (2026-08-15, later the same day)
+
+Rollout-flag probe with the real local server
+(`MDT_PROJECTION_STREAM_ROLLOUT=true bash start-dev.sh`): see the checklist
+above — the recorded outcome is live/stream_live with a drained write journal
+and zero idle traffic.

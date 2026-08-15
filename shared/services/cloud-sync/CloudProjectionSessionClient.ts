@@ -112,7 +112,9 @@ export class CloudProjectionSessionClient {
       return failure('incompatible', 'incompatible_protocol')
     }
 
-    if (res.status !== 200) {
+    // The session route answers 201 Created (both for a fresh decision and a
+    // cached-decision grant renewal); 200 is accepted for symmetric clients.
+    if (res.status !== 200 && res.status !== 201) {
       return this.classifyError(res.status, await readEnvelope(res))
     }
 

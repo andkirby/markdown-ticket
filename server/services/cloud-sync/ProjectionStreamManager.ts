@@ -410,6 +410,36 @@ export class ProjectionStreamManager {
     await this.retry(localProjectId)
   }
 
+  /**
+   * A foreground operation resolved a credential for this service origin: the
+   * documented owner action that makes a human Access token available to the
+   * process broker. Re-arms `authentication_required` pauses (architecture
+   * README § Local Integration Contract) and `stale_offline` activations —
+   * the resolving operation exercises the same HTTPS control plane, so the
+   * exhaustion was transport-side. Membership/protocol pauses are NOT re-armed
+   * by credential availability.
+   */
+  async notifyCredentialResolved(serviceOrigin: string): Promise<void> {
+    const targets: Array<ManagedProject> = []
+    for (const managed of this.projects.values()) {
+      if (managed.serviceOrigin !== serviceOrigin)
+        continue
+      const rearmable = (managed.state.phase === 'paused_authorization'
+        && managed.state.reasonCode === 'authentication_required')
+      || managed.state.phase === 'stale_offline'
+      if (rearmable)
+        targets.push(managed)
+    }
+    for (const managed of targets) {
+      const store = new ProjectionStreamStateStore({
+        rootDir: managed.rootDir,
+        localProjectId: managed.localProjectId,
+      })
+      managed.state = { ...managed.state, attemptCount: 0 }
+      await this.activate(managed, store)
+    }
+  }
+
   /** Stop the stream for one project and remove it. */
   stop(localProjectId: string): void {
     const pending = this.starting.get(localProjectId)
@@ -484,13 +514,24 @@ export class ProjectionStreamManager {
     this.cacheStatus(managed.localProjectId, managed.state)
 
     const held = managed.session.currentGrant
-    const result: ProjectionStreamSessionResult = managed.session.hasValidGrant() && held
-      ? { kind: 'granted', grant: held.grant, grantExpiresAt: held.expiresAt }
-      : await managed.session.authorize({
-          headers: auth.headers,
-          tokenExpiry: auth.tokenExpiry,
-          activationId: fingerprint,
-        })
+    let result: ProjectionStreamSessionResult
+    try {
+      result = managed.session.hasValidGrant() && held
+        ? { kind: 'granted', grant: held.grant, grantExpiresAt: held.expiresAt }
+        : await managed.session.authorize({
+            headers: auth.headers,
+            tokenExpiry: auth.tokenExpiry,
+            activationId: fingerprint,
+          })
+    }
+    catch (err) {
+      // The session client may throw before any wire request (for example the
+      // origin-allowlist fail-closed guard). Classify as a bounded transient
+      // outcome — never crash the server over an authorization attempt.
+      const message = err instanceof Error ? err.message : 'session client error'
+      await this.handleTransientFailure(managed, `session_client_error: ${message.slice(0, 80)}`, store)
+      return
+    }
 
     switch (result.kind) {
       case 'granted':

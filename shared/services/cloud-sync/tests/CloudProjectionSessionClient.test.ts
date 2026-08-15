@@ -93,7 +93,8 @@ describe('CloudProjectionSessionClient (TEST-stream-session-client)', () => {
 
   it('performs exactly one typed POST with the activation id and Access header', async () => {
     const fetch = makeFetch()
-    fetch.queueResponse(200, okGrant())
+    // The Worker answers 201 Created for session issuance (production shape).
+    fetch.queueResponse(201, okGrant())
     const client = makeClient(fetch.fetchImpl)
 
     const result = await client.authorize(auth())
@@ -150,7 +151,7 @@ describe('CloudProjectionSessionClient (TEST-stream-session-client)', () => {
       reasonCode: 'incompatible_protocol',
     })
 
-    fetch.queueResponse(200, okGrant({ streamProtocol: 1 }))
+    fetch.queueResponse(201, okGrant({ streamProtocol: 1 }))
     await expect(client.authorize(auth())).resolves.toEqual({
       kind: 'incompatible',
       reasonCode: 'incompatible_protocol',
@@ -185,9 +186,16 @@ describe('CloudProjectionSessionClient (TEST-stream-session-client)', () => {
     expect(fetch.calls).toHaveLength(2)
   })
 
-  it('holds the grant in memory only and reports validity against the clock (C-10, C-15)', async () => {
+  it('accepts a 200 renewal response symmetrically', async () => {
     const fetch = makeFetch()
     fetch.queueResponse(200, okGrant())
+    const client = makeClient(fetch.fetchImpl)
+    await expect(client.authorize(auth())).resolves.toMatchObject({ kind: 'granted' })
+  })
+
+  it('holds the grant in memory only and reports validity against the clock (C-10, C-15)', async () => {
+    const fetch = makeFetch()
+    fetch.queueResponse(201, okGrant())
     const client = makeClient(fetch.fetchImpl)
 
     expect(client.currentGrant).toBeNull()
@@ -211,7 +219,7 @@ describe('CloudProjectionSessionClient (TEST-stream-session-client)', () => {
   it('bounds the effective grant expiry by the Access credential expiry (C-10)', async () => {
     const fetch = makeFetch()
     // Server offers a 10-minute grant, but the Access credential expires in 60s.
-    fetch.queueResponse(200, okGrant({ grantExpiresAt: NOW + 600_000 }))
+    fetch.queueResponse(201, okGrant({ grantExpiresAt: NOW + 600_000 }))
     const client = makeClient(fetch.fetchImpl)
 
     const result = await client.authorize(auth({ tokenExpiry: NOW + 60_000 }))
