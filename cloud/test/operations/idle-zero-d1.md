@@ -58,7 +58,12 @@ per-fingerprint authorization budget (C-15).
 
 ## Result
 
-PARTIAL (2026-08-15 evening): with the rollout flag enabled, one project LIVE
+PARTIAL (2026-08-15 evening, updated after the alarm-amplification fix): D1
+insights measured the hub's `SELECT projection_revision` at ~29 reads/minute
+while nominally live (unbounded alarm replay against never-acking sockets —
+issues-found.md §I6, fixed in worker `fc383338`). After the fix, the same
+query ran **2 times over 5 live minutes** (catch-up high-water + one rotation
+check). with the rollout flag enabled, one project LIVE
 (`live/stream_live`, cursor advancing via push deltas) and one project
 TERMINALLY PAUSED (`authorization_required/project_not_found`), the deployed
 Worker received ZERO requests over an observed 3-minute idle window, and ZERO

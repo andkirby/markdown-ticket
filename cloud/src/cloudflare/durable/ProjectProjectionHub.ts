@@ -81,6 +81,14 @@ interface SocketAttachment {
   /** Token expiry epoch-ms; a stream reconnects no later than this. */
   tokenExpiry: number
   authorized: boolean
+  /**
+   * Bounded-replay bookkeeping: the acknowledged revision the previous alarm
+   * pass saw, and how many passes made no progress. A client that stays
+   * connected but never acknowledges must not turn the 5s recovery alarm
+   * into an unbounded D1 polling loop (2026-08-15 follow-up).
+   */
+  lastAlarmAckRevision?: number
+  alarmPassesWithoutProgress?: number
 }
 
 export interface ProjectProjectionHubEnv {
@@ -111,6 +119,12 @@ export type CommitProjectionOutcome
 const CATCHUP_PAGE_SIZE = 500
 /** Alarm lead time for replaying committed-but-unacknowledged revisions. */
 const ALARM_DELAY_MS = 5_000
+/**
+ * Alarm passes a lagging socket may make without ANY ack progress before the
+ * hub closes it. Rebounds the recovery alarm: a stuck client reconnects and
+ * catches up fresh instead of keeping a 5s D1 read loop alive.
+ */
+const MAX_ALARM_PASSES_WITHOUT_PROGRESS = 3
 /** DO storage key for the digest-only grant/decision registry. */
 const GRANT_REGISTRY_STORAGE_KEY = 'stream-grant-registry'
 
@@ -243,20 +257,39 @@ export class ProjectProjectionHub extends DurableObject<ProjectProjectionHubEnv>
       attachment.acknowledgedRevision = ack.projectRevision
       ws.serializeAttachment(attachment)
     }
-    // After an ack, try to clear the alarm if all active sockets are caught up.
-    this.enqueue(async () => this.maybeClearAlarm())
+    // After an ack, try to clear the alarm if all active sockets are caught
+    // up. Coalesced: a catch-up burst of acks schedules ONE D1-reading check,
+    // not one per envelope.
+    this.queueMaybeClearAlarm()
   }
 
   async webSocketClose(socket: WebSocket): Promise<void> {
     const ws = socket as HibernationWebSocket
     ws.serializeAttachment(null)
-    this.enqueue(async () => this.maybeClearAlarm())
+    this.queueMaybeClearAlarm()
   }
 
   async webSocketError(socket: WebSocket): Promise<void> {
     const ws = socket as HibernationWebSocket
     ws.serializeAttachment(null)
-    this.enqueue(async () => this.maybeClearAlarm())
+    this.queueMaybeClearAlarm()
+  }
+
+  /** Coalescing flag for {@link queueMaybeClearAlarm}. */
+  private maybeClearQueued = false
+
+  /**
+   * Schedule at most one pending maybeClearAlarm: N acks arriving before the
+   * queued check runs collapse into a single D1 read.
+   */
+  private queueMaybeClearAlarm(): void {
+    if (this.maybeClearQueued)
+      return
+    this.maybeClearQueued = true
+    this.enqueue(async () => {
+      this.maybeClearQueued = false
+      await this.maybeClearAlarm()
+    })
   }
 
   /**
@@ -283,8 +316,28 @@ export class ProjectProjectionHub extends DurableObject<ProjectProjectionHubEnv>
       }
       const currentRevision = await this.readCurrentRevision(attachment.cloudProjectId)
       if (currentRevision > attachment.acknowledgedRevision) {
+        // Bounded replay: a socket that makes no ack progress across passes
+        // is closed — it never turns the 5s alarm into an unbounded D1 read
+        // loop. A healthy client acks within milliseconds.
+        const madeProgress
+          = attachment.acknowledgedRevision !== attachment.lastAlarmAckRevision
+        attachment.lastAlarmAckRevision = attachment.acknowledgedRevision
+        attachment.alarmPassesWithoutProgress = madeProgress
+          ? 0
+          : (attachment.alarmPassesWithoutProgress ?? 0) + 1
+        socket.serializeAttachment(attachment)
+        if (attachment.alarmPassesWithoutProgress > MAX_ALARM_PASSES_WITHOUT_PROGRESS) {
+          this.closeSocket(socket, 1008, 'ack_timeout')
+          continue
+        }
         stillLagging = true
-        await this.sendCatchup(socket, attachment.cloudProjectId, attachment.acknowledgedRevision)
+        // Reuse this pass's revision as the catch-up ceiling (no second read).
+        await this.sendCatchup(socket, attachment.cloudProjectId, attachment.acknowledgedRevision, currentRevision)
+      }
+      else {
+        attachment.lastAlarmAckRevision = undefined
+        attachment.alarmPassesWithoutProgress = 0
+        socket.serializeAttachment(attachment)
       }
     }
     if (stillLagging) {
