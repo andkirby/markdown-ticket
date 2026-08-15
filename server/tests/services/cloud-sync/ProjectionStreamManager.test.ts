@@ -133,6 +133,7 @@ interface ManagerHarness {
   advanceClockAndFire: (ms: number) => void
   credentialIdentity: () => string
   setCredentialIdentity: (identity: string) => void
+  setCredentialAvailable: (available: boolean) => void
 }
 
 describe('ProjectionStreamManager', () => {
@@ -154,6 +155,7 @@ describe('ProjectionStreamManager', () => {
     const timers: Array<{ ms: number, fn: () => void }> = []
     let credentialIdentity = 'user@example.com'
     let clock = NOW
+    let credentialAvailable = true
     const harness: ManagerHarness = {
       connections,
       changes,
@@ -175,6 +177,9 @@ describe('ProjectionStreamManager', () => {
       setCredentialIdentity: (identity: string) => {
         credentialIdentity = identity
       },
+      setCredentialAvailable: (available: boolean) => {
+        credentialAvailable = available
+      },
       manager: undefined as unknown as ProjectionStreamManager,
     }
     harness.manager = new ProjectionStreamManager({
@@ -188,6 +193,8 @@ describe('ProjectionStreamManager', () => {
       sessionClientFactory: () => session.port,
       credentialResolver: async () => {
         harness.session.calls.credential += 1
+        if (!credentialAvailable)
+          return null
         return {
           headers: { 'cf-access-token': fakeJwt(credentialIdentity, NOW + 3_600_000) },
           tokenExpiry: NOW + 3_600_000,
@@ -476,6 +483,92 @@ describe('TEST-stream-handshake-failure-classification', () => {
     expect(harness.manager.getStatus('project-a')?.state).toBe('connecting')
   })
 
+  it('a throwing session client is classified transient and never crashes activation', async () => {
+    // Regression: the origin-allowlist fail-closed guard throws synchronously;
+    // a fire-and-forget re-arm must settle inside the transient budget instead
+    // of rejecting (which crashed the whole server on 2026-08-15).
+    const { transport } = makeMockTransport()
+    const throwingPort: SessionHarness['port'] = {
+      authorize: async () => {
+        throw new Error('cloud serviceUrl is not on the operator allowlist (empty_allowlist)')
+      },
+      hasValidGrant: () => false,
+      get currentGrant() {
+        return null
+      },
+      clearGrant: () => {},
+    }
+    const manager = new ProjectionStreamManager({
+      clientFactory: opts => new CloudProjectionStreamClient({ ...opts, transport }),
+      readModelFactory: (localProjectId, rootDir) =>
+        new CloudProjectionReadModel({ rootDir: rootDir ?? root, localProjectId }),
+      onChange: () => {},
+      sessionClientFactory: () => throwingPort,
+      credentialResolver: async () => ({
+        headers: { 'cf-access-token': fakeJwt('user@example.com', NOW + 3_600_000) },
+        tokenExpiry: NOW + 3_600_000,
+      }),
+      now: () => NOW,
+      scheduler: () => 0,
+      cancelScheduled: () => {},
+    })
+
+    await expect(manager.start(startOpts())).resolves.toBeUndefined()
+    expect(manager.getStatus('project-a')?.state).toBe('connecting')
+    expect(manager.getStatus('project-a')?.reasonCode).toContain('session_client_error')
+  })
+
+  it('a foreground credential resolution re-arms only authentication_required pauses (owner action)', async () => {
+    const harness = makeFailureHarness(root, { credentialAvailable: false })
+    await harness.manager.start(startOpts())
+    expect(harness.manager.getStatus('project-a')?.state).toBe('authentication_required')
+    expect(harness.session.calls.session).toBe(0)
+
+    // The owner action: a foreground resolve makes the credential available.
+    harness.setCredentialAvailable(true)
+    harness.session.setOutcome({
+      kind: 'granted',
+      grant: 'grant-owner-action',
+      grantExpiresAt: NOW + 600_000,
+    })
+    await harness.manager.notifyCredentialResolved('https://mdt-sync.example.com')
+
+    expect(harness.session.calls.session).toBe(1)
+    expect(harness.connections).toHaveLength(1)
+    expect(harness.manager.getStatus('project-a')?.state).toBe('connecting')
+
+    // A membership pause on the same origin is NOT re-armed by credentials.
+    harness.session.setOutcome({ kind: 'authorization_required', reasonCode: 'forbidden' })
+    await harness.manager.notifyCredentialResolved('https://mdt-sync.example.com')
+    expect(harness.session.calls.session).toBe(1)
+  })
+
+  it('a foreground credential resolution re-arms a stale_offline activation (transport exhaustion)', async () => {
+    const harness = makeFailureHarness(root)
+    harness.session.setOutcome({ kind: 'transient_failure', reasonCode: 'coordination_unavailable' })
+    await harness.manager.start(startOpts())
+    for (let i = 0; i < 30; i++) {
+      await flushUntil(() =>
+        harness.timers.length > 0
+        || harness.manager.getStatus('project-a')?.state === 'stale_offline')
+      if (harness.timers.length === 0)
+        break
+      harness.fireTimers()
+    }
+    await harness.manager.whenIdle()
+    expect(harness.manager.getStatus('project-a')?.state).toBe('stale_offline')
+
+    harness.session.setOutcome({
+      kind: 'granted',
+      grant: 'grant-after-exhaustion',
+      grantExpiresAt: NOW + 600_000,
+    })
+    await harness.manager.notifyCredentialResolved('https://mdt-sync.example.com')
+
+    expect(harness.connections).toHaveLength(1)
+    expect(harness.manager.getStatus('project-a')?.state).toBe('connecting')
+  })
+
   it('a credential-source change re-arms automatically (fingerprint change)', async () => {
     const harness = makeFailureHarness(root)
     harness.session.setOutcome({ kind: 'authorization_required', reasonCode: 'forbidden' })
@@ -598,7 +691,7 @@ function makeFailureHarness(
   const timers: Array<{ ms: number, fn: () => void }> = []
   let credentialIdentity = opts.credentialIdentity ?? 'user@example.com'
   let clock = NOW
-  const credentialAvailable = opts.credentialAvailable !== false
+  let credentialAvailable = opts.credentialAvailable !== false
   const harness: ManagerHarness = {
     connections,
     changes,
@@ -619,6 +712,9 @@ function makeFailureHarness(
     credentialIdentity: () => credentialIdentity,
     setCredentialIdentity: (identity: string) => {
       credentialIdentity = identity
+    },
+    setCredentialAvailable: (available: boolean) => {
+      credentialAvailable = available
     },
     manager: undefined as unknown as ProjectionStreamManager,
   }

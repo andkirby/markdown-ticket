@@ -15,6 +15,7 @@ import { bindingFromEnabledConnection } from '@mdt/shared/services/cloud-sync/al
 import { CloudProjectionReadModel } from '@mdt/shared/services/cloud-sync/CloudProjectionReadModel.js'
 import { CloudProjectionSessionClient } from '@mdt/shared/services/cloud-sync/CloudProjectionSessionClient.js'
 import { CloudProjectionStreamClient } from '@mdt/shared/services/cloud-sync/CloudProjectionStreamClient.js'
+import { buildEffectiveCloudSyncConfig } from '@mdt/shared/services/cloud-sync/config.js'
 import { RuntimeCloudCredentialProvider } from '@mdt/shared/services/cloud-sync/credential-providers.js'
 import { ProjectStateStore } from '@mdt/shared/services/cloud-sync/project-state-store.js'
 import { CloudProjectionSync } from '@mdt/shared/services/cloud-sync/projection-sync.js'
@@ -191,7 +192,26 @@ setupLogInterception()
 const fileWatcher = new FileWatcherService()
 const projectDiscovery = new SharedProjectService()
 const cloudConfigDir = getDefaultPaths().CONFIG_DIR
-const cloudCredentialProvider = new AccessCredentialBroker({
+/**
+ * Process-scoped credential broker. A successful FOREGROUND resolution (an
+ * explicit cloud operation such as a journaled ticket edit) makes a human
+ * Access token available to the process — the documented owner action that
+ * re-arms `authentication_required` stream pauses. Background
+ * (non-interactive) resolution never spawns `cloudflared` (C-13, Edge-7).
+ */
+// Late-bound stream re-arm listeners: the manager is constructed after the
+// broker but resolves its credentials through it.
+const credentialResolvedListeners: Array<(serviceOrigin: string) => void> = []
+const cloudCredentialProvider = new (class extends AccessCredentialBroker {
+  override async resolve(serviceUrl: string) {
+    const credential = await super.resolve(serviceUrl)
+    if (credential) {
+      for (const notify of credentialResolvedListeners)
+        notify(serviceUrl)
+    }
+    return credential
+  }
+})({
   provider: new RuntimeCloudCredentialProvider(),
 })
 
@@ -227,9 +247,11 @@ const projectionStreamManager = new ProjectionStreamManager({
   sessionClientFactory: ({ serviceOrigin, cloudProjectId }) =>
     new CloudProjectionSessionClient({
       serviceUrl: serviceOrigin,
-      globalConfig: {
+      // Effective trust = distribution origins + operator extensions (the
+      // raw operator list alone would reject the distribution origin).
+      globalConfig: buildEffectiveCloudSyncConfig({
         allowedOrigins: projectDiscovery.getGlobalConfig().cloudSync?.allowedOrigins ?? [],
-      },
+      }),
     }, cloudProjectId),
   // Non-interactive only: a cached human token or a service credential; the
   // background path never launches an interactive login (C-13, Edge-7).
@@ -244,6 +266,13 @@ const projectionStreamManager = new ProjectionStreamManager({
     // Fan out as an ordinary file-change so browsers refetch unified tickets.
     fileWatcher.broadcastProjectionChange(localProjectId)
   },
+})
+
+// A foreground credential resolution is the documented owner action that
+// re-arms authentication-paused and transport-exhausted streams.
+credentialResolvedListeners.push((serviceOrigin) => {
+  projectionStreamManager.notifyCredentialResolved(serviceOrigin)
+    .catch((err: unknown) => logger.warn(`[MDT-226] credential re-arm failed: ${err instanceof Error ? err.message : String(err)}`))
 })
 
 // Wire the read-model provider so /tickets/unified merges cloud projections
@@ -426,7 +455,12 @@ async function startProjectionStreams(): Promise<void> {
         const binding = bindingFromEnabledConnection(connection.connection)
         const sync = new CloudProjectionSync({
           binding,
-          allowedOrigins: globalConfig.cloudSync?.allowedOrigins ?? [],
+          // Effective trust = distribution origins + operator extensions. The
+          // raw operator list alone fail-closes the journal's publishes before
+          // the wire (found on the deployed 2026-08-15 probe).
+          allowedOrigins: buildEffectiveCloudSyncConfig({
+            allowedOrigins: globalConfig.cloudSync?.allowedOrigins ?? [],
+          }).allowedOrigins,
           journalRoot: path.join(cloudConfigDir, 'cloud-sync', 'projection-journal'),
           physicalRepoPath: project.project.path,
           credentialProvider: cloudCredentialProvider,

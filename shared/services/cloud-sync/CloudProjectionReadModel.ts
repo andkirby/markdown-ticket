@@ -54,6 +54,9 @@ export interface CloudProjectionReadModelOptions {
 /** Callback invoked after the read model state changes (SSE fan-out trigger). */
 export type ReadModelChangeCallback = (cloudProjectId: string) => void
 
+/** Monotonic tmp-file suffix so concurrent saves cannot collide. */
+let persistCounter = 0
+
 export class CloudProjectionReadModel {
   private readonly rootDir: string
   private readonly localProjectId: string
@@ -186,13 +189,18 @@ export class CloudProjectionReadModel {
   /**
    * Atomically persist state + cursor BEFORE acknowledgement (C-6). Persists the
    * cursor only after applying state.
+   *
+   * The tmp name is unique per save: catch-up delivers many envelopes in quick
+   * succession and their persists run concurrently — a shared `.tmp` path made
+   * concurrent renames fail with ENOENT (found on the deployed 2026-08-15
+   * probe; unit tests emit envelopes one-at-a-time and never collide).
    */
   async persist(): Promise<void> {
     await mkdir(join(this.rootDir, 'projects', this.localProjectId), {
       recursive: true,
       mode: 0o700,
     })
-    const tmp = `${this.stateFile}.tmp`
+    const tmp = `${this.stateFile}.${process.pid}.${persistCounter++}.tmp`
     await writeFile(tmp, JSON.stringify(this.state, null, 2), { mode: 0o600 })
     await rename(tmp, this.stateFile)
   }

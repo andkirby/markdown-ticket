@@ -262,6 +262,14 @@ function buildRouter(env: Env): CoordinationRouter {
           body: publishBody,
           requestId: ctx.requestId,
         })
+        // The hub returns a typed outcome: DO RPC rejections lose the error
+        // class, which used to turn version conflicts into untyped 503s.
+        if (!result.ok) {
+          throw new CoordinationError(result.code, {
+            requestId: ctx.requestId,
+            ...(result.currentVersion !== undefined ? { currentVersion: result.currentVersion } : {}),
+          })
+        }
         return new Response(JSON.stringify({ requestId: ctx.requestId, data: result }), {
           status: 200,
           headers: {

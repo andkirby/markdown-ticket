@@ -303,6 +303,61 @@ states has not been run.
 
 ---
 
+## I. Issues Found During Deployed Validation (2026-08-15 evening) — ALL FIXED
+
+Live rollout-flag validation against the deployed Worker surfaced five more
+boundary bugs. Each had passing component tests; each only reproduced against
+the real server + Worker + Access + D1.
+
+### I1. No re-arm when a credential becomes available — FIXED
+
+The architecture documents the owner action ("a human connection remains
+`authentication_required` until an owner action makes a valid token available
+in the process broker"), but nothing re-armed the paused stream after the
+broker gained a credential — and restarts lose the in-process cache, so
+human-credential installations deadlocked. Fix: `notifyCredentialResolved`
+on the manager, wired to foreground broker resolutions in `server.ts`;
+re-arms `authentication_required` pauses and `stale_offline` transport
+exhaustion (the resolving operation exercises the same HTTPS control plane).
+Regression-tested in `ProjectionStreamManager.test.ts`.
+
+### I2. Session/journal clients built with the raw operator allowlist — FIXED
+
+`server.ts` passed `cloudSync.allowedOrigins` (empty) instead of
+`buildEffectiveCloudSyncConfig(...)` (distribution + operator origins) to the
+new session client AND the write journal. The session client's fail-closed
+allowlist guard then THREW from a fire-and-forget notify — crashing the whole
+server (Node exits on unhandled rejection). Fixes: effective-config wiring
+for both clients, try/catch around `session.authorize` in the manager
+(classified transient, never crashes), and a guarded notify listener.
+
+### I3. Session client accepted only HTTP 200 — FIXED (mock-fidelity)
+
+The Worker answers `201 Created` for session issuance; the client treated
+every non-200 as an error, so real grants were classified
+`transient_failure/coordination_unavailable` and the stream burned its budget
+retrying (reproduced against the real Worker; the unit test had blessed 200).
+Fix: accept 200 and 201; tests now use the production 201 shape.
+
+### I4. Concurrent read-model persists collided on a fixed tmp name — FIXED
+
+Catch-up floods many envelopes whose `applyPersistNotify` persists raced on
+`projection-read-model.json.tmp`; concurrent renames ENOENTed, the
+ready-branch died before marking live, the ack was never sent, and the hub's
+alarm replayed catch-up. Unit tests emit envelopes one at a time and never
+collide. Fix: unique per-save tmp names (same pattern as the state store).
+
+### I5. Durable Object RPC dropped typed publish errors — FIXED
+
+`commitAndDeliver` threw `CoordinationError` across the DO RPC boundary,
+which re-materializes as a plain `Error` on the Worker side — the router
+mapped version conflicts to untyped 503 `coordination_unavailable` and the
+journal never received `currentVersion` for its adopt-and-retry recovery
+(A5), leaving entries stuck at 60s retry cadence. Fix: the hub returns a
+typed `CommitProjectionOutcome`; the Worker re-throws a `CoordinationError`
+with `currentVersion`. Observed post-fix: 5× typed 409 → journal adopted →
+6× 200 → journal fully drained and revisions streamed back live.
+
 ## G. Root Cause Pattern
 
 Every defect in this log shares one root cause: **components designed and tested
