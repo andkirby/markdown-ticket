@@ -20,12 +20,18 @@ import type { D1Database } from '@cloudflare/workers-types'
 import type {
   ClientAck,
   CloudPrincipal,
+  CoordinatorErrorCode,
   LiveDelta,
   ProjectionDelta,
   ReadySignal,
   StreamEnvelope,
 } from '@mdt/domain-contracts'
 import type { PublishBody } from '../application/projection-usecase'
+import type {
+  StoredSessionDecision,
+  StreamGrantPrincipal,
+  StreamGrantRegistryState,
+} from './projection-hub-helpers'
 import { DurableObject } from 'cloudflare:workers'
 import { publish as publishProjectionUseCase } from '../application/projection-usecase'
 import {
@@ -35,10 +41,21 @@ import {
 import {
   isProjectionStreamClientAck as isClientAck,
   recordToCatchup,
+  StreamGrantRegistry,
 } from './projection-hub-helpers'
 
 // Re-export pure helpers for tests and the worker (MDT-226).
-export { isProjectionStreamClientAck, recordToCatchup } from './projection-hub-helpers'
+export {
+  isProjectionStreamClientAck,
+  recordToCatchup,
+  StreamGrantRegistry,
+} from './projection-hub-helpers'
+export type {
+  StoredSessionDecision,
+  StoredStreamGrant,
+  StreamGrantPrincipal,
+  StreamGrantRegistryState,
+} from './projection-hub-helpers'
 
 /**
  * The Workers Hibernation WebSocket API extends the standard WebSocket with
@@ -85,15 +102,22 @@ export interface CommitProjectionRequest {
 const CATCHUP_PAGE_SIZE = 500
 /** Alarm lead time for replaying committed-but-unacknowledged revisions. */
 const ALARM_DELAY_MS = 5_000
+/** DO storage key for the digest-only grant/decision registry. */
+const GRANT_REGISTRY_STORAGE_KEY = 'stream-grant-registry'
 
 export class ProjectProjectionHub extends DurableObject<ProjectProjectionHubEnv> {
   /** Explicit async operation queue serializes all hub work (C-6, Edge-2). */
   private queueTail: Promise<void> = Promise.resolve()
+  /** Digest-only stream grants + bounded session decisions (C-10, C-15). */
+  private grantRegistry = new StreamGrantRegistry()
+  private grantRegistryLoaded = false
 
   /**
-   * Accept a hibernating WebSocket. The Worker has already validated the Access
-   * assertion and current membership; the attachment records the principal tag
-   * and token expiry for post-hibernation reauthorization.
+   * Accept a hibernating WebSocket on the DATA PLANE. The Worker validated the
+   * Access assertion and preserved the upgrade headers; this hub validates the
+   * stream grant against its digest registry WITHOUT any D1 membership query
+   * and binds the grant's principal tag + token expiry to the socket (C-10,
+   * C-15, Edge-8).
    */
   async fetch(request: Request): Promise<Response> {
     const upgradeHeader = request.headers.get('upgrade')
@@ -101,10 +125,25 @@ export class ProjectProjectionHub extends DurableObject<ProjectProjectionHubEnv>
       return new Response('Expected WebSocket', { status: 426 })
     }
     const cloudProjectId = request.headers.get('x-mdt-cloud-project-id') ?? ''
-    const principalKind = request.headers.get('x-mdt-principal-kind') ?? 'unknown'
-    const principalId = request.headers.get('x-mdt-principal-id') ?? ''
-    const tokenExpiry = Number.parseInt(request.headers.get('x-mdt-token-expiry') ?? '0', 10)
+    const grant = request.headers.get('x-mdt-stream-grant') ?? ''
     const afterRevision = Number.parseInt(request.headers.get('x-mdt-after-revision') ?? '0', 10)
+
+    // Grant validation replaces the per-upgrade D1 membership decision. An
+    // unknown, expired, or tampered grant fails closed (C-10).
+    const grantRecord = await this.readGrantRegistry(registry => registry.validateGrant(grant))
+    if (!grantRecord) {
+      return new Response(
+        JSON.stringify({
+          error: {
+            code: 'authentication_required',
+            message: 'invalid stream grant',
+            requestId: crypto.randomUUID(),
+            retryable: false,
+          },
+        }),
+        { status: 401, headers: { 'content-type': 'application/json' } },
+      )
+    }
 
     const pair = new WebSocketPair()
     const socket = pair[1] as HibernationWebSocket
@@ -112,10 +151,10 @@ export class ProjectProjectionHub extends DurableObject<ProjectProjectionHubEnv>
 
     const attachment: SocketAttachment = {
       cloudProjectId,
-      principalKind,
-      principalId,
-      acknowledgedRevision: afterRevision,
-      tokenExpiry: Number.isSafeInteger(tokenExpiry) ? tokenExpiry : 0,
+      principalKind: grantRecord.principalKind,
+      principalId: grantRecord.principalId,
+      acknowledgedRevision: Number.isSafeInteger(afterRevision) ? afterRevision : 0,
+      tokenExpiry: grantRecord.tokenExpiry,
       authorized: true,
     }
     socket.serializeAttachment(attachment)
@@ -126,6 +165,50 @@ export class ProjectProjectionHub extends DurableObject<ProjectProjectionHubEnv>
     })
 
     return new Response(null, { status: 101, webSocket: pair[0] })
+  }
+
+  // ── Stream session control plane (C-14, C-15) ───────────────────────────
+
+  /**
+   * Report the cached session decision for one principal + activation
+   * fingerprint, or null on a miss. Called by the Worker BEFORE any D1 work;
+   * a cached terminal denial or cached allowance performs zero D1 statements.
+   */
+  async sessionDecision(req: {
+    principal: StreamGrantPrincipal
+    activationId: string
+  }): Promise<StoredSessionDecision | null> {
+    return this.enqueueResult(() =>
+      this.withGrantRegistry(registry => registry.cachedDecision(req.principal, req.activationId)))
+  }
+
+  /**
+   * Record the outcome of the ONE membership decision and, when allowed,
+   * issue a fresh opaque grant. The raw grant is returned exactly once; only
+   * its digest is persisted (C-10, C-15).
+   */
+  async recordSessionDecision(req: {
+    principal: StreamGrantPrincipal
+    activationId: string
+    outcome: 'allowed' | 'denied'
+    code?: CoordinatorErrorCode
+    tokenExpiry: number
+  }): Promise<
+    | { kind: 'granted', grant: string, expiresAt: number }
+    | { kind: 'denied', code: CoordinatorErrorCode }
+  > {
+    return this.enqueueResult(async () => {
+      const { principal, activationId, outcome, code, tokenExpiry } = req
+      await this.withGrantRegistry(async (registry) => {
+        await registry.recordDecision(principal, activationId, outcome, { code, tokenExpiry })
+      })
+      if (outcome === 'denied') {
+        return { kind: 'denied' as const, code: code ?? 'forbidden' }
+      }
+      const issued = await this.withGrantRegistry(registry =>
+        registry.issueGrant(principal, activationId, tokenExpiry))
+      return { kind: 'granted' as const, grant: issued.grant, expiresAt: issued.expiresAt }
+    })
   }
 
   /** Hibernation WebSocket message handler. Processes client `ack` only. */
@@ -267,6 +350,9 @@ export class ProjectProjectionHub extends DurableObject<ProjectProjectionHubEnv>
   /**
    * Exclude and close unauthorized sockets before delivering a later projection
    * (Edge-4). Called by the Worker after a membership mutation commits in D1.
+   * The affected principal's grants and cached session decisions are revoked
+   * in the same serialized operation, so a revoked member cannot reconnect
+   * with a previously issued grant (C-10, C-15).
    */
   async revokeSockets(unauthorizedPrincipalId: string): Promise<void> {
     // Return the queued work so the caller's await resolves only after the
@@ -274,6 +360,8 @@ export class ProjectProjectionHub extends DurableObject<ProjectProjectionHubEnv>
     // Without this, revocation completes before the close-before-deliver work
     // runs and Edge-4 becomes a timing assumption rather than a guarantee.
     return this.enqueueResult(async () => {
+      await this.withGrantRegistry(registry =>
+        registry.revokeByPrincipal(unauthorizedPrincipalId))
       const sockets = this.ctx.getWebSockets() as HibernationWebSocket[]
       for (const socket of sockets) {
         const attachment = socket.deserializeAttachment<SocketAttachment | null>()
@@ -290,6 +378,33 @@ export class ProjectProjectionHub extends DurableObject<ProjectProjectionHubEnv>
   }
 
   // ── Operation queue ────────────────────────────────────────────────────
+
+  /**
+   * Run one operation against the grant registry, lazily loading persisted
+   * state on first use and persisting the (digest-only) state after. Registry
+   * state is delivery metadata in the DO's SQLite storage — D1 remains the
+   * only membership authority (C-2, C-10).
+   */
+  private async withGrantRegistry<T>(
+    op: (registry: StreamGrantRegistry) => T | Promise<T>,
+  ): Promise<T> {
+    const result = await this.readGrantRegistry(op)
+    await this.ctx.storage.put(GRANT_REGISTRY_STORAGE_KEY, this.grantRegistry.exportState())
+    return result
+  }
+
+  /** Read-only registry access: no storage write for pure validations. */
+  private async readGrantRegistry<T>(
+    op: (registry: StreamGrantRegistry) => T | Promise<T>,
+  ): Promise<T> {
+    if (!this.grantRegistryLoaded) {
+      const state = await this.ctx.storage.get<StreamGrantRegistryState>(GRANT_REGISTRY_STORAGE_KEY)
+      if (state)
+        this.grantRegistry.loadState(state)
+      this.grantRegistryLoaded = true
+    }
+    return op(this.grantRegistry)
+  }
 
   /**
    * Enqueue an operation. Operations run strictly in arrival order; an explicit

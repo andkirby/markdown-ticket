@@ -23,8 +23,16 @@ existing SSE.
 - **Stale**: the last applied projection is available, but the stream is not
   currently live.
 - **Connection attempt**: one credential resolution followed by at most one
-  WebSocket handshake for a project. Error and close notifications for the same
-  transport are one termination event.
+  typed stream-session request and one WebSocket handshake for a project. Error
+  and close notifications for the same transport are one termination event.
+- **Stream grant**: a short-lived, server-only capability issued by the project
+  hub after Access validation and one D1 membership decision. Reconnects reuse
+  it until expiry or revocation and do not re-read membership.
+- **Activation fingerprint**: the non-secret identity of the local connection,
+  explicit credential-source revision, deployed stream protocol version, and
+  operator activation generation. Routine refresh of the same short-lived
+  token does not change it. An unchanged fingerprint cannot re-arm a terminal
+  stream failure.
 - **Credential acquisition**: one process-scoped, origin-keyed resolution. A
   still-valid human Access token is reused; concurrent callers share one
   in-flight acquisition.
@@ -63,7 +71,9 @@ live.
 ### BR-1.5 Disconnected state
 
 WHILE the projection stream is unavailable, THE SYSTEM SHALL keep the last
-applied projection visible as stale and reconnect with bounded backoff.
+applied projection visible as stale. A previously live stream MAY reconnect
+within a bounded transient-failure budget; authorization, configuration, and
+protocol failures SHALL remain paused until an explicit re-arm event.
 
 ### BR-1.6 Tab-independent cloud traffic
 
@@ -90,10 +100,11 @@ overwrite the local ticket from the projection.
 
 ## Constraints
 
-### C-1 Zero idle D1 reads
+### C-1 Zero idle D1 statements
 
-A healthy connected local server SHALL perform zero D1 reads solely because
-time passes without project changes, reconnects, or authorization changes.
+After stream activation settles into `live` or a terminal paused state, an
+enabled local server SHALL perform zero D1 statements solely because time
+passes without project, connection, credential, network, or operator change.
 
 ### C-2 Authority boundary
 
@@ -143,8 +154,10 @@ projection authority.
 
 ### C-10 Stream authorization
 
-A stream SHALL be authorized at handshake, re-authorized after Durable Object
-hibernation before delivery, and reconnected no later than Access token expiry.
+A stream grant SHALL be authorized through Access and current D1 membership
+before the WebSocket handshake. The project hub SHALL validate the grant at
+handshake, re-authorize after Durable Object hibernation before delivery, and
+expire the grant no later than the underlying Access credential.
 
 ### C-11 Browser read-model boundary
 
@@ -167,6 +180,23 @@ until its refresh window, share concurrent acquisition, and run at most one
 `cloudflared` child at a time. Startup and background reconnect SHALL never
 launch interactive login; they may use only a cached human token or a configured
 service credential.
+
+### C-14 Failed stream handshake containment
+
+Before opening a WebSocket, the local server SHALL obtain a typed stream grant
+through HTTPS. Authentication, authorization, and hidden-project outcomes
+(`401`, `403`, and `404`) SHALL persist a paused state. Protocol and deployment
+mismatches such as `426` SHALL persist an incompatible state. Neither state may
+retry until the activation fingerprint changes or an operator explicitly
+retries.
+
+### C-15 Stream D1 request budget
+
+For one unchanged activation fingerprint that has not reached `live`, automatic
+stream activation SHALL perform at most one D1 membership decision and at most
+one denial audit write. WebSocket reconnects with a valid stream grant SHALL
+perform no D1 membership read. Time passage, browser activity, and server
+restart SHALL NOT reset this budget.
 
 ## Edge Cases
 
@@ -214,6 +244,13 @@ server SHALL signal that child to terminate, resolve the caller as unavailable,
 and SHALL NOT spawn another credential child until the prior child reports exit.
 The registered projection read model remains stale and its one background
 reconnect lane checks only cached human or configured service credentials.
+
+### Edge-8 Worker-to-hub WebSocket upgrade preservation
+
+When the Worker adds internal authorization headers before forwarding an
+accepted stream request to `ProjectProjectionHub`, it SHALL preserve the
+client's WebSocket upgrade headers. A deployed `101 Switching Protocols`
+handshake is required before enabling automatic streams for an installation.
 
 ## Assumptions
 

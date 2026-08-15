@@ -387,30 +387,64 @@ be mistaken for reusable.
 
 ## Projection Stream and Catch-Up Contract
 
-The local server opens:
+The local server first authorizes a session:
 
 ```text
-GET /v1/projects/{projectId}/projection-stream?after=<projectRevision>
-Upgrade: websocket
+POST /v1/projects/{projectId}/projection-stream-sessions
 ```
 
-The Worker validates Access and current membership, routes the upgrade to the
-project's `ProjectProjectionHub`, and accepts one logical stream per local
-server/project instance. Browser tabs do not open cloud streams.
+This typed HTTPS request carries a stable opaque activation ID. The project hub
+coalesces the same principal/activation decision; only a cache miss performs
+one D1 membership decision and denial audit. The hub returns a short-lived
+opaque grant and stores its digest plus minimum activation/revocation metadata
+in SQLite-backed storage. D1 remains the membership authority; membership
+mutation invalidates affected cached decisions, grants, and sockets.
 
-The versioned server envelopes are:
+Success is intentionally small and secret-bearing (`grantExpiresAt` is
+epoch-ms and bounded by the authorizing Access credential; `streamProtocol` is
+the control-plane protocol version the local client must accept):
 
 ```json
 {
-  "type": "delta",
+  "grant": "opaque-server-only-value",
+  "grantExpiresAt": 1755259200000,
+  "streamProtocol": 2
+}
+```
+
+The grant is redacted from logs and local status. Terminal errors use the normal
+typed coordination envelope. Repeating the same activation ID returns the
+cached decision without another membership query or denial audit.
+
+The local server then opens:
+
+```text
+GET /v1/projects/{projectId}/projection-stream
+Upgrade: websocket
+x-mdt-stream-grant: <opaque grant>
+x-mdt-after-revision: <last applied+persisted projectRevision>
+```
+
+The Worker validates the Access assertion only, preserves every client header
+(including the WebSocket upgrade headers), and routes the request to the
+project's `ProjectProjectionHub` without another membership query. The hub
+validates the grant against its digest registry and accepts one logical stream
+per local server/project instance.
+Reconnects reuse the grant until expiry or revocation. Browser tabs do not open
+cloud streams.
+
+The versioned server envelopes are a `kind`-discriminated union with flat
+delivery metadata (see `domain-contracts/src/cloud-sync/projection-stream.ts`):
+
+```json
+{
+  "kind": "delta",
   "cloudProjectId": "018f5e6c-6f32-7c5b-9e76-97c7c769c123",
   "projectRevision": 43,
-  "projection": {
-    "ticketNumber": 226,
-    "projectionVersion": 4,
-    "lifecycle": "active",
-    "header": {}
-  }
+  "ticketNumber": 226,
+  "projectionVersion": 4,
+  "lifecycle": "active",
+  "header": {}
 }
 ```
 
@@ -451,8 +485,8 @@ Backend read-model merge rules:
 - duplicate or older revisions are ignored;
 - a non-contiguous **live** revision pauses live application and triggers one
   cursor catch-up from the last applied revision;
-- reconnect uses bounded exponential backoff with jitter and never becomes a
-  background D1 polling loop.
+- a previously live transport may reconnect within a bounded attempt budget
+  using its existing grant; terminal outcomes persist and no timer probes D1.
 
 The projection read model is atomically persisted under owner-only CONFIG_DIR
 state for the local project. It contains approved projected headers, lifecycle,
@@ -468,9 +502,10 @@ plus alarms; it is not a read replica or projection store. The hub's metadata
 lives in the DO's own SQLite-backed storage (`new_sqlite_classes` migration), a
 separate database from the `DB` D1 binding.
 
-Healthy idle connections perform no D1 reads. D1 reads occur only for
-handshake/authorization, catch-up or gaps, actual mutations, membership
-changes, and alarm recovery.
+Settled live or terminal activations perform no elapsed-time D1 statements. D1
+membership reads occur only for explicit stream-session issue/renewal, actual
+operations, and authorization changes—not WebSocket reconnect. Catch-up/gap and
+alarm recovery may read projection state when work exists.
 
 ## Cloud Service API
 
@@ -492,6 +527,7 @@ size bounded.
 | `PUT /v1/projects/{projectId}/reservations/{reservationId}/acknowledgement` | Contributor | `200` projection |
 | `PUT /v1/projects/{projectId}/tickets/{ticketNumber}/projection` | Contributor | `200` projection |
 | `PUT /v1/projects/{projectId}/tickets/{ticketNumber}/lifecycle` | Contributor | `200` projection or tombstone |
+| `POST /v1/projects/{projectId}/projection-stream-sessions` | Viewer | `201` short-lived server-only stream grant |
 | `GET /v1/projects/{projectId}/projection-stream` | Viewer | `101` authenticated WebSocket upgrade |
 | `GET /v1/projects/{projectId}/projections` | Viewer | `200` bounded cursor page for catch-up/compatibility |
 
@@ -508,6 +544,7 @@ The browser uses only local application contracts:
 | Method and path | Purpose |
 | --- | --- |
 | `GET /api/projects/{localProjectId}/tickets/unified` | Unified canonical and projection-only ticket views |
+| `GET /api/projects/{localProjectId}/cloud-sync/status` | Local-only live/paused/failed state; never triggers a cloud request |
 | `GET /api/events` | Ordinary local ticket changes plus high-level project sync status |
 
 A projection-only ticket view includes `kind = projected`, `readOnly = true`,
@@ -562,8 +599,8 @@ When coordination is unavailable:
 - cloud-bound creation is blocked and keeps its journaled intent;
 - eligible projection pushes remain queued with bounded backoff; terminal,
   conflict, and authentication-paused entries do not spin;
-- the projection stream shows the last applied projection as stale and
-  reconnects with bounded backoff;
+- the projection stream shows the last applied projection as stale; the manager
+  may use its bounded transient budget, while terminal state schedules no retry;
 - no caller allocates a local fallback number.
 
 Changing the CONFIG_DIR connection to `state = "disabled"` detaches one

@@ -16,7 +16,7 @@
  */
 
 import type { RouteContext } from './http/router'
-import { CoordinationError } from '@mdt/domain-contracts'
+import { CoordinationError, PROJECTION_STREAM_PROTOCOL_VERSION } from '@mdt/domain-contracts'
 import { AccessValidator } from './access/jwt'
 import { requireProjectRole } from './application/authorization'
 import {
@@ -34,6 +34,11 @@ import {
 import { provisionProject } from './application/provisioning'
 import { acknowledge, createReservation, getReservation } from './application/reservation'
 import { recordAudit } from './d1/audit'
+import {
+  authorizeProjectionStreamSession,
+  buildHubForwardedHeaders,
+  projectionStreamRouteName,
+} from './durable/projection-hub-helpers'
 import { ProjectProjectionHub } from './durable/ProjectProjectionHub'
 import { readJsonObject } from './http/body'
 import { CoordinationRouter } from './http/router'
@@ -277,6 +282,71 @@ function buildRouter(env: Env): CoordinationRouter {
     },
   )
 
+  // MDT-226 incident recovery: the stream-session CONTROL PLANE. One typed
+  // HTTPS request per activation; the hub caches the bounded membership
+  // decision so an unchanged activation fingerprint performs at most one D1
+  // membership decision and one denial audit (C-14, C-15). The grant is
+  // server-only and returned to the caller exactly once.
+  router.coordination(
+    'POST',
+    /^\/v1\/projects\/(?<projectId>[^/]+)\/projection-stream-sessions$/,
+    async (ctx) => {
+      // Rate-limit before any D1 work (operations.md § Rate Limits).
+      if (ctx.rateLimit && !await withinRateLimit(ctx.rateLimit, 'RATE_LIMIT_READ', rateLimitKey(ctx.principal, ctx.params.projectId, 'read'))) {
+        return rateLimited(ctx, 'projection.stream.session')
+      }
+      const body = await readJsonObject(ctx.request, ctx.requestId)
+      const activationId = typeof body.activationId === 'string' ? body.activationId : ''
+      if (!activationId) {
+        throw new CoordinationError('invalid_request', { requestId: ctx.requestId, message: 'invalid activationId' })
+      }
+      const tokenExpiry = typeof body.tokenExpiry === 'number' && Number.isSafeInteger(body.tokenExpiry) && body.tokenExpiry >= 0
+        ? body.tokenExpiry
+        : 0
+      if (!ctx.projectHub) {
+        throw new CoordinationError('coordination_unavailable', { requestId: ctx.requestId })
+      }
+      const stub = ctx.projectHub.get(
+        ctx.projectHub.idFromName(ctx.params.projectId),
+      ) as DurableObjectStub<ProjectProjectionHub>
+
+      const result = await authorizeProjectionStreamSession({
+        hub: {
+          cachedSessionDecision: (principal, activationId) =>
+            stub.sessionDecision({ principal, activationId }),
+          recordSessionDecision: (principal, activationId, outcome, opts) =>
+            stub.recordSessionDecision({ principal, activationId, outcome, ...opts }),
+        },
+        membership: {
+          // The single D1 membership decision (+ one denial audit on failure).
+          authorizeOnce: async () => {
+            try {
+              await requireProjectRole(ctx.db, ctx.principal, ctx.params.projectId, 'viewer', 'projection.stream.session', ctx.requestId)
+              return { ok: true as const }
+            }
+            catch (err) {
+              if (err instanceof CoordinationError)
+                return { ok: false as const, code: err.code, status: err.status }
+              throw err
+            }
+          },
+        },
+        principal: { principalKind: ctx.principal.kind, principalId: ctx.principal.id },
+        activationId,
+        tokenExpiry,
+      })
+
+      if (!result.ok) {
+        throw new CoordinationError(result.code, { requestId: ctx.requestId })
+      }
+      return json(ctx.requestId, {
+        grant: result.grant,
+        grantExpiresAt: result.expiresAt,
+        streamProtocol: PROJECTION_STREAM_PROTOCOL_VERSION,
+      }, 201)
+    },
+  )
+
   // Slice 2: operator routes.
   router.operator(
     'POST',
@@ -421,9 +491,14 @@ function matchProjectionStream(request: Request): string | null {
 }
 
 /**
- * Handle the projection-stream upgrade: validate Access, check current
- * membership without revealing hidden projects, then route to the deterministic
- * project hub (C-5). The hub owns hibernation, catch-up, and delivery.
+ * Handle the projection-stream DATA-PLANE upgrade: validate the Access
+ * assertion (no D1), then forward the request — with its WebSocket upgrade
+ * headers preserved — to the deterministic project hub, which validates the
+ * stream grant without a membership query (C-5, C-10, C-15, Edge-8).
+ *
+ * The typed authorization outcome already happened on the session control
+ * plane; Bun cannot read an upgrade rejection body, so this path deliberately
+ * performs no membership decision.
  */
 async function handleProjectionStreamUpgrade(
   request: Request,
@@ -435,49 +510,33 @@ async function handleProjectionStreamUpgrade(
   if (!validated.ok) {
     return validated.response
   }
-  const { principal, requestId } = validated
-  try {
-    await requireProjectRole(env.DB, principal, cloudProjectId, 'viewer', 'projection.stream', requestId)
-  }
-  catch (err) {
-    return errorEnvelopeResponse(err, requestId)
-  }
 
   // Route by exact cloud project UUID to the deterministic hub (C-5).
   const id = env.PROJECT_HUB.idFromName(cloudProjectId)
   const stub = env.PROJECT_HUB.get(id)
 
-  // Forward the verified principal tag, token expiry, and afterRevision cursor
-  // to the hub via headers. The hub stores only delivery metadata (C-3).
+  // Preserve EVERY client header — including `Upgrade: websocket` and the
+  // `Sec-WebSocket-*` handshake — then append the internal context the hub
+  // validates against its grant digests. Replacing the header set is what
+  // lost the upgrade in the 2026-08-15 incident (Edge-8).
   const hubRequest = new Request(request, {
-    headers: new Headers({
+    headers: buildHubForwardedHeaders(request.headers, {
       'x-mdt-cloud-project-id': cloudProjectId,
-      'x-mdt-principal-kind': principal.kind,
-      'x-mdt-principal-id': principal.id,
-      'x-mdt-token-expiry': request.headers.get('x-mdt-token-expiry') ?? '0',
-      'x-mdt-after-revision': request.headers.get('x-mdt-after-revision') ?? '0',
+      'x-mdt-stream-grant': request.headers.get('x-mdt-stream-grant') ?? '',
     }),
   })
   return stub.fetch(hubRequest)
 }
 
-/** Map a CoordinationError to the typed error envelope Response. */
-function errorEnvelopeResponse(err: unknown, requestId: string): Response {
-  if (err instanceof CoordinationError) {
-    return new Response(
-      JSON.stringify({ error: { code: err.code, message: err.message, requestId, retryable: false } }),
-      { status: err.status, headers: { 'content-type': 'application/json' } },
-    )
-  }
-  return new Response(
-    JSON.stringify({ error: { code: 'internal_error', message: 'internal_error', requestId, retryable: false } }),
-    { status: 500, headers: { 'content-type': 'application/json' } },
-  )
-}
-
 function routeName(request: Request): string {
   const pathname = new URL(request.url).pathname
   const method = request.method.toUpperCase()
+  // MDT-226 incident recovery: accurate stream route labels BEFORE the
+  // generic /v1/projects/ fallthrough (a `project.probe` label hid the
+  // failing loops during the incident).
+  const streamRoute = projectionStreamRouteName(method, pathname)
+  if (streamRoute)
+    return streamRoute
   if (pathname === '/healthz')
     return 'health'
   if (pathname.startsWith('/v1/admin/'))

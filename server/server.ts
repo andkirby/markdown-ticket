@@ -13,6 +13,7 @@ import {
 } from '@mdt/shared/services/cloud-sync/access-credential-broker.js'
 import { bindingFromEnabledConnection } from '@mdt/shared/services/cloud-sync/allocator-strategy.js'
 import { CloudProjectionReadModel } from '@mdt/shared/services/cloud-sync/CloudProjectionReadModel.js'
+import { CloudProjectionSessionClient } from '@mdt/shared/services/cloud-sync/CloudProjectionSessionClient.js'
 import { CloudProjectionStreamClient } from '@mdt/shared/services/cloud-sync/CloudProjectionStreamClient.js'
 import { RuntimeCloudCredentialProvider } from '@mdt/shared/services/cloud-sync/credential-providers.js'
 import { ProjectStateStore } from '@mdt/shared/services/cloud-sync/project-state-store.js'
@@ -211,20 +212,31 @@ const cloudToLocalProject = new Map<string, string>()
 /** Persistent projection-write-journal instances (one per enabled project). */
 const projectionSyncs: CloudProjectionSync[] = []
 
+/**
+ * MDT-226 incident recovery: automatic projection streams stay behind a
+ * per-installation rollout flag until the deployed grant/handshake and
+ * 30-minute zero-idle-D1 gates pass (TEST-deployed-stream-handshake,
+ * TEST-idle-zero-d1). Default OFF.
+ */
+const projectionStreamRolloutEnabled = process.env.MDT_PROJECTION_STREAM_ROLLOUT === 'true'
+
 const projectionStreamManager = new ProjectionStreamManager({
-  clientFactory: opts => new CloudProjectionStreamClient({
-    ...opts,
-    // Resolve authorization on every reconnect. The process broker reuses a
-    // still-valid token and refreshes it only inside its expiry window (C-10).
-    refreshAuthorization: async () => {
-      const cred = await cloudCredentialProvider.resolveNonInteractive(opts.serviceOrigin)
-      if (cred)
-        return streamAuthorizationFromCredential(cred)
-      throw new Error('authentication_required')
-    },
-  }),
+  clientFactory: opts => new CloudProjectionStreamClient(opts),
   readModelFactory: (localProjectId, rootDir) =>
     new CloudProjectionReadModel({ localProjectId, rootDir: rootDir ?? cloudConfigDir }),
+  sessionClientFactory: ({ serviceOrigin, cloudProjectId }) =>
+    new CloudProjectionSessionClient({
+      serviceUrl: serviceOrigin,
+      globalConfig: {
+        allowedOrigins: projectDiscovery.getGlobalConfig().cloudSync?.allowedOrigins ?? [],
+      },
+    }, cloudProjectId),
+  // Non-interactive only: a cached human token or a service credential; the
+  // background path never launches an interactive login (C-13, Edge-7).
+  credentialResolver: async (serviceOrigin) => {
+    const cred = await cloudCredentialProvider.resolveNonInteractive(serviceOrigin)
+    return cred ? streamAuthorizationFromCredential(cred) : null
+  },
   onChange: (cloudProjectId) => {
     const localProjectId = cloudToLocalProject.get(cloudProjectId)
     if (!localProjectId)
@@ -374,6 +386,13 @@ async function initializeMultiProjectWatchers(): Promise<void> {
  */
 async function startProjectionStreams(): Promise<void> {
   try {
+    // Rollout gate: automatic streams remain disabled until the deployed
+    // handshake and idle-D1 gates pass (MDT-226 incident recovery).
+    if (!projectionStreamRolloutEnabled) {
+      logger.info('[MDT-226] Projection stream rollout flag is OFF — automatic streams disabled (set MDT_PROJECTION_STREAM_ROLLOUT=true only after the deployed gates pass)')
+      return
+    }
+
     const projects = await projectDiscovery.getAllProjects()
     const globalConfig = projectDiscovery.getGlobalConfig()
     const profile = resolveTrustedServiceProfile({
@@ -397,11 +416,9 @@ async function startProjectionStreams(): Promise<void> {
           localProjectId: project.id,
           cloudProjectId,
           serviceOrigin,
-          headers: {},
-          tokenExpiry: 0,
           rootDir: cloudConfigDir,
         })
-        logger.info(`[MDT-226] Projection stream manager started for ${project.id} → ${cloudProjectId}`)
+        logger.info(`[MDT-226] Projection stream manager started for ${project.id} → ${cloudProjectId} (state: ${projectionStreamManager.getStatus(project.id)?.state ?? 'unknown'})`)
 
         // Start the bounded write-journal retry runner so stuck entries
         // (authentication_paused, transient) are retried on a fixed interval
@@ -449,6 +466,23 @@ app.use('/api', createApiAuthMiddleware(runtimeConfig.auth, {
 
 // Multi-Project API routes
 app.use('/api/projects', createProjectRouter(projectController))
+
+// MDT-226 incident recovery: local-only cloud-sync diagnostics. Reads manager
+// and persisted activation state only — no credential, HTTP, WebSocket, or D1
+// call (BR-1.5, C-11, C-15). MDT-203 may render this in Project Settings and
+// MDT-223 in CLI diagnostics.
+app.get('/api/projects/:id/cloud-sync/status', (req, res) => {
+  const status = projectionStreamManager.getStatus(req.params.id)
+  if (!status) {
+    res.status(404).json({ error: 'cloud sync is not enabled for this project' })
+    return
+  }
+  res.json({
+    projectId: req.params.id,
+    rolloutEnabled: projectionStreamRolloutEnabled,
+    ...status,
+  })
+})
 
 // MDT-179: Unified search endpoint
 const searchController = new SearchController(projectController)

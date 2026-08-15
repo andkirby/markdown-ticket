@@ -52,7 +52,8 @@ stream returns to live.
 **Given** the board has a previously applied cloud projection\
 **When** the cloud projection stream becomes unavailable\
 **Then** the board keeps that projection visible, marks cloud state stale, and
-retries without blocking local ticket use.
+shows whether recovery is transiently reconnecting or paused with an explicit
+next action, without blocking local ticket use.
 
 ## SC-6 Revoked member stops receiving projections
 

@@ -20,7 +20,7 @@
  * before any credential-bearing request is made.
  */
 
-import type { CloudSyncConnection, ProjectConnectionRead } from '@mdt/domain-contracts'
+import type { AnyCloudSyncConnection, CloudSyncConnection, ProjectConnectionRead } from '@mdt/domain-contracts'
 import {
   DISTRIBUTION_CLOUD_SYNC_ORIGINS,
   DISTRIBUTION_COORDINATION_ORIGIN,
@@ -70,7 +70,7 @@ export class TrustedServiceProfile {
    * `{ kind: 'ok' }` otherwise (the caller still applies the allowlist and
    * connection-state checks).
    */
-  checkConnectionOrigin(connection: CloudSyncConnection):
+  checkConnectionOrigin(connection: AnyCloudSyncConnection):
     | { kind: 'ok' }
     | { kind: 'untrusted', reason: string } {
     if (!this.isTrusted(connection.serviceOrigin)) {

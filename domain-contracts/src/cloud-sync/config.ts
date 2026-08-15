@@ -66,6 +66,23 @@ export interface CloudSyncConnection {
 }
 
 /**
+ * Legacy version-1 connection shape, accepted ONLY while reading (Edge-3):
+ * the atomic version-2 rewrite discards `pollIntervalSeconds` without
+ * changing project identity or origin trust. Consumers that inspect
+ * on-disk/legacy records accept the union; active writes are always v2.
+ */
+export interface CloudSyncConnectionV1 {
+  version: 1
+  state: CloudSyncConnectionStateValue
+  cloudProjectId: string
+  serviceOrigin: string
+  pollIntervalSeconds: number
+}
+
+/** Any readable connection record: current v2 or a legacy v1 record. */
+export type AnyCloudSyncConnection = CloudSyncConnection | CloudSyncConnectionV1
+
+/**
  * Discriminated read result for the project connection record. `absent` is the
  * ONLY outcome that selects local allocation (C3, BR-4.2, BR-5.1). Disabled,
  * malformed, and untrusted outcomes fail closed.

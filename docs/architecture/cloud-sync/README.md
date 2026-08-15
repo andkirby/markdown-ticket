@@ -172,11 +172,12 @@ allocation, journal, authorization, cursor, or projection-conflict rules.
 | --- | --- | --- |
 | Worker router | HTTP/upgrade validation, principal resolution, deterministic project routing | Long-lived socket state |
 | Membership authorizer | Project-scoped role decisions and non-disclosure | Cached authorization beyond its documented boundary |
-| `ProjectProjectionHub` | Hibernating sockets, ordering, catch-up, broadcast, alarm recovery, revocation disconnect | Ticket bodies or authoritative projection data |
+| `ProjectProjectionHub` | Bounded activation decisions/grants, hibernating sockets, ordering, catch-up, broadcast, alarm recovery, revocation disconnect | Ticket bodies or authoritative membership/projection data |
 | Projection use case | Version checks, operation idempotency, D1 transaction result | Pre-commit broadcast |
 | D1 repositories | Prepared project-scoped reads and atomic mutation batches | Transport/session ownership |
-| Local stream manager | One client/project, read-model delivery, and catch-up intent | Connection timers, credential subprocesses, ticket-list presentation, or browser state |
-| Local stream client | One project connection state machine: handshake, expiry, reconnect, and transport replacement | Credential subprocesses or project/read-model ownership |
+| Local stream-session client | One typed HTTPS grant request and response normalization | Retry, WebSocket, or project state policy |
+| Local stream manager | One activation/project, persisted phase, re-arm/reconnect budget, grant renewal, read-model delivery | Credential subprocesses, ticket-list presentation, or browser state |
+| Local stream client | One grant-bearing WebSocket and envelope validation | Retry timers, credentials, membership, or project state policy |
 | Access credential broker | Process-scoped origin cache, concurrent single-flight, and shared server credential resolution | WebSocket lifecycle or credential persistence |
 | `CloudflaredCredentialProvider` | Serialized fixed-argument child process with deadline signal and exit barrier | Token caching, retry scheduling, or more than one active child |
 | Local projection read model | Projected header cache, applied cursor, local-wins merge | Cloud transport or React state |
@@ -195,15 +196,20 @@ mutations. Its write retry lifecycle is independent of reads and browser
 activity: enqueue, server startup, and a due retry may schedule one bounded,
 single-flight drain per project; ticket reads and projection-feed reads never
 drain it. Empty or terminal journals generate no cloud requests.
-`CloudProjectionStreamClient` receives cloud-to-local projection
-state; `ProjectionStreamManager` passes it to `CloudProjectionReadModel`, which
-persists the cursor/state and merges against canonical tickets. The local
+`CloudProjectionSessionClient` obtains one typed, short-lived stream grant after
+Access and D1 membership authorization. `CloudProjectionStreamClient` uses that
+grant only as WebSocket transport; `ProjectionStreamManager` owns activation,
+bounded transient reconnect, and terminal pause state. It passes cloud-to-local
+state to `CloudProjectionReadModel`, which persists the cursor/state and merges
+against canonical tickets. The local
 `/api/projects/:id/tickets/unified` endpoint and local SSE expose ordinary
 ticket views/events. The browser never receives Cloudflare credentials, project
 revisions, or a separate projection feed.
 
-The stream client permits one handshake and one reconnect/expiry timer per
-project. One process-scoped `AccessCredentialBroker` serves stream, journal,
+Reconnects reuse a valid stream grant and do not query D1 membership. A denied
+session or protocol mismatch is persisted with its activation fingerprint and
+does not retry because time passes or the server restarts. One process-scoped
+`AccessCredentialBroker` serves stream, journal,
 and ticket operations: valid human tokens are reused by trusted origin and
 concurrent callers share one resolution. Its `cloudflared` adapter serializes
 children, signals a child that exceeds its deadline, and does not admit another
@@ -217,7 +223,16 @@ machine credential can connect headlessly; a human connection remains
 `authentication_required` until an owner action makes a valid `cloudflared`
 application token available in the process broker. Background reconnect checks
 that cache and never spawns `cloudflared`. Concurrent manager starts and browser
-mounts do not add clients.
+mounts do not add clients. Project, credential, or protocol change; membership
+reconciliation; a successful explicit cloud operation after a transport-only
+failure; or operator retry is required to re-arm a paused activation. Routine
+refresh of the same token does not change the activation fingerprint.
+
+Runtime activation state is separate from `cloud-sync.toml` configuration and
+is atomically persisted in owner-only
+`CONFIG_DIR/projects/{localProjectId}/projection-stream-state.json`. It contains
+only phase, reason, non-secret activation fingerprint, attempt budget, and
+transition timestamps—never a grant, Access token, or principal identifier.
 
 Journal and connection files use a device-local routing hash derived from the
 physical Git common directory or canonical non-Git root plus cloud project UUID.

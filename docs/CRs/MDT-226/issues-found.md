@@ -1,4 +1,4 @@
-# MDT-226 — Complete Issue Log (All Issues Found Through 2026-08-12)
+# MDT-226 — Complete Issue Log (All Issues Found Through 2026-08-15)
 
 A consolidated record of every defect, gap, and architecture issue found during
 the MDT-226 cloud projection push-delivery implementation. Issues are grouped by
@@ -316,3 +316,106 @@ interface contracts through the full path: request/response shapes, error code
 flows, validation rules, and platform-specific runtime behavior. A single
 integration test exercising the real round-trip would have caught A1-A5, B1-B3,
 and C1 simultaneously.
+
+---
+
+## H. Production Incident 2026-08-15 (CONTAINED in code; deployed gates pending)
+
+Incident recovery implemented 2026-08-15 (TASK-stream-incident-recovery). The
+fixes below are proven by the automated incident tests; the deployed
+`TEST-deployed-stream-handshake` and `TEST-idle-zero-d1` gates remain UNVERIFIED
+until an explicitly authorized limited-production probe runs, and automatic
+streams stay behind `MDT_PROJECTION_STREAM_ROLLOUT` (default off).
+
+### H1. Worker drops the WebSocket upgrade before the Durable Object — FIXED (2026-08-15)
+
+`buildHubForwardedHeaders` (cloud/src/cloudflare/durable/projection-hub-helpers.ts)
+now preserves every client header — including `Upgrade: websocket` and
+`Sec-WebSocket-*` — and appends the internal context instead of replacing the
+header set. Proven by TEST-worker-hub-upgrade-forwarding; deployed `101`
+confirmation is the manual gate.
+
+`cloud/src/cloudflare/worker.ts` replaces the request headers while adding
+internal principal context. That removes `Upgrade: websocket`, so
+`ProjectProjectionHub` returns `426 Expected WebSocket`. The authorized MDT
+project therefore never establishes its stream.
+
+### H2. Terminal handshake failures retry forever — FIXED (2026-08-15)
+
+The transport owns no retry timer (CloudProjectionStreamClient reports one
+coalesced termination). ProjectionStreamManager persists
+`paused_authorization` (401/403/404) and `paused_incompatible` (426/protocol)
+with the activation fingerprint in projection-stream-state.json; time passage,
+browser activity, and server restart cannot re-arm them. Proven by
+TEST-stream-handshake-failure-classification.
+
+`CloudProjectionStreamClient` treats handshake `404` and `426` as generic
+transport failures. Full-jitter backoff caps at 30 seconds but never pauses or
+opens a circuit. The enabled VOC binding has no current membership and retries
+`404`; MDT retries the protocol `426`.
+
+### H3. Reconnect traffic caused continuous D1 reads and writes — FIXED in code (2026-08-15); deployed proof pending
+
+One typed session request per activation performs at most one D1 membership
+decision and one denial audit (hub-cached decisions); grant-bearing
+reconnects perform no membership read; the manager reuses a valid grant and
+stops after a persisted bounded budget. Automated proof:
+TEST-stream-session-client, TEST-worker-hub-upgrade-forwarding,
+TEST-stream-handshake-failure-classification. The 30-minute zero-idle-D1
+statement count remains the deployed TEST-idle-zero-d1 gate.
+
+From 09:08:55 to 09:23:20 CEST, the VOC stream recorded 54 denied
+`projection.stream` attempts. Each attempt performed one membership `SELECT`
+and one denied audit `INSERT`. The MDT stream retried at a similar cadence and
+performed its membership `SELECT` before failing with `426`. This accounts for
+approximately 162 stream-attributable D1 statements and matches the observed
+approximately 170 statements per 15 minutes. No data loss was observed, but
+push delivery was unavailable for both configured projects.
+
+A later idle 30-minute window recorded 238 membership reads and 111 denied
+audit inserts: 349 D1 statements without project activity. This independently
+supports the same two-loop diagnosis and proves the incident remained active.
+
+### H4. Rollout and telemetry controls were not delivered — FIXED (2026-08-15)
+
+Automatic streams now require `MDT_PROJECTION_STREAM_ROLLOUT=true`
+(default off) in server/server.ts. Route telemetry distinguishes
+`projection.stream.session` from `projection.stream` before the generic
+`project.probe` fallthrough, and
+`GET /api/projects/:id/cloud-sync/status` exposes local-only
+state/reason/timestamps/next action with zero cloud traffic.
+
+The ticket requires a per-installation feature flag, deployed handshake gate,
+idle-D1 proof, and observability before automatic rollout. The running server
+started automatic streams without that flag or proof. Stream requests are also
+mislabelled as `project.probe`, obscuring the failing route. Application status
+shows configuration/auth reachability, not whether a projection stream is
+live, paused, or failed.
+
+### H5. The 2026-08-14 update overstated readiness — CORRECTED IN DOCS
+
+The last update correctly proved bounded local WebSocket and `cloudflared`
+resources, but focused mocked tests and a build did not prove a deployed
+Worker-to-hub handshake or bounded cloud request volume. `C-1` is now a
+production failure, not merely an unverified external gate. `C-14`, `Edge-8`,
+and the incident recovery slice make those missing seams explicit.
+
+### H6. Direct authorization inside every WebSocket attempt — IMPLEMENTED (2026-08-15)
+
+`CloudProjectionSessionClient` owns the single typed HTTPS authorization;
+the Worker session route asks the hub for a cached decision before any D1;
+the hub issues short-lived opaque grants stored as SHA-256 digests
+(StreamGrantRegistry, DO-storage persisted, bounded 256 entries, revoked with
+sockets on membership mutation); the grant-bearing upgrade validates without
+a membership query and the manager owns the only re-arm policy.
+
+The current upgrade mixes control-plane authorization with data-plane transport.
+Bun exposes a generic WebSocket error rather than the Worker's typed denial, so
+the client cannot reliably distinguish membership, protocol, and network
+failures. Every reconnect repeats the D1 membership decision and denial audit.
+
+**Target:** authorize once through a typed HTTPS stream-session request. The
+project hub issues a short-lived opaque grant, stored as a digest; grant-bearing
+WebSocket upgrade/reconnect performs no membership read. The manager persists
+terminal activation state and owns the only re-arm policy. The transport owns
+no retry timer.

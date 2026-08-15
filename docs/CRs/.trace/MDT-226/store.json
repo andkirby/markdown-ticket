@@ -27,17 +27,6 @@
       ]
     },
     {
-      "id": "BR-1.5",
-      "kind": "behavior",
-      "text": "WHILE the projection stream is unavailable, THE SYSTEM SHALL keep the last applied projection visible as stale and reconnect with bounded backoff.",
-      "sourceRef": "docs/CRs/MDT-226/requirements.md#br-15-disconnected-state",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:in-ticket",
-        "recovery"
-      ]
-    },
-    {
       "id": "BR-1.6",
       "kind": "behavior",
       "text": "WHEN another browser tab opens for the same local project, THE SYSTEM SHALL reuse the local server projection stream and SHALL NOT open another cloud connection.",
@@ -79,17 +68,6 @@
       "tags": [
         "timing:in-ticket",
         "authority"
-      ]
-    },
-    {
-      "id": "C-1",
-      "kind": "constraint",
-      "text": "A healthy connected local server SHALL perform zero D1 reads solely because time passes without project changes, reconnects, or authorization changes.",
-      "sourceRef": "docs/CRs/MDT-226/requirements.md#c-1-zero-idle-d1-reads",
-      "routePolicy": "tests",
-      "tags": [
-        "timing:in-ticket",
-        "performance"
       ]
     },
     {
@@ -156,17 +134,6 @@
       "tags": [
         "timing:in-ticket",
         "scope"
-      ]
-    },
-    {
-      "id": "C-10",
-      "kind": "constraint",
-      "text": "A stream SHALL be authorized at handshake, re-authorized after Durable Object hibernation before delivery, and reconnected no later than Access token expiry.",
-      "sourceRef": "docs/CRs/MDT-226/requirements.md#c-10-stream-authorization",
-      "routePolicy": "tests",
-      "tags": [
-        "timing:in-ticket",
-        "security"
       ]
     },
     {
@@ -302,6 +269,48 @@
       "text": "If cloudflared access token does not complete by its deadline, the local server SHALL signal that child to terminate, resolve the caller as unavailable, and SHALL NOT spawn another credential child until the prior child reports exit. The registered projection read model remains stale and its one background reconnect lane checks only cached human or configured service credentials.",
       "sourceRef": "docs/CRs/MDT-226/requirements.md#edge-7-hung-credential-acquisition",
       "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-8",
+      "kind": "edge_case",
+      "text": "When the Worker adds internal authorization headers before forwarding an accepted stream request to ProjectProjectionHub, it SHALL preserve the client's WebSocket upgrade headers. A deployed 101 Switching Protocols handshake is required before enabling automatic streams for an installation.",
+      "sourceRef": "requirements.md#edge-8-worker-to-hub-websocket-upgrade-preservation",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-1.5",
+      "kind": "behavior",
+      "text": "WHILE the projection stream is unavailable, THE SYSTEM SHALL keep the last applied projection visible as stale. A previously live stream MAY reconnect within a bounded transient-failure budget; authorization, configuration, and protocol failures SHALL remain paused until an explicit re-arm event.",
+      "sourceRef": "requirements.md#br-15-disconnected-state",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C-10",
+      "kind": "constraint",
+      "text": "A stream grant SHALL be authorized through Access and current D1 membership before the WebSocket handshake. The project hub SHALL validate the grant at handshake, re-authorize after Durable Object hibernation before delivery, and expire the grant no later than the underlying Access credential.",
+      "sourceRef": "requirements.md#c-10-stream-authorization",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-14",
+      "kind": "constraint",
+      "text": "Before opening a WebSocket, the local server SHALL obtain a typed stream grant through HTTPS. Authentication, authorization, and hidden-project outcomes (401, 403, and 404) SHALL persist a paused state. Protocol and deployment mismatches such as 426 SHALL persist an incompatible state. Neither state may retry until the activation fingerprint changes or an operator explicitly retries.",
+      "sourceRef": "requirements.md#c-14-failed-stream-handshake-containment",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-15",
+      "kind": "constraint",
+      "text": "For one unchanged activation fingerprint that has not reached live, automatic stream activation SHALL perform at most one D1 membership decision and at most one denial audit write. WebSocket reconnects with a valid stream grant SHALL perform no D1 membership read. Time passage, browser activity, and server restart SHALL NOT reset this budget.",
+      "sourceRef": "requirements.md#c-15-stream-d1-request-budget",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-1",
+      "kind": "constraint",
+      "text": "After stream activation settles into live or a terminal paused state, an enabled local server SHALL perform zero D1 statements solely because time passes without project, connection, credential, network, or operator change.",
+      "sourceRef": "requirements.md#c-1-zero-idle-d1-statements",
+      "routePolicy": "tests"
     }
   ],
   "scenarios": [
@@ -328,17 +337,6 @@
       "when": "its bounded reconnect succeeds with the last applied revision",
       "then": "the missing projection state is applied in revision order before the stream returns to live",
       "sourceRef": "docs/CRs/MDT-226/bdd.md#sc-4-reconnect-catches-up-before-live-delivery"
-    },
-    {
-      "id": "disconnected_board_stale",
-      "title": "Disconnected board remains usable and visibly stale",
-      "covers": [
-        "BR-1.5"
-      ],
-      "given": "the board has a previously applied cloud projection",
-      "when": "the cloud projection stream becomes unavailable",
-      "then": "the board keeps that projection visible, marks cloud state stale, and retries without blocking local ticket use",
-      "sourceRef": "docs/CRs/MDT-226/bdd.md#sc-5-disconnected-board-remains-usable-and-visibly-stale"
     },
     {
       "id": "revoked_member_disconnected",
@@ -395,6 +393,17 @@
       "when": "the project hub alarm runs or the backend reconnects",
       "then": "the backend receives committed projection state from its last acknowledged or persisted revision without periodic polling",
       "sourceRef": "docs/CRs/MDT-226/bdd.md#sc-7-post-commit-delivery-failure-converges"
+    },
+    {
+      "id": "disconnected_board_stale",
+      "title": "Disconnected board remains usable and visibly stale",
+      "covers": [
+        "BR-1.5"
+      ],
+      "given": "the board has a previously applied cloud projection",
+      "when": "the cloud projection stream becomes unavailable",
+      "then": "the board keeps that projection visible, marks cloud state stale, and shows whether recovery is transiently reconnecting or paused with an explicit next action, without blocking local ticket use",
+      "sourceRef": "bdd.md#sc-5-disconnected-board-remains-usable-and-visibly-stale"
     }
   ],
   "obligations": [
@@ -432,38 +441,6 @@
         "ART-stream-contract"
       ],
       "sourceRef": "docs/CRs/MDT-226/architecture.md#obl-commit-before-delivery"
-    },
-    {
-      "id": "OBL-stream-authorization",
-      "title": "Authorize stream handshakes and stop delivery after revocation or token expiry",
-      "derivedFrom": [
-        "BR-1.7",
-        "C-10",
-        "Edge-4"
-      ],
-      "artifactIds": [
-        "ART-worker-router",
-        "ART-project-hub",
-        "ART-stream-client",
-        "ART-stream-manager"
-      ],
-      "sourceRef": "docs/CRs/MDT-226/architecture.md#obl-stream-authorization"
-    },
-    {
-      "id": "OBL-zero-idle-reads",
-      "title": "Eliminate timer-driven D1 reads and bound delivery freshness",
-      "derivedFrom": [
-        "C-1",
-        "C-7",
-        "C-8",
-        "C-9"
-      ],
-      "artifactIds": [
-        "ART-project-hub",
-        "ART-stream-manager",
-        "ART-worker-config"
-      ],
-      "sourceRef": "docs/CRs/MDT-226/architecture.md#obl-zero-idle-reads"
     },
     {
       "id": "OBL-local-fanout",
@@ -621,6 +598,72 @@
         "ART-server-bootstrap"
       ],
       "sourceRef": "architecture.md § Local stream client, manager, and Access credential broker"
+    },
+    {
+      "id": "OBL-stream-authorization",
+      "title": "Authorize a typed stream session and revoke grants and sockets",
+      "derivedFrom": [
+        "BR-1.7",
+        "C-10",
+        "Edge-4"
+      ],
+      "artifactIds": [
+        "ART-worker-router",
+        "ART-project-hub",
+        "ART-stream-contract",
+        "ART-stream-session-client",
+        "ART-stream-state-store",
+        "ART-stream-client",
+        "ART-stream-manager"
+      ],
+      "sourceRef": "architecture.md#obl-stream-authorization"
+    },
+    {
+      "id": "OBL-zero-idle-reads",
+      "title": "Eliminate timer-driven D1 reads and bound delivery freshness",
+      "derivedFrom": [
+        "C-1",
+        "C-7",
+        "C-8",
+        "C-9",
+        "C-15"
+      ],
+      "artifactIds": [
+        "ART-project-hub",
+        "ART-stream-session-client",
+        "ART-stream-state-store",
+        "ART-stream-manager",
+        "ART-worker-config"
+      ],
+      "sourceRef": "architecture.md#obl-zero-idle-reads"
+    },
+    {
+      "id": "OBL-stream-failure-containment",
+      "title": "Authorize once, reuse stream grants, and persist failed activation",
+      "derivedFrom": [
+        "C-1",
+        "C-10",
+        "C-14",
+        "C-15",
+        "Edge-8"
+      ],
+      "artifactIds": [
+        "ART-stream-contract",
+        "ART-worker-router",
+        "ART-project-hub",
+        "ART-stream-session-client",
+        "ART-stream-state-store",
+        "ART-stream-client",
+        "ART-stream-manager",
+        "ART-server-bootstrap",
+        "ART-cloud-tests",
+        "ART-local-tests",
+        "ART-owner-docs",
+        "ART-data-doc",
+        "ART-identity-doc",
+        "ART-operations-doc"
+      ],
+      "sourceRef": "architecture.md#obl-stream-failure-containment"
     }
   ],
   "artifacts": [
@@ -785,6 +828,18 @@
       "path": "server/server.ts",
       "kind": "runtime",
       "sourceRef": "architecture.md § Access credential broker"
+    },
+    {
+      "id": "ART-stream-session-client",
+      "path": "shared/services/cloud-sync/CloudProjectionSessionClient.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#local-stream-session-client"
+    },
+    {
+      "id": "ART-stream-state-store",
+      "path": "shared/services/cloud-sync/projection-stream-state-store.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#local-stream-manager"
     }
   ],
   "testPlans": [
@@ -921,17 +976,6 @@
       "sourceRef": "CR:MDT-226"
     },
     {
-      "id": "TEST-idle-zero-d1",
-      "kind": "manual",
-      "title": "Connected idle project for 5+ former poll intervals observes zero timer-caused projection/membership D1 reads (statement counts)",
-      "covers": [
-        "C-1",
-        "C-7"
-      ],
-      "file": "cloud/test/operations/idle-zero-d1.md",
-      "sourceRef": "CR:MDT-226"
-    },
-    {
       "id": "TEST-delivery-latency-slo",
       "kind": "manual",
       "title": "p50/p95/p99 commit-to-rendered-browser under load <=2s p95; reconnect catch-up <=5s p95",
@@ -1010,7 +1054,7 @@
     {
       "id": "TEST-stream-client-transport",
       "kind": "integration",
-      "title": "Coalesce stream lifecycle and refresh authorization atomically",
+      "title": "Grant-bearing WebSocket transport has one handshake and no autonomous retry",
       "covers": [
         "C-6",
         "C-10",
@@ -1019,18 +1063,93 @@
         "C-3"
       ],
       "file": "shared/services/cloud-sync/tests/CloudProjectionStreamClient.test.ts",
-      "sourceRef": "CR:MDT-226"
+      "sourceRef": "tests.md#integration-local-server--controllable-ws-peer--fake-clock"
+    },
+    {
+      "id": "TEST-stream-session-client",
+      "kind": "integration",
+      "title": "Typed stream-session authorization performs one request and no retry",
+      "covers": [
+        "C-10",
+        "C-14",
+        "C-15"
+      ],
+      "file": "shared/services/cloud-sync/tests/CloudProjectionSessionClient.test.ts",
+      "sourceRef": "tests.md#integration-local-server--controllable-ws-peer--fake-clock"
+    },
+    {
+      "id": "TEST-stream-handshake-failure-classification",
+      "kind": "integration",
+      "title": "Manager persists terminal activation and re-arms only on approved events",
+      "covers": [
+        "BR-1.5",
+        "C-14",
+        "C-15"
+      ],
+      "file": "server/tests/services/cloud-sync/ProjectionStreamManager.test.ts",
+      "sourceRef": "tests.md#integration-local-server--controllable-ws-peer--fake-clock"
+    },
+    {
+      "id": "TEST-worker-hub-upgrade-forwarding",
+      "kind": "integration",
+      "title": "One session membership decision creates a revocable hub grant and upgrade adds no D1 read",
+      "covers": [
+        "C-10",
+        "C-14",
+        "C-15",
+        "Edge-8"
+      ],
+      "file": "cloud/test/projection-stream-upgrade.test.ts",
+      "sourceRef": "tests.md#integration-local-server--controllable-ws-peer--fake-clock"
     },
     {
       "id": "TEST-stream-manager-single-flight",
       "kind": "integration",
-      "title": "Keep one stream client per enabled project across concurrent starts and browser tabs",
+      "title": "Keep one activation per project and persist terminal state across restart",
       "covers": [
         "BR-1.6",
-        "C-13"
+        "C-13",
+        "C-15"
       ],
       "file": "server/tests/services/cloud-sync/ProjectionStreamManager.test.ts",
-      "sourceRef": "CR:MDT-226"
+      "sourceRef": "tests.md#integration-local-server--controllable-ws-peer--fake-clock"
+    },
+    {
+      "id": "TEST-idle-zero-d1",
+      "kind": "manual",
+      "title": "Live and terminal projects produce zero elapsed-time D1 statements for 30 minutes",
+      "covers": [
+        "C-1",
+        "C-7",
+        "C-15"
+      ],
+      "file": "cloud/test/operations/idle-zero-d1.md",
+      "sourceRef": "tests.md#manual-deployed-limited-production-probe--live-worker--operator"
+    },
+    {
+      "id": "TEST-deployed-stream-handshake",
+      "kind": "manual",
+      "title": "Deployed session grant reaches ready, reconnects without D1, and terminal state stays paused",
+      "covers": [
+        "C-10",
+        "C-14",
+        "C-15",
+        "Edge-8"
+      ],
+      "file": "cloud/test/operations/projection-stream-handshake.md",
+      "sourceRef": "tests.md#manual-deployed-limited-production-probe--live-worker--operator"
+    },
+    {
+      "id": "TEST-stream-status-local-only",
+      "kind": "integration",
+      "title": "Cloud-sync status reads local activation state without cloud traffic",
+      "covers": [
+        "BR-1.5",
+        "C-11",
+        "C-15"
+      ],
+      "file": "server/tests/services/cloud-sync/ProjectionStreamManager.test.ts",
+      "sourceRef": "tests.md#integration-local-server--controllable-ws-peer--fake-clock"
     }
   ],
   "tasks": [
@@ -1197,6 +1316,39 @@
         "typescript"
       ],
       "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "TASK-stream-incident-recovery",
+      "title": "Slice 8: authorize once, reuse hub grants, persist activation state, and prove zero retry-driven D1",
+      "ownsArtifactIds": [
+        "ART-stream-contract",
+        "ART-worker-router",
+        "ART-project-hub",
+        "ART-stream-session-client",
+        "ART-stream-client",
+        "ART-stream-state-store",
+        "ART-stream-manager",
+        "ART-server-bootstrap",
+        "ART-cloud-tests",
+        "ART-local-tests",
+        "ART-owner-docs",
+        "ART-data-doc",
+        "ART-identity-doc",
+        "ART-operations-doc"
+      ],
+      "makesGreenIds": [
+        "TEST-stream-session-client",
+        "TEST-stream-handshake-failure-classification",
+        "TEST-stream-status-local-only",
+        "TEST-worker-hub-upgrade-forwarding",
+        "TEST-deployed-stream-handshake",
+        "TEST-idle-zero-d1"
+      ],
+      "skills": [
+        "cloudflare",
+        "workers-best-practices"
+      ],
+      "sourceRef": "tasks.md#slice-8--incident-recovery-failed-stream-containment"
     }
   ]
 }
