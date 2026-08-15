@@ -70,17 +70,19 @@
 }
 
 /* Print styles */
-@media print {
-  .no-print {
-    display: none !important;
-  }
-  
-  .print-break-before {
-    page-break-before: always;
-  }
-  
-  .print-break-inside-avoid {
-    page-break-inside: avoid;
+@layer utilities {
+  @media print {
+    .no-print {
+      display: none !important;
+    }
+
+    .print-break-before {
+      page-break-before: always;
+    }
+
+    .print-break-inside-avoid {
+      page-break-inside: avoid;
+    }
   }
 }
 
@@ -103,55 +105,57 @@
 }
 
 /* Responsive utilities */
-@media (max-width: 640px) {
-  .mobile-full-width {
-    @apply w-full;
-  }
-  
-  .mobile-stack {
-    @apply flex-col space-y-2 space-x-0;
-  }
-}
+@layer utilities {
+  @media (max-width: 640px) {
+    .mobile-full-width {
+      @apply w-full;
+    }
 
-/* Print utilities */
-@media print {
-  .print-hidden {
-    display: none !important;
+    .mobile-stack {
+      @apply flex-col space-y-2 space-x-0;
+    }
   }
-  
-  .print-block {
-    display: block !important;
-  }
-  
-  .print-inline {
-    display: inline !important;
-  }
-  
-  .print-inline-block {
-    display: inline-block !important;
-  }
-}
 
-/* Accessibility utilities */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
+  /* Print utilities */
+  @media print {
+    .print-hidden {
+      display: none !important;
+    }
 
-.not-sr-only {
-  position: static;
-  width: auto;
-  height: auto;
-  padding: 0;
-  margin: 0;
-  overflow: visible;
-  clip: auto;
-  white-space: normal;
+    .print-block {
+      display: block !important;
+    }
+
+    .print-inline {
+      display: inline !important;
+    }
+
+    .print-inline-block {
+      display: inline-block !important;
+    }
+  }
+
+  /* Accessibility utilities */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .not-sr-only {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: 0;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
 }
