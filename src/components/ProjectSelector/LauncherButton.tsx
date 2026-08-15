@@ -55,7 +55,7 @@ const LauncherButton: React.FC<LauncherButtonProps> = ({
       title="Open project selector panel"
       type="button"
     >
-      <Plus className="w-5 h-5 project-launcher__icon" />
+      <Plus className="project-launcher__icon" />
     </button>
   )
 }

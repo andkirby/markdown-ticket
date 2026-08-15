@@ -407,8 +407,10 @@
     color: var(--text-muted);
   }
 
-  /* Launcher plus-icon color (v3) */
+  /* Launcher plus-icon (v3) — color + 20px size (was w-5 h-5 on the lucide
+     Plus in markup; no 20px token exists, --sz-icon is 16px). */
   .project-launcher__icon {
+    @apply h-5 w-5;
     color: var(--text-muted);
   }
 }

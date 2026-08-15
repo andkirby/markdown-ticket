@@ -23,7 +23,7 @@ export interface TypeBadgeProps extends TypeVariantProps {
  *
  * @example
  * <TypeBadge type="Feature Enhancement" />
- * <TypeBadge type="Bug Fix" className="ml-2" />
+ * <TypeBadge type="Bug Fix" className="custom-class" />
  */
 export function TypeBadge({ type, className, ...props }: TypeBadgeProps & React.HTMLAttributes<HTMLDivElement>) {
   return (
