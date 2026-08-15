@@ -36,12 +36,14 @@
     border-color: oklch(var(--border));
     background-color: oklch(var(--background));
     color: oklch(var(--foreground));
-  }
-  .documents-view__search-input::placeholder {
-    color: var(--text-muted);
-  }
-  .documents-view__search-input:focus-visible {
-    border-color: color-mix(in srgb, oklch(var(--primary)) 50%, transparent);
+
+    &::placeholder {
+      color: var(--text-muted);
+    }
+
+    &:focus-visible {
+      border-color: color-mix(in srgb, oklch(var(--primary)) 50%, transparent);
+    }
   }
 
   /* ── Empty / loading / error states ── */
@@ -110,12 +112,14 @@
      scroll/configure actions in the navigation toolbar. */
   .documents-view__icon-button {
     @apply p-1 rounded transition-colors;
-  }
-  .documents-view__icon-button:hover {
-    background-color: var(--bg-muted);
-  }
-  .documents-view__icon-button:disabled {
-    @apply cursor-not-allowed opacity-40;
+
+    &:hover {
+      background-color: var(--bg-muted);
+    }
+
+    &:disabled {
+      @apply cursor-not-allowed opacity-40;
+    }
   }
   .documents-view__icon-button-icon {
     @apply h-4 w-4;
@@ -138,9 +142,10 @@
     @apply inline-flex h-8 w-7 flex-shrink-0 items-center justify-center border transition-colors;
     border-color: oklch(var(--border));
     background-color: var(--bg-muted);
-  }
-  .documents-view__sort-direction-button:hover {
-    background-color: var(--bg-muted);
+
+    &:hover {
+      background-color: var(--bg-muted);
+    }
   }
 
   .documents-view__resize-handle {
@@ -157,9 +162,10 @@
     border-color: oklch(var(--border));
     background-color: var(--bg-elevated);
     color: var(--text-muted);
-  }
-  .documents-view__navigation-expand:hover {
-    background-color: var(--bg-muted);
+
+    &:hover {
+      background-color: var(--bg-muted);
+    }
   }
 
   .documents-view__viewer-panel {
