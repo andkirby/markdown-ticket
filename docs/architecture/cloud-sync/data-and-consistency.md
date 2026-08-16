@@ -295,7 +295,11 @@ and `project_revision`. A send does not count as delivery. Each active socket
 acknowledges only after its local read model applies and persists state; the hub
 stores that cursor in the socket attachment. The alarm stays armed while an
 active authorized socket is behind and replays a bounded catch-up from its
-acknowledged cursor. A disconnected server catches up when it reconnects.
+acknowledged cursor. The replay is bounded in count as well: a socket that makes
+no acknowledgement progress across three alarm passes is closed
+(`ack_timeout`) and recovers by reconnecting — a stuck client must not turn the
+alarm into a D1 polling loop. A disconnected server catches up when it
+reconnects.
 
 Recovery promises final-state convergence. The latest-row projection table is
 not an event log of every intermediate edit, so catch-up can contain sparse

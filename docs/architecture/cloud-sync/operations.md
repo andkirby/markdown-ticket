@@ -219,6 +219,12 @@ Every request emits one redacted structured completion event:
 }
 ```
 
+The project hub emits the same redacted shape for delivery diagnostics:
+`hub_alarm_pass` (socket count), `hub_socket_close` (close code, reason,
+acknowledged revision), and `hub_ws_close`/`hub_ws_error` on transport
+termination. `reason: ack_timeout` is the bounded-replay containment closing a
+socket that made no acknowledgement progress (see data-and-consistency.md).
+
 Do not log raw request bodies, projected titles, assignee values, email beyond
 the durable audit requirement, filesystem paths, tokens, cookies, assertions,
 or SQL parameters. Project, principal, outcome, and resource attribution lives
@@ -324,8 +330,10 @@ The local POC is correctness evidence, not a capacity result.
 3. Inspect D1 project revision, each active socket's acknowledged revision,
    reconnect rate, and alarm retry state.
 4. If an active socket is behind, allow the armed alarm to send bounded catch-up
-   from its acknowledged cursor; if disconnected, verify reconnect catch-up.
-   Duplicate delivery is safe and sparse catch-up revisions are expected.
+   from its acknowledged cursor; a socket with no acknowledgement progress is
+   closed `ack_timeout` after three passes and recovers by reconnecting. If
+   disconnected, verify reconnect catch-up. Duplicate delivery is safe and
+   sparse catch-up revisions are expected.
 5. If reconnects are storming, open the activation circuit. Do not rely on
    backoff to contain request volume.
 6. Verify one typed session decision, grant reuse without membership reads, one
