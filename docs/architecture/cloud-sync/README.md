@@ -221,9 +221,11 @@ The stream manager never launches an interactive login merely because the
 server started. It registers one stale read model/reconnect owner immediately. A
 machine credential can connect headlessly; a human connection remains
 `authentication_required` until an owner action makes a valid `cloudflared`
-application token available in the process broker. Background reconnect checks
+application token available in the process broker — that same action re-arms
+the pause, so the stream connects without a restart. Background reconnect checks
 that cache and never spawns `cloudflared`. Concurrent manager starts and browser
-mounts do not add clients. Project, credential, or protocol change; membership
+mounts do not add clients. Project, credential, or protocol change (including a
+credential becoming available to the process broker); membership
 reconciliation; a successful explicit cloud operation after a transport-only
 failure; or operator retry is required to re-arm a paused activation. Routine
 refresh of the same token does not change the activation fingerprint.

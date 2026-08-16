@@ -332,7 +332,7 @@ export class ProjectProjectionHub extends DurableObject<ProjectProjectionHubEnv>
           ? 0
           : (attachment.alarmPassesWithoutProgress ?? 0) + 1
         socket.serializeAttachment(attachment)
-        if (attachment.alarmPassesWithoutProgress > MAX_ALARM_PASSES_WITHOUT_PROGRESS) {
+        if (attachment.alarmPassesWithoutProgress >= MAX_ALARM_PASSES_WITHOUT_PROGRESS) {
           this.closeSocket(socket, 1008, 'ack_timeout')
           continue
         }
