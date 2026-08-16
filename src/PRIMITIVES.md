@@ -106,4 +106,4 @@ human-owned preserves the annotations a script can't author.
 | Class | Purpose | File |
 |-------|---------|------|
 | `.settings-*` | Settings modal | `components/SettingsModal/settings.css` |
-| `.tab`, `.tab__*`, `.tab--*` | Shared Radix Tabs pattern | `components/SettingsModal/settings.css` |
+| `.tab`, `.tab__*`, `.tab--*` | Shared underline-tab object (every tab strip; also consumed by styleguide.html) | `styles/components/tabs.css` |

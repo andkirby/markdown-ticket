@@ -11,6 +11,7 @@
     takes over). Open directly or serve from src/.
   -->
   <link rel="stylesheet" href="styles/design-tokens.css" />
+  <link rel="stylesheet" href="styles/components/tabs.css" />
   <style>
     :root { color-scheme: light dark; }
     body {
@@ -268,13 +269,14 @@
     .state-row small { margin-left: auto; white-space: nowrap; }
     .state-side { display: flex; flex-direction: column; gap: .35rem; }
     .state-side > label { font-size: .7rem; color: var(--text-subtle); }
-    .state-pills, .state-tabs { display: flex; align-items: center; gap: .35rem; padding: .5rem .6rem; background: var(--bg-subtle); border-radius: var(--radius-input); }
+    .state-pills { display: flex; align-items: center; gap: .35rem; padding: .5rem .6rem; background: var(--bg-subtle); border-radius: var(--radius-input); }
+    /* pills demo mirrors .search-scope-bar__tab (QuickSearch) — feature-local there */
     .state-pill { padding: .25rem .7rem; border-radius: var(--radius-input); font-size: .78rem; font-weight: 500; color: var(--text-muted); cursor: pointer; }
     .state-pill:hover { background: var(--state-hover-bg); }
     .state-pill.is-active { background: oklch(var(--primary)); color: oklch(var(--primary-foreground)); }
-    .state-tab { padding: .4rem .65rem .35rem; font-size: .8rem; font-weight: 500; color: var(--text-muted); border-bottom: 2px solid transparent; cursor: pointer; }
-    .state-tab:hover { color: oklch(var(--foreground)); }
-    .state-tab.is-active { color: var(--state-active-fg); border-bottom-color: var(--state-active-fg); }
+    /* tabs demo uses the REAL shared object (styles/components/tabs.css) — not a copy */
+    .state-demo .tab__list { border-radius: var(--radius-input) var(--radius-input) 0 0; }
+    .tab { cursor: pointer; }
   </style>
 
   <h2>interaction-state ramp · hover vs active/selected</h2>
@@ -292,11 +294,11 @@
         <span class="state-pill is-active">Open</span>
         <span class="state-pill">Done</span>
       </div>
-      <label>tabs · underline only</label>
-      <div class="state-tabs">
-        <span class="state-tab">Overview</span>
-        <span class="state-tab is-active">Comments</span>
-        <span class="state-tab">Activity</span>
+      <label>tabs · underline only — the real shared .tab object</label>
+      <div class="tab__list">
+        <span class="tab">Overview</span>
+        <span class="tab" data-state="active">Comments</span>
+        <span class="tab">Activity</span>
       </div>
     </div>
   </div>
