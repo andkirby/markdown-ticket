@@ -1,8 +1,8 @@
 # Deployed Stream-Session Handshake Evidence — MDT-226
 
 Manual evidence target for `TEST-deployed-stream-handshake`
-(C-10, C-14, C-15, Edge-8). This file defines the deployed limited-production
-procedure; it does not claim the check has run. Do not enable automatic
+(C-10, C-14, C-15, Edge-8). The Result section records the 2026-08-15
+deployed run; the still-open items are listed there. Do not enable automatic
 streams (`MDT_PROJECTION_STREAM_ROLLOUT=true`) for an installation until every
 item below is recorded.
 

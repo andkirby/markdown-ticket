@@ -223,17 +223,21 @@ flowchart LR
 
 ### Functional
 
-- [ ] An enabled cloud project with a valid server-side credential establishes
+- [x] An enabled cloud project with a valid server-side credential establishes
   exactly one authenticated upstream projection stream per local server,
   regardless of browser-tab count.
-  _Component-tested (`ProjectionStreamManager.test.ts`); server bootstrap wiring
-  exists in `server/server.ts`; deployed credential/Worker round-trip still needs
-  UAT evidence._
-- [ ] Initial connection and reconnect send `afterRevision`, apply catch-up,
+  _Deployed 2026-08-15 with the real local server behind the rollout flag: one
+  session authorization → grant → `101` → live per project
+  (projection-stream-handshake.md). Tab independence is structural — the
+  browser owns no cloud transport; the multi-tab drill belongs to the open
+  browser E2E below._
+- [x] Initial connection and reconnect send `afterRevision`, apply catch-up,
   accept sparse catch-up revisions, and become live only after applying the
   final `ready` high-water cursor.
-  _Component-tested; server bootstrap wiring exists; deployed catch-up evidence
-  remains pending._
+  _Deployed: catch-up deltas followed by `ready` before `live/stream_live`;
+  reconnects across transport drops and server restarts re-entered via the
+  grant and caught up again (projection-stream-handshake.md). Sparse-catch-up
+  acceptance is component-tested._
 - [x] Each project has at most one in-flight connection attempt and one
   reconnect/expiry timer; `error` plus `close`, catch-up close, and stale
   callbacks cannot create parallel reconnect lanes.
@@ -244,17 +248,19 @@ flowchart LR
   keeps startup/reconnect non-interactive, supports service-token stream headers,
   serializes `cloudflared` children, and signals deadline overruns without
   spawning a replacement before exit.
-- [ ] A committed projection is delivered as a complete approved header without
+- [x] A committed projection is delivered as a complete approved header without
   waiting for a periodic client request.
-  _Server path is wired; deployed commit-to-local-read-model/browser evidence is
-  still pending._
-- [ ] The local server persists the revision after applying the delta and fans
+  _Deployed: journal publishes committed in D1 arrived as live deltas and the
+  read-model cursor advanced 39→44 with the stream continuously live
+  (projection-stream-handshake.md)._
+- [x] The local server persists the revision after applying the delta and fans
   out an ordinary ticket change through existing local SSE; it sends `ack` only
   after state and cursor persistence succeeds.
-  _Ack-after-persistence is component-tested; `server/server.ts` wires
-  `ProjectionStreamManager`, the read-model provider, and
-  `FileWatcherService.broadcastProjectionChange`; live deployed evidence remains
-  pending._
+  _Deployed: `ready` → `ack` observed; the incident proved the failure
+  direction (persist ENOENT → no `ack` → alarm replay; issues-found §I4), and
+  the cursor survived restart without replay. SSE fan-out rides the ordinary
+  ticket-change broadcaster (component-tested; browser-level receipt is the
+  open browser E2E below)._
 - [x] `/api/projects/:id/tickets/unified` returns canonical local tickets and
   projection-only read-only entries as one collection; local tickets win on
   duplicate ticket number.
@@ -272,15 +278,17 @@ flowchart LR
   sparse accepted, live-gap detection._
 - [x] A disconnected board keeps the last projection visible and marks it stale.
   _Read-model stale-without-losing-entries tested._
-- [ ] A failure after D1 commit and before acknowledgement by an active socket
+- [x] A failure after D1 commit and before acknowledgement by an active socket
   converges through per-socket alarm replay or reconnect without polling.
-  _Manual deployed gate only (C-7/Edge-1); hibernation/alarm not in the
-  automated suite._
+  _Observed deployed during the 2026-08-15 incident and fix (issues-found
+  §I4–§I6): committed-but-unacked revisions triggered hub alarm replay, and
+  after the persist fix the journal drained through reconnect catch-up. Replay
+  is bounded — three alarm passes without ack progress close the socket._
 - [ ] Revocation/suspension closes or excludes active sockets before any later
   projection delivery.
-  _`revokeSockets` now returns its queued work (enqueueResult); the
-  hibernation-runtime revocation behavior remains a manual deployed gate
-  (Edge-4)._
+  _Not exercised during the 2026-08-15 deployed validation — no live principal
+  was revoked. `revokeSockets` returns its queued work (enqueueResult); the
+  hibernation-runtime revocation drill remains the manual Edge-4 gate._
 - [x] Local Markdown tickets remain authoritative over same-number projections.
   _Read-model local-wins merge tested._
 - [x] Version 1 connection files migrate to version 2 without changing project
@@ -292,21 +300,20 @@ flowchart LR
 
 - [ ] After activation settles into live or a terminal paused state, a project
   with no external state change performs zero D1 statements as time passes.
-  _FAILED in production on 2026-08-15; containment implemented 2026-08-15
-  (session/grant split, terminal pause persistence, no timer-driven retry;
-  automatic streams behind the rollout flag, default off). Local incident tests
-  green; the deployed 30-minute TEST-idle-zero-d1 statement count remains the
-  accepting evidence._
-- [ ] One unchanged non-live activation performs at most one D1 membership
+  _Contained and measured 2026-08-15 (idle-zero-d1.md): ~29 reads/minute before
+  the alarm fix → 2 projection reads over 5 live minutes, zero Worker requests
+  over a 3-minute idle window, zero for 70+ s after restart. The accepting
+  evidence remains the formal 30-minute instrumented D1 statement count
+  (TEST-idle-zero-d1)._
+- [x] One unchanged non-live activation performs at most one D1 membership
   decision and one denial audit; grant reconnect, elapsed time, browser activity,
   and server restart add no D1 statement.
-  _FAILED in the 2026-08-15 incident (238 membership reads + 111 denied-audit
-  inserts in an idle 30-minute sample); enforced locally since 2026-08-15 by
-  hub-cached session decisions, digest-stored grants, the persisted activation
-  fingerprint, and the manager-owned re-arm policy. Proven by
-  TEST-stream-session-client, TEST-worker-hub-upgrade-forwarding, and
-  TEST-stream-handshake-failure-classification; deployed confirmation is the
-  TEST-deployed-stream-handshake gate._
+  _Deployed 2026-08-15 (projection-stream-handshake.md): the denied project made
+  one membership decision, then stayed terminal across restarts with zero
+  traffic (the pre-fix 111-audits-per-30-min loop stopped); grant rotation
+  re-entered without membership reads (2 projection reads, 0 membership reads
+  over 5 live minutes). Statement-level confirmation rides with the formal
+  TEST-idle-zero-d1 window._
 - [ ] Healthy connected delivery reaches the unified local ticket read model
   and connected browser within 2 seconds at p95 under the documented test load.
   _External gate; not measured. No automated SLO test._
@@ -314,7 +321,9 @@ flowchart LR
   _External gate; not measured._
 - [ ] The hub uses the Hibernation WebSocket API and alarms; no interval or
   application keepalive keeps it active.
-  _Designed but not verified by the automated suite (manual gate C-7)._
+  _Informal deployed evidence exists (hub silent over idle windows; alarm
+  diagnostics fire only when armed by commits); the formal C-7 confirmation —
+  including restore after Durable Object eviction — remains a manual gate._
 - [x] Stream payloads contain approved projection headers and delivery metadata
   only, never ticket bodies or Cloudflare credentials.
   _`recordToCatchup` envelope mapping + forbidden-field recursion tested._
@@ -330,17 +339,18 @@ flowchart LR
 - [ ] Worker tests prove explicit operation serialization, hibernation restore,
   commit-before-broadcast, per-socket acknowledgement/alarm recovery,
   membership revocation, and payload redaction.
-  _Partial: operation-queue serialization + payload redaction proven by the
-  hub pure-logic tests; hibernation/alarm/revocation are manual deployed
-  gates only. See architecture.md § Verification Architecture._
-- [ ] Local tests prove one stream per project, bounded reconnect, cursor
+  _Serialization, payload redaction, and bounded alarm replay (three-pass
+  `ack_timeout` close) are covered by hub pure-logic tests; hibernation restore
+  and membership revocation in the hibernating runtime remain manual deployed
+  gates. See architecture.md § Verification Architecture._
+- [x] Local tests prove one stream per project, bounded reconnect, cursor
   persistence before acknowledgement, sparse catch-up, live-gap handling, and
   SSE fan-out.
-  _Component-tested in isolation (`ProjectionStreamManager`, read model, SSE
-  fan-out helper). The incident-recovery slice adds the automated incident
-  tests (session client, upgrade forwarding, failure classification,
-  local-only status); the deployed Worker-to-hub round-trip remains unproven
-  until the TEST-deployed-stream-handshake probe runs._
+  _All six properties covered by component suites (`ProjectionStreamManager`
+  21 tests including one-attempt/one-timer lanes and the 30 s rotation floor;
+  read-model sparse/live-gap; stream client no-timer contract; SSE fan-out
+  helper). The deployed Worker-to-hub round-trip blocker was cleared by the
+  2026-08-15 gate run._
 - [x] Local resource-bound tests prove compound transport termination and
   catch-up replacement and concurrent manager starts create one connection,
   concurrent credential callers share one acquisition, background refresh is
@@ -349,12 +359,17 @@ flowchart LR
 - [ ] Browser E2E proves a remote projection appears without calling the legacy
   polling endpoint, is received as an ordinary ticket update, and additional
   tabs create no cloud traffic.
-  _`cloud-sync-board.spec.ts` mocks the unified endpoint via `page.route`; it
-  proves the board's render contract, not a live server/cloud round-trip._
-- [ ] An idle-traffic test holds a connected project open for at least five
+  _`cloud-sync-board.spec.ts` still mocks the unified endpoint via
+  `page.route`; the server-side feed it would consume is now deployed-live
+  (cursor advanced via push). Missing: a live-server E2E or manual browser
+  drill against a real pushed projection — multi-tab case and the
+  `kind/readOnly/stale` normalization regression noted above included._
+- [x] An idle-traffic test holds a connected project open for at least five
   former poll intervals and observes zero projection or membership D1 reads.
-  _FAILED 2026-08-15: approximately 170 D1 statements per 15 minutes while two
-  configured streams repeatedly failed to upgrade._
+  _Deployed (idle-zero-d1.md): a 3-minute idle window — twelve former 15 s
+  intervals — with one live and one terminal project recorded zero Worker
+  requests, hence zero D1 reads. The formal 30-minute instrumented count for
+  C-1 is tracked separately above._
 - [x] A write-journal test proves reads never trigger drains, retries honor
   persisted backoff, and missing projections become terminal `unmanaged`.
   _`projection-sync.test.ts` (terminal-no-retry) +
