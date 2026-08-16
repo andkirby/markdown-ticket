@@ -22,6 +22,28 @@ fi
 
 echo "✅ Found MDT project"
 
+# Read a variable with the app's env cascade: real environment > .env.local > .env
+# (mirrors server/server.ts dotenv precedence; MDT-117)
+read_env_var() {
+    local key="$1" default="$2" value=""
+    value="${!key}"
+    if [ -z "$value" ]; then
+        local f
+        for f in .env.local .env; do
+            if [ -f "$f" ]; then
+                value="$(grep -E "^[[:space:]]*${key}=" "$f" | tail -1 | cut -d= -f2- | tr -d '"' | tr -d "'" | xargs)"
+                [ -n "$value" ] && break
+            fi
+        done
+    fi
+    echo "${value:-$default}"
+}
+
+# Resolve ports exactly like the servers do (MDT-117): BACKEND_PORT / FRONTEND_PORT
+# with the deprecated PORT fallback, then canonical defaults (dev: 3075 / 3001).
+BACKEND_PORT="$(read_env_var BACKEND_PORT "$(read_env_var PORT 3001)")"
+FRONTEND_PORT="$(read_env_var FRONTEND_PORT "$(read_env_var PORT 3075)")"
+
 # Function to kill processes on specific ports
 kill_processes_on_ports() {
     local ports=("$@")
@@ -41,7 +63,7 @@ kill_processes_on_ports() {
 # Function to stop all running processes
 stop_processes() {
     echo "🛑 Stopping MDT processes..."
-    kill_processes_on_ports 3075 3001
+    kill_processes_on_ports "$FRONTEND_PORT" "$BACKEND_PORT"
     echo "✅ All processes stopped"
 }
 
@@ -57,8 +79,8 @@ elif [ "$1" = "help" ] || [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
     echo ""
     echo "Options:"
     echo "  both (default)   - Start both frontend and backend servers"
-    echo "  frontend         - Start frontend server only (port 3075)"
-    echo "  backend          - Start backend server only (port 3001)"
+    echo "  frontend         - Start frontend server only (port ${FRONTEND_PORT})"
+    echo "  backend          - Start backend server only (port ${BACKEND_PORT})"
     echo "  stop             - Stop all running servers"
     echo "  help, --help, -h - Show this help message"
     echo ""
@@ -96,9 +118,9 @@ echo "📁 Creating tasks directory..."
 mkdir -p tasks
 
 
-# Kill existing processes on default ports
-echo "🔍 Checking for existing processes on default ports..."
-kill_processes_on_ports 3075 3001
+# Kill existing processes on the configured ports (.env / .env.local aware)
+echo "🔍 Checking for existing processes on configured ports..."
+kill_processes_on_ports "$FRONTEND_PORT" "$BACKEND_PORT"
 
 # Check if nodemon is installed for development
 if ! command -v nodemon &> /dev/null; then
@@ -129,8 +151,8 @@ else
     echo ""
     echo "Options:"
     echo "  both (default)   - Start both frontend and backend servers"
-    echo "  frontend         - Start frontend server only (port 3075)"
-    echo "  backend          - Start backend server only (port 3001)" 
+    echo "  frontend         - Start frontend server only (port ${FRONTEND_PORT})"
+    echo "  backend          - Start backend server only (port ${BACKEND_PORT})"
     echo "  stop             - Stop all running servers"
     exit 1
 fi
