@@ -33,5 +33,5 @@
     "docs/**"
   ],
   "ignoreBinaries": ["jq", "prettier", "rimraf", "rg"],
-  "ignoreDependencies": ["happy-dom", "swagger-jsdoc", "@typescript-eslint/eslint-plugin", "@typescript-eslint/parser"]
+  "ignoreDependencies": ["happy-dom", "swagger-jsdoc", "@typescript-eslint/eslint-plugin", "@typescript-eslint/parser", "markdownlint-cli2"]
 }
