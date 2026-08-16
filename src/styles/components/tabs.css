@@ -1,0 +1,51 @@
+/* Shared tab object (underline tabs) — the ONE implementation for every
+   underline-tab strip (Settings modal, ticket document tabs, filename tabs,
+   styleguide demo). Pure CSS (no @apply) so this file also renders standalone
+   in browser-served contexts (src/styleguide.html links it directly next to
+   design-tokens.css). Do not add @apply here.
+
+   Consumed by Radix Tabs (<Tabs.List className="tab__list">, trigger .tab,
+   content .tab__content). Active state = the interaction-state ramp's signal
+   token (--state-active-fg underline, no fill); state hierarchy: the active
+   rule is declared after :hover so active absorbs hover (STYLING.md
+   §Interaction-state ramp). */
+
+@layer components {
+  .tab__list {
+    display: flex;
+    overflow-x: auto;
+    padding: 0 1rem;
+    background-color: var(--bg-subtle);
+    border-bottom: 1px solid oklch(var(--border));
+  }
+
+  .tab {
+    padding: 0.375rem 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    color: var(--text-muted);
+
+    &:hover {
+      color: oklch(var(--foreground));
+    }
+
+    /* Active: underline-only signal from the state ramp. Declared after
+       &:hover so an active tab never demotes on hover. */
+    &[data-state='active'] {
+      border-bottom: 2px solid var(--state-active-fg);
+      color: oklch(var(--foreground));
+    }
+  }
+
+  .tab--fill {
+    flex: 1 1 0%;
+  }
+
+  .tab__content {
+    padding: 1rem;
+    outline: none;
+  }
+}

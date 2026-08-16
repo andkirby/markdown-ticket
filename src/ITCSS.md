@@ -83,7 +83,7 @@ Current state, audited against `src/index.css` import order.
 | 2 | **Tools** | `styles/animations.css` (keyframes) | unlayered | ⚠️ no formal mixins; `@apply` + `color-mix()` are the ad-hoc tools |
 | 3 | **Generic** | `styles/base.css` (reset portion, `*`, `html`, `body` box rules) | `@layer base` | ⚠️ combined with Elements |
 | 4 | **Elements** | `styles/base.css` (`h1`–`h6`, `a`, `code`, type scale) | `@layer base` | ⚠️ combined with Generic |
-| 5 | **Objects** | `styles/components/{buttons,forms,overlays,loading,layout}.css` | `@layer components` | ✅ shared primitives, UI-agnostic |
+| 5 | **Objects** | `styles/components/{buttons,forms,tabs,overlays,loading,layout}.css` | `@layer components` | ✅ shared primitives, UI-agnostic |
 | 6 | **Components** | `components/**/*.css` + `styles/prose.css` + `styles/wireloom-annotations.css` + `styles/entities/fav-star.css` | `@layer components` (mostly) | ⚠️ `AccentColorPicker.css` unlayered |
 | 7 | **Utilities** | `styles/utilities.css` | `@layer utilities` (partly) | ⚠️ `.sr-only`, `.not-sr-only`, print/responsive sit outside any layer |
 

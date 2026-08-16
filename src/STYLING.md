@@ -471,10 +471,14 @@ Variants). When you extract a new shared primitive, add a row to PRIMITIVES.md.
 
 ### Shared Tabs
 
-Use the Ticket Viewer tab rows as the canonical spacing pattern:
+The ONE underline-tab implementation is the shared object in
+[`styles/components/tabs.css`](styles/components/tabs.css) — every tab strip
+(Settings modal, ticket document tabs, filename tabs) consumes it, and
+`styleguide.html` demos the same classes (no parallel demo classes). It is pure
+CSS (no `@apply`) so it renders standalone in browser-served contexts. Canonical spacing pattern:
 
 ```tsx
-<Tabs.List className="tab__list overflow-x-auto scrollbar-hide">
+<Tabs.List className="tab__list scrollbar-hide">
   <Tabs.Trigger className="tab mr-3 last:mr-0">Main</Tabs.Trigger>
   <Tabs.Trigger className="tab mr-3 last:mr-0">architecture.md</Tabs.Trigger>
 </Tabs.List>

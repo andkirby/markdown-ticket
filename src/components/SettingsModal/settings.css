@@ -1,32 +1,11 @@
-/* Settings modal styles and shared Radix Tabs pattern */
+/* Settings modal styles.
+   Shared tab object (.tab/.tab__list/.tab__content) lives in
+   styles/components/tabs.css — do not redeclare tab styles here. */
 
 @layer components {
-  /* Tabs — shared Radix Tabs pattern */
-  .tab__list {
-    @apply flex overflow-x-auto px-4 py-0;
-    background-color: var(--bg-subtle);
-    border-bottom: 1px solid oklch(var(--border));
-  }
-
-  .tab {
-    @apply px-2 py-1.5 text-sm font-medium transition-colors hover:text-foreground whitespace-nowrap;
-    color: var(--text-muted);
-  }
-
-  .tab[data-state='active'] {
-    @apply border-b-2 border-primary text-foreground;
-  }
-
-  .tab--fill {
-    @apply flex-1;
-  }
-
+  /* Settings surface variant layered on .tab__list */
   .settings-tab-list {
     background-color: var(--bg-subtle);
-  }
-
-  .tab__content {
-    @apply p-4 outline-none;
   }
 
   /* TW→semantic migrations (see src/ITCSS-migration-map.md) */
