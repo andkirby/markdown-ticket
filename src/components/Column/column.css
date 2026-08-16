@@ -35,9 +35,9 @@
     overflow: hidden;
   }
 
-  /* Column drop-target highlight — v3: primary-light tint + primary ring (no shadow) */
+  /* Column drop-target highlight — v3: active-tier fill + subdued primary ring (no shadow) */
   .column--over {
-    background: var(--primary-light);
+    background: var(--state-active-bg);
     @apply ring-2 ring-primary/40;
   }
 
@@ -121,7 +121,7 @@
     transition: background-color 0.15s ease-out;
   }
   .column__collapsed:hover {
-    background: var(--bg-muted);
+    background: var(--state-hover-bg);
     border-color: var(--border-strong);
   }
 
@@ -149,7 +149,7 @@
     color: var(--text-subtle);
   }
   .col-collapse-btn:hover {
-    background: var(--bg-muted);
+    background: var(--state-hover-bg);
     color: oklch(var(--foreground));
   }
   /* Mobile: a single visible column fills the track width. */

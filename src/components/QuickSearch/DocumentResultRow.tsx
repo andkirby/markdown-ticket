@@ -34,19 +34,19 @@ export function DocumentResultRow({ document, isSelected, onSelect }: DocumentRe
         className="search-result"
         onClick={onSelect}
       >
-        <div className="flex items-center gap-3">
+        <div className="search-result__row">
           <span className="search-result__code">
             {document.name}
           </span>
-          <span className="search-result__title truncate">
+          <span className="search-result__title">
             {document.path}
           </span>
         </div>
-        <div className="mt-1 text-xs search-result__project-name">
+        <div className="search-result__project-name">
           <span className="search-result__project-label">
             {document.project.code}
           </span>
-          <span className="ml-1.5">{document.project.name}</span>
+          <span>{document.project.name}</span>
         </div>
       </button>
     </li>

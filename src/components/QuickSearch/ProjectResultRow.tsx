@@ -31,15 +31,15 @@ export function ProjectResultRow({ scoredProject, isSelected, onSelect }: Projec
         className="search-result"
         onClick={onSelect}
       >
-        <div className="flex items-center gap-3">
+        <div className="search-result__row">
           <span className="search-result__code">
             {code}
           </span>
-          <span className="search-result__title truncate">
+          <span className="search-result__title">
             {name}
           </span>
         </div>
-        <div className="mt-1 text-xs">
+        <div className="search-result__project-name">
           <span className="search-result__project-label">Project</span>
         </div>
       </button>

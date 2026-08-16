@@ -29,19 +29,6 @@
     @apply p-4 outline-none;
   }
 
-  /* Legacy aliases — remove after migration */
-  .settings-tab-trigger {
-    @apply flex-1 px-4 py-3 text-sm font-medium transition-colors hover:text-foreground whitespace-nowrap;
-    color: var(--text-muted);
-  }
-  .settings-tab-trigger[data-state='active'] {
-    @apply border-b-2 border-primary text-foreground;
-  }
-
-  .settings-tab-content {
-    @apply p-4 outline-none;
-  }
-
   /* TW→semantic migrations (see src/ITCSS-migration-map.md) */
   .settings-input--compact {
     @apply w-20 border px-2 py-1 text-sm;

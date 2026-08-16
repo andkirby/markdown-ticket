@@ -12,30 +12,30 @@ The token file holds **two aligned palettes** (both retuned to the `designs/boar
 
 | Palette | Format | Consumed as | Used by |
 |---|---|---|---|
-| **shadcn HSL set** | bare HSL channels (`244.5 57.9% 50.6%`) | `oklch(var(--primary))` in CSS, or Tailwind `bg-primary` / `text-primary-foreground` | base surfaces, Tailwind utilities, shadcn primitives |
-| **v3 semantic set** | hex (`#dc2626`) | bare `var(--prio-critical)` in CSS | the design3 system: bg tiers, badges, card accents, splines |
+| **shadcn set** | bare OKLCH channels (`0.457 0.214 277.0`) | `oklch(var(--primary))` in CSS, or Tailwind `bg-primary` / `text-primary-foreground` | base surfaces, Tailwind utilities, shadcn primitives |
+| **v3 semantic set** | full `oklch()` colors (`oklch(0.577 0.215 27.3)`) | bare `var(--prio-critical)` in CSS | the design3 system: bg tiers, badges, card accents, splines |
 
-Never wrap a v3 hex token in `hsl()` — it is already a color. Never use a shadcn token bare — it is raw channels, not a color.
+Never wrap a v3 token in `oklch()` — it is already a color. Never use a shadcn token bare — it is raw OKLCH channels, not a color.
 
 ---
 
-## shadcn HSL palette
+## shadcn OKLCH palette
 
 ### Light (`:root`)
 
 | Token | Value | Usage |
 |---|---|---|
-| `--background` | `0 0% 100%` | Page background |
-| `--foreground` | `222.2 47.4% 11.2%` | Primary text |
-| `--card` / `--card-foreground` | `0 0% 100%` / `222.2 47.4% 11.2%` | Card surface + text |
-| `--popover` / `--popover-foreground` | `0 0% 100%` / `222.2 47.4% 11.2%` | Dropdown/popover surface + text |
-| `--primary` / `--primary-foreground` | `244.5 57.9% 50.6%` (indigo-700) / `0 0% 100%` | Primary actions |
-| `--secondary` / `--secondary-foreground` | `213.3 29.7% 82.2%` (gray tonal) / `222.2 47.4% 11.2%` | Secondary button (medium emphasis) |
-| `--muted` / `--muted-foreground` | `215 27.3% 91.4%` / `215.3 19.3% 34.5%` | Muted surface / muted text |
-| `--accent` / `--accent-foreground` | `215 27.3% 91.4%` / `222.2 47.4% 11.2%` | Accent surface |
-| `--destructive` / `--destructive-foreground` | `0 84.2% 60.2%` / `0 0% 100%` | Errors, danger |
-| `--border` / `--input` | `218.8 16.5% 79.8%` | Borders / inputs (shared value) |
-| `--ring` | `244.5 57.9% 50.6%` | Focus ring |
+| `--background` | `1.0 0.0 89.9` | Page background |
+| `--foreground` | `0.208 0.04 265.7` | Primary text |
+| `--card` / `--card-foreground` | `1.0 0.0 89.9` / `0.208 0.04 265.7` | Card surface + text |
+| `--popover` / `--popover-foreground` | `1.0 0.0 89.9` / `0.208 0.04 265.7` | Dropdown/popover surface + text |
+| `--primary` / `--primary-foreground` | `0.457 0.214 277.0` (indigo) / `1.0 0.0 89.9` | Primary actions |
+| `--secondary` / `--secondary-foreground` | `0.853 0.025 253.9` (gray tonal) / `0.208 0.04 265.7` | Secondary button (medium emphasis) |
+| `--muted` / `--muted-foreground` | `0.929 0.011 256.7` / `0.445 0.037 257.3` | Muted surface / muted text |
+| `--accent` / `--accent-foreground` | `0.929 0.011 256.7` / `0.208 0.04 265.7` | Accent surface |
+| `--destructive` / `--destructive-foreground` | `0.637 0.208 25.3` / `1.0 0.0 89.9` | Errors, danger |
+| `--border` / `--input` | `0.835 0.017 262.7` | Borders / inputs (shared value) |
+| `--ring` | `0.457 0.214 277.0` | Focus ring |
 
 ### Dark (`.dark`)
 
@@ -43,16 +43,16 @@ Applied via a `.dark` class on the root element. Background shifts near-black, t
 
 | Token | Value |
 |---|---|
-| `--background` | `220 29% 6.1%` |
-| `--foreground` | `215 35.3% 93.3%` |
-| `--card` / `--popover` | `214.3 24.1% 22.7%` |
-| `--primary` | `243.4 75.4% 58.6%` |
-| `--secondary` | `215.3 19.3% 34.5%` |
-| `--muted` / `--accent` | `219.1 24.7% 18.2%` |
-| `--muted-foreground` | `216 17.4% 66.3%` |
-| `--destructive` | `0 62.8% 30.6%` |
-| `--border` / `--input` | `213.6 16.1% 30.4%` |
-| `--ring` | `243.4 75.4% 58.6%` |
+| `--background` | `0.164 0.014 264.1` |
+| `--foreground` | `0.944 0.011 256.7` |
+| `--card` / `--popover` | `0.336 0.033 255.8` |
+| `--primary` | `0.51 0.23 276.9` |
+| `--secondary` | `0.445 0.037 257.3` |
+| `--muted` / `--accent` | `0.288 0.03 262.7` |
+| `--muted-foreground` | `0.722 0.029 258.4` |
+| `--destructive` | `0.396 0.133 25.7` |
+| `--border` / `--input` | `0.412 0.027 254.6` |
+| `--ring` | `0.51 0.23 276.9` |
 
 ---
 
@@ -64,25 +64,35 @@ The design3 system. Consumed as bare `var(--x)`. These hold the bg-tier grammar 
 
 | Token | Light | Dark | Usage |
 |---|---|---|---|
-| `--bg-subtle` | `#eef1f5` | `#1a1f2b` | Recessed tier (columns, chips, nav panes) |
-| `--bg-muted` | `#e3e8ef` | `#232b3a` | Mid tier |
-| `--bg-elevated` | `#ffffff` | `#2c3848` | Raised surface (cards, header, inputs) |
-| `--border-strong` | `#8a93a2` | `#6b7686` | The only structural border token (hover/active reveals) |
-| `--text-muted` | `#475569` | `#9aa6b8` | Secondary text |
-| `--text-subtle` | `#5b6675` | `#8b97ab` | Tertiary text |
-| `--primary-light` | `#eef2ff` | `#1e1b4b` | Primary tint (active project, selection) |
+| `--bg-subtle` | `oklch(0.957 0.006 255.5)` | `oklch(0.24 0.024 267.0)` | Recessed-soft tier (tab bars, nav rails, columns, chips) |
+| `--bg-muted` | `oklch(0.929 0.011 256.7)` | `oklch(0.288 0.03 262.8)` | Recessed tier (hover, inputs, secondary chrome) |
+| `--bg-elevated` | `oklch(1.0 0.0 89.9)` | `oklch(0.337 0.033 255.7)` | Raised surface (cards, header, modals, popovers) |
+| `--border-strong` | `oklch(0.661 0.025 260.7)` | `oklch(0.562 0.028 257.7)` | The only structural border token (hover/active reveals) |
+| `--text-muted` | `oklch(0.446 0.037 257.3)` | `oklch(0.722 0.03 258.4)` | Secondary text |
+| `--text-subtle` | `oklch(0.506 0.027 256.2)` | `oklch(0.674 0.033 260.7)` | Tertiary text |
+| `--primary-text` | `oklch(0.457 0.214 277)` | `oklch(0.75 0.14 277)` | Indigo accent for text on surfaces (7.9:1 light / ~5.2:1 dark) |
+
+### Interaction-state ramp
+
+Hover is always the neutral tier; active/selected is always the accent family at two strengths — **surface** (tint + `--state-active-fg` signal) and **solid** (compact controls: `oklch(var(--primary))` + `oklch(var(--primary-foreground))`). Never a primary tint for hover. See [STYLING.md](STYLING.md) §Interaction-state ramp.
+
+| Token | Light | Dark | Purpose |
+|---|---|---|---|
+| `--state-hover-bg` | `var(--bg-muted)` | (same alias) | Hover/pointing fill — neutral recessed tier ("cursor is here") |
+| `--state-active-bg` | `oklch(0.90 0.05 277)` | `oklch(0.30 0.10 281)` | Active/selected SURFACE tint ("committed / current") — explicit per theme; the old `--primary-light` alias was 1.01:1 on `--bg-subtle` in light (invisible) and was removed |
+| `--state-active-fg` | `var(--primary-text)` | (same alias) | Active/selected signal — text, ring, or underline |
 
 ### Status (badge fg / bg pairs)
 
 | Status | fg token | Light fg/bg | Dark fg/bg |
 |---|---|---|---|
-| backlog | `--status-backlog` | `#64748b` / `#f1f5f9` | `#94a3b8` / `#1a2231` |
-| open | `--status-open` | `#3b82f6` / `#eff6ff` | `#60a5fa` / `#172554` |
-| progress | `--status-progress` | `#d97706` / `#fffbeb` | `#fbbf24` / `#422006` |
-| done | `--status-done` | `#059669` / `#ecfdf5` | `#34d399` / `#064e3b` |
-| deferred | `--status-deferred` | `#ea580c` / `#fff7ed` | `#fb923c` / `#431407` |
-| rejected | `--status-rejected` | `#dc2626` / `#fef2f2` | `#f87171` / `#450a0a` |
-| hold | `--status-hold` | `#7c3aed` / `#f5f3ff` | `#a78bfa` / `#2e1065` |
+| backlog | `--status-backlog` | `oklch(0.554 0.041 257.4)` / `oklch(0.968 0.007 247.9)` | `oklch(0.711 0.035 256.8)` / `oklch(0.252 0.031 262.6)` |
+| open | `--status-open` | `oklch(0.623 0.188 259.8)` / `oklch(0.97 0.014 254.6)` | `oklch(0.714 0.143 254.6)` / `oklch(0.282 0.087 267.9)` |
+| progress | `--status-progress` | `oklch(0.666 0.157 58.3)` / `oklch(0.987 0.021 95.3)` | `oklch(0.837 0.164 84.4)` / `oklch(0.286 0.064 53.8)` |
+| done | `--status-done` | `oklch(0.596 0.127 163.2)` / `oklch(0.979 0.021 166.1)` | `oklch(0.773 0.153 163.2)` / `oklch(0.378 0.073 168.9)` |
+| deferred | `--status-deferred` | `oklch(0.646 0.194 41.1)` / `oklch(0.98 0.016 73.7)` | `oklch(0.758 0.159 55.9)` / `oklch(0.266 0.076 36.3)` |
+| rejected | `--status-rejected` | `oklch(0.577 0.215 27.3)` / `oklch(0.971 0.013 17.4)` | `oklch(0.711 0.166 22.2)` / `oklch(0.258 0.089 26.0)` |
+| hold | `--status-hold` | `oklch(0.541 0.247 293.0)` / `oklch(0.969 0.016 293.8)` | `oklch(0.709 0.159 293.5)` / `oklch(0.283 0.135 291.1)` |
 
 Status → token mapping (proposed→backlog, approved→open, in-progress→progress, implemented→done, rejected→rejected, on-hold→hold, invalid→rejected) lives in [`badge.css`](components/Badge/badge.css).
 
@@ -90,10 +100,10 @@ Status → token mapping (proposed→backlog, approved→open, in-progress→pro
 
 | Token | Light | Dark |
 |---|---|---|
-| `--prio-critical` | `#dc2626` | `#f87171` |
-| `--prio-high` | `#ea580c` | `#fb923c` |
-| `--prio-medium` | `#d97706` | `#fbbf24` |
-| `--prio-low` | `#2563eb` | `#60a5fa` |
+| `--prio-critical` | `oklch(0.577 0.215 27.3)` | `oklch(0.711 0.166 22.2)` |
+| `--prio-high` | `oklch(0.646 0.194 41.1)` | `oklch(0.758 0.159 55.9)` |
+| `--prio-medium` | `oklch(0.666 0.157 58.3)` | `oklch(0.837 0.164 84.4)` |
+| `--prio-low` | `oklch(0.546 0.215 262.9)` | `oklch(0.714 0.143 254.6)` |
 
 Drives the priority icon glyph color and the critical/high card accent stripe.
 
@@ -101,9 +111,9 @@ Drives the priority icon glyph color and the critical/high card accent stripe.
 
 | Group | Light | Dark |
 |---|---|---|
-| `--epic-1..4` | `#4f46e5 #06b6d4 #f59e0b #10b981` | `#818cf8 #22d3ee #fbbf24 #34d399` |
-| `--spline-blocker` / `--spline-related` | `#dc2626` / `#0d9488` | `#f87171` / `#2dd4bf` |
-| `--type-feature/bug/architecture/documentation/research` | `#3b82f6 #ea580c #7c3aed #0891b2 #db2777` | `#60a5fa #fb923c #a78bfa #22d3ee #f472b6` |
+| `--epic-1..4` | `oklch(0.511 0.23 277.0)` `oklch(0.715 0.126 215.2)` `oklch(0.769 0.165 70.1)` `oklch(0.696 0.149 162.5)` | `oklch(0.68 0.158 276.9)` `oklch(0.797 0.134 211.5)` `oklch(0.837 0.164 84.4)` `oklch(0.773 0.153 163.2)` |
+| `--spline-blocker` / `--spline-related` | `oklch(0.577 0.215 27.3)` / `oklch(0.6 0.104 184.7)` | `oklch(0.711 0.166 22.2)` / `oklch(0.785 0.133 181.9)` |
+| `--type-feature/bug/architecture/documentation/research` | `oklch(0.623 0.188 259.8)` `oklch(0.646 0.194 41.1)` `oklch(0.541 0.247 293.0)` `oklch(0.609 0.111 221.7)` `oklch(0.592 0.218 0.6)` | `oklch(0.714 0.143 254.6)` `oklch(0.758 0.159 55.9)` `oklch(0.709 0.159 293.5)` `oklch(0.797 0.134 211.5)` `oklch(0.725 0.175 349.8)` |
 
 ### Density slots (mode-independent px)
 
@@ -119,7 +129,7 @@ Drives the priority icon glyph color and the critical/high card accent stripe.
 ## Usage
 
 ```css
-/* shadcn HSL token — wrap in hsl() */
+/* shadcn OKLCH token — wrap in oklch() */
 .btn { background: oklch(var(--primary)); border-color: oklch(var(--border)); }
 .btn { background: oklch(var(--primary) / 0.5); } /* with opacity */
 
@@ -132,7 +142,7 @@ Drives the priority icon glyph color and the critical/high card accent stripe.
 ```
 
 ```tsx
-/* Tailwind utilities resolve to the shadcn HSL tokens */
+/* Tailwind utilities resolve to the shadcn OKLCH tokens */
 <div className="bg-primary text-primary-foreground border-border" />
 ```
 

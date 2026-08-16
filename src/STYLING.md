@@ -364,6 +364,26 @@ A control's fill must differ from its host surface, or the control ghosts (becom
 
 Measured (light): `--bg-muted` `#e3e8ef` on `--card` `#fff` = **1.23:1** (ghost); a `#bcc7d4` recessed fill = **1.71:1** (reads); `--primary` = 4.9–6:1 on every tier (safe). See [`styleguide.html`](styleguide.html) → "form controls & the surface contract" for a live demo.
 
+### Interaction-state ramp (hover vs active/selected)
+
+**Hover is ALWAYS the neutral recessed tier** (`--state-hover-bg` = `--bg-muted`) — pointing, not committed. **Active/selected is ALWAYS the accent family**, delivered at two strengths:
+
+| Strength | Recipe | For | Examples |
+|---|---|---|---|
+| hover / pointing | `--state-hover-bg` fill | any hover | result rows, icon buttons, facet options |
+| active — **surface** | `--state-active-bg` tint **+ `--state-active-fg` signal** (ring/border carries the state) | large surfaces | search result `[data-selected]` (2px inset ring), project card active (accent border), drag-over targets, `.tab[data-state=active]` (underline only) |
+| active — **solid** | `oklch(var(--primary))` fill + `oklch(var(--primary-foreground))` text | compact controls | scope-bar pills, mode badge (same as `.settings-theme-btn--active`) |
+
+Rules:
+
+- **State hierarchy: active absorbs hover.** An element in the active/selected state never demotes to the neutral hover tier on hover — that swaps the fill while the active rule's text/signal persists (white text on the light hover fill). Implement structurally, not per-site: nest the active rule inside the base **after** `&:hover` at equal specificity (`&.component--active { … }`), so the hierarchy is expressed by construction. A BEM modifier is ONE class `(0,1,0)` and silently loses to `:hover` `(0,2,0)` if declared flat — this exact bug shipped on the scope pill and the filter trigger. Attribute selectors (`[data-selected]`) count as class-level, so they must also be declared after the hover rule.
+- **A tint cannot carry state alone in light mode.** Indigo tints cap at ~1.1:1 against the near-white tiers (`--bg-subtle`/`--background`), so a tinted pill is invisible — the original `--primary-light` fill measured **1.01:1** on the scope bar. Large surfaces get tint + a strong signal (ring/border/underline in `--state-active-fg` or primary); compact controls go **solid**.
+- **Never a primary tint for hover.** The tier change (neutral → accent) carries hover→selected meaning and survives both themes; tint-strength steps collapse in light mode.
+- Hand-written hover backgrounds consume `var(--state-hover-bg)`, never `var(--bg-muted)` directly (Tailwind `@apply hover:bg-*` forms are equivalent and fine).
+- Drop-target highlights reuse `--state-active-bg` with a subdued ring (`ring-primary/40`) — "will receive" reads as commit-preview, not hover.
+- Tabs are one *consumer* of this ramp, not the shared component for selectable things. Result rows are listboxes (`role="option"` + `aria-selected`); never force selection surfaces under the tabs component.
+- **Verify state contrast where the state sits**, not in isolation: fill-vs-surface (and signal-vs-fill) in BOTH themes, AND under state combinations (hover-on-active, focus-on-active). A state token that is architecturally correct can still be imperceptible — measure it (`--primary-light` shipped invisible-on-arrival in light mode; the solid pill shipped with hover demoting it back to the invisible tier).
+
 ---
 
 ## Tailwind Layers

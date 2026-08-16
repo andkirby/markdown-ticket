@@ -65,7 +65,7 @@
     background-color: var(--bg-elevated);
   }
   .trace-graph-action:hover {
-    background-color: var(--bg-muted);
+    background-color: var(--state-hover-bg);
   }
 
   .trace-graph-action svg {

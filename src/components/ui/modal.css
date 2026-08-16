@@ -96,7 +96,7 @@
     color: var(--text-subtle);
   }
   .modal__close--absolute:hover {
-    background-color: var(--bg-muted);
+    background-color: var(--state-hover-bg);
     color: oklch(var(--foreground));
   }
 

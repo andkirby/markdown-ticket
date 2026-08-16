@@ -82,9 +82,9 @@
   animation: pin-rail-slide-in 140ms ease-out;
 }
 
-/* Drop-hover state — reuses the board's primary-light + primary ring pattern. */
+/* Drop-hover state — reuses the board's active-tier fill + subdued primary ring. */
 .pin-rail--drop-active {
-  background: var(--primary-light);
+  background: var(--state-active-bg);
   @apply ring-2 ring-primary/40;
 }
 
@@ -128,8 +128,8 @@
 
 /* Pinned state: filled accent so the "stays open" affordance is unmistakable. */
 .pin-rail__toggle--pinned {
-  color: var(--primary);
-  border-color: var(--primary);
+  color: var(--state-active-fg);
+  border-color: var(--state-active-fg);
 }
 
 .pin-rail__toggle-icon {
