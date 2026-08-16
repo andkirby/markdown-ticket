@@ -22,6 +22,28 @@ fi
 
 echo "✅ Found MDT project"
 
+# Read a variable with the app's env cascade: real environment > .env.local > .env
+# (mirrors server/server.ts dotenv precedence; MDT-117)
+read_env_var() {
+    local key="$1" default="$2" value=""
+    value="${!key}"
+    if [ -z "$value" ]; then
+        local f
+        for f in .env.local .env; do
+            if [ -f "$f" ]; then
+                value="$(grep -E "^[[:space:]]*${key}=" "$f" | tail -1 | cut -d= -f2- | tr -d '"' | tr -d "'" | xargs)"
+                [ -n "$value" ] && break
+            fi
+        done
+    fi
+    echo "${value:-$default}"
+}
+
+# Resolve ports exactly like the servers do (MDT-117): BACKEND_PORT / FRONTEND_PORT
+# with the deprecated PORT fallback, then canonical defaults (preview: 3070 / 3001).
+BACKEND_PORT="$(read_env_var BACKEND_PORT "$(read_env_var PORT 3001)")"
+FRONTEND_PORT="$(read_env_var FRONTEND_PORT "$(read_env_var PORT 3070)")"
+
 # Function to kill processes on specific ports
 kill_processes_on_ports() {
     local ports=("$@")
@@ -41,7 +63,7 @@ kill_processes_on_ports() {
 # Function to stop all running processes
 stop_processes() {
     echo "🛑 Stopping MDT production processes..."
-    kill_processes_on_ports 3070 3001
+    kill_processes_on_ports "$FRONTEND_PORT" "$BACKEND_PORT"
     echo "✅ All processes stopped"
 }
 
@@ -57,8 +79,8 @@ elif [ "$1" = "help" ] || [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
     echo ""
     echo "Options:"
     echo "  both (default)   - Start both frontend and backend production servers"
-    echo "  frontend         - Start frontend production server only (port 3070)"
-    echo "  backend          - Start backend production server only (port 3001)"
+    echo "  frontend         - Start frontend production server only (port ${FRONTEND_PORT})"
+    echo "  backend          - Start backend production server only (port ${BACKEND_PORT})"
     echo "  stop             - Stop all running production servers"
     echo "  build            - Build all projects before starting (if needed)"
     echo "  help, --help, -h - Show this help message"
@@ -131,9 +153,9 @@ else
     echo "✅ All production builds found"
 fi
 
-# Kill existing processes on default ports
-echo "🔍 Checking for existing processes on default ports..."
-kill_processes_on_ports 3070 3001
+# Kill existing processes on the configured ports (.env / .env.local aware)
+echo "🔍 Checking for existing processes on configured ports..."
+kill_processes_on_ports "$FRONTEND_PORT" "$BACKEND_PORT"
 
 echo "✅ Setup complete!"
 echo ""
@@ -144,7 +166,7 @@ if [ -z "$1" ] || [ "$1" = "both" ] || [ "$1" = "build" ]; then
     echo "🚀 Starting both frontend and backend production servers..."
 
     # Start backend in background
-    echo "🔧 Starting backend production server on port 3001..."
+    echo "🔧 Starting backend production server on port ${BACKEND_PORT}..."
     cd server && node dist/server.js &
     BACKEND_PID=$!
     cd ..
@@ -153,14 +175,14 @@ if [ -z "$1" ] || [ "$1" = "both" ] || [ "$1" = "build" ]; then
     sleep 2
 
     # Start frontend in background
-    echo "🎨 Starting frontend production server on port 3070..."
+    echo "🎨 Starting frontend production server on port ${FRONTEND_PORT}..."
     (cd "${SCRIPT_DIR}" && bun run preview) &
     FRONTEND_PID=$!
 
     echo ""
     echo "✅ Production servers started!"
-    echo "   Frontend: http://localhost:3070 (PID: $FRONTEND_PID)"
-    echo "   Backend:  http://localhost:3001 (PID: $BACKEND_PID)"
+    echo "   Frontend: http://localhost:${FRONTEND_PORT} (PID: $FRONTEND_PID)"
+    echo "   Backend:  http://localhost:${BACKEND_PORT} (PID: $BACKEND_PID)"
     echo ""
     echo "To stop servers, run: ./start.sh stop"
     echo ""
@@ -186,8 +208,8 @@ else
     echo ""
     echo "Options:"
     echo "  both (default)   - Start both frontend and backend production servers"
-    echo "  frontend         - Start frontend production server only (port 3070)"
-    echo "  backend          - Start backend production server only (port 3001)"
+    echo "  frontend         - Start frontend production server only (port ${FRONTEND_PORT})"
+    echo "  backend          - Start backend production server only (port ${BACKEND_PORT})"
     echo "  stop             - Stop all running production servers"
     echo "  build            - Build all projects then start both servers"
     exit 1
