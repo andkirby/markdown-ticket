@@ -358,6 +358,24 @@ typed `CommitProjectionOutcome`; the Worker re-throws a `CoordinationError`
 with `currentVersion`. Observed post-fix: 5× typed 409 → journal adopted →
 6× 200 → journal fully drained and revisions streamed back live.
 
+### I7. Grant-rotation tight-loop when the effective rotate-at was already past — FIXED (2026-08-16)
+
+The last containment check of the deployed validation (D1 insights + a fresh
+`wrangler tail`) caught a reconnect loop: 82 grant-reusing `101` upgrades in
+~20 minutes with no session requests, each reconnect costing one catch-up
+high-water read (~2-4 reads/min sustained on top of the alarm fix). Root
+cause: `openTransport` scheduled rotation with
+`Math.max(MIN_BACKOFF_MS=1s, rotateAt - now - skew)`, so once the effective
+rotate-at (min of grant and credential expiry) was already in the past, the
+timer re-armed rotation every second. Fix (commit 4fd7019a): rotation has a
+30-second floor — grants live ≥10 minutes, so the clamp is safe. The same
+commit added structured non-secret hub telemetry (`hub_alarm_pass`,
+`hub_socket_close` with reason/code, `hub_ws_close/error` with acknowledged
+revision) so future containment breaks are named directly in `wrangler tail`
+instead of being inferred from D1 counters. Verified after the fix: stream
+live with zero reconnects; `projection_revision` reads flat while idle and in
+single digits around a reconnect.
+
 ### I6. Recovery alarm replay was unbounded against never-acking sockets — FIXED (2026-08-15 night)
 
 D1 insights showed `SELECT projection_revision FROM cloud_projects` at ~29
