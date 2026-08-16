@@ -83,7 +83,7 @@ priority: Medium
 - [ ] All numeric environment variables parsed through centralized utility _(ports migrated to `parsePortEnv`/`parseEnvInt` in `shared/utils/env.ts`; non-port numeric vars pending)_
 - [x] Port defaults sourced from single constant definition _(`DEFAULT_PORTS` in `shared/utils/constants.ts`)_
 - [x] `.env` is loaded by every runtime that reads ports — backend cascades `.env.local` then `.env`; Vite mirrors `loadEnv` into `process.env` _(addendum; smoke-tested 8101/8102)_
-- [ ] All Vite environment variables have TypeScript definitions
+- [ ] All Vite environment variables have TypeScript definitions _(re-verified list: `VITE_BACKEND_URL`, `VITE_BACKEND_PORT`, `VITE_DISABLE_EVENTBUS_LOGS`; `VITE_HMR_*` are dead vars — see Remaining §2)_
 
 ### Non-Functional
 - [ ] Code duplication reduced for environment variable parsing
@@ -128,9 +128,15 @@ priority: Medium
 ### MDT-157 interaction (conflict note)
 `feat(MDT-157): loopback-host no-auth carve-out + bind boundary` landed on `origin/main` while this work was stashed and edited the same hunks (`server.ts` PORT/HOST region, `vite.config.ts` host/port region, compose `environment:` blocks). Resolved by keeping **both**: the MDT-117 port rename **and** MDT-157's `API_BIND_ADDRESS`/`API_LOCAL_HOST_BYPASS`/`VITE_SERVER_HOST` additions. The two are orthogonal.
 
-### Remaining (out of this subset)
-- `LOG_LEVEL` vs `MCP_LOG_LEVEL` precedence.
-- `MCP_CACHE_TIMEOUT` (seconds) vs `cacheTimeout` (ms) unit mismatch.
-- `DOCKER_BACKEND_URL` / `VITE_BACKEND_URL` duplication.
-- `MCP_SANITIZATION_ENABLED` → `MCP_SECURITY_*` prefix.
-- MCP server port wiring to `DEFAULT_PORTS.MCP`; TypeScript definitions for all Vite env vars.
+### Remaining (out of this subset) — re-verified 2026-08-17
+
+Re-verified against the current tree (post MDT-157, post SSE-proxy fix `0093eea0`): none of these items were absorbed by other tickets. Three details drifted from the original notes and are corrected below.
+
+1. **`LOG_LEVEL` is dead in all three compose files** — no code reads `process.env.LOG_LEVEL` anywhere (only a historical MDT-074 doc reference). Two distinct fixes:
+   - `docker-compose.yml:75` and `docker-compose.prod.yml:68` set it in the **mcp** service block → rename to `MCP_LOG_LEVEL` (read at `mcp-server/src/config/index.ts:42`).
+   - `docker-compose.dev.yml:80` sets it in the **backend** block → **remove**, not rename (the backend reads no log-level env; adding one would be a new feature — out of scope).
+2. **Vite env TypeScript definitions** — `src/vite-env.d.ts` types only `VITE_FRONTEND_LOGGING_AUTOSTART`. Live vars needing types: `VITE_BACKEND_URL` (`src/services/sseClient.ts:467`), `VITE_BACKEND_PORT` (`sseClient.ts:476`, injected via `vite.config.ts:684` `define`), `VITE_DISABLE_EVENTBUS_LOGS` (`sseClient.ts`, `eventBus.ts`, `useSSEEvents.ts`). Correction to the recommendations doc: `VITE_HMR_HOST`/`VITE_HMR_PORT` are **stale — nothing consumes them** (zero HMR wiring in `vite.config.ts`, zero `import.meta.env` reads); they are dead vars in `docker-compose.dev.yml:27-28` and candidates for removal, not typing. `VITE_SERVER_HOST` is config-time only (not `import.meta.env`) and needs no `ImportMetaEnv` entry.
+3. **`DOCKER_BACKEND_URL` / `VITE_BACKEND_URL` duplication** — set at `docker-compose.dev.yml:24` beside `VITE_BACKEND_URL=` (empty, which is what activates the fallback today); consumed at `vite.config.ts:347,630`. Fix: set `VITE_BACKEND_URL=http://backend:3001` directly and drop `DOCKER_BACKEND_URL`. Requires a dev-compose smoke test (container networking change).
+4. **`MCP_SANITIZATION_ENABLED` → `MCP_SECURITY_SANITIZATION`** — premise strengthened since ticket creation: `MCP_SECURITY_AUTH`/`_ORIGIN_VALIDATION`/`_RATE_LIMITING` are load-bearing (`mcp-server/src/transports/httpSecurity.ts:24-55`, prod compose defaults, `mcp-server/Dockerfile:130-132`, doc-enforcement tests in `docs/tests/`). The sanitizer (`mcp-server/src/utils/sanitizer.ts:20`) is the sole nonconforming var. Blast radius: `sanitizer.ts`, `mcp-server/tests/e2e/tools/output-sanitization.spec.ts`, `mcp-server/SANITIZATION.md`, `docs/ENVIRONMENT_VARIABLES.md`. Not set in any compose file.
+5. **MCP port wiring** — the parse moved: it now lives at `mcp-server/src/transports/httpSecurity.ts:48` (not `mcp-server/src/index.ts` as the recommendations doc says), hardcodes `'3002'`, and carries an **undocumented `HTTP_PORT` fallback**. Wire `DEFAULT_PORTS.MCP` (`shared/utils/constants.ts:150`; `@mdt/shared` dependency already present in `mcp-server`) and drop or document `HTTP_PORT`. Related non-port numeric parsing still raw-`parseInt`: `MCP_RATE_LIMIT_MAX`/`MCP_RATE_LIMIT_WINDOW_MS` (`rateLimitManager.ts`), `MCP_CACHE_TIMEOUT` (`mcp-server/src/config/index.ts:61`).
+6. **Cache timeout unit mismatch — deferred to MDT-105** (still `Proposed`): MDT-105 owns the `MCP_CACHE_TIMEOUT` → `MDT_CACHE_TIMEOUT` hard break with full architecture docs; implementing this ticket's version first would mean double migration. Note its blast radius grew: base and prod compose both now set `MCP_CACHE_TIMEOUT=300`.
