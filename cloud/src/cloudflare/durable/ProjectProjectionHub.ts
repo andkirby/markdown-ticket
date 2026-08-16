@@ -265,12 +265,16 @@ export class ProjectProjectionHub extends DurableObject<ProjectProjectionHubEnv>
 
   async webSocketClose(socket: WebSocket): Promise<void> {
     const ws = socket as HibernationWebSocket
+    // eslint-disable-next-line no-console -- diagnostic telemetry (MDT-226 I7)
+    console.info(JSON.stringify({ event: 'hub_ws_close', acked: ws.deserializeAttachment<SocketAttachment | null>()?.acknowledgedRevision ?? null }))
     ws.serializeAttachment(null)
     this.queueMaybeClearAlarm()
   }
 
   async webSocketError(socket: WebSocket): Promise<void> {
     const ws = socket as HibernationWebSocket
+    // eslint-disable-next-line no-console -- diagnostic telemetry (MDT-226 I7)
+    console.info(JSON.stringify({ event: 'hub_ws_error', acked: ws.deserializeAttachment<SocketAttachment | null>()?.acknowledgedRevision ?? null }))
     ws.serializeAttachment(null)
     this.queueMaybeClearAlarm()
   }
@@ -301,6 +305,8 @@ export class ProjectProjectionHub extends DurableObject<ProjectProjectionHubEnv>
   async alarm(): Promise<void> {
     const sockets = this.ctx.getWebSockets() as HibernationWebSocket[]
     let stillLagging = false
+    // eslint-disable-next-line no-console -- diagnostic telemetry (MDT-226 I7)
+    console.info(JSON.stringify({ event: 'hub_alarm_pass', sockets: sockets.length }))
     for (const socket of sockets) {
       const attachment = socket.deserializeAttachment<SocketAttachment | null>()
       if (!attachment || !attachment.authorized) {
@@ -624,6 +630,13 @@ export class ProjectProjectionHub extends DurableObject<ProjectProjectionHubEnv>
 
   private closeSocket(socket: HibernationWebSocket, code: number, reason: string): void {
     // Close/error reasons carry a non-secret code/reason only (C-3, C-10).
+    // eslint-disable-next-line no-console -- diagnostic telemetry (MDT-226 I7)
+    console.info(JSON.stringify({
+      event: 'hub_socket_close',
+      code,
+      reason,
+      acked: socket.deserializeAttachment<SocketAttachment | null>()?.acknowledgedRevision ?? null,
+    }))
     try {
       socket.close(code, reason)
     }
