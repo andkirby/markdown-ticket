@@ -6,6 +6,7 @@
  */
 
 import process from 'node:process'
+import { parseEnvInt } from '@mdt/shared/utils/env.js'
 
 interface RateLimitConfig {
   enabled: boolean
@@ -229,8 +230,8 @@ export class RateLimitManager {
    */
   static fromEnvironment(logger?: (message: string) => void): RateLimitManager {
     const enabled = process.env.MCP_SECURITY_RATE_LIMITING !== 'false'
-    const maxRequests = Number.parseInt(process.env.MCP_RATE_LIMIT_MAX || '100')
-    const windowMs = Number.parseInt(process.env.MCP_RATE_LIMIT_WINDOW_MS || '60000')
+    const maxRequests = parseEnvInt('MCP_RATE_LIMIT_MAX', 100)
+    const windowMs = parseEnvInt('MCP_RATE_LIMIT_WINDOW_MS', 60000)
 
     return new RateLimitManager(
       {

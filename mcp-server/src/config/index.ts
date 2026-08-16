@@ -4,6 +4,7 @@ import * as path from 'node:path'
 import process from 'node:process'
 import { safeValidateMcpServerConfig } from '@mdt/domain-contracts'
 import { DEFAULT_PATHS } from '@mdt/shared/utils/constants.js'
+import { parseEnvInt } from '@mdt/shared/utils/env.js'
 import { parseToml } from '@mdt/shared/utils/toml.js'
 import * as fs from 'fs-extra'
 
@@ -58,7 +59,8 @@ const DEFAULT_CONFIG: ServerConfig = {
       'temp',
     ],
     maxDepth: 4,
-    cacheTimeout: Number.parseInt(process.env.MCP_CACHE_TIMEOUT || '300', 10), // 5 minutes default
+    // 5 minutes default. MDT-105 owns the planned rename to MDT_CACHE_TIMEOUT (MDT-117 defers it).
+    cacheTimeout: parseEnvInt('MCP_CACHE_TIMEOUT', 300),
   },
   templates: {
     customPath: DEFAULT_PATHS.TEMPLATES_DIR,

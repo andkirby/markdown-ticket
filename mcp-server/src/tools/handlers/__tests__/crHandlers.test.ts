@@ -108,10 +108,12 @@ describe('cRHandlers - Behavioral Preservation Tests', () => {
     (MarkdownService.readFile as jest.MockedFunction<typeof MarkdownService.readFile>).mockResolvedValue(mockFileContent)
 
     // Mock sanitization disabled (default behavior)
-    process.env.MCP_SANITIZATION_ENABLED = 'false'
+    process.env.MCP_SECURITY_SANITIZATION = 'false'
+    delete process.env.MCP_SANITIZATION_ENABLED
   })
 
   afterEach(() => {
+    delete process.env.MCP_SECURITY_SANITIZATION
     delete process.env.MCP_SANITIZATION_ENABLED
   })
 

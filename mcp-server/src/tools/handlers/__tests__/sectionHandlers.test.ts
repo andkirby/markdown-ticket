@@ -84,10 +84,12 @@ describe('sectionHandlers - Behavioral Preservation Tests', () => {
     (MarkdownService.writeFile as jest.MockedFunction<typeof MarkdownService.writeFile>).mockResolvedValue(undefined)
 
     // Mock sanitization disabled (default behavior)
-    process.env.MCP_SANITIZATION_ENABLED = 'false'
+    process.env.MCP_SECURITY_SANITIZATION = 'false'
+    delete process.env.MCP_SANITIZATION_ENABLED
   })
 
   afterEach(() => {
+    delete process.env.MCP_SECURITY_SANITIZATION
     delete process.env.MCP_SANITIZATION_ENABLED
   })
 

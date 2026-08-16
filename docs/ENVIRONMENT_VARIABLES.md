@@ -22,7 +22,7 @@ Complete reference of all environment variables used in the Markdown Ticket proj
 - **Usage**: `vite.config.ts` (resolved by the local `resolveFrontendPort` helper)
 - **Notes**: Canonical name as of MDT-117. The legacy `PORT` env var is still read
   with a one-time deprecation warning; `FRONTEND_PORT` takes precedence when both
-  are set. Distinct from `VITE_HMR_PORT` (the HMR client port) and `BACKEND_PORT`.
+  are set. Distinct from `BACKEND_PORT`.
 
 ### VITE_BACKEND_URL
 - **Description**: Backend URL for API and SSE connections
@@ -31,8 +31,10 @@ Complete reference of all environment variables used in the Markdown Ticket proj
   - `src/services/sseClient.ts:353`
 - **Notes**:
   - When empty, uses frontend proxy in development
-  - Docker development: `http://backend:3001`
+  - Docker development: `http://backend:3001` (set directly by `docker-compose.dev.yml`)
   - Native development: `http://localhost:3001`
+  - Also consumed at config time by `vite.config.ts` to target the `/api` proxy
+    and the `/api/cache/clear` middleware (MDT-117: replaced `DOCKER_BACKEND_URL`)
 
 ### VITE_DISABLE_EVENTBUS_LOGS
 - **Description**: Disable EventBus debug logging in development mode
@@ -49,15 +51,9 @@ Complete reference of all environment variables used in the Markdown Ticket proj
 - **Default**: `false`
 - **Documentation**: See `docs/CRs/MDT-037-create-react-sse-mcp-frontend-client-package.md`
 
-### VITE_HMR_HOST
-- **Description**: Vite Hot Module Replacement host
-- **Default**: `localhost`
-- **Used by**: Vite configuration
-
-### VITE_HMR_PORT
-- **Description**: Vite Hot Module Replacement port
-- **Default**: `3075`
-- **Used by**: Vite configuration
+> `VITE_HMR_HOST` / `VITE_HMR_PORT` were **removed** (MDT-117): nothing ever
+> consumed them (no HMR wiring in `vite.config.ts`, no `import.meta.env` reads);
+> they were dead config in `docker-compose.dev.yml` and `.env.example`.
 
 ---
 
@@ -69,8 +65,8 @@ Backend runtime variables are parsed by `server/config/runtimeConfig.ts`. The ca
 - **Description**: Backend Express API server port
 - **Default**: `3001`
 - **Usage**: `server/server.ts:137` (parsed via `parsePortEnv` from `@mdt/shared/utils/env.js`)
-- **Also read by**: `vite.config.ts` — when neither `VITE_BACKEND_URL` nor `DOCKER_BACKEND_URL`
-  is set, the Vite dev-server `/api` proxy targets `http://localhost:${BACKEND_PORT}`, so the
+- **Also read by**: `vite.config.ts` — when `VITE_BACKEND_URL` is not set, the Vite
+  dev-server `/api` proxy targets `http://localhost:${BACKEND_PORT}`, so the
   frontend tracks a custom backend port automatically. Set `VITE_BACKEND_URL` to override.
 - **Notes**: Canonical name as of MDT-117. The legacy `PORT` env var is still read
   with a one-time deprecation warning to avoid silently breaking stale `.env.local`
@@ -141,10 +137,10 @@ Backend runtime variables are parsed by `server/config/runtimeConfig.ts`. The ca
 - **Type**: Boolean
 - **Usage**: `docker-compose.dev.yml`
 
-### DOCKER_BACKEND_URL
-- **Description**: Backend URL for Docker container networking
-- **Default**: `http://backend:3001`
-- **Usage**: `docker-compose.dev.yml`
+### DOCKER_BACKEND_URL (removed)
+- **Status**: **Removed** (MDT-117) — duplicated `VITE_BACKEND_URL`.
+- **Migration**: set `VITE_BACKEND_URL=http://backend:3001` directly
+  (this is what `docker-compose.dev.yml` now does).
 
 ---
 
@@ -159,8 +155,10 @@ Backend runtime variables are parsed by `server/config/runtimeConfig.ts`. The ca
 
 #### MCP_HTTP_PORT
 - **Description**: HTTP server port
-- **Default**: `3002`
-- **Usage**: `mcp-server/src/index.ts:131`
+- **Default**: `3002` (`DEFAULT_PORTS.MCP` in `shared/utils/constants.ts`)
+- **Usage**: `mcp-server/src/transports/httpSecurity.ts` (parsed via `parsePortEnvFrom`)
+- **Notes**: The legacy undocumented `HTTP_PORT` name still resolves but emits a
+  one-time deprecation warning (MDT-117); it is not a silent alias.
 
 #### MCP_BIND_ADDRESS
 - **Description**: Bind address
@@ -228,12 +226,14 @@ Backend runtime variables are parsed by `server/config/runtimeConfig.ts`. The ca
 #### MCP_RATE_LIMIT_MAX
 - **Description**: Maximum requests per time window
 - **Default**: `100`
-- **Usage**: `mcp-server/src/utils/rateLimitManager.ts:228`
+- **Usage**: `mcp-server/src/utils/rateLimitManager.ts` and
+  `mcp-server/src/transports/httpSecurity.ts` (parsed via `parseEnvInt`)
 
 #### MCP_RATE_LIMIT_WINDOW_MS
 - **Description**: Rate limiting time window in milliseconds
 - **Default**: `60000` (1 minute)
-- **Usage**: `mcp-server/src/utils/rateLimitManager.ts:229`
+- **Usage**: `mcp-server/src/utils/rateLimitManager.ts` and
+  `mcp-server/src/transports/httpSecurity.ts` (parsed via `parseEnvInt`)
 
 ### Security - Authentication
 
@@ -249,11 +249,13 @@ Backend runtime variables are parsed by `server/config/runtimeConfig.ts`. The ca
 
 ### Sanitization (Beta)
 
-#### MCP_SANITIZATION_ENABLED
+#### MCP_SECURITY_SANITIZATION
 - **Description**: Enable output sanitization (XSS protection)
 - **Default**: `false`
 - **Status**: Beta feature - may affect performance
-- **Usage**: `mcp-server/src/utils/sanitizer.ts:18`
+- **Usage**: `mcp-server/src/utils/sanitizer.ts`
+- **Notes**: Renamed from `MCP_SANITIZATION_ENABLED` (MDT-117) to match the
+  `MCP_SECURITY_*` prefix family. The old name still works but warns (deprecated).
 
 ---
 
@@ -350,8 +352,7 @@ NODE_ENV=development
 
 ```bash
 # Set in docker-compose.dev.yml
-VITE_BACKEND_URL=
-DOCKER_BACKEND_URL=http://backend:3001
+VITE_BACKEND_URL=http://backend:3001
 NODE_ENV=development
 DOCKER=true
 CHOKIDAR_USEPOLLING=true
@@ -403,20 +404,17 @@ MCP_AUTH_TOKEN=<secure-token>
 - `MCP_HTTP_ENABLED=true`
 - `MCP_HTTP_PORT=3002`
 - `MCP_BIND_ADDRESS=0.0.0.0`
-- `LOG_LEVEL=debug`
+- `MCP_LOG_LEVEL=debug` (renamed from dead `LOG_LEVEL`, MDT-117)
 - `MCP_CACHE_TIMEOUT=300`
 
 ### docker-compose.dev.yml (Development)
 - `NODE_ENV=development`
 - `DOCKER=true`
-- `DOCKER_BACKEND_URL=http://backend:3001`
-- `VITE_BACKEND_URL=`
-- `VITE_HMR_HOST=localhost`
-- `VITE_HMR_PORT=3075`
+- `VITE_BACKEND_URL=http://backend:3001` (set directly; `DOCKER_BACKEND_URL` removed, MDT-117)
 
 ### docker-compose.prod.yml (Production)
 - `NODE_ENV=production`
-- `LOG_LEVEL=info`
+- `MCP_LOG_LEVEL=info` (renamed from dead `LOG_LEVEL`, MDT-117)
 
 ---
 
@@ -424,14 +422,13 @@ MCP_AUTH_TOKEN=<secure-token>
 
 **File**: `src/vite-env.d.ts`
 
-**Currently Defined**:
+**Defined** (complete as of MDT-117):
 - `VITE_FRONTEND_LOGGING_AUTOSTART`
-
-**Missing Definitions**:
 - `VITE_BACKEND_URL`
+- `VITE_BACKEND_PORT` (injected at build time by `vite.config.ts` `define`)
 - `VITE_DISABLE_EVENTBUS_LOGS`
-- `VITE_HMR_HOST`
-- `VITE_HMR_PORT`
+
+**Removed**: `VITE_HMR_HOST`, `VITE_HMR_PORT` (dead vars — never consumed).
 
 ---
 
