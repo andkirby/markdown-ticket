@@ -6,10 +6,13 @@
  * - Result items (current project + cross-project)
  * - Loading skeletons, error states, empty states
  *
- * Uses CSS variables for semantic colors so the palette
- * can be re-themed without touching component code.
+ * Consumes global tokens directly (design-tokens.css) — the historical local
+ * --search-* alias layer was removed 2026-08-16. Interaction states use the
+ * shared state ramp: hover = --state-hover-bg (neutral), selected/active =
+ * --state-active-bg + --state-active-fg (accent family, same recipe as scope
+ * tabs and mode badges).
  *
- * @see STYLING.md for naming conventions
+ * @see STYLING.md §Interaction-state ramp
  */
 
 @layer components {
@@ -22,7 +25,7 @@
   }
 
   .search-result:hover {
-    background: var(--search-result-hover-bg);
+    background: var(--state-hover-bg);
   }
 
   .search-result:focus-visible {
@@ -30,44 +33,58 @@
   }
 
   .search-result[data-selected="true"] {
-    background: var(--search-result-selected-bg);
-    box-shadow: inset 0 0 0 2px var(--search-result-selected-ring);
+    background: var(--state-active-bg);
+    box-shadow: inset 0 0 0 2px var(--state-active-fg);
   }
 
-  /* Result child parts */
+  /* Main row layout: code + title side by side (was flex items-center gap-3
+     in markup across ProjectResultRow / DocumentResultRow / QuickSearchResults). */
+  .search-result__row {
+    @apply flex items-center gap-3;
+  }
+
   .search-result__code {
     @apply text-sm font-medium whitespace-nowrap shrink-0;
     font-family: 'JetBrains Mono', monospace;
     font-variant-numeric: tabular-nums;
-    color: var(--search-result-code-color);
+    color: var(--text-subtle);
   }
 
-  /* Cross-project variant uses purple code color */
+  /* Cross-project variant uses the indigo accent for the code */
   .search-result[data-type="cross-project"] .search-result__code {
-    color: var(--search-result-code-cross-color);
+    color: var(--primary-text);
   }
 
+  /* truncate: every usage truncates (space-constrained rows). */
   .search-result__title {
-    color: var(--search-result-title-color);
+    @apply truncate;
+    color: oklch(var(--foreground));
   }
 
   /* Project label badge (cross-project results only) */
   .search-result__project-label {
     @apply inline-flex items-center px-1.5 py-0.5 rounded;
-    background: var(--search-result-label-bg);
-    color: var(--search-result-label-color);
+    background: var(--bg-muted);
+    color: var(--text-muted);
   }
 
+  /* Meta row under the main row (was mt-1 text-xs on the container in markup).
+     Also spaces a following name span from the label (was ml-1.5 in markup). */
   .search-result__project-name {
-    color: var(--search-result-project-name-color);
+    @apply mt-1 text-xs;
+    color: var(--text-subtle);
+  }
+
+  .search-result__project-name > span + span {
+    @apply ml-1.5;
   }
 
   /* ── Section header ── */
 
   .search-section-header {
     @apply px-4 py-2 text-xs font-semibold uppercase tracking-wide;
-    color: var(--search-section-header-color);
-    border-bottom: 1px solid var(--search-section-header-border);
+    color: var(--text-muted);
+    border-bottom: 1px solid oklch(var(--border));
   }
 
   /* ── Result list container ── */
@@ -79,7 +96,7 @@
   }
 
   .search-results-list > li + li {
-    border-top: 1px solid var(--search-results-divider);
+    border-top: 1px solid oklch(var(--border));
   }
 
   /* ── Scope bar tab strip (MDT-179) ── */
@@ -93,17 +110,23 @@
   .search-scope-bar__tab {
     @apply px-2.5 py-1 text-xs font-medium transition-colors;
     border-radius: var(--radius-input);
-    color: var(--search-section-header-color);
+    color: var(--text-muted);
     background: transparent;
-  }
 
-  .search-scope-bar__tab:hover {
-    background: var(--search-result-hover-bg);
-  }
+    &:hover {
+      background: var(--state-hover-bg);
+    }
 
-  .search-scope-bar__tab--active {
-    background: var(--search-scope-tab-active-bg);
-    color: var(--search-scope-tab-active-text);
+    /* Compact control → SOLID active (tints cap at ~1.1:1 on the bg-subtle bar
+       in light mode; solid primary is unmistakable in both themes).
+       State hierarchy: the modifier is nested AFTER :hover at equal specificity
+       so an active pill never demotes to the neutral hover tier on hover —
+       a BEM modifier is ONE class (0,1,0) and would otherwise lose to :hover
+       (0,2,0), orphaning the white text on the light hover fill. */
+    &.search-scope-bar__tab--active {
+      background: oklch(var(--primary));
+      color: oklch(var(--primary-foreground));
+    }
   }
 
   /* ── Mode indicator badge ── */
@@ -111,56 +134,27 @@
   .search-mode-badge {
     @apply absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap;
 
-    background: var(--search-mode-badge-bg);
-    color: var(--search-mode-badge-text);
+    background: oklch(var(--primary));
+    color: oklch(var(--primary-foreground));
   }
 
   /* ── Error / Retry link ── */
 
   .search-retry-link {
     @apply text-sm font-medium hover:underline;
-    color: var(--search-retry-color);
+    color: var(--primary-text);
   }
 
   /* ── Error text ── */
 
   .search-error-text {
-    color: var(--search-error-color);
+    color: var(--prio-critical);
   }
 
   /* ── Skeleton loading card ── */
 
   .search-skeleton-bar {
     @apply h-4 rounded animate-pulse;
-    background: var(--search-skeleton-bg);
+    background: var(--bg-muted);
   }
-}
-
-/* ── CSS Variables (v3 tokens; theme-aware — single set covers light + dark) ── */
-:root {
-  /* Result item surfaces / selection signals */
-  --search-result-hover-bg: var(--bg-muted);
-  --search-result-selected-bg: var(--primary-light);
-  --search-result-selected-ring: var(--primary);
-  --search-result-code-color: var(--text-subtle);
-  --search-result-code-cross-color: var(--primary);
-  --search-result-title-color: oklch(var(--foreground));
-  --search-result-label-bg: var(--bg-muted);
-  --search-result-label-color: var(--text-muted);
-  --search-result-project-name-color: var(--text-subtle);
-
-  /* Section headers + list dividers */
-  --search-section-header-color: var(--text-muted);
-  --search-section-header-border: oklch(var(--border));
-  --search-results-divider: oklch(var(--border));
-
-  /* Mode badge + active scope tab — primary-light bg / primary text */
-  --search-mode-badge-bg: var(--primary-light);
-  --search-mode-badge-text: var(--primary);
-
-  --search-scope-tab-active-bg: var(--primary-light);
-  --search-scope-tab-active-text: var(--primary);
-  --search-retry-color: var(--primary);
-  --search-error-color: var(--prio-critical);
-  --search-skeleton-bg: var(--bg-muted);
 }

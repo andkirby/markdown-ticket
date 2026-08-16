@@ -56,9 +56,9 @@
     outline-offset: 2px;
   }
 
-  /* Active variant — flat primary-light surface, primary border (v3) */
+  /* Active variant — the shared active/selected state ramp (v3) */
   .project-card[data-active="true"] {
-    background-color: var(--primary-light);
+    background-color: var(--state-active-bg);
     border-color: var(--project-card-active-border);
   }
 
@@ -234,8 +234,8 @@
   }
 
   .project-chip:hover {
-    /* v3: hover = muted bg + stronger border — no lift, no shadow. */
-    background-color: var(--bg-muted);
+    /* v3: hover = neutral muted tier + stronger border — no lift, no shadow. */
+    background-color: var(--state-hover-bg);
     border-color: var(--project-chip-hover-border);
   }
 
@@ -364,8 +364,8 @@
   }
 
   .project-launcher:hover {
-    /* v3: hover = muted bg + stronger border — no lift, no shadow. */
-    background-color: var(--bg-muted);
+    /* v3: hover = neutral muted tier + stronger border — no lift, no shadow. */
+    background-color: var(--state-hover-bg);
     border-color: var(--project-launcher-hover-border);
   }
 
@@ -437,7 +437,7 @@
   --project-card-title-color: var(--text-muted);
   --project-card-desc-color: var(--text-subtle);
 
-  /* Active card — flat primary-light surface, primary border */
+  /* Active card — active/selected surface tint + primary border */
   --project-card-active-border: oklch(var(--primary));
 
   --project-chip-code-color: var(--text-muted);

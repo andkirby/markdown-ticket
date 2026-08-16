@@ -35,22 +35,28 @@
     border-radius: var(--radius-input);
     background-color: oklch(var(--background));
     border-color: oklch(var(--border));
-  }
-  /* Hover = bg change only (v3 Pr.5: no lift, no gradient). */
-  .filter-button:hover {
-    background-color: var(--bg-muted);
-  }
-  .filter-button--open {
-    border-color: oklch(var(--primary));
-  }
-  /* Open + unfocused: 1px primary ring (replicates ring-1 ring-primary). */
-  .filter-button--open:not(:focus-visible) {
-    box-shadow: 0 0 0 1px oklch(var(--primary));
-  }
-  /* Keyboard focus owns the ring — keyboard-only, thin, low-opacity. */
-  .filter-button:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 1px color-mix(in srgb, oklch(var(--ring)) 50%, transparent);
+
+    /* Hover = bg change only (v3 Pr.5: no lift, no gradient). */
+    &:hover {
+      background-color: var(--state-hover-bg);
+    }
+
+    /* Keyboard focus owns the ring — keyboard-only, thin, low-opacity. */
+    &:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 1px color-mix(in srgb, oklch(var(--ring)) 50%, transparent);
+    }
+
+    /* State hierarchy: open is nested AFTER :hover at equal specificity so an
+       open trigger never demotes to the neutral hover fill on hover. */
+    &.filter-button--open {
+      border-color: oklch(var(--primary));
+
+      /* Open + unfocused: 1px primary ring (replicates ring-1 ring-primary). */
+      &:not(:focus-visible) {
+        box-shadow: 0 0 0 1px oklch(var(--primary));
+      }
+    }
   }
 
   /* When joined in a .control-group, cede the border-radius to the group
@@ -79,16 +85,14 @@
     border: 1px solid oklch(var(--border));
     color: var(--text-muted);
   }
-  .filter-chip__remove:hover {
-    background-color: var(--bg-muted);
-  }
 
   /* "Clear all" link — muted text, foreground on hover. */
   .filter-clear-all {
     color: var(--text-muted);
-  }
-  .filter-clear-all:hover {
-    color: oklch(var(--foreground));
+
+    &:hover {
+      color: oklch(var(--foreground));
+    }
   }
 
   /* Desktop inline cluster wrapper — now a .control-group so its search +
@@ -110,9 +114,10 @@
   .filter-clear-all-link {
     @apply text-xs underline-offset-2 hover:underline;
     color: var(--text-muted);
-  }
-  .filter-clear-all-link:hover {
-    color: oklch(var(--foreground));
+
+    &:hover {
+      color: oklch(var(--foreground));
+    }
   }
 
   /* Two-column facet grid (surface spec §"Facet grid order"). */
@@ -163,9 +168,10 @@
   }
   .facet-option {
     @apply flex items-center gap-2 px-1 py-1 text-sm cursor-pointer rounded;
-  }
-  .facet-option:hover {
-    background-color: oklch(var(--accent));
+
+    &:hover {
+      background-color: var(--state-hover-bg);
+    }
   }
   .facet-option__checkbox {
     @apply h-4 w-4 rounded;
@@ -187,6 +193,10 @@
   }
   .filter-chip__remove {
     @apply inline-flex items-center rounded-full p-0.5 -mr-1;
+
+    &:hover {
+      background-color: var(--state-hover-bg);
+    }
   }
   .filter-chip__remove-icon {
     @apply h-3 w-3;
@@ -194,9 +204,10 @@
   .active-filter-clear-all {
     @apply text-xs underline-offset-2 hover:underline ml-1;
     color: var(--text-muted);
-  }
-  .active-filter-clear-all:hover {
-    color: oklch(var(--foreground));
+
+    &:hover {
+      color: oklch(var(--foreground));
+    }
   }
 
   /* ── Mobile chip strip (horizontal scroll) ── */
@@ -214,9 +225,10 @@
   }
   .mobile-filter-chip__remove {
     @apply inline-flex items-center rounded-full p-0.5;
-  }
-  .mobile-filter-chip__remove:hover {
-    background-color: oklch(var(--accent));
+
+    &:hover {
+      background-color: var(--state-hover-bg);
+    }
   }
   .mobile-filter-chip__remove-icon {
     @apply h-3 w-3;

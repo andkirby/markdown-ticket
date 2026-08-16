@@ -75,7 +75,7 @@
   </header>
   <p class="note">Swatches render <b>live</b> from <code>src/styles/design-tokens.css</code> — this file defines no colors of its own. Toggle re-themes the entire page via the token file's <code>.dark</code> block.</p>
 
-  <h2>shadcn HSL palette · surfaces</h2>
+  <h2>shadcn OKLCH palette · surfaces</h2>
   <div class="grid">
     <div class="sw"><div class="sw__chip" data-token="background" data-fmt="oklch" style="background:oklch(var(--background))"></div><div class="sw__meta"><div class="sw__name">--background</div><div class="sw__val"></div></div></div>
     <div class="sw"><div class="sw__chip" data-token="foreground" data-fmt="oklch" style="background:oklch(var(--foreground))"></div><div class="sw__meta"><div class="sw__name">--foreground</div><div class="sw__val"></div></div></div>
@@ -98,7 +98,8 @@
     <div class="sw"><div class="sw__chip" data-token="border-strong" data-fmt="raw" style="background:var(--border-strong)"></div><div class="sw__meta"><div class="sw__name">--border-strong</div><div class="sw__val"></div></div></div>
     <div class="sw"><div class="sw__chip" data-token="text-muted" data-fmt="raw" style="background:var(--text-muted)"></div><div class="sw__meta"><div class="sw__name">--text-muted</div><div class="sw__val"></div></div></div>
     <div class="sw"><div class="sw__chip" data-token="text-subtle" data-fmt="raw" style="background:var(--text-subtle)"></div><div class="sw__meta"><div class="sw__name">--text-subtle</div><div class="sw__val"></div></div></div>
-    <div class="sw"><div class="sw__chip" data-token="primary-light" data-fmt="raw" style="background:var(--primary-light)"></div><div class="sw__meta"><div class="sw__name">--primary-light</div><div class="sw__val"></div></div></div>
+    <div class="sw"><div class="sw__chip" data-token="state-active-bg" data-fmt="raw" style="background:var(--state-active-bg)"></div><div class="sw__meta"><div class="sw__name">--state-active-bg</div><div class="sw__val"></div></div></div>
+    <div class="sw"><div class="sw__chip" data-token="primary-text" data-fmt="raw" style="background:var(--primary-text)"></div><div class="sw__meta"><div class="sw__name">--primary-text</div><div class="sw__val"></div></div></div>
   </div>
 
   <h2>status badges (fg on bg)</h2>
@@ -252,6 +253,52 @@
     <div class="field"><label>hairline border (alternative)</label><input class="input-hairline" value="MDT-220"></div>
     <div class="field"><label>select</label><select class="select-demo"><option>Open</option><option>Done</option></select></div>
     <div class="field"><label>checkbox</label><input type="checkbox" class="checkbox-demo" checked></div>
+  </div>
+
+  <style>
+    /* Interaction-state ramp demo — same recipe as quick-search.css / settings tabs. */
+    .state-demo { display: flex; flex-wrap: wrap; gap: 1.25rem; margin-top: .85rem; align-items: flex-start; }
+    .state-list { list-style: none; margin: 0; padding: 0; flex: 1; min-width: 300px; max-width: 480px; background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: var(--radius-input); overflow: hidden; }
+    .state-row { display: flex; align-items: baseline; gap: .6rem; padding: .5rem .75rem; }
+    .state-row + .state-row { border-top: 1px solid oklch(var(--border)); }
+    .state-row:hover, .state-row.is-hover { background: var(--state-hover-bg); }
+    .state-row.is-selected { background: var(--state-active-bg); box-shadow: inset 0 0 0 2px var(--state-active-fg); }
+    .state-row code { font-size: .78rem; color: var(--text-subtle); }
+    .state-row span { color: oklch(var(--foreground)); font-size: .85rem; }
+    .state-row small { margin-left: auto; white-space: nowrap; }
+    .state-side { display: flex; flex-direction: column; gap: .35rem; }
+    .state-side > label { font-size: .7rem; color: var(--text-subtle); }
+    .state-pills, .state-tabs { display: flex; align-items: center; gap: .35rem; padding: .5rem .6rem; background: var(--bg-subtle); border-radius: var(--radius-input); }
+    .state-pill { padding: .25rem .7rem; border-radius: var(--radius-input); font-size: .78rem; font-weight: 500; color: var(--text-muted); cursor: pointer; }
+    .state-pill:hover { background: var(--state-hover-bg); }
+    .state-pill.is-active { background: oklch(var(--primary)); color: oklch(var(--primary-foreground)); }
+    .state-tab { padding: .4rem .65rem .35rem; font-size: .8rem; font-weight: 500; color: var(--text-muted); border-bottom: 2px solid transparent; cursor: pointer; }
+    .state-tab:hover { color: oklch(var(--foreground)); }
+    .state-tab.is-active { color: var(--state-active-fg); border-bottom-color: var(--state-active-fg); }
+  </style>
+
+  <h2>interaction-state ramp · hover vs active/selected</h2>
+  <p class="note" style="margin-top:.25rem"><b>Rule:</b> hover = the neutral tier (<code>--state-hover-bg</code>); active/selected = the accent family at two strengths — <b>surface</b> (<code>--state-active-bg</code> tint + <code>--state-active-fg</code> signal: fill + ring on rows, underline on tabs) and <b>solid</b> (compact pills/badges: <code>oklch(var(--primary))</code> + <code>--primary-foreground</code> — a tint cannot read on near-white surfaces, it measured 1.01:1 on the scope bar). Never a primary tint for hover.</p>
+  <div class="state-demo">
+    <ul class="state-list">
+      <li class="state-row"><code>MDT-218</code><span>Sort epics by rank</span><small class="src">open</small></li>
+      <li class="state-row is-hover"><code>MDT-221</code><span>Drag-over highlight tokens</span><small class="src">← hover · neutral</small></li>
+      <li class="state-row is-selected"><code>MDT-220</code><span>Interaction-state ramp</span><small class="src">← selected · fill + ring</small></li>
+    </ul>
+    <div class="state-side">
+      <label>scope pills · fill + text</label>
+      <div class="state-pills">
+        <span class="state-pill">All</span>
+        <span class="state-pill is-active">Open</span>
+        <span class="state-pill">Done</span>
+      </div>
+      <label>tabs · underline only</label>
+      <div class="state-tabs">
+        <span class="state-tab">Overview</span>
+        <span class="state-tab is-active">Comments</span>
+        <span class="state-tab">Activity</span>
+      </div>
+    </div>
   </div>
 
   <p class="src" style="margin-top:2.5rem">Tokens: <code>src/styles/design-tokens.css</code> · Reference: <code>src/THEME.md</code></p>

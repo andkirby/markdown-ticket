@@ -114,7 +114,7 @@
     @apply p-1 rounded transition-colors;
 
     &:hover {
-      background-color: var(--bg-muted);
+      background-color: var(--state-hover-bg);
     }
 
     &:disabled {
@@ -144,7 +144,7 @@
     background-color: var(--bg-muted);
 
     &:hover {
-      background-color: var(--bg-muted);
+      background-color: var(--state-hover-bg);
     }
   }
 
@@ -164,7 +164,7 @@
     color: var(--text-muted);
 
     &:hover {
-      background-color: var(--bg-muted);
+      background-color: var(--state-hover-bg);
     }
   }
 
