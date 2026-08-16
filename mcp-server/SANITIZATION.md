@@ -15,18 +15,21 @@ When enabled, the server automatically sanitizes all tool outputs before returni
 
 ## Enabling Sanitization
 
-Set the environment variable `MCP_SANITIZATION_ENABLED=true`:
+Set the environment variable `MCP_SECURITY_SANITIZATION=true`:
 
 ```bash
 # For stdio transport
-MCP_SANITIZATION_ENABLED=true bun run dev
+MCP_SECURITY_SANITIZATION=true bun run dev
 
 # For HTTP transport
-MCP_SANITIZATION_ENABLED=true MCP_HTTP_ENABLED=true bun run dev
+MCP_SECURITY_SANITIZATION=true MCP_HTTP_ENABLED=true bun run dev
 
 # For both transports
-MCP_SANITIZATION_ENABLED=true MCP_HTTP_ENABLED=true MCP_HTTP_PORT=3002 bun run dev
+MCP_SECURITY_SANITIZATION=true MCP_HTTP_ENABLED=true MCP_HTTP_PORT=3002 bun run dev
 ```
+
+> **MDT-117 rename**: the variable was previously `MCP_SANITIZATION_ENABLED`.
+> The old name still enables the feature but emits a one-time deprecation warning.
 
 ## Sanitization Rules
 

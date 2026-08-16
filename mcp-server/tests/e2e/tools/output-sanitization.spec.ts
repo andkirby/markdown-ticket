@@ -6,7 +6,7 @@
  * Following TDD RED-GREEN-REFACTOR approach
  *
  * IMPORTANT: The sanitizer is disabled by default in the MCP server.
- * These tests set MCP_SANITIZATION_ENABLED=true in beforeEach to enable sanitization.
+ * These tests set MCP_SECURITY_SANITIZATION=true in beforeEach to enable sanitization.
  * The "Sanitization Toggle" section tests both enabled and disabled states.
  *
  * BDD Scenarios:
@@ -33,7 +33,9 @@ describe('output Sanitization (MUST-06)', () => {
     // NOTE: The sanitizer is disabled by default in the MCP server.
     // This environment variable is required to enable sanitization behavior
     // and verify that malicious content is properly filtered from tool outputs.
-    process.env.MCP_SANITIZATION_ENABLED = 'true'
+    process.env.MCP_SECURITY_SANITIZATION = 'true'
+    // Isolate from the deprecated pre-rename name (MDT-117)
+    delete process.env.MCP_SANITIZATION_ENABLED
 
     // Create isolated test environment
     testEnv = new TestEnvironment()
@@ -479,12 +481,13 @@ console.log('safe code');
   })
 
   describe('sanitization Toggle', () => {
-    it('should not sanitize when MCP_SANITIZATION_ENABLED is not set', async () => {
+    it('should not sanitize when MCP_SECURITY_SANITIZATION is not set', async () => {
       // Create a new test environment with sanitization disabled
       const testEnvDisabled = new TestEnvironment()
       await testEnvDisabled.setup()
 
-      // Ensure sanitization is disabled
+      // Ensure sanitization is disabled (both canonical and deprecated names)
+      delete process.env.MCP_SECURITY_SANITIZATION
       delete process.env.MCP_SANITIZATION_ENABLED
 
       // Create project BEFORE starting client (server discovers projects at startup)
@@ -559,7 +562,7 @@ Testing sanitization of malicious content.
       }
     })
 
-    it('should sanitize when MCP_SANITIZATION_ENABLED=true', async () => {
+    it('should sanitize when MCP_SECURITY_SANITIZATION=true', async () => {
       // This test verifies that the existing tests are actually testing sanitization
       // Given: A project exists with sanitization enabled (created in beforeEach)
 
@@ -576,6 +579,53 @@ Testing sanitization of malicious content.
       expect(result.data).not.toContain('<script>alert("XSS")</script>')
       expect(result.data).not.toContain('</script>')
       expect(result.data).toContain('Safe content') // Safe content should remain
+    })
+
+    it('should sanitize when deprecated MCP_SANITIZATION_ENABLED=true (legacy fallback, MDT-117)', async () => {
+      // Given: Only the deprecated pre-rename flag is set
+      delete process.env.MCP_SECURITY_SANITIZATION
+      process.env.MCP_SANITIZATION_ENABLED = 'true'
+
+      const testEnvLegacy = new TestEnvironment()
+      await testEnvLegacy.setup()
+      const projectSetupLegacy = new ProjectSetup({ testEnv: testEnvLegacy })
+      const projectCodeLegacy = `L${Math.random().toString(36).replace(/[^a-z]/g, '').toUpperCase().slice(0, 3)}`
+      await projectSetupLegacy.createProjectStructure(projectCodeLegacy, 'Legacy Sanitization Project')
+
+      const mcpClientLegacy = new MCPClient(testEnvLegacy, { transport: 'stdio' })
+      await mcpClientLegacy.start()
+
+      try {
+        // When: Creating and retrieving a CR with script tags
+        const maliciousContent = '<script>alert("XSS")</script><p>Safe content</p>'
+        const crData = {
+          title: 'Test CR with Malicious Content',
+          type: 'Feature Enhancement',
+          priority: 'Medium',
+          content: `## 1. Description\n\n${maliciousContent}\n\n## 2. Rationale\n\nLegacy fallback test.`,
+        }
+        const created = await mcpClientLegacy.callTool('create_cr', {
+          project: projectCodeLegacy,
+          type: crData.type,
+          data: crData,
+        })
+        const match = ((created.data as string) || '').match(/Created CR (\w+-\d+)/)
+        expect(match).not.toBeNull()
+
+        const result = await mcpClientLegacy.callTool('get_cr', {
+          project: projectCodeLegacy,
+          key: match![1],
+        })
+
+        // Then: The deprecated name still enables sanitization (loud fallback, not a silent drop)
+        expect(result.data).not.toContain('<script>alert("XSS")</script>')
+        expect(result.data).toContain('Safe content')
+      }
+      finally {
+        delete process.env.MCP_SANITIZATION_ENABLED
+        await mcpClientLegacy.stop()
+        await testEnvLegacy.cleanup()
+      }
     })
   })
 })

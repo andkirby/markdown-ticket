@@ -1,5 +1,7 @@
 import type { Request } from 'express'
 import { createHash } from 'node:crypto'
+import { DEFAULT_PORTS } from '@mdt/shared/utils/constants.js'
+import { parseEnvIntFrom, parsePortEnvFrom } from '@mdt/shared/utils/env.js'
 
 export interface HttpTransportSecurityConfig {
   port: number
@@ -45,7 +47,9 @@ export function parseHttpTransportConfig(env: NodeJS.ProcessEnv): HttpTransportS
   }
 
   return {
-    port: Number.parseInt(env.MCP_HTTP_PORT || env.HTTP_PORT || '3002', 10),
+    // MDT-117: default comes from the shared DEFAULT_PORTS table; the legacy
+    // undocumented HTTP_PORT name still resolves but warns (not a silent alias).
+    port: parsePortEnvFrom(env, 'MCP_HTTP_PORT', 'HTTP_PORT', DEFAULT_PORTS.MCP),
     host: env.MCP_BIND_ADDRESS || env.HOST || '127.0.0.1',
     trustProxy: parseTrustProxyConfig(env.MCP_TRUST_PROXY),
     enableOriginValidation: originValidationEnabled,
@@ -53,8 +57,8 @@ export function parseHttpTransportConfig(env: NodeJS.ProcessEnv): HttpTransportS
     enableRateLimiting: env.MCP_SECURITY_RATE_LIMITING === undefined
       ? nodeEnv === 'production'
       : env.MCP_SECURITY_RATE_LIMITING !== 'false',
-    rateLimitMax: Number.parseInt(env.MCP_RATE_LIMIT_MAX || '100', 10),
-    rateLimitWindowMs: Number.parseInt(env.MCP_RATE_LIMIT_WINDOW_MS || '60000', 10),
+    rateLimitMax: parseEnvIntFrom(env, 'MCP_RATE_LIMIT_MAX', 100),
+    rateLimitWindowMs: parseEnvIntFrom(env, 'MCP_RATE_LIMIT_WINDOW_MS', 60000),
     enableAuth: authEnabled,
     authToken: env.MCP_AUTH_TOKEN,
     authMigrationWarningRequired,

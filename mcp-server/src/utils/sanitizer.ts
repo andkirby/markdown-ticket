@@ -5,7 +5,7 @@
  * Implements MUST-06 requirement for server output sanitization.
  *
  * NOTE: This is a BETA FEATURE disabled by default.
- * Enable with MCP_SANITIZATION_ENABLED=true environment variable.
+ * Enable with MCP_SECURITY_SANITIZATION=true environment variable.
  */
 
 import type { IOptions } from 'sanitize-html'
@@ -13,11 +13,40 @@ import process from 'node:process'
 import sanitize from 'sanitize-html'
 
 /**
+ * Canonical enable flag, aligned with the MCP_SECURITY_* prefix used by the
+ * other security features (MDT-117).
+ */
+const SANITIZATION_ENV = 'MCP_SECURITY_SANITIZATION'
+
+/**
+ * Pre-rename name. Still honored — with a one-time deprecation warning — so
+ * stale environments fail loudly instead of silently disabling the feature.
+ */
+const SANITIZATION_ENV_DEPRECATED = 'MCP_SANITIZATION_ENABLED'
+
+let sanitizationDeprecationWarned = false
+
+/**
  * Check if sanitization is enabled via environment variable
  * This function checks the environment variable at runtime
  */
 function isSanitizationEnabled(): boolean {
-  return process.env.MCP_SANITIZATION_ENABLED === 'true'
+  const primary = process.env[SANITIZATION_ENV]
+  if (primary !== undefined && primary !== '')
+    return primary === 'true'
+
+  const deprecated = process.env[SANITIZATION_ENV_DEPRECATED]
+  if (deprecated !== undefined && deprecated !== '') {
+    if (!sanitizationDeprecationWarned) {
+      sanitizationDeprecationWarned = true
+      console.warn(
+        `\n⚠️  Environment variable \`${SANITIZATION_ENV_DEPRECATED}\` is deprecated; use \`${SANITIZATION_ENV}\` instead.\n`,
+      )
+    }
+    return deprecated === 'true'
+  }
+
+  return false
 }
 
 /**

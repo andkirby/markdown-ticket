@@ -344,7 +344,7 @@ function frontendLoggingPlugin() {
       server.middlewares.use('/api/cache/clear', (req, res, next) => {
         if (req.method === 'POST') {
         // Call backend to clear cache
-          const backendUrl = process.env.DOCKER_BACKEND_URL || `http://localhost:${resolveBackendPort(VITE_DEFAULT_PORTS.BACKEND)}`
+          const backendUrl = process.env.VITE_BACKEND_URL || `http://localhost:${resolveBackendPort(VITE_DEFAULT_PORTS.BACKEND)}`
           fetch(`${backendUrl}/api/cache/clear`, { method: 'POST' })
             .then(response => response.json())
             .then(() => {
@@ -625,9 +625,11 @@ export default defineConfig(({ mode }) => {
       process.env[k] = v
   }
 
-  // Precedence: explicit VITE_BACKEND_URL → DOCKER_BACKEND_URL → localhost on the
-  // resolved backend port (BACKEND_PORT, falling back to legacy PORT, then 3001).
-  const backendUrl = env.VITE_BACKEND_URL || process.env.DOCKER_BACKEND_URL || `http://localhost:${resolveBackendPort(VITE_DEFAULT_PORTS.BACKEND)}`
+  // Precedence: VITE_BACKEND_URL (real env — e.g. Docker compose — wins because
+  // the mirror loop above never overrides it, then .env/.env.local file values)
+  // → localhost on the resolved backend port (BACKEND_PORT, legacy PORT, then 3001).
+  // MDT-117: DOCKER_BACKEND_URL was a duplicate of VITE_BACKEND_URL and is gone.
+  const backendUrl = process.env.VITE_BACKEND_URL || `http://localhost:${resolveBackendPort(VITE_DEFAULT_PORTS.BACKEND)}`
 
   // Shared API proxy — dev and preview both forward /api to the backend.
   // MDT-157 UAT 2026-08-06: changeOrigin must be false so the backend sees the

@@ -45,6 +45,12 @@ export default {
     // Map keyNormalizer to source (for proper ES module transformation)
     '^@mdt/shared/utils/keyNormalizer$': '<rootDir>/../shared/utils/keyNormalizer.ts',
     '^@mdt/shared/utils/keyNormalizer.js$': '<rootDir>/../shared/utils/keyNormalizer.ts',
+    // Map env/constants utils to source too (MDT-117: shared/dist is ESM-only,
+    // which jest's CJS runtime cannot load; same reason as keyNormalizer above)
+    '^@mdt/shared/utils/env$': '<rootDir>/../shared/utils/env.ts',
+    '^@mdt/shared/utils/env.js$': '<rootDir>/../shared/utils/env.ts',
+    '^@mdt/shared/utils/constants$': '<rootDir>/../shared/utils/constants.ts',
+    '^@mdt/shared/utils/constants.js$': '<rootDir>/../shared/utils/constants.ts',
     // Map test-lib to the actual test-lib directory
     '^@mdt/shared/test-lib(.*)$': '<rootDir>/../shared/test-lib$1',
     '^shared/test-lib(.*)$': '<rootDir>/../shared/test-lib$1',

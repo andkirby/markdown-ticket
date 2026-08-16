@@ -72,7 +72,7 @@ services:
       - MCP_HTTP_ENABLED=true
       - MCP_HTTP_PORT=3002
       - MCP_BIND_ADDRESS=0.0.0.0
-      - LOG_LEVEL=debug
+      - MCP_LOG_LEVEL=debug
 
       # Cache Configuration
       - MCP_CACHE_TIMEOUT=300

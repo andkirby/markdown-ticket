@@ -122,4 +122,55 @@ describe('MCP HTTP security config', () => {
     expect(parseHttpTransportConfig({ MCP_TRUST_PROXY: '1' } as NodeJS.ProcessEnv).trustProxy).toBe(1)
     expect(parseHttpTransportConfig({ MCP_TRUST_PROXY: 'loopback, linklocal' } as NodeJS.ProcessEnv).trustProxy).toEqual(['loopback', 'linklocal'])
   })
+
+  it('defaults the HTTP port to the shared DEFAULT_PORTS.MCP value', () => {
+    const config = parseHttpTransportConfig({ NODE_ENV: 'test' } as NodeJS.ProcessEnv)
+
+    expect(config.port).toBe(3002)
+  })
+
+  it('parses MCP_HTTP_PORT and falls back to the default on invalid values', () => {
+    expect(parseHttpTransportConfig({ MCP_HTTP_PORT: '3015' } as NodeJS.ProcessEnv).port).toBe(3015)
+    expect(parseHttpTransportConfig({ MCP_HTTP_PORT: 'not-a-port' } as NodeJS.ProcessEnv).port).toBe(3002)
+    expect(parseHttpTransportConfig({ MCP_HTTP_PORT: '' } as NodeJS.ProcessEnv).port).toBe(3002)
+  })
+
+  it('honors legacy HTTP_PORT with a deprecation warning instead of a silent alias', () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => undefined)
+
+    try {
+      expect(parseHttpTransportConfig({ HTTP_PORT: '3016' } as NodeJS.ProcessEnv).port).toBe(3016)
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringMatching(/deprecated.*MCP_HTTP_PORT/))
+    }
+    finally {
+      warnSpy.mockRestore()
+    }
+  })
+
+  it('prefers MCP_HTTP_PORT over legacy HTTP_PORT without warning', () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => undefined)
+
+    try {
+      const config = parseHttpTransportConfig({
+        MCP_HTTP_PORT: '3017',
+        HTTP_PORT: '3018',
+      } as NodeJS.ProcessEnv)
+
+      expect(config.port).toBe(3017)
+      expect(warnSpy).not.toHaveBeenCalled()
+    }
+    finally {
+      warnSpy.mockRestore()
+    }
+  })
+
+  it('falls back to documented rate-limit defaults on invalid numeric values', () => {
+    const config = parseHttpTransportConfig({
+      MCP_RATE_LIMIT_MAX: 'oops',
+      MCP_RATE_LIMIT_WINDOW_MS: 'also-oops',
+    } as NodeJS.ProcessEnv)
+
+    expect(config.rateLimitMax).toBe(100)
+    expect(config.rateLimitWindowMs).toBe(60000)
+  })
 })
