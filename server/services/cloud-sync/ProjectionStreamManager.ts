@@ -106,6 +106,14 @@ export const MIN_BACKOFF_MS = 1_000
 export const MAX_BACKOFF_MS = 30_000
 /** Reconnect no later than this skew before grant/credential expiry. */
 export const GRANT_ROTATION_SKEW_MS = 60_000
+/**
+ * Rotation scheduling floor. When the effective rotate-at is already past
+ * (stale credential expiry), the naive Math.max(MIN_BACKOFF_MS, negative)
+ * re-armed rotation every second — a reconnect tight-loop observed on the
+ * deployed 2026-08-16 validation. Grants live ≥ minutes; a 30s floor is
+ * always safe and stops the cycle.
+ */
+export const MIN_ROTATION_DELAY_MS = 30_000
 
 /** Local-only diagnostic view (GET /api/projects/:id/cloud-sync/status). */
 export interface ProjectionStreamStatus {
@@ -590,7 +598,7 @@ export class ProjectionStreamManager {
       grant.grantExpiresAt,
       auth.tokenExpiry > 0 ? auth.tokenExpiry : grant.grantExpiresAt,
     )
-    const delay = Math.max(MIN_BACKOFF_MS, rotateAt - this.now() - GRANT_ROTATION_SKEW_MS)
+    const delay = Math.max(MIN_ROTATION_DELAY_MS, rotateAt - this.now() - GRANT_ROTATION_SKEW_MS)
     managed.rotationHandle = this.scheduler(delay, () => {
       managed.rotationHandle = undefined
       this.track(this.rotateGrant(managed))
