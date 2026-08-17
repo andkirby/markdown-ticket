@@ -398,3 +398,87 @@ describe('SwimlaneBoard column collapse (MDT-206 UAT round 6)', () => {
     expect(container.querySelector('[data-testid="swimlane-col-expand"][data-status="Approved"]')).not.toBeNull()
   })
 })
+
+describe('SwimlaneBoard toolbar search (MDT-206 BR-6.1, UAT round 7)', () => {
+  beforeEach(() => {
+    localStorage.clear()
+  })
+
+  afterEach(() => {
+    cleanup()
+  })
+
+  function renderSearchBoard() {
+    const epic = ticket({
+      code: 'MDT-010',
+      title: 'Auth Overhaul',
+      status: 'Approved',
+      level: 'epic',
+    })
+    const login = ticket({ code: 'MDT-012', title: 'Fix login flow', status: 'Approved', phaseEpic: 'MDT-010' })
+    const rate = ticket({ code: 'MDT-003', title: 'Rate limits', status: 'Proposed', phaseEpic: 'MDT-010' })
+    return renderBoard({ tickets: [epic, login, rate] })
+  }
+
+  it('renders the search field in the toolbar next to the toggles', () => {
+    renderSearchBoard()
+    const input = screen.getByTestId('swimlane-search')
+    expect(input).toBeDefined()
+    expect(input.getAttribute('aria-label')).toBe('Search swimlane tickets by title or key')
+    expect(screen.getByTestId('swimlane-hide-empty')).toBeDefined()
+    expect(screen.getByTestId('swimlane-show-closed')).toBeDefined()
+  })
+
+  it('filters lane tickets by title (case-insensitive substring)', () => {
+    renderSearchBoard()
+    fireEvent.change(screen.getByTestId('swimlane-search'), { target: { value: 'LOGIN' } })
+    expect(screen.getByText('Fix login flow')).toBeDefined()
+    expect(screen.queryByText('Rate limits')).toBeNull()
+  })
+
+  it('filters by bare number and by simplified key (MDT-12 → MDT-012)', () => {
+    renderSearchBoard()
+    fireEvent.change(screen.getByTestId('swimlane-search'), { target: { value: '12' } })
+    expect(screen.getByText('Fix login flow')).toBeDefined()
+    expect(screen.queryByText('Rate limits')).toBeNull()
+
+    fireEvent.change(screen.getByTestId('swimlane-search'), { target: { value: 'MDT-12' } })
+    expect(screen.getByText('Fix login flow')).toBeDefined()
+    expect(screen.queryByText('Rate limits')).toBeNull()
+  })
+
+  it('clears the search via the clear button and restores the full board', () => {
+    renderSearchBoard()
+    fireEvent.change(screen.getByTestId('swimlane-search'), { target: { value: 'login' } })
+    expect(screen.queryByText('Rate limits')).toBeNull()
+
+    fireEvent.click(screen.getByTestId('swimlane-search-clear'))
+    expect(screen.getByText('Fix login flow')).toBeDefined()
+    expect(screen.getByText('Rate limits')).toBeDefined()
+    expect((screen.getByTestId('swimlane-search') as HTMLInputElement).value).toBe('')
+  })
+
+  it('keeps the whole lane when the epic title/key matches (filters the epic list)', () => {
+    const { container } = renderSearchBoard()
+    fireEvent.change(screen.getByTestId('swimlane-search'), { target: { value: 'auth' } })
+    // Epic 'Auth Overhaul' matches → its lane stays with ALL its tickets.
+    const lane = container.querySelector('[data-testid="swimlane-lane"][data-lane-key="MDT-010"]')
+    expect(lane).not.toBeNull()
+    expect(screen.getByText('Fix login flow')).toBeDefined()
+    expect(screen.getByText('Rate limits')).toBeDefined()
+  })
+
+  it('removes lanes entirely when nothing in them matches', () => {
+    const { container } = renderSearchBoard()
+    fireEvent.change(screen.getByTestId('swimlane-search'), { target: { value: 'nothing matches this' } })
+    expect(container.querySelectorAll('[data-testid="swimlane-lane"]').length).toBe(0)
+  })
+
+  it('does not recompute the epic progress bar for the filtered view', () => {
+    renderSearchBoard()
+    const before = document.querySelector('[data-testid="swimlane-progress"]')?.getAttribute('aria-valuenow')
+    fireEvent.change(screen.getByTestId('swimlane-search'), { target: { value: 'login' } })
+    const after = document.querySelector('[data-testid="swimlane-progress"]')?.getAttribute('aria-valuenow')
+    expect(after).toBe(before)
+  })
+})

@@ -393,4 +393,54 @@ test.describe('Epic swimlane board (MDT-206)', () => {
     await expect(page.locator(swimlaneSelectors.colCollapseByStatus('Implemented'))).toBeVisible()
     await expect(page.locator(swimlaneSelectors.laneColumn(scenario.alphaEpic, 'Implemented'))).toBeVisible()
   })
+
+  test('toolbar search filters lane tickets by title and ticket key (BR-6.1)', async ({ page, e2eContext }) => {
+    const scenario = await createEpicProject(e2eContext.projectFactory)
+
+    await page.goto(`/prj/${scenario.projectCode}`)
+    await waitForBoardReady(page)
+    await page.click(swimlaneSelectors.modeToggle)
+    await page.click(swimlaneSelectors.expandAll)
+
+    const alphaLane = page.locator(swimlaneSelectors.laneByKey(scenario.alphaEpic))
+    const alphaOpenCard = alphaLane.locator(boardSelectors.ticketByCode(scenario.alphaOpen))
+    const alphaDoneCard = alphaLane.locator(boardSelectors.ticketByCode(scenario.alphaDone))
+
+    // Search by title (case-insensitive substring).
+    await page.locator(swimlaneSelectors.search).fill('alpha open')
+    await expect(alphaOpenCard).toBeVisible()
+    await expect(alphaDoneCard).toHaveCount(0)
+    // Progress is presentation-only: kept from the full child set.
+    await expect(page.locator(swimlaneSelectors.laneProgressByKey(scenario.alphaEpic))).toHaveAttribute('aria-valuenow', '50')
+
+    // Search by full zero-padded ticket key.
+    await page.locator(swimlaneSelectors.search).fill(scenario.alphaDone)
+    await expect(alphaDoneCard).toBeVisible()
+    await expect(alphaOpenCard).toHaveCount(0)
+
+    // Search by simplified key (SWIM-00X → SWIM-X) and bare number.
+    const [prefix, num] = scenario.alphaDone.split('-')
+    await page.locator(swimlaneSelectors.search).fill(`${prefix}-${Number(num)}`)
+    await expect(alphaDoneCard).toBeVisible()
+    await expect(alphaOpenCard).toHaveCount(0)
+    await page.locator(swimlaneSelectors.search).fill(String(Number(num)))
+    await expect(alphaDoneCard).toBeVisible()
+    await expect(alphaOpenCard).toHaveCount(0)
+
+    // Non-matching query removes the lanes from the board entirely (the search
+    // filters the epic lane list, not just tickets inside lanes).
+    await page.locator(swimlaneSelectors.search).fill('no such ticket anywhere')
+    await expect(page.locator(swimlaneSelectors.lane)).toHaveCount(0)
+
+    // Epic-title match keeps the epic's lane with ALL of its tickets.
+    await page.locator(swimlaneSelectors.search).fill('alpha epic')
+    await expect(alphaLane).toBeVisible()
+    await expect(alphaOpenCard).toBeVisible()
+    await expect(alphaDoneCard).toBeVisible()
+
+    // Clear restores the full board.
+    await page.click(swimlaneSelectors.searchClear)
+    await expect(alphaOpenCard).toBeVisible()
+    await expect(alphaDoneCard).toBeVisible()
+  })
 })

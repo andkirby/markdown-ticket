@@ -262,3 +262,36 @@ Made the swimlane status columns collapsible like the flat Board page. Execution
 **Strict drift/lock:** not used.
 
 **More implementation required:** no — implemented, tested (22/22 swimlane component = 15 lane + 7 column; 10/10 swimlane E2E), and trace-validated.
+
+### UAT Session 2026-08-10 (round 7 — toolbar ticket search)
+
+Added a simple search field to the swimlane toolbar, filtering by title / ticket key only. Execution brief: [uat.md](./MDT-206/uat.md).
+
+**Approved changes:**
+- New search input in the swimlane toolbar (beside Hide empty / Show badges / Show closed), with a clear button.
+- Filters lane tickets by **title only** (case-insensitive substring) or **ticket key**, accepting `ABC-012` (full zero-padded), `12` (bare number), and `ABC-12` (simplified, normalized to zero-padded via the shared key-normalization rules).
+- Presentation-only: no ticket mutation, epic progress not recomputed; composes with Hide empty / Show closed (search applies before visibility filters).
+
+**Changed requirement IDs:** `BR-6.1` (new), `swimlane_search_filters_by_title_or_key` (new BDD scenario); `TEST-swimlane-component`, `TEST-swimlane-helpers`, `TEST-swimlane-board-e2e` extended to cover BR-6.1.
+
+**Updated workflow documents:** `requirements.md`, `bdd.md`, `tests.md`, `uat.md`; all `*.trace.md` projections re-rendered.
+
+**Strict drift/lock:** not used.
+
+**More implementation required:** no — implemented in the same session and tested (17/17 helpers, 27/27 swimlane component, 11/11 swimlane E2E green; trace re-validated).
+
+### UAT Session 2026-08-10 (round 8 — search filters the epic lane list)
+
+Corrected round 7: the toolbar search must filter **the epics list itself**, not behave like the header global filter (which only hides tickets inside lanes). Execution brief: [uat.md](./MDT-206/uat.md).
+
+**Approved changes:**
+- `filterLanesBySearch` now removes lanes from the board instead of leaving emptied lanes: an epic lane stays when its epic key/title matches (showing **all** its tickets), or when any child ticket matches (narrowed to the matching tickets); the No-epic lane stays only when one of its tickets matches; everything else is removed.
+- Unchanged from round 7: toolbar placement, clear button, title/key-only matching (`ABC-012`, `12`, `ABC-12`), presentation-only (no mutation, epic progress not recomputed).
+
+**Changed requirement IDs:** `BR-6.1` (refined in place — lane-list filtering), `swimlane_search_filters_by_title_or_key` (refined in place).
+
+**Updated workflow documents:** `requirements.md`, `tests.md`, `uat.md`; requirements + bdd `*.trace.md` re-rendered.
+
+**Strict drift/lock:** not used.
+
+**More implementation required:** no — re-implemented and tested (19/19 helpers, 29/29 swimlane component, 11/11 swimlane E2E green; trace re-validated).
