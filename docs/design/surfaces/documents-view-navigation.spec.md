@@ -83,7 +83,7 @@ DocumentsLayout
 - Sidebar default width is about one third of the Documents View; user-resized width and collapsed state persist per project.
 - Collapsing navigation removes the sidebar and exposes a compact show-navigation control in the viewer pane.
 - Header first row is the search input at full width — search is the primary affordance and gets the breathing room; it is not squeezed by sort controls or action icons.
-- Header second row is a toolbar: sort select and sort direction button on the left, navigation action icons on the right (justify-between).
+- Header second row is a toolbar: the collapsed SortMenu trigger (+ direction segment when it fits) on the left, navigation action icons on the right (justify-between). SortMenu variants here are container-query driven by the panel width — owned by `sort-menu.spec.md` (A ≥ 300px, B 220–299px, C below; popover right-aligned). Attribute set: Filename, Title, Created, Updated.
 - The navigation panel has no title; its identity is established by the surrounding route (the Documents View) and its content.
 - The path configuration action uses a gear/settings icon, not an edit pencil, because it opens configuration rather than editing a document.
 - Header padding matches board chrome tokens (`p-2`, 8px); inter-row gap is `gap-2` (8px) and the tight icon cluster is `gap-1` (4px), reusing the board spacing grammar rather than the larger content-reading padding.

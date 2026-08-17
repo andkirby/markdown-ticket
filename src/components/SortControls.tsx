@@ -1,7 +1,7 @@
 import type { SortPreferences } from '../config/sorting'
-import { ChevronDown, ChevronUp } from 'lucide-react'
 import * as React from 'react'
 import { DEFAULT_SORT_ATTRIBUTES } from '../config/sorting'
+import { SortMenu } from './SortMenu'
 
 interface SortControlsProps {
   preferences: SortPreferences
@@ -9,59 +9,34 @@ interface SortControlsProps {
 }
 
 /**
+ * Board/list sort controls — the shared collapsed SortMenu in the app header.
+ * Variant is viewport-driven (spec: sort-menu.spec.md): icon-only below md,
+ * icon + label at md+. Below sm this component is hidden (`hidden sm:flex`);
+ * mobile sorting lives in the Hamburger Menu full-label list.
+ *
  * @testid sort-controls — Sort controls container
  */
 export const SortControls: React.FC<SortControlsProps> = ({
   preferences,
   onPreferencesChange,
 }) => {
-  const handleAttributeChange = (attribute: string) => {
-    const sortAttribute = DEFAULT_SORT_ATTRIBUTES.find(attr => attr.name === attribute)
-    const newPreferences = {
-      selectedAttribute: attribute,
-      selectedDirection: sortAttribute?.defaultDirection || 'desc',
-    }
-    onPreferencesChange(newPreferences)
-  }
-
-  const handleDirectionToggle = () => {
-    const newDirection = preferences.selectedDirection === 'asc' ? 'desc' : 'asc'
+  const handleChange = (attribute: string, direction: 'asc' | 'desc') => {
     onPreferencesChange({
-      ...preferences,
-      selectedDirection: newDirection,
+      selectedAttribute: attribute,
+      selectedDirection: direction,
     })
   }
 
-  const _selectedAttribute = DEFAULT_SORT_ATTRIBUTES.find(
-    attr => attr.name === preferences.selectedAttribute,
-  )
-
   return (
-    <div data-testid="sort-controls" className="hidden sm:flex control-group">
-      <select
+    <div data-testid="sort-controls" className="hidden sm:flex">
+      <SortMenu
+        attributes={DEFAULT_SORT_ATTRIBUTES}
         value={preferences.selectedAttribute}
-        onChange={e => handleAttributeChange(e.target.value)}
-        className="control-group__item h-9 border border-border px-3 pr-8 text-sm bg-background focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 appearance-none"
-      >
-        {DEFAULT_SORT_ATTRIBUTES.map(attr => (
-          <option key={attr.name} value={attr.name}>
-            {attr.label}
-          </option>
-        ))}
-      </select>
-      <button
-        onClick={handleDirectionToggle}
-        className="control-group__item h-9 w-9 flex items-center justify-center border border-border bg-background hover:bg-muted transition-colors"
-        title={`Sort ${preferences.selectedDirection === 'asc' ? 'ascending' : 'descending'}`}
-      >
-        {preferences.selectedDirection === 'asc'
-          ? (
-              <ChevronUp className="h-4 w-4" />
-            )
-          : (
-              <ChevronDown className="h-4 w-4" />
-            )}
-      </button>
+        direction={preferences.selectedDirection}
+        onChange={handleChange}
+        variant="a"
+        collapseLabelBelowMd
+      />
     </div>
   )
 }

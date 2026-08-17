@@ -1,8 +1,13 @@
+import type { LucideIcon } from 'lucide-react'
+import { ALargeSmall, Calendar1, CalendarClock, ChevronsUp, Ticket } from 'lucide-react'
+
 interface SortAttribute {
   name: string
   label: string
   defaultDirection: 'asc' | 'desc'
   system: boolean
+  /** Lucide glyph shown in the collapsed SortMenu (icon map: sort-menu.spec.md). */
+  icon: LucideIcon
 }
 
 export interface SortPreferences {
@@ -11,11 +16,12 @@ export interface SortPreferences {
 }
 
 export const DEFAULT_SORT_ATTRIBUTES: SortAttribute[] = [
-  { name: 'code', label: 'Key', defaultDirection: 'desc', system: true },
-  { name: 'title', label: 'Title', defaultDirection: 'asc', system: true },
-  { name: 'priority', label: 'Priority', defaultDirection: 'desc', system: true },
-  { name: 'dateCreated', label: 'Created Date', defaultDirection: 'desc', system: true },
-  { name: 'lastModified', label: 'Update Date', defaultDirection: 'desc', system: true },
+  { name: 'code', label: 'Key', defaultDirection: 'desc', system: true, icon: Ticket },
+  { name: 'title', label: 'Title', defaultDirection: 'asc', system: true, icon: ALargeSmall },
+  { name: 'priority', label: 'Priority', defaultDirection: 'desc', system: true, icon: ChevronsUp },
+  // Labels drop the redundant "Date" — the calendar glyph carries it.
+  { name: 'dateCreated', label: 'Created', defaultDirection: 'desc', system: true, icon: Calendar1 },
+  { name: 'lastModified', label: 'Updated', defaultDirection: 'desc', system: true, icon: CalendarClock },
 ]
 
 const DEFAULT_SORT_PREFERENCES: SortPreferences = {

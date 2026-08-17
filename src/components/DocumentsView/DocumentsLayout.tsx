@@ -1,9 +1,12 @@
 import type { Layout, PanelImperativeHandle } from 'react-resizable-panels'
+import type { SortMenuAttribute } from '../SortMenu'
 import type { DocumentFile, FileTreeHandle } from './FileTree'
 import {
-  ChevronDown,
-  ChevronUp,
+  ALargeSmall,
+  Calendar1,
+  CalendarClock,
   Crosshair,
+  FileText,
   FileX,
   ListCollapse,
   PanelLeftClose,
@@ -41,6 +44,8 @@ import {
   usePageTitle,
 } from '../../hooks/usePageTitle'
 import { useEventBus } from '../../services/eventBus'
+import { SortMenu } from '../SortMenu'
+import { useSortVariantByContainer } from '../SortMenu/useSortVariantByContainer'
 import {
   resolveDocumentFilenameTabs,
   resolveFilenameTabFallback,
@@ -59,6 +64,14 @@ interface DocumentsLayoutProps {
 }
 
 const DOCUMENT_NAVIGATION_PANEL_MIN_SIZE = 18
+
+/** Sort attributes for the navigation toolbar (icon map: sort-menu.spec.md). */
+const DOCUMENT_SORT_ATTRIBUTES: SortMenuAttribute[] = [
+  { name: 'name', label: 'Filename', icon: FileText, defaultDirection: 'asc' },
+  { name: 'title', label: 'Title', icon: ALargeSmall, defaultDirection: 'asc' },
+  { name: 'created', label: 'Created', icon: Calendar1, defaultDirection: 'desc' },
+  { name: 'modified', label: 'Updated', icon: CalendarClock, defaultDirection: 'desc' },
+]
 const DOCUMENT_NAVIGATION_PANEL_MAX_SIZE = 45
 const DOCUMENT_NAVIGATION_PANEL_COLLAPSED_SIZE = 0
 const DOCUMENT_NAVIGATION_PANEL_ID = 'documents-navigation'
@@ -96,6 +109,9 @@ export default function DocumentsLayout({
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(
     savedPreferences.sortDirection,
   )
+  // SortMenu variant tracks the resizable navigation panel width (spec:
+  // sort-menu.spec.md — container-driven, not viewport-driven).
+  const { ref: sortVariantRef, variant: sortVariant } = useSortVariantByContainer()
 
   // Refs to store timeout IDs for cleanup
   const sortByTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -902,42 +918,23 @@ export default function DocumentsLayout({
                   data-testid="document-filter-input"
                 />
               </div>
-              <div className="documents-view__navigation-toolbar">
-                <div className="documents-view__toolbar-group control-group">
-                  <select
+              {/* Ref measures the toolbar ROW — the container the panel width
+                  drives. Never measure the control's own wrapper: hiding the
+                  label shrinks it below the C threshold and locks variant c. */}
+              <div ref={sortVariantRef} className="documents-view__navigation-toolbar">
+                {/* Sort — shared collapsed SortMenu; variant tracks the panel
+                    width (user-resizable), not the viewport (sort-menu.spec.md). */}
+                <div className="documents-view__toolbar-group">
+                  <SortMenu
+                    attributes={DOCUMENT_SORT_ATTRIBUTES}
                     value={sortBy}
-                    onChange={e =>
-                      setSortBy(
-                        e.target.value as
-                        | 'name'
-                        | 'title'
-                        | 'created'
-                        | 'modified',
-                      )}
-                    className="documents-view__sort-select control-group__item"
-                    title="Sort by"
-                  >
-                    <option value="name">Filename</option>
-                    <option value="title">Title</option>
-                    <option value="created">Created Date</option>
-                    <option value="modified">Update Date</option>
-                  </select>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
-                    className="documents-view__sort-direction-button control-group__item"
-                    title={`Sort ${sortDirection === 'asc' ? 'ascending' : 'descending'}`}
-                    aria-label={`Sort ${sortDirection === 'asc' ? 'ascending' : 'descending'}`}
-                  >
-                    {sortDirection === 'asc'
-                      ? (
-                          <ChevronUp className="documents-view__sort-chevron" />
-                        )
-                      : (
-                          <ChevronDown className="documents-view__sort-chevron" />
-                        )}
-                  </button>
+                    direction={sortDirection}
+                    onChange={(attribute, direction) => {
+                      setSortBy(attribute as typeof sortBy)
+                      setSortDirection(direction)
+                    }}
+                    variant={sortVariant}
+                  />
                 </div>
                 <div className="documents-view__toolbar-group documents-view__toolbar-group--actions">
                   <button

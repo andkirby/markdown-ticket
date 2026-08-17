@@ -83,9 +83,9 @@ test.describe('Board View', () => {
       return
     }
 
-    // Act: Select Title from sort dropdown
-    const sortSelect = page.locator('[data-testid="sort-controls"] select')
-    await sortSelect.selectOption({ label: 'Title' })
+    // Act: Select Title from the collapsed sort menu
+    await page.locator('[data-testid="sort-controls"] [data-testid="sort-menu-trigger"]').click()
+    await page.locator('[data-testid="sort-menu-option"][data-value="title"]').click()
 
     // Wait for sorting to complete
     await page.waitForTimeout(500)
@@ -98,7 +98,7 @@ test.describe('Board View', () => {
     expect(sortedOrder).not.toEqual(initialOrder)
 
     // Act: Toggle sort direction
-    const directionToggle = page.locator('[data-testid="sort-controls"] button')
+    const directionToggle = page.locator('[data-testid="sort-menu-direction"]')
     await directionToggle.click()
     await page.waitForTimeout(500)
 
@@ -139,8 +139,8 @@ test.describe('Board View', () => {
     expect(initialOrder.length).toBeGreaterThan(0)
 
     // Act: Change sort attribute (use Title to ensure order change)
-    const sortSelect = page.locator('[data-testid="sort-controls"] select')
-    await sortSelect.selectOption({ label: 'Title' })
+    await page.locator('[data-testid="sort-controls"] [data-testid="sort-menu-trigger"]').click()
+    await page.locator('[data-testid="sort-menu-option"][data-value="title"]').click()
 
     // Wait for sorting to complete
     await page.waitForTimeout(500)

@@ -1,6 +1,6 @@
 import type { SortPreferences } from '../config/sorting'
 import type { AccessMode, AuthAccessIndicator } from '@/auth/AuthSessionContext'
-import { ArrowUpDown, Edit, Eye, EyeOff, KeyRound, LockKeyhole, Menu, Monitor, Moon, Plus, Settings, Sun, Trash2 } from 'lucide-react'
+import { ArrowUpDown, Check, Edit, Eye, EyeOff, KeyRound, LockKeyhole, Menu, Monitor, Moon, Plus, Settings, Sun, Trash2 } from 'lucide-react'
 import * as React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -242,21 +242,35 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
               <div className="sm:hidden">
                 <>
                   <div className="px-4 py-2 border-t border-border">
-                    <div className="text-xs font-medium text-muted-foreground mb-2">Sort by</div>
-                    <div className="space-y-1">
-                      {DEFAULT_SORT_ATTRIBUTES.map(attr => (
-                        <button
-                          key={attr.name}
-                          onClick={() => handleSortAttributeChange(attr.name)}
-                          className={`flex items-center w-full px-3 py-1.5 text-sm rounded transition-colors ${
-                            sortPreferences.selectedAttribute === attr.name
-                              ? 'bg-primary text-primary-foreground'
-                              : 'text-foreground hover:bg-muted'
-                          }`}
-                        >
-                          {attr.label}
-                        </button>
-                      ))}
+                    <div className="text-xs font-medium text-muted-foreground mb-1">Sort by</div>
+                    <div>
+                      {DEFAULT_SORT_ATTRIBUTES.map((attr) => {
+                        const Icon = attr.icon
+                        const selected = sortPreferences.selectedAttribute === attr.name
+                        return (
+                          <button
+                            key={attr.name}
+                            onClick={() => handleSortAttributeChange(attr.name)}
+                            className={`flex items-center w-full px-3 py-1.5 text-sm transition-colors ${
+                              selected
+                              /* Flush-row menu idiom (design3 / SortMenu popover):
+                                 full-width tint + trailing accent check — one idiom
+                                 for every dropdown menu in the app. */
+                                ? 'bg-[var(--state-active-bg)] text-foreground'
+                                : 'text-foreground hover:bg-muted'
+                            }`}
+                          >
+                            <Icon
+                              className={`h-3.5 w-3.5 mr-2 ${selected ? 'text-[var(--state-active-fg)]' : 'text-muted-foreground'}`}
+                              aria-hidden="true"
+                            />
+                            <span className="flex-1 text-left">{attr.label}</span>
+                            {selected && (
+                              <Check className="h-3.5 w-3.5 text-[var(--state-active-fg)]" aria-hidden="true" />
+                            )}
+                          </button>
+                        )
+                      })}
                     </div>
                   </div>
 

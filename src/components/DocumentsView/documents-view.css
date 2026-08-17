@@ -128,25 +128,8 @@
   .documents-view__icon-button:hover .documents-view__icon-button-icon {
     color: oklch(var(--foreground));
   }
-  .documents-view__sort-chevron {
-    @apply h-3 w-3;
-  }
-
-  .documents-view__sort-select {
-    @apply h-8 w-24 flex-shrink-0 border px-2 py-1 text-xs text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50;
-    border-color: oklch(var(--border));
-    background-color: var(--bg-muted);
-  }
-
-  .documents-view__sort-direction-button {
-    @apply inline-flex h-8 w-7 flex-shrink-0 items-center justify-center border transition-colors;
-    border-color: oklch(var(--border));
-    background-color: var(--bg-muted);
-
-    &:hover {
-      background-color: var(--state-hover-bg);
-    }
-  }
+  /* Sort controls moved to the shared SortMenu component
+     (components/SortMenu/sort-menu.css) — per sort-menu.spec.md. */
 
   .documents-view__resize-handle {
     @apply bg-border/70 transition-colors hover:bg-border;
