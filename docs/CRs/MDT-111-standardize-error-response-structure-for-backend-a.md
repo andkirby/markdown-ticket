@@ -4,6 +4,7 @@ status: Proposed
 dateCreated: 2025-12-29T10:10:39.241Z
 type: Architecture
 priority: Medium
+phaseEpic: MDT-228
 ---
 
 # Standardize error response structure for backend API

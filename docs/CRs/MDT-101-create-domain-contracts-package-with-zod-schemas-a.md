@@ -4,6 +4,7 @@ status: On Hold
 dateCreated: 2025-12-19T14:39:23.333Z
 type: Architecture
 priority: Medium
+phaseEpic: MDT-233
 ---
 
 # Create domain-contracts package with Zod schemas as source of truth

@@ -4,6 +4,7 @@ status: Proposed
 dateCreated: 2025-12-18T22:10:34.006Z
 type: Architecture
 priority: Medium
+phaseEpic: MDT-233
 ---
 
 # Interface Architecture Investigation

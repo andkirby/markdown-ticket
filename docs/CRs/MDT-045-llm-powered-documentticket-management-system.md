@@ -5,7 +5,7 @@ status: Proposed
 dateCreated: 2025-09-13T13:11:31.218Z
 type: Feature Enhancement
 priority: High
-phaseEpic: AI Integration Phase 1
+phaseEpic: MDT-235
 description: Integrate LLM capabilities into the MDT UI to enable natural language document creation, updates, and management with git diff approval workflows.
 rationale: Enable users to manage tickets and documents through natural language interactions, making the system more accessible and efficient while maintaining version control and approval workflows.
 ---

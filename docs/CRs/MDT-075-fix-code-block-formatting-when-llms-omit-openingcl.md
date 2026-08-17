@@ -5,6 +5,7 @@ status: Proposed
 dateCreated: 2025-10-26T14:32:22.054Z
 type: Bug Fix
 priority: Medium
+phaseEpic: MDT-235
 ---
 
 # Fix code block formatting when LLMs omit opening/closing triple backticks

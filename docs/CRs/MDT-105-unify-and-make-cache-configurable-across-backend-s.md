@@ -4,6 +4,7 @@ status: Proposed
 dateCreated: 2025-12-26T12:48:55.218Z
 type: Technical Debt
 priority: Medium
+phaseEpic: MDT-228
 ---
 
 # Unify and make cache configurable across backend services

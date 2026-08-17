@@ -5,6 +5,7 @@ dateCreated: 2026-07-17T15:59:59.045Z
 type: Architecture
 priority: High
 dependsOn: MDT-189
+phaseEpic: MDT-188
 ---
 
 # Frontmatter Relationship Field Format Guard

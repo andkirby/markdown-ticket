@@ -4,7 +4,7 @@ status: Proposed
 dateCreated: 2026-03-10T18:35:45.433Z
 type: Feature Enhancement
 priority: Medium
-phaseEpic: UI/UX
+phaseEpic: MDT-231
 ---
 
 # Add ticket preview hover cards and self-referencing links

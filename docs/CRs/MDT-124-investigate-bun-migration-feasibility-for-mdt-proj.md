@@ -4,6 +4,7 @@ status: Proposed
 dateCreated: 2026-02-08T20:44:03.189Z
 type: Research
 priority: Medium
+phaseEpic: MDT-234
 ---
 
 # Investigate Bun migration feasibility for MDT project

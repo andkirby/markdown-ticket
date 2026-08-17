@@ -4,6 +4,7 @@ status: Approved
 dateCreated: 2026-07-17T15:33:01.144Z
 type: Feature Enhancement
 priority: High
+level: epic
 ---
 
 # Ticket Dependency Graph: Implementation-Order Planning

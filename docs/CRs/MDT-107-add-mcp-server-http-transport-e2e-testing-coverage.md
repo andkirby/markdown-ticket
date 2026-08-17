@@ -5,6 +5,7 @@ dateCreated: 2025-12-27T09:11:29.041Z
 type: Technical Debt
 priority: Medium
 dependsOn: MDT-091
+phaseEpic: MDT-229
 ---
 
 # Add MCP server HTTP Transport E2E Testing Coverage

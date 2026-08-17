@@ -4,6 +4,7 @@ status: Proposed
 dateCreated: 2025-12-04T00:51:40.415Z
 type: Technical Debt
 priority: High
+phaseEpic: MDT-228
 ---
 
 # Extract ProjectService into focused services
