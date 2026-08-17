@@ -371,7 +371,7 @@ Measured (light): `--bg-muted` `#e3e8ef` on `--card` `#fff` = **1.23:1** (ghost)
 | Strength | Recipe | For | Examples |
 |---|---|---|---|
 | hover / pointing | `--state-hover-bg` fill | any hover | result rows, icon buttons, facet options |
-| active — **surface** | `--state-active-bg` tint **+ `--state-active-fg` signal** (ring/border carries the state) | large surfaces | search result `[data-selected]` (2px inset ring), project card active (accent border), drag-over targets, `.tab[data-state=active]` (underline only) |
+| active — **surface** | `--state-active-bg` tint **+ `--state-active-fg` signal** (ring/border — or a trailing check on flush menu rows — carries the state) | large surfaces | search result `[data-selected]` (2px inset ring), project card active (accent border), drag-over targets, `.tab[data-state=active]` (underline only), dropdown menu rows (SortMenu popover, Hamburger sort list: tint + check) |
 | active — **solid** | `oklch(var(--primary))` fill + `oklch(var(--primary-foreground))` text | compact controls | scope-bar pills, mode badge (same as `.settings-theme-btn--active`) |
 
 Rules:

@@ -69,9 +69,9 @@ test.describe('List View', () => {
     const initialOrder = await getTicketCodes()
     expect(initialOrder.length).toBeGreaterThan(0)
 
-    // Act: Select Title from sort dropdown (available option)
-    const sortSelect = page.locator('[data-testid="sort-controls"] select')
-    await sortSelect.selectOption({ label: 'Title' })
+    // Act: Select Title from the collapsed sort menu (available option)
+    await page.locator('[data-testid="sort-controls"] [data-testid="sort-menu-trigger"]').click()
+    await page.locator('[data-testid="sort-menu-option"][data-value="title"]').click()
 
     // Wait for sorting to complete
     await page.waitForTimeout(500)
@@ -85,7 +85,7 @@ test.describe('List View', () => {
     expect(sortedOrder).not.toEqual(initialOrder)
 
     // Act: Toggle sort direction
-    const directionToggle = page.locator('[data-testid="sort-controls"] button')
+    const directionToggle = page.locator('[data-testid="sort-menu-direction"]')
     await directionToggle.click()
     await page.waitForTimeout(500)
 

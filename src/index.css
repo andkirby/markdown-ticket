@@ -40,6 +40,7 @@
 @import './components/QuickSearch/quick-search.css';
 @import './components/AddProjectModal/components/AccentColorPicker.css';
 @import './components/BoardFilterBar/board-filter-bar.css';
+@import './components/SortMenu/sort-menu.css';
 @import './components/ViewModeSwitcher/view-mode-switcher.css';
 @import './components/PinRail/pin-rail.css';
 @import './components/SwimlaneBoard/swimlane-board.css';

@@ -329,6 +329,12 @@ export const listSelectors = {
   rowByCode: (code: string) => `[data-testid="ticket-row-${code}"]`,
   /** Sort controls container */
   sortControls: '[data-testid="sort-controls"]',
+  /** SortMenu attribute trigger (collapsed sort control) */
+  sortMenuTrigger: '[data-testid="sort-menu-trigger"]',
+  /** SortMenu direction segment (variants a/b) */
+  sortMenuDirection: '[data-testid="sort-menu-direction"]',
+  /** SortMenu popover rows; data-value carries attribute or direction name */
+  sortMenuOption: (value: string) => `[data-testid="sort-menu-option"][data-value="${value}"]`,
   /** Sort button for column */
   sortButton: (column: string) => `[data-testid="sort-${column}"]`,
   /** Table header */

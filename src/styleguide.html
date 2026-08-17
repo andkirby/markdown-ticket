@@ -281,7 +281,7 @@
   </style>
 
   <h2>interaction-state ramp · hover vs active/selected</h2>
-  <p class="note" style="margin-top:.25rem"><b>Rule:</b> hover = the neutral tier (<code>--state-hover-bg</code>); active/selected = the accent family at two strengths — <b>surface</b> (<code>--state-active-bg</code> tint + <code>--state-active-fg</code> signal: fill + ring on rows, underline on tabs) and <b>solid</b> (compact pills/badges: <code>oklch(var(--primary))</code> + <code>--primary-foreground</code> — a tint cannot read on near-white surfaces, it measured 1.01:1 on the scope bar). Never a primary tint for hover.</p>
+  <p class="note" style="margin-top:.25rem"><b>Rule:</b> hover = the neutral tier (<code>--state-hover-bg</code>); active/selected = the accent family at two strengths — <b>surface</b> (<code>--state-active-bg</code> tint + <code>--state-active-fg</code> signal: fill + ring on in-content rows, underline on tabs, trailing check on menu rows — see menu idiom below) and <b>solid</b> (compact pills/badges: <code>oklch(var(--primary))</code> + <code>--primary-foreground</code> — a tint cannot read on near-white surfaces, it measured 1.01:1 on the scope bar). Never a primary tint for hover.</p>
   <div class="state-demo">
     <ul class="state-list">
       <li class="state-row"><code>MDT-218</code><span>Sort epics by rank</span><small class="src">open</small></li>
@@ -303,6 +303,165 @@
       </div>
     </div>
   </div>
+  <p class="note" style="margin-top:.5rem"><b>Rule — one menu idiom, everywhere:</b> dropdown menus (SortMenu popover, Hamburger Menu lists, design3 reference) use <b>flush full-width rows</b> — the panel owns border/radius and vertical padding; rows have no rounding of their own. Hover = neutral tier. Selected = <b>surface strength</b> of the ramp: full-width <code>--state-active-bg</code> tint + trailing check in <code>--state-active-fg</code> (design3's signal — the check <i>is</i> the fg signal; the inset ring belongs to in-content lists like quick-search results, not chrome menus). Solid primary full-row fill and rounded/ringed rows in a padded panel are both rejected drifts.</p>
+  <style>
+    /* Menu-row demo — the Hamburger Menu "Sort by" list and the SortMenu popover
+       share one selected-row treatment (surface strength of the ramp). */
+    .menu-demo { margin-top: .85rem; display: flex; gap: 1.25rem; flex-wrap: wrap; align-items: flex-start; }
+    .menu-list { min-width: 200px; padding: .25rem 0; background: var(--bg-elevated); border: 1px solid oklch(var(--border)); border-radius: var(--radius-input); }
+    .menu-label { font-size: .7rem; font-weight: 500; color: var(--text-subtle); padding: .3rem .75rem .35rem; }
+    .menu-row { display: flex; align-items: center; gap: .5rem; padding: .35rem .75rem; font-size: .82rem; color: oklch(var(--foreground)); cursor: pointer; }
+    .menu-row:hover { background: var(--state-hover-bg); }
+    .menu-row.is-selected { background: var(--state-active-bg); }
+    .menu-row svg { width: 14px; height: 14px; color: var(--text-muted); flex: none; }
+    .menu-row.is-selected > svg:first-child { color: oklch(var(--primary)); }
+    .menu-row .menu-row__check { margin-left: auto; color: var(--state-active-fg); }
+    .menu-row--bad.is-selected { background: oklch(var(--primary)); color: oklch(var(--primary-foreground)); }
+    .menu-row--bad.is-selected svg { color: oklch(var(--primary-foreground)); }
+  </style>
+  <div class="menu-demo">
+    <div class="menu-list">
+      <div class="menu-label">menus · one idiom (flush rows · tint + check)</div>
+      <div class="menu-row is-selected"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg>Key<svg class="menu-row__check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div class="menu-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 16 2.536-7.328a1.02 1.02 0 0 1 1.928 0L22 16"/><path d="M15.697 14h5.606"/><path d="m2 16 4.039-9.69a.5.5 0 0 1 .923 0L11 16"/><path d="M3.304 13h6.392"/></svg>Title</div>
+      <div class="menu-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 14h1v4"/><path d="M16 2v4"/><path d="M3 10h18"/><path d="M8 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/></svg>Created</div>
+    </div>
+    <div class="menu-list">
+      <div class="menu-label">rejected · solid full-row (old hamburger)</div>
+      <div class="menu-row menu-row--bad is-selected"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg>Key</div>
+      <div class="menu-row">Title</div>
+      <div class="menu-row">Created</div>
+    </div>
+  </div>
+
+  <style>
+    /* ── Collapsed sort control ──────────────────────────────────────────
+       Demo of the sort trigger replacing the native <select> in
+       SortControls.tsx. Same silhouette as .control-group in layout.css:
+       segmented cluster, collapsed inner corners, shared border. */
+    .sort-demo { margin-top: .85rem; display: flex; gap: 1.25rem; flex-wrap: wrap; align-items: flex-start; }
+    .sort-group { position: relative; display: inline-flex; align-items: stretch; }
+    .sort-group > button { border-radius: var(--radius-input); }
+    .sort-group > button + button { border-top-left-radius: 0; border-bottom-left-radius: 0; margin-left: -1px; }
+    .sort-group > button:not(:last-of-type) { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+
+    .sort-trigger, .sort-dir {
+      display: inline-flex; align-items: center; gap: .45rem;
+      height: 36px; font-size: .82rem; font-weight: 500;
+      background: oklch(var(--background));
+      border: 1px solid oklch(var(--border));
+      color: oklch(var(--foreground));
+      cursor: pointer; transition: background-color .15s;
+    }
+    .sort-trigger { padding: 0 .6rem; min-width: 128px; } /* stable width — no jitter between "Key" and "Priority" (longest label) */
+    .sort-trigger:hover, .sort-dir:hover { background: var(--state-hover-bg); }
+    .sort-trigger.is-open, .sort-dir.is-open { border-color: oklch(var(--primary)); box-shadow: 0 0 0 1px oklch(var(--primary)); }
+    .sort-trigger svg { width: 14px; height: 14px; color: var(--text-muted); flex: none; }
+    .sort-trigger .sort-trigger__label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    /* tight-space variant: icon-only trigger — label moves to title/aria-label */
+    .sort-trigger--icon { width: 36px; min-width: 0; padding: 0; justify-content: center; }
+    .sort-dir { width: 36px; justify-content: center; }
+    .sort-dir svg { width: 14px; height: 14px; }
+
+    .sort-menu {
+      position: absolute; top: 100%; left: 0; margin-top: 4px; z-index: 30;
+      min-width: 220px; padding: 4px 0;
+      background: var(--bg-elevated); border: 1px solid oklch(var(--border));
+      border-radius: var(--radius-input); box-shadow: 0 8px 24px oklch(0 0 0 / .12);
+    }
+    .sort-menu[hidden] { display: none; }
+    .sort-menu--right { left: auto; right: 0; }
+    .sort-sep { height: 1px; margin: 4px 0; background: oklch(var(--border)); }
+    /* Flush-row idiom (design3 / Hamburger Menu): full-width rows, no per-row
+       rounding; selected = tint + trailing check (the ramp's fg signal). */
+    .sort-option {
+      display: flex; align-items: center; gap: .55rem;
+      padding: .42rem .75rem;
+      font-size: .82rem; color: oklch(var(--foreground)); cursor: pointer;
+    }
+    .sort-option:hover { background: var(--state-hover-bg); }
+    .sort-option.is-selected { background: var(--state-active-bg); }
+    .sort-option svg { width: 14px; height: 14px; color: var(--text-muted); flex: none; }
+    .sort-option.is-selected > svg:first-child { color: oklch(var(--primary)); }
+    .sort-option .sort-option__dir { color: var(--text-subtle); font-size: .7rem; font-family: "JetBrains Mono", monospace; }
+    .sort-option .sort-option__check { margin-left: auto; color: var(--state-active-fg); }
+
+    /* Rejected variants — static, for comparison */
+    .sort-rejected { display: flex; flex-direction: column; gap: .6rem; }
+    .sort-reject { display: flex; align-items: center; gap: .45rem; height: 36px; padding: 0 .55rem;
+      background: oklch(var(--background)); border: 1px solid oklch(var(--border)); border-radius: var(--radius-input); font-size: .82rem; opacity: .75; }
+    .sort-reject svg { width: 14px; height: 14px; color: var(--text-muted); }
+  </style>
+
+  <h2>collapsed sort control</h2>
+  <p class="note" style="margin-top:.25rem">
+    Replaces the native <code>&lt;select&gt;</code> in <code>SortControls.tsx</code>. <b>One control, three sizes</b> — degrades by breakpoint, shares one state: <b>A</b> icon + label + direction segment (default) · <b>B</b> icon-only + direction segment (tight) · <b>C</b> icon-only, direction inside the menu (tightest).
+  </p>
+  <ul style="margin:.5rem 0 0; padding-left: 1.2rem; max-width: 72ch;">
+    <li><b>Caret removed</b> — the segmented silhouette + popover behavior already say "opens a menu". A third glyph was buying nothing for 16px.</li>
+    <li><b>Icon-only is a degradation, not a design</b> (B, C): at 14px <code>calendar-1</code> and <code>calendar-clock</code> are twins, so B/C trade glanceable state for space — deliberately, only when space runs out. The label never disappears: it moves to <code>title</code> + <code>aria-label</code>, and the menu is fully labeled.</li>
+    <li><b>Direction-in-menu only in C</b> — acceptable once the space emergency is bad enough to drop the label too. The menu shows an explicit Ascending/Descending section so the state stays visible while open. A keeps direction as a sibling segment: one click, always glanceable, and per-attribute <code>defaultDirection</code> can silently flip it.</li>
+    <li><b>Priority glyph note</b> — the sort field uses <code>chevrons-up</code>, <i>not</i> the per-value <code>PriorityIcon</code> glyphs (Flame/ChevronUp/Equal/ChevronDown). Those mean specific priority <i>values</i>; reusing them for the <i>field</i> concept conflates two different semantics.</li>
+    <li>Labels drop the redundant "Date" — the calendar glyph already carries it. <code>Updated</code> over <code>Update Date</code>: past participle, matches "Created". Trigger has a <b>fixed min-width</b> sized to the longest label ("Priority") so the header doesn't reflow on selection.</li>
+  </ul>
+  <p class="note" style="margin:.5rem 0 0">Icon mapping (lucide, verified in lucide-react 0.542.0): Key → <code>ticket</code> · Title → <code>a-large-small</code> · Priority → <code>chevrons-up</code> · Created → <code>calendar-1</code> · Updated → <code>calendar-clock</code> · direction segment → <code>arrow-up-narrow-wide</code> / <code>arrow-down-wide-narrow</code>. All three share one state — click around:</p>
+
+  <div class="sort-demo">
+    <div style="display:flex;flex-direction:column;gap:.35rem">
+      <small class="src">A · default</small>
+      <div class="sort-group" data-sort-group data-variant="label">
+        <button class="sort-trigger" data-sort-trigger aria-haspopup="listbox" aria-expanded="false">
+          <svg data-sort-icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+          <span class="sort-trigger__label" data-sort-label>Key</span>
+        </button>
+        <button class="sort-dir" data-sort-dir title="Toggle direction">
+          <svg data-sort-diricon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+        </button>
+        <div class="sort-menu" data-sort-menu role="listbox" hidden></div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:.35rem">
+      <small class="src">B · tight — icon-only</small>
+      <div class="sort-group" data-sort-group data-variant="icon">
+        <button class="sort-trigger sort-trigger--icon" data-sort-trigger aria-haspopup="listbox" aria-expanded="false">
+          <svg data-sort-icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+        </button>
+        <button class="sort-dir" data-sort-dir title="Toggle direction">
+          <svg data-sort-diricon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+        </button>
+        <div class="sort-menu" data-sort-menu role="listbox" hidden></div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:.35rem">
+      <small class="src">C · tightest — direction in menu</small>
+      <div class="sort-group" data-sort-group data-variant="menu-dir">
+        <button class="sort-trigger sort-trigger--icon" data-sort-trigger aria-haspopup="listbox" aria-expanded="false">
+          <svg data-sort-icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+        </button>
+        <div class="sort-menu sort-menu--right" data-sort-menu role="listbox" hidden></div>
+      </div>
+    </div>
+
+    <div class="sort-rejected">
+      <div style="display:flex;align-items:center;gap:.6rem">
+        <div class="sort-reject" title="icon-only trigger without tooltip — rejected: calendar twins are indistinguishable">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 14v2.2l1.6 1"/><path d="M16 2v4"/><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M3 10h5"/><path d="M8 2v4"/><circle cx="16" cy="16" r="6"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 14h1v4"/><path d="M16 2v4"/><path d="M3 10h18"/><path d="M8 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 11-5-5-5 5"/><path d="m17 18-5-5-5 5"/></svg>
+        </div>
+        <span class="tag tag-bad">← icon-only as the default: which is active? rejected</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:.6rem">
+        <div class="sort-reject">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="M11 4h10"/><path d="M11 8h7"/><path d="M11 12h4"/></svg>
+          direction buried in menu at default width
+        </div>
+        <span class="tag tag-bad">← hidden state, 2× clicks. rejected outside the tightest variant</span>
+      </div>
+    </div>
+  </div>
 
   <p class="src" style="margin-top:2.5rem">Tokens: <code>src/styles/design-tokens.css</code> · Reference: <code>src/THEME.md</code></p>
 
@@ -321,6 +480,108 @@
         fill();
       });
       fill();
+
+      /* ── Collapsed sort control demo ── */
+      var ICONS = {
+        code: '<path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/>',
+        title: '<path d="m15 16 2.536-7.328a1.02 1.02 0 0 1 1.928 0L22 16"/><path d="M15.697 14h5.606"/><path d="m2 16 4.039-9.69a.5.5 0 0 1 .923 0L11 16"/><path d="M3.304 13h6.392"/>',
+        priority: '<path d="m17 11-5-5-5 5"/><path d="m17 18-5-5-5 5"/>',
+        dateCreated: '<path d="M11 14h1v4"/><path d="M16 2v4"/><path d="M3 10h18"/><path d="M8 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/>',
+        lastModified: '<path d="M16 14v2.2l1.6 1"/><path d="M16 2v4"/><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M3 10h5"/><path d="M8 2v4"/><circle cx="16" cy="16" r="6"/>',
+        asc: '<path d="m3 8 4-4 4 4"/><path d="M7 4v16"/><path d="M11 12h4"/><path d="M11 16h7"/><path d="M11 20h10"/>',
+        desc: '<path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="M11 4h10"/><path d="M11 8h7"/><path d="M11 12h4"/>'
+      };
+      var ATTRS = [
+        { name: 'code', label: 'Key', dir: 'desc' },
+        { name: 'title', label: 'Title', dir: 'asc' },
+        { name: 'priority', label: 'Priority', dir: 'desc' },
+        { name: 'dateCreated', label: 'Created', dir: 'desc' },
+        { name: 'lastModified', label: 'Updated', dir: 'desc' }
+      ];
+      var state = { attr: 'code', dir: 'desc' };
+      var groups = Array.prototype.slice.call(document.querySelectorAll('[data-sort-group]'));
+      var openGroup = null;
+
+      function svg(inner) {
+        return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + inner + '</svg>';
+      }
+      function render() {
+        var a = ATTRS.find(function (x) { return x.name === state.attr });
+        var dirWord = state.dir === 'asc' ? 'ascending' : 'descending';
+        groups.forEach(function (g) {
+          var t = g.querySelector('[data-sort-trigger]');
+          t.querySelector('[data-sort-icon]').innerHTML = ICONS[a.name];
+          var l = t.querySelector('[data-sort-label]');
+          if (l) l.textContent = a.label;
+          t.title = 'Sort by ' + a.label + ' — ' + dirWord; /* label never disappears; it moves to title/aria */
+          t.setAttribute('aria-label', t.title);
+          var d = g.querySelector('[data-sort-dir]');
+          if (d) {
+            d.querySelector('[data-sort-diricon]').innerHTML = state.dir === 'asc' ? ICONS.asc : ICONS.desc;
+            d.title = 'Sort ' + dirWord;
+          }
+          var m = g.querySelector('[data-sort-menu]');
+          m.innerHTML = '';
+          var CHECK = '<svg class="sort-option__check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+          ATTRS.forEach(function (x) {
+            var row = document.createElement('div');
+            var sel = x.name === state.attr;
+            row.className = 'sort-option' + (sel ? ' is-selected' : '');
+            row.setAttribute('role', 'option');
+            row.innerHTML = svg(ICONS[x.name]) + x.label + '<span class="sort-option__dir">' + x.dir + '</span>' + (sel ? CHECK : '');
+            row.addEventListener('click', function () {
+              state.attr = x.name;
+              state.dir = x.dir; /* per-attribute defaultDirection — same as handleAttributeChange */
+              closeAll();
+              render();
+            });
+            m.appendChild(row);
+          });
+          /* C variant: direction lives in the menu — explicit section, state visible while open */
+          if (g.dataset.variant === 'menu-dir') {
+            var sep = document.createElement('div');
+            sep.className = 'sort-sep';
+            m.appendChild(sep);
+            [['asc', 'Ascending'], ['desc', 'Descending']].forEach(function (d) {
+              var row = document.createElement('div');
+              var sel = state.dir === d[0];
+              row.className = 'sort-option' + (sel ? ' is-selected' : '');
+              row.setAttribute('role', 'option');
+              row.innerHTML = svg(ICONS[d[0]]) + d[1] + (sel ? CHECK : '');
+              row.addEventListener('click', function () { state.dir = d[0]; closeAll(); render(); });
+              m.appendChild(row);
+            });
+          }
+        });
+      }
+      function closeAll() {
+        groups.forEach(function (g) {
+          g.querySelector('[data-sort-menu]').hidden = true;
+          g.querySelector('[data-sort-trigger]').classList.remove('is-open');
+          g.querySelector('[data-sort-trigger]').setAttribute('aria-expanded', 'false');
+        });
+        openGroup = null;
+      }
+      groups.forEach(function (g) {
+        g.querySelector('[data-sort-trigger]').addEventListener('click', function (e) {
+          e.stopPropagation();
+          var m = g.querySelector('[data-sort-menu]');
+          var willOpen = m.hidden;
+          closeAll();
+          if (willOpen) {
+            m.hidden = false;
+            g.querySelector('[data-sort-trigger]').classList.add('is-open');
+            g.querySelector('[data-sort-trigger]').setAttribute('aria-expanded', 'true');
+            openGroup = g;
+          }
+        });
+        var d = g.querySelector('[data-sort-dir]');
+        if (d) d.addEventListener('click', function () { state.dir = state.dir === 'asc' ? 'desc' : 'asc'; render(); });
+      });
+      document.addEventListener('click', function (e) {
+        if (openGroup && !openGroup.contains(e.target)) closeAll();
+      });
+      render();
     })();
   </script>
 </body>

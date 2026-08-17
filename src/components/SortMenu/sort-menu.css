@@ -1,0 +1,154 @@
+/**
+ * SortMenu — collapsed sort control (trigger + direction segment + popover).
+ *
+ * Shared by the app header (board/list, SortControls) and the Documents
+ * navigation toolbar. Spec: docs/design/surfaces/sort-menu.spec.md.
+ * Interactive reference: src/styleguide.html § "collapsed sort control".
+ *
+ * Classes:
+ *   .sort-menu                  — cluster root; owns the segmented silhouette
+ *   .sort-menu__trigger         — attribute trigger (label variant A default)
+ *   .sort-menu__trigger--icon   — icon-only trigger (variants B/C)
+ *   .sort-menu__label           — label span (hidden below md with --collapse-below-md)
+ *   .sort-menu__direction       — asc/desc sibling segment (A/B; absent in C)
+ *   .sort-menu__popover         — portaled floating menu (fixed, z 60)
+ *   .sort-menu__option          — menu row (attribute or direction)
+ *   .sort-menu__option-dir      — per-attribute default-direction hint
+ *   .sort-menu__separator       — divider before the direction section (C only)
+ *
+ * The cluster rolls its own corner-flattening scoped to `> button` (same recipe
+ * as .control-group in layout.css) so the portaled popover — a div sibling —
+ * can never participate in the silhouette.
+ */
+
+@layer components {
+  .sort-menu {
+    @apply relative inline-flex items-stretch;
+  }
+
+  /* Silhouette: buttons join corners; non-button children (popover wrapper)
+     are excluded by design. */
+  .sort-menu > button {
+    border-radius: var(--radius-input);
+  }
+  .sort-menu > button + button {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    margin-left: -1px;
+  }
+  .sort-menu > button:not(:last-of-type) {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  .sort-menu__trigger,
+  .sort-menu__direction {
+    @apply inline-flex h-9 items-center gap-1.5 border text-sm font-medium transition-colors;
+    background-color: oklch(var(--background));
+    border-color: oklch(var(--border));
+    color: oklch(var(--foreground));
+    cursor: pointer;
+  }
+
+  .sort-menu__trigger {
+    @apply px-2.5;
+  }
+  .sort-menu__trigger--icon {
+    @apply w-9 justify-center px-0;
+  }
+  .sort-menu__trigger:hover,
+  .sort-menu__direction:hover {
+    background-color: var(--state-hover-bg);
+  }
+  .sort-menu__trigger:focus-visible,
+  .sort-menu__direction:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 1px color-mix(in srgb, oklch(var(--ring)) 50%, transparent);
+  }
+  /* Open = accent signal (same recipe as .filter-button--open). */
+  .sort-menu__trigger[aria-expanded='true'] {
+    border-color: oklch(var(--primary));
+    box-shadow: 0 0 0 1px oklch(var(--primary));
+  }
+
+  .sort-menu__trigger svg {
+    @apply h-3.5 w-3.5 flex-none;
+    color: var(--text-muted);
+  }
+  .sort-menu__trigger[aria-expanded='true'] svg {
+    color: oklch(var(--primary));
+  }
+  .sort-menu__label {
+    @apply truncate;
+  }
+
+  /* Header integration: variant B below md, A at md+ — label toggles by
+     viewport, no JS breakpoint listener. */
+  .sort-menu--collapse-below-md .sort-menu__label {
+    display: none;
+  }
+  @media (min-width: 768px) {
+    .sort-menu--collapse-below-md .sort-menu__label {
+      display: inline;
+    }
+    .sort-menu--collapse-below-md .sort-menu__trigger {
+      min-width: 8rem; /* longest label ("Priority") — no header reflow on selection */
+    }
+  }
+
+  .sort-menu__direction {
+    @apply w-9 justify-center;
+  }
+  .sort-menu__direction svg {
+    @apply h-3.5 w-3.5;
+  }
+
+  /* Popover — portaled to body; truly floating layer (shadow allowed).
+     Flush-row idiom (design3 / Hamburger Menu): the panel owns border+radius
+     and py padding; rows run full width, flush, no rounding of their own. */
+  .sort-menu__popover {
+    @apply z-[60] border py-1 shadow-lg;
+    position: fixed;
+    min-width: 13.75rem;
+    background-color: var(--bg-elevated);
+    border-color: oklch(var(--border));
+    border-radius: var(--radius-input);
+  }
+
+  .sort-menu__option {
+    @apply flex w-full cursor-pointer items-center gap-2 px-3 py-1.5 text-sm;
+    color: oklch(var(--foreground));
+    text-align: left;
+  }
+  .sort-menu__option:hover {
+    background-color: var(--state-hover-bg);
+  }
+  /* Selected = surface strength of the ramp: full-width tint + trailing accent
+     check (the fg signal) — one idiom shared with the Hamburger Menu list. */
+  .sort-menu__option[aria-selected='true'] {
+    background-color: var(--state-active-bg);
+  }
+  .sort-menu__option svg {
+    @apply h-3.5 w-3.5 flex-none;
+    color: var(--text-muted);
+  }
+  .sort-menu__option[aria-selected='true'] > svg:first-child {
+    color: oklch(var(--primary));
+  }
+  .sort-menu__option-dir {
+    @apply text-xs;
+    color: var(--text-subtle);
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  .sort-menu__check {
+    @apply h-3.5 w-3.5 flex-none;
+    margin-left: auto;
+    color: var(--state-active-fg);
+  }
+
+  .sort-menu__separator {
+    height: 1px;
+    margin: var(--gap-xs) 0;
+    background-color: oklch(var(--border));
+  }
+}
