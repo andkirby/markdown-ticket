@@ -12,6 +12,7 @@
   -->
   <link rel="stylesheet" href="styles/design-tokens.css" />
   <link rel="stylesheet" href="styles/components/tabs.css" />
+  <link rel="stylesheet" href="styles/components/checkbox.css" />
   <style>
     :root { color-scheme: light dark; }
     body {
@@ -182,7 +183,6 @@
     .input-demo, .select-demo { background: var(--bg-muted); border: 1px solid var(--border-strong); border-radius: var(--radius-input); padding: .4rem .6rem; color: oklch(var(--foreground)); font: inherit; font-size: .82rem; }
     .input-demo:focus, .select-demo:focus { outline: none; border-color: oklch(var(--primary)); box-shadow: 0 0 0 2px oklch(var(--primary) / .3); }
     .input-demo.error { border-color: oklch(var(--destructive)); }
-    .checkbox-demo { width: 16px; height: 16px; accent-color: oklch(var(--primary)); }
   </style>
 
   <style>
@@ -253,7 +253,8 @@
     <div class="field"><label>borderless, recessed fill (reads)</label><input class="input-recessed" value="MDT-220"></div>
     <div class="field"><label>hairline border (alternative)</label><input class="input-hairline" value="MDT-220"></div>
     <div class="field"><label>select</label><select class="select-demo"><option>Open</option><option>Done</option></select></div>
-    <div class="field"><label>checkbox</label><input type="checkbox" class="checkbox-demo" checked></div>
+    <!-- checkbox demo uses the REAL shared object (styles/components/checkbox.css) — not a copy -->
+    <div class="field"><label>checkbox</label><input type="checkbox" class="checkbox" checked></div>
   </div>
 
   <style>

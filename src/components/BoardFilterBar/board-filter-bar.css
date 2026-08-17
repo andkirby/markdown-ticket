@@ -173,10 +173,6 @@
       background-color: var(--state-hover-bg);
     }
   }
-  .facet-option__checkbox {
-    @apply h-4 w-4 rounded;
-    border-color: oklch(var(--border));
-  }
 
   /* ── Active filter chips (popover/sheet variant) ── */
   .active-filter-chips {

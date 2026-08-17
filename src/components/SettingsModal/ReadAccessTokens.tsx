@@ -177,7 +177,7 @@ export function ReadAccessTokens({ projects, linkOrigin, onLinkOriginChange }: R
               data-testid={`sharing-named-access-project-${project.code}`}
               checked={selectedProjects.includes(project.code)}
               onChange={event => toggleProject(project.code, event.target.checked)}
-              className="settings-checkbox"
+              className="checkbox"
             />
             <span>{project.code}</span>
           </label>

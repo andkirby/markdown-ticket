@@ -2,7 +2,6 @@ import type { Status, Ticket } from '../../types'
 import { CRStatus } from '@mdt/domain-contracts'
 import * as React from 'react'
 import { useRef, useState } from 'react'
-import { getButtonModeClasses } from './buttonModeStyles'
 import { useButtonModes } from './useButtonModes'
 import { useDropZone } from './useDropZone'
 
@@ -132,40 +131,12 @@ const StatusToggle: React.FC<StatusToggleProps> = ({
     }
   }
 
-  // Get checkbox styling - orange only when checked (merge mode active)
-  const getCheckboxClasses = () => {
-    const baseClasses = 'w-4 h-4 rounded transition-all duration-150 ease-out cursor-pointer'
-
-    if (mergeMode && canWrite) {
-      // Orange theme when checked (merge mode active)
-      return `${baseClasses} text-orange-600 bg-orange-100 border-orange-400 focus:outline-none focus-visible:ring-1 focus-visible:ring-orange-500/50`
-    }
-
-    // Gray theme when not checked
-    return `${baseClasses} text-gray-600 bg-gray-50 border-gray-300 focus:outline-none focus-visible:ring-1 focus-visible:ring-gray-500/50 dark:bg-gray-700 dark:border-gray-500 dark:text-gray-300`
-  }
-
-  // Determine button styling based on active state
-  const getButtonStyles = () => {
-    // Compact styling that doesn't affect header height
-    const baseClasses = 'flex items-center justify-between px-2 py-1 text-xs rounded-md border transition-all whitespace-nowrap h-8'
-
-    if (isActive && !mergeMode) {
-      // Switch mode is active - use orange theme with orange background
-      return `${baseClasses} bg-orange-100 border-orange-300 text-orange-800 dark:bg-orange-900/20 dark:border-orange-700 dark:text-orange-300`
-    }
-
-    if (mergeMode && canWrite) {
-      // Merge mode - gray button with orange border
-      return `${baseClasses} bg-gray-100 border-gray-300 text-gray-700 dark:bg-gray-700 dark:border-gray-500 dark:text-gray-300 ring-2 ring-orange-300 dark:ring-orange-600`
-    }
-
-    // Normal mode - gray button
-    return `${baseClasses} ${getButtonModeClasses('status')}`
-  }
+  // Shared .checkbox base; warning accent (column.css) while merge mode is armed
+  const getCheckboxClasses = () =>
+    mergeMode && canWrite ? 'checkbox column-merge-checkbox' : 'checkbox'
 
   return (
-    <div className="relative inline-block">
+    <div className="status-toggle">
       <button
         /**
          * @testid status-dropdown — Status toggle button for changing ticket status
@@ -176,21 +147,23 @@ const StatusToggle: React.FC<StatusToggleProps> = ({
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         className={`
-          ${getButtonStyles()}
-          ${isOver ? 'ring-2 ring-blue-400 bg-blue-50 dark:bg-blue-950/20' : ''}
+          status-toggle__btn
+          ${isActive && !mergeMode ? 'status-toggle__btn--active' : ''}
+          ${mergeMode && canWrite ? 'status-toggle__btn--merge' : ''}
+          ${isOver ? 'status-toggle__btn--over' : ''}
         `}
         title={mergeMode && canWrite ? `Click to exit merge mode. Drag tickets here to move them to parent column.` : `${status} tickets${ticketCount > 0 ? ` (${ticketCount})` : ''}`}
       >
-        <span className="flex items-center justify-between w-full gap-2">
-          <span className="flex items-center gap-1">
-            <span className="text-lg">{getIcon()}</span>
-            <span className="font-medium">{status}</span>
+        <span className="status-toggle__content">
+          <span className="status-toggle__label-group">
+            <span className="status-toggle__icon">{getIcon()}</span>
+            <span className="status-toggle__name">{status}</span>
           </span>
 
           {ticketCount > 0 && (
             <div
               ref={countContainerRef}
-              className="relative flex items-center justify-center w-6 h-6"
+              className="status-toggle__count-slot"
               onMouseEnter={(e) => {
                 e.stopPropagation()
                 setIsHoveringCount(true)

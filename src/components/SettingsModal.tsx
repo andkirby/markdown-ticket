@@ -687,7 +687,7 @@ export function SettingsModal({
                       onChange={e =>
                         handleVisibleBadgeChange(option.id, e.target.checked)}
                       data-testid={`settings-visible-badge-${option.id}`}
-                      className="settings-checkbox"
+                      className="checkbox"
                     />
                     <span>{option.label}</span>
                   </label>

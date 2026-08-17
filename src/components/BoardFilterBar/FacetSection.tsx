@@ -65,7 +65,7 @@ export const FacetSection: React.FC<FacetSectionProps> = ({
                 onChange={() => onToggle(facet, option.value)}
                 data-testid="facet-option-checkbox"
                 data-value={option.value}
-                className="facet-option__checkbox"
+                className="checkbox"
               />
               {option.label}
             </label>

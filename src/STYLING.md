@@ -493,6 +493,23 @@ Rules:
 - Add surface-specific tab row styling with a second class, for example `settings-tab-list`.
 - Surface wrappers (`.documents-view__filename-tabs`, `.ticket-document-tabs`) must NOT duplicate `.tab__list`'s padding/bg/border — `.tab__list` is the single owner. A wrapper sets its own bg only when it groups multiple tab rows (`.ticket-document-tabs` → solid bg-subtle band); a single-row wrapper stays `flex-shrink-0` only.
 
+### Shared Checkbox
+
+The ONE checkbox implementation is the shared object in
+[`styles/components/checkbox.css`](styles/components/checkbox.css) — a native
+`<input type="checkbox">` at 16px themed via `accent-color: oklch(var(--primary))`,
+with keyboard-only focus (`:focus-visible`, ring-1 @50%). Every checkbox input
+consumes `.checkbox`, and `styleguide.html` demos the same class (no parallel
+demo classes). It is pure CSS (no `@apply`) so it renders standalone in
+browser-served contexts.
+
+Rules:
+
+- Never custom-draw a checkbox (boxes, check glyphs, `peer-checked` chains) — the native widget + `accent-color` is the design.
+- Never restyle a checkbox with utility chains (`text-blue-600 border-gray-300 …`); size and color come from `.checkbox`.
+- Spacing to the label belongs to the wrapping row (`.settings-checkbox-row`, `.facet-option`, `gap-*` on the container), not to `.checkbox`.
+- Documented deviations, both declared next to their consumer: prose task-list checkboxes (`styles/prose.css`) use the same accent recipe at `1em` so they scale with body text; the column merge-mode checkbox overrides `accent-color` with a warning tone (`.column-merge-checkbox` in `components/Column/column.css`) because drag-merging re-parents tickets.
+
 ---
 
 ## Scrollable Regions
