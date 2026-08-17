@@ -75,9 +75,18 @@
   /* Merge-mode checkbox: shared .checkbox base, but the checked state carries
      a warning tone (dragging re-parents tickets into the parent column) —
      the ONE documented deviation from the primary accent (STYLING.md
-     §Shared Checkbox). No --warning token exists yet; value = orange-600. */
+     §Shared Checkbox). No --warning token exists yet; value = orange-600.
+     Overrides the checked fill/border (accent-color does nothing under
+     appearance: none); column.css loads after checkbox.css, so it wins. */
   .column-merge-checkbox {
-    accent-color: oklch(0.6646 0.1792 41.05);
+    &:hover {
+      border-color: oklch(0.6646 0.1792 41.05 / 50%);
+    }
+
+    &:checked {
+      background: oklch(0.6646 0.1792 41.05);
+      border-color: oklch(0.6646 0.1792 41.05);
+    }
   }
 
   /* StatusToggle — the switch/merge control in column headers. Normal body

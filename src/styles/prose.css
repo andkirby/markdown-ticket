@@ -245,14 +245,14 @@
   padding-left: 1.55em;
 }
 
+/* Geometry only — the drawing (appearance, radius, checked fill, glyph)
+   lives in the shared checkbox object, which lists this same selector. */
 .prose .task-list-item input[type="checkbox"] {
   position: absolute;
   left: 0;
   top: 0.35em;
   width: 1em;
   height: 1em;
-  margin: 0;
-  accent-color: oklch(var(--primary));
 }
 
 .prose blockquote {

@@ -72,9 +72,9 @@
        --radius-input so the header controls line up. Use bare var(), never a
        hardcoded px or a Tailwind rounded-* class in app-owned CSS (shadcn
        vendor components may keep rounded-md/lg). */
-    --radius-input: 8px;  /* inputs, selects, checkboxes, buttons, project cards/chips, control groups (ViewModeSwitcher) */
+    --radius-input: 8px;  /* inputs, selects, buttons, project cards/chips, control groups (ViewModeSwitcher) */
     --radius-card: 8px;   /* ticket cards, lane cards, modal-content edges */
-    --radius-xs: 4px;     /* badges, inline code pills, tiny inline marks */
+    --radius-xs: 4px;     /* checkboxes, badges, inline code pills, tiny inline marks */
     --radius-pill: 999px; /* circular controls: launcher, info trigger, status dots */
 
     /* ── Gap scale — pick by ROLE, not by look ──

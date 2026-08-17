@@ -1,22 +1,58 @@
-/* Shared checkbox object — the ONE implementation for every native checkbox
+/* Shared checkbox object — the ONE implementation for every checkbox
    (settings lists, facet filters, swimlane toolbar, path selector, add-project
-   form, styleguide demo). Pure CSS (no @apply) so this file also renders
-   standalone in browser-served contexts (src/styleguide.html links it
-   directly next to design-tokens.css). Do not add @apply here.
+   form, styleguide demo, prose task lists). Pure CSS (no @apply) so this file
+   also renders standalone in browser-served contexts (src/styleguide.html
+   links it directly next to design-tokens.css). Do not add @apply here.
 
-   Design: native widget, 16px, themed via accent-color — never custom-drawn
-   boxes. Focus is keyboard-only (:focus-visible) with the thin ring-1 @50%
-   convention (STYLING.md §Focus). Prose task-list checkboxes are the one
-   sibling: same accent recipe but 1em so they scale with body text
-   (styles/prose.css). Documented deviation: Column merge-mode checkbox
-   overrides accent-color with a warning tone (column.css). */
+   Drawn by this object (appearance: none), NOT native: engines normalize
+   author border-radius to 0 on appearance:auto checkboxes (verified Chrome
+   147 — inline border-radius computes 0px), so the small round corner can
+   only be guaranteed by owning the drawing. Corner = --radius-xs (4px on
+   16px). Checked fill = --primary; the check glyph is an inline SVG
+   background-image because <input> is a replaced element and cannot render
+   ::before/::after (verified — the glyph silently never draws). Glyph stroke
+   = #fff, matching --primary-foreground (white in both themes); data URIs
+   cannot consume vars, so the value is baked. Focus is keyboard-only
+   (:focus-visible) with the thin ring-1 @50% convention (STYLING.md §Focus).
+   State hierarchy: &:checked is declared after &:hover so checked absorbs
+   hover.
+
+   Prose task lists share this selector list; styles/prose.css then overrides
+   only geometry (absolute position, 1em size) — later in source order within
+   the same layer. Documented deviation: the Column merge-mode checkbox
+   overrides the checked fill with a warning tone (column.css). */
 
 @layer components {
-  .checkbox {
+  .checkbox,
+  .prose .task-list-item input[type="checkbox"] {
+    appearance: none;
+    position: relative;
     width: 1rem;
     height: 1rem;
-    accent-color: oklch(var(--primary));
+    margin: 0;
+    border-radius: var(--radius-xs);
+    border: 1px solid var(--border-strong);
+    background: var(--bg-elevated);
+    background-position: center;
+    background-repeat: no-repeat;
     cursor: pointer;
+    transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1),
+      border-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:hover {
+      border-color: oklch(var(--primary) / 50%);
+    }
+
+    &:checked {
+      background-color: oklch(var(--primary));
+      border-color: oklch(var(--primary));
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='m3.5 8.5 3 3 6-7' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
 
     &:focus-visible {
       box-shadow: 0 0 0 1px oklch(var(--ring) / 50%);

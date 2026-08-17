@@ -496,19 +496,27 @@ Rules:
 ### Shared Checkbox
 
 The ONE checkbox implementation is the shared object in
-[`styles/components/checkbox.css`](styles/components/checkbox.css) — a native
-`<input type="checkbox">` at 16px themed via `accent-color: oklch(var(--primary))`,
-with keyboard-only focus (`:focus-visible`, ring-1 @50%). Every checkbox input
-consumes `.checkbox`, and `styleguide.html` demos the same class (no parallel
-demo classes). It is pure CSS (no `@apply`) so it renders standalone in
-browser-served contexts.
+[`styles/components/checkbox.css`](styles/components/checkbox.css) — an
+`<input type="checkbox">` at 16px **drawn by the object** (`appearance: none`),
+with a small round corner (`--radius-xs`, 4px), checked fill
+`oklch(var(--primary))` + white check glyph, and keyboard-only focus
+(`:focus-visible`, ring-1 @50%). Every checkbox input consumes `.checkbox`,
+and `styleguide.html` demos the same class (no parallel demo classes). It is
+pure CSS (no `@apply`) so it renders standalone in browser-served contexts.
+
+Why custom-drawn and not `accent-color`: engines normalize author
+`border-radius` to 0 on native (`appearance: auto`) checkboxes — verified on
+Chromium 147, where even an inline `border-radius: 4px` computes to 0px. The
+UA's own painted rounding varies by browser, so the token-driven corner can
+only be guaranteed by owning the drawing.
 
 Rules:
 
-- Never custom-draw a checkbox (boxes, check glyphs, `peer-checked` chains) — the native widget + `accent-color` is the design.
-- Never restyle a checkbox with utility chains (`text-blue-600 border-gray-300 …`); size and color come from `.checkbox`.
+- Only the shared object draws checkboxes — never a local `appearance: none` recipe, `peer-checked` chain, or `accent-color`-only theming (accent-color does nothing under `appearance: none`).
+- Never restyle a checkbox with utility chains (`text-blue-600 border-gray-300 …`); size, corner, and color come from `.checkbox`.
 - Spacing to the label belongs to the wrapping row (`.settings-checkbox-row`, `.facet-option`, `gap-*` on the container), not to `.checkbox`.
-- Documented deviations, both declared next to their consumer: prose task-list checkboxes (`styles/prose.css`) use the same accent recipe at `1em` so they scale with body text; the column merge-mode checkbox overrides `accent-color` with a warning tone (`.column-merge-checkbox` in `components/Column/column.css`) because drag-merging re-parents tickets.
+- State hierarchy: `&:checked` is declared after `&:hover` so a checked box never demotes on hover.
+- Documented deviation: the column merge-mode checkbox overrides the *checked fill* with a warning tone (`.column-merge-checkbox` in `components/Column/column.css`) because drag-merging re-parents tickets. Prose task-lists are not a deviation — they share the object's selector list; `styles/prose.css` overrides only geometry (absolute position, `1em`).
 
 ---
 
