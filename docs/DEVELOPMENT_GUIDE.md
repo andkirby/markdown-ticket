@@ -241,12 +241,14 @@ shared/
 ## Configuration
 
 ### Environment Variables
-- `BACKEND_URL` - Backend server URL (default: http://localhost:3001)
+
+The canonical, complete reference lives in [ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md).
+The local-development essentials:
+
+- `BACKEND_URL` - Backend server URL for the MCP dev tools (default: http://localhost:3001)
 - `API_SECURITY_AUTH` - Enable backend API auth when `true`; leave unset or set `false` for local no-auth development
 - `API_AUTH_TOKEN` - Owner token used by API clients and browser unlock when auth is enabled
-- `MCP_PROJECT_FILTER` - Limit MCP to specific project
-- `MCP_SCAN_PATHS` - Set project paths for MCP scanning
-- `MCP_HTTP_ENABLED` - Enable HTTP transport for MCP server
+- `MCP_HTTP_ENABLED` - Enable HTTP transport for MCP server (default: `false`)
 - `MCP_HTTP_PORT` - HTTP port for MCP server (default: 3002)
 
 ### Configuration Files
