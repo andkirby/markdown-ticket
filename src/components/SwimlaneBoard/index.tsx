@@ -1,6 +1,6 @@
 import type { BoardTicket, Status, Ticket } from '../../types'
 import { CRStatus } from '@mdt/domain-contracts'
-import { Check, ChevronDown, ChevronLeft, FileText } from 'lucide-react'
+import { Check, ChevronDown, ChevronLeft, FileText, Search, X } from 'lucide-react'
 import * as React from 'react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useDrag } from 'react-dnd'
@@ -18,6 +18,7 @@ import { Button } from '../ui/index'
 import {
   buildSwimlaneModel,
   canDropTicketInLane,
+  filterLanesBySearch,
   filterLanesByVisibility,
 } from './helpers'
 
@@ -193,6 +194,8 @@ export function SwimlaneBoard({
   const [hideEmpty, setHideEmpty] = useState(false)
   const [showBadges, setShowBadges] = useState(false)
   const [showClosed, setShowClosed] = useState(false)
+  // BR-6.1: toolbar ticket search (title / ticket key only, presentation-only).
+  const [searchQuery, setSearchQuery] = useState('')
   // Default is collapsed-by-default: the set tracks EXPANDED lanes (the ones the
   // user explicitly opened), persisted to localStorage. An empty set = all collapsed.
   const [expandedLaneKeys, setExpandedLaneKeys] = useState<Set<string>>(() => readExpandedLanes())
@@ -214,9 +217,11 @@ export function SwimlaneBoard({
   }, [])
   const { lanes } = useMemo(() => buildSwimlaneModel(tickets, laneSourceTickets), [laneSourceTickets, tickets])
   const epicKeys = useMemo(() => new Set(lanes.filter(lane => lane.epic).map(lane => lane.key)), [lanes])
+  // Search narrows lane tickets first; visibility filters (Hide empty /
+  // Show closed) then apply on the searched lanes.
   const visibleLanes = useMemo(
-    () => filterLanesByVisibility(lanes, { hideEmpty, showClosed }),
-    [lanes, hideEmpty, showClosed],
+    () => filterLanesByVisibility(filterLanesBySearch(lanes, searchQuery), { hideEmpty, showClosed }),
+    [lanes, hideEmpty, showClosed, searchQuery],
   )
 
   const toggleLane = (laneKey: string): void => {
@@ -245,6 +250,29 @@ export function SwimlaneBoard({
   return (
     <div className="swimlane-board" data-testid="swimlane-board">
       <div className="swimlane-board__toolbar" data-testid="swimlane-toolbar">
+        <div className="swimlane-board__search">
+          <Search className="swimlane-board__search-icon" aria-hidden="true" size={14} />
+          <input
+            type="text"
+            className="swimlane-board__search-input"
+            value={searchQuery}
+            onChange={event => setSearchQuery(event.currentTarget.value)}
+            placeholder="Search title or key (ABC-012, 12, ABC-12)"
+            aria-label="Search swimlane tickets by title or key"
+            data-testid="swimlane-search"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              className="swimlane-board__search-clear"
+              aria-label="Clear search"
+              onClick={() => setSearchQuery('')}
+              data-testid="swimlane-search-clear"
+            >
+              <X aria-hidden="true" size={14} />
+            </button>
+          )}
+        </div>
         <label className="swimlane-board__toggle">
           <input
             type="checkbox"

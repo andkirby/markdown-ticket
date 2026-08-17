@@ -220,6 +220,13 @@
       "text": "WHILE swimlane mode is active, the system shall let the user collapse any status column from its header into a 44px rail (status dot + click-to-expand), hiding that column's drop zones in every lane. The collapsed column's lane-body cells are narrow strips that are also click targets to re-expand the column (Board parity: the whole collapsed column is one expand surface). Column collapse state is keyed by primary status and persisted in the shared mdt-settings-collapsed-columns key used by the flat Board, so a status collapsed in one view is collapsed in the other and stays in sync across tabs via the collapsed-columns-change event. Column collapse and lane collapse are independent axes.",
       "sourceRef": "CR:MDT-206",
       "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-6.1",
+      "kind": "behavior",
+      "text": "WHILE swimlane mode is active, the system shall render a search field in the swimlane toolbar beside the Hide empty / Show badges / Show closed toggles. Typing filters the epic lane list itself (not just tickets inside lanes): an epic lane is shown when its epic key or title matches the query, or when any of its child tickets matches; lanes with no match are removed from the board. Matching is by title (case-insensitive substring) or ticket key, accepting the full zero-padded key (ABC-012), the bare number (12), and the simplified key (ABC-12, normalized to the zero-padded form via the shared key-normalization rules). When the epic itself matches, the lane shows all of its tickets (the user found the epic); when only child tickets match, the lane shows only the matching tickets. The No-epic lane is shown only when one of its tickets matches, showing only the matching tickets. The search filters presentation only (ticket data is not mutated, epic progress is not recomputed) and composes with the visibility toggles.",
+      "sourceRef": "CR:MDT-206",
+      "routePolicy": "bdd"
     }
   ],
   "scenarios": [
@@ -400,6 +407,17 @@
       "given": "the user is on the swimlane board with lanes expanded",
       "when": "the user clicks the collapse chevron on a status column header",
       "then": "the column header becomes a 44px click-to-expand rail, that status's lane-body cells become narrow click-to-expand strips with no drop zones, the collapse is persisted to mdt-settings-collapsed-columns (shared with the flat Board), and clicking either the header rail or any lane strip re-expands the column",
+      "sourceRef": "CR:MDT-206"
+    },
+    {
+      "id": "swimlane_search_filters_by_title_or_key",
+      "title": "Swimlane search filters the epic lane list by title or key",
+      "covers": [
+        "BR-6.1"
+      ],
+      "given": "the user is on the swimlane board with multiple epic lanes and the toolbar showing the search field and the toggles",
+      "when": "the user types a query (an epic title or key, a child ticket title or key in full/bare/simplified form) into the toolbar search field",
+      "then": "only lanes with a matching epic or a matching child ticket remain on the board (epic match shows the whole lane; child match shows only matching tickets; the No-epic lane stays only if one of its tickets matches), ticket data is unchanged, epic progress is unchanged, and clearing the query restores the full lane list",
       "sourceRef": "CR:MDT-206"
     }
   ],
@@ -675,21 +693,6 @@
   ],
   "testPlans": [
     {
-      "id": "TEST-swimlane-helpers",
-      "kind": "unit",
-      "title": "Swimlane lane model and progress helpers",
-      "covers": [
-        "C2",
-        "C3",
-        "Edge-1",
-        "Edge-2",
-        "Edge-3",
-        "OBL-lane-model"
-      ],
-      "file": "src/components/SwimlaneBoard/helpers.test.ts",
-      "sourceRef": "tests:TDD helper RED"
-    },
-    {
       "id": "TEST-ticket-level-api-metadata",
       "kind": "integration",
       "title": "Ticket metadata preserves explicit epic level for board filtering",
@@ -712,6 +715,38 @@
       "sourceRef": "CR:MDT-206"
     },
     {
+      "id": "TEST-swimlane-component",
+      "kind": "unit",
+      "title": "Swimlane lane label structure, clickable epic key, column collapse, and toolbar search",
+      "covers": [
+        "BR-2.5",
+        "BR-5.1",
+        "BR-5.2",
+        "BR-5.3",
+        "BR-6.1",
+        "C5",
+        "C6"
+      ],
+      "file": "src/components/SwimlaneBoard/SwimlaneBoard.test.tsx",
+      "sourceRef": "CR:MDT-206"
+    },
+    {
+      "id": "TEST-swimlane-helpers",
+      "kind": "unit",
+      "title": "Swimlane lane model, progress, and ticket-search matching helpers",
+      "covers": [
+        "C2",
+        "C3",
+        "Edge-1",
+        "Edge-2",
+        "Edge-3",
+        "OBL-lane-model",
+        "BR-6.1"
+      ],
+      "file": "src/components/SwimlaneBoard/helpers.test.ts",
+      "sourceRef": "CR:MDT-206"
+    },
+    {
       "id": "TEST-swimlane-board-e2e",
       "kind": "e2e",
       "title": "Epic swimlane board user-visible behavior",
@@ -731,6 +766,7 @@
         "BR-5.1",
         "BR-5.2",
         "BR-5.3",
+        "BR-6.1",
         "C1",
         "C4",
         "C5",
@@ -738,21 +774,6 @@
         "C7"
       ],
       "file": "tests/e2e/board/swimlane-board.spec.ts",
-      "sourceRef": "CR:MDT-206"
-    },
-    {
-      "id": "TEST-swimlane-component",
-      "kind": "unit",
-      "title": "Swimlane lane label structure, clickable epic key, and column collapse",
-      "covers": [
-        "BR-2.5",
-        "BR-5.1",
-        "BR-5.2",
-        "BR-5.3",
-        "C5",
-        "C6"
-      ],
-      "file": "src/components/SwimlaneBoard/SwimlaneBoard.test.tsx",
       "sourceRef": "CR:MDT-206"
     }
   ],
@@ -836,6 +857,7 @@
         "collapse_state_persists",
         "show_closed_hides_implemented_lanes",
         "column_collapses_to_rail_shared_with_flat_board",
+        "swimlane_search_filters_by_title_or_key",
         "same_epic_drag_updates_status_only",
         "cross_epic_drag_is_rejected",
         "blocked_epic_close_surfaces_children",

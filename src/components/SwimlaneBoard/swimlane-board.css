@@ -17,6 +17,62 @@
     flex-shrink: 0;
   }
 
+  /* BR-6.1: toolbar ticket search (title / ticket key only). Same inline
+     icon-input pattern as FilterControls, in semantic swimlane classes. */
+  .swimlane-board__search {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+  }
+
+  .swimlane-board__search-icon {
+    position: absolute;
+    left: 8px;
+    color: var(--text-subtle);
+    pointer-events: none;
+  }
+
+  .swimlane-board__search-input {
+    width: 220px;
+    min-height: 32px;
+    padding: 0 26px 0 26px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--background);
+    color: oklch(var(--foreground));
+    font-size: var(--fs-xs);
+
+    &::placeholder {
+      color: var(--text-subtle);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--ring);
+      outline-offset: -1px;
+    }
+  }
+
+  .swimlane-board__search-clear {
+    position: absolute;
+    right: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+
+    &:hover {
+      background: var(--state-hover-bg);
+      color: oklch(var(--foreground));
+    }
+  }
+
   .swimlane-board__toggle {
     display: inline-flex;
     align-items: center;

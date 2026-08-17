@@ -2,7 +2,7 @@
 
 ## Overview
 
-The BDD scenarios cover the swimlane board as a user-visible board layout selected from the app header. They are grouped around mode switching, lane composition, status-only drag/drop, epic lifecycle actions, and lane visibility controls.
+The BDD scenarios cover the swimlane board as a user-visible board layout selected from the app header. They are grouped around mode switching, lane composition, status-only drag/drop, epic lifecycle actions, lane visibility controls, and the toolbar ticket search (round 7).
 
 ## Acceptance Strategy
 

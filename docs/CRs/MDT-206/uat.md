@@ -2,61 +2,65 @@
 
 ## Objective
 
-Make the swimlane board's status columns collapsible like the flat Board page: a per-column collapse chevron in the header collapses a status column into a 44px rail (status dot + click-to-expand), hiding that column's drop zones in every lane.
+Round 8 correction of the round-7 toolbar search: the search shall filter **the epic lane list itself** — not just hide tickets inside lanes like the header global filter does. A query narrows the board to the epics (and No-epic tickets) that match by title or ticket key (`ABC-012`, `12`, `ABC-12`).
 
 ## Approved Changes
 
-1. **Column collapse (shared with flat Board)**: each swimlane column header renders a collapse chevron. Collapsing replaces the header with a 44px click-to-expand rail (status dot only) and replaces that column's lane-body cells with a narrow strip (no drop zone, matching the flat Board).
-2. **Clickable collapsed columns (Board parity)**: the collapsed column is one big expand surface — clicking the header rail *or* any lane strip re-expands the column. The strips are real `<button>`s (`aria-label="Expand column …"`), not dead divs.
-3. **Shared collapse memory**: swimlane column collapse reuses the flat Board's `mdt-settings-collapsed-columns` key (keyed by primary status) + the `COLLAPSED_COLUMNS_CHANGE_EVENT` cross-tab sync. A status collapsed in one view is collapsed in the other.
-4. **Independent axes**: column collapse (status axis) and lane collapse (epic axis) are independent — toggling one does not affect the other.
+1. **Lane-list filtering (the delta)**: `filterLanesBySearch` now removes lanes from the board instead of leaving emptied lanes:
+   - an epic lane stays when its **epic key or title** matches — and then shows **all** its tickets (the user found the epic);
+   - an epic lane also stays when any **child ticket** matches — narrowed to the matching tickets;
+   - the **No-epic** lane stays only when one of its tickets matches — narrowed to the matching tickets;
+   - everything else is removed from the board.
+2. Unchanged from round 7: search field in the toolbar beside the toggles (`swimlane-search`) with a clear button; matching by title (case-insensitive substring) or ticket key (`ABC-012`, `12` bare number, `ABC-12` simplified→zero-padded); presentation-only (no ticket mutation, epic progress not recomputed).
 
 ## Changed Requirement IDs
 
-- `BR-5.3` — **new** behavior: swimlane column collapse to a 44px rail, shared key, independent from lane collapse.
-- `column_collapses_to_rail_shared_with_flat_board` — **new** BDD scenario.
-- `TEST-swimlane-board-e2e`, `TEST-swimlane-component` — extended to cover BR-5.3.
+- `BR-6.1` — **refined in place**: filters the epic lane list, not just lane tickets.
+- `swimlane_search_filters_by_title_or_key` — **refined in place** to the lane-list semantics.
+- `TEST-swimlane-component`, `TEST-swimlane-helpers`, `TEST-swimlane-board-e2e` — coverage extended to the new semantics.
 
 ## Affected Downstream Trace
 
-- **requirements** — BR-5.3 added; non-ambiguity row added; validated + rendered.
-- **bdd** — one new scenario; validated + rendered.
-- **tests** — TEST-swimlane-board-e2e + TEST-swimlane-component extended (covers += BR-5.3); validated + rendered.
+- **requirements** — BR-6.1 refined; non-ambiguity row updated; validated + rendered.
+- **bdd** — scenario refined; validated + rendered.
+- **tests** — coverage notes updated (plans already cover BR-6.1).
 
 ## Execution Slices
 
-### Slice 1: Swimlane column collapse (TDD)
+### Slice 1: Lane-list search semantics
 
-- **Objective**: per-column collapse to a 44px rail, reusing the flat Board's collapse memory.
+- **Objective**: query filters which epic lanes exist on the board.
 - **Direct artifacts/files**:
-  - `src/components/SwimlaneBoard/index.tsx` (collapsedColumns state + COLLAPSED_COLUMNS_CHANGE_EVENT sync + toggleColumnCollapse; header rail/chevron; lane-body cell strip when collapsed)
-  - `src/components/SwimlaneBoard/swimlane-board.css` (.swimlane-board__col-collapse, .swimlane-board__col-head--collapsed, .swimlane-board__col-expand, .swimlane-board__lane-col-rail)
-  - tests: `src/components/SwimlaneBoard/SwimlaneBoard.test.tsx` (6 new column-collapse cases), `tests/e2e/board/swimlane-board.spec.ts` (column-collapse E2E), `tests/e2e/utils/selectors.ts` (colCollapseByStatus, colExpandByStatus, laneColRail)
+  - `src/components/SwimlaneBoard/helpers.ts` (`filterLanesBySearch` rewritten: epic match keeps whole lane, child match narrows, no-match lanes removed)
+  - tests: `src/components/SwimlaneBoard/helpers.test.ts`, `src/components/SwimlaneBoard/SwimlaneBoard.test.tsx`, `tests/e2e/board/swimlane-board.spec.ts`
 - **Direct GREEN targets**:
-  - 7 unit cases: render chevron, collapse→rail+persist shared key, expand from rail, **expand by clicking a lane strip (Board parity)**, restore from localStorage, independence from lane collapse, cross-view event sync.
-  - 1 E2E case: collapse Done column → 44px rail + strip cell + shared key + re-expand via header rail **and via a lane strip**.
-- **Impacted canonical task IDs**: `TEST-swimlane-board-e2e`, `TEST-swimlane-component` (covers extended).
-- **Why**: "collapsible like the Board page" — the swimlane had lane collapse but no column collapse; the flat Board already has the canonical column-collapse mechanism and memory. Board parity also means the whole collapsed column is clickable, not just the header.
+  - Helper: epic title/key match keeps full lane; child-only match narrows lane; non-matching epic + No-epic lanes removed; no-match query yields empty board; orphan-only query keeps only the No-epic lane.
+  - Component: epic-title match shows all tickets; no-match query renders zero lanes; round-7 cases (title, bare number, simplified key, clear, progress) still green.
+  - E2E: no-match query removes lanes; epic-title match keeps the lane with all tickets; clear restores.
+- **Impacted canonical task IDs**: `TASK-2` (makes-green already includes the scenario).
+- **Why**: UAT feedback — round 7 behaved like the header filter (hiding cards inside lanes); the user expects the search to narrow the epics list itself.
 
 ## Validation
 
 ```bash
-bun test src/components/SwimlaneBoard/SwimlaneBoard.test.tsx
-PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/board/swimlane-board.spec.ts --project=chromium
-bun run validate:ts src/components/SwimlaneBoard/index.tsx src/components/SwimlaneBoard/SwimlaneBoard.test.tsx
+bun test --isolate src/components/SwimlaneBoard/helpers.test.ts
+bun test --isolate src/components/SwimlaneBoard/SwimlaneBoard.test.tsx
+bunx playwright test tests/e2e/board/swimlane-board.spec.ts --project=chromium
+bun run validate:ts src/components/SwimlaneBoard/helpers.ts src/components/SwimlaneBoard/SwimlaneBoard.test.tsx
 spec-trace validate MDT-206 --stage all
 ```
 
-All green at completion: 22/22 swimlane component (15 lane + 7 column), 10/10 swimlane E2E, all trace stages valid.
+All green at completion: 19/19 helpers, 29/29 swimlane component, 11/11 swimlane E2E, all trace stages valid.
 
 ## Watchlist
 
-- Column collapse is keyed by primary status string (e.g. `"Implemented"`), shared with the flat Board. If a future column-config change makes two columns share a primary status, collapse would affect both — but the flat Board has the same constraint, so this is the canonical behavior, not a regression.
-- `act()` wraps the cross-view event-sync unit test because a raw `window.dispatchEvent` triggers a setState outside React's batching boundary. The production listener is identical to the flat Board's verified pattern.
+- Bare-number matching uses substring semantics on the key's number part (consistent with Quick Search): `12` also matches `MDT-112`.
+- Epic progress is intentionally NOT recomputed on search — progress is an epic health signal, not a filtered count.
+- A query matching an epic key/title shows that epic's **entire** lane including non-matching children — intentional (finding the epic means reviewing its work), recorded in BR-6.1.
 
 ## Prior rounds
 
-- Rounds 1–4 (lane-label restructure, collapse approach, `/epics` route + Default View + switcher sizing, collapse persistence/Show-closed/key-before-title) are recorded in CR §8.
+- Rounds 1–7 are recorded in CR §8 (round 7 added the toolbar search with ticket-only narrowing).
 
 ## Open Decisions
 

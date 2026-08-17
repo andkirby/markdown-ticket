@@ -79,6 +79,10 @@ export const swimlaneSelectors = {
   toolbar: '[data-testid="swimlane-toolbar"]',
   /** Hide empty lanes toggle */
   hideEmptyToggle: '[data-testid="swimlane-hide-empty"]',
+  /** MDT-206 BR-6.1 — toolbar ticket search input (title / ticket key only) */
+  search: '[data-testid="swimlane-search"]',
+  /** MDT-206 BR-6.1 — toolbar search clear button */
+  searchClear: '[data-testid="swimlane-search-clear"]',
   /** Show ticket-card badges toggle */
   showBadgesToggle: '[data-testid="swimlane-show-badges"]',
   /** Show closed (Implemented) epic lanes toggle */

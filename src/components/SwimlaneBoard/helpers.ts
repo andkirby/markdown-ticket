@@ -1,5 +1,6 @@
 import type { BoardTicket, Ticket } from '../../types'
 import { CRStatus } from '@mdt/domain-contracts'
+import { formatCrKey } from '@mdt/shared/utils/keyNormalizer'
 import { getLocalBoardTicket, isEpicTicket as isEpicBoardTicket } from '../../utils/ticketLevels'
 
 export { isEpicTicket } from '../../utils/ticketLevels'
@@ -123,6 +124,79 @@ export function buildSwimlaneModel(
 
 export function canDropTicketInLane(ticket: Pick<Ticket, 'phaseEpic'>, laneKey: string, epicKeys: Set<string>): boolean {
   return getTicketLaneKey(ticket, epicKeys) === laneKey
+}
+
+/**
+ * Normalize a simplified ticket-key search term ("ABC-12") to the zero-padded
+ * stored form ("ABC-012"), mirroring Quick Search's `normalizeTicketKeyTerm`
+ * so both surfaces match keys identically. Non-key terms pass through.
+ */
+function normalizeKeyTerm(term: string): string {
+  const match = term.match(/^([a-z]+)-(\d+)$/)
+  if (match)
+    return formatCrKey(match[1]!.toUpperCase(), Number.parseInt(match[2]!, 10)).toLowerCase()
+  return term
+}
+
+/**
+ * MDT-206 BR-6.1 (UAT round 7): does a ticket match the swimlane toolbar
+ * search query? Only the title (case-insensitive substring) and the ticket
+ * key are searched — no other field. Key matching accepts:
+ * - the full zero-padded key ("ABC-012"),
+ * - the bare number ("12", substring of the key's number part, so zero-pad
+ *   differences don't matter),
+ * - the simplified key ("ABC-12", normalized to zero-padded before compare).
+ */
+export function matchesTicketSearch(
+  ticket: { code: string, title: string },
+  query: string,
+): boolean {
+  const term = query.trim().toLowerCase()
+  if (!term)
+    return true
+
+  const code = ticket.code.toLowerCase()
+  const keyNum = code.split('-')[1] ?? ''
+  const normalizedTerm = normalizeKeyTerm(term)
+
+  if (code === term || code === normalizedTerm || code.includes(normalizedTerm))
+    return true
+  if (keyNum === term || keyNum.includes(term))
+    return true
+  return ticket.title.toLowerCase().includes(term)
+}
+
+/**
+ * Filter the epic lane list itself (MDT-206 BR-6.1, UAT round 8):
+ * - an epic lane is kept when its epic key/title matches the query, or when
+ *   any child ticket matches;
+ * - an epic match shows the whole lane (the user found the epic);
+ * - a child-only match narrows the lane to the matching tickets;
+ * - the No-epic lane is kept only when one of its tickets matches (narrowed).
+ * Epic progress is intentionally kept from the full child set (search is
+ * presentation-only).
+ */
+export function filterLanesBySearch(
+  lanes: SwimlaneLane[],
+  query: string,
+): SwimlaneLane[] {
+  if (!query.trim())
+    return lanes
+  return lanes
+    .map((lane) => {
+      const epicMatches = !!lane.epic && matchesTicketSearch(
+        { code: lane.key, title: lane.title },
+        query,
+      )
+      if (epicMatches)
+        return { lane, keep: true }
+      return {
+        lane: { ...lane, tickets: lane.tickets.filter(ticket => matchesTicketSearch(ticket, query)) },
+        keep: false,
+      }
+    })
+    .filter(({ lane, keep }) => keep || lane.tickets.length > 0)
+    .map(({ lane }) => lane)
 }
 
 export interface LaneVisibilityOptions {

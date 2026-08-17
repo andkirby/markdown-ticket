@@ -2,10 +2,12 @@ import type { Ticket } from '../../types'
 import { CRLevel, CRStatus } from '@mdt/domain-contracts'
 import {
   buildSwimlaneModel,
+  filterLanesBySearch,
   filterLanesByVisibility,
   getEpicProgress,
   getTicketLaneKey,
   isEpicTicket,
+  matchesTicketSearch,
   NO_EPIC_LANE_KEY,
 } from './helpers'
 
@@ -154,5 +156,98 @@ describe('SwimlaneBoard helpers', () => {
       const result = filterLanesByVisibility(lanes, { hideEmpty: true, showClosed: false })
       expect(result.map(l => l.key)).toEqual(['MDT-100', NO_EPIC_LANE_KEY])
     })
+  })
+})
+
+describe('SwimlaneBoard toolbar search (MDT-206 BR-6.1, UAT round 7)', () => {
+  it('matches the full zero-padded key', () => {
+    expect(matchesTicketSearch({ code: 'ABC-012', title: 'Fix login' }, 'ABC-012')).toBe(true)
+    expect(matchesTicketSearch({ code: 'ABC-012', title: 'Fix login' }, 'abc-012')).toBe(true)
+    expect(matchesTicketSearch({ code: 'ABC-012', title: 'Fix login' }, 'ABC-013')).toBe(false)
+  })
+
+  it('matches the bare number regardless of zero-padding', () => {
+    expect(matchesTicketSearch({ code: 'ABC-012', title: 'Fix login' }, '12')).toBe(true)
+    expect(matchesTicketSearch({ code: 'ABC-012', title: 'Fix login' }, '012')).toBe(true)
+    expect(matchesTicketSearch({ code: 'ABC-012', title: 'Fix login' }, '7')).toBe(false)
+  })
+
+  it('matches the simplified key by normalizing to zero-padded form', () => {
+    expect(matchesTicketSearch({ code: 'ABC-012', title: 'Fix login' }, 'ABC-12')).toBe(true)
+    expect(matchesTicketSearch({ code: 'MDT-206', title: 'Swimlanes' }, 'mdt-206')).toBe(true)
+  })
+
+  it('matches the title case-insensitively as a substring, and nothing else', () => {
+    expect(matchesTicketSearch({ code: 'ABC-012', title: 'Fix login flow' }, 'LOGIN')).toBe(true)
+    expect(matchesTicketSearch({ code: 'ABC-012', title: 'Fix login flow' }, 'login')).toBe(true)
+    // Description-like words that appear nowhere in title or key do not match.
+    expect(matchesTicketSearch({ code: 'ABC-012', title: 'Fix login flow' }, 'oauth')).toBe(false)
+  })
+
+  it('treats an empty/whitespace query as match-all', () => {
+    expect(matchesTicketSearch({ code: 'ABC-012', title: 'Fix login' }, '')).toBe(true)
+    expect(matchesTicketSearch({ code: 'ABC-012', title: 'Fix login' }, '   ')).toBe(true)
+  })
+
+  it('filterLanesBySearch narrows lane tickets, preserves progress, and does not mutate input lanes', () => {
+    const epic = ticket({ code: 'MDT-100', title: 'Platform Epic', status: CRStatus.APPROVED, level: CRLevel.EPIC })
+    const a = ticket({ code: 'MDT-101', title: 'OAuth PKCE', phaseEpic: 'MDT-100' })
+    const b = ticket({ code: 'MDT-102', title: 'Rate limits', phaseEpic: 'MDT-100' })
+    const { lanes } = buildSwimlaneModel([epic, a, b], [epic, a, b])
+    const epicLane = lanes.find(lane => lane.key === 'MDT-100')!
+
+    const filtered = filterLanesBySearch(lanes, 'oauth')
+    const filteredEpicLane = filtered.find(lane => lane.key === 'MDT-100')!
+    expect(filteredEpicLane.tickets.map(t => t.code)).toEqual(['MDT-101'])
+
+    // Progress is presentation-only: kept from the full child set.
+    expect(filteredEpicLane.progress.total).toBe(epicLane.progress.total)
+    // Input lanes untouched (original still holds both tickets).
+    expect(epicLane.tickets.map(t => t.code)).toEqual(['MDT-101', 'MDT-102'])
+  })
+
+  it('filterLanesBySearch returns the same lanes when the query is empty', () => {
+    const { lanes } = buildSwimlaneModel([], [])
+    expect(filterLanesBySearch(lanes, '  ')).toBe(lanes)
+  })
+
+  it('keeps the whole lane when the epic key or title matches', () => {
+    const epic = ticket({ code: 'MDT-100', title: 'Platform Epic', status: CRStatus.APPROVED, level: CRLevel.EPIC })
+    const a = ticket({ code: 'MDT-101', title: 'OAuth PKCE', phaseEpic: 'MDT-100' })
+    const b = ticket({ code: 'MDT-102', title: 'Rate limits', phaseEpic: 'MDT-100' })
+    const { lanes } = buildSwimlaneModel([epic, a, b], [epic, a, b])
+
+    // Epic title match → whole lane visible, all tickets shown.
+    const byTitle = filterLanesBySearch(lanes, 'platform')
+    const laneByTitle = byTitle.find(l => l.key === 'MDT-100')
+    expect(laneByTitle).toBeDefined()
+    expect(laneByTitle!.tickets.map(t => t.code).sort()).toEqual(['MDT-101', 'MDT-102'])
+
+    // Epic key match (bare number) → whole lane visible.
+    const byKey = filterLanesBySearch(lanes, '100')
+    const laneByKey = byKey.find(l => l.key === 'MDT-100')
+    expect(laneByKey).toBeDefined()
+    expect(laneByKey!.tickets.map(t => t.code).sort()).toEqual(['MDT-101', 'MDT-102'])
+  })
+
+  it('removes epic lanes and the No-epic lane when nothing matches (filters the lane list)', () => {
+    const epic = ticket({ code: 'MDT-100', title: 'Platform Epic', status: CRStatus.APPROVED, level: CRLevel.EPIC })
+    const other = ticket({ code: 'MDT-200', title: 'Other Epic', status: CRStatus.APPROVED, level: CRLevel.EPIC })
+    const a = ticket({ code: 'MDT-101', title: 'OAuth PKCE', phaseEpic: 'MDT-100' })
+    const orphan = ticket({ code: 'MDT-001', title: 'Orphan work' })
+    const { lanes } = buildSwimlaneModel([epic, other, a, orphan], [epic, other, a, orphan])
+
+    // 'oauth' matches only MDT-101 → MDT-100 lane kept (narrowed), MDT-200 and No-epic removed.
+    const filtered = filterLanesBySearch(lanes, 'oauth')
+    expect(filtered.map(l => l.key)).toEqual(['MDT-100'])
+    expect(filtered[0]!.tickets.map(t => t.code)).toEqual(['MDT-101'])
+
+    // A query matching nothing removes every lane.
+    expect(filterLanesBySearch(lanes, 'xyz nothing')).toEqual([])
+
+    // A query matching only the No-epic orphan keeps just the No-epic lane.
+    const byOrphan = filterLanesBySearch(lanes, 'orphan')
+    expect(byOrphan.map(l => l.key)).toEqual([NO_EPIC_LANE_KEY])
+    expect(byOrphan[0]!.tickets.map(t => t.code)).toEqual(['MDT-001'])
   })
 })
