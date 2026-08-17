@@ -137,10 +137,29 @@ Backend runtime variables are parsed by `server/config/runtimeConfig.ts`. The ca
 - **Type**: Boolean
 - **Usage**: `docker-compose.dev.yml`
 
+### BACKEND_URL
+- **Description**: Backend server URL used by the MCP dev tools (`server/mcp-dev-tools`)
+- **Default**: `http://localhost:3001`
+- **Usage**: `server/mcp-dev-tools/src/index.ts`
+
+### API_SECURITY_AUTH
+- **Description**: Enable backend API auth when `true`; leave unset or set `false` for local no-auth development
+- **Usage**: `server/security/apiAuth.ts` (see also the `API_LOCAL_HOST_BYPASS` carve-out above)
+
+### API_AUTH_TOKEN
+- **Description**: Owner token used by API clients and browser unlock when auth is enabled
+- **Usage**: `server/security/apiAuth.ts`
+
 ### DOCKER_BACKEND_URL (removed)
 - **Status**: **Removed** (MDT-117) — duplicated `VITE_BACKEND_URL`.
 - **Migration**: set `VITE_BACKEND_URL=http://backend:3001` directly
   (this is what `docker-compose.dev.yml` now does).
+
+### MCP_PROJECT_FILTER / MCP_SCAN_PATHS (never implemented)
+- **Status**: Were documented in older guides but **no code has ever read them**.
+  Removed from the guides (2026-08-17) to stop them spreading. Single-project
+  mode is auto-detected from `.mdt-config.toml` in the working directory;
+  discovery paths come from the config registry, not env vars.
 
 ---
 

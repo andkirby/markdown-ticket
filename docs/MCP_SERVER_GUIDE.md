@@ -21,9 +21,9 @@ bun run build
 claude mcp add mdt-all node $HOME/markdown-ticket/mcp-server/dist/index.js
 
 # Project-specific access
-claude mcp add mdt-all node $HOME/markdown-ticket/mcp-server/dist/index.js \
-  --env MCP_PROJECT_FILTER=MDT \
-  --env MCP_SCAN_PATHS=$(pwd)
+# (Single-project mode is auto-detected from .mdt-config.toml when the server
+#  starts inside a project directory — no env flags needed.)
+claude mcp add mdt-all node $HOME/markdown-ticket/mcp-server/dist/index.js
 ```
 
 #### Amazon Q CLI
@@ -137,14 +137,16 @@ header-only projection if the cloud is unavailable. Interactive MCP uses
 ## Integration Setup
 
 ### Environment Variables
-- `MCP_PROJECT_FILTER=MDT` - Limit to specific project
-- `MCP_SCAN_PATHS=/path/to/project` - Set project directory
-- `MCP_HTTP_ENABLED=true|false` - Enable/disable HTTP transport (default: true)
-- `MCP_HTTP_PORT=3002` - Change HTTP port (default: 3002)
+
+The canonical, complete reference lives in [ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md).
+The transport-relevant subset:
+
+- `MCP_HTTP_ENABLED=true|false` - Enable HTTP transport (default: `false`; stdio is always enabled)
+- `MCP_HTTP_PORT=3002` - Change HTTP port (default: `3002` from `DEFAULT_PORTS.MCP`; legacy `HTTP_PORT` warns)
 
 ### HTTP Transport Control
 
-**Note**: All npm scripts (`build`, `start`, `dev`) have HTTP transport enabled by default.
+**Note**: npm scripts (`build`, `start`, `dev`) do **not** enable HTTP transport — the default is stdio only. Prefix with `MCP_HTTP_ENABLED=true` (as in the examples below) to add the HTTP transport.
 
 #### Custom HTTP Port
 
