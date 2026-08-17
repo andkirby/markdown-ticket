@@ -315,14 +315,14 @@ export const DEFAULT_PORTS = {
 
 ## 8. Implementation Checklist
 
-- [ ] Update `src/vite-env.d.ts` with missing type definitions _(re-verified 2026-08-17: live vars are `VITE_BACKEND_URL`, `VITE_BACKEND_PORT`, `VITE_DISABLE_EVENTBUS_LOGS`; `VITE_HMR_HOST`/`VITE_HMR_PORT` below are dead — nothing consumes them)_
+- [x] Update `src/vite-env.d.ts` with missing type definitions _(done 2026-08-17: live vars `VITE_BACKEND_URL`, `VITE_BACKEND_PORT`, `VITE_DISABLE_EVENTBUS_LOGS` typed as `string | undefined`; `VITE_HMR_HOST`/`VITE_HMR_PORT` were dead — removed from compose and `.env.example` instead of typed)_
 - [x] Create `shared/utils/env.ts` with `parseEnvInt` utility _(done, plus `parsePortEnv` with legacy-`PORT` deprecation warning)_
 - [x] Rename `PORT` to `BACKEND_PORT` in code and compose files _(done: backend, all three compose files, test setup; one-time deprecation warning, not a silent alias)_
-- [ ] Replace `LOG_LEVEL` with `MCP_LOG_LEVEL` in all compose files _(re-verified: mcp block in base/prod gets the rename; the backend block in `docker-compose.dev.yml:80` must be **removed** — backend reads no log-level env)_
-- [ ] Remove `DOCKER_BACKEND_URL` from docker-compose.dev.yml
-- [ ] Rename `MCP_SANITIZATION_ENABLED` to `MCP_SECURITY_SANITIZATION`
+- [x] Replace `LOG_LEVEL` with `MCP_LOG_LEVEL` in all compose files _(done 2026-08-17: renamed in the mcp blocks of all three compose files plus two `ENV` stages in `mcp-server/Dockerfile` the original notes missed. Drift correction: the dev-compose occurrence at line 80 sat in the **mcp** block by then — the old backend-block occurrence was already gone — so it was renamed, not removed)_
+- [x] Remove `DOCKER_BACKEND_URL` from docker-compose.dev.yml _(done 2026-08-17: `VITE_BACKEND_URL=http://backend:3001` set directly; `vite.config.ts` reads it for the `/api` proxy and cache-clear middleware; verified via `docker compose config` merge + proxy-resolution smokes)_
+- [x] Rename `MCP_SANITIZATION_ENABLED` to `MCP_SECURITY_SANITIZATION` _(done 2026-08-17: old name kept as a loud one-time-warning fallback; tests, `SANITIZATION.md`, both `.env.example` files, and the env-vars reference updated; runtime tri-state smoke verified)_
 - [x] Add `DEFAULT_PORTS` to `shared/utils/constants.ts` _(done: FRONTEND 3075, FRONTEND_PREVIEW 3070, BACKEND 3001, MCP 3002; `vite.config.ts` mirrors `VITE_DEFAULT_PORTS` inline to avoid a build-time dependency on the `@mdt/shared` artifact)_
-- [x] Update documentation with new variable names _(done for the port subset: `.env.example` + `docs/ENVIRONMENT_VARIABLES.md`; remaining renames will need a further pass)_
+- [x] Update documentation with new variable names _(pass complete 2026-08-17: `.env.example`, `mcp-server/.env.example`, `docs/ENVIRONMENT_VARIABLES.md`, `SANITIZATION.md`, plus guide de-drift — `MCP_SERVER_GUIDE.md`/`DEVELOPMENT_GUIDE.md` corrected and linked to the canonical reference)_
 
 ---
 
@@ -337,7 +337,9 @@ Full re-check against the current tree (post MDT-157, post SSE-proxy fix `0093ee
 - **§2.3 premise strengthened**: `MCP_SECURITY_AUTH`/`_ORIGIN_VALIDATION`/`_RATE_LIMITING` are now load-bearing (prod compose defaults, `mcp-server/Dockerfile`, doc-enforcement tests in `docs/tests/`), making `MCP_SANITIZATION_ENABLED` the sole nonconforming security var.
 - **§4.1 note**: `mcp-server/.env.example` no longer documents `MCP_CACHE_TIMEOUT` (the §1.2 location reference is stale).
 
-The authoritative remaining-work list is §6 "Remaining (out of this subset) — re-verified 2026-08-17" in the ticket file.
+The authoritative record is §6 "Remaining items — implemented 2026-08-17" in the ticket file; the ticket is **Implemented** as of 2026-08-17.
+
+Final disposition of §7 priorities: High 1-3 and Medium 4-7 all done. Low 8 (consolidate `.env` files) was resolved by decision — root and `mcp-server/.env.example` are kept separate with cross-referenced sections and `docs/ENVIRONMENT_VARIABLES.md` as the canonical owner, rather than merged or symlinked. Low 9 (cache-timeout discrepancy) remains deferred to MDT-105, which owns the `MCP_CACHE_TIMEOUT` → `MDT_CACHE_TIMEOUT` break.
 
 *Generated: 2026-01-14*
 *Focus: Standardization and Redundancy Elimination*
