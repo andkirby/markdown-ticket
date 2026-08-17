@@ -2,6 +2,7 @@ import type { LucideIcon } from 'lucide-react'
 import { ArrowDownWideNarrow, ArrowUpNarrowWide, Check } from 'lucide-react'
 import * as React from 'react'
 import { createPortal } from 'react-dom'
+import { useAnchoredPopover } from '@/components/shared/useAnchoredPopover'
 import { cn } from '../../lib/utils'
 
 /**
@@ -55,65 +56,11 @@ export const SortMenu: React.FC<SortMenuProps> = ({
   collapseLabelBelowMd = false,
   className,
 }) => {
-  const [open, setOpen] = React.useState(false)
-  const [position, setPosition] = React.useState({ top: 0, left: 0 })
-  const triggerRef = React.useRef<HTMLButtonElement>(null)
-  const popoverRef = React.useRef<HTMLDivElement>(null)
+  const { open, toggle, close, position, triggerRef, popoverRef } = useAnchoredPopover()
 
   const selected = attributes.find(attr => attr.name === value) ?? attributes[0]
   const iconOnly = variant !== 'a'
   const dirWord = direction === 'asc' ? 'ascending' : 'descending'
-
-  const place = React.useCallback(() => {
-    const rect = triggerRef.current?.getBoundingClientRect()
-    if (!rect)
-      return
-    // Align to the trigger's right edge (toolbar hugs the panel's right side);
-    // flip to left alignment only if that would overflow the viewport.
-    const width = popoverRef.current?.offsetWidth ?? 220
-    const left = rect.right + 4 + width > window.innerWidth
-      ? Math.max(4, rect.left)
-      : Math.max(4, rect.right - width)
-    setPosition({ top: rect.bottom + 4, left })
-  }, [])
-
-  const close = React.useCallback(() => setOpen(false), [])
-
-  const toggle = () => {
-    setOpen((was) => {
-      const next = !was
-      if (next)
-        queueMicrotask(place)
-      return next
-    })
-  }
-
-  // Reposition while open (scroll/resize); close on outside click and Esc.
-  React.useEffect(() => {
-    if (!open)
-      return
-    place()
-    const onDocChange = () => place()
-    window.addEventListener('resize', onDocChange)
-    window.addEventListener('scroll', onDocChange, true)
-    const onPointerDown = (e: PointerEvent) => {
-      const t = e.target as Node
-      if (!triggerRef.current?.contains(t) && !popoverRef.current?.contains(t))
-        close()
-    }
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape')
-        close()
-    }
-    document.addEventListener('pointerdown', onPointerDown)
-    document.addEventListener('keydown', onKeyDown)
-    return () => {
-      window.removeEventListener('resize', onDocChange)
-      window.removeEventListener('scroll', onDocChange, true)
-      document.removeEventListener('pointerdown', onPointerDown)
-      document.removeEventListener('keydown', onKeyDown)
-    }
-  }, [open, place, close])
 
   const selectAttribute = (attr: SortMenuAttribute) => {
     // Per-attribute defaultDirection — same contract as the old handleAttributeChange.

@@ -15,7 +15,7 @@
 
 .accent-color-picker__label {
   margin: 0;
-  font-size: 0.875rem;
+  font-size: var(--fs-ui);
   line-height: 1.4;
   color: rgb(75 85 99);
 }
@@ -26,7 +26,7 @@
 
 .accent-color-picker__link {
   flex-shrink: 0;
-  font-size: 0.875rem;
+  font-size: var(--fs-ui);
   font-weight: 500;
   color: rgb(37 99 235);
   text-decoration: none;
@@ -104,7 +104,7 @@
 }
 
 .accent-color-picker__preset-name {
-  font-size: 0.8125rem;
+  font-size: var(--fs-ui);
   line-height: 1.2;
   text-transform: capitalize;
 }
@@ -116,7 +116,7 @@
 }
 
 .accent-color-picker__custom-label {
-  font-size: 0.875rem;
+  font-size: var(--fs-ui);
   font-weight: 500;
   color: rgb(55 65 81);
 }
@@ -147,7 +147,7 @@
 
 .accent-color-picker__error {
   margin: 0;
-  font-size: 0.875rem;
+  font-size: var(--fs-ui);
   color: rgb(220 38 38);
 }
 
@@ -159,7 +159,7 @@
   border: 1px solid rgb(209 213 219);
   border-radius: 0.5rem;
   background: transparent;
-  font-size: 0.8125rem;
+  font-size: var(--fs-ui);
   font-weight: 500;
   color: rgb(107 114 128);
   cursor: pointer;

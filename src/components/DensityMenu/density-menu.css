@@ -1,0 +1,166 @@
+/**
+ * DensityMenu — header control for the two-axis density system (design3
+ * §Density): SIZE (text & elements) and SPACE (padding & gaps), each three
+ * steps, with a live `size · space` readout and Reset.
+ *
+ * Classes:
+ *   .density-menu              — root; trigger joins the header control family
+ *   .density-menu__trigger     — trigger button (icon; label below md via __label)
+ *   .density-menu__label       — label span (hidden below md)
+ *   .density-menu__popover     — portaled panel (fixed, z 60)
+ *   .density-menu__section     — one axis (header + tile grid)
+ *   .density-menu__section-head / __section-hint
+ *   .density-menu__tiles       — 3-col tile grid
+ *   .density-menu__tile        — one option tile (preview + label)
+ *   .density-menu__tile[aria-pressed='true'] — selected: accent border + tint
+ *   .density-menu__preview-*   — tile preview strokes (lines / boxes)
+ *   .density-menu__footer      — readout + reset
+ */
+
+@layer components {
+  .density-menu {
+    @apply relative inline-flex;
+  }
+
+  .density-menu__trigger {
+    @apply inline-flex h-9 items-center gap-1.5 border px-2.5 text-sm font-medium transition-colors;
+    background-color: oklch(var(--background));
+    border-color: oklch(var(--border));
+    color: oklch(var(--foreground));
+    border-radius: var(--radius-input);
+    cursor: pointer;
+
+    &:hover {
+      background-color: var(--state-hover-bg);
+    }
+    &:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 1px color-mix(in srgb, oklch(var(--ring)) 50%, transparent);
+    }
+    /* Open = accent signal (same recipe as .filter-button--open). */
+    &[aria-expanded='true'] {
+      border-color: oklch(var(--primary));
+      box-shadow: 0 0 0 1px oklch(var(--primary));
+    }
+
+    & svg {
+      @apply h-3.5 w-3.5 flex-none;
+      color: var(--text-muted);
+    }
+  }
+  .density-menu__label {
+    @apply truncate;
+    display: none;
+  }
+  @media (min-width: 768px) {
+    .density-menu__label {
+      display: inline;
+    }
+  }
+
+  .density-menu__popover {
+    @apply z-[60] border p-3 shadow-lg;
+    position: fixed;
+    width: 20rem;
+    background-color: var(--bg-elevated);
+    border-color: oklch(var(--border));
+    border-radius: var(--radius-input);
+  }
+
+  .density-menu__section {
+    & + & {
+      border-top: 1px solid oklch(var(--border));
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+    }
+  }
+  .density-menu__section-head {
+    @apply mb-2 flex items-center justify-between;
+    font-size: var(--fs-ui-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-subtle);
+  }
+  .density-menu__section-hint {
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  .density-menu__tiles {
+    @apply grid grid-cols-3 gap-2;
+  }
+
+  .density-menu__tile {
+    @apply flex cursor-pointer flex-col items-center gap-1.5 border p-2 transition-colors;
+    border-color: oklch(var(--border));
+    border-radius: var(--radius-xs);
+    color: var(--text-muted);
+
+    &:hover {
+      border-color: var(--border-strong);
+    }
+    /* Selected = accent border + surface tint (ramp "accent border" recipe). */
+    &[aria-pressed='true'] {
+      border-color: oklch(var(--primary));
+      background-color: var(--state-active-bg);
+      color: oklch(var(--foreground));
+    }
+  }
+  .density-menu__tile-label {
+    font-size: var(--fs-ui-xs);
+    font-weight: 500;
+  }
+
+  /* Preview strokes — current-color divs, no tokens (decorative geometry). */
+  .density-menu__preview-lines {
+    @apply w-full;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    & > div {
+      background-color: currentColor;
+      border-radius: var(--radius-pill);
+      opacity: 0.6;
+
+      &:nth-child(2) {
+        opacity: 0.4;
+      }
+    }
+  }
+  .density-menu__preview-box {
+    @apply flex h-9 w-full items-center justify-center;
+    background-color: color-mix(in srgb, currentColor 10%, transparent);
+    border-radius: var(--radius-xs);
+
+    & > div {
+      background-color: currentColor;
+      opacity: 0.7;
+      border-radius: var(--radius-xs);
+    }
+  }
+
+  .density-menu__footer {
+    @apply mt-3 flex items-center justify-between border-t pt-2;
+    border-color: oklch(var(--border));
+  }
+  .density-menu__readout {
+    font-size: var(--fs-ui-xs);
+    color: var(--text-subtle);
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  .density-menu__reset {
+    @apply cursor-pointer font-medium;
+    font-size: var(--fs-ui-xs);
+    color: var(--primary-text);
+    background: none;
+    border: none;
+    padding: 0;
+
+    &:hover {
+      color: oklch(var(--primary));
+    }
+  }
+}

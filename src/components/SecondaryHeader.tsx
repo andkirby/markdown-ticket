@@ -2,6 +2,7 @@ import type { Project } from '@mdt/shared/models/Project'
 import type { SortPreferences } from '../config/sorting'
 import type { AccessMode, AuthAccessIndicator } from '@/auth/AuthSessionContext'
 import * as React from 'react'
+import { DensityMenu } from './DensityMenu'
 import { HamburgerMenu } from './HamburgerMenu'
 import { SortControls } from './SortControls'
 
@@ -54,6 +55,13 @@ export const SecondaryHeader: React.FC<SecondaryHeaderProps> = ({
           preferences={sortPreferences}
           onPreferencesChange={onSortPreferencesChange}
         />
+      )}
+
+      {/* Density - desktop only (design3 §Density: size + space axes) */}
+      {(viewMode === 'board' || viewMode === 'list') && (
+        <div className="hidden sm:flex">
+          <DensityMenu />
+        </div>
       )}
 
       {/* Hamburger Menu - visible in all views */}
