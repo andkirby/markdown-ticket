@@ -4,7 +4,7 @@ status: Proposed
 dateCreated: 2025-12-18T01:14:35.798Z
 type: Architecture
 priority: Medium
-phaseEpic: Core Reference Architecture
+phaseEpic: MDT-233
 ---
 
 # Identify and Consolidate Shared Code Across Interfaces

@@ -4,7 +4,7 @@ status: Proposed
 dateCreated: 2026-01-20T15:02:26.313Z
 type: Architecture
 priority: Medium
-phaseEpic: Build infrastructure
+phaseEpic: MDT-234
 ---
 
 # Unify TypeScript moduleResolution to bundler across all packages

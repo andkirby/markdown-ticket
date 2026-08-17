@@ -4,6 +4,7 @@ status: Proposed
 dateCreated: 2026-01-10T00:00:00.000Z
 type: Architecture
 priority: High
+phaseEpic: MDT-228
 ---
 
 # Spike: Repository Pattern for project discovery

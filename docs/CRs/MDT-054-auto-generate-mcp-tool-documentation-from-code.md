@@ -5,7 +5,7 @@ status: Proposed
 dateCreated: 2025-10-02T09:19:21.905Z
 type: Feature Enhancement
 priority: Medium
-phaseEpic: Phase C (Developer Experience)
+phaseEpic: MDT-229
 ---
 
 # Auto-generate MCP tool documentation from code

@@ -5,6 +5,7 @@ dateCreated: 2026-07-26T09:29:28.393Z
 type: Feature Enhancement
 priority: Medium
 relatedTickets: 210
+phaseEpic: MDT-230
 ---
 
 # Add opt-in full-text search over ticket bodies (Alt 3)

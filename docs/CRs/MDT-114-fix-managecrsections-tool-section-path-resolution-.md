@@ -4,6 +4,7 @@ status: Proposed
 dateCreated: 2026-01-02T12:53:55.868Z
 type: Bug Fix
 priority: High
+phaseEpic: MDT-229
 ---
 
 # Fix manage_cr_sections tool section path resolution and ambiguous subsection handling

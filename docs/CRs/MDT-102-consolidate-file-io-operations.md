@@ -4,7 +4,7 @@ status: Proposed
 dateCreated: 2025-12-23T22:43:52.392Z
 type: Technical Debt
 priority: Medium
-phaseEpic: Phase 1b - Integration
+phaseEpic: MDT-228
 ---
 
 # Consolidate file I/O operations to shared services

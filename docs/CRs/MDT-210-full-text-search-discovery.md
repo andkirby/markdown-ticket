@@ -5,6 +5,7 @@ dateCreated: 2026-07-26T09:29:09.633Z
 type: Research
 priority: Medium
 relatedTickets: 211
+phaseEpic: MDT-230
 ---
 
 # Full-text search discovery and alternatives analysis

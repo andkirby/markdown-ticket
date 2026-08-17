@@ -5,7 +5,7 @@ status: Proposed
 dateCreated: 2025-11-17T23:50:40.637Z
 type: Bug Fix
 priority: Medium
-phaseEpic: Code Quality and Testing
+phaseEpic: MDT-232
 ---
 
 # Add comprehensive unit tests for MarkdownSectionService code block parsing
