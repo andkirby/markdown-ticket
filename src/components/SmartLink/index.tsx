@@ -108,7 +108,7 @@ const SmartLink: React.FC<SmartLinkProps> = ({
           data-link-type="external"
         >
           {children}
-          {showIcon && <ExternalLink className="w-3 h-3" />}
+          {showIcon && <ExternalLink className="smart-link__icon" />}
         </a>
       )
 
@@ -119,7 +119,7 @@ const SmartLink: React.FC<SmartLinkProps> = ({
           className={`${baseClassName} smart-link`}
           data-link-type="ticket"
         >
-          {showIcon && <FileText className="w-3 h-3" />}
+          {showIcon && <FileText className="smart-link__icon" />}
           {children}
         </Link>
       )
@@ -131,7 +131,7 @@ const SmartLink: React.FC<SmartLinkProps> = ({
           className={`${baseClassName} smart-link`}
           data-link-type="document"
         >
-          {showIcon && <FileCode className="w-3 h-3" />}
+          {showIcon && <FileCode className="smart-link__icon" />}
           {children}
         </Link>
       )
@@ -143,7 +143,7 @@ const SmartLink: React.FC<SmartLinkProps> = ({
           className={`${baseClassName} smart-link`}
           data-link-type="anchor"
         >
-          {showIcon && <Hash className="w-3 h-3" />}
+          {showIcon && <Hash className="smart-link__icon" />}
           {children}
         </a>
       )
@@ -157,7 +157,7 @@ const SmartLink: React.FC<SmartLinkProps> = ({
           className={`${baseClassName} smart-link`}
           data-link-type="file"
         >
-          {showIcon && <File className="w-3 h-3" />}
+          {showIcon && <File className="smart-link__icon" />}
           {children}
         </a>
       )
@@ -169,9 +169,9 @@ const SmartLink: React.FC<SmartLinkProps> = ({
           className={`${baseClassName} smart-link`}
           data-link-type="cross-project"
         >
-          {showIcon && <FileText className="w-3 h-3" />}
+          {showIcon && <FileText className="smart-link__icon" />}
           {children}
-          <span className="text-xs bg-gray-200 dark:bg-gray-700 px-1 rounded">
+          <span className="smart-link__project-badge">
             {effectiveLink.projectCode || normalizedLink?.targetProject}
           </span>
         </Link>
