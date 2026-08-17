@@ -12,6 +12,21 @@
     @apply hover:underline transition-colors;
   }
 
+  /* Inline variant glyph (was w-3 h-3 on lucide icons in markup; 12px has no
+     token — --sz-icon is 16px; mirrors .badge__icon). */
+  .smart-link__icon {
+    @apply h-3 w-3;
+  }
+
+  /* Cross-project code pill (was text-xs bg-gray-200 dark:bg-gray-700 px-1
+     rounded in markup). Recessed tier + xs radius replace the hand-rolled
+     light/dark grays. */
+  .smart-link__project-badge {
+    @apply text-xs px-1;
+    background: var(--bg-muted);
+    border-radius: var(--radius-xs);
+  }
+
   /* Link type variants */
   .smart-link[data-link-type="external"] {
     @apply text-blue-600 dark:text-blue-400;

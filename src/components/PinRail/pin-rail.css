@@ -113,23 +113,24 @@
   flex-shrink: 0;
   padding: 0;
   transition: border-color 0.12s ease, color 0.12s ease, background-color 0.12s ease;
-}
 
-.pin-rail__toggle:hover,
-.pin-rail__toggle:focus-visible {
-  border-color: var(--border-strong);
-  color: var(--text-foreground, var(--text-muted));
-  outline: none;
-}
+  &:hover,
+  &:focus-visible {
+    border-color: var(--border-strong);
+    color: var(--text-foreground, var(--text-muted));
+    outline: none;
+  }
 
-.pin-rail__toggle:focus-visible {
-  @apply ring-2 ring-primary/40;
-}
+  &:focus-visible {
+    @apply ring-2 ring-primary/40;
+  }
 
-/* Pinned state: filled accent so the "stays open" affordance is unmistakable. */
-.pin-rail__toggle--pinned {
-  color: var(--state-active-fg);
-  border-color: var(--state-active-fg);
+  /* Pinned state: filled accent so the "stays open" affordance is unmistakable.
+     Nested after :hover per the state-hierarchy rule — active absorbs hover. */
+  &.pin-rail__toggle--pinned {
+    color: var(--state-active-fg);
+    border-color: var(--state-active-fg);
+  }
 }
 
 .pin-rail__toggle-icon {
@@ -153,17 +154,17 @@
   flex-shrink: 0;
   padding: 0;
   transition: border-color 0.12s ease, color 0.12s ease;
-}
 
-.pin-item:hover,
-.pin-item:focus-visible {
-  border-color: var(--border-strong);
-  color: var(--text-foreground, var(--text-muted));
-  outline: none;
-}
+  &:hover,
+  &:focus-visible {
+    border-color: var(--border-strong);
+    color: var(--text-foreground, var(--text-muted));
+    outline: none;
+  }
 
-.pin-item:focus-visible {
-  @apply ring-2 ring-primary/40;
+  &:focus-visible {
+    @apply ring-2 ring-primary/40;
+  }
 }
 
 .pin-item__code {
@@ -193,16 +194,16 @@
   opacity: 0;
   transition: opacity 0.12s ease;
   cursor: pointer;
+
+  &:hover {
+    border-color: var(--border-strong);
+    color: var(--text-foreground, var(--text-muted));
+  }
 }
 
 .pin-item:hover .pin-item__unpin,
 .pin-item:focus-visible .pin-item__unpin {
   opacity: 1;
-}
-
-.pin-item__unpin:hover {
-  border-color: var(--border-strong);
-  color: var(--text-foreground, var(--text-muted));
 }
 
 /* Tooltip content (Radix portal). */
