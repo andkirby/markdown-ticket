@@ -41,7 +41,7 @@
     border-radius: 6px;
     background: var(--background);
     color: oklch(var(--foreground));
-    font-size: var(--fs-xs);
+    font-size: var(--fs-ui-sm);
 
     &::placeholder {
       color: var(--text-subtle);
@@ -81,7 +81,7 @@
     padding: 0 8px;
     border-radius: 6px;
     color: var(--text-muted);
-    font-size: var(--fs-xs);
+    font-size: var(--fs-ui-sm);
     font-weight: 600;
     cursor: pointer;
 
@@ -94,7 +94,7 @@
   .swimlane-board__lane-count {
     margin-left: auto;
     color: var(--text-subtle);
-    font-size: var(--fs-xs);
+    font-size: var(--fs-ui-sm);
     font-variant-numeric: tabular-nums;
   }
 
@@ -126,7 +126,7 @@
     padding: 10px 12px;
     background: var(--bg-muted);
     color: var(--text-subtle);
-    font-size: var(--fs-xs);
+    font-size: var(--fs-ui-sm);
     font-weight: 700;
     text-transform: uppercase;
   }
@@ -139,7 +139,7 @@
     flex-shrink: 0;
     padding: 10px 12px;
     color: oklch(var(--foreground));
-    font-size: var(--fs-xs);
+    font-size: var(--fs-ui-sm);
     font-weight: 700;
     text-transform: uppercase;
     background: var(--bg-muted);
@@ -299,7 +299,7 @@
     flex-direction: column;
     min-width: 0;
     gap: 2px;
-    font-size: var(--fs-md);
+    font-size: var(--fs-ui);
   }
 
   .swimlane-board__lane-title-text {
@@ -319,7 +319,7 @@
     max-width: 100%;
     /* Match the lane title's font-size token so the key and title read at the
        same scale in the lane header. */
-    font-size: var(--fs-md);
+    font-size: var(--fs-ui);
     padding: 0;
     border: 0;
     border-radius: 4px;
@@ -379,7 +379,7 @@
     border-radius: 999px;
     background: var(--bg-muted);
     color: var(--text-subtle);
-    font-size: var(--fs-xs);
+    font-size: var(--fs-ui-sm);
     font-variant-numeric: tabular-nums;
   }
 
@@ -400,7 +400,7 @@
 
   .swimlane-board__progress-text {
     color: var(--text-subtle);
-    font-size: var(--fs-xs);
+    font-size: var(--fs-ui-sm);
     font-variant-numeric: tabular-nums;
   }
 
@@ -409,7 +409,7 @@
     align-items: center;
     gap: 4px;
     color: var(--status-done);
-    font-size: var(--fs-xs);
+    font-size: var(--fs-ui-sm);
     font-weight: 700;
   }
 
@@ -439,10 +439,10 @@
        stretching the lane indefinitely. The sticky lane-label shares this cap
        via its own max-height. */
     max-height: 60vh;
-  }
 
-  .swimlane-board__lane-body[hidden] {
-    display: none;
+    &[hidden] {
+      display: none;
+    }
   }
 
   .swimlane-board__lane-col {
@@ -462,11 +462,13 @@
     overflow-y: auto;
     background: color-mix(in srgb, var(--bg-subtle) 78%, var(--bg-elevated));
     transition: background-color 150ms ease-out, box-shadow 150ms ease-out;
-  }
 
-  .swimlane-board__lane-col.drag-over {
-    background: var(--state-active-bg);
-    box-shadow: inset 0 0 0 2px color-mix(in srgb, oklch(var(--primary)) 35%, transparent);
+    /* Drop-target highlight reuses --state-active-bg with a subdued ring
+       (commit-preview, not hover — STYLING.md §Interaction-state ramp). */
+    &.drag-over {
+      background: var(--state-active-bg);
+      box-shadow: inset 0 0 0 2px color-mix(in srgb, oklch(var(--primary)) 35%, transparent);
+    }
   }
 
   /* Collapsed-column lane cell: a narrow 44px strip aligned to the collapsed
@@ -506,7 +508,7 @@
     border: 1px dashed color-mix(in srgb, var(--border-strong) 45%, transparent);
     border-radius: var(--radius-card);
     color: var(--text-subtle);
-    font-size: var(--fs-xs);
+    font-size: var(--fs-ui-sm);
   }
 
   @media (max-width: 767px) {

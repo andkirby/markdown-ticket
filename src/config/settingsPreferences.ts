@@ -1,17 +1,28 @@
 const DEFAULT_VIEW_KEY = 'mdt-settings-default-view'
 const CARD_DENSITY_KEY = 'mdt-settings-card-density'
+const SPACE_DENSITY_KEY = 'mdt-settings-space-density'
 const PIN_RAIL_ENABLED_KEY = 'mdt-settings-pin-rail-enabled'
 const PIN_RAIL_PINNED_KEY = 'mdt-settings-pin-rail-pinned'
 export const MARKDOWN_DENSITY_KEY = 'markdown-ticket:settings:markdown-density'
 export const MARKDOWN_DENSITY_CHANGE_EVENT = 'markdown-ticket:settings:markdown-density-change'
 export const CARD_DENSITY_CHANGE_EVENT = 'markdown-ticket:settings:card-density-change'
+export const SPACE_DENSITY_CHANGE_EVENT = 'markdown-ticket:settings:space-density-change'
 export const PIN_RAIL_ENABLED_CHANGE_EVENT = 'markdown-ticket:settings:pin-rail-enabled-change'
 export const PIN_RAIL_PINNED_CHANGE_EVENT = 'markdown-ticket:settings:pin-rail-pinned-change'
 
 export type DefaultView = 'board' | 'list' | 'epics'
-export type CardDensity = 'regular' | 'compact'
+/**
+ * Density system (design3 §Density): two independent axes.
+ * - CardDensity = SIZE axis — text & element scale on cards (--fs-*, --radius-card).
+ *   Keeps the historical name/key so stored prefs stay valid.
+ * - SpaceDensity = SPACE axis — padding & gaps (--pad-y/--pad-x).
+ */
+export type CardDensity = 'regular' | 'compact' | 'comfortable'
+export type SpaceDensity = 'tight' | 'normal' | 'relaxed'
 export type MarkdownDensity = 'compact' | 'default' | 'comfortable'
 
+export const CardDensities = ['compact', 'regular', 'comfortable'] as const
+export const SpaceDensities = ['tight', 'normal', 'relaxed'] as const
 export const MarkdownDensities = ['compact', 'default', 'comfortable'] as const
 
 export function readStorageString(key: string, fallback: string): string {
@@ -54,6 +65,23 @@ export function setCardDensityPreference(density: CardDensity): void {
 
   try {
     window.dispatchEvent(new CustomEvent(CARD_DENSITY_CHANGE_EVENT, {
+      detail: { density },
+    }))
+  }
+  catch {
+    // Non-browser callers only need persistence.
+  }
+}
+
+export function getSpaceDensity(): SpaceDensity {
+  return readStorageString(SPACE_DENSITY_KEY, 'normal') as SpaceDensity
+}
+
+export function setSpaceDensityPreference(density: SpaceDensity): void {
+  writeStorageString(SPACE_DENSITY_KEY, density)
+
+  try {
+    window.dispatchEvent(new CustomEvent(SPACE_DENSITY_CHANGE_EVENT, {
       detail: { density },
     }))
   }

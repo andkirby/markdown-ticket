@@ -115,14 +115,16 @@ Drives the priority icon glyph color and the critical/high card accent stripe.
 | `--spline-blocker` / `--spline-related` | `oklch(0.577 0.215 27.3)` / `oklch(0.6 0.104 184.7)` | `oklch(0.711 0.166 22.2)` / `oklch(0.785 0.133 181.9)` |
 | `--type-feature/bug/architecture/documentation/research` | `oklch(0.623 0.188 259.8)` `oklch(0.646 0.194 41.1)` `oklch(0.541 0.247 293.0)` `oklch(0.609 0.111 221.7)` `oklch(0.592 0.218 0.6)` | `oklch(0.714 0.143 254.6)` `oklch(0.758 0.159 55.9)` `oklch(0.709 0.159 293.5)` `oklch(0.797 0.134 211.5)` `oklch(0.725 0.175 349.8)` |
 
-### Density slots (mode-independent px)
+### Density slots (mode-independent px) — two axes, cards only
 
-| Token | Value | Usage |
-|---|---|---|
-| `--pad-y` / `--pad-x` | `10px` / `12px` | Card padding (driven by `CardDensity` pref) |
-| `--fs-xs` / `--fs-md` | `11px` / `13px` | Card font sizes |
-| `--radius-card` | `8px` | Card corner radius |
-| `--sz-icon` | `16px` | Fixed lucide glyph size beside the ticket key |
+**Cards only.** `useCardDensity` rewrites these on `<html>` at runtime — any chrome element consuming them resizes when the user changes density (the bug behind "the swimlane filter input is 11px"). Chrome uses the [chrome type scale](#chrome-type-scale) instead. Two independent axes (design3 §Density), driven from the header Density menu and Settings:
+
+| Token | Compact / Tight | Regular / Normal | Comfortable / Relaxed | Axis |
+|---|---|---|---|---|
+| `--fs-xs` / `--fs-md` | `10px` / `12px` | `11px` / `13px` | `12px` / `14px` | SIZE (text & elements) |
+| `--radius-card` | `4px` | `8px` | `8px` | SIZE |
+| `--pad-y` / `--pad-x` | `6px` / `8px` | `10px` / `12px` | `14px` / `16px` | SPACE (padding & gaps) |
+| `--sz-icon` | `16px` — fixed lucide glyph size beside the ticket key (not density-driven) ||| — |
 
 ---
 
@@ -151,6 +153,18 @@ See also: [STYLING.md](STYLING.md) — theming contract & component patterns · 
 ---
 
 ## Typography
+
+### Chrome type scale
+
+Three static sizes for all chrome (headers, toolbars, inputs, menus, sidebars, meta text). Deliberately equal to the Tailwind utilities chrome already uses: TSX may use `text-sm`/`text-xs`, CSS-authored components use the token — never raw px/rem, never the card-density tokens.
+
+| Token | Value | Role | Equals |
+|---|---|---|---|
+| `--fs-ui` | `14px` | primary: controls, inputs, menu rows, primary labels, group headers | `text-sm` |
+| `--fs-ui-sm` | `12px` | dense: sidebar row meta, counts, secondary labels | `text-xs` |
+| `--fs-ui-xs` | `11px` | micro: pills in chrome, hints, mono meta | — |
+
+Three sizes. No fourth. 10px and 13px are not chrome sizes (13px belongs to cards via `--fs-md`).
 
 ### Font Families
 

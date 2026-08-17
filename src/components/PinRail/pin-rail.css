@@ -186,7 +186,7 @@
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   color: var(--text-muted);
-  font-size: 11px;
+  font-size: var(--fs-ui-xs);
   line-height: 1;
   display: flex;
   align-items: center;
@@ -212,7 +212,7 @@
   flex-direction: column;
   gap: 4px;
   max-width: 240px;
-  font-size: 12px;
+  font-size: var(--fs-ui-sm);
 }
 
 /* The tooltip code is rendered via the canonical <TicketCode>, which brings its
@@ -233,7 +233,7 @@
 }
 
 .pin-tooltip__status .badge {
-  font-size: 10px;
+  font-size: var(--fs-ui-xs);
 }
 
 } /* end @layer components */

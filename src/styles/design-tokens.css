@@ -59,8 +59,20 @@
     --spline-blocker: oklch(0.577 0.215 27.3); --spline-related: oklch(0.6 0.104 184.7);
     /* Type-badge accents (MDT-135); decoupled from status tokens. */
     --type-feature: oklch(0.623 0.188 259.8); --type-bug: oklch(0.646 0.194 41.1); --type-architecture: oklch(0.541 0.247 293.0); --type-documentation: oklch(0.609 0.111 221.7); --type-research: oklch(0.592 0.218 0.6);
-    /* v3 card-density tokens (driven by CardDensity pref; see useCardDensity). Mode-independent px. */
+    /* v3 card-density tokens (driven by CardDensity pref; see useCardDensity).
+       Mode-independent px. CARDS ONLY — useCardDensity rewrites these on <html>
+       at runtime, so any chrome element consuming them resizes when the user
+       changes card density. Chrome uses the --fs-ui-* scale below. */
     --pad-y: 10px; --pad-x: 12px; --fs-xs: 11px; --fs-md: 13px;
+    /* ── Chrome type scale ──
+       Static sizes for all chrome (headers, toolbars, inputs, menus, sidebars,
+       meta text). Deliberately equal to the Tailwind utilities chrome already
+       uses (text-sm / text-xs): TSX may use the utility, CSS-authored components
+       use the token — never raw px/rem, never the card-density tokens above.
+       Three sizes. No fourth. */
+    --fs-ui: 14px;     /* primary: controls, inputs, menu rows, primary labels (= text-sm) */
+    --fs-ui-sm: 12px;  /* dense: sidebar rows meta, counts, secondary labels (= text-xs) */
+    --fs-ui-xs: 11px;  /* micro: pills in chrome, hints, mono meta */
     /* Fixed lucide icon size (glyphs beside the ticket key). */
     --sz-icon: 16px;
     /* Square icon-control hit target (width & height). Used by icon-button

@@ -39,6 +39,6 @@
     /* Match the time block: Inter (inherit) + text-xs (0.75rem).
        !important overrides the Radix text-sm default (utilities layer). */
     font-family: inherit;
-    font-size: 0.75rem !important;
+    font-size: var(--fs-ui-sm) !important;
   }
 }

@@ -52,7 +52,16 @@
 
   .sort-menu__trigger {
     @apply px-2.5;
+
+    & svg {
+      @apply h-3.5 w-3.5 flex-none;
+      color: var(--text-muted);
+    }
+    &[aria-expanded='true'] svg {
+      color: oklch(var(--primary));
+    }
   }
+
   .sort-menu__trigger--icon {
     @apply w-9 justify-center px-0;
   }
@@ -71,13 +80,6 @@
     box-shadow: 0 0 0 1px oklch(var(--primary));
   }
 
-  .sort-menu__trigger svg {
-    @apply h-3.5 w-3.5 flex-none;
-    color: var(--text-muted);
-  }
-  .sort-menu__trigger[aria-expanded='true'] svg {
-    color: oklch(var(--primary));
-  }
   .sort-menu__label {
     @apply truncate;
   }
@@ -98,9 +100,10 @@
 
   .sort-menu__direction {
     @apply w-9 justify-center;
-  }
-  .sort-menu__direction svg {
-    @apply h-3.5 w-3.5;
+
+    & svg {
+      @apply h-3.5 w-3.5;
+    }
   }
 
   /* Popover — portaled to body; truly floating layer (shadow allowed).
@@ -119,21 +122,22 @@
     @apply flex w-full cursor-pointer items-center gap-2 px-3 py-1.5 text-sm;
     color: oklch(var(--foreground));
     text-align: left;
-  }
-  .sort-menu__option:hover {
-    background-color: var(--state-hover-bg);
+
+    &:hover {
+      background-color: var(--state-hover-bg);
+    }
+    & svg {
+      @apply h-3.5 w-3.5 flex-none;
+      color: var(--text-muted);
+    }
+    &[aria-selected='true'] > svg:first-child {
+      color: oklch(var(--primary));
+    }
   }
   /* Selected = surface strength of the ramp: full-width tint + trailing accent
      check (the fg signal) — one idiom shared with the Hamburger Menu list. */
   .sort-menu__option[aria-selected='true'] {
     background-color: var(--state-active-bg);
-  }
-  .sort-menu__option svg {
-    @apply h-3.5 w-3.5 flex-none;
-    color: var(--text-muted);
-  }
-  .sort-menu__option[aria-selected='true'] > svg:first-child {
-    color: oklch(var(--primary));
   }
   .sort-menu__option-dir {
     @apply text-xs;

@@ -138,12 +138,22 @@
     <span class="chip" style="background:color-mix(in srgb,var(--spline-related) 12%,transparent);color:var(--spline-related)">Related</span>
   </div>
 
-  <h2>density slots</h2>
+  <h2>density slots · cards only</h2>
+  <p class="note" style="margin-top:.25rem"><b>Rule:</b> these are rewritten on <code>&lt;html&gt;</code> by <code>useCardDensity</code> at runtime — a chrome element consuming <code>--fs-xs</code>/<code>--fs-md</code> resizes when the user changes <i>card</i> density. That is how "the swimlane filter input is 11px" happened. Chrome uses the <a href="#chrome-type-scale" style="color:var(--primary-text)">chrome type scale</a> below; only ticket/lane cards (and card-mimics like the PinRail code) use these.</p>
+  <p class="note" style="margin-top:.5rem"><b>Density system (design3 §Density) — two independent axes</b>, driven from the header Density menu and Settings:</p>
   <div class="slots">
-    <div class="slot"><b>--pad-y/x</b><small>10 / 12 px</small></div>
-    <div class="slot"><b>--fs-xs / --fs-md</b><small>11 / 13 px</small></div>
+    <div class="slot"><b>SIZE — text &amp; elements</b><small>compact 10/12px · regular 11/13px · comfortable 12/14px → --fs-xs/--fs-md/--radius-card (4px only in compact)</small></div>
+    <div class="slot"><b>SPACE — padding &amp; gaps</b><small>tight 6/8px · normal 10/12px · relaxed 14/16px → --pad-y/--pad-x</small></div>
     <div class="slot"><b>--sz-icon</b><small>16 px · lucide glyph size</small></div>
     <div class="slot"><b>--sz-control</b><small>32 px · square icon-button hit target (ViewModeSwitcher)</small></div>
+  </div>
+
+  <h2 id="chrome-type-scale">chrome type scale · three sizes</h2>
+  <p class="note" style="margin-top:.25rem">Static sizes for all chrome (headers, toolbars, inputs, menus, sidebars, meta). Equal to the Tailwind utilities chrome already uses — TSX keeps <code>text-sm</code>/<code>text-xs</code>, CSS-authored components use the token. Never raw px/rem, never the card-density tokens, no fourth size (10px and 13px are not chrome sizes).</p>
+  <div class="type-sample" style="margin-top:.85rem">
+    <div class="body" style="font-size:var(--fs-ui)"><b>--fs-ui · 14px</b> — primary: controls, inputs, menu rows, group headers (= text-sm)</div>
+    <div class="body" style="font-size:var(--fs-ui-sm);margin-top:.5rem"><b>--fs-ui-sm · 12px</b> — dense: sidebar row meta, counts, secondary labels (= text-xs)</div>
+    <div class="body" style="font-size:var(--fs-ui-xs);margin-top:.5rem"><b>--fs-ui-xs · 11px</b> — micro: pills in chrome, hints, mono meta</div>
   </div>
 
   <h2>radius scale · pick by role</h2>
