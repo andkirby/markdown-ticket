@@ -72,6 +72,7 @@ loop.
 | Ticket-number allocation | D1 transaction | [Data and consistency](data-and-consistency.md) |
 | Projection version and project revision | D1 transaction | [Data and consistency](data-and-consistency.md) |
 | Projection ordering and live delivery | `ProjectProjectionHub` | [Data and consistency](data-and-consistency.md) |
+| Multi-user sync scenarios and current coverage | Scenario catalog over the rule documents | [Team sync use cases](sync-use-cases.md) |
 | Credentials and principal attribution | Access and local credential providers | [Identity and access](identity-and-access.md) |
 | Bindings, migrations, recovery, and telemetry | Cloud-sync operator | [Operations](operations.md) |
 | Local checkout/worktree routing identity | Existing local project services | [Project identity](../project-identity-and-worktrees.md) |
