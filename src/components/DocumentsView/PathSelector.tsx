@@ -256,31 +256,31 @@ export default function PathSelector({
 
     return (
       <div key={item.path} style={{ marginLeft: `${depth * 20}px` }}>
-        <div className="flex items-center rounded py-1 text-foreground hover:bg-accent">
+        <div className="path-selector__row">
           {isFolder && hasChildren
             ? (
                 <button
                   type="button"
                   onClick={() => toggleExpansion(item.path)}
-                  className="mr-1 inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
+                  className="path-selector__tree-toggle"
                   aria-expanded={isExpanded}
                   aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${item.name}`}
                   data-testid={`path-toggle-${safeTestId}`}
                 >
                   {isExpanded
                     ? (
-                        <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                        <ChevronDown className="path-selector__icon" aria-hidden="true" />
                       )
                     : (
-                        <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                        <ChevronRight className="path-selector__icon" aria-hidden="true" />
                       )}
                 </button>
               )
             : (
-                <span className="mr-1 h-6 w-6 flex-shrink-0" />
+                <span className="path-selector__tree-toggle-spacer" />
               )}
           <label
-            className="flex min-w-0 flex-1 cursor-pointer items-center"
+            className="path-selector__option"
             htmlFor={`checkbox-${item.path}`}
           >
             <input
@@ -289,27 +289,27 @@ export default function PathSelector({
               checked={isSelected}
               onChange={() =>
                 toggleSelection(item.path, item.type === 'folder', item)}
-              className="settings-checkbox mr-2 cursor-pointer"
+              className="checkbox"
               data-testid={`path-checkbox-${safeTestId}`}
             />
             {isFolder
               ? (
                   <Folder
-                    className="mr-2 h-4 w-4 flex-shrink-0 text-muted-foreground"
+                    className="path-selector__icon path-selector__icon--muted"
                     aria-hidden="true"
                   />
                 )
               : (
                   <File
-                    className="mr-2 h-4 w-4 flex-shrink-0 text-muted-foreground"
+                    className="path-selector__icon path-selector__icon--muted"
                     aria-hidden="true"
                   />
                 )}
             <span
               className={cn(
-                'truncate text-sm',
-                isFolder && 'font-medium',
-                hasSelectedChildren && 'text-primary',
+                'path-selector__name',
+                isFolder && 'path-selector__name--folder',
+                hasSelectedChildren && 'path-selector__name--selected',
               )}
             >
               {item.name}
@@ -326,15 +326,15 @@ export default function PathSelector({
   const renderContent = () => {
     if (loading) {
       return (
-        <div className="flex items-center justify-center h-64">
-          <div className="text-muted-foreground">Loading file system...</div>
+        <div className="documents-view__state">
+          <div className="documents-view__state-loading">Loading file system...</div>
         </div>
       )
     }
 
     if (loadError) {
       return (
-        <div className="flex h-64 items-center justify-center rounded-lg border border-border px-4 text-center text-sm text-destructive">
+        <div className="path-selector__state path-selector__state--destructive">
           {loadError}
         </div>
       )
@@ -342,7 +342,7 @@ export default function PathSelector({
 
     if (items.length === 0) {
       return (
-        <div className="flex h-64 items-center justify-center rounded-lg border border-border px-4 text-center text-sm text-muted-foreground">
+        <div className="path-selector__state path-selector__state--muted">
           No selectable document paths found.
         </div>
       )
@@ -350,14 +350,14 @@ export default function PathSelector({
 
     return (
       <div>
-        <div className="mb-3 flex items-center gap-2">
+        <div className="path-selector__toolbar">
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={expandAll}
             disabled={items.length === 0}
-            leftIcon={<ListTree className="h-4 w-4" aria-hidden="true" />}
+            leftIcon={<ListTree className="path-selector__icon" aria-hidden="true" />}
             data-testid="path-selector-expand-all"
           >
             Expand all
@@ -368,17 +368,14 @@ export default function PathSelector({
             size="sm"
             onClick={collapseAll}
             disabled={items.length === 0}
-            leftIcon={<ListCollapse className="h-4 w-4" aria-hidden="true" />}
+            leftIcon={<ListCollapse className="path-selector__icon" aria-hidden="true" />}
             data-testid="path-selector-collapse-all"
           >
             Collapse all
           </Button>
         </div>
-        <div
-          className="rounded-lg border border-border"
-          data-testid="path-selector-tree"
-        >
-          <div className="p-4">{items.map(item => renderItem(item))}</div>
+        <div className="path-selector__tree" data-testid="path-selector-tree">
+          <div className="path-selector__tree-inner">{items.map(item => renderItem(item))}</div>
         </div>
       </div>
     )
@@ -398,19 +395,19 @@ export default function PathSelector({
   }
 
   return (
-    <div className="flex flex-col h-[70vh]" data-testid="path-selector">
+    <div className="path-selector" data-testid="path-selector">
       {/* Fixed Header */}
-      <div className="flex-shrink-0 border-b border-gray-200 px-4 py-3 dark:border-gray-700">
-        <h3 className="mb-2 text-xl font-semibold text-foreground">
+      <div className="path-selector__header">
+        <h3 className="path-selector__title">
           Select Document Paths
         </h3>
-        <p className="text-sm text-muted-foreground">
+        <p className="path-selector__subtitle">
           Choose the files and folders you want to include in the documents
           view.
         </p>
-        <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+        <div className="path-selector__options">
           <label
-            className="flex items-center gap-1"
+            className="path-selector__field"
             data-testid="path-selector-max-depth"
           >
             <span>Max depth:</span>
@@ -423,13 +420,13 @@ export default function PathSelector({
                 setMaxDepth(
                   Math.min(10, Math.max(1, Number(e.target.value) || 5)),
                 )}
-              className="w-14 rounded border border-gray-300 px-1 py-0.5 text-xs dark:border-gray-600 dark:bg-gray-800"
+              className="path-selector__field-input path-selector__field-input--num"
               aria-label="Document scan max depth (1 to 10)"
               data-testid="path-selector-max-depth-input"
             />
           </label>
           <label
-            className="flex items-center gap-1"
+            className="path-selector__field"
             data-testid="path-selector-exclude-folders"
           >
             <span>Exclude folders:</span>
@@ -438,7 +435,7 @@ export default function PathSelector({
               value={excludeFoldersText}
               onChange={e => setExcludeFoldersText(e.target.value)}
               placeholder="node_modules, dist"
-              className="w-48 rounded border border-gray-300 px-1 py-0.5 text-xs dark:border-gray-600 dark:bg-gray-800"
+              className="path-selector__field-input path-selector__field-input--text"
               aria-label="Folders to exclude from document discovery (comma separated)"
               data-testid="path-selector-exclude-folders-input"
             />
@@ -448,15 +445,15 @@ export default function PathSelector({
               <TooltipTrigger asChild>
                 <button
                   type="button"
-                  className="inline-flex h-5 w-5 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
+                  className="path-selector__info-btn"
                   aria-label="Ticket path exclusion details"
                   data-testid="path-selector-info"
                 >
-                  <Info className="h-4 w-4" aria-hidden="true" />
+                  <Info className="path-selector__icon" aria-hidden="true" />
                 </button>
               </TooltipTrigger>
               <TooltipContent
-                className="max-w-xs"
+                className="path-selector__tooltip"
                 data-testid="path-selector-info-tooltip"
               >
                 <p>
@@ -472,15 +469,15 @@ export default function PathSelector({
       </div>
 
       {/* Scrollable Content Area */}
-      <ScrollArea type="hover" scrollHideDelay={600} className="min-h-0 flex-1">
-        <div className="p-4">{renderContent()}</div>
+      <ScrollArea type="hover" scrollHideDelay={600} className="path-selector__scroll">
+        <div className="path-selector__body">{renderContent()}</div>
       </ScrollArea>
 
       {/* Fixed Footer */}
-      <div className="flex-shrink-0 border-t border-gray-200 px-4 py-3 dark:border-gray-700">
-        <div className="flex justify-between items-center">
+      <div className="path-selector__footer">
+        <div className="path-selector__footer-row">
           <div
-            className="text-sm text-muted-foreground"
+            className="path-selector__count"
             data-testid="path-selector-count"
           >
             {selectedPaths.size}
@@ -490,7 +487,7 @@ export default function PathSelector({
             {' '}
             selected
           </div>
-          <div className="flex space-x-3">
+          <div className="path-selector__actions">
             <Button
               variant="outline"
               onClick={onCancel}

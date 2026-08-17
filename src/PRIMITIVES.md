@@ -107,3 +107,5 @@ human-owned preserves the annotations a script can't author.
 |-------|---------|------|
 | `.settings-*` | Settings modal | `components/SettingsModal/settings.css` |
 | `.tab`, `.tab__*`, `.tab--*` | Shared underline-tab object (every tab strip; also consumed by styleguide.html) | `styles/components/tabs.css` |
+| `.checkbox` | Shared checkbox object — native 16px + `accent-color` primary (every checkbox input; also consumed by styleguide.html) | `styles/components/checkbox.css` |
+| `.column-merge-checkbox` | Documented deviation — warning accent on merge-mode checkbox | `components/Column/column.css` |

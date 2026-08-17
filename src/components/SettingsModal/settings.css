@@ -196,13 +196,6 @@
   @apply flex items-center gap-2 text-sm text-foreground;
 }
 
-.settings-checkbox {
-  @apply h-4 w-4 text-primary focus-visible:ring-1 focus-visible:ring-ring/50;
-  border-radius: var(--radius-input);
-  border-color: oklch(var(--border));
-  background-color: var(--bg-muted);
-}
-
 /* Project Accents */
 .project-accents {
   @apply flex flex-col gap-1.5;

@@ -248,7 +248,7 @@ export function SwimlaneBoard({
         <label className="swimlane-board__toggle">
           <input
             type="checkbox"
-            className="settings-checkbox"
+            className="checkbox"
             checked={hideEmpty}
             onChange={event => setHideEmpty(event.currentTarget.checked)}
             data-testid="swimlane-hide-empty"
@@ -258,7 +258,7 @@ export function SwimlaneBoard({
         <label className="swimlane-board__toggle">
           <input
             type="checkbox"
-            className="settings-checkbox"
+            className="checkbox"
             checked={showBadges}
             onChange={event => setShowBadges(event.currentTarget.checked)}
             data-testid="swimlane-show-badges"
@@ -268,7 +268,7 @@ export function SwimlaneBoard({
         <label className="swimlane-board__toggle">
           <input
             type="checkbox"
-            className="settings-checkbox"
+            className="checkbox"
             checked={showClosed}
             onChange={event => setShowClosed(event.currentTarget.checked)}
             data-testid="swimlane-show-closed"

@@ -1,0 +1,25 @@
+/* Shared checkbox object — the ONE implementation for every native checkbox
+   (settings lists, facet filters, swimlane toolbar, path selector, add-project
+   form, styleguide demo). Pure CSS (no @apply) so this file also renders
+   standalone in browser-served contexts (src/styleguide.html links it
+   directly next to design-tokens.css). Do not add @apply here.
+
+   Design: native widget, 16px, themed via accent-color — never custom-drawn
+   boxes. Focus is keyboard-only (:focus-visible) with the thin ring-1 @50%
+   convention (STYLING.md §Focus). Prose task-list checkboxes are the one
+   sibling: same accent recipe but 1em so they scale with body text
+   (styles/prose.css). Documented deviation: Column merge-mode checkbox
+   overrides accent-color with a warning tone (column.css). */
+
+@layer components {
+  .checkbox {
+    width: 1rem;
+    height: 1rem;
+    accent-color: oklch(var(--primary));
+    cursor: pointer;
+
+    &:focus-visible {
+      box-shadow: 0 0 0 1px oklch(var(--ring) / 50%);
+    }
+  }
+}
