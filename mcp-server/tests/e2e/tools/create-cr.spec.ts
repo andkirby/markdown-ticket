@@ -444,4 +444,44 @@ More details here.`
       expect(response.data.phaseEpic).toBe('Test Phase')
     })
   })
+
+  describe('explicit project from non-project cwd (MDT-143 C8)', () => {
+    it('GIVEN multi-project registry and non-project server cwd WHEN creating with explicit project THEN succeed', async () => {
+      // Stop the single-project beforeEach client and rebuild with two
+      // registered projects so no single-project default exists.
+      await mcpClient.stop()
+      const projectSetup = new ProjectSetup({ testEnv })
+      await projectSetup.createProjectStructure('OTHER', 'Other Project')
+      mcpClient = new MCPClient(testEnv, { transport: 'stdio' })
+      await mcpClient.start()
+
+      const response = await mcpClient.callTool('create_cr', {
+        project: 'TEST',
+        type: 'Documentation',
+        data: { title: 'Explicit Project Create' },
+      })
+
+      expect(response.success).toBe(true)
+      if (!response.success) {
+        throw new Error(`create_cr failed: ${JSON.stringify(response.error)}`)
+      }
+      expect(response.data).toContain('Created CR TEST-')
+    })
+
+    it('GIVEN no project context WHEN creating without project parameter THEN actionable error naming the parameter', async () => {
+      await mcpClient.stop()
+      const projectSetup = new ProjectSetup({ testEnv })
+      await projectSetup.createProjectStructure('OTHER', 'Other Project')
+      mcpClient = new MCPClient(testEnv, { transport: 'stdio' })
+      await mcpClient.start()
+
+      const response = await mcpClient.callTool('create_cr', {
+        type: 'Documentation',
+        data: { title: 'No Project Context Create' },
+      })
+
+      expect(response.success).toBe(false)
+      expect(response.error?.message).toContain('`project` parameter')
+    })
+  })
 })

@@ -6,7 +6,7 @@ import { safeValidateMcpServerConfig } from '@mdt/domain-contracts'
 import { DEFAULT_PATHS } from '@mdt/shared/utils/constants.js'
 import { parseEnvInt } from '@mdt/shared/utils/env.js'
 import { parseToml } from '@mdt/shared/utils/toml.js'
-import * as fs from 'fs-extra'
+import fs from 'fs-extra'
 
 /**
  * Server configuration with merged approach.
