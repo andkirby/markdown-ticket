@@ -2,74 +2,83 @@
 
 ## Objective
 
-Complete the CLI alias-system rebuild and help-parity work on MDT-143. The attr
-enum-value resolution had been half-migrated: `attr` delegated to a new shared
-resolver while `list` still used a stale CLI-local map, so the same token meant
-two things. A refactor also left relation-value comma-splitting unreachable.
-This round finishes the migration, removes the duplicate map, fixes both
-regressions, and makes `ticket attr --help` and the accepted-field list derive
-from one metadata source.
+Make every ticket-addressing surface of MDT-143 work for non-interactive
+consumers that run with a cwd that is not a project root. Consumers that know
+the project code (`mcp-server`, `dsh-plugin/mdt.js`) must be able to address a
+ticket explicitly; `ticket get` and `ticket attr` are the last CLI subcommands
+that reject `-p/--project`.
 
 ## Approved Changes
 
 | Change | Detail |
 |--------|--------|
-| Shared input gate | `shared/services/ticket/attrResolver.ts` is the single resolver for status + priority tokens; CLI `attr` and `list` both route through it. Added non-throwing `lookupStatusToken` for the read/filter path. |
-| Single-source help | `cli/src/commands/attrMeta.ts` owns the field list + help text; `index.ts` (`--help`) and `attr.ts` (parser validation) both import it, so documented and validated fields cannot drift. |
-| Alias drift fix | `status=open` now means Approved everywhere (was Proposed in `list`, Approved in `attr`). `backlog`→Proposed, `deferred`→On Hold added consistently. |
-| Duplicate map removed | Stale `STATUS_ALIASES` deleted from `cli/src/utils/aliases.ts`; status tokens no longer have a second source of truth. |
-| Relation regression fix | `related`/`depends`/`blocks` values split on commas again (branch moved ahead of the early `return` in `attr.ts`). |
-| Doc sync | `cli/mdt-cli/SKILL.md` alias reference corrected (`open`→Approved, `backlog`/`deferred` added). |
+| `-p` on `ticket get` / `ticket attr` | Same `-p, --project <code>` option as `list`/`create`/`deps`; explicit project wins over cwd detection; unknown project → `Project <code> not found`, exit 1; identical behavior when omitted. `cli/mdt-cli/SKILL.md` updated (canonical agent-facing reference, per `cli/AGENTS.md`). |
+| MCP project contract | Verified and locked as C8: the MCP server is in-process (not a CLI wrapper); every CR tool already accepts `project`, falls back to detected cwd context only when absent, and `resolveProject` throws a structured actionable error naming the missing `project` parameter. No premise-matching rewrite needed; e2e coverage confirmed. |
+| DSH plugin alignment | `mdt_ticket_get` and `mdt_ticket_attr` gain the optional `project` parameter via the existing `projectArgs()` pattern; cwd caveats removed from descriptions; tool names and all other schema fields unchanged. |
 
 ## Changed Requirement IDs
 
-- `BR-4` — refined in place (list status filter uses shared gate)
-- `BR-10` — refined in place (shared gate, unknown rejection, relation split, single-source help)
-- `C2` — refined in place (single metadata module owns the field list)
-- `Edge-2` — refined in place (unknown enum values rejected with valid set + alias map)
+- `BR-1` — refined in place (`ticket get -p`)
+- `BR-10` — refined in place (`ticket attr -p`)
+- `Edge-11` — added (unknown `-p` project rejection on get/attr)
+- `C8` — added (MCP explicit-project contract, verified as already satisfied)
+- `C9` — added (DSH plugin schema mirrors CLI flag surface, names stable)
 
 ## Affected Downstream Trace
 
-- requirements: BR-4, BR-10, C2, Edge-2 refined → rendered
-- bdd: validated (existing scenarios cover alias normalization + rejection)
-- architecture: `OBL-shared-attr-gate` added (owns `ART-shared-attr-resolver`, `ART-shared-attr-resolver-test`, `ART-cli-attr-meta`, `ART-cli-attr`, `ART-cli-list`) → rendered
-- tests: `TEST-shared-attr-resolver` (unit) added, covers BR-4/BR-10/Edge-2 → rendered
-- tasks: `TASK-cli-attr-shared-gate` added (makes `TEST-shared-attr-resolver`, `TEST-cli-ticket-attr` green) → rendered
+- requirements: BR-1, BR-10 refined; Edge-11, C8, C9 added → rendered
+- bdd: `ticket_get_attr_in_explicit_project` added (covers BR-1, BR-10) → rendered
+- architecture: `ART-dsh-plugin-mdt`, `ART-mcp-project-handlers` added; `OBL-explicit-project-targeting` added → rendered
+- tests: `TEST-cli-get-attr-project`, `TEST-mcp-explicit-project`, `TEST-dsh-plugin-project-flag` added → rendered
+- tasks: `TASK-uat-project-context` added → rendered
 
 ## Execution Slices
 
-### Slice 1 — Finish the shared-gate migration (DONE)
+### Slice 1 — `-p/--project` on `ticket get` and `ticket attr` (CLI)
 
-- **Objective**: one alias meaning across `list` and `attr`; no duplicate map.
-- **Direct artifacts**: `shared/services/ticket/attrResolver.ts` (+ `.test.ts`), `cli/src/commands/list.ts`, `cli/src/utils/aliases.ts`, `cli/src/commands/attr.ts`.
-- **Direct GREEN targets**: `TEST-shared-attr-resolver`, `TEST-cli-ticket-attr` (relation + alias e2e).
-- **Impacted tasks**: `TASK-cli-attr-shared-gate`.
-- **Why**: the half-migration was the root cause of the `open` drift and the relation regression.
+- **Objective**: resolve a ticket within an explicitly given project from any cwd.
+- **Direct artifacts**: `cli/src/index.ts`, `cli/src/commands/view.ts`, `cli/src/commands/attr.ts`, `cli/mdt-cli/SKILL.md`, `cli/tests/e2e/ticket/`.
+- **Direct GREEN targets**: `TEST-cli-get-attr-project`, `ticket_get_attr_in_explicit_project`.
+- **Impacted canonical tasks**: `TASK-uat-project-context`.
+- **Why**: consumers that know the project code cannot address a ticket without cwd context today.
 
-### Slice 2 — Single-source help + doc parity (DONE)
+### Slice 2 — MCP project contract verification (no code change expected)
 
-- **Objective**: `--help` and accepted fields derive from one module; SKILL.md matches the canonical resolver.
-- **Direct artifacts**: `cli/src/commands/attrMeta.ts`, `cli/src/index.ts`, `cli/mdt-cli/SKILL.md`.
-- **Direct GREEN targets**: `TEST-shared-attr-resolver`.
-- **Impacted tasks**: `TASK-cli-attr-shared-gate`.
-- **Why**: prevents the help-vs-validation drift that re-appears whenever two maps exist.
+- **Objective**: prove `create_cr` with explicit `project` succeeds from a non-project cwd and the no-context error is actionable.
+- **Direct artifacts**: `mcp-server/src/tools/handlers/projectHandlers.ts` (read-only), `mcp-server/tests/e2e/tools/create-cr.spec.ts`.
+- **Direct GREEN targets**: `TEST-mcp-explicit-project`.
+- **Impacted canonical tasks**: `TASK-uat-project-context`.
+- **Why**: the request assumed the MCP server wraps `mdt-cli`; it is in-process and already threads `project` — verify and lock the contract instead of rewriting.
 
-## Validation
+### Slice 3 — DSH plugin alignment
 
-- `bun run build:shared` — clean
-- `bun test shared/services/ticket/attrResolver.test.ts` — 5/5 pass
-- `bun test` (cli) — 107/107 pass (incl. relation `+=`/`-=` dedupe + alias normalization)
-- `eslint` (cli) — clean
-- `spec-trace validate MDT-143` — all five stages pass; all rendered
+- **Objective**: `mdt_ticket_get`/`mdt_ticket_attr` accept optional `project`; descriptions drop the cwd caveat.
+- **Direct artifacts**: `dsh-plugin/mdt.js`, `dsh-plugin/AGENTS.md` (tool list wording only if needed).
+- **Direct GREEN targets**: `TEST-dsh-plugin-project-flag` (import + schema check).
+- **Impacted canonical tasks**: `TASK-uat-project-context`.
+- **Why**: the plugin omitted `project` only because the CLI rejected it; item 1 removes that blocker.
+
+## Validation (results)
+
+- `./cli/bin/mdt-cli ticket get -p MDT MDT-143 --json` from `/tmp` — ✅ returns the ticket
+- `./cli/bin/mdt-cli ticket attr -p MDT 143 status=Implemented --json` from `/tmp` — ✅ applies (no-op) update, exit 0
+- Unknown `-p` code — ✅ `PROJECT_NOT_FOUND` / `Project <code> not found`, exit 1 (structured envelope)
+- MCP e2e: `create-cr.spec.ts` + `optional-project-param.spec.ts` — ✅ 26/26 (incl. new explicit-project-from-non-project-cwd and actionable-error tests)
+- `node -e "import('.../dsh-plugin/mdt.js')"` — ✅ loads; all 6 tool names unchanged; `project` present on get/list/create/attr/deps
+- `bun test` (cli) — ✅ 218/218 (new `ticket/project-flag.spec.ts` 6/6); `eslint` clean
+- MCP jest unit/integration — ✅ 159/159
+- `spec-trace validate MDT-143 --stage all` — ✅ all five stages pass; all rendered
+- Extra fix surfaced by verification: `import * as fs from 'fs-extra'` broke Node-ESM consumers (`fs.stat is not a function`) — switched to default import in `TicketService` and `mcp-server/config`; this had silently broken all node-run create e2e tests
 
 ## Watchlist
 
-- `attrResolver` status map is hand-mirrored from board column labels (`column.statuses[0]` convention). If columns are reconfigured, re-align `backlog`/`open`/`done`/`deferred` there — it is the one source now.
-- `STATUS_ALIASES` was deleted; do not re-introduce a CLI-local status map. New status token needs go in the shared resolver.
+- Explicit-project precedence is now "flag wins" across list/create/deps/get/attr — keep MCP `resolveProject` (explicit > key-embedded > detected > single-registry-project) consistent if precedence is ever revisited.
+- `dsh-plugin` tool names and non-`project` schema fields are preset contracts; do not rename.
+- Deferred concerns UC-1 (orphan `{KEY}/` subdocument folder on delete) and UC-2 (`.trace/{KEY}/` never cleaned on delete), raised 2026-07-26 below, remain open for a separate session.
 
 ## Open Decisions
 
-None. All changes are in-place refinements on the same CR.
+None. Item 2's premise (MCP wrapping `mdt-cli`) did not match the repo; the in-process contract was verified instead of rewritten.
 
 ---
 
@@ -88,10 +97,6 @@ the folder **only if empty** after the `.md` file is gone. With subdocuments
 present, the `.md` is removed but the folder — and its 13 sibling files —
 survives as an orphan.
 
-**Evidence**: `docs/CRs/MDT-143/` currently holds 13 files (architecture.md,
-bdd.md, tasks.md, uat.md, …) plus a `poc/` subdir. A `delete 143` call would
-leave all of them parented to a "deleted" ticket.
-
 **Question**: should `delete` (a) recursively remove the entire `{KEY}/` folder,
 (b) refuse unless `--purge-subdocuments` is passed, or (c) stay as-is and treat
 subdocuments as independent artifacts? (a) matches user mental model of
@@ -102,22 +107,11 @@ subdocuments as independent artifacts? (a) matches user mental model of
 **Repro**: `mdt-cli delete 143` leaves `docs/CRs/.trace/MDT-143/` (with
 `baselines/` and `store.json`) intact on disk forever.
 
-**Current behavior**: `grep -rn "\.trace" shared/services/TicketService.ts
-cli/src/commands/delete.ts` returns zero hits. The spec-trace store is invisible
-to the delete path. Orphans accumulate per deleted ticket.
-
-**Evidence**: `docs/CRs/.trace/MDT-143/` exists with `baselines/` + `store.json`.
-No code path removes it.
-
 **Question**: should `delete` cascade to `.trace/{KEY}/`? If yes, `delete.ts`
-needs to resolve the trace root (likely `path.join(ticketsPath, '.trace', key)`)
-and remove it. If no, this should be documented as an intentional separation of
-concerns (trace = separate subsystem, garbage-collected elsewhere).
+needs to resolve the trace root and remove it. If no, document it as an
+intentional separation of concerns.
 
 ### Scope note
 
-Both concerns are independent of MDT-209's agent-write-governance work. MDT-209
-will **block** direct agent deletes of `ticketsPath/**` (Rule C, in-progress),
-forcing deletes through `mdt-cli` — which makes the gaps above the *only* path
-to delete. Closing UC-1/UC-2 becomes more urgent once MDT-209 ships, but is
-out of scope for that ticket.
+Closing UC-1/UC-2 becomes more urgent once MDT-209 ships (it forces deletes
+through `mdt-cli`), but is out of scope for that ticket and for this round.

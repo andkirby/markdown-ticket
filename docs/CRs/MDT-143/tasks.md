@@ -351,6 +351,22 @@
 - [x] CLI structured output stays schema-owned and agent-safe
 - [x] CLI E2E coverage is GREEN
 
+## TASK-uat-project-context — project-context robustness (UAT 2026-04-03)
+
+- [x] Add `-p, --project <code>` to `ticket get` and `ticket attr`
+      (`cli/src/index.ts`, `cli/src/commands/view.ts`, `cli/src/commands/attr.ts`),
+      explicit-project-wins precedence, `Project <code> not found` on unknown code
+- [x] Update `cli/mdt-cli/SKILL.md` (canonical agent-facing CLI reference)
+- [x] Verify MCP project contract (already in-process via `resolveProject`):
+      explicit `project` param on all CR tools, cwd fallback, actionable error;
+      e2e coverage added for create from non-project cwd (+ fs-extra ESM interop
+      fix that had broken node-run create e2e)
+- [x] `dsh-plugin/mdt.js`: add optional `project` to `mdt_ticket_get` and
+      `mdt_ticket_attr` via existing `projectArgs()`; drop cwd caveats from
+      descriptions; tool names/schemas otherwise unchanged
+- [x] Separate commit per item; no breaking flag or JSON-shape changes
+      (6cbf55f8, 43fd5eb1, ca4f4867)
+
 ---
 *Canonical task ownership and GREEN links: [tasks.trace.md](./tasks.trace.md)*
 *Rendered by /mdt:tasks via spec-trace*

@@ -186,6 +186,26 @@ bun test cli/tests/e2e/ticket/attr.spec.ts
 bun test cli/tests/e2e/output/structured-output.spec.ts
 ```
 
+## UAT Round 2026-04-03 — project-context robustness
+
+- `TEST-cli-get-attr-project` (e2e, `cli/tests/e2e/`): `ticket get -p <code>` and
+  `ticket attr -p <code>` resolve a ticket from a non-project cwd (e.g. `/tmp`);
+  unknown project code rejects with `Project <code> not found` and exit 1;
+  omitting `-p` keeps cwd behavior identical. Covers BR-1, BR-10, Edge-11.
+- `TEST-mcp-explicit-project` (e2e, `mcp-server` jest): `create_cr` with an
+  explicit `project` succeeds from a non-project server cwd; with no `project`
+  and no detected context the error names the missing `project` parameter.
+  Covers C8 (contract already implemented by `resolveProject`; this round
+  verifies and locks it).
+- `TEST-dsh-plugin-project-flag` (manual): `node -e "import('.../dsh-plugin/mdt.js')"`
+  loads; `mdt_ticket_get`/`mdt_ticket_attr` expose optional `project` passed as
+  `-p`; tool names unchanged. Covers C9.
+
+```bash
+bun test cli/tests/e2e/ticket/get.spec.ts cli/tests/e2e/ticket/attr.spec.ts
+bun run --cwd mcp-server jest -- tests/e2e/tools/create-cr.spec.ts
+```
+
 ---
 *Canonical test-plan projection: [tests.trace.md](./tests.trace.md)*
 *Rendered by /mdt:tests via spec-trace*
