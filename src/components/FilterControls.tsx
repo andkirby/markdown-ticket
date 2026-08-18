@@ -24,23 +24,25 @@ export const FilterControls: React.FC<FilterControlsProps> = ({
   }
 
   return (
-    <div data-testid="filter-controls" className={groupItem ? 'control-group__item relative' : 'relative'}>
-      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+    <div data-testid="filter-controls" className={groupItem ? 'control-group__item icon-input' : 'icon-input'}>
+      <Search className="icon-input__icon" aria-hidden="true" size={16} />
       <input
         type="text"
         placeholder={placeholder}
         value={searchQuery}
         onChange={e => onSearchChange(e.target.value)}
-        className="h-9 pl-10 pr-10 text-sm border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 min-w-[200px]"
+        className="icon-input__input"
         data-testid="search-input"
       />
       {searchQuery && (
         <button
+          type="button"
           onClick={handleClear}
-          className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 hover:bg-muted rounded transition-colors"
+          className="icon-input__clear"
           title="Clear filter"
+          aria-label="Clear filter"
         >
-          <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+          <X aria-hidden="true" size={12} />
         </button>
       )}
     </div>
