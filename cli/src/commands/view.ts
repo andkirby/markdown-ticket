@@ -9,7 +9,7 @@ import type { Project } from '@mdt/shared/models/Project.js'
 import type { StructuredOutputOptions } from '../output/structured.js'
 import { ProjectService } from '@mdt/shared/services/ProjectService.js'
 import { TicketService } from '@mdt/shared/services/TicketService.js'
-import { KeyNormalizationError, normalizeKey } from '@mdt/shared/utils/keyNormalizer.js'
+import { formatCrKey, KeyNormalizationError, normalizeKey } from '@mdt/shared/utils/keyNormalizer.js'
 import { formatTicketView } from '../output/formatter.js'
 import { CliCommandError, formatTicketForStructured, getOutputFormat, writeStructuredSuccess } from '../output/structured.js'
 
@@ -24,6 +24,27 @@ import { CliCommandError, formatTicketForStructured, getOutputFormat, writeStruc
 interface ParsedKey {
   projectCode: string
   ticketKey: string
+}
+
+/** Options for ticket get (extends structured output with --project). */
+interface ViewCommandOptions extends StructuredOutputOptions {
+  project?: string
+}
+
+/**
+ * Resolve a ticket key inside an explicitly given project (MDT-143 UAT).
+ *
+ * `--project` wins over cwd detection and over project codes embedded in the
+ * key: the numeric part of the key (from "12", "ABC-12", or "PROJ/ABC-12") is
+ * rebuilt under the given project's code.
+ */
+function resolveKeyInProject(key: string, projectCode: string): string {
+  const bare = key.includes('/') ? key.slice(key.lastIndexOf('/') + 1) : key
+  const fullFormat = bare.match(/^([a-z][a-z0-9]*)-(\d+)$/i)
+  if (fullFormat) {
+    return formatCrKey(projectCode, Number.parseInt(fullFormat[2], 10))
+  }
+  return normalizeKey(bare, projectCode)
 }
 
 function parseTicketKey(key: string): ParsedKey | null {
@@ -57,7 +78,7 @@ function parseTicketKey(key: string): ParsedKey | null {
  * @param key - Ticket key (numeric shorthand, full format, or cross-project)
  * @throws Process.exit(1) on error
  */
-export async function ticketViewAction(key: string, options: StructuredOutputOptions = {}): Promise<void> {
+export async function ticketViewAction(key: string, options: ViewCommandOptions = {}): Promise<void> {
   const projectService = new ProjectService(true) // quiet=true
   const ticketService = new TicketService(true)
 
@@ -68,7 +89,32 @@ export async function ticketViewAction(key: string, options: StructuredOutputOpt
   // Try to parse the key
   const parsed = parseTicketKey(key)
 
-  if (parsed) {
+  if (options.project) {
+    // Explicit --project wins over cwd detection and key-embedded codes
+    const resolved = await projectService.getProjectByCodeOrId(options.project)
+    if (!resolved) {
+      throw new CliCommandError(
+        'PROJECT_NOT_FOUND',
+        `Project ${options.project} not found`,
+        { projectCode: options.project },
+      )
+    }
+    projectCode = resolved.project.code
+    project = resolved
+    try {
+      ticketKey = resolveKeyInProject(key, projectCode)
+    }
+    catch (error) {
+      if (error instanceof KeyNormalizationError) {
+        throw new CliCommandError(
+          'INVALID_TICKET_KEY',
+          `Invalid key format '${key}'. Expected: numeric shorthand, full format ABC-012, or cross-project ABC/DEF-012`,
+        )
+      }
+      throw error
+    }
+  }
+  else if (parsed) {
     // Cross-project or full format - use explicit project code
     projectCode = parsed.projectCode
     ticketKey = parsed.ticketKey
@@ -109,7 +155,7 @@ export async function ticketViewAction(key: string, options: StructuredOutputOpt
   }
 
   // If we have a full format key from cross-project parsing, normalize it
-  if (parsed && !ticketKey.includes('/')) {
+  if (!options.project && parsed && !ticketKey.includes('/')) {
     try {
       ticketKey = normalizeKey(ticketKey, projectCode)
     }

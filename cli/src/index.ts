@@ -83,6 +83,7 @@ function registerCommands(program: Command): void {
     .argument('<key>', 'Ticket key (e.g., 5, ABC-12, PROJ/MDT-12)')
     .option('-j, --json', 'Output as JSON')
     .option('--yaml', 'Output as YAML')
+    .option('-p, --project <code>', 'Target project code')
     .action(async (key, options) => {
       const { ticketViewAction } = await import('./commands/view.js')
       await runCliAction(program, 'ticket.get', options, mergedOptions => ticketViewAction(key, mergedOptions))
@@ -129,6 +130,7 @@ function registerCommands(program: Command): void {
     .argument('<attrs...>', ATTR_HELP.attrsArg)
     .option('-j, --json', 'Output as JSON')
     .option('--yaml', 'Output as YAML')
+    .option('-p, --project <code>', 'Target project code')
     .action(async (key, attrs, options) => {
       const { ticketAttrAction } = await import('./commands/attr.js')
       await runCliAction(program, 'ticket.attr', options, mergedOptions => ticketAttrAction(key, attrs, mergedOptions))
