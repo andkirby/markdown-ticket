@@ -72,13 +72,14 @@ const WORKDIR = {
 
 export function apply(ctx) {
   const shell = ctx.get('shell')
-  if (shell === undefined) {
-    console.error('spec-trace plugin: shell service unavailable')
+  const tools = ctx.get('tools')
+  if (shell === undefined || tools === undefined) {
+    console.error('spec-trace plugin: shell or tools service unavailable')
     return
   }
 
   function register(definition) {
-    ctx.effect(() => ctx.tools.register(definition))
+    ctx.effect(() => tools.register(definition))
   }
 
   register({
