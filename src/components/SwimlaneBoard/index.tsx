@@ -303,8 +303,8 @@ export function SwimlaneBoard({
           />
           <span>Show closed</span>
         </label>
-        <Button type="button" variant="ghost" size="sm" onClick={collapseAll} data-testid="swimlane-collapse-all">Collapse all</Button>
-        <Button type="button" variant="ghost" size="sm" onClick={expandAll} data-testid="swimlane-expand-all">Expand all</Button>
+        <button type="button" className="swimlane-board__toggle" onClick={collapseAll} data-testid="swimlane-collapse-all">Collapse all</button>
+        <button type="button" className="swimlane-board__toggle" onClick={expandAll} data-testid="swimlane-expand-all">Expand all</button>
         <span className="swimlane-board__lane-count" data-testid="swimlane-lane-count">
           {visibleLanes.length}
           {' '}
