@@ -36,7 +36,7 @@ import {
   CoordinatorError,
   CRStatus as CRStatusEnum,
 } from '@mdt/domain-contracts'
-import * as fs from 'fs-extra'
+import fs from 'fs-extra'
 import { getTicketsPath } from '../models/Project.js'
 import {
   arrayToString,
