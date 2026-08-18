@@ -82,6 +82,30 @@ it is read only at tool-call time. An env var (`SPEC_TRACE_BIN`) is the
 alternative when the binary lives outside the repo; fail loud with the
 variable's name when it is unset.
 
+### Resolve the calling session's live sandbox policy for subprocesses
+
+`shell.resolve()` without an explicit `sandboxPolicy` gets the executor's
+standing default, frozen at boot — it does NOT follow the session's file
+policy, so a session running unrestricted still gets EPERM from plugin
+subprocesses. Thread the policy like `tool-bash` does:
+
+```js
+const sandboxPolicy = ctx.get('sandboxPolicy')
+
+function policyFor(exec) {
+  if (sandboxPolicy === undefined || exec?.agent === undefined) return undefined
+  return sandboxPolicy.resolve({ session: exec.agent.session })
+}
+
+// execute(args, exec) — the second parameter carries the agent
+async execute(args, exec) {
+  return runMdt(shell, [...], policyFor(exec))
+}
+```
+
+Failure mode avoided: bash can write the target directory but the plugin's
+`mdt-cli` write fails with EPERM — identical command, different policy.
+
 ### Keep absolute home paths out of committed files
 
 The repo's `block-home-paths-code` pre-commit hook rejects them. Resolve
