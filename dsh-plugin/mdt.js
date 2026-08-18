@@ -9,6 +9,7 @@
 const CLI = new URL('../bin/mdt-cli', import.meta.url).pathname
 
 export const name = 'mdt'
+export const inject = ['tools', 'shell']
 
 function quote(value) {
   return "'" + String(value).replace(/'/g, "'\\''") + "'"
