@@ -95,3 +95,24 @@ export function normalizeKey(key: string, projectCode: string): string {
     + `  • Full format: "ABC-012" or "abc-12" (normalizes to ABC-012)`,
   )
 }
+
+/**
+ * Resolve a ticket key inside an explicitly given project (MDT-143).
+ *
+ * `--project` wins over cwd detection and over project codes embedded in the
+ * key: the numeric part of the key (from "12", "ABC-12", or "PROJ/ABC-12") is
+ * rebuilt under the given project's code.
+ *
+ * @param key - Ticket key in any accepted shorthand/full/cross-project form
+ * @param projectCode - The explicitly targeted project's code
+ * @returns Normalized key in format {PROJECTCODE}-{NUMBER}
+ * @throws KeyNormalizationError if the remaining key part is invalid
+ */
+export function resolveKeyInProject(key: string, projectCode: string): string {
+  const bare = key.includes('/') ? key.slice(key.lastIndexOf('/') + 1) : key
+  const fullFormat = bare.match(/^([a-z][a-z0-9]*)-(\d+)$/i)
+  if (fullFormat) {
+    return formatCrKey(projectCode, Number.parseInt(fullFormat[2], 10))
+  }
+  return normalizeKey(bare, projectCode)
+}
