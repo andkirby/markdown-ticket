@@ -37,29 +37,30 @@
        one chrome group. */
     background-color: var(--bg-muted);
     border-color: transparent;
-  }
 
-  .project-card:hover {
     /* v3: hover = stronger border only — no lift, no shadow. */
-    border-color: var(--border-strong);
-  }
+    &:hover {
+      border-color: var(--border-strong);
+    }
 
-  .project-card:focus-visible {
-    @apply outline-none ring-1 ring-ring/50;
-  }
+    &:focus-visible {
+      @apply outline-none ring-1 ring-ring/50;
+    }
 
-  /* Active-descendant highlight in the project browser listbox (BR-11).
-     Uses outline (not ring/box-shadow) so it cannot be clobbered by the
-     active card's own box-shadow and stays visible on every card. */
-  .project-card[data-selected="true"] {
-    outline: 2px solid oklch(var(--ring));
-    outline-offset: 2px;
-  }
+    /* Active-descendant highlight in the project browser listbox (BR-11).
+       Uses outline (not ring/box-shadow) so it cannot be clobbered by the
+       active card's own box-shadow and stays visible on every card. */
+    &[data-selected="true"] {
+      outline: 2px solid oklch(var(--ring));
+      outline-offset: 2px;
+    }
 
-  /* Active variant — the shared active/selected state ramp (v3) */
-  .project-card[data-active="true"] {
-    background-color: var(--state-active-bg);
-    border-color: var(--project-card-active-border);
+    /* Active variant — the shared active/selected state ramp (v3). Declared
+       after &:hover so active absorbs hover (state hierarchy). */
+    &[data-active="true"] {
+      background-color: var(--state-active-bg);
+      border-color: var(--project-card-active-border);
+    }
   }
 
   /* Card child elements */
@@ -194,6 +195,10 @@
     @apply min-w-[100px] sm:min-w-[150px] max-w-[150px] sm:max-w-[280px] flex-1 h-9;
     /* h-9 (fixed) overrides the base .project-card min-h-12. */
     min-height: 0;
+
+    &:hover {
+      border-color: var(--border-strong);
+    }
   }
 
   /* The rail active card reads as the same surface as a ticket card — flat
@@ -207,9 +212,6 @@
   .dark .project-card--rail[data-active="true"][data-accent-enabled="true"][data-accent-style="gradient"] {
     background-color: var(--bg-elevated);
     border: 1px solid transparent;
-  }
-  .project-card--rail:hover {
-    border-color: var(--border-strong);
   }
 
   /* Reserve room on the right for the overlay fav star (top-1 right-1, ~24px
@@ -231,17 +233,18 @@
     /* Matches the active card + ViewModeSwitcher tray (bg-muted). */
     background-color: var(--bg-muted);
     border: 1px solid transparent;
-  }
 
-  .project-chip:hover {
     /* v3: hover = neutral muted tier + stronger border — no lift, no shadow. */
-    background-color: var(--state-hover-bg);
-    border-color: var(--project-chip-hover-border);
+    &:hover {
+      background-color: var(--state-hover-bg);
+      border-color: var(--project-chip-hover-border);
+    }
+
+    &:focus-visible {
+      @apply outline-none ring-1 ring-ring/50;
+    }
   }
 
-  .project-chip:focus-visible {
-    @apply outline-none ring-1 ring-ring/50;
-  }
 
   .project-chip__surface {
     position: absolute;
@@ -361,17 +364,18 @@
     /* Matches the active card + chips (bg-muted). */
     background-color: var(--bg-muted);
     border: 1px solid transparent;
-  }
 
-  .project-launcher:hover {
     /* v3: hover = neutral muted tier + stronger border — no lift, no shadow. */
-    background-color: var(--state-hover-bg);
-    border-color: var(--project-launcher-hover-border);
+    &:hover {
+      background-color: var(--state-hover-bg);
+      border-color: var(--project-launcher-hover-border);
+    }
+
+    &.active {
+      @apply ring-2 ring-primary;
+    }
   }
 
-  .project-launcher.active {
-    @apply ring-2 ring-primary;
-  }
 
   /* ── Search Input (panel header) ── */
 
@@ -382,11 +386,12 @@
     background: var(--project-search-bg);
     border-color: var(--project-search-border);
     color: var(--project-search-text);
+
+    &::placeholder {
+      color: var(--project-search-placeholder);
+    }
   }
 
-  .project-search::placeholder {
-    color: var(--project-search-placeholder);
-  }
 
   /* ── Hover-card preview (rail card + chip) — v3 text tiers ── */
   .project-hovercard__code {
