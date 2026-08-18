@@ -38,7 +38,7 @@ function flagTokens(flags) {
   return tokens
 }
 
-async function runSpecTrace(shell, args, workdir) {
+async function runSpecTrace(shell, args, workdir, sandboxPolicy) {
   if (!SPEC_TRACE) {
     throw new Error('SPEC_TRACE_BIN is not set; point it at the compiled spec-trace binary.')
   }
@@ -46,6 +46,7 @@ async function runSpecTrace(shell, args, workdir) {
     command: [SPEC_TRACE].concat(args).map(quote).join(' '),
     workdir,
     timeoutMs: 60000,
+    ...(sandboxPolicy !== undefined ? { sandboxPolicy } : {}),
   })
   const result = await shell.run(spec)
   if (result.exitCode !== 0) {
@@ -89,6 +90,14 @@ export function apply(ctx) {
     return
   }
 
+  const sandboxPolicy = ctx.get('sandboxPolicy')
+
+  /** Resolve the calling session's live sandbox policy so the subprocess follows it. */
+  function policyFor(exec) {
+    if (sandboxPolicy === undefined || exec?.agent === undefined) return undefined
+    return sandboxPolicy.resolve({ session: exec.agent.session })
+  }
+
   function register(definition) {
     ctx.effect(() => tools.register(definition))
   }
@@ -102,8 +111,8 @@ export function apply(ctx) {
       ['ticket'],
     ),
     output: { schema: { type: 'string' }, render },
-    async execute(args) {
-      return runSpecTrace(shell, ['init', args.ticket], args.workdir)
+    async execute(args, exec) {
+      return runSpecTrace(shell, ['init', args.ticket], args.workdir, policyFor(exec))
     },
   })
 
@@ -130,12 +139,8 @@ export function apply(ctx) {
       ['entity', 'ticket', 'id', 'flags'],
     ),
     output: { schema: { type: 'string' }, render },
-    async execute(args) {
-      return runSpecTrace(
-        shell,
-        [args.entity, 'upsert', args.ticket, args.id].concat(flagTokens(args.flags)),
-        args.workdir,
-      )
+    async execute(args, exec) {
+      return runSpecTrace(shell, [args.entity, 'upsert', args.ticket, args.id].concat(flagTokens(args.flags)), args.workdir, policyFor(exec))
     },
   })
 
@@ -147,8 +152,8 @@ export function apply(ctx) {
       ['entity', 'ticket'],
     ),
     output: { schema: { type: 'string' }, render },
-    async execute(args) {
-      return runSpecTrace(shell, [args.entity, 'list', args.ticket], args.workdir)
+    async execute(args, exec) {
+      return runSpecTrace(shell, [args.entity, 'list', args.ticket], args.workdir, policyFor(exec))
     },
   })
 
@@ -161,12 +166,8 @@ export function apply(ctx) {
       ['entity', 'ticket', 'id'],
     ),
     output: { schema: { type: 'string' }, render },
-    async execute(args) {
-      return runSpecTrace(
-        shell,
-        [args.entity, 'delete', args.ticket, args.id, '--if-exists', '--format', 'json'],
-        args.workdir,
-      )
+    async execute(args, exec) {
+      return runSpecTrace(shell, [args.entity, 'delete', args.ticket, args.id, '--if-exists', '--format', 'json'], args.workdir, policyFor(exec))
     },
   })
 
@@ -185,12 +186,13 @@ export function apply(ctx) {
       ['ticket', 'stage'],
     ),
     output: { schema: { type: 'string' }, render },
-    async execute(args) {
+    async execute(args, exec) {
       return runSpecTrace(
         shell,
         ['validate', args.ticket, '--stage', args.stage, '--format', 'json']
           .concat(args.strict ? ['--strict'] : []),
         args.workdir,
+        policyFor(exec),
       )
     },
   })
@@ -205,8 +207,8 @@ export function apply(ctx) {
       ['stage', 'ticket'],
     ),
     output: { schema: { type: 'string' }, render },
-    async execute(args) {
-      return runSpecTrace(shell, ['render', args.stage, args.ticket], args.workdir)
+    async execute(args, exec) {
+      return runSpecTrace(shell, ['render', args.stage, args.ticket], args.workdir, policyFor(exec))
     },
   })
 
@@ -227,7 +229,7 @@ export function apply(ctx) {
       ['ticket', 'taskId'],
     ),
     output: { schema: { type: 'string' }, render },
-    async execute(args) {
+    async execute(args, exec) {
       const flags = {}
       if (args.format) flags.format = args.format
       if (args.profile) flags.profile = args.profile
@@ -236,6 +238,7 @@ export function apply(ctx) {
         shell,
         ['bundle', 'task', args.ticket, args.taskId].concat(flagTokens(flags)),
         args.workdir,
+        policyFor(exec),
       )
     },
   })

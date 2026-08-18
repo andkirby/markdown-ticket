@@ -31,10 +31,11 @@ function quote(value) {
 }
 
 /** Run mdt-cli with JSON output; non-zero exits become tool errors. */
-async function runMdt(shell, args) {
+async function runMdt(shell, args, sandboxPolicy) {
   const spec = shell.resolve({
     command: [CLI].concat(args).map(quote).join(' '),
     timeoutMs: 30000,
+    ...(sandboxPolicy !== undefined ? { sandboxPolicy } : {}),
   })
   const result = await shell.run(spec)
   if (result.exitCode !== 0) {
@@ -50,9 +51,16 @@ function render(_args, value) {
 export function apply(ctx) {
   const shell = ctx.get('shell')
   const tools = ctx.get('tools')
+  const sandboxPolicy = ctx.get('sandboxPolicy')
   if (shell === undefined || tools === undefined) {
     console.error('mdt plugin: shell or tools service unavailable')
     return
+  }
+
+  /** Resolve the calling session's live sandbox policy so the subprocess follows it. */
+  function policyFor(exec) {
+    if (sandboxPolicy === undefined || exec?.agent === undefined) return undefined
+    return sandboxPolicy.resolve({ session: exec.agent.session })
   }
 
   /** Optional `project` arg becomes `-p <code>` so operations work from any cwd. */
@@ -74,8 +82,8 @@ export function apply(ctx) {
       ['key'],
     ),
     output: { schema: { type: 'string' }, render },
-    async execute(args) {
-      return runMdt(shell, ['ticket', 'get', '--json', ...projectArgs(args), args.key])
+    async execute(args, exec) {
+      return runMdt(shell, ['ticket', 'get', '--json', ...projectArgs(args), args.key], policyFor(exec))
     },
   })
 
@@ -89,8 +97,12 @@ export function apply(ctx) {
       project: PROJECT_PARAM,
     }),
     output: { schema: { type: 'string' }, render },
-    async execute(args) {
-      return runMdt(shell, ['ticket', 'list', '--json', ...projectArgs(args), ...(args.filters ?? [])])
+    async execute(args, exec) {
+      return runMdt(
+        shell,
+        ['ticket', 'list', '--json', ...projectArgs(args), ...(args.filters ?? [])],
+        policyFor(exec),
+      )
     },
   })
 
@@ -104,8 +116,12 @@ export function apply(ctx) {
       ['tokens'],
     ),
     output: { schema: { type: 'string' }, render },
-    async execute(args) {
-      return runMdt(shell, ['ticket', 'create', '--json', ...projectArgs(args), ...args.tokens])
+    async execute(args, exec) {
+      return runMdt(
+        shell,
+        ['ticket', 'create', '--json', ...projectArgs(args), ...args.tokens],
+        policyFor(exec),
+      )
     },
   })
 
@@ -124,8 +140,12 @@ export function apply(ctx) {
       ['key', 'attrs'],
     ),
     output: { schema: { type: 'string' }, render },
-    async execute(args) {
-      return runMdt(shell, ['ticket', 'attr', '--json', ...projectArgs(args), args.key, ...args.attrs])
+    async execute(args, exec) {
+      return runMdt(
+        shell,
+        ['ticket', 'attr', '--json', ...projectArgs(args), args.key, ...args.attrs],
+        policyFor(exec),
+      )
     },
   })
 
@@ -138,11 +158,15 @@ export function apply(ctx) {
       ['key'],
     ),
     output: { schema: { type: 'string' }, render },
-    async execute(args) {
-      return runMdt(shell, [
-        'ticket', 'deps', '--json', ...projectArgs(args), args.key,
-        ...(args.check ? ['--check'] : []),
-      ])
+    async execute(args, exec) {
+      return runMdt(
+        shell,
+        [
+          'ticket', 'deps', '--json', ...projectArgs(args), args.key,
+          ...(args.check ? ['--check'] : []),
+        ],
+        policyFor(exec),
+      )
     },
   })
 
@@ -151,8 +175,8 @@ export function apply(ctx) {
     description: 'List all MDT projects known to mdt-cli. Returns JSON.',
     parameters: objectSchema({}),
     output: { schema: { type: 'string' }, render },
-    async execute() {
-      return runMdt(shell, ['project', 'ls', '--json'])
+    async execute(_args, exec) {
+      return runMdt(shell, ['project', 'ls', '--json'], policyFor(exec))
     },
   })
 }
