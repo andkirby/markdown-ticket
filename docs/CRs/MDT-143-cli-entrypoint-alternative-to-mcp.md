@@ -654,3 +654,21 @@ Resolved by the MDT-143 UAT implementation. The canonical command grammar and te
 - `shared` + `cli` typecheck clean; `shared` rebuilt.
 
 **Lesson learned**: when a batch operation accumulates state in a map before a single persist, each loop iteration must read its "current value" from that map (falling back to the source-of-truth on first touch), not from a snapshot captured once before the loop. Per-token stdout reporting the in-memory *intent* rather than the *persisted aggregate* masked this for multiple `+=` in one command — e2e assertions must check the persisted file frontmatter, not the CLI's success output.
+
+### UAT Session 2026-04-03 (r2) — project-context robustness
+
+Non-interactive consumers (MCP tools, DSH plugin) run with a cwd that is not a project root; `ticket get`/`ticket attr` were the last subcommands without `-p/--project`.
+
+**Approved changes**:
+- `-p, --project <code>` added to `ticket get` and `ticket attr` (explicit-project-wins precedence; unknown project → `Project <code> not found`, exit 1; identical behavior when omitted). `cli/mdt-cli/SKILL.md` updated.
+- MCP project contract verified and locked as C8 — premise check showed `mcp-server` is in-process (not a `mdt-cli` wrapper) and already threads `project` on every CR tool with cwd fallback and an actionable error naming the missing parameter; no rewrite, coverage confirmed.
+- `dsh-plugin/mdt.js`: `mdt_ticket_get`/`mdt_ticket_attr` gained optional `project` via `projectArgs()`; cwd caveats removed from descriptions; tool names/schemas otherwise unchanged.
+
+**Changed requirement IDs**: BR-1, BR-10 (refined in place); Edge-11, C8, C9 (added).
+**Updated workflow documents**: requirements.md, bdd.md (scenario `ticket_get_attr_in_explicit_project`), architecture.md (`OBL-explicit-project-targeting`, `ART-dsh-plugin-mdt`, `ART-mcp-project-handlers`), tests.md, tasks.md (`TASK-uat-project-context`).
+**uat.md written**: yes (current-round brief).
+**Strict drift/lock**: not used.
+
+**Validation**: `ticket get/attr -p` from `/tmp` GREEN (incl. unknown-project rejection); new CLI e2e `ticket/project-flag.spec.ts` 6/6, full CLI suite 218/218, eslint clean; MCP e2e 26/26 and unit/integration 159/159; dsh-plugin import + schema check GREEN; `spec-trace validate --stage all` pass, all stages rendered. Verification surfaced and fixed a Node-ESM `fs-extra` interop bug (`import * as fs` → default import) that had broken all node-run MCP create e2e tests.
+
+**Commits**: 6cbf55f8 (cli), 43fd5eb1 (mcp + shared interop fix), ca4f4867 (dsh-plugin, now tracked via .gitignore negation).

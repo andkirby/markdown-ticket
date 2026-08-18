@@ -68,6 +68,14 @@ This CR introduces a standalone `mdt-cli` entrypoint for reading and mutating CR
 - Edge-2 refined: unknown status/priority enum values are rejected with the valid set and alias map
 - Bug fixes: `open` alias no longer means Proposed for `list` but Approved for `attr`; relation values (`related`/`depends`/`blocks`) split on commas again after a refactor regression left the branch unreachable
 
+## UAT Refinements (2026-04-03) — project-context robustness
+
+- BR-1 refined: `ticket get` accepts `-p, --project <code>` to resolve the ticket within the given project from any cwd; explicit `--project` wins over cwd detection; unknown project rejects with `Project <code> not found` and exit 1; behavior identical when omitted
+- BR-10 refined: `ticket attr` accepts the same `-p, --project <code>` option with the same precedence and rejection semantics
+- Edge-11 added: `ticket get|attr -p <code>` with an unknown project code rejects with `Project <code> not found` and exit 1
+- C8 added: non-interactive consumers must be able to address a project explicitly — MCP CR tools accept a `project` parameter, fall back to detected cwd context only when it is absent, and return a structured actionable error naming the missing `project` parameter when neither is available
+- C9 added: DSH plugin tool schemas mirror the CLI flag surface — `mdt_ticket_get` and `mdt_ticket_attr` accept an optional `project` passed through as `-p`; tool names and other schema fields stay stable (presets depend on them)
+
 ## Review Notes
 
 - The requirements intentionally lock project detection to filesystem-root search even though the current MCP helper shows a bounded search depth. Architecture should treat the existing implementation as insufficient, not as the target behavior.
