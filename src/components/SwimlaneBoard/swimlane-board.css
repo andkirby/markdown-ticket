@@ -48,7 +48,9 @@
     }
 
     &:focus-visible {
-      outline: 2px solid var(--ring);
+      /* oklch() wrapper required: --ring is a bare L C H channel triplet —
+         a bare var() here is an invalid color (focus ring silently absent). */
+      outline: 1px solid oklch(var(--ring) / 50%);
       outline-offset: -1px;
     }
   }
@@ -73,13 +75,19 @@
     }
   }
 
+  /* Compact ghost toolbar chip — shared by the checkbox <label>s and the
+     Collapse/Expand-all <button>s (replaces the vendor ui/Button ghost/sm
+     utility chain; per STYLING.md the toolbar family owns one pattern).
+     border/background resets are no-ops on <label>, required on <button>. */
   .swimlane-board__toggle {
     display: inline-flex;
     align-items: center;
     gap: 6px;
     min-height: 32px;
     padding: 0 8px;
+    border: 0;
     border-radius: 6px;
+    background: transparent;
     color: var(--text-muted);
     font-size: var(--fs-ui-sm);
     font-weight: 600;
@@ -143,6 +151,13 @@
     font-weight: 700;
     text-transform: uppercase;
     background: var(--bg-muted);
+
+    /* Status-color dot per column (semantic data-attribute variants). */
+    &[data-column-color="blue"] .swimlane-board__status-dot { background: var(--status-open); }
+    &[data-column-color="yellow"] .swimlane-board__status-dot { background: var(--status-progress); }
+    &[data-column-color="green"] .swimlane-board__status-dot { background: var(--status-done); }
+    &[data-column-color="red"] .swimlane-board__status-dot { background: var(--status-rejected); }
+    &[data-column-color="purple"] .swimlane-board__status-dot { background: var(--status-hold); }
   }
 
   .swimlane-board__col-label {
@@ -492,13 +507,14 @@
     &:hover {
       background: color-mix(in srgb, var(--bg-muted) 75%, transparent);
     }
-  }
 
-  .swimlane-board__lane-col-rail[data-column-color="blue"] { border-left-color: color-mix(in srgb, var(--status-open) 45%, transparent); }
-  .swimlane-board__lane-col-rail[data-column-color="yellow"] { border-left-color: color-mix(in srgb, var(--status-progress) 45%, transparent); }
-  .swimlane-board__lane-col-rail[data-column-color="green"] { border-left-color: color-mix(in srgb, var(--status-done) 45%, transparent); }
-  .swimlane-board__lane-col-rail[data-column-color="red"] { border-left-color: color-mix(in srgb, var(--status-rejected) 45%, transparent); }
-  .swimlane-board__lane-col-rail[data-column-color="purple"] { border-left-color: color-mix(in srgb, var(--status-hold) 45%, transparent); }
+    /* Status-color tint per column (semantic data-attribute variants). */
+    &[data-column-color="blue"] { border-left-color: color-mix(in srgb, var(--status-open) 45%, transparent); }
+    &[data-column-color="yellow"] { border-left-color: color-mix(in srgb, var(--status-progress) 45%, transparent); }
+    &[data-column-color="green"] { border-left-color: color-mix(in srgb, var(--status-done) 45%, transparent); }
+    &[data-column-color="red"] { border-left-color: color-mix(in srgb, var(--status-rejected) 45%, transparent); }
+    &[data-column-color="purple"] { border-left-color: color-mix(in srgb, var(--status-hold) 45%, transparent); }
+  }
 
   .swimlane-board__lane-empty {
     display: flex;
