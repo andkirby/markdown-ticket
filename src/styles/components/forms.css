@@ -17,6 +17,68 @@
     @apply border-destructive focus-visible:ring-destructive;
   }
 
+  /* Icon-input object (layer 5) — leading search icon + text input + optional
+     trailing clear button. Shared by the board filter bar (FilterControls),
+     and the pattern-consumers swimlane toolbar / documents-view /
+     project-browser (those still carry their own copies; consolidate onto
+     this object over time). Structure + affordance only; skin via tokens.
+     36px = the h-9 toolbar bar-scale (board filter bar siblings), not the
+     32px --sz-control header-scale — token gap tracked by the nightly audit. */
+  .icon-input {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .icon-input__icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-subtle);
+    pointer-events: none;
+  }
+
+  .icon-input__input {
+    min-height: 36px;
+    min-width: 200px;
+    padding: 0 40px;
+    border: 1px solid oklch(var(--border));
+    border-radius: var(--radius-input);
+    background: var(--background);
+    color: oklch(var(--foreground));
+    font-size: var(--fs-ui);
+
+    &::placeholder {
+      color: var(--text-muted);
+    }
+
+    &:focus-visible {
+      outline: 1px solid oklch(var(--ring) / 50%);
+      outline-offset: -1px;
+    }
+  }
+
+  .icon-input__clear {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    display: inline-flex;
+    transform: translateY(-50%);
+    padding: 4px;
+    border: 0;
+    border-radius: var(--radius-xs);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background-color 0.15s ease-out, color 0.15s ease-out;
+
+    &:hover {
+      background: var(--state-hover-bg);
+      color: oklch(var(--foreground));
+    }
+  }
+
   .label {
     @apply text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70;
   }
