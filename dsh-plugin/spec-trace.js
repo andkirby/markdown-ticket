@@ -11,6 +11,7 @@
 const SPEC_TRACE = process.env.SPEC_TRACE_BIN
 
 export const name = 'spec-trace'
+export const inject = ['tools', 'shell']
 
 function quote(value) {
   return "'" + String(value).replace(/'/g, "'\\''") + "'"
