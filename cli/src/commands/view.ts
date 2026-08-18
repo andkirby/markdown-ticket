@@ -9,7 +9,7 @@ import type { Project } from '@mdt/shared/models/Project.js'
 import type { StructuredOutputOptions } from '../output/structured.js'
 import { ProjectService } from '@mdt/shared/services/ProjectService.js'
 import { TicketService } from '@mdt/shared/services/TicketService.js'
-import { formatCrKey, KeyNormalizationError, normalizeKey } from '@mdt/shared/utils/keyNormalizer.js'
+import { KeyNormalizationError, normalizeKey, resolveKeyInProject } from '@mdt/shared/utils/keyNormalizer.js'
 import { formatTicketView } from '../output/formatter.js'
 import { CliCommandError, formatTicketForStructured, getOutputFormat, writeStructuredSuccess } from '../output/structured.js'
 
@@ -29,22 +29,6 @@ interface ParsedKey {
 /** Options for ticket get (extends structured output with --project). */
 interface ViewCommandOptions extends StructuredOutputOptions {
   project?: string
-}
-
-/**
- * Resolve a ticket key inside an explicitly given project (MDT-143 UAT).
- *
- * `--project` wins over cwd detection and over project codes embedded in the
- * key: the numeric part of the key (from "12", "ABC-12", or "PROJ/ABC-12") is
- * rebuilt under the given project's code.
- */
-function resolveKeyInProject(key: string, projectCode: string): string {
-  const bare = key.includes('/') ? key.slice(key.lastIndexOf('/') + 1) : key
-  const fullFormat = bare.match(/^([a-z][a-z0-9]*)-(\d+)$/i)
-  if (fullFormat) {
-    return formatCrKey(projectCode, Number.parseInt(fullFormat[2], 10))
-  }
-  return normalizeKey(bare, projectCode)
 }
 
 function parseTicketKey(key: string): ParsedKey | null {
@@ -132,7 +116,7 @@ export async function ticketViewAction(key: string, options: ViewCommandOptions 
     if (!projectResult.data) {
       throw new CliCommandError(
         'NO_PROJECT_CONTEXT',
-        'No project context. Run from a project directory or use an explicit key like MDT-143.',
+        'No project context. Run from a project directory, use --project, or use an explicit key like MDT-143.',
       )
     }
 
