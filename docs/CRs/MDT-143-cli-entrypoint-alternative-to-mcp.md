@@ -6,6 +6,7 @@ lastModified: 2026-04-03T17:37:55.000Z
 type: Feature Enhancement
 priority: Medium
 phaseEpic: Phase B (Enhancement)
+implementationNotes: UAT verified from DSH session (cwd=/tmp)
 ---
 
 # CLI access to tickets and projects

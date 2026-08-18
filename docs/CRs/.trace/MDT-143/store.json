@@ -185,13 +185,6 @@
       "routePolicy": "bdd"
     },
     {
-      "id": "BR-1",
-      "kind": "behavior",
-      "text": "WHEN operator invokes mdt-cli ticket get <key>, mdt-cli ticket <key>, mdt-cli t <key>, or mdt-cli <key> with a resolvable ticket reference, the system shall print the matching ticket title followed by labeled status, type, priority, phase, assignee, created date, modified date, and path fields. When the ticket has a corresponding CR directory (e.g., docs/CRs/MDT-012/), the system shall list the 1st-level files and directories in that directory below the path line, excluding the main ticket .md file. Directories are shown with a trailing slash. Nested directory contents are not expanded. If no subdocuments exist, the section is omitted.",
-      "sourceRef": "CR:MDT-143",
-      "routePolicy": "bdd"
-    },
-    {
       "id": "BR-20",
       "kind": "behavior",
       "text": "WHEN operator invokes mdt-cli ticket delete <key> or mdt-cli delete <key>, the system shall resolve the ticket, prompt for confirmation on an interactive terminal (showing key and title), delete the ticket file on confirmation, delete the ticket CR directory if it is empty after file removal, and print the deleted ticket key and relative path.",
@@ -290,13 +283,6 @@
       "routePolicy": "bdd"
     },
     {
-      "id": "BR-10",
-      "kind": "behavior",
-      "text": "WHEN operator invokes mdt-cli ticket attr <ticket> <attr-op><value>... or mdt-cli attr <ticket> <attr-op><value>... with supported attribute keys, the system shall normalize accepted value aliases, apply = to scalar attributes, apply =, +=, or -= to relation attributes, update all supplied attributes on the target ticket, and confirm the applied changes using pipe-separated format showing old and new values. When a value is unchanged, the system shall print an unchanged message and exit with code 0. Enum value resolution (status, priority) shall run through a single shared input gate shared with the MCP surface, so alias canonicalization and unknown-value rejection are identical across interfaces; unknown enum values shall be rejected with the valid set and the alias map. Relation attribute values shall be split on commas into a list before being applied. The accepted attribute field list and the ticket attr --help text shall derive from one metadata source, so help output and parser validation cannot drift.",
-      "sourceRef": "CR:MDT-143",
-      "routePolicy": "bdd"
-    },
-    {
       "id": "C2",
       "kind": "constraint",
       "text": "The system shall accept only status, priority, phase, assignee, related, depends, blocks, impl-date, and impl-notes as mutable CLI attributes; only related, depends, and blocks may use += or -= operators, while all other mutable attributes use = only. The accepted-field list shall be owned by a single metadata module consumed by both the ticket attr --help renderer and the attr token parser, so the documented fields and the validated fields cannot diverge.",
@@ -307,6 +293,41 @@
       "id": "Edge-2",
       "kind": "edge_case",
       "text": "IF operator omits required command arguments or supplies an unrecognized create token, unsupported attribute-mutation form, unsupported attribute key, unsupported attribute operator, or unrecognized explicit project verb, THEN the system shall reject the command with a clear corrective message and a suggestion for the closest valid token when available. IF operator supplies an unknown status or priority enum value to ticket attr, THEN the system shall reject the command with the valid value set and the alias map.",
+      "sourceRef": "CR:MDT-143",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-1",
+      "kind": "behavior",
+      "text": "WHEN operator invokes mdt-cli ticket get <key>, mdt-cli ticket <key>, mdt-cli t <key>, or mdt-cli <key> with a resolvable ticket reference, the system shall print the matching ticket title followed by labeled status, type, priority, phase, assignee, created date, modified date, and path fields. When the ticket has a corresponding CR directory (e.g., docs/CRs/MDT-012/), the system shall list the 1st-level files and directories in that directory below the path line, excluding the main ticket .md file. Directories are shown with a trailing slash. Nested directory contents are not expanded. If no subdocuments exist, the section is omitted. WHEN -p/--project <code> is provided, the system shall resolve the ticket within the given project regardless of cwd; explicit --project wins over cwd-detected context; WHEN --project targets a project that does not exist, the system shall reject with 'Project <code> not found' and exit 1. Behavior is identical when the option is omitted.",
+      "sourceRef": "CR:MDT-143",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-10",
+      "kind": "behavior",
+      "text": "WHEN operator invokes mdt-cli ticket attr <ticket> <attr-op><value>... or mdt-cli attr <ticket> <attr-op><value>... with supported attribute keys, the system shall normalize accepted value aliases, apply = to scalar attributes, apply =, +=, or -= to relation attributes, update all supplied attributes on the target ticket, and confirm the applied changes using pipe-separated format showing old and new values. When a value is unchanged, the system shall print an unchanged message and exit with code 0. Enum value resolution (status, priority) shall run through a single shared input gate shared with the MCP surface, so alias canonicalization and unknown-value rejection are identical across interfaces; unknown enum values shall be rejected with the valid set and the alias map. Relation attribute values shall be split on commas into a list before being applied. The accepted attribute field list and the ticket attr --help text shall derive from one metadata source, so help output and parser validation cannot drift. WHEN -p/--project <code> is provided, the system shall resolve the ticket within the given project regardless of cwd; explicit --project wins over cwd-detected context and over project codes embedded in the key; WHEN --project targets a project that does not exist, the system shall reject with 'Project <code> not found' and exit 1. Behavior is identical when the option is omitted.",
+      "sourceRef": "CR:MDT-143",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "Edge-11",
+      "kind": "edge_case",
+      "text": "IF operator invokes mdt-cli ticket get or mdt-cli ticket attr with -p/--project <code> and the project does not exist, THEN the system shall print 'Project <code> not found' and exit with code 1.",
+      "sourceRef": "CR:MDT-143",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C8",
+      "kind": "constraint",
+      "text": "Non-interactive consumers must be able to address a project explicitly without cwd context: MCP CR tools (list_crs, get_cr, create_cr, update_cr_status, update_cr_attrs, delete_cr, manage_cr_sections, suggest_cr_improvements) shall accept a project parameter, fall back to the detected current-project context only when no project is given, and return a structured actionable error that names the missing project parameter (not a raw NO_PROJECT_CONTEXT) when neither is available.",
+      "sourceRef": "CR:MDT-143",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C9",
+      "kind": "constraint",
+      "text": "The DSH plugin tool schemas shall mirror the CLI flag surface: mdt_ticket_get and mdt_ticket_attr accept an optional project parameter passed through to mdt-cli as -p <code>; tool names and all other schema fields remain stable because presets depend on them; their descriptions must not claim cwd/project-config requirements that -p removes.",
       "sourceRef": "CR:MDT-143",
       "routePolicy": "tests"
     }
@@ -617,6 +638,18 @@
       "when": "the command succeeds",
       "then": "the system prints a structured success envelope with the created/updated/deleted entity, relevant paths, and mutation change details such as attr old and new values",
       "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "ticket_get_attr_in_explicit_project",
+      "title": "Get and attr resolve a ticket in an explicitly given project from any cwd",
+      "covers": [
+        "BR-1",
+        "BR-10"
+      ],
+      "given": "the operator's working directory is not inside any project and project code ABC exists with ticket ABC-012",
+      "when": "the operator runs mdt-cli ticket get -p ABC 12 --json or mdt-cli ticket attr -p ABC 12 status=Approved --json",
+      "then": "the ticket is resolved within project ABC and returned/updated without cwd context; with an unknown project code the command prints 'Project <code> not found' and exits 1",
+      "sourceRef": "CR:MDT-143"
     }
   ],
   "obligations": [
@@ -850,6 +883,26 @@
         "ART-cli-list"
       ],
       "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "OBL-explicit-project-targeting",
+      "title": "Every ticket-addressing surface accepts an explicit project: ticket get and ticket attr take -p/--project with explicit-project-wins precedence (unknown project rejects with 'Project <code> not found', exit 1); --project key resolution lives in the shared keyNormalizer (resolveKeyInProject) so get/attr share one implementation; MCP CR tools accept a project parameter with cwd-detection fallback and a structured actionable error naming the missing parameter; the DSH plugin passes an optional project through as -p on every mdt_ticket_* tool while keeping tool names and schemas stable.",
+      "derivedFrom": [
+        "BR-1",
+        "BR-10",
+        "C8",
+        "C9",
+        "Edge-11"
+      ],
+      "artifactIds": [
+        "ART-cli-view",
+        "ART-cli-attr",
+        "ART-cli-index",
+        "ART-shared-key-normalizer",
+        "ART-mcp-project-handlers",
+        "ART-dsh-plugin-mdt"
+      ],
+      "sourceRef": "CR:MDT-143"
     }
   ],
   "artifacts": [
@@ -1036,6 +1089,24 @@
     {
       "id": "ART-cli-attr-meta",
       "path": "cli/src/commands/attrMeta.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "ART-dsh-plugin-mdt",
+      "path": "dsh-plugin/mdt.js",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "ART-mcp-project-handlers",
+      "path": "mcp-server/src/tools/handlers/projectHandlers.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "ART-shared-key-normalizer",
+      "path": "shared/utils/keyNormalizer.ts",
       "kind": "runtime",
       "sourceRef": "CR:MDT-143"
     }
@@ -1240,6 +1311,35 @@
         "Edge-2"
       ],
       "file": "shared/services/ticket/attrResolver.test.ts",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "TEST-cli-get-attr-project",
+      "kind": "e2e",
+      "title": "ticket get and ticket attr resolve tickets via -p/--project from a non-project cwd; unknown project rejects with 'Project <code> not found' and exit 1; omitted flag keeps cwd behavior",
+      "covers": [
+        "BR-1",
+        "BR-10",
+        "Edge-11"
+      ],
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "TEST-mcp-explicit-project",
+      "kind": "e2e",
+      "title": "MCP create_cr (and sibling CR tools) succeed with an explicit project parameter from a non-project server cwd; without project and without detected context the error names the missing project parameter",
+      "covers": [
+        "C8"
+      ],
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "TEST-dsh-plugin-project-flag",
+      "kind": "manual",
+      "title": "dsh-plugin/mdt.js loads via node import; mdt_ticket_get and mdt_ticket_attr expose optional project passed as -p; tool names unchanged; descriptions carry no cwd caveat",
+      "covers": [
+        "C9"
+      ],
       "sourceRef": "CR:MDT-143"
     }
   ],
@@ -1488,6 +1588,29 @@
       ],
       "skills": [
         "mdt"
+      ],
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "TASK-uat-project-context",
+      "title": "Project-context robustness: -p on ticket get/attr (shared resolveKeyInProject), MCP project contract verification, DSH plugin get/attr project parameter",
+      "ownsArtifactIds": [
+        "ART-cli-view",
+        "ART-cli-attr",
+        "ART-cli-index",
+        "ART-shared-key-normalizer",
+        "ART-mcp-project-handlers",
+        "ART-dsh-plugin-mdt"
+      ],
+      "makesGreenIds": [
+        "ticket_get_attr_in_explicit_project",
+        "TEST-cli-get-attr-project",
+        "TEST-mcp-explicit-project",
+        "TEST-dsh-plugin-project-flag"
+      ],
+      "skills": [
+        "repo-routing",
+        "bash-scripting"
       ],
       "sourceRef": "CR:MDT-143"
     }
