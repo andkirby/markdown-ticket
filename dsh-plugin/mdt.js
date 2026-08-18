@@ -109,17 +109,28 @@ export function apply(ctx) {
   register({
     name: 'mdt_ticket_create',
     description:
-      'Create a new MDT ticket. `tokens` are the title words (and any CLI options) ' +
-      'passed to `mdt-cli ticket create`. Pass `project` instead of relying on cwd. Returns JSON.',
+      'Create a new MDT ticket. `title` is the full ticket title (one string). ' +
+      '`type` is the optional Type[/priority] marker (e.g. "Bug/high"), `slug` an optional ' +
+      'URL slug. Pass `project` instead of relying on cwd. Returns JSON.',
     parameters: objectSchema(
-      { tokens: { type: 'array', items: { type: 'string' } }, project: PROJECT_PARAM },
-      ['tokens'],
+      {
+        title: { type: 'string', description: 'Full ticket title.' },
+        type: { type: 'string', description: 'Optional Type[/priority] marker, e.g. "Bug/high".' },
+        slug: { type: 'string', description: 'Optional URL slug.' },
+        project: PROJECT_PARAM,
+      },
+      ['title'],
     ),
     output: { schema: { type: 'string' }, render },
     async execute(args, exec) {
       return runMdt(
         shell,
-        ['ticket', 'create', '--json', ...projectArgs(args), ...args.tokens],
+        [
+          'ticket', 'create', '--json', ...projectArgs(args),
+          ...(args.type ? [args.type] : []),
+          args.title,
+          ...(args.slug ? [args.slug] : []),
+        ],
         policyFor(exec),
       )
     },
