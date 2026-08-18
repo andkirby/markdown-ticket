@@ -1,12 +1,12 @@
 /**
  * mdt-cli as DeepSeek Harness model tools.
  *
- * Thin glue over `../bin/mdt-cli --json` through the DSH `shell` service.
+ * Thin glue over `../cli/bin/mdt-cli --json` through the DSH `shell` service.
  * Publishes no Cordis service; mounts loose in an agent preset.
  * See ./AGENTS.md for the mount contract and conventions.
  */
 
-const CLI = new URL('../bin/mdt-cli', import.meta.url).pathname
+const CLI = new URL('../cli/bin/mdt-cli', import.meta.url).pathname
 
 export const name = 'mdt'
 export const inject = ['tools', 'shell']
