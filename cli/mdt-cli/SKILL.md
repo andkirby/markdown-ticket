@@ -23,9 +23,12 @@ Bare numbers and full keys can be used directly: `mdt-cli 12` views the ticket.
 ```bash
 mdt-cli <key>                 # Bare shortcut
 mdt-cli ticket get <key>      # Canonical form
+mdt-cli ticket get -p <code> <key>   # Resolve within an explicit project (any cwd)
 ```
 
 Prints ticket title, labeled metadata (status, type, priority, phase, assignee, dates), and path. If the ticket has a CR directory with subdocuments, lists them below the path.
+
+`-p, --project <code>` — resolve the ticket within the given project instead of the cwd-detected one; explicit project wins over key-embedded codes. Unknown project → `Project <code> not found`, exit 1. Useful for non-interactive consumers running outside a project root.
 
 ## List
 
@@ -105,9 +108,12 @@ Deletes the ticket file. On TTY without `--force`, prompts `Delete <key> (<title
 ```bash
 mdt-cli attr <key> status=Implemented priority=High
 mdt-cli attr <key> related+=MDT-100 related-=MDT-050
+mdt-cli ticket attr -p <code> <key> status=Approved   # Explicit project, any cwd
 ```
 
 Updates ticket attributes. Normalizes aliases (e.g. `in-progress` → `In Progress`). Prints old→new confirmation per field.
+
+`-p, --project <code>` — same semantics as on `ticket get`: explicit project wins, unknown project exits 1.
 
 Keys: `status`, `priority`, `level`, `phase`, `assignee`, `related`, `depends`, `blocks`, `impl-date`, `impl-notes`.
 
