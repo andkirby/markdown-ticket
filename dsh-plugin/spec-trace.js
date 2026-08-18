@@ -71,6 +71,16 @@ const WORKDIR = {
     'inside the project.',
 }
 
+/** Full JSON-Schema object; raw registrations are not converted from shorthand. */
+function objectSchema(properties, required) {
+  return {
+    type: 'object',
+    additionalProperties: false,
+    properties,
+    ...(required ? { required } : []),
+  }
+}
+
 export function apply(ctx) {
   const shell = ctx.get('shell')
   const tools = ctx.get('tools')
@@ -87,7 +97,10 @@ export function apply(ctx) {
     name: 'spec_trace_init',
     description:
       'Initialize the trace store for one ticket. Run before any upsert. Returns CLI text.',
-    parameters: { ticket: { type: 'string', required: true }, workdir: WORKDIR },
+    parameters: objectSchema(
+      { ticket: { type: 'string' }, workdir: WORKDIR },
+      ['ticket'],
+    ),
     output: { schema: { type: 'string' }, render },
     async execute(args) {
       return runSpecTrace(shell, ['init', args.ticket], args.workdir)
@@ -103,17 +116,19 @@ export function apply(ctx) {
       'scenario{title,covers,given,when,then,sourceRef}, artifact{path,kind,sourceRef}, ' +
       'obligation{title,derivedFrom,artifacts,sourceRef}, testPlan{kind,title,covers,file,sourceRef}, ' +
       'task{title,owns,makesGreen,skills,sourceRef}. Array values are comma-joined. Returns CLI text.',
-    parameters: {
-      entity: ENTITIES,
-      ticket: { type: 'string', required: true },
-      id: { type: 'string', required: true },
-      flags: {
-        type: 'object',
-        description: 'camelCase option keys; converted to kebab-case CLI flags.',
-        required: true,
+    parameters: objectSchema(
+      {
+        entity: ENTITIES,
+        ticket: { type: 'string' },
+        id: { type: 'string' },
+        flags: {
+          type: 'object',
+          description: 'camelCase option keys; converted to kebab-case CLI flags.',
+        },
+        workdir: WORKDIR,
       },
-      workdir: WORKDIR,
-    },
+      ['entity', 'ticket', 'id', 'flags'],
+    ),
     output: { schema: { type: 'string' }, render },
     async execute(args) {
       return runSpecTrace(
@@ -127,11 +142,10 @@ export function apply(ctx) {
   register({
     name: 'spec_trace_list',
     description: 'List all entries of one trace entity for a ticket. Returns CLI text.',
-    parameters: {
-      entity: ENTITIES,
-      ticket: { type: 'string', required: true },
-      workdir: WORKDIR,
-    },
+    parameters: objectSchema(
+      { entity: ENTITIES, ticket: { type: 'string' }, workdir: WORKDIR },
+      ['entity', 'ticket'],
+    ),
     output: { schema: { type: 'string' }, render },
     async execute(args) {
       return runSpecTrace(shell, [args.entity, 'list', args.ticket], args.workdir)
@@ -142,12 +156,10 @@ export function apply(ctx) {
     name: 'spec_trace_delete',
     description:
       'Delete one trace entity entry. Uses --if-exists semantics so re-running is safe. Returns JSON.',
-    parameters: {
-      entity: ENTITIES,
-      ticket: { type: 'string', required: true },
-      id: { type: 'string', required: true },
-      workdir: WORKDIR,
-    },
+    parameters: objectSchema(
+      { entity: ENTITIES, ticket: { type: 'string' }, id: { type: 'string' }, workdir: WORKDIR },
+      ['entity', 'ticket', 'id'],
+    ),
     output: { schema: { type: 'string' }, render },
     async execute(args) {
       return runSpecTrace(
@@ -163,12 +175,15 @@ export function apply(ctx) {
     description:
       'Validate one ticket at a stage (requirements | bdd | architecture | tests | tasks | all). ' +
       'Set strict=true for the strict gate. Returns JSON.',
-    parameters: {
-      ticket: { type: 'string', required: true },
-      stage: { type: 'string', required: true },
-      strict: { type: 'boolean' },
-      workdir: WORKDIR,
-    },
+    parameters: objectSchema(
+      {
+        ticket: { type: 'string' },
+        stage: { type: 'string' },
+        strict: { type: 'boolean' },
+        workdir: WORKDIR,
+      },
+      ['ticket', 'stage'],
+    ),
     output: { schema: { type: 'string' }, render },
     async execute(args) {
       return runSpecTrace(
@@ -185,11 +200,10 @@ export function apply(ctx) {
     description:
       'Render trace docs for one ticket: stage is requirements | bdd | architecture | ' +
       'tests | tasks | all. Writes <ticket>/<stage>.trace.md files. Returns CLI text.',
-    parameters: {
-      stage: { type: 'string', required: true },
-      ticket: { type: 'string', required: true },
-      workdir: WORKDIR,
-    },
+    parameters: objectSchema(
+      { stage: { type: 'string' }, ticket: { type: 'string' }, workdir: WORKDIR },
+      ['stage', 'ticket'],
+    ),
     output: { schema: { type: 'string' }, render },
     async execute(args) {
       return runSpecTrace(shell, ['render', args.stage, args.ticket], args.workdir)
@@ -201,14 +215,17 @@ export function apply(ctx) {
     description:
       'Build the execution bundle for one task: format md|json, profile executor|audit, ' +
       'optional --out path. Returns the bundle.',
-    parameters: {
-      ticket: { type: 'string', required: true },
-      taskId: { type: 'string', required: true },
-      format: { type: 'string', description: 'md (default) or json.' },
-      profile: { type: 'string', description: 'executor (default) or audit.' },
-      out: { type: 'string', description: 'Output file path instead of stdout.' },
-      workdir: WORKDIR,
-    },
+    parameters: objectSchema(
+      {
+        ticket: { type: 'string' },
+        taskId: { type: 'string' },
+        format: { type: 'string', description: 'md (default) or json.' },
+        profile: { type: 'string', description: 'executor (default) or audit.' },
+        out: { type: 'string', description: 'Output file path instead of stdout.' },
+        workdir: WORKDIR,
+      },
+      ['ticket', 'taskId'],
+    ),
     output: { schema: { type: 'string' }, render },
     async execute(args) {
       const flags = {}

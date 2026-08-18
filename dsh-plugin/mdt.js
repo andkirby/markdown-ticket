@@ -11,6 +11,21 @@ const CLI = new URL('../cli/bin/mdt-cli', import.meta.url).pathname
 export const name = 'mdt'
 export const inject = ['tools', 'shell']
 
+const PROJECT_PARAM = {
+  type: 'string',
+  description: 'Project code; avoids needing the project as cwd.',
+}
+
+/** Full JSON-Schema object; raw registrations are not converted from shorthand. */
+function objectSchema(properties, required) {
+  return {
+    type: 'object',
+    additionalProperties: false,
+    properties,
+    ...(required ? { required } : []),
+  }
+}
+
 function quote(value) {
   return "'" + String(value).replace(/'/g, "'\\''") + "'"
 }
@@ -54,10 +69,10 @@ export function apply(ctx) {
     description:
       'Get one MDT ticket by key (e.g. MDT-042) with full attributes. Returns JSON. ' +
       'Pass `project` to target a project explicitly instead of relying on cwd.',
-    parameters: {
-      key: { type: 'string', required: true },
-      project: { type: 'string', description: 'Project code; avoids needing the project as cwd.' },
-    },
+    parameters: objectSchema(
+      { key: { type: 'string' }, project: PROJECT_PARAM },
+      ['key'],
+    ),
     output: { schema: { type: 'string' }, render },
     async execute(args) {
       return runMdt(shell, ['ticket', 'get', '--json', ...projectArgs(args), args.key])
@@ -69,10 +84,10 @@ export function apply(ctx) {
     description:
       'List MDT tickets. Optional filter tokens as accepted by `mdt-cli ticket list` ' +
       '(e.g. status=Approved, level=epic, project=<code>). Returns JSON.',
-    parameters: {
+    parameters: objectSchema({
       filters: { type: 'array', items: { type: 'string' } },
-      project: { type: 'string', description: 'Project code; avoids needing the project as cwd.' },
-    },
+      project: PROJECT_PARAM,
+    }),
     output: { schema: { type: 'string' }, render },
     async execute(args) {
       return runMdt(shell, ['ticket', 'list', '--json', ...projectArgs(args), ...(args.filters ?? [])])
@@ -84,10 +99,10 @@ export function apply(ctx) {
     description:
       'Create a new MDT ticket. `tokens` are the title words (and any CLI options) ' +
       'passed to `mdt-cli ticket create`. Pass `project` instead of relying on cwd. Returns JSON.',
-    parameters: {
-      tokens: { type: 'array', items: { type: 'string' }, required: true },
-      project: { type: 'string', description: 'Project code; avoids needing the project as cwd.' },
-    },
+    parameters: objectSchema(
+      { tokens: { type: 'array', items: { type: 'string' } }, project: PROJECT_PARAM },
+      ['tokens'],
+    ),
     output: { schema: { type: 'string' }, render },
     async execute(args) {
       return runMdt(shell, ['ticket', 'create', '--json', ...projectArgs(args), ...args.tokens])
@@ -100,11 +115,14 @@ export function apply(ctx) {
       'Update attributes of one MDT ticket. `attrs` are field=value tokens; fields: ' +
       'status, priority, level, phase, assignee, related, depends, blocks, impl-date, impl-notes. ' +
       'Pass `project` to target a project explicitly instead of relying on cwd. Returns JSON.',
-    parameters: {
-      key: { type: 'string', required: true },
-      attrs: { type: 'array', items: { type: 'string' }, required: true },
-      project: { type: 'string', description: 'Project code; avoids needing the project as cwd.' },
-    },
+    parameters: objectSchema(
+      {
+        key: { type: 'string' },
+        attrs: { type: 'array', items: { type: 'string' } },
+        project: PROJECT_PARAM,
+      },
+      ['key', 'attrs'],
+    ),
     output: { schema: { type: 'string' }, render },
     async execute(args) {
       return runMdt(shell, ['ticket', 'attr', '--json', ...projectArgs(args), args.key, ...args.attrs])
@@ -115,11 +133,10 @@ export function apply(ctx) {
     name: 'mdt_ticket_deps',
     description:
       "Check one MDT ticket's dependency readiness. Set check=true for the blocking readiness verdict. Returns JSON.",
-    parameters: {
-      key: { type: 'string', required: true },
-      check: { type: 'boolean' },
-      project: { type: 'string', description: 'Project code; avoids needing the project as cwd.' },
-    },
+    parameters: objectSchema(
+      { key: { type: 'string' }, check: { type: 'boolean' }, project: PROJECT_PARAM },
+      ['key'],
+    ),
     output: { schema: { type: 'string' }, render },
     async execute(args) {
       return runMdt(shell, [
@@ -132,7 +149,7 @@ export function apply(ctx) {
   register({
     name: 'mdt_project_list',
     description: 'List all MDT projects known to mdt-cli. Returns JSON.',
-    parameters: {},
+    parameters: objectSchema({}),
     output: { schema: { type: 'string' }, render },
     async execute() {
       return runMdt(shell, ['project', 'ls', '--json'])
