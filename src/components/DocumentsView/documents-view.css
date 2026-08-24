@@ -541,4 +541,72 @@
     display: flex;
     gap: 0.75rem;
   }
+
+  /* ── Document tree rows (FileTree.tsx) — MDT-236 ──
+     Content surface: SIZE via --fs-md, SPACE via calc(var(--pad-y)*0.6)
+     (0.6 keeps the 24px target floor at tight·compact). The `group` class
+     stays on the row in markup — it drives the hover-reveal of the fav star
+     and copy-path button (fav-star.css / .group:hover rules). */
+  .document-tree {
+    min-height: 1rem;
+    display: flex;
+    flex-direction: column;
+    row-gap: 0.25rem;
+  }
+
+  .document-tree__row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-block: calc(var(--pad-y) * 0.6);
+    padding-right: 0.5rem;
+    border-radius: var(--radius-xs);
+    cursor: pointer;
+    font-size: var(--fs-md);
+    color: oklch(var(--foreground));
+    transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .document-tree__row:hover {
+    background: var(--state-hover-bg);
+  }
+
+  .document-tree__row--selected {
+    background: oklch(var(--primary) / 0.1);
+    font-weight: 500;
+  }
+
+  .document-tree__row--located {
+    box-shadow: 0 0 0 1px oklch(var(--primary) / 0.4);
+  }
+
+  .document-tree__icon {
+    height: 1rem;
+    width: 1rem;
+    flex-shrink: 0;
+    color: var(--text-muted);
+  }
+
+  .document-tree__label {
+    flex: 1 1 0%;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .document-tree__label-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Meta (filename under a titled doc) — density token with the 11px a11y floor */
+  .document-tree__meta {
+    font-size: clamp(11px, var(--fs-xs, 11px), 2rem);
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }

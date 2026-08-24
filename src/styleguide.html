@@ -138,15 +138,17 @@
     <span class="chip" style="background:color-mix(in srgb,var(--spline-related) 12%,transparent);color:var(--spline-related)">Related</span>
   </div>
 
-  <h2>density slots · cards only</h2>
-  <p class="note" style="margin-top:.25rem"><b>Rule:</b> these are rewritten on <code>&lt;html&gt;</code> by <code>useCardDensity</code> at runtime — a chrome element consuming <code>--fs-xs</code>/<code>--fs-md</code> resizes when the user changes <i>card</i> density. That is how "the swimlane filter input is 11px" happened. Chrome uses the <a href="#chrome-type-scale" style="color:var(--primary-text)">chrome type scale</a> below; only ticket/lane cards (and card-mimics like the PinRail code) use these.</p>
-  <p class="note" style="margin-top:.5rem"><b>Density system (design3 §Density) — two independent axes</b>, driven from the header Density menu and Settings:</p>
+  <h2>density slots · all content surfaces</h2>
+  <p class="note" style="margin-top:.25rem"><b>Rule:</b> these are rewritten on <code>&lt;html&gt;</code> by <code>useCardDensity</code> at runtime — consumers must be pure CSS <code>var()</code>/<code>calc()</code> references. They are <b>surface-agnostic density slots</b> (MDT-236), not "card" tokens: every <b>content</b> surface consumes them. <b>Chrome never does</b> — chrome uses the <a href="#chrome-type-scale" style="color:var(--primary-text)">chrome type scale</a> below (that boundary is how "the swimlane filter input is 11px" got fixed).</p>
+  <p class="note" style="margin-top:.5rem"><b>Density system (design3 §Density) — two independent axes</b>, owned solely by the header Density menu (no Settings duplicate):</p>
   <div class="slots">
     <div class="slot"><b>SIZE — text &amp; elements</b><small>compact 10/12px · regular 11/13px · comfortable 12/14px → --fs-xs/--fs-md/--radius-card (4px only in compact)</small></div>
     <div class="slot"><b>SPACE — padding &amp; gaps</b><small>tight 6/8px · normal 10/12px · relaxed 14/16px → --pad-y/--pad-x</small></div>
     <div class="slot"><b>--sz-icon</b><small>16 px · lucide glyph size</small></div>
     <div class="slot"><b>--sz-control</b><small>32 px · square icon-button hit target (ViewModeSwitcher)</small></div>
   </div>
+  <p class="note" style="margin-top:.5rem"><b>A11y floor (MDT-236):</b> content text consuming <code>--fs-xs</code> wraps it as <code>clamp(11px, var(--fs-xs), 2rem)</code> — nothing renders below 11px at any combination; interactive targets keep a 24px minimum.</p>
+  <p class="note" style="margin-top:.5rem"><b>Density-aware surfaces (content verdicts):</b> ticket cards (board + swimlane lanes) · PinRail card-mimics · list view rows (header row follows SIZE for grid alignment) · documents nav rows (tree/favs/recent) · ticket detail attributes · QuickSearch result rows · project browser panel cards. <b>Density-immune (chrome verdicts):</b> header/toolbars/menus/popovers, project selector rail card + chips (header <code>h-9</code> furniture), settings/forms, documents toolbar, swimlane lane headers; viewer prose keeps its own reading-density setting. Full inventory: <code>THEME.md §Density slots</code>.</p>
 
   <h2 id="chrome-type-scale">chrome type scale · three sizes</h2>
   <p class="note" style="margin-top:.25rem">Static sizes for all chrome (headers, toolbars, inputs, menus, sidebars, meta). Equal to the Tailwind utilities chrome already uses — TSX keeps <code>text-sm</code>/<code>text-xs</code>, CSS-authored components use the token. Never raw px/rem, never the card-density tokens, no fourth size (10px and 13px are not chrome sizes).</p>

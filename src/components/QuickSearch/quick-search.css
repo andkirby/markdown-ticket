@@ -19,8 +19,11 @@
   /* ── Search Result Item (shared for current + cross-project) ── */
 
   .search-result {
-    @apply w-full px-4 py-3 text-left transition-colors ring-inset;
-
+    /* MDT-236: content surface — SPACE token for row padding; 0.6 factor keeps
+       the 24px target floor at tight·compact (3.6*2 + ~17px line ≈ 24.2px). */
+    @apply w-full text-left transition-colors ring-inset;
+    padding: calc(var(--pad-y) * 0.6) var(--pad-x);
+    font-size: var(--fs-md);
     background: transparent;
   }
 
@@ -44,7 +47,8 @@
   }
 
   .search-result__code {
-    @apply text-sm font-medium whitespace-nowrap shrink-0;
+    /* MDT-236: content surface — density SIZE token */
+    @apply text-[length:var(--fs-md)] font-medium whitespace-nowrap shrink-0;
     font-family: 'JetBrains Mono', monospace;
     font-variant-numeric: tabular-nums;
     color: var(--text-subtle);
@@ -71,7 +75,8 @@
   /* Meta row under the main row (was mt-1 text-xs on the container in markup).
      Also spaces a following name span from the label (was ml-1.5 in markup). */
   .search-result__project-name {
-    @apply mt-1 text-xs;
+    /* MDT-236: density token with the 11px a11y floor (clamp) */
+    @apply mt-1 text-[length:clamp(11px,var(--fs-xs),2rem)];
     color: var(--text-subtle);
   }
 

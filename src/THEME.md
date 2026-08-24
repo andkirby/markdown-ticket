@@ -115,9 +115,9 @@ Drives the priority icon glyph color and the critical/high card accent stripe.
 | `--spline-blocker` / `--spline-related` | `oklch(0.577 0.215 27.3)` / `oklch(0.6 0.104 184.7)` | `oklch(0.711 0.166 22.2)` / `oklch(0.785 0.133 181.9)` |
 | `--type-feature/bug/architecture/documentation/research` | `oklch(0.623 0.188 259.8)` `oklch(0.646 0.194 41.1)` `oklch(0.541 0.247 293.0)` `oklch(0.609 0.111 221.7)` `oklch(0.592 0.218 0.6)` | `oklch(0.714 0.143 254.6)` `oklch(0.758 0.159 55.9)` `oklch(0.709 0.159 293.5)` `oklch(0.797 0.134 211.5)` `oklch(0.725 0.175 349.8)` |
 
-### Density slots (mode-independent px) — two axes, cards only
+### Density slots (mode-independent px) — two axes, all content surfaces
 
-**Cards only.** `useCardDensity` rewrites these on `<html>` at runtime — any chrome element consuming them resizes when the user changes density (the bug behind "the swimlane filter input is 11px"). Chrome uses the [chrome type scale](#chrome-type-scale) instead. Two independent axes (design3 §Density), driven from the header Density menu and Settings:
+`useCardDensity` rewrites these on `<html>` at runtime — consumers must be pure CSS `var()`/`calc()` references (no JS sizing). These are **surface-agnostic density slots**, not "card" tokens: every surface classified **content** consumes them. **Chrome never consumes them** — chrome uses the [chrome type scale](#chrome-type-scale). Two independent axes (design3 §Density), owned solely by the header Density menu (MDT-236: no Settings duplicate):
 
 | Token | Compact / Tight | Regular / Normal | Comfortable / Relaxed | Axis |
 |---|---|---|---|---|
@@ -125,6 +125,24 @@ Drives the priority icon glyph color and the critical/high card accent stripe.
 | `--radius-card` | `4px` | `8px` | `8px` | SIZE |
 | `--pad-y` / `--pad-x` | `6px` / `8px` | `10px` / `12px` | `14px` / `16px` | SPACE (padding & gaps) |
 | `--sz-icon` | `16px` — fixed lucide glyph size beside the ticket key (not density-driven) ||| — |
+
+**A11y floor (MDT-236):** content text consuming `--fs-xs` must wrap it as `clamp(11px, var(--fs-xs), 2rem)` — no content text below 11px at any axis combination, and interactive targets keep a 24px minimum (derive paddings with `calc()` factors that hold the floor at tight·compact).
+
+**Surface classification (MDT-236):** content = a surface whose primary job is presenting ticket/document data; chrome = controls, navigation furniture, containers. Chrome verdicts are density-immune by rule, not case-by-case taste.
+
+| Surface | Verdict | Scales |
+|---------|---------|--------|
+| Ticket cards (board, swimlane lanes) | content | SIZE+SPACE |
+| PinRail card-mimics | content | SIZE+SPACE |
+| List view rows + header row (grid-aligned) | content | SIZE+SPACE (header SIZE-following) |
+| Documents nav rows (tree/favs/recent) | content | SIZE+SPACE |
+| Ticket detail attributes | content | SIZE+SPACE |
+| QuickSearch result rows | content | SIZE+SPACE |
+| Project browser panel cards | content | SIZE+SPACE |
+| Project selector rail card + chips (header `h-9` furniture) | chrome | — |
+| Documents toolbar, viewer prose (own setting), modals/settings forms, header, menus, popovers, swimlane lane headers | chrome / excluded | — |
+
+Misclassified later? Fix = change that surface's CSS token references only. No component rewrite, no new token family.
 
 ---
 

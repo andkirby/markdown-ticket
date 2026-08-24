@@ -1,5 +1,5 @@
-import { CRPriorities } from '@mdt/domain-contracts'
 import type { Ticket } from '../types'
+import { CRPriorities } from '@mdt/domain-contracts'
 
 export function sortTickets(
   tickets: Ticket[],

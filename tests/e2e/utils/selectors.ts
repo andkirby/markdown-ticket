@@ -560,3 +560,25 @@ export const quickSearchSelectors = {
   /** No results message */
   noResults: '[data-testid="quick-search-no-results"]',
 } as const
+
+/**
+ * Density menu selectors (MDT-236)
+ *
+ * @testid density-menu — two-axis density panel (SIZE/SPACE)
+ * @testid density-menu-trigger — header trigger button
+ * @testid density-menu-size-{value} — SIZE axis option (compact|regular|comfortable)
+ * @testid density-menu-space-{value} — SPACE axis option (tight|normal|relaxed)
+ * @testid density-menu-reset — reset to regular · normal
+ */
+export const densitySelectors = {
+  /** Density menu panel */
+  menu: '[data-testid="density-menu"]',
+  /** Trigger button in the secondary header */
+  trigger: '[data-testid="density-menu-trigger"]',
+  /** SIZE axis option by value */
+  sizeOption: (value: string) => `[data-testid="density-menu-size-${value}"]`,
+  /** SPACE axis option by value */
+  spaceOption: (value: string) => `[data-testid="density-menu-space-${value}"]`,
+  /** Reset button */
+  reset: '[data-testid="density-menu-reset"]',
+} as const

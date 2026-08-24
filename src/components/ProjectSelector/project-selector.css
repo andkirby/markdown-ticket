@@ -30,7 +30,11 @@
   /* ── Project Card (rail active + panel cards) ── */
 
   .project-card {
-    @apply relative flex items-center justify-center border px-2 sm:px-4 py-1.5 min-h-12 cursor-pointer;
+    /* MDT-236: browser-panel card = content (card-mimic) — density SPACE tokens.
+       The --rail variant below resets to chrome sizing (header h-9 furniture). */
+    @apply relative flex items-center justify-center border cursor-pointer;
+    padding: calc(var(--pad-y) * 0.6) var(--pad-x);
+    min-height: calc(var(--pad-y) * 1.2 + 1.5rem);
     border-radius: var(--radius-input);
 
     /* Matches the ViewModeSwitcher tray (bg-muted) so the rail controls read as
@@ -169,19 +173,21 @@
   }
 
   .project-card__code {
-    @apply text-xs sm:text-sm font-medium flex-shrink-0;
+    /* MDT-236: content (browser panel) — density SIZE token; rail resets to chrome */
+    @apply text-[length:var(--fs-md)] font-medium flex-shrink-0;
     font-family: 'JetBrains Mono', monospace;
     font-variant-numeric: tabular-nums;
     color: var(--project-card-code-color);
   }
 
   .project-card__title {
-    @apply text-[10px] sm:text-xs font-bold truncate break-words leading-tight;
+    /* MDT-236: density token with the 11px a11y floor (replaces raw 10px) */
+    @apply text-[length:clamp(11px,var(--fs-xs),2rem)] font-bold truncate break-words leading-tight;
     color: var(--project-card-title-color);
   }
 
   .project-card__desc {
-    @apply hidden sm:block text-xs truncate break-words leading-tight mt-0.5;
+    @apply hidden sm:block text-[length:clamp(11px,var(--fs-xs),2rem)] truncate break-words leading-tight mt-0.5;
     color: var(--project-card-desc-color);
   }
 
@@ -193,12 +199,25 @@
      still shows it). */
   .project-card--rail {
     @apply min-w-[100px] sm:min-w-[150px] max-w-[150px] sm:max-w-[280px] flex-1 h-9;
-    /* h-9 (fixed) overrides the base .project-card min-h-12. */
+    /* h-9 (fixed) overrides the base .project-card density sizing.
+       MDT-236: rail card = header chrome (density-immune) — reset the
+       content-density padding the base class now applies. */
     min-height: 0;
+    padding: 0 0.5rem;
+    font-size: var(--fs-ui-sm);
 
     &:hover {
       border-color: var(--border-strong);
     }
+  }
+
+  /* MDT-236: rail card children stay on the static chrome type scale. */
+  .project-card--rail .project-card__code {
+    font-size: var(--fs-ui-sm);
+  }
+
+  .project-card--rail .project-card__title {
+    font-size: var(--fs-ui-xs);
   }
 
   /* The rail active card reads as the same surface as a ticket card — flat

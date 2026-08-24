@@ -170,7 +170,7 @@
 .pin-item__code {
   /* Same token as the board ticket card code (.ticket-card__code): stays in
      sync with the density setting (comfortable=11px / compact=10px). */
-  font-size: var(--fs-xs, 11px);
+  font-size: clamp(11px, var(--fs-xs, 11px), 2rem); /* MDT-236: 11px a11y floor */
   font-weight: 600;
   line-height: 1;
 }

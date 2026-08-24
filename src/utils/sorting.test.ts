@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'bun:test'
-import { CRPriorities } from '@mdt/domain-contracts'
 import type { Ticket } from '../types'
+import { CRPriorities } from '@mdt/domain-contracts'
+import { describe, expect, it } from 'bun:test'
 import { sortTickets } from './sorting'
 
 function mk(code: string, priority: string): Ticket {
@@ -14,21 +14,30 @@ describe('sortTickets', () => {
     // Weight order mirrors CRPriorities: [Low, Medium, High, Critical] → 0..3.
     it('desc orders most-urgent first (Critical → Low)', () => {
       const tickets = [
-        mk('M', 'Medium'), mk('C', 'Critical'), mk('L', 'Low'), mk('H', 'High'),
+        mk('M', 'Medium'),
+        mk('C', 'Critical'),
+        mk('L', 'Low'),
+        mk('H', 'High'),
       ]
       expect(codes(sortTickets(tickets, 'priority', 'desc'))).toEqual(['C', 'H', 'M', 'L'])
     })
 
     it('asc orders least-urgent first (Low → Critical)', () => {
       const tickets = [
-        mk('M', 'Medium'), mk('C', 'Critical'), mk('L', 'Low'), mk('H', 'High'),
+        mk('M', 'Medium'),
+        mk('C', 'Critical'),
+        mk('L', 'Low'),
+        mk('H', 'High'),
       ]
       expect(codes(sortTickets(tickets, 'priority', 'asc'))).toEqual(['L', 'M', 'H', 'C'])
     })
 
     it('is NOT alphabetical (would give Critical < High < Low < Medium)', () => {
       const tickets = [
-        mk('M', 'Medium'), mk('C', 'Critical'), mk('L', 'Low'), mk('H', 'High'),
+        mk('M', 'Medium'),
+        mk('C', 'Critical'),
+        mk('L', 'Low'),
+        mk('H', 'High'),
       ]
       const alphabetical = ['C', 'H', 'L', 'M']
       expect(codes(sortTickets(tickets, 'priority', 'asc'))).not.toEqual(alphabetical)
@@ -36,7 +45,9 @@ describe('sortTickets', () => {
 
     it('handles unknown values via indexOf -1 (last on desc, first on asc)', () => {
       const tickets = [
-        mk('M', 'Medium'), mk('C', 'Critical'), mk('U', 'Blocker'), // unknown
+        mk('M', 'Medium'),
+        mk('C', 'Critical'),
+        mk('U', 'Blocker'), // unknown
       ]
       expect(codes(sortTickets(tickets, 'priority', 'desc'))).toEqual(['C', 'M', 'U'])
       expect(codes(sortTickets(tickets, 'priority', 'asc'))).toEqual(['U', 'M', 'C'])

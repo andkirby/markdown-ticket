@@ -55,7 +55,7 @@
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
-    font-size: var(--fs-xs, 11px);
+    font-size: clamp(11px, var(--fs-xs, 11px), 2rem); /* MDT-236: 11px a11y floor */
   }
   /* .ticket-key — canonical ticket key/number typography (mono, tabular, 600).
      Color-agnostic: the context sets color, so a key in a gold epic badge reads
@@ -116,7 +116,7 @@
     margin: 2px 0;
   }
   .ticket-card__time {
-    font-size: var(--fs-xs, 11px);
+    font-size: clamp(11px, var(--fs-xs, 11px), 2rem); /* MDT-236: 11px a11y floor */
     color: var(--text-subtle);
   }
 
