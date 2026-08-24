@@ -57,9 +57,10 @@
   /* Chevron rotate icon (was transition-transform + conditional rotate-180 in markup). */
   .settings-icon--rotate {
     @apply transition-transform;
-  }
-  .settings-icon--rotate[data-state="open"] {
-    @apply rotate-180;
+
+    &[data-state="open"] {
+      @apply rotate-180;
+    }
   }
 }
 
@@ -139,11 +140,11 @@
   border-radius: var(--radius-input);
   border-color: oklch(var(--border));
   background-color: var(--bg-elevated);
-}
 
-/* Disabled state for action buttons (was disabled:cursor-not-allowed disabled:opacity-60 in markup). */
-.settings-action-btn:disabled {
-  @apply cursor-not-allowed opacity-60;
+  /* Disabled state (was disabled:cursor-not-allowed disabled:opacity-60 in markup). */
+  &:disabled {
+    @apply cursor-not-allowed opacity-60;
+  }
 }
 
 /* Inline icon inside a settings control (was h-4 w-4 on lucide icons in markup). */
@@ -244,30 +245,30 @@
   border-color: oklch(var(--border));
   background-color: var(--bg-elevated);
   color: var(--text-muted);
-}
 
-.project-accents__icon-btn:hover {
-  @apply bg-muted text-foreground;
-}
+  &:hover {
+    @apply bg-muted text-foreground;
+  }
 
-.project-accents__icon-btn:focus-visible {
-  @apply outline-none ring-2 ring-ring ring-offset-1;
+  &:focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-1;
+  }
 }
 
 .project-accents__save-btn {
   @apply text-primary border-primary;
-}
 
-.project-accents__save-btn:hover {
-  @apply bg-primary text-primary-foreground;
+  &:hover {
+    @apply bg-primary text-primary-foreground;
+  }
 }
 
 .project-accents__link {
   @apply text-xs font-medium text-primary whitespace-nowrap;
-}
 
-.project-accents__link:hover {
-  @apply underline;
+  &:hover {
+    @apply underline;
+  }
 }
 
 .project-accents__color-slider {
