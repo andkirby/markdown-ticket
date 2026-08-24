@@ -1,0 +1,480 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-236"
+  },
+  "requirements": [
+    {
+      "id": "BR-1",
+      "kind": "behavior",
+      "text": "WHEN the user changes the SIZE axis, the system shall scale text and element sizing on every surface classified as content (ticket cards, list rows, documents navigation rows, and other content-classified surfaces) in the same interaction.",
+      "sourceRef": "MDT-236 §2 Success Conditions; §4 AC-F1",
+      "routePolicy": "bdd",
+      "tags": [
+        "density"
+      ]
+    },
+    {
+      "id": "BR-2",
+      "kind": "behavior",
+      "text": "WHEN the user changes the SPACE axis, the system shall adjust padding and gaps on content surfaces without any text-size change.",
+      "sourceRef": "MDT-236 §2; §4 AC-F2",
+      "routePolicy": "bdd",
+      "tags": [
+        "density"
+      ]
+    },
+    {
+      "id": "BR-3",
+      "kind": "behavior",
+      "text": "WHILE any axis combination is set, the system shall render chrome surfaces (header, toolbars, menus, popovers) identically to the default density.",
+      "sourceRef": "MDT-236 §2; §4 AC-F3",
+      "routePolicy": "bdd",
+      "tags": [
+        "density",
+        "chrome"
+      ]
+    },
+    {
+      "id": "BR-4",
+      "kind": "behavior",
+      "text": "The system shall persist the density choice across reloads and sync it across tabs for all content surfaces, reusing the existing preference layer and events.",
+      "sourceRef": "MDT-236 §2 Constraints; §4 AC-F4",
+      "routePolicy": "bdd",
+      "tags": [
+        "density",
+        "persistence"
+      ]
+    },
+    {
+      "id": "BR-5",
+      "kind": "behavior",
+      "text": "WHEN the user activates Reset, the system shall return every content surface to regular size and normal space.",
+      "sourceRef": "MDT-236 §4 AC-F5",
+      "routePolicy": "bdd",
+      "tags": [
+        "density"
+      ]
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "IF a stored legacy (pre-two-axis) density preference exists, THEN the system shall map it to sensible defaults on all surfaces.",
+      "sourceRef": "MDT-236 §4 Edge Cases",
+      "routePolicy": "tests",
+      "tags": [
+        "density",
+        "edge"
+      ]
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "Accessibility floor: no axis combination may drop content text below 11px, reduce interactive targets below 24px, or alter color/contrast tokens.",
+      "sourceRef": "MDT-236 §2 Constraints; §4 AC-NF3",
+      "routePolicy": "tests",
+      "tags": [
+        "a11y"
+      ]
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "Token purity: newly density-aware surfaces size text and spacing exclusively via density tokens (no raw px/rem font sizes, no JS sizing); a later misclassification is fixable by changing token consumption only.",
+      "sourceRef": "MDT-236 §2 Constraints; §4 AC-NF2, Edge Cases",
+      "routePolicy": "tests",
+      "tags": [
+        "tokens"
+      ]
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "List-row density changes preserve table alignment and existing row testids.",
+      "sourceRef": "MDT-236 §3 Open Questions (List view)",
+      "routePolicy": "tests",
+      "tags": [
+        "e2e"
+      ]
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "Reuse existing preference layer, change events, cross-tab sync; stored preference keys/values stay backward-compatible.",
+      "sourceRef": "MDT-236 §2 Constraints",
+      "routePolicy": "tests",
+      "tags": [
+        "persistence"
+      ]
+    }
+  ],
+  "scenarios": [],
+  "obligations": [
+    {
+      "id": "OBL-token-mapping",
+      "title": "Single density-slot token set: all content surfaces consume the existing axis tokens (--fs-xs/--fs-md/--pad-y/--pad-x/--radius-card) directly; derived proportions use calc() in surface CSS; no per-family token sets, no JS sizing",
+      "derivedFrom": [
+        "BR-1",
+        "BR-2",
+        "C2"
+      ],
+      "artifactIds": [
+        "ART-design-tokens",
+        "ART-theme-md"
+      ],
+      "sourceRef": "architecture.md D1"
+    },
+    {
+      "id": "OBL-surface-inventory",
+      "title": "Surface classification inventory (content vs chrome) recorded in THEME.md as rule-derived verdicts; chrome verdict = density-immune by rule",
+      "derivedFrom": [
+        "BR-1",
+        "BR-3"
+      ],
+      "artifactIds": [
+        "ART-theme-md",
+        "ART-styleguide"
+      ],
+      "sourceRef": "architecture.md D2"
+    },
+    {
+      "id": "OBL-list-table",
+      "title": "Vendored ui/table.tsx row/cell sizing converted from Tailwind utilities to density tokens; header scales with SIZE to preserve grid alignment; ticket-row testids unchanged",
+      "derivedFrom": [
+        "BR-1",
+        "BR-2",
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-ui-table"
+      ],
+      "sourceRef": "architecture.md D3"
+    },
+    {
+      "id": "OBL-documents-rows",
+      "title": "Documents navigation rows (tree/favs/recent) reclassified content: swap --fs-ui* chrome tokens for density tokens; toolbar stays chrome; viewer prose excluded",
+      "derivedFrom": [
+        "BR-1",
+        "BR-2"
+      ],
+      "artifactIds": [
+        "ART-documents-css"
+      ],
+      "sourceRef": "architecture.md D2"
+    },
+    {
+      "id": "OBL-quicksearch-rows",
+      "title": "QuickSearch result rows reclassified content: text-sm/text-xs utilities replaced by density tokens; modal chrome (scope bar, hints) stays chrome",
+      "derivedFrom": [
+        "BR-1",
+        "BR-2"
+      ],
+      "artifactIds": [
+        "ART-quicksearch-css"
+      ],
+      "sourceRef": "architecture.md D2"
+    },
+    {
+      "id": "OBL-project-selector",
+      "title": "Project selector cards/chips reclassified content (card-mimics, same rule as PinRail)",
+      "derivedFrom": [
+        "BR-1",
+        "BR-2"
+      ],
+      "artifactIds": [
+        "ART-project-selector-css"
+      ],
+      "sourceRef": "architecture.md D2"
+    },
+    {
+      "id": "OBL-ticket-attributes",
+      "title": "Ticket detail attribute rows reclassified content: SIZE scales text, SPACE scales row gaps; chrome container untouched",
+      "derivedFrom": [
+        "BR-1",
+        "BR-2"
+      ],
+      "artifactIds": [
+        "ART-ticket-attributes"
+      ],
+      "sourceRef": "architecture.md D2"
+    },
+    {
+      "id": "OBL-density-e2e",
+      "title": "E2E density spec: computed font-size/padding assertions on representative content elements per surface across axis changes, chrome invariance assertions (header/toolbar), and a11y floor at compact·tight",
+      "derivedFrom": [
+        "BR-1",
+        "BR-2",
+        "BR-3",
+        "BR-5",
+        "C1"
+      ],
+      "artifactIds": [
+        "ART-e2e-density"
+      ],
+      "sourceRef": "architecture.md D5"
+    },
+    {
+      "id": "OBL-persistence-reuse",
+      "title": "Density persistence/sync reuses the existing preference layer verbatim (no parallel storage); legacy value mapping already shipped and covered by existing unit tests",
+      "derivedFrom": [
+        "BR-4",
+        "Edge-1",
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-e2e-density",
+        "ART-theme-md"
+      ],
+      "sourceRef": "architecture.md D4"
+    },
+    {
+      "id": "OBL-styleguide-contract",
+      "title": "Styleguide gains a density-aware surface list + live mapping section so the contract is inspectable",
+      "derivedFrom": [
+        "BR-1",
+        "BR-3"
+      ],
+      "artifactIds": [
+        "ART-styleguide"
+      ],
+      "sourceRef": "architecture.md D2"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-design-tokens",
+      "path": "src/styles/design-tokens.css",
+      "kind": "config",
+      "sourceRef": "MDT-236 §3 Source-of-truth anchors"
+    },
+    {
+      "id": "ART-ui-table",
+      "path": "src/components/ui/table.tsx",
+      "kind": "runtime",
+      "sourceRef": "assess.md Mismatch: vendored shadcn Table"
+    },
+    {
+      "id": "ART-documents-css",
+      "path": "src/components/DocumentsView/documents-view.css",
+      "kind": "runtime",
+      "sourceRef": "MDT-236 §3 Documents view"
+    },
+    {
+      "id": "ART-quicksearch-css",
+      "path": "src/components/QuickSearch/quick-search.css",
+      "kind": "runtime",
+      "sourceRef": "MDT-236 §3 Surface classification"
+    },
+    {
+      "id": "ART-project-selector-css",
+      "path": "src/components/ProjectSelector/project-selector.css",
+      "kind": "runtime",
+      "sourceRef": "MDT-236 §3 Surface classification"
+    },
+    {
+      "id": "ART-ticket-attributes",
+      "path": "src/components/TicketAttributes.tsx",
+      "kind": "runtime",
+      "sourceRef": "MDT-236 §3 Surface classification"
+    },
+    {
+      "id": "ART-theme-md",
+      "path": "src/THEME.md",
+      "kind": "doc",
+      "sourceRef": "MDT-236 §4 Documentation"
+    },
+    {
+      "id": "ART-styleguide",
+      "path": "src/styleguide.html",
+      "kind": "doc",
+      "sourceRef": "MDT-236 §4 Documentation"
+    },
+    {
+      "id": "ART-e2e-density",
+      "path": "tests/e2e/density/surfaces.spec.ts",
+      "kind": "test",
+      "sourceRef": "MDT-236 §4 Verification (Automated)"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-size-axis",
+      "kind": "e2e",
+      "title": "SIZE axis scales content text on list rows, board cards, documents tree rows (computed font-size)",
+      "covers": [
+        "BR-1",
+        "OBL-token-mapping",
+        "OBL-list-table",
+        "OBL-documents-rows"
+      ],
+      "file": "tests/e2e/density/surfaces.spec.ts",
+      "sourceRef": "surfaces.spec.ts:65"
+    },
+    {
+      "id": "TEST-space-axis",
+      "kind": "e2e",
+      "title": "SPACE axis scales padding without changing text size",
+      "covers": [
+        "BR-2",
+        "OBL-list-table"
+      ],
+      "file": "tests/e2e/density/surfaces.spec.ts",
+      "sourceRef": "surfaces.spec.ts:99"
+    },
+    {
+      "id": "TEST-axis-independence",
+      "kind": "e2e",
+      "title": "SIZE change never moves padding (axis independence)",
+      "covers": [
+        "BR-1",
+        "BR-2"
+      ],
+      "file": "tests/e2e/density/surfaces.spec.ts",
+      "sourceRef": "surfaces.spec.ts:125"
+    },
+    {
+      "id": "TEST-chrome-immunity",
+      "kind": "e2e",
+      "title": "Chrome computed font-size identical at every axis combination",
+      "covers": [
+        "BR-3"
+      ],
+      "file": "tests/e2e/density/surfaces.spec.ts",
+      "sourceRef": "surfaces.spec.ts:139"
+    },
+    {
+      "id": "TEST-a11y-floor",
+      "kind": "e2e",
+      "title": "A11y floor at compact·tight: content text >= 11px, targets >= 24px (list + documents)",
+      "covers": [
+        "C1"
+      ],
+      "file": "tests/e2e/density/surfaces.spec.ts",
+      "sourceRef": "surfaces.spec.ts:151"
+    },
+    {
+      "id": "TEST-reset",
+      "kind": "e2e",
+      "title": "Density menu Reset returns list row font+padding to regular·normal baseline",
+      "covers": [
+        "BR-5"
+      ],
+      "file": "tests/e2e/density/surfaces.spec.ts",
+      "sourceRef": "surfaces.spec.ts:167"
+    },
+    {
+      "id": "TEST-persistence",
+      "kind": "e2e",
+      "title": "Density choice persists across reload on list and documents surfaces",
+      "covers": [
+        "BR-4",
+        "Edge-1",
+        "C4"
+      ],
+      "file": "tests/e2e/density/surfaces.spec.ts",
+      "sourceRef": "surfaces.spec.ts:184"
+    },
+    {
+      "id": "TEST-token-purity",
+      "kind": "manual",
+      "title": "Token purity: no raw px/rem font sizes on newly density-aware surfaces (grep gate at review)",
+      "covers": [
+        "C2"
+      ],
+      "sourceRef": "architecture.md invariant 2"
+    },
+    {
+      "id": "TEST-list-contract",
+      "kind": "e2e",
+      "title": "List row testids and table alignment preserved (existing list specs stay green)",
+      "covers": [
+        "C3"
+      ],
+      "file": "tests/e2e/list/view.spec.ts",
+      "sourceRef": "existing suite as preservation net"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-1-tokens-doc",
+      "title": "design-tokens.css: mark density slots surface-agnostic (comments/semantic grouping); no value changes",
+      "ownsArtifactIds": [
+        "ART-design-tokens"
+      ],
+      "sourceRef": "tasks.md#task-1"
+    },
+    {
+      "id": "TASK-2-list-table",
+      "title": "Convert vendored ui/table.tsx row/cell sizing from Tailwind utilities to density tokens (SIZE for text, SPACE for cell padding)",
+      "ownsArtifactIds": [
+        "ART-ui-table"
+      ],
+      "makesGreenIds": [
+        "TEST-size-axis",
+        "TEST-space-axis",
+        "TEST-axis-independence",
+        "TEST-list-contract"
+      ],
+      "sourceRef": "tasks.md#task-2"
+    },
+    {
+      "id": "TASK-3-documents-rows",
+      "title": "Documents nav rows (tree/favs/recent) consume density tokens; toolbar stays chrome; viewer prose untouched",
+      "ownsArtifactIds": [
+        "ART-documents-css"
+      ],
+      "makesGreenIds": [
+        "TEST-size-axis",
+        "TEST-a11y-floor"
+      ],
+      "sourceRef": "tasks.md#task-3"
+    },
+    {
+      "id": "TASK-4-remaining-surfaces",
+      "title": "QuickSearch result rows, project selector cards/chips, ticket detail attributes consume density tokens",
+      "ownsArtifactIds": [
+        "ART-quicksearch-css",
+        "ART-project-selector-css",
+        "ART-ticket-attributes"
+      ],
+      "makesGreenIds": [
+        "TEST-size-axis"
+      ],
+      "sourceRef": "tasks.md#task-4"
+    },
+    {
+      "id": "TASK-5-clamp-floor",
+      "title": "Apply clamp(11px, var(--fs-xs), ...) floor guard to all content text consuming --fs-xs (cards included, user-approved)",
+      "ownsArtifactIds": [
+        "ART-design-tokens"
+      ],
+      "makesGreenIds": [
+        "TEST-a11y-floor"
+      ],
+      "sourceRef": "tasks.md#task-5"
+    },
+    {
+      "id": "TASK-6-docs-contract",
+      "title": "THEME.md surface inventory + styleguide density-aware surface section",
+      "ownsArtifactIds": [
+        "ART-theme-md",
+        "ART-styleguide"
+      ],
+      "sourceRef": "tasks.md#task-6"
+    },
+    {
+      "id": "TASK-7-verification",
+      "title": "Full verification: density spec GREEN, list/board specs GREEN, chrome immunity, reset, persistence, token-purity grep gate",
+      "ownsArtifactIds": [
+        "ART-e2e-density"
+      ],
+      "makesGreenIds": [
+        "TEST-chrome-immunity",
+        "TEST-reset",
+        "TEST-persistence",
+        "TEST-token-purity"
+      ],
+      "sourceRef": "tasks.md#task-7"
+    }
+  ]
+}
