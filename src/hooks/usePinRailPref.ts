@@ -27,8 +27,8 @@ export interface UsePinRailPrefResult {
 }
 
 export function usePinRailPref(): UsePinRailPrefResult {
-  const [enabled, setEnabledState] = useState<boolean>(getPinRailEnabled)
-  const [pinned, setPinnedState] = useState<boolean>(getPinRailPinned)
+  const [enabledState, setEnabledState] = useState<boolean>(getPinRailEnabled)
+  const [pinnedState, setPinnedState] = useState<boolean>(getPinRailPinned)
 
   useEffect(() => {
     const syncEnabled = (): void => {
@@ -65,5 +65,5 @@ export function usePinRailPref(): UsePinRailPrefResult {
     setPinnedState(value)
   }, [])
 
-  return { enabled, pinned, setEnabled, setPinned }
+  return { enabled: enabledState, pinned: pinnedState, setEnabled, setPinned }
 }

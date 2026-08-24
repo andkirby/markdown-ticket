@@ -125,13 +125,13 @@ describe('SettingsModal', () => {
     await waitFor(() => expect(fetchMock).toHaveBeenCalled())
     fetchMock.mockClear()
 
-    fireEvent.change(screen.getByTestId('settings-card-density'), {
-      target: { value: 'compact' },
-    })
     fireEvent.click(screen.getByTestId('settings-auto-linking'))
     fireEvent.click(screen.getByTestId('settings-visible-badge-priority'))
 
-    expect(localStorage.getItem('mdt-settings-card-density')).toBe('compact')
+    // MDT-236: density prefs are owned by the header DensityMenu only —
+    // Settings must not expose a second control (asserted on every tab).
+    expect(screen.queryByTestId('settings-card-density')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('settings-space-density')).not.toBeInTheDocument()
     expect(localStorage.getItem('markdown-ticket-link-config')).toBe('{"enableAutoLinking":false}')
     expect(localStorage.getItem(TICKET_CARD_BADGE_STORAGE_KEY)).toBe(
       '["status","priority","type","phase","related","depends","blocks","worktree"]',

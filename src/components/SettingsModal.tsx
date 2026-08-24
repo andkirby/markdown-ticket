@@ -1,9 +1,7 @@
 import type { Project } from '@mdt/shared/models/Project'
 import type {
-  CardDensity,
   DefaultView,
   MarkdownDensity,
-  SpaceDensity,
 } from '../config/settingsPreferences'
 import type { TicketCardBadgeId } from '../config/ticketCardBadges'
 import type { SelectorState } from './ProjectSelector/types'
@@ -12,16 +10,12 @@ import { Info, Monitor, Moon, Sun, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { authFetch } from '../auth/authFetch'
 import {
-  getCardDensity,
   getDefaultView,
   getMarkdownDensity,
   getPinRailEnabled,
-  getSpaceDensity,
-  setCardDensityPreference,
   setDefaultViewPreference,
   setMarkdownDensityPreference,
   setPinRailEnabledPreference,
-  setSpaceDensityPreference,
 } from '../config/settingsPreferences'
 import {
   getVisibleTicketCardBadges,
@@ -155,8 +149,8 @@ export function SettingsModal({
     = useState<MarkdownDensity>(getMarkdownDensity)
 
   // Board
-  const [cardDensity, setCardDensity] = useState<CardDensity>(getCardDensity)
-  const [spaceDensity, setSpaceDensity] = useState<SpaceDensity>(getSpaceDensity)
+  // MDT-236: the two-axis density prefs are owned solely by the header
+  // DensityMenu — no duplicate controls here (one concept, one owner).
   const [autoLinking, setAutoLinking] = useState(readAutoLinking)
   const [pinRailEnabled, setPinRailEnabled] = useState<boolean>(getPinRailEnabled)
   const [visibleBadgeIds, setVisibleBadgeIds] = useState(
@@ -343,16 +337,6 @@ export function SettingsModal({
   )
 
   // Board handlers
-  const handleCardDensityChange = useCallback((density: CardDensity) => {
-    setCardDensity(density)
-    setCardDensityPreference(density)
-  }, [])
-
-  const handleSpaceDensityChange = useCallback((density: SpaceDensity) => {
-    setSpaceDensity(density)
-    setSpaceDensityPreference(density)
-  }, [])
-
   const handleAutoLinkingChange = useCallback((checked: boolean) => {
     setAutoLinking(checked)
     writeAutoLinking(checked)
@@ -630,42 +614,6 @@ export function SettingsModal({
           </Tabs.Content>
 
           <Tabs.Content value="board" className="tab__content">
-            <div className="settings-group">
-              <label className="settings-label">Card Size</label>
-              <p className="settings-desc">
-                Text and element scale on cards (also in the header Density menu)
-              </p>
-              <select
-                data-testid="settings-card-density"
-                value={cardDensity}
-                onChange={e =>
-                  handleCardDensityChange(e.target.value as CardDensity)}
-                className="settings-select settings-select--spaced"
-              >
-                <option value="compact">Compact</option>
-                <option value="regular">Regular</option>
-                <option value="comfortable">Comfortable</option>
-              </select>
-            </div>
-
-            <div className="settings-group">
-              <label className="settings-label">Card Space</label>
-              <p className="settings-desc">
-                Padding and gaps on cards (also in the header Density menu)
-              </p>
-              <select
-                data-testid="settings-space-density"
-                value={spaceDensity}
-                onChange={e =>
-                  handleSpaceDensityChange(e.target.value as SpaceDensity)}
-                className="settings-select settings-select--spaced"
-              >
-                <option value="tight">Tight</option>
-                <option value="normal">Normal</option>
-                <option value="relaxed">Relaxed</option>
-              </select>
-            </div>
-
             {/* Smart Links */}
             <div className="settings-group-row">
               <div>

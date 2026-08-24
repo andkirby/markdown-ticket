@@ -59,10 +59,16 @@
     --spline-blocker: oklch(0.577 0.215 27.3); --spline-related: oklch(0.6 0.104 184.7);
     /* Type-badge accents (MDT-135); decoupled from status tokens. */
     --type-feature: oklch(0.623 0.188 259.8); --type-bug: oklch(0.646 0.194 41.1); --type-architecture: oklch(0.541 0.247 293.0); --type-documentation: oklch(0.609 0.111 221.7); --type-research: oklch(0.592 0.218 0.6);
-    /* v3 card-density tokens (driven by CardDensity pref; see useCardDensity).
-       Mode-independent px. CARDS ONLY — useCardDensity rewrites these on <html>
-       at runtime, so any chrome element consuming them resizes when the user
-       changes card density. Chrome uses the --fs-ui-* scale below. */
+    /* v3 density slots (driven by the SIZE/SPACE prefs; see useCardDensity).
+       Mode-independent px, rewritten on <html> at runtime — consumers must be
+       pure CSS var() references (no JS sizing). MDT-236: these are SURFACE-
+       AGNOSTIC density slots, not "card" tokens: every surface classified
+       CONTENT consumes them (ticket cards, list rows, documents nav rows,
+       QuickSearch results, browser-panel project cards, ticket attributes).
+       CHROME never consumes them — chrome uses the --fs-ui-* scale below.
+       Content text using --fs-xs must wrap it in clamp(11px, var(--fs-xs), 2rem)
+       — the a11y floor (MDT-236). Derived proportions use calc() in the
+       consuming surface's own CSS, never new token families. */
     --pad-y: 10px; --pad-x: 12px; --fs-xs: 11px; --fs-md: 13px;
     /* ── Chrome type scale ──
        Static sizes for all chrome (headers, toolbars, inputs, menus, sidebars,

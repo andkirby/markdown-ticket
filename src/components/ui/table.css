@@ -1,0 +1,95 @@
+/**
+ * Vendored shadcn Table — semantic-class conversion (MDT-236).
+ *
+ * The vendor original expressed everything as Tailwind utilities in markup;
+ * this directory is under the semantic-classes contract (colocated
+ * @layer components CSS), so the primitives now carry semantic classes with
+ * the styling in this file. Density: rows/cells consume the two-axis
+ * density slots (SIZE text via --fs-md, SPACE padding via --pad-y/--pad-x);
+ * the header row is content-following — same tokens as cells so the grid
+ * stays aligned at every axis combination.
+ */
+
+@layer components {
+  .mdt-table {
+    width: 100%;
+    caption-side: bottom;
+    font-size: var(--fs-md);
+  }
+
+  .mdt-table__scroll {
+    position: relative;
+    width: 100%;
+    overflow: auto;
+  }
+
+  .mdt-table__header tr {
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    border-bottom-color: oklch(var(--border));
+  }
+
+  .mdt-table__body tr:last-child {
+    border-bottom-width: 0;
+  }
+
+  .mdt-table__footer {
+    border-top-width: 1px;
+    border-top-style: solid;
+    border-top-color: oklch(var(--border));
+    background-color: oklch(var(--muted) / 0.5);
+    font-weight: 500;
+  }
+
+  .mdt-table__footer tr:last-child {
+    border-bottom-width: 0;
+  }
+
+  .mdt-table__row {
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    border-bottom-color: oklch(var(--border));
+    transition-property: color, background-color, border-color;
+    transition-duration: 150ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .mdt-table__row:hover {
+    background-color: oklch(var(--muted) / 0.5);
+  }
+
+  .mdt-table__row[data-state='selected'] {
+    background-color: oklch(var(--muted) / 0.5);
+  }
+
+  .mdt-table__head {
+    /* content-following header: SIZE text + SPACE padding from the same
+       density tokens the cells use (grid alignment at every combination).
+       0.6 factor keeps the header proportionally slimmer than body rows. */
+    padding: calc(var(--pad-y) * 0.6) var(--pad-x);
+    font-size: var(--fs-md);
+    text-align: left;
+    vertical-align: middle;
+    font-weight: 500;
+    color: oklch(var(--muted-foreground));
+  }
+
+  .mdt-table__head:has([role='checkbox']) {
+    padding-right: 0;
+  }
+
+  .mdt-table__cell {
+    padding: var(--pad-y) var(--pad-x);
+    vertical-align: middle;
+  }
+
+  .mdt-table__cell:has([role='checkbox']) {
+    padding-right: 0;
+  }
+
+  .mdt-table__caption {
+    margin-top: 1rem;
+    font-size: var(--fs-md);
+    color: oklch(var(--muted-foreground));
+  }
+}

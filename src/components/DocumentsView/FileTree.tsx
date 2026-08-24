@@ -200,9 +200,13 @@ const FileTree = React.forwardRef<FileTreeHandle, FileTreeProps>(({
       <div key={file.path}>
         <div
           ref={element => setItemRef(file.path, element)}
-          className={`group flex items-center gap-2 px-2 py-1 rounded cursor-pointer hover:bg-muted transition-colors ${
-            selectedFile === file.path ? 'bg-primary/10 text-foreground font-medium' : 'text-foreground'
-          } ${locatedPath === file.path ? 'ring-1 ring-primary/40' : ''}`}
+          // `group` drives hover-reveal (fav star, copy path — see fav-star.css).
+          // Density tokens + 24px floor live in documents-view.css (MDT-236).
+          className={cn(
+            'group document-tree__row',
+            selectedFile === file.path && 'document-tree__row--selected',
+            locatedPath === file.path && 'document-tree__row--located',
+          )}
           style={{ paddingLeft: `${level * 16 + 8}px` }}
           onClick={() => handleFileClick(file)}
           data-testid={file.type === 'folder' ? 'folder-item' : 'document-item'}
@@ -214,27 +218,27 @@ const FileTree = React.forwardRef<FileTreeHandle, FileTreeProps>(({
                 <>
                   {expandedFolders.has(file.path)
                     ? (
-                        <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                        <ChevronDown className="document-tree__icon" />
                       )
                     : (
-                        <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                        <ChevronRight className="document-tree__icon" />
                       )}
-                  <Folder className="w-4 h-4 text-muted-foreground" />
+                  <Folder className="document-tree__icon" />
                 </>
               )
             : file.kind === 'html'
               ? (
-                  <FileCode className="w-4 h-4 text-muted-foreground" />
+                  <FileCode className="document-tree__icon" />
                 )
               : (
-                  <File className="w-4 h-4 text-muted-foreground" />
+                  <File className="document-tree__icon" />
                 )}
-          <div className="flex-1 min-w-0">
-            <div className="text-sm truncate">
+          <div className="document-tree__label">
+            <div className="document-tree__label-text">
               {file.type === 'file' && file.title ? file.title : file.name}
             </div>
             {file.type === 'file' && file.title && (
-              <div className="text-xs text-muted-foreground truncate">
+              <div className="document-tree__meta">
                 {file.name}
               </div>
             )}
@@ -266,7 +270,7 @@ const FileTree = React.forwardRef<FileTreeHandle, FileTreeProps>(({
   }
 
   return (
-    <div data-testid="document-tree" className="min-h-4 space-y-1">
+    <div data-testid="document-tree" className="document-tree">
       {renderFiles(files)}
     </div>
   )
