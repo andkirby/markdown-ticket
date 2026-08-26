@@ -2,73 +2,80 @@
 
 ## Objective
 
-Recover from the 2026-08-15 production D1 amplification incident and prevent a
-failed stream handshake from becoming an unbounded cloud retry loop.
+Eliminate the scheduled-maintenance D1 read amplification discovered while
+investigating the 2026-08-26 cloud-quota report (~1M rows read/day against the
+5M/day D1 free-tier budget with no project activity), and keep the 180-day
+audit retention policy.
 
 ## Approved Changes
 
-- Split typed HTTPS stream-session authorization from the WebSocket data plane.
-- Issue one short-lived hub grant after one D1 membership decision; grant
-  reconnects perform no membership read.
-- Persist `401`/`403`/`404` authorization pause and `426` incompatibility across
-  time, browser activity, and server restart.
-- Put re-arm and bounded transient reconnect policy solely in the stream manager;
-  the WebSocket transport owns no timer.
-- Keep automatic streams behind a per-installation rollout flag until deployed
-  `101`, catch-up, route telemetry, and idle-D1 gates pass.
-- Expose live/paused/failed stream state in backend diagnostics; the frontend
-  status surface remains owned by MDT-203 and CLI output fidelity by MDT-223.
+- Add `C-16 Bounded scheduled-maintenance D1 reads`: scheduled maintenance
+  locates its working set through indexes; the audit-retention scan reads only
+  rows before its `occurred_at` cutoff.
+- Add forward-only migration `0003` creating `audit_by_time ON
+  audit_events(occurred_at)`. Maintenance logic is unchanged.
+- Keep audit retention at 180 days: the whole database is ≈ 6 MB; storing
+  audit rows costs ~nothing, the forensic window is kept, and the quota defect
+  is the scan pattern, not the row count.
+- Keep reservation expiry as an eager idempotent cron transition (34 rows
+  read/day is noise); lazy expiry was evaluated and rejected because it would
+  spread the 24h TTL rule across every reader of reservation state.
+- Keep `TEST-idle-zero-d1` and `TEST-deployed-stream-handshake` as the
+  remaining deployed gates for this ticket; the maintenance index removes the
+  cron's audit scan as a contaminant in instrumented idle-D1 windows.
 
 ## Changed Requirement IDs
 
-- Refined `BR-1.5`, `C-1`, `C-10`, and `C-14`; added `C-15`.
-- `Edge-8` remains the concrete upgrade-preservation failure.
-- `C-1` now covers settled live and terminal states and has failed production
-  evidence.
-- Refined `disconnected_board_stale` to distinguish transient reconnect from a
-  terminal pause with an explicit next action.
+- Added `C-16` (additive change). `C-1` and `C-15` keep their meanings: they
+  bound the local-server stream path; `C-16` bounds Worker-side scheduled
+  maintenance.
 
 ## Affected Downstream Trace
 
-- Refine `OBL-stream-failure-containment` across the stream contract, Worker,
-  hub, session client, state store, stream client/manager, server bootstrap,
-  tests, and durable owners.
-- Add `TEST-stream-session-client`, `TEST-worker-hub-upgrade-forwarding`,
-  `TEST-stream-handshake-failure-classification`,
-  `TEST-stream-status-local-only`, and `TEST-deployed-stream-handshake`.
-- Add `TASK-stream-incident-recovery`; reopen `TEST-idle-zero-d1` as failed.
+- Add `TEST-audit-retention-index` (unit, `cloud/test/maintenance.test.ts`).
+- Add `TASK-audit-retention-index` (Slice 9) owning `ART-audit-migration`,
+  `ART-maintenance-tests`, and `ART-data-doc`.
+- No BDD scenario change: `C-16` is a maintenance-cost constraint routed to
+  tests, not a user-visible scenario.
 
 ## Execution Slices
 
-1. **Contain failed handshakes**
-   - Objective: authorize once, reconnect without D1, and make terminal failure
-     state-driven rather than timer-driven.
-   - Direct artifacts: stream contract, Worker, hub, session client, activation
-     state store, transport client, manager, server bootstrap, and owners.
-   - Direct GREEN targets: one typed authorization; grant-bearing `101`; grant
-     reconnect with no membership read; persisted pause; accurate telemetry;
-     zero retry-driven D1 statements.
-   - Canonical task: `TASK-stream-incident-recovery`.
+1. **Audit-retention index**
+   - Objective: make the 15-minute retention scan read only its bounded
+     working set (≈ 0 rows today) instead of the full table.
+   - Direct artifacts: `cloud/migrations/0003_audit_retention_index.sql`,
+     `cloud/test/maintenance.test.ts`,
+     `docs/architecture/cloud-sync/data-and-consistency.md`.
+   - Direct GREEN targets: TEST-audit-retention-index (migrations apply in
+     order; retention scan uses `audit_by_time`, never a full scan).
+   - Canonical task: `TASK-audit-retention-index`.
+   - Deploy: apply migration 0003 to production D1, then verify remotely with
+     `EXPLAIN QUERY PLAN` and a measured `rows_read` near zero for the
+     retention SELECT.
 
 ## Validation
 
-- RED production evidence: MDT handshake returns `426`; unauthorized VOC
-  handshake returns `404`; neither stream becomes live.
-- In a 14-minute-25-second sample, VOC produced 54 denied attempts, 54
-  membership reads, and 54 audit inserts; MDT added a similar membership-read
-  cadence. Observed total was approximately 170 D1 statements per 15 minutes.
-- A later idle 30-minute sample recorded 238 membership reads and 111 denied
-  audit inserts: 349 D1 statements with no project activity. The near 2:1
-  read/write ratio supports one denied loop plus one authorized failing loop.
-- The 2026-08-14 focused tests remain valid only for local process bounds. They
-  are not evidence for deployed handshake success or D1 request containment.
-- Required GREEN evidence is the new incident-recovery tests plus a deployed
-  session/grant handshake and a 30-minute zero-idle-D1 probe.
+- RED evidence (production, 2026-08-26): D1 insights show the retention
+  `SELECT id FROM audit_events WHERE occurred_at < ? ORDER BY occurred_at
+  LIMIT ?` reading 12,714 rows per invocation, 96 invocations/day ≈ 1.22M
+  rows/day; `audit_events` holds 12,714 rows (oldest 2026-07-25, newest
+  2026-08-24); `COUNT(*)` itself reported `rows_read: 12714`.
+- Neither existing audit index (`audit_by_project_time`,
+  `audit_by_principal_time`) can serve the cutoff predicate — both lead with
+  tenant columns, so SQLite full-scans.
+- GREEN target: local suite green including the new index-plan test; deployed
+  `EXPLAIN QUERY PLAN` shows `USING INDEX audit_by_time` and the retention
+  SELECT reports `rows_read` ≈ 0.
+- Remaining deployed gates for the ticket (unrelated to this slice):
+  `TEST-deployed-stream-handshake` formal D1 telemetry counts and
+  `TEST-idle-zero-d1` 30-minute instrumented window.
 
 ## Watchlist
 
-- D1 traffic remains active while the affected server runs automatic streams.
-- No containment action was taken during documentation repair.
-- Disabling a binding or stopping the server is immediate containment but also
-  disables cloud delivery; perform it only as an explicit operator action.
-- Correct the `project.probe` route label before using route metrics as proof.
+- `CREATE INDEX` on a 12,714-row table is an online one-time build; no worker
+  code change or redeploy is required for the fix itself (the Worker's
+  maintenance query is unchanged), but apply the migration with
+  `wrangler d1 migrations apply` so the migration ledger stays authoritative.
+- Do not shorten retention to chase quota: after the index, stored rows cost
+  ~nothing; revisit 180-day retention only as a deliberate forensic-policy
+  decision.

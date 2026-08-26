@@ -52,3 +52,23 @@ matched. Fixed by gating the counter advance on `EXISTS (reservation row for
 THIS request's reservation_id)` — on replay no such row is inserted, so the
 counter is untouched. The integration test (`alloc.integration.test.ts`) and the
 live replay both confirm: counter advances exactly once per unique allocation.
+
+## 2026-08-26 — `0003_audit_retention_index.sql` (MDT-226 Slice 9, C-16)
+
+The audit-retention scan `SELECT id FROM audit_events WHERE occurred_at < ?
+ORDER BY occurred_at LIMIT ?` had no usable index (both audit indexes lead
+with tenant columns) and full-scanned 12,714 rows 96×/day ≈ 1.22M rows/day
+against the 5M/day D1 free-tier read budget while deleting nothing (oldest
+event was 32 days old; retention is 180 days).
+
+1. ✅ Local: all migrations applied in order against fresh SQLite —
+   `cloud/test/maintenance.test.ts` (TEST-audit-retention-index: plan uses
+   `audit_by_time`, never `SCAN audit_events`); cloud suite 87/87.
+2. ✅ Applied with `wrangler d1 migrations apply mdt-cloud-sync-production
+   --remote`: `0003_audit_retention_index.sql` ✅, 2 commands in 9.28ms
+   (ledger `applied_at` 2026-08-26 16:23:21).
+3. ✅ Verified post-apply: `EXPLAIN QUERY PLAN` → `SEARCH audit_events USING
+   INDEX audit_by_time (occurred_at<?)`; measured retention SELECT
+   `rows_read: 1` (was 12,714), empty result as expected.
+
+Production indexes now additionally include `audit_by_time`.

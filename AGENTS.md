@@ -44,6 +44,13 @@ Load the skills accordingly:
 - Test: `bunx @modelcontextprotocol/inspector --transport streamable-http --server-url http://localhost:3002/mcp`
 - Optional Phase 2: Session management, SSE streaming, rate limiting, auth, origin validation
 
+### Cloud Worker
+- `bun run --cwd cloud test` - Cloud coordination Worker tests (bun:test, real SQL against the production schema)
+- `bun run --cwd cloud build` - TypeScript check
+- `bun run --cwd cloud deploy:dry-run` - Validate wrangler deploy config (bindings, cron, migrations)
+
+**See [cloud/AGENTS.md](cloud/AGENTS.md)** for D1/DO boundaries, forward-only migration rules, and deployment conventions.
+
 ### Full Stack
 - `bun run dev:full` - **Recommended** - Builds shared code, starts frontend + backend
 

@@ -596,3 +596,34 @@ Durable Object binding is removed only after all sockets and alarms are drained.
   the WebSocket transport owns no retry timer. Restore the rollout flag and
   accurate route telemetry, then pass deployed grant/`101`, catch-up, and
   30-minute idle-D1 gates before automatic streams are re-enabled.
+
+### UAT Session 2026-08-26 - Scheduled-maintenance read amplification
+
+**Approved changes**
+
+- A 2026-08-26 cloud-quota investigation attributed ~1.22M D1 rows read/day
+  (against the 5M/day free-tier budget) to the 15-minute audit-retention
+  SELECT full-scanning `audit_events` (12,714 rows) 96×/day while returning
+  zero rows — no index leads with `occurred_at`.
+- Added `C-16`: scheduled maintenance locates its working set through indexes;
+  the retention scan reads only rows before its cutoff.
+- Fix is one forward-only migration (`0003`, `audit_by_time`); maintenance
+  logic and the 180-day retention policy are unchanged.
+- Shortening retention was evaluated and rejected as a quota fix: storage is
+  ≈ 6 MB total, the scan pattern is the cost, and the forensic window is kept.
+- Lazy reservation-expiry (skip the cron, ignore old locks at read time) was
+  evaluated and rejected: it smears the 24h TTL rule across every reader; the
+  eager idempotent transition reads 34 rows/day and stays.
+
+**Changed requirement IDs**
+
+- Added `C-16` (additive). No existing ID changed meaning; `C-1`/`C-15` still
+  bound the local-server stream path.
+
+**Updated workflow documents**
+
+- `requirements.md` (C-16), `tests.md` (TEST-audit-retention-index),
+  `tasks.md` (Slice 9, TASK-audit-retention-index), `uat.md` rewritten for
+  this round, `docs/architecture/cloud-sync/data-and-consistency.md`
+  (`audit_by_time` index). `uat.md` was written; strict validation was used
+  for the re-synced trace stages.
