@@ -8,7 +8,7 @@
  * Runs the real SQL against bun:sqlite with the production schema.
  */
 
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -143,5 +143,40 @@ describe('scheduled maintenance (Edge-3, C3)', () => {
     expect(oldRemaining.n).toBe(5)
     const recentRemaining = db.prepare(`SELECT COUNT(*) AS n FROM audit_events WHERE id = 'recent'`).get() as { n: number }
     expect(recentRemaining.n).toBe(1)
+  })
+})
+
+describe('TEST-audit-retention-index (C-16)', () => {
+  let migrated: Database.Database
+
+  beforeAll(() => {
+    // Apply every schema migration in wrangler order (lexicographic filename),
+    // mirroring `wrangler d1 migrations apply` on a fresh database.
+    const migrationsDir = join(__dirname, '..', 'migrations')
+    const files = readdirSync(migrationsDir).filter(f => f.endsWith('.sql')).sort()
+    migrated = new Database(':memory:')
+    for (const file of files) {
+      migrated.run(readFileSync(join(migrationsDir, file), 'utf8'))
+    }
+  })
+
+  afterAll(() => {
+    migrated.close()
+  })
+
+  test('every schema migration applies in order and creates audit_by_time', () => {
+    const indexes = migrated.prepare(`PRAGMA index_list('audit_events')`).all() as Array<{ name: string }>
+    expect(indexes.map(index => index.name)).toContain('audit_by_time')
+  })
+
+  test('retention scan uses the audit_by_time index and never full-scans audit_events', () => {
+    const cutoff = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString()
+    const plan = migrated.prepare(
+      `EXPLAIN QUERY PLAN
+       SELECT id FROM audit_events WHERE occurred_at < ? ORDER BY occurred_at LIMIT ?`,
+    ).all(cutoff, 100) as Array<{ detail: string }>
+    const details = plan.map(row => row.detail).join(' | ')
+    expect(details).toMatch(/USING (COVERING )?INDEX audit_by_time/)
+    expect(details).not.toMatch(/SCAN audit_events/)
   })
 })

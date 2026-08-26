@@ -25,6 +25,7 @@ deterministic.
 | TEST-stream-contract-shape | C-4, C-2 | `domain-contracts/src/cloud-sync/__tests__/projection-stream.test.ts` — envelope discriminated union validates catchup/delta/ready/ack/stale/error; rejects body/credential fields |
 | TEST-read-model-merge | C-2, C-6, BR-1.9 | `shared/services/cloud-sync/__tests__/CloudProjectionReadModel.test.ts` — local-wins merge, projection-only entries, duplicate/old revision ignored, sparse accepted in catch-up, live gap triggers resync |
 | TEST-ticket-view-contract | C-11, C-3 | `domain-contracts/src/ticket/__tests__/view.test.ts` — unified item has kind/readOnly/stale, no projectRevision/projectionVersion/cursor/cloudUrl/credential |
+| TEST-audit-retention-index | C-16 | `cloud/test/maintenance.test.ts` — all schema migrations apply in order; `EXPLAIN QUERY PLAN` for the retention scan uses the `audit_by_time` index (or a covering variant) and never full-scans `audit_events` |
 
 ## Integration (local server + controllable WS peer + fake clock)
 

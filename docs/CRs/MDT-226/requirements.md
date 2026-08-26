@@ -198,6 +198,13 @@ one denial audit write. WebSocket reconnects with a valid stream grant SHALL
 perform no D1 membership read. Time passage, browser activity, and server
 restart SHALL NOT reset this budget.
 
+### C-16 Bounded scheduled-maintenance D1 reads
+
+Scheduled maintenance (reservation expiry, audit retention) SHALL locate its
+working set through indexes. The audit-retention scan SHALL NOT read rows at or
+after its `occurred_at` cutoff; time-driven maintenance D1 reads SHALL be
+proportional to the retention working set, not to the table size.
+
 ## Edge Cases
 
 ### Edge-1 Commit-acknowledgement gap

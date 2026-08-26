@@ -153,6 +153,34 @@ and accurate route telemetry, and expose the state through backend diagnostics.
 Do not re-enable automatic streams until the deployed grant/handshake and
 idle-D1 gates pass.
 
+## Slice 9 — Scheduled-maintenance read amplification fix
+
+Status: implemented and deployed 2026-08-26. Local: migrations apply in
+order, retention plan `SEARCH audit_events USING INDEX audit_by_time`,
+cloud suite 87/87. Production: `0003` applied via
+`wrangler d1 migrations apply --remote` (2 commands, 9.28ms); EXPLAIN shows
+`SEARCH audit_events USING INDEX audit_by_time (occurred_at<?)`; measured
+retention SELECT `rows_read: 1` (was 12,714), results empty as expected.
+
+Production evidence: the 15-minute audit-retention SELECT full-scanned
+`audit_events` (12,714 rows) 96×/day ≈ 1.22M rows/day against the 5M/day D1
+free-tier read budget, returning zero rows until events age past the 180-day
+retention (oldest event was 32 days old). Root cause: no index leads with
+`occurred_at`; both existing audit indexes lead with tenant columns.
+
+Decisions: retention stays 180 days (whole database ≈ 6 MB; forensic window
+kept — the quota defect is fixed with an index, not a shorter policy).
+Reservation expiry stays an eager idempotent transition (34 rows read/day;
+lazy expiry rejected — it would smear the TTL rule across every reader).
+
+| Task | Owns | Makes green |
+| --- | --- | --- |
+| **TASK-audit-retention-index** | `ART-audit-migration`, `ART-maintenance-tests`, `ART-data-doc` | TEST-audit-retention-index |
+
+Add one forward-only migration creating `audit_by_time ON
+audit_events(occurred_at)` so the retention scan reads only its bounded
+working set. No behavior change to maintenance logic.
+
 ## Scenario closure
 
 All eight BDD scenarios are made green by these tasks:

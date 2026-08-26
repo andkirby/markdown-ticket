@@ -142,6 +142,8 @@ CREATE INDEX audit_by_project_time
   ON audit_events(cloud_project_id, occurred_at);
 CREATE INDEX audit_by_principal_time
   ON audit_events(principal_kind, principal_id, occurred_at);
+CREATE INDEX audit_by_time
+  ON audit_events(occurred_at);
 ```
 
 Wrangler migrations own this schema. Application startup never creates or

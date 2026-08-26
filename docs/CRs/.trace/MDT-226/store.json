@@ -311,6 +311,13 @@
       "text": "After stream activation settles into live or a terminal paused state, an enabled local server SHALL perform zero D1 statements solely because time passes without project, connection, credential, network, or operator change.",
       "sourceRef": "requirements.md#c-1-zero-idle-d1-statements",
       "routePolicy": "tests"
+    },
+    {
+      "id": "C-16",
+      "kind": "constraint",
+      "text": "Scheduled maintenance (reservation expiry, audit retention) SHALL locate its working set through indexes. The audit-retention scan SHALL NOT read rows at or after its occurred_at cutoff; time-driven maintenance D1 reads SHALL be proportional to the retention working set, not to the table size.",
+      "sourceRef": "CR:MDT-226",
+      "routePolicy": "tests"
     }
   ],
   "scenarios": [
@@ -664,6 +671,19 @@
         "ART-operations-doc"
       ],
       "sourceRef": "architecture.md#obl-stream-failure-containment"
+    },
+    {
+      "id": "OBL-maintenance-read-bounds",
+      "title": "Bound scheduled-maintenance D1 reads to their working set: the audit-retention scan locates expired rows through the audit_by_time index instead of full-scanning audit_events",
+      "derivedFrom": [
+        "C-16"
+      ],
+      "artifactIds": [
+        "ART-audit-migration",
+        "ART-maintenance-tests",
+        "ART-data-doc"
+      ],
+      "sourceRef": "CR:MDT-226"
     }
   ],
   "artifacts": [
@@ -840,6 +860,18 @@
       "path": "shared/services/cloud-sync/projection-stream-state-store.ts",
       "kind": "runtime",
       "sourceRef": "architecture.md#local-stream-manager"
+    },
+    {
+      "id": "ART-audit-migration",
+      "path": "cloud/migrations/0003_audit_retention_index.sql",
+      "kind": "config",
+      "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "ART-maintenance-tests",
+      "path": "cloud/test/maintenance.test.ts",
+      "kind": "test",
+      "sourceRef": "CR:MDT-226"
     }
   ],
   "testPlans": [
@@ -1150,6 +1182,16 @@
       ],
       "file": "server/tests/services/cloud-sync/ProjectionStreamManager.test.ts",
       "sourceRef": "tests.md#integration-local-server--controllable-ws-peer--fake-clock"
+    },
+    {
+      "id": "TEST-audit-retention-index",
+      "kind": "unit",
+      "title": "All schema migrations apply in order and the audit-retention scan uses the audit_by_time index (EXPLAIN QUERY PLAN), never a full table scan of audit_events",
+      "covers": [
+        "C-16"
+      ],
+      "file": "cloud/test/maintenance.test.ts",
+      "sourceRef": "CR:MDT-226"
     }
   ],
   "tasks": [
@@ -1349,6 +1391,19 @@
         "workers-best-practices"
       ],
       "sourceRef": "tasks.md#slice-8--incident-recovery-failed-stream-containment"
+    },
+    {
+      "id": "TASK-audit-retention-index",
+      "title": "Slice 9: add forward-only migration 0003 creating audit_by_time on audit_events(occurred_at) so the 15-minute retention scan reads only its bounded working set; update the data-and-consistency schema doc",
+      "ownsArtifactIds": [
+        "ART-audit-migration",
+        "ART-maintenance-tests",
+        "ART-data-doc"
+      ],
+      "makesGreenIds": [
+        "TEST-audit-retention-index"
+      ],
+      "sourceRef": "CR:MDT-226"
     }
   ]
 }

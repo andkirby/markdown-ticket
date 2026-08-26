@@ -384,6 +384,13 @@ projected entries. Derived from `BR-1.9`, `C-2`, `C-4`, and `C-11`.
 Eliminate timer-driven D1 reads and bound delivery freshness. Derived from
 `C-1`, `C-7`, `C-8`, and `C-9`.
 
+### OBL-maintenance-read-bounds
+
+Bound scheduled-maintenance D1 reads to their working set: the audit-retention
+scan locates expired rows through the `audit_by_time` index instead of
+full-scanning `audit_events`, keeping time-driven maintenance cost
+proportional to the retention working set. Derived from `C-16`.
+
 ### OBL-write-retry-isolation
 
 Drain eligible projection writes independently with bounded backoff and stop
