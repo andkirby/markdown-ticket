@@ -277,20 +277,20 @@
   border-color: oklch(var(--border));
   background-color: var(--bg-muted);
   @apply appearance-none [-webkit-appearance:none];
-}
 
-.project-accents__color-slider::-webkit-color-swatch-wrapper {
-  padding: 0;
-}
+  &::-webkit-color-swatch-wrapper {
+    padding: 0;
+  }
 
-.project-accents__color-slider::-webkit-color-swatch {
-  border: none;
-  border-radius: 4px;
-}
+  &::-webkit-color-swatch {
+    border: none;
+    border-radius: 4px;
+  }
 
-.project-accents__color-slider::-moz-color-swatch {
-  border: none;
-  border-radius: 4px;
+  &::-moz-color-swatch {
+    border: none;
+    border-radius: 4px;
+  }
 }
 
 .project-accents__palette {
