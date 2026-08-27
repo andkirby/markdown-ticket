@@ -674,14 +674,15 @@
     },
     {
       "id": "OBL-maintenance-read-bounds",
-      "title": "Bound scheduled-maintenance D1 reads to their working set: the audit-retention scan locates expired rows through the audit_by_time index instead of full-scanning audit_events",
+      "title": "Bound scheduled-maintenance D1 reads to their working set: the audit-retention scan locates expired rows through the audit_by_time index and the reservation-expiry scan through reservations_by_expiry, instead of full-scanning audit_events or ticket_reservations",
       "derivedFrom": [
         "C-16"
       ],
       "artifactIds": [
         "ART-audit-migration",
         "ART-maintenance-tests",
-        "ART-data-doc"
+        "ART-data-doc",
+        "ART-reservations-migration"
       ],
       "sourceRef": "CR:MDT-226"
     }
@@ -871,6 +872,12 @@
       "id": "ART-maintenance-tests",
       "path": "cloud/test/maintenance.test.ts",
       "kind": "test",
+      "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "ART-reservations-migration",
+      "path": "cloud/migrations/0004_reservations_expiry_index.sql",
+      "kind": "config",
       "sourceRef": "CR:MDT-226"
     }
   ],
@@ -1192,6 +1199,16 @@
       ],
       "file": "cloud/test/maintenance.test.ts",
       "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "TEST-reservations-expiry-index",
+      "kind": "unit",
+      "title": "EXPLAIN QUERY PLAN for the reservation-expiry scan uses the reservations_by_expiry index and never full-scans ticket_reservations",
+      "covers": [
+        "C-16"
+      ],
+      "file": "cloud/test/maintenance.test.ts",
+      "sourceRef": "CR:MDT-226"
     }
   ],
   "tasks": [
@@ -1402,6 +1419,19 @@
       ],
       "makesGreenIds": [
         "TEST-audit-retention-index"
+      ],
+      "sourceRef": "CR:MDT-226"
+    },
+    {
+      "id": "TASK-reservations-expiry-index",
+      "title": "Slice 10: add forward-only migration 0004 creating reservations_by_expiry on ticket_reservations(state, created_at) so the 15-minute expiry scan reads only its working set; update the data-and-consistency schema doc",
+      "ownsArtifactIds": [
+        "ART-reservations-migration",
+        "ART-maintenance-tests",
+        "ART-data-doc"
+      ],
+      "makesGreenIds": [
+        "TEST-reservations-expiry-index"
       ],
       "sourceRef": "CR:MDT-226"
     }

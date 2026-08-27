@@ -146,18 +146,22 @@ describe('scheduled maintenance (Edge-3, C3)', () => {
   })
 })
 
+/** Apply every schema migration in wrangler order to a fresh in-memory DB. */
+function applyAllMigrations(): Database.Database {
+  const migrationsDir = join(__dirname, '..', 'migrations')
+  const files = readdirSync(migrationsDir).filter(f => f.endsWith('.sql')).sort()
+  const migrated = new Database(':memory:')
+  for (const file of files) {
+    migrated.run(readFileSync(join(migrationsDir, file), 'utf8'))
+  }
+  return migrated
+}
+
 describe('TEST-audit-retention-index (C-16)', () => {
   let migrated: Database.Database
 
   beforeAll(() => {
-    // Apply every schema migration in wrangler order (lexicographic filename),
-    // mirroring `wrangler d1 migrations apply` on a fresh database.
-    const migrationsDir = join(__dirname, '..', 'migrations')
-    const files = readdirSync(migrationsDir).filter(f => f.endsWith('.sql')).sort()
-    migrated = new Database(':memory:')
-    for (const file of files) {
-      migrated.run(readFileSync(join(migrationsDir, file), 'utf8'))
-    }
+    migrated = applyAllMigrations()
   })
 
   afterAll(() => {
@@ -178,5 +182,31 @@ describe('TEST-audit-retention-index (C-16)', () => {
     const details = plan.map(row => row.detail).join(' | ')
     expect(details).toMatch(/USING (COVERING )?INDEX audit_by_time/)
     expect(details).not.toMatch(/SCAN audit_events/)
+  })
+})
+
+describe('TEST-reservations-expiry-index (C-16)', () => {
+  let migrated: Database.Database
+
+  beforeAll(() => {
+    migrated = applyAllMigrations()
+  })
+
+  afterAll(() => {
+    migrated.close()
+  })
+
+  test('expiry scan uses the reservations_by_expiry index and never full-scans ticket_reservations', () => {
+    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+    const plan = migrated.prepare(
+      `EXPLAIN QUERY PLAN
+       SELECT cloud_project_id, reservation_id, ticket_number
+       FROM ticket_reservations
+       WHERE state = 'reserved' AND created_at < ?
+       LIMIT ?`,
+    ).all(cutoff, 100) as Array<{ detail: string }>
+    const details = plan.map(row => row.detail).join(' | ')
+    expect(details).toMatch(/USING (COVERING )?INDEX reservations_by_expiry/)
+    expect(details).not.toMatch(/SCAN ticket_reservations/)
   })
 })
