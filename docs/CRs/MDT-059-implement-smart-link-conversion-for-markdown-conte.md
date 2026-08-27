@@ -1,13 +1,13 @@
 ---
 code: MDT-059
-status: On Hold
+status: Rejected
 dateCreated: 2025-10-03T13:52:40.563Z
 type: Feature Enhancement
 priority: High
 relatedTickets: MDT-017, MDT-065
 dependsOn: MDT-017
 implementationDate: 2025-10-08T14:35:45.725Z
-implementationNotes: Status changed to Implemented on 10/8/2025
+implementationNotes: Rejected as superseded (2026-08-24): every deliverable in the spec shipped via the later smart-link pipeline — MarkdownContent/SmartLink (client-side routing, external target=_blank+noopener), LinkType/ParsedLink classification (linkProcessor), path-traversal prevention (linkNormalization, MDT-150), per-type icons (showIcon), linkConfig feature toggles. Delivered by MDT-150/MDT-154 successors; no unshipped deliverables remain.
 ---
 
 # Implement smart link conversion for markdown content with React Router integration 1111
