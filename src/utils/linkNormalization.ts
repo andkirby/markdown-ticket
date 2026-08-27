@@ -6,7 +6,7 @@
  */
 
 import type { ProjectConfig } from '@mdt/shared/models/Project.js'
-import { basename, dirname, extname, normalize, relative, resolve, sep } from '@mdt/shared/utils/path-browser.js'
+import { basename, dirname, normalize, relative, resolve, sep } from '@mdt/shared/utils/path-browser.js'
 import { buildDocumentPath, buildTicketPath } from '../routes'
 
 export interface LinkContext {
@@ -287,9 +287,15 @@ export class LinkNormalizer {
       }
     }
 
-    // Determine link type and build web route
+    // Determine link type and build web route.
+    //
+    // Design (MDT-237 UAT 2026-08-24): only .md references are PROCESSED.
+    // Every other allowed path passes through untouched as a valid file
+    // link — an extension allowlist must never flag authored links
+    // (e.g. THEME.md's components/Badge/badge.css) as broken. Security
+    // boundaries stay above: traversal and configured-paths checks still
+    // mark disallowed targets broken.
     const isMarkdown = resolvedPath.relativePath.endsWith('.md')
-    const isFile = this.isFileExtension(resolvedPath.relativePath)
 
     if (isMarkdown) {
       const webRoute = this.buildDocumentWebRoute(context.currentProject, resolvedPath.relativePath)
@@ -301,24 +307,14 @@ export class LinkNormalizer {
         isValid: true,
       }
     }
-    else if (isFile) {
-      // For non-markdown files, we'll treat them as file links
-      return {
-        originalHref: href,
-        webHref: href, // Keep original href for file links
-        filePath: resolvedPath.relativePath,
-        type: 'file',
-        isValid: true,
-      }
-    }
-    else {
-      return {
-        originalHref: href,
-        webHref: href,
-        type: 'broken',
-        isValid: false,
-        error: 'Unsupported file type',
-      }
+
+    // Non-markdown: passthrough file link with the original href
+    return {
+      originalHref: href,
+      webHref: href,
+      filePath: resolvedPath.relativePath,
+      type: 'file',
+      isValid: true,
     }
   }
 
@@ -370,30 +366,6 @@ export class LinkNormalizer {
     return this.DEFAULT_BLACKLIST.some(blacklisted =>
       parts.includes(blacklisted),
     )
-  }
-
-  private static isFileExtension(filePath: string): boolean {
-    const ext = extname(filePath).toLowerCase()
-    return [
-      '.png',
-      '.jpg',
-      '.jpeg',
-      '.gif',
-      '.svg',
-      '.webp',
-      '.pdf',
-      '.txt',
-      '.json',
-      '.yaml',
-      '.yml',
-      '.xml',
-      '.zip',
-      '.tar',
-      '.gz',
-      '.csv',
-      '.xlsx',
-      '.docx',
-    ].includes(ext)
   }
 
   private static isValidURL(href: string): boolean {

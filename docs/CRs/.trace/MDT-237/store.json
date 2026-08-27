@@ -1,0 +1,509 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-237"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "WHEN a rendered markdown document contains an inline-code span whose entire content is a .md document reference, the system shall render that span as a clickable link to the referenced document.",
+      "sourceRef": "docs/CRs/MDT-237-inline-code-doc-links.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "WHEN the user clicks a converted inline-code .md reference, the system shall navigate to the referenced document via client-side routing without a full page reload.",
+      "sourceRef": "docs/CRs/MDT-237-inline-code-doc-links.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.1",
+      "kind": "behavior",
+      "text": "IF a converted inline-code reference targets a document that does not exist in the project, THEN the system shall visibly flag the reference as broken rather than rendering a silently dead link.",
+      "sourceRef": "docs/CRs/MDT-237-inline-code-doc-links.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.2",
+      "kind": "behavior",
+      "text": "IF a converted inline-code reference target escapes project boundaries or contains path traversal, THEN the system shall block navigation and flag the reference.",
+      "sourceRef": "docs/CRs/MDT-237-inline-code-doc-links.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-3.1",
+      "kind": "behavior",
+      "text": "WHILE a .md path appears inside a fenced code block, the system shall render it verbatim without converting it to a link.",
+      "sourceRef": "docs/CRs/MDT-237-inline-code-doc-links.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3.2",
+      "kind": "behavior",
+      "text": "WHILE an inline-code span's content is not solely a .md document reference (genuine code, command, or example), the system shall render it verbatim without converting it to a link.",
+      "sourceRef": "docs/CRs/MDT-237-inline-code-doc-links.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4.1",
+      "kind": "behavior",
+      "text": "The system shall preserve existing markdown-link rendering and ticket-key linkification behavior unchanged when inline-code conversion is active.",
+      "sourceRef": "docs/CRs/MDT-237-inline-code-doc-links.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "Conversion applies only when the entire inline-code span content (after stripping an optional #anchor fragment) matches the .md document-reference shape accepted for plain-text references; spans merely containing a .md path do not convert.",
+      "sourceRef": "docs/CRs/MDT-237-inline-code-doc-links.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "Anchor fragments (#section) on converted references are supported through the existing MDT-150 URL scheme and are carried into the resolved URL.",
+      "sourceRef": "docs/CRs/MDT-237-inline-code-doc-links.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "Same-name disambiguation follows the existing MDT-150 resolution semantics (ticket-context vs documents-view mode); no new disambiguation rules are introduced.",
+      "sourceRef": "docs/CRs/MDT-237-inline-code-doc-links.md",
+      "routePolicy": "not_applicable"
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "Paths with spaces or URL-encoded characters resolve through the existing query-parameter document URL scheme (encodeURIComponent).",
+      "sourceRef": "docs/CRs/MDT-237-inline-code-doc-links.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C5",
+      "kind": "constraint",
+      "text": "Documents containing many inline-code spans shall render without perceptible regression relative to current rendering (no additional network requests per span at render time).",
+      "sourceRef": "docs/CRs/MDT-237-inline-code-doc-links.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "WHILE an inline-code span names a .md file as part of a command or example sentence, the system shall apply the whole-span rule and convert only spans that are solely a reference.",
+      "sourceRef": "docs/CRs/MDT-237-inline-code-doc-links.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-2.4",
+      "kind": "behavior",
+      "text": "WHEN an inline-code .md reference names a file that exists at the project root (e.g. src/THEME.md) while its source-relative interpretation would miss, the system shall resolve the reference to the existing project document instead of a dead relative target.",
+      "sourceRef": "docs/CRs/MDT-237/architecture.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C6",
+      "kind": "constraint",
+      "text": "Link behavior merges configuration with precedence: browser localStorage override > CONFIG_DIR/config.toml [links] global defaults (fetched from /api/config/global) > built-in defaults.",
+      "sourceRef": "docs/CRs/MDT-237/architecture.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C7",
+      "kind": "constraint",
+      "text": "Only .md references are processed by link normalization; non-.md hrefs pass through as valid file links and are never flagged broken for their file extension. Traversal and configured-path security boundaries are unchanged.",
+      "sourceRef": "docs/CRs/MDT-237/uat.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-2.5",
+      "kind": "behavior",
+      "text": "WHEN an inline-code document reference is a bare filename whose relative interpretation is unverifiable and exactly one project file carries that basename, the system shall resolve the reference to that unique file; ambiguous or unmatched names keep the relative resolution.",
+      "sourceRef": "docs/CRs/MDT-237/uat.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C8",
+      "kind": "constraint",
+      "text": "Inline-code .html references are processed exactly like .md references (qualification, fallback chain, basename disambiguation, documents-route rendering); the basename map is built once per document-index load with no additional network requests.",
+      "sourceRef": "docs/CRs/MDT-237/uat.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C9",
+      "kind": "constraint",
+      "text": "A code span containing a full http(s) URL links the whole span to that URL (code-styled, navigable); URL-less command spans with .md words stay verbatim regardless of index state.",
+      "sourceRef": "docs/CRs/MDT-237/uat.md",
+      "routePolicy": "tests"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "convert_inline_code_doc_reference",
+      "title": "convert_inline_code_doc_reference",
+      "covers": [
+        "BR-1.1"
+      ],
+      "given": "Given a project containing a ticket whose body includes an inline-code reference to an existing .md document",
+      "when": "When I open that ticket in the board",
+      "then": "Then the inline-code reference renders as a clickable link",
+      "sourceRef": "docs/CRs/MDT-237/requirements.trace.md"
+    },
+    {
+      "id": "client_side_navigation_no_reload",
+      "title": "client_side_navigation_no_reload",
+      "covers": [
+        "BR-1.2"
+      ],
+      "given": "Given a rendered inline-code .md reference",
+      "when": "When I click it",
+      "then": "Then the app navigates to the referenced document without a full page reload",
+      "sourceRef": "docs/CRs/MDT-237/requirements.trace.md"
+    },
+    {
+      "id": "broken_reference_visibly_flagged",
+      "title": "broken_reference_visibly_flagged",
+      "covers": [
+        "BR-2.1"
+      ],
+      "given": "Given a ticket body with an inline-code reference to a .md document that does not exist in the project",
+      "when": "When I open that ticket",
+      "then": "Then the reference is visibly flagged as broken instead of appearing as a normal working link",
+      "sourceRef": "docs/CRs/MDT-237/requirements.trace.md"
+    },
+    {
+      "id": "fenced_code_path_stays_plain",
+      "title": "fenced_code_path_stays_plain",
+      "covers": [
+        "BR-3.1"
+      ],
+      "given": "Given a document containing a fenced code block that includes a .md path",
+      "when": "When I open that document",
+      "then": "Then the path inside the code block renders as plain code with no link",
+      "sourceRef": "docs/CRs/MDT-237/requirements.trace.md"
+    },
+    {
+      "id": "genuine_inline_code_stays_plain",
+      "title": "genuine_inline_code_stays_plain",
+      "covers": [
+        "BR-3.2"
+      ],
+      "given": "Given a document containing an inline-code span that is a command or example rather than solely a .md reference",
+      "when": "When I open that document",
+      "then": "Then that span renders as plain inline code with no link",
+      "sourceRef": "docs/CRs/MDT-237/requirements.trace.md"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-1",
+      "title": "Conversion of qualifying inline-code spans must go through resolveDocumentRef and the link-placeholder mechanism, never a second conversion pass (D2/D3, covers BR-1.1)",
+      "derivedFrom": [
+        "BR-1.1",
+        "C1",
+        "C2",
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-preprocessor"
+      ],
+      "sourceRef": "docs/CRs/MDT-237/architecture.md"
+    },
+    {
+      "id": "OBL-2",
+      "title": "Missing ctx or disabled enableDocumentLinks must keep protectInlineCode byte-identical to current output (D4, covers BR-3.2, BR-4.1)",
+      "derivedFrom": [
+        "BR-3.2",
+        "BR-4.1",
+        "Edge-1"
+      ],
+      "artifactIds": [
+        "ART-preprocessor"
+      ],
+      "sourceRef": "docs/CRs/MDT-237/architecture.md"
+    },
+    {
+      "id": "OBL-3",
+      "title": "Existence cache must dedupe to one in-flight fetch per project and expose sync lookup plus subscription (D5, covers BR-2.1, C5)",
+      "derivedFrom": [
+        "BR-2.1",
+        "C5"
+      ],
+      "artifactIds": [
+        "ART-existence-cache"
+      ],
+      "sourceRef": "docs/CRs/MDT-237/architecture.md"
+    },
+    {
+      "id": "OBL-4",
+      "title": "SmartLink broken styling for known-missing DOCUMENT targets must reuse the existing broken span rendering; unknown index renders normal link (D5/D7)",
+      "derivedFrom": [
+        "BR-2.1"
+      ],
+      "artifactIds": [
+        "ART-smartlink"
+      ],
+      "sourceRef": "docs/CRs/MDT-237/architecture.md"
+    },
+    {
+      "id": "OBL-5",
+      "title": "No new traversal/scope code; converted links must pass unchanged through classifyAndNormalizeLink (D6, covers BR-2.2)",
+      "derivedFrom": [
+        "BR-2.2"
+      ],
+      "artifactIds": [
+        "ART-smartlink"
+      ],
+      "sourceRef": "docs/CRs/MDT-237/architecture.md"
+    },
+    {
+      "id": "OBL-6",
+      "title": "Unit + e2e suites must cover conversion, preservation, anchor, encoding, traversal and existence cases",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-2.1",
+        "BR-3.1",
+        "BR-3.2",
+        "C1",
+        "C2",
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-unit-preprocessor",
+        "ART-unit-cache",
+        "ART-e2e-spec"
+      ],
+      "sourceRef": "docs/CRs/MDT-237/architecture.md"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-preprocessor",
+      "path": "src/utils/markdownPreprocessor.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-237/architecture.md"
+    },
+    {
+      "id": "ART-existence-cache",
+      "path": "src/utils/documentExistenceCache.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-237/architecture.md"
+    },
+    {
+      "id": "ART-smartlink",
+      "path": "src/components/SmartLink/index.tsx",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-237/architecture.md"
+    },
+    {
+      "id": "ART-unit-preprocessor",
+      "path": "src/utils/markdownPreprocessor.mdt237.test.ts",
+      "kind": "test",
+      "sourceRef": "docs/CRs/MDT-237/architecture.md"
+    },
+    {
+      "id": "ART-unit-cache",
+      "path": "src/utils/documentExistenceCache.test.ts",
+      "kind": "test",
+      "sourceRef": "docs/CRs/MDT-237/architecture.md"
+    },
+    {
+      "id": "ART-e2e-spec",
+      "path": "tests/e2e/ticket/inline-code-doc-links.spec.ts",
+      "kind": "test",
+      "sourceRef": "docs/CRs/MDT-237/architecture.md"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-unit-cache",
+      "kind": "unit",
+      "title": "MDT-237 existence cache: null-while-loading, membership, per-project scope, subscription semantics",
+      "covers": [
+        "BR-2.1",
+        "C5"
+      ],
+      "file": "src/utils/documentExistenceCache.test.ts",
+      "sourceRef": "docs/CRs/MDT-237/architecture.md"
+    },
+    {
+      "id": "TEST-e2e-bdd",
+      "kind": "e2e",
+      "title": "MDT-237 Playwright: conversion render, no-reload navigation, fenced/plain preservation, broken flagging (BDD scenarios)",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-2.1",
+        "BR-3.1",
+        "BR-3.2"
+      ],
+      "file": "tests/e2e/ticket/inline-code-doc-links.spec.ts",
+      "sourceRef": "docs/CRs/MDT-237/architecture.md"
+    },
+    {
+      "id": "TEST-regression-suite",
+      "kind": "unit",
+      "title": "Existing suites must stay green: bun run fe:test and lint:frontend (BR-4.1 preservation)",
+      "covers": [
+        "BR-4.1"
+      ],
+      "file": "src/utils/markdownPreprocessor.mdt150.test.ts",
+      "sourceRef": "docs/CRs/MDT-237/architecture.md"
+    },
+    {
+      "id": "TEST-unit-preservation",
+      "kind": "unit",
+      "title": "MDT-237 preprocessor: genuine code, fenced code, no-context, disabled-flags, and traversal-shaped spans stay safe/verbatim; existing links unaffected",
+      "covers": [
+        "BR-3.1",
+        "BR-3.2",
+        "BR-4.1",
+        "BR-2.2",
+        "Edge-1"
+      ],
+      "file": "src/utils/markdownPreprocessor.mdt237.test.ts",
+      "sourceRef": "docs/CRs/MDT-237/architecture.md"
+    },
+    {
+      "id": "TEST-unit-fallback",
+      "kind": "unit",
+      "title": "Project-root fallback resolution: absolute-exists wins, explicit .. refs never re-anchored, unknown index keeps path math",
+      "covers": [
+        "BR-2.4"
+      ],
+      "file": "src/utils/markdownPreprocessor.mdt237.test.ts",
+      "sourceRef": "docs/CRs/MDT-237/architecture.md"
+    },
+    {
+      "id": "TEST-e2e-fallback",
+      "kind": "e2e",
+      "title": "E2E: project-root fallback scenario renders documents-route link for root-existing refs from ticket subdocs",
+      "covers": [
+        "BR-2.4"
+      ],
+      "file": "tests/e2e/ticket/inline-code-doc-links.spec.ts",
+      "sourceRef": "docs/CRs/MDT-237/architecture.md"
+    },
+    {
+      "id": "TEST-unit-config-merge",
+      "kind": "manual",
+      "title": "Config merge verified via inspection + e2e: getLinkConfig merges localStorage > config.toml [links] > defaults (covered by green suites run with config.toml links present; see UAT notes)",
+      "covers": [
+        "C6"
+      ],
+      "file": "src/config/linkConfig.ts",
+      "sourceRef": "docs/CRs/MDT-237/architecture.md"
+    },
+    {
+      "id": "TEST-unit-nonmd-passthrough",
+      "kind": "unit",
+      "title": "Non-.md passthrough: badge.css/unknown extensions stay valid file links; .md still processed; traversal still broken (MDT-150 normalizer amendment)",
+      "covers": [
+        "C7"
+      ],
+      "file": "src/utils/linkNormalization.mdt150.test.ts",
+      "sourceRef": "docs/CRs/MDT-237/uat.md"
+    },
+    {
+      "id": "TEST-unit-basename-html",
+      "kind": "unit",
+      "title": "Basename disambiguation (unique wins, ambiguous keeps relative) and .html processing parity; e2e bare-filename scenario",
+      "covers": [
+        "BR-2.5",
+        "C8"
+      ],
+      "file": "src/utils/markdownPreprocessor.mdt237.test.ts",
+      "sourceRef": "docs/CRs/MDT-237/uat.md"
+    },
+    {
+      "id": "TEST-unit-conversion",
+      "kind": "unit",
+      "title": "MDT-237 preprocessor: qualifying inline-code .md spans convert to resolved links (bare, anchor, ../); nested ticket-key guard; URL-span linking; plain-text positive-knowledge routing",
+      "covers": [
+        "BR-1.1",
+        "C1",
+        "C2",
+        "C4",
+        "C9"
+      ],
+      "file": "src/utils/markdownPreprocessor.mdt237.test.ts",
+      "sourceRef": "docs/CRs/MDT-237/architecture.md"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-existence-cache",
+      "title": "Implement documentExistenceCache module",
+      "ownsArtifactIds": [
+        "ART-existence-cache",
+        "ART-unit-cache"
+      ],
+      "makesGreenIds": [
+        "TEST-unit-cache"
+      ],
+      "sourceRef": "docs/CRs/MDT-237/architecture.md"
+    },
+    {
+      "id": "TASK-preprocessor-conversion",
+      "title": "Add inline-code .md conversion branch to protectInlineCode",
+      "ownsArtifactIds": [
+        "ART-preprocessor",
+        "ART-unit-preprocessor"
+      ],
+      "makesGreenIds": [
+        "TEST-unit-conversion",
+        "TEST-unit-preservation",
+        "fenced_code_path_stays_plain",
+        "genuine_inline_code_stays_plain"
+      ],
+      "sourceRef": "docs/CRs/MDT-237/architecture.md"
+    },
+    {
+      "id": "TASK-smartlink-broken",
+      "title": "Render known-missing DOCUMENT links as broken in SmartLink",
+      "ownsArtifactIds": [
+        "ART-smartlink"
+      ],
+      "makesGreenIds": [
+        "broken_reference_visibly_flagged"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "docs/CRs/MDT-237/architecture.md"
+    },
+    {
+      "id": "TASK-e2e-green",
+      "title": "Verify E2E scenarios and full regression suite",
+      "ownsArtifactIds": [
+        "ART-e2e-spec"
+      ],
+      "makesGreenIds": [
+        "TEST-e2e-bdd",
+        "TEST-regression-suite",
+        "convert_inline_code_doc_reference",
+        "client_side_navigation_no_reload"
+      ],
+      "sourceRef": "docs/CRs/MDT-237/architecture.md"
+    },
+    {
+      "id": "TASK-followup-fallback",
+      "title": "Follow-up: project-root fallback + config merge + non-.md passthrough + basename disambiguation + .html parity",
+      "ownsArtifactIds": [
+        "ART-preprocessor",
+        "ART-existence-cache",
+        "ART-smartlink"
+      ],
+      "makesGreenIds": [
+        "TEST-unit-fallback",
+        "TEST-e2e-fallback",
+        "TEST-unit-config-merge",
+        "TEST-unit-nonmd-passthrough",
+        "TEST-unit-basename-html"
+      ],
+      "sourceRef": "docs/CRs/MDT-237/uat.md"
+    }
+  ]
+}

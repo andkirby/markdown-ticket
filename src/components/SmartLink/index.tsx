@@ -4,7 +4,8 @@ import type { ParsedLink } from '../../utils/linkProcessor'
 import { ExternalLink, File, FileCode, FileText, Hash } from 'lucide-react'
 import * as React from 'react'
 import { Link } from 'react-router-dom'
-import { getLinkConfig } from '../../config/linkConfig'
+import { ensureGlobalLinkConfig, getLinkConfig, subscribeGlobalLinkConfig } from '../../config/linkConfig'
+import { ensureDocumentIndex, getCachedDocumentIndex, subscribeDocumentIndex } from '../../utils/documentExistenceCache'
 import { classifyAndNormalizeLink, createLinkContextFromProject, LinkType } from '../../utils/linkProcessor'
 
 interface SmartLinkProps {
@@ -34,6 +35,13 @@ const SmartLink: React.FC<SmartLinkProps> = ({
     : `inline ${className}`
 
   const linkConfig = getLinkConfig()
+
+  // MDT-237 follow-up: re-render when global config.toml link defaults arrive
+  const [, setLinkConfigTick] = React.useState(0)
+  React.useEffect(() => {
+    ensureGlobalLinkConfig()
+    return subscribeGlobalLinkConfig(() => setLinkConfigTick(t => t + 1))
+  }, [])
 
   // Enhanced link processing if context is provided
   const [normalizedLink, setNormalizedLink] = React.useState<NormalizedLink | null>(null)
@@ -74,6 +82,35 @@ const SmartLink: React.FC<SmartLinkProps> = ({
   const effectiveHref = shouldUseNormalizedHref ? normalizedLink.webHref : link.href
   const effectiveLink = shouldUseNormalizedHref ? { ...link, href: effectiveHref } : link
 
+  // MDT-237 (BR-2.1): visibly flag document links whose target is known to be
+  // missing. One document-index fetch per project (C5); unknown index (loading,
+  // unconfigured paths, or failure) renders the normal link — no signal, no flag.
+  const [, setIndexTick] = React.useState(0)
+  React.useEffect(() => {
+    if (link.type !== LinkType.DOCUMENT) {
+      return
+    }
+    ensureDocumentIndex(currentProject)
+    return subscribeDocumentIndex(currentProject, () => setIndexTick(t => t + 1))
+  }, [link.type, currentProject])
+
+  const documentMissing = (() => {
+    if (effectiveLink.type !== LinkType.DOCUMENT) {
+      return false
+    }
+    const index = getCachedDocumentIndex(currentProject)
+    if (!index) {
+      return false
+    }
+    try {
+      const fileParam = new URL(effectiveLink.href, window.location.origin).searchParams.get('file')
+      return fileParam ? !index.has(fileParam) : false
+    }
+    catch {
+      return false
+    }
+  })()
+
   // If auto-linking is disabled, render as plain text
   if (!linkConfig.enableAutoLinking) {
     return <span className={className}>{children}</span>
@@ -92,6 +129,15 @@ const SmartLink: React.FC<SmartLinkProps> = ({
   if (normalizedLink && !normalizedLink.isValid) {
     return (
       <span className={`${baseClassName} smart-link`} data-link-type="broken" title={normalizedLink.error}>
+        {children}
+      </span>
+    )
+  }
+
+  // MDT-237 (BR-2.1): known-missing document target — visibly flagged, not clickable
+  if (documentMissing) {
+    return (
+      <span className={`${baseClassName} smart-link`} data-link-type="broken" title="Document not found">
         {children}
       </span>
     )

@@ -3,8 +3,9 @@ import MarkdownIt from 'markdown-it'
 import anchor from 'markdown-it-anchor'
 // @ts-expect-error markdown-it-task-lists has no type declarations
 import taskLists from 'markdown-it-task-lists'
-import { useMemo } from 'react'
-import { getLinkConfig } from '../../config/linkConfig'
+import { useEffect, useMemo, useState } from 'react'
+import { ensureGlobalLinkConfig, getLinkConfig, subscribeGlobalLinkConfig } from '../../config/linkConfig'
+import { ensureDocumentIndex, getCachedDocumentIndex, subscribeDocumentIndex } from '../../utils/documentExistenceCache'
 import { classifyLink } from '../../utils/linkProcessor'
 import { markdownItWireframePlugin } from '../../utils/markdownItWireframePlugin'
 import { markdownItWireloomPlugin } from '../../utils/markdownItWireloomPlugin'
@@ -33,6 +34,23 @@ export function useMarkdownProcessor(
 ): string {
   // Get link configuration (outside useMemo to ensure proper caching)
   const linkConfig = getLinkConfig()
+
+  // MDT-237 follow-up: global link defaults come from CONFIG_DIR/config.toml
+  // ([links]); load them once and re-render when they arrive.
+  const [, setLinkConfigTick] = useState(0)
+  useEffect(() => {
+    ensureGlobalLinkConfig()
+    return subscribeGlobalLinkConfig(() => setLinkConfigTick(t => t + 1))
+  }, [])
+
+  // MDT-237 follow-up: load the project document index so inline-code
+  // reference resolution can verify target existence (relative → project-root
+  // fallback chain). Re-render when the index arrives.
+  const [docIndexTick, setDocIndexTick] = useState(0)
+  useEffect(() => {
+    ensureDocumentIndex(currentProject)
+    return subscribeDocumentIndex(currentProject, () => setDocIndexTick(t => t + 1))
+  }, [currentProject])
 
   // Initialize markdown-it converter
   const converter = useMemo(() => {
@@ -105,7 +123,29 @@ export function useMarkdownProcessor(
 
     try {
       // Step 1: Preprocess markdown with safe link conversion
-      const preprocessedMarkdown = preprocessMarkdown(markdown, currentProject, linkConfig, sourcePath, ticketsPath)
+      const preprocessedMarkdown = preprocessMarkdown(
+        markdown,
+        currentProject,
+        linkConfig,
+        sourcePath,
+        ticketsPath,
+        // Existence oracle over project-relative paths (documents tree);
+        // docIndexTick re-runs this memo when the index arrives or refreshes
+        (path) => {
+          if (docIndexTick < 0) {
+            return null
+          }
+          return getCachedDocumentIndex(currentProject)?.has(path) ?? null
+        },
+        // Unique-basename disambiguation (D10); null while index unknown
+        (basename) => {
+          if (docIndexTick < 0) {
+            return null
+          }
+          const matches = getCachedDocumentIndex(currentProject)?.findByBasename(basename) ?? []
+          return matches.length === 1 ? matches[0] : null
+        },
+      )
 
       // Step 2: Convert markdown to HTML
       const rawHTML = converter.render(preprocessedMarkdown)
@@ -128,7 +168,7 @@ export function useMarkdownProcessor(
       console.error('Markdown processing error:', error)
       return `<div class="text-red-600 p-4 border border-red-200 rounded">Error processing markdown: ${error instanceof Error ? error.message : 'Unknown error'}</div>`
     }
-  }, [markdown, currentProject, converter, linkConfig, sourcePath, ticketsPath])
+  }, [markdown, currentProject, converter, linkConfig, sourcePath, ticketsPath, docIndexTick])
 }
 
 /**

@@ -6,7 +6,7 @@ interface PreprocessorState {
   inlineCodePlaceholders: string[]
 }
 
-const DOCUMENT_REFERENCE_PATTERN = /(^|[\s([{<])((?:[\w.-]+\/)*\w[\w.-]*\.md(?:#[A-Za-z0-9][\w.~:/?#[\]@!$&'()*+,;=%-]*)?)(?=$|[\s)\]},>.;:!?])/g
+const DOCUMENT_REFERENCE_PATTERN = /(^|[\s([{<])((?:[\w.-]+\/)*\w[\w.-]*\.md(?:#[A-Za-z0-9][\w.~:/?#[\]@!$&'()*+,;=%-]*)?)(?=$|[\s)\]},>.;:!?'’"])/g
 
 function isRelativeMarkdownHref(href: string): boolean {
   if (!/\.md(?:#[^\s)]*)?$/.test(href)) {
@@ -21,6 +21,15 @@ function isRelativeMarkdownHref(href: string): boolean {
   const isMatch = DOCUMENT_REFERENCE_PATTERN.test(` ${href}`)
   DOCUMENT_REFERENCE_PATTERN.lastIndex = 0
   return isMatch
+}
+
+/** Escapes text for safe embedding inside raw-HTML emissions. */
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
 }
 
 /**
@@ -67,10 +76,188 @@ function protectCodeBlocks(markdown: string, state: PreprocessorState): string {
 }
 
 /**
- * Protects inline code from link processing
+ * Resolution context for MDT-237 inline-code document-reference conversion.
+ * When absent (or document links disabled), inline code is protected verbatim —
+ * byte-identical to pre-MDT-237 behavior.
  */
-function protectInlineCode(markdown: string, state: PreprocessorState): string {
+interface InlineCodeContext {
+  sourcePath?: string
+  ticketKey?: string
+  projectCode?: string
+  ticketsPath?: string
+  enableDocumentLinks: boolean
+  /**
+   * MDT-237 follow-up: existence oracle over project-relative file paths.
+   * Returns true/false when the project file index is loaded, null when
+   * unknown (drives the relative -> project-root fallback chain).
+   */
+  fileExists?: (projectRelPath: string) => boolean | null
+  /** Returns the unique project file path for a basename, or null when absent/ambiguous. */
+  findUniqueByBasename?: (basename: string) => string | null
+}
+
+/**
+ * MDT-237: whole-span document-reference shape. The span content must be
+ * ONLY a relative .md path (optionally with #anchor) — anchored match, so a
+ * command like `git mv old.md new.md` never qualifies (C1, Edge-1).
+ *
+ * C4: spaces and percent-encoded characters are allowed in path segments,
+ * but a span containing a space must also contain a "/" — bare multi-word
+ * spans (commands like `git mv old.md new.md`) stay verbatim.
+ */
+const WHOLE_SPAN_DOCUMENT_REFERENCE
+  = /^[.\w%-]+(?:\/[. \w%-]+)*\.(?:md|html)(?:#[A-Za-z0-9][\w.~:/?#[\]@!$&'()*+,;=%-]*)?$/
+
+function isWholeSpanDocumentReference(content: string): boolean {
+  if (!WHOLE_SPAN_DOCUMENT_REFERENCE.test(content)) {
+    return false
+  }
+  if (content.includes(' ') && !content.includes('/')) {
+    return false
+  }
+  // .html documents render in the viewer too; the anchored regex already
+  // rejects schemes, leading '/', and multi-word command spans.
+  if (content.endsWith('.html')) {
+    return true
+  }
+  // Percent-encoded spans decode to their real path before resolution (C4)
+  if (content.includes('%')) {
+    return true
+  }
+  return isRelativeMarkdownHref(content)
+}
+
+/** Best-effort percent-decoding that never throws and never double-decodes. */
+function tryDecodeContent(content: string): string {
+  if (!content.includes('%')) {
+    return content
+  }
+  try {
+    const decoded = decodeURIComponent(content)
+    return decoded
+  }
+  catch {
+    return content
+  }
+}
+
+/**
+ * MDT-237 follow-up: existence-aware resolution for inline-code references.
+ *
+ * The document index covers the project's configured document paths but, by
+ * design, NOT the tickets area — so a ticket-relative interpretation cannot
+ * be verified and stays pure path math (resolvedRelative). What IS knowable
+ * is the project-root interpretation. Chain:
+ *
+ * 1. Project-root interpretation (e.g. `src/THEME.md` from a ticket body):
+ *    when the referenced project file provably exists, resolve to the
+ *    documents route — the correct destination (D8).
+ * 2. Otherwise keep the relative resolution (existing behavior). References
+ *    that escape the tickets area already land on the documents route, where
+ *    SmartLink flags known-missing targets as broken (BR-2.1).
+ *
+ * `..`-prefixed refs are explicitly relative intents and never re-anchored.
+ */
+function resolveWithFallback(
+  content: string,
+  resolvedRelative: string,
+  ctx: InlineCodeContext & { sourcePath: string, projectCode: string },
+): string {
+  const oracle = ctx.fileExists
+  if (!oracle) {
+    return resolvedRelative
+  }
+
+  const decoded = tryDecodeContent(content)
+  const anchorIdx = decoded.indexOf('#')
+  const pathPart = anchorIdx >= 0 ? decoded.slice(0, anchorIdx) : decoded
+  const anchor = anchorIdx >= 0 ? decoded.slice(anchorIdx) : ''
+
+  if (!pathPart || pathPart.includes('..')) {
+    return resolvedRelative
+  }
+
+  if (oracle(pathPart) === true) {
+    return buildDocumentPathWithAnchor(ctx.projectCode, pathPart, anchor)
+  }
+
+  // Unique-basename disambiguation (D10): a bare filename that exists nowhere
+  // relative to the source (e.g. THEME.md in a ticket body) resolves to the
+  // only project file with that basename (src/THEME.md). Ambiguous names and
+  // unknown index keep the relative resolution. Zero extra fetches: the
+  // basename map is built once per document-index load.
+  const findUnique = ctx.findUniqueByBasename
+  if (findUnique && !pathPart.includes('/')) {
+    const uniqueMatch = findUnique(pathPart.slice(pathPart.lastIndexOf('/') + 1))
+    if (uniqueMatch) {
+      return buildDocumentPathWithAnchor(ctx.projectCode, uniqueMatch, anchor)
+    }
+  }
+  return resolvedRelative
+}
+
+/**
+ * Protects inline code from link processing.
+ *
+ * MDT-237: an inline-code span whose entire content is a relative .md
+ * document reference (optional #anchor) is a navigable document reference,
+ * not genuine code. Qualifying spans are resolved via resolveDocumentRef and
+ * stored as markdown links in the LINK placeholder set — which restores last,
+ * after ticket-key conversion, so the emitted link is never re-linkified
+ * (nested-link guard, same mechanism as protectExistingLinks).
+ */
+function protectInlineCode(markdown: string, state: PreprocessorState, ctx?: InlineCodeContext): string {
   return markdown.replace(/`[^`\n]+`/g, (match) => {
+    const content = match.slice(1, -1)
+    if (
+      ctx
+      && ctx.enableDocumentLinks
+      && ctx.sourcePath
+      && ctx.projectCode
+      && isWholeSpanDocumentReference(content)
+    ) {
+      // C4: resolve the decoded path; URLs encode it back via the query scheme
+      const baseCtx = { sourcePath: ctx.sourcePath, projectCode: ctx.projectCode }
+      const resolved = resolveWithFallback(
+        content,
+        resolveDocumentRef(
+          tryDecodeContent(content),
+          ctx.sourcePath,
+          ctx.ticketKey,
+          ctx.projectCode,
+          ctx.ticketsPath,
+        ),
+        { ...ctx, ...baseCtx },
+      )
+      if (resolved !== content) {
+        const link = `[${match}](${resolved})`
+        const placeholder = `__LINK_PLACEHOLDER_${state.linkPlaceholders.length}__`
+        state.linkPlaceholders.push(link)
+        return placeholder
+      }
+    }
+
+    // MDT-237 (D11): a code span containing a full URL (e.g.
+    // `git clone https://git.example.com/some/path`) keeps the WHOLE span as
+    // code, with only the URL part as an anchor INSIDE it:
+    // <code>git clone <a href="…">…</a></code>. Markdown syntax cannot nest a
+    // link inside a code span, so raw HTML is emitted — the pipeline passes it
+    // through (html: true), DOMPurify keeps code/a, and SmartLink replaces the
+    // anchor. The host must be a plausible ASCII hostname (letters, digits,
+    // hyphens; dots and port optional) so prose like `https://…` never becomes
+    // a punycode link.
+    if (ctx && ctx.enableDocumentLinks) {
+      const urlMatch = content.match(/https?:\/\/[a-zA-Z0-9][^\s)]*/)
+      if (urlMatch) {
+        const url = urlMatch[0]
+        const before = content.slice(0, urlMatch.index ?? 0)
+        const after = content.slice((urlMatch.index ?? 0) + url.length)
+        const html = `<code>${escapeHtml(before)}<a href="${escapeHtml(url)}">${escapeHtml(url)}</a>${escapeHtml(after)}</code>`
+        const placeholder = `__LINK_PLACEHOLDER_${state.linkPlaceholders.length}__`
+        state.linkPlaceholders.push(html)
+        return placeholder
+      }
+    }
     const placeholder = `__INLINE_CODE_PLACEHOLDER_${state.inlineCodePlaceholders.length}__`
     state.inlineCodePlaceholders.push(match)
     return placeholder
@@ -261,6 +448,11 @@ function resolveDocumentRef(
  * Converts document references to markdown links.
  * MDT-150: When sourcePath is available, resolves .md refs to absolute URLs
  * using resolveDocumentRef(). When no sourcePath, falls back to simple wrapping.
+ *
+ * MDT-237 UAT (D10 applied to plain text): when the document index is loaded,
+ * a plain-text .md token that provably names a project file (root path or
+ * unique basename) links to that real file instead of an unverifiable
+ * relative guess — .md linkification favors actual .md files.
  */
 function convertDocumentReferences(
   markdown: string,
@@ -268,8 +460,27 @@ function convertDocumentReferences(
   ticketKey?: string,
   projectCode?: string,
   ticketsPath?: string,
+  fileExists?: (projectRelPath: string) => boolean | null,
+  findUniqueByBasename?: (basename: string) => string | null,
 ): string {
   return markdown.replace(DOCUMENT_REFERENCE_PATTERN, (match, prefix, filename) => {
+    // Positive-knowledge routing: prefer a provably-existing project file
+    if (fileExists && findUniqueByBasename && projectCode && !filename.includes('..')) {
+      const anchorIdx = filename.indexOf('#')
+      const pathPart = anchorIdx >= 0 ? filename.slice(0, anchorIdx) : filename
+      const anchor = anchorIdx >= 0 ? filename.slice(anchorIdx) : ''
+      let target: string | null = null
+      if (fileExists(pathPart) === true) {
+        target = pathPart
+      }
+      else {
+        target = findUniqueByBasename(pathPart.slice(pathPart.lastIndexOf('/') + 1))
+      }
+      if (target) {
+        return `${prefix}[${filename}](${buildDocumentPathWithAnchor(projectCode, target, anchor)})`
+      }
+    }
+
     // Match .md references that may have path prefixes like ../ ./. etc.
     // If we have sourcePath context, resolve to absolute URLs.
     // UAT 2026-07-21 (BR-5): engage without ticketKey in documents-view mode.
@@ -338,6 +549,8 @@ export function preprocessMarkdown(
   },
   sourcePath?: string,
   ticketsPath?: string,
+  fileExists?: (projectRelPath: string) => boolean | null,
+  findUniqueByBasename?: (basename: string) => string | null,
 ): string {
   if (!linkConfig.enableAutoLinking) {
     return markdown
@@ -363,7 +576,15 @@ export function preprocessMarkdown(
     // Step 1: Protect existing content
     processed = protectExistingLinks(processed, state, sourcePath, extractedTicketKey, currentProject, tp)
     processed = protectCodeBlocks(processed, state)
-    processed = protectInlineCode(processed, state)
+    processed = protectInlineCode(processed, state, {
+      sourcePath,
+      ticketKey: extractedTicketKey,
+      projectCode: currentProject,
+      ticketsPath: tp,
+      enableDocumentLinks: linkConfig.enableDocumentLinks,
+      fileExists,
+      findUniqueByBasename,
+    })
     processed = normalizeNestedListIndentation(processed)
 
     // Step 1.5: Protect ALL ticket-key .md filenames from partial ticket conversion
@@ -382,7 +603,7 @@ export function preprocessMarkdown(
     }
 
     if (linkConfig.enableDocumentLinks) {
-      processed = convertDocumentReferences(processed, sourcePath, extractedTicketKey, currentProject, tp)
+      processed = convertDocumentReferences(processed, sourcePath, extractedTicketKey, currentProject, tp, fileExists, findUniqueByBasename)
     }
 
     // Step 2.5: Restore ticket-key filenames with resolved absolute URLs
