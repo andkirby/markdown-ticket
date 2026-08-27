@@ -1,6 +1,6 @@
 ---
 code: MDT-237
-status: Proposed
+status: In Progress
 dateCreated: 2026-08-24T13:15:11.023Z
 type: Feature Enhancement
 priority: Medium
@@ -71,21 +71,21 @@ full — feature enhancement, navigable document references
 ## 4. Acceptance Criteria
 
 ### Functional (Outcome-focused)
-- [ ] An inline-code `.md` reference in a ticket/document body renders as a clickable element
-- [ ] Clicking it navigates to the referenced document with client-side routing (no full page reload)
-- [ ] A reference to a non-existent document is visibly flagged, not silently dead
-- [ ] An out-of-scope or traversal path is blocked and flagged
-- [ ] Inline code inside fenced code blocks remains unlinked and verbatim
-- [ ] Existing markdown links and ticket-key references keep working unchanged
+- [x] An inline-code `.md` reference in a ticket/document body renders as a clickable element — e2e `inline-code .md ref renders as a clickable link`
+- [x] Clicking it navigates to the referenced document with client-side routing (no full page reload) — e2e `clicking an inline-code ref navigates without reload` (window-marker proof)
+- [x] A reference to a non-existent document is visibly flagged, not silently dead — e2e `reference to a non-existent document is visibly flagged` (BR-2.1)
+- [x] An out-of-scope or traversal path is blocked and flagged — unit BR-2.2 traversal case + LinkNormalizer security boundaries unchanged
+- [x] Inline code inside fenced code blocks remains unlinked and verbatim — e2e `.md path inside fenced code stays plain code` (BR-3.1)
+- [x] Existing markdown links and ticket-key references keep working unchanged — MDT-150 suites + 4 regression e2e specs green (BR-4.1)
 
 ### Non-Functional
-- [ ] Documents containing many inline-code spans render without perceptible regression vs. current rendering
+- [x] Documents containing many inline-code spans render without perceptible regression vs. current rendering — one document-index fetch per project per session + per-load lookup maps; zero per-span requests (C5, unit-locked)
 
 ### Edge Cases
-- Inline code that merely mentions `.md` files in a command or example must not become a navigation link
-- References that include an anchor fragment (`#section`) — behavior defined or explicitly unsupported
-- Same filename in different directories (disambiguation)
-- Paths with spaces or URL-encoded characters
+- [x] Inline code that merely mentions `.md` files in a command or example must not become a navigation link — whole-span rule (C1/Edge-1, unit + e2e)
+- [x] References that include an anchor fragment (`#section`) — supported via the MDT-150 URL scheme (C2, unit)
+- [x] Same filename in different directories (disambiguation) — unique-basename resolution; ambiguous names keep relative resolution (BR-2.5/D10, unit + e2e)
+- [x] Paths with spaces or URL-encoded characters — decoded then re-encoded via the query scheme (C4, unit)
 
 ## 5. Verification
 
@@ -93,3 +93,13 @@ full — feature enhancement, navigable document references
 - Manual: open a document containing an inline-code reference (e.g., `` `../architecture/url-map.md` ``), click it, land on that document in the viewer
 - Manual: a fenced code sample containing a `.md` path stays plain code
 - Automated: rendering cases for detection, false-positive, flagging, and scope blocking (architecture will detail tests)
+
+## 8. Clarifications
+
+### UAT Session 2026-08-24
+- Approved: project-root fallback resolution — inline-code refs naming an existing project file (e.g. src/THEME.md) resolve to that document; '..' refs never re-anchored (new BR-2.4, architecture D8)
+- Approved: link config precedence — localStorage override > CONFIG_DIR/config.toml [links] > defaults (new C6, architecture D9)
+- Updated docs: requirements.md, architecture.md, tests.md, uat.md; all trace stages re-validated and re-rendered
+- uat.md written; strict drift/lock not used
+- Approved (same session): non-.md passthrough — LinkNormalizer no longer flags non-.md hrefs as 'Unsupported file type'; only .md is processed, others pass through as valid file links (new C7; MDT-150 semantics amendment; negative tests in linkNormalization.mdt150.test.ts)
+- Approved (same session): unique-basename disambiguation for bare filenames (new BR-2.5/D10) and .html references processed with full .md parity (new C8); zero additional network cost (basename map per index load)

@@ -1,5 +1,5 @@
 import type { DOMNode, HTMLReactParserOptions } from 'html-react-parser'
-import { Element } from 'html-react-parser'
+import { domToReact, Element } from 'html-react-parser'
 import * as React from 'react'
 import SmartLink from '../SmartLink'
 import { extractText } from './extractText'
@@ -32,13 +32,24 @@ export function getHtmlParserOptions(currentProject: string): HTMLReactParserOpt
 
         parsedLink.text = linkText || href
 
+        // Guard (PV-3): sanitized markdown-it output cannot contain nested
+        // anchors, but if one ever appears, fall back to flattened text
+        // instead of rendering SmartLink-in-SmartLink.
+        const hasNestedAnchor = domNode.children?.some(
+          child => child instanceof Element && child.name === 'a',
+        )
+
         return React.createElement(
           SmartLink,
           {
             link: parsedLink,
             currentProject,
             className: domNode.attribs?.class,
-            children: linkText || href,
+            // MDT-237: preserve rich children (e.g. <code> inside a converted
+            // inline-code document reference) instead of flattening to text.
+            children: hasNestedAnchor
+              ? (linkText || href)
+              : domToReact(domNode.children as DOMNode[]),
           },
         )
       }

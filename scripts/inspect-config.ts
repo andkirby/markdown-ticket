@@ -183,7 +183,7 @@ const BROWSER_ONLY_SETTINGS: readonly BrowserOnlySetting[] = [
     module: 'src/config/linkConfig.ts',
     storageKey: 'markdown-ticket-link-config',
     ownerSurface: 'board',
-    note: 'Smart Links auto-linking toggle (browser mirror). Same blob also stores browser-side enableTicketLinks/enableDocumentLinks.',
+    note: 'Smart Links auto-linking toggle (browser override). Same blob stores browser-side enableTicketLinks/enableDocumentLinks. Since MDT-237 these localStorage values override global config.toml [links] defaults (getLinkConfig merge, D9).',
   },
   {
     selector: 'browser.selectorAccents',

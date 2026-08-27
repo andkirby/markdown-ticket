@@ -120,15 +120,67 @@ describe('MDT-150: linkNormalization resolution', () => {
       expect(result.isValid).toBe(false)
     })
 
-    it('LinkNormalizer does not recognize absolute ticket URLs', () => {
-      // These are handled by classifyLink in the parser, not by LinkNormalizer
+    it('LinkNormalizer passes absolute ticket URLs through as file links', () => {
+      // These are handled by classifyLink in the parser, not by LinkNormalizer.
+      // MDT-237 UAT 2026-08-24: non-.md hrefs are never extension-flagged —
+      // passthrough keeps app-route hrefs working instead of crossing them.
       const result = LinkNormalizer.normalizeLink('/prj/MDT/ticket/MDT-150', ticketSubdocContext)
-      expect(result.type).toBe('broken')
+      expect(result.type).toBe('file')
+      expect(result.isValid).toBe(true)
+      expect(result.webHref).toBe('/prj/MDT/ticket/MDT-150')
     })
 
-    it('LinkNormalizer does not recognize absolute cross-project URLs', () => {
+    it('LinkNormalizer passes absolute cross-project URLs through as file links', () => {
       const result = LinkNormalizer.normalizeLink('/prj/OTHER/ticket/OTHER-123', ticketSubdocContext)
-      expect(result.type).toBe('broken')
+      expect(result.type).toBe('file')
+      expect(result.isValid).toBe(true)
+      expect(result.webHref).toBe('/prj/OTHER/ticket/OTHER-123')
     })
+  })
+})
+
+describe('MDT-237 UAT: only .md is processed — non-.md is passthrough', () => {
+  it('badge.css relative link stays a valid file link (never crossed)', () => {
+    const context = createLinkContext({
+      currentProject: 'MDT',
+      sourcePath: 'src/THEME.md',
+    })
+    const result = LinkNormalizer.normalizeLink('components/Badge/badge.css', context)
+    expect(result.type).toBe('file')
+    expect(result.isValid).toBe(true)
+    expect(result.webHref).toBe('components/Badge/badge.css')
+    expect(result.error).toBeUndefined()
+  })
+
+  it('unknown extensions (.exe, .css, .html) are passthrough file links, not broken', () => {
+    const context = createLinkContext({
+      currentProject: 'MDT',
+      sourcePath: 'docs/guide.md',
+    })
+    for (const href of ['./tool.exe', 'styles/main.css', 'preview.html']) {
+      const result = LinkNormalizer.normalizeLink(href, context)
+      expect(result.type).toBe('file')
+      expect(result.isValid).toBe(true)
+    }
+  })
+
+  it('.md links are still processed to document routes', () => {
+    const context = createLinkContext({
+      currentProject: 'MDT',
+      sourcePath: 'docs/guide.md',
+    })
+    const result = LinkNormalizer.normalizeLink('related.md', context)
+    expect(result.type).toBe('document')
+    expect(result.isValid).toBe(true)
+    expect(result.webHref).toContain('/prj/MDT/documents')
+  })
+
+  it('path traversal is still broken (security boundary unchanged)', () => {
+    const context = createLinkContext({
+      currentProject: 'MDT',
+      sourcePath: 'docs/guide.md',
+    })
+    const result = LinkNormalizer.normalizeLink('../../outside.md', context)
+    expect(result.isValid).toBe(false)
   })
 })
