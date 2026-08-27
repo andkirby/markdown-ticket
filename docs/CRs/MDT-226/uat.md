@@ -53,6 +53,19 @@ audit retention policy.
      `EXPLAIN QUERY PLAN` and a measured `rows_read` near zero for the
      retention SELECT.
 
+2. **Reservation-expiry index (C-16 completion)**
+   - Objective: make the 15-minute reservation-expiry scan read only its
+     working set instead of full-scanning `ticket_reservations` (grows for
+     project lifetime; confirmed `SCAN` by production EXPLAIN 2026-08-26).
+   - Direct artifacts: `cloud/migrations/0004_reservations_expiry_index.sql`,
+     `cloud/test/maintenance.test.ts`,
+     `docs/architecture/cloud-sync/data-and-consistency.md`.
+   - Direct GREEN targets: TEST-reservations-expiry-index (expiry scan uses
+     `reservations_by_expiry`, never a full scan).
+   - Canonical task: `TASK-reservations-expiry-index`.
+   - Deliberately out: a `cloud_projects(project_code)` index — 2 rows on a
+     rare provisioning path; not worth the write cost now.
+
 ## Validation
 
 - RED evidence (production, 2026-08-26): D1 insights show the retention

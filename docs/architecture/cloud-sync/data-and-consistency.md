@@ -138,6 +138,8 @@ CREATE INDEX projections_by_revision
   ON ticket_projections(cloud_project_id, project_revision);
 CREATE INDEX reservations_by_state_age
   ON ticket_reservations(cloud_project_id, state, created_at);
+CREATE INDEX reservations_by_expiry
+  ON ticket_reservations(state, created_at);
 CREATE INDEX audit_by_project_time
   ON audit_events(cloud_project_id, occurred_at);
 CREATE INDEX audit_by_principal_time

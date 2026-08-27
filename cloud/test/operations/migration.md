@@ -72,3 +72,25 @@ event was 32 days old; retention is 180 days).
    `rows_read: 1` (was 12,714), empty result as expected.
 
 Production indexes now additionally include `audit_by_time`.
+
+## 2026-08-26 — `0004_reservations_expiry_index.sql` (MDT-226 Slice 10, C-16)
+
+The reservation-expiry scan `SELECT cloud_project_id, reservation_id,
+ticket_number FROM ticket_reservations WHERE state = 'reserved' AND
+created_at < ?` could not use `reservations_by_state_age` (leads with
+`cloud_project_id`) → production EXPLAIN showed `SCAN ticket_reservations`;
+34 rows × 96/day, unbounded lifetime growth on a timer-driven path.
+
+1. ✅ Local: `cloud/test/maintenance.test.ts` (TEST-reservations-expiry-index:
+   plan uses `reservations_by_expiry`, never `SCAN ticket_reservations`);
+   cloud suite 88/88.
+2. ✅ Applied with `wrangler d1 migrations apply mdt-cloud-sync-production
+   --remote`: `0004_reservations_expiry_index.sql` ✅, 2 commands in 1.07ms
+   (ledger `applied_at` 2026-08-26 16:56:58).
+3. ✅ Verified post-apply: `EXPLAIN QUERY PLAN` → `SEARCH ticket_reservations
+   USING INDEX reservations_by_expiry (state=? AND created_at<?)`; measured
+   expiry SELECT `rows_read: 1` (was 34), empty result as expected.
+
+Same audit: `cloud_projects(project_code)` provisioning lookup full-scans
+(2 rows, rare operator path) — deliberately not indexed. Production indexes
+now additionally include `reservations_by_expiry`.

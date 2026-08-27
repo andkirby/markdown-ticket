@@ -181,6 +181,29 @@ Add one forward-only migration creating `audit_by_time ON
 audit_events(occurred_at)` so the retention scan reads only its bounded
 working set. No behavior change to maintenance logic.
 
+## Slice 10 — Reservation-expiry scan index (C-16 completion)
+
+Status: implemented and deployed 2026-08-26. Local: plan uses
+`reservations_by_expiry`, cloud suite 88/88. Production: `0004` applied at
+16:56:58 UTC; EXPLAIN shows `SEARCH ticket_reservations USING INDEX
+reservations_by_expiry (state=? AND created_at<?)`; measured expiry SELECT
+`rows_read: 1` (was 34), empty result as expected. The 2026-08-26 table-wide index
+audit found the reservation-expiry cron predicate (`state = 'reserved' AND
+created_at < ?`) cannot use `reservations_by_state_age` (leads with
+`cloud_project_id`) → `SCAN ticket_reservations`, confirmed by production
+EXPLAIN. 34 rows × 96/day today, but the table grows for project lifetime,
+so the timer-driven scan is unbounded — the same defect class C-16 exists to
+prevent. The `cloud_projects` `project_code` lookup (provisioning) also
+full-scans but stays 2 rows on a rare operator path: deliberately not indexed.
+
+| Task | Owns | Makes green |
+| --- | --- | --- |
+| **TASK-reservations-expiry-index** | `ART-reservations-migration`, `ART-maintenance-tests`, `ART-data-doc` | TEST-reservations-expiry-index |
+
+Add forward-only migration `0004` creating `reservations_by_expiry ON
+ticket_reservations(state, created_at)` so the expiry scan reads only its
+working set. No behavior change to maintenance logic.
+
 ## Scenario closure
 
 All eight BDD scenarios are made green by these tasks:

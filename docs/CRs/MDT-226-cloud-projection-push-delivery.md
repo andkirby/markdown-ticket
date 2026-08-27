@@ -609,6 +609,11 @@ Durable Object binding is removed only after all sockets and alarms are drained.
   the retention scan reads only rows before its cutoff.
 - Fix is one forward-only migration (`0003`, `audit_by_time`); maintenance
   logic and the 180-day retention policy are unchanged.
+- Follow-up 2026-08-26: a table-wide index audit found the reservation-expiry
+  cron predicate also full-scans (`ticket_reservations`, 34 rows, unbounded
+  lifetime growth) — slice 10 completes C-16 with `0004`
+  (`reservations_by_expiry`). The `cloud_projects(project_code)` lookup also
+  scans (2 rows, rare provisioning path) and is deliberately not indexed.
 - Shortening retention was evaluated and rejected as a quota fix: storage is
   ≈ 6 MB total, the scan pattern is the cost, and the forensic window is kept.
 - Lazy reservation-expiry (skip the cron, ignore old locks at read time) was
