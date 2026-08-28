@@ -43,36 +43,6 @@ import {
   TooltipTrigger,
 } from './ui/tooltip'
 
-function readAutoLinking(): boolean {
-  try {
-    const stored = localStorage.getItem('markdown-ticket-link-config')
-    if (stored) {
-      return (
-        (JSON.parse(stored) as { enableAutoLinking?: boolean })
-          .enableAutoLinking ?? true
-      )
-    }
-  }
-  catch {
-    /* use default */
-  }
-  return true
-}
-
-function writeAutoLinking(value: boolean): void {
-  try {
-    const stored = localStorage.getItem('markdown-ticket-link-config')
-    const current = stored ? JSON.parse(stored) : {}
-    localStorage.setItem(
-      'markdown-ticket-link-config',
-      JSON.stringify({ ...current, enableAutoLinking: value }),
-    )
-  }
-  catch {
-    console.warn('Failed to save link config')
-  }
-}
-
 interface SettingsModalProps {
   isOpen: boolean
   onClose: () => void
@@ -151,7 +121,6 @@ export function SettingsModal({
   // Board
   // MDT-236: the two-axis density prefs are owned solely by the header
   // DensityMenu — no duplicate controls here (one concept, one owner).
-  const [autoLinking, setAutoLinking] = useState(readAutoLinking)
   const [pinRailEnabled, setPinRailEnabled] = useState<boolean>(getPinRailEnabled)
   const [visibleBadgeIds, setVisibleBadgeIds] = useState(
     getVisibleTicketCardBadges,
@@ -337,11 +306,6 @@ export function SettingsModal({
   )
 
   // Board handlers
-  const handleAutoLinkingChange = useCallback((checked: boolean) => {
-    setAutoLinking(checked)
-    writeAutoLinking(checked)
-  }, [])
-
   const handlePinRailEnabledChange = useCallback((checked: boolean) => {
     setPinRailEnabled(checked)
     setPinRailEnabledPreference(checked)
@@ -614,20 +578,8 @@ export function SettingsModal({
           </Tabs.Content>
 
           <Tabs.Content value="board" className="tab__content">
-            {/* Smart Links */}
-            <div className="settings-group-row">
-              <div>
-                <label className="settings-label">Smart Links</label>
-                <p className="settings-desc">
-                  Auto-detect ticket keys and document paths
-                </p>
-              </div>
-              <Switch
-                checked={autoLinking}
-                onCheckedChange={handleAutoLinkingChange}
-                data-testid="settings-auto-linking"
-              />
-            </div>
+            {/* Link config is owner/file-level (config.toml [links]) — managed
+                in Settings > Advanced by owners; no browser-level toggle. */}
 
             {/* MDT-197: pin rail enable/disable. When off, neither rail nor
                 collapsed strip occupies space. The rail's own pin icon handles
