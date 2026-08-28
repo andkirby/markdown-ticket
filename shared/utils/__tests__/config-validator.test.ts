@@ -20,21 +20,17 @@ describe('config Validator', () => {
 
     it('should validate enum fields', () => {
       const config = {
-        ui: { theme: 'dark' },
         system: { logLevel: 'debug' },
       }
       const result = validateConfig(config)
-      expect(result.ui!.theme).toBe('dark')
       expect(result.system!.logLevel).toBe('debug')
     })
 
     it('should fallback for invalid enum values', () => {
       const config = {
-        ui: { theme: 'invalid' },
         system: { logLevel: 'invalid' },
       }
       const result = validateConfig(config)
-      expect(result.ui!.theme).toBe('auto')
       expect(result.system!.logLevel).toBe('info')
     })
   })
@@ -45,8 +41,7 @@ describe('config Validator', () => {
         dashboard: { autoRefresh: false, refreshInterval: 10000 },
       }
       const result = migrateConfig(oldConfig)
-      expect(result.ui!.autoRefresh).toBe(false)
-      expect(result.ui!.refreshInterval).toBe(10000)
+      expect(result.links.enableAutoLinking).toBe(false)
     })
   })
 
@@ -54,7 +49,7 @@ describe('config Validator', () => {
     it('should detect old config and migrate', () => {
       const config = { dashboard: { autoRefresh: true } }
       const result = processConfig(config)
-      expect(result.ui!.autoRefresh).toBe(true)
+      expect(result.links.enableAutoLinking).toBe(true)
     })
 
     it('should validate new config structure', () => {
@@ -69,7 +64,6 @@ describe('config Validator', () => {
       const config = getDefaultConfig()
       expect(config.discovery.autoDiscover).toBe(true)
       expect(config.links.enableTicketLinks).toBe(true)
-      expect(config.ui!.theme).toBe('auto')
     })
   })
 })

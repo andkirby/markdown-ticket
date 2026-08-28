@@ -110,10 +110,6 @@ interface BackendSupplementSetting {
 }
 
 const BACKEND_SUPPLEMENT_SETTINGS: readonly BackendSupplementSetting[] = [
-  // Global [ui] — read-only until ownership confirmed (exposure matrix).
-  { selector: 'ui.theme', scope: 'global', file: 'CONFIG_DIR/config.toml', exposure: 'fileOnly', note: 'Backend theme enum (light/dark/auto); browser cookie theme is the live control.' },
-  { selector: 'ui.autoRefresh', scope: 'global', file: 'CONFIG_DIR/config.toml', exposure: 'readOnly', note: 'Read-only until ownership is confirmed.' },
-  { selector: 'ui.refreshInterval', scope: 'global', file: 'CONFIG_DIR/config.toml', exposure: 'readOnly', note: 'Read-only until ownership is confirmed.' },
   // Project [worktree] and symlinks.
   { selector: 'worktree.enabled', scope: 'project', file: '{project}/.mdt-config.toml', exposure: 'fileOnly', note: 'Worktree feature toggle (default true).' },
   { selector: 'project.allowSymlinks', scope: 'project', file: '{project}/.mdt-config.toml', exposure: 'fileOnly', note: 'Symlink following in subdocument reads (MDT-151, default false).' },
@@ -127,7 +123,7 @@ const BROWSER_ONLY_SETTINGS: readonly BrowserOnlySetting[] = [
     module: 'src/hooks/useTheme.ts',
     storageKey: 'cookie "theme" (light/dark/system)',
     ownerSurface: 'settings',
-    note: 'Theme quick toggle; stored in a browser COOKIE (not localStorage). Browser/profile-specific presentation. Distinct from backend ui.theme.',
+    note: 'Theme quick toggle; stored in a browser COOKIE (not localStorage). Browser/profile-specific presentation.',
   },
   {
     selector: 'browser.defaultView',

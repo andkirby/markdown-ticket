@@ -47,12 +47,6 @@ export const GLOBAL_LINKS_DEFAULTS = {
   linkValidation: false,
 } as const
 
-export const GLOBAL_UI_DEFAULTS = {
-  theme: 'auto' as const,
-  autoRefresh: true,
-  refreshInterval: 5000,
-} as const
-
 export const GLOBAL_SYSTEM_DEFAULTS = {
   logLevel: 'info' as const,
   cacheTimeout: 30000,
@@ -65,7 +59,6 @@ export const GLOBAL_CLOUD_SYNC_DEFAULTS = {
 export const GLOBAL_CONFIG_DEFAULTS = {
   discovery: { ...GLOBAL_DISCOVERY_DEFAULTS },
   links: { ...GLOBAL_LINKS_DEFAULTS },
-  ui: { ...GLOBAL_UI_DEFAULTS },
   system: { ...GLOBAL_SYSTEM_DEFAULTS },
   cloudSync: { ...GLOBAL_CLOUD_SYNC_DEFAULTS },
 } as const
@@ -110,12 +103,6 @@ export const GlobalLinksConfigSchema = z.object({
   linkValidation: z.boolean().catch(GLOBAL_LINKS_DEFAULTS.linkValidation).default(GLOBAL_LINKS_DEFAULTS.linkValidation),
 }).catch({ ...GLOBAL_LINKS_DEFAULTS }).default({ ...GLOBAL_LINKS_DEFAULTS })
 
-export const GlobalUIConfigSchema = z.object({
-  theme: z.enum(['light', 'dark', 'auto']).catch(GLOBAL_UI_DEFAULTS.theme).default(GLOBAL_UI_DEFAULTS.theme),
-  autoRefresh: z.boolean().catch(GLOBAL_UI_DEFAULTS.autoRefresh).default(GLOBAL_UI_DEFAULTS.autoRefresh),
-  refreshInterval: z.number().int().min(0).catch(GLOBAL_UI_DEFAULTS.refreshInterval).default(GLOBAL_UI_DEFAULTS.refreshInterval),
-}).catch({ ...GLOBAL_UI_DEFAULTS }).default({ ...GLOBAL_UI_DEFAULTS })
-
 export const GlobalSystemConfigSchema = z.object({
   logLevel: z.enum(['error', 'warn', 'info', 'debug']).catch(GLOBAL_SYSTEM_DEFAULTS.logLevel).default(GLOBAL_SYSTEM_DEFAULTS.logLevel),
   cacheTimeout: z.number().int().min(0).catch(GLOBAL_SYSTEM_DEFAULTS.cacheTimeout).default(GLOBAL_SYSTEM_DEFAULTS.cacheTimeout),
@@ -136,19 +123,16 @@ export const GlobalCloudSyncConfigSchema = z.object({
 export const GlobalConfigSchema = z.object({
   discovery: GlobalDiscoveryConfigSchema.default({ ...GLOBAL_DISCOVERY_DEFAULTS, searchPaths: [...GLOBAL_DISCOVERY_DEFAULTS.searchPaths] }),
   links: GlobalLinksConfigSchema.default({ ...GLOBAL_LINKS_DEFAULTS }),
-  ui: GlobalUIConfigSchema.default({ ...GLOBAL_UI_DEFAULTS }),
   system: GlobalSystemConfigSchema.default({ ...GLOBAL_SYSTEM_DEFAULTS }),
   cloudSync: GlobalCloudSyncConfigSchema.default({ ...GLOBAL_CLOUD_SYNC_DEFAULTS, allowedOrigins: [...GLOBAL_CLOUD_SYNC_DEFAULTS.allowedOrigins] }),
 }).catch({
   discovery: { ...GLOBAL_DISCOVERY_DEFAULTS, searchPaths: [...GLOBAL_DISCOVERY_DEFAULTS.searchPaths] },
   links: { ...GLOBAL_LINKS_DEFAULTS },
-  ui: { ...GLOBAL_UI_DEFAULTS },
   system: { ...GLOBAL_SYSTEM_DEFAULTS },
   cloudSync: { ...GLOBAL_CLOUD_SYNC_DEFAULTS, allowedOrigins: [...GLOBAL_CLOUD_SYNC_DEFAULTS.allowedOrigins] },
 }).default({
   discovery: { ...GLOBAL_DISCOVERY_DEFAULTS, searchPaths: [...GLOBAL_DISCOVERY_DEFAULTS.searchPaths] },
   links: { ...GLOBAL_LINKS_DEFAULTS },
-  ui: { ...GLOBAL_UI_DEFAULTS },
   system: { ...GLOBAL_SYSTEM_DEFAULTS },
   cloudSync: { ...GLOBAL_CLOUD_SYNC_DEFAULTS, allowedOrigins: [...GLOBAL_CLOUD_SYNC_DEFAULTS.allowedOrigins] },
 })

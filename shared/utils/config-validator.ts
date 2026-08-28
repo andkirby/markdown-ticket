@@ -5,7 +5,6 @@ import { logQuiet } from './logger.js'
 const defaultConfig: GlobalConfig = {
   discovery: { ...GLOBAL_CONFIG_DEFAULTS.discovery, searchPaths: [...GLOBAL_CONFIG_DEFAULTS.discovery.searchPaths] },
   links: { ...GLOBAL_CONFIG_DEFAULTS.links },
-  ui: { ...GLOBAL_CONFIG_DEFAULTS.ui },
   system: { ...GLOBAL_CONFIG_DEFAULTS.system },
   cloudSync: { ...GLOBAL_CONFIG_DEFAULTS.cloudSync, allowedOrigins: [...GLOBAL_CONFIG_DEFAULTS.cloudSync.allowedOrigins] },
 }
@@ -50,11 +49,6 @@ export function migrateConfig(oldConfig: unknown, quiet = false): GlobalConfig {
       enableHoverPreviews: defaultConfig.links.enableHoverPreviews,
       linkValidation: defaultConfig.links.linkValidation,
     },
-    ui: {
-      theme: defaultConfig.ui.theme,
-      autoRefresh: getBool(dashboard.autoRefresh, defaultConfig.ui.autoRefresh),
-      refreshInterval: getNumber(dashboard.refreshInterval, defaultConfig.ui.refreshInterval),
-    },
     system: defaultConfig.system,
     cloudSync: {
       allowedOrigins: getArray(asRecord(config.cloudSync).allowedOrigins, defaultConfig.cloudSync.allowedOrigins),
@@ -78,11 +72,6 @@ export function validateConfig(config: unknown, quiet = false): GlobalConfig {
       enableDocumentLinks: getBool(asRecord(root.links).enableDocumentLinks, defaultConfig.links.enableDocumentLinks),
       enableHoverPreviews: getBool(asRecord(root.links).enableHoverPreviews, defaultConfig.links.enableHoverPreviews),
       linkValidation: getBool(asRecord(root.links).linkValidation, defaultConfig.links.linkValidation),
-    },
-    ui: {
-      theme: getEnum(asRecord(root.ui).theme, ['light', 'dark', 'auto'], defaultConfig.ui.theme),
-      autoRefresh: getBool(asRecord(root.ui).autoRefresh, defaultConfig.ui.autoRefresh),
-      refreshInterval: getNumber(asRecord(root.ui).refreshInterval, defaultConfig.ui.refreshInterval),
     },
     system: {
       logLevel: getEnum(asRecord(root.system).logLevel, ['error', 'warn', 'info', 'debug'], defaultConfig.system.logLevel),
