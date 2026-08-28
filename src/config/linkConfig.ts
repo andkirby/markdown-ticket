@@ -10,12 +10,12 @@ const defaultLinkConfig: LinkConfig = {
   enableDocumentLinks: true,
 }
 
-const LINK_CONFIG_KEY = 'markdown-ticket-link-config'
-
 /**
- * Global link defaults from CONFIG_DIR/config.toml ([links]), fetched once per
- * session from /api/config/global. Precedence (highest wins):
- *   browser localStorage override > global config.toml > built-in defaults.
+ * Link configuration is OWNER-level, FILE-level (UAT decision 2026-08-24):
+ * CONFIG_DIR/config.toml [links], edited by owners via Settings - Advanced
+ * (BackendConfigSection) or the config API. There is no browser-localStorage
+ * override. Values are fetched once per session from /api/config/global and
+ * merged over the built-in defaults.
  */
 let globalLinkConfig: Partial<LinkConfig> | null = null
 let globalFetchStarted = false
@@ -72,29 +72,18 @@ export function subscribeGlobalLinkConfig(cb: () => void): () => void {
 }
 
 export function getLinkConfig(): LinkConfig {
-  let merged: LinkConfig = { ...defaultLinkConfig }
-  if (globalLinkConfig) {
-    merged = { ...merged, ...globalLinkConfig }
-  }
-  try {
-    const stored = localStorage.getItem(LINK_CONFIG_KEY)
-    if (stored) {
-      merged = { ...merged, ...JSON.parse(stored) }
-    }
-  }
-  catch (error) {
-    console.warn('Failed to load link config:', error)
-  }
-  return merged
+  return { ...defaultLinkConfig, ...globalLinkConfig }
 }
 
-function _setLinkConfig(config: Partial<LinkConfig>): void {
-  try {
-    const current = getLinkConfig()
-    const updated = { ...current, ...config }
-    localStorage.setItem(LINK_CONFIG_KEY, JSON.stringify(updated))
-  }
-  catch (error) {
-    console.warn('Failed to save link config:', error)
-  }
+// ── Test-only helpers ────────────────────────────────────────────────────
+
+/** Test hook: override the loaded global config (owner/file-level values). */
+export function __testSetGlobalLinkConfig(overrides: Partial<LinkConfig> | null): void {
+  globalLinkConfig = overrides
+}
+
+/** Test hook: reset module state between tests. */
+export function __testResetLinkConfig(): void {
+  globalLinkConfig = null
+  globalFetchStarted = false
 }

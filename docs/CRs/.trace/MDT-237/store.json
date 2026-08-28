@@ -103,13 +103,6 @@
       "routePolicy": "tests"
     },
     {
-      "id": "C6",
-      "kind": "constraint",
-      "text": "Link behavior merges configuration with precedence: browser localStorage override > CONFIG_DIR/config.toml [links] global defaults (fetched from /api/config/global) > built-in defaults.",
-      "sourceRef": "docs/CRs/MDT-237/architecture.md",
-      "routePolicy": "tests"
-    },
-    {
       "id": "C7",
       "kind": "constraint",
       "text": "Only .md references are processed by link normalization; non-.md hrefs pass through as valid file links and are never flagged broken for their file extension. Traversal and configured-path security boundaries are unchanged.",
@@ -134,6 +127,13 @@
       "id": "C9",
       "kind": "constraint",
       "text": "A code span containing a full http(s) URL links the whole span to that URL (code-styled, navigable); URL-less command spans with .md words stay verbatim regardless of index state.",
+      "sourceRef": "docs/CRs/MDT-237/uat.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C6",
+      "kind": "constraint",
+      "text": "Link configuration is owner-level and file-level only: CONFIG_DIR/config.toml [links] (read via /api/config/global, merged over built-in defaults). The browser localStorage override and its Board-tab toggle were removed; a stale legacy key is ignored.",
       "sourceRef": "docs/CRs/MDT-237/uat.md",
       "routePolicy": "tests"
     }

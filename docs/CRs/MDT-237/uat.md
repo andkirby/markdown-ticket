@@ -53,5 +53,11 @@ link defaults actually reach the rendering pipeline.
    relative wrap; legacy behavior is kept when the index has no positive
    knowledge (ticket-relative targets are unverifiable by design).
 
+8. **Link config is owner/file-level only (C6 amended, reverses D9's
+   localStorage precedence)** — getLinkConfig() = config.toml [links] over
+   defaults, nothing else; the Board-tab "Smart Links" localStorage toggle was
+   removed; stale markdown-ticket-link-config keys are ignored. Owners manage
+   links.* in Settings - Advanced (BackendConfigSection) or config.toml.
+
 ## Implementation Slices
 Both changes implemented in this round; no remaining execution work.

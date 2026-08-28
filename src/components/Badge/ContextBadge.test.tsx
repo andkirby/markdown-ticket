@@ -18,10 +18,12 @@ import type { ReactNode } from 'react'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { __testResetLinkConfig, __testSetGlobalLinkConfig } from '../../config/linkConfig'
 import { ContextBadge } from './ContextBadge'
 
 // Cleanup DOM between tests
 afterEach(() => {
+  __testResetLinkConfig()
   cleanup()
 })
 
@@ -176,10 +178,13 @@ describe('ContextBadge', () => {
     })
 
     it('renders the value as plain text when enableTicketLinks is disabled', () => {
-      localStorage.setItem(
-        'markdown-ticket-link-config',
-        JSON.stringify({ enableTicketLinks: false }),
-      )
+      // Link config is owner/file-level: simulate the global config value
+      // (config.toml [links]) instead of the removed localStorage override.
+      __testSetGlobalLinkConfig({
+        enableAutoLinking: true,
+        enableTicketLinks: false,
+        enableDocumentLinks: true,
+      })
       const { container } = render(
         <TestHarness projectCode="TEST">
           <ContextBadge variant="phase" value="TEST-012" />

@@ -103,3 +103,4 @@ full — feature enhancement, navigable document references
 - uat.md written; strict drift/lock not used
 - Approved (same session): non-.md passthrough — LinkNormalizer no longer flags non-.md hrefs as 'Unsupported file type'; only .md is processed, others pass through as valid file links (new C7; MDT-150 semantics amendment; negative tests in linkNormalization.mdt150.test.ts)
 - Approved (same session): unique-basename disambiguation for bare filenames (new BR-2.5/D10) and .html references processed with full .md parity (new C8); zero additional network cost (basename map per index load)
+- Approved (same session): link config is owner/file-level only (C6 amended, D9 precedence reversed) — config.toml [links] over defaults; localStorage override + Board-tab Smart Links toggle removed; links.* managed by owners in Settings - Advanced

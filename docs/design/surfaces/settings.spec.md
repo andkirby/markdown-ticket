@@ -187,7 +187,7 @@ A section below Markdown Density with rendering controls (Accent Colors toggle, 
 | Setting | Storage | Control | Default |
 |---------|---------|---------|---------|
 | Card Density | localStorage `mdt-settings-card-density` | Select (Comfortable / Compact) | `comfortable` |
-| Smart Links | localStorage `markdown-ticket-link-config.enableAutoLinking` (overrides global config.toml `[links]` since MDT-237) | Switch toggle | `true` |
+| Smart Links | (removed MDT-237 UAT) link config is owner/file-level — `config.toml [links]` via Settings → Advanced; no browser toggle | — | — |
 | Visible Card Badges | localStorage `markdown-ticket:board:ticket-card-badges` | Checkbox list | Status, Priority, Type, Phase, Related, Depends, Blocks, Worktree |
 
 ### Sharing
