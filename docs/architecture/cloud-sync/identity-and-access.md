@@ -251,9 +251,12 @@ CLI and stdio MCP use the same human credential provider:
 cloudflared access token -app=https://mdt-sync.example.com
 ```
 
-`cloudflared` launches the IdP flow when needed. The adapter passes the token to
-the shared cloud client in memory and does not print it, persist it, or include
-it in structured logs.
+`cloudflared access token` is non-interactive: it refreshes an existing
+session and fails when none exists. Bootstrap the personal session once per
+origin with `cloudflared access login <origin>` (the CLI `cloud login`
+command names the exact origin when no session exists). The adapter passes the
+token to the shared cloud client in memory and does not print it, persist it,
+or include it in structured logs.
 
 ### Headless MCP or Automation
 

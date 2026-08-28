@@ -225,7 +225,7 @@ export async function cloudLoginAction(options: CloudCommandOptions): Promise<vo
   if (!credential) {
     throw new CloudCommandError(
       'AUTHENTICATION_REQUIRED',
-      'No personal Access session could be obtained. Run cloudflared login first.',
+      `No personal Access session could be obtained. Bootstrap one with: cloudflared access login ${handle.coordinationOrigin}`,
       CloudExitCode.AUTHENTICATION_REQUIRED,
     )
   }
