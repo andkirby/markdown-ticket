@@ -155,4 +155,14 @@ build-bun-binary.sh
 logs/security/
 # Local-only design mockups (board-zai parallel design system — design artifact)
 docs/design/mockups/wireloom/
-scripts/
+# scripts/ is repo tooling — tracked by default (lint + tsc cover it).
+# Local exceptions only: `_*` prefix is the scratch/measurement convention;
+# everything else here is a regenerable artifact or a local-only leftover.
+scripts/_*
+scripts/code-finder/
+scripts/index.scip
+scripts/empty-env.json
+scripts/build-desktop.sh
+scripts/test_mcp.sh
+scripts/test_mcp_direct.py
+scripts/verify-pin-rail.mjs
