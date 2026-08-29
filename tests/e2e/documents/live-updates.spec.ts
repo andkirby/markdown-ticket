@@ -11,27 +11,6 @@ async function writeDocument(projectDir: string, relativePath: string, content: 
   await writeFile(absolutePath, content, 'utf8')
 }
 
-async function waitForDocumentWatcherReady(
-  fileWatcher: {
-    initDocumentWatchers: (projectId: string, projectRoot: string, documentPaths: string[], ticketsPath?: string) => number
-    once: (event: string, listener: (data: { projectId: string, watcherId: string }) => void) => void
-  },
-  projectId: string,
-  expectedWatcherSuffix: string,
-  startWatching: () => void,
-): Promise<void> {
-  await new Promise<void>((resolve) => {
-    const timeout = setTimeout(resolve, 1500)
-    fileWatcher.once('document-ready', (data) => {
-      if (data.projectId === projectId && data.watcherId.endsWith(expectedWatcherSuffix)) {
-        clearTimeout(timeout)
-        resolve()
-      }
-    })
-    startWatching()
-  })
-}
-
 test.describe('Document SSE live updates', () => {
   test('captures add, change, and delete events for configured document files', async ({ page, e2eContext }) => {
     const project = await e2eContext.projectFactory.createProject('empty', {
@@ -40,12 +19,8 @@ test.describe('Document SSE live updates', () => {
 
     await writeDocument(project.path, 'docs/live.md', '# Live Document\n\nInitial document marker')
 
-    await waitForDocumentWatcherReady(
-      e2eContext.fileWatcher,
-      project.key,
-      '__document__docs',
-      () => e2eContext.fileWatcher.initDocumentWatchers(project.key, project.path, ['docs'], 'docs/CRs'),
-    )
+    // MDT-239: admin seam awaits the backend's document-ready event server-side
+    await e2eContext.fileWatcher.initDocumentWatchers(project.key, project.path, ['docs'], 'docs/CRs', '__document__docs')
 
     await page.goto(`/prj/${project.key}/documents/docs/live.md`)
 
@@ -108,12 +83,8 @@ test.describe('Document SSE live updates', () => {
     await writeDocument(project.path, 'docs/current.md', '# Current Docs\n\nCurrent path marker')
     await writeDocument(project.path, 'guides/live.md', '# Guide Document\n\nInitial guide marker')
 
-    await waitForDocumentWatcherReady(
-      e2eContext.fileWatcher,
-      project.key,
-      '__document__docs',
-      () => e2eContext.fileWatcher.initDocumentWatchers(project.key, project.path, ['docs'], 'docs/CRs'),
-    )
+    // MDT-239: admin seam awaits the backend's document-ready event server-side
+    await e2eContext.fileWatcher.initDocumentWatchers(project.key, project.path, ['docs'], 'docs/CRs', '__document__docs')
 
     await page.goto(`/prj/${project.key}/documents/docs/current.md`)
     await expect(page.locator(documentSelectors.fileViewer)).toContainText('Current path marker')
@@ -144,14 +115,11 @@ test.describe('Document SSE live updates', () => {
     const saveButton = page.locator(pathSelectorSelectors.saveButton)
     await expect(saveButton).toBeEnabled()
 
-    await waitForDocumentWatcherReady(
-      e2eContext.fileWatcher,
-      project.key,
-      '__document__guides',
-      () => {
-        void saveButton.click()
-      },
-    )
+    // MDT-239: watcher init is triggered by the app's save action; the
+    // admin seam cannot pre-await it, so rely on the selector closing and
+    // the page navigation settling before any file writes (same tolerance
+    // the old 1500ms ready-timeout fallback provided).
+    await saveButton.click()
 
     await expect(pathSelector).not.toBeVisible({ timeout: 5000 })
 
@@ -208,12 +176,8 @@ test.describe('Document SSE live updates', () => {
 
     await writeDocument(project.path, 'docs/wireloom.md', initialContent)
 
-    await waitForDocumentWatcherReady(
-      e2eContext.fileWatcher,
-      project.key,
-      '__document__docs',
-      () => e2eContext.fileWatcher.initDocumentWatchers(project.key, project.path, ['docs'], 'docs/CRs'),
-    )
+    // MDT-239: admin seam awaits the backend's document-ready event server-side
+    await e2eContext.fileWatcher.initDocumentWatchers(project.key, project.path, ['docs'], 'docs/CRs', '__document__docs')
 
     await page.goto(`/prj/${project.key}/documents/docs/wireloom.md`)
 

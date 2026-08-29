@@ -44,7 +44,7 @@ test.describe('Subdocument SSE Events (MDT-142)', () => {
 
     await writeSubdocument(project.path, ticketCode, subdocumentFilename, initialContent)
 
-    e2eContext.fileWatcher.initMultiProjectWatcher([
+    await e2eContext.fileWatcher.initMultiProjectWatcher([
       { id: project.key, path: `${project.path}/docs/CRs` },
     ])
 
@@ -118,7 +118,7 @@ test.describe('Subdocument SSE Events (MDT-142)', () => {
 
     await writeSubdocument(project.path, ticketCode, subdocumentFilename, initialContent)
 
-    e2eContext.fileWatcher.initMultiProjectWatcher([
+    await e2eContext.fileWatcher.initMultiProjectWatcher([
       { id: project.key, path: `${project.path}/docs/CRs` },
     ])
 
@@ -190,7 +190,7 @@ test.describe('Subdocument SSE Events (MDT-142)', () => {
     await writeSubdocument(project.path, ticketCode, 'architecture.md', '# Architecture\n\nArchitecture root')
     await writeSubdocument(project.path, ticketCode, subdocumentFilename, initialContent)
 
-    e2eContext.fileWatcher.initMultiProjectWatcher([
+    await e2eContext.fileWatcher.initMultiProjectWatcher([
       { id: project.key, path: `${project.path}/docs/CRs` },
     ])
 

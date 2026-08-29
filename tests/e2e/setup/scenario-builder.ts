@@ -221,7 +221,7 @@ export async function buildScenario(
   projectFactory: ProjectFactory,
   type: ScenarioType = 'simple',
   fileWatcher?: {
-    initMultiProjectWatcher: (projectPaths: Array<{ id: string; path: string }>) => void
+    initMultiProjectWatcher: (projectPaths: Array<{ id: string; path: string }>) => void | Promise<void>
   },
 ): Promise<ScenarioResult> {
   const scenario = SCENARIOS[type]
@@ -261,7 +261,7 @@ export async function buildScenario(
   // Initialize file watcher for this project (if provided)
   // This ensures SSE events are broadcast when tickets are updated
   if (fileWatcher) {
-    fileWatcher.initMultiProjectWatcher([
+    await fileWatcher.initMultiProjectWatcher([
       { id: project.key, path: `${project.path}/docs/CRs` },
     ])
   }

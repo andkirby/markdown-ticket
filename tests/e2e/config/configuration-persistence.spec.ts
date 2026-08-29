@@ -10,6 +10,23 @@ import { expect, test } from '../fixtures/test-fixtures.js'
  * capable), so config endpoints are reachable.
  */
 test.describe('MDT-168 configuration persistence', () => {
+
+  // MDT-239: mutations persist in the run-shared user config — restore the
+  // link toggles so later spec files (SmartLink rendering) are not affected.
+  test.afterAll(async ({ e2eContext }) => {
+    const { backendUrl } = e2eContext
+    for (const [selector, value] of [
+      ['links.enableTicketLinks', true],
+      ['links.enableDocumentLinks', true],
+    ] as const) {
+      await fetch(`${backendUrl}/api/config`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ selector, value }),
+      })
+    }
+  })
+
   test.describe.configure({ mode: 'serial' })
 
   test('owner can read configuration selectors with exposure metadata', async ({ e2eContext }) => {

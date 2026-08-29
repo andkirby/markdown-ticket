@@ -39,6 +39,9 @@ test.describe('Scoped Global Search (MDT-179)', () => {
 
   test('scope controls are visible when quick search opens (BR-1.1, BR-1.2)', async ({ page, e2eContext }) => {
     await page.goto(e2eContext.frontendUrl)
+    // MDT-239: wait for the app shell (project auto-select) before pressing
+    // Cmd+K — pressing during boot misses the not-yet-attached key listener.
+    await expect(page.locator('nav, [data-testid="app-logo"]').first()).toBeVisible({ timeout: 10000 })
 
     // Open quick search with Cmd+K / Ctrl+K
     await page.keyboard.press('Meta+k')
@@ -58,6 +61,9 @@ test.describe('Scoped Global Search (MDT-179)', () => {
 
   test('user can switch scope by clicking tab (BR-1.3)', async ({ page, e2eContext }) => {
     await page.goto(e2eContext.frontendUrl)
+    // MDT-239: wait for the app shell (project auto-select) before pressing
+    // Cmd+K — pressing during boot misses the not-yet-attached key listener.
+    await expect(page.locator('nav, [data-testid="app-logo"]').first()).toBeVisible({ timeout: 10000 })
     await page.keyboard.press('Meta+k')
 
     // Click Projects tab
@@ -70,6 +76,9 @@ test.describe('Scoped Global Search (MDT-179)', () => {
 
   test('Tab cycles scope (BR-1.4)', async ({ page, e2eContext }) => {
     await page.goto(e2eContext.frontendUrl)
+    // MDT-239: wait for the app shell (project auto-select) before pressing
+    // Cmd+K — pressing during boot misses the not-yet-attached key listener.
+    await expect(page.locator('nav, [data-testid="app-logo"]').first()).toBeVisible({ timeout: 10000 })
     await page.keyboard.press('Meta+k')
 
     const input = page.getByTestId('quick-search-input')
@@ -92,6 +101,9 @@ test.describe('Scoped Global Search (MDT-179)', () => {
 
   test('global search shows grouped results (BR-2.1)', async ({ page, e2eContext }) => {
     await page.goto(e2eContext.frontendUrl)
+    // MDT-239: wait for the app shell (project auto-select) before pressing
+    // Cmd+K — pressing during boot misses the not-yet-attached key listener.
+    await expect(page.locator('nav, [data-testid="app-logo"]').first()).toBeVisible({ timeout: 10000 })
     await page.keyboard.press('Meta+k')
 
     // Type a query that matches projects
@@ -106,6 +118,9 @@ test.describe('Scoped Global Search (MDT-179)', () => {
 
   test('project results are visually distinct from tickets (BR-2.2)', async ({ page, e2eContext }) => {
     await page.goto(e2eContext.frontendUrl)
+    // MDT-239: wait for the app shell (project auto-select) before pressing
+    // Cmd+K — pressing during boot misses the not-yet-attached key listener.
+    await expect(page.locator('nav, [data-testid="app-logo"]').first()).toBeVisible({ timeout: 10000 })
     await page.keyboard.press('Meta+k')
 
     const input = page.getByTestId('quick-search-input')
@@ -120,6 +135,9 @@ test.describe('Scoped Global Search (MDT-179)', () => {
 
   test('partial project name matches by word prefix (BR-3.1)', async ({ page, e2eContext }) => {
     await page.goto(e2eContext.frontendUrl)
+    // MDT-239: wait for the app shell (project auto-select) before pressing
+    // Cmd+K — pressing during boot misses the not-yet-attached key listener.
+    await expect(page.locator('nav, [data-testid="app-logo"]').first()).toBeVisible({ timeout: 10000 })
     await page.keyboard.press('Meta+k')
 
     const input = page.getByTestId('quick-search-input')
@@ -132,6 +150,9 @@ test.describe('Scoped Global Search (MDT-179)', () => {
 
   test('exact ticket key prioritizes ticket lookup (BR-3.3)', async ({ page, e2eContext }) => {
     await page.goto(e2eContext.frontendUrl)
+    // MDT-239: wait for the app shell (project auto-select) before pressing
+    // Cmd+K — pressing during boot misses the not-yet-attached key listener.
+    await expect(page.locator('nav, [data-testid="app-logo"]').first()).toBeVisible({ timeout: 10000 })
     await page.keyboard.press('Meta+k')
 
     const input = page.getByTestId('quick-search-input')
@@ -144,6 +165,9 @@ test.describe('Scoped Global Search (MDT-179)', () => {
 
   test('arrow keys navigate across grouped sections (BR-5.1)', async ({ page, e2eContext }) => {
     await page.goto(e2eContext.frontendUrl)
+    // MDT-239: wait for the app shell (project auto-select) before pressing
+    // Cmd+K — pressing during boot misses the not-yet-attached key listener.
+    await expect(page.locator('nav, [data-testid="app-logo"]').first()).toBeVisible({ timeout: 10000 })
     await page.keyboard.press('Meta+k')
 
     const input = page.getByTestId('quick-search-input')
@@ -162,6 +186,9 @@ test.describe('Scoped Global Search (MDT-179)', () => {
 
   test('enter activates result and closes modal (BR-5.3)', async ({ page, e2eContext }) => {
     await page.goto(e2eContext.frontendUrl)
+    // MDT-239: wait for the app shell (project auto-select) before pressing
+    // Cmd+K — pressing during boot misses the not-yet-attached key listener.
+    await expect(page.locator('nav, [data-testid="app-logo"]').first()).toBeVisible({ timeout: 10000 })
     await page.keyboard.press('Meta+k')
 
     const input = page.getByTestId('quick-search-input')
@@ -196,6 +223,9 @@ test.describe('Scoped Global Search (MDT-179)', () => {
 
   test('Arrow keys navigate across all groups (BR-5.1, BR-5.2)', async ({ page, e2eContext }) => {
     await page.goto(e2eContext.frontendUrl)
+    // MDT-239: wait for the app shell (project auto-select) before pressing
+    // Cmd+K — pressing during boot misses the not-yet-attached key listener.
+    await expect(page.locator('nav, [data-testid="app-logo"]').first()).toBeVisible({ timeout: 10000 })
     await page.keyboard.press('Meta+k')
 
     const input = page.getByTestId('quick-search-input')
@@ -218,6 +248,9 @@ test.describe('Scoped Global Search (MDT-179)', () => {
 
   test('ambiguous query shows separate groups (BR-6.1)', async ({ page, e2eContext }) => {
     await page.goto(e2eContext.frontendUrl)
+    // MDT-239: wait for the app shell (project auto-select) before pressing
+    // Cmd+K — pressing during boot misses the not-yet-attached key listener.
+    await expect(page.locator('nav, [data-testid="app-logo"]').first()).toBeVisible({ timeout: 10000 })
     await page.keyboard.press('Meta+k')
 
     const input = page.getByTestId('quick-search-input')
@@ -230,6 +263,9 @@ test.describe('Scoped Global Search (MDT-179)', () => {
 
   test('empty state identifies active scope (BR-6.3)', async ({ page, e2eContext }) => {
     await page.goto(e2eContext.frontendUrl)
+    // MDT-239: wait for the app shell (project auto-select) before pressing
+    // Cmd+K — pressing during boot misses the not-yet-attached key listener.
+    await expect(page.locator('nav, [data-testid="app-logo"]').first()).toBeVisible({ timeout: 10000 })
     await page.keyboard.press('Meta+k')
 
     // Switch to Projects scope
@@ -245,6 +281,9 @@ test.describe('Scoped Global Search (MDT-179)', () => {
 
   test('scope resets to Global when modal reopens', async ({ page, e2eContext }) => {
     await page.goto(e2eContext.frontendUrl)
+    // MDT-239: wait for the app shell (project auto-select) before pressing
+    // Cmd+K — pressing during boot misses the not-yet-attached key listener.
+    await expect(page.locator('nav, [data-testid="app-logo"]').first()).toBeVisible({ timeout: 10000 })
 
     // Open, switch scope, close
     await page.keyboard.press('Meta+k')

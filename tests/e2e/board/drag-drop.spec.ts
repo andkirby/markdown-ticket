@@ -130,7 +130,7 @@ test.describe('Board Drag-Drop', () => {
 
     // Initialize file watcher for the test project's CRs folder
     const crsPath = `${scenario.projectDir}/docs/CRs/*.md`
-    e2eContext.fileWatcher.initMultiProjectWatcher([
+    await e2eContext.fileWatcher.initMultiProjectWatcher([
       { id: scenario.projectCode, path: crsPath },
     ])
 

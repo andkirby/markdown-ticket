@@ -8,7 +8,6 @@
 import type { ProjectFactory } from '@mdt/shared/test-lib'
 import type { Browser, Page } from '@playwright/test'
 import type { E2EContext } from '../setup/index.js'
-import { buildRuntimeConfig } from '../../../server/config/runtimeConfig.js'
 import { expect, test } from '../fixtures/test-fixtures.js'
 import { waitForBoardReady, waitForDocumentsReady, waitForListReady } from '../utils/helpers.js'
 import {
@@ -198,7 +197,9 @@ test.describe('MDT-177 read access sharing journey', () => {
     await visitor.locator(sharingSelectors.ownerUnlockCancelButton).click()
     await expect(visitor.locator(sharingSelectors.ownerUnlockDialog)).toHaveCount(0)
     expect(visitor.url()).toBe(listUrl)
-    await expect(visitor.locator(listSelectors.ticketTable).or(visitor.locator(listSelectors.ticketList))).toBeVisible()
+    // Both list containers exist in the DOM (visibility via CSS breakpoints);
+    // .or() strict-matches both. Match whichever is visible instead.
+    await expect(visitor.locator(`${listSelectors.ticketTable}:visible, ${listSelectors.ticketList}:visible`).first()).toBeVisible()
 
     await openOwnerUnlockFromMenu(visitor)
     await visitor.locator(authSelectors.tokenInput).fill(invalidOwnerToken)
@@ -250,15 +251,20 @@ test.describe('MDT-177 read access sharing journey', () => {
   })
 
   test('configured public origin is used for generated invite links', async ({ page, e2eContext }) => {
-    setRuntimeConfigOverride(e2eContext, {
-      PUBLIC_ORIGIN: 'https://share.example.com',
-    })
     const dataset = await createSharingDataset(e2eContext.projectFactory)
     const accessName = accessNameFor(dataset)
 
     try {
       await page.goto(`/prj/${dataset.firstPrivate.code}`)
       await waitForBoardReady(page)
+      // Apply the override only after the page has loaded and established
+      // owner capability — a public (non-loopback) PUBLIC_ORIGIN at load time
+      // changes the app's owner-auth posture and hides owner UI. The modal
+      // loads link-origin options from the backend when it opens, so the
+      // override still reaches invite-link generation.
+      await setRuntimeConfigOverride(e2eContext, {
+        PUBLIC_ORIGIN: 'https://share.example.com',
+      })
       await openSharingSettings(page)
       await createNamedAccess(page, accessName, [
         dataset.firstPrivate.code,
@@ -270,7 +276,7 @@ test.describe('MDT-177 read access sharing journey', () => {
       expect(new URL(inviteUrl).origin).toBe('https://share.example.com')
     }
     finally {
-      clearRuntimeConfigOverride(e2eContext)
+      await clearRuntimeConfigOverride(e2eContext)
     }
   })
 })
@@ -394,25 +400,16 @@ async function openCleanVisitorPage(browser: Browser, inviteUrl: string): Promis
   return visitor
 }
 
-function setRuntimeConfigOverride(e2eContext: E2EContext, overrides: NodeJS.ProcessEnv): void {
-  e2eContext.app.locals.runtimeConfig = buildRuntimeConfig({
-    ...process.env,
-    CONFIG_DIR: e2eContext.testEnv.getConfigDirectory(),
-    NODE_ENV: 'test',
-    API_SECURITY_AUTH: process.env.API_SECURITY_AUTH,
-    API_AUTH_TOKEN: process.env.API_AUTH_TOKEN,
-    ...overrides,
-  } as NodeJS.ProcessEnv)
+/**
+ * MDT-239: runtime-config overrides now go through the backend's /_e2e
+ * admin seam instead of in-process app.locals mutation.
+ */
+async function setRuntimeConfigOverride(e2eContext: E2EContext, overrides: NodeJS.ProcessEnv): Promise<void> {
+  await e2eContext.setRuntimeConfigOverride(overrides)
 }
 
-function clearRuntimeConfigOverride(e2eContext: E2EContext): void {
-  e2eContext.app.locals.runtimeConfig = buildRuntimeConfig({
-    ...process.env,
-    CONFIG_DIR: e2eContext.testEnv.getConfigDirectory(),
-    NODE_ENV: 'test',
-    API_SECURITY_AUTH: process.env.API_SECURITY_AUTH,
-    API_AUTH_TOKEN: process.env.API_AUTH_TOKEN,
-  } as NodeJS.ProcessEnv)
+async function clearRuntimeConfigOverride(e2eContext: E2EContext): Promise<void> {
+  await e2eContext.clearRuntimeConfigOverride()
 }
 
 async function openProjectBrowser(page: Page): Promise<void> {

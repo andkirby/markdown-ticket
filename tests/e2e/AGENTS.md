@@ -4,6 +4,7 @@ Essential guidance for agents writing E2E tests. For detailed reference, see:
 - `TESTING_SCENARIOS.md` — Scenario presets and API reference
 - `TESTING_PATTERNS.md` — Common test patterns and recipes
 - `TESTING_INFRASTRUCTURE.md` — Test environment setup details
+- `../../../scripts/e2e/AGENTS.md` — run infrastructure design (wrapper, out-of-process backend, admin seam)
 
 ## File Structure
 
@@ -11,7 +12,7 @@ Essential guidance for agents writing E2E tests. For detailed reference, see:
 tests/e2e/
   fixtures/test-fixtures.ts     — extends Playwright base with e2eContext fixture
   setup/
-    e2e-context.ts              — singleton: TestEnvironment + ProjectFactory + Express server
+    e2e-context.ts              — thin client: adopts wrapper CONFIG_DIR, HTTP admin adapter
     scenario-builder.ts         — named datasets: simple (3), medium (7), complex (12) tickets
     index.ts                    — re-exports buildScenario, ScenarioResult
   utils/
@@ -82,11 +83,13 @@ Read it before writing a test — never guess selectors from component names.
   - Active project: `[data-testid="project-selector-card-{CODE}"]` (larger card)
   - Inactive projects: `[data-testid="project-selector-chip-{CODE}"]` (compact chips)
   - Clicking the active project card opens the full project panel
-- **View Mode Switcher (MDT-131)**: Merged Board|List toggle with Documents button:
-  - Board|List toggle: `navSelectors.boardListToggle` — `[data-testid="board-list-toggle"]`
-  - Documents button: `navSelectors.documentsButton` — `[data-testid="documents-button"]`
-  - Hover overlay: `navSelectors.boardListToggleOverlay` — `[data-testid="board-list-toggle-overlay"]`
-  - View mode changes URL: `/prj/{code}` (board), `/prj/{code}/list`, `/prj/{code}/documents`
+- **View Mode Switcher (MDT-131/206)**: four dedicated buttons in the header,
+  each carrying `data-active="true|false"`:
+  - Board (flat): `navSelectors.boardModeFlatToggle`
+  - Epics (swimlanes): `navSelectors.boardModeEpicsToggle`
+  - List: `navSelectors.viewModeListToggle`
+  - Documents: `navSelectors.documentsButton`
+  - View mode changes URL: `/prj/{code}` (board), `/prj/{code}/epics`, `/prj/{code}/list`, `/prj/{code}/documents`
 - **Mobile Theme Toggle (MDT-131)**: 20% transparent floating button on mobile:
   - Mobile theme toggle: `projectSelectors.mobileThemeToggle` — `[data-testid="mobile-theme-toggle"]`
   - Only visible on mobile (< 768px)

@@ -34,6 +34,13 @@ export interface Ticket {
   relatedTickets: string[]
   dependsOn: string[]
   blocks: string[]
+  /**
+   * MDT-226/MDT-239: source discriminator for unified board items —
+   * `'projected'` marks a cloud-projected read-only stub (no canonical
+   * Markdown file). Absent on canonical local tickets. Normalization must
+   * preserve it or projected stubs lose their identity downstream.
+   */
+  kind?: 'canonical' | 'projected'
   inWorktree?: boolean
   worktreePath?: string
   subdocuments?: SubDocument[]

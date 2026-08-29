@@ -192,6 +192,9 @@ export class TicketService {
       assignee: t.assignee ?? null,
       level: t.level ?? null,
       phaseEpic: t.phaseEpic ?? null,
+      relatedTickets: t.relatedTickets ?? null,
+      dependsOn: t.dependsOn ?? null,
+      blocks: t.blocks ?? null,
       dateCreated: t.dateCreated ? t.dateCreated.toISOString() : null,
       lastModified: t.lastModified ? t.lastModified.toISOString() : null,
     }))
@@ -215,6 +218,9 @@ export class TicketService {
         assignee: entry.header.assignee,
         level: null,
         phaseEpic: null,
+        relatedTickets: null,
+        dependsOn: null,
+        blocks: null,
         dateCreated: entry.header.date_created,
         lastModified: entry.header.last_modified,
       }))

@@ -33,8 +33,12 @@ test.describe('MDT-131: Mobile Responsive UI', () => {
       await page.goto(`/prj/${scenario.projectCode}`)
       await waitForBoardReady(page)
 
+      // The logo is a single theme-aware masked element (.app-logo) — there is
+      // no per-viewport asset swap and no src attribute (see MobileLogo.tsx).
       const logo = page.locator('[data-testid="app-logo"]')
-      await expect(logo).toHaveAttribute('src', /logo-mdt-m-dark_64x64\.png/)
+      await expect(logo).toBeVisible()
+      await expect(logo).toHaveClass(/app-logo/)
+      await expect(logo).toHaveAttribute('role', 'img')
     })
   })
 

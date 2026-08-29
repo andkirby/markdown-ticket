@@ -172,6 +172,13 @@
     z-index: 1;
   }
 
+  /* MDT-239: keep the card's favorite star clickable — .project-card__content
+     (z-index 1) otherwise overlays the star rendered before it in DOM order. */
+  .project-card .fav-star-btn--card {
+    @apply relative;
+    z-index: 2;
+  }
+
   .project-card__code {
     /* MDT-236: content (browser panel) — density SIZE token; rail resets to chrome */
     @apply text-[length:var(--fs-md)] font-medium flex-shrink-0;
@@ -198,7 +205,11 @@
      project description has no room, so it is hidden here (the browser panel
      still shows it). */
   .project-card--rail {
-    @apply min-w-[100px] sm:min-w-[150px] max-w-[150px] sm:max-w-[280px] flex-1 h-9;
+    /* MDT-239: no width floor below sm — a forced 100px min on narrow
+       viewports made the card overflow header__left and its title box
+       intercept pointer events over the hamburger button. The title
+       truncates instead (wrapper is min-w-0). sm keeps the 150px floor. */
+    @apply min-w-0 sm:min-w-[150px] max-w-[150px] sm:max-w-[280px] flex-1 h-9;
     /* h-9 (fixed) overrides the base .project-card density sizing.
        MDT-236: rail card = header chrome (density-immune) — reset the
        content-density padding the base class now applies. */
@@ -214,6 +225,16 @@
   /* MDT-236: rail card children stay on the static chrome type scale. */
   .project-card--rail .project-card__code {
     font-size: var(--fs-ui-sm);
+  }
+
+  /* MDT-239: below sm the rail title is hidden so the card collapses to its
+     code. At intrinsic ~150px the card overflowed its shrunken wrapper in
+     header__left and its title box intercepted clicks on the hamburger
+     button (narrow viewports). Same pattern as .project-card__desc above. */
+  @media (max-width: 639px) {
+    .project-card--rail .project-card__title {
+      display: none;
+    }
   }
 
   .project-card--rail .project-card__title {

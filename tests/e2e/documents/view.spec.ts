@@ -97,9 +97,18 @@ test.describe('Documents View', () => {
     const fileViewer = page.locator(documentSelectors.fileViewer)
     await expect(fileViewer).toBeVisible()
     await expect(fileViewer).toContainText('Test Project')
+    // The timestamp button shows a relative label ('just now' for a file the
+    // scenario created moments ago); which date is shown (updated/created)
+    // lives in the aria-label, not in the visible text (RelativeTimestamp).
     const timestamp = fileViewer.locator('.relative-timestamp')
-    await expect(timestamp).toContainText('Updated')
+    await expect(timestamp).toBeVisible()
+    await expect(timestamp).toContainText('just now')
+    // The button still toggles between updated/created (mode in aria-label).
+    // toHaveAttribute regexes must match the WHOLE value, hence the .* prefix.
+    await expect(timestamp).toHaveAttribute('aria-label', /.*Currently showing updated/)
     await timestamp.click()
-    await expect(timestamp).toContainText('Created')
+    await expect(timestamp).toHaveAttribute('aria-label', /.*Currently showing created/)
+    await timestamp.click()
+    await expect(timestamp).toHaveAttribute('aria-label', /.*Currently showing updated/)
   })
 })

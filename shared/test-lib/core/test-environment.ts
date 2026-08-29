@@ -9,13 +9,28 @@ import type { TestEnvironment as ITestEnvironment } from '../types.js'
 import { randomUUID } from 'node:crypto'
 import { existsSync, mkdirSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import process from 'node:process'
 import { getPortConfig, validatePortConfig } from '../config/ports.js'
 import { TestFrameworkError } from '../types.js'
 
 const EXIT_SIGNALS = ['SIGINT', 'SIGTERM', 'SIGHUP', 'uncaughtException', 'unhandledRejection'] as const
 const ERR_NOT_INIT = 'Test environment not initialized. Call setup() first.'
+
+/** Options for TestEnvironment construction */
+export interface TestEnvironmentOptions {
+  /**
+   * Adopt an existing config directory instead of creating a new temp one.
+   * The temp directory is assumed to be the config directory's parent
+   * (matching the layout this class creates: `<tempDir>/config`).
+   *
+   * Use this when a run-level orchestrator (e.g. the e2e wrapper) owns the
+   * directory lifecycle and multiple processes must share one CONFIG_DIR.
+   * Adopted directories are NEVER deleted by cleanup() — the owner is
+   * responsible for removal.
+   */
+  configDir?: string
+}
 
 /** Manages isolated test environments with unique temporary directories and port configurations */
 export class TestEnvironment {
@@ -27,11 +42,14 @@ export class TestEnvironment {
   private _ports: ReturnType<typeof getPortConfig>
   private _cleanupHandlers: Array<() => Promise<void>> = []
   private _exitHandler: (() => void) | null = null
+  private _adoptedConfigDir: string | null = null
 
-  constructor() {
+  constructor(options: TestEnvironmentOptions = {}) {
     this._id = randomUUID()
     this._createdAt = new Date()
     this._ports = getPortConfig()
+    if (options.configDir)
+      this._adoptedConfigDir = options.configDir
     this._setupExitHandlers()
   }
 
@@ -41,6 +59,15 @@ export class TestEnvironment {
       throw new TestFrameworkError('Test environment already initialized', 'ENV_ALREADY_SETUP')
     try {
       validatePortConfig(this._ports)
+      if (this._adoptedConfigDir) {
+        if (!existsSync(this._adoptedConfigDir))
+          throw new TestFrameworkError(`Adopted config directory does not exist: ${this._adoptedConfigDir}`, 'ADOPTED_CONFIG_DIR_MISSING')
+        this._configDir = this._adoptedConfigDir
+        this._tempDir = dirname(this._adoptedConfigDir)
+        process.env.CONFIG_DIR = this._configDir
+        this._isInitialized = true
+        return
+      }
       const tempBase = tmpdir()
       this._tempDir = join(tempBase, `mdt-test-${this._id}`)
       this._configDir = join(this._tempDir, 'config')
@@ -112,6 +139,10 @@ export class TestEnvironment {
     if (!this._tempDir)
       return
     try {
+      if (this._adoptedConfigDir) {
+        // Adopted directories are owned by the orchestrator — never delete.
+        return
+      }
       const systemTempDir = tmpdir()
       if (!this._tempDir.startsWith(systemTempDir))
         throw new TestFrameworkError(`Refusing to delete outside system temp directory: ${this._tempDir}`, 'SAFETY_VIOLATION')

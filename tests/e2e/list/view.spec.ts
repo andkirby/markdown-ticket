@@ -26,12 +26,11 @@ test.describe('List View', () => {
     // Wait for either table (desktop) or list (mobile) to be visible
     await page.waitForSelector(`${listSelectors.ticketTable}, ${listSelectors.ticketList}`, { state: 'visible', timeout: 10000 })
 
-    // Assert: Verify ticket items are rendered (desktop rows or mobile cards)
+    // Assert: Verify ticket items are rendered (desktop rows or mobile cards).
+    // Rows arrive asynchronously after the table container — poll for them
+    // instead of taking an instant count (races ticket load).
     const ticketItems = page.locator(listSelectors.ticketItem)
-    const itemCount = await ticketItems.count()
-
-    // Should have at least the tickets we created
-    expect(itemCount).toBeGreaterThanOrEqual(scenario.ticketCount)
+    await expect.poll(async () => await ticketItems.count()).toBeGreaterThanOrEqual(scenario.ticketCount)
 
     // Assert: Verify each item has expected data attributes
     for (const crCode of scenario.crCodes) {
@@ -52,6 +51,8 @@ test.describe('List View', () => {
     // Get initial order of tickets (using data-testid attributes)
     const getTicketCodes = async (): Promise<string[]> => {
       const items = page.locator(listSelectors.ticketItem)
+      // Items can arrive after the container — poll before reading order.
+      await expect.poll(async () => await items.count(), { timeout: 10000 }).toBeGreaterThan(0)
       const count = await items.count()
       const codes: string[] = []
       for (let i = 0; i < count; i++) {

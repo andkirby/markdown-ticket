@@ -18,6 +18,7 @@ Load the skills accordingly:
 ## Toolchain
 
 - **Runtime**: `bun` (package manager, test runner, dev servers)
+- **Repo scripts**: `scripts/` is tracked tooling (lint + tsc covered); `_*` prefix = local scratch. See [scripts/AGENTS.md](scripts/AGENTS.md) for the inventory.
 - **Test Frameworks**: Jest (server unit tests), Playwright (E2E)
 
 ## Development Commands
@@ -55,8 +56,9 @@ Load the skills accordingly:
 - `bun run dev:full` - **Recommended** - Builds shared code, starts frontend + backend
 
 ### Testing
-- `bun run test:e2e` - Playwright E2E
-- `PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/file.spec.ts --project=chromium` - Run specific test without server restart
+- `bun run test:e2e` - Playwright E2E (wrapper: ephemeral ports, run-scoped config, teardown)
+- `bun run test:e2e -- tests/e2e/board/view.spec.ts` - Run specific spec file(s) via the wrapper
+- `PWTEST_SKIP_WEB_SERVER=1 bunx playwright test <file>` - Raw Playwright against an env you orchestrate yourself (needs TEST_*_PORT/CONFIG_DIR exported; fails fast otherwise)
 
 **See [tests/AGENTS.md](tests/AGENTS.md)** for E2E testing ports, isolation, and conventions.
 

@@ -397,6 +397,10 @@ test.describe('QuickSearch Cross-Project: Current Project Mode (MDT-152 BR-4)', 
     await waitForBoardReady(page)
 
     await openQuickSearch(page)
+    // MDT-179 made plain-text mode scope-aware: in the default global scope
+    // there is no project context (no indicator). Switch to the Tickets
+    // scope — a current-project mode — where the "In: CODE" indicator shows.
+    await page.getByTestId('search-scope-tab-tickets').click()
     await page.locator(quickSearchSelectors.input).fill('test')
 
     await expect(page.locator(crossSearchSelectors.modeIndicator)).toBeVisible()
@@ -452,8 +456,9 @@ test.describe('QuickSearch Cross-Project: Keyboard Navigation (MDT-152 BR-6)', (
     await page.keyboard.press('ArrowDown')
     await page.keyboard.press('ArrowDown')
 
-    // Something should be selected
-    const selected = page.locator('[aria-selected="true"]')
+    // Something should be selected. Scope to the results listbox — the
+    // scope tab strip also uses aria-selected and would strict-match.
+    const selected = page.locator('[data-testid="quick-search-results"] [aria-selected="true"]')
     await expect(selected).toBeVisible()
   })
 

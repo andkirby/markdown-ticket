@@ -65,10 +65,16 @@ export function QuickSearchModal({ isOpen, onClose, tickets, onSelectTicket, onS
       })()
     : false
 
-  // Trigger cross-project search when mode changes to ticket_key or project_scope
+  // Trigger cross-project search when mode changes to ticket_key or project_scope.
+  // MDT-239: depend on the hook's stable callbacks (search/cancel are
+  // useCallback-stable) — the previous `crossProject` object dependency is a
+  // fresh object every render, which re-triggered the effect on every render
+  // and left the results in a permanent loading/skeleton loop.
+  const crossProjectSearch = crossProject.search
+  const crossProjectCancel = crossProject.cancel
   useEffect(() => {
     if (queryMode === 'ticket_key' && queryParts.ticketCode) {
-      crossProject.search({
+      crossProjectSearch({
         mode: 'ticket_key',
         query: queryParts.ticketCode,
         limitPerProject: 5,
@@ -76,7 +82,7 @@ export function QuickSearchModal({ isOpen, onClose, tickets, onSelectTicket, onS
       })
     }
     else if (queryMode === 'project_scope' && queryParts.projectCode && queryParts.searchText && !invalidProjectCode) {
-      crossProject.search({
+      crossProjectSearch({
         mode: 'project_scope',
         query: queryParts.searchText,
         projectCode: queryParts.projectCode,
@@ -85,9 +91,9 @@ export function QuickSearchModal({ isOpen, onClose, tickets, onSelectTicket, onS
       })
     }
     else {
-      crossProject.cancel()
+      crossProjectCancel()
     }
-  }, [queryMode, queryParts.ticketCode, queryParts.projectCode, queryParts.searchText, invalidProjectCode, crossProject])
+  }, [queryMode, queryParts.ticketCode, queryParts.projectCode, queryParts.searchText, invalidProjectCode, crossProjectSearch, crossProjectCancel])
 
   // Cleanup cross-project search on close
   useEffect(() => {

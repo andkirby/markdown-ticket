@@ -57,7 +57,9 @@ test.describe('Epic badge linking (MDT-193)', () => {
     await expect(sourceCard).toBeVisible()
 
     // DECISIVE: the phase badge renders the bare key as a link (not plain text).
-    const phaseBadge = sourceCard.locator('.badge[data-context="phase"]')
+    // MDT-193/MDT-239: a bare ticket key renders as data-context="epic"
+    // (gold accent + Zap icon) — free-text phase labels keep data-context="phase".
+    const phaseBadge = sourceCard.locator('.badge[data-context="epic"]')
     await expect(phaseBadge).toBeVisible()
     const epicLink = phaseBadge.locator('a[data-link-type="ticket"]')
     await expect(epicLink).toBeVisible()

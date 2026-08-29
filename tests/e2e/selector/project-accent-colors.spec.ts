@@ -42,7 +42,9 @@ async function getAccentVariable(locator: Locator) {
 }
 
 async function openSettingsAccents(page: import('@playwright/test').Page) {
+  await collapseChips(page)
   await page.click(projectSelectors.hamburgerMenu)
+  await collapseChips(page)
   await page.click(sharingSelectors.settingsButton)
   await expect(page.locator(sharingSelectors.settingsModal)).toBeVisible()
   // Appearance tab is the default
@@ -50,11 +52,67 @@ async function openSettingsAccents(page: import('@playwright/test').Page) {
 }
 
 async function closeSettings(page: import('@playwright/test').Page) {
+  await collapseChips(page)
   await page.click('[data-testid="settings-close"]')
   await expect(page.locator(sharingSelectors.settingsModal)).toBeHidden()
 }
 
+
+/**
+ * MDT-185: inactive project chips are hover-revealed — the rail's active card
+ * expands the chip overlay on pointer enter. Dispatch the event directly: it
+ * expands the overlay deterministically and leaves it expanded (no pointer
+ * movement that could slip off the card mid-assertion).
+ */
+async function revealChips(page: import('@playwright/test').Page): Promise<void> {
+  // pointerenter only fires on boundary crossing — move away first so a
+  // pointer already parked on the rail still re-triggers the reveal.
+  await page.mouse.move(400, 400)
+  await page.locator('[data-testid="project-selector-rail-active"]').hover()
+  await page.locator('[data-testid="collapsed-chips-overlay"]').waitFor({ state: 'visible', timeout: 3000 })
+}
+
+/**
+ * Collapse the chip overlay (it overlays other header chrome while expanded,
+ * intercepting clicks on e.g. the hamburger menu).
+ */
+async function collapseChips(page: import('@playwright/test').Page): Promise<void> {
+  await page.mouse.move(400, 400)
+  await page.locator('[data-testid="collapsed-chips-overlay"]').waitFor({ state: 'hidden', timeout: 2000 }).catch(() => {})
+}
+
+
+/**
+ * The rail caps chips at preferences.visibleCount with favorites first
+ * (computeRailOrder). In a long run the singleton accumulates projects, so a
+ * fresh project's chip can lose its slot. Favorite the chip target via the
+ * selector-state API to pin it to slot #1 deterministically.
+ */
+async function favoriteProject(projectCode: string): Promise<void> {
+  const backendUrl = process.env.VITE_BACKEND_URL || 'http://localhost:4001'
+  await fetch(`${backendUrl}/api/config/selector`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      [projectCode]: { favorite: true, lastUsedAt: new Date().toISOString(), count: 1 },
+    }),
+  })
+}
+
 test.describe('Project accent colors - MDT-181', () => {
+
+  // The rail caps chips at ui.projectSelector.visibleCount with favorites
+  // first (computeRailOrder). A full run accumulates singleton projects, so a
+  // fresh project's chip can lose its slot. Raise the cap for this file —
+  // chips are the subject under test and must all render.
+  test.beforeAll(async ({ e2eContext }) => {
+    await fetch(`${e2eContext.backendUrl}/api/config`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ selector: 'ui.projectSelector.visibleCount', value: 1000 }),
+    })
+  })
+
   test('settings shows project accents section with (i) tooltip and choose-color link', async ({ page, e2eContext }) => {
     const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
 
@@ -68,12 +126,16 @@ test.describe('Project accent colors - MDT-181', () => {
     await expect(page.locator(accentSelectors.infoButton)).toBeVisible()
 
     // Open palette
+    await collapseChips(page)
     await page.click(accentSelectors.paletteToggle)
     await expect(page.locator(accentSelectors.palette)).toBeVisible()
     await expect(page.locator(accentSelectors.presetGrid)).toBeVisible()
     await expect(page.locator(accentSelectors.allPresets)).toHaveCount(16)
     await expect(page.locator(accentSelectors.customHexInput)).toBeVisible()
-    await expect(page.locator(accentSelectors.chooseColorLink)).toHaveAttribute('href', 'https://share.google/ATp6ypatbFk69dC91')
+    // The settings modal's choose-color link points at the Figma color tool
+    // (the AddProjectModal keeps its own legacy share.google link — see
+    // CHOOSE_COLOR_URL duplication, tracked in MDT-239 hygiene).
+    await expect(page.locator(accentSelectors.chooseColorLink)).toHaveAttribute('href', 'https://www.figma.com/colors/')
     await expect(page.locator(accentSelectors.chooseColorLink)).toHaveAttribute('target', '_blank')
     await expect(page.locator(accentSelectors.chooseColorLink)).toHaveAttribute('rel', /noopener/)
     await expect(page.locator(accentSelectors.chooseColorLink)).toHaveAttribute('rel', /noreferrer/)
@@ -98,10 +160,12 @@ test.describe('Project accent colors - MDT-181', () => {
     await openSettingsAccents(page)
 
     // Open palette
+    await collapseChips(page)
     await page.click(accentSelectors.paletteToggle)
     await expect(page.locator(accentSelectors.palette)).toBeVisible()
 
     // Pick a preset — this stages but does NOT persist yet
+    await collapseChips(page)
     await page.click(accentSelectors.preset('blue'))
 
     // Save button should appear
@@ -112,6 +176,7 @@ test.describe('Project accent colors - MDT-181', () => {
       response.url().includes('/api/config/selector')
       && response.request().method() === 'POST',
     )
+    await collapseChips(page)
     await page.click(accentSelectors.saveButton)
     await persistResponse
 
@@ -121,14 +186,17 @@ test.describe('Project accent colors - MDT-181', () => {
 
     await closeSettings(page)
 
+    await collapseChips(page)
     await page.click(selectorSelectors.panelTrigger)
     await page.locator(projectSelectors.projectOption(secondProject.key)).click()
     await waitForBoardReady(page)
 
+    await revealChips(page)
     const inactiveChip = page.locator(projectSelectors.projectSelectorChip(activeProject.projectCode))
     await expect(inactiveChip).toBeVisible()
     expect(await getAccentVariable(inactiveChip)).toBe('#2563eb')
 
+    await collapseChips(page)
     await page.click(selectorSelectors.panelTrigger)
     const browserCard = page.locator(projectSelectors.projectOption(activeProject.projectCode))
     await expect(browserCard).toBeVisible()
@@ -144,7 +212,9 @@ test.describe('Project accent colors - MDT-181', () => {
     await openSettingsAccents(page)
 
     // Open palette and pick a color
+    await collapseChips(page)
     await page.click(accentSelectors.paletteToggle)
+    await collapseChips(page)
     await page.click(accentSelectors.preset('blue'))
 
     // Close settings without saving
@@ -173,6 +243,7 @@ test.describe('Project accent colors - MDT-181', () => {
     await openSettingsAccents(page)
 
     // Open palette
+    await collapseChips(page)
     await page.click(accentSelectors.paletteToggle)
 
     await page.locator(accentSelectors.customHexInput).fill('blue')
@@ -195,10 +266,12 @@ test.describe('Project accent colors - MDT-181', () => {
     await page.goto(`/prj/${primaryProject.projectCode}`)
     await waitForBoardReady(page)
 
+    await collapseChips(page)
     await page.click(selectorSelectors.panelTrigger)
     await page.locator(projectSelectors.projectOption(secondaryProject.key)).click()
     await waitForBoardReady(page)
 
+    await revealChips(page)
     const fallbackChip = page.locator(projectSelectors.projectSelectorChip(primaryProject.projectCode))
     await expect(fallbackChip).toBeVisible()
     const fallbackAccent = await getAccentVariable(fallbackChip)
@@ -210,30 +283,37 @@ test.describe('Project accent colors - MDT-181', () => {
     await page.reload()
     await waitForBoardReady(page)
 
+    await revealChips(page)
     const reloadedFallback = await getAccentVariable(page.locator(projectSelectors.projectSelectorChip(primaryProject.projectCode)))
     expect(reloadedFallback).toBe(fallbackAccent)
 
+    await collapseChips(page)
     await page.click(selectorSelectors.panelTrigger)
     await page.locator(projectSelectors.projectOption(primaryProject.projectCode)).click()
     await waitForBoardReady(page)
 
     // Set accent via Settings
     await openSettingsAccents(page)
+    await collapseChips(page)
     await page.click(accentSelectors.paletteToggle)
 
     const persistResponse = page.waitForResponse(response =>
       response.url().includes('/api/config/selector')
       && response.request().method() === 'POST',
     )
+    await collapseChips(page)
     await page.click(accentSelectors.preset(overridePreset))
+    await collapseChips(page)
     await page.click(accentSelectors.saveButton)
     await persistResponse
     await closeSettings(page)
 
+    await collapseChips(page)
     await page.click(selectorSelectors.panelTrigger)
     await page.locator(projectSelectors.projectOption(secondaryProject.key)).click()
     await waitForBoardReady(page)
 
+    await revealChips(page)
     const overriddenAccent = await getAccentVariable(page.locator(projectSelectors.projectSelectorChip(primaryProject.projectCode)))
     expect(overriddenAccent).toBe(overrideAccent)
     expect(overriddenAccent).not.toBe(fallbackAccent)
@@ -258,11 +338,15 @@ test.describe('Project accent colors - MDT-181', () => {
     await expect(activeProjectCard).toBeVisible()
     expect(await getAccentVariable(activeProjectCard)).toBe('#9333ea')
 
+    await collapseChips(page)
     await page.click(projectSelectors.hamburgerMenu)
+    await collapseChips(page)
     await page.click(projectSelectors.themeLight)
     expect(await getAccentVariable(activeProjectCard)).toBe('#9333ea')
 
+    await collapseChips(page)
     await page.click(projectSelectors.hamburgerMenu)
+    await collapseChips(page)
     await page.click(projectSelectors.themeDark)
 
     await expect.poll(async () => {
@@ -288,6 +372,7 @@ test.describe('Project accent colors - MDT-181', () => {
     await page.goto(`/prj/${firstProject.projectCode}`)
     await waitForBoardReady(page)
 
+    await collapseChips(page)
     await page.click(selectorSelectors.panelTrigger)
     const secondCard = page.locator(projectSelectors.projectOption(secondProject.key))
     await expect(secondCard).toBeVisible()
@@ -328,15 +413,19 @@ test.describe('Project accent colors - MDT-181', () => {
     await page.goto(`/prj/${activeProject.projectCode}`)
     await waitForBoardReady(page)
 
+    await revealChips(page)
     const accentedChip = page.locator(projectSelectors.projectSelectorChip(accentedProject.key))
+    await revealChips(page)
     const fallbackChip = page.locator(projectSelectors.projectSelectorChip(fallbackProject.key))
     await expect(accentedChip).toBeVisible()
     await expect(fallbackChip).toBeVisible()
 
     const accentedChipBox = await accentedChip.boundingBox()
     const fallbackChipBox = await fallbackChip.boundingBox()
-    expect(accentedChipBox?.height).toBe(fallbackChipBox?.height)
+    // subpixel rendering makes exact float equality flaky — compare with tolerance
+    expect(accentedChipBox?.height).toBeCloseTo(fallbackChipBox?.height ?? 0, 0)
 
+    await collapseChips(page)
     await page.click(selectorSelectors.panelTrigger)
     const accentedCard = page.locator(projectSelectors.projectOption(accentedProject.key))
     const fallbackCard = page.locator(projectSelectors.projectOption(fallbackProject.key))
@@ -359,30 +448,36 @@ test.describe('Project accent colors - MDT-181', () => {
 
     // Open settings and pick green
     await openSettingsAccents(page)
+    await collapseChips(page)
     await page.click(accentSelectors.paletteToggle)
 
+    await collapseChips(page)
     await page.click(accentSelectors.preset('green'))
 
     const persistResponse = page.waitForResponse(response =>
       response.url().includes('/api/config/selector')
       && response.request().method() === 'POST',
     )
+    await collapseChips(page)
     await page.click(accentSelectors.saveButton)
     await persistResponse
 
     await closeSettings(page)
 
     // Switch to second project so activeProject becomes inactive
+    await collapseChips(page)
     await page.click(selectorSelectors.panelTrigger)
     await page.locator(projectSelectors.projectOption(secondProject.key)).click()
     await waitForBoardReady(page)
 
     // Verify inactive chip shows the accent
+    await revealChips(page)
     const inactiveChip = page.locator(projectSelectors.projectSelectorChip(activeProject.projectCode))
     await expect(inactiveChip).toBeVisible()
     expect(await getAccentVariable(inactiveChip)).toBe('#16a34a')
 
     // Verify browser card shows the accent
+    await collapseChips(page)
     await page.click(selectorSelectors.panelTrigger)
     const browserCard = page.locator(projectSelectors.projectOption(activeProject.projectCode))
     await expect(browserCard).toBeVisible()
@@ -414,7 +509,9 @@ test.describe('Project accent colors - MDT-181', () => {
       response.url().includes('/api/config/selector')
       && response.request().method() === 'POST',
     )
+    await collapseChips(page)
     await page.click('[data-testid="accent-reset-button"]')
+    await collapseChips(page)
     await page.click(accentSelectors.saveButton)
     await persistResponse
 
@@ -445,17 +542,21 @@ test.describe('Project accent colors - MDT-181', () => {
     await waitForBoardReady(page)
 
     // Verify accent mark is visible initially
+    await revealChips(page)
     const chip = page.locator(`[data-testid="project-selector-chip-${inactiveProject.key}"]`)
+    await revealChips(page)
     await expect(chip.locator('.project-chip__accent-mark')).toBeVisible()
 
     // Open settings and toggle off
     await openSettingsAccents(page)
+    await collapseChips(page)
     await page.click('[data-testid="toggle-accent-enabled"]')
 
-    // Accent mark should be hidden
-    await expect(chip.locator('.project-chip__accent-mark')).toBeHidden()
-
+    // Accent mark should be hidden. The open settings modal intercepts the
+    // reveal hover — close it before re-revealing the chips.
     await closeSettings(page)
+    await revealChips(page)
+    await expect(chip.locator('.project-chip__accent-mark')).toBeHidden()
   })
 
   test('gradient toggle switches between gradient and flat stripe', async ({ page, e2eContext }) => {
@@ -477,27 +578,33 @@ test.describe('Project accent colors - MDT-181', () => {
     await page.goto(`/prj/${activeProject.projectCode}`)
     await waitForBoardReady(page)
 
+    await revealChips(page)
     const chip = page.locator(`[data-testid="project-selector-chip-${inactiveProject.key}"]`)
 
     // Default: gradient style
+    await revealChips(page)
     await expect(chip).toHaveAttribute('data-accent-style', 'gradient')
 
     // Open settings and switch to flat style
     await openSettingsAccents(page)
     await page.selectOption('[data-testid="accent-style-select"]', 'flat')
 
-    // Should switch to flat
-    await expect(chip).toHaveAttribute('data-accent-style', 'flat')
-
+    // Should switch to flat. Close settings first — the open modal
+    // intercepts the reveal hover.
     await closeSettings(page)
+    await revealChips(page)
+    await expect(chip).toHaveAttribute('data-accent-style', 'flat')
   })
 
-  test('plate style renders code badge with accent background', async ({ page }) => {
-    const inactiveProject = { key: 'OPS', name: 'Operations' }
-    const activeProject = { projectCode: 'MDT', projectName: 'Markdown Ticket' }
+  test('plate style renders code badge with accent background', async ({ page, e2eContext }) => {
+    const activeProject = await buildScenario(e2eContext.projectFactory, 'simple')
+    const inactiveProject = await e2eContext.projectFactory.createProject('empty', {
+      name: 'Plate Target Project',
+    })
 
-    await mockSelectorState(page, {
+    await writeSelectorState(e2eContext.backendUrl, {
       [inactiveProject.key]: {
+        visible: true,
         favorite: false,
         lastUsedAt: null,
         count: 0,
@@ -508,50 +615,51 @@ test.describe('Project accent colors - MDT-181', () => {
     await page.goto(`/prj/${activeProject.projectCode}`)
     await waitForBoardReady(page)
 
+    await revealChips(page)
     const chip = page.locator(`[data-testid="project-selector-chip-${inactiveProject.key}"]`)
 
     // Switch to plate style
+    await collapseChips(page)
     await openSettingsAccents(page)
     await page.selectOption('[data-testid="accent-style-select"]', 'plate')
 
-    // Should have plate style attribute
+    // Should have plate style attribute. Close settings first — the open
+    // modal intercepts the reveal hover.
+    await closeSettings(page)
+    await revealChips(page)
     await expect(chip).toHaveAttribute('data-accent-style', 'plate')
 
     // Code badge should have accent background
     const codeBadge = chip.locator('.project-chip__code')
     await expect(codeBadge).toHaveCSS('background-color', /rgb/) // some rgb color
-
-    await closeSettings(page)
   })
 
-  test('autocolor off hides accent for unconfigured projects', async ({ page }) => {
-    const inactiveProject = { key: 'OPS', name: 'Operations' }
-    const activeProject = { projectCode: 'MDT', projectName: 'Markdown Ticket' }
-
-    await mockSelectorState(page, {
-      [inactiveProject.key]: {
-        favorite: false,
-        lastUsedAt: null,
-        count: 0,
-        // No accent configured
-      },
+  test('autocolor off hides accent for unconfigured projects', async ({ page, e2eContext }) => {
+    const activeProject = await buildScenario(e2eContext.projectFactory, 'simple')
+    const inactiveProject = await e2eContext.projectFactory.createProject('empty', {
+      name: 'Autocolor Target Project',
     })
+    // No accent configured for the inactive project.
 
     await page.goto(`/prj/${activeProject.projectCode}`)
     await waitForBoardReady(page)
 
+    await revealChips(page)
     const chip = page.locator(`[data-testid="project-selector-chip-${inactiveProject.key}"]`)
 
     // Default: autocolor on, should have fallback
+    await revealChips(page)
     await expect(chip).toHaveAttribute('data-autocolor', 'true')
 
     // Toggle autocolor off
+    await collapseChips(page)
     await openSettingsAccents(page)
     await page.click('[data-testid="toggle-autocolor"]')
 
-    // Should switch autocolor off
-    await expect(chip).toHaveAttribute('data-autocolor', 'false')
-
+    // Should switch autocolor off. Close settings first — the open modal
+    // intercepts the reveal hover.
     await closeSettings(page)
+    await revealChips(page)
+    await expect(chip).toHaveAttribute('data-autocolor', 'false')
   })
 })

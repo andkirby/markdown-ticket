@@ -105,15 +105,15 @@ All procedures have been verified with evidence.
 |-------|-------|
 | id | `e2e-playwright` |
 | class | test-runner |
-| entry | `playwright.config.ts` |
+| entry | `scripts/e2e/run.ts` (wrapper) → `playwright.config.ts` |
 | owner | root |
-| ports | Frontend: 6173, Backend: 4001 (isolated from dev) |
+| ports | Ephemeral per run (wrapper-allocated); fixed 6173/4001 only without the wrapper |
 | observe | HTML reporter, console output, trace files |
-| control | `bun run test:e2e`, `bunx playwright test` |
-| inject | Playwright UI mode (`--ui`), headed mode (`--headed`) |
-| rollout | Auto-starts dev servers via `webServer` config |
+| control | `bun run test:e2e` (wrapper), `bun run test:e2e:raw` (needs wrapper env) |
+| inject | Playwright UI mode (`bun run test:e2e:ui`), headed mode (`bun run test:e2e:headed`) |
+| rollout | Wrapper picks ports + run-scoped CONFIG_DIR, then Playwright `webServer[]` starts backend (`scripts/e2e/backend.ts`, out-of-process) then vite |
 | test | `bun run test:e2e` |
-| state | `shared/test-lib` TestEnvironment + ProjectFactory |
+| state | `shared/test-lib` TestEnvironment (adopt-mode) + ProjectFactory; teardown owned by the wrapper |
 
 ---
 

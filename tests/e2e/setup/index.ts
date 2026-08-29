@@ -6,9 +6,8 @@
 
 export {
   type E2EContext,
+  type E2EFileWatcherAdmin,
   getE2EContext,
-  resetE2EContext,
-  teardownE2EContext,
 } from './e2e-context.js'
 
 export {

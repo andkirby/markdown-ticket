@@ -125,6 +125,8 @@ test.describe('Invalid Status Badge', () => {
     // Act: Check all ticket cards on the board
     const allTicketCards = page.locator(boardSelectors.ticketCard)
 
+    // Cards can arrive after the board container — poll before counting badges.
+    await expect.poll(async () => await allTicketCards.count(), { timeout: 10000 }).toBeGreaterThanOrEqual(scenario.ticketCount)
     const ticketCount = await allTicketCards.count()
 
     let invalidBadgeCount = 0
