@@ -20,40 +20,43 @@
 //
 // Exit codes: 0 = all parsed, 1 = at least one parse error.
 
-import { readFileSync } from 'node:fs';
-import postcss from 'postcss';
+import { readFileSync } from 'node:fs'
+import process from 'node:process'
+import postcss from 'postcss'
 
-const files = process.argv.slice(2);
+const files = process.argv.slice(2)
 
 if (files.length === 0) {
-  console.error('usage: parse-css.mjs <file.css> [...]');
-  process.exit(2);
+  console.error('usage: parse-css.mjs <file.css> [...]')
+  process.exit(2)
 }
 
-let failures = 0;
+let failures = 0
 
 for (const file of files) {
-  let css;
+  let css
   try {
-    css = readFileSync(file, 'utf8');
-  } catch (e) {
-    console.error(`✗ ${file}: cannot read (${e.code})`);
-    failures++;
-    continue;
+    css = readFileSync(file, 'utf8')
+  }
+  catch (e) {
+    console.error(`✗ ${file}: cannot read (${e.code})`)
+    failures++
+    continue
   }
 
   try {
-    postcss.parse(css);
-  } catch (e) {
-    const where = e.line ? `:${e.line}:${e.column || 1}` : '';
-    console.error(`✗ ${file}${where}: ${e.message.split('\n')[0]}`);
-    failures++;
+    postcss.parse(css)
+  }
+  catch (e) {
+    const where = e.line ? `:${e.line}:${e.column || 1}` : ''
+    console.error(`✗ ${file}${where}: ${e.message.split('\n')[0]}`)
+    failures++
   }
 }
 
 if (failures > 0) {
-  console.error(`\n${failures} CSS file(s) failed to parse.`);
-  process.exit(1);
+  console.error(`\n${failures} CSS file(s) failed to parse.`)
+  process.exit(1)
 }
 
-console.log(`✓ ${files.length} CSS file(s) parsed cleanly.`);
+console.log(`✓ ${files.length} CSS file(s) parsed cleanly.`)
