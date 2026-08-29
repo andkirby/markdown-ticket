@@ -216,13 +216,12 @@ test.describe('Pin Rail (MDT-197)', () => {
     // Board view: rail visible (app-level chrome).
     await expect(page.getByTestId('pin-rail')).toBeVisible()
 
-    // Toggle to list view and confirm the rail persists. We click the toggle
-    // directly and assert on the rail (not the list contents) so the assertion
+    // Switch to list view via the List mode button and confirm the rail
+    // persists. We assert on the rail (not the list contents) so the assertion
     // is independent of list-view rendering timing in the E2E backend.
-    const toggle = page.getByTestId('board-list-toggle')
-    if ((await toggle.getAttribute('data-current-mode')) !== 'list') {
-      await toggle.click()
-      await page.waitForTimeout(500)
+    if (!page.url().endsWith('/list')) {
+      await page.getByTestId('view-mode-list-toggle').click()
+      await page.waitForURL('**/list')
     }
     await expect(page.getByTestId('pin-rail')).toBeVisible()
 
@@ -303,13 +302,14 @@ test.describe('Pin Rail (MDT-197)', () => {
     })
     expect(pinCodeFont).toBe('11px')
 
-    // Collapse to the floating button and assert its opacity is 0.85 at rest.
+    // Collapse via the header toggle: the rail becomes an invisible drop zone
+    // (.pin-rail--collapsed) and the always-available header toggle remains
+    // the way back (the old floating .pin-rail__toggle--collapsed button was
+    // removed when the collapsed toggle moved to the header).
     await page.getByTestId('pin-rail-toggle').click()
     await page.mouse.move(500, 500) // move away so it settles to collapsed
     await page.waitForTimeout(400)
-    const collapsedBtn = page.locator('.pin-rail__toggle--collapsed')
-    await expect(collapsedBtn).toBeVisible()
-    const opacity = await collapsedBtn.evaluate(el => window.getComputedStyle(el).opacity)
-    expect(opacity).toBe('0.85')
+    await expect(page.getByTestId('pin-rail')).toHaveAttribute('data-state', 'collapsed')
+    await expect(page.getByTestId('pin-rail-toggle')).toBeVisible()
   })
 })

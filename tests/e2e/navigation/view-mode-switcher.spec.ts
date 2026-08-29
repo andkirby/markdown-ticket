@@ -1,14 +1,16 @@
 /**
- * MDT-131: View Mode Switcher E2E Tests
+ * MDT-131 / MDT-206: View Mode Switcher E2E Tests
  *
- * Tests the merged Board|List toggle with hover overlay, Documents button visibility,
- * and localStorage persistence.
+ * The switcher is now four dedicated buttons — Board (flat), Epics
+ * (swimlanes), List, Documents — each carrying data-view-mode and
+ * data-active. The old merged Board|List toggle with a hover overlay no
+ * longer exists; these tests cover the current component contract.
  */
 
 import { expect, test } from '../fixtures/test-fixtures.js'
 import { buildScenario, type ScenarioResult } from '../setup/index.js'
 import { navSelectors } from '../utils/selectors.js'
-import { waitForBoardReady, waitForListReady, waitForDocumentsReady } from '../utils/helpers.js'
+import { waitForBoardReady, waitForDocumentsReady, waitForListReady } from '../utils/helpers.js'
 
 test.describe('MDT-131: View Mode Switcher', () => {
   let scenario: ScenarioResult
@@ -21,191 +23,167 @@ test.describe('MDT-131: View Mode Switcher', () => {
   })
 
   test.describe('Initial View Display', () => {
-    test('should display Board icon when application loads in board view', async ({ page }) => {
-      await expect(page.locator(navSelectors.boardListToggle)).toBeVisible()
-      await expect(page.locator(navSelectors.boardListToggle)).toHaveAttribute('data-current-mode', 'board')
+    test('shows all four mode buttons with board active on load', async ({ page }) => {
+      await expect(page.locator(navSelectors.viewModeSwitcher)).toBeVisible()
+      await expect(page.locator(navSelectors.boardModeFlatToggle)).toBeVisible()
+      await expect(page.locator(navSelectors.boardModeEpicsToggle)).toBeVisible()
+      await expect(page.locator(navSelectors.viewModeListToggle)).toBeVisible()
+      await expect(page.locator(navSelectors.documentsButton)).toBeVisible()
+
+      await expect(page.locator(navSelectors.boardModeFlatToggle)).toHaveAttribute('data-active', 'true')
+      await expect(page.locator(navSelectors.viewModeListToggle)).toHaveAttribute('data-active', 'false')
     })
 
-    test('should display List icon when application loads in list view', async ({ page }) => {
-      // Navigate to list view first
-      await page.click(navSelectors.boardListToggle)
-      await page.waitForURL(`**/prj/${scenario.projectCode}/list`)
+    test('shows list button active when loading list view directly', async ({ page }) => {
+      await page.click(navSelectors.viewModeListToggle)
+      await page.waitForURL(`/prj/${scenario.projectCode}/list`)
 
       // Reload to test initial state in list view
       await page.reload()
       await waitForListReady(page)
 
-      await expect(page.locator(navSelectors.boardListToggle)).toHaveAttribute('data-current-mode', 'list')
+      await expect(page.locator(navSelectors.viewModeListToggle)).toHaveAttribute('data-active', 'true')
+      await expect(page.locator(navSelectors.boardModeFlatToggle)).toHaveAttribute('data-active', 'false')
     })
 
-    test('should show last-used mode in documents view', async ({ page }) => {
-      // Set board mode as last-used
-      await page.click(navSelectors.boardListToggle)
-      await page.click(navSelectors.boardListToggle)
+    test('persists the last-used board/list mode while documents is active', async ({ page }) => {
+      // Switch to list first, then documents — the last board/list choice is
+      // persisted (lastBoardListMode) even while documents is active.
+      await page.click(navSelectors.viewModeListToggle)
+      await expect(page).toHaveURL(`/prj/${scenario.projectCode}/list`)
 
-      // Navigate to documents
       await page.click(navSelectors.documentsButton)
-      await page.waitForURL(`**/prj/${scenario.projectCode}/documents`)
+      await expect(page).toHaveURL(`/prj/${scenario.projectCode}/documents`)
 
-      // Verify board icon is shown (last-used mode)
-      await expect(page.locator(navSelectors.boardListToggle)).toHaveAttribute('data-current-mode', 'board')
+      await expect(page.locator(navSelectors.documentsButton)).toHaveAttribute('data-active', 'true')
+      const lastBoardListMode = await page.evaluate(() => localStorage.getItem('lastBoardListMode'))
+      expect(lastBoardListMode).toBe('list')
     })
   })
 
   test.describe('Desktop Navigation', () => {
-    test.beforeEach(async ({ page }) => {
-      await page.setViewportSize({ width: 1200, height: 800 })
+    test.use({ viewport: { width: 1280, height: 800 } })
+
+    test('renders the full switcher in the header on desktop', async ({ page }) => {
+      await expect(page.locator(navSelectors.viewModeSwitcher)).toBeVisible()
+      for (const selector of [
+        navSelectors.boardModeFlatToggle,
+        navSelectors.boardModeEpicsToggle,
+        navSelectors.viewModeListToggle,
+        navSelectors.documentsButton,
+      ])
+        await expect(page.locator(selector)).toBeVisible()
     })
 
-    test('should show both Board|List and Documents buttons on desktop', async ({ page }) => {
-      await expect(page.locator(navSelectors.boardListToggle)).toBeVisible()
-      await expect(page.locator(navSelectors.documentsButton)).toBeVisible()
-    })
-  })
+    test('switches from Board to List and back via dedicated buttons', async ({ page }) => {
+      await page.click(navSelectors.viewModeListToggle)
+      await page.waitForURL(`/prj/${scenario.projectCode}/list`)
+      await waitForListReady(page)
+      await expect(page.locator(navSelectors.viewModeListToggle)).toHaveAttribute('data-active', 'true')
 
-  test.describe('Mobile Navigation', () => {
-    test.beforeEach(async ({ page }) => {
-      await page.setViewportSize({ width: 375, height: 667 })
-    })
-
-    test('should show only Board|List button and hide Documents button on mobile', async ({ page }) => {
-      await expect(page.locator(navSelectors.boardListToggle)).toBeVisible()
-      await expect(page.locator(navSelectors.documentsButton)).not.toBeVisible()
-    })
-  })
-
-  test.describe('Hover Overlay', () => {
-    test('should show alternate view icon overlay when hovering in board/list view', async ({ page }) => {
-      const overlay = page.locator(navSelectors.boardListToggleOverlay)
-
-      // Hover and check overlay appears
-      await page.locator(navSelectors.boardListToggle).hover()
-
-      // Check that overlay is visible (Playwright retries automatically)
-      await expect(overlay).toBeVisible()
+      await page.click(navSelectors.boardModeFlatToggle)
+      await waitForBoardReady(page)
+      await expect(page).toHaveURL(`/prj/${scenario.projectCode}`)
+      await expect(page.locator(navSelectors.boardModeFlatToggle)).toHaveAttribute('data-active', 'true')
     })
 
-    test('should not show overlay when hovering in documents view', async ({ page }) => {
+    test('switches to Epics (swimlane) mode via the epics button', async ({ page }) => {
+      await page.click(navSelectors.boardModeEpicsToggle)
+      await page.waitForURL(`/prj/${scenario.projectCode}/epics`)
+      await expect(page.locator(navSelectors.boardModeEpicsToggle)).toHaveAttribute('data-active', 'true')
+      await expect(page.locator(navSelectors.boardModeFlatToggle)).toHaveAttribute('data-active', 'false')
+    })
+
+    test('returns to the last-used board/list view from documents', async ({ page }) => {
+      await page.click(navSelectors.documentsButton)
+      await expect(page).toHaveURL(`/prj/${scenario.projectCode}/documents`)
+      await waitForDocumentsReady(page)
+
+      // Board was the last-used board/list mode — the board button returns there.
+      await page.click(navSelectors.boardModeFlatToggle)
+      await waitForBoardReady(page)
+      await expect(page).toHaveURL(`/prj/${scenario.projectCode}`)
+    })
+
+    test('navigates from Board to Documents view', async ({ page }) => {
+      await page.click(navSelectors.documentsButton)
+      await expect(page).toHaveURL(`/prj/${scenario.projectCode}/documents`)
+      await waitForDocumentsReady(page)
+      await expect(page.locator(navSelectors.documentsButton)).toHaveAttribute('data-active', 'true')
+    })
+
+    test('navigates from List to Documents view', async ({ page }) => {
+      await page.click(navSelectors.viewModeListToggle)
+      await expect(page).toHaveURL(`/prj/${scenario.projectCode}/list`)
+
+      await page.click(navSelectors.documentsButton)
+      await expect(page).toHaveURL(`/prj/${scenario.projectCode}/documents`)
+      await waitForDocumentsReady(page)
+    })
+
+    test('completes circular navigation: Board → Documents → Board', async ({ page }) => {
+      await page.click(navSelectors.documentsButton)
+      await waitForDocumentsReady(page)
+      await page.click(navSelectors.boardModeFlatToggle)
+      await waitForBoardReady(page)
+      await expect(page).toHaveURL(`/prj/${scenario.projectCode}`)
+    })
+
+    test('completes circular navigation: List → Documents → List', async ({ page }) => {
+      await page.click(navSelectors.viewModeListToggle)
+      await expect(page).toHaveURL(`/prj/${scenario.projectCode}/list`)
+
       await page.click(navSelectors.documentsButton)
       await waitForDocumentsReady(page)
 
-      await page.locator(navSelectors.boardListToggle).hover()
-      await expect(page.locator(navSelectors.boardListToggleOverlay)).not.toBeVisible()
+      await page.click(navSelectors.viewModeListToggle)
+      await waitForListReady(page)
+      await expect(page).toHaveURL(`/prj/${scenario.projectCode}/list`)
     })
   })
 
-  test.describe('Toggle Navigation', () => {
-    test('should toggle from Board to List view and show Board icon on button', async ({ page }) => {
-      const boardListButton = page.locator(navSelectors.boardListToggle)
+  test.describe('Mobile Viewport (< 768px)', () => {
+    test.use({ viewport: { width: 375, height: 667 } })
 
-      // Verify starting state
-      await expect(boardListButton).toHaveAttribute('data-current-mode', 'board')
-
-      // Click to toggle
-      await boardListButton.click()
-      await page.waitForURL(`**/prj/${scenario.projectCode}/list`)
-
-      // Verify button shows list mode
-      await expect(boardListButton).toHaveAttribute('data-current-mode', 'list')
+    test('keeps the switcher available on mobile', async ({ page }) => {
+      await expect(page.locator(navSelectors.viewModeSwitcher)).toBeVisible()
+      await expect(page.locator(navSelectors.boardModeFlatToggle)).toBeVisible()
+      await expect(page.locator(navSelectors.viewModeListToggle)).toBeVisible()
+      await expect(page.locator(navSelectors.documentsButton)).toBeVisible()
     })
 
-    test('should toggle from List to Board view and show List icon on button', async ({ page }) => {
-      await page.goto(`/prj/${scenario.projectCode}/list`)
+    test('switches to list view on mobile', async ({ page }) => {
+      await page.click(navSelectors.viewModeListToggle)
+      await expect(page).toHaveURL(`/prj/${scenario.projectCode}/list`)
       await waitForListReady(page)
-
-      const boardListButton = page.locator(navSelectors.boardListToggle)
-
-      // Verify starting state
-      await expect(boardListButton).toHaveAttribute('data-current-mode', 'list')
-
-      // Click to toggle
-      await boardListButton.click()
-      await page.waitForURL(`**/prj/${scenario.projectCode}`)
-
-      // Verify button shows board mode
-      await expect(boardListButton).toHaveAttribute('data-current-mode', 'board')
-    })
-
-    test('should return to last-used view when clicking from documents view', async ({ page }) => {
-      // Set list as last-used
-      await page.click(navSelectors.boardListToggle)
-
-      // Navigate to documents
-      await page.click(navSelectors.documentsButton)
-
-      // Click to return
-      await page.click(navSelectors.boardListToggle)
-      await page.waitForURL(`**/prj/${scenario.projectCode}/list`)
-    })
-
-    test('should navigate from Board to Documents view', async ({ page }) => {
-      await page.click(navSelectors.documentsButton)
-      await page.waitForURL(`**/prj/${scenario.projectCode}/documents`)
-
-      // Verify Board icon is shown (last-used mode)
-      await expect(page.locator(navSelectors.boardListToggle)).toHaveAttribute('data-current-mode', 'board')
-    })
-
-    test('should navigate from List to Documents view', async ({ page }) => {
-      await page.click(navSelectors.boardListToggle)
-      await page.click(navSelectors.documentsButton)
-      await page.waitForURL(`**/prj/${scenario.projectCode}/documents`)
-
-      // Verify List icon is shown (last-used mode)
-      await expect(page.locator(navSelectors.boardListToggle)).toHaveAttribute('data-current-mode', 'list')
-    })
-
-    test('should complete circular navigation: Board → Documents → Board', async ({ page }) => {
-      // Board → Documents
-      await page.click(navSelectors.documentsButton)
-      await page.waitForURL(`**/prj/${scenario.projectCode}/documents`)
-
-      // Documents → Board
-      await page.click(navSelectors.boardListToggle)
-      await page.waitForURL(`**/prj/${scenario.projectCode}`)
-
-      await expect(page.locator(navSelectors.boardListToggle)).toHaveAttribute('data-current-mode', 'board')
-    })
-
-    test('should complete circular navigation: List → Documents → List', async ({ page }) => {
-      // Board → List
-      await page.click(navSelectors.boardListToggle)
-
-      // List → Documents
-      await page.click(navSelectors.documentsButton)
-      await page.waitForURL(`**/prj/${scenario.projectCode}/documents`)
-
-      // Documents → List
-      await page.click(navSelectors.boardListToggle)
-      await page.waitForURL(`**/prj/${scenario.projectCode}/list`)
-
-      await expect(page.locator(navSelectors.boardListToggle)).toHaveAttribute('data-current-mode', 'list')
+      await expect(page.locator(navSelectors.viewModeListToggle)).toHaveAttribute('data-active', 'true')
     })
   })
 
   test.describe('Persistence', () => {
-    test('should save last-used mode to localStorage when switching views', async ({ page }) => {
-      await page.click(navSelectors.boardListToggle)
+    test('saves last-used mode to localStorage when switching views', async ({ page }) => {
+      await page.click(navSelectors.viewModeListToggle)
+      await expect(page).toHaveURL(`/prj/${scenario.projectCode}/list`)
 
-      const storedMode = await page.evaluate(() => {
-        return localStorage.getItem('lastBoardListMode')
-      })
+      const lastBoardListMode = await page.evaluate(() => localStorage.getItem('lastBoardListMode'))
+      expect(lastBoardListMode).toBe('list')
 
-      expect(storedMode).toBe('list')
+      const lastViewMode = await page.evaluate(() => localStorage.getItem('lastViewMode'))
+      expect(lastViewMode).toBe('list')
     })
 
-    test('should load last-used mode from localStorage on application load', async ({ page }) => {
-      // Set localStorage
-      await page.evaluate(() => {
-        localStorage.setItem('lastBoardListMode', 'list')
-      })
+    test('loads last-used mode from localStorage on application load', async ({ page }) => {
+      await page.evaluate((code) => {
+        // The bare /prj/:code redirect follows the Settings "Default View"
+        // preference (kept in sync by the switcher), not lastViewMode.
+        localStorage.setItem('mdt-settings-default-view', 'list')
+        window.location.href = `/prj/${code}`
+      }, scenario.projectCode)
 
-      // Reload and verify
-      await page.reload()
+      // The bare /prj/:code route initializes the last-used view mode without
+      // rewriting the URL — assert on the rendered view, not the URL.
       await waitForListReady(page)
-      await page.waitForURL(`**/prj/${scenario.projectCode}/list`)
-
-      await expect(page.locator(navSelectors.boardListToggle)).toHaveAttribute('data-current-mode', 'list')
+      await expect(page.locator(navSelectors.viewModeListToggle)).toHaveAttribute('data-active', 'true')
     })
   })
 })

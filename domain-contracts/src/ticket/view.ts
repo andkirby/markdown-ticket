@@ -51,6 +51,16 @@ export interface UnifiedTicketItem {
    * Projected entries do not carry it and report `null`.
    */
   phaseEpic: string | null
+  /**
+   * MDT-239: relationship link codes for the board's relationship badges
+   * (MDT-187 elision). Canonical local tickets carry the arrays parsed from
+   * frontmatter; projected entries do not carry them and report `null`.
+   */
+  relatedTickets: string[] | null
+  /** See `relatedTickets`. */
+  dependsOn: string[] | null
+  /** See `relatedTickets`. */
+  blocks: string[] | null
   dateCreated: string | null
   lastModified: string | null
 }

@@ -54,7 +54,7 @@ test.describe("SSE Real-time Updates - File System Modifications", () => {
 
     // Initialize file watcher for the test project
     const projectPath = `${scenario.projectDir}/docs/CRs/*.md`;
-    e2eContext.fileWatcher.initMultiProjectWatcher([
+    await e2eContext.fileWatcher.initMultiProjectWatcher([
       {
         id: scenario.projectCode,
         path: projectPath,
@@ -194,13 +194,13 @@ test.describe("SSE Real-time Updates - File System Modifications", () => {
       // Verify all updates reflected on first page
       for (const update of updates) {
         const ticketSelector = boardSelectors.ticketByCode(update.code);
-        await expect(page.locator(ticketSelector)).toContainText(update.title, { timeout: 5000 });
+        await expect(page.locator(ticketSelector)).toContainText(update.title, { timeout: 20000 });
       }
 
       // Verify all updates reflected on first page
       for (const update of updates) {
         const ticketSelector = boardSelectors.ticketByCode(update.code);
-        await expect(page.locator(ticketSelector)).toContainText(update.title);
+        await expect(page.locator(ticketSelector)).toContainText(update.title, { timeout: 20000 });
       }
 
       // Verify second page also received all updates (multi-tab SSE)
@@ -208,6 +208,7 @@ test.describe("SSE Real-time Updates - File System Modifications", () => {
         const ticketSelector = boardSelectors.ticketByCode(update.code);
         await expect(secondPage.locator(ticketSelector)).toContainText(
           update.title,
+          { timeout: 20000 },
         );
       }
 

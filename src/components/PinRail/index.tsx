@@ -10,7 +10,9 @@
  *   The collapsed toggle lives in the header (SecondaryHeader) so it never
  *   collides with content at the top-left corner. The nav exists solely as a
  *   react-dnd drop target so drag-to-pin works from collapsed.
- * - enabled && open → full 48px rail: items + an inline pin-icon toggle.
+ * - enabled && open → full 48px rail: items + an inline pin-icon toggle
+ *   (`pin-rail-strip-toggle`; the header's canonical toggle keeps
+ *   `pin-rail-toggle` — one testid must resolve to exactly one element).
  *   Visual signals only (filled accent = pinned); no text label.
  *
  * "Open" is true when: pinned (user toggled the pin icon on) OR a drag is in
@@ -140,7 +142,7 @@ export function PinRail({
         className={`pin-rail__toggle pin-rail__toggle--open${pinned ? ' pin-rail__toggle--pinned' : ''}`}
         aria-label={pinned ? 'Unpin — collapse rail to strip' : 'Pin — keep rail open'}
         aria-pressed={pinned}
-        data-testid="pin-rail-toggle"
+        data-testid="pin-rail-strip-toggle"
         onClick={onTogglePinned}
       >
         {pinned ? <Pin className="pin-rail__toggle-icon" aria-hidden="true" fill="currentColor" /> : <PinOff className="pin-rail__toggle-icon" aria-hidden="true" />}

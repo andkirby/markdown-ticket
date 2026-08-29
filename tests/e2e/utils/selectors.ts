@@ -19,12 +19,18 @@ export const navSelectors = {
   listTab: '[data-testid="nav-list"]',
   /** Documents view tab */
   documentsTab: '[data-testid="nav-documents"]',
-  /** Board|List toggle button (MDT-131) */
-  boardListToggle: '[data-testid="board-list-toggle"]',
+  /**
+   * View Mode Switcher (MDT-131/MDT-206): four dedicated buttons —
+   * Board (flat), Epics (swimlanes), List, Documents. The old merged
+   * Board|List toggle (`board-list-toggle`) no longer exists.
+   */
+  boardModeFlatToggle: '[data-testid="board-mode-flat-toggle"]',
+  /** Epics (swimlane) mode button (MDT-206) */
+  boardModeEpicsToggle: '[data-testid="board-mode-epics-toggle"]',
+  /** List mode button */
+  viewModeListToggle: '[data-testid="view-mode-list-toggle"]',
   /** Documents button (MDT-131) */
   documentsButton: '[data-testid="documents-button"]',
-  /** Board|List toggle overlay (MDT-131) */
-  boardListToggleOverlay: '[data-testid="board-list-toggle-overlay"]',
   /** View mode switcher container (MDT-131) */
   viewModeSwitcher: '[data-testid="view-mode-switcher"]',
 } as const
@@ -312,7 +318,7 @@ export const sharingSelectors = {
  */
 export const listSelectors = {
   /** Ticket list container (mobile cards) */
-  ticketList: '[data-testid="ticket-list"]',
+  ticketList: '[data-testid="ticket-list-mobile"]',
   /** Ticket table container (desktop) */
   ticketTable: '[data-testid="ticket-table"]',
   /** Any ticket item (desktop row or mobile card) */

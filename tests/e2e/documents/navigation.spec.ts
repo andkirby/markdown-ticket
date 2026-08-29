@@ -147,7 +147,10 @@ test.describe('Documents View navigation (MDT-162)', () => {
     await expect(page.locator(pathSelectorSelectors.configureButton)).toHaveAttribute('aria-label', 'Configure document paths')
     await page.locator(pathSelectorSelectors.configureButton).click()
 
-    await expect(page.locator(pathSelectorSelectors.maxDepth)).toContainText('Max depth: 5')
+    // The value lives in the number input (value attribute), not in the
+    // label's text content — assert both parts separately.
+    await expect(page.locator(pathSelectorSelectors.maxDepth)).toContainText('Max depth:')
+    await expect(page.locator('[data-testid="path-selector-max-depth-input"]')).toHaveValue('5')
     await expect(page.locator(pathSelectorSelectors.pathCheckbox('docs'))).toBeVisible()
     await expect(page.locator(pathSelectorSelectors.pathCheckbox('docs/design'))).toBeVisible()
     await expect(page.locator(pathSelectorSelectors.pathCheckbox('docs/design/selector.md'))).not.toBeVisible()

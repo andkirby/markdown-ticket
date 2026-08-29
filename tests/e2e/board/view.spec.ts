@@ -32,12 +32,10 @@ test.describe('Board View', () => {
     const board = page.locator(boardSelectors.board)
     await expect(board).toBeVisible()
 
-    // Assert: Verify ticket cards are rendered
+    // Assert: Verify ticket cards are rendered — poll: the board container
+    // can appear before tickets finish loading (instant counts race the load).
     const ticketCards = page.locator(boardSelectors.ticketCard)
-    const cardCount = await ticketCards.count()
-
-    // Should have at least the tickets we created
-    expect(cardCount).toBeGreaterThanOrEqual(scenario.ticketCount)
+    await expect.poll(async () => await ticketCards.count(), { timeout: 10000 }).toBeGreaterThanOrEqual(scenario.ticketCount)
 
     // Assert: Verify expected tickets are visible
     for (const crCode of scenario.crCodes) {
@@ -61,7 +59,8 @@ test.describe('Board View', () => {
 
     const getTicketCodesInColumn = async (column: typeof proposedColumn): Promise<string[]> => {
       const cards = column.locator(boardSelectors.ticketCard)
-      const count = await cards.count()
+      await expect.poll(async () => await cards.count(), { timeout: 10000 }).toBeGreaterThan(0)
+    const count = await cards.count()
       const codes: string[] = []
       for (let i = 0; i < count; i++) {
         const card = cards.nth(i)
@@ -122,7 +121,8 @@ test.describe('Board View', () => {
     // Get initial state across all columns
     const getAllTicketCodes = async (): Promise<string[]> => {
       const cards = page.locator(boardSelectors.ticketCard)
-      const count = await cards.count()
+      await expect.poll(async () => await cards.count(), { timeout: 10000 }).toBeGreaterThan(0)
+    const count = await cards.count()
       const codes: string[] = []
       for (let i = 0; i < count; i++) {
         const card = cards.nth(i)

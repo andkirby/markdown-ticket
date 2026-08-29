@@ -3,7 +3,7 @@ import path from 'node:path'
 import process from 'node:process'
 import { parseApiAuthConfig } from '../security/apiAuth.js'
 import { getPreviewTokenSecret } from '../security/documentPreviewToken.js'
-import { createAllowedOrigins, parsePublicOrigin } from '../security/originPolicy.js'
+import { createAllowedOrigins, parseExtraOrigins, parsePublicOrigin } from '../security/originPolicy.js'
 import { getReadSessionSecret, parseReadTokenScopes } from '../security/readSession.js'
 
 const DEFAULT_OWNER_SESSION_MAX_AGE_DAYS = 14
@@ -46,7 +46,10 @@ export function buildRuntimeConfig(env: NodeJS.ProcessEnv = process.env): Runtim
     nodeEnv: env.NODE_ENV,
     auth,
     origins: {
-      allowedOrigins: createAllowedOrigins(publicOrigin),
+      // MDT_ALLOWED_ORIGINS adds origins independently of PUBLIC_ORIGIN —
+      // e2e runs use an ephemeral frontend port (not in DEFAULT_LOCAL_ORIGINS)
+      // and tests may override PUBLIC_ORIGIN without losing their own origin.
+      allowedOrigins: createAllowedOrigins(publicOrigin, parseExtraOrigins(env.MDT_ALLOWED_ORIGINS)),
       publicOrigin,
     },
     readSessions: {

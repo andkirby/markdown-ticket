@@ -166,3 +166,6 @@ scripts/build-desktop.sh
 scripts/test_mcp.sh
 scripts/test_mcp_direct.py
 scripts/verify-pin-rail.mjs
+
+# no mdt-next anymore
+.mdt-next

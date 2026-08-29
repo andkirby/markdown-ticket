@@ -48,13 +48,29 @@ export function parsePublicOrigin(value: string | undefined): string | undefined
   }
 }
 
-export function createAllowedOrigins(publicOrigin?: string): string[] {
+export function createAllowedOrigins(publicOrigin?: string, extraOrigins?: string[]): string[] {
   const normalizedPublicOrigin = publicOrigin ? trimTrailingSlash(publicOrigin.trim()) : undefined
 
   return Array.from(new Set([
     ...DEFAULT_LOCAL_ORIGINS,
     ...(normalizedPublicOrigin ? [normalizedPublicOrigin] : []),
+    ...(extraOrigins ?? []),
   ]))
+}
+
+/**
+ * Parse a comma-separated origins list from an environment value
+ * (MDT_ALLOWED_ORIGINS). Returns [] when unset/empty. Origins are trimmed
+ * and empty entries dropped; trailing-slash normalization happens in
+ * createAllowedOrigins.
+ */
+export function parseExtraOrigins(value?: string): string[] {
+  if (!value)
+    return []
+  return value
+    .split(',')
+    .map(origin => origin.trim())
+    .filter(Boolean)
 }
 
 export function createOriginPolicy(allowedOrigins: Iterable<string>): OriginPolicy {

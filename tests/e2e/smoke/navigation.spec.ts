@@ -54,8 +54,8 @@ test.describe('Navigation', () => {
     })
 
     test('switches from board to list view', async ({ page }) => {
-      // Click Board|List toggle to switch to list view
-      await page.click(navSelectors.boardListToggle)
+      // Click the List mode button to switch to list view
+      await page.click(navSelectors.viewModeListToggle)
 
       // Verify URL changed to list view
       await expect(page).toHaveURL(`/prj/${scenario!.projectCode}/list`)
@@ -83,12 +83,12 @@ test.describe('Navigation', () => {
 
     test('switches from list back to board view', async ({ page }) => {
       // First switch to list view
-      await page.click(navSelectors.boardListToggle)
+      await page.click(navSelectors.viewModeListToggle)
       await expect(page).toHaveURL(`/prj/${scenario!.projectCode}/list`)
       await expect(page.locator('[data-testid="ticket-table"]')).toBeVisible()
 
-      // Then switch back to board view by clicking Board|List toggle again
-      await page.click(navSelectors.boardListToggle)
+      // Then switch back to board view via the Board (flat) button
+      await page.click(navSelectors.boardModeFlatToggle)
       await waitForBoardReady(page)
 
       // Verify URL changed back to board view
@@ -107,8 +107,8 @@ test.describe('Navigation', () => {
       await expect(page).toHaveURL(`/prj/${scenario!.projectCode}/documents`)
       await expect(page.locator('[data-testid="document-tree"]').first()).toBeVisible()
 
-      // Then switch back to board view by clicking Board|List toggle
-      await page.click(navSelectors.boardListToggle)
+      // Then switch back to board view via the Board (flat) button
+      await page.click(navSelectors.boardModeFlatToggle)
       await waitForBoardReady(page)
 
       // Verify URL changed back to board view

@@ -10,7 +10,7 @@
  * to ensure services use the test configuration directory.
  */
 
-import type { Express } from 'express'
+import type { Express, Router } from 'express'
 import type { ProjectServiceExtension } from '../../controllers/ProjectController'
 import { ProjectService as SharedProjectService } from '@mdt/shared/services/ProjectService.js'
 
@@ -24,6 +24,7 @@ import { ProjectController } from '../../controllers/ProjectController'
 import { SearchController } from '../../controllers/SearchController'
 import { errorHandler, notFoundHandler } from '../../middleware/errorHandler'
 import { createAuthRouter } from '../../routes/auth'
+import { createConfigRouter } from '../../routes/config'
 import { createDevToolsRouter } from '../../routes/devtools'
 import { createDocumentRouter } from '../../routes/documents'
 import { createPinRouter } from '../../routes/pins'
@@ -143,7 +144,18 @@ interface TestAppResult {
   fileWatcher: FileWatcherService
 }
 
-export function createTestApp(): TestAppResult {
+/** Options for createTestApp */
+export interface CreateTestAppOptions {
+  /**
+   * Router mounted BEFORE /api auth middleware and /api routes.
+   * Use a non-/api path prefix (e.g. /_e2e) so the router is reachable
+   * without auth. Intended for run-level orchestrators (e2e backend
+   * launcher) that need a process-control seam. Never used by prod.
+   */
+  preAuthRouter?: Router
+}
+
+export function createTestApp(options: CreateTestAppOptions = {}): TestAppResult {
   // Create Express app
   const app: Express = express()
   const runtimeConfig = buildRuntimeConfig()
@@ -155,6 +167,12 @@ export function createTestApp(): TestAppResult {
   app.use(securityHeaders)
   app.use(cors(createCorsOptions(originPolicy)))
   app.use(express.json())
+
+  // MDT-239: optional orchestrator seam (e2e backend launcher). Mounted
+  // before any /api router so it bypasses API auth by design; the e2e
+  // backend only ever listens on localhost with an ephemeral port.
+  if (options.preAuthRouter)
+    app.use(options.preAuthRouter)
 
   // Skip log interception for tests (devtools is OOS for E2E testing per MDT-106)
   // setupLogInterception();
@@ -205,6 +223,30 @@ export function createTestApp(): TestAppResult {
   }))
 
   app.use('/api/projects', createProjectRouter(projectController))
+
+  // MDT-168/MDT-239: configuration management routes — mounted exactly like
+  // production server.ts so /api/config/selectors + PATCH /api/config behave
+  // identically in tests (the test app previously omitted this router, so
+  // every config-selector call 404'd in e2e).
+  app.use('/api/config', createConfigRouter({
+    resolveProjectId: (req) => {
+      const q = req.query.projectId
+      return typeof q === 'string' ? q : undefined
+    },
+    clearDiscoveryCache: () => projectDiscovery.clearCache(),
+    reconfigureDocumentWatchers: async (projectId, _documentPaths) => {
+      const project = (await projectDiscovery.getAllProjects()).find(p => p.id === projectId)
+      if (!project)
+        return 0
+      const config = projectDiscovery.getProjectConfig(project.project.path)
+      const documentPaths = config?.project?.document?.paths ?? config?.document?.paths ?? []
+      const ticketsPath = config?.project?.ticketsPath ?? undefined
+      if (fileWatcher.reconfigureDocumentWatchers) {
+        return fileWatcher.reconfigureDocumentWatchers(project.id, project.project.path, documentPaths, ticketsPath)
+      }
+      return 0
+    },
+  }))
 
   // MDT-179: Unified search
   const searchController = new SearchController(projectController)

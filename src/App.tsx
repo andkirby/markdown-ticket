@@ -535,7 +535,11 @@ function ProjectRouteHandler() {
                 }
                 onModeChange={handleViewModeChange}
               />
-              <div className="min-w-0 flex-shrink-0">
+              {/* MDT-239: shrinkable (with min-w-0) — flex-shrink-0 here kept
+                  the rail card at content width on narrow viewports, pushing
+                  its title box over the hamburger button and intercepting
+                  its clicks. The card title truncates instead. */}
+              <div className="min-w-0 flex-shrink">
                 <ProjectSelector />
               </div>
               {pinRailPref.enabled && (

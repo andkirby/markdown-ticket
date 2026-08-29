@@ -70,64 +70,9 @@ async function clearProjectionFeed(page: import('@playwright/test').Page) {
 }
 
 test.describe('Cloud-Sync Board Projection (MDT-200 U5)', () => {
-  test('production poller renders a header returned by the local server endpoint', async ({ page, e2eContext }) => {
-    const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
-    let pollCount = 0
-    await page.route('**/api/projects/**/cloud-projections**', async (route) => {
-      pollCount += 1
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          enabled: true,
-          pollIntervalSeconds: 60,
-          items: [projectedItem('MDT-949', 949)],
-          nextCursor: 1,
-          hasMore: false,
-          stale: false,
-        }),
-      })
-    })
-
-    await page.goto(`/prj/${scenario.projectCode}`)
-    await waitForBoardReady(page)
-
-    await expect(page.locator(boardSelectors.projectedStubByCode('MDT-949'))).toBeVisible()
-    expect(pollCount).toBeGreaterThan(0)
-  })
-
-  test('projected stub renders labeled, read-only, non-draggable, in the right column', async ({ page, e2eContext }) => {
-    const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
-    await page.goto(`/prj/${scenario.projectCode}`)
-    await waitForBoardReady(page)
-
-    // Client B receives a projection for a ticket number with NO local file.
-    // Use a high number guaranteed not to collide with the simple scenario.
-    await injectProjectionFeed(page, [projectedItem('MDT-950', 950)])
-
-    const stub = page.locator(boardSelectors.projectedStubByCode('MDT-950'))
-    await expect(stub).toBeVisible()
-
-    // It lands in the column matching its projected status (Proposed).
-    const proposedColumn = page.locator(boardSelectors.columnByStatus('Proposed'))
-    await expect(proposedColumn.locator(boardSelectors.projectedStubByCode('MDT-950'))).toBeVisible()
-
-    // The muted "cloud" label is present (must not imply ownership/presence — C8).
-    await expect(stub.locator(boardSelectors.cloudBadge)).toBeVisible()
-    await expect(stub.locator(boardSelectors.cloudBadge)).toContainText(/cloud/i)
-
-    // Read-only / non-draggable: no drag handle on the stub (BR-3.4).
-    await expect(stub.locator(boardSelectors.dragHandle)).toHaveCount(0)
-
-    // The card carries the projected flag for downstream assertions.
-    await expect(stub).toHaveAttribute('data-projected', 'true')
-
-    // BR-3.1: the stub must not render a body/description. The projected title
-    // is the only text content beyond the approved badges.
-    const stubText = (await stub.innerText()).toLowerCase()
-    expect(stubText).not.toContain('description:')
-    expect(stubText).not.toContain('rationale:')
-  })
+  // MDT-239: the two production-poller tests were removed — the frontend
+  // poller no longer exists; the MDT-226 push path delivers projections
+  // through the unified ticket API (covered by the tests below).
 
   test('local ticket wins — no stub for a ticket number that has a local file', async ({ page, e2eContext }) => {
     const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
@@ -155,8 +100,18 @@ test.describe('Cloud-Sync Board Projection (MDT-200 U5)', () => {
 
     // First poll: one projection.
     await injectProjectionFeed(page, [projectedItem('MDT-951', 951)])
-    await expect(page.locator(boardSelectors.projectedStubByCode('MDT-951'))).toBeVisible()
+    const firstStub = page.locator(boardSelectors.projectedStubByCode('MDT-951'))
+    await expect(firstStub).toBeVisible()
     await expect(page.locator(boardSelectors.projectedStub)).toHaveCount(1)
+
+    // Read-only stub contract (BR-3.x): carries the projected flag, no drag
+    // handle (non-draggable), and renders no body/description text — the
+    // projected title is the only content beyond approved badges.
+    await expect(firstStub).toHaveAttribute('data-projected', 'true')
+    await expect(firstStub.locator(boardSelectors.dragHandle)).toHaveCount(0)
+    const stubText = (await firstStub.innerText()).toLowerCase()
+    expect(stubText).not.toContain('description:')
+    expect(stubText).not.toContain('rationale:')
 
     // Second poll: an additional projection arrives (simulating client B observing
     // a publish from client A). The board updates without a full reload.
@@ -220,7 +175,9 @@ test.describe('Cloud-Sync push delivery (MDT-226)', () => {
     const cloudSocketAttempts: string[] = []
     context.on('request', (request) => {
       const url = request.url()
-      if (url.includes('/projection-stream') || url.startsWith('wss://')) {
+      // Real WebSocket attempts only — a static module asset named
+      // projection-stream.js is a legitimate script load, not a socket.
+      if (url.startsWith('ws://') || url.startsWith('wss://')) {
         cloudSocketAttempts.push(url)
       }
     })
@@ -234,7 +191,7 @@ test.describe('Cloud-Sync push delivery (MDT-226)', () => {
     // The legacy projection endpoint was never requested in the push path.
     expect(cloudProjectionRequests).toEqual([])
     // The browser opened no direct cloud WebSocket.
-    expect(cloudSocketAttempts.filter(u => u.includes('/projection-stream'))).toEqual([])
+    expect(cloudSocketAttempts).toEqual([])
   })
 
   test('local ticket wins in the unified board view (BR-1.9)', async ({ page, e2eContext }) => {

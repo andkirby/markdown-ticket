@@ -8,8 +8,9 @@ import type { Page } from '@playwright/test'
 import { expect } from '@playwright/test'
 import { boardSelectors, commonSelectors, listSelectors, selectorSelectors, ticketSelectors } from './selectors.js'
 
-/** Default timeout for board ready state */
-const BOARD_READY_TIMEOUT = 10000
+/** Default timeout for board ready state (generous: concurrent e2e runs
+ * share one machine and can double board-load latency — MDT-239) */
+const BOARD_READY_TIMEOUT = 20000
 
 /** Default timeout for API responses */
 const API_TIMEOUT = 5000
@@ -47,11 +48,18 @@ export async function waitForBoardReady(page: Page, timeout = BOARD_READY_TIMEOU
 export async function waitForListReady(page: Page, timeout = BOARD_READY_TIMEOUT): Promise<void> {
   await page.waitForSelector(commonSelectors.loading, { state: 'hidden', timeout })
   // Wait for either desktop table or mobile list container to be visible
-  // Use Promise.race because waitForSelector with comma picks first DOM match, not first visible
+  // Use Promise.race because waitForSelector with comma picks first DOM match, not first visible.
+  // The losing branch's eventual rejection is swallowed so it cannot surface
+  // as an unhandled rejection after the race has already resolved.
   await Promise.race([
-    page.locator(listSelectors.ticketTable).waitFor({ state: 'visible', timeout }),
-    page.locator(listSelectors.ticketList).waitFor({ state: 'visible', timeout }),
+    page.locator(listSelectors.ticketTable).waitFor({ state: 'visible', timeout }).catch(() => null),
+    page.locator(listSelectors.ticketList).waitFor({ state: 'visible', timeout }).catch(() => null),
   ])
+  // At least one of the two must have been visible; verify explicitly.
+  const tableVisible = await page.locator(listSelectors.ticketTable).isVisible()
+  const listVisible = await page.locator(listSelectors.ticketList).isVisible()
+  if (!tableVisible && !listVisible)
+    throw new Error('waitForListReady: neither ticket-table nor ticket-list-mobile became visible')
 }
 
 /**
@@ -64,6 +72,23 @@ export async function waitForListReady(page: Page, timeout = BOARD_READY_TIMEOUT
 export async function waitForDocumentsReady(page: Page, timeout = BOARD_READY_TIMEOUT): Promise<void> {
   await page.waitForSelector(commonSelectors.loading, { state: 'hidden', timeout })
   await page.waitForSelector('[data-testid="document-tree"]', { state: 'visible', timeout })
+}
+
+/**
+ * Wait until at least `minCount` ticket cards are rendered.
+ * The board container can appear before tickets finish loading — instant
+ * counts race the load (MDT-239).
+ */
+export async function waitForTicketCount(page: Page, minCount: number, timeout = 10000): Promise<number> {
+  let count = 0
+  const deadline = Date.now() + timeout
+  while (Date.now() < deadline) {
+    count = await page.locator(boardSelectors.ticketCard).count()
+    if (count >= minCount)
+      return count
+    await page.waitForTimeout(100)
+  }
+  return count
 }
 
 /**

@@ -20,27 +20,6 @@ async function addFilenameTabDocs(projectDir: string): Promise<void> {
   await writeDocument(projectDir, 'docs/standalone.md', '# Standalone\n\nStandalone marker')
 }
 
-async function waitForDocumentWatcherReady(
-  fileWatcher: {
-    initDocumentWatchers: (projectId: string, projectRoot: string, documentPaths: string[], ticketsPath?: string) => number
-    once: (event: string, listener: (data: { projectId: string, watcherId: string }) => void) => void
-  },
-  projectId: string,
-  expectedWatcherSuffix: string,
-  startWatching: () => void,
-): Promise<void> {
-  await new Promise<void>((resolve) => {
-    const timeout = setTimeout(resolve, 1500)
-    fileWatcher.once('document-ready', (data) => {
-      if (data.projectId === projectId && data.watcherId.endsWith(expectedWatcherSuffix)) {
-        clearTimeout(timeout)
-        resolve()
-      }
-    })
-    startWatching()
-  })
-}
-
 test.describe('Documents filename tabs (MDT-169)', () => {
   test('opening a tree variant shows grouped tabs while preserving physical tree files', async ({ page, e2eContext }) => {
     const project = await e2eContext.projectFactory.createProject('empty', {
@@ -74,7 +53,9 @@ test.describe('Documents filename tabs (MDT-169)', () => {
     await expect(page.locator(documentSelectors.fileViewer)).toContainText('Alpha beta marker')
     await expect(page).toHaveURL(/file=docs(?:%2F|\/)some-name\.alpha\.beta\.md/)
     await expect(page.locator(documentSelectors.recentDocument).first()).toContainText('some-name.alpha.beta.md')
-    await expect(page.locator(`${documentSelectors.documentItem}[data-document-path="docs/some-name.alpha.beta.md"]`)).toHaveClass(/text-primary/)
+    // Selected styling moved from the text-primary utility to the dedicated
+    // document-tree__row--selected class.
+    await expect(page.locator(`${documentSelectors.documentItem}[data-document-path="docs/some-name.alpha.beta.md"]`)).toHaveClass(/document-tree__row--selected/)
   })
 
   test('standalone markdown opens without filename tabs', async ({ page, e2eContext }) => {
@@ -96,12 +77,8 @@ test.describe('Documents filename tabs (MDT-169)', () => {
     })
     await addFilenameTabDocs(project.path)
 
-    await waitForDocumentWatcherReady(
-      e2eContext.fileWatcher,
-      project.key,
-      '__document__docs',
-      () => e2eContext.fileWatcher.initDocumentWatchers(project.key, project.path, ['docs'], 'docs/CRs'),
-    )
+    // MDT-239: admin seam awaits the backend's document-ready event server-side
+    await e2eContext.fileWatcher.initDocumentWatchers(project.key, project.path, ['docs'], 'docs/CRs', '__document__docs')
 
     await page.goto(`/prj/${project.key}/documents?file=docs/some-name.two.md`)
     await page.waitForLoadState('load')
@@ -127,12 +104,8 @@ test.describe('Documents filename tabs (MDT-169)', () => {
     })
     await addFilenameTabDocs(project.path)
 
-    await waitForDocumentWatcherReady(
-      e2eContext.fileWatcher,
-      project.key,
-      '__document__docs',
-      () => e2eContext.fileWatcher.initDocumentWatchers(project.key, project.path, ['docs'], 'docs/CRs'),
-    )
+    // MDT-239: admin seam awaits the backend's document-ready event server-side
+    await e2eContext.fileWatcher.initDocumentWatchers(project.key, project.path, ['docs'], 'docs/CRs', '__document__docs')
 
     await page.goto(`/prj/${project.key}/documents?file=docs/some-name.one.md`)
     await page.waitForLoadState('load')

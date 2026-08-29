@@ -114,6 +114,12 @@ export function normalizeTicket(rawTicket: unknown): Ticket {
     normalizedTicket.worktreePath = ticket.worktreePath
   }
 
+  // MDT-226/MDT-239: preserve the unified-item source discriminator so
+  // projected stubs keep their identity (isProjectedStub) downstream.
+  if (ticket.kind === 'projected') {
+    normalizedTicket.kind = 'projected'
+  }
+
   // MDT-093: Preserve subdocuments array if present
   if (Array.isArray(ticket.subdocuments)) {
     normalizedTicket.subdocuments = ticket.subdocuments
@@ -170,6 +176,12 @@ export function normalizeTicketMetadata(rawTicket: unknown): TicketMetadata {
   }
   if (typeof ticket.worktreePath === 'string') {
     normalizedMetadata.worktreePath = ticket.worktreePath
+  }
+
+  // MDT-226/MDT-239: preserve the unified-item source discriminator
+  // (see normalizeTicket).
+  if (ticket.kind === 'projected') {
+    normalizedMetadata.kind = 'projected'
   }
 
   return normalizedMetadata

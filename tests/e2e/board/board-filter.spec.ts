@@ -44,8 +44,8 @@ test.describe('Board Filter Bar (MDT-196)', () => {
     await expect(page.getByTestId('facet-section')).toHaveCount(4)
 
     // Toggle "Proposed" in the Status facet.
-    await page.getByTestId('facet-section').filter({ hasText: 'Status' })
-      .getByTestId('facet-option-checkbox').filter({ hasText: 'Proposed' }).click()
+    await page.locator('[data-testid="facet-section"][data-facet="status"] '
+      + '[data-testid="facet-option-checkbox"][data-value="Proposed"]').click()
 
     // Only the Proposed ticket should be visible now.
     const filteredCount = await getTicketCount(page)
@@ -63,8 +63,8 @@ test.describe('Board Filter Bar (MDT-196)', () => {
 
     // Apply a priority filter via the popover.
     await page.getByTestId('filter-button').click()
-    await page.getByTestId('facet-section').filter({ hasText: 'Priority' })
-      .getByTestId('facet-option-checkbox').filter({ hasText: 'High' }).click()
+    await page.locator('[data-testid="facet-section"][data-facet="priority"] '
+      + '[data-testid="facet-option-checkbox"][data-value="High"]').click()
 
     // Two tickets have priority High (Setup Project Structure, Fix Navigation Bug).
     await expect(page.getByTestId('filter-result-count')).toContainText('Showing 2 of 3')
@@ -84,8 +84,8 @@ test.describe('Board Filter Bar (MDT-196)', () => {
 
     // Apply a type filter.
     await page.getByTestId('filter-button').click()
-    await page.getByTestId('facet-section').filter({ hasText: 'Type' })
-      .getByTestId('facet-option-checkbox').filter({ hasText: 'Bug Fix' }).click()
+    await page.locator('[data-testid="facet-section"][data-facet="type"] '
+      + '[data-testid="facet-option-checkbox"][data-value="Bug Fix"]').click()
 
     await expect(page.getByTestId('filter-result-count')).toContainText('Showing 1 of 3')
 
@@ -106,12 +106,14 @@ test.describe('Board Filter Bar (MDT-196)', () => {
     // Type a query that matches one ticket title.
     await page.getByTestId('search-input').fill('Authentication')
 
+    // The result count only renders inside the filter popover (desktop),
+    // so open it before asserting.
+    await page.getByTestId('filter-button').click()
     await expect(page.getByTestId('filter-result-count')).toContainText('Showing 1 of 3')
 
     // Now also filter by type — the query AND the facet must both match.
-    await page.getByTestId('filter-button').click()
-    await page.getByTestId('facet-section').filter({ hasText: 'Type' })
-      .getByTestId('facet-option-checkbox').filter({ hasText: 'Feature Enhancement' }).click()
+    await page.locator('[data-testid="facet-section"][data-facet="type"] '
+      + '[data-testid="facet-option-checkbox"][data-value="Feature Enhancement"]').click()
 
     // "Add User Authentication" is Feature Enhancement and matches the query.
     await expect(page.getByTestId('filter-result-count')).toContainText('Showing 1 of 3')
@@ -142,15 +144,17 @@ test.describe('Board Filter Bar (MDT-196)', () => {
 
     // Apply a status filter.
     await page.getByTestId('filter-button').click()
-    await page.getByTestId('facet-section').filter({ hasText: 'Status' })
-      .getByTestId('facet-option-checkbox').filter({ hasText: 'In Progress' }).click()
+    await page.locator('[data-testid="facet-section"][data-facet="status"] '
+      + '[data-testid="facet-option-checkbox"][data-value="In Progress"]').click()
 
     await expect(page.getByTestId('filter-result-count')).toContainText('Showing 1 of 3')
 
-    // Reload — the filter should be restored from localStorage.
+    // Reload — the filter should be restored from localStorage. The result
+    // count only renders inside the popover (desktop), so reopen it.
     await page.reload()
     await waitForBoardReady(page)
 
+    await page.getByTestId('filter-button').click()
     await expect(page.getByTestId('filter-result-count')).toContainText('Showing 1 of 3')
   })
 

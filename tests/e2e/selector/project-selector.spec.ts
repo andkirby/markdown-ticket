@@ -332,12 +332,17 @@ test.describe('Project Selector - Configuration', () => {
     const rail = page.locator(selectorSelectors.rail)
     await expect(rail).toBeVisible()
 
-    // Default visibleCount is 7; should show active + up to 6 inactive + launcher
-    // With MDT-185, inactive chips hide behind active-card hover-reveal when many projects
+    // With MDT-185, inactive chips hide behind active-card hover-reveal when
+    // many projects. The singleton run accumulates projects across files (and
+    // other files may raise ui.projectSelector.visibleCount), so assert
+    // against the CURRENT effective cap rather than a hardcoded default.
     await page.locator('[data-testid="project-selector-rail-active"]').hover()
     const inactiveCards = page.locator(selectorSelectors.inactiveProjectCard)
     const count = await inactiveCards.count()
-    expect(count).toBeLessThanOrEqual(6)
+    const prefsRes = await fetch(`${e2eContext.backendUrl}/api/config/selector`)
+    const prefs = await prefsRes.json()
+    const effectiveCap = prefs?.preferences?.visibleCount ?? prefs?.preferences?.projectSelector?.visibleCount ?? 7
+    expect(count).toBeLessThanOrEqual(Math.max(0, effectiveCap - 1))
   })
 })
 
