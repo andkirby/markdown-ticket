@@ -9,6 +9,7 @@
  * RED phase: Tests may fail due to missing selectors and UI elements.
  */
 
+import { dirname, join } from 'node:path'
 import { expect, test } from '../fixtures/test-fixtures.js'
 import { buildScenario } from '../setup/index.js'
 import { boardSelectors, projectSelectors, selectorSelectors } from '../utils/selectors.js'
@@ -79,7 +80,12 @@ test.describe('Project Management', () => {
     // Fill in the form
     const newProjectName = 'My New Project'
     const newProjectCode = 'NEW'
-    const newProjectPath = '~/test-projects/my-new-project'
+    // Create inside the run-scoped temp dir (wrapper tears it down) — a fixed
+    // path in the real HOME would make every run after the first fail with
+    // "already exists" (backend rejects createProject into an existing path).
+    // The wrapper exports CONFIG_DIR as <runTempDir>/config (see
+    // scripts/e2e/run.ts), so dirname(CONFIG_DIR) is the run temp dir.
+    const newProjectPath = join(dirname(process.env.CONFIG_DIR!), 'my-new-project')
 
     await page.fill(projectSelectors.projectNameInput, newProjectName)
     await page.fill(projectSelectors.projectCodeInput, newProjectCode)
