@@ -115,7 +115,7 @@ Custom event management system with three core services:
 
 ### Core Services
 
-#### EventBus (`src/services/eventBus.ts`)
+#### EventBus (`frontend/src/services/eventBus.ts`)
 
 ```typescript
 // Singleton event bus
@@ -130,7 +130,7 @@ class EventBus {
 function useEventBus<T>(eventType: EventType, handler: EventListener<T>): void
 ```
 
-#### SSEClient (`src/services/sseClient.ts`)
+#### SSEClient (`frontend/src/services/sseClient.ts`)
 
 ```typescript
 class SSEClient {
@@ -143,7 +143,7 @@ class SSEClient {
 }
 ```
 
-#### DataLayer (`src/services/dataLayer.ts`)
+#### DataLayer (`frontend/src/services/dataLayer.ts`)
 
 ```typescript
 const dataLayer = {
@@ -190,7 +190,7 @@ Update UI
 
 ### Dev Tools
 
-#### EventHistory Component (`src/components/DevTools/EventHistory.tsx`)
+#### EventHistory Component (`frontend/src/components/DevTools/EventHistory.tsx`)
 - Visual event history viewer
 - Filter and search events
 - Listener statistics
@@ -289,7 +289,7 @@ Update UI
 - Added "Show/Hide Event History" menu item in hamburger menu (dev mode only)
 - Menu controls BOTH popup visibility AND floating button
 - localStorage persistence for hidden state (key: `mdt-eventHistory-hidden`)
-- Hook file: `src/components/DevTools/useEventHistoryState.ts`
+- Hook file: `frontend/src/components/DevTools/useEventHistoryState.ts`
 
 ### Related Work
 

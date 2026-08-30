@@ -22,13 +22,13 @@ phaseEpic: UI Polish
 - Project selector does not handle overflow when many projects are loaded
 
 ### Affected Artifacts
-- `src/index.css` - CSS for scrollbar styling
-- `src/components/Board.tsx` - Main board layout, loading state
-- `src/components/Column/index.tsx` - Column styling, drag effects
-- `src/components/ProjectSelector.tsx` - Horizontal scroll container
-- `src/components/TicketAttributeTags.tsx` - Badge gradient colors
-- `src/config/statusConfig.ts` - Column color mapping
-- `src/utils/colorUtils.ts` - NEW: Gradient utility functions
+- `frontend/src/index.css` - CSS for scrollbar styling
+- `frontend/src/components/Board.tsx` - Main board layout, loading state
+- `frontend/src/components/Column/index.tsx` - Column styling, drag effects
+- `frontend/src/components/ProjectSelector.tsx` - Horizontal scroll container
+- `frontend/src/components/TicketAttributeTags.tsx` - Badge gradient colors
+- `frontend/src/config/statusConfig.ts` - Column color mapping
+- `frontend/src/utils/colorUtils.ts` - NEW: Gradient utility functions
 
 ### Scope
 - **Changes**: Update styling with gradients, animations, skeleton loaders, and scroll handling
@@ -59,21 +59,21 @@ Apply Tailwind gradient utilities, CSS animations, and Radix UI scroll component
 
 | Artifact | Type | Purpose |
 |----------|------|---------|
-| `src/utils/colorUtils.ts` | Utility | Map color names to Tailwind gradient classes |
+| `frontend/src/utils/colorUtils.ts` | Utility | Map color names to Tailwind gradient classes |
 
 ### Modified Artifacts
 
 | Artifact | Change Type | Modification |
 |----------|-------------|--------------|
-| `src/index.css` | CSS added | Project selector scrollbar styling (hover-visible) |
-| `src/components/Board.tsx` | UI replaced | Spinner → skeleton grid with gradient animation |
-| `src/components/Board.tsx` | Layout updated | Padding reduced, gap spacing added |
-| `src/components/Board.tsx` | Typography updated | Header size reduced (2xl → lg) |
-| `src/components/Column/index.tsx` | Style added | Column header gradient backgrounds, borders |
-| `src/components/Column/index.tsx` | Animation added | Drag transform: scale, rotate, shadow transitions |
-| `src/components/ProjectSelector.tsx` | Component added | ScrollArea root wrapper for horizontal overflow |
-| `src/components/TicketAttributeTags.tsx` | Style replaced | Flat colors → gradient badges with backdrop-blur |
-| `src/config/statusConfig.ts` | Color updated | Column colors remapped (green→blue, blue→yellow, teal→green) |
+| `frontend/src/index.css` | CSS added | Project selector scrollbar styling (hover-visible) |
+| `frontend/src/components/Board.tsx` | UI replaced | Spinner → skeleton grid with gradient animation |
+| `frontend/src/components/Board.tsx` | Layout updated | Padding reduced, gap spacing added |
+| `frontend/src/components/Board.tsx` | Typography updated | Header size reduced (2xl → lg) |
+| `frontend/src/components/Column/index.tsx` | Style added | Column header gradient backgrounds, borders |
+| `frontend/src/components/Column/index.tsx` | Animation added | Drag transform: scale, rotate, shadow transitions |
+| `frontend/src/components/ProjectSelector.tsx` | Component added | ScrollArea root wrapper for horizontal overflow |
+| `frontend/src/components/TicketAttributeTags.tsx` | Style replaced | Flat colors → gradient badges with backdrop-blur |
+| `frontend/src/config/statusConfig.ts` | Color updated | Column colors remapped (green→blue, blue→yellow, teal→green) |
 
 ### Integration Points
 
@@ -89,7 +89,7 @@ Apply Tailwind gradient utilities, CSS animations, and Radix UI scroll component
 
 ## 5. Acceptance Criteria
 ### Functional
-- [ ] `src/utils/colorUtils.ts` exports `getColumnGradient()` function
+- [ ] `frontend/src/utils/colorUtils.ts` exports `getColumnGradient()` function
 - [ ] Board loading state renders 4 columns × 3 skeleton cards with gradient animation
 - [ ] Dragged tickets show scale(0.95) + rotate(2deg) + shadow effects
 - [ ] Project selector shows horizontal scrollbar on hover when content overflows

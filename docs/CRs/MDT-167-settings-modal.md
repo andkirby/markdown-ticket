@@ -27,12 +27,12 @@ A dedicated Settings modal with three tabs (Appearance, Board, Advanced) that su
 Centralizing settings reduces hamburger menu clutter, surfaces hidden preferences, and gives users control over board behavior (density, default view).
 
 ### Impact Areas
-- `src/components/SettingsModal.tsx` — new component
-- `src/components/ui/switch.tsx` — new Switch component
-- `src/components/HamburgerMenu.tsx` — add Settings entry point, keep theme quick-access
-- `src/components/SecondaryHeader.tsx` — thread `onOpenSettings` prop
-- `src/App.tsx` — state and render SettingsModal
-- `src/index.css` — settings-specific CSS classes
+- `frontend/src/components/SettingsModal.tsx` — new component
+- `frontend/src/components/ui/switch.tsx` — new Switch component
+- `frontend/src/components/HamburgerMenu.tsx` — add Settings entry point, keep theme quick-access
+- `frontend/src/components/SecondaryHeader.tsx` — thread `onOpenSettings` prop
+- `frontend/src/App.tsx` — state and render SettingsModal
+- `frontend/src/index.css` — settings-specific CSS classes
 
 ## 2. Solution Analysis
 
@@ -95,9 +95,9 @@ Three-tab modal using Radix Tabs (already installed). All settings write immedia
 ## 6. References
 - Design spec: `docs/design/surfaces/settings.spec.md`
 - Wireframes: `docs/design/surfaces/settings.mockups.md`
-- Modal patterns: `src/MODALS.md`
-- Theme hook: `src/hooks/useTheme.ts`
-- Link config: `src/config/linkConfig.ts`
+- Modal patterns: `frontend/src/MODALS.md`
+- Theme hook: `frontend/src/hooks/useTheme.ts`
+- Link config: `frontend/src/config/linkConfig.ts`
 - Related: MDT-166 (modal standardization)
 
 ## 8. Clarifications

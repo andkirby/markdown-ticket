@@ -12,10 +12,10 @@
 
 | Critical Behavior | Owner Module | Merge/Refactor Task if Overlap |
 |-------------------|--------------|--------------------------------|
-| Scope state management | `src/hooks/useSearchScope.ts` | N/A — new module |
-| Project matching logic | `src/hooks/useProjectSearch.ts` | N/A — new module |
-| Query mode classification | `src/hooks/useQuickSearch.ts` | N/A — extending existing |
-| N-section keyboard nav | `src/components/QuickSearch/QuickSearchModal.tsx` | N/A — extending existing |
+| Scope state management | `frontend/src/hooks/useSearchScope.ts` | N/A — new module |
+| Project matching logic | `frontend/src/hooks/useProjectSearch.ts` | N/A — new module |
+| Query mode classification | `frontend/src/hooks/useQuickSearch.ts` | N/A — extending existing |
+| N-section keyboard nav | `frontend/src/components/QuickSearch/QuickSearchModal.tsx` | N/A — extending existing |
 | Unified search API | `server/controllers/SearchController.ts` | N/A — new module |
 
 ## Constraint Coverage
@@ -93,11 +93,11 @@ bun test domain-contracts/src/search/__tests__/search.test.ts
 
 **Milestone**: M1 — Scope Model (BR-1.1, BR-1.2, BR-1.3, BR-1.4)
 
-**Structure**: `src/hooks/useSearchScope.ts`, `src/components/QuickSearch/SearchScopeBar.tsx`
+**Structure**: `frontend/src/hooks/useSearchScope.ts`, `frontend/src/components/QuickSearch/SearchScopeBar.tsx`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-search-scope-hook` → `src/hooks/__tests__/useSearchScope.test.ts`: Scope state tests
-- `TEST-scope-bar` → `src/components/QuickSearch/__tests__/SearchScopeBar.test.tsx`: Scope bar rendering tests
+- `TEST-search-scope-hook` → `frontend/src/hooks/__tests__/useSearchScope.test.ts`: Scope state tests
+- `TEST-scope-bar` → `frontend/src/components/QuickSearch/__tests__/SearchScopeBar.test.tsx`: Scope bar rendering tests
 
 **Makes GREEN (Behavior)**:
 - `scope_controls_visible` (BR-1.1, BR-1.2)
@@ -108,17 +108,17 @@ bun test domain-contracts/src/search/__tests__/search.test.ts
 **Boundary**: Hook + component only. Do not wire into QuickSearchModal yet (Task 5).
 
 **Creates**:
-- `src/hooks/useSearchScope.ts` — SearchScope state, switch function, keyboard handler
-- `src/hooks/__tests__/useSearchScope.test.ts` — Scope state tests
-- `src/components/QuickSearch/SearchScopeBar.tsx` — Scope tab strip
-- `src/components/QuickSearch/__tests__/SearchScopeBar.test.tsx` — Scope bar tests
+- `frontend/src/hooks/useSearchScope.ts` — SearchScope state, switch function, keyboard handler
+- `frontend/src/hooks/__tests__/useSearchScope.test.ts` — Scope state tests
+- `frontend/src/components/QuickSearch/SearchScopeBar.tsx` — Scope tab strip
+- `frontend/src/components/QuickSearch/__tests__/SearchScopeBar.test.tsx` — Scope bar tests
 
 **Modifies**: None (standalone new files)
 
 **Must Not Touch**:
-- `src/components/QuickSearch/QuickSearchModal.tsx` — Integration in Task 5
-- `src/components/QuickSearch/QuickSearchInput.tsx` — Integration in Task 5
-- `src/hooks/useQuickSearch.ts` — Extended in Task 3
+- `frontend/src/components/QuickSearch/QuickSearchModal.tsx` — Integration in Task 5
+- `frontend/src/components/QuickSearch/QuickSearchInput.tsx` — Integration in Task 5
+- `frontend/src/hooks/useQuickSearch.ts` — Extended in Task 3
 
 **Anti-duplication**: Import `SearchScope` from `@mdt/domain-contracts` — do NOT define a local scope enum.
 
@@ -128,8 +128,8 @@ bun test domain-contracts/src/search/__tests__/search.test.ts
 
 **Verify**:
 ```bash
-bun test src/hooks/__tests__/useSearchScope.test.ts
-bun test src/components/QuickSearch/__tests__/SearchScopeBar.test.tsx
+bun test frontend/src/hooks/__tests__/useSearchScope.test.ts
+bun test frontend/src/components/QuickSearch/__tests__/SearchScopeBar.test.tsx
 ```
 
 **Done when**:
@@ -146,11 +146,11 @@ bun test src/components/QuickSearch/__tests__/SearchScopeBar.test.tsx
 
 **Milestone**: M2 — Project Matching & Query (BR-3.1, BR-3.2, BR-3.3, BR-3.4, BR-4.1–BR-4.4)
 
-**Structure**: `src/hooks/useProjectSearch.ts`, `src/hooks/useQuickSearch.ts`
+**Structure**: `frontend/src/hooks/useProjectSearch.ts`, `frontend/src/hooks/useQuickSearch.ts`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-project-search-hook` → `src/hooks/__tests__/useProjectSearch.test.ts`: Project matching tests
-- `TEST-query-mode-extended` → `src/hooks/useQuickSearch.test.ts`: Extended query mode tests
+- `TEST-project-search-hook` → `frontend/src/hooks/__tests__/useProjectSearch.test.ts`: Project matching tests
+- `TEST-query-mode-extended` → `frontend/src/hooks/useQuickSearch.test.ts`: Extended query mode tests
 
 **Makes GREEN (Behavior)**:
 - `partial_project_name_matching` (BR-3.1, BR-3.2)
@@ -163,16 +163,16 @@ bun test src/components/QuickSearch/__tests__/SearchScopeBar.test.tsx
 **Boundary**: Hooks only. No component changes.
 
 **Creates**:
-- `src/hooks/useProjectSearch.ts` — Client-side project matching with word-prefix scoring
-- `src/hooks/__tests__/useProjectSearch.test.ts` — Project matching tests
+- `frontend/src/hooks/useProjectSearch.ts` — Client-side project matching with word-prefix scoring
+- `frontend/src/hooks/__tests__/useProjectSearch.test.ts` — Project matching tests
 
 **Modifies**:
-- `src/hooks/useQuickSearch.ts` — Add new QueryMode values, update parseQueryMode to be scope-aware
-- `src/hooks/useQuickSearch.test.ts` — Add tests for new query modes
+- `frontend/src/hooks/useQuickSearch.ts` — Add new QueryMode values, update parseQueryMode to be scope-aware
+- `frontend/src/hooks/useQuickSearch.test.ts` — Add tests for new query modes
 
 **Must Not Touch**:
-- `src/components/QuickSearch/*` — Components integrated in Tasks 4–5
-- `src/hooks/useCrossProjectSearch.ts` — Extended in Task 6
+- `frontend/src/components/QuickSearch/*` — Components integrated in Tasks 4–5
+- `frontend/src/hooks/useCrossProjectSearch.ts` — Extended in Task 6
 - `domain-contracts/src/ticket/search.ts` — Backward compat (C5)
 
 **Anti-duplication**: Import `filterTickets` scoring pattern from `useQuickSearch.ts` as reference — do NOT copy scoring logic into useProjectSearch; implement project-specific scoring from scratch.
@@ -183,8 +183,8 @@ bun test src/components/QuickSearch/__tests__/SearchScopeBar.test.tsx
 
 **Verify**:
 ```bash
-bun test src/hooks/__tests__/useProjectSearch.test.ts
-bun test src/hooks/useQuickSearch.test.ts
+bun test frontend/src/hooks/__tests__/useProjectSearch.test.ts
+bun test frontend/src/hooks/useQuickSearch.test.ts
 ```
 
 **Done when**:
@@ -201,10 +201,10 @@ bun test src/hooks/useQuickSearch.test.ts
 
 **Milestone**: M3 — Grouped Results (BR-2.1, BR-2.2, BR-2.3–BR-2.5, BR-6.1, BR-6.3)
 
-**Structure**: `src/components/QuickSearch/QuickSearchResults.tsx`
+**Structure**: `frontend/src/components/QuickSearch/QuickSearchResults.tsx`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-quick-search-results-grouped` → `src/components/QuickSearch/__tests__/QuickSearchResults.test.tsx`: Grouped rendering tests
+- `TEST-quick-search-results-grouped` → `frontend/src/components/QuickSearch/__tests__/QuickSearchResults.test.tsx`: Grouped rendering tests
 
 **Makes GREEN (Behavior)**:
 - `global_search_grouped_results` (BR-2.1, BR-2.2)
@@ -219,17 +219,17 @@ bun test src/hooks/useQuickSearch.test.ts
 **Boundary**: Results rendering only. Keyboard nav stays in Task 5.
 
 **Creates**:
-- `src/components/QuickSearch/ProjectResultRow.tsx` — Project result row
-- `src/components/QuickSearch/DocumentResultRow.tsx` — Document result row
-- `src/components/QuickSearch/__tests__/QuickSearchResults.test.tsx` — Grouped rendering tests
+- `frontend/src/components/QuickSearch/ProjectResultRow.tsx` — Project result row
+- `frontend/src/components/QuickSearch/DocumentResultRow.tsx` — Document result row
+- `frontend/src/components/QuickSearch/__tests__/QuickSearchResults.test.tsx` — Grouped rendering tests
 
 **Modifies**:
-- `src/components/QuickSearch/QuickSearchResults.tsx` — Restructure for N groups
-- `src/components/QuickSearch/index.ts` — Export new components
+- `frontend/src/components/QuickSearch/QuickSearchResults.tsx` — Restructure for N groups
+- `frontend/src/components/QuickSearch/index.ts` — Export new components
 
 **Must Not Touch**:
-- `src/components/QuickSearch/QuickSearchModal.tsx` — Modal integration in Task 5
-- `src/hooks/*` — Hook logic already done
+- `frontend/src/components/QuickSearch/QuickSearchModal.tsx` — Modal integration in Task 5
+- `frontend/src/hooks/*` — Hook logic already done
 
 **Anti-duplication**: Import `SearchResultType` from `@mdt/domain-contracts` — do NOT re-declare entity type enum.
 
@@ -239,7 +239,7 @@ bun test src/hooks/useQuickSearch.test.ts
 
 **Verify**:
 ```bash
-bun test src/components/QuickSearch/__tests__/QuickSearchResults.test.tsx
+bun test frontend/src/components/QuickSearch/__tests__/QuickSearchResults.test.tsx
 ```
 
 **Done when**:
@@ -256,10 +256,10 @@ bun test src/components/QuickSearch/__tests__/QuickSearchResults.test.tsx
 
 **Milestone**: M4 — Keyboard Integration (BR-5.1–BR-5.3, BR-2.3–BR-2.5)
 
-**Structure**: `src/components/QuickSearch/QuickSearchModal.tsx`, `src/components/QuickSearch/QuickSearchInput.tsx`
+**Structure**: `frontend/src/components/QuickSearch/QuickSearchModal.tsx`, `frontend/src/components/QuickSearch/QuickSearchInput.tsx`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-keyboard-navigation` → `src/components/QuickSearch/__tests__/QuickSearchModal.keyboard.test.tsx`: Keyboard nav tests
+- `TEST-keyboard-navigation` → `frontend/src/components/QuickSearch/__tests__/QuickSearchModal.keyboard.test.tsx`: Keyboard nav tests
 - `TEST-e2e-scoped-search` → `tests/e2e/scoped-search.spec.ts`: Full E2E scenarios
 
 **Makes GREEN (Behavior)**:
@@ -275,20 +275,20 @@ bun test src/components/QuickSearch/__tests__/QuickSearchResults.test.tsx
 **Boundary**: Modal integration layer only. Core logic stays in hooks (Tasks 2–3).
 
 **Creates**:
-- `src/components/QuickSearch/__tests__/QuickSearchModal.keyboard.test.tsx` — Keyboard nav tests
+- `frontend/src/components/QuickSearch/__tests__/QuickSearchModal.keyboard.test.tsx` — Keyboard nav tests
 - `tests/e2e/scoped-search.spec.ts` — E2E test file
 
 **Modifies**:
-- `src/components/QuickSearch/QuickSearchModal.tsx` — Integrate scope, generalize keyboard, wire selection
-- `src/components/QuickSearch/QuickSearchInput.tsx` — Add SearchScopeBar integration
+- `frontend/src/components/QuickSearch/QuickSearchModal.tsx` — Integrate scope, generalize keyboard, wire selection
+- `frontend/src/components/QuickSearch/QuickSearchInput.tsx` — Add SearchScopeBar integration
 
 **Must Not Touch**:
-- `src/hooks/useSearchScope.ts` — Already done
-- `src/hooks/useProjectSearch.ts` — Already done
-- `src/hooks/useQuickSearch.ts` — Already done
+- `frontend/src/hooks/useSearchScope.ts` — Already done
+- `frontend/src/hooks/useProjectSearch.ts` — Already done
+- `frontend/src/hooks/useQuickSearch.ts` — Already done
 - `domain-contracts/*` — Already done
 
-**Anti-duplication**: Import `useSearchScope` from `src/hooks/useSearchScope.ts` — do NOT create scope state inside the modal.
+**Anti-duplication**: Import `useSearchScope` from `frontend/src/hooks/useSearchScope.ts` — do NOT create scope state inside the modal.
 
 **Duplication Guard**:
 - Keyboard nav logic lives in QuickSearchModal only — no duplicate nav handlers in child components
@@ -296,7 +296,7 @@ bun test src/components/QuickSearch/__tests__/QuickSearchResults.test.tsx
 
 **Verify**:
 ```bash
-bun test src/components/QuickSearch/__tests__/QuickSearchModal.keyboard.test.tsx
+bun test frontend/src/components/QuickSearch/__tests__/QuickSearchModal.keyboard.test.tsx
 ```
 
 **Done when**:
@@ -328,12 +328,12 @@ bun test src/components/QuickSearch/__tests__/QuickSearchModal.keyboard.test.tsx
 - `server/tests/api/search.test.ts` — Integration tests
 
 **Modifies**:
-- `src/hooks/useCrossProjectSearch.ts` — Add support for unified endpoint when scoped
+- `frontend/src/hooks/useCrossProjectSearch.ts` — Add support for unified endpoint when scoped
 
 **Must Not Touch**:
 - `server/routes/projects.ts` — Existing /api/projects/search route untouched (C5)
 - `server/controllers/ProjectController.ts` — Existing search logic untouched
-- `src/components/QuickSearch/*` — Already done
+- `frontend/src/components/QuickSearch/*` — Already done
 
 **Anti-duplication**: Import `UnifiedSearchRequest` from `@mdt/domain-contracts` — do NOT re-declare request schema in server code.
 
@@ -357,7 +357,7 @@ bun run --cwd server jest -- tests/api/search.test.ts
 | Layer | Arch Files | In Tasks | Gap | Status |
 |-------|-----------|----------|-----|--------|
 | domain-contracts/search/ | 4 | 4 | 0 | ✅ |
-| src/hooks/ | 4 | 4 | 0 | ✅ |
+| frontend/src/hooks/ | 4 | 4 | 0 | ✅ |
 | QuickSearch components | 7 | 7 | 0 | ✅ |
 | server/ | 3 | 3 | 0 | ✅ |
 

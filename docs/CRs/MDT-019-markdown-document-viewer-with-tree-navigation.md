@@ -187,7 +187,7 @@ max_depth = 3
 - Maintains security through path configuration
 
 ### Phase 1.5 Enhancement (2025-09-30)
-**✅ Collapsible Folders**: Added expand/collapse functionality to folder navigation with chevron icons. All folders start expanded by default. (`src/components/DocumentsView/FileTree.tsx`)
+**✅ Collapsible Folders**: Added expand/collapse functionality to folder navigation with chevron icons. All folders start expanded by default. (`frontend/src/components/DocumentsView/FileTree.tsx`)
 
 ### Original Decisions (2025-09-06)
 1. **UI**: Board/Documents toggle within single project view

@@ -23,8 +23,8 @@ The page fires a burst of API requests every 2–3 minutes while completely idle
 ## Solution
 
 - `server/routes/sse.ts` — Disable all Node.js timeouts on SSE connections (`req.setTimeout(0)`, `res.setTimeout(0)`, `req.socket.setTimeout(0)`, `req.socket.setKeepAlive(true)`).
-- `vite.config.ts` — Add dedicated `/api/events` proxy entry with `timeout: 0`, `proxyTimeout: 0`.
-- `src/hooks/useProjectManager.ts` — Module-level `fetchProjectsDeduped()` coalesces concurrent `fetchProjects()` calls from N instances into a single HTTP request.
+- `frontend/vite.config.ts` — Add dedicated `/api/events` proxy entry with `timeout: 0`, `proxyTimeout: 0`.
+- `frontend/src/hooks/useProjectManager.ts` — Module-level `fetchProjectsDeduped()` coalesces concurrent `fetchProjects()` calls from N instances into a single HTTP request.
 
 ## Verification
 

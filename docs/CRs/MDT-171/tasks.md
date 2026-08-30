@@ -17,10 +17,10 @@
 | Fav JSON state path and reconciliation | `server/services/DocumentFavStateService.ts` | Task 2 or Task 3 |
 | Eligible document tree rules | `server/services/TreeService.ts` | Task 3 |
 | Fav write API | `server/routes/documents.ts`, `server/controllers/DocumentController.ts` | Task 2 |
-| Documents sidebar composition | `src/components/DocumentsView/DocumentsLayout.tsx` | Task 5 or Task 6 |
-| Fav row rendering | `src/components/DocumentsView/FavDocuments.tsx` | Task 5 |
-| Tree row star controls and folder locate | `src/components/DocumentsView/FileTree.tsx` | Task 4 or Task 6 |
-| Recent behavior | `src/config/documentNavigation.ts`, `src/components/DocumentsView/RecentDocuments.tsx` | Task 6 |
+| Documents sidebar composition | `frontend/src/components/DocumentsView/DocumentsLayout.tsx` | Task 5 or Task 6 |
+| Fav row rendering | `frontend/src/components/DocumentsView/FavDocuments.tsx` | Task 5 |
+| Tree row star controls and folder locate | `frontend/src/components/DocumentsView/FileTree.tsx` | Task 4 or Task 6 |
+| Recent behavior | `frontend/src/config/documentNavigation.ts`, `frontend/src/components/DocumentsView/RecentDocuments.tsx` | Task 6 |
 
 ## Constraint Coverage
 
@@ -60,11 +60,11 @@
 | server/controllers/ | 1 | 1 | 0 | ✅ |
 | server/routes/ | 1 | 1 | 0 | ✅ |
 | server/tests/api/ | 2 | 2 | 0 | ✅ |
-| src/config/ | 3 | 3 | 0 | ✅ |
-| src/components/DocumentsView/ | 7 | 7 | 0 | ✅ |
-| src/styles/entities/ | 1 | 1 | 0 | ✅ |
-| src/components/shared/ | 1 | 1 | 0 | ✅ |
-| src/components/ProjectSelector/ | 1 | 1 | 0 | ✅ |
+| frontend/src/config/ | 3 | 3 | 0 | ✅ |
+| frontend/src/components/DocumentsView/ | 7 | 7 | 0 | ✅ |
+| frontend/src/styles/entities/ | 1 | 1 | 0 | ✅ |
+| frontend/src/components/shared/ | 1 | 1 | 0 | ✅ |
+| frontend/src/components/ProjectSelector/ | 1 | 1 | 0 | ✅ |
 | tests/e2e/ | 2 | 2 | 0 | ✅ |
 
 No orphaned architecture files remain.
@@ -75,7 +75,7 @@ No orphaned architecture files remain.
 
 **Milestone**: M0 - Walking Skeleton
 
-**Structure**: `server/services/DocumentFavStateService.ts`; `src/config/documentFavs.ts`; `src/components/DocumentsView/FavDocuments.tsx`; `server/tests/api/document-favs.test.ts`; `src/config/documentFavs.test.ts`; `src/components/DocumentsView/FavDocuments.test.tsx`; `tests/e2e/documents/favs.spec.ts`
+**Structure**: `server/services/DocumentFavStateService.ts`; `frontend/src/config/documentFavs.ts`; `frontend/src/components/DocumentsView/FavDocuments.tsx`; `server/tests/api/document-favs.test.ts`; `frontend/src/config/documentFavs.test.ts`; `frontend/src/components/DocumentsView/FavDocuments.test.tsx`; `tests/e2e/documents/favs.spec.ts`
 
 **Makes GREEN (Automated Tests)**:
 - None. This task proves missing files and runners exist before feature implementation.
@@ -85,11 +85,11 @@ No orphaned architecture files remain.
 
 **Creates**:
 - `server/services/DocumentFavStateService.ts`
-- `src/config/documentFavs.ts`
-- `src/components/DocumentsView/FavDocuments.tsx`
+- `frontend/src/config/documentFavs.ts`
+- `frontend/src/components/DocumentsView/FavDocuments.tsx`
 - `server/tests/api/document-favs.test.ts`
-- `src/config/documentFavs.test.ts`
-- `src/components/DocumentsView/FavDocuments.test.tsx`
+- `frontend/src/config/documentFavs.test.ts`
+- `frontend/src/components/DocumentsView/FavDocuments.test.tsx`
 - `tests/e2e/documents/favs.spec.ts`
 
 **Modifies**:
@@ -118,7 +118,7 @@ No orphaned architecture files remain.
 
 ```bash
 bun run --cwd server jest --runInBand --listTests
-bun test src/config/documentFavs.test.ts src/components/DocumentsView/FavDocuments.test.tsx
+bun test frontend/src/config/documentFavs.test.ts frontend/src/components/DocumentsView/FavDocuments.test.tsx
 bunx playwright test --list tests/e2e/documents/favs.spec.ts --project=chromium
 ```
 
@@ -134,11 +134,11 @@ bunx playwright test --list tests/e2e/documents/favs.spec.ts --project=chromium
 
 **Milestone**: M1 - Durable backend state and read enrichment (BR-3.2)
 
-**Structure**: `domain-contracts/src/app-config/schema.ts`; `domain-contracts/src/app-config/validation.ts`; `src/config/documentFavs.ts`; `src/config/documentFavs.test.ts`
+**Structure**: `domain-contracts/src/app-config/schema.ts`; `domain-contracts/src/app-config/validation.ts`; `frontend/src/config/documentFavs.ts`; `frontend/src/config/documentFavs.test.ts`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-document-fav-state-schema` -> `src/config/documentFavs.test.ts`: document fav schema validates ordered file and folder records and falls back for invalid state
-- `TEST-document-favs-api-client` -> `src/config/documentFavs.test.ts`: frontend document fav API writes complete ordered lists through the narrow fav endpoint only
+- `TEST-document-fav-state-schema` -> `frontend/src/config/documentFavs.test.ts`: document fav schema validates ordered file and folder records and falls back for invalid state
+- `TEST-document-favs-api-client` -> `frontend/src/config/documentFavs.test.ts`: frontend document fav API writes complete ordered lists through the narrow fav endpoint only
 
 **Enables (BDD)**:
 - `ordered_write_preserves_existing_navigation` (BR-3.2, BR-3.3) - needs Task 6 to complete
@@ -147,8 +147,8 @@ bunx playwright test --list tests/e2e/documents/favs.spec.ts --project=chromium
 **Boundary**: Keep persistence ownership out of the frontend and out of `.mdt-config.toml`.
 
 **Creates**:
-- `src/config/documentFavs.ts`
-- `src/config/documentFavs.test.ts`
+- `frontend/src/config/documentFavs.ts`
+- `frontend/src/config/documentFavs.test.ts`
 
 **Modifies**:
 - `domain-contracts/src/app-config/schema.ts`
@@ -156,7 +156,7 @@ bunx playwright test --list tests/e2e/documents/favs.spec.ts --project=chromium
 
 **Must Not Touch**:
 - `server/services/DocumentFavStateService.ts` implementation beyond imports needed by later tasks
-- `src/config/documentNavigation.ts`
+- `frontend/src/config/documentNavigation.ts`
 - `.mdt-config.toml`
 
 **Create/Move**:
@@ -165,7 +165,7 @@ bunx playwright test --list tests/e2e/documents/favs.spec.ts --project=chromium
 
 **Exclude**: No backend route registration, no localStorage persistence, no browser-only fallback.
 
-**Anti-duplication**: Import Zod app-config schema/validation helpers from `domain-contracts/src/app-config/*` - do not create parallel validators in `src/config/documentFavs.ts`.
+**Anti-duplication**: Import Zod app-config schema/validation helpers from `domain-contracts/src/app-config/*` - do not create parallel validators in `frontend/src/config/documentFavs.ts`.
 
 **Duplication Guard**:
 - Check app-config schema/validation for existing project-scoped JSON state helpers before coding.
@@ -175,7 +175,7 @@ bunx playwright test --list tests/e2e/documents/favs.spec.ts --project=chromium
 **Verify**:
 
 ```bash
-bun test src/config/documentFavs.test.ts
+bun test frontend/src/config/documentFavs.test.ts
 ```
 
 **Done when**:
@@ -273,7 +273,7 @@ bun run --cwd server jest tests/api/document-favs.test.ts --runInBand
 
 **Must Not Touch**:
 - Frontend component behavior
-- `src/config/documentNavigation.ts`
+- `frontend/src/config/documentNavigation.ts`
 - Document root configuration write paths
 - Ticket files under `docs/CRs`
 
@@ -307,10 +307,10 @@ bun run --cwd server jest tests/api/documents.test.ts --runInBand
 
 **Milestone**: M2 - Reusable Documents View fav UI (BR-1.1, BR-1.2, BR-1.5, BR-2.1, BR-2.2)
 
-**Structure**: `src/components/DocumentsView/FileTree.tsx`; `src/components/DocumentsView/FileTree.test.tsx`; `src/styles/entities/fav-star.css`; `src/components/shared/Icon.tsx`; `src/components/ProjectSelector/ProjectSelectorCard.tsx`; `tests/e2e/utils/selectors.ts`
+**Structure**: `frontend/src/components/DocumentsView/FileTree.tsx`; `frontend/src/components/DocumentsView/FileTree.test.tsx`; `frontend/src/styles/entities/fav-star.css`; `frontend/src/components/shared/Icon.tsx`; `frontend/src/components/ProjectSelector/ProjectSelectorCard.tsx`; `tests/e2e/utils/selectors.ts`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-file-tree-fav-controls` -> `src/components/DocumentsView/FileTree.test.tsx`: FileTree renders reusable fav star controls isolates star clicks and locates folder favorites
+- `TEST-file-tree-fav-controls` -> `frontend/src/components/DocumentsView/FileTree.test.tsx`: FileTree renders reusable fav star controls isolates star clicks and locates folder favorites
 
 **Enables (BDD)**:
 - `folder_fav_appears_active` (BR-1.1, BR-1.3, BR-1.5) - needs Task 6 to complete
@@ -325,16 +325,16 @@ bun run --cwd server jest tests/api/documents.test.ts --runInBand
 - No new files
 
 **Modifies**:
-- `src/components/DocumentsView/FileTree.tsx`
-- `src/components/DocumentsView/FileTree.test.tsx`
-- `src/styles/entities/fav-star.css`
-- `src/components/shared/Icon.tsx`
-- `src/components/ProjectSelector/ProjectSelectorCard.tsx` only if reusable star extraction is required
+- `frontend/src/components/DocumentsView/FileTree.tsx`
+- `frontend/src/components/DocumentsView/FileTree.test.tsx`
+- `frontend/src/styles/entities/fav-star.css`
+- `frontend/src/components/shared/Icon.tsx`
+- `frontend/src/components/ProjectSelector/ProjectSelectorCard.tsx` only if reusable star extraction is required
 - `tests/e2e/utils/selectors.ts`
 
 **Must Not Touch**:
-- `src/config/documentNavigation.ts`
-- `src/components/DocumentsView/RecentDocuments.tsx`
+- `frontend/src/config/documentNavigation.ts`
+- `frontend/src/components/DocumentsView/RecentDocuments.tsx`
 - Backend persistence routes
 
 **Create/Move**:
@@ -343,7 +343,7 @@ bun run --cwd server jest tests/api/documents.test.ts --runInBand
 
 **Exclude**: No Favs section rendering, no new row height.
 
-**Anti-duplication**: Reuse `src/styles/entities/fav-star.css` and existing star/icon patterns from `src/components/ProjectSelector/ProjectSelectorCard.tsx` - do not duplicate icon SVG or CSS states.
+**Anti-duplication**: Reuse `frontend/src/styles/entities/fav-star.css` and existing star/icon patterns from `frontend/src/components/ProjectSelector/ProjectSelectorCard.tsx` - do not duplicate icon SVG or CSS states.
 
 **Duplication Guard**:
 - Check `ProjectSelectorCard` and shared icon styles before adding visual state code.
@@ -353,7 +353,7 @@ bun run --cwd server jest tests/api/documents.test.ts --runInBand
 **Verify**:
 
 ```bash
-bun test src/components/DocumentsView/FileTree.test.tsx
+bun test frontend/src/components/DocumentsView/FileTree.test.tsx
 ```
 
 **Done when**:
@@ -369,10 +369,10 @@ bun test src/components/DocumentsView/FileTree.test.tsx
 
 **Milestone**: M2 - Reusable Documents View fav UI (BR-1.3, BR-1.4, BR-1.5, BR-1.6, BR-3.3)
 
-**Structure**: `src/components/DocumentsView/FavDocuments.tsx`; `src/components/DocumentsView/FavDocuments.test.tsx`; `src/components/DocumentsView/DocumentsLayout.tsx`; `src/components/DocumentsView/documents-view.css`; `src/components/DocumentsView/RecentDocuments.tsx`; `src/config/documentNavigation.ts`; `src/styles/entities/fav-star.css`
+**Structure**: `frontend/src/components/DocumentsView/FavDocuments.tsx`; `frontend/src/components/DocumentsView/FavDocuments.test.tsx`; `frontend/src/components/DocumentsView/DocumentsLayout.tsx`; `frontend/src/components/DocumentsView/documents-view.css`; `frontend/src/components/DocumentsView/RecentDocuments.tsx`; `frontend/src/config/documentNavigation.ts`; `frontend/src/styles/entities/fav-star.css`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-fav-documents-component` -> `src/components/DocumentsView/FavDocuments.test.tsx`: FavDocuments renders compact Favs rows active star removal accessibility five-row preview and Show all or Show less behavior
+- `TEST-fav-documents-component` -> `frontend/src/components/DocumentsView/FavDocuments.test.tsx`: FavDocuments renders compact Favs rows active star removal accessibility five-row preview and Show all or Show less behavior
 
 **Enables (BDD)**:
 - `empty_favs_section_is_hidden` (BR-1.4) - needs Task 6 to complete
@@ -383,15 +383,15 @@ bun test src/components/DocumentsView/FileTree.test.tsx
 **Boundary**: Favs and Recent stay outside the All Documents scroll area; Recent remains automatic and browser-local.
 
 **Creates**:
-- `src/components/DocumentsView/FavDocuments.tsx`
-- `src/components/DocumentsView/FavDocuments.test.tsx`
+- `frontend/src/components/DocumentsView/FavDocuments.tsx`
+- `frontend/src/components/DocumentsView/FavDocuments.test.tsx`
 
 **Modifies**:
-- `src/components/DocumentsView/DocumentsLayout.tsx`
-- `src/components/DocumentsView/documents-view.css`
-- `src/components/DocumentsView/RecentDocuments.tsx`
-- `src/config/documentNavigation.ts`
-- `src/styles/entities/fav-star.css`
+- `frontend/src/components/DocumentsView/DocumentsLayout.tsx`
+- `frontend/src/components/DocumentsView/documents-view.css`
+- `frontend/src/components/DocumentsView/RecentDocuments.tsx`
+- `frontend/src/config/documentNavigation.ts`
+- `frontend/src/styles/entities/fav-star.css`
 
 **Must Not Touch**:
 - Backend write route ownership
@@ -406,7 +406,7 @@ bun test src/components/DocumentsView/FileTree.test.tsx
 
 **Exclude**: No manual sorting UI, no drag reorder, no empty Favs placeholder, no nested scroll or popover overflow.
 
-**Anti-duplication**: Import existing document navigation helpers from `src/config/documentNavigation.ts` only for Recent behavior - do not merge favs into Recent storage.
+**Anti-duplication**: Import existing document navigation helpers from `frontend/src/config/documentNavigation.ts` only for Recent behavior - do not merge favs into Recent storage.
 
 **Duplication Guard**:
 - Check `RecentDocuments.tsx` and `DocumentsLayout.tsx` for existing sidebar section primitives before adding markup.
@@ -416,7 +416,7 @@ bun test src/components/DocumentsView/FileTree.test.tsx
 **Verify**:
 
 ```bash
-bun test src/components/DocumentsView/FavDocuments.test.tsx
+bun test frontend/src/components/DocumentsView/FavDocuments.test.tsx
 ```
 
 **Done when**:
@@ -433,7 +433,7 @@ bun test src/components/DocumentsView/FavDocuments.test.tsx
 
 **Milestone**: M3 - Full user workflow (BR-1.1 through BR-3.3)
 
-**Structure**: `src/components/DocumentsView/DocumentsLayout.tsx`; `src/components/DocumentsView/FileTree.tsx`; `src/components/DocumentsView/FavDocuments.tsx`; `src/config/documentFavs.ts`; `src/components/DocumentsView/RecentDocuments.tsx`; `src/config/documentNavigation.ts`; `tests/e2e/documents/favs.spec.ts`; `tests/e2e/utils/selectors.ts`
+**Structure**: `frontend/src/components/DocumentsView/DocumentsLayout.tsx`; `frontend/src/components/DocumentsView/FileTree.tsx`; `frontend/src/components/DocumentsView/FavDocuments.tsx`; `frontend/src/config/documentFavs.ts`; `frontend/src/components/DocumentsView/RecentDocuments.tsx`; `frontend/src/config/documentNavigation.ts`; `tests/e2e/documents/favs.spec.ts`; `tests/e2e/utils/selectors.ts`
 
 **Makes GREEN (Automated Tests)**:
 - `TEST-documents-favs-e2e` -> `tests/e2e/documents/favs.spec.ts`: Documents favs support add remove reload document open folder locate and preserve Recent and All Documents
@@ -455,12 +455,12 @@ bun test src/components/DocumentsView/FavDocuments.test.tsx
 - `tests/e2e/documents/favs.spec.ts`
 
 **Modifies**:
-- `src/components/DocumentsView/DocumentsLayout.tsx`
-- `src/components/DocumentsView/FileTree.tsx`
-- `src/components/DocumentsView/FavDocuments.tsx`
-- `src/config/documentFavs.ts`
-- `src/components/DocumentsView/RecentDocuments.tsx`
-- `src/config/documentNavigation.ts`
+- `frontend/src/components/DocumentsView/DocumentsLayout.tsx`
+- `frontend/src/components/DocumentsView/FileTree.tsx`
+- `frontend/src/components/DocumentsView/FavDocuments.tsx`
+- `frontend/src/config/documentFavs.ts`
+- `frontend/src/components/DocumentsView/RecentDocuments.tsx`
+- `frontend/src/config/documentNavigation.ts`
 - `tests/e2e/utils/selectors.ts`
 
 **Must Not Touch**:
@@ -476,7 +476,7 @@ bun test src/components/DocumentsView/FavDocuments.test.tsx
 
 **Exclude**: No full-text search, no ticket navigation changes, no document root configuration changes.
 
-**Anti-duplication**: Use `src/config/documentFavs.ts` for API writes and existing Documents View navigation helpers for document/folder selection - do not create ad hoc fetches inside components.
+**Anti-duplication**: Use `frontend/src/config/documentFavs.ts` for API writes and existing Documents View navigation helpers for document/folder selection - do not create ad hoc fetches inside components.
 
 **Duplication Guard**:
 - Check `DocumentsLayout`, `FileTree`, and `FavDocuments` ownership before adding state transitions.
@@ -503,16 +503,16 @@ bunx playwright test tests/e2e/documents/favs.spec.ts --project=chromium
 
 **Milestone**: M3 - Full user workflow verification
 
-**Structure**: `server/tests/api/document-favs.test.ts`; `server/tests/api/documents.test.ts`; `src/config/documentFavs.test.ts`; `src/components/DocumentsView/FavDocuments.test.tsx`; `src/components/DocumentsView/FileTree.test.tsx`; `tests/e2e/documents/favs.spec.ts`; `tests/e2e/utils/selectors.ts`
+**Structure**: `server/tests/api/document-favs.test.ts`; `server/tests/api/documents.test.ts`; `frontend/src/config/documentFavs.test.ts`; `frontend/src/components/DocumentsView/FavDocuments.test.tsx`; `frontend/src/components/DocumentsView/FileTree.test.tsx`; `tests/e2e/documents/favs.spec.ts`; `tests/e2e/utils/selectors.ts`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-document-fav-state-schema` -> `src/config/documentFavs.test.ts`: schema and fallback
+- `TEST-document-fav-state-schema` -> `frontend/src/config/documentFavs.test.ts`: schema and fallback
 - `TEST-document-fav-storage-owner` -> `server/tests/api/document-favs.test.ts`: CONFIG_DIR owner and project resolution
 - `TEST-document-fav-write-route` -> `server/tests/api/document-favs.test.ts`: complete-list writes and unsafe target rejection
-- `TEST-document-favs-api-client` -> `src/config/documentFavs.test.ts`: narrow frontend endpoint
+- `TEST-document-favs-api-client` -> `frontend/src/config/documentFavs.test.ts`: narrow frontend endpoint
 - `TEST-document-tree-fav-reconciliation` -> `server/tests/api/documents.test.ts`: read enrichment and reconciliation
-- `TEST-fav-documents-component` -> `src/components/DocumentsView/FavDocuments.test.tsx`: compact Favs rows, five-row preview, and Show all or Show less behavior
-- `TEST-file-tree-fav-controls` -> `src/components/DocumentsView/FileTree.test.tsx`: tree row stars and folder locate
+- `TEST-fav-documents-component` -> `frontend/src/components/DocumentsView/FavDocuments.test.tsx`: compact Favs rows, five-row preview, and Show all or Show less behavior
+- `TEST-file-tree-fav-controls` -> `frontend/src/components/DocumentsView/FileTree.test.tsx`: tree row stars and folder locate
 - `TEST-documents-favs-e2e` -> `tests/e2e/documents/favs.spec.ts`: full workflow
 
 **Scope**: Run the focused regression set and inspect for ownership drift against the architecture decisions.
@@ -524,9 +524,9 @@ bunx playwright test tests/e2e/documents/favs.spec.ts --project=chromium
 **Modifies**:
 - `server/tests/api/document-favs.test.ts`
 - `server/tests/api/documents.test.ts`
-- `src/config/documentFavs.test.ts`
-- `src/components/DocumentsView/FavDocuments.test.tsx`
-- `src/components/DocumentsView/FileTree.test.tsx`
+- `frontend/src/config/documentFavs.test.ts`
+- `frontend/src/components/DocumentsView/FavDocuments.test.tsx`
+- `frontend/src/components/DocumentsView/FileTree.test.tsx`
 - `tests/e2e/documents/favs.spec.ts`
 - `tests/e2e/utils/selectors.ts`
 
@@ -551,7 +551,7 @@ bunx playwright test tests/e2e/documents/favs.spec.ts --project=chromium
 
 ```bash
 bun run --cwd server jest tests/api/document-favs.test.ts tests/api/documents.test.ts --runInBand
-bun test src/config/documentFavs.test.ts src/components/DocumentsView/FavDocuments.test.tsx src/components/DocumentsView/FileTree.test.tsx
+bun test frontend/src/config/documentFavs.test.ts frontend/src/components/DocumentsView/FavDocuments.test.tsx frontend/src/components/DocumentsView/FileTree.test.tsx
 bunx playwright test tests/e2e/documents/favs.spec.ts --project=chromium
 spec-trace validate MDT-171 --stage tasks
 ```

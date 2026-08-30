@@ -245,7 +245,7 @@ bunx playwright test tests/e2e/security-hardening.spec.ts --project=chromium --g
 **Must Not Touch**:
 - `server/services/DocumentService.ts`
 - `mcp-server/src/**`
-- `src/**`
+- `frontend/src/**`
 
 **Create/Move**:
 - Add canonical realpath containment checks before `fs.stat` or `fs.readdir` on user-supplied paths.
@@ -372,7 +372,7 @@ bun test docs/tests/mcp-docker-docs.test.ts
 **Must Not Touch**:
 - `mcp-server/src/tools/index.ts`
 - `server/**`
-- `src/**`
+- `frontend/src/**`
 
 **Create/Move**:
 - Replace plain token equality with timing-safe comparison when auth is enabled.
@@ -435,7 +435,7 @@ bun run --cwd mcp-server jest mcp-server/tests/http-auth-session-rate-limit.test
 - `docs/MCP_SERVER_GUIDE.md`
 
 **Must Not Touch**:
-- `src/components/MarkdownContent/**` except if a dependency API change requires import compatibility.
+- `frontend/src/components/MarkdownContent/**` except if a dependency API change requires import compatibility.
 - `docs/CRs/MDT-156/security-audit-research.md` except as read-only scan input.
 - Authentication or rotation policy docs owned by MDT-157.
 
@@ -514,7 +514,7 @@ bun audit
 - `bun.lock`
 
 **Must Not Touch**:
-- `src/**` unless E2E route reachability requires a test hook already approved by the prior tasks.
+- `frontend/src/**` unless E2E route reachability requires a test hook already approved by the prior tasks.
 - `mcp-server/src/tools/index.ts`
 - Authentication/RBAC implementation files for MDT-157.
 

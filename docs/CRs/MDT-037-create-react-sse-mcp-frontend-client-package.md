@@ -41,7 +41,7 @@ When users report frontend errors, LLMs need access to browser console logs to p
 - **Extend existing MCP server** (`server/mcp-dev-tools/`) with frontend tools
 - **Manual session activation** to prevent spam across global MCP usage
 - **Frontend log streaming** via HTTP POST batching + SSE for real-time delivery
-- **React hook integration** in `src/hooks/useMCPClient.ts`
+- **React hook integration** in `frontend/src/hooks/useMCPClient.ts`
 - **Auto-cleanup** with timeout safety (30min inactivity)
 
 ### Architecture Flow
@@ -81,7 +81,7 @@ server/server.js
 ├── POST /api/frontend/logs/start  # Start session
 └── POST /api/frontend/logs/stop   # Stop session
 
-src/hooks/
+frontend/src/hooks/
 └── useMCPClient.ts           # React hook for console interception
 ```
 
@@ -170,7 +170,7 @@ const SESSION_TIMEOUT = 30 * 60 * 1000;
 - ✅ Works even when React app is broken
 
 **Vite Server Integration:**
-- ✅ `vite.config.ts` - Frontend logging endpoints via Vite plugin
+- ✅ `frontend/vite.config.ts` - Frontend logging endpoints via Vite plugin
 - ✅ Session management: `/api/frontend/logs/status`, `/start`, `/stop`
 - ✅ Log collection: `POST /api/frontend/logs`
 - ✅ Log retrieval: `GET /api/frontend/logs?lines=20&filter=error`
@@ -216,7 +216,7 @@ LLM: "I see the error: Cannot read property 'map' of undefined. Here's the fix..
 - **After**: `VITE_FRONTEND_LOGGING_AUTOSTART=true` enables immediate session start on page load, capturing complete log history
 
 **Implementation Details:**
-- **Environment Variable Injection**: Modified `vite.config.ts` with `envInjectionPlugin()` to inject `VITE_FRONTEND_LOGGING_AUTOSTART` into HTML at build time
+- **Environment Variable Injection**: Modified `frontend/vite.config.ts` with `envInjectionPlugin()` to inject `VITE_FRONTEND_LOGGING_AUTOSTART` into HTML at build time
 - **Auto-Start Logic**: Enhanced `public/mcp-logger.js` to detect environment variable and immediately start frontend logging session
 - **Session Management**: Maintains backward compatibility with manual session control while providing automatic startup when enabled
 
@@ -253,7 +253,7 @@ The timing problem is completely solved - LLMs now have access to the full conte
 ### Technical References
 - [Existing MCP dev-tools](server/mcp-dev-tools/README.md)
 - [Current backend SSE implementation](server/server.js#L1867)
-- [Vite proxy configuration](vite.config.ts)
+- [Vite proxy configuration](frontend/vite.config.ts)
 
 ### Related Tickets
 - MDT-036: MCP Server Backend Integration (implemented)

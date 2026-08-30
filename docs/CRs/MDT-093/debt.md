@@ -9,7 +9,7 @@
 
 | Setting | Value |
 |---------|-------|
-| Source directory | `src/`, `server/`, `shared/` |
+| Source directory | `frontend/src/`, `server/`, `shared/` |
 | File extension | `.ts` |
 
 ## Summary
@@ -20,7 +20,7 @@ MDT-093 introduces sub-document navigation with hierarchical tabs. The implement
 
 ### 1. Duplication: normalizeTicket duplicated across shared and frontend
 
-- **Location**: `shared/models/Ticket.ts:85-122`, `src/services/dataLayer.ts:318-376`
+- **Location**: `shared/models/Ticket.ts:85-122`, `frontend/src/services/dataLayer.ts:318-376`
 - **Evidence**: Both files contain nearly identical `normalizeTicket()` functions with the same helper functions (`parseDate`, `normalizeArray`). The shared version is authoritative (line 85), but the frontend duplicates the logic (line 318).
 - **Impact**: Adding new ticket fields requires updating two normalization functions. When `subdocuments` field was added, only the frontend version included it (dataLayer.ts:370), but the shared `normalizeTicket()` omitted it, causing subdocument metadata loss when using shared normalization.
 - **Suggested Fix**: Export `normalizeTicket` from `@mdt/shared/models/Ticket` and import it in dataLayer. Remove the duplicated implementation. Ensure shared version handles all fields including `subdocuments`.
@@ -49,13 +49,13 @@ MDT-093 introduces sub-document navigation with hierarchical tabs. The implement
 ### 4. Hidden Coupling: Dynamic import creates type incompatibility
 
 - **Location**: `shared/models/Ticket.ts:44`
-- **Evidence**: Uses `import('./SubDocument.js').SubDocument[]` (dynamic import) while `src/types/ticket.ts:27` uses `import('@mdt/shared/models/SubDocument').SubDocument[]` (static import).
+- **Evidence**: Uses `import('./SubDocument.js').SubDocument[]` (dynamic import) while `frontend/src/types/ticket.ts:27` uses `import('@mdt/shared/models/SubDocument').SubDocument[]` (static import).
 - **Impact**: Type checker may treat these as incompatible types. When shared `Ticket` is used in frontend, the `subdocuments` field type may not match the frontend expectation, causing type errors or requiring type assertions.
 - **Suggested Fix**: Change to static import at top of file: `import type { SubDocument } from './SubDocument.js'` and use `subdocuments?: SubDocument[]`
 
 ### 5. Shotgun Surgery: Adding subdocument feature required editing 12+ files
 
-- **Location**: Backend: `server/services/TicketService.ts`, `server/controllers/ProjectController.ts`, `server/routes/projects.ts`. Frontend: `src/components/TicketViewer.tsx`, `src/components/TicketViewer/*`, `src/services/dataLayer.ts`, `src/types/ticket.ts`. Shared: `shared/models/Ticket.ts`, `shared/models/SubDocument.ts`.
+- **Location**: Backend: `server/services/TicketService.ts`, `server/controllers/ProjectController.ts`, `server/routes/projects.ts`. Frontend: `frontend/src/components/TicketViewer.tsx`, `frontend/src/components/TicketViewer/*`, `frontend/src/services/dataLayer.ts`, `frontend/src/types/ticket.ts`. Shared: `shared/models/Ticket.ts`, `shared/models/SubDocument.ts`.
 - **Evidence**: MDT-093 touched backend controllers, routes, services, shared models, frontend types, services, and multiple components. Adding new subdocument metadata fields requires coordinated changes across 4+ boundaries.
 - **Impact**: Future enhancements to subdocument metadata (e.g., adding `lastModified`, `size`) will require backend API changes, shared type updates, frontend type updates, dataLayer changes, and component updates—high coordination cost.
 - **Suggested Fix**: Consider introducing a SubDocumentService that encapsulates discovery, ordering, and metadata. This would provide a single extension point for subdocument-related operations.
@@ -108,7 +108,7 @@ MDT-093 introduces sub-document navigation with hierarchical tabs. The implement
 // See: MDT-093/debt.md item #4
 ```
 
-**File**: `src/services/dataLayer.ts`
+**File**: `frontend/src/services/dataLayer.ts`
 **Line**: 318
 
 ```typescript

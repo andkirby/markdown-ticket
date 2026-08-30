@@ -15,7 +15,7 @@
 |-------------------|--------------|-------------------------------|
 | Dot-notation parsing | `server/services/TicketService.ts` | N/A |
 | Virtual folder creation | `server/services/TicketService.ts` | N/A |
-| Namespace tab rendering | `src/components/TicketViewer/TicketDocumentTabs.tsx` | N/A |
+| Namespace tab rendering | `frontend/src/components/TicketViewer/TicketDocumentTabs.tsx` | N/A |
 
 ## Constraint Coverage
 
@@ -145,7 +145,7 @@ bun run --cwd server jest tests/api/ticket-namespace.test.ts
 
 **Milestone**: M2 — Frontend rendering (BR-1, BR-3, BR-5, BR-6, BR-7, BR-8)
 
-**Structure**: `src/components/TicketViewer/TicketDocumentTabs.tsx`, `src/components/TicketViewer/useTicketDocumentNavigation.ts`
+**Structure**: `frontend/src/components/TicketViewer/TicketDocumentTabs.tsx`, `frontend/src/components/TicketViewer/useTicketDocumentNavigation.ts`
 
 **Makes GREEN (Automated Tests)**:
 - `TEST-namespace-tabs` → `tests/e2e/ticket/namespace.spec.ts`: all E2E tests
@@ -192,7 +192,7 @@ navigate(`/prj/${projectCode}/ticket/${ticketCode}/${urlPath}`, { replace: true 
 - `bdd/legacy.md` file → URL: `/prj/{code}/ticket/{ticket}/bdd/legacy.md`
 
 **Modifies**:
-- `src/components/TicketViewer/TicketDocumentTabs.tsx` — add namespace grouping logic
+- `frontend/src/components/TicketViewer/TicketDocumentTabs.tsx` — add namespace grouping logic
 
 **Must Not Touch**:
 - Backend services
@@ -235,7 +235,7 @@ bunx playwright test tests/e2e/ticket/namespace.spec.ts --project=chromium
 
 **Source**: [uat.md](./uat.md) — UAT Refinement Brief 2026-07-18
 
-**Structure**: `src/utils/subdocPathValidation.ts`, `src/components/TicketViewer/useTicketDocumentNavigation.ts`
+**Structure**: `frontend/src/utils/subdocPathValidation.ts`, `frontend/src/components/TicketViewer/useTicketDocumentNavigation.ts`
 
 **Status**:
 - Slice 1 (Bug 1 fix — `extractSubDocPath`): **DONE**
@@ -243,7 +243,7 @@ bunx playwright test tests/e2e/ticket/namespace.spec.ts --project=chromium
 - Slice 3 (test hardening): **DEFERRED** — should land before MDT-138 closes
 
 **Makes GREEN (Automated Tests)** — pending Slice 3:
-- New unit tests in `src/__tests__/subdocPathValidation.test.ts` covering:
+- New unit tests in `frontend/src/__tests__/subdocPathValidation.test.ts` covering:
   - `extractSubDocPath('/prj/MDT/ticket/MDT-138/architecture.md', 'MDT-138')` → `'architecture.md'`
   - `extractSubDocPath('/prj/MDT/ticket/MDT-138/requirements.trace.md', 'MDT-138')` → `'requirements.trace.md'`
   - `extractSubDocPath('/prj/MDT/ticket/MDT-138/bdd/another.trace.md', 'MDT-138')` → `'bdd/another.trace.md'`
@@ -278,15 +278,15 @@ Bug 2 was masked by Bug 1 and pre-existed in `collectPaths`. See `uat.md`
 **Boundary**: Frontend utility + navigation hook + E2E assertions only.
 
 **Modifies (Slices 1 and 2 — committed)**:
-- `src/utils/subdocPathValidation.ts` — fixed `extractSubDocPath`
-- `src/components/TicketViewer/useTicketDocumentNavigation.ts` — rewrote `collectPaths`
+- `frontend/src/utils/subdocPathValidation.ts` — fixed `extractSubDocPath`
+- `frontend/src/components/TicketViewer/useTicketDocumentNavigation.ts` — rewrote `collectPaths`
 
 **Modifies (Slice 3 — deferred)**:
-- `src/__tests__/subdocPathValidation.test.ts` — new (or extend if exists)
+- `frontend/src/__tests__/subdocPathValidation.test.ts` — new (or extend if exists)
 - `tests/e2e/ticket/namespace.spec.ts` — strengthen 3 tests with `data-state="active"` assertions
 
 **Must Not Touch**:
-- `src/routes.ts` (`routePatternToRegex` escaping is correct; Bug 1 was in the caller)
+- `frontend/src/routes.ts` (`routePatternToRegex` escaping is correct; Bug 1 was in the caller)
 - Backend services
 - Shared types
 
@@ -301,8 +301,8 @@ from the folder's storage type.
 
 ```bash
 # Unit (existing)
-bun test src/__tests__/routes.test.ts                              # 22/22 pass
-bun test src/components/TicketViewer/useTicketDocumentNavigation.test.tsx  # 10/10 pass
+bun test frontend/src/__tests__/routes.test.ts                              # 22/22 pass
+bun test frontend/src/components/TicketViewer/useTicketDocumentNavigation.test.tsx  # 10/10 pass
 
 # E2E (existing suite — no regression)
 PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/ticket/namespace.spec.ts --project=chromium          # 19/19 pass
@@ -319,7 +319,7 @@ bunx tsc --noEmit -p tsconfig.json   # no new errors in changed files
 
 ```bash
 # New unit tests
-bun test src/__tests__/subdocPathValidation.test.ts
+bun test frontend/src/__tests__/subdocPathValidation.test.ts
 
 # Strengthened E2E
 PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/ticket/namespace.spec.ts --project=chromium

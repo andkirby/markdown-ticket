@@ -186,7 +186,7 @@ flowchart LR
 
 ```text
 mcp-server/
-├── src/
+├── frontend/src/
 │   ├── index.ts              # Start both transports
 │   ├── transports/
 │   │   ├── stdio.ts          # Existing stdio transport
@@ -200,7 +200,7 @@ mcp-server/
 
 **Do NOT modify:**
 - Backend server (`server/`) - unchanged
-- Frontend (`src/`) - unchanged
+- Frontend (`frontend/src/`) - unchanged
 - Shared services (`shared/`) - unchanged
 - Existing stdio transport - unchanged
 - Existing tool implementations - unchanged
@@ -247,7 +247,7 @@ flowchart TB
 
 ```text
 mcp-server/
-├── src/
+├── frontend/src/
 │   ├── index.ts                  # Start stdio (always) + HTTP (if enabled)
 │   ├── transports/
 │   │   ├── stdio.ts              # Existing stdio transport
@@ -877,7 +877,7 @@ This CR adds HTTP transport support to the existing MCP server without breaking 
 - All existing stdio functionality
 - All existing tool implementations
 - Backend server (`server/`)
-- Frontend (`src/`)
+- Frontend (`frontend/src/`)
 - Shared services (`shared/`)
 - Existing clients using stdio
 

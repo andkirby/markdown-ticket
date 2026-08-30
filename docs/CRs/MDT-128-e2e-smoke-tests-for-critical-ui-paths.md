@@ -43,7 +43,7 @@ Pay down test debt by implementing comprehensive E2E smoke tests for all critica
 - `tests/e2e/smoke/` — Navigation and UI tests
 - `tests/e2e/board/` — Rendering and drag-drop tests
 - `tests/e2e/sse/` — Real-time update tests
-- `src/components/` — May require additional `data-testid` attributes
+- `frontend/src/components/` — May require additional `data-testid` attributes
 ## 2. Rationale
 ### Why Address This Debt Now
 - **E2E infrastructure is now stable** (MDT-092) — foundation exists for expansion

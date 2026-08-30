@@ -211,34 +211,34 @@ The MCP Server for Universal CR Management has been successfully implemented. Th
 
 ### Key Implementation Details
 
-#### MCP Server Core (`src/index.ts`)
+#### MCP Server Core (`frontend/src/index.ts`)
 - **Framework**: @modelcontextprotocol/sdk with StdioServerTransport
 - **Architecture**: Service-oriented with dependency injection
 - **Error Handling**: Comprehensive error handling with graceful shutdown
 - **Project Discovery**: Automatic scanning for *-config.toml files
 - **Configuration**: TOML-based configuration with validation
 
-#### Project Discovery Service (`src/services/projectDiscovery.ts`)
+#### Project Discovery Service (`frontend/src/services/projectDiscovery.ts`)
 - **Auto-Discovery**: Scans configurable paths for project configuration files
 - **Caching**: Intelligent caching with configurable timeout (default 5 minutes)
 - **Performance**: Handles up to 100+ projects efficiently
 - **Path Expansion**: Support for ~ (home directory) path expansion
 - **Exclusions**: Configurable exclusion patterns (node_modules, .git, etc.)
 
-#### CR Service (`src/services/crService.ts`)
+#### CR Service (`frontend/src/services/crService.ts`)
 - **YAML Frontmatter**: Full support for YAML frontmatter parsing and writing
 - **File Operations**: Create, read, update, delete CRs with proper file management
 - **Filtering**: Advanced filtering by status, type, priority, and date ranges
 - **Counter Management**: Automatic CR numbering with counter file tracking
 - **Content Templates**: Dynamic template population based on CR type
 
-#### Template System (`src/services/templateService.ts`)
+#### Template System (`frontend/src/services/templateService.ts`)
 - **5 CR Types**: Complete templates for Architecture, Feature Enhancement, Bug Fix, Technical Debt, Documentation
 - **Validation Engine**: Comprehensive data validation with errors and warnings
 - **Improvement Suggestions**: AI-like suggestions for CR quality improvements
 - **Template Customization**: Support for custom template paths
 
-#### MCP Tools (`src/tools/index.ts`)
+#### MCP Tools (`frontend/src/tools/index.ts`)
 **12 Comprehensive Tools Implemented:**
 
 **Project Management:**
@@ -261,7 +261,7 @@ The MCP Server for Universal CR Management has been successfully implemented. Th
 11. `find_related_crs` - Find CRs by keyword search
 12. `suggest_cr_improvements` - AI-like improvement suggestions
 
-#### Configuration System (`src/config/index.ts`)
+#### Configuration System (`frontend/src/config/index.ts`)
 - **Default Configuration**: Sensible defaults for immediate use
 - **Path Resolution**: Multiple config file location support
 - **Validation**: Comprehensive config validation with helpful error messages
@@ -308,7 +308,7 @@ mcp-server/
 ├── package.json                    # Node.js project configuration
 ├── tsconfig.json                   # TypeScript configuration
 ├── MCP_REQUEST_SAMPLES.md          # Comprehensive request examples
-└── src/
+└── frontend/src/
     ├── index.ts                    # Main MCP server entry point
     ├── types/index.ts              # TypeScript type definitions
     ├── config/index.ts             # Configuration management

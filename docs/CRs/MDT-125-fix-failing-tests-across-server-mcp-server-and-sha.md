@@ -350,11 +350,11 @@ class MockEventStream extends Readable {
 **Status:** Resolved 25 TypeScript build errors across frontend codebase (2026-02-09)
 
 **Files Modified:**
-- `src/components/` - CounterAPI.tsx (deleted), Board.tsx, HamburgerMenu.tsx, MarkdownContent.tsx, ProjectView.tsx, SecondaryHeader.tsx, TicketViewer.tsx
-- `src/hooks/` - useCounterAPI.ts (deleted), useConfig.ts, useProjectManager.ts, useSSEEvents.ts
-- `src/services/` - dataLayer.ts, eventBus.ts
-- `src/utils/` - linkProcessor.ts, sorting.ts
-- `vite.config.ts` - Increased chunkSizeWarningLimit to 1500KB
+- `frontend/src/components/` - CounterAPI.tsx (deleted), Board.tsx, HamburgerMenu.tsx, MarkdownContent.tsx, ProjectView.tsx, SecondaryHeader.tsx, TicketViewer.tsx
+- `frontend/src/hooks/` - useCounterAPI.ts (deleted), useConfig.ts, useProjectManager.ts, useSSEEvents.ts
+- `frontend/src/services/` - dataLayer.ts, eventBus.ts
+- `frontend/src/utils/` - linkProcessor.ts, sorting.ts
+- `frontend/vite.config.ts` - Increased chunkSizeWarningLimit to 1500KB
 
 **Key Changes:**
 1. **CounterAPI removal** - Deleted unused component and hook (875 lines removed)

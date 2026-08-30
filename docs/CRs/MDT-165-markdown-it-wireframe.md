@@ -19,11 +19,11 @@ priority: Medium
 - Wireframe blocks with metadata (e.g., state, surface name) need a visible label rendered above the code block for context
 
 ### Affected Artifacts
-- `src/components/MarkdownContent/useMarkdownProcessor.ts` (primary — replace Showdown converter with markdown-it)
-- `src/components/MarkdownContent/domPurifyConfig.ts` (may need tag/attr updates for label `div`)
-- `src/utils/markdownPreprocessor.ts` (pipeline integration, unchanged behavior)
-- `src/utils/mermaid/core.ts` (Mermaid post-processing must remain compatible)
-- `src/utils/syntaxHighlight.ts` (Prism highlighting must remain compatible)
+- `frontend/src/components/MarkdownContent/useMarkdownProcessor.ts` (primary — replace Showdown converter with markdown-it)
+- `frontend/src/components/MarkdownContent/domPurifyConfig.ts` (may need tag/attr updates for label `div`)
+- `frontend/src/utils/markdownPreprocessor.ts` (pipeline integration, unchanged behavior)
+- `frontend/src/utils/mermaid/core.ts` (Mermaid post-processing must remain compatible)
+- `frontend/src/utils/syntaxHighlight.ts` (Prism highlighting must remain compatible)
 - `package.json` (add markdown-it as direct dependency)
 
 ### Scope
@@ -57,14 +57,14 @@ Migrate `useMarkdownProcessor.ts` from Showdown to markdown-it with a custom fen
 
 | Artifact | Type | Purpose |
 |----------|------|---------|
-| `src/utils/markdownItWireframePlugin.ts` | Utility | Custom markdown-it fence plugin rendering labeled wireframe blocks |
+| `frontend/src/utils/markdownItWireframePlugin.ts` | Utility | Custom markdown-it fence plugin rendering labeled wireframe blocks |
 
 ### Modified Artifacts
 
 | Artifact | Change Type | Modification |
 |----------|-------------|--------------|
-| `src/components/MarkdownContent/useMarkdownProcessor.ts` | Rewrite render step | Replace `showdown.Converter` with `markdown-it` instance + wireframe plugin |
-| `src/components/MarkdownContent/domPurifyConfig.ts` | Config update | Add `div` class `code-block-label`/`wireframe-label` to allowed attrs if needed |
+| `frontend/src/components/MarkdownContent/useMarkdownProcessor.ts` | Rewrite render step | Replace `showdown.Converter` with `markdown-it` instance + wireframe plugin |
+| `frontend/src/components/MarkdownContent/domPurifyConfig.ts` | Config update | Add `div` class `code-block-label`/`wireframe-label` to allowed attrs if needed |
 | `package.json` | Dependency added | Add `markdown-it` as direct dependency; add `markdown-it-task-lists` (or equivalent) for task list support; remove `showdown` if no other consumer |
 
 ### Integration Points
@@ -91,7 +91,7 @@ Migrate `useMarkdownProcessor.ts` from Showdown to markdown-it with a custom fen
 - [x] Tables render correctly (markdown-it `table` plugin enabled)
 - [x] Strikethrough (`~~text~~`) renders correctly with `<s>` tag
 - [x] Task lists (`- [ ]` / `- [x]`) render correctly with `markdown-it-task-lists` plugin
-- [x] Mermaid blocks produce markup compatible with `processMermaidBlocks` in `src/utils/mermaid/core.ts`
+- [x] Mermaid blocks produce markup compatible with `processMermaidBlocks` in `frontend/src/utils/mermaid/core.ts`
 - [x] Prism syntax highlighting works on fenced code blocks via `highlightCodeBlocks`
 - [x] Smart-link preprocessing (`preprocessMarkdown`) continues to work unchanged
 - [x] DOMPurify sanitization allows the new label markup
@@ -126,8 +126,8 @@ Migrate `useMarkdownProcessor.ts` from Showdown to markdown-it with a custom fen
 - Visual: heading titles are clickable, `#` appears on hover, scrolls below sticky tab bar
 
 ### Verifiable Artifacts
-- `src/components/MarkdownContent/useMarkdownProcessor.ts` imports markdown-it, not showdown
-- `src/utils/markdownItWireframePlugin.ts` exists and exports a markdown-it plugin function
+- `frontend/src/components/MarkdownContent/useMarkdownProcessor.ts` imports markdown-it, not showdown
+- `frontend/src/utils/markdownItWireframePlugin.ts` exists and exports a markdown-it plugin function
 - `package.json` lists `markdown-it` as direct dependency
 - Existing test suite passes without regression
 
@@ -183,7 +183,7 @@ Follow-up execution slice:
 - `TASK-7`: make Wireloom 0.7.0 render defaults explicit.
 
 Implementation result:
-- `TASK-7` implemented. Wireloom render defaults now live in `src/utils/wireloomRenderer.ts`; long annotation bodies are compacted before render; malformed source errors include enumerable Wireloom source positions; missing package fallback remains escaped plain code.
+- `TASK-7` implemented. Wireloom render defaults now live in `frontend/src/utils/wireloomRenderer.ts`; long annotation bodies are compacted before render; malformed source errors include enumerable Wireloom source positions; missing package fallback remains escaped plain code.
 - Targeted Wireloom unit tests and Documents View Wireloom E2E passed.
 - Full changed-file TypeScript validation is blocked by unrelated ProjectSelector/accent-color worktree errors.
 

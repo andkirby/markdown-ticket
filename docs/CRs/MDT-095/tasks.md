@@ -275,10 +275,10 @@ cd mcp-server && npm test -- --testPathPattern="crHandlers.worktree.test.ts"
 
 ### Task 8: Add Frontend Ticket Type Worktree Field
 
-**Structure**: `src/types/ticket.ts`
+**Structure**: `frontend/src/types/ticket.ts`
 
 **Makes GREEN**:
-- `src/types/__tests__/ticket.worktree.test.ts`: 8 tests covering:
+- `frontend/src/types/__tests__/ticket.worktree.test.ts`: 8 tests covering:
   - inWorktree optional field
   - worktreePath optional field
   - Type compatibility with undefined values
@@ -287,7 +287,7 @@ cd mcp-server && npm test -- --testPathPattern="crHandlers.worktree.test.ts"
 **Boundary**: No API calls, no path resolution
 
 **Modify**:
-- `src/types/ticket.ts` - Add `inWorktree?: boolean` and `worktreePath?: string` to Ticket interface
+- `frontend/src/types/ticket.ts` - Add `inWorktree?: boolean` and `worktreePath?: string` to Ticket interface
 
 **Exclude**: API integration, path resolution
 
@@ -310,10 +310,10 @@ npm test -- --testPathPattern="ticket.worktree.test.ts"
 
 ### Task 9: Add Worktree Badge to TicketCard Component
 
-**Structure**: `src/components/TicketCard.tsx`
+**Structure**: `frontend/src/components/TicketCard.tsx`
 
 **Makes GREEN**:
-- `src/components/__tests__/TicketCard.worktree.test.tsx`: 5 tests covering:
+- `frontend/src/components/__tests__/TicketCard.worktree.test.tsx`: 5 tests covering:
   - Badge renders when inWorktree=true
   - Badge hidden when inWorktree=false or undefined
   - Badge styling and icon
@@ -322,7 +322,7 @@ npm test -- --testPathPattern="ticket.worktree.test.ts"
 **Boundary**: No path resolution, no API calls
 
 **Modify**:
-- `src/components/TicketCard.tsx` - Add WorktreeBadge component, conditional rendering
+- `frontend/src/components/TicketCard.tsx` - Add WorktreeBadge component, conditional rendering
 
 **Exclude**: Path resolution, API calls
 
@@ -345,10 +345,10 @@ npm test -- --testPathPattern="TicketCard.worktree.test.tsx"
 
 ### Task 10: Add Worktree Badge to TicketAttributeTags
 
-**Structure**: `src/components/TicketAttributeTags.tsx`
+**Structure**: `frontend/src/components/TicketAttributeTags.tsx`
 
 **Makes GREEN**:
-- `src/components/__tests__/TicketRow.worktree.test.tsx`: 4 tests covering:
+- `frontend/src/components/__tests__/TicketRow.worktree.test.tsx`: 4 tests covering:
   - Worktree badge in attribute tags
   - Conditional rendering
   - Consistent styling with other badges
@@ -357,7 +357,7 @@ npm test -- --testPathPattern="TicketCard.worktree.test.tsx"
 **Boundary**: No path resolution, no API calls
 
 **Modify**:
-- `src/components/TicketAttributeTags.tsx` - Add conditional worktree badge alongside status/priority badges
+- `frontend/src/components/TicketAttributeTags.tsx` - Add conditional worktree badge alongside status/priority badges
 
 **Exclude**: Path resolution, API calls
 
@@ -389,7 +389,7 @@ npm test -- --testPathPattern="TicketRow.worktree.test.tsx"
 ## Post-Verify Fixes (appended by implement-agentic)
 
 ### Fix PV-1: TypeScript error in dataLayer.ts
-**Evidence**: `src/services/dataLayer.ts:202`
+**Evidence**: `frontend/src/services/dataLayer.ts:202`
 **Reason**: CRITICAL — Build fails with TypeScript error: boolean not assignable to string | Date | string[]
 **Action**: Fix type error in dataLayer.ts
 

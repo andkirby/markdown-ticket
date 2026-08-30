@@ -46,7 +46,7 @@ Implement a minimal Cmd+K (Ctrl+K on Windows/Linux) keyboard shortcut that opens
 ### Component Structure
 
 ```text
-src/components/QuickSearch/
+frontend/src/components/QuickSearch/
   QuickSearchModal.tsx    # Main modal component
   QuickSearchInput.tsx    # Search input with icon
   QuickSearchResults.tsx  # Results list
@@ -76,13 +76,13 @@ src/components/QuickSearch/
 
 ### Integration Points
 - Add keyboard listener in `App.tsx` or dedicated hook
-- Modal uses existing overlay patterns (see `src/MODALS.md`)
+- Modal uses existing overlay patterns (see `frontend/src/MODALS.md`)
 - Navigation: call existing `selectTicket` or equivalent
 
 ### Files to Modify/Create
-- `src/components/QuickSearch/` (new)
-- `src/App.tsx` or `src/hooks/useGlobalKeyboard.ts` (keyboard handler)
-- `src/hooks/useProjectManager.ts` (expose tickets if needed)
+- `frontend/src/components/QuickSearch/` (new)
+- `frontend/src/App.tsx` or `frontend/src/hooks/useGlobalKeyboard.ts` (keyboard handler)
+- `frontend/src/hooks/useProjectManager.ts` (expose tickets if needed)
 
 ## 5. Acceptance Criteria
 - [ ] Cmd+K opens search modal (Ctrl+K on Windows/Linux)

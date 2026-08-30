@@ -9,7 +9,7 @@
 
 | Setting | Value |
 |---------|-------|
-| Source directory | `shared/`, `server/`, `mcp-server/`, `src/` |
+| Source directory | `shared/`, `server/`, `mcp-server/`, `frontend/src/` |
 | File extension | `.ts`, `.tsx` |
 | Test command | `npm test -- --testPathPattern="worktree"` |
 

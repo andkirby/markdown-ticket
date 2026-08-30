@@ -96,8 +96,8 @@ For ticket ABC-123:
 | `shared/services/WorktreeService.ts` | **NEW** - Detect worktrees, extract ticket codes from branches, provide path resolution |
 | `shared/ProjectService.ts` | Integrate WorktreeService for path resolution, in-memory cache with 30s TTL |
 | `server/src/services/ProjectService.ts` | Add chokidar watchers for worktree paths |
-| `src/components/TicketCard.tsx` | Add "🌿 Worktree" badge when ticket in worktree |
-| `src/components/TicketRow.tsx` | Add "🌿 Worktree" badge when ticket in worktree |
+| `frontend/src/components/TicketCard.tsx` | Add "🌿 Worktree" badge when ticket in worktree |
+| `frontend/src/components/TicketRow.tsx` | Add "🌿 Worktree" badge when ticket in worktree |
 
 ### MCP Tool Changes (Critical)
 

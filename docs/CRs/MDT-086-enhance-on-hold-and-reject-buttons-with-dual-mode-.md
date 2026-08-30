@@ -40,27 +40,27 @@ Modify button component to add hover checkbox and dual modes (switch/merge).
 - Components: 9 (StatusToggle, 4 hooks, 1 utility, 2 tests, 1 modified)
 - Key constraint: StatusToggle ≤225 lines, useButtonModes ≤165 lines
 
-**Extension Rule**: To add similar toggle, create component in `src/components/Column/` (limit 225 lines) using `useButtonModes` and `buttonModeStyles` patterns.
+**Extension Rule**: To add similar toggle, create component in `frontend/src/components/Column/` (limit 225 lines) using `useButtonModes` and `buttonModeStyles` patterns.
 ## 3. Alternatives Considered
 ## 4. Artifact Specifications
 ### New Artifacts
 | Artifact | Type | Purpose |
 |----------|------|---------|
-| `src/components/Column/StatusToggle.tsx` | Component | Extracted status toggle button with hover checkbox functionality (217 lines) |
-| `src/components/Column/useButtonModes.ts` | Hook | Manage switch vs. merge mode state (178 lines) |
-| `src/components/Column/useDropZone.ts` | Hook | Drag-and-drop abstraction layer eliminating react-dnd duplication (123 lines) |
-| `src/components/Column/buttonModeStyles.ts` | Utility | Centralized orange theme styling for button modes (121 lines) |
-| `src/components/Column/useTicketPosition.ts` | Hook | Dedicated ticket position tracking and restoration (86 lines) |
-| `src/components/Column/useButtonModes.test.ts` | Test | Unit tests for useButtonModes hook |
-| `src/components/Column/useDropZone.test.ts` | Test | Unit tests for useDropZone hook |
+| `frontend/src/components/Column/StatusToggle.tsx` | Component | Extracted status toggle button with hover checkbox functionality (217 lines) |
+| `frontend/src/components/Column/useButtonModes.ts` | Hook | Manage switch vs. merge mode state (178 lines) |
+| `frontend/src/components/Column/useDropZone.ts` | Hook | Drag-and-drop abstraction layer eliminating react-dnd duplication (123 lines) |
+| `frontend/src/components/Column/buttonModeStyles.ts` | Utility | Centralized orange theme styling for button modes (121 lines) |
+| `frontend/src/components/Column/useTicketPosition.ts` | Hook | Dedicated ticket position tracking and restoration (86 lines) |
+| `frontend/src/components/Column/useButtonModes.test.ts` | Test | Unit tests for useButtonModes hook |
+| `frontend/src/components/Column/useDropZone.test.ts` | Test | Unit tests for useDropZone hook |
 | `tests/e2e/status-toggle-hover-merge.spec.ts` | Test | E2E test coverage for hover-merge workflow (191 lines) |
 ### Modified Artifacts
 | Artifact | Change Type | Modification |
 |----------|-------------|--------------|
-| `src/components/Column/index.tsx` | Refactor + Rename | Renamed from Column.tsx to index.tsx, removed embedded StatusToggle, import and use useDropZone, useButtonModes |
-| `src/components/Column/StatusToggle.tsx` | Behavior added | Add hover checkbox, orange states, mode switching, external state management props |
-| `src/hooks/useTicketOperations.ts` | Refactor | Import and integrate useTicketPosition hook for position tracking |
-| `src/components/Board/index.tsx` | Integration | Added position tracking methods (getTicketPosition, clearTicketPosition) and updated handleDrop signature |
+| `frontend/src/components/Column/index.tsx` | Refactor + Rename | Renamed from Column.tsx to index.tsx, removed embedded StatusToggle, import and use useDropZone, useButtonModes |
+| `frontend/src/components/Column/StatusToggle.tsx` | Behavior added | Add hover checkbox, orange states, mode switching, external state management props |
+| `frontend/src/hooks/useTicketOperations.ts` | Refactor | Import and integrate useTicketPosition hook for position tracking |
+| `frontend/src/components/Board/index.tsx` | Integration | Added position tracking methods (getTicketPosition, clearTicketPosition) and updated handleDrop signature |
 ### Integration Points
 | From | To | Interface |
 |------|----|-----------|
@@ -85,7 +85,7 @@ Modify button component to add hover checkbox and dual modes (switch/merge).
 - Component directory pattern: Use index.tsx for main component file with supporting files in same directory
 ## 5. Acceptance Criteria
 ### Functional
-- [ ] StatusToggle component extracted from Column.tsx to `src/components/Board/StatusToggle.tsx`
+- [ ] StatusToggle component extracted from Column.tsx to `frontend/src/components/Board/StatusToggle.tsx`
 - [ ] Button toggles between showing In Progress tickets and On Hold tickets when clicked (switch mode)
 - [ ] Button shows orange background color when in switch mode (viewing alternate status)
 - [ ] Button shows orange border (no background) when in merge mode only
@@ -117,7 +117,7 @@ Modify button component to add hover checkbox and dual modes (switch/merge).
 - Manual: Test Rejected button with same workflow
 
 ### Functional
-- [ ] StatusToggle component extracted from Column.tsx to `src/components/Board/StatusToggle.tsx`
+- [ ] StatusToggle component extracted from Column.tsx to `frontend/src/components/Board/StatusToggle.tsx`
 - [ ] Button toggles between showing In Progress tickets and On Hold tickets when clicked (switch mode)
 - [ ] Button shows orange background color when in switch mode (viewing alternate status)
 - [ ] Button shows orange border (no background) when in merge mode only
@@ -165,10 +165,10 @@ Modify button component to add hover checkbox and dual modes (switch/merge).
 - Q: Which specific file should contain the new useButtonModes hook logic? → A: not sure, find a best way accoding to existing code
 
 **Artifact Discoveries**:
-- Created `src/hooks/useDropZone.ts` (116 lines) - Not in original spec, but essential for eliminating react-dnd duplication
-- Created `src/utils/buttonModeStyles.ts` (120 lines) - Centralized styling utility for consistent theming
-- Created `src/hooks/useTicketPosition.ts` (85 lines) - Separated position tracking concerns
-- Created `src/components/Board/` directory - Following project pattern for component organization
+- Created `frontend/src/hooks/useDropZone.ts` (116 lines) - Not in original spec, but essential for eliminating react-dnd duplication
+- Created `frontend/src/utils/buttonModeStyles.ts` (120 lines) - Centralized styling utility for consistent theming
+- Created `frontend/src/hooks/useTicketPosition.ts` (85 lines) - Separated position tracking concerns
+- Created `frontend/src/components/Board/` directory - Following project pattern for component organization
 - Created `tests/e2e/status-toggle-hover-merge.spec.ts` (191 lines) - Automated test coverage for hover-merge workflow
 
 **Specification Corrections**:
@@ -226,12 +226,12 @@ Modify button component to add hover checkbox and dual modes (switch/merge).
 ### Post-Implementation Session 2025-12-07
 
 **Directory Structure Decision**:
-- Decided against creating `src/components/Board/` directory
-- Kept all StatusToggle-related components in `src/components/Column/` to follow existing project patterns
+- Decided against creating `frontend/src/components/Board/` directory
+- Kept all StatusToggle-related components in `frontend/src/components/Column/` to follow existing project patterns
 - Better consistency with codebase organization
 
 **File Structure Changes**:
-- `Column.tsx` renamed to `src/components/Column/index.tsx` to follow component directory pattern
+- `Column.tsx` renamed to `frontend/src/components/Column/index.tsx` to follow component directory pattern
 - Added unit test files: `useButtonModes.test.ts`, `useDropZone.test.ts`
 - No Board directory was created - over-specified in original design
 

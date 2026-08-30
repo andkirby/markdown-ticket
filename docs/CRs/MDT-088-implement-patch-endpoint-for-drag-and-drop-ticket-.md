@@ -20,7 +20,7 @@ implementationNotes: PATCH endpoint implemented in commit 971c6e6. MDT-089 later
 ### Affected Artifacts
 - `server/controllers/ProjectController.ts` - patchCR implementation with proper error handling
 - `server/services/TicketService.ts` - Partial update method for status updates
-- `src/components/ProjectView.tsx` - Frontend PATCH request calls
+- `frontend/src/components/ProjectView.tsx` - Frontend PATCH request calls
 ### Scope
 - **Changes**: Implement PATCH endpoint logic, enhance partial update service
 - **Unchanged**: Existing GET/POST endpoints, frontend UI components, markdown file structure, TicketService dependency injection

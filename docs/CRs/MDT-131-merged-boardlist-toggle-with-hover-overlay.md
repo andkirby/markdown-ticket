@@ -24,7 +24,7 @@ priority: Medium
 
 
 ## Affected Artifacts
-- `src/App.tsx` (lines 27-119) — Current ViewModeSwitcher implementation
+- `frontend/src/App.tsx` (lines 27-119) — Current ViewModeSwitcher implementation
 - `/logo-mdt-m-dark_64x64.png` — Mobile logo (new asset)
 - Navigation header components — Mobile responsive changes
 
@@ -74,22 +74,22 @@ Create merged Board|List toggle button with hover overlay that shows alternate v
 
 | Artifact | Type | Purpose |
 |----------|------|---------|
-| `src/components/ViewModeSwitcher/index.tsx` | Export barrel | Main component export |
-| `src/components/ViewModeSwitcher/ViewModeSwitcher.tsx` | Component | Main view mode switcher composes BoardListToggle and Documents button with mobile responsiveness |
-| `src/components/ViewModeSwitcher/BoardListToggle.tsx` | Component | Merged Board|List toggle with hover overlay, click-to-toggle, visual state management |
-| `src/components/ViewModeSwitcher/useViewModePersistence.ts` | Hook | localStorage management for lastBoardListMode persistence |
-| `src/components/ViewModeSwitcher/types.ts` | Types | ViewMode type following Type-Safe Enum pattern (docs/PRE_IMPLEMENT.md) |
+| `frontend/src/components/ViewModeSwitcher/index.tsx` | Export barrel | Main component export |
+| `frontend/src/components/ViewModeSwitcher/ViewModeSwitcher.tsx` | Component | Main view mode switcher composes BoardListToggle and Documents button with mobile responsiveness |
+| `frontend/src/components/ViewModeSwitcher/BoardListToggle.tsx` | Component | Merged Board|List toggle with hover overlay, click-to-toggle, visual state management |
+| `frontend/src/components/ViewModeSwitcher/useViewModePersistence.ts` | Hook | localStorage management for lastBoardListMode persistence |
+| `frontend/src/components/ViewModeSwitcher/types.ts` | Types | ViewMode type following Type-Safe Enum pattern (docs/PRE_IMPLEMENT.md) |
 | `/logo-mdt-m-dark_64x64.png` | Asset | Mobile-specific logo (64x64px) |
-| `src/components/ProjectView.tsx` | Modified | Mobile list view card layout (2-line: badges + title) |
+| `frontend/src/components/ProjectView.tsx` | Modified | Mobile list view card layout (2-line: badges + title) |
 
 ## Modified Artifacts
 
 | Artifact | Change Type | Modification |
 |----------|-------------|--------------|
-| `src/App.tsx` | Import added | Add `import { ViewModeSwitcher } from './components/ViewModeSwitcher'` |
-| `src/App.tsx` | Code removed | Delete lines 27-119 (inline ViewModeSwitcher) |
-| `src/App.tsx` | Mobile responsive | Hide Documents button on mobile, use mobile logo, move theme toggle to hamburger menu |
-| `src/components/ProjectView.tsx` | Mobile layout | Update list view cards for 2-line layout on mobile (CR-key + badges, title) |
+| `frontend/src/App.tsx` | Import added | Add `import { ViewModeSwitcher } from './components/ViewModeSwitcher'` |
+| `frontend/src/App.tsx` | Code removed | Delete lines 27-119 (inline ViewModeSwitcher) |
+| `frontend/src/App.tsx` | Mobile responsive | Hide Documents button on mobile, use mobile logo, move theme toggle to hamburger menu |
+| `frontend/src/components/ProjectView.tsx` | Mobile layout | Update list view cards for 2-line layout on mobile (CR-key + badges, title) |
 
 ## Integration Points
 
@@ -113,9 +113,9 @@ Create merged Board|List toggle button with hover overlay that shows alternate v
 This feature has **17 behavioral requirements**, **6 constraints**, and **2 edge cases** specified in the canonical requirements store (includes 8 mobile-specific requirements).
 
 ## Functional
-- [ ] `src/components/ViewModeSwitcher/index.tsx` exports ViewModeSwitcher component
-- [ ] `src/App.tsx` imports ViewModeSwitcher from new location
-- [ ] `src/App.tsx` lines 27-119 are removed
+- [ ] `frontend/src/components/ViewModeSwitcher/index.tsx` exports ViewModeSwitcher component
+- [ ] `frontend/src/App.tsx` imports ViewModeSwitcher from new location
+- [ ] `frontend/src/App.tsx` lines 27-119 are removed
 - [ ] Only 2 buttons visible in desktop navigation (merged Board|List + Documents)
 - [ ] Only 1 button visible in mobile navigation (merged Board|List only, Documents hidden at < 768px)
 - [ ] Mobile breakpoint: 768px (Tailwind `md:`)
@@ -162,7 +162,7 @@ This feature has **17 behavioral requirements**, **6 constraints**, and **2 edge
 ## Metrics
 - Desktop navigation: 3 buttons → 2 buttons (verified visually)
 - Mobile navigation: 3 buttons → 1 button (verified visually at < 768px)
-- Component files created: 5 files in src/components/ViewModeSwitcher/ (verified by file existence)
+- Component files created: 5 files in frontend/src/components/ViewModeSwitcher/ (verified by file existence)
 - Hover animation duration: 150ms (specified in CSS)
 - Mobile breakpoint: 768px (Tailwind md: breakpoint)
 - TypeScript compilation: No errors (verified by build)

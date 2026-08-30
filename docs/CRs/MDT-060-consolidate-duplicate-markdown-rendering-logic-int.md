@@ -15,8 +15,8 @@ priority: Medium
 
 ### Problem Statement
 Currently, there are two separate markdown rendering implementations:
-1. **TicketViewer** (`src/components/TicketViewer.tsx`) - Renders ticket content in a modal
-2. **MarkdownViewer** (`src/components/DocumentsView/MarkdownViewer.tsx`) - Renders documents in the Documents view
+1. **TicketViewer** (`frontend/src/components/TicketViewer.tsx`) - Renders ticket content in a modal
+2. **MarkdownViewer** (`frontend/src/components/DocumentsView/MarkdownViewer.tsx`) - Renders documents in the Documents view
 
 Both implementations:
 - Use the same Showdown converter configuration
@@ -38,9 +38,9 @@ Both implementations:
 - Easier to maintain and extend
 
 ### Impact Areas
-- `src/components/TicketViewer.tsx`
-- `src/components/DocumentsView/MarkdownViewer.tsx`
-- New shared component location (e.g., `src/components/shared/MarkdownRenderer.tsx`)
+- `frontend/src/components/TicketViewer.tsx`
+- `frontend/src/components/DocumentsView/MarkdownViewer.tsx`
+- New shared component location (e.g., `frontend/src/components/shared/MarkdownRenderer.tsx`)
 
 ## Rationale
 
@@ -123,7 +123,7 @@ The markdown **content rendering** is shared, while **metadata display** and **c
 
 ### Step 1: Create Shared Component
 
-1. Create `src/components/shared/MarkdownRenderer.tsx`:
+1. Create `frontend/src/components/shared/MarkdownRenderer.tsx`:
    - Accept `content`, `className`, `onRenderComplete` props
    - Initialize Showdown converter (same config as current)
    - Use `useTheme` hook to load Prism theme
@@ -155,7 +155,7 @@ The markdown **content rendering** is shared, while **metadata display** and **c
 
 ## Acceptance Criteria
 
-- [ ] Single `MarkdownRenderer` component created in `src/components/shared/`
+- [ ] Single `MarkdownRenderer` component created in `frontend/src/components/shared/`
 - [ ] TicketViewer uses shared MarkdownRenderer component
 - [ ] DocumentsView/MarkdownViewer uses shared MarkdownRenderer component
 - [ ] All markdown features work identically in both views (syntax highlighting, Mermaid, tables, links)

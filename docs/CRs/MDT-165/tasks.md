@@ -14,11 +14,11 @@
 
 | Critical Behavior | Owner Module | Merge/Refactor Task if Overlap |
 |-------------------|--------------|--------------------------------|
-| Markdown rendering pipeline | `src/components/MarkdownContent/useMarkdownProcessor.ts` | N/A — single owner |
-| Heading slug generation | `src/utils/slugify.ts` | N/A — new shared utility |
-| Wireframe fence label rendering | `src/utils/markdownItWireframePlugin.ts` | N/A — new module |
-| TOC heading extraction | `src/utils/tableOfContents.ts` | N/A — existing owner, refactored |
-| Mermaid block post-processing | `src/utils/mermaid/core.ts` | N/A — existing owner, regex cleanup |
+| Markdown rendering pipeline | `frontend/src/components/MarkdownContent/useMarkdownProcessor.ts` | N/A — single owner |
+| Heading slug generation | `frontend/src/utils/slugify.ts` | N/A — new shared utility |
+| Wireframe fence label rendering | `frontend/src/utils/markdownItWireframePlugin.ts` | N/A — new module |
+| TOC heading extraction | `frontend/src/utils/tableOfContents.ts` | N/A — existing owner, refactored |
+| Mermaid block post-processing | `frontend/src/utils/mermaid/core.ts` | N/A — existing owner, regex cleanup |
 
 ## Constraint Coverage
 
@@ -45,34 +45,34 @@
 
 **Milestone**: M0 — Walking Skeleton
 
-**Structure**: `package.json`, `src/utils/slugify.ts`, `src/utils/markdownItWireframePlugin.ts`
+**Structure**: `package.json`, `frontend/src/utils/slugify.ts`, `frontend/src/utils/markdownItWireframePlugin.ts`
 
 **Scope**: Install markdown-it ecosystem dependencies; create minimal stub files for new shared utilities
 **Boundary**: No existing source files modified except `package.json`
 
 **Creates**:
-- `src/utils/slugify.ts` — minimal stub exporting a `slugify(text: string): string` function
-- `src/utils/markdownItWireframePlugin.ts` — minimal stub exporting a markdown-it PluginFn
+- `frontend/src/utils/slugify.ts` — minimal stub exporting a `slugify(text: string): string` function
+- `frontend/src/utils/markdownItWireframePlugin.ts` — minimal stub exporting a markdown-it PluginFn
 
 **Modifies**:
 - `package.json` — add `markdown-it`, `markdown-it-task-lists`, `markdown-it-anchor` as direct dependencies
 
 **Must Not Touch**:
-- Any `src/components/` files
-- Any `src/utils/` files other than the new stubs
+- Any `frontend/src/components/` files
+- Any `frontend/src/utils/` files other than the new stubs
 - Any test files
 
 **Create/Move**:
-- `src/utils/slugify.ts` (new)
-- `src/utils/markdownItWireframePlugin.ts` (new)
+- `frontend/src/utils/slugify.ts` (new)
+- `frontend/src/utils/markdownItWireframePlugin.ts` (new)
 
 **Exclude**: No Showdown removal in this task
 
 **Anti-duplication**: Import `markdown-it` types from the package — do NOT copy type definitions
 
 **Duplication Guard**:
-- Check if `slugify`-like utility already exists: `grep -r "slugify\|toSlug\|slug" src/utils/ --include="*.ts"`
-- Check if any markdown-it plugin stubs exist: `ls src/utils/markdownIt*.ts`
+- Check if `slugify`-like utility already exists: `grep -r "slugify\|toSlug\|slug" frontend/src/utils/ --include="*.ts"`
+- Check if any markdown-it plugin stubs exist: `ls frontend/src/utils/markdownIt*.ts`
 - If slug logic exists elsewhere, merge into shared utility before proceeding
 
 **Verify**:
@@ -84,8 +84,8 @@ bun run validate:ts
 
 **Done when**:
 - [ ] `markdown-it`, `markdown-it-task-lists`, `markdown-it-anchor` in `package.json`
-- [ ] `src/utils/slugify.ts` exists and compiles
-- [ ] `src/utils/markdownItWireframePlugin.ts` exists and compiles
+- [ ] `frontend/src/utils/slugify.ts` exists and compiles
+- [ ] `frontend/src/utils/markdownItWireframePlugin.ts` exists and compiles
 - [ ] `bun run validate:ts` passes
 
 ---
@@ -94,23 +94,23 @@ bun run validate:ts
 
 **Milestone**: M1 — Shared Utilities GREEN
 
-**Structure**: `src/utils/slugify.ts`, `src/utils/markdownItWireframePlugin.ts`
+**Structure**: `frontend/src/utils/slugify.ts`, `frontend/src/utils/markdownItWireframePlugin.ts`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-slugify-unit` → `src/utils/slugify.test.ts`: slug format matches Showdown's ghCompatibleHeaderId
-- `TEST-wireframe-plugin-unit` → `src/utils/markdownItWireframePlugin.test.ts`: wireframe fence label rendering with escaping
+- `TEST-slugify-unit` → `frontend/src/utils/slugify.test.ts`: slug format matches Showdown's ghCompatibleHeaderId
+- `TEST-wireframe-plugin-unit` → `frontend/src/utils/markdownItWireframePlugin.test.ts`: wireframe fence label rendering with escaping
 
 **Scope**: Implement the two new shared utility modules
 **Boundary**: Only new files; no changes to existing modules
 
 **Modifies**:
-- `src/utils/slugify.ts` — full implementation: `text.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-')`
-- `src/utils/markdownItWireframePlugin.ts` — full implementation: custom fence renderer detecting wireframe language + non-empty info string, emitting escaped label div + code block
+- `frontend/src/utils/slugify.ts` — full implementation: `text.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-')`
+- `frontend/src/utils/markdownItWireframePlugin.ts` — full implementation: custom fence renderer detecting wireframe language + non-empty info string, emitting escaped label div + code block
 
 **Must Not Touch**:
-- `src/components/MarkdownContent/useMarkdownProcessor.ts`
-- `src/components/MarkdownContent/domPurifyConfig.ts`
-- `src/utils/tableOfContents.ts`
+- `frontend/src/components/MarkdownContent/useMarkdownProcessor.ts`
+- `frontend/src/components/MarkdownContent/domPurifyConfig.ts`
+- `frontend/src/utils/tableOfContents.ts`
 - Any test files (test files already exist from `/mdt:tests` stage)
 
 **Exclude**: No processor wiring; no Showdown changes
@@ -118,15 +118,15 @@ bun run validate:ts
 **Anti-duplication**: Import `escapeHtml` from markdown-it's built-in utils — do NOT implement custom HTML escaping
 
 **Duplication Guard**:
-- Check `src/utils/` for any existing slug implementation before coding
+- Check `frontend/src/utils/` for any existing slug implementation before coding
 - Verify no other fence renderer plugin exists in the codebase
 - If duplicate slug logic found, consolidate into `slugify.ts`
 
 **Verify**:
 
 ```bash
-bun test src/utils/slugify.test.ts                    # TEST-slugify-unit GREEN
-bun test src/utils/markdownItWireframePlugin.test.ts   # TEST-wireframe-plugin-unit GREEN
+bun test frontend/src/utils/slugify.test.ts                    # TEST-slugify-unit GREEN
+bun test frontend/src/utils/markdownItWireframePlugin.test.ts   # TEST-wireframe-plugin-unit GREEN
 ```
 
 **Done when**:
@@ -141,31 +141,31 @@ bun test src/utils/markdownItWireframePlugin.test.ts   # TEST-wireframe-plugin-u
 
 **Milestone**: M2 — Pipeline Integration GREEN
 
-**Structure**: `src/components/MarkdownContent/useMarkdownProcessor.ts`, `src/components/MarkdownContent/domPurifyConfig.ts`, `src/utils/mermaid/core.ts`
+**Structure**: `frontend/src/components/MarkdownContent/useMarkdownProcessor.ts`, `frontend/src/components/MarkdownContent/domPurifyConfig.ts`, `frontend/src/utils/mermaid/core.ts`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-processor-pipeline-unit` → `src/components/MarkdownContent/useMarkdownProcessor.test.ts`: pipeline order, heading IDs, code blocks, wireframe labels, Mermaid markup, tables, strikethrough, task lists, smart links
-- `TEST-mermaid-core-unit` → `src/utils/mermaid/core.test.ts`: Mermaid block processing with cleaned-up regex
+- `TEST-processor-pipeline-unit` → `frontend/src/components/MarkdownContent/useMarkdownProcessor.test.ts`: pipeline order, heading IDs, code blocks, wireframe labels, Mermaid markup, tables, strikethrough, task lists, smart links
+- `TEST-mermaid-core-unit` → `frontend/src/utils/mermaid/core.test.ts`: Mermaid block processing with cleaned-up regex
 
 **Scope**: Core migration — replace Showdown with markdown-it, update sanitization config, clean up Mermaid regex
 **Boundary**: Rendering step swap + DOMPurify config + Mermaid regex; pipeline shape preserved exactly (C4)
 
 **Modifies**:
-- `src/components/MarkdownContent/useMarkdownProcessor.ts` — replace `showdown.Converter` with markdown-it instance configured with table, strikethrough, task-lists plugins; wire wireframe plugin via `md.use()`; configure `markdown-it-anchor` with shared `slugify()` from `src/utils/slugify.ts`
-- `src/components/MarkdownContent/domPurifyConfig.ts` — add `div` class attributes `code-block-label` and `wireframe-label` to allowed attributes
-- `src/utils/mermaid/core.ts` — remove dead first regex (Showdown double-class `mermaid language-mermaid`); retain only `language-mermaid` pattern compatible with markdown-it output
+- `frontend/src/components/MarkdownContent/useMarkdownProcessor.ts` — replace `showdown.Converter` with markdown-it instance configured with table, strikethrough, task-lists plugins; wire wireframe plugin via `md.use()`; configure `markdown-it-anchor` with shared `slugify()` from `frontend/src/utils/slugify.ts`
+- `frontend/src/components/MarkdownContent/domPurifyConfig.ts` — add `div` class attributes `code-block-label` and `wireframe-label` to allowed attributes
+- `frontend/src/utils/mermaid/core.ts` — remove dead first regex (Showdown double-class `mermaid language-mermaid`); retain only `language-mermaid` pattern compatible with markdown-it output
 
 **Must Not Touch**:
-- `src/utils/markdownPreprocessor.ts` (unchanged — verified via pipeline test)
-- `src/utils/syntaxHighlight.ts` (unchanged — verified via pipeline test)
-- `src/utils/tableOfContents.ts` (Task 3)
-- `src/utils/slugify.ts` (Task 1)
-- `src/utils/markdownItWireframePlugin.ts` (Task 1)
-- Any test files outside `src/components/MarkdownContent/useMarkdownProcessor.test.ts` and `src/utils/mermaid/core.test.ts`
+- `frontend/src/utils/markdownPreprocessor.ts` (unchanged — verified via pipeline test)
+- `frontend/src/utils/syntaxHighlight.ts` (unchanged — verified via pipeline test)
+- `frontend/src/utils/tableOfContents.ts` (Task 3)
+- `frontend/src/utils/slugify.ts` (Task 1)
+- `frontend/src/utils/markdownItWireframePlugin.ts` (Task 1)
+- Any test files outside `frontend/src/components/MarkdownContent/useMarkdownProcessor.test.ts` and `frontend/src/utils/mermaid/core.test.ts`
 
 **Exclude**: No TOC refactor (Task 3); no preprocessor test updates (Task 3); no Showdown removal from package.json (Task 4)
 
-**Anti-duplication**: Import `slugify` from `src/utils/slugify.ts` — do NOT inline slug logic in the processor. Import `markdownItWireframePlugin` from `src/utils/markdownItWireframePlugin.ts` — do NOT inline fence rendering.
+**Anti-duplication**: Import `slugify` from `frontend/src/utils/slugify.ts` — do NOT inline slug logic in the processor. Import `markdownItWireframePlugin` from `frontend/src/utils/markdownItWireframePlugin.ts` — do NOT inline fence rendering.
 
 **Duplication Guard**:
 - Check that `useMarkdownProcessor.ts` does not re-implement slug logic that exists in `slugify.ts`
@@ -175,8 +175,8 @@ bun test src/utils/markdownItWireframePlugin.test.ts   # TEST-wireframe-plugin-u
 **Verify**:
 
 ```bash
-bun test src/components/MarkdownContent/useMarkdownProcessor.test.ts  # TEST-processor-pipeline-unit GREEN
-bun test src/utils/mermaid/core.test.ts                                # TEST-mermaid-core-unit GREEN
+bun test frontend/src/components/MarkdownContent/useMarkdownProcessor.test.ts  # TEST-processor-pipeline-unit GREEN
+bun test frontend/src/utils/mermaid/core.test.ts                                # TEST-mermaid-core-unit GREEN
 ```
 
 **Done when**:
@@ -192,28 +192,28 @@ bun test src/utils/mermaid/core.test.ts                                # TEST-me
 
 **Milestone**: M2 — Pipeline Integration GREEN
 
-**Structure**: `src/utils/tableOfContents.ts`, `src/utils/markdownPreprocessor.test.ts`, `src/utils/markdownPreprocessor.mdt150.test.ts`
+**Structure**: `frontend/src/utils/tableOfContents.ts`, `frontend/src/utils/markdownPreprocessor.test.ts`, `frontend/src/utils/markdownPreprocessor.mdt150.test.ts`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-toc-extraction-unit` → `src/utils/tableOfContents.test.ts`: TOC extraction with regex-based heading parsing, inline markdown stripping, headerLevelStart offset, shared slugify IDs
+- `TEST-toc-extraction-unit` → `frontend/src/utils/tableOfContents.test.ts`: TOC extraction with regex-based heading parsing, inline markdown stripping, headerLevelStart offset, shared slugify IDs
 
 **Scope**: Decouple TOC extraction from Showdown; update preprocessor test files to use markdown-it instead of Showdown for assertion rendering
 **Boundary**: TOC module refactor + preprocessor test Showdown import removal
 
 **Modifies**:
-- `src/utils/tableOfContents.ts` — replace Showdown-based heading extraction with regex-based parsing from raw markdown (`/^(#{1,6})\s+(.+)$/gm`); add `stripInlineMarkdown()` helper for bold, italic, code, links in heading text; use shared `slugify()` from `src/utils/slugify.ts` for ID generation
-- `src/utils/markdownPreprocessor.test.ts` — replace `showdown.Converter` with markdown-it for rendering in assertions
-- `src/utils/markdownPreprocessor.mdt150.test.ts` — replace `showdown.Converter` with markdown-it for rendering in assertions
+- `frontend/src/utils/tableOfContents.ts` — replace Showdown-based heading extraction with regex-based parsing from raw markdown (`/^(#{1,6})\s+(.+)$/gm`); add `stripInlineMarkdown()` helper for bold, italic, code, links in heading text; use shared `slugify()` from `frontend/src/utils/slugify.ts` for ID generation
+- `frontend/src/utils/markdownPreprocessor.test.ts` — replace `showdown.Converter` with markdown-it for rendering in assertions
+- `frontend/src/utils/markdownPreprocessor.mdt150.test.ts` — replace `showdown.Converter` with markdown-it for rendering in assertions
 
 **Must Not Touch**:
-- `src/components/MarkdownContent/useMarkdownProcessor.ts` (Task 2)
-- `src/utils/slugify.ts` (Task 1)
-- `src/utils/markdownItWireframePlugin.ts` (Task 1)
+- `frontend/src/components/MarkdownContent/useMarkdownProcessor.ts` (Task 2)
+- `frontend/src/utils/slugify.ts` (Task 1)
+- `frontend/src/utils/markdownItWireframePlugin.ts` (Task 1)
 - `package.json` (Task 4)
 
 **Exclude**: No Showdown removal from `package.json` (Task 4)
 
-**Anti-duplication**: Import `slugify` from `src/utils/slugify.ts` — do NOT inline slug logic. Import `MarkdownIt` from `markdown-it` in test files — do NOT use Showdown.
+**Anti-duplication**: Import `slugify` from `frontend/src/utils/slugify.ts` — do NOT inline slug logic. Import `MarkdownIt` from `markdown-it` in test files — do NOT use Showdown.
 
 **Duplication Guard**:
 - Check that `tableOfContents.ts` does not re-implement slug logic
@@ -223,9 +223,9 @@ bun test src/utils/mermaid/core.test.ts                                # TEST-me
 **Verify**:
 
 ```bash
-bun test src/utils/tableOfContents.test.ts                 # TEST-toc-extraction-unit GREEN
-bun test src/utils/markdownPreprocessor.test.ts             # preprocessor tests still pass
-bun test src/utils/markdownPreprocessor.mdt150.test.ts      # preprocessor tests still pass
+bun test frontend/src/utils/tableOfContents.test.ts                 # TEST-toc-extraction-unit GREEN
+bun test frontend/src/utils/markdownPreprocessor.test.ts             # preprocessor tests still pass
+bun test frontend/src/utils/markdownPreprocessor.mdt150.test.ts      # preprocessor tests still pass
 ```
 
 **Done when**:
@@ -244,8 +244,8 @@ bun test src/utils/markdownPreprocessor.mdt150.test.ts      # preprocessor tests
 **Structure**: `package.json`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-showdown-removal` → `src/components/MarkdownContent/useMarkdownProcessor.test.ts`: verify showdown absent from dependencies and imports
-- `TEST-performance-non-regression` → `src/components/MarkdownContent/useMarkdownProcessor.test.ts`: rendering performance benchmark
+- `TEST-showdown-removal` → `frontend/src/components/MarkdownContent/useMarkdownProcessor.test.ts`: verify showdown absent from dependencies and imports
+- `TEST-performance-non-regression` → `frontend/src/components/MarkdownContent/useMarkdownProcessor.test.ts`: rendering performance benchmark
 
 **Scope**: Remove Showdown from the project; verify performance non-regression
 **Boundary**: Package dependency removal + final verification
@@ -254,7 +254,7 @@ bun test src/utils/markdownPreprocessor.mdt150.test.ts      # preprocessor tests
 - `package.json` — remove `showdown` from dependencies
 
 **Must Not Touch**:
-- Any `src/` files (all Showdown imports removed in Tasks 2–3)
+- Any `frontend/src/` files (all Showdown imports removed in Tasks 2–3)
 - Any test logic (tests already written)
 
 **Create/Move**:
@@ -265,7 +265,7 @@ bun test src/utils/markdownPreprocessor.mdt150.test.ts      # preprocessor tests
 **Anti-duplication**: N/A — removal task
 
 **Duplication Guard**:
-- Verify zero remaining Showdown imports before removal: `grep -r "showdown" src/ --include="*.ts"`
+- Verify zero remaining Showdown imports before removal: `grep -r "showdown" frontend/src/ --include="*.ts"`
 - If any imports remain, they must be removed in an earlier task first
 - Verify `showdown` is not a transitive dependency of any retained package
 
@@ -276,17 +276,17 @@ bun test src/utils/markdownPreprocessor.mdt150.test.ts      # preprocessor tests
 bun remove showdown
 
 # Verify no remaining imports
-grep -r "showdown" src/ --include="*.ts" && echo "FAIL: showdown imports remain" || echo "OK: no showdown imports"
+grep -r "showdown" frontend/src/ --include="*.ts" && echo "FAIL: showdown imports remain" || echo "OK: no showdown imports"
 
 # Run full test suite
-bun test src/components/MarkdownContent/useMarkdownProcessor.test.ts  # TEST-showdown-removal + TEST-performance-non-regression GREEN
+bun test frontend/src/components/MarkdownContent/useMarkdownProcessor.test.ts  # TEST-showdown-removal + TEST-performance-non-regression GREEN
 bun install  # verify lockfile clean
 bun run validate:ts
 ```
 
 **Done when**:
 - [ ] `showdown` absent from `package.json` (C3)
-- [ ] Zero Showdown imports across all `src/` files
+- [ ] Zero Showdown imports across all `frontend/src/` files
 - [ ] Performance non-regression test GREEN (C2)
 - [ ] `bun install` succeeds
 - [ ] `bun run validate:ts` passes
@@ -321,7 +321,7 @@ bun run validate:ts
 - `tests/e2e/ticket/markdown-it-migration.spec.ts` — only if selector or timing adjustments needed post-migration
 
 **Must Not Touch**:
-- All `src/` files (implementation complete from Tasks 0–4)
+- All `frontend/src/` files (implementation complete from Tasks 0–4)
 - `package.json`
 
 **Exclude**: No implementation changes; this task only verifies and potentially adjusts E2E selectors/timing
@@ -339,13 +339,13 @@ bun run validate:ts
 PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/ticket/markdown-it-migration.spec.ts --project=chromium
 
 # Run full unit test suite as final regression check
-bun test src/utils/slugify.test.ts
-bun test src/utils/markdownItWireframePlugin.test.ts
-bun test src/components/MarkdownContent/useMarkdownProcessor.test.ts
-bun test src/utils/tableOfContents.test.ts
-bun test src/utils/mermaid/core.test.ts
-bun test src/utils/markdownPreprocessor.test.ts
-bun test src/utils/markdownPreprocessor.mdt150.test.ts
+bun test frontend/src/utils/slugify.test.ts
+bun test frontend/src/utils/markdownItWireframePlugin.test.ts
+bun test frontend/src/components/MarkdownContent/useMarkdownProcessor.test.ts
+bun test frontend/src/utils/tableOfContents.test.ts
+bun test frontend/src/utils/mermaid/core.test.ts
+bun test frontend/src/utils/markdownPreprocessor.test.ts
+bun test frontend/src/utils/markdownPreprocessor.mdt150.test.ts
 ```
 
 **Done when**:
@@ -360,11 +360,11 @@ bun test src/utils/markdownPreprocessor.mdt150.test.ts
 
 **Milestone**: UAT — Mermaid browser rendering regression
 
-**Structure**: `src/utils/mermaid/core.ts`, `src/utils/mermaid/hooks.ts`, `src/components/MarkdownContent/usePostRender.ts`, `src/styles/prose.css`
+**Structure**: `frontend/src/utils/mermaid/core.ts`, `frontend/src/utils/mermaid/hooks.ts`, `frontend/src/components/MarkdownContent/usePostRender.ts`, `frontend/src/styles/prose.css`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-mermaid-core-unit` → `src/utils/mermaid/core.test.ts`: Mermaid source entity decoding and source preservation
-- `TEST-processor-pipeline-unit` → `src/components/MarkdownContent/useMarkdownProcessor.test.ts`: markdown-it pipeline still produces Mermaid-compatible output
+- `TEST-mermaid-core-unit` → `frontend/src/utils/mermaid/core.test.ts`: Mermaid source entity decoding and source preservation
+- `TEST-processor-pipeline-unit` → `frontend/src/components/MarkdownContent/useMarkdownProcessor.test.ts`: markdown-it pipeline still produces Mermaid-compatible output
 - `TEST-mermaid-render-runtime` → browser runtime check: Mermaid renders from decoded source without syntax-error fallback
 
 **Makes GREEN (Behavior)**:
@@ -374,16 +374,16 @@ bun test src/utils/markdownPreprocessor.mdt150.test.ts
 **Boundary**: No change to ticket markdown syntax, no doc diagram rewrites, no server changes.
 
 **Modifies**:
-- `src/utils/mermaid/core.ts` — stores decoded Mermaid source in `data-source-encoded`
-- `src/utils/mermaid/hooks.ts` — uses `mermaid.render(id, source)` per diagram instead of page-wide `mermaid.run()`
-- `src/components/MarkdownContent/usePostRender.ts` — scopes Mermaid rendering to the current MarkdownContent container
-- `src/styles/prose.css` — targets `.mermaid` container styling after switching from `code` to `div`
+- `frontend/src/utils/mermaid/core.ts` — stores decoded Mermaid source in `data-source-encoded`
+- `frontend/src/utils/mermaid/hooks.ts` — uses `mermaid.render(id, source)` per diagram instead of page-wide `mermaid.run()`
+- `frontend/src/components/MarkdownContent/usePostRender.ts` — scopes Mermaid rendering to the current MarkdownContent container
+- `frontend/src/styles/prose.css` — targets `.mermaid` container styling after switching from `code` to `div`
 
 **Verify**:
 
 ```bash
-bun test src/utils/mermaid/core.test.ts
-bun test src/components/MarkdownContent/useMarkdownProcessor.test.ts
+bun test frontend/src/utils/mermaid/core.test.ts
+bun test frontend/src/components/MarkdownContent/useMarkdownProcessor.test.ts
 bun run build
 scripts/validate-mermaid-md docs/CRs/MDT-157/architecture.md
 ```
@@ -399,11 +399,11 @@ scripts/validate-mermaid-md docs/CRs/MDT-157/architecture.md
 
 **Milestone**: UAT — Wireloom 0.7.0 defaults and error surface
 
-**Structure**: `src/utils/wireloomRenderer.ts`, `src/utils/markdownItWireloomPlugin.ts`, `src/utils/wireloomRenderer.test.ts`, `src/utils/wireloomFullscreen.ts`, `src/utils/wireloomFullscreen.test.ts`, `src/styles/prose.css`
+**Structure**: `frontend/src/utils/wireloomRenderer.ts`, `frontend/src/utils/markdownItWireloomPlugin.ts`, `frontend/src/utils/wireloomRenderer.test.ts`, `frontend/src/utils/wireloomFullscreen.ts`, `frontend/src/utils/wireloomFullscreen.test.ts`, `frontend/src/styles/prose.css`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-wireloom-plugin-unit` → `src/utils/wireloomRenderer.test.ts`: Wireloom fences emit placeholders and non-Wireloom fences stay untouched.
-- `TEST-wireloom-renderer-unit` → `src/utils/wireloomRenderer.test.ts`: explicit render defaults, compact annotation bodies, parse-error surface, and missing-package fallback.
+- `TEST-wireloom-plugin-unit` → `frontend/src/utils/wireloomRenderer.test.ts`: Wireloom fences emit placeholders and non-Wireloom fences stay untouched.
+- `TEST-wireloom-renderer-unit` → `frontend/src/utils/wireloomRenderer.test.ts`: explicit render defaults, compact annotation bodies, parse-error surface, and missing-package fallback.
 - `TEST-wireloom-live-document-e2e` → `tests/e2e/documents/live-updates.spec.ts`: Documents View refreshes rendered Wireloom content after file changes.
 
 **Makes GREEN (Behavior)**:
@@ -415,15 +415,15 @@ scripts/validate-mermaid-md docs/CRs/MDT-157/architecture.md
 **Boundary**: No rewrite of the markdown pipeline, no new markdown surface, and no Wireloom package changes.
 
 **Modifies**:
-- `src/utils/wireloomRenderer.ts` — centralize default render options, compact long annotation bodies before render, and include available `WireloomError` line/column context.
-- `src/utils/wireloomRenderer.test.ts` — cover defaults, compact annotations, fallback, parse errors, and successful SVG replacement.
-- `src/utils/markdownItWireloomPlugin.ts` — keep placeholder emission safe and limited to `wireloom` fences.
+- `frontend/src/utils/wireloomRenderer.ts` — centralize default render options, compact long annotation bodies before render, and include available `WireloomError` line/column context.
+- `frontend/src/utils/wireloomRenderer.test.ts` — cover defaults, compact annotations, fallback, parse errors, and successful SVG replacement.
+- `frontend/src/utils/markdownItWireloomPlugin.ts` — keep placeholder emission safe and limited to `wireloom` fences.
 
 **Verify**:
 
 ```bash
-bun test src/utils/wireloomRenderer.test.ts
-bun test src/utils/wireloomFullscreen.test.ts
+bun test frontend/src/utils/wireloomRenderer.test.ts
+bun test frontend/src/utils/wireloomFullscreen.test.ts
 PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/documents/live-updates.spec.ts --project=chromium --grep "Wireloom"
 ```
 
@@ -436,9 +436,9 @@ PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/documents/live-updates.s
 - [x] Existing fullscreen control still attaches after successful render.
 
 **Implementation evidence**:
-- `bun test src/utils/wireloomRenderer.test.ts src/utils/wireloomFullscreen.test.ts` — 18/18 pass.
+- `bun test frontend/src/utils/wireloomRenderer.test.ts frontend/src/utils/wireloomFullscreen.test.ts` — 18/18 pass.
 - `PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/documents/live-updates.spec.ts --project=chromium --grep "Wireloom"` — 1/1 pass.
-- Targeted ESLint for `src/utils/wireloomRenderer.ts` and `src/utils/wireloomRenderer.test.ts` — pass.
+- Targeted ESLint for `frontend/src/utils/wireloomRenderer.ts` and `frontend/src/utils/wireloomRenderer.test.ts` — pass.
 - `bun run validate:ts` is blocked by unrelated ProjectSelector/accent-color TypeScript errors in the dirty worktree.
 
 ---
@@ -455,23 +455,23 @@ PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/documents/live-updates.s
 | e2e/ | 1 | 1 | 0 | ✅ |
 
 **File-level coverage**:
-- `src/components/MarkdownContent/useMarkdownProcessor.ts` → Task 2 ✅
-- `src/components/MarkdownContent/domPurifyConfig.ts` → Task 2 ✅
-- `src/components/MarkdownContent/useMarkdownProcessor.test.ts` → Task 2 ✅
-- `src/utils/markdownItWireframePlugin.ts` → Task 0 (Creates), Task 1 (Modifies) ✅
-- `src/utils/slugify.ts` → Task 0 (Creates), Task 1 (Modifies) ✅
-- `src/utils/tableOfContents.ts` → Task 3 ✅
-- `src/utils/mermaid/core.ts` → Task 2 ✅
-- `src/utils/markdownPreprocessor.ts` → Task 2 (Structure, verified unchanged) ✅
-- `src/utils/syntaxHighlight.ts` → Task 2 (Structure, verified unchanged) ✅
-- `src/utils/markdownPreprocessor.test.ts` → Task 3 ✅
-- `src/utils/markdownPreprocessor.mdt150.test.ts` → Task 3 ✅
+- `frontend/src/components/MarkdownContent/useMarkdownProcessor.ts` → Task 2 ✅
+- `frontend/src/components/MarkdownContent/domPurifyConfig.ts` → Task 2 ✅
+- `frontend/src/components/MarkdownContent/useMarkdownProcessor.test.ts` → Task 2 ✅
+- `frontend/src/utils/markdownItWireframePlugin.ts` → Task 0 (Creates), Task 1 (Modifies) ✅
+- `frontend/src/utils/slugify.ts` → Task 0 (Creates), Task 1 (Modifies) ✅
+- `frontend/src/utils/tableOfContents.ts` → Task 3 ✅
+- `frontend/src/utils/mermaid/core.ts` → Task 2 ✅
+- `frontend/src/utils/markdownPreprocessor.ts` → Task 2 (Structure, verified unchanged) ✅
+- `frontend/src/utils/syntaxHighlight.ts` → Task 2 (Structure, verified unchanged) ✅
+- `frontend/src/utils/markdownPreprocessor.test.ts` → Task 3 ✅
+- `frontend/src/utils/markdownPreprocessor.mdt150.test.ts` → Task 3 ✅
 - `package.json` → Task 0, Task 4 ✅
 - `tests/e2e/ticket/markdown-it-migration.spec.ts` → Task 5 ✅
 
 ## Post-Implementation
 
-- [ ] No duplication (grep check): `grep -r "showdown" src/ --include="*.ts"` returns nothing
+- [ ] No duplication (grep check): `grep -r "showdown" frontend/src/ --include="*.ts"` returns nothing
 - [ ] Scope boundaries respected: pipeline shape unchanged
 - [ ] All unit tests GREEN
 - [ ] All BDD scenarios GREEN

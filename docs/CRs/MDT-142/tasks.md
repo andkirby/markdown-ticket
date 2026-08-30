@@ -168,10 +168,10 @@ bun run --cwd server jest sseBroadcaster.subdocument.test.ts
 
 ### Task 4: EventBus: Add ticket:subdocument:changed event type (M1)
 
-**Structure**: `src/services/eventBus.ts`
+**Structure**: `frontend/src/services/eventBus.ts`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-frontend-event-mapping` → `src/hooks/useSSEEvents.subdocument.test.ts`: mapping tests
+- `TEST-frontend-event-mapping` → `frontend/src/hooks/useSSEEvents.subdocument.test.ts`: mapping tests
 
 **Scope**: Add new event type to EventBus
 **Boundary**: Does not modify SSE handling or TicketViewer
@@ -179,7 +179,7 @@ bun run --cwd server jest sseBroadcaster.subdocument.test.ts
 **Creates**: None (modifies existing)
 
 **Modifies**:
-- `src/services/eventBus.ts`
+- `frontend/src/services/eventBus.ts`
 
 **Must Not Touch**:
 - `useSSEEvents.ts`
@@ -194,7 +194,7 @@ bun run --cwd server jest sseBroadcaster.subdocument.test.ts
 **Verify**:
 
 ```bash
-bun test src/hooks/useSSEEvents.subdocument.test.ts
+bun test frontend/src/hooks/useSSEEvents.subdocument.test.ts
 ```
 
 **Done when**:
@@ -209,10 +209,10 @@ bun test src/hooks/useSSEEvents.subdocument.test.ts
 
 **Skills**: frontend-react-component
 
-**Structure**: `src/hooks/useSSEEvents.ts`
+**Structure**: `frontend/src/hooks/useSSEEvents.ts`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-frontend-event-mapping` → `src/hooks/useSSEEvents.subdocument.test.ts`: mapping tests
+- `TEST-frontend-event-mapping` → `frontend/src/hooks/useSSEEvents.subdocument.test.ts`: mapping tests
 
 **Enables (BDD)**:
 - `subdocument_sse_event_main_project` (BR-1.1, BR-1.4) — needs Task 6 to complete
@@ -224,11 +224,11 @@ bun test src/hooks/useSSEEvents.subdocument.test.ts
 **Creates**: None (modifies existing)
 
 **Modifies**:
-- `src/hooks/useSSEEvents.ts`
+- `frontend/src/hooks/useSSEEvents.ts`
 
 **Must Not Touch**:
-- `src/services/eventBus.ts`
-- `src/components/TicketViewer/index.tsx`
+- `frontend/src/services/eventBus.ts`
+- `frontend/src/components/TicketViewer/index.tsx`
 
 **Anti-duplication**: Use existing `eventBus.emit()` patterns
 
@@ -239,7 +239,7 @@ bun test src/hooks/useSSEEvents.subdocument.test.ts
 **Verify**:
 
 ```bash
-bun test src/hooks/useSSEEvents.subdocument.test.ts
+bun test frontend/src/hooks/useSSEEvents.subdocument.test.ts
 ```
 
 **Done when**:
@@ -254,10 +254,10 @@ bun test src/hooks/useSSEEvents.subdocument.test.ts
 
 **Skills**: frontend-react-component
 
-**Structure**: `src/components/TicketViewer/index.tsx`
+**Structure**: `frontend/src/components/TicketViewer/index.tsx`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-ticket-viewer-subdocument` → `src/components/TicketViewer/useTicketDocumentRealtime.subdocument.test.ts`: 5-case tests
+- `TEST-ticket-viewer-subdocument` → `frontend/src/components/TicketViewer/useTicketDocumentRealtime.subdocument.test.ts`: 5-case tests
 
 **Makes GREEN (Behavior)**:
 - `subdocument_sse_event_main_project` → `tests/e2e/filewatcher/subdocument-sse.spec.ts` (BR-1.1, BR-1.4)
@@ -269,12 +269,12 @@ bun test src/hooks/useSSEEvents.subdocument.test.ts
 **Creates**: None (modifies existing)
 
 **Modifies**:
-- `src/components/TicketViewer/index.tsx`
-- `src/components/TicketViewer/useTicketDocumentRealtime.ts`
+- `frontend/src/components/TicketViewer/index.tsx`
+- `frontend/src/components/TicketViewer/useTicketDocumentRealtime.ts`
 
 **Must Not Touch**:
-- `src/hooks/useSSEEvents.ts`
-- `src/services/eventBus.ts`
+- `frontend/src/hooks/useSSEEvents.ts`
+- `frontend/src/services/eventBus.ts`
 
 **Anti-duplication**: Use existing `invalidateCache()` from `useTicketDocumentContent`
 
@@ -285,7 +285,7 @@ bun test src/hooks/useSSEEvents.subdocument.test.ts
 **Verify**:
 
 ```bash
-bun test src/components/TicketViewer/useTicketDocumentRealtime.subdocument.test.ts
+bun test frontend/src/components/TicketViewer/useTicketDocumentRealtime.subdocument.test.ts
 ```
 
 **Done when**:
@@ -352,8 +352,8 @@ bunx playwright test tests/e2e/filewatcher/subdocument-sse.spec.ts
 
 **Must Not Touch**:
 - `server/services/fileWatcher/PathWatcherService.ts`
-- `src/hooks/useSSEEvents.ts`
-- `src/components/TicketViewer/index.tsx`
+- `frontend/src/hooks/useSSEEvents.ts`
+- `frontend/src/components/TicketViewer/index.tsx`
 
 **Anti-duplication**: Reuse existing `WorktreeService` detection and path resolution behavior.
 
