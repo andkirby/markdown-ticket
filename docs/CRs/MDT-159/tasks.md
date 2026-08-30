@@ -22,7 +22,7 @@
 |---------------|-------|-------------|
 | C1 | Task 3 | `git diff --name-only -- docs/CRs/` shows zero changes |
 | C2 | Task 1 | Exhaustive unit test n∈[1,999] matches `padStart(3, '0')` |
-| C3 | Task 2, Task 3 | `grep "padStart(3" --include="*.ts" shared/ src/ server/` returns zero |
+| C3 | Task 2, Task 3 | `grep "padStart(3" --include="*.ts" shared/ frontend/src/ server/` returns zero |
 | C4 | Task 1 | Unit tests verify return type, input immutability, idempotency |
 
 ## Milestones
@@ -39,8 +39,8 @@
 |-------|-----------|----------|-----|--------|
 | shared/utils/ (runtime) | 1 | 1 | 0 | ✅ |
 | shared/services/ (runtime) | 1 | 1 | 0 | ✅ |
-| src/utils/ (runtime) | 1 | 1 | 0 | ✅ |
-| src/hooks/ (runtime) | 1 | 1 | 0 | ✅ |
+| frontend/src/utils/ (runtime) | 1 | 1 | 0 | ✅ |
+| frontend/src/hooks/ (runtime) | 1 | 1 | 0 | ✅ |
 | shared/test-lib/ (test) | 2 | 2 | 0 | ✅ |
 | shared/tests/ (test) | 1 | 1 | 0 | ✅ |
 | shared/services/__tests__/ (test) | 1 | 1 | 0 | ✅ |
@@ -104,10 +104,10 @@ bun run --cwd server jest shared/utils/__tests__/formatCrKey.test.ts
 
 ### Task 2: Replace padStart(3, '0') in production call sites (M2)
 
-**Structure**: `shared/services/TicketService.ts`, `src/utils/routing.ts`, `src/hooks/useQuickSearch.ts`
+**Structure**: `shared/services/TicketService.ts`, `frontend/src/utils/routing.ts`, `frontend/src/hooks/useQuickSearch.ts`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-routing-keys` → `src/utils/__tests__/routing.normalizeTicketKey.test.ts`: 9 tests covering Edge-2
+- `TEST-routing-keys` → `frontend/src/utils/__tests__/routing.normalizeTicketKey.test.ts`: 9 tests covering Edge-2
 
 **Scope**: Replace all 3 production `padStart(3, '0')` call sites with `formatCrKey()`, including the 2 internal sites in `keyNormalizer.ts`'s own `normalizeKey()`
 
@@ -119,8 +119,8 @@ bun run --cwd server jest shared/utils/__tests__/formatCrKey.test.ts
 **Modifies**:
 - `shared/utils/keyNormalizer.ts` — refactor `normalizeKey()` to call `formatCrKey()` internally (lines 54, 76)
 - `shared/services/TicketService.ts` — replace inline `padStart(3, '0')` in `createCR()` with `formatCrKey(project.project.code, nextNumber)`
-- `src/utils/routing.ts` — replace inline `padStart(3, '0')` in `normalizeTicketKey()` with `formatCrKey()`
-- `src/hooks/useQuickSearch.ts` — replace inline `padStart(3, '0')` in `normalizeTicketKeyTerm()` with `formatCrKey()`
+- `frontend/src/utils/routing.ts` — replace inline `padStart(3, '0')` in `normalizeTicketKey()` with `formatCrKey()`
+- `frontend/src/hooks/useQuickSearch.ts` — replace inline `padStart(3, '0')` in `normalizeTicketKeyTerm()` with `formatCrKey()`
 
 **Must Not Touch**:
 - Any test files (Task 3)
@@ -142,7 +142,7 @@ bun run --cwd server jest shared/utils/__tests__/formatCrKey.test.ts
 **Verify**:
 
 ```bash
-bun run --cwd server jest src/utils/__tests__/routing.normalizeTicketKey.test.ts
+bun run --cwd server jest frontend/src/utils/__tests__/routing.normalizeTicketKey.test.ts
 bun run --cwd server jest shared/utils/__tests__/keyNormalizer.test.ts
 ```
 
@@ -150,7 +150,7 @@ bun run --cwd server jest shared/utils/__tests__/keyNormalizer.test.ts
 - [ ] All 5 production sites use `formatCrKey` (TicketService + 2 in keyNormalizer + routing + useQuickSearch)
 - [ ] `TEST-routing-keys` GREEN
 - [ ] Existing `keyNormalizer.test.ts` still passes (backward compatibility preserved)
-- [ ] `grep "padStart(3" shared/services/TicketService.ts shared/utils/keyNormalizer.ts src/utils/routing.ts src/hooks/useQuickSearch.ts` returns zero matches
+- [ ] `grep "padStart(3" shared/services/TicketService.ts shared/utils/keyNormalizer.ts frontend/src/utils/routing.ts frontend/src/hooks/useQuickSearch.ts` returns zero matches
 
 ---
 
@@ -159,7 +159,7 @@ bun run --cwd server jest shared/utils/__tests__/keyNormalizer.test.ts
 **Structure**: `shared/test-lib/ticket/test-ticket-builder.ts`, `shared/test-lib/ticket/helpers/TicketCodeHelper.ts`, `shared/services/__tests__/WorktreeService.test.ts`, `shared/tests/services/MDT-094/MarkdownService.scanTicketMetadata.test.ts`, `server/tests/mocks/shared/services/TicketService.ts`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-call-site-audit` → structural audit: `grep "padStart(3" --include="*.ts" shared/ src/ server/` returns zero matches
+- `TEST-call-site-audit` → structural audit: `grep "padStart(3" --include="*.ts" shared/ frontend/src/ server/` returns zero matches
 - `TEST-no-migration-audit` → structural audit: `git diff --name-only -- docs/CRs/` shows zero changes
 
 **Scope**: Replace all 5 test/mock `padStart(3, '0')` call sites with `formatCrKey()`, then run structural verification audits
@@ -196,7 +196,7 @@ bun run --cwd server jest shared/utils/__tests__/keyNormalizer.test.ts
 
 ```bash
 # Structural audit: zero padStart(3,'0') remaining in entire codebase
-grep -rn "padStart(3" --include="*.ts" shared/ src/ server/ | grep -v "node_modules" | grep -v ".gitWT"
+grep -rn "padStart(3" --include="*.ts" shared/ frontend/src/ server/ | grep -v "node_modules" | grep -v ".gitWT"
 # Expected: zero matches
 
 # Migration audit: no ticket files changed
@@ -211,7 +211,7 @@ bun run validate:ts
 
 **Done when**:
 - [ ] All 5 test/mock sites use `formatCrKey`
-- [ ] `grep "padStart(3" --include="*.ts" shared/ src/ server/` returns zero matches (C3 satisfied)
+- [ ] `grep "padStart(3" --include="*.ts" shared/ frontend/src/ server/` returns zero matches (C3 satisfied)
 - [ ] `git diff --name-only -- docs/CRs/` shows zero changes (C1 satisfied)
 - [ ] Full test suite passes (`bun run --cwd server jest`)
 - [ ] Lint passes (`bun run lint`)

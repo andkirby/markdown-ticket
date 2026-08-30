@@ -4,7 +4,7 @@
 
 ### ViewModeSwitcher Component Folder
 
-**Location:** `src/components/ViewModeSwitcher/`
+**Location:** `frontend/src/components/ViewModeSwitcher/`
 
 **Files:**
 - `index.tsx` - Export barrel for clean imports
@@ -21,7 +21,7 @@
 
 ### AppHeader Component Folder (New)
 
-**Location:** `src/components/AppHeader/`
+**Location:** `frontend/src/components/AppHeader/`
 
 **Files:**
 - `index.tsx` - Export barrel
@@ -33,7 +33,7 @@
 
 ### HamburgerMenu Component (Standalone)
 
-**Location:** `src/components/HamburgerMenu.tsx`
+**Location:** `frontend/src/components/HamburgerMenu.tsx`
 
 **Features:**
 - Desktop-only by default (visible on all devices after implementation)
@@ -204,7 +204,7 @@ ViewModeSwitcher → useViewModePersistence
 
 ### HamburgerMenu Integration
 
-**Location:** `src/components/HamburgerMenu.tsx`
+**Location:** `frontend/src/components/HamburgerMenu.tsx`
 
 **Theme Controls:**
 - ButtonGroup with 3 icon-only buttons at bottom of menu
@@ -241,7 +241,7 @@ import { Sun, Moon, Monitor } from 'lucide-react'
 
 ### Theme Hook Enhancement
 
-**Location:** `src/hooks/useTheme.ts`
+**Location:** `frontend/src/hooks/useTheme.ts`
 
 **Enhancements:**
 - Added `system` theme mode

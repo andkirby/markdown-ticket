@@ -197,7 +197,7 @@ Standard `tsg` JSON output, pass-through with filtering applied:
 | `server/...` | `server/tsconfig.json` | `--tsconfig server` |
 | `mcp-server/...` | `mcp-server/tsconfig.json` | `--tsconfig mcp-server` |
 | `domain-contracts/...` | `domain-contracts/tsconfig.json` | `--tsconfig domain-contracts` |
-| `src/...` or no prefix | `./tsconfig.json` | `--tsconfig .` |
+| `frontend/src/...` or no prefix | `./tsconfig.json` | `--tsconfig .` |
 | Specific `.ts` file path | Extract directory from file path, lookup above | `--tsconfig {detected}` {file} |
 
 **Fallback**: If detected tsconfig file doesn't exist, skip with warning.

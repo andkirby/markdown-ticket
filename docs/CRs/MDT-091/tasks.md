@@ -6,7 +6,7 @@
 
 | Setting | Value |
 |---------|-------|
-| Source directory | `src/` |
+| Source directory | `frontend/src/` |
 | Test command | `npm test` |
 | E2E Test command | `npm run test:e2e` |
 | Build command | `npm run build` |
@@ -181,7 +181,7 @@ npm run build
 **Makes GREEN**:
 - `rate-limiting.spec`: "Rate Limiting (MUST-05)" (5 failing tests)
 
-**From**: `src/index.ts` (transport initialization)
+**From**: `frontend/src/index.ts` (transport initialization)
 **To**: Rate limiting implementation in transport layers
 
 **Move**:
@@ -213,7 +213,7 @@ npm run build
 **Makes GREEN**:
 - `output-sanitization.spec`: "Output Sanitization (MUST-06)" (11 failing tests)
 
-**From**: Tool handlers in `src/tools/`
+**From**: Tool handlers in `frontend/src/tools/`
 **To**: Sanitized output responses
 
 **Move**:

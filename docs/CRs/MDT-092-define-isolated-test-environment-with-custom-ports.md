@@ -76,10 +76,10 @@ Two-layer isolation:
 | File | Change |
 |------|--------|
 | `playwright.config.ts` | Vite on `:6173`, `VITE_BACKEND_URL=http://localhost:4001` |
-| `vite.config.ts` | Proxy checks `VITE_BACKEND_URL` first |
+| `frontend/vite.config.ts` | Proxy checks `VITE_BACKEND_URL` first |
 | `server/tests/api/test-app-factory.ts` | Fixed ESM `.js` extensions; `setCacheTTL(0)` |
-| `src/components/Board.tsx` | Added `data-testid="kanban-board"` |
-| `src/components/ProjectSelector.tsx` | Added `data-testid="project-option-{CODE}"` |
+| `frontend/src/components/Board.tsx` | Added `data-testid="kanban-board"` |
+| `frontend/src/components/ProjectSelector.tsx` | Added `data-testid="project-option-{CODE}"` |
 
 ## 4. Acceptance Criteria
 

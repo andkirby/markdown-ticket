@@ -22,12 +22,12 @@ The DocumentsView already has a working client-side search that filters a docume
 |----------|----------|--------|
 | `SearchScope.DOCUMENTS` enum value | `domain-contracts/src/search/types.ts` | ✅ Defined |
 | `DocumentResultItemSchema` (Zod) | `domain-contracts/src/search/schema.ts` | ✅ Defined |
-| `DocumentResultRow` component | `src/components/QuickSearch/DocumentResultRow.tsx` | ✅ Renders doc items |
-| `QuickSearchResults` documents section | `src/components/QuickSearch/QuickSearchResults.tsx` | ✅ Groups + renders |
-| `SearchScopeBar` "Documents" tab | `src/components/QuickSearch/SearchScopeBar.tsx` | ✅ Visible |
-| `QuickSearchModal` scope filtering | `src/components/QuickSearch/QuickSearchModal.tsx` | ✅ Filters by scope |
+| `DocumentResultRow` component | `frontend/src/components/QuickSearch/DocumentResultRow.tsx` | ✅ Renders doc items |
+| `QuickSearchResults` documents section | `frontend/src/components/QuickSearch/QuickSearchResults.tsx` | ✅ Groups + renders |
+| `SearchScopeBar` "Documents" tab | `frontend/src/components/QuickSearch/SearchScopeBar.tsx` | ✅ Visible |
+| `QuickSearchModal` scope filtering | `frontend/src/components/QuickSearch/QuickSearchModal.tsx` | ✅ Filters by scope |
 | Backend `SearchController.searchDocuments` | `server/controllers/SearchController.ts` | ⬜ Stub — empty |
-| `useDocumentSearch` hook | `src/hooks/useDocumentSearch.ts` | ❌ Does not exist |
+| `useDocumentSearch` hook | `frontend/src/hooks/useDocumentSearch.ts` | ❌ Does not exist |
 | `QuickSearchModal` → document data flow | `QuickSearchModal.tsx` | ❌ Passes `[]` |
 | `onSelectDocument` callback | `App.tsx` → `QuickSearchModal` | ❌ Not wired |
 
@@ -44,7 +44,7 @@ The DocumentsView already has a working client-side search that filters a docume
 
 ## 3. How DocumentsView Search Works (Reference Model)
 
-The existing DocumentsView (`src/components/DocumentsView/DocumentsLayout.tsx`) performs **pure client-side filtering** on an already-loaded document tree.
+The existing DocumentsView (`frontend/src/components/DocumentsView/DocumentsLayout.tsx`) performs **pure client-side filtering** on an already-loaded document tree.
 
 ### 3.1 Data Loading
 
@@ -71,7 +71,7 @@ interface TreeNode {
 The frontend extends this with optional metadata:
 
 ```typescript
-// src/components/DocumentsView/FileTree.tsx
+// frontend/src/components/DocumentsView/FileTree.tsx
 interface DocumentFile {
   name: string
   path: string
@@ -110,7 +110,7 @@ Key characteristics:
 
 ## 4. How Project Search Works (Existing Pattern)
 
-`useProjectSearch` (`src/hooks/useProjectSearch.ts`) provides the closest parallel pattern:
+`useProjectSearch` (`frontend/src/hooks/useProjectSearch.ts`) provides the closest parallel pattern:
 
 ```typescript
 // Hook signature
@@ -156,12 +156,12 @@ QuickSearchModal
 
 | # | File | Change |
 |---|------|--------|
-| 1 | `src/hooks/useDocumentSearch.ts` | **New file** — hook + `matchDocuments()` + `flattenTree()` pure functions |
-| 2 | `src/hooks/__tests__/useDocumentSearch.test.ts` | **New file** — unit tests |
-| 3 | `src/components/QuickSearch/QuickSearchModal.tsx` | Add `useDocumentSearch` hook, wire `documentResults`, add Enter dispatch for documents, add offset to `totalSelectableResults` |
-| 4 | `src/App.tsx` | Add `onSelectDocument` callback → navigate to document |
-| 5 | `src/components/QuickSearch/QuickSearchModalProps` | Add `onSelectDocument` prop |
-| 6 | `src/components/QuickSearch/DocumentResultRow.tsx` | No change needed (already renders `DocumentResultItem`) |
+| 1 | `frontend/src/hooks/useDocumentSearch.ts` | **New file** — hook + `matchDocuments()` + `flattenTree()` pure functions |
+| 2 | `frontend/src/hooks/__tests__/useDocumentSearch.test.ts` | **New file** — unit tests |
+| 3 | `frontend/src/components/QuickSearch/QuickSearchModal.tsx` | Add `useDocumentSearch` hook, wire `documentResults`, add Enter dispatch for documents, add offset to `totalSelectableResults` |
+| 4 | `frontend/src/App.tsx` | Add `onSelectDocument` callback → navigate to document |
+| 5 | `frontend/src/components/QuickSearch/QuickSearchModalProps` | Add `onSelectDocument` prop |
+| 6 | `frontend/src/components/QuickSearch/DocumentResultRow.tsx` | No change needed (already renders `DocumentResultItem`) |
 
 **Estimated complexity**: Small (1 new hook, 3 integration edits)
 
@@ -233,11 +233,11 @@ QuickSearchModal
 |---|------|--------|
 | 1 | `server/controllers/SearchController.ts` | Implement `searchDocuments()` — iterate projects, call `TreeService.getDocumentTree()`, flatten, filter |
 | 2 | `server/tests/api/search.test.ts` | Add document search integration tests |
-| 3 | `src/hooks/useDocumentSearch.ts` | **New file** — calls `POST /api/search` with `scope: 'documents'` |
-| 4 | `src/hooks/__tests__/useDocumentSearch.test.ts` | **New file** — unit tests |
-| 5 | `src/components/QuickSearch/QuickSearchModal.tsx` | Wire `useDocumentSearch` + Enter dispatch |
-| 6 | `src/App.tsx` | Add `onSelectDocument` callback |
-| 7 | `src/services/dataLayer.ts` | Add `searchDocuments()` method |
+| 3 | `frontend/src/hooks/useDocumentSearch.ts` | **New file** — calls `POST /api/search` with `scope: 'documents'` |
+| 4 | `frontend/src/hooks/__tests__/useDocumentSearch.test.ts` | **New file** — unit tests |
+| 5 | `frontend/src/components/QuickSearch/QuickSearchModal.tsx` | Wire `useDocumentSearch` + Enter dispatch |
+| 6 | `frontend/src/App.tsx` | Add `onSelectDocument` callback |
+| 7 | `frontend/src/services/dataLayer.ts` | Add `searchDocuments()` method |
 
 **Estimated complexity**: Medium (backend + frontend changes, I/O-heavy search)
 
@@ -297,7 +297,7 @@ The `SearchController` stub already exists and is correctly commented — it ser
 
 ### Phase 1: Hook + Pure Functions
 
-- [ ] Create `src/hooks/useDocumentSearch.ts`
+- [ ] Create `frontend/src/hooks/useDocumentSearch.ts`
   - [ ] `flattenTree(nodes: TreeNode[]): FlatDocument[]` — recurse tree, return file-only nodes
   - [ ] `scoreDocument(query: string, doc: FlatDocument): number` — score by name/title/path
   - [ ] `matchDocuments(options): ScoredDocument[]` — AND logic, sorted by score
@@ -307,7 +307,7 @@ The `SearchController` stub already exists and is correctly commented — it ser
 
 ### Phase 2: Unit Tests
 
-- [ ] Create `src/hooks/__tests__/useDocumentSearch.test.ts`
+- [ ] Create `frontend/src/hooks/__tests__/useDocumentSearch.test.ts`
   - [ ] `flattenTree` — nested tree → flat list, skips folders
   - [ ] `scoreDocument` — exact name > prefix > title > path > substring
   - [ ] `matchDocuments` — AND logic, maxResults, empty query returns empty
@@ -315,7 +315,7 @@ The `SearchController` stub already exists and is correctly commented — it ser
 
 ### Phase 3: Modal Integration
 
-- [ ] Edit `src/components/QuickSearch/QuickSearchModal.tsx`
+- [ ] Edit `frontend/src/components/QuickSearch/QuickSearchModal.tsx`
   - [ ] Add `useDocumentSearch` hook call
   - [ ] Pass `documentResults` to `QuickSearchResults`
   - [ ] Add document offset to `totalSelectableResults`
@@ -325,7 +325,7 @@ The `SearchController` stub already exists and is correctly commented — it ser
 
 ### Phase 4: App Wiring
 
-- [ ] Edit `src/App.tsx`
+- [ ] Edit `frontend/src/App.tsx`
   - [ ] Add `onSelectDocument` callback to `QuickSearchModal`
   - [ ] Navigate to `/prj/${code}/documents?file=${encodedPath}`
 

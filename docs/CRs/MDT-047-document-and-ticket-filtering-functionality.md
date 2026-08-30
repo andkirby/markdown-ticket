@@ -151,7 +151,7 @@ interface FilterControlsProps {
 
 ## 6. References
 - Related ticket: MDT-012 (Sortable Ticket Attributes) - existing sorting implementation
-- FilterControls component: `src/components/FilterControls.tsx`
-- Documents implementation: `src/components/DocumentsView/DocumentsLayout.tsx`
-- Board implementation: `src/components/Board.tsx`
+- FilterControls component: `frontend/src/components/FilterControls.tsx`
+- Documents implementation: `frontend/src/components/DocumentsView/DocumentsLayout.tsx`
+- Board implementation: `frontend/src/components/Board.tsx`
 - React performance best practices for filtering/sorting

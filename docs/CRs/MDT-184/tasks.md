@@ -4,16 +4,16 @@
 
 ## Scope Boundaries
 
-- `src/routes.ts`: **Only** file that contains the `/prj` literal and route pattern strings
-- `src/utils/linkBuilder.ts`: Re-exports builders from routes.ts, preserves public API
+- `frontend/src/routes.ts`: **Only** file that contains the `/prj` literal and route pattern strings
+- `frontend/src/utils/linkBuilder.ts`: Re-exports builders from routes.ts, preserves public API
 - All other files: import and use builders, no inline path construction
 
 ## Ownership Guardrails
 
 | Critical Behavior | Owner Module | Merge/Refactor Task if Overlap |
 |-------------------|--------------|--------------------------------|
-| Route pattern constants | `src/routes.ts` | N/A — single owner |
-| Path builder functions | `src/routes.ts` (defs), `linkBuilder.ts` (re-exports) | N/A |
+| Route pattern constants | `frontend/src/routes.ts` | N/A — single owner |
+| Path builder functions | `frontend/src/routes.ts` (defs), `linkBuilder.ts` (re-exports) | N/A |
 | Link classification | `linkProcessor.ts` | Already stable, no change needed |
 
 ## Constraint Coverage
@@ -28,15 +28,15 @@
 
 ### Task 1: Create routes.ts with pattern constants and builder functions
 
-**Structure**: `src/routes.ts`
+**Structure**: `frontend/src/routes.ts`
 
-**Makes GREEN**: `TEST-routes-patterns` → `src/__tests__/routes.test.ts`
+**Makes GREEN**: `TEST-routes-patterns` → `frontend/src/__tests__/routes.test.ts`
 
 **Scope**: Create the single source of truth for route patterns
 **Boundary**: This file only defines constants and pure functions — no imports from app code
 
 **Creates**:
-- `src/routes.ts`
+- `frontend/src/routes.ts`
 
 **Modifies**: (none)
 
@@ -50,7 +50,7 @@
 
 **Verify**:
 ```bash
-bun test src/__tests__/routes.test.ts
+bun test frontend/src/__tests__/routes.test.ts
 ```
 
 **Done when**:
@@ -62,18 +62,18 @@ bun test src/__tests__/routes.test.ts
 
 ### Task 2: Refactor linkBuilder.ts to delegate to routes.ts
 
-**Structure**: `src/utils/linkBuilder.ts`
+**Structure**: `frontend/src/utils/linkBuilder.ts`
 
-**Makes GREEN**: `TEST-existing-tests-pass` → `src/utils/linkBuilder.mdt150.test.ts`
+**Makes GREEN**: `TEST-existing-tests-pass` → `frontend/src/utils/linkBuilder.mdt150.test.ts`
 
 **Scope**: Replace hardcoded `/prj/` in linkBuilder with imports from routes.ts
 **Boundary**: Public API (`buildTicketLink`, `buildDocumentLink`) must remain identical
 
 **Modifies**:
-- `src/utils/linkBuilder.ts`
-- `src/utils/linkProcessor.ts` (verify no breakage — already uses buildTicketLink)
+- `frontend/src/utils/linkBuilder.ts`
+- `frontend/src/utils/linkProcessor.ts` (verify no breakage — already uses buildTicketLink)
 
-**Must Not Touch**: `src/routes.ts` (Task 1 owns), test files
+**Must Not Touch**: `frontend/src/routes.ts` (Task 1 owns), test files
 
 **Anti-duplication**: Import pattern constants from `routes.ts` — do NOT copy
 
@@ -83,7 +83,7 @@ bun test src/__tests__/routes.test.ts
 
 **Verify**:
 ```bash
-bun test src/utils/linkBuilder.mdt150.test.ts
+bun test frontend/src/utils/linkBuilder.mdt150.test.ts
 ```
 
 **Done when**:
@@ -95,7 +95,7 @@ bun test src/utils/linkBuilder.mdt150.test.ts
 
 ### Task 3: Refactor linkNormalization.ts to remove DEFAULT_WEB_BASE and delegate to linkBuilder
 
-**Structure**: `src/utils/linkNormalization.ts`
+**Structure**: `frontend/src/utils/linkNormalization.ts`
 
 **Makes GREEN**: `TEST-existing-tests-pass`
 
@@ -103,9 +103,9 @@ bun test src/utils/linkBuilder.mdt150.test.ts
 **Boundary**: Normalization logic (path resolution, security checks) stays unchanged
 
 **Modifies**:
-- `src/utils/linkNormalization.ts`
+- `frontend/src/utils/linkNormalization.ts`
 
-**Must Not Touch**: `src/routes.ts`, `linkBuilder.ts`, test files
+**Must Not Touch**: `frontend/src/routes.ts`, `linkBuilder.ts`, test files
 
 **Anti-duplication**: Import `buildTicketLink`, `buildDocumentLink` from `linkBuilder.ts`
 
@@ -115,7 +115,7 @@ bun test src/utils/linkBuilder.mdt150.test.ts
 
 **Verify**:
 ```bash
-bun test src/utils/linkNormalization.mdt150.test.ts
+bun test frontend/src/utils/linkNormalization.mdt150.test.ts
 ```
 
 **Done when**:
@@ -127,7 +127,7 @@ bun test src/utils/linkNormalization.mdt150.test.ts
 
 ### Task 4: Migrate markdownPreprocessor.ts to use builders
 
-**Structure**: `src/utils/markdownPreprocessor.ts`
+**Structure**: `frontend/src/utils/markdownPreprocessor.ts`
 
 **Makes GREEN**: `TEST-existing-tests-pass`
 
@@ -135,9 +135,9 @@ bun test src/utils/linkNormalization.mdt150.test.ts
 **Boundary**: Preprocessor logic unchanged; only URL construction changes
 
 **Modifies**:
-- `src/utils/markdownPreprocessor.ts`
+- `frontend/src/utils/markdownPreprocessor.ts`
 
-**Must Not Touch**: `src/routes.ts`, `linkBuilder.ts`, test files
+**Must Not Touch**: `frontend/src/routes.ts`, `linkBuilder.ts`, test files
 
 **Anti-duplication**: Import `buildTicketLink`, `buildTicketSubDocPath`, `buildDocumentLink` from `linkBuilder.ts`
 
@@ -146,7 +146,7 @@ bun test src/utils/linkNormalization.mdt150.test.ts
 
 **Verify**:
 ```bash
-bun test src/utils/markdownPreprocessor.test.ts src/utils/markdownPreprocessor.mdt150.test.ts src/utils/markdownPreprocessor.mdt155.test.ts
+bun test frontend/src/utils/markdownPreprocessor.test.ts frontend/src/utils/markdownPreprocessor.mdt150.test.ts frontend/src/utils/markdownPreprocessor.mdt155.test.ts
 ```
 
 **Done when**:
@@ -157,7 +157,7 @@ bun test src/utils/markdownPreprocessor.test.ts src/utils/markdownPreprocessor.m
 
 ### Task 5: Migrate subdocPathValidation.ts to use builders and derive regex from patterns
 
-**Structure**: `src/utils/subdocPathValidation.ts`
+**Structure**: `frontend/src/utils/subdocPathValidation.ts`
 
 **Makes GREEN**: `TEST-existing-tests-pass`
 
@@ -165,9 +165,9 @@ bun test src/utils/markdownPreprocessor.test.ts src/utils/markdownPreprocessor.m
 **Boundary**: `extractSubDocPath` and `hashToPathUrl` logic unchanged
 
 **Modifies**:
-- `src/utils/subdocPathValidation.ts`
+- `frontend/src/utils/subdocPathValidation.ts`
 
-**Must Not Touch**: `src/routes.ts`, test files
+**Must Not Touch**: `frontend/src/routes.ts`, test files
 
 **Anti-duplication**: Import builders from `linkBuilder.ts`, derive regex from `routes.ts` pattern constants
 
@@ -177,7 +177,7 @@ bun test src/utils/markdownPreprocessor.test.ts src/utils/markdownPreprocessor.m
 
 **Verify**:
 ```bash
-bun test src/components/TicketViewer/useTicketDocumentNavigation.test.tsx
+bun test frontend/src/components/TicketViewer/useTicketDocumentNavigation.test.tsx
 ```
 
 **Done when**:
@@ -188,7 +188,7 @@ bun test src/components/TicketViewer/useTicketDocumentNavigation.test.tsx
 
 ### Task 6: Migrate App.tsx route definitions and navigate() calls
 
-**Structure**: `src/App.tsx`
+**Structure**: `frontend/src/App.tsx`
 
 **Makes GREEN**: `TEST-routes-patterns`, `TEST-existing-tests-pass`
 
@@ -196,9 +196,9 @@ bun test src/components/TicketViewer/useTicketDocumentNavigation.test.tsx
 **Boundary**: Component logic, hooks, state unchanged
 
 **Modifies**:
-- `src/App.tsx`
+- `frontend/src/App.tsx`
 
-**Must Not Touch**: `src/routes.ts`, `linkBuilder.ts`, test files
+**Must Not Touch**: `frontend/src/routes.ts`, `linkBuilder.ts`, test files
 
 **Anti-duplication**: Import pattern constants and builders from `routes.ts`/`linkBuilder.ts`
 
@@ -207,7 +207,7 @@ bun test src/components/TicketViewer/useTicketDocumentNavigation.test.tsx
 
 **Verify**:
 ```bash
-bun test src/__tests__/routes.test.ts
+bun test frontend/src/__tests__/routes.test.ts
 ```
 
 **Done when**:
@@ -227,12 +227,12 @@ bun test src/__tests__/routes.test.ts
 **Boundary**: Component behavior unchanged
 
 **Modifies**:
-- `src/components/DirectTicketAccess.tsx`
-- `src/components/TicketViewer/useTicketDocumentNavigation.ts`
-- `src/components/ProjectSelector/index.tsx`
-- `src/components/RedirectToCurrentProject.tsx`
+- `frontend/src/components/DirectTicketAccess.tsx`
+- `frontend/src/components/TicketViewer/useTicketDocumentNavigation.ts`
+- `frontend/src/components/ProjectSelector/index.tsx`
+- `frontend/src/components/RedirectToCurrentProject.tsx`
 
-**Must Not Touch**: `src/routes.ts`, `linkBuilder.ts`, test files
+**Must Not Touch**: `frontend/src/routes.ts`, `linkBuilder.ts`, test files
 
 **Anti-duplication**: Import `buildTicketLink`, `buildTicketSubDocPath`, `buildProjectPath`, `buildDirectTicketPath`, `buildDirectTicketSubDocPath` from `linkBuilder.ts`
 
@@ -241,8 +241,8 @@ bun test src/__tests__/routes.test.ts
 
 **Verify**:
 ```bash
-bun test src/components/TicketViewer/useTicketDocumentNavigation.test.tsx
-bun test src/__tests__/no-hardcoded-routes.test.ts
+bun test frontend/src/components/TicketViewer/useTicketDocumentNavigation.test.tsx
+bun test frontend/src/__tests__/no-hardcoded-routes.test.ts
 ```
 
 **Done when**:
@@ -264,16 +264,16 @@ bun test src/__tests__/no-hardcoded-routes.test.ts
 
 **Verify**:
 ```bash
-bun test src/__tests__/routes.test.ts
-bun test src/__tests__/no-hardcoded-routes.test.ts
-bun test src/utils/linkBuilder.mdt150.test.ts
-bun test src/utils/linkProcessor.mdt150.test.ts
-bun test src/utils/markdownPreprocessor.test.ts
-bun test src/utils/markdownPreprocessor.mdt150.test.ts
-bun test src/utils/markdownPreprocessor.mdt155.test.ts
-bun test src/utils/linkNormalization.mdt150.test.ts
-bun test src/components/TicketViewer/useTicketDocumentNavigation.test.tsx
-bun test src/components/TicketViewer/subdocumentPath.test.ts
+bun test frontend/src/__tests__/routes.test.ts
+bun test frontend/src/__tests__/no-hardcoded-routes.test.ts
+bun test frontend/src/utils/linkBuilder.mdt150.test.ts
+bun test frontend/src/utils/linkProcessor.mdt150.test.ts
+bun test frontend/src/utils/markdownPreprocessor.test.ts
+bun test frontend/src/utils/markdownPreprocessor.mdt150.test.ts
+bun test frontend/src/utils/markdownPreprocessor.mdt155.test.ts
+bun test frontend/src/utils/linkNormalization.mdt150.test.ts
+bun test frontend/src/components/TicketViewer/useTicketDocumentNavigation.test.tsx
+bun test frontend/src/components/TicketViewer/subdocumentPath.test.ts
 ```
 
 **Done when**:

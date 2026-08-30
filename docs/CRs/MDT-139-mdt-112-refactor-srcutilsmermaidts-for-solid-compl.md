@@ -6,11 +6,11 @@ type: Technical Debt
 priority: Medium
 ---
 
-# MDT-112: Refactor src/utils/mermaid.ts for SOLID compliance
+# MDT-112: Refactor frontend/src/utils/mermaid.ts for SOLID compliance
 
 ## 1. Description
 
-`src/utils/mermaid.ts` is a **582-line utility module** that violates Single Responsibility Principle by mixing multiple concerns:
+`frontend/src/utils/mermaid.ts` is a **582-line utility module** that violates Single Responsibility Principle by mixing multiple concerns:
 - Mermaid library initialization
 - HTML processing
 - Rendering orchestration
@@ -51,7 +51,7 @@ Extract magic numbers into named constants:
 
 ## 5. Acceptance Criteria
 
-- [ ] Constants extracted to `src/utils/mermaid/constants.ts`
+- [ ] Constants extracted to `frontend/src/utils/mermaid/constants.ts`
 - [ ] Magic numbers replaced with named constants in `mermaid.ts`
 - [ ] All existing E2E tests pass
 - [ ] No behavioral changes to mermaid rendering

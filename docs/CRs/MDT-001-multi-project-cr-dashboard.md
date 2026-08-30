@@ -213,16 +213,16 @@ POST   /api/projects/register         # Register new project
 - **File System Integration**: Direct markdown file manipulation with proper error handling
 - **Project Validation**: Ensures project paths and configurations are valid before operations
 
-#### Frontend Implementation (`src/`)
+#### Frontend Implementation (`frontend/src/`)
 
-##### MultiProjectDashboard Component (`src/components/MultiProjectDashboard.tsx`)
+##### MultiProjectDashboard Component (`frontend/src/components/MultiProjectDashboard.tsx`)
 - **Project Selector**: Grid-based project selection with metadata display
 - **CR Management**: Full CRUD interface with table views and detail views
 - **Form Handling**: Comprehensive CR creation forms with validation
 - **State Management**: React hooks-based local state with error handling
 - **Responsive Design**: Tailwind CSS with mobile-friendly layouts
 
-##### Navigation Integration (`src/App.tsx`)
+##### Navigation Integration (`frontend/src/App.tsx`)
 - **Mode Switching**: Toggle between single-project and multi-project views
 - **Navigation Bar**: Consistent header across both modes
 - **State Isolation**: Multi-project mode bypasses single-project loading states
@@ -401,10 +401,10 @@ The multi-project CR management dashboard successfully achieves all primary obje
 - **`server/package.json`** (Modified) - Added `toml@^4.0.0` dependency for configuration file parsing
 
 #### Frontend Files
-- **`src/components/MultiProjectDashboard.tsx`** (New) - Complete multi-project dashboard with project selection, CR list/detail views, creation forms, and responsive design
-- **`src/App.tsx`** (Modified) - Added navigation between single-project and multi-project modes with consistent header design
-- **`src/hooks/useMultiProjectData.ts`** (New) - Multi-project data management hook with project-specific code generation support
-- **`src/components/Board.tsx`** (Modified) - Enhanced with project dropdown and integration with useMultiProjectData hook
+- **`frontend/src/components/MultiProjectDashboard.tsx`** (New) - Complete multi-project dashboard with project selection, CR list/detail views, creation forms, and responsive design
+- **`frontend/src/App.tsx`** (Modified) - Added navigation between single-project and multi-project modes with consistent header design
+- **`frontend/src/hooks/useMultiProjectData.ts`** (New) - Multi-project data management hook with project-specific code generation support
+- **`frontend/src/components/Board.tsx`** (Modified) - Enhanced with project dropdown and integration with useMultiProjectData hook
 
 #### Configuration Files
 - **`~/.config/markdown-ticket/config.toml`** (New) - Global configuration for dashboard settings and auto-discovery
@@ -465,7 +465,7 @@ const crFiles = fs.readdirSync(fullCRPath)
 **Before**: Only matched `CR-001-`, `MDT-002-` (standard 3-digit format)
 **After**: Matches both `CR-001-` and `CR-A001-`, `CR-B001-` (letter+3-digit format)
 
-##### Frontend Enhancement (`src/hooks/useMultiProjectData.ts`)
+##### Frontend Enhancement (`frontend/src/hooks/useMultiProjectData.ts`)
 
 ```typescript
 // New hook with project-specific code generation

@@ -69,7 +69,7 @@ that maps color names to Tailwind gradient classes.
 
 ## Fix Criteria
 
-- [ ] `src/utils/colorUtils.ts` exists and exports `getColumnGradient()`
+- [ ] `frontend/src/utils/colorUtils.ts` exists and exports `getColumnGradient()`
 - [ ] Board loading state shows skeleton grid instead of spinner
 - [ ] All badge types render with `bg-gradient-to-r` classes
 - [ ] Dragged tickets have visual transform effects

@@ -50,7 +50,7 @@ full
 - Frontmatter detection must match mdopen behavior for leading standalone `---` markers.
 - Frontmatter must be escaped as text and must not render embedded HTML.
 - The UI must use native disclosure semantics where practical.
-- Styling must follow `src/STYLING.md` and use theme tokens for reusable semantic colors.
+- Styling must follow `frontend/src/STYLING.md` and use theme tokens for reusable semantic colors.
 - The implementation must not add a YAML parsing dependency for display-only metadata.
 
 ### Non-Goals

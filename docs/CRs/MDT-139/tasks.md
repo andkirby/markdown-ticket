@@ -5,7 +5,7 @@
 # Phase 1 - Extract Value Objects & Constants
 
 **Mode**: prep (refactoring)
-**Scope**: `src/utils/mermaid.ts` → `src/utils/mermaid/constants.ts`
+**Scope**: `frontend/src/utils/mermaid.ts` → `frontend/src/utils/mermaid/constants.ts`
 
 ## Execution Order
 
@@ -44,15 +44,15 @@ TASK-1 ──> TASK-2 ──> TASK-3 ──> TASK-4 ──> TASK-5
 ### Task 1: Create constants.ts with extracted values
 
 **Structure**:
-- Create `src/utils/mermaid/` directory
-- Create `src/utils/mermaid/constants.ts` with:
+- Create `frontend/src/utils/mermaid/` directory
+- Create `frontend/src/utils/mermaid/constants.ts` with:
   - `ZOOM_LIMITS` - min/max zoom values
   - `SCALE_FACTORS` - wheel, pinch, fullscreen scaling
   - `THEME_CONFIG` - font family, size, background
   - `ADAPTIVE_SCALE` - bounds and defaults
 
 **Scope**:
-- Creates: `src/utils/mermaid/constants.ts`
+- Creates: `frontend/src/utils/mermaid/constants.ts`
 - Must Not Touch: Any other files
 
 **Verify**:
@@ -63,7 +63,7 @@ bun run lint
 ```
 
 **Done when**:
-- [ ] `src/utils/mermaid/constants.ts` exists with all exported constants
+- [ ] `frontend/src/utils/mermaid/constants.ts` exists with all exported constants
 - [ ] TypeScript compiles without errors
 - [ ] ESLint passes
 
@@ -76,7 +76,7 @@ bun run lint
 - Replace hardcoded font family, font size, background with `THEME_CONFIG` properties
 
 **Scope**:
-- Modifies: `src/utils/mermaid.ts` (lines 41-44)
+- Modifies: `frontend/src/utils/mermaid.ts` (lines 41-44)
 - Must Not Touch: Other functions, other files
 
 **Verify**:
@@ -101,7 +101,7 @@ bun run lint
 - Replace hardcoded scale steps (0.1, 0.15) with `SCALE_FACTORS` properties
 
 **Scope**:
-- Modifies: `src/utils/mermaid.ts` (`enableZoom` function, lines 274-465)
+- Modifies: `frontend/src/utils/mermaid.ts` (`enableZoom` function, lines 274-465)
 - Must Not Touch: Other functions, other files
 
 **Verify**:
@@ -126,7 +126,7 @@ bun run lint
 - Replace hardcoded adaptive scale values (0.5, 8, 2.3, 3.0, 0.9) with `ADAPTIVE_SCALE` properties
 
 **Scope**:
-- Modifies: `src/utils/mermaid.ts` (`updateFullscreenButtons` function, lines 165-272)
+- Modifies: `frontend/src/utils/mermaid.ts` (`updateFullscreenButtons` function, lines 165-272)
 - Must Not Touch: Other functions, other files
 
 **Verify**:
@@ -148,11 +148,11 @@ bun run test:e2e -- --grep "mermaid"
 ### Task 5: Create barrel export and verify E2E
 
 **Structure**:
-- Create `src/utils/mermaid/index.ts` that re-exports from `constants.ts`
+- Create `frontend/src/utils/mermaid/index.ts` that re-exports from `constants.ts`
 - Run full E2E test suite to verify no behavioral changes
 
 **Scope**:
-- Creates: `src/utils/mermaid/index.ts`
+- Creates: `frontend/src/utils/mermaid/index.ts`
 - Must Not Touch: Any other files
 
 **Verify**:
@@ -164,6 +164,6 @@ bun run test:e2e
 ```
 
 **Done when**:
-- [ ] `src/utils/mermaid/index.ts` exists with barrel exports
+- [ ] `frontend/src/utils/mermaid/index.ts` exists with barrel exports
 - [ ] All E2E tests pass
 - [ ] No behavioral changes to mermaid rendering

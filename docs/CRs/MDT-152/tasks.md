@@ -4,8 +4,8 @@
 
 ## Scope Boundaries
 
-- **Frontend QuickSearch**: Extend existing `src/components/QuickSearch/*` components with cross-project modes, mode indicators, loading/error/empty states, and multi-section keyboard navigation. Must preserve existing MDT-136 current-project search behavior.
-- **Frontend ProjectBrowserPanel**: Add client-side search filtering, autofocus, Escape close, current-project exclusion, and empty state to `src/components/ProjectSelector/ProjectBrowserPanel.tsx`.
+- **Frontend QuickSearch**: Extend existing `frontend/src/components/QuickSearch/*` components with cross-project modes, mode indicators, loading/error/empty states, and multi-section keyboard navigation. Must preserve existing MDT-136 current-project search behavior.
+- **Frontend ProjectBrowserPanel**: Add client-side search filtering, autofocus, Escape close, current-project exclusion, and empty state to `frontend/src/components/ProjectSelector/ProjectBrowserPanel.tsx`.
 - **Backend**: Add `POST /api/projects/search` endpoint to existing route/controller/service stack. Must not preload all project tickets.
 - **Shared Contracts**: Define typed search request/response schemas in `domain-contracts/src/ticket/search.ts`.
 - **No full-text search**: Only ticket-key lookup and single-project scoped search. Future full-text requires a new mode and ADR.
@@ -14,13 +14,13 @@
 
 | Critical Behavior | Owner Module | Merge/Refactor Task if Overlap |
 |---|---|---|
-| Query classification (mode detection) | `src/hooks/useQuickSearch.ts` | N/A — single owner |
-| Async search state (debounce, cache, dedupe) | `src/hooks/useCrossProjectSearch.ts` | N/A — single owner |
-| HTTP transport + request dedupe | `src/services/dataLayer.ts` | N/A — single owner |
+| Query classification (mode detection) | `frontend/src/hooks/useQuickSearch.ts` | N/A — single owner |
+| Async search state (debounce, cache, dedupe) | `frontend/src/hooks/useCrossProjectSearch.ts` | N/A — single owner |
+| HTTP transport + request dedupe | `frontend/src/services/dataLayer.ts` | N/A — single owner |
 | Search request/response schemas | `domain-contracts/src/ticket/search.ts` | N/A — single owner |
 | Cross-project search orchestration | `server/services/TicketService.ts` | N/A — single owner |
 | HTTP validation + response shaping | `server/controllers/ProjectController.ts` | N/A — single owner |
-| Project list filtering | `src/components/ProjectSelector/ProjectBrowserPanel.tsx` | N/A — single owner |
+| Project list filtering | `frontend/src/components/ProjectSelector/ProjectBrowserPanel.tsx` | N/A — single owner |
 
 ## Constraint Coverage
 
@@ -56,10 +56,10 @@
 | server/controllers/ | 1 | 1 | 0 | ✅ |
 | server/services/ | 1 | 1 | 0 | ✅ |
 | shared/services/ | 1 | 1 | 0 | ✅ |
-| src/services/ | 1 | 1 | 0 | ✅ |
-| src/hooks/ | 2 | 2 | 0 | ✅ |
-| src/components/QuickSearch/ | 3 | 3 | 0 | ✅ |
-| src/components/ProjectSelector/ | 1 | 1 | 0 | ✅ |
+| frontend/src/services/ | 1 | 1 | 0 | ✅ |
+| frontend/src/hooks/ | 2 | 2 | 0 | ✅ |
+| frontend/src/components/QuickSearch/ | 3 | 3 | 0 | ✅ |
+| frontend/src/components/ProjectSelector/ | 1 | 1 | 0 | ✅ |
 
 All doc artifacts (specs, mockups) exist on disk — no task creation needed.
 
@@ -67,7 +67,7 @@ All doc artifacts (specs, mockups) exist on disk — no task creation needed.
 
 ### Task 0: Create Missing Infrastructure Stubs + Verify Builds (M0)
 
-**Structure**: `domain-contracts/src/ticket/search.ts`, `src/hooks/useCrossProjectSearch.ts`
+**Structure**: `domain-contracts/src/ticket/search.ts`, `frontend/src/hooks/useCrossProjectSearch.ts`
 
 **Makes GREEN (Automated Tests)**: *(none — infrastructure prep)*
 
@@ -77,7 +77,7 @@ All doc artifacts (specs, mockups) exist on disk — no task creation needed.
 
 **Creates**:
 - `domain-contracts/src/ticket/search.ts` (stub exports: SearchMode, SearchRequestSchema, SearchResponseSchema, SearchErrorCode)
-- `src/hooks/useCrossProjectSearch.ts` (stub exports: createSearchDebouncer, createSearchCache, createSearchState, createRequestDeduper)
+- `frontend/src/hooks/useCrossProjectSearch.ts` (stub exports: createSearchDebouncer, createSearchCache, createSearchState, createRequestDeduper)
 
 **Modifies**:
 - (none — purely additive)
@@ -100,12 +100,12 @@ All doc artifacts (specs, mockups) exist on disk — no task creation needed.
 bun run build:shared
 bun run --cwd domain-contracts build
 bun run --cwd domain-contracts jest --passWithNoTests 2>&1 | head -5
-npx jest src/hooks/useCrossProjectSearch.test.ts --no-coverage 2>&1 | head -10
+npx jest frontend/src/hooks/useCrossProjectSearch.test.ts --no-coverage 2>&1 | head -10
 ```
 
 **Done when**:
 - [x] `domain-contracts/src/ticket/search.ts` exists and exports stubs
-- [x] `src/hooks/useCrossProjectSearch.ts` exists and exports stubs
+- [x] `frontend/src/hooks/useCrossProjectSearch.ts` exists and exports stubs
 - [x] `bun run build:shared` exits without error
 - [x] `bun run --cwd domain-contracts build` exits without error
 - [x] RED test files can import the stubs (tests fail, not crash on import)
@@ -114,7 +114,7 @@ npx jest src/hooks/useCrossProjectSearch.test.ts --no-coverage 2>&1 | head -10
 
 ### Task 1: ProjectBrowserPanel Client-Side Search (M1)
 
-**Structure**: `src/components/ProjectSelector/ProjectBrowserPanel.tsx`
+**Structure**: `frontend/src/components/ProjectSelector/ProjectBrowserPanel.tsx`
 
 **Makes GREEN (Automated Tests)**:
 - `TEST-e2e-project-browser-search` → `tests/e2e/selector/project-browser.spec.ts`: all project browser search tests
@@ -134,12 +134,12 @@ npx jest src/hooks/useCrossProjectSearch.test.ts --no-coverage 2>&1 | head -10
 - (none — modifies existing component)
 
 **Modifies**:
-- `src/components/ProjectSelector/ProjectBrowserPanel.tsx`
+- `frontend/src/components/ProjectSelector/ProjectBrowserPanel.tsx`
 
 **Must Not Touch**:
-- `src/hooks/useQuickSearch.ts` (query classification belongs there, not here)
+- `frontend/src/hooks/useQuickSearch.ts` (query classification belongs there, not here)
 - Any backend routes or services
-- `src/services/dataLayer.ts`
+- `frontend/src/services/dataLayer.ts`
 
 **Exclude**: Backend fetch, debounce, loading states — this is purely client-side filtering against preloaded project list
 
@@ -264,10 +264,10 @@ npx jest server/tests/api/projects.search.test.ts --no-coverage
 
 ### Task 4: Query Mode Detection in useQuickSearch (M3)
 
-**Structure**: `src/hooks/useQuickSearch.ts`
+**Structure**: `frontend/src/hooks/useQuickSearch.ts`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-query-mode-detection` → `src/hooks/useQuickSearch.test.ts`: parseQueryMode for ticket_key, @syntax, current_project; parseQueryParts extraction; Edge-5 and Edge-6 exclusivity
+- `TEST-query-mode-detection` → `frontend/src/hooks/useQuickSearch.test.ts`: parseQueryMode for ticket_key, @syntax, current_project; parseQueryParts extraction; Edge-5 and Edge-6 exclusivity
 
 **Scope**: Add `parseQueryMode(query: string)` and `parseQueryParts(query: string)` pure functions to useQuickSearch. parseQueryMode classifies input as 'current_project' (plain text), 'ticket_key' (CODE-NUMBER with 2-5 uppercase letters, 1-5 digits), or 'project_scope' (@CODE followed by space and search text). parseQueryParts extracts structured fields (projectCode, searchText, ticketCode) from the parsed mode.
 
@@ -277,11 +277,11 @@ npx jest server/tests/api/projects.search.test.ts --no-coverage
 - (none — extends existing hook module)
 
 **Modifies**:
-- `src/hooks/useQuickSearch.ts` (add parseQueryMode and parseQueryParts exports)
+- `frontend/src/hooks/useQuickSearch.ts` (add parseQueryMode and parseQueryParts exports)
 
 **Must Not Touch**:
-- `src/hooks/useCrossProjectSearch.ts` (async state management)
-- `src/services/dataLayer.ts` (HTTP transport)
+- `frontend/src/hooks/useCrossProjectSearch.ts` (async state management)
+- `frontend/src/services/dataLayer.ts` (HTTP transport)
 - Any component files
 - Any test files
 
@@ -296,7 +296,7 @@ npx jest server/tests/api/projects.search.test.ts --no-coverage
 **Verify**:
 
 ```bash
-npx jest src/hooks/useQuickSearch.test.ts --no-coverage
+npx jest frontend/src/hooks/useQuickSearch.test.ts --no-coverage
 ```
 
 **Done when**:
@@ -316,10 +316,10 @@ npx jest src/hooks/useQuickSearch.test.ts --no-coverage
 
 ### Task 5: useCrossProjectSearch Hook + DataLayer (M3)
 
-**Structure**: `src/hooks/useCrossProjectSearch.ts`, `src/services/dataLayer.ts`
+**Structure**: `frontend/src/hooks/useCrossProjectSearch.ts`, `frontend/src/services/dataLayer.ts`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-crossproject-hook-async` → `src/hooks/useCrossProjectSearch.test.ts`: debounce timing (C2), cache TTL (C9), loading state (C4), request deduplication, retry (Edge-4)
+- `TEST-crossproject-hook-async` → `frontend/src/hooks/useCrossProjectSearch.test.ts`: debounce timing (C2), cache TTL (C9), loading state (C4), request deduplication, retry (Edge-4)
 
 **Scope**: Implement the useCrossProjectSearch hook with extracted pure utility functions (createSearchDebouncer, createSearchCache, createSearchState, createRequestDeduper) plus the React hook itself. Add `searchProjects` method to dataLayer that POSTs to /api/projects/search with request dedupe via existing dedupe infrastructure.
 
@@ -329,11 +329,11 @@ npx jest src/hooks/useQuickSearch.test.ts --no-coverage
 - (none — replaces Task 0 stub in existing file)
 
 **Modifies**:
-- `src/hooks/useCrossProjectSearch.ts` (replace stubs with full debounce/cache/dedupe/retry implementation)
-- `src/services/dataLayer.ts` (add searchProjects method)
+- `frontend/src/hooks/useCrossProjectSearch.ts` (replace stubs with full debounce/cache/dedupe/retry implementation)
+- `frontend/src/services/dataLayer.ts` (add searchProjects method)
 
 **Must Not Touch**:
-- `src/hooks/useQuickSearch.ts` (query classification — Task 4 owns this)
+- `frontend/src/hooks/useQuickSearch.ts` (query classification — Task 4 owns this)
 - Any component files
 - Any test files
 
@@ -349,7 +349,7 @@ npx jest src/hooks/useQuickSearch.test.ts --no-coverage
 **Verify**:
 
 ```bash
-npx jest src/hooks/useCrossProjectSearch.test.ts --no-coverage
+npx jest frontend/src/hooks/useCrossProjectSearch.test.ts --no-coverage
 ```
 
 **Done when**:
@@ -368,7 +368,7 @@ npx jest src/hooks/useCrossProjectSearch.test.ts --no-coverage
 
 ### Task 6: QuickSearch Ticket Key + Current Project + Mode Indicators (M4)
 
-**Structure**: `src/components/QuickSearch/QuickSearchModal.tsx`, `src/components/QuickSearch/QuickSearchResults.tsx`, `src/components/QuickSearch/QuickSearchInput.tsx`
+**Structure**: `frontend/src/components/QuickSearch/QuickSearchModal.tsx`, `frontend/src/components/QuickSearch/QuickSearchResults.tsx`, `frontend/src/components/QuickSearch/QuickSearchInput.tsx`
 
 **Makes GREEN (Automated Tests)**:
 - `TEST-e2e-quicksearch-crossproject` → `tests/e2e/quick-search/modal.spec.ts`: ticket key lookup, loading/error/empty states, current project mode, mode indicators
@@ -393,16 +393,16 @@ npx jest src/hooks/useCrossProjectSearch.test.ts --no-coverage
 - (none — modifies existing components)
 
 **Modifies**:
-- `src/components/QuickSearch/QuickSearchModal.tsx` (integrate useCrossProjectSearch, parseQueryMode, cross-project state)
-- `src/components/QuickSearch/QuickSearchResults.tsx` (add cross-project results section, loading skeletons, error/retry states, project context labels)
-- `src/components/QuickSearch/QuickSearchInput.tsx` (add mode indicator display)
+- `frontend/src/components/QuickSearch/QuickSearchModal.tsx` (integrate useCrossProjectSearch, parseQueryMode, cross-project state)
+- `frontend/src/components/QuickSearch/QuickSearchResults.tsx` (add cross-project results section, loading skeletons, error/retry states, project context labels)
+- `frontend/src/components/QuickSearch/QuickSearchInput.tsx` (add mode indicator display)
 
 **Must Not Touch**:
-- `src/hooks/useQuickSearch.ts` (Task 4 owns query parsing)
-- `src/hooks/useCrossProjectSearch.ts` (Task 5 owns async state)
-- `src/services/dataLayer.ts` (Task 5 owns HTTP)
+- `frontend/src/hooks/useQuickSearch.ts` (Task 4 owns query parsing)
+- `frontend/src/hooks/useCrossProjectSearch.ts` (Task 5 owns async state)
+- `frontend/src/services/dataLayer.ts` (Task 5 owns HTTP)
 - Backend files
-- `src/components/ProjectSelector/ProjectBrowserPanel.tsx`
+- `frontend/src/components/ProjectSelector/ProjectBrowserPanel.tsx`
 
 **Exclude**: @syntax project-scoped rendering (Task 7), multi-section keyboard navigation (Task 8)
 
@@ -437,7 +437,7 @@ PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/quick-search/modal.spec.
 
 ### Task 7: QuickSearch Project-Scoped Search (M5)
 
-**Structure**: `src/components/QuickSearch/QuickSearchResults.tsx`, `src/components/QuickSearch/QuickSearchModal.tsx`
+**Structure**: `frontend/src/components/QuickSearch/QuickSearchResults.tsx`, `frontend/src/components/QuickSearch/QuickSearchModal.tsx`
 
 **Makes GREEN (Automated Tests)**:
 - `TEST-e2e-quicksearch-crossproject` → `tests/e2e/quick-search/modal.spec.ts`: @syntax tests
@@ -454,14 +454,14 @@ PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/quick-search/modal.spec.
 - (none — modifies existing components)
 
 **Modifies**:
-- `src/components/QuickSearch/QuickSearchResults.tsx` (add project-scoped results rendering, invalid-project-code state)
-- `src/components/QuickSearch/QuickSearchModal.tsx` (wire project_scope mode through to hook and results)
+- `frontend/src/components/QuickSearch/QuickSearchResults.tsx` (add project-scoped results rendering, invalid-project-code state)
+- `frontend/src/components/QuickSearch/QuickSearchModal.tsx` (wire project_scope mode through to hook and results)
 
 **Must Not Touch**:
-- `src/hooks/useQuickSearch.ts` (parser already done)
-- `src/hooks/useCrossProjectSearch.ts` (hook already done)
+- `frontend/src/hooks/useQuickSearch.ts` (parser already done)
+- `frontend/src/hooks/useCrossProjectSearch.ts` (hook already done)
 - Backend files
-- `src/components/QuickSearch/QuickSearchInput.tsx` (mode indicator already done)
+- `frontend/src/components/QuickSearch/QuickSearchInput.tsx` (mode indicator already done)
 
 **Exclude**: Keyboard navigation changes (Task 8), new search modes
 
@@ -489,7 +489,7 @@ PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/quick-search/modal.spec.
 
 ### Task 8: Keyboard Navigation Across Sections (M5)
 
-**Structure**: `src/components/QuickSearch/QuickSearchModal.tsx`, `src/components/QuickSearch/QuickSearchResults.tsx`
+**Structure**: `frontend/src/components/QuickSearch/QuickSearchModal.tsx`, `frontend/src/components/QuickSearch/QuickSearchResults.tsx`
 
 **Makes GREEN (Automated Tests)**:
 - `TEST-e2e-quicksearch-crossproject` → `tests/e2e/quick-search/modal.spec.ts`: keyboard navigation tests
@@ -506,12 +506,12 @@ PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/quick-search/modal.spec.
 - (none — modifies existing components)
 
 **Modifies**:
-- `src/components/QuickSearch/QuickSearchModal.tsx` (extend handleKeyDown for multi-section navigation)
-- `src/components/QuickSearch/QuickSearchResults.tsx` (support section-aware selected index, aria attributes for sections)
+- `frontend/src/components/QuickSearch/QuickSearchModal.tsx` (extend handleKeyDown for multi-section navigation)
+- `frontend/src/components/QuickSearch/QuickSearchResults.tsx` (support section-aware selected index, aria attributes for sections)
 
 **Must Not Touch**:
-- `src/hooks/useQuickSearch.ts` (selectedIndex model may need extending, but core filter logic is Task 4's)
-- `src/hooks/useCrossProjectSearch.ts`
+- `frontend/src/hooks/useQuickSearch.ts` (selectedIndex model may need extending, but core filter logic is Task 4's)
+- `frontend/src/hooks/useCrossProjectSearch.ts`
 - Backend files
 
 **Exclude**: New search modes, new visual elements

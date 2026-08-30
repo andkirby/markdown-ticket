@@ -19,7 +19,7 @@ implementationNotes: Implemented CRUD endpoints in ProjectController with compre
 ### Affected Artifacts
 - `server/controllers/ProjectController.ts` - Missing implementations for getCR, createCR, updateCR, deleteCR
 - `server/services/TicketService.ts` - Has required methods but not used by ProjectController
-- `src/services/dataLayer.ts` - Attempts to call `/api/projects/:projectId/crs/:ticketCode`
+- `frontend/src/services/dataLayer.ts` - Attempts to call `/api/projects/:projectId/crs/:ticketCode`
 
 ### Scope
 - **Changes**: Implement missing CRUD methods in ProjectController using existing TicketService
@@ -53,17 +53,17 @@ Implement missing ProjectController CRUD methods by delegating to existing Ticke
 | `server/controllers/ProjectController.ts` | Method updated | createCR() now calls ticketService.createCR() |
 | `server/controllers/ProjectController.ts` | Method updated | updateCR() now calls ticketService.updateCRPartial() |
 | `server/controllers/ProjectController.ts` | Method updated | deleteCR() now calls ticketService.deleteCR() |
-| `src/components/Board.tsx` | Error handling added | handleDrop() now has try/catch with toast notifications |
-| `src/components/ProjectView.tsx` | Error parsing added | handleTicketUpdate() parses JSON error responses |
-| `src/components/ui/sonner` | New component | Toast notification component from shadcn |
-| `src/App.tsx` | Component added | Added <Toaster /> for global toast rendering |
+| `frontend/src/components/Board.tsx` | Error handling added | handleDrop() now has try/catch with toast notifications |
+| `frontend/src/components/ProjectView.tsx` | Error parsing added | handleTicketUpdate() parses JSON error responses |
+| `frontend/src/components/ui/sonner` | New component | Toast notification component from shadcn |
+| `frontend/src/App.tsx` | Component added | Added <Toaster /> for global toast rendering |
 
 ### New Artifacts
 
 | Artifact | Purpose | Interface |
 |----------|---------|-----------|
-| `src/hooks/useToast.ts` | Centralized toast notification management | success(), error(), warning(), info(), dismiss() |
-| `src/hooks/useToast.ts` | Toast options interface | ToastOptions with description, duration, position |
+| `frontend/src/hooks/useToast.ts` | Centralized toast notification management | success(), error(), warning(), info(), dismiss() |
+| `frontend/src/hooks/useToast.ts` | Toast options interface | ToastOptions with description, duration, position |
 ### Integration Points
 | From | To | Interface |
 |------|----|-----------|
@@ -126,9 +126,9 @@ Implement missing ProjectController CRUD methods by delegating to existing Ticke
 ### Post-Implementation Session 2025-12-07
 
 #### Edge Case Artifacts Discovered
-- **Drag-and-Drop Error Handling**: Added comprehensive error handling in `src/components/Board.tsx` handleDrop() method with try/catch block and toast notifications
+- **Drag-and-Drop Error Handling**: Added comprehensive error handling in `frontend/src/components/Board.tsx` handleDrop() method with try/catch block and toast notifications
 - **Backend Error Response Structure**: Backend returns standardized `{ error: string, details: string }` JSON for validation errors (400 Bad Request)
-- **Toast Notification System**: New UI feedback artifact added - shadcn sonner with custom `useToast` hook in `src/hooks/useToast.ts`
+- **Toast Notification System**: New UI feedback artifact added - shadcn sonner with custom `useToast` hook in `frontend/src/hooks/useToast.ts`
 
 #### Specification Corrections
 - **Status Transition Validation**: Backend enforces stricter validation than frontend (Approved→On Hold rejected, only In Progress/Rejected allowed)

@@ -35,11 +35,11 @@ implementationNotes: Status changed to Implemented on 9/11/2025
 5. **Project Code Management**: Both auto-generate codes, but UI correctly makes code read-only in edit forms
 
 ### Affected Artifacts
-- `src/components/AddProjectModal.tsx` - Project creation form (needs strategy options)
-- `src/components/EditProjectModal.tsx` - Project editing form (needs to be created)
+- `frontend/src/components/AddProjectModal.tsx` - Project creation form (needs strategy options)
+- `frontend/src/components/EditProjectModal.tsx` - Project editing form (needs to be created)
 - `server/services/ProjectService.ts` - Backend project management (needs strategy support)
 - `shared/services/ProjectService.ts` - Shared project logic (reference implementation)
-- `src/components/ProjectManager.tsx` - Project list management (needs strategy indicators)
+- `frontend/src/components/ProjectManager.tsx` - Project list management (needs strategy indicators)
 
 ### Scope
 **Changes**:
@@ -194,7 +194,7 @@ POST /api/filesystem/exists - Validate directory existence
 - `shared/services/ProjectService.ts` - Shared project management logic with three-strategy support
 - `shared/tools/project-cli.ts` - CLI implementation reference for strategy patterns
 - `server/services/ProjectService.ts` - Backend project management requiring alignment with shared service
-- `src/components/AddProjectModal.tsx` - Current project creation form requiring enhancement
+- `frontend/src/components/AddProjectModal.tsx` - Current project creation form requiring enhancement
 
 ### Architectural References
 - Three-Strategy Architecture: MDT-077 Section 3

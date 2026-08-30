@@ -57,8 +57,8 @@ Board.tsx:117 Ticket CR-A002: status=Approved, column=Open
 The "issue" is not actually a bug but intentional behavior. The Done column requires users to select from multiple possible statuses ('Implemented' or 'Partially Implemented') via a resolution dialog. This is working as designed to handle the complexity of having multiple terminal statuses. The UI doesn't immediately update because it's waiting for user input in the resolution dialog.
 
 **Files involved:**
-- `src/services/markdownParser.ts:formatTicketAsMarkdown()` - Main issue location
-- `src/hooks/useMultiProjectData.ts:updateTicket()` - Calls formatting function
+- `frontend/src/services/markdownParser.ts:formatTicketAsMarkdown()` - Main issue location
+- `frontend/src/hooks/useMultiProjectData.ts:updateTicket()` - Calls formatting function
 - Multi-project CR files use both YAML frontmatter + markdown body format
 
 ### Impact Assessment

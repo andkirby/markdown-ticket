@@ -19,7 +19,7 @@ priority: Medium
 ### Affected Artifacts
 - `shared/services/project/ProjectRegistry.ts` (file system operations using require)
 - `shared/tools/ProjectValidator.ts` (path module and require usage)
-- `src/utils/linkNormalization.ts` (Node.js path methods in frontend)
+- `frontend/src/utils/linkNormalization.ts` (Node.js path methods in frontend)
 
 ### Scope
 - **Changes**: Replace CommonJS patterns with ES module compatible code
@@ -58,7 +58,7 @@ Replace CommonJS require() statements with ES module imports and create cross-pl
 |----------|-------------|--------------|
 | `shared/services/project/ProjectRegistry.ts` | Import update | Replaced require() with listFiles/readFile imports |
 | `shared/tools/ProjectValidator.ts` | Import update | Added ES module path import, removed require() |
-| `src/utils/linkNormalization.ts` | Import update | Switched to cross-platform path utility |
+| `frontend/src/utils/linkNormalization.ts` | Import update | Switched to cross-platform path utility |
 
 ### Integration Points
 

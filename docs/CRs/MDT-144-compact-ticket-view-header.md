@@ -32,11 +32,11 @@ The ticket viewer modal header takes excessive vertical space (~180px for header
 Users primarily want to read ticket content, not metadata. The previous attempt over-compressed one block while leaving the rest of the stack spacious, which made the layout feel uneven. A compact row system with consistent spacing improves scanability without making any single row feel cramped.
 
 ### Impact Areas
-- `src/components/TicketViewer/index.tsx` - Main viewer component
-- `src/components/TicketViewer/CompactTicketHeader.tsx` - Compact row stack for title and badges
-- `src/components/TicketViewer/TicketDocumentTabs.tsx` - Sticky tab row density and hover treatment
-- `src/components/shared/RelativeTimestamp.tsx` - Reusable relative timestamp interaction
-- `src/components/ui/Modal.tsx` - Modal body padding override behavior
+- `frontend/src/components/TicketViewer/index.tsx` - Main viewer component
+- `frontend/src/components/TicketViewer/CompactTicketHeader.tsx` - Compact row stack for title and badges
+- `frontend/src/components/TicketViewer/TicketDocumentTabs.tsx` - Sticky tab row density and hover treatment
+- `frontend/src/components/shared/RelativeTimestamp.tsx` - Reusable relative timestamp interaction
+- `frontend/src/components/ui/Modal.tsx` - Modal body padding override behavior
 
 ## 2. Solution Analysis
 
@@ -133,8 +133,8 @@ None - all changes are presentational.
 
 ## 6. References
 
-- `src/components/TicketViewer/index.tsx` - Current implementation
-- `src/components/ui/Modal.tsx` - ModalHeader component
-- `src/components/TicketViewer/CompactTicketHeader.tsx` - Header stack
-- `src/components/TicketViewer/TicketDocumentTabs.tsx` - Sticky tabs
-- `src/components/shared/RelativeTimestamp.tsx` - Reusable timestamp interaction
+- `frontend/src/components/TicketViewer/index.tsx` - Current implementation
+- `frontend/src/components/ui/Modal.tsx` - ModalHeader component
+- `frontend/src/components/TicketViewer/CompactTicketHeader.tsx` - Header stack
+- `frontend/src/components/TicketViewer/TicketDocumentTabs.tsx` - Sticky tabs
+- `frontend/src/components/shared/RelativeTimestamp.tsx` - Reusable timestamp interaction

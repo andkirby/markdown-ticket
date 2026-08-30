@@ -37,9 +37,9 @@ Web UI is broken and unusable after attribute simplification changes
 MDT-029 removed attributes from schemas but frontend code still references them
 
 ### Files Affected
-- `src/services/fileService.ts` - Reads/writes removed attributes
-- `src/services/markdownParser.ts` - Parses removed attributes
-- `src/types/index.ts` - Exports removed enum types
+- `frontend/src/services/fileService.ts` - Reads/writes removed attributes
+- `frontend/src/services/markdownParser.ts` - Parses removed attributes
+- `frontend/src/types/index.ts` - Exports removed enum types
 - Various components expecting removed fields
 
 ## 3. Implementation Specification

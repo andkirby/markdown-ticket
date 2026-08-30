@@ -26,7 +26,7 @@ relatedTickets: MDT-157
 - `server/` — CORS enforcement, filesystem route restrictions, security headers, error handling
 - `mcp-server/` — HTTP transport origin validation and rate limiting defaults
 - `shared/` — input validation utilities
-- `src/` — DOMPurify upgrade (dependency)
+- `frontend/src/` — DOMPurify upgrade (dependency)
 - Docker configs — security defaults in docker-compose
 
 ### Scope

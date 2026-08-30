@@ -27,7 +27,7 @@ When the backend is locked, the UI should clearly show an authentication-require
 5. Subsequent API calls authenticate through the session cookie.
 
 ### Affected Areas
-- `src/` — locked/unauthenticated UI state, API fetch handling, admin-action visibility
+- `frontend/src/` — locked/unauthenticated UI state, API fetch handling, admin-action visibility
 - `server/` — session exchange endpoint and session-cookie validation
 - `tests/` — API/session tests and frontend/E2E locked-state tests
 - `docs/` — auth/session operator documentation

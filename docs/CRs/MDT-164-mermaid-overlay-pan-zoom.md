@@ -19,7 +19,7 @@ brief
 - A prior pan/zoom wrapper approach changed inline Mermaid layout and caused diagrams to no longer fit document width.
 
 ### Affected Areas
-- `src/` Mermaid markdown rendering and viewer behavior.
+- `frontend/src/` Mermaid markdown rendering and viewer behavior.
 - `tests/` Mermaid fullscreen and zoom coverage.
 - `research/` profiling notes for the native fullscreen delay.
 

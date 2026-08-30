@@ -37,7 +37,7 @@ This leads to:
 5. Seven+ duplicate color-mapping functions that must be kept in sync
 
 ### Affected Areas
-- `src/components/` - Badge implementations across views
+- `frontend/src/components/` - Badge implementations across views
 - `tests/e2e/` - Tests verifying badge rendering
 
 ### Scope

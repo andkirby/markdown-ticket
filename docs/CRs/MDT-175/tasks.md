@@ -6,17 +6,17 @@
 
 **Skills**: frontend-react-component
 
-**Structure**: `src/hooks/usePageTitle.ts`
+**Structure**: `frontend/src/hooks/usePageTitle.ts`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-page-title-formatting` -> `src/hooks/usePageTitle.test.ts`: root view, ticket, ticket subcontext, document, empty-source, and cleanup behavior
+- `TEST-page-title-formatting` -> `frontend/src/hooks/usePageTitle.test.ts`: root view, ticket, ticket subcontext, document, empty-source, and cleanup behavior
 
 **Scope**: Create the single frontend title formatting and write owner.
 **Boundary**: No route, ticket, or document behavior changes in this task.
 
 **Creates**:
-- `src/hooks/usePageTitle.ts`
-- `src/hooks/usePageTitle.test.ts`
+- `frontend/src/hooks/usePageTitle.ts`
+- `frontend/src/hooks/usePageTitle.test.ts`
 
 **Modifies**:
 - `index.html`
@@ -46,7 +46,7 @@
 **Verify**:
 
 ```bash
-bun test src/hooks/usePageTitle.test.ts
+bun test frontend/src/hooks/usePageTitle.test.ts
 ```
 
 **Done when**:
@@ -66,10 +66,10 @@ bun test src/hooks/usePageTitle.test.ts
 
 **Milestone**: M1 - Project view title context (`BR-1.1`, `BR-1.5`, `BR-1.6`)
 
-**Structure**: `src/App.tsx`
+**Structure**: `frontend/src/App.tsx`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-project-view-title-context` -> `src/App.pageTitle.test.tsx`: board/listing/documents root, modal, and project switch title behavior
+- `TEST-project-view-title-context` -> `frontend/src/App.pageTitle.test.tsx`: board/listing/documents root, modal, and project switch title behavior
 
 **Makes GREEN (Behavior)**:
 - `project_view_title_reflects_context` -> `tests/e2e/navigation/page-title.spec.ts` (`BR-1.1`)
@@ -80,11 +80,11 @@ bun test src/hooks/usePageTitle.test.ts
 **Boundary**: Do not change route matching, project selection, or view-mode persistence.
 
 **Creates**:
-- `src/App.pageTitle.test.tsx`
+- `frontend/src/App.pageTitle.test.tsx`
 
 **Modifies**:
-- `src/App.tsx`
-- `src/components/ProjectView.tsx`
+- `frontend/src/App.tsx`
+- `frontend/src/components/ProjectView.tsx`
 
 **Must Not Touch**:
 - `server/`
@@ -101,7 +101,7 @@ bun test src/hooks/usePageTitle.test.ts
 
 **Exclude**: no URL redesign, no project selector redesign.
 
-**Anti-duplication**: Use `usePageTitle` from `src/hooks/usePageTitle.ts`; do not inline formatter logic in `App.tsx`.
+**Anti-duplication**: Use `usePageTitle` from `frontend/src/hooks/usePageTitle.ts`; do not inline formatter logic in `App.tsx`.
 
 **Duplication Guard**:
 - Check `ProjectRouteHandler` for existing route-derived labels before adding new labels.
@@ -111,7 +111,7 @@ bun test src/hooks/usePageTitle.test.ts
 **Verify**:
 
 ```bash
-bun test src/App.pageTitle.test.tsx
+bun test frontend/src/App.pageTitle.test.tsx
 ```
 
 **Done when**:
@@ -127,10 +127,10 @@ bun test src/App.pageTitle.test.tsx
 
 **Milestone**: M2 - Ticket title context (`BR-1.2`, `BR-1.4`)
 
-**Structure**: `src/components/TicketViewer/index.tsx`
+**Structure**: `frontend/src/components/TicketViewer/index.tsx`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-ticket-title-context` -> `src/components/TicketViewer/TicketViewer.test.tsx`: main ticket, subdocument/subtab, close, missing, unavailable, and rapid ticket title behavior
+- `TEST-ticket-title-context` -> `frontend/src/components/TicketViewer/TicketViewer.test.tsx`: main ticket, subdocument/subtab, close, missing, unavailable, and rapid ticket title behavior
 
 **Makes GREEN (Behavior)**:
 - `ticket_title_reflects_active_ticket` -> `tests/e2e/navigation/page-title.spec.ts` (`BR-1.2`)
@@ -144,8 +144,8 @@ bun test src/App.pageTitle.test.tsx
 - none
 
 **Modifies**:
-- `src/components/TicketViewer/index.tsx`
-- `src/components/TicketViewer/TicketViewer.test.tsx`
+- `frontend/src/components/TicketViewer/index.tsx`
+- `frontend/src/components/TicketViewer/TicketViewer.test.tsx`
 
 **Must Not Touch**:
 - `server/services/TicketService.ts`
@@ -171,7 +171,7 @@ bun test src/App.pageTitle.test.tsx
 **Verify**:
 
 ```bash
-bun test src/components/TicketViewer/TicketViewer.test.tsx
+bun test frontend/src/components/TicketViewer/TicketViewer.test.tsx
 ```
 
 **Done when**:
@@ -187,10 +187,10 @@ bun test src/components/TicketViewer/TicketViewer.test.tsx
 
 **Milestone**: M3 - Document title context (`BR-1.3`, `BR-1.4`)
 
-**Structure**: `src/components/DocumentsView/DocumentsLayout.tsx`
+**Structure**: `frontend/src/components/DocumentsView/DocumentsLayout.tsx`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-document-title-context` -> `src/components/DocumentsView/DocumentsLayout.test.tsx`: selected, unselected, missing, deleted, and rapid document title behavior
+- `TEST-document-title-context` -> `frontend/src/components/DocumentsView/DocumentsLayout.test.tsx`: selected, unselected, missing, deleted, and rapid document title behavior
 
 **Makes GREEN (Behavior)**:
 - `document_title_reflects_active_document` -> `tests/e2e/navigation/page-title.spec.ts` (`BR-1.3`)
@@ -200,10 +200,10 @@ bun test src/components/TicketViewer/TicketViewer.test.tsx
 **Boundary**: Do not change document URL behavior, recent documents, favs, filename tabs, or file tree selection.
 
 **Creates**:
-- `src/components/DocumentsView/DocumentsLayout.test.tsx`
+- `frontend/src/components/DocumentsView/DocumentsLayout.test.tsx`
 
 **Modifies**:
-- `src/components/DocumentsView/DocumentsLayout.tsx`
+- `frontend/src/components/DocumentsView/DocumentsLayout.tsx`
 
 **Must Not Touch**:
 - `server/services/DocumentService.ts`
@@ -228,7 +228,7 @@ bun test src/components/TicketViewer/TicketViewer.test.tsx
 **Verify**:
 
 ```bash
-bun test src/components/DocumentsView/DocumentsLayout.test.tsx
+bun test frontend/src/components/DocumentsView/DocumentsLayout.test.tsx
 ```
 
 **Done when**:
@@ -305,10 +305,10 @@ bunx playwright test tests/e2e/navigation/page-title.spec.ts --project=chromium
 **Structure**: test and trace artifacts
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-page-title-formatting` -> `src/hooks/usePageTitle.test.ts`
-- `TEST-project-view-title-context` -> `src/App.pageTitle.test.tsx`
-- `TEST-ticket-title-context` -> `src/components/TicketViewer/TicketViewer.test.tsx`
-- `TEST-document-title-context` -> `src/components/DocumentsView/DocumentsLayout.test.tsx`
+- `TEST-page-title-formatting` -> `frontend/src/hooks/usePageTitle.test.ts`
+- `TEST-project-view-title-context` -> `frontend/src/App.pageTitle.test.tsx`
+- `TEST-ticket-title-context` -> `frontend/src/components/TicketViewer/TicketViewer.test.tsx`
+- `TEST-document-title-context` -> `frontend/src/components/DocumentsView/DocumentsLayout.test.tsx`
 - `TEST-page-title-e2e` -> `tests/e2e/navigation/page-title.spec.ts`
 
 **Scope**: Run focused checks and update task status only after verification.
@@ -335,7 +335,7 @@ bunx playwright test tests/e2e/navigation/page-title.spec.ts --project=chromium
 **Anti-duplication**: Use existing validation commands from project docs and this CR; do not invent new runners.
 
 **Duplication Guard**:
-- Confirm no second title writer exists with `rg \"document\\.title\" src`.
+- Confirm no second title writer exists with `rg \"document\\.title\" frontend/src`.
 - Confirm no duplicate page-title E2E helper was added.
 - Confirm title fallback remains centralized.
 
@@ -343,7 +343,7 @@ bunx playwright test tests/e2e/navigation/page-title.spec.ts --project=chromium
 
 ```bash
 bun run validate:ts
-bun test src/hooks/usePageTitle.test.ts src/App.pageTitle.test.tsx src/components/TicketViewer/TicketViewer.test.tsx src/components/DocumentsView/DocumentsLayout.test.tsx
+bun test frontend/src/hooks/usePageTitle.test.ts frontend/src/App.pageTitle.test.tsx frontend/src/components/TicketViewer/TicketViewer.test.tsx frontend/src/components/DocumentsView/DocumentsLayout.test.tsx
 bunx playwright test tests/e2e/navigation/page-title.spec.ts --project=chromium
 spec-trace validate MDT-175 --stage all
 ```

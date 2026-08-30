@@ -77,11 +77,11 @@ Comprehensive UX improvements to enhance visual consistency and user experience 
 - **Professional Appearance**: Modern UI patterns that match contemporary design standards
 
 ## Files Modified
-- `src/components/TicketAttributeTags.tsx`
-- `src/components/TicketAttributes.tsx`
-- `src/components/Column.tsx`
-- `src/components/ui/scroll-area.tsx`
-- `src/hooks/useMultiProjectData.ts`
+- `frontend/src/components/TicketAttributeTags.tsx`
+- `frontend/src/components/TicketAttributes.tsx`
+- `frontend/src/components/Column.tsx`
+- `frontend/src/components/ui/scroll-area.tsx`
+- `frontend/src/hooks/useMultiProjectData.ts`
 
 ## Testing
 - ✅ Badge components render correctly across all ticket views

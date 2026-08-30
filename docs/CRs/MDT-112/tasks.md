@@ -330,7 +330,7 @@ echo "// test" >> shared/test-lib/ticket/ticket-creator.ts
   - `server/*` → `server/tsconfig.json`
   - `mcp-server/*` → `mcp-server/tsconfig.json`
   - `domain-contracts/*` → `domain-contracts/tsconfig.json`
-  - `src/*` or no prefix → `./tsconfig.json`
+  - `frontend/src/*` or no prefix → `./tsconfig.json`
 - Path validation (exists check)
 - Build tsg command with single detected tsconfig
 - Reuse `build_tsg_command()` and `run_tsg_metrics()` from Task 4

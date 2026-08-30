@@ -19,9 +19,9 @@ priority: Medium
 - E2E tests needed updating to support both desktop table and mobile card views
 
 ### Affected Areas
-- Frontend: `src/components/ProjectView.tsx` - List view rendering
-- Frontend: `src/components/UI/table.tsx` - New shadcn/ui Table component
-- Frontend: `src/App.tsx` - View mode detection from URL params
+- Frontend: `frontend/src/components/ProjectView.tsx` - List view rendering
+- Frontend: `frontend/src/components/UI/table.tsx` - New shadcn/ui Table component
+- Frontend: `frontend/src/App.tsx` - View mode detection from URL params
 - Testing: `tests/e2e/list/view.spec.ts` - List view E2E tests
 - Testing: `tests/e2e/utils/selectors.ts` - Viewport-aware selectors
 - Testing: `tests/e2e/utils/helpers.ts` - Wait helper for dual layouts

@@ -17,7 +17,7 @@
 | YAML frontmatter parsing | `shared/services/MarkdownService.ts` | N/A - single owner |
 | Metadata type definition | `shared/models/Ticket.ts` | N/A - single owner |
 | CR list endpoint response | `server/controllers/ProjectController.ts` | N/A - single owner |
-| Frontend data fetching | `src/services/dataLayer.ts` | N/A - single owner |
+| Frontend data fetching | `frontend/src/services/dataLayer.ts` | N/A - single owner |
 
 ## Constraint Coverage
 
@@ -58,7 +58,7 @@
 
 **Must Not Touch**:
 - `server/` files
-- `src/` files
+- `frontend/src/` files
 - Any existing `Ticket` type fields
 
 **Exclude**:
@@ -235,10 +235,10 @@ bun run --cwd server test tests/integration/api.metadata.test.ts
 
 ### Task 5: Add fetchTicketsMetadata() to DataLayer
 
-**Structure**: `src/services/dataLayer.ts`
+**Structure**: `frontend/src/services/dataLayer.ts`
 
 **Makes GREEN (unit)**:
-- `src/services/dataLayer.metadata.test.ts`: All 8 tests
+- `frontend/src/services/dataLayer.metadata.test.ts`: All 8 tests
 
 **Scope**: Add `fetchTicketsMetadata()` method for frontend list views
 **Boundary**: New method only - `fetchTickets()` remains for backward compatibility
@@ -248,7 +248,7 @@ bun run --cwd server test tests/integration/api.metadata.test.ts
 - `ApiTicketMetadataItem` interface (if needed)
 
 **Modifies**:
-- `src/services/dataLayer.ts` - Add new method and types
+- `frontend/src/services/dataLayer.ts` - Add new method and types
 
 **Must Not Touch**:
 - `fetchTickets()` method - some views may still need full tickets
@@ -268,7 +268,7 @@ bun run --cwd server test tests/integration/api.metadata.test.ts
 **Verify**:
 
 ```bash
-bun test src/services/dataLayer.metadata.test.ts
+bun test frontend/src/services/dataLayer.metadata.test.ts
 ```
 
 **Done when**:
@@ -288,7 +288,7 @@ bun test src/services/dataLayer.metadata.test.ts
 | shared/models/ | 1 | 1 | 0 | ✅ |
 | shared/services/ | 2 | 2 | 0 | ✅ |
 | server/controllers/ | 1 | 1 | 0 | ✅ |
-| src/services/ | 1 | 1 | 0 | ✅ |
+| frontend/src/services/ | 1 | 1 | 0 | ✅ |
 
 All architecture files covered by tasks.
 

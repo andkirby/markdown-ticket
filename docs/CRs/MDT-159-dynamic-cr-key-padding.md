@@ -17,7 +17,7 @@ priority: Medium
 ## Affected Areas
 
 - `shared/` — TicketService, keyNormalizer, test helpers
-- `src/` — routing, quick search
+- `frontend/src/` — routing, quick search
 
 ## Scope
 

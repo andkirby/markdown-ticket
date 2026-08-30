@@ -95,7 +95,7 @@ bun run --cwd server jest server/tests/api/public-sharing.test.ts
 
 ## Task 4: Add owner sharing settings and frontend read-only capabilities
 
-**Structure**: `src/auth/`, `src/App.tsx`, `src/components/`
+**Structure**: `frontend/src/auth/`, `frontend/src/App.tsx`, `frontend/src/components/`
 
 **Makes GREEN**
 - `owner_updates_project_sharing`
@@ -105,23 +105,23 @@ bun run --cwd server jest server/tests/api/public-sharing.test.ts
 - `TEST-share-code-url-cleanup`
 
 **Creates**
-- `src/components/ReadOnlyMode.test.tsx`
+- `frontend/src/components/ReadOnlyMode.test.tsx`
 
 **Modifies**
-- `src/auth/AuthSessionProvider.tsx`
-- `src/App.tsx`
-- `src/components/SettingsModal.tsx`
-- `src/components/ProjectView.tsx`
-- `src/components/Board.tsx`
-- `src/components/Column/index.tsx`
-- `src/components/DocumentsView/DocumentsLayout.tsx`
+- `frontend/src/auth/AuthSessionProvider.tsx`
+- `frontend/src/App.tsx`
+- `frontend/src/components/SettingsModal.tsx`
+- `frontend/src/components/ProjectView.tsx`
+- `frontend/src/components/Board.tsx`
+- `frontend/src/components/Column/index.tsx`
+- `frontend/src/components/DocumentsView/DocumentsLayout.tsx`
 
 **Must Not Touch**
 - Visual theme system beyond necessary control disabling/hiding.
 
 **Verify**
 ```bash
-bun test src/components/ReadOnlyMode.test.tsx
+bun test frontend/src/components/ReadOnlyMode.test.tsx
 ```
 
 ## Task 5: Run validation and fix review findings
@@ -146,7 +146,7 @@ bun test src/components/ReadOnlyMode.test.tsx
 ```bash
 bun run validate:ts
 bun run --cwd server jest server/tests/api/public-sharing.test.ts
-bun test src/components/ReadOnlyMode.test.tsx
+bun test frontend/src/components/ReadOnlyMode.test.tsx
 ```
 
 ## Trace
