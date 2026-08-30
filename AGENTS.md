@@ -83,6 +83,7 @@ Load the skills accordingly:
 
 ### Frontend (src/)
 - **State**: Custom React hooks, no external library
+- **Routing**: `App.tsx` is a route table only; handlers + one-concern hooks live in `src/components/routes/` — see `docs/architecture/frontend-routes-architecture.md` for the model and where new code goes
 - **Key**: `useProjectManager.ts` (central hub, uses refs to prevent stale closures)
 - **Views**: Board (drag-drop), List (tabular), DocumentsView (file browser)
 - **Component Standards**: See `src/MODALS.md` for modal/overlay patterns and conventions
@@ -167,7 +168,8 @@ When users ask "how to" questions, search and read the relevant documentation be
 | "How do I configure projects?" | `docs/CONFIG_SPECIFICATION.md`, `docs/CONFIG_GLOBAL_SPECIFICATION.md`, `docs/CONFIG_INSPECTION.md` (`bun run inspect:config`) |
 | "Where does a setting live?" | `docs/CONFIG_INSPECTION.md` — `bun run inspect:config` (browser vs backend file + exposure class) |
 | "How do I test/E2E?" | `tests/AGENTS.md`, `tests/e2e/AGENTS.md` |
-| "How does [feature] work?" | `docs/ARCHITECTURE.md`, `server/docs/ARCHITECTURE.md`, `docs/CRs/` (feature tickets) |
+| "How does [feature] work?" | `docs/architecture/`, `server/docs/ARCHITECTURE.md`, `docs/CRs/` (feature tickets) |
+| "How is the frontend structured / where does frontend code go?" | `docs/architecture/frontend-routes-architecture.md`, `src/AGENTS.md` |
 | "How do I develop locally?" | `docs/DEVELOPMENT_GUIDE.md` |
 | "How do I use MCP?" | `docs/MCP_SERVER_GUIDE.md`, `docs/CRs/MDT-074*.md` (MCP HTTP), `docs/CRs/MDT-004*.md` (MCP server) |
 | "How was [feature] implemented?" | Search `docs/CRs/MDT-*` for relevant ticket describing the implementation |
