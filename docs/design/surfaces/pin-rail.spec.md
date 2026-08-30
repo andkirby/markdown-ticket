@@ -23,7 +23,7 @@ for the same pixels. This is non-negotiable and is restated in `board-filter-bar
 ## Owns
 
 - The left rail zone: a fixed-width vertical column (`48px`, `hidden < md`) rendered as a sibling of
-  the content area inside `App.tsx`'s content row — not inside `<main>`, not inside the header.
+  the content area inside `ProjectRouteHandler.tsx`'s content row — not inside `<main>`, not inside the header.
 - The pin set as **server-backed** state (a whole-list `PUT /api/pins` replace, mirroring
   `PUT /api/documents/favs`). Cross-project by design: each pin carries its project code.
 - Icon-only pin items: a `48px`-wide strip with ~`32px` square buttons showing the ticket's numeric
@@ -79,7 +79,7 @@ layout flow depends on the pin state:
 | disabled | **`0px`** | — | nothing (Settings → Board → Pin rail off) |
 | content | full width when not pinned; `48px` less when pinned | `flex-1 min-w-0` | board / list / documents |
 
-The rail is a sibling of content inside a `relative` content row in `App.tsx`. **Pinned = docked
+The rail is a sibling of content inside a `relative` content row in `ProjectRouteHandler.tsx`. **Pinned = docked
 (takes 48px, pushes board columns ~48px right). Unpinned = floating (0px footprint; transient hover
 reveal overlays content without pushing).** Both collapsed and floating use `position: absolute`
 (overlay) so the floating→collapsed slide never flips position mid-animation — **no column jump
@@ -93,7 +93,7 @@ pin owns the left rail. Stated from both sides in `board-filter-bar.spec.md` §"
 ## Composition
 
 ```text
-App content row (src/App.tsx)                  ← PinRail + content siblings
+App content row (src/components/routes/ProjectRouteHandler.tsx)   ← PinRail + content siblings
 ├── PinRail
 │   ├── PinToggleButton                       (Pin icon: filled=--primary when pinned, outline when unpinned)
 │   └── PinList (overflow-y-auto, flex-col, gap-1.5)
@@ -130,9 +130,9 @@ Manual reordering is deferred (IDEA-002).
 | UnpinButton | inline in `PinItem` | — | pointer hover on a PinItem; hidden in read-only |
 | StatusBadge | `src/components/Badge/` | `ticket-card.spec.md` / `BADGE_ARCHITECTURE.md` | inside the tooltip |
 
-### Mount site (App.tsx)
+### Mount site (ProjectRouteHandler.tsx)
 
-`PinRail` mounts as a sibling of the content area inside `App.tsx`'s content row, **outside** the
+`PinRail` mounts as a sibling of the content area inside `ProjectRouteHandler.tsx`'s content row, **outside** the
 `locked` branch (it is app-level chrome, not gated by auth state — see States for read-only rules):
 
 ```text
@@ -151,8 +151,8 @@ Manual reordering is deferred (IDEA-002).
 
 | Anchor | Path | Why It Exists |
 |--------|------|---------------|
-| App shell insertion | `src/App.tsx:533` (`flex-1 overflow-hidden` content row) | the exact row `PinRail + content` replaces |
-| Drag-drop contract | `src/components/Board.tsx:631` (`DndProvider`), `src/components/Column/index.tsx:73` (`useDrag` type `'ticket'`) | the DnD system the rail reuses — **see Code Drift** |
+| App shell insertion | `src/components/routes/ProjectRouteHandler.tsx:371` (`flex-1 overflow-hidden` content row) | the exact row `PinRail + content` replaces |
+| Drag-drop contract | `src/components/routes/ProjectRouteHandler.tsx:383` (`DndProvider`, lifted here by MDT-197), `src/components/Column/index.tsx:73` (`useDrag` type `'ticket'`) | the DnD system the rail reuses — **see Code Drift** |
 | Persistence pattern | `src/config/documentFavs.ts`, `server/controllers/DocumentController.ts:putDocumentFavs`, `server/routes/documents.ts:115` (`PUT /favs`) | the whole-list-replace user-selection pattern to mirror for `/api/pins` |
 | Pin schema home | `domain-contracts/src/app-config/schema.ts` (`DocumentFavItem`/`DocumentFavState` are the sibling to copy for `PinItem`/`PinState`) | where the validated pin types must live |
 | Spatial boundary | `docs/design/surfaces/board-filter-bar.spec.md` §"Spatial boundary" | the contract this surface is the other half of |
@@ -280,10 +280,10 @@ target. No new DnD library, no new drag type.
 
 ### Code Drift — DndProvider scope (must be resolved by implementation)
 
-Today `DndProvider` is mounted **inside** `Board.tsx:631`, scoped to the board. The rail lives in
-`App.tsx`, outside that context, so its `useDrop` would silently never fire. Implementation must
-**lift `DndProvider` to `App.tsx`** (or to the content row) so both the board (drag source + column
-drop targets) and the rail (drop target) share one DnD context. This is a required code change, not
+`DndProvider` is mounted at the top of the project route's content tree
+(`ProjectRouteHandler.tsx:383`, lifted out of `Board.tsx` by MDT-197), spanning both the board
+(drag source + column drop targets) and the rail (drop target), so they share one DnD context.
+This was a required code change, not
 a design option — without it, drag-to-pin cannot work. The board's existing behavior must remain
 green (regression gate).
 
@@ -310,7 +310,7 @@ green (regression gate).
 |-------------|-----------|-----------------------------|
 | 50-pin render, no perceivable lag | rail renders ≤50 icon-only items | PinItem is a stateless `32px` button; no per-item image/network work; PinTooltip is portaled and lazily mounted on hover, not rendered for all items up front |
 | No new runtime frontend deps | zero added dependencies | reuses `react-dnd` + `HTML5Backend` already in the board; reuses existing `Badge`, shared tooltip/HoverCard primitive; no icon library, no virtualization lib (50 items needs none) |
-| Drag-to-pin does not regress board DnD | board status drag-drop unchanged | rail adds a `useDrop` target on the existing `'ticket'` drag type; lifting `DndProvider` to `App.tsx` widens the context but does not alter board source/target wiring. Regression gate: existing board drag-drop + status-change tests stay green |
+| Drag-to-pin does not regress board DnD | board status drag-drop unchanged | rail adds a `useDrop` target on the existing `'ticket'` drag type; the `DndProvider` at `ProjectRouteHandler.tsx:383` spans the context but does not alter board source/target wiring. Regression gate: existing board drag-drop + status-change tests stay green |
 | `/api/pins` response time ≈ document-favs | whole-list `PUT` replace, same shape as `/api/documents/favs` | same controller/service/repository layering; file-backed persistence. **Storage scope differs**: document-favs is per-project (`projects/{id}/document-favs.json`); pins are cross-project (one user-global `pins.json`), since each pin carries its own project code |
 
 
@@ -322,7 +322,7 @@ green (regression gate).
 | `≥ 768px` (`≥ md`) | full rail per Layout, when visible |
 
 The rail is cross-view chrome: visible on board, list, and documents views (it is app-level, mounted
-in `App.tsx`, not per-view). It is not affected by `viewMode`.
+in `ProjectRouteHandler.tsx`, not per-view). It is not affected by `viewMode`.
 
 ## Accessibility
 
@@ -393,5 +393,5 @@ inventions.
   read-only" is read to require a keyboard pin path in v1.
 - **Tooltip primitive**: reuse the existing `ProjectSelectorChip` hover-card mechanism vs. a small
   dedicated `PinTooltip`. Decide at implementation; both satisfy the AC.
-- **DndProvider lift scope**: lift to `App.tsx` root vs. to the content row. Either works as long as
+- **DndProvider lift scope**: lift to the route-handler shell vs. to the content row. Either works as long as
   both board and rail share the context; the board regression suite must stay green.

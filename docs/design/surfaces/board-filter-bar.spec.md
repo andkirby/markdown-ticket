@@ -105,7 +105,7 @@ This order groups the enum-backed facets (type, status, priority — bounded, sh
 | Data contract | `domain-contracts/src/ticket/input.ts` | `TicketFilters` shape — the single filter state |
 | Enum source of truth | `domain-contracts/src/types/schema.ts` | `CRStatuses`, `CRTypes`, `CRPriorities` feed static facet menus |
 | Behavior model | `src/hooks/useBoardFilters.ts` | reducer, persistence, `clearAll` |
-| Header host | `src/App.tsx:428-480` | `Header`/`HeaderContent` — where the filter bar mounts (header__left centerSection) |
+| Header host | `src/components/routes/ProjectRouteHandler.tsx:300` (desktop) / `:351` (mobile) | `Header`/`HeaderContent` — where the filter bar mounts (header__left centerSection) |
 | Header layout | `src/components/Header/header.css` | `header__left` / `header__right` zone definitions |
 | Mobile menu host | `src/components/HamburgerMenu.tsx` | hosts the "Filter · N" row on mobile (wrapped in `border-t`/`border-b` separators) |
 | Verification | `tests/e2e/board/board-filter.spec.ts` | add/remove/clear via popover; assert header height never grows; mobile modal opens on tap |
