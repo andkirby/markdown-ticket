@@ -16,12 +16,12 @@ priority: Medium
 
 ## Affected Artifacts
 
-- `src/utils/linkBuilder.ts` — canonical builder, only covers ticket + document + project links (missing subdoc, anchor variants)
-- `src/utils/markdownPreprocessor.ts` — 5 inline URL constructions in `resolveDocumentRef()` + `convertTicketReferences()`
-- `src/utils/subdocPathValidation.ts` — `hashToPathUrl()` builds ticket URLs inline
-- `src/components/TicketViewer/useTicketDocumentNavigation.ts` — navigates to ticket URLs inline
-- `src/components/DirectTicketAccess.tsx` — builds ticket URLs inline
-- `src/App.tsx` — builds ticket URLs in navigation handlers
+- `frontend/src/utils/linkBuilder.ts` — canonical builder, only covers ticket + document + project links (missing subdoc, anchor variants)
+- `frontend/src/utils/markdownPreprocessor.ts` — 5 inline URL constructions in `resolveDocumentRef()` + `convertTicketReferences()`
+- `frontend/src/utils/subdocPathValidation.ts` — `hashToPathUrl()` builds ticket URLs inline
+- `frontend/src/components/TicketViewer/useTicketDocumentNavigation.ts` — navigates to ticket URLs inline
+- `frontend/src/components/DirectTicketAccess.tsx` — builds ticket URLs inline
+- `frontend/src/App.tsx` — builds ticket URLs in navigation handlers
 
 ## Scope
 
@@ -58,12 +58,12 @@ None
 
 | Artifact | Change Type | Modification |
 |----------|-------------|--------------|
-| `src/utils/linkBuilder.ts` | Functions added | `buildTicketSubdocLink()`, `buildTicketAnchorLink()`, update `buildDocumentLink()` for path-style |
-| `src/utils/markdownPreprocessor.ts` | Import changed | Replace inline URL strings with `linkBuilder` calls |
-| `src/utils/subdocPathValidation.ts` | Import changed | Replace `hashToPathUrl()` internals with `linkBuilder` calls |
-| `src/components/TicketViewer/useTicketDocumentNavigation.ts` | Import changed | Replace inline URL with `linkBuilder` call |
-| `src/components/DirectTicketAccess.tsx` | Import changed | Replace inline URLs with `linkBuilder` calls |
-| `src/App.tsx` | Import changed | Replace inline ticket URL with `linkBuilder` call |
+| `frontend/src/utils/linkBuilder.ts` | Functions added | `buildTicketSubdocLink()`, `buildTicketAnchorLink()`, update `buildDocumentLink()` for path-style |
+| `frontend/src/utils/markdownPreprocessor.ts` | Import changed | Replace inline URL strings with `linkBuilder` calls |
+| `frontend/src/utils/subdocPathValidation.ts` | Import changed | Replace `hashToPathUrl()` internals with `linkBuilder` calls |
+| `frontend/src/components/TicketViewer/useTicketDocumentNavigation.ts` | Import changed | Replace inline URL with `linkBuilder` call |
+| `frontend/src/components/DirectTicketAccess.tsx` | Import changed | Replace inline URLs with `linkBuilder` calls |
+| `frontend/src/App.tsx` | Import changed | Replace inline ticket URL with `linkBuilder` call |
 
 ### Missing URL Patterns to Add
 
@@ -95,7 +95,7 @@ None
 
 - Unit: `linkBuilder.ts` — all URL patterns produce correct output
 - Unit: `markdownPreprocessor.mdt150.test.ts` — still GREEN after migration
-- Grep: `grep -rn '/prj/' src/ --include='*.ts' --include='*.tsx' | grep -v linkBuilder | grep -v '.test.'` returns empty
+- Grep: `grep -rn '/prj/' frontend/src/ --include='*.ts' --include='*.tsx' | grep -v linkBuilder | grep -v '.test.'` returns empty
 
 ## Verification
 

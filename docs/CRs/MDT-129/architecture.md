@@ -32,14 +32,14 @@ Redesigns the project selector from a uniform horizontal list into a tiered rail
 
 | Runtime Module | Test Scaffolding | Separation Rule |
 |----------------|------------------|-----------------|
-| `src/components/ProjectSelector/` | `tests/e2e/selector/MDT-129*.spec.ts` | E2E tests exercise full stack; no unit test mocks of internal component state |
-| `src/utils/selectorOrdering.ts` | Jest unit tests | Pure function; test ordering rules in isolation |
-| `src/components/ProjectSelector/useSelectorData.ts` | Jest with mock fetch | Hook logic testable with mocked API responses |
+| `frontend/src/components/ProjectSelector/` | `tests/e2e/selector/MDT-129*.spec.ts` | E2E tests exercise full stack; no unit test mocks of internal component state |
+| `frontend/src/utils/selectorOrdering.ts` | Jest unit tests | Pure function; test ordering rules in isolation |
+| `frontend/src/components/ProjectSelector/useSelectorData.ts` | Jest with mock fetch | Hook logic testable with mocked API responses |
 
 ## Structure
 
 ```text
-src/
+frontend/src/
 ├── components/
 │   ├── UI/
 │   │   └── hover-card.tsx            # Hover card primitive with delay defaults (100ms open/close)
@@ -105,7 +105,7 @@ To add a new selector view mode (e.g., grid): create `ProjectSelectorGrid.tsx`, 
 
 ## Pattern Note (UAT 2026-06-24)
 
-The project browser panel (`ProjectBrowserPanel.tsx`) uses an **active-descendant combobox** pattern for keyboard navigation, adapted from `src/components/QuickSearch/QuickSearchModal.tsx`: a `selectedProjectIndex` state drives a visual highlight (`data-selected`, rendered via CSS `outline` so it is not clobbered by the active card's box-shadow) on the filtered card list, DOM focus stays in the search input (cards are `role="option"` with `tabindex=-1`), typing updates the query in place, and Enter selects the highlighted project. The highlighted card is kept in view via a `useLayoutEffect` that calls `scrollIntoView({ block: 'nearest' })` on the `[data-selected="true"]` card whenever `selectedProjectIndex` changes, so the Radix `ScrollArea` viewport follows the highlight without a visible jump and only scrolls when the card is outside the visible area. **Two differences from QuickSearch**, because this is a multi-column GRID, not a single-column list: (1) navigation is Excel-grid — Down/Up move within the same column (±columnCount via `getGridColumnCount`), Left/Right move between adjacent columns (±1), all cyclic; Tab/Shift+Tab act as down/up and are intercepted on `ModalBody` so focus never escapes the panel. (2) The panel highlights the **active project on open** (wherever it sits in the favorites/usage ordering). This replaces the earlier roving-tabindex approach where DOM focus moved onto cards and stranded typed characters, and the intermediate linear-nav approach that zigzagged across columns.
+The project browser panel (`ProjectBrowserPanel.tsx`) uses an **active-descendant combobox** pattern for keyboard navigation, adapted from `frontend/src/components/QuickSearch/QuickSearchModal.tsx`: a `selectedProjectIndex` state drives a visual highlight (`data-selected`, rendered via CSS `outline` so it is not clobbered by the active card's box-shadow) on the filtered card list, DOM focus stays in the search input (cards are `role="option"` with `tabindex=-1`), typing updates the query in place, and Enter selects the highlighted project. The highlighted card is kept in view via a `useLayoutEffect` that calls `scrollIntoView({ block: 'nearest' })` on the `[data-selected="true"]` card whenever `selectedProjectIndex` changes, so the Radix `ScrollArea` viewport follows the highlight without a visible jump and only scrolls when the card is outside the visible area. **Two differences from QuickSearch**, because this is a multi-column GRID, not a single-column list: (1) navigation is Excel-grid — Down/Up move within the same column (±columnCount via `getGridColumnCount`), Left/Right move between adjacent columns (±1), all cyclic; Tab/Shift+Tab act as down/up and are intercepted on `ModalBody` so focus never escapes the panel. (2) The panel highlights the **active project on open** (wherever it sits in the favorites/usage ordering). This replaces the earlier roving-tabindex approach where DOM focus moved onto cards and stranded typed characters, and the intermediate linear-nav approach that zigzagged across columns.
 
 ## Obligations
 
@@ -159,23 +159,23 @@ The project browser panel (`ProjectBrowserPanel.tsx`) uses an **active-descendan
 
 | Artifact ID | Path | Kind | Referencing Obligations |
 |---|---|---|---|
-| `ART-browser-panel` | `src/components/ProjectSelector/ProjectBrowserPanel.tsx` | runtime | `OBL-active-project-card-display`, `OBL-active-project-click-opens-browser`, `OBL-browser-keyboard-navigation`, `OBL-panel-displays-full-list`, `OBL-project-switching-flow`, `OBL-responsive-collapse` |
+| `ART-browser-panel` | `frontend/src/components/ProjectSelector/ProjectBrowserPanel.tsx` | runtime | `OBL-active-project-card-display`, `OBL-active-project-click-opens-browser`, `OBL-browser-keyboard-navigation`, `OBL-panel-displays-full-list`, `OBL-project-switching-flow`, `OBL-responsive-collapse` |
 | `ART-config-selector-state` | `CONFIG_DIR/project-selector.json` | config | `OBL-config-validation`, `OBL-load-selector-data`, `OBL-project-switching-flow`, `OBL-state-persistence` |
 | `ART-config-user-toml` | `CONFIG_DIR/user.toml` | config | `OBL-config-validation`, `OBL-configuration-load-and-defaults`, `OBL-inactive-projects-display-mode`, `OBL-load-selector-data`, `OBL-rail-ordering` |
-| `ART-hook-project-manager` | `src/hooks/useProjectManager.ts` | runtime | `OBL-project-switching-flow` |
-| `ART-hover-card-component` | `src/components/UI/hover-card.tsx` | runtime | `OBL-hover-card-on-chips` |
-| `ART-ordering-utils` | `src/utils/selectorOrdering.ts` | runtime | `OBL-active-project-always-visible`, `OBL-panel-displays-full-list`, `OBL-rail-ordering` |
-| `ART-selector-card` | `src/components/ProjectSelector/ProjectSelectorCard.tsx` | runtime | `OBL-active-project-card-display`, `OBL-browser-keyboard-navigation`, `OBL-hover-card-on-chips` |
-| `ART-selector-chip` | `src/components/ProjectSelector/ProjectSelectorChip.tsx` | runtime | `OBL-hover-card-on-chips`, `OBL-inactive-projects-display-mode` |
-| `ART-selector-data-hook` | `src/components/ProjectSelector/useSelectorData.ts` | runtime | `OBL-config-validation`, `OBL-configuration-load-and-defaults`, `OBL-load-selector-data`, `OBL-project-switching-flow`, `OBL-state-persistence` |
-| `ART-selector-index` | `src/components/ProjectSelector/index.tsx` | runtime | `OBL-active-project-card-display`, `OBL-active-project-click-opens-browser`, `OBL-responsive-collapse` |
-| `ART-selector-manager-hook` | `src/components/ProjectSelector/useProjectSelectorManager.ts` | runtime | `OBL-active-project-always-visible`, `OBL-panel-displays-full-list`, `OBL-rail-ordering` |
-| `ART-selector-rail` | `src/components/ProjectSelector/ProjectSelectorRail.tsx` | runtime | `OBL-active-project-always-visible`, `OBL-active-project-card-display`, `OBL-active-project-click-opens-browser`, `OBL-inactive-projects-display-mode`, `OBL-project-switching-flow`, `OBL-rail-ordering`, `OBL-responsive-collapse` |
-| `ART-selector-types` | `src/components/ProjectSelector/types.ts` | runtime | `OBL-active-project-card-display` |
+| `ART-hook-project-manager` | `frontend/src/hooks/useProjectManager.ts` | runtime | `OBL-project-switching-flow` |
+| `ART-hover-card-component` | `frontend/src/components/UI/hover-card.tsx` | runtime | `OBL-hover-card-on-chips` |
+| `ART-ordering-utils` | `frontend/src/utils/selectorOrdering.ts` | runtime | `OBL-active-project-always-visible`, `OBL-panel-displays-full-list`, `OBL-rail-ordering` |
+| `ART-selector-card` | `frontend/src/components/ProjectSelector/ProjectSelectorCard.tsx` | runtime | `OBL-active-project-card-display`, `OBL-browser-keyboard-navigation`, `OBL-hover-card-on-chips` |
+| `ART-selector-chip` | `frontend/src/components/ProjectSelector/ProjectSelectorChip.tsx` | runtime | `OBL-hover-card-on-chips`, `OBL-inactive-projects-display-mode` |
+| `ART-selector-data-hook` | `frontend/src/components/ProjectSelector/useSelectorData.ts` | runtime | `OBL-config-validation`, `OBL-configuration-load-and-defaults`, `OBL-load-selector-data`, `OBL-project-switching-flow`, `OBL-state-persistence` |
+| `ART-selector-index` | `frontend/src/components/ProjectSelector/index.tsx` | runtime | `OBL-active-project-card-display`, `OBL-active-project-click-opens-browser`, `OBL-responsive-collapse` |
+| `ART-selector-manager-hook` | `frontend/src/components/ProjectSelector/useProjectSelectorManager.ts` | runtime | `OBL-active-project-always-visible`, `OBL-panel-displays-full-list`, `OBL-rail-ordering` |
+| `ART-selector-rail` | `frontend/src/components/ProjectSelector/ProjectSelectorRail.tsx` | runtime | `OBL-active-project-always-visible`, `OBL-active-project-card-display`, `OBL-active-project-click-opens-browser`, `OBL-inactive-projects-display-mode`, `OBL-project-switching-flow`, `OBL-rail-ordering`, `OBL-responsive-collapse` |
+| `ART-selector-types` | `frontend/src/components/ProjectSelector/types.ts` | runtime | `OBL-active-project-card-display` |
 | `ART-server-system-routes` | `server/routes/system.ts` | runtime | `OBL-config-validation`, `OBL-configuration-load-and-defaults`, `OBL-load-selector-data`, `OBL-state-persistence` |
 | `ART-test-e2e-selector` | `tests/e2e/selector/project-selector.spec.ts` | test | `OBL-test-coverage` |
-| `ART-test-ordering` | `src/utils/selectorOrdering.test.ts` | test | `OBL-test-coverage` |
-| `ART-test-selector-data-hook` | `src/components/ProjectSelector/useSelectorData.test.ts` | test | `OBL-test-coverage` |
+| `ART-test-ordering` | `frontend/src/utils/selectorOrdering.test.ts` | test | `OBL-test-coverage` |
+| `ART-test-selector-data-hook` | `frontend/src/components/ProjectSelector/useSelectorData.test.ts` | test | `OBL-test-coverage` |
 
 ## Derivation Summary
 

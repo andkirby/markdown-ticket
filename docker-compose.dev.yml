@@ -9,13 +9,9 @@ services:
     ports:
       - '5174:5173'
     volumes:
-      # Mount source code for hot reload
-      - ./src:/app/src
-      - ./public:/app/public
-      - ./index.html:/app/index.html
-      - ./vite.config.ts:/app/vite.config.ts
-      - ./tsconfig.json:/app/tsconfig.json
-      - ./tsconfig.node.json:/app/tsconfig.node.json
+      # Mount the frontend area for hot reload (app runs via `bun run dev`,
+      # which delegates to frontend/ with cwd=frontend)
+      - ./frontend:/app/frontend
       - ./shared:/app/shared
       # Preserve node_modules in container
       - /app/node_modules

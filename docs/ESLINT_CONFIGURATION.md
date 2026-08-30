@@ -13,7 +13,7 @@ This repo uses flat ESLint config (`eslint.config.ts`) with per-workspace config
 ## Lint Command Model
 
 - `bun run lint`: lint all areas (frontend + all workspaces)
-- `bun run lint:frontend`: lint frontend/root `src/**`
+- `bun run lint:frontend`: lint frontend/root `frontend/src/**`
 - `bun run lint:server|lint:shared|lint:domain|lint:mcp`: lint one workspace
 - `bun run lint:fix`: run `--fix` across all areas
 - `bun run lint:frontend:fix|lint:server:fix|lint:shared:fix|lint:domain:fix|lint:mcp:fix`: fix one area

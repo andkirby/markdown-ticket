@@ -12,9 +12,9 @@
 
 | Critical Behavior | Owner Module | Merge/Refactor Task if Overlap |
 |-------------------|--------------|--------------------------------|
-| Global keyboard shortcuts | `src/hooks/useGlobalKeyboard.ts` | N/A |
-| Ticket filtering logic | `src/hooks/useQuickSearch.ts` | N/A |
-| Modal visibility state | `src/components/QuickSearch/QuickSearchModal.tsx` | N/A |
+| Global keyboard shortcuts | `frontend/src/hooks/useGlobalKeyboard.ts` | N/A |
+| Ticket filtering logic | `frontend/src/hooks/useQuickSearch.ts` | N/A |
+| Modal visibility state | `frontend/src/components/QuickSearch/QuickSearchModal.tsx` | N/A |
 
 ## Constraint Coverage
 
@@ -43,12 +43,12 @@
 **Structure**:
 
 ```text
-src/components/QuickSearch/
+frontend/src/components/QuickSearch/
   index.ts
   QuickSearchModal.tsx
   QuickSearchInput.tsx
   QuickSearchResults.tsx
-src/hooks/
+frontend/src/hooks/
   useGlobalKeyboard.ts
   useQuickSearch.ts
 ```
@@ -59,27 +59,27 @@ src/hooks/
 **Boundary**: No implementation logic, only type definitions and empty exports
 
 **Creates**:
-- `src/components/QuickSearch/index.ts` - barrel exports
-- `src/components/QuickSearch/QuickSearchModal.tsx` - modal stub
-- `src/components/QuickSearch/QuickSearchInput.tsx` - input stub
-- `src/components/QuickSearch/QuickSearchResults.tsx` - results stub
-- `src/hooks/useGlobalKeyboard.ts` - hook stub
-- `src/hooks/useQuickSearch.ts` - hook stub
+- `frontend/src/components/QuickSearch/index.ts` - barrel exports
+- `frontend/src/components/QuickSearch/QuickSearchModal.tsx` - modal stub
+- `frontend/src/components/QuickSearch/QuickSearchInput.tsx` - input stub
+- `frontend/src/components/QuickSearch/QuickSearchResults.tsx` - results stub
+- `frontend/src/hooks/useGlobalKeyboard.ts` - hook stub
+- `frontend/src/hooks/useQuickSearch.ts` - hook stub
 
 **Modifies**:
 - *(none)*
 
 **Must Not Touch**:
-- `src/App.tsx` (integration in Task 2)
-- `src/hooks/useProjectManager.ts`
-- Existing modal patterns in `src/components/UI/Modal.tsx`
+- `frontend/src/App.tsx` (integration in Task 2)
+- `frontend/src/hooks/useProjectManager.ts`
+- Existing modal patterns in `frontend/src/components/UI/Modal.tsx`
 
 **Exclude**: No actual keyboard handling, filtering logic, or modal behavior
 
-**Anti-duplication**: Import modal patterns from `src/MODALS.md` — do NOT create custom overlay
+**Anti-duplication**: Import modal patterns from `frontend/src/MODALS.md` — do NOT create custom overlay
 
 **Duplication Guard**:
-- Check `src/components/UI/Modal.tsx` for existing modal patterns before coding
+- Check `frontend/src/components/UI/Modal.tsx` for existing modal patterns before coding
 - Use existing `bg-black/50` backdrop pattern from MODALS.md
 
 **Verify**:
@@ -103,7 +103,7 @@ bun run build
 
 **Milestone**: M1 — Modal Open/Close (BR-1, BR-2, BR-6, BR-7)
 
-**Structure**: `src/hooks/useGlobalKeyboard.ts`, `src/components/QuickSearch/QuickSearchModal.tsx`
+**Structure**: `frontend/src/hooks/useGlobalKeyboard.ts`, `frontend/src/components/QuickSearch/QuickSearchModal.tsx`
 
 **Makes GREEN (Automated Tests)**:
 - `TEST-quick-search-modal` → `tests/e2e/quick-search/modal.spec.ts`: `opens modal with Cmd+K keyboard shortcut (BR-1, BR-2)`
@@ -122,25 +122,25 @@ bun run build
 - *(stubs created in Task 1)*
 
 **Modifies**:
-- `src/hooks/useGlobalKeyboard.ts` - add Cmd/Ctrl+K detection
-- `src/components/QuickSearch/QuickSearchModal.tsx` - modal visibility, Escape/click-outside close
-- `src/components/QuickSearch/QuickSearchInput.tsx` - auto-focus on mount
-- `src/components/QuickSearch/index.ts` - export components
-- `src/App.tsx` - integrate useGlobalKeyboard and QuickSearchModal
+- `frontend/src/hooks/useGlobalKeyboard.ts` - add Cmd/Ctrl+K detection
+- `frontend/src/components/QuickSearch/QuickSearchModal.tsx` - modal visibility, Escape/click-outside close
+- `frontend/src/components/QuickSearch/QuickSearchInput.tsx` - auto-focus on mount
+- `frontend/src/components/QuickSearch/index.ts` - export components
+- `frontend/src/App.tsx` - integrate useGlobalKeyboard and QuickSearchModal
 
 **Must Not Touch**:
-- `src/hooks/useQuickSearch.ts` (Task 3)
-- `src/components/QuickSearch/QuickSearchResults.tsx` (Task 4)
-- `src/hooks/useProjectManager.ts`
+- `frontend/src/hooks/useQuickSearch.ts` (Task 3)
+- `frontend/src/components/QuickSearch/QuickSearchResults.tsx` (Task 4)
+- `frontend/src/hooks/useProjectManager.ts`
 
 **Exclude**: No search filtering, no result items, no navigation
 
 **Anti-duplication**:
-- Import `Ticket` type from `src/types.ts` — do NOT redefine
-- Use modal patterns from `src/MODALS.md` — do NOT create custom overlay
+- Import `Ticket` type from `frontend/src/types.ts` — do NOT redefine
+- Use modal patterns from `frontend/src/MODALS.md` — do NOT create custom overlay
 
 **Duplication Guard**:
-- Check `src/MODALS.md` for existing modal patterns before implementing close behavior
+- Check `frontend/src/MODALS.md` for existing modal patterns before implementing close behavior
 - Verify no duplicate keyboard listener in App.tsx
 
 **Verify**:
@@ -167,10 +167,10 @@ PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/quick-search/modal.spec.
 
 **Milestone**: M2 — Search Filtering (BR-3, C2-C4)
 
-**Structure**: `src/hooks/useQuickSearch.ts`
+**Structure**: `frontend/src/hooks/useQuickSearch.ts`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-use-quick-search-unit` → `src/hooks/useQuickSearch.test.ts`: all unit tests
+- `TEST-use-quick-search-unit` → `frontend/src/hooks/useQuickSearch.test.ts`: all unit tests
 
 **Makes GREEN (Behavior)**:
 - `filter_by_ticket_key` → unit tests validate (BR-3)
@@ -180,19 +180,19 @@ PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/quick-search/modal.spec.
 **Boundary**: Hook only - no UI rendering
 
 **Creates**:
-- `src/hooks/useQuickSearch.test.ts` - unit tests for filtering logic
+- `frontend/src/hooks/useQuickSearch.test.ts` - unit tests for filtering logic
 
 **Modifies**:
-- `src/hooks/useQuickSearch.ts` - implement filtering, selection state, result limit
+- `frontend/src/hooks/useQuickSearch.ts` - implement filtering, selection state, result limit
 
 **Must Not Touch**:
-- `src/components/QuickSearch/` components (Task 4)
-- `src/hooks/useProjectManager.ts`
-- `src/App.tsx`
+- `frontend/src/components/QuickSearch/` components (Task 4)
+- `frontend/src/hooks/useProjectManager.ts`
+- `frontend/src/App.tsx`
 
 **Exclude**: No UI components, no E2E integration
 
-**Anti-duplication**: Import `Ticket` type from `src/types.ts` — do NOT redefine
+**Anti-duplication**: Import `Ticket` type from `frontend/src/types.ts` — do NOT redefine
 
 **Duplication Guard**:
 - Check if filtering logic exists in `useProjectManager.ts` before implementing
@@ -222,7 +222,7 @@ bun run --cwd src jest hooks/useQuickSearch.test.ts
 
 **Milestone**: M2 — Search Filtering (BR-3, BR-8, C2)
 
-**Structure**: `src/components/QuickSearch/QuickSearchResults.tsx`
+**Structure**: `frontend/src/components/QuickSearch/QuickSearchResults.tsx`
 
 **Makes GREEN (Automated Tests)**:
 - `TEST-quick-search-modal` → `tests/e2e/quick-search/modal.spec.ts`: `filters tickets by key number (BR-3)`
@@ -242,21 +242,21 @@ bun run --cwd src jest hooks/useQuickSearch.test.ts
 - *(stubs created in Task 1)*
 
 **Modifies**:
-- `src/components/QuickSearch/QuickSearchResults.tsx` - render result items, empty state
-- `src/components/QuickSearch/QuickSearchModal.tsx` - integrate useQuickSearch, pass results to QuickSearchResults
+- `frontend/src/components/QuickSearch/QuickSearchResults.tsx` - render result items, empty state
+- `frontend/src/components/QuickSearch/QuickSearchModal.tsx` - integrate useQuickSearch, pass results to QuickSearchResults
 
 **Must Not Touch**:
-- `src/hooks/useGlobalKeyboard.ts`
-- `src/App.tsx`
+- `frontend/src/hooks/useGlobalKeyboard.ts`
+- `frontend/src/App.tsx`
 
 **Exclude**: No arrow key navigation, no Enter selection
 
 **Anti-duplication**:
-- Import `Ticket` type from `src/types.ts` — do NOT redefine
+- Import `Ticket` type from `frontend/src/types.ts` — do NOT redefine
 - Import `useQuickSearch` from `./useQuickSearch` — do NOT inline logic
 
 **Duplication Guard**:
-- Check `src/components/` for existing ticket card patterns before creating result item styling
+- Check `frontend/src/components/` for existing ticket card patterns before creating result item styling
 - Reuse existing badge/status styling if available
 
 **Verify**:
@@ -282,7 +282,7 @@ PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/quick-search/modal.spec.
 
 **Milestone**: M3 — Navigation & Selection (BR-4, BR-5)
 
-**Structure**: `src/components/QuickSearch/QuickSearchResults.tsx`, `src/hooks/useQuickSearch.ts`
+**Structure**: `frontend/src/components/QuickSearch/QuickSearchResults.tsx`, `frontend/src/hooks/useQuickSearch.ts`
 
 **Makes GREEN (Automated Tests)**:
 - `TEST-quick-search-modal` → `tests/e2e/quick-search/modal.spec.ts`: `navigates results with arrow keys (BR-4)`
@@ -299,13 +299,13 @@ PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/quick-search/modal.spec.
 - *(none)*
 
 **Modifies**:
-- `src/hooks/useQuickSearch.ts` - add arrow key handlers, Enter handler
-- `src/components/QuickSearch/QuickSearchResults.tsx` - highlight selected item, handle click selection
-- `src/components/QuickSearch/QuickSearchModal.tsx` - wire up onSelectTicket callback
+- `frontend/src/hooks/useQuickSearch.ts` - add arrow key handlers, Enter handler
+- `frontend/src/components/QuickSearch/QuickSearchResults.tsx` - highlight selected item, handle click selection
+- `frontend/src/components/QuickSearch/QuickSearchModal.tsx` - wire up onSelectTicket callback
 
 **Must Not Touch**:
-- `src/hooks/useGlobalKeyboard.ts`
-- `src/App.tsx` routing logic
+- `frontend/src/hooks/useGlobalKeyboard.ts`
+- `frontend/src/App.tsx` routing logic
 
 **Exclude**: No changes to ticket detail view
 
@@ -314,7 +314,7 @@ PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/quick-search/modal.spec.
 - Use existing `handleTicketClick` pattern from `App.tsx` — do NOT create new navigation
 
 **Duplication Guard**:
-- Check `src/App.tsx` for `handleTicketClick` before implementing selection callback
+- Check `frontend/src/App.tsx` for `handleTicketClick` before implementing selection callback
 - Verify navigation uses existing routing pattern
 
 **Verify**:
@@ -346,11 +346,11 @@ PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/quick-search/modal.spec.
 
 | Layer | Arch Files | In Tasks | Gap | Status |
 |-------|-----------|----------|-----|--------|
-| `src/components/QuickSearch/` | 4 | 4 | 0 | ✅ |
-| `src/hooks/useGlobalKeyboard.ts` | 1 | 1 | 0 | ✅ |
-| `src/hooks/useQuickSearch.ts` | 1 | 1 | 0 | ✅ |
-| `src/App.tsx` (modify) | 1 | 1 | 0 | ✅ |
-| `src/hooks/useQuickSearch.test.ts` | 1 | 1 | 0 | ✅ |
+| `frontend/src/components/QuickSearch/` | 4 | 4 | 0 | ✅ |
+| `frontend/src/hooks/useGlobalKeyboard.ts` | 1 | 1 | 0 | ✅ |
+| `frontend/src/hooks/useQuickSearch.ts` | 1 | 1 | 0 | ✅ |
+| `frontend/src/App.tsx` (modify) | 1 | 1 | 0 | ✅ |
+| `frontend/src/hooks/useQuickSearch.test.ts` | 1 | 1 | 0 | ✅ |
 | `tests/e2e/quick-search/modal.spec.ts` | 1 | 1 | 0 | ✅ |
 
 ## Post-Verify Fixes (appended by implement-agentic)

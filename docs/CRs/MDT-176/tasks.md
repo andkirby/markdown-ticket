@@ -6,7 +6,7 @@
 
 - Backend auth: `server/security/apiAuth.ts` remains the protected API auth owner; `server/security/apiSession.ts` owns only signed cookie mechanics.
 - Session routes: only `GET/POST/DELETE /api/auth/session` are new auth-route exemptions.
-- Frontend auth: `src/auth/AuthSessionProvider.tsx` owns access/session state; `src/auth/authFetch.ts` owns credentials, 401 classification, and mutation intent headers.
+- Frontend auth: `frontend/src/auth/AuthSessionProvider.tsx` owns access/session state; `frontend/src/auth/authFetch.ts` owns credentials, 401 classification, and mutation intent headers.
 - UI gating: owner/admin controls are capability-driven, never project-count-driven.
 - MDT-172: MDT-176 distinguishes response semantics but does not add public project filtering.
 - Security scope: no raw token browser storage, no OAuth/RBAC/password login/token rotation/refresh-token behavior.
@@ -18,10 +18,10 @@
 | Header-token validation and protected-route auth decision | `server/security/apiAuth.ts` | Task 1 |
 | Signed session cookie creation/verification | `server/security/apiSession.ts` | Task 1 |
 | Auth route session exchange/logout | `server/routes/auth.ts` | Task 1 |
-| Browser access mode and unlock/lock lifecycle | `src/auth/AuthSessionProvider.tsx` | Task 2 |
-| Browser API credentials/CSRF intent boundary | `src/auth/authFetch.ts` | Task 2 |
-| Locked/public/owner visible UI | `src/components/AuthUnlock/*`, `src/components/RedirectToCurrentProject.tsx` | Task 3/4 |
-| SSE convergence after logout/401 | `src/services/sseClient.ts`, `src/auth/AuthSessionProvider.tsx` | Task 4 |
+| Browser access mode and unlock/lock lifecycle | `frontend/src/auth/AuthSessionProvider.tsx` | Task 2 |
+| Browser API credentials/CSRF intent boundary | `frontend/src/auth/authFetch.ts` | Task 2 |
+| Locked/public/owner visible UI | `frontend/src/components/AuthUnlock/*`, `frontend/src/components/RedirectToCurrentProject.tsx` | Task 3/4 |
+| SSE convergence after logout/401 | `frontend/src/services/sseClient.ts`, `frontend/src/auth/AuthSessionProvider.tsx` | Task 4 |
 | Operator docs | `docs/AUTH_SESSION_GUIDE.md` | Task 5 |
 
 ## Constraint Coverage
@@ -57,7 +57,7 @@
 
 **Milestone**: M0 — Walking skeleton
 
-**Structure**: `server/security/apiSession.ts`, `server/routes/auth.ts`, `src/auth/AuthSessionProvider.tsx`, `src/auth/authFetch.ts`, `src/components/AuthUnlock/AuthUnlockPanel.tsx`, `src/components/AuthUnlock/AuthStatusAction.tsx`, `docs/AUTH_SESSION_GUIDE.md`
+**Structure**: `server/security/apiSession.ts`, `server/routes/auth.ts`, `frontend/src/auth/AuthSessionProvider.tsx`, `frontend/src/auth/authFetch.ts`, `frontend/src/components/AuthUnlock/AuthUnlockPanel.tsx`, `frontend/src/components/AuthUnlock/AuthStatusAction.tsx`, `docs/AUTH_SESSION_GUIDE.md`
 
 **Makes GREEN (Automated Tests)**: none; this is dependency/skeleton setup.
 
@@ -68,16 +68,16 @@
 **Creates**:
 - `server/security/apiSession.ts`
 - `server/routes/auth.ts`
-- `src/auth/AuthSessionProvider.tsx`
-- `src/auth/authFetch.ts`
-- `src/components/AuthUnlock/AuthUnlockPanel.tsx`
-- `src/components/AuthUnlock/AuthStatusAction.tsx`
+- `frontend/src/auth/AuthSessionProvider.tsx`
+- `frontend/src/auth/authFetch.ts`
+- `frontend/src/components/AuthUnlock/AuthUnlockPanel.tsx`
+- `frontend/src/components/AuthUnlock/AuthStatusAction.tsx`
 - `docs/AUTH_SESSION_GUIDE.md`
 
 **Modifies**:
 - `server/server.ts`
 - `server/tests/api/test-app-factory.ts`
-- `src/App.tsx`
+- `frontend/src/App.tsx`
 - `tests/e2e/utils/selectors.ts`
 
 **Must Not Touch**:
@@ -139,7 +139,7 @@ bun run validate:ts
 - `server/routes/system.ts`
 
 **Must Not Touch**:
-- `src/` UI files
+- `frontend/src/` UI files
 - `mcp-server/`
 - public project filtering / MDT-172 authorization
 
@@ -176,7 +176,7 @@ bun run --cwd server jest tests/api/auth-session.test.ts tests/api/api-auth.test
 
 **Milestone**: M2 — Auth state boundary and local no-auth (BR-1.7)
 
-**Structure**: `src/auth/AuthSessionProvider.tsx`, `src/auth/authFetch.ts`, `src/hooks/useProjectManager.ts`
+**Structure**: `frontend/src/auth/AuthSessionProvider.tsx`, `frontend/src/auth/authFetch.ts`, `frontend/src/hooks/useProjectManager.ts`
 
 **Makes GREEN (Automated Tests)**:
 - `TEST-local-no-auth-regression` → `docs/CRs/MDT-176/tests.md`: default no-auth suite unchanged.
@@ -189,16 +189,16 @@ bun run --cwd server jest tests/api/auth-session.test.ts tests/api/api-auth.test
 **Boundary**: State/fetch plumbing only; locked UI polish and admin-gating visuals are Task 3.
 
 **Creates**:
-- `src/auth/AuthSessionProvider.tsx`
-- `src/auth/authFetch.ts`
+- `frontend/src/auth/AuthSessionProvider.tsx`
+- `frontend/src/auth/authFetch.ts`
 
 **Modifies**:
-- `src/App.tsx`
-- `src/hooks/useProjectManager.ts`
-- `src/services/dataLayer.ts`
-- `src/hooks/useTicketOperations.ts`
-- `src/components/ProjectSelector/useSelectorData.ts`
-- `src/services/sseClient.ts`
+- `frontend/src/App.tsx`
+- `frontend/src/hooks/useProjectManager.ts`
+- `frontend/src/services/dataLayer.ts`
+- `frontend/src/hooks/useTicketOperations.ts`
+- `frontend/src/components/ProjectSelector/useSelectorData.ts`
+- `frontend/src/services/sseClient.ts`
 
 **Must Not Touch**:
 - `server/security/apiAuth.ts`
@@ -239,7 +239,7 @@ bun run validate:ts
 
 **Milestone**: M3 — Locked/unlock owner path (BR-1.1-BR-1.5, BR-1.10)
 
-**Structure**: `src/components/AuthUnlock/AuthUnlockPanel.tsx`, `src/components/AuthUnlock/AuthStatusAction.tsx`, `src/components/RedirectToCurrentProject.tsx`
+**Structure**: `frontend/src/components/AuthUnlock/AuthUnlockPanel.tsx`, `frontend/src/components/AuthUnlock/AuthStatusAction.tsx`, `frontend/src/components/RedirectToCurrentProject.tsx`
 
 **Makes GREEN (Automated Tests)**: partial auth E2E subset only; full `TEST-auth-session-e2e` is claimed by Task 6 final verification.
 
@@ -253,16 +253,16 @@ bun run validate:ts
 **Boundary**: Do not change backend session mechanics; consume Task 1/2 contracts.
 
 **Creates**:
-- `src/components/AuthUnlock/AuthUnlockPanel.tsx`
-- `src/components/AuthUnlock/AuthStatusAction.tsx`
+- `frontend/src/components/AuthUnlock/AuthUnlockPanel.tsx`
+- `frontend/src/components/AuthUnlock/AuthStatusAction.tsx`
 
 **Modifies**:
-- `src/App.tsx`
-- `src/components/RedirectToCurrentProject.tsx`
-- `src/components/SecondaryHeader.tsx`
-- `src/components/HamburgerMenu.tsx`
-- `src/components/AddProjectModal/AddProjectModal.tsx`
-- `src/components/ProjectSelector/index.tsx`
+- `frontend/src/App.tsx`
+- `frontend/src/components/RedirectToCurrentProject.tsx`
+- `frontend/src/components/SecondaryHeader.tsx`
+- `frontend/src/components/HamburgerMenu.tsx`
+- `frontend/src/components/AddProjectModal/AddProjectModal.tsx`
+- `frontend/src/components/ProjectSelector/index.tsx`
 - `tests/e2e/utils/selectors.ts`
 - `tests/e2e/auth/session-unlock.spec.ts`
 
@@ -303,7 +303,7 @@ MDT_E2E_AUTH_ENABLED=true API_SECURITY_AUTH=true API_AUTH_TOKEN=mdt-176-e2e-toke
 
 **Milestone**: M4 — Logout and public compatibility (BR-1.6, BR-1.8, BR-1.9)
 
-**Structure**: `src/services/sseClient.ts`, `src/auth/AuthSessionProvider.tsx`, `src/components/RedirectToCurrentProject.tsx`
+**Structure**: `frontend/src/services/sseClient.ts`, `frontend/src/auth/AuthSessionProvider.tsx`, `frontend/src/components/RedirectToCurrentProject.tsx`
 
 **Makes GREEN (Automated Tests)**: partial auth E2E subset only; full `TEST-auth-session-e2e` is claimed by Task 6 final verification.
 
@@ -319,13 +319,13 @@ MDT_E2E_AUTH_ENABLED=true API_SECURITY_AUTH=true API_AUTH_TOKEN=mdt-176-e2e-toke
 - none
 
 **Modifies**:
-- `src/auth/AuthSessionProvider.tsx`
-- `src/auth/authFetch.ts`
-- `src/hooks/useProjectManager.ts`
-- `src/services/sseClient.ts`
-- `src/components/RedirectToCurrentProject.tsx`
-- `src/components/ProjectSelector/index.tsx`
-- `src/components/AuthUnlock/AuthStatusAction.tsx`
+- `frontend/src/auth/AuthSessionProvider.tsx`
+- `frontend/src/auth/authFetch.ts`
+- `frontend/src/hooks/useProjectManager.ts`
+- `frontend/src/services/sseClient.ts`
+- `frontend/src/components/RedirectToCurrentProject.tsx`
+- `frontend/src/components/ProjectSelector/index.tsx`
+- `frontend/src/components/AuthUnlock/AuthStatusAction.tsx`
 - `tests/e2e/auth/session-unlock.spec.ts`
 
 **Must Not Touch**:
@@ -494,23 +494,23 @@ spec-trace render all MDT-176
 | `server/routes/` | 3 | 3 | 0 | ✅ |
 | `server/` | 1 | 1 | 0 | ✅ |
 | `server/tests/api/` | 3 | 3 | 0 | ✅ |
-| `src/` | 1 | 1 | 0 | ✅ |
-| `src/auth/` | 2 | 2 | 0 | ✅ |
-| `src/components/AuthUnlock/` | 2 | 2 | 0 | ✅ |
-| `src/components/` | 4 | 4 | 0 | ✅ |
-| `src/components/ProjectSelector/` | 2 | 2 | 0 | ✅ |
-| `src/hooks/` | 2 | 2 | 0 | ✅ |
-| `src/services/` | 2 | 2 | 0 | ✅ |
+| `frontend/src/` | 1 | 1 | 0 | ✅ |
+| `frontend/src/auth/` | 2 | 2 | 0 | ✅ |
+| `frontend/src/components/AuthUnlock/` | 2 | 2 | 0 | ✅ |
+| `frontend/src/components/` | 4 | 4 | 0 | ✅ |
+| `frontend/src/components/ProjectSelector/` | 2 | 2 | 0 | ✅ |
+| `frontend/src/hooks/` | 2 | 2 | 0 | ✅ |
+| `frontend/src/services/` | 2 | 2 | 0 | ✅ |
 
 ### Missing File Assignment
 
 | Missing Architecture File | Creating Task |
 |---|---|
 | `docs/AUTH_SESSION_GUIDE.md` | Task 0, Task 5 |
-| `src/auth/authFetch.ts` | Task 0, Task 2 |
-| `src/auth/AuthSessionProvider.tsx` | Task 0, Task 2 |
-| `src/components/AuthUnlock/AuthStatusAction.tsx` | Task 0, Task 3 |
-| `src/components/AuthUnlock/AuthUnlockPanel.tsx` | Task 0, Task 3 |
+| `frontend/src/auth/authFetch.ts` | Task 0, Task 2 |
+| `frontend/src/auth/AuthSessionProvider.tsx` | Task 0, Task 2 |
+| `frontend/src/components/AuthUnlock/AuthStatusAction.tsx` | Task 0, Task 3 |
+| `frontend/src/components/AuthUnlock/AuthUnlockPanel.tsx` | Task 0, Task 3 |
 | `server/security/apiSession.ts` | Task 0, Task 1 |
 | `server/routes/auth.ts` | Task 0, Task 1 |
 | `docs/CRs/MDT-176/tasks.md` | Task 0 / this task artifact |

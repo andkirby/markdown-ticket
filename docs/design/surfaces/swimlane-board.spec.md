@@ -50,21 +50,21 @@ SwimlaneBoard
 
 | Child | Component | Spec | Conditional |
 |---|---|---|---|
-| SwimlaneBoard | `src/components/SwimlaneBoard/index.tsx` | this file | board layout mode = swimlanes |
-| Lane | inline in `src/components/SwimlaneBoard/index.tsx` | this file | per epic + trailing __none |
-| EpicLifecycleControl | inline in `src/components/SwimlaneBoard/index.tsx` | this file | epic lanes only (not __none) |
-| TicketCard | `src/components/TicketCard.tsx` | `ticket-card.spec.md` | reused with badges hidden unless Show badges is on |
-| Drop zone hook | `src/components/Column/useDropZone.ts` | — | reused, with epic-match `canDrop` |
+| SwimlaneBoard | `frontend/src/components/SwimlaneBoard/index.tsx` | this file | board layout mode = swimlanes |
+| Lane | inline in `frontend/src/components/SwimlaneBoard/index.tsx` | this file | per epic + trailing __none |
+| EpicLifecycleControl | inline in `frontend/src/components/SwimlaneBoard/index.tsx` | this file | epic lanes only (not __none) |
+| TicketCard | `frontend/src/components/TicketCard.tsx` | `ticket-card.spec.md` | reused with badges hidden unless Show badges is on |
+| Drop zone hook | `frontend/src/components/Column/useDropZone.ts` | — | reused, with epic-match `canDrop` |
 
 ## Source files
 
 | Type | Path |
 |---|---|
-| SwimlaneBoard | `src/components/SwimlaneBoard/index.tsx` |
-| Lane model helpers | `src/components/SwimlaneBoard/helpers.ts` |
-| CSS | `src/components/SwimlaneBoard/swimlane-board.css` |
-| Ticket card | `src/components/TicketCard.tsx` |
-| Board layout pref | `src/config/boardLayoutMode.ts` |
+| SwimlaneBoard | `frontend/src/components/SwimlaneBoard/index.tsx` |
+| Lane model helpers | `frontend/src/components/SwimlaneBoard/helpers.ts` |
+| CSS | `frontend/src/components/SwimlaneBoard/swimlane-board.css` |
+| Ticket card | `frontend/src/components/TicketCard.tsx` |
+| Board layout pref | `frontend/src/config/boardLayoutMode.ts` |
 | Design source | `designs/board-zai/design3-epics.md` §8 |
 
 ## Lanes

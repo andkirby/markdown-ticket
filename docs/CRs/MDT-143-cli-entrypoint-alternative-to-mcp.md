@@ -293,7 +293,7 @@ Updated MDT-012: status → Implemented
 
 ### Color Mapping
 
-Uses existing badge colors from `src/components/Badge/badge.css`:
+Uses existing badge colors from `frontend/src/components/Badge/badge.css`:
 
 #### Status Colors
 | Status | Color | Tailwind Classes |
@@ -381,7 +381,7 @@ priority: Medium
 cli/
 ├── package.json
 ├── tsconfig.json
-├── src/
+├── frontend/src/
 │   ├── index.ts           # Entry point
 │   ├── commands/
 │   │   ├── view.ts        # Ticket view command
@@ -505,8 +505,8 @@ Resolved by the MDT-143 UAT implementation. The canonical command grammar and te
 > Tasks notes: [tasks.md](./MDT-143/tasks.md)
 
 ## 6. References
-- `src/components/Badge/badge.css` - Color definitions (single source of truth)
-- `src/config/statusConfig.ts` - Status configuration and colors
+- `frontend/src/components/Badge/badge.css` - Color definitions (single source of truth)
+- `frontend/src/config/statusConfig.ts` - Status configuration and colors
 - `shared/utils/keyNormalizer.ts` - Key normalization logic
 - `shared/utils/projectDetector.ts` - Shared project detection
 - `shared/services/ProjectService.ts` - Shared project query/current-project contract

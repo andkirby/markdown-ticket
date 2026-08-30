@@ -14,14 +14,14 @@ priority: Medium
 `full` — Documents View navigation behavior with concrete UI and data boundaries.
 
 ### Problem
-- `src/components/DocumentsView/FileTree.tsx` expands all folders by default, which makes large configured document trees overwhelming.
-- `src/components/DocumentsView/DocumentsLayout.tsx` has search, sort, configure paths, and active-document targeting, but no global collapse control or focused entry points.
+- `frontend/src/components/DocumentsView/FileTree.tsx` expands all folders by default, which makes large configured document trees overwhelming.
+- `frontend/src/components/DocumentsView/DocumentsLayout.tsx` has search, sort, configure paths, and active-document targeting, but no global collapse control or focused entry points.
 - `docs/CRs/` is ticket territory and must not appear as general document navigation when broad document roots include `docs/`.
 
 ### Affected Artifacts
-- `src/components/DocumentsView/DocumentsLayout.tsx` — sidebar controls, filter behavior, recent section.
-- `src/components/DocumentsView/FileTree.tsx` — default expansion and collapse behavior.
-- `src/components/DocumentsView/PathSelector.tsx` — communicate automatic ticket-area exclusion.
+- `frontend/src/components/DocumentsView/DocumentsLayout.tsx` — sidebar controls, filter behavior, recent section.
+- `frontend/src/components/DocumentsView/FileTree.tsx` — default expansion and collapse behavior.
+- `frontend/src/components/DocumentsView/PathSelector.tsx` — communicate automatic ticket-area exclusion.
 - `server/services/DocumentService.ts` — enforce document path exclusions for `docs/CRs/`.
 - `docs/design/surfaces/documents-view-navigation.spec.md` — canonical UX contract.
 - `docs/design/surfaces/documents-view-navigation.mockups.md` — wireframe contract.
@@ -65,16 +65,16 @@ Implement focused document navigation with collapsed roots, recent files, filter
 
 | Artifact | Type | Purpose |
 |----------|------|---------|
-| `src/components/DocumentsView/RecentDocuments.tsx` | Component | Render project-scoped recently opened document shortcuts |
-| `src/config/documentNavigation.ts` | Config utility | Persist recent documents per project |
+| `frontend/src/components/DocumentsView/RecentDocuments.tsx` | Component | Render project-scoped recently opened document shortcuts |
+| `frontend/src/config/documentNavigation.ts` | Config utility | Persist recent documents per project |
 
 ### Modified Artifacts
 
 | Artifact | Change Type | Modification |
 |----------|-------------|--------------|
-| `src/components/DocumentsView/DocumentsLayout.tsx` | Layout update | Add collapse control, recent section, path-aware filtering |
-| `src/components/DocumentsView/FileTree.tsx` | Behavior update | Default to collapsed roots, expose collapse-all method, preserve selected ancestors |
-| `src/components/DocumentsView/PathSelector.tsx` | UX copy update | Show automatic exclusion for `docs/CRs/` when configured roots overlap ticket area |
+| `frontend/src/components/DocumentsView/DocumentsLayout.tsx` | Layout update | Add collapse control, recent section, path-aware filtering |
+| `frontend/src/components/DocumentsView/FileTree.tsx` | Behavior update | Default to collapsed roots, expose collapse-all method, preserve selected ancestors |
+| `frontend/src/components/DocumentsView/PathSelector.tsx` | UX copy update | Show automatic exclusion for `docs/CRs/` when configured roots overlap ticket area |
 | `server/services/DocumentService.ts` | Filtering update | Exclude `docs/CRs/` from broad document roots by default |
 | `tests/e2e/documents/*.spec.ts` | Test update | Cover collapsed tree, recents, filtering, and ticket exclusion |
 
@@ -90,7 +90,7 @@ Implement focused document navigation with collapsed roots, recent files, filter
 ### Key Patterns
 
 - Existing icon-button control cluster: apply to collapse, active target, and configure paths in `DocumentsLayout.tsx`.
-- Local project-scoped preferences: follow `src/config/documentSorting.ts` pattern for document navigation preferences.
+- Local project-scoped preferences: follow `frontend/src/config/documentSorting.ts` pattern for document navigation preferences.
 - Data-state styling: use `data-tree-state` from `docs/design/surfaces/documents-view-navigation.spec.md` when row states become semantic.
 
 ## 5. Acceptance Criteria

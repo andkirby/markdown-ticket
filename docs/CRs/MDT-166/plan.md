@@ -22,7 +22,7 @@
 ## Migration Order (easiest → hardest)
 
 ### Step 1: RouteErrorModal → Pattern C
-**File**: `src/components/RouteErrorModal.tsx`
+**File**: `frontend/src/components/RouteErrorModal.tsx`
 **What changes**:
 -  Remove: outer `<div className="fixed inset-0 ...">`
 -  Remove: `<div className="bg-card border rounded-lg p-6 max-w-md mx-4">`
@@ -41,7 +41,7 @@
 - --
 
 ### Step 2: FolderBrowserModal → Pattern A
-**File**: `src/components/AddProjectModal/components/FolderBrowserModal.tsx`
+**File**: `frontend/src/components/AddProjectModal/components/FolderBrowserModal.tsx`
 **What changes**:
 -  Remove: outer `<div className="fixed inset-0 ...">`
 -  Remove: `<div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl ...">`
@@ -60,7 +60,7 @@
 - --
 
 ### Step 3: QuickSearchModal → Pattern B
-**File**: `src/components/QuickSearch/QuickSearchModal.tsx`
+**File**: `frontend/src/components/QuickSearch/QuickSearchModal.tsx`
 **What changes**:
 -  Remove: `createPortal` import and call
 -  Remove: escape key handler useEffect (base Modal handles)
@@ -97,7 +97,7 @@ This centers vertically. For QuickSearch, we want `items-start pt-[15vh]`. We'd 
 - --
 
 ### Step 4: ProjectBrowserPanel → Pattern B
-**File**: `src/components/ProjectSelector/ProjectBrowserPanel.tsx`
+**File**: `frontend/src/components/ProjectSelector/ProjectBrowserPanel.tsx`
 **What changes**:
 -  Remove: escape key handler useEffect
 -  Remove: body scroll lock useEffect
@@ -117,7 +117,7 @@ This centers vertically. For QuickSearch, we want `items-start pt-[15vh]`. We'd 
 - --
 
 ### Step 5: AddProjectModal → Pattern A (main) + Pattern C ×3 (sub-dialogs)
-**File**: `src/components/AddProjectModal/AddProjectModal.tsx`
+**File**: `frontend/src/components/AddProjectModal/AddProjectModal.tsx`
 **What changes**:
 
 #### 5a. Main form modal
@@ -176,12 +176,12 @@ Currently uses `bg-black bg-opacity-50` (Tailwind v3 syntax). Ticket says standa
 
 | File | Change |
 |------|--------|
-| `src/components/ui/Modal.tsx` | Fix backdrop to `bg-black/50` |
-| `src/components/RouteErrorModal.tsx` | Migrate to Pattern C |
-| `src/components/AddProjectModal/components/FolderBrowserModal.tsx` | Migrate to Pattern A |
-| `src/components/QuickSearch/QuickSearchModal.tsx` | Migrate to Pattern B |
-| `src/components/ProjectSelector/ProjectBrowserPanel.tsx` | Migrate to Pattern B |
-| `src/components/AddProjectModal/AddProjectModal.tsx` | Migrate to Pattern A + 3× Pattern C |
+| `frontend/src/components/ui/Modal.tsx` | Fix backdrop to `bg-black/50` |
+| `frontend/src/components/RouteErrorModal.tsx` | Migrate to Pattern C |
+| `frontend/src/components/AddProjectModal/components/FolderBrowserModal.tsx` | Migrate to Pattern A |
+| `frontend/src/components/QuickSearch/QuickSearchModal.tsx` | Migrate to Pattern B |
+| `frontend/src/components/ProjectSelector/ProjectBrowserPanel.tsx` | Migrate to Pattern B |
+| `frontend/src/components/AddProjectModal/AddProjectModal.tsx` | Migrate to Pattern A + 3× Pattern C |
 
 **Total**: 6 files modified, 0 new files.
 
@@ -193,16 +193,16 @@ After all migrations:
 
 ```bash
 # 1. No hand-rolled fixed inset-0 outside of base Modal
-grep -r "fixed inset-0" src/components --include="*.tsx"
-# Should only return: src/components/ui/Modal.tsx (×1 for the overlay, ×1 for the backdrop)
+grep -r "fixed inset-0" frontend/src/components --include="*.tsx"
+# Should only return: frontend/src/components/ui/Modal.tsx (×1 for the overlay, ×1 for the backdrop)
 
 # 2. No manual createPortal outside of base Modal
-grep -r "createPortal" src/components --include="*.tsx"
-# Should only return: src/components/ui/Modal.tsx
+grep -r "createPortal" frontend/src/components --include="*.tsx"
+# Should only return: frontend/src/components/ui/Modal.tsx
 
 # 3. No manual body scroll lock outside of base Modal
-grep -r "body.style.overflow" src/components --include="*.tsx"
-# Should only return: src/components/ui/Modal.tsx
+grep -r "body.style.overflow" frontend/src/components --include="*.tsx"
+# Should only return: frontend/src/components/ui/Modal.tsx
 
 # 4. TypeScript compiles
 bun run validate:ts:all

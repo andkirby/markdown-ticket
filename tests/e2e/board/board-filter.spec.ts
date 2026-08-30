@@ -11,7 +11,7 @@
  * a bottom-anchored filter sheet.
  *
  * Predicate semantics (AND/OR/empty/query) are covered exhaustively at the
- * unit level (src/utils/ticketFilters.test.ts). This file proves the chrome
+ * unit level (frontend/src/utils/ticketFilters.test.ts). This file proves the chrome
  * is wired to the predicate end-to-end.
  *
  * Scenario data (simple):

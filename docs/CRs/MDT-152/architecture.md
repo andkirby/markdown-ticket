@@ -59,7 +59,7 @@ Response shape:
 
 ### Flow 1: ProjectBrowserPanel Search
 
-Owner module: `src/components/ProjectSelector/ProjectBrowserPanel.tsx`
+Owner module: `frontend/src/components/ProjectSelector/ProjectBrowserPanel.tsx`
 
 ```text
 Panel opens
@@ -74,7 +74,7 @@ No backend call and no debounce are allowed in this flow.
 
 ### Flow 2: Current Project QuickSearch
 
-Owner module: `src/hooks/useQuickSearch.ts`
+Owner module: `frontend/src/hooks/useQuickSearch.ts`
 
 ```text
 QuickSearch opens
@@ -88,7 +88,7 @@ This flow must not use cross-project cache or backend fetch.
 
 ### Flow 3: Cross-Project Ticket-Key Lookup
 
-Owner modules: `src/hooks/useQuickSearch.ts`, `src/hooks/useCrossProjectSearch.ts`, `server/services/TicketService.ts`
+Owner modules: `frontend/src/hooks/useQuickSearch.ts`, `frontend/src/hooks/useCrossProjectSearch.ts`, `server/services/TicketService.ts`
 
 ```text
 User types ABC-42
@@ -105,7 +105,7 @@ The backend may target the resolved project directly; it must not ask the browse
 
 ### Flow 4: Project-Scoped QuickSearch
 
-Owner modules: `src/hooks/useQuickSearch.ts`, `src/hooks/useCrossProjectSearch.ts`, `server/services/TicketService.ts`
+Owner modules: `frontend/src/hooks/useQuickSearch.ts`, `frontend/src/hooks/useCrossProjectSearch.ts`, `server/services/TicketService.ts`
 
 ```text
 User types @ABC login
@@ -123,7 +123,7 @@ Explicit `@MDT ...` while currently in MDT is allowed and must not be treated as
 
 ### Flow 5: Async State and Cache
 
-Owner module: `src/hooks/useCrossProjectSearch.ts`
+Owner module: `frontend/src/hooks/useCrossProjectSearch.ts`
 
 ```text
 Mode enters async search
@@ -154,19 +154,19 @@ server/services/TicketService.ts
 shared/services/TicketService.ts
   Reusable per-project ticket read/search primitives
 
-src/services/dataLayer.ts
+frontend/src/services/dataLayer.ts
   searchProjects request, response normalization, request dedupe
 
-src/hooks/useQuickSearch.ts
+frontend/src/hooks/useQuickSearch.ts
   Query parser, current-project filtering, selected-index model
 
-src/hooks/useCrossProjectSearch.ts
+frontend/src/hooks/useCrossProjectSearch.ts
   Debounce, loading/error state, 5-minute cache, retry
 
-src/components/QuickSearch/*
+frontend/src/components/QuickSearch/*
   Modal shell, input, mode indicator, result sections, empty/loading states
 
-src/components/ProjectSelector/ProjectBrowserPanel.tsx
+frontend/src/components/ProjectSelector/ProjectBrowserPanel.tsx
   Client-side project filtering and browser-panel empty state
 
 docs/design/specs/*.md and docs/design/mockups/*.md
@@ -194,8 +194,8 @@ docs/design/specs/*.md and docs/design/mockups/*.md
 Runtime files must not import E2E helpers or test fixtures. Test artifacts are separated by layer:
 
 - API contract tests: `server/tests/api/projects.search.test.ts`
-- Query parser tests: `src/hooks/useQuickSearch.test.ts`
-- Async/cache tests: `src/hooks/useCrossProjectSearch.test.ts`
+- Query parser tests: `frontend/src/hooks/useQuickSearch.test.ts`
+- Async/cache tests: `frontend/src/hooks/useCrossProjectSearch.test.ts`
 - QuickSearch E2E: `tests/e2e/quick-search/modal.spec.ts`
 - Project browser E2E: `tests/e2e/selector/project-browser.spec.ts`
 
@@ -210,7 +210,7 @@ E2E tests verify visible states and keyboard behavior. Unit/API tests verify par
 - Result limits are enforced server-side even if the client sends larger limits.
 - Current project exclusion applies only to ProjectBrowserPanel search results.
 - Loading skeletons render only after async fetch start, not during the debounce wait.
-- Modal overlay behavior remains aligned with `src/MODALS.md`.
+- Modal overlay behavior remains aligned with `frontend/src/MODALS.md`.
 - Shared query contract strings live in `domain-contracts`, not duplicated as ad hoc frontend/server literals.
 
 ## Error Philosophy

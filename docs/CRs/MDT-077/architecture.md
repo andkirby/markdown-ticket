@@ -52,8 +52,8 @@ flowchart TD
 | `shared/tools/ProjectManager.ts` | Project create/init facade | Read/query contract replacement |
 | `shared/tools/ProjectValidator.ts` | Project field validation | Persistence |
 | `server/controllers/ProjectController.ts` | API input validation, project resolution, response shape | Direct TOML writes |
-| `src/components/AddProjectModal/` | Project edit/create UI and form validation | Storage-mode decisions |
-| `src/hooks/useProjectManager.ts` | Frontend project state and selected-project sync | Backend persistence |
+| `frontend/src/components/AddProjectModal/` | Project edit/create UI and form validation | Storage-mode decisions |
+| `frontend/src/hooks/useProjectManager.ts` | Frontend project state and selected-project sync | Backend persistence |
 | `cli/src/commands/project.ts` | Human/agent CLI presentation | Project merge rules |
 | `mcp-server/src/tools/handlers/projectHandlers.ts` | MCP project tool presentation | Project merge rules |
 

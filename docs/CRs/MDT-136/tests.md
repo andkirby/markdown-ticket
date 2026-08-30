@@ -6,7 +6,7 @@
 
 - useQuickSearch Hook Unit Tests (`TEST-use-quick-search-unit`)
   Covers: `BR-3`, `C2`, `C3`, `C4`
-  File: `src/hooks/useQuickSearch.test.ts`
+  File: `frontend/src/hooks/useQuickSearch.test.ts`
 
 ### e2e
 

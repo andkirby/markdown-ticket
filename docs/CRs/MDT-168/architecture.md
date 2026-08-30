@@ -34,11 +34,11 @@ server/services/config/                   NEW — application boundary + adapter
 server/controllers/ConfigController.ts     NEW — thin transport delegate
 server/routes/config.ts                    NEW — config endpoints extracted from system.ts
 shared/services/project/ProjectDocumentPatch.ts  NEW — typed document patch command
-src/hooks/useBackendConfig.ts              NEW — staged backend-config state/actions
-src/config/configApiClient.ts              NEW — typed client + field-error handling
+frontend/src/hooks/useBackendConfig.ts              NEW — staged backend-config state/actions
+frontend/src/config/configApiClient.ts              NEW — typed client + field-error handling
 ```
 
-**Dependency direction**: `domain-contracts` ← `shared` ← `server`/`src`. The
+**Dependency direction**: `domain-contracts` ← `shared` ← `server`/`frontend/src`. The
 contract layer has no filesystem/controller/UI behavior. Adapters depend on the
 contract + shared atomic-write/TOML helpers; they never reach into routes.
 

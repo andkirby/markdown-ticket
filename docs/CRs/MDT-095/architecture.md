@@ -56,12 +56,12 @@ server/
       └── tickets.ts              # (modified) add inWorktree, worktreePath to responses
 
 mcp-server/
-  └── src/
+  └── frontend/src/
       └── tools/
           └── handlers/
               └── crHandlers.ts   # (modified) use WorktreeService for path resolution
 
-src/
+frontend/src/
   ├── components/
   │   ├── TicketCard.tsx          # (modified) uses TicketAttributeTags for badge
   │   ├── TicketAttributeTags.tsx # (already implemented) 🪾 Worktree badge
@@ -80,7 +80,7 @@ src/
 | `shared/services/ProjectService.ts` | Project discovery, CR list aggregation (calls WorktreeService for path resolution) | Direct git command execution |
 | `server/fileWatcherService.ts` | chokidar watchers for main and worktree paths, SSE broadcasting | Ticket content parsing, path resolution logic |
 | `server/services/TicketService.ts` | CR CRUD operations using resolved paths | Git operations, worktree detection |
-| `src/components/TicketAttributeTags.tsx` | Visual worktree badge display (🪾 Worktree) | Path resolution, API calls |
+| `frontend/src/components/TicketAttributeTags.tsx` | Visual worktree badge display (🪾 Worktree) | Path resolution, API calls |
 
 ## Error Philosophy
 

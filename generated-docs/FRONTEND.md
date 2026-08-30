@@ -16,7 +16,7 @@ The Markdown Ticket Board frontend is a modern React application built with Type
 ## Project Structure
 
 ```
-src/
+frontend/src/
 ├── App.tsx                    # Main application component
 ├── main.tsx                   # Application entry point
 ├── index.css                  # Global styles and Tailwind imports
@@ -212,7 +212,7 @@ class FileWatcherService {
 #### Tailwind CSS Configuration
 
 ```javascript
-// tailwind.config.js highlights:
+// frontend/tailwind.config.js highlights:
 - Custom color palette for light/dark themes
 - Component-specific utility classes
 - Responsive breakpoint definitions
@@ -268,7 +268,7 @@ bun run deploy
 
 ### Build Configuration
 
-**Vite Configuration** (`vite.config.ts`):
+**Vite Configuration** (`frontend/vite.config.ts`):
 
 ```typescript
 export default defineConfig({

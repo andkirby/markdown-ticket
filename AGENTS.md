@@ -81,12 +81,12 @@ Load the skills accordingly:
 
 **Core Concept**: Kanban board where tickets are markdown files with YAML frontmatter in `docs/CRs/`, version-controlled with Git, with real-time file watching and MCP integration.
 
-### Frontend (src/)
+### Frontend (frontend/src/)
 - **State**: Custom React hooks, no external library
-- **Routing**: `App.tsx` is a route table only; handlers + one-concern hooks live in `src/components/routes/` — see `docs/architecture/frontend-routes-architecture.md` for the model and where new code goes
+- **Routing**: `App.tsx` is a route table only; handlers + one-concern hooks live in `frontend/src/components/routes/` — see `docs/architecture/frontend-routes-architecture.md` for the model and where new code goes
 - **Key**: `useProjectManager.ts` (central hub, uses refs to prevent stale closures)
 - **Views**: Board (drag-drop), List (tabular), DocumentsView (file browser)
-- **Component Standards**: See `src/MODALS.md` for modal/overlay patterns and conventions
+- **Component Standards**: See `frontend/src/MODALS.md` for modal/overlay patterns and conventions
 
 ### Backend (server/)
 Layered architecture: controllers → services → repositories
@@ -169,7 +169,7 @@ When users ask "how to" questions, search and read the relevant documentation be
 | "Where does a setting live?" | `docs/CONFIG_INSPECTION.md` — `bun run inspect:config` (browser vs backend file + exposure class) |
 | "How do I test/E2E?" | `tests/AGENTS.md`, `tests/e2e/AGENTS.md` |
 | "How does [feature] work?" | `docs/architecture/`, `server/docs/ARCHITECTURE.md`, `docs/CRs/` (feature tickets) |
-| "How is the frontend structured / where does frontend code go?" | `docs/architecture/frontend-routes-architecture.md`, `src/AGENTS.md` |
+| "How is the frontend structured / where does frontend code go?" | `docs/architecture/frontend-routes-architecture.md`, `frontend/src/AGENTS.md` |
 | "How do I develop locally?" | `docs/DEVELOPMENT_GUIDE.md` |
 | "How do I use MCP?" | `docs/MCP_SERVER_GUIDE.md`, `docs/CRs/MDT-074*.md` (MCP HTTP), `docs/CRs/MDT-004*.md` (MCP server) |
 | "How was [feature] implemented?" | Search `docs/CRs/MDT-*` for relevant ticket describing the implementation |

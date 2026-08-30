@@ -67,7 +67,7 @@ The backend keeps deployment state at startup and passes plain values into polic
 - `server/tests/security/originPolicy.test.ts` verifies pure allowed-origin policy behavior.
 - `server/tests/security/publicLinkOrigins.test.ts` verifies generated-link option selection.
 - `server/tests/api/read-token-management.test.ts` verifies invite URL construction for `PUBLIC_ORIGIN` and current-origin fallback.
-- `src/components/SettingsModal/ReadAccessTokens.test.tsx` verifies the UI uses the server-selected origin without rendering an owner picker.
+- `frontend/src/components/SettingsModal/ReadAccessTokens.test.tsx` verifies the UI uses the server-selected origin without rendering an owner picker.
 - `tests/e2e/sharing/read-access-journey.spec.ts` verifies owners generate invite links using `PUBLIC_ORIGIN`.
 
 ## Extension Rule

@@ -120,7 +120,7 @@ This is the **only mutation path that correctly updates `lastModified` in frontm
 
 ### 1.8 Frontend Optimistic Updates (⚠️ Local only)
 
-**File**: `src/hooks/useTicketOperations.ts:147`
+**File**: `frontend/src/hooks/useTicketOperations.ts:147`
 
 ```ts
 setTickets((prevTickets: Ticket[]) =>
@@ -144,7 +144,7 @@ lastModified: frontmatter.lastModified || new Date().toISOString(),
 
 When a file changes, the SSE broadcast reads frontmatter's `lastModified` and sends it to the frontend. If frontmatter is stale, the frontend gets stale data.
 
-**File**: `src/hooks/useProjectManager.ts:83`
+**File**: `frontend/src/hooks/useProjectManager.ts:83`
 
 ```ts
 { ...ticket, ...ticketData, lastModified: ticketData.lastModified || new Date() }
@@ -154,7 +154,7 @@ The frontend applies SSE data directly. If `ticketData.lastModified` is the stal
 
 ### 1.10 Sorting (✅ Works, depends on data quality)
 
-**File**: `src/utils/sorting.ts:26-28`
+**File**: `frontend/src/utils/sorting.ts:26-28`
 
 ```ts
 case 'lastModified':

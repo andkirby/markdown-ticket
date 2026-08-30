@@ -30,7 +30,7 @@ free-text `query` keeps today's multi-term AND semantics over title/code/descrip
 | Predicate | Location | Match semantics | Caller |
 |-----------|----------|-----------------|--------|
 | Server (fuzzy) | `shared/services/TicketService.ts:640` | substring, case-insensitive | MCP `list_crs` |
-| Frontend (exact + query-AND) | `src/utils/ticketFilters.ts` (new) | exact for facets, multi-term AND for query | Board |
+| Frontend (exact + query-AND) | `frontend/src/utils/ticketFilters.ts` (new) | exact for facets, multi-term AND for query | Board |
 
 **Rationale**: forcing the frontend to reuse the fuzzy predicate would break
 the facet UX (selecting "High" would also match "Highlander"). The two
@@ -69,9 +69,9 @@ the **state + persistence** lives in a hook.
 
 | Concern | Owner | File |
 |---------|-------|------|
-| Predicate (apply filters → ticket subset) | pure function | `src/utils/ticketFilters.ts` |
-| State shape, reducer, actions, localStorage | hook | `src/hooks/useBoardFilters.ts` |
-| localStorage read/write | config module | `src/config/filterPreferences.ts` |
+| Predicate (apply filters → ticket subset) | pure function | `frontend/src/utils/ticketFilters.ts` |
+| State shape, reducer, actions, localStorage | hook | `frontend/src/hooks/useBoardFilters.ts` |
+| localStorage read/write | config module | `frontend/src/config/filterPreferences.ts` |
 
 This mirrors the existing sort architecture: `sorting.ts` (config/persistence)
 + `sortTickets` (pure util) + `SortControls` (UI).
@@ -106,7 +106,7 @@ render inline in the app header's single row (UAT: filters apply to board AND
 list views — both consume the same pre-filtered set).
 
 ```
-src/components/BoardFilterBar/
+frontend/src/components/BoardFilterBar/
 ├── index.tsx              # BoardFilterBar — desktop inline bar OR mobile sheet
 ├── FilterButton.tsx       # "Filter · N" trigger + popover (desktop)
 ├── FacetSection.tsx       # checkbox group inside the popover/mobile sheet
@@ -227,8 +227,8 @@ Static facets (`status`, `type`, `priority`) import directly from
 1. Add optional fields to `TicketFilters` (domain-contracts) — additive, no
    rebuild of consumers required, but `bun run build:shared` is run to refresh
    the `shared` re-export.
-2. Add `src/utils/ticketFilters.ts` (predicate) + tests — no integration yet.
-3. Add `src/config/filterPreferences.ts` + `src/hooks/useBoardFilters.ts`.
+2. Add `frontend/src/utils/ticketFilters.ts` (predicate) + tests — no integration yet.
+3. Add `frontend/src/config/filterPreferences.ts` + `frontend/src/hooks/useBoardFilters.ts`.
 4. Add `BoardFilterBar/` components.
 5. Wire into `Board.tsx`, `HamburgerMenu.tsx`, `Column/index.tsx`.
 6. Remove the old `filterQuery` useState + inline useMemo from Board.tsx.

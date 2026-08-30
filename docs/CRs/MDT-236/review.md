@@ -1,16 +1,16 @@
 # Review: MDT-236
 
 ## Changed code
-- `src/components/ui/table.tsx` — vendored Table: `text-sm`→`var(--fs-md)`, `px-4`/`p-4`→`var(--pad-x)`/`var(--pad-y)`; header content-following (`calc(var(--pad-y)*0.6)`, SIZE text).
-- `src/components/DocumentsView/FileTree.tsx` — tree rows: density text + `calc(var(--pad-y)*0.6)` padding (24px floor at tight·compact); meta line clamped to 11px floor.
-- `src/components/QuickSearch/quick-search.css` — result rows: `var(--fs-md)` text, `calc(var(--pad-y)*0.6) var(--pad-x)` padding; meta clamped. Scope bar/hints (chrome) untouched.
-- `src/components/ProjectSelector/project-selector.css` — browser-panel cards (content): density padding + SIZE text (code `--fs-md`, title/desc clamped `--fs-xs`); rail card + chips (chrome) explicitly reset to static chrome sizing (`--fs-ui-sm`/`--fs-ui-xs`, fixed padding) — corrected from architecture draft after reading the code (rail is fixed `h-9` header furniture).
-- `src/components/TicketAttributes.tsx` — dt/dd/h4 → `var(--fs-md)`; xs meta → clamped `--fs-xs`.
-- `src/components/TicketCard/ticket.css`, `src/components/PinRail/pin-rail.css` — `--fs-xs` consumers wrapped in `clamp(11px, …, 2rem)` (user-approved floor; compact cards now 11px, was 10px).
-- `src/styles/design-tokens.css` — density slots documented surface-agnostic + clamp-floor rule (no value changes).
-- `src/THEME.md`, `src/styleguide.html` — surface inventory, floor rule, density-aware surface list.
+- `frontend/src/components/ui/table.tsx` — vendored Table: `text-sm`→`var(--fs-md)`, `px-4`/`p-4`→`var(--pad-x)`/`var(--pad-y)`; header content-following (`calc(var(--pad-y)*0.6)`, SIZE text).
+- `frontend/src/components/DocumentsView/FileTree.tsx` — tree rows: density text + `calc(var(--pad-y)*0.6)` padding (24px floor at tight·compact); meta line clamped to 11px floor.
+- `frontend/src/components/QuickSearch/quick-search.css` — result rows: `var(--fs-md)` text, `calc(var(--pad-y)*0.6) var(--pad-x)` padding; meta clamped. Scope bar/hints (chrome) untouched.
+- `frontend/src/components/ProjectSelector/project-selector.css` — browser-panel cards (content): density padding + SIZE text (code `--fs-md`, title/desc clamped `--fs-xs`); rail card + chips (chrome) explicitly reset to static chrome sizing (`--fs-ui-sm`/`--fs-ui-xs`, fixed padding) — corrected from architecture draft after reading the code (rail is fixed `h-9` header furniture).
+- `frontend/src/components/TicketAttributes.tsx` — dt/dd/h4 → `var(--fs-md)`; xs meta → clamped `--fs-xs`.
+- `frontend/src/components/TicketCard/ticket.css`, `frontend/src/components/PinRail/pin-rail.css` — `--fs-xs` consumers wrapped in `clamp(11px, …, 2rem)` (user-approved floor; compact cards now 11px, was 10px).
+- `frontend/src/styles/design-tokens.css` — density slots documented surface-agnostic + clamp-floor rule (no value changes).
+- `frontend/src/THEME.md`, `frontend/src/styleguide.html` — surface inventory, floor rule, density-aware surface list.
 - Tests: `tests/e2e/density/surfaces.spec.ts` (new, 7 tests), `tests/e2e/utils/selectors.ts` (densitySelectors).
-- Baseline repairs (pre-existing failures): `src/utils/sorting(.test).ts` eslint --fix; `src/hooks/usePinRailPref.ts` state-var rename (naming-convention lint).
+- Baseline repairs (pre-existing failures): `frontend/src/utils/sorting(.test).ts` eslint --fix; `frontend/src/hooks/usePinRailPref.ts` state-var rename (naming-convention lint).
 
 ## Gates
 - Build/typecheck: PASS (`bun run build` 7.4s; `validate:ts` 1/1 projects pass; density utilities verified present in built CSS)

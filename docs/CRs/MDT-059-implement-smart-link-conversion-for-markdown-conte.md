@@ -245,7 +245,7 @@ interface LinkConfig {
 ### File Structure
 
 ```text
-src/
+frontend/src/
 ├── components/
 │   ├── MarkdownContent.tsx       # Main processing component
 │   ├── MarkdownErrorBoundary.tsx # Error handling

@@ -29,7 +29,7 @@ The accent color flows through the same data path as existing selector state (fa
 
 **Invariant**: The `accent` field is optional. Absent accent triggers fallback — never an error.
 
-### Owner: `src/utils/accentColors.ts` (accent utilities)
+### Owner: `frontend/src/utils/accentColors.ts` (accent utilities)
 
 | Responsibility | Boundary |
 |---------------|----------|
@@ -41,7 +41,7 @@ The accent color flows through the same data path as existing selector state (fa
 
 **Invariant**: All functions are pure. No React hooks, no DOM access, no API calls.
 
-### Owner: `src/components/ProjectSelector/useSelectorData.ts` (accent persistence)
+### Owner: `frontend/src/components/ProjectSelector/useSelectorData.ts` (accent persistence)
 
 | Responsibility | Boundary |
 |---------------|----------|
@@ -50,7 +50,7 @@ The accent color flows through the same data path as existing selector state (fa
 
 **Invariant**: Accent persistence goes through `/api/config/selector` only. Never through `/api/projects/:code/update`.
 
-### Owner: `src/components/AddProjectModal/components/AccentColorPicker.tsx` (color picker UI)
+### Owner: `frontend/src/components/AddProjectModal/components/AccentColorPicker.tsx` (color picker UI)
 
 | Responsibility | Boundary |
 |---------------|----------|
@@ -60,7 +60,7 @@ The accent color flows through the same data path as existing selector state (fa
 
 **Invariant**: The picker calls `onChange(accentValue)` — it does not persist directly.
 
-### Owner: `src/components/ProjectSelector/ProjectSelectorCard.tsx` (card rendering)
+### Owner: `frontend/src/components/ProjectSelector/ProjectSelectorCard.tsx` (card rendering)
 
 | Responsibility | Boundary |
 |---------------|----------|
@@ -69,7 +69,7 @@ The accent color flows through the same data path as existing selector state (fa
 
 **Invariant**: Card row height does not increase. Identity area width is fixed.
 
-### Owner: `src/components/ProjectSelector/ProjectSelectorChip.tsx` (chip rendering)
+### Owner: `frontend/src/components/ProjectSelector/ProjectSelectorChip.tsx` (chip rendering)
 
 | Responsibility | Boundary |
 |---------------|----------|
@@ -253,18 +253,18 @@ domain-contracts/src/app-config/
   validation.ts                      ← Hex validation helper
   __tests__/accent.test.ts           ← NEW: accent schema + validation tests
 
-src/utils/
+frontend/src/utils/
   accentColors.ts                    ← NEW: palette, fallback, foreground, validation
   __tests__/accentColors.test.ts     ← NEW: accent utilities tests
 
-src/components/SettingsModal.tsx           ← "Project Accents" section in Appearance tab
-src/components/SettingsModal/
+frontend/src/components/SettingsModal.tsx           ← "Project Accents" section in Appearance tab
+frontend/src/components/SettingsModal/
   ProjectAccents.tsx                      ← NEW: per-project accent rows with pickers
-src/components/AddProjectModal/
+frontend/src/components/AddProjectModal/
   components/AccentColorPicker.tsx        ← reused from Settings (no longer in AddProjectModal)
   components/AccentColorPicker.css        ← reused
 
-src/components/ProjectSelector/
+frontend/src/components/ProjectSelector/
   useSelectorData.ts                 ← setAccent() extension
   useSelectorData.test.ts            ← accent read/write/persist test extension
   ProjectSelectorChip.tsx            ← left-edge accent stripe rendering

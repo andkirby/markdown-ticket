@@ -7,7 +7,7 @@
 
 | Module | Test File | Tests |
 |--------|-----------|-------|
-| `wireloomAnnotationToggle` | `src/utils/wireloomAnnotationToggle.test.ts` | 18 |
+| `wireloomAnnotationToggle` | `frontend/src/utils/wireloomAnnotationToggle.test.ts` | 18 |
 | E2E annotation toggle | `tests/e2e/documents/wireloom-annotation-toggle.spec.ts` | 11 |
 
 ## Data Mechanism Tests
@@ -33,7 +33,7 @@
 
 ```bash
 # Unit tests
-bun test src/utils/wireloomAnnotationToggle.test.ts
+bun test frontend/src/utils/wireloomAnnotationToggle.test.ts
 
 # E2E tests (will fail until implementation)
 bun run test:e2e -- tests/e2e/documents/wireloom-annotation-toggle.spec.ts

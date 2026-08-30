@@ -16,7 +16,7 @@ relatedTickets:
 - full
 
 ### Problem
-- Route path patterns (e.g., `/prj/:projectCode/ticket/:ticketKey`) are hardcoded in 8+ files, 25+ call sites across `src/`.
+- Route path patterns (e.g., `/prj/:projectCode/ticket/:ticketKey`) are hardcoded in 8+ files, 25+ call sites across `frontend/src/`.
 - `linkBuilder.ts`, `linkNormalization.ts` (`DEFAULT_WEB_BASE`), `markdownPreprocessor.ts`, `subdocPathValidation.ts`, `DirectTicketAccess.tsx`, `useTicketDocumentNavigation.ts`, `ProjectSelector/index.tsx`, `RedirectToCurrentProject.tsx`, and `App.tsx` all independently construct the same route shapes with template literals.
 - `linkBuilder.ts` exists as a canonical builder but is not used consistently — `linkNormalization.ts` reinvented its own builder methods, and most `navigate()` calls hand-roll paths inline.
 - Sub-document path variants (`ticket/:key/*`) have no builder function at all.
@@ -29,7 +29,7 @@ relatedTickets:
 
 ## 2. Proposed Solution
 
-Introduce a `src/routes.ts` (or extend `linkBuilder.ts`) that:
+Introduce a `frontend/src/routes.ts` (or extend `linkBuilder.ts`) that:
 
 1. **Defines route pattern constants** for all route shapes:
    - `ROUTE_PROJECT = '/prj/:projectCode'`

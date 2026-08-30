@@ -34,13 +34,13 @@ flowchart TD
 ## Structure
 
 ```text
-src/components/DocumentsView/
+frontend/src/components/DocumentsView/
 ├── DocumentsLayout.tsx
 ├── FileTree.tsx
 ├── PathSelector.tsx
 └── RecentDocuments.tsx
 
-src/config/
+frontend/src/config/
 ├── documentSorting.ts
 └── documentNavigation.ts
 

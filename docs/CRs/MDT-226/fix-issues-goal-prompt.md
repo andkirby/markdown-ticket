@@ -77,7 +77,7 @@ Projected stubs can render as editable regular cards.
 Required behavior:
 
 - preserve `kind: 'projected'`, `readOnly: true`, and `stale` through
-  `src/services/dataLayer.ts` and shared/frontend ticket normalization;
+  `frontend/src/services/dataLayer.ts` and shared/frontend ticket normalization;
 - projected items render via `CloudProjectionStub`, are non-draggable, and do
   not expose edit controls;
 - canonical local tickets remain editable and local wins on duplicate code;
@@ -132,7 +132,7 @@ Run focused tests first, then broader validation:
 
 ```bash
 bun test shared/services/cloud-sync/__tests__/projection-sync.test.ts
-bun test src/services/dataLayer*.test.ts
+bun test frontend/src/services/dataLayer*.test.ts
 bun run --cwd server jest server/tests/services/cloud-sync/SSEProjectionFanout.test.ts
 bun run validate:ts
 spec-trace validate MDT-226 --stage all --strict --format json

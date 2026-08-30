@@ -60,7 +60,7 @@ Then run the verifier in another:
 
 ```bash
 cd docs/CRs/MDT-198/poc/d1-binding
-bun run src/verify.ts
+bun run frontend/src/verify.ts
 ```
 
 ## Experiments
@@ -202,7 +202,7 @@ limitations, architecture implication.
 - **Hypothesis:** A production-shaped prepared-statement `D1Database.batch()`
   can allocate collision-free numbers without branching on intermediate batch
   results, and concurrent idempotent replays return one stable result.
-- **Command:** start `wrangler dev` and run `bun run src/verify.ts` as shown
+- **Command:** start `wrangler dev` and run `bun run frontend/src/verify.ts` as shown
   above.
 - **Method:** a Worker with a local D1 binding receives 50 concurrent unique
   allocation requests, 10 concurrent requests sharing one idempotency key, and

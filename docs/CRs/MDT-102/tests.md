@@ -260,7 +260,7 @@ Run all tests (currently passing - baseline established):
 
 ```bash
 # Run handler behavioral preservation tests
-cd mcp-server && npm test -- src/tools/handlers/__tests__/
+cd mcp-server && npm test -- frontend/src/tools/handlers/__tests__/
 
 # Run all MCP server unit tests
 cd mcp-server && npm test

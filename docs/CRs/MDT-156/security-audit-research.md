@@ -12,7 +12,7 @@
 - `server/` — Express REST API (controllers, routes, middleware, services)
 - `mcp-server/src/` — MCP HTTP transport, auth middleware, tool handlers
 - `shared/` — Shared services, models, YAML parser
-- `src/` — React frontend (XSS surface, sanitization)
+- `frontend/src/` — React frontend (XSS surface, sanitization)
 - Dockerfiles (`Dockerfile`, `server/Dockerfile`, `mcp-server/Dockerfile`)
 - Docker Compose files (`docker-compose.yml`, `docker-compose.prod.yml`, `docker-compose.dev.yml`)
 - `nginx.conf` — Frontend reverse proxy
@@ -448,7 +448,7 @@ Write operations with no rate limiting:
   - GHSA-crv5-9vww-q3g8 — SAFE_FOR_TEMPLATES bypass in RETURN_DOM mode
   - GHSA-v9jr-rg53-9pgp — Prototype Pollution to XSS via CUSTOM_ELEMENT_HANDLING
 
-**Context**: The project uses DOMPurify for markdown sanitization in `src/components/MarkdownContent/useMarkdownProcessor.ts`:
+**Context**: The project uses DOMPurify for markdown sanitization in `frontend/src/components/MarkdownContent/useMarkdownProcessor.ts`:
 
 ```typescript
 import DOMPurify from 'dompurify'
@@ -591,7 +591,7 @@ No type coercion, no anchors, no `!!js/function` tags, no nested structures. Thi
 
 #### DOMPurify sanitization pipeline is correct
 
-- **File**: `src/components/MarkdownContent/useMarkdownProcessor.ts`
+- **File**: `frontend/src/components/MarkdownContent/useMarkdownProcessor.ts`
 
 The processing pipeline follows best practices:
 1. Preprocess markdown

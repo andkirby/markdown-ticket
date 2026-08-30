@@ -12,7 +12,7 @@ UX surface for this ticket is narrow and surgical:
 - One new "unsupported kind" placeholder state.
 
 No modals, no new navigation, no settings UI. The viewer is inline (Pattern:
-not a modal — see `src/MODALS.md`). Existing `document-viewer__*` layout classes
+not a modal — see `frontend/src/MODALS.md`). Existing `document-viewer__*` layout classes
 are reused so the HTML viewer is visually consistent with `MarkdownViewer`.
 
 ## Viewer state machine

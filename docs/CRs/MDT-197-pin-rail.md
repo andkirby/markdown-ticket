@@ -68,7 +68,7 @@ Out of scope (deferred with evidence):
 
 - Must occupy the **left rail zone** per the spatial boundary contract (`docs/design/surfaces/board-filter-bar.spec.md` §"Spatial boundary"). The filter bar owns `header__right`; this surface owns the left rail. The two surfaces do not share a zone.
 - Must slot into `App.tsx` cleanly: the current `flex-1 overflow-hidden` content row becomes `PinRail + content`. No eviction of existing surfaces.
-- Must persist via a server endpoint following the **document-favorites pattern** (`PUT /api/documents/favs`, `src/config/documentFavs.ts`) — not localStorage-only. Reinventing localStorage-only pins would fork the persistence story for user selections.
+- Must persist via a server endpoint following the **document-favorites pattern** (`PUT /api/documents/favs`, `frontend/src/config/documentFavs.ts`) — not localStorage-only. Reinventing localStorage-only pins would fork the persistence story for user selections.
 - Must reuse the existing drag-drop infrastructure (`react-dnd` with `HTML5Backend`, drag type `'ticket'` per `board-layout.spec.md` "Drag-and-Drop"). The rail is a new drop target, not a new DnD system.
 - Must work cross-view: rail is visible on board, list, and documents views (it's app-level chrome, not per-view chrome like the header).
 - Must remain functional in read-only access modes for viewing pinned tickets; pinning/unpinning is blocked in read-only (mutation).
@@ -159,8 +159,8 @@ Out of scope (deferred with evidence):
 | Spatial decision | `docs/design/explorations/filtering-system.md` §3.1 | Why the rail (not the header) — rejected alternatives |
 | Neighbor spec | `docs/design/surfaces/board-layout.spec.md` | Drag-drop contract the rail reuses (drag type `'ticket'`) |
 | Neighbor spec | `docs/design/surfaces/app-header.spec.md` | Extension note forbidding second header strip |
-| Persistence pattern | `src/config/documentFavs.ts`, `server/tests/api/document-favs.test.ts` | Established server-backed user-selection pattern to follow |
-| Layout insertion | `src/App.tsx` | `flex-1` content row becomes `PinRail + content` |
+| Persistence pattern | `frontend/src/config/documentFavs.ts`, `server/tests/api/document-favs.test.ts` | Established server-backed user-selection pattern to follow |
+| Layout insertion | `frontend/src/App.tsx` | `flex-1` content row becomes `PinRail + content` |
 | Sibling ticket | `docs/CRs/MDT-196-board-filter-bar.md` | Spatial boundary partner — filter owns header |
 
 ## Phase Plan (non-binding — final breakdown via `mdt:tasks`)

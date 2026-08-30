@@ -36,7 +36,7 @@ Implement conditional rendering in ProjectSelector component:
 - Use TooltipProvider for hover information display
 
 ### Key Components Modified
-- `src/components/ProjectSelector.tsx`: Main implementation
+- `frontend/src/components/ProjectSelector.tsx`: Main implementation
 - Added tooltip UI components for enhanced UX
 - Implemented project code mapping function
 
@@ -91,7 +91,7 @@ Implement conditional rendering in ProjectSelector component:
 ## 5. Implementation Notes
 
 ### Code Changes Summary
-- **File Modified**: `src/components/ProjectSelector.tsx`
+- **File Modified**: `frontend/src/components/ProjectSelector.tsx`
 - **Lines Added**: ~50+ lines of enhanced logic
 - **Key Features**: Conditional rendering, tooltip integration, project code mapping, hover effects
 
@@ -120,9 +120,9 @@ Implement conditional rendering in ProjectSelector component:
 ## 6. References
 
 ### Related Files
-- `src/components/ProjectSelector.tsx` - Main implementation
-- `src/components/ui/tooltip.tsx` - Tooltip components
-- `src/components/ui/badge.tsx` - Badge component (imported)
+- `frontend/src/components/ProjectSelector.tsx` - Main implementation
+- `frontend/src/components/ui/tooltip.tsx` - Tooltip components
+- `frontend/src/components/ui/badge.tsx` - Badge component (imported)
 
 ### Git Commits
 - Implementation was part of commit `ec59d79` (feat: implement document path selection interface)

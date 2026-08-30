@@ -16,42 +16,42 @@ MemoryRouter harness pattern (already in `RelationshipBadge.test.tsx:21-35`) is 
 
 - Elision helper purity (`TEST-elide-link-key`)
   Covers: S1, S2, S3, S4, S13
-  File: `src/components/Badge/relationshipLink.test.ts`
+  File: `frontend/src/components/Badge/relationshipLink.test.ts`
   Cases: same-project → bare number; cross-project → full; multi-digit preserved; malformed → full key fallback; number-segment extraction respects original width.
 
 - Compact-mode inline rendering (`TEST-compact-inline`)
   Covers: S1, S3, S5
-  File: `src/components/Badge/RelationshipBadge.test.tsx`
+  File: `frontend/src/components/Badge/RelationshipBadge.test.tsx`
   Cases: single same-project link renders bare number; 3 links render all inline with no trigger; mixed same/cross renders elided + full together.
 
 - Per-link title carries full key (`TEST-per-link-title`)
   Covers: S1, S2
-  File: `src/components/Badge/RelationshipBadge.test.tsx`
+  File: `frontend/src/components/Badge/RelationshipBadge.test.tsx`
   Cases: each inline link element's `title` is its full CR key regardless of elision.
 
 - Overflow trigger and badge title (`TEST-overflow-closed`)
   Covers: S6
-  File: `src/components/Badge/RelationshipBadge.test.tsx`
+  File: `frontend/src/components/Badge/RelationshipBadge.test.tsx`
   Cases: 5 links → "030, 005, 035 +2"; `+N` is a `<button>` with `aria-haspopup`; badge-level `title` lists all 5 full keys.
 
 - Popover open/close behavior (`TEST-popover`)
   Covers: S7, S8
-  File: `src/components/Badge/RelationshipBadge.test.tsx`
+  File: `frontend/src/components/Badge/RelationshipBadge.test.tsx`
   Cases: clicking `+N` opens popover; popover lists hidden links as full codes; trigger `aria-expanded` toggles; Escape closes popover.
 
 - Click isolation (`TEST-click-stop-propagation`)
   Covers: S9, S10
-  File: `src/components/Badge/RelationshipBadge.test.tsx`
+  File: `frontend/src/components/Badge/RelationshipBadge.test.tsx`
   Cases: clicking an inline link does not call a parent `onClick`; clicking `+N` does not call a parent `onClick`. Use a spy `onClick` on a wrapping div.
 
 - Full-mode (viewer) no elision/no overflow (`TEST-full-mode`)
   Covers: S11
-  File: `src/components/Badge/RelationshipBadge.test.tsx`
+  File: `frontend/src/components/Badge/RelationshipBadge.test.tsx`
   Cases: `displayMode="full"` (or default) with 5 links renders all 5 full codes inline, no `+N`, no popover.
 
 - Existing baseline preserved (`TEST-baseline-preserved`)
   Covers: data-relationship attribute; icon rendering; SmartLink href resolution; cross-project full rendering
-  File: `src/components/Badge/RelationshipBadge.test.tsx`
+  File: `frontend/src/components/Badge/RelationshipBadge.test.tsx`
   Cases: the non-elision assertions from the current suite (data-relationship, icons, href `/prj/TEST/ticket/TEST-100`, cross-project full code) remain green.
 
 ### e2e

@@ -52,7 +52,7 @@ Remove redundant prop passing from SingleProjectView to Board:
 ## 3. Implementation Specification
 
 ### Code Changes
-**File:** `src/components/SingleProjectView.tsx` (lines 180-188)
+**File:** `frontend/src/components/SingleProjectView.tsx` (lines 180-188)
 - **Removed:** `tickets={tickets}` prop
 - **Removed:** `selectedProject={selectedProject}` prop
 - **Removed:** `loading={loading}` prop
@@ -97,7 +97,7 @@ Remove redundant prop passing from SingleProjectView to Board:
 - **Root cause**: Board.tsx refactoring between `2c8c094` and current HEAD
 
 ### Code Changes
-- **Modified**: `src/components/SingleProjectView.tsx` (prop removal)
+- **Modified**: `frontend/src/components/SingleProjectView.tsx` (prop removal)
 - **Architecture**: Restored single-source-of-truth for ticket state management
 
 ### Related CRs

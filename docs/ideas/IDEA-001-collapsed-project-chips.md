@@ -37,6 +37,6 @@ Option B is additive — no change to active card behavior. The "+N" button is a
 ## References
 
 - MDT-129: Project selector redesign
-- `src/components/ProjectSelector/ProjectSelectorRail.tsx` — current rail composition
-- `src/components/ProjectSelector/ProjectSelectorChip.tsx` — chip component
-- `src/components/ProjectSelector/ProjectSelectorCard.tsx` — active card component
+- `frontend/src/components/ProjectSelector/ProjectSelectorRail.tsx` — current rail composition
+- `frontend/src/components/ProjectSelector/ProjectSelectorChip.tsx` — chip component
+- `frontend/src/components/ProjectSelector/ProjectSelectorCard.tsx` — active card component

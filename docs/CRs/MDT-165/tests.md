@@ -4,13 +4,13 @@
 
 | Module | Test File | Tests |
 |--------|-----------|-------|
-| `markdownItWireframePlugin.ts` | `src/utils/markdownItWireframePlugin.test.ts` | 10 |
-| `useMarkdownProcessor.ts` | `src/components/MarkdownContent/useMarkdownProcessor.test.ts` | 19 |
-| `slugify.ts` | `src/utils/slugify.test.ts` | 12 |
-| `tableOfContents.ts` | `src/utils/tableOfContents.test.ts` | 17 |
-| `mermaid/core.ts` | `src/utils/mermaid/core.test.ts` | 5 |
-| `markdownPreprocessor.ts` | `src/utils/markdownPreprocessor.test.ts` | 2 |
-| `markdownPreprocessor (mdt150)` | `src/utils/markdownPreprocessor.mdt150.test.ts` | 21 |
+| `markdownItWireframePlugin.ts` | `frontend/src/utils/markdownItWireframePlugin.test.ts` | 10 |
+| `useMarkdownProcessor.ts` | `frontend/src/components/MarkdownContent/useMarkdownProcessor.test.ts` | 19 |
+| `slugify.ts` | `frontend/src/utils/slugify.test.ts` | 12 |
+| `tableOfContents.ts` | `frontend/src/utils/tableOfContents.test.ts` | 17 |
+| `mermaid/core.ts` | `frontend/src/utils/mermaid/core.test.ts` | 5 |
+| `markdownPreprocessor.ts` | `frontend/src/utils/markdownPreprocessor.test.ts` | 2 |
+| `markdownPreprocessor (mdt150)` | `frontend/src/utils/markdownPreprocessor.mdt150.test.ts` | 21 |
 
 ## Data Mechanism Tests
 
@@ -41,20 +41,20 @@
 
 | Constraint ID | Test File | Tests |
 |---------------|-----------|-------|
-| C1 | `src/utils/markdownItWireframePlugin.test.ts`, `src/components/MarkdownContent/useMarkdownProcessor.test.ts` | XSS escaping in wireframe labels |
-| C2 | `src/components/MarkdownContent/useMarkdownProcessor.test.ts` | Performance non-regression benchmark |
-| C3 | `src/components/MarkdownContent/useMarkdownProcessor.test.ts` | Showdown removal verification |
-| C4 | `src/components/MarkdownContent/useMarkdownProcessor.test.ts` | Pipeline order integration test |
-| C5 | `src/utils/slugify.test.ts`, `src/components/MarkdownContent/useMarkdownProcessor.test.ts` | Slug parity with Showdown ghCompatibleHeaderId |
+| C1 | `frontend/src/utils/markdownItWireframePlugin.test.ts`, `frontend/src/components/MarkdownContent/useMarkdownProcessor.test.ts` | XSS escaping in wireframe labels |
+| C2 | `frontend/src/components/MarkdownContent/useMarkdownProcessor.test.ts` | Performance non-regression benchmark |
+| C3 | `frontend/src/components/MarkdownContent/useMarkdownProcessor.test.ts` | Showdown removal verification |
+| C4 | `frontend/src/components/MarkdownContent/useMarkdownProcessor.test.ts` | Pipeline order integration test |
+| C5 | `frontend/src/utils/slugify.test.ts`, `frontend/src/components/MarkdownContent/useMarkdownProcessor.test.ts` | Slug parity with Showdown ghCompatibleHeaderId |
 
 ## E2E Tests
 
 | Test ID | File | Covers |
 |---------|------|--------|
 | `TEST-markdown-it-migration-e2e` | `tests/e2e/ticket/markdown-it-migration.spec.ts` | BR-1 through BR-11 |
-| `TEST-mermaid-render-runtime` | `src/utils/mermaid/hooks.ts` + Playwright runtime check | BR-6, C4 |
-| `TEST-wireloom-plugin-unit` | `src/utils/wireloomRenderer.test.ts` | BR-12, Edge-6 |
-| `TEST-wireloom-renderer-unit` | `src/utils/wireloomRenderer.test.ts` | BR-12, BR-13, C6, Edge-6 |
+| `TEST-mermaid-render-runtime` | `frontend/src/utils/mermaid/hooks.ts` + Playwright runtime check | BR-6, C4 |
+| `TEST-wireloom-plugin-unit` | `frontend/src/utils/wireloomRenderer.test.ts` | BR-12, Edge-6 |
+| `TEST-wireloom-renderer-unit` | `frontend/src/utils/wireloomRenderer.test.ts` | BR-12, BR-13, C6, Edge-6 |
 | `TEST-wireloom-live-document-e2e` | `tests/e2e/documents/live-updates.spec.ts` | BR-12 |
 
 ## Test Status
@@ -78,22 +78,22 @@
 - `TEST-wireloom-live-document-e2e`: confirms Documents View refreshes rendered Wireloom blocks after file changes.
 
 Validation evidence:
-- `bun test src/utils/wireloomRenderer.test.ts src/utils/wireloomFullscreen.test.ts` — 18/18 pass.
+- `bun test frontend/src/utils/wireloomRenderer.test.ts frontend/src/utils/wireloomFullscreen.test.ts` — 18/18 pass.
 - `PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/documents/live-updates.spec.ts --project=chromium --grep "Wireloom"` — 1/1 pass.
-- Targeted ESLint for `src/utils/wireloomRenderer.ts` and `src/utils/wireloomRenderer.test.ts` — pass.
+- Targeted ESLint for `frontend/src/utils/wireloomRenderer.ts` and `frontend/src/utils/wireloomRenderer.test.ts` — pass.
 - `bun run validate:ts` is blocked by unrelated ProjectSelector/accent-color TypeScript errors in the dirty worktree, not by the Wireloom files.
 
 ## Verify
 
 ```bash
 # Run all unit tests
-bun test src/utils/markdownItWireframePlugin.test.ts
-bun test src/utils/slugify.test.ts
-bun test src/utils/tableOfContents.test.ts
-bun test src/utils/mermaid/core.test.ts
-bun test src/components/MarkdownContent/useMarkdownProcessor.test.ts
-bun test src/utils/wireloomRenderer.test.ts
-bun test src/utils/wireloomFullscreen.test.ts
+bun test frontend/src/utils/markdownItWireframePlugin.test.ts
+bun test frontend/src/utils/slugify.test.ts
+bun test frontend/src/utils/tableOfContents.test.ts
+bun test frontend/src/utils/mermaid/core.test.ts
+bun test frontend/src/components/MarkdownContent/useMarkdownProcessor.test.ts
+bun test frontend/src/utils/wireloomRenderer.test.ts
+bun test frontend/src/utils/wireloomFullscreen.test.ts
 
 # Mermaid UAT render regression
 scripts/validate-mermaid-md docs/CRs/MDT-157/architecture.md

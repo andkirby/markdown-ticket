@@ -615,11 +615,13 @@ ${scriptTag}
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  // Load env vars from .env and .env.local (Vite's loadEnv returns an object but
-  // does not populate process.env). Mirror file-only values into process.env
-  // without overriding real env (e.g. Docker compose) so the port resolvers
+  // Load env vars from .env and .env.local at the REPO ROOT (Vite's loadEnv
+  // returns an object but does not populate process.env). Operator env files
+  // stay at the repository root even though this config lives in frontend/ and
+  // runs with cwd=frontend/. Mirror file-only values into process.env without
+  // overriding real env (e.g. Docker compose) so the port resolvers
   // resolveFrontendPort/resolveBackendPort honor .env. (MDT-117)
-  const env = loadEnv(mode, process.cwd(), '')
+  const env = loadEnv(mode, path.resolve(__dirname, '..'), '')
   for (const [k, v] of Object.entries(env)) {
     if (process.env[k] === undefined)
       process.env[k] = v
@@ -675,9 +677,16 @@ export default defineConfig(({ mode }) => {
   const serverHost = env.VITE_SERVER_HOST || process.env.VITE_SERVER_HOST || '127.0.0.1'
 
   return {
+    // Frontend root is frontend/ (this config runs with cwd=frontend/); the
+    // operator env files (.env, .env.local) intentionally stay at the repo root.
+    envDir: path.resolve(__dirname, '..'),
     plugins: [react(), frontendLoggingPlugin(), envInjectionPlugin()],
     build: {
       chunkSizeWarningLimit: 1500,
+      // Emit the production bundle to the repo-root dist/ — the location
+      // start.sh and the Dockerfile/nginx static serving expect.
+      outDir: path.resolve(__dirname, '../dist'),
+      emptyOutDir: true,
     },
     define: {
       // Inject the resolved backend port so non-browser code can build an absolute
@@ -688,7 +697,7 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
-        '@mdt/shared': path.resolve(__dirname, './shared/dist'),
+        '@mdt/shared': path.resolve(__dirname, '../shared/dist'),
       },
     },
     server: {

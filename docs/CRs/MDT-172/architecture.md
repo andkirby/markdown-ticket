@@ -57,15 +57,15 @@ server/routes/sse.ts
 server/controllers/ProjectController.ts
 server/services/fileWatcher/SSEBroadcaster.ts
 server/services/fileWatcher/index.ts
-src/auth/AuthSessionProvider.tsx
-src/App.tsx
-src/components/SettingsModal.tsx
-src/components/ProjectView.tsx
-src/components/Board.tsx
-src/components/Column/index.tsx
-src/components/DocumentsView/DocumentsLayout.tsx
+frontend/src/auth/AuthSessionProvider.tsx
+frontend/src/App.tsx
+frontend/src/components/SettingsModal.tsx
+frontend/src/components/ProjectView.tsx
+frontend/src/components/Board.tsx
+frontend/src/components/Column/index.tsx
+frontend/src/components/DocumentsView/DocumentsLayout.tsx
 server/tests/api/public-sharing.test.ts
-src/components/ReadOnlyMode.test.tsx
+frontend/src/components/ReadOnlyMode.test.tsx
 ```
 
 ## Module Boundaries

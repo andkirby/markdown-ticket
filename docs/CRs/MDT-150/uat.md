@@ -37,8 +37,8 @@ Close the documents-view resolution gap. MDT-150 shipped relative `.md` link res
 
 - **Objective**: Make relative `.md` references in documents-view markdown resolve against the source document's directory.
 - **Direct artifacts/files**:
-  - `src/components/DocumentsView/MarkdownViewer.tsx` (line ~214-219): add `sourcePath={selectedFile}` prop to `<MarkdownContent>`.
-  - `src/utils/markdownPreprocessor.ts`: add documents-mode branch to `resolveDocumentRef`. Detection: `sourcePath` does not match `^[A-Z]+-\d+/`. Behavior: resolve href against sourcePath's directory using existing `resolveRelativePath`, route to `buildDocumentPathWithAnchor`.
+  - `frontend/src/components/DocumentsView/MarkdownViewer.tsx` (line ~214-219): add `sourcePath={selectedFile}` prop to `<MarkdownContent>`.
+  - `frontend/src/utils/markdownPreprocessor.ts`: add documents-mode branch to `resolveDocumentRef`. Detection: `sourcePath` does not match `^[A-Z]+-\d+/`. Behavior: resolve href against sourcePath's directory using existing `resolveRelativePath`, route to `buildDocumentPathWithAnchor`.
 - **Direct GREEN targets**: `TEST-preprocessor-documents-mode` (2 new unit tests), `TEST-e2e-documents-relative-link` (1 new E2E), `documents_view_relative_reference` (BDD scenario).
 - **Impacted canonical task**: `TASK-documents-view-resolve`.
 - **Why this slice exists**: Two-layer bug — (a) `MarkdownViewer` doesn't pass `sourcePath`, (b) `resolveDocumentRef` silently no-ops on documents-relative sourcePaths. Both must land together for any test to pass. ~30 lines of code.
@@ -46,7 +46,7 @@ Close the documents-view resolution gap. MDT-150 shipped relative `.md` link res
 **Proof target** (must pass before slice is done):
 ```bash
 bun -e "
-const { preprocessMarkdown } = require('./src/utils/markdownPreprocessor.ts')
+const { preprocessMarkdown } = require('./frontend/src/utils/markdownPreprocessor.ts')
 const cfg = { enableAutoLinking: true, enableTicketLinks: true, enableDocumentLinks: true }
 const out = preprocessMarkdown('see [x](relative.md)', 'ABC', cfg, 'docs/architecture/aaaa.md', 'docs/CRs')
 console.log(out)

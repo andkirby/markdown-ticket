@@ -53,6 +53,6 @@ for equal-width layout. Ticket tabs stay compact with `mr-3` spacing.
 - Remove micro-hover animations (inconsistent with settings, adds complexity)
 
 ## Files
-- `src/index.css` — add `.tab` classes, remove `.settings-tab-trigger`, `.settings-tab-content`
-- `src/components/SettingsModal.tsx` — use `tab` classes
-- `src/components/TicketViewer/TicketDocumentTabs.tsx` — use `tab` classes
+- `frontend/src/index.css` — add `.tab` classes, remove `.settings-tab-trigger`, `.settings-tab-content`
+- `frontend/src/components/SettingsModal.tsx` — use `tab` classes
+- `frontend/src/components/TicketViewer/TicketDocumentTabs.tsx` — use `tab` classes

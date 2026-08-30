@@ -19,9 +19,9 @@ The `tailwind-template.css` file provides a complete, production-ready Tailwind 
 ```text
 md-ticket-board/
 ├── tailwind-template.css      # Complete Tailwind CSS template
-├── tailwind.config.js         # Tailwind configuration
-├── postcss.config.js          # PostCSS configuration
-├── src/
+├── frontend/tailwind.config.js         # Tailwind configuration
+├── frontend/postcss.config.js          # PostCSS configuration
+├── frontend/src/
 │   └── index.css              # Main CSS file (imports Tailwind)
 └── TAILWIND_CSS_GUIDE.md      # This guide
 ```
@@ -30,7 +30,7 @@ md-ticket-board/
 
 ### 1. Basic Setup
 
-The template is already integrated into your project. The main CSS file (`src/index.css`) imports Tailwind CSS:
+The template is already integrated into your project. The main CSS file (`frontend/src/index.css`) imports Tailwind CSS:
 
 ```css
 @tailwind base;
@@ -254,7 +254,7 @@ The template includes several custom components:
 
 #### Extending the Theme
 
-To add custom colors or styles, modify `tailwind.config.js`:
+To add custom colors or styles, modify `frontend/tailwind.config.js`:
 
 ```javascript
 export default {
@@ -274,7 +274,7 @@ export default {
 
 #### Adding Custom Components
 
-Add new components to the `src/index.css` file:
+Add new components to the `frontend/src/index.css` file:
 
 ```css
 @layer components {
@@ -309,7 +309,7 @@ The template supports all modern browsers:
 
 #### Debug Mode
 
-Enable Tailwind CSS debug mode by adding this to your `tailwind.config.js`:
+Enable Tailwind CSS debug mode by adding this to your `frontend/tailwind.config.js`:
 
 ```javascript
 export default {

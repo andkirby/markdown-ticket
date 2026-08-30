@@ -19,7 +19,7 @@ Complete reference of all environment variables used in the Markdown Ticket proj
 ### FRONTEND_PORT
 - **Description**: Vite dev / preview server port
 - **Defaults**: `3075` (dev server), `3070` (preview)
-- **Usage**: `vite.config.ts` (resolved by the local `resolveFrontendPort` helper)
+- **Usage**: `frontend/vite.config.ts` (resolved by the local `resolveFrontendPort` helper)
 - **Notes**: Canonical name as of MDT-117. The legacy `PORT` env var is still read
   with a one-time deprecation warning; `FRONTEND_PORT` takes precedence when both
   are set. Distinct from `BACKEND_PORT`.
@@ -28,21 +28,21 @@ Complete reference of all environment variables used in the Markdown Ticket proj
 - **Description**: Backend URL for API and SSE connections
 - **Default**: Empty (uses Vite proxy or `localhost:3001`)
 - **Usage**:
-  - `src/services/sseClient.ts:353`
+  - `frontend/src/services/sseClient.ts:353`
 - **Notes**:
   - When empty, uses frontend proxy in development
   - Docker development: `http://backend:3001` (set directly by `docker-compose.dev.yml`)
   - Native development: `http://localhost:3001`
-  - Also consumed at config time by `vite.config.ts` to target the `/api` proxy
+  - Also consumed at config time by `frontend/vite.config.ts` to target the `/api` proxy
     and the `/api/cache/clear` middleware (MDT-117: replaced `DOCKER_BACKEND_URL`)
 
 ### VITE_DISABLE_EVENTBUS_LOGS
 - **Description**: Disable EventBus debug logging in development mode
 - **Type**: Boolean (set any value to disable)
 - **Usage**:
-  - `src/services/sseClient.ts`
-  - `src/services/eventBus.ts`
-  - `src/hooks/useSSEEvents.ts`
+  - `frontend/src/services/sseClient.ts`
+  - `frontend/src/services/eventBus.ts`
+  - `frontend/src/hooks/useSSEEvents.ts`
 - **Notes**: Can be set in `.env.local` to reduce console noise
 
 ### VITE_FRONTEND_LOGGING_AUTOSTART
@@ -52,7 +52,7 @@ Complete reference of all environment variables used in the Markdown Ticket proj
 - **Documentation**: See `docs/CRs/MDT-037-create-react-sse-mcp-frontend-client-package.md`
 
 > `VITE_HMR_HOST` / `VITE_HMR_PORT` were **removed** (MDT-117): nothing ever
-> consumed them (no HMR wiring in `vite.config.ts`, no `import.meta.env` reads);
+> consumed them (no HMR wiring in `frontend/vite.config.ts`, no `import.meta.env` reads);
 > they were dead config in `docker-compose.dev.yml` and `.env.example`.
 
 ---
@@ -65,7 +65,7 @@ Backend runtime variables are parsed by `server/config/runtimeConfig.ts`. The ca
 - **Description**: Backend Express API server port
 - **Default**: `3001`
 - **Usage**: `server/server.ts:137` (parsed via `parsePortEnv` from `@mdt/shared/utils/env.js`)
-- **Also read by**: `vite.config.ts` — when `VITE_BACKEND_URL` is not set, the Vite
+- **Also read by**: `frontend/vite.config.ts` — when `VITE_BACKEND_URL` is not set, the Vite
   dev-server `/api` proxy targets `http://localhost:${BACKEND_PORT}`, so the
   frontend tracks a custom backend port automatically. Set `VITE_BACKEND_URL` to override.
 - **Notes**: Canonical name as of MDT-117. The legacy `PORT` env var is still read
@@ -439,12 +439,12 @@ MCP_AUTH_TOKEN=<secure-token>
 
 ## Type Definitions Status
 
-**File**: `src/vite-env.d.ts`
+**File**: `frontend/src/vite-env.d.ts`
 
 **Defined** (complete as of MDT-117):
 - `VITE_FRONTEND_LOGGING_AUTOSTART`
 - `VITE_BACKEND_URL`
-- `VITE_BACKEND_PORT` (injected at build time by `vite.config.ts` `define`)
+- `VITE_BACKEND_PORT` (injected at build time by `frontend/vite.config.ts` `define`)
 - `VITE_DISABLE_EVENTBUS_LOGS`
 
 **Removed**: `VITE_HMR_HOST`, `VITE_HMR_PORT` (dead vars — never consumed).
@@ -463,4 +463,4 @@ MCP_AUTH_TOKEN=<secure-token>
 ---
 
 *Generated: 2026-01-14*
-*Source: Comprehensive scan of src/, server/, mcp-server/, shared/, and Docker configuration files*
+*Source: Comprehensive scan of frontend/src/, server/, mcp-server/, shared/, and Docker configuration files*

@@ -4,9 +4,9 @@
 
 ## Scope Boundaries
 
-- Board layout mode: `src/App.tsx` owns persistence and switching; `Board.tsx` receives the selected layout.
-- Swimlane runtime: `src/components/SwimlaneBoard/` owns lane model, lane UI, guarded drops, lifecycle controls, and semantic CSS.
-- Testing: `src/components/SwimlaneBoard/helpers.test.ts`, `src/components/TicketCard.test.tsx`, and `tests/e2e/board/swimlane-board.spec.ts` own MDT-206 regression coverage.
+- Board layout mode: `frontend/src/App.tsx` owns persistence and switching; `Board.tsx` receives the selected layout.
+- Swimlane runtime: `frontend/src/components/SwimlaneBoard/` owns lane model, lane UI, guarded drops, lifecycle controls, and semantic CSS.
+- Testing: `frontend/src/components/SwimlaneBoard/helpers.test.ts`, `frontend/src/components/TicketCard.test.tsx`, and `tests/e2e/board/swimlane-board.spec.ts` own MDT-206 regression coverage.
 
 ## Architecture Coverage
 
@@ -23,14 +23,14 @@
 **Skills**: frontend-react-component
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-swimlane-helpers` -> `src/components/SwimlaneBoard/helpers.test.ts`
+- `TEST-swimlane-helpers` -> `frontend/src/components/SwimlaneBoard/helpers.test.ts`
 
 **Scope**: pure helpers for epic detection, lane grouping, No epic fallback, and progress math.
 **Boundary**: no React rendering, no backend writes.
 
 **Creates**:
-- `src/components/SwimlaneBoard/helpers.ts`
-- `src/components/SwimlaneBoard/helpers.test.ts`
+- `frontend/src/components/SwimlaneBoard/helpers.ts`
+- `frontend/src/components/SwimlaneBoard/helpers.test.ts`
 
 **Modifies**:
 - none
@@ -44,7 +44,7 @@
 
 **Verify**:
 ```bash
-bun test --isolate src/components/SwimlaneBoard/helpers.test.ts
+bun test --isolate frontend/src/components/SwimlaneBoard/helpers.test.ts
 ```
 
 **Status**: done.
@@ -70,17 +70,17 @@ bun test --isolate src/components/SwimlaneBoard/helpers.test.ts
 **Boundary**: no backend rule changes and no main view-mode route refactor.
 
 **Creates**:
-- `src/components/SwimlaneBoard/index.tsx`
-- `src/components/SwimlaneBoard/swimlane-board.css`
+- `frontend/src/components/SwimlaneBoard/index.tsx`
+- `frontend/src/components/SwimlaneBoard/swimlane-board.css`
 
 **Modifies**:
-- `src/components/Board.tsx`
-- `src/components/TicketCard.tsx`
-- `src/components/ViewModeSwitcher/`
-- `src/index.css`
+- `frontend/src/components/Board.tsx`
+- `frontend/src/components/TicketCard.tsx`
+- `frontend/src/components/ViewModeSwitcher/`
+- `frontend/src/index.css`
 
 **Must Not Touch**:
-- `src/components/Column/index.tsx`
+- `frontend/src/components/Column/index.tsx`
 
 **Duplication Guard**:
 - Reuse `TicketCard`, `useDropZone`, `sortTickets`, status config, and design tokens; do not copy the Alpine implementation from `design3.html`.
@@ -98,14 +98,14 @@ bunx playwright test tests/e2e/board/swimlane-board.spec.ts --project=chromium
 
 **Makes GREEN (Automated Tests)**:
 - `TEST-swimlane-board-e2e` -> `tests/e2e/board/swimlane-board.spec.ts`
-- `TEST-ticket-card-badge-visibility` -> `src/components/TicketCard.test.tsx`
+- `TEST-ticket-card-badge-visibility` -> `frontend/src/components/TicketCard.test.tsx`
 
 **Scope**: selector registry and E2E test file.
 **Boundary**: tests must use selector registry, not guessed runtime class names.
 
 **Creates**:
 - `tests/e2e/board/swimlane-board.spec.ts`
-- `src/components/TicketCard.test.tsx`
+- `frontend/src/components/TicketCard.test.tsx`
 
 **Modifies**:
 - `tests/e2e/utils/selectors.ts`
@@ -119,7 +119,7 @@ bunx playwright test tests/e2e/board/swimlane-board.spec.ts --project=chromium
 **Verify**:
 ```bash
 bunx playwright test tests/e2e/board/swimlane-board.spec.ts --project=chromium
-bun test --isolate src/components/TicketCard.test.tsx
+bun test --isolate frontend/src/components/TicketCard.test.tsx
 ```
 
 **Status**: done.

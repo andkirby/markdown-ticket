@@ -53,32 +53,32 @@ TraceGraphShell (opened from TraceGraphAction)
 
 | Child | Component | Spec | Conditional |
 |-------|-----------|------|-------------|
-| Modal | `src/components/ui/Modal.tsx` | `MODALS.md` | always |
-| TableOfContents | `src/components/shared/TableOfContents.tsx` | — | always (extracts from content) |
-| CompactTicketHeader | `src/components/TicketViewer/CompactTicketHeader.tsx` | — | when ticket exists |
-| TicketDocumentTabs | `src/components/TicketViewer/TicketDocumentTabs.tsx` | — | when `subdocuments.length > 0` |
-| MarkdownContent | `src/components/MarkdownContent/index.tsx` | `markdown-content.spec.md` | always (renders main or subdoc content) |
+| Modal | `frontend/src/components/ui/Modal.tsx` | `MODALS.md` | always |
+| TableOfContents | `frontend/src/components/shared/TableOfContents.tsx` | — | always (extracts from content) |
+| CompactTicketHeader | `frontend/src/components/TicketViewer/CompactTicketHeader.tsx` | — | when ticket exists |
+| TicketDocumentTabs | `frontend/src/components/TicketViewer/TicketDocumentTabs.tsx` | — | when `subdocuments.length > 0` |
+| MarkdownContent | `frontend/src/components/MarkdownContent/index.tsx` | `markdown-content.spec.md` | always (renders main or subdoc content) |
 | TraceGraphAction | colocated TicketViewer action | this file | when standard trace store metadata exists |
-| TraceGraphShell | `src/components/TicketViewer/TraceGraphShell.tsx` | this file | when user opens trace graph |
-| RelativeTimestamp | `src/components/shared/RelativeTimestamp.tsx` | — | in content area |
-| StatusBadge | `src/components/Badge/StatusBadge.tsx` | — | always in header |
-| PriorityBadge | `src/components/Badge/PriorityBadge.tsx` | — | always in header |
-| TypeBadge | `src/components/Badge/TypeBadge.tsx` | — | always in header |
+| TraceGraphShell | `frontend/src/components/TicketViewer/TraceGraphShell.tsx` | this file | when user opens trace graph |
+| RelativeTimestamp | `frontend/src/components/shared/RelativeTimestamp.tsx` | — | in content area |
+| StatusBadge | `frontend/src/components/Badge/StatusBadge.tsx` | — | always in header |
+| PriorityBadge | `frontend/src/components/Badge/PriorityBadge.tsx` | — | always in header |
+| TypeBadge | `frontend/src/components/Badge/TypeBadge.tsx` | — | always in header |
 
 ## Source files
 
 | Type | Path |
 |------|------|
-| Viewer | `src/components/TicketViewer/index.tsx` |
-| Header | `src/components/TicketViewer/CompactTicketHeader.tsx` |
-| Doc tabs | `src/components/TicketViewer/TicketDocumentTabs.tsx` |
-| Trace graph shell | `src/components/TicketViewer/TraceGraphShell.tsx` |
-| Trace graph availability hook | `src/components/TicketViewer/useTraceStoreAvailability.ts` |
-| Trace graph URL hash token | `src/routes.ts` (`TRACE_GRAPH_HASH`, `isTraceGraphHash`) |
-| Navigation hook | `src/components/TicketViewer/useTicketDocumentNavigation.ts` |
-| Content hook | `src/components/TicketViewer/useTicketDocumentContent.ts` |
-| Realtime hook | `src/components/TicketViewer/useTicketDocumentRealtime.ts` |
-| Subdoc path | `src/components/TicketViewer/subdocumentPath.ts` |
+| Viewer | `frontend/src/components/TicketViewer/index.tsx` |
+| Header | `frontend/src/components/TicketViewer/CompactTicketHeader.tsx` |
+| Doc tabs | `frontend/src/components/TicketViewer/TicketDocumentTabs.tsx` |
+| Trace graph shell | `frontend/src/components/TicketViewer/TraceGraphShell.tsx` |
+| Trace graph availability hook | `frontend/src/components/TicketViewer/useTraceStoreAvailability.ts` |
+| Trace graph URL hash token | `frontend/src/routes.ts` (`TRACE_GRAPH_HASH`, `isTraceGraphHash`) |
+| Navigation hook | `frontend/src/components/TicketViewer/useTicketDocumentNavigation.ts` |
+| Content hook | `frontend/src/components/TicketViewer/useTicketDocumentContent.ts` |
+| Realtime hook | `frontend/src/components/TicketViewer/useTicketDocumentRealtime.ts` |
+| Subdoc path | `frontend/src/components/TicketViewer/subdocumentPath.ts` |
 
 ## Layout
 
@@ -147,7 +147,7 @@ Two horizontal bars, both with bottom border:
   - `#trace` is reserved and must not collide with legacy hash-based sub-document links; `useTicketDocumentNavigation` skips it during hash→path redirect resolution.
   - Switching sub-documents while the shell is open preserves `#trace` (document selection and graph open state are orthogonal).
   - Closing the ticket modal or switching tickets navigates to a hash-less URL, which drops `#trace` naturally — the viewer must not auto-close the shell via its own effects (that races the modal's initial `isOpen=false` state on deep-link load and strips the hash).
-  - Reserved token and helpers live in `src/routes.ts` (`TRACE_GRAPH_HASH`, `TRACE_GRAPH_HASH_FRAGMENT`, `isTraceGraphHash`).
+  - Reserved token and helpers live in `frontend/src/routes.ts` (`TRACE_GRAPH_HASH`, `TRACE_GRAPH_HASH_FRAGMENT`, `isTraceGraphHash`).
 - The iframe source is ticket-based, for example:
   - `/spec-trace/trace-dashboard.html?project={projectCode}&ticket={ticketCode}`
 - The dashboard HTML derives its data endpoint from `project` and `ticket`.
@@ -273,7 +273,7 @@ TraceGraphShell uses the full available viewport at all breakpoints:
 
 ## Modal / Overlay Compliance
 
-TraceGraphShell uses the standard `Modal` Pattern B from `src/MODALS.md`, with one proposed extension: a full-viewport modal content variant for iframe-heavy tools. The existing `size="full"` width cap is not enough by itself because the graph dashboard needs the full viewport, no rounded card impression, and stable height.
+TraceGraphShell uses the standard `Modal` Pattern B from `frontend/src/MODALS.md`, with one proposed extension: a full-viewport modal content variant for iframe-heavy tools. The existing `size="full"` width cap is not enough by itself because the graph dashboard needs the full viewport, no rounded card impression, and stable height.
 
 Proposed viewport variant:
 

@@ -12,7 +12,7 @@
 ### Code Graph
 - **1,547 nodes** (files + folders + functions + classes)
 - **1,549 relationships**
-- Scanned directories: `src/`, `tests/`, `server/`, `mcp-server/`, `domain-contracts/`
+- Scanned directories: `frontend/src/`, `tests/`, `server/`, `mcp-server/`, `domain-contracts/`
 - Whitelist file types: `.ts`, `.tsx`, `.test.ts`, `.spec.ts`
 
 ### Database
@@ -150,7 +150,7 @@ Try these to verify MCP works:
 ```
 1. Find all classes containing "Ticket" or "CR"
 
-2. What directories exist in src/?
+2. What directories exist in frontend/src/?
 
 3. Search for code containing "markdown"
 

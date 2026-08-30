@@ -158,9 +158,9 @@ MCP_SECURITY_SANITIZATION=true
 
 ### 3.1 Missing TypeScript Definitions
 
-**Problem**: `src/vite-env.d.ts` only defines 1 of 5 Vite variables:
+**Problem**: `frontend/src/vite-env.d.ts` only defines 1 of 5 Vite variables:
 
-**Current** (`src/vite-env.d.ts`):
+**Current** (`frontend/src/vite-env.d.ts`):
 
 ```typescript
 interface ImportMetaEnv {
@@ -240,7 +240,7 @@ Keep `mcp-server/.env.example` as a symlink or reference to the main file.
 | `server/server.ts:98`             | `3001`             | Backend  |
 | `mcp-server/src/index.ts:131`     | `'3002'`           | MCP      |
 | `shared/test-lib/config/ports.ts` | `6173, 4001, 4002` | Tests    |
-| `vite.config.ts`                  | `5173`             | Frontend |
+| `frontend/vite.config.ts`                  | `5173`             | Frontend |
 
 **Recommendation**: Centralize in `shared/utils/constants.ts`:
 
@@ -297,7 +297,7 @@ export const DEFAULT_PORTS = {
 
 1. **Rename `PORT` → `BACKEND_PORT`**: Update `server/server.ts` and all compose files
 2. **Standardize `LOG_LEVEL` → `MCP_LOG_LEVEL`**: Update all compose files
-3. **Fix type definitions**: Add missing Vite env vars to `src/vite-env.d.ts`
+3. **Fix type definitions**: Add missing Vite env vars to `frontend/src/vite-env.d.ts`
 
 ### Medium Priority (Non-Breaking)
 
@@ -315,13 +315,13 @@ export const DEFAULT_PORTS = {
 
 ## 8. Implementation Checklist
 
-- [x] Update `src/vite-env.d.ts` with missing type definitions _(done 2026-08-17: live vars `VITE_BACKEND_URL`, `VITE_BACKEND_PORT`, `VITE_DISABLE_EVENTBUS_LOGS` typed as `string | undefined`; `VITE_HMR_HOST`/`VITE_HMR_PORT` were dead — removed from compose and `.env.example` instead of typed)_
+- [x] Update `frontend/src/vite-env.d.ts` with missing type definitions _(done 2026-08-17: live vars `VITE_BACKEND_URL`, `VITE_BACKEND_PORT`, `VITE_DISABLE_EVENTBUS_LOGS` typed as `string | undefined`; `VITE_HMR_HOST`/`VITE_HMR_PORT` were dead — removed from compose and `.env.example` instead of typed)_
 - [x] Create `shared/utils/env.ts` with `parseEnvInt` utility _(done, plus `parsePortEnv` with legacy-`PORT` deprecation warning)_
 - [x] Rename `PORT` to `BACKEND_PORT` in code and compose files _(done: backend, all three compose files, test setup; one-time deprecation warning, not a silent alias)_
 - [x] Replace `LOG_LEVEL` with `MCP_LOG_LEVEL` in all compose files _(done 2026-08-17: renamed in the mcp blocks of all three compose files plus two `ENV` stages in `mcp-server/Dockerfile` the original notes missed. Drift correction: the dev-compose occurrence at line 80 sat in the **mcp** block by then — the old backend-block occurrence was already gone — so it was renamed, not removed)_
-- [x] Remove `DOCKER_BACKEND_URL` from docker-compose.dev.yml _(done 2026-08-17: `VITE_BACKEND_URL=http://backend:3001` set directly; `vite.config.ts` reads it for the `/api` proxy and cache-clear middleware; verified via `docker compose config` merge + proxy-resolution smokes)_
+- [x] Remove `DOCKER_BACKEND_URL` from docker-compose.dev.yml _(done 2026-08-17: `VITE_BACKEND_URL=http://backend:3001` set directly; `frontend/vite.config.ts` reads it for the `/api` proxy and cache-clear middleware; verified via `docker compose config` merge + proxy-resolution smokes)_
 - [x] Rename `MCP_SANITIZATION_ENABLED` to `MCP_SECURITY_SANITIZATION` _(done 2026-08-17: old name kept as a loud one-time-warning fallback; tests, `SANITIZATION.md`, both `.env.example` files, and the env-vars reference updated; runtime tri-state smoke verified)_
-- [x] Add `DEFAULT_PORTS` to `shared/utils/constants.ts` _(done: FRONTEND 3075, FRONTEND_PREVIEW 3070, BACKEND 3001, MCP 3002; `vite.config.ts` mirrors `VITE_DEFAULT_PORTS` inline to avoid a build-time dependency on the `@mdt/shared` artifact)_
+- [x] Add `DEFAULT_PORTS` to `shared/utils/constants.ts` _(done: FRONTEND 3075, FRONTEND_PREVIEW 3070, BACKEND 3001, MCP 3002; `frontend/vite.config.ts` mirrors `VITE_DEFAULT_PORTS` inline to avoid a build-time dependency on the `@mdt/shared` artifact)_
 - [x] Update documentation with new variable names _(pass complete 2026-08-17: `.env.example`, `mcp-server/.env.example`, `docs/ENVIRONMENT_VARIABLES.md`, `SANITIZATION.md`, plus guide de-drift — `MCP_SERVER_GUIDE.md`/`DEVELOPMENT_GUIDE.md` corrected and linked to the canonical reference)_
 
 ---
@@ -330,7 +330,7 @@ export const DEFAULT_PORTS = {
 
 Full re-check against the current tree (post MDT-157, post SSE-proxy fix `0093eea0`). No item was absorbed by another ticket, but several details in this document (written 2026-01-14) have drifted:
 
-- **§3.1 missing-vars list is superseded**: `VITE_HMR_HOST`/`VITE_HMR_PORT` are dead — nothing consumes them (no HMR wiring in `vite.config.ts`, no `import.meta.env` reads; set only in `docker-compose.dev.yml:27-28`). `VITE_BACKEND_PORT` is live (`src/services/sseClient.ts:476`, injected via `vite.config.ts` `define`) and needs typing instead.
+- **§3.1 missing-vars list is superseded**: `VITE_HMR_HOST`/`VITE_HMR_PORT` are dead — nothing consumes them (no HMR wiring in `frontend/vite.config.ts`, no `import.meta.env` reads; set only in `docker-compose.dev.yml:27-28`). `VITE_BACKEND_PORT` is live (`frontend/src/services/sseClient.ts:476`, injected via `frontend/vite.config.ts` `define`) and needs typing instead.
 - **§2.1 / §1.3 locations moved**: the MCP HTTP port parse is no longer in `mcp-server/src/index.ts`; it lives at `mcp-server/src/transports/httpSecurity.ts:48`, which hardcodes `'3002'` and adds an undocumented `HTTP_PORT` fallback. Wire to `DEFAULT_PORTS.MCP` (`shared/utils/constants.ts`) and drop or document `HTTP_PORT`.
 - **§5.1 is implemented**: port defaults are centralized in `DEFAULT_PORTS` (frontend dev is 3075, preview 3070 — not the 5173 shown above).
 - **§1.2 cache timeout is deferred to MDT-105** (`Proposed`), which owns the `MCP_CACHE_TIMEOUT` → `MDT_CACHE_TIMEOUT` hard break; resolving it here first would mean double migration. Blast radius grew: base and prod compose both set `MCP_CACHE_TIMEOUT=300`.

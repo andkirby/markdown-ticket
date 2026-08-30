@@ -8,7 +8,7 @@
 | `server/security/originPolicy.ts` | `server/tests/security/originPolicy.test.ts` | allowed-origin policy behavior |
 | `server/security/publicLinkOrigins.ts` | `server/tests/security/publicLinkOrigins.test.ts` | public-link defaults, selected origin validation, no safe origin |
 | `server/routes/readTokens.ts` | `server/tests/api/read-token-management.test.ts` | configured public origin, `Origin`/`Referer` current-origin fallback |
-| Sharing settings UI | `src/components/SettingsModal/ReadAccessTokens.test.tsx` | server-selected origin is used without an owner picker |
+| Sharing settings UI | `frontend/src/components/SettingsModal/ReadAccessTokens.test.tsx` | server-selected origin is used without an owner picker |
 | Sharing settings UI | `tests/e2e/sharing/read-access-journey.spec.ts` | configured public origin is used for generated invites |
 
 ## Constraint Coverage
@@ -25,7 +25,7 @@
 ```bash
 bun run validate:ts
 bun run --cwd server jest tests/config/runtimeConfig.test.ts tests/security/originPolicy.test.ts tests/security/publicLinkOrigins.test.ts tests/api/read-token-management.test.ts --runInBand
-bun test src/components/SettingsModal/ReadAccessTokens.test.tsx
+bun test frontend/src/components/SettingsModal/ReadAccessTokens.test.tsx
 rg -n "process\\.env" server --glob '!server/config/**' --glob '!server/server.ts' --glob '!server/tests/**' --glob '!server/dist/**' --glob '!server/mcp-dev-tools/**' --glob '!server/docs/**' && exit 1 || exit 0
 bunx playwright test tests/e2e/sharing/read-access-journey.spec.ts --project=chromium --grep "configured public origin"
 ```

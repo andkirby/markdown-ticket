@@ -1,19 +1,19 @@
 # Frontend Routes Architecture
 
 Status: authoritative (source of truth for frontend route-level structure).
-Established by the 2026-08-28 controlled refactor of `src/App.tsx`; see History.
+Established by the 2026-08-28 controlled refactor of `frontend/src/App.tsx`; see History.
 
 ## Scope
 
 How the app shell routes URLs to handlers, how the project route composes
 state, and where new frontend code belongs. UI mechanics of modals live in
-`src/MODALS.md`; surface design contracts in `docs/design/surfaces/`; realtime
+`frontend/src/MODALS.md`; surface design contracts in `docs/design/surfaces/`; realtime
 data flow in `docs/architecture/event-system/`.
 
 ## The map
 
 ```text
-src/
+frontend/src/
   App.tsx                              # 64 lines: providers + <Routes> table ONLY
   main.tsx                             # sole consumer of the default export
   components/routes/
@@ -38,14 +38,14 @@ MemoryRouter pattern). `DirectTicketAccess.tsx` and `RedirectToCurrentProject.ts
 
 | You are adding… | It belongs in… | Notes |
 |---|---|---|
-| A new route | `App.tsx` table + a handler file in `routes/` | route patterns come from `src/routes.ts` constants (MDT-184) — never inline strings |
+| A new route | `App.tsx` table + a handler file in `routes/` | route patterns come from `frontend/src/routes.ts` constants (MDT-184) — never inline strings |
 | A new project-page concern | a NEW hook in `routes/hooks/` + colocated test | call it in `ProjectRouteHandler` at the position dictated by effect order (below); do not accrete `useState` in the shell for a concern that has a home |
 | A persisted view/layout preference | `useViewModeRouting` — the ONLY writer of `lastViewMode`, `lastBoardListMode`, `mdt-board-mode`, Default View | single-writer rule; extend its tests |
 | Unlock / lock / owner-token behavior | `useAuthGate` | shell passes capabilities in; `onBeforeLock` preserves close-then-lock order |
 | Ticket URL / modal navigation | `useTicketModalRoute` | |
 | Project code validation / selection | `useProjectRouteValidation` | |
 | A pure URL↔view derivation | `viewModeDerivation.ts` (pure, tested) | keep it free of router imports |
-| A new overlay/modal | `ProjectOverlays.tsx`, props-only | visibility state stays in the shell (see Known Follow-ups); UI follows `src/MODALS.md`; register `data-testid` in `tests/e2e/utils/selectors.ts` |
+| A new overlay/modal | `ProjectOverlays.tsx`, props-only | visibility state stays in the shell (see Known Follow-ups); UI follows `frontend/src/MODALS.md`; register `data-testid` in `tests/e2e/utils/selectors.ts` |
 | An invite/share session exchange | `inviteExchange.ts` pattern | in-flight promise cache, delete-on-failure |
 
 Boundary alarm: a hook whose return object exceeds ~15 fields, or a shell that
@@ -79,7 +79,7 @@ verbatim and each hook is called exactly where its effect(s) sat.
 ## Invariants (do not break)
 
 1. `App.tsx` default-exports `App`; `main.tsx` is its only consumer.
-2. Route table: paths from `src/routes.ts` constants, stable order.
+2. Route table: paths from `frontend/src/routes.ts` constants, stable order.
 3. `data-testid` anchors are E2E contracts — preserve them verbatim on moves.
 4. localStorage single-writer rules (see decision table).
 5. `exchangeInviteCode` cache: reuse in-flight promise, evict on failure.
@@ -95,15 +95,15 @@ review; a `no-restricted-imports` ESLint rule is the intended enforcement.
 ## Metric gate
 
 Project `ts-metrics` thresholds (`.ts-metrics.rc`): red at MI ≤ 13, CC ≥ 50,
-CoC ≥ 50. No file under `src/` may enter the red zone; new files should land
-green or yellow. Run `ts-metrics --red src` before committing structural
+CoC ≥ 50. No file under `frontend/src/` may enter the red zone; new files should land
+green or yellow. Run `ts-metrics --red frontend/src` before committing structural
 change; compare at the real granularity across every changed file (extraction
 relocates complexity, it does not delete it).
 
 ## History (why this shape)
 
-Before 2026-08-28, `src/App.tsx` was a 1037-line monolith — MI 1.16 / CC 88 /
-CoC 209 (worst-tier complexity × highest churn: 70 commits, most in `src/`),
+Before 2026-08-28, `frontend/src/App.tsx` was a 1037-line monolith — MI 1.16 / CC 88 /
+CoC 209 (worst-tier complexity × highest churn: 70 commits, most in `frontend/src/`),
 mixing routing, auth gating, view persistence, ticket modal state, pins, and
 seven overlays. The controlled refactor (8 staged slices, verbatim moves,
 effect-order pin, characterization tests) produced:

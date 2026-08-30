@@ -10,7 +10,7 @@ Pattern: derived UI metadata owner. Route, ticket, and document state remain own
 
 ## Decisions
 
-- Add `src/hooks/usePageTitle.ts` as the single runtime owner for title formatting and `document.title` writes.
+- Add `frontend/src/hooks/usePageTitle.ts` as the single runtime owner for title formatting and `document.title` writes.
 - Keep `index.html` as the current first-paint title source until the React title owner replaces it after load.
 - Use `{PROJECT_CODE} Board`, `{PROJECT_CODE} Listing`, and `{PROJECT_CODE} Documents` for root project views with no opened content.
 - Use `{TICKET_CODE} - {ticket H1/title}` for the main ticket document.
@@ -58,10 +58,10 @@ Pattern: derived UI metadata owner. Route, ticket, and document state remain own
 
 ## Module Boundaries
 
-- `src/hooks/usePageTitle.ts` owns formatting, fallback, empty-source handling, and effect cleanup.
-- `src/App.tsx` owns route-level title inputs because `ProjectRouteHandler` already owns project and view state.
-- `src/components/TicketViewer/index.tsx` owns ticket title inputs because it already owns active ticket and ticket error state.
-- `src/components/DocumentsView/DocumentsLayout.tsx` owns document title inputs because it already owns selected file and deletion/error state.
+- `frontend/src/hooks/usePageTitle.ts` owns formatting, fallback, empty-source handling, and effect cleanup.
+- `frontend/src/App.tsx` owns route-level title inputs because `ProjectRouteHandler` already owns project and view state.
+- `frontend/src/components/TicketViewer/index.tsx` owns ticket title inputs because it already owns active ticket and ticket error state.
+- `frontend/src/components/DocumentsView/DocumentsLayout.tsx` owns document title inputs because it already owns selected file and deletion/error state.
 - `index.html` owns only the initial static fallback.
 - Tests own observable title assertions; runtime code must not add hidden DOM just for title testing.
 
@@ -69,15 +69,15 @@ Pattern: derived UI metadata owner. Route, ticket, and document state remain own
 
 Expected implementation paths:
 
-- `src/hooks/usePageTitle.ts`
-- `src/hooks/usePageTitle.test.ts`
-- `src/App.tsx`
-- `src/App.pageTitle.test.tsx`
-- `src/components/ProjectView.tsx`
-- `src/components/TicketViewer/index.tsx`
-- `src/components/TicketViewer/TicketViewer.test.tsx`
-- `src/components/DocumentsView/DocumentsLayout.tsx`
-- `src/components/DocumentsView/DocumentsLayout.test.tsx`
+- `frontend/src/hooks/usePageTitle.ts`
+- `frontend/src/hooks/usePageTitle.test.ts`
+- `frontend/src/App.tsx`
+- `frontend/src/App.pageTitle.test.tsx`
+- `frontend/src/components/ProjectView.tsx`
+- `frontend/src/components/TicketViewer/index.tsx`
+- `frontend/src/components/TicketViewer/TicketViewer.test.tsx`
+- `frontend/src/components/DocumentsView/DocumentsLayout.tsx`
+- `frontend/src/components/DocumentsView/DocumentsLayout.test.tsx`
 - `index.html`
 - `tests/e2e/navigation/page-title.spec.ts`
 

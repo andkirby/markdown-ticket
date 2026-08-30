@@ -12,7 +12,7 @@
 # What it does:
 #   1. Writes lefthook-local.yml with the parse-css command.
 #   2. Runs `lefthook install` to sync the hook.
-#   3. Verifies the gate by parsing all existing src/**/*.css.
+#   3. Verifies the gate by parsing all existing frontend/src/**/*.css.
 #
 set -e
 
@@ -40,8 +40,8 @@ GATE
 
 lefthook install
 
-echo "Verifying gate against all src/**/*.css…"
-find src -name '*.css' -print0 | xargs -0 node scripts/parse-css.mjs
+echo "Verifying gate against all frontend/src/**/*.css…"
+find frontend/src -name '*.css' -print0 | xargs -0 node scripts/parse-css.mjs
 
 echo ""
 echo "✓ CSS parse gate installed. It runs on every commit that stages .css files."

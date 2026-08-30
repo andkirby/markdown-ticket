@@ -4,7 +4,7 @@
 
 ```text
 domain-contracts/
-  src/
+  frontend/src/
     project/
       schema.ts                 ← Public entrypoint or compatibility barrel
       entity.ts                 ← Optional canonical entity schema
@@ -33,7 +33,7 @@ Test your schema rules and derivation logic, not the validation library itself:
 | Custom refinements | Your logic |
 
 ```typescript
-// src/project/__tests__/schema.test.ts
+// frontend/src/project/__tests__/schema.test.ts
 import { CreateProjectInputSchema, ProjectSchema } from '../schema'
 
 describe('ProjectSchema', () => {
@@ -99,7 +99,7 @@ describe('ProjectSchema', () => {
 Test behavior, especially safe variants:
 
 ```typescript
-// src/project/__tests__/validation.test.ts
+// frontend/src/project/__tests__/validation.test.ts
 import {
   safeValidateCreateProjectInput,
   validateCreateProjectInput,

@@ -46,7 +46,7 @@ This research will determine whether migration is viable, what the migration pat
 ### 3.2 Runtime Compatibility (Medium Risk)
 - Do all `node:*` built-in module imports work under Bun?
   - server/ uses: `node:path`, `node:fs`, `node:http`, `node:child_process`, `node:events`, `node:url`
-  - mcp-server/: standard Node APIs only (no child_process usage in src/)
+  - mcp-server/: standard Node APIs only (no child_process usage in frontend/src/)
 - Does Express 4.x (server) and Express 5.x (mcp-server) work correctly under Bun?
 - Does `chokidar` file watching work under Bun on macOS and Linux?
 - Does the MCP SDK (`@modelcontextprotocol/sdk`) stdio transport work under Bun?

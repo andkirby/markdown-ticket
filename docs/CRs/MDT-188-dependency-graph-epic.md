@@ -71,7 +71,7 @@ honest plan that the tool reconciles against reality.
 - `cli/` — `mdt-cli deps` command (check, tree, mermaid)
 - `domain-contracts/` — satisfaction function, structured error shapes
 - `server/` — HTTP error surface for guardrail violations
-- (later, v1.1) `src/` — UI readiness banner, focused-neighborhood graph
+- (later, v1.1) `frontend/src/` — UI readiness banner, focused-neighborhood graph
 
 ## 2. Solution Analysis
 

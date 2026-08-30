@@ -13,14 +13,14 @@
 | Epic lifecycle controls | Implemented for Activate, Close, and Closed; blocked Close is disabled with child names in `title`. |
 | Swimlane card badges | Implemented as a swimlane-local Show badges toggle; badges are hidden by default without changing flat Board card defaults. |
 | Epic ticket opening | Implemented as a bottom-right icon button on epic lanes; it opens the existing ticket viewer route. |
-| Semantic CSS classes | Implemented in `view-mode-switcher.css` and `swimlane-board.css`; imported through `src/index.css`. |
+| Semantic CSS classes | Implemented in `view-mode-switcher.css` and `swimlane-board.css`; imported through `frontend/src/index.css`. |
 
 ## Verification
 
 ```bash
-bun test --isolate src/components/TicketCard.test.tsx src/components/ViewModeSwitcher/ViewModeSwitcher.test.tsx src/components/SwimlaneBoard/helpers.test.ts
+bun test --isolate frontend/src/components/TicketCard.test.tsx frontend/src/components/ViewModeSwitcher/ViewModeSwitcher.test.tsx frontend/src/components/SwimlaneBoard/helpers.test.ts
 bun run validate:ts
-bunx eslint src/components/TicketCard.tsx src/components/TicketCard.test.tsx src/components/SwimlaneBoard/index.tsx tests/e2e/board/swimlane-board.spec.ts tests/e2e/utils/selectors.ts src/components/ViewModeSwitcher/ViewModeSwitcher.tsx --no-warn-ignored
+bunx eslint frontend/src/components/TicketCard.tsx frontend/src/components/TicketCard.test.tsx frontend/src/components/SwimlaneBoard/index.tsx tests/e2e/board/swimlane-board.spec.ts tests/e2e/utils/selectors.ts frontend/src/components/ViewModeSwitcher/ViewModeSwitcher.tsx --no-warn-ignored
 bun run build
 bunx playwright test tests/e2e/board/swimlane-board.spec.ts --project=chromium
 spec-trace render all MDT-206
@@ -35,7 +35,7 @@ Live DOM verification against `http://127.0.0.1:3075/prj/MDT` confirmed the view
 Earlier scoped lint passed for the backend and swimlane-owned files:
 
 ```bash
-bunx eslint src/components/Board.tsx src/components/SwimlaneBoard/index.tsx src/components/SwimlaneBoard/helpers.ts src/components/SwimlaneBoard/helpers.test.ts src/utils/ticketLevels.ts tests/e2e/board/swimlane-board.spec.ts tests/e2e/utils/selectors.ts server/tests/integration/api.metadata.test.ts server/tests/api/setup.ts server/tests/mocks/shared/models/Ticket.ts server/tests/mocks/shared/services/ProjectService.ts server/routes/documents.ts --no-warn-ignored
+bunx eslint frontend/src/components/Board.tsx frontend/src/components/SwimlaneBoard/index.tsx frontend/src/components/SwimlaneBoard/helpers.ts frontend/src/components/SwimlaneBoard/helpers.test.ts frontend/src/utils/ticketLevels.ts tests/e2e/board/swimlane-board.spec.ts tests/e2e/utils/selectors.ts server/tests/integration/api.metadata.test.ts server/tests/api/setup.ts server/tests/mocks/shared/models/Ticket.ts server/tests/mocks/shared/services/ProjectService.ts server/routes/documents.ts --no-warn-ignored
 ```
 
 Earlier backend metadata regression coverage also passed:
@@ -44,7 +44,7 @@ Earlier backend metadata regression coverage also passed:
 bun run --cwd server jest tests/integration/api.metadata.test.ts --runInBand
 ```
 
-Full `bun run lint:frontend` is still blocked by pre-existing unrelated errors in `src/utils/sorting.ts` and `src/utils/sorting.test.ts`.
+Full `bun run lint:frontend` is still blocked by pre-existing unrelated errors in `frontend/src/utils/sorting.ts` and `frontend/src/utils/sorting.test.ts`.
 
 ## Residual Risk
 

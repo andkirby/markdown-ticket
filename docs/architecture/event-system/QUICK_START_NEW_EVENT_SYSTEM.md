@@ -19,12 +19,12 @@ This guide helps you quickly understand and use the new event management archite
 ## File Structure
 
 ```text
-src/services/
+frontend/src/services/
 ├── eventBus.ts        # Central event router - ALL events flow through here
 ├── sseClient.ts       # SSE connection manager - emits to EventBus
 └── dataLayer.ts       # API calls - clean abstraction
 
-src/components/DevTools/
+frontend/src/components/DevTools/
 └── EventHistory.tsx   # Debug tool - view event history (dev only)
 ```
 
@@ -165,7 +165,7 @@ await dataLayer.deleteTicket('markdown-ticket', 'MDT-001');
 ### 1. Use the Event History Tool
 
 Add to your project route (development only — already wired in
-`src/components/routes/`, mounted via `ProjectOverlays`):
+`frontend/src/components/routes/`, mounted via `ProjectOverlays`):
 
 ```typescript
 import { EventHistory } from './components/DevTools/EventHistory';

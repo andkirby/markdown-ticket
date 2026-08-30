@@ -103,7 +103,7 @@ below. They are ordered by dependency: slices 1–3 are the integration core;
 - **Objective**: React projection-stub rendering (read-only, labeled,
   non-draggable per `ux-design.md`) + a local projection poller +
   `tests/e2e/cloud-sync-board.spec.ts` (two clients).
-- **Direct files**: `src/components/` (new stub), `shared/services/cloud-sync/CloudProjectionClient.ts` (poller), `tests/e2e/cloud-sync-board.spec.ts`.
+- **Direct files**: `frontend/src/components/` (new stub), `shared/services/cloud-sync/CloudProjectionClient.ts` (poller), `tests/e2e/cloud-sync-board.spec.ts`.
 - **Direct GREEN targets**: `TEST-board-stub-render`, `board_distinguishes_projected_state`, `polling_sees_changes_within_interval`.
 - **Impacted tasks**: `TASK-board-projection`, `TASK-projection`.
 - **Why**: blocking findings #4.

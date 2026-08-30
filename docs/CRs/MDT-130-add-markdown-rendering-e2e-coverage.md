@@ -14,7 +14,7 @@ The frontend markdown rendering pipeline currently lacks focused end-to-end cove
 Current state:
 - `tests/e2e/ticket/detail.spec.ts` checks only for the presence of generic markdown HTML.
 - `tests/e2e/documents/view.spec.ts` validates that content appears, but not specific rendered constructs.
-- Markdown rendering behavior in `src/components/MarkdownContent.tsx` includes preprocessing, Showdown conversion, Mermaid transformation, syntax highlighting, and sanitization, which creates multiple regression points.
+- Markdown rendering behavior in `frontend/src/components/MarkdownContent.tsx` includes preprocessing, Showdown conversion, Mermaid transformation, syntax highlighting, and sanitization, which creates multiple regression points.
 
 Desired state:
 - Add targeted Playwright E2E coverage for markdown rendering in ticket detail and documents views.

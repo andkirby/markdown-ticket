@@ -210,7 +210,7 @@ Remove `import('fs/promises')` statements from handler files.
 
 ```bash
 # 1. Run behavioral tests (must still pass)
-npm test --workspace=mcp-server -- src/tools/handlers/__tests__/
+npm test --workspace=mcp-server -- frontend/src/tools/handlers/__tests__/
 
 # 2. Run MCP server e2e tests (213 tests - Jest, NOT Playwright)
 npm run test:e2e --workspace=mcp-server

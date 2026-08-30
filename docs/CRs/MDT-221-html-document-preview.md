@@ -19,9 +19,9 @@ relatedTickets: MDT-156,MDT-160,MDT-199
 
 - `server/builders/TreeBuilder.ts` discovers only `**/*.md`, so `.html` documents in configured document paths are invisible.
 - `server/services/DocumentService.ts#getDocumentContent` rejects non-`.md` paths and returns UTF-8 strings only, so executable HTML and sibling assets cannot be served.
-- `src/components/DocumentsView/MarkdownViewer.tsx` always fetches text from `/api/documents/content` and renders through the markdown pipeline.
+- `frontend/src/components/DocumentsView/MarkdownViewer.tsx` always fetches text from `/api/documents/content` and renders through the markdown pipeline.
 - Same-origin executable HTML would be able to issue credentialed `/api/*` requests if rendered directly in the React tree.
-- Multi-file HTML depends on relative `href`, `src`, `img`, and `fetch` URLs resolving against a stable document root.
+- Multi-file HTML depends on relative `href`, `frontend/src`, `img`, and `fetch` URLs resolving against a stable document root.
 
 ### Affected Artifacts
 
@@ -34,11 +34,11 @@ relatedTickets: MDT-156,MDT-160,MDT-199
 - `server/security/documentPreviewToken.ts` — internal short-lived preview-token signing and validation.
 - `server/types/tree.ts` — document kind/type metadata exposed to clients.
 - `server/services/fileWatcher/PathWatcherService.ts` — document-change parity for HTML files.
-- `src/components/DocumentsView/FileTree.tsx` — document metadata type and HTML file icon/display handling.
-- `src/components/DocumentsView/DocumentsLayout.tsx` — viewer selection by document kind.
-- `src/components/DocumentsView/MarkdownViewer.tsx` — remains markdown-only.
-- `src/components/DocumentsView/HtmlSandboxViewer.tsx` — new sandboxed HTML preview component.
-- `src/components/MarkdownContent/useMarkdownProcessor.ts` — remains the sanitizer owner for markdown HTML only.
+- `frontend/src/components/DocumentsView/FileTree.tsx` — document metadata type and HTML file icon/display handling.
+- `frontend/src/components/DocumentsView/DocumentsLayout.tsx` — viewer selection by document kind.
+- `frontend/src/components/DocumentsView/MarkdownViewer.tsx` — remains markdown-only.
+- `frontend/src/components/DocumentsView/HtmlSandboxViewer.tsx` — new sandboxed HTML preview component.
+- `frontend/src/components/MarkdownContent/useMarkdownProcessor.ts` — remains the sanitizer owner for markdown HTML only.
 - `tests/e2e/` and `server/tests/` — route security, raw serving, and preview behavior coverage.
 
 ### Scope
@@ -111,8 +111,8 @@ relatedTickets: MDT-156,MDT-160,MDT-199
 
 | Artifact | Type | Purpose |
 |----------|------|---------|
-| `src/components/DocumentsView/HtmlSandboxViewer.tsx` | Component | Render HTML previews in a sandboxed iframe |
-| `src/components/DocumentsView/HtmlSandboxViewer.test.tsx` | Unit test | Prove iframe sandbox tokens exclude unsafe combinations |
+| `frontend/src/components/DocumentsView/HtmlSandboxViewer.tsx` | Component | Render HTML previews in a sandboxed iframe |
+| `frontend/src/components/DocumentsView/HtmlSandboxViewer.test.tsx` | Unit test | Prove iframe sandbox tokens exclude unsafe combinations |
 | `server/security/documentPreviewToken.ts` | Security helper | Sign and validate short-lived preview tokens scoped to project and document directory |
 | `server/tests/api/document-raw.test.ts` | API test | Prove raw route auth, containment, MIME, and CSP behavior |
 
@@ -130,9 +130,9 @@ relatedTickets: MDT-156,MDT-160,MDT-199
 | `server/routes/documents.ts` | Route added | Add owner-authenticated `POST /api/documents/preview-token` endpoint |
 | `server/routes/documents.ts` | Route added | Add token-authenticated `GET /api/documents/raw-preview/:token/*documentPath` route |
 | `server/services/fileWatcher/PathWatcherService.ts` | Filter extended | Emit document-change events for `.html` and `.htm` files |
-| `src/components/DocumentsView/FileTree.tsx` | Type updated | Carry document kind metadata and render appropriate file icon/state |
-| `src/components/DocumentsView/DocumentsLayout.tsx` | Viewer selection added | Select `MarkdownViewer`, `HtmlSandboxViewer`, or unsupported state by document kind |
-| `src/components/DocumentsView/MarkdownViewer.tsx` | Responsibility narrowed | Keep markdown rendering unchanged and do not handle HTML |
+| `frontend/src/components/DocumentsView/FileTree.tsx` | Type updated | Carry document kind metadata and render appropriate file icon/state |
+| `frontend/src/components/DocumentsView/DocumentsLayout.tsx` | Viewer selection added | Select `MarkdownViewer`, `HtmlSandboxViewer`, or unsupported state by document kind |
+| `frontend/src/components/DocumentsView/MarkdownViewer.tsx` | Responsibility narrowed | Keep markdown rendering unchanged and do not handle HTML |
 | `server/security/apiAuth.ts` | Policy extended | Add only a narrow GET exemption for `/api/documents/raw-preview/*` so token auth can run |
 | `docs/CONFIG_SPECIFICATION.md` | Documentation updated | Document supported document file kinds and raw-preview security boundary |
 | `server/docs/ARCHITECTURE.md` | Documentation updated | Reflect the new `/api/documents/raw-preview/*` prefix, its GET-only auth exemption, and the preview-token bridge in the auth-gate + route map (lines 13, 56-65, 90). This doc is the canonical "where do new `/api` routes go" reference future contributors use. |
@@ -201,7 +201,7 @@ X-Frame-Options: SAMEORIGIN
 - [x] Existing `.md` discovery, selection, markdown rendering, tabs, favorites, and timestamps continue to work.
 - [x] Selecting an HTML file renders an iframe preview instead of the markdown renderer.
 - [x] Selecting an HTML file first mints an owner-only internal preview token.
-- [x] HTML iframe `src` uses `/api/documents/raw-preview/:token/*documentPath`.
+- [x] HTML iframe `frontend/src` uses `/api/documents/raw-preview/:token/*documentPath`.
 - [x] Relative subresources resolve under the same preview-token path prefix.
 - [x] HTML files that reference relative CSS, JavaScript, and image assets load those assets when they remain inside the token-scoped directory and configured document paths.
 - [x] External edits to a selected `.html` or `.htm` file refresh the HTML preview through the document-change path.
@@ -242,7 +242,7 @@ X-Frame-Options: SAMEORIGIN
 
 ### Testing
 
-- Unit: `HtmlSandboxViewer.test.tsx` verifies iframe `sandbox`, `src`, deleted state, and unsupported unsafe token combination.
+- Unit: `HtmlSandboxViewer.test.tsx` verifies iframe `sandbox`, `frontend/src`, deleted state, and unsupported unsafe token combination.
 - Unit: `DocumentsLayout` or viewer-selection tests verify markdown, HTML, and unsupported kind routing.
 - Unit: Preview-token helper tests verify TTL, tamper detection, project scoping, path scoping, and expiry.
 - API: `document-raw.test.ts` verifies owner auth required for token minting, visible-project required, configured document path required, containment, MIME, `nosniff`, and CSP headers.

@@ -28,10 +28,10 @@ PathSelector
 
 | Child | Component | Conditional |
 |-------|-----------|-------------|
-| PathSelector | `src/components/DocumentsView/PathSelector.tsx` | when owner/admin configures document paths |
-| Tooltip | `src/components/ui/tooltip.tsx` | header info icon |
-| ScrollArea | `src/components/ui/scroll-area.tsx` | tree body |
-| Button | `src/components/ui/Button.tsx` | toolbar and footer actions |
+| PathSelector | `frontend/src/components/DocumentsView/PathSelector.tsx` | when owner/admin configures document paths |
+| Tooltip | `frontend/src/components/ui/tooltip.tsx` | header info icon |
+| ScrollArea | `frontend/src/components/ui/scroll-area.tsx` | tree body |
+| Button | `frontend/src/components/ui/Button.tsx` | toolbar and footer actions |
 
 ## Selection Model
 
@@ -78,9 +78,9 @@ PathSelector
 
 | Element | Class | Source |
 |---------|-------|--------|
-| Modal sections | Tailwind inline utilities | `src/MODALS.md` tight layout |
+| Modal sections | Tailwind inline utilities | `frontend/src/MODALS.md` tight layout |
 | Tree rows | Tailwind inline utilities | local component pattern |
-| Tooltip trigger/content | existing tooltip primitives | `src/components/ui/tooltip.tsx` |
+| Tooltip trigger/content | existing tooltip primitives | `frontend/src/components/ui/tooltip.tsx` |
 
 ## Extension notes
 

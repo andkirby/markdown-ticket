@@ -107,7 +107,7 @@ Remove redundant prop passing between SingleProjectView and Board components:
 - **Working Baseline**: Commit `2c8c094` provided reference implementation
 
 ### Code Changes
-- **Modified**: `src/components/SingleProjectView.tsx` (removed redundant props)
-- **Enhanced**: `src/components/Board.tsx` (improved dual-mode support)
-- **Preserved**: `src/hooks/useMultiProjectData.ts` (core functionality intact)
+- **Modified**: `frontend/src/components/SingleProjectView.tsx` (removed redundant props)
+- **Enhanced**: `frontend/src/components/Board.tsx` (improved dual-mode support)
+- **Preserved**: `frontend/src/hooks/useMultiProjectData.ts` (core functionality intact)
 - **Architecture**: Restored single-source-of-truth state management pattern

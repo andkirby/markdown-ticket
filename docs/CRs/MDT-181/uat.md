@@ -45,19 +45,19 @@ Replace the "Gradient Accents" toggle with a "Style" dropdown offering three nam
 ### Slice 2: CSS — add Plate style rules
 
 - **Objective**: Add CSS rules for `data-accent-style="plate"` on chips and cards. Chip: code element gets accent-filled background, right-rounded corners, computed foreground. Card: same badge treatment, identity area hidden.
-- **Direct artifacts**: `src/components/ProjectSelector/project-selector.css`
+- **Direct artifacts**: `frontend/src/components/ProjectSelector/project-selector.css`
 - **GREEN targets**: Plate style renders correctly in light and dark mode
 
 ### Slice 3: Components — wire `accentStyle` prop to data attributes
 
 - **Objective**: Update `ProjectSelectorChip.tsx` and `ProjectSelectorCard.tsx` to read `accentStyle` from preferences and set `data-accent-style` attribute. Remove `data-accent-gradients`.
-- **Direct artifacts**: `src/components/ProjectSelector/ProjectSelectorChip.tsx`, `src/components/ProjectSelector/ProjectSelectorCard.tsx`
+- **Direct artifacts**: `frontend/src/components/ProjectSelector/ProjectSelectorChip.tsx`, `frontend/src/components/ProjectSelector/ProjectSelectorCard.tsx`
 - **GREEN targets**: Chips and cards render correct style based on preference
 
 ### Slice 4: Settings — replace toggle with Style dropdown + Autocolor toggle
 
 - **Objective**: In `ProjectAccents.tsx`, replace "Gradient Accents" Switch with a "Style" select dropdown (Gradient / Flat / Plate). Add "Autocolor" Switch toggle. Persist `accentStyle` and `autocolor` to localStorage. Update reset button behavior for autocolor-off state.
-- **Direct artifacts**: `src/components/SettingsModal/ProjectAccents.tsx`
+- **Direct artifacts**: `frontend/src/components/SettingsModal/ProjectAccents.tsx`
 - **GREEN targets**: Dropdown shows three options; autocolor toggle works; reset fills auto hex when appropriate; rendering updates immediately
 
 ### Slice 5: E2E tests — add plate scenario, update existing

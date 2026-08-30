@@ -16,7 +16,7 @@ The inspection script only **projects** these; it is not itself a source of trut
 | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
 | [`docs/CRs/MDT-168/configuration-exposure.md`](CRs/MDT-168/configuration-exposure.md) | Human exposure matrix (the canonical classification)                       |
 | `domain-contracts/src/config-management/selectors.ts`                                 | `CONFIG_SELECTOR_ALLOWLIST` (code registry of readable/writable selectors) |
-| `src/config/*.ts`                                                                     | Browser-only `localStorage` modules                                        |
+| `frontend/src/config/*.ts`                                                                     | Browser-only `localStorage` modules                                        |
 
 ## Usage
 

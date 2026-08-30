@@ -50,7 +50,7 @@ All CR §4 criteria met. The original cross-project-routing criterion was withdr
 
 ## Test evidence
 
-- `bun test src/components/Badge/ContextBadge.test.tsx` → 20/20 pass
-- `bun test src/components/Badge/` → 105/105 pass (no regression)
+- `bun test frontend/src/components/Badge/ContextBadge.test.tsx` → 20/20 pass
+- `bun test frontend/src/components/Badge/` → 105/105 pass (no regression)
 - `bunx playwright test tests/e2e/board/epic-badge-link.spec.ts` → 1/1 pass
 - `bun run build` → success

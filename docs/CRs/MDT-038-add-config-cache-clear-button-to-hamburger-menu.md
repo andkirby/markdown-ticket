@@ -36,7 +36,7 @@ The original problem was based on incorrect assumption about caching. Investigat
 ### ✅ COMPLETED (2025-09-09)
 - **Frontend**: HamburgerMenu.tsx updated with refresh button
 - **Backend**: Cache clear endpoint added to server.js
-- **Vite**: Proxy endpoint added to vite.config.ts
+- **Vite**: Proxy endpoint added to frontend/vite.config.ts
 - **UX**: Loading states and auto-reload implemented
 
 ### 🔄 REVERTED (2025-09-09)

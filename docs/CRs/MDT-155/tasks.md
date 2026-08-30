@@ -12,9 +12,9 @@
 
 | Critical Behavior | Owner Module | Merge/Refactor Task if Overlap |
 |-------------------|--------------|--------------------------------|
-| Active subdocument source path | `src/components/TicketViewer/index.tsx` | N/A |
-| Bare `.md` reference matching | `src/utils/markdownPreprocessor.ts` | N/A |
-| Absolute subdoc route classification | `src/utils/linkProcessor.ts` | N/A, regression only |
+| Active subdocument source path | `frontend/src/components/TicketViewer/index.tsx` | N/A |
+| Bare `.md` reference matching | `frontend/src/utils/markdownPreprocessor.ts` | N/A |
+| Absolute subdoc route classification | `frontend/src/utils/linkProcessor.ts` | N/A, regression only |
 
 ## Constraint Coverage
 
@@ -29,8 +29,8 @@
 
 | Layer | Arch Files | In Tasks | Gap | Status |
 |-------|-----------:|---------:|----:|--------|
-| src/components/TicketViewer/ | 2 | 2 | 0 | OK |
-| src/utils/ | 3 | 3 | 0 | OK |
+| frontend/src/components/TicketViewer/ | 2 | 2 | 0 | OK |
+| frontend/src/utils/ | 3 | 3 | 0 | OK |
 
 ## Tasks
 
@@ -38,25 +38,25 @@
 
 **Skills**: mdt-frontend
 
-**Structure**: `src/components/TicketViewer/TicketViewer.test.tsx`, `src/utils/markdownPreprocessor.mdt155.test.ts`, `src/utils/linkProcessor.mdt150.test.ts`
+**Structure**: `frontend/src/components/TicketViewer/TicketViewer.test.tsx`, `frontend/src/utils/markdownPreprocessor.mdt155.test.ts`, `frontend/src/utils/linkProcessor.mdt150.test.ts`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-ticket-viewer-sourcepath` -> `src/components/TicketViewer/TicketViewer.test.tsx`
-- `TEST-markdown-reference-regex` -> `src/utils/markdownPreprocessor.mdt155.test.ts`
-- `TEST-link-processor-subdoc-anchor` -> `src/utils/linkProcessor.mdt150.test.ts`
-- `TEST-relative-md-anchor-classification` -> `src/utils/linkProcessor.mdt150.test.ts`
+- `TEST-ticket-viewer-sourcepath` -> `frontend/src/components/TicketViewer/TicketViewer.test.tsx`
+- `TEST-markdown-reference-regex` -> `frontend/src/utils/markdownPreprocessor.mdt155.test.ts`
+- `TEST-link-processor-subdoc-anchor` -> `frontend/src/utils/linkProcessor.mdt150.test.ts`
+- `TEST-relative-md-anchor-classification` -> `frontend/src/utils/linkProcessor.mdt150.test.ts`
 
 **Scope**: Add/adjust tests for MDT-155 behavior.
 **Boundary**: Runtime code changes are not part of this task.
 
 **Creates**:
-- `src/utils/markdownPreprocessor.mdt155.test.ts`
+- `frontend/src/utils/markdownPreprocessor.mdt155.test.ts`
 
 **Modifies**:
-- `src/components/TicketViewer/TicketViewer.test.tsx`
+- `frontend/src/components/TicketViewer/TicketViewer.test.tsx`
 
 **Must Not Touch**:
-- `src/hooks/useQuickSearch.test.ts`
+- `frontend/src/hooks/useQuickSearch.test.ts`
 - `tests/e2e/quick-search/modal.spec.ts`
 
 **Create/Move**:
@@ -73,7 +73,7 @@
 
 **Verify**:
 ```bash
-bun test ./src/components/TicketViewer/TicketViewer.test.tsx ./src/utils/markdownPreprocessor.mdt155.test.ts ./src/utils/linkProcessor.mdt150.test.ts
+bun test ./frontend/src/components/TicketViewer/TicketViewer.test.tsx ./frontend/src/utils/markdownPreprocessor.mdt155.test.ts ./frontend/src/utils/linkProcessor.mdt150.test.ts
 ```
 
 **Done when**:
@@ -84,10 +84,10 @@ bun test ./src/components/TicketViewer/TicketViewer.test.tsx ./src/utils/markdow
 
 **Skills**: mdt-frontend
 
-**Structure**: `src/components/TicketViewer/index.tsx`
+**Structure**: `frontend/src/components/TicketViewer/index.tsx`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-ticket-viewer-sourcepath` -> `src/components/TicketViewer/TicketViewer.test.tsx`
+- `TEST-ticket-viewer-sourcepath` -> `frontend/src/components/TicketViewer/TicketViewer.test.tsx`
 
 **Makes GREEN (Behavior)**:
 - `subdocument_sourcepath_uses_file_path` (BR-1.1)
@@ -99,11 +99,11 @@ bun test ./src/components/TicketViewer/TicketViewer.test.tsx ./src/utils/markdow
 - None.
 
 **Modifies**:
-- `src/components/TicketViewer/index.tsx`
+- `frontend/src/components/TicketViewer/index.tsx`
 
 **Must Not Touch**:
-- `src/components/TicketViewer/useTicketDocumentNavigation.ts`
-- `src/components/TicketViewer/useTicketDocumentContent.ts`
+- `frontend/src/components/TicketViewer/useTicketDocumentNavigation.ts`
+- `frontend/src/components/TicketViewer/useTicketDocumentContent.ts`
 
 **Create/Move**:
 - Add a local helper if needed to find active subdocuments recursively.
@@ -118,7 +118,7 @@ bun test ./src/components/TicketViewer/TicketViewer.test.tsx ./src/utils/markdow
 
 **Verify**:
 ```bash
-bun test ./src/components/TicketViewer/TicketViewer.test.tsx
+bun test ./frontend/src/components/TicketViewer/TicketViewer.test.tsx
 ```
 
 **Done when**:
@@ -127,10 +127,10 @@ bun test ./src/components/TicketViewer/TicketViewer.test.tsx
 
 ### Task 3: Tighten markdownPreprocessor document reference matching
 
-**Structure**: `src/utils/markdownPreprocessor.ts`
+**Structure**: `frontend/src/utils/markdownPreprocessor.ts`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-markdown-reference-regex` -> `src/utils/markdownPreprocessor.mdt155.test.ts`
+- `TEST-markdown-reference-regex` -> `frontend/src/utils/markdownPreprocessor.mdt155.test.ts`
 
 **Makes GREEN (Behavior)**:
 - `standalone_markdown_refs_are_tight` (BR-1.2)
@@ -142,11 +142,11 @@ bun test ./src/components/TicketViewer/TicketViewer.test.tsx
 - None.
 
 **Modifies**:
-- `src/utils/markdownPreprocessor.ts`
+- `frontend/src/utils/markdownPreprocessor.ts`
 
 **Must Not Touch**:
-- `src/utils/linkProcessor.ts`
-- `src/utils/linkNormalization.ts`
+- `frontend/src/utils/linkProcessor.ts`
+- `frontend/src/utils/linkNormalization.ts`
 
 **Create/Move**:
 - Introduce a named regex constant if it improves clarity.
@@ -161,7 +161,7 @@ bun test ./src/components/TicketViewer/TicketViewer.test.tsx
 
 **Verify**:
 ```bash
-bun test ./src/utils/markdownPreprocessor.mdt155.test.ts ./src/utils/markdownPreprocessor.mdt150.test.ts
+bun test ./frontend/src/utils/markdownPreprocessor.mdt155.test.ts ./frontend/src/utils/markdownPreprocessor.mdt150.test.ts
 ```
 
 **Done when**:
@@ -170,11 +170,11 @@ bun test ./src/utils/markdownPreprocessor.mdt155.test.ts ./src/utils/markdownPre
 
 ### Task 4: Verify link preservation, full regression, and MDT-152 exclusion
 
-**Structure**: `src/utils/linkProcessor.mdt150.test.ts`, `src/components/TicketViewer/index.tsx`, `src/utils/markdownPreprocessor.ts`
+**Structure**: `frontend/src/utils/linkProcessor.mdt150.test.ts`, `frontend/src/components/TicketViewer/index.tsx`, `frontend/src/utils/markdownPreprocessor.ts`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-link-processor-subdoc-anchor` -> `src/utils/linkProcessor.mdt150.test.ts`
-- `TEST-relative-md-anchor-classification` -> `src/utils/linkProcessor.mdt150.test.ts`
+- `TEST-link-processor-subdoc-anchor` -> `frontend/src/utils/linkProcessor.mdt150.test.ts`
+- `TEST-relative-md-anchor-classification` -> `frontend/src/utils/linkProcessor.mdt150.test.ts`
 - `TEST-existing-frontend-suite` -> `bun run fe:test`
 - `TEST-no-mdt152-diff` -> manual diff check
 
@@ -192,7 +192,7 @@ bun test ./src/utils/markdownPreprocessor.mdt155.test.ts ./src/utils/markdownPre
 - None expected.
 
 **Must Not Touch**:
-- `src/hooks/useQuickSearch.test.ts`
+- `frontend/src/hooks/useQuickSearch.test.ts`
 - `tests/e2e/quick-search/modal.spec.ts`
 
 **Create/Move**:
@@ -208,9 +208,9 @@ bun test ./src/utils/markdownPreprocessor.mdt155.test.ts ./src/utils/markdownPre
 
 **Verify**:
 ```bash
-bun test ./src/utils/linkProcessor.mdt150.test.ts
+bun test ./frontend/src/utils/linkProcessor.mdt150.test.ts
 bun run fe:test
-git diff --name-only -- src/hooks/useQuickSearch.test.ts tests/e2e/quick-search/modal.spec.ts
+git diff --name-only -- frontend/src/hooks/useQuickSearch.test.ts tests/e2e/quick-search/modal.spec.ts
 ```
 
 **Done when**:

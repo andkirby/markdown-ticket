@@ -164,7 +164,7 @@ Development Phase → bun run validate:ts → Build Phase → bun run build:all 
 
 ```bash
 # 1. Make changes to TypeScript files
-vim src/components/MyComponent.tsx
+vim frontend/src/components/MyComponent.tsx
 
 # 2. Quick validation (only changed files) - FAST
 bun run validate:ts
@@ -192,7 +192,7 @@ bun run test:e2e
 ```text
 domain-contracts (1 file)
   ✓ Validated
-  ✓ src/types/schema.ts
+  ✓ frontend/src/types/schema.ts
 
 shared (5 files)
   ✓ Validated
@@ -231,7 +231,7 @@ Passed: 3  |  Failed: 0  |  Skipped: 0
 bun run lint --fix
 
 # Fix specific file
-bunx eslint src/components/MyComponent.tsx --fix
+bunx eslint frontend/src/components/MyComponent.tsx --fix
 ```
 
 ### Knip (`bun run knip`)
@@ -297,7 +297,7 @@ PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/my-test.spec.ts --projec
 ### Test Output Interpretation
 
 ```text
-✓ src/components/TicketAttributes.tsx (1 file)
+✓ frontend/src/components/TicketAttributes.tsx (1 file)
 ✗ shared/services/TemplateService.ts (2 errors)
 ```
 
@@ -312,7 +312,7 @@ PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/my-test.spec.ts --projec
 
 ```text
 / (root)
-├── src/              # Frontend (React + Vite)
+├── frontend/src/              # Frontend (React + Vite)
 ├── server/           # Backend (Express)
 ├── shared/           # Shared code (compiled separately)
 ├── mcp-server/       # MCP Server (separate build)
@@ -369,7 +369,7 @@ When making changes to `domain-contracts`, you MUST rebuild it AND rebuild depen
 
 ```typescript
 // ❌ Don't define types in multiple places
-// src/types/ticket.ts - defines CRType
+// frontend/src/types/ticket.ts - defines CRType
 // server/types/ticket.ts - defines CRType (different!)
 
 // ✅ Import from single source

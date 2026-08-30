@@ -14,7 +14,7 @@ phaseEpic: MDT-233
 ## 1. Description
 
 ### Problem
-- The system has multiple competing definitions of the same domain entities across `shared/`, `server/`, `mcp-server/`, and `src/`
+- The system has multiple competing definitions of the same domain entities across `shared/`, `server/`, `mcp-server/`, and `frontend/src/`
 - Type definitions are mixed with implementation concerns, making dependency boundaries unclear and causing contract drift
 - Runtime validation is inconsistent, so interfaces may accept or emit shapes that differ from the intended domain model
 - Tests and fixtures often mirror production types manually, which creates a second source of truth instead of validating against the real one
@@ -27,7 +27,7 @@ This CR is not just a package extraction. It establishes the contract architectu
 
 - `domain-contracts` defines canonical domain meaning
 - `shared` implements business logic against validated contracts
-- `server`, `mcp-server`, and `src` consume those contracts at boundaries
+- `server`, `mcp-server`, and `frontend/src` consume those contracts at boundaries
 - tests and fixtures derive from the same contract definitions instead of duplicating entity shapes
 
 ### Scope
@@ -98,7 +98,7 @@ This structure avoids the common failure mode where “CR”, “Ticket”, “D
 
 ```text
 domain-contracts/
-  src/
+  frontend/src/
     index.ts
     project/
       schema.ts
@@ -126,11 +126,11 @@ domain-contracts/
 - [x] Create shared primitive contracts in `domain-contracts/src/types/`
 - [x] Create ticket contracts in `domain-contracts/src/ticket/`
 - [x] Split ticket contracts by role: `entity`, `frontmatter`, `input`, `subdocument`, `validation`
-- [x] Migrate canonical ticket shape ownership out of `shared`, `server`, `mcp-server`, and `src`
+- [x] Migrate canonical ticket shape ownership out of `shared`, `server`, `mcp-server`, and `frontend/src`
 - [x] Move worktree schemas and types from `shared/models/WorktreeTypes.ts` into contracts
 - [x] Consolidate the project contract into `domain-contracts/src/project/` as the canonical source of truth
 - [x] Migrate `LocalProjectConfig`, merged `Project`, registry entry, and project input/update shapes into project contracts
-- [ ] Remove remaining project and worktree duplicates from `shared`, `server`, `mcp-server`, and `src`
+- [ ] Remove remaining project and worktree duplicates from `shared`, `server`, `mcp-server`, and `frontend/src`
 - [ ] Decide whether template metadata should become a formal contract
 - [x] Create formal app config contracts for `config.toml` and `user.toml`
 - [x] Keep selector preferences in `user.toml` as a separate user-config contract, not in global `config.toml`
@@ -182,9 +182,9 @@ domain-contracts/
 ### Key Patterns
 - **Schema-first**: Define Zod schema, derive TypeScript type with `z.infer<typeof Schema>`
 - **Validation at boundaries**: Parse/validate at API boundaries, not internal calls
-- **Separate testing subpath**: Test fixtures in `src/testing/` to keep production API clean
+- **Separate testing subpath**: Test fixtures in `frontend/src/testing/` to keep production API clean
 - **Cross-interface consistency**: All interfaces validate against same schemas
-- **Clean exports**: Production API from `src/index.ts`, testing utilities from `src/testing/index.ts`
+- **Clean exports**: Production API from `frontend/src/index.ts`, testing utilities from `frontend/src/testing/index.ts`
 
 ## 6. Acceptance Criteria
 

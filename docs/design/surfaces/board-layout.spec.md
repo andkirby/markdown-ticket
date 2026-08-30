@@ -42,34 +42,34 @@ Column
 
 | Child | Component | Spec | Conditional |
 |-------|-----------|------|-------------|
-| Board | `src/components/Board.tsx` | this file | always |
-| Column | `src/components/Column/index.tsx` | this file (column section) | always (4 visible) |
-| TicketCard | `src/components/TicketCard.tsx` | `ticket-card.spec.md` | inside Column |
-| FilterControls | `src/components/FilterControls.tsx` | — | `showHeader` mode only |
-| SortControls | `src/components/SortControls.tsx` | — | `showHeader` mode only |
-| HamburgerMenu | `src/components/HamburgerMenu.tsx` | `app-header.spec.md` | `showHeader` mode only |
-| StatusToggle | `src/components/Column/StatusToggle.tsx` | — | In Progress, Done columns |
-| ResolutionDialog | `src/components/ResolutionDialog.tsx` | — | Done column on drop |
-| ScrollArea | `src/components/ui/scroll-area.tsx` | — | inside each Column |
+| Board | `frontend/src/components/Board.tsx` | this file | always |
+| Column | `frontend/src/components/Column/index.tsx` | this file (column section) | always (4 visible) |
+| TicketCard | `frontend/src/components/TicketCard.tsx` | `ticket-card.spec.md` | inside Column |
+| FilterControls | `frontend/src/components/FilterControls.tsx` | — | `showHeader` mode only |
+| SortControls | `frontend/src/components/SortControls.tsx` | — | `showHeader` mode only |
+| HamburgerMenu | `frontend/src/components/HamburgerMenu.tsx` | `app-header.spec.md` | `showHeader` mode only |
+| StatusToggle | `frontend/src/components/Column/StatusToggle.tsx` | — | In Progress, Done columns |
+| ResolutionDialog | `frontend/src/components/ResolutionDialog.tsx` | — | Done column on drop |
+| ScrollArea | `frontend/src/components/ui/scroll-area.tsx` | — | inside each Column |
 
 ## Source files
 
 | Type | Path |
 |------|------|
-| Board | `src/components/Board.tsx` |
-| Column | `src/components/Column/index.tsx` |
-| StatusToggle | `src/components/Column/StatusToggle.tsx` |
-| Drop zone hook | `src/components/Column/useDropZone.ts` |
-| Button modes hook | `src/components/Column/useButtonModes.ts` |
-| Board layout hook | `src/hooks/useBoardLayout.ts` |
-| Column config | `src/config/statusConfig.ts` |
-| Sort config | `src/config/sorting.ts` |
+| Board | `frontend/src/components/Board.tsx` |
+| Column | `frontend/src/components/Column/index.tsx` |
+| StatusToggle | `frontend/src/components/Column/StatusToggle.tsx` |
+| Drop zone hook | `frontend/src/components/Column/useDropZone.ts` |
+| Button modes hook | `frontend/src/components/Column/useButtonModes.ts` |
+| Board layout hook | `frontend/src/hooks/useBoardLayout.ts` |
+| Column config | `frontend/src/config/statusConfig.ts` |
+| Sort config | `frontend/src/config/sorting.ts` |
 
 ## Layout
 
 ### Board grid
 
-- Class: `.board-container` (defined in `src/components/Column/column.css`)
+- Class: `.board-container` (defined in `frontend/src/components/Column/column.css`)
 - Grid: `grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4`
 - Full width: `w-full`
 - Items stretch: `items-stretch`
@@ -99,7 +99,7 @@ Column
 
 ## Board Columns
 
-Defined in `src/config/statusConfig.ts` → `BOARD_COLUMNS`. Visible columns only:
+Defined in `frontend/src/config/statusConfig.ts` → `BOARD_COLUMNS`. Visible columns only:
 
 | Column | Label | Color | Statuses | Has Toggle |
 |--------|-------|-------|----------|------------|

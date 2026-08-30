@@ -15,7 +15,7 @@ The acceptance surface is covered by focused frontend tests rather than new Play
 Use Bun frontend tests:
 
 ```bash
-bun test ./src/components/TicketViewer/TicketViewer.test.tsx ./src/utils/markdownPreprocessor.mdt155.test.ts ./src/utils/markdownPreprocessor.mdt150.test.ts ./src/utils/linkProcessor.mdt150.test.ts
+bun test ./frontend/src/components/TicketViewer/TicketViewer.test.tsx ./frontend/src/utils/markdownPreprocessor.mdt155.test.ts ./frontend/src/utils/markdownPreprocessor.mdt150.test.ts ./frontend/src/utils/linkProcessor.mdt150.test.ts
 bun run fe:test
 ```
 

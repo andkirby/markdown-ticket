@@ -12,10 +12,10 @@ Executable test files were not authored in this pipeline run because the request
 
 | Module | Test File | Test Plan |
 |--------|-----------|-----------|
-| `src/hooks/usePageTitle.ts` | `src/hooks/usePageTitle.test.ts` | `TEST-page-title-formatting` |
-| `src/App.tsx` | `src/App.pageTitle.test.tsx` | `TEST-project-view-title-context` |
-| `src/components/TicketViewer/index.tsx` | `src/components/TicketViewer/TicketViewer.test.tsx` | `TEST-ticket-title-context` |
-| `src/components/DocumentsView/DocumentsLayout.tsx` | `src/components/DocumentsView/DocumentsLayout.test.tsx` | `TEST-document-title-context` |
+| `frontend/src/hooks/usePageTitle.ts` | `frontend/src/hooks/usePageTitle.test.ts` | `TEST-page-title-formatting` |
+| `frontend/src/App.tsx` | `frontend/src/App.pageTitle.test.tsx` | `TEST-project-view-title-context` |
+| `frontend/src/components/TicketViewer/index.tsx` | `frontend/src/components/TicketViewer/TicketViewer.test.tsx` | `TEST-ticket-title-context` |
+| `frontend/src/components/DocumentsView/DocumentsLayout.tsx` | `frontend/src/components/DocumentsView/DocumentsLayout.test.tsx` | `TEST-document-title-context` |
 | `tests/e2e/navigation/page-title.spec.ts` | `tests/e2e/navigation/page-title.spec.ts` | `TEST-page-title-e2e` |
 
 ## Test Contracts
@@ -80,7 +80,7 @@ Executable test files were not authored in this pipeline run because the request
 ## Verify
 
 ```bash
-bun test src/hooks/usePageTitle.test.ts src/App.pageTitle.test.tsx src/components/TicketViewer/TicketViewer.test.tsx src/components/DocumentsView/DocumentsLayout.test.tsx
+bun test frontend/src/hooks/usePageTitle.test.ts frontend/src/App.pageTitle.test.tsx frontend/src/components/TicketViewer/TicketViewer.test.tsx frontend/src/components/DocumentsView/DocumentsLayout.test.tsx
 bunx playwright test tests/e2e/navigation/page-title.spec.ts --project=chromium
 spec-trace validate MDT-175 --stage tests
 spec-trace render tests MDT-175

@@ -93,7 +93,7 @@ For each selected surface:
 - Keep annotations about behavior outside the visible UI unless they are real callouts.
 - If exploration artifacts are useful, either leave them uncommitted and call them out, or move them to an explicit exploration location only if the repo already has or needs that convention.
 
-Do not modify runtime code in `src/`, `server/`, `shared/`, or `mcp-server/` unless the user explicitly asks.
+Do not modify runtime code in `frontend/src/`, `server/`, `shared/`, or `mcp-server/` unless the user explicitly asks.
 
 ## Skill / Output Feedback Loop
 

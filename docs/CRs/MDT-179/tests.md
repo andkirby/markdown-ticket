@@ -45,10 +45,10 @@ Tests verify the scoped global search feature across unit, integration, and E2E 
 
 ```bash
 # Unit tests
-bun test src/hooks/__tests__/useSearchScope.test.ts
-bun test src/hooks/__tests__/useProjectSearch.test.ts
-bun test src/hooks/useQuickSearch.test.ts
-bun test src/components/QuickSearch/__tests__/
+bun test frontend/src/hooks/__tests__/useSearchScope.test.ts
+bun test frontend/src/hooks/__tests__/useProjectSearch.test.ts
+bun test frontend/src/hooks/useQuickSearch.test.ts
+bun test frontend/src/components/QuickSearch/__tests__/
 
 # Integration tests
 bun run --cwd server jest -- tests/api/search.test.ts

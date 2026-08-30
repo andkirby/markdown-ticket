@@ -46,7 +46,7 @@ This is a refinement of MDT-157's own BR-1.6 ("local development workflow contin
 - `server/routes/auth.ts` — reuse `isLocalHostRequest` in `GET /api/auth/session`.
 - `server/config/runtimeConfig.ts` — carry `localHosts` + `localHostBypassEnabled`.
 - `server/server.ts` — `API_BIND_ADDRESS` (default `127.0.0.1`), `app.listen(PORT, HOST, …)`.
-- `vite.config.ts` — `changeOrigin: false` on three proxy blocks; `server.host`/`preview.host` default `127.0.0.1`.
+- `frontend/vite.config.ts` — `changeOrigin: false` on three proxy blocks; `server.host`/`preview.host` default `127.0.0.1`.
 - `docker-compose.yml`, `docker-compose.dev.yml`, `docker-compose.prod.yml` — `API_BIND_ADDRESS=0.0.0.0`, `API_LOCAL_HOST_BYPASS=false`.
 - `.env.example`, `docs/AUTH_SESSION_GUIDE.md`, `docs/ENVIRONMENT_VARIABLES.md` — document new env + bind default.
 - `server/tests/security/apiAuth.test.ts`, `server/tests/api/api-auth.test.ts` — loopback accept/reject matrix + integration truth-table cases.

@@ -70,9 +70,9 @@ in `@apply` within the same `@layer components` block.
 
 ## Verification
 
-- [x] `grep -r "fixed inset-0" src/components --include="*.tsx"` returns only `ui/Modal.tsx`
-- [x] `grep -r "createPortal" src/components --include="*.tsx"` returns only `ui/Modal.tsx`
-- [x] `grep -r "p-6" src/components/{ui/Modal,RouteError,Settings,AddProject,FolderBrowser,QuickSearch,ProjectSelector}*` returns 0 results
+- [x] `grep -r "fixed inset-0" frontend/src/components --include="*.tsx"` returns only `ui/Modal.tsx`
+- [x] `grep -r "createPortal" frontend/src/components --include="*.tsx"` returns only `ui/Modal.tsx`
+- [x] `grep -r "p-6" frontend/src/components/{ui/Modal,RouteError,Settings,AddProject,FolderBrowser,QuickSearch,ProjectSelector}*` returns 0 results
 - [x] All modals render correctly (visual check via Playwright)
 - [x] Settings modal tabs use `.tab` classes
 - [x] Ticket viewer tabs use `.tab` classes

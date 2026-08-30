@@ -15,7 +15,7 @@ to the same combobox contract already used by QuickSearch.
 ## Approved Changes
 
 1. Adopt the **active-descendant combobox pattern** in `ProjectBrowserPanel`
-   (mirror `src/components/QuickSearch/QuickSearchModal.tsx`): a
+   (mirror `frontend/src/components/QuickSearch/QuickSearchModal.tsx`): a
    `selectedProjectIndex` state drives a visual highlight on the filtered card
    list; DOM focus stays in the search input.
 2. **ArrowDown from the search field** moves the highlight onto the first card
@@ -57,9 +57,9 @@ Additive change — new behavior group, no existing IDs mutated:
 - Objective: implement the five BR-11 behaviors in the panel by switching from
   roving-tabindex to active-descendant, matching QuickSearch.
 - Direct artifacts/files:
-  - `src/components/ProjectSelector/ProjectBrowserPanel.tsx`
-  - `src/components/ProjectSelector/ProjectSelectorCard.tsx` (highlight rendering; remove `tabIndex`/`onCardKeyDown` keyboard-focus path)
-  - `src/components/ProjectSelector/ProjectBrowserPanel.test.tsx`
+  - `frontend/src/components/ProjectSelector/ProjectBrowserPanel.tsx`
+  - `frontend/src/components/ProjectSelector/ProjectSelectorCard.tsx` (highlight rendering; remove `tabIndex`/`onCardKeyDown` keyboard-focus path)
+  - `frontend/src/components/ProjectSelector/ProjectBrowserPanel.test.tsx`
 - Direct GREEN targets: `browser_arrow_keys_navigate_list`,
   `browser_typing_keeps_focus_in_search`, `browser_enter_selects_highlighted_project`,
   `TEST-browser-keyboard-nav`

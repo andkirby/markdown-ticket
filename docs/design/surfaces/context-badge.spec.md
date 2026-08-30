@@ -65,18 +65,18 @@ Cross-project note: `ABC-012` viewed from a non-`ABC` project linkifies but reso
 
 | Child | Component | Spec | Conditional |
 |-------|-----------|------|-------------|
-| Badge shell | `src/components/ui/badge.tsx` | shadcn | always |
-| SmartLink | `src/components/SmartLink/index.tsx` | — | phase variant + linkable value only |
+| Badge shell | `frontend/src/components/ui/badge.tsx` | shadcn | always |
+| SmartLink | `frontend/src/components/SmartLink/index.tsx` | — | phase variant + linkable value only |
 
 ## Source / Verification Anchors
 
 | Anchor | Path | Why It Exists |
 |--------|------|---------------|
-| Surface owner | `src/components/Badge/ContextBadge.tsx` | composition, phase-link decision, variant dispatch |
-| Behavior model | `src/utils/linkProcessor.ts` (`classifyLink`) | defines what counts as a linkable ticket key — the phase variant's source of truth for the boundary |
-| Style contract | `src/components/Badge/badge.css` (`.badge[data-context="phase\|assignee\|worktree"]`) | per-variant color identity |
-| Link style | `src/components/SmartLink/smart-link.css` (`.smart-link[data-link-type]`) | semantic link color when the phase value linkifies |
-| Unit verification | `src/components/Badge/ContextBadge.test.tsx` | link-vs-plain-text decision across value shapes; propagation |
+| Surface owner | `frontend/src/components/Badge/ContextBadge.tsx` | composition, phase-link decision, variant dispatch |
+| Behavior model | `frontend/src/utils/linkProcessor.ts` (`classifyLink`) | defines what counts as a linkable ticket key — the phase variant's source of truth for the boundary |
+| Style contract | `frontend/src/components/Badge/badge.css` (`.badge[data-context="phase\|assignee\|worktree"]`) | per-variant color identity |
+| Link style | `frontend/src/components/SmartLink/smart-link.css` (`.smart-link[data-link-type]`) | semantic link color when the phase value linkifies |
+| Unit verification | `frontend/src/components/Badge/ContextBadge.test.tsx` | link-vs-plain-text decision across value shapes; propagation |
 | E2E verification | `tests/e2e/board/epic-badge-link.spec.ts` | phase link navigates end-to-end on the board |
 
 ## States

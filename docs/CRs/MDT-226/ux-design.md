@@ -3,7 +3,7 @@
 Pipeline stage: UX (mdt-pipeline-e2e). This is a focused state-rendering spec,
 not a board redesign. It reuses existing patterns: `CloudProjectionStub.tsx`,
 `TicketCard` Tailwind idioms, and the compact chip form of
-`AuthStatusAction.tsx`. See `src/MODALS.md` for overlay conventions (not used
+`AuthStatusAction.tsx`. See `frontend/src/MODALS.md` for overlay conventions (not used
 here — these are inline board states, not modals).
 
 ## Why a gate

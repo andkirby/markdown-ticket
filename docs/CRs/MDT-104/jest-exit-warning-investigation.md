@@ -23,7 +23,7 @@ Jest uses an arbitrary 1-second timeout to check for open handles. When spawning
 
 ## Current Solution
 
-Added `forceExit: true` to `jest.config.js`. This is acceptable because:
+Added `forceExit: true` to `frontend/jest.config.js`. This is acceptable because:
 - `--detectOpenHandles` confirms no actual leaks
 - Process exits cleanly (just slower than 1 second)
 - This is standard practice for integration tests spawning servers

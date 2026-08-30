@@ -373,7 +373,7 @@ global.console = {
 | R4.3 | `helpers/assertions.ts` | Response assertions extract status/body/headers |
 | R5.1 | All `*.test.ts` files | Jest parallel execution + targeted assertions |
 | R5.2 | `setup.ts` | TestServer port isolation prevents contention |
-| R5.3 | Jest config | `testTimeout: 5000` in jest.config.js |
+| R5.3 | Jest config | `testTimeout: 5000` in frontend/jest.config.js |
 | R6.1 | All `*.test.ts` files + `helpers/assertions.ts` | 400 error tests in each endpoint suite |
 | R6.2 | All `*.test.ts` files + `helpers/assertions.ts` | 404 error tests for missing resources |
 | R6.3 | `tickets.test.ts` | Malformed YAML fixture + assertion |

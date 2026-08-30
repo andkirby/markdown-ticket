@@ -2,7 +2,7 @@
 
 ## Objective
 Fold user feedback from live verification into MDT-237: correct resolution of
-project-root file references ('src/THEME.md') and make CONFIG_DIR/config.toml
+project-root file references ('frontend/src/THEME.md') and make CONFIG_DIR/config.toml
 link defaults actually reach the rendering pipeline.
 
 ## Approved Changes
@@ -38,7 +38,7 @@ link defaults actually reach the rendering pipeline.
 
 4. **Unique-basename disambiguation (BR-2.5, D10)** — a bare filename
    unverifiable relative to the source resolves to the only project file with
-   that basename (THEME.md -> src/THEME.md); ambiguous names keep relative
+   that basename (THEME.md -> frontend/src/THEME.md); ambiguous names keep relative
    resolution. Basename map built once per index load — zero extra fetches.
 5. **.html parity (C8)** — inline-code .html refs are processed exactly like
    .md (qualification, fallback, basename, documents-route rendering);

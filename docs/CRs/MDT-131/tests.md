@@ -6,19 +6,19 @@
 
 - BoardListToggle Component Unit Tests (`TEST-board-list-toggle`)
   Covers: `BR-2.1`, `BR-2.2`, `BR-3.1`, `C1`, `C2`
-  File: `src/components/ViewModeSwitcher/BoardListToggle.test.tsx`
+  File: `frontend/src/components/ViewModeSwitcher/BoardListToggle.test.tsx`
 - ButtonGroup Component Unit Tests (`TEST-button-group`)
   Covers: `BR-7.3`
-  File: `src/components/UI/button-group.test.tsx`
+  File: `frontend/src/components/UI/button-group.test.tsx`
 - HamburgerMenu Component Unit Tests (`TEST-hamburger-menu`)
   Covers: `BR-7.3`
-  File: `src/components/HamburgerMenu.test.tsx`
+  File: `frontend/src/components/HamburgerMenu.test.tsx`
 - MobileLogo Component Unit Tests (`TEST-mobile-logo`)
   Covers: `BR-7.2`
-  File: `src/components/AppHeader/MobileLogo.test.tsx`
+  File: `frontend/src/components/AppHeader/MobileLogo.test.tsx`
 - useViewModePersistence Hook Unit Tests (`TEST-use-view-mode-persistence`)
   Covers: `BR-4`, `BR-5`, `Edge-1`, `Edge-2`
-  File: `src/components/ViewModeSwitcher/useViewModePersistence.test.ts`
+  File: `frontend/src/components/ViewModeSwitcher/useViewModePersistence.test.ts`
 
 ### integration
 

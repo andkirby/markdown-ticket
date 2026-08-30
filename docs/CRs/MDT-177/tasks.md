@@ -21,7 +21,7 @@ Canonical projection: [tasks.trace.md](./tasks.trace.md)
 
 **Milestone**: M0 - Runtime probe
 
-**Structure**: `server/security/readTokenStore.ts`, `server/routes/readTokens.ts`, `src/components/SettingsModal/ReadAccessTokens.tsx`
+**Structure**: `server/security/readTokenStore.ts`, `server/routes/readTokens.ts`, `frontend/src/components/SettingsModal/ReadAccessTokens.tsx`
 
 **Makes GREEN (Automated Tests)**:
 - None. This is a probe and missing-file inventory task.
@@ -33,7 +33,7 @@ Canonical projection: [tasks.trace.md](./tasks.trace.md)
 **Creates**:
 - `server/security/readTokenStore.ts`
 - `server/routes/readTokens.ts`
-- `src/components/SettingsModal/ReadAccessTokens.tsx`
+- `frontend/src/components/SettingsModal/ReadAccessTokens.tsx`
 
 **Modifies**:
 - None
@@ -42,8 +42,8 @@ Canonical projection: [tasks.trace.md](./tasks.trace.md)
 - `server/security/readSession.ts`
 - `server/routes/auth.ts`
 - `server/routes/share.ts`
-- `src/App.tsx`
-- `src/components/SettingsModal.tsx`
+- `frontend/src/App.tsx`
+- `frontend/src/components/SettingsModal.tsx`
 
 **Create/Move**:
 - Create missing directories only when implementation starts.
@@ -55,7 +55,7 @@ Canonical projection: [tasks.trace.md](./tasks.trace.md)
 
 **Duplication Guard**:
 - Check `server/security/` for existing token/session helpers before coding.
-- Check `src/components/SettingsModal.tsx` before creating a parallel Settings surface.
+- Check `frontend/src/components/SettingsModal.tsx` before creating a parallel Settings surface.
 - Verify no second token store, route owner, or Settings modal owner was introduced.
 
 **Verify**:
@@ -103,7 +103,7 @@ bunx playwright test tests/e2e/smoke/infrastructure.spec.ts --project=chromium
 - `server/routes/readTokens.ts`
 - `server/routes/auth.ts`
 - `server/routes/share.ts`
-- `src/**`
+- `frontend/src/**`
 
 **Create/Move**:
 - Create service types and exported store factory/functions.
@@ -159,7 +159,7 @@ bun run validate:ts
 **Must Not Touch**:
 - `server/security/readTokenStore.ts`
 - `server/routes/readTokens.ts`
-- `src/**`
+- `frontend/src/**`
 
 **Create/Move**:
 - Add one exported helper that reads the current valid cookie, unions grants, de-dupes, and applies earliest active expiry.
@@ -218,8 +218,8 @@ bun run validate:ts
 
 **Must Not Touch**:
 - `server/routes/share.ts`
-- `src/components/SettingsModal.tsx`
-- `src/App.tsx`
+- `frontend/src/components/SettingsModal.tsx`
+- `frontend/src/App.tsx`
 - `tests/e2e/sharing/read-access-journey.spec.ts`
 
 **Create/Move**:
@@ -278,8 +278,8 @@ bun run validate:ts
 
 **Must Not Touch**:
 - `server/security/readTokenStore.ts`
-- `src/components/SettingsModal.tsx`
-- `src/components/ProjectSelector/**`
+- `frontend/src/components/SettingsModal.tsx`
+- `frontend/src/components/ProjectSelector/**`
 
 **Create/Move**:
 - Add origin helper(s) for `PUBLIC_ORIGIN`, allowed current-origin fallback, and fail-closed no-origin state.
@@ -313,7 +313,7 @@ bun run validate:ts
 
 **Milestone**: M3 - Owner management UI (BR-1.1, BR-1.2, BR-1.8, BR-1.9, BR-1.10, BR-1.15)
 
-**Structure**: `src/components/SettingsModal.tsx`, `src/components/SettingsModal/ReadAccessTokens.tsx`, `tests/e2e/utils/selectors.ts`, `server/routes/readTokens.ts`
+**Structure**: `frontend/src/components/SettingsModal.tsx`, `frontend/src/components/SettingsModal/ReadAccessTokens.tsx`, `tests/e2e/utils/selectors.ts`, `server/routes/readTokens.ts`
 
 **Makes GREEN (Automated Tests)**:
 - `TEST-e2e-selector-contract` -> `tests/e2e/utils/selectors.ts`: read access selector exports
@@ -330,17 +330,17 @@ bun run validate:ts
 **Boundary**: Settings UI and selector contract only.
 
 **Creates**:
-- `src/components/SettingsModal/ReadAccessTokens.tsx`
+- `frontend/src/components/SettingsModal/ReadAccessTokens.tsx`
 
 **Modifies**:
-- `src/components/SettingsModal.tsx`
+- `frontend/src/components/SettingsModal.tsx`
 - `tests/e2e/utils/selectors.ts`
 - `server/routes/readTokens.ts`
 
 **Must Not Touch**:
-- `src/App.tsx`
-- `src/auth/AuthSessionProvider.tsx`
-- `src/components/ProjectSelector/**`
+- `frontend/src/App.tsx`
+- `frontend/src/auth/AuthSessionProvider.tsx`
+- `frontend/src/components/ProjectSelector/**`
 - `server/security/readTokenStore.ts`
 
 **Create/Move**:
@@ -353,7 +353,7 @@ bun run validate:ts
 **Anti-duplication**: Import existing Settings modal controls, project list data, API fetch helpers, and modal CSS conventions; do not create a second sharing tab.
 
 **Duplication Guard**:
-- Check `src/components/SettingsModal.tsx` ownership before adding new state.
+- Check `frontend/src/components/SettingsModal.tsx` ownership before adding new state.
 - If link generation exists in multiple components, centralize through this Settings section and backend origin response.
 - Verify raw token/invite result state is transient and not persisted.
 
@@ -376,7 +376,7 @@ bunx playwright test tests/e2e/sharing/read-access-journey.spec.ts --project=chr
 
 **Milestone**: M4 - Invite and unlock recovery (BR-1.3, BR-1.6, BR-1.7, BR-1.12, BR-1.16)
 
-**Structure**: `src/App.tsx`, `src/auth/AuthSessionProvider.tsx`, `src/components/AuthUnlock/AuthStatusAction.tsx`, `src/components/AuthUnlock/AuthUnlockPanel.tsx`, `tests/e2e/utils/selectors.ts`, `server/routes/readTokens.ts`
+**Structure**: `frontend/src/App.tsx`, `frontend/src/auth/AuthSessionProvider.tsx`, `frontend/src/components/AuthUnlock/AuthStatusAction.tsx`, `frontend/src/components/AuthUnlock/AuthUnlockPanel.tsx`, `tests/e2e/utils/selectors.ts`, `server/routes/readTokens.ts`
 
 **Makes GREEN (Automated Tests)**:
 - `TEST-e2e-selector-contract` -> `tests/e2e/utils/selectors.ts`: invite and unlock selectors
@@ -396,16 +396,16 @@ bunx playwright test tests/e2e/sharing/read-access-journey.spec.ts --project=chr
 - None
 
 **Modifies**:
-- `src/App.tsx`
-- `src/auth/AuthSessionProvider.tsx`
-- `src/components/AuthUnlock/AuthStatusAction.tsx`
-- `src/components/AuthUnlock/AuthUnlockPanel.tsx`
+- `frontend/src/App.tsx`
+- `frontend/src/auth/AuthSessionProvider.tsx`
+- `frontend/src/components/AuthUnlock/AuthStatusAction.tsx`
+- `frontend/src/components/AuthUnlock/AuthUnlockPanel.tsx`
 - `tests/e2e/utils/selectors.ts`
 - `server/routes/readTokens.ts`
 
 **Must Not Touch**:
-- `src/components/SettingsModal.tsx`
-- `src/components/ProjectSelector/**`
+- `frontend/src/components/SettingsModal.tsx`
+- `frontend/src/components/ProjectSelector/**`
 - `server/routes/auth.ts`
 - `server/routes/share.ts`
 
@@ -441,7 +441,7 @@ bunx playwright test tests/e2e/sharing/read-access-journey.spec.ts --project=chr
 
 **Milestone**: M5 - Read-only project browser (BR-1.4, BR-1.5, BR-1.14, BR-1.17)
 
-**Structure**: `src/components/ProjectSelector/*`, `server/security/projectSharing.ts`, `server/security/apiAuth.ts`, `tests/e2e/utils/selectors.ts`
+**Structure**: `frontend/src/components/ProjectSelector/*`, `server/security/projectSharing.ts`, `server/security/apiAuth.ts`, `tests/e2e/utils/selectors.ts`
 
 **Makes GREEN (Automated Tests)**:
 - `TEST-read-access-journey` -> `tests/e2e/sharing/read-access-journey.spec.ts`: project switching, share merge, control suppression
@@ -461,17 +461,17 @@ bunx playwright test tests/e2e/sharing/read-access-journey.spec.ts --project=chr
 - None
 
 **Modifies**:
-- `src/components/ProjectSelector/index.tsx`
-- `src/components/ProjectSelector/ProjectBrowserPanel.tsx`
-- `src/components/ProjectSelector/ProjectSelectorCard.tsx`
-- `src/components/ProjectSelector/useSelectorData.ts`
+- `frontend/src/components/ProjectSelector/index.tsx`
+- `frontend/src/components/ProjectSelector/ProjectBrowserPanel.tsx`
+- `frontend/src/components/ProjectSelector/ProjectSelectorCard.tsx`
+- `frontend/src/components/ProjectSelector/useSelectorData.ts`
 - `server/security/projectSharing.ts`
 - `server/security/apiAuth.ts`
 - `tests/e2e/utils/selectors.ts`
 
 **Must Not Touch**:
-- `src/components/SettingsModal.tsx`
-- `src/components/AuthUnlock/**`
+- `frontend/src/components/SettingsModal.tsx`
+- `frontend/src/components/AuthUnlock/**`
 - `server/security/readTokenStore.ts`
 - `server/routes/readTokens.ts`
 
@@ -543,8 +543,8 @@ bunx playwright test tests/e2e/sharing/read-access-journey.spec.ts --project=chr
 **Must Not Touch**:
 - `server/security/readTokenStore.ts`
 - `server/routes/readTokens.ts`
-- `src/components/SettingsModal.tsx`
-- `src/App.tsx`
+- `frontend/src/components/SettingsModal.tsx`
+- `frontend/src/App.tsx`
 
 **Create/Move**:
 - Keep the journey under `tests/e2e/sharing/`.
@@ -581,7 +581,7 @@ spec-trace render tasks MDT-177
 
 **Milestone**: UAT - Contract boundary hardening
 
-**Structure**: `domain-contracts/src/access/schema.ts`, `domain-contracts/src/access/__tests__/schema.test.ts`, `src/auth/AuthSessionContext.ts`, `src/services/sseClient.ts`, `src/components/SettingsModal/ReadAccessTokens.tsx`, `server/security/apiAuth.ts`, `server/security/publicLinkOrigins.ts`, `server/routes/readTokens.ts`
+**Structure**: `domain-contracts/src/access/schema.ts`, `domain-contracts/src/access/__tests__/schema.test.ts`, `frontend/src/auth/AuthSessionContext.ts`, `frontend/src/services/sseClient.ts`, `frontend/src/components/SettingsModal/ReadAccessTokens.tsx`, `server/security/apiAuth.ts`, `server/security/publicLinkOrigins.ts`, `server/routes/readTokens.ts`
 
 **Makes GREEN (Automated Tests)**:
 - `TEST-access-domain-contracts` -> `domain-contracts/src/access/__tests__/schema.test.ts`: access/read-token schema contracts
@@ -600,9 +600,9 @@ spec-trace render tasks MDT-177
 **Modifies**:
 - `domain-contracts/src/index.ts`
 - `shared/models/PublicLinkOrigin.ts`
-- `src/auth/AuthSessionContext.ts`
-- `src/services/sseClient.ts`
-- `src/components/SettingsModal/ReadAccessTokens.tsx`
+- `frontend/src/auth/AuthSessionContext.ts`
+- `frontend/src/services/sseClient.ts`
+- `frontend/src/components/SettingsModal/ReadAccessTokens.tsx`
 - `server/security/apiAuth.ts`
 - `server/security/publicLinkOrigins.ts`
 - `server/security/readTokenStore.ts`
@@ -637,7 +637,7 @@ bunx playwright test tests/e2e/sharing/read-access-journey.spec.ts --project=chr
 
 **Milestone**: UAT - Lock/status refinement
 
-**Structure**: `src/auth/AuthSessionProvider.tsx`, `src/hooks/useProjectManager.ts`, `src/components/HamburgerMenu.tsx`, `src/App.tsx`, `src/components/RouteErrorModal.tsx`, `domain-contracts/src/access/schema.ts`, `tests/e2e/auth/session-unlock.spec.ts`, `tests/e2e/sharing/read-access-journey.spec.ts`
+**Structure**: `frontend/src/auth/AuthSessionProvider.tsx`, `frontend/src/hooks/useProjectManager.ts`, `frontend/src/components/HamburgerMenu.tsx`, `frontend/src/App.tsx`, `frontend/src/components/RouteErrorModal.tsx`, `domain-contracts/src/access/schema.ts`, `tests/e2e/auth/session-unlock.spec.ts`, `tests/e2e/sharing/read-access-journey.spec.ts`
 
 **Makes GREEN (Automated Tests)**:
 - `TEST-auth-session-lock-refresh` -> `tests/e2e/auth/session-unlock.spec.ts`: owner Lock refreshes project visibility and status chrome.
@@ -657,13 +657,13 @@ bunx playwright test tests/e2e/sharing/read-access-journey.spec.ts --project=chr
 
 **Modifies**:
 - `domain-contracts/src/access/schema.ts`
-- `src/auth/AuthSessionContext.ts`
-- `src/auth/AuthSessionProvider.tsx`
-- `src/hooks/useProjectManager.ts`
-- `src/App.tsx`
-- `src/components/HamburgerMenu.tsx`
-- `src/components/ProjectSelector/ProjectSelectorRail.tsx`
-- `src/components/RouteErrorModal.tsx`
+- `frontend/src/auth/AuthSessionContext.ts`
+- `frontend/src/auth/AuthSessionProvider.tsx`
+- `frontend/src/hooks/useProjectManager.ts`
+- `frontend/src/App.tsx`
+- `frontend/src/components/HamburgerMenu.tsx`
+- `frontend/src/components/ProjectSelector/ProjectSelectorRail.tsx`
+- `frontend/src/components/RouteErrorModal.tsx`
 - `tests/e2e/auth/session-unlock.spec.ts`
 - `tests/e2e/sharing/read-access-journey.spec.ts`
 - `tests/e2e/utils/selectors.ts`
@@ -677,7 +677,7 @@ bunx playwright test tests/e2e/sharing/read-access-journey.spec.ts --project=chr
 
 ```bash
 bun run --cwd domain-contracts test -- access --runInBand
-bun test src/components/HamburgerMenu.test.tsx src/components/AuthUnlock/AuthStatusAction.test.tsx
+bun test frontend/src/components/HamburgerMenu.test.tsx frontend/src/components/AuthUnlock/AuthStatusAction.test.tsx
 bun run validate:ts
 bunx playwright test tests/e2e/auth/session-unlock.spec.ts --project=chromium
 bunx playwright test tests/e2e/sharing/read-access-journey.spec.ts --project=chromium --grep "valid invite exchange"

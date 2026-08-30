@@ -55,7 +55,7 @@ full — feature enhancement, metadata-driven settings system
 | Area | Question | Constraints |
 |------|----------|-------------|
 | Schema location | Extend the existing selectors registry in place, or new schema module consuming/replacing it? | Registry is the API's default-deny source — replacement must be atomic |
-| Surface generation | Render surfaces from the registry at build time (codegen) or runtime (generic form renderer)? | React components, existing modal patterns (src/MODALS.md) |
+| Surface generation | Render surfaces from the registry at build time (codegen) or runtime (generic form renderer)? | React components, existing modal patterns (frontend/src/MODALS.md) |
 | Browser settings | How do device-local settings declare their storage (localStorage key vs cookie) in the schema? | browser.theme lives in a cookie today |
 | Access levels | Is `owner-only | device-local` sufficient, or is an intermediate authenticated level needed? | Current auth has owner + agents + read sessions |
 | Depends | Which visibility dependencies are actually needed in v1? | Keep minimal; avoid Magento-level complexity |

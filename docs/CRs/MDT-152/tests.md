@@ -7,10 +7,10 @@
 | `domain-contracts/src/ticket/search.ts` | `domain-contracts/src/ticket/__tests__/search.test.ts` | SearchMode enum, SearchRequestSchema validation, SearchResponseSchema validation, SearchErrorCode enum |
 | `server/controllers/ProjectController.ts` | `server/tests/api/projects.search.test.ts` | POST /api/projects/search ticket_key mode, project_scope mode, request validation, result-limit boundaries, response shape |
 | `server/services/TicketService.ts` | `server/tests/api/projects.search.test.ts` | Cross-project orchestration, project resolution, scoped lookup |
-| `src/hooks/useQuickSearch.ts` | `src/hooks/useQuickSearch.test.ts` | parseQueryMode, parseQueryParts, filterTickets current-project preservation |
-| `src/hooks/useCrossProjectSearch.ts` | `src/hooks/useCrossProjectSearch.test.ts` | Debounce timing, cache TTL, loading state, request deduplication, retry |
-| `src/components/ProjectSelector/ProjectBrowserPanel.tsx` | `tests/e2e/selector/project-browser.spec.ts` | E2E: search input, filtering, current-project exclusion, empty state, Escape close |
-| `src/components/QuickSearch/*` | `tests/e2e/quick-search/modal.spec.ts` | E2E: ticket-key lookup, @syntax search, mode indicators, keyboard navigation, edge cases |
+| `frontend/src/hooks/useQuickSearch.ts` | `frontend/src/hooks/useQuickSearch.test.ts` | parseQueryMode, parseQueryParts, filterTickets current-project preservation |
+| `frontend/src/hooks/useCrossProjectSearch.ts` | `frontend/src/hooks/useCrossProjectSearch.test.ts` | Debounce timing, cache TTL, loading state, request deduplication, retry |
+| `frontend/src/components/ProjectSelector/ProjectBrowserPanel.tsx` | `tests/e2e/selector/project-browser.spec.ts` | E2E: search input, filtering, current-project exclusion, empty state, Escape close |
+| `frontend/src/components/QuickSearch/*` | `tests/e2e/quick-search/modal.spec.ts` | E2E: ticket-key lookup, @syntax search, mode indicators, keyboard navigation, edge cases |
 
 ## Data Mechanism Tests
 
@@ -35,14 +35,14 @@
 | Constraint ID | Test File | Tests |
 |---------------|-----------|-------|
 | C1 | `tests/e2e/selector/project-browser.spec.ts` | No backend requests during project browser search filtering |
-| C2 | `src/hooks/useCrossProjectSearch.test.ts` | Debounce not triggered before 300ms, triggered after 300ms |
+| C2 | `frontend/src/hooks/useCrossProjectSearch.test.ts` | Debounce not triggered before 300ms, triggered after 300ms |
 | C3 | `domain-contracts/src/ticket/__tests__/search.test.ts`, `server/tests/api/projects.search.test.ts` | limitPerProject/limitTotal boundary validation |
-| C4 | `src/hooks/useCrossProjectSearch.test.ts`, `tests/e2e/quick-search/modal.spec.ts` | Loading state set immediately on fetch start |
+| C4 | `frontend/src/hooks/useCrossProjectSearch.test.ts`, `tests/e2e/quick-search/modal.spec.ts` | Loading state set immediately on fetch start |
 | C5 | `tests/e2e/quick-search/modal.spec.ts` | No layout shift when results load (E2E visual check) |
 | C6 | `tests/e2e/quick-search/modal.spec.ts` | Modal integration with existing QuickSearch infrastructure |
 | C7 | `tests/e2e/selector/project-browser.spec.ts` | ProjectBrowserPanel integration with existing selector |
 | C8 | `tests/e2e/quick-search/modal.spec.ts` | Modal/overlay patterns (Escape close, backdrop click) |
-| C9 | `src/hooks/useCrossProjectSearch.test.ts` | Cache TTL 5-minute expiry, cache key includes mode+code+query |
+| C9 | `frontend/src/hooks/useCrossProjectSearch.test.ts` | Cache TTL 5-minute expiry, cache key includes mode+code+query |
 
 ## BDD E2E Trace Continuity
 
@@ -68,27 +68,27 @@ BDD scenarios from `bdd.trace.md` are covered by E2E test plans:
 | Obligation ID | Test Files |
 |---------------|------------|
 | OBL-backend-search-endpoint | `server/tests/api/projects.search.test.ts` |
-| OBL-client-cache | `src/hooks/useCrossProjectSearch.test.ts` |
-| OBL-crossproject-debounce | `src/hooks/useCrossProjectSearch.test.ts` |
-| OBL-current-project-exclusion | `src/hooks/useQuickSearch.test.ts`, `tests/e2e/selector/project-browser.spec.ts` |
+| OBL-client-cache | `frontend/src/hooks/useCrossProjectSearch.test.ts` |
+| OBL-crossproject-debounce | `frontend/src/hooks/useCrossProjectSearch.test.ts` |
+| OBL-current-project-exclusion | `frontend/src/hooks/useQuickSearch.test.ts`, `tests/e2e/selector/project-browser.spec.ts` |
 | OBL-e2e-tests | `tests/e2e/selector/project-browser.spec.ts`, `tests/e2e/quick-search/modal.spec.ts` |
 | OBL-empty-states | `tests/e2e/selector/project-browser.spec.ts`, `tests/e2e/quick-search/modal.spec.ts` |
 | OBL-keyboard-nav | `tests/e2e/quick-search/modal.spec.ts` |
-| OBL-loading-skeleton | `src/hooks/useCrossProjectSearch.test.ts`, `tests/e2e/quick-search/modal.spec.ts` |
+| OBL-loading-skeleton | `frontend/src/hooks/useCrossProjectSearch.test.ts`, `tests/e2e/quick-search/modal.spec.ts` |
 | OBL-mode-indicator | `tests/e2e/quick-search/modal.spec.ts` |
 | OBL-project-browser-search | `tests/e2e/selector/project-browser.spec.ts` |
 | OBL-project-scoped-search | `server/tests/api/projects.search.test.ts`, `tests/e2e/quick-search/modal.spec.ts` |
-| OBL-query-mode-detector | `src/hooks/useQuickSearch.test.ts` |
+| OBL-query-mode-detector | `frontend/src/hooks/useQuickSearch.test.ts` |
 | OBL-search-contract | `domain-contracts/src/ticket/__tests__/search.test.ts`, `server/tests/api/projects.search.test.ts` |
-| OBL-unit-tests | `src/hooks/useQuickSearch.test.ts`, `src/hooks/useCrossProjectSearch.test.ts`, `server/tests/api/projects.search.test.ts` |
+| OBL-unit-tests | `frontend/src/hooks/useQuickSearch.test.ts`, `frontend/src/hooks/useCrossProjectSearch.test.ts`, `server/tests/api/projects.search.test.ts` |
 
 ## Verify
 
 ```bash
 # Unit tests
 bun run --cwd domain-contracts jest
-npx jest src/hooks/useQuickSearch.test.ts
-npx jest src/hooks/useCrossProjectSearch.test.ts
+npx jest frontend/src/hooks/useQuickSearch.test.ts
+npx jest frontend/src/hooks/useCrossProjectSearch.test.ts
 
 # Integration tests
 npx jest server/tests/api/projects.search.test.ts

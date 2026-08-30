@@ -90,7 +90,7 @@ This check applies only when authentication source is the owner session cookie. 
 
 ### Frontend auth state and fetch boundary
 
-Decision: add `src/auth/AuthSessionProvider.tsx` and `src/auth/authFetch.ts`.
+Decision: add `frontend/src/auth/AuthSessionProvider.tsx` and `frontend/src/auth/authFetch.ts`.
 
 `AuthSessionProvider` owns:
 
@@ -199,18 +199,18 @@ server/tests/api/test-app-factory.ts          # test route ordering mirror
 server/tests/api/auth-session.test.ts         # session API and cookie regressions
 server/tests/api/api-auth.test.ts             # MDT-157 preservation
 
-src/auth/AuthSessionProvider.tsx              # accessMode/sessionStatus/unlock/lock/capabilities
-src/auth/authFetch.ts                         # credentials, intent header, 401 classification
-src/components/AuthUnlock/AuthUnlockPanel.tsx # locked/unlock UI
-src/components/AuthUnlock/AuthStatusAction.tsx# header auth chip/actions
-src/hooks/useProjectManager.ts                # project-load auth semantics
-src/App.tsx                                   # provider composition and route-level gating
-src/components/RedirectToCurrentProject.tsx   # locked/root handling
-src/components/SecondaryHeader.tsx            # admin menu capability input
-src/components/HamburgerMenu.tsx              # Add/Edit/Settings visibility
-src/components/AddProjectModal/AddProjectModal.tsx # owner-only project mutation calls
-src/components/ProjectSelector/index.tsx      # public/owner project selector semantics
-src/services/sseClient.ts                     # connect/disconnect by auth state
+frontend/src/auth/AuthSessionProvider.tsx              # accessMode/sessionStatus/unlock/lock/capabilities
+frontend/src/auth/authFetch.ts                         # credentials, intent header, 401 classification
+frontend/src/components/AuthUnlock/AuthUnlockPanel.tsx # locked/unlock UI
+frontend/src/components/AuthUnlock/AuthStatusAction.tsx# header auth chip/actions
+frontend/src/hooks/useProjectManager.ts                # project-load auth semantics
+frontend/src/App.tsx                                   # provider composition and route-level gating
+frontend/src/components/RedirectToCurrentProject.tsx   # locked/root handling
+frontend/src/components/SecondaryHeader.tsx            # admin menu capability input
+frontend/src/components/HamburgerMenu.tsx              # Add/Edit/Settings visibility
+frontend/src/components/AddProjectModal/AddProjectModal.tsx # owner-only project mutation calls
+frontend/src/components/ProjectSelector/index.tsx      # public/owner project selector semantics
+frontend/src/services/sseClient.ts                     # connect/disconnect by auth state
 
 tests/e2e/auth/session-unlock.spec.ts         # isolated auth-enabled Playwright coverage
 tests/e2e/utils/selectors.ts                  # auth selectors from design spec

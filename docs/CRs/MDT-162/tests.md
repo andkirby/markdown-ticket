@@ -7,8 +7,8 @@
 
 | Test ID | File | Purpose |
 |---------|------|---------|
-| TEST-file-tree-state | `src/components/DocumentsView/FileTree.test.tsx` | Collapsed root state and selected ancestor expansion |
-| TEST-document-navigation-config | `src/config/documentNavigation.test.ts` | Project-scoped recents and shortcut sanitization |
+| TEST-file-tree-state | `frontend/src/components/DocumentsView/FileTree.test.tsx` | Collapsed root state and selected ancestor expansion |
+| TEST-document-navigation-config | `frontend/src/config/documentNavigation.test.ts` | Project-scoped recents and shortcut sanitization |
 | TEST-document-navigation-e2e | `tests/e2e/documents/navigation.spec.ts` | End-to-end Documents View navigation behavior, including Recent row display and scroll containment |
 | TEST-ticket-area-exclusion | `tests/e2e/documents/navigation.spec.ts` | `docs/CRs/` exclusion and disclosure |
 
@@ -24,7 +24,7 @@
 ## Verify
 
 ```bash
-bun test ./src/components/DocumentsView/FileTree.test.tsx ./src/config/documentNavigation.test.ts
+bun test ./frontend/src/components/DocumentsView/FileTree.test.tsx ./frontend/src/config/documentNavigation.test.ts
 bunx playwright test tests/e2e/documents/navigation.spec.ts --project=chromium
 ```
 

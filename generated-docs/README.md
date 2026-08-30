@@ -88,13 +88,13 @@ graph TB
 
 ## Project Components
 
-### Frontend (`src/`)
+### Frontend (`frontend/src/`)
 The React-based frontend provides an intuitive interface for ticket management:
 
-- **Components** (`src/components/`): Reusable UI components including Board, TicketCard, ProjectSelector
-- **Hooks** (`src/hooks/`): Custom React hooks for data management and theme handling
-- **Services** (`src/services/`): Frontend services for API communication and real-time updates
-- **Types** (`src/types/`): TypeScript type definitions for tickets, projects, and configurations
+- **Components** (`frontend/src/components/`): Reusable UI components including Board, TicketCard, ProjectSelector
+- **Hooks** (`frontend/src/hooks/`): Custom React hooks for data management and theme handling
+- **Services** (`frontend/src/services/`): Frontend services for API communication and real-time updates
+- **Types** (`frontend/src/types/`): TypeScript type definitions for tickets, projects, and configurations
 
 ### Backend (`server/`)
 Express.js server handling API requests and file system operations:
@@ -114,9 +114,9 @@ Common code shared between frontend, backend, and MCP server:
 ### MCP Server (`mcp-server/`)
 Model Context Protocol server for AI assistant integration:
 
-- **Core Server** (`src/index.ts`): MCP protocol implementation
-- **Services** (`src/services/`): CR management and project discovery services
-- **Configuration** (`src/config/`): MCP server configuration and setup
+- **Core Server** (`frontend/src/index.ts`): MCP protocol implementation
+- **Services** (`frontend/src/services/`): CR management and project discovery services
+- **Configuration** (`frontend/src/config/`): MCP server configuration and setup
 
 ## Installation & Setup
 

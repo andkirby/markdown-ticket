@@ -53,11 +53,11 @@ Pattern: bounded feature state owner with read enrichment. `DocumentFavStateServ
 - `server/controllers/DocumentController.ts` owns HTTP request validation and status mapping for document fav reads/writes.
 - `server/services/DocumentService.ts` coordinates document tree read enrichment. It must not own file-path eligibility independently from `TreeService`.
 - `server/services/TreeService.ts` remains the source of document-tree eligibility, configured roots, max depth, exclude folders, and ticket-path exclusion.
-- `src/config/documentFavs.ts` owns frontend API calls and client-side normalization needed for optimistic updates.
-- `src/components/DocumentsView/DocumentsLayout.tsx` owns data loading, mutation orchestration, Favs placement, and document/folder selection routing.
-- `src/components/DocumentsView/FavDocuments.tsx` owns compact fav section rendering and active star removal controls.
-- `src/components/DocumentsView/FileTree.tsx` owns row star controls, click isolation, expansion state, and locate-by-path for both files and folders.
-- `src/config/documentNavigation.ts` owns browser-local per-project section presentation state for Favs and Recent, including Favs expanded/collapsed, Favs show-all, and Recent expanded/collapsed. It must not store durable fav targets.
+- `frontend/src/config/documentFavs.ts` owns frontend API calls and client-side normalization needed for optimistic updates.
+- `frontend/src/components/DocumentsView/DocumentsLayout.tsx` owns data loading, mutation orchestration, Favs placement, and document/folder selection routing.
+- `frontend/src/components/DocumentsView/FavDocuments.tsx` owns compact fav section rendering and active star removal controls.
+- `frontend/src/components/DocumentsView/FileTree.tsx` owns row star controls, click isolation, expansion state, and locate-by-path for both files and folders.
+- `frontend/src/config/documentNavigation.ts` owns browser-local per-project section presentation state for Favs and Recent, including Favs expanded/collapsed, Favs show-all, and Recent expanded/collapsed. It must not store durable fav targets.
 
 ## Structure
 
@@ -70,24 +70,24 @@ Expected implementation paths:
 - `server/services/DocumentService.ts`
 - `server/services/TreeService.ts`
 - `server/routes/documents.ts`
-- `src/config/documentFavs.ts`
-- `src/components/DocumentsView/DocumentsLayout.tsx`
-- `src/components/DocumentsView/FavDocuments.tsx`
-- `src/components/DocumentsView/FileTree.tsx`
-- `src/components/DocumentsView/RecentDocuments.tsx`
-- `src/config/documentNavigation.ts`
-- `src/components/DocumentsView/documents-view.css`
-- `src/styles/entities/fav-star.css`
-- `src/components/shared/Icon.tsx`
-- `src/components/ProjectSelector/ProjectSelectorCard.tsx`
+- `frontend/src/config/documentFavs.ts`
+- `frontend/src/components/DocumentsView/DocumentsLayout.tsx`
+- `frontend/src/components/DocumentsView/FavDocuments.tsx`
+- `frontend/src/components/DocumentsView/FileTree.tsx`
+- `frontend/src/components/DocumentsView/RecentDocuments.tsx`
+- `frontend/src/config/documentNavigation.ts`
+- `frontend/src/components/DocumentsView/documents-view.css`
+- `frontend/src/styles/entities/fav-star.css`
+- `frontend/src/components/shared/Icon.tsx`
+- `frontend/src/components/ProjectSelector/ProjectSelectorCard.tsx`
 
 Test scaffolding stays separate:
 
 - `server/tests/api/document-favs.test.ts`
 - `server/tests/api/documents.test.ts`
-- `src/config/documentFavs.test.ts`
-- `src/components/DocumentsView/FavDocuments.test.tsx`
-- `src/components/DocumentsView/FileTree.test.tsx`
+- `frontend/src/config/documentFavs.test.ts`
+- `frontend/src/components/DocumentsView/FavDocuments.test.tsx`
+- `frontend/src/components/DocumentsView/FileTree.test.tsx`
 - `tests/e2e/documents/favs.spec.ts`
 - `tests/e2e/utils/selectors.ts`
 

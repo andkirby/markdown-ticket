@@ -83,5 +83,5 @@ Vars `COORDINATION_AUD`/`OPERATOR_AUD` are already in `cloud/wrangler.jsonc`.
 | 1 | Real human + service-token assertions on live Worker | `http/router.ts`, `access/jwt.ts`, `d1/audit.ts`, `0001` migration, `/healthz` |
 | 2 | Deployed concurrency/replay/isolation/recovery pass | `application/reservation.ts`, `d1/*`, `application/membership.ts`, `scheduled/maintenance.ts` |
 | 3 | Local-only green; cloud create no fallback | `shared/services/cloud-sync/*`, strategy seam in `TicketService`, config schema |
-| 4 | Two clients observe changes in poll interval | `application/projection-usecase.ts`, `CloudProjectionClient.ts`, server poll adapter, board stub/poller in `src/` |
+| 4 | Two clients observe changes in poll interval | `application/projection-usecase.ts`, `CloudProjectionClient.ts`, server poll adapter, board stub/poller in `frontend/src/` |
 | 5 | Operations release gate recorded | disable/export/restore drills, doc reconciliation |

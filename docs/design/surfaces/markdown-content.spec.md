@@ -35,23 +35,23 @@ MarkdownContent
 
 | Child | Component | Spec | Conditional |
 |-------|-----------|------|-------------|
-| MarkdownContent | `src/components/MarkdownContent/index.tsx` | this spec | always for rendered markdown |
-| MarkdownViewer | `src/components/DocumentsView/MarkdownViewer.tsx` | `documents-view-file-updates.spec.md` | documents route |
-| TicketViewer | `src/components/TicketViewer/index.tsx` | `ticket-viewer.spec.md` | ticket modal |
-| TableOfContents | `src/components/shared/TableOfContents.tsx` | owning viewer spec | when headings exist |
-| SmartLink | `src/components/SmartLink` | — | when rendered markdown contains links |
+| MarkdownContent | `frontend/src/components/MarkdownContent/index.tsx` | this spec | always for rendered markdown |
+| MarkdownViewer | `frontend/src/components/DocumentsView/MarkdownViewer.tsx` | `documents-view-file-updates.spec.md` | documents route |
+| TicketViewer | `frontend/src/components/TicketViewer/index.tsx` | `ticket-viewer.spec.md` | ticket modal |
+| TableOfContents | `frontend/src/components/shared/TableOfContents.tsx` | owning viewer spec | when headings exist |
+| SmartLink | `frontend/src/components/SmartLink` | — | when rendered markdown contains links |
 
 ## Source files
 
 | Type | Path |
 |------|------|
-| Renderer | `src/components/MarkdownContent/index.tsx` |
-| Markdown pipeline | `src/components/MarkdownContent/useMarkdownProcessor.ts` |
-| Parser options | `src/components/MarkdownContent/useHtmlParser.ts` |
-| Prose CSS | `src/styles/prose.css` |
-| Wireloom annotations CSS | `src/styles/wireloom-annotations.css` |
-| Base typography | `src/styles/base.css` |
-| Tokens | `src/styles/design-tokens.css` |
+| Renderer | `frontend/src/components/MarkdownContent/index.tsx` |
+| Markdown pipeline | `frontend/src/components/MarkdownContent/useMarkdownProcessor.ts` |
+| Parser options | `frontend/src/components/MarkdownContent/useHtmlParser.ts` |
+| Prose CSS | `frontend/src/styles/prose.css` |
+| Wireloom annotations CSS | `frontend/src/styles/wireloom-annotations.css` |
+| Base typography | `frontend/src/styles/base.css` |
+| Tokens | `frontend/src/styles/design-tokens.css` |
 
 ## Variants
 
@@ -167,7 +167,7 @@ Markdown density is a browser-local visual preference. See `docs/architecture/pr
 
 | Element | Class | Source |
 |---------|-------|--------|
-| base prose | `.prose` | `src/styles/prose.css` |
+| base prose | `.prose` | `frontend/src/styles/prose.css` |
 | document prose | `.prose--document` proposed | document reading variant |
 | ticket prose | `.prose--ticket` proposed | ticket modal reading variant |
 | compact prose | `.prose--compact` proposed | short preview variant |
@@ -180,7 +180,7 @@ Markdown density is a browser-local visual preference. See `docs/architecture/pr
 
 Compact annotation mode for Wireloom blocks with annotations. Users switch between full callout (default) and compact numbered-marker views.
 
-**Source**: `src/utils/wireloomAnnotationToggle.ts`, `src/styles/wireloom-annotations.css`
+**Source**: `frontend/src/utils/wireloomAnnotationToggle.ts`, `frontend/src/styles/wireloom-annotations.css`
 
 | Aspect | Detail |
 |--------|--------|
@@ -197,7 +197,7 @@ Full spec: `docs/CRs/MDT-182/architecture.md`
 
 ## Extension notes
 
-- Do not put global markdown spacing into `src/styles/base.css`; markdown rhythm belongs under `.prose`.
+- Do not put global markdown spacing into `frontend/src/styles/base.css`; markdown rhythm belongs under `.prose`.
 - Do not style `.prose` with app-shell assumptions such as sidebar widths or modal padding.
 - Do not rely on hard-coded light colors in markdown fallback states; use design tokens.
 - If a new markdown consumer needs different density, add a named variant instead of overriding individual descendants inline.

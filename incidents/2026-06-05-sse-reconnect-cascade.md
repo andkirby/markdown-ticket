@@ -23,7 +23,7 @@ Express server (`app.listen()`) uses Node.js defaults: `requestTimeout=300s`, `h
 
 In dev mode, Vite's `http-proxy` proxies `/api/events` without timeout overrides, adding another layer that could kill idle connections.
 
-**Fix:** `vite.config.ts` — added dedicated `/api/events` proxy entry with `timeout: 0`, `proxyTimeout: 0`.
+**Fix:** `frontend/vite.config.ts` — added dedicated `/api/events` proxy entry with `timeout: 0`, `proxyTimeout: 0`.
 
 ### 3. Triple `useProjectManager` deduplication failure
 
@@ -37,13 +37,13 @@ Three components mount `useProjectManager({ handleSSEEvents: true })` simultaneo
 
 Each independently fetches projects on mount and on `sse:reconnected`. No dedup → 7 `/api/projects` calls on page load, 3× on every reconnect.
 
-**Fix:** `src/hooks/useProjectManager.ts` — added module-level `fetchProjectsDeduped()` that coalesces concurrent calls into one HTTP request.
+**Fix:** `frontend/src/hooks/useProjectManager.ts` — added module-level `fetchProjectsDeduped()` that coalesces concurrent calls into one HTTP request.
 
 ## Files Changed
 
 - `server/routes/sse.ts` — disable timeouts on SSE connections
-- `vite.config.ts` — SSE-specific proxy with no timeout
-- `src/hooks/useProjectManager.ts` — project fetch dedup
+- `frontend/vite.config.ts` — SSE-specific proxy with no timeout
+- `frontend/src/hooks/useProjectManager.ts` — project fetch dedup
 - `server/server.ts` — captured server instance (minor)
 
 ## Results

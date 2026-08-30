@@ -47,9 +47,9 @@ DOMPurify allowlist; flipping the parser flag unlocks the capability with no new
 security surface.
 
 ### Impact Areas
-- Frontend: `src/components/MarkdownContent/useMarkdownProcessor.ts` (single flag
+- Frontend: `frontend/src/components/MarkdownContent/useMarkdownProcessor.ts` (single flag
   flip + explanatory comment)
-- Tests: `src/components/MarkdownContent/useMarkdownProcessor.test.ts` (helper
+- Tests: `frontend/src/components/MarkdownContent/useMarkdownProcessor.test.ts` (helper
   mirror, one regression-test replacement, new XSS-safety block)
 - Consumers (`TicketViewer`, `DocumentsView/MarkdownViewer`) inherit the change
   automatically — they share `<MarkdownContent>`
@@ -87,7 +87,7 @@ Three layers between raw markdown and the rendered DOM:
    - Strips `<script>`, `<iframe>`, `<object>`, `<embed>` (not in `ALLOWED_TAGS`)
    - Strips event-handler attributes (`onerror`, `onclick`, …) — not in
      `ALLOWED_ATTR`
-   - Strips dangerous URI schemes on `href`/`src` (`javascript:`, non-image
+   - Strips dangerous URI schemes on `href`/`frontend/src` (`javascript:`, non-image
      `data:`) via DOMPurify defaults
    - `ALLOWED_TAGS` already includes `a`, `img`, `code`, `div`, `span`;
      `ALLOWED_ATTR` already includes `href`, `target`, `rel`
@@ -124,16 +124,16 @@ These should be filed as a follow-up idea/ticket.
 - **AC-6**: Unknown tags like `<key>` are dropped (inner text preserved).
 - **AC-7**: Existing pipeline tests (wireframe label XSS escaping, mermaid,
   prism, headings, preprocessor, task lists) continue to pass.
-- **AC-8**: `bun test src/components/MarkdownContent/` and dependent suites
+- **AC-8**: `bun test frontend/src/components/MarkdownContent/` and dependent suites
   (`MarkdownViewer.test.tsx`, `TicketViewer.test.tsx`,
   `markdownPreprocessor*.test.ts`) are green.
 
 ## 5. Implementation Notes
 
 ### Changes
-- `src/components/MarkdownContent/useMarkdownProcessor.ts:40` — `html: false →
+- `frontend/src/components/MarkdownContent/useMarkdownProcessor.ts:40` — `html: false →
   html: true` with security-boundary comment.
-- `src/components/MarkdownContent/useMarkdownProcessor.test.ts`:
+- `frontend/src/components/MarkdownContent/useMarkdownProcessor.test.ts`:
   - `createProcessorMd()` helper: `html: false → html: true` (mirrors production)
   - Replaced test `'keeps angle-bracket placeholders as text instead of opening
     raw HTML tags'` with `'renders inline raw HTML in table cells (html: true
@@ -142,10 +142,10 @@ These should be filed as a follow-up idea/ticket.
     tests covering AC-1 through AC-6.
 
 ### Verification
-- `bun test src/components/MarkdownContent/useMarkdownProcessor.test.ts` — 27/27
+- `bun test frontend/src/components/MarkdownContent/useMarkdownProcessor.test.ts` — 27/27
   pass
-- `bun test src/components/MarkdownContent/ src/components/DocumentsView/MarkdownViewer.test.tsx src/components/TicketViewer/TicketViewer.test.tsx` — 47/47 pass
-- `bun test src/utils/markdownPreprocessor*.test.ts src/utils/markdownItWireframePlugin.test.ts src/utils/wireloomRenderer.test.ts` — 48/48 pass
+- `bun test frontend/src/components/MarkdownContent/ frontend/src/components/DocumentsView/MarkdownViewer.test.tsx frontend/src/components/TicketViewer/TicketViewer.test.tsx` — 47/47 pass
+- `bun test frontend/src/utils/markdownPreprocessor*.test.ts frontend/src/utils/markdownItWireframePlugin.test.ts frontend/src/utils/wireloomRenderer.test.ts` — 48/48 pass
 - `bunx tsc --noEmit` — no errors in `MarkdownContent/*`
 - `bunx eslint` on changed files — clean
 

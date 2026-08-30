@@ -60,7 +60,7 @@ Implementation must conform to these. The spec defines elision rules, overflow t
 
 ### Constraints
 
-- Must reuse `classifyLink` (`src/utils/linkProcessor.ts`) for same/cross-project classification — do not reimplement the regex.
+- Must reuse `classifyLink` (`frontend/src/utils/linkProcessor.ts`) for same/cross-project classification — do not reimplement the regex.
 - Must reuse `formatCrKey` / zero-padding semantics from `shared/utils/keyNormalizer.ts` when extracting the number segment.
 - Must reuse existing `.badge[data-relationship]` selectors in `badge.css`; no new badge color tokens.
 - Overflow trigger must be an accessible `<button>` (`aria-haspopup`, `aria-expanded`); popover must close on Escape, outside click, and item click; focus returns to trigger on close.
@@ -144,7 +144,7 @@ Implementation must conform to these. The spec defines elision rules, overflow t
 
 - Removed the inline comma separator between relationship links. Links now render adjacently (e.g. `🔗 030 005 035`).
 - Made project-code elision **global**: same-project links render as bare numbers on all surfaces (board + TicketViewer), not board-only.
-- Introduced code-level configuration (`src/config/relationshipBadge.ts`) for the separator (`RELATIONSHIP_LINK_SEPARATOR`) and the global-elision flag (`ELIDE_EVERYWHERE`). A settings UI item is deferred to a later ticket.
+- Introduced code-level configuration (`frontend/src/config/relationshipBadge.ts`) for the separator (`RELATIONSHIP_LINK_SEPARATOR`) and the global-elision flag (`ELIDE_EVERYWHERE`). A settings UI item is deferred to a later ticket.
 
 **Changed requirement IDs:** in-place refinement of the MDT-187 elision contract (acceptance criterion #8 reversed: viewer now elides too).
 

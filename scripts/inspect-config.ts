@@ -10,7 +10,7 @@
  * Sources of truth (this script only projects them, never redefines them):
  *   - docs/CRs/MDT-168/configuration-exposure.md  (human matrix)
  *   - domain-contracts/src/config-management/selectors.ts  (code allowlist)
- *   - src/config/*.ts  (browser-only localStorage modules)
+ *   - frontend/src/config/*.ts  (browser-only localStorage modules)
  *
  * Usage:
  *   bun scripts/inspect-config.ts                     # grouped, readable table
@@ -28,7 +28,7 @@ import { CONFIG_SELECTOR_ALLOWLIST, Exposure } from '@mdt/domain-contracts'
 
 // ---------------------------------------------------------------------------
 // Browser-only settings are NOT in the backend allowlist (they never reach a
-// file). They live in browser localStorage via src/config/*.ts. This list is
+// file). They live in browser localStorage via frontend/src/config/*.ts. This list is
 // the documented supplement from the exposure matrix; update it there first
 // (docs/CRs/MDT-168/configuration-exposure.md) if a browser-only setting is
 // added or promoted to backend storage.
@@ -120,91 +120,91 @@ const BACKEND_SUPPLEMENT_SETTINGS: readonly BackendSupplementSetting[] = [
 const BROWSER_ONLY_SETTINGS: readonly BrowserOnlySetting[] = [
   {
     selector: 'browser.theme',
-    module: 'src/hooks/useTheme.ts',
+    module: 'frontend/src/hooks/useTheme.ts',
     storageKey: 'cookie "theme" (light/dark/system)',
     ownerSurface: 'settings',
     note: 'Theme quick toggle; stored in a browser COOKIE (not localStorage). Browser/profile-specific presentation.',
   },
   {
     selector: 'browser.defaultView',
-    module: 'src/config/settingsPreferences.ts',
+    module: 'frontend/src/config/settingsPreferences.ts',
     storageKey: 'mdt-settings-default-view',
     ownerSurface: 'settings',
     note: 'Board/list default view (MDT-167).',
   },
   {
     selector: 'browser.cardDensity',
-    module: 'src/config/settingsPreferences.ts',
+    module: 'frontend/src/config/settingsPreferences.ts',
     storageKey: 'mdt-settings-card-density',
     ownerSurface: 'settings',
     note: 'Browser-only visual density.',
   },
   {
     selector: 'browser.markdownDensity',
-    module: 'src/config/settingsPreferences.ts',
+    module: 'frontend/src/config/settingsPreferences.ts',
     storageKey: 'markdown-ticket:settings:markdown-density',
     ownerSurface: 'settings',
     note: 'Browser-only markdown density.',
   },
   {
     selector: 'browser.eventHistoryVisible',
-    module: 'src/components/DevTools/useEventHistoryState.ts',
+    module: 'frontend/src/components/DevTools/useEventHistoryState.ts',
     storageKey: 'mdt-eventHistory-hidden',
     ownerSurface: 'devtools',
     note: 'Browser-only panel state.',
   },
   {
     selector: 'browser.documentTree.navigation',
-    module: 'src/config/documentNavigation.ts',
+    module: 'frontend/src/config/documentNavigation.ts',
     storageKey: 'markdown-ticket:documents-navigation:<projectId>',
     ownerSurface: 'documents',
     note: 'Recents/collapse/panel size per project.',
   },
   {
     selector: 'browser.documentTree.sorting',
-    module: 'src/config/documentSorting.ts',
+    module: 'frontend/src/config/documentSorting.ts',
     storageKey: 'documents-sort-<projectId>',
     ownerSurface: 'documents',
     note: 'Sort by/direction per project.',
   },
   {
     selector: 'browser.visibleTicketCardBadges',
-    module: 'src/config/ticketCardBadges.ts',
+    module: 'frontend/src/config/ticketCardBadges.ts',
     storageKey: 'markdown-ticket:board:ticket-card-badges',
     ownerSurface: 'board',
     note: 'Which badges render on ticket cards.',
   },
   {
     selector: 'browser.autoLinking',
-    module: 'src/config/linkConfig.ts',
+    module: 'frontend/src/config/linkConfig.ts',
     storageKey: 'markdown-ticket-link-config',
     ownerSurface: 'board',
     note: 'REMOVED (MDT-237 UAT): link config is owner/file-level (config.toml [links]); the legacy localStorage key is no longer read.',
   },
   {
     selector: 'browser.selectorAccents',
-    module: 'src/components/ProjectSelector/useSelectorData.ts',
+    module: 'frontend/src/components/ProjectSelector/useSelectorData.ts',
     storageKey: 'mdt-selector-preferences',
     ownerSurface: 'settings',
     note: 'accentEnabled/autocolor/accentStyle browser mirror; overrides backend user.toml values on load (legacy accentGradients migrated).',
   },
   {
     selector: 'browser.tocExpanded',
-    module: 'src/config/tocConfig.ts',
+    module: 'frontend/src/config/tocConfig.ts',
     storageKey: 'markdown-ticket-toc-<view>',
     ownerSurface: 'documents',
     note: 'Table-of-contents expand state, per view (document/ticket).',
   },
   {
     selector: 'browser.ticketListSorting',
-    module: 'src/config/sorting.ts',
+    module: 'frontend/src/config/sorting.ts',
     storageKey: 'markdown-ticket-sort-preferences',
     ownerSurface: 'list',
     note: 'Ticket-list sort attribute/direction (distinct from document-tree sort).',
   },
   {
     selector: 'browser.viewMode',
-    module: 'src/components/ViewModeSwitcher/useViewModePersistence.ts',
+    module: 'frontend/src/components/ViewModeSwitcher/useViewModePersistence.ts',
     storageKey: 'lastBoardListMode / lastViewMode / single-project-view-mode',
     ownerSurface: 'navigation',
     note: 'Persisted active view mode (board/list/documents).',
@@ -409,7 +409,7 @@ function printJson(rows: UnifiedRow[]): void {
     sources: [
       'docs/CRs/MDT-168/configuration-exposure.md',
       'domain-contracts/src/config-management/selectors.ts',
-      'src/config/*.ts',
+      'frontend/src/config/*.ts',
     ],
     exposureLegend: Object.fromEntries(
       Object.entries(EXPOSURE_META).map(([k, v]) => [
@@ -552,7 +552,7 @@ Scopes:        project | global | user | registry | browser
 Exposure:      editable | guarded | readOnly | fileOnly | browser-only
 
 The "where it lives" answer:
-  browser-only  → browser localStorage (src/config/*.ts)
+  browser-only  → browser localStorage (frontend/src/config/*.ts)
   editable      → backend file, normal setting
   guarded       → backend file, confirmation/advanced only
   readOnly      → backend file, display only (immutable via UI)

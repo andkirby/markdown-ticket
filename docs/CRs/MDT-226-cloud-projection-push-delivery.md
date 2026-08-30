@@ -204,7 +204,7 @@ flowchart LR
   ticket item with capability metadata but no cloud revision/transport fields.
 - `server/services/TicketService.ts` returns the unified ticket list through
   `/api/projects/:id/tickets/unified`.
-- `SSEBroadcaster`, `src/services/sseClient.ts`, and `useSSEEvents` deliver
+- `SSEBroadcaster`, `frontend/src/services/sseClient.ts`, and `useSSEEvents` deliver
   ordinary local ticket changes. `useCloudProjectionFeed.ts` and the browser
   `/cloud-projections` request are removed after compatibility rollout.
 - `shared/services/cloud-sync/project-state-store.ts` migrates version 1

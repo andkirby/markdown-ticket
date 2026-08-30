@@ -223,7 +223,7 @@ bun run lint               # Code quality
 ```text
 markdown-ticket/
 ├── prompts/          # SDD workflow commands (install this!)
-├── src/              # React frontend
+├── frontend/src/      # React frontend
 ├── server/           # Express backend + SSE
 ├── mcp-server/       # MCP server for AI
 ├── shared/           # TypeScript types

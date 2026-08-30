@@ -17,14 +17,14 @@ Visual treatment is undecided — candidates: a small colored triangle in the co
 The data and styling needed already exist; only the wiring is missing.
 
 **What's already there:**
-- `useProjectManager` holds `tickets: Ticket[]` (every ticket for the current project, each with a `status`) — so the referenced ticket's status is available client-side for same-project refs. (`src/hooks/useProjectManager.ts:75,316`)
-- Status colors are centralized in `src/components/Badge/badge.css:26-79`, keyed by `data-status`. No JS color logic — pure CSS attribute selectors. Reusable as-is.
-- `RelationshipBadge` (`src/components/Badge/RelationshipBadge.tsx:32-46`) renders each ref as a `<SmartLink>` but currently receives only `links: string[]` (bare codes) — it has no status and does no lookup today.
+- `useProjectManager` holds `tickets: Ticket[]` (every ticket for the current project, each with a `status`) — so the referenced ticket's status is available client-side for same-project refs. (`frontend/src/hooks/useProjectManager.ts:75,316`)
+- Status colors are centralized in `frontend/src/components/Badge/badge.css:26-79`, keyed by `data-status`. No JS color logic — pure CSS attribute selectors. Reusable as-is.
+- `RelationshipBadge` (`frontend/src/components/Badge/RelationshipBadge.tsx:32-46`) renders each ref as a `<SmartLink>` but currently receives only `links: string[]` (bare codes) — it has no status and does no lookup today.
 
 **What's missing:**
 - A `Map<code, status>` lookup (today lookups are ad-hoc `tickets.find(...)` at `App.tsx:297`, `Column/index.tsx:179,197,203`, `Board.tsx:80`).
 - Threading that lookup (or a `tickets` prop) into `RelationshipBadge`.
-- The same idea applies to **inline markdown refs** (`convertTicketReferences` in `src/utils/markdownPreprocessor.ts:125-130` → `SmartLink` `LinkType.TICKET` in `src/components/SmartLink/index.tsx:115-125`), which are plain links today.
+- The same idea applies to **inline markdown refs** (`convertTicketReferences` in `frontend/src/utils/markdownPreprocessor.ts:125-130` → `SmartLink` `LinkType.TICKET` in `frontend/src/components/SmartLink/index.tsx:115-125`), which are plain links today.
 
 **Edge case:** `useProjectManager` only loads tickets for the *currently selected* project. Cross-project refs (e.g. `OTHER-045`) have no client-side status — needs a neutral/unknown fallback. Same-project refs cover the common case.
 
@@ -46,10 +46,10 @@ Status color could be applied per-ref in several ways. Trade-offs:
 Recommended starting point: **colored left-border or underline**, leaving the relationship-type color intact — keeps the two dimensions (relationship vs. status) visually separate. Settle with a mock in the CR.
 
 ## References
-- `src/components/Badge/RelationshipBadge.tsx:32-46` — component to extend (currently `links: string[]`, no status)
-- `src/components/Badge/badge.css:26-79` — existing `data-status` color system (reusable)
-- `src/config/statusConfig.ts:6-63` — status → color token map
-- `src/hooks/useProjectManager.ts:75,316` — `tickets: Ticket[]` source for the lookup
-- `src/utils/markdownPreprocessor.ts:125-130` — inline `MDT-123` refs in body text (second surface)
-- `src/components/SmartLink/index.tsx:115-125` — `LinkType.TICKET` rendering (no status styling today)
-- `src/components/TicketAttributeTags.tsx:68-94` — where RelationshipBadge is used on cards
+- `frontend/src/components/Badge/RelationshipBadge.tsx:32-46` — component to extend (currently `links: string[]`, no status)
+- `frontend/src/components/Badge/badge.css:26-79` — existing `data-status` color system (reusable)
+- `frontend/src/config/statusConfig.ts:6-63` — status → color token map
+- `frontend/src/hooks/useProjectManager.ts:75,316` — `tickets: Ticket[]` source for the lookup
+- `frontend/src/utils/markdownPreprocessor.ts:125-130` — inline `MDT-123` refs in body text (second surface)
+- `frontend/src/components/SmartLink/index.tsx:115-125` — `LinkType.TICKET` rendering (no status styling today)
+- `frontend/src/components/TicketAttributeTags.tsx:68-94` — where RelationshipBadge is used on cards

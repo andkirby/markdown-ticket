@@ -137,7 +137,7 @@ C4Container
 cloud/
   wrangler.jsonc
   migrations/                             ordered D1 migrations
-  src/cloudflare/
+  frontend/src/cloudflare/
     worker.ts                              HTTP/WebSocket Worker entry point
     durable/ProjectProjectionHub.ts        project delivery sequencer
     access/                                Access JWT validation
@@ -151,13 +151,13 @@ shared/services/cloud-sync/                create orchestration, journals, strea
 server/services/cloud-sync/                project stream lifecycle
 server/services/TicketService.ts           unified canonical/projected ticket reads
 cli/ and mcp-server/                       thin adapters over shared operations
-src/                                       board and live/stale projection presentation
+frontend/src/                                       board and live/stale projection presentation
 ```
 
 Dependency direction remains:
 
 ```text
-domain-contracts <- shared <- server | cli | mcp-server | src
+domain-contracts <- shared <- server | cli | mcp-server | frontend
 domain-contracts <- cloud/cloudflare
 
 server/shared --JSON/HTTPS + WebSocket--> cloud/cloudflare

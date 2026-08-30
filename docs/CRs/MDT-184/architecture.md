@@ -2,11 +2,11 @@
 
 ## Overview
 
-Route path strings (`/prj/:projectCode/ticket/:ticketKey`, etc.) are currently duplicated across 8+ files. This refactor introduces a single ownership module (`src/routes.ts`) for route pattern constants and builder functions, then migrates all consumers to delegate. No behavioral change — purely structural.
+Route path strings (`/prj/:projectCode/ticket/:ticketKey`, etc.) are currently duplicated across 8+ files. This refactor introduces a single ownership module (`frontend/src/routes.ts`) for route pattern constants and builder functions, then migrates all consumers to delegate. No behavioral change — purely structural.
 
 ## Design Decisions
 
-### Single source of truth: `src/routes.ts`
+### Single source of truth: `frontend/src/routes.ts`
 
 A new module that owns:
 1. **Route pattern constants** — the parametric forms with `:projectCode`, `:ticketKey`, `*` — used by `App.tsx` `<Route path={...}>`.
@@ -37,17 +37,17 @@ The hardcoded regex patterns in `extractSubDocPath` are derived from route patte
 ## Module Boundaries
 
 ```
-src/routes.ts                    ← NEW: pattern constants + all builders
-src/utils/linkBuilder.ts         ← Refactored: imports from routes.ts, re-exports builders
-src/utils/linkProcessor.ts       ← Stable: already uses buildTicketLink
-src/utils/linkNormalization.ts   ← Slimmed: removes DEFAULT_WEB_BASE + own builders
-src/utils/markdownPreprocessor.ts ← Migrated: uses builders from linkBuilder
-src/utils/subdocPathValidation.ts ← Migrated: uses builders + derives regex from patterns
-src/App.tsx                      ← Route defs use pattern constants
-src/components/DirectTicketAccess.tsx      ← Uses buildTicketLink/buildTicketSubDocPath
-src/components/TicketViewer/useTicketDocumentNavigation.ts ← Same
-src/components/ProjectSelector/index.tsx   ← Uses buildProjectPath
-src/components/RedirectToCurrentProject.tsx ← Uses buildProjectPath
+frontend/src/routes.ts                    ← NEW: pattern constants + all builders
+frontend/src/utils/linkBuilder.ts         ← Refactored: imports from routes.ts, re-exports builders
+frontend/src/utils/linkProcessor.ts       ← Stable: already uses buildTicketLink
+frontend/src/utils/linkNormalization.ts   ← Slimmed: removes DEFAULT_WEB_BASE + own builders
+frontend/src/utils/markdownPreprocessor.ts ← Migrated: uses builders from linkBuilder
+frontend/src/utils/subdocPathValidation.ts ← Migrated: uses builders + derives regex from patterns
+frontend/src/App.tsx                      ← Route defs use pattern constants
+frontend/src/components/DirectTicketAccess.tsx      ← Uses buildTicketLink/buildTicketSubDocPath
+frontend/src/components/TicketViewer/useTicketDocumentNavigation.ts ← Same
+frontend/src/components/ProjectSelector/index.tsx   ← Uses buildProjectPath
+frontend/src/components/RedirectToCurrentProject.tsx ← Uses buildProjectPath
 ```
 
 ## Invariants

@@ -142,20 +142,20 @@ To extend worktree support to other server-side services:
 | Artifact ID | Path | Kind | Referencing Obligations |
 |---|---|---|---|
 | `ART-api-subdocument-tests` | `server/tests/api/ticket-subdocuments.test.ts` | test | `OBL-test-runtime-separation` |
-| `ART-data-layer` | `src/services/dataLayer.ts` | runtime | `OBL-api-subdocument-endpoints`, `OBL-content-loading-pipeline`, `OBL-server-discovery-authority` |
+| `ART-data-layer` | `frontend/src/services/dataLayer.ts` | runtime | `OBL-api-subdocument-endpoints`, `OBL-content-loading-pipeline`, `OBL-server-discovery-authority` |
 | `ART-e2e-subdocument-tests` | `tests/e2e/ticket/subdoc-navigation.spec.ts` | test | `OBL-test-runtime-separation` |
-| `ART-markdown-content` | `src/components/MarkdownContent.tsx` | runtime | `OBL-content-loading-pipeline` |
-| `ART-nav-hook-unit-tests` | `src/components/TicketViewer/useTicketDocumentNavigation.test.ts` | test | `OBL-test-runtime-separation` |
+| `ART-markdown-content` | `frontend/src/components/MarkdownContent.tsx` | runtime | `OBL-content-loading-pipeline` |
+| `ART-nav-hook-unit-tests` | `frontend/src/components/TicketViewer/useTicketDocumentNavigation.test.ts` | test | `OBL-test-runtime-separation` |
 | `ART-openapi-spec` | `server/openapi.yaml` | config | `OBL-openapi-documentation` |
-| `ART-realtime-hook-tests` | `src/components/TicketViewer/useTicketDocumentRealtime.test.ts` | test | `OBL-test-runtime-separation` |
+| `ART-realtime-hook-tests` | `frontend/src/components/TicketViewer/useTicketDocumentRealtime.test.ts` | test | `OBL-test-runtime-separation` |
 | `ART-server-project-controller` | `server/controllers/ProjectController.ts` | runtime | `OBL-api-subdocument-endpoints`, `OBL-openapi-documentation` |
 | `ART-server-ticket-service` | `server/services/TicketService.ts` | runtime | `OBL-api-subdocument-endpoints`, `OBL-server-discovery-authority` |
 | `ART-shared-subdocument-model` | `shared/models/SubDocument.ts` | runtime | `OBL-server-discovery-authority` |
-| `ART-ticket-document-tabs` | `src/components/TicketViewer/TicketDocumentTabs.tsx` | runtime | `OBL-hierarchical-tab-rows`, `OBL-navigation-transition-authority`, `OBL-no-nav-when-empty`, `OBL-sticky-navigation-layout` |
-| `ART-ticket-viewer-index` | `src/components/TicketViewer/index.tsx` | runtime | `OBL-hierarchical-tab-rows`, `OBL-no-nav-when-empty`, `OBL-realtime-reconciliation`, `OBL-sticky-navigation-layout` |
-| `ART-use-ticket-document-content` | `src/components/TicketViewer/useTicketDocumentContent.ts` | runtime | `OBL-content-loading-pipeline` |
-| `ART-use-ticket-document-navigation` | `src/components/TicketViewer/useTicketDocumentNavigation.ts` | runtime | `OBL-navigation-transition-authority` |
-| `ART-use-ticket-document-realtime` | `src/components/TicketViewer/useTicketDocumentRealtime.ts` | runtime | `OBL-realtime-reconciliation` |
+| `ART-ticket-document-tabs` | `frontend/src/components/TicketViewer/TicketDocumentTabs.tsx` | runtime | `OBL-hierarchical-tab-rows`, `OBL-navigation-transition-authority`, `OBL-no-nav-when-empty`, `OBL-sticky-navigation-layout` |
+| `ART-ticket-viewer-index` | `frontend/src/components/TicketViewer/index.tsx` | runtime | `OBL-hierarchical-tab-rows`, `OBL-no-nav-when-empty`, `OBL-realtime-reconciliation`, `OBL-sticky-navigation-layout` |
+| `ART-use-ticket-document-content` | `frontend/src/components/TicketViewer/useTicketDocumentContent.ts` | runtime | `OBL-content-loading-pipeline` |
+| `ART-use-ticket-document-navigation` | `frontend/src/components/TicketViewer/useTicketDocumentNavigation.ts` | runtime | `OBL-navigation-transition-authority` |
+| `ART-use-ticket-document-realtime` | `frontend/src/components/TicketViewer/useTicketDocumentRealtime.ts` | runtime | `OBL-realtime-reconciliation` |
 
 ## Derivation Summary
 

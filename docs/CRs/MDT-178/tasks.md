@@ -127,8 +127,8 @@ bun run --cwd server jest tests/api/read-token-management.test.ts --runInBand
 **Boundary**: Keep selectors centralized and do not redesign the settings modal.
 **Creates**: none
 **Modifies**:
-- `src/components/SettingsModal/ReadAccessTokens.tsx`
-- `src/components/SettingsModal/ReadAccessTokens.test.tsx`
+- `frontend/src/components/SettingsModal/ReadAccessTokens.tsx`
+- `frontend/src/components/SettingsModal/ReadAccessTokens.test.tsx`
 - `tests/e2e/sharing/read-access-journey.spec.ts`
 **Must Not Touch**:
 - unrelated settings tabs
@@ -138,7 +138,7 @@ bun run --cwd server jest tests/api/read-token-management.test.ts --runInBand
 
 **Verify**:
 ```bash
-bun test src/components/SettingsModal/ReadAccessTokens.test.tsx
+bun test frontend/src/components/SettingsModal/ReadAccessTokens.test.tsx
 bunx playwright test tests/e2e/sharing/read-access-journey.spec.ts --project=chromium --grep "configured public origin"
 ```
 

@@ -97,7 +97,7 @@ full — feature enhancement, navigable document references
 ## 8. Clarifications
 
 ### UAT Session 2026-08-24
-- Approved: project-root fallback resolution — inline-code refs naming an existing project file (e.g. src/THEME.md) resolve to that document; '..' refs never re-anchored (new BR-2.4, architecture D8)
+- Approved: project-root fallback resolution — inline-code refs naming an existing project file (e.g. frontend/src/THEME.md) resolve to that document; '..' refs never re-anchored (new BR-2.4, architecture D8)
 - Approved: link config precedence — localStorage override > CONFIG_DIR/config.toml [links] > defaults (new C6, architecture D9)
 - Updated docs: requirements.md, architecture.md, tests.md, uat.md; all trace stages re-validated and re-rendered
 - uat.md written; strict drift/lock not used

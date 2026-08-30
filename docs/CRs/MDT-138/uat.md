@@ -75,7 +75,7 @@ masked by Bug 1 and only surfaced after Bug 1 was fixed.
 
 ### Bug 1 — `extractSubDocPath` regex slot mis-substitution (MDT-184 regression)
 
-`src/utils/subdocPathValidation.ts::extractSubDocPath` rebuilt its regex from
+`frontend/src/utils/subdocPathValidation.ts::extractSubDocPath` rebuilt its regex from
 `routePatternToRegex(ROUTE_TICKET_SUBDOC)` and then attempted to substitute the
 literal `crId` into the `:ticketKey` slot by searching for the substring
 `'/ticket/'` inside the escaped regex source:
@@ -102,7 +102,7 @@ extraction, so the regression shipped unnoticed.
 
 ### Bug 2 — `collectPaths` only generated dot+slash variants for virtual folders
 
-`src/components/TicketViewer/useTicketDocumentNavigation.ts::collectPaths`
+`frontend/src/components/TicketViewer/useTicketDocumentNavigation.ts::collectPaths`
 decided the path separator for a child based on the **folder's** storage type
 (virtual → dot, physical → slash) and only emitted both forms for virtual
 folders (as "backward compatibility"). When a dot-notation file like
@@ -128,9 +128,9 @@ obligations so the regressions are caught going forward.
 
 | Change | Type | Affects | Bug |
 |--------|------|---------|-----|
-| Fix `extractSubDocPath` to substitute the literal `:ticketKey` token in the un-escaped `ROUTE_*` constant **before** converting to regex, instead of doing string surgery on the escaped regex source. | Code fix | `src/utils/subdocPathValidation.ts` | 1 |
-| Fix `collectPaths` to generate **both** dot and slash path forms for every subdoc, regardless of folder storage type. The URL is derived from the child's filePath, so the valid-path lookup must accept either form. | Code fix | `src/components/TicketViewer/useTicketDocumentNavigation.ts` | 2 |
-| Add unit tests for `extractSubDocPath` covering project-prefixed, direct, dot-notation, slash-notation, and multi-segment paths. | Test gap (deferred — see Validation) | `src/__tests__/subdocPathValidation.test.ts` (new) | 1, 2 |
+| Fix `extractSubDocPath` to substitute the literal `:ticketKey` token in the un-escaped `ROUTE_*` constant **before** converting to regex, instead of doing string surgery on the escaped regex source. | Code fix | `frontend/src/utils/subdocPathValidation.ts` | 1 |
+| Fix `collectPaths` to generate **both** dot and slash path forms for every subdoc, regardless of folder storage type. The URL is derived from the child's filePath, so the valid-path lookup must accept either form. | Code fix | `frontend/src/components/TicketViewer/useTicketDocumentNavigation.ts` | 2 |
+| Add unit tests for `extractSubDocPath` covering project-prefixed, direct, dot-notation, slash-notation, and multi-segment paths. | Test gap (deferred — see Validation) | `frontend/src/__tests__/subdocPathValidation.test.ts` (new) | 1, 2 |
 | Strengthen E2E for `root_document_url_routing`, `dot_notation_url_routing`, `folder_subfile_url_routing` to assert the targeted tab is `data-state="active"` (not merely visible) after `page.goto` to a `/prj/...` deep link. | Test gap (deferred — see Validation) | `tests/e2e/ticket/namespace.spec.ts` | 1, 2 |
 
 No requirements, BDD scenarios, architecture, or tasks are renamed.
@@ -172,12 +172,12 @@ narrow fix scope.
 - **Objective**: Restore correct substitution of the `:ticketKey` slot in the
   project-prefixed regex produced by `routePatternToRegex`.
 - **Direct artifacts**:
-  - `src/utils/subdocPathValidation.ts` (modified `extractSubDocPath`)
+  - `frontend/src/utils/subdocPathValidation.ts` (modified `extractSubDocPath`)
 - **Implementation applied**: substitute the literal `:ticketKey` token in the
   un-escaped `ROUTE_DIRECT_TICKET_SUBDOC` and `ROUTE_TICKET_SUBDOC` constants
   (after regex-escaping `crId`), then convert to regex via
   `routePatternToRegex`. No more string surgery on the escaped regex source.
-- **Verification**: existing `src/__tests__/routes.test.ts` (22/22) and
+- **Verification**: existing `frontend/src/__tests__/routes.test.ts` (22/22) and
   `useTicketDocumentNavigation.test.tsx` (10/10) pass; manual live check of
   `/prj/MDT/ticket/MDT-138/{architecture,tests,requirements,tasks,bdd}.md`
   resolves to the expected active tab.
@@ -187,7 +187,7 @@ narrow fix scope.
 - **Objective**: Make deep links to dot-notation children of physical folders
   round-trip through the valid-path lookup.
 - **Direct artifacts**:
-  - `src/components/TicketViewer/useTicketDocumentNavigation.ts` (rewrote
+  - `frontend/src/components/TicketViewer/useTicketDocumentNavigation.ts` (rewrote
     `collectPaths`)
 - **Implementation applied**: every subdoc now registers both forms
   (`bdd.trace` and `bdd/trace`) at every non-root level, regardless of whether
@@ -210,7 +210,7 @@ narrow fix scope.
 - **Objective**: Lock the regressions with automated coverage at both unit and
   E2E layers, so a future refactor cannot reintroduce them silently.
 - **Direct artifacts** (not yet created in this round):
-  - `src/__tests__/subdocPathValidation.test.ts` (new file) — unit coverage
+  - `frontend/src/__tests__/subdocPathValidation.test.ts` (new file) — unit coverage
     for `extractSubDocPath` and (optionally) `collectPaths`.
   - `tests/e2e/ticket/namespace.spec.ts` — strengthen three existing tests to
     assert `data-state="active"` instead of `toBeVisible()`.
@@ -238,8 +238,8 @@ narrow fix scope.
 
 | Step | Command | Result |
 |------|---------|--------|
-| Route tests | `bun test src/__tests__/routes.test.ts` | 22/22 pass |
-| Navigation hook tests | `bun test src/components/TicketViewer/useTicketDocumentNavigation.test.tsx` | 10/10 pass |
+| Route tests | `bun test frontend/src/__tests__/routes.test.ts` | 22/22 pass |
+| Navigation hook tests | `bun test frontend/src/components/TicketViewer/useTicketDocumentNavigation.test.tsx` | 10/10 pass |
 | E2E namespace | `PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/ticket/namespace.spec.ts --project=chromium` | 19/19 pass |
 | E2E subdoc nav + preload | `PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/ticket/subdoc-navigation.spec.ts tests/e2e/ticket/subdoc-preload.spec.ts --project=chromium` | 21 pass, 1 pre-existing skip |
 | TypeScript | `bunx tsc --noEmit -p tsconfig.json` | no new errors in changed files (pre-existing `BackendConfigSection.tsx` errors only) |
@@ -250,7 +250,7 @@ narrow fix scope.
 
 | Step | Command |
 |------|---------|
-| New unit tests for `extractSubDocPath` | `bun test src/__tests__/subdocPathValidation.test.ts` |
+| New unit tests for `extractSubDocPath` | `bun test frontend/src/__tests__/subdocPathValidation.test.ts` |
 | Strengthened E2E assertions | `bunx playwright test tests/e2e/ticket/namespace.spec.ts --project=chromium` |
 | Trace validation after test bind | `spec-trace validate MDT-138 --stage tests` |
 

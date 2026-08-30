@@ -242,7 +242,7 @@ Markdown list endpoint, not the cloud projection surface.
 
 `SSEBroadcaster` remains the local one-to-many transport. The backend emits a
 normal ticket-view change after the projection read model changes.
-`src/services/sseClient.ts` maps it to the existing ticket event bus, and
+`frontend/src/services/sseClient.ts` maps it to the existing ticket event bus, and
 `useSSEEvents` updates or refreshes the same ticket collection used for local
 filesystem changes. The browser has no projection-feed hook, cloud cursor,
 reconnect loop, or cloud endpoint knowledge. A separate project sync-status

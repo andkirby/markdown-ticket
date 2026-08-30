@@ -47,7 +47,7 @@ proper spacing. Fix spec drift accumulated during implementation.
 ### Slice U1 — Click-outside dismissal
 
 - **Objective**: popover closes on outside click.
-- **Artifacts**: `src/components/BoardFilterBar/FilterButton.tsx`.
+- **Artifacts**: `frontend/src/components/BoardFilterBar/FilterButton.tsx`.
 - **GREEN target**: S26 (browser smoke test — popover `offsetParent` null after
   outside click).
 - **Impacted tasks**: U1.
@@ -55,20 +55,20 @@ proper spacing. Fix spec drift accumulated during implementation.
 ### Slice U2 — List view filtering
 
 - **Objective**: list table honors faceted filters.
-- **Artifacts**: `src/components/ProjectView.tsx`.
+- **Artifacts**: `frontend/src/components/ProjectView.tsx`.
 - **GREEN target**: S27 (board 185→32, list 32 rows).
 - **Impacted tasks**: U2.
 
 ### Slice U3 — Chips spacing
 
 - **Objective**: chips block visually separated from facet grid.
-- **Artifacts**: `src/components/BoardFilterBar/ActiveFilterChips.tsx`.
+- **Artifacts**: `frontend/src/components/BoardFilterBar/ActiveFilterChips.tsx`.
 - **GREEN target**: S28 (`marginTop` 12px).
 - **Impacted tasks**: U3.
 
 ## Validation
 
-- `bun test --isolate ./src/components/BoardFilterBar ./src/utils/ticketFilters.test.ts ./src/hooks/useBoardFilters.test.ts` — 78 pass, 0 fail.
+- `bun test --isolate ./frontend/src/components/BoardFilterBar ./frontend/src/utils/ticketFilters.test.ts ./frontend/src/hooks/useBoardFilters.test.ts` — 78 pass, 0 fail.
 - `bun run validate:ts` — 4 changed files clean (FilterButton, ActiveFilterChips, ProjectView, playwright.config).
 - Browser smoke tests: all three behaviors confirmed on `localhost:3075` (DEVPT + MDT projects).
 
@@ -115,7 +115,7 @@ merge(full locals, cloud stubs)  →  applyTicketFilters(merged)  →  display
   then `displayTickets = applyTicketFilters(boardTickets, filters)`.
 - Thread `filters` state prop App → ProjectView → Board (previously Board only
   received the pre-filtered result, not the filter state).
-- New pipeline unit test `src/hooks/useCloudProjections.test.ts` (6 cases
+- New pipeline unit test `frontend/src/hooks/useCloudProjections.test.ts` (6 cases
   including a Bug B regression guard).
 
 ## Changed requirement IDs
@@ -127,5 +127,5 @@ merge(full locals, cloud stubs)  →  applyTicketFilters(merged)  →  display
 
 - Browser: 7 "Proposed" stubs → 0 visible when filtering by "Implemented"
   (Bug A fixed); no stub reappearance (Bug B fixed).
-- `bun test --isolate ./src/hooks ./src/components/BoardFilterBar ./src/utils/ticketFilters.test.ts` — 181 pass.
+- `bun test --isolate ./frontend/src/hooks ./frontend/src/components/BoardFilterBar ./frontend/src/utils/ticketFilters.test.ts` — 181 pass.
 - `bun run validate:ts` — 5 files clean. `bun run build` — green.

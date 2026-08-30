@@ -4,9 +4,9 @@
 
 | Module | Test File | Tests |
 |--------|-----------|-------|
-| `src/routes.ts` | `src/__tests__/routes.test.ts` | Pattern constants (6) + Builders (10) |
-| Constraint C-1 enforcement | `src/__tests__/no-hardcoded-routes.test.ts` | 1 scan test |
-| `src/utils/linkBuilder.ts` | `src/utils/linkBuilder.mdt150.test.ts` | Existing (regression) |
+| `frontend/src/routes.ts` | `frontend/src/__tests__/routes.test.ts` | Pattern constants (6) + Builders (10) |
+| Constraint C-1 enforcement | `frontend/src/__tests__/no-hardcoded-routes.test.ts` | 1 scan test |
+| `frontend/src/utils/linkBuilder.ts` | `frontend/src/utils/linkBuilder.mdt150.test.ts` | Existing (regression) |
 
 ## Data Mechanism Tests
 
@@ -20,14 +20,14 @@
 
 | Constraint ID | Test File | Tests |
 |---------------|-----------|-------|
-| C-1 | `src/__tests__/no-hardcoded-routes.test.ts` | scan all src/ for /prj/ literals |
-| C-2 | `src/utils/linkBuilder.mdt150.test.ts` | existing regression tests pass |
-| C-3 | `src/utils/linkBuilder.mdt150.test.ts` | existing tests pass unchanged |
+| C-1 | `frontend/src/__tests__/no-hardcoded-routes.test.ts` | scan all frontend/src/ for /prj/ literals |
+| C-2 | `frontend/src/utils/linkBuilder.mdt150.test.ts` | existing regression tests pass |
+| C-3 | `frontend/src/utils/linkBuilder.mdt150.test.ts` | existing tests pass unchanged |
 
 ## Verify
 
 ```bash
-bun test src/__tests__/routes.test.ts
-bun test src/__tests__/no-hardcoded-routes.test.ts
-bun test src/utils/linkBuilder.mdt150.test.ts
+bun test frontend/src/__tests__/routes.test.ts
+bun test frontend/src/__tests__/no-hardcoded-routes.test.ts
+bun test frontend/src/utils/linkBuilder.mdt150.test.ts
 ```

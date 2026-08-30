@@ -17,10 +17,10 @@ phaseEpic: Architecture Phase A
 - Regex-based TOML parsing in `server/services/ProjectService.ts`
 
 **Affected Artifacts**:
-- `src/components/RedirectToCurrentProject.tsx`
+- `frontend/src/components/RedirectToCurrentProject.tsx`
 - `server/services/ProjectService.ts`
 - `server/routes/configRoutes.js`
-- `src/hooks/useProjectManager.ts`
+- `frontend/src/hooks/useProjectManager.ts`
 
 **Scope**:
 - Add `/api/config` endpoint
@@ -55,7 +55,7 @@ phaseEpic: Architecture Phase A
 | Artifact | Type | Purpose |
 |----------|------|---------|
 | `/api/config` | Endpoint | System configuration state |
-| `src/components/UI/alert.tsx` | Component | Reusable alert UI (shadcn-style) |
+| `frontend/src/components/UI/alert.tsx` | Component | Reusable alert UI (shadcn-style) |
 | `server/routes/configRoutes.js` | Route | Configuration endpoint routing |
 | `server/controllers/configController.js` | Controller | Configuration request handling |
 
@@ -64,9 +64,9 @@ phaseEpic: Architecture Phase A
 | Artifact | Change Type | Modification |
 |----------|-------------|--------------|
 | `server/services/ProjectService.ts` | Dependency change | Added `toml.js` library, removed regex parsing |
-| `src/hooks/useProjectManager.ts` | State added | `isBackendDown: boolean` in return interface |
-| `src/components/RedirectToCurrentProject.tsx` | Conditional UI | Empty state view when `projects.length === 0` |
-| `src/components/RedirectToCurrentProject.tsx` | Error display | Backend down alert when `isBackendDown === true` |
+| `frontend/src/hooks/useProjectManager.ts` | State added | `isBackendDown: boolean` in return interface |
+| `frontend/src/components/RedirectToCurrentProject.tsx` | Conditional UI | Empty state view when `projects.length === 0` |
+| `frontend/src/components/RedirectToCurrentProject.tsx` | Error display | Backend down alert when `isBackendDown === true` |
 
 #### Integration Points
 
@@ -119,7 +119,7 @@ phaseEpic: Architecture Phase A
 **Architecture CR**:
 - `/api/config` endpoint exists and returns configuration state
 - `toml.js` library integrated in `server/services/ProjectService.ts`
-- `Alert` component implemented in `src/components/UI/alert.tsx`
+- `Alert` component implemented in `frontend/src/components/UI/alert.tsx`
 - Empty state UI renders in `RedirectToCurrentProject` when `projects.length === 0`
 - Backend connectivity detection via `isBackendDown` in `useProjectManager`
 - Alert displays actionable commands (`npm run server`, `bin/dc up backend -d`)

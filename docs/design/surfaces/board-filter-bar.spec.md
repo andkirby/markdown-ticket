@@ -86,17 +86,17 @@ This order groups the enum-backed facets (type, status, priority — bounded, sh
 
 | Child | Component | Spec | Conditional |
 |-------|-----------|------|-------------|
-| BoardFilterBar | `src/components/BoardFilterBar/index.tsx` | this file | board or list view, any project |
-| FreeTextSearch | `src/components/FilterControls.tsx` (re-skinned) | — | desktop (`≥ sm`) inline in header |
-| FilterButton | `src/components/BoardFilterBar/FilterButton.tsx` | — | desktop (`≥ sm`) inline in header; label `Filter` or `Filter · N` |
+| BoardFilterBar | `frontend/src/components/BoardFilterBar/index.tsx` | this file | board or list view, any project |
+| FreeTextSearch | `frontend/src/components/FilterControls.tsx` (re-skinned) | — | desktop (`≥ sm`) inline in header |
+| FilterButton | `frontend/src/components/BoardFilterBar/FilterButton.tsx` | — | desktop (`≥ sm`) inline in header; label `Filter` or `Filter · N` |
 | FilterPopover | manual overlay panel (fixed overlay + absolute panel; see `FilterButton.tsx`) | — | on FilterButton click |
 | FacetGrid | `grid grid-cols-2 gap-x-4` container in `index.tsx` | — | inside popover (desktop) / modal ScrollArea (mobile) |
-| FacetSection | `src/components/BoardFilterBar/FacetSection.tsx` (checkbox list) | — | inside FacetGrid |
-| ActiveFilterChips | `src/components/BoardFilterBar/ActiveFilterChips.tsx` (reuses `Badge` styling, `gap-2`) | — | inside popover; ≥1 active value |
+| FacetSection | `frontend/src/components/BoardFilterBar/FacetSection.tsx` (checkbox list) | — | inside FacetGrid |
+| ActiveFilterChips | `frontend/src/components/BoardFilterBar/ActiveFilterChips.tsx` (reuses `Badge` styling, `gap-2`) | — | inside popover; ≥1 active value |
 | ResultCount | `<span aria-live="polite">` | — | inside popover; always rendered there |
 | ClearAll | text `button` | — | inside popover; ≥1 active value |
-| HamburgerMenuRow | existing Hamburger Menu (`src/components/HamburgerMenu.tsx`) | `app-header.spec.md` | `< sm` (FilterButton entry lives here on mobile, wrapped in separators) |
-| MobileFilterModal | `<Modal size="full">` + `ModalHeader` + `ScrollArea` in `index.tsx` (`MobileFilterSheet`) | `src/MODALS.md` Pattern B | `< sm`, opened from Hamburger Menu |
+| HamburgerMenuRow | existing Hamburger Menu (`frontend/src/components/HamburgerMenu.tsx`) | `app-header.spec.md` | `< sm` (FilterButton entry lives here on mobile, wrapped in separators) |
+| MobileFilterModal | `<Modal size="full">` + `ModalHeader` + `ScrollArea` in `index.tsx` (`MobileFilterSheet`) | `frontend/src/MODALS.md` Pattern B | `< sm`, opened from Hamburger Menu |
 
 ## Source / Verification Anchors
 
@@ -104,10 +104,10 @@ This order groups the enum-backed facets (type, status, priority — bounded, sh
 |--------|------|---------------|
 | Data contract | `domain-contracts/src/ticket/input.ts` | `TicketFilters` shape — the single filter state |
 | Enum source of truth | `domain-contracts/src/types/schema.ts` | `CRStatuses`, `CRTypes`, `CRPriorities` feed static facet menus |
-| Behavior model | `src/hooks/useBoardFilters.ts` | reducer, persistence, `clearAll` |
-| Header host | `src/components/routes/ProjectRouteHandler.tsx:300` (desktop) / `:351` (mobile) | `Header`/`HeaderContent` — where the filter bar mounts (header__left centerSection) |
-| Header layout | `src/components/Header/header.css` | `header__left` / `header__right` zone definitions |
-| Mobile menu host | `src/components/HamburgerMenu.tsx` | hosts the "Filter · N" row on mobile (wrapped in `border-t`/`border-b` separators) |
+| Behavior model | `frontend/src/hooks/useBoardFilters.ts` | reducer, persistence, `clearAll` |
+| Header host | `frontend/src/components/routes/ProjectRouteHandler.tsx:300` (desktop) / `:351` (mobile) | `Header`/`HeaderContent` — where the filter bar mounts (header__left centerSection) |
+| Header layout | `frontend/src/components/Header/header.css` | `header__left` / `header__right` zone definitions |
+| Mobile menu host | `frontend/src/components/HamburgerMenu.tsx` | hosts the "Filter · N" row on mobile (wrapped in `border-t`/`border-b` separators) |
 | Verification | `tests/e2e/board/board-filter.spec.ts` | add/remove/clear via popover; assert header height never grows; mobile modal opens on tap |
 
 ## Filter State Contract
@@ -164,7 +164,7 @@ All three elements render inline inside `header__left`, **right-aligned** within
 
 - The inline FreeTextSearch and FilterButton are hidden on `< sm` (the header is too crowded with logo + view switcher + hamburger).
 - A **"Filter · N" row** in the Hamburger Menu opens the filter modal. This row is wrapped in separators (`border-t` above, `border-b` below) so the Filter block reads as a distinct section, matching the Sort block's separator pattern. Tapping the Filter row first closes the Hamburger Menu, then opens the modal.
-- The filter modal reuses the **shared `<Modal>` primitive** (`src/components/ui/Modal.tsx`) with `size="full"` (100% width), the same pattern ProjectBrowserPanel uses (`src/MODALS.md` — "Pattern B / constrained"). It is portaled to `document.body` by `<Modal>`, so it naturally escapes the header's `backdrop-blur-xl` containing block. Structure:
+- The filter modal reuses the **shared `<Modal>` primitive** (`frontend/src/components/ui/Modal.tsx`) with `size="full"` (100% width), the same pattern ProjectBrowserPanel uses (`frontend/src/MODALS.md` — "Pattern B / constrained"). It is portaled to `document.body` by `<Modal>`, so it naturally escapes the header's `backdrop-blur-xl` containing block. Structure:
   1. **ModalHeader** (pinned): "Filter" headline + inline free-text search input + close (✕) button.
   2. **ResultCountRow**: `Showing N of M tickets` (left, `aria-live`) + `Clear all` (right). This is the **single** Clear-all — no duplication.
   3. **ScrollArea** (`type="hover"`, Radix): the two-column FacetGrid + ActiveFilterChips, filling the remaining `80dvh`-constrained body. The header stays pinned while the body scrolls.
@@ -209,7 +209,7 @@ All three elements render inline inside `header__left`, **right-aligned** within
 | filter button label | `Filter` / `Filter · N` swap | the single header-level summary of facet state — honest without consuming width |
 | filter block alignment | `justify-end` within `header__left` dead zone | right-aligned next to sort + hamburger; never left-anchored to ProjectSelector |
 | facet grid | `grid grid-cols-2 gap-x-4` | two-column layout; type/status row, priority/assignee row |
-| popover chip | reuses `Badge` styling (`src/components/Badge/`); container uses `gap-2` (project standard) | filter chips and ticket badges share one visual vocabulary |
+| popover chip | reuses `Badge` styling (`frontend/src/components/Badge/`); container uses `gap-2` (project standard) | filter chips and ticket badges share one visual vocabulary |
 | popover scroll | desktop: global `::-webkit-scrollbar` (6px, gray-400 thumb, gray-100 track); mobile: Radix `ScrollArea` (`type="hover"`) inside the constrained `<Modal>` body | matches the project browser's scroll pattern (MODALS.md Pattern B) |
 | mobile menu Filter row | `border-t border-b border-border` separators | visually groups Filter as a distinct menu section (mirrors the Sort block) |
 | mobile strip | horizontally scrollable chip row | never wraps; never shows an empty state |

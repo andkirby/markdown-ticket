@@ -5,7 +5,7 @@ UX contract: `docs/design/surfaces/relationship-badge.spec.md`
 
 ## Rationale
 
-The current `RelationshipBadge` (`src/components/Badge/RelationshipBadge.tsx`) renders every link inline with a comma separator and no project-code elision. On dense board cards with many same-project relationships this produces long, repetitive rows (`🔗 VOC-030, VOC-005, VOC-035, VOC-040, VOC-041`) that wrap and push other badges down. Additionally, link clicks today bubble to the card's `onClick={onEdit}` (`TicketCard.tsx:45`), so a relationship click both navigates and opens the viewer.
+The current `RelationshipBadge` (`frontend/src/components/Badge/RelationshipBadge.tsx`) renders every link inline with a comma separator and no project-code elision. On dense board cards with many same-project relationships this produces long, repetitive rows (`🔗 VOC-030, VOC-005, VOC-035, VOC-040, VOC-041`) that wrap and push other badges down. Additionally, link clicks today bubble to the card's `onClick={onEdit}` (`TicketCard.tsx:45`), so a relationship click both navigates and opens the viewer.
 
 This change makes the badge compact on the board (elision + overflow popover) and stops event propagation on relationship interactions, while preserving full codes in the TicketViewer.
 
@@ -21,12 +21,12 @@ This change makes the badge compact on the board (elision + overflow popover) an
 ## Structure
 
 ```text
-src/components/
+frontend/src/components/
 └── Badge/
     ├── RelationshipBadge.tsx        # updated: displayMode + overflow + stopPropagation
     ├── RelationshipBadge.test.tsx   # updated: elision, overflow, stopPropagation
     └── relationshipLink.ts          # NEW: elision helper (pure, unit-tested)
-src/components/ui/
+frontend/src/components/ui/
 └── popover.tsx                      # NEW: shadcn popover wrapper over @radix-ui/react-popover
 ```
 
@@ -42,7 +42,7 @@ interface RelationshipBadgeProps {
 }
 ```
 
-**UAT 2026-07-16**: elision is now global (`ELIDE_EVERYWHERE = true`), so `displayMode` no longer gates rendering — both board and viewer elide. The prop is retained for a future per-surface settings override. The inline separator is configurable (`RELATIONSHIP_LINK_SEPARATOR`, default `''` = no separator). Both constants live in `src/config/relationshipBadge.ts`; a settings UI item is deferred.
+**UAT 2026-07-16**: elision is now global (`ELIDE_EVERYWHERE = true`), so `displayMode` no longer gates rendering — both board and viewer elide. The prop is retained for a future per-surface settings override. The inline separator is configurable (`RELATIONSHIP_LINK_SEPARATOR`, default `''` = no separator). Both constants live in `frontend/src/config/relationshipBadge.ts`; a settings UI item is deferred.
 
 ## Decisions
 
@@ -61,7 +61,7 @@ The full CR key is always carried in a per-link `title` attribute regardless of 
 
 ### D2 — Overflow: add `@radix-ui/react-popover`, not DropdownMenu
 
-There is no Popover primitive in `src/components/ui/` today. Options considered:
+There is no Popover primitive in `frontend/src/components/ui/` today. Options considered:
 
 | Option | Verdict |
 |---|---|
@@ -73,7 +73,7 @@ There is no Popover primitive in `src/components/ui/` today. Options considered:
 
 ### D3 — `stopPropagation` lives in `RelationshipBadge`, not in `SmartLink`
 
-`SmartLink` (`src/components/SmartLink/index.tsx`) renders plain `<Link>`/`<a>` with no propagation control, and is used in `MarkdownContent` and elsewhere where bubbling may be intentional. Changing `SmartLink` globally is out of scope (flagged in the CR as a separate decision).
+`SmartLink` (`frontend/src/components/SmartLink/index.tsx`) renders plain `<Link>`/`<a>` with no propagation control, and is used in `MarkdownContent` and elsewhere where bubbling may be intentional. Changing `SmartLink` globally is out of scope (flagged in the CR as a separate decision).
 
 Resolution: `RelationshipBadge` wraps each `SmartLink` (inline and popover) in a `<span onClick={(e) => e.stopPropagation()}>` and the `+N` trigger button calls `e.stopPropagation()` before toggling. This mirrors the existing edit-button precedent (`TicketCard.tsx:69-73`). This also fixes the pre-existing double-fire bug for this surface.
 

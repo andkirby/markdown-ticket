@@ -55,7 +55,7 @@ if (filters.query?.trim()) {
 - **Files:** `shared/services/TicketService.ts:988`, `TicketFilters` type
   in `domain-contracts`.
 - **Effect:** Server-side surface search consistent with client
-  `matchesQuery` (`src/utils/ticketFilters.ts:78`).
+  `matchesQuery` (`frontend/src/utils/ticketFilters.ts:78`).
 - Reuse the existing `fuzzyMatch` helper for stylistic consistency.
 
 ### Change 3 — "Full" button → `?full=true` content scan

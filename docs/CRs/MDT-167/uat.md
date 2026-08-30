@@ -41,7 +41,7 @@ Storage decision: browser `localStorage`, following `docs/architecture/preferenc
 ### Slice 1: Badge preference storage
 
 - Objective: Add a typed browser-local preference for visible board ticket card badges.
-- Direct artifacts/files: `src/config/ticketCardBadges.ts`, `src/config/ticketCardBadges.test.ts`, `src/config/localStoragePreferences.ts`
+- Direct artifacts/files: `frontend/src/config/ticketCardBadges.ts`, `frontend/src/config/ticketCardBadges.test.ts`, `frontend/src/config/localStoragePreferences.ts`
 - Direct GREEN targets: `TEST-visible-ticket-card-badges-config`
 - Impacted canonical task IDs: `TASK-2`
 - Why this slice exists: The preference needs validation and defaults before UI or card rendering consume it.
@@ -49,7 +49,7 @@ Storage decision: browser `localStorage`, following `docs/architecture/preferenc
 ### Slice 2: Board settings control and card rendering
 
 - Objective: Let users change visible badges in Settings and reflect that selection on board ticket cards.
-- Direct artifacts/files: `src/components/SettingsModal.tsx`, `src/components/TicketAttributeTags.tsx`, `src/components/TicketCard.tsx`
+- Direct artifacts/files: `frontend/src/components/SettingsModal.tsx`, `frontend/src/components/TicketAttributeTags.tsx`, `frontend/src/components/TicketCard.tsx`
 - Direct GREEN targets: `visible_card_badges_configured`, `TEST-ticket-card-badge-rendering`, `TEST-settings-modal-controls`
 - Impacted canonical task IDs: `TASK-2`, `TASK-3`
 - Why this slice exists: The user-facing control and board rendering must stay in sync without backend involvement.

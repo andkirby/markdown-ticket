@@ -18,23 +18,23 @@ DocumentsLayout
 
 | Child | Component | Spec | Conditional |
 |-------|-----------|------|-------------|
-| DocumentsLayout | `src/components/DocumentsView/DocumentsLayout.tsx` | `documents-view-navigation.spec.md` | documents route |
-| DocumentFilenameTabModel | `src/components/DocumentsView/documentFilenameTabModel.ts` | this spec | selected markdown file |
-| DocumentFilenameTabs | `src/components/DocumentsView/DocumentFilenameTabs.tsx` | this spec | selected file belongs to a filename group |
-| MarkdownViewer | `src/components/DocumentsView/MarkdownViewer.tsx` | `documents-view-file-updates.spec.md` | selected file exists or deleted state is shown |
+| DocumentsLayout | `frontend/src/components/DocumentsView/DocumentsLayout.tsx` | `documents-view-navigation.spec.md` | documents route |
+| DocumentFilenameTabModel | `frontend/src/components/DocumentsView/documentFilenameTabModel.ts` | this spec | selected markdown file |
+| DocumentFilenameTabs | `frontend/src/components/DocumentsView/DocumentFilenameTabs.tsx` | this spec | selected file belongs to a filename group |
+| MarkdownViewer | `frontend/src/components/DocumentsView/MarkdownViewer.tsx` | `documents-view-file-updates.spec.md` | selected file exists or deleted state is shown |
 
 ## Source files
 
 | Type | Path |
 |------|------|
-| Tabs component | `src/components/DocumentsView/DocumentFilenameTabs.tsx` |
-| View model | `src/components/DocumentsView/documentFilenameTabModel.ts` |
-| Layout integration | `src/components/DocumentsView/DocumentsLayout.tsx` |
+| Tabs component | `frontend/src/components/DocumentsView/DocumentFilenameTabs.tsx` |
+| View model | `frontend/src/components/DocumentsView/documentFilenameTabModel.ts` |
+| Layout integration | `frontend/src/components/DocumentsView/DocumentsLayout.tsx` |
 | Shared parser | `shared/services/filenameNamespace.ts` |
 | Ticket namespace adapter | `shared/services/ticket/subdocuments/namespace.ts` |
-| CSS | `src/components/DocumentsView/documents-view.css` |
-| Component tests | `src/components/DocumentsView/DocumentFilenameTabs.test.tsx` |
-| Resolver tests | `src/components/DocumentsView/documentFilenameTabs.test.ts` |
+| CSS | `frontend/src/components/DocumentsView/documents-view.css` |
+| Component tests | `frontend/src/components/DocumentsView/DocumentFilenameTabs.test.tsx` |
+| Resolver tests | `frontend/src/components/DocumentsView/documentFilenameTabs.test.ts` |
 | E2E tests | `tests/e2e/documents/filename-tabs.spec.ts` |
 
 ## Grouping Rules
@@ -92,11 +92,11 @@ DocumentsLayout
 
 | Element | Class | Source |
 |---------|-------|--------|
-| tab list | `.tab__list` | shared Radix tabs pattern from `src/components/SettingsModal/settings.css` |
-| tab trigger | `.tab` | shared Radix tabs pattern from `src/components/SettingsModal/settings.css` |
-| horizontal overflow | `.scrollbar-hide` | `src/styles/utilities.css` |
-| filename tabs wrapper | `.documents-view__filename-tabs` | `src/components/DocumentsView/documents-view.css` |
-| viewer panel | `.documents-view__viewer-panel` | `src/components/DocumentsView/documents-view.css` |
+| tab list | `.tab__list` | shared Radix tabs pattern from `frontend/src/components/SettingsModal/settings.css` |
+| tab trigger | `.tab` | shared Radix tabs pattern from `frontend/src/components/SettingsModal/settings.css` |
+| horizontal overflow | `.scrollbar-hide` | `frontend/src/styles/utilities.css` |
+| filename tabs wrapper | `.documents-view__filename-tabs` | `frontend/src/components/DocumentsView/documents-view.css` |
+| viewer panel | `.documents-view__viewer-panel` | `frontend/src/components/DocumentsView/documents-view.css` |
 
 ## Extension notes
 

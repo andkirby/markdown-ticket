@@ -11,7 +11,7 @@
 ## Project Structure
 
 ```text
-src/
+frontend/src/
   app.ts          # Express app (no listen)
   server.ts       # Entry point (calls listen)
 test/
@@ -26,7 +26,7 @@ openapi.yaml      # API specification
 ## App Separation Pattern
 
 ```typescript
-// src/app.ts — export app, don't listen
+// frontend/src/app.ts — export app, don't listen
 import express from 'express'
 
 export const app = express()
@@ -35,7 +35,7 @@ app.get('/health', (req, res) => res.json({ ok: true }))
 ```
 
 ```typescript
-// src/server.ts — production entry point
+// frontend/src/server.ts — production entry point
 import { app } from './app'
 
 app.listen(process.env.PORT || 3000)
@@ -65,8 +65,8 @@ export default {
 import jestOpenAPI from 'jest-openapi'
 // test/api/users.test.ts
 import request from 'supertest'
-import { app } from '../../src/app'
-import { db } from '../../src/db'
+import { app } from '../../frontend/src/app'
+import { db } from '../../frontend/src/db'
 
 jestOpenAPI('./openapi.yaml')
 

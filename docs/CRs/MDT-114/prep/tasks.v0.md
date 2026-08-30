@@ -658,7 +658,7 @@ npm test -- --coverage --coveragePathIgnorePatterns="dist/"
 ```bash
 # Run TypeScript metrics on refactored code
 cd mcp-server
-npx ts-metrics src/tools/handlers/sectionHandlers.ts
+npx ts-metrics frontend/src/tools/handlers/sectionHandlers.ts
 
 # Compare with baseline (from prep/architecture.md):
 # Before: MI 19.97%, CC 40

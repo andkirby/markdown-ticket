@@ -15,14 +15,14 @@ implementationNotes: Post-update completed: CONFIG_USER_SPECIFICATION.md now con
 preservation
 
 ### Problem
-- `src/config/tocConfig.ts`, `src/config/sorting.ts`, `src/config/documentSorting.ts`, and `src/components/ViewModeSwitcher/useViewModePersistence.ts` each handle `localStorage` directly.
+- `frontend/src/config/tocConfig.ts`, `frontend/src/config/sorting.ts`, `frontend/src/config/documentSorting.ts`, and `frontend/src/components/ViewModeSwitcher/useViewModePersistence.ts` each handle `localStorage` directly.
 - `docs/CONFIG_USER_SPECIFICATION.md`, `docs/CONFIG_GLOBAL_SPECIFICATION.md`, and `docs/CRs/MDT-129/architecture.md` describe preference storage, but no single decision rule exists in canonical config docs.
 - `domain-contracts/src/app-config/schema.ts` and `server/routes/system.ts` define a backend-persisted selector pattern, but the boundary between browser-only preferences and backend-persisted preferences is implicit.
 
 ### Affected Artifacts
 - `docs/architecture/preference-storage-architecture.md` (architecture note and decision record)
 - `docs/CONFIG_USER_SPECIFICATION.md` (canonical user preference guidance)
-- `src/config/*` (browser-only preference helpers)
+- `frontend/src/config/*` (browser-only preference helpers)
 - `domain-contracts/src/app-config/schema.ts` (backend-persisted preference contracts)
 - `server/routes/system.ts` (backend-persisted preference endpoints)
 - `cli/src/utils/cliConfig.ts` (CLI boundary example)
@@ -58,7 +58,7 @@ Standardize preference tiers while keeping browser-only state frontend-local by 
 
 | Artifact | Type | Purpose |
 |----------|------|---------|
-| `src/config/localStoragePreferences.ts` | Utility | Typed safe JSON read/write for browser-only preferences |
+| `frontend/src/config/localStoragePreferences.ts` | Utility | Typed safe JSON read/write for browser-only preferences |
 
 ### Modified Artifacts
 
@@ -66,21 +66,21 @@ Standardize preference tiers while keeping browser-only state frontend-local by 
 |----------|-------------|--------------|
 | `docs/CONFIG_USER_SPECIFICATION.md` | Documentation | Add preference storage decision rule |
 | `docs/architecture/preference-storage-architecture.md` | Documentation | Mark current behavior versus recommendations |
-| `src/config/tocConfig.ts` | Refactor | Use `localStoragePreferences` helper with legacy key read |
-| `src/config/documentSorting.ts` | Refactor | Use `localStoragePreferences` helper with project-scoped key |
+| `frontend/src/config/tocConfig.ts` | Refactor | Use `localStoragePreferences` helper with legacy key read |
+| `frontend/src/config/documentSorting.ts` | Refactor | Use `localStoragePreferences` helper with project-scoped key |
 
 ### Integration Points
 
 | From | To | Interface |
 |------|----|-----------|
-| React components | `src/config/*` helpers | Getter/setter functions |
-| `src/config/*` helpers | `src/config/localStoragePreferences.ts` | Typed read/write utility |
+| React components | `frontend/src/config/*` helpers | Getter/setter functions |
+| `frontend/src/config/*` helpers | `frontend/src/config/localStoragePreferences.ts` | Typed read/write utility |
 | Backend-persisted prefs | `domain-contracts/src/app-config/schema.ts` | Zod schemas and defaults |
 | Backend-persisted prefs | `server/routes/system.ts` | Config route handlers |
 
 ### Key Patterns
 
-- Browser-only state: `src/config/*` helper owns key, defaults, getter, setter.
+- Browser-only state: `frontend/src/config/*` helper owns key, defaults, getter, setter.
 - Backend-persisted stable preference: `user.toml` shape is defined in `domain-contracts`.
 - Backend-persisted mutable state: JSON file shape is defined in `domain-contracts`.
 - CLI boundary: CLI consumes shared behavior only when preference affects non-UI output.
@@ -89,9 +89,9 @@ Standardize preference tiers while keeping browser-only state frontend-local by 
 
 ### Functional
 - [x] `docs/CONFIG_USER_SPECIFICATION.md` contains a storage decision rule for browser-only, per-user, mutable user-state, and project/system settings.
-- [x] `src/config/localStoragePreferences.ts` exports typed safe read/write helpers with default fallback.
-- [x] `src/config/tocConfig.ts` uses the shared helper without losing existing `markdown-ticket-toc-*` values.
-- [x] `src/config/documentSorting.ts` uses the shared helper for project-scoped document sort preferences.
+- [x] `frontend/src/config/localStoragePreferences.ts` exports typed safe read/write helpers with default fallback.
+- [x] `frontend/src/config/tocConfig.ts` uses the shared helper without losing existing `markdown-ticket-toc-*` values.
+- [x] `frontend/src/config/documentSorting.ts` uses the shared helper for project-scoped document sort preferences.
 - [x] No backend route is added for visual-only collapse state.
 - [x] No CLI behavior changes unless a preference is promoted to shared product behavior.
 
@@ -114,7 +114,7 @@ Standardize preference tiers while keeping browser-only state frontend-local by 
 - Documentation: `docs/CONFIG_USER_SPECIFICATION.md` and `docs/architecture/preference-storage-architecture.md` contain the preference tier rules.
 
 ### Metrics
-- Verifiable artifacts: `src/config/localStoragePreferences.ts`, updated config helpers, updated docs, and unit tests.
+- Verifiable artifacts: `frontend/src/config/localStoragePreferences.ts`, updated config helpers, updated docs, and unit tests.
 
 ## 7. Deployment
 

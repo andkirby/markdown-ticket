@@ -4,24 +4,24 @@
 
 | Test | RED Before Implementation | GREEN After Implementation |
 |------|---------------------------|----------------------------|
-| `src/components/SwimlaneBoard/helpers.test.ts` | Failed: missing `./helpers` module; later failed for childless Proposed epic lane omission; later failed for missing `filterLanesByVisibility` export; round 7 failed for missing `matchesTicketSearch` / `filterLanesBySearch` exports; round 8 failed for lane-removal semantics | `19 pass / 0 fail` |
-| `src/components/ViewModeSwitcher/ViewModeSwitcher.test.tsx` | Failed against old Board/List toggle; missing icon-only peer buttons; later failed for "Swimlanes" label (renamed to "Epics") | `4 pass / 0 fail` |
-| `src/components/TicketCard.test.tsx` | Failed: `showBadges={false}` still rendered `.badge` rows | `2 pass / 0 fail` |
-| `src/components/SwimlaneBoard/SwimlaneBoard.test.tsx` | Failed: epic key was a bare `<span>` (no TicketCode glyph); epic-dot present; chevron on title row; lifecycle pinned to bottom; later failed for non-toggleable label, missing role=button, default-expanded assumption, missing persistence, and key-after-title; round 7 failed for missing toolbar search field; round 8 failed for lane-removal semantics | `29 pass / 0 fail` |
-| `src/__tests__/routes.test.ts` | Failed: missing `ROUTE_PROJECT_EPICS` export + `buildProjectPath('epics')` | `24 pass / 0 fail` |
-| `src/components/SettingsModal.test.tsx` | Failed: Default View select had no "epics" option | `7 pass / 0 fail` |
+| `frontend/src/components/SwimlaneBoard/helpers.test.ts` | Failed: missing `./helpers` module; later failed for childless Proposed epic lane omission; later failed for missing `filterLanesByVisibility` export; round 7 failed for missing `matchesTicketSearch` / `filterLanesBySearch` exports; round 8 failed for lane-removal semantics | `19 pass / 0 fail` |
+| `frontend/src/components/ViewModeSwitcher/ViewModeSwitcher.test.tsx` | Failed against old Board/List toggle; missing icon-only peer buttons; later failed for "Swimlanes" label (renamed to "Epics") | `4 pass / 0 fail` |
+| `frontend/src/components/TicketCard.test.tsx` | Failed: `showBadges={false}` still rendered `.badge` rows | `2 pass / 0 fail` |
+| `frontend/src/components/SwimlaneBoard/SwimlaneBoard.test.tsx` | Failed: epic key was a bare `<span>` (no TicketCode glyph); epic-dot present; chevron on title row; lifecycle pinned to bottom; later failed for non-toggleable label, missing role=button, default-expanded assumption, missing persistence, and key-after-title; round 7 failed for missing toolbar search field; round 8 failed for lane-removal semantics | `29 pass / 0 fail` |
+| `frontend/src/__tests__/routes.test.ts` | Failed: missing `ROUTE_PROJECT_EPICS` export + `buildProjectPath('epics')` | `24 pass / 0 fail` |
+| `frontend/src/components/SettingsModal.test.tsx` | Failed: Default View select had no "epics" option | `7 pass / 0 fail` |
 | `tests/e2e/board/swimlane-board.spec.ts` | `3 failed`: missing `board-mode-epics-toggle`; later failed for childless Proposed epic lane omission and visible default swimlane badges; later failed for `/epics` deep-link + flat-toggle race; round 6 added the column-collapse case; round 7 added the toolbar-search case | `11 passed` |
 | `server/tests/integration/api.metadata.test.ts` | Failed: metadata list response omitted `level` for explicit epics | `14 passed` |
 
 ## Verification Commands
 
 ```bash
-bun test --isolate src/components/SwimlaneBoard/helpers.test.ts
-bun test --isolate src/components/SwimlaneBoard/SwimlaneBoard.test.tsx
-bun test --isolate src/components/ViewModeSwitcher/ViewModeSwitcher.test.tsx
-bun test --isolate src/components/TicketCard.test.tsx
-bun test --isolate src/__tests__/routes.test.ts
-bun test --isolate src/components/SettingsModal.test.tsx
+bun test --isolate frontend/src/components/SwimlaneBoard/helpers.test.ts
+bun test --isolate frontend/src/components/SwimlaneBoard/SwimlaneBoard.test.tsx
+bun test --isolate frontend/src/components/ViewModeSwitcher/ViewModeSwitcher.test.tsx
+bun test --isolate frontend/src/components/TicketCard.test.tsx
+bun test --isolate frontend/src/__tests__/routes.test.ts
+bun test --isolate frontend/src/components/SettingsModal.test.tsx
 bunx playwright test tests/e2e/board/swimlane-board.spec.ts --project=chromium
 bun run --cwd server jest tests/integration/api.metadata.test.ts --runInBand
 ```

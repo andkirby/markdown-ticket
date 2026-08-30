@@ -13,7 +13,7 @@
 
 **Milestone**: M0 - Runner and file-path readiness
 
-**Structure**: `shared/services/filenameNamespace.ts`, `src/components/DocumentsView/documentFilenameTabModel.ts`, `src/components/DocumentsView/DocumentFilenameTabs.tsx`
+**Structure**: `shared/services/filenameNamespace.ts`, `frontend/src/components/DocumentsView/documentFilenameTabModel.ts`, `frontend/src/components/DocumentsView/DocumentFilenameTabs.tsx`
 
 **Makes GREEN (Automated Tests)**:
 - None. This task only creates missing module entry points and verifies runners are available.
@@ -23,15 +23,15 @@
 
 **Creates**:
 - `shared/services/filenameNamespace.ts`
-- `src/components/DocumentsView/documentFilenameTabModel.ts`
-- `src/components/DocumentsView/DocumentFilenameTabs.tsx`
+- `frontend/src/components/DocumentsView/documentFilenameTabModel.ts`
+- `frontend/src/components/DocumentsView/DocumentFilenameTabs.tsx`
 
 **Modifies**:
 - None
 
 **Must Not Touch**:
 - `server/services/DocumentService.ts`
-- `src/components/TicketDetail/**`
+- `frontend/src/components/TicketDetail/**`
 - `shared/services/ticket/subdocuments/**`
 - document tree discovery code
 
@@ -51,7 +51,7 @@
 
 ```bash
 bun run --cwd shared jest tests/services/filenameNamespace.test.ts tests/services/ticket/namespace.test.ts --runInBand
-bun test ./src
+bun test ./frontend/src
 bun run --cwd server jest tests/api/documents.test.ts --runInBand
 bunx playwright test tests/e2e/documents/filename-tabs.spec.ts --project=chromium
 ```
@@ -85,8 +85,8 @@ bunx playwright test tests/e2e/documents/filename-tabs.spec.ts --project=chromiu
 - `shared/tests/services/ticket/namespace.test.ts`
 
 **Must Not Touch**:
-- `src/components/DocumentsView/**`
-- `src/components/TicketDetail/**`
+- `frontend/src/components/DocumentsView/**`
+- `frontend/src/components/TicketDetail/**`
 - `server/services/DocumentService.ts`
 - `tests/e2e/**`
 
@@ -120,10 +120,10 @@ bun run --cwd shared jest tests/services/filenameNamespace.test.ts tests/service
 
 **Milestone**: M2 - Documents resolver and UI integration
 
-**Structure**: `src/components/DocumentsView/documentFilenameTabModel.ts`
+**Structure**: `frontend/src/components/DocumentsView/documentFilenameTabModel.ts`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-document-filename-tabs-model` -> `src/components/DocumentsView/documentFilenameTabs.test.ts`: `Documents filename tab resolver groups markdown variants without changing physical files`
+- `TEST-document-filename-tabs-model` -> `frontend/src/components/DocumentsView/documentFilenameTabs.test.ts`: `Documents filename tab resolver groups markdown variants without changing physical files`
 
 **Enables (BDD)**:
 - `grouped_variants_show_as_tabs` (BR-1.1) - needs Tasks 3 and 4 to complete
@@ -136,14 +136,14 @@ bun run --cwd shared jest tests/services/filenameNamespace.test.ts tests/service
 **Boundary**: Keep the document tree physical and unchanged; grouping is a viewer model only.
 
 **Creates**:
-- `src/components/DocumentsView/documentFilenameTabModel.ts`
+- `frontend/src/components/DocumentsView/documentFilenameTabModel.ts`
 
 **Modifies**:
-- `src/components/DocumentsView/documentFilenameTabs.test.ts`
-- `src/components/DocumentsView/DocumentsLayout.tsx` only if needed to type-check resolver inputs without wiring UI
+- `frontend/src/components/DocumentsView/documentFilenameTabs.test.ts`
+- `frontend/src/components/DocumentsView/DocumentsLayout.tsx` only if needed to type-check resolver inputs without wiring UI
 
 **Must Not Touch**:
-- `src/components/TicketDetail/**`
+- `frontend/src/components/TicketDetail/**`
 - `shared/services/ticket/subdocuments/**`
 - `server/services/DocumentService.ts`
 - backend document discovery endpoints
@@ -165,7 +165,7 @@ bun run --cwd shared jest tests/services/filenameNamespace.test.ts tests/service
 **Verify**:
 
 ```bash
-bun test src/components/DocumentsView/documentFilenameTabs.test.ts
+bun test frontend/src/components/DocumentsView/documentFilenameTabs.test.ts
 ```
 
 **Done when**:
@@ -179,11 +179,11 @@ bun test src/components/DocumentsView/documentFilenameTabs.test.ts
 
 **Milestone**: M2 - Documents resolver and UI integration
 
-**Structure**: `src/components/DocumentsView/DocumentFilenameTabs.tsx`, `src/components/DocumentsView/DocumentsLayout.tsx`, `src/components/DocumentsView/MarkdownViewer.tsx`, `src/components/DocumentsView/documents-view.css`, `src/components/shared/RelativeTimestamp.tsx`, `src/components/shared/relative-timestamp.css`, `src/config/documentNavigation.ts`
+**Structure**: `frontend/src/components/DocumentsView/DocumentFilenameTabs.tsx`, `frontend/src/components/DocumentsView/DocumentsLayout.tsx`, `frontend/src/components/DocumentsView/MarkdownViewer.tsx`, `frontend/src/components/DocumentsView/documents-view.css`, `frontend/src/components/shared/RelativeTimestamp.tsx`, `frontend/src/components/shared/relative-timestamp.css`, `frontend/src/config/documentNavigation.ts`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-document-filename-tabs-component` -> `src/components/DocumentsView/DocumentFilenameTabs.test.tsx`: `Document filename tab component renders project tab UI and selects physical file paths`
-- `TEST-document-metadata-presentation` -> `src/components/DocumentsView/MarkdownViewer.test.tsx`: `Document metadata timestamp uses shared floating presentation classes`
+- `TEST-document-filename-tabs-component` -> `frontend/src/components/DocumentsView/DocumentFilenameTabs.test.tsx`: `Document filename tab component renders project tab UI and selects physical file paths`
+- `TEST-document-metadata-presentation` -> `frontend/src/components/DocumentsView/MarkdownViewer.test.tsx`: `Document metadata timestamp uses shared floating presentation classes`
 
 **Enables (BDD)**:
 - `opening_tree_variant_selects_tab` (BR-1.2) - needs Task 4 to complete
@@ -194,20 +194,20 @@ bun test src/components/DocumentsView/documentFilenameTabs.test.ts
 **Boundary**: `MarkdownViewer` remains a one-file renderer; it must not know logical grouping rules.
 
 **Creates**:
-- `src/components/DocumentsView/DocumentFilenameTabs.tsx`
-- `src/components/DocumentsView/DocumentFilenameTabs.test.tsx`
+- `frontend/src/components/DocumentsView/DocumentFilenameTabs.tsx`
+- `frontend/src/components/DocumentsView/DocumentFilenameTabs.test.tsx`
 
 **Modifies**:
-- `src/components/DocumentsView/DocumentsLayout.tsx`
-- `src/components/DocumentsView/MarkdownViewer.tsx`
-- `src/components/DocumentsView/documents-view.css`
-- `src/components/shared/RelativeTimestamp.tsx`
-- `src/components/shared/relative-timestamp.css`
-- `src/config/documentNavigation.ts`
+- `frontend/src/components/DocumentsView/DocumentsLayout.tsx`
+- `frontend/src/components/DocumentsView/MarkdownViewer.tsx`
+- `frontend/src/components/DocumentsView/documents-view.css`
+- `frontend/src/components/shared/RelativeTimestamp.tsx`
+- `frontend/src/components/shared/relative-timestamp.css`
+- `frontend/src/config/documentNavigation.ts`
 
 **Must Not Touch**:
-- `src/components/TicketDetail/**`
-- `src/components/DocumentsView/DocumentTree.tsx` unless a test hook already exists and must be passed through
+- `frontend/src/components/TicketDetail/**`
+- `frontend/src/components/DocumentsView/DocumentTree.tsx` unless a test hook already exists and must be passed through
 - `server/services/DocumentService.ts`
 - `tests/e2e/documents/filename-tabs.spec.ts`
 
@@ -219,7 +219,7 @@ bun test src/components/DocumentsView/documentFilenameTabs.test.ts
 
 **Exclude**: No new route shape, no backend group endpoint, no virtual tree nodes, no document editing changes.
 
-**Anti-duplication**: Import the Documents-view resolver from `src/components/DocumentsView/documentFilenameTabModel.ts`; do not reimplement grouping inside React components.
+**Anti-duplication**: Import the Documents-view resolver from `frontend/src/components/DocumentsView/documentFilenameTabModel.ts`; do not reimplement grouping inside React components.
 
 **Duplication Guard**:
 - Check `DocumentsLayout` for existing selected-file ownership before adding state.
@@ -229,7 +229,7 @@ bun test src/components/DocumentsView/documentFilenameTabs.test.ts
 **Verify**:
 
 ```bash
-bun test src/components/DocumentsView/DocumentFilenameTabs.test.tsx src/components/DocumentsView/MarkdownViewer.test.tsx src/components/shared/RelativeTimestamp.test.tsx
+bun test frontend/src/components/DocumentsView/DocumentFilenameTabs.test.tsx frontend/src/components/DocumentsView/MarkdownViewer.test.tsx frontend/src/components/shared/RelativeTimestamp.test.tsx
 ```
 
 **Done when**:
@@ -271,12 +271,12 @@ bun test src/components/DocumentsView/DocumentFilenameTabs.test.tsx src/componen
 - `server/services/DocumentService.ts`
 - `server/tests/api/documents.test.ts`
 - `tests/e2e/documents/filename-tabs.spec.ts`
-- `src/components/DocumentsView/DocumentsLayout.tsx` only for native document SSE reconciliation or deletion fallback defects found by E2E
-- `src/config/documentNavigation.ts` only for active physical path URL/query defects found by E2E
-- `src/components/DocumentsView/MarkdownViewer.tsx` only for metadata/content defects found by E2E
+- `frontend/src/components/DocumentsView/DocumentsLayout.tsx` only for native document SSE reconciliation or deletion fallback defects found by E2E
+- `frontend/src/config/documentNavigation.ts` only for active physical path URL/query defects found by E2E
+- `frontend/src/components/DocumentsView/MarkdownViewer.tsx` only for metadata/content defects found by E2E
 
 **Must Not Touch**:
-- `src/components/TicketDetail/**`
+- `frontend/src/components/TicketDetail/**`
 - `shared/services/ticket/subdocuments/**`
 - document tree discovery ordering logic
 - files on disk outside isolated test fixtures

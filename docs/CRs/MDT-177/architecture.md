@@ -21,7 +21,7 @@ server/
     auth.ts                  # owner session and env read-token compatibility
     share.ts                 # share-link session exchange
   server.ts                  # route mounting order
-src/
+frontend/src/
   App.tsx                    # /invite route and read-only owner-unlock overlay owner
   auth/AuthSessionProvider.tsx
   components/
@@ -33,7 +33,7 @@ tests/
   e2e/sharing/read-access-journey.spec.ts
   e2e/utils/selectors.ts
 domain-contracts/
-  src/access/schema.ts       # access vocabulary and read-token API DTO owner
+  frontend/src/access/schema.ts       # access vocabulary and read-token API DTO owner
 ```
 
 Runtime code owns token/session behavior. The Playwright spec and selector constants are test scaffolding only and must not become production dependencies.
@@ -147,7 +147,7 @@ When `PUBLIC_ORIGIN` exists, Settings uses the server-selected origin and does n
 
 ## Settings Sharing UI
 
-`src/components/SettingsModal.tsx` keeps the owner-only Sharing tab. `src/components/SettingsModal/ReadAccessTokens.tsx` owns the named read-access section:
+`frontend/src/components/SettingsModal.tsx` keeps the owner-only Sharing tab. `frontend/src/components/SettingsModal/ReadAccessTokens.tsx` owns the named read-access section:
 
 - create named access with name, multi-project scope, and optional expiry
 - show one-time raw token/invite result after creation or invite generation
@@ -163,8 +163,8 @@ Read-only owner unlock is not the same state as full locked startup.
 
 State ownership:
 
-- `src/App.tsx` owns overlay open/close and overlay error state so route, selected project, and view mode remain stable.
-- `src/auth/AuthSessionProvider.tsx` owns session exchange and access-mode transitions.
+- `frontend/src/App.tsx` owns overlay open/close and overlay error state so route, selected project, and view mode remain stable.
+- `frontend/src/auth/AuthSessionProvider.tsx` owns session exchange and access-mode transitions.
 - `AuthStatusAction` opens the overlay for read-only mode and the existing full locked panel for locked mode.
 - `AuthUnlockPanel` supports a modal owner-unlock variant with Cancel, Escape, backdrop close, generic owner-token error, and no read-token fallback.
 
@@ -180,14 +180,14 @@ The active ProjectSelector rail card opens the project browser; it must not navi
 
 ## Header Access Chrome
 
-`src/components/HamburgerMenu.tsx` owns access chrome:
+`frontend/src/components/HamburgerMenu.tsx` owns access chrome:
 
 - green dot: owner/admin access
 - orange dot: share/read-token access beyond public projects
 - no dot: public-only read-only, locked, backend-down, or local no-auth mode
 - `Read only` text appears inside the hamburger menu, not inline in the header
 
-`src/auth/AuthSessionProvider.tsx` derives the indicator from owner session state and read-session authentication. Anonymous public projects produce read-only access with no indicator dot.
+`frontend/src/auth/AuthSessionProvider.tsx` derives the indicator from owner session state and read-session authentication. Anonymous public projects produce read-only access with no indicator dot.
 
 ## Project Selector
 

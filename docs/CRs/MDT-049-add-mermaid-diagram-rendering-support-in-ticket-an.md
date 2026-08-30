@@ -52,10 +52,10 @@ Integrate Mermaid.js library directly into the frontend with custom processing p
 - Ensure cross-browser compatibility
 
 ### Components Modified
-- `src/utils/mermaid.ts`: Core mermaid processing and rendering logic
-- `src/components/TicketViewer.tsx`: Integration in ticket modal
-- `src/components/DocumentsView/MarkdownViewer.tsx`: Integration in document view
-- `src/components/UI/FullscreenWrapper.tsx`: Reusable fullscreen component
+- `frontend/src/utils/mermaid.ts`: Core mermaid processing and rendering logic
+- `frontend/src/components/TicketViewer.tsx`: Integration in ticket modal
+- `frontend/src/components/DocumentsView/MarkdownViewer.tsx`: Integration in document view
+- `frontend/src/components/UI/FullscreenWrapper.tsx`: Reusable fullscreen component
 
 ## 4. Acceptance Criteria
 
@@ -105,9 +105,9 @@ None required - implementation is complete and functional.
 ## 6. References
 
 ### Code Changes
-- **Primary Implementation**: `src/utils/mermaid.ts` - Core mermaid processing and fullscreen functionality
-- **UI Integration**: `src/components/TicketViewer.tsx`, `src/components/DocumentsView/MarkdownViewer.tsx`
-- **Reusable Component**: `src/components/UI/FullscreenWrapper.tsx` - Generic fullscreen wrapper for future use
+- **Primary Implementation**: `frontend/src/utils/mermaid.ts` - Core mermaid processing and fullscreen functionality
+- **UI Integration**: `frontend/src/components/TicketViewer.tsx`, `frontend/src/components/DocumentsView/MarkdownViewer.tsx`
+- **Reusable Component**: `frontend/src/components/UI/FullscreenWrapper.tsx` - Generic fullscreen wrapper for future use
 
 ### External Dependencies
 - **Mermaid.js**: Diagram rendering library

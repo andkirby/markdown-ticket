@@ -11,7 +11,7 @@ Related artifacts:
 - Spatial boundary partner: `board-filter-bar.spec.md` §"Spatial boundary"
 - Drag-drop contract reused: `board-layout.spec.md` "Drag-and-Drop"
 - App shell it slots into: `app-header.spec.md`
-- Persistence pattern mirrored: `src/config/documentFavs.ts`, `domain-contracts/src/app-config/schema.ts` (`DocumentFavItem`)
+- Persistence pattern mirrored: `frontend/src/config/documentFavs.ts`, `domain-contracts/src/app-config/schema.ts` (`DocumentFavItem`)
 
 ## The one rule
 
@@ -93,7 +93,7 @@ pin owns the left rail. Stated from both sides in `board-filter-bar.spec.md` §"
 ## Composition
 
 ```text
-App content row (src/components/routes/ProjectRouteHandler.tsx)   ← PinRail + content siblings
+App content row (frontend/src/components/routes/ProjectRouteHandler.tsx)   ← PinRail + content siblings
 ├── PinRail
 │   ├── PinToggleButton                       (Pin icon: filled=--primary when pinned, outline when unpinned)
 │   └── PinList (overflow-y-auto, flex-col, gap-1.5)
@@ -122,13 +122,13 @@ Manual reordering is deferred (IDEA-002).
 
 | Child | Component | Spec | Conditional |
 |-------|-----------|------|-------------|
-| PinRail | `src/components/PinRail/index.tsx` (new) | this file | feature enabled (Settings → Board → Pin rail) |
+| PinRail | `frontend/src/components/PinRail/index.tsx` (new) | this file | feature enabled (Settings → Board → Pin rail) |
 | PinToggleButton | inline in `PinRail` | — | always (floating button when collapsed; rail-top button when open) |
 | PinList | inline in `PinRail` | — | rail open (pinned or transient) |
-| PinItem | `src/components/PinRail/PinItem.tsx` (new) | — | one per pin |
-| PinTooltip | `src/components/PinRail/PinTooltip.tsx` (new) or shared `Tooltip`/`HoverCard` | — | pointer hover on a PinItem |
+| PinItem | `frontend/src/components/PinRail/PinItem.tsx` (new) | — | one per pin |
+| PinTooltip | `frontend/src/components/PinRail/PinTooltip.tsx` (new) or shared `Tooltip`/`HoverCard` | — | pointer hover on a PinItem |
 | UnpinButton | inline in `PinItem` | — | pointer hover on a PinItem; hidden in read-only |
-| StatusBadge | `src/components/Badge/` | `ticket-card.spec.md` / `BADGE_ARCHITECTURE.md` | inside the tooltip |
+| StatusBadge | `frontend/src/components/Badge/` | `ticket-card.spec.md` / `BADGE_ARCHITECTURE.md` | inside the tooltip |
 
 ### Mount site (ProjectRouteHandler.tsx)
 
@@ -151,12 +151,12 @@ Manual reordering is deferred (IDEA-002).
 
 | Anchor | Path | Why It Exists |
 |--------|------|---------------|
-| App shell insertion | `src/components/routes/ProjectRouteHandler.tsx:371` (`flex-1 overflow-hidden` content row) | the exact row `PinRail + content` replaces |
-| Drag-drop contract | `src/components/routes/ProjectRouteHandler.tsx:383` (`DndProvider`, lifted here by MDT-197), `src/components/Column/index.tsx:73` (`useDrag` type `'ticket'`) | the DnD system the rail reuses — **see Code Drift** |
-| Persistence pattern | `src/config/documentFavs.ts`, `server/controllers/DocumentController.ts:putDocumentFavs`, `server/routes/documents.ts:115` (`PUT /favs`) | the whole-list-replace user-selection pattern to mirror for `/api/pins` |
+| App shell insertion | `frontend/src/components/routes/ProjectRouteHandler.tsx:371` (`flex-1 overflow-hidden` content row) | the exact row `PinRail + content` replaces |
+| Drag-drop contract | `frontend/src/components/routes/ProjectRouteHandler.tsx:383` (`DndProvider`, lifted here by MDT-197), `frontend/src/components/Column/index.tsx:73` (`useDrag` type `'ticket'`) | the DnD system the rail reuses — **see Code Drift** |
+| Persistence pattern | `frontend/src/config/documentFavs.ts`, `server/controllers/DocumentController.ts:putDocumentFavs`, `server/routes/documents.ts:115` (`PUT /favs`) | the whole-list-replace user-selection pattern to mirror for `/api/pins` |
 | Pin schema home | `domain-contracts/src/app-config/schema.ts` (`DocumentFavItem`/`DocumentFavState` are the sibling to copy for `PinItem`/`PinState`) | where the validated pin types must live |
 | Spatial boundary | `docs/design/surfaces/board-filter-bar.spec.md` §"Spatial boundary" | the contract this surface is the other half of |
-| Access mode source | `src/hooks/useProjectManager.ts` (`accessMode`, `canWriteTickets`) | drives read-only pin/unpin gating |
+| Access mode source | `frontend/src/hooks/useProjectManager.ts` (`accessMode`, `canWriteTickets`) | drives read-only pin/unpin gating |
 | Verification | `tests/e2e/` (new: `pin-rail.spec.ts`) + `server/tests/api/` (new: `pins.test.ts` mirroring `document-favs.test.ts`) | drag-to-pin, click-to-open, hover-unpin, persistence, cross-project, read-only |
 
 ## Pin State Contract
@@ -245,7 +245,7 @@ PinTooltip (portal to body; positioned beside the item)
 ```
 
 - **The ticket key is rendered via the canonical `<TicketCode>` component**
-  (`src/components/TicketCode.tsx`) — the single source of the "priority glyph before key" invariant
+  (`frontend/src/components/TicketCode.tsx`) — the single source of the "priority glyph before key" invariant
   shared with the board card, list row, viewer, and QuickSearch. The tooltip must **never**
   hand-compose `<PriorityIcon> + code` (that is how surfaces drift out of sync — see the invariant
   docstring in `TicketCode.tsx`). Passing `priority={metadata?.priority}` drives the colored glyph;

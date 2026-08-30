@@ -77,7 +77,7 @@ relatedTickets: MDT-093
 - **Sorting**: Alphanumerical within each namespace
 - **API approach**: Dot-notation files appear as virtual folders in subdocuments array (backward compatible)
 - **Backend**: Use existing sub-document system, no new service needed
-- **Frontend**: `src/components/TicketDetail/SubDocumentTabs.tsx`
+- **Frontend**: `frontend/src/components/TicketDetail/SubDocumentTabs.tsx`
 - **Types**: `shared/types/Document.ts`
 - **Tests**: `server/src/__tests__/services/DocumentService.test.ts`
 
@@ -103,7 +103,7 @@ relatedTickets: MDT-093
 ### Modified Artifacts
 | File | Change |
 |------|--------|
-| `src/components/TicketDetail/SubDocumentTabs.tsx` | Add namespace grouping logic, display nested tabs |
+| `frontend/src/components/TicketDetail/SubDocumentTabs.tsx` | Add namespace grouping logic, display nested tabs |
 | `shared/types/Document.ts` | Add types for namespace-aware subdocument structure |
 | `server/src/services/DocumentService.ts` | Add dot-notation parsing to sub-document discovery |
 
@@ -185,7 +185,7 @@ Then: UI shows [bdd >] [scenario-1]
 
 ### Session 2026-03-12
 - Q: Which backend file should contain the dot-notation namespace parsing logic? → A: Use existing sub-document system, no new service needed
-- Q: Which frontend component/hook handles namespace tab rendering? → A: `src/components/TicketDetail/SubDocumentTabs.tsx`
+- Q: Which frontend component/hook handles namespace tab rendering? → A: `frontend/src/components/TicketDetail/SubDocumentTabs.tsx`
 - Q: How should the API represent dot-notation documents? → A: Virtual folders (backward compatible)
 - Q: Which shared types file should contain namespace-related types? → A: `shared/types/Document.ts`
 - Q: Where should backend namespace parsing unit tests live? → A: `server/src/__tests__/services/DocumentService.test.ts`
@@ -196,7 +196,7 @@ Then: UI shows [bdd >] [scenario-1]
 
 **Root causes**: two independent bugs.
 
-1. **Bug 1 (MDT-184 regression)**: `src/utils/subdocPathValidation.ts::extractSubDocPath`
+1. **Bug 1 (MDT-184 regression)**: `frontend/src/utils/subdocPathValidation.ts::extractSubDocPath`
    searched for the literal substring `'/ticket/'` inside the regex source
    produced by `routePatternToRegex`, but that source escapes `/` as `\/`, so
    `indexOf` returned `-1`. The `:ticketKey` substitution then landed in the
@@ -207,7 +207,7 @@ Then: UI shows [bdd >] [scenario-1]
    `ROOT_DOCUMENT_PATH`. Direct `/ticket/{key}/{subdoc}` URLs still worked
    because their pattern's first `[^/]+` slot is the ticket key.
 2. **Bug 2 (valid-path lookup asymmetry)**:
-   `src/components/TicketViewer/useTicketDocumentNavigation.ts::collectPaths`
+   `frontend/src/components/TicketViewer/useTicketDocumentNavigation.ts::collectPaths`
    decided the path separator for a child based on the **folder's** storage
    type (virtual → dot, physical → slash) and only emitted both forms for
    virtual folders. Dot-notation children of physical folders (e.g.
@@ -254,8 +254,8 @@ passes against the fixes, so this is hardening, not a functional gap.
   unrelated to this UAT round — verified pre-existing via `git stash`.
 
 **Verification (this commit)**:
-- `bun test src/__tests__/routes.test.ts` — 22/22 pass
-- `bun test src/components/TicketViewer/useTicketDocumentNavigation.test.tsx` — 10/10 pass
+- `bun test frontend/src/__tests__/routes.test.ts` — 22/22 pass
+- `bun test frontend/src/components/TicketViewer/useTicketDocumentNavigation.test.tsx` — 10/10 pass
 - `bunx playwright test tests/e2e/ticket/namespace.spec.ts` — 19/19 pass
 - `bunx playwright test tests/e2e/ticket/subdoc-navigation.spec.ts tests/e2e/ticket/subdoc-preload.spec.ts` — 21 pass, 1 pre-existing skip
 - Manual smoke (live): all seven URL forms in `uat.md` verification table resolve to expected active tab

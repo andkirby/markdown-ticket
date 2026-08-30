@@ -28,7 +28,7 @@
 | Extension Fit | Healthy | Existing Board props and `useDropZone` create a clean insertion point for a sibling board surface. |
 | Dependency Fit | Healthy | No new runtime packages are needed; React DnD and existing tokens cover the UI. |
 | Verification Fit | Concerning | The feature needs new Playwright coverage plus focused pure helper tests for grouping/progress. |
-| Redesign Scope | Concerning | A bounded component extraction is needed inside `src/components/Board/`. |
+| Redesign Scope | Concerning | A bounded component extraction is needed inside `frontend/src/components/Board/`. |
 
 ## Mismatch Points
 

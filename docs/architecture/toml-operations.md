@@ -103,7 +103,7 @@ Any .toml file
 
 ```typescript
 const config = parseToml(readFile('.mdt-config.toml'))
-config.project.document.paths = ['docs', 'src']
+config.project.document.paths = ['docs', 'frontend/src']
 writeFile('.mdt-config.toml', stringify(config))
 ```
 

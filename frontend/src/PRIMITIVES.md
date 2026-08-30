@@ -14,7 +14,7 @@ see [STYLING.md](STYLING.md). For *which ITCSS layer a file belongs in*, see
 ## Drift check
 
 The nightly ITCSS task (02:00) reconciles this table against the actual
-`@layer components` selectors in `src/`. Each entry's `Class` cell is the key. When
+`@layer components` selectors in `frontend/src/`. Each entry's `Class` cell is the key. When
 the check reports drift:
 
 | Drift type | Meaning | Action |

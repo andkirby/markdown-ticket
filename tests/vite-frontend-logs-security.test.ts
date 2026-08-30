@@ -4,7 +4,7 @@ import {
   isLoopbackAddress,
   parseFrontendLogsRequestBody,
   rejectNonLocalFrontendLoggingRequest,
-} from '../vite.config'
+} from '../frontend/vite.config'
 
 function makeRequest(remoteAddress: string, headers: Record<string, string> = {}) {
   return {

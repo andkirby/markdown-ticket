@@ -38,7 +38,7 @@ change shape between the board, the list, and the ticket viewer.
   position (left of the key). Users find priority in one place regardless of view.
 
 **Single source of truth.** The glyph-before-key invariant lives in exactly one
-place: `<TicketCode>` (`src/components/TicketCode.tsx`) renders the
+place: `<TicketCode>` (`frontend/src/components/TicketCode.tsx`) renders the
 `<PriorityIcon>` then the code. Every surface that shows a ticket key MUST use
 `<TicketCode code={...} priority={...} />` (or pass `ticket`). **Never**
 hand-compose `<PriorityIcon>` + the code in a surface — that is how surfaces
@@ -87,11 +87,11 @@ Start with a flat file. Convert to a folder when extracting CSS.
 
 ```text
 # Simple component - keep flat
-src/components/
+frontend/src/components/
 ├── Board.tsx
 
 # Component with extracted styles - becomes folder
-src/components/Badge/
+frontend/src/components/Badge/
 ├── index.tsx
 ├── StatusBadge.tsx
 ├── badge.css
@@ -104,19 +104,19 @@ src/components/Badge/
 
 | CSS Type | Location |
 |----------|----------|
-| Component styles | `src/components/{Component}/{component}.css` |
-| Shared component primitives | `src/styles/components/{concern}.css` |
-| Shared entities | `src/styles/entities/{entity}.css` |
-| Design tokens | `src/styles/design-tokens.css` |
-| Base resets & typography | `src/styles/base.css` |
-| Prose/markdown rendering | `src/styles/prose.css` |
-| Animations | `src/styles/animations.css` |
-| Utilities (scrollbar, print, a11y) | `src/styles/utilities.css` |
-| Orchestration hub (imports only) | `src/index.css` |
+| Component styles | `frontend/src/components/{Component}/{component}.css` |
+| Shared component primitives | `frontend/src/styles/components/{concern}.css` |
+| Shared entities | `frontend/src/styles/entities/{entity}.css` |
+| Design tokens | `frontend/src/styles/design-tokens.css` |
+| Base resets & typography | `frontend/src/styles/base.css` |
+| Prose/markdown rendering | `frontend/src/styles/prose.css` |
+| Animations | `frontend/src/styles/animations.css` |
+| Utilities (scrollbar, print, a11y) | `frontend/src/styles/utilities.css` |
+| Orchestration hub (imports only) | `frontend/src/index.css` |
 
 ### Import Pattern
 
-All CSS is imported through `src/index.css` as the orchestration hub.
+All CSS is imported through `frontend/src/index.css` as the orchestration hub.
 `@import` statements come before `@tailwind` directives so PostCSS resolves them correctly.
 
 ```css
@@ -202,7 +202,7 @@ Use `data-*` instead when the value represents domain meaning rather than UI sta
 
 ### Global Utilities
 
-Global utilities should be rare and live in `src/index.css`.
+Global utilities should be rare and live in `frontend/src/index.css`.
 
 Use clear semantic names without a prefix:
 
@@ -331,7 +331,7 @@ That pattern is acceptable only for non-themeable, purely structural class compo
 
 ### Token Source Of Truth
 
-Use [THEME.md](THEME.md) for the token system; the values live in [`src/styles/design-tokens.css`](styles/design-tokens.css) (imported first by `index.css`).
+Use [THEME.md](THEME.md) for the token system; the values live in [`frontend/src/styles/design-tokens.css`](styles/design-tokens.css) (imported first by `index.css`).
 
 ### Surface Tier Model (colors as signals)
 
@@ -571,7 +571,7 @@ Use SVG sprites for reusable icons.
 
 ```text
 public/icons/sprite.svg         -> icon definitions
-src/components/shared/Icon.tsx  -> <Icon name="fav-star" />
+frontend/src/components/shared/Icon.tsx  -> <Icon name="fav-star" />
 ```
 
 ```tsx
@@ -609,5 +609,5 @@ export function Icon({ name, className }: { name: string; className?: string }) 
 3. Use `data-*` for semantic variants.
 4. Use modifiers for structural variations.
 5. Use state classes for transient behavior.
-6. Import extracted CSS from `src/index.css`.
+6. Import extracted CSS from `frontend/src/index.css`.
 7. Update this file when adding new global styling patterns.

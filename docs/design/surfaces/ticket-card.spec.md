@@ -30,25 +30,25 @@ DraggableTicketCard (drag wrapper)
 
 | Child | Component | Spec | Conditional |
 |-------|-----------|------|-------------|
-| TicketCard | `src/components/TicketCard.tsx` | this file | always |
-| TicketCode | `src/components/TicketCode.tsx` | — | always |
-| TicketAttributeTags | `src/components/TicketAttributeTags.tsx` | — | always |
-| StatusBadge | `src/components/Badge/StatusBadge.tsx` | — | always |
-| PriorityBadge | `src/components/Badge/PriorityBadge.tsx` | — | always |
-| TypeBadge | `src/components/Badge/TypeBadge.tsx` | — | always |
-| ContextBadge | `src/components/Badge/ContextBadge.tsx` | — | phase, assignee, worktree |
-| RelationshipBadge | `src/components/Badge/RelationshipBadge.tsx` | `relationship-badge.spec.md` | related, depends, blocks |
+| TicketCard | `frontend/src/components/TicketCard.tsx` | this file | always |
+| TicketCode | `frontend/src/components/TicketCode.tsx` | — | always |
+| TicketAttributeTags | `frontend/src/components/TicketAttributeTags.tsx` | — | always |
+| StatusBadge | `frontend/src/components/Badge/StatusBadge.tsx` | — | always |
+| PriorityBadge | `frontend/src/components/Badge/PriorityBadge.tsx` | — | always |
+| TypeBadge | `frontend/src/components/Badge/TypeBadge.tsx` | — | always |
+| ContextBadge | `frontend/src/components/Badge/ContextBadge.tsx` | — | phase, assignee, worktree |
+| RelationshipBadge | `frontend/src/components/Badge/RelationshipBadge.tsx` | `relationship-badge.spec.md` | related, depends, blocks |
 
 ## Source files
 
 | Type | Path |
 |------|------|
-| Component | `src/components/TicketCard.tsx` |
-| Drag wrapper | `src/components/Column/index.tsx` (DraggableTicketCard) |
-| Attribute tags | `src/components/TicketAttributeTags.tsx` |
-| Badge module | `src/components/Badge/` |
-| Badge styles | `src/components/Badge/badge.css` |
-| TicketCode | `src/components/TicketCode.tsx` |
+| Component | `frontend/src/components/TicketCard.tsx` |
+| Drag wrapper | `frontend/src/components/Column/index.tsx` (DraggableTicketCard) |
+| Attribute tags | `frontend/src/components/TicketAttributeTags.tsx` |
+| Badge module | `frontend/src/components/Badge/` |
+| Badge styles | `frontend/src/components/Badge/badge.css` |
+| TicketCode | `frontend/src/components/TicketCode.tsx` |
 
 ## Layout
 

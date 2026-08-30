@@ -2,7 +2,7 @@
 
 Reference for the CSS custom properties (design tokens) that drive theming, color, and density across the app.
 
-**Source of truth:** [`src/styles/design-tokens.css`](styles/design-tokens.css) — imported first by `src/index.css`, so every other layer inherits these values. `THEME.md` is the human-readable mirror; if the two disagree, the CSS file wins. See [`src/styleguide.html`](styleguide.html) for a live rendered swatch page.
+**Source of truth:** [`frontend/src/styles/design-tokens.css`](styles/design-tokens.css) — imported first by `frontend/src/index.css`, so every other layer inherits these values. `THEME.md` is the human-readable mirror; if the two disagree, the CSS file wins. See [`frontend/src/styleguide.html`](styleguide.html) for a live rendered swatch page.
 
 ---
 
@@ -193,7 +193,7 @@ Three sizes. No fourth. 10px and 13px are not chrome sizes (13px belongs to card
 
 ### Heading Scale
 
-Defined in `@layer base` (`src/styles/base.css` lines 17-43):
+Defined in `@layer base` (`frontend/src/styles/base.css` lines 17-43):
 
 | Element | Size | Responsive |
 |---------|------|------------|
@@ -248,7 +248,7 @@ See [MODALS.md](MODALS.md) for modal z-index conventions.
 
 ## Star Colors (Favorite Indicator)
 
-Themeable star icon tokens for project favorites. Defined in `src/styles/entities/fav-star.css`.
+Themeable star icon tokens for project favorites. Defined in `frontend/src/styles/entities/fav-star.css`.
 
 ### Light Mode
 

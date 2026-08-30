@@ -18,9 +18,9 @@ within the same browser session until a full page reload.
 
 **Root cause (verified in code)**:
 
-- `src/hooks/useBackendConfig.ts` `applyOne` commits the effective value into
+- `frontend/src/hooks/useBackendConfig.ts` `applyOne` commits the effective value into
   its own descriptor list on success but never notifies any other consumer.
-- `src/components/ProjectSelector/useSelectorData.ts`:
+- `frontend/src/components/ProjectSelector/useSelectorData.ts`:
   - initial load (line ~90) fetches `{preferences, selectorState}` from
     `/api/config/selector` once;
   - the existing `mdt:selector-prefs-updated` (`SELECTOR_PREFS_SYNC_EVENT`)
@@ -91,15 +91,15 @@ No upstream IDs were deleted or remapped.
   - new obligation `OBL-selector-consumer-refresh` (derived-from `BR-7.1`;
     artifacts `ART-fe-use-backend-config`, `ART-fe-selector-data`);
   - newly registered artifact `ART-fe-selector-data`
-    (`src/components/ProjectSelector/useSelectorData.ts`);
+    (`frontend/src/components/ProjectSelector/useSelectorData.ts`);
   - Side-Effect Ownership row for `ui.projectSelector.*` reworded; new
     subsection "Same-Browser Consumer Refresh for `ui.projectSelector.*`";
     invariant 9 added.
 - **Tests**:
   - `TEST-use-backend-config-refresh-signal` (unit,
-    `src/hooks/useBackendConfig.test.tsx`);
+    `frontend/src/hooks/useBackendConfig.test.tsx`);
   - `TEST-selector-data-refresh-on-signal` (unit,
-    `src/components/ProjectSelector/useSelectorData.test.tsx`);
+    `frontend/src/components/ProjectSelector/useSelectorData.test.tsx`);
   - `TEST-e2e-config-refresh` (e2e) extended — `BR-7.1` added to its covers.
 - **Tasks**: new `TASK-10` (owns `ART-fe-use-backend-config`,
   `ART-fe-selector-data`; makes-green `selector_pref_change_refreshes_live_consumers`,
@@ -115,20 +115,20 @@ No upstream IDs were deleted or remapped.
   notify live selector consumers so they re-fetch backend prefs without a full
   page reload.
 - **Direct artifacts/files**:
-  - `src/hooks/useBackendConfig.ts` — in `applyOne`, on `outcome.ok` and the
+  - `frontend/src/hooks/useBackendConfig.ts` — in `applyOne`, on `outcome.ok` and the
     selector is one of the two `ui.projectSelector.*` selectors, dispatch the
     existing `SELECTOR_PREFS_SYNC_EVENT` window event (import the constant from
     `useSelectorData.ts`; do not declare a second event name).
-  - `src/components/ProjectSelector/useSelectorData.ts` — change
+  - `frontend/src/components/ProjectSelector/useSelectorData.ts` — change
     `handlePrefsSync` so that on the event it re-fetches backend prefs from
     `/api/config/selector` (currently it only re-reads localStorage), then
     layers `loadLocalPreferences()` overrides on top, preserving the
     `{...validatedPreferences, ...localOverrides}` merge order used at initial
     load.
-  - `src/hooks/useBackendConfig.test.tsx` — extend: assert the signal is
+  - `frontend/src/hooks/useBackendConfig.test.tsx` — extend: assert the signal is
     emitted on a successful `ui.projectSelector.*` save and **not** emitted on
     a non-`ui.projectSelector.*` save (e.g. `links.enableTicketLinks`).
-  - `src/components/ProjectSelector/useSelectorData.test.tsx` — extend or add:
+  - `frontend/src/components/ProjectSelector/useSelectorData.test.tsx` — extend or add:
     assert that on `mdt:selector-prefs-updated`, `/api/config/selector` is
     re-fetched and localStorage overrides are layered on top.
   - `tests/e2e/config/configuration-refresh.spec.ts` — extend: change

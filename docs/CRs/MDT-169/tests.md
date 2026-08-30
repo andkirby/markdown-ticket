@@ -6,10 +6,10 @@
 |--------|-----------|-----------|
 | `shared/services/filenameNamespace.ts` | `shared/tests/services/filenameNamespace.test.ts` | `TEST-shared-filename-namespace` |
 | `shared/services/ticket/subdocuments/namespace.ts` | `shared/tests/services/ticket/namespace.test.ts` | `TEST-ticket-namespace-adapter` |
-| `src/components/DocumentsView/documentFilenameTabModel.ts` | `src/components/DocumentsView/documentFilenameTabs.test.ts` | `TEST-document-filename-tabs-model` |
-| `src/components/DocumentsView/DocumentFilenameTabs.tsx` | `src/components/DocumentsView/DocumentFilenameTabs.test.tsx` | `TEST-document-filename-tabs-component` |
-| `src/components/DocumentsView/MarkdownViewer.tsx` | `src/components/DocumentsView/MarkdownViewer.test.tsx` | `TEST-document-metadata-presentation` |
-| `src/components/shared/RelativeTimestamp.tsx` | `src/components/shared/RelativeTimestamp.test.tsx` | `TEST-document-metadata-presentation` |
+| `frontend/src/components/DocumentsView/documentFilenameTabModel.ts` | `frontend/src/components/DocumentsView/documentFilenameTabs.test.ts` | `TEST-document-filename-tabs-model` |
+| `frontend/src/components/DocumentsView/DocumentFilenameTabs.tsx` | `frontend/src/components/DocumentsView/DocumentFilenameTabs.test.tsx` | `TEST-document-filename-tabs-component` |
+| `frontend/src/components/DocumentsView/MarkdownViewer.tsx` | `frontend/src/components/DocumentsView/MarkdownViewer.test.tsx` | `TEST-document-metadata-presentation` |
+| `frontend/src/components/shared/RelativeTimestamp.tsx` | `frontend/src/components/shared/RelativeTimestamp.test.tsx` | `TEST-document-metadata-presentation` |
 | `server/services/DocumentService.ts` | `server/tests/api/documents.test.ts` | `TEST-document-content-path-safety` |
 | Documents view integration | `tests/e2e/documents/filename-tabs.spec.ts` | `TEST-documents-filename-tabs-e2e` |
 
@@ -62,7 +62,7 @@
 
 ```bash
 bun run --cwd shared jest tests/services/filenameNamespace.test.ts tests/services/ticket/namespace.test.ts --runInBand
-bun test src/components/DocumentsView/documentFilenameTabs.test.ts src/components/DocumentsView/DocumentFilenameTabs.test.tsx src/components/DocumentsView/MarkdownViewer.test.tsx src/components/shared/RelativeTimestamp.test.tsx
+bun test frontend/src/components/DocumentsView/documentFilenameTabs.test.ts frontend/src/components/DocumentsView/DocumentFilenameTabs.test.tsx frontend/src/components/DocumentsView/MarkdownViewer.test.tsx frontend/src/components/shared/RelativeTimestamp.test.tsx
 bun run --cwd server jest tests/api/documents.test.ts --runInBand
 bunx playwright test tests/e2e/documents/filename-tabs.spec.ts --project=chromium
 spec-trace validate MDT-169 --stage tests

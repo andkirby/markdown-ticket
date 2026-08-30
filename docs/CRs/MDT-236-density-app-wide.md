@@ -74,10 +74,10 @@ implementationNotes: Implemented via pipeline-e2e: app-wide density consumers (l
 | Surface classification | Which remaining surfaces are content vs chrome: QuickSearch result rows, project selector cards/browser, settings rows, ticket detail attributes, swimlane lane cards vs lane headers? | Deliverable: an inventory table with a verdict per surface; chrome verdict = density-immune by rule, not case-by-case taste |
 
 ### Source-of-truth anchors (inputs for architecture)
-- `src/THEME.md` §Density slots + §Chrome type scale — token names and current values
-- `src/styleguide.html` §density slots / §chrome type scale — live contract
-- `src/styles/design-tokens.css` — machine truth (axes, chrome scale)
-- `src/hooks/useCardDensity.ts` — runtime rewrite mechanism
+- `frontend/src/THEME.md` §Density slots + §Chrome type scale — token names and current values
+- `frontend/src/styleguide.html` §density slots / §chrome type scale — live contract
+- `frontend/src/styles/design-tokens.css` — machine truth (axes, chrome scale)
+- `frontend/src/hooks/useCardDensity.ts` — runtime rewrite mechanism
 - `docs/design/surfaces/sort-menu.spec.md` — popover/menu pattern any new surface must reuse
 
 ### Known Constraints

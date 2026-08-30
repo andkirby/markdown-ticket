@@ -74,7 +74,7 @@ This feature enables the system to detect and work with Git worktrees, allowing 
 3. WHEN a ticket exists in both worktree and main project, the system shall display a warning badge to indicate the conflict.
 4. WHEN a worktree is deleted while the UI is viewing that ticket, the system shall gracefully update to show the main project version.
 
-**Note**: UI badge implementation is verified via component tests (`src/components/__tests__/TicketCard.worktree.test.tsx` and `TicketRow.worktree.test.tsx`). BDD scenarios focus on API/MCP responses.
+**Note**: UI badge implementation is verified via component tests (`frontend/src/components/__tests__/TicketCard.worktree.test.tsx` and `TicketRow.worktree.test.tsx`). BDD scenarios focus on API/MCP responses.
 
 ### BR-8: Edge Case Handling
 

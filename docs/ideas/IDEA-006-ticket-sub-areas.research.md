@@ -38,9 +38,9 @@ Goal of this doc: find the approach that gives the **best UX** at **reasonably l
 | Number generation | Filename scan with `${code}-(\d+)-` regex | `shared/services/TicketService.ts:583-611` |
 | Filename | `${crKey}-${slug}.md` — **key is embedded in filename** (`/` illegal) | `TicketService.ts:314` |
 | Frontmatter categorization fields | `phaseEpic?: string`, `impactAreas?: string[]` — **both unused in frontend** | `frontmatter.ts:43-44` |
-| Board grouping | By `status` only — no group/filter by area | `src/components/Board.tsx:313-332` |
-| List view columns | Code, Title, Status, Modified — no area | `src/components/ProjectView.tsx:136-168` |
-| Create flow | Hardcoded title + type — no field inputs at all | `src/components/Board.tsx:260-277` |
+| Board grouping | By `status` only — no group/filter by area | `frontend/src/components/Board.tsx:313-332` |
+| List view columns | Code, Title, Status, Modified — no area | `frontend/src/components/ProjectView.tsx:136-168` |
+| Create flow | Hardcoded title + type — no field inputs at all | `frontend/src/components/Board.tsx:260-277` |
 | Cross-project CLI syntax | `PROJECT/KEY` **already means** "project, ticket" — collision risk | `cli/src/commands/view.ts:29-52` |
 
 **Key fact:** there is **no concept of "area", "component", "label", or "tag"** anywhere in the ticket model, config, or UI. The closest analog (`impactAreas: string[]`) is declared in the schema but never rendered, never filtered, and not even serialized to YAML by `MarkdownService`.
@@ -309,6 +309,6 @@ The `MDT/API-123` format is visually appealing and was the original instinct, bu
 - `domain-contracts/src/ticket/entity.ts` — Ticket model (line 23: the unused `impactAreas` field)
 - `shared/utils/keyNormalizer.ts` — single owner of key formatting (`formatCrKey`, line 38)
 - `shared/services/TicketService.ts` — `createCR` (305) / `getNextCRNumber` (583)
-- `src/components/Board.tsx` — status-only grouping (313)
-- `src/config/ticketCardBadges.ts` — badge extension point
+- `frontend/src/components/Board.tsx` — status-only grouping (313)
+- `frontend/src/config/ticketCardBadges.ts` — badge extension point
 - [docs/PRE_IMPLEMENT.md](../PRE_IMPLEMENT.md) — type-safe enum pattern for adding the `area` field

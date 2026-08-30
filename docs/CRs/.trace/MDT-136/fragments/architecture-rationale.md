@@ -13,7 +13,7 @@ Cmd+K Quick Search provides keyboard-driven ticket discovery via a modal overlay
 ## Structure
 
 ```text
-src/
+frontend/src/
 ├── components/QuickSearch/
 │   ├── index.ts                    # Exports
 │   ├── QuickSearchModal.tsx        # Modal container, keyboard state

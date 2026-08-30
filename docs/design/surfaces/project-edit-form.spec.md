@@ -27,16 +27,16 @@ AddProjectModal (editMode=true)
 
 | Child | Component | Spec | Conditional |
 |-------|-----------|------|-------------|
-| Modal shell | `src/components/AddProjectModal/AddProjectModal.tsx` | this file | `editMode=true` |
-| Form field | `src/components/AddProjectModal/components/FormField.tsx` | — | all fields |
-| Folder browser | `src/components/AddProjectModal/components/FolderBrowserModal.tsx` | — | hidden in edit mode |
+| Modal shell | `frontend/src/components/AddProjectModal/AddProjectModal.tsx` | this file | `editMode=true` |
+| Form field | `frontend/src/components/AddProjectModal/components/FormField.tsx` | — | all fields |
+| Folder browser | `frontend/src/components/AddProjectModal/components/FolderBrowserModal.tsx` | — | hidden in edit mode |
 
 ## Source files
 
 | Type | Path |
 |------|------|
-| Component | `src/components/AddProjectModal/AddProjectModal.tsx` |
-| Form hook | `src/components/AddProjectModal/hooks/useProjectForm.ts` |
+| Component | `frontend/src/components/AddProjectModal/AddProjectModal.tsx` |
+| Form hook | `frontend/src/components/AddProjectModal/hooks/useProjectForm.ts` |
 | E2E | `tests/e2e/project/management.spec.ts` |
 
 ## Layout
@@ -92,8 +92,8 @@ AddProjectModal (editMode=true)
 
 | Element | Class | Source |
 |---------|-------|--------|
-| Modal overlay | centered modal pattern | `src/MODALS.md` |
-| Form controls | inline Tailwind utilities | `src/STYLING.md` |
+| Modal overlay | centered modal pattern | `frontend/src/MODALS.md` |
+| Form controls | inline Tailwind utilities | `frontend/src/STYLING.md` |
 | Read-only fields | `bg-gray-50 dark:bg-gray-700 cursor-not-allowed` | existing `FormField` pattern |
 
 ## Extension notes

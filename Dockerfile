@@ -19,11 +19,10 @@ FROM base AS development
 # Install all dependencies (including devDependencies)
 RUN bun install --frozen-lockfile
 
-# Copy source code and configuration files
-COPY tsconfig.json tsconfig.node.json vite.config.ts index.html ./
-COPY postcss.config.js tailwind.config.js ./
-COPY src ./src
-COPY public ./public
+# Copy the frontend area (app source + vite/tailwind/tsconfig configs).
+# The build script needs tsconfig.shared.json (copied in base) and runs the
+# frontend typecheck/build via `bun run --cwd frontend`.
+COPY frontend ./frontend
 
 # Build domain-contracts and shared code
 RUN bun run build:domain-contracts
@@ -44,11 +43,10 @@ FROM base AS build
 # Install all dependencies for build (including devDependencies for compilation)
 RUN bun install --frozen-lockfile
 
-# Copy source code and configuration files
-COPY tsconfig.json tsconfig.node.json vite.config.ts index.html ./
-COPY postcss.config.js tailwind.config.js ./
-COPY src ./src
-COPY public ./public
+# Copy the frontend area (app source + vite/tailwind/tsconfig configs).
+# The build script needs tsconfig.shared.json (copied in base) and runs the
+# frontend typecheck/build via `bun run --cwd frontend`.
+COPY frontend ./frontend
 COPY domain-contracts ./domain-contracts
 
 # Build domain-contracts, shared code, and frontend

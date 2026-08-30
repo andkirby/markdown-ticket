@@ -28,14 +28,14 @@ Redesigns the project selector from a uniform horizontal list into a tiered rail
 
 | Runtime Module | Test Scaffolding | Separation Rule |
 |----------------|------------------|-----------------|
-| `src/components/ProjectSelector/` | `tests/e2e/selector/MDT-129*.spec.ts` | E2E tests exercise full stack; no unit test mocks of internal component state |
-| `src/utils/selectorOrdering.ts` | Jest unit tests | Pure function; test ordering rules in isolation |
-| `src/components/ProjectSelector/useSelectorData.ts` | Jest with mock fetch | Hook logic testable with mocked API responses |
+| `frontend/src/components/ProjectSelector/` | `tests/e2e/selector/MDT-129*.spec.ts` | E2E tests exercise full stack; no unit test mocks of internal component state |
+| `frontend/src/utils/selectorOrdering.ts` | Jest unit tests | Pure function; test ordering rules in isolation |
+| `frontend/src/components/ProjectSelector/useSelectorData.ts` | Jest with mock fetch | Hook logic testable with mocked API responses |
 
 ## Structure
 
 ```text
-src/
+frontend/src/
 ├── components/
 │   ├── UI/
 │   │   └── hover-card.tsx            # Hover card primitive with delay defaults (100ms open/close)

@@ -27,7 +27,7 @@ dependsOn: MDT-198
 - `docs/architecture/auth-and-sharing-architecture.md` — local authentication boundary and cloud-team identity cross-reference.
 - `docs/architecture/project-identity-and-worktrees.md` — local checkout identity and cloud project UUID boundary.
 - `docs/CRs/MDT-198/research.md` and `docs/CRs/MDT-198/poc.md` — source evidence.
-- `shared/services/TicketService.ts`, `domain-contracts/`, `server/`, `mcp-server/`, `cli/`, and `src/` — integration boundaries to design.
+- `shared/services/TicketService.ts`, `domain-contracts/`, `server/`, `mcp-server/`, `cli/`, and `frontend/src/` — integration boundaries to design.
 
 ### Scope
 

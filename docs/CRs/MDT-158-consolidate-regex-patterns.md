@@ -23,8 +23,8 @@ Project code and ticket key regex patterns are duplicated across 8+ files with s
 1. `shared/utils/constants.ts` — `PATTERNS.PROJECT_CODE = /^[A-Z0-9]{2,5}$/` (allows leading digit, drifts from canonical)
 2. `shared/utils/constants.ts` — `PATTERNS.TICKET_CODE = /^[A-Z0-9]{2,5}-\d{3,}$/` (unused in prod)
 3. `shared/tools/ProjectValidator.ts` — inline `/^[A-Z][A-Z0-9]{1,4}$/` (dup of canonical)
-4. `src/hooks/useQuickSearch.ts` — inline `/^([A-Za-z]{2,5})-(\d{1,5})$/i` (no alphanumeric support)
-5. `src/hooks/useQuickSearch.ts` — inline `/^@([A-Za-z]{2,5}) (.*)$/i` (no alphanumeric support)
+4. `frontend/src/hooks/useQuickSearch.ts` — inline `/^([A-Za-z]{2,5})-(\d{1,5})$/i` (no alphanumeric support)
+5. `frontend/src/hooks/useQuickSearch.ts` — inline `/^@([A-Za-z]{2,5}) (.*)$/i` (no alphanumeric support)
 6. `server/services/TicketService.ts` — inline `/^([A-Za-z][A-Za-z0-9]*)-(\d+)$/i` (no length limits)
 7. `cli/src/commands/delete.ts` — inline `/^[A-Z][A-Z0-9]*-\d+$/` (no length limits)
 8. `server/tests/mocks/shared/utils/constants.ts` — stale mock
@@ -54,7 +54,7 @@ Project code and ticket key regex patterns are duplicated across 8+ files with s
 - `domain-contracts/` — add 2 new patterns
 - `shared/` — remove PATTERNS, update keyNormalizer
 - `server/` — update TicketService
-- `src/` — update useQuickSearch
+- `frontend/src/` — update useQuickSearch
 - `cli/` — update delete command
 - `mcp-server/` — check for duplicates
 

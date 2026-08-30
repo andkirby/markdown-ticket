@@ -105,8 +105,8 @@ Cost: M (was S — bumped for the new rail primitive + server endpoint).
 
 - MDT-129: Project selector redesign (top bar area)
 - IDEA-001: Collapsed project chips (frees space in top bar)
-- `src/components/ProjectSelector/ProjectSelectorRail.tsx` — current top bar occupant
-- Document favorites: existing per-project favorite mechanism (`src/config/documentFavs.ts`, `PUT /api/documents/favs`)
+- `frontend/src/components/ProjectSelector/ProjectSelectorRail.tsx` — current top bar occupant
+- Document favorites: existing per-project favorite mechanism (`frontend/src/config/documentFavs.ts`, `PUT /api/documents/favs`)
 - `docs/design/surfaces/board-filter-bar.spec.md` — spatial boundary contract (filter owns header__right, pin owns left rail)
 - `docs/design/explorations/filtering-system.md` §3.1 — spatial decision and rejected horizontal alternatives
-- `src/App.tsx` — rail insertion point (`flex-1` content row becomes `PinRail + content`)
+- `frontend/src/App.tsx` — rail insertion point (`flex-1` content row becomes `PinRail + content`)

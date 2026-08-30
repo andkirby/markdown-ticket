@@ -82,7 +82,7 @@ This is the configuration deliverable that the operator-facing question
     uses eval-capable patterns and `allowUnsafeEval` is false, return
     `{ needsApproval: { domains: [...], unsafeEval: bool }, token: null }`
     instead of minting.
-  - `src/components/DocumentsView/HtmlSandboxViewer.tsx` — handle the
+  - `frontend/src/components/DocumentsView/HtmlSandboxViewer.tsx` — handle the
     `needsApproval` response by showing a dialog listing the domains + the
     eval capability, with per-domain checkboxes and an "Allow selected" action
     that PUTs to a config endpoint and re-mints.

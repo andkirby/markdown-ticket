@@ -207,12 +207,12 @@ These are UX decisions, not data decisions, and belong in `docs/design/explorati
 
 | Claim | Anchor |
 |-------|--------|
-| Current filter is free-text only over title/code/description | `src/components/Board.tsx:293-311` |
-| Existing filter UI is a single text input | `src/components/FilterControls.tsx` |
+| Current filter is free-text only over title/code/description | `frontend/src/components/Board.tsx:293-311` |
+| Existing filter UI is a single text input | `frontend/src/components/FilterControls.tsx` |
 | `Ticket` entity field set | `domain-contracts/src/ticket/entity.ts` |
 | Enum value lists (`CRStatuses` etc.) | `domain-contracts/src/types/schema.ts` |
 | Existing `TicketFilters` contract | `domain-contracts/src/ticket/input.ts` |
-| `inWorktree` badge already exists (MDT-095) | `src/components/Badge/ContextBadge.tsx`, `ticket-card.spec.md` |
-| Sort already persists to localStorage with this pattern | `src/config/sorting.ts`, `board-layout.spec.md:156` |
+| `inWorktree` badge already exists (MDT-095) | `frontend/src/components/Badge/ContextBadge.tsx`, `ticket-card.spec.md` |
+| Sort already persists to localStorage with this pattern | `frontend/src/config/sorting.ts`, `board-layout.spec.md:156` |
 | Prior filtering ticket (text only) | `docs/CRs/MDT-047-document-and-ticket-filtering-functionality.md` |
 | Prior date filter (last 30 days done) | `docs/CRs/MDT-108-add-last-30-days-filter-for-done-column-tickets.md` |

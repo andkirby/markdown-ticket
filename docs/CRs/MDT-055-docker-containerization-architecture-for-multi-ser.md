@@ -234,7 +234,7 @@ MDT_DOCKER_MODE=dev MDT_DOCKER_PROJECTS_YML=docker-compose.dev.mdt.yml ./bin/dc 
 - **Backend**: Network-only (not exposed to host, accessed via frontend proxy)
 - **MCP**: Port 3012→3002 (avoids conflict with native MCP on 3002)
 - **Configuration**: Docker-only `./docker-config` (never mounts `~/.config/markdown-ticket`)
-- **Hot Reload**: Development mode mounts `src/` directories for instant updates
+- **Hot Reload**: Development mode mounts `frontend/src/` directories for instant updates
 
 See `README.docker.md` for complete setup instructions and `docker-compose.dev.yml` for volume mount examples.
 
@@ -340,18 +340,18 @@ environment:
 
 **Critical Fix: Tailwind CSS in Docker**
 
-The Docker frontend was displaying without styles because `postcss.config.js` and `tailwind.config.js` were not being copied to the container.
+The Docker frontend was displaying without styles because `frontend/postcss.config.js` and `frontend/tailwind.config.js` were not being copied to the container.
 
 **Solution**: Updated `Dockerfile.frontend` (lines 21, 45) to include:
 
 ```dockerfile
-COPY postcss.config.js tailwind.config.js ./
+COPY frontend/postcss.config.js frontend/tailwind.config.js ./
 ```
 
 This fix ensures Tailwind CSS processes correctly in Docker containers. All styling now displays properly at `http://localhost:5174`.
 
 **Additional Changes**:
-- Updated `vite.config.ts` to use config function for better environment variable handling
+- Updated `frontend/vite.config.ts` to use config function for better environment variable handling
 - Verified backend connectivity via Docker network (`backend:3001`)
 - Tested with DEBUG-035 sample ticket
 - All three containers (frontend, backend, MCP) working correctly
