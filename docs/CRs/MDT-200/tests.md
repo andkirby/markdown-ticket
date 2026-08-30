@@ -34,7 +34,7 @@ Worker / remote D1 / operator procedure).
 | TEST-projection-content | BR-3.1 | `cloud/test/projection.test.ts` |
 | TEST-projection-conflict | BR-3.2 | `cloud/test/projection.test.ts` |
 | TEST-projection-polling | BR-3.3 | `cloud/test/projection.test.ts`, `shared/services/cloud-sync/__tests__/create-orchestrator.test.ts` |
-| TEST-local-projection-feed | BR-3.3, BR-3.4 | `src/hooks/useCloudProjectionFeed.test.ts`, server controller/API tests |
+| TEST-local-projection-feed | BR-3.3, BR-3.4 | `frontend/src/hooks/useCloudProjectionFeed.test.ts`, server controller/API tests |
 | TEST-audit-redacted | BR-4.1, Edge-3 | membership/ack/projection/maintenance integration tests plus `cloud/test/audit.test.ts` |
 | TEST-audit-retention | BR-4.1 | `cloud/test/maintenance.test.ts` |
 | TEST-rate-limit-abuse | C7 | `cloud/test/ratelimit.test.ts`, `cloud/test/ratelimit.wiring.test.ts` |

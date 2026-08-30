@@ -121,7 +121,7 @@ md-ticket-board/
 │   ├── server.js          # Main server file
 │   ├── package.json       # Server dependencies
 │   └── tasks/             # Ticket markdown files
-├── src/                   # Frontend source code
+├── frontend/src/                   # Frontend source code
 │   ├── components/        # React components
 │   ├── hooks/             # Custom React hooks
 │   ├── services/          # API and file services
@@ -129,7 +129,7 @@ md-ticket-board/
 │   └── config/            # Configuration files
 ├── public/                # Static assets
 ├── package.json           # Frontend dependencies
-├── tailwind.config.js     # Tailwind CSS configuration
+├── frontend/tailwind.config.js     # Tailwind CSS configuration
 ├── server.js             # Main server file (root level)
 └── README.md             # This file
 ```
@@ -311,7 +311,7 @@ bun run dev
 
 ```bash
 # Frontend hot-reloads automatically
-# Make changes in src/ directory
+# Make changes in frontend/src/ directory
 ```
 
 #### Backend Changes

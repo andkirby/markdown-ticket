@@ -48,7 +48,7 @@
 
 **Safe HTML Document Preview (MDT-221)**
 - `.html` and `.htm` files under your configured document paths are now discovered and previewable alongside markdown, instead of being invisible
-- Executable HTML renders in a sandboxed viewer so same-origin scripts can't reach your credentialed `/api/*` requests — multi-file HTML resolves relative `href`, `src`, `img`, and `fetch` URLs against a stable document root
+- Executable HTML renders in a sandboxed viewer so same-origin scripts can't reach your credentialed `/api/*` requests — multi-file HTML resolves relative `href`, `frontend/src`, `img`, and `fetch` URLs against a stable document root
 - Each project opts into HTML preview explicitly through a per-project CSP config, so the relaxed content security policy only applies where you intend it
 
 **Priority in Board and List Sorting (MDT-047)**

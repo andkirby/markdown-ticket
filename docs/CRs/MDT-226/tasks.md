@@ -75,8 +75,8 @@ rendering; no browser projection polling ownership.
 Wires `server/services/TicketService.ts` to return the unified list from
 `GET /api/projects/:id/tickets/unified` (canonical Markdown + read-model entries
 with no canonical match). The read model publishes an ordinary ticket-view
-change through the existing `SSEBroadcaster`; `src/services/sseClient.ts` and
-`src/hooks/useSSEEvents.ts` map it to the existing ticket bus. The browser
+change through the existing `SSEBroadcaster`; `frontend/src/services/sseClient.ts` and
+`frontend/src/hooks/useSSEEvents.ts` map it to the existing ticket bus. The browser
 preserves and renders `kind/readOnly/stale` + the project sync-status chip per
 [`ux-design.md`](ux-design.md).
 

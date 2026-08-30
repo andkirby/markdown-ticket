@@ -30,7 +30,7 @@ A modern, responsive Kanban-style ticket board application built with React, Typ
 ### Frontend Structure
 
 ```
-src/
+frontend/src/
 ├── components/
 │   ├── Board.tsx          # Main board container
 │   ├── Column.tsx         # Individual status columns
@@ -74,7 +74,7 @@ The application uses a hardcoded path for task files located at `docs/CRs/`. To 
    - To change the path, modify this line to point to your desired directory
    - Example: `const tasksDirectory = path.join(__dirname, '../my-tasks');`
 
-2. **Frontend Configuration** (`src/services/fileService.ts`):
+2. **Frontend Configuration** (`frontend/src/services/fileService.ts`):
    - The API base URL is hardcoded to `http://localhost:3001`
    - File operations use the `/api/tickets` endpoint
    - Ensure the backend server is running on the same port
@@ -93,7 +93,7 @@ md-ticket-board/
 │       ├── CR-A001.md
 │       ├── CR-A002.md
 │       └── ...
-└── src/
+└── frontend/src/
     └── services/
         └── fileService.ts  # Handles file operations
 ```

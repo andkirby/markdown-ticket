@@ -4,11 +4,11 @@
 
 | Module | Test File | Tests |
 |--------|-----------|-------|
-| `linkProcessor.ts` | `src/utils/linkProcessor.mdt150.test.ts` | 14 |
-| `linkBuilder.ts` | `src/utils/linkBuilder.mdt150.test.ts` | 9 |
-| `linkNormalization.ts` | `src/utils/linkNormalization.mdt150.test.ts` | 11 |
-| `markdownPreprocessor.ts` | `src/utils/markdownPreprocessor.mdt150.test.ts` | 5 |
-| `markdownPreprocessor.ts` (documents-view mode) | `src/utils/markdownPreprocessor.mdt150.test.ts` | +2 (UAT 2026-07-21) |
+| `linkProcessor.ts` | `frontend/src/utils/linkProcessor.mdt150.test.ts` | 14 |
+| `linkBuilder.ts` | `frontend/src/utils/linkBuilder.mdt150.test.ts` | 9 |
+| `linkNormalization.ts` | `frontend/src/utils/linkNormalization.mdt150.test.ts` | 11 |
+| `markdownPreprocessor.ts` | `frontend/src/utils/markdownPreprocessor.mdt150.test.ts` | 5 |
+| `markdownPreprocessor.ts` (documents-view mode) | `frontend/src/utils/markdownPreprocessor.mdt150.test.ts` | +2 (UAT 2026-07-21) |
 | SmartLink doc refs (E2E) | `tests/e2e/ticket/smartlink-doc-refs.spec.ts` | 3 |
 | Anchor passthrough (E2E) | `tests/e2e/ticket/smartlink-anchor.spec.ts` | 1 |
 | Documents path route (E2E) | `tests/e2e/documents/path-style-routing.spec.ts` | 1 |
@@ -18,11 +18,11 @@
 
 | Constraint ID | Test File | Tests |
 |---------------|-----------|-------|
-| C1 | `src/utils/linkProcessor.mdt150.test.ts` | ticket reference classification unchanged |
-| C2 | `src/utils/linkProcessor.mdt150.test.ts` | external link classification unchanged |
-| C3 | `src/utils/linkBuilder.mdt150.test.ts`, `src/utils/linkNormalization.mdt150.test.ts`, `src/utils/markdownPreprocessor.mdt150.test.ts` | bare filenames, relative paths, sibling refs (incl. documents-view mode UAT 2026-07-21) |
-| C4 | `src/utils/linkBuilder.mdt150.test.ts`, `src/utils/linkNormalization.mdt150.test.ts` | no security checks in SmartLink |
-| C5 | `src/utils/markdownPreprocessor.mdt150.test.ts`, `src/utils/linkProcessor.mdt150.test.ts` | preprocessor/linkProcessor unchanged in ticket context (regression guard for UAT 2026-07-21 documents-mode branch) |
+| C1 | `frontend/src/utils/linkProcessor.mdt150.test.ts` | ticket reference classification unchanged |
+| C2 | `frontend/src/utils/linkProcessor.mdt150.test.ts` | external link classification unchanged |
+| C3 | `frontend/src/utils/linkBuilder.mdt150.test.ts`, `frontend/src/utils/linkNormalization.mdt150.test.ts`, `frontend/src/utils/markdownPreprocessor.mdt150.test.ts` | bare filenames, relative paths, sibling refs (incl. documents-view mode UAT 2026-07-21) |
+| C4 | `frontend/src/utils/linkBuilder.mdt150.test.ts`, `frontend/src/utils/linkNormalization.mdt150.test.ts` | no security checks in SmartLink |
+| C5 | `frontend/src/utils/markdownPreprocessor.mdt150.test.ts`, `frontend/src/utils/linkProcessor.mdt150.test.ts` | preprocessor/linkProcessor unchanged in ticket context (regression guard for UAT 2026-07-21 documents-mode branch) |
 
 ## RED Tests (expected to fail until implementation)
 
@@ -37,7 +37,7 @@ The first two test the original path resolution logic. The last two test the doc
 
 ```bash
 # Unit tests
-bun test src/utils/linkProcessor.mdt150.test.ts src/utils/linkBuilder.mdt150.test.ts src/utils/linkNormalization.mdt150.test.ts src/utils/markdownPreprocessor.mdt150.test.ts
+bun test frontend/src/utils/linkProcessor.mdt150.test.ts frontend/src/utils/linkBuilder.mdt150.test.ts frontend/src/utils/linkNormalization.mdt150.test.ts frontend/src/utils/markdownPreprocessor.mdt150.test.ts
 
 # E2E tests (after implementation)
 bun run test:e2e --grep="@MDT-150"

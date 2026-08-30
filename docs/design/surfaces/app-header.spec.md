@@ -28,26 +28,26 @@ Header (nav.header)
 
 | Child | Component | Spec | Conditional |
 |-------|-----------|------|-------------|
-| MobileLogo | `src/components/AppHeader/MobileLogo.tsx` | — | always |
-| ViewModeSwitcher | `src/components/ViewModeSwitcher/ViewModeSwitcher.tsx` | — | always |
-| ProjectSelector | `src/components/ProjectSelector/index.tsx` | `project-browser.spec.md` | always |
-| SecondaryHeader | `src/components/SecondaryHeader.tsx` | — | always |
-| AuthStatusAction | `src/components/AuthUnlock/AuthStatusAction.tsx` | `auth-session-unlock.spec.md` | locked mode only |
-| SortControls | `src/components/SortControls.tsx` | — | board or list view, desktop only |
-| HamburgerMenu | `src/components/HamburgerMenu.tsx` | — | always (via SecondaryHeader) |
+| MobileLogo | `frontend/src/components/AppHeader/MobileLogo.tsx` | — | always |
+| ViewModeSwitcher | `frontend/src/components/ViewModeSwitcher/ViewModeSwitcher.tsx` | — | always |
+| ProjectSelector | `frontend/src/components/ProjectSelector/index.tsx` | `project-browser.spec.md` | always |
+| SecondaryHeader | `frontend/src/components/SecondaryHeader.tsx` | — | always |
+| AuthStatusAction | `frontend/src/components/AuthUnlock/AuthStatusAction.tsx` | `auth-session-unlock.spec.md` | locked mode only |
+| SortControls | `frontend/src/components/SortControls.tsx` | — | board or list view, desktop only |
+| HamburgerMenu | `frontend/src/components/HamburgerMenu.tsx` | — | always (via SecondaryHeader) |
 
 ## Source files
 
 | Type | Path |
 |------|------|
-| Header | `src/components/Header/index.tsx` |
-| Nav composition | `src/components/routes/ProjectRouteHandler.tsx` (Header/HeaderContent in AppRoot) |
-| SecondaryHeader | `src/components/SecondaryHeader.tsx` |
-| HamburgerMenu | `src/components/HamburgerMenu.tsx` |
-| Auth status action | `src/components/AuthUnlock/AuthStatusAction.tsx` |
-| ViewModeSwitcher | `src/components/ViewModeSwitcher/ViewModeSwitcher.tsx` |
-| AppHeader exports | `src/components/AppHeader/index.tsx` |
-| Header CSS | `src/components/Header/header.css` |
+| Header | `frontend/src/components/Header/index.tsx` |
+| Nav composition | `frontend/src/components/routes/ProjectRouteHandler.tsx` (Header/HeaderContent in AppRoot) |
+| SecondaryHeader | `frontend/src/components/SecondaryHeader.tsx` |
+| HamburgerMenu | `frontend/src/components/HamburgerMenu.tsx` |
+| Auth status action | `frontend/src/components/AuthUnlock/AuthStatusAction.tsx` |
+| ViewModeSwitcher | `frontend/src/components/ViewModeSwitcher/ViewModeSwitcher.tsx` |
+| AppHeader exports | `frontend/src/components/AppHeader/index.tsx` |
+| Header CSS | `frontend/src/components/Header/header.css` |
 
 ## Layout
 
@@ -139,4 +139,4 @@ The menu is a positioned dropdown: `absolute right-0 top-full mt-1 w-48`, with c
 - Owner/admin-only actions must not be mounted in read-only mode. Backend authorization remains authoritative, but hidden components must not run owner-only effects.
 - Frontend API calls to `/api/*` must go through `authFetch` or an approved API wrapper so session cookies and owner-intent headers are applied consistently.
 - Future settings entry point: Settings item in the hamburger menu opens the dedicated Settings modal. See `settings.spec.md`.
-- ViewModeSwitcher does not persist its own state — persistence is handled by `src/components/routes/hooks/useViewModeRouting` (invoked from `ProjectRouteHandler.tsx`) via localStorage keys `lastBoardListMode`, `lastViewMode`, and `mdt-board-mode`.
+- ViewModeSwitcher does not persist its own state — persistence is handled by `frontend/src/components/routes/hooks/useViewModeRouting` (invoked from `ProjectRouteHandler.tsx`) via localStorage keys `lastBoardListMode`, `lastViewMode`, and `mdt-board-mode`.

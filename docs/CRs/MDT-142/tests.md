@@ -14,8 +14,8 @@ Test specification for subdocument SSE events in main project and worktree conte
 | `PathWatcherService` | `server/tests/fileWatcherService.subdocument.test.ts` | Unit | 8 |
 | `PathWatcherService` | `server/tests/fileWatcherService.worktree-monitor.test.ts` | Unit | 6 |
 | `SSEBroadcaster` | `server/tests/sseBroadcaster.subdocument.test.ts` | Unit | 7 |
-| `useSSEEvents` | `src/hooks/useSSEEvents.subdocument.test.ts` | Unit | 5 |
-| `TicketViewer` | `src/components/TicketViewer/useTicketDocumentRealtime.subdocument.test.ts` | Unit | 7 |
+| `useSSEEvents` | `frontend/src/hooks/useSSEEvents.subdocument.test.ts` | Unit | 5 |
+| `TicketViewer` | `frontend/src/components/TicketViewer/useTicketDocumentRealtime.subdocument.test.ts` | Unit | 7 |
 | E2E | `tests/e2e/filewatcher/subdocument-sse.spec.ts` | E2E | 5 |
 | `ProjectService` | `shared/tests/services/project/ProjectService.worktree.test.ts` | Integration | worktree-only listing |
 
@@ -66,8 +66,8 @@ bun run --cwd server jest fileWatcherService.worktree-monitor.test.ts
 bun run --cwd server jest sseBroadcaster.subdocument.test.ts
 
 # Frontend unit tests
-bun test src/hooks/useSSEEvents.subdocument.test.ts
-bun test src/components/TicketViewer/useTicketDocumentRealtime.subdocument.test.ts
+bun test frontend/src/hooks/useSSEEvents.subdocument.test.ts
+bun test frontend/src/components/TicketViewer/useTicketDocumentRealtime.subdocument.test.ts
 
 # E2E tests
 bun run test:e2e tests/e2e/filewatcher/subdocument-sse.spec.ts

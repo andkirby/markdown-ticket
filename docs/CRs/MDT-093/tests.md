@@ -6,10 +6,10 @@
 
 - useTicketDocumentNavigation: selected path, folder stack, URL hash sync, fallback to main (`TEST-nav-hook-unit`)
   Covers: `C4`, `BR-4.1`, `BR-4.2`, `BR-4.3`, `BR-4.4`
-  File: `src/components/TicketViewer/useTicketDocumentNavigation.test.ts`
+  File: `frontend/src/components/TicketViewer/useTicketDocumentNavigation.test.ts`
 - useTicketDocumentRealtime: SSE reconciliation, active-removed callback, degraded-mode safety (`TEST-realtime-hook-unit`)
   Covers: `C5`, `BR-5.1`, `BR-5.2`, `BR-5.4`
-  File: `src/components/TicketViewer/useTicketDocumentRealtime.test.ts`
+  File: `frontend/src/components/TicketViewer/useTicketDocumentRealtime.test.ts`
 
 ### integration
 

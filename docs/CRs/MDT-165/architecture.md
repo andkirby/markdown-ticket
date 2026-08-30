@@ -88,7 +88,7 @@ extractTableOfContents(markdown, headerLevelStart):
     - Links [text](url) → text
     Uses stripInlineMarkdown() helper in tableOfContents.ts
   Apply headerLevelStart offset to levels
-  Generate slug IDs using shared slugify() from src/utils/slugify.ts
+  Generate slug IDs using shared slugify() from frontend/src/utils/slugify.ts
   Return TocItem[] with { id, text, level }
 ```
 
@@ -97,7 +97,7 @@ extractTableOfContents(markdown, headerLevelStart):
 ### Flow 4: Heading ID Generation
 
 ```text
-markdown-it-anchor plugin configured with shared slugify() from src/utils/slugify.ts:
+markdown-it-anchor plugin configured with shared slugify() from frontend/src/utils/slugify.ts:
   slugify(text) = text.toLowerCase()
     .split(/\s+/).map(s => s.replace(/[^\p{L}\p{N}-]/gu, '')).join('-')
   Unicode-aware: preserves letters/numbers in all scripts (e.g., Über → über)
@@ -115,7 +115,7 @@ Custom permalink wraps heading content in clickable anchor:
 ## Invariants
 
 1. **Pipeline order is fixed**: `preprocessMarkdown → md.render() → processMermaidBlocks → highlightCodeBlocks → DOMPurify.sanitize`. No steps may be reordered, merged, or skipped. (C4)
-2. **Heading slug parity**: A single shared `slugify()` function in `src/utils/slugify.ts` is used by both `markdown-it-anchor` config and `tableOfContents.ts`. Any deviation breaks in-document anchor navigation silently. (C5)
+2. **Heading slug parity**: A single shared `slugify()` function in `frontend/src/utils/slugify.ts` is used by both `markdown-it-anchor` config and `tableOfContents.ts`. Any deviation breaks in-document anchor navigation silently. (C5)
 3. **Wireframe labels are escaped**: All label text passes through `escapeHtml` before insertion into the DOM. Never render raw info string content as HTML. (C1)
 4. **No Showdown remains**: After migration, zero source or test files import `showdown`, and `showdown` is absent from `package.json`. (C3)
 5. **TOC extraction is rendering-free**: `extractTableOfContents` must never invoke a markdown-to-HTML converter. It parses raw markdown text directly.

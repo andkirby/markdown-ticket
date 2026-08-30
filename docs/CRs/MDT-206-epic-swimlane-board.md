@@ -204,7 +204,7 @@ Gave swimlanes a deep-linkable URL, fixed the orphaned Default View setting, and
 
 **Changed requirement IDs:** `BR-1.1` (refined — Epics navigates to `/epics`), `BR-1.3` (new — Default View drives landing), `C7` (new — tokenized control size), `epics_route_is_deep_linkable` + `default_view_drives_landing` (new BDD scenarios).
 
-**Updated workflow documents:** `requirements.md`, `tests.md`, `uat.md`, `src/styleguide.html`; all `*.trace.md` projections re-rendered.
+**Updated workflow documents:** `requirements.md`, `tests.md`, `uat.md`, `frontend/src/styleguide.html`; all `*.trace.md` projections re-rendered.
 
 **Strict drift/lock:** not used (standard validate + render per stage).
 

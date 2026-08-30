@@ -169,7 +169,7 @@ Rejected alternatives:
   determined, and let consumers decide.
 - `useConfigSlice(selector)` uses the existing `configApiClient.readSelector`
   (add a single-selector read if not present) and subscribes to
-  `config:changed` via the existing SSE client (`src/services/sseClient`).
+  `config:changed` via the existing SSE client (`frontend/src/services/sseClient`).
 - The event payload and the SSE event type are registered as OpenAPI/contract
   types (C-9 from MDT-168 carries forward).
 

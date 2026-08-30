@@ -12,7 +12,7 @@ Accessibility/responsive: controls are real buttons; lane collapse uses `aria-ex
 
 Alternatives considered: a Board-local inline toggle was rejected after UAT because Design 3 treats Swimlanes as a peer view. Visible text labels were also rejected for this pass; the final control is icon-only with `aria-label` and `title`.
 
-Reviewer: self-review against `mdt-ux-designer`, `ux-designer-specifier`, `src/THEME.md`, `src/STYLING.md`, `docs/design/surfaces/swimlane-board.spec.md`, and `designs/board-zai/design3.html`.
+Reviewer: self-review against `mdt-ux-designer`, `ux-designer-specifier`, `frontend/src/THEME.md`, `frontend/src/STYLING.md`, `docs/design/surfaces/swimlane-board.spec.md`, and `designs/board-zai/design3.html`.
 
 Verdict: approved for implementation with ticket-local override.
 

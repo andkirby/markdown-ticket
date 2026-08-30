@@ -45,7 +45,7 @@ This is the minimal fix that solves the immediate problem without requiring arch
 
 ## 4. Implementation Specification
 
-**File:** `src/services/dataLayer.ts`
+**File:** `frontend/src/services/dataLayer.ts`
 
 Add a `pendingRequests` Map to track in-flight requests:
 
@@ -100,15 +100,15 @@ class DataLayer {
 
 ### Changes Made
 
-1. **`src/services/dataLayer.ts`**
+1. **`frontend/src/services/dataLayer.ts`**
    - Added `pendingRequests` Map to track in-flight requests
    - Added `dedupe<T>()` helper method that shares Promises across concurrent callers
    - Wrapped `fetchTickets()` and `fetchProjectConfig()` with deduplication
 
-2. **`src/hooks/useProjectManager.ts`**
+2. **`frontend/src/hooks/useProjectManager.ts`**
    - Updated `fetchProjectConfig` to use `dataLayer.fetchProjectConfig()` instead of raw `fetch()`
 
-3. **`src/services/dataLayer.dedupe.test.ts`**
+3. **`frontend/src/services/dataLayer.dedupe.test.ts`**
    - Added unit tests for deduplication behavior (10 tests, all passing)
 
 ### Verification

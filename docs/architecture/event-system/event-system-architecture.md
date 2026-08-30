@@ -385,7 +385,7 @@ graph LR
 #### 1. EventBus (Central Event Router)
 
 ```typescript
-// src/services/eventBus.ts
+// frontend/src/services/eventBus.ts
 type EventType =
   | 'ticket:created'
   | 'ticket:updated'
@@ -460,7 +460,7 @@ export const eventBus = new EventBus();
 #### 2. SSE Client (Connection Only)
 
 ```typescript
-// src/services/sseClient.ts
+// frontend/src/services/sseClient.ts
 import { eventBus } from './eventBus';
 
 class SSEClient {
@@ -571,7 +571,7 @@ export const sseClient = new SSEClient();
 #### 3. State Manager (React Context)
 
 ```typescript
-// src/contexts/TicketContext.tsx
+// frontend/src/contexts/TicketContext.tsx
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { eventBus } from '../services/eventBus';
 import { dataLayer } from '../services/dataLayer';
@@ -733,7 +733,7 @@ export const useTickets = () => {
 #### 4. Data Layer (API Abstraction)
 
 ```typescript
-// src/services/dataLayer.ts
+// frontend/src/services/dataLayer.ts
 class DataLayer {
   private baseUrl = '/api';
 
@@ -955,16 +955,16 @@ sequenceDiagram
 
 ```bash
 # Create new files alongside existing ones
-src/services/eventBus.ts          # New
-src/services/sseClient.ts          # New
-src/services/dataLayer.ts          # New
-src/contexts/TicketContext.tsx     # New
+frontend/src/services/eventBus.ts          # New
+frontend/src/services/sseClient.ts          # New
+frontend/src/services/dataLayer.ts          # New
+frontend/src/contexts/TicketContext.tsx     # New
 ```
 
 #### Step 2: Dual Mode (Old + New Running Together)
 
 ```typescript
-// Route handler (src/components/routes/ProjectRouteHandler.tsx) — App.tsx is a
+// Route handler (frontend/src/components/routes/ProjectRouteHandler.tsx) — App.tsx is a
 // route table only — Both systems running
 function ProjectRouteHandler() {
   // Old system (keep working)
@@ -1001,8 +1001,8 @@ function Board() {
 
 ```bash
 # After all components migrated
-git rm src/hooks/useMultiProjectData.ts
-git rm src/services/realtimeFileWatcher.ts
+git rm frontend/src/hooks/useMultiProjectData.ts
+git rm frontend/src/services/realtimeFileWatcher.ts
 # Simplify FileService to just API calls
 ```
 
@@ -1160,7 +1160,7 @@ test('should update UI when file changes on disk', async ({ page }) => {
 ### Event History Viewer
 
 ```typescript
-// src/components/DevTools.tsx
+// frontend/src/components/DevTools.tsx
 function EventHistoryViewer() {
   const [events, setEvents] = useState([]);
 
@@ -1246,7 +1246,7 @@ function StateInspector() {
 ### Code Organization
 
 ```text
-src/
+frontend/src/
 ├── services/
 │   ├── eventBus.ts          # Central event router
 │   ├── sseClient.ts          # SSE connection management

@@ -116,7 +116,7 @@ function normalizeTicketKey(key: string) {
 1. **Performance Optimization**
    - Changed from sequential N+1 queries to parallel fetching
    - `Promise.all()` reduces 10 projects from ~1000ms to ~100ms
-   - Routes: `src/utils/routing.ts:28-34`
+   - Routes: `frontend/src/utils/routing.ts:28-34`
 
 2. **Type Safety**
    - Eliminated duplicate `Project` interfaces across 6 files

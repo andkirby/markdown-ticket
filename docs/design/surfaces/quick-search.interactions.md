@@ -76,7 +76,7 @@ Keyboard selection uses the same order. When a group is hidden by scope or has n
 | `ArrowUp` | move selected index to the previous visible selectable result |
 | `Enter` | activate the selected visible result |
 
-`Tab` is a scope command inside this modal, not normal focus traversal. If the modal accessibility model changes, this contract must be revisited with `src/MODALS.md`.
+`Tab` is a scope command inside this modal, not normal focus traversal. If the modal accessibility model changes, this contract must be revisited with `frontend/src/MODALS.md`.
 
 ## Enter Dispatch
 

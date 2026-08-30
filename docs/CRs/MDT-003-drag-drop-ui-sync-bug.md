@@ -175,7 +175,7 @@ After thorough investigation of the codebase, the real root cause was identified
 // - Handle various date formats properly
 ```
 
-#### 2. Frontend Data Handling (`src/hooks/useMultiProjectData.ts`)
+#### 2. Frontend Data Handling (`frontend/src/hooks/useMultiProjectData.ts`)
 
 ```typescript
 // Added proper date parsing for backend string dates
@@ -183,7 +183,7 @@ After thorough investigation of the codebase, the real root cause was identified
 // Ensured compatibility with backend data format
 ```
 
-#### 3. Markdown Formatter Fix (`src/services/markdownParser.ts`)
+#### 3. Markdown Formatter Fix (`frontend/src/services/markdownParser.ts`)
 
 ```typescript
 // Fixed formatTicketAsMarkdown() to handle both Date objects and strings
@@ -309,8 +309,8 @@ While the current fix fully resolves the issue, potential future enhancements co
 
 #### Modified Files
 - **`server/projectDiscovery.js`** (Modified) - Fixed `getProjectCRs()` function to properly parse YAML frontmatter from ticket files. Added fallback support for legacy markdown-style headers. Enhanced status extraction and date handling.
-- **`src/hooks/useMultiProjectData.ts`** (Modified) - Added proper date parsing for backend string dates. Enhanced field mapping for YAML frontmatter fields.
-- **`src/services/markdownParser.ts`** (Modified) - Fixed `formatTicketAsMarkdown()` to handle both Date objects and strings. Added safe date formatting to prevent `toISOString()` errors.
+- **`frontend/src/hooks/useMultiProjectData.ts`** (Modified) - Added proper date parsing for backend string dates. Enhanced field mapping for YAML frontmatter fields.
+- **`frontend/src/services/markdownParser.ts`** (Modified) - Fixed `formatTicketAsMarkdown()` to handle both Date objects and strings. Added safe date formatting to prevent `toISOString()` errors.
 - **UI Components** (Modified) - Added missing CSS classes (`.board-container`, `.column`, `.draggable-ticket`) for E2E test compatibility. Enhanced visual feedback for drag operations.
 
 #### Key Implementation Changes

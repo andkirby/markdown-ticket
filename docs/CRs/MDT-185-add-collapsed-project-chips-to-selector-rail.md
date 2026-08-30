@@ -30,11 +30,11 @@ Inactive project chips in the selector rail are now **always hidden by default**
 
 ## Affected files
 
-- `src/components/ProjectSelector/ProjectSelectorRail.tsx` — owns hover state; renders the `CollapsedChipsIndicator` overlay and the `‹` hint.
-- `src/components/ProjectSelector/CollapsedChipsIndicator.tsx` — controlled portaled overlay; transparent container; positions via the active card ref.
-- `src/components/ProjectSelector/useCollapsedChips.ts` — `isExpanded`/`expand`/`collapse` with debounced leave.
-- `src/components/ProjectSelector/project-selector.css` — `.rail-expand-hint`, `.collapsed-chips-overlay`, stagger keyframes.
-- `src/components/ProjectSelector/CollapsedChipsIndicator.test.tsx` — unit tests.
+- `frontend/src/components/ProjectSelector/ProjectSelectorRail.tsx` — owns hover state; renders the `CollapsedChipsIndicator` overlay and the `‹` hint.
+- `frontend/src/components/ProjectSelector/CollapsedChipsIndicator.tsx` — controlled portaled overlay; transparent container; positions via the active card ref.
+- `frontend/src/components/ProjectSelector/useCollapsedChips.ts` — `isExpanded`/`expand`/`collapse` with debounced leave.
+- `frontend/src/components/ProjectSelector/project-selector.css` — `.rail-expand-hint`, `.collapsed-chips-overlay`, stagger keyframes.
+- `frontend/src/components/ProjectSelector/CollapsedChipsIndicator.test.tsx` — unit tests.
 - `tests/e2e/selector/project-selector.spec.ts` — E2E tests (hover-reveal behavior).
 
 ## Verification

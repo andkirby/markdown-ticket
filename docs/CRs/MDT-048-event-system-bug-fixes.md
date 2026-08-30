@@ -162,9 +162,9 @@ useEffect(() => {
 - `server/projectDiscovery.js`: Confirmed auto-discovery works without manual registration
 
 ### Frontend
-- `src/services/realtimeFileWatcher.ts`: Added project-created event handler
-- `src/components/AddProjectModal.tsx`: Added onProjectCreated callback
-- `src/App.tsx`: Added useEffect import and custom event listener
+- `frontend/src/services/realtimeFileWatcher.ts`: Added project-created event handler
+- `frontend/src/components/AddProjectModal.tsx`: Added onProjectCreated callback
+- `frontend/src/App.tsx`: Added useEffect import and custom event listener
 
 ## Impact
 

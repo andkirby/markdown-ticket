@@ -13,9 +13,9 @@
 | `server/services/TicketService.ts` | `server/services/__tests__/TicketService.worktree.test.ts` | 5 | RED |
 | `server/routes/tickets.ts` | `server/routes/__tests__/crs.worktree.test.ts` | 5 | RED |
 | `mcp-server/src/tools/handlers/crHandlers.ts` | `mcp-server/src/tools/handlers/__tests__/crHandlers.worktree.test.ts` | 8 | RED |
-| `src/types/ticket.ts` | `src/types/__tests__/ticket.worktree.test.ts` | 8 | RED |
-| `src/components/TicketCard.tsx` | `src/components/__tests__/TicketCard.worktree.test.tsx` | 5 | RED |
-| `src/components/TicketRow.tsx` | `src/components/__tests__/TicketRow.worktree.test.tsx` | 4 | RED |
+| `frontend/src/types/ticket.ts` | `frontend/src/types/__tests__/ticket.worktree.test.ts` | 8 | RED |
+| `frontend/src/components/TicketCard.tsx` | `frontend/src/components/__tests__/TicketCard.worktree.test.tsx` | 5 | RED |
+| `frontend/src/components/TicketRow.tsx` | `frontend/src/components/__tests__/TicketRow.worktree.test.tsx` | 4 | RED |
 
 **Total Tests**: 77
 
@@ -63,7 +63,7 @@ Unit Tests (RED - will fail until implemented)
 │   └── services/__tests__/TicketService.worktree.test.ts # Path resolution
 ├── mcp-server/src/tools/handlers/__tests__/
 │   └── crHandlers.worktree.test.ts                   # MCP tool integration
-└── src/
+└── frontend/src/
     ├── types/__tests__/ticket.worktree.test.ts       # Type definitions
     └── components/__tests__/
         ├── TicketCard.worktree.test.tsx              # Board view badge

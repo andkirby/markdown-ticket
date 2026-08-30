@@ -117,8 +117,8 @@ Place `formatCrKey()` in `shared/utils/keyNormalizer.ts` — it already owns key
 | 5 | `shared/test-lib/ticket/helpers/TicketCodeHelper.ts` | 55 | Test helper |
 | 6 | `shared/services/__tests__/WorktreeService.test.ts` | 419 | Test fixture |
 | 7 | `shared/tests/services/MDT-094/MarkdownService.scanTicketMetadata.test.ts` | 214-215 | Test fixture |
-| 8 | `src/utils/routing.ts` | 15 | Frontend URL routing |
-| 9 | `src/hooks/useQuickSearch.ts` | 93 | Quick search input |
+| 8 | `frontend/src/utils/routing.ts` | 15 | Frontend URL routing |
+| 9 | `frontend/src/hooks/useQuickSearch.ts` | 93 | Quick search input |
 | 10 | `server/tests/mocks/shared/services/TicketService.ts` | 181 | Server test mock |
 
 ### Key design decision

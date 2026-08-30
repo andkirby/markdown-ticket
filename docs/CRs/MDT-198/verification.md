@@ -85,7 +85,7 @@ Verifier:
 
 ```bash
 cd docs/CRs/MDT-198/poc/d1-binding
-bun run src/verify.ts
+bun run frontend/src/verify.ts
 ```
 
 Result:
@@ -123,7 +123,7 @@ multi-isolate capacity, network latency, or Access integration.
    unnecessary per-project binding secret.
 7. Corrected the polling calculation: 172,800 requests/day is not necessarily
    172,800 D1 rows read.
-8. Corrected `frontend/` to `src/`, `O_EXNL` to `O_EXCL`, and removed an
+8. Corrected `frontend/` to `frontend/src/`, `O_EXNL` to `O_EXCL`, and removed an
    unsupported claim that presence doubles cost.
 9. Reframed Durable Objects as stateful/realtime infrastructure, not a D1
    throughput workaround.

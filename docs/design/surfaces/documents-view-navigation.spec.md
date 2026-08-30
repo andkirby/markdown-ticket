@@ -31,31 +31,31 @@ DocumentsLayout
 
 | Child | Component | Spec | Conditional |
 |-------|-----------|------|-------------|
-| DocumentsLayout | `src/components/DocumentsView/DocumentsLayout.tsx` | this spec | always in documents route |
-| SidebarHeader | `src/components/DocumentsView/DocumentsLayout.tsx` | this spec | always |
-| SearchRow | `src/components/DocumentsView/DocumentsLayout.tsx` | this spec | always |
-| ToolbarRow | `src/components/DocumentsView/DocumentsLayout.tsx` | this spec | always |
-| SearchInput | `src/components/DocumentsView/DocumentsLayout.tsx` | this spec | always |
-| FavDocuments | `src/components/DocumentsView/FavDocuments.tsx` | this spec | when reconciled favs exist |
-| RecentDocuments | `src/components/DocumentsView/RecentDocuments.tsx` | this spec | when user has opened documents |
-| FileTree | `src/components/DocumentsView/FileTree.tsx` | this spec | when documents are configured |
-| NoDocumentPathsEmptyState | `src/components/DocumentsView/DocumentsLayout.tsx` | this spec | when backend reports no configured document paths |
-| DocumentFilenameTabs | `src/components/DocumentsView/DocumentFilenameTabs.tsx` | `document-filename-tabs.spec.md` | when selected markdown file belongs to a filename group |
-| MarkdownViewer | `src/components/DocumentsView/MarkdownViewer.tsx` | `documents-view-file-updates.spec.md` | when a file is selected |
-| PathSelector | `src/components/DocumentsView/PathSelector.tsx` | `documents-path-selector.spec.md` | when a write-capable user opens document path configuration |
+| DocumentsLayout | `frontend/src/components/DocumentsView/DocumentsLayout.tsx` | this spec | always in documents route |
+| SidebarHeader | `frontend/src/components/DocumentsView/DocumentsLayout.tsx` | this spec | always |
+| SearchRow | `frontend/src/components/DocumentsView/DocumentsLayout.tsx` | this spec | always |
+| ToolbarRow | `frontend/src/components/DocumentsView/DocumentsLayout.tsx` | this spec | always |
+| SearchInput | `frontend/src/components/DocumentsView/DocumentsLayout.tsx` | this spec | always |
+| FavDocuments | `frontend/src/components/DocumentsView/FavDocuments.tsx` | this spec | when reconciled favs exist |
+| RecentDocuments | `frontend/src/components/DocumentsView/RecentDocuments.tsx` | this spec | when user has opened documents |
+| FileTree | `frontend/src/components/DocumentsView/FileTree.tsx` | this spec | when documents are configured |
+| NoDocumentPathsEmptyState | `frontend/src/components/DocumentsView/DocumentsLayout.tsx` | this spec | when backend reports no configured document paths |
+| DocumentFilenameTabs | `frontend/src/components/DocumentsView/DocumentFilenameTabs.tsx` | `document-filename-tabs.spec.md` | when selected markdown file belongs to a filename group |
+| MarkdownViewer | `frontend/src/components/DocumentsView/MarkdownViewer.tsx` | `documents-view-file-updates.spec.md` | when a file is selected |
+| PathSelector | `frontend/src/components/DocumentsView/PathSelector.tsx` | `documents-path-selector.spec.md` | when a write-capable user opens document path configuration |
 
 ## Source files
 
 | Type | Path |
 |------|------|
-| Layout | `src/components/DocumentsView/DocumentsLayout.tsx` |
-| Layout CSS | `src/components/DocumentsView/documents-view.css` |
-| Favs | `src/components/DocumentsView/FavDocuments.tsx` |
-| Recent | `src/components/DocumentsView/RecentDocuments.tsx` |
-| Tree | `src/components/DocumentsView/FileTree.tsx` |
-| Navigation preferences | `src/config/documentNavigation.ts` |
-| Fav star entity | `src/styles/entities/fav-star.css` |
-| Path configuration | `src/components/DocumentsView/PathSelector.tsx` |
+| Layout | `frontend/src/components/DocumentsView/DocumentsLayout.tsx` |
+| Layout CSS | `frontend/src/components/DocumentsView/documents-view.css` |
+| Favs | `frontend/src/components/DocumentsView/FavDocuments.tsx` |
+| Recent | `frontend/src/components/DocumentsView/RecentDocuments.tsx` |
+| Tree | `frontend/src/components/DocumentsView/FileTree.tsx` |
+| Navigation preferences | `frontend/src/config/documentNavigation.ts` |
+| Fav star entity | `frontend/src/styles/entities/fav-star.css` |
+| Path configuration | `frontend/src/components/DocumentsView/PathSelector.tsx` |
 | Existing update spec | `docs/design/surfaces/documents-view-file-updates.spec.md` |
 | Filename tabs spec | `docs/design/surfaces/document-filename-tabs.spec.md` |
 
@@ -250,7 +250,7 @@ DocumentsLayout
 | copy path button | `.copy-path-btn` | hover-revealed trailing action — see `copy-document-path.spec.md` |
 | row hover group | `.group` (Tailwind) | required on all row containers for trailing-action hover cascade |
 | sidebar section | Tailwind inline utilities | compact section spacing and dividers |
-| favs scroll region | `ScrollArea` (shadcn) with `min-h-0` + relative `max-h` bound (≈ one third of column, tunable) | shared `ScrollArea` mechanism with board `Column` — see `src/components/Column/index.tsx`, `src/components/Column/column.css`; bound resolves against the `.documents-view__navigation-panel` definite height |
+| favs scroll region | `ScrollArea` (shadcn) with `min-h-0` + relative `max-h` bound (≈ one third of column, tunable) | shared `ScrollArea` mechanism with board `Column` — see `frontend/src/components/Column/index.tsx`, `frontend/src/components/Column/column.css`; bound resolves against the `.documents-view__navigation-panel` definite height |
 
 ## Extension notes
 

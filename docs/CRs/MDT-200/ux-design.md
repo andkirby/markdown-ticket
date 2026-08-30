@@ -3,7 +3,7 @@
 **Scope**: only the durable UX for states cloud sync adds to the existing
 board. This is a focused spec, not a redesign. Existing board patterns are
 reused (`TicketCard`, `Board.tsx` Tailwind idioms, `opacity-50 cursor-not-allowed`
-for disabled). See [`src/MODALS.md`](../../../src/MODALS.md) for overlay rules.
+for disabled). See [`frontend/src/MODALS.md`](../../../frontend/src/MODALS.md) for overlay rules.
 
 **Why a gate**: projection stubs, stale state, conflicts, and degraded behavior
 change what the board shows. The board must never confuse projected state with

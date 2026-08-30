@@ -43,13 +43,13 @@
 ## Test Utilities (Fixtures)
 
 ### MUST
-- Live in `src/testing/` directory
+- Live in `frontend/src/testing/` directory
 - Be exported via separate subpath (e.g., `domain-contracts/testing`)
 - Use schemas to generate valid test data
 - Follow builder pattern for flexibility
 
 ### MUST NOT
-- Be exported from main entry point (`src/index.ts`)
+- Be exported from main entry point (`frontend/src/index.ts`)
 - Be bundled with production code
 
 ## Dependency Direction

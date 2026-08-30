@@ -16,7 +16,7 @@ server/
 │   ├── permissions.js        # File permissions handling
 │   └── configManager.js      # Configuration utilities
 ├── mcp-dev-tools/           # MCP development utilities
-│   ├── src/
+│   ├── frontend/src/
 │   │   ├── index.ts         # MCP dev server entry point
 │   │   └── tools/           # Development tools
 │   └── package.json         # MCP dev tools dependencies

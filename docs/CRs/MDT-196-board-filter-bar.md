@@ -65,8 +65,8 @@ Out of scope (deferred with evidence):
 ### Constraints
 
 - Must extend the existing `TicketFilters` contract in `domain-contracts/src/ticket/input.ts` additively — existing callers (MCP `list_crs`, any server-side filter) must keep working without modification.
-- Must reuse existing primitives: `src/components/ui/popover.tsx`, Radix `DropdownMenu`, existing `Badge` styling for chips. No new primitive for v1.
-- Must persist via localStorage, mirroring the existing `markdown-ticket-sort-preferences` pattern (`src/config/sorting.ts`).
+- Must reuse existing primitives: `frontend/src/components/ui/popover.tsx`, Radix `DropdownMenu`, existing `Badge` styling for chips. No new primitive for v1.
+- Must persist via localStorage, mirroring the existing `markdown-ticket-sort-preferences` pattern (`frontend/src/config/sorting.ts`).
 - Must respect the spatial boundary contract: the filter controls render inline in the app header's single row, inside the `header__left` dead zone (after ProjectSelector); the planned pin rail (IDEA-002) owns a separate left rail. The filter surface must never add a second header line. See `docs/design/surfaces/board-filter-bar.spec.md` §"Spatial boundary" and §"The one rule".
 - Must not break the existing mobile one-column-at-a-time board layout (`useBoardLayout.ts`, `max-width: 768px`).
 - Must remain functional in read-only access modes (filtering does not mutate server state).

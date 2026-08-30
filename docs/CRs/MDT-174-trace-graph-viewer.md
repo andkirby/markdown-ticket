@@ -16,20 +16,20 @@ priority: High
 
 ### Problem
 
-- `src/components/TicketViewer/index.tsx` has no ticket-scoped entry point for spec-trace graph data.
+- `frontend/src/components/TicketViewer/index.tsx` has no ticket-scoped entry point for spec-trace graph data.
 - `server/routes/projects.ts` exposes ticket and subdocument reads, but no endpoint for the standard trace store path.
 - The standalone spec-trace dashboard at `/Users/kirby/home/mdt-prompts/tools/spec-trace/dashboard/trace-dashboard.html` can render trace stores, but Markdown Ticket does not expose it from the ticket viewer.
 - The user flow must preserve dashboard styles without rewriting the graph board as React.
 
 ### Affected Artifacts
 
-- `src/components/TicketViewer/index.tsx` - render conditional trace graph entry and open shell; reflect shell open state in the `#trace` URL hash.
-- `src/components/TicketViewer/CompactTicketHeader.tsx` - host or expose header action placement.
-- `src/components/TicketViewer/TraceGraphShell.tsx` - new full-screen parent shell.
-- `src/components/TicketViewer/useTraceStoreAvailability.ts` - new availability hook.
-- `src/components/TicketViewer/useTicketDocumentNavigation.ts` - exclude reserved `#trace` from the legacy hash→subdoc redirect; preserve `#trace` across subdoc URL rewrites.
-- `src/routes.ts` - reserved trace-graph hash token and helpers (`TRACE_GRAPH_HASH`, `TRACE_GRAPH_HASH_FRAGMENT`, `isTraceGraphHash`).
-- `src/services/dataLayer.ts` - trace store metadata/data fetch methods.
+- `frontend/src/components/TicketViewer/index.tsx` - render conditional trace graph entry and open shell; reflect shell open state in the `#trace` URL hash.
+- `frontend/src/components/TicketViewer/CompactTicketHeader.tsx` - host or expose header action placement.
+- `frontend/src/components/TicketViewer/TraceGraphShell.tsx` - new full-screen parent shell.
+- `frontend/src/components/TicketViewer/useTraceStoreAvailability.ts` - new availability hook.
+- `frontend/src/components/TicketViewer/useTicketDocumentNavigation.ts` - exclude reserved `#trace` from the legacy hash→subdoc redirect; preserve `#trace` across subdoc URL rewrites.
+- `frontend/src/routes.ts` - reserved trace-graph hash token and helpers (`TRACE_GRAPH_HASH`, `TRACE_GRAPH_HASH_FRAGMENT`, `isTraceGraphHash`).
+- `frontend/src/services/dataLayer.ts` - trace store metadata/data fetch methods.
 - `server/routes/projects.ts` - trace store routes under ticket resource.
 - `server/controllers/ProjectController.ts` - trace store route handlers.
 - `server/services/TicketService.ts` - project/ticket trace store lookup.
@@ -86,8 +86,8 @@ Embed the static trace dashboard in a ticket-owned full-screen iframe shell with
 
 | Artifact | Type | Purpose |
 |----------|------|---------|
-| `src/components/TicketViewer/TraceGraphShell.tsx` | Component | Full-screen shell with Back button and iframe |
-| `src/components/TicketViewer/useTraceStoreAvailability.ts` | Hook | Check whether trace store metadata exists for the open ticket |
+| `frontend/src/components/TicketViewer/TraceGraphShell.tsx` | Component | Full-screen shell with Back button and iframe |
+| `frontend/src/components/TicketViewer/useTraceStoreAvailability.ts` | Hook | Check whether trace store metadata exists for the open ticket |
 | `public/spec-trace/trace-dashboard.html` | Static asset | Dashboard reader copied from spec-trace with ticket-based boot params |
 | `server/services/TraceStoreService.ts` or server-local helper | Service/helper | Resolve and read `{ticketsDir}/.trace/{ticketCode}/store.json` safely |
 | `server/tests/api/ticket-trace-store.test.ts` | API test | Verify metadata, read, missing store, and path containment behavior |
@@ -97,9 +97,9 @@ Embed the static trace dashboard in a ticket-owned full-screen iframe shell with
 
 | Artifact | Change Type | Modification |
 |----------|-------------|--------------|
-| `src/components/TicketViewer/index.tsx` | Composition change | Wire availability hook, render action, open/close `TraceGraphShell` |
-| `src/components/TicketViewer/CompactTicketHeader.tsx` | Header action support | Allow trace action placement after badge row or expose action slot |
-| `src/services/dataLayer.ts` | Methods added | Add trace metadata and trace store fetch methods |
+| `frontend/src/components/TicketViewer/index.tsx` | Composition change | Wire availability hook, render action, open/close `TraceGraphShell` |
+| `frontend/src/components/TicketViewer/CompactTicketHeader.tsx` | Header action support | Allow trace action placement after badge row or expose action slot |
+| `frontend/src/services/dataLayer.ts` | Methods added | Add trace metadata and trace store fetch methods |
 | `server/routes/projects.ts` | Routes added | Add ticket trace store metadata and JSON routes |
 | `server/controllers/ProjectController.ts` | Handlers added | Handle trace store metadata/read responses |
 | `server/services/TicketService.ts` | Service methods added | Resolve project, ticket, and trace store location |
@@ -180,7 +180,7 @@ Embed the static trace dashboard in a ticket-owned full-screen iframe shell with
 - Frontend unit: availability hook maps metadata states to render states.
 - Frontend unit: TraceGraphShell builds iframe URL from project code and ticket code.
 - Frontend unit: clicking `Trace Graph` appends `#trace`; Back removes it; an initial URL carrying `#trace` opens the shell on mount; dropping the hash via navigation closes it.
-- Frontend unit: `isTraceGraphHash` and the reserved token in `src/routes.ts`.
+- Frontend unit: `isTraceGraphHash` and the reserved token in `frontend/src/routes.ts`.
 - E2E: open ticket with trace store -> `Trace Graph` appears -> shell opens -> Back returns to ticket.
 - E2E: open ticket without trace store -> `Trace Graph` is absent.
 - Manual: verify dashboard styles are preserved inside iframe.
@@ -189,8 +189,8 @@ Embed the static trace dashboard in a ticket-owned full-screen iframe shell with
 
 ### Feature Verification
 
-- `src/components/TicketViewer/TraceGraphShell.tsx` exists and renders Back + iframe.
-- `src/components/TicketViewer/useTraceStoreAvailability.ts` exists and is used by Ticket Viewer.
+- `frontend/src/components/TicketViewer/TraceGraphShell.tsx` exists and renders Back + iframe.
+- `frontend/src/components/TicketViewer/useTraceStoreAvailability.ts` exists and is used by Ticket Viewer.
 - `public/spec-trace/trace-dashboard.html` exists and supports `project` + `ticket` params.
 - Server trace store endpoints exist under the ticket route.
 - Server tests for trace store access pass.

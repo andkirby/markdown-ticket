@@ -7,7 +7,7 @@ This file provides practical examples of how to use the Tailwind CSS template wi
 ### 1. TicketCard Component
 
 ```tsx
-// src/components/TicketCard.tsx
+// frontend/src/components/TicketCard.tsx
 import React from 'react';
 import { Ticket } from '../types';
 
@@ -72,7 +72,7 @@ export default TicketCard;
 ### 2. Column Component
 
 ```tsx
-// src/components/Column.tsx
+// frontend/src/components/Column.tsx
 import React from 'react';
 import { Ticket, Status } from '../types';
 import { useDrag, useDrop } from 'react-dnd';
@@ -160,7 +160,7 @@ export default Column;
 ### 3. Board Component
 
 ```tsx
-// src/components/Board.tsx
+// frontend/src/components/Board.tsx
 import React from 'react';
 import { Ticket, Status } from '../types';
 import { DndProvider, useDrop } from 'react-dnd';
@@ -256,7 +256,7 @@ export default Board;
 ### 4. Modal Component
 
 ```tsx
-// src/components/Modal.tsx
+// frontend/src/components/Modal.tsx
 import React from 'react';
 import { Button } from './UI/index';
 
@@ -303,7 +303,7 @@ export default Modal;
 ### 5. Form Components
 
 ```tsx
-// src/components/Form.tsx
+// frontend/src/components/Form.tsx
 import React from 'react';
 import { Button } from './UI/index';
 

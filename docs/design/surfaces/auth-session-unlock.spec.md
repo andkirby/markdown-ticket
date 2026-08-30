@@ -38,10 +38,10 @@ AuthUnlockPanel
 
 | Type | Proposed path |
 |------|---------------|
-| Auth state provider | `src/auth/AuthSessionProvider.tsx` |
-| Fetch wrapper | `src/auth/authFetch.ts` |
-| Unlock panel | `src/components/AuthUnlock/AuthUnlockPanel.tsx` |
-| Auth status header action | `src/components/AuthUnlock/AuthStatusAction.tsx` |
+| Auth state provider | `frontend/src/auth/AuthSessionProvider.tsx` |
+| Fetch wrapper | `frontend/src/auth/authFetch.ts` |
+| Unlock panel | `frontend/src/components/AuthUnlock/AuthUnlockPanel.tsx` |
+| Auth status header action | `frontend/src/components/AuthUnlock/AuthStatusAction.tsx` |
 | Backend session route | `server/routes/auth.ts` |
 | Backend auth owner extension | `server/security/apiAuth.ts` |
 | API tests | `server/tests/api/auth-session.test.ts` |

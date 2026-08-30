@@ -138,7 +138,7 @@ TASK-14 shipped items 1-2 + 5-6 below. TASK-15 is the remaining work:
 1. ~~Add `[project.document.preview]` config schema (allowedExternalDomains,
    allowUnsafeEval) — strict defaults.~~ **Shipped (TASK-14).**
 2. ~~Serving route derives CSP from config (replaces the hardcoded constant).~~ **Shipped (TASK-14).**
-3. Mint endpoint statically scans the selected HTML's external `src`/`href`
+3. Mint endpoint statically scans the selected HTML's external `frontend/src`/`href`
    and returns a "needs approval" list when the config doesn't cover them.
 4. Frontend dialog surfaces the list; user picks domains; persisted to config.
 5. ~~`RAW_PREVIEW_CSP` constant deleted; CSP is always per-request.~~ **Shipped (TASK-14).**

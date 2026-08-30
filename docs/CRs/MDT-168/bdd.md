@@ -63,7 +63,7 @@ These mechanics must be preserved by implementers and E2E authors:
   read-only session, not just an absent-auth request.
 - **Browser-only settings** to assert isolation against: theme quick toggle,
   default view, card density, markdown density, event history visibility,
-  document tree recents/sort/collapse (see `src/config/*.ts`). Changing any of
+  document tree recents/sort/collapse (see `frontend/src/config/*.ts`). Changing any of
   these must not produce a TOML-writing network call.
 - **maxDepth** valid range differs by concept: document maxDepth is 1–10,
   discovery maxDepth is 1–50. Validation tests must use range-appropriate

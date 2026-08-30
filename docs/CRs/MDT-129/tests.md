@@ -9,13 +9,13 @@
   File: `server/tests/api/selector.test.ts`
 - Selector Data Hook Tests (`TEST-selector-data-hook`)
   Covers: `BR-7.1`, `BR-7.2`, `BR-7.3`, `BR-7.4`, `BR-7.5`, `BR-8.1`, `BR-8.2`, `BR-8.3`, `BR-8.4`, `BR-8.5`, `BR-8.6`, `BR-8.7`, `BR-10.1`, `BR-10.2`, `BR-10.3`, `BR-10.4`, `BR-10.5`, `BR-10.6`, `BR-10.7`, `C1`, `C2`, `C3`, `C5`, `C6`, `C10`
-  File: `src/components/ProjectSelector/useSelectorData.test.ts`
+  File: `frontend/src/components/ProjectSelector/useSelectorData.test.ts`
 - Selector Ordering Logic Tests (`TEST-selector-ordering`)
   Covers: `BR-6.1`, `BR-6.2`, `BR-6.3`, `BR-6.4`, `BR-4.3`, `BR-4.4`
-  File: `src/utils/selectorOrdering.test.ts`
+  File: `frontend/src/utils/selectorOrdering.test.ts`
 - Project Browser Keyboard Navigation Tests (`TEST-browser-keyboard-nav`)
   Covers: `BR-11.1`, `BR-11.2`, `BR-11.3`, `BR-11.4`, `BR-11.5`, `BR-11.6`
-  File: `src/components/ProjectSelector/ProjectBrowserPanel.test.tsx`
+  File: `frontend/src/components/ProjectSelector/ProjectBrowserPanel.test.tsx`
 
 ### e2e
 

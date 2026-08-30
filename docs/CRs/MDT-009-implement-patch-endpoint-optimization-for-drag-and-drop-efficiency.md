@@ -136,8 +136,8 @@ No configuration changes required - backward compatible implementation.
 
 **Files Modified:**
 - `server/server.js` - Added PATCH endpoint (lines 684-806)
-- `src/hooks/useMultiProjectData.ts` - Added intelligent request routing
-- `src/components/Board.tsx` - Simplified drag-and-drop payload
+- `frontend/src/hooks/useMultiProjectData.ts` - Added intelligent request routing
+- `frontend/src/components/Board.tsx` - Simplified drag-and-drop payload
 
 ## References
 

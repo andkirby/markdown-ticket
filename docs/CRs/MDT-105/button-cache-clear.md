@@ -32,7 +32,7 @@ Force reload page with ?cache-bust={timestamp}
 
 ### Frontend
 
-**Hamburger Menu Component** (`src/components/HamburgerMenu.tsx:96-101`):
+**Hamburger Menu Component** (`frontend/src/components/HamburgerMenu.tsx:96-101`):
 
 ```tsx
 <button
@@ -44,7 +44,7 @@ Force reload page with ?cache-bust={timestamp}
 </button>
 ```
 
-**Handler** (`src/components/HamburgerMenu.tsx:50-54`):
+**Handler** (`frontend/src/components/HamburgerMenu.tsx:50-54`):
 
 ```tsx
 function handleClearCache() {
@@ -54,7 +54,7 @@ function handleClearCache() {
 }
 ```
 
-**Nuclear Cache Clear Function** (`src/utils/cache.ts:80-103`):
+**Nuclear Cache Clear Function** (`frontend/src/utils/cache.ts:80-103`):
 
 ```tsx
 export async function nuclearCacheClear() {
@@ -160,7 +160,7 @@ The "Clear Cache" button is **incomplete**:
 
 ### Development Tools
 
-In development mode, these are exposed globally (`src/utils/cache.ts:104-108`):
+In development mode, these are exposed globally (`frontend/src/utils/cache.ts:104-108`):
 
 ```tsx
 (window as any).clearCache = clearAllCache;

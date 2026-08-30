@@ -131,7 +131,7 @@ consuming the sidebar. Canonical design updated in
 **Updated documents:** `docs/design/surfaces/documents-view-navigation.spec.md`,
 `docs/design/surfaces/documents-view-navigation.mockups.md`.
 
-**Affected code:** `src/components/DocumentsView/FavDocuments.tsx`,
-`src/components/DocumentsView/DocumentsLayout.tsx`.
+**Affected code:** `frontend/src/components/DocumentsView/FavDocuments.tsx`,
+`frontend/src/components/DocumentsView/DocumentsLayout.tsx`.
 
-**Affected tests:** `src/components/DocumentsView/FavDocuments.test.tsx`.
+**Affected tests:** `frontend/src/components/DocumentsView/FavDocuments.test.tsx`.

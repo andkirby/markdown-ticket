@@ -52,9 +52,9 @@ Three test layers, cheapest first, matching the project's existing conventions:
 
 | Module                | Test File                             | Covers                        | Tests                                                                                                          |
 | --------------------- | ------------------------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `configApiClient.ts`  | `src/config/configApiClient.test.ts`  | BR-1.1, BR-2.2                | read returns descriptors; mutation maps field errors                                                           |
-| `useBackendConfig.ts` | `src/hooks/useBackendConfig.test.tsx` | BR-3.2, BR-6.1, BR-7.1, Edge-6 | staged edits + save status; browser-only change emits no backend call; **ui.projectSelector.* save emits selector-prefs refresh signal** |
-| `useSelectorData.ts`  | `src/components/ProjectSelector/useSelectorData.test.tsx` | BR-7.1 | **on `mdt:selector-prefs-updated`, re-fetches backend prefs from `/api/config/selector` and layers localStorage overrides (preserves merge order)** |
+| `configApiClient.ts`  | `frontend/src/config/configApiClient.test.ts`  | BR-1.1, BR-2.2                | read returns descriptors; mutation maps field errors                                                           |
+| `useBackendConfig.ts` | `frontend/src/hooks/useBackendConfig.test.tsx` | BR-3.2, BR-6.1, BR-7.1, Edge-6 | staged edits + save status; browser-only change emits no backend call; **ui.projectSelector.* save emits selector-prefs refresh signal** |
+| `useSelectorData.ts`  | `frontend/src/components/ProjectSelector/useSelectorData.test.tsx` | BR-7.1 | **on `mdt:selector-prefs-updated`, re-fetches backend prefs from `/api/config/selector` and layers localStorage overrides (preserves merge order)** |
 
 ### E2E (Playwright, isolated 6173/4001)
 
@@ -118,7 +118,7 @@ bun run --cwd shared jest --testPathPattern="(ProjectDocumentPatch|configureDocu
 bun run --cwd server jest --testPathPattern="(config|ConfigRepository)"
 
 # frontend unit
-bun test ./src --filter "(configApiClient|useBackendConfig)"
+bun test ./frontend/src --filter "(configApiClient|useBackendConfig)"
 
 # E2E (isolated)
 PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/config --project=chromium

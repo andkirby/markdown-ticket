@@ -22,9 +22,9 @@ MDT-150 implementation review identified hardening concerns before final ship:
 
 ## Affected Areas
 
-- `src/components/TicketViewer/index.tsx`
-- `src/utils/markdownPreprocessor.ts`
-- `src/utils/linkProcessor.ts`
+- `frontend/src/components/TicketViewer/index.tsx`
+- `frontend/src/utils/markdownPreprocessor.ts`
+- `frontend/src/utils/linkProcessor.ts`
 
 ## Scope
 

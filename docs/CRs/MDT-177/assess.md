@@ -19,9 +19,9 @@
 - `server/routes/auth.ts` owns env-configured read-token exchange at `/api/auth/read-token`; there is no named token store, owner CRUD route, invite-code route, or durable revocation model.
 - `server/routes/share.ts` owns share-id exchange at `/api/share/:shareId/session` and writes only the opened share grant.
 - `server/security/originPolicy.ts` parses allowed origins for CORS, but does not expose a public-origin list or distinguish local defaults from link-generation candidates.
-- `src/components/SettingsModal.tsx` owns project sharing controls and builds links from `window.location.origin`; it has no read-token management section and no server-selected link-origin handling.
-- `src/auth/AuthSessionProvider.tsx` treats unlock as owner-token first, then read-token fallback; read-only Unlock currently uses the same full locked panel path, not a recoverable overlay.
-- `src/components/ProjectSelector/` renders the backend-filtered project list, but read-only badge/favorite suppression and named-token switch journeys are not covered end to end.
+- `frontend/src/components/SettingsModal.tsx` owns project sharing controls and builds links from `window.location.origin`; it has no read-token management section and no server-selected link-origin handling.
+- `frontend/src/auth/AuthSessionProvider.tsx` treats unlock as owner-token first, then read-token fallback; read-only Unlock currently uses the same full locked panel path, not a recoverable overlay.
+- `frontend/src/components/ProjectSelector/` renders the backend-filtered project list, but read-only badge/favorite suppression and named-token switch journeys are not covered end to end.
 - Existing tests cover MDT-172 public sharing and MDT-176 auth unlock basics; they do not cover named token management, invite exchange, read-session merge, `PUBLIC_ORIGIN` link handling, or read-only owner-upgrade recovery.
 
 ## Fitness Summary

@@ -36,16 +36,16 @@ Make the MDT-165 Wireloom integration explicit after the upstream Wireloom upgra
 Objective: Make Wireloom render options explicit and make malformed-source failures useful without escaping the markdown surface.
 
 Direct artifacts/files:
-- `src/utils/wireloomRenderer.ts`
-- `src/utils/wireloomRenderer.test.ts`
-- `src/utils/markdownItWireloomPlugin.ts`
-- `src/utils/wireloomFullscreen.ts`
-- `src/utils/wireloomFullscreen.test.ts`
-- `src/styles/prose.css`
+- `frontend/src/utils/wireloomRenderer.ts`
+- `frontend/src/utils/wireloomRenderer.test.ts`
+- `frontend/src/utils/markdownItWireloomPlugin.ts`
+- `frontend/src/utils/wireloomFullscreen.ts`
+- `frontend/src/utils/wireloomFullscreen.test.ts`
+- `frontend/src/styles/prose.css`
 
 Direct GREEN targets:
-- `bun test src/utils/wireloomRenderer.test.ts`
-- `bun test src/utils/wireloomFullscreen.test.ts`
+- `bun test frontend/src/utils/wireloomRenderer.test.ts`
+- `bun test frontend/src/utils/wireloomFullscreen.test.ts`
 - `PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/documents/live-updates.spec.ts --project=chromium --grep "Wireloom"`
 
 Impacted canonical task IDs:
@@ -61,13 +61,13 @@ Why this slice exists: Wireloom `0.7.0` is now the integration target, but the a
 - `spec-trace validate MDT-165 --stage tests`
 - `spec-trace validate MDT-165 --stage tasks`
 - `spec-trace validate MDT-165 --stage all`
-- `bun test src/utils/wireloomRenderer.test.ts`
-- `bun test src/utils/wireloomFullscreen.test.ts`
+- `bun test frontend/src/utils/wireloomRenderer.test.ts`
+- `bun test frontend/src/utils/wireloomFullscreen.test.ts`
 - `PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/documents/live-updates.spec.ts --project=chromium --grep "Wireloom"`
 
 Result:
 - `spec-trace validate MDT-165 --stage all` passed.
-- `bun test src/utils/wireloomRenderer.test.ts src/utils/wireloomFullscreen.test.ts` passed.
+- `bun test frontend/src/utils/wireloomRenderer.test.ts frontend/src/utils/wireloomFullscreen.test.ts` passed.
 - `PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/documents/live-updates.spec.ts --project=chromium --grep "Wireloom"` passed.
 - Targeted ESLint for the edited Wireloom files passed.
 - `bun run validate:ts` is blocked by unrelated ProjectSelector/accent-color TypeScript errors in the dirty worktree.

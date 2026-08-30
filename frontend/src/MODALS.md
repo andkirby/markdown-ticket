@@ -2,7 +2,7 @@
 
 ## Base Component
 
-**All modals MUST use `<Modal>` from `src/components/ui/Modal.tsx`.**
+**All modals MUST use `<Modal>` from `frontend/src/components/ui/Modal.tsx`.**
 
 ```tsx
 import { Modal, ModalBody, ModalFooter, ModalHeader } from '@/components/ui/Modal'

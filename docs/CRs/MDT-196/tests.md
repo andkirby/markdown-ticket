@@ -10,11 +10,11 @@ Three layers, mapped to the BDD scenarios:
 
 | Layer | Runner | What it proves | Scenarios |
 |-------|--------|----------------|-----------|
-| Predicate unit | `bun test --isolate ./src` (bun:test) | AND/OR/empty/query semantics are correct | S1–S10 |
-| Component unit | `bun test --isolate ./src` (@testing-library/react) | Chrome renders/states/affordances | S11–S20, S23–S25 |
+| Predicate unit | `bun test --isolate ./frontend/src` (bun:test) | AND/OR/empty/query semantics are correct | S1–S10 |
+| Component unit | `bun test --isolate ./frontend/src` (@testing-library/react) | Chrome renders/states/affordances | S11–S20, S23–S25 |
 | E2E | `bun run test:e2e` (Playwright) | Real user flow across reload + viewports | S21 (persistence), key desktop + mobile flows |
 
-## Unit: predicate (`src/utils/ticketFilters.test.ts`)
+## Unit: predicate (`frontend/src/utils/ticketFilters.test.ts`)
 
 Pure-function tests for `applyTicketFilters(tickets, filters)`. No React.
 
@@ -34,7 +34,7 @@ Pure-function tests for `applyTicketFilters(tickets, filters)`. No React.
 | query matches code and description too | — | not just title |
 | `inWorktree` true/false exact (v1.1 contract) | — | predicate handles boolean facet when present |
 
-## Unit: reducer (`src/hooks/useBoardFilters.test.ts`)
+## Unit: reducer (`frontend/src/hooks/useBoardFilters.test.ts`)
 
 Tests the reducer transitions via the hook (using @testing-library `renderHook`).
 
@@ -47,7 +47,7 @@ Tests the reducer transitions via the hook (using @testing-library `renderHook`)
 | clearAll empties everything | S14 | all facets `[]`, query `""` |
 | reconcile drops stale derived values | S10 | assignee "bob" removed when not in available set |
 
-## Unit: persistence (`src/config/filterPreferences.test.ts`)
+## Unit: persistence (`frontend/src/config/filterPreferences.test.ts`)
 
 | Test | BDD | Asserts |
 |------|-----|---------|
@@ -119,8 +119,8 @@ These existing tests must stay green (touched files are in their import graph):
 
 - `tests/e2e/board/rendering.spec.ts` — board renders tickets
 - `tests/e2e/board/view.spec.ts` — board view switching
-- `src/components/HamburgerMenu.test.tsx` — menu still renders after prop additions
-- `src/components/SortControls` tests — sort unaffected (sibling in header)
+- `frontend/src/components/HamburgerMenu.test.tsx` — menu still renders after prop additions
+- `frontend/src/components/SortControls` tests — sort unaffected (sibling in header)
 
 ## Non-functional verification
 
@@ -160,7 +160,7 @@ spec (`tests/e2e/board/board-filter.spec.ts`).
 
 ### Regression status (post-fix)
 
-- `bun test --isolate ./src/components/BoardFilterBar ./src/utils/ticketFilters.test.ts ./src/hooks/useBoardFilters.test.ts` — 78 pass, 0 fail.
+- `bun test --isolate ./frontend/src/components/BoardFilterBar ./frontend/src/utils/ticketFilters.test.ts ./frontend/src/hooks/useBoardFilters.test.ts` — 78 pass, 0 fail.
 - `bun run validate:ts` — 4 changed files clean.
 
 ## UAT Round 2 (2026-08-02) — cloud-projection filter pipeline
@@ -169,10 +169,10 @@ spec (`tests/e2e/board/board-filter.spec.ts`).
 
 | Scenario | Layer | How verified |
 |----------|-------|--------------|
-| S29 — cloud stubs respect status filter | browser smoke test + unit | Browser: 7 "Proposed" stubs → 0 visible when filtering by "Implemented". Unit: `src/hooks/useCloudProjections.test.ts` pipeline test asserts stubs excluded by filter. |
-| S30 — filtered-out local's stub does not reappear | unit (regression guard) | `src/hooks/useCloudProjections.test.ts` includes a Bug B regression test proving the OLD pipeline (merge filtered locals) leaks the stub back, while the fixed pipeline (merge full locals → filter) does not. |
+| S29 — cloud stubs respect status filter | browser smoke test + unit | Browser: 7 "Proposed" stubs → 0 visible when filtering by "Implemented". Unit: `frontend/src/hooks/useCloudProjections.test.ts` pipeline test asserts stubs excluded by filter. |
+| S30 — filtered-out local's stub does not reappear | unit (regression guard) | `frontend/src/hooks/useCloudProjections.test.ts` includes a Bug B regression test proving the OLD pipeline (merge filtered locals) leaks the stub back, while the fixed pipeline (merge full locals → filter) does not. |
 
-### Pipeline unit test (`src/hooks/useCloudProjections.test.ts`)
+### Pipeline unit test (`frontend/src/hooks/useCloudProjections.test.ts`)
 
 Tests the architectural invariant: `mergeProjections(fullLocals)` then
 `applyTicketFilters(merged)`. Six cases cover empty filter, stub suppression,
@@ -181,6 +181,6 @@ priority filtering across locals + stubs.
 
 ### Regression status (post-fix r2)
 
-- `bun test --isolate ./src/hooks ./src/components/BoardFilterBar ./src/utils/ticketFilters.test.ts` — 181 pass, 0 fail.
+- `bun test --isolate ./frontend/src/hooks ./frontend/src/components/BoardFilterBar ./frontend/src/utils/ticketFilters.test.ts` — 181 pass, 0 fail.
 - `bun run validate:ts` — 5 files clean.
 - `bun run build` — green.

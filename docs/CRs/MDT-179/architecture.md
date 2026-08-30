@@ -38,13 +38,13 @@ domain-contracts/src/search/       ← New module: search types and schemas
   ├── schema.ts                     ← UnifiedSearchRequest/Response schemas
   └── index.ts                      ← Barrel export
 
-src/hooks/
+frontend/src/hooks/
   ├── useQuickSearch.ts             ← Modified: extended QueryMode parsing
   ├── useSearchScope.ts             ← New: scope state management
   ├── useProjectSearch.ts           ← New: client-side project matching
   └── useCrossProjectSearch.ts      ← Modified: use unified endpoint when scoped
 
-src/components/QuickSearch/
+frontend/src/components/QuickSearch/
   ├── QuickSearchModal.tsx          ← Modified: integrate scope, generalize keyboard nav
   ├── QuickSearchInput.tsx          ← Modified: integrate SearchScopeBar
   ├── QuickSearchResults.tsx        ← Modified: N-group rendering

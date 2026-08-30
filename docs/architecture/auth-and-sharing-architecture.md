@@ -321,10 +321,10 @@ shared/services/auth/AccessPolicyService.ts
 Expected frontend modules:
 
 ```text
-src/config/accessContext.ts
-src/components/AccessBadge.tsx
-src/components/AuthorizeModal.tsx
-src/config/projectSharing.ts
+frontend/src/config/accessContext.ts
+frontend/src/components/AccessBadge.tsx
+frontend/src/components/AuthorizeModal.tsx
+frontend/src/config/projectSharing.ts
 ```
 
 Keep route policy centralized. Do not scatter one-off checks inside each controller except where the controller maps access errors to HTTP status.

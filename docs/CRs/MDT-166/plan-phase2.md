@@ -87,9 +87,9 @@ Visual check for each modal — spacing should be tighter but consistent.
 
 | File | Change |
 |------|--------|
-| `src/components/ui/Modal.tsx` | ModalHeader/Body/Footer padding → tight |
-| `src/components/AddProjectModal/AddProjectModal.tsx` | Inner `p-6` → `p-4` |
-| `src/components/ProjectSelector/ProjectBrowserPanel.tsx` | Header `px-6 py-4` → `px-4 py-3`, border color |
-| `src/components/AddProjectModal/components/FolderBrowserModal.tsx` | Content border color |
-| `src/index.css` | `.modal-header/body/footer` classes |
-| `src/MODALS.md` | Update spacing examples |
+| `frontend/src/components/ui/Modal.tsx` | ModalHeader/Body/Footer padding → tight |
+| `frontend/src/components/AddProjectModal/AddProjectModal.tsx` | Inner `p-6` → `p-4` |
+| `frontend/src/components/ProjectSelector/ProjectBrowserPanel.tsx` | Header `px-6 py-4` → `px-4 py-3`, border color |
+| `frontend/src/components/AddProjectModal/components/FolderBrowserModal.tsx` | Content border color |
+| `frontend/src/index.css` | `.modal-header/body/footer` classes |
+| `frontend/src/MODALS.md` | Update spacing examples |

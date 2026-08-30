@@ -15,14 +15,14 @@ phaseEpic: MDT-231
 `full` — Complete specification with concrete artifacts
 
 ### Problem
-- RelationshipBadge (`src/components/Badge/RelationshipBadge.tsx`) shows ticket codes without preview, requiring navigation to see ticket details
-- SmartLink (`src/components/SmartLink.tsx`) renders self-references as clickable links, creating confusing UX when viewing a ticket that references itself
+- RelationshipBadge (`frontend/src/components/Badge/RelationshipBadge.tsx`) shows ticket codes without preview, requiring navigation to see ticket details
+- SmartLink (`frontend/src/components/SmartLink.tsx`) renders self-references as clickable links, creating confusing UX when viewing a ticket that references itself
 - No visual feedback when clicking relationship badges to locate tickets in board/list views
 
 ### Affected Artifacts
-- `src/components/Badge/RelationshipBadge.tsx` (wrapping with HoverCard)
-- `src/components/SmartLink.tsx` (self-reference detection)
-- `src/utils/linkProcessor.ts` (extract targetCode from links)
+- `frontend/src/components/Badge/RelationshipBadge.tsx` (wrapping with HoverCard)
+- `frontend/src/components/SmartLink.tsx` (self-reference detection)
+- `frontend/src/utils/linkProcessor.ts` (extract targetCode from links)
 
 ### Scope
 - **Changes**: Add HoverCard to RelationshipBadge, create TicketPreviewCard component, add currentViewedTicket prop to SmartLink, create useHighlightTicket hook
@@ -34,7 +34,7 @@ phaseEpic: MDT-231
 Wrap RelationshipBadge with HoverCard containing TicketPreviewCard, add prop-based self-reference detection to SmartLink.
 
 ### Rationale
-- Reuses existing HoverCard component (`src/components/UI/hover-card.tsx`) and TicketAttributeTags (`src/components/TicketAttributeTags.tsx`) - minimal new code
+- Reuses existing HoverCard component (`frontend/src/components/UI/hover-card.tsx`) and TicketAttributeTags (`frontend/src/components/TicketAttributeTags.tsx`) - minimal new code
 - Prop-based currentViewedTicket provides explicit control without URL coupling
 - w-96 width matches ticket card visual density for consistency
 - Highlight action uses existing data-ticket-key selector pattern
@@ -53,16 +53,16 @@ Wrap RelationshipBadge with HoverCard containing TicketPreviewCard, add prop-bas
 
 | Artifact | Type | Purpose |
 |----------|------|---------|
-| `src/components/TicketPreviewCard.tsx` | Component | Compact ticket preview with SmartLink, title, TicketAttributeTags |
-| `src/hooks/useHighlightTicket.ts` | Hook | Scroll and highlight ticket in current view using data-ticket-key selector |
+| `frontend/src/components/TicketPreviewCard.tsx` | Component | Compact ticket preview with SmartLink, title, TicketAttributeTags |
+| `frontend/src/hooks/useHighlightTicket.ts` | Hook | Scroll and highlight ticket in current view using data-ticket-key selector |
 
 ### Modified Artifacts
 
 | Artifact | Change Type | Modification |
 |----------|-------------|--------------|
-| `src/components/Badge/RelationshipBadge.tsx` | Refactored | New `RelationshipLinkWithPreview` sub-component wraps each link with HoverCard; fetches ticket via `dataLayer.fetchTicket()` on hover |
-| `src/components/SmartLink.tsx` | Prop added | `currentViewedTicket?: string` for self-reference detection |
-| `src/utils/linkProcessor.ts` | Property added | Extract `targetCode` from TICKET/CROSS_PROJECT links |
+| `frontend/src/components/Badge/RelationshipBadge.tsx` | Refactored | New `RelationshipLinkWithPreview` sub-component wraps each link with HoverCard; fetches ticket via `dataLayer.fetchTicket()` on hover |
+| `frontend/src/components/SmartLink.tsx` | Prop added | `currentViewedTicket?: string` for self-reference detection |
+| `frontend/src/utils/linkProcessor.ts` | Property added | Extract `targetCode` from TICKET/CROSS_PROJECT links |
 
 ### Integration Points
 

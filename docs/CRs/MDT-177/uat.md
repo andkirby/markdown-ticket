@@ -32,10 +32,10 @@ Refine the owner Lock and header auth-status journey so access changes are visib
 Objective: make owner Lock refresh all project-list instances and avoid stale owner-only selector entries.
 
 Direct artifacts/files:
-- `src/auth/AuthSessionProvider.tsx`
-- `src/hooks/useProjectManager.ts`
-- `src/App.tsx`
-- `src/components/RouteErrorModal.tsx`
+- `frontend/src/auth/AuthSessionProvider.tsx`
+- `frontend/src/hooks/useProjectManager.ts`
+- `frontend/src/App.tsx`
+- `frontend/src/components/RouteErrorModal.tsx`
 - `tests/e2e/auth/session-unlock.spec.ts`
 
 Direct GREEN targets:
@@ -54,9 +54,9 @@ Objective: move read-only status into the menu and add compact owner/shared indi
 
 Direct artifacts/files:
 - `domain-contracts/src/access/schema.ts`
-- `src/auth/AuthSessionContext.ts`
-- `src/auth/AuthSessionProvider.tsx`
-- `src/components/HamburgerMenu.tsx`
+- `frontend/src/auth/AuthSessionContext.ts`
+- `frontend/src/auth/AuthSessionProvider.tsx`
+- `frontend/src/components/HamburgerMenu.tsx`
 - `tests/e2e/utils/selectors.ts`
 - `tests/e2e/sharing/read-access-journey.spec.ts`
 
@@ -75,7 +75,7 @@ Why this slice exists:
 
 ```bash
 bun run --cwd domain-contracts test -- access --runInBand
-bun test src/components/HamburgerMenu.test.tsx src/components/AuthUnlock/AuthStatusAction.test.tsx
+bun test frontend/src/components/HamburgerMenu.test.tsx frontend/src/components/AuthUnlock/AuthStatusAction.test.tsx
 bun run validate:ts
 bunx playwright test tests/e2e/auth/session-unlock.spec.ts --project=chromium
 bunx playwright test tests/e2e/sharing/read-access-journey.spec.ts --project=chromium --grep "valid invite exchange"

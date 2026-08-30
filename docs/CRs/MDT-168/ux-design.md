@@ -9,9 +9,9 @@ visible state refreshing afterward.
 
 **Surfaces**:
 
-- Documents settings / `PathSelector` (`src/components/DocumentsView/PathSelector.tsx`) — owns `project.document.*`.
-- Settings modal (`src/components/SettingsModal.tsx` + new owned sections) — owns global/system + stable user preferences.
-- Project Edit form (`src/components/AddProjectModal/`) — owns safe metadata + guarded operations.
+- Documents settings / `PathSelector` (`frontend/src/components/DocumentsView/PathSelector.tsx`) — owns `project.document.*`.
+- Settings modal (`frontend/src/components/SettingsModal.tsx` + new owned sections) — owns global/system + stable user preferences.
+- Project Edit form (`frontend/src/components/AddProjectModal/`) — owns safe metadata + guarded operations.
 
 ## State Coverage
 

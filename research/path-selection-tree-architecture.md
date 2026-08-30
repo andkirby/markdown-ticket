@@ -22,7 +22,7 @@ That made the selector document-centric instead of path-centric:
 
 - folders with Markdown files appeared,
 - folders without Markdown files disappeared,
-- selectable paths like `src` could be configured but not selected from the modal.
+- selectable paths like `frontend/src` could be configured but not selected from the modal.
 
 ## Architectural Concern
 

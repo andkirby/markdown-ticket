@@ -22,7 +22,7 @@ priority: Medium
 ### Affected Artifacts
 
 - `server/repositories/ConfigRepository.ts` (lines 37-47) - TOML parsing for document paths
-- `src/components/DocumentsView/PathSelector.tsx` (line 37) - API response path access
+- `frontend/src/components/DocumentsView/PathSelector.tsx` (line 37) - API response path access
 
 ### Scope
 
@@ -58,7 +58,7 @@ Add `parsed.project?.document?.paths` and `data.config?.project?.document?.paths
 |----------|-------------|--------------|
 | `server/repositories/ConfigRepository.ts:38` | Expression updated | Add `parsed.project?.document?.paths` as first option |
 | `server/repositories/ConfigRepository.ts:44` | Expression updated | Add `parsed.project?.document?.excludeFolders` as first option |
-| `src/components/DocumentsView/PathSelector.tsx:37-38` | Expression updated | Change to `data.config?.project?.document?.paths` |
+| `frontend/src/components/DocumentsView/PathSelector.tsx:37-38` | Expression updated | Change to `data.config?.project?.document?.paths` |
 
 ## 5. Acceptance Criteria
 ### Functional

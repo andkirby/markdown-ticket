@@ -13,7 +13,7 @@ Single source of truth for entity definitions across all interfaces. Provides:
 ```text
 domain-contracts/
   package.json
-  src/
+  frontend/src/
     index.ts                     ← Main production exports
 
     {entity}/                    ← One directory per domain entity
@@ -47,7 +47,7 @@ domain-contracts     ← Pure schemas, minimal dependencies
 
 ## File Patterns
 
-### Entity Module (`src/{entity}/`)
+### Entity Module (`frontend/src/{entity}/`)
 
 Contains:
 - One canonical entity schema
@@ -86,7 +86,7 @@ Current ticket example in this repo:
 - `input.ts` = create/update input schemas
 - `schema.ts` = compatibility barrel
 
-### Validation File (`src/{entity}/validation.ts`)
+### Validation File (`frontend/src/{entity}/validation.ts`)
 
 Contains:
 - Wrapper functions using schema validation
@@ -110,14 +110,14 @@ export function safeValidateEntity(input: unknown) {
 
 ### Export Files
 
-**Entity exports (`src/{entity}/index.ts`)**:
+**Entity exports (`frontend/src/{entity}/index.ts`)**:
 
 ```typescript
 export * from './schema'      // stable consumer entrypoint
 export * from './validation'
 ```
 
-**Main exports (`src/index.ts`)**:
+**Main exports (`frontend/src/index.ts`)**:
 
 ```typescript
 export * from './entity1'
@@ -126,7 +126,7 @@ export * from './entity2'
 // Do NOT export testing utilities from main
 ```
 
-### Test Fixtures (`src/testing/{entity}.fixtures.ts`)
+### Test Fixtures (`frontend/src/testing/{entity}.fixtures.ts`)
 
 Contains:
 - Builder functions for test data
@@ -158,7 +158,7 @@ export function buildCreateEntityInput(
 }
 ```
 
-**Testing exports (`src/testing/index.ts`)**:
+**Testing exports (`frontend/src/testing/index.ts`)**:
 
 ```typescript
 export * from './entity.fixtures'

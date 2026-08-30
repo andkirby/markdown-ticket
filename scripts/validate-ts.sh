@@ -14,7 +14,7 @@ BLUE='\033[1;34m'
 NC='\033[0m' # No Color
 
 # Known projects and their tsconfigs
-KNOWN_PROJECTS="mcp-server server shared domain-contracts cloud src"
+KNOWN_PROJECTS="mcp-server server shared domain-contracts cloud frontend"
 
 get_tsconfig_for_project() {
     local project="$1"
@@ -24,7 +24,7 @@ get_tsconfig_for_project() {
         shared) echo "shared/tsconfig.json" ;;
         domain-contracts) echo "domain-contracts/tsconfig.json" ;;
         cloud) echo "cloud/tsconfig.json" ;;
-        src) echo "tsconfig.json" ;;
+        frontend) echo "frontend/tsconfig.json" ;;
         *) echo "" ;;
     esac
 }
@@ -41,8 +41,8 @@ get_project_for_path() {
         mcp-server|server|shared|domain-contracts|cloud)
             echo "$top_dir"
             ;;
-        src)
-            echo "src"
+        frontend)
+            echo "frontend"
             ;;
         *)
             echo ""

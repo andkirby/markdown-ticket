@@ -44,16 +44,16 @@ LauncherButton (+ icon, rounded-full w-10 h-10)
 
 | Type | Path |
 |------|------|
-| Panel | `src/components/ProjectSelector/ProjectBrowserPanel.tsx` |
-| Card | `src/components/ProjectSelector/ProjectSelectorCard.tsx` |
-| Chip | `src/components/ProjectSelector/ProjectSelectorChip.tsx` |
-| Rail | `src/components/ProjectSelector/ProjectSelectorRail.tsx` |
-| Launcher | `src/components/ProjectSelector/LauncherButton.tsx` |
-| Types | `src/components/ProjectSelector/types.ts` |
-| Index | `src/components/ProjectSelector/index.tsx` |
-| Hook | `src/components/ProjectSelector/useProjectSelectorManager.ts` |
-| Rail styles | `src/components/ProjectSelector/project-selector.css` |
-| Ordering | `src/utils/selectorOrdering.ts` |
+| Panel | `frontend/src/components/ProjectSelector/ProjectBrowserPanel.tsx` |
+| Card | `frontend/src/components/ProjectSelector/ProjectSelectorCard.tsx` |
+| Chip | `frontend/src/components/ProjectSelector/ProjectSelectorChip.tsx` |
+| Rail | `frontend/src/components/ProjectSelector/ProjectSelectorRail.tsx` |
+| Launcher | `frontend/src/components/ProjectSelector/LauncherButton.tsx` |
+| Types | `frontend/src/components/ProjectSelector/types.ts` |
+| Index | `frontend/src/components/ProjectSelector/index.tsx` |
+| Hook | `frontend/src/components/ProjectSelector/useProjectSelectorManager.ts` |
+| Rail styles | `frontend/src/components/ProjectSelector/project-selector.css` |
+| Ordering | `frontend/src/utils/selectorOrdering.ts` |
 
 ## Search Logic
 
@@ -189,7 +189,7 @@ Hover-reveal is progressive enhancement; keyboard users reach inactive projects 
 
 **Affordance** — `.project-expand-hint` chevron: `opacity: 0.4`, `color: var(--project-card-title-color)`, `right: -4px`, vertically centered, 14×14px, `transition: opacity 120ms ease-out`, `pointer-events: none`, `aria-hidden="true"`. Conditionally rendered only while collapsed and not revealed (`hasChips && !isExpanded`); unmounts once chips show.
 
-**Animation** — per chip: `@keyframes chip-stagger-in` (`translateY(6px) scale(.95)→0/1` + opacity, 150ms, delay `min(index, 8) × 25ms`), `ease-out` / fill `both`. The keyframe lives in `src/styles/animations.css` (not the component CSS). There is intentionally no container-level entrance animation — only the per-chip stagger.
+**Animation** — per chip: `@keyframes chip-stagger-in` (`translateY(6px) scale(.95)→0/1` + opacity, 150ms, delay `min(index, 8) × 25ms`), `ease-out` / fill `both`. The keyframe lives in `frontend/src/styles/animations.css` (not the component CSS). There is intentionally no container-level entrance animation — only the per-chip stagger.
 
 ## Ordering
 

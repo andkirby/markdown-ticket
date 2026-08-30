@@ -19,23 +19,23 @@
 
 **Milestone**: M1 — Navigation preference model (BR-3.1, BR-4.1, C1, Edge-1)
 
-**Structure**: `src/config/documentNavigation.ts`
+**Structure**: `frontend/src/config/documentNavigation.ts`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-document-navigation-config` → `src/config/documentNavigation.test.ts`: recent cap and shortcut sanitization
+- `TEST-document-navigation-config` → `frontend/src/config/documentNavigation.test.ts`: recent cap and shortcut sanitization
 
 **Scope**: Add local browser persistence for recent documents.
 **Boundary**: Preference logic only; no Documents View rendering.
 
 **Creates**:
-- `src/config/documentNavigation.ts`
+- `frontend/src/config/documentNavigation.ts`
 
 **Modifies**:
-- `src/config/documentNavigation.test.ts`
+- `frontend/src/config/documentNavigation.test.ts`
 
 **Must Not Touch**:
 - `server/services/TreeService.ts`
-- `src/components/DocumentsView/DocumentsLayout.tsx`
+- `frontend/src/components/DocumentsView/DocumentsLayout.tsx`
 
 **Create/Move**:
 - Add `DocumentNavigationPreferences` type.
@@ -45,17 +45,17 @@
 
 **Exclude**: No project config writes; no backend calls.
 
-**Anti-duplication**: Follow `src/config/documentSorting.ts` storage style; do not copy unrelated view-mode persistence logic.
+**Anti-duplication**: Follow `frontend/src/config/documentSorting.ts` storage style; do not copy unrelated view-mode persistence logic.
 
 **Duplication Guard**:
-- Check `src/config/documentSorting.ts` before coding.
+- Check `frontend/src/config/documentSorting.ts` before coding.
 - If a document preference helper already exists, extend it instead of adding a parallel owner.
 - Verify no second recent-document storage key is introduced.
 
 **Verify**:
 
 ```bash
-bun test ./src/config/documentNavigation.test.ts
+bun test ./frontend/src/config/documentNavigation.test.ts
 ```
 
 **Done when**:
@@ -67,7 +67,7 @@ bun test ./src/config/documentNavigation.test.ts
 
 **Milestone**: M2 — Ticket-area boundary (BR-6.1, BR-6.2, C1)
 
-**Structure**: `server/services/TreeService.ts`, `server/services/DocumentService.ts`, `src/components/DocumentsView/PathSelector.tsx`
+**Structure**: `server/services/TreeService.ts`, `server/services/DocumentService.ts`, `frontend/src/components/DocumentsView/PathSelector.tsx`
 
 **Makes GREEN (Automated Tests)**:
 - `TEST-ticket-area-exclusion` → `tests/e2e/documents/navigation.spec.ts`: ticket area excluded
@@ -84,11 +84,11 @@ bun test ./src/config/documentNavigation.test.ts
 **Modifies**:
 - `server/services/TreeService.ts`
 - `server/services/DocumentService.ts`
-- `src/components/DocumentsView/PathSelector.tsx`
+- `frontend/src/components/DocumentsView/PathSelector.tsx`
 
 **Must Not Touch**:
 - `shared/services/TicketService.ts`
-- `src/components/TicketViewer/`
+- `frontend/src/components/TicketViewer/`
 - `docs/CRs/**` ticket content
 
 **Create/Move**:
@@ -122,10 +122,10 @@ bunx playwright test tests/e2e/documents/navigation.spec.ts --project=chromium -
 
 **Milestone**: M3 — Tree orientation (BR-1.1, BR-1.2, BR-2.1)
 
-**Structure**: `src/components/DocumentsView/FileTree.tsx`
+**Structure**: `frontend/src/components/DocumentsView/FileTree.tsx`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-file-tree-state` → `src/components/DocumentsView/FileTree.test.tsx`: collapsed default and selected ancestor expansion
+- `TEST-file-tree-state` → `frontend/src/components/DocumentsView/FileTree.test.tsx`: collapsed default and selected ancestor expansion
 
 **Makes GREEN (Behavior)**:
 - `default_tree_collapsed` → `tests/e2e/documents/navigation.spec.ts` (BR-1.1, BR-1.2)
@@ -138,12 +138,12 @@ bunx playwright test tests/e2e/documents/navigation.spec.ts --project=chromium -
 - None
 
 **Modifies**:
-- `src/components/DocumentsView/FileTree.tsx`
-- `src/components/DocumentsView/FileTree.test.tsx`
+- `frontend/src/components/DocumentsView/FileTree.tsx`
+- `frontend/src/components/DocumentsView/FileTree.test.tsx`
 
 **Must Not Touch**:
 - `server/services/TreeService.ts`
-- `src/config/documentNavigation.ts`
+- `frontend/src/config/documentNavigation.ts`
 
 **Create/Move**:
 - Initialize expanded folders to selected ancestors only.
@@ -162,7 +162,7 @@ bunx playwright test tests/e2e/documents/navigation.spec.ts --project=chromium -
 **Verify**:
 
 ```bash
-bun test ./src/components/DocumentsView/FileTree.test.tsx
+bun test ./frontend/src/components/DocumentsView/FileTree.test.tsx
 ```
 
 **Done when**:
@@ -176,7 +176,7 @@ bun test ./src/components/DocumentsView/FileTree.test.tsx
 
 **Milestone**: M4 — Sidebar navigation (BR-3.1, BR-4.1, BR-5.1, BR-5.2, C2, C3)
 
-**Structure**: `src/components/DocumentsView/DocumentsLayout.tsx`
+**Structure**: `frontend/src/components/DocumentsView/DocumentsLayout.tsx`
 
 **Makes GREEN (Automated Tests)**:
 - `TEST-document-navigation-e2e` → `tests/e2e/documents/navigation.spec.ts`: sidebar navigation behavior
@@ -191,15 +191,15 @@ bun test ./src/components/DocumentsView/FileTree.test.tsx
 **Boundary**: Do not change MarkdownViewer rendering or backend document content loading.
 
 **Creates**:
-- `src/components/DocumentsView/RecentDocuments.tsx`
+- `frontend/src/components/DocumentsView/RecentDocuments.tsx`
 
 **Modifies**:
-- `src/components/DocumentsView/DocumentsLayout.tsx`
+- `frontend/src/components/DocumentsView/DocumentsLayout.tsx`
 - `tests/e2e/utils/selectors.ts`
 - `tests/e2e/documents/navigation.spec.ts`
 
 **Must Not Touch**:
-- `src/components/DocumentsView/MarkdownViewer.tsx`
+- `frontend/src/components/DocumentsView/MarkdownViewer.tsx`
 - `server/services/DocumentService.ts`
 
 **Create/Move**:
@@ -214,7 +214,7 @@ bun test ./src/components/DocumentsView/FileTree.test.tsx
 
 **Exclude**: No full-text search, no cards-inside-cards, no new global state library.
 
-**Anti-duplication**: Import navigation preference helpers from `src/config/documentNavigation.ts`; do not duplicate localStorage logic in components.
+**Anti-duplication**: Import navigation preference helpers from `frontend/src/config/documentNavigation.ts`; do not duplicate localStorage logic in components.
 
 **Duplication Guard**:
 - Check `DocumentsLayout.tsx` for existing filter and selected-file logic before editing.
@@ -275,7 +275,7 @@ bunx playwright test tests/e2e/documents/navigation.spec.ts --project=chromium -
 **Verify**:
 
 ```bash
-bun test ./src/components/DocumentsView/FileTree.test.tsx ./src/config/documentNavigation.test.ts
+bun test ./frontend/src/components/DocumentsView/FileTree.test.tsx ./frontend/src/config/documentNavigation.test.ts
 bunx playwright test tests/e2e/documents/navigation.spec.ts --project=chromium
 ```
 
@@ -289,8 +289,8 @@ bunx playwright test tests/e2e/documents/navigation.spec.ts --project=chromium
 
 | Layer | Arch Files | In Tasks | Gap | Status |
 |-------|------------|----------|-----|--------|
-| src/components/DocumentsView | 5 | 5 | 0 | Pass |
-| src/config | 1 | 1 | 0 | Pass |
+| frontend/src/components/DocumentsView | 5 | 5 | 0 | Pass |
+| frontend/src/config | 1 | 1 | 0 | Pass |
 | server/services | 2 | 2 | 0 | Pass |
 | tests/e2e | 2 | 2 | 0 | Pass |
 | src unit tests | 2 | 2 | 0 | Pass |

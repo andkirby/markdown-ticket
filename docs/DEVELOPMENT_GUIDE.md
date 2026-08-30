@@ -42,7 +42,7 @@ AI-powered Kanban board where **tickets are markdown files** with YAML frontmatt
 
 ```text
 / (root)
-├── src/              # Frontend (React + Vite)
+├── frontend/src/      # Frontend (React + Vite)
 ├── server/           # Backend (Express) - layered architecture
 ├── shared/           # Shared code (compiled separately)
 ├── mcp-server/       # MCP Server (separate build)
@@ -74,7 +74,7 @@ import { CRType, CRTypes, type CRTypeValue } from '@mdt/domain-contracts'
 
 **Type-Safe Enum Pattern:** See [PRE_IMPLEMENT.md](PRE_IMPLEMENT.md#type-safe-enum-pattern) for the pattern used across all CR enums (status, type, priority).
 
-### Frontend Architecture (src/)
+### Frontend Architecture (frontend/src/)
 
 **State Management:** Custom React hooks, no external state library
 - `useProjectManager.ts` - Central hub (uses refs to prevent stale closures)
@@ -177,7 +177,7 @@ npm start
 ### Frontend Structure
 
 ```text
-src/
+frontend/src/
 ├── components/          # React components
 ├── hooks/              # Custom React hooks
 ├── types/              # Frontend-specific types

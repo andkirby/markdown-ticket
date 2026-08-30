@@ -73,7 +73,7 @@
 **Must Not Touch**:
 - `server/controllers/**`
 - `server/services/**`
-- `src/**`
+- `frontend/src/**`
 - MDT-172 sharing/public-readonly files
 
 **Create/Move**:
@@ -341,7 +341,7 @@ bun test docs/tests/api-auth-docs.test.ts
 
 **Milestone**: UAT — Vite dev logging boundary
 
-**Structure**: `vite.config.ts`, `tests/vite-frontend-logs-security.test.ts`
+**Structure**: `frontend/vite.config.ts`, `tests/vite-frontend-logs-security.test.ts`
 
 **Makes GREEN (Automated Tests)**:
 - `TEST-vite-frontend-logs-localhost` -> `tests/vite-frontend-logs-security.test.ts`: Vite-only frontend logging middleware is loopback-only and handles malformed JSON safely
@@ -353,7 +353,7 @@ bun test docs/tests/api-auth-docs.test.ts
 - `tests/vite-frontend-logs-security.test.ts`
 
 **Modifies**:
-- `vite.config.ts`
+- `frontend/vite.config.ts`
 
 **Must Not Touch**:
 - `server/security/apiAuth.ts`
@@ -384,7 +384,7 @@ bun run test:e2e
 
 **Milestone**: UAT — Loopback-host no-auth scope (2026-08-06)
 
-**Structure**: `server/security/apiAuth.ts`, `server/routes/auth.ts`, `server/config/runtimeConfig.ts`, `server/server.ts`, `vite.config.ts`, `docker-compose.yml`, `docker-compose.dev.yml`, `docker-compose.prod.yml`, `.env.example`, `docs/AUTH_SESSION_GUIDE.md`, `docs/ENVIRONMENT_VARIABLES.md`, `server/tests/security/apiAuth.test.ts`, `server/tests/api/api-auth.test.ts`
+**Structure**: `server/security/apiAuth.ts`, `server/routes/auth.ts`, `server/config/runtimeConfig.ts`, `server/server.ts`, `frontend/vite.config.ts`, `docker-compose.yml`, `docker-compose.dev.yml`, `docker-compose.prod.yml`, `.env.example`, `docs/AUTH_SESSION_GUIDE.md`, `docs/ENVIRONMENT_VARIABLES.md`, `server/tests/security/apiAuth.test.ts`, `server/tests/api/api-auth.test.ts`
 
 **Makes GREEN (Automated Tests)**:
 - `TEST-backend-loopback-host-bypass` → `server/tests/security/apiAuth.test.ts` + `server/tests/api/api-auth.test.ts`: `isLocalHostRequest` accept/reject matrix; loopback `Host` grants owner without token (auth on/off); tunnel `Host` denied when auth off; forged `X-Forwarded-Host` ignored; `GET /api/auth/session` local-exempt consistency.
@@ -406,7 +406,7 @@ bun run test:e2e
 - `server/routes/auth.ts` — reuse `isLoopbackBypassEligible` in `GET /api/auth/session`; report `localExempt` AND effective `authEnabled = config.enabled || !localExempt` so a non-exempt caller on a disabled-auth backend sees locked UI (review-P1 fix).
 - `server/config/runtimeConfig.ts` — carry `localHosts` + `localHostBypassEnabled`.
 - `server/server.ts` — `API_BIND_ADDRESS` (default `127.0.0.1`), `app.listen(PORT, HOST, …)`.
-- `vite.config.ts` — `changeOrigin: false` on `/api`, `/api/events`, `/api-docs`; `server.host`/`preview.host` default `127.0.0.1`.
+- `frontend/vite.config.ts` — `changeOrigin: false` on `/api`, `/api/events`, `/api-docs`; `server.host`/`preview.host` default `127.0.0.1`.
 - `docker-compose*.yml` — `API_BIND_ADDRESS=0.0.0.0`, `API_LOCAL_HOST_BYPASS=false`.
 - `.env.example`, `docs/AUTH_SESSION_GUIDE.md`, `docs/ENVIRONMENT_VARIABLES.md` — document new env vars + bind default.
 - `server/tests/security/apiAuth.test.ts`, `server/tests/api/api-auth.test.ts` — add loopback cases.

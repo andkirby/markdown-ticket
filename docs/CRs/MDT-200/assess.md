@@ -57,7 +57,7 @@ Slice 1's first concrete step is replacing the 503 stub with real routing.
 - Project config is service-isolated: `ProjectConfigService`
   (`shared/services/project/ProjectConfigService.ts:74`) reads/writes
   `.mdt-config.toml`; `TicketLocationResolver` consumes it at create time.
-- Board rendering (`src/components/Board.tsx`, `Column/`, `TicketCard.tsx`)
+- Board rendering (`frontend/src/components/Board.tsx`, `Column/`, `TicketCard.tsx`)
   consumes `Ticket` objects via hooks and is decoupled from allocation. The
   cloud projection surface is additive (new read-only stubs), not a rewrite.
 

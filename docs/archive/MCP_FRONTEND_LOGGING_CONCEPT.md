@@ -56,7 +56,7 @@ The system currently has:
 ### Option 1: Console Override (Recommended)
 
 ```typescript
-// src/utils/logging.ts
+// frontend/src/utils/logging.ts
 class FrontendLogger {
   private originalConsole = { ...console };
   private sessionActive = false;
@@ -113,7 +113,7 @@ class FrontendLogger {
 ### Option 2: React Error Boundary Integration
 
 ```typescript
-// src/components/LoggingErrorBoundary.tsx
+// frontend/src/components/LoggingErrorBoundary.tsx
 class LoggingErrorBoundary extends React.Component {
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     this.sendErrorLog(error, errorInfo);

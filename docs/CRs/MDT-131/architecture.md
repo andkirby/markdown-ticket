@@ -19,7 +19,7 @@ The Board|List toggle MUST use the original webp image files, not icon library c
 
 ### Component: MobileThemeToggle
 
-**Location:** `src/components/MobileThemeToggle.tsx`
+**Location:** `frontend/src/components/MobileThemeToggle.tsx`
 
 **Behavior:**
 - **Mobile only**: Renders only when viewport width < 768px
@@ -86,19 +86,19 @@ import { MobileThemeToggle } from './components/MobileThemeToggle'
 
 | Artifact ID | Path | Kind | Referencing Obligations |
 |---|---|---|---|
-| `ART-app-header-index` | `src/components/AppHeader/index.tsx` | runtime | `OBL-integration`, `OBL-mobile-header` |
-| `ART-app-modified` | `src/App.tsx` | runtime | `OBL-integration`, `OBL-mobile-header`, `OBL-persistence`, `OBL-responsive-navigation`, `OBL-view-mode-switcher-ui` |
-| `ART-board-list-toggle` | `src/components/ViewModeSwitcher/BoardListToggle.tsx` | runtime | `OBL-hover-overlay`, `OBL-integration`, `OBL-toggle-navigation` |
-| `ART-button-group` | `src/components/UI/button-group.tsx` | runtime | `OBL-hamburger-theme-controls` |
-| `ART-button-group-separator` | `src/components/UI/separator.tsx` | runtime | `OBL-hamburger-theme-controls` |
-| `ART-hamburger-menu` | `src/components/AppHeader/HamburgerMenu.tsx` | runtime | `OBL-hamburger-theme-controls`, `OBL-integration`, `OBL-mobile-header` |
-| `ART-mobile-logo` | `src/components/AppHeader/MobileLogo.tsx` | runtime | `OBL-integration`, `OBL-mobile-header` |
+| `ART-app-header-index` | `frontend/src/components/AppHeader/index.tsx` | runtime | `OBL-integration`, `OBL-mobile-header` |
+| `ART-app-modified` | `frontend/src/App.tsx` | runtime | `OBL-integration`, `OBL-mobile-header`, `OBL-persistence`, `OBL-responsive-navigation`, `OBL-view-mode-switcher-ui` |
+| `ART-board-list-toggle` | `frontend/src/components/ViewModeSwitcher/BoardListToggle.tsx` | runtime | `OBL-hover-overlay`, `OBL-integration`, `OBL-toggle-navigation` |
+| `ART-button-group` | `frontend/src/components/UI/button-group.tsx` | runtime | `OBL-hamburger-theme-controls` |
+| `ART-button-group-separator` | `frontend/src/components/UI/separator.tsx` | runtime | `OBL-hamburger-theme-controls` |
+| `ART-hamburger-menu` | `frontend/src/components/AppHeader/HamburgerMenu.tsx` | runtime | `OBL-hamburger-theme-controls`, `OBL-integration`, `OBL-mobile-header` |
+| `ART-mobile-logo` | `frontend/src/components/AppHeader/MobileLogo.tsx` | runtime | `OBL-integration`, `OBL-mobile-header` |
 | `ART-mobile-logo-asset` | `/logo-mdt-m-dark_64x64.png` | runtime | `OBL-mobile-header` |
-| `ART-project-view-modified` | `src/components/ProjectView.tsx` | runtime | `OBL-integration`, `OBL-mobile-cards` |
-| `ART-use-view-mode-persistence` | `src/components/ViewModeSwitcher/useViewModePersistence.ts` | runtime | `OBL-integration`, `OBL-persistence` |
-| `ART-view-mode-switcher-component` | `src/components/ViewModeSwitcher/ViewModeSwitcher.tsx` | runtime | `OBL-integration`, `OBL-responsive-navigation`, `OBL-toggle-navigation`, `OBL-view-mode-switcher-ui` |
-| `ART-view-mode-switcher-index` | `src/components/ViewModeSwitcher/index.tsx` | runtime | `OBL-integration`, `OBL-view-mode-switcher-ui` |
-| `ART-view-mode-types` | `src/components/ViewModeSwitcher/types.ts` | runtime | `OBL-integration`, `OBL-view-mode-switcher-ui` |
+| `ART-project-view-modified` | `frontend/src/components/ProjectView.tsx` | runtime | `OBL-integration`, `OBL-mobile-cards` |
+| `ART-use-view-mode-persistence` | `frontend/src/components/ViewModeSwitcher/useViewModePersistence.ts` | runtime | `OBL-integration`, `OBL-persistence` |
+| `ART-view-mode-switcher-component` | `frontend/src/components/ViewModeSwitcher/ViewModeSwitcher.tsx` | runtime | `OBL-integration`, `OBL-responsive-navigation`, `OBL-toggle-navigation`, `OBL-view-mode-switcher-ui` |
+| `ART-view-mode-switcher-index` | `frontend/src/components/ViewModeSwitcher/index.tsx` | runtime | `OBL-integration`, `OBL-view-mode-switcher-ui` |
+| `ART-view-mode-types` | `frontend/src/components/ViewModeSwitcher/types.ts` | runtime | `OBL-integration`, `OBL-view-mode-switcher-ui` |
 
 ## Derivation Summary
 

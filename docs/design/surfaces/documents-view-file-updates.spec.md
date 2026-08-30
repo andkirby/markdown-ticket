@@ -30,29 +30,29 @@ DocumentsLayout
 
 | Child | Component | Spec | Conditional |
 |-------|-----------|------|-------------|
-| DocumentsLayout | `src/components/DocumentsView/DocumentsLayout.tsx` | this spec | always in documents route |
-| ScrollToActiveDocumentButton | `src/components/DocumentsView/DocumentsLayout.tsx` | this spec | disabled until a file is selected |
-| FileTree | `src/components/DocumentsView/FileTree.tsx` | — | when documents are configured |
-| DocumentFilenameTabs | `src/components/DocumentsView/DocumentFilenameTabs.tsx` | `document-filename-tabs.spec.md` | when selected markdown file belongs to a filename group |
-| MarkdownViewer | `src/components/DocumentsView/MarkdownViewer.tsx` | this spec | when a file is selected |
-| MarkdownContent | `src/components/MarkdownContent/index.tsx` | `markdown-content.spec.md` | when markdown body renders |
-| PathSelector | `src/components/DocumentsView/PathSelector.tsx` | — | when no document paths are configured |
+| DocumentsLayout | `frontend/src/components/DocumentsView/DocumentsLayout.tsx` | this spec | always in documents route |
+| ScrollToActiveDocumentButton | `frontend/src/components/DocumentsView/DocumentsLayout.tsx` | this spec | disabled until a file is selected |
+| FileTree | `frontend/src/components/DocumentsView/FileTree.tsx` | — | when documents are configured |
+| DocumentFilenameTabs | `frontend/src/components/DocumentsView/DocumentFilenameTabs.tsx` | `document-filename-tabs.spec.md` | when selected markdown file belongs to a filename group |
+| MarkdownViewer | `frontend/src/components/DocumentsView/MarkdownViewer.tsx` | this spec | when a file is selected |
+| MarkdownContent | `frontend/src/components/MarkdownContent/index.tsx` | `markdown-content.spec.md` | when markdown body renders |
+| PathSelector | `frontend/src/components/DocumentsView/PathSelector.tsx` | — | when no document paths are configured |
 
 ## Source files
 
 | Type | Path |
 |------|------|
-| Layout | `src/components/DocumentsView/DocumentsLayout.tsx` |
-| Viewer | `src/components/DocumentsView/MarkdownViewer.tsx` |
-| Event bus | `src/services/eventBus.ts` |
-| SSE client | `src/services/sseClient.ts` |
+| Layout | `frontend/src/components/DocumentsView/DocumentsLayout.tsx` |
+| Viewer | `frontend/src/components/DocumentsView/MarkdownViewer.tsx` |
+| Event bus | `frontend/src/services/eventBus.ts` |
+| SSE client | `frontend/src/services/sseClient.ts` |
 | Backend watcher | `server/services/fileWatcher/PathWatcherService.ts` |
 | Backend SSE | `server/services/fileWatcher/index.ts` |
 | Document service | `server/services/DocumentService.ts` |
 | Document metadata | `server/commands/ExtractMetadataCommand.ts` |
 | Document content cache | `server/commands/ReadFileCommand.ts` |
-| Filename tabs | `src/components/DocumentsView/DocumentFilenameTabs.tsx` |
-| Filename tab resolver | `src/components/DocumentsView/documentFilenameTabModel.ts` |
+| Filename tabs | `frontend/src/components/DocumentsView/DocumentFilenameTabs.tsx` |
+| Filename tab resolver | `frontend/src/components/DocumentsView/documentFilenameTabModel.ts` |
 | Frontmatter reference | mdopen `frontmatter-block.spec.md` |
 
 ## Frontmatter Display

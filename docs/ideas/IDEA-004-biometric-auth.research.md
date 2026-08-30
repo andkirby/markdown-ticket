@@ -37,8 +37,8 @@ Biometric unlock via WebAuthn/passkeys is technically feasible and maps cleanly 
 | `server/security/apiSession.ts` | Cookie creation/verification, HMAC signing, payload encoding |
 | `server/security/apiSession.ts` | `appendOwnerSessionCookie()`, `verifyOwnerSessionCookie()` |
 | `server/config/runtimeConfig.ts` | Auth config from env, origin policy, session TTL |
-| `src/auth/AuthSessionProvider.tsx` | Frontend: session state machine (locked → unlocking → unlocked) |
-| `src/auth/authFetch.ts` | Frontend: fetch wrapper with CSRF intent header |
+| `frontend/src/auth/AuthSessionProvider.tsx` | Frontend: session state machine (locked → unlocking → unlocked) |
+| `frontend/src/auth/authFetch.ts` | Frontend: fetch wrapper with CSRF intent header |
 
 ### Credential storage pattern
 

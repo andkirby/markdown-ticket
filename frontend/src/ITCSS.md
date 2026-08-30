@@ -75,7 +75,7 @@ in layer 1 — don't hardcode it where you need it.
 
 ## Layer Map — how this repo maps to ITCSS
 
-Current state, audited against `src/index.css` import order.
+Current state, audited against `frontend/src/index.css` import order.
 
 | # | ITCSS Layer | This repo's files | `@layer` home | Status |
 |---|---|---|---|---|
@@ -129,10 +129,10 @@ source of truth for "which ITCSS layer is this file in."
 
 | Missing token | Currently hardcoded in | Migration target |
 |---|---|---|
-| `--shadow-*` (sm/md/lg/xl/2xl) | `tailwind.config.js:98-104` (rgba values) | `--shadow-sm/md/lg/xl/2xl` tokens |
+| `--shadow-*` (sm/md/lg/xl/2xl) | `frontend/tailwind.config.js:98-104` (rgba values) | `--shadow-sm/md/lg/xl/2xl` tokens |
 | `--z-*` (scale) | documented in THEME.md but no CSS custom properties | `--z-base/dropdown/sticky/modal/toast` tokens |
 | `--bp-*` (breakpoints) | Tailwind defaults inline via `@media (max-width: Npx)` | `--bp-sm/md/lg` tokens |
-| `success`/`warning`/`error` palettes | `tailwind.config.js:44-79` (hex, not OKLCH) | OKLCH tokens aligned to the two-palette system |
+| `success`/`warning`/`error` palettes | `frontend/tailwind.config.js:44-79` (hex, not OKLCH) | OKLCH tokens aligned to the two-palette system |
 | focus-ring as token | `.ring-prim` class in `utilities.css:66-69` | `--ring-width`, `--ring-offset`, `--ring-color` tokens |
 
 ### 2. Tools — functions, mixins, keyframes
@@ -224,7 +224,7 @@ order, but escape the cascade-layer contract — the nightly audit flags them.
 ## Nesting — current state and target
 
 **Today:** no CSS nesting. No `postcss-nesting` or `tailwindcss/nesting` plugin
-in `postcss.config.js`. All selectors are flat (`.parent .child` or
+in `frontend/postcss.config.js`. All selectors are flat (`.parent .child` or
 `.parent > .child`), with occasional `:is()` for selector-list grouping.
 
 **Target:** native CSS nesting (`&`), progressively adopted per-file. Benefits:
@@ -257,7 +257,7 @@ in `postcss.config.js`. All selectors are flat (`.parent .child` or
 
 Three signals, all machine-checkable (the nightly task runs them):
 
-1. **Layer membership.** Every `.css` file under `src/` should have its rules
+1. **Layer membership.** Every `.css` file under `frontend/src/` should have its rules
    inside the correct `@layer`. The audit lists files whose rules are unlayered
    or in the wrong layer.
 2. **Token coverage.** Component/Object CSS must reference tokens, not literals.
@@ -271,13 +271,13 @@ Three signals, all machine-checkable (the nightly task runs them):
 
 ```bash
 # Files not wrapped in @layer (should be empty or utilities-only)
-grep -rL '@layer' src/components/**/*.css src/styles/**/*.css
+grep -rL '@layer' frontend/src/components/**/*.css frontend/src/styles/**/*.css
 
 # Hardcoded hex/rgb in component CSS (should trend to zero)
-grep -rn '#[0-9a-fA-F]\{3,8\}\|rgb(' src/components/ src/styles/components/ src/styles/entities/
+grep -rn '#[0-9a-fA-F]\{3,8\}\|rgb(' frontend/src/components/ frontend/src/styles/components/ frontend/src/styles/entities/
 
 # Specificity outliers (!important — should be near-zero)
-grep -rn '!important' src/components/ src/styles/
+grep -rn '!important' frontend/src/components/ frontend/src/styles/
 
 # CSS syntax gate (parse-only — catches agent-broken CSS)
 find src -name '*.css' | xargs node scripts/parse-css.mjs
@@ -330,4 +330,4 @@ it.
 - Harry Roberts, **"Managing Specificity"** talk — the inverted-triangle
   rationale.
 - This repo: [STYLING.md](STYLING.md) (class taxonomy, surface contract),
-  [THEME.md](THEME.md) (token reference), `src/index.css` (import order).
+  [THEME.md](THEME.md) (token reference), `frontend/src/index.css` (import order).

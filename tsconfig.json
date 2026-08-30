@@ -1,34 +1,20 @@
 {
+  /* Repo-root TypeScript project: covers tracked repo tooling (scripts/) and
+     the root ESLint flat config. The frontend app project lives in
+     frontend/tsconfig.json (run via `bun run --cwd frontend tsc`); other
+     packages (server, mcp-server, shared, domain-contracts, cli, cloud) have
+     their own tsconfig.json — see scripts/validate-ts.sh. */
   "compilerOptions": {
-    "target": "ES2020",
-    "jsx": "react-jsx",
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
-
-    /* Node.js types */
-    "moduleDetection": "force",
-    "useDefineForClassFields": true,
-
-    /* Path Mapping */
-    "baseUrl": ".",
+    "target": "ES2022",
+    "lib": ["ES2023"],
     "module": "ESNext",
-
-    /* Bundler mode */
+    "moduleDetection": "force",
     "moduleResolution": "bundler",
-    "paths": {
-      "@mdt/shared/*": ["./shared/dist/*"],
-      "@/*": ["./src/*"]
-    },
-
-    "resolveJsonModule": true,
-
-    /* Bun types */
     "types": ["bun"],
+    "resolveJsonModule": true,
     "allowImportingTsExtensions": true,
-    /* Linting */
     "strict": true,
     "noFallthroughCasesInSwitch": true,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
     "noEmit": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
@@ -36,7 +22,6 @@
     "isolatedModules": true,
     "skipLibCheck": true
   },
-  "references": [{ "path": "./tsconfig.node.json" }],
-  "include": ["src", "scripts"],
-  "exclude": ["tests", "**/*.spec.ts", "**/*.spec.tsx", "**/*.test.ts", "**/*.test.tsx", "**/__tests__/**"]
+  "include": ["scripts", "eslint.config.ts", "bun-env.d.ts"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
 }

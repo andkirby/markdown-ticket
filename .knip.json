@@ -2,8 +2,8 @@
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "workspaces": {
     ".": {
-      "entry": ["src/**/*.tsx", "src/**/*.ts", "**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx", "src/test-setup.ts", "tailwind.config.js", "postcss.config.js"],
-      "project": ["src/**/*.ts", "src/**/*.tsx"]
+      "entry": ["frontend/src/**/*.tsx", "frontend/src/**/*.ts", "**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx", "frontend/src/test-setup.ts", "frontend/tailwind.config.js", "frontend/postcss.config.js", "frontend/vite.config.ts"],
+      "project": ["frontend/src/**/*.ts", "frontend/src/**/*.tsx"]
     },
     "server": {
       "entry": ["server.ts", "fileWatcherService.ts", "eslint.config.ts"],

@@ -35,7 +35,7 @@ Record the approved UAT refinement for MDT-173 after reviewing wide rendered moc
 ### TASK-10: Expand document artifact layout without widening prose
 
 - Objective: Let artifacts use available Documents View width while text remains readable.
-- Direct artifacts/files: `src/components/DocumentsView/MarkdownViewer.tsx`, `src/components/DocumentsView/documents-view.css`, `src/styles/prose.css`, `docs/design/surfaces/markdown-content.spec.md`, `docs/design/surfaces/markdown-content.mockups.md`
+- Direct artifacts/files: `frontend/src/components/DocumentsView/MarkdownViewer.tsx`, `frontend/src/components/DocumentsView/documents-view.css`, `frontend/src/styles/prose.css`, `docs/design/surfaces/markdown-content.spec.md`, `docs/design/surfaces/markdown-content.mockups.md`
 - Direct GREEN targets: `document_artifacts_use_available_width`, `TEST-document-artifact-layout`, `TEST-browser-wide-artifact-check`
 - Impacted canonical task IDs: `TASK-10`
 - Why this slice exists: It separates document layout semantics from rendered artifact sizing.
@@ -43,7 +43,7 @@ Record the approved UAT refinement for MDT-173 after reviewing wide rendered moc
 ### TASK-11: Add resizable, collapsible, and readable document navigation
 
 - Objective: Replace the fixed document sidebar split with a resizable/collapsible panel and keep navigation controls readable with search flexing left of sort controls.
-- Direct artifacts/files: `src/components/DocumentsView/DocumentsLayout.tsx`, `src/components/DocumentsView/documents-view.css`, `src/config/documentNavigation.ts`, `src/components/ui/resizable.tsx`, `docs/design/surfaces/documents-view-navigation.spec.md`, `docs/design/surfaces/documents-view-navigation.mockups.md`
+- Direct artifacts/files: `frontend/src/components/DocumentsView/DocumentsLayout.tsx`, `frontend/src/components/DocumentsView/documents-view.css`, `frontend/src/config/documentNavigation.ts`, `frontend/src/components/ui/resizable.tsx`, `docs/design/surfaces/documents-view-navigation.spec.md`, `docs/design/surfaces/documents-view-navigation.mockups.md`
 - Direct GREEN targets: `document_navigation_resizes_and_collapses`, `TEST-document-navigation-layout`, `TEST-browser-wide-artifact-check`
 - Impacted canonical task IDs: `TASK-11`
 - Why this slice exists: It addresses available layout width at the pane level instead of only inside Markdown rendering.
@@ -51,7 +51,7 @@ Record the approved UAT refinement for MDT-173 after reviewing wide rendered moc
 ### TASK-12: Add Wireloom native-width rendering and zoomable inspection
 
 - Objective: Keep Wireloom readable inline and inspectable in a zoomable overlay.
-- Direct artifacts/files: `src/utils/wireloomRenderer.ts`, `src/utils/wireloomFullscreen.ts`, `src/utils/mermaid/zoom.ts`, `src/styles/prose.css`, `docs/design/surfaces/markdown-content.spec.md`, `docs/design/surfaces/markdown-content.mockups.md`
+- Direct artifacts/files: `frontend/src/utils/wireloomRenderer.ts`, `frontend/src/utils/wireloomFullscreen.ts`, `frontend/src/utils/mermaid/zoom.ts`, `frontend/src/styles/prose.css`, `docs/design/surfaces/markdown-content.spec.md`, `docs/design/surfaces/markdown-content.mockups.md`
 - Direct GREEN targets: `document_artifacts_use_available_width`, `TEST-wireloom-inspection`
 - Impacted canonical task IDs: `TASK-12`
 - Why this slice exists: Wireloom has artifact-specific sizing and inspection needs distinct from normal prose.

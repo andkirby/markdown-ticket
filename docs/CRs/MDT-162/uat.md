@@ -24,7 +24,7 @@ inherits the shared rule and adds only file metadata via `processFile`.
 ## Verification
 
 - `server/tests/api/system.test.ts` — selector regression test flipped: folders
-  without Markdown (`src/`, `docs/empty-section`) are excluded from
+  without Markdown (`frontend/src/`, `docs/empty-section`) are excluded from
   `/api/filesystem`; `docs` (has `overview.md`) remains selectable.
 - `server/tests/api/documents.test.ts` — navigation tree still prunes the same
   folders from `/api/documents`.

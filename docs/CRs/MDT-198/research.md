@@ -535,7 +535,7 @@ this one method — verified.
 | `mcp-server/` | Thin wrapper over shared | No change to CRUD; reservation flows through shared seam. | Low. |
 | `server/` | REST API + SSE | Add projection-pull endpoint (poll) for header visibility; SSE stays instance-local for now. | Medium — new endpoint + access scoping. |
 | `domain-contracts/` | Types | Add cloud-binding DTOs, reservation result type, projection version type. | Low. |
-| `src/` | Board | Consume projection for cross-clone visibility; indicate cloud-bound vs local. | Medium — UX decision (see open decisions). |
+| `frontend/src/` | Board | Consume projection for cross-clone visibility; indicate cloud-bound vs local. | Medium — UX decision (see open decisions). |
 
 **No duplication rule:** the cloud service owns *only* allocation + projection
 storage. Ticket field semantics (allowed attrs, relation fields, status
@@ -769,7 +769,7 @@ count alone.
 
 (See RQ12 table.) Single seam at `TicketService.createCR:320`; injectable
 `NumberAllocator`; projection read endpoint in `server/`; new DTOs in
-`domain-contracts`; optional board UX in `src/`. No CRUD duplication.
+`domain-contracts`; optional board UX in `frontend/src/`. No CRUD duplication.
 
 ---
 

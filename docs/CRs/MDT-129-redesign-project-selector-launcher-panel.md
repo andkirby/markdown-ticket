@@ -19,7 +19,7 @@ relatedTickets: MDT-039,MDT-118
 - Users need a project selector that remains compact in the rail while still providing access to all projects.
 
 ### Affected Areas
-- `src`: project selector and project switching UI
+- `frontend/src`: project selector and project switching UI
 - `shared`: global configuration contract for selector visibility settings
 - `server`: validated delivery of global UI configuration
 - `tests`: selector behavior coverage
@@ -150,18 +150,18 @@ Implemented the active-descendant keyboard navigation in `ProjectBrowserPanel`,
 mirroring `QuickSearch`.
 
 **Code changes:**
-- `src/components/ProjectSelector/ProjectBrowserPanel.tsx`: added
+- `frontend/src/components/ProjectSelector/ProjectBrowserPanel.tsx`: added
   `selectedProjectIndex` state; arrow/Enter handling moved onto the search
   input (`handleSearchKeyDown`) with cyclic wrap; highlight resets on open and
   on each keystroke; clamped against the filtered list. Removed the old
   roving-tabindex grid handler and `getGridColumnCount`. Grid is now
   `role="listbox"`.
-- `src/components/ProjectSelector/ProjectSelectorCard.tsx`: browser cards are
+- `frontend/src/components/ProjectSelector/ProjectSelectorCard.tsx`: browser cards are
   now `role="option"`, `tabindex=-1`, with `aria-selected`/`data-selected`
   driven by a new `highlighted` prop (visual highlight only; DOM focus stays in
   the input). Removed the now-dead `onCardKeyDown` prop. Favorite-star button is
   `tabindex=-1` in browser mode so it is not a tab stop.
-- `src/components/ProjectSelector/project-selector.css`: added
+- `frontend/src/components/ProjectSelector/project-selector.css`: added
   `.project-card[data-selected="true"]` highlight reusing the focus-visible ring
   tokens.
 

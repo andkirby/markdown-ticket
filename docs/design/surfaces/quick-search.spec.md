@@ -22,7 +22,7 @@ Related artifacts:
 - Documents View tree filtering, document title extraction, or full-text indexing.
 - Backend search endpoint shape beyond the UI states needed to consume it.
 - Detailed ranking algorithms; only user-visible ordering guarantees are specified here.
-- Modal primitive internals. Shared modal behavior is owned by `src/MODALS.md`.
+- Modal primitive internals. Shared modal behavior is owned by `frontend/src/MODALS.md`.
 
 ## Composition
 
@@ -51,12 +51,12 @@ QuickSearchModal
 
 | Child | Component | Spec | Conditional |
 |-------|-----------|------|-------------|
-| Modal | `src/components/ui/Modal.tsx` | `src/MODALS.md` | always while open |
-| SearchInput | `src/components/QuickSearch/QuickSearchInput.tsx` | this spec | always |
-| SearchScopeBar | `src/components/QuickSearch/SearchScopeBar.tsx` | this spec | always |
-| QuickSearchResults | `src/components/QuickSearch/QuickSearchResults.tsx` | this spec | always |
-| ProjectResultRow | `src/components/QuickSearch/ProjectResultRow.tsx` | `project-browser.spec.md` for project identity rules | when project results exist |
-| DocumentResultRow | `src/components/QuickSearch/DocumentResultRow.tsx` | `documents-view-navigation.spec.md` for document-search boundary | future document search |
+| Modal | `frontend/src/components/ui/Modal.tsx` | `frontend/src/MODALS.md` | always while open |
+| SearchInput | `frontend/src/components/QuickSearch/QuickSearchInput.tsx` | this spec | always |
+| SearchScopeBar | `frontend/src/components/QuickSearch/SearchScopeBar.tsx` | this spec | always |
+| QuickSearchResults | `frontend/src/components/QuickSearch/QuickSearchResults.tsx` | this spec | always |
+| ProjectResultRow | `frontend/src/components/QuickSearch/ProjectResultRow.tsx` | `project-browser.spec.md` for project identity rules | when project results exist |
+| DocumentResultRow | `frontend/src/components/QuickSearch/DocumentResultRow.tsx` | `documents-view-navigation.spec.md` for document-search boundary | future document search |
 
 ## Source / Verification Anchors
 
@@ -64,11 +64,11 @@ These refs are drift anchors, not a code inventory. Keep them short and update t
 
 | Anchor | Path | Why It Exists |
 |--------|------|---------------|
-| Surface owner | `src/components/QuickSearch/QuickSearchModal.tsx` | modal composition and lifecycle |
-| Result rendering | `src/components/QuickSearch/QuickSearchResults.tsx` | visible groups, rows, and remote states |
-| Behavior model | `src/hooks/useQuickSearch.ts`, `src/hooks/useSearchScope.ts` | query filtering and scope state |
-| Style contract | `src/components/QuickSearch/quick-search.css` | semantic search classes only |
-| Verification | `src/components/QuickSearch/__tests__/`, `tests/e2e/quick-search/modal.spec.ts`, `tests/e2e/scoped-search.spec.ts` | keyboard, scope, and result behavior |
+| Surface owner | `frontend/src/components/QuickSearch/QuickSearchModal.tsx` | modal composition and lifecycle |
+| Result rendering | `frontend/src/components/QuickSearch/QuickSearchResults.tsx` | visible groups, rows, and remote states |
+| Behavior model | `frontend/src/hooks/useQuickSearch.ts`, `frontend/src/hooks/useSearchScope.ts` | query filtering and scope state |
+| Style contract | `frontend/src/components/QuickSearch/quick-search.css` | semantic search classes only |
+| Verification | `frontend/src/components/QuickSearch/__tests__/`, `tests/e2e/quick-search/modal.spec.ts`, `tests/e2e/scoped-search.spec.ts` | keyboard, scope, and result behavior |
 
 ## Layout
 
@@ -117,7 +117,7 @@ Group order is cross-project tickets, current-project tickets, projects, then do
 
 ## Accessibility
 
-- The modal must follow `src/MODALS.md` requirements unless that shared contract is explicitly revised.
+- The modal must follow `frontend/src/MODALS.md` requirements unless that shared contract is explicitly revised.
 - The scope bar uses `role="tablist"` and scope buttons use `role="tab"` with `aria-selected`.
 - The results container uses `role="listbox"`.
 - Selectable result rows use `role="option"` and `aria-selected`.

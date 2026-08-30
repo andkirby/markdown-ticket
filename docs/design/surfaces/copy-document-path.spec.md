@@ -30,19 +30,19 @@ RecentDocuments (recent row)
 |-------|-----------|------|-------------|
 | CopyPathButton | `CopyPathButton.tsx` | this spec | all rows (files and folders) |
 | FavStarButton | inline in `FileTree.tsx`, `FavDocuments.tsx` | `fav-star.css` | when `onToggleFavorite` provided and path ≠ `./` |
-| FileTree | `src/components/DocumentsView/FileTree.tsx` | `documents-view-navigation.spec.md` | always |
-| FavDocuments | `src/components/DocumentsView/FavDocuments.tsx` | `documents-view-navigation.spec.md` | when reconciled favs exist |
-| RecentDocuments | `src/components/DocumentsView/RecentDocuments.tsx` | `documents-view-navigation.spec.md` | when user has opened documents |
+| FileTree | `frontend/src/components/DocumentsView/FileTree.tsx` | `documents-view-navigation.spec.md` | always |
+| FavDocuments | `frontend/src/components/DocumentsView/FavDocuments.tsx` | `documents-view-navigation.spec.md` | when reconciled favs exist |
+| RecentDocuments | `frontend/src/components/DocumentsView/RecentDocuments.tsx` | `documents-view-navigation.spec.md` | when user has opened documents |
 
 ## Source files
 
 | Type | Path |
 |------|------|
-| Component | `src/components/DocumentsView/CopyPathButton.tsx` |
-| Documents CSS | `src/components/DocumentsView/documents-view.css` |
-| Fav star CSS | `src/styles/entities/fav-star.css` |
-| Toast hook | `src/hooks/useToast.ts` |
-| Sonner setup | `src/components/ui/sonner.tsx` |
+| Component | `frontend/src/components/DocumentsView/CopyPathButton.tsx` |
+| Documents CSS | `frontend/src/components/DocumentsView/documents-view.css` |
+| Fav star CSS | `frontend/src/styles/entities/fav-star.css` |
+| Toast hook | `frontend/src/hooks/useToast.ts` |
+| Sonner setup | `frontend/src/components/ui/sonner.tsx` |
 
 ## Behavior
 

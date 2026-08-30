@@ -12,21 +12,21 @@ Executable test files were not authored in this run because the requested write 
 
 | Module | Test File | Test Plan |
 |--------|-----------|-----------|
-| `domain-contracts/src/app-config/schema.ts` | `src/config/documentFavs.test.ts` | `TEST-document-fav-state-schema` |
-| `domain-contracts/src/app-config/validation.ts` | `src/config/documentFavs.test.ts` | `TEST-document-fav-state-schema` |
+| `domain-contracts/src/app-config/schema.ts` | `frontend/src/config/documentFavs.test.ts` | `TEST-document-fav-state-schema` |
+| `domain-contracts/src/app-config/validation.ts` | `frontend/src/config/documentFavs.test.ts` | `TEST-document-fav-state-schema` |
 | `server/services/DocumentFavStateService.ts` | `server/tests/api/document-favs.test.ts` | `TEST-document-fav-storage-owner`, `TEST-document-fav-write-route` |
 | `server/controllers/DocumentController.ts` | `server/tests/api/document-favs.test.ts` | `TEST-document-fav-storage-owner`, `TEST-document-fav-write-route` |
 | `server/routes/documents.ts` | `server/tests/api/document-favs.test.ts` | `TEST-document-fav-write-route` |
 | `server/services/DocumentService.ts` | `server/tests/api/documents.test.ts` | `TEST-document-tree-fav-reconciliation` |
 | `server/services/TreeService.ts` | `server/tests/api/documents.test.ts` | `TEST-document-tree-fav-reconciliation` |
-| `src/config/documentFavs.ts` | `src/config/documentFavs.test.ts` | `TEST-document-favs-api-client` |
-| `src/components/DocumentsView/DocumentsLayout.tsx` | `tests/e2e/documents/favs.spec.ts` | `TEST-documents-favs-e2e` |
-| `src/components/DocumentsView/FavDocuments.tsx` | `src/components/DocumentsView/FavDocuments.test.tsx` | `TEST-fav-documents-component` |
-| `src/components/DocumentsView/FileTree.tsx` | `src/components/DocumentsView/FileTree.test.tsx` | `TEST-file-tree-fav-controls` |
-| `src/components/DocumentsView/RecentDocuments.tsx` | `tests/e2e/documents/favs.spec.ts` | `TEST-documents-favs-e2e` |
-| `src/config/documentNavigation.ts` | `tests/e2e/documents/favs.spec.ts` | `TEST-documents-favs-e2e` |
-| `src/components/DocumentsView/documents-view.css` | `src/components/DocumentsView/FavDocuments.test.tsx` | `TEST-fav-documents-component` |
-| `src/styles/entities/fav-star.css` | `src/components/DocumentsView/FavDocuments.test.tsx`, `src/components/DocumentsView/FileTree.test.tsx` | `TEST-fav-documents-component`, `TEST-file-tree-fav-controls` |
+| `frontend/src/config/documentFavs.ts` | `frontend/src/config/documentFavs.test.ts` | `TEST-document-favs-api-client` |
+| `frontend/src/components/DocumentsView/DocumentsLayout.tsx` | `tests/e2e/documents/favs.spec.ts` | `TEST-documents-favs-e2e` |
+| `frontend/src/components/DocumentsView/FavDocuments.tsx` | `frontend/src/components/DocumentsView/FavDocuments.test.tsx` | `TEST-fav-documents-component` |
+| `frontend/src/components/DocumentsView/FileTree.tsx` | `frontend/src/components/DocumentsView/FileTree.test.tsx` | `TEST-file-tree-fav-controls` |
+| `frontend/src/components/DocumentsView/RecentDocuments.tsx` | `tests/e2e/documents/favs.spec.ts` | `TEST-documents-favs-e2e` |
+| `frontend/src/config/documentNavigation.ts` | `tests/e2e/documents/favs.spec.ts` | `TEST-documents-favs-e2e` |
+| `frontend/src/components/DocumentsView/documents-view.css` | `frontend/src/components/DocumentsView/FavDocuments.test.tsx` | `TEST-fav-documents-component` |
+| `frontend/src/styles/entities/fav-star.css` | `frontend/src/components/DocumentsView/FavDocuments.test.tsx`, `frontend/src/components/DocumentsView/FileTree.test.tsx` | `TEST-fav-documents-component`, `TEST-file-tree-fav-controls` |
 
 ## Data Mechanism Tests
 
@@ -82,7 +82,7 @@ Executable test files were not authored in this run because the requested write 
 
 ```bash
 bun run --cwd server jest tests/api/document-favs.test.ts tests/api/documents.test.ts --runInBand
-bun test src/config/documentFavs.test.ts src/components/DocumentsView/FavDocuments.test.tsx src/components/DocumentsView/FileTree.test.tsx
+bun test frontend/src/config/documentFavs.test.ts frontend/src/components/DocumentsView/FavDocuments.test.tsx frontend/src/components/DocumentsView/FileTree.test.tsx
 bunx playwright test tests/e2e/documents/favs.spec.ts --project=chromium
 spec-trace validate MDT-171 --stage tests
 spec-trace render tests MDT-171

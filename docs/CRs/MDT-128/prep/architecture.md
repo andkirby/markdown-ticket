@@ -16,7 +16,7 @@ Preparatory work to add `data-testid` attributes across frontend components, ena
 
 | Critical Behavior | Canonical Runtime Flow | Owner Module |
 |-------------------|------------------------|--------------|
-| Test selects element | Playwright locates `data-testid` → Component renders with attribute → Test interacts | `src/components/*` |
+| Test selects element | Playwright locates `data-testid` → Component renders with attribute → Test interacts | `frontend/src/components/*` |
 
 **Rules:**
 - Each interactive element gets exactly one `data-testid`
@@ -31,46 +31,46 @@ Preparatory work to add `data-testid` attributes across frontend components, ena
 
 | Selector | Component | Location | Enables |
 |----------|-----------|----------|---------|
-| `ticket-{code}` | TicketCard | `src/components/TicketCard.tsx` | Ticket targeting |
-| `column-{status}` | Column | `src/components/Board.tsx` or `Column/index.tsx` | Column verification |
-| `nav-board`, `nav-list`, `nav-documents` | Navigation tabs | `src/components/ProjectView.tsx` | View switching tests |
-| `ticket-detail` | TicketViewer modal | `src/components/TicketViewer.tsx` | Modal tests |
-| `close-detail` | TicketViewer close button | `src/components/TicketViewer.tsx` | Modal close tests |
-| `drag-handle` | DraggableTicketCard | `src/components/Board.tsx` | DnD tests |
-| `drop-zone` | Column drop area | `src/components/Column/index.tsx` | DnD tests |
-| `filter-controls` | FilterControls | `src/components/FilterControls.tsx` | Board filtering tests |
-| `sort-controls` | SortControls | `src/components/SortControls.tsx` | Board/List sorting tests |
-| `search-input` | Search field in FilterControls | `src/components/FilterControls.tsx` | Search tests |
+| `ticket-{code}` | TicketCard | `frontend/src/components/TicketCard.tsx` | Ticket targeting |
+| `column-{status}` | Column | `frontend/src/components/Board.tsx` or `Column/index.tsx` | Column verification |
+| `nav-board`, `nav-list`, `nav-documents` | Navigation tabs | `frontend/src/components/ProjectView.tsx` | View switching tests |
+| `ticket-detail` | TicketViewer modal | `frontend/src/components/TicketViewer.tsx` | Modal tests |
+| `close-detail` | TicketViewer close button | `frontend/src/components/TicketViewer.tsx` | Modal close tests |
+| `drag-handle` | DraggableTicketCard | `frontend/src/components/Board.tsx` | DnD tests |
+| `drop-zone` | Column drop area | `frontend/src/components/Column/index.tsx` | DnD tests |
+| `filter-controls` | FilterControls | `frontend/src/components/FilterControls.tsx` | Board filtering tests |
+| `sort-controls` | SortControls | `frontend/src/components/SortControls.tsx` | Board/List sorting tests |
+| `search-input` | Search field in FilterControls | `frontend/src/components/FilterControls.tsx` | Search tests |
 
 #### P2: Full Coverage (completes all test paths)
 
 | Selector | Component | Location | Enables |
 |----------|-----------|----------|---------|
-| `ticket-title` | TicketViewer | `src/components/TicketViewer.tsx` | Title verification |
-| `ticket-status` | TicketAttributes | `src/components/TicketAttributes.tsx` | Attribute tests |
-| `ticket-type` | TicketAttributes | `src/components/TicketAttributes.tsx` | Attribute tests |
-| `ticket-priority` | TicketAttributes | `src/components/TicketAttributes.tsx` | Attribute tests |
-| `ticket-content` | TicketViewer markdown | `src/components/TicketViewer.tsx` | Markdown rendering tests |
-| `ticket-assignee` | TicketAttributes | `src/components/TicketAttributes.tsx` | Assignee tests |
-| `ticket-list` | List view container | `src/components/ProjectView.tsx` | List view tests |
-| `ticket-row` | List view row | `src/components/ProjectView.tsx` | List row interaction |
-| `document-tree` | FileTree | `src/components/DocumentsView/FileTree.tsx` | Documents tests |
-| `document-item` | FileTree file nodes | `src/components/DocumentsView/FileTree.tsx` | Documents tests |
-| `folder-item` | FileTree folder nodes | `src/components/DocumentsView/FileTree.tsx` | Documents tests |
-| `file-viewer` | MarkdownViewer | `src/components/DocumentsView/MarkdownViewer.tsx` | Documents tests |
-| `add-project-modal` | AddProjectModal | `src/components/AddProjectModal/` | Project management tests |
-| `edit-project-modal` | AddProjectModal (edit mode) | `src/components/AddProjectModal/` | Project management tests |
-| `theme-toggle` | Theme toggle button | `src/components/HamburgerMenu.tsx` or similar | UI/Theme tests |
-| `loading` | Loading spinner | `src/App.tsx` or Board | Loading state tests |
-| `status-dropdown` | StatusToggle | `src/components/Column/StatusToggle.tsx` | Status change tests |
+| `ticket-title` | TicketViewer | `frontend/src/components/TicketViewer.tsx` | Title verification |
+| `ticket-status` | TicketAttributes | `frontend/src/components/TicketAttributes.tsx` | Attribute tests |
+| `ticket-type` | TicketAttributes | `frontend/src/components/TicketAttributes.tsx` | Attribute tests |
+| `ticket-priority` | TicketAttributes | `frontend/src/components/TicketAttributes.tsx` | Attribute tests |
+| `ticket-content` | TicketViewer markdown | `frontend/src/components/TicketViewer.tsx` | Markdown rendering tests |
+| `ticket-assignee` | TicketAttributes | `frontend/src/components/TicketAttributes.tsx` | Assignee tests |
+| `ticket-list` | List view container | `frontend/src/components/ProjectView.tsx` | List view tests |
+| `ticket-row` | List view row | `frontend/src/components/ProjectView.tsx` | List row interaction |
+| `document-tree` | FileTree | `frontend/src/components/DocumentsView/FileTree.tsx` | Documents tests |
+| `document-item` | FileTree file nodes | `frontend/src/components/DocumentsView/FileTree.tsx` | Documents tests |
+| `folder-item` | FileTree folder nodes | `frontend/src/components/DocumentsView/FileTree.tsx` | Documents tests |
+| `file-viewer` | MarkdownViewer | `frontend/src/components/DocumentsView/MarkdownViewer.tsx` | Documents tests |
+| `add-project-modal` | AddProjectModal | `frontend/src/components/AddProjectModal/` | Project management tests |
+| `edit-project-modal` | AddProjectModal (edit mode) | `frontend/src/components/AddProjectModal/` | Project management tests |
+| `theme-toggle` | Theme toggle button | `frontend/src/components/HamburgerMenu.tsx` or similar | UI/Theme tests |
+| `loading` | Loading spinner | `frontend/src/App.tsx` or Board | Loading state tests |
+| `status-dropdown` | StatusToggle | `frontend/src/components/Column/StatusToggle.tsx` | Status change tests |
 
 ### Already Implemented
 
 | Selector | Component | Location |
 |----------|-----------|----------|
-| `ticket-card` | TicketCard | `src/components/TicketCard.tsx:19` |
-| `kanban-board` | Board | `src/components/Board.tsx:511` |
-| `project-option-{code}` | ProjectSelector | `src/components/ProjectSelector.tsx:58,83` |
+| `ticket-card` | TicketCard | `frontend/src/components/TicketCard.tsx:19` |
+| `kanban-board` | Board | `frontend/src/components/Board.tsx:511` |
+| `project-option-{code}` | ProjectSelector | `frontend/src/components/ProjectSelector.tsx:58,83` |
 
 ### SSE Test Utilities (Non-Selector)
 
@@ -98,7 +98,7 @@ This tests the full production flow: file change → file monitor (chokidar) det
 ## Structure
 
 ```text
-src/components/
+frontend/src/components/
 ├── Board.tsx                  # Add: column-{status}, drop-zone, drag-handle
 ├── Column/
 │   └── index.tsx              # Add: ticket-{code}, drop-zone
@@ -125,7 +125,7 @@ tests/e2e/utils/
 
 | Module | Owns | Must Not |
 |--------|------|----------|
-| `src/components/*` | Adding `data-testid` to JSX | Changing component behavior |
+| `frontend/src/components/*` | Adding `data-testid` to JSX | Changing component behavior |
 | `tests/e2e/utils/selectors.ts` | Selector definitions | Adding selectors without component implementation |
 | `tests/e2e/utils/sse-helpers.ts` | SSE event capture/verification utilities | Test logic that belongs in spec files |
 
@@ -178,7 +178,7 @@ To add new E2E tests: First add selector to `tests/e2e/utils/selectors.ts`, then
 
 | Runtime Module | Test Scaffolding | Separation Rule |
 |----------------|------------------|-----------------|
-| `src/components/*` | `tests/e2e/utils/selectors.ts` | Selectors defined in test utils; components implement via `data-testid` |
+| `frontend/src/components/*` | `tests/e2e/utils/selectors.ts` | Selectors defined in test utils; components implement via `data-testid` |
 | SSE endpoint (`/api/events`) | `tests/e2e/utils/sse-helpers.ts` | SSE capture utilities stay in test-only location |
 
 ## Verification
@@ -187,7 +187,7 @@ After prep implementation:
 
 ```bash
 # Verify all selectors have matching data-testid in components
-grep -r "data-testid=" src/components/ | wc -l  # Should increase significantly
+grep -r "data-testid=" frontend/src/components/ | wc -l  # Should increase significantly
 
 # Run existing E2E tests to verify no regressions
 npm run test:e2e

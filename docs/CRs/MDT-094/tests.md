@@ -14,7 +14,7 @@ Tests for optimizing CR listing API to return metadata-only responses. Tests ver
 | `shared/models/Ticket.ts` | `shared/tests/models/MDT-094/TicketMetadata.test.ts` | 7 | ✅ PASS (uses `Omit<Ticket, 'content'>` placeholder) |
 | `shared/services/MarkdownService.ts` | `shared/tests/services/MDT-094/MarkdownService.scanTicketMetadata.test.ts` | 12 | 🔴 FAIL (method not implemented) |
 | `server/controllers/ProjectController.ts` | `server/tests/integration/api.metadata.test.ts` | 11 | 🔴 FAIL (endpoint returns full Ticket[]) |
-| `src/services/dataLayer.ts` | `src/services/dataLayer.metadata.test.ts` | 8 | 🔴 FAIL (method not implemented) |
+| `frontend/src/services/dataLayer.ts` | `frontend/src/services/dataLayer.metadata.test.ts` | 8 | 🔴 FAIL (method not implemented) |
 
 ## Data Mechanism Tests
 
@@ -144,7 +144,7 @@ describe('GET /api/projects/:projectId/crs (Metadata)', () => {
 
 ### 4. DataLayer Metadata Tests (8 tests)
 
-**File**: `src/services/dataLayer.metadata.test.ts`
+**File**: `frontend/src/services/dataLayer.metadata.test.ts`
 
 ```typescript
 describe('DataLayer.fetchTicketsMetadata', () => {
@@ -173,7 +173,7 @@ bun run --cwd shared test tests/services/MDT-094/MarkdownService.scanTicketMetad
 bun run --cwd server test tests/integration/api.metadata.test.ts
 
 # Run frontend tests (from root)
-bun test src/services/dataLayer.metadata.test.ts
+bun test frontend/src/services/dataLayer.metadata.test.ts
 
 # Run all MDT-094 tests with coverage
 bun run --cwd shared test --coverage --testPathPattern="MDT-094"

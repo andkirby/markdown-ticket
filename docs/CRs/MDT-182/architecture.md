@@ -20,7 +20,7 @@ The circles' `cx`/`cy` directly give the target positions. Colors are auto-detec
 
 ## Module Boundaries
 
-### `src/utils/wireloomAnnotationToggle.ts`
+### `frontend/src/utils/wireloomAnnotationToggle.ts`
 **Owner**: All annotation toggle logic.
 
 **Exports**:
@@ -35,13 +35,13 @@ The circles' `cx`/`cy` directly give the target positions. Colors are auto-detec
 - `showTooltip()` / `hideTooltip()` — manages a single `position: fixed` tooltip on `document.body`
 - `switchToCompact()` / `switchToCallout()` — mode transitions with full cleanup
 
-### `src/utils/wireloomRenderer.ts`
+### `frontend/src/utils/wireloomRenderer.ts`
 Calls `addAnnotationToggle()` and `reapplyCompactMode()` after rendering.
 
-### `src/components/MarkdownContent/domPurifyConfig.ts`
+### `frontend/src/components/MarkdownContent/domPurifyConfig.ts`
 Allows `data-annotation-mode`, `data-annotation-index`, `data-wireloom-callout`, `data-callout-*` attributes.
 
-### `src/styles/wireloom-annotations.css`
+### `frontend/src/styles/wireloom-annotations.css`
 Styled via CSS custom properties (`--wl-dot`, `--wl-box-fill`, `--wl-box-stroke`, `--wl-text`) set on the wrapper from auto-detected colors. No theme-specific color tables.
 
 ## Auto-Detection Flow

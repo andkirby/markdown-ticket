@@ -32,7 +32,7 @@ All procedures have been verified with evidence.
 |-------|-------|
 | id | `frontend-vite` |
 | class | frontend |
-| entry | `vite.config.ts` → Vite dev server |
+| entry | `frontend/vite.config.ts` → Vite dev server |
 | owner | root |
 | port | 3075 (configurable via `PORT` env) |
 | observe | Console output, `/api/frontend/logs/*` endpoints |

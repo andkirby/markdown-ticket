@@ -51,7 +51,7 @@ Tickets can now be moved to ANY status freely without validation errors.
 
 #### 1. Ticket Card Visual Indicators
 
-**File: `src/components/TicketCard.tsx`**
+**File: `frontend/src/components/TicketCard.tsx`**
 
 Added detection for invalid status and conditional red border:
 
@@ -69,7 +69,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, ... }) => {
 
 #### 2. Status Badge Warning
 
-**File: `src/components/TicketAttributeTags.tsx`**
+**File: `frontend/src/components/TicketAttributeTags.tsx`**
 
 Added `isInvalidStatus` prop to pass validation state:
 
@@ -81,7 +81,7 @@ interface TicketAttributeTagsProps {
 }
 ```
 
-**File: `src/components/Badge/StatusBadge.tsx`**
+**File: `frontend/src/components/Badge/StatusBadge.tsx`**
 
 Added `isInvalid` prop with solid variant for invalid statuses:
 
@@ -107,7 +107,7 @@ export function StatusBadge({ status, className, isInvalid = false, ...props }) 
 
 #### 3. Badge CSS Styling
 
-**File: `src/components/Badge/badge.css`**
+**File: `frontend/src/components/Badge/badge.css`**
 
 Added red gradient styling for invalid status:
 
@@ -118,7 +118,7 @@ Added red gradient styling for invalid status:
 }
 ```
 
-**File: `src/components/ui/badge.tsx`**
+**File: `frontend/src/components/ui/badge.tsx`**
 
 Added 'solid' variant to CVA:
 
@@ -141,7 +141,7 @@ const badgeVariants = cva(
 
 #### 4. Ticket Card CSS
 
-**File: `src/components/TicketCard/ticket.css`**
+**File: `frontend/src/components/TicketCard/ticket.css`**
 
 Created new CSS file for ticket card styling:
 
@@ -207,12 +207,12 @@ Created comprehensive E2E tests covering:
 ## Related Files Changed
 
 - `shared/services/TicketService.ts`
-- `src/components/TicketCard.tsx`
-- `src/components/TicketAttributeTags.tsx`
-- `src/components/Badge/StatusBadge.tsx`
-- `src/components/Badge/badge.css`
-- `src/components/ui/badge.tsx`
-- `src/components/TicketCard/ticket.css` (new file)
+- `frontend/src/components/TicketCard.tsx`
+- `frontend/src/components/TicketAttributeTags.tsx`
+- `frontend/src/components/Badge/StatusBadge.tsx`
+- `frontend/src/components/Badge/badge.css`
+- `frontend/src/components/ui/badge.tsx`
+- `frontend/src/components/TicketCard/ticket.css` (new file)
 - `tests/e2e/board/invalid-status.spec.ts` (new file)
 
 ## Verification

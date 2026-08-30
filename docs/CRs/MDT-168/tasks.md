@@ -297,7 +297,7 @@ bun run --cwd server jest --testPathPattern="(GuardedOperations|configureDocumen
 
 **Skills**: mdt-frontend, frontend-react-component
 
-**Structure**: `src/config/configApiClient.ts`, `src/hooks/useBackendConfig.ts`
+**Structure**: `frontend/src/config/configApiClient.ts`, `frontend/src/hooks/useBackendConfig.ts`
 
 **Makes GREEN (Automated Tests)**: `TEST-frontend-config-api-client`, `TEST-use-backend-config-hook`
 
@@ -308,10 +308,10 @@ bun run --cwd server jest --testPathPattern="(GuardedOperations|configureDocumen
 
 **Creates**:
 
-- `src/config/configApiClient.ts` + `src/config/configApiClient.test.ts`
-- `src/hooks/useBackendConfig.ts` + `src/hooks/useBackendConfig.test.tsx`
+- `frontend/src/config/configApiClient.ts` + `frontend/src/config/configApiClient.test.ts`
+- `frontend/src/hooks/useBackendConfig.ts` + `frontend/src/hooks/useBackendConfig.test.tsx`
 
-**Must Not Touch**: `src/config/settingsPreferences.ts` and other browser-only modules (they stay localStorage).
+**Must Not Touch**: `frontend/src/config/settingsPreferences.ts` and other browser-only modules (they stay localStorage).
 **Exclude**: never import TOML or backend persistence into browser-only handlers.
 **Anti-duplication**: reuse `authFetch`; reuse existing staged-edit pattern from Project Accents.
 **Duplication Guard**: `useBackendConfig` is the only backend-config state owner; Settings sections consume it.
@@ -319,7 +319,7 @@ bun run --cwd server jest --testPathPattern="(GuardedOperations|configureDocumen
 **Verify**:
 
 ```bash
-bun test ./src   # configApiClient + useBackendConfig GREEN
+bun test ./frontend/src   # configApiClient + useBackendConfig GREEN
 ```
 
 **Done when**: browser-only change emits zero backend calls (Edge-6).
@@ -330,16 +330,16 @@ bun test ./src   # configApiClient + useBackendConfig GREEN
 
 **Skills**: mdt-frontend, mdt-ux-designer, frontend-react-component
 
-**Structure**: `src/components/SettingsModal/`, `src/components/DocumentsView/PathSelector.tsx`, `src/components/AddProjectModal/`
+**Structure**: `frontend/src/components/SettingsModal/`, `frontend/src/components/DocumentsView/PathSelector.tsx`, `frontend/src/components/AddProjectModal/`
 
 **Scope**: split backend-config Settings sections consuming `useBackendConfig`; add Documents `excludeFolders`/`maxDepth` editing via document patch; Project Edit guarded workflow entry with confirmation.
 **Boundary**: UI only; all persistence via TASK-7 client/hook.
 
 **Modifies**:
 
-- `src/components/SettingsModal.tsx` + `src/components/SettingsModal/*` (owned sections)
-- `src/components/DocumentsView/PathSelector.tsx` (editable excludeFolders/maxDepth)
-- `src/components/AddProjectModal/AddProjectModal.tsx` (guarded entry)
+- `frontend/src/components/SettingsModal.tsx` + `frontend/src/components/SettingsModal/*` (owned sections)
+- `frontend/src/components/DocumentsView/PathSelector.tsx` (editable excludeFolders/maxDepth)
+- `frontend/src/components/AddProjectModal/AddProjectModal.tsx` (guarded entry)
 - durable: `docs/design/surfaces/settings.spec.md`, `documents-path-selector.spec.md`, `project-edit-form.spec.md` (capability boundaries + new controls)
 
 **Must Not Touch**: browser-only preference handlers, backend services.
@@ -350,7 +350,7 @@ bun test ./src   # configApiClient + useBackendConfig GREEN
 **Verify**:
 
 ```bash
-bun test ./src
+bun test ./frontend/src
 bun run lint
 ```
 
@@ -398,7 +398,7 @@ git diff --check
 
 **Skills**: mdt-frontend, frontend-react-component
 
-**Structure**: `src/hooks/useBackendConfig.ts`, `src/components/ProjectSelector/useSelectorData.ts`
+**Structure**: `frontend/src/hooks/useBackendConfig.ts`, `frontend/src/components/ProjectSelector/useSelectorData.ts`
 
 **Makes GREEN (Automated Tests)**:
 
@@ -416,13 +416,13 @@ git diff --check
 
 **Modifies**:
 
-- `src/hooks/useBackendConfig.ts` (in `applyOne`, on `ok` and selector is `ui.projectSelector.*`, dispatch the existing `SELECTOR_PREFS_SYNC_EVENT`)
-- `src/components/ProjectSelector/useSelectorData.ts` (`handlePrefsSync`: re-fetch backend prefs from `/api/config/selector` then merge localStorage overrides — currently it only re-reads localStorage)
-- `src/hooks/useBackendConfig.test.tsx` (extend with refresh-signal assertions)
-- `src/components/ProjectSelector/useSelectorData.test.tsx` (extend or add with re-fetch-on-signal assertions)
+- `frontend/src/hooks/useBackendConfig.ts` (in `applyOne`, on `ok` and selector is `ui.projectSelector.*`, dispatch the existing `SELECTOR_PREFS_SYNC_EVENT`)
+- `frontend/src/components/ProjectSelector/useSelectorData.ts` (`handlePrefsSync`: re-fetch backend prefs from `/api/config/selector` then merge localStorage overrides — currently it only re-reads localStorage)
+- `frontend/src/hooks/useBackendConfig.test.tsx` (extend with refresh-signal assertions)
+- `frontend/src/components/ProjectSelector/useSelectorData.test.tsx` (extend or add with re-fetch-on-signal assertions)
 - `tests/e2e/config/configuration-refresh.spec.ts` (extend with `selector_pref_change_refreshes_live_consumers`)
 
-**Must Not Touch**: server, domain-contracts, `ConfigSideEffectRegistry`, browser-only preference handlers (`src/config/settingsPreferences.ts`, accent/autocolor/style localStorage modules — they stay browser-only per BR-6.1).
+**Must Not Touch**: server, domain-contracts, `ConfigSideEffectRegistry`, browser-only preference handlers (`frontend/src/config/settingsPreferences.ts`, accent/autocolor/style localStorage modules — they stay browser-only per BR-6.1).
 
 **Exclude**:
 
@@ -438,7 +438,7 @@ git diff --check
 **Verify**:
 
 ```bash
-bun test ./src   # useBackendConfig refresh-signal + useSelectorData re-fetch GREEN
+bun test ./frontend/src   # useBackendConfig refresh-signal + useSelectorData re-fetch GREEN
 PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/config/configuration-refresh.spec.ts --project=chromium
 ```
 

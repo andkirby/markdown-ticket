@@ -35,7 +35,7 @@ Rechecked on 2026-07-24:
   path. The existing worktree owner document contains end-state intent that is
   not required for cloud identity because the cloud UUID is explicit.
 - `server/security/apiAuth.ts:97-140` and
-  `src/auth/AuthSessionProvider.tsx:246-256` still implement local
+  `frontend/src/auth/AuthSessionProvider.tsx:246-256` still implement local
   anonymous/read-only/owner behavior.
 - `mcp-server/src/transports/transportSelection.ts:11-21` selects either stdio
   or HTTP. The architecture assigns a credential provider to each mode without

@@ -16,8 +16,8 @@
 
 | Critical Behavior | Owner Module | Overlap Risk |
 |-------------------|--------------|-------------|
-| Link resolution (ticket mode) | `src/utils/markdownPreprocessor.ts` existing branches | Regression risk — guard with C5 tests |
-| Link resolution (documents mode) | `src/utils/markdownPreprocessor.ts` new branch | None — additive |
+| Link resolution (ticket mode) | `frontend/src/utils/markdownPreprocessor.ts` existing branches | Regression risk — guard with C5 tests |
+| Link resolution (documents mode) | `frontend/src/utils/markdownPreprocessor.ts` new branch | None — additive |
 | Documents-view sourcePath plumbing | `DocumentsView/MarkdownViewer.tsx` → `MarkdownContent` | None — MarkdownContent already threads sourcePath |
 
 ## Constraint Coverage
@@ -51,10 +51,10 @@
 
 ### TASK-documents-view-resolve (M1)
 
-**Structure**: `src/components/DocumentsView/MarkdownViewer.tsx`, `src/utils/markdownPreprocessor.ts`
+**Structure**: `frontend/src/components/DocumentsView/MarkdownViewer.tsx`, `frontend/src/utils/markdownPreprocessor.ts`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-preprocessor-documents-mode` → `src/utils/markdownPreprocessor.mdt150.test.ts` (2 new tests)
+- `TEST-preprocessor-documents-mode` → `frontend/src/utils/markdownPreprocessor.mdt150.test.ts` (2 new tests)
 - `TEST-e2e-documents-relative-link` → `tests/e2e/documents/relative-link-resolution.spec.ts` (1 new test)
 
 **Makes GREEN (Behavior)**:
@@ -72,16 +72,16 @@
 **Boundary**: The new branch is purely additive. The existing ticket-mode branches (ticket-key filename, bare filename in ticket context, `..` relative inside ticket folder) remain first in order and unchanged.
 
 **Modifies**:
-- `src/components/DocumentsView/MarkdownViewer.tsx` — add `sourcePath` prop to `<MarkdownContent>`
-- `src/utils/markdownPreprocessor.ts` — add documents-mode branch to `resolveDocumentRef`
+- `frontend/src/components/DocumentsView/MarkdownViewer.tsx` — add `sourcePath` prop to `<MarkdownContent>`
+- `frontend/src/utils/markdownPreprocessor.ts` — add documents-mode branch to `resolveDocumentRef`
 
 **Must Not Touch**:
-- `src/utils/linkProcessor.ts`
-- `src/utils/linkNormalization.ts`
-- `src/utils/linkBuilder.ts`
-- `src/components/SmartLink/index.tsx`
-- `src/components/TicketViewer/` (sourcePath plumbing already shipped there)
-- `src/App.tsx`, `src/components/DocumentsView/DocumentsLayout.tsx` (path-style routing already shipped)
+- `frontend/src/utils/linkProcessor.ts`
+- `frontend/src/utils/linkNormalization.ts`
+- `frontend/src/utils/linkBuilder.ts`
+- `frontend/src/components/SmartLink/index.tsx`
+- `frontend/src/components/TicketViewer/` (sourcePath plumbing already shipped there)
+- `frontend/src/App.tsx`, `frontend/src/components/DocumentsView/DocumentsLayout.tsx` (path-style routing already shipped)
 - `server/`
 
 **Exclude**: No changes to ticket-mode resolution. No new mode parameter on `preprocessMarkdown` (form is detected from sourcePath shape). No drive-by URL scheme migration.
@@ -94,11 +94,11 @@
 
 ```bash
 # Unit tests (2 new should turn GREEN, 61 existing should stay GREEN)
-bun test src/utils/markdownPreprocessor.mdt150.test.ts
+bun test frontend/src/utils/markdownPreprocessor.mdt150.test.ts
 
 # Direct execution proof — sourcePath = documents-relative
 bun -e "
-const { preprocessMarkdown } = require('./src/utils/markdownPreprocessor.ts')
+const { preprocessMarkdown } = require('./frontend/src/utils/markdownPreprocessor.ts')
 const config = { enableAutoLinking: true, enableTicketLinks: true, enableDocumentLinks: true }
 const out = preprocessMarkdown('see [x](relative.md)', 'ABC', config, 'docs/architecture/aaaa.md', 'docs/CRs')
 console.log(out)  // expect: see [x](/prj/ABC/documents/docs/architecture/relative.md)
@@ -120,27 +120,27 @@ bun run test:e2e --grep="@MDT-150"
 
 ### TASK-regression-lock (M2)
 
-**Structure**: `src/utils/linkProcessor.ts`, `src/components/SmartLink/index.tsx` (test-only unless regression found)
+**Structure**: `frontend/src/utils/linkProcessor.ts`, `frontend/src/components/SmartLink/index.tsx` (test-only unless regression found)
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-link-processor-regression` → `src/utils/linkProcessor.mdt150.test.ts`: C1, C2
-- `TEST-link-builder-regression` → `src/utils/linkBuilder.mdt150.test.ts`: C3, C4
-- `TEST-preprocessor-regression` → `src/utils/markdownPreprocessor.mdt150.test.ts`: C5
+- `TEST-link-processor-regression` → `frontend/src/utils/linkProcessor.mdt150.test.ts`: C1, C2
+- `TEST-link-builder-regression` → `frontend/src/utils/linkBuilder.mdt150.test.ts`: C3, C4
+- `TEST-preprocessor-regression` → `frontend/src/utils/markdownPreprocessor.mdt150.test.ts`: C5
 
 **Scope**: Run all constraint tests. Verify nothing broke. Fix regressions only.
 
 **Boundary**: Test-only unless regression found.
 
 **Must Not Touch**:
-- `src/utils/markdownPreprocessor.ts` (beyond what TASK-documents-view-resolve changed)
-- `src/components/TicketViewer/`
-- `src/App.tsx`
+- `frontend/src/utils/markdownPreprocessor.ts` (beyond what TASK-documents-view-resolve changed)
+- `frontend/src/components/TicketViewer/`
+- `frontend/src/App.tsx`
 - `server/`
 
 **Verify**:
 
 ```bash
-bun test src/utils/linkProcessor.mdt150.test.ts src/utils/linkBuilder.mdt150.test.ts src/utils/markdownPreprocessor.mdt150.test.ts src/utils/linkNormalization.mdt150.test.ts
+bun test frontend/src/utils/linkProcessor.mdt150.test.ts frontend/src/utils/linkBuilder.mdt150.test.ts frontend/src/utils/markdownPreprocessor.mdt150.test.ts frontend/src/utils/linkNormalization.mdt150.test.ts
 ```
 
 **Done when**:

@@ -40,8 +40,8 @@ Both analyses converged on the same primary recommendation.
 | Server `TicketService.listCRs` | Full `Ticket[]` incl. `content` body | `getProjectCRs` → `scanMarkdownFiles` reads entire file |
 | Server `MarkdownService.scanMarkdownFilesMetadata` | Frontmatter only, no content | Exists, **unused by `listCRs`** |
 | Client `Ticket` type | Has `content: string` field | `shared/models/Ticket.ts:67` |
-| Client `ProjectedStubTicket` | `content: ''` intentionally (BR-3.1) | `src/types/ticket.ts:39` |
-| Client `matchesQuery` | title + code + description only | `src/utils/ticketFilters.ts:78` |
+| Client `ProjectedStubTicket` | `content: ''` intentionally (BR-3.1) | `frontend/src/types/ticket.ts:39` |
+| Client `matchesQuery` | title + code + description only | `frontend/src/utils/ticketFilters.ts:78` |
 | Server `matchesFilters` | Facet fields only, **no free-text query** | `shared/services/TicketService.ts:988` |
 
 **Key finding:** surface search is not actually saving disk I/O today — the
@@ -202,14 +202,14 @@ Rationale:
 
 ## Evidence (file refs)
 
-- `src/utils/ticketFilters.ts:78` — current client `matchesQuery` (title/code/description only)
+- `frontend/src/utils/ticketFilters.ts:78` — current client `matchesQuery` (title/code/description only)
 - `shared/services/TicketService.ts:988` — current server `matchesFilters` (facets only, no query)
 - `shared/services/MarkdownService.ts:256` — `scanMarkdownFiles` (full body read)
 - `shared/services/MarkdownService.ts` — `scanMarkdownFilesMetadata` (frontmatter only, exists)
 - `shared/services/ProjectService.ts:290` — `getProjectCRs` (uses full-body scanner)
 - `shared/services/ProjectService.ts:348` — `getProjectCRsMetadata` (exists, unused by `listCRs`)
 - `shared/models/Ticket.ts:67` — `Ticket.content` field
-- `src/types/ticket.ts:39` — `ProjectedStubTicket.content` intentionally empty (BR-3.1)
+- `frontend/src/types/ticket.ts:39` — `ProjectedStubTicket.content` intentionally empty (BR-3.1)
 - `docs/CRs/MDT-179-scoped-global-search.md` — prior scoped-search CR; explicitly deferred indexing/backend choice (this ticket picks up that deferral)
 - LinearRAG (separate local project, not in this repo) — Family F+ asset; future semantic-Q&A candidate
 

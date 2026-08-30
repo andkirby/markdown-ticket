@@ -158,17 +158,17 @@ full — feature enhancement, complete smart document linking
 **Slices shipped**: TASK-documents-view-resolve (M1) + TASK-regression-lock (M2).
 
 **Code changes**:
-- `src/utils/markdownPreprocessor.ts`: Added documents-mode branch to `resolveDocumentRef`. Detection rule: sourcePath NOT matching `^[A-Z]+-\d+(?:/|\.md$)` (i.e. not a ticket subdoc or main ticket doc). Resolves href against source document's directory via existing `resolveRelativePath` helper; routes to `buildDocumentPathWithAnchor`. Relaxed gates in `protectExistingLinks` and `convertDocumentReferences` from `sourcePath && ticketKey && projectCode` to `sourcePath && projectCode` so documents-mode (where ticketKey is undefined) engages the resolver.
-- `src/components/DocumentsView/MarkdownViewer.tsx`: Pass `sourcePath={filePath}` to `<MarkdownContent>`.
-- `src/components/MarkdownContent/index.tsx`: Expanded `sourcePath` prop docstring to document both accepted forms.
+- `frontend/src/utils/markdownPreprocessor.ts`: Added documents-mode branch to `resolveDocumentRef`. Detection rule: sourcePath NOT matching `^[A-Z]+-\d+(?:/|\.md$)` (i.e. not a ticket subdoc or main ticket doc). Resolves href against source document's directory via existing `resolveRelativePath` helper; routes to `buildDocumentPathWithAnchor`. Relaxed gates in `protectExistingLinks` and `convertDocumentReferences` from `sourcePath && ticketKey && projectCode` to `sourcePath && projectCode` so documents-mode (where ticketKey is undefined) engages the resolver.
+- `frontend/src/components/DocumentsView/MarkdownViewer.tsx`: Pass `sourcePath={filePath}` to `<MarkdownContent>`.
+- `frontend/src/components/MarkdownContent/index.tsx`: Expanded `sourcePath` prop docstring to document both accepted forms.
 
 **Tests added**:
-- 6 unit tests in `src/utils/markdownPreprocessor.mdt150.test.ts` (BR-5 block): bare filename, `../sibling.md`, nested `sub/deep.md`, anchor preservation, no-ticket-route guard, unwrapped bare filename.
+- 6 unit tests in `frontend/src/utils/markdownPreprocessor.mdt150.test.ts` (BR-5 block): bare filename, `../sibling.md`, nested `sub/deep.md`, anchor preservation, no-ticket-route guard, unwrapped bare filename.
 - 1 E2E test in `tests/e2e/documents/relative-link-resolution.spec.ts`: navigates to source doc, asserts link href contains `docs/architecture/relative.md`, clicks link, verifies navigation to sibling doc.
 
 **Proof**:
 - 67/67 MDT-150 unit tests GREEN (61 original + 6 new). Zero regressions.
-- 214/214 `src/utils/` broader sweep GREEN.
+- 214/214 `frontend/src/utils/` broader sweep GREEN.
 - New E2E test GREEN against running dev server.
 - `tsc --noEmit` clean on changed files.
 

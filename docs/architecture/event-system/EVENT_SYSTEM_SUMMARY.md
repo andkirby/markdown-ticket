@@ -135,7 +135,7 @@ function MyComponent() {
 ### Phase 2: Add Debugging
 
 ```typescript
-// Add to the project route (src/components/routes/ProjectRouteHandler.tsx;
+// Add to the project route (frontend/src/components/routes/ProjectRouteHandler.tsx;
 // already mounted there via ProjectOverlays)
 import { EventHistory } from './components/DevTools/EventHistory';
 
@@ -292,7 +292,7 @@ cat docs/architecture/event-system/QUICK_START_NEW_EVENT_SYSTEM.md
 ### Step 2: Add Debug Tools (5 minutes)
 
 ```typescript
-// In the project route (src/components/routes/ProjectRouteHandler.tsx;
+// In the project route (frontend/src/components/routes/ProjectRouteHandler.tsx;
 // EventHistory already mounts there via ProjectOverlays)
 import { EventHistory } from './components/DevTools/EventHistory';
 

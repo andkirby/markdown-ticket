@@ -186,7 +186,7 @@ test.describe('MDT-237: inline-code document references', () => {
 
   // Scenario: unique_basename_disambiguation (BR-2.5)
   // A bare filename that is not a ticket subdoc but uniquely matches a
-  // project file resolves to that file (THEME.md -> src/THEME.md pattern)
+  // project file resolves to that file (THEME.md -> frontend/src/THEME.md pattern)
   test('@MDT-237 bare filename with unique project basename resolves to that file', async ({ page, e2eContext }) => {
     const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
     const ticketCode = scenario.crCodes[0]

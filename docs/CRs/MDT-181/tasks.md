@@ -16,11 +16,11 @@
 |---|---|---|
 | Canonical accent shape + hex validation contract | `domain-contracts/src/app-config/schema.ts`, `domain-contracts/src/app-config/validation.ts` | Task 1 |
 | Selector-only storage boundary | `server/repositories/ConfigRepository.ts` + existing `/api/config/selector` owner path | Task 1 |
-| Accent palette, fallback, and luminance helpers | `src/utils/accentColors.ts` | Task 2 |
-| Personal preference persistence path | `src/components/ProjectSelector/useSelectorData.ts` | Task 2 |
-| Edit-form accent controls | `src/components/AddProjectModal/components/AccentColorPicker.tsx` | Task 3 |
-| Chip left-edge accent stripe | `src/components/ProjectSelector/ProjectSelectorChip.tsx` | Task 4 |
-| Card identity fill + theme-adaptive accent surfaces | `src/components/ProjectSelector/ProjectSelectorCard.tsx`, `src/components/ProjectSelector/project-selector.css` | Task 4 / Task 5 |
+| Accent palette, fallback, and luminance helpers | `frontend/src/utils/accentColors.ts` | Task 2 |
+| Personal preference persistence path | `frontend/src/components/ProjectSelector/useSelectorData.ts` | Task 2 |
+| Edit-form accent controls | `frontend/src/components/AddProjectModal/components/AccentColorPicker.tsx` | Task 3 |
+| Chip left-edge accent stripe | `frontend/src/components/ProjectSelector/ProjectSelectorChip.tsx` | Task 4 |
+| Card identity fill + theme-adaptive accent surfaces | `frontend/src/components/ProjectSelector/ProjectSelectorCard.tsx`, `frontend/src/components/ProjectSelector/project-selector.css` | Task 4 / Task 5 |
 
 ## Constraint Coverage
 
@@ -50,15 +50,15 @@
 | Layer | Arch Files | In Tasks | Gap | Status |
 |---|---:|---:|---:|---|
 | `domain-contracts/src/app-config/` | 3 | 3 | 0 | ✅ |
-| `src/utils/` | 2 | 2 | 0 | ✅ |
-| `src/components/AddProjectModal/` | 3 | 3 | 0 | ✅ |
-| `src/components/ProjectSelector/` | 7 | 7 | 0 | ✅ |
+| `frontend/src/utils/` | 2 | 2 | 0 | ✅ |
+| `frontend/src/components/AddProjectModal/` | 3 | 3 | 0 | ✅ |
+| `frontend/src/components/ProjectSelector/` | 7 | 7 | 0 | ✅ |
 | `server/` | 2 | 2 | 0 | ✅ |
 
 Missing runtime artifacts already covered by Task 0:
-- `src/utils/accentColors.ts`
-- `src/components/AddProjectModal/components/AccentColorPicker.tsx`
-- `src/components/AddProjectModal/components/AccentColorPicker.css`
+- `frontend/src/utils/accentColors.ts`
+- `frontend/src/components/AddProjectModal/components/AccentColorPicker.tsx`
+- `frontend/src/components/AddProjectModal/components/AccentColorPicker.css`
 
 ## Tasks
 
@@ -68,7 +68,7 @@ Missing runtime artifacts already covered by Task 0:
 
 **Milestone**: M0 — Walking Skeleton
 
-**Structure**: `src/utils/accentColors.ts`, `src/components/AddProjectModal/components/AccentColorPicker.tsx`, `src/components/AddProjectModal/components/AccentColorPicker.css`
+**Structure**: `frontend/src/utils/accentColors.ts`, `frontend/src/components/AddProjectModal/components/AccentColorPicker.tsx`, `frontend/src/components/AddProjectModal/components/AccentColorPicker.css`
 
 **Makes GREEN (Automated Tests)**: *(none — infrastructure prep)*
 
@@ -76,22 +76,22 @@ Missing runtime artifacts already covered by Task 0:
 **Boundary**: Stubs and placeholder exports only. No final palette logic, no persistence logic, no selector rendering changes.
 
 **Creates**:
-- `src/utils/accentColors.ts` — stub exports for palette, fallback, foreground, and validation helpers
-- `src/components/AddProjectModal/components/AccentColorPicker.tsx` — placeholder component shell with planned props
-- `src/components/AddProjectModal/components/AccentColorPicker.css` — placeholder style file for picker-specific classes
+- `frontend/src/utils/accentColors.ts` — stub exports for palette, fallback, foreground, and validation helpers
+- `frontend/src/components/AddProjectModal/components/AccentColorPicker.tsx` — placeholder component shell with planned props
+- `frontend/src/components/AddProjectModal/components/AccentColorPicker.css` — placeholder style file for picker-specific classes
 
 **Modifies**:
 - (none — purely additive)
 
 **Must Not Touch**:
 - `domain-contracts/src/app-config/schema.ts`
-- `src/components/ProjectSelector/useSelectorData.ts`
-- `src/components/ProjectSelector/ProjectSelectorChip.tsx`
-- `src/components/ProjectSelector/ProjectSelectorCard.tsx`
+- `frontend/src/components/ProjectSelector/useSelectorData.ts`
+- `frontend/src/components/ProjectSelector/ProjectSelectorChip.tsx`
+- `frontend/src/components/ProjectSelector/ProjectSelectorCard.tsx`
 
 **Exclude**: Real HSL/luminance math, API calls, edit-form wiring, selector CSS changes
 
-**Anti-duplication**: Reuse existing component/file conventions from `src/components/AddProjectModal/` — do NOT create a parallel modal or selector module.
+**Anti-duplication**: Reuse existing component/file conventions from `frontend/src/components/AddProjectModal/` — do NOT create a parallel modal or selector module.
 
 **Duplication Guard**:
 - Check that `accentColors.ts` is the only new accent utility owner before adding any helper elsewhere
@@ -101,7 +101,7 @@ Missing runtime artifacts already covered by Task 0:
 **Verify**:
 ```bash
 bun run build
-bun test src/utils/__tests__/accentColors.test.ts 2>&1 | head -20
+bun test frontend/src/utils/__tests__/accentColors.test.ts 2>&1 | head -20
 PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/selector/project-accent-colors.spec.ts --project=chromium --grep "edit form shows accent controls" 2>&1 | head -20
 ```
 
@@ -140,10 +140,10 @@ PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/selector/project-accent-
 - `server/tests/api/selector.test.ts` — assert uppercase normalization, malformed rejection, and no shared-config writes
 
 **Must Not Touch**:
-- `src/components/AddProjectModal/AddProjectModal.tsx`
-- `src/components/AddProjectModal/components/AccentColorPicker.tsx`
-- `src/components/ProjectSelector/useSelectorData.ts`
-- `src/components/ProjectSelector/project-selector.css`
+- `frontend/src/components/AddProjectModal/AddProjectModal.tsx`
+- `frontend/src/components/AddProjectModal/components/AccentColorPicker.tsx`
+- `frontend/src/components/ProjectSelector/useSelectorData.ts`
+- `frontend/src/components/ProjectSelector/project-selector.css`
 
 **Exclude**: No picker UI, no fallback color algorithm, no selector rendering, no theme styling
 
@@ -174,14 +174,14 @@ bun run --cwd server jest tests/api/selector.test.ts --runInBand
 
 **Milestone**: M1 — Storage + Validation Foundation (BR-2.3)
 
-**Structure**: `src/utils/accentColors.ts`, `src/components/ProjectSelector/useSelectorData.ts`, `src/components/ProjectSelector/types.ts`
+**Structure**: `frontend/src/utils/accentColors.ts`, `frontend/src/components/ProjectSelector/useSelectorData.ts`, `frontend/src/components/ProjectSelector/types.ts`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-accent-color-utilities` → `src/utils/__tests__/accentColors.test.ts`: palette, fallback, luminance, and hex utility tests
-- `TEST-selector-hook-accent-state` → `src/components/ProjectSelector/useSelectorData.test.ts`: accent load/persist and no-owner-state hook tests
+- `TEST-accent-color-utilities` → `frontend/src/utils/__tests__/accentColors.test.ts`: palette, fallback, luminance, and hex utility tests
+- `TEST-selector-hook-accent-state` → `frontend/src/components/ProjectSelector/useSelectorData.test.ts`: accent load/persist and no-owner-state hook tests
 
 **Makes GREEN (Behavior)**:
-- `cross_user_accent_independence` → `src/components/ProjectSelector/useSelectorData.test.ts` (BR-2.3)
+- `cross_user_accent_independence` → `frontend/src/components/ProjectSelector/useSelectorData.test.ts` (BR-2.3)
 
 **Scope**: Implement the pure accent utility module and extend selector-state types/hook behavior for accent reads, writes, fallback resolution inputs, and no-owner-state safety.
 **Boundary**: Utilities + selector hook only. No edit-form controls, no selector chip/card UI, no route/controller changes.
@@ -190,21 +190,21 @@ bun run --cwd server jest tests/api/selector.test.ts --runInBand
 - (none — Task 0 stubs become full implementations)
 
 **Modifies**:
-- `src/utils/accentColors.ts` — final palette, fallback, foreground, and `#RRGGBB` helpers
-- `src/utils/__tests__/accentColors.test.ts` — align tests with final helper behavior
-- `src/components/ProjectSelector/useSelectorData.ts` — load/persist `accent`, preserve existing favorite/usage fields
-- `src/components/ProjectSelector/useSelectorData.test.ts` — cover accent update path and `loadOwnerState: false` guard
-- `src/components/ProjectSelector/types.ts` — expose accent-aware selector state typing
+- `frontend/src/utils/accentColors.ts` — final palette, fallback, foreground, and `#RRGGBB` helpers
+- `frontend/src/utils/__tests__/accentColors.test.ts` — align tests with final helper behavior
+- `frontend/src/components/ProjectSelector/useSelectorData.ts` — load/persist `accent`, preserve existing favorite/usage fields
+- `frontend/src/components/ProjectSelector/useSelectorData.test.ts` — cover accent update path and `loadOwnerState: false` guard
+- `frontend/src/components/ProjectSelector/types.ts` — expose accent-aware selector state typing
 
 **Must Not Touch**:
-- `src/components/AddProjectModal/AddProjectModal.tsx`
-- `src/components/AddProjectModal/components/AccentColorPicker.tsx`
-- `src/components/ProjectSelector/ProjectSelectorChip.tsx`
-- `src/components/ProjectSelector/ProjectSelectorCard.tsx`
+- `frontend/src/components/AddProjectModal/AddProjectModal.tsx`
+- `frontend/src/components/AddProjectModal/components/AccentColorPicker.tsx`
+- `frontend/src/components/ProjectSelector/ProjectSelectorChip.tsx`
+- `frontend/src/components/ProjectSelector/ProjectSelectorCard.tsx`
 
 **Exclude**: No DOM/UI rendering, no modal layout changes, no theme CSS, no browser-card identity markup
 
-**Anti-duplication**: Import palette/fallback/foreground helpers from `src/utils/accentColors.ts` everywhere — do NOT duplicate fallback hashing or luminance logic in hooks or components.
+**Anti-duplication**: Import palette/fallback/foreground helpers from `frontend/src/utils/accentColors.ts` everywhere — do NOT duplicate fallback hashing or luminance logic in hooks or components.
 
 **Duplication Guard**:
 - Confirm `accentColors.ts` is the only owner of palette + fallback + foreground math
@@ -213,8 +213,8 @@ bun run --cwd server jest tests/api/selector.test.ts --runInBand
 
 **Verify**:
 ```bash
-bun test src/utils/__tests__/accentColors.test.ts
-bun test src/components/ProjectSelector/useSelectorData.test.ts
+bun test frontend/src/utils/__tests__/accentColors.test.ts
+bun test frontend/src/components/ProjectSelector/useSelectorData.test.ts
 ```
 
 **Done when**:
@@ -231,7 +231,7 @@ bun test src/components/ProjectSelector/useSelectorData.test.ts
 
 **Milestone**: M2 — Accent Selection + Selector Identity (BR-1.4, BR-1.5)
 
-**Structure**: `src/components/AddProjectModal/AddProjectModal.tsx`, `src/components/AddProjectModal/components/AccentColorPicker.tsx`
+**Structure**: `frontend/src/components/AddProjectModal/AddProjectModal.tsx`, `frontend/src/components/AddProjectModal/components/AccentColorPicker.tsx`
 
 **Makes GREEN (Automated Tests)**:
 - `TEST-e2e-project-accent-colors` → `tests/e2e/selector/project-accent-colors.spec.ts`: edit-form helper-link + invalid-input flow subset
@@ -252,20 +252,20 @@ bun test src/components/ProjectSelector/useSelectorData.test.ts
 - (none — Task 0 created the files)
 
 **Modifies**:
-- `src/components/AddProjectModal/AddProjectModal.tsx` — add personal accent section and separate persistence flow
-- `src/components/AddProjectModal/components/AccentColorPicker.tsx` — implement preset grid, custom hex input, and helper link
-- `src/components/AddProjectModal/components/AccentColorPicker.css` — final picker-specific layout/states
+- `frontend/src/components/AddProjectModal/AddProjectModal.tsx` — add personal accent section and separate persistence flow
+- `frontend/src/components/AddProjectModal/components/AccentColorPicker.tsx` — implement preset grid, custom hex input, and helper link
+- `frontend/src/components/AddProjectModal/components/AccentColorPicker.css` — final picker-specific layout/states
 - `tests/e2e/selector/project-accent-colors.spec.ts` — keep selector/test IDs aligned if implementation details shift
 
 **Must Not Touch**:
 - Shared project update endpoint payload shape (`/api/projects/:code/update`)
-- `src/components/ProjectSelector/ProjectSelectorChip.tsx`
-- `src/components/ProjectSelector/ProjectSelectorCard.tsx`
-- `src/components/ProjectSelector/project-selector.css`
+- `frontend/src/components/ProjectSelector/ProjectSelectorChip.tsx`
+- `frontend/src/components/ProjectSelector/ProjectSelectorCard.tsx`
+- `frontend/src/components/ProjectSelector/project-selector.css`
 
 **Exclude**: No fallback rendering, no chip/card markup, no auth/session redesign, no image upload support
 
-**Anti-duplication**: Import palette and validation helpers from `src/utils/accentColors.ts` — do NOT hard-code a second preset list or custom-hex validator in the picker.
+**Anti-duplication**: Import palette and validation helpers from `frontend/src/utils/accentColors.ts` — do NOT hard-code a second preset list or custom-hex validator in the picker.
 
 **Duplication Guard**:
 - Verify the accent section is the only personal-preference UI added to AddProjectModal
@@ -291,10 +291,10 @@ PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/selector/project-accent-
 
 **Milestone**: M2 — Accent Selection + Selector Identity (BR-1.1-BR-1.3, BR-2.1-BR-2.2, BR-3.1-BR-3.3, BR-4.1-BR-4.3, BR-5.1-BR-5.2)
 
-**Structure**: `src/components/ProjectSelector/ProjectSelectorChip.tsx`, `src/components/ProjectSelector/ProjectSelectorCard.tsx`, `src/components/ProjectSelector/project-selector.css`
+**Structure**: `frontend/src/components/ProjectSelector/ProjectSelectorChip.tsx`, `frontend/src/components/ProjectSelector/ProjectSelectorCard.tsx`, `frontend/src/components/ProjectSelector/project-selector.css`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-selector-accent-rendering` → `src/components/ProjectSelector/ProjectSelectorAccent.test.tsx`: chip/card accent rendering tests
+- `TEST-selector-accent-rendering` → `frontend/src/components/ProjectSelector/ProjectSelectorAccent.test.tsx`: chip/card accent rendering tests
 - `TEST-e2e-project-accent-colors` → `tests/e2e/selector/project-accent-colors.spec.ts`: preset-save, fallback, and identity-render subset
 
 **Makes GREEN (Behavior)**:
@@ -314,24 +314,24 @@ PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/selector/project-accent-
 - (none — existing selector files extended)
 
 **Modifies**:
-- `src/components/ProjectSelector/ProjectSelectorChip.tsx` — apply resolved accent per style (gradient, flat, plate) without size growth
-- `src/components/ProjectSelector/ProjectSelectorCard.tsx` — add identity slot/fill and consume resolved accent
-- `src/components/ProjectSelector/project-selector.css` — chip/card accent variables and compact layout styles
-- `src/components/ProjectSelector/ProjectBrowserPanel.test.tsx` — extend browser-card regression coverage
-- `src/components/ProjectSelector/ProjectSelectorAccent.test.tsx` — align rendering tests with final markup/classes
-- `src/components/ProjectSelector/ProjectBrowserPanel.tsx` — pass accent-bearing project state through browser-panel cards if required
-- `src/components/ProjectSelector/ProjectSelectorRail.tsx` — preserve current rail ordering while chip rendering changes
+- `frontend/src/components/ProjectSelector/ProjectSelectorChip.tsx` — apply resolved accent per style (gradient, flat, plate) without size growth
+- `frontend/src/components/ProjectSelector/ProjectSelectorCard.tsx` — add identity slot/fill and consume resolved accent
+- `frontend/src/components/ProjectSelector/project-selector.css` — chip/card accent variables and compact layout styles
+- `frontend/src/components/ProjectSelector/ProjectBrowserPanel.test.tsx` — extend browser-card regression coverage
+- `frontend/src/components/ProjectSelector/ProjectSelectorAccent.test.tsx` — align rendering tests with final markup/classes
+- `frontend/src/components/ProjectSelector/ProjectBrowserPanel.tsx` — pass accent-bearing project state through browser-panel cards if required
+- `frontend/src/components/ProjectSelector/ProjectSelectorRail.tsx` — preserve current rail ordering while chip rendering changes
 - `tests/e2e/selector/project-accent-colors.spec.ts` — keep rendering and selector flow assertions aligned
 
 **Must Not Touch**:
 - `domain-contracts/src/app-config/schema.ts`
 - `server/repositories/ConfigRepository.ts`
-- `src/components/AddProjectModal/AddProjectModal.tsx`
-- `src/components/AddProjectModal/components/AccentColorPicker.tsx`
+- `frontend/src/components/AddProjectModal/AddProjectModal.tsx`
+- `frontend/src/components/AddProjectModal/components/AccentColorPicker.tsx`
 
 **Exclude**: No image upload/discovery logic, no favorite-ordering refactor, no project-browser search redesign
 
-**Anti-duplication**: Resolve accent, fallback, and foreground from `src/utils/accentColors.ts` — do NOT recompute fallback hashes or contrast logic inside chip/card components.
+**Anti-duplication**: Resolve accent, fallback, and foreground from `frontend/src/utils/accentColors.ts` — do NOT recompute fallback hashes or contrast logic inside chip/card components.
 
 **Duplication Guard**:
 - Check existing chip/card styling before adding new classes; extend current selector CSS instead of creating a parallel stylesheet
@@ -340,8 +340,8 @@ PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/selector/project-accent-
 
 **Verify**:
 ```bash
-bun test src/components/ProjectSelector/ProjectSelectorAccent.test.tsx
-bun test src/components/ProjectSelector/ProjectBrowserPanel.test.tsx
+bun test frontend/src/components/ProjectSelector/ProjectSelectorAccent.test.tsx
+bun test frontend/src/components/ProjectSelector/ProjectBrowserPanel.test.tsx
 PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/selector/project-accent-colors.spec.ts --project=chromium --grep "preset accent saves through selector state and renders on inactive chips and browser cards|fallback accent is stable across reloads and is replaced by a user-selected accent"
 ```
 
@@ -360,7 +360,7 @@ PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/selector/project-accent-
 
 **Milestone**: M3 — Theme + Preservation (BR-6.1, BR-6.2, BR-7.1, BR-7.2)
 
-**Structure**: `src/components/ProjectSelector/project-selector.css`, `src/components/ProjectSelector/ProjectSelectorCard.tsx`, `tests/e2e/selector/project-accent-colors.spec.ts`
+**Structure**: `frontend/src/components/ProjectSelector/project-selector.css`, `frontend/src/components/ProjectSelector/ProjectSelectorCard.tsx`, `tests/e2e/selector/project-accent-colors.spec.ts`
 
 **Makes GREEN (Automated Tests)**:
 - `TEST-e2e-project-accent-colors` → `tests/e2e/selector/project-accent-colors.spec.ts`: theme-switch + preserved-interaction subset
@@ -376,16 +376,16 @@ PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/selector/project-accent-
 - (none)
 
 **Modifies**:
-- `src/components/ProjectSelector/project-selector.css` — theme-adaptive accent surfaces and foreground variables
-- `src/components/ProjectSelector/ProjectSelectorCard.tsx` — final foreground/application hook-up if theme surfaces need component-level variables
-- `src/components/ProjectSelector/ProjectBrowserPanel.test.tsx` — preserve keyboard/focus/browser-panel assumptions while accent styling lands
+- `frontend/src/components/ProjectSelector/project-selector.css` — theme-adaptive accent surfaces and foreground variables
+- `frontend/src/components/ProjectSelector/ProjectSelectorCard.tsx` — final foreground/application hook-up if theme surfaces need component-level variables
+- `frontend/src/components/ProjectSelector/ProjectBrowserPanel.test.tsx` — preserve keyboard/focus/browser-panel assumptions while accent styling lands
 - `tests/e2e/selector/project-accent-colors.spec.ts` — close theme/preservation assertions
 
 **Must Not Touch**:
 - `domain-contracts/src/app-config/schema.ts`
 - `server/tests/api/selector.test.ts`
-- `src/components/AddProjectModal/AddProjectModal.tsx`
-- `src/utils/accentColors.ts` palette membership unless a proven contrast bug is found
+- `frontend/src/components/AddProjectModal/AddProjectModal.tsx`
+- `frontend/src/utils/accentColors.ts` palette membership unless a proven contrast bug is found
 
 **Exclude**: No auth model changes, no read-only storage redesign, no new preset colors, no project ordering changes
 
@@ -398,7 +398,7 @@ PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/selector/project-accent-
 
 **Verify**:
 ```bash
-bun test src/components/ProjectSelector/ProjectBrowserPanel.test.tsx
+bun test frontend/src/components/ProjectSelector/ProjectBrowserPanel.test.tsx
 PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/selector/project-accent-colors.spec.ts --project=chromium --grep "theme switching keeps the same stored accent across light and dark mode|preset accent saves through selector state and renders on inactive chips and browser cards"
 ```
 

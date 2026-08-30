@@ -44,14 +44,14 @@ shared/services/filenameNamespace.ts
 shared/tests/services/filenameNamespace.test.ts
 shared/services/ticket/subdocuments/namespace.ts
 shared/tests/services/ticket/namespace.test.ts
-src/components/DocumentsView/documentFilenameTabModel.ts
-src/components/DocumentsView/DocumentFilenameTabs.tsx
-src/components/DocumentsView/DocumentsLayout.tsx
-src/components/DocumentsView/MarkdownViewer.tsx
-src/components/DocumentsView/documents-view.css
-src/components/shared/RelativeTimestamp.tsx
-src/components/shared/relative-timestamp.css
-src/config/documentNavigation.ts
+frontend/src/components/DocumentsView/documentFilenameTabModel.ts
+frontend/src/components/DocumentsView/DocumentFilenameTabs.tsx
+frontend/src/components/DocumentsView/DocumentsLayout.tsx
+frontend/src/components/DocumentsView/MarkdownViewer.tsx
+frontend/src/components/DocumentsView/documents-view.css
+frontend/src/components/shared/RelativeTimestamp.tsx
+frontend/src/components/shared/relative-timestamp.css
+frontend/src/config/documentNavigation.ts
 server/services/DocumentService.ts
 tests/e2e/documents/filename-tabs.spec.ts
 ```
@@ -60,12 +60,12 @@ tests/e2e/documents/filename-tabs.spec.ts
 
 - `shared/services/filenameNamespace.ts` owns parsing and sorting semantics: first dot splits logical base from variant key, later dots remain in the variant key, and labels sort alphanumerically with numeric awareness.
 - `shared/services/ticket/subdocuments/namespace.ts` adapts the shared parser for MDT-138 ticket subdocument structures. It should not remain an independent implementation of the split rule.
-- `src/components/DocumentsView/documentFilenameTabModel.ts` owns Documents-view grouping and active-tab resolution from physical `DocumentFile` trees, including the `main` root tab rule for `base.md` plus variants and the single-variant grouped view rule.
-- `src/components/DocumentsView/DocumentsLayout.tsx` owns selection, URL/query updates, recent documents, selected tree highlighting, document SSE reconciliation, refresh fallback, and passing the active physical path to the viewer.
-- `src/components/DocumentsView/DocumentFilenameTabs.tsx` owns the tab UI using existing project tab classes and interaction conventions.
-- `src/components/DocumentsView/MarkdownViewer.tsx` remains a one-file renderer and should not know logical grouping rules. It reuses shared document metadata presentation rather than defining a Documents-only timestamp row.
-- `src/components/shared/RelativeTimestamp.tsx` and `src/components/shared/relative-timestamp.css` own created/updated timestamp display, tooltip chrome, and the shared floating timestamp placement used by ticket and document views.
-- `src/components/DocumentsView/documents-view.css` owns Documents-view layout wrappers and uses extracted BEM-style classes for filename tabs, viewer panel, and content positioning.
+- `frontend/src/components/DocumentsView/documentFilenameTabModel.ts` owns Documents-view grouping and active-tab resolution from physical `DocumentFile` trees, including the `main` root tab rule for `base.md` plus variants and the single-variant grouped view rule.
+- `frontend/src/components/DocumentsView/DocumentsLayout.tsx` owns selection, URL/query updates, recent documents, selected tree highlighting, document SSE reconciliation, refresh fallback, and passing the active physical path to the viewer.
+- `frontend/src/components/DocumentsView/DocumentFilenameTabs.tsx` owns the tab UI using existing project tab classes and interaction conventions.
+- `frontend/src/components/DocumentsView/MarkdownViewer.tsx` remains a one-file renderer and should not know logical grouping rules. It reuses shared document metadata presentation rather than defining a Documents-only timestamp row.
+- `frontend/src/components/shared/RelativeTimestamp.tsx` and `frontend/src/components/shared/relative-timestamp.css` own created/updated timestamp display, tooltip chrome, and the shared floating timestamp placement used by ticket and document views.
+- `frontend/src/components/DocumentsView/documents-view.css` owns Documents-view layout wrappers and uses extracted BEM-style classes for filename tabs, viewer panel, and content positioning.
 - `server/services/DocumentService.ts` remains the content safety boundary for active physical file reads.
 
 ## Invariants

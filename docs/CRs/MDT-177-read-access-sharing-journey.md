@@ -16,17 +16,17 @@ priority: High
 ### Problem
 - `server/routes/auth.ts` supports scoped read tokens through env config, but owner users have no UI to create named multi-project access for a person.
 - `server/routes/share.ts` opens `/share/{shareId}` as a read session, but the journey must preserve any existing read-token project grants instead of replacing them.
-- `src/components/AuthUnlock/AuthUnlockPanel.tsx` can trap a read-only visitor in an owner unlock state without a clear cancel path back to the board.
-- `src/components/SettingsModal.tsx` builds share URLs from the current browser origin only; owner users need links to follow the server-owned `PUBLIC_ORIGIN` runtime contract.
+- `frontend/src/components/AuthUnlock/AuthUnlockPanel.tsx` can trap a read-only visitor in an owner unlock state without a clear cancel path back to the board.
+- `frontend/src/components/SettingsModal.tsx` builds share URLs from the current browser origin only; owner users need links to follow the server-owned `PUBLIC_ORIGIN` runtime contract.
 
 ### Affected Artifacts
 - `server/security/readSession.ts` — read-cookie grant shape, merge behavior, and expiry rules.
 - `server/routes/auth.ts` — read-token exchange and owner-token unlock behavior.
 - `server/routes/share.ts` — share-id exchange into read-only session.
 - `server/security/publicLinkOrigins.ts` — select the server-approved public link origin from runtime-provided values.
-- `src/components/SettingsModal.tsx` — sharing controls, read-token management, generated links.
-- `src/components/AuthUnlock/` — read-only unlock/cancel journey.
-- `src/components/ProjectSelector/` — project switching for token-scoped read-only visitors.
+- `frontend/src/components/SettingsModal.tsx` — sharing controls, read-token management, generated links.
+- `frontend/src/components/AuthUnlock/` — read-only unlock/cancel journey.
+- `frontend/src/components/ProjectSelector/` — project switching for token-scoped read-only visitors.
 - `tests/e2e/` — browser journeys for anonymous, share-link, read-token, and unlock recovery flows.
 
 ### Scope
@@ -62,7 +62,7 @@ Add named read access tokens with server-generated one-time invite links that ex
 |----------|------|---------|
 | `server/security/readTokenStore.ts` | Service | Persist named read-token hashes, project scopes, invite codes, expiry, and revocation state |
 | `server/routes/readTokens.ts` | Route | Owner CRUD and invite-code exchange endpoints for read access tokens |
-| `src/components/SettingsModal/ReadAccessTokens.tsx` | Component | Owner UI for named token creation, project assignment, invite links, and revocation |
+| `frontend/src/components/SettingsModal/ReadAccessTokens.tsx` | Component | Owner UI for named token creation, project assignment, invite links, and revocation |
 | `tests/e2e/sharing/read-access-journey.spec.ts` | Playwright spec | End-to-end browser journeys for public, unlisted, token-scoped, and unlock recovery flows |
 
 ### Modified Artifacts
@@ -74,9 +74,9 @@ Add named read access tokens with server-generated one-time invite links that ex
 | `server/security/publicLinkOrigins.ts` | Module added | Resolve server-approved public link origin options for generated links |
 | `domain-contracts/src/access/schema.ts` | Contract added | Own access-mode, capability, public-link-origin, and read-token API DTO schemas |
 | `server/server.ts` | Route added | Mount read-token management routes behind owner/admin protection |
-| `src/components/SettingsModal.tsx` | UI changed | Add read-token management section that uses the server-selected link origin |
-| `src/components/AuthUnlock/` | UI changed | Make owner unlock a recoverable overlay from read-only mode |
-| `src/components/ProjectSelector/` | UI verified | Ensure token-scoped read-only users can switch among all allowed projects |
+| `frontend/src/components/SettingsModal.tsx` | UI changed | Add read-token management section that uses the server-selected link origin |
+| `frontend/src/components/AuthUnlock/` | UI changed | Make owner unlock a recoverable overlay from read-only mode |
+| `frontend/src/components/ProjectSelector/` | UI verified | Ensure token-scoped read-only users can switch among all allowed projects |
 
 ### Integration Points
 

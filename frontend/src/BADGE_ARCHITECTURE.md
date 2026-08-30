@@ -1,7 +1,7 @@
 # Badge CSS Architecture
 
 **Status: ✅ Migration Complete**
-This pattern is now implemented. See `src/components/Badge/badge.css` for the live implementation.
+This pattern is now implemented. See `frontend/src/components/Badge/badge.css` for the live implementation.
 
 Step-by-step guide for defining badge styles with theming support.
 
@@ -12,7 +12,7 @@ Step-by-step guide for defining badge styles with theming support.
 **End result:**
 
 ```
-src/components/Badge/
+frontend/src/components/Badge/
 ├── index.tsx              # Exports
 ├── StatusBadge.tsx        # Uses data attributes (no CVA)
 ├── PriorityBadge.tsx
@@ -211,7 +211,7 @@ export function TypeBadge({ type, size, className }: TypeBadgeProps) {
 ## Step 5: Import CSS
 
 ```css
-/* src/index.css */
+/* frontend/src/index.css */
 
 @import './components/Badge/badge.css';
 

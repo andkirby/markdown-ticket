@@ -11,7 +11,7 @@ Apply post-implementation UAT feedback to the relationship badge: make elision g
 
 1. **Remove inline comma separator.** Relationship links render adjacently with no separator by default (`🔗 030 005 035`).
 2. **Global elision.** Same-project links render as bare numbers on the board **and** in the TicketViewer. Reverses the earlier "board-only" decision.
-3. **Code-level configuration.** New `src/config/relationshipBadge.ts` exports `RELATIONSHIP_LINK_SEPARATOR` and `ELIDE_EVERYWHERE`. A settings UI item is explicitly deferred.
+3. **Code-level configuration.** New `frontend/src/config/relationshipBadge.ts` exports `RELATIONSHIP_LINK_SEPARATOR` and `ELIDE_EVERYWHERE`. A settings UI item is explicitly deferred.
 
 ## Changed Requirement IDs
 
@@ -31,18 +31,18 @@ Apply post-implementation UAT feedback to the relationship badge: make elision g
 ### Slice 1 — Config module (done)
 
 - Objective: single source of truth for separator + global elision flag.
-- Direct artifacts: `src/config/relationshipBadge.ts` (new).
+- Direct artifacts: `frontend/src/config/relationshipBadge.ts` (new).
 - GREEN targets: none (constants only).
 
 ### Slice 2 — Global elision + no separator (done)
 
 - Objective: `RelationshipBadge` elides on all surfaces and renders no separator.
-- Direct artifacts: `src/components/Badge/RelationshipBadge.tsx`.
+- Direct artifacts: `frontend/src/components/Badge/RelationshipBadge.tsx`.
 - GREEN targets: `RelationshipBadge.test.tsx`, `TicketAttributeTags.test.tsx`, `tests/e2e/board/relationship-badge.spec.ts`.
 
 ## Validation
 
-- `bun test --isolate ./src/components/Badge/ ./src/components/TicketAttributeTags.test.tsx` → 97/97 pass
+- `bun test --isolate ./frontend/src/components/Badge/ ./frontend/src/components/TicketAttributeTags.test.tsx` → 97/97 pass
 - `bunx playwright test tests/e2e/board/relationship-badge.spec.ts` → 2/2 pass
 - `npx tsc --noEmit --project tsconfig.json` → clean (src)
 - `bun run lint:frontend` → clean

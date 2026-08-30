@@ -13,11 +13,11 @@
 
 | Critical Behavior | Owner Module | Merge/Refactor Task if Overlap |
 |-------------------|--------------|--------------------------------|
-| Annotation parsing & marker generation | `src/utils/wireloomAnnotationToggle.ts` | N/A — new module |
-| Tooltip show/hide/dismiss | `src/utils/wireloomAnnotationToggle.ts` | N/A — new module |
-| Toggle control creation | `src/utils/wireloomAnnotationToggle.ts` | N/A — new module |
-| Rendering pipeline integration | `src/utils/wireloomRenderer.ts` | N/A — additive call |
-| Fullscreen state preservation | `src/utils/wireloomFullscreen.ts` | N/A — additive guard |
+| Annotation parsing & marker generation | `frontend/src/utils/wireloomAnnotationToggle.ts` | N/A — new module |
+| Tooltip show/hide/dismiss | `frontend/src/utils/wireloomAnnotationToggle.ts` | N/A — new module |
+| Toggle control creation | `frontend/src/utils/wireloomAnnotationToggle.ts` | N/A — new module |
+| Rendering pipeline integration | `frontend/src/utils/wireloomRenderer.ts` | N/A — additive call |
+| Fullscreen state preservation | `frontend/src/utils/wireloomFullscreen.ts` | N/A — additive guard |
 
 ## Constraint Coverage
 
@@ -44,10 +44,10 @@
 
 **Milestone**: M1 — Toggle + compact mode (BR-1.1, BR-1.2, BR-1.3)
 
-**Structure**: `src/utils/wireloomAnnotationToggle.ts`, `src/styles/wireloom-annotations.css`
+**Structure**: `frontend/src/utils/wireloomAnnotationToggle.ts`, `frontend/src/styles/wireloom-annotations.css`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-annotation-toggle-unit` → `src/utils/wireloomAnnotationToggle.test.ts`: toggle control placement tests, no-toggle-on-empty tests, no-toggle-on-non-wireloom tests
+- `TEST-annotation-toggle-unit` → `frontend/src/utils/wireloomAnnotationToggle.test.ts`: toggle control placement tests, no-toggle-on-empty tests, no-toggle-on-non-wireloom tests
 
 **Enables (BDD)**:
 - `toggle_visible_on_wireloom_block` (BR-1.1) — needs Task 3 for renderer integration
@@ -63,16 +63,16 @@
 **Boundary**: Only handles toggle creation and annotation data extraction. Does NOT handle compact mode markers or tooltips.
 
 **Creates**:
-- `src/utils/wireloomAnnotationToggle.ts` — annotation toggle module
-- `src/styles/wireloom-annotations.css` — toggle button styles
+- `frontend/src/utils/wireloomAnnotationToggle.ts` — annotation toggle module
+- `frontend/src/styles/wireloom-annotations.css` — toggle button styles
 
 **Modifies**:
 - None
 
 **Must Not Touch**:
-- `src/utils/wireloomRenderer.ts` — integration is Task 3
-- `src/utils/wireloomFullscreen.ts` — integration is Task 3
-- `src/styles/prose.css` — existing styles untouched
+- `frontend/src/utils/wireloomRenderer.ts` — integration is Task 3
+- `frontend/src/utils/wireloomFullscreen.ts` — integration is Task 3
+- `frontend/src/styles/prose.css` — existing styles untouched
 - `wireloom` package — no external package changes
 
 **Exclude**: No compact mode markers, no tooltips, no renderer integration
@@ -85,7 +85,7 @@
 
 **Verify**:
 ```bash
-bun test src/utils/wireloomAnnotationToggle.test.ts --test-name-pattern="toggle control placement"
+bun test frontend/src/utils/wireloomAnnotationToggle.test.ts --test-name-pattern="toggle control placement"
 ```
 
 **Done when**:
@@ -100,10 +100,10 @@ bun test src/utils/wireloomAnnotationToggle.test.ts --test-name-pattern="toggle 
 
 **Milestone**: M1 (markers) → M3 (interactions) — BR-1.3, BR-1.4, BR-1.5, BR-1.6, BR-1.10
 
-**Structure**: `src/utils/wireloomAnnotationToggle.ts`, `src/styles/wireloom-annotations.css`
+**Structure**: `frontend/src/utils/wireloomAnnotationToggle.ts`, `frontend/src/styles/wireloom-annotations.css`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-annotation-toggle-unit` → `src/utils/wireloomAnnotationToggle.test.ts`: compact mode tests, tooltip interaction tests, accessibility tests, edge case tests, constraint C1/C2 tests
+- `TEST-annotation-toggle-unit` → `frontend/src/utils/wireloomAnnotationToggle.test.ts`: compact mode tests, tooltip interaction tests, accessibility tests, edge case tests, constraint C1/C2 tests
 
 **Enables (BDD)**:
 - `switch_to_compact_mode` (BR-1.3) — needs Task 3 for renderer
@@ -129,17 +129,17 @@ bun test src/utils/wireloomAnnotationToggle.test.ts --test-name-pattern="toggle 
 - C2: Markers are `<button>` elements with `aria-label`, `tabindex="0"`, tooltip has `role="tooltip"`
 
 **Creates**:
-- Functions within `src/utils/wireloomAnnotationToggle.ts` (already created in Task 1)
-- Styles within `src/styles/wireloom-annotations.css` (marker + tooltip styles)
+- Functions within `frontend/src/utils/wireloomAnnotationToggle.ts` (already created in Task 1)
+- Styles within `frontend/src/styles/wireloom-annotations.css` (marker + tooltip styles)
 
 **Modifies**:
-- `src/utils/wireloomAnnotationToggle.ts` — add compact mode functions
-- `src/styles/wireloom-annotations.css` — add marker + tooltip styles
+- `frontend/src/utils/wireloomAnnotationToggle.ts` — add compact mode functions
+- `frontend/src/styles/wireloom-annotations.css` — add marker + tooltip styles
 
 **Must Not Touch**:
-- `src/utils/wireloomRenderer.ts` — integration is Task 3
-- `src/utils/wireloomFullscreen.ts` — integration is Task 3
-- `src/styles/prose.css` — existing styles untouched
+- `frontend/src/utils/wireloomRenderer.ts` — integration is Task 3
+- `frontend/src/utils/wireloomFullscreen.ts` — integration is Task 3
+- `frontend/src/styles/prose.css` — existing styles untouched
 
 **Exclude**: No renderer integration, no fullscreen handling, no theme handling
 
@@ -151,7 +151,7 @@ bun test src/utils/wireloomAnnotationToggle.test.ts --test-name-pattern="toggle 
 
 **Verify**:
 ```bash
-bun test src/utils/wireloomAnnotationToggle.test.ts --test-name-pattern="compact mode|tooltip|accessibility|edge"
+bun test frontend/src/utils/wireloomAnnotationToggle.test.ts --test-name-pattern="compact mode|tooltip|accessibility|edge"
 ```
 
 **Done when**:
@@ -168,10 +168,10 @@ bun test src/utils/wireloomAnnotationToggle.test.ts --test-name-pattern="compact
 
 **Milestone**: M2 — Integration + state persistence (BR-1.7, BR-1.8, BR-1.9, C3, C4, C5, C6)
 
-**Structure**: `src/utils/wireloomRenderer.ts`, `src/utils/wireloomFullscreen.ts`, `src/components/MarkdownContent/domPurifyConfig.ts`, `src/styles/prose.css`
+**Structure**: `frontend/src/utils/wireloomRenderer.ts`, `frontend/src/utils/wireloomFullscreen.ts`, `frontend/src/components/MarkdownContent/domPurifyConfig.ts`, `frontend/src/styles/prose.css`
 
 **Makes GREEN (Automated Tests)**:
-- `TEST-annotation-toggle-unit` → `src/utils/wireloomAnnotationToggle.test.ts`: source immutability, per-block state, theme/fullscreen persistence, error fallback tests
+- `TEST-annotation-toggle-unit` → `frontend/src/utils/wireloomAnnotationToggle.test.ts`: source immutability, per-block state, theme/fullscreen persistence, error fallback tests
 
 **Enables (BDD)**:
 - `no_toggle_on_non_wireloom` (BR-1.8) — needs Task 4 for E2E test wiring
@@ -195,15 +195,15 @@ bun test src/utils/wireloomAnnotationToggle.test.ts --test-name-pattern="compact
 - C6: Fullscreen toggle preserves compact mode state and marker visibility
 
 **Modifies**:
-- `src/utils/wireloomRenderer.ts` — add `addAnnotationToggle()` call after wrapper creation
-- `src/utils/wireloomFullscreen.ts` — preserve annotation mode state during fullscreen transitions
-- `src/components/MarkdownContent/domPurifyConfig.ts` — allow tooltip ARIA attributes
-- `src/styles/prose.css` — import `wireloom-annotations.css`
+- `frontend/src/utils/wireloomRenderer.ts` — add `addAnnotationToggle()` call after wrapper creation
+- `frontend/src/utils/wireloomFullscreen.ts` — preserve annotation mode state during fullscreen transitions
+- `frontend/src/components/MarkdownContent/domPurifyConfig.ts` — allow tooltip ARIA attributes
+- `frontend/src/styles/prose.css` — import `wireloom-annotations.css`
 
 **Must Not Touch**:
-- `src/utils/wireloomAnnotationToggle.ts` — core logic complete from Tasks 1-2
+- `frontend/src/utils/wireloomAnnotationToggle.ts` — core logic complete from Tasks 1-2
 - `wireloom` package — no external changes
-- `src/utils/markdownItWireloomPlugin.ts` — fence rendering unchanged
+- `frontend/src/utils/markdownItWireloomPlugin.ts` — fence rendering unchanged
 
 **Exclude**: No new annotation toggle logic, no new CSS rules (all in wireloom-annotations.css from Task 1-2)
 
@@ -215,9 +215,9 @@ bun test src/utils/wireloomAnnotationToggle.test.ts --test-name-pattern="compact
 
 **Verify**:
 ```bash
-bun test src/utils/wireloomAnnotationToggle.test.ts
-bun test src/utils/wireloomRenderer.test.ts
-bun test src/utils/wireloomFullscreen.test.ts
+bun test frontend/src/utils/wireloomAnnotationToggle.test.ts
+bun test frontend/src/utils/wireloomRenderer.test.ts
+bun test frontend/src/utils/wireloomFullscreen.test.ts
 ```
 
 **Done when**:
@@ -270,7 +270,7 @@ bun test src/utils/wireloomFullscreen.test.ts
 - `tests/e2e/documents/wireloom-annotation-toggle.spec.ts` — replace stubs with real test implementations
 
 **Must Not Touch**:
-- Any `src/` production code
+- Any `frontend/src/` production code
 - Any existing test files
 
 **Exclude**: No production code changes, no new test utilities (use existing Playwright patterns from the project)
@@ -298,7 +298,7 @@ PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/documents/wireloom-annot
 
 - [ ] No duplication (grep check for compact marker logic outside wireloomAnnotationToggle.ts)
 - [ ] Scope boundaries respected (no Wireloom package changes)
-- [ ] All unit tests GREEN (`bun test src/utils/wireloomAnnotationToggle.test.ts`)
+- [ ] All unit tests GREEN (`bun test frontend/src/utils/wireloomAnnotationToggle.test.ts`)
 - [ ] All BDD scenarios GREEN (E2E test suite)
 - [ ] Smoke test: open annotated Wireloom doc, toggle compact, verify markers + tooltips
 - [ ] Fallback paths: malformed source, missing Wireloom both work unchanged

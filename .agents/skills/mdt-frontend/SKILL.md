@@ -1,21 +1,21 @@
 ---
 name: mdt-frontend
-description: Build and refactor MDT frontend components following project conventions. Use when creating React components, writing CSS classes, working with modals, tabs, or any UI surface in src/. Enforces STYLING.md patterns, Tailwind 3 constraints, and build safety checks.
+description: Build and refactor MDT frontend components following project conventions. Use when creating React components, writing CSS classes, working with modals, tabs, or any UI surface in frontend/src/. Enforces STYLING.md patterns, Tailwind 3 constraints, and build safety checks.
 ---
 
 # MDT Frontend Developer
 
-Project-specific conventions for writing frontend code in `src/`. Generic React/TypeScript knowledge is assumed — this skill only covers **MDT-specific rules that break builds or create inconsistency**.
+Project-specific conventions for writing frontend code in `frontend/src/`. Generic React/TypeScript knowledge is assumed — this skill only covers **MDT-specific rules that break builds or create inconsistency**.
 
 ## Mandatory reads
 
 Before touching CSS or a modal component, read these files:
 
-1. `src/STYLING.md` — CSS rules: BEM naming, inline-vs-extract decision tree, surface contract
-2. `src/THEME.md` — token reference (colors, spacing, radius, gap, typography, z-index)
-3. `src/PRIMITIVES.md` — shared CSS class inventory (what already exists; check before inventing)
-4. `src/ITCSS.md` — ITCSS layer architecture, nesting contract, token-gap registry
-5. `src/MODALS.md` — three modal patterns, spacing standard, close button rules
+1. `frontend/src/STYLING.md` — CSS rules: BEM naming, inline-vs-extract decision tree, surface contract
+2. `frontend/src/THEME.md` — token reference (colors, spacing, radius, gap, typography, z-index)
+3. `frontend/src/PRIMITIVES.md` — shared CSS class inventory (what already exists; check before inventing)
+4. `frontend/src/ITCSS.md` — ITCSS layer architecture, nesting contract, token-gap registry
+5. `frontend/src/MODALS.md` — three modal patterns, spacing standard, close button rules
 
 ## Critical rules
 
@@ -41,7 +41,7 @@ Only Tailwind utility classes work in `@apply`. If you need to "extend" a base c
 
 ### 2. Use tokens — never invent sizes, colors, spacing, or radii
 
-**Tokens are the single source of truth.** Before writing any hardcoded value (`8px`, `0.5rem`, `#hex`, `oklch(0.5 …)`), check `src/THEME.md` for an existing token. If a token exists, use it. If you need a value that doesn't exist as a token, add the token to `src/styles/design-tokens.css` (both `:root` and `.dark`) — don't hardcode it where you need it.
+**Tokens are the single source of truth.** Before writing any hardcoded value (`8px`, `0.5rem`, `#hex`, `oklch(0.5 …)`), check `frontend/src/THEME.md` for an existing token. If a token exists, use it. If you need a value that doesn't exist as a token, add the token to `frontend/src/styles/design-tokens.css` (both `:root` and `.dark`) — don't hardcode it where you need it.
 
 | Concern | Token scale (consume via bare `var()`) | Examples |
 |---|---|---|
@@ -64,7 +64,7 @@ Only Tailwind utility classes work in `@apply`. If you need to "extend" a base c
 - **shadcn bare-channel set** (`--background`, `--primary`, `--border`, …): `L C H` triplets, consume via `oklch(var(--x))` or Tailwind `bg-x`.
 - **v3 semantic set** (`--bg-subtle`, `--gap-md`, `--radius-input`, …): full values, consume via bare `var(--x)`.
 
-See `src/THEME.md` for the full token reference. When extracting a new semantic class, always check `src/PRIMITIVES.md` first — a shared class for your pattern may already exist.
+See `frontend/src/THEME.md` for the full token reference. When extracting a new semantic class, always check `frontend/src/PRIMITIVES.md` first — a shared class for your pattern may already exist.
 
 ### 3. No Tailwind utilities in contracted `.tsx` files
 
@@ -89,7 +89,7 @@ PostCSS/Tailwind crashes produce unhelpful errors like `Cannot read properties o
 - Invalid Tailwind utility name in `@apply`
 
 ```bash
-# After ANY edit to src/index.css or any imported .css file:
+# After ANY edit to frontend/src/index.css or any imported .css file:
 bun run build
 
 # If it fails, bisect: comment out blocks until it passes,
@@ -106,7 +106,7 @@ Never hand-roll `fixed inset-0` overlays. Three patterns exist:
 | **B** (content) | Ticket viewer, search | `ModalBody className="p-0"`, own close button |
 | **C** (alert) | Confirmations, errors | Small, centered, footer buttons only |
 
-See `src/MODALS.md` for full details.
+See `frontend/src/MODALS.md` for full details.
 
 ### 6. Close button: single pattern
 
@@ -149,7 +149,7 @@ Dropdown menus that need to appear above modals must use `createPortal` to `docu
 
 ### 9. CSS class naming: BEM with `data-*` variants
 
-Follow `src/STYLING.md` taxonomy:
+Follow `frontend/src/STYLING.md` taxonomy:
 
 | Concern | Pattern | Example |
 |---------|---------|---------|
@@ -169,12 +169,12 @@ Follow `src/STYLING.md` taxonomy:
 <div className={`modal__header ${className}`}>
 ```
 
-### 11. CSS imports go through `src/index.css`
+### 11. CSS imports go through `frontend/src/index.css`
 
-Extracted CSS files are imported from `src/index.css`, not from individual components:
+Extracted CSS files are imported from `frontend/src/index.css`, not from individual components:
 
 ```css
-/* src/index.css */
+/* frontend/src/index.css */
 @import './components/Badge/badge.css';
 @import './components/SmartLink/smart-link.css';
 @import './styles/entities/fav-star.css';
@@ -203,8 +203,8 @@ Before submitting any frontend change:
 1. `bun run validate:ts` — TypeScript check
 2. `bun run build` — catches CSS/PostCSS errors
 3. **For contracted `.tsx` files** — run the semantic-classes linter (see rule 3)
-4. Verify no `@apply` references custom classes: `grep '@apply' src/index.css | grep -v '^[^@]*@apply [a-z]*-'`
-5. Verify no hand-rolled overlays: `grep -r "fixed inset-0" src/components --include="*.tsx"` should only match `ui/Modal.tsx`
+4. Verify no `@apply` references custom classes: `grep '@apply' frontend/src/index.css | grep -v '^[^@]*@apply [a-z]*-'`
+5. Verify no hand-rolled overlays: `grep -r "fixed inset-0" frontend/src/components --include="*.tsx"` should only match `ui/Modal.tsx`
 6. Check `data-testid` attributes are preserved
 
 ## Anti-patterns

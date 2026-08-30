@@ -65,32 +65,32 @@ Modal[size="md"]
 
 | Child | Component | Spec | Conditional |
 |-------|-----------|------|-------------|
-| Modal | `src/components/ui/Modal.tsx` | `MODALS.md` | always |
+| Modal | `frontend/src/components/ui/Modal.tsx` | `MODALS.md` | always |
 | Tabs | Radix `@radix-ui/react-tabs` | — | always |
-| ButtonGroup | `src/components/ui/button-group.tsx` | — | theme selector |
-| Button | `src/components/ui/Button.tsx` | — | clear cache action |
-| Switch | `src/components/ui/switch.tsx` | — | toggle preferences |
+| ButtonGroup | `frontend/src/components/ui/button-group.tsx` | — | theme selector |
+| Button | `frontend/src/components/ui/Button.tsx` | — | clear cache action |
+| Switch | `frontend/src/components/ui/switch.tsx` | — | toggle preferences |
 | Checkbox list | native checkbox controls | — | visible card badges |
 | Readonly input | native input with `readOnly` | — | Sharing tab with generated share URL or invite link |
 | Link origin notice | text | — | visible only when no server-approved link origin is available |
 | Project multiselect | checkbox list or compact multiselect | `project-browser.spec.md` visibility rules | read-token creation |
-| AccentColorPicker | `src/components/AddProjectModal/components/AccentColorPicker.tsx` | this spec | reused in Project Accents section |
-| ProjectAccents | `src/components/SettingsModal/ProjectAccents.tsx` | this spec | accent editor in Appearance tab |
+| AccentColorPicker | `frontend/src/components/AddProjectModal/components/AccentColorPicker.tsx` | this spec | reused in Project Accents section |
+| ProjectAccents | `frontend/src/components/SettingsModal/ProjectAccents.tsx` | this spec | accent editor in Appearance tab |
 
 ## Source files
 
 | Type | Path |
 |------|------|
-| Component | `src/components/SettingsModal.tsx` |
-| Modal primitive | `src/components/ui/Modal.tsx` |
-| Theme hook | `src/hooks/useTheme.ts` |
-| Link config | `src/config/linkConfig.ts` |
-| Event history | `src/components/DevTools/useEventHistoryState.ts` |
-| Cache utils | `src/utils/cache.ts` |
+| Component | `frontend/src/components/SettingsModal.tsx` |
+| Modal primitive | `frontend/src/components/ui/Modal.tsx` |
+| Theme hook | `frontend/src/hooks/useTheme.ts` |
+| Link config | `frontend/src/config/linkConfig.ts` |
+| Event history | `frontend/src/components/DevTools/useEventHistoryState.ts` |
+| Cache utils | `frontend/src/utils/cache.ts` |
 | Sharing API | `PUT /api/projects/:code/sharing` |
-| Accent picker | `src/components/AddProjectModal/components/AccentColorPicker.tsx` |
-| Accent utilities | `src/utils/accentColors.ts` |
-| Selector state hook | `src/components/ProjectSelector/useSelectorData.ts` |
+| Accent picker | `frontend/src/components/AddProjectModal/components/AccentColorPicker.tsx` |
+| Accent utilities | `frontend/src/utils/accentColors.ts` |
+| Selector state hook | `frontend/src/components/ProjectSelector/useSelectorData.ts` |
 
 ## Layout
 

@@ -114,7 +114,7 @@ package.json                    # add cli workspace + shared scripts if needed
 cli/
   package.json                  # bin entry, dependencies, package scripts
   tsconfig.json
-  src/
+  frontend/src/
     index.ts
     commands/
       view.ts
@@ -329,7 +329,7 @@ When adding another CLI capability:
 ## Review Notes
 
 - The shared detector is now part of the shared framework. CLI should consume `ProjectService.resolveCurrentProject()` for project-context reads rather than importing the detector directly in command modules.
-- The color mapping should remain category-aligned with `src/components/Badge/badge.css`, but runtime CSS parsing is not required; alignment can be enforced through tests around the CLI color adapter.
+- The color mapping should remain category-aligned with `frontend/src/components/Badge/badge.css`, but runtime CSS parsing is not required; alignment can be enforced through tests around the CLI color adapter.
 - The PoC changed the parser decision: do not build a bespoke top-level parser when `commander` already provides the canonical tree and the `project list` versus `project LIST` behavior we need.
 - Ticket mutation grammar stays under the ticket entity in the canonical tree: `ticket create` and `ticket attr` are the canonical forms, while `create` and `attr` remain top-level aliases.
 - Relation operator semantics are now part of the shared attr operation model; CLI should translate argv tokens into shared `AttrOperation` requests rather than implementing a separate mutation policy.

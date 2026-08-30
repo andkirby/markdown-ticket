@@ -20,69 +20,69 @@ are contract-ready but not wired to UI in this ticket.
 
 ### T2 — Pure-function predicate + unit tests
 
-- **Files**: `src/utils/ticketFilters.ts` (new), `src/utils/ticketFilters.test.ts` (new)
+- **Files**: `frontend/src/utils/ticketFilters.ts` (new), `frontend/src/utils/ticketFilters.test.ts` (new)
 - **Scope**: `applyTicketFilters(tickets, filters)` — exact-match facets (AND across, OR within), multi-term-AND query, `__none__` assignee sentinel.
-- **Command**: `bun test --isolate ./src/utils/ticketFilters.test.ts`
+- **Command**: `bun test --isolate ./frontend/src/utils/ticketFilters.test.ts`
 - **Done when**: all S1–S10 unit cases pass.
 
 ## Phase 2 — State + persistence (no UI)
 
 ### T3 — localStorage config module + tests
 
-- **Files**: `src/config/filterPreferences.ts` (new), `src/config/filterPreferences.test.ts` (new)
+- **Files**: `frontend/src/config/filterPreferences.ts` (new), `frontend/src/config/filterPreferences.test.ts` (new)
 - **Scope**: `getFilterPreferences()` / `setFilterPreferences()` mirroring `sorting.ts`; invalid shape → `{}`.
-- **Command**: `bun test --isolate ./src/config/filterPreferences.test.ts`
+- **Command**: `bun test --isolate ./frontend/src/config/filterPreferences.test.ts`
 - **Done when**: S21, S22 cases pass.
 
 ### T4 — `useBoardFilters` hook + reducer + tests
 
-- **Files**: `src/hooks/useBoardFilters.ts` (new), `src/hooks/useBoardFilters.test.ts` (new)
+- **Files**: `frontend/src/hooks/useBoardFilters.ts` (new), `frontend/src/hooks/useBoardFilters.test.ts` (new)
 - **Scope**: `useReducer` with `toggle`/`setQuery`/`clearFacet`/`clearAll`/`reconcile`; persists via T3; computes `filteredTickets` via T2; derives `facetOptions` via `useMemo`.
-- **Command**: `bun test --isolate ./src/hooks/useBoardFilters.test.ts`
+- **Command**: `bun test --isolate ./frontend/src/hooks/useBoardFilters.test.ts`
 - **done when**: reducer transition cases pass; `reconcile` drops stale values (S10).
 
 ## Phase 3 — Components (presentational)
 
 ### T5 — `ActiveFilterChips` + tests
 
-- **Files**: `src/components/BoardFilterBar/ActiveFilterChips.tsx` (new), `.test.tsx` (new)
+- **Files**: `frontend/src/components/BoardFilterBar/ActiveFilterChips.tsx` (new), `.test.tsx` (new)
 - **Scope**: one removable chip per active value; reuses `Badge` styling; `aria-label` per chip.
-- **Command**: `bun test --isolate ./src/components/BoardFilterBar/ActiveFilterChips.test.tsx`
+- **Command**: `bun test --isolate ./frontend/src/components/BoardFilterBar/ActiveFilterChips.test.tsx`
 - **Done when**: S12, S13, S24 cases pass.
 
 ### T6 — `FacetDropdown` + tests
 
-- **Files**: `src/components/BoardFilterBar/FacetDropdown.tsx` (new), `.test.tsx` (new)
+- **Files**: `frontend/src/components/BoardFilterBar/FacetDropdown.tsx` (new), `.test.tsx` (new)
 - **Scope**: Radix `DropdownMenu` trigger; label `Facet` / `Facet: N`; checkbox items; static facets take enum values, derived facets take provided options.
-- **Command**: `bun test --isolate ./src/components/BoardFilterBar/FacetDropdown.test.tsx`
+- **Command**: `bun test --isolate ./frontend/src/components/BoardFilterBar/FacetDropdown.test.tsx`
 - **Done when**: S15, S16 cases pass.
 
 ### T7 — `DesktopFilterBar` + tests
 
-- **Files**: `src/components/BoardFilterBar/DesktopFilterBar.tsx` (new), `src/components/BoardFilterBar/index.tsx` (new), `.test.tsx` (new)
+- **Files**: `frontend/src/components/BoardFilterBar/DesktopFilterBar.tsx` (new), `frontend/src/components/BoardFilterBar/index.tsx` (new), `.test.tsx` (new)
 - **Scope**: composes `FilterControls` (query) + `FacetDropdown`×4 + `ActiveFilterChips` + ClearAll + result-count (`aria-live`).
-- **Command**: `bun test --isolate ./src/components/BoardFilterBar/DesktopFilterBar.test.tsx`
+- **Command**: `bun test --isolate ./frontend/src/components/BoardFilterBar/DesktopFilterBar.test.tsx`
 - **Done when**: S11, S12, S14, S25 cases pass.
 
 ### T8 — `FacetSection` + `MobileChipStrip` + tests
 
-- **Files**: `src/components/BoardFilterBar/FacetSection.tsx` (new), `src/components/BoardFilterBar/MobileChipStrip.tsx` (new), `.test.tsx` (new)
+- **Files**: `frontend/src/components/BoardFilterBar/FacetSection.tsx` (new), `frontend/src/components/BoardFilterBar/MobileChipStrip.tsx` (new), `.test.tsx` (new)
 - **Scope**: checkbox group for mobile popover; horizontal-scroll chip strip for column header (returns null when empty).
-- **Command**: `bun test --isolate ./src/components/BoardFilterBar/MobileChipStrip.test.tsx`
+- **Command**: `bun test --isolate ./frontend/src/components/BoardFilterBar/MobileChipStrip.test.tsx`
 - **Done when**: S18, S19, S20 cases pass.
 
 ## Phase 4 — Integration (the switchover)
 
 ### T9 — Wire `Board.tsx` to the hook
 
-- **Files**: `src/components/Board.tsx`
+- **Files**: `frontend/src/components/Board.tsx`
 - **Scope**: replace `filterQuery` useState + inline `filteredTickets` useMemo with `useBoardFilters(tickets)`; render `DesktopFilterBar` in header; pass `filters`/`onRemoveFilter` to mobile columns.
 - **Command**: `bun run validate:ts` then `bun run build`
 - **Done when**: board still renders; free-text still works; facets now work.
 
 ### T10 — Wire mobile chrome
 
-- **Files**: `src/components/HamburgerMenu.tsx`, `src/components/Column/index.tsx`
+- **Files**: `frontend/src/components/HamburgerMenu.tsx`, `frontend/src/components/Column/index.tsx`
 - **Scope**: HamburgerMenu gains `filterCount` + `onOpenFilters`; renders "Filter · N" row opening FilterPopover (FreeTextSearch + FacetSection×4 + Clear all + Done). Column renders `MobileChipStrip` under switcher when active.
 - **Command**: `bun run validate:ts` then `bun run build`
 - **Done when**: S17, S18 flows work; HamburgerMenu existing tests still pass.
@@ -98,7 +98,7 @@ are contract-ready but not wired to UI in this ticket.
 
 ### T12 — Full verification gate
 
-- **Commands**: `bun run validate:ts:all`, `bun run lint`, `bun run build`, `bun test --isolate ./src`, `bun run test:e2e`
+- **Commands**: `bun run validate:ts:all`, `bun run lint`, `bun run build`, `bun test --isolate ./frontend/src`, `bun run test:e2e`
 - **Done when**: no new failures vs. baseline (pre-existing failures documented in state). The dirty worktree MDT-150 failures remain unchanged and unrelated.
 
 ## Sequencing rationale
@@ -116,7 +116,7 @@ browser-verified.
 
 ### U1 — Click outside filter popover closes it
 
-- **Files**: `src/components/BoardFilterBar/FilterButton.tsx`
+- **Files**: `frontend/src/components/BoardFilterBar/FilterButton.tsx`
 - **Change**: replace the broken `position:fixed` click-away overlay with an
   event-based `mousedown` guard (reuses the `<Modal>` primitive's
   `handleClickOutside` pattern). The header's `backdrop-filter` created a
@@ -126,7 +126,7 @@ browser-verified.
 
 ### U2 — Filters apply to the list view
 
-- **Files**: `src/components/ProjectView.tsx`
+- **Files**: `frontend/src/components/ProjectView.tsx`
 - **Change**: `sortedTickets` now sorts `propFilteredTickets` (the app-level
   filtered set) instead of the raw `propTickets`, so the list table honors
   faceted filters identically to the board.
@@ -135,7 +135,7 @@ browser-verified.
 
 ### U3 — Proper spacing for active-filter-chips block
 
-- **Files**: `src/components/BoardFilterBar/ActiveFilterChips.tsx`
+- **Files**: `frontend/src/components/BoardFilterBar/ActiveFilterChips.tsx`
 - **Change**: inline variant gains `mt-3` top gap so the chips block is not
   flush against the facet grid above it.
 - **Done when**: `[data-testid=active-filter-chips]` `marginTop` is 12px.

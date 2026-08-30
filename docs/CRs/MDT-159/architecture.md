@@ -52,10 +52,10 @@ This is the single canonical flow for all CR key formatting. Every call site del
 
 ## Frontend Integration
 
-### Routing (`src/utils/routing.ts`)
+### Routing (`frontend/src/utils/routing.ts`)
 `normalizeTicketKey()` currently uses `padStart(3, '0')` to normalize ticket numbers in URL paths. After migration, it calls `formatCrKey()` for the padding step. URLs like `/prj/MDT/ticket/MDT-1000` must resolve correctly — the regex `(\d+)` already extracts variable-length numbers, so only the padding call changes.
 
-### Quick Search (`src/hooks/useQuickSearch.ts`)
+### Quick Search (`frontend/src/hooks/useQuickSearch.ts`)
 `normalizeTicketKeyTerm()` currently uses `padStart(3, '0')` to match user input against stored keys. After migration, it calls `formatCrKey()` for padding. Partial input like "1000" must correctly pad to match stored keys. Since stored keys are already zero-padded by `formatCrKey`, the matching logic is preserved.
 
 **Edge-2 compliance**: Neither component performs layout-sensitive rendering of key width. Keys are rendered as text strings in existing flex/grid layouts that accommodate variable-width content. No layout changes required.

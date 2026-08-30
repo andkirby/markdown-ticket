@@ -47,18 +47,18 @@ Both fields are **nullable** and part of the Zod `TicketSchema`. They are requir
 
 | Consumer | Field Used | Location |
 |----------|-----------|----------|
-| **Sorting config** | `dateCreated`, `lastModified` | `src/config/sorting.ts:16-17` |
-| **Sort logic** | Both, with `lastModified` falling back to `dateCreated` | `src/utils/sorting.ts:22-28` |
-| **Ticket attributes panel** | `dateCreated`, `lastModified` | `src/components/TicketAttributes.tsx:41-45` |
-| **List view (ProjectView)** | `lastModified` | `src/components/ProjectView.tsx:156` |
-| **Ticket viewer header** | `dateCreated` as `createdAt`, `lastModified` as `updatedAt` | `src/components/TicketViewer/index.tsx:271-272` |
-| **RelativeTimestamp** | `createdAt`, `updatedAt` | `src/components/shared/RelativeTimestamp.tsx:6-7` |
-| **Documents view** | Both for sorting | `src/components/DocumentsView/DocumentsLayout.tsx:214-215` |
-| **Markdown viewer** | Both for display | `src/components/DocumentsView/MarkdownViewer.tsx:108,114` |
-| **SSE event payload** | `lastModified` | `src/services/sseClient.ts:27` |
-| **Event bus type** | `lastModified` | `src/services/eventBus.ts:51` |
-| **Optimistic updates** | Sets `lastModified: new Date()` locally | `src/hooks/useTicketOperations.ts:130,147` |
-| **Project manager SSE handler** | Maps `ticketData.lastModified` from SSE | `src/hooks/useProjectManager.ts:83` |
+| **Sorting config** | `dateCreated`, `lastModified` | `frontend/src/config/sorting.ts:16-17` |
+| **Sort logic** | Both, with `lastModified` falling back to `dateCreated` | `frontend/src/utils/sorting.ts:22-28` |
+| **Ticket attributes panel** | `dateCreated`, `lastModified` | `frontend/src/components/TicketAttributes.tsx:41-45` |
+| **List view (ProjectView)** | `lastModified` | `frontend/src/components/ProjectView.tsx:156` |
+| **Ticket viewer header** | `dateCreated` as `createdAt`, `lastModified` as `updatedAt` | `frontend/src/components/TicketViewer/index.tsx:271-272` |
+| **RelativeTimestamp** | `createdAt`, `updatedAt` | `frontend/src/components/shared/RelativeTimestamp.tsx:6-7` |
+| **Documents view** | Both for sorting | `frontend/src/components/DocumentsView/DocumentsLayout.tsx:214-215` |
+| **Markdown viewer** | Both for display | `frontend/src/components/DocumentsView/MarkdownViewer.tsx:108,114` |
+| **SSE event payload** | `lastModified` | `frontend/src/services/sseClient.ts:27` |
+| **Event bus type** | `lastModified` | `frontend/src/services/eventBus.ts:51` |
+| **Optimistic updates** | Sets `lastModified: new Date()` locally | `frontend/src/hooks/useTicketOperations.ts:130,147` |
+| **Project manager SSE handler** | Maps `ticketData.lastModified` from SSE | `frontend/src/hooks/useProjectManager.ts:83` |
 | **OpenAPI schema** | Both declared on subdocument response | `server/openapi/schemas.ts:282-283, 402, 406-407` |
 | **Tree metadata** | `lastModified` on `TreeNode` | `server/services/TreeService.ts:11` |
 | **ExtractMetadataCommand** | Both from `fs.stat` | `server/commands/ExtractMetadataCommand.ts:48-49` |

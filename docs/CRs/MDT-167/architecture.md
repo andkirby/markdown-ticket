@@ -10,14 +10,14 @@ All Settings modal preferences in this ticket are browser-only UI state. Per `do
 
 | ID | Path | Kind | Purpose |
 |----|------|------|---------|
-| `ART-settings-modal` | `src/components/SettingsModal.tsx` | runtime | Renders tabs and controls for client-side preferences. |
-| `ART-settings-css` | `src/components/SettingsModal/settings.css` | runtime | Provides Settings modal tab and control styling. |
-| `ART-local-storage-preferences` | `src/config/localStoragePreferences.ts` | runtime | Provides safe typed localStorage read/write helpers. |
-| `ART-ticket-card-badge-config` | `src/config/ticketCardBadges.ts` | runtime | Owns visible ticket card badge defaults, validation, getter, and setter. |
-| `ART-ticket-attribute-tags` | `src/components/TicketAttributeTags.tsx` | runtime | Renders board ticket card badges using the configured visible badge list. |
-| `ART-ticket-card` | `src/components/TicketCard.tsx` | runtime | Applies board card presentation and density consumers. |
-| `ART-settings-tests` | `src/components/SettingsModal.test.tsx` | test | Verifies Settings controls and persistence. |
-| `ART-ticket-card-badge-tests` | `src/config/ticketCardBadges.test.ts` | test | Verifies badge preference defaults, filtering, and invalid storage fallback. |
+| `ART-settings-modal` | `frontend/src/components/SettingsModal.tsx` | runtime | Renders tabs and controls for client-side preferences. |
+| `ART-settings-css` | `frontend/src/components/SettingsModal/settings.css` | runtime | Provides Settings modal tab and control styling. |
+| `ART-local-storage-preferences` | `frontend/src/config/localStoragePreferences.ts` | runtime | Provides safe typed localStorage read/write helpers. |
+| `ART-ticket-card-badge-config` | `frontend/src/config/ticketCardBadges.ts` | runtime | Owns visible ticket card badge defaults, validation, getter, and setter. |
+| `ART-ticket-attribute-tags` | `frontend/src/components/TicketAttributeTags.tsx` | runtime | Renders board ticket card badges using the configured visible badge list. |
+| `ART-ticket-card` | `frontend/src/components/TicketCard.tsx` | runtime | Applies board card presentation and density consumers. |
+| `ART-settings-tests` | `frontend/src/components/SettingsModal.test.tsx` | test | Verifies Settings controls and persistence. |
+| `ART-ticket-card-badge-tests` | `frontend/src/config/ticketCardBadges.test.ts` | test | Verifies badge preference defaults, filtering, and invalid storage fallback. |
 
 ## Obligations
 

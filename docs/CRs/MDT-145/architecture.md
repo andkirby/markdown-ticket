@@ -327,7 +327,7 @@ flowchart LR
 
 ```text
 domain-contracts/
-  src/
+  frontend/src/
     project/
       entity.ts
       input.ts
@@ -362,7 +362,7 @@ shared/
     ProjectManager.ts
 
 mcp-server/
-  src/
+  frontend/src/
     index.ts
     services/
       crService.ts

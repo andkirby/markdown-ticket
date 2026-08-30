@@ -39,8 +39,8 @@ Integrate Prism.js with existing Showdown converter for minimal impact.
    - `prism-themes@1.9.0` - Additional theme support
 
 2. **Created Utilities**:
-   - `src/utils/syntaxHighlight.ts` - Prism integration and code block highlighting
-   - `src/styles/prism-theme-loader.ts` - Theme management (Darcula theme)
+   - `frontend/src/utils/syntaxHighlight.ts` - Prism integration and code block highlighting
+   - `frontend/src/styles/prism-theme-loader.ts` - Theme management (Darcula theme)
 
 3. **Updated Components**:
    - Modified `MarkdownViewer.tsx` to call `loadPrismTheme()` and `highlightCodeBlocks()`

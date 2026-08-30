@@ -131,10 +131,10 @@ nohup.out
 lefthook-local.yml
 
 # ITCSS nightly audit working files (agent state + reports, not durable docs)
-# The style guide itself (src/ITCSS.md) IS tracked; only working state is ignored.
-src/ITCSS-reports/
-src/ITCSS-plan.md
-src/ITCSS-migration-map.md
+# The style guide itself (frontend/src/ITCSS.md) IS tracked; only working state is ignored.
+frontend/src/ITCSS-reports/
+frontend/src/ITCSS-plan.md
+frontend/src/ITCSS-migration-map.md
 
 # ── Project-wide patterns (migrated from .git/info/exclude) ──
 # Proof-of-concept dirs and scratch test files (convention, not shared code)

@@ -40,12 +40,12 @@ useProjectManager (multiple instances)
 ## Structure
 
 ```text
-src/services/
+frontend/src/services/
 └── dataLayer.ts           # Add pendingRequests Map + dedupe() helper
 ```
 
 ```text
-src/services/
+frontend/src/services/
 └── dataLayer.dedupe.test.ts  # Unit test for deduplication
 ```
 

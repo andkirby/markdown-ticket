@@ -19,7 +19,7 @@ CR declares **Requirements Scope: full**. Delivery timing for all requirements: 
 | Spaces/encoding | Inherits the query-parameter document URL scheme with `encodeURIComponent` (C4) |
 | Broken reference | A converted link whose target document does not exist; visibly flagged (BR-2.1) |
 | Performance | No per-span network requests at render time (C5) |
-| Project-root fallback | A ref naming an existing project-root file (e.g. 'src/THEME.md') resolves to that document; explicit '..' refs are never re-anchored (BR-2.4, UAT 2026-08-24) |
+| Project-root fallback | A ref naming an existing project-root file (e.g. 'frontend/src/THEME.md') resolves to that document; explicit '..' refs are never re-anchored (BR-2.4, UAT 2026-08-24) |
 | Link config precedence | localStorage override > CONFIG_DIR/config.toml [links] > defaults (C6, UAT 2026-08-24) |
 
 ## Behavioral Coverage Summary

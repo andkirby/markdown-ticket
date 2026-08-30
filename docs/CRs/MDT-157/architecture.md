@@ -145,7 +145,7 @@ Test scaffolding responsibilities:
 
 Vite dev-server frontend logging endpoints under `/api/frontend/logs*` are not backend routes and do not pass through `server/security/apiAuth.ts`. They must remain local debugging endpoints only.
 
-Owner module: `vite.config.ts` owns the Vite middleware boundary for:
+Owner module: `frontend/vite.config.ts` owns the Vite middleware boundary for:
 
 - `GET /api/frontend/logs/status`
 - `POST /api/frontend/logs/start`
@@ -166,7 +166,7 @@ Owner modules:
 - `server/routes/auth.ts` owns reusing `isLocalHostRequest` in `GET /api/auth/session` so the session endpoint and the protected-API gate report a consistent local-exempt state.
 - `server/config/runtimeConfig.ts` carries `localHosts` and `localHostBypassEnabled` through runtime config.
 - `server/server.ts` owns `API_BIND_ADDRESS` (default `127.0.0.1`) and the `app.listen(PORT, HOST, …)` form.
-- `vite.config.ts` owns `changeOrigin: false` on the `/api`, `/api/events`, `/api-docs` proxy blocks and the `server.host`/`preview.host` loopback default.
+- `frontend/vite.config.ts` owns `changeOrigin: false` on the `/api`, `/api/events`, `/api-docs` proxy blocks and the `server.host`/`preview.host` loopback default.
 - `docker-compose*.yml` own the explicit `API_BIND_ADDRESS=0.0.0.0` and `API_LOCAL_HOST_BYPASS=false` for the containerized nginx path.
 
 Behavior contract (truth table):

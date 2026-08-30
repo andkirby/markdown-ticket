@@ -5,7 +5,7 @@
 // Catches syntax errors (orphaned braces, malformed nesting, broken @layer,
 // unclosed blocks) that a nightly LLM agent can introduce when editing CSS.
 // Enforces NO style rules — it either parses or it doesn't. Style/architecture
-// enforcement lives in the nightly ITCSS task (src/ITCSS.md) + the
+// enforcement lives in the nightly ITCSS task (frontend/src/ITCSS.md) + the
 // enforce-semantic-classes lefthook hook.
 //
 // Why postcss, not lightningcss: lightningcss auto-closes unclosed braces

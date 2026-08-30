@@ -8,7 +8,7 @@ Preference storage guidance exists, but it is split across several files:
 - `docs/CONFIG_GLOBAL_SPECIFICATION.md` - distinguishes global system config from user preferences.
 - `docs/architecture/toml-operations.md` - shared TOML read/write pattern.
 - `docs/CRs/MDT-129/architecture.md` - strongest implemented pattern: immutable preferences in `user.toml`, mutable selector state in `project-selector.json`, served through `/api/config/selector`.
-- `src/config/*` - browser-local examples for lightweight UI state, including ToC and sort preferences.
+- `frontend/src/config/*` - browser-local examples for lightweight UI state, including ToC and sort preferences.
 
 ## Current Architecture
 
@@ -29,7 +29,7 @@ Browser-only preferences are owned completely by the frontend.
 
 Flow:
 
-1. A small `src/config/*` helper defines the storage key, default value, getter, and setter.
+1. A small `frontend/src/config/*` helper defines the storage key, default value, getter, and setter.
 2. React component or hook reads the helper during initialization.
 3. Invalid, missing, or unavailable `localStorage` falls back to defaults.
 4. User interaction updates React state immediately.
@@ -47,11 +47,11 @@ Use this for visual or interaction state that only matters in the current browse
 
 Current examples:
 
-- `src/config/tocConfig.ts` stores ToC expanded/collapsed state.
-- `src/config/sorting.ts` stores ticket sort preferences.
-- `src/config/documentSorting.ts` stores per-project document sort preferences.
-- `src/components/ViewModeSwitcher/useViewModePersistence.ts` stores last board/list mode.
-- `src/config/settingsPreferences.ts` stores visual Settings preferences such as card density and default view.
+- `frontend/src/config/tocConfig.ts` stores ToC expanded/collapsed state.
+- `frontend/src/config/sorting.ts` stores ticket sort preferences.
+- `frontend/src/config/documentSorting.ts` stores per-project document sort preferences.
+- `frontend/src/components/ViewModeSwitcher/useViewModePersistence.ts` stores last board/list mode.
+- `frontend/src/config/settingsPreferences.ts` stores visual Settings preferences such as card density and default view.
 
 ## Markdown Density Recommendation
 
@@ -68,7 +68,7 @@ Recommended contract:
 
 | Setting | Storage key | Values | Default | Owner |
 | --- | --- | --- | --- | --- |
-| Markdown density | `markdown-ticket:settings:markdown-density` | `compact`, `default`, `comfortable` | `compact` | `src/config/settingsPreferences.ts` |
+| Markdown density | `markdown-ticket:settings:markdown-density` | `compact`, `default`, `comfortable` | `compact` | `frontend/src/config/settingsPreferences.ts` |
 
 Behavior:
 
@@ -145,7 +145,7 @@ Move logic into `shared/` only when it becomes product behavior reused by backen
 
 ## To Make This Right
 
-1. Keep browser-only state in frontend `src/config/*` helpers.
+1. Keep browser-only state in frontend `frontend/src/config/*` helpers.
 2. Standardize localStorage keys as `markdown-ticket:<scope>:<feature>[:<projectId>]`.
 3. Add a small typed localStorage utility for safe JSON read/write with defaults.
 4. Move existing browser-only helpers to that utility gradually; do not rewrite all at once.

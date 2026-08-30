@@ -81,7 +81,7 @@ contracts with local consumers.
 | `server/` | Browser-facing thin adapter and interactive human credential provider |
 | `cli/` | Thin interactive adapter using the shared coordinator |
 | `mcp-server/` | Thin human stdio or machine HTTP credential adapter |
-| `src/` | Sync status, projection stub, conflict, and stale-state presentation |
+| `frontend/src/` | Sync status, projection stub, conflict, and stale-state presentation |
 | `cloud/src/cloudflare/application/` | Authorization and coordination use cases |
 | `cloud/src/cloudflare/access/` | Access assertion validation and principal mapping |
 | `cloud/src/cloudflare/d1/` | Prepared D1 statements and transactional batches |

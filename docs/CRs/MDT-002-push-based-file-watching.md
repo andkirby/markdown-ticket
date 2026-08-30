@@ -214,7 +214,7 @@ The push-based file watching architecture has been successfully implemented, ach
 
 ### Frontend Implementation Details
 
-#### RealtimeFileWatcher (`src/services/realtimeFileWatcher.ts`)
+#### RealtimeFileWatcher (`frontend/src/services/realtimeFileWatcher.ts`)
 - **SSE Client**: Native `EventSource` API for server-sent events
 - **Connection Management**: Exponential backoff reconnection (1s, 2s, 4s, 8s, 16s)
 - **Fallback Mechanism**: Automatic polling fallback after 5 failed reconnection attempts
@@ -222,7 +222,7 @@ The push-based file watching architecture has been successfully implemented, ach
 - **Compatibility**: Drop-in replacement for existing FileWatcher with same interface
 
 #### Integration with useTicketData Hook
-- Updated `src/hooks/useTicketData.ts` to use RealtimeFileWatcher by default
+- Updated `frontend/src/hooks/useTicketData.ts` to use RealtimeFileWatcher by default
 - Maintains existing API for backward compatibility
 - SSE enabled by default with configurable fallback options
 - Error handling preserves user experience during connection issues
@@ -357,9 +357,9 @@ Potential improvements identified during implementation:
 - **`server/package.json`** (Modified) - Added `chokidar@^3.5.3` dependency
 
 #### Frontend Files
-- **`src/services/realtimeFileWatcher.ts`** (New) - Complete RealtimeFileWatcher class with SSE client, automatic reconnection, exponential backoff, polling fallback, and drop-in compatibility with existing FileWatcher
-- **`src/hooks/useTicketData.ts`** (Modified) - Updated to use RealtimeFileWatcher by default, maintains backward compatibility, enables SSE by default with configurable options
-- **`src/services/fileWatcher.ts`** (Modified) - Fixed TypeScript timer type issues for cross-platform compatibility
+- **`frontend/src/services/realtimeFileWatcher.ts`** (New) - Complete RealtimeFileWatcher class with SSE client, automatic reconnection, exponential backoff, polling fallback, and drop-in compatibility with existing FileWatcher
+- **`frontend/src/hooks/useTicketData.ts`** (Modified) - Updated to use RealtimeFileWatcher by default, maintains backward compatibility, enables SSE by default with configurable options
+- **`frontend/src/services/fileWatcher.ts`** (Modified) - Fixed TypeScript timer type issues for cross-platform compatibility
 
 #### Dependencies Added
 - **Backend**: `chokidar@^3.5.3` for robust file system monitoring

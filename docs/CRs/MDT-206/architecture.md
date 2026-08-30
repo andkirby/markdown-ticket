@@ -32,13 +32,13 @@ flowchart LR
 
 ## Module Boundaries
 
-- `src/App.tsx`: owns view-switcher actions, route selection, and `mdt-board-mode` persistence.
-- `src/components/ViewModeSwitcher/`: owns the icon-only Board / Swimlanes / List / Docs peer control with semantic labels.
-- `src/components/Board.tsx`: owns passing display tickets and update callbacks into `SwimlaneBoard`, and preserving the flat board branch unchanged when mode is `flat`.
-- `src/components/SwimlaneBoard/index.tsx`: owns rendered swimlane UI, lane controls, lifecycle controls, and lane-column drop targets.
-- `src/components/SwimlaneBoard/helpers.ts`: owns pure epic classification, lane-key resolution, progress calculation, and lane visibility helpers.
-- `src/components/SwimlaneBoard/swimlane-board.css`: owns semantic swimlane classes and Design 3 token consumption.
-- `src/components/TicketCard.tsx`: owns optional badge-row rendering; default remains visible for existing flat-board callers, swimlanes pass `showBadges=false` until the local toolbar toggle is enabled.
+- `frontend/src/App.tsx`: owns view-switcher actions, route selection, and `mdt-board-mode` persistence.
+- `frontend/src/components/ViewModeSwitcher/`: owns the icon-only Board / Swimlanes / List / Docs peer control with semantic labels.
+- `frontend/src/components/Board.tsx`: owns passing display tickets and update callbacks into `SwimlaneBoard`, and preserving the flat board branch unchanged when mode is `flat`.
+- `frontend/src/components/SwimlaneBoard/index.tsx`: owns rendered swimlane UI, lane controls, lifecycle controls, and lane-column drop targets.
+- `frontend/src/components/SwimlaneBoard/helpers.ts`: owns pure epic classification, lane-key resolution, progress calculation, and lane visibility helpers.
+- `frontend/src/components/SwimlaneBoard/swimlane-board.css`: owns semantic swimlane classes and Design 3 token consumption.
+- `frontend/src/components/TicketCard.tsx`: owns optional badge-row rendering; default remains visible for existing flat-board callers, swimlanes pass `showBadges=false` until the local toolbar toggle is enabled.
 - `tests/e2e/utils/selectors.ts`: owns stable test selectors for swimlane controls and lanes.
 - `tests/e2e/board/swimlane-board.spec.ts`: owns user-visible acceptance coverage.
 

@@ -87,14 +87,14 @@ mcp-server/src/tools/handlers/__tests__/
 Before starting each task:
 
 ```bash
-cd mcp-server && npm test -- src/tools/handlers/__tests__/
+cd mcp-server && npm test -- frontend/src/tools/handlers/__tests__/
 # Should show 52 PASS (baseline established)
 ```
 
 After completing each task:
 
 ```bash
-cd mcp-server && npm test -- src/tools/handlers/__tests__/
+cd mcp-server && npm test -- frontend/src/tools/handlers/__tests__/
 # Tests should still PASS (behavior preserved)
 npm test
 # Full suite — no regressions
@@ -333,7 +333,7 @@ grep "import.*glob" mcp-server/src/tools/handlers/
 # Expected: No results (or only in files that still use glob)
 
 # Run tests
-cd mcp-server && npm test -- src/tools/handlers/__tests__/
+cd mcp-server && npm test -- frontend/src/tools/handlers/__tests__/
 # Expected: All tests PASS
 ```
 
@@ -400,7 +400,7 @@ grep -r "fs\.readFile" mcp-server/src/tools/handlers/
 # Expected: No results
 
 # Run tests
-cd mcp-server && npm test -- src/tools/handlers/__tests__/
+cd mcp-server && npm test -- frontend/src/tools/handlers/__tests__/
 # Expected: All tests PASS
 ```
 
@@ -454,7 +454,7 @@ grep -r "fs\.writeFile" mcp-server/src/tools/handlers/
 # Expected: No results
 
 # Run tests
-cd mcp-server && npm test -- src/tools/handlers/__tests__/
+cd mcp-server && npm test -- frontend/src/tools/handlers/__tests__/
 # Expected: All tests PASS
 ```
 
@@ -499,7 +499,7 @@ grep "import.*fs/promises" mcp-server/src/tools/handlers/
 # Expected: No results (or only in files that still use fs)
 
 # Run tests
-cd mcp-server && npm test -- src/tools/handlers/__tests__/
+cd mcp-server && npm test -- frontend/src/tools/handlers/__tests__/
 # Expected: All tests PASS
 ```
 
@@ -566,7 +566,7 @@ grep -A 15 "static async writeFile" shared/services/MarkdownService.ts | wc -l
 ### Task 3.3: Run handler behavioral tests
 
 ```bash
-cd mcp-server && npm test -- src/tools/handlers/__tests__/
+cd mcp-server && npm test -- frontend/src/tools/handlers/__tests__/
 ```
 
 **Done when**:

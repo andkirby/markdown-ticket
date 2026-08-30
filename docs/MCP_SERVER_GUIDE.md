@@ -169,10 +169,10 @@ MCP_HTTP_ENABLED=true MCP_HTTP_PORT=3002 node dist/index.js
 node dist/index.js
 
 # Development with HTTP transport
-MCP_HTTP_ENABLED=true MCP_HTTP_PORT=9000 tsx src/index.ts
+MCP_HTTP_ENABLED=true MCP_HTTP_PORT=9000 tsx frontend/src/index.ts
 
 # Development with stdio transport only
-tsx src/index.ts
+tsx frontend/src/index.ts
 ```
 
 ### Project Requirements

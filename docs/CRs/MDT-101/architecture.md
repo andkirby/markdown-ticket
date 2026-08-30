@@ -56,7 +56,7 @@ graph LR
 ```text
 domain-contracts/
 ├── package.json                 → { "dependencies": { "zod": "^3.x" } }
-├── src/
+├── frontend/src/
 │   ├── index.ts                → Production exports (no testing)
 │   ├── {entity}/               → One per domain entity
 │   │   ├── schema.ts          → Stable entrypoint or compatibility barrel
@@ -474,13 +474,13 @@ These are implemented in `shared/services` using the contracts.
 ### 5.2 Adding New Entity Checklist
 
 **For Contracts**:
-- [ ] Create `src/{entity}/schema.ts` as the stable public entrypoint
-- [ ] Add `src/{entity}/entity.ts`, `input.ts`, or other focused files when useful
-- [ ] Create `src/{entity}/validation.ts` with parse/safeParse wrappers
-- [ ] Create `src/{entity}/index.ts` exporting the entity module
-- [ ] Add to `src/index.ts`
-- [ ] Create `src/testing/{entity}.fixtures.ts`
-- [ ] Add to `src/testing/index.ts`
+- [ ] Create `frontend/src/{entity}/schema.ts` as the stable public entrypoint
+- [ ] Add `frontend/src/{entity}/entity.ts`, `input.ts`, or other focused files when useful
+- [ ] Create `frontend/src/{entity}/validation.ts` with parse/safeParse wrappers
+- [ ] Create `frontend/src/{entity}/index.ts` exporting the entity module
+- [ ] Add to `frontend/src/index.ts`
+- [ ] Create `frontend/src/testing/{entity}.fixtures.ts`
+- [ ] Add to `frontend/src/testing/index.ts`
 
 **For Services** (Separate repository):
 - [ ] Implement business rules in `shared/services/{entity}.ts`

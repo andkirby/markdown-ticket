@@ -17,7 +17,7 @@ Cmd+K Quick Search provides keyboard-driven ticket discovery via a modal overlay
 ## Structure
 
 ```text
-src/
+frontend/src/
 ├── components/QuickSearch/
 │   ├── index.ts                    # Exports
 │   ├── QuickSearchModal.tsx        # Modal container, keyboard state
@@ -99,12 +99,12 @@ Future expansions (actions, filters, navigation) should:
 | Artifact ID | Path | Kind | Referencing Obligations |
 |---|---|---|---|
 | `ART-quick-search-e2e-test` | `tests/e2e/quick-search/modal.spec.ts` | test | `OBL-empty-state`, `OBL-result-limit`, `OBL-results-navigation`, `OBL-search-filter`, `OBL-ticket-selection` |
-| `ART-quick-search-index` | `src/components/QuickSearch/index.ts` | runtime | `OBL-modal-close`, `OBL-modal-open`, `OBL-search-filter` |
-| `ART-quick-search-input` | `src/components/QuickSearch/QuickSearchInput.tsx` | runtime | `OBL-modal-open`, `OBL-search-filter` |
-| `ART-quick-search-modal` | `src/components/QuickSearch/QuickSearchModal.tsx` | runtime | `OBL-modal-close`, `OBL-modal-open`, `OBL-ticket-selection` |
-| `ART-quick-search-results` | `src/components/QuickSearch/QuickSearchResults.tsx` | runtime | `OBL-empty-state`, `OBL-result-limit`, `OBL-results-navigation`, `OBL-search-filter`, `OBL-ticket-selection` |
-| `ART-use-global-keyboard` | `src/hooks/useGlobalKeyboard.ts` | runtime | `OBL-modal-open` |
-| `ART-use-quick-search` | `src/hooks/useQuickSearch.ts` | runtime | `OBL-result-limit`, `OBL-results-navigation`, `OBL-search-filter` |
+| `ART-quick-search-index` | `frontend/src/components/QuickSearch/index.ts` | runtime | `OBL-modal-close`, `OBL-modal-open`, `OBL-search-filter` |
+| `ART-quick-search-input` | `frontend/src/components/QuickSearch/QuickSearchInput.tsx` | runtime | `OBL-modal-open`, `OBL-search-filter` |
+| `ART-quick-search-modal` | `frontend/src/components/QuickSearch/QuickSearchModal.tsx` | runtime | `OBL-modal-close`, `OBL-modal-open`, `OBL-ticket-selection` |
+| `ART-quick-search-results` | `frontend/src/components/QuickSearch/QuickSearchResults.tsx` | runtime | `OBL-empty-state`, `OBL-result-limit`, `OBL-results-navigation`, `OBL-search-filter`, `OBL-ticket-selection` |
+| `ART-use-global-keyboard` | `frontend/src/hooks/useGlobalKeyboard.ts` | runtime | `OBL-modal-open` |
+| `ART-use-quick-search` | `frontend/src/hooks/useQuickSearch.ts` | runtime | `OBL-result-limit`, `OBL-results-navigation`, `OBL-search-filter` |
 
 ## Derivation Summary
 

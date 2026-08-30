@@ -31,7 +31,7 @@ see [DOCKER_GUIDE.md](DOCKER_GUIDE.md).
 
 - Runtime: Vite dev server with Hot Module Replacement (HMR)
 - Port: 3075 (container) → 3075 (host)
-- Watch: `src/` directory for instant updates
+- Watch: `frontend/src/` directory for instant updates
 - Proxy: `/api/*` → backend:3001
 
 **Production Mode:**
@@ -277,7 +277,7 @@ docker system prune -a
 
 **Frontend (Vite HMR):**
 
-- watches: `src/` directory
+- watches: `frontend/src/` directory
 - trigger: File save
 - latency: <1 second
 - preserves: Component state, CSS, console

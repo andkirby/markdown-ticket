@@ -160,7 +160,7 @@ Then shared/* paths should use shared/tsconfig.json
 And server/* paths should use server/tsconfig.json
 And mcp-server/* paths should use mcp-server/tsconfig.json
 And domain-contracts/* paths should use domain-contracts/tsconfig.json
-And src/* or no prefix should use ./tsconfig.json
+And frontend/src/* or no prefix should use ./tsconfig.json
 ```
 
 **Test**: `test_tsconfig_detection()`

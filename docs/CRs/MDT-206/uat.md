@@ -31,8 +31,8 @@ Round 8 correction of the round-7 toolbar search: the search shall filter **the 
 
 - **Objective**: query filters which epic lanes exist on the board.
 - **Direct artifacts/files**:
-  - `src/components/SwimlaneBoard/helpers.ts` (`filterLanesBySearch` rewritten: epic match keeps whole lane, child match narrows, no-match lanes removed)
-  - tests: `src/components/SwimlaneBoard/helpers.test.ts`, `src/components/SwimlaneBoard/SwimlaneBoard.test.tsx`, `tests/e2e/board/swimlane-board.spec.ts`
+  - `frontend/src/components/SwimlaneBoard/helpers.ts` (`filterLanesBySearch` rewritten: epic match keeps whole lane, child match narrows, no-match lanes removed)
+  - tests: `frontend/src/components/SwimlaneBoard/helpers.test.ts`, `frontend/src/components/SwimlaneBoard/SwimlaneBoard.test.tsx`, `tests/e2e/board/swimlane-board.spec.ts`
 - **Direct GREEN targets**:
   - Helper: epic title/key match keeps full lane; child-only match narrows lane; non-matching epic + No-epic lanes removed; no-match query yields empty board; orphan-only query keeps only the No-epic lane.
   - Component: epic-title match shows all tickets; no-match query renders zero lanes; round-7 cases (title, bare number, simplified key, clear, progress) still green.
@@ -43,10 +43,10 @@ Round 8 correction of the round-7 toolbar search: the search shall filter **the 
 ## Validation
 
 ```bash
-bun test --isolate src/components/SwimlaneBoard/helpers.test.ts
-bun test --isolate src/components/SwimlaneBoard/SwimlaneBoard.test.tsx
+bun test --isolate frontend/src/components/SwimlaneBoard/helpers.test.ts
+bun test --isolate frontend/src/components/SwimlaneBoard/SwimlaneBoard.test.tsx
 bunx playwright test tests/e2e/board/swimlane-board.spec.ts --project=chromium
-bun run validate:ts src/components/SwimlaneBoard/helpers.ts src/components/SwimlaneBoard/SwimlaneBoard.test.tsx
+bun run validate:ts frontend/src/components/SwimlaneBoard/helpers.ts frontend/src/components/SwimlaneBoard/SwimlaneBoard.test.tsx
 spec-trace validate MDT-206 --stage all
 ```
 

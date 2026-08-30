@@ -167,7 +167,7 @@ The document viewer integrates with project configuration to provide markdown an
 
 1. **Exclusion First**: Any path containing folder name in `excludeFolders` is excluded
 2. **Auto-Exclusion**: `ticketsPath` is automatically added to `excludeFolders` to prevent CR ticket files from appearing in documents view
-3. **Root `index.html` Exclusion** (MDT-221): the repo-root app shell `index.html` is excluded even when `./` is in `paths`, so the Vite app shell is not previewable inside the app. Non-root `index.html` files (e.g. `docs/site/index.html`) are discovered normally.
+3. **Root `index.html` Exclusion** (MDT-221): a project-root `index.html` is excluded even when `./` is in `paths`, so a Vite app shell sitting at the project root is not previewable inside the app. Non-root `index.html` files (e.g. `docs/site/index.html`) are discovered normally. Note: since MDT's own frontend moved to `frontend/` (2026-08), its app shell lives at `frontend/index.html` and is therefore discovered normally; extend the `PathSelectionStrategy` rule if in-app shell preview should be excluded again.
 4. **Scanning**: System scans `paths` for `.md`, `.html`, and `.htm` files up to `maxDepth` levels (default 5)
 5. **Path Types**:
    - **Files**: Direct path to specific markdown/HTML (depth doesn't apply)

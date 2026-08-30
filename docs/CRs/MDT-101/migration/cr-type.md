@@ -151,9 +151,9 @@ this.templates.set(CRType.DOCUMENTATION, { type: CRType.DOCUMENTATION, ... })
 this.templates.set(CRType.RESEARCH, { type: CRType.RESEARCH, ... })
 ```
 
-### src/ package (frontend) (4 files)
+### frontend/src/ package (frontend) (4 files)
 
-#### 6. `src/services/dataLayer.ts`
+#### 6. `frontend/src/services/dataLayer.ts`
 
 **Change**: Default type in `normalizeTicket()`
 
@@ -167,7 +167,7 @@ import { CRType } from '@mdt/domain-contracts'
 type: item.type || CRType.FEATURE_ENHANCEMENT,
 ```
 
-#### 7. `src/hooks/useTicketOperations.ts`
+#### 7. `frontend/src/hooks/useTicketOperations.ts`
 
 **Change**: Default type in optimistic ticket
 
@@ -189,7 +189,7 @@ const optimisticTicket: Ticket = {
 }
 ```
 
-#### 8. `src/components/TicketAttributeTags.tsx`
+#### 8. `frontend/src/components/TicketAttributeTags.tsx`
 
 **Change**: Type color mapping using CRType constants
 
@@ -224,7 +224,7 @@ function getTypeColor(type: string) {
 
 **Note**: Added color mapping for `CRType.RESEARCH` (pink/rose gradient).
 
-#### 9. `src/components/TicketAttributes.tsx`
+#### 9. `frontend/src/components/TicketAttributes.tsx`
 
 **Change**: Type color mapping using CRType constants
 

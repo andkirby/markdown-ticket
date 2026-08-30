@@ -19,7 +19,7 @@ priority: Medium
 - The application misses a low-friction way to make tabs, browser history, and recent pages reflect the active work context.
 
 ### Affected Areas
-- `src` - page and view state that determines the active user-facing context.
+- `frontend/src` - page and view state that determines the active user-facing context.
 - `public` - default document title fallback.
 - `tests` - browser or unit coverage for title behavior.
 

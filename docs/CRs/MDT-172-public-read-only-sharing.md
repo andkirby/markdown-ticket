@@ -24,7 +24,7 @@ Architecture reference: [Authentication and Sharing Architecture](../architectur
 
 ### Affected Areas
 - `server/` - project visibility filtering, access-control middleware, mutation blocking, token exchange endpoints, audit-safe logging.
-- `src/` - read-only mode UI, Settings sharing controls, authorization entry, project selector visibility, disabled mutation controls.
+- `frontend/src/` - read-only mode UI, Settings sharing controls, authorization entry, project selector visibility, disabled mutation controls.
 - `shared/` and `domain-contracts/` - typed access mode, sharing configuration, token scope validation.
 - `docs/design/surfaces/` - Settings, App Header, Project Browser, and Board Layout UX contracts.
 

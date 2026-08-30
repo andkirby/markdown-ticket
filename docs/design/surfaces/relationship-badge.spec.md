@@ -44,8 +44,8 @@ RelationshipBadge (one per type: related | depends | blocks)
 
 | Child | Component | Spec | Conditional |
 |-------|-----------|------|-------------|
-| Badge shell | `src/components/ui/badge.tsx` | shadcn | always |
-| SmartLink | `src/components/SmartLink/index.tsx` | — | per link |
+| Badge shell | `frontend/src/components/ui/badge.tsx` | shadcn | always |
+| SmartLink | `frontend/src/components/SmartLink/index.tsx` | — | per link |
 | OverflowTrigger | inline `<button>` | this file | `links.length > INLINE_MAX` |
 | Popover | shadcn `Popover` | — | `links.length > INLINE_MAX` and open |
 
@@ -53,12 +53,12 @@ RelationshipBadge (one per type: related | depends | blocks)
 
 | Anchor | Path | Why It Exists |
 |--------|------|---------------|
-| Surface owner | `src/components/Badge/RelationshipBadge.tsx` | composition, elision, overflow, popover |
+| Surface owner | `frontend/src/components/Badge/RelationshipBadge.tsx` | composition, elision, overflow, popover |
 | Behavior model | this spec | click-stop, elision rule, overflow threshold |
-| Style contract | `src/components/Badge/badge.css` (`data-relationship` selectors, lines 182–194) | relationship color identity |
-| Link classification | `src/utils/linkProcessor.ts` (`classifyLink`, `LinkType.TICKET` vs `LinkType.CROSS_PROJECT`) | same/cross-project display decision |
+| Style contract | `frontend/src/components/Badge/badge.css` (`data-relationship` selectors, lines 182–194) | relationship color identity |
+| Link classification | `frontend/src/utils/linkProcessor.ts` (`classifyLink`, `LinkType.TICKET` vs `LinkType.CROSS_PROJECT`) | same/cross-project display decision |
 | Key format | `shared/utils/keyNormalizer.ts` (`formatCrKey`) | zero-padded number extraction |
-| Card click owner | `src/components/TicketCard.tsx` (`onClick={onEdit}`, line 45) | why stopPropagation is required |
+| Card click owner | `frontend/src/components/TicketCard.tsx` (`onClick={onEdit}`, line 45) | why stopPropagation is required |
 
 ## Display Rules
 
@@ -79,7 +79,7 @@ Rules:
 - Zero-padding is preserved so a bare number still reads as a ticket key, not an arbitrary integer. Extract the number segment from the full key (`split('-').pop()` on the normalized key), not from the raw input.
 - Each link keeps a per-link `title` attribute carrying its **full CR key** (e.g. `MDT-030`) so hover reveals what was elided. The legacy single `title` on the whole badge is removed.
 - **Surface scope**: elision applies **globally** — board card and TicketViewer alike — while `ELIDE_EVERYWHERE` is on (default). The `displayMode` prop is retained for a future per-surface settings override but is currently a no-op when `ELIDE_EVERYWHERE` is on. (UAT 2026-07-16: changed from board-only to global.)
-- **Inline separator**: links render with no separator by default (`RELATIONSHIP_LINK_SEPARATOR = ''`). A non-empty value (e.g. `', '`) restores comma separation. Configured in `src/config/relationshipBadge.ts`.
+- **Inline separator**: links render with no separator by default (`RELATIONSHIP_LINK_SEPARATOR = ''`). A non-empty value (e.g. `', '`) restores comma separation. Configured in `frontend/src/config/relationshipBadge.ts`.
 
 ### Overflow
 
@@ -125,7 +125,7 @@ The badge renders inside a clickable card (`TicketCard` opens the viewer via `on
 - OverflowTrigger click → `stopPropagation`, then toggle popover.
 - Popover `SmartLink` click → `stopPropagation`, then navigate and close popover.
 
-> Pre-existing bug to fix as part of this work: the current `SmartLink` (`src/components/SmartLink/index.tsx`) renders plain `<Link>`/`<a>` and does **not** stop propagation, so today a click on a relationship link both navigates and opens the card's viewer. Wrapping the badge's links in the propagation contract above resolves it for this surface; a separate decision is whether `SmartLink` itself should stop propagation globally.
+> Pre-existing bug to fix as part of this work: the current `SmartLink` (`frontend/src/components/SmartLink/index.tsx`) renders plain `<Link>`/`<a>` and does **not** stop propagation, so today a click on a relationship link both navigates and opens the card's viewer. Wrapping the badge's links in the propagation contract above resolves it for this surface; a separate decision is whether `SmartLink` itself should stop propagation globally.
 
 ### Popover behavior
 

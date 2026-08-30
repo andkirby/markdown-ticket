@@ -1,10 +1,10 @@
 # Sort Menu
 
-Collapsed sort control — one shared component replacing the native `<select>` + direction button in both places sorting appears: the app header (board/list) and the documents navigation toolbar. Visual reference and interactive demo: `src/styleguide.html` § "collapsed sort control".
+Collapsed sort control — one shared component replacing the native `<select>` + direction button in both places sorting appears: the app header (board/list) and the documents navigation toolbar. Visual reference and interactive demo: `frontend/src/styleguide.html` § "collapsed sort control".
 
 Related artifacts:
 - Host specs: `board-layout.spec.md` (§ Sort & Filter), `documents-view-navigation.spec.md` (§ toolbar)
-- Interactive review artifact: `src/styleguide.html` — three live variants sharing one state
+- Interactive review artifact: `frontend/src/styleguide.html` — three live variants sharing one state
 
 ## Owns
 
@@ -15,9 +15,9 @@ Related artifacts:
 
 ## Does Not Own
 
-- Sort state or persistence — each host owns its preferences (`src/config/sorting.ts` for tickets, documents sort prefs in `DocumentsLayout.tsx`).
+- Sort state or persistence — each host owns its preferences (`frontend/src/config/sorting.ts` for tickets, documents sort prefs in `DocumentsLayout.tsx`).
 - The mobile board/list sort UI — stays in the Hamburger Menu as the full-label list (labels are free there; this component does not render in it).
-- Actual sorting logic (`src/utils/sorting.ts`, documents `sortFiles`).
+- Actual sorting logic (`frontend/src/utils/sorting.ts`, documents `sortFiles`).
 - Segmented-cluster styling of the surrounding header (`control-group` in `layout.css`).
 
 ## Variants
@@ -119,14 +119,14 @@ Documents uses its own attribute set (Filename instead of Key/Priority) and its 
 
 | Anchor | Path | Why |
 |--------|------|-----|
-| Current implementation (to be replaced) | `src/components/SortControls.tsx` | native select + chevron pair |
-| Documents sort controls | `src/components/DocumentsView/DocumentsLayout.tsx` (navigation-toolbar) | second host, container-query case |
-| Ticket sort config | `src/config/sorting.ts` | attribute list, defaultDirection, persistence |
-| Interactive review artifact | `src/styleguide.html` § collapsed sort control | three variants, live shared state |
-| Segmented cluster | `src/styles/components/layout.css` (.control-group) | trigger + segment join rule — popovers must not be `control-group` direct children or they break corner flattening |
+| Current implementation (to be replaced) | `frontend/src/components/SortControls.tsx` | native select + chevron pair |
+| Documents sort controls | `frontend/src/components/DocumentsView/DocumentsLayout.tsx` (navigation-toolbar) | second host, container-query case |
+| Ticket sort config | `frontend/src/config/sorting.ts` | attribute list, defaultDirection, persistence |
+| Interactive review artifact | `frontend/src/styleguide.html` § collapsed sort control | three variants, live shared state |
+| Segmented cluster | `frontend/src/styles/components/layout.css` (.control-group) | trigger + segment join rule — popovers must not be `control-group` direct children or they break corner flattening |
 
 ## Implementation Notes
 
 - One presentational component (proposed `SortMenu`), props: `attributes`, `value`, `direction`, `onChange`, `variant`. Hosts own state and persistence.
-- Reuse: `control-group` silhouette, interaction-state ramp tokens, `filter-button--open` open-state recipe. New: container-query variant switching (case 2) — no existing container-query usage in `src/`.
+- Reuse: `control-group` silhouette, interaction-state ramp tokens, `filter-button--open` open-state recipe. New: container-query variant switching (case 2) — no existing container-query usage in `frontend/src/`.
 - E2E: `sort-controls` testid survives; option-text assertions must move from "Created Date"→"Created", "Update Date"→"Updated".

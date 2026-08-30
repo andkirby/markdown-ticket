@@ -200,7 +200,7 @@ BoardFilterBar (new)
 └── ClearAll (text button, only when ≥1 filter active)
 ```
 
-Reuses: `src/components/ui/popover.tsx`, Radix `DropdownMenu`, existing `Badge` styles for chip
+Reuses: `frontend/src/components/ui/popover.tsx`, Radix `DropdownMenu`, existing `Badge` styles for chip
 appearance. No new primitive needed for desktop.
 
 ### State
@@ -234,7 +234,7 @@ model, not fight it.
    app-header spec item 6–7 moves it into the Hamburger Menu on mobile.) That is the established MDT
    pattern for "control that doesn't fit on mobile" — **filter must follow the same pattern**, not
    invent a new one.
-3. **No `Sheet` / `Drawer` primitive exists in `src/components/ui/`.** Only `dropdown-menu.tsx` and
+3. **No `Sheet` / `Drawer` primitive exists in `frontend/src/components/ui/`.** Only `dropdown-menu.tsx` and
    `popover.tsx`. My earlier draft proposed a bottom-sheet tray (the NN/G-preferred pattern) — that
    would require adding a new Radix Dialog-based primitive. It's the right long-term answer but it's a
    scope add; see "Decision" below.
@@ -410,11 +410,11 @@ Stated so the recommendation is concrete; not implementation, just the shape of 
 | Layer | Change |
 |-------|--------|
 | `domain-contracts/src/ticket/input.ts` | Add `query`, `impactAreas`, `inWorktree` to `TicketFilters`. Additive. |
-| `src/hooks/` (new `useBoardFilters.ts`) | `useReducer` over `TicketFilters`; localStorage persist; `clearAll` action. |
-| `src/components/BoardFilterBar/` (new) | Desktop: FreeTextSearch + 4 FacetDropdowns + ActiveFilterChips + ClearAll. Hidden `< sm`. |
-| `src/components/AppHeader/` (Hamburger Menu) | Add **"Filter · N"** row alongside existing mobile-only sort rows (`< sm`). Opens Popover with facets. |
-| `src/components/Column/index.tsx` | Render a horizontally-scrollable active-chip strip under the column header on mobile (`< 768px`) when filters are active. |
-| `src/components/Board.tsx` | Replace inline filter logic (`293-311`) with a predicate built from `TicketFilters`. |
+| `frontend/src/hooks/` (new `useBoardFilters.ts`) | `useReducer` over `TicketFilters`; localStorage persist; `clearAll` action. |
+| `frontend/src/components/BoardFilterBar/` (new) | Desktop: FreeTextSearch + 4 FacetDropdowns + ActiveFilterChips + ClearAll. Hidden `< sm`. |
+| `frontend/src/components/AppHeader/` (Hamburger Menu) | Add **"Filter · N"** row alongside existing mobile-only sort rows (`< sm`). Opens Popover with facets. |
+| `frontend/src/components/Column/index.tsx` | Render a horizontally-scrollable active-chip strip under the column header on mobile (`< 768px`) when filters are active. |
+| `frontend/src/components/Board.tsx` | Replace inline filter logic (`293-311`) with a predicate built from `TicketFilters`. |
 | Tests | Predicate unit tests (AND across facets, OR within). E2E: chip add/remove/clear on desktop; hamburger→popover apply/clear on mobile viewport. |
 
 No backend changes. No new endpoints. No new indexes. The board already has the data. No new

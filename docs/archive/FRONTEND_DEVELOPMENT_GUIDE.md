@@ -19,7 +19,7 @@ The project uses **shadcn/ui** components with Tailwind CSS. Available component
 - `Toast` - Notification messages
 - `Tooltip` - Hover information displays
 
-**Configuration**: See `components.json` for shadcn/ui setup
+**Configuration**: See `frontend/components.json` for shadcn/ui setup
 - Style: default
 - Base color: slate
 - CSS variables: enabled
@@ -28,8 +28,8 @@ The project uses **shadcn/ui** components with Tailwind CSS. Available component
 ### Tailwind CSS Usage
 
 **⚠️ Important**: Always use the **same Tailwind CSS library** that's configured in the project:
-- Configuration: `tailwind.config.js`
-- CSS file: `src/index.css`
+- Configuration: `frontend/tailwind.config.js`
+- CSS file: `frontend/src/index.css`
 - Base color: slate with CSS variables
 
 **Adding New Components**:
@@ -166,7 +166,7 @@ const TestModal = ({ isOpen, onClose }) => {
 
 ### UI Component Usage
 1. **Use shadcn/ui components** instead of building custom ones
-2. **Check existing components** before adding new ones (`src/components/ui/`)
+2. **Check existing components** before adding new ones (`frontend/src/components/ui/`)
 3. **Follow shadcn/ui patterns** for component structure and styling
 4. **Import from configured aliases**: `@/components/ui/[component]`
 

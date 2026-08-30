@@ -18,7 +18,7 @@ Create a dedicated `Badge/` module that owns ALL ticket attribute badge renderin
 ## Structure
 
 ```text
-src/components/
+frontend/src/components/
 └── Badge/
     ├── index.ts              # Export all badge components
     ├── StatusBadge.tsx       # Status badge (Proposed, Approved, In Progress, etc.)
@@ -120,7 +120,7 @@ To add a new badge type:
 
 ## Module Boundaries
 
-- **Badge module**: `src/components/Badge/` - owns ALL badge styling
+- **Badge module**: `frontend/src/components/Badge/` - owns ALL badge styling
 - **Consumers**: Import specialized badge components, pass attribute value only
 - **No direct color access**: Consumers never access `badgeVariants` directly
 

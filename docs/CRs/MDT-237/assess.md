@@ -13,10 +13,10 @@
 - Works on already-authored documents with no reformatting required (render-side detection, not authoring convention)
 
 ### Current System Assumptions
-- `src/utils/markdownPreprocessor.ts` owns all linkification: a protect → convert → restore pipeline where inline code is unconditionally protected (line 72-78, `protectInlineCode`) and restored verbatim (line 306-309)
+- `frontend/src/utils/markdownPreprocessor.ts` owns all linkification: a protect → convert → restore pipeline where inline code is unconditionally protected (line 72-78, `protectInlineCode`) and restored verbatim (line 306-309)
 - MDT-150 already implements `.md` reference resolution to absolute app URLs (`resolveDocumentRef`, line 169-258) with ticket-context and documents-view modes, anchor support, and traversal handling — but only for plain-text and existing markdown links
 - Inline code is deliberately excluded from conversion (MDT-150/MDT-059 decision) — this CR narrows that exclusion to *genuine code*, not `.md`-shaped references
-- Rendering uses Showdown; links use absolute URL paths produced by `src/routes.ts` builders (`buildTicketPath`, `buildTicketSubDocPath`, `buildDocumentPathWithAnchor`)
+- Rendering uses Showdown; links use absolute URL paths produced by `frontend/src/routes.ts` builders (`buildTicketPath`, `buildTicketSubDocPath`, `buildDocumentPathWithAnchor`)
 
 ## Fitness Summary
 
@@ -45,7 +45,7 @@
 - Scope: local
 
 ### Non-existent document flagging
-- Current system assumes: linkValidator (`src/utils/linkValidator.ts`) already skips inline code and validates rendered links against document scope
+- Current system assumes: linkValidator (`frontend/src/utils/linkValidator.ts`) already skips inline code and validates rendered links against document scope
 - Feature needs: converted links participate in the same validation/flagging as other document links
 - Mismatch: none expected — converted inline-code refs become ordinary markdown links, so the existing validation surface applies unchanged
 - Adjustment required: verify linkValidator's inline-code skip happens on raw markdown *before* conversion ordering, or operates on rendered HTML where spans no longer exist; align ordering
@@ -55,7 +55,7 @@
 
 - New packages: none
 - Runtime/config impact: none
-- Testing/E2E impact: new colocated unit tests in `src/utils/`; optional Playwright spec under `tests/e2e/`
+- Testing/E2E impact: new colocated unit tests in `frontend/src/utils/`; optional Playwright spec under `tests/e2e/`
 - Main risk introduced: false-positive conversions of `.md`-shaped inline code that the author intended as code — mitigated by whole-span matching
 
 ## Verification Gaps

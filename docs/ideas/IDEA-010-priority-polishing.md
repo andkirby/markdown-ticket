@@ -46,18 +46,18 @@ the filter facet, and the CSS stripe rule — all assume exactly four values tod
   `shared/models/Types.ts`, `shared/utils/constants.ts` (`PRIORITIES`,
   `DEFAULTS.PRIORITY = 'Medium'`).
 - **Stripe:** CSS-only, via `data-priority` attribute +
-  `--card-accent` custom property. `src/components/TicketCard/ticket.css:22-34`
+  `--card-accent` custom property. `frontend/src/components/TicketCard/ticket.css:22-34`
   — **only `critical` and `high` produce a stripe**; `medium`/`low`/unknown fall
   back to `transparent`. Colors are `--prio-*` tokens in
-  `src/styles/design-tokens.css:58` (light) / `:118` (dark). No JS color logic.
-- **Icons:** `PRIORITY_ICON` map in `src/components/Badge/priorityIcons.ts:9-14`
+  `frontend/src/styles/design-tokens.css:58` (light) / `:118` (dark). No JS color logic.
+- **Icons:** `PRIORITY_ICON` map in `frontend/src/components/Badge/priorityIcons.ts:9-14`
   (`critical: Flame, high: ChevronUp, medium: Equal, low: ChevronDown`). Plain
   `Record<string, LucideIcon>` — no compile-time link to the enum.
 - **Badge in ticket view:** `CompactTicketHeader.tsx:26` and
   `TicketAttributes.tsx:24` render `<PriorityBadge>`. **No inline edit control.**
 - **Filter facet:** `BoardFilterBar/index.tsx:37` builds `PRIORITY_OPTIONS`
   directly from `CRPriorities`.
-- **Sorting:** `src/config/sorting.ts:1-49` — four system attributes
+- **Sorting:** `frontend/src/config/sorting.ts:1-49` — four system attributes
   (`code`, `title`, `dateCreated`, `lastModified`). **Priority is absent.** The
   `system: boolean` flag is a vestigial hook for admin-configurable attributes
   (MDT-012 sketched a TOML reader/writer for this but never built it).
@@ -68,7 +68,7 @@ the filter facet, and the CSS stripe rule — all assume exactly four values tod
 - **Config system:** three-tier merge already exists — global app
   `config.toml` → local `.mdt-config.toml`. No ticket-attribute / status /
   priority config exists in either today.
-- **Architectural precedent:** `STATUS_CONFIG` (`src/config/statusConfig.ts:6-63`)
+- **Architectural precedent:** `STATUS_CONFIG` (`frontend/src/config/statusConfig.ts:6-63`)
   is the template — closed enum + presentation registry
   (`{ label, color, description, isTerminal, canTransitionTo, order }`). `phaseEpic`
   is the *other* pattern (free-text, no catalog, neutral fallback styling).
@@ -112,7 +112,7 @@ type PriorityEntry = {
 - **#3 Clickable badge:** frontend-only. Turn `<PriorityBadge>` into a popover
   bound to the resolved catalog. Picker shows active subset; deactivated current
   value still renders and stays selectable.
-- **#4 Priority sort:** ~10 lines in `src/config/sorting.ts`, gated on #2. Sort
+- **#4 Priority sort:** ~10 lines in `frontend/src/config/sorting.ts`, gated on #2. Sort
   by `weight`, not alphabetical.
 
 ### Extended concerns to keep in scope
@@ -173,10 +173,10 @@ Estimated effort: **M–L** for the complete concept (#1+#2+#4 as one feature);
 ## References
 
 - `domain-contracts/src/types/schema.ts:56-73` (CRPriority enum + schema)
-- `src/components/TicketCard/ticket.css:22-34` (left stripe rule)
-- `src/components/Badge/priorityIcons.ts:9-14` (PRIORITY_ICON map)
-- `src/config/statusConfig.ts:6-63` (architectural precedent — STATUS_CONFIG)
-- `src/config/sorting.ts:1-49` (sort attributes, priority absent)
+- `frontend/src/components/TicketCard/ticket.css:22-34` (left stripe rule)
+- `frontend/src/components/Badge/priorityIcons.ts:9-14` (PRIORITY_ICON map)
+- `frontend/src/config/statusConfig.ts:6-63` (architectural precedent — STATUS_CONFIG)
+- `frontend/src/config/sorting.ts:1-49` (sort attributes, priority absent)
 - `shared/services/ticket/attrResolver.ts:79-100` (CLI alias coupling)
 - `domain-contracts/src/ticket/input.ts:50-61` (TICKET_UPDATE_ATTRS — priority allowed)
 - `server/routes/projects.ts:179` (PATCH cr — edit API exists)
