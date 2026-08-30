@@ -135,7 +135,8 @@ function MyComponent() {
 ### Phase 2: Add Debugging
 
 ```typescript
-// Add to App.tsx
+// Add to the project route (src/components/routes/ProjectRouteHandler.tsx;
+// already mounted there via ProjectOverlays)
 import { EventHistory } from './components/DevTools/EventHistory';
 
 function App() {
@@ -284,14 +285,15 @@ cat ~/home/markdown-ticket/src/services/eventBus.ts
 cat ~/home/markdown-ticket/src/services/sseClient.ts
 cat ~/home/markdown-ticket/src/services/dataLayer.ts
 
-# Read the quick start guide
-cat ~/home/markdown-ticket/docs/QUICK_START_NEW_EVENT_SYSTEM.md
+# Read the quick start guide (from the project root)
+cat docs/architecture/event-system/QUICK_START_NEW_EVENT_SYSTEM.md
 ```
 
 ### Step 2: Add Debug Tools (5 minutes)
 
 ```typescript
-// In App.tsx
+// In the project route (src/components/routes/ProjectRouteHandler.tsx;
+// EventHistory already mounts there via ProjectOverlays)
 import { EventHistory } from './components/DevTools/EventHistory';
 
 function App() {

@@ -164,7 +164,8 @@ await dataLayer.deleteTicket('markdown-ticket', 'MDT-001');
 
 ### 1. Use the Event History Tool
 
-Add to your App.tsx (development only):
+Add to your project route (development only — already wired in
+`src/components/routes/`, mounted via `ProjectOverlays`):
 
 ```typescript
 import { EventHistory } from './components/DevTools/EventHistory';

@@ -48,7 +48,7 @@ graph TB
 ```mermaid
 graph TB
     subgraph Frontend["Frontend (React + Vite)"]
-        App[App.tsx<br/>Router & Layout]
+        App[App.tsx Router<br/>routes/ handlers own layout]
         Hook[useMultiProjectData<br/>State & Events]
         Watcher[RealtimeFileWatcher<br/>SSE Connection]
         FileService[FileService<br/>API Calls]
@@ -964,8 +964,9 @@ src/contexts/TicketContext.tsx     # New
 #### Step 2: Dual Mode (Old + New Running Together)
 
 ```typescript
-// App.tsx - Both systems running
-function App() {
+// Route handler (src/components/routes/ProjectRouteHandler.tsx) — App.tsx is a
+// route table only — Both systems running
+function ProjectRouteHandler() {
   // Old system (keep working)
   const oldData = useMultiProjectData();
 
