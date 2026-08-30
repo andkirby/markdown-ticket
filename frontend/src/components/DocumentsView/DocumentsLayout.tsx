@@ -280,7 +280,6 @@ export default function DocumentsLayout({
 
         if (response.status === 404) {
           setNoDocumentPathsConfigured(true)
-          setShowPathSelector(false)
           setFiles([])
           return []
         }
@@ -288,7 +287,6 @@ export default function DocumentsLayout({
           const data = await response.json()
           setFiles(data)
           setNoDocumentPathsConfigured(false)
-          setShowPathSelector(false)
           return data
         }
         else {
@@ -776,8 +774,12 @@ export default function DocumentsLayout({
         await applyConfig('project.document.maxDepth', patch.maxDepth)
       }
 
-      // Reload documents after configuration
+      // Reload documents after configuration, then close the selector.
+      // Closing must happen HERE, not inside loadDocuments: background
+      // reloads (document:file:changed SSE events, sse:reconnected) also
+      // call loadDocuments and must never slam an open selector shut.
       await loadDocuments()
+      setShowPathSelector(false)
     }
     catch (error) {
       console.error('Failed to configure documents:', error)
