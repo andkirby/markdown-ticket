@@ -41,7 +41,7 @@ Header (nav.header)
 | Type | Path |
 |------|------|
 | Header | `src/components/Header/index.tsx` |
-| Nav composition | `src/App.tsx` (Header/HeaderContent in AppRoot) |
+| Nav composition | `src/components/routes/ProjectRouteHandler.tsx` (Header/HeaderContent in AppRoot) |
 | SecondaryHeader | `src/components/SecondaryHeader.tsx` |
 | HamburgerMenu | `src/components/HamburgerMenu.tsx` |
 | Auth status action | `src/components/AuthUnlock/AuthStatusAction.tsx` |
@@ -139,4 +139,4 @@ The menu is a positioned dropdown: `absolute right-0 top-full mt-1 w-48`, with c
 - Owner/admin-only actions must not be mounted in read-only mode. Backend authorization remains authoritative, but hidden components must not run owner-only effects.
 - Frontend API calls to `/api/*` must go through `authFetch` or an approved API wrapper so session cookies and owner-intent headers are applied consistently.
 - Future settings entry point: Settings item in the hamburger menu opens the dedicated Settings modal. See `settings.spec.md`.
-- ViewModeSwitcher does not persist its own state — persistence is handled by `App.tsx` via localStorage keys `lastBoardListMode`, `lastViewMode`, and `mdt-board-mode`.
+- ViewModeSwitcher does not persist its own state — persistence is handled by `src/components/routes/hooks/useViewModeRouting` (invoked from `ProjectRouteHandler.tsx`) via localStorage keys `lastBoardListMode`, `lastViewMode`, and `mdt-board-mode`.
