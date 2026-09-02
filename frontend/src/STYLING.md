@@ -561,9 +561,11 @@ Content padding goes on a wrapper `div` inside ScrollArea, never on ScrollArea i
 
 ## SVG Icons
 
-Use SVG sprites for reusable icons.
+**Standard glyphs come from `lucide-react`** — import the icon, render it inline. Tree-shaking ships only the imported icons (~1 KB gz for a six-glyph set), inline rendering costs zero network requests and never blanks the first paint, and `currentColor` inherits the consumer's color. Themed sets driven by a `data-*` attribute follow the Badge pattern: value→glyph map in a plain `<thing>Icons.ts` module beside the icon component (see `components/Badge/priorityIcons.ts`, `components/Badge/typeIcons.ts`), keeping the component file Fast-Refresh-clean (`react-refresh/only-export-components`). Reference set: the ticket-type icons (see the styleguide, `styleguide.html#type-icons`).
 
-**Benefits:**
+The sprite (`public/icons/sprite.svg` + `<Icon>`) is for **curated custom glyphs** that lucide doesn't have (e.g. `fav-star`). Do **not** add per-icon SVG files under `public/` — each is an extra fetch that pops in late, and unhashed files go stale.
+
+**Sprite benefits** (why custom glyphs centralize there):
 
 - single source of truth
 - browser caching
@@ -596,9 +598,10 @@ export function Icon({ name, className }: { name: string; className?: string }) 
 
 | Scenario | Approach |
 |----------|----------|
-| Simple, one-off | Inline SVG |
-| Reusable icon | Add to sprite |
-| Themed or styled icon | Sprite plus CSS classes |
+| Glyph exists in lucide | Import from `lucide-react`, render inline |
+| Simple, one-off custom glyph | Inline SVG |
+| Curated custom glyph, reused across surfaces | Add to sprite |
+| Themed or styled icon | `currentColor` inline, or sprite plus CSS classes |
 
 ---
 
