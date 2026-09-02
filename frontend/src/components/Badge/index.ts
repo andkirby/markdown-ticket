@@ -25,6 +25,8 @@ export type { StatusBadgeProps } from './StatusBadge'
 export { TypeBadge } from './TypeBadge'
 export type { TypeBadgeProps } from './TypeBadge'
 
+export { TypeIcon } from './TypeIcon'
+
 // Types
 export type {
   ContextVariant,
