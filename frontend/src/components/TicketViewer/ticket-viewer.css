@@ -96,4 +96,31 @@
     background-color: oklch(var(--background));
     border: 1px solid oklch(var(--border));
   }
+
+  /* MDT-244: compact ticket viewer header — semantic classes migrated from
+     utility markup (enforce-semantic-classes contract for this directory).
+     1:1 with the utilities they replace; no behavior change. */
+  .compact-ticket-header__title-section {
+    @apply pr-14;
+  }
+
+  .compact-ticket-header__headline {
+    @apply min-w-0;
+  }
+
+  .compact-ticket-header__divider {
+    @apply mx-1 text-gray-900 dark:text-white;
+  }
+
+  .compact-ticket-header__title {
+    @apply break-words text-gray-900 dark:text-white;
+  }
+
+  .compact-ticket-header__badges {
+    @apply flex flex-wrap items-center gap-2;
+  }
+
+  .compact-ticket-header__spacer {
+    @apply hidden flex-1 sm:block;
+  }
 }

@@ -56,6 +56,7 @@ human-owned preserves the annotations a script can't author.
 |-------|---------|------|
 | `.badge`, `.badge[*]` | Ticket attribute badges (`data-status`/`data-priority`/`data-type` variants) | `components/Badge/badge.css` |
 | `.priority-dot`, `.priority-dot[*]` | Card-only 8px priority dot | `components/Badge/badge.css` |
+| `.ticket-code__type-icon[*]` | Key-line type glyph sizing + `--type-*` colors (MDT-244, opt-in) | `components/TicketCard/ticket.css` |
 | `.status-dot`, `.status-dot--*` | Pulsing status dots | `styles/components/loading.css` |
 | `.count-badge`, `.count-badge--*` | Count indicators | `styles/components/loading.css` |
 | `.skeleton`, `.skeleton-*` | Loading placeholders | `styles/components/loading.css` |

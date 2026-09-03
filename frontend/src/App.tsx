@@ -6,6 +6,7 @@ import { RouteErrorModal } from './components/RouteErrorModal'
 import { InviteRouteHandler } from './components/routes/InviteRouteHandler'
 import { ProjectRouteHandler } from './components/routes/ProjectRouteHandler'
 import { ShareRouteHandler } from './components/routes/ShareRouteHandler'
+import { loadTicketKeyOptions } from './config/ticketKeyConfig'
 import { useCardDensity } from './hooks/useCardDensity'
 import {
   ROUTE_DIRECT_TICKET,
@@ -22,6 +23,8 @@ import './utils/cache' // Import cache utilities for development
 
 function App() {
   useCardDensity()
+  // MDT-244: one shared read of the ticket-key display options; defaults stand until it resolves.
+  void loadTicketKeyOptions()
   return (
     <AuthSessionProvider>
       <BrowserRouter>

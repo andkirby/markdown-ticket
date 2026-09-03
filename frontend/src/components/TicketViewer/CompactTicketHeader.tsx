@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import type { Ticket } from '../../types'
+import { useTicketKeyOptions } from '../../config/ticketKeyConfig'
 import { ContextBadge, PriorityBadge, RelationshipBadge, StatusBadge, TypeBadge } from '../Badge'
 import { TicketCode } from '../TicketCode'
 
@@ -10,21 +11,24 @@ interface CompactTicketHeaderProps {
 }
 
 export function CompactTicketHeader({ ticket, className = '', action }: CompactTicketHeaderProps) {
+  // MDT-244 suppression precedence: when the key line already carries the type
+  // glyph, the header omits the type badge (no duplicate type encoding).
+  const { typeIconNearKey } = useTicketKeyOptions()
   return (
-    <div className={className}>
-      <div className="modal__section pr-14">
-        <h1 className="modal__headline min-w-0" data-testid="ticket-title">
+    <div className={className} data-testid="ticket-detail-header">
+      <div className="modal__section compact-ticket-header__title-section">
+        <h1 className="modal__headline compact-ticket-header__headline" data-testid="ticket-title">
           <TicketCode code={ticket.code} ticket={ticket} />
-          <span className="mx-1 text-gray-900 dark:text-white">•</span>
-          <span className="break-words text-gray-900 dark:text-white">{ticket.title}</span>
+          <span className="compact-ticket-header__divider">•</span>
+          <span className="compact-ticket-header__title">{ticket.title}</span>
         </h1>
       </div>
 
       <div className="modal__section--sm">
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="compact-ticket-header__badges">
           <StatusBadge status={ticket.status} data-testid="ticket-status" />
           <PriorityBadge priority={ticket.priority} data-testid="ticket-priority" />
-          <TypeBadge type={ticket.type} data-testid="ticket-type" />
+          {!typeIconNearKey && <TypeBadge type={ticket.type} data-testid="ticket-type" />}
           {ticket.phaseEpic && (
             <ContextBadge variant="phase" value={ticket.phaseEpic} />
           )}
@@ -45,7 +49,7 @@ export function CompactTicketHeader({ ticket, className = '', action }: CompactT
           )}
           {action && (
             <>
-              <span className="hidden flex-1 sm:block" />
+              <span className="compact-ticket-header__spacer" />
               {action}
             </>
           )}

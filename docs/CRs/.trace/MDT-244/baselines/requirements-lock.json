@@ -1,0 +1,50 @@
+{
+  "ticket": "MDT-244",
+  "generatedAt": "2026-09-02T18:44:05.081Z",
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.2",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.1",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.2",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3.1",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4.1",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C1",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C2",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C3",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C4",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-1",
+      "routePolicy": "tests"
+    }
+  ]
+}

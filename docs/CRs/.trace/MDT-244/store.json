@@ -1,0 +1,484 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-244"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "WHEN the key-icon option is enabled, the system shall render the ticket-type glyph between the ticket key text and the epic marker on every surface that renders a ticket key",
+      "sourceRef": "MDT-244 §4 TicketCode row",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "WHEN the key-icon option is disabled, the system shall render ticket keys without any type glyph, identical to pre-feature output",
+      "sourceRef": "MDT-244 §5 AC2",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-2.1",
+      "kind": "behavior",
+      "text": "WHEN the badge-glyph option is enabled, the system shall render the ticket-type glyph inside the type badge before its label",
+      "sourceRef": "MDT-244 §4 TypeBadge row",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-2.2",
+      "kind": "behavior",
+      "text": "WHEN the badge-glyph option is disabled, the system shall render the type badge as text-only",
+      "sourceRef": "MDT-244 §5 AC3",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-3.1",
+      "kind": "behavior",
+      "text": "WHEN the key-icon option is enabled and a surface renders the ticket key and the type badge in the same header row, the system shall omit the type badge on that surface",
+      "sourceRef": "MDT-244 §2 precedence rule",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-4.1",
+      "kind": "behavior",
+      "text": "WHEN both options are absent from configuration, the system shall render ticket keys and type badges exactly as before this feature",
+      "sourceRef": "MDT-244 §5 AC6",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "The two options shall be user-scope app configuration persisted in user.toml with exposure editable and owner surface settings, never browser localStorage",
+      "sourceRef": "MDT-244 §4 New Artifacts",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "WHEN configuration keys are absent, the system shall fall through to defaults (both options off) without migration",
+      "sourceRef": "MDT-244 §7 Deployment",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "Type glyphs shall render at the standard 16px icon size with lucide default 2px stroke, inherit existing type color tokens only, and require no per-glyph network requests",
+      "sourceRef": "MDT-244 §5 NFR1",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "Key-slot type glyphs shall be hidden from assistive technology while the badge label or key text remains the accessible name",
+      "sourceRef": "MDT-244 §5 NFR2",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "IF configuration changes while the app is open, THEN the system shall apply updated option values after the config refresh and shall accept staleness until that refresh",
+      "sourceRef": "MDT-244 assess.md staleness note",
+      "routePolicy": "tests"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "key_glyph_enabled_renders_in_key_line",
+      "title": "Key line shows the type glyph when key-icon option is enabled",
+      "covers": [
+        "BR-1.1"
+      ],
+      "given": "the key-icon option is enabled and the project has tickets",
+      "when": "I open the board",
+      "then": "each ticket key line shows its type glyph after the key text and before any epic marker",
+      "sourceRef": "requirements BR-1.1"
+    },
+    {
+      "id": "key_glyph_disabled_keeps_key_line_unchanged",
+      "title": "Key line has no type glyph when key-icon option is disabled",
+      "covers": [
+        "BR-1.2"
+      ],
+      "given": "the key-icon option is disabled",
+      "when": "I view any ticket key",
+      "then": "no type glyph appears in the key line and it renders as before the feature",
+      "sourceRef": "requirements BR-1.2"
+    },
+    {
+      "id": "badge_glyph_enabled_shows_leading_glyph",
+      "title": "Type badge shows leading glyph when badge-glyph option is enabled",
+      "covers": [
+        "BR-2.1"
+      ],
+      "given": "the badge-glyph option is enabled",
+      "when": "I open a ticket that shows its type badge",
+      "then": "the badge shows the type glyph before its label",
+      "sourceRef": "requirements BR-2.1"
+    },
+    {
+      "id": "badge_glyph_disabled_stays_text_only",
+      "title": "Type badge stays text-only when badge-glyph option is disabled",
+      "covers": [
+        "BR-2.2"
+      ],
+      "given": "the badge-glyph option is disabled",
+      "when": "I open a ticket that shows its type badge",
+      "then": "the badge shows only its text label",
+      "sourceRef": "requirements BR-2.2"
+    },
+    {
+      "id": "viewer_header_suppresses_badge_when_key_glyph_shown",
+      "title": "Viewer header omits type badge while key glyph is shown",
+      "covers": [
+        "BR-3.1"
+      ],
+      "given": "the key-icon option is enabled and the viewer header shows the ticket key and type badge in one row",
+      "when": "I open the ticket viewer",
+      "then": "the type badge is omitted from that header row while the key line keeps its glyph",
+      "sourceRef": "requirements BR-3.1"
+    },
+    {
+      "id": "viewer_header_shows_badge_when_key_glyph_hidden",
+      "title": "Viewer header shows type badge when key glyph is hidden",
+      "covers": [
+        "BR-3.1"
+      ],
+      "given": "the key-icon option is disabled",
+      "when": "I open the ticket viewer",
+      "then": "the header row shows the type badge again",
+      "sourceRef": "requirements BR-3.1"
+    },
+    {
+      "id": "absent_config_keeps_pre_feature_rendering",
+      "title": "Absent config keys keep pre-feature rendering",
+      "covers": [
+        "BR-4.1"
+      ],
+      "given": "neither option key exists in configuration",
+      "when": "I view the board and open a ticket",
+      "then": "key lines have no type glyph and type badges are text-only, exactly as before the feature",
+      "sourceRef": "requirements BR-4.1"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-key-icon-slot",
+      "title": "TicketCode renders the optional type glyph between key text and epic Zap, styled via .ticket-code__type-icon at --sz-icon with --type-* colors",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-4.1",
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-ticket-code",
+        "ART-type-icon",
+        "ART-ticket-css"
+      ],
+      "sourceRef": "CR §4 TicketCode row"
+    },
+    {
+      "id": "OBL-badge-glyph-option",
+      "title": "TypeBadge renders an optional leading TypeIcon glyph gated by ui.ticketKey.typeIconInBadge, text-only when off",
+      "derivedFrom": [
+        "BR-2.1",
+        "BR-2.2",
+        "BR-4.1"
+      ],
+      "artifactIds": [
+        "ART-type-badge"
+      ],
+      "sourceRef": "CR §4 TypeBadge row"
+    },
+    {
+      "id": "OBL-viewer-suppression",
+      "title": "CompactTicketHeader omits its TypeBadge when the key-icon option is on (precedence: key glyph wins in the header row); badge test hook ticket-detail-header added",
+      "derivedFrom": [
+        "BR-3.1"
+      ],
+      "artifactIds": [
+        "ART-compact-header",
+        "ART-type-badge",
+        "ART-ticket-code"
+      ],
+      "sourceRef": "CR §2 precedence rule"
+    },
+    {
+      "id": "OBL-e2e-acceptance-gate",
+      "title": "TEST-type-icon-key-options executes all six behavior scenarios against the live config API path and gates acceptance",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-2.1",
+        "BR-2.2",
+        "BR-3.1",
+        "BR-4.1"
+      ],
+      "artifactIds": [
+        "ART-e2e-spec"
+      ],
+      "sourceRef": "bdd.md acceptance strategy"
+    },
+    {
+      "id": "OBL-config-consumption",
+      "title": "ticketKeyConfig.ts provides one shared server-backed read of the two options via GET /api/config/selector (non-owner user-scope prefs; the owner-only /api/config/selectors serves the settings editor), store updated directly by Settings apply — never per-card fetches, never localStorage",
+      "derivedFrom": [
+        "C1",
+        "Edge-1",
+        "BR-3.1"
+      ],
+      "artifactIds": [
+        "ART-ticket-key-config",
+        "ART-selector-prefs-route",
+        "ART-ticket-code",
+        "ART-type-badge"
+      ],
+      "sourceRef": "correction: GET /api/config/selectors is owner/admin only (403 for viewers); prefs read endpoint is the established non-owner delivery"
+    },
+    {
+      "id": "OBL-config-selectors",
+      "title": "Register ui.ticketKey.typeIconNearKey and ui.ticketKey.typeIconInBadge as USER-scope EDITABLE selectors owned by settings, with strict boolean patch schemas, ui.ticketKey user-config schema section, and exposure-catalog rows; defaults off",
+      "derivedFrom": [
+        "C1",
+        "C2",
+        "BR-4.1"
+      ],
+      "artifactIds": [
+        "ART-selectors",
+        "ART-patch-schemas",
+        "ART-exposure-doc",
+        "ART-user-config-schema"
+      ],
+      "sourceRef": "CR §4 New Artifacts"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-ticket-code",
+      "path": "frontend/src/components/TicketCode.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR §4; STYLING.md single-composition invariant"
+    },
+    {
+      "id": "ART-type-icon",
+      "path": "frontend/src/components/Badge/TypeIcon.tsx",
+      "kind": "runtime",
+      "sourceRef": "existing, MDT-244 predecessor commit ccaba832"
+    },
+    {
+      "id": "ART-type-badge",
+      "path": "frontend/src/components/Badge/TypeBadge.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR §4"
+    },
+    {
+      "id": "ART-compact-header",
+      "path": "frontend/src/components/TicketViewer/CompactTicketHeader.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR §4 suppression row"
+    },
+    {
+      "id": "ART-selectors",
+      "path": "domain-contracts/src/config-management/selectors.ts",
+      "kind": "config",
+      "sourceRef": "ui.projectSelector.* precedent rows"
+    },
+    {
+      "id": "ART-patch-schemas",
+      "path": "domain-contracts/src/config-management/patch-schemas.ts",
+      "kind": "config",
+      "sourceRef": "strict patch schema map"
+    },
+    {
+      "id": "ART-exposure-doc",
+      "path": "docs/CRs/MDT-168/configuration-exposure.md",
+      "kind": "doc",
+      "sourceRef": "inspect:config source registry"
+    },
+    {
+      "id": "ART-ticket-key-config",
+      "path": "frontend/src/config/ticketKeyConfig.ts",
+      "kind": "runtime",
+      "sourceRef": "proposed: shared consumption seam"
+    },
+    {
+      "id": "ART-ticket-css",
+      "path": "frontend/src/components/TicketCard/ticket.css",
+      "kind": "runtime",
+      "sourceRef": ".priority-icon precedent rows 82-90"
+    },
+    {
+      "id": "ART-e2e-spec",
+      "path": "tests/e2e/ticket/type-icon-options.spec.ts",
+      "kind": "test",
+      "sourceRef": "bdd.md TEST-type-icon-key-options"
+    },
+    {
+      "id": "ART-selector-prefs-route",
+      "path": "server/routes/system.ts",
+      "kind": "runtime",
+      "sourceRef": "GET /api/config/selector non-owner user-scope prefs read"
+    },
+    {
+      "id": "ART-user-config-schema",
+      "path": "domain-contracts/src/app-config/schema.ts",
+      "kind": "config",
+      "sourceRef": "UserUIConfigSchema gains ui.ticketKey section"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-type-icon-key-options",
+      "kind": "e2e",
+      "title": "Ticket type icon options: key-line glyph, badge glyph, suppression, defaults (live config API path)",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-2.1",
+        "BR-2.2",
+        "BR-3.1",
+        "BR-4.1",
+        "C1"
+      ],
+      "file": "tests/e2e/ticket/type-icon-options.spec.ts",
+      "sourceRef": "bdd.md acceptance strategy"
+    },
+    {
+      "id": "TEST-ticket-code-type-slot",
+      "kind": "unit",
+      "title": "TicketCode type glyph slot: position between key and Zap, aria-hidden, off-identical",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-4.1",
+        "C3",
+        "C4"
+      ],
+      "file": "frontend/src/components/TicketCode.test.tsx",
+      "sourceRef": "tests stage"
+    },
+    {
+      "id": "TEST-type-badge-leading-glyph",
+      "kind": "unit",
+      "title": "TypeBadge leading glyph: on renders glyph+label, off text-only",
+      "covers": [
+        "BR-2.1",
+        "BR-2.2",
+        "BR-4.1"
+      ],
+      "file": "frontend/src/components/Badge/TypeBadge.test.tsx",
+      "sourceRef": "tests stage"
+    },
+    {
+      "id": "TEST-viewer-header-suppression",
+      "kind": "unit",
+      "title": "CompactTicketHeader suppression: badge omitted when key glyph on, shown when off, header test hook",
+      "covers": [
+        "BR-3.1"
+      ],
+      "file": "frontend/src/components/TicketViewer/CompactTicketHeader.test.tsx",
+      "sourceRef": "tests stage"
+    },
+    {
+      "id": "TEST-ticket-key-config-store",
+      "kind": "unit",
+      "title": "ticketKeyConfig store: defaults off, set/notify, unsubscribe, refresh semantics",
+      "covers": [
+        "C2",
+        "Edge-1"
+      ],
+      "file": "frontend/src/config/ticketKeyConfig.test.ts",
+      "sourceRef": "tests stage"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-2",
+      "title": "TicketCode type-glyph slot: optional TypeIcon between key and epic Zap + .ticket-code__type-icon styling",
+      "ownsArtifactIds": [
+        "ART-ticket-code",
+        "ART-type-icon",
+        "ART-ticket-css"
+      ],
+      "makesGreenIds": [
+        "TEST-ticket-code-type-slot"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-2"
+    },
+    {
+      "id": "TASK-3",
+      "title": "TypeBadge leading glyph + CompactTicketHeader suppression and detail-header test hook",
+      "ownsArtifactIds": [
+        "ART-type-badge",
+        "ART-compact-header"
+      ],
+      "makesGreenIds": [
+        "TEST-type-badge-leading-glyph",
+        "TEST-viewer-header-suppression"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-3"
+    },
+    {
+      "id": "TASK-4",
+      "title": "Acceptance: E2E gate green, Settings toggles verified, durable docs (STYLING.md scanning patterns)",
+      "ownsArtifactIds": [
+        "ART-e2e-spec"
+      ],
+      "makesGreenIds": [
+        "key_glyph_enabled_renders_in_key_line",
+        "key_glyph_disabled_keeps_key_line_unchanged",
+        "badge_glyph_enabled_shows_leading_glyph",
+        "badge_glyph_disabled_stays_text_only",
+        "viewer_header_suppresses_badge_when_key_glyph_shown",
+        "viewer_header_shows_badge_when_key_glyph_hidden",
+        "absent_config_keeps_pre_feature_rendering",
+        "TEST-type-icon-key-options"
+      ],
+      "skills": [
+        "playwright-skill"
+      ],
+      "sourceRef": "tasks.md#task-4"
+    },
+    {
+      "id": "TASK-1",
+      "title": "Config foundation: register ui.ticketKey.* selectors (descriptors, patch schemas, exposure catalog, user-config schema, prefs read route) + shared ticketKeyConfig store",
+      "ownsArtifactIds": [
+        "ART-selectors",
+        "ART-patch-schemas",
+        "ART-exposure-doc",
+        "ART-ticket-key-config",
+        "ART-selector-prefs-route",
+        "ART-user-config-schema"
+      ],
+      "makesGreenIds": [
+        "TEST-ticket-key-config-store"
+      ],
+      "sourceRef": "tasks.md#task-1"
+    }
+  ]
+}

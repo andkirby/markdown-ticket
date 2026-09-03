@@ -79,6 +79,23 @@
     gap: 0.25rem;
     color: var(--primary-text);
   }
+  /* MDT-244: type glyph after the key — colored by the same --type-* tokens the
+     type badge tints with; unknown types fall back to the feature color like
+     badge.css does. Sized to the priority glyph so the
+     `{priority}{key}{type}{lightning}` row reads balanced. */
+  .ticket-code__type-icon {
+    width: var(--sz-icon);
+    height: var(--sz-icon);
+    flex-shrink: 0;
+    vertical-align: middle;
+  }
+  .ticket-code__type-icon[data-type="feature-enhancement"] { color: var(--type-feature); }
+  .ticket-code__type-icon[data-type="bug-fix"]             { color: var(--type-bug); }
+  .ticket-code__type-icon[data-type="architecture"]        { color: var(--type-architecture); }
+  .ticket-code__type-icon[data-type="technical-debt"]      { color: var(--text-muted); }
+  .ticket-code__type-icon[data-type="documentation"]       { color: var(--type-documentation); }
+  .ticket-code__type-icon[data-type="research"]            { color: var(--type-research); }
+  .ticket-code__type-icon[data-type]:not([data-type="feature-enhancement"]):not([data-type="bug-fix"]):not([data-type="architecture"]):not([data-type="technical-debt"]):not([data-type="documentation"]):not([data-type="research"]) { color: var(--type-feature); }
   .priority-icon {
     width: var(--sz-icon);
     height: var(--sz-icon);

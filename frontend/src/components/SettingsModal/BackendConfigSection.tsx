@@ -12,8 +12,15 @@
 import type { ChangeEvent } from 'react'
 import { useBackendConfig } from '../../hooks/useBackendConfig'
 
-function isBooleanSelector(selector: string): boolean {
-  return selector.startsWith('links.') || selector === 'discovery.autoDiscover'
+interface SelectorDescriptor {
+  selector: string
+  validation: string
+}
+
+function isBooleanSelector(s: SelectorDescriptor): boolean {
+  // Data-driven: the descriptor's validation string is the contract for
+  // boolean rendering. links.* keep the legacy prefix match (MDT-168 era).
+  return s.validation === 'Boolean.' || s.selector.startsWith('links.')
 }
 
 function isNumberSelector(selector: string): boolean {
@@ -104,7 +111,7 @@ export function BackendConfigSection({ enabled }: { enabled: boolean }) {
               )}
             </div>
 
-            {isBooleanSelector(s.selector)
+            {isBooleanSelector(s)
               ? (
                   <input
                     id={`backend-cfg-${s.selector}`}

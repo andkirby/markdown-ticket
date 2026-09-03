@@ -86,6 +86,7 @@ export const DOCUMENT_FAV_STATE_DEFAULTS = {
 export const USER_CONFIG_DEFAULTS = {
   ui: {
     projectSelector: { ...PROJECT_SELECTOR_PREFERENCES_DEFAULTS },
+    ticketKey: { typeIconNearKey: false, typeIconInBadge: false },
   },
 } as const
 
@@ -149,25 +150,46 @@ export const SelectorPreferencesSchema = z.object({
   return data
 }).catch({ ...PROJECT_SELECTOR_PREFERENCES_DEFAULTS }).default({ ...PROJECT_SELECTOR_PREFERENCES_DEFAULTS })
 
+// MDT-244: ticket-key type-glyph display options (user-scope app configuration)
+export const TicketKeyOptionsSchema = z.object({
+  typeIconNearKey: z.boolean().catch(false).default(false),
+  typeIconInBadge: z.boolean().catch(false).default(false),
+}).catch({
+  typeIconNearKey: false,
+  typeIconInBadge: false,
+}).default({
+  typeIconNearKey: false,
+  typeIconInBadge: false,
+})
+
 export const UserUIConfigSchema = z.object({
   projectSelector: SelectorPreferencesSchema.default({ ...PROJECT_SELECTOR_PREFERENCES_DEFAULTS }),
+  ticketKey: TicketKeyOptionsSchema.default({
+    typeIconNearKey: false,
+    typeIconInBadge: false,
+  }),
 }).catch({
   projectSelector: { ...PROJECT_SELECTOR_PREFERENCES_DEFAULTS },
+  ticketKey: { typeIconNearKey: false, typeIconInBadge: false },
 }).default({
   projectSelector: { ...PROJECT_SELECTOR_PREFERENCES_DEFAULTS },
+  ticketKey: { typeIconNearKey: false, typeIconInBadge: false },
 })
 
 export const UserConfigSchema = z.object({
   ui: UserUIConfigSchema.default({
     projectSelector: { ...PROJECT_SELECTOR_PREFERENCES_DEFAULTS },
+    ticketKey: { typeIconNearKey: false, typeIconInBadge: false },
   }),
 }).catch({
   ui: {
     projectSelector: { ...PROJECT_SELECTOR_PREFERENCES_DEFAULTS },
+    ticketKey: { typeIconNearKey: false, typeIconInBadge: false },
   },
 }).default({
   ui: {
     projectSelector: { ...PROJECT_SELECTOR_PREFERENCES_DEFAULTS },
+    ticketKey: { typeIconNearKey: false, typeIconInBadge: false },
   },
 })
 

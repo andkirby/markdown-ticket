@@ -120,6 +120,8 @@ export const ProjectSelectorVisibleCountPatchSchema = z
 
 export const ProjectSelectorCompactInactivePatchSchema = z.boolean()
 
+export const TicketKeyBooleanPatchSchema = z.boolean()
+
 /**
  * Strict patch validator for a single selector. Returns the parsed value or a
  * ZodError; never converts invalid input to a default. Throws if the selector
@@ -149,6 +151,8 @@ export function strictPatchValidator(selector: string): z.ZodTypeAny {
     'ui.projectSelector.visibleCount': ProjectSelectorVisibleCountPatchSchema,
     'ui.projectSelector.compactInactive':
       ProjectSelectorCompactInactivePatchSchema,
+    'ui.ticketKey.typeIconNearKey': TicketKeyBooleanPatchSchema,
+    'ui.ticketKey.typeIconInBadge': TicketKeyBooleanPatchSchema,
   }
   const schema = map[selector]
   if (!schema) {
