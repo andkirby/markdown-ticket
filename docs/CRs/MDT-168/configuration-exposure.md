@@ -51,6 +51,8 @@
 |---------|-------|----------|-------|
 | `ui.projectSelector` | `visibleCount` | Editable | Settings user/preferences section |
 | `ui.projectSelector` | `compactInactive` | Editable | Settings user/preferences section |
+| `ui.ticketKey` | `typeIconNearKey` | Editable | Settings user/preferences section (MDT-244) |
+| `ui.ticketKey` | `typeIconInBadge` | Editable | Settings user/preferences section (MDT-244) |
 
 ## Mutable User State: `CONFIG_DIR/<feature>.json`
 

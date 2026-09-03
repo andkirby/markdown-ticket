@@ -92,6 +92,39 @@ Machine-readable payload for agents and tooling:
 }
 ```
 
+## Choosing a layer for a new setting (decision rule)
+
+Placement is decided by **who owns the value** and **what it changes** — answer
+two questions before registering anything:
+
+1. **Who decides the value?** Each visitor for themselves, the workspace owner
+   for everyone, the server operator, or a per-project owner?
+2. **What does it change?** Personal presentation of one session, rendering or
+   behavior that every viewer shares, server/integration behavior, or one
+   project's identity and layout?
+
+| Who decides | What it changes | Layer | Permission surface | Repo examples |
+|---|---|---|---|---|
+| Each visitor | Own-session presentation | `browser-only` (localStorage) | none — client-only | theme, card density, default view, event-history panel |
+| Workspace owner | Rendering every viewer shares | `user` (`user.toml`), `editable` | Settings (owner) | `ui.ticketKey.*`, `ui.projectSelector.*` |
+| Server operator | Server/integration behavior | `global` (`config.toml`), `editable`/`guarded` | Settings, or advanced for `guarded` | `links.*`, `discovery.*`, `system.*` |
+| Project owner | Project identity/layout | `project` (`.mdt-config.toml`) | project edit; `guarded`/`fileOnly` for internals | `ticketsPath`, `code`, counters |
+
+Corollaries (sharp edges — learned in MDT-244):
+
+- If every viewer must see the **same** value, it can never be `browser-only` —
+  localStorage silently makes it per-browser and it will not survive another
+  browser or a storage clear.
+- If only the current visitor cares, it must never reach a backend file (BR-6.1) —
+  owner surfaces are for shared behavior, not personal cosmetics.
+- Litmus test when unsure: would a visitor ever need a **different** value than
+  the owner? Yes → browser. No → backend.
+- An owner-managed option ships with its **operability check**: the Settings row
+  renders with the right control type and persists to its file — proven by an
+  executable scenario, never by reading the filter code.
+- Layering (backend defaults + localStorage overrides) exists — the project
+  selector rail does it — but it is a deliberate exception, not the default.
+
 ## Adding or changing a setting
 
 The script reflects the canonical sources. To add or reclassify a setting:

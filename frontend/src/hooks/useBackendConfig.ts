@@ -24,6 +24,7 @@ import type { ConfigSelectorDescriptor } from '../config/configApiClient'
 import { useCallback, useEffect, useState } from 'react'
 import { SELECTOR_PREFS_SYNC_EVENT } from '../components/ProjectSelector/useSelectorData'
 import { applyConfig, fetchConfigSelectors } from '../config/configApiClient'
+import { setTicketKeyOptions } from '../config/ticketKeyConfig'
 
 /**
  * Selectors whose successful write requires a same-browser consumer refresh
@@ -142,6 +143,16 @@ export function useBackendConfig(enabled: boolean): UseBackendConfigResult {
         // ui.projectSelector.* save so they can re-fetch backend prefs.
         if (SELECTOR_PREFS_REFRESH_SELECTORS.has(selector)) {
           notifySelectorPrefsConsumers()
+        }
+        // MDT-244: mirror persisted ui.ticketKey.* values into the shared
+        // store so key-line/badge consumers update without a reload.
+        if (typeof outcome.effective === 'boolean'
+          && (selector === 'ui.ticketKey.typeIconNearKey' || selector === 'ui.ticketKey.typeIconInBadge')) {
+          setTicketKeyOptions(
+            selector === 'ui.ticketKey.typeIconNearKey'
+              ? { typeIconNearKey: outcome.effective }
+              : { typeIconInBadge: outcome.effective },
+          )
         }
         return true
       }

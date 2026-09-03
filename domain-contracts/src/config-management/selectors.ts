@@ -6,6 +6,12 @@
  * of truth for selector identity, scope, exposure classification, owning UI
  * surface, and validation constraints.
  *
+ * Layer choice is not arbitrary: pick scope/exposure via the decision rule in
+ * `docs/CONFIG_INSPECTION.md` § "Choosing a layer for a new setting" (who owns
+ * the value × what it changes). Owner-managed rendering for every viewer is
+ * `USER` + `EDITABLE` + settings; per-visitor presentation never registers
+ * here at all (browser localStorage, BR-6.1).
+ *
  * This module is pure contract data — no filesystem, controller, or UI behavior.
  */
 
@@ -237,6 +243,20 @@ export const CONFIG_SELECTOR_ALLOWLIST: readonly ConfigSelector[] = [
   },
   {
     selector: 'ui.projectSelector.compactInactive',
+    scope: ConfigScope.USER,
+    exposure: Exposure.EDITABLE,
+    ownerSurface: ConfigOwnerSurface.SETTINGS,
+    validation: 'Boolean.',
+  },
+  {
+    selector: 'ui.ticketKey.typeIconNearKey',
+    scope: ConfigScope.USER,
+    exposure: Exposure.EDITABLE,
+    ownerSurface: ConfigOwnerSurface.SETTINGS,
+    validation: 'Boolean.',
+  },
+  {
+    selector: 'ui.ticketKey.typeIconInBadge',
     scope: ConfigScope.USER,
     exposure: Exposure.EDITABLE,
     ownerSurface: ConfigOwnerSurface.SETTINGS,

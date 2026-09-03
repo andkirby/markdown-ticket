@@ -8,6 +8,7 @@
 
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'bun:test'
+import { setTicketKeyOptions } from '../../config/ticketKeyConfig'
 import { TypeBadge } from './TypeBadge'
 
 // Cleanup DOM between tests
@@ -98,6 +99,30 @@ describe('TypeBadge', () => {
 
       expect(screen.getByText('Unknown')).toBeInTheDocument()
       expect(badge).toHaveClass('badge')
+    })
+  })
+
+  describe('leading glyph (MDT-244)', () => {
+    afterEach(() => {
+      setTicketKeyOptions({ typeIconNearKey: false, typeIconInBadge: false })
+      cleanup()
+    })
+
+    it('renders the type glyph before the label when the badge-glyph option is on', () => {
+      setTicketKeyOptions({ typeIconNearKey: false, typeIconInBadge: true })
+      const { container } = render(<TypeBadge type="Bug Fix" />)
+      const badge = container.firstChild as HTMLElement
+      const glyph = badge.querySelector('svg[data-type="bug-fix"]')
+      expect(glyph).not.toBeNull()
+      expect(screen.getByText('Bug Fix')).toBeInTheDocument()
+    })
+
+    it('stays text-only when the badge-glyph option is off', () => {
+      setTicketKeyOptions({ typeIconNearKey: false, typeIconInBadge: false })
+      const { container } = render(<TypeBadge type="Bug Fix" />)
+      const badge = container.firstChild as HTMLElement
+      expect(badge.querySelector('svg[data-type]')).toBeNull()
+      expect(screen.getByText('Bug Fix')).toBeInTheDocument()
     })
   })
 })

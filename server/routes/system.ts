@@ -609,6 +609,9 @@ export function createSystemRouter(
       res.json({
         preferences: userConfig.ui.projectSelector,
         selectorState,
+        // MDT-244: ticket-key display options ride the same non-owner
+        // user-scope read so every viewer renders according to config.
+        ticketKeyOptions: userConfig.ui.ticketKey,
       })
     }
     catch (error) {

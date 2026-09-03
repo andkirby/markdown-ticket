@@ -36,6 +36,11 @@ change shape between the board, the list, and the ticket viewer.
   (desktop table + mobile card), ticket viewer header, and search results.
   Same glyph, same `data-priority` color mapping, same `--sz-icon` size, same
   position (left of the key). Users find priority in one place regardless of view.
+- **Type** (MDT-244, opt-in via `ui.ticketKey.typeIconNearKey`) is the colored
+  `<TypeIcon>` glyph placed immediately **after the ticket key, before the epic
+  Zap** — same `--sz-icon` size, `--type-*` color mapping on every surface. While
+  the key glyph shows, the viewer header suppresses its type badge (no duplicate
+  type encoding in one header block).
 
 **Single source of truth.** The glyph-before-key invariant lives in exactly one
 place: `<TicketCode>` (`frontend/src/components/TicketCode.tsx`) renders the
