@@ -1,204 +1,97 @@
 # Event System Architecture
 
-The Markdown Ticket project uses **Server-Sent Events (SSE)** for real-time communication between backend and frontend, providing live updates without polling.
+> Canonical description of the real-time update system: file watching → SSE
+> broadcasting → frontend event bus → UI updates.
+>
+> Design history and decision rationale live in the CRs:
+> [MDT-183](../../CRs/MDT-183/architecture.md) (lazy watchers, zombie
+> detection, runtime project registration), MDT-142 (subdocuments/worktrees),
+> MDT-128/106 (original SSE + e2e).
 
-## Overview
+## Question This Doc Answers
 
-```text
-Backend → SSE Stream → Frontend Handler → Custom DOM Events → React Components
+How do on-disk changes (ticket `.md` files, documents, project registry
+`.toml` files) reach open browser tabs in real time — and which module owns
+each stage?
+
+## System Overview
+
+```
+ .md file changed on disk
+        │
+        ▼
+ PathWatcherService (chokidar, per project)
+        │  emits raw events, parses subdocument info
+        ▼
+ FileWatcherService facade (server/services/fileWatcher/index.ts)
+        │  enriches with ticket metadata, debounces (100ms)
+        ▼
+ SSEBroadcaster (server/services/fileWatcher/SSEBroadcaster.ts)
+        │  per-client scope filtering, heartbeat (30s), zombie removal
+        ▼
+ SSE stream  GET /api/events (server/routes/sse.ts)
+        │
+        ▼
+ sseClient (frontend/src/services/sseClient.ts)
+        │  parses, dedupes by eventId, maps to EventBus events
+        ▼
+ eventBus (frontend/src/services/eventBus.ts)
+        ▼
+ useSSEEvents / TicketViewer hooks → UI update
 ```
 
-## SSE Event Types
+## Backend Modules (`server/services/fileWatcher/`)
 
-### 1. Connection Event
+| Module | Responsibility |
+|--------|----------------|
+| `PathWatcherService` | Owns chokidar watchers: per-project ticket globs, document paths, worktrees, and the global registry watcher (`~config/projects/*.toml`). Emits raw file/document/registry events. |
+| `WatcherLifecycleManager` | Lazy lifecycle: per-project refcount, provision watchers on first SSE subscriber, stop (debounced 5s) on last unsubscribe. Late registration provisions waiting subscribers (BR-7). |
+| `projectRegistrationIntegration` | Production wiring shared by `server.ts` and the e2e app factory: boot-time metadata registration + registry watcher init + runtime (registry-change) project registration with bounded retry. |
+| `SSEBroadcaster` | Client set, per-event scope filtering, 100ms debounce, 30s heartbeat with write-error zombie detection, last-50-event queue. |
+| `index.ts` (facade) | Composes the above; enriches file events with ticket frontmatter metadata; owns client connect/disconnect (`addClient`/`removeClient`); re-subscribes connected write clients when a project registers at runtime. |
 
-```javascript
-{
-  type: "connection",
-  data: {
-    status: "connected",
-    timestamp: 1758900073623
-  }
-}
-```
+### Lazy watcher lifecycle (MDT-183)
 
-- **Purpose**: Confirms SSE connection establishment
-- **Sent**: When client connects to `/api/events`
-- **Frontend Action**: Logs connection confirmation
+- **Zero watchers with zero SSE clients** (registry watcher excepted) — memory invariant.
+- Watchers are provisioned on the first subscriber for a project and released (after a 5s debounce) when the last subscriber disconnects.
+- **Runtime project registration (BR-7, UAT 2026-09-02)**: a project whose registry `.toml` appears while the server runs is discovered by the global registry watcher, registered into the lifecycle (bounded retry covers a tickets dir that appears after the `.toml`), and connected write-access clients are re-subscribed without a reconnect. `ensureWatchers` never silently skips an unknown project — it logs and holds the subscription.
+- Invariants and design decisions (D1–D5): see [MDT-183 architecture.md](../../CRs/MDT-183/architecture.md).
 
-### 2. File Change Event
+## SSE Protocol (`GET /api/events`)
 
-```javascript
-{
-  type: "file-change", 
-  data: {
-    eventType: "add" | "change" | "unlink",
-    filename: "MDT-001-example-ticket.md",
-    projectId: "markdown-ticket",
-    timestamp: 1758900073623
-  }
-}
-```
+- `text/event-stream`; same origin via the Vite dev proxy (or a production reverse proxy); cross-origin via `VITE_BACKEND_URL`.
+- Timeouts disabled for long-lived connections; heartbeat every 30s doubles as liveness proof — write errors or `false` returns remove the client (zombie detection).
 
-- **Purpose**: Real-time file system changes
-- **Triggers**: File add/modify/delete in project directories
-- **Frontend Action**: Refreshes ticket lists for affected project
+### Message envelope
 
-### 3. Project Created Event
+All messages: `data: {"type":"<event-type>","data":{...}}\n\n`
 
-```javascript
-{
-  type: "project-created",
-  data: {
-    projectId: "OPU",
-    projectPath: "~/home/OPUS-training", 
-    timestamp: 1758900073623
-  }
-}
-```
+| Type | When | Key `data` fields |
+|------|------|-------------------|
+| `connection` | once on connect | `status`, `timestamp` |
+| `heartbeat` | every 30s | `timestamp` |
+| `file-change` | ticket `.md` add/change/unlink | `eventType`, `filename`, `projectId`, `timestamp`, `ticketData` (code/title/status/type/priority/lastModified), `subdocument` (MDT-142: `{code, filePath}` or null), `source` (`main`/`worktree`), `eventId` |
+| `document-change` | document file add/change/unlink | `eventType`, `filePath`, `projectId`, `timestamp` |
+| `project-created` / `project-updated` / `project-deleted` | registry `.toml` add/change/unlink | `projectId`, `timestamp`, `eventId`, `source` |
 
-- **Purpose**: Notifies when new project is created
-- **Triggers**: Successful project creation via `/api/projects/create`
-- **Frontend Action**: Triggers `refreshProjects()` without page reload
+Read-only clients receive only events for projects in their scope;
+write-access (owner) clients receive everything.
 
-### 4. Heartbeat Event
+## Frontend (`frontend/src/`)
 
-```javascript
-{
-  type: "heartbeat",
-  data: { ... }
-}
-```
+| Module | Responsibility |
+|--------|----------------|
+| `services/sseClient.ts` | Single `EventSource`; parses messages; dedupes by `eventId` (last 100 ids / 5s); maps SSE types to EventBus events; reconnects with exponential backoff (1s→30s, max 5 attempts), then surfaces `sse:error`. |
+| `services/eventBus.ts` | App-wide pub/sub (`ticket:created/updated/deleted`, `ticket:subdocument:changed`, `document:file:changed`, `project:*`, `sse:*`). |
+| `hooks/useSSEEvents.ts` | Consumes ticket events for the current project: applies complete `ticketData` directly (no refetch) or debounces a full refetch (100ms). User-initiated (optimistic) updates are tracked and skipped once when the echo arrives (5s window). |
+| `hooks/useProjectManager.ts` | On `sse:reconnected`, refetches projects — reconnects are lossy, so a resync follows. |
 
-- **Purpose**: Keep-alive mechanism
-- **Frontend Action**: Silent acknowledgment
+**There is no polling fallback.** SSE is the only live channel; a dead stream
+means stale UI until the EventSource reconnects (which triggers a resync).
+AGENTS-level summaries must not claim a polling backup.
 
-## Implementation Details
+## Testing
 
-### Backend (Server-Side)
-
-#### SSE Endpoint
-- **Route**: `GET /api/events`
-- **Headers**: `text/event-stream`, CORS enabled
-- **Client Management**: FileWatcherService handles client connections
-
-#### Event Broadcasting
-
-```javascript
-// File changes
-fileWatcher.broadcastFileChange(eventType, filename, projectId);
-
-// Project creation
-fileWatcher.clients.forEach(client => {
-  fileWatcher.sendSSEEvent(client, projectCreatedEvent);
-});
-```
-
-#### File Watching
-- Uses `chokidar` for file system monitoring
-- Watches `docs/CRs/*.md` patterns for each project
-- Debounced events (100ms) to prevent spam
-
-### Frontend (Client-Side)
-
-#### SSE Handler
-- **Service**: `RealtimeFileWatcher`
-- **Connection**: Auto-reconnect on failure
-- **Event Queue**: Stores last 50 events for new connections
-
-#### Custom DOM Events
-
-```javascript
-// SSE → Custom Event
-window.dispatchEvent(new CustomEvent('projectCreated', { 
-  detail: event.data 
-}));
-
-// React Component Listener
-useEffect(() => {
-  const handleProjectCreated = () => refreshProjects();
-  window.addEventListener('projectCreated', handleProjectCreated);
-  return () => window.removeEventListener('projectCreated', handleProjectCreated);
-}, [refreshProjects]);
-```
-
-## Event Flow Examples
-
-### Project Creation Flow
-1. User submits project form
-2. Backend creates project files
-3. Backend broadcasts `project-created` SSE event
-4. Frontend SSE handler receives event
-5. Frontend dispatches `projectCreated` custom event
-6. App component calls `refreshProjects()`
-7. Projects list updates without page reload
-
-### File Change Flow
-1. User modifies ticket file
-2. File watcher detects change
-3. Backend broadcasts `file-change` SSE event
-4. Frontend receives event and refreshes ticket list
-5. UI updates to show changes
-
-## Error Handling
-
-### Connection Issues
-- Auto-reconnect with exponential backoff
-- Event queue replay for missed events
-- Graceful degradation (manual refresh fallback)
-
-### Client Management
-- Automatic cleanup of stale connections
-- Connection state tracking
-- Memory management (50 event limit)
-
-## Configuration
-
-### Backend
-
-```javascript
-// File watcher debounce
-const DEBOUNCE_DELAY = 100; // ms
-
-// Event queue size
-const MAX_EVENTS = 50;
-```
-
-### Frontend
-
-```javascript
-// SSE endpoint
-const SSE_ENDPOINT = '/api/events';
-
-// Reconnection settings
-const RECONNECT_DELAY = 1000; // ms
-```
-
-## Debugging
-
-### Backend Logs
-
-```text
-📡 Event happened: change - MDT-001.md in project markdown-ticket
-📤 Broadcasting to 1 SSE clients: {...}
-✅ SSE pushed to client #1
-```
-
-### Frontend Logs
-
-```text
-📨 Received SSE event: {"type":"file-change",...}
-Project created event received: {...}
-```
-
-### Common Issues
-- **"Unknown SSE event type"**: Add handler in `realtimeFileWatcher.ts`
-- **Events not received**: Check SSE connection status
-- **UI not updating**: Verify custom event listeners are registered
-
-## Future Enhancements
-
-- **Project deletion events**
-- **Ticket status change events** 
-- **User presence indicators**
-- **Collaborative editing notifications**
+- Unit: `server/tests/watcherLifecycle.test.ts`, `sseBroadcaster.zombie.test.ts`, `tests/unit/RegistryWatcher.test.ts`.
+- E2E (production path, no manual watcher init): `tests/e2e/sse/late-registration.spec.ts` — runtime-created projects, including a client connected before registration.
+- E2E (admin seam `/_e2e/watchers/*`, eager init for pre-existing scenario setups): `tests/e2e/sse/updates.spec.ts`. New specs should follow the production-path pattern.

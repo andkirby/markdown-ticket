@@ -87,6 +87,7 @@ relatedTickets: MDT-180
 - [x] Zombie SSE connections (closed tab, network drop) are detected within 60s
 - [x] `/api/status` `sseClients` reflects live connections only
 - [x] File change events still flow correctly to all connected SSE clients
+- [x] A project registered while the server is running receives watchers and live SSE file-change updates without a backend restart (BR-7, UAT 2026-09-02)
 
 ### Non-Functional
 - [x] Server RSS memory under 300 MB with ≤5 SSE clients and ≤3 active projects
@@ -147,3 +148,21 @@ relatedTickets: MDT-180
 - `server/routes/sse.ts` — SSE connection handler
 - `server/server.ts` — startup initialization (lines 174–297)
 - Related discussion: MDT-142 (worktree watchers add more chokidar instances)
+
+## 8. Clarifications
+
+### UAT Session 2026-09-02
+
+**Source**: production defect. GPDE project (registered 2026-09-01 ~23:01 while the dev server had been running since Sunday) showed a stale board — `status: Implemented` on disk and in REST responses, but "In Progress" on the board. Live A/B probe: `touch` on a late-registered project's ticket produced no `file-change` SSE event; the same touch on a startup-registered project fired within 3s. Root cause: `WatcherLifecycleManager.projectRegistry` was boot-only; the global registry watcher emitted `project-created` but never fed the lifecycle; `ensureWatchers` silently skipped unknown projects (refcount incremented, no watcher, `activeWatcherCount()` over-reported). E2E masked the gap: `tests/e2e/sse/updates.spec.ts` manually calls the `/_e2e/watchers/multi-project` admin seam instead of the production lazy path.
+
+**Approved changes**:
+- `refine_in_place` BR-2 — SSE-triggered watcher creation holds for any project discoverable from the global registry, regardless of registration time
+- `additive_change` BR-7 — runtime registration makes a project watchable without restart (registry-change feeds the lifecycle, late registration provisions waiting subscribers, no silent skip)
+- New: `OBL-runtime-registration`, `ART-e2e-late-registration`, `TEST-late-registration`, `TASK-4`
+
+**Updated workflow documents**: `architecture.md` (state machine `Registered` states + D5 + invariant 5), `tests.md` (regression scope), `tasks.md` (Task 4), `requirements.trace.md` / `architecture.trace.md` / `tests.trace.md` / `tasks.trace.md` re-rendered.
+
+**uat.md**: written — `docs/CRs/MDT-183/uat.md`
+**Strict drift/lock**: not used. Note: `bdd` stage validation fails pre-existing (6 missing-scenario issues for BR-1..6, present before this round and unchanged by it).
+
+**Implementation required**: yes — TASK-4 execution slices in `uat.md`.
