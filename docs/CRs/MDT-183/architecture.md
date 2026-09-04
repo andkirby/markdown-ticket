@@ -51,6 +51,7 @@ Responsibilities:
   - Call PathWatcherService.stop for project on last unsubscribe (debounced)
   - Expose activeWatcherCount() for /api/status
   - Debounce rapid connect/disconnect (Edge-1)
+  - Provision watchers on late registration when subscribers already wait (D5)
 
 Does NOT own:
   - SSE client management (SSEBroadcaster)
@@ -92,6 +93,7 @@ Changes:
   - Keep project discovery (metadata only, no watcher creation)
   - Pass project metadata to WatcherLifecycleManager
   - Registry watcher still initialized at boot
+  - registry-change (add) → re-discover that project → registerProject() (D5)
   - Heartbeat unchanged (interval, but zombie detection improved)
 ```
 
@@ -137,6 +139,15 @@ Changes:
 - Project metadata is in-memory objects (~100 KB total) — negligible
 - Avoids race condition where SSE client connects before project discovery completes
 
+### D5: Runtime registration drives the lazy lifecycle (UAT 2026-09-02)
+
+**Decision**: The global registry watcher (D3) does not stop at emitting `project-created`/`registry-change` — on a registry add, `server.ts` re-discovers that project and calls `WatcherLifecycleManager.registerProject()`. If subscribers already wait (refcount > 0 — an SSE client raced the `.toml` write), watchers are provisioned immediately. `ensureWatchers` logs loudly for unknown projects instead of silently skipping them.
+
+**Rationale**:
+- Boot-only population of `projectRegistry` made projects registered while the server runs silently unwatchable: `ensureWatchers` skipped them, refcount incremented with no watcher, `activeWatcherCount()` over-reported, and boards stayed stale until backend restart (production defect, 2026-09-02: late-registered GPDE project showed stale board status while REST data was correct).
+- Lazy provisioning (this design) defers watcher creation — not registration. Registration metadata must track the registry at all times, or the lazy path has nothing to provision from.
+- The SSE-connect-before-registration race is covered by late provisioning: the client's refcount is held, then watchers start when `registry-change` arrives.
+
 ## Diagrams
 
 ### Lazy watcher lifecycle
@@ -149,7 +160,11 @@ stateDiagram-v2
     Watching --> PendingStop: last client disconnects (refcount→0)
     PendingStop --> Watching: new client within 5s debounce (refcount→1)
     PendingStop --> Discovered: debounce expires → close watchers
+    Registered --> Discovered: registry-change add (no subscribers)
+    Registered --> Watching: registry-change add (refcount > 0, D5)
 ```
+
+`Registered` covers projects whose `.toml` appears in the global registry while the server runs. An SSE client may subscribe before registration — the refcount is held and `ensureWatchers` logs the unknown project; the pending `registry-change` then provisions watchers via D5.
 
 ### Zombie detection flow
 
@@ -172,6 +187,7 @@ sequenceDiagram
 2. **One watcher set per project**: PathWatcherService creates at most one watcher set per project ID, shared by all SSE clients
 3. **Heartbeat = liveness proof**: After every heartbeat cycle, every client in the Set is verified writable
 4. **Refcount >= client count**: `WatcherLifecycleManager.refcounts[projectId] >= number of SSE clients subscribed to that project`
+5. **Registration completeness**: every project discoverable from the global registry is in the lifecycle registry within one `registry-change` event of its `.toml` write; a registered project with refcount > 0 has a watcher set (late registration provisions waiting subscribers synchronously); `ensureWatchers` never silently skips an unknown project — it logs
 
 ## Extension Rule
 

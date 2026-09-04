@@ -12,13 +12,6 @@
       "routePolicy": "bdd"
     },
     {
-      "id": "BR-2",
-      "kind": "behavior",
-      "text": "SSE connection triggers watcher creation for that client's project scope",
-      "sourceRef": "MDT-183 §4 Functional",
-      "routePolicy": "bdd"
-    },
-    {
       "id": "BR-3",
       "kind": "behavior",
       "text": "Multiple SSE clients for same project share one watcher set",
@@ -86,6 +79,20 @@
       "kind": "edge_case",
       "text": "Multiple browser tabs to same project share watchers, not duplicated",
       "sourceRef": "MDT-183 §4 Edge Cases",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-2",
+      "kind": "behavior",
+      "text": "SSE connection triggers watcher creation for that client's project scope, for any project discoverable from the global registry regardless of whether it was registered before or after server start",
+      "sourceRef": "CR:MDT-183",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-7",
+      "kind": "behavior",
+      "text": "A project registered in the global registry while the server is running becomes watchable without a backend restart: registry-change events feed the WatcherLifecycleManager, late registration immediately provisions projects that already have SSE subscribers, and ensureWatchers never silently skips an unknown project",
+      "sourceRef": "CR:MDT-183",
       "routePolicy": "tests"
     }
   ],
@@ -219,6 +226,20 @@
         "ART-watcher-lifecycle"
       ],
       "sourceRef": "MDT-183 §4: facade coordination refactor"
+    },
+    {
+      "id": "OBL-runtime-registration",
+      "title": "Runtime project registration drives the lazy watcher lifecycle: registry-change registers the project, late registration provisions waiting subscribers, unknown projects in ensureWatchers log loudly instead of silently skipping",
+      "derivedFrom": [
+        "BR-2",
+        "BR-7"
+      ],
+      "artifactIds": [
+        "ART-watcher-lifecycle",
+        "ART-server-entry",
+        "ART-e2e-late-registration"
+      ],
+      "sourceRef": "CR:MDT-183"
     }
   ],
   "artifacts": [
@@ -269,6 +290,12 @@
       "path": "server/tests/watcherLifecycle.test.ts",
       "kind": "test",
       "sourceRef": "MDT-183 §4: lazy lifecycle tests"
+    },
+    {
+      "id": "ART-e2e-late-registration",
+      "path": "tests/e2e/sse/late-registration.spec.ts",
+      "kind": "test",
+      "sourceRef": "CR:MDT-183"
     }
   ],
   "testPlans": [
@@ -328,6 +355,17 @@
       ],
       "file": "server/tests/watcherLifecycle.test.ts",
       "sourceRef": "MDT-183 §4 Edge Cases: hot reload"
+    },
+    {
+      "id": "TEST-late-registration",
+      "kind": "e2e",
+      "title": "Project created at runtime gets SSE file-change updates with no manual watcher init",
+      "covers": [
+        "BR-2",
+        "BR-7"
+      ],
+      "file": "tests/e2e/sse/late-registration.spec.ts",
+      "sourceRef": "CR:MDT-183"
     }
   ],
   "tasks": [
@@ -372,6 +410,20 @@
         "TEST-memory-constraint"
       ],
       "sourceRef": "tasks.md#task-3"
+    },
+    {
+      "id": "TASK-4",
+      "title": "Wire runtime project registration into watcher lifecycle (late provisioning + fail-loud skip + e2e regression)",
+      "ownsArtifactIds": [
+        "ART-watcher-lifecycle",
+        "ART-server-entry",
+        "ART-e2e-late-registration"
+      ],
+      "makesGreenIds": [
+        "TEST-late-registration",
+        "TEST-watcher-lifecycle"
+      ],
+      "sourceRef": "CR:MDT-183"
     }
   ]
 }

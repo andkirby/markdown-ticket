@@ -8,6 +8,8 @@
 |--------|-----------|-------|
 | `WatcherLifecycleManager` (new) | `server/tests/watcherLifecycle.test.ts` | 12 |
 | `SSEBroadcaster` (modified) | `server/tests/sseBroadcaster.zombie.test.ts` | 9 |
+| `WatcherLifecycleManager` late registration (UAT 2026-09-02) | `server/tests/watcherLifecycle.test.ts` | +2 |
+| Production SSE path for runtime-created projects (UAT 2026-09-02) | `tests/e2e/sse/late-registration.spec.ts` | 2 |
 
 ## Test Details
 
@@ -29,6 +31,10 @@
 | Memory under 300 MB with ≤5 clients | C-1 | manual |
 | Latency unchanged after lazy init | C-2 | integration |
 | Clean re-init after --hot restart | Edge-2 | integration |
+| Late registration provisions waiting subscribers (refcount > 0) | BR-7 | unit |
+| Unknown project in ensureWatchers logs, never silently skipped | BR-7 | unit |
+| Runtime-created project board updates via SSE (no manual watcher init) | BR-2, BR-7 | e2e |
+| Runtime-created project: status change moves ticket to correct column | BR-7 | e2e |
 
 ### SSEBroadcaster Zombie Detection
 
@@ -68,4 +74,7 @@ cd server && bunx jest tests/watcherLifecycle.test.ts tests/sseBroadcaster.zombi
 
 # All server tests (regression check)
 cd server && bunx jest --no-coverage
+
+# E2E regression: runtime-created project, production SSE path (UAT 2026-09-02)
+bun run test:e2e -- tests/e2e/sse/late-registration.spec.ts
 ```

@@ -33,6 +33,7 @@
 | routes/ | 1 | 1 | 0 | ✅ |
 | server.ts | 1 | 1 | 0 | ✅ |
 | tests/ | 2 | 2 | 0 | ✅ |
+| tests/e2e/sse/ | 1 | 1 | 0 | ✅ (UAT 2026-09-02) |
 
 ## Tasks
 
@@ -178,6 +179,59 @@ bash scripts/smart-server.sh 60
 - [x] Full server test suite passes (regression)
 - [x] Server RSS < 300 MB with 3 active projects (manual)
 - [x] `bun --hot` restart re-runs lazy init cleanly
+
+---
+
+### Task 4: Wire runtime project registration into watcher lifecycle (UAT 2026-09-02)
+
+**Structure**: `server/services/fileWatcher/WatcherLifecycleManager.ts`, `server/server.ts`
+
+**Makes GREEN (Automated Tests)**:
+- `TEST-late-registration` → `tests/e2e/sse/late-registration.spec.ts`: production SSE path for runtime-created projects
+- `TEST-watcher-lifecycle` → `server/tests/watcherLifecycle.test.ts`: new late-registration unit tests
+
+**Scope**: Fix the UAT defect — projects registered while the server runs never received watchers:
+1. `WatcherLifecycleManager.registerProject()`: when the project already has subscribers (refcount > 0), provision watchers immediately (extract shared provisioning from `ensureWatchers`)
+2. `WatcherLifecycleManager.ensureWatchers()`: unknown project → log loudly; never silently skip
+3. `server.ts`: on `registry-change` (add), re-discover that project and `registerProject()` it
+
+**Boundary**: Registration + provisioning only. No changes to refcount/debounce semantics, SSEBroadcaster, or PathWatcherService watcher creation.
+
+**Creates**:
+- `tests/e2e/sse/late-registration.spec.ts`
+
+**Modifies**:
+- `server/services/fileWatcher/WatcherLifecycleManager.ts`
+- `server/server.ts`
+- `server/tests/watcherLifecycle.test.ts` (add tests)
+
+**Must Not Touch**:
+- `SSEBroadcaster.ts`
+- `PathWatcherService.ts`
+- Frontend code
+- Existing e2e specs (their `/_e2e/watchers/multi-project` eager init is a test seam, not the production path)
+
+**Anti-duplication**: Reuse the existing registration construction from `initializeMultiProjectWatchers()` — extract a single-project helper, do not duplicate config/ticketsPath resolution.
+
+**Verify**:
+```bash
+cd server && bunx jest tests/watcherLifecycle.test.ts --no-coverage --testTimeout=10000 --forceExit
+bun run test:e2e -- tests/e2e/sse/late-registration.spec.ts
+```
+
+**Done when**:
+- [x] New unit tests GREEN (late provisioning, fail-loud skip)
+- [x] New e2e GREEN: runtime-created project board updates via SSE with no manual watcher init
+- [x] Existing watcherLifecycle + sseBroadcaster tests still GREEN (regression)
+- [x] Manual: register a project against a running server, SSE connect, edit ticket file → `file-change` fires (verified live 2026-09-02, plus two latent gaps fixed below)
+
+**Implementation notes (2026-09-02)**:
+- `WatcherLifecycleManager`: extracted `provisionWatchers()`; `registerProject()` late-provisions when subscribers wait; `ensureWatchers()` warns on unknown projects (never silent) and is idempotent per client+project; new `releaseClient()` releases the authoritative subscription set (facade `removeClient` now uses it).
+- New shared integration `server/services/fileWatcher/projectRegistrationIntegration.ts` (boot registration + registry watcher + runtime registration with bounded retry): called by `server.ts` AND the e2e app factory (`createTestApp({ watcherIntegration: true })`), so e2e exercises the production path.
+- Facade: `resubscribeWriteClientsToProject()` — connected write-access clients whose connect-time scope predates a project's registration are re-subscribed without reconnect.
+- Latent gap fixed: `initGlobalRegistryWatcher()` silently no-opped when `config/projects/` did not exist at boot (fresh installs, run-scoped test CONFIG_DIRs) — it now creates the app-owned dir.
+- Latent gap fixed: registry `.toml` can appear before the tickets dir; runtime registration now retries (400ms…8s) instead of dropping one-shot.
+- `RegistryWatcher.test.ts` updated: the "should not initialize if registry directory does not exist" test encoded the defect; now asserts dir creation + watcher init.
 
 ## Post-Implementation
 
