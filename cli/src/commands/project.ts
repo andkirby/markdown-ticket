@@ -160,6 +160,7 @@ export async function projectInitAction(
         {
           project: formatProjectForStructured(project),
           initialized: true,
+          gitignore: '.gitignore',
         },
         {
           projectCode: project.project.code,

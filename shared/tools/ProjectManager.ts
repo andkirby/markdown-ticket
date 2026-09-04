@@ -9,6 +9,7 @@ import { ProjectService } from '../services/ProjectService.js'
 import { ServiceError } from '../services/ServiceError.js'
 import { CONFIG_FILES, DEFAULTS } from '../utils/constants.js'
 import { calculatePathDepth, isPathWithinSearchPaths } from '../utils/path-resolver.js'
+import { ensureProjectGitignore } from './projectGitignore.js'
 import { ProjectValidator } from './ProjectValidator.node.js'
 
 /**
@@ -214,6 +215,10 @@ export class ProjectManager {
       if (!fs.existsSync(counterFile)) {
         fs.writeFileSync(counterFile, '1', 'utf8')
       }
+
+      // Ensure the managed MDT working-state gitignore block (MDT-143 BR-16/C10).
+      // Canonical entry list: docs/MDT_WORKING_STATE_FILES.md
+      ensureProjectGitignore(projectPath, project.project.ticketsPath, code)
     }
     else {
       // Strategy 1: Global-Only Mode - Skip local config creation

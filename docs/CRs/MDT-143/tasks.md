@@ -367,6 +367,28 @@
 - [x] Separate commit per item; no breaking flag or JSON-shape changes
       (6cbf55f8, 43fd5eb1, ca4f4867)
 
+## TASK-cli-init-gitignore — MDT gitignore scaffold on project init (UAT 2026-09-03)
+
+- [x] Add `shared/tools/projectGitignore.ts`: single MDT ignore-entry constant
+      mirroring [docs/MDT_WORKING_STATE_FILES.md](../../../docs/MDT_WORKING_STATE_FILES.md)
+      (`**/*.trace.md`, `**/spec-trace*.md`, `**/pipeline-state.json`,
+      `**/*.pipeline-state.json`, `**/*.tasks-status.yaml`,
+      `**/.checkpoint.yaml`, `/.mdt-next`, `/.mdt/`, `**/poc/`,
+      `**/*prompt*.md`, closing negation
+      `!{ticketsPath}/{CODE}-*.md`; no broad `**/.*.json`/`**/.*.yaml` — they
+      swallow tool configs)
+      plus marker-delimited idempotent merge (create `.gitignore` when absent,
+      append block when missing, no-op when current; never touch unmanaged lines)
+- [x] Call it from `ProjectManager.createProject` on the non-globalOnly path,
+      after local-config and counter creation
+- [x] Surface the scaffolded path in init output (`formatProjectInit`) and in
+      the structured `project.init` payload
+- [x] Update `cli/mdt-cli/SKILL.md`: init now writes the managed `.gitignore`
+      block (canonical agent-facing CLI reference)
+- [x] Add `cli/tests/e2e/project/init-gitignore.spec.ts`: fresh-folder create,
+      existing-file merge preserving user lines, idempotent re-run
+      (plus unit suite `shared/tools/__tests__/projectGitignore.test.ts`)
+
 ---
 *Canonical task ownership and GREEN links: [tasks.trace.md](./tasks.trace.md)*
 *Rendered by /mdt:tasks via spec-trace*

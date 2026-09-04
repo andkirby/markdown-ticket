@@ -331,6 +331,7 @@ export function formatProjectInit(project: Project, targetDir: string): string {
   lines.push(`Initialized project ${code} in ${displayDir}`)
   lines.push(`  ${'config:'.padEnd(10)} ${project.project.configFile}`)
   lines.push(`  ${'tickets:'.padEnd(10)} ${project.project.ticketsPath}`)
+  lines.push(`  ${'gitignore:'.padEnd(10)} .gitignore (managed MDT block)`)
 
   return lines.join('\n')
 }
