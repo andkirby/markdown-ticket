@@ -156,6 +156,11 @@ export class SSEBroadcaster extends EventEmitter {
     return this.clients.size
   }
 
+  /** Connected clients (snapshot) — used by the facade for D5 runtime-registration resubscribe. */
+  getClients(): ResponseLike[] {
+    return Array.from(this.clients)
+  }
+
   getEventQueue(): SSEEvent[] {
     return [...this.eventQueue]
   }

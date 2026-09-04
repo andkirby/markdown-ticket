@@ -143,7 +143,7 @@ async function main(): Promise<void> {
   // Isolation contract: CONFIG_DIR is set (verified above) BEFORE the app
   // factory and its services are imported.
   const { createTestApp } = await import('../../server/tests/api/test-app-factory.js')
-  const { app, fileWatcher } = createTestApp({ preAuthRouter: adminRouter })
+  const { app, fileWatcher } = createTestApp({ preAuthRouter: adminRouter, watcherIntegration: true })
   deps.app = app
   deps.fileWatcher = fileWatcher
 
