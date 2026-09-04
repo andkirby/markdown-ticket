@@ -373,16 +373,43 @@ class FileWatcherService extends EventEmitter {
    * Remove an SSE client connection and release watcher subscriptions.
    */
   removeClient(response: ResponseLike): void {
-    // Release watcher subscriptions before removing from broadcaster
-    const scope = response.mdtSseScope
+    // Release watcher subscriptions before removing from broadcaster.
+    // The lifecycle manager owns the authoritative subscription set —
+    // connect-time projectRefs miss projects added via D5 resubscribe.
     const clientId = (response as any).__lifecycleClientId as string | undefined
-    if (clientId && scope?.projectRefs) {
-      const projectIds = scope.projectRefs.filter(ref => !/^\d+$/.test(ref))
-      if (projectIds.length > 0) {
-        this.lifecycleManager.releaseProject(clientId, projectIds)
-      }
+    if (clientId) {
+      this.lifecycleManager.releaseClient(clientId)
     }
     this.sseBroadcaster.removeClient(response)
+  }
+
+  /**
+   * D5 (UAT 2026-09-02): a project registered at runtime must reach clients
+   * whose connect-time projectRefs predate the registration. Re-subscribes
+   * every connected write-access client to the project; read-only clients
+   * reconnect naturally and their delivery is scope-filtered anyway.
+   * Call after registerProject() so ensureWatchers finds the metadata.
+   */
+  resubscribeWriteClientsToProject(projectId: string): void {
+    for (const client of this.sseBroadcaster.getClients()) {
+      // Skip clients already gone — subscribing a dead response would leak a
+      // refcount nobody ever releases (breaks the zero-idle-watchers invariant)
+      if (client.destroyed || client.closed)
+        continue
+
+      const scope = client.mdtSseScope
+      if (scope && !scope.canWrite)
+        continue
+
+      let clientId = (client as any).__lifecycleClientId as string | undefined
+      if (!clientId) {
+        clientId = `sse-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+        ;(client as any).__lifecycleClientId = clientId
+      }
+      this.lifecycleManager.ensureWatchers(clientId, [projectId]).catch((e) => {
+        console.error(`Error resubscribing client to project ${projectId}:`, e)
+      })
+    }
   }
 
   disconnectReadOnlyClients(): void {

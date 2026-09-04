@@ -1,11 +1,8 @@
 import type { Express } from 'express'
 import type { ProjectServiceExtension } from './controllers/ProjectController.js'
-import type { ProjectRegistration } from './services/fileWatcher/WatcherLifecycleManager.js'
 import * as path from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
-
-import { getTicketsPath } from '@mdt/shared/models/Project.js'
 
 import {
   AccessCredentialBroker,
@@ -23,7 +20,7 @@ import { resolveTrustedServiceProfile } from '@mdt/shared/services/cloud-sync/tr
 // Services
 import { ProjectService as SharedProjectService } from '@mdt/shared/services/ProjectService.js'
 import { ProjectManager } from '@mdt/shared/tools/ProjectManager.js'
-import { DEFAULT_PORTS, DEFAULTS, getDefaultPaths } from '@mdt/shared/utils/constants.js'
+import { DEFAULT_PORTS, getDefaultPaths } from '@mdt/shared/utils/constants.js'
 import { parsePortEnv } from '@mdt/shared/utils/env.js'
 import { logger } from '@mdt/shared/utils/server-logger.js'
 import cors from 'cors'
@@ -56,6 +53,7 @@ import { createCorsOptions, createOriginPolicy, securityHeaders } from './securi
 import { ProjectionStreamManager } from './services/cloud-sync/ProjectionStreamManager.js'
 import { DocumentService } from './services/DocumentService.js'
 import FileWatcherService from './services/fileWatcher/index.js'
+import { initializeProjectWatcherIntegration } from './services/fileWatcher/projectRegistrationIntegration.js'
 import { PinStateService } from './services/PinStateService.js'
 import { TicketService } from './services/TicketService.js'
 import { TreeService } from './services/TreeService.js'
@@ -69,18 +67,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const rootDir = path.resolve(__dirname, '..')
 config({ path: path.resolve(rootDir, '.env.local') })
 config({ path: path.resolve(rootDir, '.env') })
-
-// Extended project type for server use
-interface ServerProject {
-  id: string
-  project: {
-    name: string
-    path: string
-    active: boolean
-  }
-  autoDiscovered?: boolean
-  configPath?: string
-}
 
 interface FileInvokerAdapter {
   readFile: (filePath: string) => Promise<string>
@@ -321,90 +307,10 @@ const pinController = new PinController(pinStateService)
 // =============================================================================
 
 async function initializeMultiProjectWatchers(): Promise<void> {
-  try {
-    logger.info('🔍 Discovering projects for file watching...')
-
-    const projects = await projectDiscovery.getAllProjects()
-
-    logger.info(`Found ${projects.length} projects for file watching`)
-
-    const projectPaths: ProjectRegistration[] = []
-
-    // Add configured projects
-    for (const project of projects) {
-      try {
-        const serverProject = project as ServerProject
-
-        if (!serverProject.project.active) {
-          logger.info(`Skipping inactive project: ${serverProject.project.name}`)
-          continue
-        }
-
-        let configPath: string
-
-        if (serverProject.autoDiscovered && serverProject.configPath) {
-          configPath = path.dirname(serverProject.configPath)
-        }
-        else {
-          configPath = serverProject.project.path
-        }
-
-        const config = projectDiscovery.getProjectConfig(configPath)
-
-        if (!config?.project) {
-          logger.warn(`No config found for project: ${serverProject.project.name}`)
-          continue
-        }
-
-        // Use new helper function with backward compatibility
-        const crPath: string = getTicketsPath(config, DEFAULTS.TICKETS_PATH)
-        const fullCRPath: string = path.resolve(configPath, crPath)
-        const watchPath: string = path.join(fullCRPath, '*.md')
-        const documentPaths = config.project.document?.paths || []
-
-        // Check if directory exists
-        try {
-          const fs = await import('node:fs/promises')
-
-          await fs.access(fullCRPath)
-          projectPaths.push({
-            id: serverProject.id,
-            path: watchPath,
-            projectRoot: configPath,
-            projectCode: config.project?.code || serverProject.id.toUpperCase(), // MDT-142: Use project code for worktree detection
-            documentPaths,
-            ticketsPath: crPath,
-          })
-          logger.info(`✅ Registered project ${serverProject.project.name} at: ${watchPath}`)
-        }
-        catch {
-          logger.warn(`⚠️  CR directory not found for project ${serverProject.project.name}: ${fullCRPath}`)
-        }
-      }
-      catch (error) {
-        console.error(`Error setting up watcher for project ${project.project.name}:`, error)
-      }
-    }
-
-    if (projectPaths.length === 0) {
-      logger.warn('⚠️  No valid project paths found, skipping file watcher registration')
-    }
-    else {
-      // MDT-183: Register projects for lazy watcher lifecycle (no watchers created yet)
-      projectPaths.forEach((project) => {
-        fileWatcher.registerProject(project)
-        logger.info(`   📂 Registered project ${project.id}: ${project.path}`)
-      })
-      logger.info(`📡 ${projectPaths.length} projects registered for lazy watcher lifecycle`)
-    }
-
-    // Initialize global registry watcher for project lifecycle events
-    fileWatcher.initGlobalRegistryWatcher()
-  }
-  catch (error) {
-    console.error('Error initializing multi-project watchers:', error)
-    logger.warn('⚠️  Failed to initialize file watchers')
-  }
+  // MDT-183 (+ UAT 2026-09-02, BR-7): boot metadata registration + registry
+  // watcher + runtime registration wiring live in the shared integration so
+  // the e2e/test app factory exercises the identical production path.
+  await initializeProjectWatcherIntegration(fileWatcher, projectDiscovery)
 }
 
 /**

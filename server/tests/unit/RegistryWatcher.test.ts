@@ -26,8 +26,10 @@ jest.mock('@mdt/shared/utils/constants.js', () => ({
 
 // Mock fs module
 const mockExistsSync = jest.fn().mockReturnValue(true)
+const mockMkdirSync = jest.fn()
 jest.mock('node:fs', () => ({
   existsSync: () => mockExistsSync(),
+  mkdirSync: (...args: unknown[]) => mockMkdirSync(...args),
 }))
 
 describe('RegistryWatcher (BR-1.6)', () => {
@@ -62,12 +64,21 @@ describe('RegistryWatcher (BR-1.6)', () => {
       )
     })
 
-    it('should not initialize if registry directory does not exist', () => {
+    it('should create the registry directory and still initialize when it does not exist (BR-7)', () => {
       mockExistsSync.mockReturnValue(false)
 
       service.initGlobalRegistryWatcher()
 
-      expect(chokidar.watch).not.toHaveBeenCalled()
+      // The registry dir is app-owned state — create it instead of leaving
+      // runtime registration deaf until restart (MDT-183 UAT, BR-7).
+      expect(mockMkdirSync).toHaveBeenCalledWith('/mock/config/projects', { recursive: true })
+      expect(chokidar.watch).toHaveBeenCalledWith(
+        '/mock/config/projects/*.toml',
+        expect.objectContaining({
+          ignoreInitial: true,
+          persistent: true,
+        }),
+      )
     })
 
     it('should set up event handlers for registry events', () => {

@@ -38,6 +38,7 @@ import { createApiAuthMiddleware } from '../../security/apiAuth'
 import { createCorsOptions, createOriginPolicy, securityHeaders } from '../../security/originPolicy'
 import { DocumentService } from '../../services/DocumentService'
 import FileWatcherService from '../../services/fileWatcher/index.js'
+import { initializeProjectWatcherIntegration } from '../../services/fileWatcher/projectRegistrationIntegration.js'
 import { PinStateService } from '../../services/PinStateService'
 import { TicketService } from '../../services/TicketService'
 import { TreeService } from '../../services/TreeService'
@@ -153,6 +154,13 @@ export interface CreateTestAppOptions {
    * launcher) that need a process-control seam. Never used by prod.
    */
   preAuthRouter?: Router
+  /**
+   * MDT-183 UAT (BR-7): mirror production watcher registration (boot
+   * metadata + registry watcher + runtime registration) so e2e exercises
+   * the real lazy-lifecycle path. Off by default — jest suites create
+   * many apps per run and must not spawn chokidar watchers each time.
+   */
+  watcherIntegration?: boolean
 }
 
 export function createTestApp(options: CreateTestAppOptions = {}): TestAppResult {
@@ -192,6 +200,12 @@ export function createTestApp(options: CreateTestAppOptions = {}): TestAppResult
 
   // Connect file watcher to document service for cache invalidation
   fileWatcher.setFileInvoker(documentService.fileInvoker as FileInvokerAdapter)
+
+  // MDT-183 UAT (BR-7): opt-in production watcher registration for the
+  // out-of-process e2e backend (registry watcher + runtime registration).
+  if (options.watcherIntegration) {
+    void initializeProjectWatcherIntegration(fileWatcher, projectDiscovery)
+  }
 
   // Initialize Controllers
   const projectController = new ProjectController(

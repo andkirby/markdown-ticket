@@ -217,4 +217,79 @@ describe('WatcherLifecycleManager (MDT-183)', () => {
       expect(manager.activeWatcherCount()).toBe(0)
     })
   })
+
+  // ── BR-7: Runtime project registration (UAT 2026-09-02) ──
+
+  describe('BR-7: Runtime project registration', () => {
+    it('should log loudly and hold the subscription when project is unknown', async () => {
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+
+      try {
+        await manager.ensureWatchers('client-1', ['late-project'])
+
+        // Never a silent skip: the miss is logged
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('late-project'))
+        // The subscriber's reservation is held for late provisioning (D5)
+        expect(manager.refCount('late-project')).toBe(1)
+
+        // No watchers were created for the unknown project
+        expect(mockPathWatcher.initMultiProjectWatcher).not.toHaveBeenCalled()
+      }
+      finally {
+        warnSpy.mockRestore()
+      }
+    })
+
+    it('should provision watchers immediately on late registration with waiting subscribers', async () => {
+      await manager.ensureWatchers('client-1', ['late-project']) // unknown → held
+      expect(mockPathWatcher.initMultiProjectWatcher).not.toHaveBeenCalled()
+
+      manager.registerProject(projectB) // id: 'project-b' — not the late one
+
+      // Still nothing: the late project itself was not registered
+      expect(mockPathWatcher.initMultiProjectWatcher).not.toHaveBeenCalled()
+
+      const lateProject = { id: 'late-project', path: '/path/late/*.md', projectRoot: '/path/late', projectCode: 'LP' }
+      manager.registerProject(lateProject)
+
+      // Late registration provisions waiting subscribers synchronously
+      expect(mockPathWatcher.initMultiProjectWatcher).toHaveBeenCalledWith(
+        expect.arrayContaining([expect.objectContaining({ id: 'late-project' })]),
+      )
+      expect(manager.activeWatcherCount()).toBe(1)
+    })
+
+    it('should not provision watchers on late registration when nobody subscribes', () => {
+      manager.registerProject(projectA)
+
+      expect(mockPathWatcher.initMultiProjectWatcher).not.toHaveBeenCalled()
+      expect(manager.activeWatcherCount()).toBe(0)
+    })
+
+    it('should treat re-ensure of an already-subscribed project as a no-op', async () => {
+      manager.registerProject(projectA)
+      await manager.ensureWatchers('client-1', ['project-a'])
+      await manager.ensureWatchers('client-1', ['project-a']) // D5 resubscribe path
+
+      // Refcount reflects one subscription for the client, not two
+      expect(manager.refCount('project-a')).toBe(1)
+    })
+
+    it('releaseClient should release ALL recorded subscriptions, including late-added projects', async () => {
+      manager.registerProject(projectA)
+      await manager.ensureWatchers('client-1', ['project-a'])
+      // D5 resubscribe: project added to the same client after connect
+      const lateProject = { id: 'late-project', path: '/path/late/*.md', projectRoot: '/path/late', projectCode: 'LP' }
+      manager.registerProject(lateProject)
+      await manager.ensureWatchers('client-1', ['late-project'])
+
+      expect(manager.refCount('project-a')).toBe(1)
+      expect(manager.refCount('late-project')).toBe(1)
+
+      manager.releaseClient('client-1')
+
+      expect(manager.refCount('project-a')).toBe(0)
+      expect(manager.refCount('late-project')).toBe(0)
+    })
+  })
 })

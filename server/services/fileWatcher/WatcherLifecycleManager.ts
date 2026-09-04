@@ -30,9 +30,17 @@ export class WatcherLifecycleManager {
   /**
    * Register project metadata for lazy watcher creation.
    * Called at startup during project discovery (no watchers created yet).
+   * D5 (UAT 2026-09-02): also called at runtime on registry-change; SSE
+   * subscribers that raced the registration get watchers provisioned now.
    */
   registerProject(project: ProjectRegistration): void {
     this.projectRegistry.set(project.id, project)
+
+    if ((this.refcounts.get(project.id) ?? 0) > 0) {
+      this.provisionWatchers(project).catch((e) => {
+        console.error(`Error provisioning watchers for late-registered project ${project.id}:`, e)
+      })
+    }
   }
 
   /**
@@ -47,6 +55,10 @@ export class WatcherLifecycleManager {
     const clientProjects = this.clientSubscriptions.get(clientId)!
 
     for (const projectId of projectIds) {
+      // Already subscribed — no-op (idempotent D5 resubscribe)
+      if (clientProjects.has(projectId))
+        continue
+
       // Cancel any pending stop debounce for this project
       if (this.debounceTimers.has(projectId)) {
         clearTimeout(this.debounceTimers.get(projectId)!)
@@ -59,27 +71,30 @@ export class WatcherLifecycleManager {
         // First subscriber — create watchers
         const project = this.projectRegistry.get(projectId)
         if (project) {
-          this.pathWatcher.initMultiProjectWatcher([project])
-          // Also init document and worktree watchers if project has config
-          if (project.projectRoot) {
-            this.pathWatcher.initDocumentWatchers(
-              project.id,
-              project.projectRoot,
-              project.documentPaths ?? [],
-              project.ticketsPath,
-            )
-            await this.pathWatcher.initWorktreeWatchers(
-              project.id,
-              project.projectRoot,
-              project.projectCode,
-            )
-          }
+          await this.provisionWatchers(project)
+        }
+        else {
+          // BR-7: never silently skip — the refcount below still reserves the
+          // subscription; late registerProject() provisions the watchers.
+          console.warn(`[WatcherLifecycle] Unknown project ${projectId} requested by ${clientId}; holding subscription until registry registration`)
         }
       }
 
       this.refcounts.set(projectId, currentCount + 1)
       clientProjects.add(projectId)
     }
+  }
+
+  /**
+   * Release ALL of a client's recorded subscriptions (the authoritative set),
+   * including projects added after connect via D5 resubscribe.
+   */
+  releaseClient(clientId: string): void {
+    const clientProjects = this.clientSubscriptions.get(clientId)
+    if (clientProjects && clientProjects.size > 0)
+      this.releaseProject(clientId, Array.from(clientProjects))
+    else
+      this.clientSubscriptions.delete(clientId) // no-op for unknown clients
   }
 
   /**
@@ -130,15 +145,32 @@ export class WatcherLifecycleManager {
   }
 
   /**
+   * Create the watcher set for a project (ticket glob + document + worktree).
+   * Idempotent at the PathWatcherService level (existing watcher IDs are skipped).
+   */
+  private async provisionWatchers(project: ProjectRegistration): Promise<void> {
+    this.pathWatcher.initMultiProjectWatcher([project])
+    // Also init document and worktree watchers if project has config
+    if (project.projectRoot) {
+      this.pathWatcher.initDocumentWatchers(
+        project.id,
+        project.projectRoot,
+        project.documentPaths ?? [],
+        project.ticketsPath,
+      )
+      await this.pathWatcher.initWorktreeWatchers(
+        project.id,
+        project.projectRoot,
+        project.projectCode,
+      )
+    }
+  }
+
+  /**
    * Number of projects with active watchers (refcount > 0).
    */
   activeWatcherCount(): number {
-    let count = 0
-    for (const rc of this.refcounts.values()) {
-      if (rc > 0)
-        count++
-    }
-    return count
+    return Array.from(this.refcounts.values()).filter(rc => rc > 0).length
   }
 
   /**

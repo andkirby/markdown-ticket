@@ -140,8 +140,12 @@ export class PathWatcherService extends EventEmitter {
 
   initGlobalRegistryWatcher(): void {
     const rp = path.join(getConfigDir(), 'projects')
+    // The registry dir is app-owned state. A first run (or run-scoped test
+    // CONFIG_DIR) may not have it yet — create it so the watcher is live for
+    // projects registered later; bailing here would leave runtime
+    // registration deaf until a restart (MDT-183 UAT, BR-7).
     if (!fs.existsSync(rp))
-      return
+      fs.mkdirSync(rp, { recursive: true })
     this.createWatcher('__global_registry__', path.join(rp, '*.toml'), (w) => {
       w.on('add', fp => this.handleRegistryEvent('add', fp))
         .on('change', fp => this.handleRegistryEvent('change', fp))
