@@ -13,7 +13,7 @@ BDD for this ticket is organized around seven CLI journeys: ticket retrieval, pr
 |---------|-----------|----------------------|
 | Ticket retrieval | `view_ticket_from_detected_project`, `view_ticket_across_projects`, `list_tickets_in_detected_project` | BR-1, BR-2, BR-3, BR-4 |
 | Project commands | `show_current_project_details`, `list_projects_via_project_namespace`, `resolve_project_token_without_subcommand_collision` | BR-5, BR-14, BR-15, BR-17 |
-| Project bootstrap and ticket creation | `initialize_project_in_current_folder`, `create_ticket_from_slug_with_order_independent_tokens`, `create_ticket_from_piped_input` | BR-6, BR-7, BR-8, BR-9, BR-16 |
+| Project bootstrap and ticket creation | `initialize_project_in_current_folder`, `project_init_scaffolds_mdt_gitignore`, `project_init_merges_existing_gitignore`, `create_ticket_from_slug_with_order_independent_tokens`, `create_ticket_from_piped_input` | BR-6, BR-7, BR-8, BR-9, BR-16 |
 | Ticket mutation and formatting | `update_ticket_attributes_in_one_command`, `render_colored_relative_ticket_output`, `render_absolute_ticket_path_when_configured` | BR-10, BR-11, BR-12, BR-13 |
 | List filtering and paging | `filter_ticket_list_by_multiple_criteria` | BR-18 |
 | Command guide | `show_generated_command_guide` | BR-19 |
@@ -41,7 +41,7 @@ MDT-143 introduces a terminal-first CLI surface. CLI acceptance tests run as rea
 - Ticket list defaults to 10 tickets sorted newest-first. `--all` shows every ticket, `--limit N` overrides the default.
 - Ticket list supports positional filter arguments in `key=value` format: AND across fields, comma-separated fuzzy matching within a field. Filterable fields: status, priority, type, assignee, epic.
 - Ticket list output modes: `--files` (paths only), `--info` (info without paths).
-- `project init` is expected to materialize project configuration in the current folder, not just print a template to stdout.
+- `project init` is expected to materialize project configuration in the current folder, not just print a template to stdout. Init is also expected to leave behind a `.gitignore` carrying the managed MDT working-state block (created when absent, merged idempotently when present).
 - STDIN creation is a no-template path: generated frontmatter plus generated H1, followed by the literal piped body content.
 - `--guide` at global scope prints a full command manual; at per-namespace scope (e.g., `ticket --guide`) prints that namespace's commands only. Content is generated from the commander tree.
 - `--json` and `--yaml` are agent-facing output modes. They use the same schema, suppress ANSI/decorative formatting, and include normalized IDs, display labels, paths, timestamps, list metadata, and mutation changes.
@@ -56,6 +56,7 @@ MDT-143 introduces a terminal-first CLI surface. CLI acceptance tests run as rea
 - UAT session 2026-03-30 added two new scenarios (`filter_ticket_list_by_multiple_criteria`, `show_generated_command_guide`) and refined four existing scenarios. Four new E2E suites are planned in tasks 8-11.
 - UAT session 2026-05-22 added structured-output scenarios for ticket detail, ticket list, project output, and mutation output. Edge/error handling is covered in tests, not BDD, because spec-trace routes constraints and edge cases to the tests stage.
 - CLI E2E runs real-process tests using `@mdt/shared/test-lib` for isolated project fixtures and process helpers.
+- UAT session 2026-09-03 added init gitignore scenarios (`project_init_scaffolds_mdt_gitignore`, `project_init_merges_existing_gitignore`), both covering BR-16; the existing-file merge edge (Edge-12) and the single-source entry-list constraint (C10) are tracked in tests, not BDD.
 
 ---
 *Canonical scenario projection: [bdd.trace.md](./bdd.trace.md)*

@@ -315,6 +315,7 @@ Initialized project MDT in /current/folder
   config:    .mdt-config.toml
   counter:   .mdt-next
   tickets:   docs/CRs
+  gitignore: .gitignore (managed MDT block created or merged)
 ```
 
 ## Extension Rule
@@ -336,6 +337,13 @@ When adding another CLI capability:
 - `MDT-143` does not add document-edit commands. If future CLI work updates ticket title or body content, it should route through the shared document-capability path rather than the attr command.
 - CLI verification should mirror the repository's existing real-process E2E style by standing on `@mdt/shared/test-lib`, not by introducing `bats` or a second shell-centric test stack.
 - The `project` namespace is the only place for project inspection, listing, explicit project lookup, and init in this ticket. A parallel top-level `projects` command would violate the current requirement set.
+
+## UAT Round 2026-09-03 — init gitignore scaffold
+
+- `ART-shared-gitignore-scaffold` (`shared/tools/projectGitignore.ts`): owns the single MDT ignore-entry constant and the idempotent managed-block merge — create `.gitignore` when absent, append a marker-delimited block when missing, no-op when already current, never modify unmanaged lines.
+- **Phrase-source**: the canonical entry list, per-file git policy, and evidence live in [docs/MDT_WORKING_STATE_FILES.md](../../../docs/MDT_WORKING_STATE_FILES.md) (single durable document); the shared constant mirrors it, and this repo's `.gitignore` carries the same list in one consolidated marked block. Change the doc first, then the constant and `.gitignore`.
+- `OBL-init-gitignore-scaffold`: `ProjectManager.createProject` ensures the target `.gitignore` contains the managed MDT block by delegating to that shared module, so `mdt-cli project init`, the `project:create` script flow, and web-driven creation scaffold identical entries. The CLI layer adds no ignore logic of its own (CLI business-logic boundary); placement in `ProjectManager` follows the established init backend boundary.
+- The spec-trace store under `{ticketsPath}/.trace/` is canonical state and stays trackable; only rendered `*.trace.md` projections and working-state files are ignored. The scaffold block ends with a `{ticketsPath}/{CODE}-*.md` negation (ticket files must survive slug collisions with ignore patterns — proven necessary by MDT-080) and omits broad dot-file patterns that swallow tool configs.
 
 ---
 *Canonical architecture projection: [architecture.trace.md](./architecture.trace.md)*

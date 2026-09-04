@@ -92,11 +92,7 @@ counter-api/
 **/.unused
 **/unused.*
 **/typescript-graph.md
-# MDT agentic implementation checkpoint state
-**/.*.json
-**/.*.yaml
-# Pipeline state tracking (ignore in any subfolder)
-**/pipeline-state.json
+# (MDT agentic state + pipeline patterns moved to the consolidated MDT block at the bottom)
 /.*/
 !/.agents/
 !/.agents/skills/
@@ -106,28 +102,16 @@ counter-api/
 /.agents/skills/*/
 !/.agents/skills/mdt-pipeline-e2e/
 
-# Task status tracking
-*.tasks-status.yaml
-.checkpoint.yaml
-
 # debug files
 _*
 designs/
 
-# debug spec-trace files
-spec-trace*.md
-**/*.trace.md
 *.bun-build
 /*.md
 /*.txt
 incidents/
 nohup.out
 
-# ignore agent prompts
-**/*prompt*.md
-
-# pipeline json
-**/*.pipeline-state.json
 lefthook-local.yml
 
 # ITCSS nightly audit working files (agent state + reports, not durable docs)
@@ -137,8 +121,6 @@ frontend/src/ITCSS-plan.md
 frontend/src/ITCSS-migration-map.md
 
 # ── Project-wide patterns (migrated from .git/info/exclude) ──
-# Proof-of-concept dirs and scratch test files (convention, not shared code)
-**/poc/**
 # Backup files
 **/*.bak.*
 # Generated report / summary files (not source of truth)
@@ -167,5 +149,28 @@ scripts/test_mcp.sh
 scripts/test_mcp_direct.py
 scripts/verify-pin-rail.mjs
 
-# no mdt-next anymore
-.mdt-next
+# ── MDT working state (consolidated) — canonical list: docs/MDT_WORKING_STATE_FILES.md ──
+# Hand-maintained here; the same list is scaffolded by `mdt-cli project init` in new projects.
+# Depth convention: leading / anchors to project root; **/ matches at any depth.
+# Ticket counter (written by ProjectManager.createProject at project root)
+/.mdt-next
+# MDT workflow context state (e.g. .mdt/workflow-context/ at project root)
+/.mdt/
+# spec-trace rendered projections (canonical store under .trace/ stays TRACKED)
+**/*.trace.md
+**/spec-trace*.md
+# Pipeline state (any subfolder)
+**/pipeline-state.json
+**/*.pipeline-state.json
+# Per-ticket working state
+**/*.tasks-status.yaml
+**/.checkpoint.yaml
+# Agent working conventions
+**/poc/
+**/*prompt*.md
+# Broad dot-file agent state (kept in this repo for tool configs like .auto-claude-security.json;
+# deliberately NOT part of the init scaffold — see docs/MDT_WORKING_STATE_FILES.md)
+**/.*.json
+**/.*.yaml
+# Ticket files must stay trackable even when a slug collides with a pattern above
+!docs/CRs/MDT-*.md

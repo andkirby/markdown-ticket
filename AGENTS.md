@@ -108,10 +108,9 @@ Layered architecture: controllers → services → repositories
 
 ### Data Flow
 1. Tickets are `.md` files with YAML frontmatter
-2. Backend watches directories with `chokidar`
-3. SSE broadcasts changes to clients
-4. Frontend polls as backup (1s interval)
-5. Drag-drop updates UI immediately, then syncs
+2. Backend watches directories with `chokidar` (lazy: watchers start on first SSE client — see `docs/architecture/event-system/EVENT_SYSTEM.md`)
+3. SSE broadcasts changes to clients — the only live channel (no polling fallback); EventSource auto-reconnect triggers a resync
+4. Drag-drop updates UI immediately, then syncs
 
 ### Project Configuration
 - **Global**: `~/.config/markdown-ticket/projects/{project-dir}.toml` (discovery metadata)
@@ -167,6 +166,7 @@ When users ask "how to" questions, search and read the relevant documentation be
 | "How do I use Docker?" | `docs/DOCKER_GUIDE.md`, `README.docker.md`, `docs/CRs/MDT-055*.md` (Docker architecture) |
 | "How do I configure projects?" | `docs/CONFIG_SPECIFICATION.md`, `docs/CONFIG_GLOBAL_SPECIFICATION.md`, `docs/CONFIG_INSPECTION.md` (`bun run inspect:config`) |
 | "Where does a setting live?" | `docs/CONFIG_INSPECTION.md` — `bun run inspect:config` (browser vs backend file + exposure class) |
+| "Which files does MDT generate / which are git-ignored?" | `docs/MDT_WORKING_STATE_FILES.md` (inventory + git policy + the project-init scaffold list) |
 | "How do I test/E2E?" | `tests/AGENTS.md`, `tests/e2e/AGENTS.md` |
 | "How does [feature] work?" | `docs/architecture/`, `server/docs/ARCHITECTURE.md`, `docs/CRs/` (feature tickets) |
 | "How is the frontend structured / where does frontend code go?" | `docs/architecture/frontend-routes-architecture.md`, `frontend/src/AGENTS.md` |

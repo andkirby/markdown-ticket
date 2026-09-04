@@ -206,6 +206,14 @@ bun test cli/tests/e2e/ticket/get.spec.ts cli/tests/e2e/ticket/attr.spec.ts
 bun run --cwd mcp-server jest -- tests/e2e/tools/create-cr.spec.ts
 ```
 
+## UAT Round 2026-09-03 — init gitignore scaffold
+
+- `TEST-cli-init-gitignore` (e2e, `cli/tests/e2e/project/init-gitignore.spec.ts`): `project init` in a fresh folder creates `.gitignore` with the full managed MDT working-state block; init into a folder with a user-authored `.gitignore` preserves every unmanaged line and appends the block exactly once; a second init run leaves the file byte-identical (idempotent). Covers BR-16, C10, Edge-12.
+
+```bash
+bun test cli/tests/e2e/project/init-gitignore.spec.ts
+```
+
 ---
 *Canonical test-plan projection: [tests.trace.md](./tests.trace.md)*
 *Rendered by /mdt:tests via spec-trace*
