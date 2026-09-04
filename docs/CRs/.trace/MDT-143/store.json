@@ -220,13 +220,6 @@
       "routePolicy": "bdd"
     },
     {
-      "id": "BR-16",
-      "kind": "behavior",
-      "text": "WHEN operator invokes mdt-cli project init in a folder that is not yet configured as a project, the system shall create project configuration for the current folder using provided code and name values or interactive defaults when omitted. WHEN --tickets-path <path> is provided, the system shall set the tickets directory to the specified relative path. WHEN --tickets-path is an absolute path or empty, the system shall reject with a validation error.",
-      "sourceRef": "CR:MDT-143",
-      "routePolicy": "bdd"
-    },
-    {
       "id": "Edge-6",
       "kind": "edge_case",
       "text": "IF operator invokes mdt-cli ticket create --project <code> and the project does not exist, THEN the system shall print 'Project <code> not found' and exit with code 1.",
@@ -328,6 +321,27 @@
       "id": "C9",
       "kind": "constraint",
       "text": "The DSH plugin tool schemas shall mirror the CLI flag surface: mdt_ticket_get and mdt_ticket_attr accept an optional project parameter passed through to mdt-cli as -p <code>; tool names and all other schema fields remain stable because presets depend on them; their descriptions must not claim cwd/project-config requirements that -p removes.",
+      "sourceRef": "CR:MDT-143",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-12",
+      "kind": "edge_case",
+      "text": "IF the target folder of mdt-cli project init already contains a .gitignore with user-authored entries, THEN the system shall preserve every unmanaged line, append the managed MDT block exactly once, and leave the file unchanged on a second init run (idempotent merge, no duplicate block).",
+      "sourceRef": "CR:MDT-143",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-16",
+      "kind": "behavior",
+      "text": "WHEN operator invokes mdt-cli project init in a folder that is not yet configured as a project, the system shall create project configuration for the current folder using provided code and name values or interactive defaults when omitted. WHEN --tickets-path <path> is provided, the system shall set the tickets directory to the specified relative path. WHEN --tickets-path is an absolute path or empty, the system shall reject with a validation error. The init shall also ensure the target folder's .gitignore contains a marker-delimited managed MDT block, creating .gitignore when absent and merging into an existing .gitignore without altering unmanaged content. The entry list is phrased canonically in docs/MDT_WORKING_STATE_FILES.md and mirrored by one shared constant; the block ends with a negation ({ticketsPath}/{CODE}-*.md) so ticket files stay trackable when a slug collides with an ignore pattern, omits broad dot-file patterns that swallow tool configs, and leaves the spec-trace store under {ticketsPath}/.trace/ trackable.",
+      "sourceRef": "CR:MDT-143",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C10",
+      "kind": "constraint",
+      "text": "The MDT gitignore entry list shall be owned by one shared constant consumed by every project-init entrypoint routing through ProjectManager.createProject (mdt-cli project init, the project:create script flow, and web-driven project creation), so scaffolded ignores cannot drift between interfaces. The canonical phrasing of the list, its evidence, and the git policy for every MDT working-state file shall live in docs/MDT_WORKING_STATE_FILES.md, and the shared constant must mirror it. The managed block shall be marker-delimited, re-mergeable, and end with a ticket-file negation.",
       "sourceRef": "CR:MDT-143",
       "routePolicy": "tests"
     }
@@ -650,6 +664,28 @@
       "when": "the operator runs mdt-cli ticket get -p ABC 12 --json or mdt-cli ticket attr -p ABC 12 status=Approved --json",
       "then": "the ticket is resolved within project ABC and returned/updated without cwd context; with an unknown project code the command prints 'Project <code> not found' and exits 1",
       "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "project_init_scaffolds_mdt_gitignore",
+      "title": "project init scaffolds the MDT gitignore block in a fresh folder",
+      "covers": [
+        "BR-16"
+      ],
+      "given": "a folder that is not configured as a project and contains no .gitignore",
+      "when": "the operator runs mdt-cli project init with code and name in that folder",
+      "then": "a .gitignore exists containing the marker-delimited managed MDT block with every working-state entry (trace projections, spec-trace debug files, pipeline state, tasks-status, checkpoint and dot-state files, poc directories, prompt files, .mdt-next), and project configuration is created unchanged",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "project_init_merges_existing_gitignore",
+      "title": "project init merges the MDT block into an existing .gitignore idempotently",
+      "covers": [
+        "BR-16"
+      ],
+      "given": "a folder with an existing user-authored .gitignore and no managed MDT block",
+      "when": "the operator runs mdt-cli project init and then runs it a second time",
+      "then": "every user-authored line is preserved, the managed MDT block appears exactly once, and the second run leaves the file byte-identical",
+      "sourceRef": "CR:MDT-143"
     }
   ],
   "obligations": [
@@ -903,6 +939,21 @@
         "ART-dsh-plugin-mdt"
       ],
       "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "OBL-init-gitignore-scaffold",
+      "title": "Project init ensures the managed MDT gitignore block through one shared scaffold module",
+      "derivedFrom": [
+        "BR-16",
+        "C10",
+        "Edge-12"
+      ],
+      "artifactIds": [
+        "ART-shared-project-manager",
+        "ART-shared-gitignore-scaffold",
+        "ART-cli-project"
+      ],
+      "sourceRef": "CR:MDT-143"
     }
   ],
   "artifacts": [
@@ -1107,6 +1158,12 @@
     {
       "id": "ART-shared-key-normalizer",
       "path": "shared/utils/keyNormalizer.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "ART-shared-gitignore-scaffold",
+      "path": "shared/tools/projectGitignore.ts",
       "kind": "runtime",
       "sourceRef": "CR:MDT-143"
     }
@@ -1340,6 +1397,18 @@
       "covers": [
         "C9"
       ],
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "TEST-cli-init-gitignore",
+      "kind": "e2e",
+      "title": "Project init scaffolds and idempotently merges the managed MDT gitignore block: fresh-folder create, existing-file merge preserving user lines, byte-identical re-run",
+      "covers": [
+        "BR-16",
+        "C10",
+        "Edge-12"
+      ],
+      "file": "cli/tests/e2e/project/init-gitignore.spec.ts",
       "sourceRef": "CR:MDT-143"
     }
   ],
@@ -1611,6 +1680,21 @@
       "skills": [
         "repo-routing",
         "bash-scripting"
+      ],
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "TASK-cli-init-gitignore",
+      "title": "Scaffold MDT gitignore managed block on project init (shared constant + idempotent merge + CLI surfacing + e2e)",
+      "ownsArtifactIds": [
+        "ART-shared-project-manager",
+        "ART-shared-gitignore-scaffold",
+        "ART-cli-project"
+      ],
+      "makesGreenIds": [
+        "project_init_scaffolds_mdt_gitignore",
+        "project_init_merges_existing_gitignore",
+        "TEST-cli-init-gitignore"
       ],
       "sourceRef": "CR:MDT-143"
     }
