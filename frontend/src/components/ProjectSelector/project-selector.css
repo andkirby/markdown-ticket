@@ -173,9 +173,11 @@
   }
 
   /* MDT-239: keep the card's favorite star clickable — .project-card__content
-     (z-index 1) otherwise overlays the star rendered before it in DOM order. */
+     (z-index 1) otherwise overlays the star rendered before it in DOM order.
+     z-index alone is enough (the star is position:absolute, hence positioned);
+     adding `relative` here overrode that absolute and dropped the star into
+     flex flow at the card's left edge. */
   .project-card .fav-star-btn--card {
-    @apply relative;
     z-index: 2;
   }
 
