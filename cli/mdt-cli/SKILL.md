@@ -204,6 +204,7 @@ mdt-cli project init [code] [name] [-t <path>]  # Initialize project in cwd
 Bare `mdt-cli project <code>` resolves as `project get <code>`. Lowercase `ls` and `list` are reserved as list aliases.
 
 - **`-t, --tickets-path <path>`** — set a custom tickets directory (relative to project root).
+- **init also scaffolds `.gitignore`** — a marker-delimited `# >>> MDT working state >>>` managed block (counter, trace projections, pipeline state, per-ticket working state, poc/prompts, plus a `!{tickets}/{CODE}-*.md` negation keeping ticket files trackable) is created or idempotently merged into an existing `.gitignore`; unmanaged lines are never touched. Entry list: `docs/MDT_WORKING_STATE_FILES.md`.
 
 ## Top-level Aliases
 

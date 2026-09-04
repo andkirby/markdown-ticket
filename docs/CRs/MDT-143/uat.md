@@ -2,116 +2,85 @@
 
 ## Objective
 
-Make every ticket-addressing surface of MDT-143 work for non-interactive
-consumers that run with a cwd that is not a project root. Consumers that know
-the project code (`mcp-server`, `dsh-plugin/mdt.js`) must be able to address a
-ticket explicitly; `ticket get` and `ticket attr` are the last CLI subcommands
-that reject `-p/--project`.
+Make `mdt-cli project init` scaffold the MDT working-state gitignore entries as
+part of project initialization, so newly initialized projects get the same
+generated-artifact ignores the source repo maintains by hand (`*.trace.md`
+projections, pipeline state, tasks-status, checkpoints, poc, prompts) instead
+of surfacing them as untracked git noise.
 
 ## Approved Changes
 
 | Change | Detail |
 |--------|--------|
-| `-p` on `ticket get` / `ticket attr` | Same `-p, --project <code>` option as `list`/`create`/`deps`; explicit project wins over cwd detection; unknown project → `Project <code> not found`, exit 1; identical behavior when omitted. `cli/mdt-cli/SKILL.md` updated (canonical agent-facing reference, per `cli/AGENTS.md`). |
-| MCP project contract | Verified and locked as C8: the MCP server is in-process (not a CLI wrapper); every CR tool already accepts `project`, falls back to detected cwd context only when absent, and `resolveProject` throws a structured actionable error naming the missing `project` parameter. No premise-matching rewrite needed; e2e coverage confirmed. |
-| DSH plugin alignment | `mdt_ticket_get` and `mdt_ticket_attr` gain the optional `project` parameter via the existing `projectArgs()` pattern; cwd caveats removed from descriptions; tool names and all other schema fields unchanged. |
+| Init scaffolds `.gitignore` | `ProjectManager.createProject` ensures the target folder's `.gitignore` contains a marker-delimited managed MDT block, delegating to one new shared module (`shared/tools/projectGitignore.ts`). Covers every entrypoint routing through `createProject`: `mdt-cli project init`, `project:create` script flow, web-driven creation. |
+| Durable single-source doc | [docs/MDT_WORKING_STATE_FILES.md](../../MDT_WORKING_STATE_FILES.md) — canonical inventory (file → producer → observed locations → git policy → pattern), the scaffold block, and gotchas; the shared constant must mirror it, and this repo's `.gitignore` now carries the same list in one consolidated marked block referencing the doc. |
+| Entry set (evidence-upgraded) | Grounded in the repo survey (2026-09-03), all patterns depth-explicit (`/` = project root, `**/` = any depth): `**/*.trace.md`, `**/spec-trace*.md`, `**/pipeline-state.json`, `**/*.pipeline-state.json`, `**/*.tasks-status.yaml`, `**/.checkpoint.yaml`, `/.mdt-next` (written by `createProject` itself), `/.mdt/` (workflow-context observed), `**/poc/`, `**/*prompt*.md`, closing negation `!{ticketsPath}/{CODE}-*.md`. Broad `**/.*.json`/`**/.*.yaml` **omitted** — no observed MDT dot-state beyond the explicit entries, and they swallow tool configs (`.prettierrc.json`, `.knip.json`). |
+| Merge semantics (user: "1, consider best practices") | Idempotent managed-block merge: create `.gitignore` when absent; append the block when missing; no-op when already current; never modify unmanaged lines; re-running init produces no diff. Negation placed last so ticket files always stay trackable (MDT-080 proves slug collisions are real). |
+| Trace store stays trackable | `{ticketsPath}/.trace/**/store.json` is canonical spec-trace state and is intentionally NOT ignored (committed in the source repo). Only rendered projections and working state are ignored. |
 
 ## Changed Requirement IDs
 
-- `BR-1` — refined in place (`ticket get -p`)
-- `BR-10` — refined in place (`ticket attr -p`)
-- `Edge-11` — added (unknown `-p` project rejection on get/attr)
-- `C8` — added (MCP explicit-project contract, verified as already satisfied)
-- `C9` — added (DSH plugin schema mirrors CLI flag surface, names stable)
+- `BR-16` — refined in place (init also ensures the managed MDT gitignore block)
+- `Edge-12` — added (existing user `.gitignore`: preserve unmanaged lines, append block once, idempotent re-run)
+- `C10` — added (single shared entry-list constant consumed by all `createProject` entrypoints; marker-delimited re-mergeable block)
 
 ## Affected Downstream Trace
 
-- requirements: BR-1, BR-10 refined; Edge-11, C8, C9 added → rendered
-- bdd: `ticket_get_attr_in_explicit_project` added (covers BR-1, BR-10) → rendered
-- architecture: `ART-dsh-plugin-mdt`, `ART-mcp-project-handlers` added; `OBL-explicit-project-targeting` added → rendered
-- tests: `TEST-cli-get-attr-project`, `TEST-mcp-explicit-project`, `TEST-dsh-plugin-project-flag` added → rendered
-- tasks: `TASK-uat-project-context` added → rendered
+- requirements: BR-16 refined; Edge-12, C10 added → validated, **relocked**, rendered; refined again after the repo survey (doc as phrase-source, ticket negation, dot-pattern omission) → revalidated, relocked
+- bdd: `project_init_scaffolds_mdt_gitignore`, `project_init_merges_existing_gitignore` added (both cover BR-16) → rendered
+- architecture: `ART-shared-gitignore-scaffold`, `OBL-init-gitignore-scaffold` added → rendered
+- tests: `TEST-cli-init-gitignore` added → rendered
+- tasks: `TASK-cli-init-gitignore` added → rendered
 
 ## Execution Slices
 
-### Slice 1 — `-p/--project` on `ticket get` and `ticket attr` (CLI)
+### Slice 1 — shared scaffold module + ProjectManager wiring
 
-- **Objective**: resolve a ticket within an explicitly given project from any cwd.
-- **Direct artifacts**: `cli/src/index.ts`, `cli/src/commands/view.ts`, `cli/src/commands/attr.ts`, `cli/mdt-cli/SKILL.md`, `cli/tests/e2e/ticket/`.
-- **Direct GREEN targets**: `TEST-cli-get-attr-project`, `ticket_get_attr_in_explicit_project`.
-- **Impacted canonical tasks**: `TASK-uat-project-context`.
-- **Why**: consumers that know the project code cannot address a ticket without cwd context today.
+- **Objective**: one constant + one idempotent merge function, called from `createProject` on the non-globalOnly path after local-config/counter creation.
+- **Direct artifacts**: `shared/tools/projectGitignore.ts` (new), `shared/tools/ProjectManager.ts`, `shared/dist` rebuild.
+- **Direct GREEN targets**: `TEST-cli-init-gitignore`, `project_init_scaffolds_mdt_gitignore`, `project_init_merges_existing_gitignore`.
+- **Impacted canonical tasks**: `TASK-cli-init-gitignore`.
+- **Why**: the entry list must live in shared so CLI/script/web cannot drift (C10); the CLI keeps zero ignore logic (business-logic boundary).
 
-### Slice 2 — MCP project contract verification (no code change expected)
+### Slice 2 — CLI surfacing + agent reference
 
-- **Objective**: prove `create_cr` with explicit `project` succeeds from a non-project cwd and the no-context error is actionable.
-- **Direct artifacts**: `mcp-server/src/tools/handlers/projectHandlers.ts` (read-only), `mcp-server/tests/e2e/tools/create-cr.spec.ts`.
-- **Direct GREEN targets**: `TEST-mcp-explicit-project`.
-- **Impacted canonical tasks**: `TASK-uat-project-context`.
-- **Why**: the request assumed the MCP server wraps `mdt-cli`; it is in-process and already threads `project` — verify and lock the contract instead of rewriting.
+- **Objective**: init output names the scaffolded file; structured `project.init` payload reflects it; the canonical agent-facing skill doc stays truthful.
+- **Direct artifacts**: `cli/src/output/formatter.ts` (`formatProjectInit`), `cli/src/commands/project.ts`, `cli/mdt-cli/SKILL.md`.
+- **Direct GREEN targets**: `TEST-cli-init-gitignore` (output assertions), existing `TEST-cli-structured-output` regression.
+- **Impacted canonical tasks**: `TASK-cli-init-gitignore`.
+- **Why**: per `cli/AGENTS.md`, any interface change must update `cli/mdt-cli/SKILL.md`; structured consumers need the new field.
 
-### Slice 3 — DSH plugin alignment
+### Slice 3 — E2E coverage
 
-- **Objective**: `mdt_ticket_get`/`mdt_ticket_attr` accept optional `project`; descriptions drop the cwd caveat.
-- **Direct artifacts**: `dsh-plugin/mdt.js`, `dsh-plugin/AGENTS.md` (tool list wording only if needed).
-- **Direct GREEN targets**: `TEST-dsh-plugin-project-flag` (import + schema check).
-- **Impacted canonical tasks**: `TASK-uat-project-context`.
-- **Why**: the plugin omitted `project` only because the CLI rejected it; item 1 removes that blocker.
+- **Objective**: prove create / merge / idempotent-re-run against the built binary in isolated fixtures.
+- **Direct artifacts**: `cli/tests/e2e/project/init-gitignore.spec.ts` (new, `@mdt/shared/test-lib`).
+- **Direct GREEN targets**: `TEST-cli-init-gitignore`.
+- **Impacted canonical tasks**: `TASK-cli-init-gitignore`.
+- **Why**: Edge-12 routes to tests; the byte-identical re-run assertion is the regression guard for duplicate blocks.
 
-## Validation (results)
+## Validation
 
-- `./cli/bin/mdt-cli ticket get -p MDT MDT-143 --json` from `/tmp` — ✅ returns the ticket
-- `./cli/bin/mdt-cli ticket attr -p MDT 143 status=Implemented --json` from `/tmp` — ✅ applies (no-op) update, exit 0
-- Unknown `-p` code — ✅ `PROJECT_NOT_FOUND` / `Project <code> not found`, exit 1 (structured envelope)
-- MCP e2e: `create-cr.spec.ts` + `optional-project-param.spec.ts` — ✅ 26/26 (incl. new explicit-project-from-non-project-cwd and actionable-error tests)
-- `node -e "import('.../dsh-plugin/mdt.js')"` — ✅ loads; all 6 tool names unchanged; `project` present on get/list/create/attr/deps
-- `bun test` (cli) — ✅ 218/218 (new `ticket/project-flag.spec.ts` 6/6); `eslint` clean
-- MCP jest unit/integration — ✅ 159/159
-- `spec-trace validate MDT-143 --stage all` — ✅ all five stages pass; all rendered
-- Extra fix surfaced by verification: `import * as fs from 'fs-extra'` broke Node-ESM consumers (`fs.stat is not a function`) — switched to default import in `TicketService` and `mcp-server/config`; this had silently broken all node-run create e2e tests
+**Implemented 2026-09-03 (TASK-cli-init-gitignore) — all GREEN:**
+
+- TDD: `init-gitignore.spec.ts` 3/3 RED → GREEN; unit suite `shared/tools/__tests__/projectGitignore.test.ts` 6/6 (RED on missing module → GREEN)
+- Full CLI e2e: 117/117 across 15 files (includes new spec)
+- Shared jest project suites: 47/47 (`project-management` + `projectGitignore`)
+- `eslint` clean on all changed files (one `perfectionist/sort-imports` fix applied); `bun run validate:ts` 5/5 projects pass
+- Manual acceptance in an isolated temp project with real `git init`: user `.gitignore` preserved, managed block appended once, re-run byte-identical, `git check-ignore` confirms working state ignored and ticket files (incl. a `prompt`-slug ticket) trackable via the negation
+- Lesson learned: `**/` inside a JSDoc comment closes the block comment early (`*/` substring) — tsc parse errors pointed mid-file while the real culprit was a pattern literal in a doc comment above
+
+Earlier spec-round evidence (repo survey 2026-09-03): filesystem glob + `git check-ignore --no-index` + `git ls-files -i -c --exclude-standard` — results recorded in docs/MDT_WORKING_STATE_FILES.md. `.gitignore` consolidation verified behavior-preserving (274-file battery identical before/after except the intended MDT-080 negation protection; tracked-but-ignored 666 → 665).
+- Requirements lock refreshed after approved changes; `--stage requirements --strict` now passes (the previous baseline was stale — it predated the already-approved BR-22/C7–C9/Edge-9–11 additions recorded in CR Section 8).
+- Entry forms verified against the source repo with `git check-ignore` before being specified.
 
 ## Watchlist
 
-- Explicit-project precedence is now "flag wins" across list/create/deps/get/attr — keep MCP `resolveProject` (explicit > key-embedded > detected > single-registry-project) consistent if precedence is ever revisited.
+- Broad dot patterns (`**/.*.json` / `**/.*.yaml`) stay in THIS repo's `.gitignore` (they cover tool configs like `.auto-claude-security.json`) but are deliberately omitted from the scaffold — the durable doc records the divergence and the reason.
+- Managed-block markers are a public convention once shipped: other tools editing `.gitignore` must respect them; keep the merge conservative (append-only outside markers).
+- Explicit-project precedence is "flag wins" across list/create/deps/get/attr — keep MCP `resolveProject` consistent if precedence is ever revisited.
 - `dsh-plugin` tool names and non-`project` schema fields are preset contracts; do not rename.
-- Deferred concerns UC-1 (orphan `{KEY}/` subdocument folder on delete) and UC-2 (`.trace/{KEY}/` never cleaned on delete), raised 2026-07-26 below, remain open for a separate session.
+- Deferred concerns UC-1 (orphan `{KEY}/` subdocument folder on delete) and UC-2 (`.trace/{KEY}/` never cleaned on delete), raised 2026-07-26, remain open for a separate session.
 
 ## Open Decisions
 
-None. Item 2's premise (MCP wrapping `mdt-cli`) did not match the repo; the in-process contract was verified instead of rewritten.
-
----
-
-## UAT Concerns (2026-07-26)
-
-Raised during MDT-209 planning (ticket write governance / agent deletion
-protection). Logged here for a **separate session** — do not address in MDT-209.
-
-### UC-1: `delete` leaves orphan `{KEY}/` subdocument folder when non-empty
-
-**Repro**: `mdt-cli delete 143` on a project where `docs/CRs/MDT-143/` contains
-sibling subdocuments (architecture.md, bdd.md, tasks.md, …).
-
-**Current behavior**: `cli/src/commands/delete.ts:59 cleanupEmptyCRDir` removes
-the folder **only if empty** after the `.md` file is gone. With subdocuments
-present, the `.md` is removed but the folder — and its 13 sibling files —
-survives as an orphan.
-
-**Question**: should `delete` (a) recursively remove the entire `{KEY}/` folder,
-(b) refuse unless `--purge-subdocuments` is passed, or (c) stay as-is and treat
-subdocuments as independent artifacts? (a) matches user mental model of
-"deleting the ticket"; (b) is safer; (c) is current behavior.
-
-### UC-2: `delete` never touches `{ticketsPath}/.trace/{KEY}/`
-
-**Repro**: `mdt-cli delete 143` leaves `docs/CRs/.trace/MDT-143/` (with
-`baselines/` and `store.json`) intact on disk forever.
-
-**Question**: should `delete` cascade to `.trace/{KEY}/`? If yes, `delete.ts`
-needs to resolve the trace root and remove it. If no, document it as an
-intentional separation of concerns.
-
-### Scope note
-
-Closing UC-1/UC-2 becomes more urgent once MDT-209 ships (it forces deletes
-through `mdt-cli`), but is out of scope for that ticket and for this round.
+None. Entry set ("1 and 2") and merge semantics ("1, with best practices") were confirmed by the user; best practices applied: repo-proven pattern forms, marker-delimited block, append-only outside markers, idempotent no-diff re-run, trace store left trackable.

@@ -673,3 +673,26 @@ Non-interactive consumers (MCP tools, DSH plugin) run with a cwd that is not a p
 **Validation**: `ticket get/attr -p` from `/tmp` GREEN (incl. unknown-project rejection); new CLI e2e `ticket/project-flag.spec.ts` 6/6, full CLI suite 218/218, eslint clean; MCP e2e 26/26 and unit/integration 159/159; dsh-plugin import + schema check GREEN; `spec-trace validate --stage all` pass, all stages rendered. Verification surfaced and fixed a Node-ESM `fs-extra` interop bug (`import * as fs` → default import) that had broken all node-run MCP create e2e tests.
 
 **Commits**: 6cbf55f8 (cli), 43fd5eb1 (mcp + shared interop fix), ca4f4867 (dsh-plugin, now tracked via .gitignore negation).
+
+### UAT Session 2026-09-03
+
+**Approved changes**: Make the MDT working-state gitignore entries part of project init — `mdt-cli project init` scaffolds a marker-delimited managed `.gitignore` block (core working state + agent conventions) via one shared module, so new projects stop leaking generated artifacts into git status.
+
+| Change | Requirement Impact |
+|--------|-------------------|
+| Init ensures managed MDT `.gitignore` block (create-when-absent, idempotent merge) | BR-16 refined |
+| Existing user `.gitignore` preserved; block appended once; re-run is no-diff | Edge-12 added |
+| Single shared entry-list constant consumed by all `createProject` entrypoints (CLI, `project:create`, web) | C10 added |
+| `{ticketsPath}/.trace/` store stays trackable (only projections/working state ignored) | design note (no ID) |
+| Durable phrase-source doc `docs/MDT_WORKING_STATE_FILES.md` + evidence-based list upgrade (repo survey): scaffold omits broad `**/.*.json`/`**/.*.yaml`, adds `.mdt/`, ends with `!{ticketsPath}/{CODE}-*.md` negation (MDT-080 slug-collision proof); repo `.gitignore` consolidated into one marked block, verified behavior-preserving; AGENTS.md documentation table points to the doc | BR-16, C10 refined |
+
+**Updated workflow documents**: requirements.md, bdd.md, architecture.md, tests.md, tasks.md, uat.md, and generated `*.trace.md` projections.
+**uat.md written**: yes (current-round brief)
+**Strict drift/lock**: requirements relocked after approved changes (previous baseline was stale — predated approved BR-22/C7–C9/Edge-9–11 additions); `validate --stage requirements --strict` and `validate --stage all` now pass.
+**New task**: TASK-cli-init-gitignore
+**New artifacts**: ART-shared-gitignore-scaffold
+**New obligation**: OBL-init-gitignore-scaffold
+**New test plan**: TEST-cli-init-gitignore
+**New scenarios**: project_init_scaffolds_mdt_gitignore, project_init_merges_existing_gitignore
+
+**Implementation (same day)**: TASK-cli-init-gitignore complete — `shared/tools/projectGitignore.ts` (constant + idempotent marker-delimited merge), wired into `ProjectManager.createProject` (non-globalOnly path), init output + structured `project.init` payload surface the scaffold, `cli/mdt-cli/SKILL.md` updated. Evidence: new e2e 3/3 (RED→GREEN), unit suite 6/6, full CLI e2e 117/117, shared project suites 47/47, eslint clean on changed files, validate:ts 5/5, manual temp-project acceptance with real `git check-ignore` (prompt-slug ticket trackable via negation).
