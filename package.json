@@ -15,7 +15,7 @@
   "scripts": {
     "install:all": "bun install && bun install --cwd shared && bun install --cwd server && bun install --cwd mcp-server && bun install --cwd domain-contracts && bun install --cwd cloud",
     "install:prod": "bun install --ci --omit=dev && bun pm cache clean --force && bun install --workspaces --omit=dev && bun pm cache clean --force",
-    "dev": "bun run --cwd frontend vite",
+    "dev": "bun run --cwd frontend vite --host",
     "dev:lan": "VITE_SERVER_HOST=0.0.0.0 bun run --cwd frontend vite",
     "dev:server": "bun run --cwd server dev",
     "smart-server": "bash scripts/smart-server.sh",
@@ -47,7 +47,7 @@
     "lint:cloud:fix": "bun run --cwd cloud lint:fix",
     "lint:domain:fix": "bun run --cwd domain-contracts lint:fix",
     "lint:shared:fix": "bun run --cwd shared lint:fix",
-    "preview": "bun run --cwd frontend vite preview",
+    "preview": "bun run --cwd frontend vite preview --host",
     "predeploy": "bun run build",
     "test:project-cli": "bun run --cwd shared jest --testPathPattern=project-management",
     "config": "node shared/dist/tools/config-cli.js",
