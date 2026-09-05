@@ -2,7 +2,7 @@
 code: MDT-184
 status: Implemented
 dateCreated: 2026-06-12T21:00:00.000Z
-type: Tech Debt
+type: Technical Debt
 priority: Medium
 relatedTickets:
   - MDT-172
