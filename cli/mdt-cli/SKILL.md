@@ -7,6 +7,16 @@ description: Use the `mdt-cli` CLI for quick ticket and project lookups from the
 
 Terminal tool for Markdown Ticket management. Binary: `mdt-cli`.
 
+## Project Resolution
+
+Commands resolve the project from the cwd: the nearest `.mdt-config.toml`
+walking up from the current directory, with a registry fallback. **Inside a
+project, omit `-p` — cwd detection is the default and the recommended path.**
+Use `-p <code>` only to target a *different* project than cwd, and
+`mdt-cli project ls` only for cross-project work or when cwd is not inside a
+project. Do not list all projects just to orient — run bare `mdt-cli project`
+for the current project's info.
+
 ## Key Resolution
 
 All ticket commands accept flexible key forms:

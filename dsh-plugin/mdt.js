@@ -13,7 +13,10 @@ export const inject = ['tools', 'shell']
 
 const PROJECT_PARAM = {
   type: 'string',
-  description: 'Project code; avoids needing the project as cwd.',
+  description:
+    'Optional project code. Omit to use the project detected from the current working ' +
+    'directory (the default and recommended path); pass only to target a different ' +
+    'project than cwd.',
 }
 
 /** Full JSON-Schema object; raw registrations are not converted from shorthand. */
@@ -76,7 +79,7 @@ export function apply(ctx) {
     name: 'mdt_ticket_get',
     description:
       'Get one MDT ticket by key (e.g. MDT-042) with full attributes. Returns JSON. ' +
-      'Pass `project` to target a project explicitly instead of relying on cwd.',
+      'The project resolves from cwd by default; pass `project` only to target a different project.',
     parameters: objectSchema(
       { key: { type: 'string' }, project: PROJECT_PARAM },
       ['key'],
@@ -90,8 +93,8 @@ export function apply(ctx) {
   register({
     name: 'mdt_ticket_list',
     description:
-      'List MDT tickets. Optional filter tokens as accepted by `mdt-cli ticket list` ' +
-      '(e.g. status=Approved, level=epic, project=<code>). Returns JSON.',
+      'List MDT tickets; cwd-detected project by default. Optional filter tokens as accepted by ' +
+      '`mdt-cli ticket list` (e.g. status=Approved, level=epic). Returns JSON.',
     parameters: objectSchema({
       filters: { type: 'array', items: { type: 'string' } },
       project: PROJECT_PARAM,
@@ -111,7 +114,8 @@ export function apply(ctx) {
     description:
       'Create a new MDT ticket. `title` is the full ticket title (one string). ' +
       '`type` is the optional Type[/priority] marker (e.g. "Bug/high"), `slug` an optional ' +
-      'URL slug. Pass `project` instead of relying on cwd. Returns JSON.',
+      'URL slug. The project resolves from cwd by default; pass `project` only to target ' +
+      'a different project. Returns JSON.',
     parameters: objectSchema(
       {
         title: { type: 'string', description: 'Full ticket title.' },
@@ -141,7 +145,7 @@ export function apply(ctx) {
     description:
       'Update attributes of one MDT ticket. `attrs` are field=value tokens; fields: ' +
       'status, priority, level, phase, assignee, related, depends, blocks, impl-date, impl-notes. ' +
-      'Pass `project` to target a project explicitly instead of relying on cwd. Returns JSON.',
+      'The project resolves from cwd by default; pass `project` only to target a different project. Returns JSON.',
     parameters: objectSchema(
       {
         key: { type: 'string' },
@@ -182,8 +186,24 @@ export function apply(ctx) {
   })
 
   register({
+    name: 'mdt_project_current',
+    description:
+      'Get the MDT project resolved from the current working directory: code, name, root, ' +
+      'tickets path. Use this when you need the session project code to anchor ticket keys. ' +
+      'Returns JSON.',
+    parameters: objectSchema({}),
+    output: { schema: { type: 'string' }, render },
+    async execute(_args, exec) {
+      return runMdt(shell, ['project', '--json'], policyFor(exec))
+    },
+  })
+
+  register({
     name: 'mdt_project_list',
-    description: 'List all MDT projects known to mdt-cli. Returns JSON.',
+    description:
+      'List all MDT projects known to mdt-cli. Rarely needed: ticket tools resolve the cwd ' +
+      'project automatically and `mdt_project_current` returns the session project. Use only ' +
+      'for cross-project work or when cwd is not inside a project. Returns JSON.',
     parameters: objectSchema({}),
     output: { schema: { type: 'string' }, render },
     async execute(_args, exec) {

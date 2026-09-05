@@ -4,7 +4,8 @@ This directory holds raw Cordis plugins that expose local CLIs as model tools
 inside DeepSeek Harness (DSH) sessions:
 
 - `mdt.js` — `../cli/bin/mdt-cli`: `mdt_ticket_get`, `mdt_ticket_list`,
-  `mdt_ticket_create`, `mdt_ticket_attr`, `mdt_ticket_deps`, `mdt_project_list`.
+  `mdt_ticket_create`, `mdt_ticket_attr`, `mdt_ticket_deps`,
+  `mdt_project_current`, `mdt_project_list`.
 - `spec-trace.js` — the compiled spec-trace CLI, resolved from the
   `SPEC_TRACE_BIN` environment variable (set it in the DSH host environment
   or the preset's shell-env contributor): `spec_trace_init`,
