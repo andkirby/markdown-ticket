@@ -21,6 +21,7 @@ CR declares **Requirements Scope: full**. Delivery timing for all requirements: 
 | Performance | No per-span network requests at render time (C5) |
 | Project-root fallback | A ref naming an existing project-root file (e.g. 'frontend/src/THEME.md') resolves to that document; explicit '..' refs are never re-anchored (BR-2.4, UAT 2026-08-24) |
 | Link config precedence | localStorage override > CONFIG_DIR/config.toml [links] > defaults (C6, UAT 2026-08-24) |
+| Ticket-key path tokens | A plain-text path ending in a ticket-key-shaped .md basename (docs/uat/GPDE-003.md) renders as ONE document link whenever the index is loaded — navigable if it exists, visibly flagged broken if known-missing; unknown index and guarded cases keep the legacy split rendering byte-identically (BR-2.6, UAT 2026-09-05) |
 
 ## Behavioral Coverage Summary
 
@@ -28,6 +29,7 @@ CR declares **Requirements Scope: full**. Delivery timing for all requirements: 
 - BR-2.1/BR-2.2 — broken and out-of-scope/traversal flagging
 - BR-3.1/BR-3.2 — preservation of fenced-code and genuine-code rendering
 - BR-4.1 — no regression to existing links and ticket-key linkification
+- BR-2.6 — plain-text path tokens with ticket-key basenames: whole-link routing on positive index knowledge (UAT 2026-09-05)
 - C1–C5, Edge-1 — constraints and the command-example edge case
 
 ## Traceability
