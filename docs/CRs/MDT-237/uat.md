@@ -1,63 +1,55 @@
-# UAT Refinement Brief — MDT-237 (2026-08-24)
+# UAT Refinement Brief — MDT-237 (2026-09-05)
 
 ## Objective
-Fold user feedback from live verification into MDT-237: correct resolution of
-project-root file references ('frontend/src/THEME.md') and make CONFIG_DIR/config.toml
-link defaults actually reach the rendering pipeline.
+Fix the linkification defect found in live GPDE UAT: a plain-text path token
+ending in a ticket-key-shaped basename (`docs/uat/GPDE-003.md`) rendered as a
+plain `docs/uat/` prefix plus a bare ticket link — split rendering AND a wrong
+target (ticket view instead of the referenced document), even with the
+document index loaded.
 
 ## Approved Changes
-1. **Project-root fallback (BR-2.4)** — inline-code refs that provably name an
-   existing project file (per the document index) resolve to the documents
-   route instead of a dead ticket-relative URL. Explicit '..' refs are never
-   re-anchored. Relative path math remains the fallback when the index is
-   unknown or the root file does not exist.
-2. **Config merge (C6)** — getLinkConfig() now merges
-   localStorage > config.toml [links] (/api/config/global) > defaults;
-   useMarkdownProcessor and SmartLink re-render when globals arrive.
+1. **Whole-token capture (BR-2.6, D12)** — the Step 1.5 ticket-filename
+   protection regex now captures the WHOLE path token (leading path segments
+   included) instead of only the ticket-key basename, so the basename is never
+   split from its prefix. The separator scan runs on the path part only —
+   anchors containing `/` (`#foo/bar`) never split the basename.
+2. **Index-loaded routing at restore** — `restoreTicketFilenameRef` renders
+   the whole token as ONE document link (documents route, anchor + percent-
+   decoding carried) whenever the document index is loaded and ALL hold:
+   a path prefix exists, document links are enabled, an existence oracle is
+   provided, and the path is outside the tickets area. Existing targets
+   navigate; known-missing targets (e.g. a forward reference to a not-yet-
+   written UAT report) render as one flagged-broken link (BR-2.1) that
+   becomes navigable automatically once the file is created (SSE → index
+   update → re-preprocess).
+3. **Byte-identical legacy fallback** — every other case (no oracle, index
+   unknown/null, disabled flags, `..`-prefixed tokens, tickets-area paths,
+   bare/suffixed ticket filenames) reconstructs today's rendering exactly:
+   prefix plain text + basename → ticket route.
 
 ## Changed Requirement IDs
-- Added: BR-2.4 (behavior), C6 (constraint)
-- Unchanged: BR-1.1…BR-4.1, C1–C5, Edge-1
+- Added: BR-2.6 (behavior, refined same session: known-missing routes whole + flagged), OBL-7 (architecture obligation), D12 (decision)
+- Added: TEST-unit-plaintext-token (tests), TASK-uat2-plaintext-token (tasks)
+- Unchanged: BR-1.1…BR-2.5, BR-3.x, BR-4.1, C1–C9, Edge-1
 
 ## Affected Downstream Trace
-- requirements/bdd/architecture/tests/tasks re-validated (all stages clean) and re-rendered
-- New test plans: TEST-unit-fallback, TEST-e2e-fallback, TEST-unit-config-merge
-- New task: TASK-followup-fallback (done)
+- requirements / architecture / tests / tasks re-validated (all stages clean) and re-rendered
+- BDD stage untouched (BR-2.6 routes to tests, matching BR-2.4/BR-2.5)
 
-## Verification
-- Unit: 940 pass / 0 fail (17 MDT-237 preprocessor + 4 cache cases)
-- Lint + validate:ts clean
-- E2E: 6/6 MDT-237 scenarios (incl. project-root fallback) + 4/4 adjacent regressions
+## Execution Slices
+Implemented in this session; no remaining execution work:
+- `frontend/src/utils/markdownPreprocessor.ts` — Step 1.5 regex, `restoreTicketFilenameRef`, Step 2.5 wiring
+- `frontend/src/utils/markdownPreprocessor.mdt237.test.ts` — 13 new BR-2.6 cases (routing incl. known-missing, anchor incl. anchor-with-slash, encoding, and legacy-fallback regressions)
 
-3. **Non-.md passthrough (C7)** — LinkNormalizer (MDT-150 amendment): only .md is
-   processed; every other allowed path passes through as a valid file link.
-   The old extension allowlist flagged authored links like THEME.md's
-   components/Badge/badge.css as broken ('Unsupported file type'). Traversal
-   and configured-paths boundaries unchanged. Negative tests added in
-   linkNormalization.mdt150.test.ts.
+## Validation
+- Unit: mdt237 suite 42/42; full frontend suite 1061 pass / 0 fail
+- Lint + validate:ts clean on touched files (domain-contracts lint errors are pre-existing baseline, untouched)
+- E2E: 12 passed — inline-code-doc-links (6 MDT-237 scenarios) + smartlink-doc-refs + smartlink-anchor + markdown-rendering regressions
+- Post-review parity check: old-vs-new preprocessor byte-identical on anchor-bearing tokens (regression found and fixed in-session)
 
-4. **Unique-basename disambiguation (BR-2.5, D10)** — a bare filename
-   unverifiable relative to the source resolves to the only project file with
-   that basename (THEME.md -> frontend/src/THEME.md); ambiguous names keep relative
-   resolution. Basename map built once per index load — zero extra fetches.
-5. **.html parity (C8)** — inline-code .html refs are processed exactly like
-   .md (qualification, fallback, basename, documents-route rendering);
-   classifyLink recognizes .html subdoc/document URLs.
-
-6. **URL-bearing code spans (D11/C9)** — `git clone https://git.example.com/some/path`
-   spans link ONLY the URL part — surrounding code stays a code span
-   (ASCII-hostname guard: pseudo-URLs like https://… stay verbatim); fixed authoring bug where escaped backticks in
-   artifacts turned code examples into plain text (assess.md restored).
-7. **Plain-text .md favors real files** — plain-text tokens route to
-   provably-existing project files (root/unique-basename) before the legacy
-   relative wrap; legacy behavior is kept when the index has no positive
-   knowledge (ticket-relative targets are unverifiable by design).
-
-8. **Link config is owner/file-level only (C6 amended, reverses D9's
-   localStorage precedence)** — getLinkConfig() = config.toml [links] over
-   defaults, nothing else; the Board-tab "Smart Links" localStorage toggle was
-   removed; stale markdown-ticket-link-config keys are ignored. Owners manage
-   links.* in Settings - Advanced (BackendConfigSection) or config.toml.
-
-## Implementation Slices
-Both changes implemented in this round; no remaining execution work.
+## Watchlist
+- Documents-view mode (sourcePath outside a ticket) restores ticket-key .md
+  tokens verbatim (no ticketKey ⇒ no ticket link) — pre-existing behavior,
+  unchanged by this round; extend D12 routing there only if a real use case appears.
+- The architecture decisions table stops at D9 for round-1 items D10/D11
+  (they live only in uat.md history); D12 was appended directly after D9.

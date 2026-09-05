@@ -136,6 +136,13 @@
       "text": "Link configuration is owner-level and file-level only: CONFIG_DIR/config.toml [links] (read via /api/config/global, merged over built-in defaults). The browser localStorage override and its Board-tab toggle were removed; a stale legacy key is ignored.",
       "sourceRef": "docs/CRs/MDT-237/uat.md",
       "routePolicy": "tests"
+    },
+    {
+      "id": "BR-2.6",
+      "kind": "behavior",
+      "text": "WHEN a plain-text path token ending in a ticket-key-shaped .md basename (e.g. docs/uat/GPDE-003.md) appears in a ticket-context document and the document index is loaded, the system shall render the whole token as ONE document link — navigable when the path exists, visibly flagged broken when the index knows it is missing — instead of splitting it into a plain path prefix plus a bare ticket link; an unknown index (null) and ..-prefixed, tickets-area, or disabled-flag tokens keep the legacy rendering byte-identically.",
+      "sourceRef": "CR:MDT-237",
+      "routePolicy": "tests"
     }
   ],
   "scenarios": [
@@ -276,6 +283,17 @@
         "ART-e2e-spec"
       ],
       "sourceRef": "docs/CRs/MDT-237/architecture.md"
+    },
+    {
+      "id": "OBL-7",
+      "title": "Step 1.5 ticket-filename protection captures the WHOLE path token; restore-time routing produces a documents-route link whenever the index is loaded for a path outside the tickets area with document links enabled — existing targets navigate, known-missing targets render flagged-broken via SmartLink (BR-2.1); unknown index (null), no oracle, ..-prefixed, tickets-area, and disabled flags keep the legacy split rendering byte-identically (covers BR-2.6)",
+      "derivedFrom": [
+        "BR-2.6"
+      ],
+      "artifactIds": [
+        "ART-preprocessor"
+      ],
+      "sourceRef": "CR:MDT-237"
     }
   ],
   "artifacts": [
@@ -430,6 +448,16 @@
       ],
       "file": "src/utils/markdownPreprocessor.mdt237.test.ts",
       "sourceRef": "docs/CRs/MDT-237/architecture.md"
+    },
+    {
+      "id": "TEST-unit-plaintext-token",
+      "kind": "unit",
+      "title": "Plain-text path tokens with ticket-key basenames: positive-index whole-link routing, anchor/encoding, and byte-identical legacy fallback (missing/unknown oracle, disabled flags, tickets-area, ..-prefixed, bare/suffixed regression)",
+      "covers": [
+        "BR-2.6"
+      ],
+      "file": "src/utils/markdownPreprocessor.mdt237.test.ts",
+      "sourceRef": "CR:MDT-237"
     }
   ],
   "tasks": [
@@ -504,6 +532,17 @@
         "TEST-unit-basename-html"
       ],
       "sourceRef": "docs/CRs/MDT-237/uat.md"
+    },
+    {
+      "id": "TASK-uat2-plaintext-token",
+      "title": "UAT round 2: whole-token capture for plain-text ticket-key path tokens + positive-index documents routing (BR-2.6)",
+      "ownsArtifactIds": [
+        "ART-preprocessor"
+      ],
+      "makesGreenIds": [
+        "TEST-unit-plaintext-token"
+      ],
+      "sourceRef": "CR:MDT-237"
     }
   ]
 }

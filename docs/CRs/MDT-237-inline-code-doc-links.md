@@ -86,6 +86,7 @@ full — feature enhancement, navigable document references
 - [x] References that include an anchor fragment (`#section`) — supported via the MDT-150 URL scheme (C2, unit)
 - [x] Same filename in different directories (disambiguation) — unique-basename resolution; ambiguous names keep relative resolution (BR-2.5/D10, unit + e2e)
 - [x] Paths with spaces or URL-encoded characters — decoded then re-encoded via the query scheme (C4, unit)
+- [x] Plain-text path tokens with a ticket-key-shaped basename (`docs/uat/GPDE-003.md`) render as one whole document link on positive index knowledge; legacy split rendering kept otherwise (BR-2.6, unit + UAT 2026-09-05)
 
 ## 5. Verification
 
@@ -104,3 +105,14 @@ full — feature enhancement, navigable document references
 - Approved (same session): non-.md passthrough — LinkNormalizer no longer flags non-.md hrefs as 'Unsupported file type'; only .md is processed, others pass through as valid file links (new C7; MDT-150 semantics amendment; negative tests in linkNormalization.mdt150.test.ts)
 - Approved (same session): unique-basename disambiguation for bare filenames (new BR-2.5/D10) and .html references processed with full .md parity (new C8); zero additional network cost (basename map per index load)
 - Approved (same session): link config is owner/file-level only (C6 amended, D9 precedence reversed) — config.toml [links] over defaults; localStorage override + Board-tab Smart Links toggle removed; links.* managed by owners in Settings - Advanced
+
+### UAT Session 2026-09-05
+- Bug found in live GPDE UAT: plain-text `docs/uat/GPDE-003.md` in a ticket subdocument rendered as a plain `docs/uat/` prefix plus a bare ticket link to the ticket — split rendering AND wrong target, even with the document index loaded (Step 1.5 protected only the basename; restore resolved it as a bare ticket filename)
+- Approved: whole-token capture in Step 1.5 + positive-index documents routing at restore (new BR-2.6, architecture D12, OBL-7); every unverifiable case (no oracle, unknown/missing index, disabled flags, `..`-prefixed, tickets-area paths) keeps the legacy rendering byte-identically
+- Updated docs: requirements.md, architecture.md, tests.md, tasks.md, uat.md; all trace stages re-validated and re-rendered
+- uat.md written; strict drift/lock not used
+- Verified: mdt237 unit suite 41/41 (12 new BR-2.6 cases), full frontend suite 1060/0, eslint + validate:ts clean on touched files (domain-contracts lint errors are pre-existing baseline), e2e 12 passed (MDT-237 scenarios + smartlink/markdown-rendering regressions)
+- Post-commit review amendments (same session):
+  - Found and fixed an anchor regression: a token whose anchor contains `/` (`MDT-151.md#foo/bar`) split inside the anchor because the separator scan ran on the whole token; the scan now runs on the path part only (old-vs-new byte parity verified)
+  - Live UAT on GPDE showed the reported case unchanged — root cause: `docs/uat/GPDE-003.md` does not exist yet (forward reference), so the index answers known-missing and the shipped fix's exists-only gate kept the legacy split. BR-2.6 refined in place: routing engages whenever the index is LOADED — existing targets navigate, known-missing targets render as ONE flagged-broken link (BR-2.1 alignment, no silent re-targeting to the ticket); unknown index (null) and guarded cases keep legacy byte-identically
+  - Verified after refinement: mdt237 suite 42/42 (13 BR-2.6 cases), full frontend suite 1061/0, eslint + validate:ts clean; all trace stages re-validated

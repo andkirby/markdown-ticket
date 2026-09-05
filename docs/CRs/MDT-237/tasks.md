@@ -60,6 +60,15 @@ Canonical task records live in spec-trace (`tasks.trace.md`). Operator view belo
 **Boundary**: no unrelated refactors, no test weakening.
 **Re-plan Trigger**: E2E infra failure unrelated to the feature.
 
+### Task 5: UAT round 2 — plain-text ticket-key path tokens (done 2026-09-05)
+
+**Structure**: `frontend/src/utils/markdownPreprocessor.ts` (Step 1.5 capture + `restoreTicketFilenameRef`)
+
+**Makes GREEN (Automated Tests)**:
+- `TEST-unit-plaintext-token` → `frontend/src/utils/markdownPreprocessor.mdt237.test.ts`
+
+**Scope**: whole-token capture in the Step 1.5 regex; restore-time routing to the documents view on positive index knowledge outside the tickets area; byte-identical legacy fallback otherwise (BR-2.6, D12). Completed in-session; no remaining execution work on this ticket.
+
 ## Execution order
 
 1 → 2 → 3 → 4 (Tasks 1 and 2 are independent; 3 depends on 1; 4 last).

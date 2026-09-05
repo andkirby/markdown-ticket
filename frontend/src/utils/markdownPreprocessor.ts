@@ -445,6 +445,57 @@ function resolveDocumentRef(
 }
 
 /**
+ * MDT-237 UAT 2026-09-05 (BR-2.6): restore a protected ticket-key .md token.
+ *
+ * A token captured WITH a path prefix (docs/uat/GPDE-003.md) names a project
+ * document, not the ticket itself, whenever the document index is loaded for
+ * the project: an existing target navigates, a known-missing target renders
+ * as ONE whole link that SmartLink flags broken (BR-2.1 — no silent
+ * re-targeting to the ticket). Paths inside the tickets area never take this
+ * route (that area is not indexed, and a tickets-area path means the ticket).
+ * An unknown index (null / no oracle) and every other guarded case keeps the
+ * legacy rendering byte-identically: prefix plain text + basename -> ticket
+ * route.
+ */
+function restoreTicketFilenameRef(
+  filename: string,
+  ctx: {
+    sourcePath: string
+    ticketKey: string
+    projectCode: string
+    ticketsPath: string
+    enableDocumentLinks: boolean
+    fileExists?: (projectRelPath: string) => boolean | null
+  },
+): string {
+  // The anchor may itself contain '/' (#foo/bar) — split it off before
+  // locating the last path separator so the basename never lands mid-anchor.
+  const anchorIdxRaw = filename.indexOf('#')
+  const pathPartRaw = anchorIdxRaw >= 0 ? filename.slice(0, anchorIdxRaw) : filename
+  const slashIdx = pathPartRaw.lastIndexOf('/')
+  const ticketsArea = ctx.ticketsPath || 'docs/CRs'
+  if (slashIdx >= 0 && ctx.enableDocumentLinks && ctx.fileExists) {
+    const decoded = tryDecodeContent(filename)
+    const anchorIdx = decoded.indexOf('#')
+    const pathPart = anchorIdx >= 0 ? decoded.slice(0, anchorIdx) : decoded
+    const anchor = anchorIdx >= 0 ? decoded.slice(anchorIdx) : ''
+    if (
+      !pathPart.includes('..')
+      && pathPart !== ticketsArea
+      && !pathPart.startsWith(`${ticketsArea}/`)
+      && ctx.fileExists(pathPart) !== null
+    ) {
+      return `[${filename}](${buildDocumentPathWithAnchor(ctx.projectCode, pathPart, anchor)})`
+    }
+  }
+
+  const basename = slashIdx >= 0 ? filename.slice(slashIdx + 1) : filename
+  const prefix = slashIdx >= 0 ? filename.slice(0, slashIdx + 1) : ''
+  const resolved = resolveDocumentRef(basename, ctx.sourcePath, ctx.ticketKey, ctx.projectCode, ctx.ticketsPath)
+  return `${prefix}[${basename}](${resolved})`
+}
+
+/**
  * Converts document references to markdown links.
  * MDT-150: When sourcePath is available, resolves .md refs to absolute URLs
  * using resolveDocumentRef(). When no sourcePath, falls back to simple wrapping.
@@ -590,8 +641,11 @@ export function preprocessMarkdown(
     // Step 1.5: Protect ALL ticket-key .md filenames from partial ticket conversion
     // Must happen BEFORE convertTicketReferences to prevent corruption
     // Protects both bare ticket-key.md (MDT-151.md) and prefixed ones (MDT-150-smartlink-doc-urls.md)
+    // UAT 2026-09-05 (BR-2.6): capture the WHOLE path token — a ticket-key
+    // basename inside a path (docs/uat/GPDE-003.md) must never be split from
+    // its prefix; restore-time routing decides document vs ticket target.
     const ticketFilenamePlaceholders: string[] = []
-    processed = processed.replace(/\b([A-Z]+-\d\S*\.md(?:#\S+)?)\b/g, (match) => {
+    processed = processed.replace(/\b((?:[\w.%-]+\/)*[A-Z]+-\d\S*\.md(?:#\S+)?)\b/g, (match) => {
       const placeholder = `__TICKET_FILENAME_PLACEHOLDER_${ticketFilenamePlaceholders.length}__`
       ticketFilenamePlaceholders.push(match)
       return placeholder
@@ -608,11 +662,20 @@ export function preprocessMarkdown(
 
     // Step 2.5: Restore ticket-key filenames with resolved absolute URLs
     // These are resolved using sourcePath context if available
+    // UAT 2026-09-05 (BR-2.6): path-prefixed tokens route to the documents
+    // view when the index positively knows the full path; all other cases
+    // keep the legacy rendering (bare basename -> ticket route).
     ticketFilenamePlaceholders.forEach((filename, index) => {
       const placeholder = `__TICKET_FILENAME_PLACEHOLDER_${index}__`
       if (sourcePath && extractedTicketKey && currentProject) {
-        const resolved = resolveDocumentRef(filename, sourcePath, extractedTicketKey, currentProject, tp)
-        processed = safeReplace(processed, placeholder, `[${filename}](${resolved})`)
+        processed = safeReplace(processed, placeholder, restoreTicketFilenameRef(filename, {
+          sourcePath,
+          ticketKey: extractedTicketKey,
+          projectCode: currentProject,
+          ticketsPath: tp,
+          enableDocumentLinks: linkConfig.enableDocumentLinks,
+          fileExists,
+        }))
       }
       else {
         processed = safeReplace(processed, placeholder, filename)

@@ -215,6 +215,117 @@ describe('MDT-237: inline-code .md reference conversion', () => {
     expect(out).toContain('[requirements.md](/prj/MDT/ticket/MDT-237/requirements.md)')
   })
 
+  // UAT 2026-09-05 (BR-2.6): plain-text path tokens with a ticket-key-shaped
+  // basename. Step 1.5 captures the WHOLE token; restore routes it to the
+  // documents view only on positive index knowledge. Legacy fallback must be
+  // byte-identical: prefix plain + basename -> ticket route.
+  describe('plain-text path tokens with ticket-key basenames (BR-2.6)', () => {
+    const SRC = 'GPDE-003/requirements.md'
+
+    it('routes a provably-existing full path to ONE whole document link', () => {
+      const md = 'See docs/uat/GPDE-003.md for UAT.'
+      const oracle = (p: string) => p === 'docs/uat/GPDE-003.md'
+      const out = preprocessMarkdown(md, 'GPDE', CFG, SRC, 'docs/CRs', oracle)
+      expect(out).toBe('See [docs/uat/GPDE-003.md](/prj/GPDE/documents?file=docs%2Fuat%2FGPDE-003.md) for UAT.')
+    })
+
+    it('carries the anchor fragment into the document URL', () => {
+      const md = 'See docs/uat/GPDE-003.md#results for UAT.'
+      const oracle = (p: string) => p === 'docs/uat/GPDE-003.md'
+      const out = preprocessMarkdown(md, 'GPDE', CFG, SRC, 'docs/CRs', oracle)
+      expect(out).toContain('[docs/uat/GPDE-003.md#results](/prj/GPDE/documents?file=docs%2Fuat%2FGPDE-003.md#results)')
+    })
+
+    it('decodes percent-encoded tokens before the existence check (C4)', () => {
+      const md = 'See docs/uat/GPDE-003%20report.md for UAT.'
+      const oracle = (p: string) => p === 'docs/uat/GPDE-003 report.md'
+      const out = preprocessMarkdown(md, 'GPDE', CFG, SRC, 'docs/CRs', oracle)
+      expect(out).toContain('](/prj/GPDE/documents?file=docs%2Fuat%2FGPDE-003%20report.md)')
+    })
+
+    it('routes a known-missing path as ONE whole link (SmartLink flags it broken, BR-2.1)', () => {
+      const md = 'See docs/uat/GPDE-003.md for UAT.'
+      // docs/uat/GPDE-003.md is a forward reference — the report does not
+      // exist yet. The loaded index KNOWS it is missing, so the whole token
+      // renders as one document link (flagged broken downstream) instead of
+      // silently re-targeting to the ticket.
+      const out = preprocessMarkdown(md, 'GPDE', CFG, SRC, 'docs/CRs', () => false)
+      expect(out).toBe('See [docs/uat/GPDE-003.md](/prj/GPDE/documents?file=docs%2Fuat%2FGPDE-003.md) for UAT.')
+    })
+
+    it('keeps the legacy split render when the index is unknown (oracle null)', () => {
+      const md = 'See docs/uat/GPDE-003.md for UAT.'
+      const out = preprocessMarkdown(md, 'GPDE', CFG, SRC, 'docs/CRs', () => null)
+      expect(out).toBe('See docs/uat/[GPDE-003.md](/prj/GPDE/ticket/GPDE-003) for UAT.')
+    })
+
+    it('keeps the legacy split render when no oracle is provided', () => {
+      const md = 'See docs/uat/GPDE-003.md for UAT.'
+      const out = preprocessMarkdown(md, 'GPDE', CFG, SRC, 'docs/CRs')
+      expect(out).toBe('See docs/uat/[GPDE-003.md](/prj/GPDE/ticket/GPDE-003) for UAT.')
+    })
+
+    it('keeps the legacy split render when document links are disabled', () => {
+      const md = 'See docs/uat/GPDE-003.md for UAT.'
+      const oracle = (p: string) => p === 'docs/uat/GPDE-003.md'
+      const out = preprocessMarkdown(md, 'GPDE', CFG_NO_DOC, SRC, 'docs/CRs', oracle)
+      expect(out).toBe('See docs/uat/[GPDE-003.md](/prj/GPDE/ticket/GPDE-003) for UAT.')
+    })
+
+    it('never routes tickets-area paths to the documents view, even with a positive oracle', () => {
+      const md = 'See docs/CRs/MDT-151.md for the ticket.'
+      const oracle = (p: string) => p === 'docs/CRs/MDT-151.md'
+      const out = preprocessMarkdown(md, 'MDT', CFG, 'MDT-237/requirements.md', 'docs/CRs', oracle)
+      expect(out).toBe('See docs/CRs/[MDT-151.md](/prj/MDT/ticket/MDT-151) for the ticket.')
+    })
+
+    it('never re-anchors ..-prefixed tokens (explicit relative intent)', () => {
+      const md = 'See ../GPDE-003.md for UAT.'
+      const oracle = (p: string) => p === 'docs/uat/GPDE-003.md'
+      const out = preprocessMarkdown(md, 'GPDE', CFG, SRC, 'docs/CRs', oracle)
+      expect(out).toBe('See ../[GPDE-003.md](/prj/GPDE/ticket/GPDE-003) for UAT.')
+    })
+
+    it('keeps bare and suffixed ticket-key filenames on the ticket route (regression)', () => {
+      const oracle = () => true
+      const out = preprocessMarkdown('Ref MDT-151.md and MDT-150-smartlink-doc-urls.md.', 'MDT', CFG, 'MDT-237/requirements.md', 'docs/CRs', oracle)
+      expect(out).toBe('Ref [MDT-151.md](/prj/MDT/ticket/MDT-151) and [MDT-150-smartlink-doc-urls.md](/prj/MDT/ticket/MDT-150).')
+    })
+
+    it('keeps plain ticket refs (no .md) linkified unchanged', () => {
+      const oracle = () => true
+      const out = preprocessMarkdown('Ref GPDE-003 too.', 'GPDE', CFG, SRC, 'docs/CRs', oracle)
+      expect(out).toBe('Ref [GPDE-003](/prj/GPDE/ticket/GPDE-003) too.')
+    })
+
+    it('never splits inside an anchor that contains a slash (basename lands whole)', () => {
+      const oracle = () => true
+      // Bare token: whole token resolves to the ticket (legacy semantics)
+      const bare = 'See MDT-151.md#foo/bar here.'
+      const outBare = preprocessMarkdown(bare, 'MDT', CFG, 'MDT-237/requirements.md', 'docs/CRs', oracle)
+      expect(outBare).toBe('See [MDT-151.md#foo/bar](/prj/MDT/ticket/MDT-151#foo/bar) here.')
+
+      // Path-prefixed token with a known document: whole link, anchor carried
+      const md = 'See docs/uat/GPDE-003.md#foo/bar here.'
+      const oraclePath = (p: string) => p === 'docs/uat/GPDE-003.md'
+      const out = preprocessMarkdown(md, 'GPDE', CFG, SRC, 'docs/CRs', oraclePath)
+      expect(out).toBe('See [docs/uat/GPDE-003.md#foo/bar](/prj/GPDE/documents?file=docs%2Fuat%2FGPDE-003.md#foo/bar) here.')
+    })
+
+    it('does not split tokens inside inline code or fenced blocks (existing protection)', () => {
+      const oracle = () => true
+      const inline = 'See `docs/uat/GPDE-003.md` and run `cat GPDE-003.md`.'
+      const outInline = preprocessMarkdown(inline, 'GPDE', CFG, SRC, 'docs/CRs', oracle)
+      expect(outInline).toContain('[`docs/uat/GPDE-003.md`](/prj/GPDE/documents?file=docs%2Fuat%2FGPDE-003.md)')
+      expect(outInline).toContain('`cat GPDE-003.md`')
+
+      const fenced = 'Example:\n\n```\ncat docs/uat/GPDE-003.md\n```\n'
+      const outFenced = preprocessMarkdown(fenced, 'GPDE', CFG, SRC, 'docs/CRs', oracle)
+      expect(outFenced).toContain('cat docs/uat/GPDE-003.md')
+      expect(outFenced).not.toContain('](/prj/')
+    })
+  })
+
   it('never builds a URL escaping the project scope for traversal-shaped refs (BR-2.2)', () => {
     const md = 'See `../../../../etc/passwd.md` for details.'
     const out = preprocessMarkdown(md, 'MDT', CFG, 'MDT-237/requirements.md', 'docs/CRs')
