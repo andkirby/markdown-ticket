@@ -16,6 +16,10 @@ Each plugin is thin glue: it shells out to its CLI through the DSH `shell`
 service. They publish no Cordis service, so they mount loose in an agent
 preset with no `isolate` realm.
 
+Operational docs: [DEBUG.md](DEBUG.md) — verified procedures (offline
+simulate harness, rollout loop, stale-host signature, known limitations);
+[TESTING.md](TESTING.md) — live in-session verification prompts.
+
 Project targeting differs by CLI: mdt-cli takes `-p <code>` where supported;
 spec-trace resolves the project from the nearest `.mdt-config.toml`, so its
 tools take a `workdir` parameter instead.
