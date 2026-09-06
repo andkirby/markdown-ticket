@@ -33,18 +33,40 @@ function quote(value) {
   return "'" + String(value).replace(/'/g, "'\\''") + "'"
 }
 
-/** Run mdt-cli with JSON output; non-zero exits become tool errors. */
-async function runMdt(shell, args, sandboxPolicy) {
+/**
+ * Run mdt-cli with JSON output; non-zero exits become tool errors.
+ * Runs at the calling session's cwd so mdt-cli's cwd-based project detection
+ * resolves the session workspace, matching the bash tool's default.
+ */
+async function runMdt(shell, args, execInfo) {
   const spec = shell.resolve({
     command: [CLI].concat(args).map(quote).join(' '),
     timeoutMs: 30000,
-    ...(sandboxPolicy !== undefined ? { sandboxPolicy } : {}),
+    ...(execInfo?.workdir !== undefined ? { workdir: execInfo.workdir } : {}),
+    ...(execInfo?.policy !== undefined ? { sandboxPolicy: execInfo.policy } : {}),
   })
   const result = await shell.run(spec)
   if (result.exitCode !== 0) {
-    throw new Error(`mdt-cli exited ${result.exitCode}: ${result.stderr.text.trim()}`)
+    throw new Error(`mdt-cli exited ${result.exitCode}: ${errorDetail(result)}`)
   }
   return result.stdout.text
+}
+
+/**
+ * Error text for a failed run. Prefer the CLI's structured JSON error on
+ * stdout; from stderr drop the benign config-dir warning (sandboxed hosts
+ * cannot write ~/.config, mdt-cli continues with a fallback) so the real
+ * cause stays visible instead of implicating the sandbox.
+ */
+function errorDetail(result) {
+  const stdout = result.stdout.text.trim()
+  if (stdout !== '') return stdout
+  const stderr = result.stderr.text
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line !== '' && !line.startsWith('⚠️'))
+    .join('\n')
+  return stderr !== '' ? stderr : result.stderr.text.trim()
 }
 
 function render(_args, value) {
@@ -64,6 +86,24 @@ export function apply(ctx) {
   function policyFor(exec) {
     if (sandboxPolicy === undefined || exec?.agent === undefined) return undefined
     return sandboxPolicy.resolve({ session: exec.agent.session })
+  }
+
+  /**
+   * Session cwd for the subprocess (mirrors the bash tool's resolveWorkdir):
+   * the sandbox policy's canonical workspace root wins, else the session
+   * header cwd. Without this, mdt-cli runs at the host cwd and its
+   * .mdt-config.toml walk-up never sees the session workspace.
+   */
+  function workdirFor(exec, policy) {
+    if (policy !== undefined && policy.workspaceRoot !== undefined) return policy.workspaceRoot
+    const headerCwd = exec?.agent?.session?.header?.cwd
+    return typeof headerCwd === 'string' && headerCwd !== '' ? headerCwd : undefined
+  }
+
+  /** Per-call exec context: sandbox policy plus the session workdir. */
+  function execContext(exec) {
+    const policy = policyFor(exec)
+    return { policy, workdir: workdirFor(exec, policy) }
   }
 
   /** Optional `project` arg becomes `-p <code>` so operations work from any cwd. */
@@ -86,7 +126,7 @@ export function apply(ctx) {
     ),
     output: { schema: { type: 'string' }, render },
     async execute(args, exec) {
-      return runMdt(shell, ['ticket', 'get', '--json', ...projectArgs(args), args.key], policyFor(exec))
+      return runMdt(shell, ['ticket', 'get', '--json', ...projectArgs(args), args.key], execContext(exec))
     },
   })
 
@@ -104,7 +144,7 @@ export function apply(ctx) {
       return runMdt(
         shell,
         ['ticket', 'list', '--json', ...projectArgs(args), ...(args.filters ?? [])],
-        policyFor(exec),
+        execContext(exec),
       )
     },
   })
@@ -135,7 +175,7 @@ export function apply(ctx) {
           args.title,
           ...(args.slug ? [args.slug] : []),
         ],
-        policyFor(exec),
+        execContext(exec),
       )
     },
   })
@@ -159,7 +199,7 @@ export function apply(ctx) {
       return runMdt(
         shell,
         ['ticket', 'attr', '--json', ...projectArgs(args), args.key, ...args.attrs],
-        policyFor(exec),
+        execContext(exec),
       )
     },
   })
@@ -180,7 +220,7 @@ export function apply(ctx) {
           'ticket', 'deps', '--json', ...projectArgs(args), args.key,
           ...(args.check ? ['--check'] : []),
         ],
-        policyFor(exec),
+        execContext(exec),
       )
     },
   })
@@ -194,7 +234,7 @@ export function apply(ctx) {
     parameters: objectSchema({}),
     output: { schema: { type: 'string' }, render },
     async execute(_args, exec) {
-      return runMdt(shell, ['project', '--json'], policyFor(exec))
+      return runMdt(shell, ['project', '--json'], execContext(exec))
     },
   })
 
@@ -207,7 +247,7 @@ export function apply(ctx) {
     parameters: objectSchema({}),
     output: { schema: { type: 'string' }, render },
     async execute(_args, exec) {
-      return runMdt(shell, ['project', 'ls', '--json'], policyFor(exec))
+      return runMdt(shell, ['project', 'ls', '--json'], execContext(exec))
     },
   })
 }
