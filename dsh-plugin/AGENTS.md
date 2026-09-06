@@ -35,6 +35,12 @@ add one row to `agent.cordis.yml` pointing at `mdt.js` in this directory:
 Mount-validate with the preset's `standingKeyFor` check before starting a
 session; a broken path fails loudly at mount.
 
+The loader imports the plugin module into the long-running DSH **host
+process**: later edits to the file do not reach sessions until the host
+restarts (or reloads its plugins). A new session alone re-runs the cached
+`apply()` — new tool names and descriptions appear, but execute bodies stay
+old. After changing a plugin, restart the host before live-testing.
+
 ## Conventions
 
 - One tool per CLI subcommand surface; parameters mirror the CLI's flags. Do
@@ -44,5 +50,11 @@ session; a broken path fails loudly at mount.
   exits as tool errors.
 - Binary paths are resolved in one constant at the top of each plugin; update
   them in one place if a CLI moves.
+- Run subprocesses at the calling session's cwd, not the host cwd: derive
+  `workdir` from the session's sandbox-policy workspace root, falling back to
+  `exec.agent.session.header.cwd` (see `workdirFor` in mdt.js). Without it,
+  CLIs that detect project context by walking up from cwd (mdt-cli's
+  `.mdt-config.toml` detection) resolve the wrong directory and fail with
+  `NO_PROJECT_CONTEXT`.
 - Tool schemas and descriptions are model-facing contracts: change them
   deliberately, since agents and presets depend on the names.
