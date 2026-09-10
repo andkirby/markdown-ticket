@@ -1,21 +1,20 @@
 /**
  * spec-trace as DeepSeek Harness model tools.
  *
- * Thin glue over the compiled spec-trace CLI through the DSH `shell` service.
- * spec-trace resolves the project root from the nearest `.mdt-config.toml`,
- * so every tool takes an optional `workdir` (any directory inside the target
- * project). Publishes no Cordis service; mounts loose in an agent preset.
+ * Thin glue over the compiled spec-trace CLI through the DSH `shell`
+ * service, using the shared plumbing in ./lib/kit.js. spec-trace resolves
+ * the project root from the nearest `.mdt-config.toml`, so every tool
+ * takes an optional `workdir` (any directory inside the target project).
+ * Publishes no Cordis service; mounts loose in an agent preset.
  * See ./AGENTS.md for the mount contract and conventions.
  */
+
+import { quote, objectSchema, render, sessionPolicy, runSubprocess } from './lib/kit.js'
 
 const SPEC_TRACE = process.env.SPEC_TRACE_BIN
 
 export const name = 'spec-trace'
 export const inject = ['tools', 'shell']
-
-function quote(value) {
-  return "'" + String(value).replace(/'/g, "'\\''") + "'"
-}
 
 /** camelCase flag key (e.g. sourceRef) to CLI kebab-case (e.g. --source-ref). */
 function kebabFlag(key) {
@@ -42,21 +41,16 @@ async function runSpecTrace(shell, args, workdir, sandboxPolicy) {
   if (!SPEC_TRACE) {
     throw new Error('SPEC_TRACE_BIN is not set; point it at the compiled spec-trace binary.')
   }
-  const spec = shell.resolve({
+  const result = await runSubprocess(shell, {
     command: [SPEC_TRACE].concat(args).map(quote).join(' '),
     workdir,
     timeoutMs: 60000,
-    ...(sandboxPolicy !== undefined ? { sandboxPolicy } : {}),
+    sandboxPolicy,
   })
-  const result = await shell.run(spec)
   if (result.exitCode !== 0) {
     throw new Error(`spec-trace exited ${result.exitCode}: ${result.stderr.text.trim()}`)
   }
   return result.stdout.text || result.stderr.text
-}
-
-function render(_args, value) {
-  return [{ type: 'text', text: String(value) }]
 }
 
 const ENTITIES = {
@@ -72,16 +66,6 @@ const WORKDIR = {
     'inside the project.',
 }
 
-/** Full JSON-Schema object; raw registrations are not converted from shorthand. */
-function objectSchema(properties, required) {
-  return {
-    type: 'object',
-    additionalProperties: false,
-    properties,
-    ...(required ? { required } : []),
-  }
-}
-
 export function apply(ctx) {
   const shell = ctx.get('shell')
   const tools = ctx.get('tools')
@@ -92,10 +76,9 @@ export function apply(ctx) {
 
   const sandboxPolicy = ctx.get('sandboxPolicy')
 
-  /** Resolve the calling session's live sandbox policy so the subprocess follows it. */
+  /** Per-call sandbox policy from the shared kit (session-derived). */
   function policyFor(exec) {
-    if (sandboxPolicy === undefined || exec?.agent === undefined) return undefined
-    return sandboxPolicy.resolve({ session: exec.agent.session })
+    return sessionPolicy(sandboxPolicy, exec)
   }
 
   function register(definition) {

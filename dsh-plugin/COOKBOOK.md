@@ -87,24 +87,51 @@ variable's name when it is unset.
 `shell.resolve()` without an explicit `sandboxPolicy` gets the executor's
 standing default, frozen at boot — it does NOT follow the session's file
 policy, so a session running unrestricted still gets EPERM from plugin
-subprocesses. Thread the policy like `tool-bash` does:
+subprocesses. Thread the policy like `tool-bash` does — `lib/kit.js` owns
+the derivation, each plugin binds its service instance:
 
 ```js
+import { sessionPolicy } from './lib/kit.js'
+
 const sandboxPolicy = ctx.get('sandboxPolicy')
 
 function policyFor(exec) {
-  if (sandboxPolicy === undefined || exec?.agent === undefined) return undefined
-  return sandboxPolicy.resolve({ session: exec.agent.session })
+  return sessionPolicy(sandboxPolicy, exec)
 }
 
 // execute(args, exec) — the second parameter carries the agent
 async execute(args, exec) {
-  return runMdt(shell, [...], policyFor(exec))
+  return runSpecTrace(shell, [...], args.workdir, policyFor(exec))
 }
 ```
 
 Failure mode avoided: bash can write the target directory but the plugin's
 `mdt-cli` write fails with EPERM — identical command, different policy.
+
+### Run subprocesses at the calling session's cwd
+
+Subprocesses inherit the DSH host's cwd unless `workdir` is passed — a CLI
+that walks up from cwd looking for `.mdt-config.toml` then scans the host's
+directories, not the session workspace. Derive the session cwd via the kit:
+
+```js
+import { execContextFor } from './lib/kit.js'
+
+function execContext(exec) {
+  return execContextFor(sandboxPolicy, exec) // { policy, workdir }
+}
+
+async execute(args, exec) {
+  return runMdt(shell, [...], execContext(exec))
+}
+```
+
+Failure mode avoided: every cwd-resolving tool call fails
+`NO_PROJECT_CONTEXT` although the session workspace is a registered
+project — the plugin shell runs the CLI at the host cwd (the pre-fix
+behavior of `mdt.js`). Caught by TESTING.md Prompt A2/A3: bare numeric
+keys and a bare ticket list both exercise cwd resolution, while
+embedded-code keys (`MDT-001`) hide it by resolving through the registry.
 
 ### Keep absolute home paths out of committed files
 

@@ -56,9 +56,9 @@ old. After changing a plugin, restart the host before live-testing.
   them in one place if a CLI moves.
 - Run subprocesses at the calling session's cwd, not the host cwd: derive
   `workdir` from the session's sandbox-policy workspace root, falling back to
-  `exec.agent.session.header.cwd` (see `workdirFor` in mdt.js). Without it,
-  CLIs that detect project context by walking up from cwd (mdt-cli's
-  `.mdt-config.toml` detection) resolve the wrong directory and fail with
-  `NO_PROJECT_CONTEXT`.
+  `exec.agent.session.header.cwd` (see `sessionWorkdir`/`execContextFor` in
+  `lib/kit.js`). Without it, CLIs that detect project context by walking up
+  from cwd (mdt-cli's `.mdt-config.toml` detection) resolve the wrong
+  directory and fail with `NO_PROJECT_CONTEXT`.
 - Tool schemas and descriptions are model-facing contracts: change them
   deliberately, since agents and presets depend on the names.

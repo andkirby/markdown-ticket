@@ -1,10 +1,13 @@
 /**
  * mdt-cli as DeepSeek Harness model tools.
  *
- * Thin glue over `../cli/bin/mdt-cli --json` through the DSH `shell` service.
- * Publishes no Cordis service; mounts loose in an agent preset.
+ * Thin glue over `../cli/bin/mdt-cli --json` through the DSH `shell`
+ * service, using the shared plumbing in ./lib/kit.js. Publishes no Cordis
+ * service; mounts loose in an agent preset.
  * See ./AGENTS.md for the mount contract and conventions.
  */
+
+import { quote, objectSchema, render, execContextFor, runSubprocess } from './lib/kit.js'
 
 const CLI = new URL('../cli/bin/mdt-cli', import.meta.url).pathname
 
@@ -19,33 +22,18 @@ const PROJECT_PARAM = {
     'project than cwd.',
 }
 
-/** Full JSON-Schema object; raw registrations are not converted from shorthand. */
-function objectSchema(properties, required) {
-  return {
-    type: 'object',
-    additionalProperties: false,
-    properties,
-    ...(required ? { required } : []),
-  }
-}
-
-function quote(value) {
-  return "'" + String(value).replace(/'/g, "'\\''") + "'"
-}
-
 /**
  * Run mdt-cli with JSON output; non-zero exits become tool errors.
  * Runs at the calling session's cwd so mdt-cli's cwd-based project detection
  * resolves the session workspace, matching the bash tool's default.
  */
 async function runMdt(shell, args, execInfo) {
-  const spec = shell.resolve({
+  const result = await runSubprocess(shell, {
     command: [CLI].concat(args).map(quote).join(' '),
     timeoutMs: 30000,
-    ...(execInfo?.workdir !== undefined ? { workdir: execInfo.workdir } : {}),
-    ...(execInfo?.policy !== undefined ? { sandboxPolicy: execInfo.policy } : {}),
+    workdir: execInfo?.workdir,
+    sandboxPolicy: execInfo?.policy,
   })
-  const result = await shell.run(spec)
   if (result.exitCode !== 0) {
     throw new Error(`mdt-cli exited ${result.exitCode}: ${errorDetail(result)}`)
   }
@@ -69,10 +57,6 @@ function errorDetail(result) {
   return stderr !== '' ? stderr : result.stderr.text.trim()
 }
 
-function render(_args, value) {
-  return [{ type: 'text', text: String(value) }]
-}
-
 export function apply(ctx) {
   const shell = ctx.get('shell')
   const tools = ctx.get('tools')
@@ -82,28 +66,9 @@ export function apply(ctx) {
     return
   }
 
-  /** Resolve the calling session's live sandbox policy so the subprocess follows it. */
-  function policyFor(exec) {
-    if (sandboxPolicy === undefined || exec?.agent === undefined) return undefined
-    return sandboxPolicy.resolve({ session: exec.agent.session })
-  }
-
-  /**
-   * Session cwd for the subprocess (mirrors the bash tool's resolveWorkdir):
-   * the sandbox policy's canonical workspace root wins, else the session
-   * header cwd. Without this, mdt-cli runs at the host cwd and its
-   * .mdt-config.toml walk-up never sees the session workspace.
-   */
-  function workdirFor(exec, policy) {
-    if (policy !== undefined && policy.workspaceRoot !== undefined) return policy.workspaceRoot
-    const headerCwd = exec?.agent?.session?.header?.cwd
-    return typeof headerCwd === 'string' && headerCwd !== '' ? headerCwd : undefined
-  }
-
-  /** Per-call exec context: sandbox policy plus the session workdir. */
+  /** Per-call exec context from the shared kit: policy + session workdir. */
   function execContext(exec) {
-    const policy = policyFor(exec)
-    return { policy, workdir: workdirFor(exec, policy) }
+    return execContextFor(sandboxPolicy, exec)
   }
 
   /** Optional `project` arg becomes `-p <code>` so operations work from any cwd. */
