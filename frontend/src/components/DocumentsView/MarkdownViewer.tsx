@@ -86,6 +86,34 @@ export default function MarkdownViewer({ projectId, filePath, fileInfo, refreshT
     return extractDocumentFrontmatter(content)
   }, [content])
 
+  // MDT-237 UAT 2026-09-12 (BR-2.7): tickets-area link routing needs the
+  // project's configured tickets area — without it the preprocessor assumes
+  // docs/CRs and misroutes projects that configure differently (e.g. .tickets).
+  const [ticketsPath, setTicketsPath] = useState<string | undefined>(undefined)
+  useEffect(() => {
+    if (!projectId)
+      return
+    let cancelled = false
+    authFetch(`/api/projects/${encodeURIComponent(projectId)}/config`)
+      .then(async (response) => {
+        if (!response.ok)
+          return
+        const data = await response.json()
+        if (cancelled)
+          return
+        const tp
+          = data?.config?.project?.ticketsPath
+            ?? data?.project?.project?.ticketsPath
+        setTicketsPath(typeof tp === 'string' && tp ? tp : 'docs/CRs')
+      })
+      .catch(() => {
+        // config unreachable → MarkdownContent falls back to the docs/CRs default
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [projectId])
+
   // Extract ToC items from the rendered body, excluding the raw frontmatter disclosure.
   const tocItems = useMemo(() => {
     return extractTableOfContents(parsedContent.body)
@@ -217,6 +245,7 @@ export default function MarkdownViewer({ projectId, filePath, fileInfo, refreshT
                     markdown={parsedContent.body}
                     currentProject={projectCode || ''}
                     sourcePath={filePath}
+                    ticketsPath={ticketsPath}
                     className={`prose prose--document ${getMarkdownDensityClass(markdownDensity)} dark:prose-invert`}
                   />
                 )}

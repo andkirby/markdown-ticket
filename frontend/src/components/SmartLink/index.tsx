@@ -104,7 +104,18 @@ const SmartLink: React.FC<SmartLinkProps> = ({
     }
     try {
       const fileParam = new URL(effectiveLink.href, window.location.origin).searchParams.get('file')
-      return fileParam ? !index.has(fileParam) : false
+      if (!fileParam) {
+        return false
+      }
+      // MDT-237 UAT 2026-09-12 (BR-2.8): known-missing requires the index to
+      // positively cover the target's directory. Targets under prefixes the
+      // index never lists (the tickets area, unconfigured directories) are
+      // unknown, not missing — render the normal link, never a false flag.
+      const dirPrefix = fileParam.slice(0, fileParam.lastIndexOf('/') + 1)
+      if (!index.coversPrefix(dirPrefix)) {
+        return false
+      }
+      return !index.has(fileParam)
     }
     catch {
       return false

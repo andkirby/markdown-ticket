@@ -4,8 +4,8 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import MarkdownViewer from './MarkdownViewer'
 
 mock.module('../MarkdownContent', () => ({
-  default: ({ markdown, className }: { markdown: string, className?: string }) => (
-    <article data-testid="markdown-content" className={className}>{markdown}</article>
+  default: ({ markdown, className, ticketsPath }: { markdown: string, className?: string, ticketsPath?: string }) => (
+    <article data-testid="markdown-content" className={className} data-tickets-path={ticketsPath ?? ''}>{markdown}</article>
   ),
 }))
 
@@ -43,11 +43,24 @@ function renderMarkdownViewer(props: Partial<React.ComponentProps<typeof Markdow
 }
 
 describe('MarkdownViewer', () => {
-  const mockFetch = mock(async () => new Response('# Document', { status: 200 }))
+  // URL-aware fetch mock: the viewer issues two API calls (project config for
+  // ticketsPath + document content), so queue-based mockImplementationOnce
+  // fixtures would be consumed by the wrong request. Route by URL instead.
+  let contentResponse = () => new Response('# Document', { status: 200 })
+  let configResponse = () => new Response(JSON.stringify({ config: { project: { ticketsPath: 'docs/CRs' } } }), { status: 200 })
+  const mockFetch = mock(async (input: RequestInfo | URL) => {
+    const url = typeof input === 'string' ? input : String(input)
+    if (url.includes('/api/projects/') && url.includes('/config')) {
+      return configResponse()
+    }
+    return contentResponse()
+  })
 
   beforeEach(() => {
     localStorage.clear()
     setSystemTime(FIXED_NOW)
+    contentResponse = () => new Response('# Document', { status: 200 })
+    configResponse = () => new Response(JSON.stringify({ config: { project: { ticketsPath: 'docs/CRs' } } }), { status: 200 })
     globalThis.fetch = mockFetch as unknown as typeof fetch
     mockFetch.mockClear()
   })
@@ -108,7 +121,7 @@ describe('MarkdownViewer', () => {
   })
 
   it('renders valid leading frontmatter as a collapsed raw disclosure above the markdown body', async () => {
-    mockFetch.mockImplementationOnce(async () => new Response('---\ntitle: API Documentation\nauthor: John Doe\n---\n\n# API Documentation', { status: 200 }))
+    contentResponse = () => new Response('---\ntitle: API Documentation\nauthor: John Doe\n---\n\n# API Documentation', { status: 200 })
 
     const { container } = renderMarkdownViewer()
 
@@ -129,7 +142,7 @@ describe('MarkdownViewer', () => {
   })
 
   it('escapes frontmatter text instead of rendering it as HTML', async () => {
-    mockFetch.mockImplementationOnce(async () => new Response('---\ntitle: <img src=x onerror=alert(1)>\n---\n\n# Safe Body', { status: 200 }))
+    contentResponse = () => new Response('---\ntitle: <img src=x onerror=alert(1)>\n---\n\n# Safe Body', { status: 200 })
 
     const { container } = renderMarkdownViewer()
 
@@ -142,7 +155,7 @@ describe('MarkdownViewer', () => {
   })
 
   it('keeps non-leading or unterminated frontmatter markers in the markdown body', async () => {
-    mockFetch.mockImplementationOnce(async () => new Response('# Intro\n\n---\ntitle: Not frontmatter\n---', { status: 200 }))
+    contentResponse = () => new Response('# Intro\n\n---\ntitle: Not frontmatter\n---', { status: 200 })
 
     const { container } = renderMarkdownViewer()
 
@@ -151,5 +164,30 @@ describe('MarkdownViewer', () => {
     })
 
     expect(container.querySelector('.document-frontmatter')).not.toBeInTheDocument()
+  })
+
+  // MDT-237 UAT 2026-09-12 (BR-2.7): the documents view must forward the
+  // project's configured ticketsPath to MarkdownContent — without it the
+  // preprocessor assumes docs/CRs and misroutes projects like GPDE (.tickets),
+  // false-flagging existing tickets as missing documents.
+  it('passes the configured ticketsPath to MarkdownContent', async () => {
+    configResponse = () => new Response(JSON.stringify({ config: { project: { ticketsPath: '.tickets' } } }), { status: 200 })
+
+    renderMarkdownViewer()
+
+    await waitFor(() => {
+      expect(screen.getByTestId('markdown-content')).toHaveAttribute('data-tickets-path', '.tickets')
+    })
+  })
+
+  it('falls back to the docs/CRs default when the config request fails', async () => {
+    configResponse = () => new Response('unavailable', { status: 500 })
+
+    renderMarkdownViewer()
+
+    await waitFor(() => {
+      expect(screen.getByTestId('markdown-content')).toBeInTheDocument()
+    })
+    expect(screen.getByTestId('markdown-content')).toHaveAttribute('data-tickets-path', '')
   })
 })

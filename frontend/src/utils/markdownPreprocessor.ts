@@ -319,6 +319,39 @@ function convertTicketReferences(markdown: string, currentProject: string): stri
 }
 
 /**
+ * MDT-237 UAT 2026-09-12 (BR-2.7): classify a resolved path that lands inside
+ * the tickets area.
+ *
+ * The document index never covers the tickets area (by design, and projects
+ * typically exclude it explicitly), so such a path can never be verified as a
+ * project document — it names a ticket document: `<ticketsPath>/<KEY>[-slug].md`
+ * is the ticket itself, `<ticketsPath>/<KEY>/<rest>.md|.html` is a subdoc of
+ * that ticket. Returns null for paths outside the area or not ticket-shaped —
+ * the caller keeps its default routing.
+ */
+function classifyTicketsAreaPath(
+  resolvedPath: string,
+  projectCode: string,
+  ticketsPath: string | undefined,
+  anchor: string,
+): string | null {
+  const area = (ticketsPath || 'docs/CRs').replace(/\/+$/, '')
+  if (!resolvedPath.startsWith(`${area}/`)) {
+    return null
+  }
+  const rest = resolvedPath.slice(area.length + 1)
+  const ticketDocMatch = rest.match(/^([A-Z]+-\d+)(?:-[^/]*)?\.md$/)
+  if (ticketDocMatch) {
+    return buildTicketPath(projectCode, ticketDocMatch[1], anchor)
+  }
+  const subdocMatch = rest.match(/^([A-Z]+-\d+)\/(.+\.(?:md|html))$/)
+  if (subdocMatch) {
+    return buildTicketSubDocPath(projectCode, subdocMatch[1], subdocMatch[2], anchor)
+  }
+  return null
+}
+
+/**
  * Resolve a path relative to a source directory.
  * Handles .., ./, and bare filenames correctly.
  */
@@ -382,6 +415,26 @@ function resolveDocumentRef(
   if (!/^[A-Z]+-\d+(?:\/|\.md$)/.test(sourcePath)) {
     const sourceDir = sourcePath.includes('/') ? sourcePath.substring(0, sourcePath.lastIndexOf('/')) : ''
     const resolvedPath = resolveRelativePath(sourceDir, pathPart)
+
+    // MDT-237 UAT 2026-09-12 (BR-2.7): a resolved path inside the tickets
+    // area names a ticket document, not a project document — routing it to
+    // the documents view guarantees a false broken flag (the index never
+    // covers that area) and lands on the wrong view even when it opens.
+    const ticketsAreaHref = classifyTicketsAreaPath(resolvedPath, projectCode, ticketsPath, anchor)
+    if (ticketsAreaHref) {
+      return ticketsAreaHref
+    }
+
+    // A bare ticket-key-shaped .md basename (GPDE-012, GPDE-012-slug.md) means
+    // the ticket — the same rule ticket-context mode applies and the same
+    // target plain-text ticket keys already link to (convertTicketReferences).
+    if (!pathPart.includes('/')) {
+      const bareTicketMatch = pathPart.match(/^([A-Z]+-\d+)(?:-[^/]*?)?\.md$/)
+      if (bareTicketMatch) {
+        return buildTicketPath(projectCode, bareTicketMatch[1], anchor)
+      }
+    }
+
     // resolvedPath is project-relative; pass directly to buildDocumentPathWithAnchor
     return buildDocumentPathWithAnchor(projectCode, resolvedPath, anchor)
   }
@@ -431,6 +484,15 @@ function resolveDocumentRef(
       subPath = subPath.slice(subdocPrefix.length)
     }
     return buildTicketSubDocPath(projectCode, ticketKey, subPath, anchor)
+  }
+
+  // MDT-237 UAT 2026-09-12 (BR-2.7): a path inside ANOTHER ticket's subdoc
+  // directory (e.g. "../GPDE-012/research.md" resolving to "GPDE-012/research.md"
+  // relative to the tickets area) names that ticket's subdoc — never a
+  // documents-view path.
+  const otherTicketSubdocMatch = resolvedPath.match(/^([A-Z]+-\d+)\/(.+\.(?:md|html))$/)
+  if (otherTicketSubdocMatch) {
+    return buildTicketSubDocPath(projectCode, otherTicketSubdocMatch[1], otherTicketSubdocMatch[2], anchor)
   }
 
   // Path escapes the tickets directory → documents view
