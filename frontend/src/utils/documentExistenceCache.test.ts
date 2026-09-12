@@ -45,4 +45,26 @@ describe('MDT-237: documentExistenceCache', () => {
     __testSeed('p1', ['a.md', 'b.md'])
     expect(notified).toBe(1)
   })
+
+  // UAT 2026-09-12 (BR-2.8): coverage is the evidence standard for the
+  // broken flag — absence is only knowable inside prefixes the index lists.
+  describe('coversPrefix (BR-2.8)', () => {
+    it('reports true for a directory with indexed files', () => {
+      __testSeed('p1', ['research/brief.md', 'docs/guide.md'])
+      expect(getCachedDocumentIndex('p1')!.coversPrefix('research/')).toBe(true)
+      expect(getCachedDocumentIndex('p1')!.coversPrefix('docs/')).toBe(true)
+    })
+
+    it('reports false for prefixes the index never lists (tickets area, unconfigured dirs)', () => {
+      __testSeed('p1', ['research/brief.md'])
+      expect(getCachedDocumentIndex('p1')!.coversPrefix('.tickets/')).toBe(false)
+      expect(getCachedDocumentIndex('p1')!.coversPrefix('docs/CRs/')).toBe(false)
+      expect(getCachedDocumentIndex('p1')!.coversPrefix('unconfigured/')).toBe(false)
+    })
+
+    it('reports false for an empty index (nothing is knowable)', () => {
+      __testSeed('p1', [])
+      expect(getCachedDocumentIndex('p1')!.coversPrefix('')).toBe(false)
+    })
+  })
 })

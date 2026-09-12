@@ -326,6 +326,66 @@ describe('MDT-237: inline-code .md reference conversion', () => {
     })
   })
 
+  // UAT 2026-09-12 (BR-2.7): tickets-area targets mean the ticket — the
+  // document index never covers the tickets area, so routing such refs to
+  // the documents view guarantees a false broken flag and the wrong view.
+  // Live case: [GPDE-012](../.tickets/GPDE-012-learning-coverage-matrix.md)
+  // in a GPDE research brief flagged an EXISTING ticket as "Document not found".
+  describe('tickets-area targets route to the ticket (BR-2.7)', () => {
+    const DOC_SRC = 'research/learning-coverage-matrix-brief.md'
+
+    it('explicit link into the tickets area from a documents-view file routes to the ticket (live GPDE-012 case)', () => {
+      const md = 'promoted to [GPDE-012](../.tickets/GPDE-012-learning-coverage-matrix.md) for investigation.'
+      const out = preprocessMarkdown(md, 'GPDE', CFG, DOC_SRC, '.tickets')
+      expect(out).toBe('promoted to [GPDE-012](/prj/GPDE/ticket/GPDE-012) for investigation.')
+    })
+
+    it('carries anchors on tickets-area ticket routes', () => {
+      const md = 'See [coverage](../.tickets/GPDE-012-learning-coverage-matrix.md#scope).'
+      const out = preprocessMarkdown(md, 'GPDE', CFG, DOC_SRC, '.tickets')
+      expect(out).toContain('](/prj/GPDE/ticket/GPDE-012#scope)')
+    })
+
+    it('tickets-area subdoc paths route to that ticket\'s subdoc view', () => {
+      const md = 'See [evidence](../.tickets/GPDE-012/research.md).'
+      const out = preprocessMarkdown(md, 'GPDE', CFG, DOC_SRC, '.tickets')
+      expect(out).toContain('](/prj/GPDE/ticket/GPDE-012/research.md)')
+    })
+
+    it('bare ticket-key .md basename in documents-view mode routes to the ticket (mirrors ticket-context semantics)', () => {
+      const md = 'See [matrix](GPDE-012-learning-coverage-matrix.md).'
+      const out = preprocessMarkdown(md, 'GPDE', CFG, DOC_SRC, '.tickets')
+      expect(out).toContain('](/prj/GPDE/ticket/GPDE-012)')
+    })
+
+    it('another ticket\'s subdoc resolved from a ticket body routes to that subdoc, not the documents view', () => {
+      const md = 'See [their research](../GPDE-012/research.md).'
+      const out = preprocessMarkdown(md, 'MDT', CFG, 'MDT-237/requirements.md', 'docs/CRs')
+      expect(out).toContain('](/prj/MDT/ticket/GPDE-012/research.md)')
+      expect(out).not.toContain('/documents?file=')
+    })
+
+    it('non-ticket targets keep documents-view routing (regression)', () => {
+      const sibling = preprocessMarkdown('See [sib](../sibling.md).', 'GPDE', CFG, DOC_SRC, '.tickets')
+      expect(sibling).toContain('](/prj/GPDE/documents?file=sibling.md)')
+
+      const bare = preprocessMarkdown('See [notes](notes.md).', 'GPDE', CFG, DOC_SRC, '.tickets')
+      expect(bare).toContain('](/prj/GPDE/documents?file=research%2Fnotes.md)')
+    })
+
+    it('tickets-area paths relative to docs/CRs also classify (default ticketsPath)', () => {
+      const md = 'See [cr](../CRs/MDT-150-smartlink-doc-urls.md).'
+      const out = preprocessMarkdown(md, 'MDT', CFG, 'docs/architecture/overview.md', 'docs/CRs')
+      expect(out).toContain('](/prj/MDT/ticket/MDT-150)')
+    })
+
+    it('non-ticket .md files inside the tickets area keep the documents route', () => {
+      const md = 'See [tpl](../.tickets/README.md).'
+      const out = preprocessMarkdown(md, 'GPDE', CFG, DOC_SRC, '.tickets')
+      expect(out).toContain('](/prj/GPDE/documents?file=.tickets%2FREADME.md)')
+    })
+  })
+
   it('never builds a URL escaping the project scope for traversal-shaped refs (BR-2.2)', () => {
     const md = 'See `../../../../etc/passwd.md` for details.'
     const out = preprocessMarkdown(md, 'MDT', CFG, 'MDT-237/requirements.md', 'docs/CRs')

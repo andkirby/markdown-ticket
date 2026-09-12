@@ -143,6 +143,20 @@
       "text": "WHEN a plain-text path token ending in a ticket-key-shaped .md basename (e.g. docs/uat/GPDE-003.md) appears in a ticket-context document and the document index is loaded, the system shall render the whole token as ONE document link — navigable when the path exists, visibly flagged broken when the index knows it is missing — instead of splitting it into a plain path prefix plus a bare ticket link; an unknown index (null) and ..-prefixed, tickets-area, or disabled-flag tokens keep the legacy rendering byte-identically.",
       "sourceRef": "CR:MDT-237",
       "routePolicy": "tests"
+    },
+    {
+      "id": "BR-2.7",
+      "kind": "behavior",
+      "text": "WHEN a link or token in a rendered document resolves into the tickets area (e.g. ../.tickets/GPDE-012-slug.md from a documents-view source, or another ticket's subdoc directory resolved from a ticket body), THEN the system shall route it to the ticket it names — the ticket view for a ticket-key .md basename, that ticket's subdoc view for a <KEY>/<rest>.md|.html path — and a bare ticket-key-shaped .md basename in documents-view mode shall route to the ticket mirroring ticket-context semantics; non-ticket-shaped targets keep their existing documents-view routing unchanged.",
+      "sourceRef": "CR:MDT-237",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-2.8",
+      "kind": "behavior",
+      "text": "WHEN SmartLink evaluates a document link against the document index, THEN it shall flag the target broken only when the index positively covers the target's directory (coversPrefix) and the file is absent; targets under prefixes the index never lists (the tickets area, unconfigured directories) are unknown — rendered as normal links, never flagged broken.",
+      "sourceRef": "CR:MDT-237",
+      "routePolicy": "tests"
     }
   ],
   "scenarios": [
@@ -294,6 +308,22 @@
         "ART-preprocessor"
       ],
       "sourceRef": "CR:MDT-237"
+    },
+    {
+      "id": "OBL-8",
+      "title": "resolveDocumentRef classifies tickets-area targets as ticket documents in every source mode (documents-view explicit links and bare ticket-key basenames, ticket-context other-ticket subdocs), the documents view forwards the project's configured ticketsPath into preprocessing, and SmartLink broken flagging is coverage-bounded by the document index (coversPrefix) so targets outside covered prefixes are unknown, not missing (covers BR-2.7, BR-2.8)",
+      "derivedFrom": [
+        "BR-2.7",
+        "BR-2.8"
+      ],
+      "artifactIds": [
+        "ART-preprocessor",
+        "ART-smartlink",
+        "ART-existence-cache",
+        "ART-unit-smartlink",
+        "ART-unit-docsview"
+      ],
+      "sourceRef": "CR:MDT-237"
     }
   ],
   "artifacts": [
@@ -332,20 +362,21 @@
       "path": "tests/e2e/ticket/inline-code-doc-links.spec.ts",
       "kind": "test",
       "sourceRef": "docs/CRs/MDT-237/architecture.md"
+    },
+    {
+      "id": "ART-unit-smartlink",
+      "path": "src/components/SmartLink/index.test.tsx",
+      "kind": "test",
+      "sourceRef": "CR:MDT-237"
+    },
+    {
+      "id": "ART-unit-docsview",
+      "path": "src/components/DocumentsView/MarkdownViewer.test.tsx",
+      "kind": "test",
+      "sourceRef": "CR:MDT-237"
     }
   ],
   "testPlans": [
-    {
-      "id": "TEST-unit-cache",
-      "kind": "unit",
-      "title": "MDT-237 existence cache: null-while-loading, membership, per-project scope, subscription semantics",
-      "covers": [
-        "BR-2.1",
-        "C5"
-      ],
-      "file": "src/utils/documentExistenceCache.test.ts",
-      "sourceRef": "docs/CRs/MDT-237/architecture.md"
-    },
     {
       "id": "TEST-e2e-bdd",
       "kind": "e2e",
@@ -458,6 +489,49 @@
       ],
       "file": "src/utils/markdownPreprocessor.mdt237.test.ts",
       "sourceRef": "CR:MDT-237"
+    },
+    {
+      "id": "TEST-unit-tickets-routing",
+      "kind": "unit",
+      "title": "Tickets-area targets route to the ticket: documents-view explicit links (live GPDE-012 case), anchors, subdoc paths, bare ticket-key basenames, ticket-context other-ticket subdocs; non-ticket targets keep documents routing",
+      "covers": [
+        "BR-2.7"
+      ],
+      "file": "src/utils/markdownPreprocessor.mdt237.test.ts",
+      "sourceRef": "CR:MDT-237"
+    },
+    {
+      "id": "TEST-unit-cover-bounded-flag",
+      "kind": "unit",
+      "title": "SmartLink coverage-bounded flagging: tickets-area and unconfigured-prefix targets render normal links; covered-and-missing still flags (BR-2.1 preserved); unknown index stays no-signal; plus coversPrefix cache semantics",
+      "covers": [
+        "BR-2.8",
+        "BR-2.1"
+      ],
+      "file": "src/components/SmartLink/index.test.tsx",
+      "sourceRef": "CR:MDT-237"
+    },
+    {
+      "id": "TEST-unit-cache",
+      "kind": "unit",
+      "title": "MDT-237 existence cache: null-while-loading, membership, per-project scope, subscription semantics, coversPrefix coverage bounds",
+      "covers": [
+        "BR-2.1",
+        "C5",
+        "BR-2.8"
+      ],
+      "file": "src/utils/documentExistenceCache.test.ts",
+      "sourceRef": "CR:MDT-237"
+    },
+    {
+      "id": "TEST-unit-docsview-ticketspath",
+      "kind": "unit",
+      "title": "Documents-view wiring: MarkdownViewer fetches the project config and forwards the configured ticketsPath to MarkdownContent; config failure falls back to the docs/CRs default",
+      "covers": [
+        "BR-2.7"
+      ],
+      "file": "src/components/DocumentsView/MarkdownViewer.test.tsx",
+      "sourceRef": "CR:MDT-237"
     }
   ],
   "tasks": [
@@ -541,6 +615,23 @@
       ],
       "makesGreenIds": [
         "TEST-unit-plaintext-token"
+      ],
+      "sourceRef": "CR:MDT-237"
+    },
+    {
+      "id": "TASK-uat3-tickets-area-routing",
+      "title": "UAT round 3: tickets-area targets route to the ticket + coverage-bounded broken flagging + documents-view ticketsPath wiring (BR-2.7/BR-2.8)",
+      "ownsArtifactIds": [
+        "ART-preprocessor",
+        "ART-smartlink",
+        "ART-unit-smartlink",
+        "ART-unit-docsview"
+      ],
+      "makesGreenIds": [
+        "TEST-unit-tickets-routing",
+        "TEST-unit-cover-bounded-flag",
+        "TEST-unit-cache",
+        "TEST-unit-docsview-ticketspath"
       ],
       "sourceRef": "CR:MDT-237"
     }

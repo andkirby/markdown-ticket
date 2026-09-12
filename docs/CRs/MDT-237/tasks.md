@@ -69,6 +69,18 @@ Canonical task records live in spec-trace (`tasks.trace.md`). Operator view belo
 
 **Scope**: whole-token capture in the Step 1.5 regex; restore-time routing to the documents view on positive index knowledge outside the tickets area; byte-identical legacy fallback otherwise (BR-2.6, D12). Completed in-session; no remaining execution work on this ticket.
 
+### Task 6: UAT round 3 — tickets-area routing + coverage-bounded flagging (done 2026-09-12)
+
+**Structure**: `frontend/src/utils/markdownPreprocessor.ts` (`classifyTicketsAreaPath` + `resolveDocumentRef` branches), `frontend/src/components/SmartLink/index.tsx` (coversPrefix guard), `frontend/src/components/DocumentsView/MarkdownViewer.tsx` (ticketsPath wiring)
+
+**Makes GREEN (Automated Tests)**:
+- `TEST-unit-tickets-routing` → `frontend/src/utils/markdownPreprocessor.mdt237.test.ts`
+- `TEST-unit-cover-bounded-flag` → `frontend/src/components/SmartLink/index.test.tsx`
+- `TEST-unit-cache` (coversPrefix cases) → `frontend/src/utils/documentExistenceCache.test.ts`
+- `TEST-unit-docsview-ticketspath` → `frontend/src/components/DocumentsView/MarkdownViewer.test.tsx`
+
+**Scope**: tickets-area targets route to the ticket in every source mode (D13); SmartLink broken flagging requires index coverage of the target directory (D14); happy-dom test setup gains a real origin (about:blank silently disabled the existence check in component tests). Completed in-session.
+
 ## Execution order
 
-1 → 2 → 3 → 4 (Tasks 1 and 2 are independent; 3 depends on 1; 4 last).
+1 → 2 → 3 → 4 (Tasks 1 and 2 are independent; 3 depends on 1; 4 last). Tasks 5–6 are UAT rounds, executed after 4.

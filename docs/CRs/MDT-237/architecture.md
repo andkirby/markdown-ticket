@@ -22,6 +22,8 @@ Extend the existing markdown linkification pipeline so that inline-code spans wh
 | D8 | Project-root fallback (UAT 2026-08-24): when the document index proves the ref names an existing project file (e.g. 'frontend/src/THEME.md'), resolve to the documents route; '..'-prefixed refs are never re-anchored | The docs tree excludes the tickets area by design, so ticket-relative existence is unverifiable — the knowable interpretation wins (BR-2.4) |
 | D9 | Link config precedence (UAT 2026-08-24): localStorage override > CONFIG_DIR/config.toml [links] (via /api/config/global) > built-in defaults | Global config.toml was advertised but never consumed by rendering; now merged in getLinkConfig() (C6) |
 | D12 | Plain-text ticket-key path tokens (UAT 2026-09-05): the Step 1.5 protection regex captures the WHOLE path token (`docs/uat/GPDE-003.md`, not just the basename); `restoreTicketFilenameRef` routes the whole token to the documents view whenever the index is loaded for a path outside the tickets area — existing targets navigate, known-missing targets render as one flagged-broken link (BR-2.1) | Basename-only capture split `docs/uat/GPDE-003.md` into a plain `docs/uat/` prefix plus a bare ticket link — wrong target, even with the index loaded. Positive index knowledge (exists OR known-missing) is the discriminator; tickets-area paths mean the ticket, and an unknown index (null) plus the guarded cases keep the legacy rendering byte-identically |
+| D13 | Tickets-area targets mean the ticket, in every source mode (UAT 2026-09-12): `resolveDocumentRef` classifies a resolved path inside the tickets area — ticket view for `<ticketsPath>/<KEY>[-slug].md`, that ticket's subdoc view for `<ticketsPath>/<KEY>/<rest>.md\|.html` — in documents-view mode, and another ticket's subdoc directory resolved from a ticket body routes to that subdoc instead of escaping to a fabricated documents path; a bare ticket-key-shaped .md basename in documents-view mode routes to the ticket, mirroring ticket-context semantics and the target plain-text ticket keys already link to | Documents-view mode resolved `../.tickets/GPDE-012-….md` from a GPDE research brief to the documents route, where the index (which never covers the tickets area — GPDE even lists `.tickets` in excludeFolders) flagged the EXISTING ticket GPDE-012 as "Document not found". The document index cannot verify tickets-area targets, so the documents route was both a guaranteed false flag and the wrong view (BR-2.7) |
+| D14 | Known-missing is coverage-bounded (UAT 2026-09-12): SmartLink flags a DOCUMENT target broken only when the index positively covers the target's directory (`coversPrefix`) and the file is absent; targets under prefixes the index never lists render as normal links | "Not in the index" conflates two states: covered-and-absent (provable) and never-listed (unknowable — tickets area, unconfigured dirs). The flag asserts positive knowledge; without coverage there is none (BR-2.8). The check rides the existing index — no new fetches (C5) |
 
 ## Canonical Runtime Flow
 
@@ -47,7 +49,7 @@ flowchart LR
 | Behavior | Owner module |
 |----------|--------------|
 | Span qualification + conversion | `frontend/src/utils/markdownPreprocessor.ts` |
-| URL resolution | `resolveDocumentRef` (unchanged, MDT-150) |
+| URL resolution | `resolveDocumentRef` (MDT-150; UAT 2026-09-12 gains tickets-area classification, D13) |
 | Existence signal | `frontend/src/utils/documentExistenceCache.ts` (new) |
 | Broken rendering + client-side nav | `frontend/src/components/SmartLink/index.tsx` (existence branch added) |
 
@@ -66,7 +68,7 @@ tests/e2e/ticket/inline-code-doc-links.spec.ts # proposed: Playwright acceptance
 
 ```ts
 // documentExistenceCache.ts (signatures only)
-export interface DocumentIndex { has(filePath: string): boolean }
+export interface DocumentIndex { has(filePath: string): boolean; coversPrefix(dirPrefix: string): boolean; findByBasename(basename: string): string[] }
 export function getCachedDocumentIndex(projectId: string): DocumentIndex | null // null while loading
 export function subscribeDocumentIndex(projectId: string, cb: () => void): () => void
 export function __testSeed(projectId: string, paths: string[]): void // test-only
@@ -74,7 +76,10 @@ export function __testSeed(projectId: string, paths: string[]): void // test-onl
 
 - `protectInlineCode(markdown, state, ctx?)` gains an optional context param (`{ sourcePath, ticketKey, projectCode, ticketsPath, enableDocumentLinks }`); callers in `preprocessMarkdown` pass it through. Missing ctx ⇒ existing behavior, byte-identical.
 - UAT 2026-09-05 (BR-2.6/D12): the Step 1.5 ticket-filename regex captures leading path segments (whole token), and `restoreTicketFilenameRef` resolves it — documents route whenever the index is loaded for a path outside the tickets area (existing navigates; known-missing renders flagged-broken via SmartLink; anchor split before the last-separator scan so anchors containing `/` never split the basename); unknown index or guarded cases reconstruct the legacy rendering (prefix plain + basename ticket link) byte-identically.
-- SmartLink: for `LinkType.DOCUMENT`, read cached index; `null` (loading/unknown) renders the normal link; known-missing renders the existing broken span (reuse L92-98 styling + `title="Document not found"`).
+- UAT 2026-09-12 (BR-2.7/D13): `classifyTicketsAreaPath` classifies resolved tickets-area paths in `resolveDocumentRef` — documents-view mode applies it to the source-dir-resolved path and additionally routes bare ticket-key-shaped .md basenames to the ticket; ticket-context mode routes another ticket's subdoc directory to that subdoc instead of the escape branch. Non-ticket-shaped targets keep their prior routing.
+- UAT 2026-09-12 (BR-2.8/D14): SmartLink's existence check requires `coversPrefix(targetDir)` before `has(target)` can flag; `DocumentIndex.coversPrefix` (previously defined, first consumer) answers whether the index lists anything under the prefix.
+- UAT 2026-09-12 (BR-2.7 wiring): the documents-view MarkdownViewer fetches `/api/projects/:id/config` (once per project mount, PathSelector's established pattern) and forwards the configured `ticketsPath` to MarkdownContent — without it the preprocessor assumed docs/CRs and GPDE's `.tickets` targets never classified.
+- SmartLink: for `LinkType.DOCUMENT`, read cached index; `null` (loading/unknown) renders the normal link; covered-and-missing renders the existing broken span (reuse L92-98 styling + `title="Document not found"`).
 - Call order for a converted ref: `protectInlineCode` → `resolveDocumentRef` → link placeholder → restore → markdown-it → SmartLink `classifyAndNormalizeLink` → existence check → `<Link>`.
 - Least-confident decision: D5 cache approach (evidence: DocumentsLayout L278 already consumes `GET /api/documents`; the endpoint returns the full tree). Invalidated if the endpoint proves rate-limited or the tree too large for a session cache — fallback is destination-level 404 flagging only.
 
