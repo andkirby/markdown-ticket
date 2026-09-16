@@ -322,28 +322,28 @@ window "Atlas — Board / Epics":
       spacer
       text "3 lanes"
     row:
-      button row id="lane-auth-collapsed":
+      row id="lane-auth-collapsed":
         text "Auth Overhaul"
         button "MDT-180" id="auth-key-c"
         chip "Proposed"
         text "0"
         progress value=0 max=5 label="0/5"
         button "Activate" id="auth-action-c"
-        text "▾" rotated
+        text "▾"
     row:
-      button row id="lane-sync-collapsed":
+      row id="lane-sync-collapsed":
         text "Cloud Sync"
         button "MDT-012" id="sync-key-c"
         chip "Approved"
         text "3"
         progress value=3 max=5 label="3/5"
         button "Close" id="sync-action-c"
-        text "▾" rotated
+        text "▾"
     row:
-      button row id="lane-none-collapsed":
+      row id="lane-none-collapsed":
         text "No epic"
         text "1"
-        text "▾" rotated
+        text "▾"
 ```
 
 | Element | Semantic Pattern | Notes |
@@ -353,6 +353,66 @@ window "Atlas — Board / Epics":
 | inline `button "Activate"` / `button "Close"` | lifecycle action | sits inline on the collapsed bar; `stopPropagation` |
 | `progress` inline | mini progress bar | shrinks to the available row width |
 | rotated `▾` | collapsed affordance | aria-hidden glyph; not a separate control |
+
+## 7. Focused arrival (`?epic=`, MDT-246)
+
+The board opened via the epic jump (split-chip action zone or viewer CTA — see `epic-navigation.interactions.md`). The focused lane (`MDT-012`) arrives expanded, scrolled into view, and transiently highlighted in its `--epic-N` accent; other lanes keep their persisted (collapsed) state. Wireloom is structural — the transient highlight itself is owned by the spec's "Focused arrival" section.
+
+```wireloom
+window "Atlas — Board / Epics — focused arrival":
+  panel:
+    row:
+      segmented:
+        segment "Flat"
+        segment "Epics" selected
+      button "Hide empty"
+      button "Collapse all"
+      button "Expand all"
+      spacer
+      text "3 lanes"
+    row:
+      row id="fa-auth-collapsed":
+        text "Auth Overhaul"
+        button "MDT-180"
+        chip "Proposed"
+        text "0"
+        progress value=0 max=5 label="0/5"
+        text "▾"
+    row:
+      col:
+        text "EPIC LANE · Cloud Sync" id="fa-lane"
+        button "MDT-012" id="fa-key"
+        row:
+          chip "Approved" id="fa-status"
+          text "3"
+          button "▾" id="fa-chevron"
+        progress value=3 max=5 label="3/5" id="fa-progress"
+        row:
+          button "Close" id="fa-action"
+        row:
+          list:
+            item "MDT-200  First slice"
+          list:
+            item "MDT-201  Conflict UI"
+          list:
+            item "MDT-202  Poll worker"
+          list:
+            item "MDT-204  E2E"
+    row:
+      row id="fa-none-collapsed":
+        text "No epic"
+        text "1"
+        text "▾"
+
+annotation "Focused lane: joins the persisted expanded set,\nrenders despite Hide empty / Show closed, scrolls into\nview, and flashes its --epic-N accent (~2s, then clears;\nexpansion persists). Non-focused lanes unchanged." target="fa-lane" position=right
+annotation "Arrival from ?epic=MDT-012 — badge action zone\nor 'Epics →' CTA." target="fa-key" position=left
+```
+
+| Element | Semantic Pattern | Notes |
+|---|---|---|
+| expanded Cloud Sync lane | focused-arrival state | only the focused lane is forced visible + expanded |
+| collapsed Auth / No-epic rows | persisted lane state | focus does not touch non-focused lanes; each row is the whole-bar collapse toggle (role=button, aria-expanded — see spec) |
+| unknown `?epic=` key | degraded arrival | token ignored; board renders normally (not mocked — no visual state) |
 
 ## Notes
 
