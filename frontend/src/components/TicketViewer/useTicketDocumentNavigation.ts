@@ -51,6 +51,14 @@ function collectPaths(docs: SubDocument[], prefix = '', isVirtualPrefix = false)
     const fullPath = prefix ? `${prefix}${separator}${doc.name}` : doc.name
     paths.add(fullPath)
 
+    // MDT-221 UAT r2: HTML subdocuments keep their extension in the API/URL
+    // path (their filePath-derived selection path is 'diagrams/flow.html'),
+    // so the extension-full form must validate for deep links (BR-1.15).
+    if (doc.kind === 'file' && doc.docKind === 'html' && doc.filePath) {
+      const extension = doc.filePath.slice(doc.filePath.lastIndexOf('.'))
+      paths.add(prefix ? `${prefix}/${doc.name}${extension}` : `${doc.name}${extension}`)
+    }
+
     // Always register the alternate form so deep links using the "wrong"
     // separator still round-trip. At the top level (no prefix) both forms
     // collapse to the same string, so we only add when there is a prefix.

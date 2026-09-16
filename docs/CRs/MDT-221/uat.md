@@ -1,157 +1,142 @@
-# UAT Refinement Brief — MDT-221
+# UAT Refinement Brief — MDT-221 (Round 2)
 
 ## Objective
 
-Replace the hardcoded CSP constant (the original global CDN allowlist +
-`unsafe-eval` baked into `RAW_PREVIEW_CSP`) with a **per-project, opt-in
-configuration model** so
-each project's HTML preview security posture is a conscious owner decision,
-not a global default. Strict by default; relaxed only when the project config
-says so.
+Close the ticket-view integration gap for HTML previews. MDT-221 shipped
+sandboxed HTML preview in **Documents View** only; ticket directories that
+contain HTML (e.g. `GPDE-012/diagrams/*.html`) show **nothing** in the ticket
+view because `SubdocumentService` drops non-`.md` children and folders whose
+children are all non-`.md`.
 
-This is the configuration deliverable that the operator-facing question
-*"how to configure this per project"* maps to.
+Trigger: `http://localhost:3075/prj/GPDE/ticket/GPDE-012` has a `diagrams/`
+subfolder with `.html` files; nothing is shown.
 
 ## Approved Changes
 
-1. **C-2.13 refined in place** — the strict CSP is now the *default*, not the
-   only option. Non-negotiable directives (`connect-src 'none'`, `img-src 'self'`,
-   `default-src 'none'`, no `allow-same-origin`) hold in every configuration.
-2. **C-2.23 added** — `[project.document.preview].allowedExternalDomains`
-   (array of hostnames, default empty) controls which external script/style/font
-   origins the preview CSP allows.
-3. **C-2.24 added** — `[project.document.preview].allowUnsafeEval` (boolean,
-   default false) controls whether `'unsafe-eval'` is added to `script-src`.
-4. **BR-1.13 added** — when a selected HTML references external origins or eval
-   not yet allowed, the user is *told which domains/capabilities need attention*
-   so the opt-in is conscious.
+1. **BR-1.14 added** — `.html`/`.htm` files inside a ticket directory (top
+   level or subfolders) are discovered as ticket subdocuments and appear in
+   the ticket view document tabs; non-document assets stay invisible (parity
+   with BR-1.3); asset-only folders are not listed.
+2. **BR-1.15 added** — selecting an HTML subdocument renders the sandboxed
+   iframe preview through the same owner-minted preview token +
+   `/api/documents/raw-preview` route as Documents View; the markdown renderer
+   is not called and no subdocument text fetch is issued; `.html` deep links
+   round-trip.
+3. **C-2.25 added** — raw-preview serving accepts paths inside the project's
+   tickets tree in addition to configured document paths (gate G7 extension);
+   all other gates unchanged; minting stays owner-only and HTML-only.
+4. **C-2.26 added** — subdocument name resolution maps `.html`/`.htm`-suffixed
+   names to their real files (no `.md` suffix appended), under the existing
+   traversal/containment/whitelist checks.
+5. **C-2.1 refined in place** — the 403 rule now reads "outside configured
+   document paths **and** outside the project's tickets tree".
+6. **Defect folded in (BR-1.9 wiring)** — document watchers watch
+   `**/*.{md,html,htm}` instead of `**/*.md`; the MDT-221 handler accepted
+   `.html` events but the chokidar pattern never fired them, so the shipped
+   "external HTML edit refreshes preview" criterion was inert.
 
 ## Changed Requirement IDs
 
 | ID | Action | Why |
 |---|---|---|
-| C-2.13 | refine_in_place | Strict CSP becomes the default; was the only option |
-| C-2.23 | additive | New config field `allowedExternalDomains` |
-| C-2.24 | additive | New config field `allowUnsafeEval` |
-| BR-1.13 | additive | New surfacing behavior (needs-approval list) |
+| BR-1.14 | additive | New capability: HTML subdocuments in ticket view tabs |
+| BR-1.15 | additive | New capability: sandboxed preview + deep links in ticket view |
+| C-2.25 | additive | New serving scope rule (tickets tree) + mint HTML-only guard |
+| C-2.26 | additive | New resolution rule for HTML subdocument names |
+| C-2.1 | refine_in_place | 403 scope now excludes the tickets tree |
 
 ## Affected Downstream Trace
 
-- **requirements**: C-2.13 refined; C-2.23, C-2.24, BR-1.13 added
-- **bdd**: `unconfigured_domains_surfaced` scenario added
-- **architecture**: OBL-19 (dynamic CSP derivation), OBL-20 (scan + surfacing);
-  ART-19 (`domain-contracts/src/project/schema.ts` for config schema)
-- **tests**: 4 new plans (strict-by-default, allowed-domains, unsafe-eval-optin,
-  needs-approval-surfaced)
-- **tasks**: TASK-14, TASK-15 (the two execution slices below)
+- **requirements**: C-2.1 refined; BR-1.14, BR-1.15, C-2.25, C-2.26 added
+- **bdd**: `ticket_html_subdocs_in_tabs`, `ticket_html_renders_sandboxed_preview`,
+  `ticket_html_deep_link_round_trips` added
+- **architecture**: ART-20..ART-24 added; OBL-21..OBL-24 added
+- **tests**: 6 new plans (discovery, resolve, tickets-tree scope, mint
+  html-only, viewer routing, path validation)
+- **tasks**: TASK-16..TASK-18 (execution slices below)
 
 ## Execution Slices
 
-### Slice 1 — Per-project preview config + dynamic CSP (TASK-14)
+### Slice 1 — Backend discovery + resolution (TASK-16)
 
-- **Objective**: replace the hardcoded `RAW_PREVIEW_CSP` constant with
-  per-request CSP derived from project config. Strict by default.
+- **Objective**: make HTML files in ticket directories exist as subdocuments.
 - **Direct artifacts/files**:
-  - `domain-contracts/src/project/schema.ts` — add `[project.document.preview]`
-    schema: `allowedExternalDomains: string[]` (default `[]`),
-    `allowUnsafeEval: boolean` (default `false`).
-  - `server/services/DocumentService.ts` — `resolveRawPreviewPath` reads the new
-    config fields and returns them alongside `{projectPath, resolvedPath, mime}`.
-  - `server/controllers/DocumentController.ts` — delete `RAW_PREVIEW_CSP`;
-    build the CSP string per-request from config. The non-negotiable invariants
-    stay hardcoded; only `script-src`/`style-src`/`font-src` grow with config.
-  - `server/tests/api/document-raw.test.ts` — replace the strict-string
-    assertion with config-driven assertions (TEST-csp-strict-by-default,
-    TEST-csp-allowed-domains, TEST-csp-unsafe-eval-optin).
-- **Direct GREEN targets**: TEST-csp-strict-by-default, TEST-csp-allowed-domains,
-  TEST-csp-unsafe-eval-optin.
-- **Impacted canonical task IDs**: TASK-14 (this slice), and the strict-CSP
-  deviation test turns green because the default-config project
-  now legitimately gets the strict CSP.
-- **Why**: this is the core config model. Without it, the relaxations are a
-  global default with no per-project control.
+  - `domain-contracts/src/ticket/subdocument.ts` — add optional
+    `docKind?: 'markdown' | 'html'` to `SubDocument` (+ zod schema).
+  - `shared/services/ticket/SubdocumentService.ts` — accept `.html`/`.htm` in
+    `buildEntryFromPath` and `discoverFolderChildren` (extension-less `name`,
+    extension-kept `filePath`, `docKind: 'html'`); keep the namespace
+    machinery markdown-only; add the `.html`/`.htm` branch to `resolvePath`
+    (exact file match, no `.md` appending).
+  - `server/services/fileWatcher/PathWatcherService.ts` — document watcher
+    pattern `**/*.md` → `**/*.{md,html,htm}` (document watchers only; ticket
+    watchers stay markdown-only this round).
+- **Direct GREEN targets**: TEST-subdoc-html-discovery, TEST-subdoc-html-resolve.
+- **Impacted canonical task IDs**: TASK-16.
 
-### Slice 2 — Needs-approval surfacing + dialog (TASK-15)
+### Slice 2 — Raw-preview tickets-tree scope (TASK-17)
 
-- **Objective**: when a file references external origins/capabilities not in
-  the project config, tell the user which ones need attention.
+- **Objective**: let the token-scoped raw route serve ticket-tree HTML even
+  when the tickets path is not under a configured document path.
 - **Direct artifacts/files**:
-  - `server/controllers/DocumentController.ts` — `mintPreviewToken` statically
-    scans the selected HTML's `<script src>`/`<link href>`/`<img src>` for
-    external origins; if any are not in `allowedExternalDomains`, or if the file
-    uses eval-capable patterns and `allowUnsafeEval` is false, return
-    `{ needsApproval: { domains: [...], unsafeEval: bool }, token: null }`
-    instead of minting.
-  - `frontend/src/components/DocumentsView/HtmlSandboxViewer.tsx` — handle the
-    `needsApproval` response by showing a dialog listing the domains + the
-    eval capability, with per-domain checkboxes and an "Allow selected" action
-    that PUTs to a config endpoint and re-mints.
-  - A new `PUT /api/documents/preview-config` endpoint (or extend the existing
-    configure endpoint) to persist the owner's choices.
-- **Direct GREEN targets**: TEST-needs-approval-surfaced,
-  `unconfigured_domains_surfaced` scenario.
-- **Impacted canonical task IDs**: TASK-15 (this slice).
-- **Why**: makes the opt-in conscious. Without surfacing, the owner has to
-  hand-edit TOML and know which domains their file wants — defeats the purpose.
+  - `server/services/DocumentService.ts` — gate G7 admits
+    `ticketsPath`-prefixed paths (empty ticketsPath admits nothing).
+  - `server/controllers/DocumentController.ts` — `mintPreviewToken` rejects
+    non-`.html`/`.htm` `filePath` targets (400).
+- **Direct GREEN targets**: TEST-raw-preview-tickets-tree, TEST-mint-html-only.
+- **Impacted canonical task IDs**: TASK-17.
 
-## How to configure this per project (the operator answer)
+### Slice 3 — Frontend ticket-view integration (TASK-18)
 
-After Slice 1 + 2 land, a project owner configures HTML preview relaxations in
-`.mdt-config.toml`:
+- **Objective**: render the sandboxed preview inside the ticket modal.
+- **Direct artifacts/files**:
+  - `frontend/src/utils/subdocPathValidation.ts` — `validateSubDocPath`
+    accepts `.md`/`.html`/`.htm`; `apiPathToUrlPath` does not append `.md` to
+    extension-carrying paths.
+  - `frontend/src/components/TicketViewer/useTicketDocumentNavigation.ts` —
+    `collectPaths` also admits the extension-full form
+    (`diagrams/foo.html`) for `docKind: 'html'` entries.
+  - `frontend/src/components/TicketViewer/index.tsx` — resolve the selected
+    subdocument; for `docKind === 'html'` render `HtmlSandboxViewer` with
+    `projectId` and `${ticketsPath}/${subdocument.filePath}`, skip the
+    markdown content fetch, keep the tabs/loading states.
+- **Direct GREEN targets**: TEST-ticketviewer-html-routing,
+  TEST-subdocpath-html-validation.
+- **Impacted canonical task IDs**: TASK-18.
 
-```toml
-# .mdt-config.toml
-[project.document.preview]
-# External origins the project's HTML files may load script/style/font from.
-# Empty by default — no external origins. Add hostnames (no scheme/path).
-allowedExternalDomains = [
-  "cdn.tailwindcss.com",     # Tailwind CDN JIT
-  "cdn.jsdelivr.net",        # Alpine.js, etc.
-  "fonts.googleapis.com",    # Google Fonts CSS
-  "fonts.gstatic.com",       # Google Fonts files
-]
+## Security Posture (what does NOT change)
 
-# Allow eval-based frameworks (Alpine.js x-data, Tailwind CDN JIT).
-# Default false. Set true only if the project's HTML uses such frameworks.
-allowUnsafeEval = true
-```
-
-Behavior:
-- **Default (no `[project.document.preview]` section)**: strict CSP. External
-  origins blocked, eval blocked. HTML that depends on CDNs will not render
-  correctly until the owner opts in.
-- **On first preview of a file that needs more**: the dialog shows the file's
-  external domains + whether it needs eval. The owner checks the ones they
-  trust; those are persisted to `[project.document.preview]` and the preview
-  re-mints with the relaxed CSP.
-- **What never relaxes regardless of config**: `connect-src 'none'` (no API
-  channel), `img-src 'self' data:` (no image beacons), the opaque-origin
-  sandbox (no `allow-same-origin`).
+- iframe `sandbox="allow-scripts"` hardcoded, never `allow-same-origin`.
+- Token in the iframe src path prefix; TTL ≤ 300s; docDir-scoped; HMAC.
+- `connect-src 'none'`, `img-src 'self' data:`, `default-src 'none'` hold in
+  every configuration.
+- Mint endpoint stays behind owner-authenticated `/api` middleware;
+  read-token/shared sessions still cannot mint.
+- Ticket-tree raw serving adds **no new read scope**: ticket bytes were
+  already readable as text through the CR subdocument API by any
+  project-visible user; the executable-preview risk is what the
+  token/CSP/sandbox chain governs, and that chain is unchanged.
 
 ## Validation
 
-- `spec-trace validate MDT-221 --stage all` — PASS (all 5 stages).
-- Slice 1 GREEN target: TEST-csp-strict-by-default (asserts default-config
-  project gets the strict CSP string) + the two opt-in tests.
-- Slice 2 GREEN target: TEST-needs-approval-surfaced.
-- The strict-CSP test (`PINNED_CSP_STRICT`) passes because the default-config project
-  once Slice 1 lands and the default-config project legitimately serves strict.
+- `spec-trace validate MDT-221 --stage all` — PASS (all 5 stages, r2).
+- `bun run --cwd server jest -- subdocuments document-raw SubdocumentService`
+- `bun test frontend/src/utils/subdocPathValidation.test.ts` +
+  `TicketViewer` unit tests
+- `bun run validate:ts`, `bun run lint`
+- Live: GPDE-012 ticket view shows `diagrams/` tabs and renders
+  `coverage-dataflow.html` in the sandboxed iframe.
 
 ## Watchlist
 
-- **Static scan coverage** — only catches literal `src=`/`href=` in the HTML;
-  dynamically-injected resources (rare for design HTML) won't be surfaced until
-  runtime CSP-violation events are wired (deferred).
-- **Config drift** — the `[project.document.preview]` schema must stay in
-  `domain-contracts` so CLI/MCP/server all validate identically.
-- **Dialog UX** — the surfacing dialog must not become a nag loop; once
-  domains are approved, subsequent previews mint immediately.
+- **Ticket-view HTML SSE refresh** — ticket watchers (`**/*.md`) do not emit
+  `ticket:subdocument:changed` for HTML; previews refresh on reopen/tab
+  switch only. Deferred (would widen ticket-watcher noise).
+- **Basename collisions** — `foo.md` + `foo.html` in one folder produce two
+  subdocuments with the same extension-less `name`; markdown wins tab
+  dedupe. Rare; documented behavior.
 
 ## Open Decisions
 
-- **Where the whitelist persists** — `.mdt-config.toml` (per-project, committed)
-  vs. a separate browser-side preference (per-user, not committed). Recommended:
-  `.mdt-config.toml` so a team shares the decision. Confirm before Slice 2.
-- **Scope of allowedExternalDomains** — hostname only (`cdn.tailwindcss.com`)
-  vs. origin with scheme (`https://cdn.tailwindcss.com`). Recommended:
-  hostname only (scheme forced to https in the CSP). Confirm before Slice 1.
+None — all r1 open decisions were settled by TASK-14 (config schema,
+hostname-only allowlist, `.mdt-config.toml` persistence).

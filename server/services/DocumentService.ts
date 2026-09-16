@@ -139,6 +139,22 @@ export class DocumentService {
   }
 
   /**
+   * MDT-221 UAT r2 (C-2.25) — raw-preview allowance for the project's tickets
+   * tree. Ticket-view HTML subdocuments live in ticket directories which are
+   * frequently excluded from document paths; ticket bytes are already
+   * text-readable through the CR subdocument API, so this adds no new read
+   * scope — the executable-preview chain (token/CSP/sandbox) is unchanged.
+   */
+  private isInsideTicketsTree(filePath: string, project: Project): boolean {
+    const ticketsPath = this.normalizeRelativePath(project.project.ticketsPath)
+    if (!ticketsPath) {
+      return false
+    }
+
+    return filePath === ticketsPath || filePath.startsWith(`${ticketsPath}/`)
+  }
+
+  /**
    * MDT-221 — Resolve a raw-preview file path against the project, applying the
    * full gate chain (gates G4-G9 in architecture.md §3): project lookup,
    * path normalization, docDir token-scope check, configured-document-path
@@ -177,9 +193,16 @@ export class DocumentService {
       throw new Error('Access denied')
     }
 
-    // Gate G7: configured document-paths containment.
+    // Gate G7: configured document-paths containment. MDT-221 UAT r2: the
+    // project's tickets tree is also servable so ticket-view HTML
+    // subdocuments (which may live outside every configured document path,
+    // e.g. an excluded .tickets dir) stay previewable (C-2.25). All other
+    // gates are unchanged; an empty ticketsPath admits nothing.
     const config = await this.configRepository.getConfig(projectPath)
-    if (!this.isInConfiguredDocumentPath(normalizedRequested, config.documentPaths)) {
+    if (
+      !this.isInConfiguredDocumentPath(normalizedRequested, config.documentPaths)
+      && !this.isInsideTicketsTree(normalizedRequested, project)
+    ) {
       throw new Error('File is outside configured document paths')
     }
 

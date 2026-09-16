@@ -58,18 +58,27 @@
     @apply text-lg font-semibold text-foreground;
   }
 
-  .trace-graph-action {
+  /* Shared 32px chrome control for the ticket-viewer header action slot
+     (Trace Graph, MDT-246 "Epics →"). Renamed from the Trace-Graph-only
+     .trace-graph-action when the slot gained its second control. */
+  .ticket-viewer-action {
     @apply inline-flex h-8 items-center gap-2 px-3 text-sm font-medium text-foreground transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50;
     border-radius: var(--radius-input);
     border: 1px solid oklch(var(--border));
     background-color: var(--bg-elevated);
   }
-  .trace-graph-action:hover {
+  .ticket-viewer-action:hover {
     background-color: var(--state-hover-bg);
   }
 
-  .trace-graph-action svg {
+  .ticket-viewer-action svg {
     @apply h-4 w-4;
+  }
+
+  /* MDT-246 jump variant: the trailing arrow-right tucks against the label —
+     label + arrow read as one "Epics →" unit (styleguide § epic board CTA). */
+  .ticket-viewer-action--jump .ticket-viewer-action__arrow {
+    margin-left: -5px;
   }
 }
 
@@ -122,5 +131,65 @@
 
   .compact-ticket-header__spacer {
     @apply hidden flex-1 sm:block;
+  }
+
+  /* MDT-221 UAT r2 — sandboxed HTML subdocument preview inside the ticket
+     modal. The modal body scrolls rather than being a fixed-height panel, so
+     the preview gets an explicit viewport instead of the iframe's intrinsic
+     300x150 default (BR-1.12 parity). */
+  .ticket-html-preview {
+    @apply flex h-[70vh] min-h-0 w-full flex-col;
+  }
+
+  /* Semantic-class migration of the ticket-viewer markup (pre-existing
+     utilities moved 1:1 into this contract; enforce-semantic-classes gate).
+     `.prose` base already sets max-width: none, so the removed max-w-none
+     utility was redundant. */
+  .modal__body.ticket-viewer-body {
+    @apply p-0;
+  }
+
+  .ticket-not-found {
+    @apply flex flex-col items-center justify-center py-16 px-6;
+  }
+
+  .ticket-not-found__icon {
+    @apply h-10 w-10 mb-4;
+  }
+
+  .ticket-not-found__headline {
+    @apply mb-2;
+  }
+
+  .ticket-not-found__text {
+    @apply text-center;
+  }
+
+  .ticket-viewer-content {
+    @apply min-w-0;
+  }
+
+  .subdoc-content {
+    @apply relative;
+  }
+
+  .subdoc-error {
+    @apply px-4 py-3 text-sm text-destructive;
+  }
+
+  .subdoc-loading {
+    @apply absolute inset-0 z-10 flex items-start justify-center pt-8 bg-background/50;
+  }
+
+  .subdoc-loading__message {
+    @apply text-sm animate-pulse;
+  }
+
+  .ticket-content--pending {
+    @apply pointer-events-none opacity-50;
+  }
+
+  .ticket-viewer__section {
+    @apply relative;
   }
 }

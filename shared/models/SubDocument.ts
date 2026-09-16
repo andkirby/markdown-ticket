@@ -1,2 +1,2 @@
-export type { SubDocument } from '@mdt/domain-contracts'
-export { DEFAULT_SUBDOCUMENT_ORDER } from '@mdt/domain-contracts'
+export type { SubDocument, SubDocumentDocKind } from '@mdt/domain-contracts'
+export { classifySubdocumentDocKind, DEFAULT_SUBDOCUMENT_ORDER } from '@mdt/domain-contracts'

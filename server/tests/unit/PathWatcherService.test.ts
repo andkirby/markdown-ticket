@@ -312,7 +312,7 @@ describe('PathWatcherService', () => {
       )
 
       expect(count).toBe(2)
-      expect(chokidar.watch).toHaveBeenCalledWith('/project/docs/**/*.md', expect.any(Object))
+      expect(chokidar.watch).toHaveBeenCalledWith('/project/docs/**/*.{md,html,htm}', expect.any(Object))
       expect(chokidar.watch).toHaveBeenCalledWith('/project/README.md', expect.any(Object))
     })
 
@@ -376,7 +376,7 @@ describe('PathWatcherService', () => {
 
       expect(count).toBe(2)
       expect(mockWatcher.close).toHaveBeenCalled()
-      expect(chokidar.watch).toHaveBeenCalledWith('/project/guides/**/*.md', expect.any(Object))
+      expect(chokidar.watch).toHaveBeenCalledWith('/project/guides/**/*.{md,html,htm}', expect.any(Object))
       expect(chokidar.watch).toHaveBeenCalledWith('/project/README.md', expect.any(Object))
     })
   })

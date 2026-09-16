@@ -102,9 +102,13 @@ export class PathWatcherService extends EventEmitter {
       if (this.watchers.has(watcherId))
         continue
 
+      // MDT-221 UAT r2 (OBL-24): watch HTML too — the handler has accepted
+      // .html/.htm document events since MDT-221, but this pattern was
+      // **/*.md, so external HTML edits never reached the SSE refresh path
+      // (BR-1.9 was shipped but inert).
       const watchPattern = normalizedPath.endsWith('.md')
         ? absolutePath
-        : path.join(absolutePath, '**/*.md')
+        : path.join(absolutePath, '**/*.{md,html,htm}')
 
       this.createWatcher(watcherId, watchPattern, (w) => {
         w.on('add', fp => this.handleDocumentEvent('add', fp, projectId, projectRoot))

@@ -2,9 +2,12 @@ import type { SubDocument } from '../../models/SubDocument.js'
 import type { ResolvedTicketLocation, SubdocumentReadResult } from './types.js'
 import { existsSync, lstatSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs'
 import { join } from 'node:path'
+import { classifySubdocumentDocKind } from '../../models/SubDocument.js'
 import { isContainedPath } from '../../utils/path-resolver.js'
 import { mergeNamespaceGroupedEntries, sortSubDocuments } from './subdocuments/merge.js'
 import { parseNamespace } from './subdocuments/namespace.js'
+
+const SUBDOCUMENT_FILE_EXTENSION = /\.(md|html|htm)$/
 
 export class SubdocumentService {
   discover(location: ResolvedTicketLocation, crId: string): SubDocument[] {
@@ -17,15 +20,48 @@ export class SubdocumentService {
       return []
     }
 
-    const { entryMap, markdownFiles, existingFolders } = this.scanEntries(entries, location.ticketDir, crId)
+    const { entryMap, markdownFiles, htmlFiles, existingFolders } = this.scanEntries(entries, location.ticketDir, crId)
     mergeNamespaceGroupedEntries(entryMap, markdownFiles, existingFolders, crId)
+    this.attachHtmlEntries(entryMap, htmlFiles)
 
     return sortSubDocuments(entryMap)
+  }
+
+  /**
+   * MDT-221 UAT r2 — re-attach HTML file entries after the markdown namespace
+   * merge. A namespace group named like an HTML file (coverage.html +
+   * coverage.trace.md) replaces the plain entry with a virtual folder; the
+   * HTML file survives as a folder child, mirroring how coverage.md survives
+   * as the 'main' child of its group.
+   */
+  private attachHtmlEntries(entryMap: Map<string, SubDocument>, htmlFiles: SubDocument[]): void {
+    for (const htmlEntry of htmlFiles) {
+      const existing = entryMap.get(htmlEntry.name)
+      if (!existing) {
+        entryMap.set(htmlEntry.name, htmlEntry)
+        continue
+      }
+
+      if (existing.kind === 'folder') {
+        existing.children.push(htmlEntry)
+      }
+      // An existing file entry wins (markdown precedence, BR-1.14 watchlist).
+    }
   }
 
   resolvePath(location: ResolvedTicketLocation, subDocName: string): string | null {
     if (!this.isSupportedSubdocumentPath(subDocName)) {
       return null
+    }
+
+    // MDT-221 UAT r2 — HTML names carry their real extension and resolve to
+    // the exact file; the .md suffix is never appended for them (C-2.26).
+    if (/\.(?:html|htm)$/.test(subDocName)) {
+      const htmlPath = join(location.ticketDir, subDocName)
+      if (!existsSync(htmlPath) || !isContainedPath(htmlPath, location.ticketDir)) {
+        return null
+      }
+      return htmlPath
     }
 
     const directFilePath = join(location.ticketDir, `${subDocName}.md`)
@@ -134,10 +170,12 @@ export class SubdocumentService {
   ): {
     entryMap: Map<string, SubDocument>
     markdownFiles: string[]
+    htmlFiles: SubDocument[]
     existingFolders: Set<string>
   } {
     const entryMap = new Map<string, SubDocument>()
     const markdownFiles: string[] = []
+    const htmlFiles: SubDocument[] = []
     const existingFolders = new Set<string>()
 
     for (const entry of entries) {
@@ -146,14 +184,20 @@ export class SubdocumentService {
         continue
       }
 
-      if (subdocument.kind === 'file') {
+      // The namespace machinery (virtual dot-folders) is markdown-only: it
+      // reconstructs filePaths with a hardcoded .md suffix, so HTML names
+      // must not flow into it (MDT-221 UAT r2).
+      if (subdocument.kind === 'file' && subdocument.docKind === 'html') {
+        htmlFiles.push(subdocument)
+      }
+      else if (subdocument.kind === 'file') {
         markdownFiles.push(subdocument.name)
       }
 
       this.handleEntryConflict(entryMap, subdocument)
     }
 
-    return { entryMap, markdownFiles, existingFolders }
+    return { entryMap, markdownFiles, htmlFiles, existingFolders }
   }
 
   private buildEntryFromPath(
@@ -183,10 +227,12 @@ export class SubdocumentService {
         }
       }
 
-      if (entry.endsWith('.md')) {
+      const docKind = classifySubdocumentDocKind(entry)
+      if (docKind) {
         return {
-          name: entry.replace(/\.md$/, ''),
+          name: entry.replace(SUBDOCUMENT_FILE_EXTENSION, ''),
           kind: 'file',
+          docKind,
           children: [],
           filePath: `${crId}/${entry}`,
         }
@@ -200,15 +246,33 @@ export class SubdocumentService {
   }
 
   private discoverFolderChildren(dirPath: string, crId: string, folderName: string): SubDocument[] {
-    return this.readDirectorySafe(dirPath)
-      .filter(entry => entry.endsWith('.md'))
-      .sort()
-      .map(entry => ({
-        name: entry.replace(/\.md$/, ''),
-        kind: 'file' as const,
+    // Markdown wins when a folder holds both foo.md and foo.html: the
+    // extension-less tab name collides and the markdown document is the
+    // richer rendering of the same basename (MDT-221 UAT r2 watchlist).
+    const byName = new Map<string, SubDocument>()
+
+    for (const entry of this.readDirectorySafe(dirPath).sort()) {
+      const docKind = classifySubdocumentDocKind(entry)
+      if (!docKind) {
+        continue
+      }
+
+      const name = entry.replace(SUBDOCUMENT_FILE_EXTENSION, '')
+      const existing = byName.get(name)
+      if (existing && existing.docKind !== 'html') {
+        continue
+      }
+
+      byName.set(name, {
+        name,
+        kind: 'file',
+        docKind,
         children: [],
         filePath: `${crId}/${folderName}/${entry}`,
-      }))
+      })
+    }
+
+    return [...byName.values()]
   }
 
   private handleEntryConflict(entryMap: Map<string, SubDocument>, subdocument: SubDocument): void {

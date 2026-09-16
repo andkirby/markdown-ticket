@@ -1,3 +1,6 @@
+import type { SubDocumentDocKind } from '@mdt/domain-contracts'
+import { classifySubdocumentDocKind } from '@mdt/domain-contracts'
+
 export type TreeNodeType = 'file' | 'folder'
 
 /**
@@ -10,7 +13,7 @@ export type TreeNodeType = 'file' | 'folder'
  * known kind, decided at the viewer switch. Persisting a negative category
  * would force every future file type to be mis-categorized or silently added.
  */
-export type DocumentKind = 'markdown' | 'html'
+export type DocumentKind = SubDocumentDocKind
 
 export interface TreeNode {
   name: string
@@ -24,15 +27,9 @@ export interface TreeNode {
 
 /**
  * Derive DocumentKind from a filename. Returns undefined for unclassified
- * extensions. Centralised here so both TreeBuilder and PathSelectionStrategy
- * classify identically (single source of truth for kind derivation).
+ * extensions. Delegates to `classifySubdocumentDocKind` in domain-contracts —
+ * the single source of truth — so the documents tree (TreeBuilder,
+ * PathSelectionStrategy) and the ticket-subdocument tree (SubdocumentService)
+ * classify identically (MDT-221 UAT r2).
  */
-export function deriveDocumentKind(name: string): DocumentKind | undefined {
-  if (name.endsWith('.md')) {
-    return 'markdown'
-  }
-  if (name.endsWith('.html') || name.endsWith('.htm')) {
-    return 'html'
-  }
-  return undefined
-}
+export const deriveDocumentKind = classifySubdocumentDocKind

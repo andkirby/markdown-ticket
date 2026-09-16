@@ -327,4 +327,40 @@ describe('document raw preview API (MDT-221)', () => {
       expect(response.status).toBeGreaterThanOrEqual(400)
     })
   })
+
+  describe('UAT r2 — tickets-tree serving scope (C-2.25)', () => {
+    // ticketsPath defaults to 'docs/CRs'; documentPaths is ['docs/site'], so
+    // the ticket directory is NOT under a configured document path.
+    const ticketDiagramsDir = 'docs/CRs/RAWP-1/diagrams'
+
+    beforeAll(async () => {
+      await mkdir(join(projectPath, ticketDiagramsDir), { recursive: true })
+      await writeFile(join(projectPath, ticketDiagramsDir, 'flow.html'), '<!doctype html><p>flow</p>\n')
+      await mkdir(join(projectPath, 'private'), { recursive: true })
+      await writeFile(join(projectPath, 'private/secret.html'), '<p>secret</p>\n')
+    })
+
+    it('serves an HTML file inside the tickets tree (ticket-view subdocument preview)', async () => {
+      const token = await mintToken(ticketDiagramsDir)
+      const response = await authRequest.get(`/api/documents/raw-preview/${token}/${ticketDiagramsDir}/flow.html`)
+
+      assertSuccess(response, 200)
+      expect(response.headers['content-type']).toMatch(/text\/html/)
+      expect(response.text).toContain('flow')
+    })
+
+    it('still 403 for paths outside both document paths and the tickets tree', async () => {
+      const token = await mintToken('private')
+      const response = await authRequest.get(`/api/documents/raw-preview/${token}/private/secret.html`)
+      expect(response.status).toBe(403)
+    })
+
+    it('mint rejects non-HTML targets with 400 (token stays an HTML-preview credential)', async () => {
+      const css = await authRequest.post('/api/documents/preview-token').send({ projectId: projectCode, filePath: 'docs/site/style.css' })
+      expect(css.status).toBe(400)
+
+      const md = await authRequest.post('/api/documents/preview-token').send({ projectId: projectCode, filePath: `${ticketDiagramsDir}/notes.md` })
+      expect(md.status).toBe(400)
+    })
+  })
 })

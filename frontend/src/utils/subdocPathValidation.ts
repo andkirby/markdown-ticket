@@ -11,10 +11,21 @@ import { buildDirectTicketPath, buildDirectTicketSubDocPath, buildTicketPath, bu
  */
 
 /**
+ * MDT-221 UAT r2 — document extensions allowed in sub-document URL paths.
+ * `.md` paths are extension-less in their API form; `.html`/`.htm` paths
+ * keep their extension end-to-end (deep links round-trip, BR-1.15).
+ */
+const SUBDOCUMENT_DOC_EXTENSIONS = ['.md', '.html', '.htm'] as const
+
+function findDocExtension(path: string): string | undefined {
+  return SUBDOCUMENT_DOC_EXTENSIONS.find(extension => path.endsWith(extension))
+}
+
+/**
  * Validates a sub-document path for security and format compliance.
  *
  * Rules:
- * - Must end with .md extension
+ * - Must end with a document extension (.md, .html, .htm)
  * - Must not contain .. (path traversal prevention)
  * - Must not start with / (no absolute paths)
  * - Must not be empty
@@ -24,10 +35,10 @@ import { buildDirectTicketPath, buildDirectTicketSubDocPath, buildTicketPath, bu
  *
  * @example
  * validateSubDocPath('prep/test.md') // true
- * validateSubDocPath('part-1/chapter-1/intro.md') // true
+ * validateSubDocPath('diagrams/flow.html') // true
  * validateSubDocPath('../etc/passwd.md') // false (path traversal)
  * validateSubDocPath('/absolute/path.md') // false (absolute path)
- * validateSubDocPath('prep/doc') // false (no .md extension)
+ * validateSubDocPath('prep/doc') // false (no document extension)
  */
 export function validateSubDocPath(path: string): boolean {
   // Must not be empty
@@ -35,8 +46,9 @@ export function validateSubDocPath(path: string): boolean {
     return false
   }
 
-  // Must end with .md
-  if (!path.endsWith('.md')) {
+  // Must end with a known document extension
+  const extension = findDocExtension(path)
+  if (!extension) {
     return false
   }
 
@@ -55,8 +67,8 @@ export function validateSubDocPath(path: string): boolean {
     return false
   }
 
-  // Must have at least one character before .md
-  const basename = path.slice(0, -3)
+  // Must have at least one character before the extension
+  const basename = path.slice(0, -extension.length)
   if (basename.length === 0 || basename === '/') {
     return false
   }
@@ -65,40 +77,45 @@ export function validateSubDocPath(path: string): boolean {
 }
 
 /**
- * Converts a URL path (with .md extension) to an API path (without .md extension).
+ * Converts a URL path (with extension) to an API path.
  * MDT-138: Preserves dot-notation for virtual folders, slash-notation for physical folders.
+ * MDT-221 UAT r2: .md is stripped (legacy convention); .html/.htm are kept.
  *
  * The backend handles both formats:
  * - Virtual folders: 'tests.trace' → looks for 'tests.trace.md'
  * - Physical folders: 'bdd/legacy' → looks for 'bdd/legacy.md' or 'bdd.legacy.md'
+ * - HTML files: 'diagrams/flow.html' → resolves the exact .html file
  *
- * @param urlPath - Path from URL (e.g., 'prep/test.md', 'tests.trace.md')
- * @returns Path for API call (e.g., 'prep/test', 'tests.trace')
+ * @param urlPath - Path from URL (e.g., 'prep/test.md', 'tests.trace.md', 'diagrams/flow.html')
+ * @returns Path for API call (e.g., 'prep/test', 'tests.trace', 'diagrams/flow.html')
  *
  * @example
  * urlPathToApiPath('prep/test.md') // 'prep/test'
  * urlPathToApiPath('part-1/chapter-1/intro.md') // 'part-1/chapter-1/intro'
  * urlPathToApiPath('tests.trace.md') // 'tests.trace' (virtual folder)
+ * urlPathToApiPath('diagrams/flow.html') // 'diagrams/flow.html' (extension kept)
  */
 export function urlPathToApiPath(urlPath: string): string {
-  // Remove .md extension - no other transformation needed
-  // The backend handles both dot and slash notation
+  // Remove .md extension only - HTML keeps its extension end-to-end
   return urlPath.endsWith('.md') ? urlPath.slice(0, -3) : urlPath
 }
 
 /**
- * Converts an API path (without .md extension) to a URL path (with .md extension).
+ * Converts an API path to a URL path.
+ * Extension-less markdown API paths get .md appended; paths that already
+ * carry a document extension (HTML) pass through unchanged (MDT-221 UAT r2).
  *
- * @param apiPath - Path from API (e.g., 'prep/test')
- * @returns Path for URL (e.g., 'prep/test.md')
+ * @param apiPath - Path from API (e.g., 'prep/test', 'diagrams/flow.html')
+ * @returns Path for URL (e.g., 'prep/test.md', 'diagrams/flow.html')
  *
  * @example
  * apiPathToUrlPath('prep/test') // 'prep/test.md'
  * apiPathToUrlPath('part-1/chapter-1/intro') // 'part-1/chapter-1/intro.md'
+ * apiPathToUrlPath('diagrams/flow.html') // 'diagrams/flow.html'
  */
 export function apiPathToUrlPath(apiPath: string): string {
-  // Add .md extension if not present
-  if (!apiPath.endsWith('.md')) {
+  // Add .md extension only when the path carries no document extension
+  if (!findDocExtension(apiPath)) {
     return `${apiPath}.md`
   }
   return apiPath

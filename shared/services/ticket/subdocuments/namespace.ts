@@ -41,6 +41,7 @@ export function groupNamespacedFiles(
     group.set(subKey, {
       name: subKey,
       kind: 'file',
+      docKind: 'markdown',
       children: [],
       filePath: `${crId}/${filename}.md`,
     })
@@ -66,6 +67,7 @@ export function groupNamespacedFiles(
         children.push({
           name: 'main',
           kind: 'file',
+          docKind: 'markdown',
           children: [],
           filePath: `${crId}/${namespace}.md`,
         })
@@ -99,6 +101,7 @@ export function groupNamespacedFiles(
       result.push({
         name: file,
         kind: 'file',
+        docKind: 'markdown',
         children: [],
         filePath: `${crId}/${file}.md`,
       })

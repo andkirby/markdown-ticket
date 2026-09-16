@@ -182,4 +182,53 @@ describe('useTicketDocumentNavigation', () => {
     expect(typeof result.current.selectedPath).toBe('string')
     expect(Array.isArray(result.current.folderStack)).toBe(true)
   })
+
+  // ─── HTML subdocuments (MDT-221 UAT r2) ──────────────────────────────────
+
+  const htmlSubdocuments = [
+    {
+      name: 'diagrams',
+      kind: 'folder' as const,
+      children: [
+        {
+          name: 'flow',
+          kind: 'file' as const,
+          docKind: 'html' as const,
+          children: [],
+          filePath: 'MDT-093/diagrams/flow.html',
+        },
+      ],
+    },
+  ]
+
+  it('deep-links to an .html subdocument URL into the extension-full selectedPath', () => {
+    const { result } = renderHook(
+      () => useTicketDocumentNavigation({ subdocuments: htmlSubdocuments, ticketCode: 'MDT-093', projectCode: 'MDT' }),
+      { wrapper: ({ children }) => wrapper({ children, initialEntries: ['/prj/MDT/ticket/MDT-093/diagrams/flow.html'] }) },
+    )
+    expect(result.current.selectedPath).toBe('diagrams/flow.html')
+    expect(result.current.folderStack).toEqual(['diagrams'])
+  })
+
+  it('falls back to main when the .html URL path has no matching subdocument', () => {
+    const { result } = renderHook(
+      () => useTicketDocumentNavigation({ subdocuments: htmlSubdocuments, ticketCode: 'MDT-093', projectCode: 'MDT' }),
+      { wrapper: ({ children }) => wrapper({ children, initialEntries: ['/prj/MDT/ticket/MDT-093/diagrams/missing.html'] }) },
+    )
+    expect(result.current.selectedPath).toBe('main')
+  })
+
+  it('selects an HTML subdocument by its extension-full path (MDT-221 UAT r2)', () => {
+    const { result } = renderHook(
+      () => useTicketDocumentNavigation({ subdocuments: htmlSubdocuments, ticketCode: 'MDT-093', projectCode: 'MDT' }),
+      { wrapper: ({ children }) => wrapper({ children }) },
+    )
+
+    act(() => {
+      result.current.selectPath('diagrams/flow.html')
+    })
+
+    expect(result.current.selectedPath).toBe('diagrams/flow.html')
+    expect(result.current.folderStack).toEqual(['diagrams'])
+  })
 })
