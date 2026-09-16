@@ -70,10 +70,136 @@ describe('SubdocumentService', () => {
       {
         name: 'poc',
         kind: 'file',
+        docKind: 'markdown',
         children: [],
         filePath: 'MDT-138/poc.md',
       },
     ])
+  })
+
+  it('discovers .html files inside ticket subfolders as subdocuments with docKind html', () => {
+    mkdirSync(join(location.ticketDir, 'diagrams'))
+    writeFileSync(join(location.ticketDir, 'diagrams', 'coverage-dataflow.html'), '<html></html>')
+    writeFileSync(join(location.ticketDir, 'diagrams', 'coverage-entities.htm'), '<html></html>')
+    writeFileSync(join(location.ticketDir, 'diagrams', 'coverage-entities.json'), '{}')
+    writeFileSync(join(location.ticketDir, 'diagrams', 'logo.png'), 'png')
+
+    const result = service.discover(location, 'MDT-138')
+    const diagrams = result.find(entry => entry.name === 'diagrams')
+
+    expect(diagrams).toMatchObject({ name: 'diagrams', kind: 'folder' })
+    expect(diagrams?.children).toEqual([
+      {
+        name: 'coverage-dataflow',
+        kind: 'file',
+        docKind: 'html',
+        children: [],
+        filePath: 'MDT-138/diagrams/coverage-dataflow.html',
+      },
+      {
+        name: 'coverage-entities',
+        kind: 'file',
+        docKind: 'html',
+        children: [],
+        filePath: 'MDT-138/diagrams/coverage-entities.htm',
+      },
+    ])
+  })
+
+  it('drops a folder that contains only non-document assets', () => {
+    mkdirSync(join(location.ticketDir, 'assets'))
+    writeFileSync(join(location.ticketDir, 'assets', 'data.json'), '{}')
+    writeFileSync(join(location.ticketDir, 'assets', 'image.png'), 'png')
+
+    expect(service.discover(location, 'MDT-138')).toEqual([])
+  })
+
+  it('discovers top-level .html files next to the ticket markdown', () => {
+    writeFileSync(join(location.ticketDir, 'sketch.html'), '<html></html>')
+
+    expect(service.discover(location, 'MDT-138')).toEqual([
+      {
+        name: 'sketch',
+        kind: 'file',
+        docKind: 'html',
+        children: [],
+        filePath: 'MDT-138/sketch.html',
+      },
+    ])
+  })
+
+  it('keeps html names out of the markdown namespace machinery', () => {
+    // coverage.html + coverage.trace.md: the namespace group rebuilds
+    // filePaths with a .md suffix, so the .html file must not enter it —
+    // it survives as a child of the virtual 'coverage' folder instead.
+    writeFileSync(join(location.ticketDir, 'coverage.html'), '<html></html>')
+    writeFileSync(join(location.ticketDir, 'coverage.trace.md'), '# trace')
+
+    const result = service.discover(location, 'MDT-138')
+
+    expect(result).toEqual([
+      {
+        name: 'coverage',
+        kind: 'folder',
+        isVirtual: true,
+        filePath: 'MDT-138/coverage.md',
+        children: [
+          {
+            name: 'trace',
+            kind: 'file',
+            docKind: 'markdown',
+            children: [],
+            filePath: 'MDT-138/coverage.trace.md',
+          },
+          {
+            name: 'coverage',
+            kind: 'file',
+            docKind: 'html',
+            children: [],
+            filePath: 'MDT-138/coverage.html',
+          },
+        ],
+      },
+    ])
+  })
+
+  it('prefers markdown when a folder holds both foo.md and foo.html', () => {
+    mkdirSync(join(location.ticketDir, 'diagrams'))
+    writeFileSync(join(location.ticketDir, 'diagrams', 'flow.html'), '<html></html>')
+    writeFileSync(join(location.ticketDir, 'diagrams', 'flow.md'), '# flow')
+
+    const result = service.discover(location, 'MDT-138')
+    const diagrams = result.find(entry => entry.name === 'diagrams')
+
+    expect(diagrams?.children).toEqual([
+      {
+        name: 'flow',
+        kind: 'file',
+        docKind: 'markdown',
+        children: [],
+        filePath: 'MDT-138/diagrams/flow.md',
+      },
+    ])
+  })
+
+  it('resolves .html subdocument names to the exact file without appending .md', () => {
+    mkdirSync(join(location.ticketDir, 'diagrams'))
+    writeFileSync(join(location.ticketDir, 'diagrams', 'coverage-dataflow.html'), '<html></html>')
+
+    expect(service.resolvePath(location, 'diagrams/coverage-dataflow.html')).toBe(
+      join(location.ticketDir, 'diagrams', 'coverage-dataflow.html'),
+    )
+    expect(service.read(location, 'diagrams/coverage-dataflow.html')).toMatchObject({
+      code: 'diagrams/coverage-dataflow.html',
+      content: '<html></html>',
+    })
+  })
+
+  it('rejects .html subdocument names that do not exist as exact files', () => {
+    mkdirSync(join(location.ticketDir, 'diagrams'))
+    writeFileSync(join(location.ticketDir, 'diagrams', 'coverage-dataflow.md'), '# md')
+
+    expect(service.resolvePath(location, 'diagrams/coverage-dataflow.html')).toBeNull()
   })
 
   it('rejects subdocument paths deeper than one folder level', () => {

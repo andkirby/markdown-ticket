@@ -18,7 +18,9 @@ import { dataLayer } from '../../services/dataLayer'
 import { useEventBus } from '../../services/eventBus'
 import { filePathToApiPath } from '../../utils/subdocPathValidation'
 import { extractTableOfContents } from '../../utils/tableOfContents'
+import { isEpicTicket } from '../../utils/ticketLevels'
 import { processContentForDisplay } from '../../utils/titleExtraction'
+import HtmlSandboxViewer from '../DocumentsView/HtmlSandboxViewer'
 import MarkdownContent from '../MarkdownContent'
 // eslint-disable-next-line no-restricted-imports
 import { RelativeTimestamp } from '../shared/RelativeTimestamp'
@@ -26,6 +28,7 @@ import { RelativeTimestamp } from '../shared/RelativeTimestamp'
 import TableOfContents from '../shared/TableOfContents'
 import { Modal, ModalBody } from '../ui/Modal'
 import { CompactTicketHeader } from './CompactTicketHeader'
+import { EpicBoardAction } from './EpicBoardAction'
 import { ROOT_DOCUMENT_PATH, splitPathSegments } from './subdocumentPath'
 import { TicketDocumentTabs } from './TicketDocumentTabs'
 import { TraceGraphShell } from './TraceGraphShell'
@@ -51,33 +54,16 @@ function humanizeTitleSegment(value: string): string {
     .replace(/\b\w/g, character => character.toUpperCase())
 }
 
-function findSubdocumentLabel(subdocuments: SubDocument[], selectedPath: string, ticketCode: string): string | null {
+function findSubdocument(subdocuments: SubDocument[], selectedPath: string, ticketCode: string): SubDocument | null {
   for (const subdocument of subdocuments) {
     if (subdocument.filePath && filePathToApiPath(subdocument.filePath, ticketCode) === selectedPath) {
-      return humanizeTitleSegment(subdocument.name)
+      return subdocument
     }
 
     if (subdocument.children.length > 0) {
-      const childLabel = findSubdocumentLabel(subdocument.children, selectedPath, ticketCode)
-      if (childLabel) {
-        return childLabel
-      }
-    }
-  }
-
-  return null
-}
-
-function findSubdocumentSourcePath(subdocuments: SubDocument[], selectedPath: string, ticketCode: string): string | null {
-  for (const subdocument of subdocuments) {
-    if (subdocument.filePath && filePathToApiPath(subdocument.filePath, ticketCode) === selectedPath) {
-      return subdocument.filePath
-    }
-
-    if (subdocument.children.length > 0) {
-      const childSourcePath = findSubdocumentSourcePath(subdocument.children, selectedPath, ticketCode)
-      if (childSourcePath) {
-        return childSourcePath
+      const child = findSubdocument(subdocument.children, selectedPath, ticketCode)
+      if (child) {
+        return child
       }
     }
   }
@@ -100,7 +86,8 @@ function deriveTicketContextLabel(
   }
 
   const fallbackLabel = splitPathSegments(selectedPath).map(humanizeTitleSegment).filter(Boolean).join(' ')
-  return findSubdocumentLabel(subdocuments, selectedPath, ticketCode) ?? (fallbackLabel || null)
+  const subdocument = findSubdocument(subdocuments, selectedPath, ticketCode)
+  return (subdocument && humanizeTitleSegment(subdocument.name)) ?? (fallbackLabel || null)
 }
 
 const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ticketsPath, ticketError }) => {
@@ -263,12 +250,26 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
   // `#trace` naturally. Auto-closing in this component raced the modal's
   // initial isOpen=false state on deep-link load and stripped the hash.
 
+  // MDT-221 UAT r2: the selected subdocument itself (not just its label) —
+  // docKind drives the viewer switch and the raw-preview path for HTML.
+  const selectedSubdoc = useMemo(() => {
+    if (!currentTicket || selectedPath === ROOT_DOCUMENT_PATH) {
+      return null
+    }
+    return findSubdocument(liveSubdocs, selectedPath, currentTicket.code)
+  }, [currentTicket, liveSubdocs, selectedPath])
+
+  const isHtmlSubdoc = selectedSubdoc?.docKind === 'html'
+
   const { content: subdocContent, loading: subdocLoading, error: subdocError, invalidateCache, invalidateAndRefetch } = useTicketDocumentContent({
     projectId: projectCode ?? '',
     ticketCode: currentTicket?.code ?? '',
     selectedPath,
     mainContent: processedContent,
     pendingPath,
+    // HTML renders through the token-minted sandboxed iframe; there is no
+    // markdown text to fetch (BR-1.15).
+    skipFetch: isHtmlSubdoc,
     onContentLoaded: confirmPathSwitch,
   })
 
@@ -357,8 +358,8 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
       return `${currentTicket.code}.md`
     }
 
-    return findSubdocumentSourcePath(liveSubdocs, selectedPath, currentTicket.code) ?? undefined
-  }, [currentTicket, liveSubdocs, selectedPath])
+    return selectedSubdoc?.filePath ?? undefined
+  }, [currentTicket, selectedSubdoc, selectedPath])
 
   const ticketPageTitle = currentTicket
     ? formatTicketPageTitle(currentTicket.code, currentTicket.title, ticketContextLabel)
@@ -373,12 +374,29 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
     ? (
         <button
           type="button"
-          className="trace-graph-action"
+          className="ticket-viewer-action"
           onClick={openTraceGraph}
         >
           <Network aria-hidden="true" />
           <span>Trace Graph</span>
         </button>
+      )
+    : null
+
+  // MDT-246: the epic's own way out to its board lane — epic tickets carry no
+  // phase badge, so the CTA is their jump entry point. Renders before Trace
+  // Graph (nearest the badges; ticket-viewer.spec.md § layout).
+  const epicBoardAction = currentTicket && isEpicTicket(currentTicket) && projectCode
+    ? (
+        <EpicBoardAction projectCode={projectCode} ticketCode={currentTicket.code} />
+      )
+    : null
+  const headerActions = (epicBoardAction || traceGraphAction)
+    ? (
+        <>
+          {epicBoardAction}
+          {traceGraphAction}
+        </>
       )
     : null
 
@@ -418,18 +436,18 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
             />
           </svg>
         </button>
-        <ModalBody className="p-0">
+        <ModalBody className="ticket-viewer-body">
           {ticketError && !ticket
             ? (
-                <div data-testid="ticket-not-found" className="flex flex-col items-center justify-center py-16 px-6">
-                  <AlertTriangle className="h-10 w-10 text-muted-foreground mb-4" />
-                  <h1 className="modal__headline mb-2">Ticket Not Found</h1>
-                  <p className="text-muted-foreground text-center">{ticketError}</p>
+                <div data-testid="ticket-not-found" className="ticket-not-found">
+                  <AlertTriangle className="ticket-not-found__icon text-muted-foreground" />
+                  <h1 className="modal__headline ticket-not-found__headline">Ticket Not Found</h1>
+                  <p className="text-muted-foreground ticket-not-found__text">{ticketError}</p>
                 </div>
               )
             : (
-                <div className="min-w-0 ticket-viewer-content" style={ticketContentStyle}>
-                  <CompactTicketHeader ticket={currentTicket!} action={traceGraphAction} />
+                <div className="ticket-viewer-content" style={ticketContentStyle}>
+                  <CompactTicketHeader ticket={currentTicket!} action={headerActions} />
 
                   <TicketDocumentTabs
                     subdocuments={liveSubdocs}
@@ -440,38 +458,53 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
                     onHeightChange={handleTabNavigationHeightChange}
                   />
 
-                  <div data-testid="subdoc-content" className="relative">
+                  <div data-testid="subdoc-content" className="subdoc-content">
                     {subdocError && (
-                      <div data-testid="subdoc-error" className="px-4 py-3 text-sm text-destructive" role="alert">
+                      <div data-testid="subdoc-error" className="subdoc-error" role="alert">
                         {subdocError}
                       </div>
                     )}
                     {!subdocError && isOpen && projectCode && (
                       <>
                         {(pendingPath || subdocLoading) && (
-                          <div data-testid="subdoc-loading" className="absolute inset-0 z-10 flex items-start justify-center pt-8 bg-background/50">
-                            <span className="text-muted-foreground text-sm animate-pulse">
+                          <div data-testid="subdoc-loading" className="subdoc-loading">
+                            <span className="subdoc-loading__message text-muted-foreground">
                               Loading…
                             </span>
                           </div>
                         )}
-                        <div data-testid="ticket-content" className={pendingPath || subdocLoading ? 'pointer-events-none opacity-50' : ''}>
-                          <div className="relative modal__section--content">
-                            <div className="relative-timestamp__floating">
-                              <RelativeTimestamp
-                                createdAt={currentTicket!.dateCreated}
-                                updatedAt={currentTicket!.lastModified}
-                              />
-                            </div>
-                            <MarkdownContent
-                              markdown={subdocContent}
-                              currentProject={projectCode}
-                              sourcePath={markdownSourcePath}
-                              ticketsPath={ticketsPath}
-                              headerLevelStart={3}
-                              className={`prose prose--ticket ${getMarkdownDensityClass(markdownDensity)} max-w-none dark:prose-invert`}
-                            />
-                          </div>
+                        <div data-testid="ticket-content" className={pendingPath || subdocLoading ? 'ticket-content--pending' : ''}>
+                          {isHtmlSubdoc && selectedSubdoc?.filePath
+                            ? (
+                              // MDT-221 UAT r2: sandboxed HTML preview — the
+                              // identical component, mint flow, and raw route as
+                              // Documents View; iframe sandbox invariants (OBL-13)
+                              // apply unchanged.
+                                <div className="ticket-html-preview" data-testid="ticket-html-preview">
+                                  <HtmlSandboxViewer
+                                    projectId={projectCode}
+                                    filePath={`${ticketsPath}/${selectedSubdoc.filePath}`}
+                                  />
+                                </div>
+                              )
+                            : (
+                                <div className="ticket-viewer__section modal__section--content">
+                                  <div className="relative-timestamp__floating">
+                                    <RelativeTimestamp
+                                      createdAt={currentTicket!.dateCreated}
+                                      updatedAt={currentTicket!.lastModified}
+                                    />
+                                  </div>
+                                  <MarkdownContent
+                                    markdown={subdocContent}
+                                    currentProject={projectCode}
+                                    sourcePath={markdownSourcePath}
+                                    ticketsPath={ticketsPath}
+                                    headerLevelStart={3}
+                                    className={`prose prose--ticket ${getMarkdownDensityClass(markdownDensity)} dark:prose-invert`}
+                                  />
+                                </div>
+                              )}
                         </div>
                       </>
                     )}

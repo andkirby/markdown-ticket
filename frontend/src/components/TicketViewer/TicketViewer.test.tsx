@@ -88,10 +88,19 @@ mock.module('./TicketDocumentTabs', () => ({
   TicketDocumentTabs: () => <div data-testid="ticket-document-tabs" />,
 }))
 
+// MDT-221 UAT r2: assert the routing props, not the minting (the real viewer
+// mints a preview token over authFetch, which has no server in unit tests).
+mock.module('../DocumentsView/HtmlSandboxViewer', () => ({
+  default: ({ projectId, filePath }: { projectId: string, filePath: string }) => (
+    <div data-testid="html-sandbox-viewer" data-project-id={projectId} data-filepath={filePath} />
+  ),
+}))
+
 let selectedPath = 'main'
 let liveSubdocuments: Array<{
   name: string
   kind: 'file' | 'folder'
+  docKind?: 'markdown' | 'html'
   filePath?: string
   children: unknown[]
 }> = []
@@ -210,7 +219,7 @@ describe('TicketViewer', () => {
     renderTicketViewer()
 
     const markdown = screen.getByTestId('markdown-content')
-    expect(markdown).toHaveClass('prose', 'prose--ticket', 'prose--density-compact', 'max-w-none', 'dark:prose-invert')
+    expect(markdown).toHaveClass('prose', 'prose--ticket', 'prose--density-compact', 'dark:prose-invert')
     expect(markdown).toHaveAttribute('data-header-level-start', '3')
     expect(markdown.closest('.ticket-viewer-content')).toHaveStyle('--prose-anchor-offset: 0px')
     await waitFor(() => expect(fetchTraceStoreMetadata).toHaveBeenCalled())
@@ -253,6 +262,25 @@ describe('TicketViewer', () => {
       'data-source-path',
       'docs/CRs/MDT-173/architecture.md',
     )
+    await waitFor(() => expect(fetchTraceStoreMetadata).toHaveBeenCalled())
+  })
+
+  it('renders the sandboxed HTML viewer for docKind=html subdocuments instead of markdown (MDT-221 UAT r2)', async () => {
+    selectedPath = 'diagrams/flow.html'
+    liveSubdocuments = [{
+      name: 'diagrams',
+      kind: 'folder',
+      children: [
+        { name: 'flow', kind: 'file', docKind: 'html', filePath: 'MDT-173/diagrams/flow.html', children: [] },
+      ],
+    }]
+
+    renderTicketViewer()
+
+    const viewer = screen.getByTestId('html-sandbox-viewer')
+    expect(viewer).toHaveAttribute('data-project-id', 'MDT')
+    expect(viewer).toHaveAttribute('data-filepath', 'docs/CRs/MDT-173/diagrams/flow.html')
+    expect(screen.queryByTestId('markdown-content')).toBeNull()
     await waitFor(() => expect(fetchTraceStoreMetadata).toHaveBeenCalled())
   })
 

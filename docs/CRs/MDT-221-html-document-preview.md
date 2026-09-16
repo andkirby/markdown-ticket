@@ -345,3 +345,32 @@ TASK-15 (scan + dialog) is the remaining slice.
 "How to configure this per project" — `[project.document.preview]` in
 `.mdt-config.toml` with `allowedExternalDomains` and `allowUnsafeEval`, strict
 defaults.
+
+### UAT Session 2026-09-13
+
+**Trigger**: ticket-view integration was missing. `GPDE-012` has a `diagrams/`
+subfolder with `.html` files, but `/prj/GPDE/ticket/GPDE-012` showed nothing —
+`SubdocumentService` drops non-`.md` children (and folders whose children are
+all non-`.md`), and MDT-221 shipped the HTML preview only in Documents View.
+
+**Approved changes**:
+- BR-1.14, BR-1.15, C-2.25, C-2.26 added (ticket-view HTML subdocuments:
+  tab discovery, sandboxed preview via the existing token + raw-preview
+  route, tickets-tree serving scope, HTML name resolution).
+- C-2.1 refined in place (403 scope now excludes the tickets tree).
+- BR-1.9 wiring defect folded in: document watchers watched `**/*.md`, so
+  the shipped "external HTML edit refreshes preview" criterion never fired;
+  pattern fixed to `**/*.{md,html,htm}` (OBL-24).
+
+**Changed requirement IDs**: C-2.1 (refine), BR-1.14, BR-1.15, C-2.25,
+C-2.26 (add).
+**Updated workflow documents**: `architecture.md` (§9 ticket-view
+integration), `security-tradeoffs.md` (gate G7 extension rationale),
+`uat.md` (this round's brief), this section.
+**`uat.md` written**: yes (round-2 brief replaces round-1).
+**Strict drift/lock used**: no (additive + one refine-in-place).
+**Execution slices**: TASK-16 (backend discovery/resolve + watcher pattern),
+TASK-17 (raw-preview tickets-tree scope + mint HTML-only guard), TASK-18
+(frontend viewer integration).
+**Deferred**: ticket-view HTML SSE refresh (ticket watchers stay
+`.md`-only); noted in `uat.md` → Watchlist.

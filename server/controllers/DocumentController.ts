@@ -241,6 +241,14 @@ export class DocumentController {
         return
       }
 
+      // MDT-221 UAT r2 (C-2.25): the preview token is an HTML-preview
+      // credential; mint only for HTML targets. Hygiene, not a boundary —
+      // the raw route's MIME gate already refuses non-HTML entry points.
+      if (!/\.(?:html|htm)$/.test(filePath)) {
+        res.status(400).json({ error: 'Bad Request', message: 'Preview tokens are only minted for HTML documents' })
+        return
+      }
+
       // The token is scoped to the directory of the selected HTML file so that
       // relative subresources (css/js/png) resolve under the same scope.
       const docDir = dirname(filePath.replace(/\\/g, '/')).replace(/\/+$/, '')

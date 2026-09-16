@@ -419,3 +419,63 @@ three other durable docs that this change touches:
 updates, and verify `DEBUG.md` coverage. These are not optional polish — the
 architecture doc is the reference future contributors use to place new routes,
 and the OpenAPI spec is the contract the Redoc UI renders.
+
+## 9. UAT r2 (2026-09-13) — Ticket-view integration
+
+MDT-221 shipped Documents View only. Ticket directories containing HTML
+(e.g. `GPDE-012/diagrams/*.html`) were invisible in the ticket view because
+`SubdocumentService.discover` kept `.md` children only. Round 2 extends the
+same security pipeline to the ticket surface.
+
+### 9.1 Subdocument discovery (`ART-20`, `ART-21`)
+
+- `SubDocument` gains optional `docKind?: 'markdown' | 'html'` (domain
+  contracts). `kind` stays the tree-shape axis (`file`/`folder`); `docKind`
+  is the document-classification axis, mirroring `DocumentKind` in
+  `server/types/tree.ts`.
+- HTML entries keep the extension in `filePath` (`GPDE-012/diagrams/x.html`)
+  and strip it from `name` (`x`), matching the `.md` convention.
+- The dot-namespace machinery (virtual folders) stays markdown-only: HTML
+  names never enter `groupNamespacedFiles`, whose `filePath` construction
+  hardcodes `.md`.
+- Asset files (`.json`, `.png`, …) stay invisible; a folder with only
+  non-document children yields zero children and is dropped.
+- `resolvePath` maps `.html`/`.htm`-suffixed subdocument names to the exact
+  file (no `.md` appending) under the existing
+  `isSupportedSubdocumentPath` whitelist and `isContainedPath` checks.
+
+### 9.2 Raw-preview serving scope (`ART-3`, `ART-4`)
+
+- Gate G7 admits the project's tickets tree in addition to configured
+  document paths. An empty `ticketsPath` admits nothing. All other gates
+  (G2 signature, G3 expiry, G4 project, G6 docDir scope, G8 root
+  containment, G9 MIME allowlist) are unchanged.
+- `mintPreviewToken` rejects `filePath` targets that are not `.html`/`.htm`
+  (400). The token is an *HTML preview* credential; tying the mint to the
+  HTML surface keeps scope review simple.
+- No new read scope: ticket bytes were already readable as text through the
+  CR subdocument API by project-visible users; executable preview is what
+  the token/CSP/sandbox chain governs, and that chain is untouched.
+
+### 9.3 Frontend routing (`ART-22`, `ART-23`, `ART-24`)
+
+- `TicketViewer` resolves the selected subdocument; `docKind === 'html'`
+  renders `HtmlSandboxViewer` with `projectId` and
+  `${ticketsPath}/${subdocument.filePath}` — the identical component,
+  mint flow, and raw route as Documents View (OBL-13 invariants apply
+  unchanged). The markdown content fetch and renderer are skipped.
+- Path utilities are extension-aware: `validateSubDocPath` accepts
+  `.md`/`.html`/`.htm`; `apiPathToUrlPath` never appends `.md` to an
+  extension-carrying path; `collectPaths` admits the extension-full HTML
+  form so deep links (`…/ticket/GPDE-012/diagrams/x.html`) round-trip.
+- The canonical `selectedPath` for HTML keeps the extension (`.md` paths
+  stay extension-less, unchanged).
+
+### 9.4 Watcher pattern fix (`ART-8`, OBL-24)
+
+`initDocumentWatchers` watched `**/*.md`, so the MDT-221 handler that
+accepts `.html`/`.htm` events never received them — BR-1.9 was shipped but
+inert. The document-watch pattern is now `**/*.{md,html,htm}`. Ticket
+watchers (markdown lifecycle events) intentionally stay `.md`-only this
+round; ticket-view HTML refresh-on-external-edit is deferred (uat.md
+Watchlist).

@@ -18,6 +18,8 @@ interface UseTicketDocumentContentOptions {
   selectedPath: string
   mainContent: string
   pendingPath: string | null
+  /** MDT-221 UAT r2: true for HTML subdocuments — rendered by the sandboxed iframe viewer, no markdown text fetch (BR-1.15). */
+  skipFetch?: boolean
   onContentLoaded?: () => void
 }
 
@@ -34,7 +36,7 @@ interface UseTicketDocumentContentResult {
 export function useTicketDocumentContent(
   options: UseTicketDocumentContentOptions,
 ): UseTicketDocumentContentResult {
-  const { projectId, ticketCode, selectedPath, mainContent, onContentLoaded } = options
+  const { projectId, ticketCode, selectedPath, mainContent, skipFetch, onContentLoaded } = options
 
   const [content, setContent] = useState<string>(mainContent)
   const [loading, setLoading] = useState(false)
@@ -94,6 +96,16 @@ export function useTicketDocumentContent(
       return
     }
 
+    // MDT-221 UAT r2: HTML subdocuments render through the sandboxed iframe
+    // viewer; clear the markdown pipeline state instead of fetching text.
+    if (skipFetch) {
+      setContent('')
+      setLoading(false)
+      setError(null)
+      onContentLoadedRef.current?.()
+      return
+    }
+
     // Serve from cache if available (cache is cleared by invalidateAndRefetch)
     const cached = cacheRef.current.get(selectedPath)
     if (import.meta.env.DEV)
@@ -135,7 +147,7 @@ export function useTicketDocumentContent(
     return () => {
       cancelled = true
     }
-  }, [selectedPath, projectId, ticketCode, mainContent, refetchKey])
+  }, [selectedPath, projectId, ticketCode, mainContent, skipFetch, refetchKey])
 
   return { content, loading, error, invalidateCache, invalidateAndRefetch }
 }

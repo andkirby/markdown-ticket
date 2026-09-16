@@ -147,3 +147,46 @@ TASK-14 shipped items 1-2 + 5-6 below. TASK-15 is the remaining work:
    its CDNs until the owner opts in, with the dialog explaining why.
 
 This is the proper version of the initial stopgap; TASK-14 shipped it.
+
+## 5. UAT r2 — tickets-tree serving scope (C-2.25, C-2.1 refined)
+
+**Change**: raw-preview gate G7 accepts paths inside the project's tickets
+tree in addition to configured document paths, and the mint endpoint rejects
+non-`.html`/`.htm` targets.
+
+**Why it is needed**: ticket-view HTML subdocuments (BR-1.14/BR-1.15) live in
+ticket directories (e.g. `.tickets/GPDE-012/diagrams/`), which are frequently
+*excluded* from document paths (GPDE excludes `.tickets` from Documents View
+discovery). Without the extension, the preview of a legitimately discovered
+ticket subdocument 403s at G7.
+
+**Blast radius analysis**:
+
+- **Who can trigger it**: unchanged — the owner mints the token (C-2.5,
+  `isWriteAccess` gate); every raw request re-validates the HMAC token
+  (G2/G3), the docDir scope (G6), root containment (G8), and the MIME
+  allowlist (G9). Non-owners gain nothing: they still cannot mint, and a
+  stolen token still expires in ≤300s and only reads its scoped directory.
+- **What becomes newly servable**: files under `ticketsPath` with MIME-map
+  extensions (`.html/.htm/.css/.js/.png/…`). `.md` ticket files remain
+  unservable (not in `RAW_MIME` → 415). Ticket bytes were already readable
+  as UTF-8 text by any project-visible user through
+  `GET /api/projects/:id/crs/:crId/subdocuments/:name` — the raw route adds
+  an *executable* rendering of the same bytes, which is exactly what the
+  unchanged CSP/sandbox chain governs (`connect-src 'none'`, opaque origin,
+  no `allow-same-origin`).
+- **What is explicitly NOT relaxed**: `connect-src 'none'`, `img-src 'self'
+  data:`, `default-src 'none'`, `sandbox` without `allow-same-origin`,
+  `X-Frame-Options: SAMEORIGIN` override scope, `nosniff`, owner-only
+  minting, TTL ≤ 300s, per-directory token scope.
+
+**Mint guard**: rejecting non-HTML mint targets (400) is hygiene, not a
+boundary — the raw route's MIME gate already refuses non-HTML entry points —
+but it keeps the token concept tied to "HTML preview credential" and makes
+scope audits trivial.
+
+**Watcher fix note (OBL-24)**: the `**/*.{md,html,htm}` document-watch pattern
+widens chokidar's filesystem watch surface to HTML files under configured
+document paths. This is the shipped intent of BR-1.9 (the handler already
+accepted HTML events); no new data leaves the process — same SSE channel,
+same payload shape.

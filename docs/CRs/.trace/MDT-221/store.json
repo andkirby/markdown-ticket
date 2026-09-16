@@ -82,13 +82,6 @@
       "routePolicy": "bdd"
     },
     {
-      "id": "C-2.1",
-      "kind": "constraint",
-      "text": "Raw preview requests for files outside configured document paths return 403.",
-      "sourceRef": "CR:MDT-221",
-      "routePolicy": "tests"
-    },
-    {
       "id": "C-2.2",
       "kind": "constraint",
       "text": "Raw requests using .., absolute paths, encoded traversal, or project-root escapes return 403.",
@@ -325,6 +318,41 @@
       "text": "When a selected HTML file references external origins or capabilities (eval) not yet allowed by the project's preview config, the user is told which domains/capabilities need attention (via the mint response or a dialog), so the opt-in is conscious rather than implicit.",
       "sourceRef": "CR:MDT-221",
       "routePolicy": "bdd"
+    },
+    {
+      "id": "C-2.1",
+      "kind": "constraint",
+      "text": "Raw preview requests for files outside configured document paths AND outside the project's tickets tree return 403. (UAT r2: the tickets tree was added as an allowed raw-preview origin for ticket-view HTML subdocument previews; originally the check covered configured document paths only.)",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-1.14",
+      "kind": "behavior",
+      "text": ".html and .htm files inside a ticket directory (top level or subfolders such as diagrams/) are discovered as ticket subdocuments and appear in the ticket view document tabs. Non-document assets (.json, .png, ...) in those folders stay invisible in the tab tree, matching the Documents View asset rule (BR-1.3). A folder that contains only non-document files is not listed.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.15",
+      "kind": "behavior",
+      "text": "Selecting an HTML subdocument in the ticket view renders the sandboxed iframe preview through the same owner-minted preview token and /api/documents/raw-preview route as Documents View; the markdown renderer is not called and no subdocument text fetch is issued. Deep links like /prj/:projectCode/ticket/:ticketKey/diagrams/file.html round-trip through tab switches.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C-2.25",
+      "kind": "constraint",
+      "text": "Raw-preview serving accepts paths inside the project's tickets tree in addition to configured document paths (gate G7 extension for ticket-view HTML subdocument previews). All other gates (token signature/expiry, docDir scope, project-root containment, MIME allowlist) are unchanged, preview-token minting stays owner-only, and the mint endpoint rejects file paths that are not .html/.htm.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-2.26",
+      "kind": "constraint",
+      "text": "Subdocument name resolution maps .html/.htm-suffixed subdocument names to their real files (no .md suffix is appended for HTML names), under the existing traversal, containment, and character-whitelist checks.",
+      "sourceRef": "CR:MDT-221",
+      "routePolicy": "tests"
     }
   ],
   "scenarios": [
@@ -469,6 +497,39 @@
       "given": "Given a project with empty allowedExternalDomains and an HTML file referencing cdn.tailwindcss.com and cdn.jsdelivr.net",
       "when": "When the user selects the HTML file and the mint endpoint scans its external references",
       "then": "Then the user is shown the list of domains needing approval (cdn.tailwindcss.com, cdn.jsdelivr.net) and can opt in per-domain",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "ticket_html_subdocs_in_tabs",
+      "title": "Ticket view lists HTML subdocuments in folders",
+      "covers": [
+        "BR-1.14"
+      ],
+      "given": "Given a ticket directory contains a diagrams/ folder with .html files plus non-document assets (.json, .png)",
+      "when": "When the ticket is opened in the ticket view",
+      "then": "Then diagrams/ and its .html files appear as document tabs, non-document assets are not listed, and a folder with only non-document files is not listed",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "ticket_html_renders_sandboxed_preview",
+      "title": "HTML subdocument renders sandboxed iframe preview",
+      "covers": [
+        "BR-1.15"
+      ],
+      "given": "Given an HTML subdocument tab is selected in the ticket view",
+      "when": "When the selection is activated",
+      "then": "Then an owner-minted preview token loads the sandboxed iframe from /api/documents/raw-preview and the markdown renderer is not called and no subdocument text fetch is issued",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "ticket_html_deep_link_round_trips",
+      "title": "HTML subdocument deep link round-trips",
+      "covers": [
+        "BR-1.15"
+      ],
+      "given": "Given a URL /prj/:projectCode/ticket/:ticketKey/diagrams/file.html",
+      "when": "When the URL is opened directly and tabs are switched",
+      "then": "Then the HTML subdocument preview is selected on load and the URL is preserved",
       "sourceRef": "CR:MDT-221"
     }
   ],
@@ -748,6 +809,57 @@
         "ART-4"
       ],
       "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "OBL-21",
+      "title": "SubdocumentService discovers .html/.htm ticket subdocuments with docKind metadata; markdown namespace machinery stays md-only; asset files stay invisible",
+      "derivedFrom": [
+        "BR-1.14",
+        "C-2.26"
+      ],
+      "artifactIds": [
+        "ART-20",
+        "ART-21"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "OBL-22",
+      "title": "TicketViewer routes docKind=html subdocuments to HtmlSandboxViewer with a project-relative raw path (ticketsPath + subdocument filePath); markdown content fetch and renderer are skipped for HTML; deep links keep the .html extension",
+      "derivedFrom": [
+        "BR-1.15"
+      ],
+      "artifactIds": [
+        "ART-12",
+        "ART-22",
+        "ART-23",
+        "ART-24"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "OBL-23",
+      "title": "Raw-preview gate G7 admits the project tickets tree in addition to configured document paths; preview-token mint stays owner-only and rejects non-.html/.htm targets",
+      "derivedFrom": [
+        "C-2.1",
+        "C-2.25"
+      ],
+      "artifactIds": [
+        "ART-3",
+        "ART-4"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "OBL-24",
+      "title": "Document watchers watch **/*.{md,html,htm} so document-change events actually fire for HTML external edits (fixes the shipped-but-unwired BR-1.9 parity)",
+      "derivedFrom": [
+        "BR-1.9"
+      ],
+      "artifactIds": [
+        "ART-8"
+      ],
+      "sourceRef": "CR:MDT-221"
     }
   ],
   "artifacts": [
@@ -862,6 +974,36 @@
     {
       "id": "ART-19",
       "path": "domain-contracts/src/project/schema.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "ART-20",
+      "path": "domain-contracts/src/ticket/subdocument.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "ART-21",
+      "path": "shared/services/ticket/SubdocumentService.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "ART-22",
+      "path": "src/components/TicketViewer/index.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "ART-23",
+      "path": "src/utils/subdocPathValidation.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "ART-24",
+      "path": "src/components/TicketViewer/useTicketDocumentNavigation.ts",
       "kind": "runtime",
       "sourceRef": "CR:MDT-221"
     }
@@ -1255,6 +1397,62 @@
       ],
       "file": "server/tests/api/document-raw.test.ts",
       "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-subdoc-html-discovery",
+      "kind": "unit",
+      "title": "SubdocumentService discovers .html/.htm as subdocuments (docKind, extension-less name, extension-kept filePath); folders with only assets dropped; md namespace grouping unaffected",
+      "covers": [
+        "BR-1.14",
+        "C-2.26"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-subdoc-html-resolve",
+      "kind": "unit",
+      "title": "resolvePath maps .html/.htm-suffixed subdocument names to real files without .md appending; missing files and traversal stay rejected",
+      "covers": [
+        "C-2.26"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-raw-preview-tickets-tree",
+      "kind": "integration",
+      "title": "Raw preview serves an HTML file inside the tickets tree when ticketsPath is not under a configured document path; paths outside both scopes still 403",
+      "covers": [
+        "C-2.1",
+        "C-2.25"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-mint-html-only",
+      "kind": "integration",
+      "title": "Preview-token mint rejects non-.html/.htm filePath targets with 400; owner-only minting unchanged",
+      "covers": [
+        "C-2.25"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-ticketviewer-html-routing",
+      "kind": "unit",
+      "title": "TicketViewer renders HtmlSandboxViewer (projectId + ticketsPath-relative src) for docKind=html and skips fetchSubDocument; markdown path unchanged for .md",
+      "covers": [
+        "BR-1.15"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-subdocpath-html-validation",
+      "kind": "unit",
+      "title": "validateSubDocPath accepts .md/.html/.htm; apiPathToUrlPath does not append .md to extension-carrying paths; collectPaths admits extension-full HTML paths",
+      "covers": [
+        "BR-1.15"
+      ],
+      "sourceRef": "CR:MDT-221"
     }
   ],
   "tasks": [
@@ -1538,6 +1736,51 @@
         "typescript",
         "react",
         "backend"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TASK-16",
+      "title": "Backend subdocument HTML: docKind contract field, SubdocumentService discovery (.html/.htm, assets invisible, md-only namespaces), resolvePath html branch, document watcher **/*.{md,html,htm} pattern fix",
+      "ownsArtifactIds": [
+        "ART-20",
+        "ART-21",
+        "ART-8"
+      ],
+      "makesGreenIds": [
+        "TEST-subdoc-html-discovery",
+        "TEST-subdoc-html-resolve",
+        "ticket_html_subdocs_in_tabs"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TASK-17",
+      "title": "Raw-preview tickets-tree scope: gate G7 admits ticketsPath, mint endpoint rejects non-HTML targets",
+      "ownsArtifactIds": [
+        "ART-3",
+        "ART-4"
+      ],
+      "makesGreenIds": [
+        "TEST-raw-preview-tickets-tree",
+        "TEST-mint-html-only"
+      ],
+      "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TASK-18",
+      "title": "Frontend ticket-view HTML integration: extension-aware path utils, collectPaths html forms, TicketViewer HtmlSandboxViewer routing with skipped markdown fetch",
+      "ownsArtifactIds": [
+        "ART-22",
+        "ART-23",
+        "ART-24",
+        "ART-12"
+      ],
+      "makesGreenIds": [
+        "TEST-ticketviewer-html-routing",
+        "TEST-subdocpath-html-validation",
+        "ticket_html_renders_sandboxed_preview",
+        "ticket_html_deep_link_round_trips"
       ],
       "sourceRef": "CR:MDT-221"
     }
