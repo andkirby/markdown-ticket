@@ -235,7 +235,36 @@ window "Ticket Viewer — Mobile":
     text "1. Navigate to /login" muted
 ```
 
+## Epic Ticket — Board CTA (MDT-246)
+
+An epic ticket opened in the viewer. Epics carry no phase badge; the `Epics →` action appears in the header action cluster, before `Trace Graph`, and is the epic's way out to its swimlane lane.
+
+```wireloom
+window "Ticket Viewer — Epic Ticket (MDT-246)":
+  panel:
+    row:
+      text "MDT-231⚡ • UI/UX improvements" bold id="tv-epic-title"
+      spacer
+      button "×" id="tv-epic-close"
+    divider
+    row:
+      chip "Approved" id="tv-epic-status"
+      chip "Medium" id="tv-epic-priority"
+      chip "Architecture" id="tv-epic-type"
+      spacer
+      button "Epics →" id="tv-epic-cta"
+      button "Trace Graph" icon="tech" id="tv-epic-trace"
+    divider
+    text "## 1. Description" bold
+    text "Groups UI/UX follow-up tickets..." muted
+
+annotation "Epic key line: Zap rides the key (TicketCode);\nno ContextBadge[phase] — epics have no phaseEpic." target="tv-epic-title" position=top
+annotation "Rendered only when level === 'epic'.\nSame 32px chrome recipe as Trace Graph; rows-3 leading,\narrow-right trailing (the go-verb — this control leaves\nthe modal). Tooltip/aria: 'Show MDT-231 on Epics board'.\nOne navigation: closes the modal, lands on\n/prj/MDT/epics?epic=MDT-231 (focused arrival)." target="tv-epic-cta" position=right
+```
+
 Mobile behavior:
+
+- `Epics →` follows the same wrap rule as `Trace Graph`: it moves to its own row when badges leave no stable inline space.
 
 - Sub-document tabs stay visible when sub-documents exist, but use horizontal scroll instead of wrapping.
 - The table of contents is hidden by default on mobile and opens from a compact content-menu control.
@@ -253,6 +282,7 @@ Mobile behavior:
 | Badge bar | badge.css | `flex flex-wrap gap-2` | `border-b`, `px-4 py-2.5` |
 | Document tabs | `--primary` | `sticky top-0 z-10` | Active: `border-b-2 border-primary` |
 | Trace action | `--primary`, `--border` | small secondary button or inline Tailwind | Ticket-scoped action, hidden when no trace store |
+| Epic board action | `--primary`, `--border` | same chrome-control recipe as Trace action | Epic tickets only; label `Epics →` (rows-3 leading, arrow-right trailing); tooltip/aria `Show {KEY} on Epics board`; single navigation to `/prj/:code/epics?epic=KEY` |
 | Trace back control | `--background`, `--border` | `.trace-graph-shell__back` | Floating translucent Back over iframe |
 | Trace iframe | n/a | iframe inside `.trace-graph-shell` | Dashboard styles remain isolated; graph internals are out of scope |
 | Content area | `--background` | `px-4 py-4 sm:px-5` | |

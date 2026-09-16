@@ -98,3 +98,31 @@ window "Worktree — literal label":
 
 annotation "Visible text: literal 'worktree'.\ntitle attr carries the full worktreePath.\nNever linkified. No MDT-193 change." target="worktree" position=top
 ```
+
+## Phase — Split Chip (Detail Surfaces, MDT-246)
+
+In the ticket viewer header or ticket attributes panel, a linkable epic reference renders as a split chip: an identity zone (passive Zap + key link, unchanged from MDT-193) and a trailing action zone that jumps to the Epics board focused on that epic. Wireloom is structural — the seam, rest veil, and 24×24 floor are owned by `context-badge.spec.md` § "Split chip" and the styleguide section.
+
+```wireloom
+window "Phase — split chip (viewer / attributes)":
+  panel:
+    row:
+      chip "⚡ MDT-187" id="split-identity"
+      button "▤" id="split-action"
+
+annotation "Identity zone: passive Zap glyph + SmartLink.\nclick → open epic ticket viewer (unchanged, MDT-193).\nZap is never a click target." target="split-identity" position=top
+annotation "Action zone: real button, 24×24 minimum,\nrows-3 glyph, seam-separated.\nclick → /prj/MDT/epics?epic=MDT-187\n(focus lifecycle: epic-navigation.interactions.md)." target="split-action" position=right
+```
+
+## Phase — Board Card Stays Compact (MDT-246)
+
+On board cards the linkable phase value keeps the single-zone pill: cards are scan surfaces, the card itself already owns "open" as the click action, and a 24px target per card would inflate card height.
+
+```wireloom
+window "Phase — board card (no action zone)":
+  panel:
+    row:
+      chip "⚡ MDT-187" id="card-identity"
+
+annotation "Board card: identity zone only.\nSame click as MDT-193 — opens the epic ticket viewer.\nThe action zone renders only in detail surfaces\n(viewer header, ticket attributes)." target="card-identity" position=top
+```

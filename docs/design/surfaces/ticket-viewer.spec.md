@@ -29,6 +29,8 @@ Modal[size="xl"]
         │       ├── RelationshipBadge[related] (conditional)
         │       ├── RelationshipBadge[depends] (conditional)
         │       └── RelationshipBadge[blocks] (conditional)
+        ├── EpicBoardAction (conditional: ticket is an epic, MDT-246)
+        │   └── button["Epics →"]
         ├── TraceGraphAction (conditional: trace store exists)
         │   └── button["Trace Graph"]
         ├── TicketDocumentTabs (conditional: subdocuments exist)
@@ -59,6 +61,7 @@ TraceGraphShell (opened from TraceGraphAction)
 | TicketDocumentTabs | `frontend/src/components/TicketViewer/TicketDocumentTabs.tsx` | — | when `subdocuments.length > 0` |
 | MarkdownContent | `frontend/src/components/MarkdownContent/index.tsx` | `markdown-content.spec.md` | always (renders main or subdoc content) |
 | TraceGraphAction | colocated TicketViewer action | this file | when standard trace store metadata exists |
+| EpicBoardAction | colocated TicketViewer action | this file | when `ticket.level === 'epic'` (proposed, MDT-246; journey contract in `epic-navigation.interactions.md`) |
 | TraceGraphShell | `frontend/src/components/TicketViewer/TraceGraphShell.tsx` | this file | when user opens trace graph |
 | RelativeTimestamp | `frontend/src/components/shared/RelativeTimestamp.tsx` | — | in content area |
 | StatusBadge | `frontend/src/components/Badge/StatusBadge.tsx` | — | always in header |
@@ -111,6 +114,14 @@ Two horizontal bars, both with bottom border:
    - Label: `Trace Graph`.
    - Icon: use a Lucide graph/network-style icon if one is already available in the app bundle.
    - Hidden entirely when no trace store is present. Do not show a disabled button for the absent state.
+
+4. **Epic board action** (conditional, MDT-246)
+   - Appears only when `ticket.level === 'epic'` — epic tickets carry no phase badge, so this is the epic's own way out to its board lane.
+   - Same 32px chrome-control recipe and placement cluster as the trace graph action (end of badge bar after the flex spacer; wraps on narrow widths).
+   - Label: `Epics →`. Leading icon: `rows-3` — the same glyph the view switcher uses for the Epics toggle (one destination vocabulary; never the Zap identity glyph). Trailing `arrow-right` is the go-verb: this control leaves the modal (no back), unlike Trace's in-place overlay.
+   - Accessible name / tooltip: the full sentence `Show {KEY} on Epics board` — Label-in-Name holds (visible "Epics" ⊂ accessible name).
+   - One navigation: closes the modal and lands on `/prj/:code/epics?epic={KEY}`. Arrival behavior is owned by `epic-navigation.interactions.md`.
+   - Rendering order: before the Trace Graph action (nearest the badges).
 
 ### TicketDocumentTabs
 
@@ -174,6 +185,8 @@ Two horizontal bars, both with bottom border:
 | subdoc removed | SSE subdocument unlink event | if viewing removed doc → switch to main, refetch ticket |
 | trace store present | standard trace store metadata exists | `Trace Graph` action appears in header action area |
 | trace store absent | metadata endpoint reports no store | no graph action is rendered |
+| epic ticket | `ticket.level === 'epic'` | `Epics →` action appears in the header action area (before `Trace Graph`) |
+| epic board jump | user clicks `Epics →` | single navigation to `/prj/:code/epics?epic={KEY}`; the viewer modal closes with it |
 | trace graph open | user clicks `Trace Graph` | full-screen TraceGraphShell replaces ticket content visually; ticket viewer remains the return context; `#trace` appended to URL |
 | trace graph open via deep link | URL carries `#trace` on load | shell opens immediately once the ticket modal opens; `#trace` preserved through the async ticket fetch |
 | trace graph loading | iframe is mounting or dashboard fetches store | floating Back remains visible; iframe may show dashboard-owned loading |

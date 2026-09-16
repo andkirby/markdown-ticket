@@ -13,6 +13,9 @@
   <link rel="stylesheet" href="styles/design-tokens.css" />
   <link rel="stylesheet" href="styles/components/tabs.css" />
   <link rel="stylesheet" href="styles/components/checkbox.css" />
+  <!-- epic-badge split-chip demo: REAL badge variants + ticket-key typography -->
+  <link rel="stylesheet" href="components/Badge/badge.css" />
+  <link rel="stylesheet" href="components/TicketCard/ticket.css" />
   <style>
     :root { color-scheme: light dark; }
     body {
@@ -357,6 +360,110 @@
       <div class="menu-row">Created</div>
     </div>
   </div>
+
+  <style>
+    /* ── Epic badge split chip ──────────────────────────────────────────
+       Uses the REAL shared objects: badge.css (tint via [data-context="epic"],
+       radius, link color) and ticket.css (.ticket-key mono/600/underline-on-
+       hover) are linked in <head> — not copied. Two things cannot survive a
+       raw <link> and are compiled here from their @apply sources (determin-
+       istic Tailwind output, commented per rule); everything else with a
+       .badge-action name is the MDT-246 proposal, absent from badge.css. */
+    /* compiled from `.badge { @apply inline-flex items-center gap-1 px-1.5
+       py-0.5 text-xs font-medium }` — @apply is Tailwind-only syntax, dropped
+       by the browser when served raw */
+    .epic-demo .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 6px; font-size: 12px; line-height: 16px; font-weight: 500;
+    }
+    /* compiled from `.badge__icon { @apply h-3 w-3 }` */
+    .epic-demo .badge__icon { width: 12px; height: 12px; flex: none; }
+    /* ── MDT-246 proposal: split-chip modifier + action zone
+       (.badge--split, .badge__id, .badge-action — absent from badge.css;
+       scoped to .epic-demo to out-rank the compiled base above) ── */
+    .epic-demo { margin-top: .85rem; display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: flex-end; }
+    .epic-demo > div { display: flex; flex-direction: column; gap: .35rem; align-items: flex-start; }
+    .epic-demo .badge--split { align-items: stretch; padding: 0; }
+    .epic-demo .badge--split .badge__id { display: inline-flex; align-items: center; gap: 4px; padding: 3px 6px; }
+    .badge-action {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 24px; min-height: 24px; padding: 0 5px;
+      border: none; border-left: 1px solid color-mix(in srgb, currentColor 40%, transparent);
+      border-radius: 0 4px 4px 0;
+      background: color-mix(in srgb, var(--bg-muted) 45%, transparent);
+      color: inherit; font: inherit; cursor: pointer;
+    }
+    .badge-action svg { width: 14px; height: 14px; }
+    .badge-action:hover { background: var(--state-hover-bg); }
+    /* static state previews (same recipe as .state-row.is-hover) */
+    .badge.is-key-hover .ticket-key { text-decoration: underline; }
+    .badge.is-jump-hover .badge-action { background: var(--state-hover-bg); }
+    /* the rejected bare-glyph variant = the production badge itself */
+    .epic-demo .badge--x .badge__icon { cursor: pointer; }
+    /* ── epic detail header · CTA placement ──
+       hdr-action is the .trace-graph-action recipe (ticket-viewer.css): its
+       @apply'd base compiled here, its plain declarations (border, elevated
+       bg, hover ramp, radius) copied verbatim — the file isn't linked. */
+    .hdr-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: .85rem; max-width: 860px; }
+    .hdr-row .hdr-spacer { flex: 1; } /* virtual divider — no DOM rule */
+    .hdr-action {
+      display: inline-flex; height: 32px; align-items: center; gap: 8px;
+      padding: 0 12px; font-size: 14px; font-weight: 500;
+      color: oklch(var(--foreground));
+      border-radius: var(--radius-input);
+      border: 1px solid oklch(var(--border));
+      background-color: var(--bg-elevated);
+      font-family: inherit; cursor: pointer;
+    }
+    .hdr-action:hover { background-color: var(--state-hover-bg); }
+    .hdr-action svg { width: 16px; height: 16px; }
+    .hdr-action svg.hdr-arrow { margin-left: -5px; } /* label→arrow reads as one unit, not a third gap */
+  </style>
+
+  <h2 id="epic-badge">epic badge · split chip — identity vs action</h2>
+  <p class="note" style="margin-top:.25rem"><b>Rule:</b> a badge that references an epic is one unit with two separately interactive zones. The <b>identity zone</b> — Zap glyph + key link — answers <i>what this is</i>: the Zap is passive and screen-reader-silent everywhere it appears (epic ContextBadge, TicketCode key line), and the key text is the only path into the epic's ticket view — every ticket key in the app opens the ticket (MDT-237 muscle memory). The <b>action zone</b> — a trailing, seam-separated button — answers <i>where to go</i>: it jumps to the Epics board focused on that epic (MDT-246, <code>?epic=</code> deep link). Navigation actions take the <b>destination's glyph</b>: <code>rows-3</code> is the Epics view (ViewModeSwitcher toggle), <code>file-text</code> is "open document" (the lane's open-epic button) — never the object's identity glyph. A Zap that opens a board is one mark meaning two things.</p>
+  <p class="note" style="margin-top:.5rem"><b>Geometry:</b> the action zone is a real button — 24×24 minimum (the MDT-236 a11y floor; the badge grows ~4px to host a legal target — the floor is not optional), its own hover state on the ramp's neutral tier (<code>--state-hover-bg</code>), <code>title</code> + <code>aria-label</code> ("Show MDT-231 on Epics board"), and stopPropagation isolation like the key link. The two controls are siblings in a group — never a button nested inside a link. The zone is legible at rest — a 1px seam derived from the badge's own color (<code>currentColor</code>) plus a half-strength neutral veil (<code>color-mix 45% of --bg-muted</code>) — and completes to the full neutral tier on hover; a bare <code>--state-hover-bg</code> swap measured invisible against the gold tint in dark mode, the same tint-cannot-read lesson as the scope bar. The split must be <i>visible</i>, not discovered by mis-clicking.</p>
+  <div class="epic-demo">
+    <div>
+      <small class="src">split chip · default</small>
+      <span class="badge badge--split" data-context="epic">
+        <span class="badge__id"><svg class="badge__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg><a class="ticket-key smart-link" data-link-type="ticket" href="#epic-badge" title="Open epic MDT-231">MDT-231</a></span>
+        <button class="badge-action" type="button" title="Show MDT-231 on Epics board" aria-label="Show MDT-231 on Epics board"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M21 9H3"/><path d="M21 15H3"/></svg></button>
+      </span>
+    </div>
+    <div>
+      <small class="src">key hover — link affordance stays on the text</small>
+      <span class="badge badge--split is-key-hover" data-context="epic">
+        <span class="badge__id"><svg class="badge__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg><a class="ticket-key smart-link" data-link-type="ticket" href="#epic-badge">MDT-231</a></span>
+        <button class="badge-action" type="button" aria-label="Show MDT-231 on Epics board"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M21 9H3"/><path d="M21 15H3"/></svg></button>
+      </span>
+    </div>
+    <div>
+      <small class="src">action hover — neutral tier, zone-local</small>
+      <span class="badge badge--split is-jump-hover" data-context="epic">
+        <span class="badge__id"><svg class="badge__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg><a class="ticket-key smart-link" data-link-type="ticket" href="#epic-badge">MDT-231</a></span>
+        <button class="badge-action" type="button" aria-label="Show MDT-231 on Epics board"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M21 9H3"/><path d="M21 15H3"/></svg></button>
+      </span>
+    </div>
+    <div>
+      <small class="src">rejected · bare glyph target — the production badge</small>
+      <div style="display:flex;align-items:center;gap:.6rem">
+        <span class="badge badge--x" data-context="epic"><svg class="badge__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg><a class="ticket-key smart-link" data-link-type="ticket" href="#epic-badge">MDT-231</a></span>
+        <span class="tag tag-bad">← 12×12 · 4px from the link · misroutes with no back</span>
+      </div>
+    </div>
+  </div>
+  <p class="note" style="margin-top:.5rem"><b>Why the glyph-as-target is rejected (measured):</b> <code>.badge__icon</code> is 12×12 (<code>h-3 w-3</code>) inside a ~20px badge (<code>py-0.5 text-xs</code>), 4px from a competing target with a different consequence (<code>gap-1</code>). WCAG 2.5.8's 24×24 floor fails and the spacing exception fails — there is no clearance. A padded zone would still claim ~a quarter of the badge, and its misfire is a full view navigation — the app has no history/back machinery to recover with. Icon mapping (lucide-react 0.542.0): Epics-board jump → <code>rows-3</code> · epic identity, passive-only → <code>zap</code>.</p>
+
+  <div class="hdr-row">
+    <span class="badge" data-status="approved">Approved</span>
+    <span class="badge" data-priority="medium">Medium</span>
+    <span class="badge" data-type="architecture">Architecture</span>
+    <span class="hdr-spacer"></span>
+    <button class="hdr-action" type="button" title="Show MDT-231 on Epics board" aria-label="Show MDT-231 on Epics board"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M21 9H3"/><path d="M21 15H3"/></svg>Epics<svg class="hdr-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
+    <button class="hdr-action" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></svg>Trace Graph</button>
+  </div>
+  <p class="note" style="margin-top:.5rem"><b>Epic detail — where the CTA lives:</b> the <code>CompactTicketHeader</code> action slot, right of the badges row via the flex spacer (the virtual-divider split — no DOM rule), beside the Trace Graph button (TicketViewer/index.tsx:432). Same 32px chrome-control recipe as Trace. Label: `Epics →` — the switcher's own word for the destination, with a trailing `arrow-right` as the go-verb (this control leaves the modal, unlike Trace's in-place overlay); the full sentence lives in `title`/`aria-label` ("Show MDT-231 on Epics board" — Label-in-Name holds). Rendered only when <code>level === 'epic'</code>. One navigation — it closes the modal and lands on <code>/prj/:code/epics?epic=KEY</code>. The split chip above is the child-side entry; two entry points, one destination, one glyph.</p>
 
   <style>
     /* ── Collapsed sort control ──────────────────────────────────────────

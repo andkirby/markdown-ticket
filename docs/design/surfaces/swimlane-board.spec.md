@@ -5,6 +5,7 @@ An alternate layout of the board that groups tickets into one row per epic, with
 ## Owns
 
 - The swimlane container, lane construction, lane-label rendering, and epic lifecycle control on the lane header.
+- The focused-arrival rendering state: when the `/epics` route carries `?epic=KEY`, the focused lane renders expanded, visible, scrolled into view, and transiently highlighted (MDT-246).
 - Status-only drag-and-drop within a ticket's own epic lane; the cross-epic drop guard.
 - Epic progress computation (terminal children / total children).
 - Rendering when App selects the persisted swimlane board layout.
@@ -14,6 +15,7 @@ An alternate layout of the board that groups tickets into one row per epic, with
 - The flat board, columns, or ticket-card identity — see `board-layout.spec.md` and `ticket-card.spec.md`. Swimlanes reuses `TicketCard` and `useDropZone`, not `Column`.
 - Epic detail modal, side-rail, and zoom-filter (design3 §3/§4/§5 — deferred).
 - The app-header view switcher and board-layout persistence — see `app-header.spec.md`.
+- `?epic=` token semantics, the entry points that produce it, and the focus lifecycle ordering — see `epic-navigation.interactions.md`. This surface renders the resulting state; it does not own the journey.
 - The epic lifecycle rules themselves (the close guard, the reference guard) — those are data-layer rules owned by MDT-205. This surface only renders their state and surfaces their errors.
 - Status resolution semantics — terminal statuses for the progress calc are defined by the data layer (Implemented / Rejected / Partially Implemented).
 
@@ -76,6 +78,16 @@ SwimlaneBoard
 - "Show closed" is off by default. When off, epic lanes whose epic is in a terminal (`Implemented`) status are hidden so the board focuses on active work. The `__none` lane is never hidden by this toggle.
 - "Show badges" is off by default in swimlanes. Child ticket cards render code, title, and timestamp only until this toggle is enabled.
 
+## Focused arrival (`?epic=KEY`, MDT-246)
+
+When mounted with the `?epic=` token (or when it changes), the board enters a focused-arrival state for that lane. Ordering and token semantics are owned by `epic-navigation.interactions.md`; the visible contract here:
+
+- The focused lane renders **expanded** (it joins the persisted expanded set) regardless of the collapsed-by-default rule.
+- The focused lane **cannot be hidden** by "Hide empty" or "Show closed" while focused — the focused lane always renders.
+- The lane scrolls into view; a transient highlight in the lane's `--epic-N` accent (same token as the lane's left border and progress fill) marks the arrival target and auto-clears (~2s). Non-focused lanes keep their persisted state.
+- An unknown or missing epic key renders the board normally — no error state, no empty focus artifact.
+- The highlight is presentational only; expansion persists after it clears.
+
 ## Lane label
 
 The lane label is a sticky-left column (md+) showing the epic identity and lifecycle. It is **not** a drop target.
@@ -116,6 +128,8 @@ An epic's status is a publish/close gate, not a spatial workflow — so it rende
 | close blocked | Close clicked with open children | button disabled; tooltip names blockers; toast on click attempt |
 | close error | server rejects close (MDT-205 guard) | toast with blocking children; optimistic state reverts |
 | no epics | project has zero epic tickets | only the `__none` lane renders |
+| focused arrival | `/epics` route carries `?epic=KEY` | focused lane expanded + scrolled into view + transient `--epic-N` highlight; overrides Hide empty / Show closed for that lane |
+| focused arrival, unknown key | `?epic=` value matches no lane | board renders normally; token ignored |
 | read-only | access mode lacks write | drag inactive, lifecycle controls hidden, collapse still works |
 
 ## Drag-and-Drop
@@ -155,7 +169,7 @@ An epic's status is a publish/close gate, not a spatial workflow — so it rende
 
 | Element | Token | Usage |
 |---|---|---|
-| epic color | `--epic-1` … `--epic-4` | 4-color rotation per epic; lane left border, progress fill |
+| epic color | `--epic-1` … `--epic-4` | 4-color rotation per epic; lane left border, progress fill, focused-arrival highlight |
 | lane track bg | `--bg-subtle` | recessed tier behind lane-cols |
 | empty placeholder | `--border-strong` (dashed) | `.lane-empty` outline |
 | drop highlight | `--bg-muted` | `.drag-over` tint |
