@@ -11,54 +11,31 @@ level: epic
 
 ## 1. Description
 
-### Problem Statement
-[What problem does this feature solve?]
+### Problem
 
-### Current State
-[How things work now]
+Standalone UI/UX enhancement tickets had no grouping epic after the
+2026-08-23 epic-structuring pass created phase epics from the old phase
+labels. This epic is the parent for discrete interface-polish tickets that
+don't belong to a feature epic — tickets link to it via `phaseEpic` and its
+children are derived from those pointers.
 
-### Desired State
-[How things should work after implementation]
+### Scope
 
-### Rationale
-[Why this feature is needed]
+Enhancements to existing surfaces: presentation options, hover affordances,
+link behavior, density/visual polish. Explicitly **not** in scope:
 
-### Impact Areas
-[Areas of the system that will be affected]
+- Epic/swimlane board work — parented under MDT-225.
+- New views or architectural changes to routes/state — those get their own
+  epic.
 
-## 2. Solution Analysis
+## 2. Children
 
-### Approaches Considered
-[Different ways to implement this feature]
+| Ticket  | Status      | Role                                                              |
+| ------- | ----------- | ----------------------------------------------------------------- |
+| MDT-244 | Implemented | Ticket-type icon display options alongside the ticket key         |
+| MDT-137 | Proposed    | Ticket preview hover cards on relationship badges + self-link fix |
 
-### Trade-offs Analysis
-[Pros and cons of different approaches]
+## 3. References
 
-### Chosen Approach
-[Selected implementation strategy]
-
-### Rejected Alternatives
-[Why other approaches were not chosen]
-
-## 3. Implementation Specification
-
-### Technical Requirements
-[Specific technical details]
-
-### UI/UX Changes
-[User interface changes if applicable]
-
-### API Changes
-[API modifications if applicable]
-
-### Database Changes
-[Schema changes if applicable]
-
-## 4. Acceptance Criteria
-[Specific, testable conditions that must be met]
-
-## 5. Implementation Notes
-*To be filled during/after implementation*
-
-## 6. References
-*Related documents, designs, discussions*
+- `docs/design/surfaces/` — per-surface design specs and mockups that
+  children of this epic build on.
