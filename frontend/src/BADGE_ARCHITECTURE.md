@@ -259,7 +259,7 @@ data-type="bug-fix"
 
 ## Migration: From CVA to Data Attributes
 
-**Before (current CVA - Tailwind classes in TS):**
+**Before (legacy CVA - Tailwind classes in TS; fully removed from `ui/badge.tsx`):**
 
 ```tsx
 // badgeVariants.ts

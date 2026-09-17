@@ -33,7 +33,6 @@ export function TypeBadge({ type, className, ...props }: TypeBadgeProps & React.
   const { typeIconInBadge } = useTicketKeyOptions()
   return (
     <Badge
-      variant="outline"
       className={cn('badge', className)}
       data-type={formatDataAttr(type)}
       {...props}
