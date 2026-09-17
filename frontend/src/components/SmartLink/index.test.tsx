@@ -77,3 +77,40 @@ describe('MDT-237: SmartLink coverage-bounded broken flagging', () => {
     expect(el.getAttribute('data-link-type')).toBe('document')
   })
 })
+
+describe('MDT-246: ticket links carry ?view= inside a ticket modal (BR-1.7)', () => {
+  afterEach(() => {
+    __testResetLinkConfig()
+    cleanup()
+  })
+
+  function renderTicketLinkAt(path: string) {
+    const { container } = render(
+      <MemoryRouter initialEntries={[path]}>
+        <SmartLink
+          link={{ type: LinkType.TICKET, href: '/prj/GPDE/ticket/GPDE-012', text: 'GPDE-012' }}
+          currentProject={CURRENT}
+          showIcon={false}
+        >
+          GPDE-012
+        </SmartLink>
+      </MemoryRouter>,
+    )
+    return container.querySelector('a[data-link-type="ticket"]') as HTMLAnchorElement
+  }
+
+  it('appends the current ?view= to a ticket link opened inside a ticket modal', () => {
+    const link = renderTicketLinkAt('/prj/GPDE/ticket/GPDE-001?view=epics')
+    expect(link.getAttribute('href')).toBe('/prj/GPDE/ticket/GPDE-012?view=epics')
+  })
+
+  it('leaves the href untouched outside ticket routes', () => {
+    const link = renderTicketLinkAt('/prj/GPDE?view=epics')
+    expect(link.getAttribute('href')).toBe('/prj/GPDE/ticket/GPDE-012')
+  })
+
+  it('leaves the href untouched on ticket routes without ?view=', () => {
+    const link = renderTicketLinkAt('/prj/GPDE/ticket/GPDE-001')
+    expect(link.getAttribute('href')).toBe('/prj/GPDE/ticket/GPDE-012')
+  })
+})

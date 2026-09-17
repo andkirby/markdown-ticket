@@ -202,6 +202,13 @@ export function filterLanesBySearch(
 export interface LaneVisibilityOptions {
   hideEmpty: boolean
   showClosed: boolean
+  /**
+   * MDT-246: key of the focused lane (the `?epic=` token, while focus is
+   * active). The focused lane is exempt from both filters — arrival must land
+   * on the lane even when it is empty or closed. Null/unknown keys filter
+   * exactly as before (BR-1.6).
+   */
+  focusedKey?: string | null
 }
 
 /**
@@ -210,14 +217,17 @@ export interface LaneVisibilityOptions {
  * - `showClosed`: when false, omit epic lanes whose epic is in a terminal
  *   (Implemented) status — closed epics are hidden by default so the board
  *   focuses on active work. The `__none` lane is never hidden by this filter.
+ * - `focusedKey`: the focused lane is always kept (MDT-246 focused arrival).
  */
 export function filterLanesByVisibility(
   lanes: SwimlaneLane[],
   options: LaneVisibilityOptions,
 ): SwimlaneLane[] {
-  const { hideEmpty, showClosed } = options
+  const { hideEmpty, showClosed, focusedKey = null } = options
   return lanes.filter((lane) => {
     if (lane.isNone)
+      return true
+    if (focusedKey === lane.key)
       return true
     if (!showClosed && lane.epic?.status === CRStatus.IMPLEMENTED)
       return false

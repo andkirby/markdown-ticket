@@ -1,6 +1,6 @@
 ---
 code: MDT-246
-status: Proposed
+status: In Progress
 dateCreated: 2026-09-09T11:52:22.991Z
 type: Feature Enhancement
 priority: Medium
@@ -126,7 +126,7 @@ Hash token rejected (`#` is modal state, cf. `#trace` / MDT-237); path segment
 - [ ] Unit tests for focus expansion / filter-override / unknown-key logic;
       E2E for the full journey ticket → epic → board (target via
       data-lane-key)
-- [ ] UAT round 1 executed per repo convention (uat.md brief +
+- [x] UAT round 1 executed per repo convention (uat.md brief +
       §Clarifications entry in the CR file)
 
 ## 5. Verification
@@ -159,3 +159,58 @@ Hash token rejected (`#` is modal state, cf. `#trace` / MDT-237); path segment
   frontend/src/components/TicketViewer/CompactTicketHeader.tsx,
   frontend/src/components/Badge/ContextBadge.tsx,
   frontend/src/components/SmartLink/index.tsx
+
+## 8. Clarifications
+
+### UAT Session 2026-09-16 (Round 1)
+
+Verification round — no requirement deltas, no changed IDs, no strict
+drift/lock needed. `uat.md` written (brief + validation log).
+
+- All ACs verified on the live app (walk A–E in `uat.md` § Validation):
+  split chip geometry (action zone exactly 24×24, identity-zone height parity
+  with the plain badge), one-navigation jumps, focused arrival
+  (expand+persist+scroll+~2s highlight+live region), `?view=` carry round
+  trip, unknown-token degradation, and the Show-closed override (MDT-225 is
+  Implemented, so every real jump to it exercises the override).
+- Three review findings fixed before UAT (behavior-faithful, no spec change):
+  `carryViewParam` inserts before `#fragment` (anchored epic values no longer
+  lose the carried view); `Collapse all` ends focus (it collapses the focused
+  lane); `architecture.md` no longer names dead `TicketAttributes.tsx` as a
+  live surface.
+- User-reported round-1 finding F1, fixed: the split chip rendered 28px with
+  dead space — the shadcn Badge wrapper's baked-in utilities (`py-0.5`,
+  `font-semibold`) outranked `@layer components`, so badge.css never owned the
+  chrome. Root-cause fix strips those utilities from `ui/badge.tsx`; chip now
+  24px (styleguide parity), all badges at the curated font-weight 500 (was
+  600). Details in `uat.md` § Round-1 finding F1.
+- Known non-blocking: deterministic mdt-verify evidence (sealed plan +
+  immutable run) absent — plan was initialized after implementation started
+  and seal requires the live baseline; RED pre-states + green post-states
+  recorded in-session (see `.pipeline-state.json` exceptions).
+
+### UAT finding F2 (2026-09-16)
+
+User ruling: every badge, on every surface, renders at the same height — the
+canonical 20px badge box — and the split chip's action zone must not increase
+the badge's visible height anywhere. Supersedes the "badge grows ~4px"
+geometry notes (styleguide § "epic badge · split chip" and
+`context-badge.spec.md`, dated 2026-09-13). The MDT-236 24×24 floor still
+holds and moves to an invisible hit surface, not the visible box.
+
+Fix (badge.css split-chip block only): `.badge-action` drops
+`min-height: 24px` (keeps `min-width: 24px`), gains `align-self: stretch` —
+its visible box becomes the identity zone's 20px line — and an invisible
+`::after` hit surface (`inset: -2px 0` → a 24px band, vertical-only so it
+never reaches the key link). Wrapper (`ui/badge.tsx`) untouched; hover veil,
+seam, and keyboard-only focus treatment stay on the visible box.
+
+Measured: before the fix, an inventory of all four badge surfaces (viewer
+header, flat board, epics swimlane with Show-badges + Expand-all, list) found
+2207 visible badges at exactly 20.00px and the chip as the single 24.00px
+outlier (106.42×24.00, action 24×24). After: chip 106.42×20.00, action
+20.00×24.00, identity zone 20.00 — equal to every neighbor. Hit-target proof
+via `document.elementFromPoint`: points 1.5px above and 1.5px below the
+button's visual edges resolve to `button.badge-action`; 3px out resolves to
+the badges row (outside the surface). Details in `uat.md` § Round-1 finding
+F2.

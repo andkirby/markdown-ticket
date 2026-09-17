@@ -24,7 +24,7 @@ const TicketAttributes: React.FC<TicketAttributesProps> = ({ ticket, className =
         <PriorityBadge priority={ticket.priority} data-testid="ticket-priority" />
         <TypeBadge type={ticket.type} data-testid="ticket-type" />
         {ticket.phaseEpic && (
-          <ContextBadge variant="phase" value={ticket.phaseEpic} />
+          <ContextBadge variant="phase" value={ticket.phaseEpic} detail />
         )}
         {ticket.assignee && (
           <ContextBadge variant="assignee" value={ticket.assignee} data-testid="ticket-assignee" />

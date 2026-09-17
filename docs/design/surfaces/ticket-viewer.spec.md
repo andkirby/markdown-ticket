@@ -61,7 +61,7 @@ TraceGraphShell (opened from TraceGraphAction)
 | TicketDocumentTabs | `frontend/src/components/TicketViewer/TicketDocumentTabs.tsx` | — | when `subdocuments.length > 0` |
 | MarkdownContent | `frontend/src/components/MarkdownContent/index.tsx` | `markdown-content.spec.md` | always (renders main or subdoc content) |
 | TraceGraphAction | colocated TicketViewer action | this file | when standard trace store metadata exists |
-| EpicBoardAction | colocated TicketViewer action | this file | when `ticket.level === 'epic'` (proposed, MDT-246; journey contract in `epic-navigation.interactions.md`) |
+| EpicBoardAction | `frontend/src/components/TicketViewer/EpicBoardAction.tsx` | this file | when `ticket.level === 'epic'` (MDT-246; journey contract in `epic-navigation.interactions.md`) |
 | TraceGraphShell | `frontend/src/components/TicketViewer/TraceGraphShell.tsx` | this file | when user opens trace graph |
 | RelativeTimestamp | `frontend/src/components/shared/RelativeTimestamp.tsx` | — | in content area |
 | StatusBadge | `frontend/src/components/Badge/StatusBadge.tsx` | — | always in header |

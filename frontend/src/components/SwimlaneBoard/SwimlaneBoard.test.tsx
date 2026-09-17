@@ -31,7 +31,7 @@ const columns = [
   { label: 'Done', statuses: ['Implemented'], color: 'green' },
 ]
 
-function renderBoard(overrides: { tickets?: Ticket[], onTicketEdit?: (t: Ticket) => void } = {}) {
+function renderBoard(overrides: { tickets?: Ticket[], onTicketEdit?: (t: Ticket) => void, focusEpicKey?: string | null } = {}) {
   const epic = ticket({
     code: 'MDT-100',
     title: 'Auth Overhaul',
@@ -48,7 +48,7 @@ function renderBoard(overrides: { tickets?: Ticket[], onTicketEdit?: (t: Ticket)
   })
   const all = overrides.tickets ?? [epic, child]
   const onTicketEdit = overrides.onTicketEdit ?? mock()
-  const utils = render(
+  const buildTree = (focusEpicKey: string | null) => (
     <DndProvider backend={HTML5Backend}>
       <MemoryRouter initialEntries={['/prj/MDT']}>
         <Routes>
@@ -65,14 +65,16 @@ function renderBoard(overrides: { tickets?: Ticket[], onTicketEdit?: (t: Ticket)
                 onTicketEdit={onTicketEdit}
                 onTicketDrop={mock()}
                 onEpicStatusChange={mock()}
+                focusEpicKey={focusEpicKey}
               />
             )}
           />
         </Routes>
       </MemoryRouter>
-    </DndProvider>,
+    </DndProvider>
   )
-  return { ...utils, onTicketEdit }
+  const utils = render(buildTree(overrides.focusEpicKey ?? null))
+  return { ...utils, onTicketEdit, rerenderWithFocus: (key: string | null) => utils.rerender(buildTree(key)) }
 }
 
 describe('SwimlaneBoard lane label (MDT-206 UAT round)', () => {
@@ -480,5 +482,172 @@ describe('SwimlaneBoard toolbar search (MDT-206 BR-6.1, UAT round 7)', () => {
     fireEvent.change(screen.getByTestId('swimlane-search'), { target: { value: 'login' } })
     const after = document.querySelector('[data-testid="swimlane-progress"]')?.getAttribute('aria-valuenow')
     expect(after).toBe(before)
+  })
+})
+
+describe('SwimlaneBoard focused arrival (MDT-246 ?epic= token)', () => {
+  beforeEach(() => {
+    localStorage.clear()
+  })
+
+  afterEach(() => {
+    cleanup()
+  })
+
+  function laneEl(container: HTMLElement, key: string): HTMLElement {
+    return container.querySelector(`[data-testid="swimlane-lane"][data-lane-key="${key}"]`) as HTMLElement
+  }
+
+  it('expands and persists the focused lane on arrival (BR-1.4)', async () => {
+    const { container } = renderBoard({ focusEpicKey: 'MDT-100' })
+    await act(async () => {})
+
+    const label = container.querySelector('[data-testid="swimlane-lane-label"][data-lane-key="MDT-100"]') as HTMLElement
+    expect(label.getAttribute('aria-expanded')).toBe('true')
+    const persisted = JSON.parse(localStorage.getItem('mdt-settings-swimlane-expanded-lanes') ?? '[]')
+    expect(persisted).toContain('MDT-100')
+  })
+
+  it('scrolls the focused lane into view (BR-1.4)', async () => {
+    const scrollIntoView = mock()
+    const original = Element.prototype.scrollIntoView
+    Element.prototype.scrollIntoView = scrollIntoView
+    try {
+      renderBoard({ focusEpicKey: 'MDT-100' })
+      await act(async () => {})
+      expect(scrollIntoView).toHaveBeenCalled()
+    }
+    finally {
+      Element.prototype.scrollIntoView = original
+    }
+  })
+
+  it('transiently highlights the focused lane and auto-clears after ~2s (BR-1.4)', async () => {
+    const { container } = renderBoard({ focusEpicKey: 'MDT-100' })
+    await act(async () => {})
+    expect(laneEl(container, 'MDT-100').hasAttribute('data-focused')).toBe(true)
+
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 2100))
+    })
+    expect(laneEl(container, 'MDT-100').hasAttribute('data-focused')).toBe(false)
+    // The highlight cleared; the expansion persists.
+    const label = container.querySelector('[data-testid="swimlane-lane-label"][data-lane-key="MDT-100"]') as HTMLElement
+    expect(label.getAttribute('aria-expanded')).toBe('true')
+  })
+
+  it('announces the focused lane through a polite live region (BR-1.4 a11y)', async () => {
+    const { container } = renderBoard({ focusEpicKey: 'MDT-100' })
+    await act(async () => {})
+    const live = container.querySelector('[role="status"][aria-live="polite"]') as HTMLElement
+    expect(live).not.toBeNull()
+    expect(live.textContent).toContain('MDT-100')
+    expect(live.textContent).toMatch(/expand/i)
+  })
+
+  it('renders the focused lane despite hideEmpty when the token arrives (BR-1.5)', async () => {
+    const emptyEpic = ticket({ code: 'MDT-100', title: 'Auth Overhaul', status: 'Approved', level: 'epic' })
+    const otherEpic = ticket({ code: 'MDT-200', title: 'Other Epic', status: 'Approved', level: 'epic' })
+    const otherChild = ticket({ code: 'MDT-201', title: 'Other child', status: 'Approved', phaseEpic: 'MDT-200' })
+    const { container, rerenderWithFocus } = renderBoard({ tickets: [emptyEpic, otherEpic, otherChild] })
+
+    // Hide empty on: the empty focused lane is excluded before the token arrives.
+    fireEvent.click(screen.getByTestId('swimlane-hide-empty'))
+    expect(container.querySelector('[data-testid="swimlane-lane"][data-lane-key="MDT-100"]')).toBeNull()
+
+    // Token changes while mounted (arrival): the focused lane renders anyway and
+    // the filter toggle is untouched.
+    rerenderWithFocus('MDT-100')
+    await act(async () => {})
+    expect(laneEl(container, 'MDT-100')).not.toBeNull()
+    expect((screen.getByTestId('swimlane-hide-empty') as HTMLInputElement).checked).toBe(true)
+  })
+
+  it('clears an active non-matching search on arrival (BR-1.5)', async () => {
+    const { container, rerenderWithFocus } = renderBoard({ focusEpicKey: null })
+
+    // Active search that excludes the focused lane before the token arrives.
+    fireEvent.change(screen.getByTestId('swimlane-search'), { target: { value: 'nothing matches' } })
+    expect(container.querySelector('[data-testid="swimlane-lane"][data-lane-key="MDT-100"]')).toBeNull()
+
+    // Arrival: the non-matching search is cleared; the lane is present.
+    rerenderWithFocus('MDT-100')
+    await act(async () => {})
+    expect((screen.getByTestId('swimlane-search') as HTMLInputElement).value).toBe('')
+    expect(laneEl(container, 'MDT-100')).not.toBeNull()
+  })
+
+  it('ignores an unknown epic key — board renders normally, nothing persisted (BR-1.6)', async () => {
+    const { container } = renderBoard({ focusEpicKey: 'MDT-999' })
+    await act(async () => {})
+
+    const label = container.querySelector('[data-testid="swimlane-lane-label"][data-lane-key="MDT-100"]') as HTMLElement
+    expect(label.getAttribute('aria-expanded')).toBe('false')
+    expect(localStorage.getItem('mdt-settings-swimlane-expanded-lanes')).toBeNull()
+    expect(container.querySelector('[role="status"][aria-live="polite"]')?.textContent).toBe('')
+    expect(container.querySelectorAll('[data-testid="swimlane-lane"]').length).toBeGreaterThan(0)
+  })
+
+  it('keeps the lane expanded when focus ends on search interaction (INV-3)', async () => {
+    const { container } = renderBoard({ focusEpicKey: 'MDT-100' })
+    await act(async () => {})
+
+    fireEvent.change(screen.getByTestId('swimlane-search'), { target: { value: 'oauth' } })
+    const label = container.querySelector('[data-testid="swimlane-lane-label"][data-lane-key="MDT-100"]') as HTMLElement
+    expect(label.getAttribute('aria-expanded')).toBe('true')
+    // Focus ended: the highlight is gone even before its timeout.
+    expect(laneEl(container, 'MDT-100').hasAttribute('data-focused')).toBe(false)
+  })
+
+  it('scrolls once per arrival — later unrelated expansions do not re-scroll', async () => {
+    const otherEpic = ticket({ code: 'MDT-200', title: 'Other Epic', status: 'Approved', level: 'epic' })
+    const otherChild = ticket({ code: 'MDT-201', title: 'Other child', status: 'Approved', phaseEpic: 'MDT-200' })
+    const scrolls: unknown[][] = []
+    const original = Element.prototype.scrollIntoView
+    Element.prototype.scrollIntoView = function (...args: unknown[]) {
+      scrolls.push([this, args])
+    }
+    try {
+      const { container } = renderBoard({ tickets: [ticket({ code: 'MDT-100', title: 'Auth Overhaul', status: 'Approved', level: 'epic' }), ticket({ code: 'MDT-101', title: 'Child', status: 'Approved', phaseEpic: 'MDT-100' }), otherEpic, otherChild], focusEpicKey: 'MDT-100' })
+      await act(async () => {})
+      const arrivalScrolls = scrolls.length
+      expect(arrivalScrolls).toBeGreaterThan(0)
+
+      // Expanding an unrelated lane must not snap back to the focused lane.
+      fireEvent.click(container.querySelector('[data-testid="swimlane-lane-label"][data-lane-key="MDT-200"]') as HTMLElement)
+      await act(async () => {})
+      expect(scrolls.length).toBe(arrivalScrolls)
+    }
+    finally {
+      Element.prototype.scrollIntoView = original
+    }
+  })
+
+  it('ends focus when Collapse all collapses the focused lane (interactions contract)', async () => {
+    const { container } = renderBoard({ focusEpicKey: 'MDT-100' })
+    await act(async () => {})
+    expect(laneEl(container, 'MDT-100').hasAttribute('data-focused')).toBe(true)
+
+    fireEvent.click(screen.getByTestId('swimlane-collapse-all'))
+    const label = container.querySelector('[data-testid="swimlane-lane-label"][data-lane-key="MDT-100"]') as HTMLElement
+    expect(label.getAttribute('aria-expanded')).toBe('false')
+    // Focus ended with the user's collapse — no override, no highlight.
+    expect(laneEl(container, 'MDT-100').hasAttribute('data-focused')).toBe(false)
+  })
+
+  it('expands in-memory when localStorage persistence fails (Edge-1)', async () => {
+    const original = localStorage.setItem.bind(localStorage)
+    localStorage.setItem = () => {
+      throw new Error('quota exceeded')
+    }
+    try {
+      const { container } = renderBoard({ focusEpicKey: 'MDT-100' })
+      await act(async () => {})
+      const label = container.querySelector('[data-testid="swimlane-lane-label"][data-lane-key="MDT-100"]') as HTMLElement
+      expect(label.getAttribute('aria-expanded')).toBe('true')
+    }
+    finally {
+      localStorage.setItem = original
+    }
   })
 })

@@ -226,6 +226,32 @@
     border-bottom: 1px solid color-mix(in srgb, var(--border-strong) 20%, transparent);
   }
 
+  /* MDT-246 focused arrival (?epic= token): transient accent wash in the
+     lane's own --epic-N token (same as its left border and progress fill),
+     marking the arrival target. Auto-clears after ~2s; the expansion
+     persists. Presentational only. */
+  .swimlane-board__lane[data-focused] {
+    background: color-mix(in srgb, var(--epic-color, var(--border-strong)) 8%, transparent);
+  }
+
+  .swimlane-board__lane[data-focused] .swimlane-board__lane-label {
+    background: color-mix(in srgb, var(--epic-color, var(--border-strong)) 12%, var(--bg-elevated));
+  }
+
+  /* MDT-246: visually-hidden polite live region announcing the focused lane
+     (screen-reader parity with the visual highlight). */
+  .swimlane-board__announcement {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
   /* The whole lane label is the collapse toggle (design3 §8): a role=button
      container that reflows from a vertical sticky column (expanded) to a
      horizontal full-width summary bar (collapsed). Interactive children are

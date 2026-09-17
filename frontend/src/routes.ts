@@ -75,6 +75,17 @@ export function buildProjectPath(projectCode: string, view: 'board' | 'list' | '
   }
 }
 
+/**
+ * MDT-246: deep link to the Epics board focused on one epic lane. The `?epic=`
+ * token is view state mirroring the `?view=` vocabulary — the swimlane board
+ * consumes it on arrival and every other navigation drops it naturally; it is
+ * never rewritten onto other routes. Single construction site for both jump
+ * entry points (epic detail CTA, split-chip action zone).
+ */
+export function buildEpicsFocusPath(projectCode: string, epicKey: string): string {
+  return `${buildProjectPath(projectCode, 'epics')}?epic=${encodeURIComponent(epicKey)}`
+}
+
 export function buildTicketPath(projectCode: string, ticketKey: string, anchor?: string): string {
   if (!projectCode?.trim())
     throw new Error('Project code is required')

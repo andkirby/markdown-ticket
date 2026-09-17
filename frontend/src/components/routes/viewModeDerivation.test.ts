@@ -4,10 +4,11 @@
  *
  * Pins the exact mapping the project route handler relies on:
  * pathname precedence over ?view=, the /epics → 'board' variant rule,
- * and the ticket-close return-path mapping.
+ * the ticket-close return-path mapping, and the ?view= carry rule for
+ * ticket links opened inside a ticket modal (MDT-246 BR-1.7).
  */
 import { describe, expect, it } from 'bun:test'
-import { deriveViewMode, ticketCloseTargetPath } from './viewModeDerivation'
+import { carryViewParam, deriveViewMode, ticketCloseTargetPath } from './viewModeDerivation'
 
 describe('deriveViewMode', () => {
   // ─── Pathname takes precedence ────────────────────────────────────────────
@@ -69,5 +70,45 @@ describe('ticketCloseTargetPath', () => {
   it('list and documents contexts map directly', () => {
     expect(ticketCloseTargetPath('list', '/prj/MDT')).toBe('/prj/MDT/list')
     expect(ticketCloseTargetPath('documents', '/prj/MDT')).toBe('/prj/MDT/documents')
+  })
+})
+
+describe('carryViewParam (MDT-246 BR-1.7)', () => {
+  it('carries ?view= onto ticket links while on a ticket route', () => {
+    expect(carryViewParam('/prj/MDT/ticket/MDT-231', '/prj/MDT/ticket/MDT-100', '?view=epics'))
+      .toBe('/prj/MDT/ticket/MDT-231?view=epics')
+    expect(carryViewParam('/prj/MDT/ticket/MDT-231', '/prj/MDT/ticket/MDT-100', '?view=list'))
+      .toBe('/prj/MDT/ticket/MDT-231?view=list')
+  })
+
+  it('does not carry outside a ticket route (board/list/documents/epics)', () => {
+    expect(carryViewParam('/prj/MDT/ticket/MDT-231', '/prj/MDT', '?view=epics')).toBe('/prj/MDT/ticket/MDT-231')
+    expect(carryViewParam('/prj/MDT/ticket/MDT-231', '/prj/MDT/epics', '?view=epics')).toBe('/prj/MDT/ticket/MDT-231')
+    expect(carryViewParam('/prj/MDT/ticket/MDT-231', '/prj/MDT/list', '?view=list')).toBe('/prj/MDT/ticket/MDT-231')
+  })
+
+  it('does not carry when the current location has no ?view=', () => {
+    expect(carryViewParam('/prj/MDT/ticket/MDT-231', '/prj/MDT/ticket/MDT-100', '')).toBe('/prj/MDT/ticket/MDT-231')
+    expect(carryViewParam('/prj/MDT/ticket/MDT-231', '/prj/MDT/ticket/MDT-100', '?other=1')).toBe('/prj/MDT/ticket/MDT-231')
+  })
+
+  it('never rewrites a href that already carries a query', () => {
+    expect(carryViewParam('/prj/MDT/ticket/MDT-231?view=list', '/prj/MDT/ticket/MDT-100', '?view=epics'))
+      .toBe('/prj/MDT/ticket/MDT-231?view=list')
+  })
+
+  it('inserts the param before a #fragment, not inside the hash', () => {
+    expect(carryViewParam('/prj/MDT/ticket/MDT-231#section', '/prj/MDT/ticket/MDT-100', '?view=epics'))
+      .toBe('/prj/MDT/ticket/MDT-231?view=epics#section')
+  })
+
+  it('leaves a href untouched when both a query and a fragment are present', () => {
+    expect(carryViewParam('/prj/MDT/ticket/MDT-231?view=list#section', '/prj/MDT/ticket/MDT-100', '?view=epics'))
+      .toBe('/prj/MDT/ticket/MDT-231?view=list#section')
+  })
+
+  it('encodes the carried value', () => {
+    expect(carryViewParam('/prj/MDT/ticket/MDT-231', '/prj/MDT/ticket/MDT-100', '?view=epics%20mode'))
+      .toBe('/prj/MDT/ticket/MDT-231?view=epics%20mode')
   })
 })
