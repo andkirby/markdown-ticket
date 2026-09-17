@@ -33,7 +33,6 @@ export function PriorityBadge({ priority, className, ...props }: PriorityBadgePr
   const Icon = PRIORITY_ICON[key] ?? Equal
   return (
     <Badge
-      variant="outline"
       className={cn('badge', className)}
       data-priority={key}
       {...props}

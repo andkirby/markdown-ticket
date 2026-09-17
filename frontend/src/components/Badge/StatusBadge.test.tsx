@@ -37,7 +37,6 @@ describe('StatusBadge', () => {
       const badge = container.firstChild as HTMLElement
 
       expect(badge).toHaveClass('badge')
-      expect(badge).toHaveClass('rounded')
     })
 
     it('should render a flat badge with no border', () => {

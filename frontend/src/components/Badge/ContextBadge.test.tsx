@@ -289,7 +289,6 @@ describe('ContextBadge', () => {
       const badge = container.querySelector('.badge') as HTMLElement
 
       expect(badge).toHaveClass('badge')
-      expect(badge).toHaveClass('rounded')
     })
   })
 

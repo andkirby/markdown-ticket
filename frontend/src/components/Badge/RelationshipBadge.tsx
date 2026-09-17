@@ -107,12 +107,11 @@ export function RelationshipBadge({
 
   return (
     <Badge
-      variant="outline"
       className={cn('badge', className)}
       data-relationship={variant}
       title={badgeTitle}
     >
-      <Icon className="mr-1 h-3 w-3 flex-shrink-0" aria-hidden="true" />
+      <Icon className="badge__icon" aria-hidden="true" />
       {inlineItems.map((item, index) => (
         <span
           key={item.fullKey}
@@ -126,7 +125,7 @@ export function RelationshipBadge({
             link={classifyLink(item.fullKey, currentProject)}
             currentProject={currentProject}
             showIcon={false}
-            className="ticket-key hover:underline"
+            className="ticket-key"
           >
             {item.display}
           </SmartLink>
@@ -140,12 +139,7 @@ export function RelationshipBadge({
           <PopoverTrigger asChild>
             <button
               type="button"
-              className={cn(
-                'relationship-badge__overflow',
-                'ml-1 inline-flex items-center rounded px-1 leading-none',
-                'text-xs font-medium opacity-80 hover:opacity-100 hover:underline',
-                'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-              )}
+              className="relationship-badge__overflow"
               aria-haspopup="dialog"
               aria-expanded={overflowOpen}
               // Stop the card's viewer-open onClick from firing when opening the popover.
@@ -160,7 +154,7 @@ export function RelationshipBadge({
           </PopoverTrigger>
           <PopoverContent
             align="start"
-            className="w-auto min-w-[8rem] p-2"
+            className="relationship-badge__panel"
             onOpenAutoFocus={(e) => {
               // Move focus to the first popover link instead of the content container.
               e.preventDefault()
@@ -170,7 +164,7 @@ export function RelationshipBadge({
               firstLink?.focus()
             }}
           >
-            <div className="flex flex-col gap-1">
+            <div className="relationship-badge__list">
               {overflowItems.map(item => (
                 <span
                   key={item.fullKey}
@@ -186,7 +180,7 @@ export function RelationshipBadge({
                     link={classifyLink(item.fullKey, currentProject)}
                     currentProject={currentProject}
                     showIcon={false}
-                    className="ticket-key inline-flex w-full items-center rounded px-1.5 py-1 text-xs hover:bg-accent hover:underline"
+                    className="ticket-key relationship-badge__link"
                   >
                     {item.fullKey}
                   </SmartLink>

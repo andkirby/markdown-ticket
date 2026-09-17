@@ -16,16 +16,21 @@
  */
 
 @layer components {
-  /* Base badge class (single, shared by all badge types) */
+  /* Base badge class (single, shared by all badge types). The default color
+     used to come from the wrapper's text-foreground utility — owned here now
+     that the wrapper ships zero utilities; data-attribute rules below (0,2,0)
+     override it per variant. */
   .badge {
     @apply inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium;
     @apply transition-colors;
+    color: oklch(var(--foreground));
     border-radius: 4px;
   }
 
   /* Inline glyph inside a badge (was h-3 w-3 on lucide icons in markup). */
   .badge__icon {
     @apply h-3 w-3;
+    flex: none;
   }
 
   /* =====================================================
@@ -179,6 +184,33 @@
   .badge[data-relationship="blocks"] {
     background: color-mix(in srgb, var(--spline-blocker) 12%, transparent);
     color: var(--spline-blocker);
+  }
+
+  /* =====================================================
+   * RELATIONSHIP BADGE PARTS
+   * The +N overflow trigger and its popover. Rules moved verbatim from
+   * RelationshipBadge.tsx, which now ships semantic classes only — the
+   * Badge dir is contracted (enforce-semantic-classes). Key rows reuse
+   * .ticket-key; a.ticket-key:hover (ticket.css) already underlines.
+   * ===================================================== */
+
+  .relationship-badge__overflow {
+    @apply ml-1 inline-flex items-center rounded px-1 leading-none;
+    @apply text-xs font-medium opacity-80 hover:opacity-100 hover:underline;
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-primary;
+  }
+
+  .relationship-badge__panel {
+    @apply w-auto min-w-[8rem] p-2;
+  }
+
+  .relationship-badge__list {
+    @apply flex flex-col gap-1;
+  }
+
+  .relationship-badge__link {
+    @apply inline-flex w-full items-center rounded px-1.5 py-1 text-xs;
+    @apply hover:bg-accent hover:underline;
   }
 
   /* =====================================================

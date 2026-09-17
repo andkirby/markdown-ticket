@@ -131,7 +131,6 @@ export function ContextBadge({ variant, value, worktreePath, className, detail }
 
   return (
     <Badge
-      variant="outline"
       className={cn('badge', splitChip && 'badge--split', className)}
       data-context={contextType}
       title={title}

@@ -30,8 +30,7 @@ export interface StatusBadgeProps extends StatusVariantProps {
 export function StatusBadge({ status, className, isInvalid = false, ...props }: StatusBadgeProps & React.HTMLAttributes<HTMLDivElement>) {
   return (
     <Badge
-      variant={isInvalid ? 'solid' : 'outline'}
-      className={cn('badge', isInvalid && 'badge--invalid', className)}
+      className={cn('badge', className)}
       data-status={isInvalid ? 'invalid' : formatDataAttr(status)}
       {...props}
     >
