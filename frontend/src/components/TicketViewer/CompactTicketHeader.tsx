@@ -30,7 +30,7 @@ export function CompactTicketHeader({ ticket, className = '', action }: CompactT
           <PriorityBadge priority={ticket.priority} data-testid="ticket-priority" />
           {!typeIconNearKey && <TypeBadge type={ticket.type} data-testid="ticket-type" />}
           {ticket.phaseEpic && (
-            <ContextBadge variant="phase" value={ticket.phaseEpic} />
+            <ContextBadge variant="phase" value={ticket.phaseEpic} detail />
           )}
           {ticket.assignee && (
             <ContextBadge variant="assignee" value={ticket.assignee} data-testid="ticket-assignee" />

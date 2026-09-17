@@ -139,6 +139,10 @@ export function ProjectRouteHandler() {
   // boardLayoutMode — preserving the pinned effect order, INV-6.)
   const viewMode = deriveViewMode(location.pathname, searchParams.get('view'))
   const onEpicsRoute = location.pathname.includes('/epics')
+  // MDT-246: the focused-epic token is parsed here, on the /epics route only,
+  // and threaded down as a prop — board components never read the URL. Unknown
+  // keys travel too; the board ignores what it cannot resolve (BR-1.6).
+  const focusEpicKey = onEpicsRoute ? searchParams.get('epic') : null
   const rootTitleArea
     = viewMode === 'list'
       ? 'Listing'
@@ -404,6 +408,7 @@ export function ProjectRouteHandler() {
                     onRemoveMobileFilter={(facet, value) => toggleBoardFilter(facet, value)}
                     viewMode={viewMode}
                     boardLayoutMode={effectiveBoardLayoutMode}
+                    focusEpicKey={focusEpicKey}
                     sortPreferences={
                       viewMode === 'board' || viewMode === 'list'
                         ? localSortPreferences

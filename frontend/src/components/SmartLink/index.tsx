@@ -3,10 +3,11 @@ import type { ParsedLink } from '../../utils/linkProcessor'
 
 import { ExternalLink, File, FileCode, FileText, Hash } from 'lucide-react'
 import * as React from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { ensureGlobalLinkConfig, getLinkConfig, subscribeGlobalLinkConfig } from '../../config/linkConfig'
 import { ensureDocumentIndex, getCachedDocumentIndex, subscribeDocumentIndex } from '../../utils/documentExistenceCache'
 import { classifyAndNormalizeLink, createLinkContextFromProject, LinkType } from '../../utils/linkProcessor'
+import { carryViewParam } from '../routes/viewModeDerivation'
 
 interface SmartLinkProps {
   link: ParsedLink
@@ -18,6 +19,8 @@ interface SmartLinkProps {
   linkContext?: Partial<LinkContext>
   /** Original href before normalization */
   originalHref?: string
+  /** Optional accessible name override (e.g. "Open epic MDT-012", MDT-246) */
+  ariaLabel?: string
 }
 
 const SmartLink: React.FC<SmartLinkProps> = ({
@@ -28,6 +31,7 @@ const SmartLink: React.FC<SmartLinkProps> = ({
   showIcon = true,
   linkContext,
   originalHref,
+  ariaLabel,
 }) => {
   // Force hot reload - showIcon should hide icons
   const baseClassName = showIcon
@@ -81,6 +85,16 @@ const SmartLink: React.FC<SmartLinkProps> = ({
 
   const effectiveHref = shouldUseNormalizedHref ? normalizedLink.webHref : link.href
   const effectiveLink = shouldUseNormalizedHref ? { ...link, href: effectiveHref } : link
+
+  // MDT-246 (BR-1.7): ticket links opened inside a ticket modal carry the
+  // current ?view= context, so closing the opened ticket returns to the
+  // originating view. Rule owned by viewModeDerivation.carryViewParam.
+  const location = useLocation()
+  const isTicketLikeLink
+    = effectiveLink.type === LinkType.TICKET || effectiveLink.type === LinkType.CROSS_PROJECT
+  const ticketHref = isTicketLikeLink
+    ? carryViewParam(effectiveLink.href, location.pathname, location.search)
+    : effectiveLink.href
 
   // MDT-237 (BR-2.1): visibly flag document links whose target is known to be
   // missing. One document-index fetch per project (C5); unknown index (loading,
@@ -163,6 +177,7 @@ const SmartLink: React.FC<SmartLinkProps> = ({
           rel="noopener noreferrer"
           className={`${baseClassName} smart-link`}
           data-link-type="external"
+          aria-label={ariaLabel}
         >
           {children}
           {showIcon && <ExternalLink className="smart-link__icon" />}
@@ -172,9 +187,10 @@ const SmartLink: React.FC<SmartLinkProps> = ({
     case LinkType.TICKET:
       return (
         <Link
-          to={effectiveLink.href}
+          to={ticketHref}
           className={`${baseClassName} smart-link`}
           data-link-type="ticket"
+          aria-label={ariaLabel}
         >
           {showIcon && <FileText className="smart-link__icon" />}
           {children}
@@ -187,6 +203,7 @@ const SmartLink: React.FC<SmartLinkProps> = ({
           to={effectiveLink.href}
           className={`${baseClassName} smart-link`}
           data-link-type="document"
+          aria-label={ariaLabel}
         >
           {showIcon && <FileCode className="smart-link__icon" />}
           {children}
@@ -199,6 +216,7 @@ const SmartLink: React.FC<SmartLinkProps> = ({
           href={effectiveLink.href}
           className={`${baseClassName} smart-link`}
           data-link-type="anchor"
+          aria-label={ariaLabel}
         >
           {showIcon && <Hash className="smart-link__icon" />}
           {children}
@@ -213,6 +231,7 @@ const SmartLink: React.FC<SmartLinkProps> = ({
           rel="noopener noreferrer"
           className={`${baseClassName} smart-link`}
           data-link-type="file"
+          aria-label={ariaLabel}
         >
           {showIcon && <File className="smart-link__icon" />}
           {children}
@@ -222,9 +241,10 @@ const SmartLink: React.FC<SmartLinkProps> = ({
     case LinkType.CROSS_PROJECT:
       return (
         <Link
-          to={effectiveLink.href}
+          to={ticketHref}
           className={`${baseClassName} smart-link`}
           data-link-type="cross-project"
+          aria-label={ariaLabel}
         >
           {showIcon && <FileText className="smart-link__icon" />}
           {children}

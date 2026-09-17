@@ -368,7 +368,7 @@
        hover) are linked in <head> — not copied. Two things cannot survive a
        raw <link> and are compiled here from their @apply sources (determin-
        istic Tailwind output, commented per rule); everything else with a
-       .badge-action name is the MDT-246 proposal, absent from badge.css. */
+       .badge-action name is the MDT-246 ruled pattern, shipped in badge.css. */
     /* compiled from `.badge { @apply inline-flex items-center gap-1 px-1.5
        py-0.5 text-xs font-medium }` — @apply is Tailwind-only syntax, dropped
        by the browser when served raw */
@@ -378,21 +378,25 @@
     }
     /* compiled from `.badge__icon { @apply h-3 w-3 }` */
     .epic-demo .badge__icon { width: 12px; height: 12px; flex: none; }
-    /* ── MDT-246 proposal: split-chip modifier + action zone
-       (.badge--split, .badge__id, .badge-action — absent from badge.css;
-       scoped to .epic-demo to out-rank the compiled base above) ── */
+    /* ── MDT-246 ruled pattern: split-chip modifier + action zone.
+       Production source of truth: badge.css (.badge--split, .badge__id,
+       .badge-action). These demo-local copies stay scoped to .epic-demo to
+       out-rank the compiled base above; badge.css ships the same rules. ── */
     .epic-demo { margin-top: .85rem; display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: flex-end; }
     .epic-demo > div { display: flex; flex-direction: column; gap: .35rem; align-items: flex-start; }
     .epic-demo .badge--split { align-items: stretch; padding: 0; }
-    .epic-demo .badge--split .badge__id { display: inline-flex; align-items: center; gap: 4px; padding: 3px 6px; }
+    .epic-demo .badge--split .badge__id { display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; }
     .badge-action {
       display: inline-flex; align-items: center; justify-content: center;
-      min-width: 24px; min-height: 24px; padding: 0 5px;
+      min-width: 24px; align-self: stretch; position: relative; padding: 0 5px;
       border: none; border-left: 1px solid color-mix(in srgb, currentColor 40%, transparent);
       border-radius: 0 4px 4px 0;
       background: color-mix(in srgb, var(--bg-muted) 45%, transparent);
       color: inherit; font: inherit; cursor: pointer;
     }
+    /* invisible ≥24×24 hit surface — the visible box stays at the canonical
+       20px badge height (user ruling 2026-09-16): 2px above/below only */
+    .badge-action::after { content: ""; position: absolute; inset: -2px 0; }
     .badge-action svg { width: 14px; height: 14px; }
     .badge-action:hover { background: var(--state-hover-bg); }
     /* static state previews (same recipe as .state-row.is-hover) */
@@ -422,7 +426,7 @@
 
   <h2 id="epic-badge">epic badge · split chip — identity vs action</h2>
   <p class="note" style="margin-top:.25rem"><b>Rule:</b> a badge that references an epic is one unit with two separately interactive zones. The <b>identity zone</b> — Zap glyph + key link — answers <i>what this is</i>: the Zap is passive and screen-reader-silent everywhere it appears (epic ContextBadge, TicketCode key line), and the key text is the only path into the epic's ticket view — every ticket key in the app opens the ticket (MDT-237 muscle memory). The <b>action zone</b> — a trailing, seam-separated button — answers <i>where to go</i>: it jumps to the Epics board focused on that epic (MDT-246, <code>?epic=</code> deep link). Navigation actions take the <b>destination's glyph</b>: <code>rows-3</code> is the Epics view (ViewModeSwitcher toggle), <code>file-text</code> is "open document" (the lane's open-epic button) — never the object's identity glyph. A Zap that opens a board is one mark meaning two things.</p>
-  <p class="note" style="margin-top:.5rem"><b>Geometry:</b> the action zone is a real button — 24×24 minimum (the MDT-236 a11y floor; the badge grows ~4px to host a legal target — the floor is not optional), its own hover state on the ramp's neutral tier (<code>--state-hover-bg</code>), <code>title</code> + <code>aria-label</code> ("Show MDT-231 on Epics board"), and stopPropagation isolation like the key link. The two controls are siblings in a group — never a button nested inside a link. The zone is legible at rest — a 1px seam derived from the badge's own color (<code>currentColor</code>) plus a half-strength neutral veil (<code>color-mix 45% of --bg-muted</code>) — and completes to the full neutral tier on hover; a bare <code>--state-hover-bg</code> swap measured invisible against the gold tint in dark mode, the same tint-cannot-read lesson as the scope bar. The split must be <i>visible</i>, not discovered by mis-clicking.</p>
+  <p class="note" style="margin-top:.5rem"><b>Geometry (ruled 2026-09-16, supersedes the earlier "badge grows ~4px" note):</b> every badge on every surface renders at the same height — the canonical 20px badge box (<code>text-xs</code> line 16 + 2px vertical padding); the split chip never exceeds its neighbors. The action zone is a real button whose <b>visible box is that same 20px</b>; the MDT-236 24×24 a11y floor is still law, but it is met by an <b>invisible hit surface</b> — <code>::after</code>, 2px above and below the button, vertical-only so it never reaches the key link — not by growing the badge. Its own hover state on the ramp's neutral tier (<code>--state-hover-bg</code>), <code>title</code> + <code>aria-label</code> ("Show MDT-231 on Epics board"), and stopPropagation isolation like the key link. The two controls are siblings in a group — never a button nested inside a link. The zone is legible at rest — a 1px seam derived from the badge's own color (<code>currentColor</code>) plus a half-strength neutral veil (<code>color-mix 45% of --bg-muted</code>) — and completes to the full neutral tier on hover; a bare <code>--state-hover-bg</code> swap measured invisible against the gold tint in dark mode, the same tint-cannot-read lesson as the scope bar. The split must be <i>visible</i>, not discovered by mis-clicking.</p>
   <div class="epic-demo">
     <div>
       <small class="src">split chip · default</small>

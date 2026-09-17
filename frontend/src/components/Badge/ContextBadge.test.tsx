@@ -17,7 +17,7 @@
 import type { ReactNode } from 'react'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { __testResetLinkConfig, __testSetGlobalLinkConfig } from '../../config/linkConfig'
 import { ContextBadge } from './ContextBadge'
 
@@ -290,6 +290,115 @@ describe('ContextBadge', () => {
 
       expect(badge).toHaveClass('badge')
       expect(badge).toHaveClass('rounded')
+    })
+  })
+
+  describe('split chip on detail surfaces (MDT-246 BR-1.2)', () => {
+    function renderDetailBadge(value = 'TEST-012') {
+      return render(
+        <TestHarness projectCode="TEST">
+          <ContextBadge variant="phase" value={value} detail />
+        </TestHarness>,
+      )
+    }
+
+    /**
+     * Router harness whose location probe stays mounted across navigation
+     * (the probe is a direct child of MemoryRouter, outside Routes).
+     */
+    function renderWithLocationProbe(value: string) {
+      const locationLog: string[] = []
+      function LocationProbe() {
+        const location = useLocation()
+        locationLog.push(`${location.pathname}${location.search}`)
+        return null
+      }
+      const { container } = render(
+        <MemoryRouter initialEntries={['/prj/TEST']}>
+          <LocationProbe />
+          <Routes>
+            <Route path="/prj/:projectCode" element={<ContextBadge variant="phase" value={value} detail />} />
+            <Route path="/prj/:projectCode/epics" element={<div data-testid="epics-route" />} />
+          </Routes>
+        </MemoryRouter>,
+      )
+      return { container, locationLog }
+    }
+
+    it('renders one badge with two interactive zones when detail is set', () => {
+      const { container } = renderDetailBadge()
+      const badge = container.querySelector('.badge[data-context="epic"]') as HTMLElement
+      expect(badge).not.toBeNull()
+      expect(badge.classList.contains('badge--split')).toBe(true)
+
+      // Identity zone: passive Zap + key link.
+      const idZone = badge.querySelector('.badge__id') as HTMLElement
+      expect(idZone).not.toBeNull()
+      expect(idZone.querySelector('[data-link-type="ticket"]')).not.toBeNull()
+      expect(idZone.querySelector('svg[aria-hidden="true"]')).not.toBeNull()
+
+      // Action zone: a real button sibling — never nested inside the link.
+      const action = badge.querySelector('button.badge-action') as HTMLElement
+      expect(action).not.toBeNull()
+      expect(action.querySelector('svg[aria-hidden="true"]')).not.toBeNull()
+      expect(idZone.contains(action)).toBe(false)
+    })
+
+    it('labels the action zone with the full sentence (C-1 Label-in-Name)', () => {
+      const { container } = renderDetailBadge('TEST-012')
+      const action = container.querySelector('button.badge-action') as HTMLElement
+      expect(action.getAttribute('aria-label')).toBe('Show TEST-012 on Epics board')
+      expect(action.getAttribute('title')).toBe('Show TEST-012 on Epics board')
+    })
+
+    it('navigates to the focused epics deep link when the action zone is clicked (BR-1.3)', () => {
+      const { container, locationLog } = renderWithLocationProbe('TEST-012')
+      fireEvent.click(container.querySelector('button.badge-action') as HTMLElement)
+      expect(locationLog[locationLog.length - 1]).toBe('/prj/TEST/epics?epic=TEST-012')
+    })
+
+    it('stops click propagation so the parent onClick does not fire', () => {
+      const parentClick = vi.fn()
+      const { container } = render(
+        <div onClick={parentClick}>
+          <TestHarness projectCode="TEST">
+            <ContextBadge variant="phase" value="TEST-012" detail />
+          </TestHarness>
+        </div>,
+      )
+      fireEvent.click(container.querySelector('button.badge-action') as HTMLElement)
+      expect(parentClick).not.toHaveBeenCalled()
+    })
+
+    it('keeps the compact single-zone badge by default — board cards stay compact (C-3)', () => {
+      const { container } = render(
+        <TestHarness projectCode="TEST">
+          <ContextBadge variant="phase" value="TEST-012" />
+        </TestHarness>,
+      )
+      const badge = container.querySelector('.badge[data-context="epic"]') as HTMLElement
+      expect(badge.classList.contains('badge--split')).toBe(false)
+      expect(badge.querySelector('.badge__id')).toBeNull()
+      expect(badge.querySelector('button.badge-action')).toBeNull()
+      // The key link still renders (unchanged MDT-193 behavior).
+      expect(badge.querySelector('[data-link-type="ticket"]')).not.toBeNull()
+    })
+
+    it('does not split free-text phase values even on detail surfaces', () => {
+      const { container } = render(
+        <TestHarness projectCode="TEST">
+          <ContextBadge variant="phase" value="Phase 1" detail />
+        </TestHarness>,
+      )
+      const badge = container.querySelector('.badge') as HTMLElement
+      expect(badge.classList.contains('badge--split')).toBe(false)
+      expect(badge.querySelector('button.badge-action')).toBeNull()
+    })
+
+    it('resolves the epic key from suffixed values (TEST-012.md → TEST-012)', () => {
+      const { container, locationLog } = renderWithLocationProbe('TEST-012.md')
+      fireEvent.click(container.querySelector('button.badge-action') as HTMLElement)
+      expect(locationLog[locationLog.length - 1]).toBe('/prj/TEST/epics?epic=TEST-012')
     })
   })
 })

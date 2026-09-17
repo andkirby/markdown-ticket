@@ -125,6 +125,8 @@ export const swimlaneSelectors = {
   colExpandByStatus: (status: string) => `[data-testid="swimlane-col-expand"][data-status="${status}"]`,
   /** Collapsed-column lane cell strip (no drop zone), by lane key and status */
   laneColRail: (key: string, status: string) => `[data-testid="swimlane-lane-col-rail"][data-lane-key="${key}"][data-status="${status}"]`,
+  /** MDT-246 — lane currently carrying the transient focused-arrival highlight */
+  focusedLaneByKey: (key: string) => `[data-testid="swimlane-lane"][data-lane-key="${key}"][data-focused]`,
 } as const
 
 /**
@@ -149,6 +151,12 @@ export const ticketSelectors = {
   closeDetail: '[data-testid="close-detail"]',
   /** Status dropdown for changing status */
   statusDropdown: '[data-testid="status-dropdown"]',
+  /** MDT-246 — "Epics →" CTA in the epic ticket detail header */
+  epicBoardAction: '[data-testid="epic-board-action"]',
+  /** MDT-246 — split-chip action zone on the epic ContextBadge (detail surfaces) */
+  epicBadgeAction: 'button.badge-action',
+  /** MDT-246 — identity-zone key link inside the split chip */
+  epicBadgeKeyLink: '.badge--split [data-link-type="ticket"]',
 } as const
 
 /**
@@ -537,6 +545,8 @@ export const markdownSelectors = {
 export const htmlSandboxSelectors = {
   /** The iframe element rendering the HTML preview */
   iframe: '.html-sandbox-viewer__frame',
+  /** The fullscreen expand/collapse control on the preview wrapper (r3) */
+  fullscreenToggle: '[data-testid="html-fullscreen-toggle"]',
   /** The unsupported-kind placeholder */
   unsupportedViewer: '[data-testid="unsupported-viewer"]',
 } as const

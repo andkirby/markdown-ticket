@@ -81,7 +81,7 @@ In detail surfaces, a linkable phase value renders as **one unit with two separa
 | Action | trailing button, `rows-3` glyph, seam-separated | jumps to `/prj/:code/epics?epic=KEY` (contract in `epic-navigation.interactions.md`) |
 
 - **Surfaces**: ticket viewer header (`CompactTicketHeader`) and ticket attributes panel. Board cards keep the compact single-zone badge — cards are scan surfaces; a 24px target per card would inflate card height for an action the card itself already owns (click = open).
-- **Hit target**: the action zone is a real button with a 24×24 minimum (MDT-236 a11y floor); the badge grows ~4px to host it. The Zap never becomes a click target — measured rejection in `frontend/src/styleguide.html` § "epic badge · split chip" (12×12 glyph, 4px from a competing link, misroute with no back).
+- **Hit target** (user ruling 2026-09-16; supersedes the 2026-09-13 "badge grows ~4px" geometry note): every badge on every surface renders at the same height — the canonical 20px badge box — and the split chip is no exception. The action zone is a real button whose visible box is that same 20px; the MDT-236 24×24 a11y floor is still required and is met by an invisible hit surface (2px `::after` expansion above/below the button, vertical-only so it never reaches the key link), not by the visible box. The Zap never becomes a click target — measured rejection in `frontend/src/styleguide.html` § "epic badge · split chip" (12×12 glyph, 4px from a competing link, misroute with no back).
 - **Zone legibility**: 1px seam derived from the badge's own color (`currentColor`), plus a half-strength neutral veil at rest (`color-mix 45% --bg-muted`); hover completes to the full neutral tier (`--state-hover-bg`). A bare hover-token swap measured invisible against the gold tint in dark mode.
 - **Structure**: the zones are siblings inside the badge — never a button nested inside a link.
 
@@ -91,7 +91,7 @@ In detail surfaces, a linkable phase value renders as **one unit with two separa
 |-------|-----------|------|-------------|
 | Badge shell | `frontend/src/components/ui/badge.tsx` | shadcn | always |
 | SmartLink | `frontend/src/components/SmartLink/index.tsx` | — | phase variant + linkable value only |
-| Split-chip action zone | inline button (`.badge-action`) | this file | phase variant + linkable value + detail surface only (proposed, MDT-246) |
+| Split-chip action zone | inline button (`.badge-action`) | this file | phase variant + linkable value + detail surface only (MDT-246) |
 
 ## Source / Verification Anchors
 
@@ -112,7 +112,7 @@ In detail surfaces, a linkable phase value renders as **one unit with two separa
 |-------|---------|---------------|
 | phase plain text | `phaseEpic` is not a ticket-key shape | pill, value in default text color |
 | phase link | `phaseEpic` is a whole-string ticket key | pill, value as `SmartLink` (purple, hover-underline) |
-| split chip (detail) | linkable phase value, viewer/attributes surface | pill grows ~4px; identity zone + seam + action zone (rest veil); key hover stays on the text, action hover = neutral tier |
+| split chip (detail) | linkable phase value, viewer/attributes surface | same 20px pill height as every badge (24×24 hit surface is invisible, not visible box); identity zone + seam + action zone (rest veil); key hover stays on the text, action hover = neutral tier |
 | split chip action focus | keyboard/pointer focus on action zone | action zone shows the full neutral tier; key link unaffected |
 | assignee | any non-empty `assignee` | pill, plain text |
 | worktree | `worktreePath` present | pill, literal "worktree"; `title` carries the full path |

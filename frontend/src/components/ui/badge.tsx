@@ -4,8 +4,12 @@ import * as React from 'react'
 
 import { cn } from '../../lib/utils'
 
+// Chrome (padding/typography) is owned by `.badge` in Badge/badge.css
+// (@layer components) — utility classes here would outrank it in the cascade
+// and silently fork the metrics (MDT-246: py-0.5 defeated the split chip's
+// padding: 0, and font-semibold overrode the curated font-medium).
 const badgeVariants = cva(
-  'inline-flex items-center rounded px-1.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50',
+  'inline-flex items-center rounded transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50',
   {
     variants: {
       variant: {

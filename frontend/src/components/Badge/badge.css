@@ -196,6 +196,76 @@
   }
 
   /* =====================================================
+   * SPLIT CHIP (MDT-246, detail surfaces only)
+   * One badge, two interactive zones: identity (passive Zap + key link) and a
+   * trailing board-jump action. Pattern contract: styleguide.html § "epic
+   * badge · split chip" (verified light + dark). The zones are siblings —
+   * never a button inside a link. Same-file source order after .badge lets
+   * these equal-specificity overrides win without !important (the shell keeps
+   * the wrapper's items-center; the action zone uses align-self: stretch to
+   * match the identity zone's 20px line — same height everywhere, per the
+   * 2026-09-16 ruling).
+   * ===================================================== */
+
+  .badge--split {
+    padding: 0;
+  }
+
+  .badge--split .badge__id {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 6px;
+  }
+
+  /* Action zone: the VISIBLE box stays at the canonical badge height — the
+     chip must render at the same 20px as every other badge (user ruling
+     2026-09-16, supersedes the "badge grows ~4px" geometry), so the zone
+     stretches to the identity zone's line instead of forcing a 24px chip.
+     The ≥24×24 MDT-236 floor moves to the invisible hit surface below.
+     Seam + half-strength neutral veil at rest, full neutral tier on
+     hover/focus. A bare --state-hover-bg swap measured invisible against the
+     gold tint in dark mode — the rest veil is required, not decorative. */
+  .badge-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    align-self: stretch;
+    position: relative;
+    flex: none;
+    border: 0;
+    border-left: 1px solid color-mix(in srgb, currentColor 40%, transparent);
+    border-radius: 0 4px 4px 0;
+    background: color-mix(in srgb, var(--bg-muted) 45%, transparent);
+    color: inherit;
+    cursor: pointer;
+  }
+
+  /* Invisible ≥24×24 hit surface on the 20px visible box: 2px above and
+     below the button (the badges row's 8px gaps absorb it). Vertical-only —
+     it must not reach into the key link's hit area. */
+  .badge-action::after {
+    content: "";
+    position: absolute;
+    inset: -2px 0;
+  }
+
+  .badge-action:hover,
+  .badge-action:focus-visible {
+    background: var(--state-hover-bg);
+  }
+
+  .badge-action:focus-visible {
+    outline: 1px solid color-mix(in srgb, currentColor 60%, transparent);
+    outline-offset: -1px;
+  }
+
+  .badge-action svg {
+    pointer-events: none;
+  }
+
+  /* =====================================================
    * SIZE MODIFIERS
    * Use --modifier suffix for size variations
    * ===================================================== */

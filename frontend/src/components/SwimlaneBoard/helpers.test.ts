@@ -251,3 +251,44 @@ describe('SwimlaneBoard toolbar search (MDT-206 BR-6.1, UAT round 7)', () => {
     expect(byOrphan[0]!.tickets.map(t => t.code)).toEqual(['MDT-001'])
   })
 })
+
+describe('filterLanesByVisibility focusedKey override (MDT-246 BR-1.5/1.6)', () => {
+  const openEpic = ticket({ code: 'MDT-100', title: 'Open Epic', status: CRStatus.APPROVED, level: CRLevel.EPIC })
+  const closedEpic = ticket({ code: 'MDT-200', title: 'Closed Epic', status: CRStatus.IMPLEMENTED, level: CRLevel.EPIC })
+  const emptyEpic = ticket({ code: 'MDT-300', title: 'Empty Epic', status: CRStatus.APPROVED, level: CRLevel.EPIC })
+  const child = ticket({ code: 'MDT-101', title: 'Child', phaseEpic: 'MDT-100' })
+  const { lanes } = buildSwimlaneModel([openEpic, closedEpic, emptyEpic, child], [openEpic, closedEpic, emptyEpic, child])
+  const laneByKey = new Map(lanes.map(l => [l.key, l]))
+
+  it('keeps the focused lane when hideEmpty would exclude it', () => {
+    const visible = filterLanesByVisibility(lanes, { hideEmpty: true, showClosed: false, focusedKey: 'MDT-300' })
+    expect(visible.map(l => l.key)).toContain('MDT-300')
+    // Non-focused empty lanes are still hidden.
+    expect(visible).not.toContain(laneByKey.get('MDT-200'))
+  })
+
+  it('keeps the focused lane when showClosed=false would exclude it', () => {
+    const visible = filterLanesByVisibility(lanes, { hideEmpty: false, showClosed: false, focusedKey: 'MDT-200' })
+    expect(visible.map(l => l.key)).toContain('MDT-200')
+  })
+
+  it('keeps the focused lane when both filters would exclude it', () => {
+    const emptyClosed = ticket({ code: 'MDT-400', title: 'Empty Closed', status: CRStatus.IMPLEMENTED, level: CRLevel.EPIC })
+    const { lanes: lanes2 } = buildSwimlaneModel([openEpic, emptyClosed, child], [openEpic, emptyClosed, child])
+    const visible = filterLanesByVisibility(lanes2, { hideEmpty: true, showClosed: false, focusedKey: 'MDT-400' })
+    expect(visible.map(l => l.key)).toContain('MDT-400')
+  })
+
+  it('applies the filters unchanged when focusedKey is null or unknown (BR-1.6)', () => {
+    const hidden = filterLanesByVisibility(lanes, { hideEmpty: true, showClosed: false, focusedKey: null })
+    expect(hidden.map(l => l.key)).toEqual(['MDT-100', NO_EPIC_LANE_KEY])
+
+    const unknown = filterLanesByVisibility(lanes, { hideEmpty: true, showClosed: false, focusedKey: 'MDT-999' })
+    expect(unknown.map(l => l.key)).toEqual(['MDT-100', NO_EPIC_LANE_KEY])
+  })
+
+  it('leaves ordinary filtering untouched without a focused key', () => {
+    const visible = filterLanesByVisibility(lanes, { hideEmpty: false, showClosed: true, focusedKey: null })
+    expect(visible.map(l => l.key)).toEqual(['MDT-100', 'MDT-200', 'MDT-300', NO_EPIC_LANE_KEY])
+  })
+})

@@ -51,6 +51,11 @@ interface BoardProps {
   onRemoveMobileFilter?: (facet: FacetKey, value: string) => void
   loading?: boolean
   boardLayoutMode?: BoardLayoutModeValue
+  /**
+   * MDT-246: epic key to focus on arrival (the `?epic=` token). Pass-through
+   * to SwimlaneBoard; ignored in flat layout.
+   */
+  focusEpicKey?: string | null
   sortPreferences?: SortPreferences
   canWrite?: boolean
   /**
@@ -75,6 +80,7 @@ const BoardContent: React.FC<BoardProps> = ({
   onRemoveMobileFilter,
   loading: propLoading,
   boardLayoutMode = BoardLayoutMode.FLAT,
+  focusEpicKey,
   sortPreferences: propSortPreferences,
   canWrite = true,
   projectionFeed = null,
@@ -585,6 +591,7 @@ const BoardContent: React.FC<BoardProps> = ({
               sortAttribute={localSortPreferences.selectedAttribute}
               sortDirection={localSortPreferences.selectedDirection}
               canWrite={canWrite}
+              focusEpicKey={focusEpicKey}
               onTicketEdit={handleTicketEdit}
               onTicketDrop={async (status: Status, ticket: Ticket) => {
                 await handleDrop(status, ticket)

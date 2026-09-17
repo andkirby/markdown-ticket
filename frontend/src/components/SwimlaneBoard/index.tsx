@@ -2,7 +2,7 @@ import type { BoardTicket, Status, Ticket } from '../../types'
 import { CRStatus } from '@mdt/domain-contracts'
 import { Check, ChevronDown, ChevronLeft, FileText, Search, X } from 'lucide-react'
 import * as React from 'react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useDrag } from 'react-dnd'
 import {
   COLLAPSED_COLUMNS_CHANGE_EVENT,
@@ -53,6 +53,12 @@ interface SwimlaneBoardProps {
   sortAttribute: string
   sortDirection: 'asc' | 'desc'
   canWrite: boolean
+  /**
+   * MDT-246: epic key focused on arrival (the `?epic=` token, parsed by
+   * ProjectRouteHandler). Unknown or missing keys are ignored — the board
+   * renders normally (BR-1.6).
+   */
+  focusEpicKey?: string | null
   onTicketEdit: (ticket: Ticket) => void
   onTicketDrop: (status: Status, ticket: Ticket) => void | Promise<void>
   onEpicStatusChange: (epic: Ticket, status: Status) => void | Promise<void>
@@ -187,6 +193,7 @@ export function SwimlaneBoard({
   sortAttribute,
   sortDirection,
   canWrite,
+  focusEpicKey,
   onTicketEdit,
   onTicketDrop,
   onEpicStatusChange,
@@ -217,14 +224,96 @@ export function SwimlaneBoard({
   }, [])
   const { lanes } = useMemo(() => buildSwimlaneModel(tickets, laneSourceTickets), [laneSourceTickets, tickets])
   const epicKeys = useMemo(() => new Set(lanes.filter(lane => lane.epic).map(lane => lane.key)), [lanes])
+
+  // ── Focused arrival (?epic= token, MDT-246) ─────────────────────────────
+  // The token resolves against the lane model: unknown keys are ignored before
+  // any focus effect runs (BR-1.6). focusActive gates the visibility override
+  // and ends on user board interaction; highlightedLaneKey is the transient
+  // ~2s accent that auto-clears while the expansion persists (INV-3).
+  const knownFocusKey = useMemo(
+    () => (focusEpicKey && lanes.some(lane => lane.key === focusEpicKey) ? focusEpicKey : null),
+    [focusEpicKey, lanes],
+  )
+  const [focusActive, setFocusActive] = useState(false)
+  const [highlightedLaneKey, setHighlightedLaneKey] = useState<string | null>(null)
+  const [arrivalAnnouncement, setArrivalAnnouncement] = useState('')
+  const [arrivalSeq, setArrivalSeq] = useState(0)
+  const lanesRef = useRef(lanes)
+  lanesRef.current = lanes
+
+  // Arrival lifecycle (ordered per epic-navigation.interactions.md):
+  // expand+persist → search clear → highlight+announce. The scroll runs in a
+  // follow-up effect keyed on the same commit so the override has rendered.
+  useEffect(() => {
+    if (!knownFocusKey)
+      return
+    setExpandedLaneKeys((prev) => {
+      if (prev.has(knownFocusKey))
+        return prev
+      const next = new Set(prev)
+      next.add(knownFocusKey)
+      writeExpandedLanes(next)
+      return next
+    })
+    setSearchQuery((prev) => {
+      if (!prev.trim())
+        return prev
+      const lane = lanesRef.current.find(l => l.key === knownFocusKey)
+      const kept = lane ? filterLanesBySearch([lane], prev) : []
+      return kept.length > 0 ? prev : ''
+    })
+    setFocusActive(true)
+    setHighlightedLaneKey(knownFocusKey)
+    const lane = lanesRef.current.find(l => l.key === knownFocusKey)
+    setArrivalAnnouncement(`Epic lane ${knownFocusKey}${lane ? ` ${lane.title}` : ''} expanded`)
+    setArrivalSeq(seq => seq + 1)
+    const timer = setTimeout(() => setHighlightedLaneKey(null), 2000)
+    return () => clearTimeout(timer)
+  }, [knownFocusKey])
+
+  // Scroll the focused lane into view (label plus leading columns). The lane
+  // may only exist in the DOM one commit after the arrival (the visibility
+  // override and expansion render then), so the effect also keys on the
+  // expansion set — but scrolls AT MOST ONCE per arrival: a later, unrelated
+  // lane expansion must not snap the board back to the focused lane.
+  const scrolledArrivalRef = useRef(0)
+  useEffect(() => {
+    if (!knownFocusKey || scrolledArrivalRef.current === arrivalSeq)
+      return
+    const laneEl = document.querySelector(
+      `[data-testid="swimlane-lane"][data-lane-key="${CSS.escape(knownFocusKey)}"]`,
+    )
+    if (!laneEl)
+      return
+    scrolledArrivalRef.current = arrivalSeq
+    laneEl.scrollIntoView({ block: 'nearest', inline: 'start' })
+  }, [knownFocusKey, arrivalSeq, focusActive, expandedLaneKeys])
+
+  // Focus ends on user board interaction (search, filter toggle, collapsing
+  // the focused lane); never re-collapses the lane — the persisted expanded
+  // set stays as the user left it.
+  const endFocus = useCallback(() => {
+    setFocusActive(false)
+    setHighlightedLaneKey(null)
+  }, [])
+
   // Search narrows lane tickets first; visibility filters (Hide empty /
-  // Show closed) then apply on the searched lanes.
+  // Show closed) then apply on the searched lanes. While focus is active the
+  // focused lane is exempt from both filters (BR-1.5).
   const visibleLanes = useMemo(
-    () => filterLanesByVisibility(filterLanesBySearch(lanes, searchQuery), { hideEmpty, showClosed }),
-    [lanes, hideEmpty, showClosed, searchQuery],
+    () => filterLanesByVisibility(filterLanesBySearch(lanes, searchQuery), {
+      hideEmpty,
+      showClosed,
+      focusedKey: focusActive ? knownFocusKey : null,
+    }),
+    [lanes, hideEmpty, showClosed, searchQuery, focusActive, knownFocusKey],
   )
 
   const toggleLane = (laneKey: string): void => {
+    // Collapsing the focused lane ends focus (MDT-246); expansion itself
+    // persists — ending focus never re-collapses anything (INV-3).
+    if (laneKey === knownFocusKey && expandedLaneKeys.has(laneKey))
+      endFocus()
     setExpandedLaneKeys((prev) => {
       const next = new Set(prev)
       if (next.has(laneKey))
@@ -237,6 +326,9 @@ export function SwimlaneBoard({
   }
 
   const collapseAll = (): void => {
+    // Collapsing every lane collapses the focused lane too — that is a
+    // collapse of the focused lane, so focus ends (interactions contract).
+    endFocus()
     const next = new Set<string>()
     writeExpandedLanes(next)
     setExpandedLaneKeys(next)
@@ -249,6 +341,15 @@ export function SwimlaneBoard({
 
   return (
     <div className="swimlane-board" data-testid="swimlane-board">
+      {/* MDT-246: screen-reader parity for the focused-arrival highlight. */}
+      <span
+        className="swimlane-board__announcement"
+        role="status"
+        aria-live="polite"
+        data-testid="swimlane-arrival-announcement"
+      >
+        {arrivalAnnouncement}
+      </span>
       <div className="swimlane-board__toolbar" data-testid="swimlane-toolbar">
         <div className="swimlane-board__search">
           <Search className="swimlane-board__search-icon" aria-hidden="true" size={14} />
@@ -256,7 +357,10 @@ export function SwimlaneBoard({
             type="text"
             className="swimlane-board__search-input"
             value={searchQuery}
-            onChange={event => setSearchQuery(event.currentTarget.value)}
+            onChange={(event) => {
+              setSearchQuery(event.currentTarget.value)
+              endFocus()
+            }}
             placeholder="Search title or key (ABC-012, 12, ABC-12)"
             aria-label="Search swimlane tickets by title or key"
             data-testid="swimlane-search"
@@ -266,7 +370,10 @@ export function SwimlaneBoard({
               type="button"
               className="swimlane-board__search-clear"
               aria-label="Clear search"
-              onClick={() => setSearchQuery('')}
+              onClick={() => {
+                setSearchQuery('')
+                endFocus()
+              }}
               data-testid="swimlane-search-clear"
             >
               <X aria-hidden="true" size={14} />
@@ -278,7 +385,10 @@ export function SwimlaneBoard({
             type="checkbox"
             className="checkbox"
             checked={hideEmpty}
-            onChange={event => setHideEmpty(event.currentTarget.checked)}
+            onChange={(event) => {
+              setHideEmpty(event.currentTarget.checked)
+              endFocus()
+            }}
             data-testid="swimlane-hide-empty"
           />
           <span>Hide empty</span>
@@ -298,7 +408,10 @@ export function SwimlaneBoard({
             type="checkbox"
             className="checkbox"
             checked={showClosed}
-            onChange={event => setShowClosed(event.currentTarget.checked)}
+            onChange={(event) => {
+              setShowClosed(event.currentTarget.checked)
+              endFocus()
+            }}
             data-testid="swimlane-show-closed"
           />
           <span>Show closed</span>
@@ -375,6 +488,7 @@ export function SwimlaneBoard({
               style={{ '--epic-color': lane.isNone ? 'var(--border-strong)' : `var(--epic-${lane.colorIndex})` } as React.CSSProperties}
               data-testid="swimlane-lane"
               data-lane-key={lane.key}
+              data-focused={highlightedLaneKey === lane.key || undefined}
             >
               <div
                 role="button"

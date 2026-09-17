@@ -1,0 +1,520 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-246"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "Epic detail header shows an \"Epics →\" action (Rows3 leading glyph, trailing arrow-right) beside Trace Graph when ticket.level is epic; tooltip and accessible name carry the full sentence \"Show MDT-### on Epics board\"",
+      "sourceRef": "CR:MDT-246",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "In detail surfaces (viewer header, ticket attributes) a linkable phase value renders as a split chip: identity zone (passive Zap + key link) plus a trailing labeled action button of at least 24x24 jumping to the epics board; board cards keep the compact badge and the Zap is never a click target",
+      "sourceRef": "CR:MDT-246",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.3",
+      "kind": "behavior",
+      "text": "Both entry points navigate to /prj/:code/epics?epic=:key in one navigation; the ticket modal closes with it and no orphaned modal state remains",
+      "sourceRef": "CR:MDT-246",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.4",
+      "kind": "behavior",
+      "text": "SwimlaneBoard with focusEpicKey: the lane is expanded (and persisted), scrolled into view, and transiently highlighted in its epic color with auto-clear after about 2 seconds",
+      "sourceRef": "CR:MDT-246",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.5",
+      "kind": "behavior",
+      "text": "The focused lane renders even when Hide empty or Show closed would exclude it; an active search that would exclude it is cleared on arrival; filter toggles are untouched",
+      "sourceRef": "CR:MDT-246",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.6",
+      "kind": "behavior",
+      "text": "An unknown or missing ?epic= token is ignored; the board renders normally with no error state",
+      "sourceRef": "CR:MDT-246",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.7",
+      "kind": "behavior",
+      "text": "Ticket links opened from inside a ticket modal carry the current ?view= context so closing the opened ticket returns to the originating view",
+      "sourceRef": "CR:MDT-246",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C-1",
+      "kind": "constraint",
+      "text": "Split-chip action zone hit target is at least 24x24 (MDT-236 a11y floor) and the visible label is a substring of the accessible name (Label-in-Name)",
+      "sourceRef": "CR:MDT-246",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-2",
+      "kind": "constraint",
+      "text": "The ?epic= token is never rewritten onto non-/epics routes; in-app navigation drops it naturally",
+      "sourceRef": "CR:MDT-246",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-3",
+      "kind": "constraint",
+      "text": "Board cards (scan surfaces) never render the split-chip action zone",
+      "sourceRef": "CR:MDT-246",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "Local storage unavailable or corrupted: focus expansion still applies in-memory and arrival never blocks on persistence failure",
+      "sourceRef": "CR:MDT-246",
+      "routePolicy": "tests"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "epic_detail_header_cta",
+      "title": "Epic detail header shows the Epics board CTA",
+      "covers": [
+        "BR-1.1"
+      ],
+      "given": "Given an open ticket with level epic",
+      "when": "When the detail header renders",
+      "then": "Then an \"Epics →\" action with Rows3 and trailing arrow-right renders beside Trace Graph with the full-sentence tooltip and accessible name",
+      "sourceRef": "CR:MDT-246"
+    },
+    {
+      "id": "split_chip_jump_to_epics_board",
+      "title": "Epic badge split chip jumps to the focused board",
+      "covers": [
+        "BR-1.2",
+        "BR-1.3"
+      ],
+      "given": "Given an open non-epic ticket whose phaseEpic is a ticket key in a detail surface",
+      "when": "When the split-chip action zone is activated",
+      "then": "Then the app navigates in one step to /prj/:code/epics?epic=KEY and the ticket modal is closed",
+      "sourceRef": "CR:MDT-246"
+    },
+    {
+      "id": "focused_arrival_expand_scroll_highlight",
+      "title": "Focused arrival expands scrolls and highlights the lane",
+      "covers": [
+        "BR-1.4"
+      ],
+      "given": "Given the Epics board route with ?epic=KEY for a known epic",
+      "when": "When the board mounts",
+      "then": "Then the lane is expanded and persisted scrolled into view and transiently highlighted in its epic color with auto-clear",
+      "sourceRef": "CR:MDT-246"
+    },
+    {
+      "id": "focused_lane_visibility_override",
+      "title": "Focused lane overrides visibility filters",
+      "covers": [
+        "BR-1.5"
+      ],
+      "given": "Given Hide empty or Show closed would exclude the focused lane and an active search does not match it",
+      "when": "When arrival focus applies",
+      "then": "Then the focused lane still renders and the search is cleared while filter toggles stay untouched",
+      "sourceRef": "CR:MDT-246"
+    },
+    {
+      "id": "unknown_epic_token_ignored",
+      "title": "Unknown epic token is ignored",
+      "covers": [
+        "BR-1.6"
+      ],
+      "given": "Given the Epics board route with ?epic=UNKNOWN or no token",
+      "when": "When the board mounts",
+      "then": "Then the board renders normally with no error state",
+      "sourceRef": "CR:MDT-246"
+    },
+    {
+      "id": "view_context_carried_from_ticket_modal",
+      "title": "Ticket links inside a ticket modal carry the view context",
+      "covers": [
+        "BR-1.7"
+      ],
+      "given": "Given a ticket modal opened from the Epics view",
+      "when": "When a ticket link inside the modal opens another ticket",
+      "then": "Then the new ticket URL carries ?view=epics and closing it returns to the Epics view",
+      "sourceRef": "CR:MDT-246"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-1",
+      "title": "Epic focus token: single construction site, route-only parsing, prop threading",
+      "derivedFrom": [
+        "BR-1.3"
+      ],
+      "artifactIds": [
+        "ART-1",
+        "ART-2",
+        "ART-3",
+        "ART-4"
+      ],
+      "sourceRef": "CR:MDT-246"
+    },
+    {
+      "id": "OBL-2",
+      "title": "Focus arrival rendering: expand-persist, scroll, transient highlight with live-region announcement",
+      "derivedFrom": [
+        "BR-1.4"
+      ],
+      "artifactIds": [
+        "ART-5",
+        "ART-7"
+      ],
+      "sourceRef": "CR:MDT-246"
+    },
+    {
+      "id": "OBL-3",
+      "title": "Visibility override and search clear for the focused lane",
+      "derivedFrom": [
+        "BR-1.5"
+      ],
+      "artifactIds": [
+        "ART-5",
+        "ART-6"
+      ],
+      "sourceRef": "CR:MDT-246"
+    },
+    {
+      "id": "OBL-4",
+      "title": "Unknown or missing token degrades to a normal board",
+      "derivedFrom": [
+        "BR-1.6"
+      ],
+      "artifactIds": [
+        "ART-5",
+        "ART-6"
+      ],
+      "sourceRef": "CR:MDT-246"
+    },
+    {
+      "id": "OBL-5",
+      "title": "Epics CTA on the epic detail header",
+      "derivedFrom": [
+        "BR-1.1"
+      ],
+      "artifactIds": [
+        "ART-8",
+        "ART-9",
+        "ART-10"
+      ],
+      "sourceRef": "CR:MDT-246"
+    },
+    {
+      "id": "OBL-6",
+      "title": "Split chip on detail surfaces; cards stay compact",
+      "derivedFrom": [
+        "BR-1.2"
+      ],
+      "artifactIds": [
+        "ART-11",
+        "ART-12",
+        "ART-13",
+        "ART-14",
+        "ART-15"
+      ],
+      "sourceRef": "CR:MDT-246"
+    },
+    {
+      "id": "OBL-7",
+      "title": "View context carried by in-modal ticket links",
+      "derivedFrom": [
+        "BR-1.7"
+      ],
+      "artifactIds": [
+        "ART-16"
+      ],
+      "sourceRef": "CR:MDT-246"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-1",
+      "path": "frontend/src/routes.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-246"
+    },
+    {
+      "id": "ART-2",
+      "path": "frontend/src/components/routes/ProjectRouteHandler.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-246"
+    },
+    {
+      "id": "ART-3",
+      "path": "frontend/src/components/ProjectView.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-246"
+    },
+    {
+      "id": "ART-4",
+      "path": "frontend/src/components/Board.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-246"
+    },
+    {
+      "id": "ART-5",
+      "path": "frontend/src/components/SwimlaneBoard/index.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-246"
+    },
+    {
+      "id": "ART-6",
+      "path": "frontend/src/components/SwimlaneBoard/helpers.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-246"
+    },
+    {
+      "id": "ART-7",
+      "path": "frontend/src/components/SwimlaneBoard/swimlane-board.css",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-246"
+    },
+    {
+      "id": "ART-8",
+      "path": "frontend/src/components/TicketViewer/EpicBoardAction.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-246"
+    },
+    {
+      "id": "ART-9",
+      "path": "frontend/src/components/TicketViewer/index.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-246"
+    },
+    {
+      "id": "ART-10",
+      "path": "frontend/src/components/TicketViewer/ticket-viewer.css",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-246"
+    },
+    {
+      "id": "ART-11",
+      "path": "frontend/src/components/Badge/ContextBadge.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-246"
+    },
+    {
+      "id": "ART-12",
+      "path": "frontend/src/components/Badge/badge.css",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-246"
+    },
+    {
+      "id": "ART-13",
+      "path": "frontend/src/components/Badge/ContextBadge.test.tsx",
+      "kind": "test",
+      "sourceRef": "CR:MDT-246"
+    },
+    {
+      "id": "ART-14",
+      "path": "frontend/src/components/TicketViewer/CompactTicketHeader.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-246"
+    },
+    {
+      "id": "ART-15",
+      "path": "frontend/src/components/TicketAttributes.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-246"
+    },
+    {
+      "id": "ART-16",
+      "path": "frontend/src/components/SmartLink/index.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-246"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-carry-view-param",
+      "kind": "unit",
+      "title": "carryViewParam pure rule for ?view= carry",
+      "covers": [
+        "BR-1.7"
+      ],
+      "file": "frontend/src/components/routes/viewModeDerivation.test.ts",
+      "sourceRef": "CR:MDT-246"
+    },
+    {
+      "id": "TEST-focus-visibility-override",
+      "kind": "unit",
+      "title": "Focused lane visibility override and unknown-key pass-through",
+      "covers": [
+        "BR-1.5",
+        "BR-1.6"
+      ],
+      "file": "frontend/src/components/SwimlaneBoard/helpers.test.ts",
+      "sourceRef": "CR:MDT-246"
+    },
+    {
+      "id": "TEST-focus-lifecycle",
+      "kind": "unit",
+      "title": "SwimlaneBoard focused arrival lifecycle",
+      "covers": [
+        "BR-1.4",
+        "BR-1.5",
+        "Edge-1"
+      ],
+      "file": "frontend/src/components/SwimlaneBoard/SwimlaneBoard.test.tsx",
+      "sourceRef": "CR:MDT-246"
+    },
+    {
+      "id": "TEST-split-chip",
+      "kind": "unit",
+      "title": "ContextBadge split chip zones, labels, navigation",
+      "covers": [
+        "BR-1.2",
+        "BR-1.3",
+        "C-1",
+        "C-3"
+      ],
+      "file": "frontend/src/components/Badge/ContextBadge.test.tsx",
+      "sourceRef": "CR:MDT-246"
+    },
+    {
+      "id": "TEST-view-carry-integration",
+      "kind": "unit",
+      "title": "SmartLink ticket hrefs carry ?view= inside ticket modals",
+      "covers": [
+        "BR-1.7"
+      ],
+      "file": "frontend/src/components/SmartLink/index.test.tsx",
+      "sourceRef": "CR:MDT-246"
+    },
+    {
+      "id": "TEST-epic-cta",
+      "kind": "unit",
+      "title": "EpicBoardAction render contract and navigation",
+      "covers": [
+        "BR-1.1",
+        "BR-1.3",
+        "C-1"
+      ],
+      "file": "frontend/src/components/TicketViewer/EpicBoardAction.test.tsx",
+      "sourceRef": "CR:MDT-246"
+    },
+    {
+      "id": "TEST-epic-cta-journey",
+      "kind": "e2e",
+      "title": "Epics CTA journey: epic detail to focused lane",
+      "covers": [
+        "BR-1.1",
+        "BR-1.3",
+        "BR-1.4",
+        "C-2"
+      ],
+      "file": "tests/e2e/board/epic-board-jump.spec.ts",
+      "sourceRef": "CR:MDT-246"
+    },
+    {
+      "id": "TEST-epic-badge-journey",
+      "kind": "e2e",
+      "title": "Split-chip jump, view carry, unknown token, hide-empty override journeys",
+      "covers": [
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.5",
+        "BR-1.6",
+        "BR-1.7"
+      ],
+      "file": "tests/e2e/board/epic-board-jump.spec.ts",
+      "sourceRef": "CR:MDT-246"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-1",
+      "title": "URL epic token, prop threading, and SwimlaneBoard focus lifecycle",
+      "ownsArtifactIds": [
+        "ART-1",
+        "ART-2",
+        "ART-3",
+        "ART-4",
+        "ART-5",
+        "ART-6",
+        "ART-7"
+      ],
+      "makesGreenIds": [
+        "TEST-focus-visibility-override",
+        "TEST-focus-lifecycle",
+        "focused_arrival_expand_scroll_highlight",
+        "focused_lane_visibility_override",
+        "unknown_epic_token_ignored"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "CR:MDT-246"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Epics CTA on the epic detail header",
+      "ownsArtifactIds": [
+        "ART-8",
+        "ART-9",
+        "ART-10"
+      ],
+      "makesGreenIds": [
+        "TEST-epic-cta",
+        "TEST-epic-cta-journey",
+        "epic_detail_header_cta"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "CR:MDT-246"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Split chip on the epic ContextBadge (detail surfaces)",
+      "ownsArtifactIds": [
+        "ART-11",
+        "ART-12",
+        "ART-13",
+        "ART-14",
+        "ART-15"
+      ],
+      "makesGreenIds": [
+        "TEST-split-chip",
+        "TEST-epic-badge-journey",
+        "split_chip_jump_to_epics_board"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "CR:MDT-246"
+    },
+    {
+      "id": "TASK-4",
+      "title": "?view= carry for ticket links inside ticket modals",
+      "ownsArtifactIds": [
+        "ART-16"
+      ],
+      "makesGreenIds": [
+        "TEST-carry-view-param",
+        "TEST-view-carry-integration",
+        "view_context_carried_from_ticket_modal"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "CR:MDT-246"
+    }
+  ]
+}

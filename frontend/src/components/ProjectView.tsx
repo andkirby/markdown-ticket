@@ -51,11 +51,17 @@ interface ProjectViewProps {
   updateTicketOptimistic?: (ticketCode: string, updates: Partial<Ticket>) => Promise<Ticket>
   viewMode?: ViewMode
   boardLayoutMode?: BoardLayoutModeValue
+  /**
+   * MDT-246: epic key to focus on the Epics board (the `?epic=` token, parsed
+   * by ProjectRouteHandler). Pass-through to SwimlaneBoard; unknown keys are
+   * ignored downstream.
+   */
+  focusEpicKey?: string | null
   loading?: boolean
   sortPreferences?: SortPreferences
   canWrite?: boolean
 }
-export default function ProjectView({ onTicketClick, selectedProject, tickets: propTickets, filteredTickets: propFilteredTickets, filters, mobileFilters, onRemoveMobileFilter, updateTicketOptimistic, viewMode: externalViewMode, boardLayoutMode, loading: propLoading, sortPreferences, canWrite = true }: ProjectViewProps) {
+export default function ProjectView({ onTicketClick, selectedProject, tickets: propTickets, filteredTickets: propFilteredTickets, filters, mobileFilters, onRemoveMobileFilter, updateTicketOptimistic, viewMode: externalViewMode, boardLayoutMode, focusEpicKey, loading: propLoading, sortPreferences, canWrite = true }: ProjectViewProps) {
   // Use external viewMode if provided, otherwise fall back to internal state
   const [internalViewMode] = useState<ViewMode>(() => {
     const saved = localStorage.getItem(VIEW_MODE_KEY)
@@ -178,6 +184,7 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
                 onRemoveMobileFilter={onRemoveMobileFilter}
                 loading={loading}
                 boardLayoutMode={boardLayoutMode}
+                focusEpicKey={focusEpicKey}
                 sortPreferences={sortPreferences}
                 canWrite={canWrite}
                 projectionFeed={projectionFeed}

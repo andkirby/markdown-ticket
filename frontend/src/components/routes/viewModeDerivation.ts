@@ -40,3 +40,27 @@ export function ticketCloseTargetPath(viewContext: string, basePath: string): st
     return `${basePath}/epics`
   return `${basePath}/${viewContext}`
 }
+
+/**
+ * MDT-246 (BR-1.7): the inverse of ticketCloseTargetPath — attach the current
+ * `?view=` context to a ticket-link href when the link is opened from inside a
+ * ticket modal, so closing the opened ticket returns to the originating view.
+ * The inverse pairing with ticketCloseTargetPath is why this rule lives here.
+ *
+ * Outside ticket routes, without a `?view=`, or on hrefs that already carry a
+ * query, the href passes through untouched. The param is inserted before any
+ * `#fragment` — appending after it would place the query inside the hash.
+ */
+export function carryViewParam(href: string, pathname: string, search: string): string {
+  if (!href || !pathname.includes('/ticket/'))
+    return href
+  const view = new URLSearchParams(search).get('view')
+  if (!view)
+    return href
+  const hashIndex = href.indexOf('#')
+  const beforeHash = hashIndex === -1 ? href : href.slice(0, hashIndex)
+  const hash = hashIndex === -1 ? '' : href.slice(hashIndex)
+  if (beforeHash.includes('?'))
+    return href
+  return `${beforeHash}?view=${encodeURIComponent(view)}${hash}`
+}
