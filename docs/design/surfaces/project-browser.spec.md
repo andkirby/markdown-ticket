@@ -249,7 +249,7 @@ Focused project cards show the standard blue focus ring. Arrow navigation applie
 | Chip accent flat | CSS `.project-chip__accent-mark` (gradients off) | 4px solid, 0.3 opacity |
 | Active card bg | CSS `.project-card[data-accent-gradients="true"]` | `linear-gradient(to left, theme-bg, accent/0.15)` |
 | Star tokens | `--star-*` | Favorite indicators (see `THEME.md`) |
-| Backdrop | — | `bg-black/50` (per MODALS.md) |
+| Backdrop | — | `bg-black/50 backdrop-blur-sm` (per MODALS.md) |
 
 ## Classes used
 

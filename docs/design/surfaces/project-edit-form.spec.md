@@ -82,7 +82,7 @@ AddProjectModal (editMode=true)
 
 | Element | Token | Usage |
 |---------|-------|-------|
-| Backdrop | — | `bg-black/50` per `MODALS.md` |
+| Backdrop | — | `bg-black/50 backdrop-blur-sm` per `MODALS.md` |
 | Modal background | `--card` | light/dark modal surface |
 | Border | `--border` | header/footer and input borders |
 | Focus ring | `--ring` | focused inputs |

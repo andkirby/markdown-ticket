@@ -10,7 +10,7 @@ import { Modal, ModalBody, ModalFooter, ModalHeader } from '@/components/ui/Moda
 
 Do NOT hand-roll `fixed inset-0` overlays. The base Modal handles:
 - Portal rendering via `createPortal`
-- Backdrop (`bg-black/50`)
+- Backdrop — dim + blur (`bg-black/50` + `backdrop-blur-sm`, built in)
 - Escape to close
 - Click-outside to close
 - Body scroll lock
@@ -240,9 +240,9 @@ When using Pattern B (content modal), sections follow the ticket viewer style:
 
 ## Backdrop
 
-**ALL modals MUST use `bg-black/50`** — handled by the base Modal component.
+**ALL modals share one backdrop: `bg-black/50` + `backdrop-blur-sm`** — dim and blur ship together in the base Modal's `.modal-overlay` (see `ui/modal.css`). There is no opt-in: every modal rendered through `<Modal>` gets the frosted backdrop.
 
-For backdrop blur (QuickSearch, ProjectBrowser), pass `overlayClassName="backdrop-blur-sm"`.
+Do NOT pass `backdrop-blur-*` via `overlayClassName` — the blur is already applied, and a second filter on the modal root just doubles GPU work.
 
 ## Migration Guide
 
@@ -258,6 +258,7 @@ If you find a hand-rolled modal (`fixed inset-0` in component JSX):
 
 ❌ **Hand-rolling `fixed inset-0 bg-black/50`** — use `<Modal>`
 ❌ **Different backdrop opacities** — always `bg-black/50`
+❌ **Passing `backdrop-blur-*` via `overlayClassName`** — the base overlay already blurs
 ❌ **Using `p-6` padding** — always use tight `px-4 py-3` / `p-4`
 ❌ **Forgetting click-outside-to-close** — base Modal handles this
 ❌ **Manual `createPortal`** — base Modal handles this
@@ -271,7 +272,7 @@ If you find a hand-rolled modal (`fixed inset-0` in component JSX):
 - [ ] Uses `<Modal>` from `ui/Modal.tsx` (no hand-rolled overlay)
 - [ ] Correct pattern selected (A, B, or C)
 - [ ] Tight spacing: `px-4 py-3` header/footer, `p-4` body (or `p-0` for content modals)
-- [ ] `bg-black/50` backdrop (handled by Modal)
+- [ ] Dimmed + blurred backdrop (handled by Modal)
 - [ ] Escape to close (handled by Modal)
 - [ ] Click outside to close (handled by Modal)
 - [ ] Body scroll prevention (handled by Modal)
