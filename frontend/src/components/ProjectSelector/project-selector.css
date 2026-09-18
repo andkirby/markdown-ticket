@@ -446,12 +446,34 @@
     color: var(--text-subtle);
   }
 
-  /* ── Project browser: search icon + empty-state text (v3) ── */
+  /* ── Project browser panel (v3) — semantic chrome for ProjectBrowserPanel.
+     Layout/spacing lives here so the TSX stays utility-free
+     (enforce-semantic-classes contract for this directory). ── */
+  .project-browser__header {
+    @apply flex items-center gap-3;
+  }
+  .project-browser__title {
+    @apply shrink-0;
+  }
+  .project-browser__search-field {
+    @apply relative min-w-0 flex-1;
+  }
   .project-browser__search-icon {
+    @apply absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4;
     color: var(--text-subtle);
   }
+  .project-browser__list {
+    @apply flex-1 min-h-0 overflow-hidden;
+  }
+  .project-browser__body {
+    @apply p-4;
+  }
   .project-browser__empty-state {
+    @apply text-center py-12;
     color: var(--text-muted);
+  }
+  .project-browser__grid {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-4;
   }
 
   /* Launcher plus-icon (v3) — color + 20px size (was w-5 h-5 on the lucide

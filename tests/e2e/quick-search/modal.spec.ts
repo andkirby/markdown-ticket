@@ -9,6 +9,7 @@
  * 5. Escape closes modal without selection
  * 6. Click outside closes modal
  * 7. "No results" shown when no matches
+ * 8. Backdrop is dimmed + blurred (MODALS.md Backdrop standard)
  */
 
 import { expect, test } from '../fixtures/test-fixtures.js'
@@ -182,6 +183,26 @@ test.describe('Quick Search Modal', () => {
 
     // Modal should close
     await expect(page.locator(quickSearchSelectors.modal)).not.toBeVisible()
+  })
+
+  test('backdrop is dimmed and blurred (MODALS.md Backdrop standard)', async ({ page, e2eContext }) => {
+    const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
+
+    await page.goto(`/prj/${scenario.projectCode}`)
+    await waitForBoardReady(page)
+
+    // Open modal
+    const isMac = process.platform === 'darwin'
+    const modifier = isMac ? 'Meta' : 'Control'
+    await page.keyboard.press(`${modifier}+k`)
+
+    await expect(page.locator(quickSearchSelectors.modal)).toBeVisible()
+
+    // Dim + blur ship together on the shared .modal-overlay — every <Modal> gets both
+    const overlay = page.locator('.modal-overlay')
+    await expect(overlay).toBeVisible()
+    await expect(overlay).toHaveCSS('background-color', /rgba\(0, 0, 0, 0\.5\)/)
+    await expect(overlay).toHaveCSS('backdrop-filter', /blur/)
   })
 
   test('shows "No results" when no matches (BR-8)', async ({ page, e2eContext }) => {

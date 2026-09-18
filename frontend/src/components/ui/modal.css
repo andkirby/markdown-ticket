@@ -21,8 +21,11 @@
     padding-top: 0;
   }
 
+  /* Dim + frosted blur ship together on every modal (MODALS.md "Backdrop").
+   * Fullscreen takeovers (mermaid, HTML sandbox) are opaque by design and do
+   * not route through this overlay. */
   .modal-overlay {
-    @apply fixed inset-0 bg-black/50 transition-opacity;
+    @apply fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity;
   }
 
   .modal-content {

@@ -104,7 +104,7 @@ window "Project Edit Form — Mobile":
 
 | Element | Token | Class | Notes |
 |---------|-------|-------|-------|
-| Backdrop | — | `bg-black/50` | Matches modal standard |
+| Backdrop | — | `bg-black/50 backdrop-blur-sm` | Matches modal standard |
 | Modal surface | `--card` | `bg-white dark:bg-gray-800` | Existing modal surface |
 | Header/footer border | `--border` | `border-gray-200 dark:border-gray-700` | Separates fixed regions |
 | Read-only fields | `--muted` | `bg-gray-50 dark:bg-gray-700 cursor-not-allowed` | Identity/filesystem fields cannot be changed |

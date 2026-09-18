@@ -280,22 +280,22 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="xl" overlayClassName="backdrop-blur-sm" data-testid="project-browser-panel">
+    <Modal isOpen={isOpen} onClose={onClose} size="xl" data-testid="project-browser-panel">
       <ModalBody className="modal__body--constrained" onKeyDown={handlePanelKeyDown}>
         {/* Header with inline search input */}
         <ModalHeader
           onClose={onClose}
           closeTestId="project-browser-close"
           closeButtonTabIndex={-1}
-          className="flex items-center gap-3"
+          className="project-browser__header"
         >
-          <h1 className="modal__headline shrink-0">
+          <h1 className="modal__headline project-browser__title">
             Projects
           </h1>
           {/* Search input (MDT-152) */}
-          <div className="relative min-w-0 flex-1">
+          <div className="project-browser__search-field">
             <svg
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 project-browser__search-icon"
+              className="project-browser__search-icon"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -332,13 +332,13 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
         </ModalHeader>
 
         {/* Project list */}
-        <ScrollArea type="hover" scrollHideDelay={600} className="flex-1 min-h-0 overflow-hidden">
-          <div className="p-4">
+        <ScrollArea type="hover" scrollHideDelay={600} className="project-browser__list">
+          <div className="project-browser__body">
             {displayProjects.length === 0
               ? (
                   <div
                     data-testid="project-browser-empty-state"
-                    className="text-center py-12 project-browser__empty-state"
+                    className="project-browser__empty-state"
                   >
                     {searchQuery.trim()
                       ? 'No projects match your search'
@@ -348,7 +348,7 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
               : (
                   <div
                     ref={projectGridRef}
-                    className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                    className="project-browser__grid"
                     role="listbox"
                     aria-label="Projects"
                   >
