@@ -34,8 +34,10 @@ for the same pixels. This is non-negotiable and is restated in `board-filter-bar
   drag-hover is signaled by the board's drop-hover style (C-5).
 - Click-to-open: clicking a pin opens the ticket viewer for that ticket, same path as a board card
   click (cross-project pins open the owning project's viewer).
-- Hover tooltip: priority glyph + ticket key (via the canonical `<TicketCode>`) + title + status
-  badge — the minimum to disambiguate cross-project pins and convey state at a glance.
+- Hover tooltip: priority glyph + status glyph + ticket key (via the canonical `<TicketCode>`) +
+  title — the minimum to disambiguate cross-project pins and convey state at a glance. Status rides
+  the key-strip glyph (MDT-247 removed the tooltip's `StatusBadge`; no badge co-renders here, so the
+  strip is the one status encoding).
 - Hover-× unpin: a small × revealed on each pin item on hover, removing that pin.
 - **Feature enable/disable (BR-11):** a browser-only "Pin rail" Switch in Settings → Board. When
   off, neither rail nor collapsed strip renders (0px; truly gone). Default on.
@@ -100,9 +102,8 @@ App content row (frontend/src/components/routes/ProjectRouteHandler.tsx)   ← P
 │       └── PinItem[]                         (one per pin, recency-pinned-first)
 │           ├── PinCode "042"                 (numeric part only; mono; var(--fs-xs,11px) — same token as ticket card code)
 │           ├── PinTooltip (on hover)         (portal; NOT native :title)
-│           │   ├── TicketCode                (canonical <TicketCode> — priority glyph + "MDT-042"; NEVER hand-composed)
-│           │   ├── Title                     (ticket title)
-│           │   └── StatusBadge               (reuses Badge data-status)
+│           │   ├── TicketCode                (canonical <TicketCode> — priority + status glyphs + "MDT-042"; NEVER hand-composed)
+│           │   └── Title                     (ticket title)
 │           └── UnpinButton ×                 (hover-reveal, top-right of item)
 └── content (existing: <main> / ProjectView)
 ```
@@ -128,7 +129,6 @@ Manual reordering is deferred (IDEA-002).
 | PinItem | `frontend/src/components/PinRail/PinItem.tsx` (new) | — | one per pin |
 | PinTooltip | `frontend/src/components/PinRail/PinTooltip.tsx` (new) or shared `Tooltip`/`HoverCard` | — | pointer hover on a PinItem |
 | UnpinButton | inline in `PinItem` | — | pointer hover on a PinItem; hidden in read-only |
-| StatusBadge | `frontend/src/components/Badge/` | `ticket-card.spec.md` / `BADGE_ARCHITECTURE.md` | inside the tooltip |
 
 ### Mount site (ProjectRouteHandler.tsx)
 
@@ -157,6 +157,7 @@ Manual reordering is deferred (IDEA-002).
 | Pin schema home | `domain-contracts/src/app-config/schema.ts` (`DocumentFavItem`/`DocumentFavState` are the sibling to copy for `PinItem`/`PinState`) | where the validated pin types must live |
 | Spatial boundary | `docs/design/surfaces/board-filter-bar.spec.md` §"Spatial boundary" | the contract this surface is the other half of |
 | Access mode source | `frontend/src/hooks/useProjectManager.ts` (`accessMode`, `canWriteTickets`) | drives read-only pin/unpin gating |
+| Status strip glyph | `docs/CRs/MDT-247/ux-design.md` (tooltip swap: StatusBadge → key-strip status glyph) | owns the change this spec describes for the tooltip |
 | Verification | `tests/e2e/` (new: `pin-rail.spec.ts`) + `server/tests/api/` (new: `pins.test.ts` mirroring `document-favs.test.ts`) | drag-to-pin, click-to-open, hover-unpin, persistence, cross-project, read-only |
 
 ## Pin State Contract
@@ -233,15 +234,15 @@ button.pin-item (relative, w-8 h-8, rounded-md, border border-app, bg-app,
 
 ### PinTooltip
 
-A portaled hover tooltip (not a native `:title`). Native `:title` cannot carry the status badge and
-cannot be styled; the AC requires priority + project code + ticket code + title + status, and status
-is a badge.
+A portaled hover tooltip (not a native `:title`). Native `:title` cannot be styled and cannot carry
+the glyph-colored key strip; the content contract is priority + status glyphs + ticket key + title.
+Status moved from a `StatusBadge` line onto the strip glyph in MDT-247 — this surface has no
+co-rendered badge, so the strip is the one status encoding.
 
 ```text
 PinTooltip (portal to body; positioned beside the item)
-├── TicketCode                      (canonical <TicketCode>: PriorityIcon glyph + "MDT-042", mono, primary text)
-├── Title                           (ticket title, primary text, one line + ellipsis)
-└── StatusBadge                     (reuses Badge data-status; same as card badge)
+├── TicketCode                      (canonical <TicketCode>: PriorityIcon + status glyphs + "MDT-042", mono, primary text)
+└── Title                           (ticket title, primary text, one line + ellipsis)
 ```
 
 - **The ticket key is rendered via the canonical `<TicketCode>` component**
@@ -362,7 +363,7 @@ in `ProjectRouteHandler.tsx`, not per-view). It is not affected by `viewMode`.
 | item | `.pin-item` (new) | this surface |
 | code | `.ticket-key` | `STYLING.md` (mono convention) |
 | tooltip | reuse shared tooltip/HoverCard primitive, or `.pin-tooltip` (new) | this surface |
-| status badge | `Badge[data-status="…"]` | `BADGE_ARCHITECTURE.md` |
+| status glyph | `.ticket-code__status-icon[data-status="…"]` (new, via `<TicketCode>`) | MDT-247; status→token fg mapping mirrors `badge.css` |
 | drop hover | `draggable-ticket--dragging`-style ring (reuse board drop-hover utility) | `board-layout.spec.md` |
 
 New classes are scoped under `.pin-rail` / `.pin-item` to avoid collisions. No global class
