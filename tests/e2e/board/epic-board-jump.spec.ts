@@ -201,6 +201,6 @@ test.describe('Epic board jump (MDT-246)', () => {
     await waitForEpicsBoard(page)
     await expect(page.locator(swimlaneSelectors.laneByKey(scenario.closedEpic))).toBeVisible()
     await expect(page.locator(swimlaneSelectors.laneLabelByKey(scenario.closedEpic))).toHaveAttribute('aria-expanded', 'true')
-    await expect(page.locator(swimlaneSelectors.showClosedToggle)).not.toBeChecked()
+    await expect(page.locator(swimlaneSelectors.showClosedToggle)).toHaveAttribute('aria-pressed', 'false')
   })
 })

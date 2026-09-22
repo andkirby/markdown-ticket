@@ -159,7 +159,7 @@ describe('SwimlaneBoard helpers', () => {
   })
 })
 
-describe('SwimlaneBoard toolbar search (MDT-206 BR-6.1, UAT round 7)', () => {
+describe('SwimlaneBoard toolbar search (MDT-206 BR-6.1, UAT rounds 7–9)', () => {
   it('matches the full zero-padded key', () => {
     expect(matchesTicketSearch({ code: 'ABC-012', title: 'Fix login' }, 'ABC-012')).toBe(true)
     expect(matchesTicketSearch({ code: 'ABC-012', title: 'Fix login' }, 'abc-012')).toBe(true)
@@ -189,19 +189,17 @@ describe('SwimlaneBoard toolbar search (MDT-206 BR-6.1, UAT round 7)', () => {
     expect(matchesTicketSearch({ code: 'ABC-012', title: 'Fix login' }, '   ')).toBe(true)
   })
 
-  it('filterLanesBySearch narrows lane tickets, preserves progress, and does not mutate input lanes', () => {
+  it('removes a lane whose only matches are child tickets, and does not mutate input lanes', () => {
     const epic = ticket({ code: 'MDT-100', title: 'Platform Epic', status: CRStatus.APPROVED, level: CRLevel.EPIC })
     const a = ticket({ code: 'MDT-101', title: 'OAuth PKCE', phaseEpic: 'MDT-100' })
     const b = ticket({ code: 'MDT-102', title: 'Rate limits', phaseEpic: 'MDT-100' })
     const { lanes } = buildSwimlaneModel([epic, a, b], [epic, a, b])
     const epicLane = lanes.find(lane => lane.key === 'MDT-100')!
 
+    // 'oauth' matches only the child MDT-101 — round 9: epics only, so the lane goes.
     const filtered = filterLanesBySearch(lanes, 'oauth')
-    const filteredEpicLane = filtered.find(lane => lane.key === 'MDT-100')!
-    expect(filteredEpicLane.tickets.map(t => t.code)).toEqual(['MDT-101'])
+    expect(filtered.map(l => l.key)).toEqual([])
 
-    // Progress is presentation-only: kept from the full child set.
-    expect(filteredEpicLane.progress.total).toBe(epicLane.progress.total)
     // Input lanes untouched (original still holds both tickets).
     expect(epicLane.tickets.map(t => t.code)).toEqual(['MDT-101', 'MDT-102'])
   })
@@ -222,6 +220,8 @@ describe('SwimlaneBoard toolbar search (MDT-206 BR-6.1, UAT round 7)', () => {
     const laneByTitle = byTitle.find(l => l.key === 'MDT-100')
     expect(laneByTitle).toBeDefined()
     expect(laneByTitle!.tickets.map(t => t.code).sort()).toEqual(['MDT-101', 'MDT-102'])
+    // Progress is presentation-only: kept from the full child set.
+    expect(laneByTitle!.progress.total).toBe(2)
 
     // Epic key match (bare number) → whole lane visible.
     const byKey = filterLanesBySearch(lanes, '100')
@@ -230,25 +230,25 @@ describe('SwimlaneBoard toolbar search (MDT-206 BR-6.1, UAT round 7)', () => {
     expect(laneByKey!.tickets.map(t => t.code).sort()).toEqual(['MDT-101', 'MDT-102'])
   })
 
-  it('removes epic lanes and the No-epic lane when nothing matches (filters the lane list)', () => {
+  it('removes lanes on child-only, No-epic-only, and no-match queries (round 9: epics only)', () => {
     const epic = ticket({ code: 'MDT-100', title: 'Platform Epic', status: CRStatus.APPROVED, level: CRLevel.EPIC })
     const other = ticket({ code: 'MDT-200', title: 'Other Epic', status: CRStatus.APPROVED, level: CRLevel.EPIC })
     const a = ticket({ code: 'MDT-101', title: 'OAuth PKCE', phaseEpic: 'MDT-100' })
     const orphan = ticket({ code: 'MDT-001', title: 'Orphan work' })
     const { lanes } = buildSwimlaneModel([epic, other, a, orphan], [epic, other, a, orphan])
 
-    // 'oauth' matches only MDT-101 → MDT-100 lane kept (narrowed), MDT-200 and No-epic removed.
-    const filtered = filterLanesBySearch(lanes, 'oauth')
-    expect(filtered.map(l => l.key)).toEqual(['MDT-100'])
-    expect(filtered[0]!.tickets.map(t => t.code)).toEqual(['MDT-101'])
+    // 'oauth' matches only the child MDT-101 → its lane is removed.
+    expect(filterLanesBySearch(lanes, 'oauth').map(l => l.key)).toEqual([])
+
+    // 'orphan' matches only a No-epic ticket → the No-epic lane has no epic to match.
+    expect(filterLanesBySearch(lanes, 'orphan').map(l => l.key)).toEqual([])
 
     // A query matching nothing removes every lane.
     expect(filterLanesBySearch(lanes, 'xyz nothing')).toEqual([])
 
-    // A query matching only the No-epic orphan keeps just the No-epic lane.
-    const byOrphan = filterLanesBySearch(lanes, 'orphan')
-    expect(byOrphan.map(l => l.key)).toEqual([NO_EPIC_LANE_KEY])
-    expect(byOrphan[0]!.tickets.map(t => t.code)).toEqual(['MDT-001'])
+    // An epic key match (bare number) keeps that epic's lane only, with all tickets.
+    const byEpicKey = filterLanesBySearch(lanes, '200')
+    expect(byEpicKey.map(l => l.key)).toEqual(['MDT-200'])
   })
 })
 

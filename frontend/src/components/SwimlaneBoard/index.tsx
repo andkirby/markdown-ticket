@@ -1,6 +1,6 @@
 import type { BoardTicket, Status, Ticket } from '../../types'
 import { CRStatus } from '@mdt/domain-contracts'
-import { Check, ChevronDown, ChevronLeft, FileText, Search, X } from 'lucide-react'
+import { Check, ChevronDown, ChevronLeft, FileText, FoldVertical, Search, SquareDashed, Tag, UnfoldVertical, X } from 'lucide-react'
 import * as React from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useDrag } from 'react-dnd'
@@ -11,6 +11,7 @@ import {
 } from '../../config/settingsPreferences'
 import { sortTickets } from '../../utils/sorting'
 import { StatusBadge } from '../Badge/StatusBadge'
+import { ImplementedGlyph } from '../Badge/statusGlyphs'
 import { useDropZone } from '../Column/useDropZone'
 import TicketCard from '../TicketCard'
 import { TicketCode } from '../TicketCode'
@@ -360,8 +361,8 @@ export function SwimlaneBoard({
               setSearchQuery(event.currentTarget.value)
               endFocus()
             }}
-            placeholder="Search title or key (ABC-012, 12, ABC-12)"
-            aria-label="Search swimlane tickets by title or key"
+            placeholder="Search epic title or key (ABC-012, 12, ABC-12)"
+            aria-label="Search epics by title or key"
             data-testid="swimlane-search"
           />
           {searchQuery && (
@@ -379,44 +380,57 @@ export function SwimlaneBoard({
             </button>
           )}
         </div>
-        <label className="swimlane-board__toggle">
-          <input
-            type="checkbox"
-            className="checkbox"
-            checked={hideEmpty}
-            onChange={(event) => {
-              setHideEmpty(event.currentTarget.checked)
+        {/* Filters are aria-pressed toggle buttons (the ruled "toolbar
+            toggles" pattern, styleguide.html / MDT-206 UAT r9): label =
+            verb, icon = object, fill = state. Icon vocabulary is unique per
+            control — Show closed reuses the Implemented status glyph because
+            it toggles exactly that status's visibility. */}
+        <div className="control-group swimlane-board__filters" role="group" aria-label="Swimlane filters">
+          <button
+            type="button"
+            className="control-group__item swimlane-board__filter"
+            aria-pressed={hideEmpty}
+            onClick={() => {
+              setHideEmpty(value => !value)
               endFocus()
             }}
             data-testid="swimlane-hide-empty"
-          />
-          <span>Hide empty</span>
-        </label>
-        <label className="swimlane-board__toggle">
-          <input
-            type="checkbox"
-            className="checkbox"
-            checked={showBadges}
-            onChange={event => setShowBadges(event.currentTarget.checked)}
+          >
+            <SquareDashed aria-hidden="true" size={14} />
+            <span>Hide empty</span>
+          </button>
+          <button
+            type="button"
+            className="control-group__item swimlane-board__filter"
+            aria-pressed={showBadges}
+            onClick={() => setShowBadges(value => !value)}
             data-testid="swimlane-show-badges"
-          />
-          <span>Show badges</span>
-        </label>
-        <label className="swimlane-board__toggle">
-          <input
-            type="checkbox"
-            className="checkbox"
-            checked={showClosed}
-            onChange={(event) => {
-              setShowClosed(event.currentTarget.checked)
+          >
+            <Tag aria-hidden="true" size={14} />
+            <span>Show badges</span>
+          </button>
+          <button
+            type="button"
+            className="control-group__item swimlane-board__filter"
+            aria-pressed={showClosed}
+            onClick={() => {
+              setShowClosed(value => !value)
               endFocus()
             }}
             data-testid="swimlane-show-closed"
-          />
-          <span>Show closed</span>
-        </label>
-        <button type="button" className="swimlane-board__toggle" onClick={collapseAll} data-testid="swimlane-collapse-all">Collapse all</button>
-        <button type="button" className="swimlane-board__toggle" onClick={expandAll} data-testid="swimlane-expand-all">Expand all</button>
+          >
+            <ImplementedGlyph aria-hidden="true" />
+            <span>Show closed</span>
+          </button>
+        </div>
+        <button type="button" className="btn btn-sm btn-outline" onClick={collapseAll} data-testid="swimlane-collapse-all">
+          <FoldVertical aria-hidden="true" size={14} />
+          Collapse all
+        </button>
+        <button type="button" className="btn btn-sm btn-outline" onClick={expandAll} data-testid="swimlane-expand-all">
+          <UnfoldVertical aria-hidden="true" size={14} />
+          Expand all
+        </button>
         <span className="swimlane-board__lane-count" data-testid="swimlane-lane-count">
           {visibleLanes.length}
           {' '}
