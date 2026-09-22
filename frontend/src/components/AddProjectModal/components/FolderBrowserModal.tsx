@@ -2,7 +2,6 @@ import { ChevronRight, Folder } from 'lucide-react'
 import * as React from 'react'
 import { useEffect, useState } from 'react'
 import { authFetch } from '@/auth/authFetch'
-import { Button } from '@/components/ui/index'
 import { Modal, ModalFooter, ModalHeader } from '@/components/ui/Modal'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { usePathResolution } from '@/hooks/usePathResolution'
@@ -264,19 +263,18 @@ export default function FolderBrowserModal({
           )}
         </div>
         <div className="flex space-x-3">
-          <Button
-            variant="outline"
-            onClick={onClose}
-          >
+          <button type="button" className="btn btn-outline" onClick={onClose}>
             Cancel
-          </Button>
-          <Button
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary"
             onClick={handleSelect}
             disabled={!selectedPath}
             data-testid="folder-browser-select-button"
           >
             Select Folder
-          </Button>
+          </button>
         </div>
       </ModalFooter>
     </Modal>
