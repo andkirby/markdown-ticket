@@ -8,6 +8,7 @@ import { ensureGlobalLinkConfig, getLinkConfig, subscribeGlobalLinkConfig } from
 import { ensureDocumentIndex, getCachedDocumentIndex, subscribeDocumentIndex } from '../../utils/documentExistenceCache'
 import { classifyAndNormalizeLink, createLinkContextFromProject, LinkType } from '../../utils/linkProcessor'
 import { carryViewParam } from '../routes/viewModeDerivation'
+import { documentTargetFromHref, useDocumentDelivery } from './documentDelivery'
 
 interface SmartLinkProps {
   link: ParsedLink
@@ -136,6 +137,14 @@ const SmartLink: React.FC<SmartLinkProps> = ({
     }
   })()
 
+  // MDT-248: inside the ticket modal, document links deliver to the side
+  // reading pane instead of navigating. No provider (every other surface)
+  // falls through to router navigation — byte-identical to before (C6).
+  const delivery = useDocumentDelivery()
+  const paneTarget = delivery && !documentMissing
+    ? (normalizedLink?.filePath ?? documentTargetFromHref(effectiveLink.href))
+    : null
+
   // If auto-linking is disabled, render as plain text
   if (!linkConfig.enableAutoLinking) {
     return <span className={className}>{children}</span>
@@ -201,6 +210,12 @@ const SmartLink: React.FC<SmartLinkProps> = ({
       return (
         <Link
           to={effectiveLink.href}
+          onClick={paneTarget
+            ? (event) => {
+                event.preventDefault()
+                delivery?.openDocument(paneTarget)
+              }
+            : undefined}
           className={`${baseClassName} smart-link`}
           data-link-type="document"
           aria-label={ariaLabel}

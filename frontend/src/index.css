@@ -30,6 +30,7 @@
 @import './components/Badge/badge.css';
 @import './components/SmartLink/smart-link.css';
 @import './components/TicketViewer/ticket-viewer.css';
+@import './components/TicketViewer/ticket-side-pane.css';
 @import './components/TicketCard/ticket.css';
 @import './components/Column/column.css';
 @import './components/ui/modal.css';

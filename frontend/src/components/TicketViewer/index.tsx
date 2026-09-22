@@ -4,7 +4,7 @@ import type { TypedEvent } from '../../services/eventBus'
 import type { Ticket } from '../../types'
 import { AlertTriangle, Network } from 'lucide-react'
 import * as React from 'react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
   getMarkdownDensity,
@@ -13,7 +13,8 @@ import {
   MARKDOWN_DENSITY_KEY,
 } from '../../config/settingsPreferences'
 import { formatTicketPageTitle, PageTitlePriority, usePageTitle } from '../../hooks/usePageTitle'
-import { isTraceGraphHash, TRACE_GRAPH_HASH_FRAGMENT } from '../../routes'
+import { cn } from '../../lib/utils'
+import { buildDocumentPath, isTraceGraphHash, TRACE_GRAPH_HASH_FRAGMENT } from '../../routes'
 import { dataLayer } from '../../services/dataLayer'
 import { useEventBus } from '../../services/eventBus'
 import { filePathToApiPath } from '../../utils/subdocPathValidation'
@@ -26,12 +27,15 @@ import MarkdownContent from '../MarkdownContent'
 import { RelativeTimestamp } from '../shared/RelativeTimestamp'
 // eslint-disable-next-line no-restricted-imports
 import TableOfContents from '../shared/TableOfContents'
+import { DocumentDeliveryContext } from '../SmartLink/documentDelivery'
 import { Modal, ModalBody } from '../ui/Modal'
 import { CompactTicketHeader } from './CompactTicketHeader'
 import { EpicBoardAction } from './EpicBoardAction'
 import { ROOT_DOCUMENT_PATH, splitPathSegments } from './subdocumentPath'
 import { TicketDocumentTabs } from './TicketDocumentTabs'
+import { SidePanePill, TicketSidePane } from './TicketSidePane'
 import { TraceGraphShell } from './TraceGraphShell'
+import { useSidePane } from './useSidePane'
 import { useTicketDocumentContent } from './useTicketDocumentContent'
 import { useTicketDocumentNavigation } from './useTicketDocumentNavigation'
 import { useTicketDocumentRealtime } from './useTicketDocumentRealtime'
@@ -100,6 +104,100 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
   // `#trace` hash so the URL is a deep link into the graph view.
   const isTraceGraphOpen = isTraceGraphHash(location.hash)
   const [tabNavigationHeight, setTabNavigationHeight] = useState<number | null>(null)
+
+  // MDT-248 — side reading pane session (state machine: useSidePane;
+  // contract: docs/design/surfaces/ticket-side-doc.interactions.md).
+  const sidePane = useSidePane()
+  const {
+    state: sidePaneState,
+    paneVisible,
+    hasSession: hasSidePaneSession,
+    openDocument: openSideDoc,
+    back: backSidePane,
+    fwd: fwdSidePane,
+    hide: hideSidePane,
+    reveal: revealSidePane,
+    discard: discardSidePane,
+    captureScroll: captureSidePaneScroll,
+  } = sidePane
+  const sidePaneDelivery = useMemo(
+    () => ({ openDocument: openSideDoc }),
+    [openSideDoc],
+  )
+  const [sidePaneTitle, setSidePaneTitle] = useState('')
+  const [sidePaneAnnouncement, setSidePaneAnnouncement] = useState('')
+  const sidePaneTitleRef = useRef('')
+  const ticketColumnRef = useRef<HTMLDivElement>(null)
+  const paneWasVisibleRef = useRef(false)
+
+  const handlePaneTitle = useCallback((title: string) => {
+    sidePaneTitleRef.current = title
+    setSidePaneTitle(title)
+  }, [])
+
+  const handlePaneDiscard = useCallback(() => {
+    discardSidePane()
+    sidePaneTitleRef.current = ''
+    setSidePaneTitle('')
+    setSidePaneAnnouncement('Reading session closed')
+  }, [discardSidePane])
+
+  const openPaneDocInDocuments = useCallback((filePath: string) => {
+    if (!projectCode)
+      return
+    navigate(buildDocumentPath(projectCode, filePath))
+  }, [navigate, projectCode])
+
+  // Esc while the pane is visible hides it (session kept). The Modal's own
+  // Escape handler is gated off via closeOnEscape in the same state, so one
+  // press walks out exactly one layer: trace shell → pane → modal (C3).
+  useEffect(() => {
+    if (!paneVisible)
+      return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape')
+        hideSidePane()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [paneVisible, hideSidePane])
+
+  // C2 no-jump: when the split activates, the ticket column becomes the
+  // scroll container — transfer the overlay's scroll offset into it, and
+  // back when the split deactivates. The modal's top-left anchor never moves.
+  useEffect(() => {
+    const overlay = document.querySelector<HTMLElement>('.modal.ticket-detail-overlay')
+    const column = ticketColumnRef.current
+    if (!overlay || !column)
+      return
+    if (paneVisible) {
+      const top = overlay.scrollTop
+      requestAnimationFrame(() => {
+        column.scrollTop = top
+      })
+    }
+    else if (column.scrollTop > 0) {
+      overlay.scrollTop = column.scrollTop
+    }
+  }, [paneVisible])
+
+  // C5 announcements + focus routing for the hide transition
+  useEffect(() => {
+    const was = paneWasVisibleRef.current
+    paneWasVisibleRef.current = paneVisible
+    if (paneVisible === was)
+      return
+    setSidePaneAnnouncement(paneVisible
+      ? `Opening ${sidePaneTitleRef.current || 'document'} beside ticket`
+      : `${sidePaneTitleRef.current || 'Document'} tucked — show it from the reading pill`)
+    if (!paneVisible && hasSidePaneSession) {
+      requestAnimationFrame(() => {
+        document
+          .querySelector<HTMLButtonElement>('[data-testid="ticket-side-pane-pill"]')
+          ?.focus()
+      })
+    }
+  }, [paneVisible, hasSidePaneSession])
 
   const openTraceGraph = useCallback(() => {
     navigate(location.pathname + location.search + TRACE_GRAPH_HASH_FRAGMENT, { replace: true })
@@ -409,9 +507,10 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
       <Modal
         isOpen={isOpen}
         onClose={onClose}
-        size="xl"
+        size={paneVisible ? 'split' : 'xl'}
         className="ticket-detail-modal"
-        closeOnEscape={!isTraceGraphOpen}
+        overlayClassName="ticket-detail-overlay"
+        closeOnEscape={!isTraceGraphOpen && !paneVisible}
         closeOnOverlayClick={!isTraceGraphOpen}
         data-testid="ticket-detail"
       >
@@ -420,7 +519,7 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
           type="button"
           aria-label="Close ticket viewer"
           data-testid="close-detail"
-          className="modal__close--absolute"
+          className={cn('modal__close--absolute', paneVisible && 'modal__close--split')}
           onClick={onClose}
         >
           <svg
@@ -436,81 +535,105 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
             />
           </svg>
         </button>
-        <ModalBody className="ticket-viewer-body">
-          {ticketError && !ticket
-            ? (
-                <div data-testid="ticket-not-found" className="ticket-not-found">
-                  <AlertTriangle className="ticket-not-found__icon text-muted-foreground" />
-                  <h1 className="modal__headline ticket-not-found__headline">Ticket Not Found</h1>
-                  <p className="text-muted-foreground ticket-not-found__text">{ticketError}</p>
-                </div>
-              )
-            : (
-                <div className="ticket-viewer-content" style={ticketContentStyle}>
-                  <CompactTicketHeader ticket={currentTicket!} action={headerActions} />
+        <ModalBody className={cn('ticket-viewer-body', paneVisible && 'ticket-viewer-body--split')}>
+          <DocumentDeliveryContext.Provider value={sidePaneDelivery}>
+            {ticketError && !ticket
+              ? (
+                  <div data-testid="ticket-not-found" className="ticket-not-found">
+                    <AlertTriangle className="ticket-not-found__icon text-muted-foreground" />
+                    <h1 className="modal__headline ticket-not-found__headline">Ticket Not Found</h1>
+                    <p className="text-muted-foreground ticket-not-found__text">{ticketError}</p>
+                  </div>
+                )
+              : (
+                  <div className="ticket-viewer-content" ref={ticketColumnRef} style={ticketContentStyle}>
+                    <CompactTicketHeader ticket={currentTicket!} action={headerActions} />
 
-                  <TicketDocumentTabs
-                    subdocuments={liveSubdocs}
-                    selectedPath={selectedPath}
-                    folderStack={folderStack}
-                    onSelect={selectPath}
-                    ticketCode={currentTicket?.code ?? ''}
-                    onHeightChange={handleTabNavigationHeightChange}
-                  />
+                    <TicketDocumentTabs
+                      subdocuments={liveSubdocs}
+                      selectedPath={selectedPath}
+                      folderStack={folderStack}
+                      onSelect={selectPath}
+                      ticketCode={currentTicket?.code ?? ''}
+                      onHeightChange={handleTabNavigationHeightChange}
+                    />
 
-                  <div data-testid="subdoc-content" className="subdoc-content">
-                    {subdocError && (
-                      <div data-testid="subdoc-error" className="subdoc-error" role="alert">
-                        {subdocError}
-                      </div>
-                    )}
-                    {!subdocError && isOpen && projectCode && (
-                      <>
-                        {(pendingPath || subdocLoading) && (
-                          <div data-testid="subdoc-loading" className="subdoc-loading">
-                            <span className="subdoc-loading__message text-muted-foreground">
-                              Loading…
-                            </span>
-                          </div>
-                        )}
-                        <div data-testid="ticket-content" className={pendingPath || subdocLoading ? 'ticket-content--pending' : ''}>
-                          {isHtmlSubdoc && selectedSubdoc?.filePath
-                            ? (
-                              // MDT-221 UAT r2: sandboxed HTML preview — the
-                              // identical component, mint flow, and raw route as
-                              // Documents View; iframe sandbox invariants (OBL-13)
-                              // apply unchanged.
-                                <div className="ticket-html-preview" data-testid="ticket-html-preview">
-                                  <HtmlSandboxViewer
-                                    projectId={projectCode}
-                                    filePath={`${ticketsPath}/${selectedSubdoc.filePath}`}
-                                  />
-                                </div>
-                              )
-                            : (
-                                <div className="ticket-viewer__section modal__section--content">
-                                  <div className="relative-timestamp__floating">
-                                    <RelativeTimestamp
-                                      createdAt={currentTicket!.dateCreated}
-                                      updatedAt={currentTicket!.lastModified}
+                    <div data-testid="subdoc-content" className="subdoc-content">
+                      {subdocError && (
+                        <div data-testid="subdoc-error" className="subdoc-error" role="alert">
+                          {subdocError}
+                        </div>
+                      )}
+                      {!subdocError && isOpen && projectCode && (
+                        <>
+                          {(pendingPath || subdocLoading) && (
+                            <div data-testid="subdoc-loading" className="subdoc-loading">
+                              <span className="subdoc-loading__message text-muted-foreground">
+                                Loading…
+                              </span>
+                            </div>
+                          )}
+                          <div data-testid="ticket-content" className={pendingPath || subdocLoading ? 'ticket-content--pending' : ''}>
+                            {isHtmlSubdoc && selectedSubdoc?.filePath
+                              ? (
+                                  // MDT-221 UAT r2: sandboxed HTML preview — the
+                                  // identical component, mint flow, and raw route as
+                                  // Documents View; iframe sandbox invariants (OBL-13)
+                                  // apply unchanged.
+                                  <div className="ticket-html-preview" data-testid="ticket-html-preview">
+                                    <HtmlSandboxViewer
+                                      projectId={projectCode}
+                                      filePath={`${ticketsPath}/${selectedSubdoc.filePath}`}
                                     />
                                   </div>
-                                  <MarkdownContent
-                                    markdown={subdocContent}
-                                    currentProject={projectCode}
-                                    sourcePath={markdownSourcePath}
-                                    ticketsPath={ticketsPath}
-                                    headerLevelStart={3}
-                                    className={`prose prose--ticket ${getMarkdownDensityClass(markdownDensity)} dark:prose-invert`}
-                                  />
-                                </div>
-                              )}
-                        </div>
-                      </>
-                    )}
+                                )
+                              : (
+                                  <div className="ticket-viewer__section modal__section--content">
+                                    <div className="relative-timestamp__floating">
+                                      <RelativeTimestamp
+                                        createdAt={currentTicket!.dateCreated}
+                                        updatedAt={currentTicket!.lastModified}
+                                      />
+                                    </div>
+                                    <MarkdownContent
+                                      markdown={subdocContent}
+                                      currentProject={projectCode}
+                                      sourcePath={markdownSourcePath}
+                                      ticketsPath={ticketsPath}
+                                      headerLevelStart={3}
+                                      className={`prose prose--ticket ${getMarkdownDensityClass(markdownDensity)} dark:prose-invert`}
+                                    />
+                                  </div>
+                                )}
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+            {hasSidePaneSession && currentTicket && (
+              <TicketSidePane
+                projectId={projectCode ?? ''}
+                hist={sidePaneState.hist}
+                hi={sidePaneState.hi}
+                visible={paneVisible}
+                scrolls={sidePaneState.scrolls}
+                onBack={backSidePane}
+                onForward={fwdSidePane}
+                onHide={hideSidePane}
+                onDiscard={handlePaneDiscard}
+                onOpenInDocuments={openPaneDocInDocuments}
+                onScrollChange={captureSidePaneScroll}
+                onTitleChange={handlePaneTitle}
+              />
+            )}
+            {hasSidePaneSession && !paneVisible && currentTicket && (
+              <SidePanePill title={sidePaneTitle || 'Document'} onReveal={revealSidePane} />
+            )}
+            <div className="ticket-side-pane__announcer" aria-live="polite">
+              {sidePaneAnnouncement}
+            </div>
+          </DocumentDeliveryContext.Provider>
         </ModalBody>
       </Modal>
 
