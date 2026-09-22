@@ -115,14 +115,16 @@ test.describe('MDT-248: ticket side reading pane', () => {
     const ticketCode = scenario.crCodes[0]
     createProjectDocs(scenario.projectDir, { 'side-doc-guide.md': '# Guide\n\nGuide body.' })
     createSubDocFiles(scenario.projectDir, ticketCode, {
-      'architecture.md': '# Architecture\n\nSee the [guide](../../side-doc-guide.md).',
+      'architecture.md': `# Architecture\n\nSee the [guide](../../side-doc-guide.md).\n\n${filler(40)}`,
     })
 
     const detailPanel = await openSubdocWithGuideLink(page, scenario.projectCode, ticketCode)
-    // Ticket column scrolled before opening the pane
-    await page.locator(subdocSelectors.content).evaluate(el => { el.scrollTop = 0 })
 
-    await detailPanel.locator('a.smart-link[data-link-type="document"]').click()
+    // Scroll the ticket (outer overlay is the scroller pre-split), then open
+    // the pane via JS click so the manual offset survives to be transferred.
+    const overlayScroll = page.locator('.modal')
+    await overlayScroll.evaluate(el => { el.scrollTop = 150 })
+    await detailPanel.locator('a.smart-link[data-link-type="document"]').evaluate(el => (el as HTMLElement).click())
 
     const pane = page.locator(sidePaneSelectors.pane)
     await expect(pane).toBeVisible()
@@ -131,6 +133,23 @@ test.describe('MDT-248: ticket side reading pane', () => {
     // Ticket column: still the architecture subdoc, still selected
     await expect(page.locator(subdocSelectors.tabTrigger('architecture'))).toHaveAttribute('data-state', 'active')
     await expect(detailPanel).toBeVisible()
+
+    // C2: the pre-split scroll offset transferred into the content scroller
+    const subdocScroll = page.locator(subdocSelectors.content)
+    const transferred = await subdocScroll.evaluate(el => el.scrollTop)
+    expect(transferred).toBeGreaterThan(100)
+
+    // UAT r1 — pinned chrome: deep scroll the content; title + tabs stay
+    // visible and the modal × stays over the pinned title bar (above the
+    // tabs band), never over scrolling prose.
+    await subdocScroll.evaluate(el => { el.scrollTop = 100000 })
+    await expect(page.locator('[data-testid="ticket-title"]')).toBeVisible()
+    await expect(page.locator(subdocSelectors.tabsContainer)).toBeVisible()
+    const closeBox = await page.locator('[data-testid="close-detail"]').boundingBox()
+    const tabsBox = await page.locator(subdocSelectors.tabsContainer).boundingBox()
+    expect(closeBox).not.toBeNull()
+    expect(tabsBox).not.toBeNull()
+    expect(closeBox!.y).toBeLessThan(tabsBox!.y)
   })
 
   test('@MDT-248 pane_follow_link_stays_in_pane (BR-1.2)', async ({ page, e2eContext }) => {

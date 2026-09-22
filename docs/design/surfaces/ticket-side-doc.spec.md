@@ -58,11 +58,13 @@ Proposed new component (architecture MDT-248): `frontend/src/components/TicketVi
 
 - Default (pane closed): exactly today's `xl` modal. No visual difference until a document link is clicked.
 - Pane visible: modal widens (proposed cap `min(94vw, 1560px)`), animated so the ticket column stays visually anchored; only the right edge grows.
+- Split is a **work surface**, not a document glance: the frame reclaims document-mode whitespace while the pane is visible (reduced top anchor and card margins vs the default modal).
 - Ticket column: keeps today's readable prose measure — `clamp(420px, 46%, 640px)` in the split; never narrower than the single-column modal's effective reading width.
+- **Pinned chrome**: in split mode the ticket column's header (title + badges) and sub-document tabs stay fixed; only the content region below the tabs scrolls. The card-absolute modal close × therefore always sits over the pinned title bar — never over scrolling prose.
 - Divider: 1px `--border` between columns.
 - Pane: fills the remainder, min ~460px; below the responsive breakpoint it overlays instead (see Responsive).
-- Scroll: each column is its own scroll region (`overscroll-behavior: contain`); the outer overlay no longer scrolls while the pane is visible. Ticket column scroll position is preserved across pane open/hide/close.
-- Floating TableOfContents and the modal close × stay scoped to the ticket column and must not overlay the pane.
+- Scroll: the ticket column's content region and the pane body are independent scroll regions (`overscroll-behavior: contain`); the outer overlay no longer scrolls while the pane is visible. Scroll positions are preserved across pane open/hide/close (offset captured at open time — the pane-header focus otherwise scrolls the overlay first).
+- Floating TableOfContents stays scoped to the ticket column and must not overlap the pane.
 - RelativeTimestamp stays in the ticket column only.
 
 ### Pane header

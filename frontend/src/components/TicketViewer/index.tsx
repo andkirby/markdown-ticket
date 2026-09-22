@@ -120,9 +120,18 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
     discard: discardSidePane,
     captureScroll: captureSidePaneScroll,
   } = sidePane
+  // C2: the pre-split scroll offset must be captured at click time — the
+  // pane-header focus (child effect) scrolls the overlay before the transfer
+  // effect (parent) gets to read it.
+  const preSplitScrollRef = useRef(0)
+  const openDocumentWithTransfer = useCallback((filePath: string) => {
+    const overlay = document.querySelector<HTMLElement>('.modal.ticket-detail-overlay')
+    preSplitScrollRef.current = overlay?.scrollTop ?? 0
+    openSideDoc(filePath)
+  }, [openSideDoc])
   const sidePaneDelivery = useMemo(
-    () => ({ openDocument: openSideDoc }),
-    [openSideDoc],
+    () => ({ openDocument: openDocumentWithTransfer }),
+    [openDocumentWithTransfer],
   )
   const [sidePaneTitle, setSidePaneTitle] = useState('')
   const [sidePaneAnnouncement, setSidePaneAnnouncement] = useState('')
@@ -162,22 +171,23 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [paneVisible, hideSidePane])
 
-  // C2 no-jump: when the split activates, the ticket column becomes the
-  // scroll container — transfer the overlay's scroll offset into it, and
-  // back when the split deactivates. The modal's top-left anchor never moves.
+  // C2 no-jump: when the split activates, the ticket column's content region
+  // (.subdoc-content) becomes the scroll container — transfer the overlay's
+  // scroll offset into it, and back when the split deactivates. The modal's
+  // top-left anchor never moves.
   useEffect(() => {
     const overlay = document.querySelector<HTMLElement>('.modal.ticket-detail-overlay')
-    const column = ticketColumnRef.current
-    if (!overlay || !column)
+    const scroller = ticketColumnRef.current?.querySelector<HTMLElement>('[data-testid="subdoc-content"]')
+    if (!overlay || !scroller)
       return
     if (paneVisible) {
-      const top = overlay.scrollTop
+      const top = preSplitScrollRef.current
       requestAnimationFrame(() => {
-        column.scrollTop = top
+        scroller.scrollTop = top
       })
     }
-    else if (column.scrollTop > 0) {
-      overlay.scrollTop = column.scrollTop
+    else if (scroller.scrollTop > 0) {
+      overlay.scrollTop = scroller.scrollTop
     }
   }, [paneVisible])
 
@@ -509,7 +519,7 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
         onClose={onClose}
         size={paneVisible ? 'split' : 'xl'}
         className="ticket-detail-modal"
-        overlayClassName="ticket-detail-overlay"
+        overlayClassName={cn('ticket-detail-overlay', paneVisible && 'ticket-detail-overlay--split')}
         closeOnEscape={!isTraceGraphOpen && !paneVisible}
         closeOnOverlayClick={!isTraceGraphOpen}
         data-testid="ticket-detail"
