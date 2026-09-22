@@ -1,6 +1,6 @@
 ---
 code: MDT-246
-status: In Progress
+status: Implemented
 dateCreated: 2026-09-09T11:52:22.991Z
 type: Feature Enhancement
 priority: Medium
@@ -106,24 +106,24 @@ Hash token rejected (`#` is modal state, cf. `#trace` / MDT-237); path segment
 
 ## 4. Acceptance Criteria
 
-- [ ] Epic detail header (level: epic) shows an "Epics →" action
+- [x] Epic detail header (level: epic) shows an "Epics →" action
       beside the Trace Graph button, with the Rows3 icon (the view switcher's
       Epics glyph) and a trailing arrow-right; tooltip/aria carry the full
       sentence
-- [ ] Epic ContextBadge renders as a split chip: identity zone (passive Zap +
+- [x] Epic ContextBadge renders as a split chip: identity zone (passive Zap +
       key link to ticket view) + trailing ≥24×24 action button (rows-3, seam +
       rest veil, hover `--state-hover-bg`, labeled) navigating to the `?epic=`
       deep link; Zap never becomes a click target
-- [ ] The action navigates to `/prj/:code/epics?epic=:key` in one navigation;
+- [x] The action navigates to `/prj/:code/epics?epic=:key` in one navigation;
       no orphaned modal state
-- [ ] SwimlaneBoard with `focusEpicKey`: lane expanded (persisted), scrolled
+- [x] SwimlaneBoard with `focusEpicKey`: lane expanded (persisted), scrolled
       into view, transiently highlighted in its epic color
-- [ ] Focused lane renders even when Hide empty / Show closed would exclude it
-- [ ] `?epic=` pointing at an unknown/missing epic is ignored; board renders
+- [x] Focused lane renders even when Hide empty / Show closed would exclude it
+- [x] `?epic=` pointing at an unknown/missing epic is ignored; board renders
       normally
-- [ ] `?view=` context survives epic-badge navigation from within a ticket
+- [x] `?view=` context survives epic-badge navigation from within a ticket
       modal (close returns to the originating view)
-- [ ] Unit tests for focus expansion / filter-override / unknown-key logic;
+- [x] Unit tests for focus expansion / filter-override / unknown-key logic;
       E2E for the full journey ticket → epic → board (target via
       data-lane-key)
 - [x] UAT round 1 executed per repo convention (uat.md brief +
@@ -214,3 +214,12 @@ via `document.elementFromPoint`: points 1.5px above and 1.5px below the
 button's visual edges resolve to `button.badge-action`; 3px out resolves to
 the badges row (outside the surface). Details in `uat.md` § Round-1 finding
 F2.
+
+### Closure (2026-09-22)
+
+User approved closure; status → Implemented. Evidence: UAT round 1 walks A–E
+verified ACs 1–7 (uat.md § Validation); AC 8 covered by fe:test 1130/1130
+(+2 focus tests), SwimlaneBoard 64/64, epic-board-jump E2E 4/4 + board
+regression 81/81; independent review resolved in
+`verify-complete.json`. Nothing outstanding (`uat.md` § Open Decisions:
+none; watchlist items are non-blocking follow-ups).
