@@ -75,4 +75,51 @@ test.describe('HTML Document Preview (MDT-221)', () => {
     // The fixture attempts fetch('/api/status'); connect-src 'none' blocks it
     await expect(frame.locator('#probe')).toHaveAttribute('data-fetch', 'blocked', { timeout: 5000 })
   })
+
+  test('fullscreen overlays the viewport and exits on Escape without reloading the preview (MDT-221 r3)', async ({ page, e2eContext }) => {
+    const project = await e2eContext.projectFactory.createProject('empty', {
+      name: 'HTML Preview Fullscreen',
+      documentPaths: ['docs/site'],
+    })
+    await addHtmlPreviewDocs(project.path)
+
+    await page.goto(`/prj/${project.key}/documents?file=${encodeURIComponent(htmlPreviewDocumentPath)}`)
+    await page.waitForLoadState('load')
+
+    const wrapper = page.locator('.html-sandbox-viewer')
+    const iframe = page.locator(htmlSandboxSelectors.iframe)
+    await expect(iframe).toBeVisible()
+    // contentFrame() yields a FrameLocator (locator-only); evaluate needs the
+    // raw Frame, resolved by URL (the sandboxed frame has an opaque origin but
+    // is still registered in page.frames()). Poll: the lazy iframe element can
+    // be visible before its frame is attached/navigated.
+    await expect.poll(() => page.frame({ url: /\/api\/documents\/raw-preview\// }) !== null).toBe(true)
+    const frame = page.frame({ url: /\/api\/documents\/raw-preview\// })!
+
+    // Marker inside the frame proves the browsing context never reloads across
+    // the toggle (a remount or forced reload would wipe it).
+    await frame!.evaluate(() => {
+      (window as unknown as Record<string, unknown>).__mdtFullscreenMarker = 'alive'
+    })
+
+    await page.locator(htmlSandboxSelectors.fullscreenToggle).click()
+    await expect(wrapper).toHaveClass(/html-sandbox-viewer--fullscreen/)
+
+    // Overlay geometry: the wrapper becomes a viewport-sized fixed box.
+    const viewport = page.viewportSize()!
+    const box = await wrapper.boundingBox()
+    expect(box).not.toBeNull()
+    expect(Math.round(box!.x)).toBe(0)
+    expect(Math.round(box!.y)).toBe(0)
+    expect(Math.round(box!.width)).toBe(viewport.width)
+    expect(Math.round(box!.height)).toBe(viewport.height)
+
+    // No reload: the marker survived entering fullscreen.
+    expect(await frame!.evaluate(() => (window as unknown as Record<string, unknown>).__mdtFullscreenMarker)).toBe('alive')
+
+    // Escape exits and the preview is still the same loaded document.
+    await page.keyboard.press('Escape')
+    await expect(wrapper).not.toHaveClass(/html-sandbox-viewer--fullscreen/)
+    expect(await frame!.evaluate(() => (window as unknown as Record<string, unknown>).__mdtFullscreenMarker)).toBe('alive')
+  })
 })

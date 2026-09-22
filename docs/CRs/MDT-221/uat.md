@@ -1,142 +1,131 @@
-# UAT Refinement Brief — MDT-221 (Round 2)
+# UAT Refinement Brief — MDT-221 (Round 3)
 
 ## Objective
 
-Close the ticket-view integration gap for HTML previews. MDT-221 shipped
-sandboxed HTML preview in **Documents View** only; ticket directories that
-contain HTML (e.g. `GPDE-012/diagrams/*.html`) show **nothing** in the ticket
-view because `SubdocumentService` drops non-`.md` children and folders whose
-children are all non-`.md`.
+Add a fullscreen mode to the HTML preview so wide/large `.html` documents
+become readable at full viewport size, in both surfaces (Documents View and
+ticket view), with the same UX as the mermaid fullscreen overlay.
 
-Trigger: `http://localhost:3075/prj/GPDE/ticket/GPDE-012` has a `diagrams/`
-subfolder with `.html` files; nothing is shown.
+## Investigation — chosen approach
+
+**Chosen: CSS-repositioning overlay on the EXISTING wrapper** (React state +
+`html-sandbox-viewer--fullscreen` modifier class), mirroring the mermaid
+overlay contract (`frontend/src/utils/mermaid/fullscreen.ts`).
+
+- The iframe DOM node is never moved or recreated → no reload, no re-mint;
+  the loaded preview and its token are undisturbed (C-2.27). Browsers reload
+  an iframe on DOM move, so any portal/modal approach is disqualified by the
+  token-TTL constraint alone.
+- Escape is captured in the capture phase with `stopImmediatePropagation`,
+  exactly like mermaid — this is what keeps the ticket modal's own
+  bubble-phase Escape close (ui/Modal.tsx) from also firing.
+- No scaling logic (unlike mermaid's adaptive SVG scaling): an iframe just
+  fills 100%/100%.
+
+**Rejected alternatives**:
+
+1. **React-level `.modal--viewport` / portal** (TraceGraphShell pattern) —
+   rendering the preview inside a new modal tree re-parents or recreates the
+   iframe → forced reload → re-mint; long fullscreen sessions would break on
+   their own. Also stacks a second Escape/focus management layer on the
+   ticket modal.
+2. **Native Fullscreen API** (`element.requestFullscreen()`) — also
+   remount-free, but hides browser chrome (different UX from mermaid), needs
+   vendor prefixes + `:fullscreen` styling anyway, exits on tab switch, and
+   is flaky in headless E2E. Rejected for UX consistency with the requested
+   mermaid parity.
 
 ## Approved Changes
 
-1. **BR-1.14 added** — `.html`/`.htm` files inside a ticket directory (top
-   level or subfolders) are discovered as ticket subdocuments and appear in
-   the ticket view document tabs; non-document assets stay invisible (parity
-   with BR-1.3); asset-only folders are not listed.
-2. **BR-1.15 added** — selecting an HTML subdocument renders the sandboxed
-   iframe preview through the same owner-minted preview token +
-   `/api/documents/raw-preview` route as Documents View; the markdown renderer
-   is not called and no subdocument text fetch is issued; `.html` deep links
-   round-trip.
-3. **C-2.25 added** — raw-preview serving accepts paths inside the project's
-   tickets tree in addition to configured document paths (gate G7 extension);
-   all other gates unchanged; minting stays owner-only and HTML-only.
-4. **C-2.26 added** — subdocument name resolution maps `.html`/`.htm`-suffixed
-   names to their real files (no `.md` suffix appended), under the existing
-   traversal/containment/whitelist checks.
-5. **C-2.1 refined in place** — the 403 rule now reads "outside configured
-   document paths **and** outside the project's tickets tree".
-6. **Defect folded in (BR-1.9 wiring)** — document watchers watch
-   `**/*.{md,html,htm}` instead of `**/*.md`; the MDT-221 handler accepted
-   `.html` events but the chokidar pattern never fired them, so the shipped
-   "external HTML edit refreshes preview" criterion was inert.
+1. **BR-1.16 added** — fullscreen control on the HTML preview in both
+   surfaces; entering overlays the whole viewport above app chrome and the
+   ticket modal; Escape or the control exits.
+2. **C-2.27 added** — the fullscreen transition never remounts/reloads the
+   iframe and never issues a mint (iframe node identity, src, and sandbox
+   unchanged across the toggle).
 
 ## Changed Requirement IDs
 
 | ID | Action | Why |
 |---|---|---|
-| BR-1.14 | additive | New capability: HTML subdocuments in ticket view tabs |
-| BR-1.15 | additive | New capability: sandboxed preview + deep links in ticket view |
-| C-2.25 | additive | New serving scope rule (tickets tree) + mint HTML-only guard |
-| C-2.26 | additive | New resolution rule for HTML subdocument names |
-| C-2.1 | refine_in_place | 403 scope now excludes the tickets tree |
+| BR-1.16 | additive | New capability: fullscreen reading mode |
+| C-2.27 | additive | New constraint: no remount / no re-mint on toggle |
 
 ## Affected Downstream Trace
 
-- **requirements**: C-2.1 refined; BR-1.14, BR-1.15, C-2.25, C-2.26 added
-- **bdd**: `ticket_html_subdocs_in_tabs`, `ticket_html_renders_sandboxed_preview`,
-  `ticket_html_deep_link_round_trips` added
-- **architecture**: ART-20..ART-24 added; OBL-21..OBL-24 added
-- **tests**: 6 new plans (discovery, resolve, tickets-tree scope, mint
-  html-only, viewer routing, path validation)
-- **tasks**: TASK-16..TASK-18 (execution slices below)
+- **requirements**: BR-1.16, C-2.27 added
+- **bdd**: `html_preview_fullscreen_overlay` added
+- **architecture**: ART-25 (documents-view.css) added; OBL-25 added
+- **tests**: TEST-html-fullscreen-toggle (unit), TEST-e2e-html-fullscreen (e2e)
+- **tasks**: TASK-19 (single execution slice, below)
 
 ## Execution Slices
 
-### Slice 1 — Backend discovery + resolution (TASK-16)
+### Slice 1 — Fullscreen overlay in HtmlSandboxViewer (TASK-19)
 
-- **Objective**: make HTML files in ticket directories exist as subdocuments.
+- **Objective**: viewport-covering fullscreen with Escape exit, no remount.
 - **Direct artifacts/files**:
-  - `domain-contracts/src/ticket/subdocument.ts` — add optional
-    `docKind?: 'markdown' | 'html'` to `SubDocument` (+ zod schema).
-  - `shared/services/ticket/SubdocumentService.ts` — accept `.html`/`.htm` in
-    `buildEntryFromPath` and `discoverFolderChildren` (extension-less `name`,
-    extension-kept `filePath`, `docKind: 'html'`); keep the namespace
-    machinery markdown-only; add the `.html`/`.htm` branch to `resolvePath`
-    (exact file match, no `.md` appending).
-  - `server/services/fileWatcher/PathWatcherService.ts` — document watcher
-    pattern `**/*.md` → `**/*.{md,html,htm}` (document watchers only; ticket
-    watchers stay markdown-only this round).
-- **Direct GREEN targets**: TEST-subdoc-html-discovery, TEST-subdoc-html-resolve.
-- **Impacted canonical task IDs**: TASK-16.
-
-### Slice 2 — Raw-preview tickets-tree scope (TASK-17)
-
-- **Objective**: let the token-scoped raw route serve ticket-tree HTML even
-  when the tickets path is not under a configured document path.
-- **Direct artifacts/files**:
-  - `server/services/DocumentService.ts` — gate G7 admits
-    `ticketsPath`-prefixed paths (empty ticketsPath admits nothing).
-  - `server/controllers/DocumentController.ts` — `mintPreviewToken` rejects
-    non-`.html`/`.htm` `filePath` targets (400).
-- **Direct GREEN targets**: TEST-raw-preview-tickets-tree, TEST-mint-html-only.
-- **Impacted canonical task IDs**: TASK-17.
-
-### Slice 3 — Frontend ticket-view integration (TASK-18)
-
-- **Objective**: render the sandboxed preview inside the ticket modal.
-- **Direct artifacts/files**:
-  - `frontend/src/utils/subdocPathValidation.ts` — `validateSubDocPath`
-    accepts `.md`/`.html`/`.htm`; `apiPathToUrlPath` does not append `.md` to
-    extension-carrying paths.
-  - `frontend/src/components/TicketViewer/useTicketDocumentNavigation.ts` —
-    `collectPaths` also admits the extension-full form
-    (`diagrams/foo.html`) for `docKind: 'html'` entries.
-  - `frontend/src/components/TicketViewer/index.tsx` — resolve the selected
-    subdocument; for `docKind === 'html'` render `HtmlSandboxViewer` with
-    `projectId` and `${ticketsPath}/${subdocument.filePath}`, skip the
-    markdown content fetch, keep the tabs/loading states.
-- **Direct GREEN targets**: TEST-ticketviewer-html-routing,
-  TEST-subdocpath-html-validation.
-- **Impacted canonical task IDs**: TASK-18.
+  - `frontend/src/components/DocumentsView/HtmlSandboxViewer.tsx` —
+    `isFullscreen` state; capture-phase Escape keydown with
+    `stopImmediatePropagation`; body-overflow lock with guarded restore
+    (only unlocks what the overlay locked — the ticket modal's own lock is
+    never clobbered, in either cleanup order); floating expand/collapse
+    button (lucide Maximize/Minimize, `aria-pressed`, title swap).
+  - `frontend/src/components/DocumentsView/documents-view.css` —
+    `.html-sandbox-viewer--fullscreen` (fixed inset-0, z-9999 above the
+    modal layer's z-50, canvas-token backdrop) and
+    `.html-sandbox-viewer__fullscreen-btn` (h-9 floating control,
+    state-ramp hover, `:focus-visible` ring-1/50).
+  - `frontend/src/components/DocumentsView/HtmlSandboxViewer.test.tsx` —
+    fullscreen describe block (5 tests).
+  - `tests/e2e/documents/html-preview.spec.ts` + `tests/e2e/utils/selectors.ts`
+    — E2E: viewport-sized box, in-frame marker survives toggle (no reload),
+    Escape restores panel size.
+- **Direct GREEN targets**: TEST-html-fullscreen-toggle,
+  TEST-e2e-html-fullscreen.
+- **Impacted canonical task IDs**: TASK-19.
 
 ## Security Posture (what does NOT change)
 
-- iframe `sandbox="allow-scripts"` hardcoded, never `allow-same-origin`.
-- Token in the iframe src path prefix; TTL ≤ 300s; docDir-scoped; HMAC.
-- `connect-src 'none'`, `img-src 'self' data:`, `default-src 'none'` hold in
-  every configuration.
-- Mint endpoint stays behind owner-authenticated `/api` middleware;
-  read-token/shared sessions still cannot mint.
-- Ticket-tree raw serving adds **no new read scope**: ticket bytes were
-  already readable as text through the CR subdocument API by any
-  project-visible user; the executable-preview risk is what the
-  token/CSP/sandbox chain governs, and that chain is unchanged.
+- iframe `sandbox="allow-scripts"` hardcoded, never `allow-same-origin`;
+  the "NEVER includes allow-same-origin" unit test stays as the guard and
+  still passes untouched.
+- Fullscreen is pure CSS class toggling on a wrapper: iframe src, mint flow,
+  CSP, and the raw-preview route are not touched; no extra mint request is
+  issued for the transition (asserted in unit + E2E).
+- Escape capture with `stopImmediatePropagation` only intercepts the key
+  while fullscreen is active; the ticket modal's close behavior is otherwise
+  unchanged (E2E-verified live: first Escape exits fullscreen only, second
+  closes the modal).
 
 ## Validation
 
-- `spec-trace validate MDT-221 --stage all` — PASS (all 5 stages, r2).
-- `bun run --cwd server jest -- subdocuments document-raw SubdocumentService`
-- `bun test frontend/src/utils/subdocPathValidation.test.ts` +
-  `TicketViewer` unit tests
-- `bun run validate:ts`, `bun run lint`
-- Live: GPDE-012 ticket view shows `diagrams/` tabs and renders
-  `coverage-dataflow.html` in the sandboxed iframe.
+- `spec-trace validate MDT-221 --stage all` — PASS (all 5 stages, r3).
+- `bun test frontend/src/components/DocumentsView` — 42/42 pass.
+- `bun run test:e2e -- tests/e2e/documents/html-preview.spec.ts` — 4/4 pass.
+- `bun run validate:ts` (changed files) + `eslint` on the two changed
+  frontend files — clean; `scripts/parse-css.mjs` on documents-view.css —
+  clean; JSX uses semantic classes only (enforce-semantic-classes safe).
+- Live throwaway stack (BACKEND_PORT=3005 + vite 3076, user servers
+  untouched): Documents View `designs/board-zai/design3.html` and ticket
+  view `GPDE-012/diagrams/coverage-dataflow.html` — fullscreen box exactly
+  the 1440x900 viewport, z-index 9999/fixed, no frame reload (in-frame
+  marker survives), Escape exits; in the ticket view the first Escape only
+  exits fullscreen (modal stays open), the second closes the modal; body
+  scroll lock fully released afterwards.
 
 ## Watchlist
 
-- **Ticket-view HTML SSE refresh** — ticket watchers (`**/*.md`) do not emit
-  `ticket:subdocument:changed` for HTML; previews refresh on reopen/tab
-  switch only. Deferred (would widen ticket-watcher noise).
-- **Basename collisions** — `foo.md` + `foo.html` in one folder produce two
-  subdocuments with the same extension-less `name`; markdown wins tab
-  dedupe. Rare; documented behavior.
+- **Pre-existing TicketViewer directory test failures** — running the whole
+  `frontend/src/components/TicketViewer` directory under one bun process
+  fails 19 hook tests (useTicketDocumentNavigation/useTicketDocumentRealtime);
+  the same files pass in isolation, and the failures persist with this
+  round's changes fully stashed → pre-existing in the in-flight worktree
+  state, unrelated to MDT-221 r3. Not caused or fixed here.
+- **SSE refresh while fullscreen** — an external edit (refreshToken bump)
+  remounts the iframe by design (fresh token) inside the fullscreen
+  overlay; fullscreen itself persists. Expected behavior.
 
 ## Open Decisions
 
-None — all r1 open decisions were settled by TASK-14 (config schema,
-hostname-only allowlist, `.mdt-config.toml` persistence).
+None.

@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import HtmlSandboxViewer from './HtmlSandboxViewer'
@@ -129,6 +129,96 @@ describe('HtmlSandboxViewer (MDT-221)', () => {
       expect(init.method).toBe('POST')
       expect(String(init.body)).toContain('"projectId":"P1"')
       expect(String(init.body)).toContain('"filePath":"docs/x.html"')
+    })
+  })
+
+  describe('fullscreen overlay (BR-1.16, C-2.27)', () => {
+    async function renderReadyViewer() {
+      const { container } = renderViewer()
+      await waitFor(() => {
+        expect(document.querySelector('iframe')).not.toBeNull()
+      })
+      return container
+    }
+
+    it('renders the fullscreen control in the ready state', async () => {
+      await renderReadyViewer()
+      const button = screen.getByTestId<HTMLButtonElement>('html-fullscreen-toggle')
+      expect(button.title).toBe('Enter fullscreen')
+      expect(button.getAttribute('aria-pressed')).toBe('false')
+    })
+
+    it('repositions the SAME wrapper (no remount, no re-mint) when toggled', async () => {
+      const container = await renderReadyViewer()
+      const wrapper = container.querySelector('.html-sandbox-viewer')!
+      const iframeBefore = document.querySelector('iframe')!
+      const srcBefore = iframeBefore.getAttribute('src')
+      const mintCallsAfterInitialLoad = mockFetch.mock.calls.length
+
+      fireEvent.click(screen.getByTestId('html-fullscreen-toggle'))
+
+      expect(wrapper.classList.contains('html-sandbox-viewer--fullscreen')).toBe(true)
+      // C-2.27: the iframe DOM node, its src, and the sandbox attr survive the
+      // toggle untouched, and no second mint was issued for the transition.
+      expect(document.querySelector('iframe')).toBe(iframeBefore)
+      expect(iframeBefore.getAttribute('src')).toBe(srcBefore)
+      expect(iframeBefore.getAttribute('sandbox')).toBe('allow-scripts')
+      expect(mockFetch.mock.calls.length).toBe(mintCallsAfterInitialLoad)
+
+      fireEvent.click(screen.getByTestId('html-fullscreen-toggle'))
+
+      expect(wrapper.classList.contains('html-sandbox-viewer--fullscreen')).toBe(false)
+      expect(document.querySelector('iframe')).toBe(iframeBefore)
+      expect(mockFetch.mock.calls.length).toBe(mintCallsAfterInitialLoad)
+    })
+
+    it('Escape exits fullscreen and stops before bubble-phase handlers (ticket-modal shield)', async () => {
+      const container = await renderReadyViewer()
+      const wrapper = container.querySelector('.html-sandbox-viewer')!
+      fireEvent.click(screen.getByTestId('html-fullscreen-toggle'))
+      expect(wrapper.classList.contains('html-sandbox-viewer--fullscreen')).toBe(true)
+
+      // The ticket modal registers its Escape close as a bubble-phase document
+      // listener (ui/Modal.tsx); the overlay's capture-phase handler must win.
+      const bubbleSpy = mock(() => {})
+      document.addEventListener('keydown', bubbleSpy)
+
+      fireEvent.keyDown(document, { key: 'Escape' })
+
+      expect(wrapper.classList.contains('html-sandbox-viewer--fullscreen')).toBe(false)
+      expect(bubbleSpy).not.toHaveBeenCalled()
+
+      document.removeEventListener('keydown', bubbleSpy)
+
+      // Non-fullscreen Escape is not intercepted by the viewer at all.
+      const idleSpy = mock(() => {})
+      document.addEventListener('keydown', idleSpy)
+      fireEvent.keyDown(document, { key: 'Escape' })
+      expect(idleSpy).toHaveBeenCalled()
+      document.removeEventListener('keydown', idleSpy)
+    })
+
+    it('locks body overflow while fullscreen and restores it on exit', async () => {
+      const container = await renderReadyViewer()
+      const wrapper = container.querySelector('.html-sandbox-viewer')!
+      expect(document.body.style.overflow).toBe('')
+
+      fireEvent.click(screen.getByTestId('html-fullscreen-toggle'))
+      expect(wrapper.classList.contains('html-sandbox-viewer--fullscreen')).toBe(true)
+      expect(document.body.style.overflow).toBe('hidden')
+
+      fireEvent.keyDown(document, { key: 'Escape' })
+      expect(document.body.style.overflow).toBe('')
+    })
+
+    it('the CSS file defines the fixed inset-0 overlay rules (static guard)', async () => {
+      const { readFileSync } = await import('node:fs')
+      const { resolve } = await import('node:path')
+      const css = readFileSync(resolve(import.meta.dir, 'documents-view.css'), 'utf8')
+
+      expect(css).toMatch(/\.html-sandbox-viewer--fullscreen\s*\{[^}]*position:\s*fixed/)
+      expect(css).toMatch(/\.html-sandbox-viewer--fullscreen\s*\{[^}]*z-index:\s*9999/)
+      expect(css).toMatch(/\.html-sandbox-viewer__fullscreen-btn\s*\{[^}]*position:\s*absolute/)
     })
   })
 
