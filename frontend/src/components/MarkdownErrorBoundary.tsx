@@ -30,7 +30,7 @@ export class MarkdownErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return this.props.fallback || (
-        <Alert variant="destructive">
+        <Alert data-variant="destructive">
           <AlertTitle>Failed to render markdown content</AlertTitle>
           <AlertDescription>
             {this.state.error?.message || 'Unknown error occurred'}
