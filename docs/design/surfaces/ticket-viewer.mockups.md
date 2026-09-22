@@ -2,6 +2,8 @@
 
 Related spec: `ticket-viewer.spec.md`
 
+The side reading pane (MDT-248) is not drawn here — its states have their own file: `ticket-side-doc.mockups.md`. The closed-pane state is this file unchanged.
+
 ## Default State (Ticket with Sub-Documents)
 
 ```wireloom
