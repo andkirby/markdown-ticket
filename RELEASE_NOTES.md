@@ -1,5 +1,64 @@
 # Release Notes
 
+## v0.30.0 (2026-09-22)
+
+### New Features
+
+**Status and Type Icons on Ticket Keys (MDT-247, MDT-244)**
+- Ticket keys now carry a small status icon next to the priority marker — on board cards, the ticket view's key strip, list rows, and tooltips — so you can read a ticket's state at a glance instead of by color alone
+- Status badges gained a leading icon (matching the existing priority-badge style), the list view gained a Status column on desktop and mobile, and the pin-rail tooltip swaps the full badge for a compact status icon
+- Ticket-type icons are now reachable too: two new user settings let you show the type glyph next to the key, inside the type badge, or both — with badge suppression where the glyph already renders
+
+**HTML Previews in the Ticket View, with Fullscreen (MDT-221)**
+- The sandboxed HTML preview is no longer limited to the documents view — referenced HTML documents now render right inside the ticket view, where you're reading
+- A fullscreen overlay expands the preview over the whole window; the page never reloads, so session tokens survive long viewing sessions, and Escape (or the floating control) returns you to where you were
+- Both surfaces share the same sandboxed viewer and the same per-project CSP opt-in, so the security posture doesn't change
+
+**Swimlane Search and Toolbar Toggles (MDT-206)**
+- The Epics board toolbar search now matches epic keys and titles only, so typing instantly narrows the board to the epics you care about; the No-epic lane hides when it doesn't match
+- Hide empty, Show badges, and Show closed are now proper toggle buttons — visible labels, unique icons, and a clear pressed state — joined into a single control group, with Collapse all / Expand all beside them as plain actions
+
+**Jump from an Epic to Its Lane (MDT-246)**
+- An epic's detail view now has an "Epics →" jump that lands on the Epics board with that epic's lane expanded and in view
+- Opening a ticket from the Epics view, clicking through to its epic, and closing now returns you to the Epics view instead of dumping you on the flat board
+
+**Clickable Inline-Code Document Links (MDT-237)**
+- References to `.md` files written as inline code in ticket bodies — the convention AI assistants use when cross-referencing docs — now render as clickable links that open the referenced document
+- Plain-text ticket-key path tokens render as one whole link, and links in the tickets area always mean the ticket
+- Link behavior is configured once at the owner level in `config.toml`
+
+**CLI Additions (MDT-143)**
+- `mdt-cli ticket get` and `ticket attr` accept `-p/--project` to target a project explicitly, so scripted calls work from any directory
+- Project init scaffolds a managed `.gitignore` block listing the working-state files MDT generates, keeping clones clean without hand-maintaining ignores
+
+### Improvements
+
+**Lighter, More Reliable Live Updates (MDT-183)**
+- Directory watchers now start only when someone is actually watching and stop when the last client leaves — the server no longer walks every registered project's tree at boot, eliminating the large memory footprint that grew over a session
+- Half-open (zombie) SSE connections are detected and reaped, so change broadcasts stay healthy on long-lived servers
+- Projects registered while the server is running join the lazy watcher lifecycle correctly, so their changes stream without a restart
+
+**Port and Environment Handling (MDT-117)**
+- Start scripts resolve ports through an environment cascade, and the frontend's live-update stream routes through the dev proxy rather than a hardcoded port — non-default ports and LAN access just work
+
+**Interface Polish**
+- Every modal now dims and blurs the page behind it by default, keeping attention on the dialog
+- Disabled buttons and menu items show a not-allowed cursor while keeping their tooltips working
+- A collapsed sort menu condenses the header and documents toolbars
+
+### Bug Fixes
+
+- The documents path selector no longer snaps shut when a background reload lands while you're using it
+- The unified tickets API now carries `level` and `phaseEpic`, fixing epic rendering in swimlanes
+- The modal close button sits centered on the headline line, and ticket codes baseline-align with neighboring text instead of riding high
+- The favorite star in the project card keeps its corner position
+- MCP server: restored file-system interop under Node ESM, and the explicit-project create contract is enforced
+- Cloud CLI: `cloud login` now points at `cloudflared access login` — the only command that can actually establish an Access session
+
+### Migration Notes
+
+- Dead `ui.*` settings (`theme`, `autoRefresh`, `refreshInterval`) were removed from the settings registry; leftover keys in config files are ignored and defaults apply
+
 ## v0.29.0 (2026-08-10)
 
 ### New Features
