@@ -54,6 +54,14 @@ The modal body is capped at 80dvh. Header stays pinned, inner content scrolls.
 
 Do NOT use for forms or long-document modals (settings, ticket viewer) — those should grow freely.
 
+**3. Split (ticket column + side pane)** — Ticket Viewer with the side reading pane visible (MDT-248)
+
+A free-growing modal that temporarily hosts two internal scroll regions. `size="split"` widens the card (`min(94vw, 1560px)`); the body switches to a flex row where each column scrolls independently (`overscroll-behavior: contain`) and the outer overlay stops scrolling.
+
+- Ownership: the modal system provides only the `split` width tier; the column layout belongs to the ticket viewer (`ticket-viewer-body--split`, spec: `docs/design/surfaces/ticket-side-doc.spec.md`).
+- Scroll identity changes (overlay → column). The host must transfer the overlay's scrollTop into the column on activation and back on deactivation — the no-jump guarantee holds only with that transfer.
+- Absolutely-positioned modal chrome (close ×, floating ToC) stays scoped to the ticket column and must not overlay the pane.
+
 ### Opt-in centering for static modals
 
 Small static-content modals (alerts, confirms — Pattern C) can opt into vertical centering since their content never changes and won't jump:
@@ -87,6 +95,7 @@ Small static-content modals (alerts, confirms — Pattern C) can opt into vertic
 | `md` | `sm:max-w-xl` | Simple forms |
 | `lg` | `sm:max-w-3xl` | Project forms |
 | `xl` | `sm:max-w-5xl` | Default modal width, ticket viewer, search, settings |
+| `split` | `min(94vw, 1560px)` | Ticket viewer while the side reading pane is visible (MDT-248) |
 
 The default modal width is `xl`. Use `sm`, `md`, or `lg` explicitly for dialogs that should stay narrower.
 

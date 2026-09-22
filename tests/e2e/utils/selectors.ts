@@ -598,3 +598,40 @@ export const densitySelectors = {
   /** Reset button */
   reset: '[data-testid="density-menu-reset"]',
 } as const
+
+/**
+ * Ticket side reading pane selectors (MDT-248)
+ *
+ * @testid ticket-side-pane — the pane (aside) while visible
+ * @testid ticket-side-pane-title — document title in the pane header
+ * @testid ticket-side-pane-path — mono document path in the pane header
+ * @testid ticket-side-pane-back — pane history back
+ * @testid ticket-side-pane-forward — pane history forward
+ * @testid ticket-side-pane-close — discard session (×)
+ * @testid ticket-side-pane-open-documents — hand-off to Documents view
+ * @testid ticket-side-pane-back-to-ticket — overlay return control (narrow only)
+ * @testid ticket-side-pane-pill — reading pill while pane hidden
+ * @testid ticket-side-pane-scroll — pane scroll region
+ */
+export const sidePaneSelectors = {
+  /** The pane aside element (visible states only) */
+  pane: '[data-testid="ticket-side-pane"]',
+  /** Document title in the pane header */
+  title: '[data-testid="ticket-side-pane-title"]',
+  /** Document path in the pane header */
+  path: '[data-testid="ticket-side-pane-path"]',
+  /** History back control */
+  back: '[data-testid="ticket-side-pane-back"]',
+  /** History forward control */
+  forward: '[data-testid="ticket-side-pane-forward"]',
+  /** Close (discard session) control */
+  close: '[data-testid="ticket-side-pane-close"]',
+  /** Open in Documents hand-off control */
+  openDocuments: '[data-testid="ticket-side-pane-open-documents"]',
+  /** Overlay-variant return-to-ticket control */
+  backToTicket: '[data-testid="ticket-side-pane-back-to-ticket"]',
+  /** Reading pill (session kept, pane hidden) */
+  pill: '[data-testid="ticket-side-pane-pill"]',
+  /** Pane scroll region */
+  scroll: '[data-testid="ticket-side-pane-scroll"]',
+} as const

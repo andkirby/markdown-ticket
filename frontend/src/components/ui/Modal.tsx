@@ -10,6 +10,7 @@ const MODAL_SIZE_CLASS = {
   md: 'modal-content--md',
   lg: 'modal-content--lg',
   xl: 'modal-content--xl',
+  split: 'modal-content--split',
   full: 'modal-content--full',
 } as const
 

@@ -147,6 +147,47 @@
      utility was redundant. */
   .modal__body.ticket-viewer-body {
     @apply p-0;
+    position: relative; /* MDT-248: session pill anchors to the modal card */
+  }
+
+  /* MDT-248 — split layout while the side reading pane is visible: the body
+     stops free-growing and hosts two internal scroll regions (C1/C2). Height
+     budget: 10dvh top anchor + container/vertical margins (6rem). */
+  .modal__body.ticket-viewer-body--split {
+    @apply flex overflow-hidden;
+    max-height: calc(100dvh - 10dvh - 6rem);
+  }
+
+  .ticket-viewer-body--split .ticket-viewer-content {
+    @apply flex min-h-0 flex-col;
+    flex: 0 0 clamp(420px, 46%, 640px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  /* Below the split breakpoint the pane overlays the modal (single column);
+     the ticket column returns to free layout underneath it. */
+  @media (max-width: 1099.98px) {
+    .ticket-viewer-body--split .ticket-viewer-content {
+      flex: none;
+      overflow: visible;
+    }
+  }
+
+  /* Split mode: the modal-level close stays scoped to the ticket column —
+     it must not stack over the pane's own controls (pane × discards the
+     session; modal × closes the ticket). Ticket-column width minus the
+     button box (32px) and its right offset (12px). */
+  .modal__close--split {
+    right: auto;
+    left: calc(clamp(420px, 46%, 640px) - 2.75rem);
+  }
+
+  @media (max-width: 1099.98px) {
+    .modal__close--split {
+      left: auto;
+      right: 0.75rem;
+    }
   }
 
   .ticket-not-found {
