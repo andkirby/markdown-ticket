@@ -122,4 +122,40 @@ describe('StatusBadge', () => {
       expect(screen.getByText('In Progress')).toBeVisible()
     })
   })
+
+  describe('leading status glyph (MDT-247)', () => {
+    it('renders a leading glyph with the badge icon class and data-status', () => {
+      const { container } = render(<StatusBadge status="In Progress" />)
+      const badge = container.firstChild as HTMLElement
+      const icon = badge.querySelector('svg.badge__icon[data-status="in-progress"]')
+      expect(icon).not.toBeNull()
+      expect(icon?.getAttribute('aria-hidden')).toBe('true')
+      // Glyph precedes the label: the label text node comes after the svg.
+      expect(badge.textContent).toBe('In Progress')
+    })
+
+    it('renders a glyph for each of the 7 statuses', () => {
+      for (const status of allStatuses) {
+        const { container } = render(<StatusBadge status={status} />)
+        const kebab = status.toLowerCase().replace(/\s+/g, '-')
+        expect(container.querySelector(`svg.badge__icon[data-status="${kebab}"]`)).not.toBeNull()
+      }
+    })
+
+    it('uses the rejected glyph under invalid colors when isInvalid (BR-1.10)', () => {
+      const { container } = render(<StatusBadge status="In Review" isInvalid />)
+      const badge = container.firstChild as HTMLElement
+      expect(badge.getAttribute('data-status')).toBe('invalid')
+      expect(badge.querySelector('svg.badge__icon[data-status="rejected"]')).not.toBeNull()
+      // Label unchanged.
+      expect(badge.textContent).toBe('In Review')
+    })
+
+    it('renders no glyph for an unmapped status without isInvalid (BR-1.9)', () => {
+      const { container } = render(<StatusBadge status="In Review" />)
+      const badge = container.firstChild as HTMLElement
+      expect(badge.querySelector('svg')).toBeNull()
+      expect(badge.textContent).toBe('In Review')
+    })
+  })
 })

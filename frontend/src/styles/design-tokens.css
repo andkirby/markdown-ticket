@@ -50,6 +50,9 @@
     --status-backlog: oklch(0.554 0.041 257.4); --status-backlog-bg: oklch(0.968 0.007 247.9);
     --status-open: oklch(0.623 0.188 259.8); --status-open-bg: oklch(0.97 0.014 254.6);
     --status-progress: oklch(0.666 0.157 58.3); --status-progress-bg: oklch(0.987 0.021 95.3);
+    /* MDT-247: Partially Implemented — lime between In Progress (amber 58) and
+       Implemented (green 163): the traffic-light scale working → mostly done → done. Owner-approved; separates partial from in-progress's amber signal. */
+    --status-partial: oklch(0.64 0.15 125); --status-partial-bg: oklch(0.98 0.035 125);
     --status-done: oklch(0.596 0.127 163.2); --status-done-bg: oklch(0.979 0.021 166.1);
     --status-deferred: oklch(0.646 0.194 41.1); --status-deferred-bg: oklch(0.98 0.016 73.7);
     --status-rejected: oklch(0.577 0.215 27.3); --status-rejected-bg: oklch(0.971 0.013 17.4);
@@ -166,6 +169,7 @@
     --status-backlog: oklch(0.711 0.035 256.8); --status-backlog-bg: oklch(0.252 0.031 262.6);
     --status-open: oklch(0.714 0.143 254.6); --status-open-bg: oklch(0.282 0.087 267.9);
     --status-progress: oklch(0.837 0.164 84.4); --status-progress-bg: oklch(0.286 0.064 53.8);
+    --status-partial: oklch(0.81 0.16 130); --status-partial-bg: oklch(0.31 0.07 130);
     --status-done: oklch(0.773 0.153 163.2); --status-done-bg: oklch(0.378 0.073 168.9);
     --status-deferred: oklch(0.758 0.159 55.9); --status-deferred-bg: oklch(0.266 0.076 36.3);
     --status-rejected: oklch(0.711 0.166 22.2); --status-rejected-bg: oklch(0.258 0.089 26.0);

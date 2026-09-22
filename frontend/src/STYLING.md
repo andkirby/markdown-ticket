@@ -36,6 +36,15 @@ change shape between the board, the list, and the ticket viewer.
   (desktop table + mobile card), ticket viewer header, and search results.
   Same glyph, same `data-priority` color mapping, same `--sz-icon` size, same
   position (left of the key). Users find priority in one place regardless of view.
+- **Status** (MDT-247, always-on) is the `<StatusIcon>` glyph placed
+  **between the priority glyph and the ticket key** — but only on surfaces with
+  no co-rendered `StatusBadge` (QuickSearch hits, the pin tooltip); those pass
+  `status` to `<TicketCode>` explicitly. Badge-co-rendering surfaces (board and
+  swimlane cards, cloud stub, viewer header/attributes, swimlane lane header,
+  list rows) never pass it — the badge is the single status encoding there
+  (suppression by construction, not per-site discipline). Strip format:
+  `{priority}{status}{key}{type}{epic Zap}{worktree}`; the badge itself leads
+  with the same glyph (`badge__icon`, PriorityBadge parity).
 - **Type** (MDT-244, opt-in via `ui.ticketKey.typeIconNearKey`) is the colored
   `<TypeIcon>` glyph placed immediately **after the ticket key, before the epic
   Zap** — same `--sz-icon` size, `--type-*` color mapping on every surface. While
@@ -388,6 +397,16 @@ Rules:
 - Drop-target highlights reuse `--state-active-bg` with a subdued ring (`ring-primary/40`) — "will receive" reads as commit-preview, not hover.
 - Tabs are one *consumer* of this ramp, not the shared component for selectable things. Result rows are listboxes (`role="option"` + `aria-selected`); never force selection surfaces under the tabs component.
 - **Verify state contrast where the state sits**, not in isolation: fill-vs-surface (and signal-vs-fill) in BOTH themes, AND under state combinations (hover-on-active, focus-on-active). A state token that is architecturally correct can still be imperceptible — measure it (`--primary-light` shipped invisible-on-arrival in light mode; the solid pill shipped with hover demoting it back to the invisible tier).
+
+### Disabled Controls (cursor contract)
+
+A disabled control **keeps pointer events** and takes `cursor: not-allowed` plus the dim opacity — one recipe everywhere: Tailwind `disabled:cursor-not-allowed disabled:opacity-50` (buttons.css, forms.css `.input`, `ui/switch`, `ui/Input`, FormField, vendored dropdown items).
+
+- **Never `pointer-events: none` on a disabled control.** The browser then skips the element under the pointer: the cursor falls through to the parent (no feedback at all) and any `title` tooltip explaining *why* the control is off is unreachable — the tooltip is half the disabled state's communication.
+- **Hover styles must be guarded** so a dead control never reacts to pointing: Tailwind `enabled:hover:bg-*` (buttons.css, ui/Button), pure-CSS shared objects scope structurally (`checkbox.css` → `&:hover:not(:checked, :disabled)`).
+- Menu rows keep their `cursor-default` base (menus don't use the hand cursor); the disabled state is what flips them to `not-allowed` (`data-[disabled]:cursor-not-allowed`).
+- Loading buttons use the native `disabled` attribute (spinner carries the "in progress" meaning) and therefore the same `not-allowed` cursor — don't invent a third cursor for it.
+- Live demo: [`styleguide.html`](styleguide.html) → "disabled controls · cursor contract".
 
 ---
 

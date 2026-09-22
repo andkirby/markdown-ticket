@@ -113,6 +113,40 @@ describe('POST /api/projects/search — MDT-152', () => {
       }
     })
 
+    it('includes the ticket status in cross-project hits (MDT-247 C8)', async () => {
+      // Short code: TICKET_KEY_INPUT_PATTERN accepts 2-5 char project codes,
+      // unlike generateTestProjectCode()'s 7-8 char output (see the SK1 test).
+      const project = await projectFactory.createProject('empty', {
+        name: 'Status Carrier Project',
+        code: 'ST7',
+      })
+      const crResult = await projectFactory.createTestCR(project.key, {
+        title: 'Status Carrier Ticket',
+        type: 'Feature Enhancement',
+        status: 'In Progress',
+        content: 'Test content',
+      })
+      if (!crResult.success)
+        return
+
+      // The project-discovery cache (30s TTL) may predate the fixture project;
+      // rescan like the app does on load so the search can see it.
+      await authRequest.get('/api/projects?bypassCache=true')
+
+      const res = await authRequest
+        .post('/api/projects/search')
+        .send({
+          mode: 'ticket_key',
+          query: crResult.crCode,
+          limitPerProject: 5,
+          limitTotal: 15,
+        })
+
+      assertSuccess(res)
+      expect(res.body.results.length).toBeGreaterThan(0)
+      expect(res.body.results[0].ticket.status).toBe('In Progress')
+    })
+
     it('finds ticket using simplified key (MDT-1 matches MDT-001)', async () => {
       const project = await projectFactory.createProject('empty', {
         name: 'Simplified Key Project',

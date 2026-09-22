@@ -150,10 +150,60 @@
     color: var(--primary-text);
   }
 
-  /* ── Error text ── */
+  /* ── Error text (was text-sm in markup → density SIZE token) ── */
 
   .search-error-text {
+    @apply text-[length:var(--fs-md)];
     color: var(--prio-critical);
+  }
+
+  /* ── Error state container + message (were p-4 text-center / mb-2) ── */
+
+  .search-error-state {
+    @apply p-4 text-center;
+  }
+
+  .search-error-state__message {
+    @apply mb-2;
+  }
+
+  /* ── Empty / not-found states (were p-8 text-center text-gray-500 in
+     markup; hardcoded gray-500 → --text-subtle token) ── */
+
+  .search-empty-state {
+    @apply p-8 text-center;
+    color: var(--text-subtle);
+  }
+
+  .search-empty-state--compact {
+    @apply p-6 text-[length:var(--fs-md)];
+  }
+
+  /* Mono code emphasis inside an empty state (was font-mono font-medium). */
+  .search-empty-state__code {
+    @apply font-medium;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ── Skeleton card row (was px-4 py-3 on the li; the row div reuses
+     .search-result__row) ── */
+
+  .search-skeleton-card {
+    @apply px-4 py-3;
+  }
+
+  .search-skeleton-bar--short {
+    @apply w-16;
+  }
+
+  .search-skeleton-bar--long {
+    @apply w-48;
+  }
+
+  /* ── Results scroll area (the required ScrollArea flex recipe, semantic) ── */
+
+  .search-results-scroll {
+    @apply flex-1 min-h-0;
   }
 
   /* ── Skeleton loading card ── */

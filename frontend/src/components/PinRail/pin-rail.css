@@ -227,13 +227,4 @@
   max-width: 220px;
 }
 
-.pin-tooltip__status {
-  display: flex;
-  margin-top: 2px;
-}
-
-.pin-tooltip__status .badge {
-  font-size: var(--fs-ui-xs);
-}
-
 } /* end @layer components */

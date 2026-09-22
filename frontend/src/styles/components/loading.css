@@ -37,7 +37,7 @@
   .status-dot--inline[data-status="approved"]              { background: var(--status-open); }
   .status-dot--inline[data-status="in-progress"]           { background: var(--status-progress); }
   .status-dot--inline[data-status="implemented"]           { background: var(--status-done); }
-  .status-dot--inline[data-status="partially-implemented"] { background: var(--status-progress); }
+  .status-dot--inline[data-status="partially-implemented"] { background: var(--status-partial); }
   .status-dot--inline[data-status="on-hold"]               { background: var(--status-hold); }
   .status-dot--inline[data-status="rejected"]              { background: var(--status-rejected); }
 

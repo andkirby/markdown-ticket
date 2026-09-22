@@ -102,3 +102,39 @@ describe('TicketAttributeTags badge visibility', () => {
     expect(screen.getByText('200')).toBeInTheDocument()
   })
 })
+
+describe('TicketAttributeTags excludeStatus (MDT-247)', () => {
+  beforeEach(() => {
+    localStorage.clear()
+  })
+
+  afterEach(() => {
+    cleanup()
+    localStorage.clear()
+  })
+
+  it('hides the STATUS badge when excludeStatus is set (desktop list Attributes cell)', () => {
+    setVisibleTicketCardBadges([
+      TicketCardBadge.STATUS,
+      TicketCardBadge.TYPE,
+    ])
+
+    const { container } = renderWithRouter(<TicketAttributeTags ticket={ticket} excludeStatus />)
+
+    expect(screen.queryByText('Implemented')).not.toBeInTheDocument()
+    expect(container.querySelector('.badge[data-status]')).toBeNull()
+    // Other badges unaffected.
+    expect(screen.getByText('Feature Enhancement')).toBeInTheDocument()
+  })
+
+  it('keeps the STATUS badge by default (board cards, mobile lead tag)', () => {
+    setVisibleTicketCardBadges([
+      TicketCardBadge.STATUS,
+      TicketCardBadge.TYPE,
+    ])
+
+    renderWithRouter(<TicketAttributeTags ticket={ticket} />)
+
+    expect(screen.getByText('Implemented')).toBeInTheDocument()
+  })
+})
