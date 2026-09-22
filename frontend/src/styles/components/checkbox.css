@@ -14,8 +14,9 @@
    = #fff, matching --primary-foreground (white in both themes); data URIs
    cannot consume vars, so the value is baked. Focus is keyboard-only
    (:focus-visible) with the thin ring-1 @50% convention (STYLING.md §Focus).
-   State hierarchy: &:checked is declared after &:hover so checked absorbs
-   hover.
+   State hierarchy is expressed structurally: hover is scoped with
+   :not(:checked, :disabled) — checked absorbs hover (no hover→50% border
+   demotion on a checked box) and disabled never reacts to pointing.
 
    Prose task lists share this selector list; styles/prose.css then overrides
    only geometry (absolute position, 1em size) — later in source order within
@@ -39,7 +40,7 @@
     transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1),
       border-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
 
-    &:hover {
+    &:hover:not(:checked, :disabled) {
       border-color: oklch(var(--primary) / 50%);
     }
 
@@ -49,9 +50,11 @@
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='m3.5 8.5 3 3 6-7' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     }
 
+    /* Disabled contract (STYLING.md): pointer events stay on so the cursor
+       and any tooltip survive; cursor: not-allowed matches forms.css/switch. */
     &:disabled {
       opacity: 0.5;
-      cursor: default;
+      cursor: not-allowed;
     }
 
     &:focus-visible {
