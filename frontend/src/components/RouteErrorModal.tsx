@@ -1,6 +1,5 @@
 import { AlertTriangle, Home } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { Button } from './ui'
 import { Modal, ModalBody, ModalFooter } from './ui/Modal'
 
 interface RouteErrorModalProps {
@@ -28,14 +27,14 @@ export function RouteErrorModal({ error, title = 'Page Not Found', onClose }: Ro
         <p className="text-muted-foreground mb-6">{error}</p>
 
         <ModalFooter justify="start">
-          <Button onClick={handleGoHome} className="flex items-center space-x-2">
+          <button type="button" className="btn btn-primary" onClick={handleGoHome}>
             <Home className="h-4 w-4" />
             <span>Go Home</span>
-          </Button>
+          </button>
           {onClose && (
-            <Button variant="outline" onClick={onClose}>
+            <button type="button" className="btn btn-outline" onClick={onClose}>
               Close
-            </Button>
+            </button>
           )}
         </ModalFooter>
       </ModalBody>

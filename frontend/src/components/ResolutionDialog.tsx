@@ -2,7 +2,6 @@ import type { Status } from '../types'
 import * as React from 'react'
 import { getStatusDescription, getStatusLabel } from '../config/statusConfig'
 import { formatDataAttr } from './Badge/utils'
-import { Button } from './ui/Button'
 import { Modal, ModalBody, ModalFooter, ModalHeader } from './ui/Modal'
 
 interface ResolutionDialogProps {
@@ -103,13 +102,14 @@ export const ResolutionDialog: React.FC<ResolutionDialogProps> = ({
       </ModalBody>
 
       <ModalFooter>
-        <Button
-          variant="secondary"
+        <button
+          type="button"
+          className="btn btn-secondary"
           onClick={onCancel}
           data-testid="resolution-cancel"
         >
           Cancel
-        </Button>
+        </button>
       </ModalFooter>
     </Modal>
   )

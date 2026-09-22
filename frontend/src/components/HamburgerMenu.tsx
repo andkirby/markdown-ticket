@@ -8,8 +8,6 @@ import { DEFAULT_SORT_ATTRIBUTES } from '../config/sorting'
 import { useTheme } from '../hooks/useTheme'
 import { nuclearCacheClear } from '../utils/cache'
 import { getEventHistoryForceHidden, subscribeEventHistoryState, toggleEventHistory } from './DevTools/useEventHistoryState'
-import { ButtonGroup, ButtonGroupSeparator } from './ui/button-group'
-import { Button } from './ui/index'
 
 interface HamburgerMenuProps {
   onAddProject?: () => void
@@ -146,12 +144,11 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
 
   return (
     <div className="relative flex" ref={menuRef}>
-      <Button
+      <button
+        type="button"
         data-testid="hamburger-menu"
-        variant="ghost"
-        size="sm"
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2"
+        className="btn btn-ghost btn-sm relative p-2"
       >
         <Menu className="h-4 w-4" />
         {accessIndicator !== 'none' && (
@@ -161,7 +158,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
             aria-hidden="true"
           />
         )}
-      </Button>
+      </button>
 
       {isOpen && createPortal(
         <div
@@ -360,18 +357,18 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
             )}
 
             {/* Delimiter before theme quick-access */}
-            <ButtonGroupSeparator />
+            <div className="my-1 border-t border-border" />
 
             {/* Theme button group — quick access */}
             <div className="px-2 py-1">
-              <ButtonGroup orientation="horizontal" className="w-full">
+              <div role="group" className="control-group w-full">
                 <button
                   data-testid="theme-light"
                   onClick={() => {
                     setTheme('light')
                     setIsOpen(false)
                   }}
-                  className={`flex-1 flex items-center justify-center px-3 py-2 text-sm transition-colors rounded-l-md ${
+                  className={`flex-1 flex items-center justify-center px-3 py-2 text-sm transition-colors control-group__item ${
                     themeMode === 'light'
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-muted text-foreground hover:bg-muted/80'
@@ -387,7 +384,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                     setTheme('dark')
                     setIsOpen(false)
                   }}
-                  className={`flex-1 flex items-center justify-center px-3 py-2 text-sm transition-colors ${
+                  className={`flex-1 flex items-center justify-center px-3 py-2 text-sm transition-colors control-group__item ${
                     themeMode === 'dark'
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-muted text-foreground hover:bg-muted/80'
@@ -403,7 +400,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                     setTheme('system')
                     setIsOpen(false)
                   }}
-                  className={`flex-1 flex items-center justify-center px-3 py-2 text-sm transition-colors rounded-r-md ${
+                  className={`flex-1 flex items-center justify-center px-3 py-2 text-sm transition-colors control-group__item ${
                     themeMode === 'system'
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-muted text-foreground hover:bg-muted/80'
@@ -412,7 +409,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                 >
                   <Monitor className="h-4 w-4" />
                 </button>
-              </ButtonGroup>
+              </div>
             </div>
           </div>
         </div>,

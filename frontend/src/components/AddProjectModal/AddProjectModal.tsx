@@ -4,7 +4,6 @@ import * as React from 'react'
 import { useEffect, useState } from 'react'
 import { authFetch } from '@/auth/authFetch'
 import { useAuthSession } from '@/auth/AuthSessionContext'
-import { Button } from '@/components/ui'
 import { Modal, ModalBody, ModalFooter, ModalHeader } from '@/components/ui/Modal'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
@@ -383,23 +382,26 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
           {/**
             * @testid project-cancel-button — Cancel button in project modal
             */}
-          <Button
-            variant="outline"
+          <button
+            type="button"
+            className="btn btn-outline"
             onClick={handleSmartClose}
             data-testid="project-cancel-button"
           >
             Cancel
-          </Button>
+          </button>
           {/**
             * @testid project-submit-button — Submit button in project modal
             */}
-          <Button
+          <button
+            type="button"
+            className="btn btn-primary"
             onClick={handleConfirmCreate}
             disabled={isSubmitting || !formData.name || !formData.code || !formData.path}
             data-testid="project-submit-button"
           >
             {isSubmitting ? (editMode ? 'Updating...' : 'Creating...') : (editMode ? 'Update Project' : 'Create Project')}
-          </Button>
+          </button>
         </ModalFooter>
       </Modal>
 
@@ -411,16 +413,12 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
             You have unsaved changes. Are you sure you want to close this dialog?
           </p>
           <ModalFooter>
-            <Button variant="outline" onClick={() => setShowConfirmClose(false)}>
+            <button type="button" className="btn btn-outline" onClick={() => setShowConfirmClose(false)}>
               Keep Editing
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleConfirmClose}
-              className="bg-red-600 hover:bg-red-700 text-white border-red-600"
-            >
+            </button>
+            <button type="button" className="btn btn-danger" onClick={handleConfirmClose}>
               Discard Changes
-            </Button>
+            </button>
           </ModalFooter>
         </ModalBody>
       </Modal>
@@ -459,15 +457,15 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
             )}
           </div>
           <ModalFooter>
-            <Button variant="outline" onClick={() => setShowConfirmation(false)}>
+            <button type="button" className="btn btn-outline" onClick={() => setShowConfirmation(false)}>
               Cancel
-            </Button>
+            </button>
             {/**
               * @testid confirm-creation-button — Confirm button to create project
               */}
-            <Button data-testid="confirm-creation-button" onClick={handleConfirmSubmit}>
+            <button type="button" className="btn btn-primary" data-testid="confirm-creation-button" onClick={handleConfirmSubmit}>
               Create Project
-            </Button>
+            </button>
           </ModalFooter>
         </ModalBody>
       </Modal>
@@ -495,13 +493,15 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
             </div>
           )}
           <ModalFooter justify="center">
-            <Button variant="outline" onClick={handleCreateAnother}>
+            <button type="button" className="btn btn-outline" onClick={handleCreateAnother}>
               Create Another
-            </Button>
+            </button>
             {/**
               * @testid success-done-button — Done button to close success dialog
               */}
-            <Button
+            <button
+              type="button"
+              className="btn btn-primary"
               data-testid="success-done-button"
               onClick={() => {
                 setShowSuccess(false)
@@ -514,7 +514,7 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
               }}
             >
               Done
-            </Button>
+            </button>
           </ModalFooter>
         </ModalBody>
       </Modal>

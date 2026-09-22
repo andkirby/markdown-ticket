@@ -33,7 +33,6 @@ import { SELECTOR_STATE_SYNC_EVENT } from './ProjectSelector/useSelectorData'
 import { BackendConfigSection } from './SettingsModal/BackendConfigSection'
 import { ProjectAccents } from './SettingsModal/ProjectAccents'
 import { ReadAccessTokens } from './SettingsModal/ReadAccessTokens'
-import { ButtonGroup } from './ui/button-group'
 import { Modal, ModalBody, ModalHeader } from './ui/Modal'
 import { Switch } from './ui/switch'
 import {
@@ -456,11 +455,11 @@ export function SettingsModal({
               <p className="settings-desc">
                 Choose light, dark, or system theme
               </p>
-              <ButtonGroup orientation="horizontal" className="settings-theme-group">
+              <div role="group" className="control-group settings-theme-group">
                 <button
                   data-testid="settings-theme-light"
                   onClick={() => handleThemeChange('light')}
-                  className={`settings-theme-btn rounded-l-md ${
+                  className={`settings-theme-btn control-group__item ${
                     themeMode === 'light'
                       ? 'settings-theme-btn--active'
                       : 'settings-theme-btn--inactive'
@@ -472,7 +471,7 @@ export function SettingsModal({
                 <button
                   data-testid="settings-theme-dark"
                   onClick={() => handleThemeChange('dark')}
-                  className={`settings-theme-btn ${
+                  className={`settings-theme-btn control-group__item ${
                     themeMode === 'dark'
                       ? 'settings-theme-btn--active'
                       : 'settings-theme-btn--inactive'
@@ -484,7 +483,7 @@ export function SettingsModal({
                 <button
                   data-testid="settings-theme-system"
                   onClick={() => handleThemeChange('system')}
-                  className={`settings-theme-btn rounded-r-md ${
+                  className={`settings-theme-btn control-group__item ${
                     themeMode === 'system'
                       ? 'settings-theme-btn--active'
                       : 'settings-theme-btn--inactive'
@@ -493,7 +492,7 @@ export function SettingsModal({
                   <Monitor className="settings-icon" />
                   System
                 </button>
-              </ButtonGroup>
+              </div>
             </div>
 
             {/* Default View */}
