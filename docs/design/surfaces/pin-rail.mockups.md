@@ -47,7 +47,7 @@ annotation "Trailing DropAffordance (dashed +). Always last; doubles as the empt
 
 ## 2. PinItem hover (tooltip + unpin ×)
 
-Hovering a pin reveals the portaled tooltip (project code + ticket code + title + status badge) and
+Hovering a pin reveals the portaled tooltip (priority + status glyphs + ticket key + title) and
 the top-right × for one-tap unpin. This is the disambiguation + mutation state.
 
 ```wireloom
@@ -65,13 +65,12 @@ window "Board — pin item hover":
     spacer
     panel:
       col:
-        text "MDT-042" weight=bold id="tt-code"
+        text "◆ ▶ MDT-042" weight=bold id="tt-code"
         text "Add vertical pin rail for ticket quick access" id="tt-title"
-        status "In Progress" kind=info id="tt-status"
 
 annotation "Hovered PinItem: border → --border-strong, text → primary. UnpinButton × fades in at top-right (16px hit target)." target="pin-hovered" position=left
 annotation "Portaled tooltip (NOT native :title). Full identity — this is the cross-project disambiguator. Appears after ~300ms hover." target="tt-code" position=left
-annotation "Status reuses Badge[data-status] from the card; tooltip is the only place status appears for a pin." target="tt-status" position=left
+annotation "Status rides the key-strip glyph (MDT-247 removed the tooltip's StatusBadge): strip = priority glyph ◆ + status glyph ▶ + key. Wireloom approximates the glyphs; colors and sizing per spec §Tokens/Classes." target="tt-code" position=left
 ```
 
 | Element | Semantic Pattern | Notes |
@@ -176,3 +175,6 @@ annotation "hidden md:flex on the rail → 0px footprint on mobile. Content row 
 - **Tooltip vs HoverCard**: the wireframe shows a lightweight tooltip. Implementation may upgrade to
   the existing `ProjectSelectorChip` hover-card primitive if that is the project's established
   pattern; both satisfy the AC. See spec §"Open Questions".
+- **Status in the tooltip rides the key strip (MDT-247).** The standalone `StatusBadge` line was
+  removed; the strip's status glyph is the only status encoding, mirroring the priority glyph. The
+  tooltip stays an icon-surface (no badge co-renders here), so there is no double encoding.
