@@ -1,0 +1,751 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-247"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "WHEN a ticket key is rendered on a surface that does not co-render a status badge, the system shall render a status glyph between the priority glyph and the key text, for any ticket including epics",
+      "sourceRef": "MDT-247 CR §5 Functional + ux-design States",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "The system shall map each of the seven ticket statuses (Proposed, Approved, In Progress, Implemented, Rejected, On Hold, Partially Implemented) to exactly one status glyph, with In Progress mapped to the play glyph",
+      "sourceRef": "MDT-247 CR §5 Functional + status_svg README default",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.3",
+      "kind": "behavior",
+      "text": "WHEN a status badge is rendered, the system shall render its status glyph before the status label",
+      "sourceRef": "MDT-247 CR §5 Functional",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.4",
+      "kind": "behavior",
+      "text": "WHILE a status badge co-renders with a ticket key on the same surface, the system shall suppress the key-strip status glyph (board cards, swimlane cards, cloud-projected stub, viewer header, viewer attributes, swimlane lane header, list rows)",
+      "sourceRef": "MDT-247 CR §5 Functional + MDT-244 precedence",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.5",
+      "kind": "behavior",
+      "text": "WHEN the list view renders on desktop, the system shall show a Status column whose cell renders the status badge, and shall omit the STATUS tag from the Attributes cell",
+      "sourceRef": "MDT-247 CR §5 Functional + ux-design",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.6",
+      "kind": "behavior",
+      "text": "WHEN the list view renders on mobile, the system shall present status via the existing lead status tag without a second status rendering",
+      "sourceRef": "MDT-247 ux-design responsive",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.7",
+      "kind": "behavior",
+      "text": "WHEN the pinned-ticket tooltip renders, the system shall show the status glyph on the key strip and shall not render the status badge block",
+      "sourceRef": "MDT-247 CR §5 Functional",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.8",
+      "kind": "behavior",
+      "text": "WHEN a quick-search hit carries a status, current-project or cross-project, the system shall render the status glyph on its key strip",
+      "sourceRef": "MDT-247 CR §5 Functional + Affected Artifacts",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.9",
+      "kind": "behavior",
+      "text": "IF a ticket status is missing or matches none of the seven statuses, the system shall render no status glyph while the badge label remains unchanged",
+      "sourceRef": "MDT-247 CR §5 Functional",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.10",
+      "kind": "behavior",
+      "text": "WHEN a status is flagged invalid, the system shall render the rejected-status glyph with invalid-status colors on the badge",
+      "sourceRef": "MDT-247 ux-design States",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "Status glyphs shall render legibly at the 16px strip slot and the 12px badge slot in light and dark themes",
+      "sourceRef": "MDT-247 CR §5 Non-Functional",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "The key-strip status glyph shall be aria-hidden with a native title hover tooltip carrying the status name, and the badge label shall remain the accessible name",
+      "sourceRef": "MDT-247 CR §5 Non-Functional + MDT-244 precedent",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "Status glyphs shall ship as bundled inline components in a map module with no per-icon public URL fetches",
+      "sourceRef": "MDT-247 CR §5 Non-Functional resolved by ux-design + STYLING.md SVG Icons",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C5",
+      "kind": "constraint",
+      "text": "All mapped glyphs shall use a 24x24 viewBox with currentColor strokes of approximately weight 2, normalizing the 64x64 hardcoded-hex source assets",
+      "sourceRef": "MDT-247 CR §5 Non-Functional",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C6",
+      "kind": "constraint",
+      "text": "deferred.svg and both fast-forward variants shall remain bundled but unmapped assets, excluded from the status registry",
+      "sourceRef": "MDT-247 CR §5 Functional + ux-design",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C7",
+      "kind": "constraint",
+      "text": "The priority glyph position, the type-icon slot, the epic Zap marker, the worktree marker, badge color tokens, and the CRStatus enum shall remain unchanged",
+      "sourceRef": "MDT-247 CR §1 Scope Unchanged",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C8",
+      "kind": "constraint",
+      "text": "The cross-project search contract extension shall be additive and optional so responses without status degrade to no glyph",
+      "sourceRef": "MDT-247 CR Affected Artifacts resolved by ux-design",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "WHILE pin metadata is not loaded, the pinned-ticket tooltip shall render no status glyph and no status badge block",
+      "sourceRef": "MDT-247 PinItem current behavior retained",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "Status glyph color shall derive from currentColor with the existing data-status to status token foreground mapping mirrored from badge.css; Partially Implemented uses the owner-approved dedicated --status-partial lime token pair (added by MDT-247 user-review round 2), and no other new color tokens",
+      "sourceRef": "MDT-247 user-review round 2 owner approval",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "quick_search_hit_shows_status_glyph",
+      "title": "Quick-search hit shows the status glyph on its key strip",
+      "covers": [
+        "BR-1.1",
+        "BR-1.8"
+      ],
+      "given": "Given a project with a ticket whose status is In Progress",
+      "when": "When I open quick search and type the ticket key",
+      "then": "Then the hit key strip shows the status glyph between the priority glyph and the key text",
+      "sourceRef": "MDT-247 BR-1.1 BR-1.8"
+    },
+    {
+      "id": "pin_tooltip_shows_status_glyph_not_badge",
+      "title": "Pin tooltip shows the status glyph and no badge block",
+      "covers": [
+        "BR-1.1",
+        "BR-1.7"
+      ],
+      "given": "Given a pinned ticket with a known status",
+      "when": "When I hover the pin item",
+      "then": "Then the tooltip key strip shows the status glyph and the status badge block is gone",
+      "sourceRef": "MDT-247 BR-1.7"
+    },
+    {
+      "id": "status_badge_leads_with_glyph",
+      "title": "Status badge leads with its status glyph",
+      "covers": [
+        "BR-1.3"
+      ],
+      "given": "Given a ticket card on the board",
+      "when": "When the status badge renders",
+      "then": "Then a status glyph appears before the status label",
+      "sourceRef": "MDT-247 BR-1.3"
+    },
+    {
+      "id": "strip_glyph_suppressed_where_badge_renders",
+      "title": "Key-strip status glyph is suppressed where the badge co-renders",
+      "covers": [
+        "BR-1.4"
+      ],
+      "given": "Given a board ticket card showing the status badge",
+      "when": "When the card renders",
+      "then": "Then the key strip shows no status glyph, one status encoding per surface",
+      "sourceRef": "MDT-247 BR-1.4"
+    },
+    {
+      "id": "desktop_list_status_column",
+      "title": "Desktop list shows a Status column with the badge cell",
+      "covers": [
+        "BR-1.5"
+      ],
+      "given": "Given the desktop list view with tickets",
+      "when": "When the table renders",
+      "then": "Then a Status column shows the status badge per row and the Attributes cell has no STATUS tag",
+      "sourceRef": "MDT-247 BR-1.5"
+    },
+    {
+      "id": "mobile_list_lead_status_tag",
+      "title": "Mobile list presents status once via the lead tag",
+      "covers": [
+        "BR-1.6"
+      ],
+      "given": "Given the mobile list view",
+      "when": "When a ticket card renders",
+      "then": "Then status appears exactly once via the lead status tag",
+      "sourceRef": "MDT-247 BR-1.6"
+    },
+    {
+      "id": "every_status_has_exactly_one_glyph",
+      "title": "Every ticket status maps to exactly one glyph",
+      "covers": [
+        "BR-1.2"
+      ],
+      "given": "Given tickets in each of the seven ticket statuses",
+      "when": "When a key strip or badge renders",
+      "then": "Then exactly one distinct glyph represents each status, with the play glyph for In Progress",
+      "sourceRef": "MDT-247 BR-1.2"
+    },
+    {
+      "id": "cross_project_hit_shows_status_glyph",
+      "title": "Cross-project quick-search hit shows the status glyph",
+      "covers": [
+        "BR-1.8"
+      ],
+      "given": "Given another project with a ticket carrying a status",
+      "when": "When a cross-project quick search returns that hit",
+      "then": "Then its key strip shows the status glyph",
+      "sourceRef": "MDT-247 BR-1.8"
+    },
+    {
+      "id": "unknown_status_renders_no_glyph",
+      "title": "Unknown or missing status renders no glyph",
+      "covers": [
+        "BR-1.9"
+      ],
+      "given": "Given a ticket whose status matches none of the seven statuses",
+      "when": "When its card renders",
+      "then": "Then no status glyph appears and the badge label stays unchanged",
+      "sourceRef": "MDT-247 BR-1.9"
+    },
+    {
+      "id": "invalid_status_uses_rejected_glyph_and_invalid_colors",
+      "title": "Invalid status uses the rejected glyph with invalid colors",
+      "covers": [
+        "BR-1.10"
+      ],
+      "given": "Given a ticket flagged with an invalid status",
+      "when": "When the badge renders",
+      "then": "Then it shows the rejected-status glyph with invalid-status colors",
+      "sourceRef": "MDT-247 BR-1.10"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-strip-glyph-slot",
+      "title": "TicketCode renders the status glyph from an explicit status prop only, between priority glyph and key, with native title tooltip",
+      "derivedFrom": [
+        "BR-1.1",
+        "C2",
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-status-icon",
+        "ART-ticket-code",
+        "ART-ticket-card-css"
+      ],
+      "sourceRef": "MDT-247 requirements BR-1.1"
+    },
+    {
+      "id": "OBL-badge-leading-glyph",
+      "title": "StatusBadge renders its glyph before the label; invalid status maps to the rejected glyph under data-status invalid colors",
+      "derivedFrom": [
+        "BR-1.3",
+        "BR-1.10",
+        "C1"
+      ],
+      "artifactIds": [
+        "ART-status-badge",
+        "ART-status-icon"
+      ],
+      "sourceRef": "MDT-247 requirements BR-1.3 BR-1.10"
+    },
+    {
+      "id": "OBL-suppression-by-construction",
+      "title": "No badge-co-rendering surface passes the status prop; glyph presence is the suppression mechanism, no suppression boolean exists",
+      "derivedFrom": [
+        "BR-1.4",
+        "C7"
+      ],
+      "artifactIds": [
+        "ART-ticket-code"
+      ],
+      "sourceRef": "MDT-247 requirements BR-1.4"
+    },
+    {
+      "id": "OBL-list-status-column",
+      "title": "Desktop list gains a Status column whose cell is StatusBadge and Attributes omits the STATUS tag; mobile keeps the lead tag as the status column",
+      "derivedFrom": [
+        "BR-1.5",
+        "BR-1.6"
+      ],
+      "artifactIds": [
+        "ART-project-view",
+        "ART-ticket-attribute-tags"
+      ],
+      "sourceRef": "MDT-247 requirements BR-1.5 BR-1.6"
+    },
+    {
+      "id": "OBL-pin-tooltip-swap",
+      "title": "Pin tooltip drops the badge block and passes metadata status to the strip; unloaded metadata renders no glyph",
+      "derivedFrom": [
+        "BR-1.7",
+        "Edge-1"
+      ],
+      "artifactIds": [
+        "ART-pin-item"
+      ],
+      "sourceRef": "MDT-247 requirements BR-1.7 Edge-1"
+    },
+    {
+      "id": "OBL-search-status-plumbing",
+      "title": "Cross-project search contract gains additive optional status and both QuickSearch sections pass status to TicketCode",
+      "derivedFrom": [
+        "BR-1.8",
+        "C8"
+      ],
+      "artifactIds": [
+        "ART-quicksearch-results",
+        "ART-search-contract",
+        "ART-ticket-service-search"
+      ],
+      "sourceRef": "MDT-247 requirements BR-1.8 C8"
+    },
+    {
+      "id": "OBL-graceful-absence",
+      "title": "Unknown or missing status renders no glyph anywhere while badge label stays unchanged",
+      "derivedFrom": [
+        "BR-1.9"
+      ],
+      "artifactIds": [
+        "ART-status-icon",
+        "ART-status-badge"
+      ],
+      "sourceRef": "MDT-247 requirements BR-1.9"
+    },
+    {
+      "id": "OBL-strip-color-tokens",
+      "title": "Strip glyph sized at the 16px icon slot with data-status foreground colors mirroring badge.css tokens; no new tokens",
+      "derivedFrom": [
+        "BR-1.1",
+        "C1",
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-ticket-card-css"
+      ],
+      "sourceRef": "MDT-247 constraints C1 C3"
+    },
+    {
+      "id": "OBL-e2e-verification",
+      "title": "E2E suite verifies cross-surface behavior: suppression on cards, list column desktop and mobile, graceful absence",
+      "derivedFrom": [
+        "BR-1.4",
+        "BR-1.5"
+      ],
+      "artifactIds": [
+        "ART-status-e2e"
+      ],
+      "sourceRef": "MDT-247 bdd TEST-e2e-status-icons"
+    },
+    {
+      "id": "OBL-status-registry",
+      "title": "Registry maps exactly the 7 CRStatus kebels to normalized 24x24 currentColor glyphs ported from the owner status_svg set and bundled inline; deferred and fast-forwards stay unmapped",
+      "derivedFrom": [
+        "BR-1.2",
+        "C4",
+        "C5",
+        "C6"
+      ],
+      "artifactIds": [
+        "ART-status-glyphs",
+        "ART-status-icons-map"
+      ],
+      "sourceRef": "MDT-247 requirements BR-1.2 C4 C5 C6"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-status-glyphs",
+      "path": "frontend/src/components/Badge/statusGlyphs.tsx",
+      "kind": "runtime",
+      "sourceRef": "MDT-247 architecture: 7 inline glyph components ported from status_svg"
+    },
+    {
+      "id": "ART-status-icons-map",
+      "path": "frontend/src/components/Badge/statusIcons.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-247 architecture: status-to-glyph map module (priorityIcons pattern)"
+    },
+    {
+      "id": "ART-status-icon",
+      "path": "frontend/src/components/Badge/StatusIcon.tsx",
+      "kind": "runtime",
+      "sourceRef": "MDT-247 architecture: lookup component (TypeIcon pattern)"
+    },
+    {
+      "id": "ART-ticket-code",
+      "path": "frontend/src/components/TicketCode.tsx",
+      "kind": "runtime",
+      "sourceRef": "MDT-247 CR Affected Artifacts"
+    },
+    {
+      "id": "ART-status-badge",
+      "path": "frontend/src/components/Badge/StatusBadge.tsx",
+      "kind": "runtime",
+      "sourceRef": "MDT-247 CR Affected Artifacts"
+    },
+    {
+      "id": "ART-ticket-attribute-tags",
+      "path": "frontend/src/components/TicketAttributeTags.tsx",
+      "kind": "runtime",
+      "sourceRef": "MDT-247 CR Affected Artifacts"
+    },
+    {
+      "id": "ART-project-view",
+      "path": "frontend/src/components/ProjectView.tsx",
+      "kind": "runtime",
+      "sourceRef": "MDT-247 CR Affected Artifacts"
+    },
+    {
+      "id": "ART-pin-item",
+      "path": "frontend/src/components/PinRail/PinItem.tsx",
+      "kind": "runtime",
+      "sourceRef": "MDT-247 CR Affected Artifacts"
+    },
+    {
+      "id": "ART-quicksearch-results",
+      "path": "frontend/src/components/QuickSearch/QuickSearchResults.tsx",
+      "kind": "runtime",
+      "sourceRef": "MDT-247 CR Affected Artifacts"
+    },
+    {
+      "id": "ART-search-contract",
+      "path": "domain-contracts/src/ticket/search.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-247 CR Affected Artifacts"
+    },
+    {
+      "id": "ART-ticket-service-search",
+      "path": "server/services/TicketService.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-247 architecture: searchTickets hit building"
+    },
+    {
+      "id": "ART-ticket-card-css",
+      "path": "frontend/src/components/TicketCard/ticket.css",
+      "kind": "runtime",
+      "sourceRef": "MDT-247 architecture: strip glyph sizing + data-status colors"
+    },
+    {
+      "id": "ART-status-e2e",
+      "path": "tests/e2e/ticket/status-icons.spec.ts",
+      "kind": "test",
+      "sourceRef": "MDT-247 bdd TEST-e2e-status-icons"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-status-badge-glyph-unit",
+      "kind": "unit",
+      "title": "StatusBadge leading glyph, invalid rejected glyph, unknown no-glyph",
+      "covers": [
+        "BR-1.3",
+        "BR-1.9",
+        "BR-1.10"
+      ],
+      "file": "frontend/src/components/Badge/StatusBadge.test.tsx",
+      "sourceRef": "MDT-247 tests: StatusBadge"
+    },
+    {
+      "id": "TEST-attribute-tags-exclude-status-unit",
+      "kind": "unit",
+      "title": "TicketAttributeTags excludeStatus hides the STATUS badge for desktop list rows",
+      "covers": [
+        "BR-1.5",
+        "BR-1.6"
+      ],
+      "file": "frontend/src/components/TicketAttributeTags.test.tsx",
+      "sourceRef": "MDT-247 tests: TicketAttributeTags"
+    },
+    {
+      "id": "TEST-quicksearch-status-glyph-unit",
+      "kind": "unit",
+      "title": "QuickSearch key strips render the status glyph on hits carrying status (current + cross-project)",
+      "covers": [
+        "BR-1.8",
+        "C8"
+      ],
+      "file": "frontend/src/components/QuickSearch/__tests__/QuickSearchResults.test.tsx",
+      "sourceRef": "MDT-247 tests: QuickSearchResults"
+    },
+    {
+      "id": "TEST-search-contract-status",
+      "kind": "integration",
+      "title": "Cross-project search hits include ticket status (server contract)",
+      "covers": [
+        "BR-1.8",
+        "C8"
+      ],
+      "file": "server/tests/api/projects.search.test.ts",
+      "sourceRef": "MDT-247 tests: search contract"
+    },
+    {
+      "id": "TEST-e2e-status-icons",
+      "kind": "e2e",
+      "title": "Status icons end-to-end suite (strip glyph on icon-surfaces, badge leading glyph, suppression, list column desktop+mobile, graceful absence)",
+      "covers": [
+        "BR-1.1",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.5",
+        "BR-1.6",
+        "BR-1.7",
+        "BR-1.8",
+        "BR-1.9",
+        "BR-1.10",
+        "C1",
+        "OBL-pin-tooltip-swap"
+      ],
+      "file": "tests/e2e/ticket/status-icons.spec.ts",
+      "sourceRef": "scenario:quick_search_hit_shows_status_glyph,pin_tooltip_shows_status_glyph_not_badge,status_badge_leads_with_glyph,strip_glyph_suppressed_where_badge_renders,desktop_list_status_column,mobile_list_lead_status_tag,unknown_status_renders_no_glyph,invalid_status_uses_rejected_glyph_and_invalid_colors"
+    },
+    {
+      "id": "TEST-status-icon-unit",
+      "kind": "unit",
+      "title": "StatusIcon registry exhaustiveness, rendering contract, graceful absence (inline bundled glyphs)",
+      "covers": [
+        "BR-1.2",
+        "BR-1.9",
+        "C2",
+        "C4",
+        "C5",
+        "C6"
+      ],
+      "file": "frontend/src/components/Badge/StatusIcon.test.tsx",
+      "sourceRef": "MDT-247 tests: StatusIcon"
+    },
+    {
+      "id": "TEST-ticket-code-status-slot-unit",
+      "kind": "unit",
+      "title": "TicketCode status slot: order, title tooltip, suppression by construction, unmapped/unloaded absence, unchanged sibling markers",
+      "covers": [
+        "BR-1.1",
+        "BR-1.4",
+        "BR-1.9",
+        "Edge-1",
+        "C2",
+        "C3",
+        "C7"
+      ],
+      "file": "frontend/src/components/TicketCode.test.tsx",
+      "sourceRef": "MDT-247 tests: TicketCode"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-1",
+      "title": "Create the status glyph module set: statusGlyphs.tsx (7 ported components), statusIcons.ts (map), StatusIcon.tsx (lookup)",
+      "ownsArtifactIds": [
+        "ART-status-glyphs",
+        "ART-status-icons-map",
+        "ART-status-icon"
+      ],
+      "makesGreenIds": [
+        "TEST-status-icon-unit",
+        "every_status_has_exactly_one_glyph"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-1"
+    },
+    {
+      "id": "TASK-2",
+      "title": "TicketCode status slot (explicit status prop, no ticket fallback) + ticket.css strip rules",
+      "ownsArtifactIds": [
+        "ART-ticket-code",
+        "ART-ticket-card-css"
+      ],
+      "makesGreenIds": [
+        "TEST-ticket-code-status-slot-unit",
+        "strip_glyph_suppressed_where_badge_renders",
+        "unknown_status_renders_no_glyph"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-2"
+    },
+    {
+      "id": "TASK-3",
+      "title": "StatusBadge leading glyph with PriorityBadge parity; invalid maps to rejected glyph",
+      "ownsArtifactIds": [
+        "ART-status-badge"
+      ],
+      "makesGreenIds": [
+        "TEST-status-badge-glyph-unit",
+        "status_badge_leads_with_glyph",
+        "invalid_status_uses_rejected_glyph_and_invalid_colors"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-3"
+    },
+    {
+      "id": "TASK-4",
+      "title": "Search contract gains additive status; server populates it; QuickSearch passes status on both sections",
+      "ownsArtifactIds": [
+        "ART-search-contract",
+        "ART-ticket-service-search",
+        "ART-quicksearch-results"
+      ],
+      "makesGreenIds": [
+        "TEST-search-contract-status",
+        "TEST-quicksearch-status-glyph-unit",
+        "quick_search_hit_shows_status_glyph",
+        "cross_project_hit_shows_status_glyph"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-4"
+    },
+    {
+      "id": "TASK-5",
+      "title": "PinItem tooltip: drop the badge block, pass metadata status to the strip",
+      "ownsArtifactIds": [
+        "ART-pin-item"
+      ],
+      "makesGreenIds": [
+        "pin_tooltip_shows_status_glyph_not_badge",
+        "TEST-e2e-status-icons"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-5"
+    },
+    {
+      "id": "TASK-6",
+      "title": "List Status column: TicketAttributeTags excludeStatus + ProjectView desktop column (mobile unchanged)",
+      "ownsArtifactIds": [
+        "ART-ticket-attribute-tags",
+        "ART-project-view"
+      ],
+      "makesGreenIds": [
+        "TEST-attribute-tags-exclude-status-unit",
+        "desktop_list_status_column",
+        "mobile_list_lead_status_tag"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-6"
+    },
+    {
+      "id": "TASK-7",
+      "title": "Checkpoint: durable docs (STYLING.md status marker), full E2E suite GREEN, typecheck + lint clean",
+      "ownsArtifactIds": [
+        "ART-status-e2e"
+      ],
+      "makesGreenIds": [
+        "TEST-e2e-status-icons",
+        "quick_search_hit_shows_status_glyph",
+        "pin_tooltip_shows_status_glyph_not_badge",
+        "status_badge_leads_with_glyph",
+        "strip_glyph_suppressed_where_badge_renders",
+        "desktop_list_status_column",
+        "mobile_list_lead_status_tag",
+        "every_status_has_exactly_one_glyph",
+        "cross_project_hit_shows_status_glyph",
+        "unknown_status_renders_no_glyph",
+        "invalid_status_uses_rejected_glyph_and_invalid_colors"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-7"
+    }
+  ]
+}
