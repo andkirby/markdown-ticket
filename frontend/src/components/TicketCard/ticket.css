@@ -75,9 +75,20 @@
      on top of .ticket-key typography (the component applies both classes). */
   .ticket-code {
     display: inline-flex;
-    align-items: center;
+    /* Baseline contract: an inline-flex with `align-items: center` has no
+       baseline-participating item, so when it sits in inline flow next to
+       sibling text (ticket-viewer h1: {code} • title) its baseline is
+       synthesized from the box edge and the whole run rides ~2px high. The
+       key text is an anonymous flex item (unstyleable), so the container
+       participates by default and the styled svg glyphs re-center themselves
+       (rule below). Assumes the key's line box is the tallest item — true for
+       every consumer type size (11px × 1.5 line-height = 16.5px ≥ 16px icon). */
+    align-items: baseline;
     gap: 0.25rem;
     color: var(--primary-text);
+  }
+  .ticket-code > svg {
+    align-self: center;
   }
   /* MDT-247: status glyph between the priority glyph and the key — only on
      surfaces that pass an explicit `status` (QuickSearch hits, pin tooltip);
