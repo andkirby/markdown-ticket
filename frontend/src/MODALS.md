@@ -59,8 +59,8 @@ Do NOT use for forms or long-document modals (settings, ticket viewer) — those
 A free-growing modal that temporarily hosts two internal scroll regions. `size="split"` widens the card (`min(94vw, 1560px)`); the body switches to a flex row where each column scrolls independently (`overscroll-behavior: contain`) and the outer overlay stops scrolling.
 
 - Ownership: the modal system provides only the `split` width tier; the column layout belongs to the ticket viewer (`ticket-viewer-body--split`, spec: `docs/design/surfaces/ticket-side-doc.spec.md`).
-- Scroll identity changes (overlay → column). The host must transfer the overlay's scrollTop into the column on activation and back on deactivation — the no-jump guarantee holds only with that transfer.
-- Absolutely-positioned modal chrome (close ×, floating ToC) stays scoped to the ticket column and must not overlay the pane.
+- Pinned chrome: in split mode each column keeps its chrome fixed and scrolls only its content region. Absolutely-positioned modal chrome (close ×, floating ToC) then always sits over pinned chrome, never over scrolling content.
+- Scroll identity changes (overlay → content region). The host must capture the overlay's scrollTop when the split activates (at click time — child focus effects may scroll the overlay first) and transfer it into the content region, and back on deactivation. The no-jump guarantee holds only with that transfer.
 
 ### Opt-in centering for static modals
 
