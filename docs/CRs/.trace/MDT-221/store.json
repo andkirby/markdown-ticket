@@ -353,6 +353,20 @@
       "text": "Subdocument name resolution maps .html/.htm-suffixed subdocument names to their real files (no .md suffix is appended for HTML names), under the existing traversal, containment, and character-whitelist checks.",
       "sourceRef": "CR:MDT-221",
       "routePolicy": "tests"
+    },
+    {
+      "id": "BR-1.16",
+      "kind": "behavior",
+      "text": "The HTML preview in both surfaces (Documents View viewer panel and ticket-view preview) has a fullscreen control. Entering it overlays the whole viewport above app chrome and above the ticket modal; Escape or the control exits. Wide or tall HTML documents become readable at full viewport size.",
+      "sourceRef": "docs/CRs/MDT-221/uat.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C-2.27",
+      "kind": "constraint",
+      "text": "Entering or leaving HTML preview fullscreen never remounts or reloads the iframe: the iframe DOM node identity, its src, and the sandbox attribute are unchanged across the toggle, and no preview-token mint request is issued for the fullscreen transition (long fullscreen sessions must not self-destruct through token TTL; token minting still happens only on file change or SSE external-edit refresh).",
+      "sourceRef": "docs/CRs/MDT-221/uat.md",
+      "routePolicy": "tests"
     }
   ],
   "scenarios": [
@@ -531,6 +545,17 @@
       "when": "When the URL is opened directly and tabs are switched",
       "then": "Then the HTML subdocument preview is selected on load and the URL is preserved",
       "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "html_preview_fullscreen_overlay",
+      "title": "HTML preview fullscreen overlays the viewport and exits on Escape without reloading",
+      "covers": [
+        "BR-1.16"
+      ],
+      "given": "an HTML document preview is rendered (Documents View or ticket view) and its iframe has finished loading the token-scoped preview",
+      "when": "the user activates the fullscreen control on the preview",
+      "then": "the existing preview wrapper is repositioned to overlay the whole viewport above app chrome and modals while the loaded iframe keeps its content (no reload, no re-mint); pressing Escape or the control again returns the preview to its panel",
+      "sourceRef": "docs/CRs/MDT-221/uat.md"
     }
   ],
   "obligations": [
@@ -860,6 +885,20 @@
         "ART-8"
       ],
       "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "OBL-25",
+      "title": "HtmlSandboxViewer ships a fullscreen toggle that CSS-repositions the existing .html-sandbox-viewer wrapper into a fixed inset-0 overlay above the modal layer (z above z-50), with a floating control in both surfaces; Escape exits via a capture-phase keydown handler that stops propagation so the ticket modal does not also close; the iframe node, src, and sandbox are untouched and no mint fires on toggle (wrapper class toggle only)",
+      "derivedFrom": [
+        "BR-1.16",
+        "C-2.27"
+      ],
+      "artifactIds": [
+        "ART-12",
+        "ART-25",
+        "ART-14"
+      ],
+      "sourceRef": "docs/CRs/MDT-221/uat.md"
     }
   ],
   "artifacts": [
@@ -1006,6 +1045,12 @@
       "path": "src/components/TicketViewer/useTicketDocumentNavigation.ts",
       "kind": "runtime",
       "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "ART-25",
+      "path": "src/components/DocumentsView/documents-view.css",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-221/uat.md"
     }
   ],
   "testPlans": [
@@ -1453,6 +1498,28 @@
         "BR-1.15"
       ],
       "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TEST-html-fullscreen-toggle",
+      "kind": "unit",
+      "title": "HtmlSandboxViewer fullscreen toggle: control renders in ready state; activating it adds the fullscreen modifier to the existing wrapper (same iframe DOM node, same src, same sandbox) without a second mint call; Escape removes it and restores body overflow; button title/aria swap enter/exit",
+      "covers": [
+        "BR-1.16",
+        "C-2.27"
+      ],
+      "file": "src/components/DocumentsView/HtmlSandboxViewer.test.tsx",
+      "sourceRef": "docs/CRs/MDT-221/uat.md"
+    },
+    {
+      "id": "TEST-e2e-html-fullscreen",
+      "kind": "e2e",
+      "title": "E2E: fullscreen control on a live HTML preview; wrapper box becomes viewport-sized fixed overlay, iframe content marker survives the toggle (no reload), Escape restores the panel-sized wrapper",
+      "covers": [
+        "BR-1.16",
+        "C-2.27"
+      ],
+      "file": "tests/e2e/documents/html-preview.spec.ts",
+      "sourceRef": "docs/CRs/MDT-221/uat.md"
     }
   ],
   "tasks": [
@@ -1783,6 +1850,24 @@
         "ticket_html_deep_link_round_trips"
       ],
       "sourceRef": "CR:MDT-221"
+    },
+    {
+      "id": "TASK-19",
+      "title": "Fullscreen overlay for the HTML preview (both surfaces): CSS-repositioning modifier on the existing wrapper, floating expand/collapse control, capture-phase Escape exit that shields the ticket modal, body-overflow lock with guarded restore; no iframe remount and no mint on toggle",
+      "ownsArtifactIds": [
+        "ART-12",
+        "ART-25",
+        "ART-14"
+      ],
+      "makesGreenIds": [
+        "TEST-html-fullscreen-toggle",
+        "TEST-e2e-html-fullscreen",
+        "html_preview_fullscreen_overlay"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "docs/CRs/MDT-221/uat.md"
     }
   ]
 }

@@ -479,3 +479,35 @@ inert. The document-watch pattern is now `**/*.{md,html,htm}`. Ticket
 watchers (markdown lifecycle events) intentionally stay `.md`-only this
 round; ticket-view HTML refresh-on-external-edit is deferred (uat.md
 Watchlist).
+
+## 10. UAT r3 (2026-09-17) — Fullscreen overlay (`ART-25`, OBL-25)
+
+Fullscreen is implemented entirely inside `HtmlSandboxViewer`
+(`ART-12`); both surfaces inherit it because they render the same
+component. No backend, route, mint, or iframe-contract change.
+
+- **Overlay mechanism.** `isFullscreen` React state toggles the
+  `html-sandbox-viewer--fullscreen` modifier on the existing wrapper
+  (`documents-view.css`, `ART-25`): `position: fixed; inset: 0; z-index:
+  9999` — above the modal layer (`ui/modal.css` `.modal` is z-50), so the
+  overlay covers the viewport inside the ticket-view modal as well. The
+  iframe DOM node is never moved or recreated (browsers reload an iframe on
+  DOM move): no re-mint, src/sandbox untouched, long sessions cannot
+  self-destruct through the ≤5 min token TTL (C-2.27).
+- **Escape routing.** A capture-phase `document` keydown handler calls
+  `stopImmediatePropagation` — the same contract as the mermaid overlay
+  (`utils/mermaid/fullscreen.ts`). `ui/Modal.tsx` registers its Escape
+  close as a bubble-phase document listener, so in the ticket view the
+  first Escape exits fullscreen only; the modal's close fires on the next
+  Escape. Rejected alternatives (React portal/modal re-parents the iframe;
+  native Fullscreen API is not mermaid-parity) are recorded in uat.md →
+  Investigation.
+- **Body scroll lock.** Entering fullscreen saves and sets
+  `document.body.style.overflow = 'hidden'`; the restore is guarded (only
+  unlocks what the overlay locked) because the ticket modal owns the same
+  property — with the guard, either cleanup order leaves exactly one owner
+  in control and no stray lock survives the modal close (verified live).
+- **Effect ownership.** The keydown listener and lock live in one
+  `useEffect` keyed on `isFullscreen`; unmounting while fullscreen (tab
+  switch, file deleted) releases both — no module-global singleton state,
+  unlike the mermaid DOM-util implementation.

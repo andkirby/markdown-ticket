@@ -374,3 +374,38 @@ TASK-17 (raw-preview tickets-tree scope + mint HTML-only guard), TASK-18
 (frontend viewer integration).
 **Deferred**: ticket-view HTML SSE refresh (ticket watchers stay
 `.md`-only); noted in `uat.md` → Watchlist.
+
+### UAT Session 2026-09-17
+
+**Trigger**: `.html` content can be wide and big; the panel-sized preview
+does not give enough room to read it properly. Requested a fullscreen mode
+with the same UX as mermaid fullscreen (viewport overlay + Escape exit).
+
+**Approach decision** (see `uat.md` → Investigation): CSS-repositioning
+overlay on the EXISTING `.html-sandbox-viewer` wrapper — React state + a
+`--fullscreen` modifier class (fixed inset-0, z above the modal layer), NOT
+a React modal/portal (would re-parent the iframe → forced reload → re-mint,
+breaking long sessions against the ≤5 min token TTL) and NOT the native
+Fullscreen API (hides browser chrome, prefix/`:fullscreen` styling, exits on
+tab switch — not mermaid-parity). Capture-phase Escape with
+`stopImmediatePropagation` shields the ticket modal's own Escape close, same
+contract as the mermaid overlay.
+
+**Approved changes**:
+- BR-1.16 added: fullscreen control on the preview in both surfaces;
+  overlays the viewport above app chrome and the ticket modal; Escape or the
+  control exits.
+- C-2.27 added: the toggle never remounts/reloads the iframe and never
+  issues a mint (node identity, src, sandbox unchanged).
+
+**Changed requirement IDs**: BR-1.16, C-2.27 (add).
+**Updated workflow documents**: `uat.md` (round-3 brief replaces round-2),
+`architecture.md` (§10 fullscreen overlay), `ux-design.md` (Fullscreen mode
++ Accessibility), this section.
+**`uat.md` written**: yes.
+**Strict drift/lock used**: no (purely additive).
+**Execution slices**: TASK-19 (shipped: HtmlSandboxViewer overlay + control,
+documents-view.css rules, 5 unit tests, 1 E2E test).
+**Verification**: all 5 trace stages validate; DocumentsView unit suite
+42/42; html-preview E2E 4/4; live throwaway stack (3005/3076) confirmed both
+surfaces including the modal-Escape shield and body-scroll-lock release.

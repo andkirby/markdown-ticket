@@ -68,6 +68,45 @@ condition wins.
 | `deleted` | `fileDeleted === true` or 404 | "File was deleted" (reuse MarkdownViewer's deleted block) | `file-viewer` (deleted) |
 | `unsupported-kind` | (rendered by `DocumentsLayout`, not this viewer) | "Preview not available for this file type" | `unsupported-viewer` |
 
+## Fullscreen mode (r3, BR-1.16)
+
+Fullscreen is an overlay property of the `preview-ready` render, orthogonal
+to the state machine above — it never changes which state is active or
+re-runs the mint.
+
+**Control.** A floating icon-only button (`.html-sandbox-viewer__fullscreen-btn`)
+pins to the top-right corner of the preview, over the iframe: `h-9` square,
+`Maximize` icon → `Minimize` on toggle, state-ramp hover, keyboard-only
+`:focus-visible` ring (ring-1 @50%). `aria-pressed` carries the state;
+`aria-label`/title swap between "Enter fullscreen" and "Exit fullscreen".
+
+**Fullscreen render.** The SAME `.html-sandbox-viewer` wrapper gains the
+`--fullscreen` modifier class: `position: fixed; inset: 0; z-index: 9999`
+(above the modal layer's z-50, so it covers the whole viewport inside the
+ticket-view modal too), opaque canvas-token backdrop. The iframe just fills
+100%/100% — unlike the mermaid overlay there is no scaling logic, because an
+HTML document reflows on its own.
+
+**Why CSS-repositioning and not a portal/modal or the native Fullscreen
+API** — the contract is that toggling must not disturb the loaded preview
+(C-2.27): browsers reload an iframe when it is moved in the DOM, so a
+React-portal/modal approach would force a re-mint and long fullscreen
+sessions would die against the ≤5 min token TTL on their own. The native
+Fullscreen API is remount-free but hides browser chrome and exits on tab
+switch — not the requested mermaid-parity UX.
+
+**Exit affordances.** The button (still visible top-right) and `Escape`.
+Escape is handled in the capture phase with `stopImmediatePropagation`, so
+in the ticket view the first Escape exits fullscreen only — the modal's own
+Escape close never fires alongside it (verified live: second Escape closes
+the modal). While fullscreen, the body scroll is locked; the lock restores
+guarded, so the ticket modal's own lock is never clobbered.
+
+**Deliberately NOT done.** No focus trap: the overlay matches the mermaid
+fullscreen precedent — background chrome is visually covered and Escape
+always exits; adding a modal-grade focus trap is out of parity scope. No
+keyboard shortcut other than Escape while fullscreen.
+
 ## The hard invariant — `sandbox` is not a prop
 
 `HtmlSandboxViewer` hardcodes the iframe `sandbox="allow-scripts"` attribute.
@@ -140,4 +179,9 @@ the node is server-owned (OBL-1); the icon is pure presentation derived from it.
 - The iframe has `title="Document preview"` for screen readers (WCAG 2.4.1).
 - The unsupported placeholder and error/deleted states use the same heading
   hierarchy as `MarkdownViewer`'s equivalent states.
-- No focus trap needed (inline viewer, not a modal).
+- No focus trap in the panel view (inline viewer, not a modal). The
+  fullscreen overlay also ships without a focus trap — deliberate mermaid
+  parity (background is covered, Escape always exits); see "Fullscreen
+  mode".
+- The fullscreen control is keyboard-operable with a visible `:focus-visible`
+  state and announces its state via `aria-pressed`.

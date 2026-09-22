@@ -1,6 +1,8 @@
 import type { DocumentFile } from './FileTree'
+import { Maximize, Minimize } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { authFetch } from '@/auth/authFetch'
+import { cn } from '@/lib/utils'
 
 interface PreviewTokenResponse {
   token: string
@@ -42,6 +44,7 @@ export default function HtmlSandboxViewer({
 }: HtmlSandboxViewerProps): React.JSX.Element {
   const [state, setState] = useState<ViewerState>('minting')
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [isFullscreen, setIsFullscreen] = useState(false)
   const loadedFilePathRef = useRef<string | null>(null)
 
   const mintTokenAndBuildUrl = useCallback(async (pathToLoad: string) => {
@@ -82,6 +85,39 @@ export default function HtmlSandboxViewer({
     void mintTokenAndBuildUrl(filePath)
   }, [filePath, fileDeleted, mintTokenAndBuildUrl, refreshToken, updateState])
 
+  // Fullscreen is a CSS-repositioning overlay on the EXISTING wrapper (BR-1.16):
+  // the iframe node is never moved or recreated, so a long fullscreen session
+  // cannot outlive the preview token (C-2.27 — no remount, no re-mint).
+  // Escape is handled in the capture phase with stopImmediatePropagation so the
+  // ticket modal's own bubble-phase Escape close never fires alongside it
+  // (same contract as the mermaid overlay, utils/mermaid/fullscreen.ts).
+  useEffect(() => {
+    if (!isFullscreen)
+      return
+
+    const savedBodyOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    const handleKeydown = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        event.stopImmediatePropagation()
+        setIsFullscreen(false)
+      }
+    }
+    document.addEventListener('keydown', handleKeydown, true)
+
+    return () => {
+      document.removeEventListener('keydown', handleKeydown, true)
+      // Guarded restore: only unlock what this overlay locked. The ticket
+      // modal also owns a 'hidden' body lock — when it was the previous owner
+      // it stays in control, and when its cleanup already ran (current value
+      // unlocked) there is nothing of ours left to undo.
+      if (document.body.style.overflow === 'hidden' && savedBodyOverflow !== 'hidden')
+        document.body.style.overflow = savedBodyOverflow
+    }
+  }, [isFullscreen])
+
   // Bump iframe key on refreshToken so the iframe reloads with the fresh token
   // (the src itself changes, but the key guarantees a clean remount).
   const effectiveKey = `preview:${refreshToken ?? 0}`
@@ -114,7 +150,10 @@ export default function HtmlSandboxViewer({
   }
 
   return (
-    <div data-testid="file-viewer" className="html-sandbox-viewer">
+    <div
+      data-testid="file-viewer"
+      className={cn('html-sandbox-viewer', isFullscreen && 'html-sandbox-viewer--fullscreen')}
+    >
       {/*
         SECURITY: sandbox is hardcoded. Do NOT make it a prop. Do NOT add
         allow-same-origin. The unit test (HtmlSandboxViewer.test.tsx) asserts
@@ -129,6 +168,19 @@ export default function HtmlSandboxViewer({
         title="Document preview"
         className="html-sandbox-viewer__frame"
       />
+      <button
+        type="button"
+        data-testid="html-fullscreen-toggle"
+        className="html-sandbox-viewer__fullscreen-btn"
+        title={isFullscreen ? 'Exit fullscreen (Esc)' : 'Enter fullscreen'}
+        aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+        aria-pressed={isFullscreen}
+        onClick={() => setIsFullscreen(current => !current)}
+      >
+        {isFullscreen
+          ? <Minimize size={16} aria-hidden="true" />
+          : <Maximize size={16} aria-hidden="true" />}
+      </button>
     </div>
   )
 }

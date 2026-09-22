@@ -161,13 +161,48 @@
 
   /* MDT-221 — sandboxed HTML preview fills the viewer panel like the markdown
    * viewer. The iframe defaults to 300x150 without this; the design intent is
-   * full-width/height so "working" HTML files render at their real size. */
+   * full-width/height so "working" HTML files render at their real size.
+   * `relative` anchors the floating fullscreen control. */
   .html-sandbox-viewer {
-    @apply flex h-full min-h-0 w-full flex-col;
+    @apply relative flex h-full min-h-0 w-full flex-col;
   }
 
   .html-sandbox-viewer__frame {
     @apply h-full w-full flex-1 border-0;
+  }
+
+  /* MDT-221 r3 (BR-1.16) — fullscreen overlays the whole viewport by
+   * CSS-repositioning the EXISTING wrapper: the iframe node is never moved,
+   * so nothing reloads and the minted preview token keeps serving the loaded
+   * document (C-2.27). Mermaid-overlay parity (utils/mermaid/fullscreen.ts):
+   * fixed inset-0 + z above the modal layer (ui/modal.css .modal is z-50).
+   * Unlike mermaid there is no scaling logic — an iframe just fills 100%/100%.
+   * The canvas token gives the overlay an opaque backdrop in both themes. */
+  .html-sandbox-viewer--fullscreen {
+    position: fixed;
+    /* inset:0 alone sizes the box — do NOT add width:100vw, it includes the
+     * classic scrollbar width and overflows the viewport on Windows. */
+    inset: 0;
+    z-index: 9999;
+    background-color: oklch(var(--background));
+  }
+
+  .html-sandbox-viewer__fullscreen-btn {
+    @apply inline-flex h-9 w-9 items-center justify-center border transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50;
+    position: absolute;
+    top: var(--gap-sm);
+    right: var(--gap-sm);
+    /* Above the iframe despite following it in DOM order (iframe is flex-1
+     * and fills the wrapper). */
+    z-index: 1;
+    border-color: oklch(var(--border));
+    border-radius: var(--radius-input);
+    background-color: color-mix(in srgb, var(--bg-elevated) 80%, transparent);
+    color: oklch(var(--foreground));
+  }
+
+  .html-sandbox-viewer__fullscreen-btn:hover {
+    background-color: var(--state-hover-bg);
   }
 
   .document-viewer {
