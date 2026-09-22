@@ -1,53 +1,35 @@
-import type { VariantProps } from 'class-variance-authority'
-import { cva } from 'class-variance-authority'
 import * as React from 'react'
 import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '../../lib/utils'
 
-const modalVariants = cva(
-  'modal-content',
-  {
-    variants: {
-      size: {
-        sm: 'sm:max-w-lg',
-        md: 'sm:max-w-xl',
-        lg: 'sm:max-w-3xl',
-        xl: 'sm:max-w-5xl',
-        full: 'sm:max-w-full',
-      },
-      variant: {
-        default: '',
-        dark: 'bg-gray-800',
-        success: 'bg-green-50',
-        warning: 'bg-yellow-50',
-        error: 'bg-red-50',
-      },
-    },
-    defaultVariants: {
-      size: 'xl',
-      variant: 'default',
-    },
-  },
-)
+/* Width tiers own their CSS in modal.css (.modal-content--*); `size` just
+   picks the modifier. sm = Tailwind's 640px breakpoint. */
+const MODAL_SIZE_CLASS = {
+  sm: 'modal-content--sm',
+  md: 'modal-content--md',
+  lg: 'modal-content--lg',
+  xl: 'modal-content--xl',
+  full: 'modal-content--full',
+} as const
 
-interface ModalProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-  VariantProps<typeof modalVariants> {
+type ModalSize = keyof typeof MODAL_SIZE_CLASS
+
+interface ModalProps extends React.HTMLAttributes<HTMLDivElement> {
   isOpen: boolean
   onClose: () => void
   closeOnOverlayClick?: boolean
   closeOnEscape?: boolean
   showCloseButton?: boolean
   overlayClassName?: string
+  size?: ModalSize
   children: React.ReactNode
 }
 
 const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
   ({
     className,
-    size,
-    variant,
+    size = 'xl',
     isOpen,
     onClose,
     closeOnOverlayClick = true,
@@ -111,7 +93,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
           {/* Modal content */}
           <div
             ref={modalRef}
-            className={cn(modalVariants({ size, variant }), 'relative', className)}
+            className={cn('modal-content', size && MODAL_SIZE_CLASS[size], className)}
             {...props}
           >
             {children}

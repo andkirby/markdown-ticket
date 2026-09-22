@@ -33,6 +33,16 @@
     background-color: var(--bg-elevated);
   }
 
+  /* Size modifiers (were cva sm:max-w-* utilities). Tailwind `sm:` = 640px —
+     breakpoint custom properties are a tracked ITCSS §Settings gap. */
+  @media (min-width: 640px) {
+    .modal-content--sm { max-width: 32rem; }
+    .modal-content--md { max-width: 36rem; }
+    .modal-content--lg { max-width: 48rem; }
+    .modal-content--xl { max-width: 64rem; }
+    .modal-content--full { max-width: 100%; }
+  }
+
   .modal__header {
     @apply px-4 py-3 pr-14 border-b;
     border-color: oklch(var(--border));

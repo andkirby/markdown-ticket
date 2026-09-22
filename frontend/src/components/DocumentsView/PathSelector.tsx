@@ -19,7 +19,6 @@ import {
 import * as React from 'react'
 import { useCallback, useEffect, useState } from 'react'
 import { authFetch } from '@/auth/authFetch'
-import { Button } from '@/components/ui/Button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Tooltip,
@@ -351,28 +350,26 @@ export default function PathSelector({
     return (
       <div>
         <div className="path-selector__toolbar">
-          <Button
+          <button
             type="button"
-            variant="outline"
-            size="sm"
+            className="btn btn-outline btn-sm"
             onClick={expandAll}
             disabled={items.length === 0}
-            leftIcon={<ListTree className="path-selector__icon" aria-hidden="true" />}
             data-testid="path-selector-expand-all"
           >
+            <ListTree className="path-selector__icon" aria-hidden="true" />
             Expand all
-          </Button>
-          <Button
+          </button>
+          <button
             type="button"
-            variant="outline"
-            size="sm"
+            className="btn btn-outline btn-sm"
             onClick={collapseAll}
             disabled={items.length === 0}
-            leftIcon={<ListCollapse className="path-selector__icon" aria-hidden="true" />}
             data-testid="path-selector-collapse-all"
           >
+            <ListCollapse className="path-selector__icon" aria-hidden="true" />
             Collapse all
-          </Button>
+          </button>
         </div>
         <div className="path-selector__tree" data-testid="path-selector-tree">
           <div className="path-selector__tree-inner">{items.map(item => renderItem(item))}</div>
@@ -488,20 +485,23 @@ export default function PathSelector({
             selected
           </div>
           <div className="path-selector__actions">
-            <Button
-              variant="outline"
+            <button
+              type="button"
+              className="btn btn-outline"
               onClick={onCancel}
               data-testid="path-selector-cancel"
             >
               Cancel
-            </Button>
-            <Button
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary"
               onClick={handleSave}
               disabled={selectedPaths.size === 0}
               data-testid="path-selector-save"
             >
               Save Selection
-            </Button>
+            </button>
           </div>
         </div>
       </div>

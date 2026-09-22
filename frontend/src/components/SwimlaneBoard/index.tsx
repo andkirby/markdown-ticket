@@ -14,7 +14,6 @@ import { StatusBadge } from '../Badge/StatusBadge'
 import { useDropZone } from '../Column/useDropZone'
 import TicketCard from '../TicketCard'
 import { TicketCode } from '../TicketCode'
-import { Button } from '../ui/index'
 import {
   buildSwimlaneModel,
   canDropTicketInLane,
@@ -558,10 +557,9 @@ export function SwimlaneBoard({
                     <span className="swimlane-board__lifecycle">
                       {lifecycle.targetStatus
                         ? (
-                            <Button
+                            <button
                               type="button"
-                              size="sm"
-                              variant={lifecycle.text === 'Activate' ? 'default' : 'outline'}
+                              className={`btn btn-sm ${lifecycle.text === 'Activate' ? 'btn-primary' : 'btn-outline'}`}
                               disabled={!canWrite || closeBlocked}
                               title={closeBlocked ? blockedTitle : undefined}
                               aria-label={`${lifecycle.text} ${lane.title}`}
@@ -573,7 +571,7 @@ export function SwimlaneBoard({
                               data-lane-key={lane.key}
                             >
                               {lifecycle.text}
-                            </Button>
+                            </button>
                           )
                         : (
                             <span

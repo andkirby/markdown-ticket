@@ -18,7 +18,6 @@ import * as React from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { authFetch } from '@/auth/authFetch'
-import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import {
   ResizableHandle,
@@ -867,17 +866,15 @@ export default function DocumentsLayout({
               View.
             </p>
             {canWrite && (
-              <Button
+              <button
                 type="button"
                 onClick={() => setShowPathSelector(true)}
-                variant="outline"
-                size="sm"
-                className="documents-view__state-action"
-                leftIcon={<Settings className="documents-view__state-action-icon" aria-hidden="true" />}
+                className="btn btn-outline btn-sm documents-view__state-action"
                 data-testid="configure-paths-empty-button"
               >
+                <Settings className="documents-view__state-action-icon" aria-hidden="true" />
                 Configure document paths
-              </Button>
+              </button>
             )}
           </div>
         </div>

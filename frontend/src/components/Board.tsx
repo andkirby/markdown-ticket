@@ -28,7 +28,6 @@ import { HamburgerMenu } from './HamburgerMenu'
 import { SortControls } from './SortControls'
 import { SwimlaneBoard } from './SwimlaneBoard'
 import { Alert, AlertDescription, AlertTitle } from './ui/alert'
-import { Button } from './ui/index'
 import { ScrollArea } from './ui/scroll-area'
 
 interface BoardProps {
@@ -447,7 +446,7 @@ const BoardContent: React.FC<BoardProps> = ({
           {/* Backend down warning */}
           {projects.length === 0 && isBackendDown && (
             <div className="mt-6">
-              <Alert variant="warning" className="text-left">
+              <Alert data-variant="warning" className="text-left">
                 <AlertTitle className="flex items-center gap-2">
                   <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -496,16 +495,17 @@ const BoardContent: React.FC<BoardProps> = ({
   if (error) {
     return (
       <div className="p-6">
-        <Alert variant="destructive">
+        <Alert data-variant="destructive">
           <AlertTitle>Error loading tickets</AlertTitle>
           <AlertDescription>
             <p className="mb-4">{error.message}</p>
-            <Button
+            <button
+              type="button"
+              className="btn btn-secondary"
               onClick={handleRefresh}
-              variant="secondary"
             >
               Refresh
-            </Button>
+            </button>
           </AlertDescription>
         </Alert>
       </div>
@@ -552,22 +552,23 @@ const BoardContent: React.FC<BoardProps> = ({
               preferences={sortPreferences}
               onPreferencesChange={handleSortPreferencesChange}
             />
-            <Button
+            <button
+              type="button"
+              className="btn btn-secondary h-9 px-3"
               onClick={handleRefresh}
-              variant="secondary"
-              className="h-9 px-3"
             >
               Refresh
-            </Button>
+            </button>
             {canWrite && (
               <>
-                <Button
+                <button
+                  type="button"
                   onClick={handleTicketCreate}
                   className="btn btn-primary h-9 px-3"
                   disabled={!selectedProject}
                 >
                   Create
-                </Button>
+                </button>
                 <HamburgerMenu
                   onAddProject={() => console.warn('Add Project clicked from Board')}
                   onEditProject={() => console.warn('Edit Project clicked from Board')}
