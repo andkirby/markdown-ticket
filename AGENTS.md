@@ -206,7 +206,8 @@ When users ask "how to" questions, search and read the relevant documentation be
 ## Skills Reference
 
 **See [docs/SKILLS.md](docs/SKILLS.md)** for recommended skills:
+- `mdt` - MDT CR/ADR workflows and ticket stages
+- `mdt-frontend` - frontend conventions for `frontend/src/`
 - `frontend-react-component` - React component design
-- `architecture-patterns` - Backend architecture
-- `playwright-skill` - E2E testing
-- `premium-ux-designer` - UI polish
+- `code-review` - verify-only reviews with evidence
+- `playwright-cli` - E2E testing
