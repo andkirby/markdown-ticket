@@ -37,7 +37,7 @@
     width: 220px;
     min-height: 32px;
     padding: 0 26px 0 26px;
-    border: 1px solid var(--border);
+    border: 1px solid oklch(var(--border));
     border-radius: 6px;
     background: var(--background);
     color: oklch(var(--foreground));
@@ -75,27 +75,47 @@
     }
   }
 
-  /* Compact ghost toolbar chip — shared by the checkbox <label>s and the
-     Collapse/Expand-all <button>s (replaces the vendor ui/Button ghost/sm
-     utility chain; per STYLING.md the toolbar family owns one pattern).
-     border/background resets are no-ops on <label>, required on <button>. */
-  .swimlane-board__toggle {
+  /* MDT-206 UAT r9: toolbar filters are aria-pressed toggle buttons — the
+     ruled "toolbar toggles" pattern (styleguide.html): the label carries the
+     verb, the icon the object, the fill the state. Joined silhouette comes
+     from the .control-group primitive (layout.css); this class is the skin.
+     Collapse all / Expand all are one-shot actions and reuse .btn btn-sm
+     btn-outline instead — never aria-pressed. */
+  .swimlane-board__filter {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: var(--gap-sm);
     min-height: 32px;
-    padding: 0 8px;
-    border: 0;
-    border-radius: 6px;
-    background: transparent;
-    color: var(--text-muted);
+    padding: 0 10px;
+    border: 1px solid oklch(var(--border));
+    border-radius: var(--radius-input);
+    background: var(--bg-elevated);
+    color: oklch(var(--foreground));
     font-size: var(--fs-ui-sm);
     font-weight: 600;
     cursor: pointer;
 
+    & svg {
+      width: 14px;
+      height: 14px;
+      flex: none;
+      color: var(--text-muted);
+    }
+
     &:hover {
       background: var(--state-hover-bg);
-      color: oklch(var(--foreground));
+    }
+
+    /* Pressed = the ramp's solid strength (compact control). Declared after
+       :hover at equal specificity so active absorbs hover (STYLING.md). */
+    &[aria-pressed='true'] {
+      border-color: oklch(var(--primary));
+      background: oklch(var(--primary));
+      color: oklch(var(--primary-foreground));
+
+      & svg {
+        color: oklch(var(--primary-foreground));
+      }
     }
   }
 

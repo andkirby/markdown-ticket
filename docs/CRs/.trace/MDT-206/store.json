@@ -224,7 +224,7 @@
     {
       "id": "BR-6.1",
       "kind": "behavior",
-      "text": "WHILE swimlane mode is active, the system shall render a search field in the swimlane toolbar beside the Hide empty / Show badges / Show closed toggles. Typing filters the epic lane list itself (not just tickets inside lanes): an epic lane is shown when its epic key or title matches the query, or when any of its child tickets matches; lanes with no match are removed from the board. Matching is by title (case-insensitive substring) or ticket key, accepting the full zero-padded key (ABC-012), the bare number (12), and the simplified key (ABC-12, normalized to the zero-padded form via the shared key-normalization rules). When the epic itself matches, the lane shows all of its tickets (the user found the epic); when only child tickets match, the lane shows only the matching tickets. The No-epic lane is shown only when one of its tickets matches, showing only the matching tickets. The search filters presentation only (ticket data is not mutated, epic progress is not recomputed) and composes with the visibility toggles.",
+      "text": "WHILE swimlane mode is active, the system shall render a search field in the swimlane toolbar beside the Hide empty / Show badges / Show closed toggles. Typing filters the epic lane list by the epic ticket's own key or title — matching runs on epic tickets only: an epic lane is shown when its epic key or title matches the query, showing all of its tickets; every other lane, including the No-epic lane, is removed while the query is active. Child tickets are never matched (finding work inside an epic is the header global filter's job). Matching is by title (case-insensitive substring) or ticket key, accepting the full zero-padded key (ABC-012), the bare number (12), and the simplified key (ABC-12, normalized to the zero-padded form via the shared key-normalization rules). The search filters presentation only (ticket data is not mutated, epic progress is not recomputed) and composes with the visibility toggles.",
       "sourceRef": "CR:MDT-206",
       "routePolicy": "bdd"
     }
@@ -411,13 +411,13 @@
     },
     {
       "id": "swimlane_search_filters_by_title_or_key",
-      "title": "Swimlane search filters the epic lane list by title or key",
+      "title": "Swimlane search filters the epic lane list by epic title or key",
       "covers": [
         "BR-6.1"
       ],
-      "given": "the user is on the swimlane board with multiple epic lanes and the toolbar showing the search field and the toggles",
-      "when": "the user types a query (an epic title or key, a child ticket title or key in full/bare/simplified form) into the toolbar search field",
-      "then": "only lanes with a matching epic or a matching child ticket remain on the board (epic match shows the whole lane; child match shows only matching tickets; the No-epic lane stays only if one of its tickets matches), ticket data is unchanged, epic progress is unchanged, and clearing the query restores the full lane list",
+      "given": "the user is on the swimlane board with multiple epic lanes (plus the No-epic lane) and the toolbar showing the search field and the toggles",
+      "when": "the user types a query (an epic title, or an epic key in full zero-padded, bare-number, or simplified form) into the toolbar search field",
+      "then": "only lanes whose epic key or title matches remain on the board, each showing all of its tickets; lanes whose epics do not match — including the No-epic lane and lanes where only child tickets match — are removed entirely; ticket data and epic progress are unchanged, and clearing the query restores the full lane list",
       "sourceRef": "CR:MDT-206"
     }
   ],

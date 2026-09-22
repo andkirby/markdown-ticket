@@ -295,3 +295,20 @@ Corrected round 7: the toolbar search must filter **the epics list itself**, not
 **Strict drift/lock:** not used.
 
 **More implementation required:** no — re-implemented and tested (19/19 helpers, 29/29 swimlane component, 11/11 swimlane E2E green; trace re-validated).
+
+### UAT Session 2026-09-22 (round 9 — search matches epic tickets only; toolbar toggles converted to pressed-state buttons)
+
+The search query means "which epic", never "which ticket": child-ticket matching (round 8) is removed. Separately, the toolbar filters' checkbox→toggle-button ruling is applied in the same round. Execution brief: [uat.md](./MDT-206/uat.md).
+
+**Approved changes:**
+- `filterLanesBySearch` keeps an epic lane only when its **epic key or title** matches (whole lane, all tickets); child-only matches, the No-epic lane, and non-matching epics are removed while a query is active. Key matching (`ABC-012`, `12`, `ABC-12`) and presentation-only semantics unchanged. Search input `aria-label`/placeholder reworded to epics.
+- **Toolbar toggles (ruled and implemented):** Hide empty / Show badges / Show closed are `aria-pressed` toggle buttons with visible labels in a `.control-group`, pressed = ramp solid strength; icons encode the object (Implemented glyph / `Tag` / `SquareDashed`), no shared eye icon; Collapse all / Expand all are plain `btn btn-sm btn-outline` actions with lucide `FoldVertical`/`UnfoldVertical`. Pattern documented in `frontend/src/styleguide.html` ("toolbar toggles" section). Behavior unchanged (same state, persistence, endFocus wiring); testids preserved.
+
+**Changed requirement IDs:** `BR-6.1` (refined in place — epic-only matching), `swimlane_search_filters_by_title_or_key` (refined in place).
+
+**Updated workflow documents:** `requirements.md`, `tests.md`, `uat.md`; requirements + bdd `*.trace.md` re-rendered.
+
+**Strict drift/lock:** not used.
+
+**More implementation required:** no — all three slices implemented and tested (24/24 helpers, 41/41 component, 15/15 swimlane + epic-board-jump E2E, build + semantic-classes hook clean; see uat.md Validation). Note: the conversion imports `ImplementedGlyph` from MDT-247's `statusGlyphs.tsx` (uncommitted) — the two CRs should land together.
+

@@ -139,9 +139,12 @@ function normalizeKeyTerm(term: string): string {
 }
 
 /**
- * MDT-206 BR-6.1 (UAT round 7): does a ticket match the swimlane toolbar
- * search query? Only the title (case-insensitive substring) and the ticket
- * key are searched — no other field. Key matching accepts:
+ * MDT-206 BR-6.1 (UAT round 9): does an epic ticket match the swimlane toolbar
+ * search query? The toolbar search matches epic tickets only — child tickets
+ * are never searched (the query means "which epic"; finding work inside an
+ * epic is the header global filter's job). Only the title (case-insensitive
+ * substring) and the ticket key are searched — no other field. Key matching
+ * accepts:
  * - the full zero-padded key ("ABC-012"),
  * - the bare number ("12", substring of the key's number part, so zero-pad
  *   differences don't matter),
@@ -167,14 +170,12 @@ export function matchesTicketSearch(
 }
 
 /**
- * Filter the epic lane list itself (MDT-206 BR-6.1, UAT round 8):
- * - an epic lane is kept when its epic key/title matches the query, or when
- *   any child ticket matches;
- * - an epic match shows the whole lane (the user found the epic);
- * - a child-only match narrows the lane to the matching tickets;
- * - the No-epic lane is kept only when one of its tickets matches (narrowed).
- * Epic progress is intentionally kept from the full child set (search is
- * presentation-only).
+ * Filter the epic lane list (MDT-206 BR-6.1, UAT round 9): an epic lane is
+ * kept — with ALL of its tickets — when its epic key/title matches the query;
+ * every other lane, including the No-epic lane, is removed while the query is
+ * active. Child tickets are never matched (finding work inside an epic is the
+ * header global filter's job). Epic progress is intentionally kept from the
+ * full child set (search is presentation-only).
  */
 export function filterLanesBySearch(
   lanes: SwimlaneLane[],
@@ -182,21 +183,8 @@ export function filterLanesBySearch(
 ): SwimlaneLane[] {
   if (!query.trim())
     return lanes
-  return lanes
-    .map((lane) => {
-      const epicMatches = !!lane.epic && matchesTicketSearch(
-        { code: lane.key, title: lane.title },
-        query,
-      )
-      if (epicMatches)
-        return { lane, keep: true }
-      return {
-        lane: { ...lane, tickets: lane.tickets.filter(ticket => matchesTicketSearch(ticket, query)) },
-        keep: false,
-      }
-    })
-    .filter(({ lane, keep }) => keep || lane.tickets.length > 0)
-    .map(({ lane }) => lane)
+  return lanes.filter(lane =>
+    !!lane.epic && matchesTicketSearch({ code: lane.key, title: lane.title }, query))
 }
 
 export interface LaneVisibilityOptions {

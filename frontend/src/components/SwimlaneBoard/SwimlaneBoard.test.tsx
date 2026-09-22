@@ -401,7 +401,7 @@ describe('SwimlaneBoard column collapse (MDT-206 UAT round 6)', () => {
   })
 })
 
-describe('SwimlaneBoard toolbar search (MDT-206 BR-6.1, UAT round 7)', () => {
+describe('SwimlaneBoard toolbar search (MDT-206 BR-6.1, UAT rounds 7–9)', () => {
   beforeEach(() => {
     localStorage.clear()
   })
@@ -426,33 +426,47 @@ describe('SwimlaneBoard toolbar search (MDT-206 BR-6.1, UAT round 7)', () => {
     renderSearchBoard()
     const input = screen.getByTestId('swimlane-search')
     expect(input).toBeDefined()
-    expect(input.getAttribute('aria-label')).toBe('Search swimlane tickets by title or key')
+    expect(input.getAttribute('aria-label')).toBe('Search epics by title or key')
     expect(screen.getByTestId('swimlane-hide-empty')).toBeDefined()
     expect(screen.getByTestId('swimlane-show-closed')).toBeDefined()
   })
 
-  it('filters lane tickets by title (case-insensitive substring)', () => {
+  it('renders filters as an aria-pressed toggle group, not checkboxes (round 9 pattern)', () => {
     renderSearchBoard()
-    fireEvent.change(screen.getByTestId('swimlane-search'), { target: { value: 'LOGIN' } })
-    expect(screen.getByText('Fix login flow')).toBeDefined()
-    expect(screen.queryByText('Rate limits')).toBeNull()
+    expect(screen.getByRole('group', { name: 'Swimlane filters' })).toBeDefined()
+    for (const testId of ['swimlane-hide-empty', 'swimlane-show-badges', 'swimlane-show-closed']) {
+      const btn = screen.getByTestId(testId)
+      expect(btn.tagName).toBe('BUTTON')
+      expect(btn.getAttribute('aria-pressed')).toBe('false')
+    }
+    // One-shot actions never carry pressable state.
+    expect(screen.getByTestId('swimlane-collapse-all').getAttribute('aria-pressed')).toBeNull()
+    expect(screen.getByTestId('swimlane-expand-all').getAttribute('aria-pressed')).toBeNull()
   })
 
-  it('filters by bare number and by simplified key (MDT-12 → MDT-012)', () => {
-    renderSearchBoard()
-    fireEvent.change(screen.getByTestId('swimlane-search'), { target: { value: '12' } })
-    expect(screen.getByText('Fix login flow')).toBeDefined()
-    expect(screen.queryByText('Rate limits')).toBeNull()
+  it('removes the lane when only child tickets match the query (round 9: epics only)', () => {
+    const { container } = renderSearchBoard()
+    fireEvent.change(screen.getByTestId('swimlane-search'), { target: { value: 'LOGIN' } })
+    expect(container.querySelector('[data-testid="swimlane-lane"][data-lane-key="MDT-010"]')).toBeNull()
+  })
 
-    fireEvent.change(screen.getByTestId('swimlane-search'), { target: { value: 'MDT-12' } })
+  it('matches the epic by bare number and by simplified key (MDT-10 → MDT-010)', () => {
+    const { container } = renderSearchBoard()
+    fireEvent.change(screen.getByTestId('swimlane-search'), { target: { value: '10' } })
+    expect(container.querySelector('[data-testid="swimlane-lane"][data-lane-key="MDT-010"]')).not.toBeNull()
     expect(screen.getByText('Fix login flow')).toBeDefined()
-    expect(screen.queryByText('Rate limits')).toBeNull()
+    expect(screen.getByText('Rate limits')).toBeDefined()
+
+    fireEvent.change(screen.getByTestId('swimlane-search'), { target: { value: 'MDT-10' } })
+    expect(container.querySelector('[data-testid="swimlane-lane"][data-lane-key="MDT-010"]')).not.toBeNull()
+    expect(screen.getByText('Fix login flow')).toBeDefined()
+    expect(screen.getByText('Rate limits')).toBeDefined()
   })
 
   it('clears the search via the clear button and restores the full board', () => {
     renderSearchBoard()
     fireEvent.change(screen.getByTestId('swimlane-search'), { target: { value: 'login' } })
-    expect(screen.queryByText('Rate limits')).toBeNull()
+    expect(screen.queryByText('Fix login flow')).toBeNull()
 
     fireEvent.click(screen.getByTestId('swimlane-search-clear'))
     expect(screen.getByText('Fix login flow')).toBeDefined()
@@ -479,7 +493,7 @@ describe('SwimlaneBoard toolbar search (MDT-206 BR-6.1, UAT round 7)', () => {
   it('does not recompute the epic progress bar for the filtered view', () => {
     renderSearchBoard()
     const before = document.querySelector('[data-testid="swimlane-progress"]')?.getAttribute('aria-valuenow')
-    fireEvent.change(screen.getByTestId('swimlane-search'), { target: { value: 'login' } })
+    fireEvent.change(screen.getByTestId('swimlane-search'), { target: { value: 'auth overhaul' } })
     const after = document.querySelector('[data-testid="swimlane-progress"]')?.getAttribute('aria-valuenow')
     expect(after).toBe(before)
   })
@@ -560,7 +574,7 @@ describe('SwimlaneBoard focused arrival (MDT-246 ?epic= token)', () => {
     rerenderWithFocus('MDT-100')
     await act(async () => {})
     expect(laneEl(container, 'MDT-100')).not.toBeNull()
-    expect((screen.getByTestId('swimlane-hide-empty') as HTMLInputElement).checked).toBe(true)
+    expect(screen.getByTestId('swimlane-hide-empty').getAttribute('aria-pressed')).toBe('true')
   })
 
   it('clears an active non-matching search on arrival (BR-1.5)', async () => {
@@ -592,7 +606,9 @@ describe('SwimlaneBoard focused arrival (MDT-246 ?epic= token)', () => {
     const { container } = renderBoard({ focusEpicKey: 'MDT-100' })
     await act(async () => {})
 
-    fireEvent.change(screen.getByTestId('swimlane-search'), { target: { value: 'oauth' } })
+    // Round 9: the query must match the epic itself ('auth' → 'Auth Overhaul');
+    // a child-only match ('oauth') would remove the lane entirely.
+    fireEvent.change(screen.getByTestId('swimlane-search'), { target: { value: 'auth' } })
     const label = container.querySelector('[data-testid="swimlane-lane-label"][data-lane-key="MDT-100"]') as HTMLElement
     expect(label.getAttribute('aria-expanded')).toBe('true')
     // Focus ended: the highlight is gone even before its timeout.

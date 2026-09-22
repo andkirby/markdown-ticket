@@ -391,6 +391,63 @@
   </div>
 
   <style>
+    /* ── Toolbar toggles demo (MDT-206 UAT r9 ruling) ───────────────────
+       Joined silhouette mirrors the .control-group primitive (layout.css):
+       negative margin collapses adjacent borders, first/last keep corners.
+       The pressed rule is declared AFTER :hover at equal specificity —
+       active absorbs hover (STYLING.md ramp rule). */
+    .toggle-demo { margin-top: .85rem; display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: flex-start; }
+    .toggle-demo > div { display: flex; flex-direction: column; gap: .35rem; align-items: flex-start; }
+    .toggle-demo .group { display: inline-flex; align-items: stretch; }
+    .toggle-demo .tgl {
+      display: inline-flex; align-items: center; gap: 6px;
+      height: 32px; padding: 0 10px;
+      border: 1px solid oklch(var(--border)); border-radius: var(--radius-input);
+      background: var(--bg-elevated); color: oklch(var(--foreground));
+      font-size: .82rem; font-weight: 500; font-family: inherit; cursor: pointer;
+    }
+    .toggle-demo .tgl svg { width: 14px; height: 14px; flex: none; color: var(--text-muted); }
+    .toggle-demo .tgl:hover { background: var(--state-hover-bg); }
+    .toggle-demo .tgl:not(:first-child) { border-top-left-radius: 0; border-bottom-left-radius: 0; margin-left: -1px; }
+    .toggle-demo .tgl:not(:last-child) { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+    .toggle-demo .tgl[aria-pressed="true"] { background: oklch(var(--primary)); border-color: oklch(var(--primary)); color: oklch(var(--primary-foreground)); }
+    .toggle-demo .tgl[aria-pressed="true"] svg { color: oklch(var(--primary-foreground)); }
+    .toggle-demo .actions { display: inline-flex; gap: 8px; margin-top: .5rem; }
+    .toggle-demo .act {
+      display: inline-flex; align-items: center; height: 32px; padding: 0 10px;
+      border: 1px solid oklch(var(--border)); border-radius: var(--radius-input);
+      background: var(--bg-elevated); color: oklch(var(--foreground));
+      font-size: .82rem; font-weight: 500; font-family: inherit; cursor: pointer;
+    }
+    .toggle-demo .act:hover { background: var(--state-hover-bg); }
+    .toggle-demo .bad .tgl { padding: 0 8px; }
+  </style>
+  <h2 id="toolbar-toggles">toolbar toggles · filters are pressed-state buttons, labels stay</h2>
+  <p class="note" style="margin-top:.25rem"><b>Rule (ruled 2026-09-22, MDT-206 UAT r9):</b> a toolbar filter (Hide empty · Show badges · Show closed) is a <code>&lt;button aria-pressed&gt;</code> — never a checkbox, never icon-only. Three channels, no overlap: the <b>label</b> carries the verb (<i>Hide empty</i> vs <i>Show closed</i> are inverse-polarity verbs over different objects — no icon vocabulary distinguishes them, and a <code>title</code> tooltip is a hover-only recall tax); the <b>icon</b> encodes the <b>object</b>; the <b>fill</b> encodes on/off (the ramp's solid strength — compact-control recipe). <b>No shared eye icon:</b> eye/eye-off duplicates the verb the label already carries, and its polarity would flip meaning between controls while the fill already carries the state. Icon vocabulary reuses established glyphs: Show closed → the <b>Implemented status glyph</b> (it toggles exactly that status's visibility), Show badges → <code>tag</code>, Hide empty → <code>square-dashed</code>. If a slot can't earn a distinct glyph, drop the icon — label-only beats a filler eye. One-shot actions (<b>Collapse all / Expand all</b>) stay plain buttons — never <code>aria-pressed</code>; there is no state to press.</p>
+  <div class="toggle-demo">
+    <div>
+      <label>filters · joined group, pressed = solid pill (label · object icon · fill)</label>
+      <div class="group" role="group" aria-label="Swimlane filters">
+        <button type="button" class="tgl" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3a2 2 0 0 0-2 2"/><path d="M19 3a2 2 0 0 1 2 2"/><path d="M21 19a2 2 0 0 1-2 2"/><path d="M5 21a2 2 0 0 1-2-2"/><path d="M9 3h1"/><path d="M9 21h1"/><path d="M14 3h1"/><path d="M14 21h1"/><path d="M3 9v1"/><path d="M21 9v1"/><path d="M3 14v1"/><path d="M21 14v1"/></svg>Hide empty</button>
+        <button type="button" class="tgl" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></svg>Show badges</button>
+        <button type="button" class="tgl" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3.75a8.25 8.25 0 1 0 0 16.5a8.25 8.25 0 1 0 0-16.5ZM7.1 13.2L10.5 16.8L17.3 10.2L15.7 8.6L11.4 14L8.7 11.6Z" fill="currentColor" fill-rule="evenodd"/></svg>Show closed</button>
+      </div>
+      <div class="actions">
+        <button type="button" class="act">Collapse all</button>
+        <button type="button" class="act">Expand all</button>
+      </div>
+    </div>
+    <div class="bad">
+      <label>rejected · shared eye + tooltip only</label>
+      <div class="group" role="group" aria-label="Rejected icon-only filters">
+        <button type="button" class="tgl" title="Hide empty" aria-label="Hide empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></svg></button>
+        <button type="button" class="tgl" title="Show closed" aria-label="Show closed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg></button>
+      </div>
+      <small style="color:var(--text-subtle);font-size:.72rem">which filter is which — and which is on — lives behind a pointer event</small>
+    </div>
+  </div>
+
+  <style>
     /* ── Epic badge split chip ──────────────────────────────────────────
        Uses the REAL shared objects: badge.css (tint via [data-context="epic"],
        radius, link color) and ticket.css (.ticket-key mono/600/underline-on-
