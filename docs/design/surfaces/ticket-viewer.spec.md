@@ -2,6 +2,8 @@
 
 Modal overlay for viewing a ticket's full content, attributes, and sub-documents. Opens when a ticket card is clicked or a ticket URL is navigated to.
 
+The viewer also hosts the side reading pane for repo documents (MDT-248): composition, geometry, and states in `ticket-side-doc.spec.md`; state machine, link routing, and Esc chain in `ticket-side-doc.interactions.md`. With the pane closed, the viewer is exactly as specified below.
+
 ## Composition
 
 ```text
@@ -42,6 +44,8 @@ Modal[size="xl"]
             └── div.ticket-content
                 ├── RelativeTimestamp (absolute, top-right)
                 └── MarkdownContent
+        └── aside.ticket-side-pane (conditional: pane visible, MDT-248 — see ticket-side-doc.spec.md)
+        └── button.ticket-side-pane__pill (conditional: session exists AND pane hidden)
 
 TraceGraphShell (opened from TraceGraphAction)
 ├── Modal[size="full", viewport variant]
@@ -63,6 +67,7 @@ TraceGraphShell (opened from TraceGraphAction)
 | TraceGraphAction | colocated TicketViewer action | this file | when standard trace store metadata exists |
 | EpicBoardAction | `frontend/src/components/TicketViewer/EpicBoardAction.tsx` | this file | when `ticket.level === 'epic'` (MDT-246; journey contract in `epic-navigation.interactions.md`) |
 | TraceGraphShell | `frontend/src/components/TicketViewer/TraceGraphShell.tsx` | this file | when user opens trace graph |
+| TicketSidePane | proposed `frontend/src/components/TicketViewer/TicketSidePane/` | `ticket-side-doc.spec.md` | when a document link is followed (MDT-248) |
 | RelativeTimestamp | `frontend/src/components/shared/RelativeTimestamp.tsx` | — | in content area |
 | StatusBadge | `frontend/src/components/Badge/StatusBadge.tsx` | — | always in header |
 | PriorityBadge | `frontend/src/components/Badge/PriorityBadge.tsx` | — | always in header |
@@ -87,10 +92,11 @@ TraceGraphShell (opened from TraceGraphAction)
 
 ### Modal
 
-- Size: `xl` (wider than default)
+- Size: `xl` (wider than default); widened split variant while the side pane is visible — geometry owned by `ticket-side-doc.spec.md`
 - Backdrop: `bg-black/50 backdrop-blur-sm` per `MODALS.md`
 - z-index: `z-50`
 - Close button: `absolute right-3 top-3 z-20`, 8×8 rounded button, × icon 5×5
+- While the side pane is visible, each column scrolls internally; the floating ToC and close button stay scoped to the ticket column (`ticket-side-doc.spec.md` → Layout)
 
 ### CompactTicketHeader
 
@@ -191,6 +197,8 @@ Two horizontal bars, both with bottom border:
 | trace graph open via deep link | URL carries `#trace` on load | shell opens immediately once the ticket modal opens; `#trace` preserved through the async ticket fetch |
 | trace graph loading | iframe is mounting or dashboard fetches store | floating Back remains visible; iframe may show dashboard-owned loading |
 | trace graph unavailable after click | store disappears or fetch fails | floating Back remains visible; show compact shell-owned error in the viewport |
+| side pane open | document link followed (MDT-248) | modal widens; pane beside ticket column; full state machine in `ticket-side-doc.interactions.md` |
+| side pane hidden | Esc while pane visible | pane tucked; session pill appears bottom-right of ticket column |
 
 ## Trace Graph Entry
 
