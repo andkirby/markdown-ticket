@@ -1,6 +1,6 @@
 ---
 code: MDT-247
-status: In Progress
+status: Implemented
 dateCreated: 2026-09-22T08:31:16.204Z
 type: Feature Enhancement
 priority: Medium
@@ -100,27 +100,37 @@ Render the status icon in the `TicketCode` slot between the priority glyph and t
 
 ## 5. Acceptance Criteria
 
+> Requirements trace projection: [requirements.trace.md](./MDT-247/requirements.trace.md)
+> Requirements notes: [requirements.md](./MDT-247/requirements.md)
+> BDD trace projection: [bdd.trace.md](./MDT-247/bdd.trace.md)
+> BDD notes: [bdd.md](./MDT-247/bdd.md)
+> Architecture trace projection: [architecture.trace.md](./MDT-247/architecture.trace.md)
+> Architecture notes: [architecture.md](./MDT-247/architecture.md)
+> Tests trace projection: [tests.trace.md](./MDT-247/tests.trace.md)
+> Tasks trace projection: [tasks.trace.md](./MDT-247/tasks.trace.md)
+> Task plan: [tasks.md](./MDT-247/tasks.md)
+
 ### Functional
-- [ ] `TicketCode` renders `{priority}{status icon}{key}{type}{epic}{worktree}` — status icon sits between the priority glyph and the key
-- [ ] the status-icon registry maps the 7 `CRStatus` states (`domain-contracts/src/types/schema.ts:9-17`) — proposed, approved, in-progress, implemented, rejected, on-hold, partially-implemented — with `in-progress.svg` as the In Progress glyph (`status_svg/README.txt` default)
-- [ ] `deferred.svg` and both fast-forward variants ship as assets but stay unmapped (design decision, `docs/CRs/MDT-247/ux-design.md`: no `CRStatus` exists for deferred; no data distinguishes the fast-forward variants) — a deviation from owner requirement 1's explicit 10-icon list, carried here as an owner decision — *(Requires mdt:clarification)*
-- [ ] board and swimlane ticket cards show NO key-strip status icon (the `StatusBadge` in `TicketAttributeTags` already encodes status there)
-- [ ] every surface where `StatusBadge` co-renders with the key strip suppresses the key-strip status icon — viewer header/attributes, swimlane lane header — no double encoding
-- [ ] `StatusBadge` renders a leading status icon exactly as `PriorityBadge` does today (icon before label)
-- [ ] List view has a Status column (desktop table and mobile list); the cell value is the `StatusBadge` with its icon
-- [ ] pin-bar ticket tooltip no longer shows the status badge; it shows the status icon instead
-- [ ] epic keys carry the status icon on icon-surfaces (QuickSearch, pin tooltip); badge-co-rendering surfaces (lane header, viewer) suppress
-- [ ] missing/unknown status: no key-strip icon rendered, badge behavior unchanged
-- [ ] cross-project QuickSearch hits: either `SearchResponseSchema` (`domain-contracts/src/ticket/search.ts:47-62`) gains `status` (`z.string().nullable().optional()`, mirroring `priority`) so those key strips render the icon, or cross-project hits are de-scoped to graceful absence (no icon) — *(Requires mdt:clarification)*, decide before Tests
-- [ ] always-on vs config-gated (`ui.ticketKey.statusIconNearKey`/`statusIconInBadge` selectors per MDT-244's `selectors.ts:251-264` precedent, defaults off) — *(Requires mdt:clarification)*; owner spec reads always-on
-- [ ] in-progress variant: the design uses `in-progress.svg` (`status_svg/README.txt` default) and leaves both fast-forward variants unmapped — confirm or override — *(Requires mdt:clarification)*
+- [x] `TicketCode` renders `{priority}{status icon}{key}{type}{epic}{worktree}` — status icon sits between the priority glyph and the key
+- [x] the status-icon registry maps the 7 `CRStatus` states (`domain-contracts/src/types/schema.ts:9-17`) — proposed, approved, in-progress, implemented, rejected, on-hold, partially-implemented — with `in-progress.svg` as the In Progress glyph (`status_svg/README.txt` default)
+- [x] `deferred.svg` and both fast-forward variants ship as assets but stay unmapped (design decision, `docs/CRs/MDT-247/ux-design.md`: no `CRStatus` exists for deferred; no data distinguishes the fast-forward variants) — a deviation from owner requirement 1's explicit 10-icon list, carried here as an owner decision — resolved: stays unmapped (owner-approved via ux-design gate)
+- [x] board and swimlane ticket cards show NO key-strip status icon (the `StatusBadge` in `TicketAttributeTags` already encodes status there)
+- [x] every surface where `StatusBadge` co-renders with the key strip suppresses the key-strip status icon — viewer header/attributes, swimlane lane header — no double encoding
+- [x] `StatusBadge` renders a leading status icon exactly as `PriorityBadge` does today (icon before label)
+- [x] List view has a Status column (desktop table and mobile list); the cell value is the `StatusBadge` with its icon
+- [x] pin-bar ticket tooltip no longer shows the status badge; it shows the status icon instead
+- [x] epic keys carry the status icon on icon-surfaces (QuickSearch, pin tooltip); badge-co-rendering surfaces (lane header, viewer) suppress
+- [x] missing/unknown status: no key-strip icon rendered, badge behavior unchanged
+- [x] cross-project QuickSearch hits: `SearchResponseSchema` gains `status` (`domain-contracts/src/ticket/search.ts:47-62`) gains `status` (`z.string().nullable().optional()`, mirroring `priority`) so those key strips render the icon (chosen); absence of the field still degrades gracefully
+- [x] always-on vs config-gated (`ui.ticketKey.statusIconNearKey`/`statusIconInBadge` selectors per MDT-244's `selectors.ts:251-264` precedent, defaults off) — resolved: always-on shipped; selector route remains a no-redesign follow-up
+- [x] in-progress variant: the design uses `in-progress.svg` (`status_svg/README.txt` default) and leaves both fast-forward variants unmapped — confirmed
 
 ### Non-Functional
-- [ ] icons legible at `--sz-icon` (16px) in both themes on board, list, viewer, pin tooltip
-- [ ] key-strip status icon is `aria-hidden` with a native `<title>` hover tooltip carrying the status name (MDT-244 precedent, CR line 94); badge text remains the accessible name
-- [ ] icon color strategy decided: svgs carry hardcoded hex (9/10) vs badge.css `data-status` theme colors via `currentColor` — *(Requires mdt:clarification)*
-- [ ] delivery path decided: serving from `public/` (URL references) vs bundling as components — `public/` refs would break MDT-244's no-new-network-requests pattern (its non-functional AC, CR line 99) — *(Requires mdt:clarification)*
-- [ ] `in-progress-alt-fast-forward.svg` dimension drift (24×24 `currentColor` vs 64×64 hex) normalized
+- [x] icons legible at `--sz-icon` (16px) in both themes on board, list, viewer, pin tooltip
+- [x] key-strip status icon is `aria-hidden` with a native `<title>` hover tooltip carrying the status name (MDT-244 precedent, CR line 94); badge text remains the accessible name
+- [x] icon color strategy decided: `currentColor` + `--status-*` fg tokens; **amended at user-review r2 (owner-approved)**: Partially Implemented gets its own `--status-partial` lime pair (oklch 0.64/0.15/125 light, 0.81/0.16/130 dark) so it stops sharing In Progress's amber — applied in badge.css, ticket.css strip rule, loading.css status-dot, design-tokens.css
+- [x] delivery path decided: bundled inline components (statusGlyphs.tsx) — `public/` refs would break MDT-244's no-new-network-requests pattern (its non-functional AC, CR line 99) — resolved: bundled inline
+- [x] `in-progress-alt-fast-forward.svg` dimension drift (24×24 `currentColor` vs 64×64 hex) normalized
 
 ### Testing
 - Unit: `TicketCode` with a status → icon present, positioned between `PriorityIcon` and code; without status → absent
