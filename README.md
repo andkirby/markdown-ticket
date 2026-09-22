@@ -90,8 +90,9 @@ AI-powered commands for the entire development lifecycle:
 - Faceted filtering by status, priority, assignee, and type (inline in the header, never a second row)
 - Epic swimlane board — group tickets by epic to compare progress across epics at a glance, with per-epic progress and a lane-level lifecycle control
 - Pin rail for one-click access to the tickets you're actively working on (drag-to-pin, cross-project)
-- Markdown rendering with Mermaid diagrams and Wireloom wireframes
-- Sandboxed HTML document preview alongside markdown in the documents view
+- Status and ticket-type icons on ticket keys and badges, so state reads at a glance
+- Markdown rendering with Mermaid diagrams, Wireloom wireframes, and clickable inline-code `.md` references
+- Sandboxed HTML document preview in the ticket view and documents view, with a fullscreen overlay
 - Per-user project accent colors (solid or gradient)
 - Scoped global search across all projects
 - Multi-project support
@@ -105,6 +106,7 @@ AI-powered commands for the entire development lifecycle:
 
 - Use `mdt-cli` to create, list, view, update, and delete tickets from the terminal
 - Structured output is available for automation-friendly workflows
+- Target a project explicitly with `-p/--project` on `ticket get` and `ticket attr`
 - For an enabled cloud-bound project, the same create command obtains an Access
   credential, reserves the shared number, writes Markdown, and acknowledges it;
   it never falls back to a local number during an outage
@@ -243,6 +245,7 @@ markdown-ticket/
 
 ## What's New
 
+- **v0.30.0** (2026-09-22): Status icons on ticket keys and badges, HTML previews in the ticket view with fullscreen overlay, epic-only swimlane search with pressed toolbar toggles, epic-detail → board jump, clickable inline-code doc links
 - **v0.29.0** (2026-08-10): Epic swimlane board, epics as first-class tickets, header refresh with grouped controls, radius/gap design tokens, keyboard-only focus rings
 - **v0.27.0** (2026-07-27): Project-level cloud onboarding, multi-hop trace graph traversal, +/- array edits in the config CLI
 - **v0.24.0** (2026-06-13): Calmer project switcher — inactive projects reveal on hover
