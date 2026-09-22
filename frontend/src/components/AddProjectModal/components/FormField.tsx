@@ -1,7 +1,6 @@
 import { Check, CircleX, Folder, HelpCircle } from 'lucide-react'
 import * as React from 'react'
 import { useState } from 'react'
-import { Button } from '../../ui'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../ui/tooltip'
 import FolderBrowserModal from './FolderBrowserModal'
 
@@ -177,17 +176,16 @@ export const FormField: React.FC<FormFieldProps> = ({
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button
+                      <button
                         type="button"
-                        variant="outline"
+                        className="btn btn-outline gap-1 whitespace-nowrap"
                         onClick={handleFolderBrowse}
                         disabled={disabled}
                         data-testid={folderBrowseTestId}
-                        className="flex items-center gap-1 whitespace-nowrap"
                       >
                         <Folder className="h-4 w-4" />
                         Browse
-                      </Button>
+                      </button>
                     </TooltipTrigger>
                     <TooltipContent>
                       <p>Browse for folder</p>
