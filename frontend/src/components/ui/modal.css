@@ -105,7 +105,10 @@
   }
 
   .modal__close--absolute {
-    @apply absolute right-3 top-3 z-20 flex h-8 w-8 items-center justify-center rounded-md transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50;
+    /* top-2 centers the 32px button on the headline's first line: 8 + 16 = 24px =
+       header py-3 (12) + leading-6 half-line (12) — the canonical first-row
+       geometry of every modal (ModalHeader title / ticket-viewer title section). */
+    @apply absolute right-3 top-2 z-20 flex h-8 w-8 items-center justify-center rounded-md transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50;
     color: var(--text-subtle);
   }
   .modal__close--absolute:hover {
