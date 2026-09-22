@@ -1,10 +1,12 @@
 ---
 code: MDT-237
-status: In Progress
+status: Implemented
 dateCreated: 2026-08-24T13:15:11.023Z
 type: Feature Enhancement
 priority: Medium
 relatedTickets: MDT-150, MDT-059, MDT-154
+implementationDate: 2026-09-22
+implementationNotes: 4 commits: 56af07a4 core, 67937a1a owner-level link config, b97d6c34 UAT-r2 whole-token ticket-key paths (BR-2.6), 58ac0f55 UAT-r3 tickets-area routing + coverage-bounded flagging (BR-2.7/2.8). 3 UAT rounds, live-verified on GPDE. fe:test 1079/0, spec-trace 5 stages strict-clean.
 ---
 
 # Render inline-code .md references as clickable links
