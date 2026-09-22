@@ -1,10 +1,10 @@
 ---
 code: MDT-236
-status: In Progress
+status: Implemented
 dateCreated: 2026-08-18T01:40:40.513Z
 type: Architecture
 priority: Medium
-implementationNotes: Implemented via pipeline-e2e: app-wide density consumers (list table, documents tree, QuickSearch, panel cards, ticket attributes) + 11px clamp floor (user-approved) + density E2E spec 7/7 green. Artifacts in docs/CRs/MDT-236/.
+implementationNotes: Implemented via pipeline-e2e: app-wide density consumers (list table, documents tree, QuickSearch, panel cards, ticket attributes) + 11px clamp floor (user-approved) + density E2E spec 7/7 green. Artifacts in docs/CRs/MDT-236/. VERIFIED 2026-09-22 at fb5e293b: density spec 7/7 on current HEAD, token-purity clean (1 known chrome-heading debt), docs contract shipped; design3 divergence deliberate per architecture D1/D4.
 ---
 
 # Extend density system to all surfaces
@@ -91,16 +91,16 @@ implementationNotes: Implemented via pipeline-e2e: app-wide density consumers (l
 ## 4. Acceptance Criteria
 
 ### Functional (Outcome-focused)
-- [ ] Setting SIZE to compact/comfortable changes text/element scale on cards, list rows, and documents navigation rows in the same interaction.
-- [ ] Setting SPACE to tight/relaxed changes padding/gaps on those surfaces without any text-size change.
-- [ ] Header, toolbars, menus, and popovers render identically at every density combination.
-- [ ] Density choice persists across reloads and syncs across tabs on all affected surfaces.
-- [ ] Reset returns every surface to regular · normal.
+- [x] Setting SIZE to compact/comfortable changes text/element scale on cards, list rows, and documents navigation rows in the same interaction.
+- [x] Setting SPACE to tight/relaxed changes padding/gaps on those surfaces without any text-size change.
+- [x] Header, toolbars, menus, and popovers render identically at every density combination.
+- [x] Density choice persists across reloads and syncs across tabs on all affected surfaces.
+- [x] Reset returns every surface to regular · normal.
 
 ### Non-Functional
-- [ ] No layout shift or overflow introduced at any axis combination on supported viewports.
-- [ ] No raw px/rem font sizes added on newly density-aware surfaces (token-greppable).
-- [ ] Accessibility floor holds at compact · tight: content text ≥ 11px, interactive targets ≥ 24px, color/contrast unchanged.
+- [x] No layout shift or overflow introduced at any axis combination on supported viewports.
+- [x] No raw px/rem font sizes added on newly density-aware surfaces (token-greppable).
+- [x] Accessibility floor holds at compact · tight: content text ≥ 11px, interactive targets ≥ 24px, color/contrast unchanged.
 
 ### Edge Cases
 - Extreme combinations (compact · relaxed, comfortable · tight) must not clip text or collapse rows.
