@@ -192,3 +192,51 @@ describe('QuickSearchResults — grouped rendering (MDT-179)', () => {
     expect(screen.getByText('Scoped Search')).toBeDefined()
   })
 })
+
+describe('QuickSearchResults — status glyph on key strips (MDT-247)', () => {
+  const crossHit = (over: Record<string, unknown> = {}) => ({
+    ticket: { code: 'OTHER-001', title: 'Other Ticket', priority: 'High', status: 'In Progress', ...over },
+    project: { code: 'OTHER', name: 'Other Project' },
+  })
+
+  it('renders the strip status glyph on a cross-project hit carrying status', () => {
+    render(
+      <QuickSearchResults
+        {...baseProps}
+        queryMode="ticket_key"
+        tickets={[]}
+        crossProjectResults={[crossHit() as any]}
+      />,
+    )
+
+    const item = screen.getByTestId('quick-search-cross-project-result-item')
+    expect(item.querySelector('.ticket-code__status-icon[data-status="in-progress"]')).not.toBeNull()
+  })
+
+  it('renders no strip glyph on a cross-project hit without status (older contract, C8)', () => {
+    render(
+      <QuickSearchResults
+        {...baseProps}
+        queryMode="ticket_key"
+        tickets={[]}
+        crossProjectResults={[crossHit({ status: undefined }) as any]}
+      />,
+    )
+
+    const item = screen.getByTestId('quick-search-cross-project-result-item')
+    expect(item.querySelector('.ticket-code__status-icon')).toBeNull()
+  })
+
+  it('renders the strip status glyph on current-project hits', () => {
+    render(
+      <QuickSearchResults
+        {...baseProps}
+        queryMode="ticket_key"
+        tickets={[{ code: 'TMGR-001', title: 'Setup', status: 'Proposed' } as any]}
+      />,
+    )
+
+    const item = screen.getByTestId('quick-search-result-item')
+    expect(item.querySelector('.ticket-code__status-icon[data-status="proposed"]')).not.toBeNull()
+  })
+})

@@ -18,12 +18,20 @@ interface TicketAttributeTagsProps {
   ticket: Ticket
   className?: string
   isInvalidStatus?: boolean // Status is invalid - highlight badge
+  /**
+   * MDT-247: drop the STATUS tag from the row — the desktop list renders the
+   * StatusBadge in its own column, so the Attributes cell must not repeat it
+   * (one badge per row). Board/swimlane cards and the mobile list keep the
+   * default (the lead status tag IS the mobile status column).
+   */
+  excludeStatus?: boolean
 }
 
 const TicketAttributeTags: React.FC<TicketAttributeTagsProps> = ({
   ticket,
   className = '',
   isInvalidStatus = false,
+  excludeStatus = false,
 }) => {
   const [visibleBadgeIds, setVisibleBadgeIds] = useState(
     getVisibleTicketCardBadges,
@@ -53,7 +61,7 @@ const TicketAttributeTags: React.FC<TicketAttributeTagsProps> = ({
 
   return (
     <div className={`flex flex-wrap gap-2 ${className}`}>
-      {isVisible(TicketCardBadge.STATUS) && (
+      {isVisible(TicketCardBadge.STATUS) && !excludeStatus && (
         <StatusBadge status={ticket.status} isInvalid={isInvalidStatus} />
       )}
       {isVisible(TicketCardBadge.PRIORITY) && ticket.priority && (

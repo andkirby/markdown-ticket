@@ -26,10 +26,10 @@ import { ProjectResultRow } from './ProjectResultRow'
 
 function SkeletonCard(): React.ReactElement {
   return (
-    <li className="px-4 py-3" data-testid="quick-search-skeleton">
-      <div className="flex items-center gap-3">
-        <div className="search-skeleton-bar w-16" />
-        <div className="search-skeleton-bar w-48" />
+    <li className="search-skeleton-card" data-testid="quick-search-skeleton">
+      <div className="search-result__row">
+        <div className="search-skeleton-bar search-skeleton-bar--short" />
+        <div className="search-skeleton-bar search-skeleton-bar--long" />
       </div>
     </li>
   )
@@ -46,8 +46,8 @@ interface ErrorStateProps {
 
 function ErrorState({ error, onRetry }: ErrorStateProps): React.ReactElement {
   return (
-    <div className="p-4 text-center" data-testid="quick-search-error">
-      <p className="text-sm search-error-text mb-2">
+    <div className="search-error-state" data-testid="quick-search-error">
+      <p className="search-error-state__message search-error-text">
         {'Search failed: '}
         {error.message}
       </p>
@@ -86,20 +86,20 @@ function CrossProjectResultItem({ result, isSelected, onSelect }: CrossProjectRe
         className="search-result"
         onClick={onSelect}
       >
-        <div className="flex items-center gap-3">
-          <TicketCode code={result.ticket.code} priority={result.ticket.priority ?? undefined} className="search-result__code" />
-          <span className="search-result__title truncate">
+        <div className="search-result__row">
+          <TicketCode code={result.ticket.code} priority={result.ticket.priority ?? undefined} status={result.ticket.status ?? undefined} className="search-result__code" />
+          <span className="search-result__title">
             {result.ticket.title}
           </span>
         </div>
-        <div className="mt-1 text-xs search-result__project-name">
+        <div className="search-result__project-name">
           <span
             className="search-result__project-label"
             data-testid="quick-search-project-label"
           >
             {result.project.code}
           </span>
-          <span className="ml-1.5">{result.project.name}</span>
+          <span>{result.project.name}</span>
         </div>
       </button>
     </li>
@@ -167,11 +167,11 @@ export function QuickSearchResults({
   // Invalid project code — show error immediately, no fetch
   if (invalidProjectCode) {
     return (
-      <div className="p-8 text-center text-gray-500" data-testid="quick-search-no-results">
-        <p className="text-sm search-error-text">
+      <div className="search-empty-state" data-testid="quick-search-no-results">
+        <p className="search-error-text">
           Project
           {' '}
-          <span className="font-mono font-medium">{invalidProjectCode}</span>
+          <span className="search-empty-state__code">{invalidProjectCode}</span>
           {' '}
           not found
         </p>
@@ -185,7 +185,7 @@ export function QuickSearchResults({
   const _visibleTicketResults = scopeShowsTickets && !isProjectScopeMode && hasCurrentProjectResults
   if (!hasCurrentProjectResults && !hasCrossProjectResults && !hasProjectResults && !hasDocumentResults && !crossProjectLoading && !crossProjectError && !isCrossProjectMode) {
     return (
-      <div className="p-8 text-center text-gray-500" data-testid="quick-search-no-results">
+      <div className="search-empty-state" data-testid="quick-search-no-results">
         {activeScope && activeScope !== 'global'
           ? `No results found in ${activeScope}`
           : 'No results found'}
@@ -196,14 +196,14 @@ export function QuickSearchResults({
   // Cross-project modes (ticket_key / project_scope): no results anywhere, not loading, no error
   if (isCrossProjectMode && !hasCurrentProjectResults && !hasCrossProjectResults && !crossProjectLoading && !crossProjectError) {
     return (
-      <div className="p-8 text-center text-gray-500" data-testid="quick-search-no-results">
+      <div className="search-empty-state" data-testid="quick-search-no-results">
         {isProjectScopeMode ? 'No matching tickets found in this project' : 'No matching tickets found'}
       </div>
     )
   }
 
   return (
-    <ScrollArea type="hover" scrollHideDelay={600} className="flex-1 min-h-0" role="listbox" aria-label="Search results" data-testid="quick-search-results">
+    <ScrollArea type="hover" scrollHideDelay={600} className="search-results-scroll" role="listbox" aria-label="Search results" data-testid="quick-search-results">
       {/* Cross-project section (ticket-key or project-scope mode) */}
       {isCrossProjectMode && scopeShowsTickets && (
         <div role="group" aria-label={isProjectScopeMode ? 'Project Results' : 'Cross-Project Results'} data-testid="quick-search-cross-project-section">
@@ -245,7 +245,7 @@ export function QuickSearchResults({
 
           {/* Empty cross-project results after loading */}
           {!crossProjectLoading && !crossProjectError && !hasCrossProjectResults && !hasCurrentProjectResults && (
-            <div className="p-6 text-center text-sm text-gray-500" data-testid="quick-search-ticket-not-found">
+            <div className="search-empty-state search-empty-state--compact" data-testid="quick-search-ticket-not-found">
               {isProjectScopeMode ? 'No tickets found in this project' : 'Ticket not found'}
             </div>
           )}
@@ -276,9 +276,9 @@ export function QuickSearchResults({
                     className="search-result"
                     onClick={() => onSelect(ticket)}
                   >
-                    <div className="flex items-center gap-3">
-                      <TicketCode code={ticket.code} priority={ticket.priority} className="search-result__code" />
-                      <span className="search-result__title truncate">
+                    <div className="search-result__row">
+                      <TicketCode code={ticket.code} priority={ticket.priority} status={ticket.status} className="search-result__code" />
+                      <span className="search-result__title">
                         {ticket.title}
                       </span>
                     </div>

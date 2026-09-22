@@ -31,7 +31,7 @@ export type CRData = Pick<
 
 /** Search result item with ticket and project context */
 interface SearchResultItem {
-  ticket: { code: string, title: string, priority: string | null }
+  ticket: { code: string, title: string, priority: string | null, status: string | null }
   project: { code: string, name: string }
 }
 
@@ -496,6 +496,8 @@ export class TicketService {
             code: cr.code,
             title: cr.title,
             priority: cr.priority ?? null,
+            // MDT-247: additive status for the cross-project key-strip glyph.
+            status: cr.status ?? null,
           },
           project: {
             code: project.project.code || project.id,
@@ -546,6 +548,8 @@ export class TicketService {
           code: cr.code,
           title: cr.title,
           priority: cr.priority ?? null,
+          // MDT-247: additive status for the key-strip glyph (project_scope).
+          status: cr.status ?? null,
         },
         project: {
           code: project.project.code || project.id,

@@ -112,6 +112,7 @@
     <span class="chip" style="background:var(--status-backlog-bg);color:var(--status-backlog)">Backlog</span>
     <span class="chip" style="background:var(--status-open-bg);color:var(--status-open)">Open</span>
     <span class="chip" style="background:var(--status-progress-bg);color:var(--status-progress)">In Progress</span>
+    <span class="chip" style="background:var(--status-partial-bg);color:var(--status-partial)">Partially Implemented</span>
     <span class="chip" style="background:var(--status-done-bg);color:var(--status-done)">Done</span>
     <span class="chip" style="background:var(--status-deferred-bg);color:var(--status-deferred)">Deferred</span>
     <span class="chip" style="background:var(--status-rejected-bg);color:var(--status-rejected)">Rejected</span>
@@ -151,6 +152,19 @@
     <span class="chip" style="background:var(--bg-muted);color:var(--text-muted)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 10.01h.01"/><path d="M10 14.01h.01"/><path d="M14 10.01h.01"/><path d="M14 14.01h.01"/><path d="M18 6v11.5"/><path d="M6 6v12"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg>Technical Debt</span>
     <span class="chip" style="background:color-mix(in srgb,var(--type-documentation) 12%,transparent);color:var(--type-documentation)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>Documentation</span>
     <span class="chip" style="background:color-mix(in srgb,var(--type-research) 12%,transparent);color:var(--type-research)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2"/><path d="M6.453 15h11.094"/><path d="M8.5 2h7"/></svg>Research</span>
+  </div>
+
+  <h2 id="status-icons">status icons · one glyph per CRStatus</h2>
+  <p class="note" style="margin-top:.25rem"><b>Rule:</b> one glyph per <code>CRStatus</code>, ported from the owner set (<code>public/icons/status_svg/</code>) to 24×24 viewBox + <code>currentColor</code> (~2 stroke; rings 2, bold marks 2.25). Color is contextual, never baked in: the glyph inherits <code>currentColor</code>, so badges tint via <code>.badge[data-status]</code> and the key strip via <code>.ticket-code__status-icon[data-status]</code> — both map kebab status names to the <code>--status-*</code> tokens above, mirroring badge.css. Key-strip glyphs render at <code>--sz-icon</code> 16px with a native <code>title</code> tooltip (the status name — non-interactive, SR-silent); badge glyphs render at <code>.badge__icon</code> 12px with no title (label adjacent). <code>StatusIcon</code> renders <code>aria-hidden</code>; unmapped/missing status renders no glyph at all (graceful absence).</p>
+  <p class="note" style="margin-top:.5rem"><b>One encoding per surface (MDT-247):</b> the key strip carries the glyph only where no <code>StatusBadge</code> co-renders (QuickSearch hits, the pin tooltip — they pass <code>status</code> to <code>&lt;TicketCode&gt;</code>); everywhere else the badge alone encodes status. <b>Mapping:</b> Proposed → diamond · Approved → ring + check · In Progress → ring + play · Partially Implemented → ring + dim half + check (own <code>--status-partial</code> lime, the amber→lime→green scale) · Implemented → filled disc + knocked-out check · On Hold → ring + pause · Rejected → ring + X. Not mapped: <code>deferred</code> (no Deferred CRStatus) and the fast-forward variants (no data distinguishes them). Invalid status → the Rejected glyph under <code>data-status="invalid"</code> colors.</p>
+  <div class="chips">
+    <span class="chip" style="background:var(--status-backlog-bg);color:var(--status-backlog)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 4L20 12L12 20L4 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>Proposed</span>
+    <span class="chip" style="background:var(--status-open-bg);color:var(--status-open)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8.25" stroke="currentColor" stroke-width="2"></circle><path d="M8 12.4L10.9 15.3L16.5 9.4" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"></path></svg>Approved</span>
+    <span class="chip" style="background:var(--status-progress-bg);color:var(--status-progress)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8.25" stroke="currentColor" stroke-width="2"></circle><path d="M9.75 7.5v9l6.75-4.5-6.75-4.5Z" fill="currentColor"></path></svg>In Progress</span>
+    <span class="chip" style="background:var(--status-partial-bg);color:var(--status-partial)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3.75A8.25 8.25 0 0 0 12 20.25Z" fill="currentColor" fill-opacity="0.35"></path><circle cx="12" cy="12" r="8.25" stroke="currentColor" stroke-width="2"></circle><path d="M8 12.4L10.9 15.3L16.5 9.4" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"></path></svg>Partially Implemented</span>
+    <span class="chip" style="background:var(--status-done-bg);color:var(--status-done)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3.75a8.25 8.25 0 1 0 0 16.5a8.25 8.25 0 1 0 0-16.5ZM7.1 13.2L10.5 16.8L17.3 10.2L15.7 8.6L11.4 14L8.7 11.6Z" fill="currentColor" fill-rule="evenodd"></path></svg>Implemented</span>
+    <span class="chip" style="background:var(--status-hold-bg);color:var(--status-hold)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8.25" stroke="currentColor" stroke-width="2"></circle><rect x="8.2" y="7.5" width="2.6" height="9" rx="1" fill="currentColor"></rect><rect x="13.2" y="7.5" width="2.6" height="9" rx="1" fill="currentColor"></rect></svg>On Hold</span>
+    <span class="chip" style="background:var(--status-rejected-bg);color:var(--status-rejected)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8.25" stroke="currentColor" stroke-width="2"></circle><path d="M8.6 8.6L15.4 15.4M15.4 8.6L8.6 15.4" stroke="currentColor" stroke-width="2.25" stroke-linecap="round"></path></svg>Rejected</span>
   </div>
 
   <h2>density slots · all content surfaces</h2>
@@ -200,14 +214,18 @@
     .field { display: flex; flex-direction: column; gap: .25rem; }
     .field label { font-size: .7rem; color: var(--text-subtle); }
     .btn { display: inline-flex; align-items: center; gap: .4rem; padding: .4rem .85rem; border-radius: var(--radius-input); font-size: .82rem; font-weight: 500; cursor: pointer; border: 1px solid transparent; transition: background-color .15s, border-color .15s; }
+    /* Disabled contract — mirrors styles/components/buttons.css: pointer
+       events stay on, cursor: not-allowed, hover never fires on a dead control. */
+    .btn:disabled { cursor: not-allowed; opacity: .5; }
     .btn-primary { background: oklch(var(--primary)); color: oklch(var(--primary-foreground)); }
-    .btn-primary:hover { filter: brightness(1.07); }
+    .btn-primary:not(:disabled):hover { filter: brightness(1.07); }
     .btn-secondary { background: oklch(var(--secondary)); color: oklch(var(--secondary-foreground)); }
     .btn-outline { background: var(--bg-elevated); border-color: var(--border-strong); color: oklch(var(--foreground)); }
-    .btn-outline:hover { background: var(--bg-muted); }
+    .btn-outline:not(:disabled):hover { background: var(--bg-muted); }
     .btn-ghost { background: transparent; color: oklch(var(--foreground)); }
-    .btn-ghost:hover { background: var(--bg-muted); }
+    .btn-ghost:not(:disabled):hover { background: var(--bg-muted); }
     .input-demo, .select-demo { background: var(--bg-muted); border: 1px solid var(--border-strong); border-radius: var(--radius-input); padding: .4rem .6rem; color: oklch(var(--foreground)); font: inherit; font-size: .82rem; }
+    .input-demo:disabled, .select-demo:disabled { cursor: not-allowed; opacity: .5; }
     .input-demo:focus, .select-demo:focus { outline: none; border-color: oklch(var(--primary)); box-shadow: 0 0 0 2px oklch(var(--primary) / .3); }
     .input-demo.error { border-color: oklch(var(--destructive)); }
   </style>
@@ -282,6 +300,17 @@
     <div class="field"><label>select</label><select class="select-demo"><option>Open</option><option>Done</option></select></div>
     <!-- checkbox demo uses the REAL shared object (styles/components/checkbox.css) — not a copy -->
     <div class="field"><label>checkbox</label><input type="checkbox" class="checkbox" checked></div>
+  </div>
+
+  <h2 id="disabled-state">disabled controls · cursor contract</h2>
+  <p class="note" style="margin-top:.25rem"><b>Rule:</b> a disabled control <b>keeps pointer events</b> and takes <code>cursor: not-allowed</code> — never <code>pointer-events: none</code>. With pointer events off, the browser skips the element under the pointer entirely: the cursor falls through to the parent and any <code>title</code> explaining <i>why</i> the control is off dies with it (hover one of the disabled buttons — the tooltip is the point). The other half of the contract: hover styles must be scoped so a dead control never reacts to pointing — Tailwind <code>enabled:hover:</code> in <code>buttons.css</code>, <code>&amp;:hover:not(:checked, :disabled)</code> in pure-CSS shared objects (checkbox.css). One recipe everywhere: <code>disabled:cursor-not-allowed disabled:opacity-50</code> — buttons, inputs, checkboxes, switches, dropdown items (<code>forms.css</code>, <code>ui/switch</code>, <code>ui/dropdown-menu.tsx</code> all follow it; <code>buttons.css</code> was the last <code>pointer-events-none</code> holdout).</p>
+  <div class="form-row">
+    <button class="btn btn-primary" type="button">Primary</button>
+    <button class="btn btn-primary" type="button" disabled title="Select a project first">Primary</button>
+    <button class="btn btn-outline" type="button" disabled title="Select a project first">Outline</button>
+    <div class="field"><label>input · disabled</label><input class="input-demo" value="MDT-220" disabled></div>
+    <!-- checkbox is the REAL shared object — its :disabled rule ships the contract -->
+    <div class="field"><label>checkbox · disabled (real object)</label><input type="checkbox" class="checkbox" checked disabled></div>
   </div>
 
   <style>

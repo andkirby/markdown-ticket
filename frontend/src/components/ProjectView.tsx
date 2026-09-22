@@ -1,5 +1,6 @@
 import type { TicketFilters } from '@mdt/domain-contracts'
 import type { Project } from '@mdt/shared/models/Project'
+import type { CRStatus } from '@mdt/shared/models/Types'
 import type { BoardLayoutModeValue } from '../config/boardLayoutMode'
 import type { SortPreferences } from '../config/sorting'
 // MDT-200 U5: projection feed type for the cloud-projected stub merge.
@@ -10,6 +11,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { authFetch } from '../auth/authFetch'
 import { useCloudProjectionFeed } from '../hooks/useCloudProjectionFeed'
 import { sortTickets } from '../utils/sorting'
+import { VALID_STATUSES } from '../utils/ticketStatus'
+import { StatusBadge } from './Badge/StatusBadge'
 import Board from './Board'
 import { DocumentsLayout } from './DocumentsView'
 import TicketAttributeTags from './TicketAttributeTags'
@@ -200,6 +203,7 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
                         <TableRow>
                           <TableHead className="w-28">Code</TableHead>
                           <TableHead>Title</TableHead>
+                          <TableHead>Status</TableHead>
                           <TableHead>Attributes</TableHead>
                           <TableHead className="w-32">Modified</TableHead>
                         </TableRow>
@@ -218,8 +222,18 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
                             <TableCell className="font-medium" data-testid="ticket-title">
                               {ticket.title}
                             </TableCell>
+                            {/* MDT-247: the Status column cell IS the badge; the
+                                Attributes cell drops the STATUS tag (one badge
+                                per row). The key strip above carries no status
+                                glyph either — the badge is the encoding here. */}
+                            <TableCell data-testid={`ticket-status-cell-${ticket.code}`}>
+                              <StatusBadge
+                                status={ticket.status}
+                                isInvalid={!VALID_STATUSES.includes(ticket.status as CRStatus)}
+                              />
+                            </TableCell>
                             <TableCell>
-                              <TicketAttributeTags ticket={ticket} />
+                              <TicketAttributeTags ticket={ticket} excludeStatus />
                             </TableCell>
                             <TableCell className="text-muted-foreground">
                               {ticket.lastModified ? new Date(ticket.lastModified).toLocaleDateString() : 'Unknown'}

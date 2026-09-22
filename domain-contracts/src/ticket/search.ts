@@ -51,6 +51,9 @@ export const SearchResponseSchema = z.object({
         code: z.string(),
         title: z.string(),
         priority: z.string().nullable().optional(),
+        // MDT-247: additive + optional so older responses degrade gracefully —
+        // a hit without status renders no key-strip glyph (graceful absence).
+        status: z.string().nullable().optional(),
       }),
       project: z.object({
         code: z.string(),

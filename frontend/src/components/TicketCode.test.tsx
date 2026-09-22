@@ -112,3 +112,40 @@ describe('TicketCode — type glyph slot (MDT-244)', () => {
     expect(container.querySelector('svg[data-type]')).toBeNull()
   })
 })
+
+describe('TicketCode — status glyph slot (MDT-247)', () => {
+  beforeEach(() => {
+    cleanup()
+  })
+
+  afterEach(() => {
+    cleanup()
+  })
+
+  it('renders the status glyph between the priority glyph and the key when status is passed', () => {
+    const { container } = render(<TicketCode code="MDT-100" priority="Medium" status="Proposed" />)
+    const strip = container.querySelector('[data-testid="ticket-code"]')!
+    const prio = strip.querySelector('.priority-icon')!
+    const statusIcon = strip.querySelector('.ticket-code__status-icon[data-status="proposed"]')!
+    expect(statusIcon).not.toBeNull()
+    // Order invariant: priority → status glyph → key text.
+    expect(prio.compareDocumentPosition(statusIcon) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(strip.textContent).toContain('MDT-100')
+  })
+
+  it('gives the strip glyph a native tooltip with the status name (C2)', () => {
+    const { container } = render(<TicketCode code="MDT-100" priority="Medium" status="On Hold" />)
+    expect(container.querySelector('svg.ticket-code__status-icon > title')?.textContent).toBe('On Hold')
+  })
+
+  it('renders NO status glyph when no status prop is passed, even though the ticket carries status (suppression by construction, BR-1.4)', () => {
+    const { container } = render(<TicketCode code="MDT-100" ticket={ticket({ status: 'Proposed' })} />)
+    expect(container.querySelector('.ticket-code__status-icon')).toBeNull()
+    expect(container.querySelector('svg[data-status]')).toBeNull()
+  })
+
+  it('renders no status glyph for an unmapped status value (BR-1.9)', () => {
+    const { container } = render(<TicketCode code="MDT-100" priority="Medium" status="In Review" />)
+    expect(container.querySelector('.ticket-code__status-icon')).toBeNull()
+  })
+})

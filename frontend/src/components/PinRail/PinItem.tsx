@@ -4,14 +4,13 @@
  * Shows the numeric part of the ticket code on a 32px square. On hover:
  * - a portaled Tooltip (Radix) with the ticket key (rendered via the canonical
  *   <TicketCode>, so the priority-before-key glyph matches the card/list/viewer)
- *   + title + status badge
+ *   + title (status rides the key-strip glyph, MDT-247)
  * - a top-right × to unpin (hidden in read-only)
  *
  * The numeric code alone is intentionally ambiguous across projects (MDT-042
  * vs OTHER-042); the tooltip is the disambiguator. Clicking opens the viewer.
  */
 import type { PinItem as PinItemData } from '@mdt/domain-contracts'
-import { StatusBadge } from '../Badge/StatusBadge'
 import { TicketCode } from '../TicketCode'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip'
 
@@ -92,17 +91,15 @@ export function PinItem({ pin, metadata, canWrite, onOpen, onUnpin }: PinItemPro
           {/* Render the key via the canonical <TicketCode> (the single source
               of the "priority glyph before key" invariant, TicketCode.tsx) so
               the pin tooltip stays in sync with the card/list/viewer — never
-              hand-compose the code. Priority (metadata?.priority) drives the
-              colored glyph; undefined priority → no glyph (graceful). */}
-          <TicketCode code={fullCode} priority={metadata?.priority} />
+              hand-compose the code. Priority + status (metadata?.priority /
+              metadata?.status) drive the colored glyphs; undefined → no glyph
+              (graceful). MDT-247: status rides the strip glyph here — the
+              tooltip no longer shows a status badge (one encoding per
+              surface); the aria-label still carries the status name. */}
+          <TicketCode code={fullCode} priority={metadata?.priority} status={metadata?.status} />
           <div className="pin-tooltip__title">
             {metadata?.title ?? '(ticket not loaded)'}
           </div>
-          {metadata && (
-            <div className="pin-tooltip__status">
-              <StatusBadge status={metadata.status} />
-            </div>
-          )}
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

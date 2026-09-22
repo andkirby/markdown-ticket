@@ -38,7 +38,7 @@
    * Flat v3 status tokens (bg tint + colored text). No border.
    * Status → token: proposed→backlog, approved→open, in-progress→progress,
    * implemented→done, rejected→rejected, on-hold→hold,
-   * partially-implemented→progress, invalid→rejected, others→backlog.
+   * partially-implemented→partial (MDT-247 owner-approved lime), invalid→rejected, others→backlog.
    * ===================================================== */
 
   .badge[data-status="proposed"] { background: var(--status-backlog-bg); color: var(--status-backlog); }
@@ -47,7 +47,7 @@
   .badge[data-status="implemented"] { background: var(--status-done-bg); color: var(--status-done); }
   .badge[data-status="rejected"] { background: var(--status-rejected-bg); color: var(--status-rejected); }
   .badge[data-status="on-hold"] { background: var(--status-hold-bg); color: var(--status-hold); }
-  .badge[data-status="partially-implemented"] { background: var(--status-progress-bg); color: var(--status-progress); }
+  .badge[data-status="partially-implemented"] { background: var(--status-partial-bg); color: var(--status-partial); }
   .badge[data-status="superseded"] { background: var(--status-backlog-bg); color: var(--status-backlog); }
   .badge[data-status="deprecated"] { background: var(--status-backlog-bg); color: var(--status-backlog); }
   .badge[data-status="duplicate"] { background: var(--status-backlog-bg); color: var(--status-backlog); }
