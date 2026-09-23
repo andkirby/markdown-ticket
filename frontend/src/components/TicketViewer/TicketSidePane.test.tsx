@@ -252,6 +252,7 @@ describe('SplitDivider', () => {
         measureColumn={() => 560}
         measureBody={() => 1200}
         onResize={onResize}
+        onCommit={() => {}}
         onReset={onReset}
       />,
     )
@@ -274,6 +275,7 @@ describe('SplitDivider', () => {
         measureColumn={() => 560}
         measureBody={() => 1200}
         onResize={onResize}
+        onCommit={() => {}}
         onReset={() => {}}
       />,
     )

@@ -12,6 +12,7 @@ import {
   MARKDOWN_DENSITY_CHANGE_EVENT,
   MARKDOWN_DENSITY_KEY,
 } from '../../config/settingsPreferences'
+import { clearStoredSplitPercent, getStoredSplitPercent, storeSplitPercent } from '../../config/sidePaneLayout'
 import { formatTicketPageTitle, PageTitlePriority, usePageTitle } from '../../hooks/usePageTitle'
 import { cn } from '../../lib/utils'
 import { buildDocumentPath, isTraceGraphHash, TRACE_GRAPH_HASH_FRAGMENT } from '../../routes'
@@ -138,21 +139,54 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
   const sidePaneTitleRef = useRef('')
   const ticketColumnRef = useRef<HTMLDivElement>(null)
   const paneWasVisibleRef = useRef(false)
-  // UAT r2 — user-resizable wall between the columns; null = CSS default.
-  // Session-local: dies with the modal like the rest of the pane session.
-  const [splitTicketWidth, setSplitTicketWidth] = useState<number | null>(null)
+  // UAT r2/r3 — user-resizable wall between the columns; null = CSS default.
+  // Stored as a PERCENT of the split body width and persisted to localStorage
+  // (config/sidePaneLayout.ts): drag end / arrow nudge commits, double-click
+  // reset clears, first pane reveal per modal restores. A percent basis
+  // resolves live, so restore has no measurement race with the modal width
+  // transition and the wall keeps its relative position across viewports.
+  const [splitTicketPercent, setSplitTicketPercent] = useState<number | null>(null)
+  const splitPercentRef = useRef<number | null>(null)
   const splitBodyRef = useRef<HTMLDivElement>(null)
   const measureSplitColumn = useCallback(
     () => ticketColumnRef.current?.getBoundingClientRect().width ?? 0,
     [],
   )
   const measureSplitBody = useCallback(() => splitBodyRef.current?.clientWidth ?? 0, [])
+  const applySplitPercent = useCallback((percent: number | null) => {
+    splitPercentRef.current = percent
+    setSplitTicketPercent(percent)
+  }, [])
+  const handleSplitResize = useCallback((widthPx: number) => {
+    const bodyWidth = splitBodyRef.current?.clientWidth ?? 0
+    if (bodyWidth > 0)
+      applySplitPercent(Math.round((widthPx / bodyWidth) * 100000) / 1000)
+  }, [applySplitPercent])
+  const commitSplitPercent = useCallback(() => {
+    const percent = splitPercentRef.current
+    if (percent != null)
+      storeSplitPercent(percent)
+  }, [])
+  const resetSplitPercent = useCallback(() => {
+    applySplitPercent(null)
+    clearStoredSplitPercent()
+  }, [applySplitPercent])
   const modalSplitStyle = useMemo(
-    () => (splitTicketWidth != null
-      ? ({ '--ticket-col-width': `${splitTicketWidth}px` } as CSSProperties)
+    () => (splitTicketPercent != null
+      ? ({ '--ticket-col-width': `${splitTicketPercent}%` } as CSSProperties)
       : undefined),
-    [splitTicketWidth],
+    [splitTicketPercent],
   )
+
+  // Restore the persisted wall position the first time the pane shows in a
+  // modal lifetime (guard: only when no explicit width is set yet).
+  useEffect(() => {
+    if (!paneVisible || splitTicketPercent != null)
+      return
+    const stored = getStoredSplitPercent()
+    if (stored != null)
+      applySplitPercent(stored)
+  }, [paneVisible, splitTicketPercent, applySplitPercent])
 
   const handlePaneTitle = useCallback((title: string) => {
     sidePaneTitleRef.current = title
@@ -578,8 +612,8 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
                   <div
                     className="ticket-viewer-content"
                     ref={ticketColumnRef}
-                    style={splitTicketWidth != null
-                      ? { ...ticketContentStyle, flexBasis: `${splitTicketWidth}px` }
+                    style={splitTicketPercent != null
+                      ? { ...ticketContentStyle, flexBasis: `${splitTicketPercent}%` }
                       : ticketContentStyle}
                   >
                     <CompactTicketHeader ticket={currentTicket!} action={headerActions} />
@@ -650,8 +684,9 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
               <SplitDivider
                 measureColumn={measureSplitColumn}
                 measureBody={measureSplitBody}
-                onResize={setSplitTicketWidth}
-                onReset={() => setSplitTicketWidth(null)}
+                onResize={handleSplitResize}
+                onCommit={commitSplitPercent}
+                onReset={resetSplitPercent}
               />
             )}
             {hasSidePaneSession && currentTicket && (

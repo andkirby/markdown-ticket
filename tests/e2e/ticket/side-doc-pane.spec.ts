@@ -347,6 +347,17 @@ test.describe('MDT-248: ticket side reading pane', () => {
     await page.keyboard.press('ArrowRight')
     const w5 = (await column.boundingBox())!.width
     expect(Math.round(w5 - w4)).toBe(32)
+
+    // Persisted (UAT r3): the wall position survives closing and reopening
+    // the ticket modal, restored from localStorage as a percent of the body.
+    expect(await page.evaluate(() => localStorage.getItem('mdt-settings-ticket-side-pane-split-ratio'))).not.toBeNull()
+    await page.keyboard.press('Escape') // hide pane
+    await page.keyboard.press('Escape') // close modal
+    const reopened = await openSubdocWithGuideLink(page, ctx.projectCode, ctx.ticketCode)
+    await reopened.locator('a.smart-link[data-link-type="document"]').click()
+    await expect(page.locator(sidePaneSelectors.pane)).toBeVisible()
+    const w6 = await stableColumnWidth()
+    expect(Math.abs(w6 - w5)).toBeLessThan(6)
   })
 
   test('@MDT-248 escape_with_pane_hidden_closes_modal (BR-1.10)', async ({ page, e2eContext }) => {

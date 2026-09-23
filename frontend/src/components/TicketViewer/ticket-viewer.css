@@ -164,6 +164,9 @@
   .ticket-viewer-body--split .ticket-viewer-content {
     @apply flex min-h-0 flex-col;
     flex: 0 0 clamp(420px, 46%, 640px);
+    /* percent basis (persisted wall) can dip below the readable floor when
+       the window shrinks — hold the same 340px minimum the drag clamps to */
+    min-width: 340px;
     overflow: hidden;
   }
 
