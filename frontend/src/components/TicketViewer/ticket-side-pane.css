@@ -5,8 +5,44 @@
 @layer components {
   .ticket-side-pane {
     @apply relative flex min-h-0 min-w-0 flex-1 flex-col;
-    border-left: 1px solid oklch(var(--border));
     background-color: var(--bg-elevated);
+  }
+
+  /* Draggable wall between the columns (SplitDivider). 9px hit area with a
+     centered 1px rule; hover/focus/drag accent it in the primary family. */
+  .ticket-side-pane__divider {
+    position: relative;
+    flex: 0 0 9px;
+    cursor: col-resize;
+    touch-action: none;
+  }
+
+  .ticket-side-pane__divider::after {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    left: 4px;
+    width: 1px;
+    background: oklch(var(--border));
+  }
+
+  .ticket-side-pane__divider:hover::after,
+  .ticket-side-pane__divider:focus-visible::after,
+  .ticket-side-pane__divider.is-dragging::after {
+    left: 3.5px;
+    width: 2px;
+    background: oklch(var(--primary));
+  }
+
+  .ticket-side-pane__divider:focus-visible {
+    outline: none;
+  }
+
+  /* While dragging: global col-resize cursor and no accidental selection */
+  body.ticket-side-pane--resizing,
+  body.ticket-side-pane--resizing * {
+    cursor: col-resize;
+    user-select: none;
   }
 
   .ticket-side-pane__header {
@@ -143,7 +179,10 @@
   @media (max-width: 1099.98px) {
     .ticket-side-pane {
       @apply absolute inset-0 z-10;
-      border-left: 0;
+    }
+
+    .ticket-side-pane__divider {
+      display: none;
     }
 
     .ticket-side-pane__back-to-ticket {

@@ -288,6 +288,67 @@ test.describe('MDT-248: ticket side reading pane', () => {
     await expect(page.locator(sidePaneSelectors.title)).toHaveText('Guide')
   })
 
+  test('@MDT-248 divider_resizes_columns_within_range (UAT r2)', async ({ page, e2eContext }) => {
+    const ctx = await setupChainedDocs(e2eContext, 'MDT-001')
+    const detailPanel = await openSubdocWithGuideLink(page, ctx.projectCode, ctx.ticketCode)
+    await detailPanel.locator('a.smart-link[data-link-type="document"]').click()
+    await expect(page.locator(sidePaneSelectors.pane)).toBeVisible()
+
+    const column = page.locator('.ticket-viewer-content')
+    const body = page.locator('.ticket-viewer-body--split')
+    const divider = page.locator(sidePaneSelectors.divider)
+    await expect(divider).toBeVisible()
+
+    // Frame stretches to top/bottom: body height ≈ viewport minus a thin frame
+    const bodyBox = await body.boundingBox()
+    expect(bodyBox!.height).toBeGreaterThan(page.viewportSize()!.height - 48)
+
+    // The modal width transition (xl -> split) must settle before measuring
+    const stableColumnWidth = async (): Promise<number> => {
+      let previous = -1
+      for (let i = 0; i < 40; i++) {
+        const width = Math.round((await column.boundingBox())!.width)
+        if (width === previous && width > 0)
+          return width
+        previous = width
+        await page.waitForTimeout(50)
+      }
+      throw new Error('column width never settled')
+    }
+
+    // Pointer drag widens the ticket column
+    const w1 = await stableColumnWidth()
+    const d1 = await divider.boundingBox()
+    await page.mouse.move(d1!.x + d1!.width / 2, d1!.y + 60)
+    await page.mouse.down()
+    await page.mouse.move(d1!.x + d1!.width / 2 + 240, d1!.y + 60, { steps: 4 })
+    await page.mouse.up()
+    const w2 = (await column.boundingBox())!.width
+    expect(w2 - w1).toBeGreaterThan(180)
+    expect(w2 - w1).toBeLessThan(300)
+
+    // Extreme drag clamps: the pane keeps its minimum (340px)
+    const d2 = await divider.boundingBox()
+    await page.mouse.move(d2!.x + d2!.width / 2, d2!.y + 60)
+    await page.mouse.down()
+    await page.mouse.move(d2!.x + d2!.width / 2 + 2000, d2!.y + 60, { steps: 4 })
+    await page.mouse.up()
+    const bodyWidth = (await body.boundingBox())!.width
+    const w3 = (await column.boundingBox())!.width
+    expect(w3).toBeLessThanOrEqual(bodyWidth - 340 + 2)
+
+    // Double-click resets to the default measure
+    await divider.dblclick()
+    const w4 = await stableColumnWidth()
+    expect(Math.abs(w4 - w1)).toBeLessThan(2)
+
+    // Keyboard: ±32px per arrow press
+    await divider.focus()
+    await page.keyboard.press('ArrowRight')
+    const w5 = (await column.boundingBox())!.width
+    expect(Math.round(w5 - w4)).toBe(32)
+  })
+
   test('@MDT-248 escape_with_pane_hidden_closes_modal (BR-1.10)', async ({ page, e2eContext }) => {
     const ctx = await setupChainedDocs(e2eContext, 'MDT-001')
     const detailPanel = await openSubdocWithGuideLink(page, ctx.projectCode, ctx.ticketCode)

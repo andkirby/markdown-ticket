@@ -4,6 +4,7 @@ import { authFetch } from '@/auth/authFetch'
 import { getMarkdownDensity, getMarkdownDensityClass, MARKDOWN_DENSITY_CHANGE_EVENT } from '@/config/settingsPreferences'
 import HtmlSandboxViewer from '../DocumentsView/HtmlSandboxViewer'
 import MarkdownContent from '../MarkdownContent'
+import { clampTicketColumnWidth } from './splitLayout'
 
 /**
  * @testid ticket-side-pane — the pane (aside) while visible
@@ -16,6 +17,7 @@ import MarkdownContent from '../MarkdownContent'
  * @testid ticket-side-pane-back-to-ticket — overlay return control (narrow only)
  * @testid ticket-side-pane-scroll — pane scroll region
  * @testid ticket-side-pane-pill — reading pill while pane hidden
+ * @testid ticket-side-pane-divider — draggable column divider (split only)
  */
 
 interface PaneDoc {
@@ -310,5 +312,81 @@ export const SidePanePill: React.FC<SidePanePillProps> = ({ title, onReveal }) =
     <span className="ticket-side-pane__pill-show">Show&nbsp;›</span>
   </button>
 )
+
+interface SplitDividerProps {
+  /** Measured ticket-column width, read at drag/keyboard start */
+  measureColumn: () => number
+  /** Split body (row) width, for clamping */
+  measureBody: () => number
+  onResize: (widthPx: number) => void
+  onReset: () => void
+}
+
+/**
+ * The draggable wall between the ticket column and the pane. Pointer drag,
+ * ArrowLeft/ArrowRight (±32px), double-click resets to the CSS default.
+ * Session-local: the width lives in the ticket viewer and dies with the modal.
+ */
+export const SplitDivider: React.FC<SplitDividerProps> = ({ measureColumn, measureBody, onResize, onReset }) => {
+  const dragRef = useRef<{ pointerId: number, startX: number, startWidth: number } | null>(null)
+
+  const beginDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.button !== 0)
+      return
+    const startWidth = measureColumn()
+    if (!startWidth)
+      return
+    dragRef.current = { pointerId: event.pointerId, startX: event.clientX, startWidth }
+    event.currentTarget.setPointerCapture(event.pointerId)
+    event.currentTarget.classList.add('is-dragging')
+    document.body.classList.add('ticket-side-pane--resizing')
+  }
+
+  const moveDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current
+    if (!drag || drag.pointerId !== event.pointerId)
+      return
+    onResize(clampTicketColumnWidth(drag.startWidth + event.clientX - drag.startX, measureBody()))
+  }
+
+  const endDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragRef.current)
+      return
+    dragRef.current = null
+    event.currentTarget.classList.remove('is-dragging')
+    document.body.classList.remove('ticket-side-pane--resizing')
+  }
+
+  const nudge = (delta: number) => () => {
+    onResize(clampTicketColumnWidth(measureColumn() + delta, measureBody()))
+  }
+
+  return (
+    <div
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Resize ticket and document columns"
+      tabIndex={0}
+      className="ticket-side-pane__divider"
+      data-testid="ticket-side-pane-divider"
+      title="Drag to resize · double-click to reset"
+      onPointerDown={beginDrag}
+      onPointerMove={moveDrag}
+      onPointerUp={endDrag}
+      onPointerCancel={endDrag}
+      onDoubleClick={onReset}
+      onKeyDown={(event) => {
+        if (event.key === 'ArrowLeft') {
+          event.preventDefault()
+          nudge(-32)()
+        }
+        else if (event.key === 'ArrowRight') {
+          event.preventDefault()
+          nudge(32)()
+        }
+      }}
+    />
+  )
+}
 
 export default TicketSidePane

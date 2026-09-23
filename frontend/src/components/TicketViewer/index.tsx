@@ -33,7 +33,7 @@ import { CompactTicketHeader } from './CompactTicketHeader'
 import { EpicBoardAction } from './EpicBoardAction'
 import { ROOT_DOCUMENT_PATH, splitPathSegments } from './subdocumentPath'
 import { TicketDocumentTabs } from './TicketDocumentTabs'
-import { SidePanePill, TicketSidePane } from './TicketSidePane'
+import { SidePanePill, SplitDivider, TicketSidePane } from './TicketSidePane'
 import { TraceGraphShell } from './TraceGraphShell'
 import { useSidePane } from './useSidePane'
 import { useTicketDocumentContent } from './useTicketDocumentContent'
@@ -138,6 +138,21 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
   const sidePaneTitleRef = useRef('')
   const ticketColumnRef = useRef<HTMLDivElement>(null)
   const paneWasVisibleRef = useRef(false)
+  // UAT r2 — user-resizable wall between the columns; null = CSS default.
+  // Session-local: dies with the modal like the rest of the pane session.
+  const [splitTicketWidth, setSplitTicketWidth] = useState<number | null>(null)
+  const splitBodyRef = useRef<HTMLDivElement>(null)
+  const measureSplitColumn = useCallback(
+    () => ticketColumnRef.current?.getBoundingClientRect().width ?? 0,
+    [],
+  )
+  const measureSplitBody = useCallback(() => splitBodyRef.current?.clientWidth ?? 0, [])
+  const modalSplitStyle = useMemo(
+    () => (splitTicketWidth != null
+      ? ({ '--ticket-col-width': `${splitTicketWidth}px` } as CSSProperties)
+      : undefined),
+    [splitTicketWidth],
+  )
 
   const handlePaneTitle = useCallback((title: string) => {
     sidePaneTitleRef.current = title
@@ -520,6 +535,7 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
         size={paneVisible ? 'split' : 'xl'}
         className="ticket-detail-modal"
         overlayClassName={cn('ticket-detail-overlay', paneVisible && 'ticket-detail-overlay--split')}
+        style={modalSplitStyle}
         closeOnEscape={!isTraceGraphOpen && !paneVisible}
         closeOnOverlayClick={!isTraceGraphOpen}
         data-testid="ticket-detail"
@@ -545,7 +561,10 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
             />
           </svg>
         </button>
-        <ModalBody className={cn('ticket-viewer-body', paneVisible && 'ticket-viewer-body--split')}>
+        <ModalBody
+          ref={splitBodyRef}
+          className={cn('ticket-viewer-body', paneVisible && 'ticket-viewer-body--split')}
+        >
           <DocumentDeliveryContext.Provider value={sidePaneDelivery}>
             {ticketError && !ticket
               ? (
@@ -556,7 +575,13 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
                   </div>
                 )
               : (
-                  <div className="ticket-viewer-content" ref={ticketColumnRef} style={ticketContentStyle}>
+                  <div
+                    className="ticket-viewer-content"
+                    ref={ticketColumnRef}
+                    style={splitTicketWidth != null
+                      ? { ...ticketContentStyle, flexBasis: `${splitTicketWidth}px` }
+                      : ticketContentStyle}
+                  >
                     <CompactTicketHeader ticket={currentTicket!} action={headerActions} />
 
                     <TicketDocumentTabs
@@ -621,6 +646,14 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
                     </div>
                   </div>
                 )}
+            {paneVisible && (
+              <SplitDivider
+                measureColumn={measureSplitColumn}
+                measureBody={measureSplitBody}
+                onResize={setSplitTicketWidth}
+                onReset={() => setSplitTicketWidth(null)}
+              />
+            )}
             {hasSidePaneSession && currentTicket && (
               <TicketSidePane
                 projectId={projectCode ?? ''}

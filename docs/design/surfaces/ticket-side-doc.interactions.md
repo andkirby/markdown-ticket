@@ -70,6 +70,14 @@ Ordered, one Esc press per step:
 
 Steps compose: Esc walks outward exactly one layer per press.
 
+## Divider (UAT r2)
+
+- Drag (pointer), ArrowLeft/ArrowRight (±32px, focusable separator), double-click resets to the CSS default.
+- Range: neither column below 340px (`clampTicketColumnWidth` in `splitLayout.ts`); the smaller bound wins when the body cannot fit two minimums.
+- Session-local: the width lives in the ticket viewer and dies with the modal; it survives hide/reveal and ticket hops.
+- While dragging: global col-resize cursor, selection suppressed (`ticket-side-pane--resizing` body class); the modal close × tracks the width via `--ticket-col-width`.
+- Hidden below the split breakpoint (no divider in overlay mode).
+
 ## Session lifetime
 
 - Survives: ticket hops in the ticket column (state 8), sub-document tab switches, pane hide/reveal cycles, viewport resize across the split/overlay breakpoint, theme and density changes.

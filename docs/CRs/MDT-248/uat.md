@@ -22,3 +22,17 @@
 - `bun run validate:ts`, `bun run build`, `bun run lint:frontend`, TV unit suites — green.
 
 **Status**: round 1 addressed; awaiting next look.
+
+## Round 2 — 2026-09-23
+
+**Feedback**: "stretch to top/bottom, add a handle to change wall position for reasonable range."
+
+**Fix** (`fix(MDT-248): stretch split frame + draggable column divider (UAT r2)`):
+
+- The split body now has a fixed height `calc(100dvh - 1.5rem)` with a thin frame — a work surface that fills the viewport vertically regardless of content length (content scrolls inside each column).
+- New `SplitDivider` between the columns: pointer drag, ArrowLeft/ArrowRight ±32px, double-click reset; range keeps both columns ≥ 340px (`clampTicketColumnWidth`, `splitLayout.ts`). Session-local width.
+- The modal × tracks the dragged width via the `--ticket-col-width` CSS var; the pane's own border moved into the divider (1px rule with hover/focus/drag accent).
+
+**Verification**: unit 18/18 (clamp + divider drag/keyboard); E2E 10/10 (new `divider_resizes_columns_within_range` locks drag, clamp, reset, keyboard, and the vertical stretch); TS/build/lint green.
+
+**Status**: round 2 addressed; awaiting next look.

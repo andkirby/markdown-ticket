@@ -156,7 +156,9 @@
      document-mode whitespace (3dvh anchor, 0.5rem card margins). */
   .modal__body.ticket-viewer-body--split {
     @apply flex overflow-hidden;
-    max-height: calc(100dvh - 3dvh - 2.5rem);
+    /* Stretch to top/bottom: a fixed work-surface height, not a cap —
+       content scrolls inside each column regardless of its length. */
+    height: calc(100dvh - 1.5rem);
   }
 
   .ticket-viewer-body--split .ticket-viewer-content {
@@ -179,14 +181,17 @@
     overscroll-behavior: contain;
   }
 
-  /* Split-mode frame overrides — beat the base modal rules via specificity. */
+  /* Split-mode frame overrides — beat the base modal rules via specificity.
+     UAT r2: stretch to top/bottom — 0.75rem breathing room instead of the
+     document-mode anchor and margins. */
   .ticket-detail-overlay--split .modal__container {
-    padding-top: 3dvh;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
   }
 
   .ticket-detail-overlay--split .modal-content {
-    margin-top: 0.5rem;
-    margin-bottom: 0.5rem;
+    margin-top: 0;
+    margin-bottom: 0;
   }
 
   /* Below the split breakpoint the pane overlays the modal (single column);
@@ -205,11 +210,11 @@
 
   /* Split mode: the modal-level close stays scoped to the ticket column —
      it must not stack over the pane's own controls (pane × discards the
-     session; modal × closes the ticket). Ticket-column width minus the
-     button box (32px) and its right offset (12px). */
+     session; modal × closes the ticket). Tracks the dragged column width
+     via the --ticket-col-width var (falls back to the default clamp). */
   .modal__close--split {
     right: auto;
-    left: calc(clamp(420px, 46%, 640px) - 2.75rem);
+    left: calc(var(--ticket-col-width, clamp(420px, 46%, 640px)) - 2.75rem);
   }
 
   @media (max-width: 1099.98px) {
