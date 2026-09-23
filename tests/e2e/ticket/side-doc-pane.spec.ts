@@ -360,6 +360,49 @@ test.describe('MDT-248: ticket side reading pane', () => {
     expect(Math.abs(w6 - w5)).toBeLessThan(6)
   })
 
+  test('@MDT-248 pane_failure_toast_and_empty_state (Edge-2, UAT r4)', async ({ page, e2eContext }) => {
+    const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
+    const ticketCode = scenario.crCodes[0]
+
+    // deep-dive is rendered by the pane in documents mode, where ../ resolves
+    // against the project root — designs/ is unindexed, so the link stays
+    // clickable and the pane fetch is what fails (the dangling-link case).
+    createProjectDocs(scenario.projectDir, {
+      'side-doc-guide.md': '# Guide\n\nSee the [deep dive](deep-dive.md).',
+      'deep-dive.md': '# Deep dive\n\nBody.\n\nA [missing doc](../designs/nope.md).',
+    })
+    // Ticket-prose links are pinned to the docs/ world by the resolver's
+    // tickets-area escape rule, so the subdoc targets an unindexed directory
+    // under docs/ — clickable, and the fetch 404s.
+    createSubDocFiles(scenario.projectDir, ticketCode, {
+      'architecture.md': '# Architecture\n\nStart from the [guide](../../side-doc-guide.md) or the [missing doc](../../missing-dir/nope.md).',
+    })
+
+    const detailPanel = await openSubdocWithGuideLink(page, scenario.projectCode, ticketCode)
+    await detailPanel.locator('a.smart-link[data-link-type="document"]').first().click() // guide
+    const pane = page.locator(sidePaneSelectors.pane)
+    await expect(pane).toBeVisible()
+    await expect(page.locator(sidePaneSelectors.title)).toHaveText('Guide')
+
+    // Retained case: navigate to deep-dive, then to the broken target —
+    // toast reports it, the previous document stays, no inline alert
+    await pane.locator('a.smart-link[data-link-type="document"]').first().click() // deep dive
+    await expect(page.locator(sidePaneSelectors.title)).toHaveText('Deep dive')
+    await pane.locator('a.smart-link[data-link-type="document"]').first().click() // missing (deep-dive's only link)
+    const toast = page.locator('[data-sonner-toast]')
+    await expect(toast.first()).toContainText('designs/nope.md')
+    await expect(page.locator(sidePaneSelectors.title)).toHaveText('Deep dive')
+    expect(await pane.locator('[role="alert"]').count()).toBe(0)
+
+    // First-open case: discard, then open the broken target directly —
+    // the pane shows the inline empty error state naming the path
+    await page.locator(sidePaneSelectors.close).click()
+    await detailPanel.locator('a.smart-link[data-link-type="document"]').nth(1).click() // missing
+    await expect(pane).toBeVisible()
+    await expect(page.getByTestId('ticket-side-pane-error-path')).toHaveText('docs/missing-dir/nope.md')
+    await expect(page.locator(sidePaneSelectors.title)).toHaveText('Nope')
+  })
+
   test('@MDT-248 escape_with_pane_hidden_closes_modal (BR-1.10)', async ({ page, e2eContext }) => {
     const ctx = await setupChainedDocs(e2eContext, 'MDT-001')
     const detailPanel = await openSubdocWithGuideLink(page, ctx.projectCode, ctx.ticketCode)

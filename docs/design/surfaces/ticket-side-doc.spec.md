@@ -93,7 +93,7 @@ A two-row head block mirroring the ticket column's header (same rhythm and typog
 | open — loading | document link clicked | pane visible, header shows target title/path, body shows the standard loading treatment; ticket column unchanged |
 | open — loaded | document fetched | pane body renders markdown via `documents` variant; density + theme follow global settings |
 | open — html document | target is HTML | HtmlSandboxViewer in pane body |
-| open — fetch error | document fetch fails | inline error in pane body; previous pane document (if any) is not lost; error is `role="alert"` |
+| open — fetch error | document fetch fails | with a previous document on screen: toast reports the failure (app Sonner via `useToast`) and the previous document stays; first open with nothing loaded: inline empty error state (`role="alert"`) naming the path |
 | hidden | Esc (or `‹ Ticket` in overlay) | pane tucked; pill appears naming current document; session (history + scroll) kept |
 | discarded | `×` on pane | pane gone, pill gone; modal returns to default width |
 | link flagged missing | target known-missing | link renders flagged, non-clickable — identical to today; pane never opens for it |
@@ -126,7 +126,7 @@ Resize while open follows the breakpoint live; no reload or session loss.
 | document path | `--muted-foreground` | mono path text |
 | disabled history | `--muted-foreground` (dimmed) + `cursor-not-allowed` | back/forward at history bounds |
 | pill radius | `--radius-pill` | pill shape |
-| error | `--destructive` | pane fetch error text |
+| empty error state | `--destructive` (icon), `--text-subtle` (path) | pane first-open fetch failure |
 
 ## Classes used
 

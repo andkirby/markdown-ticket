@@ -48,7 +48,7 @@ phaseEpic: MDT-231
 - Reuse the existing link classification, normalization, and known-missing flagging behavior for document links; a flagged/broken link stays non-clickable.
 - Pane documents render with the same markdown pipeline, density settings, and theming as ticket prose; sandboxed HTML documents preview with the existing sandbox guarantees.
 - Existing modal conventions (focus trap, backdrop, close affordances) keep holding in the widened state.
-- Interaction contract and state machine are specified by designs/ticket-side-doc/ (POC + decisions.md) — deviations need a recorded decision.
+- Interaction contract and state machine are specified by the designs/ticket-side-doc/ POC and its decisions record — deviations need a recorded decision.
 
 ### Non-Goals
 - Not building the multi-pane workspace (panes, per-pane tabs, trails, gathered Related lists) from designs/docs-zai.
@@ -112,6 +112,6 @@ phaseEpic: MDT-231
 > Tests trace projection: [tests.trace.md](./MDT-248/tests.trace.md)
 
 ### How to Verify Success
-- Manual: run the 90-second scenario from designs/ticket-side-doc/README.md against the app (doc chain two levels deep, hide/reveal, discard, ticket hop, narrow viewport).
+- Manual: run the 90-second scenario from the ticket-side-doc POC README (designs/ticket-side-doc/) against the app (doc chain two levels deep, hide/reveal, discard, ticket hop, narrow viewport).
 - Automated: E2E covering pane open, follow-link history, scroll restore, hide/reveal/discard states, Esc chain, ticket hop with surviving session, narrow-viewport overlay, and flagged-missing links.
-- Reference interaction contract: designs/ticket-side-doc/ (POC index.html + decisions.md).
+- Reference interaction contract: designs/ticket-side-doc/ (POC index.html + the decisions record).

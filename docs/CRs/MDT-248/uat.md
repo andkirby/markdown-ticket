@@ -49,3 +49,19 @@
 **Verification**: unit green across pane + config suites (new sidePaneLayout round-trip/reject tests); E2E 10/10 — the divider journey now closes and reopens the modal and asserts the wall returns to the dragged position with the key present in localStorage; TS/build/lint green.
 
 **Status**: round 3 addressed; awaiting next look.
+
+## Round 4 — 2026-09-23
+
+**Feedback**: (1) pane error on a broken link "looks so so" — is a notifications system needed? (2) on the live MDT-248 ticket, the `designs/ticket-side-doc/` references don't work — did MDT-248 break them? (3) what about E2E coverage?
+
+**Verdict on (2) — not an MDT-248 regression.** Ticket-prose document links live in a tickets-area-relative world: `markdownPreprocessor.resolveDocumentRef` resolves `..` against the ticket's path and, when a path escapes the tickets area, unconditionally prepends the parent of `ticketsPath` (`docs/`). Repo-root paths (`designs/…`) are therefore unreachable from ticket prose by design — and bare `decisions.md` mentions resolve into the unindexed tickets area as clickable-but-dangling. Before MDT-248 these same links navigated to the Documents view and failed there; the pane only changed where the failure shows.
+
+**Fixes** (`fix(MDT-248): pane failure toast + empty state; de-link unreachable refs (UAT r4)`):
+
+- (1) No new notifications system or agent needed — the app already ships Sonner toasts app-wide (`<Toaster>` in ProjectOverlays, `useToast` hook). The pane now uses it: a failure **with a previous document on screen** toasts "Couldn't load {path}" and keeps the previous document (no inline clutter); a **first-open** failure shows a proper centered empty error state (icon + message + path, `role="alert"`), mirroring the ticket-not-found pattern. The thin inline alert is gone.
+- (2) The CR's `designs/` references rewritten as non-linking prose (they can never resolve from ticket prose; the POC folder is referenced by path only). Canonical Edge-2 requirement updated and traces re-rendered.
+- (3) E2E: new journey `pane_failure_toast_and_empty_state` covers both failure modes against a genuinely dangling-but-clickable target; suite is 11/11.
+
+**Verification**: unit 19/19 (toast mocked via `mock.module`; retained-doc and first-open cases); E2E 11/11; TS/lint/build green.
+
+**Status**: round 4 addressed; awaiting next look.

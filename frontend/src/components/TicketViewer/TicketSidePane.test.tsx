@@ -20,7 +20,22 @@ import { clampTicketColumnWidth } from './splitLayout'
 import { SidePanePill, SplitDivider, TicketSidePane } from './TicketSidePane'
 import { useSidePane } from './useSidePane'
 
-afterEach(cleanup)
+const toastMock = {
+  success: mock(() => {}),
+  error: mock(() => {}),
+  warning: mock(() => {}),
+  info: mock(() => {}),
+  dismiss: mock(() => {}),
+}
+function toastHook() {
+  return toastMock
+}
+mock.module('../../hooks/useToast', () => ({ useToast: toastHook }))
+
+afterEach(() => {
+  cleanup()
+  toastMock.error.mockClear()
+})
 
 /* ---------- useSidePane state machine ---------- */
 
@@ -131,7 +146,7 @@ describe('TicketSidePane', () => {
     expect((screen.getByTestId('ticket-side-pane-back') as HTMLButtonElement).disabled).toBe(false)
   })
 
-  it('keeps the previous document and shows an inline error when the next fetch fails (Edge-2)', async () => {
+  it('keeps the previous document and toasts when the next fetch fails (Edge-2)', async () => {
     const failing = mock(async (path: string) => {
       if (path === 'docs/broken.md') {
         throw new Error('fetch failed')
@@ -173,13 +188,48 @@ describe('TicketSidePane', () => {
       />,
     )
 
+    // toast reports the failure; no inline alert over the retained document
     await waitFor(() => {
-      expect(screen.getByRole('alert').textContent).toContain('docs/broken.md')
+      expect(toastMock.error).toHaveBeenCalledWith(
+        'Couldn’t load docs/broken.md',
+        expect.objectContaining({ description: expect.stringContaining('previous document') }),
+      )
     })
+    expect(screen.queryByRole('alert')).toBeNull()
     // previous document retained: its title still heads the pane and its body
     // is still rendered (the H1 was extracted into the title)
     expect(screen.getByTestId('ticket-side-pane-title').textContent).toBe('Deep dive')
     expect(document.querySelector('.prose--document')?.textContent).toContain('Body.')
+  })
+
+  it('first-open failure shows the inline empty error state, no toast (Edge-2)', async () => {
+    const failing = mock(async () => {
+      throw new Error('fetch failed')
+    })
+    render(
+      <TicketSidePane
+        projectId="MDT"
+        hist={['docs/gone.md']}
+        hi={0}
+        visible
+        scrolls={{}}
+        fetchContent={failing as unknown as (path: string) => Promise<string>}
+        onBack={() => {}}
+        onForward={() => {}}
+        onHide={() => {}}
+        onDiscard={() => {}}
+        onOpenInDocuments={() => {}}
+        onScrollChange={() => {}}
+      />,
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert').textContent).toContain('docs/gone.md')
+    })
+    expect(screen.getByTestId('ticket-side-pane-error-path').textContent).toBe('docs/gone.md')
+    // title falls back to the humanized basename
+    expect(screen.getByTestId('ticket-side-pane-title').textContent).toBe('Gone')
+    expect(toastMock.error).not.toHaveBeenCalled()
   })
 })
 

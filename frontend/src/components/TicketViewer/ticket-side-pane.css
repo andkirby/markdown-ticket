@@ -134,8 +134,23 @@
     @apply animate-pulse pt-8 text-center text-sm text-muted-foreground;
   }
 
-  .ticket-side-pane__error {
-    @apply rounded-md border px-3 py-2 text-sm text-destructive;
+  /* First-open fetch failure with nothing to retain — mirrors the
+     ticket-not-found pattern (icon + title + path, centered) */
+  .ticket-side-pane__empty {
+    @apply flex flex-col items-center justify-center gap-2 px-4 py-16 text-center;
+  }
+
+  .ticket-side-pane__empty svg {
+    @apply h-10 w-10 text-destructive;
+  }
+
+  .ticket-side-pane__empty-title {
+    @apply text-sm font-semibold;
+  }
+
+  .ticket-side-pane__empty-path {
+    @apply break-all font-mono text-xs;
+    color: var(--text-subtle);
   }
 
   .ticket-side-pane__html {
