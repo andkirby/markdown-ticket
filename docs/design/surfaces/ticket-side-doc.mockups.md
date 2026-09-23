@@ -32,14 +32,13 @@ window "Ticket Viewer — Side Reading Pane Open":
         text "Decisions live in decisions.md" id="tsd-doclink2"
       col fill:
         row:
-          button "◀" id="tsd-back"
-          button "▶" id="tsd-fwd"
           text "Cloud sync — map" bold id="tsd-doc-title"
           spacer
           button "↗" id="tsd-handoff"
           button "×" id="tsd-pane-close"
-        divider
         row:
+          button "◀" id="tsd-back"
+          button "▶" id="tsd-fwd"
           text "docs/architecture/cloud-sync/README.md" muted size=small id="tsd-doc-path"
         text "### Cloud sync architecture" bold
         text "Index of the durable cloud-sync documentation set." muted
@@ -48,7 +47,7 @@ window "Ticket Viewer — Side Reading Pane Open":
 
 annotation "Modal widened (cap min(94vw, 1560px)); only the right edge grows —\nticket column keeps its measure, clamp(420px, 46%, 640px).\n1px --border divider between columns." target="tsd-split" position=top
 annotation "Ticket column = today's viewer, byte-for-byte:\nheader, badge bar, subdoc tabs, prose, floating ToC.\nDocument links in this prose open the pane." target="tsd-doclink" position=left
-annotation "Pane header: back/forward (per-pane history) · title ·\npath (mono, truncate, title attr) · Open-in-Documents hand-off ·\n× discards the session. Disabled history = cursor-not-allowed." target="tsd-back" position=top
+annotation "Two-row head block mirroring the ticket header: title bar\n(modal__headline typography, 32px actions: hand-off + × discards the\nsession) over a meta bar (back/forward history + mono path). Disabled\nhistory = cursor-not-allowed." target="tsd-back" position=top
 annotation "Hand-off: lands on this document in the Documents view.\nThe only path from the pane to the full workspace." target="tsd-handoff" position=right
 annotation "Links inside pane docs open in the same pane (never a new\nsurface, never the ticket column) — recursion stays here." target="tsd-inner-link" position=right
 annotation "Pane body renders the documents prose variant;\ndensity + theme settings apply identically to ticket prose." target="tsd-doc-path" position=right

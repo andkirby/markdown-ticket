@@ -59,7 +59,7 @@ Proposed new component (architecture MDT-248): `frontend/src/components/TicketVi
 - Default (pane closed): exactly today's `xl` modal. No visual difference until a document link is clicked.
 - Pane visible: modal widens (proposed cap `min(94vw, 1560px)`), animated so the ticket column stays visually anchored; only the right edge grows.
 - Split is a **work surface**, not a document glance: the frame stretches to top/bottom (fixed height `calc(100dvh - 1.5rem)`, thin frame instead of the document-mode anchor and margins); content scrolls inside each column regardless of length.
-- **Divider**: a draggable wall between the columns (9px hit area, 1px rule, primary accent on hover/focus/drag). Pointer drag, ArrowLeft/ArrowRight (±32px), double-click resets to the default. Reasonable range: neither column below 340px (`clampTicketColumnWidth`). Session-local — the width dies with the modal.
+- **Divider**: a draggable wall between the columns (9px hit area, 1px rule, primary accent on hover/focus/drag). Pointer drag, ArrowLeft/ArrowRight (±32px), double-click resets to the default. Reasonable range: neither column below 340px (`clampTicketColumnWidth`; a CSS min-width guard holds the floor when the window shrinks under a stored position). The wall position is **persisted** as a percent of the split body width in localStorage (`mdt-settings-ticket-side-pane-split-ratio`, config/sidePaneLayout.ts): committed on drag end and arrow nudge, cleared on reset, restored the first time the pane shows in a later modal. A percent basis resolves live, so restore has no measurement race with the modal width transition and the wall keeps its relative position across viewport sizes.
 - Ticket column: default width `clamp(420px, 46%, 640px)`; the divider overrides it while dragged. Never narrower than a readable measure.
 - **Pinned chrome**: in split mode the ticket column's header (title + badges) and sub-document tabs stay fixed; only the content region below the tabs scrolls. The card-absolute modal close × therefore always sits over the pinned title bar — never over scrolling prose — and tracks the dragged column width (`--ticket-col-width` var on the modal card).
 - Divider: 1px `--border` visual rule (the divider element owns it; the pane itself has no border).
@@ -70,10 +70,13 @@ Proposed new component (architecture MDT-248): `frontend/src/components/TicketVi
 
 ### Pane header
 
-- Height and control sizing follow the modal chrome recipe (8×8 icon buttons, tight `px-3 py-2`-class bars, `border-b border-gray-200 dark:border-gray-700`).
-- Order: `‹ Ticket` (overlay only) · back/forward · title · path · `Open in Documents ↗` · `×`.
-- Back/forward disabled state: `cursor-not-allowed`, never `pointer-events:none` (why-tooltip must survive — STYLING.md §Disabled Controls).
-- Path is the mono document path, truncated with ellipsis, full path in `title` attribute.
+A two-row head block mirroring the ticket column's header (same rhythm and typography):
+
+1. **Title bar** (`px-4 py-3`, `border-b`) — `‹ Ticket` (overlay variant only), document title in `modal__headline` typography (`min-w-0` truncation), action cluster at the end: `Open in Documents ↗` and `×` close as 32px chrome controls.
+2. **Meta bar** (`py-2.5`, `border-b`) — pane history back/forward (32px controls) leading, mono document path filling (truncate, full path in `title` attribute).
+
+- Disabled history at stack bounds: `cursor-not-allowed`, never `pointer-events:none` (tooltips survive — STYLING.md §Disabled Controls).
+- The header container is the focus target when the pane opens (`tabIndex={-1}`).
 
 ### Session pill
 

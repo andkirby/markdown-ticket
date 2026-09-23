@@ -192,75 +192,77 @@ export const TicketSidePane: React.FC<TicketSidePaneProps> = ({
       data-testid="ticket-side-pane"
     >
       <div className="ticket-side-pane__header" ref={headerRef} tabIndex={-1}>
-        <button
-          type="button"
-          className="ticket-side-pane__back-to-ticket"
-          data-testid="ticket-side-pane-back-to-ticket"
-          aria-label="Back to ticket"
-          onClick={withCapture(onHide)}
-        >
-          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 18l-6-6 6-6" />
-          </svg>
-          Ticket
-        </button>
-        <div className="ticket-side-pane__nav">
+        <div className="ticket-side-pane__title-bar">
           <button
             type="button"
-            className="ticket-side-pane__btn"
-            data-testid="ticket-side-pane-back"
-            aria-label="Back"
-            title="Back"
-            disabled={hi <= 0}
-            onClick={withCapture(onBack)}
+            className="ticket-side-pane__back-to-ticket"
+            data-testid="ticket-side-pane-back-to-ticket"
+            aria-label="Back to ticket"
+            onClick={withCapture(onHide)}
           >
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 18l-6-6 6-6" />
             </svg>
+            Ticket
           </button>
-          <button
-            type="button"
-            className="ticket-side-pane__btn"
-            data-testid="ticket-side-pane-forward"
-            aria-label="Forward"
-            title="Forward"
-            disabled={hi >= hist.length - 1}
-            onClick={withCapture(onForward)}
-          >
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 6l6 6-6 6" />
-            </svg>
-          </button>
+          <span className="modal__headline ticket-side-pane__title" data-testid="ticket-side-pane-title">{title}</span>
+          <div className="ticket-side-pane__actions">
+            <button
+              type="button"
+              className="ticket-side-pane__btn"
+              data-testid="ticket-side-pane-open-documents"
+              aria-label="Open in Documents view"
+              title="Open in Documents view"
+              onClick={() => onOpenInDocuments(currentPath)}
+            >
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M9 7h8v8" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              className="ticket-side-pane__btn"
+              data-testid="ticket-side-pane-close"
+              aria-label="Close reading session"
+              title="Close — discards this reading session"
+              onClick={withCapture(onDiscard)}
+            >
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
-        <div className="ticket-side-pane__titles">
-          <span className="ticket-side-pane__title" data-testid="ticket-side-pane-title">{title}</span>
+        <div className="ticket-side-pane__meta-bar">
+          <div className="ticket-side-pane__nav">
+            <button
+              type="button"
+              className="ticket-side-pane__btn"
+              data-testid="ticket-side-pane-back"
+              aria-label="Back"
+              title="Back"
+              disabled={hi <= 0}
+              onClick={withCapture(onBack)}
+            >
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 18l-6-6 6-6" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              className="ticket-side-pane__btn"
+              data-testid="ticket-side-pane-forward"
+              aria-label="Forward"
+              title="Forward"
+              disabled={hi >= hist.length - 1}
+              onClick={withCapture(onForward)}
+            >
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 6l6 6-6 6" />
+              </svg>
+            </button>
+          </div>
           <span className="ticket-side-pane__path" data-testid="ticket-side-pane-path" title={currentPath}>{currentPath}</span>
-        </div>
-        <div className="ticket-side-pane__actions">
-          <button
-            type="button"
-            className="ticket-side-pane__btn"
-            data-testid="ticket-side-pane-open-documents"
-            aria-label="Open in Documents view"
-            title="Open in Documents view"
-            onClick={() => onOpenInDocuments(currentPath)}
-          >
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M9 7h8v8" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            className="ticket-side-pane__btn"
-            data-testid="ticket-side-pane-close"
-            aria-label="Close reading session"
-            title="Close — discards this reading session"
-            onClick={withCapture(onDiscard)}
-          >
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
         </div>
       </div>
       <div className="ticket-side-pane__scroll" ref={scrollRef} data-testid="ticket-side-pane-scroll">
@@ -319,15 +321,17 @@ interface SplitDividerProps {
   /** Split body (row) width, for clamping */
   measureBody: () => number
   onResize: (widthPx: number) => void
+  /** Persistence commit point: drag end and each arrow nudge */
+  onCommit: () => void
   onReset: () => void
 }
 
 /**
  * The draggable wall between the ticket column and the pane. Pointer drag,
  * ArrowLeft/ArrowRight (±32px), double-click resets to the CSS default.
- * Session-local: the width lives in the ticket viewer and dies with the modal.
+ * The host persists the wall position at commit points (config/sidePaneLayout).
  */
-export const SplitDivider: React.FC<SplitDividerProps> = ({ measureColumn, measureBody, onResize, onReset }) => {
+export const SplitDivider: React.FC<SplitDividerProps> = ({ measureColumn, measureBody, onResize, onCommit, onReset }) => {
   const dragRef = useRef<{ pointerId: number, startX: number, startWidth: number } | null>(null)
 
   const beginDrag = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -355,10 +359,12 @@ export const SplitDivider: React.FC<SplitDividerProps> = ({ measureColumn, measu
     dragRef.current = null
     event.currentTarget.classList.remove('is-dragging')
     document.body.classList.remove('ticket-side-pane--resizing')
+    onCommit()
   }
 
   const nudge = (delta: number) => () => {
     onResize(clampTicketColumnWidth(measureColumn() + delta, measureBody()))
+    onCommit()
   }
 
   return (

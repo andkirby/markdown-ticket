@@ -74,7 +74,7 @@ Steps compose: Esc walks outward exactly one layer per press.
 
 - Drag (pointer), ArrowLeft/ArrowRight (±32px, focusable separator), double-click resets to the CSS default.
 - Range: neither column below 340px (`clampTicketColumnWidth` in `splitLayout.ts`); the smaller bound wins when the body cannot fit two minimums.
-- Session-local: the width lives in the ticket viewer and dies with the modal; it survives hide/reveal and ticket hops.
+- Persisted (UAT r3): the position is stored as a percent of the split body width in localStorage — `mdt-settings-ticket-side-pane-split-ratio` (config/sidePaneLayout.ts). Committed on drag end and each arrow nudge; cleared by the reset (double-click); restored the first time the pane becomes visible in a later modal. Survives hide/reveal, ticket hops, and modal close.
 - While dragging: global col-resize cursor, selection suppressed (`ticket-side-pane--resizing` body class); the modal close × tracks the width via `--ticket-col-width`.
 - Hidden below the split breakpoint (no divider in overlay mode).
 
