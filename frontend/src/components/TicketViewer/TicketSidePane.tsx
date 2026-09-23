@@ -1,7 +1,8 @@
 import * as React from 'react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { authFetch } from '@/auth/authFetch'
 import { getMarkdownDensity, getMarkdownDensityClass, MARKDOWN_DENSITY_CHANGE_EVENT } from '@/config/settingsPreferences'
+import { useToast } from '@/hooks/useToast'
 import HtmlSandboxViewer from '../DocumentsView/HtmlSandboxViewer'
 import MarkdownContent from '../MarkdownContent'
 import { clampTicketColumnWidth } from './splitLayout'
@@ -101,9 +102,16 @@ export const TicketSidePane: React.FC<TicketSidePaneProps> = ({
   const [errorPath, setErrorPath] = useState<string | null>(null)
   const [markdownDensity, setMarkdownDensity] = useState(getMarkdownDensity)
   const cacheRef = useRef(new Map<string, PaneDoc>())
+  const docRef = useRef<PaneDoc | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const headerRef = useRef<HTMLDivElement>(null)
+  const notify = useToast()
   const currentPath = hist[hi] ?? null
+
+  const applyDoc = useCallback((next: PaneDoc | null) => {
+    docRef.current = next
+    setDoc(next)
+  }, [])
 
   const fetcher = useMemo(
     () => fetchContent ?? ((filePath: string) => defaultFetchContent(projectId, filePath)),
@@ -121,7 +129,7 @@ export const TicketSidePane: React.FC<TicketSidePaneProps> = ({
       return
     const cached = cacheRef.current.get(currentPath)
     if (cached) {
-      setDoc(cached)
+      applyDoc(cached)
       setErrorPath(null)
       return
     }
@@ -133,13 +141,18 @@ export const TicketSidePane: React.FC<TicketSidePaneProps> = ({
           return
         const parsed = parseDocument(currentPath, markdown)
         cacheRef.current.set(currentPath, parsed)
-        setDoc(parsed)
+        applyDoc(parsed)
         setErrorPath(null)
       })
       .catch(() => {
-        // Edge-2: retain the previously loaded document and the session
-        if (!cancelled)
-          setErrorPath(currentPath)
+        // Edge-2: the session survives. With a previous document on screen,
+        // a toast reports the failure and the previous document stays; with
+        // nothing loaded, the pane shows an inline empty error state.
+        if (cancelled)
+          return
+        setErrorPath(currentPath)
+        if (docRef.current)
+          notify.error(`Couldn’t load ${currentPath}`, { description: 'The document could not be read. Showing the previous document.' })
       })
       .finally(() => {
         if (!cancelled)
@@ -148,7 +161,7 @@ export const TicketSidePane: React.FC<TicketSidePaneProps> = ({
     return () => {
       cancelled = true
     }
-  }, [currentPath, fetcher])
+  }, [currentPath, fetcher, applyDoc, notify])
 
   useEffect(() => {
     if (doc)
@@ -267,11 +280,13 @@ export const TicketSidePane: React.FC<TicketSidePaneProps> = ({
       </div>
       <div className="ticket-side-pane__scroll" ref={scrollRef} data-testid="ticket-side-pane-scroll">
         {loading && !doc && <div className="ticket-side-pane__loading">Loading…</div>}
-        {errorPath && (
-          <div className="ticket-side-pane__error" role="alert">
-            Couldn’t load
-            {' '}
-            {errorPath}
+        {errorPath && !doc && (
+          <div className="ticket-side-pane__empty" role="alert">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+            </svg>
+            <div className="ticket-side-pane__empty-title">Couldn’t load this document</div>
+            <div className="ticket-side-pane__empty-path" data-testid="ticket-side-pane-error-path">{errorPath}</div>
           </div>
         )}
         {doc && !doc.isHtml && (
