@@ -16,7 +16,8 @@ import type { ReactNode } from 'react'
 import { act, cleanup, render, renderHook, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, mock } from 'bun:test'
 import { DocumentDeliveryContext, useDocumentDelivery } from '../SmartLink/documentDelivery'
-import { SidePanePill, TicketSidePane } from './TicketSidePane'
+import { clampTicketColumnWidth } from './splitLayout'
+import { SidePanePill, SplitDivider, TicketSidePane } from './TicketSidePane'
 import { useSidePane } from './useSidePane'
 
 afterEach(cleanup)
@@ -222,5 +223,64 @@ describe('documentDelivery', () => {
       </DocumentDeliveryContext.Provider>,
     )
     expect(captured?.openDocument).toBe(openDocument)
+  })
+})
+
+/* ---------- split divider (UAT r2) ---------- */
+
+describe('clampTicketColumnWidth', () => {
+  it('keeps both columns at or above the 340px minimum', () => {
+    expect(clampTicketColumnWidth(100, 1200)).toBe(340)
+    expect(clampTicketColumnWidth(1000, 1200)).toBe(860) // bodyWidth - min
+  })
+
+  it('passes through widths inside the range', () => {
+    expect(clampTicketColumnWidth(560, 1200)).toBe(560)
+  })
+
+  it('falls back to the minimum when the body cannot fit two minimums', () => {
+    expect(clampTicketColumnWidth(500, 600)).toBe(340)
+  })
+})
+
+describe('SplitDivider', () => {
+  it('resizes on pointer drag and resets on double-click', () => {
+    const onResize = mock(() => {})
+    const onReset = mock(() => {})
+    const { container } = render(
+      <SplitDivider
+        measureColumn={() => 560}
+        measureBody={() => 1200}
+        onResize={onResize}
+        onReset={onReset}
+      />,
+    )
+    const divider = container.querySelector('[data-testid="ticket-side-pane-divider"]') as HTMLElement
+
+    divider.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 1, clientX: 500, button: 0, bubbles: true }))
+    divider.dispatchEvent(new PointerEvent('pointermove', { pointerId: 1, clientX: 660, bubbles: true }))
+    divider.dispatchEvent(new PointerEvent('pointerup', { pointerId: 1, bubbles: true }))
+    // 560 + 160 = 720, within [340, 860]
+    expect(onResize).toHaveBeenLastCalledWith(720)
+
+    divider.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
+    expect(onReset).toHaveBeenCalled()
+  })
+
+  it('nudges by 32px with arrow keys', () => {
+    const onResize = mock(() => {})
+    const { container } = render(
+      <SplitDivider
+        measureColumn={() => 560}
+        measureBody={() => 1200}
+        onResize={onResize}
+        onReset={() => {}}
+      />,
+    )
+    const divider = container.querySelector('[data-testid="ticket-side-pane-divider"]') as HTMLElement
+    divider.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }))
+    expect(onResize).toHaveBeenLastCalledWith(528)
+    divider.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }))
+    expect(onResize).toHaveBeenLastCalledWith(592)
   })
 })

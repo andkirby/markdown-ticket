@@ -58,11 +58,12 @@ Proposed new component (architecture MDT-248): `frontend/src/components/TicketVi
 
 - Default (pane closed): exactly today's `xl` modal. No visual difference until a document link is clicked.
 - Pane visible: modal widens (proposed cap `min(94vw, 1560px)`), animated so the ticket column stays visually anchored; only the right edge grows.
-- Split is a **work surface**, not a document glance: the frame reclaims document-mode whitespace while the pane is visible (reduced top anchor and card margins vs the default modal).
-- Ticket column: keeps today's readable prose measure — `clamp(420px, 46%, 640px)` in the split; never narrower than the single-column modal's effective reading width.
-- **Pinned chrome**: in split mode the ticket column's header (title + badges) and sub-document tabs stay fixed; only the content region below the tabs scrolls. The card-absolute modal close × therefore always sits over the pinned title bar — never over scrolling prose.
-- Divider: 1px `--border` between columns.
-- Pane: fills the remainder, min ~460px; below the responsive breakpoint it overlays instead (see Responsive).
+- Split is a **work surface**, not a document glance: the frame stretches to top/bottom (fixed height `calc(100dvh - 1.5rem)`, thin frame instead of the document-mode anchor and margins); content scrolls inside each column regardless of length.
+- **Divider**: a draggable wall between the columns (9px hit area, 1px rule, primary accent on hover/focus/drag). Pointer drag, ArrowLeft/ArrowRight (±32px), double-click resets to the default. Reasonable range: neither column below 340px (`clampTicketColumnWidth`). Session-local — the width dies with the modal.
+- Ticket column: default width `clamp(420px, 46%, 640px)`; the divider overrides it while dragged. Never narrower than a readable measure.
+- **Pinned chrome**: in split mode the ticket column's header (title + badges) and sub-document tabs stay fixed; only the content region below the tabs scrolls. The card-absolute modal close × therefore always sits over the pinned title bar — never over scrolling prose — and tracks the dragged column width (`--ticket-col-width` var on the modal card).
+- Divider: 1px `--border` visual rule (the divider element owns it; the pane itself has no border).
+- Pane: fills the remainder; below the responsive breakpoint the divider is hidden and the pane overlays instead (see Responsive).
 - Scroll: the ticket column's content region and the pane body are independent scroll regions (`overscroll-behavior: contain`); the outer overlay no longer scrolls while the pane is visible. Scroll positions are preserved across pane open/hide/close (offset captured at open time — the pane-header focus otherwise scrolls the overlay first).
 - Floating TableOfContents stays scoped to the ticket column and must not overlap the pane.
 - RelativeTimestamp stays in the ticket column only.

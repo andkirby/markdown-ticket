@@ -630,8 +630,10 @@ export const sidePaneSelectors = {
   openDocuments: '[data-testid="ticket-side-pane-open-documents"]',
   /** Overlay-variant return-to-ticket control */
   backToTicket: '[data-testid="ticket-side-pane-back-to-ticket"]',
-  /** Reading pill (session kept, pane hidden) */
+/** Reading pill (session kept, pane hidden) */
   pill: '[data-testid="ticket-side-pane-pill"]',
+  /** Draggable column divider (split layout only) */
+  divider: '[data-testid="ticket-side-pane-divider"]',
   /** Pane scroll region */
   scroll: '[data-testid="ticket-side-pane-scroll"]',
 } as const
