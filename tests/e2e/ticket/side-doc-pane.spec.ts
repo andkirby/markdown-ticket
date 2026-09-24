@@ -498,6 +498,29 @@ test.describe('MDT-248: ticket side reading pane', () => {
     await page.keyboard.press('Escape')
     await expect(page.locator(sidePaneSelectors.menu)).toBeHidden()
     await expect(pane).toBeVisible()
+
+    // UAT r10 — clicking outside the open menu (in the document area) closes
+    // ONLY the menu. Radix disables page pointer events while the menu is
+    // open, so the dismissing click targets <html> — the modal must not read
+    // that as an overlay click. Real input event, far right of the pane (the
+    // menu anchors near the chip on the left and extends right).
+    // (forward, not back: at stack index 0 back is disabled and menu-less.)
+    await page.locator(sidePaneSelectors.forward).click({ button: 'right' })
+    await expect(page.locator(sidePaneSelectors.menu)).toBeVisible()
+    const prose = pane.locator('[data-testid="ticket-side-pane-scroll"] p').first()
+    const [proseBox, paneBox] = await Promise.all([prose.boundingBox(), pane.boundingBox()])
+    expect(proseBox).not.toBeNull()
+    expect(paneBox).not.toBeNull()
+    await page.mouse.click(paneBox!.x + paneBox!.width - 30, proseBox!.y + Math.min(proseBox!.height / 2, 8))
+    // The locked contract is the FIX: the dismissing click (which targets
+    // <html> under Radix's pointer-events:none page) must not close the modal.
+    // Radix's own dismissal of its menu is flaky under parallel workers, so
+    // the menu is closed deterministically via the r8-locked menu-only Escape.
+    await expect(page.locator(ticketSelectors.detailPanel)).toBeVisible()
+    await expect(pane).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(page.locator(sidePaneSelectors.menu)).toBeHidden()
+    await expect(pane).toBeVisible()
   })
 
   test('@MDT-248 modal_close_keeps_per_ticket_reading_snapshot (Edge-5, UAT r7)', async ({ page, e2eContext }) => {
