@@ -31,9 +31,9 @@ Reference implementation: `designs/ticket-side-doc/` (Alpine POC; its state mode
 | 4 | open | Esc / `‹ Ticket` (overlay) | hidden | pane tucked, pill appears; session kept |
 | 5 | hidden | document link clicked | open | pane re-reveals with the new doc (state 2 semantics from the kept session) |
 | 6 | hidden | pill clicked | open | pane re-reveals on the current doc, scroll restored |
-| 7 | open or hidden | `×` on pane | closed | session discarded (doc, history, scroll), modal narrows |
+| 7 | open or hidden | `×` on pane | closed | session discarded (doc, history, scroll) AND its per-ticket snapshot cleared, modal narrows |
 | 8 | any | ticket link clicked | unchanged | ticket column swaps in place; pane state and session untouched |
-| 9 | any | modal closes | closed | session dies with the modal (reopen starts paneless) |
+| 9 | any | modal closes | closed* | the in-modal session ends tucked (pill semantics); a per-ticket snapshot persists and the ticket reopens with the pill — see Session memory |
 
 Invariants:
 
@@ -57,6 +57,7 @@ Invariants:
 - One history stack for the pane (browser-tab model): entries are document refs; a new visit truncates the forward stack; consecutive duplicates are not pushed.
 - Back/forward live in a floating chip over the top-left of the pane body (not in the header): half transparent at rest, fully opaque on hover/focus; the content scrolls under it. The header row carries title, mono path + copy control, hand-off, and close.
 - Back/forward enabled state reflects stack bounds; disabled uses `cursor-not-allowed` (tooltip survives).
+- **History menu (UAT r7)**: right-clicking back (or forward) opens that direction's entries as a jump menu — back lists the past nearest-current first, forward lists the future in order. Rows follow the documents nav-tree format: document title over mono file path (titles come from the session's last-known map, humanized basename fallback — no refetch). Activating an entry jumps to it **without truncating the stack** (both directions stay reachable); the pane's scroll is captured before the jump. The menu is the vendored Radix context menu (`ui/context-menu.tsx`); Escape closes it before the Esc chain continues.
 - Scroll position is captured per history entry on every navigation and restored on back/forward and on hide/reveal.
 - Hiding the pane captures scroll; revealing restores it. Discarding clears it.
 - Rapid navigation must not corrupt the stack: navigation applies to the committed top of stack only.
@@ -79,14 +80,22 @@ Steps compose: Esc walks outward exactly one layer per press.
 - While dragging: global col-resize cursor, selection suppressed (`ticket-side-pane--resizing` body class); the modal close × tracks the width via `--ticket-col-width`.
 - Hidden below the split breakpoint (no divider in overlay mode).
 
+## Session memory (UAT r7)
+
+- **Where**: localStorage, key `mdt-settings-ticket-side-pane-sessions` (config/sidePaneSessions.ts) — one JSON record per `{projectId, ticketKey}` holding `{hist, hi, scrolls, titles, updatedAt}`. Visibility is never stored.
+- **Restore**: opening a ticket with no live session and a remembered snapshot restores it **hidden** — the pill names the document; reveal restores history and scroll. The reading context belongs to the ticket where it started (a ticket hop keeps the live session; it does not claim the new ticket's slot).
+- **Obsolescence control**: FILO cap of **5 tickets**, most recently used first — saving re-touches a ticket to the front and evicts the oldest beyond the cap, so stale data is bounded without sweeps. Forward-stack truncation prunes orphaned scroll/title keys at save time; deleted documents degrade to the Edge-2 failure UX on restore.
+- **Clearing**: the pane `×` discards the session and clears that ticket's snapshot. Nothing else removes records except the cap.
+
 ## Session lifetime
 
-- Survives: ticket hops in the ticket column (state 8), sub-document tab switches, pane hide/reveal cycles, viewport resize across the split/overlay breakpoint, theme and density changes.
-- Dies: `×` discard, closing the ticket modal (state 9). Navigating away from the ticket route closes the modal, therefore the session.
+- Survives: ticket hops in the ticket column (state 8), sub-document tab switches, pane hide/reveal cycles, viewport resize across the split/overlay breakpoint, theme and density changes, and modal close via the per-ticket snapshot (Session memory).
+- Dies: `×` discard — which also clears the snapshot. A modal close alone never destroys reading state anymore (state 9*).
 
 ## Keyboard and focus
 
 - Pane open: focus moves to the pane header (first enabled control). Tab order flows ticket column → pane header (copy path, hand-off, close) → floating history chip (back, forward) → pane body links.
+- History menu open (right-click): arrow keys move within the menu, Escape closes it (one press, menu only), Enter/click activates the entry; focus returns to the trigger.
 - Pane hide via Esc: focus moves to the session pill (it names the tucked document).
 - Pane discard via `×`: focus returns to the element that opened the session if still present; otherwise the modal close control.
 - All controls are standard tab stops; roving tabindex is not used. Keyboard-only `:focus-visible` rings throughout.

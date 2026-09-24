@@ -95,3 +95,19 @@
 **Verification**: E2E 12/12 ×3 consecutive full runs. Two suite-robustness fixes surfaced while locking parity: BR-1.1's scroll-transfer read is now an `expect.poll` (the transfer can land a frame after pane-visible under load — instant read raced it), and the new parity assertion settles first via a diff-poll (mid-animation rects are fractional and unequal — the r2 `stableColumnWidth` trap again). Unit 20/20, TS/lint green; live re-measure confirms both header rules at the same y.
 
 **Status**: round 6 addressed; awaiting next look.
+
+## Round 7 — 2026-09-24
+
+**Feedback**: (1) "this modal has different [x] buttons. The source must be only 1, 1 style. review architecture, fix drifts." (2) "The system recovers opened document, but it has to be within a context. I'd keep it within a ticket. Where this stays, storage? localStorage? If we open many tickets with many docs we might get obsolete data — or limit the stack of remembered opened docs, FILO, 5 default. It will keep history too." (3) "Right click on back/forward shall show menu for elements (title / file path, like the documents nav tree)."
+
+**Fixes** (`feat(MDT-248): per-ticket reading sessions, history jump menu, single × source (UAT r7)`):
+
+- **One × source**: new `ModalCloseButton` (ui/Modal.tsx) with the single `.modal__close` style (32px button, 20px glyph) — used by `ModalHeader`, the ticket viewer's card-absolute ×, and the pane's ×. Positioning variants (`--absolute`, `--split`) only place it. Pane chrome icons (hand-off, back/forward) match the 20px glyph — one chrome family. Rule recorded in MODALS.md.
+- **Per-ticket reading sessions** (answers the storage question: localStorage, `mdt-settings-ticket-side-pane-sessions`, config/sidePaneSessions.ts): each `{projectId, ticketKey}` keeps `{hist, hi, scrolls, titles}` — full history — FILO-capped at **5 tickets** most-recent-first (the cap is the obsolescence control; no sweeps needed). Modal close tucks the pane and keeps the snapshot; reopening the ticket restores it **hidden** (the pill names the document). × discards and clears the snapshot. The snapshot belongs to the ticket where the session started — ticket hops don't claim the new ticket's slot. Truncated entries' scroll/title keys are pruned at save; deleted documents degrade to the Edge-2 failure UX.
+- **History jump menu**: right-clicking back/forward (vendored Radix `ui/context-menu.tsx`) lists that direction's entries in the documents nav-tree row format — title over mono path (last-known titles from the session, humanized fallback) — and activating an entry jumps without truncating the stack. Modal outside-click now exempts Radix portal layers (menus render at document.body and were closing the modal mid-selection).
+
+**Canonical updates**: Edge-5 revised (per-ticket snapshot, restore-hidden, × clears) and BR-1.11 added (history jump menu) via spec-trace upsert; scenario + E2E test-plan coverage expanded; traces re-rendered; requirements.md decision rows revised with a dated addendum.
+
+**Verification**: unit 1190/1190 full frontend (new: session store 7 — round-trip/scoping/FILO cap/eviction protection/pruning/garbage/clear; hook restore/recordTitle/jumpTo); E2E pane suite 14/14 ×6 consecutive (new: `pane_history_context_menu_jumps`, `modal_close_keeps_per_ticket_reading_snapshot`); TS/lint/build green. Full E2E regression 372 passed / 3 failed — all three verified unrelated (invalid-status = documented pre-existing baseline; read-access journey reproduces identically at the pre-r7 baseline commit; type-icon-options is a parallel-load flake passing solo). Two product bugs found and fixed on the way: the session pill sat under the floating ToC (z-20 < z-40) and was unclickable on short content; BR-1.1's scroll-transfer E2E precondition could clamp to 0 before content was tall (test now sets-and-verifies).
+
+**Status**: round 7 addressed; awaiting next look.

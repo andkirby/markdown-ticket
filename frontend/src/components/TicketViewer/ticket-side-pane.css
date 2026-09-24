@@ -108,8 +108,26 @@
     color: var(--text-subtle);
   }
 
+  /* Chrome icons match the shared close control's geometry (20px glyph in a
+     32px button) — one chrome family across modal and pane (UAT r7). */
   .ticket-side-pane__btn svg {
-    @apply h-4 w-4;
+    @apply h-5 w-5;
+  }
+
+  /* Right-click history menu rows — the documents nav-tree format: title over
+     mono file path. Layout classes only; the menu surface itself is
+     ui/context-menu (vendored Radix). */
+  .ticket-side-pane__menu-item {
+    @apply flex-col items-start gap-0.5 py-1.5;
+  }
+
+  .ticket-side-pane__menu-title {
+    @apply max-w-[20rem] truncate text-sm;
+  }
+
+  .ticket-side-pane__menu-path {
+    @apply max-w-[20rem] truncate font-mono text-xs;
+    color: var(--text-subtle);
   }
 
   .ticket-side-pane__back-to-ticket {
@@ -184,9 +202,11 @@
   }
 
   /* Session pill — the hidden state made visible (floats bottom-right of the
-     modal card while the pane is tucked) */
+     modal card while the pane is tucked). z-50: the pill outranks the ticket
+     column's floating ToC (z-40) — on short content the two bottom-right
+     regions collide and the session affordance must stay clickable. */
   .ticket-side-pane__pill {
-    @apply absolute bottom-3 right-3 z-20 inline-flex max-w-[70%] items-center gap-2 rounded-full py-1 pl-3 pr-2 text-sm shadow-sm transition-colors;
+    @apply absolute bottom-3 right-3 z-50 inline-flex max-w-[70%] items-center gap-2 rounded-full py-1 pl-3 pr-2 text-sm shadow-sm transition-colors;
     background-color: var(--bg-elevated);
     border: 1px solid color-mix(in srgb, oklch(var(--primary)) 35%, oklch(var(--border)));
   }

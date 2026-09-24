@@ -107,20 +107,27 @@
     @apply px-4 py-4 sm:px-5;
   }
 
-  .modal__close--absolute {
-    /* top-2 centers the 32px button on the headline's first line: 8 + 16 = 24px =
-       header py-3 (12) + leading-6 half-line (12) — the canonical first-row
-       geometry of every modal (ModalHeader title / ticket-viewer title section). */
-    @apply absolute right-3 top-2 z-20 flex h-8 w-8 items-center justify-center rounded-md transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50;
+  /* The single close control (ModalCloseButton): 32px chrome button, 20px
+     glyph, subtle at rest. Every × in every modal renders this one component
+     with this one style — positioning variants (--absolute) only place it. */
+  .modal__close {
+    @apply flex h-8 w-8 items-center justify-center rounded-md transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50;
     color: var(--text-subtle);
   }
-  .modal__close--absolute:hover {
+  .modal__close:hover {
     background-color: var(--state-hover-bg);
     color: oklch(var(--foreground));
   }
 
-  .modal__close--absolute svg {
+  .modal__close svg {
     @apply h-5 w-5;
+  }
+
+  .modal__close--absolute {
+    /* top-2 centers the 32px button on the headline's first line: 8 + 16 = 24px =
+       header py-3 (12) + leading-6 half-line (12) — the canonical first-row
+       geometry of every modal (ModalHeader title / ticket-viewer title section). */
+    @apply absolute right-3 top-2 z-20;
   }
 
   /* Legacy aliases (will be removed) */

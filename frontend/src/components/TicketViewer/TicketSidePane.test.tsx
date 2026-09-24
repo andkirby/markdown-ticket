@@ -99,6 +99,44 @@ describe('useSidePane state machine', () => {
     expect(result.current.hasSession).toBe(false)
     expect(result.current.paneVisible).toBe(false)
   })
+
+  it('restore brings a snapshot back hidden with history, scroll and titles (UAT r7)', () => {
+    const { result } = renderHook(() => useSidePane())
+    act(() => result.current.restore({
+      hist: ['docs/a.md', 'docs/b.md'],
+      hi: 1,
+      scrolls: { 'docs/a.md': 40, 'docs/b.md': 480 },
+      titles: { 'docs/b.md': 'Deep dive' },
+    }))
+    expect(result.current.hasSession).toBe(true)
+    expect(result.current.paneVisible).toBe(false) // the pill is the reveal affordance
+    expect(result.current.currentPath).toBe('docs/b.md')
+    expect(result.current.canBack).toBe(true)
+    act(() => result.current.reveal())
+    expect(result.current.paneVisible).toBe(true)
+  })
+
+  it('recordTitle remembers titles per path without duplicates', () => {
+    const { result } = renderHook(() => useSidePane())
+    act(() => result.current.openDocument('docs/a.md'))
+    act(() => result.current.recordTitle('docs/a.md', 'Guide'))
+    act(() => result.current.recordTitle('docs/a.md', 'Guide'))
+    expect(result.current.state.titles).toEqual({ 'docs/a.md': 'Guide' })
+  })
+
+  it('jumpTo moves within the stack keeping it intact (history menu)', () => {
+    const { result } = renderHook(() => useSidePane())
+    act(() => result.current.openDocument('docs/a.md'))
+    act(() => result.current.openDocument('docs/b.md'))
+    act(() => result.current.openDocument('docs/c.md'))
+    act(() => result.current.jumpTo(0))
+    expect(result.current.currentPath).toBe('docs/a.md')
+    expect(result.current.state.hist).toHaveLength(3) // stack kept, nothing truncated
+    expect(result.current.canFwd).toBe(true)
+    act(() => result.current.jumpTo(9)) // out of range — no-op
+    act(() => result.current.jumpTo(0)) // same index — no-op
+    expect(result.current.currentPath).toBe('docs/a.md')
+  })
 })
 
 /* ---------- TicketSidePane chrome contracts ---------- */
@@ -114,6 +152,8 @@ describe('TicketSidePane', () => {
         hi={hi}
         visible
         scrolls={{}}
+        titles={{}}
+        onJump={() => {}}
         fetchContent={fetchOk as unknown as (path: string) => Promise<string>}
         onBack={() => {}}
         onForward={() => {}}
@@ -175,6 +215,8 @@ describe('TicketSidePane', () => {
         hi={0}
         visible
         scrolls={{}}
+        titles={{}}
+        onJump={() => {}}
         fetchContent={failing as unknown as (path: string) => Promise<string>}
         onBack={() => {}}
         onForward={() => {}}
@@ -193,6 +235,8 @@ describe('TicketSidePane', () => {
         hi={1}
         visible
         scrolls={{}}
+        titles={{}}
+        onJump={() => {}}
         fetchContent={failing as unknown as (path: string) => Promise<string>}
         onBack={() => {}}
         onForward={() => {}}
@@ -228,6 +272,8 @@ describe('TicketSidePane', () => {
         hi={0}
         visible
         scrolls={{}}
+        titles={{}}
+        onJump={() => {}}
         fetchContent={failing as unknown as (path: string) => Promise<string>}
         onBack={() => {}}
         onForward={() => {}}

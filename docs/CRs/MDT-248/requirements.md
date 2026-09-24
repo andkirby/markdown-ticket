@@ -23,8 +23,8 @@ MDT-248 gives the ticket viewer a side reading pane: repo-document links inside 
 
 | Concept | Final Semantic (chosen truth) | Rejected Semantic | Why |
 |---------|-------------------------------|-------------------|-----|
-| Session | {current document, history stack + index, per-entry scroll} created on first document open, living exactly one modal lifetime | session persisted across modal close, or stored per project | reading state is a moment-in-modal; reopen starts clean (Edge-5) |
-| Hide vs discard | Hide (Esc, overlay ‹ Ticket) preserves the session; only × (pane close) or modal close discards | Esc discarding, or a mode that also discards | Esc must never destroy reading state (CR constraint); one destroy affordance keeps the model learnable |
+| Session | {current document, history stack + index, per-entry scroll, last-known titles} created on first document open; modal close keeps a per-ticket snapshot in localStorage (project+ticket scoped, FILO cap 5) that reopens hidden with the pill (revised UAT r7) | session persisted globally or per project | the reading context belongs to the ticket; a capped FILO keeps storage bounded and fresh (Edge-5) |
+| Hide vs discard | Hide (Esc, overlay ‹ Ticket, modal close) preserves the session; only × (pane close) discards — and clears that ticket's snapshot (revised UAT r7) | Esc discarding, or a mode that also discards | Esc must never destroy reading state (CR constraint); one destroy affordance keeps the model learnable |
 | Repeated same-doc click | No history push (no-op navigation); consecutive duplicates never push | push duplicates | browser-tab model; keeps back/forward meaningful |
 | History push | Truncates the forward stack (browser-tab model) | append-only stack | matches learned browser semantics from the POC |
 | Ticket hop | Ticket-column swap via ticket/epic link; pane session explicitly survives | pane clears on ticket switch | mid-review context is the point of the pane (CR success condition) |
@@ -43,3 +43,19 @@ None in this ticket. A future `documentLinks.openIn` default belongs to the exis
 
 ---
 *Rendered by mdt:requirements via spec-trace*
+
+## UAT r7 Addendum (2026-09-24)
+
+Two requirement records changed after the initial stage (canonical state in
+`requirements.trace.md`; upserted via spec-trace):
+
+- **Edge-5 (revised)**: a modal close no longer discards the session — it keeps a
+  per-ticket snapshot in localStorage (`mdt-settings-ticket-side-pane-sessions`,
+  project+ticket scoped, FILO cap 5, most-recent first) restored **hidden** with
+  the reveal pill on the next open of that ticket. The pane × discards and clears
+  the snapshot. Obsolete entries are bounded by the cap; deleted documents
+  degrade to the Edge-2 failure UX on restore.
+- **BR-1.11 (new)**: right-clicking the back/forward controls shows that
+  direction's history as a jump menu (document title over mono file path, the
+  documents nav-tree row format); activating an entry jumps without truncating
+  the stack.

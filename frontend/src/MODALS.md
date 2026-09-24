@@ -12,9 +12,11 @@ Do NOT hand-roll `fixed inset-0` overlays. The base Modal handles:
 - Portal rendering via `createPortal`
 - Backdrop — dim + blur (`bg-black/50` + `backdrop-blur-sm`, built in)
 - Escape to close
-- Click-outside to close
+- Click-outside to close (interactions inside Radix portal layers — dropdown/context menus — are exempt)
 - Body scroll lock
 - Focus management
+
+**One close control (UAT r7 / MDT-248)**: every modal × renders `ModalCloseButton` (exported from `ui/Modal.tsx`) with the single `.modal__close` style — `ModalHeader`'s built-in ×, the ticket viewer's card-absolute ×, the side pane's ×. Never hand-roll a × button. Positioning variants only: `--absolute` (card corner), `--split` (tracks the ticket column width).
 
 ## Vertical Positioning — No-Jump Architecture
 

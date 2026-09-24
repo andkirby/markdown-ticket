@@ -626,6 +626,10 @@ export const sidePaneSelectors = {
   forward: '[data-testid="ticket-side-pane-forward"]',
   /** Floating history chip over the pane body */
   nav: '[data-testid="ticket-side-pane-nav"]',
+  /** Right-click history menu (on back/forward) */
+  menu: '[data-testid="ticket-side-pane-menu"]',
+  /** One history entry inside that menu */
+  menuItem: '[data-testid="ticket-side-pane-menu-item"]',
   /** Close (discard session) control */
   close: '[data-testid="ticket-side-pane-close"]',
   /** Open in Documents hand-off control */

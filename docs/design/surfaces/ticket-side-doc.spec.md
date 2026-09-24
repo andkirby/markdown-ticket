@@ -35,9 +35,9 @@ TicketViewer Modal[size="xl", widened variant when pane visible]
         │   ├── span[document path] (mono, truncate, title attr) + button[copy path]
         │   └── action cluster
         │       ├── button[Open in Documents ↗]
-        │       └── button[× close] (discards session)
+        │       └── ModalCloseButton[×] (discards session)
         └── div.pane-body (relative)
-            ├── div.pane-nav (floating chip over content: ◀ back · ▶ forward)
+            ├── div.pane-nav (floating chip over content: ◀ back · ▶ forward; each right-clickable for its history jump menu)
             └── div.pane-scroll (own scroll region)
                 ├── MarkdownContent[variant="documents", sourcePath=doc path]
                 └── (conditional) HtmlSandboxViewer for HTML documents
@@ -75,6 +75,10 @@ A single-row head block: `‹ Ticket` (overlay variant only) leading, document t
 
 **Height parity with the ticket column's title row** (both 48px content + 1px border, so the two header rules sit at the same y): the ticket row is `py-3` + a 24px headline; this row carries in-flow 32px chrome controls, so it uses `py-2` (8 + 32 + 8). In-flow 32px controls must never ride `py-3` here — the pane's rule would drop 8px below the ticket's.
 
+**One close control everywhere (UAT r7)**: every × in the app — `ModalHeader`, the ticket viewer's card-absolute ×, the pane's × — is the same `ModalCloseButton` (ui/Modal.tsx) with one style (`.modal__close`: 32px button, 20px glyph, subtle → hover ramp). Positioning variants (`--absolute`, `--split`) only place it. Pane chrome icons (hand-off, back/forward) match its 20px glyph geometry — one chrome family.
+
+**History menu (UAT r7)**: right-clicking a floating-chip control opens that direction's stack entries as a jump menu (`ui/context-menu.tsx`); rows are title over mono path (`ticket-side-pane__menu-*`). Jumping keeps the stack intact.
+
 Pane history is not header chrome: back/forward float over the top-left of the pane body as a small pill chip (elevated surface at 85% with backdrop blur, `--radius-pill`), **half transparent at rest and fully opaque on hover/focus** — quiet until aimed at. The chip stays put while the content scrolls under it.
 
 - Disabled history at stack bounds: `cursor-not-allowed`, never `pointer-events:none` (tooltips survive — STYLING.md §Disabled Controls).
@@ -84,9 +88,16 @@ Pane history is not header chrome: back/forward float over the top-left of the p
 ### Session pill
 
 - Visible only when a session exists and the pane is hidden.
-- Position: floating bottom-right of the ticket column content area, above the content (z above prose, below modal close).
+- Position: floating bottom-right of the ticket column content area, above the content. z-50 — above prose **and above the floating ToC (z-40)**: on short content the two bottom-right regions collide and the session affordance must stay clickable.
 - Contents: document glyph · `READING` label · current document title (truncate) · `show ›` action. Entire pill is one button; accessible name `Show {document title} side pane`.
 - Style: elevated chip — `--bg-elevated` surface, `--border` outline with `--state-active-border` emphasis, `--radius-pill`.
+
+### Session memory (UAT r7)
+
+- Closing the modal keeps a per-ticket snapshot in localStorage — `mdt-settings-ticket-side-pane-sessions` (config/sidePaneSessions.ts): `{projectId, ticketKey}` → `{hist, hi, scrolls, titles, updatedAt}`; visibility is never stored.
+- Reopening a ticket with a snapshot and no live session restores it **hidden** — the pill names the document; reveal brings back history and scroll. The snapshot belongs to the ticket where the session started (ticket hops don't claim the new ticket's slot).
+- FILO cap of 5 tickets, most recently used first; the cap is the obsolescence control (no sweeps). Scroll/title keys for truncated entries are pruned at save; deleted documents degrade to the fetch-failure UX on restore.
+- The pane `×` discards the session and clears that ticket's snapshot. Full contract: `ticket-side-doc.interactions.md` § Session memory.
 
 ## States
 
@@ -98,7 +109,8 @@ Pane history is not header chrome: back/forward float over the top-left of the p
 | open — html document | target is HTML | HtmlSandboxViewer in pane body |
 | open — fetch error | document fetch fails | with a previous document on screen: toast reports the failure (app Sonner via `useToast`) and the previous document stays; first open with nothing loaded: inline empty error state (`role="alert"`) naming the path |
 | hidden | Esc (or `‹ Ticket` in overlay) | pane tucked; pill appears naming current document; session (history + scroll) kept |
-| discarded | `×` on pane | pane gone, pill gone; modal returns to default width |
+| restored | ticket reopened with a remembered snapshot (UAT r7) | modal opens single-column with the pill naming the last-read document; reveal restores history + scroll |
+| discarded | `×` on pane | pane gone, pill gone; modal returns to default width; the ticket's persisted snapshot is cleared |
 | link flagged missing | target known-missing | link renders flagged, non-clickable — identical to today; pane never opens for it |
 
 ## Responsive
@@ -139,6 +151,8 @@ Resize while open follows the breakpoint live; no reload or session loss.
 | pane | `.ticket-side-pane` proposed | colocated CSS in TicketViewer |
 | pane header | `.ticket-side-pane__header` proposed | same |
 | pill | `.ticket-side-pane__pill` proposed | same |
+| history menu rows | `.ticket-side-pane__menu-item/-title/-path` proposed | same (menu surface: `ui/context-menu.tsx`, vendored Radix) |
+| every × | `.modal__close` (+ positioning `--absolute`/`--split`) | `ModalCloseButton` in `ui/Modal.tsx` — the single source (`MODALS.md`) |
 | modal split | widened variant via `MODALS.md` pattern (prop shape is architecture's decision) | `MODALS.md` |
 | prose | `.prose.prose--document` | `markdown-content.spec.md` |
 
@@ -152,7 +166,7 @@ Resize while open follows the breakpoint live; no reload or session loss.
 | Interaction contract | `ticket-side-doc.interactions.md` |
 | CR | `docs/CRs/MDT-248-ticket-side-doc.md` |
 | Interactive POC | `designs/ticket-side-doc/index.html` (state machine reference implementation) |
-| E2E | `tests/e2e/ticket/side-doc-pane.spec.ts` (TEST-side-doc-pane, 9 journeys) |
+| E2E | `tests/e2e/ticket/side-doc-pane.spec.ts` (TEST-side-doc-pane, 14 journeys) |
 
 ## Extension notes
 
