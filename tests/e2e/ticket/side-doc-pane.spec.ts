@@ -539,6 +539,39 @@ test.describe('MDT-248: ticket side reading pane', () => {
     await expect(pane).toBeHidden()
   })
 
+  test('@MDT-248 ticket_file_ref_routes_to_ticket_view (UAT r9)', async ({ page, e2eContext }) => {
+    const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
+    const ticketCode = scenario.crCodes[0]
+    const siblingCode = scenario.crCodes[1]
+
+    // A design-surface doc referencing ticket files root-style — the UAT r9
+    // report: these resolved into the source dir (docs/design/docs/CRs/…),
+    // opened a dead documents target in the pane, and spammed failure toasts.
+    const designDir = path.join(scenario.projectDir, 'docs', 'design')
+    fs.mkdirSync(designDir, { recursive: true })
+    fs.writeFileSync(
+      path.join(designDir, 'surface.md'),
+      `# Surface\n\nRelated ticket: \`docs/CRs/${siblingCode}.md\`.`,
+      'utf8',
+    )
+    createSubDocFiles(scenario.projectDir, ticketCode, {
+      'architecture.md': `# Architecture\n\nSee [the surface doc](../../design/surface.md).`,
+    })
+
+    const detailPanel = await openSubdocWithGuideLink(page, scenario.projectCode, ticketCode)
+    await detailPanel.locator('a.smart-link[data-link-type="document"]').first().click()
+    const pane = page.locator(sidePaneSelectors.pane)
+    await expect(pane).toBeVisible()
+    await expect(page.locator(sidePaneSelectors.title)).toHaveText('Surface')
+
+    // The backticked ticket-file ref is a TICKET link: column swaps, pane stays
+    const ticketRef = pane.locator('a.smart-link[data-link-type="ticket"]').first()
+    await expect(ticketRef).toBeVisible()
+    await ticketRef.click()
+    await expect(page.locator(ticketSelectors.title)).toContainText(siblingCode)
+    await expect(pane).toBeVisible() // session survives the ticket hop (state 8)
+  })
+
   test('@MDT-248 escape_with_pane_hidden_closes_modal (BR-1.10)', async ({ page, e2eContext }) => {
     const ctx = await setupChainedDocs(e2eContext, 'MDT-001')
     const detailPanel = await openSubdocWithGuideLink(page, ctx.projectCode, ctx.ticketCode)
