@@ -73,6 +73,8 @@ Proposed new component (architecture MDT-248): `frontend/src/components/TicketVi
 
 A single-row head block: `‹ Ticket` (overlay variant only) leading, document title in `modal__headline` typography (`min-w-0` truncation), then the trailing cluster — mono document path (truncate, capped at 40% of the row, full path in the `title` attribute) with the shared copy-path control beside it, then `Open in Documents ↗` and `×` close as 32px chrome controls.
 
+**Height parity with the ticket column's title row** (both 48px content + 1px border, so the two header rules sit at the same y): the ticket row is `py-3` + a 24px headline; this row carries in-flow 32px chrome controls, so it uses `py-2` (8 + 32 + 8). In-flow 32px controls must never ride `py-3` here — the pane's rule would drop 8px below the ticket's.
+
 Pane history is not header chrome: back/forward float over the top-left of the pane body as a small pill chip (elevated surface at 85% with backdrop blur, `--radius-pill`), **half transparent at rest and fully opaque on hover/focus** — quiet until aimed at. The chip stays put while the content scrolls under it.
 
 - Disabled history at stack bounds: `cursor-not-allowed`, never `pointer-events:none` (tooltips survive — STYLING.md §Disabled Controls).
