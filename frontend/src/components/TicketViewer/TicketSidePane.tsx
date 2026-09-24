@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { authFetch } from '@/auth/authFetch'
 import { getMarkdownDensity, getMarkdownDensityClass, MARKDOWN_DENSITY_CHANGE_EVENT } from '@/config/settingsPreferences'
 import { useToast } from '@/hooks/useToast'
+import CopyPathButton from '../DocumentsView/CopyPathButton'
 import HtmlSandboxViewer from '../DocumentsView/HtmlSandboxViewer'
 import MarkdownContent from '../MarkdownContent'
 import { clampTicketColumnWidth } from './splitLayout'
@@ -10,9 +11,10 @@ import { clampTicketColumnWidth } from './splitLayout'
 /**
  * @testid ticket-side-pane — the pane (aside) while visible
  * @testid ticket-side-pane-title — document title in the pane header
- * @testid ticket-side-pane-path — mono document path in the pane header
- * @testid ticket-side-pane-back — pane history back
- * @testid ticket-side-pane-forward — pane history forward
+ * @testid ticket-side-pane-path — mono document path in the pane header (copy via shared copy-path-btn)
+ * @testid ticket-side-pane-nav — floating history chip over the pane body
+ * @testid ticket-side-pane-back — pane history back (in the floating chip)
+ * @testid ticket-side-pane-forward — pane history forward (in the floating chip)
  * @testid ticket-side-pane-close — discard session (×)
  * @testid ticket-side-pane-open-documents — hand-off to Documents view
  * @testid ticket-side-pane-back-to-ticket — overlay return control (narrow only)
@@ -205,103 +207,109 @@ export const TicketSidePane: React.FC<TicketSidePaneProps> = ({
       data-testid="ticket-side-pane"
     >
       <div className="ticket-side-pane__header" ref={headerRef} tabIndex={-1}>
-        <div className="ticket-side-pane__title-bar">
+        <button
+          type="button"
+          className="ticket-side-pane__back-to-ticket"
+          data-testid="ticket-side-pane-back-to-ticket"
+          aria-label="Back to ticket"
+          onClick={withCapture(onHide)}
+        >
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 18l-6-6 6-6" />
+          </svg>
+          Ticket
+        </button>
+        <span className="modal__headline ticket-side-pane__title" data-testid="ticket-side-pane-title">{title}</span>
+        <div className="ticket-side-pane__path-wrap">
+          <span className="ticket-side-pane__path" data-testid="ticket-side-pane-path" title={currentPath}>{currentPath}</span>
+          <CopyPathButton path={currentPath} />
+        </div>
+        <div className="ticket-side-pane__actions">
           <button
             type="button"
-            className="ticket-side-pane__back-to-ticket"
-            data-testid="ticket-side-pane-back-to-ticket"
-            aria-label="Back to ticket"
-            onClick={withCapture(onHide)}
+            className="ticket-side-pane__btn"
+            data-testid="ticket-side-pane-open-documents"
+            aria-label="Open in Documents view"
+            title="Open in Documents view"
+            onClick={() => onOpenInDocuments(currentPath)}
+          >
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M9 7h8v8" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            className="ticket-side-pane__btn"
+            data-testid="ticket-side-pane-close"
+            aria-label="Close reading session"
+            title="Close — discards this reading session"
+            onClick={withCapture(onDiscard)}
+          >
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div className="ticket-side-pane__body">
+        <div
+          className="ticket-side-pane__nav"
+          role="group"
+          aria-label="Reading history"
+          data-testid="ticket-side-pane-nav"
+        >
+          <button
+            type="button"
+            className="ticket-side-pane__btn"
+            data-testid="ticket-side-pane-back"
+            aria-label="Back"
+            title="Back"
+            disabled={hi <= 0}
+            onClick={withCapture(onBack)}
           >
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 18l-6-6 6-6" />
             </svg>
-            Ticket
           </button>
-          <span className="modal__headline ticket-side-pane__title" data-testid="ticket-side-pane-title">{title}</span>
-          <div className="ticket-side-pane__actions">
-            <button
-              type="button"
-              className="ticket-side-pane__btn"
-              data-testid="ticket-side-pane-open-documents"
-              aria-label="Open in Documents view"
-              title="Open in Documents view"
-              onClick={() => onOpenInDocuments(currentPath)}
-            >
-              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M9 7h8v8" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              className="ticket-side-pane__btn"
-              data-testid="ticket-side-pane-close"
-              aria-label="Close reading session"
-              title="Close — discards this reading session"
-              onClick={withCapture(onDiscard)}
-            >
-              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </div>
-        <div className="ticket-side-pane__meta-bar">
-          <div className="ticket-side-pane__nav">
-            <button
-              type="button"
-              className="ticket-side-pane__btn"
-              data-testid="ticket-side-pane-back"
-              aria-label="Back"
-              title="Back"
-              disabled={hi <= 0}
-              onClick={withCapture(onBack)}
-            >
-              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 18l-6-6 6-6" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              className="ticket-side-pane__btn"
-              data-testid="ticket-side-pane-forward"
-              aria-label="Forward"
-              title="Forward"
-              disabled={hi >= hist.length - 1}
-              onClick={withCapture(onForward)}
-            >
-              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 6l6 6-6 6" />
-              </svg>
-            </button>
-          </div>
-          <span className="ticket-side-pane__path" data-testid="ticket-side-pane-path" title={currentPath}>{currentPath}</span>
-        </div>
-      </div>
-      <div className="ticket-side-pane__scroll" ref={scrollRef} data-testid="ticket-side-pane-scroll">
-        {loading && !doc && <div className="ticket-side-pane__loading">Loading…</div>}
-        {errorPath && !doc && (
-          <div className="ticket-side-pane__empty" role="alert">
+          <button
+            type="button"
+            className="ticket-side-pane__btn"
+            data-testid="ticket-side-pane-forward"
+            aria-label="Forward"
+            title="Forward"
+            disabled={hi >= hist.length - 1}
+            onClick={withCapture(onForward)}
+          >
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 6l6 6-6 6" />
             </svg>
-            <div className="ticket-side-pane__empty-title">Couldn’t load this document</div>
-            <div className="ticket-side-pane__empty-path" data-testid="ticket-side-pane-error-path">{errorPath}</div>
-          </div>
-        )}
-        {doc && !doc.isHtml && (
-          <MarkdownContent
-            markdown={doc.body}
-            currentProject={projectId}
-            sourcePath={currentPath}
-            className={`prose prose--document ${getMarkdownDensityClass(markdownDensity)}`}
-          />
-        )}
-        {doc && doc.isHtml && (
-          <div className="ticket-side-pane__html">
-            <HtmlSandboxViewer projectId={projectId} filePath={currentPath} />
-          </div>
-        )}
+          </button>
+        </div>
+        <div className="ticket-side-pane__scroll" ref={scrollRef} data-testid="ticket-side-pane-scroll">
+          {loading && !doc && <div className="ticket-side-pane__loading">Loading…</div>}
+          {errorPath && !doc && (
+            <div className="ticket-side-pane__empty" role="alert">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+              </svg>
+              <div className="ticket-side-pane__empty-title">Couldn’t load this document</div>
+              <div className="ticket-side-pane__empty-path" data-testid="ticket-side-pane-error-path">{errorPath}</div>
+            </div>
+          )}
+          {doc && !doc.isHtml && (
+            <MarkdownContent
+              markdown={doc.body}
+              currentProject={projectId}
+              sourcePath={currentPath}
+              className={`prose prose--document ${getMarkdownDensityClass(markdownDensity)}`}
+            />
+          )}
+          {doc && doc.isHtml && (
+            <div className="ticket-side-pane__html">
+              <HtmlSandboxViewer projectId={projectId} filePath={currentPath} />
+            </div>
+          )}
+        </div>
       </div>
     </aside>
   )

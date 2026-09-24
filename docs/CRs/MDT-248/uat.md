@@ -65,3 +65,18 @@
 **Verification**: unit 19/19 (toast mocked via `mock.module`; retained-doc and first-open cases); E2E 11/11; TS/lint/build green.
 
 **Status**: round 4 addressed; awaiting next look.
+
+## Round 5 — 2026-09-24
+
+**Feedback**: "I'd make header block docs side panel: `| {h1 title}  {file/path.md | copy icon} |` and `[<] [>]` floating over content, half transparent by default."
+
+**Fix** (`fix(MDT-248): compact pane header + floating history chip (UAT r5)`):
+
+- Pane header collapses to a single row: title leading, then the trailing cluster — mono path (truncated, capped at 40% of the row) with a copy control beside it, then the existing hand-off + × actions. The meta bar is gone.
+- Back/forward leave the header: they float as a small pill chip over the top-left of the pane body (`--bg-elevated` at 85% + backdrop blur, `--border`, `--radius-pill`), half transparent at rest and fully opaque on hover/focus; content scrolls under the chip. The chip is a labelled `role="group"`; disabled bounds keep `cursor-not-allowed`.
+- Copy reuses the documents-view `CopyPathButton` verbatim (toast + copied-check feedback), always visible in the pane header as an inline micro control (override scoped to `.ticket-side-pane__path-wrap`).
+- Overlay variant (< 1100px): the path cluster yields its space to the title (hidden); `‹ Ticket` leads the row; the floating chip is unchanged.
+
+**Verification**: unit 20/20 (new chrome-contract test: path + copy in the header, history group outside it); E2E 12/12 — new `pane_compact_header_floating_history` journey locks the single row, clipboard copy (`grantPermissions`), the chip's absolute position below the header, resting opacity 0.5 → 1 on hover, and back/forward from the chip; live visual check against the dev server confirmed the loaded state (title + `docs/MDT_WORKING_STATE_FILES.md` + copy + actions on one row, chip at 0.5). TS/lint/build green; wireloom mockups updated and revalidated (4/4 blocks parse+render).
+
+**Status**: round 5 addressed; awaiting next look.

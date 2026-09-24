@@ -403,6 +403,47 @@ test.describe('MDT-248: ticket side reading pane', () => {
     await expect(page.locator(sidePaneSelectors.title)).toHaveText('Nope')
   })
 
+  test('@MDT-248 pane_compact_header_floating_history (UAT r5)', async ({ page, e2eContext }) => {
+    const ctx = await setupChainedDocs(e2eContext, 'MDT-001')
+    const detailPanel = await openSubdocWithGuideLink(page, ctx.projectCode, ctx.ticketCode)
+    await detailPanel.locator('a.smart-link[data-link-type="document"]').click()
+    const pane = page.locator(sidePaneSelectors.pane)
+    await expect(pane).toBeVisible()
+
+    // Single-row header: title leading, mono path + copy control trailing
+    const header = pane.locator('.ticket-side-pane__header')
+    await expect(header.locator(sidePaneSelectors.path)).toBeVisible()
+    const copy = header.locator('[data-testid="copy-path-btn"]')
+    await expect(copy).toBeVisible()
+    expect(await copy.getAttribute('title')).toContain('side-doc-guide.md')
+
+    // Copy puts the pane path on the clipboard
+    await page.context().grantPermissions(['clipboard-read', 'clipboard-write'])
+    await copy.click()
+    await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe('docs/side-doc-guide.md')
+
+    // History is a floating group over the body: absolutely positioned below
+    // the header row, half transparent at rest, opaque on hover
+    const nav = page.locator(sidePaneSelectors.nav)
+    await expect(nav).toBeVisible()
+    expect(await nav.getAttribute('role')).toBe('group')
+    const headerBox = await header.boundingBox()
+    const navBox = await nav.boundingBox()
+    expect(headerBox).not.toBeNull()
+    expect(navBox).not.toBeNull()
+    expect(navBox!.y).toBeGreaterThanOrEqual(headerBox!.y + headerBox!.height - 1)
+    expect(await nav.evaluate(el => getComputedStyle(el).position)).toBe('absolute')
+    await expect.poll(() => nav.evaluate(el => getComputedStyle(el).opacity)).toBe('0.5')
+    await nav.hover()
+    await expect.poll(() => nav.evaluate(el => getComputedStyle(el).opacity)).toBe('1')
+
+    // Back/forward still work from the chip: guide → deep dive → back
+    await pane.locator('a.smart-link[data-link-type="document"]').first().click()
+    await expect(page.locator(sidePaneSelectors.title)).toHaveText('Deep dive')
+    await page.locator(sidePaneSelectors.back).click()
+    await expect(page.locator(sidePaneSelectors.title)).toHaveText('Guide')
+  })
+
   test('@MDT-248 escape_with_pane_hidden_closes_modal (BR-1.10)', async ({ page, e2eContext }) => {
     const ctx = await setupChainedDocs(e2eContext, 'MDT-001')
     const detailPanel = await openSubdocWithGuideLink(page, ctx.projectCode, ctx.ticketCode)

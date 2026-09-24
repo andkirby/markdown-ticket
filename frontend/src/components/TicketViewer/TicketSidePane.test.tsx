@@ -139,6 +139,21 @@ describe('TicketSidePane', () => {
     expect(prose).toBeTruthy()
   })
 
+  it('compact header carries path + copy control; history floats over the body (UAT r5)', async () => {
+    renderPane()
+    await screen.findByTestId('ticket-side-pane-title')
+    const header = document.querySelector('.ticket-side-pane__header') as HTMLElement
+    // path and its copy control live in the single header row
+    expect(header.contains(screen.getByTestId('ticket-side-pane-path'))).toBe(true)
+    expect(header.contains(screen.getByTestId('copy-path-btn'))).toBe(true)
+    // back/forward form a labelled group outside the header, over the body
+    const nav = screen.getByTestId('ticket-side-pane-nav')
+    expect(nav.getAttribute('role')).toBe('group')
+    expect(header.contains(nav)).toBe(false)
+    expect(nav.contains(screen.getByTestId('ticket-side-pane-back'))).toBe(true)
+    expect(nav.contains(screen.getByTestId('ticket-side-pane-forward'))).toBe(true)
+  })
+
   it('disables back at the history bottom and forward at the top', async () => {
     renderPane(['docs/a.md', 'docs/b.md'], 1) // at top of stack
     await screen.findByTestId('ticket-side-pane-title')

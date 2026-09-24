@@ -45,38 +45,38 @@
     user-select: none;
   }
 
-  /* Two-row head block mirroring the ticket column's header: title bar
-     (modal__section rhythm + modal__headline typography) over a meta bar
-     (modal__section--sm rhythm: history controls + mono path). */
+  /* Single-row head block: title leading; mono path + copy control and the
+     action cluster trailing. History lives in a floating chip over the body
+     (below), not in the header. */
   .ticket-side-pane__header {
-    @apply flex flex-none flex-col;
+    @apply flex flex-none items-center gap-2 px-4 py-3;
+    border-bottom: 1px solid oklch(var(--border));
   }
 
   .ticket-side-pane__header:focus-visible {
     @apply outline-none;
   }
 
-  .ticket-side-pane__title-bar {
-    @apply flex flex-none items-center gap-2 px-4 py-3;
-    border-bottom: 1px solid oklch(var(--border));
-  }
-
   .ticket-side-pane__title {
     @apply min-w-0 flex-1 truncate;
   }
 
-  .ticket-side-pane__meta-bar {
-    @apply flex flex-none items-center gap-1 px-2 py-2.5;
-    border-bottom: 1px solid oklch(var(--border));
-  }
-
-  .ticket-side-pane__nav {
-    @apply flex flex-none items-center;
+  .ticket-side-pane__path-wrap {
+    @apply flex min-w-0 flex-none items-center gap-1;
+    max-width: 40%;
   }
 
   .ticket-side-pane__path {
-    @apply ml-2 min-w-0 flex-1 truncate font-mono text-xs;
+    @apply min-w-0 truncate font-mono text-xs;
     color: var(--text-subtle);
+  }
+
+  /* The shared copy control is hover-revealed in file trees; in the pane
+     header it sits beside the visible path and is always shown, sized as an
+     inline micro control. */
+  .ticket-side-pane__path-wrap .copy-path-btn {
+    @apply h-6 w-6 flex-none rounded-sm;
+    opacity: 1;
   }
 
   .ticket-side-pane__actions {
@@ -123,6 +123,28 @@
 
   .ticket-side-pane__back-to-ticket svg {
     @apply h-4 w-4;
+  }
+
+  /* Body region below the header: the scroll area plus the floating history
+     chip (back/forward) overlaying the content's top-left corner. Half
+     transparent at rest, fully opaque on hover/focus — quiet until aimed at. */
+  .ticket-side-pane__body {
+    @apply relative flex min-h-0 flex-1 flex-col;
+  }
+
+  .ticket-side-pane__nav {
+    @apply absolute left-2 top-2 z-10 flex items-center gap-0.5 py-0.5 pl-0.5 pr-1 shadow-sm;
+    border-radius: var(--radius-pill);
+    border: 1px solid oklch(var(--border));
+    background-color: color-mix(in srgb, var(--bg-elevated) 85%, transparent);
+    backdrop-filter: blur(4px);
+    opacity: 0.5;
+    transition: opacity 0.15s ease;
+  }
+
+  .ticket-side-pane__nav:hover,
+  .ticket-side-pane__nav:focus-within {
+    opacity: 1;
   }
 
   .ticket-side-pane__scroll {
@@ -198,13 +220,18 @@
   }
 
   /* Below the split breakpoint the pane covers the modal as a single
-     column with an explicit return control (spec → Responsive). */
+     column with an explicit return control (spec → Responsive). The path
+     cluster yields its space to the title. */
   @media (max-width: 1099.98px) {
     .ticket-side-pane {
       @apply absolute inset-0 z-10;
     }
 
     .ticket-side-pane__divider {
+      display: none;
+    }
+
+    .ticket-side-pane__path-wrap {
       display: none;
     }
 

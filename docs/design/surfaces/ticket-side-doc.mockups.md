@@ -34,12 +34,14 @@ window "Ticket Viewer — Side Reading Pane Open":
         row:
           text "Cloud sync — map" bold id="tsd-doc-title"
           spacer
+          text "docs/architecture/cloud-sync/README.md" muted size=small id="tsd-doc-path"
+          button "⧉" id="tsd-copy"
           button "↗" id="tsd-handoff"
           button "×" id="tsd-pane-close"
+        divider
         row:
           button "◀" id="tsd-back"
           button "▶" id="tsd-fwd"
-          text "docs/architecture/cloud-sync/README.md" muted size=small id="tsd-doc-path"
         text "### Cloud sync architecture" bold
         text "Index of the durable cloud-sync documentation set." muted
         text "• Data & consistency — journal, outcomes" muted
@@ -47,7 +49,9 @@ window "Ticket Viewer — Side Reading Pane Open":
 
 annotation "Modal widened (cap min(94vw, 1560px)); only the right edge grows —\nticket column keeps its measure, clamp(420px, 46%, 640px).\n1px --border divider between columns." target="tsd-split" position=top
 annotation "Ticket column = today's viewer, byte-for-byte:\nheader, badge bar, subdoc tabs, prose, floating ToC.\nDocument links in this prose open the pane." target="tsd-doclink" position=left
-annotation "Two-row head block mirroring the ticket header: title bar\n(modal__headline typography, 32px actions: hand-off + × discards the\nsession) over a meta bar (back/forward history + mono path). Disabled\nhistory = cursor-not-allowed." target="tsd-back" position=top
+annotation "Single-row head block: title leading; mono path (capped at 40%\nof the row) with the shared copy control beside it; then the 32px\nactions — hand-off + × discards the session." target="tsd-doc-title" position=top
+annotation "History is not header chrome: back/forward float as a pill chip\nover the pane body's top-left (--bg-elevated 85% + backdrop blur,\n--radius-pill) — half transparent at rest, opaque on hover/focus;\ncontent scrolls under it. Disabled = cursor-not-allowed." target="tsd-back" position=top
+annotation "Copy path: shared documents-view control; toast + copied-check\nfeedback. Always visible here (inline micro size)." target="tsd-copy" position=right
 annotation "Hand-off: lands on this document in the Documents view.\nThe only path from the pane to the full workspace." target="tsd-handoff" position=right
 annotation "Links inside pane docs open in the same pane (never a new\nsurface, never the ticket column) — recursion stays here." target="tsd-inner-link" position=right
 annotation "Pane body renders the documents prose variant;\ndensity + theme settings apply identically to ticket prose." target="tsd-doc-path" position=right
@@ -71,18 +75,19 @@ window "Ticket Viewer — Pane History":
         text "Ticket column scroll position unchanged..." muted
       col fill:
         row:
-          button "◀" id="tsdh-back"
-          button "▶" id="tsdh-fwd"
           text "Data & consistency" bold id="tsdh-doc-title"
           spacer
           button "↗"
           button "×"
         divider
+        row:
+          button "◀" id="tsdh-back"
+          button "▶" id="tsdh-fwd"
         text "### Data & consistency" bold
         text "The journal uses explicit outcomes..." muted
         text "See identity for token lifetimes." muted id="tsdh-inner"
 
-annotation "Back is enabled: history = [README, data-and-consistency].\nBack/forward restore per-entry scroll positions." target="tsdh-back" position=top
+annotation "Back is enabled: history = [README, data-and-consistency].\nBack/forward restore per-entry scroll positions; the chip floats\nover the pane body like in the open frame." target="tsdh-back" position=top
 annotation "Same pane, second document — the ticket column did not\nmove, and the subdoc tab selection is untouched." target="tsdh-doc-title" position=top
 ```
 
@@ -117,16 +122,18 @@ window "Ticket Viewer — Pane Overlay (narrow)":
       button "‹ Ticket" id="tsdo-back"
       text "Cloud sync — map" bold id="tsdo-title"
       spacer
-      button "◀" id="tsdo-hist-back"
       button "↗" id="tsdo-handoff"
       button "×" id="tsdo-close"
     divider
+    row:
+      button "◀" id="tsdo-hist-back"
+      button "▶" id="tsdo-hist-fwd"
     text "### Cloud sync architecture" bold
     text "Index of the durable cloud-sync documentation set." muted
     text "• Data & consistency — journal, outcomes" muted
     text "• Identity & access — credentials" muted
 
-annotation "Below 1100px the pane covers the modal (single column).\n'‹ Ticket' returns to the ticket — same effect as Esc (hide, session kept).\nBack/forward history still available." target="tsdo-back" position=bottom
+annotation "Below 1100px the pane covers the modal (single column).\n'‹ Ticket' returns to the ticket — same effect as Esc (hide, session kept).\nThe path cluster yields its space to the title; history still floats\nas the usual chip over the body." target="tsdo-back" position=bottom
 annotation "Ticket column, pill, and session all survive the breakpoint\ncrossing in either direction (live resize, no reload)." target="tsdo-title" position=top
 ```
 
@@ -137,7 +144,8 @@ annotation "Ticket column, pill, and session all survive the breakpoint\ncrossin
 | Pane surface | `--background` | `.ticket-side-pane` proposed | matches ticket column surface; divider separates |
 | Divider | `--border` | — | 1px column separator |
 | Pane header buttons | `--state-hover-bg` (hover) | 8×8 chrome recipe | disabled history: `cursor-not-allowed`, tooltip survives |
-| Doc title / path | `--foreground` / `--muted-foreground` | mono path | path truncated, full value in `title` |
+| Doc title / path | `--foreground` / `--muted-foreground` | mono path | path truncated (≤40% of the row), full value in `title`; copy control beside it |
+| Floating history chip | `--bg-elevated` @85% + blur, `--border`, `--radius-pill` | `.ticket-side-pane__nav` proposed | half transparent at rest → opaque on hover/focus |
 | Session pill | `--bg-elevated`, `--state-active-bg`/`--state-active-fg` emphasis | `.ticket-side-pane__pill` proposed | `--radius-pill`; one button, names the tucked doc |
 | Pane error | `--destructive` | `role="alert"` | previous pane document not lost on fetch failure |
 | Prose | `--foreground`, `--muted-foreground`, `--primary` | `.prose.prose--documents` | same pipeline as Documents view |
