@@ -111,3 +111,19 @@
 **Verification**: unit 1190/1190 full frontend (new: session store 7 — round-trip/scoping/FILO cap/eviction protection/pruning/garbage/clear; hook restore/recordTitle/jumpTo); E2E pane suite 14/14 ×6 consecutive (new: `pane_history_context_menu_jumps`, `modal_close_keeps_per_ticket_reading_snapshot`); TS/lint/build green. Full E2E regression 372 passed / 3 failed — all three verified unrelated (invalid-status = documented pre-existing baseline; read-access journey reproduces identically at the pre-r7 baseline commit; type-icon-options is a parallel-load flake passing solo). Two product bugs found and fixed on the way: the session pill sat under the floating ToC (z-20 < z-40) and was unclickable on short content; BR-1.1's scroll-transfer E2E precondition could clamp to 0 before content was tall (test now sets-and-verifies).
 
 **Status**: round 7 addressed; awaiting next look.
+
+## Round 8 — 2026-09-24 (post-close hardening)
+
+**Feedback**: clicking `docs/design/surfaces/swimlane-board.spec.md` from MDT-206's debt.md "breaks the app heavily — the system does not catch this error." Console: `Invalid hook call … more than one copy of React` → `Uncaught TypeError: Cannot read properties of null (reading 'useRef')` at `ContextMenu` under `HistoryNavButton`, then React unmounted the whole tree.
+
+**Diagnosis**: not a pane-logic bug — a **duplicate React**. The `@radix-ui/react-context-menu` package added in r7 was pre-bundled by Vite in a separate optimizer session (chunk `?v=0f5a7dd9` alongside the app's `?v=a8f3f828`) while the user's long-lived dev tab kept the old module graph; the new dep chunk carried its own React copy, so the menu's `useRef` resolved against a foreign, null dispatcher. Fresh page loads merge into one optimizer session (why 10/10 fresh-context repros were clean); the mixed-graph tab crashed on the ContextMenu mount, and with no boundary between pane and modal the crash unmounted everything.
+
+**Fixes** (`fix(MDT-248): dedupe React in Vite + pane error boundary (UAT r8)`):
+
+- `resolve.dedupe: ['react', 'react-dom']` in vite.config.ts — structural guarantee: every dependency chunk resolves the app's single React, whatever optimizer session bundled it.
+- New `PaneErrorBoundary` around `TicketSidePane`: any render error in the pane subtree degrades to an inline "Something went wrong showing this document / the ticket is unharmed" state; the ticket column, modal chrome, and session keep working. The pane can no longer take the app down (demand #1).
+- Esc refinement exposed while verifying: one Escape now closes the history menu only (stopped at the menu content) instead of also tucking the pane — matches the r7 interaction contract.
+
+**Verification**: unit 3/3 boundary suite (throwing pane contained, fallback copy, siblings alive) within 93/93 TicketViewer; E2E 14/14 with the menu journey now also locking the menu-only Escape; live reproduction of the exact user path (restored 2-entry session → reveal → right-click back → menu mounts) green with zero console errors post fix — the config change restarts Vite's optimizer, so the user's next tab reload is clean.
+
+**Status**: round 8 addressed; ticket stays Implemented.

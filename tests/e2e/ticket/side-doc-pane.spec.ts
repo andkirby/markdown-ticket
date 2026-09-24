@@ -491,6 +491,13 @@ test.describe('MDT-248: ticket side reading pane', () => {
     await expect(page.locator(sidePaneSelectors.title)).toHaveText('Guide')
     await expect(page.locator(sidePaneSelectors.forward)).toBeEnabled()
     await expect(page.locator(sidePaneSelectors.back)).toBeDisabled()
+
+    // One Escape closes the menu only — the pane stays visible (UAT r8)
+    await page.locator(sidePaneSelectors.forward).click({ button: 'right' })
+    await expect(page.locator(sidePaneSelectors.menu)).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(page.locator(sidePaneSelectors.menu)).toBeHidden()
+    await expect(pane).toBeVisible()
   })
 
   test('@MDT-248 modal_close_keeps_per_ticket_reading_snapshot (Edge-5, UAT r7)', async ({ page, e2eContext }) => {

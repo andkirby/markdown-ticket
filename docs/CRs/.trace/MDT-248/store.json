@@ -1,0 +1,838 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-248"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "WHEN a repo document link inside the open ticket modal is clicked, the system shall open the document in a side pane beside the ticket within the same modal, with ticket content, selected subdocument, and scroll position unchanged.",
+      "sourceRef": "CR MDT-248 §2 Success Conditions",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "WHEN a repo document link inside the side pane document is clicked, the system shall navigate the pane to that document and push it onto the pane history (forward stack truncated, consecutive duplicates not pushed).",
+      "sourceRef": "CR MDT-248 §2 Success Conditions",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.3",
+      "kind": "behavior",
+      "text": "WHEN the pane back or forward control is activated, the system shall navigate within the pane history and restore the target document scroll position.",
+      "sourceRef": "CR MDT-248 §2 Success Conditions",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.4",
+      "kind": "behavior",
+      "text": "WHEN the Escape key is pressed while the pane is visible, the system shall hide the pane and preserve the session (current document, history, scroll positions).",
+      "sourceRef": "CR MDT-248 §2 + interactions.md Esc chain",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.5",
+      "kind": "behavior",
+      "text": "WHILE a session exists and the pane is hidden, the system shall show a reveal affordance naming the current document, and WHEN it is activated the system shall reveal the pane on that document with scroll position restored.",
+      "sourceRef": "CR MDT-248 §2 Success Conditions",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.6",
+      "kind": "behavior",
+      "text": "WHEN the pane close control is activated, the system shall discard the session and return the modal to single-column layout.",
+      "sourceRef": "CR MDT-248 §2 Success Conditions",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.7",
+      "kind": "behavior",
+      "text": "WHEN a ticket or epic link is activated inside the ticket modal, the system shall swap the ticket column content in place and leave the pane session unchanged.",
+      "sourceRef": "CR MDT-248 §2 Success Conditions",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.8",
+      "kind": "behavior",
+      "text": "WHEN the pane hand-off control is activated, the system shall open the Documents view on the pane current document.",
+      "sourceRef": "CR MDT-248 §2 Success Conditions",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.9",
+      "kind": "behavior",
+      "text": "WHILE the viewport is narrower than 1100px with the pane open, the system shall present the pane as a full-cover view with an explicit return-to-ticket control that hides the pane keeping the session.",
+      "sourceRef": "CR MDT-248 §2 + spec Responsive",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.10",
+      "kind": "behavior",
+      "text": "WHEN the Escape key is pressed while the pane is not visible and no trace shell is open, the system shall close the ticket modal as it does today.",
+      "sourceRef": "CR MDT-248 §2 Esc chain",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "In split layout the ticket column width shall be clamp(420px, 46%, 640px) with the pane minimum 460px, and the widened modal capped at min(94vw, 1560px).",
+      "sourceRef": "spec ticket-side-doc.spec.md Layout",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "Pane open, hide, and close shall preserve the ticket column scroll position exactly and keep the ticket column visually anchored (top edge and left edge do not move; only the modal right edge grows).",
+      "sourceRef": "spec Layout + MODALS.md no-jump",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "All pane controls shall be keyboard-operable with keyboard-only focus-visible rings, and Escape shall walk outward one layer per press in the order trace shell, pane, modal.",
+      "sourceRef": "interactions.md Keyboard and focus",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "Pane content shall render through the same markdown pipeline, theme tokens, and density setting as ticket prose (document prose variant).",
+      "sourceRef": "CR §4 Non-Functional",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C5",
+      "kind": "constraint",
+      "text": "The pane shall be a complementary landmark labelled Document preview - {title}, with open, hide, and discard announced to assistive technology.",
+      "sourceRef": "spec Accessibility",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C6",
+      "kind": "constraint",
+      "text": "Outside the ticket modal, document links shall deliver exactly as today (navigation to the Documents view); the pane delivery applies only to links hosted by the ticket modal.",
+      "sourceRef": "CR §2 Constraints (delivery isolation)",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C7",
+      "kind": "constraint",
+      "text": "Documents known to be missing shall render flagged and non-clickable, and the pane shall never open for them.",
+      "sourceRef": "CR §4 Functional (missing docs)",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "IF a document link is clicked while the pane is hidden, THEN the pane shall reveal on that document pushed onto the kept session history.",
+      "sourceRef": "CR MDT-248 §4 Edge Cases",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-3",
+      "kind": "edge_case",
+      "text": "IF document navigation occurs in rapid succession, THEN history shall match the committed click order and scroll memory shall not corrupt.",
+      "sourceRef": "CR MDT-248 §4 Edge Cases",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-4",
+      "kind": "edge_case",
+      "text": "IF the viewport crosses the 1100px breakpoint while the pane is open, THEN presentation shall switch between split and overlay live without losing the session.",
+      "sourceRef": "CR MDT-248 §4 Edge Cases",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-6",
+      "kind": "edge_case",
+      "text": "IF a pane document target becomes invalid mid-session, THEN the link renders flagged and non-clickable and the current pane document is retained.",
+      "sourceRef": "CR MDT-248 §4 Edge Cases",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-2",
+      "kind": "edge_case",
+      "text": "IF the pane document fetch fails, THEN the system shall notify via toast and retain any previously loaded document with the session intact; with no previous document loaded, the pane shall show an inline empty error state naming the path.",
+      "sourceRef": "CR MDT-248 §4 Edge Cases; UAT r4",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-5",
+      "kind": "edge_case",
+      "text": "IF the ticket modal closes while a session is active, THEN the session is kept as a per-ticket snapshot in localStorage (scoped by project and ticket, FILO cap of 5 tickets) and reopening that ticket restores it hidden with the reveal pill; activating the pane close control discards the session and clears its snapshot.",
+      "sourceRef": "UAT r7",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-1.11",
+      "kind": "behavior",
+      "text": "WHEN the pane history back or forward control is right-clicked, THEN the system shall show that direction's history entries as menu rows (document title over mono file path) and activating an entry shall jump the pane to it without truncating the history stack.",
+      "sourceRef": "UAT r7",
+      "routePolicy": "bdd"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "doc_link_opens_pane_beside_ticket",
+      "title": "Document link opens pane beside ticket",
+      "covers": [
+        "BR-1.1"
+      ],
+      "given": "a ticket is open in the ticket modal and its markdown contains a link to a repo document",
+      "when": "I click the document link",
+      "then": "the document opens in a pane beside the ticket inside the same modal, and the ticket column still shows the same subdocument at the same scroll position",
+      "sourceRef": "requirements BR-1.1"
+    },
+    {
+      "id": "pane_follow_link_stays_in_pane",
+      "title": "Followed link stays in the pane",
+      "covers": [
+        "BR-1.2"
+      ],
+      "given": "the side pane is showing a document that links to another repo document",
+      "when": "I click that link inside the pane",
+      "then": "the pane navigates to the linked document and the ticket column is unchanged",
+      "sourceRef": "requirements BR-1.2"
+    },
+    {
+      "id": "pane_back_forward_restores_scroll",
+      "title": "Pane back and forward restore scroll",
+      "covers": [
+        "BR-1.3"
+      ],
+      "given": "I have followed two document links in the pane and scrolled the second document",
+      "when": "I press pane back, then pane back again, then forward",
+      "then": "the pane shows each document I visited and each returns to the scroll position I left it at",
+      "sourceRef": "requirements BR-1.3"
+    },
+    {
+      "id": "escape_hides_pane_pill_reveals",
+      "title": "Escape hides pane, pill reveals it",
+      "covers": [
+        "BR-1.4",
+        "BR-1.5"
+      ],
+      "given": "the side pane is showing a document",
+      "when": "I press Escape, see a reading pill naming the document, and click it",
+      "then": "the pane hides without closing the modal, the pill appears, and clicking it reveals the pane on the same document at the same scroll position",
+      "sourceRef": "requirements BR-1.4, BR-1.5"
+    },
+    {
+      "id": "pane_close_discards_session",
+      "title": "Pane close discards the session",
+      "covers": [
+        "BR-1.6"
+      ],
+      "given": "the side pane is showing a document",
+      "when": "I activate the pane close control",
+      "then": "the pane and the reading pill disappear and the modal returns to its single-column layout",
+      "sourceRef": "requirements BR-1.6"
+    },
+    {
+      "id": "ticket_link_swaps_column_pane_survives",
+      "title": "Ticket link swaps column, pane survives",
+      "covers": [
+        "BR-1.7"
+      ],
+      "given": "the side pane is showing a document and the ticket body links to another ticket",
+      "when": "I click the ticket link",
+      "then": "the ticket column shows the other ticket while the pane keeps showing my document with its history",
+      "sourceRef": "requirements BR-1.7"
+    },
+    {
+      "id": "handoff_opens_documents_view",
+      "title": "Hand-off opens the Documents view",
+      "covers": [
+        "BR-1.8"
+      ],
+      "given": "the side pane is showing a document",
+      "when": "I activate the open-in-Documents control",
+      "then": "the app opens the Documents view with that document selected",
+      "sourceRef": "requirements BR-1.8"
+    },
+    {
+      "id": "narrow_viewport_pane_overlays",
+      "title": "Narrow viewport overlays the pane",
+      "covers": [
+        "BR-1.9"
+      ],
+      "given": "the viewport is narrower than the split breakpoint and the pane is showing a document",
+      "when": "I activate the return-to-ticket control and then click a document link again",
+      "then": "the pane covers the modal as a single column, returning hides it onto the pill, and the link re-reveals it with the session kept",
+      "sourceRef": "requirements BR-1.9"
+    },
+    {
+      "id": "escape_with_pane_hidden_closes_modal",
+      "title": "Escape with pane hidden closes the modal",
+      "covers": [
+        "BR-1.10"
+      ],
+      "given": "the pane is hidden and its session pill is showing",
+      "when": "I press Escape",
+      "then": "the ticket modal closes, like it does today when no pane exists",
+      "sourceRef": "requirements BR-1.10"
+    },
+    {
+      "id": "pane_history_context_menu_jumps",
+      "title": "Right-clicked history control shows a jump menu",
+      "covers": [
+        "BR-1.11"
+      ],
+      "given": "the pane is open with at least two documents in its history",
+      "when": "the back control is right-clicked and a history entry is activated",
+      "then": "the menu lists that direction's entries as title over file path and the pane jumps to the chosen document with the stack intact",
+      "sourceRef": "UAT r7"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-pane-open-flow",
+      "title": "Document links inside the ticket modal deliver to the side pane with ticket state preserved",
+      "derivedFrom": [
+        "BR-1.1",
+        "C2"
+      ],
+      "artifactIds": [
+        "ART-smart-link",
+        "ART-document-delivery",
+        "ART-use-side-pane",
+        "ART-side-pane-component",
+        "ART-ticket-viewer"
+      ],
+      "sourceRef": "architecture.md D2"
+    },
+    {
+      "id": "OBL-pane-history-scroll",
+      "title": "Pane navigation uses browser-tab history with per-entry scroll memory",
+      "derivedFrom": [
+        "BR-1.2",
+        "BR-1.3",
+        "Edge-3"
+      ],
+      "artifactIds": [
+        "ART-use-side-pane",
+        "ART-side-pane-component"
+      ],
+      "sourceRef": "architecture.md D1"
+    },
+    {
+      "id": "OBL-session-states",
+      "title": "Session states closed/open/hidden with pill reveal and layered Esc chain",
+      "derivedFrom": [
+        "BR-1.4",
+        "BR-1.5",
+        "BR-1.6",
+        "BR-1.10",
+        "C3",
+        "Edge-1",
+        "Edge-5"
+      ],
+      "artifactIds": [
+        "ART-use-side-pane",
+        "ART-side-pane-component",
+        "ART-ticket-viewer",
+        "ART-modal"
+      ],
+      "sourceRef": "architecture.md D5"
+    },
+    {
+      "id": "OBL-modal-split-layout",
+      "title": "Widened split modal with two internal scroll regions and overlay below 1100px",
+      "derivedFrom": [
+        "C1",
+        "C2",
+        "BR-1.9",
+        "Edge-4"
+      ],
+      "artifactIds": [
+        "ART-modal",
+        "ART-modal-css",
+        "ART-ticket-viewer",
+        "ART-ticket-viewer-css",
+        "ART-side-pane-css"
+      ],
+      "sourceRef": "architecture.md D3+D4"
+    },
+    {
+      "id": "OBL-context-survival",
+      "title": "Ticket column swaps keep the pane session alive",
+      "derivedFrom": [
+        "BR-1.7"
+      ],
+      "artifactIds": [
+        "ART-ticket-viewer",
+        "ART-use-side-pane"
+      ],
+      "sourceRef": "architecture.md D1"
+    },
+    {
+      "id": "OBL-handoff",
+      "title": "Pane hand-off navigates to the Documents view on the current document",
+      "derivedFrom": [
+        "BR-1.8"
+      ],
+      "artifactIds": [
+        "ART-side-pane-component",
+        "ART-smart-link"
+      ],
+      "sourceRef": "architecture.md D6"
+    },
+    {
+      "id": "OBL-delivery-isolation",
+      "title": "Delivery context defaults inert outside the ticket modal; flagged links never open the pane",
+      "derivedFrom": [
+        "C6",
+        "C7",
+        "Edge-6"
+      ],
+      "artifactIds": [
+        "ART-document-delivery",
+        "ART-smart-link"
+      ],
+      "sourceRef": "architecture.md D2"
+    },
+    {
+      "id": "OBL-prose-parity-a11y",
+      "title": "Pane renders document prose with theme/density parity and a labelled complementary landmark with announcements",
+      "derivedFrom": [
+        "C4",
+        "C5"
+      ],
+      "artifactIds": [
+        "ART-side-pane-component",
+        "ART-side-pane-css"
+      ],
+      "sourceRef": "architecture.md D6"
+    },
+    {
+      "id": "OBL-e2e-contract",
+      "title": "E2E suite locks the pane DOM contract and journeys",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.5",
+        "BR-1.6",
+        "BR-1.7",
+        "BR-1.8",
+        "BR-1.9",
+        "BR-1.10"
+      ],
+      "artifactIds": [
+        "ART-e2e-spec",
+        "ART-selectors"
+      ],
+      "sourceRef": "bdd.md"
+    },
+    {
+      "id": "OBL-unit-closure",
+      "title": "Component tests close constraints and edge cases not covered end-to-end",
+      "derivedFrom": [
+        "C1",
+        "C2",
+        "C3",
+        "C4",
+        "C5",
+        "C6",
+        "C7",
+        "Edge-1",
+        "Edge-2",
+        "Edge-3",
+        "Edge-5",
+        "Edge-6"
+      ],
+      "artifactIds": [
+        "ART-unit-tests",
+        "ART-use-side-pane"
+      ],
+      "sourceRef": "tests.md"
+    },
+    {
+      "id": "OBL-ux-docs-sync",
+      "title": "Durable UX docs (spec + interactions) stay in sync with the implemented pane contract",
+      "derivedFrom": [
+        "C1",
+        "C2",
+        "C4",
+        "C5"
+      ],
+      "artifactIds": [
+        "ART-spec-doc",
+        "ART-interactions-doc"
+      ],
+      "sourceRef": "ux-design.md"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-side-pane-component",
+      "path": "frontend/src/components/TicketViewer/TicketSidePane.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture.md Structure (proposed)"
+    },
+    {
+      "id": "ART-side-pane-css",
+      "path": "frontend/src/components/TicketViewer/ticket-side-pane.css",
+      "kind": "runtime",
+      "sourceRef": "architecture.md Structure (proposed)"
+    },
+    {
+      "id": "ART-use-side-pane",
+      "path": "frontend/src/components/TicketViewer/useSidePane.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md Structure (proposed)"
+    },
+    {
+      "id": "ART-document-delivery",
+      "path": "frontend/src/components/SmartLink/documentDelivery.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md Program Design (proposed)"
+    },
+    {
+      "id": "ART-smart-link",
+      "path": "frontend/src/components/SmartLink/index.tsx",
+      "kind": "runtime",
+      "sourceRef": "assess.md mismatch: link delivery"
+    },
+    {
+      "id": "ART-ticket-viewer",
+      "path": "frontend/src/components/TicketViewer/index.tsx",
+      "kind": "runtime",
+      "sourceRef": "spec ticket-side-doc.spec.md Composition"
+    },
+    {
+      "id": "ART-ticket-viewer-css",
+      "path": "frontend/src/components/TicketViewer/ticket-viewer.css",
+      "kind": "runtime",
+      "sourceRef": "C1 split layout"
+    },
+    {
+      "id": "ART-modal",
+      "path": "frontend/src/components/ui/Modal.tsx",
+      "kind": "runtime",
+      "sourceRef": "assess.md mismatch: modal geometry"
+    },
+    {
+      "id": "ART-modal-css",
+      "path": "frontend/src/components/ui/modal.css",
+      "kind": "runtime",
+      "sourceRef": "C1 widened tier"
+    },
+    {
+      "id": "ART-e2e-spec",
+      "path": "tests/e2e/ticket/side-doc-pane.spec.ts",
+      "kind": "test",
+      "sourceRef": "bdd TEST-side-doc-pane"
+    },
+    {
+      "id": "ART-selectors",
+      "path": "tests/e2e/utils/selectors.ts",
+      "kind": "test",
+      "sourceRef": "bdd test-facing contract"
+    },
+    {
+      "id": "ART-unit-tests",
+      "path": "frontend/src/components/TicketViewer/TicketSidePane.test.tsx",
+      "kind": "test",
+      "sourceRef": "tests.md unit closure (proposed)"
+    },
+    {
+      "id": "ART-spec-doc",
+      "path": "docs/design/surfaces/ticket-side-doc.spec.md",
+      "kind": "doc",
+      "sourceRef": "UX durable docs"
+    },
+    {
+      "id": "ART-interactions-doc",
+      "path": "docs/design/surfaces/ticket-side-doc.interactions.md",
+      "kind": "doc",
+      "sourceRef": "UX durable docs"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-side-doc-pane-unit",
+      "kind": "unit",
+      "title": "Side pane session state machine, chrome contracts, and delivery context",
+      "covers": [
+        "C3",
+        "C4",
+        "C5",
+        "C6",
+        "C7",
+        "Edge-1",
+        "Edge-2",
+        "Edge-3",
+        "Edge-5",
+        "Edge-6"
+      ],
+      "file": "frontend/src/components/TicketViewer/TicketSidePane.test.tsx",
+      "sourceRef": "tests.md unit closure"
+    },
+    {
+      "id": "TEST-side-doc-pane",
+      "kind": "e2e",
+      "title": "Ticket side reading pane end-to-end journeys",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.5",
+        "BR-1.6",
+        "BR-1.7",
+        "BR-1.8",
+        "BR-1.9",
+        "BR-1.10",
+        "BR-1.11",
+        "C1",
+        "C2",
+        "C3",
+        "Edge-4",
+        "Edge-5"
+      ],
+      "file": "tests/e2e/ticket/side-doc-pane.spec.ts",
+      "sourceRef": "bdd.md scenarios + UAT r2/r5/r7 journeys"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-1",
+      "title": "Document delivery context seam + SmartLink interception",
+      "ownsArtifactIds": [
+        "ART-document-delivery",
+        "ART-smart-link"
+      ],
+      "makesGreenIds": [
+        "TEST-side-doc-pane-unit",
+        "doc_link_opens_pane_beside_ticket"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-1"
+    },
+    {
+      "id": "TASK-2",
+      "title": "useSidePane session state machine",
+      "ownsArtifactIds": [
+        "ART-use-side-pane"
+      ],
+      "makesGreenIds": [
+        "TEST-side-doc-pane-unit"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-2"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Modal split tier + TicketSidePane component + pill + css",
+      "ownsArtifactIds": [
+        "ART-side-pane-component",
+        "ART-side-pane-css",
+        "ART-modal",
+        "ART-modal-css"
+      ],
+      "makesGreenIds": [
+        "TEST-side-doc-pane-unit"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-3"
+    },
+    {
+      "id": "TASK-4",
+      "title": "Integrate pane into TicketViewer with scroll transfer (M1 checkpoint)",
+      "ownsArtifactIds": [
+        "ART-ticket-viewer",
+        "ART-ticket-viewer-css"
+      ],
+      "makesGreenIds": [
+        "doc_link_opens_pane_beside_ticket",
+        "pane_follow_link_stays_in_pane",
+        "TEST-side-doc-pane"
+      ],
+      "skills": [
+        "mdt-frontend",
+        "playwright-cli"
+      ],
+      "sourceRef": "tasks.md#task-4"
+    },
+    {
+      "id": "TASK-5",
+      "title": "Pane history back/forward with scroll restore (M2)",
+      "ownsArtifactIds": [
+        "ART-use-side-pane",
+        "ART-side-pane-component"
+      ],
+      "makesGreenIds": [
+        "pane_back_forward_restores_scroll",
+        "TEST-side-doc-pane",
+        "TEST-side-doc-pane-unit"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-5"
+    },
+    {
+      "id": "TASK-6",
+      "title": "Esc chain, hide/reveal pill, discard (M2 checkpoint)",
+      "ownsArtifactIds": [
+        "ART-use-side-pane",
+        "ART-ticket-viewer",
+        "ART-side-pane-component"
+      ],
+      "makesGreenIds": [
+        "escape_hides_pane_pill_reveals",
+        "pane_close_discards_session",
+        "escape_with_pane_hidden_closes_modal",
+        "TEST-side-doc-pane"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-6"
+    },
+    {
+      "id": "TASK-7",
+      "title": "Session survives ticket-column swaps (M3)",
+      "ownsArtifactIds": [
+        "ART-ticket-viewer",
+        "ART-use-side-pane"
+      ],
+      "makesGreenIds": [
+        "ticket_link_swaps_column_pane_survives",
+        "TEST-side-doc-pane"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-7"
+    },
+    {
+      "id": "TASK-8",
+      "title": "Open-in-Documents hand-off (M3)",
+      "ownsArtifactIds": [
+        "ART-side-pane-component",
+        "ART-smart-link"
+      ],
+      "makesGreenIds": [
+        "handoff_opens_documents_view",
+        "TEST-side-doc-pane"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-8"
+    },
+    {
+      "id": "TASK-9",
+      "title": "Narrow-viewport overlay variant (M4)",
+      "ownsArtifactIds": [
+        "ART-side-pane-css",
+        "ART-side-pane-component"
+      ],
+      "makesGreenIds": [
+        "narrow_viewport_pane_overlays",
+        "TEST-side-doc-pane"
+      ],
+      "skills": [
+        "mdt-frontend",
+        "playwright-cli"
+      ],
+      "sourceRef": "tasks.md#task-9"
+    },
+    {
+      "id": "TASK-10",
+      "title": "Full unit+E2E green, regression suites, docs sync (final)",
+      "ownsArtifactIds": [
+        "ART-e2e-spec",
+        "ART-selectors",
+        "ART-unit-tests",
+        "ART-spec-doc",
+        "ART-interactions-doc"
+      ],
+      "makesGreenIds": [
+        "TEST-side-doc-pane",
+        "TEST-side-doc-pane-unit"
+      ],
+      "skills": [
+        "playwright-cli"
+      ],
+      "sourceRef": "tasks.md#task-10"
+    }
+  ]
+}
