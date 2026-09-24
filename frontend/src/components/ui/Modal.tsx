@@ -66,9 +66,17 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
           && modalRef.current
           && !modalRef.current.contains(event.target as Node)
         ) {
+          const target = event.target as HTMLElement
           // Radix menus (dropdown/context) render in a portal on document.body;
           // interacting with one is not an overlay click.
-          if ((event.target as HTMLElement).closest?.('[data-radix-popper-content-wrapper]'))
+          if (target.closest?.('[data-radix-popper-content-wrapper]'))
+            return
+          // While a floating layer is open, Radix disables pointer events on
+          // the page, so the dismissing click hits <html>/<body>, never a real
+          // element. A genuine overlay click always targets the backdrop
+          // element itself — ignoring html/body targets keeps the modal from
+          // closing behind a menu (MDT-248 UAT r10).
+          if (target === document.documentElement || target === document.body)
             return
           onClose()
         }

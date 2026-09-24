@@ -145,3 +145,15 @@
 **Verification**: unit 1198/1198 full frontend (4 new preprocessor cases: root-style main file, subdoc, no-over-capture, relative-into-tickets; useToast stability test); E2E 18/18 across the pane suite (new `ticket_file_ref_routes_to_ticket_view` journey: backticked root-style ref in a pane doc → ticket link → column swaps, pane survives) plus the MDT-150 smartlink regression suite. Live: the user's exact chain (debt.md → swimlane spec → interactions doc → `docs/CRs/MDT-246-epic-detail-board-jump.md`) now yields `/prj/MDT/ticket/MDT-246`, column swap, pane intact, zero console errors — reload the tab to pick it up.
 
 **Status**: round 9 addressed; ticket stays Implemented.
+
+## Round 10 — 2026-09-24 (post-close hardening)
+
+**Feedback**: "open a doc in right panel, open another one, RMB on [<] history button, click outside the history dropdown somewhere within the document area — actual: the ticket view popup closed; expected: only the history popup closed."
+
+**Diagnosis**: while a Radix context menu is open it disables pointer events on the page body, so the dismissing click never reaches the pane — its target is `<html>`. The Modal's outside-mousedown handler saw a target outside `modal-content` and treated it as an overlay click, closing the whole ticket modal behind the menu. (Proven by capture-phase tracing: `pointerdown@HTML`, `body pointer-events: none`.)
+
+**Fix** (`fix(MDT-248): dismissing click on an open floating menu no longer closes the modal (UAT r10)`): the Modal's outside-click handler ignores clicks whose target is `documentElement`/`body` — a genuine overlay click always targets the backdrop element itself; an html/body target only occurs when a floating layer has suppressed page pointer events. The r7 portal exemption (direct interaction with Radix layers) is unchanged.
+
+**Verification**: E2E pane suite 15/15 ×3 consecutive (the menu journey now clicks outside the open menu at real coordinates and locks modal + pane survival; the menu itself is closed deterministically via the r8 menu-only Escape — Radix's own dismissal of its menu proved flaky under parallel workers, which is outside this contract). Live trace of the exact user flow: `pointerdown@HTML` → menu dismissed, modal open, pane intact. Unit 1198/1198, TS/lint green.
+
+**Status**: round 10 addressed; ticket stays Implemented.
