@@ -33,6 +33,7 @@
 @import './components/TicketViewer/ticket-side-pane.css';
 @import './components/TicketCard/ticket.css';
 @import './components/Column/column.css';
+@import './components/ui/context-menu.css';
 @import './components/ui/modal.css';
 @import './components/SettingsModal/settings.css';
 @import './components/DocumentsView/documents-view.css';

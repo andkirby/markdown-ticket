@@ -66,6 +66,10 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
           && modalRef.current
           && !modalRef.current.contains(event.target as Node)
         ) {
+          // Radix menus (dropdown/context) render in a portal on document.body;
+          // interacting with one is not an overlay click.
+          if ((event.target as HTMLElement).closest?.('[data-radix-popper-content-wrapper]'))
+            return
           onClose()
         }
       }
@@ -109,6 +113,31 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
 
 Modal.displayName = 'Modal'
 
+interface ModalCloseButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  onClose: () => void
+}
+
+/* The single × source for every modal surface (header chrome, ticket viewer,
+   side pane). One component, one style (.modal__close); positioning variants
+   like --absolute / --split are passed via className and only place it. */
+const ModalCloseButton = React.forwardRef<HTMLButtonElement, ModalCloseButtonProps>(
+  ({ onClose, className, 'aria-label': ariaLabel = 'Close', ...props }, ref) => (
+    <button
+      ref={ref}
+      type="button"
+      aria-label={ariaLabel}
+      className={cn('modal__close', className)}
+      onClick={onClose}
+      {...props}
+    >
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  ),
+)
+ModalCloseButton.displayName = 'ModalCloseButton'
+
 interface ModalHeaderProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'> {
   title?: React.ReactNode
   description?: React.ReactNode
@@ -148,27 +177,12 @@ const ModalHeader = React.forwardRef<HTMLDivElement, ModalHeaderProps>(
         )}
         {children}
         {showCloseButton && (
-          <button
-            type="button"
-            aria-label="Close"
+          <ModalCloseButton
+            onClose={onClose ?? (() => {})}
             className="modal__close--absolute"
-            onClick={onClose}
             tabIndex={closeButtonTabIndex}
             {...(closeTestId && { 'data-testid': closeTestId })}
-          >
-            <svg
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
+          />
         )}
       </div>
     )
@@ -222,4 +236,4 @@ const ModalFooter = React.forwardRef<HTMLDivElement, ModalFooterProps>(
 
 ModalFooter.displayName = 'ModalFooter'
 
-export { Modal, ModalBody, ModalFooter, ModalHeader }
+export { Modal, ModalBody, ModalCloseButton, ModalFooter, ModalHeader }

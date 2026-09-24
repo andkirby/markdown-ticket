@@ -1,6 +1,6 @@
 ---
 code: MDT-248
-status: In Progress
+status: Implemented
 dateCreated: 2026-09-22T21:44:37.935Z
 type: Feature Enhancement
 priority: Medium
@@ -78,26 +78,28 @@ phaseEpic: MDT-231
 
 ## 4. Acceptance Criteria
 
+> All checked 2026-09-24 at close: verified by `tests/e2e/ticket/side-doc-pane.spec.ts` (14 journeys, BR-1.1–1.11) and the unit closure in `TicketSidePane.test.tsx` / `sidePaneSessions.test.ts`, exercised through seven UAT rounds on the live app (uat.md). The separate close action (×) additionally clears the ticket's persisted snapshot since UAT r7.
+
 ### Functional (Outcome-focused)
-- [ ] Clicking a repo document link in ticket prose opens the document beside the ticket in the same modal; the ticket content, scroll position, and selected subdocument are unchanged.
-- [ ] Clicking a document link inside a pane document navigates the pane and pushes history; back/forward walk the pane's own history with scroll positions restored.
-- [ ] Hiding the pane preserves the session (document, history, scroll); a visible affordance names the current document and reveals the pane; a separate close action discards the session.
-- [ ] Esc hides a visible pane, does not discard its session, and closes the modal only when the pane is not visible.
-- [ ] Clicking a ticket/epic link swaps the ticket content in place while the reading session survives.
-- [ ] On narrow viewports the pane presents as a full-cover view with an explicit return-to-ticket control.
-- [ ] A pane document can be handed off to the Documents view, landing on that document.
-- [ ] Documents known to be missing render flagged and non-clickable, exactly as today.
+- [x] Clicking a repo document link in ticket prose opens the document beside the ticket in the same modal; the ticket content, scroll position, and selected subdocument are unchanged.
+- [x] Clicking a document link inside a pane document navigates the pane and pushes history; back/forward walk the pane's own history with scroll positions restored.
+- [x] Hiding the pane preserves the session (document, history, scroll); a visible affordance names the current document and reveals the pane; a separate close action discards the session.
+- [x] Esc hides a visible pane, does not discard its session, and closes the modal only when the pane is not visible.
+- [x] Clicking a ticket/epic link swaps the ticket content in place while the reading session survives.
+- [x] On narrow viewports the pane presents as a full-cover view with an explicit return-to-ticket control.
+- [x] A pane document can be handed off to the Documents view, landing on that document.
+- [x] Documents known to be missing render flagged and non-clickable, exactly as today.
 
 ### Non-Functional
-- [ ] Pane open/close causes no visible layout jump of the ticket column (top-anchored, ticket measure preserved).
-- [ ] Keyboard users can operate the full flow (open, navigate, back/forward, hide, reveal, discard, close) with the keyboard-only focus-ring convention intact.
-- [ ] Light/dark themes and markdown density settings apply to pane content identically to ticket prose.
+- [x] Pane open/close causes no visible layout jump of the ticket column (top-anchored, ticket measure preserved).
+- [x] Keyboard users can operate the full flow (open, navigate, back/forward, hide, reveal, discard, close) with the keyboard-only focus-ring convention intact.
+- [x] Light/dark themes and markdown density settings apply to pane content identically to ticket prose.
 
 ### Edge Cases
-- [ ] Clicking a document link while the pane is hidden reveals the pane with that document.
-- [ ] Rapid repeated navigation (link spam) never corrupts history or scroll state.
-- [ ] Pane open across a ticket switch keeps rendering the same document.
-- [ ] A document link whose target becomes invalid mid-session fails visibly without losing the current pane document.
+- [x] Clicking a document link while the pane is hidden reveals the pane with that document.
+- [x] Rapid repeated navigation (link spam) never corrupts history or scroll state.
+- [x] Pane open across a ticket switch keeps rendering the same document.
+- [x] A document link whose target becomes invalid mid-session fails visibly without losing the current pane document.
 
 ## 5. Verification
 

@@ -1,0 +1,15 @@
+/* MDT-248 UAT r7 — right-click menus (pane history). Mirrors the dropdown
+ * menu surface so context menus and dropdowns read as one menu family. */
+@layer components {
+  .context-menu__content {
+    @apply z-50 max-h-[var(--radix-context-menu-content-available-height)] min-w-[12rem] overflow-y-auto overflow-x-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md;
+  }
+
+  .context-menu__item {
+    @apply relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50;
+  }
+
+  .context-menu__separator {
+    @apply -mx-1 my-1 h-px bg-border;
+  }
+}

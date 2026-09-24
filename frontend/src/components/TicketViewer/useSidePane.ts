@@ -4,18 +4,29 @@ import { useCallback, useState } from 'react'
  * MDT-248 — the side reading pane's session state machine.
  *
  * One session per ticket-modal lifetime: a browser-tab history of document
- * paths, a per-entry scroll map, and a visible flag. States:
+ * paths, a per-entry scroll map, last-known titles (for the pill and the
+ * history menu without refetching), and a visible flag. States:
  * closed (no session) / open (visible) / hidden (session kept, pill showing).
- * Esc never discards; only `discard()` or the modal closing does.
+ * Esc never discards; only `discard()` does. A modal close keeps a per-ticket
+ * snapshot (config/sidePaneSessions.ts) that `restore()` brings back hidden.
  */
 export interface SidePaneSession {
   hist: string[]
   hi: number
   scrolls: Record<string, number>
+  titles: Record<string, string>
   visible: boolean
 }
 
-const EMPTY_SESSION: SidePaneSession = { hist: [], hi: -1, scrolls: {}, visible: false }
+/** Persistable session slice — everything except live visibility. */
+export interface SidePaneSessionSnapshot {
+  hist: string[]
+  hi: number
+  scrolls: Record<string, number>
+  titles: Record<string, string>
+}
+
+const EMPTY_SESSION: SidePaneSession = { hist: [], hi: -1, scrolls: {}, titles: {}, visible: false }
 
 export function useSidePane() {
   const [session, setSession] = useState<SidePaneSession>(EMPTY_SESSION)
@@ -55,6 +66,15 @@ export function useSidePane() {
     })
   }, [])
 
+  /** Remember a document's parsed title (pill + history menu without refetch). */
+  const recordTitle = useCallback((path: string, title: string) => {
+    setSession((s) => {
+      if (!path || s.titles[path] === title)
+        return s
+      return { ...s, titles: { ...s.titles, [path]: title } }
+    })
+  }, [])
+
   const back = useCallback(() => {
     setSession(s => (s.hi > 0 ? { ...s, hi: s.hi - 1 } : s))
   }, [])
@@ -63,12 +83,32 @@ export function useSidePane() {
     setSession(s => (s.hi < s.hist.length - 1 ? { ...s, hi: s.hi + 1 } : s))
   }, [])
 
+  /** Jump to a history index (history-menu navigation); the stack is kept intact. */
+  const jumpTo = useCallback((index: number) => {
+    setSession((s) => {
+      if (index < 0 || index > s.hist.length - 1 || index === s.hi)
+        return s
+      return { ...s, hi: index }
+    })
+  }, [])
+
   const hide = useCallback(() => {
     setSession(s => ({ ...s, visible: false }))
   }, [])
 
   const reveal = useCallback(() => {
     setSession(s => ({ ...s, visible: true }))
+  }, [])
+
+  /** Bring back a persisted snapshot as hidden (the pill is the reveal affordance). */
+  const restore = useCallback((snapshot: SidePaneSessionSnapshot) => {
+    setSession({
+      hist: snapshot.hist,
+      hi: snapshot.hi,
+      scrolls: snapshot.scrolls,
+      titles: snapshot.titles,
+      visible: false,
+    })
   }, [])
 
   const discard = useCallback(() => {
@@ -84,10 +124,13 @@ export function useSidePane() {
     canFwd,
     openDocument,
     captureScroll,
+    recordTitle,
     back,
     fwd,
+    jumpTo,
     hide,
     reveal,
+    restore,
     discard,
   }
 }

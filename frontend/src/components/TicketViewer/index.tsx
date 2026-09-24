@@ -13,6 +13,11 @@ import {
   MARKDOWN_DENSITY_KEY,
 } from '../../config/settingsPreferences'
 import { clearStoredSplitPercent, getStoredSplitPercent, storeSplitPercent } from '../../config/sidePaneLayout'
+import {
+  clearSidePaneSessionRecord,
+  loadSidePaneSessionRecord,
+  saveSidePaneSessionRecord,
+} from '../../config/sidePaneSessions'
 import { formatTicketPageTitle, PageTitlePriority, usePageTitle } from '../../hooks/usePageTitle'
 import { cn } from '../../lib/utils'
 import { buildDocumentPath, isTraceGraphHash, TRACE_GRAPH_HASH_FRAGMENT } from '../../routes'
@@ -29,9 +34,10 @@ import { RelativeTimestamp } from '../shared/RelativeTimestamp'
 // eslint-disable-next-line no-restricted-imports
 import TableOfContents from '../shared/TableOfContents'
 import { DocumentDeliveryContext } from '../SmartLink/documentDelivery'
-import { Modal, ModalBody } from '../ui/Modal'
+import { Modal, ModalBody, ModalCloseButton } from '../ui/Modal'
 import { CompactTicketHeader } from './CompactTicketHeader'
 import { EpicBoardAction } from './EpicBoardAction'
+import { humanizePaneTitle } from './sidePaneDocs'
 import { ROOT_DOCUMENT_PATH, splitPathSegments } from './subdocumentPath'
 import { TicketDocumentTabs } from './TicketDocumentTabs'
 import { SidePanePill, SplitDivider, TicketSidePane } from './TicketSidePane'
@@ -108,19 +114,28 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
 
   // MDT-248 — side reading pane session (state machine: useSidePane;
   // contract: docs/design/surfaces/ticket-side-doc.interactions.md).
+  // UAT r7: a modal close keeps a per-ticket snapshot in localStorage
+  // (config/sidePaneSessions.ts, FILO cap 5); reopening that ticket restores
+  // it hidden (pill shows). The snapshot belongs to the ticket where the
+  // session started — ticket hops keep the live session, not the storage slot.
   const sidePane = useSidePane()
   const {
     state: sidePaneState,
     paneVisible,
     hasSession: hasSidePaneSession,
+    currentPath: sidePaneCurrentPath,
     openDocument: openSideDoc,
     back: backSidePane,
     fwd: fwdSidePane,
+    jumpTo: jumpSidePane,
     hide: hideSidePane,
     reveal: revealSidePane,
     discard: discardSidePane,
     captureScroll: captureSidePaneScroll,
+    recordTitle: recordSidePaneTitle,
+    restore: restoreSidePane,
   } = sidePane
+  const sessionOriginRef = useRef<{ projectId: string, ticketKey: string } | null>(null)
   // C2: the pre-split scroll offset must be captured at click time — the
   // pane-header focus (child effect) scrolls the overlay before the transfer
   // effect (parent) gets to read it.
@@ -134,7 +149,6 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
     () => ({ openDocument: openDocumentWithTransfer }),
     [openDocumentWithTransfer],
   )
-  const [sidePaneTitle, setSidePaneTitle] = useState('')
   const [sidePaneAnnouncement, setSidePaneAnnouncement] = useState('')
   const sidePaneTitleRef = useRef('')
   const ticketColumnRef = useRef<HTMLDivElement>(null)
@@ -188,15 +202,67 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
       applySplitPercent(stored)
   }, [paneVisible, splitTicketPercent, applySplitPercent])
 
-  const handlePaneTitle = useCallback((title: string) => {
-    sidePaneTitleRef.current = title
-    setSidePaneTitle(title)
-  }, [])
+  const handlePaneTitleKnown = useCallback((path: string, title: string) => {
+    recordSidePaneTitle(path, title)
+  }, [recordSidePaneTitle])
+
+  // Pill/announcement title — derived from the session's titles map, falling
+  // back to the humanized basename until the document's H1 is known.
+  const sidePaneTitle = sidePaneCurrentPath
+    ? sidePaneState.titles[sidePaneCurrentPath] ?? humanizePaneTitle(sidePaneCurrentPath)
+    : ''
+  useEffect(() => {
+    sidePaneTitleRef.current = sidePaneTitle
+  }, [sidePaneTitle])
+
+  // UAT r7 — per-ticket snapshot lifecycle. Restore: when a modal opens on a
+  // ticket with no live session, bring back the remembered snapshot (hidden;
+  // the pill is the reveal affordance). Origin: the first session in a modal
+  // claims the current ticket's storage slot; discard releases and clears it.
+  const sessionProjectId = projectCode ?? ''
+  const sessionTicketKey = currentTicket?.code ?? ''
+  useEffect(() => {
+    if (!isOpen || hasSidePaneSession || sessionOriginRef.current || !sessionProjectId || !sessionTicketKey)
+      return
+    const record = loadSidePaneSessionRecord(sessionProjectId, sessionTicketKey)
+    if (!record)
+      return
+    sessionOriginRef.current = { projectId: record.projectId, ticketKey: record.ticketKey }
+    restoreSidePane(record)
+  }, [isOpen, hasSidePaneSession, sessionProjectId, sessionTicketKey, restoreSidePane])
+
+  useEffect(() => {
+    const origin = sessionOriginRef.current
+    if (!hasSidePaneSession) {
+      if (origin && !sessionProjectId)
+        sessionOriginRef.current = null // project context gone; next session claims fresh
+      return
+    }
+    if (!origin && sessionProjectId && sessionTicketKey)
+      sessionOriginRef.current = { projectId: sessionProjectId, ticketKey: sessionTicketKey }
+  }, [hasSidePaneSession, sessionProjectId, sessionTicketKey])
+
+  useEffect(() => {
+    const origin = sessionOriginRef.current
+    if (!origin || !hasSidePaneSession)
+      return
+    saveSidePaneSessionRecord({
+      projectId: origin.projectId,
+      ticketKey: origin.ticketKey,
+      hist: sidePaneState.hist,
+      hi: sidePaneState.hi,
+      scrolls: sidePaneState.scrolls,
+      titles: sidePaneState.titles,
+      updatedAt: Date.now(),
+    })
+  }, [hasSidePaneSession, sidePaneState])
 
   const handlePaneDiscard = useCallback(() => {
+    const origin = sessionOriginRef.current
+    if (origin)
+      clearSidePaneSessionRecord(origin.projectId, origin.ticketKey)
+    sessionOriginRef.current = null
     discardSidePane()
-    sidePaneTitleRef.current = ''
-    setSidePaneTitle('')
     setSidePaneAnnouncement('Reading session closed')
   }, [discardSidePane])
 
@@ -222,8 +288,8 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
 
   // C2 no-jump: when the split activates, the ticket column's content region
   // (.subdoc-content) becomes the scroll container — transfer the overlay's
-  // scroll offset into it, and back when the split deactivates. The modal's
-  // top-left anchor never moves.
+  // scroll offset (captured at click time) into it, and back when the split
+  // deactivates. The modal's top-left anchor never moves.
   useEffect(() => {
     const overlay = document.querySelector<HTMLElement>('.modal.ticket-detail-overlay')
     const scroller = ticketColumnRef.current?.querySelector<HTMLElement>('[data-testid="subdoc-content"]')
@@ -231,14 +297,23 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
       return
     if (paneVisible) {
       const top = preSplitScrollRef.current
-      requestAnimationFrame(() => {
+      const raf = requestAnimationFrame(() => {
         scroller.scrollTop = top
       })
+      return () => cancelAnimationFrame(raf)
     }
-    else if (scroller.scrollTop > 0) {
+    if (scroller.scrollTop > 0) {
       overlay.scrollTop = scroller.scrollTop
     }
   }, [paneVisible])
+
+  // UAT r7 — closing the modal tucks the pane (same semantics as Esc): the
+  // session and its per-ticket snapshot survive, and the ticket always
+  // reopens with the pill, never an auto-expanded pane.
+  useEffect(() => {
+    if (!isOpen && paneVisible)
+      hideSidePane()
+  }, [isOpen, paneVisible, hideSidePane])
 
   // C5 announcements + focus routing for the hide transition
   useEffect(() => {
@@ -575,26 +650,12 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
         data-testid="ticket-detail"
       >
         <TableOfContents items={tocItems} view="ticket" />
-        <button
-          type="button"
+        <ModalCloseButton
+          onClose={onClose}
           aria-label="Close ticket viewer"
           data-testid="close-detail"
           className={cn('modal__close--absolute', paneVisible && 'modal__close--split')}
-          onClick={onClose}
-        >
-          <svg
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
+        />
         <ModalBody
           ref={splitBodyRef}
           className={cn('ticket-viewer-body', paneVisible && 'ticket-viewer-body--split')}
@@ -696,13 +757,15 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
                 hi={sidePaneState.hi}
                 visible={paneVisible}
                 scrolls={sidePaneState.scrolls}
+                titles={sidePaneState.titles}
                 onBack={backSidePane}
                 onForward={fwdSidePane}
+                onJump={jumpSidePane}
                 onHide={hideSidePane}
                 onDiscard={handlePaneDiscard}
                 onOpenInDocuments={openPaneDocInDocuments}
                 onScrollChange={captureSidePaneScroll}
-                onTitleChange={handlePaneTitle}
+                onTitleKnown={handlePaneTitleKnown}
               />
             )}
             {hasSidePaneSession && !paneVisible && currentTicket && (

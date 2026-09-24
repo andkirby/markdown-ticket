@@ -145,7 +145,7 @@ annotation "Ticket column, pill, and session all survive the breakpoint\ncrossin
 | Divider | `--border` | — | 1px column separator |
 | Pane header buttons | `--state-hover-bg` (hover) | 8×8 chrome recipe | disabled history: `cursor-not-allowed`, tooltip survives |
 | Doc title / path | `--foreground` / `--muted-foreground` | mono path | path truncated (≤40% of the row), full value in `title`; copy control beside it |
-| Floating history chip | `--bg-elevated` @85% + blur, `--border`, `--radius-pill` | `.ticket-side-pane__nav` proposed | half transparent at rest → opaque on hover/focus |
+| Floating history chip | `--bg-elevated` @85% + blur, `--border`, `--radius-pill` | `.ticket-side-pane__nav` proposed | half transparent at rest → opaque on hover/focus; right-click opens the history jump menu (`--foreground` title / `--text-subtle` mono path rows) |
 | Session pill | `--bg-elevated`, `--state-active-bg`/`--state-active-fg` emphasis | `.ticket-side-pane__pill` proposed | `--radius-pill`; one button, names the tucked doc |
 | Pane error | `--destructive` | `role="alert"` | previous pane document not lost on fetch failure |
 | Prose | `--foreground`, `--muted-foreground`, `--primary` | `.prose.prose--documents` | same pipeline as Documents view |

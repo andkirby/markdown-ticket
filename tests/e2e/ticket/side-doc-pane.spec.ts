@@ -122,8 +122,14 @@ test.describe('MDT-248: ticket side reading pane', () => {
 
     // Scroll the ticket (outer overlay is the scroller pre-split), then open
     // the pane via JS click so the manual offset survives to be transferred.
+    // The set is polled until it HOLDS: under load the assignment can run
+    // before the modal content is tall enough to scroll and silently clamp
+    // to 0 (there would then be nothing to transfer).
     const overlayScroll = page.locator('.modal')
-    await overlayScroll.evaluate(el => { el.scrollTop = 150 })
+    await expect.poll(() => overlayScroll.evaluate((el) => {
+      el.scrollTop = 150
+      return el.scrollTop
+    })).toBe(150)
     await detailPanel.locator('a.smart-link[data-link-type="document"]').evaluate(el => (el as HTMLElement).click())
 
     const pane = page.locator(sidePaneSelectors.pane)
@@ -457,6 +463,73 @@ test.describe('MDT-248: ticket side reading pane', () => {
     await expect(page.locator(sidePaneSelectors.title)).toHaveText('Deep dive')
     await page.locator(sidePaneSelectors.back).click()
     await expect(page.locator(sidePaneSelectors.title)).toHaveText('Guide')
+  })
+
+  test('@MDT-248 pane_history_context_menu_jumps (BR-1.11)', async ({ page, e2eContext }) => {
+    const ctx = await setupChainedDocs(e2eContext, 'MDT-001')
+    const detailPanel = await openSubdocWithGuideLink(page, ctx.projectCode, ctx.ticketCode)
+    await detailPanel.locator('a.smart-link[data-link-type="document"]').click()
+    const pane = page.locator(sidePaneSelectors.pane)
+    await expect(pane).toBeVisible()
+    await expect(page.locator(sidePaneSelectors.title)).toHaveText('Guide')
+
+    // Two documents deep: history = [guide, deep dive]
+    await pane.locator('a.smart-link[data-link-type="document"]').first().click()
+    await expect(page.locator(sidePaneSelectors.title)).toHaveText('Deep dive')
+
+    // Right-click back → the past stack as menu rows (title / file path)
+    await page.locator(sidePaneSelectors.back).click({ button: 'right' })
+    const menu = page.locator(sidePaneSelectors.menu)
+    await expect(menu).toBeVisible()
+    const items = menu.locator(sidePaneSelectors.menuItem)
+    await expect(items).toHaveCount(1)
+    await expect(items.first()).toContainText('Guide')
+    await expect(items.first()).toContainText('docs/side-doc-guide.md')
+
+    // Jumping keeps the stack intact: at guide, forward is enabled
+    await items.first().click()
+    await expect(page.locator(sidePaneSelectors.title)).toHaveText('Guide')
+    await expect(page.locator(sidePaneSelectors.forward)).toBeEnabled()
+    await expect(page.locator(sidePaneSelectors.back)).toBeDisabled()
+  })
+
+  test('@MDT-248 modal_close_keeps_per_ticket_reading_snapshot (Edge-5, UAT r7)', async ({ page, e2eContext }) => {
+    const ctx = await setupChainedDocs(e2eContext, 'MDT-001')
+    const detailPanel = await openSubdocWithGuideLink(page, ctx.projectCode, ctx.ticketCode)
+    await detailPanel.locator('a.smart-link[data-link-type="document"]').click()
+    const pane = page.locator(sidePaneSelectors.pane)
+    await expect(pane).toBeVisible()
+    // Two documents deep so the restored history is observable
+    await pane.locator('a.smart-link[data-link-type="document"]').first().click()
+    await expect(page.locator(sidePaneSelectors.title)).toHaveText('Deep dive')
+
+    // Close the modal — the reading context survives as a per-ticket snapshot
+    await page.locator('[data-testid="close-detail"]').click()
+    await expect(detailPanel).toBeHidden()
+
+    await openTicketDetail(page, ctx.ticketCode)
+    // Restored HIDDEN: the pill names the document, the pane stays tucked
+    const pill = page.locator(sidePaneSelectors.pill)
+    await expect(pill).toBeVisible()
+    await expect(pill).toContainText('Deep dive')
+    await expect(pane).toBeHidden()
+    await expect(page.locator(ticketSelectors.detailPanel)).toBeVisible()
+
+    // Reveal: the document and its history are back
+    await pill.click()
+    await expect(pane).toBeVisible()
+    await expect(page.locator(sidePaneSelectors.title)).toHaveText('Deep dive')
+    await page.locator(sidePaneSelectors.back).click()
+    await expect(page.locator(sidePaneSelectors.title)).toHaveText('Guide')
+
+    // × discards the session AND its snapshot: reopen starts clean
+    await page.locator(sidePaneSelectors.close).click()
+    await expect(pill).toBeHidden()
+    await page.locator('[data-testid="close-detail"]').click()
+    await expect(page.locator(ticketSelectors.detailPanel)).toBeHidden()
+    await openTicketDetail(page, ctx.ticketCode)
+    await expect(pill).toBeHidden()
+    await expect(pane).toBeHidden()
   })
 
   test('@MDT-248 escape_with_pane_hidden_closes_modal (BR-1.10)', async ({ page, e2eContext }) => {
