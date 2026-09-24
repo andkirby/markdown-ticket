@@ -119,7 +119,7 @@ Pane history is not header chrome: back/forward float over the top-left of the p
 | Breakpoint | Change |
 |------------|--------|
 | ≥ 1100px | split layout: ticket column + pane side by side |
-| < 1100px | pane becomes a full-cover overlay inside the modal; `‹ Ticket` leads the header row; the path cluster yields its space to the title (hidden); the floating history chip and pill behavior unchanged |
+| < 1100px | pane becomes a full-cover overlay inside the modal; `‹ Ticket` leads the header row; the path cluster yields its space to the title (hidden); the modal × tucks with the pane (single close control per surface — the pane's × only; it returns when the pane hides/discards, UAT r11); the floating history chip and pill behavior unchanged |
 
 Resize while open follows the breakpoint live; no reload or session loss.
 

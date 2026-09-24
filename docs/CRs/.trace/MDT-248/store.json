@@ -237,6 +237,20 @@
       "text": "WHEN the pane history back or forward control is right-clicked, THEN the system shall show that direction's history entries as menu rows (document title over mono file path) and activating an entry shall jump the pane to it without truncating the history stack.",
       "sourceRef": "UAT r7",
       "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.12",
+      "kind": "behavior",
+      "text": "WHEN a link inside a pane document names a ticket file (authored root-style as {ticketsPath}/{ticket key}[-slug].md, or a ticket subdoc path), THEN the system shall route it to the ticket view (column swap in the modal) instead of the documents world, from any source document.",
+      "sourceRef": "UAT r9",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "Edge-7",
+      "kind": "edge_case",
+      "text": "IF the pane subtree throws during render, THEN the error shall be contained by a boundary: the pane shows an inline fallback naming the ticket as unharmed while the ticket column, modal chrome, and session keep working.",
+      "sourceRef": "UAT r8",
+      "routePolicy": "tests"
     }
   ],
   "scenarios": [
@@ -350,6 +364,17 @@
       "when": "the back control is right-clicked and a history entry is activated",
       "then": "the menu lists that direction's entries as title over file path and the pane jumps to the chosen document with the stack intact",
       "sourceRef": "UAT r7"
+    },
+    {
+      "id": "ticket_file_ref_routes_to_ticket_view",
+      "title": "Ticket-file reference routes to the ticket view",
+      "covers": [
+        "BR-1.12"
+      ],
+      "given": "a pane document contains a root-style ticket-file reference",
+      "when": "the reference is activated",
+      "then": "the ticket column swaps to that ticket with the pane session surviving, and no documents navigation occurs",
+      "sourceRef": "UAT r9"
     }
   ],
   "obligations": [
@@ -654,6 +679,7 @@
         "BR-1.9",
         "BR-1.10",
         "BR-1.11",
+        "BR-1.12",
         "C1",
         "C2",
         "C3",
@@ -661,7 +687,47 @@
         "Edge-5"
       ],
       "file": "tests/e2e/ticket/side-doc-pane.spec.ts",
-      "sourceRef": "bdd.md scenarios + UAT r2/r5/r7 journeys"
+      "sourceRef": "bdd.md scenarios + UAT r2-r11 journeys"
+    },
+    {
+      "id": "TEST-side-doc-pane-sessions",
+      "kind": "unit",
+      "title": "Per-ticket reading-session store: round-trip, project+ticket scoping, FILO cap and eviction protection, key pruning, garbage tolerance, clear",
+      "covers": [
+        "Edge-5"
+      ],
+      "file": "frontend/src/config/sidePaneSessions.test.ts",
+      "sourceRef": "UAT r7"
+    },
+    {
+      "id": "TEST-side-doc-pane-boundary",
+      "kind": "unit",
+      "title": "Pane error boundary containment: throwing pane subtree degrades to the inline fallback without unmounting siblings or the app",
+      "covers": [
+        "Edge-7"
+      ],
+      "file": "frontend/src/components/TicketViewer/PaneErrorBoundary.test.tsx",
+      "sourceRef": "UAT r8"
+    },
+    {
+      "id": "TEST-side-doc-pane-toast",
+      "kind": "unit",
+      "title": "useToast api is referentially stable across renders (failure-toast loop prevention)",
+      "covers": [
+        "Edge-2"
+      ],
+      "file": "frontend/src/hooks/useToast.test.tsx",
+      "sourceRef": "UAT r9"
+    },
+    {
+      "id": "TEST-side-doc-pane-split-layout",
+      "kind": "unit",
+      "title": "Persisted split-wall percent: round-trip, clear, garbage rejection",
+      "covers": [
+        "C1"
+      ],
+      "file": "frontend/src/config/sidePaneLayout.test.ts",
+      "sourceRef": "UAT r3"
     }
   ],
   "tasks": [
