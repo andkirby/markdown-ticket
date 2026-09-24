@@ -195,6 +195,11 @@
   .ticket-detail-overlay--split .modal-content {
     margin-top: 0;
     margin-bottom: 0;
+    /* The pane's opaque fill reaches the card's right/top/bottom edges and
+       paints square corners over the card radius (a parent's border-radius
+       never clips children). Split mode only: document mode scrolls on the
+       outer overlay and its sticky tabs bind to that scrollport. */
+    overflow: hidden;
   }
 
   /* Below the split breakpoint the pane overlays the modal (single column);

@@ -29,17 +29,18 @@ TicketViewer Modal[size="xl", widened variant when pane visible]
     ├── div.ticket-column (existing viewer: CompactTicketHeader, TicketDocumentTabs, content)
     │   └── button.ticket-side-pane__pill (conditional: session exists AND pane hidden)
     └── aside.ticket-side-pane (conditional: pane visible)
-        ├── div.pane-header (border-b)
+        ├── div.pane-header (single row, border-b)
         │   ├── button[‹ Ticket] (overlay variant only)
-        │   ├── button[◀ back] · button[▶ forward] (history)
         │   ├── span[document title] (truncate)
-        │   ├── span[document path] (mono, truncate, title attr)
+        │   ├── span[document path] (mono, truncate, title attr) + button[copy path]
         │   └── action cluster
         │       ├── button[Open in Documents ↗]
         │       └── button[× close] (discards session)
-        └── div.pane-body (own scroll region)
-            ├── MarkdownContent[variant="documents", sourcePath=doc path]
-            └── (conditional) HtmlSandboxViewer for HTML documents
+        └── div.pane-body (relative)
+            ├── div.pane-nav (floating chip over content: ◀ back · ▶ forward)
+            └── div.pane-scroll (own scroll region)
+                ├── MarkdownContent[variant="documents", sourcePath=doc path]
+                └── (conditional) HtmlSandboxViewer for HTML documents
 ```
 
 ## Children
@@ -68,15 +69,15 @@ Proposed new component (architecture MDT-248): `frontend/src/components/TicketVi
 - Floating TableOfContents stays scoped to the ticket column and must not overlap the pane.
 - RelativeTimestamp stays in the ticket column only.
 
-### Pane header
+### Pane header and floating history
 
-A two-row head block mirroring the ticket column's header (same rhythm and typography):
+A single-row head block: `‹ Ticket` (overlay variant only) leading, document title in `modal__headline` typography (`min-w-0` truncation), then the trailing cluster — mono document path (truncate, capped at 40% of the row, full path in the `title` attribute) with the shared copy-path control beside it, then `Open in Documents ↗` and `×` close as 32px chrome controls.
 
-1. **Title bar** (`px-4 py-3`, `border-b`) — `‹ Ticket` (overlay variant only), document title in `modal__headline` typography (`min-w-0` truncation), action cluster at the end: `Open in Documents ↗` and `×` close as 32px chrome controls.
-2. **Meta bar** (`py-2.5`, `border-b`) — pane history back/forward (32px controls) leading, mono document path filling (truncate, full path in `title` attribute).
+Pane history is not header chrome: back/forward float over the top-left of the pane body as a small pill chip (elevated surface at 85% with backdrop blur, `--radius-pill`), **half transparent at rest and fully opaque on hover/focus** — quiet until aimed at. The chip stays put while the content scrolls under it.
 
 - Disabled history at stack bounds: `cursor-not-allowed`, never `pointer-events:none` (tooltips survive — STYLING.md §Disabled Controls).
 - The header container is the focus target when the pane opens (`tabIndex={-1}`).
+- Copy-path reuses the documents-view control verbatim (toast + copied-check feedback); in the pane it is always visible, sized as an inline micro control.
 
 ### Session pill
 
@@ -103,7 +104,7 @@ A two-row head block mirroring the ticket column's header (same rhythm and typog
 | Breakpoint | Change |
 |------------|--------|
 | ≥ 1100px | split layout: ticket column + pane side by side |
-| < 1100px | pane becomes a full-cover overlay inside the modal; `‹ Ticket` back control replaces back-cluster leading position (back/forward history still available); pill behavior unchanged |
+| < 1100px | pane becomes a full-cover overlay inside the modal; `‹ Ticket` leads the header row; the path cluster yields its space to the title (hidden); the floating history chip and pill behavior unchanged |
 
 Resize while open follows the breakpoint live; no reload or session loss.
 
@@ -124,6 +125,7 @@ Resize while open follows the breakpoint live; no reload or session loss.
 | active session signal | `--state-active-bg` / `--state-active-fg` | pill emphasis (committed reading state) |
 | document title | `--foreground` | pane header title |
 | document path | `--muted-foreground` | mono path text |
+| floating history chip | `--bg-elevated` @85% + backdrop blur, `--border`, `--radius-pill` | back/forward over the pane body; opacity 0.5 at rest → 1 on hover/focus |
 | disabled history | `--muted-foreground` (dimmed) + `cursor-not-allowed` | back/forward at history bounds |
 | pill radius | `--radius-pill` | pill shape |
 | empty error state | `--destructive` (icon), `--text-subtle` (path) | pane first-open fetch failure |

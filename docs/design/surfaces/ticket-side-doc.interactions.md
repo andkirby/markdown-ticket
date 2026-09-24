@@ -55,6 +55,7 @@ Invariants:
 ## History and scroll
 
 - One history stack for the pane (browser-tab model): entries are document refs; a new visit truncates the forward stack; consecutive duplicates are not pushed.
+- Back/forward live in a floating chip over the top-left of the pane body (not in the header): half transparent at rest, fully opaque on hover/focus; the content scrolls under it. The header row carries title, mono path + copy control, hand-off, and close.
 - Back/forward enabled state reflects stack bounds; disabled uses `cursor-not-allowed` (tooltip survives).
 - Scroll position is captured per history entry on every navigation and restored on back/forward and on hide/reveal.
 - Hiding the pane captures scroll; revealing restores it. Discarding clears it.
@@ -85,7 +86,7 @@ Steps compose: Esc walks outward exactly one layer per press.
 
 ## Keyboard and focus
 
-- Pane open: focus moves to the pane header (first enabled control). Tab order flows ticket column → pane header → pane body links.
+- Pane open: focus moves to the pane header (first enabled control). Tab order flows ticket column → pane header (copy path, hand-off, close) → floating history chip (back, forward) → pane body links.
 - Pane hide via Esc: focus moves to the session pill (it names the tucked document).
 - Pane discard via `×`: focus returns to the element that opened the session if still present; otherwise the modal close control.
 - All controls are standard tab stops; roving tabindex is not used. Keyboard-only `:focus-visible` rings throughout.

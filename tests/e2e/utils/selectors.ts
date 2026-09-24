@@ -624,6 +624,8 @@ export const sidePaneSelectors = {
   back: '[data-testid="ticket-side-pane-back"]',
   /** History forward control */
   forward: '[data-testid="ticket-side-pane-forward"]',
+  /** Floating history chip over the pane body */
+  nav: '[data-testid="ticket-side-pane-nav"]',
   /** Close (discard session) control */
   close: '[data-testid="ticket-side-pane-close"]',
   /** Open in Documents hand-off control */
