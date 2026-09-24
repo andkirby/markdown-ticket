@@ -134,10 +134,11 @@ test.describe('MDT-248: ticket side reading pane', () => {
     await expect(page.locator(subdocSelectors.tabTrigger('architecture'))).toHaveAttribute('data-state', 'active')
     await expect(detailPanel).toBeVisible()
 
-    // C2: the pre-split scroll offset transferred into the content scroller
+    // C2: the pre-split scroll offset transferred into the content scroller.
+    // Polled, not read once: under load the transfer effect can land a frame
+    // after the pane becomes visible.
     const subdocScroll = page.locator(subdocSelectors.content)
-    const transferred = await subdocScroll.evaluate(el => el.scrollTop)
-    expect(transferred).toBeGreaterThan(100)
+    await expect.poll(() => subdocScroll.evaluate(el => el.scrollTop)).toBeGreaterThan(100)
 
     // UAT r1 — pinned chrome: deep scroll the content; title + tabs stay
     // visible and the modal × stays over the pinned title bar (above the
@@ -413,6 +414,20 @@ test.describe('MDT-248: ticket side reading pane', () => {
     // Single-row header: title leading, mono path + copy control trailing
     const header = pane.locator('.ticket-side-pane__header')
     await expect(header.locator(sidePaneSelectors.path)).toBeVisible()
+
+    // UAT r6 — height parity: the pane row matches the ticket column's title
+    // row (py-2 + 32px chrome here vs py-3 + 24px headline there = 48px each),
+    // so the two header rules sit at the same y. Polled until the modal entry
+    // and pane reveal transitions settle (mid-animation rects are fractional
+    // and unequal — same trap as the divider's stableColumnWidth wait).
+    const ticketTitleRow = page.locator('.compact-ticket-header__title-section')
+    await expect.poll(async () => {
+      const [t, p] = await Promise.all([ticketTitleRow.boundingBox(), header.boundingBox()])
+      if (!t || !p)
+        return Number.NaN
+      return Math.abs(t.y - p.y) + Math.abs(t.height - p.height)
+    }).toBe(0)
+
     const copy = header.locator('[data-testid="copy-path-btn"]')
     await expect(copy).toBeVisible()
     expect(await copy.getAttribute('title')).toContain('side-doc-guide.md')

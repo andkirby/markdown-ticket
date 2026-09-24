@@ -47,9 +47,13 @@
 
   /* Single-row head block: title leading; mono path + copy control and the
      action cluster trailing. History lives in a floating chip over the body
-     (below), not in the header. */
+     (below), not in the header.
+     Height parity with the ticket column's title row (modal__section py-3 +
+     24px headline = 48px): this row carries in-flow 32px chrome controls, so
+     it uses py-2 (8 + 32 + 8 = 48) — at py-3 the pane's border drops 8px
+     below the ticket's and the two header rules stop aligning. */
   .ticket-side-pane__header {
-    @apply flex flex-none items-center gap-2 px-4 py-3;
+    @apply flex flex-none items-center gap-2 px-4 py-2;
     border-bottom: 1px solid oklch(var(--border));
   }
 

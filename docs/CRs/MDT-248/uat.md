@@ -80,3 +80,18 @@
 **Verification**: unit 20/20 (new chrome-contract test: path + copy in the header, history group outside it); E2E 12/12 — new `pane_compact_header_floating_history` journey locks the single row, clipboard copy (`grantPermissions`), the chip's absolute position below the header, resting opacity 0.5 → 1 on hover, and back/forward from the chip; live visual check against the dev server confirmed the loaded state (title + `docs/MDT_WORKING_STATE_FILES.md` + copy + actions on one row, chip at 0.5). TS/lint/build green; wireloom mockups updated and revalidated (4/4 blocks parse+render).
 
 **Status**: round 5 addressed; awaiting next look.
+
+## Round 6 — 2026-09-24
+
+**Feedback**: "the header height is slightly different vs ticket view block. Align right side header to left one."
+
+**Diagnosis**: the pane header rode `py-3` with in-flow 32px chrome controls → 57px, while the ticket column's title row is `py-3` + 24px headline (48px + 1px border = 49px; its × is absolutely positioned, out of flow). The pane's rule sat 8px below the ticket's.
+
+**Fix** (`fix(MDT-248): pane header height parity with ticket title row (UAT r6)`):
+
+- Pane header padding `py-3` → `py-2`: 8 + 32 + 8 = 48px content — exact parity with the ticket row (both rows 49px incl. border; live-verified top/height/bottom = 11/49/60 on both sides, rules form one continuous line). 32px hit targets kept; a CSS comment records the invariant (in-flow 32px controls must never ride `py-3` here).
+- Spec gains the parity rule under "Pane header and floating history".
+
+**Verification**: E2E 12/12 ×3 consecutive full runs. Two suite-robustness fixes surfaced while locking parity: BR-1.1's scroll-transfer read is now an `expect.poll` (the transfer can land a frame after pane-visible under load — instant read raced it), and the new parity assertion settles first via a diff-poll (mid-animation rects are fractional and unequal — the r2 `stableColumnWidth` trap again). Unit 20/20, TS/lint green; live re-measure confirms both header rules at the same y.
+
+**Status**: round 6 addressed; awaiting next look.
