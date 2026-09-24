@@ -226,9 +226,14 @@
   }
 
   @media (max-width: 1099.98px) {
-    .modal__close--split {
-      left: auto;
-      right: 0.75rem;
+    /* Overlay mode: the pane covers the whole card, and its header already
+       owns the top-right close (pane × discards the session). The modal ×
+       has no ticket-column surface to sit on here — showing both is a
+       duplicate-close drift, so the modal × tucks with the pane (UAT r11).
+       Hide/discard the pane and it returns. Compound selector because
+       modal.css (imported later) owns .modal__close's display at (0,1,0). */
+    .modal__close--absolute.modal__close--split {
+      display: none;
     }
   }
 

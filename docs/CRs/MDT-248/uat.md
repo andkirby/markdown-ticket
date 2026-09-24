@@ -157,3 +157,15 @@
 **Verification**: E2E pane suite 15/15 ×3 consecutive (the menu journey now clicks outside the open menu at real coordinates and locks modal + pane survival; the menu itself is closed deterministically via the r8 menu-only Escape — Radix's own dismissal of its menu proved flaky under parallel workers, which is outside this contract). Live trace of the exact user flow: `pointerdown@HTML` → menu dismissed, modal open, pane intact. Unit 1198/1198, TS/lint green.
 
 **Status**: round 10 addressed; ticket stays Implemented.
+
+## Round 11 — 2026-09-24 (post-close hardening)
+
+**Feedback**: "in tight space, when we have opened doc view or ticket doc — we have both [x] buttons visible. Fix this drift."
+
+**Diagnosis**: below the 1100px split breakpoint the pane covers the whole card, and the modal-level × fell back to the card's top-right (`right: 0.75rem`) — exactly where the pane header's own × lives. Two visible close controls for one surface, contradicting the r7 one-close-control rule.
+
+**Fix** (`fix(MDT-248): single close control in overlay mode (UAT r11)`): in overlay mode the modal × tucks with the pane (`.modal__close--absolute.modal__close--split { display: none }` under the breakpoint; the compound selector because modal.css imports later and owns `.modal__close`'s display at equal specificity). The pane's × is the only close control while the pane covers the card; hide/discard the pane and the modal × returns. Desktop split mode is unchanged (the modal × tracks the ticket column, the pane × owns the pane header).
+
+**Verification**: E2E pane suite 15/15 ×4 consecutive — the narrow journey now asserts one close per state (pane overlay → pane × only, modal × hidden; pane tucked → modal × back). Live at 900px: no-pane → 1 ×; pane open → pane × only; tucked → modal × only. Unit 1198/1198 earlier in the round; TS/lint green. Also hardened two suite flakes found on the way: the r5 nav-below-header assertion gained a 2px subpixel tolerance, and the r10 menu-close Escape became conditional (Radix's own dismissal intermittently lands under parallel workers).
+
+**Status**: round 11 addressed; ticket stays Implemented.
