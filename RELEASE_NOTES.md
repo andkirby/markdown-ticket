@@ -1,5 +1,22 @@
 # Release Notes
 
+## v0.31.0 (2026-09-24)
+
+### New Features
+
+**Side Reading Pane (MDT-248)**
+- Following a repo-document link from ticket prose no longer pulls you out to the Documents view — the document opens in a reading pane beside the ticket, so your working context stays put while you read
+- The pane keeps its own navigation history, and a floating history chip jumps you back to anything you've already opened for this ticket
+- Split mode is a real work surface: drag the column divider to resize, and the layout persists — close the ticket and come back, and the pane returns with your reading session intact
+- Narrow viewports degrade gracefully, a failed document load shows a toast plus a clean empty state, and links to unreachable documents simply render as text
+- The pane's close button is the same × as the ticket modal's, aligned on the headline line
+
+**App-Wide Density (MDT-236)**
+- The density menu's two axes — SIZE (compact / regular / comfortable text scale) and SPACE (tight / normal / relaxed padding and gaps) — now respond on every content surface: list rows, the documents view and viewer, modals and settings, and the ticket viewer, not just board cards
+- A documented accessibility floor keeps the tightest settings readable, and the header density menu remains the single control point
+
+*(Ships in v0.30.0 builds but is documented here — the ticket completed just after that release was cut.)*
+
 ## v0.30.0 (2026-09-22)
 
 ### New Features
