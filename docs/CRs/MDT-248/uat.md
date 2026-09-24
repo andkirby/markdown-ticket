@@ -127,3 +127,21 @@
 **Verification**: unit 3/3 boundary suite (throwing pane contained, fallback copy, siblings alive) within 93/93 TicketViewer; E2E 14/14 with the menu journey now also locking the menu-only Escape; live reproduction of the exact user path (restored 2-entry session → reveal → right-click back → menu mounts) green with zero console errors post fix — the config change restarts Vite's optimizer, so the user's next tab reload is clean.
 
 **Status**: round 8 addressed; ticket stays Implemented.
+
+## Round 9 — 2026-09-24 (post-close hardening)
+
+**Feedback**: opening `docs/CRs/MDT-248-ticket-side-doc.md` (backticked, from a design-surface doc in the pane) spammed "Couldn't load docs/design/surfaces/docs/CRs/MDT-248-ticket-side-doc.md". "Ideally it must be a ticket link… router must define this as a ticket link."
+
+**Diagnosis — two defects, one report**:
+
+1. **Misrouting**: a ticket-file reference authored root-style (`docs/CRs/MDT-248[-slug].md`) from a documents-mode doc resolves relative to the source dir (`docs/design/surfaces/docs/CRs/…` — dead), and `resolveDocumentRef` only checked the RESOLVED path against the tickets area. The ticket's main file is the entity itself — it should route to the ticket view, from anywhere.
+2. **Toast spam**: `useToast` returned a fresh object literal per render; the pane's fetch effect keeps it in its deps, so a failing fetch (loading true→false flips) re-triggered the effect on every render — an infinite refetch → re-toast loop.
+
+**Fixes** (`fix(MDT-248): ticket-file refs route to tickets + toast api stable (UAT r9)`):
+
+- `resolveDocumentRef` now classifies the AUTHORED path against the tickets area (before mode branching): a root-style `{ticketsPath}/{KEY}[-slug].md` becomes a ticket link; `{ticketsPath}/{KEY}/{subdoc}.md` becomes a ticket-subdoc link — from any source document. Relative refs that correctly land in the tickets area keep working (existing resolved-path rule). A first cut also put this rule in the frontend LinkNormalizer, hoisted above its traversal guard — reverted: MDT-150 pins the normalizer as deliberately conservative (resolution intelligence lives in the preprocessor); three pinned contracts stayed green after the revert.
+- `useToast` memoizes its api object (callbacks were already stable) — referentially stable for effect deps; the failure loop is structurally gone.
+
+**Verification**: unit 1198/1198 full frontend (4 new preprocessor cases: root-style main file, subdoc, no-over-capture, relative-into-tickets; useToast stability test); E2E 18/18 across the pane suite (new `ticket_file_ref_routes_to_ticket_view` journey: backticked root-style ref in a pane doc → ticket link → column swaps, pane survives) plus the MDT-150 smartlink regression suite. Live: the user's exact chain (debt.md → swimlane spec → interactions doc → `docs/CRs/MDT-246-epic-detail-board-jump.md`) now yields `/prj/MDT/ticket/MDT-246`, column swap, pane intact, zero console errors — reload the tab to pick it up.
+
+**Status**: round 9 addressed; ticket stays Implemented.

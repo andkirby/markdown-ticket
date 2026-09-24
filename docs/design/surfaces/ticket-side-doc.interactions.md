@@ -47,7 +47,7 @@ Invariants:
 |---------------------------|--------------|-------|
 | DOCUMENT | the pane | including links inside pane documents (recursion stays in the pane) |
 | DOCUMENT, known-missing | not clickable | flagged rendering, identical to today — pane never opens |
-| TICKET / CROSS_PROJECT | ticket column swap | current modal behavior preserved, incl. `?view=` carry (`epic-navigation.interactions.md`) |
+| TICKET / CROSS_PROJECT | ticket column swap | plain keys and ticket URLs as today, plus ticket-file paths authored root-style from any document (`{ticketsPath}/{KEY}[-slug].md`, or `{ticketsPath}/{KEY}/{subdoc}.md`) — the ticket is the entity, not a documents artifact (UAT r9) |
 | sub-document ref | sub-document tab selection | current tab behavior |
 | EXTERNAL | browser tab | unchanged |
 | in-page anchor | current region scroll | applies to whichever region contains the link |

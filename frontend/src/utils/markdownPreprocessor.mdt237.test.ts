@@ -404,3 +404,32 @@ describe('MDT-237: inline-code .md reference conversion', () => {
     expect(out).toContain('[MDT-151](/prj/MDT/ticket/MDT-151)')
   })
 })
+
+describe('MDT-248 UAT r9: ticket-file refs route to the ticket', () => {
+  it('a root-style ticket main-file ref from any document routes to the ticket, not documents', () => {
+    const md = 'Related ticket: `docs/CRs/MDT-248-ticket-side-doc.md`'
+    const out = preprocessMarkdown(md, 'MDT', CFG, 'docs/design/surfaces/ticket-side-doc.spec.md', 'docs/CRs')
+    // Relative resolution would bury it (docs/design/surfaces/docs/CRs/…) — the
+    // authored path names the ticket file, so the link IS the ticket.
+    expect(out).toContain('[`docs/CRs/MDT-248-ticket-side-doc.md`](/prj/MDT/ticket/MDT-248)')
+    expect(out).not.toContain('documents?file=')
+  })
+
+  it('a tickets-area subdoc ref routes to the ticket subdoc view', () => {
+    const md = 'See `docs/CRs/MDT-183/architecture.md` for the watcher design.'
+    const out = preprocessMarkdown(md, 'MDT', CFG, 'docs/architecture/event-system/EVENT_SYSTEM.md', 'docs/CRs')
+    expect(out).toContain('[`docs/CRs/MDT-183/architecture.md`](/prj/MDT/ticket/MDT-183/architecture.md)')
+  })
+
+  it('non-tickets-area docs keep the documents route (no over-capture)', () => {
+    const md = 'See `docs/design/surfaces/board-layout.md` for layout.'
+    const out = preprocessMarkdown(md, 'MDT', CFG, 'docs/architecture/overview.md', 'docs/CRs')
+    expect(out).toMatch(/documents\?file=/)
+  })
+
+  it('relative .. refs that correctly land in the tickets area still route to the ticket', () => {
+    const md = 'See `../../CRs/MDT-151.md` next.'
+    const out = preprocessMarkdown(md, 'MDT', CFG, 'docs/design/surfaces/board-layout.md', 'docs/CRs')
+    expect(out).toContain('[`../../CRs/MDT-151.md`](/prj/MDT/ticket/MDT-151)')
+  })
+})

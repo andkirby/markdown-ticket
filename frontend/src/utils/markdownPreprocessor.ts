@@ -406,6 +406,22 @@ function resolveDocumentRef(
     pathPart = href.slice(0, anchorIdx)
   }
 
+  // UAT 2026-09-24 (MDT-248 r9): a path that NAMES a ticket file as written
+  // from the project root (`docs/CRs/MDT-248[-slug].md`, or a subdoc like
+  // `docs/CRs/MDT-183/architecture.md`) is a ticket link no matter where the
+  // source document lives — the ticket is the entity, not a documents-world
+  // file. Matching only the relative-resolved path buries root-style refs
+  // (docs/design/surfaces/docs/CRs/…) and routes a dead documents link.
+  const authoredTicketsAreaHref = classifyTicketsAreaPath(
+    pathPart.replace(/^\.\//, ''),
+    projectCode,
+    ticketsPath,
+    anchor,
+  )
+  if (authoredTicketsAreaHref) {
+    return authoredTicketsAreaHref
+  }
+
   // UAT 2026-07-21 (BR-5): documents-view mode. sourcePath is project-relative
   // (e.g. "docs/architecture/aaaa.md") — resolve .md refs against the source
   // document's directory and route to the documents view.

@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
 import { toast } from 'sonner'
 
 interface ToastOptions {
@@ -61,11 +61,15 @@ export function useToast() {
     }
   }, [])
 
-  return {
+  // Stable identity: the individual callbacks never change, so the object is
+  // memoized once — consumers may safely keep the returned api in effect deps
+  // (a fresh literal per render caused an infinite refetch+toast loop in the
+  // MDT-248 pane's failure path).
+  return useMemo(() => ({
     success,
     error,
     warning,
     info,
     dismiss,
-  }
+  }), [success, error, warning, info, dismiss])
 }
