@@ -699,6 +699,11 @@ export default defineConfig(({ mode }) => {
         '@': path.resolve(__dirname, './src'),
         '@mdt/shared': path.resolve(__dirname, '../shared/dist'),
       },
+      // One React forever. Without dedupe, a dependency pre-bundled in a
+      // separate optimizer session (e.g. a package added while the dev server
+      // was running) can carry its own React copy — its hooks then hit a null
+      // dispatcher and React unmounts the whole tree (MDT-248 UAT r8).
+      dedupe: ['react', 'react-dom'],
     },
     server: {
       host: serverHost,

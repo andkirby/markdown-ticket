@@ -142,7 +142,12 @@ const HistoryNavButton: React.FC<HistoryNavButtonProps> = ({
       <ContextMenuTrigger asChild>
         {button}
       </ContextMenuTrigger>
-      <ContextMenuContent data-testid="ticket-side-pane-menu">
+      <ContextMenuContent
+        data-testid="ticket-side-pane-menu"
+        // The menu's Escape closes the menu ONLY: stop the key from reaching
+        // the document-level Esc chain (which would tuck the pane too).
+        onEscapeKeyDown={event => event.stopPropagation()}
+      >
         {indices.map(index => (
           <ContextMenuItem
             key={hist[index]}

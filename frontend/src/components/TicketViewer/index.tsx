@@ -37,6 +37,7 @@ import { DocumentDeliveryContext } from '../SmartLink/documentDelivery'
 import { Modal, ModalBody, ModalCloseButton } from '../ui/Modal'
 import { CompactTicketHeader } from './CompactTicketHeader'
 import { EpicBoardAction } from './EpicBoardAction'
+import { PaneErrorBoundary } from './PaneErrorBoundary'
 import { humanizePaneTitle } from './sidePaneDocs'
 import { ROOT_DOCUMENT_PATH, splitPathSegments } from './subdocumentPath'
 import { TicketDocumentTabs } from './TicketDocumentTabs'
@@ -274,7 +275,9 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
 
   // Esc while the pane is visible hides it (session kept). The Modal's own
   // Escape handler is gated off via closeOnEscape in the same state, so one
-  // press walks out exactly one layer: trace shell → pane → modal (C3).
+  // press walks out exactly one layer: trace shell → pane → modal (C3). An
+  // open history menu consumes its own Escape first (stopped at the menu
+  // content, so this handler never sees that press).
   useEffect(() => {
     if (!paneVisible)
       return
@@ -751,22 +754,24 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
               />
             )}
             {hasSidePaneSession && currentTicket && (
-              <TicketSidePane
-                projectId={projectCode ?? ''}
-                hist={sidePaneState.hist}
-                hi={sidePaneState.hi}
-                visible={paneVisible}
-                scrolls={sidePaneState.scrolls}
-                titles={sidePaneState.titles}
-                onBack={backSidePane}
-                onForward={fwdSidePane}
-                onJump={jumpSidePane}
-                onHide={hideSidePane}
-                onDiscard={handlePaneDiscard}
-                onOpenInDocuments={openPaneDocInDocuments}
-                onScrollChange={captureSidePaneScroll}
-                onTitleKnown={handlePaneTitleKnown}
-              />
+              <PaneErrorBoundary>
+                <TicketSidePane
+                  projectId={projectCode ?? ''}
+                  hist={sidePaneState.hist}
+                  hi={sidePaneState.hi}
+                  visible={paneVisible}
+                  scrolls={sidePaneState.scrolls}
+                  titles={sidePaneState.titles}
+                  onBack={backSidePane}
+                  onForward={fwdSidePane}
+                  onJump={jumpSidePane}
+                  onHide={hideSidePane}
+                  onDiscard={handlePaneDiscard}
+                  onOpenInDocuments={openPaneDocInDocuments}
+                  onScrollChange={captureSidePaneScroll}
+                  onTitleKnown={handlePaneTitleKnown}
+                />
+              </PaneErrorBoundary>
             )}
             {hasSidePaneSession && !paneVisible && currentTicket && (
               <SidePanePill title={sidePaneTitle || 'Document'} onReveal={revealSidePane} />

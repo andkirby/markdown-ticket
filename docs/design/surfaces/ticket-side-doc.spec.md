@@ -110,6 +110,7 @@ Pane history is not header chrome: back/forward float over the top-left of the p
 | open — fetch error | document fetch fails | with a previous document on screen: toast reports the failure (app Sonner via `useToast`) and the previous document stays; first open with nothing loaded: inline empty error state (`role="alert"`) naming the path |
 | hidden | Esc (or `‹ Ticket` in overlay) | pane tucked; pill appears naming current document; session (history + scroll) kept |
 | restored | ticket reopened with a remembered snapshot (UAT r7) | modal opens single-column with the pill naming the last-read document; reveal restores history + scroll |
+| pane crash | any render error inside the pane subtree (UAT r8) | `PaneErrorBoundary` degrades to an inline "something went wrong" state naming the ticket as unharmed; the ticket column, modal chrome, and session keep working — the pane never takes the app down |
 | discarded | `×` on pane | pane gone, pill gone; modal returns to default width; the ticket's persisted snapshot is cleared |
 | link flagged missing | target known-missing | link renders flagged, non-clickable — identical to today; pane never opens for it |
 
