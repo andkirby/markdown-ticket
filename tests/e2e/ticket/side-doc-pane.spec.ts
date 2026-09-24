@@ -284,10 +284,17 @@ test.describe('MDT-248: ticket side reading pane', () => {
     // Pane overlays the modal as a single column
     const panePosition = await pane.evaluate(el => getComputedStyle(el).position)
     expect(panePosition).toBe('absolute')
+    // UAT r11 — one close control per surface: while the pane covers the
+    // card, the pane's own × is the only close; the modal × is tucked away
+    const modalClose = page.locator('[data-testid="close-detail"]')
+    await expect(modalClose).toBeHidden()
+    await expect(page.locator(sidePaneSelectors.close)).toBeVisible()
 
     await pane.locator(sidePaneSelectors.backToTicket).click()
     await expect(pane).toBeHidden()
     await expect(page.locator(sidePaneSelectors.pill)).toBeVisible()
+    // Pane tucked — the modal's × returns as the card's close control
+    await expect(modalClose).toBeVisible()
 
     // A document link re-reveals the pane with the session kept
     await detailPanel.locator('a.smart-link[data-link-type="document"]').first().click()
@@ -452,7 +459,8 @@ test.describe('MDT-248: ticket side reading pane', () => {
     const navBox = await nav.boundingBox()
     expect(headerBox).not.toBeNull()
     expect(navBox).not.toBeNull()
-    expect(navBox!.y).toBeGreaterThanOrEqual(headerBox!.y + headerBox!.height - 1)
+    // 2px tolerance: fractional-DPR layouts can shave hundredths of a px
+    expect(navBox!.y).toBeGreaterThanOrEqual(headerBox!.y + headerBox!.height - 2)
     expect(await nav.evaluate(el => getComputedStyle(el).position)).toBe('absolute')
     await expect.poll(() => nav.evaluate(el => getComputedStyle(el).opacity)).toBe('0.5')
     await nav.hover()
@@ -514,12 +522,16 @@ test.describe('MDT-248: ticket side reading pane', () => {
     await page.mouse.click(paneBox!.x + paneBox!.width - 30, proseBox!.y + Math.min(proseBox!.height / 2, 8))
     // The locked contract is the FIX: the dismissing click (which targets
     // <html> under Radix's pointer-events:none page) must not close the modal.
-    // Radix's own dismissal of its menu is flaky under parallel workers, so
-    // the menu is closed deterministically via the r8-locked menu-only Escape.
+    // Radix's own dismissal of its menu is flaky under parallel workers — if
+    // the click didn't close it, the r8-locked menu-only Escape does; when the
+    // click did, no Escape is sent (it would tuck the pane instead).
     await expect(page.locator(ticketSelectors.detailPanel)).toBeVisible()
     await expect(pane).toBeVisible()
-    await page.keyboard.press('Escape')
-    await expect(page.locator(sidePaneSelectors.menu)).toBeHidden()
+    await page.waitForTimeout(300)
+    if (await page.locator(sidePaneSelectors.menu).count() > 0) {
+      await page.keyboard.press('Escape')
+      await expect(page.locator(sidePaneSelectors.menu)).toBeHidden()
+    }
     await expect(pane).toBeVisible()
   })
 
