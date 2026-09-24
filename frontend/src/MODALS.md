@@ -16,7 +16,7 @@ Do NOT hand-roll `fixed inset-0` overlays. The base Modal handles:
 - Body scroll lock
 - Focus management
 
-**One close control (UAT r7 / MDT-248)**: every modal × renders `ModalCloseButton` (exported from `ui/Modal.tsx`) with the single `.modal__close` style — `ModalHeader`'s built-in ×, the ticket viewer's card-absolute ×, the side pane's ×. Never hand-roll a × button. Positioning variants only: `--absolute` (card corner), `--split` (tracks the ticket column width).
+**One close control (UAT r7 / MDT-248)**: every modal × renders `ModalCloseButton` (exported from `ui/Modal.tsx`) with the single `.modal__close` style — `ModalHeader`'s built-in ×, the ticket viewer's card-absolute ×, the side pane's ×. Never hand-roll a × button. Positioning variants only: `--absolute` (card corner), `--split` (tracks the ticket column width; hidden below the split breakpoint while the side pane covers the card — one close control per surface).
 
 ## Vertical Positioning — No-Jump Architecture
 

@@ -59,3 +59,9 @@ Two requirement records changed after the initial stage (canonical state in
   direction's history as a jump menu (document title over mono file path, the
   documents nav-tree row format); activating an entry jumps without truncating
   the stack.
+- **BR-1.12 (new, UAT r9)**: a link naming a ticket file — authored root-style
+  `{ticketsPath}/{KEY}[-slug].md`, or a ticket subdoc path — routes to the
+  ticket view from any source document, never the documents world.
+- **Edge-7 (new, UAT r8)**: a render error in the pane subtree is contained —
+  inline fallback naming the ticket as unharmed; ticket column, chrome, and
+  session keep working.
