@@ -5,7 +5,7 @@
 
 ## Overview
 
-Clickable column sorting for the list view: Key, Title, Status, Created, and Updated headers become sort controls synced with the existing SortMenu, sort preferences become view-scoped (list independent from board+swimlane), Status gains a lifecycle-order comparator, and the table gains a Created column with relative timestamps. Benefits: sorting becomes discoverable where the data lives, list and board stop overwriting each other's sort, and the Status column carries real ordering semantics.
+Clickable column sorting for the list view: Key, Title, Status, Created, and Updated headers become sort controls synced with the existing SortMenu, sort preferences become view-scoped (list independent from board+swimlane), Status gains a lifecycle-order comparator, and the table gains a Created column with relative timestamps. UAT addition (BR-8): column headers pin (sticky) to the table's scrollport on vertical scroll. Benefits: sorting becomes discoverable where the data lives, list and board stop overwriting each other's sort, the Status column carries real ordering semantics, and long lists keep their headers visible.
 
 ## Constraint Carryover
 

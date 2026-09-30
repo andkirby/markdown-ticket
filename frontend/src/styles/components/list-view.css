@@ -44,4 +44,25 @@
   .ticket-table__head--sortable[data-sort-direction] .ticket-table__sort {
     color: oklch(var(--foreground));
   }
+
+  /* MDT-249 TASK-7 (BR-8): sticky list headers. The wrapper is a full-height
+     flex column (ProjectView), so .mdt-table__scroll — the nearest scroll
+     container for the th, inert without a height constraint — becomes the
+     vertical scrollport (it already owns horizontal scrolling). Scoped to the
+     list table only; shared ui/table.css base rules untouched. Glyph and
+     aria-sort persist automatically (pure CSS — no DOM/state changes). */
+  .ticket-table .mdt-table__scroll {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .ticket-table .mdt-table__head {
+    position: sticky;
+    top: 0;
+    z-index: 10; /* sticky-tab precedent: ticket-viewer.css:94 */
+    background-color: oklch(var(--background)); /* page surface — rows must not show through */
+    /* Hairline under the pinned header: the thead tr's border-bottom scrolls
+       away with the row, so re-create the edge without layout effects. */
+    box-shadow: inset 0 -1px 0 oklch(var(--border));
+  }
 }

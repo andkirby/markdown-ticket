@@ -251,8 +251,10 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
           : viewMode === 'list'
             ? (
                 <div className="h-full overflow-auto">
-                  {/* Desktop: Table View */}
-                  <div className="hidden md:block" data-testid="ticket-table">
+                  {/* Desktop: Table View. MDT-249 TASK-7: full-height flex column so
+                      .mdt-table__scroll becomes the vertical scrollport (sticky thead
+                      binds to it — see list-view.css; naive th sticky is inert otherwise). */}
+                  <div className="ticket-table hidden md:flex md:h-full md:flex-col" data-testid="ticket-table">
                     <Table>
                       <TableHeader>
                         <TableRow>

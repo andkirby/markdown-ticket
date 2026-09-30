@@ -5,7 +5,7 @@
 
 ## Overview
 
-One user journey family: sorting the ticket list where the data lives. Nine scenarios across five journeys (header-click sorting, header↔dropdown sync with label alignment, columns/timestamps, status lifecycle order, view-scoped options and persistence). Canonical scenarios live in `spec-trace`; see `bdd.trace.md`.
+One user journey family: sorting the ticket list where the data lives. Ten scenarios across six journeys (header-click sorting, header↔dropdown sync with label alignment, columns/timestamps, status lifecycle order, view-scoped options and persistence, sticky headers — the last added from UAT review). Canonical scenarios live in `spec-trace`; see `bdd.trace.md`.
 
 ## Acceptance Strategy
 

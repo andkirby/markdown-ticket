@@ -37,7 +37,7 @@
 |-----------|---------------|-------|------------|------------------|
 | M1: scoped sort foundation | — (unit layer) | Task 1-2 | unit suites GREEN | `bun test frontend/src/config/sorting.test.ts frontend/src/utils/sorting.test.ts` |
 | M2: scoped wiring + clickable headers | — (integration layer; scenarios gated on M3 spec) | Task 3-5 | typecheck + build + units GREEN; manual header-click proof | `bun run dev` → `/prj/{code}/list` → click Title header → rows reorder + SortMenu shows Title |
-| M3: acceptance | all nine scenarios | Task 6 | full E2E spec GREEN | `bun run test:e2e -- tests/e2e/list/view.spec.ts` |
+| M3: acceptance | all nine scenarios + `sticky_headers_pinned_during_scroll` (BR-8, UAT addition) | Task 6-7 | full E2E spec GREEN | `bun run test:e2e -- tests/e2e/list/view.spec.ts` |
 
 Task 0 skipped: no new packages (C1 decision), runtime and all command families already start; the one missing file (`frontend/src/config/sorting.test.ts`) is a feature test owned by Task 1.
 
@@ -48,6 +48,7 @@ Task 0 skipped: no new packages (C1 decision), runtime and all command families 
 | config/ | 2 (sorting.ts, sorting.test.ts†) | 2 (T1) | 0 | ✅ |
 | utils/ | 2 (sorting.ts, sorting.test.ts) | 2 (T2) | 0 | ✅ |
 | components/ | 6 (ProjectView, ProjectRouteHandler, SecondaryHeader, SortControls, HamburgerMenu, shared/RelativeTimestamp) | 6 (T3: 1, T4: 1, T5: 4) | 0 | ✅ |
+| styles/ | 1 (styles/components/list-view.css — TASK-5 spillover + sticky rules) | 1 (T7) | 0 | ✅ |
 | docs/ | 1 (sort-menu.spec.md) | 1 (T6) | 0 | ✅ |
 | tests/e2e/ | 1 (list/view.spec.ts) | 1 (T6) | 0 | ✅ |
 
@@ -279,3 +280,55 @@ bun run dev                                        # manual UAT light + dark: gl
 - [x] Fallback/absence paths match requirements (stale storage → defaults, Edge-1)
 
 Commit: `a0c0b725` (23 files, MDT-249 paths only; concurrent MDT-144 TicketViewer edits excluded per lead ruling).
+
+---
+
+### Task 7: Sticky list headers (M3 — checkpoint, UAT addition, PENDING)
+
+**Skills**: mdt-frontend, playwright-cli
+
+**Structure**: `frontend/src/styles/components/list-view.css`, `frontend/src/components/ProjectView.tsx`
+
+**Makes GREEN (Automated Tests)**:
+- `TEST-list-view-sticky-headers` → `tests/e2e/list/view.spec.ts`
+
+**Makes GREEN (Behavior)**:
+- `sticky_headers_pinned_during_scroll` → `tests/e2e/list/view.spec.ts` (BR-8)
+
+**Scope**: scrollport height chain + sticky thead, list-scope only — in `list-view.css` (the TASK-5 spillover file, already the home of list sort styles): make the `ticket-table` wrapper a full-height flex column (ProjectView class change), `.ticket-table .mdt-table__scroll { flex: 1; min-height: 0; }` so the wrapper becomes the vertical scrollport (it already scrolls horizontally), then `.ticket-table .mdt-table__head { position: sticky; top: 0; background: oklch(var(--background)); z-index: 10; }`. Glyph + `aria-sort` persist automatically (pure CSS; DOM/state untouched). Shared `ui/table.css` stays untouched — base rules must not change for other Table consumers.
+**Boundary**: sticky applies only under the list `ticket-table` scope; mobile cards and board untouched; no JS scroll listeners.
+**Creates**: None
+**Modifies**: `frontend/src/styles/components/list-view.css`, `frontend/src/components/ProjectView.tsx`
+**Deletes**: None
+**Must Not Touch**: `frontend/src/components/ui/table.css` base rules, `ticket-table`/`ticket-row-*` testids, board/documents surfaces
+**Exclude**: no global `.mdt-table` sticky, no scroll-position state, no new tokens
+**Anti-duplication**: sticky rules live beside the existing `.ticket-table__sort` styles in `list-view.css` — do not fork into a second stylesheet or inline styles
+**Duplication Guard**: grep for existing sticky thead implementations (none as of 2026-09-30: sticky usage is Header/tabs/swimlanes only); verify `.mdt-table__scroll` is the nearest scroll container after the height chain lands (naive sticky without the chain is inert — see ux-design.md § Sticky Header)
+**Re-plan Trigger**: if the height chain leaks into other Table surfaces (flex/min-height side effects), fall back to an `overflow: visible` modifier on `.ticket-table .mdt-table__scroll` so the ProjectView:253 container stays the scrollport — same UX, different scrollport owner
+
+**Verify**:
+```bash
+bun run test:e2e -- tests/e2e/list/view.spec.ts
+```
+
+**Observe**:
+```bash
+bun run dev   # list with many tickets → scroll: header pinned with glyph visible, rows pass under the
+              # opaque header; both themes; Documents/board tables render exactly as before
+```
+
+**Done when**:
+- [x] E2E sticky assertion GREEN; all MDT-249 + pre-existing list specs still GREEN
+- [x] Visual check on light + dark themes
+- [x] Other Table consumers (Documents view) unchanged
+
+> TASK-7 evidence: E2E sticky spec asserts scrollport overflow (height chain
+> works), computed `position: sticky`/`top: 0`/opaque bg, header y-stability
+> across full scroll, and aria-sort persistence while pinned. Full gates green
+> (ts/build/411 units/13 list E2E/43 documents E2E/eslint). ui/table.css
+> byte-untouched. Light/dark via THEME `--background` token (same rule both
+> themes). Additions beyond spec text: wrapper gained the `ticket-table` BEM
+> root class (CSS scoping target), inset hairline under the pinned header
+> (thead tr border scrolls away with the row).
+
+> Canonical sync: TASK-7 (plus BR-8, scenario, TEST-list-view-sticky-headers, ART-list-view-css, OBL-sticky-header) is staged in `scripts/_sync_mdt249_sticky_trace.sh` — the spec-trace binary was SIGKILLed by memory pressure on 2026-09-30 (49/49 attempts). Run the script when the box frees; it is idempotent and ends with `validate --stage` × 5 + `render all`.
