@@ -100,6 +100,7 @@ View-scoped sort preferences in localStorage with clickable table headers that d
 - [ ] A header click updates the SortMenu selection and direction; a dropdown change updates the header glyph — both stay in sync
 - [ ] Column labels match dropdown labels exactly: Key, Title, Status, Created, Updated
 - [ ] Created column renders beside Updated; both cells show relative time (e.g. "an hour ago") via RelativeTimestamp, with the full date-time on hover
+- [ ] Column headers remain visible (sticky) when the list scrolls vertically; header keeps sort glyph + aria-sort while pinned (list view only)
 - [ ] Status sorts in lifecycle order: Proposed → Approved → In Progress → On Hold → Implemented → Partially Implemented → Rejected; unknown values sort last
 - [ ] Status appears in the SortMenu and hamburger sort list only in list view; board/swimlane dropdown options are unchanged
 - [ ] List and board sort preferences persist independently across reloads

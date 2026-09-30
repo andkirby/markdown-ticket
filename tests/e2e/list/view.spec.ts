@@ -336,6 +336,47 @@ test.describe('List View — column sorting (MDT-249)', () => {
     await expect(page.locator('[data-testid="sort-menu-option"]')).toHaveCount(5)
   })
 
+  test('sticky headers stay pinned while the list scrolls (BR-8, TASK-7)', async ({ page, e2eContext }) => {
+    // complex (12 tickets) + short viewport → guaranteed vertical overflow
+    const scenario = await buildScenario(e2eContext.projectFactory, 'complex')
+    await openList(page, scenario.projectCode)
+
+    // Short viewport forces the table to overflow vertically; the height chain
+    // makes .mdt-table__scroll the scrollport (naive sticky without it is inert).
+    await page.setViewportSize({ width: 1280, height: 400 })
+    const scrollEl = page.locator(`${listSelectors.ticketTable} .mdt-table__scroll`)
+    await expect.poll(async () =>
+      await scrollEl.evaluate(el => el.scrollHeight - el.clientHeight),
+    { timeout: 5000 }).toBeGreaterThan(0)
+
+    // Computed sticky styles on the th (scoped rules from list-view.css)
+    const th = page.locator(`${listSelectors.ticketTable} th`).first()
+    const styles = await th.evaluate((el) => {
+      const s = getComputedStyle(el)
+      return { position: s.position, top: s.top, bg: s.backgroundColor }
+    })
+    expect(styles.position).toBe('sticky')
+    expect(styles.top).toBe('0px')
+    expect(styles.bg).not.toBe('rgba(0, 0, 0, 0)') // opaque — rows must not show through
+
+    // Pin proof: scroll to bottom; the header's viewport position must not move
+    const pinnedY = (await th.boundingBox())!.y
+    await scrollEl.evaluate((el) => { el.scrollTop = el.scrollHeight })
+    await page.waitForTimeout(200)
+    const scrolledY = (await th.boundingBox())!.y
+    expect(Math.abs(scrolledY - pinnedY)).toBeLessThan(2)
+
+    // Sort controls keep working while pinned: glyph state (aria-sort) persists (pure CSS)
+    await page.locator('[data-testid="sort-title"]').click()
+    await page.waitForTimeout(300)
+    await expect(sortHeader(page, 'title')).toHaveAttribute('aria-sort', 'ascending')
+    await scrollEl.evaluate((el) => { el.scrollTop = el.scrollHeight })
+    await page.waitForTimeout(200)
+    await expect(sortHeader(page, 'title')).toHaveAttribute('aria-sort', 'ascending')
+    const stillPinnedY = (await th.boundingBox())!.y
+    expect(Math.abs(stillPinnedY - pinnedY)).toBeLessThan(2)
+  })
+
   test('view sort preferences persist independently; stale flat value resets (BR-7.1/7.2, C1, Edge-1)', async ({ page, e2eContext }) => {
     const scenario = await buildScenario(e2eContext.projectFactory, 'medium')
 

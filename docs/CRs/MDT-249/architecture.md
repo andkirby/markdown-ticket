@@ -14,6 +14,7 @@ The feature rides four existing seams without moving any boundary: `config/sorti
 4. **Header click semantics live in ProjectView**: clicking an inactive header applies the registry `defaultDirection` (Status = `asc`, lead-confirmed); clicking the active header flips. ProjectView computes the next `SortPreferences` and hands it to `onSortPreferencesChange` — it holds no local sort state (single source of truth stays the route handler).
 5. **Fixed-mode timestamp is a boolean prop**: `RelativeTimestamp` gains `fixed?: boolean` — renders a non-interactive `<span>` + tooltip instead of the toggle `<button>` (C5). Toggle mode for ticket cards is unchanged.
 6. **Storage keeps one key, both scopes** (C1/Edge-1): `markdown-ticket-sort-preferences` holds `Record<SortScope, SortPreferences>`; `setSortPreferences(scope, prefs)` read-modify-writes the record so the other scope is never clobbered (BR-7.1). Reads sanitize: anything that is not a valid per-scope record — including the pre-change flat shape — resets to per-scope defaults; never throws.
+7. **Sticky headers pin the scrollport, not just the thead** (UAT addition, BR-8): a naive `th { position: sticky }` is inert — the vendored Table's `.mdt-table__scroll` wrapper (`ui/table.css:20-24`, `overflow: auto`, no height constraint) is the *nearest scroll container* for the `th` but never scrolls (the outer `div.h-full.overflow-auto` at `ProjectView.tsx:253` does). Fix: a height chain in the list scope (ticket-table wrapper → flex column; `.mdt-table__scroll { flex: 1; min-height: 0 }`) makes the wrapper the vertical scrollport; sticky thead then binds. All sticky CSS lives in `frontend/src/styles/components/list-view.css` (TASK-5 spillover file) under the `.ticket-table` scope — shared `ui/table.css` base rules unchanged. Opaque `oklch(var(--background))`, `z-index: 10` (tab precedent `ticket-viewer.css:94`).
 
 ## Module Boundaries
 
@@ -22,6 +23,7 @@ The feature rides four existing seams without moving any boundary: `config/sorti
 - `frontend/src/components/routes/ProjectRouteHandler.tsx` — owns per-scope sort state and scope selection; the only writer of state.
 - `frontend/src/components/ProjectView.tsx` — owns list-table presentation: header buttons, `aria-sort`/glyph state, Created/Updated cells. Computes next-prefs on click; never stores.
 - `frontend/src/components/SecondaryHeader.tsx` — derives scope from `viewMode`, threads the attribute list and prefs to `SortControls` (desktop) and `HamburgerMenu` (mobile).
+- `frontend/src/styles/components/list-view.css` — owns list-table sort-header styles and the sticky/scrollport rules (list scope only; `.ticket-table` namespace).
 - `frontend/src/components/shared/RelativeTimestamp.tsx` — owns timestamp rendering modes; no sorting knowledge.
 
 ## Canonical Data Flows
