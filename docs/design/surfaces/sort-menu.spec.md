@@ -57,10 +57,13 @@ Icons verified in lucide-react 0.542.0. Labels drop the redundant "Date" — the
 |------|-----------|-------|------|-------------|
 | tickets | `code` | Key | `ticket` | desc |
 | tickets | `title` | Title | `a-large-small` | asc |
+| tickets (list scope only, MDT-249) | `status` | Status | `list-checks` | asc |
 | tickets | `priority` | Priority | `chevrons-up` | desc |
 | both | `dateCreated` / `created` | Created | `calendar-1` | desc |
 | both | `lastModified` / `modified` | Updated | `calendar-clock` | desc |
 | documents | `name` | Filename | `file-text` | asc |
+
+Scope note (MDT-249): ticket attributes are view-scoped — the board/swimlane header offers the five pre-249 options (no Status, within-column status sort is meaningless there); the list header adds `status` after `title` (order: Key, Title, Status, Priority, Created, Updated), sorting by lifecycle via `CR_STATUS_SORT_ORDER` (not `STATUS_CONFIG.order`).
 
 Direction segment glyph: `arrow-up-narrow-wide` / `arrow-down-wide-narrow` (not bare chevrons — the arrow encodes the ordering semantics, not just "up/down").
 

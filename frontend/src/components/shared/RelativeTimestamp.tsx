@@ -7,6 +7,14 @@ interface RelativeTimestampProps {
   createdAt?: Date | string | null
   updatedAt?: Date | string | null
   className?: string
+  /**
+   * MDT-249: fixed render for table cells — non-interactive `<span>` (C5: no
+   * nested interactive element inside a clickable row). Shows the same relative
+   * text; the full date-time surfaces via native `title` (the UX gate's
+   * fallback path — Radix hover tooltips require a focusable trigger, and the
+   * surrounding row is not focusable). Toggle mode (ticket cards) is unchanged.
+   */
+  fixed?: boolean
 }
 
 type TimestampMode = 'created' | 'updated'
@@ -23,7 +31,7 @@ function getDefaultMode(createdAt?: Date | string | null, updatedAt?: Date | str
   return null
 }
 
-export function RelativeTimestamp({ createdAt, updatedAt, className = '' }: RelativeTimestampProps) {
+export function RelativeTimestamp({ createdAt, updatedAt, className = '', fixed = false }: RelativeTimestampProps) {
   const [mode, setMode] = React.useState<TimestampMode | null>(() => getDefaultMode(createdAt, updatedAt))
 
   React.useEffect(() => {
@@ -34,13 +42,27 @@ export function RelativeTimestamp({ createdAt, updatedAt, className = '' }: Rela
     return null
   }
 
-  const hasAlternate = Boolean(createdAt && updatedAt)
   const activeLabel = mode === 'updated' ? 'Updated' : 'Created'
   const activeDate = mode === 'updated' ? updatedAt : createdAt
 
   if (!activeDate) {
     return null
   }
+
+  // Fixed mode: static span + native title (see prop docblock). No toggle,
+  // no button, no interactive class — table cells inside clickable rows.
+  if (fixed) {
+    return (
+      <span
+        className={cn('relative-timestamp', 'relative-timestamp--static', className)}
+        title={formatFullDateTime(activeDate)}
+      >
+        {formatRelativeTime(activeDate)}
+      </span>
+    )
+  }
+
+  const hasAlternate = Boolean(createdAt && updatedAt)
 
   const handleToggle = () => {
     if (!hasAlternate) {

@@ -1,5 +1,6 @@
 import type { Ticket } from '../types'
 import { CRPriorities } from '@mdt/domain-contracts'
+import { CR_STATUS_SORT_ORDER } from '../config/sorting'
 
 export function sortTickets(
   tickets: Ticket[],
@@ -37,6 +38,13 @@ export function sortTickets(
         aValue = (CRPriorities as readonly string[]).indexOf(a.priority)
         bValue = (CRPriorities as readonly string[]).indexOf(b.priority)
         break
+      case 'status':
+        // Lifecycle rank, not alphabetical (Approved < Implemented < In
+        // Progress is meaningless). Self-contained: returns before the
+        // generic null/negate machinery (MDT-249) — unknown statuses (incl.
+        // null/undefined via indexOf('')) pin AFTER known ones in BOTH
+        // directions; ties keep input order.
+        return statusCompare(a.status, b.status, direction)
       default:
         // For custom attributes, try to access them directly
         aValue = (a as unknown as Record<string, unknown>)[attribute]
@@ -79,4 +87,22 @@ export function sortTickets(
 
     return direction === 'asc' ? comparison : -comparison
   })
+}
+
+/** Lifecycle comparison for the `status` attribute (MDT-249). */
+function statusCompare(
+  aStatus: string | null | undefined,
+  bStatus: string | null | undefined,
+  direction: 'asc' | 'desc',
+): number {
+  const aRank = CR_STATUS_SORT_ORDER.indexOf(aStatus ?? '')
+  const bRank = CR_STATUS_SORT_ORDER.indexOf(bStatus ?? '')
+  if (aRank === -1 && bRank === -1)
+    return 0
+  if (aRank === -1)
+    return 1 // unknown after known, regardless of direction
+  if (bRank === -1)
+    return -1
+  const comparison = aRank - bRank
+  return direction === 'asc' ? comparison : -comparison
 }

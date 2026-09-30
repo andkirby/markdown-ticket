@@ -1,0 +1,668 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-249"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "WHEN the list view is displayed, the system shall render the Key, Title, Status, Created, and Updated column headers as clickable sort controls and shall show the active sort direction on the active column",
+      "sourceRef": "CR §5 Functional AC-1",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "WHEN the user clicks the Attributes column header in the list view, the system shall not change the sort order",
+      "sourceRef": "CR §5 Functional AC-1",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.3",
+      "kind": "behavior",
+      "text": "WHEN the user clicks a column header that is not the active sort attribute, the system shall sort by that attribute using its default direction",
+      "sourceRef": "CR §5 Functional AC-2",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.4",
+      "kind": "behavior",
+      "text": "WHEN the user clicks the header of the currently active sort attribute, the system shall reverse the sort direction",
+      "sourceRef": "CR §5 Functional AC-2",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-2.1",
+      "kind": "behavior",
+      "text": "WHEN the user changes the sort through a column header click, the system shall update the sort menu selection and direction to match",
+      "sourceRef": "CR §5 Functional AC-3",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-2.2",
+      "kind": "behavior",
+      "text": "WHEN the user changes the sort through the sort menu, the system shall update the column header direction indicator to match",
+      "sourceRef": "CR §5 Functional AC-3",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-3.1",
+      "kind": "behavior",
+      "text": "The system shall label the sortable list columns exactly Key, Title, Status, Created, and Updated, matching the sort menu labels for those attributes",
+      "sourceRef": "CR §5 Functional AC-4",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-4.1",
+      "kind": "behavior",
+      "text": "WHEN the list view is displayed, the system shall render a Created column immediately before the Updated column",
+      "sourceRef": "CR §5 Functional AC-5",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-4.2",
+      "kind": "behavior",
+      "text": "WHEN a Created or Updated list cell is displayed, the system shall show relative time text with the full date-time available on hover",
+      "sourceRef": "CR §5 Functional AC-5",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-6.1",
+      "kind": "behavior",
+      "text": "WHILE the list view is active, the system shall offer Status as a sort attribute in the sort menu and the mobile sort list",
+      "sourceRef": "CR §5 Functional AC-7",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-6.2",
+      "kind": "behavior",
+      "text": "WHILE the board or swimlane view is active, the system shall offer exactly the pre-change sort attributes, excluding Status",
+      "sourceRef": "CR §5 Functional AC-7",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-7.1",
+      "kind": "behavior",
+      "text": "WHEN sort preferences change in one view scope, the system shall leave the other view scope's stored sort preferences unchanged",
+      "sourceRef": "CR §5 Functional AC-8",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-7.2",
+      "kind": "behavior",
+      "text": "WHEN the application is reloaded, the system shall restore each view scope's persisted sort preferences independently",
+      "sourceRef": "CR §5 Functional AC-8",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "Sort preferences shall persist in browser localStorage under the existing markdown-ticket-sort-preferences key with per-scope values, never in URL params or backend storage",
+      "sourceRef": "CR §2 Decision",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "The existing E2E data-testids ticket-table, ticket-row-*, sort-menu, and sort-controls shall remain stable through this change",
+      "sourceRef": "CR §5 Non-Functional",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "Sortable column headers shall expose aria-sort reflecting the active attribute and direction, plus a visible direction glyph",
+      "sourceRef": "CR §4 Key Patterns",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "The status lifecycle sort order shall be a dedicated constant; STATUS_CONFIG.order and VALID_STATUSES shall not be mutated or repurposed",
+      "sourceRef": "CR §2 Rationale",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C5",
+      "kind": "constraint",
+      "text": "Timestamp cells inside clickable table rows shall be non-interactive (no nested interactive element)",
+      "sourceRef": "CR §2 Rationale",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C6",
+      "kind": "constraint",
+      "text": "Board and swimlane within-column sorting behavior and Documents view sorting shall remain unchanged",
+      "sourceRef": "CR §1 Scope (Unchanged)",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "IF the stored sort preferences value has an unrecognized shape (including the pre-change flat shape), THEN the system shall fall back to per-scope defaults without throwing",
+      "sourceRef": "CR §5 Functional AC-9",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-5.1",
+      "kind": "behavior",
+      "text": "WHEN tickets are sorted by status, the system shall order them by lifecycle — ascending: Proposed, Approved, In Progress, On Hold, Implemented, Partially Implemented, Rejected; descending: the reverse — with unknown statuses positioned after all known statuses in either direction",
+      "sourceRef": "CR §5 Functional AC-6; lead decision 2026-09-30 (pin last both directions)",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "header_click_sorts_by_default_direction",
+      "title": "Clicking a header sorts by its default direction",
+      "covers": [
+        "BR-1.1",
+        "BR-1.3"
+      ],
+      "given": "I am viewing a project's list and the tickets are in mixed order",
+      "when": "I click the Title column header",
+      "then": "the rows reorder by title ascending (Title's default direction) and the Title header shows that direction while other headers show none",
+      "sourceRef": "CR §5 AC-1, AC-2"
+    },
+    {
+      "id": "active_header_click_flips_direction",
+      "title": "Clicking the active header flips direction",
+      "covers": [
+        "BR-1.4"
+      ],
+      "given": "the Title header is the active sort in ascending direction",
+      "when": "I click the Title header again",
+      "then": "the rows reverse to title descending and the header direction indicator flips to descending",
+      "sourceRef": "CR §5 AC-2"
+    },
+    {
+      "id": "attributes_header_click_does_not_sort",
+      "title": "Clicking the Attributes header changes nothing",
+      "covers": [
+        "BR-1.2"
+      ],
+      "given": "I am viewing the list with any active sort",
+      "when": "I click the Attributes column header",
+      "then": "the row order and the active sort attribute and direction are unchanged",
+      "sourceRef": "CR §5 AC-1"
+    },
+    {
+      "id": "header_click_updates_sort_menu",
+      "title": "A header click updates the sort menu with matching labels",
+      "covers": [
+        "BR-2.1",
+        "BR-3.1"
+      ],
+      "given": "I am viewing the list and its column headings read Key, Title, Status, Created, and Updated",
+      "when": "I click the Status column header",
+      "then": "the sort menu shows Status selected with the same direction as the header, and the menu label matches the column heading exactly",
+      "sourceRef": "CR §5 AC-3, AC-4"
+    },
+    {
+      "id": "sort_menu_change_updates_header",
+      "title": "A sort menu change updates the header indicator",
+      "covers": [
+        "BR-2.2"
+      ],
+      "given": "a column header is the active sort in ascending direction",
+      "when": "I select a different attribute in the sort menu",
+      "then": "the previously active header loses its direction indicator and the newly selected attribute's header shows the menu's direction",
+      "sourceRef": "CR §5 AC-3"
+    },
+    {
+      "id": "created_column_shows_relative_timestamps",
+      "title": "Created column renders before Updated with relative times",
+      "covers": [
+        "BR-4.1",
+        "BR-4.2"
+      ],
+      "given": "tickets with known created and updated times",
+      "when": "I view the list table",
+      "then": "a Created column appears immediately before the Updated column, each cell shows a relative time such as 'an hour ago', and hovering a cell shows the full date-time",
+      "sourceRef": "CR §5 AC-5"
+    },
+    {
+      "id": "status_offered_only_in_list_view",
+      "title": "Status appears in sort options only for the list",
+      "covers": [
+        "BR-6.1",
+        "BR-6.2"
+      ],
+      "given": "my project offers list and board views",
+      "when": "I open the sort menu and mobile sort list in list view, then the sort menu in board view",
+      "then": "the list options include Status while the board options are unchanged and exclude Status",
+      "sourceRef": "CR §5 AC-7"
+    },
+    {
+      "id": "view_sort_preferences_persist_independently",
+      "title": "List and board sorts persist independently",
+      "covers": [
+        "BR-7.1",
+        "BR-7.2"
+      ],
+      "given": "the list sorts by Updated descending and the board sorts by Key descending",
+      "when": "I change the list sort to Title, switch to the board, and reload the page",
+      "then": "the board still sorts by Key descending, and returning to the list shows Title sorting still in place",
+      "sourceRef": "CR §5 AC-8"
+    },
+    {
+      "id": "status_sort_uses_lifecycle_order",
+      "title": "Status sorts in lifecycle order with unknown last",
+      "covers": [
+        "BR-5.1"
+      ],
+      "given": "tickets spanning Proposed, Approved, In Progress, On Hold, Implemented, Partially Implemented, Rejected, plus one ticket with an unknown status",
+      "when": "I sort by Status ascending and then flip to descending",
+      "then": "ascending orders rows Proposed, Approved, In Progress, On Hold, Implemented, Partially Implemented, Rejected with the unknown-status ticket last; descending reverses the known lifecycle order and the unknown-status ticket is still last",
+      "sourceRef": "CR §5 AC-6; lead decision 2026-09-30"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-scope-storage",
+      "title": "View-scoped sort storage: one localStorage key holding Record<SortScope, SortPreferences>, sanitized reads, per-scope merge writes",
+      "derivedFrom": [
+        "BR-7.1",
+        "BR-7.2",
+        "C1",
+        "Edge-1"
+      ],
+      "artifactIds": [
+        "ART-config-sorting",
+        "ART-config-sorting-test",
+        "ART-route-handler"
+      ],
+      "sourceRef": "architecture.md § Decisions 6"
+    },
+    {
+      "id": "OBL-header-interaction",
+      "title": "Clickable list headers: default-direction first click, flip on repeat, aria-sort + glyph state, Attributes static",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-project-view",
+        "ART-route-handler",
+        "ART-e2e-list-view"
+      ],
+      "sourceRef": "architecture.md § Decisions 4"
+    },
+    {
+      "id": "OBL-two-way-sync",
+      "title": "Single-state two-way sync: headers and dropdown write the same route-handler state through onSortPreferencesChange",
+      "derivedFrom": [
+        "BR-2.1",
+        "BR-2.2"
+      ],
+      "artifactIds": [
+        "ART-project-view",
+        "ART-route-handler",
+        "ART-secondary-header",
+        "ART-sort-controls"
+      ],
+      "sourceRef": "architecture.md § Canonical Data Flows"
+    },
+    {
+      "id": "OBL-labels-columns",
+      "title": "List column labels match registry labels; Created column before Updated; fixed-mode RelativeTimestamp cells",
+      "derivedFrom": [
+        "BR-3.1",
+        "BR-4.1",
+        "BR-4.2",
+        "C5"
+      ],
+      "artifactIds": [
+        "ART-project-view",
+        "ART-relative-timestamp"
+      ],
+      "sourceRef": "architecture.md § Decisions 5"
+    },
+    {
+      "id": "OBL-status-sort",
+      "title": "Status comparator: CR_STATUS_SORT_ORDER lifecycle rank, unknown statuses last in both directions, no repurposing of existing status arrays",
+      "derivedFrom": [
+        "BR-5.1",
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-utils-sorting",
+        "ART-utils-sorting-test",
+        "ART-config-sorting"
+      ],
+      "sourceRef": "architecture.md § Decisions 3 (lead decision 2026-09-30)"
+    },
+    {
+      "id": "OBL-scope-options",
+      "title": "Per-scope attribute registry: list scope adds Status (SortMenu + hamburger), board scope unchanged five attributes",
+      "derivedFrom": [
+        "BR-6.1",
+        "BR-6.2",
+        "C6"
+      ],
+      "artifactIds": [
+        "ART-config-sorting",
+        "ART-secondary-header",
+        "ART-sort-controls",
+        "ART-hamburger-menu"
+      ],
+      "sourceRef": "architecture.md § Decisions 2"
+    },
+    {
+      "id": "OBL-e2e-contract",
+      "title": "Preserve existing E2E testids (ticket-table, ticket-row-*, sort-menu*, sort-controls) and board/documents sort behavior through the rewrite",
+      "derivedFrom": [
+        "C2",
+        "C6"
+      ],
+      "artifactIds": [
+        "ART-e2e-list-view"
+      ],
+      "sourceRef": "CR §5 Non-Functional"
+    },
+    {
+      "id": "OBL-ux-doc",
+      "title": "Sort-menu surface spec gains the Status icon row (list scope) at the UX permanent-owner step",
+      "derivedFrom": [
+        "BR-6.1",
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-sort-menu-spec"
+      ],
+      "sourceRef": "CR §4 Modified Artifacts"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-config-sorting",
+      "path": "frontend/src/config/sorting.ts",
+      "kind": "runtime",
+      "sourceRef": "CR §4 New+Modified Artifacts"
+    },
+    {
+      "id": "ART-utils-sorting",
+      "path": "frontend/src/utils/sorting.ts",
+      "kind": "runtime",
+      "sourceRef": "CR §4 Modified Artifacts"
+    },
+    {
+      "id": "ART-utils-sorting-test",
+      "path": "frontend/src/utils/sorting.test.ts",
+      "kind": "test",
+      "sourceRef": "CR §5 Testing"
+    },
+    {
+      "id": "ART-config-sorting-test",
+      "path": "frontend/src/config/sorting.test.ts",
+      "kind": "test",
+      "sourceRef": "CR §5 Testing (new)"
+    },
+    {
+      "id": "ART-project-view",
+      "path": "frontend/src/components/ProjectView.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR §4 Modified Artifacts"
+    },
+    {
+      "id": "ART-route-handler",
+      "path": "frontend/src/components/routes/ProjectRouteHandler.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR §4 Modified Artifacts"
+    },
+    {
+      "id": "ART-secondary-header",
+      "path": "frontend/src/components/SecondaryHeader.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR §4 Modified Artifacts"
+    },
+    {
+      "id": "ART-sort-controls",
+      "path": "frontend/src/components/SortControls.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR §4 Modified Artifacts"
+    },
+    {
+      "id": "ART-hamburger-menu",
+      "path": "frontend/src/components/HamburgerMenu.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR §4 Modified Artifacts"
+    },
+    {
+      "id": "ART-relative-timestamp",
+      "path": "frontend/src/components/shared/RelativeTimestamp.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR §4 Modified Artifacts"
+    },
+    {
+      "id": "ART-sort-menu-spec",
+      "path": "docs/design/surfaces/sort-menu.spec.md",
+      "kind": "doc",
+      "sourceRef": "CR §4 Modified Artifacts"
+    },
+    {
+      "id": "ART-e2e-list-view",
+      "path": "tests/e2e/list/view.spec.ts",
+      "kind": "test",
+      "sourceRef": "CR §4 Modified Artifacts"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-sorting-status-comparator",
+      "kind": "unit",
+      "title": "sortTickets status case: lifecycle order, both directions, unknown pinned last",
+      "covers": [
+        "BR-5.1",
+        "C4"
+      ],
+      "file": "frontend/src/utils/sorting.test.ts",
+      "sourceRef": "architecture.md § Decisions 3; CR §5 Testing"
+    },
+    {
+      "id": "TEST-sorting-config-scope-storage",
+      "kind": "unit",
+      "title": "View-scoped sort storage: per-scope read/write, cross-scope isolation, stale-shape fallback",
+      "covers": [
+        "BR-7.1",
+        "BR-7.2",
+        "C1",
+        "Edge-1"
+      ],
+      "file": "frontend/src/config/sorting.test.ts",
+      "sourceRef": "architecture.md § Decisions 6; CR §5 Testing"
+    },
+    {
+      "id": "TEST-sort-attributes-registry",
+      "kind": "unit",
+      "title": "Per-scope attribute registry: board five unchanged, list order Key/Title/Status/Priority/Created/Updated, CR_STATUS_SORT_ORDER contents",
+      "covers": [
+        "BR-6.1",
+        "BR-6.2",
+        "C6"
+      ],
+      "file": "frontend/src/config/sorting.test.ts",
+      "sourceRef": "architecture.md § Decisions 2-3 (UX-gate order)"
+    },
+    {
+      "id": "TEST-list-view-column-sorting",
+      "kind": "e2e",
+      "title": "List view E2E: header-click sorting, dropdown sync, labels, Created column + non-interactive timestamps, status order, per-view persistence, preserved testids",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-2.1",
+        "BR-2.2",
+        "BR-3.1",
+        "BR-4.1",
+        "BR-4.2",
+        "BR-5.1",
+        "BR-6.1",
+        "BR-6.2",
+        "BR-7.1",
+        "BR-7.2",
+        "C2",
+        "C3",
+        "C5"
+      ],
+      "file": "tests/e2e/list/view.spec.ts",
+      "sourceRef": "bdd.md § Acceptance Strategy; CR §4 tests/e2e/list/view.spec.ts"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-1",
+      "title": "Scoped sort config: SortScope + registry + CR_STATUS_SORT_ORDER + per-scope storage with sanitize-and-default",
+      "ownsArtifactIds": [
+        "ART-config-sorting",
+        "ART-config-sorting-test"
+      ],
+      "makesGreenIds": [
+        "TEST-sort-attributes-registry",
+        "TEST-sorting-config-scope-storage"
+      ],
+      "sourceRef": "tasks.md#task-1"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Status comparator in sortTickets: lifecycle rank, unknown pinned last both directions",
+      "ownsArtifactIds": [
+        "ART-utils-sorting",
+        "ART-utils-sorting-test"
+      ],
+      "makesGreenIds": [
+        "TEST-sorting-status-comparator"
+      ],
+      "sourceRef": "tasks.md#task-2"
+    },
+    {
+      "id": "TASK-3",
+      "title": "RelativeTimestamp fixed mode: non-interactive span + tooltip for table cells",
+      "ownsArtifactIds": [
+        "ART-relative-timestamp"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-3"
+    },
+    {
+      "id": "TASK-4",
+      "title": "ProjectView list table restructure: clickable headers, labels, Created column, fixed timestamp cells, aria-sort",
+      "ownsArtifactIds": [
+        "ART-project-view"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-4"
+    },
+    {
+      "id": "TASK-5",
+      "title": "Scoped state + wiring: route handler per-scope prefs, SecondaryHeader scope derivation, SortControls/HamburgerMenu attribute threading",
+      "ownsArtifactIds": [
+        "ART-route-handler",
+        "ART-secondary-header",
+        "ART-sort-controls",
+        "ART-hamburger-menu"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-5"
+    },
+    {
+      "id": "TASK-6",
+      "title": "E2E acceptance: extend list view spec (9 scenarios), durable sort-menu.spec.md Status row, UAT light/dark",
+      "ownsArtifactIds": [
+        "ART-e2e-list-view",
+        "ART-sort-menu-spec"
+      ],
+      "makesGreenIds": [
+        "TEST-list-view-column-sorting",
+        "header_click_sorts_by_default_direction",
+        "active_header_click_flips_direction",
+        "attributes_header_click_does_not_sort",
+        "header_click_updates_sort_menu",
+        "sort_menu_change_updates_header",
+        "created_column_shows_relative_timestamps",
+        "status_sort_uses_lifecycle_order",
+        "status_offered_only_in_list_view",
+        "view_sort_preferences_persist_independently"
+      ],
+      "skills": [
+        "playwright-cli"
+      ],
+      "sourceRef": "tasks.md#task-6"
+    }
+  ]
+}

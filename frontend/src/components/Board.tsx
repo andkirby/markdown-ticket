@@ -14,7 +14,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { getColumnForStatus, getVisibleColumns } from '../config'
 import { BoardLayoutMode } from '../config/boardLayoutMode'
 import { COLLAPSED_COLUMNS_CHANGE_EVENT, getCollapsedColumns, setCollapsedColumns as persistCollapsedColumns } from '../config/settingsPreferences'
-import { getSortPreferences, setSortPreferences } from '../config/sorting'
+import { getSortPreferences, setSortPreferences, SORT_ATTRIBUTES } from '../config/sorting'
 import { useBoardLayout } from '../hooks/useBoardLayout'
 import { useCloudProjections } from '../hooks/useCloudProjections'
 import { useProjectManager } from '../hooks/useProjectManager'
@@ -84,8 +84,9 @@ const BoardContent: React.FC<BoardProps> = ({
   canWrite = true,
   projectionFeed = null,
 }) => {
+  // MDT-249 transitional: board slot (scoped storage) until per-view wiring lands.
   const [localSortPreferences, setLocalSortPreferences] = useState<SortPreferences>(
-    propSortPreferences || getSortPreferences,
+    propSortPreferences || (() => getSortPreferences('board')),
   )
   const { error: showError } = useToast()
 
@@ -214,7 +215,7 @@ const BoardContent: React.FC<BoardProps> = ({
   // Save preferences when they change
   const handleSortPreferencesChange = useCallback((newPreferences: SortPreferences) => {
     setLocalSortPreferences(newPreferences)
-    setSortPreferences(newPreferences)
+    setSortPreferences('board', newPreferences)
   }, [])
 
   const handleDrop = useCallback(async (status: Status, ticket: Ticket, currentColumnIndex?: number, currentTicketIndex?: number) => {
@@ -549,6 +550,7 @@ const BoardContent: React.FC<BoardProps> = ({
           </div>
           <div className="flex items-center gap-2">
             <SortControls
+              attributes={SORT_ATTRIBUTES.board}
               preferences={sortPreferences}
               onPreferencesChange={handleSortPreferencesChange}
             />

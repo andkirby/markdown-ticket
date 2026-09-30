@@ -2,6 +2,7 @@ import type { Project } from '@mdt/shared/models/Project'
 import type { SortPreferences } from '../config/sorting'
 import type { AccessMode, AuthAccessIndicator } from '@/auth/AuthSessionContext'
 import * as React from 'react'
+import { SORT_ATTRIBUTES } from '../config/sorting'
 import { DensityMenu } from './DensityMenu'
 import { HamburgerMenu } from './HamburgerMenu'
 import { SortControls } from './SortControls'
@@ -47,11 +48,16 @@ export const SecondaryHeader: React.FC<SecondaryHeaderProps> = ({
   filterCount = 0,
   onOpenFilters,
 }) => {
+  // MDT-249: scope derived once here (board scope also serves swimlanes/epics);
+  // the attribute list threads down — children never import the registry.
+  const sortAttributes = SORT_ATTRIBUTES[viewMode === 'list' ? 'list' : 'board']
+
   return (
     <div className="secondary-header">
       {/* Sort Controls - desktop only (mobile inside hamburger menu) */}
       {(viewMode === 'board' || viewMode === 'list') && sortPreferences && onSortPreferencesChange && (
         <SortControls
+          attributes={sortAttributes}
           preferences={sortPreferences}
           onPreferencesChange={onSortPreferencesChange}
         />
@@ -69,6 +75,7 @@ export const SecondaryHeader: React.FC<SecondaryHeaderProps> = ({
         onAddProject={onAddProject}
         onEditProject={onEditProject}
         hasActiveProject={!!selectedProject}
+        sortAttributes={sortAttributes}
         sortPreferences={sortPreferences}
         onSortPreferencesChange={onSortPreferencesChange}
         onOpenSettings={onOpenSettings}

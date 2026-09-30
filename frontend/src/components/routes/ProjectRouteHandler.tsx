@@ -1,4 +1,4 @@
-import type { SortPreferences } from '../../config/sorting'
+import type { SortPreferences, SortScope } from '../../config/sorting'
 import { useCallback, useState } from 'react'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
@@ -118,8 +118,13 @@ export function ProjectRouteHandler() {
 
   const [eventHistoryOpen, eventHistoryForceHidden, setEventHistoryState]
     = useEventHistoryState()
-  const [localSortPreferences, setLocalSortPreferences]
-    = useState<SortPreferences>(getSortPreferences)
+  // MDT-249: per-scope sort state (arch D1) — one slice per view; switching
+  // views swaps which slice is passed down, no reconciliation effects.
+  const [sortPreferencesByScope, setSortPreferencesByScope]
+    = useState<Record<SortScope, SortPreferences>>(() => ({
+      board: getSortPreferences('board'),
+      list: getSortPreferences('list'),
+    }))
   const [showAddProjectModal, setShowAddProjectModal] = useState(false)
   const [showEditProjectModal, setShowEditProjectModal] = useState(false)
   const [showQuickSearch, setShowQuickSearch] = useState(false)
@@ -155,9 +160,14 @@ export function ProjectRouteHandler() {
 
   usePageTitle(rootPageTitle, PageTitlePriority.ROOT_VIEW)
 
+  // MDT-249: scope selection lives here (arch D1) — list → 'list'; board and
+  // /epics swimlanes → 'board'. Documents passes no sort props.
+  const activeSortScope: SortScope = viewMode === 'list' ? 'list' : 'board'
+  const activeSortPreferences = sortPreferencesByScope[activeSortScope]
+
   const handleSortPreferencesChange = (newPreferences: SortPreferences) => {
-    setLocalSortPreferences(newPreferences)
-    setSortPreferences(newPreferences)
+    setSortPreferencesByScope(prev => ({ ...prev, [activeSortScope]: newPreferences }))
+    setSortPreferences(activeSortScope, newPreferences)
   }
 
   const handleAddProject = () => {
@@ -326,7 +336,7 @@ export function ProjectRouteHandler() {
                 viewMode={viewMode}
                 sortPreferences={
                   viewMode === 'board' || viewMode === 'list'
-                    ? localSortPreferences
+                    ? activeSortPreferences
                     : undefined
                 }
                 onSortPreferencesChange={
@@ -411,7 +421,12 @@ export function ProjectRouteHandler() {
                     focusEpicKey={focusEpicKey}
                     sortPreferences={
                       viewMode === 'board' || viewMode === 'list'
-                        ? localSortPreferences
+                        ? activeSortPreferences
+                        : undefined
+                    }
+                    onSortPreferencesChange={
+                      viewMode === 'board' || viewMode === 'list'
+                        ? handleSortPreferencesChange
                         : undefined
                     }
                     canWrite={canWriteTickets}

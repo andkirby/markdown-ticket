@@ -12,6 +12,7 @@
 @import './styles/components/checkbox.css';
 @import './styles/components/overlays.css';
 @import './styles/components/loading.css';
+@import './styles/components/list-view.css';
 @import './styles/components/layout.css';
 
 /* Markdown/prose rendering */

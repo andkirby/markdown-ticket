@@ -1,9 +1,10 @@
-import type { SortPreferences } from '../config/sorting'
+import type { SortAttribute, SortPreferences } from '../config/sorting'
 import * as React from 'react'
-import { DEFAULT_SORT_ATTRIBUTES } from '../config/sorting'
 import { SortMenu } from './SortMenu'
 
 interface SortControlsProps {
+  /** MDT-249: scope-specific attribute list (threaded from SecondaryHeader). */
+  attributes: SortAttribute[]
   preferences: SortPreferences
   onPreferencesChange: (preferences: SortPreferences) => void
 }
@@ -17,6 +18,7 @@ interface SortControlsProps {
  * @testid sort-controls — Sort controls container
  */
 export const SortControls: React.FC<SortControlsProps> = ({
+  attributes,
   preferences,
   onPreferencesChange,
 }) => {
@@ -30,7 +32,7 @@ export const SortControls: React.FC<SortControlsProps> = ({
   return (
     <div data-testid="sort-controls" className="hidden sm:flex">
       <SortMenu
-        attributes={DEFAULT_SORT_ATTRIBUTES}
+        attributes={attributes}
         value={preferences.selectedAttribute}
         direction={preferences.selectedDirection}
         onChange={handleChange}

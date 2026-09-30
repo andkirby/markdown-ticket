@@ -2,19 +2,23 @@ import type { TicketFilters } from '@mdt/domain-contracts'
 import type { Project } from '@mdt/shared/models/Project'
 import type { CRStatus } from '@mdt/shared/models/Types'
 import type { BoardLayoutModeValue } from '../config/boardLayoutMode'
-import type { SortPreferences } from '../config/sorting'
+import type { SortAttribute, SortPreferences } from '../config/sorting'
 // MDT-200 U5: projection feed type for the cloud-projected stub merge.
 import type { ProjectionFeed } from '../hooks/useCloudProjections'
 import type { Ticket } from '../types'
 import type { FacetKey } from '../utils/ticketFilters'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { ArrowDownWideNarrow, ArrowUpNarrowWide } from 'lucide-react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { authFetch } from '../auth/authFetch'
+import { SORT_ATTRIBUTES } from '../config/sorting'
 import { useCloudProjectionFeed } from '../hooks/useCloudProjectionFeed'
+import { cn } from '../lib/utils'
 import { sortTickets } from '../utils/sorting'
 import { VALID_STATUSES } from '../utils/ticketStatus'
 import { StatusBadge } from './Badge/StatusBadge'
 import Board from './Board'
 import { DocumentsLayout } from './DocumentsView'
+import { RelativeTimestamp } from './shared/RelativeTimestamp'
 import TicketAttributeTags from './TicketAttributeTags'
 import { TicketCode } from './TicketCode'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table'
@@ -39,6 +43,43 @@ function readProjectionFeed(): ProjectionFeed | null {
 
 const VIEW_MODE_KEY = 'single-project-view-mode'
 
+/** List-table columns come from the list-scope registry (no local maps); Priority has no column. */
+const LIST_TABLE_COLUMNS = SORT_ATTRIBUTES.list.filter(attr => attr.name !== 'priority')
+
+/** Sortable header: button-in-th; aria-sort + data-sort-direction on the th (C3, UX gate). */
+function SortableTableHead({
+  attr,
+  active,
+  direction,
+  onClick,
+  className,
+}: {
+  attr: SortAttribute
+  active: boolean
+  direction: 'asc' | 'desc'
+  onClick: () => void
+  className?: string
+}) {
+  const Glyph = direction === 'asc' ? ArrowUpNarrowWide : ArrowDownWideNarrow
+  return (
+    <TableHead
+      className={cn('ticket-table__head--sortable', className)}
+      aria-sort={active ? (direction === 'asc' ? 'ascending' : 'descending') : undefined}
+      data-sort-direction={active ? direction : undefined}
+    >
+      <button
+        type="button"
+        className="ticket-table__sort"
+        data-testid={`sort-${attr.name}`}
+        onClick={onClick}
+      >
+        {attr.label}
+        {active && <Glyph aria-hidden="true" />}
+      </button>
+    </TableHead>
+  )
+}
+
 interface ProjectViewProps {
   onTicketClick: (ticket: Ticket) => void
   selectedProject: Project | null
@@ -62,9 +103,11 @@ interface ProjectViewProps {
   focusEpicKey?: string | null
   loading?: boolean
   sortPreferences?: SortPreferences
+  /** MDT-249: list headers write through the same thread as the dropdown; no local sort state. */
+  onSortPreferencesChange?: (preferences: SortPreferences) => void
   canWrite?: boolean
 }
-export default function ProjectView({ onTicketClick, selectedProject, tickets: propTickets, filteredTickets: propFilteredTickets, filters, mobileFilters, onRemoveMobileFilter, updateTicketOptimistic, viewMode: externalViewMode, boardLayoutMode, focusEpicKey, loading: propLoading, sortPreferences, canWrite = true }: ProjectViewProps) {
+export default function ProjectView({ onTicketClick, selectedProject, tickets: propTickets, filteredTickets: propFilteredTickets, filters, mobileFilters, onRemoveMobileFilter, updateTicketOptimistic, viewMode: externalViewMode, boardLayoutMode, focusEpicKey, loading: propLoading, sortPreferences, onSortPreferencesChange, canWrite = true }: ProjectViewProps) {
   // Use external viewMode if provided, otherwise fall back to internal state
   const [internalViewMode] = useState<ViewMode>(() => {
     const saved = localStorage.getItem(VIEW_MODE_KEY)
@@ -88,6 +131,18 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
       sortPreferences?.selectedDirection || 'asc',
     )
   }, [propFilteredTickets, propTickets, sortPreferences?.selectedAttribute, sortPreferences?.selectedDirection])
+
+  // MDT-249: first click applies the registry defaultDirection; clicking the
+  // active header flips (BR-1.3/1.4). Computes next prefs only — state lives upstream.
+  const handleHeaderSort = useCallback((attr: SortAttribute) => {
+    if (!onSortPreferencesChange)
+      return
+    const isActive = sortPreferences?.selectedAttribute === attr.name
+    const nextDirection = isActive
+      ? (sortPreferences!.selectedDirection === 'asc' ? 'desc' : 'asc')
+      : attr.defaultDirection
+    onSortPreferencesChange({ selectedAttribute: attr.name, selectedDirection: nextDirection })
+  }, [onSortPreferencesChange, sortPreferences])
 
   // Use ref to prevent stale closure bug when switching projects
   const selectedProjectRef = useRef<Project | null>(selectedProject)
@@ -201,11 +256,21 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="w-28">Code</TableHead>
-                          <TableHead>Title</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Attributes</TableHead>
-                          <TableHead className="w-32">Modified</TableHead>
+                          {LIST_TABLE_COLUMNS.map(attr => (
+                            <Fragment key={attr.name}>
+                              {/* Attributes stays 4th (before Created/Updated), matching body cells */}
+                              {attr.name === 'dateCreated' && (
+                                <TableHead>Attributes</TableHead>
+                              )}
+                              <SortableTableHead
+                                attr={attr}
+                                active={sortPreferences?.selectedAttribute === attr.name}
+                                direction={sortPreferences?.selectedDirection ?? 'asc'}
+                                onClick={() => handleHeaderSort(attr)}
+                                className={attr.name === 'code' ? 'w-28' : (attr.name === 'dateCreated' || attr.name === 'lastModified') ? 'w-32' : undefined}
+                              />
+                            </Fragment>
+                          ))}
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -235,8 +300,15 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
                             <TableCell>
                               <TicketAttributeTags ticket={ticket} excludeStatus />
                             </TableCell>
+                            {/* Created + Updated: fixed-mode relative cells (BR-4.1/4.2, C5 —
+                                non-interactive inside the clickable row). */}
                             <TableCell className="text-muted-foreground">
-                              {ticket.lastModified ? new Date(ticket.lastModified).toLocaleDateString() : 'Unknown'}
+                              <RelativeTimestamp fixed createdAt={ticket.dateCreated} />
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">
+                              {ticket.lastModified
+                                ? <RelativeTimestamp fixed updatedAt={ticket.lastModified} />
+                                : 'Unknown'}
                             </TableCell>
                           </TableRow>
                         ))}
