@@ -270,10 +270,12 @@ bun run dev                                        # manual UAT light + dark: gl
 
 ## Post-Implementation
 
-- [ ] No duplication (grep check: `DEFAULT_SORT_ATTRIBUTES` importers; second status array; shadow sort state)
-- [ ] Scope boundaries respected (board/documents/mobile-card untouched)
-- [ ] Actual create/modify/delete paths match task mutation intent
-- [ ] All unit tests GREEN
-- [ ] All BDD scenarios GREEN
-- [ ] Milestone observable proofs pass with real execution
-- [ ] Fallback/absence paths match requirements (stale storage → defaults, Edge-1)
+- [x] No duplication (grep check: `DEFAULT_SORT_ATTRIBUTES` importers; second status array; shadow sort state)
+- [x] Scope boundaries respected (board/documents/mobile-card untouched)
+- [x] Actual create/modify/delete paths match task mutation intent
+- [x] All unit tests GREEN
+- [x] All BDD scenarios GREEN
+- [x] Milestone observable proofs pass with real execution
+- [x] Fallback/absence paths match requirements (stale storage → defaults, Edge-1)
+
+Commit: `a0c0b725` (23 files, MDT-249 paths only; concurrent MDT-144 TicketViewer edits excluded per lead ruling).
