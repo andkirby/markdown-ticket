@@ -90,6 +90,7 @@ AI-powered commands for the entire development lifecycle:
 - Faceted filtering by status, priority, assignee, and type (inline in the header, never a second row)
 - Epic swimlane board — group tickets by epic to compare progress across epics at a glance, with per-epic progress and a lane-level lifecycle control
 - Pin rail for one-click access to the tickets you're actively working on (drag-to-pin, cross-project)
+- List view with clickable column sorting (remembered per view) and headers that stay pinned while you scroll
 - Side reading pane — linked repo documents open beside the ticket (own history, resizable split) instead of pulling you out of your context
 - Two-axis density control (text scale + spacing) applied across every content surface, not just board cards
 - Status and ticket-type icons on ticket keys and badges, so state reads at a glance
@@ -247,6 +248,7 @@ markdown-ticket/
 
 ## What's New
 
+- **v0.32.0** (2026-09-30): Sortable list-view columns with per-view sorting and sticky headers; reading-pane and timestamp fixes
 - **v0.31.0** (2026-09-24): Side reading pane — documents open beside the ticket with their own history; app-wide two-axis density
 - **v0.30.0** (2026-09-22): Status icons on ticket keys and badges, HTML previews in the ticket view with fullscreen overlay, epic-only swimlane search with pressed toolbar toggles, epic-detail → board jump, clickable inline-code doc links
 - **v0.29.0** (2026-08-10): Epic swimlane board, epics as first-class tickets, header refresh with grouped controls, radius/gap design tokens, keyboard-only focus rings

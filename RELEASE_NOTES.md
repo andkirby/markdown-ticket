@@ -1,5 +1,26 @@
 # Release Notes
 
+## v0.32.0 (2026-09-30)
+
+### New Features
+
+**Sortable List View Columns (MDT-249)**
+- Click any column header in the list view — Key, Title, Status, Created, or Updated — to sort by it; click again to flip the direction
+- Sort settings are remembered per view: the board and the list view each keep their own sort, so arranging one no longer disturbs the other
+- The new Status column sorts by ticket lifecycle, so implemented work naturally sinks to the bottom and open work rises to the top
+- A new Created column shows how long ago each ticket was opened
+- Column headers stay pinned to the top while you scroll long lists, so the sort controls are always in reach
+
+### Bug Fixes
+
+**Side Reading Pane (MDT-248)**
+- Links from a document to a ticket (written as `docs/CRs/MDT-XXX…`) now open the ticket itself instead of failing with a "Couldn't load" error
+- Clicking elsewhere in the document while the pane's history menu is open no longer closes the entire ticket modal
+- On narrow viewports the reading pane now shows a single close button instead of two overlapping ones
+
+**Ticket View (MDT-144)**
+- The floating timestamp in the ticket header now shows when the document you're actually viewing (a subdocument tab) was last changed, instead of always showing the ticket root's date
+
 ## v0.31.0 (2026-09-24)
 
 ### New Features
