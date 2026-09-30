@@ -49,3 +49,26 @@ Independent read-only semantic completion review. Contract:
 2. "411 units" in the dispatch was a full-suite figure; the ticket-scoped run is 30 tests (green).
 3. Reviewer revalidated evidence digests via shasum-256 (mdt-verify not on its PATH); both match.
 4. Created cell renders null if `dateCreated` absent — unreachable in practice (required CR field).
+
+---
+
+# Delta Review — UAT sticky headers (commit 66bccf18)
+
+Independent delta review executed 2026-09-30 by the `review` teammate (glm-5.3).
+
+## Verdict
+
+**pass**
+
+## Basis
+
+- BR-8 (CR §5 UAT AC): sticky verified — `list-view.css` `.ticket-table .mdt-table__scroll { flex:1; min-height:0 }` (scrollport chain) + `.ticket-table .mdt-table__head { position:sticky; top:0; z-index:10; background:oklch(var(--background)); inset hairline }`; wrapper `ProjectView.tsx:258` becomes `ticket-table hidden md:flex md:h-full md:flex-col`.
+- Shared `ui/table.css` byte-untouched; no DOM/aria delta; mobile cards / board / documents absent from diff.
+- Re-run by reviewer: E2E view.spec 13/13, validate:ts:all 6/6, eslint spot 0, ticket-scoped units 30/30.
+- Runtime E2E asserts scrollport overflow >0, sticky/top:0/opaque bg, header y-stability ±2px across full scroll, aria-sort persists, mid-scroll clickability.
+
+## Exceptions
+
+1. Canonical spec-trace store NOT yet synced for BR-8/TASK-7/TEST-list-view-sticky-headers — spec-trace binary OOM-killed system-wide (exit 137). Staged idempotent remediation: `scripts/_sync_mdt249_sticky_trace.sh` (ends with validate ×5 + render all). MUST run once memory frees; markdown artifacts carry the truth meanwhile.
+2. `bun test frontend/src/utils frontend/src/config` shows 2 failures in routing.test.ts — files byte-identical to baseline fd89958, pre-existing/environmental, not a regression.
+3. validate:ts is a no-op on a clean tree; validate:ts:all substituted (6/6).

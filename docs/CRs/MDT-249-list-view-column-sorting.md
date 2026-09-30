@@ -1,6 +1,6 @@
 ---
 code: MDT-249
-status: In Progress
+status: Implemented
 dateCreated: 2026-09-22T21:56:18.903Z
 type: Feature Enhancement
 priority: Medium
@@ -95,20 +95,20 @@ View-scoped sort preferences in localStorage with clickable table headers that d
 ## 5. Acceptance Criteria
 
 ### Functional
-- [ ] List headers Key, Title, Status, Created, Updated are clickable and show sort direction; Attributes is not clickable
-- [ ] First click on a header sorts by that attribute's `defaultDirection`; clicking the active header again flips direction
-- [ ] A header click updates the SortMenu selection and direction; a dropdown change updates the header glyph — both stay in sync
-- [ ] Column labels match dropdown labels exactly: Key, Title, Status, Created, Updated
-- [ ] Created column renders beside Updated; both cells show relative time (e.g. "an hour ago") via RelativeTimestamp, with the full date-time on hover
-- [ ] Column headers remain visible (sticky) when the list scrolls vertically; header keeps sort glyph + aria-sort while pinned (list view only)
-- [ ] Status sorts in lifecycle order: Proposed → Approved → In Progress → On Hold → Implemented → Partially Implemented → Rejected; unknown values sort last
-- [ ] Status appears in the SortMenu and hamburger sort list only in list view; board/swimlane dropdown options are unchanged
-- [ ] List and board sort preferences persist independently across reloads
-- [ ] A stale flat `markdown-ticket-sort-preferences` value falls back to per-scope defaults without throwing
+- [x] List headers Key, Title, Status, Created, Updated are clickable and show sort direction; Attributes is not clickable
+- [x] First click on a header sorts by that attribute's `defaultDirection`; clicking the active header again flips direction
+- [x] A header click updates the SortMenu selection and direction; a dropdown change updates the header glyph — both stay in sync
+- [x] Column labels match dropdown labels exactly: Key, Title, Status, Created, Updated
+- [x] Created column renders beside Updated; both cells show relative time (e.g. "an hour ago") via RelativeTimestamp, with the full date-time on hover
+- [x] Column headers remain visible (sticky) when the list scrolls vertically; header keeps sort glyph + aria-sort while pinned (list view only)
+- [x] Status sorts in lifecycle order: Proposed → Approved → In Progress → On Hold → Implemented → Partially Implemented → Rejected; unknown values sort last
+- [x] Status appears in the SortMenu and hamburger sort list only in list view; board/swimlane dropdown options are unchanged
+- [x] List and board sort preferences persist independently across reloads
+- [x] A stale flat `markdown-ticket-sort-preferences` value falls back to per-scope defaults without throwing
 
 ### Non-Functional
-- [ ] `bun run validate:ts` and `bun run build` pass
-- [ ] Existing E2E list contracts keep their `data-testid`s (`ticket-table`, `ticket-row-*`, `sort-menu`, `sort-controls`)
+- [x] `bun run validate:ts` and `bun run build` pass
+- [x] Existing E2E list contracts keep their `data-testid`s (`ticket-table`, `ticket-row-*`, `sort-menu`, `sort-controls`)
 
 ### Testing
 - Unit: `utils/sorting.test.ts` — status case: mixed-status array → lifecycle order; unknown status → last
