@@ -1,10 +1,10 @@
-import type { SortPreferences } from '../config/sorting'
+import type { SortAttribute, SortPreferences } from '../config/sorting'
 import type { AccessMode, AuthAccessIndicator } from '@/auth/AuthSessionContext'
 import { ArrowUpDown, Check, Edit, Eye, EyeOff, KeyRound, LockKeyhole, Menu, Monitor, Moon, Plus, Settings, Sun, Trash2 } from 'lucide-react'
 import * as React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { DEFAULT_SORT_ATTRIBUTES } from '../config/sorting'
+import { SORT_ATTRIBUTES } from '../config/sorting'
 import { useTheme } from '../hooks/useTheme'
 import { nuclearCacheClear } from '../utils/cache'
 import { getEventHistoryForceHidden, subscribeEventHistoryState, toggleEventHistory } from './DevTools/useEventHistoryState'
@@ -13,6 +13,8 @@ interface HamburgerMenuProps {
   onAddProject?: () => void
   onEditProject?: () => void
   hasActiveProject?: boolean
+  /** MDT-249: scope-specific attribute list (threaded from SecondaryHeader). */
+  sortAttributes?: SortAttribute[]
   sortPreferences?: SortPreferences
   onSortPreferencesChange?: (preferences: SortPreferences) => void
   onOpenSettings?: () => void
@@ -33,6 +35,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   onAddProject,
   onEditProject,
   hasActiveProject = false,
+  sortAttributes = SORT_ATTRIBUTES.board,
   sortPreferences,
   onSortPreferencesChange,
   onOpenSettings,
@@ -93,7 +96,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   }
 
   const handleSortAttributeChange = (attribute: string) => {
-    const sortAttribute = DEFAULT_SORT_ATTRIBUTES.find(attr => attr.name === attribute)
+    const sortAttribute = sortAttributes.find(attr => attr.name === attribute)
     const newPreferences = {
       selectedAttribute: attribute,
       selectedDirection: sortAttribute?.defaultDirection || 'desc',
@@ -241,7 +244,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                   <div className="px-4 py-2 border-t border-border">
                     <div className="text-xs font-medium text-muted-foreground mb-1">Sort by</div>
                     <div>
-                      {DEFAULT_SORT_ATTRIBUTES.map((attr) => {
+                      {sortAttributes.map((attr) => {
                         const Icon = attr.icon
                         const selected = sortPreferences.selectedAttribute === attr.name
                         return (

@@ -1,10 +1,15 @@
 import type { Ticket } from '../types'
 import { CRPriorities } from '@mdt/domain-contracts'
 import { describe, expect, it } from 'bun:test'
+import { CR_STATUS_SORT_ORDER } from '../config/sorting'
 import { sortTickets } from './sorting'
 
 function mk(code: string, priority: string): Ticket {
   return { code, priority, title: code, dateCreated: '2026-01-01' } as unknown as Ticket
+}
+
+function mkStatus(code: string, status: string | null | undefined): Ticket {
+  return { ...mk(code, 'Medium'), status: status ?? undefined } as Ticket
 }
 
 const codes = (tickets: Ticket[]): string[] => tickets.map(t => t.code)
@@ -66,6 +71,59 @@ describe('sortTickets', () => {
         'asc',
       ).map(t => t.priority)
       expect(ascending).toEqual([...CRPriorities])
+    })
+  })
+
+  describe('status (MDT-249)', () => {
+    const LIFECYCLE = [
+      'Proposed',
+      'Approved',
+      'In Progress',
+      'On Hold',
+      'Implemented',
+      'Partially Implemented',
+      'Rejected',
+    ]
+
+    // Deliberately out of order so a pass cannot come from input order.
+    const mixed = ['Rejected', 'Implemented', 'Proposed', 'Partially Implemented', 'On Hold', 'Approved', 'In Progress']
+
+    it('asc orders by lifecycle: Proposed → … → Rejected', () => {
+      const tickets = mixed.map((s, i) => mkStatus(`T${i}`, s))
+      expect(sortTickets(tickets, 'status', 'asc').map(t => t.status)).toEqual(LIFECYCLE)
+    })
+
+    it('desc is the reversed lifecycle', () => {
+      const tickets = mixed.map((s, i) => mkStatus(`T${i}`, s))
+      expect(sortTickets(tickets, 'status', 'desc').map(t => t.status)).toEqual([...LIFECYCLE].reverse())
+    })
+
+    it('is NOT alphabetical (would give Approved < Implemented < In Progress)', () => {
+      const tickets = mixed.map((s, i) => mkStatus(`T${i}`, s))
+      const alphabetical = [...mixed].sort((a, b) => a.localeCompare(b))
+      expect(sortTickets(tickets, 'status', 'asc').map(t => t.status)).not.toEqual(alphabetical)
+    })
+
+    it('unknown statuses sort AFTER known ones in both directions (lead decision)', () => {
+      const tickets = [mkStatus('K1', 'Implemented'), mkStatus('U1', 'Frozen'), mkStatus('K2', 'Proposed'), mkStatus('U2', 'Limbo')]
+      expect(sortTickets(tickets, 'status', 'asc').map(t => t.code)).toEqual(['K2', 'K1', 'U1', 'U2'])
+      // Unknown-vs-unknown ties → 0 → stable input order (U1 before U2 in input).
+      expect(sortTickets(tickets, 'status', 'desc').map(t => t.code)).toEqual(['K1', 'K2', 'U1', 'U2'])
+    })
+
+    it('both unknown → stable (input order kept)', () => {
+      const tickets = [mkStatus('U1', 'Frozen'), mkStatus('U2', 'Limbo')]
+      expect(sortTickets(tickets, 'status', 'asc').map(t => t.code)).toEqual(['U1', 'U2'])
+      expect(sortTickets(tickets, 'status', 'desc').map(t => t.code)).toEqual(['U1', 'U2'])
+    })
+
+    it('null/undefined status resolves to unknown (sorts last)', () => {
+      const tickets = [mkStatus('N', null), mkStatus('K', 'Proposed'), mkStatus('U', undefined)]
+      expect(sortTickets(tickets, 'status', 'asc').map(t => t.code)).toEqual(['K', 'N', 'U'])
+    })
+
+    it('rank source is the dedicated CR_STATUS_SORT_ORDER array (C4)', () => {
+      expect(LIFECYCLE).toEqual([...CR_STATUS_SORT_ORDER])
     })
   })
 })

@@ -1,0 +1,47 @@
+/**
+ * List view — sortable table headers (MDT-249).
+ *
+ * Button-in-th pattern (UX gate): the button carries the column label +
+ * direction glyph; `aria-sort` and `data-sort-direction` live on the `th`.
+ * Lives in styles/components (not colocated with ProjectView.tsx) so the
+ * flat component file stays outside the semantic-classes contract.
+ */
+
+@layer components {
+  .ticket-table__sort {
+    /* Reset button chrome; inherit th typography (mdt-table__head). */
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gap-xs);
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+    transition-property: color;
+    transition-duration: 150ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:hover {
+      color: oklch(var(--foreground));
+    }
+
+    /* Standard app-button focus ring (buttons.css recipe). */
+    &:focus-visible {
+      outline: none;
+      border-radius: var(--radius-xs);
+      box-shadow: 0 0 0 2px oklch(var(--ring));
+    }
+
+    & svg {
+      width: var(--sz-icon);
+      height: var(--sz-icon);
+    }
+  }
+
+  /* Active column: header text + glyph read as foreground (UX state table). */
+  .ticket-table__head--sortable[data-sort-direction] .ticket-table__sort {
+    color: oklch(var(--foreground));
+  }
+}
