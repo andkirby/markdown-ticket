@@ -2,7 +2,7 @@
 import type * as React from 'react'
 import type { Ticket } from '../../types'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { afterAll, afterEach, beforeEach, describe, expect, it, mock } from 'bun:test'
+import { afterAll, afterEach, beforeEach, describe, expect, it, mock, setSystemTime } from 'bun:test'
 import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { TRACE_GRAPH_HASH_FRAGMENT } from '../../routes'
 import TicketViewer from './index'
@@ -104,6 +104,8 @@ let liveSubdocuments: Array<{
   filePath?: string
   children: unknown[]
 }> = []
+// MDT-144: active-document timestamps the (mocked) content hook would expose
+let hookActiveTimestamps: { dateCreated: string | null, lastModified: string | null } | null = null
 
 mock.module('./useTicketDocumentNavigation', () => ({
   useTicketDocumentNavigation: () => ({
@@ -127,6 +129,7 @@ mock.module('./useTicketDocumentContent', () => ({
     content: mainContent,
     loading: false,
     error: null,
+    activeTimestamps: hookActiveTimestamps,
     invalidateCache: mock(() => undefined),
     invalidateAndRefetch: mock(() => undefined),
   }),
@@ -142,6 +145,9 @@ const ticket = {
   dateCreated: '2026-05-18T10:00:00Z',
   lastModified: '2026-05-18T12:00:00Z',
 } as Ticket
+
+const FIXED_NOW = new Date('2026-05-19T12:00:00Z')
+const REAL_NOW = new Date()
 
 // Location probe: MemoryRouter keeps its own history and does not touch
 // window.location, so we render a hidden element that mirrors the router's
@@ -201,12 +207,15 @@ describe('TicketViewer', () => {
     })
     selectedPath = 'main'
     liveSubdocuments = []
+    hookActiveTimestamps = null
+    setSystemTime(FIXED_NOW)
     document.title = 'CR Task Board'
     capturedNavigate = null
   })
 
   afterEach(() => {
     cleanup()
+    setSystemTime(REAL_NOW)
     localStorage.clear()
     document.title = 'CR Task Board'
   })
@@ -223,6 +232,28 @@ describe('TicketViewer', () => {
     expect(markdown).toHaveAttribute('data-header-level-start', '3')
     expect(markdown.closest('.ticket-viewer-content')).toHaveStyle('--prose-anchor-offset: 0px')
     await waitFor(() => expect(fetchTraceStoreMetadata).toHaveBeenCalled())
+  })
+
+  // MDT-144: the floating chip must describe the document being displayed —
+  // the ticket root on `main`, the subdocument's own fs timestamps otherwise.
+  it('shows the ticket root timestamps while the main document is displayed', () => {
+    renderTicketViewer()
+
+    const chip = screen.getByRole('button', { name: /toggle timestamp/i })
+    expect(chip).toHaveTextContent('1 day ago')
+  })
+
+  it('shows the viewed subdocument timestamps instead of the ticket root ones', () => {
+    selectedPath = 'studyboard-review'
+    hookActiveTimestamps = {
+      dateCreated: '2026-05-01T09:00:00Z',
+      lastModified: '2026-05-13T12:00:00Z',
+    }
+
+    renderTicketViewer()
+
+    const chip = screen.getByRole('button', { name: /toggle timestamp/i })
+    expect(chip).toHaveTextContent('6 days ago')
   })
 
   it('sets the browser title from the active ticket code and title', async () => {

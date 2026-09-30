@@ -27,10 +27,22 @@ interface UseTicketDocumentContentResult {
   content: string
   loading: boolean
   error: string | null
+  /**
+   * MDT-144: fs timestamps of the active subdocument, as returned by the
+   * subdocument API. Null while the ticket root document (or an HTML subdoc)
+   * is displayed — callers fall back to the ticket's own dates.
+   */
+  activeTimestamps: { dateCreated: string | null, lastModified: string | null } | null
   /** Clear cached content for a specific path, or all paths if none specified. */
   invalidateCache: (path?: string) => void
   /** MDT-142: Invalidate cache AND trigger refetch for currently viewed path. */
   invalidateAndRefetch: (path: string) => void
+}
+
+interface CachedSubDocument {
+  content: string
+  dateCreated: string | null
+  lastModified: string | null
 }
 
 export function useTicketDocumentContent(
@@ -41,11 +53,12 @@ export function useTicketDocumentContent(
   const [content, setContent] = useState<string>(mainContent)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [activeTimestamps, setActiveTimestamps] = useState<{ dateCreated: string | null, lastModified: string | null } | null>(null)
   // MDT-142: Increment to force refetch of current path
   const [refetchKey, setRefetchKey] = useState(0)
 
   // Cache subdocument content keyed by path. Reset when ticket changes.
-  const cacheRef = useRef<Map<string, string>>(new Map())
+  const cacheRef = useRef<Map<string, CachedSubDocument>>(new Map())
   const ticketKeyRef = useRef(`${projectId}:${ticketCode}`)
 
   // Reset cache when ticket changes
@@ -85,6 +98,7 @@ export function useTicketDocumentContent(
       console.warn('[useTicketDocumentContent] useEffect triggered', { selectedPath, refetchKey, ticketCode })
     if (selectedPath === 'main') {
       setContent(mainContent)
+      setActiveTimestamps(null)
       setLoading(false)
       setError(null)
       onContentLoadedRef.current?.()
@@ -100,6 +114,7 @@ export function useTicketDocumentContent(
     // viewer; clear the markdown pipeline state instead of fetching text.
     if (skipFetch) {
       setContent('')
+      setActiveTimestamps(null)
       setLoading(false)
       setError(null)
       onContentLoadedRef.current?.()
@@ -111,7 +126,8 @@ export function useTicketDocumentContent(
     if (import.meta.env.DEV)
       console.warn('[useTicketDocumentContent] Cache check', { selectedPath, hasCached: cached !== undefined })
     if (cached !== undefined) {
-      setContent(cached)
+      setContent(cached.content)
+      setActiveTimestamps({ dateCreated: cached.dateCreated, lastModified: cached.lastModified })
       setLoading(false)
       setError(null)
       onContentLoadedRef.current?.()
@@ -128,8 +144,14 @@ export function useTicketDocumentContent(
     dataLayer.fetchSubDocument(projectId, ticketCode, apiPath)
       .then((doc) => {
         if (!cancelled) {
-          cacheRef.current.set(selectedPath, doc.content)
-          setContent(doc.content)
+          const cachedDoc: CachedSubDocument = {
+            content: doc.content,
+            dateCreated: doc.dateCreated,
+            lastModified: doc.lastModified,
+          }
+          cacheRef.current.set(selectedPath, cachedDoc)
+          setContent(cachedDoc.content)
+          setActiveTimestamps({ dateCreated: cachedDoc.dateCreated, lastModified: cachedDoc.lastModified })
           setLoading(false)
           // Notify that content is ready for display
           onContentLoadedRef.current?.()
@@ -149,5 +171,5 @@ export function useTicketDocumentContent(
     }
   }, [selectedPath, projectId, ticketCode, mainContent, skipFetch, refetchKey])
 
-  return { content, loading, error, invalidateCache, invalidateAndRefetch }
+  return { content, loading, error, activeTimestamps, invalidateCache, invalidateAndRefetch }
 }

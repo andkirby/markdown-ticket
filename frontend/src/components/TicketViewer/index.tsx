@@ -496,7 +496,7 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
 
   const isHtmlSubdoc = selectedSubdoc?.docKind === 'html'
 
-  const { content: subdocContent, loading: subdocLoading, error: subdocError, invalidateCache, invalidateAndRefetch } = useTicketDocumentContent({
+  const { content: subdocContent, loading: subdocLoading, error: subdocError, activeTimestamps, invalidateCache, invalidateAndRefetch } = useTicketDocumentContent({
     projectId: projectCode ?? '',
     ticketCode: currentTicket?.code ?? '',
     selectedPath,
@@ -724,8 +724,8 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
                                   <div className="ticket-viewer__section modal__section--content">
                                     <div className="relative-timestamp__floating">
                                       <RelativeTimestamp
-                                        createdAt={currentTicket!.dateCreated}
-                                        updatedAt={currentTicket!.lastModified}
+                                        createdAt={activeTimestamps?.dateCreated ?? currentTicket!.dateCreated}
+                                        updatedAt={activeTimestamps?.lastModified ?? currentTicket!.lastModified}
                                       />
                                     </div>
                                     <MarkdownContent
