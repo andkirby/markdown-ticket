@@ -2,6 +2,9 @@
  * Comprehensive Type Definitions for Markdown Ticket System
  * Unified types for Frontend, Backend, and MCP systems
  *
+ * Shared adapter layer (MDT-099): app-level enums/shapes + contract re-exports.
+ * Canonical domain shapes live in @mdt/domain-contracts.
+ *
  * MDT-101: Type enums now imported from @mdt/domain-contracts as single source of truth.
  *
  * For CR types and priorities, import from @mdt/domain-contracts:

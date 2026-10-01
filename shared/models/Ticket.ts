@@ -1,3 +1,7 @@
+/**
+ * Shared adapter layer (MDT-099): normalization business logic + contract
+ * re-exports. Not a pure shim — canonical shapes live in @mdt/domain-contracts.
+ */
 import type {
   CRLevelValue,
   Ticket,

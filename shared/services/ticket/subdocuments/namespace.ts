@@ -1,4 +1,4 @@
-import type { SubDocument } from '../../../models/SubDocument.js'
+import type { SubDocument } from '@mdt/domain-contracts'
 import type { NamespaceParseResult } from '../types.js'
 import { parseFilenameNamespace, sortFilenameNamespaceKeys } from '../../filenameNamespace.js'
 

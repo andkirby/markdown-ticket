@@ -5,10 +5,8 @@
 
 export * from './models/Config.js'
 export * from './models/Project.js'
-export * from './models/PublicLinkOrigin.js'
 // Models
 export * from './models/Ticket.js'
-
 // Types
 export type {
   CRPriority,
@@ -24,18 +22,21 @@ export type {
 } from './models/Types.js'
 
 export * from './services/CRService.js'
+
 export * from './services/MarkdownService.js'
 export type { GlobalConfig } from './services/project/types.js'
 // Services
 export * from './services/ProjectService.js'
 // MDT-145: Shared Service Framework
 export { ServiceError } from './services/ServiceError.js'
-
 export type { ServiceErrorCode, ServiceErrorPayload } from './services/ServiceError.js'
-export * from './services/TemplateService.js'
 
+export * from './services/TemplateService.js'
 // Tools
 export * from './tools/ProjectManager.js'
 
 // Constants
 export * from './utils/constants.js'
+
+// PublicLinkOrigin shim retired (MDT-099): re-export straight from contracts
+export type { PublicLinkOriginOptions } from '@mdt/domain-contracts'

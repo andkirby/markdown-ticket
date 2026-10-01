@@ -1,3 +1,8 @@
+/**
+ * Shared adapter layer (MDT-099): legacy-config migration business logic +
+ * contract re-exports. Not a pure shim — canonical shapes live in
+ * @mdt/domain-contracts.
+ */
 import type { ProjectConfig } from '@mdt/domain-contracts'
 import { ProjectConfigSchema } from '@mdt/domain-contracts'
 

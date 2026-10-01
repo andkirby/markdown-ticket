@@ -1,5 +1,5 @@
-import type { SubDocument } from '../../../models/SubDocument.js'
-import { DEFAULT_SUBDOCUMENT_ORDER } from '../../../models/SubDocument.js'
+import type { SubDocument } from '@mdt/domain-contracts'
+import { DEFAULT_SUBDOCUMENT_ORDER } from '@mdt/domain-contracts'
 import { groupNamespacedFiles, parseNamespace } from './namespace.js'
 
 /**

@@ -1,6 +1,9 @@
 /**
  * Shared Configuration Types
  * Status and attribute configuration interfaces
+ *
+ * Shared adapter layer (MDT-099): app/transport config — deliberately NOT in
+ * domain-contracts (MDT-101 transport-payload rule).
  */
 
 import type { CRStatus } from './Types.js'
