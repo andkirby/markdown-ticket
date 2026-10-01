@@ -240,7 +240,7 @@ describe('TicketViewer', () => {
     renderTicketViewer()
 
     const chip = screen.getByRole('button', { name: /toggle timestamp/i })
-    expect(chip).toHaveTextContent('1 day ago')
+    expect(chip).toHaveTextContent('1d ago')
   })
 
   it('shows the viewed subdocument timestamps instead of the ticket root ones', () => {
@@ -253,7 +253,7 @@ describe('TicketViewer', () => {
     renderTicketViewer()
 
     const chip = screen.getByRole('button', { name: /toggle timestamp/i })
-    expect(chip).toHaveTextContent('6 days ago')
+    expect(chip).toHaveTextContent('6d ago')
   })
 
   it('sets the browser title from the active ticket code and title', async () => {
