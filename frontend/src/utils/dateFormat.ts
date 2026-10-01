@@ -2,10 +2,7 @@
  * Date formatting utilities
  */
 
-function formatRelativeUnit(value: number, unit: string): string {
-  return `${value} ${unit}${value === 1 ? '' : 's'} ago`
-}
-
+/** Compact units (`45m ago`), matching the EventHistory dev tool; `mo` disambiguates month from minute. */
 export function formatRelativeTime(date: Date | string): string {
   const now = new Date()
   const then = typeof date === 'string' ? new Date(date) : date
@@ -22,16 +19,16 @@ export function formatRelativeTime(date: Date | string): string {
   if (diffMins < 1)
     return 'just now'
   if (diffMins < 60)
-    return formatRelativeUnit(diffMins, 'minute')
+    return `${diffMins}m ago`
   if (diffHours < 24)
-    return formatRelativeUnit(diffHours, 'hour')
+    return `${diffHours}h ago`
   if (diffDays < 7)
-    return formatRelativeUnit(diffDays, 'day')
+    return `${diffDays}d ago`
   if (diffDays < 30)
-    return formatRelativeUnit(Math.floor(diffDays / 7), 'week')
+    return `${Math.floor(diffDays / 7)}w ago`
   if (diffDays < 365)
-    return formatRelativeUnit(Math.floor(diffDays / 30), 'month')
-  return formatRelativeUnit(Math.floor(diffDays / 365), 'year')
+    return `${Math.floor(diffDays / 30)}mo ago`
+  return `${Math.floor(diffDays / 365)}y ago`
 }
 
 export function formatFullDateTime(date: Date | string | null): string {
