@@ -40,17 +40,9 @@
 - Be duplicated across interfaces
 - Live inside interface packages
 
-## Test Utilities (Fixtures)
+## Test Utilities (Fixtures) — retired 2026-10
 
-### MUST
-- Live in `frontend/src/testing/` directory
-- Be exported via separate subpath (e.g., `domain-contracts/testing`)
-- Use schemas to generate valid test data
-- Follow builder pattern for flexibility
-
-### MUST NOT
-- Be exported from main entry point (`frontend/src/index.ts`)
-- Be bundled with production code
+The planned public fixtures subpath was never wired (`./testing` was absent from package.json `exports`) and had zero external consumers; cross-package test factories live in `shared/test-lib`. The directory was deleted 2026-10: `project.fixtures.ts` only tested itself, and the one used builder (`buildTicket`) was inlined into `ticket/__tests__/level.test.ts`. Re-introduce a fixtures module only when an external consumer exists.
 
 ## Dependency Direction
 
