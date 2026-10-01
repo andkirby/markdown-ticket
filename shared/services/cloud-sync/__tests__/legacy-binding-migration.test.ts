@@ -14,27 +14,27 @@
  *     operations never write repository cloud fields.
  */
 
-import { mkdtemp, readFile, rm, writeFile, mkdir } from 'node:fs/promises'
+import type { CloudCredential, ProjectBindingProbe, ProjectCloudSyncBinding } from '@mdt/domain-contracts'
+import type { LegacyBindingMigrationOptions, LegacyMigrationSource } from '../legacy-binding-migration'
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+
 import { tmpdir } from 'node:os'
+
 import { join } from 'node:path'
-
 import { afterEach, beforeEach, describe, expect, it } from '@jest/globals'
-
 import {
   CLOUD_SYNC_CONNECTION_VERSION,
+
   CloudSyncConnectionState,
   CoordinatorError,
-  type CloudCredential,
-  type ProjectBindingProbe,
-  type ProjectCloudSyncBinding,
+
 } from '@mdt/domain-contracts'
+import { DISTRIBUTION_CLOUD_SYNC_ORIGINS } from '../config'
 import {
   LegacyBindingMigration,
-  type LegacyBindingMigrationOptions,
-  type LegacyMigrationSource,
+
 } from '../legacy-binding-migration'
 import { ProjectStateStore } from '../project-state-store'
-import { DISTRIBUTION_CLOUD_SYNC_ORIGINS } from '../config'
 import { resolveTrustedServiceProfile } from '../trusted-service-profile'
 
 const PROJECT_ID = 'markdown-ticket'

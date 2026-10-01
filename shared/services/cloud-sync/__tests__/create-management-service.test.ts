@@ -12,20 +12,19 @@
  *   - No lifecycle rule lives in the factory itself (it only wires).
  */
 
+import type { AudienceAwareCredentialProvider, CloudAccessAudienceValue, CloudCredential, ProjectBindingProbe, ProjectCloudSyncBinding } from '@mdt/domain-contracts'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
+
 import { join } from 'node:path'
 
 import { afterEach, beforeEach, describe, expect, it } from '@jest/globals'
-
 import {
+
   CLOUD_SYNC_CONNECTION_VERSION,
+
   CloudSyncConnectionState,
-  type AudienceAwareCredentialProvider,
-  type CloudAccessAudienceValue,
-  type CloudCredential,
-  type ProjectBindingProbe,
-  type ProjectCloudSyncBinding,
+
 } from '@mdt/domain-contracts'
 import { DISTRIBUTION_CLOUD_SYNC_ORIGINS } from '../config'
 import { createManagementService } from '../create-management-service'
@@ -105,7 +104,10 @@ describe('createManagementService (TEST-factory-wiring)', () => {
   it('connect writes state with zero provisioning calls (login != bound)', async () => {
     let provisionCalls = 0
     const fakeFetch = makeFakeFetch({
-      provision: () => { provisionCalls++; return { projectId: '8a4d-uuid', replayed: false } },
+      provision: () => {
+        provisionCalls++
+        return { projectId: '8a4d-uuid', replayed: false }
+      },
       probe: (): ProjectBindingProbe => ({
         projectId: '8a4d-uuid',
         projectCode: 'MDT',

@@ -15,19 +15,24 @@
  *   - Never logs or echoes a credential.
  */
 
-import { describe, expect, it, jest } from '@jest/globals'
-
-import {
+import type {
+  CloudCredential,
   COORDINATION_ERRORS,
-  type CloudCredential,
-  CoordinatorError,
-  type CoordinationErrorEnvelope,
+  CoordinationErrorEnvelope,
 } from '@mdt/domain-contracts'
+
+import type { ManagementCoordinatorOptions } from '../management-coordinator'
+import { describe, expect, it, jest } from '@jest/globals'
+import {
+
+  CoordinatorError,
+
+} from '@mdt/domain-contracts'
+import { buildEffectiveCloudSyncConfig } from '../config'
 import {
   ManagementCoordinator,
-  type ManagementCoordinatorOptions,
+
 } from '../management-coordinator'
-import { buildEffectiveCloudSyncConfig } from '../config'
 
 const ORIGIN = 'https://mdt-sync.constantapp.org'
 const OPERATOR_ORIGIN = ORIGIN // same trusted profile host; audience differs by route prefix
@@ -255,7 +260,8 @@ describe('ManagementCoordinator (TEST-mgmt-coordinator-envelope)', () => {
 
 function headersToObject(headers: HeadersInit | undefined): Record<string, string> {
   const out: Record<string, string> = {}
-  if (!headers) return out
+  if (!headers)
+    return out
   new Headers(headers).forEach((value, key) => {
     out[key.toLowerCase()] = value
   })

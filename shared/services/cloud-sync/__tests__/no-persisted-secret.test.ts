@@ -16,18 +16,19 @@
  * credential), but it is the ONLY place active cloud state lives.
  */
 
+import type { ProjectStateStoreOptions } from '../project-state-store'
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
+
 import { join } from 'node:path'
 
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals'
-
 import { CLOUD_SYNC_CONNECTION_VERSION, CloudSyncConnectionState } from '@mdt/domain-contracts'
+import { DISTRIBUTION_CLOUD_SYNC_ORIGINS, findForbiddenSecretKeys } from '../config'
 import {
   ProjectStateStore,
-  type ProjectStateStoreOptions,
+
 } from '../project-state-store'
-import { DISTRIBUTION_CLOUD_SYNC_ORIGINS, findForbiddenSecretKeys } from '../config'
 import { resolveTrustedServiceProfile } from '../trusted-service-profile'
 
 const PROJECT_ID = 'markdown-ticket'
@@ -148,7 +149,7 @@ function parseTomlSafe(content: string): Record<string, unknown> {
   // smol-toml. We only need key presence here.
   const out: Record<string, unknown> = {}
   for (const line of content.split('\n')) {
-    const m = /^\s*([A-Za-z0-9_]+)\s*=/.exec(line)
+    const m = /^\s*(\w+)\s*=/.exec(line)
     if (m) {
       out[m[1]!] = true
     }

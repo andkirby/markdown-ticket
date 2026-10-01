@@ -20,15 +20,15 @@ import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals'
 
 import {
-  CloudflaredCredentialProvider,
-  RuntimeCloudCredentialProvider,
-  ServiceTokenCredentialProvider,
-  buildServiceTokenHeaders,
-} from '../credential-providers'
-import {
   AccessCredentialBroker,
   streamAuthorizationFromCredential,
 } from '../access-credential-broker'
+import {
+  buildServiceTokenHeaders,
+  CloudflaredCredentialProvider,
+  RuntimeCloudCredentialProvider,
+  ServiceTokenCredentialProvider,
+} from '../credential-providers'
 import { MachineCredentialStore } from '../credential-store'
 
 const ALLOWED = 'https://mdt-sync.example.com'
