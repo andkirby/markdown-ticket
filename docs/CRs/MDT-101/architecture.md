@@ -291,9 +291,9 @@ if (project.id !== basename(projectPath)) {
 - [x] `domain-contracts/src/types/schema.ts` - Shared enums (CRStatus, CRType, CRPriority)
 - [x] `domain-contracts/src/types/index.ts` - Public exports
 - [x] `domain-contracts/src/index.ts` - Main package entry point
-- [x] `domain-contracts/src/testing/project.fixtures.ts` - Test builders
-- [x] `domain-contracts/src/testing/ticket.fixtures.ts` - Test builders
-- [x] `domain-contracts/src/testing/index.ts` - Testing subpath exports
+- [x] `domain-contracts/src/testing/project.fixtures.ts` - Test builders (deleted 2026-10: self-tested only, no external consumers)
+- [x] `domain-contracts/src/testing/ticket.fixtures.ts` - Test builders (deleted 2026-10: only `buildTicket` was used; inlined into `ticket/__tests__/level.test.ts`)
+- [x] `domain-contracts/src/testing/index.ts` - Testing subpath exports (deleted 2026-10: subpath was never exported in package.json)
 - [x] All tests passing (90+ tests GREEN)
 - [x] Size limits met (all files within limits)
 

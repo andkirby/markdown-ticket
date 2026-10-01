@@ -159,8 +159,8 @@ domain-contracts/
 | `domain-contracts/src/ticket/` | Domain module | Canonical ticket entity and boundary schemas |
 | `domain-contracts/src/types/schema.ts` | Primitive contract schema | Shared status/type/priority definitions |
 | `domain-contracts/src/index.ts` | Main exports | Production API aggregate |
-| `domain-contracts/src/testing/project.fixtures.ts` | Test factory | Builder pattern for test data |
-| `domain-contracts/src/testing/index.ts` | Test exports | Testing utilities aggregate |
+| `domain-contracts/src/testing/project.fixtures.ts` | Test factory | Builder pattern for test data (deleted 2026-10: no external consumers — see §8) |
+| `domain-contracts/src/testing/index.ts` | Test exports | Testing utilities aggregate (deleted 2026-10: subpath never exported) |
 
 ### Modified Artifacts
 
@@ -179,7 +179,7 @@ domain-contracts/
 | shared/services | domain-contracts/src/index.ts | Import Project and Ticket contracts |
 | mcp-server/tools | domain-contracts/src/index.ts | Validate responses with schemas |
 | server/services | domain-contracts/src/index.ts | Parse/validate incoming data |
-| Tests | domain-contracts/src/testing/index.ts | Import fixtures and test utils |
+| Tests | domain-contracts/src/testing/index.ts | Import fixtures and test utils (retired 2026-10: cross-package factories live in `shared/test-lib`) |
 
 ### Key Patterns
 - **Schema-first**: Define Zod schema, derive TypeScript type with `z.infer<typeof Schema>`
@@ -211,7 +211,7 @@ domain-contracts/
 - Unit: Test schema validation with valid/invalid inputs
 - Integration: MCP tools return data that passes schema validation
 - Cross-interface: CLI, MCP, and UI all work with same validated shapes
-- Fixtures: Test builders from `domain-contracts/src/testing/` create valid data
+- Fixtures: Test builders from `domain-contracts/src/testing/` create valid data — retired 2026-10 (subpath never wired, zero external consumers; `buildTicket` inlined into `ticket/__tests__/level.test.ts`)
 
 ## 7. Verification
 
@@ -239,3 +239,5 @@ domain-contracts/
 
 The scope changed, see details in:
 [architecture.md](MDT-101/architecture.md)
+
+2026-10 post-close: `domain-contracts/src/testing/` deleted — the public fixtures subpath was never wired into package.json `exports` and had zero external consumers (cross-package test factories live in `shared/test-lib`). The one used builder, `buildTicket`, was inlined into `ticket/__tests__/level.test.ts`. Verified: 207 tests pass, same 2 pre-existing suite failures as baseline.
