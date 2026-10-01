@@ -1,24 +1,11 @@
 // Direct imports for standard usage
-import type { CRPriorityValue, CRTypeValue } from '@mdt/domain-contracts'
+import type { CRPriorityValue, CRTypeValue, TemplateConfig } from '@mdt/domain-contracts'
 import type { Ticket, TicketData } from '../models/Ticket.js'
 import type { Suggestion, Template, ValidationResult } from '../models/Types.js'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { CRPriorities, CRStatus, CRType, CRTypes } from '@mdt/domain-contracts'
+import { CRPriorities, CRStatus, CRType, CRTypes, TemplateConfigSchema } from '@mdt/domain-contracts'
 import { getDefaultPaths } from '../utils/constants.js'
-
-/**
- * Interface for template configuration from templates.json
- */
-interface TemplateConfig {
-  file: string
-  requiredFields: string[]
-  sections: Array<{
-    name: string
-    required: boolean
-    placeholder?: string
-  }>
-}
 
 export class TemplateService {
   private templates: Map<string, Template> = new Map()
@@ -52,7 +39,13 @@ export class TemplateService {
       const templatesConfig = JSON.parse(configContent)
 
       for (const [type, config] of Object.entries(templatesConfig)) {
-        const templateConfig = config as TemplateConfig
+        // Boundary validation: templates.json is external input (MDT-101)
+        const parsedConfig = TemplateConfigSchema.safeParse(config)
+        if (!parsedConfig.success) {
+          this.log(`Invalid template config for '${type}': ${parsedConfig.error.message}`)
+          continue
+        }
+        const templateConfig: TemplateConfig = parsedConfig.data
         const templatePath = join(this.templatesPath, templateConfig.file)
 
         if (existsSync(templatePath)) {

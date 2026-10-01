@@ -25,6 +25,9 @@ export * from './project'
 // Export unified search contracts (MDT-179)
 export * from './search'
 
+// Export template contracts (MDT-101 Phase 4)
+export * from './template'
+
 // Export ticket/CR-related schemas and validation (includes CR_CODE_PATTERN)
 export * from './ticket'
 
