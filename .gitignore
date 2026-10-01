@@ -104,6 +104,8 @@ counter-api/
 
 # debug files
 _*
+# `_*` also matches __tests__ dirs — re-include them (test files are tracked)
+!**/__tests__/
 designs/
 
 *.bun-build
