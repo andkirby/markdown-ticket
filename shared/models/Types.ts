@@ -52,42 +52,25 @@ export interface ProjectInfo {
   lastAccessed: string
 }
 
-// Template Interfaces
-export interface Template {
-  type: string
-  requiredFields: string[]
-  template: string
-  sections: TemplateSection[]
-}
+// Template Interfaces — canonical contracts live in @mdt/domain-contracts (MDT-101)
+export type {
+  Suggestion,
+  Template,
+  TemplateSection,
+  ValidationError,
+  ValidationResult,
+  ValidationWarning,
+} from '@mdt/domain-contracts'
 
-export interface TemplateSection {
-  name: string
-  required: boolean
-  placeholder?: string
-}
-
-// Validation Interfaces
-export interface ValidationResult {
-  valid: boolean
-  errors: ValidationError[]
-  warnings: ValidationWarning[]
-}
-
-export interface ValidationError {
-  field: string
-  message: string
-}
-
-export interface ValidationWarning {
-  field: string
-  message: string
-}
-
-// Suggestion Interface
-export interface Suggestion {
-  type: 'improvement' | 'related' | 'validation'
-  title: string
-  description: string
-  priority: 'low' | 'medium' | 'high'
-  actionable: boolean
-}
+export {
+  safeValidateTemplateConfig,
+  SuggestionSchema,
+  TemplateConfigSchema,
+  TemplateSchema,
+  TemplateSectionSchema,
+  validateSuggestion,
+  validateTemplate,
+  validateTemplateConfig,
+  validateValidationResult,
+  ValidationResultSchema,
+} from '@mdt/domain-contracts'
