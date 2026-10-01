@@ -3,10 +3,10 @@
  *
  * Tests for WorktreeMapping and WorktreeConfig interfaces/types.
  *
- * @module shared/models/__tests__/WorktreeTypes.test.ts
+ * @module domain-contracts/src/project/__tests__/worktree.test.ts (moved from shared/models — MDT-099)
  */
 
-import { validateWorktreeConfig, WorktreeConfigSchema, WorktreeMappingSchema } from '../WorktreeTypes'
+import { validateWorktreeConfig, WorktreeConfigSchema, WorktreeEntrySchema as WorktreeMappingSchema } from '../worktree'
 
 describe('WorktreeTypes', () => {
   describe('WorktreeConfigSchema', () => {

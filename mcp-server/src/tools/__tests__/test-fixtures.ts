@@ -6,14 +6,15 @@
  */
 
 // Re-export canonical types from domain-contracts
-export type { Project } from '@mdt/domain-contracts'
-
-// Import for use in createMockProject
+// Import for use in mock builders
 import type { Project } from '@mdt/domain-contracts'
 
+export type { Project, TicketData, TicketFilters } from '@mdt/domain-contracts'
+
 /**
- * Local Ticket interface for tests
- * Matches the runtime Ticket type used by handlers
+ * Local Ticket interface for tests — transport-response shape (MDT-099):
+ * `string` enums, nullable dates, and API-only worktree adornments. Kept
+ * local deliberately: MDT-101 keeps transport payloads out of contracts.
  */
 export interface Ticket {
   code: string
@@ -38,33 +39,9 @@ export interface Ticket {
 }
 
 /**
- * Local TicketData interface for test input
+ * TicketData/TicketFilters: derived from @mdt/domain-contracts (MDT-099) —
+ * contract versions are supersets of the former local interfaces.
  */
-export interface TicketData {
-  title: string
-  type: string
-  priority?: string
-  phaseEpic?: string
-  impactAreas?: string[]
-  relatedTickets?: string
-  dependsOn?: string
-  blocks?: string
-  assignee?: string
-  content?: string
-}
-
-/**
- * Local TicketFilters interface for test queries
- */
-export interface TicketFilters {
-  status?: string | string[]
-  type?: string | string[]
-  priority?: string | string[]
-  dateRange?: {
-    start?: Date
-    end?: Date
-  }
-}
 
 /**
  * Local SectionMatch interface matching @mdt/shared/services/MarkdownSectionService
