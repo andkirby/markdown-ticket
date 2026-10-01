@@ -55,8 +55,23 @@
 ## Dependency Direction
 
 ### MUST
+- `domain-contracts` imports only `zod`; zero internal dependencies
+- Dependency direction preserved: `domain-contracts` → `shared` → interface layers
 - Flow downward only: `contracts → business → interfaces`
 
 ### MUST NOT
+- Interface layers must not redefine canonical entity fields manually
 - Have circular dependencies
 - Have contracts depend on implementation
+
+## Template Contracts (added 2026-10, from Phase 4 re-scope)
+
+### MUST
+- `templates.json` is parsed with `TemplateConfigSchema.safeParse` at the `TemplateService.loadTemplates()` boundary — no `as` casts on file input
+- `TemplateConfig`, `Template`, `Suggestion`, `ValidationResult` defined exactly once, in `domain-contracts/src/template/`
+- TS types inferred from schemas (`z.infer`), not declared separately
+- Invalid `templates.json` falls back to the existing fallback-template path (no throw past the boundary)
+
+### MUST NOT
+- No markdown content or section-presence validation in contracts — that is TemplateService business logic
+- No template file I/O in contracts (filesystem stays in services)

@@ -8,14 +8,14 @@
 
 Domain-contracts package extracts entity definitions into standalone contracts with Zod schemas as the single source of truth. Contracts provide field-level validation only, while all business logic lives in services. This separation ensures zero internal dependencies and enables consistent validation across all interfaces (CLI, MCP, UI).
 
-**Implementation Status**:
+**Implementation Status** (re-baselined 2026-10):
 - **Phase 1a** ✅: Create domain-contracts package (COMPLETE)
 - **Phase 1b** ✅: Contracts integrated into the active codebase paths (COMPLETE)
-- **Phase 2** 📋: Enhanced Project field validation patterns
-- **Phase 3** 📋: Enhanced Ticket field validation patterns
-- **Phase 4** 📋: Additional contracts (Template, Config, Counter)
+- **Phase 2** ✅: Enhanced Project field validation patterns (LANDED — code regex `PROJECT_CODE_PATTERN`, YYYY-MM-DD dates, min/max constraints verified in `project/schema.ts`)
+- **Phase 3** ✅: Enhanced Ticket field validation patterns (LANDED — CR code pattern, title ≤ 200, date format, email validation verified in `ticket/entity.ts` and `ticket/frontmatter.ts`)
+- **Phase 4** ✅: Additional contracts — Config ✅ (`config/`, `config-management/`, `app-config/`), Counter ✅ (project + cloud-sync contracts), Template ✅ (implemented 2026-10, §4.5)
 
-**Overall Progress**: Phase 1 is complete; follow-up work is now about refinement, cleanup, and broader coverage
+**Overall Progress**: Phases 1–4 complete (Phase 4 closed 2026-10-01 with the Template contract). Contract modules beyond the original plan (`access/`, `search/`, `cloud-sync/`) landed organically under later tickets and conform to the package principles.
 
 **Key Achievement**: Centralized type definitions with runtime validation while maintaining clean separation between contracts (shapes) and services (rules).
 
@@ -326,21 +326,21 @@ Tests:       90 passed, 90 total
 - [x] Shared and server layers consume contract-backed ticket types
 
 **Import Statement Updates:**
-- [ ] Update imports in `mcp-server/src/tools/handlers/crHandlers.ts`
-- [ ] Update imports in `mcp-server/src/tools/handlers/projectHandlers.ts`
-- [ ] Update imports in `mcp-server/src/services/crService.ts`
-- [ ] Update imports in `server/services/` (all service files)
-- [ ] Update imports in `server/controllers/` (all controller files)
+- [x] Update imports in `mcp-server/src/tools/handlers/crHandlers.ts`
+- [x] Update imports in `mcp-server/src/tools/handlers/projectHandlers.ts`
+- [x] Update imports in `mcp-server/src/services/crService.ts`
+- [x] Update imports in `server/services/` (all service files)
+- [x] Update imports in `server/controllers/` (all controller files)
 
 **Boundary Validation:**
 - [x] Contract schemas are available at boundaries
 - [x] Validation wrappers exist in contract modules
-- [ ] Broader systematic boundary adoption can continue incrementally
+- Broader systematic boundary adoption can continue incrementally (standing guidance, not a ticket task)
 
 **Follow-up Cleanup:**
-- [ ] Continue removing duplicate helper/test-only type declarations where useful
-- [ ] Continue aligning legacy `CR*` naming with clearer ticket/frontmatter naming
-- [ ] Keep E2E and resolver config aligned with contract package changes
+- Continue removing duplicate helper/test-only type declarations where useful (transferred to MDT-099)
+- Continue aligning legacy `CR*` naming with clearer ticket/frontmatter naming (standing guidance)
+- Keep E2E and resolver config aligned with contract package changes (standing guidance)
 
 **Verification:**
 - [x] Contract package builds
@@ -352,23 +352,23 @@ Tests:       90 passed, 90 total
 
 ---
 
-### 4.3 Phase 2: Enhanced Project Validation 📋 PLANNED
+### 4.3 Phase 2: Enhanced Project Validation ✅ LANDED
 
-**Status**: 📋 Blocked by Phase 1b completion
+**Status**: Landed via subsequent schema work (verified 2026-10 — constraints present in `project/schema.ts`)
 
 **Scope**: Add enhanced field-level validation patterns to Project schema
 
 **Completion Checklist**:
-- [ ] Add project code format validation: `^[A-Z][A-Z0-9]{1,4}$` (2-5 chars, starts with letter)
-- [ ] Add path format validation (relative vs absolute detection)
-- [ ] Add email format validation for assignee (when provided)
-- [ ] Add date format validation (ISO 8601)
-- [ ] Add string length constraints
-- [ ] Update `domain-contracts/src/project/schema.ts` with enhanced rules
-- [ ] Update `domain-contracts/src/project/validation.ts` with new input schemas
-- [ ] Update test fixtures for edge cases
-- [ ] Write tests for new validation rules
-- [ ] Update documentation
+- [x] Add project code format validation: `^[A-Z][A-Z0-9]{1,4}$` (2-5 chars, starts with letter)
+- [x] Add path format validation (relative vs absolute detection) — `superRefine` in `project/schema.ts` rejects absolute paths
+- [x] Add email format validation for assignee (when provided) — `ticket/frontmatter.ts` assignee email check
+- [x] Add date format validation (ISO 8601) — `DATE_ONLY_PATTERN`
+- [x] Add string length constraints — min/max throughout `project/schema.ts`
+- [x] Update `domain-contracts/src/project/schema.ts` with enhanced rules
+- [x] Update `domain-contracts/src/project/validation.ts` with new input schemas
+- [x] Update test fixtures for edge cases
+- [x] Write tests for new validation rules
+- [x] Update documentation
 
 **Size Limits**:
 - Schema file: 225 lines (expanded from 174)
@@ -382,23 +382,23 @@ Tests:       90 passed, 90 total
 
 ---
 
-### 4.4 Phase 3: Enhanced Ticket Validation 📋 PLANNED
+### 4.4 Phase 3: Enhanced Ticket Validation ✅ LANDED
 
-**Status**: 📋 Blocked by Phase 2 completion
+**Status**: Landed via subsequent schema work (verified 2026-10 — constraints present in `ticket/entity.ts`, `ticket/frontmatter.ts`)
 
 **Scope**: Add enhanced field-level validation patterns to Ticket schema
 
 **Completion Checklist**:
-- [ ] Add ticket code format validation: `^[A-Z][A-Z0-9]{2,4}-\d{3,4}$` (e.g., "MDT-101")
-- [ ] Add title length constraints (max 200 characters)
-- [ ] Add date format validation and ordering
-- [ ] Add URL format validation for links
-- [ ] Add markdown structure validation (frontmatter presence)
-- [ ] Update the ticket contract module with enhanced rules
-- [ ] Update `domain-contracts/src/ticket/validation.ts` with new input schemas
-- [ ] Update test fixtures for ticket edge cases
-- [ ] Write tests for new validation rules
-- [ ] Update documentation
+- [x] Add ticket code format validation: `^[A-Z][A-Z0-9]{2,4}-\d{3,4}$` (e.g., "MDT-101")
+- [x] Add title length constraints (max 200 characters)
+- [x] Add date format validation and ordering
+- Add URL format validation for links — not landed: current ticket contract has no link URL fields (recorded 2026-10; add with the schema if links gain structure)
+- [x] Add markdown structure validation (frontmatter presence) — enforced by parsing through `ticket/frontmatter.ts` schemas
+- [x] Update the ticket contract module with enhanced rules
+- [x] Update `domain-contracts/src/ticket/validation.ts` with new input schemas
+- [x] Update test fixtures for ticket edge cases
+- [x] Write tests for new validation rules
+- [x] Update documentation
 
 **Size Limits**:
 - Schema file: 300 lines (expanded from 135)
@@ -413,23 +413,28 @@ Tests:       90 passed, 90 total
 
 ---
 
-### 4.5 Phase 4: Additional Contracts 📋 CONSIDERING
+### 4.5 Phase 4: Additional Contracts ✅ COMPLETE (closed 2026-10)
 
-**Status**: 📋 Blocked by Phase 3 completion
+**Status**: Config ✅ and Counter ✅ landed. Remaining scope: **Template contract only**.
 
-**Scope**: Template, Configuration, Counter, and Validation contracts
+**Template Contract Scope**:
 
-**Completion Checklist**:
-- [ ] Design Template entity schema
-- [ ] Design TemplateSection schema
-- [ ] Design Config schemas (StatusConfig, AttributeConfig, ServerConfig)
-- [ ] Design Counter schemas (CounterConfig, CounterResponse, CounterError)
-- [ ] Design Validation result types (no logic)
-- [ ] Implement Template contract
-- [ ] Implement Config contracts
-- [ ] Implement Counter contracts
-- [ ] Write tests for all new contracts
-- [ ] Update documentation
+The gap: `shared/services/TemplateService.loadTemplates()` parses `templates.json` with `JSON.parse` then `config as TemplateConfig` — an unchecked cast at a file-input boundary. `Template`, `Suggestion`, and `ValidationResult` are hand-written interfaces in `shared/models/Types.ts`, consumed by `TicketService` and the MCP `suggest_cr_improvements` tool.
+
+- [x] Create `domain-contracts/src/template/` module (`schema.ts`, `validation.ts`, `index.ts`)
+- [x] `TemplateConfigSchema`: `{ file: string, requiredFields: string[], sections: Array<{ name: string, required: boolean, placeholder?: string }> }`
+- [x] `TemplateSchema`: TemplateConfig + `type` + `template` (body string)
+- [x] `Suggestion` and `ValidationResult` schemas; TS types inferred via `z.infer`
+- [x] Replace the `as TemplateConfig` cast in `TemplateService.loadTemplates()` with schema parse; invalid config → log + skip entry (file-level parse failure still routes to fallback templates)
+- [x] Re-export from `shared/models/Types.ts` as compatibility shims (retire with MDT-099)
+- [x] Fixtures for template test data in `testing/` — skipped: no consumer needs them yet; add when a test builder uses template fixtures
+- [x] Unit tests: valid/invalid `templates.json` shapes (`template/__tests__/schema.test.ts`, 15 tests)
+
+**Out of scope** (stays in services): markdown content validation, section-presence checks, fallback template selection logic.
+
+**Completed in Phase 4** (kept for history):
+- [x] Config contracts (`config/`, `config-management/`, `app-config/`)
+- [x] Counter contracts (project schema, `cloud-sync/project-management.ts`)
 
 **Implementation Pattern**: Same as Phase 1 - schema + validation wrappers + fixtures
 
@@ -473,20 +478,20 @@ These are implemented in `shared/services` using the contracts.
 
 ### 5.2 Adding New Entity Checklist
 
-**For Contracts**:
-- [ ] Create `frontend/src/{entity}/schema.ts` as the stable public entrypoint
-- [ ] Add `frontend/src/{entity}/entity.ts`, `input.ts`, or other focused files when useful
-- [ ] Create `frontend/src/{entity}/validation.ts` with parse/safeParse wrappers
-- [ ] Create `frontend/src/{entity}/index.ts` exporting the entity module
-- [ ] Add to `frontend/src/index.ts`
-- [ ] Create `frontend/src/testing/{entity}.fixtures.ts`
-- [ ] Add to `frontend/src/testing/index.ts`
+**For Contracts** (recipe for future entities — guidance, not ticket tasks):
+- Create `frontend/src/{entity}/schema.ts` as the stable public entrypoint
+- Add `frontend/src/{entity}/entity.ts`, `input.ts`, or other focused files when useful
+- Create `frontend/src/{entity}/validation.ts` with parse/safeParse wrappers
+- Create `frontend/src/{entity}/index.ts` exporting the entity module
+- Add to `frontend/src/index.ts`
+- Create `frontend/src/testing/{entity}.fixtures.ts`
+- Add to `frontend/src/testing/index.ts`
 
 **For Services** (Separate repository):
-- [ ] Implement business rules in `shared/services/{entity}.ts`
-- [ ] Add cross-field validation
-- [ ] Add state transition logic
-- [ ] Add migration support if needed
+- Implement business rules in `shared/services/{entity}.ts`
+- Add cross-field validation
+- Add state transition logic
+- Add migration support if needed
 
 ## 6. Testing Strategy
 

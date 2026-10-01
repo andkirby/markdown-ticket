@@ -22,6 +22,7 @@ phaseEpic: MDT-233
 - Shared code: Utilities in shared/ directory
 - Frontend components: UI components in frontend/src/components/
 - MCP codebase: Model Context Protocol server implementation
+- Domain-contract re-export shims (from MDT-101 triage, 2026-10): `shared/models/Project.ts` and `WorktreeTypes.ts` are pure re-exports of `@mdt/domain-contracts` — retire or ratify as compatibility layer; `mcp-server/src/tools/__tests__/test-fixtures.ts` hand-rolls `Ticket`/`TicketData` interfaces instead of deriving from contracts
 
 ### Scope
 - **In scope**: Identify code that should be shared across interfaces

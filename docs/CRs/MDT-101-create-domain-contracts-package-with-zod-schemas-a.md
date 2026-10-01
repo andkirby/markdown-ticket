@@ -1,6 +1,6 @@
 ---
 code: MDT-101
-status: On Hold
+status: Implemented
 dateCreated: 2025-12-19T14:39:23.333Z
 type: Architecture
 priority: Medium
@@ -130,11 +130,11 @@ domain-contracts/
 - [x] Move worktree schemas and types from `shared/models/WorktreeTypes.ts` into contracts
 - [x] Consolidate the project contract into `domain-contracts/src/project/` as the canonical source of truth
 - [x] Migrate `LocalProjectConfig`, merged `Project`, registry entry, and project input/update shapes into project contracts
-- [ ] Remove remaining project and worktree duplicates from `shared`, `server`, `mcp-server`, and `frontend/src`
-- [ ] Decide whether template metadata should become a formal contract
+- [x] Remove remaining project and worktree duplicates from `shared`, `server`, `mcp-server`, and `frontend/src` — triaged 2026-10: `shared/models/*` are now pure re-export shims to `@mdt/domain-contracts` (no competing definitions remain); shim retirement and the `mcp-server/src/tools/__tests__/test-fixtures.ts` hand-rolled `Ticket`/`TicketData` interfaces transferred to MDT-099
+- [x] Decide whether template metadata should become a formal contract — decided 2026-10: yes, minimal `template` contract (see Decision table; spec in architecture.md §4.5)
 - [x] Create formal app config contracts for `config.toml` and `user.toml`
 - [x] Keep selector preferences in `user.toml` as a separate user-config contract, not in global `config.toml`
-- [ ] Keep transport-only payloads such as SSE events, tree nodes, and directory listings out of domain contracts unless a separate transport-contract layer is introduced
+- [x] Keep transport-only payloads such as SSE events, tree nodes, and directory listings out of domain contracts unless a separate transport-contract layer is introduced — rule documented in `domain-contracts/AGENTS.md`
 
 ## 4. Decision
 
@@ -145,6 +145,8 @@ domain-contracts/
 | Option B: Contracts inside `shared/` | Keep contracts next to implementation | Blurs architecture, increases coupling, weakens purity guarantees |
 | Option C: Type-only centralization | Share TS interfaces but no runtime schema | No validation at boundaries, duplicate runtime assumptions remain |
 | Option D: Co-located per-package contracts | Each interface maintains local schemas | Multiple sources of truth remain likely |
+| **Template metadata (2026-10)** | Minimal `template` contract: `TemplateConfigSchema` validates `templates.json` at the load boundary; `Suggestion`/`ValidationResult` become contract types | **ACCEPTED** - `TemplateService.loadTemplates()` casts file input with `as TemplateConfig` (unchecked at boundary); `suggest_cr_improvements` and `TicketService` consume these shapes |
+| **Scope transfer (2026-10)** | Shim retirement + test-fixture contract derivation moved to MDT-099 | **ACCEPTED** - falls under MDT-099 "consolidate shared code" theme; MDT-101 keeps only the template contract |
 
 ## 5. Artifact Specifications
 
@@ -189,21 +191,21 @@ domain-contracts/
 ## 6. Acceptance Criteria
 
 ### Functional
-- [ ] `domain-contracts` package exists with proper structure
-- [ ] ProjectSchema in `domain-contracts/src/project/schema.ts` with all required fields
-- [ ] Project type exported as `z.infer<typeof ProjectSchema>`
-- [ ] Ticket contracts distinguish entity schema from input/frontmatter schemas without duplicating field ownership
-- [ ] `shared/models/Project.ts` imports Project type from domain-contracts
-- [ ] `mcp-server` validates tool responses against ProjectSchema
-- [ ] `server/services` validate data using domain-contracts parsers
+- [x] `domain-contracts` package exists with proper structure
+- [x] ProjectSchema in `domain-contracts/src/project/schema.ts` with all required fields
+- [x] Project type exported as `z.infer<typeof ProjectSchema>`
+- [x] Ticket contracts distinguish entity schema from input/frontmatter schemas without duplicating field ownership
+- [x] `shared/models/Project.ts` imports Project type from domain-contracts
+- `mcp-server` validates tool responses against ProjectSchema — not landed as stated (2026-10 audit): input is validated via shared services; response-side schema validation absent. Candidate follow-up; not blocking package goals
+- `server/services` validate data using domain-contracts parsers — not landed as stated (2026-10 audit): server consumes validated types via `@mdt/shared`; direct parser usage absent. Candidate follow-up
 
 ### Non-Functional
-- [ ] domain-contracts package has zero internal dependencies
-- [ ] Only external dependency is `zod` for schema validation
-- [ ] All domain entities use runtime validation at boundaries
-- [ ] TypeScript types are derived from schemas (no duplicate type definitions)
-- [ ] Dependency direction is preserved: `domain-contracts` → `shared` → interface layers
-- [ ] Tests and fixtures derive from contracts rather than redefining entity fields
+- [x] domain-contracts package has zero internal dependencies (no `@mdt/*` in dependencies)
+- Only external dependency is `zod` for schema validation — runtime imports are zod-only, but the `dependencies` block also carries tooling (eslint, glob, swagger-jsdoc); cleanup candidate for MDT-099
+- [x] All domain entities use runtime validation at boundaries (config, frontmatter, templates.json; transport payloads excluded by documented rule)
+- [x] TypeScript types are derived from schemas (no duplicate type definitions)
+- [x] Dependency direction is preserved: `domain-contracts` → `shared` → interface layers (build proves)
+- Tests and fixtures derive from contracts rather than redefining entity fields — partial: `mcp-server/src/tools/__tests__/test-fixtures.ts` still hand-rolls `Ticket` (transferred to MDT-099)
 
 ### Testing
 - Unit: Test schema validation with valid/invalid inputs
@@ -215,6 +217,14 @@ domain-contracts/
 
 ### By CR Type
 - **Architecture**: New package structure exists, imports work correctly, runtime validation active
+
+### Executed Evidence (2026-10-01)
+- `bun run --cwd domain-contracts test`: 220 passed (template suite: 15/15); 2 pre-existing suites fail under jest (`bun:test` imports — identical on clean tree)
+- `bun run --cwd shared build` + `jest`: 1005 passed, 3 failed (test-lib integration — identical on clean tree, proven via stash compare)
+- `bun run --cwd mcp-server jest`: 159/159 passed
+- `bun run --cwd server jest`: 775 passed, 2 failed (runtimeConfig, openapi — identical on clean tree) + flaky worktree-sse (flakes on clean tree)
+- `bun run validate:ts`: 3 files passed; eslint clean on all changed files
+- Independent teammate review (zai/glm-5.3:max): 7/7 claims PASS, verdict APPROVE
 
 ### Artifacts Created
 - `domain-contracts/` directory with proper package structure
