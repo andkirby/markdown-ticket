@@ -4,16 +4,16 @@ import type {
   CloudSyncCoordinator,
   Project,
 } from '@mdt/domain-contracts'
+import { mkdtempSync } from 'node:fs'
 import { mkdir, readdir, rm, unlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { mkdtempSync } from 'node:fs'
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals'
 import { CLOUD_SYNC_CONNECTION_VERSION, CoordinatorError } from '@mdt/domain-contracts'
 import { TicketService } from '../../TicketService'
+import { DISTRIBUTION_CLOUD_SYNC_ORIGINS } from '../config'
 import { ProjectStateStore } from '../project-state-store'
 import { resolveTrustedServiceProfile } from '../trusted-service-profile'
-import { DISTRIBUTION_CLOUD_SYNC_ORIGINS } from '../config'
 
 let root: string
 let projectPath: string
@@ -162,7 +162,8 @@ describe('TicketService cloud-bound create orchestration', () => {
       content: 'Canonical body.',
     }
     await expect(service.createCR(project(), 'Feature Enhancement', input))
-      .rejects.toMatchObject({ code: 'reservation_state_conflict' })
+      .rejects
+      .toMatchObject({ code: 'reservation_state_conflict' })
     expect(reserve).toHaveBeenCalledTimes(1)
     expect(acknowledge).not.toHaveBeenCalled()
 

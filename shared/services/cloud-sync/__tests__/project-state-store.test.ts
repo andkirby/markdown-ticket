@@ -18,18 +18,19 @@
  *     (the store writes only under CONFIG_DIR/projects/{localProjectId}/).
  */
 
+import type { ProjectStateStoreOptions } from '../project-state-store'
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
+
 import { join } from 'node:path'
 
 import { afterEach, beforeEach, describe, expect, it } from '@jest/globals'
-
 import { CLOUD_SYNC_CONNECTION_VERSION, CloudSyncConnectionState } from '@mdt/domain-contracts'
+import { DISTRIBUTION_CLOUD_SYNC_ORIGINS } from '../config'
 import {
   ProjectStateStore,
-  type ProjectStateStoreOptions,
+
 } from '../project-state-store'
-import { DISTRIBUTION_CLOUD_SYNC_ORIGINS } from '../config'
 import { resolveTrustedServiceProfile } from '../trusted-service-profile'
 
 const PROJECT_ID = 'markdown-ticket'
@@ -248,7 +249,8 @@ describe('ProjectStateStore v1→v2 migration (TEST-config-v2-migration: Edge-3,
 
     const read = await store.read(PROJECT_ID)
     expect(read.kind).toBe('enabled')
-    if (read.kind !== 'enabled') return
+    if (read.kind !== 'enabled')
+      return
     expect(read.connection.version).toBe(2)
     expect(read.connection.cloudProjectId).toBe(MIGRATION_CLOUD_PROJECT_ID)
     expect(read.connection.serviceOrigin).toBe(DISTRIBUTION_ORIGIN)
@@ -263,7 +265,8 @@ describe('ProjectStateStore v1→v2 migration (TEST-config-v2-migration: Edge-3,
 
     const migrated = await store.read(PROJECT_ID)
     expect(migrated.kind).toBe('enabled')
-    if (migrated.kind !== 'enabled') return
+    if (migrated.kind !== 'enabled')
+      return
     await store.write(PROJECT_ID, migrated.connection)
 
     const content = await readFile(join(root, 'projects', PROJECT_ID, 'cloud-sync.toml'), 'utf8')
@@ -283,7 +286,8 @@ describe('ProjectStateStore v1→v2 migration (TEST-config-v2-migration: Edge-3,
     await store.write(PROJECT_ID, connection)
     const read = await store.read(PROJECT_ID)
     expect(read.kind).toBe('enabled')
-    if (read.kind !== 'enabled') return
+    if (read.kind !== 'enabled')
+      return
     expect(read.connection.version).toBe(2)
     expect(read.connection.cloudProjectId).toBe(MIGRATION_CLOUD_PROJECT_ID)
 
@@ -299,7 +303,8 @@ describe('ProjectStateStore v1→v2 migration (TEST-config-v2-migration: Edge-3,
     )
     const read = await store.read(PROJECT_ID)
     expect(read.kind).toBe('disabled')
-    if (read.kind !== 'disabled') return
+    if (read.kind !== 'disabled')
+      return
     expect(read.connection.version).toBe(2)
     expect(read.connection.state).toBe(CloudSyncConnectionState.DISABLED)
     expect(read.connection.cloudProjectId).toBe(MIGRATION_CLOUD_PROJECT_ID)

@@ -1,6 +1,6 @@
 import type { ProjectedHeader } from '@mdt/domain-contracts'
 import { mkdtempSync } from 'node:fs'
-import { readFile, readdir, rm } from 'node:fs/promises'
+import { readdir, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals'

@@ -15,11 +15,12 @@
  * selects which credential an operation resolves for a validated origin.
  */
 
-import { describe, expect, it, jest } from '@jest/globals'
+import type { CloudCredential } from '@mdt/domain-contracts'
 
+import { describe, expect, it, jest } from '@jest/globals'
 import {
   CloudAccessAudience,
-  type CloudCredential,
+
 } from '@mdt/domain-contracts'
 import { AudienceAwareCredentialResolver } from '../credential-providers'
 

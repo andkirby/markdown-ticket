@@ -15,17 +15,18 @@
  *   - The profile composes with the existing coordination-origin allowlist.
  */
 
-import { describe, expect, it } from '@jest/globals'
+import type { TrustedServiceProfileInputs } from '../trusted-service-profile'
 
+import { describe, expect, it } from '@jest/globals'
 import {
   DISTRIBUTION_CLOUD_SYNC_ORIGINS,
   DISTRIBUTION_COORDINATION_ORIGIN,
   DISTRIBUTION_PROVISIONING_ORIGIN,
 } from '../config'
 import {
-  TrustedServiceProfile,
   resolveTrustedServiceProfile,
-  type TrustedServiceProfileInputs,
+  TrustedServiceProfile,
+
 } from '../trusted-service-profile'
 
 const DISTRIBUTION_ORIGIN = DISTRIBUTION_COORDINATION_ORIGIN

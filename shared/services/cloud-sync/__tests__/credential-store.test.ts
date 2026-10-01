@@ -14,16 +14,17 @@
  *     Cloudflare procedure; it does NOT create Cloudflare tokens.
  */
 
+import type { MachineCredentialRecord } from '../credential-store'
 import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
+
 import { join } from 'node:path'
 
 import { afterEach, beforeEach, describe, expect, it } from '@jest/globals'
-
 import {
   CredentialRedactedError,
-  type MachineCredentialRecord,
   MachineCredentialFormatError,
+
   MachineCredentialStore,
 } from '../credential-store'
 

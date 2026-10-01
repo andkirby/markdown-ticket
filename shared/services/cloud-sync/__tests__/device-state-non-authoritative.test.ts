@@ -17,22 +17,24 @@
  *     protected operation; there is no local authorization cache.
  */
 
+import type { CloudCredential, ProjectBindingProbe } from '@mdt/domain-contracts'
+import type { CloudProjectManagementServiceOptions } from '../project-management'
 import { mkdtemp, rm } from 'node:fs/promises'
+
 import { tmpdir } from 'node:os'
+
 import { join } from 'node:path'
-
 import { afterEach, beforeEach, describe, expect, it } from '@jest/globals'
-
 import {
   CLOUD_SYNC_CONNECTION_VERSION,
+
   CloudSyncConnectionState,
   CoordinatorError,
-  type CloudCredential,
-  type ProjectBindingProbe,
+
 } from '@mdt/domain-contracts'
-import { CloudProjectManagementService, type CloudProjectManagementServiceOptions } from '../project-management'
+import { buildEffectiveCloudSyncConfig, DISTRIBUTION_CLOUD_SYNC_ORIGINS } from '../config'
+import { CloudProjectManagementService } from '../project-management'
 import { ProjectStateStore } from '../project-state-store'
-import { DISTRIBUTION_CLOUD_SYNC_ORIGINS, buildEffectiveCloudSyncConfig } from '../config'
 import { resolveTrustedServiceProfile } from '../trusted-service-profile'
 
 const PROJECT_ID = 'markdown-ticket'
@@ -62,7 +64,10 @@ describe('device-local state is never authoritative (TEST-device-state-non-autho
       return { projectId: id, projectCode: 'MDT', coordinationState: 'active', role: 'owner' }
     }
     const probe = opts.probeImpl
-      ? async (id: string, cred: CloudCredential): Promise<ProjectBindingProbe> => { probeCalls++; return opts.probeImpl!(id, cred) }
+      ? async (id: string, cred: CloudCredential): Promise<ProjectBindingProbe> => {
+        probeCalls++
+        return opts.probeImpl!(id, cred)
+      }
       : defaultProbe
     const coordinator: import('../project-management').ManagementCoordinatorPort = {
       provision: async () => { throw new Error('not used') },

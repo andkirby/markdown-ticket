@@ -15,23 +15,24 @@
  *   - An operator-audience denial (owner-not-operator) writes no connection.
  */
 
+import type { CloudCredential, ProjectBindingProbe, ProvisionProjectRequest } from '@mdt/domain-contracts'
+import type { CloudProjectManagementServiceOptions } from '../project-management'
 import { mkdtemp, rm } from 'node:fs/promises'
+
 import { tmpdir } from 'node:os'
+
 import { join } from 'node:path'
-
 import { afterEach, beforeEach, describe, expect, it } from '@jest/globals'
-
 import {
   CLOUD_SYNC_CONNECTION_VERSION,
+
   CloudSyncConnectionState,
   CoordinatorError,
-  type CloudCredential,
-  type ProjectBindingProbe,
-  type ProvisionProjectRequest,
+
 } from '@mdt/domain-contracts'
-import { CloudProjectManagementService, type CloudProjectManagementServiceOptions } from '../project-management'
+import { buildEffectiveCloudSyncConfig, DISTRIBUTION_CLOUD_SYNC_ORIGINS } from '../config'
+import { CloudProjectManagementService } from '../project-management'
 import { ProjectStateStore } from '../project-state-store'
-import { DISTRIBUTION_CLOUD_SYNC_ORIGINS, buildEffectiveCloudSyncConfig } from '../config'
 import { resolveTrustedServiceProfile } from '../trusted-service-profile'
 
 const PROJECT_ID = 'markdown-ticket'
@@ -165,7 +166,10 @@ describe('CloudProjectManagementService enable + connect (TEST-pm-enable-commit-
     it('writes NO CONFIG_DIR connection when provisioning is denied (owner-not-operator)', async () => {
       let provisionCalled = false
       const service = buildService({
-        provisionImpl: async () => { provisionCalled = true; return { projectId: 'x', replayed: false } },
+        provisionImpl: async () => {
+          provisionCalled = true
+          return { projectId: 'x', replayed: false }
+        },
         credentialForProvisioning: null, // operator authority absent
       })
 
@@ -205,7 +209,10 @@ describe('CloudProjectManagementService enable + connect (TEST-pm-enable-commit-
     it('enable never provisions with a coordination-audience credential', async () => {
       let provisionCalled = false
       const service = buildService({
-        provisionImpl: async () => { provisionCalled = true; return { projectId: 'uuid', replayed: false } },
+        provisionImpl: async () => {
+          provisionCalled = true
+          return { projectId: 'uuid', replayed: false }
+        },
         probeImpl: async id => ({ projectId: id, projectCode: 'MDT', coordinationState: 'active', role: 'owner' }),
         credentialForProvisioning: null, // no operator credential
       })
@@ -225,7 +232,10 @@ describe('CloudProjectManagementService enable + connect (TEST-pm-enable-commit-
       let probeCloudProjectId: string | null = null
       let probeCredentialKind: string | null = null
       const service = buildService({
-        provisionImpl: async () => { provisionCalled = true; return { projectId: 'x', replayed: false } },
+        provisionImpl: async () => {
+          provisionCalled = true
+          return { projectId: 'x', replayed: false }
+        },
         probeImpl: async (id, cred) => {
           probeCloudProjectId = id
           probeCredentialKind = cred.kind
@@ -262,7 +272,10 @@ describe('CloudProjectManagementService enable + connect (TEST-pm-enable-commit-
     it('connect never provisions even if the cloud project UUID is unknown', async () => {
       let provisionCalled = false
       const service = buildService({
-        provisionImpl: async () => { provisionCalled = true; return { projectId: 'x', replayed: false } },
+        provisionImpl: async () => {
+          provisionCalled = true
+          return { projectId: 'x', replayed: false }
+        },
         probeImpl: async () => { throw new CoordinatorError('project_not_found', {}) },
         credentialForConnect: { kind: 'human', cfAccessToken: 'coord-tok' },
       })

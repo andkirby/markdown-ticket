@@ -13,32 +13,30 @@
  * state is seeded under a temp CONFIG_DIR via ProjectStateStore.
  */
 
-import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises'
+import type { CloudSyncConnection } from '@mdt/domain-contracts'
+import type { Project } from '../../../models/Project'
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
+
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
+import { afterEach, beforeEach, describe, expect, it } from '@jest/globals'
 import {
   CLOUD_SYNC_CONNECTION_VERSION,
+
   CloudSyncConnectionState,
   CoordinatorError,
-  type CloudSyncConnection,
 } from '@mdt/domain-contracts'
-import { afterEach, beforeEach, describe, expect, it } from '@jest/globals'
-
+import { TicketService } from '../../TicketService'
 import {
+  bindingFromEnabledConnection,
   CloudTicketNumberAllocator,
   FailClosedCloudAllocator,
   LocalTicketNumberAllocator,
-  bindingFromEnabledConnection,
 } from '../allocator-strategy'
-import { validateProjectBinding } from '../config'
-import { TicketService } from '../../TicketService'
-import type { Project } from '../../../models/Project'
+import { DISTRIBUTION_CLOUD_SYNC_ORIGINS, validateProjectBinding } from '../config'
 import { ProjectStateStore } from '../project-state-store'
 import { resolveTrustedServiceProfile } from '../trusted-service-profile'
-import { DISTRIBUTION_CLOUD_SYNC_ORIGINS } from '../config'
-
-/* eslint-disable ts/no-explicit-any -- minimal fake project records for in-process tests */
 
 const TRUSTED_ORIGIN = DISTRIBUTION_CLOUD_SYNC_ORIGINS[0]!
 
@@ -125,7 +123,9 @@ describe('isolated allocator strategies (regression guard)', () => {
       acknowledge: async () => ({ acknowledged: true as const, projectionVersion: 1, projectRevision: 1, replayed: false }),
     }
     const allocator = new CloudTicketNumberAllocator(coordinator, null, {
-      cloudProjectId: 'p1', idempotencyKey: 'k', requestHash: 'h',
+      cloudProjectId: 'p1',
+      idempotencyKey: 'k',
+      requestHash: 'h',
     })
     await expect(allocator.allocate()).rejects.toThrow(CoordinatorError)
     try {
@@ -142,7 +142,9 @@ describe('isolated allocator strategies (regression guard)', () => {
       acknowledge: async () => ({ acknowledged: true as const, projectionVersion: 1, projectRevision: 1, replayed: false }),
     }
     const allocator = new CloudTicketNumberAllocator(
-      coordinator, { kind: 'human', cfAccessToken: 'tok' }, { cloudProjectId: 'p1', idempotencyKey: 'k', requestHash: 'h' },
+      coordinator,
+      { kind: 'human', cfAccessToken: 'tok' },
+      { cloudProjectId: 'p1', idempotencyKey: 'k', requestHash: 'h' },
     )
     await expect(allocator.allocate()).rejects.toThrow('coordination_unavailable')
   })
@@ -150,12 +152,17 @@ describe('isolated allocator strategies (regression guard)', () => {
   it('cloud allocator with a successful reservation returns a cloud outcome', async () => {
     const coordinator = {
       reserve: async () => ({
-        reservationId: 'res-1', ticketNumber: 201, state: 'reserved', replayed: false,
+        reservationId: 'res-1',
+        ticketNumber: 201,
+        state: 'reserved',
+        replayed: false,
       }),
       acknowledge: async () => ({ acknowledged: true as const, projectionVersion: 1, projectRevision: 1, replayed: false }),
     }
     const allocator = new CloudTicketNumberAllocator(
-      coordinator, { kind: 'human', cfAccessToken: 'tok' }, { cloudProjectId: 'p1', idempotencyKey: 'k', requestHash: 'h' },
+      coordinator,
+      { kind: 'human', cfAccessToken: 'tok' },
+      { cloudProjectId: 'p1', idempotencyKey: 'k', requestHash: 'h' },
     )
     const outcome = await allocator.allocate()
     expect(outcome.kind).toBe('cloud')
@@ -187,7 +194,10 @@ describe('isolated allocator strategies (regression guard)', () => {
   it('validateProjectBinding still guards the legacy migration-input shape', () => {
     expect(() => validateProjectBinding({ enabled: true })).toThrow()
     expect(validateProjectBinding({
-      enabled: true, projectId: 'p1', serviceUrl: TRUSTED_ORIGIN, pollIntervalSeconds: 15,
+      enabled: true,
+      projectId: 'p1',
+      serviceUrl: TRUSTED_ORIGIN,
+      pollIntervalSeconds: 15,
     }).projectId).toBe('p1')
   })
 })
