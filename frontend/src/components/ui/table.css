@@ -54,8 +54,10 @@
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .mdt-table__row:hover {
-    background-color: oklch(var(--muted) / 0.5);
+  @media (hover: hover) and (pointer: fine) {
+    .mdt-table__row:hover {
+      background-color: oklch(var(--muted) / 0.5);
+    }
   }
 
   .mdt-table__row[data-state='selected'] {

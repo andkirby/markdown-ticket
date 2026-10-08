@@ -114,9 +114,11 @@
     @apply flex h-8 w-8 items-center justify-center rounded-md transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50;
     color: var(--text-subtle);
   }
-  .modal__close:hover {
-    background-color: var(--state-hover-bg);
-    color: oklch(var(--foreground));
+  @media (hover: hover) and (pointer: fine) {
+    .modal__close:hover {
+      background-color: var(--state-hover-bg);
+      color: oklch(var(--foreground));
+    }
   }
 
   .modal__close svg {

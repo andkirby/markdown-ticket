@@ -113,8 +113,10 @@
   .documents-view__icon-button {
     @apply p-1 rounded transition-colors;
 
-    &:hover {
-      background-color: var(--state-hover-bg);
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        background-color: var(--state-hover-bg);
+      }
     }
 
     &:disabled {
@@ -125,14 +127,21 @@
     @apply h-4 w-4;
     color: var(--text-muted);
   }
-  .documents-view__icon-button:hover .documents-view__icon-button-icon {
-    color: oklch(var(--foreground));
+  @media (hover: hover) and (pointer: fine) {
+    .documents-view__icon-button:hover .documents-view__icon-button-icon {
+      color: oklch(var(--foreground));
+    }
   }
   /* Sort controls moved to the shared SortMenu component
      (components/SortMenu/sort-menu.css) — per sort-menu.spec.md. */
 
   .documents-view__resize-handle {
-    @apply bg-border/70 transition-colors hover:bg-border;
+    @apply bg-border/70 transition-colors;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .documents-view__resize-handle:hover {
+      background-color: oklch(var(--border));
+    }
   }
 
   .documents-view__preview-panel {
@@ -140,14 +149,17 @@
   }
 
   .documents-view__navigation-expand {
-    @apply absolute left-3 top-3 z-20 inline-flex h-8 w-8 items-center justify-center border transition-colors hover:text-foreground;
+    @apply absolute left-3 top-3 z-20 inline-flex h-8 w-8 items-center justify-center border transition-colors;
     border-radius: var(--radius-input);
     border-color: oklch(var(--border));
     background-color: var(--bg-elevated);
     color: var(--text-muted);
 
-    &:hover {
-      background-color: var(--state-hover-bg);
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        background-color: var(--state-hover-bg);
+        color: oklch(var(--foreground));
+      }
     }
   }
 
@@ -201,8 +213,10 @@
     color: oklch(var(--foreground));
   }
 
-  .html-sandbox-viewer__fullscreen-btn:hover {
-    background-color: var(--state-hover-bg);
+  @media (hover: hover) and (pointer: fine) {
+    .html-sandbox-viewer__fullscreen-btn:hover {
+      background-color: var(--state-hover-bg);
+    }
   }
 
   .document-viewer {
@@ -301,10 +315,15 @@
 }
 
   /* Show on row hover — parent row must have .group */
-  .group:hover .copy-path-btn,
   .copy-path-btn:focus-visible,
   .copy-path-btn[data-copied] {
     opacity: 1;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .group:hover .copy-path-btn {
+      opacity: 1;
+    }
   }
 
 
@@ -316,8 +335,10 @@
     transition: color 0.15s ease;
   }
 
-  .copy-path-btn:hover .copy-path-btn__icon {
-    @apply text-foreground;
+  @media (hover: hover) and (pointer: fine) {
+    .copy-path-btn:hover .copy-path-btn__icon {
+      @apply text-foreground;
+    }
   }
 
   .copy-path-btn__icon--copied {
@@ -424,9 +445,11 @@
     color: var(--text-muted);
     transition: color 150ms cubic-bezier(0.4, 0, 0.2, 1), background-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
 
-    &:hover {
-      background: var(--state-hover-bg);
-      color: oklch(var(--foreground));
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        background: var(--state-hover-bg);
+        color: oklch(var(--foreground));
+      }
     }
 
     &:focus-visible {
@@ -491,8 +514,10 @@
     padding-block: 0.25rem;
     color: oklch(var(--foreground));
 
-    &:hover {
-      background: var(--state-hover-bg);
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        background: var(--state-hover-bg);
+      }
     }
   }
 
@@ -508,9 +533,11 @@
     color: var(--text-muted);
     transition: color 150ms cubic-bezier(0.4, 0, 0.2, 1), background-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
 
-    &:hover {
-      background: var(--state-hover-bg);
-      color: oklch(var(--foreground));
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        background: var(--state-hover-bg);
+        color: oklch(var(--foreground));
+      }
     }
 
     &:focus-visible {
@@ -602,8 +629,10 @@
     color: oklch(var(--foreground));
     transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
 
-  &:hover {
-    background: var(--state-hover-bg);
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: var(--state-hover-bg);
+    }
   }
 }
 

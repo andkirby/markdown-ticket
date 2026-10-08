@@ -23,8 +23,10 @@
     transition-duration: 150ms;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 
-    &:hover {
-      color: oklch(var(--foreground));
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        color: oklch(var(--foreground));
+      }
     }
 
     /* Standard app-button focus ring (buttons.css recipe). */

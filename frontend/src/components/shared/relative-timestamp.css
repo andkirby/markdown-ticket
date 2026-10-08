@@ -13,15 +13,19 @@
     @apply text-xs text-primary;
   }
 
-  .relative-timestamp:hover {
-    @apply opacity-100;
+  @media (hover: hover) and (pointer: fine) {
+    .relative-timestamp:hover {
+      @apply opacity-100;
+    }
   }
 
   .relative-timestamp--interactive {
     @apply cursor-pointer;
   }
-  .relative-timestamp--interactive:hover {
-    color: oklch(var(--foreground));
+  @media (hover: hover) and (pointer: fine) {
+    .relative-timestamp--interactive:hover {
+      color: oklch(var(--foreground));
+    }
   }
 
   .relative-timestamp--static {

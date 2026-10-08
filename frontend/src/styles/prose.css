@@ -203,8 +203,10 @@
   text-underline-offset: 0.18em;
   overflow-wrap: anywhere;
 
-  &:hover {
-    text-decoration-line: underline;
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      text-decoration-line: underline;
+    }
   }
 
   &:focus-visible {
@@ -456,12 +458,6 @@
   transition: opacity 0.2s;
 }
 
-.prose h1:hover > .header-anchor::after,
-.prose h2:hover > .header-anchor::after,
-.prose h3:hover > .header-anchor::after,
-.prose h4:hover > .header-anchor::after,
-.prose h5:hover > .header-anchor::after,
-.prose h6:hover > .header-anchor::after,
 .prose h1:focus-within > .header-anchor::after,
 .prose h2:focus-within > .header-anchor::after,
 .prose h3:focus-within > .header-anchor::after,
@@ -470,6 +466,18 @@
 .prose h6:focus-within > .header-anchor::after {
   visibility: visible;
   opacity: 0.75;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .prose h1:hover > .header-anchor::after,
+  .prose h2:hover > .header-anchor::after,
+  .prose h3:hover > .header-anchor::after,
+  .prose h4:hover > .header-anchor::after,
+  .prose h5:hover > .header-anchor::after,
+  .prose h6:hover > .header-anchor::after {
+    visibility: visible;
+    opacity: 0.75;
+  }
 }
 
 .prose .code-block-label {
@@ -546,9 +554,14 @@
   transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
   transition-duration: 200ms;
 
-  &:hover,
   &:focus-visible {
     background: rgb(0 0 0 / 0.3);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: rgb(0 0 0 / 0.3);
+    }
   }
 }
 

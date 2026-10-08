@@ -36,9 +36,11 @@
     height: var(--sz-icon);
   }
 
-  .view-mode-switcher__button:hover {
-    background: color-mix(in srgb, oklch(var(--background)) 60%, transparent);
-    color: oklch(var(--foreground));
+  @media (hover: hover) and (pointer: fine) {
+    .view-mode-switcher__button:hover {
+      background: color-mix(in srgb, oklch(var(--background)) 60%, transparent);
+      color: oklch(var(--foreground));
+    }
   }
 
   .view-mode-switcher__button:focus-visible {

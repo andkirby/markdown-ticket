@@ -26,12 +26,19 @@
     background: oklch(var(--border));
   }
 
-  .ticket-side-pane__divider:hover::after,
   .ticket-side-pane__divider:focus-visible::after,
   .ticket-side-pane__divider.is-dragging::after {
     left: 3.5px;
     width: 2px;
     background: oklch(var(--primary));
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .ticket-side-pane__divider:hover::after {
+      left: 3.5px;
+      width: 2px;
+      background: oklch(var(--primary));
+    }
   }
 
   .ticket-side-pane__divider:focus-visible {
@@ -91,9 +98,11 @@
     @apply inline-flex h-8 w-8 flex-none items-center justify-center rounded-md text-muted-foreground transition-colors;
   }
 
-  .ticket-side-pane__btn:hover:not(:disabled) {
-    background-color: var(--state-hover-bg);
-    color: oklch(var(--foreground));
+  @media (hover: hover) and (pointer: fine) {
+    .ticket-side-pane__btn:hover:not(:disabled) {
+      background-color: var(--state-hover-bg);
+      color: oklch(var(--foreground));
+    }
   }
 
   .ticket-side-pane__btn:focus-visible {
@@ -134,9 +143,11 @@
     @apply hidden items-center gap-1 rounded-md py-1 pl-1.5 pr-2 text-sm font-medium text-muted-foreground transition-colors;
   }
 
-  .ticket-side-pane__back-to-ticket:hover {
-    background-color: var(--state-hover-bg);
-    color: oklch(var(--foreground));
+  @media (hover: hover) and (pointer: fine) {
+    .ticket-side-pane__back-to-ticket:hover {
+      background-color: var(--state-hover-bg);
+      color: oklch(var(--foreground));
+    }
   }
 
   .ticket-side-pane__back-to-ticket:focus-visible {
@@ -164,9 +175,14 @@
     transition: opacity 0.15s ease;
   }
 
-  .ticket-side-pane__nav:hover,
   .ticket-side-pane__nav:focus-within {
     opacity: 1;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .ticket-side-pane__nav:hover {
+      opacity: 1;
+    }
   }
 
   .ticket-side-pane__scroll {
@@ -211,8 +227,10 @@
     border: 1px solid color-mix(in srgb, oklch(var(--primary)) 35%, oklch(var(--border)));
   }
 
-  .ticket-side-pane__pill:hover {
-    background-color: color-mix(in srgb, oklch(var(--primary)) 10%, var(--bg-elevated));
+  @media (hover: hover) and (pointer: fine) {
+    .ticket-side-pane__pill:hover {
+      background-color: color-mix(in srgb, oklch(var(--primary)) 10%, var(--bg-elevated));
+    }
   }
 
   .ticket-side-pane__pill:focus-visible {

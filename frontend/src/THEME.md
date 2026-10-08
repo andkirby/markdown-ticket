@@ -79,6 +79,7 @@ Hover is always the neutral tier; active/selected is always the accent family at
 | Token | Light | Dark | Purpose |
 |---|---|---|---|
 | `--state-hover-bg` | `var(--bg-muted)` | (same alias) | Hover/pointing fill — neutral recessed tier ("cursor is here") |
+| `--state-press-bg` | `color-mix(in oklch, var(--bg-muted), oklch(var(--foreground)) 10%)` | (same expression) | Press/`:active` fill — one step deeper than hover in both themes (mixing toward foreground darkens in light, lightens in dark). Never hover-media-gated: press must fire on touch |
 | `--state-active-bg` | `oklch(0.90 0.05 277)` | `oklch(0.30 0.10 281)` | Active/selected SURFACE tint ("committed / current") — explicit per theme; the old `--primary-light` alias was 1.01:1 on `--bg-subtle` in light (invisible) and was removed |
 | `--state-active-fg` | `var(--primary-text)` | (same alias) | Active/selected signal — text, ring, or underline |
 

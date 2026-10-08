@@ -37,18 +37,28 @@
   transition-duration: 200ms;
 }
 
-.wireloom__annotation-toggle:hover,
 .wireloom__annotation-toggle:focus-visible {
   background: rgb(0 0 0 / 0.3);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .wireloom__annotation-toggle:hover {
+    background: rgb(0 0 0 / 0.3);
+  }
 }
 
 .wireloom__annotation-toggle--active {
   background: var(--wl-dot, rgb(0 0 0 / 0.4));
 }
 
-.wireloom__annotation-toggle--active:hover,
 .wireloom__annotation-toggle--active:focus-visible {
   filter: brightness(1.15);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .wireloom__annotation-toggle--active:hover {
+    filter: brightness(1.15);
+  }
 }
 
 /* Hide SVG callout elements when in compact mode. */
@@ -89,12 +99,20 @@
   transition-duration: 150ms;
 }
 
-.wireloom__compact-marker:hover,
 .wireloom__compact-marker:focus-visible {
   background: var(--wl-dot, #8a7a4f);
   color: var(--wl-box-fill, #fefcf3);
   box-shadow: 0 2px 6px rgb(0 0 0 / 0.2);
   outline: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .wireloom__compact-marker:hover {
+    background: var(--wl-dot, #8a7a4f);
+    color: var(--wl-box-fill, #fefcf3);
+    box-shadow: 0 2px 6px rgb(0 0 0 / 0.2);
+    outline: none;
+  }
 }
 
 .wireloom__compact-marker--active {

@@ -65,9 +65,11 @@
   .sort-menu__trigger--icon {
     @apply w-9 justify-center px-0;
   }
-  .sort-menu__trigger:hover,
-  .sort-menu__direction:hover {
-    background-color: var(--state-hover-bg);
+  @media (hover: hover) and (pointer: fine) {
+    .sort-menu__trigger:hover,
+    .sort-menu__direction:hover {
+      background-color: var(--state-hover-bg);
+    }
   }
   .sort-menu__trigger:focus-visible,
   .sort-menu__direction:focus-visible {
@@ -123,8 +125,10 @@
     color: oklch(var(--foreground));
     text-align: left;
 
-    &:hover {
-      background-color: var(--state-hover-bg);
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        background-color: var(--state-hover-bg);
+      }
     }
     & svg {
       @apply h-3.5 w-3.5 flex-none;

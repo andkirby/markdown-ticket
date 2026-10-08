@@ -69,9 +69,11 @@
     color: var(--text-muted);
     cursor: pointer;
 
-    &:hover {
-      background: var(--state-hover-bg);
-      color: oklch(var(--foreground));
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        background: var(--state-hover-bg);
+        color: oklch(var(--foreground));
+      }
     }
   }
 
@@ -102,8 +104,10 @@
       color: var(--text-muted);
     }
 
-    &:hover {
-      background: var(--state-hover-bg);
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        background: var(--state-hover-bg);
+      }
     }
 
     /* Pressed = the ramp's solid strength (compact control). Declared after
@@ -199,9 +203,11 @@
     cursor: pointer;
     transition: background-color 0.15s ease-out, color 0.15s ease-out;
 
-    &:hover {
-      background: color-mix(in srgb, var(--bg-elevated) 80%, transparent);
-      color: oklch(var(--foreground));
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        background: color-mix(in srgb, var(--bg-elevated) 80%, transparent);
+        color: oklch(var(--foreground));
+      }
     }
   }
 
@@ -292,8 +298,10 @@
     border-left: 3px solid var(--epic-color, var(--border-strong));
     cursor: pointer;
 
-    &:hover {
-      background: color-mix(in srgb, var(--bg-elevated) 92%, var(--bg-muted));
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        background: color-mix(in srgb, var(--bg-elevated) 92%, var(--bg-muted));
+      }
     }
 
     &:focus-visible {
@@ -388,9 +396,14 @@
     cursor: pointer;
     text-align: left;
 
-    &:hover,
     &:focus-visible {
       background: var(--state-hover-bg);
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        background: var(--state-hover-bg);
+      }
     }
   }
 
@@ -486,10 +499,16 @@
     background: transparent;
     color: var(--text-subtle);
 
-    &:hover,
     &:focus-visible {
       background: var(--state-hover-bg);
       color: oklch(var(--foreground));
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        background: var(--state-hover-bg);
+        color: oklch(var(--foreground));
+      }
     }
   }
 
@@ -550,8 +569,10 @@
     cursor: pointer;
     transition: background-color 0.15s ease-out;
 
-    &:hover {
-      background: color-mix(in srgb, var(--bg-muted) 75%, transparent);
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        background: color-mix(in srgb, var(--bg-muted) 75%, transparent);
+      }
     }
 
     /* Status-color tint per column (semantic data-attribute variants). */

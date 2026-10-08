@@ -79,8 +79,10 @@
      Overrides the checked fill/border (accent-color does nothing under
      appearance: none); column.css loads after checkbox.css, so it wins. */
   .column-merge-checkbox {
-    &:hover {
-      border-color: oklch(0.6646 0.1792 41.05 / 50%);
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        border-color: oklch(0.6646 0.1792 41.05 / 50%);
+      }
     }
 
     &:checked {
@@ -112,10 +114,16 @@
     border-radius: var(--radius-input);
     background: var(--bg-elevated);
     color: oklch(var(--foreground));
-    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    transition:
+      background-color 150ms cubic-bezier(0.4, 0, 0.2, 1),
+      border-color 150ms cubic-bezier(0.4, 0, 0.2, 1),
+      color 150ms cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow 150ms cubic-bezier(0.4, 0, 0.2, 1);
 
-    &:hover {
-      background: var(--state-hover-bg);
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        background: var(--state-hover-bg);
+      }
     }
 
     /* Switch mode active — orange tier; explicit fg ≈ orange-800 (no token) */
@@ -222,9 +230,11 @@
     border-radius: var(--radius-card);
     transition: background-color 0.15s ease-out;
   }
-  .column__collapsed:hover {
-    background: var(--state-hover-bg);
-    border-color: var(--border-strong);
+  @media (hover: hover) and (pointer: fine) {
+    .column__collapsed:hover {
+      background: var(--state-hover-bg);
+      border-color: var(--border-strong);
+    }
   }
 
   .collapsed-strip {
@@ -250,9 +260,11 @@
     @apply p-1 rounded transition-colors;
     color: var(--text-subtle);
   }
-  .col-collapse-btn:hover {
-    background: var(--state-hover-bg);
-    color: oklch(var(--foreground));
+  @media (hover: hover) and (pointer: fine) {
+    .col-collapse-btn:hover {
+      background: var(--state-hover-bg);
+      color: oklch(var(--foreground));
+    }
   }
   /* Mobile: a single visible column fills the track width. */
   @media (max-width: 767px) {

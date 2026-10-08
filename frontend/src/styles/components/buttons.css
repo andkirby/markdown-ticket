@@ -12,21 +12,48 @@
     border: 1px solid oklch(var(--border));
   }
 
+  /* Press states: :active is never hover-gated — it is the one pointer state
+     touch must fire (STYLING.md §Interaction-state ramp). Solids step their
+     hover alpha one notch down; tonals take --state-press-bg. Declared after
+     the variant so press absorbs hover while the button is down. */
+  /* Hover variants are hand-written gated rules, NOT @apply hover:*
+     (the Tailwind flag gates content-scanned utilities only — @apply'd
+     variants compile ungated). :active stays ungated on purpose: press
+     must fire on touch. */
   .btn-primary {
-    @apply inline-flex items-center justify-center text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-primary text-primary-foreground enabled:hover:bg-primary/90 h-10 py-2 px-4;
+    @apply inline-flex items-center justify-center text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-primary text-primary-foreground enabled:active:bg-primary/80 h-10 py-2 px-4;
     border-radius: var(--radius-input);
     border: 1px solid oklch(var(--border));
   }
+  @media (hover: hover) and (pointer: fine) {
+    .btn-primary:enabled:hover {
+      background-color: oklch(var(--primary) / 0.9);
+    }
+  }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-secondary text-secondary-foreground enabled:hover:bg-secondary/80 h-10 py-2 px-4;
+    @apply inline-flex items-center justify-center text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-secondary text-secondary-foreground enabled:active:bg-secondary/70 h-10 py-2 px-4;
     border-radius: var(--radius-input);
     border: 1px solid transparent;
   }
+  @media (hover: hover) and (pointer: fine) {
+    .btn-secondary:enabled:hover {
+      background-color: oklch(var(--secondary) / 0.8);
+    }
+  }
 
   .btn-outline {
-    @apply inline-flex items-center justify-center text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 border border-input bg-background enabled:hover:bg-accent enabled:hover:text-accent-foreground h-10 py-2 px-4;
+    @apply inline-flex items-center justify-center text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 border border-input bg-background h-10 py-2 px-4;
     border-radius: var(--radius-input);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .btn-outline:enabled:hover {
+      background-color: oklch(var(--accent));
+      color: oklch(var(--accent-foreground));
+    }
+  }
+  .btn-outline:enabled:active {
+    background: var(--state-press-bg);
   }
 
   /* Ghost = label-only button (transparent at rest, neutral-tier hover).
@@ -38,14 +65,24 @@
     border-radius: var(--radius-input);
     border: 1px solid transparent;
   }
-  .btn-ghost:enabled:hover {
-    background: var(--state-hover-bg);
+  @media (hover: hover) and (pointer: fine) {
+    .btn-ghost:enabled:hover {
+      background: var(--state-hover-bg);
+    }
+  }
+  .btn-ghost:enabled:active {
+    background: var(--state-press-bg);
   }
 
   .btn-danger {
-    @apply inline-flex items-center justify-center text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-destructive text-destructive-foreground enabled:hover:bg-destructive/90 h-10 py-2 px-4;
+    @apply inline-flex items-center justify-center text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-destructive text-destructive-foreground enabled:active:bg-destructive/80 h-10 py-2 px-4;
     border-radius: var(--radius-input);
     border: 1px solid oklch(var(--border));
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .btn-danger:enabled:hover {
+      background-color: oklch(var(--destructive) / 0.9);
+    }
   }
 
   .btn-sm {

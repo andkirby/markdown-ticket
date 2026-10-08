@@ -9,7 +9,12 @@
 
 @layer components {
   .smart-link {
-    @apply hover:underline transition-colors;
+    @apply transition-colors;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .smart-link:hover {
+      text-decoration-line: underline;
+    }
   }
 
   /* Inline variant glyph (was w-3 h-3 on lucide icons in markup; 12px has no

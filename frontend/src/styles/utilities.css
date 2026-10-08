@@ -42,8 +42,10 @@
     scrollbar-color: transparent transparent;
   }
 
-  .project-selector-scroll:hover {
-    scrollbar-color: #d1d5db transparent;
+  @media (hover: hover) and (pointer: fine) {
+    .project-selector-scroll:hover {
+      scrollbar-color: var(--text-subtle) transparent;
+    }
   }
 
   .project-selector-scroll::-webkit-scrollbar {
@@ -55,11 +57,14 @@
   }
 
   .project-selector-scroll::-webkit-scrollbar-thumb {
-    @apply bg-gray-300 rounded-full;
+    @apply rounded-full;
+    background: var(--text-subtle);
   }
 
-  .project-selector-scroll:hover::-webkit-scrollbar-thumb {
-    @apply bg-gray-400;
+  @media (hover: hover) and (pointer: fine) {
+    .project-selector-scroll:hover::-webkit-scrollbar-thumb {
+      background: var(--text-muted);
+    }
   }
   /* v3 Doc 4 / Pr.5: standard focus ring — 2px bg offset + 2px primary @20%.
      Consume via `ring-prim` class on any keyboard-navigable element. */
@@ -86,22 +91,28 @@
   }
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
+/* Custom scrollbar — theme-aware tokens (was hardcoded gray-*: light chrome
+   leaked into dark mode). Layered like the rest of the file (ITCSS row 7). */
+@layer utilities {
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
 
-::-webkit-scrollbar-track {
-  @apply bg-gray-100;
-}
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
 
-::-webkit-scrollbar-thumb {
-  @apply bg-gray-400 rounded-full;
-}
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-full;
+    background: var(--text-subtle);
+  }
 
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-500;
+  @media (hover: hover) and (pointer: fine) {
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-muted);
+    }
+  }
 }
 
 /* Responsive utilities */
