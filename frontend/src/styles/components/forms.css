@@ -73,9 +73,11 @@
     cursor: pointer;
     transition: background-color 0.15s ease-out, color 0.15s ease-out;
 
-    &:hover {
-      background: var(--state-hover-bg);
-      color: oklch(var(--foreground));
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        background: var(--state-hover-bg);
+        color: oklch(var(--foreground));
+      }
     }
   }
 

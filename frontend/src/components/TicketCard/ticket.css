@@ -25,9 +25,11 @@
     padding-left: calc(var(--pad-x) - 3px);
     transition: border-color 150ms ease-out;
   }
-  .ticket-card:hover {
-    border-color: var(--border-strong);
-    border-left-color: var(--card-accent, var(--border-strong));
+  @media (hover: hover) and (pointer: fine) {
+    .ticket-card:hover {
+      border-color: var(--border-strong);
+      border-left-color: var(--card-accent, var(--border-strong));
+    }
   }
   /* Accent stripe = importance landmark: critical/high only (low/medium unset → transparent). */
   .ticket-card[data-priority="critical"] { --card-accent: var(--prio-critical); }
@@ -68,8 +70,10 @@
   }
   /* Ticket-key rendered as a link (SmartLink in badges) — underline on hover.
      Scoped to <a> so non-link .ticket-key (TicketCode span, PinItem) is unaffected. */
-  a.ticket-key:hover {
-    text-decoration: underline;
+  @media (hover: hover) and (pointer: fine) {
+    a.ticket-key:hover {
+      text-decoration: underline;
+    }
   }
   /* TicketCode — glyph-before-key rendering; layers layout + primary-text color
      on top of .ticket-key typography (the component applies both classes). */

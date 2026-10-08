@@ -114,11 +114,18 @@
   padding: 0;
   transition: border-color 0.12s ease, color 0.12s ease, background-color 0.12s ease;
 
-  &:hover,
   &:focus-visible {
     border-color: var(--border-strong);
     color: var(--text-foreground, var(--text-muted));
     outline: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      border-color: var(--border-strong);
+      color: var(--text-foreground, var(--text-muted));
+      outline: none;
+    }
   }
 
   &:focus-visible {
@@ -155,11 +162,18 @@
   padding: 0;
   transition: border-color 0.12s ease, color 0.12s ease;
 
-  &:hover,
   &:focus-visible {
     border-color: var(--border-strong);
     color: var(--text-foreground, var(--text-muted));
     outline: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      border-color: var(--border-strong);
+      color: var(--text-foreground, var(--text-muted));
+      outline: none;
+    }
   }
 
   &:focus-visible {
@@ -195,15 +209,22 @@
   transition: opacity 0.12s ease;
   cursor: pointer;
 
-  &:hover {
-    border-color: var(--border-strong);
-    color: var(--text-foreground, var(--text-muted));
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      border-color: var(--border-strong);
+      color: var(--text-foreground, var(--text-muted));
+    }
   }
 }
 
-.pin-item:hover .pin-item__unpin,
 .pin-item:focus-visible .pin-item__unpin {
   opacity: 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .pin-item:hover .pin-item__unpin {
+    opacity: 1;
+  }
 }
 
 /* Tooltip content (Radix portal). */

@@ -55,9 +55,11 @@
     flex-shrink: 0;
     cursor: pointer;
   }
-  .header__pin-toggle:hover {
-    border-color: var(--border-strong);
-    color: oklch(var(--foreground));
+  @media (hover: hover) and (pointer: fine) {
+    .header__pin-toggle:hover {
+      border-color: var(--border-strong);
+      color: oklch(var(--foreground));
+    }
   }
   .header__pin-toggle:focus-visible {
     @apply outline-none ring-1 ring-ring/50;

@@ -120,7 +120,7 @@
        Never a primary tint for hover — the tier change (neutral → accent)
        carries the meaning and survives both themes. */
     --state-hover-bg: var(--bg-muted);      /* hover/pointing — neutral recessed tier */
-    --state-active-bg: oklch(0.90 0.05 277); /* active/selected SURFACE tint (explicit — was primary-light 0.962, invisible at 1.01:1 on bg-subtle) */
+    --state-press-bg: color-mix(in oklch, var(--bg-muted), oklch(var(--foreground)) 10%); /* press/`:active` — one step deeper than hover; mixing toward foreground darkens in light and lightens in dark, so one expression serves both themes */    --state-active-bg: oklch(0.90 0.05 277); /* active/selected SURFACE tint (explicit — was primary-light 0.962, invisible at 1.01:1 on bg-subtle) */
     --state-active-fg: var(--primary-text);  /* active/selected signal: text, ring, underline */
   }
 

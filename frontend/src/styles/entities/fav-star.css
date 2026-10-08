@@ -32,9 +32,11 @@
   transform: scale(1);
 
   /* Brighten on direct hover (scale) */
-  &:hover {
-    opacity: 1;
-    transform: scale(1.1);
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      opacity: 1;
+      transform: scale(1.1);
+    }
   }
 
   /* Favorited base — tilted star */
@@ -44,19 +46,25 @@
 }
 
 /* Brighten on card hover */
-.group:hover .fav-star-btn--card {
-  opacity: 1;
+@media (hover: hover) and (pointer: fine) {
+  .group:hover .fav-star-btn--card {
+    opacity: 1;
+  }
 }
 
 /* Favorited: brighten on card hover */
-.group:hover .fav-star-btn--card[data-favorited="true"] {
-  opacity: 1;
-  transform: rotate(15deg);
+@media (hover: hover) and (pointer: fine) {
+  .group:hover .fav-star-btn--card[data-favorited="true"] {
+    opacity: 1;
+    transform: rotate(15deg);
+  }
 }
 
 /* Favorited: scale on direct hover — must beat group:hover specificity */
-.group:hover .fav-star-btn--card[data-favorited="true"]:hover {
-  transform: rotate(15deg) scale(1.1);
+@media (hover: hover) and (pointer: fine) {
+  .group:hover .fav-star-btn--card[data-favorited="true"]:hover {
+    transform: rotate(15deg) scale(1.1);
+  }
 }
 
 /* Document context — hidden by default, shown on row hover, always shown when active */
@@ -69,13 +77,17 @@
     opacity: 1;
   }
 
-  &:hover {
-    opacity: 1;
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      opacity: 1;
+    }
   }
 }
 
-.group:hover .fav-star-btn--document {
-  opacity: 1;
+@media (hover: hover) and (pointer: fine) {
+  .group:hover .fav-star-btn--document {
+    opacity: 1;
+  }
 }
 
 /* ── Star icon ── */
@@ -88,9 +100,11 @@
   transition: fill 0.2s ease, color 0.2s ease, opacity 0.2s ease;
 
   /* Hover state — brighter appearance (only on direct hover) */
-  &:hover {
-    fill: var(--star-hover-fill);
-    color: var(--star-hover-color);
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      fill: var(--star-hover-fill);
+      color: var(--star-hover-color);
+    }
   }
 }
 
@@ -102,12 +116,14 @@
 }
 
 /* Favorited star turns yellow on card hover OR direct star hover */
-.fav-star[data-favorited="true"]:hover,
-.group:hover .fav-star[data-favorited="true"],
-.fav-star.active:hover,
-.group:hover .fav-star.active {
-  fill: var(--star-active-hover-fill);
-  color: var(--star-active-hover-color);
+@media (hover: hover) and (pointer: fine) {
+  .fav-star[data-favorited="true"]:hover,
+  .group:hover .fav-star[data-favorited="true"],
+  .fav-star.active:hover,
+  .group:hover .fav-star.active {
+    fill: var(--star-active-hover-fill);
+    color: var(--star-active-hover-color);
+  }
 }
 
 /* Chip variant — smaller, rotated overlay */
@@ -124,11 +140,13 @@
   filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.1));
 }
 
-.fav-star--chip:hover,
-.group:hover .fav-star--chip {
-  fill: var(--star-hover-fill);
-  color: var(--star-hover-color);
-  opacity: 1;
+@media (hover: hover) and (pointer: fine) {
+  .fav-star--chip:hover,
+  .group:hover .fav-star--chip {
+    fill: var(--star-hover-fill);
+    color: var(--star-hover-color);
+    opacity: 1;
+  }
 }
 
 /* Card variant — inline with content */

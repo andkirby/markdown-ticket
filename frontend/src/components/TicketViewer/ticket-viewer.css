@@ -28,8 +28,10 @@
     background-color: color-mix(in srgb, var(--bg-elevated) 60%, transparent);
     color: oklch(var(--foreground));
   }
-  .trace-graph-shell__back:hover {
-    background-color: color-mix(in srgb, var(--bg-elevated) 80%, transparent);
+  @media (hover: hover) and (pointer: fine) {
+    .trace-graph-shell__back:hover {
+      background-color: color-mix(in srgb, var(--bg-elevated) 80%, transparent);
+    }
   }
 
   .trace-graph-shell__back svg {
@@ -67,8 +69,10 @@
     border: 1px solid oklch(var(--border));
     background-color: var(--bg-elevated);
   }
-  .ticket-viewer-action:hover {
-    background-color: var(--state-hover-bg);
+  @media (hover: hover) and (pointer: fine) {
+    .ticket-viewer-action:hover {
+      background-color: var(--state-hover-bg);
+    }
   }
 
   .ticket-viewer-action svg {

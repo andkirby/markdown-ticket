@@ -196,8 +196,14 @@
 
   .relationship-badge__overflow {
     @apply ml-1 inline-flex items-center rounded px-1 leading-none;
-    @apply text-xs font-medium opacity-80 hover:opacity-100 hover:underline;
+    @apply text-xs font-medium opacity-80;
     @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-primary;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .relationship-badge__overflow:hover {
+      opacity: 1;
+      text-decoration-line: underline;
+    }
   }
 
   .relationship-badge__panel {
@@ -210,7 +216,12 @@
 
   .relationship-badge__link {
     @apply inline-flex w-full items-center rounded px-1.5 py-1 text-xs;
-    @apply hover:bg-accent hover:underline;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .relationship-badge__link:hover {
+      background-color: oklch(var(--accent));
+      text-decoration-line: underline;
+    }
   }
 
   /* =====================================================
@@ -283,9 +294,14 @@
     inset: -2px 0;
   }
 
-  .badge-action:hover,
   .badge-action:focus-visible {
     background: var(--state-hover-bg);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .badge-action:hover {
+      background: var(--state-hover-bg);
+    }
   }
 
   .badge-action:focus-visible {

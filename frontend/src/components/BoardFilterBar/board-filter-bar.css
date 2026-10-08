@@ -37,8 +37,10 @@
     border-color: oklch(var(--border));
 
     /* Hover = bg change only (v3 Pr.5: no lift, no gradient). */
-    &:hover {
-      background-color: var(--state-hover-bg);
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        background-color: var(--state-hover-bg);
+      }
     }
 
     /* Keyboard focus owns the ring — keyboard-only, thin, low-opacity. */
@@ -90,8 +92,10 @@
   .filter-clear-all {
     color: var(--text-muted);
 
-    &:hover {
-      color: oklch(var(--foreground));
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        color: oklch(var(--foreground));
+      }
     }
   }
 
@@ -112,11 +116,14 @@
     color: var(--text-muted);
   }
   .filter-clear-all-link {
-    @apply text-xs underline-offset-2 hover:underline;
+    @apply text-xs underline-offset-2;
     color: var(--text-muted);
 
-    &:hover {
-      color: oklch(var(--foreground));
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        color: oklch(var(--foreground));
+        text-decoration-line: underline;
+      }
     }
   }
 
@@ -169,8 +176,10 @@
   .facet-option {
     @apply flex items-center gap-2 px-1 py-1 text-sm cursor-pointer rounded;
 
-    &:hover {
-      background-color: var(--state-hover-bg);
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        background-color: var(--state-hover-bg);
+      }
     }
   }
 
@@ -190,19 +199,24 @@
   .filter-chip__remove {
     @apply inline-flex items-center rounded-full p-0.5 -mr-1;
 
-    &:hover {
-      background-color: var(--state-hover-bg);
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        background-color: var(--state-hover-bg);
+      }
     }
   }
   .filter-chip__remove-icon {
     @apply h-3 w-3;
   }
   .active-filter-clear-all {
-    @apply text-xs underline-offset-2 hover:underline ml-1;
+    @apply text-xs underline-offset-2 ml-1;
     color: var(--text-muted);
 
-    &:hover {
-      color: oklch(var(--foreground));
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        color: oklch(var(--foreground));
+        text-decoration-line: underline;
+      }
     }
   }
 
@@ -222,8 +236,10 @@
   .mobile-filter-chip__remove {
     @apply inline-flex items-center rounded-full p-0.5;
 
-    &:hover {
-      background-color: var(--state-hover-bg);
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        background-color: var(--state-hover-bg);
+      }
     }
   }
   .mobile-filter-chip__remove-icon {

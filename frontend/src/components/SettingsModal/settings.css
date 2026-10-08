@@ -99,7 +99,13 @@
 .settings-info-trigger {
   @apply inline-flex h-6 w-6 items-center justify-center rounded-full transition-colors;
   color: var(--text-muted);
-  @apply hover:bg-muted hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50;
+  @apply focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50;
+}
+@media (hover: hover) and (pointer: fine) {
+  .settings-info-trigger:hover {
+    background-color: var(--bg-muted);
+    color: oklch(var(--foreground));
+  }
 }
 
 .settings-desc {
@@ -130,13 +136,18 @@
   @apply bg-primary text-primary-foreground border-primary;
 }
 .settings-theme-btn--inactive {
-  @apply text-foreground hover:bg-muted;
+  @apply text-foreground;
   background-color: var(--bg-elevated);
   border-color: oklch(var(--border));
 }
+@media (hover: hover) and (pointer: fine) {
+  .settings-theme-btn--inactive:hover {
+    background-color: var(--bg-muted);
+  }
+}
 
 .settings-action-btn {
-  @apply flex items-center gap-2 px-3 py-1.5 text-sm font-medium border text-foreground hover:bg-muted hover:text-destructive transition-colors;
+  @apply flex items-center gap-2 px-3 py-1.5 text-sm font-medium border text-foreground transition-colors;
   border-radius: var(--radius-input);
   border-color: oklch(var(--border));
   background-color: var(--bg-elevated);
@@ -144,6 +155,12 @@
   /* Disabled state (was disabled:cursor-not-allowed disabled:opacity-60 in markup). */
   &:disabled {
     @apply cursor-not-allowed opacity-60;
+  }
+}
+@media (hover: hover) and (pointer: fine) {
+  .settings-action-btn:hover:not(:disabled) {
+    background-color: var(--bg-muted);
+    color: oklch(var(--destructive));
   }
 }
 
@@ -246,8 +263,10 @@
   background-color: var(--bg-elevated);
   color: var(--text-muted);
 
-  &:hover {
-    @apply bg-muted text-foreground;
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      @apply bg-muted text-foreground;
+    }
   }
 
   &:focus-visible {
@@ -258,16 +277,20 @@
 .project-accents__save-btn {
   @apply text-primary border-primary;
 
-  &:hover {
-    @apply bg-primary text-primary-foreground;
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      @apply bg-primary text-primary-foreground;
+    }
   }
 }
 
 .project-accents__link {
   @apply text-xs font-medium text-primary whitespace-nowrap;
 
-  &:hover {
-    @apply underline;
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      @apply underline;
+    }
   }
 }
 

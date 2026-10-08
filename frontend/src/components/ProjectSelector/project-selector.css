@@ -43,8 +43,10 @@
     border-color: transparent;
 
     /* v3: hover = stronger border only — no lift, no shadow. */
-    &:hover {
-      border-color: var(--border-strong);
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        border-color: var(--border-strong);
+      }
     }
 
     &:focus-visible {
@@ -219,8 +221,10 @@
     padding: 0 0.5rem;
     font-size: var(--fs-ui-sm);
 
-    &:hover {
-      border-color: var(--border-strong);
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        border-color: var(--border-strong);
+      }
     }
   }
 
@@ -277,9 +281,11 @@
     border: 1px solid transparent;
 
     /* v3: hover = neutral muted tier + stronger border — no lift, no shadow. */
-    &:hover {
-      background-color: var(--state-hover-bg);
-      border-color: var(--project-chip-hover-border);
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        background-color: var(--state-hover-bg);
+        border-color: var(--project-chip-hover-border);
+      }
     }
 
     &:focus-visible {
@@ -408,9 +414,11 @@
     border: 1px solid transparent;
 
     /* v3: hover = neutral muted tier + stronger border — no lift, no shadow. */
-    &:hover {
-      background-color: var(--state-hover-bg);
-      border-color: var(--project-launcher-hover-border);
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        background-color: var(--state-hover-bg);
+        border-color: var(--project-launcher-hover-border);
+      }
     }
 
     &.active {

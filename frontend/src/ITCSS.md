@@ -81,11 +81,11 @@ Current state, audited against `frontend/src/index.css` import order.
 |---|---|---|---|---|
 | 1 | **Settings** | `styles/design-tokens.css` (`:root` + `.dark`) | `@layer base` | ✅ consolidated |
 | 2 | **Tools** | `styles/animations.css` (keyframes) | unlayered | ⚠️ no formal mixins; `@apply` + `color-mix()` are the ad-hoc tools |
-| 3 | **Generic** | `styles/base.css` (reset portion, `*`, `html`, `body` box rules) | `@layer base` | ⚠️ combined with Elements |
+| 3 | **Generic** | `styles/base.css` (reset portion, `*`, `html`, `body` box rules, reduced-motion guard) | `@layer base` | ⚠️ combined with Elements |
 | 4 | **Elements** | `styles/base.css` (`h1`–`h6`, `a`, `code`, type scale) | `@layer base` | ⚠️ combined with Generic |
 | 5 | **Objects** | `styles/components/{buttons,forms,tabs,overlays,loading,layout}.css` | `@layer components` | ✅ shared primitives, UI-agnostic |
-| 6 | **Components** | `components/**/*.css` + `styles/prose.css` + `styles/wireloom-annotations.css` + `styles/entities/fav-star.css` | `@layer components` (mostly) | ⚠️ `AccentColorPicker.css` unlayered |
-| 7 | **Utilities** | `styles/utilities.css` | `@layer utilities` (partly) | ⚠️ `.sr-only`, `.not-sr-only`, print/responsive sit outside any layer |
+| 6 | **Components** | `components/**/*.css` + `styles/prose.css` + `styles/wireloom-annotations.css` + `styles/entities/fav-star.css` | `@layer components` (mostly) | ✅ all layered and token-driven |
+| 7 | **Utilities** | `styles/utilities.css` | `@layer utilities` | ✅ fully layered (print/responsive/scrollbar/a11y blocks included) |
 
 **Import order in `index.css`** (specificity increases downward):
 
@@ -189,16 +189,15 @@ consume tokens from layer 1 and objects from layer 5.
 
 **Rules:**
 - Every component CSS file is wrapped in `@layer components`.
-- Components reference tokens by `var(--x)`, never by raw color/size literals.
-- Semantic variants use `data-*` (see STYLING.md §Semantic Variants), not
+- Components reference tokens by `var(--x)`, never by raw color/size literals.- Semantic variants use `data-*` (see STYLING.md §Semantic Variants), not
   modifier-class proliferation.
 - Component CSS lives at `components/{Component}/{component}.css`, imported
   after the shared objects so it can `@apply` them.
 
-**Known violation:** `components/AddProjectModal/components/AccentColorPicker.css`
-is **not** wrapped in `@layer components` — the only component file that escapes
-the cascade layer and thus outranks siblings by specificity accident. The
-nightly audit flags this.
+**Former violation, resolved:** `components/AddProjectModal/components/AccentColorPicker.css`
+was the only component file escaping the cascade layer and hardcoding raw
+`rgb()` chrome colors; it is now wrapped in `@layer components` and tokenized
+(palette swatch fills remain inline in the TSX — they are data, not theme).
 
 ### 7. Utilities — single-purpose helpers
 
@@ -215,9 +214,9 @@ overrides.
   fighting a component with three utilities, extract the variant into the
   component's CSS instead.
 
-**Known drift:** `.sr-only`, `.not-sr-only`, and the print/responsive blocks at
-`utilities.css:73+` sit **outside** any `@layer`. They work today by source
-order, but escape the cascade-layer contract — the nightly audit flags them.
+**Former drift, resolved:** `.sr-only`, `.not-sr-only`, print/responsive, and
+the custom-scrollbar block all sit inside `@layer utilities` — no unlayered
+rules remain in the file.
 
 ---
 

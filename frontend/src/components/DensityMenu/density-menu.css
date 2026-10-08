@@ -30,8 +30,10 @@
     border-radius: var(--radius-input);
     cursor: pointer;
 
-    &:hover {
-      background-color: var(--state-hover-bg);
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        background-color: var(--state-hover-bg);
+      }
     }
     &:focus-visible {
       outline: none;
@@ -98,8 +100,10 @@
     border-radius: var(--radius-xs);
     color: var(--text-muted);
 
-    &:hover {
-      border-color: var(--border-strong);
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        border-color: var(--border-strong);
+      }
     }
     /* Selected = accent border + surface tint (ramp "accent border" recipe). */
     &[aria-pressed='true'] {
@@ -159,8 +163,10 @@
     border: none;
     padding: 0;
 
-    &:hover {
-      color: oklch(var(--primary));
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        color: oklch(var(--primary));
+      }
     }
   }
 }

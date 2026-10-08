@@ -394,6 +394,8 @@ Rules:
 - **A tint cannot carry state alone in light mode.** Indigo tints cap at ~1.1:1 against the near-white tiers (`--bg-subtle`/`--background`), so a tinted pill is invisible — the original `--primary-light` fill measured **1.01:1** on the scope bar. Large surfaces get tint + a strong signal (ring/border/underline in `--state-active-fg` or primary); compact controls go **solid**.
 - **Never a primary tint for hover.** The tier change (neutral → accent) carries hover→selected meaning and survives both themes; tint-strength steps collapse in light mode.
 - Hand-written hover backgrounds consume `var(--state-hover-bg)`, never `var(--bg-muted)` directly (Tailwind `@apply hover:bg-*` forms are equivalent and fine).
+- **Hover styles are touch-gated.** A tap latches `:hover` on touch devices, so every hand-written hover rule — `:hover`, nested `&:hover`, and `.group:hover` descendants — wraps in `@media (hover: hover) and (pointer: fine)`. Tailwind `hover:` utilities in TSX markup are gated wholesale by `future.hoverOnlyWhenSupported` in `frontend/tailwind.config.js`. Two things the flag does NOT reach, both verified in dist output: `@apply hover:*` inside component CSS compiles ungated (extract a gated hand rule instead — buttons.css is the reference pattern), and bare `group-hover:` classes stay ungated.
+- **Press is one step deeper than hover, and never gated.** `:active` is the one pointer state touch must fire, so it stays outside the hover media gate. Solid fills step their hover alpha down one notch (`bg-primary/90` hover → `/80` press); neutral/tonal fills take `--state-press-bg` (10% foreground mix — deeper than hover in light, lighter in dark), e.g. `.btn-ghost:enabled:active`.
 - Drop-target highlights reuse `--state-active-bg` with a subdued ring (`ring-primary/40`) — "will receive" reads as commit-preview, not hover.
 - Tabs are one *consumer* of this ramp, not the shared component for selectable things. Result rows are listboxes (`role="option"` + `aria-selected`); never force selection surfaces under the tabs component.
 - **Verify state contrast where the state sits**, not in isolation: fill-vs-surface (and signal-vs-fill) in BOTH themes, AND under state combinations (hover-on-active, focus-on-active). A state token that is architecturally correct can still be imperceptible — measure it (`--primary-light` shipped invisible-on-arrival in light mode; the solid pill shipped with hover demoting it back to the invisible tier).
@@ -407,6 +409,14 @@ A disabled control **keeps pointer events** and takes `cursor: not-allowed` plus
 - Menu rows keep their `cursor-default` base (menus don't use the hand cursor); the disabled state is what flips them to `not-allowed` (`data-[disabled]:cursor-not-allowed`).
 - Loading buttons use the native `disabled` attribute (spinner carries the "in progress" meaning) and therefore the same `not-allowed` cursor — don't invent a third cursor for it.
 - Live demo: [`styleguide.html`](styleguide.html) → "disabled controls · cursor contract".
+
+### Reduced Motion
+
+Motion is disabled globally, not per rule: `styles/base.css` (Generic layer) carries a `@media (prefers-reduced-motion: reduce)` guard that collapses every transition and keyframe animation — app CSS, Tailwind `transition-*`/`animate-*` utilities, and vendored Radix `animate-in/out` — to `0.01ms` while keeping end states and `animationend` (so Radix still unmounts) intact.
+
+- Do **not** wrap individual transitions in `no-preference` media queries or add `motion-reduce:` variants — the guard owns the concern; duplicating it per rule is drift.
+- The `!important` in the guard is sanctioned (same exception as the print utilities): it must beat the source-order-last utilities layer.
+- New motion that bypasses `transition`/`animation` (e.g. JS-driven scroll or transform loops) must gate itself on the preference; CSS motion never needs to.
 
 ---
 

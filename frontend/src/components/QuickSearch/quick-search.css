@@ -27,8 +27,10 @@
     background: transparent;
   }
 
-  .search-result:hover {
-    background: var(--state-hover-bg);
+  @media (hover: hover) and (pointer: fine) {
+    .search-result:hover {
+      background: var(--state-hover-bg);
+    }
   }
 
   .search-result:focus-visible {
@@ -118,8 +120,10 @@
     color: var(--text-muted);
     background: transparent;
 
-    &:hover {
-      background: var(--state-hover-bg);
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        background: var(--state-hover-bg);
+      }
     }
 
     /* Compact control → SOLID active (tints cap at ~1.1:1 on the bg-subtle bar
@@ -146,8 +150,13 @@
   /* ── Error / Retry link ── */
 
   .search-retry-link {
-    @apply text-sm font-medium hover:underline;
+    @apply text-sm font-medium;
     color: var(--primary-text);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .search-retry-link:hover {
+      text-decoration-line: underline;
+    }
   }
 
   /* ── Error text (was text-sm in markup → density SIZE token) ── */

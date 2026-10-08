@@ -20,6 +20,22 @@
     overscroll-behavior: none;
   }
 
+  /* Reduced motion: one kill-switch instead of per-rule @media wrappers.
+     Collapses durations (not `animation: none`) so end states — Radix
+     animate-in fill, entrance opacity — still land, and animationend still
+     fires so Radix unmounts. `!important` must beat the utilities layer,
+     same sanctioned exception as print. Covers the scroll-smooth above. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
   h1, h2, h3, h4, h5, h6 {
     @apply font-semibold tracking-tight;
   }

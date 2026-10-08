@@ -28,8 +28,10 @@
     transition: color 150ms cubic-bezier(0.4, 0, 0.2, 1);
     color: var(--text-muted);
 
-    &:hover {
-      color: oklch(var(--foreground));
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        color: oklch(var(--foreground));
+      }
     }
 
     /* Active: underline-only signal from the state ramp. Declared after
