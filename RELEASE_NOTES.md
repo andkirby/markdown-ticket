@@ -1,5 +1,26 @@
 # Release Notes
 
+## v0.33.0 (2026-10-17)
+
+### Improvements
+
+**Compact Relative Timestamps**
+- Timestamps across the app now read "2d ago" or "45m ago" instead of the long form "2 days ago", so lists, cards, and headers stay tidy
+- Months abbreviate to "mo", so "3 months ago" never gets confused with minutes
+
+**Accessibility and Touch Polish**
+- If your system has "reduce motion" enabled, the app now respects it: animations collapse to instant transitions while still landing on their final state
+- On touch devices, hover-only effects no longer trap the UI — hover styling applies only where a real pointer exists, and every button now gives visible press feedback when tapped
+- Scrollbars now follow your light/dark theme instead of staying light gray in dark mode, and the accent color picker uses theme tokens throughout
+
+**Template Validation (MDT-101)**
+- Malformed entries in a project's templates.json are now detected and skipped with a log message instead of being loaded unchecked — a typo in your templates file no longer risks silently broken ticket templates
+
+### Internal
+
+- Repo hygiene: a gitignore pattern that silently prevented new `__tests__` files from being committed has been fixed, and stranded test files were recovered
+- Internal refactoring of the shared/domain-contracts layer (MDT-099) with no behavior change
+
 ## v0.32.0 (2026-09-30)
 
 ### New Features
