@@ -248,6 +248,7 @@ markdown-ticket/
 
 ## What's New
 
+- **v0.33.0** (2026-10-17): Compact relative timestamps ("2d ago"); reduced-motion, touch-safe hover, press states, and theme-aware scrollbars; template file validation
 - **v0.32.0** (2026-09-30): Sortable list-view columns with per-view sorting and sticky headers; reading-pane and timestamp fixes
 - **v0.31.0** (2026-09-24): Side reading pane — documents open beside the ticket with their own history; app-wide two-axis density
 - **v0.30.0** (2026-09-22): Status icons on ticket keys and badges, HTML previews in the ticket view with fullscreen overlay, epic-only swimlane search with pressed toolbar toggles, epic-detail → board jump, clickable inline-code doc links
