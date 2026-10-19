@@ -51,6 +51,7 @@ const FILTER_FIELD_MAPPING: Record<string, string> = {
   type: 'type',
   level: 'level',
   assignee: 'assignee',
+  component: 'component',
   phase: 'phaseEpic',
   epic: 'phaseEpic',
 }

@@ -269,6 +269,8 @@ export class MarkdownService {
       lines.push(`phaseEpic: ${ticket.phaseEpic}`)
     if (ticket.assignee)
       lines.push(`assignee: ${ticket.assignee}`)
+    if (ticket.component)
+      lines.push(`component: ${ticket.component}`)
     if (ticket.implementationNotes)
       lines.push(`implementationNotes: ${ticket.implementationNotes}`)
 

@@ -61,6 +61,10 @@ export function formatTicketView(ticket: Ticket, projectPath?: string): string {
     fields.push({ label: 'assignee', value: ticket.assignee })
   }
 
+  if (ticket.component) {
+    fields.push({ label: 'component', value: ticket.component })
+  }
+
   if (ticket.dateCreated) {
     fields.push({ label: 'created', value: ticket.dateCreated.toISOString().split('T')[0] })
   }
@@ -400,6 +404,7 @@ const REVERSE_FIELD_MAPPING: Record<string, string> = {
   priority: 'priority',
   phaseEpic: 'phase',
   assignee: 'assignee',
+  component: 'component',
   relatedTickets: 'related',
   dependsOn: 'depends',
   blocks: 'blocks',

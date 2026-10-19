@@ -1274,11 +1274,28 @@ export class TicketService {
         return false
     }
 
+    if (filters.level) {
+      // Exact enum match: level is a normalized enum, not a fuzzy label.
+      const values = Array.isArray(filters.level)
+        ? filters.level
+        : [filters.level]
+      if (!values.includes((ticket.level || 'ticket')))
+        return false
+    }
+
     if (filters.assignee) {
       const values = Array.isArray(filters.assignee)
         ? filters.assignee
         : [filters.assignee]
       if (!values.some(v => fuzzyMatch(ticket.assignee || '', v)))
+        return false
+    }
+
+    if (filters.component) {
+      const values = Array.isArray(filters.component)
+        ? filters.component
+        : [filters.component]
+      if (!values.some(v => fuzzyMatch(ticket.component || '', v)))
         return false
     }
 
@@ -1364,6 +1381,8 @@ export class TicketService {
       sections.push(`blocks: ${arrayToString(ticket.blocks)}`)
     if (ticket.assignee)
       sections.push(`assignee: ${ticket.assignee}`)
+    if (ticket.component)
+      sections.push(`component: ${ticket.component}`)
     if (ticket.implementationDate) {
       sections.push(
         `implementationDate: ${ticket.implementationDate.toISOString()}`,

@@ -123,6 +123,7 @@ export function formatTicketForStructured(ticket: Ticket, projectPath?: string):
     priority: enumValue(ticket.priority),
     phaseEpic: ticket.phaseEpic || null,
     assignee: ticket.assignee || null,
+    component: ticket.component || null,
     dates: {
       created: toIso(ticket.dateCreated),
       modified: toIso(ticket.lastModified),

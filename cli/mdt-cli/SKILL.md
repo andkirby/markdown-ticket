@@ -36,7 +36,7 @@ mdt-cli ticket get <key>      # Canonical form
 mdt-cli ticket get -p <code> <key>   # Resolve within an explicit project (any cwd)
 ```
 
-Prints ticket title, labeled metadata (status, type, priority, phase, assignee, dates), and path. If the ticket has a CR directory with subdocuments, lists them below the path.
+Prints ticket title, labeled metadata (status, type, priority, phase, assignee, component, dates), and path. If the ticket has a CR directory with subdocuments, lists them below the path.
 
 `-p, --project <code>` — resolve the ticket within the given project instead of the cwd-detected one; explicit project wins over key-embedded codes. Unknown project → `Project <code> not found`, exit 1. Useful for non-interactive consumers running outside a project root.
 
@@ -65,7 +65,7 @@ Filters — positional `key=value` args with AND across fields, comma-separated 
 mdt-cli list status=impl priority=high,critical
 ```
 
-Filterable fields: `status`, `priority`, `type`, `level`, `assignee`, `epic`/`phase`. (`level` accepts aliases: `e`→epic, `t`→ticket.)
+Filterable fields: `status`, `priority`, `type`, `level`, `assignee`, `component`, `epic`/`phase`. (`level` accepts aliases: `e`→epic, `t`→ticket.)
 
 ## Create
 
@@ -125,7 +125,9 @@ Updates ticket attributes. Normalizes aliases (e.g. `in-progress` → `In Progre
 
 `-p, --project <code>` — same semantics as on `ticket get`: explicit project wins, unknown project exits 1.
 
-Keys: `status`, `priority`, `level`, `phase`, `assignee`, `related`, `depends`, `blocks`, `impl-date`, `impl-notes`.
+`component` is a free-text subsystem/package label (e.g. `owned-runtime`, `frontend`); it has no value validation and supports `list component=<value>` fuzzy filtering.
+
+Keys: `status`, `priority`, `level`, `phase`, `assignee`, `component`, `related`, `depends`, `blocks`, `impl-date`, `impl-notes`.
 
 Relations (`related`, `depends`, `blocks`) support `=` (replace), `+=` (add), `-=` (remove). All others use `=` only.
 

@@ -102,6 +102,7 @@ export function normalizeTicket(rawTicket: unknown): Ticket {
     // Map optional fields
     phaseEpic: getString(ticket.phaseEpic),
     assignee: getString(ticket.assignee),
+    component: getString(ticket.component),
     implementationNotes: getString(ticket.implementationNotes),
 
     // Normalize relationship fields to arrays
@@ -166,6 +167,7 @@ export function normalizeTicketMetadata(rawTicket: unknown): TicketMetadata {
     // Map optional fields
     phaseEpic: getString(ticket.phaseEpic),
     assignee: getString(ticket.assignee),
+    component: getString(ticket.component),
     implementationNotes: getString(ticket.implementationNotes),
 
     // Normalize relationship fields to arrays

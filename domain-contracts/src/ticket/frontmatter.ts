@@ -47,6 +47,7 @@ export const TicketFrontmatterSchema = z.object({
   dependsOn: z.string().optional(),
   blocks: z.string().optional(),
   assignee: z.string().email('Invalid email format').optional(),
+  component: z.string().optional(),
   content: z.string().optional(),
   implementationDate: ISODateSchema.optional(),
   implementationNotes: z.string().optional(),

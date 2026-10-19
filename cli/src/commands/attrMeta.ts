@@ -16,6 +16,7 @@ export const ATTR_FIELDS: Record<string, string> = {
   'level': 'level',
   'phase': 'phaseEpic',
   'assignee': 'assignee',
+  'component': 'component',
   'related': 'relatedTickets',
   'depends': 'dependsOn',
   'blocks': 'blocks',
@@ -34,6 +35,7 @@ export const ATTR_HELP = {
     '  aliases: backlog->Proposed, open->Approved, done/complete->Implemented, in-progress->In Progress, partial->Partially Implemented, deferred->On Hold',
     `priority: ${CRPriorities.join(' | ')}  (aliases: p1-p4)`,
     'level: ticket | epic  (aliases: e->epic, t->ticket)',
+    'component: free-text subsystem label (e.g. owned-runtime, frontend)',
     'Examples: status=Implemented  priority=High  level=epic  related+=MDT-100  depends-=MDT-001',
   ].join(`\n  ${' '.repeat(11)}`),
 }

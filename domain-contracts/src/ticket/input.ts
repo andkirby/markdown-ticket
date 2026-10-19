@@ -13,6 +13,7 @@ export interface TicketData {
   dependsOn?: string | string[]
   blocks?: string | string[]
   assignee?: string
+  component?: string
   content?: string
   description?: string
   rationale?: string
@@ -28,6 +29,7 @@ export interface TicketUpdateAttrs {
   dependsOn?: string | string[]
   blocks?: string | string[]
   assignee?: string
+  component?: string
   implementationDate?: Date | null
   implementationNotes?: string
 }
@@ -38,6 +40,7 @@ export interface TicketFilters {
   priority?: string | string[]
   level?: CRLevelValue | CRLevelValue[]
   assignee?: string | string[]
+  component?: string | string[]
   phaseEpic?: string | string[]
   /** Derived multi-select; v1.1 facet. Each value OR-combines within the facet. */
   impactAreas?: string | string[]
@@ -59,6 +62,7 @@ export const TICKET_UPDATE_ATTRS = [
   'dependsOn',
   'blocks',
   'assignee',
+  'component',
   'implementationDate',
   'implementationNotes',
 ] as const satisfies readonly (keyof TicketUpdateAttrs)[]
@@ -95,6 +99,7 @@ export const UpdateTicketInputSchema = z
     dependsOn: RelationshipInputSchema.optional(),
     blocks: RelationshipInputSchema.optional(),
     assignee: TicketFrontmatterSchema.shape.assignee,
+    component: z.string().optional(),
     implementationDate: z
       .string()
       .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format, use YYYY-MM-DD')

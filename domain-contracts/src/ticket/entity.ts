@@ -28,6 +28,8 @@ export interface Ticket {
   description?: string
   rationale?: string
   assignee?: string
+  /** Free-text subsystem/package label (e.g. 'owned-runtime', 'frontend'). Optional, not validated against a vocabulary. */
+  component?: string
   implementationDate?: Date | null
   implementationNotes?: string
   impactAreas?: string[]
@@ -73,6 +75,7 @@ export const TicketSchema: z.ZodType<Ticket> = z.object({
   description: z.string().optional(),
   rationale: z.string().optional(),
   assignee: z.string().optional(),
+  component: z.string().optional(),
   implementationDate: NullableDateSchema.optional(),
   implementationNotes: z.string().optional(),
   impactAreas: z.array(z.string()).optional(),
