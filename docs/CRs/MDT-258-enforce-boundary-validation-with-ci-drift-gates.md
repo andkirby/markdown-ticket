@@ -45,7 +45,7 @@ MDT-101 declared "boundary validation happens where unknown input enters the sys
 | 2 | Project + config writes (create/update/sharing/enable/disable, configure-documents, reloads) — **landed `71578a3a`** | Invalid reload leaves files unchanged |
 | 3 | Remaining mutation/session envelopes (pins, favorites, selector, tokens, invites, log batches) — **landed `71578a3a`** | Shape failures = structured 400; auth failures stay 401/403 |
 | 4 | Persisted-file ingress (TOML configs, frontmatter, templates.json, journals) | No behavior change for legacy formats; corrupt journals can't drive replay writes |
-| 5 | Read requests + browser ingress | Every advertised MCP tool has a validator; no non-baselined raw reads |
+| 5 | Read requests + browser ingress — **landed `d3326914`** (browser rendering unverified: no Chromium; API CRUD journey passed) | Every advertised MCP tool has a validator; no non-baselined raw reads |
 
 Full acceptance criteria per phase: design report §C.
 
