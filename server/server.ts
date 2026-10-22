@@ -1,3 +1,4 @@
+import type { Project } from '@mdt/shared/models/Project.js'
 import type { Express } from 'express'
 import type { ProjectServiceExtension } from './controllers/ProjectController.js'
 import * as path from 'node:path'
@@ -95,15 +96,15 @@ class ProjectServiceAdapter {
     return this.projectService.getProjectConfig(path)
   }
 
-  async getProjectCRs(path: string) {
-    return this.projectService.getProjectCRs(path)
+  async getProjectCRs(project: Project) {
+    return this.projectService.getProjectCRs(project)
   }
 
   /**
    * MDT-094: Get CR metadata only (without content) for list operations.
    */
-  async getProjectCRsMetadata(path: string) {
-    return this.projectService.getProjectCRsMetadata(path)
+  async getProjectCRsMetadata(project: Project) {
+    return this.projectService.getProjectCRsMetadata(project)
   }
 
   /**

@@ -91,7 +91,7 @@ export interface IProjectDiscoveryService {
   deleteProject?: (projectId: string, deleteLocalConfig?: boolean) => Promise<void>
   getProjectByCodeOrId?: (codeOrId: string) => Promise<Project | null>
   generateProjectId?: (name: string) => Promise<string>
-  getProjectCRs?: (projectPath: string) => Promise<Ticket[]>
+  getProjectCRs?: (project: Project) => Promise<Ticket[]>
 }
 
 /** Project configuration service - handles local and global configs */

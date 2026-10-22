@@ -64,8 +64,8 @@ export interface AuthenticatedRequest extends Request {
 export interface ProjectServiceExtension {
   getAllProjects: (bypassCache?: boolean) => Promise<Project[]>
   getProjectConfig: (path: string) => ProjectConfig | null
-  getProjectCRs: (path: string) => Promise<Ticket[]>
-  getProjectCRsMetadata: (path: string) => Promise<TicketMetadata[]>
+  getProjectCRs: (project: Project) => Promise<Ticket[]>
+  getProjectCRsMetadata: (project: Project) => Promise<TicketMetadata[]>
   getSystemDirectories: (path?: string) => Promise<DirectoryListing>
   configureDocuments: (projectId: string, documentPaths: string[]) => Promise<void>
   updateProject?: (projectId: string, updates: ProjectUpdateInput) => void
@@ -641,7 +641,7 @@ export class ProjectController {
       }
 
       // MDT-094: Return metadata-only for list endpoint (reduces payload)
-      const crs = await this.projectService.getProjectCRsMetadata(project.project.path)
+      const crs = await this.projectService.getProjectCRsMetadata(project)
 
       res.json(crs)
     }

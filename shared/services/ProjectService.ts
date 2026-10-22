@@ -286,25 +286,31 @@ export class ProjectService implements IProjectService {
     return { data: filteredProjects }
   }
 
+  private resolveTicketScanSettings(project: Project) {
+    const projectPath = project.project.path
+    const config = this.getProjectConfig(projectPath)
+
+    return {
+      projectPath,
+      ticketsPath: config?.project?.ticketsPath || project.project.ticketsPath || DEFAULTS.TICKETS_PATH,
+      projectCode: config?.project?.code ?? project.project.code,
+      worktreeEnabled: config?.worktree?.enabled !== false,
+    }
+  }
+
   // Operations
-  async getProjectCRs(path: string): Promise<Ticket[]> {
+  async getProjectCRs(project: Project): Promise<Ticket[]> {
     try {
-      const config = this.getProjectConfig(path)
-      if (!config?.project)
-        return []
-      const ticketsPath = config.project.ticketsPath || DEFAULTS.TICKETS_PATH
-      const projectCode = config.project.code
-      const fullCRPath = resolvePath(path, ticketsPath)
+      const { projectPath, ticketsPath, projectCode, worktreeEnabled } = this.resolveTicketScanSettings(project)
+      const fullCRPath = resolvePath(projectPath, ticketsPath)
       const { MarkdownService } = await import('./MarkdownService.js')
       const tickets = directoryExists(fullCRPath)
-        ? await MarkdownService.scanMarkdownFiles(fullCRPath, path)
+        ? await MarkdownService.scanMarkdownFiles(fullCRPath, projectPath)
         : []
 
       // MDT-095: Resolve worktree paths for each ticket
-      // Check if worktree support is enabled (default: true)
-      const worktreeEnabled = config.worktree?.enabled !== false // C5 backward compatibility
       if (worktreeEnabled && projectCode) {
-        const worktrees = await this.worktree.detect(path, projectCode)
+        const worktrees = await this.worktree.detect(projectPath, projectCode)
         const ticketsByCode = new Map<string, Ticket>()
 
         for (const ticket of tickets) {
@@ -336,7 +342,7 @@ export class ProjectService implements IProjectService {
       return tickets
     }
     catch (e) {
-      logQuiet(this.quiet, `Error getting CRs for project ${path}:`, e)
+      logQuiet(this.quiet, `Error getting CRs for project ${project.project.path}:`, e)
       return []
     }
   }
@@ -345,24 +351,19 @@ export class ProjectService implements IProjectService {
    * MDT-094: Get CR metadata only (without content) for list operations.
    * Optimized for list endpoints - reduces payload by excluding markdown body.
    */
-  async getProjectCRsMetadata(path: string): Promise<TicketMetadata[]> {
+  async getProjectCRsMetadata(project: Project): Promise<TicketMetadata[]> {
     try {
-      const config = this.getProjectConfig(path)
-      if (!config?.project)
-        return []
-      const ticketsPath = config.project.ticketsPath || DEFAULTS.TICKETS_PATH
-      const projectCode = config.project.code
-      const fullCRPath = resolvePath(path, ticketsPath)
+      const { projectPath, ticketsPath, projectCode, worktreeEnabled } = this.resolveTicketScanSettings(project)
+      const fullCRPath = resolvePath(projectPath, ticketsPath)
 
       const { MarkdownService } = await import('./MarkdownService.js')
       const metadataList = directoryExists(fullCRPath)
-        ? await MarkdownService.scanTicketMetadata(fullCRPath, path)
+        ? await MarkdownService.scanTicketMetadata(fullCRPath, projectPath)
         : []
 
       // MDT-095: Resolve worktree paths for each metadata entry
-      const worktreeEnabled = config.worktree?.enabled !== false
       if (worktreeEnabled && projectCode) {
-        const worktrees = await this.worktree.detect(path, projectCode)
+        const worktrees = await this.worktree.detect(projectPath, projectCode)
         const metadataByCode = new Map<string, TicketMetadata>()
 
         for (const metadata of metadataList) {
@@ -393,7 +394,7 @@ export class ProjectService implements IProjectService {
       return metadataList
     }
     catch (e) {
-      logQuiet(this.quiet, `[MDT-094] Error getting CR metadata for project ${path}:`, e)
+      logQuiet(this.quiet, `[MDT-094] Error getting CR metadata for project ${project.project.path}:`, e)
       return []
     }
   }

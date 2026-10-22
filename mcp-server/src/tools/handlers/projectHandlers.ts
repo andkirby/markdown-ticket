@@ -165,7 +165,7 @@ export class ProjectHandlers {
       if (!project.project.path) {
         continue
       }
-      const crs = await this.projectService.getProjectCRs(project.project.path)
+      const crs = await this.projectService.getProjectCRs(project)
       const crCount = crs.length
 
       const projectCode = project.project.code || project.id
@@ -195,7 +195,7 @@ export class ProjectHandlers {
 
     // Get CR count from project CRs - use path from extended Project interface
     const projectPath = (project.project as { path?: string }).path || project.project.ticketsPath || '.'
-    const crs = await this.projectService.getProjectCRs(projectPath)
+    const crs = await this.projectService.getProjectCRs(project)
     const crCount = crs.length
 
     const projectCode = project.project.code || project.id

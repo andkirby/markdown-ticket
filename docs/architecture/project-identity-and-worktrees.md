@@ -108,6 +108,20 @@ Registry loading should skip linked worktree entries when a canonical entry for 
 
 ## Ticket Worktree Routing
 
+Full-ticket and metadata list scans receive the already resolved `Project`,
+including registry-backed fields for global-only projects. A local
+`.mdt-config.toml` is not required to list tickets. Shared `ProjectService`
+resolves scan settings once: local operational fields take precedence over
+resolved project fields, with the built-in ticket path as the final fallback.
+`getProjectConfig()` remains a local-config reader.
+
+Both scan methods keep worktree routing enabled unless local
+`worktree.enabled` is explicitly `false`. They merge worktree-only tickets even
+when the canonical ticket directory is absent, prefer active worktree copies
+over canonical copies with the same code, and preserve worktree metadata.
+Metadata lists exclude ticket content. CLI, REST and MCP adapters pass the
+resolved project rather than reducing it to a path.
+
 Ticket routing remains worktree-aware.
 
 When operating on a ticket key such as `MDT-176`, the service may detect branch-matched worktrees and route file operations to the matching worktree. This is separate from project identity.

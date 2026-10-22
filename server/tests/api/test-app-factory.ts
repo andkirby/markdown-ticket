@@ -10,6 +10,7 @@
  * to ensure services use the test configuration directory.
  */
 
+import type { Project } from '@mdt/shared/models/Project.js'
 import type { Express, Router } from 'express'
 import type { ProjectServiceExtension } from '../../controllers/ProjectController'
 import { ProjectService as SharedProjectService } from '@mdt/shared/services/ProjectService.js'
@@ -51,8 +52,8 @@ interface SharedProjectServiceLike {
   refreshRegistry?: () => void
   getAllProjects: () => Promise<unknown[]>
   getProjectConfig: (path: string) => unknown
-  getProjectCRs: (path: string) => Promise<unknown[]>
-  getProjectCRsMetadata: (path: string) => Promise<unknown[]>
+  getProjectCRs: (project: Project) => Promise<unknown[]>
+  getProjectCRsMetadata: (project: Project) => Promise<unknown[]>
   getSystemDirectories: (path?: string) => Promise<unknown>
   configureDocuments: (projectId: string, documentPaths: string[]) => Promise<unknown>
   updateProject: (projectId: string, updates: Parameters<SharedProjectService['updateProject']>[1]) => void
@@ -79,15 +80,15 @@ class ProjectServiceAdapter {
     return this.projectService.getProjectConfig(path)
   }
 
-  async getProjectCRs(path: string) {
-    return this.projectService.getProjectCRs(path)
+  async getProjectCRs(project: Project) {
+    return this.projectService.getProjectCRs(project)
   }
 
   /**
    * MDT-094: Get CR metadata only (without content)
    */
-  async getProjectCRsMetadata(path: string) {
-    return this.projectService.getProjectCRsMetadata(path)
+  async getProjectCRsMetadata(project: Project) {
+    return this.projectService.getProjectCRsMetadata(project)
   }
 
   /**

@@ -338,8 +338,8 @@ export class ProjectService {
    * Get all CRs for a project
    * MDT-094: Updated to match real implementation (scans .md files directly)
    */
-  async getProjectCRs(projectPath: string): Promise<ProjectCR[]> {
-    const config = this.getProjectConfig(projectPath)
+  async getProjectCRs(project: { project: { path: string } }): Promise<ProjectCR[]> {
+    const config = this.getProjectConfig(project.project.path)
     if (!config) {
       return []
     }
@@ -573,10 +573,10 @@ export class ProjectService {
    * MDT-094: Get CR metadata only (without content)
    * Returns same data as getProjectCRs but without content field
    */
-  async getProjectCRsMetadata(projectPath: string): Promise<Omit<ProjectCR, 'content'>[]> {
+  async getProjectCRsMetadata(project: { project: { path: string } }): Promise<Omit<ProjectCR, 'content'>[]> {
     // For the mock, we return the same data as getProjectCRs
     // since our mock doesn't include content anyway
-    return this.getProjectCRs(projectPath)
+    return this.getProjectCRs(project)
   }
 
   /**

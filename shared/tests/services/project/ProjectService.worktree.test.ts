@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { ProjectFactory } from '../../../services/project/ProjectFactory.js'
 import { ProjectService } from '../../../services/ProjectService.js'
 
 function writeTicket(projectRoot: string, relativeTicketsPath: string, code: string, title: string): string {
@@ -66,7 +67,7 @@ describe('ProjectService worktree ticket listing', () => {
 
     const service = createService(projectRoot, new Map([['MDT-161', worktreeRoot]]))
 
-    const tickets = await service.getProjectCRs(projectRoot)
+    const tickets = await service.getProjectCRs(new ProjectFactory().createFromConfig(service.getProjectConfig(projectRoot)!, projectRoot))
 
     expect(tickets).toHaveLength(1)
     expect(tickets[0]).toEqual(expect.objectContaining({
@@ -85,7 +86,7 @@ describe('ProjectService worktree ticket listing', () => {
 
     const service = createService(projectRoot, new Map([['MDT-142', worktreeRoot]]))
 
-    const tickets = await service.getProjectCRs(projectRoot)
+    const tickets = await service.getProjectCRs(new ProjectFactory().createFromConfig(service.getProjectConfig(projectRoot)!, projectRoot))
 
     expect(tickets).toHaveLength(1)
     expect(tickets[0]).toEqual(expect.objectContaining({
@@ -104,7 +105,7 @@ describe('ProjectService worktree ticket listing', () => {
 
     const service = createService(projectRoot, new Map([['MDT-161', worktreeRoot]]))
 
-    const metadata = await service.getProjectCRsMetadata(projectRoot)
+    const metadata = await service.getProjectCRsMetadata(new ProjectFactory().createFromConfig(service.getProjectConfig(projectRoot)!, projectRoot))
 
     expect(metadata).toHaveLength(1)
     expect(metadata[0]).toEqual(expect.objectContaining({

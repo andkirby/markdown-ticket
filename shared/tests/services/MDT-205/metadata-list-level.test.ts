@@ -17,6 +17,7 @@ import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { CRLevel } from '@mdt/domain-contracts'
+import { ProjectFactory } from '../../../services/project/ProjectFactory.js'
 import { ProjectService } from '../../../services/ProjectService.js'
 
 function writeTicket(
@@ -86,7 +87,7 @@ describe('MDT-205 BR-8 — metadata list path preserves level (production)', () 
       level: 'epic',
     }, 'Epic ticket')
 
-    const metadata = await service.getProjectCRsMetadata(projectRoot)
+    const metadata = await service.getProjectCRsMetadata(new ProjectFactory().createFromConfig(service.getProjectConfig(projectRoot)!, projectRoot))
     const epic = metadata.find(t => t.code === 'TL-001')
 
     expect(epic).toBeDefined()
@@ -101,7 +102,7 @@ describe('MDT-205 BR-8 — metadata list path preserves level (production)', () 
       priority: 'Medium',
     }, 'Legacy ticket')
 
-    const metadata = await service.getProjectCRsMetadata(projectRoot)
+    const metadata = await service.getProjectCRsMetadata(new ProjectFactory().createFromConfig(service.getProjectConfig(projectRoot)!, projectRoot))
     const legacy = metadata.find(t => t.code === 'TL-002')
 
     expect(legacy).toBeDefined()
@@ -117,7 +118,7 @@ describe('MDT-205 BR-8 — metadata list path preserves level (production)', () 
       level: 'epic',
     }, 'No content in metadata')
 
-    const metadata = await service.getProjectCRsMetadata(projectRoot)
+    const metadata = await service.getProjectCRsMetadata(new ProjectFactory().createFromConfig(service.getProjectConfig(projectRoot)!, projectRoot))
     const item = metadata.find(t => t.code === 'TL-003')
 
     expect(item).toBeDefined()
@@ -146,7 +147,7 @@ describe('MDT-205 BR-8 — metadata list path preserves level (production)', () 
       level: 'epic',
     }, 'Epic two')
 
-    const metadata = await service.getProjectCRsMetadata(projectRoot)
+    const metadata = await service.getProjectCRsMetadata(new ProjectFactory().createFromConfig(service.getProjectConfig(projectRoot)!, projectRoot))
     const byCode = new Map(metadata.map(t => [t.code, t]))
 
     expect(byCode.get('TL-010')?.level).toBe(CRLevel.EPIC)

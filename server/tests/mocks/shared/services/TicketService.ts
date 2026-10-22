@@ -74,9 +74,7 @@ export class TicketService {
     project: ServiceProject,
     filters?: TicketFilters,
   ): Promise<Ticket[]> {
-    const crs: Ticket[] = await this.projectService.getProjectCRs(
-      project.project.path,
-    )
+    const crs: Ticket[] = await this.projectService.getProjectCRs(project)
 
     if (!filters) {
       return crs

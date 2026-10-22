@@ -438,7 +438,7 @@ export class TicketService {
   async listCRs(project: Project, filters?: TicketFilters): Promise<Ticket[]> {
     try {
       // Use shared ProjectService to get CRs with correct path resolution
-      const crs = await this.projectService.getProjectCRs(project.project.path)
+      const crs = await this.projectService.getProjectCRs(project)
 
       // Apply filters if provided
       let filteredCRs = crs
