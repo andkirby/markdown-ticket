@@ -4,7 +4,7 @@ import type { TicketMetadata } from '@mdt/shared/models/Ticket.js'
 import type { ProjectCreateInput, ProjectUpdateInput } from '@mdt/shared/tools/ProjectManager.js'
 import type { Request, Response } from 'express'
 import type { RequestAccessContext } from '../security/apiAuth.js'
-import type { CRData, TicketService } from '../services/TicketService.js'
+import type { TicketService } from '../services/TicketService.js'
 import type { TreeNode } from '../types/tree.js'
 import * as fs from 'node:fs/promises'
 import * as os from 'node:os'
@@ -18,6 +18,8 @@ import { DEFAULTS } from '@mdt/shared/utils/constants.js'
 
 import { parseToml } from '@mdt/shared/utils/toml.js'
 import { getRuntimeConfig } from '../config/runtimeConfig.js'
+import { parseRequest } from '../http/parseRequest.js'
+import { ProjectRefParamsSchema, RestCreateTicketInputSchema, RestPatchTicketInputSchema, TicketRefParamsSchema } from '../http/ticketSchemas.js'
 import { getRequestAccess } from '../security/apiAuth.js'
 import { authorizeFilesystemPath, FilesystemAccessDeniedError, getProjectRoots } from '../security/filesystemAccess.js'
 import {
@@ -770,18 +772,18 @@ export class ProjectController {
 
   async createCR(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const { projectId } = req.params
-      const crData = req.body as CRData
-
-      if (!projectId) {
-        res.status(400).json({ error: 'Bad Request', message: 'Project ID is required' })
-
+      const params = parseRequest(ProjectRefParamsSchema, req.params, res, 'params')
+      if (!params.success)
         return
-      }
+      const { projectId } = params.data
+      const body = parseRequest(RestCreateTicketInputSchema, req.body, res, 'body')
+      if (!body.success)
+        return
+      const crData = body.data
 
       // Use TicketService if available
       if (this.ticketService) {
-        const result = await this.ticketService.createCR(projectId, crData as CRData)
+        const result = await this.ticketService.createCR(projectId, crData)
 
         res.status(201).json(result)
 
@@ -812,20 +814,14 @@ export class ProjectController {
 
   async patchCR(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const { projectId, crId } = req.params
-      const updates = req.body as Record<string, unknown>
-
-      if (!projectId || !crId) {
-        res.status(400).json({ error: 'Bad Request', message: 'Project ID and CR ID are required' })
-
+      const params = parseRequest(TicketRefParamsSchema, req.params, res, 'params')
+      if (!params.success)
         return
-      }
-
-      if (!updates || Object.keys(updates).length === 0) {
-        res.status(400).json({ error: 'Bad Request', message: 'No update data provided' })
-
+      const { projectId, crId } = params.data
+      const body = parseRequest(RestPatchTicketInputSchema, req.body, res, 'body')
+      if (!body.success)
         return
-      }
+      const updates = body.data
 
       // Use TicketService if available
       if (this.ticketService) {
@@ -883,18 +879,18 @@ export class ProjectController {
 
   async updateCR(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const { projectId, crId } = req.params
-      const crData = req.body as Record<string, unknown>
-
-      if (!projectId || !crId) {
-        res.status(400).json({ error: 'Bad Request', message: 'Project ID and CR ID are required' })
-
+      const params = parseRequest(TicketRefParamsSchema, req.params, res, 'params')
+      if (!params.success)
         return
-      }
+      const { projectId, crId } = params.data
+      const body = parseRequest(RestPatchTicketInputSchema, req.body, res, 'body')
+      if (!body.success)
+        return
+      const crData = body.data
 
       // Use TicketService if available
       if (this.ticketService) {
-        const result = await this.ticketService.updateCRPartial(projectId, crId, crData as Record<string, unknown>)
+        const result = await this.ticketService.updateCRPartial(projectId, crId, crData)
 
         res.json(result)
 
@@ -1022,13 +1018,10 @@ export class ProjectController {
 
   async deleteCR(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const { projectId, crId } = req.params
-
-      if (!projectId || !crId) {
-        res.status(400).json({ error: 'Bad Request', message: 'Project ID and CR ID are required' })
-
+      const params = parseRequest(TicketRefParamsSchema, req.params, res, 'params')
+      if (!params.success)
         return
-      }
+      const { projectId, crId } = params.data
 
       // Use TicketService if available
       if (this.ticketService) {

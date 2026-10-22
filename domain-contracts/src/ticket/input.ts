@@ -1,5 +1,6 @@
 import type { CRLevelValue } from '../types/schema'
 import { z } from 'zod'
+import { CRStatusSchema } from '../types/schema'
 import { TicketFrontmatterSchema } from './frontmatter'
 
 export interface TicketData {
@@ -83,6 +84,12 @@ export const CreateTicketInputSchema = TicketFrontmatterSchema.pick({
   assignee: true,
   content: true,
 }).extend({
+  // Creation warns about long titles in TemplateService; it does not trim them.
+  title: z.string().refine(value => value.trim().length > 0, 'Title is required'),
+  priority: TicketFrontmatterSchema.shape.priority.optional(),
+  assignee: z.string().optional(),
+  component: z.string().optional(),
+  slug: z.string().optional(),
   relatedTickets: RelationshipInputSchema.optional(),
   dependsOn: RelationshipInputSchema.optional(),
   blocks: RelationshipInputSchema.optional(),
@@ -112,3 +119,38 @@ export const UpdateTicketInputSchema = z
 
 export type CreateTicketInput = z.infer<typeof CreateTicketInputSchema>
 export type UpdateTicketInput = z.infer<typeof UpdateTicketInputSchema>
+
+// Leave alias normalization to the existing service. Unknown-only updates stay
+// nonempty no-ops; ignored keys must not accidentally become forwarded fields.
+export const PatchTicketInputSchema = z.looseObject({
+  status: CRStatusSchema.optional(),
+  priority: z.string().optional(),
+  level: z.string().refine(value => ['ticket', 'epic', 'e', 't'].includes(value.trim().toLowerCase()), 'Invalid level').optional(),
+  phaseEpic: z.string().optional(),
+  assignee: z.string().optional(),
+  relatedTickets: RelationshipInputSchema.optional(),
+  dependsOn: RelationshipInputSchema.optional(),
+  blocks: RelationshipInputSchema.optional(),
+}).refine(value => Object.keys(value).length > 0, 'No update data provided')
+
+/** MCP attribute operations preserve aliases and null-as-no-op handling. */
+export const TicketAttributeInputSchema = z.object({
+  priority: z.string().nullish(),
+  level: z.string().nullish(),
+  phaseEpic: z.string().nullish(),
+  relatedTickets: RelationshipInputSchema.nullish(),
+  dependsOn: RelationshipInputSchema.nullish(),
+  blocks: RelationshipInputSchema.nullish(),
+  assignee: z.string().nullish(),
+  component: z.string().nullish(),
+  implementationDate: z.string().nullish(),
+  implementationNotes: z.string().nullish(),
+}).catchall(z.union([z.string(), z.array(z.string()), z.number(), z.boolean(), z.null()]))
+
+// String shorthand and whitespace/lowercase forms match shared normalizeKey.
+export const TicketKeyInputSchema = z.string().refine((value) => {
+  const key = value.trim()
+  return /^\d+$/.test(key) || /^[a-z][a-z0-9]{1,4}-\d+$/i.test(key)
+}, 'Invalid ticket key')
+
+export type PatchTicketInput = z.output<typeof PatchTicketInputSchema>

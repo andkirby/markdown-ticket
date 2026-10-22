@@ -8,7 +8,6 @@
  */
 
 import type { TicketData } from '@mdt/shared/models/Ticket.js'
-import type { CRStatus } from '@mdt/shared/models/Types.js'
 import type { MarkdownService } from '@mdt/shared/services/MarkdownService.js'
 import type { ProjectService } from '@mdt/shared/services/ProjectService.js'
 import type { TemplateService } from '@mdt/shared/services/TemplateService.js'
@@ -17,12 +16,15 @@ import type { TitleExtractionService } from '@mdt/shared/services/TitleExtractio
 import type { WorktreeService } from '@mdt/shared/services/WorktreeService.js'
 import type { CRService } from '../services/crService.js'
 import { MarkdownSectionService } from '@mdt/shared/services/MarkdownSectionService.js'
+import { z } from 'zod'
 import { Sanitizer } from '../utils/sanitizer.js'
 import { JsonRpcErrorCode, ToolError } from '../utils/toolError.js'
 import { ALL_TOOLS, TOOL_NAMES } from './config/allTools.js'
+import { defineTool } from './defineTool.js'
 import { CRHandlers } from './handlers/crHandlers.js'
 import { ProjectHandlers } from './handlers/projectHandlers.js'
 import { SectionHandlers } from './handlers/sectionHandlers.js'
+import { AttributesArgsSchema, CreateArgsSchema, KeyArgsSchema, SectionArgsSchema, StatusArgsSchema } from './mutationSchemas.js'
 
 /**
  * Main MCP Tools Class
@@ -39,6 +41,7 @@ export class MCPTools {
   private crHandlers: CRHandlers
   private sectionHandlers: SectionHandlers
   private detectedProject: string | null
+  readonly registry: Record<string, { invoke: (raw: unknown) => Promise<string> }>
 
   constructor(
     projectService: ProjectService,
@@ -63,6 +66,40 @@ export class MCPTools {
     )
     this.sectionHandlers = new SectionHandlers(crService, MarkdownSectionService)
     this.detectedProject = detectedProject
+    // Read envelopes remain explicit phase-5 legacy entries. Their existing
+    // dispatch and validation are unchanged. Every advertised name is registered.
+    this.registry = {
+      [TOOL_NAMES.LIST_PROJECTS]: defineTool(z.unknown(), raw => this.handleLegacyRead(TOOL_NAMES.LIST_PROJECTS, raw)),
+      [TOOL_NAMES.GET_PROJECT_INFO]: defineTool(z.unknown(), raw => this.handleLegacyRead(TOOL_NAMES.GET_PROJECT_INFO, raw)),
+      [TOOL_NAMES.LIST_CRS]: defineTool(z.unknown(), raw => this.handleLegacyRead(TOOL_NAMES.LIST_CRS, raw)),
+      [TOOL_NAMES.GET_CR]: defineTool(z.unknown(), raw => this.handleLegacyRead(TOOL_NAMES.GET_CR, raw)),
+      [TOOL_NAMES.SUGGEST_CR_IMPROVEMENTS]: defineTool(z.unknown(), raw => this.handleLegacyRead(TOOL_NAMES.SUGGEST_CR_IMPROVEMENTS, raw)),
+      [TOOL_NAMES.CREATE_CR]: defineTool(CreateArgsSchema, async (args) => {
+        const project = await this.projectHandlers.resolveProject(args.project, this.detectedProject, args.key)
+        // The positional legacy interface requires nested type although its
+        // implementation explicitly falls back to the separate type argument.
+        return this.crHandlers.handleCreateCR(project, args.type, args.data as TicketData)
+      }),
+      [TOOL_NAMES.UPDATE_CR_STATUS]: defineTool(StatusArgsSchema, async (args) => {
+        const project = await this.projectHandlers.resolveProject(args.project, this.detectedProject, args.key)
+        return this.crHandlers.handleUpdateCRStatus(project, args.key, args.status)
+      }),
+      [TOOL_NAMES.UPDATE_CR_ATTRS]: defineTool(AttributesArgsSchema, async (args) => {
+        const project = await this.projectHandlers.resolveProject(args.project, this.detectedProject, args.key)
+        return this.crHandlers.handleUpdateCRAttrs(project, args.key, args.attributes)
+      }),
+      [TOOL_NAMES.DELETE_CR]: defineTool(KeyArgsSchema, async (args) => {
+        const project = await this.projectHandlers.resolveProject(args.project, this.detectedProject, args.key)
+        return this.crHandlers.handleDeleteCR(project, args.key)
+      }),
+      [TOOL_NAMES.MANAGE_CR_SECTIONS]: defineTool(SectionArgsSchema, async (args) => {
+        const project = await this.projectHandlers.resolveProject(args.project, this.detectedProject, args.key)
+        return this.sectionHandlers.handleManageCRSections(project, args.key, args.operation, args.section, args.content)
+      }),
+    }
+    if (Object.keys(this.registry).sort().join() !== Object.values(TOOL_NAMES).sort().join()) {
+      throw new Error('Tool registry must match TOOL_NAMES')
+    }
   }
 
   /**
@@ -77,74 +114,34 @@ export class MCPTools {
    * Route tool calls to appropriate handlers
    * Delegates all business logic to specialized handlers
    */
-  async handleToolCall(name: string, args: Record<string, unknown>): Promise<string> {
+  private async handleLegacyRead(name: string, raw: unknown): Promise<string> {
+    const args = raw as Record<string, unknown>
+    const projectTools = [TOOL_NAMES.LIST_PROJECTS, TOOL_NAMES.GET_PROJECT_INFO] as const
+    if (projectTools.includes(name as typeof projectTools[number])) {
+      return this.projectHandlers.handleToolCall(name, args)
+    }
+    const key = args.key as string | undefined
+    const project = await this.projectHandlers.resolveProject(args.project as string | undefined, this.detectedProject, key)
+    switch (name) {
+      case TOOL_NAMES.LIST_CRS:
+        return this.crHandlers.handleListCRs(project, args.filters as Record<string, unknown> | undefined)
+      case TOOL_NAMES.GET_CR:
+        return this.crHandlers.handleGetCR(project, key || '', args.mode as string | undefined)
+      default:
+        return this.crHandlers.handleSuggestCRImprovements(project, key || '')
+    }
+  }
+
+  async handleToolCall(name: string, args: unknown = {}): Promise<string> {
     try {
-      // Route to project handlers
-      const projectTools = [TOOL_NAMES.LIST_PROJECTS, TOOL_NAMES.GET_PROJECT_INFO] as const
-      if (projectTools.includes(name as typeof projectTools[number])) {
-        return await this.projectHandlers.handleToolCall(name, args)
-      }
-
-      // Route to CR handlers
-      const crTools = [
-        TOOL_NAMES.LIST_CRS,
-        TOOL_NAMES.GET_CR,
-        TOOL_NAMES.CREATE_CR,
-        TOOL_NAMES.UPDATE_CR_STATUS,
-        TOOL_NAMES.UPDATE_CR_ATTRS,
-        TOOL_NAMES.DELETE_CR,
-        TOOL_NAMES.SUGGEST_CR_IMPROVEMENTS,
-      ] as const
-      if (crTools.includes(name as typeof crTools[number])) {
-        // Extract key for project resolution (MDT-121: supports full-format keys with project prefix)
-        const key = args.key as string | undefined
-        const project = await this.projectHandlers.resolveProject(args.project as string | undefined, this.detectedProject, key)
-
-        switch (name) {
-          case TOOL_NAMES.LIST_CRS:
-            return await this.crHandlers.handleListCRs(project, args.filters as Record<string, unknown> | undefined)
-
-          case TOOL_NAMES.GET_CR:
-            return await this.crHandlers.handleGetCR(project, key || '', args.mode as string | undefined)
-
-          case TOOL_NAMES.CREATE_CR:
-            return await this.crHandlers.handleCreateCR(project, args.type as string, args.data as TicketData)
-
-          case TOOL_NAMES.UPDATE_CR_STATUS:
-            return await this.crHandlers.handleUpdateCRStatus(project, key || '', args.status as CRStatus)
-
-          case TOOL_NAMES.UPDATE_CR_ATTRS:
-            return await this.crHandlers.handleUpdateCRAttrs(project, key || '', args.attributes as Record<string, unknown>)
-
-          case TOOL_NAMES.DELETE_CR:
-            return await this.crHandlers.handleDeleteCR(project, key || '')
-
-          case TOOL_NAMES.SUGGEST_CR_IMPROVEMENTS:
-            return await this.crHandlers.handleSuggestCRImprovements(project, key || '')
-        }
-      }
-
-      // Route to section handlers
-      if (name === TOOL_NAMES.MANAGE_CR_SECTIONS) {
-        // Extract key for project resolution (MDT-121: supports full-format keys with project prefix)
-        const key = args.key as string | undefined
-        const project = await this.projectHandlers.resolveProject(args.project as string | undefined, this.detectedProject, key)
-        return await this.sectionHandlers.handleManageCRSections(
-          project,
-          args.key as string,
-          args.operation as string,
-          args.section as string | undefined,
-          args.content as string | undefined,
+      if (!Object.hasOwn(this.registry, name)) {
+        const availableTools = Object.values(TOOL_NAMES)
+        throw ToolError.protocol(
+          `Method not found: Unknown tool '${Sanitizer.sanitizeText(name)}'. Available tools: ${availableTools.join(', ')}`,
+          JsonRpcErrorCode.MethodNotFound,
         )
       }
-
-      // Unknown tool - create protocol error
-      const availableTools = Object.values(TOOL_NAMES)
-      const sanitizedName = Sanitizer.sanitizeText(name)
-      throw ToolError.protocol(
-        `Method not found: Unknown tool '${sanitizedName}'. Available tools: ${availableTools.join(', ')}`,
-        JsonRpcErrorCode.MethodNotFound,
-      )
+      return await this.registry[name].invoke(args)
     }
     catch (error) {
       console.error(`Error handling tool ${name}:`, error)

@@ -3,20 +3,18 @@
  * Route JSDoc annotations should use $ref: '#/components/schemas/{Name}'.
  */
 
-import type { TicketUpdateAttrs } from '@mdt/domain-contracts'
 import {
   CR_CODE_PATTERN,
-  CreateTicketInputSchema,
   CRPrioritySchema,
   CRStatusSchema,
   CRTypeSchema,
   LocalProjectConfigSchema,
   ProjectSchema,
   SubDocumentSchema,
-  TICKET_UPDATE_ATTRS,
   TicketSchema,
-  UpdateTicketInputSchema,
 } from '@mdt/domain-contracts'
+
+import { RestCreateTicketInputSchema, RestPatchTicketInputSchema } from '../http/ticketSchemas.js'
 
 /**
  * CR code pattern for OpenAPI schemas (string format)
@@ -33,11 +31,13 @@ type OpenApiObjectSchema = OpenApiSchema & {
 
 interface ZodLikeSchema {
   _def: {
-    typeName: string
+    typeName?: string
     innerType?: ZodLikeSchema
     schema?: ZodLikeSchema
     getter?: () => ZodLikeSchema
-    type?: ZodLikeSchema
+    type?: ZodLikeSchema | string
+    element?: ZodLikeSchema
+    entries?: Record<string, string>
     shape?:
       | (() => Record<string, ZodLikeSchema>)
       | Record<string, ZodLikeSchema>
@@ -62,6 +62,13 @@ const schemaRefs = new Map<ZodLikeSchema, string>([
   ],
 ])
 
+// The adapter predates Zod v4. Recognize its tagged definitions so the
+// REST variants retain optional fields and string/array relationships in docs.
+function schemaType(schema: ZodLikeSchema): string | undefined {
+  const type = schema._def.type
+  return schema._def.typeName ?? (typeof type === 'string' ? `Zod${type[0].toUpperCase()}${type.slice(1)}` : undefined)
+}
+
 function unwrapZodSchema(schema: ZodLikeSchema): {
   schema: ZodLikeSchema
   nullable: boolean
@@ -72,7 +79,7 @@ function unwrapZodSchema(schema: ZodLikeSchema): {
   let optional = false
 
   while (true) {
-    switch (current._def.typeName) {
+    switch (schemaType(current)) {
       case 'ZodOptional':
         optional = true
         current = current._def.innerType!
@@ -81,6 +88,7 @@ function unwrapZodSchema(schema: ZodLikeSchema): {
         nullable = true
         current = current._def.innerType!
         continue
+      case 'ZodPrefault':
       case 'ZodDefault':
       case 'ZodCatch':
         optional = true
@@ -198,7 +206,7 @@ function zodSchemaToOpenApi(
 
   let result: OpenApiSchema
 
-  switch (unwrapped.schema._def.typeName) {
+  switch (schemaType(unwrapped.schema)) {
     case 'ZodString':
       result = stringSchemaFromChecks(unwrapped.schema)
       break
@@ -214,7 +222,7 @@ function zodSchemaToOpenApi(
     case 'ZodArray':
       result = {
         type: 'array',
-        items: zodSchemaToOpenApi(unwrapped.schema._def.type!),
+        items: zodSchemaToOpenApi(unwrapped.schema._def.element ?? unwrapped.schema._def.type as ZodLikeSchema),
       }
       break
     case 'ZodEnum':
@@ -222,11 +230,11 @@ function zodSchemaToOpenApi(
         type: 'string',
         enum: Array.isArray(unwrapped.schema._def.values)
           ? [...unwrapped.schema._def.values]
-          : [],
+          : Object.values(unwrapped.schema._def.entries ?? {}),
       }
       break
     case 'ZodLiteral': {
-      const value = unwrapped.schema._def.value
+      const value = unwrapped.schema._def.value ?? unwrapped.schema._def.values?.[0]
       result = {
         type: typeof value,
         enum: [value],
@@ -264,7 +272,7 @@ function zodSchemaToOpenApi(
 function resolveObjectSchema(schema: ZodLikeSchema): ZodLikeSchema {
   let current = unwrapZodSchema(schema).schema
 
-  while (current._def.typeName === 'ZodLazy') {
+  while (schemaType(current) === 'ZodLazy') {
     current = current._def.getter!()
   }
 
@@ -372,7 +380,8 @@ const ticketInputPropertyDocs: Record<string, OpenApiSchema> = {
 }
 
 const ticketUpdatePropertyDocs: Record<string, OpenApiSchema> = {
-  priority: { $ref: '#/components/schemas/CRPriority' },
+  status: { $ref: '#/components/schemas/CRStatus' },
+  priority: { type: 'string', description: 'Priority value' },
   phaseEpic: {
     description: 'Phase or epic this CR belongs to',
     example: 'Phase 1',
@@ -436,11 +445,11 @@ const ticketSchema = zodObjectToOpenApi(
   ticketPropertyDocs,
 )
 const ticketInputSchema = zodObjectToOpenApi(
-  CreateTicketInputSchema as unknown as ZodLikeSchema,
+  RestCreateTicketInputSchema as unknown as ZodLikeSchema,
   ticketInputPropertyDocs,
 )
 const ticketUpdateSchema = zodObjectToOpenApi(
-  UpdateTicketInputSchema as unknown as ZodLikeSchema,
+  RestPatchTicketInputSchema as unknown as ZodLikeSchema,
   ticketUpdatePropertyDocs,
 )
 const subDocumentSchema = zodObjectToOpenApi(
@@ -456,13 +465,7 @@ const localProjectConfigSchema = zodObjectToOpenApi(
   localProjectConfigPropertyDocs,
 )
 
-export const crPatchProperties = TICKET_UPDATE_ATTRS.reduce<
-  Record<string, unknown>
->((properties: Record<string, unknown>, field: keyof TicketUpdateAttrs) => {
-  const fieldName = field as string
-  properties[fieldName] = ticketUpdateSchema.properties[fieldName]
-  return properties
-}, {})
+export const crPatchProperties = ticketUpdateSchema.properties
 
 export const schemas = {
   CRStatus: {
@@ -490,6 +493,8 @@ export const schemas = {
   CR: ticketSchema,
 
   CRInput: ticketInputSchema,
+
+  CRPatchInput: ticketUpdateSchema,
 
   Project: projectSchema,
 

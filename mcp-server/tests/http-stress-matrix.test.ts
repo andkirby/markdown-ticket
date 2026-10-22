@@ -197,7 +197,7 @@ function createMockTools(): jest.Mocked<Pick<MCPTools, 'getTools' | 'handleToolC
         },
       },
     ]),
-    handleToolCall: jest.fn(async (_name: string, _args: Record<string, unknown>) => 'ok'),
+    handleToolCall: jest.fn(async (_name: string, _args?: unknown) => 'ok'),
   }
 }
 

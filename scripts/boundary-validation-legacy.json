@@ -1,0 +1,2551 @@
+{
+  "legacy": [
+    {
+      "file": "cli/src/utils/cliConfig.ts",
+      "function": "loadCliConfig",
+      "kind": "decoder-cast",
+      "expression": "parseToml(content) as Record<string, unknown>",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "cli/src/utils/cliConfig.ts",
+      "function": "loadCliConfig",
+      "kind": "decoder",
+      "expression": "parseToml(content)",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "mcp-server/src/config/index.ts",
+      "function": "ConfigService/loadConfigFile",
+      "kind": "decoder",
+      "expression": "parseToml(configContent)",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "mcp-server/src/tools/handlers/projectHandlers.ts",
+      "function": "ProjectHandlers/handleToolCall",
+      "kind": "tool-read",
+      "expression": "await this.handleGetProjectInfo(args.key as string)",
+      "count": 1,
+      "reason": "Read-tool dispatch retained until phase 5",
+      "phase": 5
+    },
+    {
+      "file": "mcp-server/src/tools/index.ts",
+      "function": "MCPTools/handleLegacyRead",
+      "kind": "tool-cast",
+      "expression": "raw as Record<string, unknown>",
+      "count": 1,
+      "reason": "Read-tool dispatch retained until phase 5",
+      "phase": 5
+    },
+    {
+      "file": "mcp-server/src/tools/index.ts",
+      "function": "MCPTools/handleLegacyRead",
+      "kind": "tool-read",
+      "expression": "key = args.key as string | undefined",
+      "count": 1,
+      "reason": "Read-tool dispatch retained until phase 5",
+      "phase": 5
+    },
+    {
+      "file": "mcp-server/src/tools/index.ts",
+      "function": "MCPTools/handleLegacyRead",
+      "kind": "tool-read",
+      "expression": "project = await this.projectHandlers.resolveProject(args.project as string | undefined, this.detectedProject, key)",
+      "count": 1,
+      "reason": "Read-tool dispatch retained until phase 5",
+      "phase": 5
+    },
+    {
+      "file": "mcp-server/src/tools/index.ts",
+      "function": "MCPTools/handleLegacyRead",
+      "kind": "tool-read",
+      "expression": "this.crHandlers.handleGetCR(project, key || '', args.mode as string | undefined)",
+      "count": 1,
+      "reason": "Read-tool dispatch retained until phase 5",
+      "phase": 5
+    },
+    {
+      "file": "mcp-server/src/tools/index.ts",
+      "function": "MCPTools/handleLegacyRead",
+      "kind": "tool-read",
+      "expression": "this.crHandlers.handleListCRs(project, args.filters as Record<string, unknown> | undefined)",
+      "count": 1,
+      "reason": "Read-tool dispatch retained until phase 5",
+      "phase": 5
+    },
+    {
+      "file": "mcp-server/src/transports/http.ts",
+      "function": "createHttpTransportApp/app.post(\"/mcp\")",
+      "kind": "request-delegation",
+      "expression": "getCallerIdentity(req)",
+      "count": 1,
+      "delegate": "./httpSecurity.js#getCallerIdentity",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "mcp-server/src/transports/http.ts",
+      "function": "createHttpTransportApp/app.post(\"/mcp\")",
+      "kind": "request-read",
+      "expression": "data = req.body",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 3
+    },
+    {
+      "file": "server/controllers/ConfigController.ts",
+      "function": "ConfigController/patchConfig",
+      "kind": "request-read",
+      "expression": "{ selector, value } = req.body ?? {}",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 2
+    },
+    {
+      "file": "server/controllers/DocumentController.ts",
+      "function": "DocumentController/getDocumentContent",
+      "kind": "request-read",
+      "expression": "{ projectId, filePath } = req.query",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/controllers/DocumentController.ts",
+      "function": "DocumentController/getDocuments",
+      "kind": "request-read",
+      "expression": "{ projectId } = req.query",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/controllers/DocumentController.ts",
+      "function": "DocumentController/mintPreviewToken",
+      "kind": "request-delegation",
+      "expression": "getRequestAccess(req)",
+      "count": 1,
+      "delegate": "../security/apiAuth.js#getRequestAccess",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/controllers/DocumentController.ts",
+      "function": "DocumentController/mintPreviewToken",
+      "kind": "request-read",
+      "expression": "{ projectId, filePath } = req.body",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 3
+    },
+    {
+      "file": "server/controllers/DocumentController.ts",
+      "function": "DocumentController/putDocumentFavs",
+      "kind": "request-read",
+      "expression": "{ projectId, favItems } = req.body",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 3
+    },
+    {
+      "file": "server/controllers/DocumentController.ts",
+      "function": "DocumentController/serveRawPreview",
+      "kind": "request-read",
+      "expression": "documentPath = req.params[0] as string | undefined",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/controllers/DocumentController.ts",
+      "function": "DocumentController/serveRawPreview",
+      "kind": "request-read",
+      "expression": "token = req.params.token as string | undefined",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/controllers/PinController.ts",
+      "function": "PinController/putPinState",
+      "kind": "request-read",
+      "expression": "state = await this.pinStateService.writeState(req.body)",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 3
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/configureDocuments",
+      "kind": "request-read",
+      "expression": "{ projectId, documentPaths } = req.body",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 2
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/createProject",
+      "kind": "request-read",
+      "expression": "result = await this.projectManager.createProject(req.body as ProjectCreateInput)",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 2
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/disableProject",
+      "kind": "request-read",
+      "expression": "{ code } = req.params",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/enableProject",
+      "kind": "request-read",
+      "expression": "{ code } = req.params",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/ensureProjectVisible",
+      "kind": "request-delegation",
+      "expression": "this.resolveVisibleProject(projectRef, req, res)",
+      "count": 1,
+      "delegate": "server/controllers/ProjectController.ts#this.resolveVisibleProject",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/getAllProjects",
+      "kind": "request-delegation",
+      "expression": "getRequestAccess(req)",
+      "count": 1,
+      "delegate": "../security/apiAuth.js#getRequestAccess",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/getAllProjects",
+      "kind": "request-read",
+      "expression": "bypassCache = req.query.bypassCache === 'true'",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/getCloudProjections",
+      "kind": "request-delegation",
+      "expression": "getRequestAccess(req)",
+      "count": 1,
+      "delegate": "../security/apiAuth.js#getRequestAccess",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/getCloudProjections",
+      "kind": "request-read",
+      "expression": "{ projectId } = req.params",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/getCloudProjections",
+      "kind": "request-read",
+      "expression": "after = Number.parseInt(String(req.query.after ?? '0'), 10)",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/getCloudProjections",
+      "kind": "request-read",
+      "expression": "limit = Number.parseInt(String(req.query.limit ?? '100'), 10)",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/getCR",
+      "kind": "request-delegation",
+      "expression": "this.resolveVisibleProject(projectId, req, res)",
+      "count": 1,
+      "delegate": "server/controllers/ProjectController.ts#this.resolveVisibleProject",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/getCR",
+      "kind": "request-read",
+      "expression": "{ projectId, crId } = req.params",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/getFileSystemTree",
+      "kind": "request-read",
+      "expression": "{ projectId } = req.query",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/getProjectConfig",
+      "kind": "request-delegation",
+      "expression": "getRequestAccess(req)",
+      "count": 1,
+      "delegate": "../security/apiAuth.js#getRequestAccess",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/getProjectConfig",
+      "kind": "request-read",
+      "expression": "{ projectId } = req.params",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/getProjectCRs",
+      "kind": "request-delegation",
+      "expression": "this.resolveVisibleProject(projectId, req, res)",
+      "count": 1,
+      "delegate": "server/controllers/ProjectController.ts#this.resolveVisibleProject",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/getProjectCRs",
+      "kind": "request-read",
+      "expression": "{ projectId } = req.params",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/getSubDocument",
+      "kind": "request-delegation",
+      "expression": "this.resolveVisibleProject(projectId, req, res)",
+      "count": 1,
+      "delegate": "server/controllers/ProjectController.ts#this.resolveVisibleProject",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/getSubDocument",
+      "kind": "request-read",
+      "expression": "{ projectId, crId } = req.params",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/getSubDocument",
+      "kind": "request-read",
+      "expression": "subDocName = (req.params as Record<string, string>).subDocName",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/getSystemDirectories",
+      "kind": "decoder-cast",
+      "expression": "parseToml(await fs.readFile(configPath, 'utf8')) as {\n    discovery?: {\n        searchPaths?: string[];\n    };\n}",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/getSystemDirectories",
+      "kind": "decoder",
+      "expression": "parseToml(await fs.readFile(configPath, 'utf8'))",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/getSystemDirectories",
+      "kind": "request-delegation",
+      "expression": "getRuntimeConfig(req)",
+      "count": 2,
+      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/getSystemDirectories",
+      "kind": "request-read",
+      "expression": "{ path: requestPath } = req.query",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/getTraceStore",
+      "kind": "request-delegation",
+      "expression": "this.resolveVisibleProject(projectId, req, res)",
+      "count": 1,
+      "delegate": "server/controllers/ProjectController.ts#this.resolveVisibleProject",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/getTraceStore",
+      "kind": "request-read",
+      "expression": "{ projectId, crId } = req.params",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/getTraceStoreMetadata",
+      "kind": "request-delegation",
+      "expression": "this.resolveVisibleProject(projectId, req, res)",
+      "count": 1,
+      "delegate": "server/controllers/ProjectController.ts#this.resolveVisibleProject",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/getTraceStoreMetadata",
+      "kind": "request-read",
+      "expression": "{ projectId, crId } = req.params",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/getUnifiedTickets",
+      "kind": "request-delegation",
+      "expression": "this.resolveVisibleProject(projectId, req, res)",
+      "count": 1,
+      "delegate": "server/controllers/ProjectController.ts#this.resolveVisibleProject",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/getUnifiedTickets",
+      "kind": "request-read",
+      "expression": "{ projectId } = req.params",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/resolveVisibleProject",
+      "kind": "request-delegation",
+      "expression": "getRequestAccess(req)",
+      "count": 1,
+      "delegate": "../security/apiAuth.js#getRequestAccess",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/resolveVisibleProject",
+      "kind": "request-read",
+      "expression": "projects = await this.projectService.getAllProjects(req.query.bypassCache === 'true')",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/search",
+      "kind": "request-read",
+      "expression": "parseResult = SearchRequestSchema.safeParse(req.body)",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 3
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/updateProject",
+      "kind": "request-read",
+      "expression": "{ code } = req.params",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/updateProject",
+      "kind": "request-read",
+      "expression": "updates = req.body as ProjectUpdateInput",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 2
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/updateProjectSharing",
+      "kind": "request-read",
+      "expression": "{ code } = req.params",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "function": "ProjectController/updateProjectSharing",
+      "kind": "request-read",
+      "expression": "body = req.body as {\n    mode?: unknown;\n    rotateShareId?: unknown;\n    shareId?: unknown;\n}",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 2
+    },
+    {
+      "file": "server/controllers/SearchController.ts",
+      "function": "SearchController/search",
+      "kind": "request-read",
+      "expression": "parseResult = UnifiedSearchRequestSchema.safeParse(req.body)",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 3
+    },
+    {
+      "file": "server/repositories/ConfigRepository.ts",
+      "function": "ConfigRepository/_parseConfig",
+      "kind": "decoder-cast",
+      "expression": "parseToml(content) as any",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "server/repositories/ConfigRepository.ts",
+      "function": "ConfigRepository/_parseConfig",
+      "kind": "decoder",
+      "expression": "parseToml(content)",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "server/routes/auth.ts",
+      "function": "createAuthRouter/router.delete(\"/session\")",
+      "kind": "request-delegation",
+      "expression": "extractApiCredential(req)",
+      "count": 1,
+      "delegate": "../security/apiAuth.js#extractApiCredential",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/auth.ts",
+      "function": "createAuthRouter/router.delete(\"/session\")",
+      "kind": "request-delegation",
+      "expression": "getOwnerSessionState(req, runtimeConfig.auth.token)",
+      "count": 1,
+      "delegate": "../security/apiSession.js#getOwnerSessionState",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/auth.ts",
+      "function": "createAuthRouter/router.delete(\"/session\")",
+      "kind": "request-delegation",
+      "expression": "getRuntimeConfig(req)",
+      "count": 1,
+      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/auth.ts",
+      "function": "createAuthRouter/router.delete(\"/session\")",
+      "kind": "request-delegation",
+      "expression": "shouldUseSecureSessionCookie(req, runtimeConfig.nodeEnv)",
+      "count": 1,
+      "delegate": "../security/apiSession.js#shouldUseSecureSessionCookie",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/auth.ts",
+      "function": "createAuthRouter/router.get(\"/session\")",
+      "kind": "request-delegation",
+      "expression": "getOwnerSessionState(req, runtimeConfig.auth.token)",
+      "count": 1,
+      "delegate": "../security/apiSession.js#getOwnerSessionState",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/auth.ts",
+      "function": "createAuthRouter/router.get(\"/session\")",
+      "kind": "request-delegation",
+      "expression": "getReadSessionState(req, runtimeConfig.readSessions.secret)",
+      "count": 1,
+      "delegate": "../security/readSession.js#getReadSessionState",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/auth.ts",
+      "function": "createAuthRouter/router.get(\"/session\")",
+      "kind": "request-delegation",
+      "expression": "getRuntimeConfig(req)",
+      "count": 1,
+      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/auth.ts",
+      "function": "createAuthRouter/router.get(\"/session\")",
+      "kind": "request-delegation",
+      "expression": "isLoopbackBypassEligible(req, runtimeConfig.auth, readSession)",
+      "count": 1,
+      "delegate": "../security/apiAuth.js#isLoopbackBypassEligible",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/auth.ts",
+      "function": "createAuthRouter/router.post(\"/read-token\")",
+      "kind": "request-delegation",
+      "expression": "getReadTokenStore(req)",
+      "count": 1,
+      "delegate": "server/routes/auth.ts#getReadTokenStore",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/auth.ts",
+      "function": "createAuthRouter/router.post(\"/read-token\")",
+      "kind": "request-delegation",
+      "expression": "getRuntimeConfig(req)",
+      "count": 1,
+      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/auth.ts",
+      "function": "createAuthRouter/router.post(\"/read-token\")",
+      "kind": "request-delegation",
+      "expression": "shouldUseSecureSessionCookie(req, runtimeConfig.nodeEnv)",
+      "count": 2,
+      "delegate": "../security/apiSession.js#shouldUseSecureSessionCookie",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/auth.ts",
+      "function": "createAuthRouter/router.post(\"/read-token\")",
+      "kind": "request-read",
+      "expression": "submittedToken = readSubmittedToken(req.body)",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 3
+    },
+    {
+      "file": "server/routes/auth.ts",
+      "function": "createAuthRouter/router.post(\"/session\")",
+      "kind": "request-delegation",
+      "expression": "getRuntimeConfig(req)",
+      "count": 1,
+      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/auth.ts",
+      "function": "createAuthRouter/router.post(\"/session\")",
+      "kind": "request-delegation",
+      "expression": "shouldUseSecureSessionCookie(req, runtimeConfig.nodeEnv)",
+      "count": 1,
+      "delegate": "../security/apiSession.js#shouldUseSecureSessionCookie",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/auth.ts",
+      "function": "createAuthRouter/router.post(\"/session\")",
+      "kind": "request-read",
+      "expression": "submittedToken = readSubmittedToken(req.body)",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 3
+    },
+    {
+      "file": "server/routes/auth.ts",
+      "function": "getReadTokenStore",
+      "kind": "request-delegation",
+      "expression": "getRuntimeConfig(req)",
+      "count": 1,
+      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/config.ts",
+      "function": "createConfigRouter/bindAdapters",
+      "kind": "request-delegation",
+      "expression": "context.resolveProjectId?.(req)",
+      "count": 1,
+      "delegate": "server/routes/config.ts#ConfigRouteContext.resolveProjectId",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/config.ts",
+      "function": "createConfigRouter/bindAdapters",
+      "kind": "request-delegation",
+      "expression": "context.resolveProjectPath?.(req)",
+      "count": 1,
+      "delegate": "server/routes/config.ts#ConfigRouteContext.resolveProjectPath",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/config.ts",
+      "function": "createConfigRouter/bindAdapters",
+      "kind": "request-delegation",
+      "expression": "getRuntimeConfig(req)",
+      "count": 1,
+      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/config.ts",
+      "function": "createConfigRouter/router.get(\"/selectors\")",
+      "kind": "request-delegation",
+      "expression": "controller.getSelectors(req, res)",
+      "count": 1,
+      "delegate": "../controllers/ConfigController.js#ConfigController.getSelectors",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/config.ts",
+      "function": "createConfigRouter/router.patch(\"/\")",
+      "kind": "request-delegation",
+      "expression": "controller.patchConfig(req, res)",
+      "count": 1,
+      "delegate": "../controllers/ConfigController.js#ConfigController.patchConfig",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/devtools.ts",
+      "function": "createDevToolsRouter/router.get(\"/frontend/dev-logs\")",
+      "kind": "request-read",
+      "expression": "{ filter } = req.query",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/devtools.ts",
+      "function": "createDevToolsRouter/router.get(\"/frontend/dev-logs\")",
+      "kind": "request-read",
+      "expression": "lines = Math.min(Number.parseInt(req.query.lines || '20'), MAX_DEV_MODE_LOGS)",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/devtools.ts",
+      "function": "createDevToolsRouter/router.get(\"/frontend/logs\")",
+      "kind": "request-read",
+      "expression": "{ filter } = req.query",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/devtools.ts",
+      "function": "createDevToolsRouter/router.get(\"/frontend/logs\")",
+      "kind": "request-read",
+      "expression": "lines = Math.min(Number.parseInt(req.query.lines || '20'), MAX_FRONTEND_LOGS)",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/devtools.ts",
+      "function": "createDevToolsRouter/router.get(\"/logs/stream\")",
+      "kind": "request-delegation",
+      "expression": "writeStreamHeaders(req, res, originPolicy)",
+      "count": 1,
+      "delegate": "server/routes/devtools.ts#writeStreamHeaders",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/devtools.ts",
+      "function": "createDevToolsRouter/router.get(\"/logs/stream\")",
+      "kind": "request-read",
+      "expression": "{ filter } = req.query",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/devtools.ts",
+      "function": "createDevToolsRouter/router.get(\"/logs\")",
+      "kind": "request-read",
+      "expression": "{ filter } = req.query",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/devtools.ts",
+      "function": "createDevToolsRouter/router.get(\"/logs\")",
+      "kind": "request-read",
+      "expression": "lines = Math.min(Number.parseInt(req.query.lines || '20'), MAX_LOG_ENTRIES)",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/devtools.ts",
+      "function": "createDevToolsRouter/router.post(\"/frontend/dev-logs\")",
+      "kind": "request-read",
+      "expression": "{ logs } = req.body",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 3
+    },
+    {
+      "file": "server/routes/devtools.ts",
+      "function": "createDevToolsRouter/router.post(\"/frontend/logs\")",
+      "kind": "request-read",
+      "expression": "{ logs } = req.body",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 3
+    },
+    {
+      "file": "server/routes/documents.ts",
+      "function": "createDocumentRouter/requireVisibleProject",
+      "kind": "request-delegation",
+      "expression": "projectController.ensureProjectVisible(projectId, req, res)",
+      "count": 1,
+      "delegate": "../controllers/ProjectController.js#ProjectController.ensureProjectVisible",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/documents.ts",
+      "function": "createDocumentRouter/requireVisibleProject",
+      "kind": "request-read",
+      "expression": "projectId = typeof req.query.projectId === 'string'\n    ? req.query.projectId\n    : typeof req.body?.projectId === 'string'\n        ? req.body.projectId\n        : null",
+      "count": 4,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 3
+    },
+    {
+      "file": "server/routes/documents.ts",
+      "function": "createDocumentRouter/router.get(\"/\")",
+      "kind": "request-delegation",
+      "expression": "documentController.getDocuments(req, res)",
+      "count": 1,
+      "delegate": "../controllers/DocumentController.js#DocumentController.getDocuments",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/documents.ts",
+      "function": "createDocumentRouter/router.get(\"/content\")",
+      "kind": "request-delegation",
+      "expression": "documentController.getDocumentContent(req, res)",
+      "count": 1,
+      "delegate": "../controllers/DocumentController.js#DocumentController.getDocumentContent",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/documents.ts",
+      "function": "createDocumentRouter/router.get(\"/raw-preview/:token/*\")",
+      "kind": "request-delegation",
+      "expression": "documentController.serveRawPreview(req, res)",
+      "count": 1,
+      "delegate": "../controllers/DocumentController.js#DocumentController.serveRawPreview",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/documents.ts",
+      "function": "createDocumentRouter/router.post(\"/configure\")",
+      "kind": "request-delegation",
+      "expression": "projectController.configureDocuments(req, res)",
+      "count": 1,
+      "delegate": "../controllers/ProjectController.js#ProjectController.configureDocuments",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/documents.ts",
+      "function": "createDocumentRouter/router.post(\"/preview-token\")",
+      "kind": "request-delegation",
+      "expression": "documentController.mintPreviewToken(req, res)",
+      "count": 1,
+      "delegate": "../controllers/DocumentController.js#DocumentController.mintPreviewToken",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/documents.ts",
+      "function": "createDocumentRouter/router.put(\"/favs\")",
+      "kind": "request-delegation",
+      "expression": "documentController.putDocumentFavs(req, res)",
+      "count": 1,
+      "delegate": "../controllers/DocumentController.js#DocumentController.putDocumentFavs",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/pins.ts",
+      "function": "createPinRouter/router.get(\"/\")",
+      "kind": "request-delegation",
+      "expression": "pinController.getPinState(req, res)",
+      "count": 1,
+      "delegate": "../controllers/PinController.js#PinController.getPinState",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/pins.ts",
+      "function": "createPinRouter/router.put(\"/\")",
+      "kind": "request-delegation",
+      "expression": "pinController.putPinState(req, res)",
+      "count": 1,
+      "delegate": "../controllers/PinController.js#PinController.putPinState",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/projects.ts",
+      "function": "createProjectRouter/router.delete(\"/:projectId/crs/:crId\")",
+      "kind": "request-delegation",
+      "expression": "projectController.deleteCR(req, res)",
+      "count": 1,
+      "delegate": "../controllers/ProjectController.js#ProjectController.deleteCR",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/projects.ts",
+      "function": "createProjectRouter/router.get(\"/:projectId/cloud-projections\")",
+      "kind": "request-delegation",
+      "expression": "projectController.getCloudProjections(req, res)",
+      "count": 1,
+      "delegate": "../controllers/ProjectController.js#ProjectController.getCloudProjections",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/projects.ts",
+      "function": "createProjectRouter/router.get(\"/:projectId/config\")",
+      "kind": "request-delegation",
+      "expression": "projectController.getProjectConfig(req, res)",
+      "count": 1,
+      "delegate": "../controllers/ProjectController.js#ProjectController.getProjectConfig",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/projects.ts",
+      "function": "createProjectRouter/router.get(\"/:projectId/crs/:crId/subdocuments/:subDocName\")",
+      "kind": "request-delegation",
+      "expression": "projectController.getSubDocument(req, res)",
+      "count": 1,
+      "delegate": "../controllers/ProjectController.js#ProjectController.getSubDocument",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/projects.ts",
+      "function": "createProjectRouter/router.get(\"/:projectId/crs/:crId/trace-store/meta\")",
+      "kind": "request-delegation",
+      "expression": "projectController.getTraceStoreMetadata(req, res)",
+      "count": 1,
+      "delegate": "../controllers/ProjectController.js#ProjectController.getTraceStoreMetadata",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/projects.ts",
+      "function": "createProjectRouter/router.get(\"/:projectId/crs/:crId/trace-store\")",
+      "kind": "request-delegation",
+      "expression": "projectController.getTraceStore(req, res)",
+      "count": 1,
+      "delegate": "../controllers/ProjectController.js#ProjectController.getTraceStore",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/projects.ts",
+      "function": "createProjectRouter/router.get(\"/:projectId/crs/:crId\")",
+      "kind": "request-delegation",
+      "expression": "projectController.getCR(req, res)",
+      "count": 1,
+      "delegate": "../controllers/ProjectController.js#ProjectController.getCR",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/projects.ts",
+      "function": "createProjectRouter/router.get(\"/:projectId/crs\")",
+      "kind": "request-delegation",
+      "expression": "projectController.getProjectCRs(req, res)",
+      "count": 1,
+      "delegate": "../controllers/ProjectController.js#ProjectController.getProjectCRs",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/projects.ts",
+      "function": "createProjectRouter/router.get(\"/:projectId/tickets/unified\")",
+      "kind": "request-delegation",
+      "expression": "projectController.getUnifiedTickets(req, res)",
+      "count": 1,
+      "delegate": "../controllers/ProjectController.js#ProjectController.getUnifiedTickets",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/projects.ts",
+      "function": "createProjectRouter/router.get(\"/\")",
+      "kind": "request-delegation",
+      "expression": "projectController.getAllProjects(req, res)",
+      "count": 1,
+      "delegate": "../controllers/ProjectController.js#ProjectController.getAllProjects",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/projects.ts",
+      "function": "createProjectRouter/router.patch(\"/:projectId/crs/:crId\")",
+      "kind": "request-delegation",
+      "expression": "projectController.patchCR(req, res)",
+      "count": 1,
+      "delegate": "../controllers/ProjectController.js#ProjectController.patchCR",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/projects.ts",
+      "function": "createProjectRouter/router.post(\"/:projectId/crs\")",
+      "kind": "request-delegation",
+      "expression": "projectController.createCR(req, res)",
+      "count": 1,
+      "delegate": "../controllers/ProjectController.js#ProjectController.createCR",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/projects.ts",
+      "function": "createProjectRouter/router.post(\"/create\")",
+      "kind": "request-delegation",
+      "expression": "projectController.createProject(req, res)",
+      "count": 1,
+      "delegate": "../controllers/ProjectController.js#ProjectController.createProject",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/projects.ts",
+      "function": "createProjectRouter/router.post(\"/search\")",
+      "kind": "request-delegation",
+      "expression": "projectController.search(req, res)",
+      "count": 1,
+      "delegate": "../controllers/ProjectController.js#ProjectController.search",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/projects.ts",
+      "function": "createProjectRouter/router.put(\"/:code/disable\")",
+      "kind": "request-delegation",
+      "expression": "projectController.disableProject(req, res)",
+      "count": 1,
+      "delegate": "../controllers/ProjectController.js#ProjectController.disableProject",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/projects.ts",
+      "function": "createProjectRouter/router.put(\"/:code/enable\")",
+      "kind": "request-delegation",
+      "expression": "projectController.enableProject(req, res)",
+      "count": 1,
+      "delegate": "../controllers/ProjectController.js#ProjectController.enableProject",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/projects.ts",
+      "function": "createProjectRouter/router.put(\"/:code/sharing\")",
+      "kind": "request-delegation",
+      "expression": "projectController.updateProjectSharing(req, res)",
+      "count": 1,
+      "delegate": "../controllers/ProjectController.js#ProjectController.updateProjectSharing",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/projects.ts",
+      "function": "createProjectRouter/router.put(\"/:code/update\")",
+      "kind": "request-delegation",
+      "expression": "projectController.updateProject(req, res)",
+      "count": 1,
+      "delegate": "../controllers/ProjectController.js#ProjectController.updateProject",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/projects.ts",
+      "function": "createProjectRouter/router.put(\"/:projectId/crs/:crId\")",
+      "kind": "request-delegation",
+      "expression": "projectController.updateCR(req, res)",
+      "count": 1,
+      "delegate": "../controllers/ProjectController.js#ProjectController.updateCR",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/readTokens.ts",
+      "function": "allowsEphemeralInviteFallback",
+      "kind": "request-delegation",
+      "expression": "getRuntimeConfig(req)",
+      "count": 1,
+      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/readTokens.ts",
+      "function": "consumeInviteFromCandidateStores",
+      "kind": "request-delegation",
+      "expression": "allowsEphemeralInviteFallback(req)",
+      "count": 1,
+      "delegate": "server/routes/readTokens.ts#allowsEphemeralInviteFallback",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/readTokens.ts",
+      "function": "consumeInviteFromCandidateStores",
+      "kind": "request-delegation",
+      "expression": "getCandidateConfigDirs(req)",
+      "count": 1,
+      "delegate": "server/routes/readTokens.ts#getCandidateConfigDirs",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/readTokens.ts",
+      "function": "createPublicReadTokensRouter/router.post(\"/invites/:code/session\")",
+      "kind": "request-delegation",
+      "expression": "consumeInviteFromCandidateStores(req, code)",
+      "count": 1,
+      "delegate": "server/routes/readTokens.ts#consumeInviteFromCandidateStores",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/readTokens.ts",
+      "function": "createPublicReadTokensRouter/router.post(\"/invites/:code/session\")",
+      "kind": "request-delegation",
+      "expression": "getRuntimeConfig(req)",
+      "count": 1,
+      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/readTokens.ts",
+      "function": "createPublicReadTokensRouter/router.post(\"/invites/:code/session\")",
+      "kind": "request-delegation",
+      "expression": "shouldUseSecureSessionCookie(req, runtimeConfig.nodeEnv)",
+      "count": 1,
+      "delegate": "../security/apiSession.js#shouldUseSecureSessionCookie",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/readTokens.ts",
+      "function": "createPublicReadTokensRouter/router.post(\"/invites/:code/session\")",
+      "kind": "request-read",
+      "expression": "code = req.params.code",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/readTokens.ts",
+      "function": "createReadTokensRouter/router.get(\"/\")",
+      "kind": "request-delegation",
+      "expression": "getPublicLinkOriginOptions(req)",
+      "count": 1,
+      "delegate": "server/routes/readTokens.ts#getPublicLinkOriginOptions",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/readTokens.ts",
+      "function": "createReadTokensRouter/router.get(\"/\")",
+      "kind": "request-delegation",
+      "expression": "getReadTokenStore(req)",
+      "count": 1,
+      "delegate": "server/routes/readTokens.ts#getReadTokenStore",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/readTokens.ts",
+      "function": "createReadTokensRouter/router.get(\"/\")",
+      "kind": "request-delegation",
+      "expression": "getRequestAccess(req)",
+      "count": 1,
+      "delegate": "../security/apiAuth.js#getRequestAccess",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/readTokens.ts",
+      "function": "createReadTokensRouter/router.post(\"/:tokenId/invites\")",
+      "kind": "request-delegation",
+      "expression": "allowsEphemeralInviteFallback(req)",
+      "count": 1,
+      "delegate": "server/routes/readTokens.ts#allowsEphemeralInviteFallback",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/readTokens.ts",
+      "function": "createReadTokensRouter/router.post(\"/:tokenId/invites\")",
+      "kind": "request-delegation",
+      "expression": "getReadTokenStore(req)",
+      "count": 2,
+      "delegate": "server/routes/readTokens.ts#getReadTokenStore",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/readTokens.ts",
+      "function": "createReadTokensRouter/router.post(\"/:tokenId/invites\")",
+      "kind": "request-delegation",
+      "expression": "getRequestAccess(req)",
+      "count": 1,
+      "delegate": "../security/apiAuth.js#getRequestAccess",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/readTokens.ts",
+      "function": "createReadTokensRouter/router.post(\"/:tokenId/invites\")",
+      "kind": "request-delegation",
+      "expression": "getRuntimeConfig(req)",
+      "count": 1,
+      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/readTokens.ts",
+      "function": "createReadTokensRouter/router.post(\"/:tokenId/invites\")",
+      "kind": "request-delegation",
+      "expression": "resolveInviteOrigin(req, getRuntimeConfig(req))",
+      "count": 1,
+      "delegate": "server/routes/readTokens.ts#resolveInviteOrigin",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/readTokens.ts",
+      "function": "createReadTokensRouter/router.post(\"/:tokenId/invites\")",
+      "kind": "request-read",
+      "expression": "ephemeralInvites.set(invite.code, await getReadTokenStore(req).resolveTokenById(req.params.tokenId))",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/readTokens.ts",
+      "function": "createReadTokensRouter/router.post(\"/:tokenId/invites\")",
+      "kind": "request-read",
+      "expression": "invite = await getReadTokenStore(req).createInvite(req.params.tokenId)",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/readTokens.ts",
+      "function": "createReadTokensRouter/router.post(\"/:tokenId/revoke\")",
+      "kind": "request-delegation",
+      "expression": "getReadTokenStore(req)",
+      "count": 1,
+      "delegate": "server/routes/readTokens.ts#getReadTokenStore",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/readTokens.ts",
+      "function": "createReadTokensRouter/router.post(\"/:tokenId/revoke\")",
+      "kind": "request-delegation",
+      "expression": "getRequestAccess(req)",
+      "count": 1,
+      "delegate": "../security/apiAuth.js#getRequestAccess",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/readTokens.ts",
+      "function": "createReadTokensRouter/router.post(\"/:tokenId/revoke\")",
+      "kind": "request-read",
+      "expression": "invite.tokenId === req.params.tokenId",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/readTokens.ts",
+      "function": "createReadTokensRouter/router.post(\"/:tokenId/revoke\")",
+      "kind": "request-read",
+      "expression": "revokedToken = await getReadTokenStore(req).revokeToken(req.params.tokenId)",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/readTokens.ts",
+      "function": "createReadTokensRouter/router.post(\"/\")",
+      "kind": "request-delegation",
+      "expression": "getReadTokenStore(req)",
+      "count": 1,
+      "delegate": "server/routes/readTokens.ts#getReadTokenStore",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/readTokens.ts",
+      "function": "createReadTokensRouter/router.post(\"/\")",
+      "kind": "request-delegation",
+      "expression": "getRequestAccess(req)",
+      "count": 1,
+      "delegate": "../security/apiAuth.js#getRequestAccess",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/readTokens.ts",
+      "function": "createReadTokensRouter/router.post(\"/\")",
+      "kind": "request-read",
+      "expression": "readOptionalString(req.body, 'expiresAt')",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 3
+    },
+    {
+      "file": "server/routes/readTokens.ts",
+      "function": "createReadTokensRouter/router.post(\"/\")",
+      "kind": "request-read",
+      "expression": "readString(req.body, 'name')",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 3
+    },
+    {
+      "file": "server/routes/readTokens.ts",
+      "function": "createReadTokensRouter/router.post(\"/\")",
+      "kind": "request-read",
+      "expression": "readStringArray(req.body, 'projectRefs')",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 3
+    },
+    {
+      "file": "server/routes/readTokens.ts",
+      "function": "getCandidateConfigDirs",
+      "kind": "request-delegation",
+      "expression": "getRuntimeConfig(req)",
+      "count": 1,
+      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/readTokens.ts",
+      "function": "getPublicLinkOriginOptions",
+      "kind": "request-delegation",
+      "expression": "getRequestOrigin(req)",
+      "count": 1,
+      "delegate": "server/routes/readTokens.ts#getRequestOrigin",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/readTokens.ts",
+      "function": "getPublicLinkOriginOptions",
+      "kind": "request-delegation",
+      "expression": "getRuntimeConfig(req)",
+      "count": 1,
+      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/readTokens.ts",
+      "function": "getReadTokenStore",
+      "kind": "request-delegation",
+      "expression": "getRuntimeConfig(req)",
+      "count": 1,
+      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/readTokens.ts",
+      "function": "resolveInviteOrigin",
+      "kind": "request-delegation",
+      "expression": "getPublicLinkOriginOptions(req, requestedOrigin ?? undefined, runtimeConfig)",
+      "count": 1,
+      "delegate": "server/routes/readTokens.ts#getPublicLinkOriginOptions",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/readTokens.ts",
+      "function": "resolveInviteOrigin",
+      "kind": "request-read",
+      "expression": "requestedOrigin = readOptionalString(req.body, 'origin')",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 3
+    },
+    {
+      "file": "server/routes/search.ts",
+      "function": "createSearchRouter/router.post(\"/\")",
+      "kind": "request-delegation",
+      "expression": "searchController.search(req, res)",
+      "count": 1,
+      "delegate": "../controllers/SearchController#SearchController.search",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/share.ts",
+      "function": "createShareRouter/router.post(\"/:shareId/session\")",
+      "kind": "request-delegation",
+      "expression": "getRuntimeConfig(req)",
+      "count": 1,
+      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/share.ts",
+      "function": "createShareRouter/router.post(\"/:shareId/session\")",
+      "kind": "request-delegation",
+      "expression": "shouldUseSecureSessionCookie(req, runtimeConfig.nodeEnv)",
+      "count": 1,
+      "delegate": "../security/apiSession.js#shouldUseSecureSessionCookie",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/share.ts",
+      "function": "createShareRouter/router.post(\"/:shareId/session\")",
+      "kind": "request-read",
+      "expression": "shareId = req.params.shareId",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/sse.ts",
+      "function": "createSSERouter/router.get(\"/\")",
+      "kind": "request-delegation",
+      "expression": "getRequestAccess(req)",
+      "count": 1,
+      "delegate": "../security/apiAuth.js#getRequestAccess",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/system.ts",
+      "function": "createSystemRouter/router.get(\"/config/global\")",
+      "kind": "request-delegation",
+      "expression": "getRuntimeConfig(req)",
+      "count": 1,
+      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/system.ts",
+      "function": "createSystemRouter/router.get(\"/config/links\")",
+      "kind": "request-delegation",
+      "expression": "getRuntimeConfig(req)",
+      "count": 1,
+      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/system.ts",
+      "function": "createSystemRouter/router.get(\"/config/selector\")",
+      "kind": "request-delegation",
+      "expression": "getRuntimeConfig(req)",
+      "count": 1,
+      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/system.ts",
+      "function": "createSystemRouter/router.get(\"/config\")",
+      "kind": "request-delegation",
+      "expression": "getRuntimeConfig(req)",
+      "count": 2,
+      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/system.ts",
+      "function": "createSystemRouter/router.get(\"/directories\")",
+      "kind": "request-delegation",
+      "expression": "projectController.getSystemDirectories(req, res)",
+      "count": 1,
+      "delegate": "../controllers/ProjectController.js#ProjectController.getSystemDirectories",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/system.ts",
+      "function": "createSystemRouter/router.get(\"/filesystem\")",
+      "kind": "request-delegation",
+      "expression": "projectController.getFileSystemTree(req, res)",
+      "count": 1,
+      "delegate": "../controllers/ProjectController.js#ProjectController.getFileSystemTree",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/system.ts",
+      "function": "createSystemRouter/router.post(\"/cache/clear\")",
+      "kind": "request-delegation",
+      "expression": "requireMaintenanceEnabled(req, res)",
+      "count": 1,
+      "delegate": "server/routes/system.ts#requireMaintenanceEnabled",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/system.ts",
+      "function": "createSystemRouter/router.post(\"/config/clear\")",
+      "kind": "request-delegation",
+      "expression": "requireMaintenanceEnabled(req, res)",
+      "count": 1,
+      "delegate": "server/routes/system.ts#requireMaintenanceEnabled",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/system.ts",
+      "function": "createSystemRouter/router.post(\"/config/selector\")",
+      "kind": "request-delegation",
+      "expression": "getRuntimeConfig(req)",
+      "count": 1,
+      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/system.ts",
+      "function": "createSystemRouter/router.post(\"/config/selector\")",
+      "kind": "request-delegation",
+      "expression": "requireMaintenanceEnabled(req, res)",
+      "count": 1,
+      "delegate": "server/routes/system.ts#requireMaintenanceEnabled",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/system.ts",
+      "function": "createSystemRouter/router.post(\"/config/selector\")",
+      "kind": "request-read",
+      "expression": "stateUpdate = req.body",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 2
+    },
+    {
+      "file": "server/routes/system.ts",
+      "function": "createSystemRouter/router.post(\"/filesystem/exists\")",
+      "kind": "request-delegation",
+      "expression": "getAllowedFilesystemRoots(configDir, projectDiscovery, req)",
+      "count": 1,
+      "delegate": "server/routes/system.ts#getAllowedFilesystemRoots",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/system.ts",
+      "function": "createSystemRouter/router.post(\"/filesystem/exists\")",
+      "kind": "request-delegation",
+      "expression": "getRuntimeConfig(req)",
+      "count": 2,
+      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/system.ts",
+      "function": "createSystemRouter/router.post(\"/filesystem/exists\")",
+      "kind": "request-read",
+      "expression": "{ path: inputPath } = req.body",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 3
+    },
+    {
+      "file": "server/routes/system.ts",
+      "function": "getAllowedFilesystemRoots",
+      "kind": "request-delegation",
+      "expression": "getRuntimeConfig(req)",
+      "count": 1,
+      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/system.ts",
+      "function": "loadGlobalConfig",
+      "kind": "decoder",
+      "expression": "parseToml(configContent)",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "server/routes/system.ts",
+      "function": "loadSelectorState",
+      "kind": "decoder",
+      "expression": "JSON.parse(stateContent)",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "server/routes/system.ts",
+      "function": "loadUserConfig",
+      "kind": "decoder",
+      "expression": "parseToml(userConfigContent)",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "server/routes/system.ts",
+      "function": "requireMaintenanceEnabled",
+      "kind": "request-delegation",
+      "expression": "getRuntimeConfig(req)",
+      "count": 1,
+      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/security/apiAuth.ts",
+      "function": "createApiAuthMiddleware/<callback>",
+      "kind": "request-delegation",
+      "expression": "enforceReadOnlyAccess(req, res, next, readSession)",
+      "count": 2,
+      "delegate": "server/security/apiAuth.ts#enforceReadOnlyAccess",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/security/apiAuth.ts",
+      "function": "createApiAuthMiddleware/<callback>",
+      "kind": "request-delegation",
+      "expression": "extractApiCredential(req)",
+      "count": 1,
+      "delegate": "server/security/apiAuth.ts#extractApiCredential",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/security/apiAuth.ts",
+      "function": "createApiAuthMiddleware/<callback>",
+      "kind": "request-delegation",
+      "expression": "getReadSessionState(req, options.readSessionSecret)",
+      "count": 1,
+      "delegate": "./readSession.js#getReadSessionState",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/security/apiAuth.ts",
+      "function": "createApiAuthMiddleware/<callback>",
+      "kind": "request-delegation",
+      "expression": "getRequestPath(req)",
+      "count": 1,
+      "delegate": "server/security/apiAuth.ts#getRequestPath",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/security/apiAuth.ts",
+      "function": "createApiAuthMiddleware/<callback>",
+      "kind": "request-delegation",
+      "expression": "hasCookieMutationIntent(req, originPolicy)",
+      "count": 1,
+      "delegate": "server/security/apiAuth.ts#hasCookieMutationIntent",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/security/apiAuth.ts",
+      "function": "createApiAuthMiddleware/<callback>",
+      "kind": "request-delegation",
+      "expression": "isLoopbackBypassEligible(req, config, readSession)",
+      "count": 1,
+      "delegate": "server/security/apiAuth.ts#isLoopbackBypassEligible",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/security/apiAuth.ts",
+      "function": "createApiAuthMiddleware/<callback>",
+      "kind": "request-delegation",
+      "expression": "requiresCookieMutationIntent(req)",
+      "count": 1,
+      "delegate": "server/security/apiAuth.ts#requiresCookieMutationIntent",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/security/apiAuth.ts",
+      "function": "createApiAuthMiddleware/<callback>",
+      "kind": "request-delegation",
+      "expression": "setRequestAccess(req, { canWrite: false, mode: 'anonymous', projectRefs: [], shareIds: [] })",
+      "count": 1,
+      "delegate": "server/security/apiAuth.ts#setRequestAccess",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/security/apiAuth.ts",
+      "function": "createApiAuthMiddleware/<callback>",
+      "kind": "request-delegation",
+      "expression": "setRequestAccess(req, { canWrite: true, mode: 'no-auth-dev', projectRefs: [], shareIds: [] })",
+      "count": 2,
+      "delegate": "server/security/apiAuth.ts#setRequestAccess",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/security/apiAuth.ts",
+      "function": "createApiAuthMiddleware/<callback>",
+      "kind": "request-delegation",
+      "expression": "setRequestAccess(req, { canWrite: true, mode: 'owner-admin', projectRefs: [], shareIds: [] })",
+      "count": 2,
+      "delegate": "server/security/apiAuth.ts#setRequestAccess",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/security/apiAuth.ts",
+      "function": "createApiAuthMiddleware/<callback>",
+      "kind": "request-delegation",
+      "expression": "verifyOwnerSessionCookie(req, config.token)",
+      "count": 1,
+      "delegate": "./apiSession.js#verifyOwnerSessionCookie",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/security/apiAuth.ts",
+      "function": "enforceReadOnlyAccess",
+      "kind": "request-delegation",
+      "expression": "getRequestPath(req)",
+      "count": 1,
+      "delegate": "server/security/apiAuth.ts#getRequestPath",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/security/apiAuth.ts",
+      "function": "enforceReadOnlyAccess",
+      "kind": "request-delegation",
+      "expression": "setRequestAccess(req, {\n    canWrite: false,\n    mode: readSession.authenticated ? 'read-only' : 'anonymous',\n    projectRefs: readSession.projectRefs,\n    shareIds: readSession.shareIds,\n})",
+      "count": 1,
+      "delegate": "server/security/apiAuth.ts#setRequestAccess",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/security/apiAuth.ts",
+      "function": "isLoopbackBypassEligible",
+      "kind": "request-delegation",
+      "expression": "isLocalHostRequest(req, config.localHosts)",
+      "count": 1,
+      "delegate": "server/security/apiAuth.ts#isLocalHostRequest",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/security/apiSession.ts",
+      "function": "getOwnerSessionState",
+      "kind": "request-delegation",
+      "expression": "verifyOwnerSessionCookie(req, expectedToken)",
+      "count": 1,
+      "delegate": "server/security/apiSession.ts#verifyOwnerSessionCookie",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/security/apiSession.ts",
+      "function": "parsePayload",
+      "kind": "decoder-cast",
+      "expression": "JSON.parse(decodeBase64Url(encodedPayload)) as Partial<OwnerSessionPayload>",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "server/security/apiSession.ts",
+      "function": "parsePayload",
+      "kind": "decoder-cast",
+      "expression": "parsed as OwnerSessionPayload",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "server/security/apiSession.ts",
+      "function": "verifyOwnerSessionCookie",
+      "kind": "request-delegation",
+      "expression": "extractCookieValue(req, OWNER_SESSION_COOKIE_NAME)",
+      "count": 1,
+      "delegate": "server/security/apiSession.ts#extractCookieValue",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/security/documentPreviewToken.ts",
+      "function": "parsePayload",
+      "kind": "decoder-cast",
+      "expression": "JSON.parse(decodeBase64Url(encodedPayload)) as Partial<PreviewTokenPayload>",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "server/security/documentPreviewToken.ts",
+      "function": "parsePayload",
+      "kind": "decoder-cast",
+      "expression": "parsed as PreviewTokenPayload",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "server/security/projectSharing.ts",
+      "function": "readRegistry",
+      "kind": "decoder-cast",
+      "expression": "parseToml(await readFile(registryPath, 'utf8')) as RegistryData",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "server/security/projectSharing.ts",
+      "function": "readRegistry",
+      "kind": "decoder",
+      "expression": "parseToml(await readFile(registryPath, 'utf8'))",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "server/security/projectSharing.ts",
+      "function": "shareIdCollides",
+      "kind": "decoder-cast",
+      "expression": "parseToml(await readFile(registryPath, 'utf8')) as Partial<RegistryData>",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "server/security/projectSharing.ts",
+      "function": "shareIdCollides",
+      "kind": "decoder",
+      "expression": "parseToml(await readFile(registryPath, 'utf8'))",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "server/security/readSession.ts",
+      "function": "getReadSessionPayload",
+      "kind": "request-delegation",
+      "expression": "extractCookieValue(req, READ_SESSION_COOKIE_NAME)",
+      "count": 1,
+      "delegate": "server/security/readSession.ts#extractCookieValue",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/security/readSession.ts",
+      "function": "getReadSessionState",
+      "kind": "request-delegation",
+      "expression": "getReadSessionPayload(req, secret)",
+      "count": 1,
+      "delegate": "server/security/readSession.ts#getReadSessionPayload",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/security/readSession.ts",
+      "function": "parsePayload",
+      "kind": "decoder-cast",
+      "expression": "JSON.parse(decodeBase64Url(encodedPayload)) as Partial<ReadSessionPayload>",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "server/security/readTokenStore.ts",
+      "function": "createReadTokenStore/loadStore",
+      "kind": "decoder-cast",
+      "expression": "JSON.parse(content) as unknown",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "server/security/readTokenStore.ts",
+      "function": "createReadTokenStore/loadStore",
+      "kind": "decoder",
+      "expression": "JSON.parse(content)",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "server/server.ts",
+      "function": "app.get(\"/api/projects/:id/cloud-sync/status\")",
+      "kind": "request-read",
+      "expression": "req.params.id",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/server.ts",
+      "function": "app.get(\"/api/projects/:id/cloud-sync/status\")",
+      "kind": "request-read",
+      "expression": "status = projectionStreamManager.getStatus(req.params.id)",
+      "count": 1,
+      "reason": "Existing request consumption; migrate with its owning phase",
+      "phase": 5
+    },
+    {
+      "file": "server/services/config/adapters/GlobalConfigStorageAdapter.ts",
+      "function": "GlobalConfigStorageAdapter/read",
+      "kind": "decoder",
+      "expression": "parseToml(content)",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "server/services/config/adapters/ProjectConfigStorageAdapter.ts",
+      "function": "ProjectConfigStorageAdapter/read",
+      "kind": "decoder-cast",
+      "expression": "parseToml(content) as LocalProjectConfig",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "server/services/config/adapters/ProjectConfigStorageAdapter.ts",
+      "function": "ProjectConfigStorageAdapter/read",
+      "kind": "decoder",
+      "expression": "parseToml(content)",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "server/services/config/adapters/UserConfigStorageAdapter.ts",
+      "function": "UserConfigStorageAdapter/read",
+      "kind": "decoder",
+      "expression": "parseToml(content)",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "server/services/config/ConfigApplicationService.ts",
+      "function": "structuredCloneSafe",
+      "kind": "decoder-cast",
+      "expression": "JSON.parse(JSON.stringify(value)) as T",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "server/services/DocumentFavStateService.ts",
+      "function": "DocumentFavStateService/readStateFile",
+      "kind": "decoder",
+      "expression": "JSON.parse(content)",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "server/services/fileWatcher/index.ts",
+      "function": "FileWatcherService/handleFileChangeForSSE",
+      "kind": "decoder",
+      "expression": "matter(fileContent)",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "server/services/PinStateService.ts",
+      "function": "PinStateService/readState",
+      "kind": "decoder",
+      "expression": "JSON.parse(content)",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "server/services/TraceStoreService.ts",
+      "function": "TraceStoreService/read",
+      "kind": "decoder",
+      "expression": "JSON.parse(contents)",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "shared/services/cloud-sync/access-credential-broker.ts",
+      "function": "decodeAccessTokenExpiry",
+      "kind": "decoder-cast",
+      "expression": "JSON.parse(Buffer.from(payloadSegment, 'base64url').toString('utf8')) as {\n    exp?: unknown;\n}",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "shared/services/cloud-sync/CloudProjectionReadModel.ts",
+      "function": "CloudProjectionReadModel/load",
+      "kind": "decoder-cast",
+      "expression": "JSON.parse(raw) as Partial<ReadModelState>",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "shared/services/cloud-sync/credential-store.ts",
+      "function": "parseRecord",
+      "kind": "decoder-cast",
+      "expression": "parsed as Partial<MachineCredentialRecord>",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "shared/services/cloud-sync/credential-store.ts",
+      "function": "serializeRecord",
+      "kind": "decoder-cast",
+      "expression": "parseToml(out) as Partial<MachineCredentialRecord>",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "shared/services/cloud-sync/operation-journal.ts",
+      "function": "CloudOperationJournal/acquireLock",
+      "kind": "decoder-cast",
+      "expression": "JSON.parse(await readFile(lockPath, 'utf8')) as {\n    pid?: unknown;\n}",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "shared/services/cloud-sync/operation-journal.ts",
+      "function": "CloudOperationJournal/acquireLock",
+      "kind": "decoder",
+      "expression": "JSON.parse(await readFile(lockPath, 'utf8'))",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "shared/services/cloud-sync/operation-journal.ts",
+      "function": "CloudOperationJournal/load",
+      "kind": "decoder-cast",
+      "expression": "JSON.parse(data) as PendingOperation",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "shared/services/cloud-sync/operation-journal.ts",
+      "function": "CloudOperationJournal/load",
+      "kind": "decoder",
+      "expression": "JSON.parse(data)",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "shared/services/cloud-sync/project-state-store.ts",
+      "function": "parseConnection",
+      "kind": "decoder-cast",
+      "expression": "parsed as Record<string, unknown>",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "shared/services/cloud-sync/project-state-store.ts",
+      "function": "parseConnection",
+      "kind": "decoder",
+      "expression": "parseToml(raw)",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "shared/services/cloud-sync/project-state-store.ts",
+      "function": "serializeConnection",
+      "kind": "decoder-cast",
+      "expression": "parseToml(out) as Partial<CloudSyncConnection>",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "shared/services/cloud-sync/project-state-store.ts",
+      "function": "serializeConnection",
+      "kind": "decoder",
+      "expression": "parseToml(out)",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "shared/services/cloud-sync/projection-stream-state-store.ts",
+      "function": "decodeJwtSubject",
+      "kind": "decoder-cast",
+      "expression": "JSON.parse(Buffer.from(payloadSegment, 'base64url').toString('utf8')) as {\n    sub?: unknown;\n}",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "shared/services/cloud-sync/projection-stream-state-store.ts",
+      "function": "decodeJwtSubject",
+      "kind": "decoder",
+      "expression": "JSON.parse(Buffer.from(payloadSegment, 'base64url').toString('utf8'))",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "shared/services/cloud-sync/projection-stream-state-store.ts",
+      "function": "ProjectionStreamStateStore/load",
+      "kind": "decoder",
+      "expression": "JSON.parse(raw)",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "shared/services/cloud-sync/projection-sync.ts",
+      "function": "CloudProjectionSync/load",
+      "kind": "decoder-cast",
+      "expression": "JSON.parse(await readFile(this.file(ticketNumber), 'utf8')) as PendingProjection",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "shared/services/MarkdownService.ts",
+      "function": "MarkdownService/extractTicketMetadata",
+      "kind": "decoder",
+      "expression": "this.parseYamlFrontmatter(yamlContent)",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "shared/services/MarkdownService.ts",
+      "function": "MarkdownService/parseMarkdownContent",
+      "kind": "decoder",
+      "expression": "this.parseYamlFrontmatter(yamlContent)",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "shared/services/project/ProjectConfigLoader.ts",
+      "function": "ProjectConfigLoader/getProjectConfig",
+      "kind": "decoder",
+      "expression": "parseToml(content)",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "shared/services/project/ProjectConfigService.ts",
+      "function": "ProjectConfigService/applyDocumentPatchByPath",
+      "kind": "decoder-cast",
+      "expression": "parseToml(readFile(configPath)) as LocalProjectConfigWithNestedDocument",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "shared/services/project/ProjectConfigService.ts",
+      "function": "ProjectConfigService/applyDocumentPatchByPath",
+      "kind": "decoder",
+      "expression": "parseToml(readFile(configPath))",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "shared/services/project/ProjectConfigService.ts",
+      "function": "ProjectConfigService/configureDocuments",
+      "kind": "decoder-cast",
+      "expression": "parseToml(readFile(projectFile)) as RegistryData",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "shared/services/project/ProjectConfigService.ts",
+      "function": "ProjectConfigService/configureDocuments",
+      "kind": "decoder",
+      "expression": "parseToml(readFile(projectFile))",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "shared/services/project/ProjectConfigService.ts",
+      "function": "ProjectConfigService/getGlobalConfig",
+      "kind": "decoder",
+      "expression": "parseToml(configContent)",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "shared/services/project/ProjectConfigService.ts",
+      "function": "ProjectConfigService/getProjectConfig",
+      "kind": "decoder",
+      "expression": "parseToml(content)",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "shared/services/project/ProjectConfigService.ts",
+      "function": "ProjectConfigService/loadOrMigrateConfig",
+      "kind": "decoder",
+      "expression": "parseToml(content)",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "shared/services/project/ProjectConfigService.ts",
+      "function": "ProjectConfigService/resolveProjectWriteReference",
+      "kind": "decoder-cast",
+      "expression": "parseToml(readFile(registryPath)) as RegistryData",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "shared/services/project/ProjectConfigService.ts",
+      "function": "ProjectConfigService/resolveProjectWriteReference",
+      "kind": "decoder",
+      "expression": "parseToml(readFile(registryPath))",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "shared/services/project/ProjectConfigService.ts",
+      "function": "ProjectConfigService/updateProject",
+      "kind": "decoder-cast",
+      "expression": "parseToml(content) as RegistryData",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "shared/services/project/ProjectConfigService.ts",
+      "function": "ProjectConfigService/updateProject",
+      "kind": "decoder-cast",
+      "expression": "parseToml(readFile(writeReference.localConfigPath)) as ProjectConfig",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "shared/services/project/ProjectConfigService.ts",
+      "function": "ProjectConfigService/updateProject",
+      "kind": "decoder",
+      "expression": "parseToml(content)",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "shared/services/project/ProjectConfigService.ts",
+      "function": "ProjectConfigService/updateProject",
+      "kind": "decoder",
+      "expression": "parseToml(readFile(writeReference.localConfigPath))",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "shared/services/project/ProjectConfigService.ts",
+      "function": "ProjectConfigService/updateProjectByPath",
+      "kind": "decoder-cast",
+      "expression": "parseToml(readFile(writeReference.localConfigPath!)) as ProjectConfig",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "shared/services/project/ProjectConfigService.ts",
+      "function": "ProjectConfigService/updateProjectByPath",
+      "kind": "decoder",
+      "expression": "parseToml(readFile(writeReference.localConfigPath!))",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "shared/services/project/ProjectRegistry.ts",
+      "function": "ProjectRegistry/parseRegistryContent",
+      "kind": "decoder",
+      "expression": "parseToml(content)",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "shared/services/TemplateService.ts",
+      "function": "TemplateService/loadTemplates",
+      "kind": "decoder",
+      "expression": "JSON.parse(configContent)",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    },
+    {
+      "file": "shared/tools/config-cli.ts",
+      "function": "ConfigManager/readConfig",
+      "kind": "decoder",
+      "expression": "parseToml(configContent)",
+      "count": 1,
+      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
+      "phase": 4
+    }
+  ],
+  "decoders": [
+    {
+      "file": "shared/services/project/ProjectConfigService.ts",
+      "parser": "ProjectConfigSchema / legacy normalization; unchecked reloads remain",
+      "fallback": "retain migration/defaults and siblings",
+      "fixture": "shared/services/project/__tests__/ProjectConfigService.test.ts"
+    },
+    {
+      "file": "shared/services/project/ProjectConfigLoader.ts",
+      "parser": "ProjectConfig predicate (output not yet consumed)",
+      "fallback": "retain cache/migration policy",
+      "fixture": "shared/services/project/__tests__/ProjectConfigService.test.ts"
+    },
+    {
+      "file": "shared/services/project/ProjectRegistry.ts",
+      "parser": "manual path guard",
+      "fallback": "retain missing/invalid entry recovery",
+      "fixture": "shared/services/project/__tests__/ProjectDiscoveryService.test.ts"
+    },
+    {
+      "file": "shared/tools/config-cli.ts",
+      "parser": "processConfig",
+      "fallback": "retain legacy migration/defaults",
+      "fixture": "shared/tools/__tests__/config-cli.test.ts"
+    },
+    {
+      "file": "server/routes/system.ts",
+      "parser": "global/user validators and selector sanitizer",
+      "fallback": "retain read defaults",
+      "fixture": "server/tests/api/config-api.test.ts"
+    },
+    {
+      "file": "server/services/config/adapters/GlobalConfigStorageAdapter.ts",
+      "parser": "validateGlobalConfig",
+      "fallback": "default on read failure",
+      "fixture": "server/tests/services/config/adapters/StorageAdapters.test.ts"
+    },
+    {
+      "file": "server/services/config/adapters/UserConfigStorageAdapter.ts",
+      "parser": "validateUserConfig",
+      "fallback": "default on read failure",
+      "fixture": "server/tests/services/config/adapters/StorageAdapters.test.ts"
+    },
+    {
+      "file": "server/services/config/adapters/ProjectConfigStorageAdapter.ts",
+      "parser": "legacy typed local config",
+      "fallback": "retain merge/sibling policy",
+      "fixture": "server/tests/services/config/adapters/StorageAdapters.test.ts"
+    },
+    {
+      "file": "mcp-server/src/config/index.ts",
+      "parser": "safeValidateMcpServerConfig",
+      "fallback": "defaults on invalid configuration",
+      "fixture": "mcp-server/tests/http-security-config.test.ts"
+    },
+    {
+      "file": "server/repositories/ConfigRepository.ts",
+      "parser": "manual discovery/preview defaults",
+      "fallback": "retain legacy extraction",
+      "fixture": "server/tests/unit/ConfigRepository.test.ts"
+    },
+    {
+      "file": "server/controllers/ProjectController.ts",
+      "parser": "legacy discovery config cast",
+      "fallback": "retain default roots",
+      "fixture": "server/tests/unit/ProjectController.test.ts"
+    },
+    {
+      "file": "server/security/projectSharing.ts",
+      "parser": "legacy registry cast",
+      "fallback": "retain missing-registry handling",
+      "fixture": "server/tests/api/public-sharing.test.ts"
+    },
+    {
+      "file": "cli/src/utils/cliConfig.ts",
+      "parser": "manual presentation config",
+      "fallback": "retain default booleans",
+      "fixture": "cli/tests/e2e/output/color-scheme.spec.ts"
+    },
+    {
+      "file": "shared/services/TemplateService.ts",
+      "parser": "TemplateConfigSchema per entry; root unchecked",
+      "fallback": "skip invalid entry, fallback on load error",
+      "fixture": "shared/tests/models/MDT-101/DomainContracts.schema.test.ts"
+    },
+    {
+      "file": "shared/services/MarkdownService.ts",
+      "parser": "manual frontmatter normalizer",
+      "fallback": "retain H1/defaults/legacy fields",
+      "fixture": "shared/tests/services/MDT-094/MarkdownService.scanTicketMetadata.test.ts"
+    },
+    {
+      "file": "server/services/fileWatcher/index.ts",
+      "parser": "legacy frontmatter selection",
+      "fallback": "retain watcher filtering",
+      "fixture": "server/tests/unit/RegistryWatcher.test.ts"
+    },
+    {
+      "file": "server/services/DocumentFavStateService.ts",
+      "parser": "parseDocumentFavStateOrDefault",
+      "fallback": "reset on invalid file",
+      "fixture": "server/tests/api/document-favs.test.ts"
+    },
+    {
+      "file": "server/services/PinStateService.ts",
+      "parser": "parsePinStateOrDefault",
+      "fallback": "reset on invalid file",
+      "fixture": "server/tests/api/pins.test.ts"
+    },
+    {
+      "file": "server/services/TraceStoreService.ts",
+      "parser": "syntax only, returns unknown",
+      "fallback": "consumer owns typed interpretation",
+      "fixture": "server/tests/api/ticket-trace-store.test.ts"
+    },
+    {
+      "file": "server/security/readTokenStore.ts",
+      "parser": "manual persisted-store guards",
+      "fallback": "fail closed",
+      "fixture": "server/tests/security/readTokenStore.test.ts"
+    },
+    {
+      "file": "shared/services/cloud-sync/operation-journal.ts",
+      "parser": "legacy pending-operation cast",
+      "fallback": "preserve replay/lock behavior; phase 4 owns validation",
+      "fixture": "shared/services/cloud-sync/__tests__/operation-journal.test.ts"
+    },
+    {
+      "file": "shared/services/cloud-sync/project-state-store.ts",
+      "parser": "manual connection validation",
+      "fallback": "preserve origin and version checks",
+      "fixture": "shared/services/cloud-sync/__tests__/project-state-store.test.ts"
+    },
+    {
+      "file": "shared/services/cloud-sync/projection-stream-state-store.ts",
+      "parser": "manual state sanitizer",
+      "fallback": "reset invalid stream state",
+      "fixture": "shared/services/cloud-sync/__tests__/project-state-store.test.ts"
+    }
+  ]
+}

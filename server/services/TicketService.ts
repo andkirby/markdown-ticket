@@ -5,7 +5,7 @@
  * Per MDT-082: Uses consolidated CRUD operations from shared layer.
  */
 
-import type { TicketUpdateAttrs, UnifiedTicketItem } from '@mdt/domain-contracts'
+import type { PatchTicketInput, TicketUpdateAttrs, UnifiedTicketItem } from '@mdt/domain-contracts'
 import type { Project } from '@mdt/shared/models/Project.js'
 import type { Ticket, TicketData } from '@mdt/shared/models/Ticket.js'
 import type { CRStatus } from '@mdt/shared/models/Types.js'
@@ -65,10 +65,7 @@ export interface DeleteResult {
 
 export { groupNamespacedFiles, parseNamespace }
 
-type CRPartialUpdates = TicketUpdateAttrs & {
-  status?: CRStatus
-  [key: string]: unknown
-}
+type CRPartialUpdates = PatchTicketInput
 
 interface ProjectDiscovery {
   getAllProjects: () => Promise<Project[]>

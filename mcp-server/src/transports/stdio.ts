@@ -2,6 +2,7 @@ import type { MCPTools } from '../tools/index.js'
 import { Server } from '@modelcontextprotocol/sdk/server/index.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { CallToolRequestSchema, ErrorCode, ListToolsRequestSchema, McpError } from '@modelcontextprotocol/sdk/types.js'
+import { z } from 'zod'
 import { RateLimitManager } from '../utils/rateLimitManager.js'
 import { Sanitizer } from '../utils/sanitizer.js'
 import { ToolError } from '../utils/toolError.js'
@@ -32,7 +33,23 @@ export async function startStdioTransport(mcpTools: MCPTools): Promise<void> {
     }
   })
 
-  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  // The common registry owns the selected tool shape; the SDK owns its envelope.
+  // Keep the SDK's method/name/metadata envelope validation intact.
+  const toolCallSchema = CallToolRequestSchema.extend({
+    params: CallToolRequestSchema.shape.params.extend({ arguments: z.unknown().optional() }),
+  }).superRefine(({ params }) => {
+    // Server.setRequestHandler also checks its built-in tools/call schema.
+    // Report its whole-arguments object requirement with the same issue shape
+    // before that SDK check can discard issue data. Per-tool parsing is below.
+    const envelope = z.record(z.string(), z.unknown()).optional().safeParse(params.arguments)
+    if (!envelope.success) {
+      throw new McpError(ErrorCode.InvalidParams, 'Invalid tool arguments', {
+        code: 'VALIDATION_ERROR',
+        issues: envelope.error.issues.map(({ code, path, message }) => ({ code, path, message })),
+      })
+    }
+  })
+  server.setRequestHandler(toolCallSchema, async (request) => {
     const { name, arguments: args } = request.params
 
     // Check rate limit before processing tool call
@@ -51,7 +68,7 @@ export async function startStdioTransport(mcpTools: MCPTools): Promise<void> {
     }
 
     try {
-      const result = await mcpTools.handleToolCall(name, args || {})
+      const result = await mcpTools.handleToolCall(name, args === undefined ? {} : args)
 
       // Sanitize the result content if sanitization is enabled
       const sanitizedResult = Sanitizer.sanitize(result)

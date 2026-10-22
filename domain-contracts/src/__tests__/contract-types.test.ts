@@ -32,9 +32,11 @@ type SelectorStateInputMatches = Expect<Equal<z.input<typeof SelectorStateSchema
 
 // Snapshot independently authored output shapes, not just aliases of the schema.
 interface ExpectedCreateTicketInput {
+  component?: string
+  slug?: string
   title: string
   type: 'Architecture' | 'Feature Enhancement' | 'Bug Fix' | 'Technical Debt' | 'Documentation' | 'Research'
-  priority: 'Low' | 'Medium' | 'High' | 'Critical'
+  priority?: 'Low' | 'Medium' | 'High' | 'Critical'
   level?: 'ticket' | 'epic'
   phaseEpic?: string
   impactAreas?: string[]

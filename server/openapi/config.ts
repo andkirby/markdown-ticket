@@ -130,7 +130,7 @@ All endpoints return consistent error responses with \`error\` and \`message\` f
         },
         CRUpdate: {
           required: true,
-          content: { 'application/json': { schema: { $ref: '#/components/schemas/CR' } } },
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/CRPatchInput' } } },
         },
         ProjectCreate: {
           required: true,

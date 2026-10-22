@@ -238,7 +238,7 @@ describe('projectController - CRUD Operations', () => {
       await projectController.createCR(req as AuthenticatedRequest, res as Response)
 
       expect(res.status).toHaveBeenCalledWith(400)
-      expect(res.json).toHaveBeenCalledWith({ error: 'Bad Request', message: 'Project ID is required' })
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'Bad Request', code: 'VALIDATION_ERROR', source: 'params', issues: expect.arrayContaining([expect.objectContaining({ path: ['projectId'] })]) }))
     })
   })
 
@@ -278,7 +278,7 @@ describe('projectController - CRUD Operations', () => {
       await projectController.updateCR(req as AuthenticatedRequest, res as Response)
 
       expect(res.status).toHaveBeenCalledWith(400)
-      expect(res.json).toHaveBeenCalledWith({ error: 'Bad Request', message: 'Project ID and CR ID are required' })
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'Bad Request', code: 'VALIDATION_ERROR', source: 'params', issues: expect.any(Array) }))
     })
   })
 
@@ -310,7 +310,7 @@ describe('projectController - CRUD Operations', () => {
       await projectController.deleteCR(req as AuthenticatedRequest, res as Response)
 
       expect(res.status).toHaveBeenCalledWith(400)
-      expect(res.json).toHaveBeenCalledWith({ error: 'Bad Request', message: 'Project ID and CR ID are required' })
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'Bad Request', code: 'VALIDATION_ERROR', source: 'params', issues: expect.any(Array) }))
     })
 
     it('should return 500 when delete operation fails', async () => {

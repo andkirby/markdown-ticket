@@ -196,7 +196,7 @@ export function createHttpTransportApp(
 
       else if (method === 'tools/call') {
         const tool_name = params.name
-        const tool_args = params.arguments || {}
+        const tool_args = params.arguments === undefined ? {} : params.arguments
 
         // Check rate limit before processing tool call
         const rateLimitResult = rateLimitManager.checkRateLimit(tool_name, getCallerIdentity(req))
@@ -597,7 +597,7 @@ function _isNotificationOrResponse(body: unknown): boolean {
  * Handle a single JSON-RPC request
  * Calls the MCPTools directly instead of going through the Server
  */
-async function _handleJsonRpcRequest(
+export async function _handleJsonRpcRequest(
   mcpTools: MCPTools,
   request: Record<string, unknown>,
   _sessionManager: SessionManager,
@@ -642,10 +642,10 @@ async function _handleJsonRpcRequest(
 
       case 'tools/call': {
         const params = request.params as Record<string, unknown> | undefined
-        const { name, arguments: args } = (params || {}) as { name?: string, arguments?: Record<string, unknown> }
+        const { name, arguments: args } = (params || {}) as { name?: string, arguments?: unknown }
 
         try {
-          const result = await mcpTools.handleToolCall(name || '', args || {})
+          const result = await mcpTools.handleToolCall(name || '', args === undefined ? {} : args)
 
           // Sanitize the result content if sanitization is enabled
           const sanitizedResult = Sanitizer.sanitize(result)
