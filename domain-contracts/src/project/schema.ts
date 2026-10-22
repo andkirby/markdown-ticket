@@ -116,16 +116,9 @@ export interface LocalProjectConfig {
   worktree?: WorktreeConfig
 }
 
-export interface ProjectConfig {
-  project: LocalProjectConfigProject & {
-    [key: string]: unknown
-  }
-  document?: ProjectDocumentSettings
-  document_paths?: string[]
-  exclude_folders?: string[]
-  worktree?: WorktreeConfig
-  [key: string]: unknown
-}
+// Parsed config permits legacy string counters and passthrough extension keys.
+// Derive it from the schema rather than the narrower local-config interface.
+export type ProjectConfig = z.output<typeof ProjectConfigSchema>
 
 export interface ProjectRuntimeFields {
   id: string
@@ -182,7 +175,7 @@ export interface ProjectRegistryEntry {
   metadata: ProjectMetadata
 }
 
-const DocumentConfigObjectSchema = z.object({
+const DocumentConfigObjectSchema = z.strictObject({
   paths: z.array(z.string()).default([]),
   excludeFolders: z.array(z.string()).default([]),
   // MDT-168: canonical default comes from config-management defaults (resolves drift: was 3).
@@ -191,8 +184,8 @@ const DocumentConfigObjectSchema = z.object({
   preview: z.object({
     allowedExternalDomains: z.array(z.string()).default([]),
     allowUnsafeEval: z.boolean().default(false),
-  }).default({ allowedExternalDomains: [], allowUnsafeEval: false }),
-}).strict()
+  }).prefault({ allowedExternalDomains: [], allowUnsafeEval: false }),
+})
 
 export const ProjectCodeSchema = z.string()
   .min(2, 'Project code must be 2-5 chars')
@@ -218,7 +211,7 @@ export const CounterFileSchema = z.string()
   .min(1, 'Counter file is required')
 
 export const StartNumberSchema = z.number()
-  .int('Start number must be an integer')
+  .refine(Number.isInteger, 'Start number must be an integer')
   .min(1, 'Start number must be at least 1')
 
 const StartNumberInputSchema = z.union([
@@ -265,11 +258,18 @@ export const DocumentConfigSchema = DocumentConfigObjectSchema.refine(
   },
 )
 
-export const ProjectDocumentSettingsSchema = DocumentConfigObjectSchema.partial().strict()
+// Zod v4 applies defaults inside optional fields. Remove only the outer
+// defaults so an omitted document setting stays omitted, as it did in v3.
+export const ProjectDocumentSettingsSchema = z.strictObject({
+  paths: DocumentConfigObjectSchema.shape.paths.unwrap(),
+  excludeFolders: DocumentConfigObjectSchema.shape.excludeFolders.unwrap(),
+  maxDepth: DocumentConfigObjectSchema.shape.maxDepth.unwrap(),
+  preview: DocumentConfigObjectSchema.shape.preview.unwrap(),
+}).partial()
 
 export const ProjectSharingModeSchema = z.enum(ProjectSharingModes)
 
-export const ProjectSharingSettingsSchema = z.object({
+export const ProjectSharingSettingsSchema = z.strictObject({
   mode: ProjectSharingModeSchema.default(ProjectSharingMode.PRIVATE),
   shareId: z.string()
     .trim()
@@ -278,9 +278,9 @@ export const ProjectSharingSettingsSchema = z.object({
     .regex(/^[\w-]+$/u, 'Share ID may contain only letters, numbers, underscore, and hyphen')
     .optional(),
   updatedAt: z.string().optional(),
-}).strict()
+})
 
-export const ProjectDetailsSchema = z.object({
+export const ProjectDetailsSchema = z.strictObject({
   code: ProjectCodeSchema,
   name: ProjectNameSchema,
   id: ProjectIdSchema,
@@ -288,9 +288,9 @@ export const ProjectDetailsSchema = z.object({
   description: SafeConfigStringOptionalSchema.optional(),
   repository: SafeConfigStringOptionalSchema.optional(),
   active: z.boolean().default(true),
-}).strict()
+})
 
-export const LocalProjectConfigProjectSchema = z.object({
+export const LocalProjectConfigProjectSchema = z.strictObject({
   code: ProjectCodeSchema,
   name: ProjectNameSchema,
   id: ProjectIdSchema.optional(),
@@ -302,12 +302,12 @@ export const LocalProjectConfigProjectSchema = z.object({
   startNumber: StartNumberSchema.optional(),
   counterFile: CounterFileSchema.optional(),
   document: ProjectDocumentSettingsSchema.optional(),
-}).strict()
+})
 
-export const LocalProjectConfigSchema = z.object({
+export const LocalProjectConfigSchema = z.strictObject({
   project: LocalProjectConfigProjectSchema,
   worktree: WorktreeConfigSchema.optional(),
-}).strict()
+})
 
 export const ProjectConfigSchema = z.object({
   project: z.object({
@@ -329,7 +329,7 @@ export const ProjectConfigSchema = z.object({
   worktree: WorktreeConfigSchema.optional(),
 }).passthrough()
 
-export const ProjectRuntimeFieldsSchema = z.object({
+export const ProjectRuntimeFieldsSchema = z.strictObject({
   id: ProjectIdSchema,
   name: ProjectNameSchema,
   code: ProjectCodeSchema,
@@ -341,30 +341,30 @@ export const ProjectRuntimeFieldsSchema = z.object({
   description: z.string(),
   repository: z.string(),
   ticketsPath: TicketsPathSchema,
-}).strict()
+})
 
-export const ProjectMetadataSchema = z.object({
+export const ProjectMetadataSchema = z.strictObject({
   dateRegistered: DateOnlySchema,
   lastAccessed: DateOnlySchema,
   version: z.string().trim().min(1, 'Version is required'),
   globalOnly: z.boolean().optional(),
   sharing: ProjectSharingSettingsSchema.optional(),
-}).strict()
+})
 
-export const ProjectSchema = z.object({
+export const ProjectSchema = z.strictObject({
   id: ProjectIdSchema,
   project: ProjectRuntimeFieldsSchema,
   metadata: ProjectMetadataSchema,
-  tickets: z.object({
+  tickets: z.strictObject({
     codePattern: z.string().optional(),
-  }).strict().optional(),
+  }).optional(),
   document: ProjectDocumentSettingsSchema.optional(),
   autoDiscovered: z.boolean().optional(),
   configPath: z.string().optional(),
   registryFile: z.string().optional(),
-}).strict()
+})
 
-export const ProjectRegistryProjectSchema = z.object({
+export const ProjectRegistryProjectSchema = z.strictObject({
   path: ProjectPathSchema,
   active: z.boolean().optional(),
   name: ProjectNameSchema.optional(),
@@ -377,21 +377,21 @@ export const ProjectRegistryProjectSchema = z.object({
   counterFile: CounterFileSchema.optional(),
   dateRegistered: DateOnlySchema.optional(),
   document: ProjectDocumentSettingsSchema.optional(),
-}).strict()
+})
 
-export const ProjectRegistryEntrySchema = z.object({
+export const ProjectRegistryEntrySchema = z.strictObject({
   project: ProjectRegistryProjectSchema,
   metadata: ProjectMetadataSchema,
-}).strict()
+})
 
-export const CreateProjectInputSchema = z.object({
+export const CreateProjectInputSchema = z.strictObject({
   code: ProjectCodeSchema,
   name: ProjectNameSchema,
   id: ProjectIdSchema,
   ticketsPath: TicketsPathSchema,
   description: SafeConfigStringOptionalSchema.optional(),
   repository: SafeConfigStringOptionalSchema.optional(),
-}).strict()
+})
 
 export type CreateProjectInput = z.infer<typeof CreateProjectInputSchema>
 
@@ -410,12 +410,12 @@ export interface ProjectEditFormData {
   repositoryUrl: string
 }
 
-export const UpdateProjectInputSchema = z.object({
+export const UpdateProjectInputSchema = z.strictObject({
   name: ProjectNameSchema.optional(),
   description: SafeConfigStringOptionalSchema.optional(),
   repository: SafeConfigStringOptionalSchema.optional(),
   active: z.boolean().optional(),
-}).strict().refine(
+}).refine(
   data => Object.keys(data).length > 0,
   {
     message: 'At least one field must be provided for update',

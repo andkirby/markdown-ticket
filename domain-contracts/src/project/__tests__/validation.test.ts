@@ -129,7 +129,11 @@ describe('safeValidateProject', () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       const projectError = result.error.issues.find(i => i.path[0] === 'project')
-      expect(projectError?.message).toMatch(/Required/)
+      expect(projectError).toMatchObject({
+        code: 'invalid_type',
+        path: ['project'],
+        message: 'Invalid input: expected object, received undefined',
+      })
     }
   })
 })

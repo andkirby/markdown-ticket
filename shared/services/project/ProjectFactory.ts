@@ -58,7 +58,9 @@ export class ProjectFactory {
         code: config.project.code,
         path: projectPath,
         configFile: `${projectPath}/${CONFIG_FILES.PROJECT_CONFIG}`,
-        startNumber: config.project.startNumber,
+        // Preserve the adapter's existing runtime pass-through. Parsed config
+        // also accepts legacy numeric strings; normalization is not part of MDT-259.
+        startNumber: config.project.startNumber as Project['project']['startNumber'],
         counterFile: config.project.counterFile || CONFIG_FILES.COUNTER_FILE,
         active: config.project.active !== false, // Default to true
         description: config.project.description || '',

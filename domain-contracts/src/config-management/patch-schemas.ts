@@ -99,7 +99,7 @@ export const DiscoveryMaxDepthPatchSchema = z
 
 export const SystemCacheTimeoutPatchSchema = z
   .number()
-  .int()
+  .refine(Number.isInteger, 'Expected integer')
   .min(0, 'cacheTimeout must be non-negative')
 
 export const SystemLogLevelPatchSchema = z.enum([
@@ -115,7 +115,7 @@ export const LinkBooleanPatchSchema = z.boolean()
 // --- stable user preference patches ---
 export const ProjectSelectorVisibleCountPatchSchema = z
   .number()
-  .int()
+  .refine(Number.isInteger, 'Expected integer')
   .min(1, 'visibleCount must be a positive integer')
 
 export const ProjectSelectorCompactInactivePatchSchema = z.boolean()

@@ -30,12 +30,12 @@ export const SessionStatusSchema = z.enum([
 
 export type SessionStatus = z.infer<typeof SessionStatusSchema>
 
-export const AuthCapabilitiesSchema = z.object({
+export const AuthCapabilitiesSchema = z.strictObject({
   canWriteTickets: z.boolean(),
   canManageProjects: z.boolean(),
   canManageSharing: z.boolean(),
   canUseOwnerEndpoints: z.boolean(),
-}).strict()
+})
 
 export type AuthCapabilities = z.infer<typeof AuthCapabilitiesSchema>
 
@@ -47,11 +47,11 @@ export const AuthAccessIndicatorSchema = z.enum([
 
 export type AuthAccessIndicator = z.infer<typeof AuthAccessIndicatorSchema>
 
-export const PublicLinkOriginOptionsSchema = z.object({
+export const PublicLinkOriginOptionsSchema = z.strictObject({
   options: z.array(z.string()),
   selectedOrigin: z.string().optional(),
   notice: z.string().optional(),
-}).strict()
+})
 
 export type PublicLinkOriginOptions = z.infer<typeof PublicLinkOriginOptionsSchema>
 
@@ -59,15 +59,15 @@ export const ReadTokenStatusSchema = z.enum(['active', 'expired', 'revoked'])
 
 export type ReadTokenStatus = z.infer<typeof ReadTokenStatusSchema>
 
-export const CreateReadTokenInputSchema = z.object({
+export const CreateReadTokenInputSchema = z.strictObject({
   name: z.string(),
   projectRefs: z.array(z.string()),
   expiresAt: z.string().nullable().optional(),
-}).strict()
+})
 
 export type CreateReadTokenInput = z.infer<typeof CreateReadTokenInputSchema>
 
-export const ListedReadTokenSchema = z.object({
+export const ListedReadTokenSchema = z.strictObject({
   id: z.string(),
   name: z.string(),
   projectRefs: z.array(z.string()),
@@ -75,33 +75,33 @@ export const ListedReadTokenSchema = z.object({
   createdAt: z.string(),
   revokedAt: z.string().nullable(),
   status: ReadTokenStatusSchema,
-}).strict()
+})
 
 export type ListedReadToken = z.infer<typeof ListedReadTokenSchema>
 
 export const ReadTokenCreationResponseSchema = ListedReadTokenSchema.extend({
   rawToken: z.string(),
-}).strict()
+})
 
 export type ReadTokenCreationResponse = z.infer<typeof ReadTokenCreationResponseSchema>
 
-export const ReadTokenListResponseSchema = z.object({
+export const ReadTokenListResponseSchema = z.strictObject({
   tokens: z.array(ListedReadTokenSchema),
   linkOrigins: PublicLinkOriginOptionsSchema,
-}).strict()
+})
 
 export type ReadTokenListResponse = z.infer<typeof ReadTokenListResponseSchema>
 
-export const ReadTokenInviteResponseSchema = z.object({
+export const ReadTokenInviteResponseSchema = z.strictObject({
   expiresAt: z.string(),
   inviteUrl: z.string(),
-}).strict()
+})
 
 export type ReadTokenInviteResponse = z.infer<typeof ReadTokenInviteResponseSchema>
 
-export const ReadTokenInviteSessionResponseSchema = z.object({
+export const ReadTokenInviteSessionResponseSchema = z.strictObject({
   authenticated: z.boolean(),
   projectRefs: z.array(z.string()),
-}).strict()
+})
 
 export type ReadTokenInviteSessionResponse = z.infer<typeof ReadTokenInviteSessionResponseSchema>

@@ -59,6 +59,8 @@ machine only · `global` = user-level skill directory.
 | `code-review` | global | Verify-only review of diffs, commits, or another agent's work with PASS/FAIL evidence |
 | `torvalds-doctrine` | global | Adversarial review passes (data-structure-first, proof over hand-waving) |
 | `controlled-refactor` | global | Behavior-preserving refactors with scope, evidence, and authorization gates |
+| `zod-validation-utilities` | global | Primary guidance for new Zod v4 schema code (MDT-259) |
+| `zod` | global | Legacy Zod v3 guidance; use `zod-validation-utilities` for this repository |
 | `commit` | global | Preparing conventional commits and staging (repo rule: no AI attribution) |
 | `security-best-practices` | local | Explicitly requested security reviews (auth, config, cloud surfaces) |
 

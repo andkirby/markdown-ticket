@@ -55,7 +55,7 @@ graph LR
 
 ```text
 domain-contracts/
-├── package.json                 → { "dependencies": { "zod": "^3.x" } }
+├── package.json                 → { "dependencies": { "zod": "^4.6.7" } }
 ├── frontend/src/
 │   ├── index.ts                → Production exports (no testing)
 │   ├── {entity}/               → One per domain entity

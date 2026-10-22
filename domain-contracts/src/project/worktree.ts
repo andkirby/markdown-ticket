@@ -1,23 +1,23 @@
 import { z } from 'zod'
 import { CR_CODE_PATTERN } from '../ticket/frontmatter'
 
-export const WorktreeEntrySchema = z.object({
+export const WorktreeEntrySchema = z.strictObject({
   ticketCode: z.string().regex(CR_CODE_PATTERN, 'Invalid ticket code format. Expected PROJECT_CODE-NUMBER (e.g., MDT-095)'),
   path: z.string(),
   branch: z.string().optional(),
-}).strict()
+})
 
-export const WorktreeInfoSchema = z.object({
+export const WorktreeInfoSchema = z.strictObject({
   ticketCode: z.string().regex(CR_CODE_PATTERN, 'Invalid ticket code format. Expected PROJECT_CODE-NUMBER (e.g., MDT-095)'),
   path: z.string(),
   branch: z.string().optional(),
   exists: z.boolean(),
   hasTicketFile: z.boolean(),
-}).strict()
+})
 
-export const WorktreeConfigSchema = z.object({
+export const WorktreeConfigSchema = z.strictObject({
   enabled: z.boolean().default(true),
-}).strict()
+})
 
 export type WorktreeEntry = z.infer<typeof WorktreeEntrySchema>
 export type WorktreeInfo = z.infer<typeof WorktreeInfoSchema>

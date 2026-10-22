@@ -61,7 +61,7 @@ export const SearchResponseSchema = z.object({
       }),
     }),
   ),
-  total: z.number().int().min(0),
+  total: z.number().refine(Number.isInteger, 'Expected integer').min(0),
 })
 
 export type SearchResponse = z.infer<typeof SearchResponseSchema>

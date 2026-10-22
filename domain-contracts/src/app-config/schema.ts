@@ -90,11 +90,12 @@ export const USER_CONFIG_DEFAULTS = {
   },
 } as const
 
+// Object fallbacks must be parsed (v3 default semantics), including nested cloning.
 export const GlobalDiscoveryConfigSchema = z.object({
   autoDiscover: z.boolean().catch(GLOBAL_DISCOVERY_DEFAULTS.autoDiscover).default(GLOBAL_DISCOVERY_DEFAULTS.autoDiscover),
   searchPaths: z.array(SafeConfigPathStringSchema).catch([...GLOBAL_DISCOVERY_DEFAULTS.searchPaths]).default([...GLOBAL_DISCOVERY_DEFAULTS.searchPaths]),
   maxDepth: z.number().int().min(1).max(50).catch(GLOBAL_DISCOVERY_DEFAULTS.maxDepth).default(GLOBAL_DISCOVERY_DEFAULTS.maxDepth),
-}).catch({ ...GLOBAL_DISCOVERY_DEFAULTS, searchPaths: [...GLOBAL_DISCOVERY_DEFAULTS.searchPaths] }).default({ ...GLOBAL_DISCOVERY_DEFAULTS, searchPaths: [...GLOBAL_DISCOVERY_DEFAULTS.searchPaths] })
+}).catch({ ...GLOBAL_DISCOVERY_DEFAULTS, searchPaths: [...GLOBAL_DISCOVERY_DEFAULTS.searchPaths] }).prefault({ ...GLOBAL_DISCOVERY_DEFAULTS, searchPaths: [...GLOBAL_DISCOVERY_DEFAULTS.searchPaths] })
 
 export const GlobalLinksConfigSchema = z.object({
   enableAutoLinking: z.boolean().catch(GLOBAL_LINKS_DEFAULTS.enableAutoLinking).default(GLOBAL_LINKS_DEFAULTS.enableAutoLinking),
@@ -102,36 +103,37 @@ export const GlobalLinksConfigSchema = z.object({
   enableDocumentLinks: z.boolean().catch(GLOBAL_LINKS_DEFAULTS.enableDocumentLinks).default(GLOBAL_LINKS_DEFAULTS.enableDocumentLinks),
   enableHoverPreviews: z.boolean().catch(GLOBAL_LINKS_DEFAULTS.enableHoverPreviews).default(GLOBAL_LINKS_DEFAULTS.enableHoverPreviews),
   linkValidation: z.boolean().catch(GLOBAL_LINKS_DEFAULTS.linkValidation).default(GLOBAL_LINKS_DEFAULTS.linkValidation),
-}).catch({ ...GLOBAL_LINKS_DEFAULTS }).default({ ...GLOBAL_LINKS_DEFAULTS })
+}).catch({ ...GLOBAL_LINKS_DEFAULTS }).prefault({ ...GLOBAL_LINKS_DEFAULTS })
 
 export const GlobalSystemConfigSchema = z.object({
   logLevel: z.enum(['error', 'warn', 'info', 'debug']).catch(GLOBAL_SYSTEM_DEFAULTS.logLevel).default(GLOBAL_SYSTEM_DEFAULTS.logLevel),
-  cacheTimeout: z.number().int().min(0).catch(GLOBAL_SYSTEM_DEFAULTS.cacheTimeout).default(GLOBAL_SYSTEM_DEFAULTS.cacheTimeout),
-}).catch({ ...GLOBAL_SYSTEM_DEFAULTS }).default({ ...GLOBAL_SYSTEM_DEFAULTS })
+  // Keep v3's unbounded integer acceptance; v4 .int() enforces safe integers.
+  cacheTimeout: z.number().refine(Number.isInteger, 'Expected integer').min(0).catch(GLOBAL_SYSTEM_DEFAULTS.cacheTimeout).default(GLOBAL_SYSTEM_DEFAULTS.cacheTimeout),
+}).catch({ ...GLOBAL_SYSTEM_DEFAULTS }).prefault({ ...GLOBAL_SYSTEM_DEFAULTS })
 
-export const GlobalCloudSyncConfigSchema = z.object({
+export const GlobalCloudSyncConfigSchema = z.strictObject({
   allowedOrigins: z.array(z.string().url().refine(value => new URL(value).protocol === 'https:', 'Cloud sync origins must use HTTPS'))
     .catch([...GLOBAL_CLOUD_SYNC_DEFAULTS.allowedOrigins])
     .default([...GLOBAL_CLOUD_SYNC_DEFAULTS.allowedOrigins]),
-}).strict().catch({
+}).catch({
   ...GLOBAL_CLOUD_SYNC_DEFAULTS,
   allowedOrigins: [...GLOBAL_CLOUD_SYNC_DEFAULTS.allowedOrigins],
-}).default({
+}).prefault({
   ...GLOBAL_CLOUD_SYNC_DEFAULTS,
   allowedOrigins: [...GLOBAL_CLOUD_SYNC_DEFAULTS.allowedOrigins],
 })
 
 export const GlobalConfigSchema = z.object({
-  discovery: GlobalDiscoveryConfigSchema.default({ ...GLOBAL_DISCOVERY_DEFAULTS, searchPaths: [...GLOBAL_DISCOVERY_DEFAULTS.searchPaths] }),
-  links: GlobalLinksConfigSchema.default({ ...GLOBAL_LINKS_DEFAULTS }),
-  system: GlobalSystemConfigSchema.default({ ...GLOBAL_SYSTEM_DEFAULTS }),
-  cloudSync: GlobalCloudSyncConfigSchema.default({ ...GLOBAL_CLOUD_SYNC_DEFAULTS, allowedOrigins: [...GLOBAL_CLOUD_SYNC_DEFAULTS.allowedOrigins] }),
+  discovery: GlobalDiscoveryConfigSchema.prefault({ ...GLOBAL_DISCOVERY_DEFAULTS, searchPaths: [...GLOBAL_DISCOVERY_DEFAULTS.searchPaths] }),
+  links: GlobalLinksConfigSchema.prefault({ ...GLOBAL_LINKS_DEFAULTS }),
+  system: GlobalSystemConfigSchema.prefault({ ...GLOBAL_SYSTEM_DEFAULTS }),
+  cloudSync: GlobalCloudSyncConfigSchema.prefault({ ...GLOBAL_CLOUD_SYNC_DEFAULTS, allowedOrigins: [...GLOBAL_CLOUD_SYNC_DEFAULTS.allowedOrigins] }),
 }).catch({
   discovery: { ...GLOBAL_DISCOVERY_DEFAULTS, searchPaths: [...GLOBAL_DISCOVERY_DEFAULTS.searchPaths] },
   links: { ...GLOBAL_LINKS_DEFAULTS },
   system: { ...GLOBAL_SYSTEM_DEFAULTS },
   cloudSync: { ...GLOBAL_CLOUD_SYNC_DEFAULTS, allowedOrigins: [...GLOBAL_CLOUD_SYNC_DEFAULTS.allowedOrigins] },
-}).default({
+}).prefault({
   discovery: { ...GLOBAL_DISCOVERY_DEFAULTS, searchPaths: [...GLOBAL_DISCOVERY_DEFAULTS.searchPaths] },
   links: { ...GLOBAL_LINKS_DEFAULTS },
   system: { ...GLOBAL_SYSTEM_DEFAULTS },
@@ -139,7 +141,7 @@ export const GlobalConfigSchema = z.object({
 })
 
 export const SelectorPreferencesSchema = z.object({
-  visibleCount: z.number().int().min(1).catch(PROJECT_SELECTOR_PREFERENCES_DEFAULTS.visibleCount).default(PROJECT_SELECTOR_PREFERENCES_DEFAULTS.visibleCount),
+  visibleCount: z.number().refine(Number.isInteger, 'Expected integer').min(1).catch(PROJECT_SELECTOR_PREFERENCES_DEFAULTS.visibleCount).default(PROJECT_SELECTOR_PREFERENCES_DEFAULTS.visibleCount),
   compactInactive: z.boolean().catch(PROJECT_SELECTOR_PREFERENCES_DEFAULTS.compactInactive).default(PROJECT_SELECTOR_PREFERENCES_DEFAULTS.compactInactive),
   accentEnabled: z.boolean().catch(PROJECT_SELECTOR_PREFERENCES_DEFAULTS.accentEnabled).default(PROJECT_SELECTOR_PREFERENCES_DEFAULTS.accentEnabled),
   autocolor: z.boolean().catch(PROJECT_SELECTOR_PREFERENCES_DEFAULTS.autocolor).default(PROJECT_SELECTOR_PREFERENCES_DEFAULTS.autocolor),
@@ -148,7 +150,7 @@ export const SelectorPreferencesSchema = z.object({
 }).transform((data) => {
   // No-op transform ensures passthrough; migration handled by .catch() defaults
   return data
-}).catch({ ...PROJECT_SELECTOR_PREFERENCES_DEFAULTS }).default({ ...PROJECT_SELECTOR_PREFERENCES_DEFAULTS })
+}).catch({ ...PROJECT_SELECTOR_PREFERENCES_DEFAULTS }).prefault({ ...PROJECT_SELECTOR_PREFERENCES_DEFAULTS })
 
 // MDT-244: ticket-key type-glyph display options (user-scope app configuration)
 export const TicketKeyOptionsSchema = z.object({
@@ -157,27 +159,27 @@ export const TicketKeyOptionsSchema = z.object({
 }).catch({
   typeIconNearKey: false,
   typeIconInBadge: false,
-}).default({
+}).prefault({
   typeIconNearKey: false,
   typeIconInBadge: false,
 })
 
 export const UserUIConfigSchema = z.object({
-  projectSelector: SelectorPreferencesSchema.default({ ...PROJECT_SELECTOR_PREFERENCES_DEFAULTS }),
-  ticketKey: TicketKeyOptionsSchema.default({
+  projectSelector: SelectorPreferencesSchema.prefault({ ...PROJECT_SELECTOR_PREFERENCES_DEFAULTS }),
+  ticketKey: TicketKeyOptionsSchema.prefault({
     typeIconNearKey: false,
     typeIconInBadge: false,
   }),
 }).catch({
   projectSelector: { ...PROJECT_SELECTOR_PREFERENCES_DEFAULTS },
   ticketKey: { typeIconNearKey: false, typeIconInBadge: false },
-}).default({
+}).prefault({
   projectSelector: { ...PROJECT_SELECTOR_PREFERENCES_DEFAULTS },
   ticketKey: { typeIconNearKey: false, typeIconInBadge: false },
 })
 
 export const UserConfigSchema = z.object({
-  ui: UserUIConfigSchema.default({
+  ui: UserUIConfigSchema.prefault({
     projectSelector: { ...PROJECT_SELECTOR_PREFERENCES_DEFAULTS },
     ticketKey: { typeIconNearKey: false, typeIconInBadge: false },
   }),
@@ -186,7 +188,7 @@ export const UserConfigSchema = z.object({
     projectSelector: { ...PROJECT_SELECTOR_PREFERENCES_DEFAULTS },
     ticketKey: { typeIconNearKey: false, typeIconInBadge: false },
   },
-}).default({
+}).prefault({
   ui: {
     projectSelector: { ...PROJECT_SELECTOR_PREFERENCES_DEFAULTS },
     ticketKey: { typeIconNearKey: false, typeIconInBadge: false },
@@ -197,14 +199,21 @@ export const SelectorAccentSchema = z.string()
   .regex(SELECTOR_ACCENT_HEX_PATTERN, 'Accent must be a 6-digit hex color with leading #')
   .transform(value => value.toLowerCase())
 
+// Preserve the persisted timestamp grammar from Zod v3: seconds are optional
+// and numeric offsets may omit the colon. v4's datetime format is narrower.
+const ConfigTimestampSchema = z.string().regex(
+  new RegExp(`^${z.regexes.date.source.slice(1, -1)}T([01]\\d|2[0-3]):[0-5]\\d(:[0-5]\\d(\\.\\d+)?)?(Z|[+-]\\d{2}:?\\d{2})$`),
+  'Invalid datetime',
+)
+
 export const SelectorStateEntrySchema = z.object({
   favorite: z.boolean().catch(SELECTOR_STATE_ENTRY_DEFAULTS.favorite).default(SELECTOR_STATE_ENTRY_DEFAULTS.favorite),
-  lastUsedAt: z.string().datetime({ offset: true }).nullable().catch(SELECTOR_STATE_ENTRY_DEFAULTS.lastUsedAt).default(SELECTOR_STATE_ENTRY_DEFAULTS.lastUsedAt),
-  count: z.number().int().min(0).catch(SELECTOR_STATE_ENTRY_DEFAULTS.count).default(SELECTOR_STATE_ENTRY_DEFAULTS.count),
+  lastUsedAt: ConfigTimestampSchema.nullable().catch(SELECTOR_STATE_ENTRY_DEFAULTS.lastUsedAt).default(SELECTOR_STATE_ENTRY_DEFAULTS.lastUsedAt),
+  count: z.number().refine(Number.isInteger, 'Expected integer').min(0).catch(SELECTOR_STATE_ENTRY_DEFAULTS.count).default(SELECTOR_STATE_ENTRY_DEFAULTS.count),
   accent: SelectorAccentSchema.optional(),
 })
 
-export const SelectorStateSchema = z.record(SelectorStateEntrySchema).default({})
+export const SelectorStateSchema = z.record(z.string(), SelectorStateEntrySchema).default({})
 
 const ProjectRelativeDocumentPathSchema = z.string()
   .min(1)
@@ -217,15 +226,15 @@ const ProjectRelativeDocumentPathSchema = z.string()
   }, 'Path must be normalized')
   .refine(path => path.split('/').every(part => part !== '..' && part !== '.' && part !== ''), 'Path cannot contain traversal segments')
 
-export const DocumentFavItemSchema = z.object({
+export const DocumentFavItemSchema = z.strictObject({
   path: ProjectRelativeDocumentPathSchema,
   type: z.enum(['file', 'folder']),
-  favoritedAt: z.string().datetime({ offset: true }),
-}).strict()
+  favoritedAt: ConfigTimestampSchema,
+})
 
-export const DocumentFavStateSchema = z.object({
+export const DocumentFavStateSchema = z.strictObject({
   favItems: z.array(DocumentFavItemSchema),
-}).strict()
+})
 
 // MDT-197: Pin rail — cross-project pinned tickets. Each pin carries its own
 // project code, so the pin set is a single user-global list (unlike document
@@ -235,15 +244,15 @@ const ProjectCodeSchema = z.string().min(1).max(32).refine(code => /^[A-Z][A-Z0-
 
 const TicketCodeSchema = z.string().min(1).max(64).refine(code => /^[A-Z][A-Z0-9]*-\d+$/u.test(code), 'Ticket code must be {PROJECT-CODE}-{NUMBER}')
 
-export const PinItemSchema = z.object({
+export const PinItemSchema = z.strictObject({
   projectCode: ProjectCodeSchema,
   ticketCode: TicketCodeSchema,
-  favoritedAt: z.string().datetime({ offset: true }),
-}).strict()
+  favoritedAt: ConfigTimestampSchema,
+})
 
-export const PinStateSchema = z.object({
+export const PinStateSchema = z.strictObject({
   pins: z.array(PinItemSchema),
-}).strict()
+})
 
 export type GlobalConfig = z.output<typeof GlobalConfigSchema>
 export type GlobalConfigInput = z.input<typeof GlobalConfigSchema>

@@ -77,7 +77,7 @@ export const UnifiedSearchResponseSchema = z.object({
       items: z.array(ResultItemSchema),
     }),
   ),
-  total: z.number().int().min(0),
+  total: z.number().refine(Number.isInteger, 'Expected integer').min(0),
 })
 
 export type UnifiedSearchResponse = z.infer<typeof UnifiedSearchResponseSchema>

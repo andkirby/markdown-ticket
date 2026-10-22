@@ -18,7 +18,7 @@ export const ServerConfigSchema = z.object({
     .optional(),
   /** Log level for server operations */
   logLevel: z.enum(['debug', 'info', 'warn', 'error'], {
-    errorMap: () => ({ message: 'Log level must be one of: debug, info, warn, error' }),
+    error: () => ({ message: 'Log level must be one of: debug, info, warn, error' }),
   }).optional(),
 })
 

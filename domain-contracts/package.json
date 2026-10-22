@@ -28,7 +28,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "rm -rf dist tsconfig.tsbuildinfo && tsc --build && tsc-alias",
+    "build": "rm -rf dist tsconfig.tsbuildinfo && tsc --build && tsc-alias && tsc --project tsconfig.type-tests.json && tsc --project tsconfig.migration-tests.json",
     "lint": "eslint \"**/*.{ts,tsx}\" --config eslint.config.ts --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint \"**/*.{ts,tsx}\" --config eslint.config.ts --fix",
     "test": "jest",
@@ -37,7 +37,7 @@
     "prepublishOnly": "bun run clean && bun run build"
   },
   "dependencies": {
-    "zod": "^3.22.4"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@antfu/eslint-config": "7.4.3",
@@ -81,6 +81,18 @@
       "node"
     ],
     "transform": {
+      "zod-migration\\.test\\.ts$": [
+        "ts-jest",
+        {
+          "tsconfig": "tsconfig.migration-tests.json"
+        }
+      ],
+      "contract-types\\.test\\.ts$": [
+        "ts-jest",
+        {
+          "tsconfig": "tsconfig.type-tests.json"
+        }
+      ],
       "^.+\\.tsx?$": [
         "ts-jest",
         {

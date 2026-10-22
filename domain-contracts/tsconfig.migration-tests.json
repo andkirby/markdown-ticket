@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "exactOptionalPropertyTypes": true
+  },
+  "include": ["src/__tests__/zod-migration.test.ts"],
+  "exclude": ["node_modules", "dist"]
+}
