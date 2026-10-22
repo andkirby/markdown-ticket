@@ -1,6 +1,13 @@
 import type { PinItem } from '@mdt/domain-contracts'
 import { act, renderHook } from '@testing-library/react'
-import { beforeEach, describe, expect, it, mock } from 'bun:test'
+import { afterAll, beforeEach, describe, expect, it, mock } from 'bun:test'
+import * as realPinsModuleNamespace from '../../config/pins'
+import * as realUseToastModuleNamespace from '../useToast'
+
+// Capture the real modules before mocking (value snapshots — mock.module
+// mutates the namespace in place) so they can be restored for later files.
+const realPinsModule = { ...realPinsModuleNamespace }
+const realUseToastModule = { ...realUseToastModuleNamespace }
 
 // Mock the pins client so the hook never reaches the network.
 const loadPins = mock(async () => ({ pins: [] as PinItem[] }))
@@ -9,7 +16,16 @@ mock.module('../../config/pins', () => ({ loadPins, savePins }))
 
 // Mock useToast so sonner isn't pulled into the hook test.
 const errorToast = mock(() => ({}))
-mock.module('../useToast', () => ({ useToast: () => ({ error: errorToast, success: mock(), warning: mock(), info: mock(), dismiss: mock() }) }))
+const toastApi = { error: errorToast, success: mock(), warning: mock(), info: mock(), dismiss: mock() }
+const getToastApi = () => toastApi
+mock.module('../useToast', () => ({ useToast: getToastApi }))
+
+// bun:test has no per-file module-mock scoping (mock.restore does not undo
+// mock.module), so restore the original bindings when this file is done.
+afterAll(() => {
+  mock.module('../../config/pins', () => realPinsModule)
+  mock.module('../useToast', () => realUseToastModule)
+})
 
 // eslint-disable-next-line import/first
 import { usePins } from '../usePins'

@@ -1,11 +1,22 @@
 import type { ProjectionFeed } from './useCloudProjections'
 import { act, renderHook } from '@testing-library/react'
-import { describe, expect, it, mock } from 'bun:test'
+import { afterAll, describe, expect, it, mock } from 'bun:test'
+
+import * as realAuthFetchModuleNamespace from '../auth/authFetch'
+
+// Capture the real module before mocking (value snapshot — mock.module mutates
+// the namespace in place) so it can be restored for later test files.
+const realAuthFetchModule = { ...realAuthFetchModuleNamespace }
 
 const authFetch = mock(async (): Promise<Response> => new Response(null, { status: 500 }))
 
 mock.module('../auth/authFetch', () => ({ authFetch }))
 
+// bun:test has no per-file module-mock scoping (mock.restore does not undo
+// mock.module), so restore the original bindings when this file is done.
+afterAll(() => {
+  mock.module('../auth/authFetch', () => realAuthFetchModule)
+})
 // eslint-disable-next-line import/first
 import { useCloudProjectionFeed } from './useCloudProjectionFeed'
 

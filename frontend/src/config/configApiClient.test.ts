@@ -1,5 +1,11 @@
 import type { ConfigSelectorDescriptor } from './configApiClient'
-import { beforeEach, describe, expect, it, mock } from 'bun:test'
+import { afterAll, beforeEach, describe, expect, it, mock } from 'bun:test'
+
+import * as realAuthFetchModuleNamespace from '../auth/authFetch'
+
+// Capture the real module before mocking (value snapshot — mock.module mutates
+// the namespace in place) so it can be restored for later test files.
+const realAuthFetchModule = { ...realAuthFetchModuleNamespace }
 
 // Mock authFetch so the client never reaches the network.
 const authFetch = mock(async (_input: string, _init?: unknown) => {
@@ -8,6 +14,11 @@ const authFetch = mock(async (_input: string, _init?: unknown) => {
 
 mock.module('../auth/authFetch', () => ({ authFetch }))
 
+// bun:test has no per-file module-mock scoping (mock.restore does not undo
+// mock.module), so restore the original bindings when this file is done.
+afterAll(() => {
+  mock.module('../auth/authFetch', () => realAuthFetchModule)
+})
 // eslint-disable-next-line import/first
 import { applyConfig, fetchConfigSelectors } from './configApiClient'
 

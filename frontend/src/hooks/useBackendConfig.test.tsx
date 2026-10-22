@@ -1,6 +1,12 @@
 import type { ConfigSelectorDescriptor } from '../config/configApiClient'
 import { act, renderHook, waitFor } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test'
+import { afterAll, afterEach, beforeEach, describe, expect, it, mock } from 'bun:test'
+
+import * as realConfigApiClientModuleNamespace from '../config/configApiClient'
+
+// Capture the real module before mocking (value snapshot — mock.module mutates
+// the namespace in place) so it can be restored for later test files.
+const realConfigApiClientModule = { ...realConfigApiClientModuleNamespace }
 
 // Mock the config API client so the hook never reaches the network.
 const fetchConfigSelectors = mock(async (): Promise<ConfigSelectorDescriptor[]> => [
@@ -18,6 +24,11 @@ mock.module('../config/configApiClient', () => ({
   applyConfig,
 }))
 
+// bun:test has no per-file module-mock scoping (mock.restore does not undo
+// mock.module), so restore the original bindings when this file is done.
+afterAll(() => {
+  mock.module('../config/configApiClient', () => realConfigApiClientModule)
+})
 // eslint-disable-next-line import/first
 import { useBackendConfig as useHook } from './useBackendConfig'
 

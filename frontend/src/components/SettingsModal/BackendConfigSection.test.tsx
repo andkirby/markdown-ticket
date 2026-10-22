@@ -6,7 +6,13 @@ import {
   screen,
   waitFor,
 } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test'
+import { afterAll, afterEach, beforeEach, describe, expect, it, mock } from 'bun:test'
+
+import * as realUseBackendConfigModuleNamespace from '../../hooks/useBackendConfig'
+
+// Capture the real module before mocking (value snapshot — mock.module mutates
+// the namespace in place) so it can be restored for later test files.
+const realUseBackendConfigModule = { ...realUseBackendConfigModuleNamespace }
 
 // Mock the hook so the section never reaches the network.
 const stageEdit = mock((_selector: string, _value: unknown) => {})
@@ -26,6 +32,11 @@ const useBackendConfig = mock(() => ({
 
 mock.module('../../hooks/useBackendConfig', () => ({ useBackendConfig }))
 
+// bun:test has no per-file module-mock scoping (mock.restore does not undo
+// mock.module), so restore the original bindings when this file is done.
+afterAll(() => {
+  mock.module('../../hooks/useBackendConfig', () => realUseBackendConfigModule)
+})
 // eslint-disable-next-line import/first
 import { BackendConfigSection } from './BackendConfigSection'
 

@@ -1,6 +1,11 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
-import { beforeEach, describe, expect, it, mock } from 'bun:test'
+import { afterAll, beforeEach, describe, expect, it, mock } from 'bun:test'
+import * as realDataLayerModuleNamespace from '../../services/dataLayer'
 import { useTraceStoreAvailability } from './useTraceStoreAvailability'
+
+// Capture the real module before mocking (value snapshot — mock.module mutates
+// the namespace in place) so it can be restored for later test files.
+const realDataLayerModule = { ...realDataLayerModuleNamespace }
 
 const fetchTraceStoreMetadata = mock()
 
@@ -9,6 +14,12 @@ mock.module('../../services/dataLayer', () => ({
     fetchTraceStoreMetadata,
   },
 }))
+
+// bun:test has no per-file module-mock scoping (mock.restore does not undo
+// mock.module), so restore the original bindings when this file is done.
+afterAll(() => {
+  mock.module('../../services/dataLayer', () => realDataLayerModule)
+})
 
 describe('useTraceStoreAvailability', () => {
   beforeEach(() => {

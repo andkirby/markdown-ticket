@@ -14,7 +14,8 @@
  */
 import type { ReactNode } from 'react'
 import { act, cleanup, render, renderHook, screen, waitFor } from '@testing-library/react'
-import { afterEach, describe, expect, it, mock } from 'bun:test'
+import { afterAll, afterEach, describe, expect, it, mock } from 'bun:test'
+import * as realUseToastModuleNamespace from '../../hooks/useToast'
 import { DocumentDeliveryContext, useDocumentDelivery } from '../SmartLink/documentDelivery'
 import { clampTicketColumnWidth } from './splitLayout'
 import { SidePanePill, SplitDivider, TicketSidePane } from './TicketSidePane'
@@ -30,7 +31,17 @@ const toastMock = {
 function toastHook() {
   return toastMock
 }
+// Capture the real module before mocking (value snapshot — mock.module mutates
+// the namespace in place) so it can be restored for later test files.
+const realUseToastModule = { ...realUseToastModuleNamespace }
+
 mock.module('../../hooks/useToast', () => ({ useToast: toastHook }))
+
+// bun:test has no per-file module-mock scoping (mock.restore does not undo
+// mock.module), so restore the original bindings when this file is done.
+afterAll(() => {
+  mock.module('../../hooks/useToast', () => realUseToastModule)
+})
 
 afterEach(() => {
   cleanup()

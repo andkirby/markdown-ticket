@@ -20,9 +20,11 @@ import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test'
  * - C3: Same Promise returned, cleaned up after resolution
  */
 
-// Mock fetch globally
+// Mock fetch globally — assigned per test (preload quarantines globalThis.fetch)
 const mockFetch = mock()
-globalThis.fetch = mockFetch as unknown as typeof fetch
+beforeEach(() => {
+  globalThis.fetch = mockFetch as unknown as typeof fetch
+})
 
 // eslint-disable-next-line import/first -- Must import after mocking global.fetch
 import { DataLayer } from './dataLayer'

@@ -16,9 +16,11 @@ import { act, renderHook, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test'
 import { useSelectorData } from './useSelectorData'
 
-// Mock fetch globally
+// Mock fetch globally — assigned per test (preload quarantines globalThis.fetch)
 const mockFetch = mock()
-globalThis.fetch = mockFetch as unknown as typeof fetch
+beforeEach(() => {
+  globalThis.fetch = mockFetch as unknown as typeof fetch
+})
 
 describe('useSelectorData - BR-7.1, BR-7.2: Load preferences from user.toml', () => {
   beforeEach(() => {

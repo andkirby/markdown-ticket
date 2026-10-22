@@ -17,9 +17,11 @@ import { beforeEach, describe, expect, it, mock } from 'bun:test'
  * that fetches TicketMetadata[] (without content) for list views.
  */
 
-// Mock fetch globally
+// Mock fetch globally — assigned per test (preload quarantines globalThis.fetch)
 const mockFetch = mock()
-globalThis.fetch = mockFetch as unknown as typeof fetch
+beforeEach(() => {
+  globalThis.fetch = mockFetch as unknown as typeof fetch
+})
 
 // Import after mocking
 // import { dataLayer } from './dataLayer'

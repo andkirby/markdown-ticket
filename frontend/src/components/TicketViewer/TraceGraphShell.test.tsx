@@ -1,7 +1,12 @@
 import type * as React from 'react'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it, mock } from 'bun:test'
+import { afterAll, afterEach, describe, expect, it, mock } from 'bun:test'
+import * as realModalModuleNamespace from '../ui/Modal'
 import { TraceGraphShell } from './TraceGraphShell'
+
+// Capture the real module before mocking (value snapshot — mock.module mutates
+// the namespace in place) so it can be restored for later test files.
+const realModalModule = { ...realModalModuleNamespace }
 
 mock.module('../ui/Modal', () => ({
   Modal: ({
@@ -19,6 +24,12 @@ mock.module('../ui/Modal', () => ({
     <section className={className}>{children}</section>
   ),
 }))
+
+// bun:test has no per-file module-mock scoping (mock.restore does not undo
+// mock.module), so restore the original bindings when this file is done.
+afterAll(() => {
+  mock.module('../ui/Modal', () => realModalModule)
+})
 
 describe('TraceGraphShell', () => {
   afterEach(() => {
