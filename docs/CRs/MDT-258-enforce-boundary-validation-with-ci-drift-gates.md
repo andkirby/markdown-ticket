@@ -1,15 +1,15 @@
 ---
-code: MDT-255
+code: MDT-258
 status: Proposed
 dateCreated: 2026-10-22T00:00:00.000Z
 type: Architecture
 priority: High
-phaseEpic: MDT-253
+dependsOn: MDT-259
 ---
 
 # Enforce runtime boundary validation with CI drift gates
 
-> Evidence reports: [boundary-validation-design.md](MDT-255/boundary-validation-design.md) (full input inventory + phased design) · [drift-tooling-research.md](MDT-255/drift-tooling-research.md) (toolchain research with sources). Build on MDT-101 (contract architecture) and MDT-099 (shared-code consolidation), both Implemented.
+> Evidence reports: [boundary-validation-design.md](MDT-258/boundary-validation-design.md) (full input inventory + phased design) · [drift-tooling-research.md](MDT-258/drift-tooling-research.md) (toolchain research with sources). Build on MDT-101 (contract architecture) and MDT-099 (shared-code consolidation), both Implemented.
 
 ## 1. Problem
 
@@ -34,7 +34,7 @@ MDT-101 declared "boundary validation happens where unknown input enters the sys
 | mcp-server zod dep | Keep — becomes real runtime import via envelope schemas | Report §E |
 | shared zod ^4 dep | Remove (phantom, cross-major) | Nobody imports zod in shared |
 | ConfigRepository | Keep, validate its ingress | Live code; consolidation is separate work |
-| Zod version | Migrate to ^4 via [MDT-256](MDT-256-migrate-domain-contracts-to-zod-v4.md) **before phase 0**; this ticket's phases run on v4 | New schemas written natively on v4 avoids double audit; blast radius at minimum (1 consumer, 2 v3-only sites, MCP SDK accepts ^4) |
+| Zod version | Migrate to ^4 via [MDT-259](MDT-259-migrate-domain-contracts-to-zod-v4.md) **before phase 0**; this ticket's phases run on v4 | New schemas written natively on v4 avoids double audit; blast radius at minimum (1 consumer, 2 v3-only sites, MCP SDK accepts ^4) |
 
 ## 3. Phased plan (each phase independently shippable)
 
@@ -53,7 +53,7 @@ Full acceptance criteria per phase: design report §C.
 
 1. **Knip**: un-ignore the 4 workspaces, add entry patterns, run default + `--production` modes. Catches dead exports + phantom deps. First run = triage backlog, gate after.
 2. **`@typescript-eslint/no-unsafe-type-assertion: error`** in server + mcp-server configs (typescript-eslint ≥ 8.15). Catches `req.body as X` directly — verified the rule flags exactly this pattern; `no-unsafe-assignment` does NOT.
-3. **Type-equality tests** (`Expect<Equal<HandWritten, z.infer<Schema>>>` under existing tsc): catches interface-vs-schema divergence; created in MDT-256 as its migration gate, reused here.
+3. **Type-equality tests** (`Expect<Equal<HandWritten, z.infer<Schema>>>` under existing tsc): catches interface-vs-schema divergence; created in MDT-259 as its migration gate, reused here.
 4. **Boundary convention checker** (`scripts/check-boundary-validation.ts`, AST-based, legacy manifest that only shrinks): design report §D. Baseline identity = file + function + expression; new unvalidated reads fail CI.
 5. Optional: **dependency-cruiser** (1 devDep) for import-direction rules ("server must not import zod directly"); **claims: convention test** for doc-vs-code drift (architecture CRs assert facts like `deleted_paths`). Skip for now if 1–4 land clean.
 
@@ -61,7 +61,7 @@ Full acceptance criteria per phase: design report §C.
 
 - Frontend client-side response validation, cloud worker inputs (follow-up)
 - ConfigRepository consolidation (separate ticket; only fix MDT-099's record via `claims:` test)
-- Zod v3→v4 migration (moved to [MDT-256](MDT-256-migrate-domain-contracts-to-zod-v4.md), which gates this ticket)
+- Zod v3→v4 migration (moved to [MDT-259](MDT-259-migrate-domain-contracts-to-zod-v4.md), which gates this ticket)
 - MCP advertised-JSON-schema/OpenAPI unification (parity checks only in phase 1)
 - Any transport rewrite (Express stays)
 
