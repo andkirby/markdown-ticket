@@ -1,6 +1,6 @@
 ---
 code: MDT-258
-status: Proposed
+status: In Progress
 dateCreated: 2026-10-22T00:00:00.000Z
 type: Architecture
 priority: High
@@ -67,7 +67,8 @@ Full acceptance criteria per phase: design report §C.
 
 ## 6. Acceptance criteria
 
-- [ ] Phase 0–1 landed: all CR write paths + MCP mutations schema-validated; mixed bad-payload performs zero mutations (test-proven)
+- [x] Phase 0–1 landed: all CR write paths + MCP mutations schema-validated; mixed bad-payload performs zero mutations (test-proven)
+  - Implemented in `802c074d`; report: [phase-0-1-result.md](MDT-258/phase-0-1-result.md); independently re-verified (checker 254 identities green, 30/30 checker fixtures, 15/15 controller boundary tests incl. zero-service-call proof, 60/60 MCP boundary suites, 349/349 domain tests)
 - [ ] Knip un-ignored and clean (post-triage); phantom zod deps resolved
 - [ ] `no-unsafe-type-assertion` error-level in server + mcp-server; existing violations baselined or fixed
 - [ ] Boundary checker in `check` script + PR CI; manifest shrinks every phase, never auto-grows
