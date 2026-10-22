@@ -45,6 +45,8 @@ Goal of this doc: find the approach that gives the **best UX** at **reasonably l
 
 **Key fact:** there is **no concept of "area", "component", "label", or "tag"** anywhere in the ticket model, config, or UI. The closest analog (`impactAreas: string[]`) is declared in the schema but never rendered, never filtered, and not even serialized to YAML by `MarkdownService`.
 
+> **Correction (2026-10-19):** the key fact and the "both unused in frontend" row above are stale. A `component` attribute now exists end-to-end in the data layer plus CLI (commit `82528a68`, free-text, in active use), and `phaseEpic` / `impactAreas` render as derived facets in the board filter bar (MDT-196 v1.1). See the Decision Update in [IDEA-006-ticket-sub-areas.md](./IDEA-006-ticket-sub-areas.md).
+
 **Prior art:** MDT-143's discovery doc already analyzed a near-identical feature (custom code namespaces → `ABC/API-001`) and **deferred it** as "requires domain-model change", identifying 6 hard-coupled modules.
 
 ---

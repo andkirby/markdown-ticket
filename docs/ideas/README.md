@@ -9,9 +9,12 @@
 | IDEA-003 | Click-to-Copy Document Path | deferred | — |
 | IDEA-004 | Biometric Auth (WebAuthn) | triage | — |
 | IDEA-005 | Tickets List → Mermaid Grid (CLI output) | triage | — |
-| IDEA-006 | Sub-Areas Within a Project (`area` attribute) | triage | — |
+| IDEA-006 | Ticket Sub-Areas / `component` Attribute (owning subsystem) | triage | — |
 | IDEA-007 | Status-Colored Ticket Reference Badges | triage | — |
 | IDEA-008 | Ticket Dependency Graph and Guardrails | triage | — |
+| IDEA-009 | Focused Work Navigation | triage | — |
+| IDEA-010 | Priority Polishing | triage | — |
+| IDEA-011 | External Issue Tracker Links (Jira / GitHub / GitLab) | promoted | MDT-252 |
 
 ## Resolved
 

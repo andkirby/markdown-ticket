@@ -39,6 +39,20 @@ area: API              # categorization — freely mutable
 ## Decision
 Recommendation: **promote as a Feature Enhancement CR**, scoped to the Phase 1 plan in the research doc (add `area` field to domain contracts, serialize in MarkdownService, optional `[areas].known` config allowlist, minimal frontend badge/column/filter). Do **not** pursue the key-embedded `MDT/API-123` format — record it as rejected with rationale so it isn't re-investigated.
 
+## Decision Update — 2026-10-19 (component reconciliation)
+
+Supersedes the `area` naming above; the key-embedded rejection stands. Origin: epic refactor pain — one epic became a "bottomless well" of tickets spanning three packages/services, and sorting it needed a subsystem label. The user proposed the name `component`; it was implemented in mdt-cli (commit `82528a68`, free-text, no enum validation) and already carries real values in another project (gpt-german: `owned-runtime`, `tutor-learner`, `tutor-admin`). Renaming to `area` would now break an in-use field.
+
+Established decisions:
+
+- **Field:** the existing `component` attribute — single-valued *owning subsystem*, per-project. Vocabulary: optional per-project list in `.mdt-config.toml` (`[components] known = [...]`, `enforce` optional) — decided 2026-10-19, motivated by agent-facing flows: the list is injected into MCP tool schemas and CLI suggestions so agents stop guessing values, and makes the filter facet menu stable from day one (static behavior per MDT-196; derived from ticket set when unconfigured). Default advisory; hard rejection is opt-in per project and is never airtight since tickets are plain markdown files editable outside all APIs.
+- **Concept contract:** `component` = one primary owning subsystem (containment). `impactAreas` = multiple *affected* subsystems — no traceable user need today, so demoted: remove its board-filter facet, keep the schema field dormant. Do not expose both as visible facets.
+- **Cross-package epics** (e.g. a voice-system integration touching all packages) need no new field: an epic's component footprint is the union of its children's `component` values. Single-valued tickets + epic aggregation cover this.
+- **Granularity rule (C4 mapping):** attribute values are top-level owned subsystems/packages — usually C4 *container*-level units (`frontend`, `server`, `mcp-server`, `cloud`, `cli`); libraries like `shared` qualify because ownership, not runnability, is the classifier. C4 *component*-level sub-systems inside a package (e.g. the server's event driver) are not attribute values — title/body, or `impactAreas` when affected-not-owned. The field name stays `component` (in use, Jira-familiar) despite the C4 tier mismatch; renaming to `container` would collide with Docker containers and break live values. A sub-system becomes an attribute value only when it becomes an independently owned unit (architecture split), or when ticket volume gives adoption evidence for splitting the value.
+- **UX scope:** MVP = detail-panel badge + facet in the existing board filter popover (configured list when present, otherwise derived from the ticket set); list column optional. Later = swimlanes/grouping, board-card badge, create-form picker.
+
+Next: UX specification against `docs/design/surfaces/` (board-filter-bar, ticket detail). Follow-up: code review of the CLI implementation (commit `82528a68`) — note its scope line says MCP/HTTP don't expose the field, but `TICKET_UPDATE_ATTRS` in domain-contracts `input.ts` already includes `component`, so `update_cr_attrs` likely accepts it; verify during review.
+
 ## References
 - [IDEA-006 Research](./IDEA-006-ticket-sub-areas.research.md) — full evaluation of 5 options, evaluation matrix, industry comparison, phased rollout
 - [MDT-143 / discovery-ticket-code-namespace.md](../CRs/MDT-143/discovery-ticket-code-namespace.md) — prior deferred analysis (6-module coupling)
