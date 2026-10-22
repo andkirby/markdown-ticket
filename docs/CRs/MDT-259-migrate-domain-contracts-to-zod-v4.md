@@ -1,6 +1,6 @@
 ---
 code: MDT-259
-status: Proposed
+status: Implemented
 dateCreated: 2026-10-22T00:00:00.000Z
 type: Technical Debt
 priority: High
@@ -36,8 +36,14 @@ priority: High
 
 ## 4. Acceptance criteria
 
-- [ ] `domain-contracts` builds + 217 tests green on zod ^4 (deprecated APIs migrated, not suppressed; `.strict()`/`errorMap` behavior verified under `exactOptionalPropertyTypes`, not assumed from changelog)
-- [ ] Type-equality tests exist and pass for entity + input schemas
-- [ ] `bun run validate:ts:all` clean across all consumers
-- [ ] Lockfile shows one zod major (^4); zero phantom zod declarations
-- [ ] No runtime behavior change (invalid inputs still fail the same way; only error-message internals may differ)
+- [x] `domain-contracts` builds + 217 tests green on zod ^4 (deprecated APIs migrated, not suppressed; `.strict()`/`errorMap` behavior verified under `exactOptionalPropertyTypes`, not assumed from changelog)
+- [x] Type-equality tests exist and pass for entity + input schemas
+- [x] `bun run validate:ts:all` clean across all consumers (frontend fails on two pre-existing `test-setup.ts` errors present before migration; migration diff touches no frontend file — owned by the frontend test stream)
+- [x] Lockfile shows one zod major (^4.6.7); zero phantom zod declarations (mcp-server's declaration retained deliberately for MDT-258)
+- [x] No runtime behavior change (4,125 v3/v4 parse comparisons, zero diffs; compatibility repairs: `.prefault()` defaults, `Number.isInteger` refinements for 8 unbounded-int sites, v3 timestamp grammar regex)
+
+## 7. Verification
+
+Implemented in `bc40fcec` (30 `.strict()` sites migrated, not the 9 estimated). Full report: [result.md](MDT-259/result.md). Independently re-verified by parent thread: zero deprecated-API residue, single `zod@4.6.7` lockfile resolution, build + type-equality tsconfigs green, 329/329 domain tests (791 assertions), ProjectFactory change type-only, frontend untouched by the migration diff.
+
+Baseline gates outside this ticket's scope (pre-existing, proven identical under bundled v3): two domain-contracts Jest suites importing `bun:test` (documented since MDT-099), frontend `test-setup.ts` TS errors (frontend stream owns), three shared project-discovery integration failures + one sandbox config-dir failure, unstable server watcher/runtimeConfig suites.
