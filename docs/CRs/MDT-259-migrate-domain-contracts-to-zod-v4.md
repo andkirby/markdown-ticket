@@ -17,9 +17,12 @@ priority: High
 
 ## 2. Work items
 
-1. `domain-contracts`: bump `zod` to `^4.6.x`; fix the two v3-only sites:
-   - `src/config/schema.ts:21` — `errorMap` → v4 error customization (`error` option / `message`)
+1. `domain-contracts`: bump `zod` to `^4.6.x`; fix the 12-site migration surface (verified):
+   - 9× `.strict()` → `z.strictObject()` (deprecated but still works — mechanical)
+   - `src/config/schema.ts:21` — `errorMap` → v4 `{ error }` option
    - `src/app-config/schema.ts:207` — single-arg `z.record(...)` → `z.record(z.string(), ...)`; audit `.default({})` input/output split
+   - Already clean (zero hits): `.errors`, `required_error`, `.nonempty`
+   - v4 gains mapped to this repo: `z.stringbool()` (query-flag parsing, serves MDT-258 phase 5), `z.iso.datetime()` (frontmatter dates), `z.templateLiteral` (CR-KEY format — coordinate with MDT-254 key-pattern ticket), `z.toJSONSchema()` (MCP `inputSchema` straight from contracts, drops `zod-to-json-schema`), ~2–7× faster parse + smaller core
 2. Add **type-equality tests** (`Expect<Equal<HandWritten, z.infer<Schema>>>` under existing tsc) for the main entity/input schemas — created here, reused as MDT-258 CI gate 3 and future upgrade safety net.
 3. Fix downstream tsc fallout from v4 inferred-type changes (`z.unknown()`/`z.any()` key optionality, `.default()` semantics) in server/mcp-server/frontend/cli — compile-time only, no runtime changes expected.
 4. Dependency hygiene: delete `shared`'s phantom `zod ^4.3.6`; bump `mcp-server` to `^4` (becomes a real import in MDT-258 phase 1).
@@ -33,7 +36,7 @@ priority: High
 
 ## 4. Acceptance criteria
 
-- [ ] `domain-contracts` builds + 217 tests green on zod ^4 (v3-only APIs fixed, not suppressed)
+- [ ] `domain-contracts` builds + 217 tests green on zod ^4 (deprecated APIs migrated, not suppressed; `.strict()`/`errorMap` behavior verified under `exactOptionalPropertyTypes`, not assumed from changelog)
 - [ ] Type-equality tests exist and pass for entity + input schemas
 - [ ] `bun run validate:ts:all` clean across all consumers
 - [ ] Lockfile shows one zod major (^4); zero phantom zod declarations

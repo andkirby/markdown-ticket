@@ -34,7 +34,7 @@ MDT-101 declared "boundary validation happens where unknown input enters the sys
 | mcp-server zod dep | Keep — becomes real runtime import via envelope schemas | Report §E |
 | shared zod ^4 dep | Remove (phantom, cross-major) | Nobody imports zod in shared |
 | ConfigRepository | Keep, validate its ingress | Live code; consolidation is separate work |
-| Zod version | Migrate to ^4 via [MDT-259](MDT-259-migrate-domain-contracts-to-zod-v4.md) **before phase 0**; this ticket's phases run on v4 | New schemas written natively on v4 avoids double audit; blast radius at minimum (1 consumer, 2 v3-only sites, MCP SDK accepts ^4) |
+| Zod version | Migrate to ^4 via [MDT-259](MDT-259-migrate-domain-contracts-to-zod-v4.md) **before phase 0**; this ticket's phases run on v4 | New schemas written natively on v4 avoids double audit; blast radius at minimum (1 consumer, 12-site migration surface, MCP SDK accepts ^4) |
 
 ## 3. Phased plan (each phase independently shippable)
 
