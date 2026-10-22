@@ -81,6 +81,10 @@ export class ProjectService implements IProjectService {
     return this.config.getProjectConfig(p)
   }
 
+  assertLocalConfigWritable(projectPath: string): void {
+    this.config.assertLocalConfigWritable?.(projectPath)
+  }
+
   createOrUpdateLocalConfig(projectId: string, projectPath: string, name: string, code: string, description?: string, repository?: string, globalOnly?: boolean, ticketsPath?: string) {
     return this.config.createOrUpdateLocalConfig(projectId, projectPath, name, code, description, repository, globalOnly, ticketsPath)
   }
@@ -100,7 +104,7 @@ export class ProjectService implements IProjectService {
       this.config.updateProject(project.id, u)
     }
     catch (error) {
-      if (!project.project.path) {
+      if (!project.project.path || !(error instanceof Error) || !error.message.includes('not found in registry')) {
         throw error
       }
 

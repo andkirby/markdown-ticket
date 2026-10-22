@@ -7,5 +7,6 @@
  * No filesystem, controller, or UI behavior lives here.
  */
 export * from './defaults'
+export * from './input'
 export * from './patch-schemas'
 export * from './selectors'

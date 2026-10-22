@@ -6,8 +6,11 @@ import type {
 import type { Request, Response } from 'express'
 import type { RuntimeConfig } from '../config/runtimeConfig.js'
 import type { TokenResolution } from '../security/readTokenStore.js'
+import { InviteInputSchema, ReadTokenCreateInputSchema } from '@mdt/domain-contracts'
 import { Router } from 'express'
 import { getRuntimeConfig } from '../config/runtimeConfig.js'
+import { parseRequest } from '../http/parseRequest.js'
+import { InviteCodeParamsSchema, TokenIdParamsSchema } from '../http/sessionSchemas.js'
 import { getRequestAccess } from '../security/apiAuth.js'
 import { shouldUseSecureSessionCookie } from '../security/apiSession.js'
 import { resolvePublicLinkOriginOptions } from '../security/publicLinkOrigins.js'
@@ -21,7 +24,10 @@ export function createPublicReadTokensRouter(): Router {
   const router = Router()
 
   router.post('/invites/:code/session', publicTokenExchangeRateLimit, async (req: Request, res: Response) => {
-    const code = req.params.code
+    const params = parseRequest(InviteCodeParamsSchema, req.params, res, 'params')
+    if (!params.success)
+      return
+    const { code } = params.data
     const runtimeConfig = getRuntimeConfig(req)
     const secret = runtimeConfig.readSessions.secret
     if (!code || !secret) {
@@ -78,11 +84,10 @@ export function createReadTokensRouter(): Router {
     }
 
     try {
-      const token = await getReadTokenStore(req).createToken({
-        name: readString(req.body, 'name'),
-        projectRefs: readStringArray(req.body, 'projectRefs'),
-        expiresAt: readOptionalString(req.body, 'expiresAt'),
-      })
+      const body = parseRequest(ReadTokenCreateInputSchema, req.body, res, 'body')
+      if (!body.success)
+        return
+      const token = await getReadTokenStore(req).createToken(body.data)
 
       res.status(201).json(token)
     }
@@ -97,16 +102,23 @@ export function createReadTokensRouter(): Router {
       return
     }
 
+    const params = parseRequest(TokenIdParamsSchema, req.params, res, 'params')
+    if (!params.success)
+      return
+
     try {
-      const origin = resolveInviteOrigin(req, getRuntimeConfig(req))
+      const body = parseRequest(InviteInputSchema, req.body, res, 'body')
+      if (!body.success)
+        return
+      const origin = resolveInviteOrigin(body.data.origin, getRuntimeConfig(req), getRequestOrigin(req.headers))
       if (!origin) {
         res.status(400).json({ error: 'No allowed public origin is available for invite links' })
         return
       }
 
-      const invite = await getReadTokenStore(req).createInvite(req.params.tokenId)
+      const invite = await getReadTokenStore(req).createInvite(params.data.tokenId)
       if (allowsEphemeralInviteFallback(req)) {
-        ephemeralInvites.set(invite.code, await getReadTokenStore(req).resolveTokenById(req.params.tokenId))
+        ephemeralInvites.set(invite.code, await getReadTokenStore(req).resolveTokenById(params.data.tokenId))
       }
       const response: ReadTokenInviteResponse = {
         expiresAt: invite.expiresAt,
@@ -125,10 +137,14 @@ export function createReadTokensRouter(): Router {
       return
     }
 
+    const params = parseRequest(TokenIdParamsSchema, req.params, res, 'params')
+    if (!params.success)
+      return
+
     try {
-      const revokedToken = await getReadTokenStore(req).revokeToken(req.params.tokenId)
+      const revokedToken = await getReadTokenStore(req).revokeToken(params.data.tokenId)
       for (const [code, invite] of ephemeralInvites) {
-        if (invite.tokenId === req.params.tokenId) {
+        if (invite.tokenId === params.data.tokenId) {
           ephemeralInvites.delete(code)
         }
       }
@@ -142,31 +158,34 @@ export function createReadTokensRouter(): Router {
   return router
 }
 
-function resolveInviteOrigin(req: Request, runtimeConfig: RuntimeConfig): string | null {
-  const requestedOrigin = readOptionalString(req.body, 'origin')
-  const options = getPublicLinkOriginOptions(req, requestedOrigin ?? undefined, runtimeConfig)
+function resolveInviteOrigin(requestedOrigin: string | null | undefined, runtimeConfig: RuntimeConfig, currentOrigin?: string): string | null {
+  const options = resolvePublicLinkOriginOptions({
+    allowedOrigins: runtimeConfig.origins.allowedOrigins,
+    currentOrigin,
+    publicOrigin: runtimeConfig.origins.publicOrigin,
+    selectedOrigin: requestedOrigin ?? undefined,
+  })
   if (requestedOrigin && options.selectedOrigin !== requestedOrigin.replace(/\/+$/u, '')) {
     return null
   }
-
   return options.selectedOrigin ?? null
 }
 
 function getPublicLinkOriginOptions(req: Request, selectedOrigin?: string, runtimeConfig = getRuntimeConfig(req)) {
   return resolvePublicLinkOriginOptions({
     allowedOrigins: runtimeConfig.origins.allowedOrigins,
-    currentOrigin: getRequestOrigin(req),
+    currentOrigin: getRequestOrigin(req.headers),
     publicOrigin: runtimeConfig.origins.publicOrigin,
     selectedOrigin,
   })
 }
 
-function getRequestOrigin(req: Request): string | undefined {
-  if (req.headers.origin) {
-    return req.headers.origin
+function getRequestOrigin(headers: Request['headers']): string | undefined {
+  if (headers.origin) {
+    return headers.origin
   }
 
-  const referer = req.headers.referer
+  const referer = headers.referer
   if (!referer) {
     return undefined
   }
@@ -215,36 +234,6 @@ function getCandidateConfigDirs(req: Request): string[] {
 
 function allowsEphemeralInviteFallback(req: Request): boolean {
   return getRuntimeConfig(req).readSessions.allowLocalFallback
-}
-
-function readString(body: unknown, key: string): string {
-  const value = readOptionalString(body, key)
-  if (!value) {
-    throw new ReadTokenRejectedError()
-  }
-  return value
-}
-
-function readOptionalString(body: unknown, key: string): string | null {
-  if (!body || typeof body !== 'object') {
-    return null
-  }
-
-  const value = (body as Record<string, unknown>)[key]
-  return typeof value === 'string' ? value : null
-}
-
-function readStringArray(body: unknown, key: string): string[] {
-  if (!body || typeof body !== 'object') {
-    throw new ReadTokenRejectedError()
-  }
-
-  const value = (body as Record<string, unknown>)[key]
-  if (!Array.isArray(value) || !value.every(item => typeof item === 'string')) {
-    throw new ReadTokenRejectedError()
-  }
-
-  return value
 }
 
 function sendRejected(error: unknown, res: Response): void {

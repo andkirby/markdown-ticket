@@ -1,7 +1,7 @@
 import type { Ticket as DomainTicket, SearchMode } from '@mdt/domain-contracts'
-import type { Project, ProjectConfig, ProjectSharingModeValue } from '@mdt/shared/models/Project.js'
+import type { Project, ProjectConfig } from '@mdt/shared/models/Project.js'
 import type { TicketMetadata } from '@mdt/shared/models/Ticket.js'
-import type { ProjectCreateInput, ProjectUpdateInput } from '@mdt/shared/tools/ProjectManager.js'
+import type { ProjectUpdateInput } from '@mdt/shared/tools/ProjectManager.js'
 import type { Request, Response } from 'express'
 import type { RequestAccessContext } from '../security/apiAuth.js'
 import type { TicketService } from '../services/TicketService.js'
@@ -9,8 +9,7 @@ import type { TreeNode } from '../types/tree.js'
 import * as fs from 'node:fs/promises'
 import * as os from 'node:os'
 import process from 'node:process'
-import { SearchRequestSchema } from '@mdt/domain-contracts'
-import { ProjectSharingMode } from '@mdt/shared/models/Project.js'
+import { ConfigureDocumentsInputSchema, ProjectUpdateEnvelopeSchema, RegisterProjectInputSchema, SearchRequestSchema, UpdateProjectSharingInputSchema } from '@mdt/domain-contracts'
 import { WorktreeService } from '@mdt/shared/services/WorktreeService.js'
 import { ProjectManager } from '@mdt/shared/tools/ProjectManager.js'
 import { ProjectValidator } from '@mdt/shared/tools/ProjectValidator.js'
@@ -19,6 +18,7 @@ import { DEFAULTS } from '@mdt/shared/utils/constants.js'
 import { parseToml } from '@mdt/shared/utils/toml.js'
 import { getRuntimeConfig } from '../config/runtimeConfig.js'
 import { parseRequest } from '../http/parseRequest.js'
+import { ProjectCodeParamsSchema } from '../http/projectSchemas.js'
 import { ProjectRefParamsSchema, RestCreateTicketInputSchema, RestPatchTicketInputSchema, TicketRefParamsSchema } from '../http/ticketSchemas.js'
 import { getRequestAccess } from '../security/apiAuth.js'
 import { authorizeFilesystemPath, FilesystemAccessDeniedError, getProjectRoots } from '../security/filesystemAccess.js'
@@ -91,10 +91,6 @@ export interface TreeServiceInterface {
 interface FileWatcher {
   reconfigureDocumentWatchers?: (projectId: string, projectRoot: string, documentPaths: string[], ticketsPath?: string) => Promise<number>
   disconnectReadOnlyClients?: () => void
-}
-
-function isProjectSharingMode(value: unknown): value is ProjectSharingModeValue {
-  return typeof value === 'string' && Object.values(ProjectSharingMode).includes(value as ProjectSharingModeValue)
 }
 
 /**
@@ -265,7 +261,10 @@ export class ProjectController {
    */
   async createProject(req: Request, res: Response): Promise<void> {
     try {
-      const result = await this.projectManager.createProject(req.body as ProjectCreateInput)
+      const body = parseRequest(RegisterProjectInputSchema, req.body, res, 'body')
+      if (!body.success)
+        return
+      const result = await this.projectManager.createProject(body.data)
 
       // File watcher will automatically detect the new .toml file
       // and emit the 'project-created' event - no manual emission needed
@@ -289,15 +288,15 @@ export class ProjectController {
    */
   async updateProject(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const { code } = req.params
-
-      if (!code) {
-        res.status(400).json({ error: 'Bad Request', message: 'Project code is required' })
-
+      const params = parseRequest(ProjectCodeParamsSchema, req.params, res, 'params')
+      if (!params.success)
         return
-      }
+      const { code } = params.data
 
-      const updates = req.body as ProjectUpdateInput
+      const body = parseRequest(ProjectUpdateEnvelopeSchema, req.body, res, 'body')
+      if (!body.success)
+        return
+      const updates = body.data
       const validatedUpdates: ProjectUpdateInput = {}
 
       if (updates.name !== undefined) {
@@ -351,7 +350,7 @@ export class ProjectController {
             this.projectService.updateProject(project.id, validatedUpdates)
           }
           catch (error) {
-            if (!this.projectService.updateProjectByPath) {
+            if (!this.projectService.updateProjectByPath || !(error instanceof Error) || !error.message.includes('not found in registry')) {
               throw error
             }
 
@@ -383,12 +382,14 @@ export class ProjectController {
 
   async updateProjectSharing(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const { code } = req.params
-
-      if (!code) {
-        res.status(400).json({ error: 'Bad Request', message: 'Project code is required' })
+      const params = parseRequest(ProjectCodeParamsSchema, req.params, res, 'params')
+      if (!params.success)
         return
-      }
+      const { code } = params.data
+
+      const body = parseRequest(UpdateProjectSharingInputSchema, req.body, res, 'body')
+      if (!body.success)
+        return
 
       const projects = await this.projectService.getAllProjects(true)
       const project = findProjectByRef(projects, code)
@@ -398,23 +399,9 @@ export class ProjectController {
         return
       }
 
-      const body = req.body as { mode?: unknown, rotateShareId?: unknown, shareId?: unknown }
-      if (!isProjectSharingMode(body.mode)) {
-        res.status(400).json({ error: 'Bad Request', message: 'Invalid sharing mode' })
-        return
-      }
-      if (body.shareId !== undefined) {
-        res.status(400).json({ error: 'Bad Request', message: 'Share ID is server-generated' })
-        return
-      }
-      if (body.rotateShareId !== undefined && typeof body.rotateShareId !== 'boolean') {
-        res.status(400).json({ error: 'Bad Request', message: 'Invalid share rotation flag' })
-        return
-      }
-
       const updatedProject = await updateProjectSharing(project, {
-        mode: body.mode,
-        ...(body.rotateShareId === true ? { rotateShareId: true } : {}),
+        mode: body.data.mode,
+        ...(body.data.rotateShareId === true ? { rotateShareId: true } : {}),
       })
 
       if ('clearCache' in this.projectService.projectDiscovery) {
@@ -441,13 +428,10 @@ export class ProjectController {
    */
   async enableProject(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const { code } = req.params
-
-      if (!code) {
-        res.status(400).json({ error: 'Bad Request', message: 'Project code is required' })
-
+      const params = parseRequest(ProjectCodeParamsSchema, req.params, res, 'params')
+      if (!params.success)
         return
-      }
+      const { code } = params.data
 
       const result = await this.projectManager.enableProject(code)
 
@@ -470,13 +454,10 @@ export class ProjectController {
    */
   async disableProject(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const { code } = req.params
-
-      if (!code) {
-        res.status(400).json({ error: 'Project code is required' })
-
+      const params = parseRequest(ProjectCodeParamsSchema, req.params, res, 'params')
+      if (!params.success)
         return
-      }
+      const { code } = params.data
 
       const result = await this.projectManager.disableProject(code)
 
@@ -581,13 +562,10 @@ export class ProjectController {
    * Configure document paths.
    */
   async configureDocuments(req: Request, res: Response): Promise<void> {
-    const { projectId, documentPaths } = req.body
-
-    if (!projectId || !Array.isArray(documentPaths)) {
-      res.status(400).json({ error: 'Project ID and document paths are required' })
-
+    const body = parseRequest(ConfigureDocumentsInputSchema, req.body, res, 'body')
+    if (!body.success)
       return
-    }
+    const { projectId, documentPaths } = body.data
 
     try {
       await this.projectService.configureDocuments(projectId, documentPaths)

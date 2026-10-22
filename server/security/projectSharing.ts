@@ -1,9 +1,11 @@
+import type { ProjectRegistryWriteFile } from '@mdt/domain-contracts'
 import type { Project, ProjectSharingModeValue, ProjectSharingSettings, RegistryData } from '@mdt/shared/models/Project.js'
 import type { RequestAccessContext } from './apiAuth.js'
 import { randomBytes } from 'node:crypto'
 import { mkdir, readdir, readFile, rename, unlink, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import process from 'node:process'
+import { ProjectRegistryWriteFileSchema } from '@mdt/domain-contracts'
 import { ProjectSharingMode } from '@mdt/shared/models/Project.js'
 import { getDefaultPaths } from '@mdt/shared/utils/constants.js'
 import { parseToml, stringify } from '@mdt/shared/utils/toml.js'
@@ -104,6 +106,7 @@ export async function updateProjectSharing(project: Project, update: ProjectShar
   await mkdir(path.dirname(registryPath), { recursive: true })
 
   const registry = await readRegistry(registryPath, project)
+  registry.metadata ??= {}
   const now = new Date().toISOString().split('T')[0]
   const nextSharing: ProjectSharingSettings = {
     mode: update.mode,
@@ -124,7 +127,7 @@ export async function updateProjectSharing(project: Project, update: ProjectShar
     dateRegistered: registry.metadata.dateRegistered || now,
     lastAccessed: now,
     version: registry.metadata.version || project.metadata.version || '1.0.0',
-    sharing: nextSharing,
+    sharing: { ...nextSharing },
   }
 
   const tmpPath = `${registryPath}.${process.pid}.${randomBytes(8).toString('hex')}.tmp`
@@ -168,11 +171,13 @@ function projectMatchesStableRef(project: Project, projectRef: string): boolean 
     || project.project.code === projectRef
 }
 
-async function readRegistry(registryPath: string, project: Project): Promise<RegistryData> {
+async function readRegistry(registryPath: string, project: Project): Promise<ProjectRegistryWriteFile> {
   try {
-    return parseToml(await readFile(registryPath, 'utf8')) as RegistryData
+    return ProjectRegistryWriteFileSchema.parse(parseToml(await readFile(registryPath, 'utf8')))
   }
-  catch {
+  catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT')
+      throw error
     const now = new Date().toISOString().split('T')[0]
     return {
       project: {
@@ -188,7 +193,7 @@ async function readRegistry(registryPath: string, project: Project): Promise<Reg
   }
 }
 
-async function resolveShareId(registryPath: string, currentSharing: ProjectSharingSettings | undefined, rotateShareId: boolean): Promise<string> {
+async function resolveShareId(registryPath: string, currentSharing: Pick<ProjectSharingSettings, 'shareId'> | undefined, rotateShareId: boolean): Promise<string> {
   const currentShareId = currentSharing?.shareId
   if (!rotateShareId && currentShareId && SHARE_ID_PATTERN.test(currentShareId) && !await shareIdCollides(registryPath, currentShareId)) {
     return currentShareId

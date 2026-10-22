@@ -1,11 +1,13 @@
 import type { Request, Response } from 'express'
 import type { PinStateService } from '../services/PinStateService.js'
+import { PinStateSchema } from '@mdt/domain-contracts'
+import { parseRequest } from '../http/parseRequest.js'
 
 /**
  * MDT-197: Pin rail controller.
  *
  * Thin HTTP layer over PinStateService. Mirrors DocumentController's
- * putDocumentFavs posture: validate via the service, map known service
+ * putDocumentFavs posture: validate shape at the adapter, map known service
  * errors to HTTP statuses, 500 on the unexpected.
  *
  * Two endpoints:
@@ -37,7 +39,10 @@ export class PinController {
 
   async putPinState(req: PinStateRequest, res: Response): Promise<void> {
     try {
-      const state = await this.pinStateService.writeState(req.body)
+      const body = parseRequest(PinStateSchema, req.body, res, 'body')
+      if (!body.success)
+        return
+      const state = await this.pinStateService.writeState(body.data)
       res.json(state)
     }
     catch (error: unknown) {

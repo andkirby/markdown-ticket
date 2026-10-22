@@ -64,6 +64,19 @@ describe('boundary convention fixtures', () => {
     expect(scanSources({ 'shared/new-loader.ts': 'const config = JSON[\'parse\'](text) as Config' })).toHaveLength(1)
   })
   it('allows syntax-only unknown-returning decoders outside finite ingress registry', () => expect(scanSources({ 'shared/trace.ts': 'function read(): unknown {return JSON.parse(text)}' })).toEqual([]))
+  it('accepts a direct throwing canonical write-file parse in a registered loader', () => {
+    const file = 'shared/loader.ts'
+    expect(scanSources({ [file]: 'import {ProjectConfigWriteFileSchema as schema} from "@mdt/domain-contracts"; function load() {return schema.parse(JSON.parse(text))}' }, new Set([file]))).toEqual([])
+  })
+  it.each([
+    'import {ProjectConfigWriteFileSchema as schema} from "./fake"; return schema.parse(JSON.parse(text))',
+    'import {ProjectConfigWriteFileSchema as schema} from "@mdt/domain-contracts"; schema.safeParse(JSON.parse(text)); return {}',
+    'import {ProjectConfigWriteFileSchema as schema} from "@mdt/domain-contracts"; function f(schema: unknown) {return schema.parse(JSON.parse(text))}',
+    'import {ProjectConfigWriteFileSchema as schema} from "@mdt/domain-contracts"; const raw = JSON.parse(text); schema.parse(raw); return raw',
+  ])('rejects unchecked/shadowed decoder consumption: %s', (body) => {
+    const file = 'shared/loader.ts'
+    expect(scanSources({ [file]: body }, new Set([file])).length).toBeGreaterThan(0)
+  })
   it('rejects raw MCP members through renamed dispatcher arguments and aliases', () => {
     expect(scanSources({ 'mcp-server/src/tools/new.ts': 'class Tools {handleToolCall(name: string, input: unknown) {const alias=input; return alias.key}}' })).toHaveLength(1)
   })

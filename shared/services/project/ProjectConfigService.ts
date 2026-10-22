@@ -1,6 +1,8 @@
+import type { ProjectConfigWriteFile } from '@mdt/domain-contracts'
 import type { ProjectConfig } from '../../models/Project.js'
 import type { ProjectDocumentEffectiveConfig, ProjectDocumentPatchInput } from './ProjectDocumentPatch.js'
-import type { GlobalConfig, IProjectConfigService, ProjectUpdateFields, ProjectWriteReference, RegistryData } from './types.js'
+import type { GlobalConfig, IProjectConfigService, ProjectUpdateFields, ProjectWriteReference } from './types.js'
+import { ProjectConfigWriteFileSchema, ProjectDocumentWriteFileSchema, ProjectRegistryWriteFileSchema } from '@mdt/domain-contracts'
 import { getTicketsPath, isLegacyConfig, migrateLegacyConfig, validateProjectConfig } from '../../models/Project.js'
 import { validateTicketsPath } from '../../tools/ProjectValidator.js'
 import { getDefaultConfig as getDefaultConfigUtil, processConfig } from '../../utils/config-validator.js'
@@ -19,19 +21,6 @@ import {
   validateProjectDocumentPatch,
 } from './ProjectDocumentPatch.js'
 import { ProjectConfigurationMode } from './types.js'
-
-interface ProjectDocumentConfig {
-  paths?: string[]
-  excludeFolders?: string[]
-  maxDepth?: number
-}
-
-interface LocalProjectConfigWithNestedDocument extends Omit<ProjectConfig, 'project'> {
-  document?: unknown
-  project?: Partial<NonNullable<ProjectConfig['project']>> & {
-    document?: ProjectDocumentConfig
-  }
-}
 
 /**
  * Project Configuration Service
@@ -109,6 +98,11 @@ export class ProjectConfigService implements IProjectConfigService {
     }
   }
 
+  /** Preflight create writes without modifying the existing file. */
+  assertLocalConfigWritable(projectPath: string): void {
+    this.loadOrMigrateConfig(buildConfigFilePath(projectPath, CONFIG_FILES.PROJECT_CONFIG), projectPath)
+  }
+
   /** Create or update local .mdt-config.toml file */
   createOrUpdateLocalConfig(
     projectId: string,
@@ -129,7 +123,7 @@ export class ProjectConfigService implements IProjectConfigService {
       const configPath = buildConfigFilePath(projectPath, CONFIG_FILES.PROJECT_CONFIG)
       const config = this.loadOrMigrateConfig(configPath, projectId)
 
-      const finalTicketsPath = ticketsPath || getTicketsPath(config, DEFAULTS.TICKETS_PATH)
+      const finalTicketsPath = ticketsPath || getTicketsPath(config as ProjectConfig, DEFAULTS.TICKETS_PATH)
       this.ensureTicketsDirectory(projectPath, finalTicketsPath)
 
       config.project = {
@@ -172,18 +166,16 @@ export class ProjectConfigService implements IProjectConfigService {
   }
 
   /** Helper to load existing config or create new with migration */
-  private loadOrMigrateConfig(configPath: string, projectId: string): ProjectConfig {
+  private loadOrMigrateConfig(configPath: string, projectId: string): ProjectConfigWriteFile {
     if (fileExists(configPath)) {
       const content = readFile(configPath)
-      const config = parseToml(content)
+      const config = ProjectConfigWriteFileSchema.parse(parseToml(content))
 
       if (validateProjectConfig(config) && isLegacyConfig(config)) {
         logQuiet(this.quiet, `Migrating legacy configuration format for ${projectId}...`)
         return migrateLegacyConfig(config)
       }
-      if (validateProjectConfig(config)) {
-        return config
-      }
+      return config
     }
 
     return {
@@ -221,8 +213,14 @@ export class ProjectConfigService implements IProjectConfigService {
     try {
       const writeReference = this.resolveProjectWriteReference(projectId)
       const content = readFile(writeReference.registryPath!)
-      const registryData = parseToml(content) as RegistryData
+      const registryData = ProjectRegistryWriteFileSchema.parse(parseToml(content))
 
+      const localConfig = writeReference.mode !== ProjectConfigurationMode.GLOBAL_ONLY
+        && writeReference.localConfigPath && fileExists(writeReference.localConfigPath)
+        ? ProjectConfigWriteFileSchema.parse(parseToml(readFile(writeReference.localConfigPath)))
+        : undefined
+
+      registryData.metadata ??= {}
       // Update registry timestamp
       registryData.metadata.lastAccessed = new Date().toISOString().split('T')[0]
 
@@ -237,8 +235,7 @@ export class ProjectConfigService implements IProjectConfigService {
         writeFileAtomic(writeReference.registryPath!, stringify(registryData))
 
         // Update local config
-        if (writeReference.localConfigPath && fileExists(writeReference.localConfigPath)) {
-          const localConfig = parseToml(readFile(writeReference.localConfigPath)) as ProjectConfig
+        if (localConfig && writeReference.localConfigPath) {
           Object.assign(localConfig.project, updates)
           writeFileAtomic(writeReference.localConfigPath, stringify(localConfig))
           logQuiet(this.quiet, `Updated project ${projectId} in local config`)
@@ -263,7 +260,7 @@ export class ProjectConfigService implements IProjectConfigService {
     try {
       const writeReference = this.resolveProjectWriteReferenceByPath(projectId, projectPath)
 
-      const localConfig = parseToml(readFile(writeReference.localConfigPath!)) as ProjectConfig
+      const localConfig = ProjectConfigWriteFileSchema.parse(parseToml(readFile(writeReference.localConfigPath!)))
       Object.assign(localConfig.project, updates)
       writeFileAtomic(writeReference.localConfigPath!, stringify(localConfig))
       logQuiet(this.quiet, `Updated project ${projectId} in local config by path`)
@@ -280,7 +277,7 @@ export class ProjectConfigService implements IProjectConfigService {
       throw new Error(`Project ${projectId} not found in registry`)
     }
 
-    const registryData = parseToml(readFile(registryPath)) as RegistryData
+    const registryData = ProjectRegistryWriteFileSchema.parse(parseToml(readFile(registryPath)))
     if (!registryData.project?.path) {
       throw new Error(`Project ${projectId} registry entry missing project path`)
     }
@@ -325,7 +322,7 @@ export class ProjectConfigService implements IProjectConfigService {
         throw new Error('Project not found in registry')
       }
 
-      const registryData = parseToml(readFile(projectFile)) as RegistryData
+      const registryData = ProjectRegistryWriteFileSchema.parse(parseToml(readFile(projectFile)))
       if (!registryData.project?.path) {
         throw new Error('Project registry entry missing project path')
       }
@@ -370,7 +367,7 @@ export class ProjectConfigService implements IProjectConfigService {
         throw new Error('Project configuration file not found')
       }
 
-      const localConfig = parseToml(readFile(configPath)) as LocalProjectConfigWithNestedDocument
+      const localConfig = ProjectDocumentWriteFileSchema.parse(parseToml(readFile(configPath)))
 
       // Ensure project.document structure exists
       if (!localConfig.project) {

@@ -13,6 +13,7 @@ import { randomBytes } from 'node:crypto'
 import { promises as fs } from 'node:fs'
 import * as path from 'node:path'
 import process from 'node:process'
+import { ProjectConfigWriteFileSchema } from '@mdt/domain-contracts'
 import { CONFIG_FILES } from '@mdt/shared/utils/constants.js'
 import { parseToml, stringify } from '@mdt/shared/utils/toml.js'
 
@@ -25,13 +26,15 @@ export class ProjectConfigStorageAdapter implements ConfigStorageAdapter<LocalPr
     return path.join(this.projectPath, CONFIG_FILES.PROJECT_CONFIG)
   }
 
-  async read(): Promise<LocalProjectConfig> {
+  async read(forWrite = false): Promise<LocalProjectConfig> {
     try {
       const content = await fs.readFile(this.filePath, 'utf8')
-      // Tolerant read: passthrough shape, validated upstream. Unknown keys preserved.
+      // Display reads keep their legacy passthrough. write() validates its reload.
       return parseToml(content) as LocalProjectConfig
     }
-    catch {
+    catch (error) {
+      if (forWrite && (error as NodeJS.ErrnoException).code !== 'ENOENT')
+        throw error
       // Missing file -> minimal default shape; caller decides whether to create.
       return { project: { name: '', code: '', id: '' } } as LocalProjectConfig
     }
@@ -40,8 +43,10 @@ export class ProjectConfigStorageAdapter implements ConfigStorageAdapter<LocalPr
   async write(
     mutator: (current: LocalProjectConfig) => LocalProjectConfig,
   ): Promise<ScopeWriteResult> {
-    const current = await this.read()
-    const next = mutator(current)
+    const current = ProjectConfigWriteFileSchema.parse(await this.read(true))
+    // Already parsed data; the legacy adapter interface requires name/code even
+    // though minimal persisted files have always been accepted here.
+    const next = mutator(current as LocalProjectConfig)
     await this.atomicWrite(next)
     return { effective: next, filePath: this.filePath }
   }

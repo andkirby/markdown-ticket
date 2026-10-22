@@ -107,6 +107,28 @@ export function scanSources(sources: Record<string, string>, decoderFiles: Reado
     const rawSymbols = new Set<ts.Symbol>()
     const decodedSymbols = new Set<ts.Symbol>()
     const parsers = importedName(sf, helperFile, 'parseRequest')
+    const writeSchemas = new Set<string>()
+    for (const statement of sf.statements) {
+      if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier) || statement.moduleSpecifier.text !== '@mdt/domain-contracts')
+        continue
+      const bindings = statement.importClause?.namedBindings
+      if (bindings && ts.isNamedImports(bindings)) {
+        for (const binding of bindings.elements) {
+          if (['ProjectConfigWriteFileSchema', 'ProjectDocumentWriteFileSchema', 'ProjectRegistryWriteFileSchema'].includes((binding.propertyName ?? binding.name).text))
+            writeSchemas.add(binding.name.text)
+        }
+      }
+    }
+    // A throwing canonical schema parse consumes the decoded unknown directly.
+    // safeParse alone is insufficient: its unsuccessful result might be ignored.
+    const validatedDecoder = (node: ts.Node): boolean => {
+      const parent = node.parent
+      if (!ts.isCallExpression(parent) || parent.arguments[0] !== node || !ts.isPropertyAccessExpression(parent.expression) || parent.expression.name.text !== 'parse')
+        return false
+      const schema = parent.expression.expression
+      return ts.isIdentifier(schema) && writeSchemas.has(schema.text)
+        && !checker.getSymbolAtLocation(schema)?.declarations?.some(decl => !ts.isImportSpecifier(decl))
+    }
     const requestTypes = new Set(['Request', 'AuthenticatedRequest'])
     const decoderNames = new Set<string>()
     for (const statement of sf.statements) {
@@ -278,7 +300,7 @@ export function scanSources(sources: Record<string, string>, decoderFiles: Reado
       if (ts.isCallExpression(node)) {
         if (node.arguments.some(arg => symbolIn(arg, requestSymbols)))
           add(node, 'request-delegation')
-        if (decoderFiles.has(sf.fileName) && decoderCall(node))
+        if (decoderFiles.has(sf.fileName) && decoderCall(node) && !validatedDecoder(node))
           add(node, 'decoder')
       }
       if ((ts.isAsExpression(node) || ts.isTypeAssertionExpression(node)) && (decoderCall(unwrap(node.expression)) || symbolIn(node.expression, decodedSymbols)))

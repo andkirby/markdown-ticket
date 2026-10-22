@@ -3,6 +3,8 @@ import type { TreeNode } from '../types/tree.js'
 import { createReadStream } from 'node:fs'
 import { stat } from 'node:fs/promises'
 import { dirname } from 'node:path'
+import { DocumentFavInputSchema, PreviewTokenInputSchema } from '@mdt/domain-contracts'
+import { parseRequest } from '../http/parseRequest.js'
 import { getRequestAccess } from '../security/apiAuth.js'
 import { mintPreviewToken, PreviewTokenError, verifyPreviewToken } from '../security/documentPreviewToken.js'
 import { isWriteAccess } from '../security/projectSharing.js'
@@ -184,13 +186,10 @@ export class DocumentController {
 
   async putDocumentFavs(req: DocumentFavsRequest, res: Response): Promise<void> {
     try {
-      const { projectId, favItems } = req.body
-
-      if (typeof projectId !== 'string') {
-        res.status(400).json({ error: 'Bad Request', message: 'Project ID is required' })
-
+      const body = parseRequest(DocumentFavInputSchema, req.body, res, 'body')
+      if (!body.success)
         return
-      }
+      const { projectId, favItems } = body.data
 
       const state = await this.documentService.updateDocumentFavs(projectId, { favItems })
 
@@ -235,11 +234,10 @@ export class DocumentController {
         return
       }
 
-      const { projectId, filePath } = req.body
-      if (typeof projectId !== 'string' || typeof filePath !== 'string' || !projectId || !filePath) {
-        res.status(400).json({ error: 'Bad Request', message: 'Project ID and file path are required' })
+      const body = parseRequest(PreviewTokenInputSchema, req.body, res, 'body')
+      if (!body.success)
         return
-      }
+      const { projectId, filePath } = body.data
 
       // MDT-221 UAT r2 (C-2.25): the preview token is an HTML-preview
       // credential; mint only for HTML targets. Hygiene, not a boundary —

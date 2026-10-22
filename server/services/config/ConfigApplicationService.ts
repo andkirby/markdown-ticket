@@ -30,6 +30,7 @@ export class ConfigValidationError extends Error {
   constructor(
     public readonly selector: string,
     message: string,
+    public readonly issues?: { code: string, path: PropertyKey[], message: string }[],
   ) {
     super(message)
     this.name = 'ConfigValidationError'
@@ -115,6 +116,7 @@ export class ConfigApplicationService {
       throw new ConfigValidationError(
         selector,
         firstIssue?.message ?? `Invalid value for "${selector}".`,
+        parsed.error.issues.map(({ code, path, message }) => ({ code, path: ['value', ...path], message })),
       )
     }
     const validatedValue = parsed.data

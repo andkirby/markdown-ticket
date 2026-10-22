@@ -39,6 +39,8 @@ describe('config API — validation errors', () => {
     expect(res.body.error).toBe('Validation Error')
     expect(res.body.selector).toBe('totally.unknown')
     expect(res.body.field).toBe('totally.unknown')
+    expect(res.body.issues).toEqual([expect.objectContaining({ path: ['selector'], code: 'custom' })])
+    expect(res.body.field).toBe('totally.unknown')
     // no config file written
     await expect(fs.readFile(path.join(configDir, 'config.toml'), 'utf8')).rejects.toThrow()
   })
@@ -49,6 +51,8 @@ describe('config API — validation errors', () => {
       .send({ selector: 'discovery.maxDepth', value: 5 })
     expect(res.status).toBe(400)
     expect(res.body.selector).toBe('discovery.maxDepth')
+    expect(res.body.field).toBe('discovery.maxDepth')
+    expect(res.body.issues).toEqual([expect.objectContaining({ path: ['selector'], code: 'custom' })])
     expect(String(res.body.message)).toMatch(/guarded/i)
   })
 
@@ -58,6 +62,9 @@ describe('config API — validation errors', () => {
       .send({ selector: 'links.enableTicketLinks', value: 'not-a-boolean' })
     expect(res.status).toBe(400)
     expect(res.body.selector).toBe('links.enableTicketLinks')
+    expect(res.body.field).toBe('links.enableTicketLinks')
+    expect(res.body.code).toBe('VALIDATION_ERROR')
+    expect(res.body.issues).toEqual([expect.objectContaining({ path: ['value'] })])
   })
 
   it('rejects a request missing the selector field', async () => {
@@ -66,6 +73,8 @@ describe('config API — validation errors', () => {
       .send({ value: true })
     expect(res.status).toBe(400)
     expect(res.body.field).toBe('selector')
+    expect(res.body.code).toBe('VALIDATION_ERROR')
+    expect(res.body.issues).toEqual([expect.objectContaining({ path: ['selector'] })])
   })
 
   it('accepts a valid editable selector and returns the effective value', async () => {

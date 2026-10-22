@@ -1,6 +1,9 @@
+/* eslint no-console: "off" -- Devtools intentionally intercepts and reports console logs. */
 import type { NextFunction, Request, Response } from 'express'
 import type { OriginPolicy } from '../security/originPolicy.js'
+import { DevLogBatchSchema, FrontendLogBatchSchema } from '@mdt/domain-contracts'
 import { Router } from 'express'
+import { parseRequest } from '../http/parseRequest.js'
 import { createDefaultOriginPolicy } from '../security/originPolicy.js'
 
 // Type definitions
@@ -365,7 +368,10 @@ export function createDevToolsRouter(originPolicy: OriginPolicy = createDefaultO
    *             schema: { type: object, properties: { received: { type: integer } } }
    */
   router.post('/frontend/logs', (req: AuthenticatedRequest, res: Response) => {
-    const { logs } = req.body
+    const body = parseRequest(FrontendLogBatchSchema, req.body, res, 'body')
+    if (!body.success)
+      return
+    const { logs } = body.data
 
     if (logs && Array.isArray(logs)) {
       frontendLogs.push(...logs)
@@ -482,8 +488,6 @@ export function createDevToolsRouter(originPolicy: OriginPolicy = createDefaultO
    *       403: { $ref: '#/components/responses/DevModeInactive' }
    */
   router.post('/frontend/dev-logs', devModeRateLimit, (req: AuthenticatedRequest, res: Response) => {
-    const { logs } = req.body
-
     if (!devModeActive) {
       res.status(403).json({
         error: 'DEV mode not active',
@@ -492,6 +496,11 @@ export function createDevToolsRouter(originPolicy: OriginPolicy = createDefaultO
 
       return
     }
+
+    const body = parseRequest(DevLogBatchSchema, req.body, res, 'body')
+    if (!body.success)
+      return
+    const { logs } = body.data
 
     if (logs && Array.isArray(logs)) {
       devModeLogs.push(...logs)

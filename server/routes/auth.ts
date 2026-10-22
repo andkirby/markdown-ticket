@@ -1,6 +1,8 @@
 import type { Request, Response } from 'express'
 import { Router } from 'express'
 import { getRuntimeConfig } from '../config/runtimeConfig.js'
+import { parseRequest } from '../http/parseRequest.js'
+import { SubmittedTokenBodySchema } from '../http/sessionSchemas.js'
 import { extractApiCredential, isLoopbackBypassEligible, OWNER_INTENT_HEADER, resolveActiveReadSession, timingSafeTokenMatches } from '../security/apiAuth.js'
 import {
   appendClearOwnerSessionCookie,
@@ -59,7 +61,10 @@ export function createAuthRouter(): Router {
 
   router.post('/session', publicTokenExchangeRateLimit, (req: Request, res: Response) => {
     const runtimeConfig = getRuntimeConfig(req)
-    const submittedToken = readSubmittedToken(req.body)
+    const body = parseRequest(SubmittedTokenBodySchema, req.body, res, 'body')
+    if (!body.success)
+      return
+    const submittedToken = body.data.token
 
     if (!runtimeConfig.auth.enabled || !timingSafeTokenMatches(submittedToken, runtimeConfig.auth.token)) {
       res.status(401).json({ error: 'Authentication required' })
@@ -76,7 +81,10 @@ export function createAuthRouter(): Router {
 
   router.post('/read-token', publicTokenExchangeRateLimit, async (req: Request, res: Response) => {
     const runtimeConfig = getRuntimeConfig(req)
-    const submittedToken = readSubmittedToken(req.body)
+    const body = parseRequest(SubmittedTokenBodySchema, req.body, res, 'body')
+    if (!body.success)
+      return
+    const submittedToken = body.data.token
     const readSessionSecret = runtimeConfig.readSessions.secret
 
     if (!readSessionSecret || !submittedToken) {
@@ -146,13 +154,4 @@ export function createAuthRouter(): Router {
 
 function getReadTokenStore(req: Request) {
   return createReadTokenStore({ configDir: getRuntimeConfig(req).configDir })
-}
-
-function readSubmittedToken(body: unknown): string | undefined {
-  if (!body || typeof body !== 'object') {
-    return undefined
-  }
-
-  const token = (body as { token?: unknown }).token
-  return typeof token === 'string' ? token : undefined
 }

@@ -108,8 +108,9 @@ describe('projectConfigService', () => {
       expect(buildConfigFilePath).not.toHaveBeenCalled()
       expect(writeFileAtomic).toHaveBeenCalledTimes(1)
       expect(writeFileAtomic).toHaveBeenCalledWith('/registry/GLOB.toml', expect.any(String))
-      expect(registryData.project.description).toBe('New description')
-      expect(registryData.project.repository).toBe('https://example.com/repo.git')
+      const writtenRegistry = JSON.parse((writeFileAtomic as jest.Mock).mock.calls[0][1])
+      expect(writtenRegistry.project.description).toBe('New description')
+      expect(writtenRegistry.project.repository).toBe('https://example.com/repo.git')
     })
 
     it('updates project-first operational fields in local config and keeps registry minimal', () => {
@@ -154,9 +155,10 @@ describe('projectConfigService', () => {
       expect(registryData.project).not.toHaveProperty('name')
       expect(registryData.project).not.toHaveProperty('description')
       expect(registryData.project).not.toHaveProperty('repository')
-      expect(localConfig.project.name).toBe('Updated Local')
-      expect(localConfig.project.description).toBe('Updated description')
-      expect(localConfig.project.repository).toBe('https://example.com/local.git')
+      const writtenLocal = JSON.parse((writeFileAtomic as jest.Mock).mock.calls[1][1])
+      expect(writtenLocal.project.name).toBe('Updated Local')
+      expect(writtenLocal.project.description).toBe('Updated description')
+      expect(writtenLocal.project.repository).toBe('https://example.com/local.git')
     })
   })
 
@@ -183,7 +185,8 @@ describe('projectConfigService', () => {
       expect(buildRegistryFilePath).not.toHaveBeenCalled()
       expect(writeFileAtomic).toHaveBeenCalledTimes(1)
       expect(writeFileAtomic).toHaveBeenCalledWith('/auto/.mdt-config.toml', expect.any(String))
-      expect(localConfig.project.description).toBe('Updated auto description')
+      const writtenLocal = JSON.parse((writeFileAtomic as jest.Mock).mock.calls[0][1])
+      expect(writtenLocal.project.description).toBe('Updated auto description')
     })
 
     it('throws without writing when local config is missing', () => {

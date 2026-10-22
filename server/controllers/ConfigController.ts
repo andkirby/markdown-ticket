@@ -10,8 +10,9 @@ import type { ConfigSelector } from '@mdt/domain-contracts'
 import type { Request, Response } from 'express'
 import type { StorageAdapterResolver } from '../services/config/ConfigApplicationService.js'
 import type { ConfigSideEffectRegistry } from '../services/config/ConfigSideEffectRegistry.js'
-import { CONFIG_SELECTOR_ALLOWLIST, Exposure } from '@mdt/domain-contracts'
+import { CONFIG_SELECTOR_ALLOWLIST, ConfigPatchEnvelopeSchema, Exposure } from '@mdt/domain-contracts'
 import { logger } from '@mdt/shared/utils/server-logger.js'
+import { parseRequest } from '../http/parseRequest.js'
 import {
   ConfigApplicationService,
   ConfigValidationError,
@@ -100,15 +101,10 @@ export class ConfigController {
    */
   async patchConfig(req: Request, res: Response): Promise<void> {
     try {
-      const { selector, value } = req.body ?? {}
-      if (typeof selector !== 'string' || selector.length === 0) {
-        res.status(400).json({
-          error: 'Bad Request',
-          message: 'Request body must include a non-empty "selector" string.',
-          field: 'selector',
-        })
+      const body = parseRequest(ConfigPatchEnvelopeSchema, req.body, res, 'body', { field: 'selector' })
+      if (!body.success)
         return
-      }
+      const { selector, value } = body.data
 
       const result = await this.applicationService.applyConfig(selector, value)
       res.json({
@@ -123,6 +119,9 @@ export class ConfigController {
         // Field-level error naming the offending selector (stable contract C-9).
         res.status(400).json({
           error: 'Validation Error',
+          code: 'VALIDATION_ERROR',
+          source: 'body',
+          issues: error.issues ?? [{ code: 'custom', path: ['selector'], message: error.message }],
           selector: error.selector,
           message: error.message,
           field: error.selector,

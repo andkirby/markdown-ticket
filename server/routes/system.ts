@@ -7,8 +7,8 @@ import * as os from 'node:os'
 import * as path from 'node:path'
 import process from 'node:process'
 import {
-  safeValidateSelectorState,
   sanitizeSelectorState,
+  SelectorStateSchema,
   validateGlobalConfig,
   validateUserConfig,
 } from '@mdt/domain-contracts'
@@ -16,6 +16,7 @@ import { logger } from '@mdt/shared/utils/server-logger.js'
 import { parseToml } from '@mdt/shared/utils/toml.js'
 import { Router } from 'express'
 import { getRuntimeConfig } from '../config/runtimeConfig.js'
+import { parseRequest } from '../http/parseRequest.js'
 import { authorizeFilesystemPath, FilesystemAccessDeniedError, getProjectRoots } from '../security/filesystemAccess.js'
 
 interface FileInvoker {
@@ -627,19 +628,9 @@ export function createSystemRouter(
     }
 
     try {
-      const stateUpdate = req.body
-
-      if (typeof stateUpdate !== 'object' || stateUpdate === null) {
-        return res.status(400).json({ error: 'Bad Request', message: 'Request body must be an object' })
-      }
-
-      const validatedState = safeValidateSelectorState(stateUpdate)
-      if (!validatedState.success) {
-        return res.status(400).json({
-          error: 'Bad Request',
-          message: 'Selector state payload is invalid',
-        })
-      }
+      const validatedState = parseRequest(SelectorStateSchema, req.body, res, 'body')
+      if (!validatedState.success)
+        return
 
       const configDir = getRuntimeConfig(req).configDir
       const statePath = path.join(configDir, 'project-selector.json')

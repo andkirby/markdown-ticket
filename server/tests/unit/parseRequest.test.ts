@@ -30,4 +30,13 @@ describe('parseRequest', () => {
     expect(title).toBe('  title  ')
     expect(res.status).not.toHaveBeenCalled()
   })
+  it('preserves supplied field metadata while adding sanitized issues', () => {
+    const { res } = createMockReqRes()
+    parseRequest(CreateTicketInputSchema, null, res as Response, 'body', { field: 'selector' })
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      field: 'selector',
+      code: 'VALIDATION_ERROR',
+      issues: expect.any(Array),
+    }))
+  })
 })

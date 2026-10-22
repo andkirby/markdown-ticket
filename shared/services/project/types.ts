@@ -96,6 +96,7 @@ export interface IProjectDiscoveryService {
 
 /** Project configuration service - handles local and global configs */
 export interface IProjectConfigService {
+  assertLocalConfigWritable?: (projectPath: string) => void
   getGlobalConfig: () => GlobalConfig
   getProjectConfig: (projectPath: string) => ProjectConfig | null
   createOrUpdateLocalConfig: (

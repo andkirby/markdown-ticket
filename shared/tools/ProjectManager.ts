@@ -1,6 +1,6 @@
 import type {
-  CreateProjectInput as ContractCreateProjectInput,
   UpdateProjectInput as ContractUpdateProjectInput,
+  RegisterProjectInput,
 } from '@mdt/domain-contracts'
 import type { Project } from '../models/Project.js'
 import * as fs from 'node:fs'
@@ -21,15 +21,7 @@ export type ProjectUpdateInput = Partial<ProjectUpdateFields>
 /**
  * Project creation input
  */
-type ProjectCreateFields = Pick<ContractCreateProjectInput, 'code' | 'description' | 'repository' | 'ticketsPath'>
-export type ProjectCreateInput = Partial<ProjectCreateFields> & {
-  name: ContractCreateProjectInput['name']
-  path: string
-  globalOnly?: boolean // Strategy 1: Global-only mode
-  createProjectPath?: boolean // Flag to auto-create project directory
-  documentPaths?: string[] // Document discovery paths (global-only mode only)
-  maxDepth?: number // Document discovery max depth (global-only mode only)
-}
+export type ProjectCreateInput = RegisterProjectInput
 
 /**
  * Project manager with validation
@@ -126,6 +118,11 @@ export class ProjectManager {
         throw ServiceError.validationError(ticketsPathResult.error!)
       }
       ticketsPath = ticketsPathResult.normalized!
+    }
+
+    // Validate an existing local file before directory/registry/counter writes.
+    if (!input.globalOnly) {
+      this.projectService.assertLocalConfigWritable(projectPath)
     }
 
     // Create project directory if needed (if createProjectPath flag is set)
