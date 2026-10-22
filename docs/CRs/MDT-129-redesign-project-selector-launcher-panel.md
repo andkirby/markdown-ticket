@@ -256,3 +256,45 @@ user. No new ref or card-API change — reuses the existing grid ref and the
   in reading order, Left/Right stay as caret — like Spotlight/VS Code) resolves
   the conflict but drops column-aware navigation; revisit only if caret editing
   in the query becomes a real friction point.
+### UAT Session 2026-10-22 — Rail favorite ordering refinement (recency-first)
+
+**Source:** UAT review of the selector rail with real usage data. Among
+favorites, BR-6.3 sorted by lifetime `count` descending, so a heavily-used-but-
+idle favorite permanently outranked a recently-used one: OFF (count 101, last
+used 2026-08-27) ranked above GPDE (count 29, last used 2026-10-22, the most
+recently used project). The browser panel already sorted favorites recency-
+first, making the rail the outlier. Second-opinion design review (codex)
+recommended MRU within favorites over decayed-frequency scoring.
+
+**Approved changes:**
+- BR-6.3 refined in place: visible favorites sort by `lastUsedAt` descending,
+  `count` descending as tie-break (was count-first).
+- New constraint `C11`: ordering comparators are deterministic — full ties
+  resolve by project key ascending.
+- One shared comparator now backs rail and panel (`compareByOrderingRules` /
+  `sortProjectsByOrderingRules` in `frontend/src/utils/selectorOrdering.ts`);
+  the panel's private comparator was deleted.
+- Deliberate consequence: never-used projects order alphabetically in the
+  panel (was: registration scan order).
+
+**Changed requirement IDs:** `BR-6.3` (refine-in-place), `C11` (additive);
+scenarios `rail_ordering_prioritizes_favorites` (updated),
+`rail_recency_outranks_lifetime_count` (new); test plan
+`TEST-ordering-deterministic-project-key` (new).
+
+**Updated workflow documents:** `requirements.md`, `bdd.md`, `tests.md`,
+`tasks.md` (mirrored from canonical spec-trace store; spec delta committed as
+`27762c61`).
+
+**New canonical trace records:** scenario `rail_recency_outranks_lifetime_count`;
+test plan `TEST-ordering-deterministic-project-key`; task `TASK-14`.
+
+**`uat.md` written:** yes (current-round execution brief, replaced 2026-06-24 round).
+
+**Strict drift/lock used:** no.
+
+**Open decisions:** none (MRU chosen over decayed frecency; see `uat.md`).
+
+**More implementation required:** no — `TASK-14` implemented and verified in
+this round (71/71 focused tests; codex review verdict SHIP, both minor findings
+fixed; pre-existing frontend suite failures unchanged at 110).

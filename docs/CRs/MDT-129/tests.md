@@ -13,6 +13,9 @@
 - Selector Ordering Logic Tests (`TEST-selector-ordering`)
   Covers: `BR-6.1`, `BR-6.2`, `BR-6.3`, `BR-6.4`, `BR-4.3`, `BR-4.4`
   File: `frontend/src/utils/selectorOrdering.test.ts`
+- Ordering Determinism Tests (`TEST-ordering-deterministic-project-key`)
+  Covers: `C11`
+  File: `frontend/src/utils/selectorOrdering.test.ts`
 - Project Browser Keyboard Navigation Tests (`TEST-browser-keyboard-nav`)
   Covers: `BR-11.1`, `BR-11.2`, `BR-11.3`, `BR-11.4`, `BR-11.5`, `BR-11.6`
   File: `frontend/src/components/ProjectSelector/ProjectBrowserPanel.test.tsx`

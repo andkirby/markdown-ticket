@@ -34,6 +34,7 @@ import type { ProjectWithSelectorState, SelectorPreferences, SelectorState } fro
 import * as React from 'react'
 import { Modal, ModalBody, ModalHeader } from '@/components/ui/Modal'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { sortProjectsByOrderingRules } from '@/utils/selectorOrdering'
 import ProjectSelectorCard from './ProjectSelectorCard'
 
 interface ProjectBrowserPanelProps {
@@ -79,8 +80,9 @@ function mergeProjectWithSelectorState(
 }
 
 /**
- * Compute panel order: favorites first, then by lastUsedAt descending
- * This delegates to useProjectSelectorManager for ordering logic
+ * Compute panel order via the shared rail/panel comparator (BR-4.3, BR-4.4,
+ * C11). The panel does not pin the active project — it is highlighted
+ * wherever the ordering places it.
  */
 function computePanelOrder(
   projects: Project[],
@@ -90,25 +92,20 @@ function computePanelOrder(
     mergeProjectWithSelectorState(project, selectorState),
   )
 
-  // Sort: favorites first, then by lastUsedAt descending
-  return projectsWithState.sort((a, b) => {
-    // Favorites first
-    if (a.favorite && !b.favorite)
-      return -1
-    if (!a.favorite && b.favorite)
-      return 1
+  const keyOf = (p: ProjectWithSelectorState) => p.project.code || p.id
+  const byKey = new Map(projectsWithState.map(p => [keyOf(p), p] as const))
+  const ordered = sortProjectsByOrderingRules(projectsWithState.map(p => ({
+    key: keyOf(p),
+    name: p.project.name,
+    code: keyOf(p),
+    favorite: p.favorite,
+    lastUsedAt: p.lastUsedAt,
+    count: p.count,
+  })))
 
-    // Both favorites or both non-favorites: sort by lastUsedAt descending
-    const aLastUsed = a.lastUsedAt ? new Date(a.lastUsedAt).getTime() : 0
-    const bLastUsed = b.lastUsedAt ? new Date(b.lastUsedAt).getTime() : 0
-
-    if (aLastUsed !== bLastUsed) {
-      return bLastUsed - aLastUsed // Descending
-    }
-
-    // Tiebreaker: by count descending
-    return b.count - a.count
-  })
+  return ordered
+    .map(o => byKey.get(o.key))
+    .filter((p): p is ProjectWithSelectorState => p !== undefined)
 }
 
 /**

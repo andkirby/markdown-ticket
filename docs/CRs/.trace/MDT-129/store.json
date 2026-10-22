@@ -1355,6 +1355,7 @@
       "covers": [
         "C11"
       ],
+      "file": "frontend/src/utils/selectorOrdering.test.ts",
       "sourceRef": "UAT-2026-10-22"
     }
   ],
@@ -1544,6 +1545,20 @@
         "frontend-react-component"
       ],
       "sourceRef": "CR:MDT-129"
+    },
+    {
+      "id": "TASK-14",
+      "title": "Refine rail favorite ordering to recency-first and unify rail/panel comparator (UAT 2026-10-22)",
+      "ownsArtifactIds": [
+        "ART-ordering-utils"
+      ],
+      "makesGreenIds": [
+        "rail_ordering_prioritizes_favorites",
+        "rail_recency_outranks_lifetime_count",
+        "TEST-selector-ordering",
+        "TEST-ordering-deterministic-project-key"
+      ],
+      "sourceRef": "UAT-2026-10-22"
     }
   ]
 }

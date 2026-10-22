@@ -1,111 +1,105 @@
 # UAT Refinement Brief
 
 Ticket: `MDT-129`
-Round: 2026-06-24
+Round: 2026-10-22
 
 ## Objective
 
-Close a keyboard-interaction gap found during UAT of the project browser panel:
-with the panel open, typing in the search field and using arrow keys to move
-through results is broken. Today the search input has no arrow handler, and the
-result cards use a roving-tabindex model that strands DOM focus on a card, so a
-typed character is silently dropped and the query never updates. Bring the panel
-to the same combobox contract already used by QuickSearch.
+Close the rail-ordering staleness gap found during UAT of the project selector
+rail: among favorites, the rail sorts by lifetime `count` descending (BR-6.3),
+so a heavily-used-but-idle favorite permanently outranks a recently-used one.
+Real data: OFF (count 101, last used 2026-08-27) ranked above GPDE (count 29,
+last used 2026-10-22 — the most recently used project of all). Recency should
+outrank lifetime frequency; the browser panel already sorted this way, making
+the rail the outlier. Refine BR-6.3 to recency-first and unify rail + panel on
+one shared comparator.
 
 ## Approved Changes
 
-1. Adopt the **active-descendant combobox pattern** in `ProjectBrowserPanel`
-   (mirror `frontend/src/components/QuickSearch/QuickSearchModal.tsx`): a
-   `selectedProjectIndex` state drives a visual highlight on the filtered card
-   list; DOM focus stays in the search input.
-2. **ArrowDown from the search field** moves the highlight onto the first card
-   of the filtered list; **ArrowUp/ArrowDown** move it through the list.
-3. **Cyclic wrap** at the edges: ArrowDown on the last card wraps to the first;
-   ArrowUp on the first card wraps to the last (this was the originating UAT
-   request).
-4. **Typing while a card is highlighted** keeps focus in the search field and
-   updates the query (keystroke is not stranded on the card).
-5. **Enter** selects the highlighted project and closes the panel.
-6. Cards are no longer keyboard-focusable via `tabIndex` for navigation purposes
-   (click selection and the favorite-star button remain operable).
+1. **BR-6.3 refined in place**: visible favorites sort by `lastUsedAt`
+   descending, with `count` descending as tie-break (was count-first).
+2. **C11 added (constraint)**: rail and panel ordering comparators are
+   deterministic — entries equal in favorite, `lastUsedAt`, and `count`
+   resolve by project key ascending.
+3. **One shared comparator** backs the rail (`computeRailOrder`) and the
+   browser panel (`ProjectBrowserPanel`), eliminating the drift between the
+   two surfaces. The panel keeps its no-active-pinning presentation (active
+   is highlighted wherever the ordering places it).
+4. **Regression scenario** `rail_recency_outranks_lifetime_count` pins the
+   UAT defect: a recently used favorite precedes a stale high-count favorite.
+5. Deliberate, spec-backed consequence: never-used projects (equal favorite,
+   `lastUsedAt`, count) now order alphabetically in the panel instead of by
+   filesystem/registration scan order.
 
 ## Changed Requirement IDs
 
-Additive change — new behavior group, no existing IDs mutated:
+Refine-in-place + additive:
 
-- `BR-11.1` arrow-down from search highlights first card
-- `BR-11.2` arrows move highlight through filtered list
-- `BR-11.3` cyclic wrap at list edges
-- `BR-11.4` typing keeps focus in search and updates query
-- `BR-11.5` Enter selects highlighted project and closes panel
+- `BR-6.3` — refined in place (same ID, sort key flipped to recency-first)
+- `C11` — new constraint (deterministic key-ascending tie-break)
+- Scenario `rail_ordering_prioritizes_favorites` — updated to MRU semantics
+- Scenario `rail_recency_outranks_lifetime_count` — new, covers `BR-6.3`
+- Test plan `TEST-ordering-deterministic-project-key` — new, covers `C11`
 
 ## Affected Downstream Trace
 
-- BDD: `browser_arrow_keys_navigate_list` (BR-11.1/11.2/11.3),
-  `browser_typing_keeps_focus_in_search` (BR-11.4),
-  `browser_enter_selects_highlighted_project` (BR-11.5)
-- Architecture: new obligation `OBL-browser-keyboard-navigation`
-  (artifacts `ART-browser-panel`, `ART-selector-card`); pattern note recorded
-  replacing the roving-tabindex approach.
-- Tests: `TEST-browser-keyboard-nav` (unit, `ProjectBrowserPanel.test.tsx`)
-- Tasks: `TASK-13`
+- Requirements: `BR-6.3`, `C11` (route tables regenerated)
+- BDD: `rail_ordering_prioritizes_favorites` (updated),
+  `rail_recency_outranks_lifetime_count` (new)
+- Tests: `TEST-ordering-deterministic-project-key` (new, `selectorOrdering.test.ts`)
+- Tasks: `TASK-14` (owns `ART-ordering-utils`; this slice, implemented)
+- Architecture: no structural change — ordering utilities keep their location;
+  the panel adapter (`ProjectBrowserPanel.computePanelOrder`) now delegates to
+  the shared comparator
 
 ## Execution Slices
 
-### Slice 1 — Port active-descendant keyboard nav to ProjectBrowserPanel (`TASK-13`)
+### Slice 1 — MRU comparator + rail/panel unification (`TASK-14`, complete)
 
-- Objective: implement the five BR-11 behaviors in the panel by switching from
-  roving-tabindex to active-descendant, matching QuickSearch.
+- Objective: implement the refined BR-6.3 ordering and C11 determinism in one
+  shared comparator used by both rail and panel.
 - Direct artifacts/files:
+  - `frontend/src/utils/selectorOrdering.ts` (`compareByOrderingRules`,
+    `sortProjectsByOrderingRules` now exported)
   - `frontend/src/components/ProjectSelector/ProjectBrowserPanel.tsx`
-  - `frontend/src/components/ProjectSelector/ProjectSelectorCard.tsx` (highlight rendering; remove `tabIndex`/`onCardKeyDown` keyboard-focus path)
+    (private comparator deleted; delegates to shared comparator)
+  - `frontend/src/utils/selectorOrdering.test.ts` (BR-6.3 recency tests,
+    recency-outranks-count regression, count tie-break with opposing keys,
+    C11 key-ascending tie)
   - `frontend/src/components/ProjectSelector/ProjectBrowserPanel.test.tsx`
-- Direct GREEN targets: `browser_arrow_keys_navigate_list`,
-  `browser_typing_keeps_focus_in_search`, `browser_enter_selects_highlighted_project`,
-  `TEST-browser-keyboard-nav`
-- Impacted canonical task IDs: `TASK-13`
-- Why the slice exists: the two UAT defects (no field→list arrow nav, dropped
-  keystrokes after navigating) share one root cause — the roving-tabindex model.
-  Fixing it once resolves both. Reference implementation already exists in
-  QuickSearch.
-
-Implementation notes for the slice:
-
-- Move arrow/Enter handling onto the search input's `onKeyDown` (replacing the
-  grid-level `handleProjectGridKeyDown`).
-- Clamp/reset `selectedProjectIndex` when `searchQuery` changes and when the
-  filtered list shrinks (avoid stale-index), as QuickSearch does.
-- Highlight via a CSS class/`data-` attribute driven by `selectedProjectIndex`,
-  not via DOM focus.
-- Keep click-to-select on cards unchanged.
+    (position-dependent keyboard-nav tests pin layout via explicit `orderedState`;
+    new DOM-order test for the C11 alphabetical default)
+- Direct GREEN targets: `rail_ordering_prioritizes_favorites`,
+  `rail_recency_outranks_lifetime_count`, `TEST-selector-ordering`,
+  `TEST-ordering-deterministic-project-key`
+- Impacted canonical task IDs: `TASK-14`
+- Why the slice exists: the rail/panel ordering drift and the stale-count
+  ranking share one root cause — two independent comparators with different
+  primary keys. One shared comparator fixes both.
 
 ## Validation
 
-- Canonical store revalidated green across all stages:
-  `spec-trace validate MDT-129 --stage all` — passed (requirements, bdd,
-  architecture, tests, tasks).
-- Rendered projections refreshed: `*.trace.md`.
-- Human-owned docs updated to mirror the store: `requirements.md`, `bdd.md`,
-  `architecture.md`, `tests.md`, `tasks.md`.
+- Focused: 71/71 pass (`selectorOrdering.test.ts` + `ProjectSelector/` suites).
+- Full frontend `bun test`: before 1127 pass / 110 fail, after 1129 pass /
+  110 fail — the 110 failures are pre-existing environment issues (missing
+  `jest-environment-jsdom`); delta +2 passing, 0 new failures.
+- `bun run validate:ts` passed on all changed files.
+- Codex review verdict: SHIP; both minor findings (count tie-break coverage,
+  component-level C11 DOM-order test) fixed in this round.
+- Canonical store validated green: requirements, bdd, tests, tasks; rendered
+  projections refreshed.
 
 ## Watchlist
 
-- Stale-index bug after filtering: ensure `selectedProjectIndex` is clamped when
-  the filtered list changes (existing QuickSearch pattern).
-- Don't regress click selection, favorite-star keyboard activation, or the
-  mobile/responsive panel behavior.
-- `ProjectBrowserPanel.test.tsx` already exists; extend it rather than adding a
-  new test file.
+- Rail reshuffles on project switch now that recency is primary — this is the
+  intended behavior (MRU); untouched chips keep their relative order.
+- `ProjectBrowserPanel.computePanelOrder` maps ordered keys back to full
+  projects via a key→project map; keys are unique by project-discovery
+  contract (duplicate codes rejected upstream).
+- E2E ordering test asserts active-first + chip visibility only — no
+  count-first assumptions existed.
 
 ## Open Decisions
 
-1. **Grid wrap semantics.** The panel is a 2-column grid. Cyclic wrap is
-   approved, but on ArrowDown from the last card there are two valid targets:
-   (a) item 0 (simple cyclic — likely what users expect), or (b) the first card
-   of the *same column* (true grid wrap). Recommended default: **item 0**
-   (simple cyclic). Confirm before/while implementing `TASK-13`.
-2. **QuickSearch consistency.** QuickSearch (`QuickSearchModal.tsx`) currently
-   *clamps* and does not wrap. If cyclic wrap ships here, decide whether to
-   backport wrap to QuickSearch for a consistent omnibox feel across the app,
-   or accept that the two surfaces differ. Out of scope for `TASK-13` unless
-   explicitly requested.
+None — the MRU choice was validated against real usage data (OFF vs GPDE) and
+confirmed by codex opinion thread (second-opinion review of ordering design).

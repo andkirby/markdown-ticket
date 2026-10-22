@@ -2,11 +2,12 @@
  * Selector Ordering Tests (MDT-129)
  *
  * Pure function tests for project selector ordering logic.
- * Tests cover BR-6 ordering requirements:
+ * Tests cover BR-6 ordering requirements (BR-6.3 refined by UAT 2026-10-22):
  * - Active project always first
  * - Favorites before non-favorites
- * - Favorites sorted by count desc, lastUsedAt desc
+ * - Favorites sorted by lastUsedAt desc, count desc (recency outranks lifetime count)
  * - Non-favorites sorted by lastUsedAt desc, count desc
+ * - Full ties resolve by project key ascending (C11)
  *
  * RED phase: Tests will fail until selectorOrdering.ts is implemented.
  */
@@ -154,8 +155,8 @@ describe('selectorOrdering - BR-6.2: Favorites before non-favorites', () => {
   })
 })
 
-describe('selectorOrdering - BR-6.3: Favorite ordering by count desc, lastUsedAt desc', () => {
-  it('sorts favorites by count descending as primary sort key', () => {
+describe('selectorOrdering - BR-6.3: Favorite ordering by lastUsedAt desc, count desc', () => {
+  it('sorts favorites by lastUsedAt descending as primary sort key (recency outranks count)', () => {
     const projects: ProjectWithSelectorState[] = [
       {
         key: 'ACTIVE',
@@ -201,13 +202,13 @@ describe('selectorOrdering - BR-6.3: Favorite ordering by count desc, lastUsedAt
     const favorites = result.filter(p => p.favorite && p.key !== 'ACTIVE')
     const favoriteKeys = favorites.map(p => p.key)
 
-    // Should be ordered by count: HIGH-COUNT (100), MED-COUNT (50), LOW-COUNT (5)
-    expect(favoriteKeys[0]).toBe('HIGH-COUNT')
+    // Ordered by recency: LOW-COUNT (03-05), MED-COUNT (03-03), HIGH-COUNT (03-01)
+    expect(favoriteKeys[0]).toBe('LOW-COUNT')
     expect(favoriteKeys[1]).toBe('MED-COUNT')
-    expect(favoriteKeys[2]).toBe('LOW-COUNT')
+    expect(favoriteKeys[2]).toBe('HIGH-COUNT')
   })
 
-  it('uses lastUsedAt descending as tie-breaker when counts are equal', () => {
+  it('ranks a recently used favorite above a stale high-count favorite (rail_recency_outranks_lifetime_count)', () => {
     const projects: ProjectWithSelectorState[] = [
       {
         key: 'ACTIVE',
@@ -218,17 +219,65 @@ describe('selectorOrdering - BR-6.3: Favorite ordering by count desc, lastUsedAt
         count: 0,
       },
       {
-        key: 'OLD-TIE',
-        name: 'Old Tie',
-        code: 'OLD-TIE',
+        key: 'STALE',
+        name: 'Stale Heavy',
+        code: 'STALE',
         favorite: true,
-        lastUsedAt: '2026-03-01T00:00:00Z',
-        count: 50,
+        lastUsedAt: '2026-08-27T08:42:18Z',
+        count: 101,
       },
       {
-        key: 'NEW-TIE',
-        name: 'New Tie',
-        code: 'NEW-TIE',
+        key: 'FRESH',
+        name: 'Fresh Light',
+        code: 'FRESH',
+        favorite: true,
+        lastUsedAt: '2026-10-22T13:26:36Z',
+        count: 29,
+      },
+    ]
+
+    const preferences: SelectorPreferences = {
+      visibleCount: 7,
+      compactInactive: true,
+    }
+
+    const result = computeRailOrder(projects, 'ACTIVE', preferences)
+    const favorites = result.filter(p => p.favorite)
+
+    expect(favorites[0].key).toBe('FRESH')
+    expect(favorites[1].key).toBe('STALE')
+  })
+
+  it('uses count descending as tie-breaker when favorites have equal lastUsedAt (count outranks C11 key order)', () => {
+    const projects: ProjectWithSelectorState[] = [
+      {
+        key: 'ACTIVE',
+        name: 'Active',
+        code: 'ACTIVE',
+        favorite: false,
+        lastUsedAt: null,
+        count: 0,
+      },
+      {
+        key: 'A-LOW',
+        name: 'A Low',
+        code: 'A-LOW',
+        favorite: true,
+        lastUsedAt: '2026-03-05T00:00:00Z',
+        count: 5,
+      },
+      {
+        key: 'Z-HIGH',
+        name: 'Z High',
+        code: 'Z-HIGH',
+        favorite: true,
+        lastUsedAt: '2026-03-05T00:00:00Z',
+        count: 100,
+      },
+      {
+        key: 'M-MED',
+        name: 'M Med',
+        code: 'M-MED',
         favorite: true,
         lastUsedAt: '2026-03-05T00:00:00Z',
         count: 50,
@@ -243,8 +292,9 @@ describe('selectorOrdering - BR-6.3: Favorite ordering by count desc, lastUsedAt
     const result = computeRailOrder(projects, 'ACTIVE', preferences)
 
     const favorites = result.filter(p => p.favorite)
-    expect(favorites[0].key).toBe('NEW-TIE')
-    expect(favorites[1].key).toBe('OLD-TIE')
+    // Keys oppose count order: if the C11 key tie-break fired before count,
+    // the order would be A-LOW, M-MED, Z-HIGH.
+    expect(favorites.map(p => p.key)).toEqual(['Z-HIGH', 'M-MED', 'A-LOW'])
   })
 
   it('handles null lastUsedAt (treats as never used, sorts last)', () => {
@@ -556,7 +606,7 @@ describe('selectorOrdering - Panel ordering (BR-4.3, BR-4.4)', () => {
     }
   })
 
-  it('sorts favorites in panel by count desc, lastUsedAt desc', () => {
+  it('sorts favorites in panel by lastUsedAt desc, count desc (shared comparator)', () => {
     const projects: ProjectWithSelectorState[] = [
       {
         key: 'ACTIVE',
@@ -587,8 +637,50 @@ describe('selectorOrdering - Panel ordering (BR-4.3, BR-4.4)', () => {
     const result = computePanelOrder(projects, 'ACTIVE')
     const favorites = result.filter(p => p.favorite)
 
-    expect(favorites[0].key).toBe('HIGH-COUNT')
-    expect(favorites[1].key).toBe('LOW-COUNT')
+    expect(favorites[0].key).toBe('LOW-COUNT')
+    expect(favorites[1].key).toBe('HIGH-COUNT')
+  })
+
+  it('resolves full ordering ties by project key ascending (C11)', () => {
+    const projects: ProjectWithSelectorState[] = [
+      {
+        key: 'ACTIVE',
+        name: 'Active',
+        code: 'ACTIVE',
+        favorite: false,
+        lastUsedAt: null,
+        count: 0,
+      },
+      {
+        key: 'ZZ',
+        name: 'Zed',
+        code: 'ZZ',
+        favorite: true,
+        lastUsedAt: '2026-03-05T00:00:00Z',
+        count: 10,
+      },
+      {
+        key: 'AA',
+        name: 'Ay',
+        code: 'AA',
+        favorite: true,
+        lastUsedAt: '2026-03-05T00:00:00Z',
+        count: 10,
+      },
+      {
+        key: 'MM',
+        name: 'Em',
+        code: 'MM',
+        favorite: true,
+        lastUsedAt: '2026-03-05T00:00:00Z',
+        count: 10,
+      },
+    ]
+
+    const result = computePanelOrder(projects, 'ACTIVE')
+    const favorites = result.filter(p => p.favorite)
+
+    expect(favorites.map(p => p.key)).toEqual(['AA', 'MM', 'ZZ'])
   })
 
   it('sorts non-favorites in panel by lastUsedAt desc, count desc', () => {

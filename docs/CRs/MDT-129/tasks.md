@@ -44,6 +44,9 @@
 - Scroll-follow: keep the highlighted card in view during keyboard navigation (`TASK-16`)
   Owns: `ART-browser-panel`
   Makes Green: `browser_scroll_follows_highlight`
+- Refine rail favorite ordering to recency-first and unify rail/panel comparator (UAT 2026-10-22) (`TASK-14`)
+  Owns: `ART-ordering-utils`
+  Makes Green: `rail_ordering_prioritizes_favorites`, `rail_recency_outranks_lifetime_count`, `TEST-selector-ordering`, `TEST-ordering-deterministic-project-key`
 
 ## Artifact Ownership Summary
 
@@ -54,7 +57,7 @@
 | `ART-config-user-toml` | `TASK-3` |
 | `ART-hook-project-manager` | `TASK-12` |
 | `ART-hover-card-component` | `TASK-7` |
-| `ART-ordering-utils` | `TASK-2` |
+| `ART-ordering-utils` | `TASK-2`, `TASK-14` |
 | `ART-selector-card` | `TASK-6` |
 | `ART-selector-chip` | `TASK-7` |
 | `ART-selector-data-hook` | `TASK-4`, `TASK-12` |
@@ -80,7 +83,8 @@
 | `inactive_projects_display_mode` | `TASK-7`, `TASK-8` |
 | `mobile_responsive_selector` | `TASK-8`, `TASK-11` |
 | `panel_displays_full_project_list` | `TASK-2`, `TASK-5`, `TASK-10` |
-| `rail_ordering_prioritizes_favorites` | `TASK-2`, `TASK-5`, `TASK-8` |
+| `rail_ordering_prioritizes_favorites` | `TASK-2`, `TASK-5`, `TASK-8`, `TASK-14` |
+| `rail_recency_outranks_lifetime_count` | `TASK-14` |
 | `state_persists_after_selection` | `TASK-3`, `TASK-4`, `TASK-12` |
 | `switch_project_from_panel` | `TASK-12` |
 | `switch_project_from_rail` | `TASK-12` |
@@ -89,7 +93,8 @@
 | `browser_arrow_keys_navigate_list` | `TASK-13` |
 | `browser_typing_keeps_focus_in_search` | `TASK-13` |
 | `browser_enter_selects_highlighted_project` | `TASK-13` |
+| `TEST-ordering-deterministic-project-key` | `TASK-14` |
 | `TEST-selector-api` | `TASK-0`, `TASK-1`, `TASK-3` |
 | `TEST-selector-data-hook` | `TASK-0`, `TASK-1`, `TASK-4` |
-| `TEST-selector-ordering` | `TASK-0`, `TASK-2` |
+| `TEST-selector-ordering` | `TASK-0`, `TASK-2`, `TASK-14` |
 | `toggle_favorite_by_clicking_star` | `TASK-6` |

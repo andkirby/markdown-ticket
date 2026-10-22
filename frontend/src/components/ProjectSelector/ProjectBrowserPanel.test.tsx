@@ -32,6 +32,17 @@ const projects = [
   makeProject('FIN', 'Ledger', 'Billing and revenue tools'),
 ]
 
+// Recency state pinning panel order to MDT, API, OPS, FIN for grid-navigation
+// tests. The shared comparator (C11) orders never-used projects alphabetically,
+// so position-dependent tests pin their layout precondition explicitly instead
+// of relying on input-array order.
+const orderedState: Record<string, any> = {
+  MDT: { favorite: false, lastUsedAt: '2026-01-04T00:00:00.000Z', count: 4 },
+  API: { favorite: false, lastUsedAt: '2026-01-03T00:00:00.000Z', count: 3 },
+  OPS: { favorite: false, lastUsedAt: '2026-01-02T00:00:00.000Z', count: 2 },
+  FIN: { favorite: false, lastUsedAt: '2026-01-01T00:00:00.000Z', count: 1 },
+}
+
 function renderPanel(selectorState: Record<string, any> = {}) {
   return render(
     <ProjectBrowserPanel
@@ -127,12 +138,23 @@ describe('ProjectBrowserPanel keyboard navigation - MDT-129 BR-11', () => {
 
   it('BR-11: the active project is highlighted when the panel opens', () => {
     renderPanel()
-    // MDT is the active project and sits first in the default ordering
+    // MDT is the active project and is highlighted wherever the ordering places it
+    expect(screen.getByTestId('project-browser-card-MDT').getAttribute('data-selected')).toBe('true')
+  })
+
+  it('orders never-used projects alphabetically via the shared comparator (C11, BR-4.4)', () => {
+    renderPanel()
+    // Never-used projects have equal favorite/lastUsedAt/count, so the C11
+    // key-ascending tie-break decides: API, FIN, MDT, OPS.
+    const codes = screen
+      .getAllByRole('option')
+      .map(el => el.getAttribute('data-testid')?.replace('project-browser-card-', ''))
+    expect(codes).toEqual(['API', 'FIN', 'MDT', 'OPS'])
     expect(screen.getByTestId('project-browser-card-MDT').getAttribute('data-selected')).toBe('true')
   })
 
   it('BR-11.2: Down moves down the SAME column (Excel-grid), not zigzag to the next column', () => {
-    renderPanel()
+    renderPanel(orderedState)
     // 2-column layout, row-major:
     //   col0      col1
     //   MDT(0)    API(1)
@@ -164,7 +186,7 @@ describe('ProjectBrowserPanel keyboard navigation - MDT-129 BR-11', () => {
   })
 
   it('BR-11.3: cyclic wrap within a column (Down on last-in-column wraps to column top)', () => {
-    renderPanel()
+    renderPanel(orderedState)
     forceColumns(2) // Row0=[MDT(0), API(1)], Row1=[OPS(2), FIN(3)]
     const searchInput = screen.getByTestId('project-browser-search-input')
 
@@ -211,7 +233,7 @@ describe('ProjectBrowserPanel keyboard navigation - MDT-129 BR-11', () => {
         projects={projects}
         activeProjectKey="MDT"
         preferences={{ visibleCount: 7, compactInactive: true }}
-        selectorState={{}}
+        selectorState={orderedState}
         onProjectSelect={onProjectSelect}
         isOpen={true}
         onClose={onClose}
@@ -275,7 +297,7 @@ describe('ProjectBrowserPanel keyboard navigation - MDT-129 BR-11', () => {
   })
 
   it('regression: Tab does not escape the panel to <body> and strands arrow keys (BR-11.2/BR-11.4)', () => {
-    renderPanel()
+    renderPanel(orderedState)
     forceColumns(2) // Row0=[MDT(0), API(1)], Row1=[OPS(2), FIN(3)]
     const searchInput = screen.getByTestId('project-browser-search-input') as HTMLInputElement
     searchInput.focus()

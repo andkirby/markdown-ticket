@@ -2,11 +2,15 @@
  * Selector Ordering Utilities (MDT-129)
  *
  * Pure functions for computing project order in rail and panel views.
- * Implements BR-6 ordering requirements:
- * - Active project always first
+ * Implements BR-6 ordering requirements (BR-6.3 refined by UAT 2026-10-22):
+ * - Active project always first (rail)
  * - Favorites before non-favorites
- * - Favorites sorted by count desc, lastUsedAt desc
+ * - Favorites sorted by lastUsedAt desc, count desc (recency outranks lifetime count)
  * - Non-favorites sorted by lastUsedAt desc, count desc
+ * - Full ties resolve by project key ascending (C11, deterministic)
+ *
+ * The same comparator (sortProjectsByOrderingRules) backs the rail and the
+ * project browser panel so the two surfaces cannot drift again.
  */
 
 import type { SelectorPreferences } from '../components/ProjectSelector/types'
@@ -85,33 +89,32 @@ export function computePanelOrder(
 }
 
 /**
- * Sort projects by ordering rules:
+ * Ordering comparator shared by the rail and the project browser panel:
  * 1. Favorites before non-favorites
- * 2. Favorites: count desc, lastUsedAt desc
- * 3. Non-favorites: lastUsedAt desc, count desc
+ * 2. lastUsedAt desc (recency; a recently used project outranks a stale
+ *    high-count one — UAT 2026-10-22)
+ * 3. count desc as tie-break
+ * 4. project key ascending (C11: deterministic across reloads)
  */
-function sortProjectsByOrderingRules(
+export function compareByOrderingRules(
+  a: ProjectWithSelectorState,
+  b: ProjectWithSelectorState,
+): number {
+  if (a.favorite !== b.favorite)
+    return a.favorite ? -1 : 1
+
+  return compareLastUsedAt(a.lastUsedAt, b.lastUsedAt)
+    || b.count - a.count
+    || a.key.localeCompare(b.key)
+}
+
+/**
+ * Sort projects by the shared ordering rules (see compareByOrderingRules).
+ */
+export function sortProjectsByOrderingRules(
   projects: ProjectWithSelectorState[],
 ): ProjectWithSelectorState[] {
-  return [...projects].sort((a, b) => {
-    // Favorites first
-    if (a.favorite && !b.favorite)
-      return -1
-    if (!a.favorite && b.favorite)
-      return 1
-
-    // Both are favorites - sort by count desc, then lastUsedAt desc
-    if (a.favorite && b.favorite) {
-      if (a.count !== b.count) {
-        return b.count - a.count // Higher count first
-      }
-      return compareLastUsedAt(a.lastUsedAt, b.lastUsedAt)
-    }
-
-    // Both are non-favorites - sort by lastUsedAt desc, then count desc
-    return compareLastUsedAt(a.lastUsedAt, b.lastUsedAt)
-      || b.count - a.count
-  })
+  return [...projects].sort(compareByOrderingRules)
 }
 
 /**
