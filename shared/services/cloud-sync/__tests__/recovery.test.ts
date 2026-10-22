@@ -293,3 +293,32 @@ describe('RecoveryRunner: idempotency / multiple projects', () => {
     expect(await journal.load('p2')).toBeNull()
   })
 })
+
+describe('MDT-258 corrupt journal ingress cannot drive replay writes', () => {
+  it.each([
+    '{broken',
+    'null',
+    '[]',
+    '{}',
+    { state: 'unknown' },
+    { cloudProjectId: 'another-project' },
+    { ticketNumber: '201' },
+    { reservationId: [] },
+    { draft: { crType: 'Bug Fix', data: { title: 'Valid', type: 'Bug Fix', dependsOn: { bad: true } } } },
+    { acknowledgement: { operationId: 'op', contentHash: 'h', header: { code: 'MDT-001' } } },
+  ])('ignores corrupt persisted input %j before reserve/write/ack', async (invalid) => {
+    const valid = await journal.begin({ cloudProjectId: 'p1', idempotencyKey: 'k-1', requestHash: 'h-1' })
+    const text = typeof invalid === 'string' ? invalid : JSON.stringify({ ...valid, ...invalid })
+    const file = join(journal.directory, 'p1.json')
+    const { writeFile, readFile } = await import('node:fs/promises')
+    await writeFile(file, text)
+    const coordinator = fakeCoordinator({})
+    const write = jest.fn(async () => {})
+    const runner = new RecoveryRunner({ journal, coordinator: coordinator as never, credential: CREDENTIAL, writeLocal: write, buildAcknowledgement: async () => ACKNOWLEDGEMENT })
+    expect(await runner.recoverPending(['p1'])).toEqual({ recovered: [], failed: [] })
+    expect(coordinator.reserve).not.toHaveBeenCalled()
+    expect(write).not.toHaveBeenCalled()
+    expect(coordinator.acknowledge).not.toHaveBeenCalled()
+    expect(await readFile(file, 'utf8')).toBe(text)
+  })
+})

@@ -1,11 +1,11 @@
 import type { ProjectRegistryWriteFile } from '@mdt/domain-contracts'
-import type { Project, ProjectSharingModeValue, ProjectSharingSettings, RegistryData } from '@mdt/shared/models/Project.js'
+import type { Project, ProjectSharingModeValue, ProjectSharingSettings } from '@mdt/shared/models/Project.js'
 import type { RequestAccessContext } from './apiAuth.js'
 import { randomBytes } from 'node:crypto'
 import { mkdir, readdir, readFile, rename, unlink, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import process from 'node:process'
-import { ProjectRegistryWriteFileSchema } from '@mdt/domain-contracts'
+import { ProjectRegistrySharingFileSchema, ProjectRegistryWriteFileSchema } from '@mdt/domain-contracts'
 import { ProjectSharingMode } from '@mdt/shared/models/Project.js'
 import { getDefaultPaths } from '@mdt/shared/utils/constants.js'
 import { parseToml, stringify } from '@mdt/shared/utils/toml.js'
@@ -225,7 +225,7 @@ async function shareIdCollides(currentRegistryPath: string, shareId: string): Pr
         continue
       }
 
-      const registry = parseToml(await readFile(registryPath, 'utf8')) as Partial<RegistryData>
+      const registry = ProjectRegistrySharingFileSchema.parse(parseToml(await readFile(registryPath, 'utf8')))
       if (registry.metadata?.sharing?.shareId === shareId) {
         return true
       }

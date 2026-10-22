@@ -13,6 +13,8 @@ import { logger } from '@mdt/shared/utils/server-logger.js'
 import { Router } from 'express'
 import { getRuntimeConfig } from '../config/runtimeConfig.js'
 import { ConfigController } from '../controllers/ConfigController.js'
+import { parseRequest } from '../http/parseRequest.js'
+import { OptionalProjectRefQuerySchema } from '../http/readSchemas.js'
 import { GlobalConfigStorageAdapter } from '../services/config/adapters/GlobalConfigStorageAdapter.js'
 import { ProjectConfigStorageAdapter } from '../services/config/adapters/ProjectConfigStorageAdapter.js'
 import { UserConfigStorageAdapter } from '../services/config/adapters/UserConfigStorageAdapter.js'
@@ -73,14 +75,17 @@ export function createConfigRouter(context: ConfigRouteContext = {}): Router {
    * Per-request middleware that binds the correct adapters based on configDir
    * (from runtime config) and the project path (from context).
    */
-  function bindAdapters(req: Request, _res: Response, next: () => void): void {
+  function bindAdapters(req: Request, res: Response, next: () => void): void {
+    const query = parseRequest(OptionalProjectRefQuerySchema, req.query, res, 'query')
+    if (!query.success)
+      return
     const configDir = getRuntimeConfig(req).configDir
     const globalAdapter = new GlobalConfigStorageAdapter(configDir)
     const userAdapter = new UserConfigStorageAdapter(configDir)
     const projectPath = context.resolveProjectPath?.(req)
     // Capture the request-scoped project id so document-watcher side effects
     // (which fire after a successful project.document.* write) can target it.
-    currentProjectId = context.resolveProjectId?.(req)
+    currentProjectId = context.resolveProjectId?.(req) ?? query.data.projectId
 
     resolverIndirection.resolver = (
       selector: ConfigSelector,

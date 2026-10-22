@@ -1,3 +1,5 @@
+import { z } from 'zod'
+
 /**
  * Pure view-mode routing derivations for the project route handler.
  *
@@ -7,6 +9,7 @@
  */
 
 /** The three top-level views of a project route. */
+const RouteViewSchema = z.enum(['board', 'list', 'documents', 'epics'])
 export type AppViewMode = 'board' | 'list' | 'documents'
 
 /**
@@ -23,8 +26,9 @@ export function deriveViewMode(pathname: string, viewParam: string | null): AppV
     return 'list'
   if (pathname.includes('/documents'))
     return 'documents'
-  if (viewParam === 'list' || viewParam === 'documents' || viewParam === 'epics')
-    return viewParam === 'epics' ? 'board' : viewParam
+  const view = RouteViewSchema.safeParse(viewParam)
+  if (view.success && (view.data === 'list' || view.data === 'documents'))
+    return view.data
   return 'board'
 }
 

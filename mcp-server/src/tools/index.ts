@@ -16,7 +16,6 @@ import type { TitleExtractionService } from '@mdt/shared/services/TitleExtractio
 import type { WorktreeService } from '@mdt/shared/services/WorktreeService.js'
 import type { CRService } from '../services/crService.js'
 import { MarkdownSectionService } from '@mdt/shared/services/MarkdownSectionService.js'
-import { z } from 'zod'
 import { Sanitizer } from '../utils/sanitizer.js'
 import { JsonRpcErrorCode, ToolError } from '../utils/toolError.js'
 import { ALL_TOOLS, TOOL_NAMES } from './config/allTools.js'
@@ -25,6 +24,7 @@ import { CRHandlers } from './handlers/crHandlers.js'
 import { ProjectHandlers } from './handlers/projectHandlers.js'
 import { SectionHandlers } from './handlers/sectionHandlers.js'
 import { AttributesArgsSchema, CreateArgsSchema, KeyArgsSchema, SectionArgsSchema, StatusArgsSchema } from './mutationSchemas.js'
+import { GetCRArgsSchema, ListCRsArgsSchema, ListProjectsArgsSchema, ProjectInfoArgsSchema } from './readSchemas.js'
 
 /**
  * Main MCP Tools Class
@@ -66,14 +66,21 @@ export class MCPTools {
     )
     this.sectionHandlers = new SectionHandlers(crService, MarkdownSectionService)
     this.detectedProject = detectedProject
-    // Read envelopes remain explicit phase-5 legacy entries. Their existing
-    // dispatch and validation are unchanged. Every advertised name is registered.
     this.registry = {
-      [TOOL_NAMES.LIST_PROJECTS]: defineTool(z.unknown(), raw => this.handleLegacyRead(TOOL_NAMES.LIST_PROJECTS, raw)),
-      [TOOL_NAMES.GET_PROJECT_INFO]: defineTool(z.unknown(), raw => this.handleLegacyRead(TOOL_NAMES.GET_PROJECT_INFO, raw)),
-      [TOOL_NAMES.LIST_CRS]: defineTool(z.unknown(), raw => this.handleLegacyRead(TOOL_NAMES.LIST_CRS, raw)),
-      [TOOL_NAMES.GET_CR]: defineTool(z.unknown(), raw => this.handleLegacyRead(TOOL_NAMES.GET_CR, raw)),
-      [TOOL_NAMES.SUGGEST_CR_IMPROVEMENTS]: defineTool(z.unknown(), raw => this.handleLegacyRead(TOOL_NAMES.SUGGEST_CR_IMPROVEMENTS, raw)),
+      [TOOL_NAMES.LIST_PROJECTS]: defineTool(ListProjectsArgsSchema, () => this.projectHandlers.invokeRead(TOOL_NAMES.LIST_PROJECTS, () => this.projectHandlers.handleListProjects())),
+      [TOOL_NAMES.GET_PROJECT_INFO]: defineTool(ProjectInfoArgsSchema, args => this.projectHandlers.invokeRead(TOOL_NAMES.GET_PROJECT_INFO, () => this.projectHandlers.handleGetProjectInfo(args.key))),
+      [TOOL_NAMES.LIST_CRS]: defineTool(ListCRsArgsSchema, async (args) => {
+        const project = await this.projectHandlers.resolveProject(args.project, this.detectedProject, args.key)
+        return this.crHandlers.handleListCRs(project, args.filters)
+      }),
+      [TOOL_NAMES.GET_CR]: defineTool(GetCRArgsSchema, async (args) => {
+        const project = await this.projectHandlers.resolveProject(args.project, this.detectedProject, args.key)
+        return this.crHandlers.handleGetCR(project, args.key, args.mode)
+      }),
+      [TOOL_NAMES.SUGGEST_CR_IMPROVEMENTS]: defineTool(KeyArgsSchema, async (args) => {
+        const project = await this.projectHandlers.resolveProject(args.project, this.detectedProject, args.key)
+        return this.crHandlers.handleSuggestCRImprovements(project, args.key)
+      }),
       [TOOL_NAMES.CREATE_CR]: defineTool(CreateArgsSchema, async (args) => {
         const project = await this.projectHandlers.resolveProject(args.project, this.detectedProject, args.key)
         // The positional legacy interface requires nested type although its
@@ -114,24 +121,6 @@ export class MCPTools {
    * Route tool calls to appropriate handlers
    * Delegates all business logic to specialized handlers
    */
-  private async handleLegacyRead(name: string, raw: unknown): Promise<string> {
-    const args = raw as Record<string, unknown>
-    const projectTools = [TOOL_NAMES.LIST_PROJECTS, TOOL_NAMES.GET_PROJECT_INFO] as const
-    if (projectTools.includes(name as typeof projectTools[number])) {
-      return this.projectHandlers.handleToolCall(name, args)
-    }
-    const key = args.key as string | undefined
-    const project = await this.projectHandlers.resolveProject(args.project as string | undefined, this.detectedProject, key)
-    switch (name) {
-      case TOOL_NAMES.LIST_CRS:
-        return this.crHandlers.handleListCRs(project, args.filters as Record<string, unknown> | undefined)
-      case TOOL_NAMES.GET_CR:
-        return this.crHandlers.handleGetCR(project, key || '', args.mode as string | undefined)
-      default:
-        return this.crHandlers.handleSuggestCRImprovements(project, key || '')
-    }
-  }
-
   async handleToolCall(name: string, args: unknown = {}): Promise<string> {
     try {
       if (!Object.hasOwn(this.registry, name)) {

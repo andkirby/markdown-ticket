@@ -1,4 +1,4 @@
-import type { GlobalConfig as DomainGlobalConfig, RegistryData as DomainRegistryData } from '@mdt/domain-contracts'
+import type { GlobalConfig as DomainGlobalConfig, ProjectRegistryReadFile as DomainRegistryData } from '@mdt/domain-contracts'
 import type { Project, ProjectConfig } from '../../models/Project.js'
 import type { Ticket } from '../../models/Ticket.js'
 import type { ProjectDocumentEffectiveConfig, ProjectDocumentPatchInput } from './ProjectDocumentPatch.js'

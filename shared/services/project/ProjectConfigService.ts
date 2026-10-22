@@ -2,7 +2,7 @@ import type { ProjectConfigWriteFile } from '@mdt/domain-contracts'
 import type { ProjectConfig } from '../../models/Project.js'
 import type { ProjectDocumentEffectiveConfig, ProjectDocumentPatchInput } from './ProjectDocumentPatch.js'
 import type { GlobalConfig, IProjectConfigService, ProjectUpdateFields, ProjectWriteReference } from './types.js'
-import { ProjectConfigWriteFileSchema, ProjectDocumentWriteFileSchema, ProjectRegistryWriteFileSchema } from '@mdt/domain-contracts'
+import { ProjectConfigReadFileSchema, ProjectConfigWriteFileSchema, ProjectDocumentWriteFileSchema, ProjectRegistryWriteFileSchema } from '@mdt/domain-contracts'
 import { getTicketsPath, isLegacyConfig, migrateLegacyConfig, validateProjectConfig } from '../../models/Project.js'
 import { validateTicketsPath } from '../../tools/ProjectValidator.js'
 import { getDefaultConfig as getDefaultConfigUtil, processConfig } from '../../utils/config-validator.js'
@@ -68,10 +68,7 @@ export class ProjectConfigService implements IProjectConfigService {
         return null
 
       const content = readFile(configPath)
-      const config = parseToml(content)
-
-      if (!validateProjectConfig(config))
-        return null
+      const config = ProjectConfigReadFileSchema.parse(parseToml(content))
 
       // MDT-151: Validate ticketsPath at config load time
       const ticketsPath = getTicketsPath(config, DEFAULTS.TICKETS_PATH)

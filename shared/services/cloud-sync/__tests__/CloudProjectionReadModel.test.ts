@@ -190,3 +190,23 @@ describe('CloudProjectionReadModel (TEST-read-model-merge: C-2, C-6, BR-1.9)', (
     expect(model.entries()).toHaveLength(1)
   })
 })
+
+describe('MDT-258 persisted projection cache boundary', () => {
+  it.each(['{broken', 'null', '{"entries":{"1":{"header":false}}}', '{"cloudProjectId":"different","entries":{}}'])('rebuilds corrupt cache without rewriting: %s', async (text) => {
+    const { mkdir, writeFile, readFile } = await import('node:fs/promises')
+    const root = await mkdtemp(join(tmpdir(), 'mdt-read-corrupt-'))
+    try {
+      const dir = join(root, 'projects', PROJECT_ID)
+      const file = join(dir, 'projection-read-model.json')
+      await mkdir(dir, { recursive: true })
+      await writeFile(file, text)
+      const model = new CloudProjectionReadModel({ rootDir: root, localProjectId: PROJECT_ID })
+      await model.load(CLOUD_PROJECT_ID)
+      expect(model.entries()).toEqual([])
+      expect(model.appliedCursor).toBe(0)
+      expect(model.live).toBe(false)
+      expect(await readFile(file, 'utf8')).toBe(text)
+    }
+    finally { await rm(root, { recursive: true, force: true }) }
+  })
+})

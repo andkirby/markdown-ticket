@@ -4,7 +4,7 @@ import type { Ticket, TicketData } from '../models/Ticket.js'
 import type { Suggestion, Template, ValidationResult } from '../models/Types.js'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { CRPriorities, CRStatus, CRType, CRTypes, TemplateConfigSchema } from '@mdt/domain-contracts'
+import { CRPriorities, CRStatus, CRType, CRTypes, TemplateConfigSchema, TemplatesFileSchema } from '@mdt/domain-contracts'
 import { getDefaultPaths } from '../utils/constants.js'
 
 export class TemplateService {
@@ -36,7 +36,7 @@ export class TemplateService {
       }
 
       const configContent = readFileSync(configPath, 'utf-8')
-      const templatesConfig = JSON.parse(configContent)
+      const templatesConfig = TemplatesFileSchema.parse(JSON.parse(configContent))
 
       for (const [type, config] of Object.entries(templatesConfig)) {
         // Boundary validation: templates.json is external input (MDT-101)

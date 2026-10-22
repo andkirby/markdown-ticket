@@ -1,3 +1,4 @@
+import type { ProjectedHeader, TicketData } from '@mdt/domain-contracts'
 /**
  * Cloud operation journal — atomic, non-secret pending-operation persistence.
  *
@@ -17,12 +18,11 @@
  * with user-only permissions (0700/0600 on POSIX).
  */
 
-import type { ProjectedHeader, TicketData } from '@mdt/domain-contracts'
 import { createHash } from 'node:crypto'
 import { mkdir, open, readFile, rename, unlink, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import process from 'node:process'
-import { CoordinatorError } from '@mdt/domain-contracts'
+import { CoordinatorError, PendingOperationFileSchema } from '@mdt/domain-contracts'
 
 export interface PendingTicketDraft {
   crType: string
@@ -80,7 +80,8 @@ export class CloudOperationJournal {
   async load(cloudProjectId: string): Promise<PendingOperation | null> {
     try {
       const data = await readFile(this.filePath(cloudProjectId), 'utf8')
-      return JSON.parse(data) as PendingOperation
+      const parsed = PendingOperationFileSchema.parse(JSON.parse(data))
+      return parsed.cloudProjectId === cloudProjectId ? parsed : null
     }
     catch {
       return null

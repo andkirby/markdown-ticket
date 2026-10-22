@@ -7,17 +7,17 @@
  * writes atomically via write-temp-then-rename (SEC-002), preserving unrelated
  * fields.
  */
-import type { LocalProjectConfig } from '@mdt/domain-contracts'
+import type { ProjectConfigDisplayFile } from '@mdt/domain-contracts'
 import type { ConfigStorageAdapter, ScopeWriteResult } from '../types.js'
 import { randomBytes } from 'node:crypto'
 import { promises as fs } from 'node:fs'
 import * as path from 'node:path'
 import process from 'node:process'
-import { ProjectConfigWriteFileSchema } from '@mdt/domain-contracts'
+import { ProjectConfigDisplayFileSchema, ProjectConfigWriteFileSchema } from '@mdt/domain-contracts'
 import { CONFIG_FILES } from '@mdt/shared/utils/constants.js'
 import { parseToml, stringify } from '@mdt/shared/utils/toml.js'
 
-export class ProjectConfigStorageAdapter implements ConfigStorageAdapter<LocalProjectConfig> {
+export class ProjectConfigStorageAdapter implements ConfigStorageAdapter<ProjectConfigDisplayFile> {
   readonly scope = 'project' as const
 
   constructor(private readonly projectPath: string) {}
@@ -26,27 +26,27 @@ export class ProjectConfigStorageAdapter implements ConfigStorageAdapter<LocalPr
     return path.join(this.projectPath, CONFIG_FILES.PROJECT_CONFIG)
   }
 
-  async read(forWrite = false): Promise<LocalProjectConfig> {
+  async read(forWrite = false): Promise<ProjectConfigDisplayFile> {
     try {
       const content = await fs.readFile(this.filePath, 'utf8')
-      // Display reads keep their legacy passthrough. write() validates its reload.
-      return parseToml(content) as LocalProjectConfig
+      // Display extraction and mutation reloads have separate contracts.
+      return forWrite
+        ? ProjectConfigWriteFileSchema.parse(parseToml(content))
+        : ProjectConfigDisplayFileSchema.parse(parseToml(content))
     }
     catch (error) {
       if (forWrite && (error as NodeJS.ErrnoException).code !== 'ENOENT')
         throw error
       // Missing file -> minimal default shape; caller decides whether to create.
-      return { project: { name: '', code: '', id: '' } } as LocalProjectConfig
+      return { project: { name: '', code: '', id: '' } }
     }
   }
 
   async write(
-    mutator: (current: LocalProjectConfig) => LocalProjectConfig,
+    mutator: (current: ProjectConfigDisplayFile) => ProjectConfigDisplayFile,
   ): Promise<ScopeWriteResult> {
-    const current = ProjectConfigWriteFileSchema.parse(await this.read(true))
-    // Already parsed data; the legacy adapter interface requires name/code even
-    // though minimal persisted files have always been accepted here.
-    const next = mutator(current as LocalProjectConfig)
+    const current = await this.read(true)
+    const next = mutator(current)
     await this.atomicWrite(next)
     return { effective: next, filePath: this.filePath }
   }
@@ -57,14 +57,14 @@ export class ProjectConfigStorageAdapter implements ConfigStorageAdapter<LocalPr
    * SEC-001 round-trip verification is the responsibility of the caller that
    * builds the candidate (the document patch command validates its fields).
    */
-  private async atomicWrite(config: LocalProjectConfig): Promise<void> {
+  private async atomicWrite(config: ProjectConfigDisplayFile): Promise<void> {
     const parentDir = path.dirname(this.filePath)
     await fs.mkdir(parentDir, { recursive: true })
     const tmpPath = `${this.filePath}.${process.pid}.${randomBytes(8).toString('hex')}.tmp`
     try {
       await fs.writeFile(
         tmpPath,
-        stringify(config as unknown as Record<string, unknown>),
+        stringify(config),
         'utf8',
       )
       await fs.rename(tmpPath, this.filePath)

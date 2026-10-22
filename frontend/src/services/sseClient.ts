@@ -9,61 +9,11 @@
  */
 
 import type { AccessMode, RequestAccessMode } from '@mdt/domain-contracts'
+import type { SSEMessageData } from './sseSchema'
 import { eventBus } from './eventBus'
+import { SSEMessageSchema } from './sseSchema'
 
 type SSEAccessMode = AccessMode | RequestAccessMode
-
-interface SSEMessageData {
-  type: string
-  data: {
-    eventType?: 'add' | 'change' | 'unlink'
-    filename?: string
-    filePath?: string
-    projectId?: string
-    timestamp?: number
-    status?: string
-    ticketData?: {
-      code: string
-      title: string
-      status: string
-      type: string
-      priority: string
-      lastModified: string
-    } | null
-    eventId?: string
-    source?: 'main' | 'worktree'
-    /** MDT-142: Subdocument metadata for targeted UI updates */
-    subdocument?: {
-      code: string
-      filePath: string
-    } | null
-    [key: string]: unknown
-  }
-}
-
-// Type guards for SSE message validation
-function isValidSSEMessage(data: unknown): data is SSEMessageData {
-  return (
-    data !== null
-    && typeof data === 'object'
-    && 'type' in data
-    && typeof data.type === 'string'
-    && 'data' in data
-    && data.data !== null
-    && typeof data.data === 'object'
-  )
-}
-
-function _isValidFileChangeData(data: unknown): boolean {
-  return (
-    data !== null
-    && typeof data === 'object'
-    && 'eventType' in data
-    && 'filename' in data
-    && typeof data.eventType === 'string'
-    && typeof data.filename === 'string'
-  )
-}
 
 class SSEClient {
   private eventSource: EventSource | null = null
@@ -129,14 +79,14 @@ class SSEClient {
       // Message received
       this.eventSource.onmessage = (event) => {
         try {
-          const data = JSON.parse(event.data)
+          const parsed = SSEMessageSchema.safeParse(JSON.parse(event.data))
 
-          if (!isValidSSEMessage(data)) {
-            console.error('[SSEClient] ❌ Invalid SSE message format:', data)
+          if (!parsed.success) {
+            console.warn('[SSEClient] Ignoring unknown or malformed SSE message')
             return
           }
 
-          this.handleSSEMessage(data)
+          this.handleSSEMessage(parsed.data)
         }
         catch (error) {
           console.error('[SSEClient] ❌ Error parsing message:', error)
@@ -290,9 +240,6 @@ class SSEClient {
           timestamp: data.data.timestamp,
         }, 'sse')
         break
-
-      default:
-        console.warn('[SSEClient] ⚠️ Unknown message type:', data.type)
     }
   }
 

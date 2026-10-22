@@ -72,3 +72,6 @@ export type ValidationError = z.infer<typeof ValidationErrorSchema>
 export type ValidationWarning = z.infer<typeof ValidationWarningSchema>
 export type ValidationResult = z.infer<typeof ValidationResultSchema>
 export type Suggestion = z.infer<typeof SuggestionSchema>
+
+// Only the root is checked here; each entry retains its independent skip policy.
+export const TemplatesFileSchema = z.record(z.string(), z.unknown())

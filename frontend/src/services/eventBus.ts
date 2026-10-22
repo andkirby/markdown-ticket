@@ -44,14 +44,14 @@ export type EventType
 export interface TicketEventPayload {
   ticketCode: string
   projectId: string
-  ticket?: Ticket | Partial<Ticket> | {
+  ticket?: Ticket | Partial<Ticket> | Partial<{
     code: string
     title: string
     status: string
     type: string
     priority: string
     lastModified: string
-  } | null
+  }> | null
 }
 
 /** MDT-142: Subdocument change event payload */

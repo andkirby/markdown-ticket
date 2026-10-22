@@ -7,7 +7,7 @@ import type { ProjectionPublishRequest } from './CloudProjectionClient.js'
 import { createHash, randomUUID } from 'node:crypto'
 import { mkdir, readdir, readFile, rename, unlink, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { CoordinatorError } from '@mdt/domain-contracts'
+import { CoordinatorError, PendingProjectionFileSchema } from '@mdt/domain-contracts'
 import {
   CloudProjectionClient,
 
@@ -282,7 +282,8 @@ export class CloudProjectionSync {
 
   private async load(ticketNumber: number): Promise<PendingProjection | null> {
     try {
-      return JSON.parse(await readFile(this.file(ticketNumber), 'utf8')) as PendingProjection
+      const parsed = PendingProjectionFileSchema.parse(JSON.parse(await readFile(this.file(ticketNumber), 'utf8')))
+      return parsed.ticketNumber === ticketNumber ? parsed : null
     }
     catch {
       return null

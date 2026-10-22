@@ -1,5 +1,6 @@
 import type { ProjectConfig } from '../../models/Project.js'
-import { isLegacyConfig, validateProjectConfig } from '../../models/Project.js'
+import { ProjectConfigReadFileSchema } from '@mdt/domain-contracts'
+import { isLegacyConfig } from '../../models/Project.js'
 import { CONFIG_FILES } from '../../utils/constants.js'
 import { fileExists, readFile, writeFileAtomic } from '../../utils/file-utils.js'
 import { logQuiet } from '../../utils/logger.js'
@@ -30,20 +31,14 @@ export class ProjectConfigLoader {
       }
 
       const content = readFile(configPath)
-      const config = parseToml(content)
+      const config = ProjectConfigReadFileSchema.parse(parseToml(content))
 
-      if (validateProjectConfig(config)) {
-        // Check for legacy configuration and migrate automatically
-        if (isLegacyConfig(config)) {
-          logQuiet(this.quiet, `Automatically migrating legacy configuration format for project at ${projectPath}...`)
-          const migratedConfig = this.migrateLegacyConfigWithCleanup(config, configPath)
-
-          return migratedConfig
-        }
-        return config
+      // Check for legacy configuration and migrate automatically.
+      if (isLegacyConfig(config)) {
+        logQuiet(this.quiet, `Automatically migrating legacy configuration format for project at ${projectPath}...`)
+        return this.migrateLegacyConfigWithCleanup(config, configPath)
       }
-
-      return null
+      return config
     }
     catch (error) {
       logQuiet(this.quiet, `Error reading project config from ${projectPath}:`, error)

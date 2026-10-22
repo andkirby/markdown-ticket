@@ -245,3 +245,23 @@ describe('lifecycle-aware publish (delete tombstone)', () => {
     )
   })
 })
+
+describe('MDT-258 corrupt pending projections', () => {
+  it.each([null, {}, { header: { code: 'MDT-042' } }, { ticketNumber: 43 }, { projectionVersion: [] }, { state: 'unknown' }])('cannot publish %j during flush', async (invalid) => {
+    const client = { publish: jest.fn(async () => {
+      throw new Error('offline')
+    }) }
+    const sync = syncWith(client)
+    await sync.publish(42, previous, next, 'active')
+    const files = (await readdir(root, { recursive: true })).map(String)
+    const file = join(root, files.find(name => name.endsWith('.json'))!)
+    const valid = JSON.parse(await readFile(file, 'utf8'))
+    const { writeFile } = await import('node:fs/promises')
+    const text = JSON.stringify(invalid === null || Object.keys(invalid).length === 0 ? invalid : { ...valid, ...invalid })
+    await writeFile(file, text)
+    client.publish.mockClear()
+    await sync.flush()
+    expect(client.publish).not.toHaveBeenCalled()
+    expect(await readFile(file, 'utf8')).toBe(text)
+  })
+})

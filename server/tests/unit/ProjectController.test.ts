@@ -74,7 +74,7 @@ describe('projectController - CRUD Operations', () => {
       await projectController.getCR(req as AuthenticatedRequest, res as Response)
 
       expect(res.status).toHaveBeenCalledWith(400)
-      expect(res.json).toHaveBeenCalledWith({ error: 'Bad Request', message: 'Project ID and CR ID are required' })
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'Bad Request', source: 'params', code: 'VALIDATION_ERROR', issues: expect.any(Array) }))
     })
 
     it('should return 400 when crId is missing', async () => {
@@ -85,7 +85,7 @@ describe('projectController - CRUD Operations', () => {
       await projectController.getCR(req as AuthenticatedRequest, res as Response)
 
       expect(res.status).toHaveBeenCalledWith(400)
-      expect(res.json).toHaveBeenCalledWith({ error: 'Bad Request', message: 'Project ID and CR ID are required' })
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'Bad Request', source: 'params', code: 'VALIDATION_ERROR', issues: expect.any(Array) }))
     })
 
     it('should return 404 when CR not found', async () => {

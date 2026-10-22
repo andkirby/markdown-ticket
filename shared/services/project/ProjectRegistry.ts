@@ -1,5 +1,6 @@
 import type { Project } from '../../models/Project.js'
 import type { RegistryData } from './types.js'
+import { ProjectRegistryReadFileSchema } from '@mdt/domain-contracts'
 import { DEFAULTS, getDefaultPaths } from '../../utils/constants.js'
 import {
   createDirectory,
@@ -31,19 +32,6 @@ export class ProjectRegistry {
     return getDefaultPaths().PROJECTS_REGISTRY
   }
 
-  private static isRegistryData(value: unknown): value is RegistryData {
-    if (typeof value !== 'object' || value === null) {
-      return false
-    }
-    const record = value as Record<string, unknown>
-    const project = record.project
-    if (typeof project !== 'object' || project === null) {
-      return false
-    }
-    const projectRecord = project as Record<string, unknown>
-    return typeof projectRecord.path === 'string'
-  }
-
   /**
    * Get all registered projects from the global registry
    * Returns minimal metadata for each registered project
@@ -64,13 +52,7 @@ export class ProjectRegistry {
           const content = this.readRegistryFile(registryPath)
           const registryData = this.parseRegistryContent(content)
 
-          // Validate that the registry entry has the required project path
-          if (ProjectRegistry.isRegistryData(registryData)) {
-            registered.push({ file, data: registryData })
-          }
-          else {
-            logQuiet(this.quiet, `Skipping registry file ${file}: missing project path`)
-          }
+          registered.push({ file, data: registryData })
         }
         catch (error) {
           logQuiet(this.quiet, `Error parsing registry file ${file}:`, error)
@@ -178,7 +160,7 @@ export class ProjectRegistry {
   /**
    * Parse TOML content from registry file
    */
-  private parseRegistryContent(content: string): unknown {
-    return parseToml(content)
+  private parseRegistryContent(content: string): RegistryData {
+    return ProjectRegistryReadFileSchema.parse(parseToml(content))
   }
 }

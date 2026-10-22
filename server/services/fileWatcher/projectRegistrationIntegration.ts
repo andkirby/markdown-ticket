@@ -12,8 +12,7 @@
  * becomes watchable without a restart.
  */
 
-import type { ProjectConfig } from '@mdt/domain-contracts'
-import type { Project } from '@mdt/shared/models/Project'
+import type { Project, ProjectConfig } from '@mdt/shared/models/Project'
 import type { ProjectRegistration } from './WatcherLifecycleManager.js'
 import * as path from 'node:path'
 import { getTicketsPath } from '@mdt/shared/models/Project.js'

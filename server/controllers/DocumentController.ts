@@ -5,6 +5,7 @@ import { stat } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import { DocumentFavInputSchema, PreviewTokenInputSchema } from '@mdt/domain-contracts'
 import { parseRequest } from '../http/parseRequest.js'
+import { DocumentContentQuerySchema, ProjectRefQuerySchema, RawPreviewParamsSchema } from '../http/readSchemas.js'
 import { getRequestAccess } from '../security/apiAuth.js'
 import { mintPreviewToken, PreviewTokenError, verifyPreviewToken } from '../security/documentPreviewToken.js'
 import { isWriteAccess } from '../security/projectSharing.js'
@@ -93,7 +94,10 @@ export class DocumentController {
    */
   async getDocuments(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const { projectId } = req.query
+      const query = parseRequest(ProjectRefQuerySchema, req.query, res, 'query')
+      if (!query.success)
+        return
+      const { projectId } = query.data
 
       if (!projectId) {
         res.status(400).json({ error: 'Bad Request', message: 'Project ID is required' })
@@ -125,7 +129,10 @@ export class DocumentController {
    */
   async getDocumentContent(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const { projectId, filePath } = req.query
+      const query = parseRequest(DocumentContentQuerySchema, req.query, res, 'query')
+      if (!query.success)
+        return
+      const { projectId, filePath } = query.data
 
       if (!projectId || !filePath) {
         res.status(400).json({ error: 'Bad Request', message: 'Project ID and file path are required' })
@@ -268,9 +275,10 @@ export class DocumentController {
    * SAMEORIGIN override) and stream bytes.
    */
   async serveRawPreview(req: Request, res: Response): Promise<void> {
-    const token = req.params.token as string | undefined
-    // Express 4 unnamed wildcard (*) puts the captured segment in params[0].
-    const documentPath = req.params[0] as string | undefined
+    const params = parseRequest(RawPreviewParamsSchema, req.params, res, 'params')
+    if (!params.success)
+      return
+    const { token, 0: documentPath } = params.data
 
     try {
       if (!token || !documentPath) {

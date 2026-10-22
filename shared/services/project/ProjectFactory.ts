@@ -118,7 +118,8 @@ export class ProjectFactory {
         code: projectCode,
         path: projectPath,
         configFile: '', // No local config for global-only projects
-        startNumber: registryData.project.startNumber || DEFAULTS.START_NUMBER,
+        // Registry counters retain the same legacy pass-through as local files.
+        startNumber: (registryData.project.startNumber || DEFAULTS.START_NUMBER) as Project['project']['startNumber'],
         counterFile: registryData.project.counterFile || CONFIG_FILES.COUNTER_FILE,
         active: registryData.project.active !== false,
         description: registryData.project.description || '',
@@ -126,11 +127,11 @@ export class ProjectFactory {
         ticketsPath: registryData.project.ticketsPath || DEFAULTS.TICKETS_PATH,
       },
       metadata: {
-        dateRegistered: registryData.metadata.dateRegistered || new Date().toISOString().split('T')[0],
-        lastAccessed: registryData.metadata.lastAccessed || new Date().toISOString().split('T')[0],
-        version: registryData.metadata.version || '1.0.0',
+        dateRegistered: registryData.metadata?.dateRegistered || new Date().toISOString().split('T')[0],
+        lastAccessed: registryData.metadata?.lastAccessed || new Date().toISOString().split('T')[0],
+        version: registryData.metadata?.version || '1.0.0',
         globalOnly: true,
-        sharing: registryData.metadata.sharing,
+        sharing: registryData.metadata?.sharing,
       },
       document: registryData.project.document,
       registryFile: registryPath,

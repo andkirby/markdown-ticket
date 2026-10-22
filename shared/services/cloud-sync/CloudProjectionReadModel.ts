@@ -1,3 +1,4 @@
+import type { ProjectedHeader } from '@mdt/domain-contracts'
 /**
  * CloudProjectionReadModel — backend-owned cache of projected headers + applied
  * cloud revision (MDT-226).
@@ -15,11 +16,11 @@
  * with user-only permissions (0600 files, 0700 dirs).
  */
 
-import type { ProjectedHeader } from '@mdt/domain-contracts'
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 import process from 'node:process'
+import { ProjectionReadModelFileSchema } from '@mdt/domain-contracts'
 
 /** One projected ticket entry held in the read model. */
 export interface ProjectedTicketEntry {
@@ -95,7 +96,9 @@ export class CloudProjectionReadModel {
       throw err
     }
     try {
-      const parsed = JSON.parse(raw) as Partial<ReadModelState>
+      const parsed = ProjectionReadModelFileSchema.parse(JSON.parse(raw))
+      if (parsed.cloudProjectId && parsed.cloudProjectId !== cloudProjectId)
+        throw new Error('Mismatched cloud project')
       this.state = {
         cloudProjectId: parsed.cloudProjectId ?? cloudProjectId,
         appliedCursor: typeof parsed.appliedCursor === 'number' ? parsed.appliedCursor : 0,

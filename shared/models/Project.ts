@@ -3,7 +3,7 @@
  * contract re-exports. Not a pure shim — canonical shapes live in
  * @mdt/domain-contracts.
  */
-import type { ProjectConfig } from '@mdt/domain-contracts'
+import type { ProjectConfigReadFile as ProjectConfig } from '@mdt/domain-contracts'
 import { ProjectConfigSchema } from '@mdt/domain-contracts'
 
 export type {
@@ -12,7 +12,6 @@ export type {
   LocalProjectConfig,
   LocalProjectConfigProject,
   Project,
-  ProjectConfig,
   ProjectConfigProject,
   ProjectDetails,
   ProjectDocumentSettings,
@@ -86,3 +85,5 @@ export function migrateLegacyConfig(config: ProjectConfig): ProjectConfig {
 export function validateProjectConfig(config: unknown): config is ProjectConfig {
   return ProjectConfigSchema.safeParse(config).success
 }
+
+export type { ProjectConfigReadFile as ProjectConfig } from '@mdt/domain-contracts'

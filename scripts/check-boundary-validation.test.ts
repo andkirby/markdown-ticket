@@ -93,3 +93,21 @@ describe('registry fixtures', () => {
   })
   it('rejects typed raw dispatcher arguments', () => expect(checkRegistry(index.replace('args: unknown', 'args: Record<string,unknown>'), config)).not.toEqual([]))
 })
+
+describe('phase 4 persisted parser recognition', () => {
+  const file = 'shared/persisted.ts'
+  it.each(['ProjectConfigReadFileSchema', 'ProjectRegistryReadFileSchema', 'ProjectRegistrySharingFileSchema', 'ProjectDocumentReadFileSchema', 'ProjectConfigDisplayFileSchema', 'PersistedTicketFrontmatterSchema', 'TemplatesFileSchema', 'PendingOperationFileSchema', 'PendingProjectionFileSchema', 'ProjectionReadModelFileSchema'])('accepts canonical %s, rejects safeParse/raw reuse and shadowed imports', (schema) => {
+    const imported = `import {${schema} as schema} from '@mdt/domain-contracts';`
+    const scan = (body: string) => scanSources({ [file]: imported + body }, new Set([file]))
+    expect(scan('function read() {return schema.parse(JSON.parse(text))}')).toEqual([])
+    expect(scan('schema.safeParse(JSON.parse(text)); return {}').length).toBeGreaterThan(0)
+    expect(scan('const raw=JSON.parse(text); schema.parse(raw); return raw').length).toBeGreaterThan(0)
+    expect(scan('function read(schema: unknown) {return schema.parse(JSON.parse(text))}').length).toBeGreaterThan(0)
+    expect(scanSources({ [file]: `import {${schema} as schema} from './fake'; schema.parse(JSON.parse(text))` }, new Set([file])).length).toBeGreaterThan(0)
+  })
+  it('recognizes gray-matter .data only inside a canonical frontmatter parse', () => {
+    const prefix = 'import matter from "gray-matter"; import {PersistedTicketFrontmatterSchema as schema} from "@mdt/domain-contracts";'
+    expect(scanSources({ [file]: `${prefix}return schema.parse(matter(text).data)` }, new Set([file]))).toEqual([])
+    expect(scanSources({ [file]: `${prefix}return matter(text).data` }, new Set([file]))).toHaveLength(1)
+  })
+})

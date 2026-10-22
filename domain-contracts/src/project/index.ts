@@ -7,10 +7,11 @@
 export * from './entity'
 export * from './input'
 
+export * from './read-file'
 // Export all schemas and types from schema.ts for compatibility
 export * from './schema'
+
 // Export all validation functions from validation.ts
 export * from './validation'
-
 export * from './worktree'
 export * from './write-file'

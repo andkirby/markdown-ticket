@@ -4,12 +4,12 @@ import type { ProjectServiceExtension } from './controllers/ProjectController.js
 import * as path from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
-
 import {
   AccessCredentialBroker,
   streamAuthorizationFromCredential,
 } from '@mdt/shared/services/cloud-sync/access-credential-broker.js'
 import { bindingFromEnabledConnection } from '@mdt/shared/services/cloud-sync/allocator-strategy.js'
+
 import { CloudProjectionReadModel } from '@mdt/shared/services/cloud-sync/CloudProjectionReadModel.js'
 import { CloudProjectionSessionClient } from '@mdt/shared/services/cloud-sync/CloudProjectionSessionClient.js'
 import { CloudProjectionStreamClient } from '@mdt/shared/services/cloud-sync/CloudProjectionStreamClient.js'
@@ -34,6 +34,8 @@ import { DocumentController } from './controllers/DocumentController.js'
 import { PinController } from './controllers/PinController.js'
 import { ProjectController } from './controllers/ProjectController.js'
 import { SearchController } from './controllers/SearchController.js'
+import { parseRequest } from './http/parseRequest.js'
+import { CloudStatusParamsSchema } from './http/readSchemas.js'
 // Middleware
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js'
 import { createAuthRouter } from './routes/auth.js'
@@ -413,13 +415,16 @@ app.use('/api/projects', createProjectRouter(projectController))
 // call (BR-1.5, C-11, C-15). MDT-203 may render this in Project Settings and
 // MDT-223 in CLI diagnostics.
 app.get('/api/projects/:id/cloud-sync/status', (req, res) => {
-  const status = projectionStreamManager.getStatus(req.params.id)
+  const params = parseRequest(CloudStatusParamsSchema, req.params, res, 'params')
+  if (!params.success)
+    return
+  const status = projectionStreamManager.getStatus(params.data.id)
   if (!status) {
     res.status(404).json({ error: 'cloud sync is not enabled for this project' })
     return
   }
   res.json({
-    projectId: req.params.id,
+    projectId: params.data.id,
     rolloutEnabled: projectionStreamRolloutEnabled,
     ...status,
   })
@@ -448,10 +453,6 @@ app.use('/api', createSystemRouter(fileWatcher, projectController, projectDiscov
 app.use(
   '/api/config',
   createConfigRouter({
-    resolveProjectId: (req) => {
-      const q = req.query.projectId
-      return typeof q === 'string' ? q : undefined
-    },
     clearDiscoveryCache: () => projectDiscovery.clearCache(),
     reconfigureDocumentWatchers: async (projectId, _documentPaths) => {
       // Re-read effective document config and reconfigure watchers. The watcher

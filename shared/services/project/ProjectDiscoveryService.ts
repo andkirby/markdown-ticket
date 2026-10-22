@@ -95,11 +95,11 @@ export class ProjectDiscoveryService implements IProjectDiscoveryService {
 
           // Merge registry metadata (registry takes precedence over defaults)
           project.metadata = {
-            dateRegistered: registryData.metadata.dateRegistered || project.metadata.dateRegistered,
-            lastAccessed: registryData.metadata.lastAccessed || project.metadata.lastAccessed,
-            version: registryData.metadata.version || project.metadata.version,
-            globalOnly: registryData.metadata.globalOnly,
-            sharing: registryData.metadata.sharing,
+            dateRegistered: registryData.metadata?.dateRegistered || project.metadata.dateRegistered,
+            lastAccessed: registryData.metadata?.lastAccessed || project.metadata.lastAccessed,
+            version: registryData.metadata?.version || project.metadata.version,
+            globalOnly: registryData.metadata?.globalOnly,
+            sharing: registryData.metadata?.sharing,
           }
 
           projects.push(project)

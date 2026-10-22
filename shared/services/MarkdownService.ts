@@ -1,6 +1,7 @@
 import type { Ticket, TicketMetadata } from '../models/Ticket.js'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
+import { PersistedTicketFrontmatterSchema } from '@mdt/domain-contracts'
 import { normalizeTicket, normalizeTicketMetadata } from '../models/Ticket.js'
 import { PATTERNS } from '../utils/constants.js'
 import { CRService } from './CRService.js'
@@ -68,7 +69,7 @@ export class MarkdownService {
       const markdownContent = frontmatterMatch[2]
 
       // Parse YAML frontmatter (using simple parsing for now)
-      const metadata = this.parseYamlFrontmatter(yamlContent)
+      const metadata = PersistedTicketFrontmatterSchema.parse(this.parseYamlFrontmatter(yamlContent))
 
       if (!metadata) {
         return null
@@ -413,7 +414,7 @@ export class MarkdownService {
       const markdownBody = frontmatterMatch[2]
 
       // Parse YAML frontmatter
-      const parsedYaml = this.parseYamlFrontmatter(yamlContent)
+      const parsedYaml = PersistedTicketFrontmatterSchema.parse(this.parseYamlFrontmatter(yamlContent))
 
       if (!parsedYaml) {
         // Invalid YAML - return null (graceful handling)

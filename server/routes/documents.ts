@@ -2,6 +2,8 @@ import type { NextFunction, Request, Response } from 'express'
 import type { DocumentController } from '../controllers/DocumentController.js'
 import type { ProjectController } from '../controllers/ProjectController.js'
 import { Router } from 'express'
+import { parseRequest } from '../http/parseRequest.js'
+import { OptionalProjectRefQuerySchema, VisibilityBodySchema } from '../http/readSchemas.js'
 
 /**
  * Router for document-related endpoints.
@@ -16,11 +18,13 @@ export function createDocumentRouter(
 ): Router {
   const router = Router()
   const requireVisibleProject = async (req: Request, res: Response, next: NextFunction) => {
-    const projectId = typeof req.query.projectId === 'string'
-      ? req.query.projectId
-      : typeof req.body?.projectId === 'string'
-        ? req.body.projectId
-        : null
+    const query = parseRequest(OptionalProjectRefQuerySchema, req.query, res, 'query')
+    if (!query.success)
+      return
+    const body = parseRequest(VisibilityBodySchema, req.body, res, 'body')
+    if (!body.success)
+      return
+    const projectId = query.data.projectId ?? body.data?.projectId
 
     if (!projectId) {
       next()

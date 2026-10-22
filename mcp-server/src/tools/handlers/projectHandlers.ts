@@ -23,32 +23,16 @@ export class ProjectHandlers {
 
   constructor(private projectService: ProjectService) {}
 
-  /**
-   * Handle project-related tool calls
-   */
-  async handleToolCall(name: string, args: Record<string, unknown>): Promise<string> {
+  // Keep the former project dispatcher error policy while registry callbacks
+  // carry parsed arguments directly to the positional read handlers.
+  async invokeRead(name: string, run: () => Promise<string>): Promise<string> {
     try {
-      switch (name) {
-        case 'list_projects':
-          return await this.handleListProjects()
-
-        case 'get_project_info':
-          return await this.handleGetProjectInfo(args.key as string)
-
-        default:
-          throw ToolError.protocol(
-            `Unknown project tool '${Sanitizer.sanitizeText(name)}'. Available tools: list_projects, get_project_info`,
-            JsonRpcErrorCode.MethodNotFound,
-          )
-      }
+      return await run()
     }
     catch (error) {
       console.error(`Error handling project tool ${name}:`, error)
-      // Re-throw ToolError instances
-      if (error instanceof ToolError) {
+      if (error instanceof ToolError)
         throw error
-      }
-      // Convert other errors to tool execution errors
       throw ToolError.toolExecution(error instanceof Error ? error.message : String(error))
     }
   }
@@ -150,7 +134,7 @@ export class ProjectHandlers {
   /**
    * List all discovered projects
    */
-  private async handleListProjects(): Promise<string> {
+  async handleListProjects(): Promise<string> {
     const { data: projects } = await this.projectService.listProjects({ includeInactive: true })
     this.cachedProjects = projects
 
@@ -190,7 +174,7 @@ export class ProjectHandlers {
   /**
    * Get detailed information about a specific project
    */
-  private async handleGetProjectInfo(key: string): Promise<string> {
+  async handleGetProjectInfo(key: string): Promise<string> {
     const project = await this.validateProject(key)
 
     // Get CR count from project CRs - use path from extended Project interface

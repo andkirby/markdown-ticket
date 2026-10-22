@@ -4,6 +4,7 @@ import type { OriginPolicy } from '../security/originPolicy.js'
 import { DevLogBatchSchema, FrontendLogBatchSchema } from '@mdt/domain-contracts'
 import { Router } from 'express'
 import { parseRequest } from '../http/parseRequest.js'
+import { LogQuerySchema } from '../http/readSchemas.js'
 import { createDefaultOriginPolicy } from '../security/originPolicy.js'
 
 // Type definitions
@@ -202,8 +203,11 @@ export function createDevToolsRouter(originPolicy: OriginPolicy = createDefaultO
    *             schema: { type: array, items: { $ref: '#/components/schemas/LogEntry' } }
    */
   router.get('/logs', (req: AuthenticatedRequest, res: Response) => {
-    const lines = Math.min(Number.parseInt(req.query.lines || '20'), MAX_LOG_ENTRIES)
-    const { filter } = req.query
+    const query = parseRequest(LogQuerySchema, req.query, res, 'query')
+    if (!query.success)
+      return
+    const lines = Math.min(Number.parseInt(query.data.lines || '20'), MAX_LOG_ENTRIES)
+    const { filter } = query.data
 
     let logs = logBuffer.slice(-lines)
 
@@ -238,7 +242,10 @@ export function createDevToolsRouter(originPolicy: OriginPolicy = createDefaultO
    *               example: 'data: {"type":"connected","message":"Log stream connected"}'
    */
   router.get('/logs/stream', (req: Request, res: Response) => {
-    const { filter } = req.query
+    const query = parseRequest(LogQuerySchema, req.query, res, 'query')
+    if (!query.success)
+      return
+    const { filter } = query.data
 
     writeStreamHeaders(req, res, originPolicy)
 
@@ -407,8 +414,11 @@ export function createDevToolsRouter(originPolicy: OriginPolicy = createDefaultO
    *             schema: { $ref: '#/components/schemas/FrontendLogsResponse' }
    */
   router.get('/frontend/logs', (req: AuthenticatedRequest, res: Response) => {
-    const lines = Math.min(Number.parseInt(req.query.lines || '20'), MAX_FRONTEND_LOGS)
-    const { filter } = req.query
+    const query = parseRequest(LogQuerySchema, req.query, res, 'query')
+    if (!query.success)
+      return
+    const lines = Math.min(Number.parseInt(query.data.lines || '20'), MAX_FRONTEND_LOGS)
+    const { filter } = query.data
 
     let filteredLogs = frontendLogs
 
@@ -554,8 +564,11 @@ export function createDevToolsRouter(originPolicy: OriginPolicy = createDefaultO
       return
     }
 
-    const lines = Math.min(Number.parseInt(req.query.lines || '20'), MAX_DEV_MODE_LOGS)
-    const { filter } = req.query
+    const query = parseRequest(LogQuerySchema, req.query, res, 'query')
+    if (!query.success)
+      return
+    const lines = Math.min(Number.parseInt(query.data.lines || '20'), MAX_DEV_MODE_LOGS)
+    const { filter } = query.data
 
     let filteredLogs = devModeLogs
 

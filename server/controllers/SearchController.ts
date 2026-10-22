@@ -1,3 +1,4 @@
+import type { Request, Response } from 'express'
 /**
  * SearchController - Unified search across entity types — MDT-179
  *
@@ -5,11 +6,11 @@
  * based on the requested scope. Delegates to existing services.
  */
 
-import type { Request, Response } from 'express'
-
 import type { ProjectController } from './ProjectController'
 
 import { SearchResultType, UnifiedSearchRequestSchema } from '@mdt/domain-contracts'
+
+import { parseRequest } from '../http/parseRequest.js'
 
 export class SearchController {
   constructor(private projectController: ProjectController) {}
@@ -25,14 +26,9 @@ export class SearchController {
    */
   async search(req: Request, res: Response): Promise<void> {
     try {
-      // Validate request body against schema
-      const parseResult = UnifiedSearchRequestSchema.safeParse(req.body)
-      if (!parseResult.success) {
-        const firstIssue = parseResult.error.issues[0]
-        const message = firstIssue?.message ?? 'Validation error'
-        res.status(400).json({ error: 'Bad Request', message })
+      const parseResult = parseRequest(UnifiedSearchRequestSchema, req.body, res, 'body')
+      if (!parseResult.success)
         return
-      }
 
       const { query, scope, limitPerGroup, limitTotal } = parseResult.data
 

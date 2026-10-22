@@ -1,7 +1,7 @@
 import type { DocumentConfig, DocumentPreviewConfig, TicketsPath } from '@mdt/domain-contracts'
 import { promises as fs } from 'node:fs'
 import * as path from 'node:path'
-import { DOCUMENT_PREVIEW_CONFIG_DEFAULTS, PROJECT_DOCUMENT_CONFIG_DEFAULTS } from '@mdt/domain-contracts'
+import { DOCUMENT_PREVIEW_CONFIG_DEFAULTS, PROJECT_DOCUMENT_CONFIG_DEFAULTS, ProjectDocumentReadFileSchema } from '@mdt/domain-contracts'
 import { DEFAULTS } from '@mdt/shared/utils/constants.js'
 import { parseToml } from '@mdt/shared/utils/toml.js'
 
@@ -39,7 +39,7 @@ export class ConfigRepository {
 
     try {
       // Parse TOML content properly using TOML library
-      const parsed = parseToml(content) as any
+      const parsed = ProjectDocumentReadFileSchema.parse(parseToml(content))
 
       // Parse document paths
       const docPaths = parsed.project?.document?.paths
@@ -96,7 +96,7 @@ export class ConfigRepository {
       if (preview && typeof preview === 'object') {
         if (Array.isArray(preview.allowedExternalDomains)) {
           config.preview.allowedExternalDomains = preview.allowedExternalDomains.filter(
-            (d: unknown) => typeof d === 'string' && d.trim().length > 0,
+            (d: unknown): d is string => typeof d === 'string' && d.trim().length > 0,
           )
         }
         if (typeof preview.allowUnsafeEval === 'boolean') {

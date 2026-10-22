@@ -93,7 +93,7 @@ function importedName(sf: ts.SourceFile, file: string, exported: string): Set<st
 }
 
 /** Virtual source maps make the same production rules executable in fixtures. */
-export function scanSources(sources: Record<string, string>, decoderFiles: ReadonlySet<string> = new Set()): Site[] {
+export function scanSources(sources: Record<string, string>, decoderFiles: ReadonlySet<string> = new Set(), includeValidatedDecoders = false): Site[] {
   const files = Object.entries(sources).map(([file, text]) => ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true))
   // A symbol table distinguishes aliases and shadowed callback identifiers.
   const host = ts.createCompilerHost({ noLib: true })
@@ -107,6 +107,7 @@ export function scanSources(sources: Record<string, string>, decoderFiles: Reado
     const rawSymbols = new Set<ts.Symbol>()
     const decodedSymbols = new Set<ts.Symbol>()
     const parsers = importedName(sf, helperFile, 'parseRequest')
+    const decoderNames = new Set<string>()
     const writeSchemas = new Set<string>()
     for (const statement of sf.statements) {
       if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier) || statement.moduleSpecifier.text !== '@mdt/domain-contracts')
@@ -114,7 +115,7 @@ export function scanSources(sources: Record<string, string>, decoderFiles: Reado
       const bindings = statement.importClause?.namedBindings
       if (bindings && ts.isNamedImports(bindings)) {
         for (const binding of bindings.elements) {
-          if (['ProjectConfigWriteFileSchema', 'ProjectDocumentWriteFileSchema', 'ProjectRegistryWriteFileSchema'].includes((binding.propertyName ?? binding.name).text))
+          if (['ProjectConfigWriteFileSchema', 'ProjectDocumentWriteFileSchema', 'ProjectRegistryWriteFileSchema', 'ProjectConfigReadFileSchema', 'ProjectRegistryReadFileSchema', 'ProjectRegistrySharingFileSchema', 'ProjectDocumentReadFileSchema', 'ProjectConfigDisplayFileSchema', 'PersistedTicketFrontmatterSchema', 'TemplatesFileSchema', 'PendingOperationFileSchema', 'PendingProjectionFileSchema', 'ProjectionReadModelFileSchema', 'GlobalConfigSchema'].includes((binding.propertyName ?? binding.name).text))
             writeSchemas.add(binding.name.text)
         }
       }
@@ -122,15 +123,19 @@ export function scanSources(sources: Record<string, string>, decoderFiles: Reado
     // A throwing canonical schema parse consumes the decoded unknown directly.
     // safeParse alone is insufficient: its unsuccessful result might be ignored.
     const validatedDecoder = (node: ts.Node): boolean => {
-      const parent = node.parent
-      if (!ts.isCallExpression(parent) || parent.arguments[0] !== node || !ts.isPropertyAccessExpression(parent.expression) || parent.expression.name.text !== 'parse')
+      // gray-matter exposes its decoded frontmatter through .data.
+      const value = ts.isPropertyAccessExpression(node.parent) && node.parent.name.text === 'data'
+        && ts.isCallExpression(node) && ts.isIdentifier(node.expression) && decoderNames.has(node.expression.text)
+        ? node.parent
+        : node
+      const parent = value.parent
+      if (!ts.isCallExpression(parent) || parent.arguments[0] !== value || !ts.isPropertyAccessExpression(parent.expression) || parent.expression.name.text !== 'parse')
         return false
       const schema = parent.expression.expression
       return ts.isIdentifier(schema) && writeSchemas.has(schema.text)
         && !checker.getSymbolAtLocation(schema)?.declarations?.some(decl => !ts.isImportSpecifier(decl))
     }
     const requestTypes = new Set(['Request', 'AuthenticatedRequest'])
-    const decoderNames = new Set<string>()
     for (const statement of sf.statements) {
       if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier))
         continue
@@ -300,7 +305,7 @@ export function scanSources(sources: Record<string, string>, decoderFiles: Reado
       if (ts.isCallExpression(node)) {
         if (node.arguments.some(arg => symbolIn(arg, requestSymbols)))
           add(node, 'request-delegation')
-        if (decoderFiles.has(sf.fileName) && decoderCall(node) && !validatedDecoder(node))
+        if (decoderFiles.has(sf.fileName) && decoderCall(node) && (includeValidatedDecoders || !validatedDecoder(node)))
           add(node, 'decoder')
       }
       if ((ts.isAsExpression(node) || ts.isTypeAssertionExpression(node)) && (decoderCall(unwrap(node.expression)) || symbolIn(node.expression, decodedSymbols)))
@@ -391,10 +396,11 @@ export function checkWorkspace(manifest: Manifest) {
   const sources = Object.fromEntries(['server', 'mcp-server/src', 'shared', 'cli/src'].flatMap(productionFiles).map(file => [file, fs.readFileSync(path.join(root, file), 'utf8')]))
   const sites = scanSources(sources, new Set(manifest.decoders.map(decoder => decoder.file)))
   const errors = compareManifest(sites, manifest.legacy)
+  const allDecoders = scanSources(sources, new Set(manifest.decoders.map(decoder => decoder.file)), true)
   for (const decoder of manifest.decoders) {
     if (!sources[decoder.file] || !decoder.parser || !decoder.fallback || !fs.existsSync(path.join(root, decoder.fixture)))
       errors.push(`Invalid decoder registration: ${decoder.file}`)
-    if (!sites.some(site => site.file === decoder.file && site.kind === 'decoder'))
+    if (!allDecoders.some(site => site.file === decoder.file && site.kind === 'decoder'))
       errors.push(`Unused decoder registration: ${decoder.file}`)
   }
   errors.push(...checkRegistry(sources['mcp-server/src/tools/index.ts'], sources['mcp-server/src/tools/config/allTools.ts']))

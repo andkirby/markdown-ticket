@@ -9,7 +9,7 @@ import type { TreeNode } from '../types/tree.js'
 import * as fs from 'node:fs/promises'
 import * as os from 'node:os'
 import process from 'node:process'
-import { ConfigureDocumentsInputSchema, ProjectUpdateEnvelopeSchema, RegisterProjectInputSchema, SearchRequestSchema, UpdateProjectSharingInputSchema } from '@mdt/domain-contracts'
+import { ConfigureDocumentsInputSchema, GlobalConfigSchema, ProjectUpdateEnvelopeSchema, RegisterProjectInputSchema, SearchRequestSchema, UpdateProjectSharingInputSchema } from '@mdt/domain-contracts'
 import { WorktreeService } from '@mdt/shared/services/WorktreeService.js'
 import { ProjectManager } from '@mdt/shared/tools/ProjectManager.js'
 import { ProjectValidator } from '@mdt/shared/tools/ProjectValidator.js'
@@ -19,6 +19,7 @@ import { parseToml } from '@mdt/shared/utils/toml.js'
 import { getRuntimeConfig } from '../config/runtimeConfig.js'
 import { parseRequest } from '../http/parseRequest.js'
 import { ProjectCodeParamsSchema } from '../http/projectSchemas.js'
+import { BypassCacheQuerySchema, FilesystemPathQuerySchema, ProjectionQuerySchema, ProjectRefQuerySchema, SubdocumentRefParamsSchema } from '../http/readSchemas.js'
 import { ProjectRefParamsSchema, RestCreateTicketInputSchema, RestPatchTicketInputSchema, TicketRefParamsSchema } from '../http/ticketSchemas.js'
 import { getRequestAccess } from '../security/apiAuth.js'
 import { authorizeFilesystemPath, FilesystemAccessDeniedError, getProjectRoots } from '../security/filesystemAccess.js'
@@ -153,14 +154,9 @@ export class ProjectController {
    */
   async search(req: Request, res: Response): Promise<void> {
     try {
-      // Validate request body against schema
-      const parseResult = SearchRequestSchema.safeParse(req.body)
-      if (!parseResult.success) {
-        const firstIssue = parseResult.error.issues[0]
-        const message = firstIssue?.message ?? 'Validation error'
-        res.status(400).json({ error: 'Bad Request', message })
+      const parseResult = parseRequest(SearchRequestSchema, req.body, res, 'body')
+      if (!parseResult.success)
         return
-      }
 
       const { mode, query, limitPerProject, limitTotal } = parseResult.data
       const projectCode = 'projectCode' in parseResult.data
@@ -196,7 +192,10 @@ export class ProjectController {
    */
   async getAllProjects(req: Request, res: Response): Promise<void> {
     try {
-      const bypassCache = req.query.bypassCache === 'true'
+      const query = parseRequest(BypassCacheQuerySchema, req.query, res, 'query')
+      if (!query.success)
+        return
+      const bypassCache = query.data.bypassCache === 'true'
       const projects = await this.projectService.getAllProjects(bypassCache)
       // Filter out inactive projects (MDT-001)
       const activeProjects = projects.filter(project => project.project.active === true)
@@ -215,7 +214,10 @@ export class ProjectController {
    * Get project configuration.
    */
   async getProjectConfig(req: AuthenticatedRequest, res: Response): Promise<void> {
-    const { projectId } = req.params
+    const params = parseRequest(ProjectRefParamsSchema, req.params, res, 'params')
+    if (!params.success)
+      return
+    const { projectId } = params.data
 
     if (!projectId) {
       res.status(400).json({ error: 'Project ID is required' })
@@ -480,12 +482,15 @@ export class ProjectController {
    */
   async getSystemDirectories(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const { path: requestPath } = req.query
+      const query = parseRequest(FilesystemPathQuerySchema, req.query, res, 'query')
+      if (!query.success)
+        return
+      const { path: requestPath } = query.data
       const configPath = `${getRuntimeConfig(req).configDir}/config.toml`
       let discoveryPaths: string[] = []
 
       try {
-        const config = parseToml(await fs.readFile(configPath, 'utf8')) as { discovery?: { searchPaths?: string[] } }
+        const config = GlobalConfigSchema.parse(parseToml(await fs.readFile(configPath, 'utf8')))
 
         discoveryPaths = config.discovery?.searchPaths || []
       }
@@ -508,7 +513,7 @@ export class ProjectController {
       }
 
       const targetPath = requestPath
-        ? await authorizeFilesystemPath(requestPath as string, allowedRoots)
+        ? await authorizeFilesystemPath(requestPath, allowedRoots)
         : await authorizeFilesystemPath(allowedRoots[0] || process.cwd(), allowedRoots)
       const result = await this.projectService.getSystemDirectories(targetPath)
 
@@ -534,7 +539,10 @@ export class ProjectController {
    */
   async getFileSystemTree(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const { projectId } = req.query
+      const query = parseRequest(ProjectRefQuerySchema, req.query, res, 'query')
+      if (!query.success)
+        return
+      const { projectId } = query.data
 
       if (!projectId) {
         res.status(400).json({ error: 'Bad Request', message: 'Project ID is required' })
@@ -607,7 +615,10 @@ export class ProjectController {
    */
   async getProjectCRs(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const { projectId } = req.params
+      const params = parseRequest(ProjectRefParamsSchema, req.params, res, 'params')
+      if (!params.success)
+        return
+      const { projectId } = params.data
 
       if (!projectId) {
         res.status(400).json({ error: 'Bad Request', message: 'Project ID is required' })
@@ -639,7 +650,10 @@ export class ProjectController {
    */
   async getUnifiedTickets(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const { projectId } = req.params
+      const params = parseRequest(ProjectRefParamsSchema, req.params, res, 'params')
+      if (!params.success)
+        return
+      const { projectId } = params.data
       if (!projectId) {
         res.status(400).json({ error: 'Bad Request', message: 'Project ID is required' })
         return
@@ -663,7 +677,10 @@ export class ProjectController {
 
   async getCloudProjections(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const { projectId } = req.params
+      const params = parseRequest(ProjectRefParamsSchema, req.params, res, 'params')
+      if (!params.success)
+        return
+      const { projectId } = params.data
       if (!projectId) {
         res.status(400).json({ error: 'Bad Request', message: 'Project ID is required' })
         return
@@ -679,8 +696,11 @@ export class ProjectController {
         return
       }
 
-      const after = Number.parseInt(String(req.query.after ?? '0'), 10)
-      const limit = Number.parseInt(String(req.query.limit ?? '100'), 10)
+      const query = parseRequest(ProjectionQuerySchema, req.query, res, 'query')
+      if (!query.success)
+        return
+      const after = Number.parseInt(query.data.after ?? '0', 10)
+      const limit = Number.parseInt(query.data.limit ?? '100', 10)
       if (!Number.isSafeInteger(after) || after < 0 || !Number.isSafeInteger(limit) || limit < 1 || limit > 500) {
         res.status(400).json({ error: 'Bad Request', message: 'Invalid projection cursor or limit' })
         return
@@ -702,7 +722,10 @@ export class ProjectController {
 
   async getCR(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const { projectId, crId } = req.params
+      const params = parseRequest(TicketRefParamsSchema, req.params, res, 'params')
+      if (!params.success)
+        return
+      const { projectId, crId } = params.data
 
       if (!projectId || !crId) {
         res.status(400).json({ error: 'Bad Request', message: 'Project ID and CR ID are required' })
@@ -893,8 +916,10 @@ export class ProjectController {
 
   async getSubDocument(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const { projectId, crId } = req.params
-      const subDocName = (req.params as Record<string, string>).subDocName
+      const params = parseRequest(SubdocumentRefParamsSchema, req.params, res, 'params')
+      if (!params.success)
+        return
+      const { projectId, crId, subDocName } = params.data
 
       if (!projectId || !crId || !subDocName) {
         res.status(400).json({ error: 'Bad Request', message: 'Project ID, CR ID, and sub-document name are required' })
@@ -925,7 +950,10 @@ export class ProjectController {
 
   async getTraceStoreMetadata(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const { projectId, crId } = req.params
+      const params = parseRequest(TicketRefParamsSchema, req.params, res, 'params')
+      if (!params.success)
+        return
+      const { projectId, crId } = params.data
 
       if (!projectId || !crId) {
         res.status(400).json({ error: 'Bad Request', message: 'Project ID and CR ID are required' })
@@ -958,7 +986,10 @@ export class ProjectController {
 
   async getTraceStore(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const { projectId, crId } = req.params
+      const params = parseRequest(TicketRefParamsSchema, req.params, res, 'params')
+      if (!params.success)
+        return
+      const { projectId, crId } = params.data
 
       if (!projectId || !crId) {
         res.status(400).json({ error: 'Bad Request', message: 'Project ID and CR ID are required' })
@@ -1031,7 +1062,10 @@ export class ProjectController {
   }
 
   private async resolveVisibleProject(projectRef: string, req: Request, res: Response): Promise<Project | null> {
-    const projects = await this.projectService.getAllProjects(req.query.bypassCache === 'true')
+    const query = parseRequest(BypassCacheQuerySchema, req.query, res, 'query')
+    if (!query.success)
+      return null
+    const projects = await this.projectService.getAllProjects(query.data.bypassCache === 'true')
     const project = findProjectByRef(projects, projectRef)
     const access = getRequestAccess(req)
 

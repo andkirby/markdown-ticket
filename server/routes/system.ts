@@ -17,6 +17,7 @@ import { parseToml } from '@mdt/shared/utils/toml.js'
 import { Router } from 'express'
 import { getRuntimeConfig } from '../config/runtimeConfig.js'
 import { parseRequest } from '../http/parseRequest.js'
+import { FilesystemPathBodySchema } from '../http/readSchemas.js'
 import { authorizeFilesystemPath, FilesystemAccessDeniedError, getProjectRoots } from '../security/filesystemAccess.js'
 
 interface FileInvoker {
@@ -258,11 +259,10 @@ export function createSystemRouter(
    *             schema: { $ref: '#/components/schemas/Error400' }
    */
   router.post('/filesystem/exists', async (req: Request, res: Response) => {
-    const { path: inputPath } = req.body
-
-    if (!inputPath || typeof inputPath !== 'string') {
-      return res.status(400).json({ error: 'Bad Request', message: 'Path is required and must be a string' })
-    }
+    const body = parseRequest(FilesystemPathBodySchema, req.body, res, 'body')
+    if (!body.success)
+      return
+    const { path: inputPath } = body.data
 
     try {
       const configDir = getRuntimeConfig(req).configDir

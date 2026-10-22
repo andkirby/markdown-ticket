@@ -28,60 +28,6 @@
       "phase": 4
     },
     {
-      "file": "mcp-server/src/tools/handlers/projectHandlers.ts",
-      "function": "ProjectHandlers/handleToolCall",
-      "kind": "tool-read",
-      "expression": "await this.handleGetProjectInfo(args.key as string)",
-      "count": 1,
-      "reason": "Read-tool dispatch retained until phase 5",
-      "phase": 5
-    },
-    {
-      "file": "mcp-server/src/tools/index.ts",
-      "function": "MCPTools/handleLegacyRead",
-      "kind": "tool-cast",
-      "expression": "raw as Record<string, unknown>",
-      "count": 1,
-      "reason": "Read-tool dispatch retained until phase 5",
-      "phase": 5
-    },
-    {
-      "file": "mcp-server/src/tools/index.ts",
-      "function": "MCPTools/handleLegacyRead",
-      "kind": "tool-read",
-      "expression": "key = args.key as string | undefined",
-      "count": 1,
-      "reason": "Read-tool dispatch retained until phase 5",
-      "phase": 5
-    },
-    {
-      "file": "mcp-server/src/tools/index.ts",
-      "function": "MCPTools/handleLegacyRead",
-      "kind": "tool-read",
-      "expression": "project = await this.projectHandlers.resolveProject(args.project as string | undefined, this.detectedProject, key)",
-      "count": 1,
-      "reason": "Read-tool dispatch retained until phase 5",
-      "phase": 5
-    },
-    {
-      "file": "mcp-server/src/tools/index.ts",
-      "function": "MCPTools/handleLegacyRead",
-      "kind": "tool-read",
-      "expression": "this.crHandlers.handleGetCR(project, key || '', args.mode as string | undefined)",
-      "count": 1,
-      "reason": "Read-tool dispatch retained until phase 5",
-      "phase": 5
-    },
-    {
-      "file": "mcp-server/src/tools/index.ts",
-      "function": "MCPTools/handleLegacyRead",
-      "kind": "tool-read",
-      "expression": "this.crHandlers.handleListCRs(project, args.filters as Record<string, unknown> | undefined)",
-      "count": 1,
-      "reason": "Read-tool dispatch retained until phase 5",
-      "phase": 5
-    },
-    {
       "file": "mcp-server/src/transports/http.ts",
       "function": "createHttpTransportApp/app.post(\"/mcp\")",
       "kind": "request-delegation",
@@ -102,48 +48,12 @@
     },
     {
       "file": "server/controllers/DocumentController.ts",
-      "function": "DocumentController/getDocumentContent",
-      "kind": "request-read",
-      "expression": "{ projectId, filePath } = req.query",
-      "count": 1,
-      "reason": "Existing request consumption; migrate with its owning phase",
-      "phase": 5
-    },
-    {
-      "file": "server/controllers/DocumentController.ts",
-      "function": "DocumentController/getDocuments",
-      "kind": "request-read",
-      "expression": "{ projectId } = req.query",
-      "count": 1,
-      "reason": "Existing request consumption; migrate with its owning phase",
-      "phase": 5
-    },
-    {
-      "file": "server/controllers/DocumentController.ts",
       "function": "DocumentController/mintPreviewToken",
       "kind": "request-delegation",
       "expression": "getRequestAccess(req)",
       "count": 1,
       "delegate": "../security/apiAuth.js#getRequestAccess",
       "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/controllers/DocumentController.ts",
-      "function": "DocumentController/serveRawPreview",
-      "kind": "request-read",
-      "expression": "documentPath = req.params[0] as string | undefined",
-      "count": 1,
-      "reason": "Existing request consumption; migrate with its owning phase",
-      "phase": 5
-    },
-    {
-      "file": "server/controllers/DocumentController.ts",
-      "function": "DocumentController/serveRawPreview",
-      "kind": "request-read",
-      "expression": "token = req.params.token as string | undefined",
-      "count": 1,
-      "reason": "Existing request consumption; migrate with its owning phase",
       "phase": 5
     },
     {
@@ -168,48 +78,12 @@
     },
     {
       "file": "server/controllers/ProjectController.ts",
-      "function": "ProjectController/getAllProjects",
-      "kind": "request-read",
-      "expression": "bypassCache = req.query.bypassCache === 'true'",
-      "count": 1,
-      "reason": "Existing request consumption; migrate with its owning phase",
-      "phase": 5
-    },
-    {
-      "file": "server/controllers/ProjectController.ts",
       "function": "ProjectController/getCloudProjections",
       "kind": "request-delegation",
       "expression": "getRequestAccess(req)",
       "count": 1,
       "delegate": "../security/apiAuth.js#getRequestAccess",
       "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/controllers/ProjectController.ts",
-      "function": "ProjectController/getCloudProjections",
-      "kind": "request-read",
-      "expression": "{ projectId } = req.params",
-      "count": 1,
-      "reason": "Existing request consumption; migrate with its owning phase",
-      "phase": 5
-    },
-    {
-      "file": "server/controllers/ProjectController.ts",
-      "function": "ProjectController/getCloudProjections",
-      "kind": "request-read",
-      "expression": "after = Number.parseInt(String(req.query.after ?? '0'), 10)",
-      "count": 1,
-      "reason": "Existing request consumption; migrate with its owning phase",
-      "phase": 5
-    },
-    {
-      "file": "server/controllers/ProjectController.ts",
-      "function": "ProjectController/getCloudProjections",
-      "kind": "request-read",
-      "expression": "limit = Number.parseInt(String(req.query.limit ?? '100'), 10)",
-      "count": 1,
-      "reason": "Existing request consumption; migrate with its owning phase",
       "phase": 5
     },
     {
@@ -224,24 +98,6 @@
     },
     {
       "file": "server/controllers/ProjectController.ts",
-      "function": "ProjectController/getCR",
-      "kind": "request-read",
-      "expression": "{ projectId, crId } = req.params",
-      "count": 1,
-      "reason": "Existing request consumption; migrate with its owning phase",
-      "phase": 5
-    },
-    {
-      "file": "server/controllers/ProjectController.ts",
-      "function": "ProjectController/getFileSystemTree",
-      "kind": "request-read",
-      "expression": "{ projectId } = req.query",
-      "count": 1,
-      "reason": "Existing request consumption; migrate with its owning phase",
-      "phase": 5
-    },
-    {
-      "file": "server/controllers/ProjectController.ts",
       "function": "ProjectController/getProjectConfig",
       "kind": "request-delegation",
       "expression": "getRequestAccess(req)",
@@ -252,30 +108,12 @@
     },
     {
       "file": "server/controllers/ProjectController.ts",
-      "function": "ProjectController/getProjectConfig",
-      "kind": "request-read",
-      "expression": "{ projectId } = req.params",
-      "count": 1,
-      "reason": "Existing request consumption; migrate with its owning phase",
-      "phase": 5
-    },
-    {
-      "file": "server/controllers/ProjectController.ts",
       "function": "ProjectController/getProjectCRs",
       "kind": "request-delegation",
       "expression": "this.resolveVisibleProject(projectId, req, res)",
       "count": 1,
       "delegate": "server/controllers/ProjectController.ts#this.resolveVisibleProject",
       "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/controllers/ProjectController.ts",
-      "function": "ProjectController/getProjectCRs",
-      "kind": "request-read",
-      "expression": "{ projectId } = req.params",
-      "count": 1,
-      "reason": "Existing request consumption; migrate with its owning phase",
       "phase": 5
     },
     {
@@ -287,42 +125,6 @@
       "delegate": "server/controllers/ProjectController.ts#this.resolveVisibleProject",
       "reason": "Existing controller/security Request delegation; exact callee retained for review",
       "phase": 5
-    },
-    {
-      "file": "server/controllers/ProjectController.ts",
-      "function": "ProjectController/getSubDocument",
-      "kind": "request-read",
-      "expression": "{ projectId, crId } = req.params",
-      "count": 1,
-      "reason": "Existing request consumption; migrate with its owning phase",
-      "phase": 5
-    },
-    {
-      "file": "server/controllers/ProjectController.ts",
-      "function": "ProjectController/getSubDocument",
-      "kind": "request-read",
-      "expression": "subDocName = (req.params as Record<string, string>).subDocName",
-      "count": 1,
-      "reason": "Existing request consumption; migrate with its owning phase",
-      "phase": 5
-    },
-    {
-      "file": "server/controllers/ProjectController.ts",
-      "function": "ProjectController/getSystemDirectories",
-      "kind": "decoder-cast",
-      "expression": "parseToml(await fs.readFile(configPath, 'utf8')) as {\n    discovery?: {\n        searchPaths?: string[];\n    };\n}",
-      "count": 1,
-      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
-      "phase": 4
-    },
-    {
-      "file": "server/controllers/ProjectController.ts",
-      "function": "ProjectController/getSystemDirectories",
-      "kind": "decoder",
-      "expression": "parseToml(await fs.readFile(configPath, 'utf8'))",
-      "count": 1,
-      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
-      "phase": 4
     },
     {
       "file": "server/controllers/ProjectController.ts",
@@ -336,30 +138,12 @@
     },
     {
       "file": "server/controllers/ProjectController.ts",
-      "function": "ProjectController/getSystemDirectories",
-      "kind": "request-read",
-      "expression": "{ path: requestPath } = req.query",
-      "count": 1,
-      "reason": "Existing request consumption; migrate with its owning phase",
-      "phase": 5
-    },
-    {
-      "file": "server/controllers/ProjectController.ts",
       "function": "ProjectController/getTraceStore",
       "kind": "request-delegation",
       "expression": "this.resolveVisibleProject(projectId, req, res)",
       "count": 1,
       "delegate": "server/controllers/ProjectController.ts#this.resolveVisibleProject",
       "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/controllers/ProjectController.ts",
-      "function": "ProjectController/getTraceStore",
-      "kind": "request-read",
-      "expression": "{ projectId, crId } = req.params",
-      "count": 1,
-      "reason": "Existing request consumption; migrate with its owning phase",
       "phase": 5
     },
     {
@@ -374,30 +158,12 @@
     },
     {
       "file": "server/controllers/ProjectController.ts",
-      "function": "ProjectController/getTraceStoreMetadata",
-      "kind": "request-read",
-      "expression": "{ projectId, crId } = req.params",
-      "count": 1,
-      "reason": "Existing request consumption; migrate with its owning phase",
-      "phase": 5
-    },
-    {
-      "file": "server/controllers/ProjectController.ts",
       "function": "ProjectController/getUnifiedTickets",
       "kind": "request-delegation",
       "expression": "this.resolveVisibleProject(projectId, req, res)",
       "count": 1,
       "delegate": "server/controllers/ProjectController.ts#this.resolveVisibleProject",
       "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/controllers/ProjectController.ts",
-      "function": "ProjectController/getUnifiedTickets",
-      "kind": "request-read",
-      "expression": "{ projectId } = req.params",
-      "count": 1,
-      "reason": "Existing request consumption; migrate with its owning phase",
       "phase": 5
     },
     {
@@ -409,51 +175,6 @@
       "delegate": "../security/apiAuth.js#getRequestAccess",
       "reason": "Existing controller/security Request delegation; exact callee retained for review",
       "phase": 5
-    },
-    {
-      "file": "server/controllers/ProjectController.ts",
-      "function": "ProjectController/resolveVisibleProject",
-      "kind": "request-read",
-      "expression": "projects = await this.projectService.getAllProjects(req.query.bypassCache === 'true')",
-      "count": 1,
-      "reason": "Existing request consumption; migrate with its owning phase",
-      "phase": 5
-    },
-    {
-      "file": "server/controllers/ProjectController.ts",
-      "function": "ProjectController/search",
-      "kind": "request-read",
-      "expression": "parseResult = SearchRequestSchema.safeParse(req.body)",
-      "count": 1,
-      "reason": "Existing request consumption; migrate with its owning phase",
-      "phase": 3
-    },
-    {
-      "file": "server/controllers/SearchController.ts",
-      "function": "SearchController/search",
-      "kind": "request-read",
-      "expression": "parseResult = UnifiedSearchRequestSchema.safeParse(req.body)",
-      "count": 1,
-      "reason": "Existing request consumption; migrate with its owning phase",
-      "phase": 3
-    },
-    {
-      "file": "server/repositories/ConfigRepository.ts",
-      "function": "ConfigRepository/_parseConfig",
-      "kind": "decoder-cast",
-      "expression": "parseToml(content) as any",
-      "count": 1,
-      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
-      "phase": 4
-    },
-    {
-      "file": "server/repositories/ConfigRepository.ts",
-      "function": "ConfigRepository/_parseConfig",
-      "kind": "decoder",
-      "expression": "parseToml(content)",
-      "count": 1,
-      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
-      "phase": 4
     },
     {
       "file": "server/routes/auth.ts",
@@ -647,75 +368,12 @@
     },
     {
       "file": "server/routes/devtools.ts",
-      "function": "createDevToolsRouter/router.get(\"/frontend/dev-logs\")",
-      "kind": "request-read",
-      "expression": "{ filter } = req.query",
-      "count": 1,
-      "reason": "Existing request consumption; migrate with its owning phase",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/devtools.ts",
-      "function": "createDevToolsRouter/router.get(\"/frontend/dev-logs\")",
-      "kind": "request-read",
-      "expression": "lines = Math.min(Number.parseInt(req.query.lines || '20'), MAX_DEV_MODE_LOGS)",
-      "count": 1,
-      "reason": "Existing request consumption; migrate with its owning phase",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/devtools.ts",
-      "function": "createDevToolsRouter/router.get(\"/frontend/logs\")",
-      "kind": "request-read",
-      "expression": "{ filter } = req.query",
-      "count": 1,
-      "reason": "Existing request consumption; migrate with its owning phase",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/devtools.ts",
-      "function": "createDevToolsRouter/router.get(\"/frontend/logs\")",
-      "kind": "request-read",
-      "expression": "lines = Math.min(Number.parseInt(req.query.lines || '20'), MAX_FRONTEND_LOGS)",
-      "count": 1,
-      "reason": "Existing request consumption; migrate with its owning phase",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/devtools.ts",
       "function": "createDevToolsRouter/router.get(\"/logs/stream\")",
       "kind": "request-delegation",
       "expression": "writeStreamHeaders(req, res, originPolicy)",
       "count": 1,
       "delegate": "server/routes/devtools.ts#writeStreamHeaders",
       "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/devtools.ts",
-      "function": "createDevToolsRouter/router.get(\"/logs/stream\")",
-      "kind": "request-read",
-      "expression": "{ filter } = req.query",
-      "count": 1,
-      "reason": "Existing request consumption; migrate with its owning phase",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/devtools.ts",
-      "function": "createDevToolsRouter/router.get(\"/logs\")",
-      "kind": "request-read",
-      "expression": "{ filter } = req.query",
-      "count": 1,
-      "reason": "Existing request consumption; migrate with its owning phase",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/devtools.ts",
-      "function": "createDevToolsRouter/router.get(\"/logs\")",
-      "kind": "request-read",
-      "expression": "lines = Math.min(Number.parseInt(req.query.lines || '20'), MAX_LOG_ENTRIES)",
-      "count": 1,
-      "reason": "Existing request consumption; migrate with its owning phase",
       "phase": 5
     },
     {
@@ -727,15 +385,6 @@
       "delegate": "../controllers/ProjectController.js#ProjectController.ensureProjectVisible",
       "reason": "Existing controller/security Request delegation; exact callee retained for review",
       "phase": 5
-    },
-    {
-      "file": "server/routes/documents.ts",
-      "function": "createDocumentRouter/requireVisibleProject",
-      "kind": "request-read",
-      "expression": "projectId = typeof req.query.projectId === 'string'\n    ? req.query.projectId\n    : typeof req.body?.projectId === 'string'\n        ? req.body.projectId\n        : null",
-      "count": 4,
-      "reason": "Existing request consumption; migrate with its owning phase",
-      "phase": 3
     },
     {
       "file": "server/routes/documents.ts",
@@ -1369,15 +1018,6 @@
     },
     {
       "file": "server/routes/system.ts",
-      "function": "createSystemRouter/router.post(\"/filesystem/exists\")",
-      "kind": "request-read",
-      "expression": "{ path: inputPath } = req.body",
-      "count": 1,
-      "reason": "Existing request consumption; migrate with its owning phase",
-      "phase": 3
-    },
-    {
-      "file": "server/routes/system.ts",
       "function": "getAllowedFilesystemRoots",
       "kind": "request-delegation",
       "expression": "getRuntimeConfig(req)",
@@ -1620,24 +1260,6 @@
       "phase": 4
     },
     {
-      "file": "server/security/projectSharing.ts",
-      "function": "shareIdCollides",
-      "kind": "decoder-cast",
-      "expression": "parseToml(await readFile(registryPath, 'utf8')) as Partial<RegistryData>",
-      "count": 1,
-      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
-      "phase": 4
-    },
-    {
-      "file": "server/security/projectSharing.ts",
-      "function": "shareIdCollides",
-      "kind": "decoder",
-      "expression": "parseToml(await readFile(registryPath, 'utf8'))",
-      "count": 1,
-      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
-      "phase": 4
-    },
-    {
       "file": "server/security/readSession.ts",
       "function": "getReadSessionPayload",
       "kind": "request-delegation",
@@ -1685,44 +1307,8 @@
       "phase": 4
     },
     {
-      "file": "server/server.ts",
-      "function": "app.get(\"/api/projects/:id/cloud-sync/status\")",
-      "kind": "request-read",
-      "expression": "req.params.id",
-      "count": 1,
-      "reason": "Existing request consumption; migrate with its owning phase",
-      "phase": 5
-    },
-    {
-      "file": "server/server.ts",
-      "function": "app.get(\"/api/projects/:id/cloud-sync/status\")",
-      "kind": "request-read",
-      "expression": "status = projectionStreamManager.getStatus(req.params.id)",
-      "count": 1,
-      "reason": "Existing request consumption; migrate with its owning phase",
-      "phase": 5
-    },
-    {
       "file": "server/services/config/adapters/GlobalConfigStorageAdapter.ts",
       "function": "GlobalConfigStorageAdapter/read",
-      "kind": "decoder",
-      "expression": "parseToml(content)",
-      "count": 1,
-      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
-      "phase": 4
-    },
-    {
-      "file": "server/services/config/adapters/ProjectConfigStorageAdapter.ts",
-      "function": "ProjectConfigStorageAdapter/read",
-      "kind": "decoder-cast",
-      "expression": "parseToml(content) as LocalProjectConfig",
-      "count": 1,
-      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
-      "phase": 4
-    },
-    {
-      "file": "server/services/config/adapters/ProjectConfigStorageAdapter.ts",
-      "function": "ProjectConfigStorageAdapter/read",
       "kind": "decoder",
       "expression": "parseToml(content)",
       "count": 1,
@@ -1757,15 +1343,6 @@
       "phase": 4
     },
     {
-      "file": "server/services/fileWatcher/index.ts",
-      "function": "FileWatcherService/handleFileChangeForSSE",
-      "kind": "decoder",
-      "expression": "matter(fileContent)",
-      "count": 1,
-      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
-      "phase": 4
-    },
-    {
       "file": "server/services/PinStateService.ts",
       "function": "PinStateService/readState",
       "kind": "decoder",
@@ -1788,15 +1365,6 @@
       "function": "decodeAccessTokenExpiry",
       "kind": "decoder-cast",
       "expression": "JSON.parse(Buffer.from(payloadSegment, 'base64url').toString('utf8')) as {\n    exp?: unknown;\n}",
-      "count": 1,
-      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
-      "phase": 4
-    },
-    {
-      "file": "shared/services/cloud-sync/CloudProjectionReadModel.ts",
-      "function": "CloudProjectionReadModel/load",
-      "kind": "decoder-cast",
-      "expression": "JSON.parse(raw) as Partial<ReadModelState>",
       "count": 1,
       "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
       "phase": 4
@@ -1833,24 +1401,6 @@
       "function": "CloudOperationJournal/acquireLock",
       "kind": "decoder",
       "expression": "JSON.parse(await readFile(lockPath, 'utf8'))",
-      "count": 1,
-      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
-      "phase": 4
-    },
-    {
-      "file": "shared/services/cloud-sync/operation-journal.ts",
-      "function": "CloudOperationJournal/load",
-      "kind": "decoder-cast",
-      "expression": "JSON.parse(data) as PendingOperation",
-      "count": 1,
-      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
-      "phase": 4
-    },
-    {
-      "file": "shared/services/cloud-sync/operation-journal.ts",
-      "function": "CloudOperationJournal/load",
-      "kind": "decoder",
-      "expression": "JSON.parse(data)",
       "count": 1,
       "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
       "phase": 4
@@ -1919,73 +1469,10 @@
       "phase": 4
     },
     {
-      "file": "shared/services/cloud-sync/projection-sync.ts",
-      "function": "CloudProjectionSync/load",
-      "kind": "decoder-cast",
-      "expression": "JSON.parse(await readFile(this.file(ticketNumber), 'utf8')) as PendingProjection",
-      "count": 1,
-      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
-      "phase": 4
-    },
-    {
-      "file": "shared/services/MarkdownService.ts",
-      "function": "MarkdownService/extractTicketMetadata",
-      "kind": "decoder",
-      "expression": "this.parseYamlFrontmatter(yamlContent)",
-      "count": 1,
-      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
-      "phase": 4
-    },
-    {
-      "file": "shared/services/MarkdownService.ts",
-      "function": "MarkdownService/parseMarkdownContent",
-      "kind": "decoder",
-      "expression": "this.parseYamlFrontmatter(yamlContent)",
-      "count": 1,
-      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
-      "phase": 4
-    },
-    {
-      "file": "shared/services/project/ProjectConfigLoader.ts",
-      "function": "ProjectConfigLoader/getProjectConfig",
-      "kind": "decoder",
-      "expression": "parseToml(content)",
-      "count": 1,
-      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
-      "phase": 4
-    },
-    {
       "file": "shared/services/project/ProjectConfigService.ts",
       "function": "ProjectConfigService/getGlobalConfig",
       "kind": "decoder",
       "expression": "parseToml(configContent)",
-      "count": 1,
-      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
-      "phase": 4
-    },
-    {
-      "file": "shared/services/project/ProjectConfigService.ts",
-      "function": "ProjectConfigService/getProjectConfig",
-      "kind": "decoder",
-      "expression": "parseToml(content)",
-      "count": 1,
-      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
-      "phase": 4
-    },
-    {
-      "file": "shared/services/project/ProjectRegistry.ts",
-      "function": "ProjectRegistry/parseRegistryContent",
-      "kind": "decoder",
-      "expression": "parseToml(content)",
-      "count": 1,
-      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
-      "phase": 4
-    },
-    {
-      "file": "shared/services/TemplateService.ts",
-      "function": "TemplateService/loadTemplates",
-      "kind": "decoder",
-      "expression": "JSON.parse(configContent)",
       "count": 1,
       "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
       "phase": 4
@@ -2003,21 +1490,21 @@
   "decoders": [
     {
       "file": "shared/services/project/ProjectConfigService.ts",
-      "parser": "ProjectConfigSchema read predicate; compatible Project*WriteFileSchema on write reloads",
+      "parser": "ProjectConfigReadFileSchema / processConfig; separate compatible write reload schemas",
       "fallback": "general reads retain migration/defaults; write reload failures preserve destinations",
-      "fixture": "shared/tests/services/MDT-258/project-write-boundaries.test.ts"
+      "fixture": "shared/tests/services/MDT-258/phase45-compatibility.test.ts"
     },
     {
       "file": "shared/services/project/ProjectConfigLoader.ts",
-      "parser": "ProjectConfig predicate (output not yet consumed)",
+      "parser": "ProjectConfigReadFileSchema (raw validated input, no entity transforms)",
       "fallback": "retain cache/migration policy",
-      "fixture": "shared/services/project/__tests__/ProjectConfigService.test.ts"
+      "fixture": "shared/tests/services/MDT-258/phase45-compatibility.test.ts"
     },
     {
       "file": "shared/services/project/ProjectRegistry.ts",
-      "parser": "manual path guard",
+      "parser": "ProjectRegistryReadFileSchema, optional legacy metadata",
       "fallback": "retain missing/invalid entry recovery",
-      "fixture": "shared/services/project/__tests__/ProjectDiscoveryService.test.ts"
+      "fixture": "shared/tests/services/MDT-258/phase45-compatibility.test.ts"
     },
     {
       "file": "shared/tools/config-cli.ts",
@@ -2045,9 +1532,9 @@
     },
     {
       "file": "server/services/config/adapters/ProjectConfigStorageAdapter.ts",
-      "parser": "legacy display read; ProjectConfigWriteFileSchema before write mutator",
+      "parser": "ProjectConfigDisplayFileSchema for display; ProjectConfigWriteFileSchema before mutation",
       "fallback": "display fallback unchanged; writes default only on ENOENT, reject invalid reloads",
-      "fixture": "server/tests/unit/Phase23.boundaries.test.ts"
+      "fixture": "server/tests/unit/Phase45.boundaries.test.ts"
     },
     {
       "file": "mcp-server/src/config/index.ts",
@@ -2057,19 +1544,19 @@
     },
     {
       "file": "server/repositories/ConfigRepository.ts",
-      "parser": "manual discovery/preview defaults",
+      "parser": "ProjectDocumentReadFileSchema plus existing extraction and defaults",
       "fallback": "retain legacy extraction",
-      "fixture": "server/tests/unit/ConfigRepository.test.ts"
+      "fixture": "server/tests/unit/Phase45.boundaries.test.ts"
     },
     {
       "file": "server/controllers/ProjectController.ts",
-      "parser": "legacy discovery config cast",
+      "parser": "GlobalConfigSchema for discovery roots",
       "fallback": "retain default roots",
-      "fixture": "server/tests/unit/ProjectController.test.ts"
+      "fixture": "server/tests/unit/Phase45.boundaries.test.ts"
     },
     {
       "file": "server/security/projectSharing.ts",
-      "parser": "ProjectRegistryWriteFileSchema for destination; collision scan remains phase 4",
+      "parser": "ProjectRegistryWriteFileSchema for destination; ProjectRegistrySharingFileSchema for collision scan",
       "fallback": "missing-registry creation retained; corrupt destination fails closed",
       "fixture": "server/tests/unit/Phase23.boundaries.test.ts"
     },
@@ -2081,21 +1568,21 @@
     },
     {
       "file": "shared/services/TemplateService.ts",
-      "parser": "TemplateConfigSchema per entry; root unchecked",
+      "parser": "TemplatesFileSchema root, TemplateConfigSchema per entry",
       "fallback": "skip invalid entry, fallback on load error",
-      "fixture": "shared/tests/models/MDT-101/DomainContracts.schema.test.ts"
+      "fixture": "shared/tests/services/MDT-258/phase45-compatibility.test.ts"
     },
     {
       "file": "shared/services/MarkdownService.ts",
-      "parser": "manual frontmatter normalizer",
+      "parser": "PersistedTicketFrontmatterSchema plus existing normalization/H1/metadata policy",
       "fallback": "retain H1/defaults/legacy fields",
-      "fixture": "shared/tests/services/MDT-094/MarkdownService.scanTicketMetadata.test.ts"
+      "fixture": "shared/tests/services/MDT-258/phase45-compatibility.test.ts"
     },
     {
       "file": "server/services/fileWatcher/index.ts",
-      "parser": "legacy frontmatter selection",
+      "parser": "PersistedTicketFrontmatterSchema before SSE field projection",
       "fallback": "retain watcher filtering",
-      "fixture": "server/tests/unit/RegistryWatcher.test.ts"
+      "fixture": "server/tests/unit/Phase45.boundaries.test.ts"
     },
     {
       "file": "server/services/DocumentFavStateService.ts",
@@ -2123,9 +1610,9 @@
     },
     {
       "file": "shared/services/cloud-sync/operation-journal.ts",
-      "parser": "legacy pending-operation cast",
+      "parser": "PendingOperationFileSchema; lock PID remains an explicit syntax/type reader",
       "fallback": "preserve replay/lock behavior; phase 4 owns validation",
-      "fixture": "shared/services/cloud-sync/__tests__/operation-journal.test.ts"
+      "fixture": "shared/services/cloud-sync/__tests__/recovery.test.ts"
     },
     {
       "file": "shared/services/cloud-sync/project-state-store.ts",
@@ -2138,6 +1625,18 @@
       "parser": "manual state sanitizer",
       "fallback": "reset invalid stream state",
       "fixture": "shared/services/cloud-sync/__tests__/project-state-store.test.ts"
+    },
+    {
+      "file": "shared/services/cloud-sync/projection-sync.ts",
+      "parser": "PendingProjectionFileSchema",
+      "fallback": "ignore corrupt pending projection; no publish",
+      "fixture": "shared/services/cloud-sync/__tests__/projection-sync.test.ts"
+    },
+    {
+      "file": "shared/services/cloud-sync/CloudProjectionReadModel.ts",
+      "parser": "ProjectionReadModelFileSchema",
+      "fallback": "rebuild corrupt cache; live always false after reload",
+      "fixture": "shared/services/cloud-sync/__tests__/CloudProjectionReadModel.test.ts"
     }
   ]
 }

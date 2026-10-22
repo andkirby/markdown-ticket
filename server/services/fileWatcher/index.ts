@@ -4,6 +4,7 @@ import type { ProjectRegistration } from './WatcherLifecycleManager.js'
 import { EventEmitter } from 'node:events'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
+import { PersistedTicketFrontmatterSchema } from '@mdt/domain-contracts'
 import matter from 'gray-matter'
 import { PathWatcherService } from './PathWatcherService.js'
 import { SSEBroadcaster } from './SSEBroadcaster.js'
@@ -183,7 +184,7 @@ class FileWatcherService extends EventEmitter {
 
         if (fs.existsSync(filePath)) {
           const fileContent = fs.readFileSync(filePath, 'utf8')
-          const { data: frontmatter } = matter(fileContent)
+          const frontmatter = PersistedTicketFrontmatterSchema.parse(matter(fileContent).data)
 
           // Extract key ticket fields
           ticketData = {
@@ -192,7 +193,7 @@ class FileWatcherService extends EventEmitter {
             status: frontmatter.status,
             type: frontmatter.type,
             priority: frontmatter.priority,
-            lastModified: frontmatter.lastModified || new Date().toISOString(),
+            lastModified: frontmatter.lastModified instanceof Date ? frontmatter.lastModified.toISOString() : frontmatter.lastModified || new Date().toISOString(),
           }
         }
       }
