@@ -1,6 +1,6 @@
 ---
 code: MDT-257
-status: In Progress
+status: Implemented
 dateCreated: 2026-10-22T07:34:25.060Z
 type: Bug Fix
 priority: Medium
@@ -112,7 +112,7 @@ Pass the resolved project context into shared ticket-list scans and use its regi
 2. Add isolated CLI and REST/MCP regression coverage that exercises real shared reads. Check get/list agreement, project counts, metadata-only responses, filters/pagination, and unchanged registry bytes/no local config creation.
 3. Run focused suites, affected builds/type checks and lint. Record exact results and remaining limits here. Add the shared list-read contract to the existing project identity/worktree architecture document.
 
-Number allocation through `TicketService.getCRPath()` remains a separate issue and is outside this fix. Preserve unrelated worktree changes; do not stage or commit.
+Number allocation through `TicketService.getCRPath()` remains a separate issue and is outside this fix. Preserve unrelated worktree changes. The authorized implementation commit is recorded below.
 
 ### Verification Results (2026-10-22)
 
@@ -148,7 +148,54 @@ bunx tsc -p server/tsconfig.json --noEmit
 - The MCP `test:e2e` wrapper prepends the entire E2E directory, so an initial attempted focused invocation ran the wider suite: 274 passed, four failed, 11 skipped, and the new suite initially failed to load a TOML import. The import was corrected. The wider failures were in update-attributes, suggest-improvements, and output-sanitization suites; they were not fixed or baselined here. Use the exact `jest --runTestsByPath` command above for this regression.
 - The new MCP get test initially assumed the title was returned; it now asserts the ticket-specific body actually returned by the existing `get_cr` contract.
 - The existing Jest harness reports open-handle/force-exit warnings. The focused commands exit successfully. No browser UI session, MCP HTTP transport, or full-monorepo green claim is made.
-- Logs and the isolated negative control are retained in the implementing BB thread's `MDT-257-evidence` storage (@thread:thr_cdqiqp7ujs). No staging or commit was performed; ticket closure remains pending review.
+- Logs and the isolated negative control are retained in the implementing BB thread's `MDT-257-evidence` storage (@thread:thr_cdqiqp7ujs). Initial verification left the changes unstaged; the implementation commit and follow-up are recorded below. The user approved marking this ticket Implemented and committing the follow-up.
+
+### CLI Timeout Follow-up
+
+MDT-257 was committed as `c4a24aab` (`fix(MDT-257): list tickets for global-only projects`). The two earlier `project init` timeouts were investigated after that commit:
+
+| Command | Result |
+|---------|--------|
+| `bun run --cwd cli test tests/e2e/project/project.spec.ts --test-name-pattern 'system root\|absolute non-system-root'` | Both cases pass in isolation (2 passed, 10 filtered out) |
+| `bun run --cwd cli test tests/e2e/ticket/list-enhancements.spec.ts tests/e2e/ticket/project-flag.spec.ts tests/e2e/project/project.spec.ts` | Original wider CLI sequence passes: 30/30 |
+| `bun run --cwd cli test:e2e` | Full CLI E2E suite passes: 121/121 across 16 files |
+
+No runtime code, assertions, retries, or timeout thresholds were changed to obtain these results. The earlier timeouts remain historical observations with no established cause; they are not currently reproducible CLI defects. These results do not resolve the separately recorded MCP failures.
+
+The complete follow-up logs are `mdt-cli-init-baseline.log`, `mdt-cli-original-sequence.log`, and `mdt-cli-e2e-current.log` in the same BB thread storage. Unrelated working-tree changes remain unstaged.
+
+### CLI Validation Follow-up
+
+Further tracing found a separate, deterministic defect in the shared validators: each absolute-path check on macOS canonicalized the union of Linux and macOS system roots. This included `/home`, which points to an `autofs` mount on the investigating host. Checking an unrelated path such as `/etc` therefore performed unnecessary filesystem probes. The trace confirmed the calls; the historical five-second timeouts themselves were not reproduced or conclusively attributed to that mount.
+
+Changes in this follow-up:
+
+- `shared/utils/protected-system-roots.ts` now owns the platform-specific raw root lists, used by both `ProjectValidator` and `ProjectValidator.node`.
+- macOS checks native roots and aliases, without probing or blocking Linux-only roots such as `/home`, `/proc`, or `/mnt`. Linux and Windows lists retain their previous contents. Canonical path and symlink comparisons remain in place.
+- Added `system-root-probes.test.ts`, covering both validators, native root protection, symlink targets, allowed subdirectories, Linux preservation, and the absence of foreign mount probes.
+- Extended CLI project-init coverage with real rejected/allowed symlinks and assertions that invalid input creates no local config and valid absolute ticket paths are persisted.
+- Updated MDT-151's owning `secure-paths.md` with the macOS policy and implementation boundary. CLI command syntax and timeouts did not change.
+
+Verification:
+
+| Check | Result |
+|-------|--------|
+| New regression against original validators | 2 expected failures for unwanted `/home` probes; 26 preservation cases pass |
+| New and existing shared path-validation tests | 41/41 pass |
+| Full CLI E2E suite after rebuilding shared | 123/123 pass across 16 files |
+| Shared and CLI builds, scoped ESLint, whitespace check | Pass |
+| Actual Node trace for `/etc` | Canonicalization calls fall from 28 to 17; `/home` probes fall from 1 to 0; `/etc` remains rejected |
+
+Reproduction:
+
+```bash
+bun run --cwd shared jest --runInBand --runTestsByPath tools/__tests__/project-management/system-root-probes.test.ts tools/__tests__/project-management/ticketsPath-validation.test.ts
+bun run build:shared
+bun run --cwd cli test:e2e
+bun run --cwd cli build
+```
+
+Follow-up logs include `mdt-cli-root-probes-red.log`, `mdt-cli-root-probes-green.log`, `mdt-cli-e2e-fixed.log`, and `cli-validation-etc-fixed-trace.json` in the same BB thread storage. The user approved committing this verified follow-up with the ticket marked Implemented. The separately recorded MCP failures and number-allocation issue remain outside this work.
 
 ## 7. Deployment
 

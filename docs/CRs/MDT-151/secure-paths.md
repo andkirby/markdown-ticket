@@ -42,7 +42,15 @@ Prevent selecting **system-managed root directories** as a project root or ticke
 
 ### macOS
 
-`/`, `/Applications`, `/Library`, `/System`, `/Users`, `/Volumes`, `/bin`, `/private`, `/sbin`, `/usr`, `/usr/local`
+`/`, `/Applications`, `/Library`, `/System`, `/Users`, `/Volumes`, `/bin`, `/dev`, `/etc`, `/opt`, `/private`, `/sbin`, `/tmp`, `/usr`, `/usr/local`, `/var`
+
+The list is specific to macOS. Linux-only roots such as `/home`, `/proc`, and
+`/mnt` are not included or probed by macOS validation. In particular, `/home`
+can point to an automount; resolving it while validating an unrelated ticket
+directory adds unnecessary filesystem work. The selected path and the native
+protected roots still use canonical comparisons, including `/etc`, `/var`, and
+`/tmp` aliases. Both shared validators obtain their raw platform lists from
+`shared/utils/protected-system-roots.ts`.
 
 ### Windows
 

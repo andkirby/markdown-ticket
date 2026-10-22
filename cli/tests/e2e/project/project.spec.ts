@@ -4,7 +4,7 @@
  * Tests for project operations: current, get, info, list, ls, init.
  */
 
-import { mkdir } from 'node:fs/promises'
+import { mkdir, symlink } from 'node:fs/promises'
 import { join } from 'node:path'
 import { ProjectFactory, TestEnvironment } from '@mdt/shared/test-lib'
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
@@ -171,6 +171,7 @@ describe('Project Namespace', () => {
 
     expect(result.exitCode).toBe(1)
     expect(result.stderr).toMatch(/system root|subfolder/i)
+    expect(await Bun.file(join(tempDir, '.mdt-config.toml')).exists()).toBe(false)
   })
 
   test('should accept absolute non-system-root tickets path on project init', async () => {
@@ -188,5 +189,39 @@ describe('Project Namespace', () => {
 
     expect(result.exitCode).toBe(0)
     expect(result.stdout).toContain('ABS')
+    expect(await Bun.file(join(tempDir, '.mdt-config.toml')).text()).toContain(absPath)
+  })
+
+  test('should reject a symlink to a system root without creating project config', async () => {
+    const tempDir = join(testEnv.getTempDirectory(), 'init-system-symlink')
+    const ticketsPath = join(testEnv.getTempDirectory(), 'system-link')
+    await mkdir(tempDir, { recursive: true })
+    await symlink('/etc', ticketsPath)
+
+    const result = await runCli(
+      ['project', 'init', 'REJ', 'Rejected Symlink', '--tickets-path', ticketsPath],
+      { cwd: tempDir },
+    )
+
+    expect(result.exitCode).toBe(1)
+    expect(result.stderr).toMatch(/system root|subfolder/i)
+    expect(await Bun.file(join(tempDir, '.mdt-config.toml')).exists()).toBe(false)
+  })
+
+  test('should allow a symlink to an external non-system ticket directory', async () => {
+    const tempDir = join(testEnv.getTempDirectory(), 'init-external-symlink')
+    const targetPath = join(testEnv.getTempDirectory(), 'external-ticket-target')
+    const ticketsPath = join(testEnv.getTempDirectory(), 'external-ticket-link')
+    await mkdir(tempDir, { recursive: true })
+    await mkdir(targetPath, { recursive: true })
+    await symlink(targetPath, ticketsPath)
+
+    const result = await runCli(
+      ['project', 'init', 'ALW', 'Allowed Symlink', '--tickets-path', ticketsPath],
+      { cwd: tempDir },
+    )
+
+    expect(result.exitCode).toBe(0)
+    expect(await Bun.file(join(tempDir, '.mdt-config.toml')).text()).toContain(ticketsPath)
   })
 })

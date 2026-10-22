@@ -3,6 +3,7 @@ import * as fs from 'node:fs'
 import * as os from 'node:os'
 import * as path from 'node:path'
 import process from 'node:process'
+import { getProtectedRootPaths } from '../utils/protected-system-roots.js'
 import { ProjectValidator as BaseProjectValidator } from './ProjectValidator.js'
 
 /**
@@ -15,7 +16,7 @@ export class ProjectValidator extends BaseProjectValidator {
    * @override
    */
   static isSystemRoot(normalizedPath: string): boolean {
-    const protectedRoots = getProtectedRoots()
+    const protectedRoots = getProtectedRootPaths(process.platform).map(canonicalizeRoot)
 
     try {
       const canonical = fs.realpathSync(normalizedPath)
@@ -93,59 +94,6 @@ export class ProjectValidator extends BaseProjectValidator {
     // Otherwise return unchanged
     return inputPath
   }
-}
-
-function getProtectedRoots(): string[] {
-  const posixRoots = [
-    '/',
-    '/bin',
-    '/boot',
-    '/dev',
-    '/etc',
-    '/home',
-    '/lib',
-    '/lib64',
-    '/media',
-    '/mnt',
-    '/opt',
-    '/proc',
-    '/root',
-    '/run',
-    '/sbin',
-    '/srv',
-    '/sys',
-    '/tmp',
-    '/usr',
-    '/usr/local',
-    '/var',
-  ]
-
-  if (process.platform === 'darwin') {
-    const macRoots = [
-      '/Applications',
-      '/Library',
-      '/System',
-      '/Users',
-      '/Volumes',
-      '/private',
-      '/sbin',
-    ]
-    return [...new Set([...posixRoots, ...macRoots])].map(canonicalizeRoot)
-  }
-
-  if (process.platform === 'win32') {
-    return [
-      'C:\\',
-      'C:\\Windows',
-      'C:\\Program Files',
-      'C:\\Program Files (x86)',
-      'C:\\ProgramData',
-      'C:\\Users',
-      'C:\\System Volume Information',
-    ].map(canonicalizeRoot)
-  }
-
-  return posixRoots.map(canonicalizeRoot)
 }
 
 function canonicalizeRoot(rootPath: string): string {

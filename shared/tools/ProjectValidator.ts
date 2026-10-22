@@ -1,5 +1,6 @@
 import { PROJECT_CODE_PATTERN } from '@mdt/domain-contracts'
 import { isAbsolute, normalize } from '../utils/path-browser.js'
+import { getProtectedRootPaths } from '../utils/protected-system-roots.js'
 
 // Node-only — gracefully handled in browser via typeof checks below
 let realpathSync: (path: string) => string
@@ -301,57 +302,11 @@ function getProtectedRoots(): string[] {
   // eslint-disable-next-line node/prefer-global/process
   const platform = process.platform
 
-  // Common POSIX roots
-  const posixRoots = [
-    '/',
-    '/bin',
-    '/boot',
-    '/dev',
-    '/etc',
-    '/home',
-    '/lib',
-    '/lib64',
-    '/media',
-    '/mnt',
-    '/opt',
-    '/proc',
-    '/root',
-    '/run',
-    '/sbin',
-    '/srv',
-    '/sys',
-    '/tmp',
-    '/usr',
-    '/usr/local',
-    '/var',
-  ]
-
-  if (platform === 'darwin') {
-    const macExtras = ['/Applications', '/Library', '/System', '/Users', '/Volumes', '/private', '/sbin']
-    return [...new Set([...posixRoots, ...macExtras])].map((p) => {
-      try {
-        return realpathSync(p)
-      }
-      catch {
-        return p
-      }
-    })
-  }
-
   if (platform === 'win32') {
-    return [
-      'C:\\',
-      'C:\\Windows',
-      'C:\\Program Files',
-      'C:\\Program Files (x86)',
-      'C:\\ProgramData',
-      'C:\\Users',
-      'C:\\System Volume Information',
-    ]
+    return getProtectedRootPaths(platform)
   }
 
-  // Linux and other POSIX
-  return posixRoots.map((p) => {
+  return getProtectedRootPaths(platform).map((p) => {
     try {
       return realpathSync(p)
     }
