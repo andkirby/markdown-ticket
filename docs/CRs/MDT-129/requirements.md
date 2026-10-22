@@ -43,7 +43,7 @@ Ticket: `MDT-129`
 
 - `BR-6.1` [bdd] WHEN the selector rail renders, the system shall display the active project first.
 - `BR-6.2` [bdd] WHEN filling remaining visible rail slots, the system shall prioritize favorites first, then non-favorites.
-- `BR-6.3` [bdd] WHEN ordering visible favorites, the system shall sort by count descending, with lastUsedAt descending as tie-break.
+- `BR-6.3` [bdd] WHEN ordering visible favorites, the system shall sort by lastUsedAt descending, with count descending as tie-break.
 - `BR-6.4` [bdd] WHEN ordering visible non-favorites, the system shall sort by lastUsedAt descending, with count descending as tie-break.
 - `BR-6.5` [bdd] WHEN the active project would otherwise fall outside the visible subset based on ordering rules, the system shall prioritize the active project to remain visible regardless of favorite status.
 
@@ -99,6 +99,7 @@ Ticket: `MDT-129`
 - `C7` [tests] Active project always counts toward visibleCount but is never hidden
 - `C9` [tests] No All Projects synthetic item is introduced
 - `C10` [tests] Mutable selector state remains separate from immutable user preferences
+- `C11` [tests] Rail and panel ordering comparators are deterministic: entries equal in favorite, lastUsedAt, and count resolve by project key ascending.
 
 ## Edge Cases
 
@@ -109,6 +110,6 @@ _No edge cases recorded._
 | Route | Count | IDs |
 |---|---:|---|
 | bdd | 45 | `BR-1.1`, `BR-1.2`, `BR-1.3`, `BR-1.4`, `BR-2.1`, `BR-2.3`, `BR-3.1`, `BR-3.2`, `BR-3.3`, `BR-3.4`, `BR-4.1`, `BR-4.2`, `BR-4.3`, `BR-4.4`, `BR-4.5`, `BR-5.1`, `BR-5.2`, `BR-5.3`, `BR-5.4`, `BR-5.5`, `BR-6.1`, `BR-6.2`, `BR-6.3`, `BR-6.4`, `BR-6.5`, `BR-7.1`, `BR-7.2`, `BR-7.3`, `BR-7.4`, `BR-7.5`, `BR-8.1`, `BR-8.2`, `BR-8.3`, `BR-8.4`, `BR-8.5`, `BR-8.6`, `BR-8.7`, `BR-9.1`, `BR-9.3`, `BR-11.1`, `BR-11.2`, `BR-11.3`, `BR-11.4`, `BR-11.5`, `BR-11.6` |
-| tests | 15 | `BR-10.1`, `BR-10.2`, `BR-10.3`, `BR-10.4`, `BR-10.5`, `BR-10.6`, `BR-10.7`, `C1`, `C2`, `C3`, `C5`, `C6`, `C7`, `C9`, `C10` |
+| tests | 16 | `BR-10.1`, `BR-10.2`, `BR-10.3`, `BR-10.4`, `BR-10.5`, `BR-10.6`, `BR-10.7`, `C1`, `C2`, `C3`, `C5`, `C6`, `C7`, `C9`, `C10`, `C11` |
 | clarification | 0 | - |
 | not_applicable | 0 | - |

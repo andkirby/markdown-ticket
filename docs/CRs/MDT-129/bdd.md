@@ -76,9 +76,14 @@
   Then: the active project is prioritized and remains visible in the rail
 - Rail ordering prioritizes favorites then sorts by usage (`rail_ordering_prioritizes_favorites`)
   Covers: `BR-6.1`, `BR-6.2`, `BR-6.3`, `BR-6.4`
-  Given: I have multiple projects with various favorite states and usage patterns
+  Given: the selector rail is rendering projects with a mix of favorites and non-favorites, each with lastUsedAt and count state
+  When: the rail orders the visible projects
+  Then: the active project is first; favorites are ordered by lastUsedAt descending (count descending as tie-break) before non-favorites ordered by lastUsedAt descending (count descending as tie-break)
+- Recently used favorite outranks stale high-count favorite (`rail_recency_outranks_lifetime_count`)
+  Covers: `BR-6.3`
+  Given: two favorites where one has a higher lifetime count but an older lastUsedAt, and the other has a lower count but a more recent lastUsedAt
   When: the selector rail renders
-  Then: the active project appears first, followed by favorites sorted by count descending, then non-favorites sorted by lastUsedAt descending
+  Then: the recently used favorite appears before the stale high-count favorite
 
 ### BR-7
 
@@ -153,7 +158,7 @@
 | `BR-5.5` | 2 | `switch_project_from_panel`, `switch_project_from_rail` |
 | `BR-6.1` | 1 | `rail_ordering_prioritizes_favorites` |
 | `BR-6.2` | 1 | `rail_ordering_prioritizes_favorites` |
-| `BR-6.3` | 1 | `rail_ordering_prioritizes_favorites` |
+| `BR-6.3` | 2 | `rail_ordering_prioritizes_favorites`, `rail_recency_outranks_lifetime_count` |
 | `BR-6.4` | 1 | `rail_ordering_prioritizes_favorites` |
 | `BR-6.5` | 1 | `active_project_always_visible` |
 | `BR-7.1` | 1 | `configuration_controls_selector` |

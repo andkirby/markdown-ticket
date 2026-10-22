@@ -155,16 +155,6 @@
       ]
     },
     {
-      "id": "BR-6.3",
-      "kind": "behavior",
-      "text": "WHEN ordering visible favorites, the system shall sort by count descending, with lastUsedAt descending as tie-break.",
-      "sourceRef": "requirements.md BR-6",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:now"
-      ]
-    },
-    {
       "id": "BR-6.4",
       "kind": "behavior",
       "text": "WHEN ordering visible non-favorites, the system shall sort by lastUsedAt descending, with count descending as tie-break.",
@@ -548,6 +538,23 @@
       "text": "WHEN a card is highlighted and the user presses Enter, the highlighted project shall be selected and the panel closed.",
       "sourceRef": "CR:MDT-129",
       "routePolicy": "bdd"
+    },
+    {
+      "id": "C11",
+      "kind": "constraint",
+      "text": "Rail and panel ordering comparators are deterministic: entries equal in favorite, lastUsedAt, and count resolve by project key ascending.",
+      "sourceRef": "UAT-2026-10-22",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-6.3",
+      "kind": "behavior",
+      "text": "WHEN ordering visible favorites, the system shall sort by lastUsedAt descending, with count descending as tie-break.",
+      "sourceRef": "UAT-2026-10-22",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
     }
   ],
   "scenarios": [
@@ -601,20 +608,6 @@
       "when": "I select a project from the panel",
       "then": "the selected project becomes the current project and its usage state is updated with incremented count and current timestamp",
       "sourceRef": "BR-5.2, BR-5.3, BR-5.4, BR-5.5"
-    },
-    {
-      "id": "rail_ordering_prioritizes_favorites",
-      "title": "Rail ordering prioritizes favorites then sorts by usage",
-      "covers": [
-        "BR-6.1",
-        "BR-6.2",
-        "BR-6.3",
-        "BR-6.4"
-      ],
-      "given": "I have multiple projects with various favorite states and usage patterns",
-      "when": "the selector rail renders",
-      "then": "the active project appears first, followed by favorites sorted by count descending, then non-favorites sorted by lastUsedAt descending",
-      "sourceRef": "BR-6.1, BR-6.2, BR-6.3, BR-6.4"
     },
     {
       "id": "configuration_controls_selector",
@@ -767,6 +760,31 @@
       "when": "I press Enter",
       "then": "the highlighted project becomes the current project and the panel closes",
       "sourceRef": "CR:MDT-129"
+    },
+    {
+      "id": "rail_recency_outranks_lifetime_count",
+      "title": "Recently used favorite outranks stale high-count favorite",
+      "covers": [
+        "BR-6.3"
+      ],
+      "given": "two favorites where one has a higher lifetime count but an older lastUsedAt, and the other has a lower count but a more recent lastUsedAt",
+      "when": "the selector rail renders",
+      "then": "the recently used favorite appears before the stale high-count favorite",
+      "sourceRef": "UAT-2026-10-22"
+    },
+    {
+      "id": "rail_ordering_prioritizes_favorites",
+      "title": "Rail ordering prioritizes favorites then sorts by usage",
+      "covers": [
+        "BR-6.1",
+        "BR-6.2",
+        "BR-6.3",
+        "BR-6.4"
+      ],
+      "given": "the selector rail is rendering projects with a mix of favorites and non-favorites, each with lastUsedAt and count state",
+      "when": "the rail orders the visible projects",
+      "then": "the active project is first; favorites are ordered by lastUsedAt descending (count descending as tie-break) before non-favorites ordered by lastUsedAt descending (count descending as tie-break)",
+      "sourceRef": "BR-6.1, BR-6.2, BR-6.3, BR-6.4"
     }
   ],
   "obligations": [
@@ -1329,6 +1347,15 @@
       ],
       "file": "src/components/ProjectSelector/ProjectBrowserPanel.test.tsx",
       "sourceRef": "CR:MDT-129"
+    },
+    {
+      "id": "TEST-ordering-deterministic-project-key",
+      "kind": "unit",
+      "title": "Rail and panel ordering resolve equal favorite, lastUsedAt, and count by project key ascending",
+      "covers": [
+        "C11"
+      ],
+      "sourceRef": "UAT-2026-10-22"
     }
   ],
   "tasks": [
