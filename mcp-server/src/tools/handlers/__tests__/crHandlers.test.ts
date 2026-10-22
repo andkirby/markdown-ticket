@@ -89,13 +89,13 @@ describe('cRHandlers - Behavioral Preservation Tests', () => {
 
     crHandlers = new CRHandlers(
       mockCrServiceInstance,
-      // eslint-disable-next-line ts/no-explicit-any -- Test mock: MarkdownService requires any type for constructor compatibility
+
       MarkdownService as unknown as any,
-      // eslint-disable-next-line ts/no-explicit-any -- Test mock: TitleExtractionService mock
+
       mockTitleExtractionService as unknown as any,
-      // eslint-disable-next-line ts/no-explicit-any -- Test mock: TemplateService mock
+
       mockTemplateService as unknown as any,
-      // eslint-disable-next-line ts/no-explicit-any -- Test mock: TicketService mock
+
       mockTicketService as unknown as any,
     );
 
@@ -463,7 +463,7 @@ describe('cRHandlers - Behavioral Preservation Tests', () => {
     it('should throw error when CR not found', async () => {
       mockTicketService.updateTicketAttributes.mockRejectedValue({
         code: 'TICKET_NOT_FOUND',
-        message: "CR 'MDT-999' not found",
+        message: 'CR \'MDT-999\' not found',
       })
 
       await expect(crHandlers.handleUpdateCRAttrs(mockProject, 'MDT-999', { priority: 'High' }))
@@ -474,7 +474,7 @@ describe('cRHandlers - Behavioral Preservation Tests', () => {
     it('should throw error when update fails', async () => {
       mockTicketService.updateTicketAttributes.mockRejectedValue({
         code: 'PERSISTENCE_ERROR',
-        message: "Failed to update CR 'MDT-001' attributes",
+        message: 'Failed to update CR \'MDT-001\' attributes',
       })
 
       await expect(crHandlers.handleUpdateCRAttrs(mockProject, 'MDT-001', { priority: 'High' }))

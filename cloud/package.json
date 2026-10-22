@@ -19,6 +19,7 @@
     "@mdt/domain-contracts": "workspace:*"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260101.0",
     "@antfu/eslint-config": "7.4.3",
     "eslint": "^9.39.4",
     "typescript": "^5.9.3",

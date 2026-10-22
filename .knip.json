@@ -2,36 +2,134 @@
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "workspaces": {
     ".": {
-      "entry": ["frontend/src/**/*.tsx", "frontend/src/**/*.ts", "**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx", "frontend/src/test-setup.ts", "frontend/tailwind.config.js", "frontend/postcss.config.js", "frontend/vite.config.ts"],
-      "project": ["frontend/src/**/*.ts", "frontend/src/**/*.tsx"]
+      "entry": [
+        "frontend/src/**/*.tsx",
+        "frontend/src/**/*.ts",
+        "frontend/src/test-setup.ts",
+        "frontend/tailwind.config.js",
+        "frontend/postcss.config.js",
+        "frontend/vite.config.ts"
+      ],
+      "project": [
+        "frontend/src/**/*.ts",
+        "frontend/src/**/*.tsx"
+      ]
     },
     "server": {
-      "entry": ["server.ts", "fileWatcherService.ts", "eslint.config.ts"],
-      "project": ["**/*.ts", "*.ts"]
+      "entry": [
+        "server.ts",
+        "eslint.config.ts"
+      ],
+      "project": [
+        "**/*.ts",
+        "*.ts"
+      ]
     },
     "cli": {
-      "entry": ["src/index.ts"],
-      "project": ["src/**/*.ts"]
+      "project": [
+        "src/**/*.ts"
+      ]
+    },
+    "shared": {
+      "entry": [
+        "index.ts",
+        "tools/**/*.ts"
+      ],
+      "project": [
+        "**/*.ts"
+      ]
+    },
+    "domain-contracts": {
+      "project": [
+        "src/**/*.ts"
+      ]
+    },
+    "mcp-server": {
+      "project": [
+        "src/**/*.ts"
+      ]
+    },
+    "cloud": {
+      "project": [
+        "src/**/*.ts"
+      ]
     }
   },
   "ignore": [
-    "shared/**",
-    "domain-contracts/**",
-    "mcp-server/**",
-    "cloud/**",
     ".claude/**",
-    "**/node_modules/**",
-    "**/dist/**",
-    "**/coverage/**",
-    "**/.next/**",
-    "**/build/**",
-    "**/mocks/**",
     "**/__mocks__/**",
     "**/mcp-dev-tools/**",
     "scripts/**",
     ".gitWT/**",
     "docs/**"
   ],
-  "ignoreBinaries": ["jq", "prettier", "rimraf", "rg"],
-  "ignoreDependencies": ["happy-dom", "swagger-jsdoc", "@typescript-eslint/eslint-plugin", "@typescript-eslint/parser", "markdownlint-cli2"]
+  "ignoreBinaries": [
+    "jq",
+    "prettier",
+    "rimraf",
+    "rg",
+    "lefthook"
+  ],
+  "ignoreDependencies": [
+    "happy-dom",
+    "swagger-jsdoc",
+    "@typescript-eslint/eslint-plugin",
+    "@typescript-eslint/parser",
+    "markdownlint-cli2",
+    "autoprefixer",
+    "postcss",
+    "glob"
+  ],
+  "ignoreIssues": {
+    "server/**": [
+      "exports",
+      "types"
+    ],
+    "cli/**": [
+      "exports",
+      "types"
+    ],
+    "cloud/**": [
+      "exports",
+      "types",
+      "unlisted"
+    ],
+    "frontend/**": [
+      "types",
+      "unresolved",
+      "duplicates"
+    ],
+    "domain-contracts/src/app-config/input.ts": [
+      "duplicates"
+    ],
+    "server/tests/mocks/**": [
+      "files"
+    ],
+    "shared/services/cloud-sync/**": [
+      "files"
+    ],
+    "shared/services/MarkdownSectionService.ts": [
+      "files"
+    ],
+    "shared/services/cloud-sync/recovery.ts": [
+      "files"
+    ],
+    "shared/ticketDto.ts": [
+      "files"
+    ],
+    "shared/utils/server-logger.ts": [
+      "files"
+    ],
+    "shared/test-lib/utils/timeout.ts": [
+      "files"
+    ],
+    "mcp-server/**": [
+      "exports",
+      "types"
+    ],
+    "shared/**": [
+      "exports",
+      "types"
+    ]
+  }
 }

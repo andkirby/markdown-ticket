@@ -85,7 +85,7 @@ describe('manage_cr_sections', () => {
 
     for (const line of lines) {
       // Match lines that start with dashes (list items)
-      const match = line.match(/^(\s*)- (.+?)(?: \(\d+ chars\))?$/)
+      const match = line.match(/^\s*- (.+?)(?: \(\d+ chars\))?$/)
       if (match) {
         const sectionName = match[2]
         sections.push(sectionName)

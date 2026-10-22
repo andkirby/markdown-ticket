@@ -66,14 +66,4 @@ export type {
 } from '@mdt/domain-contracts'
 
 export {
-  safeValidateTemplateConfig,
-  SuggestionSchema,
-  TemplateConfigSchema,
-  TemplateSchema,
-  TemplateSectionSchema,
-  validateSuggestion,
-  validateTemplate,
-  validateTemplateConfig,
-  validateValidationResult,
-  ValidationResultSchema,
 } from '@mdt/domain-contracts'

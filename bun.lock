@@ -36,6 +36,7 @@
         "swagger-jsdoc": "^6.3.0",
         "tailwind-merge": "^3.7.0",
         "tailwindcss": "^3.4.19",
+        "zod": "^4.6.7",
       },
       "devDependencies": {
         "@antfu/eslint-config": "7.4.3",
@@ -84,6 +85,7 @@
         "commander": "^13.1.0",
       },
       "devDependencies": {
+        "@jest/globals": "^29.7.0",
         "@types/node": "^20.10.0",
         "typescript": "^5.3.3",
       },
@@ -96,6 +98,7 @@
       },
       "devDependencies": {
         "@antfu/eslint-config": "7.4.3",
+        "@cloudflare/workers-types": "^4.20260101.0",
         "eslint": "^9.39.4",
         "typescript": "^5.9.3",
         "wrangler": "^4.24.0",
@@ -115,10 +118,8 @@
         "@typescript-eslint/eslint-plugin": "^8.56.0",
         "@typescript-eslint/parser": "^8.56.0",
         "eslint": "^9.39.2",
-        "glob": "13.0.6",
         "jest": "^29.7.0",
         "jiti": "^2.6.1",
-        "prettier": "^3.7.4",
         "swagger-jsdoc": "^6.2.8",
         "ts-jest": "^29.2.5",
         "tsc-alias": "^1.8.16",
@@ -145,10 +146,10 @@
         "glob": "^13.0.6",
         "sanitize-html": "^2.17.0",
         "swagger-jsdoc": "^6.2.8",
-        "toml": "^3.0.0",
         "zod": "^4.6.7",
       },
       "devDependencies": {
+        "@jest/globals": "^29.7.0",
         "@types/fs-extra": "^11.0.4",
         "@types/jest": "^29.5.14",
         "@types/node": "^20.9.0",
@@ -211,13 +212,13 @@
         "@typescript-eslint/eslint-plugin": "^8.56.0",
         "@typescript-eslint/parser": "^8.56.0",
         "eslint": "^9.39.2",
-        "fs-extra": "^11.2.0",
-        "glob": "13.0.6",
+        "fs-extra": "^11.3.0",
         "smol-toml": "^1.5.2",
         "swagger-jsdoc": "^6.2.8",
         "tree-kill": "^1.2.2",
       },
       "devDependencies": {
+        "@jest/globals": "^29.7.0",
         "@types/fs-extra": "^11.0.4",
         "@types/jest": "^29.5.14",
         "@types/node": "^20.10.0",
@@ -361,6 +362,8 @@
     "@cloudflare/workerd-linux-arm64": ["@cloudflare/workerd-linux-arm64@1.20260722.1", "", { "os": "linux", "cpu": "arm64" }, "sha512-BOSB55SMNdy+DA5uj2WirgiNanpHGis5PVvXH1wSfvjRKr4JGgWK+EZzxz0RFUo6QjjQQC/NimEzNZ7va7jmKg=="],
 
     "@cloudflare/workerd-windows-64": ["@cloudflare/workerd-windows-64@1.20260722.1", "", { "os": "win32", "cpu": "x64" }, "sha512-sYM8YgUpKnRz2xjvdJLX1Ojzoi4MlA4gk8WTTExhGydjYB2UTs5NIbv0ZmpKgMoK9io3ixgmiW56ZnTbcWOdiA=="],
+
+    "@cloudflare/workers-types": ["@cloudflare/workers-types@4.20260702.1", "", {}, "sha512-mOhf5TUEB1m2vPrxtqoIGfz0fUC9xyxRDx5gWHy5s+OCo6dcV+g7wI1R7gYCMFohhqF/2y2xeKVwMwCJjfn/WA=="],
 
     "@cspotcode/source-map-support": ["@cspotcode/source-map-support@0.8.1", "", { "dependencies": { "@jridgewell/trace-mapping": "0.3.9" } }, "sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw=="],
 
@@ -2140,8 +2143,6 @@
 
     "prelude-ls": ["prelude-ls@1.2.1", "", {}, "sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g=="],
 
-    "prettier": ["prettier@3.8.1", "", { "bin": "bin/prettier.cjs" }, "sha512-UOnG6LftzbdaHZcKoPFtOcCKztrQ57WkHDeRD9t/PTQtmT0NHSeWWepj6pS0z/N7+08BHFDQVUrfmfMRcZwbMg=="],
-
     "pretty-format": ["pretty-format@29.7.0", "", { "dependencies": { "@jest/schemas": "^29.6.3", "ansi-styles": "^5.0.0", "react-is": "^18.0.0" } }, "sha512-Pdlw/oPxN+aXdmM9R00JVC9WVFoCLTKJvDVLgmJ+qAffBMxsV85l/Lu7sNx4zSzPyoL2euImuEwHhOXdEgNFZQ=="],
 
     "prismjs": ["prismjs@1.30.0", "", {}, "sha512-DEvV2ZF2r2/63V+tK8hQvrR2ZGn10srHbXviTlcv7Kpzw8jWiNTqbVgjO3IY8RxrrOUF8VPMQQFysYYYv0YZxw=="],
@@ -2375,8 +2376,6 @@
     "to-valid-identifier": ["to-valid-identifier@1.0.0", "", { "dependencies": { "@sindresorhus/base62": "^1.0.0", "reserved-identifiers": "^1.0.0" } }, "sha512-41wJyvKep3yT2tyPqX/4blcfybknGB4D+oETKLs7Q76UiPqRpUJK3hr1nxelyYO0PHKVzJwlu0aCeEAsGI6rpw=="],
 
     "toidentifier": ["toidentifier@1.0.1", "", {}, "sha512-o5sSPKEkg/DIQNmH43V0/uerLrpzVedkUh8tGNvaeXpfpuwjKenlSox/2O/BTlZUtEe+JG7s5YhEz608PlAHRA=="],
-
-    "toml": ["toml@3.0.0", "", {}, "sha512-y/mWCZinnvxjTKYhJ+pYxwD0mRLVvOtdS2Awbgxln6iEnt4rk0yBxeSBHkGJcPucRiG0e55mwWp+g/05rsrd6w=="],
 
     "toml-eslint-parser": ["toml-eslint-parser@1.0.3", "", { "dependencies": { "eslint-visitor-keys": "^5.0.0" } }, "sha512-A5F0cM6+mDleacLIEUkmfpkBbnHJFV1d2rprHU2MXNk7mlxHq2zGojA+SRvQD1RoMo9gqjZPWEaKG4v1BQ48lw=="],
 

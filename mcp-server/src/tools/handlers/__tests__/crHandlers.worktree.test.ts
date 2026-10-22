@@ -58,9 +58,8 @@ describe('CRHandlers - Worktree Integration (MDT-095)', () => {
 
     MarkdownService.readFile = jest.fn().mockResolvedValue(mockFileContent) as unknown as typeof MarkdownService.readFile
 
-    // eslint-disable-next-line ts/no-explicit-any -- Mock service instances
     const titleService: any = {}
-    // eslint-disable-next-line ts/no-explicit-any -- Mock service instances
+
     const templateService: any = {
       validateTicketData: jest.fn().mockReturnValue({ valid: true }),
       suggestImprovements: jest.fn().mockReturnValue([]),
@@ -85,7 +84,7 @@ describe('CRHandlers - Worktree Integration (MDT-095)', () => {
       titleService,
       templateService,
       mockTicketService as unknown as any,
-    );
+    )
 
     process.env.MCP_SECURITY_SANITIZATION = 'false'
     delete process.env.MCP_SANITIZATION_ENABLED

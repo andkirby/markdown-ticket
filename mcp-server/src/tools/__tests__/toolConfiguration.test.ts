@@ -100,13 +100,14 @@ describe('behavioral Preservation: Tool Configuration Structure', () => {
       const sourcePath = path.join(process.cwd(), 'src', 'tools', 'index.ts')
       const sourceContent = await fs.readFile(sourcePath, 'utf-8')
 
-      // Should use TOOL_NAMES for project tools
-      expect(sourceContent).toContain('TOOL_NAMES.LIST_PROJECTS, TOOL_NAMES.GET_PROJECT_INFO')
+      // Registry-based routing (MDT-258 phase 1): entries are keyed by
+      // TOOL_NAMES via the defineTool registry instead of a hardcoded switch.
+      expect(sourceContent).toContain('TOOL_NAMES')
+      expect(sourceContent).toContain('defineTool')
 
-      // Should use TOOL_NAMES for CR tools
-      expect(sourceContent).toContain('TOOL_NAMES.LIST_CRS')
-      expect(sourceContent).toContain('TOOL_NAMES.CREATE_CR')
-      expect(sourceContent).toContain('TOOL_NAMES.GET_CR')
+      // Registry keys must equal the advertised tool names (parity enforced
+      // by mutation/transport boundary suites).
+      expect(sourceContent).not.toContain('name: \'list_crs\'')
 
       // Should use TOOL_NAMES for error handling
       expect(sourceContent).toContain('Object.values(TOOL_NAMES)')

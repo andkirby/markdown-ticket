@@ -46,7 +46,7 @@ function parseSuggestionsFromMarkdown(markdown: string) {
     const line = lines[i]
 
     // Match pattern like "1. **Title**"
-    const match = line.match(/^(\d+)\.\*\*(.+?)\*\*$/)
+    const match = line.match(/^\d+\.\*\*(.+?)\*\*$/)
     if (match) {
       // Get description from next indented lines
       let description = ''
