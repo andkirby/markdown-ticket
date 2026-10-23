@@ -52,7 +52,7 @@ export const EPIC_ERROR_CODES = {
   HAS_OPEN_CHILDREN: 'EPIC_HAS_OPEN_CHILDREN',
 } as const
 
-export type EpicErrorCode
+type EpicErrorCode
   = (typeof EPIC_ERROR_CODES)[keyof typeof EPIC_ERROR_CODES]
 
 export class EpicRuleError extends Error {
@@ -107,7 +107,7 @@ export interface RuleTicket {
  * Outcome of classifying a phaseEpic write. `skipped` means the value is not
  * ticket-key-shaped (free text) and needs no target lookup (Edge-6).
  */
-export type PhaseEpicResolution
+type PhaseEpicResolution
   = | { outcome: 'ok' }
     | { outcome: 'skipped' }
     | { outcome: 'reject', code: EpicErrorCode, message: string }

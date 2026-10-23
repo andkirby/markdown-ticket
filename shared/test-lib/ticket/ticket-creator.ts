@@ -27,7 +27,7 @@ export interface TicketCreationResult {
 }
 
 /** Interface for creating CRs/tickets */
-export interface ITicketCreator {
+interface ITicketCreator {
   createTicket: (config: TicketCreationConfig, data: TicketData) => Promise<TicketCreationResult>
   createMultipleTickets: (config: TicketCreationConfig, ticketsData: TicketData[]) => Promise<TicketCreationResult[]>
   validateTicket: (data: TicketData) => ValidationResult

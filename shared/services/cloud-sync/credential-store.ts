@@ -56,7 +56,7 @@ export interface MachineCredentialDiagnostic {
   kind?: MachineCredentialKind
 }
 
-export interface MachineCredentialStoreOptions {
+interface MachineCredentialStoreOptions {
   /**
    * Credential root dir. Credentials install under
    * `{rootDir}/credentials/{credentialRef}.toml`. Defaults to

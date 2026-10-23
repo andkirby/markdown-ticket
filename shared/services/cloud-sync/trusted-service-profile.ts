@@ -20,7 +20,7 @@
  * before any credential-bearing request is made.
  */
 
-import type { AnyCloudSyncConnection, CloudSyncConnection, ProjectConnectionRead } from '@mdt/domain-contracts'
+import type { AnyCloudSyncConnection } from '@mdt/domain-contracts'
 import {
   DISTRIBUTION_CLOUD_SYNC_ORIGINS,
   DISTRIBUTION_COORDINATION_ORIGIN,
@@ -155,24 +155,4 @@ function isExactHttpsOrigin(value: unknown): value is string {
   catch {
     return false
   }
-}
-
-/**
- * Read a CONFIG_DIR connection as a `ProjectConnectionRead`, applying the
- * trusted profile so an untrusted origin fails closed (Edge-5). The malformed
- * and disabled distinctions are owned by the project state store
- * (TASK-4); this helper only applies the trust check on top of a parsed
- * connection.
- */
-export function applyTrustToConnection(
-  connection: CloudSyncConnection,
-  profile: TrustedServiceProfile,
-): ProjectConnectionRead {
-  const trust = profile.checkConnectionOrigin(connection)
-  if (trust.kind === 'untrusted') {
-    return { kind: 'untrusted', connection, reason: trust.reason }
-  }
-  return connection.state === 'enabled'
-    ? { kind: 'enabled', connection }
-    : { kind: 'disabled', connection }
 }

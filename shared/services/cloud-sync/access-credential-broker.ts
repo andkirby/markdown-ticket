@@ -15,11 +15,11 @@ interface CachedHumanCredential {
 }
 
 /** Provider capability safe for background work: it must never start a login. */
-export interface NonInteractiveCredentialProvider extends CloudCredentialProvider {
+interface NonInteractiveCredentialProvider extends CloudCredentialProvider {
   resolveNonInteractive: (serviceUrl: string) => Promise<CloudCredential | null>
 }
 
-export interface AccessCredentialBrokerOptions {
+interface AccessCredentialBrokerOptions {
   provider: CloudCredentialProvider
   now?: () => number
   refreshSkewMs?: number
@@ -31,7 +31,7 @@ export interface AccessCredentialBrokerOptions {
  * remains Cloudflare Access' responsibility; the local value is scheduling
  * metadata only. Opaque tokens receive a conservative in-memory lifetime.
  */
-export function decodeAccessTokenExpiry(
+function decodeAccessTokenExpiry(
   token: string,
   now = Date.now(),
   opaqueTokenTtlMs = DEFAULT_OPAQUE_TOKEN_TTL_MS,

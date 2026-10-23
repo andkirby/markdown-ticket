@@ -144,65 +144,6 @@ export function basename(path: string, ext?: string): string {
 }
 
 /**
- * Join path segments
- * Browser-compatible implementation
- */
-export function join(...paths: string[]): string {
-  if (paths.length === 0) {
-    return '.'
-  }
-
-  let result = paths[0] || ''
-
-  for (let i = 1; i < paths.length; i++) {
-    const segment = paths[i] || ''
-
-    // Skip empty segments
-    if (!segment) {
-      continue
-    }
-
-    // If result is empty, just use the segment
-    if (!result) {
-      result = segment
-      continue
-    }
-
-    // If result doesn't end with a separator and segment doesn't start with one, add one
-    if (!result.endsWith('/') && !segment.startsWith('/')) {
-      result += `/${segment}`
-    }
-    else if (result.endsWith('/') && segment.startsWith('/')) {
-      // Avoid double slashes
-      result += segment.substring(1)
-    }
-    else {
-      result += segment
-    }
-  }
-
-  return normalize(result)
-}
-
-/**
- * Get the file extension
- * Browser-compatible implementation
- */
-export function extname(path: string): string {
-  const normalized = path.replace(/\\/g, '/')
-  const lastDotIndex = normalized.lastIndexOf('.')
-  const lastSlashIndex = normalized.lastIndexOf('/')
-
-  // If no dot, or dot is before the last slash (like in directory names), no extension
-  if (lastDotIndex === -1 || (lastSlashIndex !== -1 && lastDotIndex < lastSlashIndex)) {
-    return ''
-  }
-
-  // Extract extension including the dot
-  return normalized.substring(lastDotIndex)
-}
-
-/**
  * Resolve a sequence of paths or path segments into an absolute path
  * Browser-compatible implementation (simplified)
  */

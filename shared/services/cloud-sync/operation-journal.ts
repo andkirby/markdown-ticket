@@ -20,7 +20,7 @@ import type { ProjectedHeader, TicketData } from '@mdt/domain-contracts'
 
 import { createHash } from 'node:crypto'
 import { mkdir, open, readFile, rename, unlink, writeFile } from 'node:fs/promises'
-import { dirname, join } from 'node:path'
+import { join } from 'node:path'
 import process from 'node:process'
 import { CoordinatorError, PendingOperationFileSchema } from '@mdt/domain-contracts'
 
@@ -55,7 +55,7 @@ export interface PendingOperation {
   updatedAt: string
 }
 
-export interface OperationJournalOptions {
+interface OperationJournalOptions {
   /** Root dir = CONFIG_DIR/cloud-sync/journals. */
   rootDir: string
   /** Physical Git common dir or canonical project root, for the routing key. */
@@ -248,4 +248,3 @@ function isProcessAlive(pid: number): boolean {
 }
 
 // Re-export dirname helper for callers building the root path.
-export { dirname }

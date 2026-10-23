@@ -36,7 +36,7 @@ interface PendingProjection {
   updatedAt: string
 }
 
-export interface ProjectionSyncOptions {
+interface ProjectionSyncOptions {
   binding: ProjectCloudSyncBinding
   allowedOrigins: string[]
   journalRoot: string
@@ -54,7 +54,7 @@ export interface ProjectionSyncOptions {
  * - `unmanaged`            → authenticated project exists but projection does not
  *                            (projection_not_found); terminal, no automatic retry.
  */
-export type ProjectionSyncResult
+type ProjectionSyncResult
   = 'synced' | 'transient' | 'authentication_paused' | 'conflict' | 'unmanaged'
 export type ProjectionClientPort = Pick<CloudProjectionClient, 'get' | 'poll' | 'publish'>
 

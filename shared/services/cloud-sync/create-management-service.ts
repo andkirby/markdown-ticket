@@ -37,7 +37,7 @@ import { resolveTrustedServiceProfile } from './trusted-service-profile.js'
  * Inputs to the composition seam. Every input is an existing type from
  * MDT-201; this function adds no new domain concept.
  */
-export interface CreateManagementServiceOptions {
+interface CreateManagementServiceOptions {
   /** Local project identifier (slug of the project path under CONFIG_DIR). */
   localProjectId: string
   /** Project code (e.g. `MDT`); required for provisioning. */

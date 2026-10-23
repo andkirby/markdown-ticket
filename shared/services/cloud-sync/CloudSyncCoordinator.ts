@@ -41,9 +41,9 @@ import { COORDINATION_ROUTE_PREFIX, CoordinatorError } from '@mdt/domain-contrac
 import { checkOriginAllowlist } from './config.js'
 
 /** The shape of fetch we accept (Web fetch; injected for tests). */
-export type FetchImpl = (url: string, init?: RequestInit) => Promise<Response>
+type FetchImpl = (url: string, init?: RequestInit) => Promise<Response>
 
-export interface CloudSyncCoordinatorOptions {
+interface CloudSyncCoordinatorOptions {
   /** Absolute HTTPS origin from validated project config (C6). */
   serviceUrl: string
   /** Operator-controlled global allowlist. Default empty denies every origin. */

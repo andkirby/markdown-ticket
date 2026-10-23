@@ -39,7 +39,6 @@
 
 import type {
   AudienceAwareCredentialProvider,
-  CloudAccessAudienceValue,
   CloudCredential,
   CloudCredentialProvider,
 } from '@mdt/domain-contracts'
@@ -50,7 +49,7 @@ import process from 'node:process'
 import { CloudAccessAudience } from '@mdt/domain-contracts'
 
 /** The spawn signature of node:child_process.execFile (injectable for tests). */
-export type ExecFile = (
+type ExecFile = (
   file: string,
   args: readonly string[],
   callback: (err: ExecFileException | null, stdout: string, stderr: string) => void,
@@ -65,7 +64,7 @@ export type ExecFile = (
 const defaultExecFile: ExecFile = (file, args, callback) =>
   execFile(file, [...args], { encoding: 'utf8' }, callback)
 
-export interface CloudflaredCredentialProviderOptions {
+interface CloudflaredCredentialProviderOptions {
   /**
    * Injectable spawn. Defaults to node:child_process.execFile with a fixed arg
    * array — NEVER a shell. The executable name is fixed at `cloudflared`.
@@ -183,7 +182,7 @@ export class CloudflaredCredentialProvider implements CloudCredentialProvider {
  * runtime attaches the actual Access client headers via
  * `buildServiceTokenHeaders`. The secret never enters a membership payload.
  */
-export interface ServiceTokenCredentialProviderOptions {
+interface ServiceTokenCredentialProviderOptions {
   /** Owner-only CONFIG_DIR store; when provided, takes precedence over env. */
   store?: MachineCredentialStore
   /** Stable runtime name keyed under the credential store. */
@@ -291,7 +290,7 @@ export class RuntimeCloudCredentialProvider implements CloudCredentialProvider {
  * Outcome of an operator-authority requirement check. `ok: false` surfaces a
  * clear operator-authority reason without leaking a secret (BR-1.2, C5).
  */
-export type RequireCredentialOutcome
+type RequireCredentialOutcome
   = | { ok: true, credential: CloudCredential }
     | { ok: false, reason: 'operator_authority_required' | 'authentication_required', message: string }
 
@@ -360,7 +359,6 @@ export class AudienceAwareCredentialResolver {
 }
 
 /** Re-export the audience values for callers building routing tables. */
-export { CloudAccessAudience, type CloudAccessAudienceValue }
 
 /**
  * Build the Cloudflare Access service-token header pair from the resolved env

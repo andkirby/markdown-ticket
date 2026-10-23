@@ -33,7 +33,7 @@ export interface ProjectDocumentEffectiveConfig {
 }
 
 /** Result of validating a patch candidate. */
-export type ProjectDocumentPatchValidation
+type ProjectDocumentPatchValidation
   = | { ok: true, validated: ProjectDocumentPatchInput }
     | { ok: false, field: string, message: string }
 

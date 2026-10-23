@@ -14,12 +14,12 @@ import { createHash, randomUUID } from 'node:crypto'
 import { CoordinatorError } from '@mdt/domain-contracts'
 import { CloudSyncCoordinator as HttpCloudSyncCoordinator } from './CloudSyncCoordinator.js'
 
-export interface CloudCreateWriteResult<T> {
+interface CloudCreateWriteResult<T> {
   value: T
   acknowledgement: Omit<PendingAcknowledgement, 'operationId'>
 }
 
-export interface CloudCreateOrchestratorOptions {
+interface CloudCreateOrchestratorOptions {
   binding: ProjectCloudSyncBinding
   allowedOrigins: string[]
   journal: CloudOperationJournal
@@ -27,7 +27,7 @@ export interface CloudCreateOrchestratorOptions {
   coordinator?: CloudSyncCoordinatorPort
 }
 
-export interface CloudCreateInput<T> {
+interface CloudCreateInput<T> {
   crType: string
   data: TicketData
   writeLocal: (

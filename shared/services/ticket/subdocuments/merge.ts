@@ -6,7 +6,7 @@ import { groupNamespacedFiles, parseNamespace } from './namespace.js'
  * Merge and sort children according to BR-12:
  * [main] first, then dot-notation alpha, then /folder alpha.
  */
-export function mergeAndSortChildren(
+function mergeAndSortChildren(
   virtualChildren: SubDocument[],
   physicalChildren: SubDocument[],
 ): SubDocument[] {

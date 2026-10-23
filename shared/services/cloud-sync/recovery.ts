@@ -31,19 +31,19 @@ import type { CloudOperationJournal, PendingOperation } from './operation-journa
 import { CoordinatorError } from '@mdt/domain-contracts'
 
 /** A credential, or null when none is available (caller must NOT fall back). */
-export type RecoveryCredential = CloudCredential | null
+type RecoveryCredential = CloudCredential | null
 
 /**
  * Writes the local Markdown file for a recovered reservation. The runner
  * retries this with the reserved ticket number; it must not allocate a number
  * of its own. Throw to signal the write is still incomplete (op stays pending).
  */
-export type WriteLocalFile = (
+type WriteLocalFile = (
   cloudProjectId: string,
   reservation: ReservationDTO,
 ) => Promise<void>
 
-export interface RecoveryRunnerOptions {
+interface RecoveryRunnerOptions {
   journal: CloudOperationJournal
   coordinator: CloudSyncCoordinator
   credential: RecoveryCredential
@@ -55,7 +55,7 @@ export interface RecoveryRunnerOptions {
   log?: (msg: string, err?: unknown) => void
 }
 
-export interface RecoveryResult {
+interface RecoveryResult {
   /** cloudProjectIds fully recovered (acknowledged + cleared). */
   recovered: string[]
   /** cloudProjectIds that could not be completed this run (op retained). */
@@ -188,4 +188,3 @@ export class RecoveryRunner {
 }
 
 // Re-export the CoordinatorError type guard for callers that catch and classify.
-export { CoordinatorError }

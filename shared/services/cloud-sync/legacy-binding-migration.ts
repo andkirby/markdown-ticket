@@ -50,7 +50,7 @@ export interface LegacyBindingMigrationOptions {
 }
 
 /** Result of a migration attempt. */
-export interface LegacyMigrationResult {
+interface LegacyMigrationResult {
   migrated: boolean
   connection: CloudSyncConnection | null
 }

@@ -14,7 +14,7 @@ import { closeAllStreams } from '../utils/process-streams.js'
 /**
  * Options for process termination
  */
-export interface TerminationOptions {
+interface TerminationOptions {
   /** Signal to send for graceful termination (default: SIGTERM) */
   signal?: NodeJS.Signals
   /** Timeout in ms before force kill (default: 5000) */
@@ -24,7 +24,7 @@ export interface TerminationOptions {
 /**
  * Result of a termination operation
  */
-export interface TerminationResult {
+interface TerminationResult {
   /** The signal that was sent */
   signal: NodeJS.Signals
   /** Whether the process had to be forcefully killed */

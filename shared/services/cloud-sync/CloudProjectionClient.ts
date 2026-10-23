@@ -37,9 +37,9 @@ import { COORDINATION_ROUTE_PREFIX, CoordinatorError } from '@mdt/domain-contrac
 import { checkOriginAllowlist } from './config.js'
 
 /** The shape of fetch we accept (Web fetch; injected for tests). */
-export type FetchImpl = (url: string, init?: RequestInit) => Promise<Response>
+type FetchImpl = (url: string, init?: RequestInit) => Promise<Response>
 
-export interface CloudProjectionClientOptions {
+interface CloudProjectionClientOptions {
   /** Absolute HTTPS origin from validated project config (C6). */
   serviceUrl: string
   /** Operator-controlled global allowlist. Default empty denies every origin. */
@@ -58,7 +58,7 @@ export interface CloudProjectionClientOptions {
  * staleness. The full ProjectionRecord from the cloud side is intentionally NOT
  * re-exported here: the board consumes only what BR-3.1 permits.
  */
-export interface ProjectionItem extends ProjectedHeader {
+interface ProjectionItem extends ProjectedHeader {
   /** The cloud ticket number (e.g. 500 -> code "MDT-500"). */
   ticketNumber: number
   /** 'active' or 'deleted' — deleted items are tombstones to drop locally. */
@@ -72,7 +72,7 @@ export interface ProjectionItem extends ProjectedHeader {
 }
 
 /** Result of a single poll: new/updated items and the cursor to persist. */
-export interface ProjectionPollResult {
+interface ProjectionPollResult {
   items: ProjectionItem[]
   /** Advance the caller's cursor to this; null when nothing changed. */
   nextCursor: number | null

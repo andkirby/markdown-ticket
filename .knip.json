@@ -33,7 +33,11 @@
     "shared": {
       "entry": [
         "index.ts",
-        "tools/**/*.ts"
+        "tools/**/*.ts",
+        "**/__tests__/**/*.test.ts",
+        "**/__tests__/**/*.spec.ts",
+        "**/tests/**/*.test.ts",
+        "**/tests/**/*.spec.ts"
       ],
       "project": [
         "**/*.ts"
@@ -45,6 +49,11 @@
       ]
     },
     "mcp-server": {
+      "entry": [
+        "src/**/*.ts",
+        "src/**/__tests__/**/*.test.ts",
+        "src/**/__tests__/**/*.spec.ts"
+      ],
       "project": [
         "src/**/*.ts"
       ]
@@ -122,14 +131,6 @@
     ],
     "shared/test-lib/utils/timeout.ts": [
       "files"
-    ],
-    "mcp-server/**": [
-      "exports",
-      "types"
-    ],
-    "shared/**": [
-      "exports",
-      "types"
     ]
   }
 }

@@ -16,7 +16,7 @@ import { EventListenerRegistry } from './event-listener-registry.js'
 /**
  * Event handlers for process lifecycle events
  */
-export interface ProcessHandlers {
+interface ProcessHandlers {
   /** Handler for stdout data */
   stdout?: (data: Buffer) => void
   /** Handler for stderr data */

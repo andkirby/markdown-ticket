@@ -13,25 +13,8 @@ import { join } from 'node:path'
 import { TestProjectBuilder } from '../ticket/test-project-builder.js'
 import { TestTicketBuilder } from '../ticket/test-ticket-builder.js'
 
-/** Simple CR data structure for testing (legacy compatibility) */
-export interface SimpleCR {
-  code: string
-  title: string
-  status: CRStatus
-  type: CRType
-  priority: 'Low' | 'Medium' | 'High' | 'Critical'
-  dateCreated: string
-  content: string
-  phaseEpic?: string
-  assignee?: string
-  impactAreas?: string[]
-  relatedTickets?: string
-  dependsOn?: string
-  blocks?: string
-}
-
 /** Test CR data structure */
-export interface TestCRData {
+interface TestCRData {
   title: string
   type: CRType
   status?: CRStatus

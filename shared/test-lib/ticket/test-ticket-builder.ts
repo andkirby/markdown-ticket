@@ -28,7 +28,7 @@ export interface TestCRData {
 }
 
 /** Result of creating a test CR */
-export interface TestCRResult {
+interface TestCRResult {
   success: boolean
   crCode?: string
   filePath?: string

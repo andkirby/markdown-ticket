@@ -27,13 +27,6 @@ export function getBaseName(pathString: string): string {
 }
 
 /**
- * Get the base name without extension
- */
-export function getBaseNameWithoutExtension(pathString: string, extension?: string): string {
-  return path.basename(pathString, extension)
-}
-
-/**
  * Get the directory name of a path
  */
 export function getDirName(pathString: string): string {
@@ -43,7 +36,7 @@ export function getDirName(pathString: string): string {
 /**
  * Get relative path from one directory to another
  */
-export function getRelativePath(from: string, to: string): string {
+function getRelativePath(from: string, to: string): string {
   return path.relative(from, to)
 }
 
@@ -80,17 +73,6 @@ export function buildConfigFilePath(projectPath: string, configFileName: string)
  */
 export function buildProjectPath(projectPath: string, relativePath: string): string {
   return joinPaths(projectPath, relativePath)
-}
-
-/**
- * Resolve a path relative to project root
- * If the provided path is already absolute, returns it as-is
- */
-export function resolveProjectRelativePath(projectPath: string, targetPath: string): string {
-  if (isAbsolutePath(targetPath)) {
-    return targetPath
-  }
-  return resolvePath(projectPath, targetPath)
 }
 
 /**

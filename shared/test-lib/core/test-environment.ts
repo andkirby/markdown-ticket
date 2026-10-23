@@ -18,7 +18,7 @@ const EXIT_SIGNALS = ['SIGINT', 'SIGTERM', 'SIGHUP', 'uncaughtException', 'unhan
 const ERR_NOT_INIT = 'Test environment not initialized. Call setup() first.'
 
 /** Options for TestEnvironment construction */
-export interface TestEnvironmentOptions {
+interface TestEnvironmentOptions {
   /**
    * Adopt an existing config directory instead of creating a new temp one.
    * The temp directory is assumed to be the config directory's parent

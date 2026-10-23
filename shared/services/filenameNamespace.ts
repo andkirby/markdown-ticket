@@ -1,4 +1,4 @@
-export interface FilenameNamespaceParseResult {
+interface FilenameNamespaceParseResult {
   baseName: string
   variantKey: string
 }

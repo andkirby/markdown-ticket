@@ -1,9 +1,9 @@
 import type { ChildProcess } from 'node:child_process'
 import type { ServerConfig } from '../types.js'
 
-export type ProcessState = 'stopped' | 'starting' | 'running' | 'stopping' | 'error'
+type ProcessState = 'stopped' | 'starting' | 'running' | 'stopping' | 'error'
 
-export interface ProcessEntry {
+interface ProcessEntry {
   id: string
   process: ChildProcess
   config: ServerConfig

@@ -13,12 +13,6 @@ export const ProjectConfigurationMode = {
 
 export type ProjectConfigurationModeValue = typeof ProjectConfigurationMode[keyof typeof ProjectConfigurationMode]
 
-export const ProjectConfigurationModes = [
-  ProjectConfigurationMode.GLOBAL_ONLY,
-  ProjectConfigurationMode.PROJECT_FIRST,
-  ProjectConfigurationMode.AUTO_DISCOVERY,
-] as const
-
 export type ProjectUpdateFields = Partial<Pick<ProjectConfig['project'], 'name' | 'description' | 'repository' | 'active' | 'ticketsPath'>>
 
 export interface ProjectWriteReference {
@@ -160,30 +154,6 @@ export interface IProjectService extends
 
 /** Registry data structure */
 export type RegistryData = DomainRegistryData
-
-/** Project scan options */
-export interface ProjectScanOptions {
-  searchPaths: string[]
-  maxDepth: number
-  includeHidden?: boolean
-  excludePatterns?: string[]
-}
-
-/** Project validation result */
-export interface ProjectValidationResult {
-  valid: boolean
-  errors: string[]
-  warnings: string[]
-}
-
-/** Project export format */
-export interface ProjectExport {
-  project: Project
-  config: ProjectConfig
-  tickets: Ticket[]
-  exportedAt: string
-  version: string
-}
 
 /**
  * Discovery configuration result from project scanning

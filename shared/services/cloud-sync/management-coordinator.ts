@@ -34,7 +34,6 @@ import type {
   ProjectBindingProbe,
   ProjectMember,
   ProvisionProjectRequest,
-  ProvisionProjectResult,
 } from '@mdt/domain-contracts'
 import { CoordinatorError } from '@mdt/domain-contracts'
 import { checkOriginAllowlist } from './config.js'
@@ -54,7 +53,7 @@ export interface ManagementCoordinatorOptions {
 }
 
 /** Stable result of a provisioning operation (operator audience). */
-export interface ManagementProvisionResponse {
+interface ManagementProvisionResponse {
   projectId: string
   replayed: boolean
 }
@@ -300,5 +299,3 @@ function envelopeToCode(status: number, envelope?: Partial<CoordinationErrorEnve
     ? (envelope.error.code as CoordinatorErrorCode)
     : fromStatus
 }
-
-export type { ProvisionProjectResult }

@@ -28,7 +28,7 @@ import type {
 import { CoordinatorError } from '@mdt/domain-contracts'
 
 /** A strategy that allocates the next ticket number for one project. */
-export interface TicketNumberAllocator {
+interface TicketNumberAllocator {
   /**
    * Local strategies return just a number. Cloud strategies return a
    * reservation (number + reservation id, journaled for recovery).
@@ -36,7 +36,7 @@ export interface TicketNumberAllocator {
   allocate: () => Promise<AllocationOutcome>
 }
 
-export type AllocationOutcome
+type AllocationOutcome
   = | { kind: 'local', ticketNumber: number }
     | { kind: 'cloud', reservation: ReservationDTO }
 
@@ -51,14 +51,6 @@ export class LocalTicketNumberAllocator implements TicketNumberAllocator {
     return { kind: 'local', ticketNumber: await this.scan() }
   }
 }
-
-/**
- * Result of a cloud allocation attempt. `coordinator_unavailable` is the
- * recoverable failure that must NOT trigger a local fallback.
- */
-export type CloudAllocationResult
-  = | { ok: true, reservation: ReservationDTO }
-    | { ok: false, reason: 'no_credential' | 'coordinator_unavailable', error?: Error }
 
 /**
  * Cloud allocator — calls the coordinator. On coordinator unavailability it
@@ -121,7 +113,7 @@ export class FailClosedCloudAllocator implements TicketNumberAllocator {
  * connection and routes through this model. The legacy `[project.cloudSync]`
  * repo binding is no longer read by the allocator (MDT-201 cutover).
  */
-export type AllocatorSelection
+type AllocatorSelection
   = | { kind: 'local', allocator: TicketNumberAllocator }
     | { kind: 'cloud', allocator: TicketNumberAllocator }
     | { kind: 'fail-closed', reason: string }

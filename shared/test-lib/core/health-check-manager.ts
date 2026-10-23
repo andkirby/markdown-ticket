@@ -23,7 +23,7 @@ const HEALTH = {
 /**
  * Health check configuration options
  */
-export interface HealthCheckOptions {
+interface HealthCheckOptions {
   /** Maximum number of health check attempts (default: 30) */
   maxAttempts?: number
   /** Initial delay before first check in ms (default: 100) */
