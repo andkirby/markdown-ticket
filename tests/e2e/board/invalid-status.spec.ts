@@ -60,9 +60,10 @@ test.describe('Invalid Status Badge', () => {
     // Assert: Status badge shows "In Review"
     await expect(statusBadge).toHaveText('In Review')
 
-    // Assert: Status badge uses solid variant (red background, no border)
-    const badgeClass = await statusBadge.getAttribute('class')
-    expect(badgeClass).toContain('badge--invalid')
+    // Assert: badge styling hook is data-status="invalid" (MDT-246 dropped the
+    // .badge--invalid class; badge.css keys the rejected-red styling off the
+    // data-status attribute instead)
+    await expect(statusBadge).toHaveAttribute('data-status', 'invalid')
   })
 
   /**

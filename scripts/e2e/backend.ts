@@ -104,12 +104,19 @@ function createE2eAdminRouter(deps: { app?: Express, fileWatcher?: FileWatcherSe
   })
 
   // Replaces e2eContext.app.locals.runtimeConfig overrides (read-access-journey spec)
+  // Overrides must change ONLY the named keys: forcing NODE_ENV here silently
+  // flipped API_LOCAL_HOST_BYPASS's default (OFF under 'test'), so one
+  // PUT+DELETE cycle permanently degraded the whole run's owner-auth posture.
   async function applyRuntimeConfig(res: import('express').Response, overrides: Record<string, string | undefined>) {
     try {
+      if (Object.keys(overrides).length === 0) {
+        deps.app!.locals.runtimeConfig = deps.bootRuntimeConfig
+        res.json({ ok: true })
+        return
+      }
       const { buildRuntimeConfig } = await import('../../server/config/runtimeConfig.js')
       deps.app!.locals.runtimeConfig = buildRuntimeConfig({
         ...process.env,
-        NODE_ENV: 'test',
         ...overrides,
       } as NodeJS.ProcessEnv)
       res.json({ ok: true })
@@ -137,7 +144,7 @@ async function main(): Promise<void> {
   // Mutable deps: the router must be constructed BEFORE createTestApp (so it
   // mounts pre-auth via options), but the app/watcher only exist after.
   // Requests cannot arrive before listen(), by which time deps are wired.
-  const deps: { app?: Express, fileWatcher?: FileWatcherService } = {}
+  const deps: { app?: Express, fileWatcher?: FileWatcherService, bootRuntimeConfig?: unknown } = {}
   const adminRouter = createE2eAdminRouter(deps)
 
   // Isolation contract: CONFIG_DIR is set (verified above) BEFORE the app
@@ -146,6 +153,7 @@ async function main(): Promise<void> {
   const { app, fileWatcher } = createTestApp({ preAuthRouter: adminRouter, watcherIntegration: true })
   deps.app = app
   deps.fileWatcher = fileWatcher
+  deps.bootRuntimeConfig = app.locals.runtimeConfig
 
   const server: Server = createServer(app)
 

@@ -189,17 +189,19 @@ test.describe('MDT-248: ticket side reading pane', () => {
     await pane.locator('a.smart-link[data-link-type="document"]').first().evaluate(el => (el as HTMLElement).click())
     await expect(page.locator(sidePaneSelectors.title)).toHaveText('Deep dive')
 
-    await paneScroll.evaluate(el => { el.scrollTop = 480 })
+    // The pane restores scroll one frame after the entry paints (rAF). Let that
+    // pending frame fire before driving the offset, or it resets 480 back to 0.
+    await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))))
+    await paneScroll.evaluate(el => { (el as HTMLElement).scrollTop = 480 })
     // Back: returns to Guide; then forward: returns to Deep dive at 480
     await page.locator(sidePaneSelectors.back).click()
     await expect(page.locator(sidePaneSelectors.title)).toHaveText('Guide')
-    const backTop = await paneScroll.evaluate(el => el.scrollTop)
-    expect(backTop).toBeLessThan(60)
+    // Restore also applies a frame after the title paints — poll for it
+    await expect.poll(() => paneScroll.evaluate(el => (el as HTMLElement).scrollTop)).toBeLessThan(60)
 
     await page.locator(sidePaneSelectors.forward).click()
     await expect(page.locator(sidePaneSelectors.title)).toHaveText('Deep dive')
-    const fwdTop = await paneScroll.evaluate(el => el.scrollTop)
-    expect(fwdTop).toBeGreaterThan(400)
+    await expect.poll(() => paneScroll.evaluate(el => (el as HTMLElement).scrollTop)).toBeGreaterThan(400)
   })
 
   test('@MDT-248 escape_hides_pane_pill_reveals (BR-1.4, BR-1.5)', async ({ page, e2eContext }) => {
