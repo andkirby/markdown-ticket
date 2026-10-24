@@ -4,6 +4,7 @@ status: Implemented
 dateCreated: 2026-10-22T00:00:00.000Z
 type: Technical Debt
 priority: High
+phaseEpic: MDT-233
 ---
 
 # Migrate domain-contracts to Zod v4
