@@ -203,6 +203,9 @@ describe('TicketSidePane', () => {
     expect(screen.getByTestId('ticket-side-pane-path').textContent).toContain('docs/deep-dive.md')
     const prose = document.querySelector('.prose--document')
     expect(prose).toBeTruthy()
+    // parity with the documents reader: dark-mode typography inversion so
+    // plugin-default **bold** doesn't render near-black on the dark surface
+    expect(prose?.classList.contains('dark:prose-invert')).toBe(true)
   })
 
   it('compact header carries path + copy control; history floats over the body (UAT r5)', async () => {

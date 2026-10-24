@@ -5,7 +5,10 @@
 @layer components {
   .ticket-side-pane {
     @apply relative flex min-h-0 min-w-0 flex-1 flex-col;
-    background-color: var(--bg-elevated);
+    /* Spec (ticket-side-doc.spec.md, tokens): pane body is the base reading
+     * tier — same surface as the ticket column and the documents reader; the
+     * divider separates. Only the floating chip is elevated. */
+    background-color: oklch(var(--background));
   }
 
   /* Draggable wall between the columns (SplitDivider). 9px hit area with a

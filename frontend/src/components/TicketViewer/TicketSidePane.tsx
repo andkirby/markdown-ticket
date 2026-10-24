@@ -394,7 +394,7 @@ export const TicketSidePane: React.FC<TicketSidePaneProps> = ({
                 markdown={doc.body}
                 currentProject={projectId}
                 sourcePath={currentPath}
-                className={`prose prose--document ${getMarkdownDensityClass(markdownDensity)}`}
+                className={`prose prose--document dark:prose-invert ${getMarkdownDensityClass(markdownDensity)}`}
               />
             </>
           )}
