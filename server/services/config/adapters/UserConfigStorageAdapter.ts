@@ -1,3 +1,4 @@
+/* eslint-disable ts/no-unsafe-type-assertion -- MDT-258 baseline: pre-existing casts, strip as they are rewritten */
 /**
  * User config storage adapter (MDT-168).
  *

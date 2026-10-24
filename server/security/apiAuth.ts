@@ -140,7 +140,7 @@ export function isLocalHostRequest(req: Request, localHosts: string[]): boolean 
     // and lowercases. WHATWG URL keeps the brackets on IPv6 hostnames
     // (`[::1]`), so strip them to normalize to the bare address (`::1`) that
     // matches API_LOCAL_HOSTS defaults.
-    hostname = new URL(`http://${host}`).hostname.replace(/^(\[)|(\])$/g, '')
+    hostname = new URL(`http://${host}`).hostname.replace(/^\[|\]$/g, '')
   }
   catch {
     // Malformed Host (spaces, control chars, no host) -> fail closed.

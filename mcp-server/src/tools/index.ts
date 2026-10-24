@@ -1,3 +1,4 @@
+/* eslint-disable ts/no-unsafe-type-assertion -- MDT-258 baseline: pre-existing casts, strip as they are rewritten */
 /**
  * MCP Tools Main Class
  * Refactored to use extracted handlers and centralized tool configuration

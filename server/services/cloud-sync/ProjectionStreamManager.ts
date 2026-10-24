@@ -1,3 +1,4 @@
+/* eslint-disable ts/no-unsafe-type-assertion -- MDT-258 baseline: pre-existing casts, strip as they are rewritten */
 /**
  * ProjectionStreamManager — server-lifecycle owner of one upstream projection
  * stream per enabled local project (MDT-226).

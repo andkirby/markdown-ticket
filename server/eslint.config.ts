@@ -34,4 +34,30 @@ export default antfu(
       'test/prefer-lowercase-title': 'off',
     },
   },
+  // MDT-258 blind-cast gate on production sources. Tests are scoped off
+  // (thousands of casts); pre-existing casts carry a line-1 file baseline
+  // marker. Mirrors eslint.config.ts at the repo root (lefthook
+  // eslint-staged) so both configs agree on the baseline.
+  {
+    files: ['**/*.ts'],
+    ignores: [
+      'tests/**',
+      '**/__tests__/**',
+      '**/*.test.ts',
+      '**/*.spec.ts',
+      'eslint.config.ts',
+      '**/*.config.ts',
+    ],
+    languageOptions: {
+      parserOptions: {
+        projectService: {
+          allowDefaultProject: ['mcp-dev-tools/health-check.ts'],
+        },
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    rules: {
+      'ts/no-unsafe-type-assertion': 'error',
+    },
+  },
 )

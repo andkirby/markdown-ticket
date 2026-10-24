@@ -1,3 +1,4 @@
+/* eslint-disable ts/no-unsafe-type-assertion -- MDT-258 baseline: pre-existing casts, strip as they are rewritten */
 import type { Request, Response } from 'express'
 import type { ProjectController } from '../controllers/ProjectController.js'
 import type FileWatcherService from '../services/fileWatcher/index.js'

@@ -55,4 +55,52 @@ export default antfu(
       'ts/no-explicit-any': 'off',
     },
   },
+
+  // MDT-258 blind-cast gate: typed-linting rule on server + mcp-server
+  // production sources. Scoped off for tests (thousands of casts) and
+  // out-of-project config files; pre-existing casts carry a line-1 file
+  // baseline marker. Mirrored in server/eslint.config.ts and
+  // mcp-server/eslint.config.ts so per-package lint and the lefthook
+  // eslint-staged (root config) agree.
+  {
+    files: [
+      'server/server.ts',
+      'server/services/**/*.ts',
+      'server/controllers/**/*.ts',
+      'server/routes/**/*.ts',
+      'server/strategies/**/*.ts',
+      'server/utils/**/*.ts',
+      'server/repositories/**/*.ts',
+      'server/factories/**/*.ts',
+      'server/commands/**/*.ts',
+      'server/invokers/**/*.ts',
+      'server/middleware/**/*.ts',
+      'server/openapi/**/*.ts',
+      'server/scripts/**/*.ts',
+      'server/mcp-dev-tools/health-check.ts',
+      'server/mcp-dev-tools/src/**/*.ts',
+      'mcp-server/src/**/*.ts',
+    ],
+    ignores: [
+      'server/tests/**',
+      'server/**/__tests__/**',
+      'server/**/*.test.ts',
+      'server/**/*.spec.ts',
+      'mcp-server/src/**/__tests__/**',
+      'mcp-server/src/**/*.test.ts',
+      'mcp-server/src/**/*.spec.ts',
+      'mcp-server/src/**/*.config.ts',
+    ],
+    languageOptions: {
+      parserOptions: {
+        projectService: {
+          allowDefaultProject: ['server/mcp-dev-tools/health-check.ts'],
+        },
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    rules: {
+      'ts/no-unsafe-type-assertion': 'error',
+    },
+  },
 )

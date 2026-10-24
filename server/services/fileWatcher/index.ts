@@ -1,3 +1,4 @@
+/* eslint-disable ts/no-unsafe-type-assertion -- MDT-258 baseline: pre-existing casts, strip as they are rewritten */
 import type { DocumentChangeEventPayload, FileChangeEventPayload, ProjectPath, WorktreeWatcherEntry } from './PathWatcherService.js'
 import type { FileChangeEvent, ResponseLike, SSEEvent, TicketData } from './SSEBroadcaster.js'
 import type { ProjectRegistration } from './WatcherLifecycleManager.js'

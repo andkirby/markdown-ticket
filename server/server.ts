@@ -1,3 +1,4 @@
+/* eslint-disable ts/no-unsafe-type-assertion -- MDT-258 baseline: pre-existing casts, strip as they are rewritten */
 import type { Project } from '@mdt/shared/models/Project.js'
 import type { Express } from 'express'
 import type { ProjectServiceExtension } from './controllers/ProjectController.js'

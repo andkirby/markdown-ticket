@@ -1,3 +1,4 @@
+/* eslint-disable ts/no-unsafe-type-assertion -- MDT-258 baseline: pre-existing casts, strip as they are rewritten */
 import { existsSync, readFileSync } from 'node:fs'
 import * as os from 'node:os'
 import * as path from 'node:path'

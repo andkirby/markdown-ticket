@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable ts/no-unsafe-type-assertion -- MDT-258 baseline: pre-existing casts, strip as they are rewritten */
 
 import process from 'node:process'
 import { Server } from '@modelcontextprotocol/sdk/server/index.js'

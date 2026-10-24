@@ -1,3 +1,4 @@
+/* eslint-disable ts/no-unsafe-type-assertion -- MDT-258 baseline: pre-existing casts, strip as they are rewritten */
 import type { FileMetadata } from '../commands/ExtractMetadataCommand.js'
 import { ExtractMetadataCommand } from '../commands/ExtractMetadataCommand.js'
 import { ReadFileCommand } from '../commands/ReadFileCommand.js'

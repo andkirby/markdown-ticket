@@ -1,3 +1,4 @@
+/* eslint-disable ts/no-unsafe-type-assertion -- MDT-258 baseline: pre-existing casts, strip as they are rewritten */
 /**
  * Web Server Ticket Service Adapter
  * Adapts shared/services/TicketService.ts for web server API use

@@ -1,3 +1,4 @@
+/* eslint-disable ts/no-unsafe-type-assertion -- MDT-258 baseline: pre-existing casts, strip as they are rewritten */
 /**
  * OpenAPI 3.0 Schema Definitions - Single source of truth for all API schemas
  * Route JSDoc annotations should use $ref: '#/components/schemas/{Name}'.
