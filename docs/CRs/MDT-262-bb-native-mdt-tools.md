@@ -57,7 +57,7 @@ implementationNotes: bb side live-verified (native mdt_project_current in a fres
 - [x] Live bb thread check PASSED (attempt 4): fresh thread called `mdt_project_current` natively → returned `MDT`. Fixes found by live verification: tool harness has NO Bun global (ported adapter to node:child_process), daemon PATH is broken (`PATH=/Applications/LLM`) → added `cliPath` plugin setting + child PATH augmentation (`augmentedPath`).
 - [x] bun:test suite green (`plugins/tests/` + `plugins/bb/tests/`, 44 tests).
 - [x] No repo-absolute paths in either plugin; ignore whitelists cover the new layout without exposing build output.
-- Pending verification (user): DSH fresh-host remount of `plugins/dsh/*.js` after extraction. The offline simulate harness passes (same import graph the host loader pulls); the authoritative check is a fresh DSH host restart. Recorded in impl-notes.
+- Pending verification (user): in-session UAT (`TESTING.md` Prompt A) in a fresh DSH session. Host-side remount DONE 2026-10-24: `~/.dsh/profiles/web/cordis.patch.yml` repointed to `plugins/dsh/*.js`, host restarted, boot clean (no mount errors — broken paths fail loudly per DEBUG.md).
 
 ## Implementation notes (deviations found during implementation)
 
