@@ -65,6 +65,8 @@ export default antfu(
   {
     files: [
       'server/server.ts',
+      'server/counterAPI.ts',
+      'server/createSampleTickets.ts',
       'server/services/**/*.ts',
       'server/controllers/**/*.ts',
       'server/routes/**/*.ts',
@@ -76,6 +78,8 @@ export default antfu(
       'server/invokers/**/*.ts',
       'server/middleware/**/*.ts',
       'server/openapi/**/*.ts',
+      'server/security/**/*.ts',
+      'server/config/**/*.ts',
       'server/scripts/**/*.ts',
       'server/mcp-dev-tools/health-check.ts',
       'server/mcp-dev-tools/src/**/*.ts',
