@@ -1,9 +1,9 @@
 import type { HttpTransportSecurityConfig } from './httpSecurity.js'
 import { parseHttpTransportConfig } from './httpSecurity.js'
 
-export type McpTransportMode = 'stdio' | 'http'
+type McpTransportMode = 'stdio' | 'http'
 
-export interface McpTransportSelection {
+interface McpTransportSelection {
   mode: McpTransportMode
   httpConfig?: HttpTransportSecurityConfig
 }

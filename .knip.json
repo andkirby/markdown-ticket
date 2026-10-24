@@ -50,7 +50,7 @@
     },
     "mcp-server": {
       "entry": [
-        "src/**/*.ts",
+        "src/index.ts",
         "src/**/__tests__/**/*.test.ts",
         "src/**/__tests__/**/*.spec.ts"
       ],
@@ -113,6 +113,9 @@
     ],
     "server/tests/mocks/**": [
       "files"
+    ],
+    "mcp-server/src/tools/config/allTools.ts": [
+      "exports"
     ],
     "shared/services/cloud-sync/**": [
       "files"

@@ -4,7 +4,7 @@
  * Consolidates validation patterns to prevent duplication
  */
 
-export interface ValidationResult<T = string> {
+interface ValidationResult<T = string> {
   valid: boolean
   message?: string
   value?: T

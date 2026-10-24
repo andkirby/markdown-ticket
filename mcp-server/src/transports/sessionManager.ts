@@ -4,7 +4,7 @@ import { EventEmitter } from 'node:events'
 /**
  * Session data for tracking client connections
  */
-export interface Session {
+interface Session {
   id: string
   createdAt: Date
   lastActivity: Date

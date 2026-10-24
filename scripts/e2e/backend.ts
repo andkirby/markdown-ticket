@@ -40,7 +40,7 @@ if (!configDir) {
 }
 
 /** Build the /_e2e admin router (closure over mutable deps, wired in main()). */
-function createE2eAdminRouter(deps: { app?: Express, fileWatcher?: FileWatcherService }): Router {
+function createE2eAdminRouter(deps: { app?: Express, fileWatcher?: FileWatcherService, bootRuntimeConfig?: unknown }): Router {
   const router = express.Router()
 
   router.get('/_e2e/health', (_req, res) => {

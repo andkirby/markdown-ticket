@@ -62,27 +62,17 @@ export default antfu(
   // baseline marker. Mirrored in server/eslint.config.ts and
   // mcp-server/eslint.config.ts so per-package lint and the lefthook
   // eslint-staged (root config) agree.
+  // Mirror the server package config: mcp-dev-tools is a CLI tool, console is
+  // its output channel (server/eslint.config.ts allows it for the same paths).
+  {
+    files: ['server/mcp-dev-tools/**/*.ts', 'server/routes/devtools.ts'],
+    rules: {
+      'no-console': 'off',
+    },
+  },
   {
     files: [
-      'server/server.ts',
-      'server/counterAPI.ts',
-      'server/createSampleTickets.ts',
-      'server/services/**/*.ts',
-      'server/controllers/**/*.ts',
-      'server/routes/**/*.ts',
-      'server/strategies/**/*.ts',
-      'server/utils/**/*.ts',
-      'server/repositories/**/*.ts',
-      'server/factories/**/*.ts',
-      'server/commands/**/*.ts',
-      'server/invokers/**/*.ts',
-      'server/middleware/**/*.ts',
-      'server/openapi/**/*.ts',
-      'server/security/**/*.ts',
-      'server/config/**/*.ts',
-      'server/scripts/**/*.ts',
-      'server/mcp-dev-tools/health-check.ts',
-      'server/mcp-dev-tools/src/**/*.ts',
+      'server/**/*.ts',
       'mcp-server/src/**/*.ts',
     ],
     ignores: [
@@ -90,10 +80,12 @@ export default antfu(
       'server/**/__tests__/**',
       'server/**/*.test.ts',
       'server/**/*.spec.ts',
+      'server/**/*.config.ts',
+      'server/**/dist/**',
       'mcp-server/src/**/__tests__/**',
       'mcp-server/src/**/*.test.ts',
       'mcp-server/src/**/*.spec.ts',
-      'mcp-server/src/**/*.config.ts',
+      'mcp-server/**/dist/**',
     ],
     languageOptions: {
       parserOptions: {

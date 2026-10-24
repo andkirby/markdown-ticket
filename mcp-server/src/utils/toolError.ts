@@ -8,7 +8,7 @@
 /**
  * Error types for MCP server
  */
-export enum ErrorType {
+enum ErrorType {
   /** Protocol errors - should return JSON-RPC error responses */
   PROTOCOL = 'protocol',
 

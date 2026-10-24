@@ -438,11 +438,6 @@ function watchOwnerOnlyEndpointCalls(page: Page, calls: string[]): void {
 }
 
 function isOwnerOnlyEndpoint(pathname: string): boolean {
-  // MDT-244: GET /api/config/selector is the deliberate non-owner read
-  // (preferences + ticket-key options for every viewer, server/routes/system.ts);
-  // the rest of /api/config (incl. /api/config/selectors) stays owner-only.
-  if (pathname === '/api/config/selector')
-    return false
   return pathname.startsWith('/api/config')
     || pathname.startsWith('/api/filesystem')
     || pathname.startsWith('/api/directories')

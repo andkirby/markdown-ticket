@@ -30,4 +30,3 @@ export function normalizeKey(key: string, projectCode: string): string {
 }
 
 // Re-export for convenience
-export { KeyNormalizationError }

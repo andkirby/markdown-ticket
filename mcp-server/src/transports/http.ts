@@ -23,7 +23,7 @@ export type HttpTransportConfig = HttpTransportSecurityConfig
 
 const MCP_PROTOCOL_VERSION = '2025-06-18'
 
-export interface HttpTransportApp {
+interface HttpTransportApp {
   app: Express
   sessionManager: SessionManager
 }

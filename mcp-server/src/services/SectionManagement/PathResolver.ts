@@ -9,12 +9,12 @@
 import type { MarkdownSectionService, SectionMatch } from '@mdt/shared/services/MarkdownSectionService.js'
 import { ToolError } from '../../utils/toolError.js'
 
-export interface PathResolutionResult {
+interface PathResolutionResult {
   match: SectionMatch
   normalizedPath: string
 }
 
-export interface ValidationResult {
+interface ValidationResult {
   valid: boolean
   normalized?: string
   errors: string[]

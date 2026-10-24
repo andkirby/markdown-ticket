@@ -13,18 +13,18 @@
  * - No copying of sanitization logic
  */
 
-export interface ContentOptions {
+interface ContentOptions {
   operation: 'replace' | 'append' | 'prepend'
   maxLength?: number
 }
 
-export interface ContentResult {
+interface ContentResult {
   content: string
   modified: boolean
   warnings: string[]
 }
 
-export interface HeaderExtractionResult {
+interface HeaderExtractionResult {
   newHeader: string
   remainingContent: string
   hasHeader: boolean

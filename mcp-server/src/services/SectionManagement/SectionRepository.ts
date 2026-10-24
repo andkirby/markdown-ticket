@@ -23,7 +23,7 @@ import type { CRService } from '../../services/crService.js'
 import { MarkdownService } from '@mdt/shared/services/MarkdownService.js'
 import { ToolError } from '../../utils/toolError.js'
 
-export interface CRFileContent {
+interface CRFileContent {
   filePath: string
   title: string
   yamlBody: string
