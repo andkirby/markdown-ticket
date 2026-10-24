@@ -13,6 +13,7 @@ import {
   MARKDOWN_DENSITY_CHANGE_EVENT,
   MARKDOWN_DENSITY_KEY,
 } from '@/config/settingsPreferences'
+import { extractDocumentFrontmatter } from '@/utils/documentFrontmatter'
 import { extractTableOfContents } from '@/utils/tableOfContents'
 import MarkdownContent from '../MarkdownContent'
 import 'prismjs/components/prism-yaml'
@@ -35,41 +36,6 @@ interface MarkdownViewerProps {
   refreshToken?: number
   fileDeleted?: boolean
   updateState?: 'idle' | 'updated' | 'syncing'
-}
-
-interface ParsedDocumentContent {
-  frontmatter: string | null
-  body: string
-}
-
-function extractDocumentFrontmatter(value: string): ParsedDocumentContent {
-  if (!value.startsWith('---\n') && !value.startsWith('---\r\n')) {
-    return { frontmatter: null, body: value }
-  }
-
-  const marker = value.startsWith('---\r\n') ? '---\r\n' : '---\n'
-  let searchIndex = marker.length
-
-  while (searchIndex < value.length) {
-    const nextLineIndex = value.indexOf('\n', searchIndex)
-    const lineEnd = nextLineIndex === -1 ? value.length : nextLineIndex + 1
-    const line = value.slice(searchIndex, lineEnd).replace(/\r?\n$/, '')
-
-    if (line === '---') {
-      const frontmatter = value.slice(marker.length, searchIndex).replace(/\r?\n$/, '')
-      return {
-        frontmatter: frontmatter.trim() ? frontmatter : null,
-        body: value.slice(lineEnd),
-      }
-    }
-
-    if (nextLineIndex === -1)
-      break
-
-    searchIndex = lineEnd
-  }
-
-  return { frontmatter: null, body: value }
 }
 
 export default function MarkdownViewer({ projectId, filePath, fileInfo, refreshToken = 0, fileDeleted = false, updateState = 'idle' }: MarkdownViewerProps) {

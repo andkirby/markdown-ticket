@@ -155,7 +155,7 @@ describe('useSidePane state machine', () => {
 describe('TicketSidePane', () => {
   const fetchOk = mock(async () => '# Deep dive\n\nBody.')
 
-  function renderPane(history: string[] = ['docs/deep-dive.md'], hi = 0) {
+  function renderPane(history: string[] = ['docs/deep-dive.md'], hi = 0, fetch: (path: string) => Promise<string> = fetchOk) {
     return render(
       <TicketSidePane
         projectId="MDT"
@@ -165,7 +165,7 @@ describe('TicketSidePane', () => {
         scrolls={{}}
         titles={{}}
         onJump={() => {}}
-        fetchContent={fetchOk as unknown as (path: string) => Promise<string>}
+        fetchContent={fetch as unknown as (path: string) => Promise<string>}
         onBack={() => {}}
         onForward={() => {}}
         onHide={() => {}}
@@ -180,6 +180,21 @@ describe('TicketSidePane', () => {
     renderPane()
     const aside = await screen.findByRole('complementary')
     expect(aside.getAttribute('aria-label')).toContain('Deep dive')
+  })
+
+  it('renders leading YAML frontmatter as a collapsed disclosure, not as a setext heading', async () => {
+    const fetchFrontmatter = mock(async () => '---\nid: IDEA-011\nstatus: promoted\npromoted-to: MDT-252\n---\n\n# Promoted idea\n\nBody text.')
+    renderPane(['docs/ideas/IDEA-011.md'], 0, fetchFrontmatter as unknown as (path: string) => Promise<string>)
+    await screen.findByTestId('ticket-side-pane-title')
+    expect(screen.getByTestId('ticket-side-pane-title').textContent).toContain('Promoted idea')
+    // disclosure matches the documents viewer (collapsed by default)
+    const disclosure = document.querySelector('.document-frontmatter')
+    expect(disclosure).toBeTruthy()
+    expect(disclosure?.querySelector('.document-frontmatter__code')).toHaveTextContent('promoted-to: MDT-252')
+    // and it never leaks into the prose body
+    const prose = document.querySelector('.prose--document')
+    expect(prose?.textContent).not.toContain('promoted-to')
+    expect(prose?.textContent).toContain('Body text.')
   })
 
   it('renders the document path and the document prose variant (C4)', async () => {

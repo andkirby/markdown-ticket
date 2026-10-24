@@ -1,8 +1,11 @@
+import parse from 'html-react-parser'
+import Prism from 'prismjs'
 import * as React from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { authFetch } from '@/auth/authFetch'
 import { getMarkdownDensity, getMarkdownDensityClass, MARKDOWN_DENSITY_CHANGE_EVENT } from '@/config/settingsPreferences'
 import { useToast } from '@/hooks/useToast'
+import { extractDocumentFrontmatter } from '@/utils/documentFrontmatter'
 import CopyPathButton from '../DocumentsView/CopyPathButton'
 import HtmlSandboxViewer from '../DocumentsView/HtmlSandboxViewer'
 import MarkdownContent from '../MarkdownContent'
@@ -10,6 +13,7 @@ import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } 
 import { ModalCloseButton } from '../ui/Modal'
 import { humanizePaneTitle } from './sidePaneDocs'
 import { clampTicketColumnWidth } from './splitLayout'
+import 'prismjs/components/prism-yaml'
 
 /**
  * @testid ticket-side-pane — the pane (aside) while visible
@@ -31,6 +35,8 @@ import { clampTicketColumnWidth } from './splitLayout'
 interface PaneDoc {
   path: string
   title: string
+  /** Raw leading YAML frontmatter, shown collapsed like the documents viewer */
+  frontmatter: string | null
   body: string
   isHtml: boolean
 }
@@ -65,18 +71,23 @@ function isHtmlPath(path: string): boolean {
 
 /**
  * First `# ` heading becomes the pane title and is stripped from the body
- *  (mirrors how the ticket viewer strips its own H1).
+ *  (mirrors how the ticket viewer strips its own H1). Leading YAML
+ *  frontmatter is split off and shown as a collapsed disclosure, matching
+ *  the documents viewer — inline it would render as a setext heading.
  */
 function parseDocument(path: string, markdown: string): PaneDoc {
   const isHtml = isHtmlPath(path)
-  const lines = markdown.split('\n')
+  const { frontmatter, body: source } = isHtml
+    ? { frontmatter: null, body: markdown }
+    : extractDocumentFrontmatter(markdown)
+  const lines = source.split('\n')
   const h1Index = lines.findIndex(line => /^#[ \t]/.test(line))
   if (h1Index >= 0) {
     const title = lines[h1Index].slice(1).trim()
     const body = lines.filter((_, index) => index !== h1Index).join('\n').replace(/^\n+/, '')
-    return { path, title, body, isHtml }
+    return { path, title, frontmatter, body, isHtml }
   }
-  return { path, title: humanizePaneTitle(path), body: markdown, isHtml }
+  return { path, title: humanizePaneTitle(path), frontmatter, body: source, isHtml }
 }
 
 async function defaultFetchContent(projectId: string, filePath: string): Promise<string> {
@@ -368,12 +379,24 @@ export const TicketSidePane: React.FC<TicketSidePaneProps> = ({
             </div>
           )}
           {doc && !doc.isHtml && (
-            <MarkdownContent
-              markdown={doc.body}
-              currentProject={projectId}
-              sourcePath={currentPath}
-              className={`prose prose--document ${getMarkdownDensityClass(markdownDensity)}`}
-            />
+            <>
+              {doc.frontmatter && (
+                <details className="document-frontmatter">
+                  <summary className="document-frontmatter__summary">Frontmatter</summary>
+                  <pre className="document-frontmatter__code language-yaml">
+                    <code className="language-yaml">
+                      {parse(Prism.highlight(doc.frontmatter, Prism.languages.yaml, 'yaml'))}
+                    </code>
+                  </pre>
+                </details>
+              )}
+              <MarkdownContent
+                markdown={doc.body}
+                currentProject={projectId}
+                sourcePath={currentPath}
+                className={`prose prose--document ${getMarkdownDensityClass(markdownDensity)}`}
+              />
+            </>
           )}
           {doc && doc.isHtml && (
             <div className="ticket-side-pane__html">
