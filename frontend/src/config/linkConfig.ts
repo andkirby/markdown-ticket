@@ -1,3 +1,5 @@
+import { authFetch } from '../auth/authFetch'
+
 export interface LinkConfig {
   enableAutoLinking: boolean
   enableTicketLinks: boolean
@@ -36,8 +38,8 @@ export function ensureGlobalLinkConfig(): void {
   }
   globalFetchStarted = true
 
-  void import('../auth/authFetch')
-    .then(async ({ authFetch }) => {
+  void Promise.resolve()
+    .then(async () => {
       const response = await authFetch('/api/config/global')
       if (!response.ok) {
         return
