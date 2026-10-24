@@ -1,6 +1,4 @@
-import { useEffect } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
-import { useAuthSession } from './auth/AuthSessionContext'
 import { AuthSessionProvider } from './auth/AuthSessionProvider'
 import { DirectTicketAccess } from './components/DirectTicketAccess'
 import { RedirectToCurrentProject } from './components/RedirectToCurrentProject'
@@ -8,7 +6,7 @@ import { RouteErrorModal } from './components/RouteErrorModal'
 import { InviteRouteHandler } from './components/routes/InviteRouteHandler'
 import { ProjectRouteHandler } from './components/routes/ProjectRouteHandler'
 import { ShareRouteHandler } from './components/routes/ShareRouteHandler'
-import { loadTicketKeyOptions } from './config/ticketKeyConfig'
+import { TicketKeyOptionsLoader } from './components/TicketKeyOptionsLoader'
 import { useCardDensity } from './hooks/useCardDensity'
 import {
   ROUTE_DIRECT_TICKET,
@@ -22,21 +20,6 @@ import {
   ROUTE_TICKET_SUBDOC,
 } from './routes'
 import './utils/cache' // Import cache utilities for development
-
-/**
- * MDT-244: one shared read of the ticket-key display options once the
- * session is owner-capable. GET /api/config/selector is owner-gated
- * server-side, so viewers keep defaults (Edge-1) instead of probing an
- * owner-only endpoint (MDT-177 read-access contract).
- */
-function TicketKeyOptionsLoader() {
-  const { canUseOwnerEndpoints } = useAuthSession()
-  useEffect(() => {
-    if (canUseOwnerEndpoints)
-      void loadTicketKeyOptions()
-  }, [canUseOwnerEndpoints])
-  return null
-}
 
 function App() {
   useCardDensity()

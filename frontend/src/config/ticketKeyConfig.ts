@@ -5,8 +5,8 @@
  * user-scope app configuration (`user.toml`). Read through
  * `/api/config/selector`, which is owner-gated server-side
  * (OwnerOnlyApiPrefix.CONFIG): App loads it only for owner-capable
- * sessions, so viewers keep defaults (Edge-1) without probing an
- * owner-only endpoint. One shared read per session; Settings applies
+ * sessions, so viewer sessions never fetch and keep defaults — no
+ * owner-only endpoint probes (MDT-177 read-access contract). One shared read per session; Settings applies
  * update the store directly on save. Components consume via
  * `useTicketKeyOptions()` — never per-instance fetches, never
  * localStorage (BR-6.1 layer).
