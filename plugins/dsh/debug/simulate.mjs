@@ -7,11 +7,11 @@
  * throwaway project.
  *
  * Usage:
- *   bun dsh-plugin/debug/simulate.mjs <workdir> <toolName> [jsonArgs]
+ *   bun plugins/dsh/debug/simulate.mjs <workdir> <toolName> [jsonArgs]
  *
  * Examples:
- *   bun dsh-plugin/debug/simulate.mjs "$PWD" mdt_project_current
- *   bun dsh-plugin/debug/simulate.mjs "$PWD" mdt_ticket_list '{"filters":["status=Implemented"]}'
+ *   bun plugins/dsh/debug/simulate.mjs "$PWD" mdt_project_current
+ *   bun plugins/dsh/debug/simulate.mjs "$PWD" mdt_ticket_list '{"filters":["status=Implemented"]}'
  */
 
 import { spawn } from 'node:child_process'
@@ -64,7 +64,7 @@ async function loadTools() {
 
 const [workdir, toolName, jsonArgs] = process.argv.slice(2)
 if (workdir === undefined || toolName === undefined) {
-  console.error('usage: bun dsh-plugin/debug/simulate.mjs <workdir> <toolName> [jsonArgs]')
+  console.error('usage: bun plugins/dsh/debug/simulate.mjs <workdir> <toolName> [jsonArgs]')
   process.exit(2)
 }
 

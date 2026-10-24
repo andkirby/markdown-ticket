@@ -10,7 +10,7 @@
 
 /** POSIX single-quote for one shell token. */
 export function quote(value) {
-  return "'" + String(value).replace(/'/g, "'\\''") + "'"
+  return `'${String(value).replace(/'/g, '\'\\\'\'')}'`
 }
 
 /** Full JSON-Schema object; raw registrations are not converted from shorthand. */
@@ -30,7 +30,8 @@ export function render(_args, value) {
 
 /** Resolve the calling session's live sandbox policy so subprocesses follow it. */
 export function sessionPolicy(sandboxPolicy, exec) {
-  if (sandboxPolicy === undefined || exec?.agent === undefined) return undefined
+  if (sandboxPolicy === undefined || exec?.agent === undefined)
+    return undefined
   return sandboxPolicy.resolve({ session: exec.agent.session })
 }
 
@@ -41,7 +42,8 @@ export function sessionPolicy(sandboxPolicy, exec) {
  * detection (.mdt-config.toml) never sees the session workspace.
  */
 export function sessionWorkdir(exec, policy) {
-  if (policy !== undefined && policy.workspaceRoot !== undefined) return policy.workspaceRoot
+  if (policy !== undefined && policy.workspaceRoot !== undefined)
+    return policy.workspaceRoot
   const headerCwd = exec?.agent?.session?.header?.cwd
   return typeof headerCwd === 'string' && headerCwd !== '' ? headerCwd : undefined
 }

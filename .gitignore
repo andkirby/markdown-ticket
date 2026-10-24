@@ -16,8 +16,11 @@ build/
 **/*.js.map
 **/*.d.ts.map
 !/server/**/*.js
-# DSH plugin glue is source, not build output (MDT-143).
-!/dsh-plugin/*.js
+# DSH plugin glue is source, not build output (MDT-143); shared plugin lib (MDT-262).
+!/plugins/dsh/*.js
+!/plugins/dsh/lib/*.js
+# bb plugin keeps a synced copy of the shared lib (enforced by plugins/tests/lib-sync.test.ts).
+!/plugins/bb/lib/*.js
 # Generated Cloudflare Worker binding types (MDT-200 cloud/ workspace).
 # Committed as the binding contract per docs/architecture/cloud-sync/operations.md.
 !/cloud/worker-configuration.d.ts
@@ -106,6 +109,9 @@ counter-api/
 _*
 # `_*` also matches __tests__ dirs — re-include them (test files are tracked)
 !**/__tests__/
+# shared plugin lib lives under plugins/ but must not be swallowed by `_*` (MDT-262)
+!/plugins/_lib/
+!/plugins/_lib/*.js
 designs/
 
 *.bun-build

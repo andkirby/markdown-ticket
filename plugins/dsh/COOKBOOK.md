@@ -15,7 +15,7 @@ applies to every session on every preset:
 ```yaml
 - insert:
     - id: tool-mdt
-      name: /abs/path/to/dsh-plugin/mdt.js
+      name: /abs/path/to/plugins/dsh/mdt.js
 ```
 
 Failure mode avoided: tools present in one preset, absent in another, and
@@ -72,7 +72,7 @@ crashes inside `execute`.
 ### Resolve local binaries relative to the plugin file, and test the resolution
 
 ```js
-const CLI = new URL('../cli/bin/mdt-cli', import.meta.url).pathname
+const CLI = new URL('../../cli/bin/mdt-cli', import.meta.url).pathname
 ```
 
 Compute from `import.meta.url`, not from cwd — the plugin runs wherever the
@@ -164,5 +164,5 @@ useful signal.
 
 Each fix in this effort was a separate commit whose body names the
 observed failure (silent no-op registration, exit 127, stripped args).
-When a regression reappears, `git log --oneline -- dsh-plugin/` then reads
+When a regression reappears, `git log --oneline -- plugins/dsh/` then reads
 as a diagnostic checklist.

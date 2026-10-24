@@ -13,9 +13,9 @@ prompts; [AGENTS.md](AGENTS.md) holds the authoring conventions.
 ```
 dsh-host (user-operated, long-running)
   └─ cordis loader — mount list: ~/.dsh/profiles/web/cordis.patch.yml
-       ├─ mdt-plugin          dsh-plugin/mdt.js
+       ├─ mdt-plugin          plugins/dsh/mdt.js
        │    └─ subprocess:    cli/bin/mdt-cli  (cwd = calling session)
-       └─ spec-trace-plugin   dsh-plugin/spec-trace.js
+       └─ spec-trace-plugin   plugins/dsh/spec-trace.js
             └─ subprocess:    $SPEC_TRACE_BIN (see limitation L4)
 ```
 
@@ -24,22 +24,22 @@ dsh-host (user-operated, long-running)
 | id | class | entry | owner | observe | control | rollout | test |
 |----|-------|-------|-------|---------|---------|---------|------|
 | `dsh-host` | host (root) | user's DSH install | user | session behavior only | user restart | user restart | TESTING.md Prompt A in a fresh session |
-| `mdt-plugin` | tool-plugin | `dsh-plugin/mdt.js` | `dsh-host` | `debug/simulate.mjs` output | mount row in cordis.patch.yml | host restart | simulate harness + TESTING.md |
-| `spec-trace-plugin` | tool-plugin | `dsh-plugin/spec-trace.js` | `dsh-host` | `debug/simulate.mjs` output | mount row in cordis.patch.yml | host restart | simulate harness |
+| `mdt-plugin` | tool-plugin | `plugins/dsh/mdt.js` | `dsh-host` | `debug/simulate.mjs` output | mount row in cordis.patch.yml | host restart | simulate harness + TESTING.md |
+| `spec-trace-plugin` | tool-plugin | `plugins/dsh/spec-trace.js` | `dsh-host` | `debug/simulate.mjs` output | mount row in cordis.patch.yml | host restart | simulate harness |
 | `mdt-cli` (substrate) | cli | `cli/bin/mdt-cli` | `mdt-plugin` | stdout/stderr JSON | direct invocation | none (interpreted) | `bun run --cwd cli build` + e2e |
 
 ## Capability evidence
 
 ### `mdt-plugin` / OBSERVE / VERIFIED
 
-- Action: `bun dsh-plugin/debug/simulate.mjs "$PWD" mdt_project_current`
+- Action: `bun plugins/dsh/debug/simulate.mjs "$PWD" mdt_project_current`
 - Signal: `"id": "markdown-ticket"`, `"code": "MDT"`, exit 0
 - Constraints: harness registers both plugins through fake DSH services and
   executes the tool offline; no host or session involved.
 
 ### `mdt-plugin` / INJECT / VERIFIED
 
-- Action: `bun dsh-plugin/debug/simulate.mjs "$PWD" mdt_ticket_list '{"filters":["status=Implemented"]}'`
+- Action: `bun plugins/dsh/debug/simulate.mjs "$PWD" mdt_ticket_list '{"filters":["status=Implemented"]}'`
 - Signal: returns ticket keys (`MDT-184`, `MDT-244`) — live execute() bodies
   run without host restart, which is the whole point.
 - Constraints: the fake shell passes **no sandbox policy** — subprocesses
@@ -50,7 +50,7 @@ dsh-host (user-operated, long-running)
 ### `mdt-plugin` / CONTROL / VERIFIED
 
 - Action: add/remove loader rows in `~/.dsh/profiles/web/cordis.patch.yml`
-  (`- id: tool-mdt / name: <abs path>/dsh-plugin/mdt.js`), then start a host.
+  (`- id: tool-mdt / name: <abs path>/plugins/dsh/mdt.js`), then start a host.
 - Signal: tools registered in every new session (tool list shows
   `mdt_*`); a broken path fails loudly at mount.
 - Constraints: plugins load loose (no realm), available to all sessions.
@@ -58,7 +58,7 @@ dsh-host (user-operated, long-running)
 
 ### `mdt-plugin` / ROLLOUT / VERIFIED
 
-- Action: edit `dsh-plugin/mdt.js` → user restarts the DSH host → fresh
+- Action: edit `plugins/dsh/mdt.js` → user restarts the DSH host → fresh
   session → run TESTING.md Prompt A.
 - Signal: recorded behavior delta across two runs after the session-cwd fix:
   `mdt_ticket_list` went `NO_PROJECT_CONTEXT` → PASS with
@@ -99,7 +99,7 @@ Three layers, cheapest first:
 
 ### `spec-trace-plugin` / OBSERVE + INJECT + TEST / VERIFIED
 
-- Action: `bun dsh-plugin/debug/simulate.mjs "$PWD" spec_trace_list '{"entity":"requirement","ticket":"MDT-101","workdir":"'$PWD'"}'`
+- Action: `bun plugins/dsh/debug/simulate.mjs "$PWD" spec_trace_list '{"entity":"requirement","ticket":"MDT-101","workdir":"'$PWD'"}'`
 - Signal: `ERROR: spec-trace exited 1: ENOENT ... docs/CRs/.trace/MDT-101/store.json`
   — the binary executes and the CLI's real answer (no trace store for that
   ticket) surfaces as a clean tool error. Wiring verified end-to-end.
@@ -128,6 +128,6 @@ Three layers, cheapest first:
 ## Refresh triggers
 
 Re-verify the affected sections when: a plugin mounts/unmounts (CONTROL),
-`dsh-plugin/*.js` changes (ROLLOUT + TESTING.md live run), the mdt-cli
+`plugins/dsh/*.js` changes (ROLLOUT + TESTING.md live run), the mdt-cli
 interface changes (skill contract in `cli/AGENTS.md`), or `SPEC_TRACE_BIN`
 moves (L4).

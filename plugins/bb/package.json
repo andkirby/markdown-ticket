@@ -1,0 +1,26 @@
+{
+  "name": "bb-plugin-mdt",
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "bb": ">=0.46",
+    "bbPluginSdk": ">=0.6.49"
+  },
+  "bb": {
+    "name": "MDT",
+    "description": "Native mdt-cli tools: MDT tickets and projects as model tools.",
+    "branding": {
+      "icon": "ListTodo"
+    },
+    "server": "./server.ts"
+  },
+  "dependencies": {
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@get-bb/plugin-sdk": "0.6.49",
+    "@types/bun": "^1.4.4",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  }
+}

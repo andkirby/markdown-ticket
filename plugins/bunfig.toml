@@ -1,0 +1,3 @@
+# Plugin test suite must not inherit the repo-root frontend test preload.
+[test]
+preload = []

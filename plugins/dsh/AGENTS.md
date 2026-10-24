@@ -3,7 +3,7 @@
 This directory holds raw Cordis plugins that expose local CLIs as model tools
 inside DeepSeek Harness (DSH) sessions:
 
-- `mdt.js` — `../cli/bin/mdt-cli`: `mdt_ticket_get`, `mdt_ticket_list`,
+- `mdt.js` — `../../cli/bin/mdt-cli`: `mdt_ticket_get`, `mdt_ticket_list`,
   `mdt_ticket_create`, `mdt_ticket_attr`, `mdt_ticket_deps`,
   `mdt_project_current`, `mdt_project_list`.
 - `spec-trace.js` — the compiled spec-trace CLI, resolved from the
@@ -43,7 +43,9 @@ The loader imports the plugin module into the long-running DSH **host
 process**: later edits to the file do not reach sessions until the host
 restarts (or reloads its plugins). A new session alone re-runs the cached
 `apply()` — new tool names and descriptions appear, but execute bodies stay
-old. After changing a plugin, restart the host before live-testing.
+old. After changing a plugin — or anything under `../_lib/` (and its synced
+copies in the bb plugin), which the loader pulls in at import time — restart
+the host before live-testing.
 
 ## Conventions
 

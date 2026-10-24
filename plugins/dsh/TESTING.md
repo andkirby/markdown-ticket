@@ -1,9 +1,9 @@
 # DSH mdt-plugin test prompt
 
 Live verification of the session-cwd fix and the `mdt_project_current` tool
-(`dsh-plugin/mdt.js`). The DSH **host process** caches plugin modules at
+(`plugins/dsh/mdt.js`). The DSH **host process** caches plugin modules at
 import time — a fresh session alone is NOT enough. Restart the host (`dsh
-web`) after any edit to `dsh-plugin/*.js`, then start a new session. A
+web`) after any edit to `plugins/dsh/*.js`, then start a new session. A
 session in an old host re-runs the cached `apply()`: new tool names and
 descriptions appear, but execute bodies stay old (cwd resolution still
 broken, `⚠️` warning still leading error text). That mixed signature means
@@ -11,7 +11,7 @@ broken, `⚠️` warning still leading error text). That mixed signature means
 
 ## Setup
 
-Restart the DSH host if any `dsh-plugin/*.js` changed since it started, then
+Restart the DSH host if any `plugins/dsh/*.js` changed since it started, then
 start a new session with the workspace set to one of:
 
 | Variant | Workspace | What it proves |
