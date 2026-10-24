@@ -19,9 +19,22 @@ phaseEpic: MDT-233
 - No clear boundaries for shared vs interface-specific code
 
 ### Why obsolete (verified 2026-10)
-- `server/repositories/` no longer exists; TOML handling lives in `shared/services/project/*`
 - Boundaries codified: `cli/` thin-shell rule (AGENTS.md), `domain-contracts` dependency direction (MDT-101)
 - `shared/` services are the consumption hub for all interfaces
+
+> **Correction (2026-10-24, MDT-258 leftovers):** the earlier re-baseline claimed
+> `server/repositories/` no longer exists. That is false — `server/repositories/ConfigRepository.ts`
+> is live and used by `DocumentService` and `TreeService` (kept deliberately per MDT-258's
+> decision table: validate its ingress, consolidation is separate work). The claim below is
+> struck, not rewritten.
+>
+> Machine check (MDT-258 §4.5 `claims:` convention, `bun test scripts/doc-claims.test.ts`):
+>
+> ```claims
+> paths_exist: [server/repositories/ConfigRepository.ts]
+> ```
+
+- ~~`server/repositories/` no longer exists; TOML handling lives in `shared/services/project/*`~~ — see correction above; TOML handling also lives in `shared/services/project/*`, but the repository directory remains
 
 ### Actual work (this ticket, post re-baseline)
 Leftover compatibility and duplication debt from the MDT-101 contract migration:
