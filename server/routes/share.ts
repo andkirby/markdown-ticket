@@ -25,7 +25,7 @@ export function createShareRouter(projectService: ProjectServiceExtension): Rout
       return
     }
 
-    const runtimeConfig = getRuntimeConfig(req)
+    const runtimeConfig = getRuntimeConfig(req.app)
     const secret = runtimeConfig.readSessions.secret
     if (!secret) {
       res.status(500).json({ error: 'Sharing is not configured' })
@@ -37,7 +37,7 @@ export function createShareRouter(projectService: ProjectServiceExtension): Rout
       res,
       secret,
       shareIds: [shareId],
-      secure: shouldUseSecureSessionCookie(req, runtimeConfig.nodeEnv),
+      secure: shouldUseSecureSessionCookie(req.secure, req.headers, runtimeConfig.nodeEnv),
     })
 
     res.json({

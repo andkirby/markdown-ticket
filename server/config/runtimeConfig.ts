@@ -1,5 +1,5 @@
 /* eslint-disable ts/no-unsafe-type-assertion -- MDT-258 baseline: pre-existing casts, strip as they are rewritten */
-import type { Request } from 'express'
+import type { Application } from 'express'
 import path from 'node:path'
 import process from 'node:process'
 import { parseApiAuthConfig } from '../security/apiAuth.js'
@@ -73,8 +73,8 @@ export function buildRuntimeConfig(env: NodeJS.ProcessEnv = process.env): Runtim
   }
 }
 
-export function getRuntimeConfig(req: Request): RuntimeConfig {
-  const current = req.app.locals.runtimeConfig
+export function getRuntimeConfig(app: Application): RuntimeConfig {
+  const current = app.locals.runtimeConfig
   if (isRuntimeConfig(current)) {
     return current
   }

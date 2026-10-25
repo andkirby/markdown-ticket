@@ -128,16 +128,6 @@
     },
     {
       "file": "server/controllers/ProjectController.ts",
-      "function": "ProjectController/getSystemDirectories",
-      "kind": "request-delegation",
-      "expression": "getRuntimeConfig(req)",
-      "count": 2,
-      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/controllers/ProjectController.ts",
       "function": "ProjectController/getTraceStore",
       "kind": "request-delegation",
       "expression": "this.resolveVisibleProject(projectId, req, res)",
@@ -198,26 +188,6 @@
     },
     {
       "file": "server/routes/auth.ts",
-      "function": "createAuthRouter/router.delete(\"/session\")",
-      "kind": "request-delegation",
-      "expression": "getRuntimeConfig(req)",
-      "count": 1,
-      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/auth.ts",
-      "function": "createAuthRouter/router.delete(\"/session\")",
-      "kind": "request-delegation",
-      "expression": "shouldUseSecureSessionCookie(req, runtimeConfig.nodeEnv)",
-      "count": 1,
-      "delegate": "../security/apiSession.js#shouldUseSecureSessionCookie",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/auth.ts",
       "function": "createAuthRouter/router.get(\"/session\")",
       "kind": "request-delegation",
       "expression": "getOwnerSessionState(req, runtimeConfig.auth.token)",
@@ -240,16 +210,6 @@
       "file": "server/routes/auth.ts",
       "function": "createAuthRouter/router.get(\"/session\")",
       "kind": "request-delegation",
-      "expression": "getRuntimeConfig(req)",
-      "count": 1,
-      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/auth.ts",
-      "function": "createAuthRouter/router.get(\"/session\")",
-      "kind": "request-delegation",
       "expression": "isLoopbackBypassEligible(req, runtimeConfig.auth, readSession)",
       "count": 1,
       "delegate": "../security/apiAuth.js#isLoopbackBypassEligible",
@@ -263,66 +223,6 @@
       "expression": "getReadTokenStore(req)",
       "count": 1,
       "delegate": "server/routes/auth.ts#getReadTokenStore",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/auth.ts",
-      "function": "createAuthRouter/router.post(\"/read-token\")",
-      "kind": "request-delegation",
-      "expression": "getRuntimeConfig(req)",
-      "count": 1,
-      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/auth.ts",
-      "function": "createAuthRouter/router.post(\"/read-token\")",
-      "kind": "request-delegation",
-      "expression": "shouldUseSecureSessionCookie(req, runtimeConfig.nodeEnv)",
-      "count": 2,
-      "delegate": "../security/apiSession.js#shouldUseSecureSessionCookie",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/auth.ts",
-      "function": "createAuthRouter/router.post(\"/session\")",
-      "kind": "request-delegation",
-      "expression": "getRuntimeConfig(req)",
-      "count": 1,
-      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/auth.ts",
-      "function": "createAuthRouter/router.post(\"/session\")",
-      "kind": "request-delegation",
-      "expression": "shouldUseSecureSessionCookie(req, runtimeConfig.nodeEnv)",
-      "count": 1,
-      "delegate": "../security/apiSession.js#shouldUseSecureSessionCookie",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/auth.ts",
-      "function": "getReadTokenStore",
-      "kind": "request-delegation",
-      "expression": "getRuntimeConfig(req)",
-      "count": 1,
-      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/config.ts",
-      "function": "createConfigRouter/bindAdapters",
-      "kind": "request-delegation",
-      "expression": "getRuntimeConfig(req)",
-      "count": 1,
-      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
       "reason": "Existing controller/security Request delegation; exact callee retained for review",
       "phase": 5
     },
@@ -358,86 +258,6 @@
     },
     {
       "file": "server/routes/readTokens.ts",
-      "function": "allowsEphemeralInviteFallback",
-      "kind": "request-delegation",
-      "expression": "getRuntimeConfig(req)",
-      "count": 1,
-      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/readTokens.ts",
-      "function": "consumeInviteFromCandidateStores",
-      "kind": "request-delegation",
-      "expression": "allowsEphemeralInviteFallback(req)",
-      "count": 1,
-      "delegate": "server/routes/readTokens.ts#allowsEphemeralInviteFallback",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/readTokens.ts",
-      "function": "consumeInviteFromCandidateStores",
-      "kind": "request-delegation",
-      "expression": "getCandidateConfigDirs(req)",
-      "count": 1,
-      "delegate": "server/routes/readTokens.ts#getCandidateConfigDirs",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/readTokens.ts",
-      "function": "createPublicReadTokensRouter/router.post(\"/invites/:code/session\")",
-      "kind": "request-delegation",
-      "expression": "consumeInviteFromCandidateStores(req, code)",
-      "count": 1,
-      "delegate": "server/routes/readTokens.ts#consumeInviteFromCandidateStores",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/readTokens.ts",
-      "function": "createPublicReadTokensRouter/router.post(\"/invites/:code/session\")",
-      "kind": "request-delegation",
-      "expression": "getRuntimeConfig(req)",
-      "count": 1,
-      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/readTokens.ts",
-      "function": "createPublicReadTokensRouter/router.post(\"/invites/:code/session\")",
-      "kind": "request-delegation",
-      "expression": "shouldUseSecureSessionCookie(req, runtimeConfig.nodeEnv)",
-      "count": 1,
-      "delegate": "../security/apiSession.js#shouldUseSecureSessionCookie",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/readTokens.ts",
-      "function": "createReadTokensRouter/router.get(\"/\")",
-      "kind": "request-delegation",
-      "expression": "getPublicLinkOriginOptions(req)",
-      "count": 1,
-      "delegate": "server/routes/readTokens.ts#getPublicLinkOriginOptions",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/readTokens.ts",
-      "function": "createReadTokensRouter/router.get(\"/\")",
-      "kind": "request-delegation",
-      "expression": "getReadTokenStore(req)",
-      "count": 1,
-      "delegate": "server/routes/readTokens.ts#getReadTokenStore",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/readTokens.ts",
       "function": "createReadTokensRouter/router.get(\"/\")",
       "kind": "request-delegation",
       "expression": "getRequestAccess(req)",
@@ -450,49 +270,9 @@
       "file": "server/routes/readTokens.ts",
       "function": "createReadTokensRouter/router.post(\"/:tokenId/invites\")",
       "kind": "request-delegation",
-      "expression": "allowsEphemeralInviteFallback(req)",
-      "count": 1,
-      "delegate": "server/routes/readTokens.ts#allowsEphemeralInviteFallback",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/readTokens.ts",
-      "function": "createReadTokensRouter/router.post(\"/:tokenId/invites\")",
-      "kind": "request-delegation",
-      "expression": "getReadTokenStore(req)",
-      "count": 2,
-      "delegate": "server/routes/readTokens.ts#getReadTokenStore",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/readTokens.ts",
-      "function": "createReadTokensRouter/router.post(\"/:tokenId/invites\")",
-      "kind": "request-delegation",
       "expression": "getRequestAccess(req)",
       "count": 1,
       "delegate": "../security/apiAuth.js#getRequestAccess",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/readTokens.ts",
-      "function": "createReadTokensRouter/router.post(\"/:tokenId/invites\")",
-      "kind": "request-delegation",
-      "expression": "getRuntimeConfig(req)",
-      "count": 1,
-      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/readTokens.ts",
-      "function": "createReadTokensRouter/router.post(\"/:tokenId/revoke\")",
-      "kind": "request-delegation",
-      "expression": "getReadTokenStore(req)",
-      "count": 1,
-      "delegate": "server/routes/readTokens.ts#getReadTokenStore",
       "reason": "Existing controller/security Request delegation; exact callee retained for review",
       "phase": 5
     },
@@ -510,49 +290,9 @@
       "file": "server/routes/readTokens.ts",
       "function": "createReadTokensRouter/router.post(\"/\")",
       "kind": "request-delegation",
-      "expression": "getReadTokenStore(req)",
-      "count": 1,
-      "delegate": "server/routes/readTokens.ts#getReadTokenStore",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/readTokens.ts",
-      "function": "createReadTokensRouter/router.post(\"/\")",
-      "kind": "request-delegation",
       "expression": "getRequestAccess(req)",
       "count": 1,
       "delegate": "../security/apiAuth.js#getRequestAccess",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/readTokens.ts",
-      "function": "getCandidateConfigDirs",
-      "kind": "request-delegation",
-      "expression": "getRuntimeConfig(req)",
-      "count": 1,
-      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/readTokens.ts",
-      "function": "getPublicLinkOriginOptions",
-      "kind": "request-delegation",
-      "expression": "getRuntimeConfig(req)",
-      "count": 1,
-      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/readTokens.ts",
-      "function": "getReadTokenStore",
-      "kind": "request-delegation",
-      "expression": "getRuntimeConfig(req)",
-      "count": 1,
-      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
       "reason": "Existing controller/security Request delegation; exact callee retained for review",
       "phase": 5
     },
@@ -567,72 +307,12 @@
       "phase": 5
     },
     {
-      "file": "server/routes/share.ts",
-      "function": "createShareRouter/router.post(\"/:shareId/session\")",
-      "kind": "request-delegation",
-      "expression": "getRuntimeConfig(req)",
-      "count": 1,
-      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/share.ts",
-      "function": "createShareRouter/router.post(\"/:shareId/session\")",
-      "kind": "request-delegation",
-      "expression": "shouldUseSecureSessionCookie(req, runtimeConfig.nodeEnv)",
-      "count": 1,
-      "delegate": "../security/apiSession.js#shouldUseSecureSessionCookie",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
       "file": "server/routes/sse.ts",
       "function": "createSSERouter/router.get(\"/\")",
       "kind": "request-delegation",
       "expression": "getRequestAccess(req)",
       "count": 1,
       "delegate": "../security/apiAuth.js#getRequestAccess",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/system.ts",
-      "function": "createSystemRouter/router.get(\"/config/global\")",
-      "kind": "request-delegation",
-      "expression": "getRuntimeConfig(req)",
-      "count": 1,
-      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/system.ts",
-      "function": "createSystemRouter/router.get(\"/config/links\")",
-      "kind": "request-delegation",
-      "expression": "getRuntimeConfig(req)",
-      "count": 1,
-      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/system.ts",
-      "function": "createSystemRouter/router.get(\"/config/selector\")",
-      "kind": "request-delegation",
-      "expression": "getRuntimeConfig(req)",
-      "count": 1,
-      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/system.ts",
-      "function": "createSystemRouter/router.get(\"/config\")",
-      "kind": "request-delegation",
-      "expression": "getRuntimeConfig(req)",
-      "count": 2,
-      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
       "reason": "Existing controller/security Request delegation; exact callee retained for review",
       "phase": 5
     },
@@ -660,16 +340,6 @@
       "file": "server/routes/system.ts",
       "function": "createSystemRouter/router.post(\"/config/selector\")",
       "kind": "request-delegation",
-      "expression": "getRuntimeConfig(req)",
-      "count": 1,
-      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/system.ts",
-      "function": "createSystemRouter/router.post(\"/config/selector\")",
-      "kind": "request-delegation",
       "expression": "requireMaintenanceEnabled(req, res)",
       "count": 1,
       "delegate": "server/routes/system.ts#requireMaintenanceEnabled",
@@ -683,26 +353,6 @@
       "expression": "getAllowedFilesystemRoots(configDir, projectDiscovery, req)",
       "count": 1,
       "delegate": "server/routes/system.ts#getAllowedFilesystemRoots",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/system.ts",
-      "function": "createSystemRouter/router.post(\"/filesystem/exists\")",
-      "kind": "request-delegation",
-      "expression": "getRuntimeConfig(req)",
-      "count": 2,
-      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/system.ts",
-      "function": "getAllowedFilesystemRoots",
-      "kind": "request-delegation",
-      "expression": "getRuntimeConfig(req)",
-      "count": 1,
-      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
       "reason": "Existing controller/security Request delegation; exact callee retained for review",
       "phase": 5
     },
@@ -732,16 +382,6 @@
       "count": 1,
       "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
       "phase": 4
-    },
-    {
-      "file": "server/routes/system.ts",
-      "function": "requireMaintenanceEnabled",
-      "kind": "request-delegation",
-      "expression": "getRuntimeConfig(req)",
-      "count": 1,
-      "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
     },
     {
       "file": "server/security/apiAuth.ts",

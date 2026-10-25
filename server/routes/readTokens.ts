@@ -4,6 +4,7 @@ import type {
   ReadTokenListResponse,
 } from '@mdt/domain-contracts'
 import type { Request, Response } from 'express'
+import type { IncomingHttpHeaders } from 'node:http'
 import type { RuntimeConfig } from '../config/runtimeConfig.js'
 import type { TokenResolution } from '../security/readTokenStore.js'
 import { InviteInputSchema, ReadTokenCreateInputSchema } from '@mdt/domain-contracts'
@@ -28,7 +29,7 @@ export function createPublicReadTokensRouter(): Router {
     if (!params.success)
       return
     const { code } = params.data
-    const runtimeConfig = getRuntimeConfig(req)
+    const runtimeConfig = getRuntimeConfig(req.app)
     const secret = runtimeConfig.readSessions.secret
     if (!code || !secret) {
       res.status(401).json({ error: 'Invite was not accepted' })
@@ -36,7 +37,7 @@ export function createPublicReadTokensRouter(): Router {
     }
 
     try {
-      const token = await consumeInviteFromCandidateStores(req, code)
+      const token = await consumeInviteFromCandidateStores(req.app, code)
       appendMergedReadSessionCookie({
         req,
         res,
@@ -44,7 +45,7 @@ export function createPublicReadTokensRouter(): Router {
         projectRefs: token.projectRefs,
         tokenIds: [token.tokenId],
         expiresAt: token.expiresAt ? new Date(token.expiresAt) : undefined,
-        secure: shouldUseSecureSessionCookie(req, runtimeConfig.nodeEnv),
+        secure: shouldUseSecureSessionCookie(req.secure, req.headers, runtimeConfig.nodeEnv),
       })
 
       const response: ReadTokenInviteSessionResponse = {
@@ -71,8 +72,8 @@ export function createReadTokensRouter(): Router {
     }
 
     const response: ReadTokenListResponse = {
-      tokens: await getReadTokenStore(req).listTokens(),
-      linkOrigins: getPublicLinkOriginOptions(req),
+      tokens: await getReadTokenStore(getRuntimeConfig(req.app).configDir).listTokens(),
+      linkOrigins: getPublicLinkOriginOptions(req.headers, getRuntimeConfig(req.app)),
     }
     res.json(response)
   })
@@ -87,7 +88,7 @@ export function createReadTokensRouter(): Router {
       const body = parseRequest(ReadTokenCreateInputSchema, req.body, res, 'body')
       if (!body.success)
         return
-      const token = await getReadTokenStore(req).createToken(body.data)
+      const token = await getReadTokenStore(getRuntimeConfig(req.app).configDir).createToken(body.data)
 
       res.status(201).json(token)
     }
@@ -110,15 +111,16 @@ export function createReadTokensRouter(): Router {
       const body = parseRequest(InviteInputSchema, req.body, res, 'body')
       if (!body.success)
         return
-      const origin = resolveInviteOrigin(body.data.origin, getRuntimeConfig(req), getRequestOrigin(req.headers))
+      const origin = resolveInviteOrigin(body.data.origin, getRuntimeConfig(req.app), getRequestOrigin(req.headers))
       if (!origin) {
         res.status(400).json({ error: 'No allowed public origin is available for invite links' })
         return
       }
 
-      const invite = await getReadTokenStore(req).createInvite(params.data.tokenId)
-      if (allowsEphemeralInviteFallback(req)) {
-        ephemeralInvites.set(invite.code, await getReadTokenStore(req).resolveTokenById(params.data.tokenId))
+      const runtimeConfig = getRuntimeConfig(req.app)
+      const invite = await getReadTokenStore(runtimeConfig.configDir).createInvite(params.data.tokenId)
+      if (allowsEphemeralInviteFallback(runtimeConfig)) {
+        ephemeralInvites.set(invite.code, await getReadTokenStore(runtimeConfig.configDir).resolveTokenById(params.data.tokenId))
       }
       const response: ReadTokenInviteResponse = {
         expiresAt: invite.expiresAt,
@@ -142,7 +144,7 @@ export function createReadTokensRouter(): Router {
       return
 
     try {
-      const revokedToken = await getReadTokenStore(req).revokeToken(params.data.tokenId)
+      const revokedToken = await getReadTokenStore(getRuntimeConfig(req.app).configDir).revokeToken(params.data.tokenId)
       for (const [code, invite] of ephemeralInvites) {
         if (invite.tokenId === params.data.tokenId) {
           ephemeralInvites.delete(code)
@@ -171,10 +173,10 @@ function resolveInviteOrigin(requestedOrigin: string | null | undefined, runtime
   return options.selectedOrigin ?? null
 }
 
-function getPublicLinkOriginOptions(req: Request, selectedOrigin?: string, runtimeConfig = getRuntimeConfig(req)) {
+function getPublicLinkOriginOptions(headers: IncomingHttpHeaders, runtimeConfig: RuntimeConfig, selectedOrigin?: string) {
   return resolvePublicLinkOriginOptions({
     allowedOrigins: runtimeConfig.origins.allowedOrigins,
-    currentOrigin: getRequestOrigin(req.headers),
+    currentOrigin: getRequestOrigin(headers),
     publicOrigin: runtimeConfig.origins.publicOrigin,
     selectedOrigin,
   })
@@ -198,13 +200,14 @@ function getRequestOrigin(headers: Request['headers']): string | undefined {
   }
 }
 
-function getReadTokenStore(req: Request) {
-  return createReadTokenStore({ configDir: getRuntimeConfig(req).configDir })
+function getReadTokenStore(configDir: string) {
+  return createReadTokenStore({ configDir })
 }
 
-async function consumeInviteFromCandidateStores(req: Request, code: string) {
+async function consumeInviteFromCandidateStores(app: Parameters<typeof getRuntimeConfig>[0], code: string) {
   let lastError: unknown
-  for (const configDir of getCandidateConfigDirs(req)) {
+  const runtimeConfig = getRuntimeConfig(app)
+  for (const configDir of getCandidateConfigDirs(runtimeConfig)) {
     try {
       const token = await createReadTokenStore({ configDir }).consumeInvite(code)
       ephemeralInvites.delete(code)
@@ -215,7 +218,7 @@ async function consumeInviteFromCandidateStores(req: Request, code: string) {
     }
   }
 
-  const ephemeralInvite = allowsEphemeralInviteFallback(req) ? ephemeralInvites.get(code) : undefined
+  const ephemeralInvite = allowsEphemeralInviteFallback(runtimeConfig) ? ephemeralInvites.get(code) : undefined
   if (ephemeralInvite) {
     ephemeralInvites.delete(code)
     return ephemeralInvite
@@ -224,16 +227,14 @@ async function consumeInviteFromCandidateStores(req: Request, code: string) {
   throw lastError
 }
 
-function getCandidateConfigDirs(req: Request): string[] {
-  const runtimeConfig = getRuntimeConfig(req)
-
+function getCandidateConfigDirs(runtimeConfig: RuntimeConfig): string[] {
   return Array.from(new Set([
     runtimeConfig.configDir,
   ]))
 }
 
-function allowsEphemeralInviteFallback(req: Request): boolean {
-  return getRuntimeConfig(req).readSessions.allowLocalFallback
+function allowsEphemeralInviteFallback(runtimeConfig: RuntimeConfig): boolean {
+  return runtimeConfig.readSessions.allowLocalFallback
 }
 
 function sendRejected(error: unknown, res: Response): void {

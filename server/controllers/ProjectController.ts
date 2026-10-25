@@ -34,6 +34,23 @@ import {
   updateProjectSharing,
 } from '../security/projectSharing.js'
 
+/** Preserve the shared ambiguity boundary across every key-based HTTP adapter. */
+function sendTicketIdentityConflict(error: unknown, res: Response): boolean {
+  if (typeof error !== 'object' || error === null || !('code' in error) || error.code !== 'ticket_key_ambiguous')
+    return false
+  const paths = 'paths' in error && Array.isArray(error.paths)
+    ? error.paths.filter((value): value is string => typeof value === 'string'
+      && !/^(?:[\\/]|[a-z]:)/i.test(value) && !value.split(/[\\/]/).includes('..'))
+    : []
+  res.status(409).json({
+    error: 'Conflict',
+    code: 'ticket_key_ambiguous',
+    message: 'Ticket key resolves to multiple files; inspect the listed relative paths.',
+    paths,
+  })
+  return true
+}
+
 export type Ticket = Pick<DomainTicket, 'code' | 'filePath'>
 
 interface DirectoryListing {
@@ -487,7 +504,7 @@ export class ProjectController {
       if (!query.success)
         return
       const { path: requestPath } = query.data
-      const configPath = `${getRuntimeConfig(req).configDir}/config.toml`
+      const configPath = `${getRuntimeConfig(req.app).configDir}/config.toml`
       let discoveryPaths: string[] = []
 
       try {
@@ -504,7 +521,7 @@ export class ProjectController {
         ...await getProjectRoots(this.projectService),
       ]
 
-      const runtimeConfig = getRuntimeConfig(req)
+      const runtimeConfig = getRuntimeConfig(req.app)
       if (runtimeConfig.system.isTest) {
         allowedRoots.push(os.tmpdir())
       }
@@ -759,6 +776,8 @@ export class ProjectController {
       res.status(501).json({ error: 'Ticket service not available for fetching CR' })
     }
     catch (error: unknown) {
+      if (sendTicketIdentityConflict(error, res))
+        return
       console.error('Error getting CR:', error)
       const err = error as Error
 
@@ -795,6 +814,8 @@ export class ProjectController {
       res.status(501).json({ error: 'Ticket service not available for creating CR' })
     }
     catch (error: unknown) {
+      if (sendTicketIdentityConflict(error, res))
+        return
       console.error('Error creating CR:', error)
       const err = error as Error
 
@@ -846,6 +867,8 @@ export class ProjectController {
       res.status(501).json({ error: 'Ticket service not available for CR updates' })
     }
     catch (error: unknown) {
+      if (sendTicketIdentityConflict(error, res))
+        return
       console.error('Error updating CR:', error)
       const err = error as Error
 
@@ -902,6 +925,8 @@ export class ProjectController {
       res.status(501).json({ error: 'Ticket service not available for updating CR' })
     }
     catch (error: unknown) {
+      if (sendTicketIdentityConflict(error, res))
+        return
       console.error('Error updating CR:', error)
       const err = error as Error
 
@@ -1045,6 +1070,8 @@ export class ProjectController {
       res.status(501).json({ error: 'Ticket service not available for deleting CR' })
     }
     catch (error: unknown) {
+      if (sendTicketIdentityConflict(error, res))
+        return
       console.error('Error deleting CR:', error)
       const err = error as Error
 

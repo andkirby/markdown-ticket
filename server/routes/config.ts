@@ -80,7 +80,7 @@ export function createConfigRouter(context: ConfigRouteContext = {}): Router {
     const query = parseRequest(OptionalProjectRefQuerySchema, req.query, res, 'query')
     if (!query.success)
       return
-    const configDir = getRuntimeConfig(req).configDir
+    const configDir = getRuntimeConfig(req.app).configDir
     const globalAdapter = new GlobalConfigStorageAdapter(configDir)
     const userAdapter = new UserConfigStorageAdapter(configDir)
     const projectPath = context.resolveProjectPath?.(req)

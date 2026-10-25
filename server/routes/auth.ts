@@ -24,7 +24,7 @@ export function createAuthRouter(): Router {
   const router = Router()
 
   router.get('/session', async (req: Request, res: Response) => {
-    const runtimeConfig = getRuntimeConfig(req)
+    const runtimeConfig = getRuntimeConfig(req.app)
     const session = getOwnerSessionState(req, runtimeConfig.auth.token)
     const readSession = await resolveActiveReadSession(
       getReadSessionState(req, runtimeConfig.readSessions.secret),
@@ -60,7 +60,7 @@ export function createAuthRouter(): Router {
   })
 
   router.post('/session', publicTokenExchangeRateLimit, (req: Request, res: Response) => {
-    const runtimeConfig = getRuntimeConfig(req)
+    const runtimeConfig = getRuntimeConfig(req.app)
     const body = parseRequest(SubmittedTokenBodySchema, req.body, res, 'body')
     if (!body.success)
       return
@@ -73,14 +73,14 @@ export function createAuthRouter(): Router {
 
     appendOwnerSessionCookie(res, runtimeConfig.auth.token!, {
       maxAgeSeconds: runtimeConfig.ownerSessions.maxAgeSeconds,
-      secure: shouldUseSecureSessionCookie(req, runtimeConfig.nodeEnv),
+      secure: shouldUseSecureSessionCookie(req.secure, req.headers, runtimeConfig.nodeEnv),
     })
 
     res.json({ authenticated: true })
   })
 
   router.post('/read-token', publicTokenExchangeRateLimit, async (req: Request, res: Response) => {
-    const runtimeConfig = getRuntimeConfig(req)
+    const runtimeConfig = getRuntimeConfig(req.app)
     const body = parseRequest(SubmittedTokenBodySchema, req.body, res, 'body')
     if (!body.success)
       return
@@ -99,7 +99,7 @@ export function createAuthRouter(): Router {
         res,
         secret: readSessionSecret,
         projectRefs: envProjectRefs,
-        secure: shouldUseSecureSessionCookie(req, runtimeConfig.nodeEnv),
+        secure: shouldUseSecureSessionCookie(req.secure, req.headers, runtimeConfig.nodeEnv),
       })
 
       res.json({ authenticated: true })
@@ -115,7 +115,7 @@ export function createAuthRouter(): Router {
         projectRefs: persistedToken.projectRefs,
         tokenIds: [persistedToken.tokenId],
         expiresAt: persistedToken.expiresAt ? new Date(persistedToken.expiresAt) : undefined,
-        secure: shouldUseSecureSessionCookie(req, runtimeConfig.nodeEnv),
+        secure: shouldUseSecureSessionCookie(req.secure, req.headers, runtimeConfig.nodeEnv),
       })
 
       res.json({ authenticated: true })
@@ -131,7 +131,7 @@ export function createAuthRouter(): Router {
   })
 
   router.delete('/session', publicTokenExchangeRateLimit, (req: Request, res: Response) => {
-    const runtimeConfig = getRuntimeConfig(req)
+    const runtimeConfig = getRuntimeConfig(req.app)
     const originPolicy = createOriginPolicy(runtimeConfig.origins.allowedOrigins)
     const credential = extractApiCredential(req)
     const hasOwnerCredential = timingSafeTokenMatches(credential ?? undefined, runtimeConfig.auth.token)
@@ -145,7 +145,7 @@ export function createAuthRouter(): Router {
       invalidateOwnerSessions()
     }
 
-    appendClearOwnerSessionCookie(res, shouldUseSecureSessionCookie(req, runtimeConfig.nodeEnv))
+    appendClearOwnerSessionCookie(res, shouldUseSecureSessionCookie(req.secure, req.headers, runtimeConfig.nodeEnv))
     res.status(204).send()
   })
 
@@ -153,5 +153,5 @@ export function createAuthRouter(): Router {
 }
 
 function getReadTokenStore(req: Request) {
-  return createReadTokenStore({ configDir: getRuntimeConfig(req).configDir })
+  return createReadTokenStore({ configDir: getRuntimeConfig(req.app).configDir })
 }

@@ -32,7 +32,7 @@ interface ProjectDiscovery {
 }
 
 function requireMaintenanceEnabled(req: Request, res: Response): boolean {
-  if (getRuntimeConfig(req).system.maintenanceEndpointsEnabled) {
+  if (getRuntimeConfig(req.app).system.maintenanceEndpointsEnabled) {
     return true
   }
 
@@ -41,7 +41,7 @@ function requireMaintenanceEnabled(req: Request, res: Response): boolean {
 }
 
 async function getAllowedFilesystemRoots(configDir: string, projectDiscovery: ProjectDiscovery, req: Request): Promise<string[]> {
-  const runtimeConfig = getRuntimeConfig(req)
+  const runtimeConfig = getRuntimeConfig(req.app)
   const config = await loadGlobalConfig(configDir)
   const projectRoots = await getProjectRoots(projectDiscovery)
   const roots = [
@@ -187,7 +187,7 @@ export function createSystemRouter(
    */
   router.get('/config/links', async (req: Request, res: Response) => {
     try {
-      const configDir = getRuntimeConfig(req).configDir
+      const configDir = getRuntimeConfig(req.app).configDir
       const config = await loadGlobalConfig(configDir)
 
       res.json(config.links)
@@ -262,7 +262,7 @@ export function createSystemRouter(
     const { path: inputPath } = body.data
 
     try {
-      const configDir = getRuntimeConfig(req).configDir
+      const configDir = getRuntimeConfig(req.app).configDir
       const allowedRoots = await getAllowedFilesystemRoots(configDir, projectDiscovery, req)
       let expandedPath: string
 
@@ -276,7 +276,7 @@ export function createSystemRouter(
 
         const candidatePath = path.resolve(inputPath.startsWith('~') ? inputPath.replace(/^~($|\/)/, `${os.homedir()}$1`) : inputPath)
 
-        if (!getRuntimeConfig(req).system.isTest) {
+        if (!getRuntimeConfig(req.app).system.isTest) {
           await authorizeFilesystemPath(path.dirname(candidatePath), allowedRoots)
         }
         expandedPath = candidatePath
@@ -413,12 +413,12 @@ export function createSystemRouter(
    */
   router.get('/config', async (req: Request, res: Response) => {
     try {
-      const configDir = getRuntimeConfig(req).configDir
+      const configDir = getRuntimeConfig(req.app).configDir
       const config = await loadGlobalConfig(configDir)
 
       logger.debug(`Reading config from: ${path.join(configDir, 'config.toml')}`)
 
-      res.json(getRuntimeConfig(req).system.isProduction
+      res.json(getRuntimeConfig(req.app).system.isProduction
         ? { discovery: config.discovery }
         : { configDir, discovery: config.discovery })
     }
@@ -455,7 +455,7 @@ export function createSystemRouter(
    */
   router.get('/config/global', async (req: Request, res: Response) => {
     try {
-      const configDir = getRuntimeConfig(req).configDir
+      const configDir = getRuntimeConfig(req.app).configDir
       logger.debug(`Reading global config from: ${path.join(configDir, 'config.toml')}`)
 
       res.json(await loadGlobalConfig(configDir))
@@ -599,7 +599,7 @@ export function createSystemRouter(
   // GET /api/config/selector - Return preferences and state
   router.get('/config/selector', async (req: Request, res: Response) => {
     try {
-      const configDir = getRuntimeConfig(req).configDir
+      const configDir = getRuntimeConfig(req.app).configDir
       logger.debug('getConfigDir returned:', configDir)
       const userConfig = await loadUserConfig(configDir)
       const selectorState = await loadSelectorState(configDir)
@@ -629,7 +629,7 @@ export function createSystemRouter(
       if (!validatedState.success)
         return
 
-      const configDir = getRuntimeConfig(req).configDir
+      const configDir = getRuntimeConfig(req.app).configDir
       const statePath = path.join(configDir, 'project-selector.json')
 
       // Ensure directory exists

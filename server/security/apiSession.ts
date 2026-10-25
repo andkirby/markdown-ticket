@@ -1,5 +1,6 @@
 /* eslint-disable ts/no-unsafe-type-assertion -- MDT-258 baseline: pre-existing casts, strip as they are rewritten */
 import type { Request, Response } from 'express'
+import type { IncomingHttpHeaders } from 'node:http'
 import { Buffer } from 'node:buffer'
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 
@@ -77,8 +78,8 @@ export function invalidateOwnerSessions(): void {
   sessionGeneration += 1
 }
 
-export function shouldUseSecureSessionCookie(req: Request, nodeEnv: string | undefined): boolean {
-  return nodeEnv === 'production' || req.secure || req.headers['x-forwarded-proto'] === 'https'
+export function shouldUseSecureSessionCookie(secure: boolean | undefined, headers: IncomingHttpHeaders, nodeEnv: string | undefined): boolean {
+  return nodeEnv === 'production' || Boolean(secure) || headers['x-forwarded-proto'] === 'https'
 }
 
 export function appendOwnerSessionCookie(res: Response, expectedToken: string, options: OwnerSessionCookieOptions): void {

@@ -104,10 +104,8 @@ describe('runtimeConfig - MDT-178', () => {
 
   it('fails fast when request handlers run without app-local runtime config', () => {
     expect(() => getRuntimeConfig({
-      app: {
-        locals: {},
-      },
-    } as Parameters<typeof getRuntimeConfig>[0])).toThrow(/RuntimeConfig is not initialized/)
+      locals: {},
+    } as unknown as Parameters<typeof getRuntimeConfig>[0])).toThrow(/RuntimeConfig is not initialized/)
   })
 
   it('keeps direct process.env reads inside startup and runtime config boundaries', async () => {
