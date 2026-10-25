@@ -2,85 +2,96 @@
 
 ## Objective
 
-Make `mdt-cli project init` scaffold the MDT working-state gitignore entries as
-part of project initialization, so newly initialized projects get the same
-generated-artifact ignores the source repo maintains by hand (`*.trace.md`
-projections, pipeline state, tasks-status, checkpoints, poc, prompts) instead
-of surfacing them as untracked git noise.
+Make `mdt-cli create` reject unknown **explicit** type/priority tokens (e.g. `chore`,
+`spike`, `urgent`) instead of silently coercing them to the defaults, per
+[MDT-263](../MDT-263-strict-create-type-tokens.md). Today an unknown token falls
+through `parseCreateTokens` and the ticket is created with `Feature Enhancement` /
+`Medium` while the user's token is swallowed — the opposite of `mdt-cli ticket attr`,
+which rejects unknown enum values and prints the valid set. Omitted type keeps its
+`Feature Enhancement` default; only explicit unknown tokens are rejected.
 
 ## Approved Changes
 
 | Change | Detail |
 |--------|--------|
-| Init scaffolds `.gitignore` | `ProjectManager.createProject` ensures the target folder's `.gitignore` contains a marker-delimited managed MDT block, delegating to one new shared module (`shared/tools/projectGitignore.ts`). Covers every entrypoint routing through `createProject`: `mdt-cli project init`, `project:create` script flow, web-driven creation. |
-| Durable single-source doc | [docs/MDT_WORKING_STATE_FILES.md](../../MDT_WORKING_STATE_FILES.md) — canonical inventory (file → producer → observed locations → git policy → pattern), the scaffold block, and gotchas; the shared constant must mirror it, and this repo's `.gitignore` now carries the same list in one consolidated marked block referencing the doc. |
-| Entry set (evidence-upgraded) | Grounded in the repo survey (2026-09-03), all patterns depth-explicit (`/` = project root, `**/` = any depth): `**/*.trace.md`, `**/spec-trace*.md`, `**/pipeline-state.json`, `**/*.pipeline-state.json`, `**/*.tasks-status.yaml`, `**/.checkpoint.yaml`, `/.mdt-next` (written by `createProject` itself), `/.mdt/` (workflow-context observed), `**/poc/`, `**/*prompt*.md`, closing negation `!{ticketsPath}/{CODE}-*.md`. Broad `**/.*.json`/`**/.*.yaml` **omitted** — no observed MDT dot-state beyond the explicit entries, and they swallow tool configs (`.prettierrc.json`, `.knip.json`). |
-| Merge semantics (user: "1, consider best practices") | Idempotent managed-block merge: create `.gitignore` when absent; append the block when missing; no-op when already current; never modify unmanaged lines; re-running init produces no diff. Negation placed last so ticket files always stay trackable (MDT-080 proves slug collisions are real). |
-| Trace store stays trackable | `{ticketsPath}/.trace/**/store.json` is canonical spec-trace state and is intentionally NOT ignored (committed in the source repo). Only rendered projections and working state are ignored. |
+| Strict explicit token validation | Every part of an unquoted **single-word** `/`-combined create token (`<type>[/<priority>]` grammar position; a slash inside a multi-word title token is title text) must resolve against the canonical token maps (`TYPE_TOKENS`/`PRIORITY_TOKENS`, derived from `@mdt/domain-contracts`, own-property lookup); an unknown part is a structured error. Standalone single-word dash-less tokens that are not known enums are rejected **once any title is already determined** (a quoted/multi-word token, or an earlier bare word — order-independent, real-shell safe); the first bare word with no other title keeps the documented single-word-title derivation. Inherited object property names (`constructor`, `__proto__`) never resolve as enum tokens. |
+| Error envelope parity with `attr` | Rejection throws `CliCommandError('INVALID_CREATE_TOKEN', …)` → plain mode: `Error: Unknown type token 'chore'. Valid types: … (aliases: …)` on stderr, exit 1; `--json`/`--yaml`: `ok=false` envelope with `error.code`/`error.message` and `error.details` carrying the valid sets. No ticket file is created. |
+| Defaults untouched | Omitted type → Feature Enhancement, omitted priority → Medium. Known aliases (`bug`, `feature`, `debt`, `tech-debt`, `docs`, `p1`–`p4`, canonical values, any case) keep working. Dashed tokens (slug position) and quoted/spaced titles are never enum candidates. |
+| Single source of truth | Validation consumes the existing alias maps in `cli/src/utils/aliases.ts` (already derived from domain-contracts); no third copy of the enum is introduced. mcp-server/frontend untouched — MCP `create_cr` already validates via the shared zod enums. |
+
+## UAT Cases & Results (fail-first, executed 2026-10-26)
+
+Run in an isolated temp project (`mdt-cli project init UAT … --tickets-path tickets`),
+built-from-source CLI. Expected = MDT-263 behavior.
+
+| # | Command | Expected (MDT-263) | Before (evidence) | After |
+|---|---------|--------------------|-------------------|-------|
+| U1 | `mdt-cli create chore/low 'UAT probe 1'` | Error, exit 1, valid set printed, **no ticket file** | ❌ FAIL — `Created UAT-001`, exit 0; frontmatter `type: Feature Enhancement`, `priority: Low` | ✅ PASS |
+| U2 | `mdt-cli create spike 'UAT probe 2'` | Error (unknown explicit type token), exit 1, no ticket file | ❌ FAIL — `Created UAT-002`, exit 0; `spike` silently swallowed, `type: Feature Enhancement`, `priority: Medium` | ✅ PASS |
+| U3 | `mdt-cli create feature/urgent 'UAT probe 3'` | Error (unknown priority token), exit 1, no ticket file | ❌ FAIL — `Created UAT-003`, exit 0; `urgent` silently swallowed, `priority: Medium` | ✅ PASS |
+| U4 | `mdt-cli create chore/low 'UAT probe 4' --json` | `ok=false`, `error.code=INVALID_CREATE_TOKEN`, message with valid set | ❌ FAIL — `ok: true` envelope, ticket created with coerced type | ✅ PASS |
+| U5 | `mdt-cli create bug/p1 'Control'` (known aliases) | Ticket created, `type: Bug Fix`, `priority: Critical` | ✅ PASS (control) | ✅ PASS |
+| U6 | `mdt-cli create 'Just a title'` (omitted type/priority) | Ticket created, `Feature Enhancement` / `Medium` | ✅ PASS (control) | ✅ PASS |
+| U7 | `mdt-cli create feature 'Refactor'` (single-word unquoted title, no quoted title present) | Ticket created, title `Refactor` — not an enum-position token | ✅ PASS (control) | ✅ PASS |
+| U8 | `mdt-cli create bug 'Fix X' login-timeout` (dashed slug) | Ticket created with slug `login-timeout` — dashed tokens are never enum candidates | ✅ PASS (control) | ✅ PASS |
+
+Before-evidence preserved verbatim: probes U1–U4 each exited 0 and created a ticket file
+(`UAT-001`–`UAT-004`); U4 returned `"ok": true` with coerced `type.value`.
+Temp project deleted after evidence capture.
 
 ## Changed Requirement IDs
 
-- `BR-16` — refined in place (init also ensures the managed MDT gitignore block)
-- `Edge-12` — added (existing user `.gitignore`: preserve unmanaged lines, append block once, idempotent re-run)
-- `C10` — added (single shared entry-list constant consumed by all `createProject` entrypoints; marker-delimited re-mergeable block)
+- `BR-6` — refined in place (create honors only known type/priority tokens; defaults unchanged)
+- `Edge-2` — refined in place (clarifies "unrecognized create token": unknown **explicit** type/priority token → reject with valid set; title/slug tokens are not enum candidates)
 
 ## Affected Downstream Trace
 
-- requirements: BR-16 refined; Edge-12, C10 added → validated, **relocked**, rendered; refined again after the repo survey (doc as phrase-source, ticket negation, dot-pattern omission) → revalidated, relocked
-- bdd: `project_init_scaffolds_mdt_gitignore`, `project_init_merges_existing_gitignore` added (both cover BR-16) → rendered
-- architecture: `ART-shared-gitignore-scaffold`, `OBL-init-gitignore-scaffold` added → rendered
-- tests: `TEST-cli-init-gitignore` added → rendered
-- tasks: `TASK-cli-init-gitignore` added → rendered
+- requirements: BR-6, Edge-2 refined → validated, relocked, rendered
+- bdd: `create_rejects_unknown_type_token`, `create_rejects_unknown_priority_token`, `create_defaults_for_omitted_tokens` added → rendered
+- tests: `TEST-cli-create-strict-tokens` added → rendered
+- tasks: `TASK-cli-create-strict-tokens` added → rendered
 
 ## Execution Slices
 
-### Slice 1 — shared scaffold module + ProjectManager wiring
+### Slice 1 — strict token validation in `parseCreateTokens` + unit tests
 
-- **Objective**: one constant + one idempotent merge function, called from `createProject` on the non-globalOnly path after local-config/counter creation.
-- **Direct artifacts**: `shared/tools/projectGitignore.ts` (new), `shared/tools/ProjectManager.ts`, `shared/dist` rebuild.
-- **Direct GREEN targets**: `TEST-cli-init-gitignore`, `project_init_scaffolds_mdt_gitignore`, `project_init_merges_existing_gitignore`.
-- **Impacted canonical tasks**: `TASK-cli-init-gitignore`.
-- **Why**: the entry list must live in shared so CLI/script/web cannot drift (C10); the CLI keeps zero ignore logic (business-logic boundary).
-
-### Slice 2 — CLI surfacing + agent reference
-
-- **Objective**: init output names the scaffolded file; structured `project.init` payload reflects it; the canonical agent-facing skill doc stays truthful.
-- **Direct artifacts**: `cli/src/output/formatter.ts` (`formatProjectInit`), `cli/src/commands/project.ts`, `cli/mdt-cli/SKILL.md`.
-- **Direct GREEN targets**: `TEST-cli-init-gitignore` (output assertions), existing `TEST-cli-structured-output` regression.
-- **Impacted canonical tasks**: `TASK-cli-init-gitignore`.
-- **Why**: per `cli/AGENTS.md`, any interface change must update `cli/mdt-cli/SKILL.md`; structured consumers need the new field.
-
-### Slice 3 — E2E coverage
-
-- **Objective**: prove create / merge / idempotent-re-run against the built binary in isolated fixtures.
-- **Direct artifacts**: `cli/tests/e2e/project/init-gitignore.spec.ts` (new, `@mdt/shared/test-lib`).
-- **Direct GREEN targets**: `TEST-cli-init-gitignore`.
-- **Impacted canonical tasks**: `TASK-cli-init-gitignore`.
-- **Why**: Edge-12 routes to tests; the byte-identical re-run assertion is the regression guard for duplicate blocks.
+- **Objective**: reject unknown explicit type/priority tokens with the `attr`-style error envelope; keep defaults and alias behavior byte-identical.
+- **Direct artifacts**: `cli/src/commands/create.ts`, `cli/tests/unit/commands/create.parse-tokens.test.ts`.
+- **Direct GREEN targets**: `TEST-cli-create-strict-tokens`, `create_rejects_unknown_type_token`, `create_rejects_unknown_priority_token`, `create_defaults_for_omitted_tokens`.
+- **Impacted canonical tasks**: `TASK-cli-create-strict-tokens`.
+- **Why**: the enum maps already derive from domain-contracts (`cli/src/utils/aliases.ts`); the CLI shell must stop swallowing unknown tokens at its only token-parsing boundary.
 
 ## Validation
 
-**Implemented 2026-09-03 (TASK-cli-init-gitignore) — all GREEN:**
+**Implemented 2026-10-26 (TASK-cli-create-strict-tokens) — re-run all GREEN:**
 
-- TDD: `init-gitignore.spec.ts` 3/3 RED → GREEN; unit suite `shared/tools/__tests__/projectGitignore.test.ts` 6/6 (RED on missing module → GREEN)
-- Full CLI e2e: 117/117 across 15 files (includes new spec)
-- Shared jest project suites: 47/47 (`project-management` + `projectGitignore`)
-- `eslint` clean on all changed files (one `perfectionist/sort-imports` fix applied); `bun run validate:ts` 5/5 projects pass
-- Manual acceptance in an isolated temp project with real `git init`: user `.gitignore` preserved, managed block appended once, re-run byte-identical, `git check-ignore` confirms working state ignored and ticket files (incl. a `prompt`-slug ticket) trackable via the negation
-- Lesson learned: `**/` inside a JSDoc comment closes the block comment early (`*/` substring) — tsc parse errors pointed mid-file while the real culprit was a pattern literal in a doc comment above
+- U1–U4 (before: silent coercion, exit 0): now `exit=1`, `Error: Unknown create token 'chore/low' (part 'chore'). Valid types: … (aliases: …). Valid priorities: … (aliases: p1–p4).` on stderr; `--json` emits `ok:false` / `error.code=INVALID_CREATE_TOKEN` / `error.details.{hint,validTypes,validPriorities}`; no ticket file created.
+- U5–U8 (controls): `bug/p1` → Bug Fix/Critical; omitted tokens → Feature Enhancement/Medium; `feature Refactor` → title `Refactor`; `bug 'Fix X' login-timeout` → slug `login-timeout` (filename `UAT-004-login-timeout.md`). Temp project deleted after evidence capture.
+- Unit: `cli/tests/unit/commands/create.parse-tokens.test.ts` 22/22 (10 new strict-validation cases; includes the order-regression `spike` before quoted title). E2E: `cli/tests/e2e/ticket/create.spec.ts` 18/18 (3 new rejection cases + renamed legacy title-derivation case).
+- Full `bun run --cwd cli test`: 196 pass / 15 fail — the 15 failures are `mdt-cli cloud` presentation-path tests, **verified pre-existing** by stashing this diff and reproducing the identical 15 failures (stale untracked `shared/dist` from the in-flight MDT-200 allocator investigation lacks exports HEAD `cli/src/commands/cloud.ts` imports; `bun run --cwd cli build` fails on the same unrelated cloud files, zero errors in files touched here).
+- Lint/typecheck of changed files: no tsc errors attributable to this diff (build blocked only by the pre-existing shared/dist drift documented above).
+- Trace: requirements relocked; `spec-trace validate MDT-143 --stage all` passes; requirements/bdd/tests/tasks projections re-rendered.
 
-Earlier spec-round evidence (repo survey 2026-09-03): filesystem glob + `git check-ignore --no-index` + `git ls-files -i -c --exclude-standard` — results recorded in docs/MDT_WORKING_STATE_FILES.md. `.gitignore` consolidation verified behavior-preserving (274-file battery identical before/after except the intended MDT-080 negation protection; tracked-but-ignored 666 → 665).
-- Requirements lock refreshed after approved changes; `--stage requirements --strict` now passes (the previous baseline was stale — it predated the already-approved BR-22/C7–C9/Edge-9–11 additions recorded in CR Section 8).
-- Entry forms verified against the source repo with `git check-ignore` before being specified.
+**Review round (codex subthread, 2026-10-26) — FAIL → fixed → all GREEN:**
+
+Reviewer findings and resolutions:
+1. MAJOR shell-quoted slash titles (`bug 'Fix input/output'`) regressed + single-word quoted titles escaped validation in real shells (quotes are stripped) → slash branch now single-word-only; bare-word rejection is order-independent once any title is determined. Verified: `create bug 'Fix input/output'` creates with title `Fix input/output`; `create spike 'Probe'` rejects.
+2. MAJOR canonical multi-word type (`Feature Enhancement`) counted as explicit title, rejecting a following bare-word title → explicit-title pre-pass now excludes enum-resolving tokens. Verified: `create 'Feature Enhancement' 'Real Title'` consumes the enum and titles `Real Title`.
+3. MAJOR inherited properties (`constructor/low`, `__proto__/p1`) bypassed validation via `in` lookups → all token-map membership now `Object.hasOwn`. Verified: both reject with `(part '…')` errors.
+4. MINOR mixed-scope hunks in the review diff → foreign pre-existing hunks in create.spec.ts excluded from the commit (selective staging).
+5. MINOR `cli/mdt-cli/SKILL.md` create section not updated → updated with the strict-token contract.
+
+Post-fix evidence: unit 26/26 (6 new regression tests), create e2e 18/18, all unit command suites 34 tests/0 fail, live shell probes R1–R7 (rejections exit 1 with no ticket file; controls `bug 'Fix input/output'`, `'Feature Enhancement' 'Real Title'`, `feature/p2`, omitted-token defaults all correct). Requirements relocked and `--stage all` revalidated after the BR-6/Edge-2 wording refinement.
 
 ## Watchlist
 
-- Broad dot patterns (`**/.*.json` / `**/.*.yaml`) stay in THIS repo's `.gitignore` (they cover tool configs like `.auto-claude-security.json`) but are deliberately omitted from the scaffold — the durable doc records the divergence and the reason.
-- Managed-block markers are a public convention once shipped: other tools editing `.gitignore` must respect them; keep the merge conservative (append-only outside markers).
-- Explicit-project precedence is "flag wins" across list/create/deps/get/attr — keep MCP `resolveProject` consistent if precedence is ever revisited.
-- `dsh-plugin` tool names and non-`project` schema fields are preset contracts; do not rename.
-- Deferred concerns UC-1 (orphan `{KEY}/` subdocument folder on delete) and UC-2 (`.trace/{KEY}/` never cleaned on delete), raised 2026-07-26, remain open for a separate session.
+- Stricter slash-token rule: an unquoted **single-word** token containing `/` is always `<type>[/<priority>]`; a single-word slash-containing title (e.g. `24/7`) can no longer be expressed bare — use a multi-word title (`'24/7 service'`) or a dashed slug. Multi-word slash titles (`'Fix input/output'`) keep working (verified).
+- Real-shell quoting nuance: the shell strips quotes, so `create spike 'Probe'` arrives as two bare words and is rejected (second bare word with a title already determined) instead of silently titling the ticket `spike`. First-bare-word titles (`create feature Refactor`) keep working.
+- A bare unknown word after a slug-derived title (e.g. `create fix-database-pool extra`) now rejects where HEAD silently dropped it — the drop was silent data loss of the same class MDT-263 kills.
+- `mdt-cli create chore` (single unknown token, no title candidate) still derives the title from the token (`Chore`) — legacy single-word-title behavior pinned by existing tests; there is no enum position to validate without a title.
+- The cloud `create` coordinator path is broken for this repo (pending-recovery state, see MDT-262 / MDT-200 investigation); UAT ran against a local temp project via the same `parseCreateTokens` boundary.
+- `cli/tests/e2e/ticket/create.spec.ts` carries pre-existing uncommitted foreign hunks (ambiguous-key BR-1.10 test, cloud-bound create test); they are excluded from the MDT-263 commit via selective staging.
 
 ## Open Decisions
 
-None. Entry set ("1 and 2") and merge semantics ("1, with best practices") were confirmed by the user; best practices applied: repo-proven pattern forms, marker-delimited block, append-only outside markers, idempotent no-diff re-run, trace store left trackable.
+None. Only-known-tokens acceptance was decided by the user on 2026-10-24 (MDT-263); adding `Chore` to the enum is explicitly out of scope.

@@ -115,4 +115,84 @@ describe('parseCreateTokens', () => {
   test('throws when no title can be determined', () => {
     expect(() => parseCreateTokens([])).toThrow('Usage:')
   })
+
+  // ── Strict explicit token validation (MDT-263) ────────────
+
+  test('unknown type part in combined token throws with valid set', () => {
+    expect(() => parseCreateTokens(['chore/low', '\'Probe\''])).toThrow(/Unknown create token 'chore\/low' \(part 'chore'\)/)
+    expect(() => parseCreateTokens(['chore/low', '\'Probe\''])).toThrow(/Valid types: Architecture, Feature Enhancement, Bug Fix, Technical Debt, Documentation, Research/)
+    expect(() => parseCreateTokens(['chore/low', '\'Probe\''])).toThrow(/Valid priorities: Low, Medium, High, Critical/)
+  })
+
+  test('unknown priority part in combined token throws', () => {
+    expect(() => parseCreateTokens(['feature/urgent', '\'Probe\''])).toThrow(/\(part 'urgent'\)/)
+  })
+
+  test('fully unknown combined token throws', () => {
+    expect(() => parseCreateTokens(['chore/x', '\'Probe\''])).toThrow(/\(part 'chore'\)/)
+  })
+
+  test('unknown standalone token with quoted title throws', () => {
+    expect(() => parseCreateTokens(['spike', '\'Probe\''])).toThrow(/Unknown create token 'spike'/)
+  })
+
+  test('unknown standalone token after title throws instead of silent drop', () => {
+    expect(() => parseCreateTokens(['bug', '\'Fix X\'', 'login'])).toThrow(/Unknown create token 'login'/)
+  })
+
+  test('unknown standalone token without quoted title becomes the title (legacy)', () => {
+    const result = parseCreateTokens(['feature', 'Refactor'])
+    expect(result.title).toBe('Refactor')
+    expect(result.type).toBe(TYPE_FEATURE)
+  })
+
+  test('dashed slug tokens are never enum candidates', () => {
+    const result = parseCreateTokens(['bug', '\'Fix X\'', 'login-timeout'])
+    expect(result.slug).toBe('login-timeout')
+    expect(result.title).toBe('Fix X')
+  })
+
+  test('known aliases still resolve under strict validation', () => {
+    const result = parseCreateTokens(['bug/p1', '\'Critical crash\''])
+    expect(result.type).toBe(TYPE_BUG)
+    expect(result.priority).toBe('Critical')
+
+    const debt = parseCreateTokens(['tech-debt', '\'X\''])
+    expect(debt.type).toBe('Technical Debt')
+
+    const docs = parseCreateTokens(['docs', '\'X\''])
+    expect(docs.type).toBe('Documentation')
+  })
+
+  test('canonical multi-word type token still resolves', () => {
+    const result = parseCreateTokens(['feature enhancement', '\'X\''])
+    expect(result.type).toBe(TYPE_FEATURE)
+  })
+
+  // ── MDT-263 review regressions ────────────────────
+
+  test('canonical multi-word type does not count as an explicit title (review #2)', () => {
+    const result = parseCreateTokens(['Feature Enhancement', 'Refactor'])
+    expect(result.type).toBe(TYPE_FEATURE)
+    expect(result.title).toBe('Refactor')
+  })
+
+  test('slash inside a multi-word title token is title text, not enum grammar (review #1)', () => {
+    const result = parseCreateTokens(['bug', 'Fix input/output'])
+    expect(result.type).toBe(TYPE_BUG)
+    expect(result.title).toBe('Fix input/output')
+  })
+
+  test('two bare unknown words reject in either order — real-shell single-word titles (review #1)', () => {
+    // A real shell strips quotes: `create spike 'Probe'` arrives as [spike, Probe]
+    expect(() => parseCreateTokens(['spike', 'Probe'])).toThrow(/Unknown create token 'Probe'/)
+    expect(() => parseCreateTokens(['Probe', 'spike'])).toThrow(/Unknown create token 'spike'/)
+  })
+
+  test('inherited Object properties never resolve as enum tokens (review #3)', () => {
+    expect(() => parseCreateTokens(['constructor/low', '\'X\''])).toThrow(/\(part 'constructor'\)/)
+    expect(() => parseCreateTokens(['__proto__/p1', '\'X\''])).toThrow(/\(part '__proto__'\)/)
+    expect(() => parseCreateTokens(['bug', '\'X\'', 'constructor'])).toThrow(/Unknown create token 'constructor'/)
+    expect(() => parseCreateTokens(['bug', '\'X\'', 'toString'])).toThrow(/Unknown create token 'toString'/)
+  })
 })

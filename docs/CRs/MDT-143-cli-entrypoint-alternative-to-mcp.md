@@ -696,3 +696,24 @@ Non-interactive consumers (MCP tools, DSH plugin) run with a cwd that is not a p
 **New scenarios**: project_init_scaffolds_mdt_gitignore, project_init_merges_existing_gitignore
 
 **Implementation (same day)**: TASK-cli-init-gitignore complete — `shared/tools/projectGitignore.ts` (constant + idempotent marker-delimited merge), wired into `ProjectManager.createProject` (non-globalOnly path), init output + structured `project.init` payload surface the scaffold, `cli/mdt-cli/SKILL.md` updated. Evidence: new e2e 3/3 (RED→GREEN), unit suite 6/6, full CLI e2e 117/117, shared project suites 47/47, eslint clean on changed files, validate:ts 5/5, manual temp-project acceptance with real `git check-ignore` (prompt-slug ticket trackable via negation).
+
+### UAT Session 2026-10-26 — strict create tokens (MDT-263)
+
+**Approved changes**: `mdt-cli create` must reject unknown **explicit** type/priority tokens instead of silently coercing them to defaults (user decision 2026-10-24, ticket MDT-263). Fail-first UAT captured: `create chore/low 'X'` created a Feature Enhancement/Low ticket with exit 0; `create spike 'X'` silently swallowed the token; `create feature/urgent 'X'` silently defaulted priority.
+
+| Change | Requirement Impact |
+|--------|-------------------|
+| Strict explicit-token validation in `parseCreateTokens`: unknown part of a `/`-combined token, or a standalone unknown dash-less single word when a quoted/multi-word title is present, rejects with `INVALID_CREATE_TOKEN` + valid sets + aliases, exit 1, no ticket file | BR-6 refined |
+| Clarified "unrecognized create token" in Edge-2: only explicit enum-position tokens reject; quoted/spaced titles and dashed slugs are never enum candidates; `--json`/`--yaml` emit `ok=false` envelopes | Edge-2 refined |
+| Omitted type/priority keep Feature Enhancement/Medium; known aliases (`bug`, `p1`, `debt`, `docs`, canonical values, any case) unchanged; token maps stay derived from domain-contracts (no third enum copy) | design note (BR-6) |
+
+**Updated workflow documents**: requirements.md, bdd.md, tests.md, uat.md, and generated `*.trace.md` projections.
+**uat.md written**: yes (current-round brief, replaced 2026-09-03 round; that round's record lives in this section)
+**Strict drift/lock**: requirements relocked after BR-6/Edge-2 refinement; `validate --stage requirements --strict` and `validate --stage all` pass.
+**New task**: TASK-cli-create-strict-tokens
+**New scenarios**: create_rejects_unknown_type_token, create_rejects_unknown_priority_token, create_defaults_for_omitted_tokens
+**Refined test plan**: TEST-cli-create-parse-tokens (strict-validation unit scope added)
+
+**Implementation (same day)**: TASK-cli-create-strict-tokens complete — `cli/src/commands/create.ts` (single-word slash-part guard + order-independent bare-word rejection + own-property enum lookups, `unknownCreateTokenError` envelope), unit suite 26/26 (12 new), e2e 18/18 (3 new rejection cases; legacy single-word-title test renamed to match its actual contract), `cli/mdt-cli/SKILL.md` create section updated. Full CLI suite 196 pass / 15 fail — the 15 are `mdt-cli cloud` tests proven pre-existing via stash-reproduce (stale untracked `shared/dist` from the MDT-200 investigation; `bun run --cwd cli build` blocked by the same unrelated drift, zero errors in touched files). MCP/frontend untouched (MCP `create_cr` already validated by shared zod enums).
+
+**Codex review round (same day)**: initial verdict FAIL with 3 MAJOR findings — shell-stripped quoting let `create spike 'Probe'` escape validation and regressed `create bug 'Fix input/output'`; canonical multi-word type counted as explicit title; `constructor`/`__proto__` inherited-property lookups bypassed validation. All fixed (single-word-only slash grammar, order-independent bare-word rejection once any title is determined, enum-excluding explicit-title pre-pass, `Object.hasOwn` everywhere); re-verified with 6 new regression unit tests and live shell probes. Reviewer's scope finding handled by excluding pre-existing foreign hunks in create.spec.ts from the commit. Requirements relocked after BR-6/Edge-2 wording refinement; `--stage all` passes.

@@ -214,6 +214,15 @@ bun run --cwd mcp-server jest -- tests/e2e/tools/create-cr.spec.ts
 bun test cli/tests/e2e/project/init-gitignore.spec.ts
 ```
 
+## UAT Round 2026-10-26 — strict create tokens (MDT-263)
+
+- `TEST-cli-create-parse-tokens` (unit, `cli/tests/unit/commands/create.parse-tokens.test.ts`, refined in place): `parseCreateTokens` rejects unknown explicit type/priority tokens — unknown part in a `/`-combined token (`chore/low`, `feature/urgent`, `chore/x`) and standalone unknown single-word tokens when a quoted/spaced title is present (`spike 'X'`) — throwing `INVALID_CREATE_TOKEN` with the valid sets; omitted type/priority keep Feature Enhancement/Medium; known aliases (`bug/p1`, `debt`, `docs`) and dash-less single-word titles without a quoted title (`feature Refactor`) keep working; dashed slugs are never enum candidates. Covers BR-6, Edge-2.
+- `TEST-cli-ticket-create` (e2e, `cli/tests/e2e/ticket/create.spec.ts`): gains an end-to-end rejection case (exit 1, no ticket file, valid set printed; `--json` envelope `ok=false` with `error.code=INVALID_CREATE_TOKEN`). Covers BR-6, Edge-2.
+
+```bash
+bun run --cwd cli test
+```
+
 ---
 *Canonical test-plan projection: [tests.trace.md](./tests.trace.md)*
 *Rendered by /mdt:tests via spec-trace*

@@ -213,13 +213,6 @@
       "routePolicy": "tests"
     },
     {
-      "id": "BR-6",
-      "kind": "behavior",
-      "text": "WHEN operator invokes mdt-cli ticket create or mdt-cli create with a valid type, title, and optional priority or slug arguments, the system shall create one new ticket with default metadata and print the created ticket key and path. WHEN --project <code> is provided, the system shall create the ticket in the specified project rather than the cwd-detected project. WHEN --project targets a project that does not exist, the system shall reject with 'Project <code> not found' and exit 1.",
-      "sourceRef": "CR:MDT-143",
-      "routePolicy": "bdd"
-    },
-    {
       "id": "Edge-6",
       "kind": "edge_case",
       "text": "IF operator invokes mdt-cli ticket create --project <code> and the project does not exist, THEN the system shall print 'Project <code> not found' and exit with code 1.",
@@ -283,13 +276,6 @@
       "routePolicy": "tests"
     },
     {
-      "id": "Edge-2",
-      "kind": "edge_case",
-      "text": "IF operator omits required command arguments or supplies an unrecognized create token, unsupported attribute-mutation form, unsupported attribute key, unsupported attribute operator, or unrecognized explicit project verb, THEN the system shall reject the command with a clear corrective message and a suggestion for the closest valid token when available. IF operator supplies an unknown status or priority enum value to ticket attr, THEN the system shall reject the command with the valid value set and the alias map.",
-      "sourceRef": "CR:MDT-143",
-      "routePolicy": "tests"
-    },
-    {
       "id": "BR-1",
       "kind": "behavior",
       "text": "WHEN operator invokes mdt-cli ticket get <key>, mdt-cli ticket <key>, mdt-cli t <key>, or mdt-cli <key> with a resolvable ticket reference, the system shall print the matching ticket title followed by labeled status, type, priority, phase, assignee, created date, modified date, and path fields. When the ticket has a corresponding CR directory (e.g., docs/CRs/MDT-012/), the system shall list the 1st-level files and directories in that directory below the path line, excluding the main ticket .md file. Directories are shown with a trailing slash. Nested directory contents are not expanded. If no subdocuments exist, the section is omitted. WHEN -p/--project <code> is provided, the system shall resolve the ticket within the given project regardless of cwd; explicit --project wins over cwd-detected context; WHEN --project targets a project that does not exist, the system shall reject with 'Project <code> not found' and exit 1. Behavior is identical when the option is omitted.",
@@ -342,6 +328,20 @@
       "id": "C10",
       "kind": "constraint",
       "text": "The MDT gitignore entry list shall be owned by one shared constant consumed by every project-init entrypoint routing through ProjectManager.createProject (mdt-cli project init, the project:create script flow, and web-driven project creation), so scaffolded ignores cannot drift between interfaces. The canonical phrasing of the list, its evidence, and the git policy for every MDT working-state file shall live in docs/MDT_WORKING_STATE_FILES.md, and the shared constant must mirror it. The managed block shall be marker-delimited, re-mergeable, and end with a ticket-file negation.",
+      "sourceRef": "CR:MDT-143",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-6",
+      "kind": "behavior",
+      "text": "WHEN operator invokes mdt-cli ticket create or mdt-cli create with a valid type, title, and optional priority or slug arguments, the system shall create one new ticket with default metadata and print the created ticket key and path. Type and priority tokens must resolve to known canonical values: every part of an unquoted single-word slash-combined type/priority token, and every standalone single-word dash-less token that would not serve as the title (any title is already determined from a quoted or multi-word token, or from an earlier bare word), shall be checked against the canonical token maps derived from domain-contracts using own-property lookup, and an unknown explicit type or priority token shall reject the command with an INVALID_CREATE_TOKEN error naming the token and printing the valid value sets with alias lists, creating no ticket file. A slash inside a multi-word title token is title text, not enum grammar. WHEN the type is omitted the system shall default to Feature Enhancement, and WHEN the priority is omitted the system shall default to Medium. WHEN --project <code> is provided, the system shall create the ticket in the specified project rather than the cwd-detected project. WHEN --project targets a project that does not exist, the system shall reject with 'Project <code> not found' and exit 1.",
+      "sourceRef": "CR:MDT-143",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "Edge-2",
+      "kind": "edge_case",
+      "text": "IF operator omits required command arguments or supplies an unrecognized explicit create type or priority token (for example chore/low, spike, or feature/urgent), an unsupported attribute-mutation form, an unsupported attribute key, an unsupported attribute operator, or an unrecognized explicit project verb, THEN the system shall reject the command with a clear corrective message and a suggestion for the closest valid token when available; unknown explicit create tokens shall name the offending token (and part, for slash-combined tokens) and print the valid type and priority sets with alias lists in human output and as an ok=false structured error envelope (error.code=INVALID_CREATE_TOKEN) in --json/--yaml modes, and no ticket file shall be created. Quoted or multi-word title tokens, the first bare single-word title, and dashed slug tokens are not enum candidates and are never rejected on enum grounds; inherited object property names (constructor, __proto__) never resolve as enum tokens. IF operator supplies an unknown status or priority enum value to ticket attr, THEN the system shall reject the command with the valid value set and the alias map.",
       "sourceRef": "CR:MDT-143",
       "routePolicy": "tests"
     }
@@ -685,6 +685,39 @@
       "given": "a folder with an existing user-authored .gitignore and no managed MDT block",
       "when": "the operator runs mdt-cli project init and then runs it a second time",
       "then": "every user-authored line is preserved, the managed MDT block appears exactly once, and the second run leaves the file byte-identical",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "create_rejects_unknown_type_token",
+      "title": "Reject create when an explicit type token is unknown",
+      "covers": [
+        "BR-6"
+      ],
+      "given": "an initialized project",
+      "when": "the operator runs mdt-cli create chore/low 'Probe' (or create spike 'Probe' with a quoted title present)",
+      "then": "the command exits 1 without creating a ticket file, prints an INVALID_CREATE_TOKEN error naming the unknown token, and lists the valid types with aliases; --json emits an ok=false envelope with error.code=INVALID_CREATE_TOKEN",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "create_rejects_unknown_priority_token",
+      "title": "Reject create when an explicit priority token is unknown",
+      "covers": [
+        "BR-6"
+      ],
+      "given": "an initialized project",
+      "when": "the operator runs mdt-cli create feature/urgent 'Probe'",
+      "then": "the command exits 1 without creating a ticket file and the error names 'urgent' and prints the valid priorities with aliases (p1-p4 and canonical values)",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "create_defaults_for_omitted_tokens",
+      "title": "Keep Feature Enhancement/Medium defaults when type or priority is omitted",
+      "covers": [
+        "BR-6"
+      ],
+      "given": "an initialized project",
+      "when": "the operator runs mdt-cli create 'Just a title' without type or priority tokens",
+      "then": "the ticket is created with type Feature Enhancement and priority Medium, and known aliases such as bug, p1, debt, and docs keep resolving to their canonical values",
       "sourceRef": "CR:MDT-143"
     }
   ],
@@ -1273,20 +1306,6 @@
       "sourceRef": "CR:MDT-143"
     },
     {
-      "id": "TEST-cli-create-parse-tokens",
-      "kind": "unit",
-      "title": "Token parsing unit tests for create command (slug vs title disambiguation)",
-      "covers": [
-        "BR-6",
-        "BR-7",
-        "BR-8",
-        "C5",
-        "Edge-2"
-      ],
-      "file": "cli/tests/unit/commands/create.parse-tokens.test.ts",
-      "sourceRef": "CR:MDT-143"
-    },
-    {
       "id": "TEST-cli-ticket-delete",
       "kind": "e2e",
       "title": "Ticket delete CLI flows: interactive confirm, --force, non-TTY, not-found, cancel",
@@ -1409,6 +1428,15 @@
         "Edge-12"
       ],
       "file": "cli/tests/e2e/project/init-gitignore.spec.ts",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "TEST-cli-create-parse-tokens",
+      "kind": "unit",
+      "title": "Token parsing unit tests for create command (slug vs title disambiguation; strict explicit type/priority validation: unknown slash-part or standalone unknown token with a title present rejects with INVALID_CREATE_TOKEN; omitted type/priority keep Feature Enhancement/Medium; known aliases and single-word unquoted titles keep working)",
+      "covers": [
+        "Edge-2"
+      ],
       "sourceRef": "CR:MDT-143"
     }
   ],
@@ -1695,6 +1723,21 @@
         "project_init_scaffolds_mdt_gitignore",
         "project_init_merges_existing_gitignore",
         "TEST-cli-init-gitignore"
+      ],
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "TASK-cli-create-strict-tokens",
+      "title": "Strict explicit type/priority token validation in parseCreateTokens (MDT-263): unknown slash-part or standalone unknown token with an identifiable title rejects via CliCommandError INVALID_CREATE_TOKEN with valid sets; defaults and aliases unchanged",
+      "ownsArtifactIds": [
+        "ART-cli-create",
+        "ART-cli-create-parse-tokens-test"
+      ],
+      "makesGreenIds": [
+        "create_rejects_unknown_type_token",
+        "create_rejects_unknown_priority_token",
+        "create_defaults_for_omitted_tokens",
+        "TEST-cli-create-parse-tokens"
       ],
       "sourceRef": "CR:MDT-143"
     }

@@ -187,16 +187,54 @@ describe('Ticket Create', () => {
     expect(result.stdout).toContain('docs/CRs/')
   })
 
-  test('should reject unknown create tokens with a corrective message', async () => {
-    // The CLI treats unknown tokens as the title, so this will succeed
-    // The token "xyztype" becomes the title
+  test('should derive the title from a single unknown token when no explicit title is present (legacy)', async () => {
+    // Without a quoted/multi-word title token there is no enum position to
+    // validate: the dash-less unknown word becomes the title (MDT-143 grammar).
     const result = await runCli(['create', 'xyztype'], {
       cwd: projectDir,
     })
 
-    // Should succeed with "xyztype" as the title
     expect(result.exitCode).toBe(0)
     expect(result.stdout).toContain('Created')
+  })
+
+  test('should reject an unknown explicit type token without creating a ticket (MDT-263)', async () => {
+    const before = await runCli(['ticket', 'list', '--json'], { cwd: projectDir })
+    const countBefore = JSON.parse(before.stdout).data.count.total
+
+    const result = await runCli(['create', 'chore/low', 'Probe MDT-263'], {
+      cwd: projectDir,
+    })
+
+    expect(result.exitCode).toBe(1)
+    expect(result.stderr).toContain('Unknown create token \'chore/low\' (part \'chore\')')
+    expect(result.stderr).toContain('Valid types:')
+    expect(result.stderr).toContain('Valid priorities:')
+
+    const after = await runCli(['ticket', 'list', '--json'], { cwd: projectDir })
+    expect(JSON.parse(after.stdout).data.count.total).toBe(countBefore)
+  })
+
+  test('should reject an unknown standalone type token when a quoted title is present (MDT-263)', async () => {
+    const result = await runCli(['create', 'spike', 'Probe MDT-263 standalone'], {
+      cwd: projectDir,
+    })
+
+    expect(result.exitCode).toBe(1)
+    expect(result.stderr).toContain('Unknown create token \'spike\'')
+  })
+
+  test('should emit an ok=false envelope for unknown create tokens in --json mode (MDT-263)', async () => {
+    const result = await runCli(['create', 'feature/urgent', 'Probe MDT-263 json', '--json'], {
+      cwd: projectDir,
+    })
+
+    expect(result.exitCode).toBe(1)
+    const envelope = JSON.parse(result.stderr)
+    expect(envelope.ok).toBe(false)
+    expect(envelope.error.code).toBe('INVALID_CREATE_TOKEN')
+    expect(envelope.error.message).toContain('(part \'urgent\')')
+    expect(envelope.error.details.validPriorities).toContain('Critical')
   })
 
   test('should keep project-root-relative path output by default after create', async () => {

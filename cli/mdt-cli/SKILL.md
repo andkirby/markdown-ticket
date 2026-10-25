@@ -87,6 +87,7 @@ Creates a ticket with default metadata and prints the key and path.
 
 - **`--project <code>`** — create in a different project instead of cwd-detected one.
 - Type and priority tokens are order-independent.
+- **Strict tokens (MDT-263)**: unknown explicit type/priority tokens are rejected with `INVALID_CREATE_TOKEN`, the valid sets + aliases, exit 1, and no ticket file (`--json`/`--yaml`: `ok=false` envelope). Slash-combined tokens (`<type>[/<priority>]`) must be single words; a slash inside a multi-word title is title text — a single-word slash title like `24/7` cannot be expressed bare (shell quotes don't survive), so use a multi-word title or a dashed slug. Unknown bare words reject once any title is already determined — make the title quoted/multi-word to keep an unknown word out of enum position.
 - Unquoted dashed token after title becomes the filename slug.
 - Without an explicit title, title is derived from the slug.
 - `--stdin` or piped input: generates frontmatter and H1, appends stdin as body, skips template.

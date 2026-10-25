@@ -13,7 +13,7 @@ BDD for this ticket is organized around seven CLI journeys: ticket retrieval, pr
 |---------|-----------|----------------------|
 | Ticket retrieval | `view_ticket_from_detected_project`, `view_ticket_across_projects`, `list_tickets_in_detected_project` | BR-1, BR-2, BR-3, BR-4 |
 | Project commands | `show_current_project_details`, `list_projects_via_project_namespace`, `resolve_project_token_without_subcommand_collision` | BR-5, BR-14, BR-15, BR-17 |
-| Project bootstrap and ticket creation | `initialize_project_in_current_folder`, `project_init_scaffolds_mdt_gitignore`, `project_init_merges_existing_gitignore`, `create_ticket_from_slug_with_order_independent_tokens`, `create_ticket_from_piped_input` | BR-6, BR-7, BR-8, BR-9, BR-16 |
+| Project bootstrap and ticket creation | `initialize_project_in_current_folder`, `project_init_scaffolds_mdt_gitignore`, `project_init_merges_existing_gitignore`, `create_ticket_from_slug_with_order_independent_tokens`, `create_ticket_from_piped_input`, `create_rejects_unknown_type_token`, `create_rejects_unknown_priority_token`, `create_defaults_for_omitted_tokens` | BR-6, BR-7, BR-8, BR-9, BR-16 |
 | Ticket mutation and formatting | `update_ticket_attributes_in_one_command`, `render_colored_relative_ticket_output`, `render_absolute_ticket_path_when_configured` | BR-10, BR-11, BR-12, BR-13 |
 | List filtering and paging | `filter_ticket_list_by_multiple_criteria` | BR-18 |
 | Command guide | `show_generated_command_guide` | BR-19 |
@@ -37,6 +37,7 @@ MDT-143 introduces a terminal-first CLI surface. CLI acceptance tests run as rea
 - Ticket and project read paths are expected to stand on the shared entity-service surface; project-init stays a separate bootstrap path.
 - Attribute mutation is acceptance-visible through canonical `mdt-cli ticket attr <ticket> <attr-op><value>...`, with `mdt-cli attr <ticket> <attr-op><value>...` retained as the shortcut alias; ticket-key-prefixed write shortcuts are out of scope for this ticket.
 - Attribute confirmation uses pipe-separated format: `Updated MDT-143 | status: In Progress → Implemented`. No-op (value unchanged) prints an unchanged message and exits 0.
+- Create type/priority tokens are strict at the explicit-token boundary: unknown explicit tokens (e.g. `chore/low`, `spike`, `feature/urgent`) reject with `INVALID_CREATE_TOKEN`, the valid sets, exit 1, and no ticket file; omitted type/priority keep the Feature Enhancement/Medium defaults; quoted/spaced titles and dashed slugs are never enum candidates (MDT-263).
 - Relation attributes must cover all three operator paths: `=` replace, `+=` append with dedupe, and `-=` remove.
 - Ticket list defaults to 10 tickets sorted newest-first. `--all` shows every ticket, `--limit N` overrides the default.
 - Ticket list supports positional filter arguments in `key=value` format: AND across fields, comma-separated fuzzy matching within a field. Filterable fields: status, priority, type, assignee, epic.
