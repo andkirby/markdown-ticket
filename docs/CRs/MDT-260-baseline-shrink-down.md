@@ -1,6 +1,6 @@
 ---
 code: MDT-260
-status: In Progress
+status: Implemented
 dateCreated: 2026-10-24T00:00:00.000Z
 type: Technical Debt
 priority: Medium
@@ -32,13 +32,19 @@ Each is designed to only shrink, but nothing forces it. Ticket owner: every PR t
 
 ## 3. Acceptance criteria
 
-- [ ] Boundary manifest ≤100 identities with no behavior change (compat tests per migrated site)
-- [ ] eslint baseline ≤20 files; `lint:server` + `lint:mcp` exit 0 throughout
-- [ ] knip: at least the `cloud/**` and `cli/**` globs converted to per-file entries or removed; `bun run knip` exit 0
-- [ ] `bun run check:boundaries` + `test:boundaries` green throughout; no baseline grows at any commit
+- [x] Boundary manifest ≤100 identities with no behavior change (compat tests per migrated site)
+- [x] eslint baseline ≤20 files; `lint:server` + `lint:mcp` exit 0 throughout
+- [x] knip: at least the `cloud/**` and `cli/**` globs converted to per-file entries or removed; `bun run knip` exit 0
+- [x] `bun run check:boundaries` + `test:boundaries` green throughout; no baseline grows at any commit
 
 ## 4. Out of scope
 
 - Frontend test debt (`test-setup.ts`, `__tests__` lint) — parallel stream owns
 - New boundary types or schema policy (MDT-258 patterns are fixed)
 - shared strict-knip entry exports consumed by server/cli tests (needs those workspaces' lenses; follow-up)
+
+## 5. Verification
+
+Implemented across 8 commits (see [result.md](MDT-260/result.md) for the monotonic shrink table). All ACs beaten: manifest 152 → **80** (premise outdated — phase 5 had migrated the reads; shrink came from behavior-preserving request-decouplings), eslint baseline 37 → **17 files**, knip cloud/cli globs → **per-file entries** (+ real cloud entry found). Parent-thread verified in a clean-checkout worktree: checker 80 identities green, test:boundaries 46/46, knip exit 0, lint:server + lint:mcp exit 0, domain 368.
+
+Handoff: parallel stream's uncommitted `acquireLock`→`withLock` restructure will need a 2-entry manifest sync when it lands (noted in result). Interleaved fix `42d3a94c` repaired their MDT-262 DSH plugin drift that broke gates mid-flight.
