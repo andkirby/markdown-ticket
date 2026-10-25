@@ -1,4 +1,3 @@
-/* eslint-disable ts/no-unsafe-type-assertion -- MDT-258 baseline: pre-existing casts, strip as they are rewritten */
 /**
  * Project config storage adapter (MDT-168).
  *
@@ -36,7 +35,7 @@ export class ProjectConfigStorageAdapter implements ConfigStorageAdapter<Project
         : ProjectConfigDisplayFileSchema.parse(parseToml(content))
     }
     catch (error) {
-      if (forWrite && (error as NodeJS.ErrnoException).code !== 'ENOENT')
+      if (forWrite && !(typeof error === 'object' && error !== null && 'code' in error && error.code === 'ENOENT'))
         throw error
       // Missing file -> minimal default shape; caller decides whether to create.
       return { project: { name: '', code: '', id: '' } }

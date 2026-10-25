@@ -1,5 +1,3 @@
-/* eslint-disable ts/no-unsafe-type-assertion -- MDT-258 baseline: pre-existing casts, strip as they are rewritten */
-import type { ConfigSelector } from '@mdt/domain-contracts'
 /**
  * Thin transport-only controller for configuration management endpoints (MDT-168).
  *
@@ -70,7 +68,7 @@ export class ConfigController {
         let value: unknown
         try {
           const config = await this.applicationService.readScopeConfig(
-            selector as ConfigSelector,
+            selector,
           )
           value = extractValue(selector.selector, config)
         }
@@ -146,10 +144,14 @@ function extractValue(selector: string, config: unknown): unknown {
   const segments = selector.split('.')
   let node: unknown = config
   for (const seg of segments) {
-    if (node === null || node === undefined || typeof node !== 'object') {
+    if (!isRecord(node)) {
       return undefined
     }
-    node = (node as Record<string, unknown>)[seg]
+    node = node[seg]
   }
   return node
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
 }

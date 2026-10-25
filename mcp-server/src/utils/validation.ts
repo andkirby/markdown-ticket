@@ -13,7 +13,7 @@ interface ValidationResult<T = string> {
  * Validate project key format (e.g., "MDT", "API", "WEB", "GLO1")
  * Pattern: 2-5 uppercase letters and numbers
  */
-export function validateProjectKey(key: string): ValidationResult {
+export function validateProjectKey(key: string): ValidationResult<string> {
   if (!key || typeof key !== 'string') {
     return { valid: false, message: 'Project key is required and must be a string' }
   }
@@ -29,6 +29,20 @@ export function validateProjectKey(key: string): ValidationResult {
   }
 
   return { valid: true, value: normalized }
+}
+
+/**
+ * Validate required parameter exists and is a non-empty string
+ */
+export function validateRequiredString(
+  value: unknown,
+  name: string,
+): { valid: true, value: string } | { valid: false, message: string } {
+  if (typeof value !== 'string' || value.trim() === '') {
+    return { valid: false, message: `${name} is required and must be a non-empty string` }
+  }
+
+  return { valid: true, value }
 }
 
 /**
@@ -49,11 +63,11 @@ export function validateRequired(value: unknown, name: string): ValidationResult
 /**
  * Validate operation parameter against allowed values
  */
-export function validateOperation(
-  operation: string,
-  allowed: readonly string[],
+export function validateOperation<T extends string>(
+  operation: T,
+  allowed: readonly T[],
   name: string = 'operation',
-): ValidationResult<string> {
+): { valid: true, value: T } | { valid: false, message: string } {
   if (operation === null || operation === undefined) {
     return { valid: false, message: `${name} is required` }
   }

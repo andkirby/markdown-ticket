@@ -1,4 +1,3 @@
-/* eslint-disable ts/no-unsafe-type-assertion -- MDT-258 baseline: pre-existing casts, strip as they are rewritten */
 import type { MCPTools } from '../tools/index.js'
 import { Server } from '@modelcontextprotocol/sdk/server/index.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
@@ -85,11 +84,10 @@ export async function startStdioTransport(mcpTools: MCPTools): Promise<void> {
     }
     catch (error) {
       // Handle ToolError instances (check both instanceof and duck typing for robustness)
-      const isToolError = error instanceof ToolError
-        || (error instanceof Error && 'type' in error && 'code' in error)
+      const isToolError = isToolErrorLike(error)
 
       if (isToolError) {
-        const toolError = error as ToolError
+        const toolError = error
         // Check if it's a protocol error (has code property indicating JSON-RPC error)
         const isProtocolError = toolError.isProtocolError?.()
           || (toolError.code !== undefined && toolError.code !== null)
@@ -133,7 +131,7 @@ export async function startStdioTransport(mcpTools: MCPTools): Promise<void> {
       }
 
       // Handle other error types for backward compatibility
-      const errorMessage = (error as Error).message
+      const errorMessage = error instanceof Error ? error.message : String(error)
 
       // Path traversal attempts and other security issues
       if (errorMessage.includes('../')
@@ -153,4 +151,9 @@ export async function startStdioTransport(mcpTools: MCPTools): Promise<void> {
   // Connect to stdio transport
   const transport = new StdioServerTransport()
   await server.connect(transport)
+}
+
+function isToolErrorLike(error: unknown): error is ToolError {
+  return error instanceof ToolError
+    || (error instanceof Error && 'type' in error && 'code' in error)
 }

@@ -1,4 +1,3 @@
-/* eslint-disable ts/no-unsafe-type-assertion -- MDT-258 baseline: pre-existing casts, strip as they are rewritten */
 import type { Project } from '@mdt/shared/models/Project.js'
 import type { ProjectService } from '@mdt/shared/services/ProjectService.js'
 import process from 'node:process'
@@ -112,7 +111,10 @@ export class ProjectHandlers {
       throw ToolError.protocol(validation.message || 'Validation error', JsonRpcErrorCode.InvalidParams)
     }
 
-    const normalizedKey = validation.value as string
+    const normalizedKey = validation.value
+    if (normalizedKey === undefined) {
+      throw ToolError.protocol('Project key validation returned no value', JsonRpcErrorCode.InvalidParams)
+    }
     try {
       const result = await this.projectService.getProject(normalizedKey)
       return result.data

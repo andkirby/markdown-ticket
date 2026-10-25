@@ -1,4 +1,3 @@
-/* eslint-disable ts/no-unsafe-type-assertion -- MDT-258 baseline: pre-existing casts, strip as they are rewritten */
 import type { Request, Response } from 'express'
 import type { ProjectController } from '../controllers/ProjectController.js'
 import type FileWatcherService from '../services/fileWatcher/index.js'
@@ -270,7 +269,7 @@ export function createSystemRouter(
         expandedPath = await authorizeFilesystemPath(inputPath, allowedRoots)
       }
       catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+        if (!(typeof error === 'object' && error !== null && 'code' in error && error.code === 'ENOENT')) {
           throw error
         }
 

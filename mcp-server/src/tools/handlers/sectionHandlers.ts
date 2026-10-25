@@ -1,4 +1,3 @@
-/* eslint-disable ts/no-unsafe-type-assertion -- MDT-258 baseline: pre-existing casts, strip as they are rewritten */
 import type { Project } from '@mdt/shared/models/Project.js'
 /** Section handlers for MCP tools - MDT-114 Phase 6: Thin wrapper for validation and routing */
 import type { MarkdownSectionService } from '@mdt/shared/services/MarkdownSectionService.js'
@@ -6,7 +5,7 @@ import type { CRService } from '../../services/crService.js'
 import { SectionService } from '../../services/SectionManagement/SectionService.js'
 import { normalizeKey } from '../../utils/keyNormalizer.js'
 import { JsonRpcErrorCode, ToolError } from '../../utils/toolError.js'
-import { validateOperation, validateRequired } from '../../utils/validation.js'
+import { validateOperation, validateRequiredString } from '../../utils/validation.js'
 
 export class SectionHandlers {
   private sectionService: SectionService
@@ -37,33 +36,33 @@ export class SectionHandlers {
       throw ToolError.protocol(operationValidation.message || 'Validation error', JsonRpcErrorCode.InvalidParams)
     }
     const validKey = normalizedKey
-    const validOp = operationValidation.value as 'list' | 'get' | 'replace' | 'append' | 'prepend'
+    const validOp = operationValidation.value
     switch (validOp) {
       case 'list':
         return await this.sectionService.listSections(project, validKey)
       case 'get': {
-        const sectionValidation = validateRequired(section, 'section')
+        const sectionValidation = validateRequiredString(section, 'section')
         if (!sectionValidation.valid) {
           throw ToolError.protocol(sectionValidation.message || 'Validation error', JsonRpcErrorCode.InvalidParams)
         }
-        return await this.sectionService.getSection(project, validKey, sectionValidation.value as string)
+        return await this.sectionService.getSection(project, validKey, sectionValidation.value)
       }
       case 'replace':
       case 'append':
       case 'prepend': {
-        const sectionValidation = validateRequired(section, 'section')
+        const sectionValidation = validateRequiredString(section, 'section')
         if (!sectionValidation.valid) {
           throw ToolError.protocol(sectionValidation.message || 'Validation error', JsonRpcErrorCode.InvalidParams)
         }
-        const contentValidation = validateRequired(content, 'content')
+        const contentValidation = validateRequiredString(content, 'content')
         if (!contentValidation.valid) {
           throw ToolError.protocol(contentValidation.message || 'Validation error', JsonRpcErrorCode.InvalidParams)
         }
         return await this.sectionService.modifySection(
           project,
           validKey,
-          sectionValidation.value as string,
-          contentValidation.value as string,
+          sectionValidation.value,
+          contentValidation.value,
           validOp,
         )
       }

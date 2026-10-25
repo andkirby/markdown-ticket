@@ -1,4 +1,3 @@
-/* eslint-disable ts/no-unsafe-type-assertion -- MDT-258 baseline: pre-existing casts, strip as they are rewritten */
 /**
  * Global config storage adapter (MDT-168).
  *
@@ -53,7 +52,7 @@ export class GlobalConfigStorageAdapter implements ConfigStorageAdapter<GlobalCo
     try {
       await fs.writeFile(
         tmpPath,
-        stringify(config as unknown as Record<string, unknown>),
+        stringify(config),
         'utf8',
       )
       await fs.rename(tmpPath, this.filePath)

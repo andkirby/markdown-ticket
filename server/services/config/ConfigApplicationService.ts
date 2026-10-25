@@ -1,4 +1,3 @@
-/* eslint-disable ts/no-unsafe-type-assertion -- MDT-258 baseline: pre-existing casts, strip as they are rewritten */
 /**
  * Configuration application service (MDT-168).
  *
@@ -238,27 +237,24 @@ function applySelectorToConfig(
   value: unknown,
 ): unknown {
   const segments = descriptor.selector.split('.')
-  const root = structuredCloneSafe(current as Record<string, unknown>)
+  const root = structuredCloneSafe(isRecord(current) ? current : {})
   let node: Record<string, unknown> = root
   for (let i = 0; i < segments.length - 1; i++) {
     const seg = segments[i]
-    if (
-      node[seg] === undefined
-      || node[seg] === null
-      || typeof node[seg] !== 'object'
-    ) {
-      node[seg] = {}
-    }
-    node = node[seg] as Record<string, unknown>
+    const existing = node[seg]
+    const next: Record<string, unknown> = isRecord(existing) ? existing : {}
+    node[seg] = next
+    node = next
   }
   node[segments[segments.length - 1]] = value
   return root
 }
 
-/** structuredClone fallback for config objects (no functions/classes expected). */
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
+/** structuredClone for config objects (JSON-derived: no functions/classes). */
 function structuredCloneSafe<T>(value: T): T {
-  if (typeof structuredClone === 'function') {
-    return structuredClone(value)
-  }
-  return JSON.parse(JSON.stringify(value)) as T
+  return structuredClone(value)
 }
