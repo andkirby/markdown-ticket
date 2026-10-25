@@ -1,6 +1,6 @@
 ---
 code: MDT-260
-status: Proposed
+status: In Progress
 dateCreated: 2026-10-24T00:00:00.000Z
 type: Technical Debt
 priority: Medium
