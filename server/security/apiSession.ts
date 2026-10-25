@@ -1,4 +1,3 @@
-/* eslint-disable ts/no-unsafe-type-assertion -- MDT-258 baseline: pre-existing casts, strip as they are rewritten */
 import type { Request, Response } from 'express'
 import type { IncomingHttpHeaders } from 'node:http'
 import { Buffer } from 'node:buffer'
@@ -110,11 +109,16 @@ function extractCookieValue(req: Request, cookieName: string): string | null {
   return null
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
 function parsePayload(encodedPayload: string): OwnerSessionPayload | null {
   try {
-    const parsed = JSON.parse(decodeBase64Url(encodedPayload)) as Partial<OwnerSessionPayload>
+    const parsed = JSON.parse(decodeBase64Url(encodedPayload))
     if (
-      typeof parsed.exp !== 'number'
+      !isRecord(parsed)
+      || typeof parsed.exp !== 'number'
       || typeof parsed.gen !== 'number'
       || typeof parsed.iat !== 'number'
       || typeof parsed.sid !== 'string'
@@ -122,7 +126,7 @@ function parsePayload(encodedPayload: string): OwnerSessionPayload | null {
       return null
     }
 
-    return parsed as OwnerSessionPayload
+    return { exp: parsed.exp, gen: parsed.gen, iat: parsed.iat, sid: parsed.sid }
   }
   catch {
     return null

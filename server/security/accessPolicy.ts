@@ -14,6 +14,7 @@ const PublicReadApiPrefix = {
  * so the handler can enforce the token. See architecture.md §3.1.
  */
 const RAW_PREVIEW_PREFIX = '/api/documents/raw-preview'
+const TICKET_IDENTITY_DIAGNOSTICS = /^\/api\/projects\/[^/]+\/ticket-identities(?:\/|$)/i
 
 const OwnerOnlyApiPrefix = {
   CACHE: '/api/cache',
@@ -31,7 +32,7 @@ export function isPublicReadRoute(path: string, method: string): boolean {
   if (!isSafeReadMethod(method)) {
     return false
   }
-  if (path.startsWith(RAW_PREVIEW_PREFIX)) {
+  if (path.startsWith(RAW_PREVIEW_PREFIX) || TICKET_IDENTITY_DIAGNOSTICS.test(path.split('?')[0] ?? path)) {
     return false
   }
 
@@ -50,7 +51,8 @@ export function isReadOnlyMutationCandidate(path: string, method: string): boole
 }
 
 export function isOwnerOnlyRoute(path: string): boolean {
-  return path.startsWith(OwnerOnlyApiPrefix.CACHE)
+  return TICKET_IDENTITY_DIAGNOSTICS.test(path.split('?')[0] ?? path)
+    || path.startsWith(OwnerOnlyApiPrefix.CACHE)
     || path.startsWith(OwnerOnlyApiPrefix.CONFIG)
     || path.startsWith(OwnerOnlyApiPrefix.DIRECTORIES)
     || path.startsWith(OwnerOnlyApiPrefix.FILESYSTEM)

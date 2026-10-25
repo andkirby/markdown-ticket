@@ -1,4 +1,3 @@
-/* eslint-disable ts/no-unsafe-type-assertion -- MDT-258 baseline: pre-existing casts, strip as they are rewritten */
 import type { Request, Response } from 'express'
 import { Buffer } from 'node:buffer'
 import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
@@ -209,11 +208,16 @@ function getReadSessionPayload(req: Request, secret: string): ReadSessionPayload
   return payload
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
 function parsePayload(encodedPayload: string): ReadSessionPayload | null {
   try {
-    const parsed = JSON.parse(decodeBase64Url(encodedPayload)) as Partial<ReadSessionPayload>
+    const parsed = JSON.parse(decodeBase64Url(encodedPayload))
     if (
-      typeof parsed.exp !== 'number'
+      !isRecord(parsed)
+      || typeof parsed.exp !== 'number'
       || typeof parsed.iat !== 'number'
       || !Array.isArray(parsed.projectRefs)
       || !parsed.projectRefs.every(projectRef => typeof projectRef === 'string')
@@ -227,12 +231,15 @@ function parsePayload(encodedPayload: string): ReadSessionPayload | null {
     }
 
     return {
-      ...parsed,
+      exp: parsed.exp,
+      iat: parsed.iat,
+      projectRefs: parsed.projectRefs,
       shareIds: parsed.shareIds ?? [],
+      sid: parsed.sid,
       staticProjectRefs: parsed.staticProjectRefs ?? (parsed.tokenIds?.length ? [] : parsed.projectRefs),
       tokenIds: parsed.tokenIds ?? [],
       tokenProjectRefs: parsed.tokenProjectRefs ?? (parsed.tokenIds?.length ? parsed.projectRefs : []),
-    } as ReadSessionPayload
+    }
   }
   catch {
     return null

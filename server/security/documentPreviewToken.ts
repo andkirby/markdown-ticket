@@ -1,4 +1,3 @@
-/* eslint-disable ts/no-unsafe-type-assertion -- MDT-258 baseline: pre-existing casts, strip as they are rewritten */
 import { Buffer } from 'node:buffer'
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import * as path from 'node:path'
@@ -112,7 +111,7 @@ export function verifyPreviewToken(token: string, secret: string, now: number = 
   if (parts.length !== 2 || !parts[0] || !parts[1]) {
     throw new PreviewTokenError('Malformed preview token')
   }
-  const [encodedPayload, actualSignature] = parts as [string, string]
+  const [encodedPayload, actualSignature] = parts
 
   const expectedSignature = signPayload(encodedPayload, secret)
   if (!safeStringEquals(actualSignature, expectedSignature)) {
@@ -179,11 +178,16 @@ function decodeBase64Url(value: string): string {
   return Buffer.from(`${normalized}${'='.repeat(paddingLength)}`, 'base64').toString('utf8')
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
 function parsePayload(encodedPayload: string): PreviewTokenPayload | null {
   try {
-    const parsed = JSON.parse(decodeBase64Url(encodedPayload)) as Partial<PreviewTokenPayload>
+    const parsed = JSON.parse(decodeBase64Url(encodedPayload))
     if (
-      typeof parsed.exp !== 'number'
+      !isRecord(parsed)
+      || typeof parsed.exp !== 'number'
       || typeof parsed.iat !== 'number'
       || typeof parsed.projectId !== 'string'
       || typeof parsed.docDir !== 'string'
@@ -191,7 +195,7 @@ function parsePayload(encodedPayload: string): PreviewTokenPayload | null {
     ) {
       return null
     }
-    return parsed as PreviewTokenPayload
+    return { exp: parsed.exp, iat: parsed.iat, projectId: parsed.projectId, docDir: parsed.docDir, v: parsed.v }
   }
   catch {
     return null

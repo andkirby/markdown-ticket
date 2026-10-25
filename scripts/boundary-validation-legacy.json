@@ -535,24 +535,6 @@
     },
     {
       "file": "server/security/apiSession.ts",
-      "function": "parsePayload",
-      "kind": "decoder-cast",
-      "expression": "JSON.parse(decodeBase64Url(encodedPayload)) as Partial<OwnerSessionPayload>",
-      "count": 1,
-      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
-      "phase": 4
-    },
-    {
-      "file": "server/security/apiSession.ts",
-      "function": "parsePayload",
-      "kind": "decoder-cast",
-      "expression": "parsed as OwnerSessionPayload",
-      "count": 1,
-      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
-      "phase": 4
-    },
-    {
-      "file": "server/security/apiSession.ts",
       "function": "verifyOwnerSessionCookie",
       "kind": "request-delegation",
       "expression": "extractCookieValue(req, OWNER_SESSION_COOKIE_NAME)",
@@ -560,24 +542,6 @@
       "delegate": "server/security/apiSession.ts#extractCookieValue",
       "reason": "Existing controller/security Request delegation; exact callee retained for review",
       "phase": 5
-    },
-    {
-      "file": "server/security/documentPreviewToken.ts",
-      "function": "parsePayload",
-      "kind": "decoder-cast",
-      "expression": "JSON.parse(decodeBase64Url(encodedPayload)) as Partial<PreviewTokenPayload>",
-      "count": 1,
-      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
-      "phase": 4
-    },
-    {
-      "file": "server/security/documentPreviewToken.ts",
-      "function": "parsePayload",
-      "kind": "decoder-cast",
-      "expression": "parsed as PreviewTokenPayload",
-      "count": 1,
-      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
-      "phase": 4
     },
     {
       "file": "server/security/readSession.ts",
@@ -598,24 +562,6 @@
       "delegate": "server/security/readSession.ts#getReadSessionPayload",
       "reason": "Existing controller/security Request delegation; exact callee retained for review",
       "phase": 5
-    },
-    {
-      "file": "server/security/readSession.ts",
-      "function": "parsePayload",
-      "kind": "decoder-cast",
-      "expression": "JSON.parse(decodeBase64Url(encodedPayload)) as Partial<ReadSessionPayload>",
-      "count": 1,
-      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
-      "phase": 4
-    },
-    {
-      "file": "server/security/readTokenStore.ts",
-      "function": "createReadTokenStore/loadStore",
-      "kind": "decoder-cast",
-      "expression": "JSON.parse(content) as unknown",
-      "count": 1,
-      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
-      "phase": 4
     },
     {
       "file": "server/security/readTokenStore.ts",

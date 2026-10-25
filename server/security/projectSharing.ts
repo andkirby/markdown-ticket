@@ -1,4 +1,3 @@
-/* eslint-disable ts/no-unsafe-type-assertion -- MDT-258 baseline: pre-existing casts, strip as they are rewritten */
 import type { ProjectRegistryWriteFile } from '@mdt/domain-contracts'
 import type { Project, ProjectSharingModeValue, ProjectSharingSettings } from '@mdt/shared/models/Project.js'
 import type { RequestAccessContext } from './apiAuth.js'
@@ -177,7 +176,7 @@ async function readRegistry(registryPath: string, project: Project): Promise<Pro
     return ProjectRegistryWriteFileSchema.parse(parseToml(await readFile(registryPath, 'utf8')))
   }
   catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== 'ENOENT')
+    if (!(typeof error === 'object' && error !== null && 'code' in error && error.code === 'ENOENT'))
       throw error
     const now = new Date().toISOString().split('T')[0]
     return {

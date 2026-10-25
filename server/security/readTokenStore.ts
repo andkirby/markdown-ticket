@@ -1,4 +1,3 @@
-/* eslint-disable ts/no-unsafe-type-assertion -- MDT-258 baseline: pre-existing casts, strip as they are rewritten */
 import type { CreateReadTokenInput, ListedReadToken, ReadTokenCreationResponse } from '@mdt/domain-contracts'
 import { Buffer } from 'node:buffer'
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto'
@@ -89,7 +88,7 @@ export function createReadTokenStore(options: ReadTokenStoreOptions): ReadTokenS
   async function loadStore(): Promise<PersistedReadTokenStore> {
     try {
       const content = await readFile(storePath, 'utf8')
-      const parsed = JSON.parse(content) as unknown
+      const parsed = JSON.parse(content)
       if (!isPersistedStore(parsed)) {
         throw new ReadTokenStoreError()
       }
@@ -321,46 +320,51 @@ function safeHashEquals(actualHash: string, expectedHash: string): boolean {
   return actual.length === expected.length && timingSafeEqual(actual, expected)
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
 function isPersistedStore(value: unknown): value is PersistedReadTokenStore {
-  if (!value || typeof value !== 'object') {
+  if (!isRecord(value)) {
     return false
   }
 
-  const candidate = value as Partial<PersistedReadTokenStore>
-  return candidate.version === STORE_VERSION
-    && Array.isArray(candidate.tokens)
-    && candidate.tokens.every(isReadTokenRecord)
-    && Array.isArray(candidate.invites)
-    && candidate.invites.every(isReadInviteRecord)
+  return value.version === STORE_VERSION
+    && Array.isArray(value.tokens)
+    && value.tokens.every(isReadTokenRecord)
+    && Array.isArray(value.invites)
+    && value.invites.every(isReadInviteRecord)
 }
 
 function isReadTokenRecord(value: unknown): value is ReadTokenRecord {
-  const candidate = value as Partial<ReadTokenRecord>
-  return Boolean(value)
-    && typeof candidate.id === 'string'
-    && typeof candidate.name === 'string'
-    && typeof candidate.tokenHash === 'string'
-    && /^[a-f0-9]{64}$/u.test(candidate.tokenHash)
-    && Array.isArray(candidate.projectRefs)
-    && candidate.projectRefs.every(projectRef => typeof projectRef === 'string')
-    && (typeof candidate.expiresAt === 'string' || candidate.expiresAt === null)
-    && typeof candidate.createdAt === 'string'
-    && (typeof candidate.revokedAt === 'string' || candidate.revokedAt === null)
+  if (!isRecord(value)) {
+    return false
+  }
+  return typeof value.id === 'string'
+    && typeof value.name === 'string'
+    && typeof value.tokenHash === 'string'
+    && /^[a-f0-9]{64}$/u.test(value.tokenHash)
+    && Array.isArray(value.projectRefs)
+    && value.projectRefs.every(projectRef => typeof projectRef === 'string')
+    && (typeof value.expiresAt === 'string' || value.expiresAt === null)
+    && typeof value.createdAt === 'string'
+    && (typeof value.revokedAt === 'string' || value.revokedAt === null)
 }
 
 function isReadInviteRecord(value: unknown): value is ReadInviteRecord {
-  const candidate = value as Partial<ReadInviteRecord>
-  return Boolean(value)
-    && typeof candidate.id === 'string'
-    && typeof candidate.tokenId === 'string'
-    && typeof candidate.codeHash === 'string'
-    && /^[a-f0-9]{64}$/u.test(candidate.codeHash)
-    && typeof candidate.expiresAt === 'string'
-    && typeof candidate.createdAt === 'string'
-    && (typeof candidate.consumedAt === 'string' || candidate.consumedAt === null)
-    && (typeof candidate.revokedAt === 'string' || candidate.revokedAt === null)
+  if (!isRecord(value)) {
+    return false
+  }
+  return typeof value.id === 'string'
+    && typeof value.tokenId === 'string'
+    && typeof value.codeHash === 'string'
+    && /^[a-f0-9]{64}$/u.test(value.codeHash)
+    && typeof value.expiresAt === 'string'
+    && typeof value.createdAt === 'string'
+    && (typeof value.consumedAt === 'string' || value.consumedAt === null)
+    && (typeof value.revokedAt === 'string' || value.revokedAt === null)
 }
 
 function isMissingFileError(error: unknown): boolean {
-  return Boolean(error && typeof error === 'object' && (error as { code?: unknown }).code === 'ENOENT')
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'ENOENT'
 }
