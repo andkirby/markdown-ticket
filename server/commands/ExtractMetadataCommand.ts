@@ -1,4 +1,3 @@
-/* eslint-disable ts/no-unsafe-type-assertion -- MDT-258 baseline: pre-existing casts, strip as they are rewritten */
 import { promises as fs } from 'node:fs'
 import { Command } from './Command.js'
 
@@ -28,7 +27,10 @@ export class ExtractMetadataCommand extends Command {
   }
 
   async execute(...args: unknown[]): Promise<unknown> {
-    const [filePath] = args as [string]
+    const filePath = args[0]
+    if (typeof filePath !== 'string') {
+      throw new TypeError('filePath argument must be a string')
+    }
     // Check cache first
     const cached = this.cache.get(filePath)
 

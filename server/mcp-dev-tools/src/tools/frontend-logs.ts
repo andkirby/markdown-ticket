@@ -1,4 +1,3 @@
-/* eslint-disable ts/no-unsafe-type-assertion -- MDT-258 baseline: pre-existing casts, strip as they are rewritten */
 import type { Tool } from '@modelcontextprotocol/sdk/types.js'
 import process from 'node:process'
 
@@ -99,7 +98,7 @@ export async function handleGetFrontendLogs(args: { lines?: number, filter?: str
       throw new Error(`HTTP ${response.status}: ${response.statusText}`)
     }
 
-    const data = await response.json() as FrontendLogsResponse
+    const data: FrontendLogsResponse = await response.json()
 
     if (!data.logs || data.logs.length === 0) {
       return `📋 **Frontend Logs** (0 entries)\n\n${filter ? `No logs found matching filter: "${filter}"` : 'No frontend logs captured yet.'}\n\n💡 **Session auto-started** - try generating logs:\n- \`console.error("test error")\`\n- \`console.log("debug info")\`\n- \`console.warn("warning message")\`\n\n**Frontend URL:** ${frontendUrl}`

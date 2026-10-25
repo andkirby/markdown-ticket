@@ -1,4 +1,3 @@
-/* eslint-disable ts/no-unsafe-type-assertion -- MDT-258 baseline: pre-existing casts, strip as they are rewritten */
 /**
  * Common validation utilities for MCP handlers
  * Consolidates validation patterns to prevent duplication
@@ -35,7 +34,7 @@ export function validateProjectKey(key: string): ValidationResult {
 /**
  * Validate required parameter exists and is non-empty
  */
-export function validateRequired(value: unknown, name: string): ValidationResult<string> {
+export function validateRequired(value: unknown, name: string): ValidationResult<unknown> {
   if (value === null || value === undefined) {
     return { valid: false, message: `${name} is required` }
   }
@@ -44,7 +43,7 @@ export function validateRequired(value: unknown, name: string): ValidationResult
     return { valid: false, message: `${name} cannot be empty` }
   }
 
-  return { valid: true, value: value as string }
+  return { valid: true, value }
 }
 
 /**
@@ -54,10 +53,10 @@ export function validateOperation(
   operation: string,
   allowed: readonly string[],
   name: string = 'operation',
-): ValidationResult {
-  const result = validateRequired(operation, name)
-  if (!result.valid)
-    return result
+): ValidationResult<string> {
+  if (operation === null || operation === undefined) {
+    return { valid: false, message: `${name} is required` }
+  }
 
   if (!allowed.includes(operation)) {
     return {

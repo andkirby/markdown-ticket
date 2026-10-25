@@ -1,4 +1,3 @@
-/* eslint-disable ts/no-unsafe-type-assertion -- MDT-258 baseline: pre-existing casts, strip as they are rewritten */
 /**
  * API Documentation Routes - Serves OpenAPI spec and Redoc UI.
  */
@@ -51,11 +50,10 @@ export function createDocsRouter(): Router {
    *             schema:
    *               type: string
    */
-  // Use type assertion to handle redoc-express middleware typing
-  const redocMiddleware = redoc({
+  const redocMiddleware: (req: Request, res: Response) => void = redoc({
     title: 'Markdown Ticket API',
     specUrl: '/api-docs/json',
-  }) as unknown as (req: Request, res: Response) => void
+  })
 
   router.get('/', redocMiddleware)
 
