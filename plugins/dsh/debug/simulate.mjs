@@ -25,9 +25,10 @@ const PLUGINS = [
 function fakeShell() {
   return {
     resolve: spec => spec,
-    run: spec => new Promise((resolve) => {
-      // stdio 'ignore' for stdin: a live pipe never closing hangs CLIs
-      // (e.g. mdt-cli ticket create) that poll stdin.
+    // Current DSH ShellExecutor API: execute(spec) → handle with result().
+    // stdio 'ignore' for stdin: a live pipe never closing hangs CLIs
+    // (e.g. mdt-cli ticket create) that poll stdin.
+    execute: spec => {
       const child = spawn('bash', ['-c', spec.command], {
         cwd: spec.workdir,
         stdio: ['ignore', 'pipe', 'pipe'],
@@ -36,9 +37,12 @@ function fakeShell() {
       let stderr = ''
       child.stdout.on('data', d => (stdout += d))
       child.stderr.on('data', d => (stderr += d))
-      child.on('close', code =>
-        resolve({ exitCode: code ?? -1, stdout: { text: stdout }, stderr: { text: stderr } }))
-    }),
+      const result = new Promise((resolve) => {
+        child.on('close', code =>
+          resolve({ exitCode: code ?? -1, stdout: { text: stdout }, stderr: { text: stderr } }))
+      })
+      return { result: () => result }
+    },
   }
 }
 

@@ -56,7 +56,10 @@ export function execContextFor(sandboxPolicy, exec) {
 
 /**
  * Resolve and run one CLI subprocess through the DSH shell service.
- * Returns the raw run result; the caller maps success and error semantics.
+ * API drift guard (MDT-262): dsh 0.2.1-rc.3's ShellExecutor exposes
+ * `resolve()` + `execute(spec)` → handle with `result()`; older hosts used
+ * `run(spec)` — prefer execute, fall back to run. Returns the raw result;
+ * the caller maps success and error semantics.
  */
 export async function runSubprocess(shell, { command, workdir, timeoutMs, sandboxPolicy }) {
   const spec = shell.resolve({
@@ -65,5 +68,9 @@ export async function runSubprocess(shell, { command, workdir, timeoutMs, sandbo
     timeoutMs,
     ...(sandboxPolicy !== undefined ? { sandboxPolicy } : {}),
   })
+  if (typeof shell.execute === 'function') {
+    const execution = await shell.execute(spec)
+    return execution.result()
+  }
   return shell.run(spec)
 }

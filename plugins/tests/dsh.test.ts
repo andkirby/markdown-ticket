@@ -21,7 +21,8 @@ function makeCtx(result = { exitCode: 0, stdout: { text: 'OK' }, stderr: { text:
         specs.push(spec)
         return spec
       },
-      run: async () => result,
+      // Current DSH ShellExecutor API (dsh 0.2.1-rc.3).
+      execute: async () => ({ result: async () => result }),
     },
     sandboxPolicy: undefined,
   }
