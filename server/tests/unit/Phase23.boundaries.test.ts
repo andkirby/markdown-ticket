@@ -109,7 +109,7 @@ describe('MDT-258 session, preferences and transient boundaries', () => {
     app.use('/tokens', createReadTokensRouter())
     app.use('/public', createPublicReadTokensRouter())
     app.use('/dev', createDevToolsRouter(createOriginPolicy(['https://app.example.test'])))
-    app.use('/system', createSystemRouter({} as never, {} as never, {}, {} as never))
+    app.use('/system', createSystemRouter({} as never, { getSystemDirectories: () => {}, getFileSystemTree: () => {} } as never, {}, {} as never))
     const writeState = jest.fn().mockResolvedValue({ pins: [] })
     const updateDocumentFavs = jest.fn().mockResolvedValue({ favItems: [] })
     const pins = new PinController({ writeState } as never)

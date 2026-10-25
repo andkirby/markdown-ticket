@@ -56,7 +56,7 @@ export function createDocumentRouter(
    *       400: { $ref: '#/components/responses/BadRequest' }
    *       404: { $ref: '#/components/responses/NotFound' }
    */
-  router.get('/', requireVisibleProject, (req, res) => documentController.getDocuments(req, res))
+  router.get('/', requireVisibleProject, documentController.getDocuments.bind(documentController))
 
   /**
    * @openapi
@@ -84,7 +84,7 @@ export function createDocumentRouter(
    *       403: { description: Access denied or invalid file path }
    *       404: { $ref: '#/components/responses/NotFound' }
    */
-  router.get('/content', requireVisibleProject, (req, res) => documentController.getDocumentContent(req, res))
+  router.get('/content', requireVisibleProject, documentController.getDocumentContent.bind(documentController))
 
   /**
    * @openapi
@@ -116,7 +116,7 @@ export function createDocumentRouter(
    *       400: { $ref: '#/components/responses/BadRequest' }
    *       404: { $ref: '#/components/responses/NotFound' }
    */
-  router.put('/favs', (req, res) => documentController.putDocumentFavs(req, res))
+  router.put('/favs', documentController.putDocumentFavs.bind(documentController))
 
   /**
    * @openapi
@@ -143,7 +143,7 @@ export function createDocumentRouter(
    *       400: { $ref: '#/components/responses/BadRequest' }
    *       404: { $ref: '#/components/responses/NotFound' }
    */
-  router.post('/configure', (req, res) => projectController.configureDocuments(req, res))
+  router.post('/configure', projectController.configureDocuments.bind(projectController))
 
   /**
    * @openapi
@@ -176,7 +176,7 @@ export function createDocumentRouter(
    *       400: { $ref: '#/components/responses/BadRequest' }
    *       403: { description: Read-only or shared session cannot mint preview tokens }
    */
-  router.post('/preview-token', requireVisibleProject, (req, res) => documentController.mintPreviewToken(req, res))
+  router.post('/preview-token', requireVisibleProject, documentController.mintPreviewToken.bind(documentController))
 
   /**
    * @openapi
@@ -215,7 +215,7 @@ export function createDocumentRouter(
    *       404: { description: Unknown project or file }
    *       415: { description: Unsupported document type }
    */
-  router.get('/raw-preview/:token/*', (req, res) => documentController.serveRawPreview(req, res))
+  router.get('/raw-preview/:token/*', documentController.serveRawPreview.bind(documentController))
 
   return router
 }

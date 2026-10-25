@@ -162,9 +162,7 @@ export function createSystemRouter(
    *                 home: { type: string }
    *                 directories: { type: array, items: { type: string } }
    */
-  router.get('/directories', (req: Request, res: Response) => {
-    projectController.getSystemDirectories(req, res)
-  })
+  router.get('/directories', projectController.getSystemDirectories.bind(projectController))
 
   /**
    * @openapi
@@ -222,9 +220,7 @@ export function createSystemRouter(
    *                 path: { type: string }
    *                 children: { type: array, items: { type: object } }
    */
-  router.get('/filesystem', (req: Request, res: Response) => {
-    projectController.getFileSystemTree(req, res)
-  })
+  router.get('/filesystem', projectController.getFileSystemTree.bind(projectController))
 
   /**
    * @openapi

@@ -320,49 +320,9 @@
       "file": "server/routes/config.ts",
       "function": "createConfigRouter/bindAdapters",
       "kind": "request-delegation",
-      "expression": "context.resolveProjectId?.(req)",
-      "count": 1,
-      "delegate": "server/routes/config.ts#ConfigRouteContext.resolveProjectId",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/config.ts",
-      "function": "createConfigRouter/bindAdapters",
-      "kind": "request-delegation",
-      "expression": "context.resolveProjectPath?.(req)",
-      "count": 1,
-      "delegate": "server/routes/config.ts#ConfigRouteContext.resolveProjectPath",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/config.ts",
-      "function": "createConfigRouter/bindAdapters",
-      "kind": "request-delegation",
       "expression": "getRuntimeConfig(req)",
       "count": 1,
       "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/config.ts",
-      "function": "createConfigRouter/router.get(\"/selectors\")",
-      "kind": "request-delegation",
-      "expression": "controller.getSelectors(req, res)",
-      "count": 1,
-      "delegate": "../controllers/ConfigController.js#ConfigController.getSelectors",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/config.ts",
-      "function": "createConfigRouter/router.patch(\"/\")",
-      "kind": "request-delegation",
-      "expression": "controller.patchConfig(req, res)",
-      "count": 1,
-      "delegate": "../controllers/ConfigController.js#ConfigController.patchConfig",
       "reason": "Existing controller/security Request delegation; exact callee retained for review",
       "phase": 5
     },
@@ -373,76 +333,6 @@
       "expression": "writeStreamHeaders(req, res, originPolicy)",
       "count": 1,
       "delegate": "server/routes/devtools.ts#writeStreamHeaders",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/documents.ts",
-      "function": "createDocumentRouter/requireVisibleProject",
-      "kind": "request-delegation",
-      "expression": "projectController.ensureProjectVisible(projectId, req, res)",
-      "count": 1,
-      "delegate": "../controllers/ProjectController.js#ProjectController.ensureProjectVisible",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/documents.ts",
-      "function": "createDocumentRouter/router.get(\"/\")",
-      "kind": "request-delegation",
-      "expression": "documentController.getDocuments(req, res)",
-      "count": 1,
-      "delegate": "../controllers/DocumentController.js#DocumentController.getDocuments",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/documents.ts",
-      "function": "createDocumentRouter/router.get(\"/content\")",
-      "kind": "request-delegation",
-      "expression": "documentController.getDocumentContent(req, res)",
-      "count": 1,
-      "delegate": "../controllers/DocumentController.js#DocumentController.getDocumentContent",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/documents.ts",
-      "function": "createDocumentRouter/router.get(\"/raw-preview/:token/*\")",
-      "kind": "request-delegation",
-      "expression": "documentController.serveRawPreview(req, res)",
-      "count": 1,
-      "delegate": "../controllers/DocumentController.js#DocumentController.serveRawPreview",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/documents.ts",
-      "function": "createDocumentRouter/router.post(\"/configure\")",
-      "kind": "request-delegation",
-      "expression": "projectController.configureDocuments(req, res)",
-      "count": 1,
-      "delegate": "../controllers/ProjectController.js#ProjectController.configureDocuments",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/documents.ts",
-      "function": "createDocumentRouter/router.post(\"/preview-token\")",
-      "kind": "request-delegation",
-      "expression": "documentController.mintPreviewToken(req, res)",
-      "count": 1,
-      "delegate": "../controllers/DocumentController.js#DocumentController.mintPreviewToken",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/documents.ts",
-      "function": "createDocumentRouter/router.put(\"/favs\")",
-      "kind": "request-delegation",
-      "expression": "documentController.putDocumentFavs(req, res)",
-      "count": 1,
-      "delegate": "../controllers/DocumentController.js#DocumentController.putDocumentFavs",
       "reason": "Existing controller/security Request delegation; exact callee retained for review",
       "phase": 5
     },
@@ -463,196 +353,6 @@
       "expression": "pinController.putPinState(req, res)",
       "count": 1,
       "delegate": "../controllers/PinController.js#PinController.putPinState",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/projects.ts",
-      "function": "createProjectRouter/router.delete(\"/:projectId/crs/:crId\")",
-      "kind": "request-delegation",
-      "expression": "projectController.deleteCR(req, res)",
-      "count": 1,
-      "delegate": "../controllers/ProjectController.js#ProjectController.deleteCR",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/projects.ts",
-      "function": "createProjectRouter/router.get(\"/:projectId/cloud-projections\")",
-      "kind": "request-delegation",
-      "expression": "projectController.getCloudProjections(req, res)",
-      "count": 1,
-      "delegate": "../controllers/ProjectController.js#ProjectController.getCloudProjections",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/projects.ts",
-      "function": "createProjectRouter/router.get(\"/:projectId/config\")",
-      "kind": "request-delegation",
-      "expression": "projectController.getProjectConfig(req, res)",
-      "count": 1,
-      "delegate": "../controllers/ProjectController.js#ProjectController.getProjectConfig",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/projects.ts",
-      "function": "createProjectRouter/router.get(\"/:projectId/crs/:crId/subdocuments/:subDocName\")",
-      "kind": "request-delegation",
-      "expression": "projectController.getSubDocument(req, res)",
-      "count": 1,
-      "delegate": "../controllers/ProjectController.js#ProjectController.getSubDocument",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/projects.ts",
-      "function": "createProjectRouter/router.get(\"/:projectId/crs/:crId/trace-store/meta\")",
-      "kind": "request-delegation",
-      "expression": "projectController.getTraceStoreMetadata(req, res)",
-      "count": 1,
-      "delegate": "../controllers/ProjectController.js#ProjectController.getTraceStoreMetadata",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/projects.ts",
-      "function": "createProjectRouter/router.get(\"/:projectId/crs/:crId/trace-store\")",
-      "kind": "request-delegation",
-      "expression": "projectController.getTraceStore(req, res)",
-      "count": 1,
-      "delegate": "../controllers/ProjectController.js#ProjectController.getTraceStore",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/projects.ts",
-      "function": "createProjectRouter/router.get(\"/:projectId/crs/:crId\")",
-      "kind": "request-delegation",
-      "expression": "projectController.getCR(req, res)",
-      "count": 1,
-      "delegate": "../controllers/ProjectController.js#ProjectController.getCR",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/projects.ts",
-      "function": "createProjectRouter/router.get(\"/:projectId/crs\")",
-      "kind": "request-delegation",
-      "expression": "projectController.getProjectCRs(req, res)",
-      "count": 1,
-      "delegate": "../controllers/ProjectController.js#ProjectController.getProjectCRs",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/projects.ts",
-      "function": "createProjectRouter/router.get(\"/:projectId/tickets/unified\")",
-      "kind": "request-delegation",
-      "expression": "projectController.getUnifiedTickets(req, res)",
-      "count": 1,
-      "delegate": "../controllers/ProjectController.js#ProjectController.getUnifiedTickets",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/projects.ts",
-      "function": "createProjectRouter/router.get(\"/\")",
-      "kind": "request-delegation",
-      "expression": "projectController.getAllProjects(req, res)",
-      "count": 1,
-      "delegate": "../controllers/ProjectController.js#ProjectController.getAllProjects",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/projects.ts",
-      "function": "createProjectRouter/router.patch(\"/:projectId/crs/:crId\")",
-      "kind": "request-delegation",
-      "expression": "projectController.patchCR(req, res)",
-      "count": 1,
-      "delegate": "../controllers/ProjectController.js#ProjectController.patchCR",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/projects.ts",
-      "function": "createProjectRouter/router.post(\"/:projectId/crs\")",
-      "kind": "request-delegation",
-      "expression": "projectController.createCR(req, res)",
-      "count": 1,
-      "delegate": "../controllers/ProjectController.js#ProjectController.createCR",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/projects.ts",
-      "function": "createProjectRouter/router.post(\"/create\")",
-      "kind": "request-delegation",
-      "expression": "projectController.createProject(req, res)",
-      "count": 1,
-      "delegate": "../controllers/ProjectController.js#ProjectController.createProject",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/projects.ts",
-      "function": "createProjectRouter/router.post(\"/search\")",
-      "kind": "request-delegation",
-      "expression": "projectController.search(req, res)",
-      "count": 1,
-      "delegate": "../controllers/ProjectController.js#ProjectController.search",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/projects.ts",
-      "function": "createProjectRouter/router.put(\"/:code/disable\")",
-      "kind": "request-delegation",
-      "expression": "projectController.disableProject(req, res)",
-      "count": 1,
-      "delegate": "../controllers/ProjectController.js#ProjectController.disableProject",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/projects.ts",
-      "function": "createProjectRouter/router.put(\"/:code/enable\")",
-      "kind": "request-delegation",
-      "expression": "projectController.enableProject(req, res)",
-      "count": 1,
-      "delegate": "../controllers/ProjectController.js#ProjectController.enableProject",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/projects.ts",
-      "function": "createProjectRouter/router.put(\"/:code/sharing\")",
-      "kind": "request-delegation",
-      "expression": "projectController.updateProjectSharing(req, res)",
-      "count": 1,
-      "delegate": "../controllers/ProjectController.js#ProjectController.updateProjectSharing",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/projects.ts",
-      "function": "createProjectRouter/router.put(\"/:code/update\")",
-      "kind": "request-delegation",
-      "expression": "projectController.updateProject(req, res)",
-      "count": 1,
-      "delegate": "../controllers/ProjectController.js#ProjectController.updateProject",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/projects.ts",
-      "function": "createProjectRouter/router.put(\"/:projectId/crs/:crId\")",
-      "kind": "request-delegation",
-      "expression": "projectController.updateCR(req, res)",
-      "count": 1,
-      "delegate": "../controllers/ProjectController.js#ProjectController.updateCR",
       "reason": "Existing controller/security Request delegation; exact callee retained for review",
       "phase": 5
     },
@@ -933,26 +633,6 @@
       "expression": "getRuntimeConfig(req)",
       "count": 2,
       "delegate": "../config/runtimeConfig.js#getRuntimeConfig",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/system.ts",
-      "function": "createSystemRouter/router.get(\"/directories\")",
-      "kind": "request-delegation",
-      "expression": "projectController.getSystemDirectories(req, res)",
-      "count": 1,
-      "delegate": "../controllers/ProjectController.js#ProjectController.getSystemDirectories",
-      "reason": "Existing controller/security Request delegation; exact callee retained for review",
-      "phase": 5
-    },
-    {
-      "file": "server/routes/system.ts",
-      "function": "createSystemRouter/router.get(\"/filesystem\")",
-      "kind": "request-delegation",
-      "expression": "projectController.getFileSystemTree(req, res)",
-      "count": 1,
-      "delegate": "../controllers/ProjectController.js#ProjectController.getFileSystemTree",
       "reason": "Existing controller/security Request delegation; exact callee retained for review",
       "phase": 5
     },
@@ -1485,6 +1165,36 @@
       "count": 1,
       "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
       "phase": 4
+    },
+    {
+      "file": "server/routes/config.ts",
+      "function": "createConfigRouter/bindAdapters",
+      "kind": "request-delegation",
+      "expression": "context.resolveProjectId?.(req)",
+      "count": 1,
+      "delegate": "server/routes/config.ts#ConfigRouteContext.resolveProjectId",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/config.ts",
+      "function": "createConfigRouter/bindAdapters",
+      "kind": "request-delegation",
+      "expression": "context.resolveProjectPath?.(req)",
+      "count": 1,
+      "delegate": "server/routes/config.ts#ConfigRouteContext.resolveProjectPath",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
+    },
+    {
+      "file": "server/routes/documents.ts",
+      "function": "createDocumentRouter/requireVisibleProject",
+      "kind": "request-delegation",
+      "expression": "projectController.ensureProjectVisible(projectId, req, res)",
+      "count": 1,
+      "delegate": "../controllers/ProjectController.js#ProjectController.ensureProjectVisible",
+      "reason": "Existing controller/security Request delegation; exact callee retained for review",
+      "phase": 5
     }
   ],
   "decoders": [

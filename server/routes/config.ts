@@ -145,7 +145,7 @@ export function createConfigRouter(context: ConfigRouteContext = {}): Router {
    *       403: { description: Read-only or anonymous denied }
    *       500: { $ref: '#/components/schemas/Error500' }
    */
-  router.get('/selectors', (req, res) => controller.getSelectors(req, res))
+  router.get('/selectors', controller.getSelectors.bind(controller))
 
   /**
    * @openapi
@@ -197,7 +197,7 @@ export function createConfigRouter(context: ConfigRouteContext = {}): Router {
    *       403: { description: Read-only or anonymous denied }
    *       500: { $ref: '#/components/schemas/Error500' }
    */
-  router.patch('/', (req, res) => controller.patchConfig(req, res))
+  router.patch('/', controller.patchConfig.bind(controller))
 
   return router
 }

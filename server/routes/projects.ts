@@ -26,10 +26,10 @@ export function createProjectRouter(projectController: ProjectController): Route
    *               items:
    *                 $ref: '#/components/schemas/Project'
    */
-  router.get('/', (req, res) => projectController.getAllProjects(req, res))
+  router.get('/', projectController.getAllProjects.bind(projectController))
 
   // MDT-152: Cross-project search endpoint — registered before param routes
-  router.post('/search', (req, res) => projectController.search(req, res))
+  router.post('/search', projectController.search.bind(projectController))
 
   /**
    * @openapi
@@ -49,7 +49,7 @@ export function createProjectRouter(projectController: ProjectController): Route
    *       404:
    *         $ref: '#/components/responses/NotFound'
    */
-  router.get('/:projectId/config', (req, res) => projectController.getProjectConfig(req, res))
+  router.get('/:projectId/config', projectController.getProjectConfig.bind(projectController))
 
   /**
    * @openapi
@@ -71,20 +71,20 @@ export function createProjectRouter(projectController: ProjectController): Route
    *       404:
    *         $ref: '#/components/responses/NotFound'
    */
-  router.get('/:projectId/crs', (req, res) => projectController.getProjectCRs(req, res))
+  router.get('/:projectId/crs', projectController.getProjectCRs.bind(projectController))
 
   /**
    * MDT-226: unified ticket view — canonical local tickets plus projection-only
    * read-only entries with kind/readOnly/stale capability metadata. The browser
    * consumes this instead of a separate /cloud-projections request (C-11).
    */
-  router.get('/:projectId/tickets/unified', (req, res) => projectController.getUnifiedTickets(req, res))
+  router.get('/:projectId/tickets/unified', projectController.getUnifiedTickets.bind(projectController))
 
   /**
    * Owner-only, header-only cloud projection feed. Registered before the
    * generic CR routes so no ticket wildcard can consume it.
    */
-  router.get('/:projectId/cloud-projections', (req, res) => projectController.getCloudProjections(req, res))
+  router.get('/:projectId/cloud-projections', projectController.getCloudProjections.bind(projectController))
 
   /**
    * @openapi
@@ -105,7 +105,7 @@ export function createProjectRouter(projectController: ProjectController): Route
    *       404:
    *         $ref: '#/components/responses/NotFound'
    */
-  router.get('/:projectId/crs/:crId', (req, res) => projectController.getCR(req, res))
+  router.get('/:projectId/crs/:crId', projectController.getCR.bind(projectController))
 
   /**
    * @openapi
@@ -132,10 +132,10 @@ export function createProjectRouter(projectController: ProjectController): Route
    *       404:
    *         $ref: '#/components/responses/NotFound'
    */
-  router.get('/:projectId/crs/:crId/subdocuments/:subDocName', (req, res) => projectController.getSubDocument(req, res))
+  router.get('/:projectId/crs/:crId/subdocuments/:subDocName', projectController.getSubDocument.bind(projectController))
 
-  router.get('/:projectId/crs/:crId/trace-store/meta', (req, res) => projectController.getTraceStoreMetadata(req, res))
-  router.get('/:projectId/crs/:crId/trace-store', (req, res) => projectController.getTraceStore(req, res))
+  router.get('/:projectId/crs/:crId/trace-store/meta', projectController.getTraceStoreMetadata.bind(projectController))
+  router.get('/:projectId/crs/:crId/trace-store', projectController.getTraceStore.bind(projectController))
 
   // MDT-151: Catch path-traversal attempts that Express resolves before route matching
   // e.g. /subdocuments/../etc/passwd → resolved to /etc/passwd, misses the subdocuments route
@@ -162,7 +162,7 @@ export function createProjectRouter(projectController: ProjectController): Route
    *       404:
    *         $ref: '#/components/responses/NotFound'
    */
-  router.post('/:projectId/crs', (req, res) => projectController.createCR(req, res))
+  router.post('/:projectId/crs', projectController.createCR.bind(projectController))
 
   /**
    * @openapi
@@ -183,7 +183,7 @@ export function createProjectRouter(projectController: ProjectController): Route
    *       404:
    *         $ref: '#/components/responses/NotFound'
    */
-  router.patch('/:projectId/crs/:crId', (req, res) => projectController.patchCR(req, res))
+  router.patch('/:projectId/crs/:crId', projectController.patchCR.bind(projectController))
 
   /**
    * @openapi
@@ -204,7 +204,7 @@ export function createProjectRouter(projectController: ProjectController): Route
    *       404:
    *         $ref: '#/components/responses/NotFound'
    */
-  router.put('/:projectId/crs/:crId', (req, res) => projectController.updateCR(req, res))
+  router.put('/:projectId/crs/:crId', projectController.updateCR.bind(projectController))
 
   /**
    * @openapi
@@ -221,7 +221,7 @@ export function createProjectRouter(projectController: ProjectController): Route
    *       404:
    *         $ref: '#/components/responses/NotFound'
    */
-  router.delete('/:projectId/crs/:crId', (req, res) => projectController.deleteCR(req, res))
+  router.delete('/:projectId/crs/:crId', projectController.deleteCR.bind(projectController))
 
   /**
    * @openapi
@@ -237,7 +237,7 @@ export function createProjectRouter(projectController: ProjectController): Route
    *       400:
    *         $ref: '#/components/responses/BadRequest'
    */
-  router.post('/create', (req, res) => projectController.createProject(req, res))
+  router.post('/create', projectController.createProject.bind(projectController))
 
   /**
    * @openapi
@@ -257,8 +257,8 @@ export function createProjectRouter(projectController: ProjectController): Route
    *       404:
    *         $ref: '#/components/responses/NotFound'
    */
-  router.put('/:code/update', (req, res) => projectController.updateProject(req, res))
-  router.put('/:code/sharing', (req, res) => projectController.updateProjectSharing(req, res))
+  router.put('/:code/update', projectController.updateProject.bind(projectController))
+  router.put('/:code/sharing', projectController.updateProjectSharing.bind(projectController))
 
   /**
    * @openapi
@@ -278,7 +278,7 @@ export function createProjectRouter(projectController: ProjectController): Route
    *       404:
    *         $ref: '#/components/responses/NotFound'
    */
-  router.put('/:code/enable', (req, res) => projectController.enableProject(req, res))
+  router.put('/:code/enable', projectController.enableProject.bind(projectController))
 
   /**
    * @openapi
@@ -298,7 +298,7 @@ export function createProjectRouter(projectController: ProjectController): Route
    *       404:
    *         $ref: '#/components/responses/NotFound'
    */
-  router.put('/:code/disable', (req, res) => projectController.disableProject(req, res))
+  router.put('/:code/disable', projectController.disableProject.bind(projectController))
 
   return router
 }
