@@ -591,15 +591,6 @@
       "phase": 4
     },
     {
-      "file": "server/services/config/ConfigApplicationService.ts",
-      "function": "structuredCloneSafe",
-      "kind": "decoder-cast",
-      "expression": "JSON.parse(JSON.stringify(value)) as T",
-      "count": 1,
-      "reason": "Existing file decoder or typed decoder consumption; preserve documented fallback until phase 4",
-      "phase": 4
-    },
-    {
       "file": "server/services/DocumentFavStateService.ts",
       "function": "DocumentFavStateService/readStateFile",
       "kind": "decoder",

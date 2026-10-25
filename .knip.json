@@ -18,7 +18,8 @@
     "server": {
       "entry": [
         "server.ts",
-        "eslint.config.ts"
+        "eslint.config.ts",
+        "scripts/**/*.ts"
       ],
       "project": [
         "**/*.ts",
@@ -28,6 +29,11 @@
     "cli": {
       "project": [
         "src/**/*.ts"
+      ],
+      "entry": [
+        "src/**/*.ts",
+        "tests/**/*.test.ts",
+        "tests/**/*.spec.ts"
       ]
     },
     "shared": {
@@ -61,6 +67,10 @@
     "cloud": {
       "project": [
         "src/**/*.ts"
+      ],
+      "entry": [
+        "src/cloudflare/worker.ts",
+        "test/**/*.test.ts"
       ]
     }
   },
@@ -70,7 +80,8 @@
     "**/mcp-dev-tools/**",
     "scripts/**",
     ".gitWT/**",
-    "docs/**"
+    "docs/**",
+    "plugins/**"
   ],
   "ignoreBinaries": [
     "jq",
@@ -93,15 +104,6 @@
     "server/**": [
       "exports",
       "types"
-    ],
-    "cli/**": [
-      "exports",
-      "types"
-    ],
-    "cloud/**": [
-      "exports",
-      "types",
-      "unlisted"
     ],
     "frontend/**": [
       "types",
@@ -134,6 +136,55 @@
     ],
     "shared/test-lib/utils/timeout.ts": [
       "files"
+    ],
+    "cloud/src/cloudflare/durable/ProjectProjectionHub.ts": [
+      "exports",
+      "types",
+      "unlisted"
+    ],
+    "cloud/src/cloudflare/d1/statements.ts": [
+      "exports",
+      "types"
+    ],
+    "cloud/src/cloudflare/scheduled/maintenance.ts": [
+      "exports",
+      "types"
+    ],
+    "cloud/src/cloudflare/d1/projection.ts": [
+      "exports",
+      "types"
+    ],
+    "cloud/src/cloudflare/durable/projection-hub-helpers.ts": [
+      "exports",
+      "types"
+    ],
+    "cloud/src/cloudflare/d1/membership.ts": [
+      "exports",
+      "types"
+    ],
+    "cloud/src/cloudflare/application/reservation.ts": [
+      "types"
+    ],
+    "cloud/src/cloudflare/rate-limit/guard.ts": [
+      "types"
+    ],
+    "cloud/src/cloudflare/application/provisioning.ts": [
+      "types"
+    ],
+    "cloud/src/cloudflare/d1/audit.ts": [
+      "types"
+    ],
+    "cloud/src/cloudflare/d1/project.ts": [
+      "types"
+    ],
+    "shared/services/ticket/DependencyGraph.ts": [
+      "types"
+    ],
+    "shared/services/ticket/TicketIdentityService.ts": [
+      "types"
+    ],
+    "shared/services/TicketService.ts": [
+      "types"
     ]
   }
 }
