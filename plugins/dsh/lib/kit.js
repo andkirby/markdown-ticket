@@ -61,9 +61,9 @@ export function execContextFor(sandboxPolicy, exec) {
  * `run(spec)` — prefer execute, fall back to run. Returns the raw result;
  * the caller maps success and error semantics.
  */
-export async function runSubprocess(shell, { command, workdir, timeoutMs, sandboxPolicy }) {
+export async function runSubprocess(shell, { command, workdir, timeoutMs, sandboxPolicy, stdin }) {
   const spec = shell.resolve({
-    command,
+    command: stdin !== undefined ? `printf '%s' ${quote(stdin)} | ${command}` : command,
     ...(workdir !== undefined ? { workdir } : {}),
     timeoutMs,
     ...(sandboxPolicy !== undefined ? { sandboxPolicy } : {}),

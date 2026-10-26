@@ -44,8 +44,9 @@ dsh-host (user-operated, long-running)
   run without host restart, which is the whole point.
 - Constraints: the fake shell passes **no sandbox policy** — subprocesses
   run with the caller's privileges. Use read-only tools, or point workdir at
-  a throwaway project. Fake-shell stdin is `ignore`; a live stdin pipe hangs
-  CLIs that poll it (`ticket create`).
+  a throwaway project. Fake-shell stdin is `ignore` by default; explicit
+  `mdt_ticket_create.content` uses the adapter's safely quoted `printf` pipe.
+  Do not leave an unused stdin pipe open: CLIs that poll it can hang.
 
 ### `mdt-plugin` / CONTROL / VERIFIED
 

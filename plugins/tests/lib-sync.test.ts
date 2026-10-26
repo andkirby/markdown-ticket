@@ -9,7 +9,7 @@ import { describe, expect, test } from 'bun:test'
  * plugins/bb/lib/. Never edit the copies directly.
  */
 
-const SHARED = ['run-cli.js', 'mdt-tools.js', 'bb-workspace.js']
+const SHARED = ['run-cli.js', 'mdt-tools.js', 'spec-trace-tools.js', 'bb-workspace.js']
 
 describe('plugins/bb/lib is byte-identical to plugins/_lib', () => {
   for (const file of SHARED) {

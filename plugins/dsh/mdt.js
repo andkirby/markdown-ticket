@@ -43,11 +43,12 @@ export function apply(ctx) {
         const { policy, workdir } = execContextFor(sandboxPolicy, exec)
         const runArgs = tool.argv(args)
         return runCli(
-          async ({ argv, workdir: wd, timeoutMs }) => {
+          async ({ argv, workdir: wd, timeoutMs, stdin }) => {
             const result = await runSubprocess(shell, {
               command: argv.map(quote).join(' '),
               ...(wd !== undefined ? { workdir: wd } : {}),
               timeoutMs,
+              stdin,
               ...(policy !== undefined ? { sandboxPolicy: policy } : {}),
             })
             return {
@@ -59,6 +60,7 @@ export function apply(ctx) {
           {
             bin: CLI,
             args: runArgs,
+            stdin: tool.stdin?.(args),
             workdir,
             timeoutMs: 30000,
             errorDetail: mdtErrorDetail,

@@ -1,5 +1,8 @@
 import type { BbPluginApi } from '@get-bb/plugin-sdk'
 
+import { mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { afterAll, describe, expect, test } from 'bun:test'
 // Executes the REGISTERED tools through the plugin factory with SDK-shaped
 // fixtures and an injected run fn — the substitution the review required
@@ -59,7 +62,7 @@ function getTool(registered: ReturnType<typeof makeBb>['registered'], name: stri
 }
 
 describe('registered bb tools', () => {
-  test('registers the seven mdt tools', () => {
+  test('registers the eleven mdt tools', () => {
     const { bb, registered } = makeBb({ environment: ENV_OK })
     registerMdtTools(bb, { run: RUN_OK })
     expect(registered.map(t => t.name)).toEqual([
@@ -70,6 +73,10 @@ describe('registered bb tools', () => {
       'mdt_ticket_deps',
       'mdt_project_current',
       'mdt_project_list',
+      'mdt_ticket_delete',
+      'mdt_ticket_rename',
+      'mdt_project_get',
+      'mdt_project_init',
     ])
   })
 
@@ -98,7 +105,7 @@ describe('registered bb tools', () => {
       SESSION as never,
     )
     expect(out).toBe('OK')
-    expect(calls).toEqual([{ args: ['ticket', 'get', '--json', '-p', 'ABC', 'MDT-9'], cwd: '/ws/env' }])
+    expect(calls).toEqual([{ args: ['ticket', 'get', '--json', '-p', 'ABC', '--', 'MDT-9'], cwd: '/ws/env' }])
   })
 
   test('remote-host environment fails the tool without spawning', async () => {
@@ -113,7 +120,7 @@ describe('registered bb tools', () => {
         return 'should not run'
       },
     })
-    expect(
+    await expect(
       getTool(registered, 'mdt_project_current').execute({} as never, SESSION as never),
     ).rejects.toThrow(/lives on host host_remote/)
     expect(runs).toHaveLength(0)
@@ -121,9 +128,11 @@ describe('registered bb tools', () => {
 })
 
 describe('runMdt spawn adapter (real subprocesses)', () => {
+  const fixtureDir = mkdtempSync(join(tmpdir(), 'mdt-bb-spawn-'))
   const originalBin = process.env.MDT_CLI_BIN
 
   afterAll(() => {
+    rmSync(fixtureDir, { recursive: true, force: true })
     if (originalBin === undefined)
       delete process.env.MDT_CLI_BIN
     else process.env.MDT_CLI_BIN = originalBin
@@ -153,7 +162,7 @@ describe('runMdt spawn adapter (real subprocesses)', () => {
 
   test('combined byte cap kills the child and errors explicitly', async () => {
     // fixture writes 300k bytes (> 256 KiB cap) to stdout and stderr
-    const fixture = '/tmp/mdt-flood-fixture.sh'
+    const fixture = join(fixtureDir, 'mdt-flood-fixture.sh')
     await Bun.write(
       fixture,
       `#!/bin/sh\ncat /dev/zero | tr '\\\\0' 'x' | head -c 300000\ncat /dev/zero | tr '\\\\0' 'y' | head -c 300000 1>&2\n`,
@@ -161,7 +170,7 @@ describe('runMdt spawn adapter (real subprocesses)', () => {
     process.env.MDT_CLI_BIN = 'sh'
     try {
       const run = runMdt([fixture], '/tmp', new AbortController().signal)
-      expect(run).rejects.toThrow(/exceeds 262144 bytes/)
+      await expect(run).rejects.toThrow(/exceeds 262144 bytes/)
     }
     finally {
       await Bun.write(fixture, '')
@@ -169,7 +178,7 @@ describe('runMdt spawn adapter (real subprocesses)', () => {
   })
 
   test('output exactly at the limit succeeds (no off-by-one)', async () => {
-    const fixture = '/tmp/mdt-exact-fixture.sh'
+    const fixture = join(fixtureDir, 'mdt-exact-fixture.sh')
     await Bun.write(fixture, 'head -c 262144 /dev/zero | tr \'\\0\' x')
     process.env.MDT_CLI_BIN = 'sh'
     try {
@@ -182,7 +191,7 @@ describe('runMdt spawn adapter (real subprocesses)', () => {
   })
 
   test('overflow kills the child promptly even when the other stream stays open', async () => {
-    const fixture = '/tmp/mdt-flood-then-hang.sh'
+    const fixture = join(fixtureDir, 'mdt-flood-then-hang.sh')
     // flood stdout past the cap, then hold stderr open silently for 120s —
     // the pre-fix implementation waited on stderr until timeout/abort.
     await Bun.write(fixture, 'head -c 300000 /dev/zero | tr \'\\0\' x; exec sleep 120')
@@ -190,7 +199,7 @@ describe('runMdt spawn adapter (real subprocesses)', () => {
     const started = Date.now()
     try {
       const run = runMdt([fixture], '/tmp', new AbortController().signal)
-      expect(run).rejects.toThrow(/exceeds 262144 bytes/)
+      await expect(run).rejects.toThrow(/exceeds 262144 bytes/)
       expect(Date.now() - started).toBeLessThan(10_000)
     }
     finally {

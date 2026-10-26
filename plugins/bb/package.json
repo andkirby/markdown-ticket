@@ -8,7 +8,7 @@
   },
   "bb": {
     "name": "MDT",
-    "description": "Native mdt-cli tools: MDT tickets and projects as model tools.",
+    "description": "Native MDT project, ticket and spec-trace tools; cloud management remains CLI-only.",
     "branding": {
       "icon": "ListTodo"
     },

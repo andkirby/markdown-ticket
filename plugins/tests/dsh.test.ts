@@ -43,7 +43,7 @@ const names = regs => regs.map(t => t.name)
 const find = (regs, name) => regs.find(t => t.name === name)
 
 describe('mdt plugin (DSH glue over _lib)', () => {
-  test('registers the seven mdt tools', () => {
+  test('registers the eleven mdt tools', () => {
     const { ctx, registered } = makeCtx()
     applyMdt(ctx)
     expect(names(registered)).toEqual([
@@ -54,6 +54,10 @@ describe('mdt plugin (DSH glue over _lib)', () => {
       'mdt_ticket_deps',
       'mdt_project_current',
       'mdt_project_list',
+      'mdt_ticket_delete',
+      'mdt_ticket_rename',
+      'mdt_project_get',
+      'mdt_project_init',
     ])
   })
 
@@ -70,7 +74,7 @@ describe('mdt plugin (DSH glue over _lib)', () => {
     expect(spec.workdir).toBe('/session/ws')
     expect(spec.timeoutMs).toBe(30000)
     expect(spec.command).toBe(
-      `${quotedCli} 'ticket' 'get' '--json' '-p' 'ABC' 'MDT-0'\\''42'`,
+      `${quotedCli} 'ticket' 'get' '--json' '-p' 'ABC' '--' 'MDT-0'\\''42'`,
     )
   })
 
@@ -100,7 +104,7 @@ describe('spec-trace plugin (DSH glue over _lib)', () => {
     delete process.env.SPEC_TRACE_BIN
   })
 
-  test('registers the seven spec-trace tools', () => {
+  test('registers the eight spec-trace tools', () => {
     process.env.SPEC_TRACE_BIN = '/bin/spec-trace'
     const { ctx, registered } = makeCtx()
     applySpecTrace(ctx)
@@ -112,6 +116,7 @@ describe('spec-trace plugin (DSH glue over _lib)', () => {
       'spec_trace_validate',
       'spec_trace_render',
       'spec_trace_bundle',
+      'spec_trace_lock_requirements',
     ])
   })
 
@@ -142,5 +147,20 @@ describe('spec-trace plugin (DSH glue over _lib)', () => {
     expect(specs[0].workdir).toBe('/tmp/proj')
     expect(specs[0].timeoutMs).toBe(60000)
     expect(specs[0].command).toBe('\'/bin/spec-trace\' \'requirement\' \'list\' \'MDT-143\'')
+  })
+
+  test('failed validation preserves structured remediation and summary', async () => {
+    process.env.SPEC_TRACE_BIN = '/bin/spec-trace'
+    const issues = '{"issues":[{"code":"STRICT_BASELINE_MISSING","guidance":{"allowedFixes":["lock requirements"]}}]}'
+    const { ctx, registered } = makeCtx({
+      exitCode: 1,
+      stdout: { text: issues },
+      stderr: { text: 'Validation failed' },
+    })
+    applySpecTrace(ctx)
+    await expect(find(registered, 'spec_trace_validate').execute(
+      { ticket: 'MDT-1', stage: 'requirements', strict: true },
+      {},
+    )).rejects.toThrow(`exited 1: Validation failed\n${issues}`)
   })
 })

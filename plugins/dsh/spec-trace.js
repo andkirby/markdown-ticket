@@ -11,7 +11,7 @@
 
 import process from 'node:process'
 
-import { runCli, stderrDetail } from '../_lib/run-cli.js'
+import { runCli, specTraceErrorDetail } from '../_lib/run-cli.js'
 import { SPEC_TRACE_TOOLS } from '../_lib/spec-trace-tools.js'
 import { objectSchema, quote, render, runSubprocess, sessionPolicy } from './lib/kit.js'
 
@@ -74,7 +74,7 @@ export function apply(ctx) {
             args: runArgs,
             workdir: args.workdir,
             timeoutMs: 60000,
-            errorDetail: stderrDetail,
+            errorDetail: specTraceErrorDetail,
             // spec-trace success contract: stdout, falling back to stderr.
             successText: result => (result.stdout !== '' ? result.stdout : result.stderr),
           },

@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 
 import { MDT_TOOLS } from '../_lib/mdt-tools.js'
-import { flagTokens, kebabFlag, mdtErrorDetail, runCli, stderrDetail } from '../_lib/run-cli.js'
+import { flagTokens, kebabFlag, mdtErrorDetail, runCli, specTraceErrorDetail, stderrDetail } from '../_lib/run-cli.js'
 import { SPEC_TRACE_TOOLS } from '../_lib/spec-trace-tools.js'
 
 /** Build args objects for argv builders (shape mirrors the declared params). */
@@ -13,6 +13,10 @@ const mdtArgs = {
   mdt_ticket_deps: { key: 'MDT-042', check: true },
   mdt_project_current: {},
   mdt_project_list: {},
+  mdt_ticket_delete: { key: 'MDT-042' },
+  mdt_ticket_rename: { key: 'MDT-042', title: 'New title' },
+  mdt_project_get: { code: 'MDT' },
+  mdt_project_init: { code: 'TMP', name: 'Temporary' },
 }
 
 describe('flag conversion', () => {
@@ -34,7 +38,7 @@ describe('flag conversion', () => {
 })
 
 describe('mdt tool argv mapping (byte-stable contract)', () => {
-  test('all seven tools present with names the model depends on', () => {
+  test('all eleven tools present with names the model depends on', () => {
     expect(MDT_TOOLS.map(t => t.name)).toEqual([
       'mdt_ticket_get',
       'mdt_ticket_list',
@@ -43,13 +47,19 @@ describe('mdt tool argv mapping (byte-stable contract)', () => {
       'mdt_ticket_deps',
       'mdt_project_current',
       'mdt_project_list',
+      'mdt_ticket_delete',
+      'mdt_ticket_rename',
+      'mdt_project_get',
+      'mdt_project_init',
     ])
   })
 
-  test('every argv embeds --json; project becomes -p <code>', () => {
+  test('JSON-capable commands embed --json; rename retains text; project is optional', () => {
     for (const tool of MDT_TOOLS) {
       const withProject = tool.argv({ project: 'ABC', ...mdtArgs[tool.name] })
-      expect(withProject).toContain('--json')
+      if (tool.name === 'mdt_ticket_rename')
+        expect(withProject).not.toContain('--json')
+      else expect(withProject).toContain('--json')
       const without = tool.argv(mdtArgs[tool.name])
       expect(without).not.toContain('-p')
     }
@@ -57,6 +67,7 @@ describe('mdt tool argv mapping (byte-stable contract)', () => {
       'ticket',
       'get',
       '--json',
+      '--',
       'MDT-042',
     ])
     expect(MDT_TOOLS.find(t => t.name === 'mdt_ticket_get').argv({ key: 'MDT-042', project: 'ABC' })).toEqual([
@@ -65,6 +76,7 @@ describe('mdt tool argv mapping (byte-stable contract)', () => {
       '--json',
       '-p',
       'ABC',
+      '--',
       'MDT-042',
     ])
   })
@@ -74,25 +86,28 @@ describe('mdt tool argv mapping (byte-stable contract)', () => {
       'ticket',
       'create',
       '--json',
+      '--',
       'Fix login',
     ])
     expect(MDT_TOOLS.find(t => t.name === 'mdt_ticket_deps').argv({ key: 'MDT-1' })).toEqual([
       'ticket',
       'deps',
       '--json',
+      '--',
       'MDT-1',
     ])
     expect(MDT_TOOLS.find(t => t.name === 'mdt_ticket_list').argv({ filters: ['status=Approved'] })).toEqual([
       'ticket',
       'list',
       '--json',
+      '--',
       'status=Approved',
     ])
   })
 })
 
 describe('spec-trace tool argv mapping', () => {
-  test('all seven tools present', () => {
+  test('all eight tools present', () => {
     expect(SPEC_TRACE_TOOLS.map(t => t.name)).toEqual([
       'spec_trace_init',
       'spec_trace_upsert',
@@ -101,6 +116,7 @@ describe('spec-trace tool argv mapping', () => {
       'spec_trace_validate',
       'spec_trace_render',
       'spec_trace_bundle',
+      'spec_trace_lock_requirements',
     ])
   })
 
@@ -115,7 +131,7 @@ describe('spec-trace tool argv mapping', () => {
     expect(
       SPEC_TRACE_TOOLS.find(t => t.name === 'spec_trace_delete')
         .argv({ entity: 'requirement', ticket: 'MDT-1', id: 'R-1' }),
-    ).toEqual(['requirement', 'delete', 'MDT-1', 'R-1', '--if-exists', '--format', 'json'])
+    ).toEqual(['delete', 'requirement', 'MDT-1', 'R-1', '--if-exists', '--format', 'json'])
     expect(
       SPEC_TRACE_TOOLS.find(t => t.name === 'spec_trace_validate')
         .argv({ ticket: 'MDT-1', stage: 'bdd', strict: true }),
@@ -145,6 +161,14 @@ describe('per-CLI output contracts', () => {
 
   test('stderrDetail returns stderr as-is (trimmed)', () => {
     expect(stderrDetail({ stdout: '', stderr: '  boom\n' })).toBe('boom')
+  })
+
+  test('trace failures retain JSON diagnostics after the stderr summary', () => {
+    const issues = '{"issues":[{"code":"STRICT_BASELINE_MISSING","guidance":{"allowedFixes":["lock requirements"]}}]}'
+    expect(specTraceErrorDetail({ stdout: `${issues}\n`, stderr: 'Validation failed\n' }))
+      .toBe(`Validation failed\n${issues}`)
+    expect(specTraceErrorDetail({ stdout: issues, stderr: '' })).toBe(issues)
+    expect(specTraceErrorDetail({ stdout: '', stderr: ' summary\n' })).toBe('summary')
   })
 })
 

@@ -27,15 +27,20 @@ export function mdtErrorDetail(result) {
   return stderr !== '' ? stderr : result.stderr.trim()
 }
 
-/** Error text for a text-mode CLI run (spec-trace): stderr carries the cause. */
+/** Error text for a CLI that reports its failure on stderr only. */
 export function stderrDetail(result) {
   return result.stderr.trim()
+}
+
+/** Validation failures include structured issues and remediation on stdout. */
+export function specTraceErrorDetail(result) {
+  return [result.stderr.trim(), result.stdout.trim()].filter(Boolean).join('\n')
 }
 
 /**
  * Run one CLI subprocess through the injected exec fn and map the result.
  *
- * exec: async ({ argv, workdir, timeoutMs }) => { exitCode, stdout, stderr }
+ * exec: async ({ argv, workdir, timeoutMs, stdin? }) => { exitCode, stdout, stderr }
  *   (stdout/stderr as strings; workdir may be undefined = host default)
  * opts.label: name used in error prefixes (default: basename of bin —
  *   'mdt-cli' / 'spec-trace', matching the pre-_lib error contracts).
@@ -50,10 +55,11 @@ export async function runCli(exec, {
   workdir,
   timeoutMs = 30000,
   label,
+  stdin,
   errorDetail = stderrDetail,
   successText = result => result.stdout,
 }) {
-  const result = await exec({ argv: [bin, ...args], workdir, timeoutMs })
+  const result = await exec({ argv: [bin, ...args], workdir, timeoutMs, ...(stdin !== undefined ? { stdin } : {}) })
   if (result.exitCode !== 0) {
     const name = label ?? bin.split('/').pop() ?? bin
     throw new Error(`${name} exited ${result.exitCode}: ${errorDetail(result)}`)

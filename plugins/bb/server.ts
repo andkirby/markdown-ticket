@@ -4,10 +4,10 @@ import type { BbPluginApi } from '@get-bb/plugin-sdk'
 // The tool surface, argv mapping, and error extraction live in the shared
 // lib (synced copy in ./lib/ — edit plugins/_lib/ and re-copy; drift is
 // enforced by plugins/tests/lib-sync.test.ts). This file owns only the bb
-// parts: tool registration, zod schemas, workspace resolution, and the
+// parts: validated schema registration, workspace resolution, and the
 // spawn adapter.
 //
-// Subprocess contract: arg-array spawn (no shell), stdin ignored, 30s
+// Subprocess contract: arg-array spawn (no shell), optional explicit stdin, 30s MDT / 60s trace
 // timeout, cancellation forwarded from ctx.signal, 256 KiB COMBINED output
 // cap counted in bytes WHILE streaming (the child is killed on overflow) —
 // never silently truncated. Non-zero exit → thrown error (tool error).
@@ -19,13 +19,14 @@ import type { Readable } from 'node:stream'
 import { spawn } from 'node:child_process'
 import { accessSync, constants as fsConstants } from 'node:fs'
 import { homedir } from 'node:os'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import process from 'node:process'
 import { StringDecoder } from 'node:string_decoder'
 import { z } from 'zod'
 import { resolveWorkspace } from './lib/bb-workspace.js'
 import { MDT_TOOLS } from './lib/mdt-tools.js'
-import { mdtErrorDetail } from './lib/run-cli.js'
+import { mdtErrorDetail, specTraceErrorDetail } from './lib/run-cli.js'
+import { SPEC_TRACE_TOOLS } from './lib/spec-trace-tools.js'
 
 const OUTPUT_LIMIT_BYTES = 256 * 1024
 export { OUTPUT_LIMIT_BYTES }
@@ -120,18 +121,18 @@ export function augmentedPath(): string {
   return [process.env.PATH ?? '', ...extra].filter(Boolean).join(':')
 }
 
-/** Spawn mdt-cli with an argv array at `cwd`; bounded, cancellable, no stdin. */
-export async function runMdt(
+/** Spawn one CLI at cwd with a combined output budget and cancellable optional stdin. */
+async function runProcess(
+  bin: string,
   args: string[],
   cwd: string,
   signal: AbortSignal,
-  { cliPath }: { cliPath?: string } = {},
+  { stdin, trace = false }: { stdin?: string, trace?: boolean } = {},
 ): Promise<string> {
-  const bin = resolveCliBin(defaultWhich, cliPath)
   const proc = spawn(bin, args, {
     cwd,
-    stdio: ['ignore', 'pipe', 'pipe'],
-    signal: AbortSignal.any([signal, AbortSignal.timeout(TIMEOUT_MS)]),
+    stdio: ['pipe', 'pipe', 'pipe'],
+    signal: AbortSignal.any([signal, AbortSignal.timeout(trace ? 60_000 : TIMEOUT_MS)]),
     env: { ...process.env, PATH: augmentedPath() },
   })
   const budget = { left: OUTPUT_LIMIT_BYTES, overflowed: false }
@@ -140,84 +141,114 @@ export async function runMdt(
     proc.once('close', code => resolve(code ?? -1))
     proc.once('error', reject)
   })
-  const [stdout, stderr] = await Promise.all([
+  // Pipe explicit content only. Closing stdin otherwise prevents interactive prompts.
+  proc.stdin.on('error', () => { /* early CLI rejection can close stdin */ })
+  proc.stdin.end(stdin)
+  const [stdout, stderr, exitCode] = await Promise.all([
     pipeBounded(proc.stdout, budget, () => proc.kill()),
     pipeBounded(proc.stderr, budget, () => proc.kill()),
+    exited,
   ])
   if (budget.overflowed) {
-    await exited
+    const guidance = trace ? 'reduce the requested trace output.' : 'narrow the query (filters, --limit).'
     throw new Error(
-      `mdt-cli output exceeds ${OUTPUT_LIMIT_BYTES} bytes; narrow the query (filters, --limit).`,
+      `${trace ? 'spec-trace' : 'mdt-cli'} output exceeds ${OUTPUT_LIMIT_BYTES} bytes; ${guidance}`,
     )
   }
-  const exitCode = await exited
   if (exitCode !== 0) {
-    throw new Error(`${bin} exited ${exitCode}: ${mdtErrorDetail({ stdout, stderr })}`)
+    const detail = trace ? specTraceErrorDetail({ stdout, stderr }) : mdtErrorDetail({ stdout, stderr })
+    throw new Error(`${bin} exited ${exitCode}: ${detail}`)
   }
-  return stdout
+  return trace && stdout === '' ? stderr : stdout
 }
 
-// Zod schemas mirror the shared lib's mdt-tools.js params (zod validated per
-// call; bad model args become tool errors before any spawn).
-const projectOption = { project: z.string().optional() }
-const toolSchemas = {
-  mdt_ticket_get: { key: z.string(), ...projectOption },
-  mdt_ticket_list: { filters: z.array(z.string()).optional(), ...projectOption },
-  mdt_ticket_create: {
-    title: z.string(),
-    type: z.string().optional(),
-    slug: z.string().optional(),
-    ...projectOption,
-  },
-  mdt_ticket_attr: { key: z.string(), attrs: z.array(z.string()), ...projectOption },
-  mdt_ticket_deps: { key: z.string(), check: z.boolean().optional(), ...projectOption },
-  mdt_project_current: {},
-  mdt_project_list: {},
-} satisfies Record<string, z.ZodRawShape>
+/** Resolve trace binary per call, independently from mdt-cli. */
+export function resolveSpecTraceBin(
+  which: (name: string) => string | null = defaultWhich,
+  cliPath?: string,
+): string {
+  const bin = process.env.SPEC_TRACE_BIN || cliPath || which('spec-trace')
+  if (!bin)
+    throw new Error('spec-trace not found: set SPEC_TRACE_BIN, the plugin specTracePath setting, or install spec-trace on PATH.')
+  return bin
+}
 
-type MdtToolParams = Record<string, unknown>
+export async function runMdt(
+  args: string[],
+  cwd: string,
+  signal: AbortSignal,
+  { cliPath, stdin }: { cliPath?: string, stdin?: string } = {},
+): Promise<string> {
+  return runProcess(resolveCliBin(defaultWhich, cliPath), args, cwd, signal, { stdin })
+}
 
-/**
- * Register the seven tools against a bb plugin API. `run` is injectable so
- * tests can execute registered tools without spawning real processes.
- */
-export function registerMdtTools(
-  bb: BbPluginApi,
-  { run }: { run?: (args: string[], cwd: string, signal: AbortSignal) => Promise<string> } = {},
-): void {
+export async function runSpecTrace(
+  args: string[],
+  cwd: string,
+  signal: AbortSignal,
+  { cliPath }: { cliPath?: string } = {},
+): Promise<string> {
+  return runProcess(resolveSpecTraceBin(defaultWhich, cliPath), args, cwd, signal, { trace: true })
+}
+
+type ToolParams = Record<string, unknown>
+type Runner = (args: string[], cwd: string, signal: AbortSignal, options?: { stdin?: string }) => Promise<string>
+
+// One schema source: convert canonical JSON Schema to validated Zod parameters.
+// Plain JSON Schema registration alone would pass raw unknown values to execute.
+function parameters(tool: (typeof MDT_TOOLS | typeof SPEC_TRACE_TOOLS)[number]) {
+  return z.fromJSONSchema({ type: 'object', additionalProperties: false, ...tool.params } as Parameters<typeof z.fromJSONSchema>[0])
+}
+
+export function registerMdtTools(bb: BbPluginApi, { run }: { run?: Runner } = {}) {
   bb.log.info('mdt tools: registering native mdt-cli tools')
-
-  // Declared here so it renders in Settings → Installed plugins → MDT.
   const settings = bb.settings.define({
-    cliPath: {
-      type: 'string',
-      label: 'mdt-cli path',
-      default: '',
-    },
+    cliPath: { type: 'string', label: 'mdt-cli path', default: '' },
+    specTracePath: { type: 'string', label: 'spec-trace path', default: '' },
   })
-
-  // Production runner: resolves the binary per call (fresh env + setting).
-  const runDefault = async (args: string[], cwd: string, signal: AbortSignal) => {
+  const effectiveRun: Runner = run ?? (async (args, cwd, signal, options) => {
     const { cliPath } = await settings.get()
-    return runMdt(args, cwd, signal, { cliPath })
-  }
-  const effectiveRun = run ?? runDefault
-
+    return runMdt(args, cwd, signal, { cliPath, ...options })
+  })
   for (const tool of MDT_TOOLS) {
     bb.agents.registerTool({
       name: tool.name,
       description: tool.description,
-      parameters: z.object(toolSchemas[tool.name as keyof typeof toolSchemas]),
-      async execute(params: MdtToolParams, { threadId, projectId, signal }) {
-        // Fail-closed workspace resolution: thread environment path on the
-        // server host, else the project's default local-path source.
+      parameters: parameters(tool),
+      async execute(raw, { threadId, projectId, signal }) {
+        const params = raw as ToolParams
         const { cwd } = await resolveWorkspace(bb, { threadId, projectId }, { signal })
-        return effectiveRun(tool.argv(params), cwd, signal)
+        const stdin = 'stdin' in tool ? tool.stdin?.(params) : undefined
+        return effectiveRun(tool.argv(params), cwd, signal, stdin !== undefined ? { stdin } : undefined)
+      },
+    })
+  }
+  return settings
+}
+
+export function registerSpecTraceTools(bb: BbPluginApi, { run }: { run?: Runner } = {}): void {
+  // The factory passes the shared settings-backed runner. Standalone registration
+  // uses env/PATH, keeping this host adapter independently testable.
+  const effectiveRun = run ?? runSpecTrace
+  for (const tool of SPEC_TRACE_TOOLS) {
+    bb.agents.registerTool({
+      name: tool.name,
+      description: tool.description,
+      parameters: parameters(tool),
+      async execute(raw, { threadId, projectId, signal }) {
+        const params = raw as ToolParams
+        const { cwd } = await resolveWorkspace(bb, { threadId, projectId }, { signal })
+        const workdir = typeof params.workdir === 'string' ? resolve(cwd, params.workdir) : cwd
+        return effectiveRun(tool.argv(params), workdir, signal)
       },
     })
   }
 }
 
 export default async function plugin(bb: BbPluginApi) {
-  registerMdtTools(bb)
+  const settings = registerMdtTools(bb)
+  registerSpecTraceTools(bb, { run: async (args, cwd, signal) => {
+    const values = await settings.get()
+    return runSpecTrace(args, cwd, signal, { cliPath: values.specTracePath as string | undefined })
+  } })
 }

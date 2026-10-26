@@ -13,7 +13,8 @@ machine only · `global` = user-level skill directory.
 | Skill | Lives | Use when |
 |-------|-------|----------|
 | `mdt` | global | The MDT workflow entry point: creating/updating CRs or ADRs, any single stage (requirements, BDD, architecture, tests, tasks, UAT, implement), and end-to-end lifecycle orchestration via its bundled `mdt:pipeline-e2e` — subsumes the retired standalone `mdt-pipeline*` skills |
-| `mdt-cli` | global | Quick terminal lookups of tickets/projects; prefer over MCP for single-entity reads |
+| `mdt-tools` | BB plugin | Native `mdt_*` / `spec_trace_*` tool selection and usage; loaded on demand from the installed plugin; see [plugin guide](../plugins/README.md) |
+| `mdt-cli` | global | Terminal ticket/project operations when native tools are unavailable; cloud management remains CLI-only |
 | `rename-cr` | local | Renaming a ticket key with validation and reference updates |
 | `idea-intake` | local | Triaging a raw idea ("what if we…") before it becomes committed work |
 | `mdt-release` | local | Publishing a release to GitHub |

@@ -39,7 +39,9 @@ bin/dc up -d
 bun run build:all && ./start.sh
 ```
 
-### 3. Connect MCP (Required for AI)
+### 3. Connect AI Tools
+
+Use MCP below, or install the [native BB/DSH plugins](plugins/README.md).
 
 ```bash
 # Docker MCP
@@ -104,6 +106,10 @@ AI-powered commands for the entire development lifecycle:
 - Context-aware browser tab titles
 - Markdown/Git-authoritative ticket storage; optional cloud coordination stores
   only membership, allocation, and projected-header metadata
+
+### Native Agent Tools
+
+[BB and DSH plugins](plugins/README.md) expose non-cloud MDT and spec-trace operations as native tools, with on-demand agent guidance. See [coverage and verification status](plugins/docs/coverage.md). Cloud management remains CLI-only.
 
 ### CLI Access
 
