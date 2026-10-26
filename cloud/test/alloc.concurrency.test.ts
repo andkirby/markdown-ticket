@@ -1,3 +1,4 @@
+import type { D1Database } from '@cloudflare/workers-types'
 /**
  * TEST-alloc-real-concurrency — proves the lost-update recovery in
  * `allocateReservation` (BR-1.1, C3).
@@ -31,18 +32,14 @@
  * transaction" semantics.
  */
 
-import type { D1Database } from '@cloudflare/workers-types'
 import type { Database as BunDatabase } from 'bun:sqlite'
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
 import { Database } from 'bun:sqlite'
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { allocateReservation } from '../src/cloudflare/d1/statements'
-
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const SCHEMA_PATH = join(__dirname, '..', 'migrations', '0001_init.sql')
+import { applyMigrations } from './helpers/identity-d1'
 
 let db: Database.Database
 let tmpDir: string
@@ -50,7 +47,7 @@ let tmpDir: string
 beforeAll(() => {
   tmpDir = mkdtempSync(join(tmpdir(), 'mdt-alloc-conc-'))
   db = new Database(join(tmpDir, 'conc.sqlite'))
-  db.run(readFileSync(SCHEMA_PATH, 'utf8'))
+  applyMigrations(db)
   // bun:sqlite default journal mode is fine for serial transactions; bump the
   // busy timeout so contended writes never surface SQLITE_BUSY during retries.
   db.run('PRAGMA busy_timeout = 5000')

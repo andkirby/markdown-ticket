@@ -9,6 +9,7 @@ const date = z.union([z.string(), z.custom<Date>(value => value instanceof Date)
 const relationship = z.union([z.string(), z.array(z.unknown())]).optional().catch(undefined)
 export const PersistedTicketFrontmatterSchema = z.looseObject({
   ...Object.fromEntries(Object.keys(TicketFrontmatterSchema.shape).map(key => [key, text])),
+  creationId: text,
   code: text,
   key: text,
   title: text,

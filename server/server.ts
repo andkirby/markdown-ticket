@@ -40,6 +40,7 @@ import { CloudStatusParamsSchema } from './http/readSchemas.js'
 // Middleware
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js'
 import { createAuthRouter } from './routes/auth.js'
+import { createCloudCreationRecoveryRouter } from './routes/cloudCreationRecovery.js'
 import { createConfigRouter } from './routes/config.js'
 import { createDevToolsRouter, setupLogInterception } from './routes/devtools.js'
 import { createDocsRouter } from './routes/docs.js'
@@ -52,9 +53,11 @@ import { createSearchRouter } from './routes/search.js'
 import { createShareRouter } from './routes/share.js'
 import { createSSERouter } from './routes/sse.js'
 import { createSystemRouter } from './routes/system.js'
+import { createTicketIdentityRouter } from './routes/ticketIdentities.js'
 import { createApiAuthMiddleware } from './security/apiAuth.js'
 import { createCorsOptions, createOriginPolicy, securityHeaders } from './security/originPolicy.js'
 import { ProjectionStreamManager } from './services/cloud-sync/ProjectionStreamManager.js'
+import { TicketIdentityObservation } from './services/cloud-sync/TicketIdentityObservation.js'
 import { DocumentService } from './services/DocumentService.js'
 import FileWatcherService from './services/fileWatcher/index.js'
 import { initializeProjectWatcherIntegration } from './services/fileWatcher/projectRegistrationIntegration.js'
@@ -209,6 +212,23 @@ const cloudCredentialProvider = new (class extends AccessCredentialBroker {
 const projectServiceAdapter = new ProjectServiceAdapter(projectDiscovery)
 const ticketService = new TicketService(projectDiscovery, {
   credentialProvider: cloudCredentialProvider,
+  nonInteractiveCredentialProvider: { resolve: (origin: string) => cloudCredentialProvider.resolveNonInteractive(origin) },
+})
+
+// Watcher observations are separate from cloud projection mutation and never login.
+const ticketIdentityObservation = new TicketIdentityObservation({
+  observe: projectId => ticketService.observeTicketIdentities(projectId),
+  onChange: projectId => fileWatcher.broadcastTicketIdentityChange(projectId),
+})
+fileWatcher.on('file-change', (data: { projectId: string, subdocument?: unknown }) => {
+  if (!data.subdocument)
+    ticketIdentityObservation.schedule(data.projectId)
+})
+fileWatcher.on('ready', (data: { projectId: string }) => ticketIdentityObservation.schedule(data.projectId))
+fileWatcher.on('worktree-ready', (data: { projectId: string }) => ticketIdentityObservation.schedule(data.projectId))
+fileWatcher.on('error', (data: { projectId?: string }) => {
+  if (data.projectId)
+    ticketIdentityObservation.schedule(data.projectId)
 })
 
 // =============================================================================
@@ -410,6 +430,8 @@ app.use('/api', createApiAuthMiddleware(runtimeConfig.auth, {
 
 // Multi-Project API routes
 app.use('/api/projects', createProjectRouter(projectController))
+app.use('/api/projects', createTicketIdentityRouter(ticketIdentityObservation))
+app.use('/api/projects', createCloudCreationRecoveryRouter(ticketService))
 
 // MDT-226 incident recovery: local-only cloud-sync diagnostics. Reads manager
 // and persisted activation state only — no credential, HTTP, WebSocket, or D1
@@ -522,6 +544,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
     // Initialize the server
     await initializeMultiProjectWatchers()
+    // Inventory also covers files created while the backend was stopped.
+    const identityProjects = await projectDiscovery.getAllProjects()
+    await Promise.all(identityProjects.map(project => ticketIdentityObservation.refresh(project.id)))
     fileWatcher.startHeartbeat()
     // MDT-226: open backend-owned projection streams for enabled cloud projects.
     await startProjectionStreams()
@@ -531,6 +556,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 // Graceful shutdown
 process.on('SIGTERM', () => {
   logger.info('Received SIGTERM, shutting down gracefully...')
+  ticketIdentityObservation.stop()
   projectionStreamManager.stopAll()
   projectionSyncs.forEach(s => s.stopRetryRunner())
   fileWatcher.stop()
@@ -539,6 +565,7 @@ process.on('SIGTERM', () => {
 
 process.on('SIGINT', () => {
   logger.info('Received SIGINT, shutting down gracefully...')
+  ticketIdentityObservation.stop()
   projectionStreamManager.stopAll()
   projectionSyncs.forEach(s => s.stopRetryRunner())
   fileWatcher.stop()

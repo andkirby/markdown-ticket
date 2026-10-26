@@ -71,19 +71,20 @@ function makeCoordinator(fetchImpl: (url: string, init?: RequestInit) => Promise
   return { coordinator, fetchMock, calls }
 }
 
+const ALLOCATION = { protocolVersion: 2, creationId: 'c419052e-b1de-4514-8fc7-9d15c72603bc', minimumTicketNumber: 1 } as const
 const RESERVATION_BODY = {
   requestId: 'req-1',
-  data: { reservationId: 'res-9', ticketNumber: 201, state: 'reserved', replayed: false },
+  data: { ...ALLOCATION, reservationId: 'res-9', ticketNumber: 201, state: 'reserved', replayed: false },
 }
 
 describe('CloudSyncCoordinator.reserve (success)', () => {
   it('maps a 201 reservation to ReservationDTO', async () => {
     const { coordinator, calls } = makeCoordinator(async () => mockResponse(201, RESERVATION_BODY))
     const r = await coordinator.reserve(
-      { cloudProjectId: 'p1', idempotencyKey: 'k-1', requestHash: 'h-1' },
+      { ...ALLOCATION, cloudProjectId: 'p1', idempotencyKey: 'k-1', requestHash: 'a'.repeat(64) },
       CREDENTIAL,
     )
-    expect(r).toEqual({ reservationId: 'res-9', ticketNumber: 201, state: 'reserved', replayed: false })
+    expect(r).toEqual({ ...ALLOCATION, reservationId: 'res-9', ticketNumber: 201, state: 'reserved', replayed: false })
 
     const [call] = calls()
     expect(call.url).toBe('https://mdt-sync.example.com/v1/projects/p1/reservations')
@@ -92,17 +93,17 @@ describe('CloudSyncCoordinator.reserve (success)', () => {
     expect(new Headers(call.init?.headers as any).get('Idempotency-Key')).toBe('k-1')
     // Human token attached as cf-access-token.
     expect(new Headers(call.init?.headers as any).get('cf-access-token')).toBe('human-jwt-token')
-    // Body carries idempotencyKey + requestHash only.
-    expect(JSON.parse(call.init?.body as string)).toEqual({ idempotencyKey: 'k-1', requestHash: 'h-1' })
+    // Immutable allocation fields cross the wire alongside the intent digest.
+    expect(JSON.parse(call.init?.body as string)).toEqual({ ...ALLOCATION, idempotencyKey: 'k-1', requestHash: 'a'.repeat(64) })
   })
 
   it('maps a 200 reservation to ReservationDTO (replayed)', async () => {
     const { coordinator } = makeCoordinator(async () => mockResponse(200, {
       requestId: 'req-2',
-      data: { reservationId: 'res-9', ticketNumber: 201, state: 'reserved', replayed: true },
+      data: { ...ALLOCATION, reservationId: 'res-9', ticketNumber: 201, state: 'reserved', replayed: true },
     }))
     const r = await coordinator.reserve(
-      { cloudProjectId: 'p1', idempotencyKey: 'k-1', requestHash: 'h-1' },
+      { ...ALLOCATION, cloudProjectId: 'p1', idempotencyKey: 'k-1', requestHash: 'a'.repeat(64) },
       CREDENTIAL,
     )
     expect(r.replayed).toBe(true)
@@ -112,7 +113,7 @@ describe('CloudSyncCoordinator.reserve (success)', () => {
   it('attaches both service-token headers without a human token header', async () => {
     const { coordinator, calls } = makeCoordinator(async () => mockResponse(201, RESERVATION_BODY))
     await coordinator.reserve(
-      { cloudProjectId: 'p1', idempotencyKey: 'k-1', requestHash: 'h-1' },
+      { ...ALLOCATION, cloudProjectId: 'p1', idempotencyKey: 'k-1', requestHash: 'a'.repeat(64) },
       { kind: 'service', clientId: 'client-id', clientSecret: 'client-secret' },
     )
 
@@ -125,7 +126,7 @@ describe('CloudSyncCoordinator.reserve (success)', () => {
   it('uses redirect: error on the request (rejects redirects, never follows with creds)', async () => {
     const { calls } = makeCoordinator(async () => mockResponse(200, RESERVATION_BODY))
     const c = makeCoordinator(async () => mockResponse(200, RESERVATION_BODY))
-    await c.coordinator.reserve({ cloudProjectId: 'p1', idempotencyKey: 'k', requestHash: 'h' }, CREDENTIAL)
+    await c.coordinator.reserve({ ...ALLOCATION, cloudProjectId: 'p1', idempotencyKey: 'k', requestHash: 'b'.repeat(64) }, CREDENTIAL)
     expect(c.calls()[0]?.init?.redirect).toBe('error')
     void calls
   })
@@ -137,6 +138,8 @@ describe('CloudSyncCoordinator.reserve (error envelope mapping)', () => {
     [403, 'forbidden', 'forbidden'],
     [404, 'project_not_found', 'project_not_found'],
     [409, 'idempotency_key_reused', 'idempotency_key_reused'],
+    [409, 'reservation_state_conflict', 'reservation_state_conflict'],
+    [400, 'invalid_request', 'invalid_request'],
     [429, 'rate_limited', 'rate_limited'],
     [503, 'coordination_unavailable', 'coordination_unavailable'],
     [423, 'coordination_suspended', 'coordination_suspended'],
@@ -153,7 +156,7 @@ describe('CloudSyncCoordinator.reserve (error envelope mapping)', () => {
         },
       }))
       await expect(
-        coordinator.reserve({ cloudProjectId: 'p1', idempotencyKey: 'k', requestHash: 'h' }, CREDENTIAL),
+        coordinator.reserve({ ...ALLOCATION, cloudProjectId: 'p1', idempotencyKey: 'k', requestHash: 'b'.repeat(64) }, CREDENTIAL),
       ).rejects.toMatchObject({ name: 'CoordinatorError', code: expected })
     })
   }
@@ -168,7 +171,7 @@ describe('CloudSyncCoordinator.reserve (error envelope mapping)', () => {
       },
     }))
     try {
-      await coordinator.reserve({ cloudProjectId: 'p1', idempotencyKey: 'k', requestHash: 'h' }, CREDENTIAL)
+      await coordinator.reserve({ ...ALLOCATION, cloudProjectId: 'p1', idempotencyKey: 'k', requestHash: 'b'.repeat(64) }, CREDENTIAL)
       throw new Error('should have thrown')
     }
     catch (e) {
@@ -181,21 +184,21 @@ describe('CloudSyncCoordinator.reserve (error envelope mapping)', () => {
   it('a 500 with an unrecognized envelope code falls back to coordination_unavailable', async () => {
     const { coordinator } = makeCoordinator(async () => mockResponse(500, {
       error: {
-        code: 'invalid_request',
+        code: 'unknown_future_code',
         message: 'boom',
         requestId: 'req-x',
         retryable: false,
       },
     }))
     await expect(
-      coordinator.reserve({ cloudProjectId: 'p1', idempotencyKey: 'k', requestHash: 'h' }, CREDENTIAL),
+      coordinator.reserve({ ...ALLOCATION, cloudProjectId: 'p1', idempotencyKey: 'k', requestHash: 'b'.repeat(64) }, CREDENTIAL),
     ).rejects.toMatchObject({ name: 'CoordinatorError', code: 'coordination_unavailable' })
   })
 
   it('a 500 with a non-JSON body maps to coordination_unavailable', async () => {
     const { coordinator } = makeCoordinator(async () => mockResponse(500, '<html>gateway</html>', { 'content-type': 'text/html' }))
     await expect(
-      coordinator.reserve({ cloudProjectId: 'p1', idempotencyKey: 'k', requestHash: 'h' }, CREDENTIAL),
+      coordinator.reserve({ ...ALLOCATION, cloudProjectId: 'p1', idempotencyKey: 'k', requestHash: 'b'.repeat(64) }, CREDENTIAL),
     ).rejects.toMatchObject({ name: 'CoordinatorError', code: 'coordination_unavailable' })
   })
 
@@ -204,7 +207,7 @@ describe('CloudSyncCoordinator.reserve (error envelope mapping)', () => {
       throw new Error('ECONNREFUSED')
     })
     await expect(
-      coordinator.reserve({ cloudProjectId: 'p1', idempotencyKey: 'k', requestHash: 'h' }, CREDENTIAL),
+      coordinator.reserve({ ...ALLOCATION, cloudProjectId: 'p1', idempotencyKey: 'k', requestHash: 'b'.repeat(64) }, CREDENTIAL),
     ).rejects.toMatchObject({ name: 'CoordinatorError', code: 'coordination_unavailable' })
   })
 })
@@ -218,7 +221,7 @@ describe('CloudSyncCoordinator: origin allowlist guard (C6)', () => {
       fetchImpl: fetchMock as any,
     })
     await expect(
-      coordinator.reserve({ cloudProjectId: 'p1', idempotencyKey: 'k', requestHash: 'h' }, CREDENTIAL),
+      coordinator.reserve({ ...ALLOCATION, cloudProjectId: 'p1', idempotencyKey: 'k', requestHash: 'b'.repeat(64) }, CREDENTIAL),
     ).rejects.toBeInstanceOf(CoordinatorError)
     // The credential must never reach the wire for an untrusted origin.
     expect(fetchMock).not.toHaveBeenCalled()
@@ -232,7 +235,7 @@ describe('CloudSyncCoordinator: origin allowlist guard (C6)', () => {
       fetchImpl: fetchMock as any,
     })
     await expect(
-      coordinator.reserve({ cloudProjectId: 'p1', idempotencyKey: 'k', requestHash: 'h' }, CREDENTIAL),
+      coordinator.reserve({ ...ALLOCATION, cloudProjectId: 'p1', idempotencyKey: 'k', requestHash: 'b'.repeat(64) }, CREDENTIAL),
     ).rejects.toBeInstanceOf(CoordinatorError)
     expect(fetchMock).not.toHaveBeenCalled()
   })
@@ -244,7 +247,7 @@ describe('CloudSyncCoordinator: origin allowlist guard (C6)', () => {
       fetchImpl: jest.fn(async () => mockResponse(200, RESERVATION_BODY)) as any,
     })
     try {
-      await coordinator.reserve({ cloudProjectId: 'p1', idempotencyKey: 'k', requestHash: 'h' }, CREDENTIAL)
+      await coordinator.reserve({ ...ALLOCATION, cloudProjectId: 'p1', idempotencyKey: 'k', requestHash: 'b'.repeat(64) }, CREDENTIAL)
       throw new Error('should have thrown')
     }
     catch (e) {
@@ -317,7 +320,7 @@ describe('CloudSyncCoordinator: fetch binding (Slice-1 illegal-invocation guard)
       globalConfig: ALLOWED_GLOBAL,
       // no fetchImpl -> globalThis.fetch bound to globalThis.
     })
-    await coordinator.reserve({ cloudProjectId: 'p1', idempotencyKey: 'k', requestHash: 'h' }, CREDENTIAL)
+    await coordinator.reserve({ ...ALLOCATION, cloudProjectId: 'p1', idempotencyKey: 'k', requestHash: 'b'.repeat(64) }, CREDENTIAL)
     expect(boundThis).toBe(globalThis)
   })
 })

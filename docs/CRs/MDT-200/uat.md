@@ -2,324 +2,149 @@
 
 ## Objective
 
-Close the integration gap between the proven cloud service and the local
-Markdown Ticket application, plus the remaining Worker wiring and operational
-drills, so that MDT-200's acceptance criteria hold end-to-end — not only in
-isolated cloud-side tests.
-
-The cloud coordination service (Worker + D1) is deployed and proven for
-allocation, identity, projection, and audit. The review found that several
-acceptance criteria were satisfied only by isolated tests, not through the real
-application path. This brief defines the focused slices that finish the work on
-this same CR.
+Stabilize MDT-200 after the 2026-10-24 ticket-key collisions: no supported create
+or key-based mutation may accept a duplicate identity; manual files must be
+observed safely even when their number is already reserved in the cloud.
+Status: review fixes locally accepted on 2026-10-26; independent completion review passed. The
+October25 challenge findings are addressed in source and regressions. Production
+deployment and incident repair remain pending. Previous UAT evidence is archived in
+[uat-history-2026-07.md](uat-history-2026-07.md).
 
 ## Approved Changes
 
-The review's findings are accepted as a same-ticket spec delta. No requirement
-*meaning* changed; three were **refined in place** to make "through the real
-path" explicit, and seven **focused execution tasks** were added to canonical
-trace as current remaining work.
-
-1. **BR-1.5 (refined)** — no-fallback must hold through `TicketService.createCR`
-   (strategy selection), not only the isolated allocator unit test.
-2. **BR-1.7 (refined)** — local-only backward compatibility must be proven with
-   the strategy seam wired in (a project with no `[project.cloudSync]` selects
-   `LocalTicketNumberAllocator` and makes no cloud call).
-3. **BR-3.3 (refined)** — polling visibility must be proven end-to-end with a
-   local projection poller, not only the cloud polling endpoint.
-
-Drift defects already fixed this round:
-- `cloud/package.json` test script unmasked (was hiding exit-1 as "no tests yet").
-- `domain-contracts` lint fixed (12 errors → 0).
-- `deployed-access.md` stale "migrations not applied" note corrected (they are applied).
-
-## Changed Requirement IDs
-
-- `BR-1.5` — refined in place (same ID, meaning narrowed to "through the app path").
-- `BR-1.7` — refined in place.
-- `BR-3.3` — refined in place.
-
-No IDs added or removed at the requirement level (intent unchanged; execution
-scope tightened). Seven additive task IDs added (see below).
-
-## Affected Downstream Trace
-
-- **requirements** — re-rendered; BR-1.5/1.7/3.3 text tightened.
-- **tasks** — 7 new focused tasks added; all validate.
-- bdd, architecture, tests — unchanged this round (scenarios/obligations/test-plans already cover the refined meanings).
-
-## Execution Slices
-
-This is the historical execution plan captured when the gaps were discovered;
-all seven slices are now closed in source as recorded under Re-verification
-below. They are ordered by dependency: slices 1–3 are the integration core;
-4–7 are wiring and proof.
-
-### Slice U1 — Application strategy wiring
-
-- **Objective**: `TicketService.createCR` selects `LocalTicketNumberAllocator`
-  vs `CloudTicketNumberAllocator` from validated `[project.cloudSync]` config.
-  This is the single change that makes the real app cloud-aware and unblocks
-  U2–U5.
-- **Direct files**: `shared/services/TicketService.ts` (createCR + getNextCRNumber seam), `shared/services/cloud-sync/allocator-strategy.ts` (exists).
-- **Direct GREEN targets**: `coordination_unavailable_no_fallback`, `local_only_unchanged`, `offline_existing_tickets_editable`, `TEST-no-fallback-local`.
-- **Impacted tasks**: `TASK-app-strategy-wiring`, `TASK-local-orchestration`.
-- **Why**: the review's blocking finding #1 — the app always allocates locally today.
-
-### Slice U2 — Local cloud client
-
-- **Objective**: build the runtime `CloudSyncCoordinator` HTTP implementation
-  (fetch + origin-allowlist enforcement + redirect rejection), credential
-  providers (cloudflared human + service-token machine), acknowledgement
-  orchestration, and the recovery runner that consumes the operation journal.
-- **Direct files**: `shared/services/cloud-sync/CloudSyncCoordinator.ts`, `credential-providers.ts`, `recovery.ts` (new).
-- **Direct GREEN targets**: `recover_local_write_failure`, `polling_sees_changes_within_interval`.
-- **Impacted tasks**: `TASK-cloud-client`.
-- **Why**: original blocking finding #2 — only interfaces and isolated classes
-  existed at discovery.
-
-### Slice U3 — Acknowledgement → projection wiring
-
-- **Objective**: the Worker `/acknowledge` route must call
-  `createInitialProjection()` so acknowledgement creates projection v1 at
-  runtime (test-only at discovery). Requires the acknowledgement body to carry
-  the projected header + content hash.
-- **Direct files**: `cloud/src/cloudflare/application/reservation.ts` (acknowledge), `cloud/src/cloudflare/worker.ts`.
-- **Direct GREEN targets**: `projection_excludes_body`.
-- **Impacted tasks**: `TASK-ack-projection-wiring`, `TASK-projection`.
-- **Why**: blocking finding #3.
-
-### Slice U4 — Rate-limit wiring
-
-- **Objective**: call the rate-limit guard in the Worker reservation/publish
-  routes (it was built and tested but not invoked at discovery).
-- **Direct files**: `cloud/src/cloudflare/worker.ts`, `cloud/src/cloudflare/rate-limit/guard.ts`.
-- **Direct GREEN targets**: `TEST-rate-limit-abuse`.
-- **Impacted tasks**: `TASK-ratelimit-wiring`, `TASK-scheduled`.
-- **Why**: blocking finding #6.
-
-### Slice U5 — Board projection stub + two-client E2E
-
-- **Objective**: React projection-stub rendering (read-only, labeled,
-  non-draggable per `ux-design.md`) + a local projection poller +
-  `tests/e2e/cloud-sync-board.spec.ts` (two clients).
-- **Direct files**: `frontend/src/components/` (new stub), `shared/services/cloud-sync/CloudProjectionClient.ts` (poller), `tests/e2e/cloud-sync-board.spec.ts`.
-- **Direct GREEN targets**: `TEST-board-stub-render`, `board_distinguishes_projected_state`, `polling_sees_changes_within_interval`.
-- **Impacted tasks**: `TASK-board-projection`, `TASK-projection`.
-- **Why**: blocking findings #4.
-
-### Slice U6 — Real concurrency proof
-
-- **Objective**: prove allocation concurrency against the actual D1 batch. The
-  production `allocateReservation` pre-reads the counter outside the batch
-  (statements.ts:72); the current test uses a sync loop on different code.
-  Either move the read into the batch, or add a Workers-runtime concurrency
-  test that exercises the real path.
-- **Direct files**: `cloud/src/cloudflare/d1/statements.ts`, `cloud/test/alloc.integration.test.ts`.
-- **Direct GREEN targets**: `TEST-alloc-concurrency`, `concurrent_creates_unique_numbers`, `TEST-deployed-concurrency`.
-- **Impacted tasks**: `TASK-concurrency-real-proof`, `TASK-allocation`.
-- **Why**: blocking finding #7.
-
-### Slice U7 — Config inspection registry
-
-- **Objective**: register the `cloudSync` selectors so
-  `bun run inspect:config --filter cloudSync` returns them (it returned 0 at
-  discovery).
-- **Direct files**: the config-inspection registry source (per `docs/CONFIG_INSPECTION.md`).
-- **Direct GREEN targets**: `TEST-opt-in-binding`, `TEST-config-no-secrets`, `TEST-origin-allowlist`.
-- **Impacted tasks**: `TASK-config-inspection-registry`, `TASK-local-orchestration`.
-- **Why**: drift finding — docs describe selectors that the registry doesn't expose.
-
-## Validation
-
-After each slice: `bun run cloud:test`, `bun run --cwd shared jest services/cloud-sync`,
-`bun run validate:ts:all cloud shared domain-contracts`, `bun run lint:cloud`,
-`spec-trace validate MDT-200 --stage all`. Slice U5 additionally runs the E2E.
-
-Operational gates that remain manual and must be exercised before closure
-(blocking finding #8):
-
-- Real machine service-token attribution (BR-2.2).
-- Live export-before-restore, restore, and project-wide disable drills (BR-4.2).
-
-## Watchlist
-
-- The `fetch` illegal-invocation bug class (Slice 1) — any new global stored
-  detached from `globalThis` will regress. Prefer `globalThis.fetch.bind(globalThis)`.
-- The counter-on-replay bug class (Slice 2) — any change to the allocation
-  batch must re-run the idempotent-replay integration test.
-- Projection row mapping (snake_case → camelCase) — polling returns raw DB rows;
-  keep the `rowToProjection` mapper in sync with schema changes.
-
-## Deployment Decision
-
-V1 is production-only by explicit user decision; no long-lived staging
-environment is required. Deployment uses limited production rollout and a
-temporary isolated D1 database for destructive restore verification.
-
-## Re-verification 2026-07-25
-
-The implementation was reconciled again against the approved architecture,
-canonical Spec Trace state, local runtime adapters, Worker routes and
-transactions, frontend data flow, automated tests, and the active deployment.
-
-Result: **source implementation accepted for deployment-candidate
-verification; ticket remains `In Progress`**. See
-[`verification.md`](verification.md) for exact evidence and release gates.
-
-The U1-U7 implementation gaps above are closed:
-
-- `TicketService` now selects local or cloud orchestration from validated
-  project configuration and fails closed without a credential.
-- The HTTP coordinator, credential providers, durable operation recovery, and
-  projection sync are wired.
-- Acknowledgement and projection v1 are atomic.
-- Membership, recovery, suspension, validation, and rate-limit routes are
-  wired.
-- The owner-only server projection feed drives the production browser poller;
-  the test-only feed remains only as a deterministic test seam.
-- Config inspection and production-shaped allocation concurrency are covered.
-
-Remaining gates are external evidence: deploy the reconciled source, real
-service-token attribution, a live two-client polling scenario, deployed
-concurrency evidence, export/restore/disable drills, and human approval of the
-requirements baseline.
-
----
-
-# UAT Refinement Brief — 2026-07-27 (deletion-tombstone defect)
-
-## Objective
-
-A deletion tombstone never reaches the D1 projection. Reported and reproduced
-on the live cloud: ticket MDT-214 was created in a cloud-bound clone and then
-deleted with `mdt-cli ticket delete MDT-214`. The local `.md` is gone, but the
-cloud projection row stays `lifecycle='active'`, `deleted_at=NULL`, so the
-deleted ticket keeps surfacing on the board and in `mdt-cli cloud status`.
-
-Root cause confirmed three ways — code reading, type inspection, and a live D1
-query (see Validation). The client-side early-return guard in
-`CloudProjectionSync.attempt` compares only the content hash, and a delete
-keeps content unchanged (`deleteCR` passes `previous === next`), so the
-`lifecycle:'deleted'` publish is dropped as a "no-op" before it ever reaches
-the Worker. The Worker and `CloudProjectionClient.publish` routing are correct.
-
-## Approved Changes
-
-| Change | Detail |
-|--------|--------|
-| Lifecycle-aware no-op guard | `shared/services/cloud-sync/projection-sync.ts` `attempt()`: the early-return now fires only when BOTH content hash AND lifecycle match the observed cloud projection. A delete (same content, lifecycle flip) is no longer dropped. |
-| Regression test | `shared/services/cloud-sync/__tests__/projection-sync.test.ts`: new `describe('lifecycle-aware early-return (delete tombstone)')` with two cases — (1) delete with unchanged content still publishes `lifecycle:'deleted'`; (2) identical content AND lifecycle remains a genuine no-op. |
+1. Refine BR-1.1 and BR-1.4 to require key-wide collision checks, verified same-
+   creation recovery, no false create success, and all-adapter evidence.
+2. Align BR-1.7's connection wording with MDT-201 CONFIG_DIR semantics.
+3. Add a journaled local allocation minimum enforced by the coordinator without
+   replacing its authority; persist durable non-secret creationId across Git,
+   journal, and reservation. Add protocol gating and server-verified idempotency.
+4. Observe manual files and classify verified/conflict/unmanaged/pending. An
+   existing cloud reservation is never free or adoptable by number alone. Keep
+   files in place and provide actionable diagnostics; no automatic renumber,
+   reserve, acknowledgement, publish, delete, or interactive watcher login.
+5. Detect duplicate-key reads/mutations before first-match lookup can change the
+   wrong ticket. Preserve authorized path inspection and offline local edits.
+6. Define explicit audited idempotent operator reconciliation on the existing
+   cloud project, including affected identity/projection associations, not only
+   a counter bump. Production changes remain separately authorized execution.
+7. Keep a full import CLI and commit enforcement as follow-up capabilities;
+   this round adds no new ticket through the affected live allocator.
+8. Close the corrected October25 technical-review gaps under existing requirements: explicit creation recovery/inspection, consistent canonical project codes, actionable fail-closed inventory, and stable bounded diagnostics. This is a follow-up in the current round, not another UAT acceptance run.
 
 ## Changed Requirement IDs
 
-None. This is a defect against already-approved behavior, not a requirement
-change. The deletion→tombstone contract is part of the existing projection
-semantics (BR-3.x); no requirement ID was added, removed, or re-scoped.
+- `refine_in_place`: BR-1.1, BR-1.4, BR-1.7.
+- `additive_change`: BR-1.8, BR-1.9, BR-1.10, BR-4.3, C9, C10, C11,
+  Edge-7, Edge-8, Edge-9.
+- Review follow-up: no further requirement ID or meaning changes; existing BR-1.4, BR-1.8, BR-1.9 and related identity/compatibility constraints already cover these gaps.
+- No replacement, deletion, route-policy workaround, or scope removal.
 
 ## Affected Downstream Trace
 
-- **requirements** — unchanged. The deletion→tombstone contract is already
-  covered by existing `BR-3.1` (projection reflects the ticket) and `BR-3.3`
-  (changes visible end-to-end through polling). No new requirement ID needed.
-- **bdd** — unchanged (existing scenarios cover lifecycle tombstones).
-- **architecture** — unchanged in shape. The fix tightens one guard condition
-  inside `OBL-projection` (already an owner of `ART-shared-cloud-sync`, which
-  owns `shared/services/cloud-sync/projection-sync.ts`); the obligation's
-  wording still holds.
-- **tests** — `TEST-projection-sync-deletion` added (kind: integration,
-  covers `BR-3.1,BR-3.3`, file:
-  `shared/services/cloud-sync/__tests__/projection-sync.test.ts`, source-ref:
-  `lifecycle-aware early-return (delete tombstone)`). Tests stage validated;
-  `tests.trace.md` re-rendered.
-- **tasks** — no canonical task added (single-line defect fix; tracked in
-  this round only).
+- Requirements: preserve IDs, refine three, add the ten stated behaviors/rules.
+- BDD: eight focused acceptance scenarios, covering allocation, replay, manual
+  conflict/pending/Git identity, ambiguity, and operator repair.
+- Architecture: guarded transactional floor allocation; durable creation identity;
+  shared path-aware classifier; claim lookup; fail-closed compatibility; operator
+  correction. PoC constraints are mandatory implementation inputs.
+- Tests: seven new verification plans; every requirement remains covered.
+- Tasks: three implementation execution slices. Existing TASK-projection gains the
+  already-registered deletion regression to repair baseline missing task closure.
 
 ## Execution Slices
 
-### Slice 1 — Confirm + fix + regression test (DONE)
+### A — Allocation, identity and explicit recovery — locally complete
 
-- **Objective**: stop dropping the delete tombstone; prove it with a test that
-  fails pre-fix and passes post-fix.
-- **Direct artifacts**: `shared/services/cloud-sync/projection-sync.ts`,
-  `shared/services/cloud-sync/__tests__/projection-sync.test.ts`.
-- **Direct GREEN targets**: `lifecycle-aware early-return (delete tombstone)`
-  (2 cases in `projection-sync.test.ts`).
-- **Impacted tasks**: none canonical (defect fix on existing artifact).
-- **Why**: without the tombstone, deleted tickets stay live in the cloud
-  projection forever — the board and CLI keep showing them.
+- Objective: preserve the implemented collision guards and close F2/F3/F4: explicit owner-invoked inspection/resume/reviewed journal resolution, safe lock-owner diagnosis and canonical project-code normalization.
+- Direct artifacts: shared `creation-recovery.ts`, owner-only server `cloudCreationRecovery.ts`, `domain-contracts/src/{project,cloud-sync,ticket}/`,
+  `cloud/migrations/`, `cloud/src/cloudflare/{application,d1}/`,
+  `shared/services/TicketService.ts`, `shared/services/{cloud-sync,ticket}/`,
+  CLI create, MCP CR service, server TicketService/controllers.
+- Direct GREEN targets: TEST-uat-allocation-floor, TEST-uat-key-identity,
+  TEST-uat-create-adapters; stale_cloud_counter_skips_local_high_water,
+  different_slug_same_key_rejected, floor_identity_replay_stable,
+  duplicate_key_access_is_ambiguous.
+- Canonical task: TASK-uat-allocation-identity.
+- Additional direct GREEN targets: TEST-review-creation-recovery, TEST-review-legacy-journal-inspection, TEST-review-lock-owner-diagnostics, TEST-review-project-code-normalization, TEST-review-canonical-code-ack, TEST-review-recovery-adapter, TEST-review-recovery-http-integration, pending_creation_inspected_and_resumed, legacy_creation_journal_requires_reviewed_resolution, uncertain_creation_lock_is_actionable, lowercase_project_code_uses_canonical_identity.
+- Result: explicit stored-intent recovery and canonical project-code handling are shipped in source. Acknowledged journals require terminal reconciliation; receipt-less state stays inspectable. Original same-intent retries remain supported.
+
+### B — Safe manual-file observation and diagnostics — locally complete
+
+- Objective: preserve safe observation and close F1/F5: named actionable inventory failures and stable last verified evidence across bounded claim windows with safe invalidation and explicit freshness.
+- Direct artifacts: shared identity/classification contract and service;
+  `server/services/fileWatcher/`, `server/services/cloud-sync/` observation and
+  startup/error recovery integration; authorized diagnostic API/event boundaries.
+- Direct GREEN targets: TEST-uat-manual-observation, TEST-uat-watcher-paths;
+  manual_file_uses_other_reservation, manual_file_without_proof_pending,
+  verified_git_file_is_same_creation.
+- Canonical task: TASK-uat-observation-conflicts.
+- Additional direct GREEN targets: TEST-review-inventory-diagnostics, TEST-review-observation-stability, inventory_failure_reports_actionable_paths, bounded_claim_rotation_preserves_diagnostics, identity_diagnostic_cache_invalidates_on_change.
+- Result: inventory retains named failure causes/remedies and valid scanned entries; cached claim evidence stays stable outside the64-probe window and invalidates safely on content, identity, binding, credential or observed authorization changes.
+
+### C — Incident reconciliation and operational acceptance
+
+- Objective: preview/verify/apply an audited monotonic repair and explicit legacy
+  identity correction, preserve history, and verify before resuming coordination.
+- Direct artifacts: operator/application and D1 contracts, required forward-only
+  migrations, `cloud/test/counter-reconciliation.test.ts`, and
+  `cloud/test/operations/counter-reconciliation.md` (implemented local runbook).
+- Direct GREEN targets: TEST-uat-counter-repair,
+  TEST-uat-production-reconciliation; operator_repair_is_monotonic.
+- Canonical task: TASK-uat-operator-reconciliation.
+- Why: local repairs 257→261 and 258→262 did not move cloud reservations or
+  projections. A counter-only change leaves incorrect associations unresolved.
+- Operational boundary: implementation/fixture proof does not authorize a live
+  mutation; preserve and inspect production rows before a reviewed repair.
 
 ## Validation
 
-Commands run and their actual output:
+- Review documentation/trace pass:7 scenarios,3 artifact records,3 obligations,8 test plans and3 task records synchronized; requirement meanings unchanged. This remains the October24 round. A/B source fixes now have local regression evidence; C remains the separate operational gate.
+- Current review status: A/B implementation and independent review passed. The focused suites total912 passes; five affected package builds, scoped lint and all-stage trace validation passed. See [verification.md](verification.md) for immutable checkpoint digests, baseline failures and remaining live gates. Earlier1068-test evidence remains historical.
 
-- **Live D1 confirmation (read-only)** —
-  `npx wrangler d1 execute mdt-cloud-sync-production --remote --command
-  "SELECT ticket_number, lifecycle, deleted_at, projection_version, content_hash FROM ticket_projections WHERE ticket_number = 214;"`
-  (from `cloud/`, authed as andkirby@gmail.com). Result:
-  `lifecycle='active'`, `deleted_at=NULL`, `projection_version=1`,
-  `content_hash=e92e48b3…`. Only the create write landed; the delete never
-  reached D1. Empirically confirms the symptom against production.
-- **Diagnosis confirmed against source** — quoted lines:
-  - `TicketService.deleteCR` (TicketService.ts:859) calls
-    `syncTicketProjectionBestEffort(project, cr, cr, 'deleted')` at
-    TicketService.ts:867 — note `cr, cr` (previous === next).
-  - `projectedHeaderHash` (create-orchestrator.ts:115-117) hashes only the
-    `ProjectedHeader` (domain-contracts/src/cloud-sync/projection.ts:2-11),
-    which has no `lifecycle` field.
-  - `CloudProjectionSync.attempt` early-return (projection-sync.ts, pre-fix
-    118-122) compared only `contentHash`.
-  - `CloudProjectionClient.get` returns `lifecycle`
-    (CloudProjectionClient.ts:374, defaults to `'active'`); `publish` routes
-    `'deleted'` to the `/lifecycle` endpoint (CloudProjectionClient.ts:236).
-    Worker side writes
-    `deleted_at = CASE WHEN ? = 'deleted' THEN ? ELSE NULL END`
-    (cloud/src/cloudflare/d1/projection.ts:335). Worker side is correct; bug
-    is purely the client-side early-return.
-- **Regression test BEFORE fix** —
-  `bun run --cwd shared jest projection-sync`: 1 failed, 4 passed. New case
-  `publishes the lifecycle:deleted tombstone when content is unchanged but
-  lifecycle flips` failed with
-  `Expected number of calls: 1, Received number of calls: 0` — demonstrating
-  the dropped publish. The no-op case passed.
-- **Regression test AFTER fix** —
-  `bun run --cwd shared jest projection-sync`: 5/5 pass (incl. both new cases).
-- **No regression in create path** —
-  `bun run --cwd shared jest create-orchestrator`: 4/4 pass.
-- **`bun run build:shared`** — exit 0 (clean `tsc`).
-- **`bun run --cwd shared lint`** — exit 0 (`--max-warnings 0`, clean).
-- **spec-trace sync** —
-  `spec-trace test-plan upsert MDT-200 TEST-projection-sync-deletion --kind integration --title "Delete tombstone reaches the cloud projection even when ticket content is unchanged" --covers BR-3.1,BR-3.3 --file shared/services/cloud-sync/__tests__/projection-sync.test.ts --source-ref "lifecycle-aware early-return (delete tombstone)"`;
-  then `spec-trace validate MDT-200 --stage tests` (passed) and
-  `spec-trace render tests MDT-200` (re-rendered `tests.trace.md`). No new
-  requirement/obligation IDs — the existing `BR-3.1`/`BR-3.3` + `OBL-projection`
-  already cover the tombstone contract; this round only registers the new
-  regression coverage.
+- Baseline: all stages except tasks passed; tasks had one pre-existing missing
+  closure for TEST-projection-sync-deletion. Resolved through TASK-projection; its link remains intact.
+- PoC: [poc.md](poc.md). Candidate guarded batch passed isolated differing-floor
+  concurrency, replay, operator-advance, and rollback checks; naive max-only
+  change failed. Direct watcher handler proved path loss. No production fix,
+  real D1 concurrency, Access, or live watcher delivery is claimed.
+- Canonical trace: requirements → BDD → architecture → tests → tasks were
+  validated and rendered in order. Final `spec-trace validate MDT-200 --stage
+  all --format json` passed all five stages with zero issues. This validates
+  trace structure and coverage, not implementation readiness.
+- Strict drift/lock: not enabled; this is a non-strict same-ticket UAT delta.
+- Implementation acceptance: run the package-specific cases in tests.md and
+  require separate authorized live incident and multi-client evidence.
 
 ## Watchlist
 
-- **Open question (do NOT resolve in this round): should `projectedHeaderHash`
-  include `lifecycle`?** Today the hash covers only `ProjectedHeader` content
-  fields, so a delete and a re-create-with-same-content produce the same hash.
-  This fix sidesteps that by comparing lifecycle separately. Folding lifecycle
-  into the hash is a hash-contract migration (all stored `content_hash` values
-  would change semantics; cloud-side replay/idempotency keyed on
-  `operation_id` + `content_hash` must be re-checked). Track as a follow-up
-  decision, not a fix.
-- The fix reads `current.lifecycle ?? 'active'`. If the Worker ever returns a
-  projection with an absent `lifecycle` for a genuinely-deleted row, the guard
-  would treat it as `'active'` — acceptable because `normalizeProjectionItem`
-  (CloudProjectionClient.ts:374) defaults absent lifecycle to `'active'`, and a
-  deleted row always carries an explicit `'deleted'` from the Worker.
+- Do not replace the old number with local max+1 on failure. The observed local
+  maximum is only a lower bound for authoritative cloud allocation.
+- Do not mutate floor/creationId on a retry; do not trust an unchanged opaque
+  client hash as proof those fields are unchanged.
+- Guard reservation INSERT as well as counter UPDATE against the observed
+  counter. Differing floors defeat a uniqueness-only race argument.
+- New protocol support must precede client enforcement; old writers must not
+  continue silently without identity/floor protections. Handle legacy pending
+  journals explicitly, rather than inventing an identity during retry.
+- Known matching Git identity is not a new creation. Unknown legacy identity
+  is unverified, not automatically conflicting or safe. Cloud `reserved` rows
+  may have no projection and still own their number.
+- Existing files remain in place. No watcher can guarantee prevention of raw
+  filesystem writes or detect files in disconnected clones before observation.
+- MDT-226 owns projection delivery. This allocation correction adds no polling
+  loop and does not reopen its Durable Object or browser-feed architecture.
 
-## UAT Concerns
 
-- **UC-1 (closed this round): deleted ticket stays active in cloud DB.** Repro
-  and live D1 evidence above. Fixed by the lifecycle-aware guard; covered by
-  the new regression cases.
+## Review watchlist
 
-## Open Decisions
-
-The one open decision — whether `projectedHeaderHash` should include
-`lifecycle` — is recorded in Watchlist and explicitly deferred. Everything
-else in this round is closed.
+- F6 authorization-bypass claim is retracted: both Worker paths call the
+  authorized projection use case. Do not plan a workaround for a nonexistent bug.
+- F2 is an explicit recovery/inspection gap; identical create retry works across
+  processes. Never describe journal deletion as the normal remedy.
+- F3 PID reuse is confirmed; the zombie subcase is unproven. No age-only lock theft.
+- Keep incomplete inventory fail-closed; unavailable worktrees may be offline
+  mounts. Add typed cause/path/remediation, not automatic skipping or pruning.
+- Canonicalize project identity upstream; keep Worker project/code/creation
+  checks strict and existing file/config bytes unchanged unless explicitly edited.
+- Cached claim evidence is last verified evidence, never membership or adoption
+  authority. Invalidate on meaningful identity/connection/auth changes; no timers.

@@ -239,6 +239,22 @@ describe('PathWatcherService', () => {
   })
 
   describe('File change handling', () => {
+    it('preserves distinct physical paths for same-key slugged files internally', () => {
+      const changeSpy = jest.fn()
+      service.on('file-change', changeSpy)
+      service.initMultiProjectWatcher([{ id: 'test', path: '/test/*.md' }])
+      const addCallback = mockWatcher.on.mock.calls.find(
+        (call: [string, (...args: unknown[]) => void]) => call[0] === 'add',
+      )?.[1]
+      addCallback?.('/test/MDT-258-original.md')
+      addCallback?.('/test/MDT-258-manual.md')
+      expect(changeSpy.mock.calls.map(([event]) => event.physicalFilePath)).toEqual([
+        '/test/MDT-258-original.md',
+        '/test/MDT-258-manual.md',
+      ])
+      expect(changeSpy.mock.calls.map(([event]) => event.filename)).toEqual(['MDT-258.md', 'MDT-258.md'])
+    })
+
     it('should emit file-change event for ticket markdown files', () => {
       const changeSpy = jest.fn()
       service.on('file-change', changeSpy)
@@ -254,6 +270,7 @@ describe('PathWatcherService', () => {
       expect(changeSpy).toHaveBeenCalledWith({
         eventType: 'change',
         filename: 'MDT-095.md',
+        physicalFilePath: '/test/MDT-095.md',
         projectId: 'test',
         source: 'main',
         subdocument: null,
@@ -291,6 +308,7 @@ describe('PathWatcherService', () => {
       expect(changeSpy).toHaveBeenCalledWith({
         eventType: 'change',
         filename: 'MDT-095/architecture.md',
+        physicalFilePath: '/test/MDT-095/architecture.md',
         projectId: 'test',
         source: 'main',
         subdocument: {

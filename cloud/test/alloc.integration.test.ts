@@ -1,8 +1,10 @@
+import { mkdtempSync, rmSync } from 'node:fs'
 /**
  * TEST-alloc-concurrency / TEST-alloc-idempotency / TEST-alloc-isolation —
  * integration tests for the allocation transaction against a real SQLite.
  *
- * These exercise the actual SQL batch (statements.ts) that runs in production.
+ * These retain the legacy static-batch SQL reference. Production v2 allocation
+ * is exercised directly by identity-allocation.test.ts and alloc.concurrency.test.ts.
  * They use bun:sqlite (built into bun, no native install) against the same
  * schema, validating the transaction semantics (idempotency, uniqueness, counter
  * monotonicity) that D1 enforces. The full Workers-runtime + real-global-fetch
@@ -15,15 +17,11 @@
  * (UNIQUE constraints, INSERT...WHERE NOT EXISTS, atomic batch) are identical.
  */
 
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
 import { Database } from 'bun:sqlite'
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
-
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const SCHEMA_PATH = join(__dirname, '..', 'migrations', '0001_init.sql')
+import { applyMigrations } from './helpers/identity-d1'
 
 let db: Database.Database
 let tmpDir: string
@@ -31,7 +29,7 @@ let tmpDir: string
 beforeAll(() => {
   tmpDir = mkdtempSync(join(tmpdir(), 'mdt-alloc-'))
   db = new Database(join(tmpDir, 'test.sqlite'))
-  db.run(readFileSync(SCHEMA_PATH, 'utf8'))
+  applyMigrations(db)
 })
 
 afterAll(() => {
@@ -61,9 +59,9 @@ async function sha256(input: string): Promise<string> {
 }
 
 /**
- * Reproduce the allocation batch against raw SQLite, mirroring statements.ts.
- * Returns the reservation result or a reused-key conflict. This mirrors the
- * production SQL exactly; if this passes, the D1 batch passes (same SQLite).
+ * Reproduce the pre-v2 allocation reference against raw SQLite. Returns the
+ * original legacy reservation/idempotency behavior; this reference alone does
+ * not prove protocol-v2 floors, identities, or guarded INSERT concurrency.
  */
 async function allocate(
   projectId: string,

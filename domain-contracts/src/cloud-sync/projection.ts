@@ -1,5 +1,6 @@
 /** Approved cloud mirror fields. Ticket bodies never cross this boundary. */
 export interface ProjectedHeader {
+  creationId?: string
   code: string
   title: string
   status: string

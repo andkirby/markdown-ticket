@@ -26,12 +26,13 @@ Three transports carry synchronization, and they are not interchangeable:
 
 | Transport | Carries | Direction | Authority |
 | --- | --- | --- | --- |
-| Local server events (SSE, poll backup) | Everything, within one installation | Tabs of one installation | Local Markdown |
+| Local server events (SSE) | Everything, within one installation | Tabs of one installation | Local Markdown |
 | Git | Ticket bodies and canonical headers, between installations | Clone to clone | Markdown/Git |
 | Cloud coordination | Ticket-number allocation and read-only header projections, between installations | Installation to installation | D1 for numbers and projection versions |
 
 Projected headers are the full set `code`, `title`, `status`, `type`,
-`priority`, `assignee`, `date_created`, `last_modified`. Column and status
+`priority`, `assignee`, `date_created`, `last_modified`, plus the durable
+non-secret `creationId` used for provenance. Column and status
 changes are projected. Bodies, subdocuments, and everything else in the
 Markdown file are never projected and never leave Git.
 
@@ -50,13 +51,15 @@ Markdown file are never projected and never leave Git.
 | UC-9 | Credential absent or expired | Implemented; recovery is an owner action |
 | UC-10 | Membership revoked or project suspended | Implemented; deployed revocation gate pending |
 | UC-11 | Adding the second and third member | Onboarding implemented; hardening proposed |
-| UC-12 | Editing a ticket that predates cloud sync | Gap: operator import not implemented |
+| UC-12 | Editing a ticket that predates cloud sync | Gap: general import CLI not implemented |
+| UC-13 | Manual file uses an existing or unknown key | Locally verified diagnostic-only classification |
+| UC-14 | Owner resumes or reconciles a retained creation | Locally verified explicit owner API |
 
 ### UC-1: One member, several browser tabs
 
 One installation serves any number of tabs. Edits go through the local API,
-the file watcher broadcasts ordinary ticket events over SSE, and polling is the
-backup. Cloud behavior is irrelevant here: tabs of one installation never open
+the file watcher broadcasts ordinary ticket events over SSE. EventSource
+reconnect triggers a resync; there is no polling fallback. Cloud behavior is irrelevant here: tabs of one installation never open
 cloud connections, and additional tabs add no cloud traffic.
 
 ### UC-2: Canonical content between members
@@ -70,8 +73,10 @@ boundary, not a missing feature.
 ### UC-3: Concurrent ticket creation
 
 Two or three members press "create" at the same time. Each installation
-journals its intent and idempotency key, then reserves a number through one
-D1 transaction. Numbers never collide and are never reused; abandoned
+inventories canonical keys across its known physical-repository roots, then
+journals a v2 intent, creation identity, observed minimum and idempotency key.
+D1 reserves at or above both its counter and that minimum using a guarded batch.
+Supported creates do not reuse a number; abandoned
 reservations leave gaps, which is accepted. Creation requires a live
 coordinator: an offline member cannot create a cloud-bound ticket, and there
 is no local fallback numbering while a project is connected. The contract is
@@ -218,3 +223,34 @@ Dated inventory; strike items as they close.
    idle-zero-D1, revocation disconnect, and delivery-latency SLOs are
    unmeasured; until they pass, UC-5 stays flag-off and UC-4's end-to-end
    freshness in production is unproven.
+
+### UC-13: Manual file uses an existing or unknown key
+
+An agent or person can write a file directly; the filesystem is not blocked.
+Watcher/startup observation preserves it and reads current claim evidence with
+non-interactive credentials. A different cloud creation on that key is conflict,
+missing proof is verification_pending, a proved unreserved creation is unmanaged,
+and matching acknowledged creation identity is verified. Two local slugs for the
+same key are ambiguous and key-based reads/mutations cannot select one at random.
+Observation never reserves, ACKs, publishes, renumbers or deletes.
+
+Each pass probes at most 64 unique claims. Unchanged files outside that rotating
+window retain their last verification timestamp; content/identity/binding/credential
+changes or observed authorization loss invalidate proof. Incomplete inventory
+still blocks new creation and names the failed relative path and safe remedy.
+Disconnected clones and files not yet observed cannot be inventoried remotely.
+See [the identity contract](data-and-consistency.md#stable-read-only-identity-diagnostics).
+
+### UC-14: Owner resumes or reconciles a retained creation
+
+The owner inspects the local creation-recovery endpoint, then explicitly resumes
+a supported unfinished intent using its discovered journalId and expectedDigest.
+The original draft, identity, minimum and held receipt are reused without
+reconstructing CLI arguments. No read, startup or watcher event resumes it.
+
+An acknowledged journal goes through terminal reconciliation, never the owner
+resume cleanup shortcut. Read-only coordinator proof and canonical verification
+permit private immutable archival; corrupt/unproven state stays inspectable and
+fail-closed. This local disposition does not repair the D1 counter/associations.
+That separately authorized suspended-project operation and deployment/live
+acceptance remain open. See [recovery operations](operations.md#explicit-retained-creation-recovery-mdt-200).

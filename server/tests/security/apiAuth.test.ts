@@ -1,16 +1,58 @@
 /// <reference types="jest" />
 
 import type { Request } from 'express'
-import { isPublicReadRoute } from '../../security/accessPolicy'
+import { mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import express from 'express'
+import request from 'supertest'
+import { isOwnerOnlyRoute, isPublicReadRoute } from '../../security/accessPolicy'
 import {
+  createApiAuthMiddleware,
   extractApiCredential,
   isApiAuthExemptRoute,
   isLocalHostRequest,
   parseApiAuthConfig,
   timingSafeTokenMatches,
 } from '../../security/apiAuth'
+import { createReadSessionCookie } from '../../security/readSession'
 
 describe('backend API auth security utilities - MDT-157', () => {
+  describe('MDT-200 identity diagnostics access boundary', () => {
+    it.each(['GET', 'HEAD', 'OPTIONS'])('keeps cached identity diagnostics owner-only for %s', (method) => {
+      const path = '/api/projects/markdown-ticket/ticket-identities'
+      expect(isPublicReadRoute(path, method)).toBe(false)
+      expect(isOwnerOnlyRoute(path)).toBe(true)
+      expect(isPublicReadRoute('/api/projects/markdown-ticket/crs', method)).toBe(true)
+    })
+  })
+
+  describe('MDT-200 creation recovery access boundary', () => {
+    const paths = [
+      '/api/projects/markdown-ticket/cloud-sync/creation-recovery',
+      '/api/projects/markdown-ticket/cloud-sync/creation-recovery/',
+      '/api/projects/markdown-ticket/cloud-sync/creation-recovery?inspect=1',
+      '/api/projects/markdown-ticket/cloud-sync/creation-recovery/resume',
+      '/api/projects/markdown-ticket/cloud-sync/creation-recovery/reconcile',
+      '/api/projects/MDT/CLOUD-SYNC/CREATION-RECOVERY',
+    ]
+
+    it.each(paths)('keeps %s owner-only for every safe read method', (path) => {
+      for (const method of ['GET', 'HEAD', 'OPTIONS', 'get']) {
+        expect(isPublicReadRoute(path, method)).toBe(false)
+      }
+      expect(isOwnerOnlyRoute(path)).toBe(true)
+      expect(isApiAuthExemptRoute('GET', path)).toBe(false)
+    })
+
+    it('preserves the ordinary project read grant', () => {
+      for (const method of ['GET', 'HEAD', 'OPTIONS']) {
+        expect(isPublicReadRoute('/api/projects/markdown-ticket/crs', method)).toBe(true)
+        expect(isPublicReadRoute('/api/projects/markdown-ticket', method)).toBe(true)
+      }
+    })
+  })
+
   describe('parseApiAuthConfig', () => {
     it('keeps local/test no-auth compatibility when auth env is absent', () => {
       expect(parseApiAuthConfig({ NODE_ENV: 'test' } as NodeJS.ProcessEnv)).toMatchObject({
@@ -194,6 +236,73 @@ describe('backend API auth security utilities - MDT-157', () => {
       expect(isLocalHostRequest(mockRequest({ host: 'dev.box:3001' }), ['dev.box'])).toBe(true)
       expect(isLocalHostRequest(mockRequest({ host: 'localhost' }), ['dev.box'])).toBe(false)
     })
+  })
+})
+
+describe('MDT-200 recovery real auth middleware boundary', () => {
+  let root: string
+  const secret = 'isolated-recovery-read-session'
+  const ownerToken = 'isolated-recovery-owner-token'
+  const base = '/api/projects/fixture/cloud-sync/creation-recovery'
+
+  beforeAll(() => {
+    root = mkdtempSync(join(tmpdir(), 'mdt200-recovery-auth-'))
+  })
+  afterAll(() => rmSync(root, { recursive: true, force: true }))
+
+  function appWithAuth() {
+    const app = express()
+    app.use('/api', createApiAuthMiddleware(parseApiAuthConfig({
+      NODE_ENV: 'test',
+      API_SECURITY_AUTH: 'true',
+      API_AUTH_TOKEN: ownerToken,
+      API_LOCAL_HOST_BYPASS: 'false',
+    }), {
+      configDir: root,
+      allowLocalReadSessionFallback: false,
+      readSessionSecret: secret,
+      originPolicy: { isAllowedOrigin: () => false },
+    }))
+    const admitted = jest.fn()
+    app.use((_req, res) => {
+      admitted()
+      res.json({ admitted: true })
+    })
+    return { app, admitted }
+  }
+
+  it.each([
+    ['get', false],
+    ['get', true],
+    ['head', false],
+    ['head', true],
+    ['options', false],
+    ['options', true],
+  ] as const)('blocks %s with read-session=%s before handler admission', async (method, readSession) => {
+    const { app, admitted } = appWithAuth()
+    const cookie = createReadSessionCookie(secret, { projectRefs: ['fixture'] }, { secure: false }).split(';')[0]!
+    await request(app)[method](base).set(readSession ? { Cookie: cookie } : {}).expect(403)
+    expect(admitted).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ['resume', false],
+    ['resume', true],
+    ['reconcile', false],
+    ['reconcile', true],
+  ] as const)('blocks POST %s with read-session=%s before handler admission', async (operation, readSession) => {
+    const { app, admitted } = appWithAuth()
+    const cookie = createReadSessionCookie(secret, { projectRefs: ['fixture'] }, { secure: false }).split(';')[0]!
+    await request(app).post(`${base}/${operation}`).set(readSession ? { Cookie: cookie } : {}).expect(403)
+    expect(admitted).not.toHaveBeenCalled()
+  })
+
+  it('admits owner inspection and explicit operations through the existing credential path', async () => {
+    const { app, admitted } = appWithAuth()
+    await request(app).get(base).auth(ownerToken, { type: 'bearer' }).expect(200)
+    await request(app).post(`${base}/resume`).auth(ownerToken, { type: 'bearer' }).expect(200)
+    await request(app).post(`${base}/reconcile`).auth(ownerToken, { type: 'bearer' }).expect(200)
+    expect(admitted).toHaveBeenCalledTimes(3)
   })
 })
 

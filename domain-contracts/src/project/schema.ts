@@ -192,6 +192,9 @@ export const ProjectCodeSchema = z.string()
   .max(5, 'Project code must be 2-5 chars')
   .regex(PROJECT_CODE_PATTERN, 'Project code must be 2-5 chars, start with uppercase letter, and contain only alphanumeric characters')
 
+/** Canonicalize configuration at the cloud boundary; wire identities stay strict. */
+export const CanonicalProjectCodeSchema = z.string().trim().toUpperCase().pipe(ProjectCodeSchema)
+
 export const ProjectNameSchema = SafeConfigStringSchema
   .refine(
     name => name.trim().length >= 3,

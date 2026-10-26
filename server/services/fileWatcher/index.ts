@@ -171,7 +171,7 @@ class FileWatcherService extends EventEmitter {
     // Invalidate cache for changed files
     if (this.fileInvoker && (eventType === 'change' || eventType === 'add' || eventType === 'unlink')) {
       const projectPath = this.pathWatcher.getProjectPath(projectId)
-      const filePath = path.join(projectPath, filename)
+      const filePath = data.physicalFilePath ?? path.join(projectPath, filename)
 
       console.warn(`Invalidating cache for: ${filePath}`)
       this.fileInvoker.invalidateFile(filePath)
@@ -181,7 +181,7 @@ class FileWatcherService extends EventEmitter {
     if (eventType === 'change' || eventType === 'add') {
       try {
         const projectPath = this.pathWatcher.getProjectPath(projectId)
-        const filePath = path.join(projectPath, filename)
+        const filePath = data.physicalFilePath ?? path.join(projectPath, filename)
 
         if (fs.existsSync(filePath)) {
           const fileContent = fs.readFileSync(filePath, 'utf8')
@@ -250,6 +250,16 @@ class FileWatcherService extends EventEmitter {
       },
       100,
     )
+  }
+
+  /** Identity diagnostics themselves stay owner-only; ordinary clients only refetch. */
+  broadcastTicketIdentityChange(projectId: string): void {
+    this.sseBroadcaster.debouncedBroadcast(`ticket-identities:${projectId}`, () => {
+      this.sseBroadcaster.broadcast({
+        type: 'file-change',
+        data: { eventType: 'change', filename: 'ticket-identities', projectId, timestamp: Date.now() },
+      })
+    }, 100)
   }
 
   private handleDocumentChangeForSSE(data: DocumentChangeEventPayload): void {
@@ -476,6 +486,7 @@ class FileWatcherService extends EventEmitter {
     this.handleFileChangeForSSE({
       eventType,
       filename,
+      physicalFilePath: path.resolve(this.pathWatcher.getProjectPath(projectId), filename),
       projectId,
       timestamp: Date.now(),
       subdocument: null,

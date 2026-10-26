@@ -25,6 +25,9 @@ never writes a projected value back into Markdown.
 The first slice uses one D1 database per deployment environment and scopes every
 tenant query by `cloud_project_id`.
 
+The base schema excerpt below is supplemented by migration0005 for creation
+identity and permanent reconciliation records; see the protocol-v2 section.
+
 ```sql
 CREATE TABLE cloud_projects (
   id TEXT PRIMARY KEY,
@@ -179,28 +182,30 @@ counter or deletes the reservation.
 `Idempotency-Key`. The client creates and durably journals that key before the
 first network request. The Worker stores only its SHA-256 hash.
 
-The request-scoped `reservation_id` allows a static list of prepared statements
-without branching on intermediate results. The production implementation must
-retain the shape proven by `MDT-198`:
+The source implementation in `cloud/src/cloudflare/d1/statements.ts` keeps
+MDT-198's static transactional batch shape and adds protocol-v2 floor/identity
+guards. Each bounded attempt reads an observed counter and chooses
+`max(observedCounter, minimumTicketNumber)`. The batch:
 
 ```text
 batch([
-  1. INSERT reservation with projects.next_ticket_number
-       only when no row exists for the project + idempotency-key hash;
-  2. INSERT OR IGNORE the idempotency result by selecting the row created with
-       this request's reservation_id;
-  3. UPDATE cloud_projects.next_ticket_number by one only when its current
-       value equals this request's selected ticket number;
-  4. INSERT an allocation or replay audit event by comparing the selected
-       reservation_id with this request's reservation_id;
+  1. INSERT the candidate reservation and immutable creation identity only when
+       the project's counter still equals observedCounter, coordination is active,
+       and no project/idempotency-key result exists;
+  2. INSERT OR IGNORE the idempotency result from this request's inserted row;
+  3. UPDATE the counter to candidate + 1 only when it still equals observedCounter
+       and this request's reservation row exists;
+  4. INSERT an allocation or replay audit event;
   5. SELECT the row for project + idempotency-key hash.
 ])
 ```
 
-D1 executes the batch as one transaction. Unique constraints provide the final
-guard. A replay returns the existing reservation without advancing the counter.
-Reusing one key with a different canonical request hash returns
-`409 idempotency_key_reused`.
+D1 executes the batch as one transaction. The INSERT must guard the observed
+counter too: uniqueness alone is insufficient when concurrent clients propose
+different floors. A stale attempt is rolled back/retried as a whole. A replay
+returns its original reservation without advancing the counter. Reusing a key
+with changed immutable protocol/creation/floor/request inputs returns
+`409 idempotency_key_reused`; the Worker derives their canonical digest.
 
 The counter is monotonic. It is initialized to a value greater than the highest
 ticket number already present in the repository.
@@ -217,22 +222,25 @@ sequenceDiagram
   participant F as Markdown filesystem
 
   A->>S: createTicket(project, input)
-  S->>J: Persist create intent and idempotency key
+  S->>F: Inventory canonical keys across known roots
+  S->>J: Persist v2 intent, creationId, minimum and idempotency key
   S->>W: POST reservation
   W->>D: Transactional allocation batch
   D-->>W: Stable reservation and ticket number
   W-->>S: 201 reservation or 200 replay
   S->>J: Persist reservation before file write
-  S->>F: Create canonical ticket with reserved code
+  S->>F: Exclusively write reserved key and creationId
   alt file write succeeds
-    S->>W: PUT reservation acknowledgement with header hash
+    S->>F: Verify current key-wide canonical identity
+    S->>J: Persist written header acknowledgement
+    S->>W: PUT original acknowledgement with header hash
     W->>D: Acknowledge and create projection transaction
     W-->>S: Projection version and project revision
     S->>J: Remove completed intent
     S-->>A: Created ticket
   else file write fails
     S->>J: Keep recoverable reservation and error
-    S-->>A: Recoverable local_write_failed
+    S-->>A: Recoverable failure with retained intent
   end
 ```
 
@@ -241,13 +249,46 @@ Crash recovery is deterministic:
 | Last durable point | Recovery |
 | --- | --- |
 | Intent exists, no reservation response | Retry the same idempotency key |
-| Reservation exists, no local file | Retry the same atomic file creation |
+| Reservation exists, no local file | Retry the exclusive canonical write with the original identity |
 | Local file exists, no acknowledgement | Re-read header and retry acknowledgement |
-| Acknowledgement succeeded, journal not cleared | Replay acknowledgement, then clear |
+| Locally acknowledged journal remains | Explicit owner inspection and terminal reconciliation; preserve original bytes and decision |
 
 The local journal contains no credential. It is mode `0600`, uses
 write-temp-then-rename, and is protected by one lock per physical repository
 and cloud project.
+
+## Explicit Local Creation Recovery
+
+`CreationRecoveryService` composes `CloudOperationJournal` and `RecoveryRunner`
+through the shared TicketService. It is separate from projection-write retry
+and cloud incident repair. The owner HTTP requests carry a discovered relative
+journalId and exact-byte expectedDigest; resume checks that digest after the
+runner acquires its existing lock, hashing/parsing the same bounded byte read.
+Only unfinished current v2 intents with stored drafts can resume. Original
+creationId, floor, idempotency key, receipt and operation identity are retained.
+A written replay must verify the canonical file and retained header hash before
+ACK. Legacy/corrupt or unproven state is never assigned a new identity on retry.
+
+Acknowledged journals cannot enter the owner resume path, including incomplete
+ones. Terminal reconciliation additionally requires an operation UUID and reason,
+locks both active and selected former routes, and verifies the held receipt
+against current read-only claim evidence. Only acknowledged/abandoned proof
+matching cloud project, reservation, number and creation identity qualifies;
+acknowledged proof also requires a current unique canonical file.
+
+The exact raw journal and immutable decision/proof are stored under
+`archive/{operationId}/` with 0700/0600 permissions and synced before active
+removal. Identical operation/inputs replay the stored decision. Changed inputs,
+changed bytes or a replacement live intent conflict. Partial archives are
+preserved, never overwritten; there is no automatic archive GC or force-clear.
+Malformed, oversized, receipt-less and unverifiable-lock states remain
+inspectable manual-review-required. A PID check describes liveness, not proof
+of original ownership; age alone cannot authorize lock theft.
+
+Normal identical-create retries retain their existing orchestration behavior;
+this owner API does not expose the runner's historical acknowledged-cleanup
+shortcut. Explicit terminal recovery needs reachable coordination, so it stays
+blocked offline. See [the operator procedure](operations.md#explicit-retained-creation-recovery-mdt-200).
 
 ## Acknowledgement
 
@@ -359,7 +400,9 @@ only supported bootstrap is an explicit operator import/backfill operation that:
 5. records idempotency, audit outcome, skipped tickets, and failures; and
 6. leaves local ticket bodies entirely in Markdown/Git.
 
-The import is a CLI/operator workflow, not a runtime retry path. It must be
+A general legacy import CLI is not shipped by the MDT-200 correction. The
+bounded suspended-project incident repair is separate; see the incident runbook.
+The accepted import direction is a CLI/operator workflow, not a runtime retry path. It must be
 idempotent, bounded, and safe to resume after partial failure.
 
 ## Projection Conflicts
@@ -525,6 +568,7 @@ size bounded.
 | Method and path | Minimum role | Success |
 | --- | --- | --- |
 | `POST /v1/admin/projects` | Operator audience | `201` project and initial owner, or replay `200` |
+| `POST /v1/admin/projects/{projectId}/reconciliation` | Operator audience + project owner; suspended project | `200` read-only preview or audited idempotent apply |
 | `GET /v1/projects/{projectId}` | Viewer | `200` binding and coordination state |
 | `GET /v1/projects/{projectId}/members` | Owner | `200` member list |
 | `PUT /v1/projects/{projectId}/members/{kind}/{principalId}` | Owner | `200` upserted member |
@@ -532,6 +576,7 @@ size bounded.
 | `PUT /v1/projects/{projectId}/coordination-state` | Owner | `200` active or suspended |
 | `POST /v1/projects/{projectId}/reservations` | Contributor | `201` or replay `200` |
 | `GET /v1/projects/{projectId}/reservations/{reservationId}` | Contributor | `200` recovery state |
+| `GET /v1/projects/{projectId}/tickets/{ticketNumber}/claim` | Contributor | `200` reserved/acknowledged/orphaned/abandoned/unreserved identity evidence |
 | `PUT /v1/projects/{projectId}/reservations/{reservationId}/acknowledgement` | Contributor | `200` projection |
 | `PUT /v1/projects/{projectId}/tickets/{ticketNumber}/projection` | Contributor | `200` projection |
 | `PUT /v1/projects/{projectId}/tickets/{ticketNumber}/lifecycle` | Contributor | `200` projection or tombstone |
@@ -562,6 +607,22 @@ origin, or credential data. The target architecture removes the browser
 `/api/projects/{id}/cloud-projections` call after the bounded legacy rollout.
 `/api/projects/{id}/crs` remains the canonical Markdown list endpoint; it is not
 the browser's cloud projection surface.
+
+### Owner-Only Local Recovery and Diagnostics
+
+These local-server endpoints are not the cloud operator API and are not
+public/shared-board read surfaces. GET inspection obtains no cloud credential
+and performs no write. Resume/reconcile are explicit owner actions.
+
+| Method and path | Purpose |
+| --- | --- |
+| `GET /api/projects/{localProjectId}/ticket-identities` | Cached relative-path manual-file diagnostics; no claim probe on GET |
+| `GET /api/projects/{localProjectId}/cloud-sync/creation-recovery` | Bounded current/known-legacy journal and lock inspection |
+| `POST /api/projects/{localProjectId}/cloud-sync/creation-recovery/resume` | Digest-checked stored-intent recovery |
+| `POST /api/projects/{localProjectId}/cloud-sync/creation-recovery/reconcile` | Verified terminal receipt archive, no cloud mutation |
+
+A local archive is not a D1 counter bump or manual-file import. See
+[operations](operations.md#explicit-retained-creation-recovery-mdt-200).
 
 ## Error Contract
 
@@ -641,8 +702,9 @@ Re-enabling preserves the cloud counter and requires a fresh membership probe.
 | Audit events | 180 days in D1, then delete in bounded batches |
 | Durable Object per-socket acknowledged cursor and attachments (DO SQLite-backed storage, not D1) | Until project decommission; attachments only while sockets exist |
 | Local applied projection cursor | Until connection removal or explicit repair |
-| Local completed journal entries | Removed immediately after confirmed success |
-| Local failed journal entries | Until recovery or explicit operator retirement |
+| Normally completed creation journals | Removed after confirmed create success |
+| Explicitly reconciled creation journals | Raw bytes and immutable decision retained; no automatic archive GC |
+| Local failed/unproven creation journals | Until safe recovery or proved terminal archival; no blind retirement |
 
 Project-lifetime idempotency retention intentionally supersedes MDT-198's
 tentative prune-after-window note. A delayed replay must resolve to its original
@@ -650,3 +712,81 @@ reservation rather than allocate a second number.
 
 Before deleting a cloud project, operations must export coordination data and
 confirm the canonical Markdown repository remains usable.
+
+## Allocation protocol v2 and durable creation identity (MDT-200 October UAT)
+
+Source implementation requires migration `0005_creation_identity.sql` before
+its Worker rollout. This section describes the implemented source contract;
+production migration and incident reconciliation have not been executed.
+
+Every supported cloud create journals `protocolVersion: 2`, a fresh UUID
+`creationId`, and `minimumTicketNumber` before sending a reservation request.
+The minimum is a fresh inventory high-water plus one across the physical Git
+repository's known worktrees, bounded by configured startNumber. It is a lower
+bound for D1 allocation, never permission to allocate locally. Independent
+clones require cloud reservations; unknown raw files cannot be discovered
+before they are shared or observed.
+
+The reservation INSERT and counter advance both guard the observed counter.
+D1 issues max(observed counter, requested minimum) and advances monotonically;
+a raced observed value rolls back/retries the whole batch. The server derives
+its request digest from immutable protocol, creation identity, minimum, and
+original request hash. Retries retain all original inputs. Old public writers
+without v2 fields fail closed. A changed floor under the same idempotency key
+is a conflict, not an implicit new intent.
+
+Migration 0005 adds nullable `creation_id` and `minimum_ticket_number` to
+`ticket_reservations`, a per-project unique creation identity index, and
+`reconciliation_operations` for permanent repair results and before/after
+association snapshots. NULL legacy identities remain unverified; migration
+does not invent provenance. Markdown frontmatter and projected headers preserve
+creationId. Acknowledgement/publication checks the reserved identity and code.
+The mutable header hash is not a substitute for creation identity.
+
+The local journal is routed by the real Git common directory, so linked
+worktrees share one pending create. Upgrade checks the former project-root
+routes, including known worktrees, and blocks if an old journal or lock remains.
+Legacy/corrupt journals are retained for explicit recovery. Both ordinary
+create replay and RecoveryRunner verify the current canonical file before
+acknowledgement; a persisted acknowledgement payload alone is insufficient.
+
+Key-based access rejects all involved keys when duplicate slugs, mismatched
+filename/frontmatter keys, or a creation ID copied to a different key are
+present. Matching creation IDs in distinct known worktrees can represent the
+same Git-delivered creation. Unrelated files remain editable offline.
+
+Manual files are diagnostic-only: reserved, orphaned, and abandoned numbers
+are occupied even without a projection. Read-only claim lookup includes those
+states. Missing provenance or unavailable evidence is verification_pending;
+proven disagreement is conflict; a proven unreserved identity is unmanaged;
+a matching acknowledged identity is verified. No observation reserves,
+acknowledges, publishes, renumbers, or deletes a file.
+
+Explicit operator reconciliation requires the operator audience, owner
+membership, and a suspended project. Its preview is read-only. Apply asserts
+counter/revision and each reviewed reservation identity/state/projection version
+in one batch; stale input rolls back all writes. Original number/idempotency
+history and immutable correction evidence are retained, the counter only
+advances, retries return the stored result, and coordination never auto-resumes.
+See [the incident runbook](../../../cloud/test/operations/counter-reconciliation.md).
+
+Configured absolute or relative external ticket roots remain supported. Inventory
+resolves only the configured root, scans a shared physical directory once across
+worktrees, and labels external diagnostic paths `tickets-root/<filename>` without
+absolute paths or `..`. Creation and lookup resolve the same configured root.
+
+### Stable Read-Only Identity Diagnostics
+
+Creation still fails closed on incomplete inventory. Scans retain valid entries
+and named typed causes/remedies for unavailable roots, permission failures or
+unsupported numbers. External roots use relative tickets-root labels; no scan
+prunes Git metadata, renumbers or deletes a file.
+
+Observation performs at most 64 unique claim probes per pass with non-interactive
+credentials. Last verified evidence is cached by binding/hashed credential
+context and file path/content/creation identity. Rotating outside the current
+window preserves unchanged evidence and lastVerifiedAt. Changed or ambiguous
+files invalidate affected entries; binding/credential changes and observed
+authorization denial invalidate project proof. A failed selected probe becomes
+stale/pending. Timestamp-only refresh updates cache without duplicate semantic
+SSE notification. There is no idle timer and cached proof never authorizes a write.

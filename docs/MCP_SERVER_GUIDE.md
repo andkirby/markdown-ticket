@@ -122,13 +122,24 @@ The MCP server provides **10 consolidated tools** for complete CR management:
 - **`update_cr_status`** - Update CR status workflow
 - **`delete_cr`** - Remove CRs
 
-For a project with `[project.cloudSync].enabled = true`, these tools still use
+For a project with an enabled device-local
+`CONFIG_DIR/projects/{localProjectId}/cloud-sync.toml` connection, these tools use
 the shared `TicketService`: `create_cr` requires live coordination and never
 falls back to local numbering, while updates remain local-first and queue a
 header-only projection if the cloud is unavailable. Interactive MCP uses
 `cloudflared`; headless MCP uses `CF_ACCESS_CLIENT_ID` and
 `CF_ACCESS_CLIENT_SECRET`. See
-[`docs/CLOUD_COORDINATION_GUIDE.md`](CLOUD_COORDINATION_GUIDE.md).
+[`docs/CLOUD_COORDINATION_GUIDE.md`](CLOUD_COORDINATION_GUIDE.md). A disabled,
+malformed or untrusted retained connection also blocks local-number fallback;
+repository `[project.cloudSync]` is migration input only.
+
+Cloud creates preserve the shared v2 creation identity, allocation floor and
+key-wide guards; duplicate-key reads/updates are ambiguous rather than selecting
+a slug. Manually written files are observed without claiming reservations.
+The shipped explicit recovery adapter is the local server's owner-only API,
+not a new MCP tool. It can inspect/resume the stored intent without repeating
+create arguments; acknowledged or unproven state follows the
+[reviewed recovery procedure](architecture/cloud-sync/operations.md#explicit-retained-creation-recovery-mdt-200).
 
 ### Advanced Features
 - **`manage_cr_sections`** - Efficient section operations (84-94% token savings)

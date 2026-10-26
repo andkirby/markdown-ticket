@@ -37,7 +37,7 @@ import type {
   ReservationDTO,
   ReserveRequest,
 } from '@mdt/domain-contracts'
-import { COORDINATION_ROUTE_PREFIX, CoordinatorError } from '@mdt/domain-contracts'
+import { ALLOCATION_PROTOCOL_VERSION, AllocationProtocolRequestSchema, COORDINATION_ROUTE_PREFIX, CoordinatorError, TicketClaimResponseSchema } from '@mdt/domain-contracts'
 import { checkOriginAllowlist } from './config.js'
 
 /** The shape of fetch we accept (Web fetch; injected for tests). */
@@ -99,6 +99,8 @@ function envelopeToCode(status: number, envelope?: Partial<CoordinationErrorEnve
     'rate_limited',
     'coordination_unavailable',
     'coordination_suspended',
+    'reservation_state_conflict',
+    'invalid_request',
   ])
   return known.has(envelope.error.code as CoordinatorErrorCode)
     ? (envelope.error.code as CoordinatorErrorCode)
@@ -127,6 +129,9 @@ export class CloudSyncCoordinator implements ICloudSyncCoordinator {
 
   async reserve(req: ReserveRequest, credential: CloudCredential): Promise<ReservationDTO> {
     this.requireAllowlisted()
+    const input = AllocationProtocolRequestSchema.safeParse(req)
+    if (!input.success)
+      throw new CoordinatorError('reservation_state_conflict', { message: 'Allocation identity protocol v2 is required' })
     const url = routeUrl(
       this.serviceUrl,
       `${COORDINATION_ROUTE_PREFIX}/${encodeURIComponent(req.cloudProjectId)}/reservations`,
@@ -136,15 +141,33 @@ export class CloudSyncCoordinator implements ICloudSyncCoordinator {
       method: 'POST',
       redirect: 'error',
       headers,
-      body: JSON.stringify({ idempotencyKey: req.idempotencyKey, requestHash: req.requestHash }),
+      body: JSON.stringify(input.data),
     }))
-    const body = await this.parseEnvelope<{ reservationId: string, ticketNumber: number, state: string, replayed: boolean }>(res, 200, 201)
+    const body = await this.parseEnvelope<ReservationDTO>(res, 200, 201)
+    if (body.data.protocolVersion !== ALLOCATION_PROTOCOL_VERSION || body.data.creationId !== req.creationId || body.data.minimumTicketNumber !== req.minimumTicketNumber || !Number.isSafeInteger(body.data.ticketNumber) || body.data.ticketNumber < input.data.minimumTicketNumber)
+      throw new CoordinatorError('reservation_state_conflict', { message: 'Coordinator does not support the requested creation identity and minimum' })
     return {
+      protocolVersion: body.data.protocolVersion,
+      creationId: body.data.creationId,
+      minimumTicketNumber: body.data.minimumTicketNumber,
       reservationId: body.data.reservationId,
       ticketNumber: body.data.ticketNumber,
       state: body.data.state,
       replayed: body.data.replayed,
     }
+  }
+
+  async getClaim(req: { cloudProjectId: string, ticketNumber: number }, credential: CloudCredential) {
+    this.requireAllowlisted()
+    if (!Number.isSafeInteger(req.ticketNumber) || req.ticketNumber <= 0)
+      throw new CoordinatorError('invalid_request')
+    const url = routeUrl(this.serviceUrl, `${COORDINATION_ROUTE_PREFIX}/${encodeURIComponent(req.cloudProjectId)}/tickets/${req.ticketNumber}/claim`)
+    const res = await this.call(() => this.fetchImpl(url, { method: 'GET', redirect: 'error', headers: this.headers(credential) }))
+    const body = await this.parseEnvelope<unknown>(res, 200)
+    const claim = TicketClaimResponseSchema.safeParse(body.data)
+    if (!claim.success || claim.data.ticketNumber !== req.ticketNumber)
+      throw new CoordinatorError('reservation_state_conflict', { message: 'Coordinator claim response is incompatible' })
+    return claim.data
   }
 
   async acknowledge(

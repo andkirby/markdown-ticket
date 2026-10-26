@@ -10,9 +10,9 @@
  *
  * The counter is pre-read outside the transaction, so two concurrent requests
  * can read the same `next_ticket_number`. `allocateReservation` wraps the
- * static batch in a bounded retry loop that detects the resulting lost update
- * (UNIQUE violation on the reservation insert, or 0 rows on the counter
- * advance) and re-runs — it never returns a duplicate number.
+ * static batch in a bounded retry loop. The INSERT checks the observed
+ * counter before a potentially higher candidate is inserted; a lost guard
+ * leaves no new row, and a bounded retry observes the winning counter.
  *
  * A replay returns the existing reservation without advancing the counter.
  * Reusing one key with a different request hash returns 409 idempotency_key_reused.
@@ -29,12 +29,18 @@ export interface ReservationRequest {
   /** SHA-256 of the canonical request body. */
   requestHash: string
   principal: CloudPrincipal
+  protocolVersion?: number
+  creationId?: string
+  minimumTicketNumber?: number
 }
 
 export interface ReservationResult {
   reservationId: string
   ticketNumber: number
   state: string
+  protocolVersion?: number
+  creationId?: string
+  minimumTicketNumber?: number
   /** true when this call returned a prior reservation without advancing the counter. */
   replayed: boolean
 }
@@ -54,6 +60,8 @@ interface AllocationRow {
   state: string
   request_hash: string
   idempotency_key_hash: string
+  creation_id: string | null
+  minimum_ticket_number: number | null
 }
 
 /**
@@ -74,7 +82,7 @@ const ALLOCATION_MAX_ATTEMPTS = 10
  *   2. INSERT OR IGNORE idempotency result by selecting the row with this
  *      request's reservation_id;
  *   3. UPDATE cloud_projects.next_ticket_number by one only when its current
- *      value equals this request's selected ticket number;
+ *      value equals this request's observed counter;
  *   4. INSERT allocation or replay audit event by comparing the selected
  *      reservation_id with this request's reservation_id;
  *   5. SELECT the row for project + idempotency-key hash.
@@ -83,11 +91,11 @@ const ALLOCATION_MAX_ATTEMPTS = 10
  * OUTSIDE the transaction so two concurrent requests can observe the same
  * `next_ticket_number`. The static batch has two independent guards against
  * that race:
- *   - Statement 1 inserts `(cloud_project_id, ticket_number)` which has a
- *     UNIQUE constraint — a racing insert with the same number throws, aborting
- *     the batch.
- *   - Statement 3 advances the counter with `WHERE next_ticket_number = ?`; a
- *     racing request that already advanced it leaves 0 affected rows.
+ *   - Statement 1 first checks the observed counter and active state, then
+ *     inserts the selected max(counter, minimum) with final UNIQUE guards.
+ *   - Statement 3 advances only the counter that statement 1 observed, and
+ *     only for this request's inserted reservation. Differing floors cannot
+ *     leave an inserted row behind after a failed counter compare.
  * Either way NO duplicate number is returned. But the loser of the race must
  * not surface a stale error: it re-reads the counter and re-runs the batch up
  * to `ALLOCATION_MAX_ATTEMPTS`. If it still cannot win, it throws
@@ -102,13 +110,19 @@ export async function allocateReservation(
   requestId: string,
 ): Promise<AllocationOutcome> {
   const idempotencyKeyHash = await sha256(req.idempotencyKey)
+  const immutableRequestHash = req.protocolVersion === 2
+    ? await sha256(JSON.stringify([req.protocolVersion, req.creationId, req.minimumTicketNumber, req.requestHash]))
+    : req.requestHash
+  // The server owns the immutable-input digest; an opaque client hash alone
+  // must not hide a changed floor or creation identity on retry.
+  const allocationRequest = { ...req, requestHash: immutableRequestHash }
 
   for (let attempt = 1; ; attempt += 1) {
     // Pre-read the counter so the batch can reference next_ticket_number
     // without branching. Re-read on every attempt so a retry sees the value
     // the winner advanced to. The SELECT is outside the transaction; the
-    // statement-3 WHERE guard + the UNIQUE(ticket_number) constraint are the
-    // actual lost-update guards inside the batch.
+    // guarded INSERT, counter UPDATE and UNIQUE constraints enforce the
+    // actual invariant inside the transaction.
     const project = await db.prepare('SELECT next_ticket_number FROM cloud_projects WHERE id = ?')
       .bind(req.cloudProjectId)
       .first<{ next_ticket_number: number }>()
@@ -116,9 +130,13 @@ export async function allocateReservation(
       // Caller maps to project_not_found (non-disclosing).
       throw new CoordinationError('project_not_found', { requestId })
     }
-    const ticketNumber = project.next_ticket_number
+    const observedCounter = project.next_ticket_number
+    const ticketNumber = Math.max(observedCounter, req.minimumTicketNumber ?? 1)
+    if (!Number.isSafeInteger(ticketNumber) || ticketNumber < 1 || ticketNumber >= Number.MAX_SAFE_INTEGER) {
+      throw new CoordinationError('invalid_request', { requestId, message: 'ticket counter cannot advance safely' })
+    }
 
-    const outcome = await runAllocationBatch(db, req, reservationId, now, ticketNumber, idempotencyKeyHash, requestId)
+    const outcome = await runAllocationBatch(db, allocationRequest, reservationId, now, observedCounter, ticketNumber, idempotencyKeyHash, requestId)
 
     if (outcome.kind === 'retry') {
       if (attempt >= ALLOCATION_MAX_ATTEMPTS) {
@@ -148,17 +166,20 @@ async function runAllocationBatch(
   req: ReservationRequest,
   reservationId: string,
   now: string,
+  observedCounter: number,
   ticketNumber: number,
   idempotencyKeyHash: string,
   requestId: string,
 ): Promise<{ kind: 'retry' } | { kind: 'done', result: AllocationOutcome }> {
-  // Statement 1: INSERT the reservation only when no idempotency row exists.
+  // Statement 1: compare the observed counter BEFORE inserting a potentially
+  // higher candidate. A stale attempt inserts neither reservation nor intent.
   const insertReservation = db.prepare(
     `INSERT INTO ticket_reservations
        (cloud_project_id, reservation_id, ticket_number, state,
-        created_by_kind, created_by_id, created_at)
-     SELECT ?, ?, ?, 'reserved', ?, ?, ?
-     WHERE NOT EXISTS (
+        created_by_kind, created_by_id, created_at, creation_id, minimum_ticket_number)
+     SELECT ?, ?, ?, 'reserved', ?, ?, ?, ?, ?
+     FROM cloud_projects
+     WHERE id = ? AND next_ticket_number = ? AND coordination_state = 'active' AND NOT EXISTS (
        SELECT 1 FROM idempotency_keys
        WHERE cloud_project_id = ? AND idempotency_key_hash = ?
      )`,
@@ -169,6 +190,10 @@ async function runAllocationBatch(
     req.principal.kind,
     req.principal.id,
     now,
+    req.creationId ?? null,
+    req.minimumTicketNumber ?? null,
+    req.cloudProjectId,
+    observedCounter,
     req.cloudProjectId,
     idempotencyKeyHash,
   )
@@ -207,7 +232,7 @@ async function runAllocationBatch(
     ticketNumber + 1,
     now,
     req.cloudProjectId,
-    ticketNumber,
+    observedCounter,
     req.cloudProjectId,
     reservationId,
   )
@@ -220,7 +245,7 @@ async function runAllocationBatch(
        (id, cloud_project_id, request_id, principal_kind, principal_id,
         action, outcome, resource_type, resource_id, detail_json, occurred_at)
      SELECT ?, ?, ?, ?, ?, 'reservation.create',
-       CASE WHEN k.reservation_id = ? THEN 'allocated' ELSE 'replayed' END,
+       CASE WHEN k.request_hash <> ? THEN 'conflict' WHEN k.reservation_id = ? THEN 'allocated' ELSE 'replayed' END,
        'reservation', k.reservation_id,
        json_object('ticket_number', r.ticket_number), ?
      FROM idempotency_keys k
@@ -234,6 +259,7 @@ async function runAllocationBatch(
     requestId,
     req.principal.kind,
     req.principal.id,
+    req.requestHash,
     reservationId,
     now,
     req.cloudProjectId,
@@ -243,7 +269,7 @@ async function runAllocationBatch(
   // Statement 5: read back the canonical row in the same transaction.
   const selectReservation = db.prepare(
     `SELECT r.reservation_id, r.ticket_number, r.state,
-            k.request_hash, k.idempotency_key_hash
+            k.request_hash, k.idempotency_key_hash, r.creation_id, r.minimum_ticket_number
      FROM idempotency_keys k
      JOIN ticket_reservations r
        ON r.cloud_project_id = k.cloud_project_id
@@ -267,6 +293,9 @@ async function runAllocationBatch(
   catch (err) {
     // A constraint violation from a racing allocation is recoverable: re-read
     // the counter and re-run. Any other error (e.g. a genuine misuse) is not.
+    if (err instanceof Error && err.message.includes('ticket_reservations.creation_id')) {
+      throw new CoordinationError('reservation_state_conflict', { requestId, message: 'creation identity is already reserved' })
+    }
     if (isUniqueConstraintError(err)) {
       return { kind: 'retry' }
     }
@@ -277,7 +306,7 @@ async function runAllocationBatch(
   if (!row) {
     // Internal invariant: the row must exist right after a successful batch.
     // Surface a retryable 503 client-facing; the code stays non-disclosing.
-    throw new CoordinationError('coordination_unavailable', { requestId, message: 'allocation_select_failed' })
+    return { kind: 'retry' }
   }
 
   // Lost-update guard: statement 3 (index 2) must advance the counter for a
@@ -305,6 +334,9 @@ async function runAllocationBatch(
         reservationId: row.reservation_id,
         ticketNumber: row.ticket_number,
         state: row.state,
+        ...(row.creation_id && row.minimum_ticket_number !== null
+          ? { protocolVersion: 2, creationId: row.creation_id, minimumTicketNumber: row.minimum_ticket_number }
+          : {}),
         replayed: isReplay,
       },
     },
@@ -349,9 +381,9 @@ function isUniqueConstraintError(err: unknown): boolean {
   const messageStr = typeof message === 'string' ? message : ''
   const codeStr = typeof code === 'string' ? code : ''
   return (
-    codeStr.includes('SQLITE_CONSTRAINT')
+    codeStr === 'SQLITE_CONSTRAINT_UNIQUE'
+    || codeStr === 'SQLITE_CONSTRAINT_PRIMARYKEY'
     || messageStr.includes('UNIQUE constraint failed')
-    || messageStr.includes('SQLITE_CONSTRAINT')
   )
 }
 

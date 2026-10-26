@@ -1,3 +1,4 @@
+import type { TicketClaimResponse } from './identity'
 /**
  * Cloud Sync coordinator port — the local-facing contract for reaching the
  * cloud coordination service over JSON/HTTPS.
@@ -37,6 +38,9 @@ export type CloudAccessAudienceValue
 
 /** A reservation returned by the coordinator. */
 export interface ReservationDTO {
+  protocolVersion?: number
+  creationId?: string
+  minimumTicketNumber?: number
   reservationId: string
   ticketNumber: number
   state: string
@@ -45,6 +49,9 @@ export interface ReservationDTO {
 
 /** A cloud-bound allocation request. Idempotency key is journaled client-side first. */
 export interface ReserveRequest {
+  protocolVersion?: number
+  creationId?: string
+  minimumTicketNumber?: number
   cloudProjectId: string
   /** Client-generated; persisted to the operation journal before the first call. */
   idempotencyKey: string
@@ -99,6 +106,7 @@ export interface AudienceAwareCredentialProvider {
  * allowlist (C6) and reject redirects before attaching credentials.
  */
 export interface CloudSyncCoordinator {
+  getClaim?: (req: { cloudProjectId: string, ticketNumber: number }, credential: CloudCredential) => Promise<TicketClaimResponse>
   reserve: (req: ReserveRequest, credential: CloudCredential) => Promise<ReservationDTO>
   acknowledge: (
     req: AcknowledgeReservationRequest,

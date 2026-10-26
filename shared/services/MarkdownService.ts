@@ -241,6 +241,8 @@ export class MarkdownService {
     const lines: string[] = []
 
     // Core fields
+    if (ticket.creationId)
+      lines.push(`creationId: ${ticket.creationId}`)
     if (ticket.code)
       lines.push(`code: ${ticket.code}`)
     if (ticket.status)

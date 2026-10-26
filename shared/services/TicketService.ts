@@ -7,9 +7,15 @@
 import type {
   CloudCredentialProvider,
   CloudSyncCoordinator,
+  CreationRecoveryInspection,
+  CreationRecoveryOutcome,
+  CreationRecoveryReconcileInput,
+  CreationRecoveryResumeInput,
   ProjectCloudSyncBinding,
   ProjectConnectionRead,
   ProjectedHeader,
+  TicketClaimResponse,
+  TicketIdentityDiagnostic,
 } from '@mdt/domain-contracts'
 import type { Project } from '../models/Project.js'
 import type {
@@ -19,6 +25,7 @@ import type {
   TicketUpdateAttrs,
 } from '../models/Ticket.js'
 import type { CRStatus } from '../models/Types.js'
+import type { PendingOperation } from './cloud-sync/operation-journal.js'
 import type { ProjectionClientPort } from './cloud-sync/projection-sync.js'
 import type { RuleTicket } from './epicRules.js'
 import type { ReadResult } from './project/types.js'
@@ -30,9 +37,11 @@ import type {
   TicketWriteResult,
   UpdateTicketAttributesRequest,
 } from './ticket/types.js'
-import { readdir, readFile } from 'node:fs/promises'
+import { createHash } from 'node:crypto'
+import { readdir, readFile, realpath } from 'node:fs/promises'
 import * as path from 'node:path'
 import {
+  CanonicalProjectCodeSchema,
   CoordinatorError,
   CRStatus as CRStatusEnum,
 } from '@mdt/domain-contracts'
@@ -48,15 +57,18 @@ import { formatCrKey } from '../utils/keyNormalizer.js'
 import { logQuiet } from '../utils/logger.js'
 import { bindingFromEnabledConnection } from './cloud-sync/allocator-strategy.js'
 import { CloudProjectionClient as HttpCloudProjectionClient } from './cloud-sync/CloudProjectionClient.js'
+import { CloudSyncCoordinator as HttpCloudSyncCoordinator } from './cloud-sync/CloudSyncCoordinator.js'
 import { buildEffectiveCloudSyncConfig } from './cloud-sync/config.js'
 import {
   CloudCreateOrchestrator,
   projectedHeaderHash,
 } from './cloud-sync/create-orchestrator.js'
+import { CreationRecoveryService } from './cloud-sync/creation-recovery.js'
 import { RuntimeCloudCredentialProvider } from './cloud-sync/credential-providers.js'
 import { CloudOperationJournal } from './cloud-sync/operation-journal.js'
 import { ProjectStateStore } from './cloud-sync/project-state-store.js'
 import { CloudProjectionSync } from './cloud-sync/projection-sync.js'
+import { RecoveryRunner } from './cloud-sync/recovery.js'
 import { resolveTrustedServiceProfile } from './cloud-sync/trusted-service-profile.js'
 import { CRService as SharedCRService } from './CRService.js'
 import {
@@ -69,6 +81,7 @@ import { ProjectService } from './ProjectService.js'
 import { ServiceError } from './ServiceError.js'
 import { TemplateService } from './TemplateService.js'
 import { assertNotDerivedField } from './ticket/derivedFields.js'
+import { assertSafeTicketInventory, assertUnambiguousTicket, classifyTicketIdentity, repositoryRoots, scanTicketIdentities, TicketIdentityConflictError } from './ticket/TicketIdentityService.js'
 import { TicketLocationResolver } from './ticket/TicketLocationResolver.js'
 
 /**
@@ -79,6 +92,7 @@ import { TicketLocationResolver } from './ticket/TicketLocationResolver.js'
  */
 export interface CloudRuntimeDependencies {
   credentialProvider?: CloudCredentialProvider
+  nonInteractiveCredentialProvider?: CloudCredentialProvider
   coordinatorFactory?: (
     binding: ProjectCloudSyncBinding,
   ) => CloudSyncCoordinator
@@ -127,6 +141,8 @@ export class TicketService {
   private readonly ticketLocationResolver: TicketLocationResolver
   private readonly quiet: boolean
   private readonly cloudRuntime: CloudRuntimeDependencies
+  private readonly identityObservationOffsets = new Map<string, number>()
+  private readonly identityObservationProofs = new Map<string, { context: string, entries: Map<string, { signature: string, diagnostic: TicketIdentityDiagnostic }> }>()
 
   constructor(
     quiet: boolean = false,
@@ -476,33 +492,27 @@ export class TicketService {
    */
   async getCR(project: Project, key: string): Promise<Ticket | null> {
     try {
+      const inventory = await this.readIdentityInventory(project)
+      assertUnambiguousTicket(inventory, key)
       const location = await this.ticketLocationResolver.resolve(project, key)
 
-      // Get config and scan only resolved directory
-      const fullCRPath = path.join(location.projectRoot, location.ticketsPath)
-
-      // Check if directory exists
-      try {
-        await readdir(fullCRPath)
-      }
-      catch {
+      // Read the exact inventoried file. A second first-match directory scan
+      // could select a foreign file added between verification and lookup.
+      const resolvedRoot = await realpath(location.projectRoot)
+      const resolvedDirectory = await realpath(path.resolve(location.projectRoot, location.ticketsPath))
+      const candidate = inventory.files.find(file => file.code.toUpperCase() === key.toUpperCase()
+        && (path.dirname(file.absolutePath) === resolvedDirectory || path.dirname(path.dirname(file.absolutePath)) === resolvedDirectory))
+      if (!candidate)
         return null
-      }
-
-      // Use MarkdownService to scan only the resolved directory
       const { MarkdownService } = await import('./MarkdownService.js')
-      const tickets = await MarkdownService.scanMarkdownFiles(
-        fullCRPath,
-        location.projectRoot,
-      )
-
-      const targetCR = tickets.find(
-        cr => cr.code.toUpperCase() === key.toUpperCase(),
-      )
+      const logicalPath = path.join(location.projectRoot, path.relative(resolvedRoot, candidate.absolutePath))
+      const targetCR = await MarkdownService.parseMarkdownFile(logicalPath, location.projectRoot)
 
       if (!targetCR) {
         return null
       }
+      if (targetCR.code.toUpperCase() !== key.toUpperCase() || targetCR.creationId !== candidate.creationId)
+        throw new TicketIdentityConflictError(key, [candidate.relativePath])
 
       // Add worktree metadata
       return {
@@ -511,7 +521,9 @@ export class TicketService {
         worktreePath: location.isWorktree ? location.projectRoot : undefined,
       }
     }
-    catch {
+    catch (error) {
+      if (error instanceof TicketIdentityConflictError)
+        throw error
       return null
     }
   }
@@ -554,7 +566,10 @@ export class TicketService {
           message: `cloud connection is ${connection.kind}`,
         })
       }
+      project = this.canonicalCloudProject(project)
       const binding = bindingFromEnabledConnection(connection.connection)
+      const inventory = await this.readIdentityInventory(project)
+      assertSafeTicketInventory(inventory)
 
       const globalConfig = this.projectService.getGlobalConfig()
       const effectiveConfig = buildEffectiveCloudSyncConfig(
@@ -564,7 +579,8 @@ export class TicketService {
         rootDir:
           this.cloudRuntime.journalRoot
           ?? path.join(getDefaultPaths().CONFIG_DIR, 'cloud-sync', 'journals'),
-        physicalRepoPath: project.project.path,
+        physicalRepoPath: inventory.physicalRepoPath,
+        legacyPhysicalRepoPaths: [project.project.path, ...inventory.roots],
       })
       const orchestrator = new CloudCreateOrchestrator({
         binding,
@@ -578,7 +594,9 @@ export class TicketService {
       return await orchestrator.create({
         crType,
         data,
-        writeLocal: async (ticketNumber, createdAt, draft) => {
+        minimumTicketNumber: Math.max(inventory.minimumTicketNumber, project.project.startNumber || 1),
+        verifyLocal: (ticketNumber, creationId) => this.verifyCloudCreation(project, ticketNumber, creationId),
+        writeLocal: async (ticketNumber, createdAt, draft, creationId) => {
           const ticket = await this.createLocalTicketWithNumber(
             project,
             draft.crType,
@@ -586,6 +604,7 @@ export class TicketService {
             ticketNumber,
             createdAt,
             true,
+            creationId,
           )
           const header = this.toProjectedHeader(ticket)
           return {
@@ -602,7 +621,7 @@ export class TicketService {
       // MDT-200: preserve typed domain errors so callers can distinguish a
       // cloud fail-closed (BR-1.5) from a generic create failure. CoordinatorError
       // must surface verbatim — never swallowed into a local-fallback path.
-      if (error instanceof CoordinatorError || error instanceof ServiceError) {
+      if (error instanceof CoordinatorError || error instanceof ServiceError || error instanceof TicketIdentityConflictError) {
         throw error
       }
       throw new Error(`Failed to create CR: ${(error as Error).message}`)
@@ -616,16 +635,28 @@ export class TicketService {
     ticketNumber: number,
     createdAt?: string,
     exclusive = false,
+    creationId?: string,
   ): Promise<Ticket> {
     const crKey = formatCrKey(project.project.code, ticketNumber)
     const location = await this.ticketLocationResolver.resolve(project, crKey)
-    const crPath = path.join(location.projectRoot, location.ticketsPath)
+    const crPath = path.resolve(location.projectRoot, location.ticketsPath)
     const titleSlug = data.slug ?? this.createSlug(data.title)
     const filename = `${crKey}-${titleSlug}.md`
     const filePath = path.join(crPath, filename)
 
+    if (exclusive) {
+      const inventory = await this.readIdentityInventory(project)
+      assertSafeTicketInventory(inventory)
+      const occupied = inventory.files.filter(file => file.code === crKey)
+      const physicalFilePath = path.join(await realpath(crPath), filename)
+      const physicalRoot = await realpath(location.projectRoot)
+      if (occupied.some(file => file.absolutePath !== physicalFilePath && file.root === physicalRoot) || occupied.some(file => !creationId || file.creationId !== creationId))
+        throw new CoordinatorError('reservation_state_conflict', { message: 'Reserved key belongs to an existing canonical creation; resolve the conflict explicitly' })
+    }
     await fs.ensureDir(crPath)
     const ticket = SharedCRService.createTicket(data, crKey, crType, filePath)
+    if (creationId)
+      Object.assign(ticket, { creationId })
     if (createdAt) {
       const stableCreatedAt = new Date(createdAt)
       ticket.dateCreated = stableCreatedAt
@@ -670,6 +701,7 @@ export class TicketService {
 
   private toProjectedHeader(ticket: Ticket): ProjectedHeader {
     return {
+      ...(ticket.creationId ? { creationId: ticket.creationId } : {}),
       code: ticket.code,
       title: ticket.title,
       status: ticket.status,
@@ -762,7 +794,7 @@ export class TicketService {
       project,
       epic.code,
     )
-    const fullCRPath = path.join(location.projectRoot, location.ticketsPath)
+    const fullCRPath = path.resolve(location.projectRoot, location.ticketsPath)
     const { MarkdownService } = await import('./MarkdownService.js')
     const allTickets = await MarkdownService.scanMarkdownFiles(
       fullCRPath,
@@ -833,7 +865,7 @@ export class TicketService {
     catch (error) {
       // MDT-205: preserve typed domain errors (epic close guard) so callers can
       // map epicErrorCode to actionable user-facing text across surfaces.
-      if (error instanceof ServiceError) {
+      if (error instanceof ServiceError || error instanceof TicketIdentityConflictError) {
         throw error
       }
       // Enhanced error handling with specific failure types
@@ -941,7 +973,7 @@ export class TicketService {
     catch (error) {
       // MDT-205: preserve typed domain errors (phaseEpic target validation) so
       // callers can map epicErrorCode to actionable user-facing text.
-      if (error instanceof ServiceError) {
+      if (error instanceof ServiceError || error instanceof TicketIdentityConflictError) {
         throw error
       }
       if (error instanceof Error) {
@@ -1117,7 +1149,9 @@ export class TicketService {
       await this.syncTicketProjectionBestEffort(project, cr, cr, 'deleted')
       return true
     }
-    catch {
+    catch (error) {
+      if (error instanceof TicketIdentityConflictError)
+        throw error
       return false
     }
   }
@@ -1133,6 +1167,214 @@ export class TicketService {
    * CONFIG_DIR state never grants identity — the cloud re-verifies membership
    * per operation (BR-3.1, TASK-8).
    */
+  private readIdentityInventory(project: Project) {
+    const config = this.projectService.getProjectConfig(project.project.path)
+    return scanTicketIdentities(project.project.path, config?.project?.ticketsPath ?? project.project.ticketsPath ?? DEFAULTS.TICKETS_PATH, project.project.code)
+  }
+
+  private canonicalCloudProject(project: Project): Project {
+    const parsed = CanonicalProjectCodeSchema.safeParse(project.project.code)
+    if (!parsed.success)
+      throw new CoordinatorError('invalid_request', { message: 'Cloud creation requires a valid canonical project code' })
+    return { ...project, project: { ...project.project, code: parsed.data } }
+  }
+
+  private async verifyCloudCreation(project: Project, ticketNumber: number, creationId: string): Promise<void> {
+    const current = await this.readIdentityInventory(project)
+    assertSafeTicketInventory(current)
+    const matches = current.files.filter(file => file.code === formatCrKey(project.project.code, ticketNumber))
+    if (!matches.length || matches.some(file => file.creationId !== creationId))
+      throw new CoordinatorError('reservation_state_conflict', { message: 'Canonical file does not match its reserved creation identity' })
+  }
+
+  /** Owner inspection has no credential, network, ticket write or lock acquisition. */
+  async inspectCreationRecovery(project: Project): Promise<CreationRecoveryInspection> {
+    return await (await this.creationRecoveryService(project))?.inspect() ?? { entries: [] }
+  }
+
+  async resumeCreationRecovery(project: Project, input: CreationRecoveryResumeInput): Promise<CreationRecoveryOutcome> {
+    const recovery = await this.creationRecoveryService(project, input.expectedDigest)
+    if (!recovery)
+      throw new CoordinatorError('reservation_state_conflict', { message: 'No cloud creation binding is available for recovery' })
+    return recovery.resume(input)
+  }
+
+  async reconcileCreationRecovery(project: Project, input: CreationRecoveryReconcileInput): Promise<CreationRecoveryOutcome> {
+    const recovery = await this.creationRecoveryService(project)
+    if (!recovery)
+      throw new CoordinatorError('reservation_state_conflict', { message: 'No cloud creation binding is available for recovery' })
+    return recovery.reconcile(input)
+  }
+
+  private async creationRecoveryService(project: Project, expectedDigest?: string): Promise<CreationRecoveryService | null> {
+    const connection = await this.resolveCloudConnection(project)
+    if (connection.kind === 'absent')
+      return null
+    if (connection.kind !== 'enabled' && connection.kind !== 'disabled')
+      throw new CoordinatorError('coordination_suspended', { message: 'Restore a trusted readable cloud binding before recovery' })
+    // Route discovery does not scan ticket contents: an invalid file must not
+    // prevent inspection of the retained creation intent that can diagnose it.
+    const layout = await repositoryRoots(project.project.path)
+    const journal = new CloudOperationJournal({
+      rootDir: this.cloudRuntime.journalRoot ?? path.join(getDefaultPaths().CONFIG_DIR, 'cloud-sync', 'journals'),
+      physicalRepoPath: layout.physicalRepoPath,
+      legacyPhysicalRepoPaths: [project.project.path, ...layout.roots],
+    })
+    const binding = bindingFromEnabledConnection(connection.connection)
+    const client = () => this.cloudRuntime.coordinatorFactory?.(binding) ?? new HttpCloudSyncCoordinator({ serviceUrl: binding.serviceUrl, globalConfig: buildEffectiveCloudSyncConfig(this.projectService.getGlobalConfig().cloudSync) })
+    const credential = async () => {
+      const value = await (this.cloudRuntime.credentialProvider ?? new RuntimeCloudCredentialProvider()).resolve(binding.serviceUrl)
+      if (!value)
+        throw new CoordinatorError('authentication_required')
+      return value
+    }
+    return new CreationRecoveryService({
+      journal,
+      cloudProjectId: binding.projectId,
+      resumeOperation: async (op) => {
+        if (connection.kind !== 'enabled')
+          throw new CoordinatorError('coordination_suspended', { message: 'A disabled connection cannot resume ticket creation' })
+        const canonicalProject = this.canonicalCloudProject(project)
+        const headerFor = async (operation: PendingOperation) => {
+          const ticket = await this.getCR(canonicalProject, formatCrKey(canonicalProject.project.code, operation.ticketNumber!))
+          if (!ticket || ticket.creationId !== operation.creationId)
+            throw new CoordinatorError('reservation_state_conflict', { message: 'Recovery requires the original canonical creation' })
+          return this.toProjectedHeader(ticket)
+        }
+        const runner = new RecoveryRunner({
+          journal,
+          expectedDigest,
+          coordinator: client(),
+          credential: await credential(),
+          writeLocal: async (_projectId, reservation) => {
+            if (!op.draft || !op.creationId)
+              throw new CoordinatorError('reservation_state_conflict')
+            await this.createLocalTicketWithNumber(canonicalProject, op.draft.crType, op.draft.data, reservation.ticketNumber, op.createdAt, true, op.creationId)
+          },
+          verifyLocal: async (_projectId, reservation) => {
+            await this.verifyCloudCreation(canonicalProject, reservation.ticketNumber, op.creationId!)
+            if (op.acknowledgement && projectedHeaderHash(await headerFor(op)) !== op.acknowledgement.contentHash)
+              throw new CoordinatorError('reservation_state_conflict', { message: 'Canonical header changed since the retained acknowledgement; inspect and reconcile explicitly' })
+          },
+          buildAcknowledgement: async (operation) => {
+            const header = await headerFor(operation)
+            return { operationId: operation.operationId, header, contentHash: projectedHeaderHash(header) }
+          },
+        })
+        return runner.recoverPending([binding.projectId])
+      },
+      verifyTerminal: async (op) => {
+        const coordinator = client()
+        if (!coordinator.getClaim || !op.reservationId || op.ticketNumber === undefined)
+          return null
+        const claim = await coordinator.getClaim({ cloudProjectId: binding.projectId, ticketNumber: op.ticketNumber }, await credential())
+        if (claim.reservationId !== op.reservationId || claim.ticketNumber !== op.ticketNumber || (claim.creationId ?? undefined) !== op.creationId || (claim.state !== 'acknowledged' && claim.state !== 'abandoned'))
+          return null
+        let canonicalVerified = false
+        if (claim.state === 'acknowledged' && op.creationId) {
+          try {
+            await this.verifyCloudCreation(this.canonicalCloudProject(project), op.ticketNumber, op.creationId)
+            canonicalVerified = true
+          }
+          catch { return null }
+        }
+        return { cloudProjectId: binding.projectId, reservationId: op.reservationId, ticketNumber: op.ticketNumber, creationId: op.creationId, state: claim.state, canonicalVerified }
+      },
+    })
+  }
+
+  /** Read-only classification for the server watcher; never launches human login. */
+  async observeTicketIdentities(project: Project): Promise<TicketIdentityDiagnostic[]> {
+    try {
+      const connection = await this.resolveCloudConnection(project)
+      if (connection.kind === 'absent') {
+        this.identityObservationProofs.delete(project.id)
+        this.identityObservationOffsets.delete(project.id)
+        return []
+      }
+      const inventory = await this.readIdentityInventory(project)
+      const diagnostics = [...inventory.diagnostics]
+      const conflicting = new Set<string>()
+      for (const file of inventory.files) {
+        try {
+          assertUnambiguousTicket(inventory, file.code)
+        }
+        catch { conflicting.add(file.code) }
+      }
+      const credential = connection.kind === 'enabled'
+        ? await (this.cloudRuntime.nonInteractiveCredentialProvider?.resolve(connection.connection.serviceOrigin)
+          ?? new RuntimeCloudCredentialProvider().resolveNonInteractive(connection.connection.serviceOrigin))
+        : null
+      const coordinator = connection.kind === 'enabled'
+        ? this.cloudRuntime.coordinatorFactory?.(bindingFromEnabledConnection(connection.connection)) ?? new HttpCloudSyncCoordinator({ serviceUrl: connection.connection.serviceOrigin, globalConfig: buildEffectiveCloudSyncConfig(this.projectService.getGlobalConfig().cloudSync) })
+        : null
+      // Credentials are hashed only to invalidate device-local evidence. This
+      // cache grants no permission and is never consulted by a mutation.
+      const context = createHash('sha256').update(JSON.stringify({ connection, credential })).digest('hex')
+      let cache = this.identityObservationProofs.get(project.id)
+      if (!cache || cache.context !== context) {
+        cache = { context, entries: new Map() }
+        this.identityObservationProofs.set(project.id, cache)
+        this.identityObservationOffsets.delete(project.id)
+      }
+      const signature = (file: (typeof inventory.files)[number]) => JSON.stringify([file.code, file.creationId, file.contentHash, file.absolutePath, file.valid])
+      const current = new Map(inventory.files.filter(file => file.valid && file.creationId && !conflicting.has(file.code)).map(file => [file.relativePath, signature(file)]))
+      for (const [filePath, proof] of cache.entries) {
+        if (!credential || current.get(filePath) !== proof.signature)
+          cache.entries.delete(filePath)
+      }
+      const claims = new Map<string, TicketClaimResponse>()
+      const eligible = [...new Set(inventory.files.filter(file => file.valid && file.creationId && !conflicting.has(file.code)).map(file => file.code))].sort()
+      const offset = (this.identityObservationOffsets.get(project.id) ?? 0) % Math.max(eligible.length, 1)
+      const selected = new Set([...eligible.slice(offset), ...eligible.slice(0, offset)].slice(0, 64))
+      this.identityObservationOffsets.set(project.id, (offset + selected.size) % Math.max(eligible.length, 1))
+      let authorizationLost = false
+      for (const code of selected) {
+        const file = inventory.files.find(file => file.code === code)!
+        if (!credential || !coordinator?.getClaim || connection.kind !== 'enabled')
+          break
+        try {
+          claims.set(code, await coordinator.getClaim({ cloudProjectId: connection.connection.cloudProjectId, ticketNumber: file.ticketNumber }, credential))
+        }
+        catch (error) {
+          // Revocation invalidates every proof in this context, including
+          // entries outside this wave. Do not continue probing after denial.
+          if (error instanceof CoordinatorError && ['authentication_required', 'forbidden', 'not_found', 'project_not_found'].includes(error.code)) {
+            cache.entries.clear()
+            claims.clear()
+            authorizationLost = true
+            break
+          }
+        }
+      }
+      for (const file of inventory.files) {
+        if (conflicting.has(file.code)) {
+          diagnostics.push({ code: file.code, filePath: file.relativePath, state: 'conflict', message: 'Multiple local files claim this ticket key; inspect each path before changing it' })
+          continue
+        }
+        const prior = cache.entries.get(file.relativePath)
+        const claim = claims.get(file.code)
+        if (!authorizationLost && !selected.has(file.code) && prior) {
+          diagnostics.push({ ...prior.diagnostic })
+          continue
+        }
+        const diagnostic: TicketIdentityDiagnostic = { ...classifyTicketIdentity(file, claim), stale: !claim }
+        if (claim)
+          diagnostic.lastVerifiedAt = new Date().toISOString()
+        else if (!authorizationLost && prior?.diagnostic.lastVerifiedAt)
+          diagnostic.lastVerifiedAt = prior.diagnostic.lastVerifiedAt
+        if (!authorizationLost && current.has(file.relativePath))
+          cache.entries.set(file.relativePath, { signature: signature(file), diagnostic })
+        diagnostics.push(diagnostic)
+      }
+      return diagnostics
+    }
+    catch {
+      this.identityObservationProofs.delete(project.id)
+      return [{ code: project.project.code, filePath: '.', state: 'verification_pending', message: 'Ticket identity inventory could not be verified; explicit retry or operator review is required' }]
+    }
+  }
+
   private async resolveCloudConnection(
     project: Project,
   ): Promise<ProjectConnectionRead> {
@@ -1154,6 +1396,8 @@ export class TicketService {
     lifecycle: 'active' | 'deleted',
   ): Promise<void> {
     try {
+      if (!previous.creationId || next.creationId !== previous.creationId)
+        return // Legacy/unknown provenance requires explicit reconciliation before publication.
       const connection = await this.resolveCloudConnection(project)
       if (connection.kind !== 'enabled') {
         // absent (local-only) or disabled/malformed/untrusted (fail-closed):
@@ -1361,6 +1605,8 @@ export class TicketService {
     // YAML frontmatter - only mandatory fields + optional fields with values
     sections.push('---')
     sections.push(`code: ${ticket.code}`)
+    if (ticket.creationId)
+      sections.push(`creationId: ${ticket.creationId}`)
     sections.push(`status: ${ticket.status}`)
     sections.push(
       `dateCreated: ${ticket.dateCreated?.toISOString() || new Date().toISOString()}`,
@@ -1519,7 +1765,7 @@ export class TicketService {
 
     // Re-read to return updated ticket
     const location = await this.ticketLocationResolver.resolve(project, key)
-    const fullCRPath = path.join(location.projectRoot, location.ticketsPath)
+    const fullCRPath = path.resolve(location.projectRoot, location.ticketsPath)
     const { MarkdownService } = await import('./MarkdownService.js')
     const tickets = await MarkdownService.scanMarkdownFiles(
       fullCRPath,

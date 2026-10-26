@@ -18,11 +18,14 @@
 
 export * from './config'
 export * from './coordinator'
+export * from './creation-recovery'
 export * from './errors'
 export * from './http'
+export * from './identity'
 export * from './membership'
 export * from './persisted'
 export * from './principal'
 export * from './project-management'
 export * from './projection'
+
 export * from './projection-stream'

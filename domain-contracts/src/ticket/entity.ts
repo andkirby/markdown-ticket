@@ -14,6 +14,7 @@ import { SubDocumentSchema } from './subdocument'
 
 export interface Ticket {
   code: string
+  creationId?: string
   title: string
   status: string
   type: string
@@ -53,6 +54,7 @@ export type TicketMetadata = Omit<Ticket, 'content'>
 const NullableDateSchema = z.date().nullable()
 
 export const TicketSchema: z.ZodType<Ticket> = z.object({
+  creationId: z.string().uuid().optional(),
   code: z
     .string()
     .regex(

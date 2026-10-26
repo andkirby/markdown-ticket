@@ -4,7 +4,8 @@
  * Tests for creating tickets through various command forms.
  */
 
-import { readFile } from 'node:fs/promises'
+import { execFileSync } from 'node:child_process'
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { ProjectFactory, TestEnvironment } from '@mdt/shared/test-lib'
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
@@ -313,4 +314,127 @@ describe('Ticket Create', () => {
     expect(result.stderr).toContain('NOPE')
     expect(result.stderr).toContain('not found')
   })
+
+  test('refuses ambiguous key reads and mutations through the real CLI (BR-1.10)', async () => {
+    const key = `${projectCode}-258`
+    const paths = ['original', 'manual'].map(slug => join(projectDir, 'docs/CRs', `${key}-${slug}.md`))
+    const content = `---\ncode: ${key}\n---\n# Existing fixture\n`
+    for (const path of paths)
+      await writeFile(path, content)
+    try {
+      for (const args of [['ticket', 'get', key, '--json'], ['attr', key, 'priority=High', '--json'], ['delete', key, '--force']]) {
+        const result = await runCli(args, { cwd: projectDir })
+        expect(result.exitCode).toBe(1)
+        expect(result.stderr).toContain('ambiguous')
+      }
+      for (const path of paths)
+        expect(await readFile(path, 'utf8')).toBe(content)
+    }
+    finally { for (const path of paths) await rm(path, { force: true }) }
+  })
+
+  test('cloud-bound process create skips local high-water and persists its creation identity', async () => {
+    const temp = testEnv.getTempDirectory()
+    const cert = join(temp, 'fixture-cert.pem')
+    const key = join(temp, 'fixture-key.pem')
+    execFileSync('openssl', ['req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-subj', '/CN=localhost', '-days', '1', '-keyout', key, '-out', cert], { stdio: 'ignore' })
+    const requests: Array<Record<string, unknown>> = []
+    let acknowledged = 0
+    // Keep the native HTTP response implementation outside the repository's
+    // frontend test preload (which installs Happy DOM's Response globally).
+    const fixtureFile = join(temp, 'coordinator-fixture.ts')
+    await writeFile(fixtureFile, `
+const server = Bun.serve({ hostname: '127.0.0.1', port: 0, tls: { cert: Bun.file(${JSON.stringify(cert)}), key: Bun.file(${JSON.stringify(key)}) }, async fetch(request) {
+  if (request.method === 'POST' && new URL(request.url).pathname.endsWith('/reservations')) {
+    const body = await request.json(); console.log(JSON.stringify({ reserve: body }));
+    return Response.json({ requestId: 'fixture', data: { reservationId: 'fixture-reservation', ticketNumber: Math.max(258, Number(body.minimumTicketNumber)), protocolVersion: body.protocolVersion, creationId: body.creationId, minimumTicketNumber: body.minimumTicketNumber, state: 'reserved', replayed: false } }, { status: 201 });
+  }
+  if (request.method === 'PUT') {
+    const body = await request.json(); console.log(JSON.stringify({ acknowledgement: body }));
+    return Response.json({ requestId: 'fixture', data: { acknowledged: true, projectionVersion: 1, projectRevision: 1, replayed: false } });
+  }
+  return Response.json({ error: 'Unexpected fixture request' }, { status: 500 });
+}}); console.log(JSON.stringify({ port: server.port }));
+`)
+    const child = Bun.spawn(['bun', fixtureFile], { stdout: 'pipe', stderr: 'inherit' })
+    let ready: (port: number) => void = () => {}
+    const readyPort = new Promise<number>((resolve) => {
+      ready = resolve
+    })
+    let ackReady: () => void = () => {}
+    const ackSeen = new Promise<void>((resolve) => {
+      ackReady = resolve
+    })
+    const output = (async () => {
+      const reader = child.stdout.getReader()
+      const decoder = new TextDecoder()
+      let pending = ''
+      while (true) {
+        const chunk = await reader.read()
+        if (chunk.done)
+          break
+        pending += decoder.decode(chunk.value)
+        let newline: number
+        while (pending.includes('\n')) {
+          newline = pending.indexOf('\n')
+          const line = pending.slice(0, newline)
+          pending = pending.slice(newline + 1)
+          const value = JSON.parse(line)
+          if (value.port)
+            ready(value.port)
+          if (value.reserve)
+            requests.push(value.reserve)
+          if (value.acknowledgement) {
+            expect(value.acknowledgement.header.creationId).toBe(requests[0].creationId)
+            acknowledged++
+            ackReady()
+          }
+        }
+      }
+    })()
+    const origin = `https://127.0.0.1:${await readyPort}`
+    const configDir = testEnv.getConfigDirectory()
+    const configPath = join(configDir, 'config.toml')
+    let previousConfig: string | null = null
+    try {
+      previousConfig = await readFile(configPath, 'utf8')
+    }
+    catch { /* fresh fixture */ }
+    const current = await runCli(['project', '--json'], { cwd: projectDir })
+    expect(current.exitCode).toBe(0)
+    const projectId = JSON.parse(current.stdout).meta.projectId as string
+    const connectionDir = join(configDir, 'projects', projectId)
+    const connection = join(connectionDir, 'cloud-sync.toml')
+    await mkdir(connectionDir, { recursive: true })
+    const seeded: string[] = []
+    try {
+      await writeFile(configPath, `[cloudSync]\nallowedOrigins = ["${origin}"]\n`)
+      await writeFile(connection, `version = 2\nstate = "enabled"\ncloudProjectId = "35863af3-8bca-4ceb-bc18-5c7bfb3e4188"\nserviceOrigin = "${origin}"\n`)
+      for (const n of [258, 259, 260, 261, 262]) {
+        const path = join(projectDir, 'docs/CRs', `${projectCode}-${n}-existing.md`)
+        await writeFile(path, `---\ncode: ${projectCode}-${n}\n---\n# Existing\n`)
+        seeded.push(path)
+      }
+      const result = await runCliWithStdin(['create', 'feature', 'Above the stale coordinator', '--json', '--stdin'], 'Canonical fixture body.', { cwd: projectDir, env: { NODE_TLS_REJECT_UNAUTHORIZED: '0', CF_ACCESS_CLIENT_ID: 'fixture-only', CF_ACCESS_CLIENT_SECRET: 'fixture-only' } })
+      expect(result.exitCode).toBe(0)
+      const created = JSON.parse(result.stdout)
+      await ackSeen
+      expect(created.data.ticket.key).toBe(`${projectCode}-263`)
+      expect(requests).toHaveLength(1)
+      expect(requests[0].protocolVersion).toBe(2)
+      expect(requests[0].minimumTicketNumber).toBe(263)
+      expect(acknowledged).toBe(1)
+      expect(await readFile(created.data.ticket.paths.absolute, 'utf8')).toContain(`creationId: ${requests[0].creationId}`)
+    }
+    finally {
+      child.kill()
+      await child.exited
+      await output
+      await rm(connection, { force: true })
+      for (const path of seeded) await rm(path, { force: true })
+      if (previousConfig === null)
+        await rm(configPath, { force: true })
+      else await writeFile(configPath, previousConfig)
+    }
+  }, 30000)
 })

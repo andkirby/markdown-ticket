@@ -62,6 +62,7 @@ export async function acknowledgeWithInitialProjection(
   now: string,
   requestId: string,
 ): Promise<{ projectionVersion: number, projectRevision: number, replayed: boolean }> {
+  await assertCreationIdentity(db, cloudProjectId, header, requestId, { reservationId })
   const reservation = await db.prepare(
     `SELECT ticket_number, state FROM ticket_reservations
      WHERE cloud_project_id = ? AND reservation_id = ?`,
@@ -118,8 +119,9 @@ export async function acknowledgeWithInitialProjection(
       `UPDATE ticket_reservations
        SET state = 'acknowledged', acknowledged_at = ?
        WHERE cloud_project_id = ? AND reservation_id = ?
-         AND state IN ('reserved', 'orphaned')`,
-    ).bind(now, cloudProjectId, reservationId),
+         AND state IN ('reserved', 'orphaned') AND creation_id = ?
+         AND EXISTS (SELECT 1 FROM cloud_projects WHERE id = ? AND coordination_state = 'active')`,
+    ).bind(now, cloudProjectId, reservationId, header.creationId ?? null, cloudProjectId),
     db.prepare(
       `INSERT INTO ticket_projections
          (cloud_project_id, ticket_number, reservation_id, lifecycle, projection_version,
@@ -130,6 +132,8 @@ export async function acknowledgeWithInitialProjection(
        FROM ticket_reservations r
        JOIN cloud_projects p ON p.id = r.cloud_project_id
        WHERE r.cloud_project_id = ? AND r.reservation_id = ? AND r.state = 'acknowledged'
+         AND r.creation_id = ?
+         AND EXISTS (SELECT 1 FROM cloud_projects WHERE id = r.cloud_project_id AND coordination_state = 'active')
          AND NOT EXISTS (
            SELECT 1 FROM ticket_projections
            WHERE cloud_project_id = ? AND reservation_id = ?
@@ -152,6 +156,7 @@ export async function acknowledgeWithInitialProjection(
       now,
       cloudProjectId,
       reservationId,
+      header.creationId ?? null,
       cloudProjectId,
       reservationId,
     ),
@@ -333,7 +338,13 @@ export async function publishProjection(
          priority = ?, assignee = ?, date_created = ?, last_modified = ?,
          updated_by_kind = ?, updated_by_id = ?, updated_at = ?,
          deleted_at = CASE WHEN ? = 'deleted' THEN ? ELSE NULL END
-       WHERE cloud_project_id = ? AND ticket_number = ? AND projection_version = ?`,
+       WHERE cloud_project_id = ? AND ticket_number = ? AND projection_version = ?
+         AND (? IS NULL OR EXISTS (
+           SELECT 1 FROM ticket_reservations r JOIN cloud_projects p ON p.id = r.cloud_project_id
+           WHERE r.cloud_project_id = ticket_projections.cloud_project_id
+             AND r.reservation_id = ticket_projections.reservation_id AND r.creation_id = ? AND r.state = 'acknowledged'
+             AND p.coordination_state = 'active'
+         ))`,
     ).bind(
       req.lifecycle,
       cloudProjectId,
@@ -355,6 +366,8 @@ export async function publishProjection(
       cloudProjectId,
       req.ticketNumber,
       req.expectedProjectionVersion,
+      req.header.creationId ?? null,
+      req.header.creationId ?? null,
     ),
     db.prepare(
       `UPDATE cloud_projects
@@ -508,5 +521,28 @@ function rowToProjection(r: RawProjectionRow): ProjectionRecord {
     updatedById: r.updated_by_id,
     updatedAt: r.updated_at,
     deletedAt: r.deleted_at,
+  }
+}
+
+/** Number and mutable headers alone never prove a cloud creation association. */
+export async function assertCreationIdentity(
+  db: D1Database,
+  cloudProjectId: string,
+  header: ProjectedHeader,
+  requestId: string,
+  target: { reservationId: string } | { ticketNumber: number },
+): Promise<void> {
+  const byReservation = 'reservationId' in target
+  const row = await db.prepare(
+    `SELECT r.creation_id, r.ticket_number, p.project_code
+     FROM ticket_reservations r JOIN cloud_projects p ON p.id = r.cloud_project_id
+     WHERE r.cloud_project_id = ? AND ${byReservation ? 'r.reservation_id' : 'r.ticket_number'} = ?`,
+  ).bind(cloudProjectId, byReservation ? target.reservationId : target.ticketNumber).first<{ creation_id: string | null, ticket_number: number, project_code: string }>()
+  if (!row) {
+    throw new CoordinationError(byReservation ? 'reservation_not_found' : 'projection_not_found', { requestId })
+  }
+  const expectedCode = `${row.project_code}-${String(row.ticket_number).padStart(3, '0')}`
+  if (!row.creation_id || row.creation_id !== header.creationId || header.code !== expectedCode) {
+    throw new CoordinationError('reservation_state_conflict', { requestId, message: 'ticket creation identity requires explicit reconciliation' })
   }
 }

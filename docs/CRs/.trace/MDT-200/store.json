@@ -16,13 +16,6 @@
       ]
     },
     {
-      "id": "BR-1.1",
-      "kind": "behavior",
-      "text": "Concurrent create requests for one cloud project return unique ticket numbers with no duplicate ticket rows",
-      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md",
-      "routePolicy": "bdd"
-    },
-    {
       "id": "BR-1.2",
       "kind": "behavior",
       "text": "Concurrent requests sharing one idempotency key return one stable reservation and advance the counter once",
@@ -33,13 +26,6 @@
       "id": "BR-1.3",
       "kind": "behavior",
       "text": "Different cloud projects allocate ticket numbers independently",
-      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md",
-      "routePolicy": "bdd"
-    },
-    {
-      "id": "BR-1.4",
-      "kind": "behavior",
-      "text": "A failed local Markdown write can retry the same reservation and acknowledge it without number reuse",
       "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md",
       "routePolicy": "bdd"
     },
@@ -224,17 +210,6 @@
       ]
     },
     {
-      "id": "BR-1.7",
-      "kind": "behavior",
-      "text": "Local-only projects behave exactly as before this feature; allocation, creation, and board behavior are unchanged. This MUST be proven with the cloud strategy seam wired into TicketService (a project with no [project.cloudSync] binding selects LocalTicketNumberAllocator and never makes a cloud call).",
-      "sourceRef": "docs/CRs/MDT-200-cloud-sync-first-slice.md",
-      "routePolicy": "bdd",
-      "tags": [
-        "compatibility",
-        "uat-refined"
-      ]
-    },
-    {
       "id": "BR-3.3",
       "kind": "behavior",
       "text": "Another authorized client sees projected create and status changes within the configured polling interval, proven end-to-end (a local projection poller observing the cloud feed), not only the cloud polling endpoint in isolation.",
@@ -245,6 +220,97 @@
         "polling",
         "uat-refined"
       ]
+    },
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "Concurrent creates through CLI, MCP, and HTTP for one cloud project return unique numbers; a cloud-bound create never writes or acknowledges a second local ticket with an occupied key, including a different slug. Raw filesystem writes are detected as conflicts when observed, not claimed to be impossible.",
+      "sourceRef": "docs/CRs/MDT-200/requirements.md#uat-2026-10-24",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.4",
+      "kind": "behavior",
+      "text": "A failed local Markdown write retries its original reservation and immutable creation identity without number reuse; only a verified replay of the same creation may reuse an existing file. A conflicting held reservation remains explicit recoverable work, never a silent replacement allocation.",
+      "sourceRef": "docs/CRs/MDT-200/requirements.md#uat-2026-10-24",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.7",
+      "kind": "behavior",
+      "text": "Local-only projects with no CONFIG_DIR cloud connection preserve existing allocation, creation, and board behavior and make no cloud call. Enabled connections coordinate; disabled, malformed, or untrusted connections never resume local numbering (MDT-201 cutover).",
+      "sourceRef": "docs/CRs/MDT-200/requirements.md#uat-2026-10-24",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.8",
+      "kind": "behavior",
+      "text": "A fresh cloud-bound create scans canonical ticket identities across the physical repository and known worktrees, fails closed on scan errors or ambiguity, journals its observed minimum number and creation identity, and obtains a coordinator-assigned number at or above that minimum and the authoritative counter. Replay preserves the original allocation inputs and result.",
+      "sourceRef": "docs/CRs/MDT-200/requirements.md#uat-2026-10-24",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.9",
+      "kind": "behavior",
+      "text": "A watched or startup-discovered file in a cloud-bound project is classified as verified same creation, conflict, unmanaged, or verification pending. A key already reserved for another creation is a conflict; missing identity or inaccessible evidence is unverified. Detection preserves the file and emits a bounded actionable diagnostic without automatically reserving, acknowledging, publishing, renumbering, or deleting it.",
+      "sourceRef": "docs/CRs/MDT-200/requirements.md#uat-2026-10-24",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.10",
+      "kind": "behavior",
+      "text": "When multiple local files claim one ticket key, key-based CLI, MCP, and HTTP reads and mutations report ambiguity with authorized relative file paths instead of selecting the first match or changing an unrelated ticket. Files remain available for explicit path-based inspection and operator resolution.",
+      "sourceRef": "docs/CRs/MDT-200/requirements.md#uat-2026-10-24",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4.3",
+      "kind": "behavior",
+      "text": "An authorized operator can dry-run and explicitly reconcile an existing cloud project after a collision: preserve allocation history, audit corrections, raise the counter to at least the maximum of its current value, highest retained reservation plus one, and reviewed canonical high-water plus one, and resolve incorrect creation/projection associations before resuming coordination. Repeating a repair is idempotent and never reuses a number.",
+      "sourceRef": "docs/CRs/MDT-200/requirements.md#uat-2026-10-24",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C9",
+      "kind": "constraint",
+      "text": "Ticket number, filename, mutable header equality, event origin, or membership alone does not establish creation identity. New cloud creates persist a non-secret immutable creationId in canonical frontmatter, journal, and the coordinator reservation; its scoped association is verified before cloud publication. Legacy files or journals without evidence remain unverified until explicit audited reconciliation. No secret or active cloud binding is added to repository configuration.",
+      "sourceRef": "docs/CRs/MDT-200/requirements.md#uat-2026-10-24",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C10",
+      "kind": "constraint",
+      "text": "Allocation floor and creationId are immutable idempotency inputs verified by the coordinator, not trusted solely through an opaque client requestHash. Reservation insert, counter advance, idempotency result, and allocation audit stay atomic under differing-floor and operator-repair races. A protocol/capability mismatch fails closed; it never silently ignores the floor or creation identity.",
+      "sourceRef": "docs/CRs/MDT-200/requirements.md#uat-2026-10-24",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C11",
+      "kind": "constraint",
+      "text": "File watchers are observation adapters, not allocation or import authorities. Shared services own classification and identity policy; server adapters preserve physical file identity internally and expose only authorized relative diagnostic paths. Duplicate events are coalesced; failures do not start unbounded cloud probes or interactive authentication.",
+      "sourceRef": "docs/CRs/MDT-200/requirements.md#uat-2026-10-24",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-7",
+      "kind": "edge_case",
+      "text": "A manual file uses an already reserved or acknowledged key, copies another creationId, or duplicates a slugged key: reject a proven mismatched association as conflict, retain unknown associations as verification pending, and never infer ownership from the number or overwrite either creation.",
+      "sourceRef": "docs/CRs/MDT-200/requirements.md#uat-2026-10-24",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-8",
+      "kind": "edge_case",
+      "text": "Watcher verification encounters unavailable coordination, missing credentials, partial files, permission errors, or repeated events: preserve bytes, retain a deduplicated actionable pending diagnostic, and retry only through a bounded or explicit recovery path without cloud writes.",
+      "sourceRef": "docs/CRs/MDT-200/requirements.md#uat-2026-10-24",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-9",
+      "kind": "edge_case",
+      "text": "Git, another process, or a known worktree changes occupied keys during creation or an operator raises the counter after allocation pre-read: recheck identity at write and acknowledgement boundaries, suppress stale reservation inserts transactionally, and surface detected conflicts without silently renumbering. Unseen writes in disconnected clones cannot be guaranteed absent.",
+      "sourceRef": "docs/CRs/MDT-200/requirements.md#uat-2026-10-24",
+      "routePolicy": "tests"
     }
   ],
   "scenarios": [
@@ -511,6 +577,180 @@
       "when": "When the 15-minute scheduled handler runs",
       "then": "Then a bounded batch is marked abandoned and an audit record is written without decrementing the counter",
       "sourceRef": "CR:MDT-200"
+    },
+    {
+      "id": "stale_cloud_counter_skips_local_high_water",
+      "title": "Stale coordinator skips local occupied numbers",
+      "covers": [
+        "BR-1.1",
+        "BR-1.8"
+      ],
+      "given": "Counter is 258 and canonical local keys extend through 262",
+      "when": "a fresh cloud-bound CLI, MCP, or HTTP create requests allocation",
+      "then": "the coordinator reserves at least 263 and exactly one canonical key is written and acknowledged",
+      "sourceRef": "docs/CRs/MDT-200/bdd.md#uat-2026-10-24"
+    },
+    {
+      "id": "different_slug_same_key_rejected",
+      "title": "Different slug cannot bypass key uniqueness",
+      "covers": [
+        "BR-1.1",
+        "BR-1.4"
+      ],
+      "given": "a reservation or recovery intent targets a key occupied by another creation under another slug",
+      "when": "the shared writer attempts creation or acknowledgement",
+      "then": "it reports a recoverable conflict, preserves both existing bytes and the held reservation, and never reports creation success",
+      "sourceRef": "docs/CRs/MDT-200/bdd.md#uat-2026-10-24"
+    },
+    {
+      "id": "floor_identity_replay_stable",
+      "title": "Allocation identity and floor remain stable on retry",
+      "covers": [
+        "BR-1.2",
+        "BR-1.4",
+        "BR-1.8"
+      ],
+      "given": "a journaled create already has immutable allocation inputs and the counter has subsequently advanced",
+      "when": "the intent is retried or its floor or creation identity is changed under the same idempotency key",
+      "then": "an unchanged retry returns the original reservation without advancing; changed immutable inputs are rejected",
+      "sourceRef": "docs/CRs/MDT-200/bdd.md#uat-2026-10-24"
+    },
+    {
+      "id": "manual_file_uses_other_reservation",
+      "title": "Manual file cannot adopt another creation reservation",
+      "covers": [
+        "BR-1.9"
+      ],
+      "given": "a manually added file uses a key already reserved or acknowledged for a different proven creation",
+      "when": "the watcher or startup inventory classifies the file",
+      "then": "it retains the file, reports conflict, and makes no reservation, acknowledgement, projection, rename, or delete mutation",
+      "sourceRef": "docs/CRs/MDT-200/bdd.md#uat-2026-10-24"
+    },
+    {
+      "id": "manual_file_without_proof_pending",
+      "title": "Missing evidence does not imply ownership",
+      "covers": [
+        "BR-1.9"
+      ],
+      "given": "a local file has no verifiable creation provenance or coordination evidence cannot be read",
+      "when": "the file is observed",
+      "then": "the file remains inspectable with an unmanaged or verification-pending diagnostic and no automatic cloud mutation",
+      "sourceRef": "docs/CRs/MDT-200/bdd.md#uat-2026-10-24"
+    },
+    {
+      "id": "verified_git_file_is_same_creation",
+      "title": "Git delivery of a verified ticket is not a new create",
+      "covers": [
+        "BR-1.9"
+      ],
+      "given": "a ticket arrives through Git with creationId matching its acknowledged coordinator claim",
+      "when": "the watcher or startup inventory observes the file",
+      "then": "it identifies the same existing creation without reserving or acknowledging again",
+      "sourceRef": "docs/CRs/MDT-200/bdd.md#uat-2026-10-24"
+    },
+    {
+      "id": "duplicate_key_access_is_ambiguous",
+      "title": "Key-based adapters refuse ambiguous local tickets",
+      "covers": [
+        "BR-1.10"
+      ],
+      "given": "two local files claim MDT-258",
+      "when": "CLI, MCP, or HTTP resolves MDT-258 for reading or mutation",
+      "then": "it reports ambiguity and authorized relative paths rather than selecting or mutating either file",
+      "sourceRef": "docs/CRs/MDT-200/bdd.md#uat-2026-10-24"
+    },
+    {
+      "id": "operator_repair_is_monotonic",
+      "title": "Reviewed operator repair advances without number reuse",
+      "covers": [
+        "BR-4.3"
+      ],
+      "given": "coordination is suspended and reviewed files, reservations, projections, and pending intents are inventoried",
+      "when": "an authorized operator previews and applies the explicit repair twice",
+      "then": "the counter never decreases, prior allocation history remains, the second apply is idempotent, and unresolved identity conflicts keep resumption blocked",
+      "sourceRef": "docs/CRs/MDT-200/bdd.md#uat-2026-10-24"
+    },
+    {
+      "id": "pending_creation_inspected_and_resumed",
+      "title": "An explicit owner action inspects and resumes the original pending creation",
+      "covers": [
+        "BR-1.4",
+        "BR-1.5"
+      ],
+      "given": "A valid v2 creation journal survives a process exit with its original draft, identity, floor and reservation",
+      "when": "The owner inspects it and explicitly resumes it through a shipped adapter without reconstructing create arguments",
+      "then": "The shared recovery service verifies the current file and held reservation, reuses the original intent, acknowledges at most once and retains evidence on failure",
+      "sourceRef": "docs/CRs/MDT-200/bdd.md"
+    },
+    {
+      "id": "legacy_creation_journal_requires_reviewed_resolution",
+      "title": "Legacy or corrupt journals remain inspectable and require reviewed resolution",
+      "covers": [
+        "BR-1.4"
+      ],
+      "given": "An active or legacy routing location contains a legacy, corrupt or schema-invalid creation journal",
+      "when": "The owner requests inspection or a new create is attempted",
+      "then": "Inspection reports bounded redacted state, original routing and remediation; no automatic deletion, identity invention, replacement reservation or startup write occurs; reconciliation requires explicit reviewed proof and expected journal state",
+      "sourceRef": "docs/CRs/MDT-200/bdd.md"
+    },
+    {
+      "id": "uncertain_creation_lock_is_actionable",
+      "title": "Uncertain lock ownership is inspectable without stealing a live lock",
+      "covers": [
+        "BR-1.4"
+      ],
+      "given": "A retained creation lock has an ambiguous owner or a PID now belonging to another process",
+      "when": "The owner inspects recovery state or attempts explicit resume",
+      "then": "The outcome reports available PID and creation time and a safe verification path; age alone never authorizes lock theft and no overlapping create runs",
+      "sourceRef": "docs/CRs/MDT-200/bdd.md"
+    },
+    {
+      "id": "lowercase_project_code_uses_canonical_identity",
+      "title": "Lowercase local project codes use the canonical cloud key consistently",
+      "covers": [
+        "BR-1.1",
+        "BR-1.4",
+        "BR-1.7",
+        "BR-1.8"
+      ],
+      "given": "A supported local project config spells its code mdt and is connected to cloud project code MDT",
+      "when": "A supported create and its same-intent recovery run",
+      "then": "The canonical project/key identity is consistent before reservation, writing and verification; creation succeeds with strict Worker identity checks and no automatic renaming of existing files",
+      "sourceRef": "docs/CRs/MDT-200/bdd.md"
+    },
+    {
+      "id": "inventory_failure_reports_actionable_paths",
+      "title": "Incomplete inventory preserves fail-closed safety and actionable diagnostics",
+      "covers": [
+        "BR-1.8",
+        "BR-1.9"
+      ],
+      "given": "A known worktree is unavailable, a canonical root is unreadable or a filename contains an unsupported number",
+      "when": "Inventory is used by create or explicit observation",
+      "then": "Creation stays blocked and available inventory evidence is retained; diagnostics name authorized relative paths, typed causes and safe operator steps without silently skipping roots or mutating files",
+      "sourceRef": "docs/CRs/MDT-200/bdd.md"
+    },
+    {
+      "id": "bounded_claim_rotation_preserves_diagnostics",
+      "title": "Bounded rotation preserves last verified evidence for unchanged files",
+      "covers": [
+        "BR-1.9"
+      ],
+      "given": "More than64 eligible canonical creations have matching acknowledged cloud claims",
+      "when": "Repeated event-triggered observations rotate a maximum64 claim probes per pass",
+      "then": "An unchanged file is not demoted solely because it is outside this pass; last verification and freshness remain explicit, duplicate notifications are coalesced and no timer or cloud mutation is added",
+      "sourceRef": "docs/CRs/MDT-200/bdd.md"
+    },
+    {
+      "id": "identity_diagnostic_cache_invalidates_on_change",
+      "title": "Cached claim evidence cannot outlive a meaningful identity or connection change",
+      "covers": [
+        "BR-1.9"
+      ],
+      "given": "Last verified claim evidence exists for a file in a particular local project, binding and principal context",
+      "when": "The file identity changes, a duplicate appears, the binding or principal changes, or a probe returns an authorization failure",
+      "then": "Affected cached evidence is invalidated or explicitly stale; a previous verified outcome cannot authorize adoption or publication, and current membership remains enforced on mutations",
+      "sourceRef": "docs/CRs/MDT-200/bdd.md"
     }
   ],
   "obligations": [
@@ -559,23 +799,6 @@
         "ART-cloud-d1"
       ],
       "sourceRef": "docs/architecture/cloud-sync/identity-and-access.md"
-    },
-    {
-      "id": "OBL-allocation",
-      "title": "Allocation transaction: static D1 batch allocates unique numbers with idempotent replay, monotonic counter, no reuse",
-      "derivedFrom": [
-        "BR-1.1",
-        "BR-1.2",
-        "BR-1.3",
-        "C2",
-        "C3"
-      ],
-      "artifactIds": [
-        "ART-cloud-application",
-        "ART-cloud-d1",
-        "ART-cloud-migrations"
-      ],
-      "sourceRef": "docs/architecture/cloud-sync/data-and-consistency.md"
     },
     {
       "id": "OBL-local-orchestration",
@@ -633,6 +856,152 @@
         "ART-cloud-d1"
       ],
       "sourceRef": "docs/architecture/cloud-sync/operations.md"
+    },
+    {
+      "id": "OBL-allocation",
+      "title": "Static allocation batch uses immutable floor and creation identity, suppresses stale inserts before mutation, and atomically preserves uniqueness, replay, monotonic counter, and non-reuse",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.8",
+        "C2",
+        "C3",
+        "C10",
+        "Edge-9"
+      ],
+      "artifactIds": [
+        "ART-cloud-application",
+        "ART-cloud-d1",
+        "ART-cloud-migrations",
+        "ART-domain-cloud-sync"
+      ],
+      "sourceRef": "docs/CRs/MDT-200/architecture.md#uat-2026-10-24"
+    },
+    {
+      "id": "OBL-creation-identity",
+      "title": "Shared identity scan, journal, writer, and recovery verify immutable creation provenance, reject key ambiguity, and preserve transport-independent behavior",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.4",
+        "BR-1.8",
+        "BR-1.10",
+        "C9",
+        "C10",
+        "Edge-7",
+        "Edge-9"
+      ],
+      "artifactIds": [
+        "ART-ticket-creation-identity",
+        "ART-domain-cloud-sync",
+        "ART-shared-ticket-identity",
+        "ART-shared-cloud-sync",
+        "ART-shared-ticket-service",
+        "ART-server-ticket-identity",
+        "ART-cli-ticket-create",
+        "ART-mcp-ticket-create"
+      ],
+      "sourceRef": "docs/CRs/MDT-200/architecture.md#uat-2026-10-24"
+    },
+    {
+      "id": "OBL-manual-observation",
+      "title": "Shared classification receives path-preserving watcher and startup observations, distinguishes verified, conflict, unmanaged, and pending states, and produces bounded diagnostics without automatic adoption",
+      "derivedFrom": [
+        "BR-1.9",
+        "C9",
+        "C11",
+        "Edge-7",
+        "Edge-8",
+        "Edge-9"
+      ],
+      "artifactIds": [
+        "ART-shared-ticket-identity",
+        "ART-shared-cloud-sync",
+        "ART-server-file-watcher",
+        "ART-server-identity-observation",
+        "ART-domain-cloud-sync"
+      ],
+      "sourceRef": "docs/CRs/MDT-200/architecture.md#uat-2026-10-24"
+    },
+    {
+      "id": "OBL-counter-reconciliation",
+      "title": "Explicit authorized operator repair previews changes, retains allocation history, audits monotonic idempotent correction, and resolves creation/projection associations before resumption",
+      "derivedFrom": [
+        "BR-4.3",
+        "BR-4.1",
+        "C2",
+        "C3",
+        "C9",
+        "C10"
+      ],
+      "artifactIds": [
+        "ART-cloud-workspace",
+        "ART-cloud-application",
+        "ART-cloud-d1",
+        "ART-cloud-migrations",
+        "ART-shared-cloud-sync"
+      ],
+      "sourceRef": "docs/CRs/MDT-200/architecture.md#uat-2026-10-24"
+    },
+    {
+      "id": "OBL-review-creation-recovery",
+      "title": "Explicit owner-invoked creation inspection/resume and reviewed legacy resolution preserve identity, original receipts and exclusive safe lock ownership",
+      "derivedFrom": [
+        "BR-1.4",
+        "BR-1.5",
+        "C5",
+        "C9",
+        "C10",
+        "Edge-2",
+        "Edge-8"
+      ],
+      "artifactIds": [
+        "ART-domain-cloud-sync",
+        "ART-shared-cloud-sync",
+        "ART-shared-ticket-service",
+        "ART-shared-creation-recovery",
+        "ART-server-creation-recovery"
+      ],
+      "sourceRef": "docs/CRs/MDT-200/architecture.md"
+    },
+    {
+      "id": "OBL-review-canonical-code",
+      "title": "Canonical project/key identity is consistent across supported config spelling, shared create, immutable recovery and strict Worker checks",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.4",
+        "BR-1.7",
+        "BR-1.8",
+        "C9",
+        "Edge-9"
+      ],
+      "artifactIds": [
+        "ART-project-code-identity",
+        "ART-ticket-creation-identity",
+        "ART-shared-ticket-service",
+        "ART-shared-ticket-identity",
+        "ART-cloud-application"
+      ],
+      "sourceRef": "docs/CRs/MDT-200/architecture.md"
+    },
+    {
+      "id": "OBL-review-observation-diagnostics",
+      "title": "Incomplete inventory remains fail-closed with actionable per-path evidence and bounded claim rotation preserves last verified evidence with freshness and safe invalidation",
+      "derivedFrom": [
+        "BR-1.8",
+        "BR-1.9",
+        "C9",
+        "C11",
+        "Edge-8"
+      ],
+      "artifactIds": [
+        "ART-domain-cloud-sync",
+        "ART-shared-ticket-identity",
+        "ART-shared-ticket-service",
+        "ART-server-identity-observation",
+        "ART-server-file-watcher"
+      ],
+      "sourceRef": "docs/CRs/MDT-200/architecture.md"
     }
   ],
   "artifacts": [
@@ -725,6 +1094,66 @@
       "path": "src/hooks/useCloudProjectionFeed.ts",
       "kind": "runtime",
       "sourceRef": "docs/CRs/MDT-200/ux-design.md"
+    },
+    {
+      "id": "ART-ticket-creation-identity",
+      "path": "domain-contracts/src/ticket/",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-200/architecture.md#uat-2026-10-24"
+    },
+    {
+      "id": "ART-shared-ticket-identity",
+      "path": "shared/services/ticket/",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-200/architecture.md#uat-2026-10-24"
+    },
+    {
+      "id": "ART-server-file-watcher",
+      "path": "server/services/fileWatcher/",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-200/architecture.md#uat-2026-10-24"
+    },
+    {
+      "id": "ART-server-ticket-identity",
+      "path": "server/services/TicketService.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-200/architecture.md#uat-2026-10-24"
+    },
+    {
+      "id": "ART-server-identity-observation",
+      "path": "server/services/cloud-sync/",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-200/architecture.md#uat-2026-10-24"
+    },
+    {
+      "id": "ART-cli-ticket-create",
+      "path": "cli/src/commands/create.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-200/architecture.md#uat-2026-10-24"
+    },
+    {
+      "id": "ART-mcp-ticket-create",
+      "path": "mcp-server/src/services/crService.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-200/architecture.md#uat-2026-10-24"
+    },
+    {
+      "id": "ART-shared-creation-recovery",
+      "path": "shared/services/cloud-sync/creation-recovery.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-200/architecture.md"
+    },
+    {
+      "id": "ART-server-creation-recovery",
+      "path": "server/routes/cloudCreationRecovery.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-200/architecture.md"
+    },
+    {
+      "id": "ART-project-code-identity",
+      "path": "domain-contracts/src/project/",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-200/architecture.md"
     }
   ],
   "testPlans": [
@@ -1064,6 +1493,224 @@
       ],
       "file": "shared/services/cloud-sync/__tests__/projection-sync.test.ts",
       "sourceRef": "lifecycle-aware early-return (delete tombstone)"
+    },
+    {
+      "id": "TEST-uat-allocation-floor",
+      "kind": "integration",
+      "title": "Allocation floor preserves atomic uniqueness, stable identity replay, protocol gating, and rollback under differing-floor and operator races",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.8",
+        "C3",
+        "C10",
+        "Edge-9"
+      ],
+      "file": "cloud/test/alloc.concurrency.test.ts",
+      "sourceRef": "docs/CRs/MDT-200/tests.md#uat-2026-10-24"
+    },
+    {
+      "id": "TEST-uat-key-identity",
+      "kind": "integration",
+      "title": "Shared creation rejects key collisions across slugs and validates replay provenance without acknowledging or replacing a conflicting reservation",
+      "covers": [
+        "BR-1.1",
+        "BR-1.4",
+        "BR-1.8",
+        "BR-1.10",
+        "C9",
+        "Edge-7",
+        "Edge-9"
+      ],
+      "file": "shared/services/cloud-sync/__tests__/create-orchestrator.test.ts",
+      "sourceRef": "docs/CRs/MDT-200/tests.md#uat-2026-10-24"
+    },
+    {
+      "id": "TEST-uat-manual-observation",
+      "kind": "integration",
+      "title": "Manual file classification preserves bytes and verified Git identity while quarantining mismatched, absent, and inaccessible evidence",
+      "covers": [
+        "BR-1.9",
+        "C9",
+        "C11",
+        "Edge-7",
+        "Edge-8",
+        "Edge-9"
+      ],
+      "file": "shared/services/cloud-sync/__tests__/ticket-identity.test.ts",
+      "sourceRef": "docs/CRs/MDT-200/tests.md#uat-2026-10-24"
+    },
+    {
+      "id": "TEST-uat-watcher-paths",
+      "kind": "integration",
+      "title": "Watcher preserves physical path identity internally and coalesces bounded diagnostics without cloud write or login effects",
+      "covers": [
+        "BR-1.9",
+        "C11",
+        "Edge-8"
+      ],
+      "file": "server/tests/unit/PathWatcherService.test.ts",
+      "sourceRef": "docs/CRs/MDT-200/tests.md#uat-2026-10-24"
+    },
+    {
+      "id": "TEST-uat-create-adapters",
+      "kind": "e2e",
+      "title": "CLI, MCP, and HTTP use shared allocation and reject ambiguous key access instead of mutating an unrelated ticket",
+      "covers": [
+        "BR-1.1",
+        "BR-1.8",
+        "BR-1.10",
+        "C9"
+      ],
+      "file": "cli/tests/e2e/ticket/create.spec.ts",
+      "sourceRef": "docs/CRs/MDT-200/tests.md#uat-2026-10-24"
+    },
+    {
+      "id": "TEST-uat-counter-repair",
+      "kind": "integration",
+      "title": "Operator repair dry-run, monotonic audited idempotent apply, association-conflict handling, and history preservation",
+      "covers": [
+        "BR-4.3",
+        "C3",
+        "C9",
+        "C10"
+      ],
+      "file": "cloud/test/counter-reconciliation.test.ts",
+      "sourceRef": "docs/CRs/MDT-200/tests.md#uat-2026-10-24"
+    },
+    {
+      "id": "TEST-uat-production-reconciliation",
+      "kind": "manual",
+      "title": "Read-only inventory and separately authorized reviewed incident repair of the existing MDT cloud project with before/after evidence",
+      "covers": [
+        "BR-4.3",
+        "BR-4.1",
+        "C2",
+        "C3"
+      ],
+      "file": "cloud/test/operations/counter-reconciliation.md",
+      "sourceRef": "docs/CRs/MDT-200/tests.md#uat-2026-10-24"
+    },
+    {
+      "id": "TEST-review-creation-recovery",
+      "kind": "integration",
+      "title": "Explicit recovery inspects and resumes persisted v2 creation across processes without a new intent",
+      "covers": [
+        "BR-1.4",
+        "BR-1.5",
+        "C9",
+        "C10",
+        "Edge-2"
+      ],
+      "file": "shared/services/cloud-sync/__tests__/recovery.test.ts",
+      "sourceRef": "docs/CRs/MDT-200/tests.md"
+    },
+    {
+      "id": "TEST-review-legacy-journal-inspection",
+      "kind": "integration",
+      "title": "Legacy and corrupt creation state is inspectable and only reviewed expected-state reconciliation can resolve it",
+      "covers": [
+        "BR-1.4",
+        "C5",
+        "C9",
+        "C10",
+        "Edge-8"
+      ],
+      "file": "shared/services/cloud-sync/__tests__/operation-journal.test.ts",
+      "sourceRef": "docs/CRs/MDT-200/tests.md"
+    },
+    {
+      "id": "TEST-review-lock-owner-diagnostics",
+      "kind": "unit",
+      "title": "PID reuse and unverifiable lock ownership produce safe actionable recovery outcomes",
+      "covers": [
+        "BR-1.4",
+        "Edge-2",
+        "Edge-8"
+      ],
+      "file": "shared/services/cloud-sync/__tests__/operation-journal.test.ts",
+      "sourceRef": "docs/CRs/MDT-200/tests.md"
+    },
+    {
+      "id": "TEST-review-project-code-normalization",
+      "kind": "integration",
+      "title": "Real shared creation and replay with lowercase config preserve one canonical key and stable reservation",
+      "covers": [
+        "BR-1.1",
+        "BR-1.4",
+        "BR-1.7",
+        "BR-1.8",
+        "C9",
+        "Edge-9"
+      ],
+      "file": "shared/services/cloud-sync/__tests__/create-orchestrator.test.ts",
+      "sourceRef": "docs/CRs/MDT-200/tests.md"
+    },
+    {
+      "id": "TEST-review-canonical-code-ack",
+      "kind": "integration",
+      "title": "Boundary-normalized project keys pass strict Worker ACK and mismatched project or creation identities still fail",
+      "covers": [
+        "BR-1.1",
+        "BR-1.4",
+        "C9",
+        "C10",
+        "Edge-7"
+      ],
+      "file": "cloud/test/identity-allocation.test.ts",
+      "sourceRef": "docs/CRs/MDT-200/tests.md"
+    },
+    {
+      "id": "TEST-review-inventory-diagnostics",
+      "kind": "integration",
+      "title": "Unavailable worktrees and numeric overflow retain per-path evidence and fail closed with remediation",
+      "covers": [
+        "BR-1.8",
+        "BR-1.9",
+        "C11",
+        "Edge-8"
+      ],
+      "file": "shared/services/cloud-sync/__tests__/ticket-identity.test.ts",
+      "sourceRef": "docs/CRs/MDT-200/tests.md"
+    },
+    {
+      "id": "TEST-review-observation-stability",
+      "kind": "integration",
+      "title": "Real130-file claim rotation stays bounded and stable while identity and authorization changes invalidate evidence",
+      "covers": [
+        "BR-1.9",
+        "C9",
+        "C11",
+        "Edge-8"
+      ],
+      "file": "shared/services/cloud-sync/__tests__/ticket-identity.test.ts",
+      "sourceRef": "docs/CRs/MDT-200/tests.md"
+    },
+    {
+      "id": "TEST-review-recovery-adapter",
+      "kind": "integration",
+      "title": "A shipped owner-only explicit recovery adapter inspects and resumes through shared policy with no startup mutation",
+      "covers": [
+        "BR-1.4",
+        "C5",
+        "C9",
+        "Edge-8"
+      ],
+      "file": "server/tests/services/cloud-sync/CloudCreationRecovery.test.ts",
+      "sourceRef": "docs/CRs/MDT-200/tests.md"
+    },
+    {
+      "id": "TEST-review-recovery-http-integration",
+      "kind": "integration",
+      "title": "Real owner HTTP facade uses shared stored-intent recovery and preserves acknowledged journals until terminal proof",
+      "covers": [
+        "BR-1.4",
+        "C5",
+        "C9",
+        "Edge-8"
+      ],
+      "file": "server/tests/unit/TicketService.boundary-compatibility.test.ts",
+      "sourceRef": "docs/CRs/MDT-200/tests.md"
     }
   ],
   "tasks": [
@@ -1301,32 +1948,6 @@
       "sourceRef": "docs/CRs/MDT-200/tasks.md"
     },
     {
-      "id": "TASK-projection",
-      "title": "Atomic initial projection, versioned publish, safe local retry, polling, and board stubs",
-      "ownsArtifactIds": [
-        "ART-cloud-application",
-        "ART-cloud-d1",
-        "ART-domain-cloud-sync",
-        "ART-shared-cloud-sync",
-        "ART-shared-ticket-service",
-        "ART-server-cloud-projections",
-        "ART-frontend-cloud-projections"
-      ],
-      "makesGreenIds": [
-        "TEST-projection-content",
-        "TEST-projection-conflict",
-        "TEST-projection-polling",
-        "TEST-create-orchestration",
-        "TEST-local-projection-feed",
-        "TEST-board-stub-render",
-        "projection_excludes_body",
-        "stale_projection_rejected",
-        "polling_sees_changes_within_interval",
-        "board_distinguishes_projected_state"
-      ],
-      "sourceRef": "docs/CRs/MDT-200/tasks.md"
-    },
-    {
       "id": "TASK-scheduled",
       "title": "Scheduled reservation expiry, 180-day audit retention, and rate-limit abuse guard",
       "ownsArtifactIds": [
@@ -1356,6 +1977,116 @@
         "human_email_attribution"
       ],
       "sourceRef": "docs/CRs/MDT-200/tasks.md"
+    },
+    {
+      "id": "TASK-projection",
+      "title": "Atomic initial projection, versioned publish, safe local retry, polling, and board stubs",
+      "ownsArtifactIds": [
+        "ART-cloud-application",
+        "ART-cloud-d1",
+        "ART-domain-cloud-sync",
+        "ART-shared-cloud-sync",
+        "ART-shared-ticket-service",
+        "ART-server-cloud-projections",
+        "ART-frontend-cloud-projections"
+      ],
+      "makesGreenIds": [
+        "TEST-projection-content",
+        "TEST-projection-conflict",
+        "TEST-projection-polling",
+        "TEST-create-orchestration",
+        "TEST-local-projection-feed",
+        "TEST-board-stub-render",
+        "projection_excludes_body",
+        "stale_projection_rejected",
+        "polling_sees_changes_within_interval",
+        "board_distinguishes_projected_state",
+        "TEST-projection-sync-deletion"
+      ],
+      "sourceRef": "CR:MDT-200"
+    },
+    {
+      "id": "TASK-uat-operator-reconciliation",
+      "title": "Operational acceptance pending: retain locally verified audited monotonic repair and execute separately authorized production incident reconciliation",
+      "ownsArtifactIds": [
+        "ART-cloud-workspace",
+        "ART-cloud-migrations",
+        "ART-cloud-application",
+        "ART-cloud-d1",
+        "ART-shared-cloud-sync"
+      ],
+      "makesGreenIds": [
+        "TEST-uat-counter-repair",
+        "TEST-uat-production-reconciliation",
+        "operator_repair_is_monotonic"
+      ],
+      "sourceRef": "docs/CRs/MDT-200/uat.md"
+    },
+    {
+      "id": "TASK-uat-observation-conflicts",
+      "title": "Review fixes implemented: actionable fail-closed inventory and stable bounded claim evidence with safe invalidation",
+      "ownsArtifactIds": [
+        "ART-shared-ticket-identity",
+        "ART-shared-cloud-sync",
+        "ART-domain-cloud-sync",
+        "ART-server-file-watcher",
+        "ART-server-identity-observation",
+        "ART-shared-ticket-service"
+      ],
+      "makesGreenIds": [
+        "TEST-uat-manual-observation",
+        "TEST-uat-watcher-paths",
+        "manual_file_uses_other_reservation",
+        "manual_file_without_proof_pending",
+        "verified_git_file_is_same_creation",
+        "TEST-review-inventory-diagnostics",
+        "TEST-review-observation-stability",
+        "inventory_failure_reports_actionable_paths",
+        "bounded_claim_rotation_preserves_diagnostics",
+        "identity_diagnostic_cache_invalidates_on_change"
+      ],
+      "sourceRef": "docs/CRs/MDT-200/uat.md"
+    },
+    {
+      "id": "TASK-uat-allocation-identity",
+      "title": "Review fixes implemented: explicit owner creation recovery, inspectable lock ownership and canonical cloud identity; preserve allocation guards",
+      "ownsArtifactIds": [
+        "ART-domain-cloud-sync",
+        "ART-ticket-creation-identity",
+        "ART-cloud-migrations",
+        "ART-cloud-application",
+        "ART-cloud-d1",
+        "ART-shared-cloud-sync",
+        "ART-shared-ticket-identity",
+        "ART-shared-ticket-service",
+        "ART-server-ticket-identity",
+        "ART-cli-ticket-create",
+        "ART-mcp-ticket-create",
+        "ART-shared-creation-recovery",
+        "ART-server-creation-recovery",
+        "ART-project-code-identity"
+      ],
+      "makesGreenIds": [
+        "TEST-uat-allocation-floor",
+        "TEST-uat-key-identity",
+        "TEST-uat-create-adapters",
+        "stale_cloud_counter_skips_local_high_water",
+        "different_slug_same_key_rejected",
+        "floor_identity_replay_stable",
+        "duplicate_key_access_is_ambiguous",
+        "TEST-review-creation-recovery",
+        "TEST-review-legacy-journal-inspection",
+        "TEST-review-lock-owner-diagnostics",
+        "TEST-review-project-code-normalization",
+        "TEST-review-canonical-code-ack",
+        "TEST-review-recovery-adapter",
+        "pending_creation_inspected_and_resumed",
+        "legacy_creation_journal_requires_reviewed_resolution",
+        "uncertain_creation_lock_is_actionable",
+        "lowercase_project_code_uses_canonical_identity",
+        "TEST-review-recovery-http-integration"
+      ],
+      "sourceRef": "docs/CRs/MDT-200/uat.md"
     }
   ]
 }

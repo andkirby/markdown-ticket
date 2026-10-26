@@ -34,6 +34,7 @@ const ISODateSchema = z.string()
   .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format, use YYYY-MM-DD')
 
 export const TicketFrontmatterSchema = z.object({
+  creationId: z.string().uuid().optional(),
   code: z.string()
     .regex(CR_CODE_PATTERN, 'CR code must be in format PREFIX-123 (e.g., MDT-101)'),
   title: TrimmedTitleSchema,

@@ -1,3 +1,4 @@
+import type { CloudPrincipal, ProjectedHeader } from './helpers/projection-d1-adapter'
 /**
  * TEST-ack-projection-wiring — covers the acknowledgement → projection v1 wiring.
  *
@@ -10,18 +11,14 @@
  * adapter, separate from the repository unit tests in projection.test.ts.
  */
 
-import type { CloudPrincipal, ProjectedHeader } from './helpers/projection-d1-adapter'
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
 import { Database } from 'bun:sqlite'
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from 'bun:test'
 import { acknowledge } from '../src/cloudflare/application/reservation'
+import { applyMigrations } from './helpers/identity-d1'
 import { asD1 } from './helpers/projection-d1-adapter'
-
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const SCHEMA_PATH = join(__dirname, '..', 'migrations', '0001_init.sql')
 
 let db: Database.Database
 let tmpDir: string
@@ -30,7 +27,7 @@ const PRINCIPAL: CloudPrincipal = { kind: 'human', id: 'owner@example.com', disp
 beforeAll(() => {
   tmpDir = mkdtempSync(join(tmpdir(), 'mdt-ack-'))
   db = new Database(join(tmpDir, 'ack.sqlite'))
-  db.run(readFileSync(SCHEMA_PATH, 'utf8'))
+  applyMigrations(db)
 })
 
 afterAll(() => {
@@ -57,16 +54,18 @@ beforeEach(() => {
      VALUES ('p1', 'human', 'owner@example.com', 'owner@example.com', 'owner', ?, ?)`,
     [now, now],
   )
+  const identity = 'd12139b4-b607-456f-90d9-796a6f57e01e'
   // A reservation to acknowledge.
   db.run(
-    `INSERT INTO ticket_reservations (cloud_project_id, reservation_id, ticket_number, state, created_by_kind, created_by_id, created_at)
-     VALUES ('p1', 'res-1', 500, 'reserved', 'human', 'owner@example.com', ?)`,
-    [now],
+    `INSERT INTO ticket_reservations (cloud_project_id, reservation_id, ticket_number, state, created_by_kind, created_by_id, created_at, creation_id)
+     VALUES ('p1', 'res-1', 500, 'reserved', 'human', 'owner@example.com', ?, ?)`,
+    [now, identity],
   )
 })
 
 const HEADER: ProjectedHeader = {
   code: 'MDT-500',
+  creationId: 'd12139b4-b607-456f-90d9-796a6f57e01e',
   title: 'Test',
   status: 'Open',
   type: 'Feature',

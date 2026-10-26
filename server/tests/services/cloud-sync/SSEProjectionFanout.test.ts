@@ -13,9 +13,13 @@
 
 import type { ProjectedHeader, Ticket } from '@mdt/domain-contracts'
 import type { ProjectedTicketEntry } from '@mdt/shared/services/cloud-sync/CloudProjectionReadModel.js'
-
 import type { SSEEvent } from '../../../services/fileWatcher/SSEBroadcaster'
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+
 import { describe, expect, it } from '@jest/globals'
+import FileWatcherService from '../../../services/fileWatcher/index.js'
 import { SSEBroadcaster } from '../../../services/fileWatcher/SSEBroadcaster'
 
 /** Build a canonical local ticket (board-relevant fields). */
@@ -140,5 +144,34 @@ describe('SSE projection fan-out (TEST-sse-fanout: BR-1.3, C-11)', () => {
     expect(serialized).not.toContain('afterRevision')
     expect(serialized).not.toContain('catchup')
     expect(serialized).not.toContain('cfAccessToken')
+  })
+})
+
+describe('MDT-200 physical watcher identity stays internal', () => {
+  it('invalidates and parses the actual slugged file without leaking its physical path to SSE', async () => {
+    jest.useFakeTimers()
+    const root = mkdtempSync(join(tmpdir(), 'mdt200-sse-path-'))
+    const physicalFilePath = join(root, 'MDT-258-original.md')
+    writeFileSync(physicalFilePath, '---\ncode: MDT-258\ntitle: Original\nstatus: Proposed\ntype: Research\npriority: Medium\n---\n# Original\n')
+    const facade = new FileWatcherService()
+    const invalidateFile = jest.fn()
+    facade.setFileInvoker({ invalidateFile })
+    facade.watchPaths.set('p', root)
+    const events: SSEEvent[] = []
+    facade.on('broadcast', (event: SSEEvent) => events.push(event))
+    try {
+      facade.handleFileEvent('change', physicalFilePath, 'p')
+      expect(invalidateFile).toHaveBeenCalledWith(physicalFilePath)
+      await jest.advanceTimersByTimeAsync(100)
+      expect(events).toHaveLength(1)
+      expect(events[0]).toMatchObject({ type: 'file-change', data: { filename: 'MDT-258.md', ticketData: { code: 'MDT-258', title: 'Original' } } })
+      expect(JSON.stringify(events[0])).not.toContain(physicalFilePath)
+      expect(JSON.stringify(events[0])).not.toContain('physicalFilePath')
+    }
+    finally {
+      facade.stop()
+      jest.useRealTimers()
+      rmSync(root, { recursive: true, force: true })
+    }
   })
 })

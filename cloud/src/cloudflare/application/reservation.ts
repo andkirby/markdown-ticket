@@ -16,7 +16,7 @@
 import type { D1Database } from '@cloudflare/workers-types'
 import type { CloudPrincipal, ProjectedHeader } from '@mdt/domain-contracts'
 import type { ReservationRequest } from '../d1/statements'
-import { CoordinationError } from '@mdt/domain-contracts'
+import { ALLOCATION_PROTOCOL_VERSION, AllocationProtocolRequestSchema, CoordinationError } from '@mdt/domain-contracts'
 import { recordAudit } from '../d1/audit'
 import { acknowledgeWithInitialProjection } from '../d1/projection'
 import { allocateReservation } from '../d1/statements'
@@ -28,6 +28,9 @@ export interface ReservationResponse {
   ticketNumber: number
   state: string
   replayed: boolean
+  protocolVersion?: number
+  creationId?: string
+  minimumTicketNumber?: number
 }
 
 export async function getReservation(
@@ -39,13 +42,15 @@ export async function getReservation(
 ): Promise<ReservationResponse> {
   await requireProjectRole(db, principal, cloudProjectId, 'contributor', 'reservation.recover', requestId)
   const row = await db.prepare(
-    `SELECT reservation_id, ticket_number, state
+    `SELECT reservation_id, ticket_number, state, creation_id, minimum_ticket_number
      FROM ticket_reservations
      WHERE cloud_project_id = ? AND reservation_id = ?`,
   ).bind(cloudProjectId, reservationId).first<{
     reservation_id: string
     ticket_number: number
     state: string
+    creation_id: string | null
+    minimum_ticket_number: number | null
   }>()
   if (!row) {
     throw new CoordinationError('reservation_not_found', { requestId })
@@ -65,6 +70,9 @@ export async function getReservation(
     ticketNumber: row.ticket_number,
     state: row.state,
     replayed: true,
+    ...(row.creation_id && row.minimum_ticket_number !== null
+      ? { protocolVersion: ALLOCATION_PROTOCOL_VERSION, creationId: row.creation_id, minimumTicketNumber: row.minimum_ticket_number }
+      : {}),
   }
 }
 
@@ -100,8 +108,11 @@ export async function createReservation(
   body: Record<string, unknown>,
   requestId: string,
 ): Promise<ReservationResponse> {
-  const idempotencyKey = requireText(body.idempotencyKey, 'idempotencyKey', requestId, 200)
-  const requestHash = requireSha256(body.requestHash, 'requestHash', requestId)
+  const parsed = AllocationProtocolRequestSchema.safeParse(body)
+  if (!parsed.success) {
+    throw new CoordinationError('invalid_request', { requestId, message: 'allocation protocol v2 with creation identity and safe minimum is required' })
+  }
+  const { idempotencyKey, requestHash, protocolVersion, creationId, minimumTicketNumber } = parsed.data
 
   await requireProjectRole(db, principal, cloudProjectId, 'contributor', 'reservation.create', requestId)
   await requireActiveCoordination(db, principal, cloudProjectId, 'reservation.create', requestId)
@@ -110,6 +121,9 @@ export async function createReservation(
     cloudProjectId,
     idempotencyKey,
     requestHash,
+    protocolVersion,
+    creationId,
+    minimumTicketNumber,
     principal,
   }
   const reservationId = crypto.randomUUID()
@@ -126,6 +140,9 @@ export async function createReservation(
     ticketNumber: outcome.result.ticketNumber,
     state: outcome.result.state,
     replayed: outcome.result.replayed,
+    protocolVersion: outcome.result.protocolVersion,
+    creationId: outcome.result.creationId,
+    minimumTicketNumber: outcome.result.minimumTicketNumber,
   }
 }
 
@@ -174,5 +191,30 @@ export async function acknowledge(
     projectionVersion: projection.projectionVersion,
     projectRevision: projection.projectRevision,
     replayed: projection.replayed,
+  }
+}
+
+/** Membership-checked number claim lookup; a projection miss is not a free key. */
+export async function getTicketClaim(
+  db: D1Database,
+  principal: CloudPrincipal,
+  cloudProjectId: string,
+  ticketNumber: number,
+  requestId: string,
+) {
+  await requireProjectRole(db, principal, cloudProjectId, 'contributor', 'reservation.claim', requestId)
+  if (!Number.isSafeInteger(ticketNumber) || ticketNumber < 1) {
+    throw new CoordinationError('invalid_request', { requestId })
+  }
+  const row = await db.prepare(
+    `SELECT reservation_id, creation_id, state FROM ticket_reservations
+     WHERE cloud_project_id = ? AND ticket_number = ?`,
+  ).bind(cloudProjectId, ticketNumber).first<{ reservation_id: string, creation_id: string | null, state: 'reserved' | 'acknowledged' | 'abandoned' | 'orphaned' }>()
+  return {
+    protocolVersion: ALLOCATION_PROTOCOL_VERSION,
+    ticketNumber,
+    reservationId: row?.reservation_id ?? null,
+    creationId: row?.creation_id ?? null,
+    state: row?.state ?? 'unreserved',
   }
 }

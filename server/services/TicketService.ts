@@ -6,12 +6,12 @@
  * Per MDT-082: Uses consolidated CRUD operations from shared layer.
  */
 
-import type { PatchTicketInput, TicketUpdateAttrs, UnifiedTicketItem } from '@mdt/domain-contracts'
+import type { CreationRecoveryInspection, CreationRecoveryOutcome, CreationRecoveryReconcileInput, CreationRecoveryResumeInput, PatchTicketInput, TicketIdentityDiagnostic, TicketUpdateAttrs, UnifiedTicketItem } from '@mdt/domain-contracts'
 import type { Project } from '@mdt/shared/models/Project.js'
 import type { Ticket, TicketData } from '@mdt/shared/models/Ticket.js'
 import type { CRStatus } from '@mdt/shared/models/Types.js'
 import type { CloudRuntimeDependencies } from '@mdt/shared/services/TicketService.js'
-import { TICKET_KEY_INPUT_PATTERN } from '@mdt/domain-contracts'
+import { CoordinatorError, TICKET_KEY_INPUT_PATTERN } from '@mdt/domain-contracts'
 import { resolveAttrValue } from '@mdt/shared/services/ticket/attrResolver.js'
 import {
   groupNamespacedFiles,
@@ -140,17 +140,37 @@ export class TicketService {
    * Convert projectId to Project object.
    * Supports lookup by both project.id and project.project.code.
    */
-  private async getProject(projectId: string): Promise<Project> {
+  private async getProject(projectId: string, missingProjectError?: Error): Promise<Project> {
     const projects = await this.projectDiscovery.getAllProjects()
     const project = projects.find(
       p => p.id === projectId || p.project.code === projectId,
     )
 
     if (!project) {
-      throw new Error('Project not found')
+      throw missingProjectError ?? new Error('Project not found')
     }
 
     return project
+  }
+
+  /** Shared classification resolves non-interactive credentials and never adopts files. */
+  async observeTicketIdentities(projectId: string): Promise<TicketIdentityDiagnostic[]> {
+    return this.sharedTicketService.observeTicketIdentities(await this.getProject(projectId))
+  }
+
+  async inspectCreationRecovery(projectId: string): Promise<CreationRecoveryInspection> {
+    const project = await this.getProject(projectId, new CoordinatorError('project_not_found'))
+    return this.sharedTicketService.inspectCreationRecovery(project)
+  }
+
+  async resumeCreationRecovery(projectId: string, input: CreationRecoveryResumeInput): Promise<CreationRecoveryOutcome> {
+    const project = await this.getProject(projectId, new CoordinatorError('project_not_found'))
+    return this.sharedTicketService.resumeCreationRecovery(project, input)
+  }
+
+  async reconcileCreationRecovery(projectId: string, input: CreationRecoveryReconcileInput): Promise<CreationRecoveryOutcome> {
+    const project = await this.getProject(projectId, new CoordinatorError('project_not_found'))
+    return this.sharedTicketService.reconcileCreationRecovery(project, input)
   }
 
   /**

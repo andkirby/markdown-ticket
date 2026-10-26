@@ -1,8 +1,7 @@
 import type { CloudPrincipal } from '@mdt/domain-contracts'
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
 import { Database } from 'bun:sqlite'
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from 'bun:test'
 import {
@@ -13,9 +12,9 @@ import {
   updateCoordinationState,
 } from '../src/cloudflare/application/membership'
 import { createReservation } from '../src/cloudflare/application/reservation'
+import { applyMigrations } from './helpers/identity-d1'
 import { asD1 } from './helpers/projection-d1-adapter'
 
-const schemaPath = join(dirname(fileURLToPath(import.meta.url)), '..', 'migrations', '0001_init.sql')
 const owner: CloudPrincipal = { kind: 'human', id: 'owner@example.com', display: 'owner@example.com' }
 const contributor: CloudPrincipal = { kind: 'human', id: 'contributor@example.com', display: 'contributor@example.com' }
 const viewer: CloudPrincipal = { kind: 'human', id: 'viewer@example.com', display: 'viewer@example.com' }
@@ -25,7 +24,7 @@ let tempDir: string
 beforeAll(() => {
   tempDir = mkdtempSync(join(tmpdir(), 'mdt-membership-'))
   db = new Database(join(tempDir, 'membership.sqlite'))
-  db.run(readFileSync(schemaPath, 'utf8'))
+  applyMigrations(db)
 })
 
 afterAll(() => {
@@ -166,7 +165,7 @@ describe('project membership roles', () => {
       asD1(db),
       contributor,
       'p1',
-      { idempotencyKey: 'key', requestHash: 'a'.repeat(64) },
+      { idempotencyKey: 'key', requestHash: 'a'.repeat(64), protocolVersion: 2, creationId: 'd12139b4-b607-456f-90d9-796a6f57e01e', minimumTicketNumber: 200 },
       'req-create',
     )).rejects.toMatchObject({ code: 'project_not_found' })
   })
@@ -179,7 +178,7 @@ describe('project membership roles', () => {
       asD1(db),
       contributor,
       'p1',
-      { idempotencyKey: 'key', requestHash: 'a'.repeat(64) },
+      { idempotencyKey: 'key', requestHash: 'a'.repeat(64), protocolVersion: 2, creationId: 'd12139b4-b607-456f-90d9-796a6f57e01e', minimumTicketNumber: 200 },
       'req-create',
     )).rejects.toMatchObject({ code: 'coordination_suspended' })
     expect(db.prepare(

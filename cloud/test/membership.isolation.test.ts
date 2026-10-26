@@ -1,14 +1,13 @@
 import type { CloudPrincipal } from '@mdt/domain-contracts'
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
 import { Database } from 'bun:sqlite'
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from 'bun:test'
 import { getMembers, probeProject } from '../src/cloudflare/application/membership'
+import { applyMigrations } from './helpers/identity-d1'
 import { asD1 } from './helpers/projection-d1-adapter'
 
-const schemaPath = join(dirname(fileURLToPath(import.meta.url)), '..', 'migrations', '0001_init.sql')
 const owner: CloudPrincipal = { kind: 'human', id: 'owner@example.com', display: 'owner@example.com' }
 const outsider: CloudPrincipal = { kind: 'human', id: 'outsider@example.com', display: 'outsider@example.com' }
 let db: Database.Database
@@ -17,7 +16,7 @@ let tempDir: string
 beforeAll(() => {
   tempDir = mkdtempSync(join(tmpdir(), 'mdt-isolation-'))
   db = new Database(join(tempDir, 'isolation.sqlite'))
-  db.run(readFileSync(schemaPath, 'utf8'))
+  applyMigrations(db)
 })
 
 afterAll(() => {

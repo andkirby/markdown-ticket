@@ -190,7 +190,18 @@ allocation, journal, authorization, cursor, or projection-conflict rules.
 local allocation. An enabled connection uses `CloudCreateOrchestrator`, which
 journals intent, reserves a number, writes Markdown exclusively, and
 acknowledges the header projection. Disabled, malformed, or untrusted state
-fails closed.
+fails closed. Before reservation the shared service normalizes the project
+code in memory and inventories keys across known physical-repository roots.
+Protocol-v2 creation identity and the observed allocation floor are immutable
+through retries; a raw file can occupy a key without owning its cloud claim.
+
+`CreationRecoveryService` is invoked explicitly through shared TicketService
+and the owner-only local HTTP adapter. Inspection reads retained metadata only;
+resume verifies the submitted digest under the runner lock and uses the stored
+draft. Acknowledged entries require terminal reconciliation with current proof
+and a private immutable archive; unprovable entries/locks stay inspectable and
+fail closed. Reads, watcher events and startup never resume ticket creation.
+See [recovery operations](operations.md#explicit-retained-creation-recovery-mdt-200).
 
 `CloudProjectionSync` continues to journal failed local-to-cloud header
 mutations. Its write retry lifecycle is independent of reads and browser
@@ -237,11 +248,14 @@ is atomically persisted in owner-only
 only phase, reason, non-secret activation fingerprint, attempt budget, and
 transition timestamps—never a grant, Access token, or principal identifier.
 
-Journal and connection files use a device-local routing hash derived from the
-physical Git common directory or canonical non-Git root plus cloud project UUID.
-The routing key is not cloud identity. Files use atomic replacement and
-user-only permissions (`0700` directories and `0600` files on POSIX, closest
-supported equivalent elsewhere).
+Creation journals use a device-local routing hash derived from the physical
+Git common directory or canonical non-Git root, with the cloud project UUID
+as the entry filename. Connection records stay at
+`CONFIG_DIR/projects/{localProjectId}/cloud-sync.toml`; they are not routed
+through the creation-journal hash. Neither local routing key grants cloud
+identity or membership. These files use atomic replacement and user-only
+permissions (`0700` directories and `0600` files on POSIX, closest supported
+equivalent elsewhere).
 
 ## Local Cloud Connection
 
@@ -294,3 +308,17 @@ bounded `/projections` cursor endpoint remains a recovery and rollout-
 compatibility surface, not the delivery path. The idle-D1 and latency acceptance
 gates require the deployed evidence in [Operations](operations.md); local unit
 and integration tests do not alone accept those external SLOs.
+
+## October allocation and manual-file stabilization
+
+The current source implements protocol-v2 reservation floors, durable
+creationId provenance, key-wide ambiguity guards, bounded read-only manual-file
+observation, explicit owner creation recovery, and suspended-project incident
+reconciliation. Manual files are preserved and classified without adopting a
+reservation; unchanged diagnostic evidence survives bounded claim rotation.
+These source contracts passed scoped local acceptance and independent review;
+that evidence does not prove production state. Migration0005 and
+capable-client rollout are required; production repair is not implied by local
+implementation. See [data and consistency](data-and-consistency.md#allocation-protocol-v2-and-durable-creation-identity-mdt-200-october-uat),
+[operations](operations.md#october-ticket-identity-stabilization-rollout), and
+[MDT-200 current UAT](../../CRs/MDT-200/uat.md).

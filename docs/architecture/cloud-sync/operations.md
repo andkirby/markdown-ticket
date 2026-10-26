@@ -475,3 +475,89 @@ Platform behavior is mutable. These primary sources were checked on
 - [Workers secrets](https://developers.cloudflare.com/workers/configuration/secrets/)
 - [Workers versions and deployments](https://developers.cloudflare.com/workers/versions-and-deployments/)
 - [Workers Logs](https://developers.cloudflare.com/workers/observability/logs/workers-logs/)
+
+## October ticket-identity stabilization rollout
+
+The source now implements allocation protocol v2 and migration
+`0005_creation_identity.sql`; this is not evidence of production deployment.
+Deploy required schema before the Worker, then update all allocation clients.
+The v2 Worker rejects older reservation writers, including clients without
+creation identity or a local minimum. Keep the affected project suspended
+through this compatibility window and through reviewed incident repair.
+
+Follow [counter-reconciliation.md](../../../cloud/test/operations/counter-reconciliation.md)
+for inventory, read-only preview, reviewed apply, and verification. For the
+October incident inspect cloud257/local261 and cloud258/local262 associations,
+real257/258, manual259/260, and every pending journal. A counter-only bump leaves
+misassociated identities/projections unresolved. Do not fabricate legacy
+creation IDs during ordinary replay, remove journals to unblock allocation, or
+recreate the cloud project. Preserve before/after exports and a Time Travel
+bookmark under the existing release procedure.
+
+The local server caches manual-file diagnostics at the owner-only
+`GET /api/projects/{localProjectId}/ticket-identities` endpoint.
+Physical file paths stay internal; responses expose authorized relative paths.
+Startup, watcher-ready/error, and file events request a bounded read-only
+observation using non-interactive credentials. One pass performs at most64
+claim lookups; later explicit/event-triggered passes rotate through eligible
+files. There is no timer or interactive login and no write side effect.
+Failed or unavailable evidence stays verification_pending. An observation error
+never authorizes use of a reserved key.
+
+MDT-201 remains the connection/binding owner; disabled/malformed/untrusted
+bindings fail closed. MDT-202 may add operator-facing import/repair commands
+later, consuming these core contracts. MDT-226 projection streams are unchanged.
+
+## Explicit retained-creation recovery (MDT-200)
+
+Use the existing local server owner authentication. Public readers and scoped
+read sessions cannot access these endpoints, including HEAD and OPTIONS:
+
+- GET `/api/projects/{localProjectId}/cloud-sync/creation-recovery` lists current
+  and known legacy routes, safe metadata, exact-byte digest when readable,
+  held number/receipt, lock PID/createdAt/status and the next safe action. It
+  obtains no cloud credential and makes no cloud or filesystem mutation.
+- POST the same path plus `/resume` with
+  `{"journalId":"<discovered ID>","expectedDigest":"<inspection SHA256>"}`.
+  It resumes an unfinished stored intent through RecoveryRunner. A locally
+  acknowledged entry must use terminal reconciliation instead. A stale digest is a
+  conflict; inspect again before deciding. `resumed` means ACK/cleanup completed;
+  `retained` means the original intent remains for another explicit retry.
+- POST the same path plus `/reconcile` with those two fields plus a fresh UUID
+  `operationId` and reviewed `reason`. Only a verified terminal original receipt
+  can be archived. `archived` returns a relative archiveId; preserve its
+  `original.json` and `decision.json` under the configured journal root. Same
+  operation/inputs replay idempotently. This endpoint does not bump the cloud
+  counter, adopt a manual file, reserve a number or acknowledge a creation.
+
+`manual-review-required` means no safe automated disposition was proved. Keep
+all files and journals, investigate the original receipt and canonical identity,
+and use the separately reviewed incident reconciliation procedure if needed.
+Malformed/unreadable/oversized/receipt-less state is visible but cannot be
+blindly retired. A live or unverifiable lock remains blocked: inspect its PID
+and timestamp against the actual process; PID liveness alone cannot prove the
+original owner. Never steal a lock based on age or delete it to bypass recovery.
+
+Inventory errors retain valid scanned files and name the relative failure path,
+its typed cause and next action. Restore unavailable worktrees/mounts or inspect
+configuration/permissions. Review `git worktree list --porcelain` and
+`git worktree prune --dry-run` only after confirming a root is permanently gone;
+there is no automatic pruning or unsafe-number renumbering. Creation remains
+fail-closed until inventory is complete.
+
+Cached manual-file diagnostics expose lastVerifiedAt and stale. Rotating beyond
+64 probes preserves unchanged evidence. File/identity/binding/credential changes
+and observed authorization denial invalidate it; timestamps alone do not emit
+another semantic notification. Cached evidence grants no mutation authority.
+
+### Recovery Limits
+
+Terminal archival requires reachable coordination even when the local journal
+says acknowledged. Unprovable/receipt-less legacy state and uncertain locks stay
+manual-review-required. A verified-dead legacy lock-only artifact has no shipped
+retirement verb; inspection is available, but there is no safe generic clear.
+Partial archives are retained without automatic GC. Retry after partial archive
+failure requires re-inspection and a fresh reviewed operation UUID; existing
+archive directories are never overwritten. Replaying an archived decision when
+a different live intent occupies its route returns 409 and preserves that intent.
+These are source limits, not instructions to delete state or steal a lock.

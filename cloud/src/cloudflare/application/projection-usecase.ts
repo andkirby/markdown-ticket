@@ -9,6 +9,7 @@ import type { CloudPrincipal } from '@mdt/domain-contracts'
 import type { PublishProjectionRequest } from '../d1/projection'
 import { CoordinationError } from '@mdt/domain-contracts'
 import {
+  assertCreationIdentity,
   getProjectionByTicket,
   pollProjections,
   publishProjection,
@@ -65,6 +66,7 @@ export async function publish(
     header: parseProjectedHeader(body.header, requestId),
     lifecycle: body.lifecycle === 'deleted' ? 'deleted' : 'active',
   }
+  await assertCreationIdentity(db, cloudProjectId, req.header, requestId, { ticketNumber })
   const result = await publishProjection(
     db,
     cloudProjectId,

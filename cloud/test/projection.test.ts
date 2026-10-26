@@ -1,3 +1,4 @@
+import type { ProjectedHeader } from './helpers/projection-d1-adapter'
 /**
  * TEST-projection-content, TEST-projection-conflict, TEST-projection-polling —
  * covers BR-3.1, BR-3.2, BR-3.3.
@@ -8,22 +9,18 @@
  * never appear in projections.
  */
 
-import type { ProjectedHeader } from './helpers/projection-d1-adapter'
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
 import { Database } from 'bun:sqlite'
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from 'bun:test'
+import { applyMigrations } from './helpers/identity-d1'
 import {
   createInitialProjection,
   pollProjections,
 
   publishProjection,
 } from './helpers/projection-d1-adapter'
-
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const SCHEMA_PATH = join(__dirname, '..', 'migrations', '0001_init.sql')
 
 let db: Database.Database
 let tmpDir: string
@@ -32,7 +29,7 @@ const PRINCIPAL = { kind: 'human' as const, id: 'owner@example.com', display: 'o
 beforeAll(() => {
   tmpDir = mkdtempSync(join(tmpdir(), 'mdt-proj-'))
   db = new Database(join(tmpDir, 'proj.sqlite'))
-  db.run(readFileSync(SCHEMA_PATH, 'utf8'))
+  applyMigrations(db)
 })
 
 afterAll(() => {

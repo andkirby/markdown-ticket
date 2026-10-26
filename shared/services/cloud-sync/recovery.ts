@@ -44,10 +44,14 @@ type WriteLocalFile = (
 ) => Promise<void>
 
 interface RecoveryRunnerOptions {
+  /** Exact inspected bytes, rechecked under the existing exclusive lock. */
+  expectedDigest?: string
   journal: CloudOperationJournal
   coordinator: CloudSyncCoordinator
   credential: RecoveryCredential
   writeLocal: WriteLocalFile
+  /** Must verify the current file against the held creation, including written replays. */
+  verifyLocal?: WriteLocalFile
   buildAcknowledgement?: (
     op: PendingOperation,
   ) => Promise<Omit<AcknowledgeReservationRequest, 'cloudProjectId' | 'reservationId'>>
@@ -91,7 +95,24 @@ export class RecoveryRunner {
 
   /** Per-project outcome: recovered (cleared), failed (retained), or nothing. */
   private async recoverOne(cloudProjectId: string): Promise<'recovered' | 'failed' | 'nothing'> {
-    const op = await this.opts.journal.load(cloudProjectId)
+    try {
+      return await this.opts.journal.withLock(cloudProjectId, () => this.recoverLocked(cloudProjectId))
+    }
+    catch (error) {
+      this.opts.log?.(`recovery: ${cloudProjectId} cannot obtain exclusive journal ownership`, error)
+      return 'failed'
+    }
+  }
+
+  private async recoverLocked(cloudProjectId: string): Promise<'recovered' | 'failed' | 'nothing'> {
+    let op: PendingOperation | null
+    try {
+      op = await this.opts.journal.load(cloudProjectId, this.opts.expectedDigest)
+    }
+    catch (error) {
+      this.opts.log?.(`recovery: ${cloudProjectId} has an invalid retained journal`, error)
+      return 'failed'
+    }
     if (!op)
       return 'nothing' // no pending operation — nothing to do
 
@@ -111,7 +132,10 @@ export class RecoveryRunner {
 
     try {
       await this.ensureReserved(op)
+      if (!this.opts.verifyLocal)
+        throw new CoordinatorError('reservation_state_conflict', { message: 'Recovery requires current canonical-file identity verification' })
       await this.replayLocalWrite(op)
+      await this.opts.verifyLocal(op.cloudProjectId, { reservationId: op.reservationId!, ticketNumber: op.ticketNumber!, state: 'reserved', replayed: true, protocolVersion: 2, creationId: op.creationId, minimumTicketNumber: op.minimumTicketNumber })
       await this.acknowledge(op)
       await this.opts.journal.clear(cloudProjectId)
       return 'recovered'
@@ -130,13 +154,17 @@ export class RecoveryRunner {
    * write so a mid-write crash still recovers.
    */
   private async ensureReserved(op: PendingOperation): Promise<void> {
+    if (!op.creationId || !op.minimumTicketNumber || op.protocolVersion !== 2)
+      throw new CoordinatorError('reservation_state_conflict', { message: 'Legacy creation journal requires explicit reconciliation' })
     if (op.reservationId && op.ticketNumber !== undefined)
       return // already reserved — reuse the held reservation
 
     const reservation = await this.opts.coordinator.reserve(
-      { cloudProjectId: op.cloudProjectId, idempotencyKey: op.idempotencyKey, requestHash: op.requestHash },
+      { cloudProjectId: op.cloudProjectId, idempotencyKey: op.idempotencyKey, requestHash: op.requestHash, protocolVersion: 2, creationId: op.creationId, minimumTicketNumber: op.minimumTicketNumber },
       this.opts.credential!,
     )
+    if (reservation.protocolVersion !== 2 || reservation.creationId !== op.creationId || reservation.minimumTicketNumber !== op.minimumTicketNumber || !Number.isSafeInteger(reservation.ticketNumber) || reservation.ticketNumber >= Number.MAX_SAFE_INTEGER || reservation.ticketNumber < op.minimumTicketNumber)
+      throw new CoordinatorError('reservation_state_conflict', { message: 'Recovered reservation does not match immutable creation inputs' })
     await this.opts.journal.recordReservation(op.cloudProjectId, reservation.reservationId, reservation.ticketNumber)
     // Reflect the now-journaled reservation on the in-memory op so the caller
     // sees it without a re-load.
@@ -153,6 +181,9 @@ export class RecoveryRunner {
       return
     }
     const reservation: ReservationDTO = {
+      protocolVersion: 2,
+      creationId: op.creationId,
+      minimumTicketNumber: op.minimumTicketNumber,
       reservationId: op.reservationId!,
       ticketNumber: op.ticketNumber!,
       state: 'reserved',
@@ -168,7 +199,7 @@ export class RecoveryRunner {
    */
   private async acknowledge(op: PendingOperation): Promise<void> {
     const payload = op.acknowledgement ?? await this.opts.buildAcknowledgement?.(op)
-    if (!payload) {
+    if (!payload || payload.header.creationId !== op.creationId || Number(payload.header.code.split('-').pop()) !== op.ticketNumber) {
       throw new CoordinatorError('reservation_state_conflict', {
         message: 'recovery is missing the projected header acknowledgement',
       })

@@ -86,6 +86,7 @@ export function normalizeTicket(rawTicket: unknown): Ticket {
   const normalizedTicket: Ticket = {
     // Map core fields
     code: getString(ticket.code) || getString(ticket.key),
+    ...(typeof ticket.creationId === 'string' ? { creationId: ticket.creationId } : {}),
     title: getString(ticket.title),
     status: getString(ticket.status, 'Proposed'),
     type: getString(ticket.type, CRType.FEATURE_ENHANCEMENT),
@@ -151,6 +152,7 @@ export function normalizeTicketMetadata(rawTicket: unknown): TicketMetadata {
   const normalizedMetadata: TicketMetadata = {
     // Map core fields (same as normalizeTicket)
     code: getString(ticket.code) || getString(ticket.key),
+    ...(typeof ticket.creationId === 'string' ? { creationId: ticket.creationId } : {}),
     title: getString(ticket.title),
     status: getString(ticket.status, 'Proposed'),
     type: getString(ticket.type, CRType.FEATURE_ENHANCEMENT),

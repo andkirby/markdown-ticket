@@ -15,6 +15,7 @@ const PublicReadApiPrefix = {
  */
 const RAW_PREVIEW_PREFIX = '/api/documents/raw-preview'
 const TICKET_IDENTITY_DIAGNOSTICS = /^\/api\/projects\/[^/]+\/ticket-identities(?:\/|$)/i
+const CREATION_RECOVERY = /^\/api\/projects\/[^/]+\/cloud-sync\/creation-recovery(?:\/|$)/i
 
 const OwnerOnlyApiPrefix = {
   CACHE: '/api/cache',
@@ -32,7 +33,7 @@ export function isPublicReadRoute(path: string, method: string): boolean {
   if (!isSafeReadMethod(method)) {
     return false
   }
-  if (path.startsWith(RAW_PREVIEW_PREFIX) || TICKET_IDENTITY_DIAGNOSTICS.test(path.split('?')[0] ?? path)) {
+  if (path.startsWith(RAW_PREVIEW_PREFIX) || isOwnerOnlyRoute(path)) {
     return false
   }
 
@@ -52,6 +53,7 @@ export function isReadOnlyMutationCandidate(path: string, method: string): boole
 
 export function isOwnerOnlyRoute(path: string): boolean {
   return TICKET_IDENTITY_DIAGNOSTICS.test(path.split('?')[0] ?? path)
+    || CREATION_RECOVERY.test(path.split('?')[0] ?? path)
     || path.startsWith(OwnerOnlyApiPrefix.CACHE)
     || path.startsWith(OwnerOnlyApiPrefix.CONFIG)
     || path.startsWith(OwnerOnlyApiPrefix.DIRECTORIES)

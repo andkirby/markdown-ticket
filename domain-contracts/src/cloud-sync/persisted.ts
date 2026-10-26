@@ -4,6 +4,7 @@ import { CreateTicketInputSchema } from '../ticket/input'
 // Disk replay shapes, not cloud HTTP response contracts. Keep historical string
 // spellings; validate every field consumed by recovery before replay can begin.
 export const PersistedProjectedHeaderSchema = z.object({
+  creationId: z.string().uuid().optional(),
   code: z.string(),
   title: z.string(),
   status: z.string(),
@@ -15,12 +16,15 @@ export const PersistedProjectedHeaderSchema = z.object({
 })
 const integer = z.number().refine(Number.isInteger)
 export const PendingOperationFileSchema = z.object({
+  creationId: z.string().uuid().optional(),
+  minimumTicketNumber: z.number().int().positive().max(Number.MAX_SAFE_INTEGER - 1).optional(),
+  protocolVersion: z.literal(2).optional(),
   cloudProjectId: z.string(),
   idempotencyKey: z.string(),
   requestHash: z.string(),
   operationId: z.string(),
   reservationId: z.string().optional(),
-  ticketNumber: integer.optional(),
+  ticketNumber: z.number().int().positive().max(Number.MAX_SAFE_INTEGER - 1).optional(),
   draft: z.object({
     crType: z.string(),
     // A stored draft is not a new mutation request. Legacy strings remain
@@ -39,7 +43,7 @@ export const PendingOperationFileSchema = z.object({
   state: z.enum(['pending', 'reserved', 'written', 'acknowledged']),
   createdAt: z.string(),
   updatedAt: z.string(),
-})
+}).refine(value => value.protocolVersion !== 2 || value.ticketNumber === undefined || (value.minimumTicketNumber !== undefined && value.ticketNumber >= value.minimumTicketNumber), 'Held reservation must satisfy the journaled minimum')
 export const PendingProjectionFileSchema = z.object({
   ticketNumber: integer,
   baseContentHash: z.string(),

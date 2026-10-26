@@ -19,6 +19,7 @@ import type { RouteContext } from './http/router'
 import { CoordinationError, PROJECTION_STREAM_PROTOCOL_VERSION } from '@mdt/domain-contracts'
 import { AccessValidator } from './access/jwt'
 import { requireProjectRole } from './application/authorization'
+import { reconcileCounter } from './application/counter-reconciliation'
 import {
   getMembers,
   probeProject,
@@ -32,7 +33,7 @@ import {
   publish as publishProjection,
 } from './application/projection-usecase'
 import { provisionProject } from './application/provisioning'
-import { acknowledge, createReservation, getReservation } from './application/reservation'
+import { acknowledge, createReservation, getReservation, getTicketClaim } from './application/reservation'
 import { recordAudit } from './d1/audit'
 import {
   authorizeProjectionStreamSession,
@@ -98,6 +99,11 @@ function buildRouter(env: Env): CoordinationRouter {
       await getMembers(ctx.db, ctx.principal, ctx.params.projectId, ctx.requestId),
       200,
     ),
+  )
+  router.coordination(
+    'GET',
+    /^\/v1\/projects\/(?<projectId>[^/]+)\/tickets\/(?<ticketNumber>\d+)\/claim$/,
+    async ctx => json(ctx.requestId, await getTicketClaim(ctx.db, ctx.principal, ctx.params.projectId, Number.parseInt(ctx.params.ticketNumber, 10), ctx.requestId), 200),
   )
   router.coordination(
     'GET',
@@ -369,6 +375,15 @@ function buildRouter(env: Env): CoordinationRouter {
     },
   )
 
+  router.operator(
+    'POST',
+    /^\/v1\/admin\/projects\/(?<projectId>[^/]+)\/reconciliation$/,
+    async (ctx) => {
+      const body = await readJsonObject(ctx.request, ctx.requestId)
+      const result = await reconcileCounter(ctx.db, ctx.principal, ctx.params.projectId, body, ctx.requestId)
+      return json(ctx.requestId, result, 200)
+    },
+  )
   return router
 }
 

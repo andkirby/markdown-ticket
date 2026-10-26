@@ -1,3 +1,4 @@
+import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs'
 /**
  * TEST-scheduled-expiry (Edge-3) — integration test for expireStaleReservations.
  *
@@ -8,7 +9,6 @@
  * Runs the real SQL against bun:sqlite with the production schema.
  */
 
-import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -19,9 +19,9 @@ import {
   expireStaleReservations,
   EXPIRY_BATCH_LIMIT,
 } from '../src/cloudflare/scheduled/maintenance'
+import { applyMigrations } from './helpers/identity-d1'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const SCHEMA_PATH = join(__dirname, '..', 'migrations', '0001_init.sql')
 
 let db: Database.Database
 let tmpDir: string
@@ -75,7 +75,7 @@ function asD1(db: Database.Database) {
 beforeAll(() => {
   tmpDir = mkdtempSync(join(tmpdir(), 'mdt-maint-'))
   db = new Database(join(tmpDir, 'maint.sqlite'))
-  db.run(readFileSync(SCHEMA_PATH, 'utf8'))
+  applyMigrations(db)
 })
 
 afterAll(() => {

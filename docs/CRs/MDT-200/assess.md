@@ -1,5 +1,9 @@
 # Assessment: MDT-200
 
+> **Historical checkpoint — Initial July assessment.** Code mechanisms, line numbers and
+> deployment observations below describe that checkpoint. Current source fixes,
+> accepted local evidence and open production gates are in [verification.md](verification.md).
+
 ## Verdict
 
 **Recommendation**: Proceed in one ticket, delivered slice by slice, against

@@ -27,6 +27,8 @@ export interface SubdocumentInfo {
 export interface FileChangeEventPayload {
   eventType: 'add' | 'change' | 'unlink'
   filename: string
+  /** Internal only: preserve the actual slugged path for identity checks/cache invalidation. */
+  physicalFilePath: string
   projectId: string
   timestamp: number
   subdocument: SubdocumentInfo | null
@@ -453,6 +455,7 @@ export class PathWatcherService extends EventEmitter {
     const payload: FileChangeEventPayload = {
       eventType,
       filename: emitFilename,
+      physicalFilePath: path.resolve(fp),
       projectId: pid,
       timestamp: Date.now(),
       subdocument,

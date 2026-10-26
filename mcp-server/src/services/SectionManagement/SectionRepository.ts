@@ -76,17 +76,15 @@ export class SectionRepository {
    * @throws ToolError if ticket not found or file format invalid
    */
   async readCR(project: Project, key: string): Promise<CRFileContent> {
-    // Check cache first
-    const cacheKey = `${project.project.code || project.id}-${key}`
-    const cached = this.fileCache.get(cacheKey)
-    if (cached) {
-      return cached
-    }
-
-    // Get ticket info from CR service
+    // A cached body never proves that this key still identifies one file.
     const ticket = await this.crService.getCR(project, key)
     if (!ticket) {
       throw ToolError.toolExecution(`CR '${key}' not found in project`)
+    }
+    const cacheKey = `${project.project.code || project.id}-${key}`
+    const cached = this.fileCache.get(cacheKey)
+    if (cached && cached.filePath === ticket.filePath) {
+      return cached
     }
 
     // Read file content

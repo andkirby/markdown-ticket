@@ -15,8 +15,8 @@ import { TicketService } from '@mdt/shared/services/TicketService.js'
 export class CRService {
   private ticketService: TicketService
 
-  constructor() {
-    this.ticketService = new TicketService(false) // Not quiet, enable logging
+  constructor(ticketService = new TicketService(false)) {
+    this.ticketService = ticketService // Not quiet, enable logging
   }
 
   /**

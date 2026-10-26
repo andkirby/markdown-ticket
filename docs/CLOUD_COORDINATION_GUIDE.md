@@ -254,16 +254,12 @@ shared `TicketService` orchestration. MDT-202 adds dedicated `mdt cloud`
 management commands; it is not required for normal ticket creation once the
 CONFIG_DIR connection exists.
 
-In the current runtime, the browser polls header projections through
-`GET /api/projects/{projectId}/cloud-projections`. That local endpoint is
-owner-only and keeps Access credentials on the server side.
-
-MDT-226 retires that browser projection endpoint and polling interval. Its
-target local backend opens the cloud project stream, owns credentials, cursor,
-catch-up, reconnect, and the merged ticket read model, then fans ordinary
-ticket changes to browsers. Browser tabs continue to use
-`GET /api/projects/:id/crs` and `/api/events`; they do not know the cloud stream
-protocol.
+The source browser uses the backend unified ticket view and ordinary local
+SSE; it does not poll a separate cloud-projection feed. The legacy owner-only
+`/cloud-projections` route remains for compatibility. MDT-226's backend stream
+and read model are implemented behind a rollout gate; production stream/latency
+acceptance is separate. Browser tabs never receive cloud credentials or cursors.
+See [the delivery contract](architecture/cloud-sync/README.md#local-integration-contract).
 
 ## Recovery
 
@@ -277,9 +273,38 @@ atomic write-and-rename) survives these boundaries:
 | Last durable point | Recovery |
 | --- | --- |
 | Intent exists, no reservation response | Retry the same idempotency key |
-| Reservation exists, no local file | Retry the same atomic file creation |
+| Reservation exists, no local file | Retry the exclusive canonical write with the original identity |
 | Local file exists, no acknowledgement | Re-read header and retry acknowledgement |
-| Acknowledgement done, journal not cleared | Replay acknowledgement, then clear |
+| Locally acknowledged journal remains | Owner inspection and verified terminal archival; no blind clearing |
+
+### Inspect, resume or reconcile a retained creation
+
+Use the existing local-server owner authentication.
+`GET /api/projects/{localProjectId}/cloud-sync/creation-recovery` is a bounded
+read-only inspection of current/known-legacy journals and locks; it does not
+request a cloud credential or write anything. Use the returned journalId and
+exact expectedDigest for explicit POST to `/resume`, or add a reviewed UUID
+operationId/reason for `/reconcile`. The request shapes and outcomes are in
+[the recovery procedure](architecture/cloud-sync/operations.md#explicit-retained-creation-recovery-mdt-200).
+
+Resume uses the original stored unfinished v2 draft and held identity. An
+acknowledged journal requires terminal proof and immutable local archival;
+unknown/corrupt/receipt-less state remains manual-review-required. Never remove
+a journal or steal a lock to unblock creation. No automatic startup creation
+recovery, generic recovery CLI, or manual-file import is added by this API.
+A disabled trusted connection is inspectable but cannot resume creation.
+
+### Files written manually
+
+Raw file creation stays possible. Observation preserves the file and classifies
+its claim; it never treats a reserved number as free or adopts it by number.
+`GET /api/projects/{localProjectId}/ticket-identities` returns cached owner-only
+relative diagnostics without probing the cloud on that GET. Conflicts and
+incomplete inventory require explicit review, not automatic renumbering.
+Unchanged evidence survives bounded 64-claim rotation; timestamps are not write
+authorization. See [manual-file behavior](architecture/cloud-sync/sync-use-cases.md#uc-13-manual-file-uses-an-existing-or-unknown-key).
+
+### Projection retry is separate
 
 Projection updates use a separate device-local write journal. Its runner is
 independent of browser and ticket reads, retries transient failures with bounded

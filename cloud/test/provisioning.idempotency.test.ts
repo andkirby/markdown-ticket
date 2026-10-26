@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 /**
  * TEST-provision-idempotency — covers BR-1.7, Edge-8.
  *
@@ -17,17 +18,12 @@
  * the transaction semantics under test are identical.
  */
 
-import { createHash } from 'node:crypto'
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
 import { Database } from 'bun:sqlite'
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
-
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const MIGRATION_0001 = join(__dirname, '..', 'migrations', '0001_init.sql')
-const MIGRATION_0002 = join(__dirname, '..', 'migrations', '0002_project_provisioning_idempotency.sql')
+import { applyMigrations } from './helpers/identity-d1'
 
 let db: Database.Database
 let tmpDir: string
@@ -35,8 +31,7 @@ let tmpDir: string
 beforeAll(() => {
   tmpDir = mkdtempSync(join(tmpdir(), 'mdt-prov-idem-'))
   db = new Database(join(tmpDir, 'test.sqlite'))
-  db.run(readFileSync(MIGRATION_0001, 'utf8'))
-  db.run(readFileSync(MIGRATION_0002, 'utf8'))
+  applyMigrations(db)
 })
 
 afterAll(() => {

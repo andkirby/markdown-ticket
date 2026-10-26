@@ -87,7 +87,9 @@ Vite middleware endpoints, such as `/api/frontend/logs*`, are not backend Expres
 |-------|------------|
 | `/api/projects` | ProjectController |
 | `/api/projects/:id/crs` | TicketController |
-| `/api/projects/:id/cloud-projections` | ProjectController (current legacy owner-only feed; removal target in MDT-226) |
+| `/api/projects/:id/cloud-projections` | ProjectController (legacy owner-only compatibility feed) |
+| `/api/projects/:id/ticket-identities` | Owner-only cached identity diagnostics router |
+| `/api/projects/:id/cloud-sync/creation-recovery` | Owner-only inspection/resume/reconcile router over shared TicketService |
 | `/api/documents` | DocumentController |
 | `/api/documents/preview-token` | DocumentController (MDT-221, owner-only mint of short-lived HTML preview tokens) |
 | `/api/documents/raw-preview/:token/*` | DocumentController (MDT-221, token-gated raw byte stream for sandboxed HTML preview) |
@@ -129,9 +131,17 @@ Cloud-bound ticket creation and projection publishing stay in the shared
 `TicketService`; the server is a thin HTTP adapter. Cloudflare credentials
 remain server-side.
 
-The current implementation has the frontend poll the owner-only header feed
-above. The approved `MDT-226` target moves projection stream, cursor, catch-up,
-reconnect, persistence, and canonical/projected merge ownership into the local
-backend. The browser will then consume only the unified
-`/api/projects/:id/crs` ticket list and `/api/events` ticket stream. Keep this
-current-code note until MDT-226 removes the legacy route and hook.
+The source frontend consumes `/api/projects/:id/tickets/unified` and ordinary
+`/api/events` changes; it does not poll the legacy projection feed. MDT-226's
+backend stream/read model is implemented behind the documented rollout gate,
+with deployed acceptance still separate.
+
+`createCloudCreationRecoveryRouter` validates pure domain requests and forwards
+through the server facade to shared recovery policy. Inspection is read-only;
+resume and verified terminal archival require explicit owner requests.
+Public/read sessions cannot use these routes, including HEAD/OPTIONS.
+Watcher/startup identity observation uses non-interactive read-only claim checks
+and a bounded cache; diagnostic GET reads that cache only. It never resumes
+creation or repairs a manual file. See the canonical
+[cloud recovery contract](../../docs/architecture/cloud-sync/data-and-consistency.md#explicit-local-creation-recovery)
+and [operator procedure](../../docs/architecture/cloud-sync/operations.md#explicit-retained-creation-recovery-mdt-200).

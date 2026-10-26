@@ -68,7 +68,11 @@ export function parseProjectedHeader(value: unknown, requestId: string): Project
     throw new CoordinationError('invalid_request', { requestId, message: 'invalid header' })
   }
   const header = value as Record<string, unknown>
+  const identity = header.creationId === undefined
+    ? {}
+    : { creationId: requireText(header.creationId, 'header.creationId', requestId, 64) }
   return {
+    ...identity,
     code: requireText(header.code, 'header.code', requestId, 64),
     title: requireText(header.title, 'header.title', requestId, 500),
     status: requireText(header.status, 'header.status', requestId, 100),

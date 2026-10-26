@@ -1,3 +1,4 @@
+import { mkdtempSync, rmSync } from 'node:fs'
 /**
  * TEST-audit-redacted — covers BR-4.1, Edge-3 (scheduled expiry).
  *
@@ -6,15 +7,11 @@
  * Uses bun:sqlite with the production schema.
  */
 
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
 import { Database } from 'bun:sqlite'
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
-
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const SCHEMA_PATH = join(__dirname, '..', 'migrations', '0001_init.sql')
+import { applyMigrations } from './helpers/identity-d1'
 
 let db: Database.Database
 let tmpDir: string
@@ -22,7 +19,7 @@ let tmpDir: string
 beforeAll(() => {
   tmpDir = mkdtempSync(join(tmpdir(), 'mdt-audit-'))
   db = new Database(join(tmpDir, 'audit.sqlite'))
-  db.run(readFileSync(SCHEMA_PATH, 'utf8'))
+  applyMigrations(db)
   // Seed a project + owner.
   const now = new Date().toISOString()
   db.run(`INSERT INTO cloud_projects (id, project_code, coordination_state, next_ticket_number, projection_revision, created_at, updated_at) VALUES ('p1', 'MDT', 'active', 301, 0, ?, ?)`, [now, now])

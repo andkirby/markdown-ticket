@@ -19,6 +19,7 @@ import type {
   CloudCredential,
   CloudSyncCoordinator,
   Project,
+  ReserveRequest,
 } from '@mdt/domain-contracts'
 import { mkdir, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -94,7 +95,10 @@ describe('TicketService CONFIG_DIR cutover (TEST-ticketservice-config-dir-cutove
 
   /** Build a TicketService whose coordinator reserves a fixed cloud number. */
   function serviceWithCloudNumber(cloudNumber: number) {
-    const reserve = jest.fn(async () => ({
+    const reserve = jest.fn(async (request: ReserveRequest) => ({
+      protocolVersion: request.protocolVersion,
+      creationId: request.creationId,
+      minimumTicketNumber: request.minimumTicketNumber,
       reservationId: `res-${cloudNumber}`,
       ticketNumber: cloudNumber,
       state: 'reserved',

@@ -99,10 +99,12 @@ Membership is keyed by `(cloud_project_id, principal_kind, principal_id)`.
 | --- | --- | --- | --- |
 | Read own membership | Yes | Yes | Yes |
 | Subscribe to header projections and perform bounded catch-up | Yes | Yes | Yes |
+| Read reserved-number/creation claim evidence | No | Yes | Yes |
 | Reserve and acknowledge a ticket number | No | Yes | Yes |
 | Publish, tombstone, or restore a projection | No | Yes | Yes |
 | List project members | No | No | Yes |
 | Add, change, or revoke a project member | No | No | Yes |
+| Apply suspended-project incident repair | No | No | Additional operator audience required |
 | Delete the cloud project | No | No | No; operator procedure only |
 
 Human and machine members use the same roles. A service token should normally
@@ -170,6 +172,25 @@ local session. Anonymous and read-only shared-board sessions receive canonical
 local tickets only; they cannot trigger a cloud call and do not receive
 cloud-only projection stubs. A local cloud credential is never used on behalf
 of an unauthenticated or read-only browser caller.
+
+### Explicit Local Creation Recovery
+
+The local owner gate covers creation-journal inspection, resume, terminal
+reconciliation and cached ticket-identity diagnostics. Anonymous/shared readers
+cannot use them, including GET/HEAD/OPTIONS recovery routes. Safe inspection
+returns allowlisted relative metadata and lock PID/time; it never returns a
+raw draft/body, token, idempotency key or absolute filesystem path, and does not
+resolve a credential, acquire a lock or call the cloud.
+
+Explicit resume may use foreground credentials, but current cloud membership
+still authorizes reserve/ACK. Terminal archival uses read-only claim evidence
+(which requires contributor membership), never a client-supplied proof. A
+trusted disabled local connection remains inspectable and may verify terminal
+evidence; it cannot resume ticket creation. Malformed/untrusted connections
+fail closed. This local operation is distinct from cloud incident repair, which
+requires both the operator audience and project-owner membership while suspended.
+Cached manual-file proof is never a membership or mutation authorization cache.
+See [recovery operations](operations.md#explicit-retained-creation-recovery-mdt-200).
 
 ### Browser-Initiated Human Operation
 
@@ -334,7 +355,7 @@ project.
 
 ## Required MDT-200 and MDT-226 Validation
 
-Unit tests with fabricated tokens are insufficient for closure. Staging must
+Unit tests with fabricated tokens are insufficient for closure. Deployment validation must
 prove all of the following against a real Access-protected Worker:
 
 - human email attribution after IdP login;
