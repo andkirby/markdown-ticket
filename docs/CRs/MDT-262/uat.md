@@ -23,7 +23,7 @@ Backfill requirements, scenarios, artifacts/obligations, test plans and tasks in
 
 ## Validation
 
-Baseline: 45 plugin tests, TypeScript check and BB build passed. New coverage captured RED before implementation (6 pass, 52 fail); failed-validation diagnostics captured a separate real-CLI RED regression. Current scoped suite: 107 pass, 0 fail; TypeScript, targeted lint and BB build exit 0. Fresh BB discovery: all 19 schemas and installed on-demand skill; five read-only native calls pass. Deterministic verification passed and independent semantic review returned PASS with no blocking issues. Final documentation evidence is rebound after DSH inventory/stdin reconciliation. Closure remains user-owned.
+Baseline: 45 plugin tests, TypeScript check and BB build passed. New coverage captured RED before implementation (6 pass, 52 fail); failed-validation diagnostics captured a separate real-CLI RED regression. Current scoped suite: 107 pass, 0 fail; TypeScript, targeted lint and BB build exit 0. Fresh BB discovery: all 19 schemas and installed on-demand skill; five read-only native calls pass. Deterministic verification passed and independent semantic review returned PASS with no blocking issues. Final documentation evidence is rebound after DSH inventory/stdin reconciliation. User approved closure on 2026-10-26; MDT-262 is Implemented. DSH fresh-host live verification remains a separate check.
 
 ## Watchlist
 

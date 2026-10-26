@@ -1,12 +1,12 @@
 ---
 code: MDT-262
-status: In Progress
+status: Implemented
 dateCreated: 2026-10-24T13:09:41.658Z
 type: Feature Enhancement
 priority: Medium
 relatedTickets: MDT-143,MDT-261
-implementationDate: 2026-10-24
-implementationNotes: Reopened for 2026-10-26 UAT: full non-cloud native tool coverage, usage guidance, organized plugin documentation; DSH live testing separate.
+implementationDate: 2026-10-26
+implementationNotes: User approved closure on 2026-10-26. Delivered 11 MDT and 8 spec-trace native tools; 107 tests and focused checks passed; independent review PASS. Cloud remains CLI-only; DSH live testing separate.
 ---
 
 # Native mdt tools plugin for bb; restructure dsh-plugin into plugins/{dsh,bb}
@@ -101,4 +101,9 @@ Delivered 11 MDT and 8 operational spec-trace native tools, including create con
 
 Verification: 107 plugin tests across 7 files pass; targeted ESLint, BB TypeScript check, BB build and all five strict trace stages exit 0. The complete registered-tool real-CLI lifecycle uses temporary storage and isolated CONFIG_DIR; no normal project registry mutations. Failed validation retains remediation JSON and stderr summary in both adapters. Independent semantic review: PASS, no blocking issues. DSH fresh-host live testing remains separate and unverified. BB plugin reloaded with 19 tools; local specTracePath configured.
 
-No blocking technical debt or artifact drift was identified. Install-safe copies are intentional and drift-tested; business logic remains in CLI/shared services. User review is the remaining lifecycle gate; status stays In Progress until an explicit close decision. Verification plans, RED captures, runs and semantic-review JSON live under .git/mdt/evidence/MDT-262/.
+No blocking technical debt or artifact drift was identified. Install-safe copies are intentional and drift-tested; business logic remains in CLI/shared services. User approved closure on 2026-10-26; status is Implemented. Verification plans, RED captures, runs and semantic-review JSON live under .git/mdt/evidence/MDT-262/.
+
+
+### UAT closure approved 2026-10-26
+
+User approved the reviewed result and requested ticket resolution and remaining task commits. MDT-262 is Implemented. The separately scheduled DSH fresh-host live check remains explicitly unverified; cloud management remains CLI-only. Implementation commits: `caa5aaa7`, `ce188d3d`.
