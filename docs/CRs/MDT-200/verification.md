@@ -14,7 +14,7 @@ open for the separately authorized production operation. MDT-200 stays
 | Scoped lint / trace |Pass; all 5 trace stages have 0 issues (non-strict) |
 | Independent completion review |Pass; no in-scope issues |
 | GLM adversarial follow-up |No new required-fix defect; bounded scope |
-| Full-suite / live gates |Open; see release gates and historical failure evidence below |
+| Full-suite / live gates |Shared/server and live gates remain open; the CLI export regression is repaired by MDT-260 |
 
 Source acceptance was captured at HEAD `ee0a940518cd0c1893bd540baca2e3d4ff174d0b`.
 Immutable plan digest: `72143438e19b7a35fcce0fbd503171ce1aa5099a2c18d4a98fbf2ec8fdb6f580`;
@@ -26,9 +26,13 @@ durable even when machine-local evidence or thread-storage paths are unavailable
 
 Production migration0005, compatible Worker/client deployment, reviewed D1
 identity/projection/counter repair, and real multi-client acceptance are not
-proved by these local checks. Existing full shared/server/CLI failures remain
-release gates. No deployment, production mutation or commit of MDT-200 changes
-was performed during implementation or this documentation pass.
+proved by these local checks. Full shared/server failures remain release gates.
+MDT-200 changes were committed as `e050e455`; no deployment or production
+mutation was performed. MDT-260's subsequent export repair restored CLI build
+and full-suite execution (245 passes). Its shared management/store 20 and
+journal/recovery 76 checks, four package builds, lint and knip also pass.
+The earlier CLI-failure checkpoints below remain historical evidence.
+See [MDT-260 result](../MDT-260/result.md).
 
 The sections below preserve dated evidence in order. Their pending/planned
 statements describe their original checkpoints, not the current source status.

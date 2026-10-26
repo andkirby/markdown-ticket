@@ -48,7 +48,7 @@ export interface ProjectStateStoreOptions {
 }
 
 /** Thrown when a connection fails validation (never leaks the file content). */
-class ProjectStateFormatError extends Error {
+export class ProjectStateFormatError extends Error {
   constructor(message = 'cloud-sync connection is malformed') {
     super(message)
     this.name = 'ProjectStateFormatError'
@@ -56,7 +56,7 @@ class ProjectStateFormatError extends Error {
 }
 
 /** Thrown when a write is rejected because the origin is not trusted. */
-class UntrustedServiceOriginError extends Error {
+export class UntrustedServiceOriginError extends Error {
   constructor() {
     super('connection serviceOrigin is not in the effective trusted service profile')
     this.name = 'UntrustedServiceOriginError'

@@ -136,3 +136,33 @@ still fails on PinStateService.ts, unchanged by these four files. No server was
 restarted. A separate review found that c907e79a deleted five shared exports
 still consumed by the CLI (seven TS2305 diagnostics); repair is a separate
 follow-up, not part of this typing-only commit.
+
+## Follow-up 2026-10-26 — repair live CLI cloud exports
+
+The earlier c907e79a dead-export classification was incorrect: CLI cloud.ts
+still consumes CliAudienceAwareCredentialProvider, computeInitialNextTicketNumber
+and repositoryLegacyMigrationSource; exit-codes.ts and its tests consume
+ProjectStateFormatError and UntrustedServiceOriginError. The CLI build reproduced
+seven TS2305 errors before restoration. These five public exports are restored
+with their original implementations; no CLI business logic is duplicated.
+
+Knip then exposed one genuinely unused named export,
+CreationRecoveryServiceOptions. Repository usage is confined to its own class
+constructor, so the interface becomes module-private; constructor shape and
+runtime behavior are unchanged. No ignore/baseline entry is added.
+
+Verification after repair:
+
+| Check | Result |
+| --- | --- |
+| shared, CLI, server, MCP builds | All four pass |
+| Full CLI suite |245 passed, 0 failed across 32 files |
+| Shared management factory + connection-store suites |20 passed |
+| Shared journal + recovery suites |76 passed |
+| Scoped ESLint and knip |Pass |
+
+CLI consumer builds must accompany cross-workspace export removal; a clean
+knip result alone does not establish that an exported symbol has no consumers.
+The older deletion claims and CLI-failure checkpoints above are historical and
+superseded by this repair. PinStateService's existing environment-policy failure
+and unrelated full shared/server failures remain outside this repair.

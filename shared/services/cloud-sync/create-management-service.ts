@@ -18,8 +18,10 @@
 
 import type {
   AudienceAwareCredentialProvider,
+  CloudAccessAudienceValue,
   CloudCredential,
   GlobalCloudSyncConfig,
+  ProjectCloudSyncBinding,
 } from '@mdt/domain-contracts'
 import type { LegacyMigrationSource } from './legacy-binding-migration.js'
 import type { FetchImpl } from './management-coordinator.js'
@@ -149,5 +151,67 @@ export function createManagementService(
     coordinationOrigin: profile.coordinationOriginDefault,
     provisioningOrigin: profile.provisioningOrigin,
     globalConfig,
+  }
+}
+
+/**
+ * A legacy migration source backed by a repository `[project.cloudSync]`
+ * binding. CLI `migrate-legacy` builds this from the loaded project config.
+ */
+export function repositoryLegacyMigrationSource(
+  readBinding: () => Promise<ProjectCloudSyncBinding | null>,
+): LegacyMigrationSource {
+  return { readLegacyBinding: readBinding }
+}
+
+/**
+ * Compute the initial cloud counter for a new project: one greater than the
+ * highest existing local ticket number (BR-1.4). Pure shared logic — the CLI
+ * passes existing ticket numbers in, this returns the start number.
+ *
+ * `existingNumbers` may be empty (returns 1). Negative and non-integer values
+ * are ignored. The result is always a positive integer.
+ */
+export function computeInitialNextTicketNumber(existingNumbers: readonly number[]): number {
+  let max = 0
+  for (const n of existingNumbers) {
+    if (Number.isInteger(n) && n > max) {
+      max = n
+    }
+  }
+  return max + 1
+}
+
+/**
+ * CLI audience-aware credential provider.
+ *
+ * Adapts the existing `ServiceTokenCredentialProvider` (machine, owner-only
+ * CONFIG_DIR store) and `CloudflaredCredentialProvider` (human, interactive)
+ * into the `AudienceAwareCredentialProvider` the management service expects.
+ *
+ * Audience routing for the CLI:
+ *   - If a service token is installed for the requested origin, use it
+ *     (works headless; the same pair serves both audiences because Access
+ *     policies admit the service principal for both apps).
+ *   - Otherwise, resolve a human cloudflared token against the requested
+ *     origin. The trusted profile already separates the operator-audience
+ *     provisioning origin from the coordination origin, so the audience is
+ *     encoded in the origin we hand to cloudflared.
+ *
+ * This is NOT a provider framework — it is one small adapter that the CLI
+ * composition seam constructs. Browser/server transports inject their own.
+ */
+export class CliAudienceAwareCredentialProvider implements AudienceAwareCredentialProvider {
+  constructor(private readonly deps: {
+    service: { resolve: (origin: string) => Promise<CloudCredential | null> }
+    human: { resolve: (origin: string) => Promise<CloudCredential | null> }
+  }) {}
+
+  async resolve(serviceOrigin: string, _audience: CloudAccessAudienceValue): Promise<CloudCredential | null> {
+    const machine = await this.deps.service.resolve(serviceOrigin)
+    if (machine) {
+      return machine
+    }
+    return this.deps.human.resolve(serviceOrigin)
   }
 }

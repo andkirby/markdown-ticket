@@ -17,7 +17,7 @@ export interface CreationTerminalProof {
   canonicalVerified: boolean
 }
 
-export interface CreationRecoveryServiceOptions {
+interface CreationRecoveryServiceOptions {
   journal: CloudOperationJournal
   cloudProjectId: string
   resumeOperation: (op: PendingOperation) => Promise<{ recovered: string[], failed: string[] }>

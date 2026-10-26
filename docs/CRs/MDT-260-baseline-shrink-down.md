@@ -56,3 +56,10 @@ config guard are grouped as one typing-cleanup follow-up. The actual committed
 marker count before it was 18; removing runtimeConfig's exemption makes the
 reported 17 accurate. See [result.md](MDT-260/result.md) for validation and the
 separately identified CLI export regression.
+
+The separate CLI regression is repaired by restoring the five live shared
+exports incorrectly removed in c907e79a. CLI now builds and its full suite
+passes 245/245; shared management/recovery checks and knip pass. One truly unused
+recovery-options type is made private without adding ignores or changing the
+constructor contract. The earlier CLI blocker is closed; unrelated full-suite
+failures remain recorded in their owners.
