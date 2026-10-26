@@ -44,6 +44,41 @@ describe('createManagementService (TEST-factory-wiring)', () => {
     await rm(root, { recursive: true, force: true })
   })
 
+  it('disable uses the real audience resolver with its receiver and suspends before retaining disabled state', async () => {
+    const profile = resolveTrustedServiceProfile({ operatorOrigins: [] })
+    const store = new ProjectStateStore({ rootDir: root, profile })
+    await store.write(PROJECT_ID, {
+      version: CLOUD_SYNC_CONNECTION_VERSION,
+      state: CloudSyncConnectionState.ENABLED,
+      cloudProjectId: 'disable-project',
+      serviceOrigin: DISTRIBUTION_ORIGIN,
+    })
+    const events: string[] = []
+    const { service } = createManagementService({
+      localProjectId: PROJECT_ID,
+      projectCode: 'MDT',
+      initialOwnerEmail: 'owner@example.com',
+      configDirRoot: root,
+      credentialProvider: {
+        resolve: async (_origin, audience) => {
+          events.push(`credential:${audience}`)
+          return { kind: 'human', cfAccessToken: 'fixture-coordination-token' }
+        },
+      },
+      fetchImpl: async (url, init) => {
+        expect(url).toBe(`${DISTRIBUTION_ORIGIN}/v1/projects/disable-project/coordination-state`)
+        expect(init?.method).toBe('PUT')
+        expect(JSON.parse(String(init?.body))).toEqual({ state: 'suspended' })
+        expect((await store.read(PROJECT_ID)).kind).toBe('enabled')
+        events.push('cloud:suspended')
+        return makeResponse(200, { data: { state: 'suspended' } })
+      },
+    })
+    expect((await service.disable()).state).toBe(CloudSyncConnectionState.DISABLED)
+    expect(events).toEqual(['credential:coordination', 'cloud:suspended'])
+    expect((await store.read(PROJECT_ID)).kind).toBe('disabled')
+  })
+
   it('composes a service whose enable delegates to the injected coordinator exactly once and writes under configDirRoot', async () => {
     let provisionCalls = 0
     const fakeFetch = makeFakeFetch({

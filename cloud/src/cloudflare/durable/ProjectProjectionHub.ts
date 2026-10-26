@@ -27,6 +27,7 @@ import type {
   StreamEnvelope,
 } from '@mdt/domain-contracts'
 import type { PublishBody } from '../application/projection-usecase'
+import type { AcknowledgeResponse } from '../application/reservation'
 import type {
   StoredSessionDecision,
   StreamGrantPrincipal,
@@ -35,6 +36,7 @@ import type {
 import { CoordinationError } from '@mdt/domain-contracts'
 import { DurableObject } from 'cloudflare:workers'
 import { publish as publishProjectionUseCase } from '../application/projection-usecase'
+import { acknowledge } from '../application/reservation'
 import {
   getProjectionByTicket,
   pollProjections,
@@ -114,6 +116,17 @@ export interface CommitProjectionRequest {
 export type CommitProjectionOutcome
   = | { ok: true, projectionVersion: number, projectRevision: number }
     | { ok: false, code: CoordinatorErrorCode, currentVersion?: number }
+
+interface CommitAcknowledgementRequest {
+  principal: CloudPrincipal
+  reservationId: string
+  body: Parameters<typeof acknowledge>[4]
+  requestId: string
+}
+
+type CommitAcknowledgementOutcome
+  = | ({ ok: true } & AcknowledgeResponse)
+    | { ok: false, code: CoordinatorErrorCode }
 
 /** Catch-up page size for bounded cursor reads. */
 const CATCHUP_PAGE_SIZE = 500
@@ -405,12 +418,38 @@ export class ProjectProjectionHub extends DurableObject<ProjectProjectionHubEnv>
     })
   }
 
+  /** Initial projections use the same serialized commit/delivery boundary. */
+  async acknowledgeAndDeliver(cloudProjectId: string, req: CommitAcknowledgementRequest): Promise<CommitAcknowledgementOutcome> {
+    return this.enqueueResult(async () => {
+      await this.armAlarmIfNotSet()
+      let committed: AcknowledgeResponse
+      try {
+        committed = await acknowledge(this.env.DB, req.principal, cloudProjectId, req.reservationId, req.body, req.requestId)
+      }
+      catch (error) {
+        if (error instanceof CoordinationError)
+          return { ok: false as const, code: error.code }
+        throw error
+      }
+      // Read the committed identity/row, never construct a delta from input.
+      const reservation = await this.env.DB.prepare(
+        'SELECT ticket_number FROM ticket_reservations WHERE cloud_project_id = ? AND reservation_id = ?',
+      ).bind(cloudProjectId, req.reservationId).first<{ ticket_number: number }>()
+      if (!reservation)
+        throw new CoordinationError('reservation_not_found', { requestId: req.requestId })
+      const row = await getProjectionByTicket(this.env.DB, cloudProjectId, reservation.ticket_number)
+      if (row)
+        await this.broadcastDelta(recordToCatchup(cloudProjectId, row))
+      return { ok: true as const, ...committed }
+    })
+  }
+
   /**
    * Broadcast a complete delta to every authorized active socket and arm the
    * alarm in case an ack is missed. Internal to the commit + alarm paths.
    */
   private async broadcastDelta(delta: ProjectionDelta): Promise<void> {
-    const envelope: LiveDelta = { kind: 'delta', ...delta }
+    const envelope: LiveDelta = { ...delta, kind: 'delta' }
     const sockets = this.ctx.getWebSockets() as HibernationWebSocket[]
     let hasActive = false
     for (const socket of sockets) {

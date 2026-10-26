@@ -216,11 +216,25 @@ function buildRouter(env: Env): CoordinationRouter {
         return rateLimited(ctx, 'reservation.acknowledge')
       }
       const body = await readJsonObject(ctx.request, ctx.requestId)
-      const ack = await acknowledge(ctx.db, ctx.principal, ctx.params.projectId, ctx.params.reservationId, {
+      const acknowledgement = {
         operationId: body.operationId ?? '',
         contentHash: body.contentHash ?? '',
         header: body.header as AcknowledgeHeader,
-      }, ctx.requestId)
+      }
+      if (ctx.projectHub) {
+        const stub = ctx.projectHub.get(ctx.projectHub.idFromName(ctx.params.projectId)) as DurableObjectStub<ProjectProjectionHub>
+        const result = await stub.acknowledgeAndDeliver(ctx.params.projectId, {
+          principal: ctx.principal,
+          reservationId: ctx.params.reservationId,
+          body: acknowledgement,
+          requestId: ctx.requestId,
+        })
+        if (!result.ok)
+          throw new CoordinationError(result.code, { requestId: ctx.requestId })
+        const { ok: _ok, ...ack } = result
+        return json(ctx.requestId, ack, 200)
+      }
+      const ack = await acknowledge(ctx.db, ctx.principal, ctx.params.projectId, ctx.params.reservationId, acknowledgement, ctx.requestId)
       return json(ctx.requestId, ack, 200)
     },
   )

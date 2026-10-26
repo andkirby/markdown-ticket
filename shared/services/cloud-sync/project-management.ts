@@ -252,7 +252,10 @@ export class CloudProjectManagementService {
     // Best-effort cloud suspend (TASK-9 hardens ordering). Disable retains
     // state locally even if the cloud suspend is unavailable.
     try {
-      const credential = await (this.opts.resolver.forDisable ?? this.opts.resolver.forConnect)(this.opts.coordinationOrigin)
+      const resolver = this.opts.resolver
+      const credential = await (resolver.forDisable
+        ? resolver.forDisable(this.opts.coordinationOrigin)
+        : resolver.forConnect(this.opts.coordinationOrigin))
       if (credential) {
         await this.opts.coordinator.updateCoordinationState(
           current.cloudProjectId,
