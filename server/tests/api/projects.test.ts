@@ -602,9 +602,10 @@ describe('projects API - Edge Cases and Boundary Conditions', () => {
 
     assertSuccess(res, 200)
   })
-  it('should handle repeated query parameters', async () => {
+  it('should reject repeated scalar query parameters', async () => {
     const res = await authRequest.get('/api/projects').query({ bypassCache: ['true', 'false'] })
 
-    assertSuccess(res, 200)
+    assertBadRequest(res)
+    expect(res.body).toMatchObject({ code: 'VALIDATION_ERROR', source: 'query', issues: expect.arrayContaining([expect.objectContaining({ path: ['bypassCache'] })]) })
   })
 })

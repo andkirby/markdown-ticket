@@ -103,14 +103,14 @@ describe('aPI Integration Tests - CRUD Endpoints (MDT-106)', () => {
       const response = await projectApi.createCR(authRequest, projectCode, errorFixtures.missingTitle)
 
       assertBadRequest(response)
-      assertErrorMessage(response, 'required')
+      expect(response.body).toMatchObject({ code: 'VALIDATION_ERROR', source: 'body', issues: expect.arrayContaining([expect.objectContaining({ path: ['title'] })]) })
     })
 
     it('should return 400 when type is missing', async () => {
       const response = await projectApi.createCR(authRequest, projectCode, errorFixtures.missingType)
 
       assertBadRequest(response)
-      assertErrorMessage(response, 'required')
+      expect(response.body).toMatchObject({ code: 'VALIDATION_ERROR', source: 'body', issues: expect.arrayContaining([expect.objectContaining({ path: ['type'] })]) })
     })
 
     it('should return 404 when project does not exist', async () => {
@@ -154,7 +154,7 @@ describe('aPI Integration Tests - CRUD Endpoints (MDT-106)', () => {
       const response = await projectApi.patchCR(authRequest, projectCode, crCode, crUpdateFixtures.empty)
 
       assertBadRequest(response)
-      assertErrorMessage(response, 'No update data')
+      expect(response.body).toMatchObject({ code: 'VALIDATION_ERROR', source: 'body', issues: expect.arrayContaining([expect.objectContaining({ path: [] })]) })
     })
 
     it('should return 404 when CR does not exist', async () => {

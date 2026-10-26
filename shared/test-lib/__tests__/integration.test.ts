@@ -11,7 +11,10 @@
 import { existsSync, readFileSync } from 'node:fs'
 import http from 'node:http'
 import { join } from 'node:path'
+import process from 'node:process'
 import { findProjectRoot, ProjectFactory, TestEnvironment, TestServer } from '../index.js'
+
+const TEST_ADMIN_TOKEN = 'mdt-test-lib-integration-token'
 
 interface ProjectListItem {
   id?: string
@@ -32,7 +35,7 @@ function asProjectList(value: unknown): ProjectListItem[] {
  */
 function httpGet(url: string): Promise<{ ok: boolean, statusCode: number, json: () => Promise<unknown> }> {
   return new Promise((resolve, reject) => {
-    const req = http.get(url, { headers: { Connection: 'close' } }, (res) => {
+    const req = http.get(url, { headers: { Connection: 'close', Authorization: `Bearer ${TEST_ADMIN_TOKEN}` } }, (res) => {
       let data = ''
       res.on('data', (chunk) => {
         data += chunk
@@ -61,6 +64,7 @@ describe('shared/test-lib - Integration', () => {
   let testEnv: TestEnvironment
   let testServer: TestServer
   let factory: ProjectFactory
+  const previousAuthToken = process.env.API_AUTH_TOKEN
 
   beforeAll(async () => {
     // 1. Create isolated test environment with custom CONFIG_DIR
@@ -90,6 +94,7 @@ describe('shared/test-lib - Integration', () => {
     // The dev:server script is defined in the root package.json, not in the shared workspace
     // CONFIG_DIR env var tells server where to find test projects
     // IMPORTANT: Start server AFTER creating projects so it discovers them on startup
+    process.env.API_AUTH_TOKEN = TEST_ADMIN_TOKEN
     testServer = new TestServer(testEnv.getPortConfig())
 
     // Find monorepo root by walking up from current directory
@@ -149,6 +154,10 @@ describe('shared/test-lib - Integration', () => {
     // 5. Cleanup - stopAll() now properly waits for process tree to exit
     await testServer.stopAll()
     await testEnv.cleanup()
+    if (previousAuthToken === undefined)
+      delete process.env.API_AUTH_TOKEN
+    else
+      process.env.API_AUTH_TOKEN = previousAuthToken
   })
 
   it('backend server discovers test-lib created project', async () => {

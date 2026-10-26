@@ -69,7 +69,7 @@ describe('documents API Tests (MDT-106)', () => {
       const response = await authRequest.get('/api/documents')
 
       assertBadRequest(response)
-      assertErrorMessage(response, 'Project ID')
+      expect(response.body).toMatchObject({ code: 'VALIDATION_ERROR', source: 'query', issues: expect.arrayContaining([expect.objectContaining({ path: ['projectId'] })]) })
     })
 
     it('should return 404 for non-existent project', async () => {
@@ -194,14 +194,14 @@ describe('documents API Tests (MDT-106)', () => {
       const response = await authRequest.get('/api/documents/content?filePath=README.md')
 
       assertBadRequest(response)
-      assertErrorMessage(response, 'Project ID')
+      expect(response.body).toMatchObject({ code: 'VALIDATION_ERROR', source: 'query', issues: expect.arrayContaining([expect.objectContaining({ path: ['projectId'] })]) })
     })
 
     it('should return 400 for missing filePath', async () => {
       const response = await authRequest.get(`/api/documents/content?projectId=${projectCode}`)
 
       assertBadRequest(response)
-      assertErrorMessage(response, 'file path')
+      expect(response.body).toMatchObject({ code: 'VALIDATION_ERROR', source: 'query', issues: expect.arrayContaining([expect.objectContaining({ path: ['filePath'] })]) })
     })
 
     it('should return 404 for non-existent project', async () => {

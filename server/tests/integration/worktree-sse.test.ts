@@ -9,7 +9,7 @@ import { createServer } from 'node:http'
 import { dirname, join } from 'node:path'
 import { WorktreeService } from '@mdt/shared/services/WorktreeService.js'
 import { commitAllChanges, createGitWorktree, initGitRepository } from '@mdt/shared/test-lib'
-import { cleanupTestEnvironment, setupTestEnvironment } from '../api/setup'
+import { API_TEST_ADMIN_TOKEN, cleanupAuthenticatedTestEnvironment, setupAuthenticatedTestEnvironment } from '../api/setup'
 
 interface RecordedSSEEvent {
   type: string
@@ -81,6 +81,7 @@ async function createSSERecorder(baseUrl: string): Promise<SSERecorder> {
   const response = await fetch(`${baseUrl}/api/events`, {
     headers: {
       Accept: 'text/event-stream',
+      Authorization: `Bearer ${API_TEST_ADMIN_TOKEN}`,
     },
     signal: controller.signal,
   })
@@ -226,7 +227,7 @@ async function expectNoMatchingEvent(
 }
 
 async function createGitBackedProject(
-  projectFactory: Awaited<ReturnType<typeof setupTestEnvironment>>['projectFactory'],
+  projectFactory: Awaited<ReturnType<typeof setupAuthenticatedTestEnvironment>>['projectFactory'],
 ): Promise<{ project: ProjectData, ticketCode: string }> {
   const project = await projectFactory.createProject('empty', {
     code: 'MDT',
@@ -253,12 +254,12 @@ async function createGitBackedProject(
 }
 
 describe('Worktree SSE Integration (MDT-142)', () => {
-  let context: Awaited<ReturnType<typeof setupTestEnvironment>>
+  let context: Awaited<ReturnType<typeof setupAuthenticatedTestEnvironment>>
   let server: Server
   let baseUrl: string
 
   beforeEach(async () => {
-    context = await setupTestEnvironment()
+    context = await setupAuthenticatedTestEnvironment()
     server = createServer(context.app)
 
     await new Promise<void>((resolve, reject) => {
@@ -277,7 +278,7 @@ describe('Worktree SSE Integration (MDT-142)', () => {
 
     context.fileWatcher.stop()
     await context.testEnv.cleanup()
-    await cleanupTestEnvironment(context.tempDir)
+    await cleanupAuthenticatedTestEnvironment(context.authRequest, context.tempDir)
   })
 
   it('emits a real SSE subdocument event from a git worktree with source attribution', async () => {

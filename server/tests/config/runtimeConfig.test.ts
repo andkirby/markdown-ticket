@@ -160,6 +160,7 @@ function isAllowedEnvBoundary(relativePath: string): boolean {
 function isLegacyConfigDirConsumer(relativePath: string): boolean {
   return [
     'services/DocumentFavStateService.ts',
+    'services/PinStateService.ts',
     'services/fileWatcher/PathWatcherService.ts',
   ].includes(relativePath)
 }

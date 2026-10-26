@@ -6,6 +6,7 @@ import express from 'express'
 import request from 'supertest'
 import ts from 'typescript'
 import * as parser from '../../http/parseRequest'
+import * as readSchemas from '../../http/readSchemas'
 import * as origins from '../../security/originPolicy'
 
 // The production module has no DEV-mode activator. Exercise its actual dormant
@@ -21,6 +22,7 @@ function activeDevApp() {
     '@mdt/domain-contracts': contracts,
     'express': express,
     '../http/parseRequest.js': parser,
+    '../http/readSchemas.js': readSchemas,
     '../security/originPolicy.js': origins,
   }
   runInNewContext(compiled, {

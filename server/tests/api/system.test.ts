@@ -10,7 +10,7 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { createTestDocument, documentFixtures } from './fixtures/documents'
-import { assertBadRequest, assertBodyHasProperties, assertErrorMessage, assertIsArray, assertNotFound, assertSuccess, createGetRequest, createPostRequest } from './helpers'
+import { assertBadRequest, assertBodyHasProperties, assertIsArray, assertNotFound, assertSuccess, createGetRequest, createPostRequest } from './helpers'
 import { cleanupAuthenticatedTestEnvironment, setProjectDocumentMaxDepth, setupAuthenticatedTestEnvironment } from './setup'
 
 describe('system Endpoint Tests (MDT-106)', () => {
@@ -76,14 +76,14 @@ describe('system Endpoint Tests (MDT-106)', () => {
       const response = await createPostRequest(app, '/api/filesystem/exists', {})
 
       assertBadRequest(response)
-      assertErrorMessage(response, 'Path is required')
+      expect(response.body).toMatchObject({ code: 'VALIDATION_ERROR', source: 'body', issues: expect.arrayContaining([expect.objectContaining({ path: ['path'] })]) })
     })
 
     it('should return 400 for non-string path', async () => {
       const response = await createPostRequest(app, '/api/filesystem/exists', { path: 12345 })
 
       assertBadRequest(response)
-      assertErrorMessage(response, 'string')
+      expect(response.body).toMatchObject({ code: 'VALIDATION_ERROR', source: 'body', issues: expect.arrayContaining([expect.objectContaining({ path: ['path'] })]) })
     })
 
     it('should check if valid path exists', async () => {

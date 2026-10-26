@@ -14,7 +14,7 @@ function appWithSystemRouter() {
 
   app.use('/api', createSystemRouter(
     { getClientCount: () => 0 } as any,
-    { getSystemDirectories: jest.fn() } as any,
+    { getSystemDirectories: jest.fn(), getFileSystemTree: jest.fn(), checkDirectoryExists: jest.fn() } as any,
     { clearCache: jest.fn() },
     { clearCache: jest.fn(), invalidateFile: jest.fn() },
   ))
