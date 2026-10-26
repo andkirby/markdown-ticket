@@ -38,7 +38,7 @@ export class FileOperationInvoker {
       }
     }
     catch (error) {
-      console.warn('Failed to fetch cache TTL from config, using default:', (error as Error).message)
+      console.warn('Failed to fetch cache TTL from config, using default:', error instanceof Error ? error.message : String(error))
     }
 
     return 3600 // Default 1 hour
@@ -53,7 +53,7 @@ export class FileOperationInvoker {
       throw new Error('Metadata command not initialized')
     }
 
-    return await this.metadataCommand.execute(filePath) as FileMetadata
+    return await this.metadataCommand.execute(filePath)
   }
 
   /**
@@ -65,7 +65,7 @@ export class FileOperationInvoker {
       throw new Error('Read command not initialized')
     }
 
-    return await this.readCommand.execute(filePath) as string
+    return await this.readCommand.execute(filePath)
   }
 
   /**

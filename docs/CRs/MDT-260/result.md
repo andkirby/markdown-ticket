@@ -116,3 +116,23 @@ parallel stream's uncommitted `operation-journal.ts` / shared WIP (their
 `acquireLock` → `withLock` restructure needs its manifest sync when they
 land: drop the two stale `acquireLock` entries, add the live `withLock`
 decoder pair).
+
+## Follow-up 2026-10-26 — finish unstaged typing cleanup
+
+Four server files from this cleanup remained outside the earlier commits:
+ExtractMetadataCommand and ReadFileCommand still declared Promise<unknown>,
+FileOperationInvoker retained caller casts and an unsafe catch assertion, and
+runtimeConfig retained its assertion-based guard. This follow-up commits the
+precise return types, safe error narrowing and isRecord guard together.
+
+The old 17-marker report counted the unstaged runtimeConfig exemption removal:
+HEAD actually contained 18 marker files immediately before this follow-up; the
+working change reduces that to 17. FileOperationInvoker keeps its exemption
+because its unrelated response.json assertion remains. No baseline is expanded.
+
+Validation: scoped ESLint on all four files and the server build pass. Runtime
+configuration tests pass 7 cases; the existing direct-process.env policy test
+still fails on PinStateService.ts, unchanged by these four files. No server was
+restarted. A separate review found that c907e79a deleted five shared exports
+still consumed by the CLI (seven TS2305 diagnostics); repair is a separate
+follow-up, not part of this typing-only commit.

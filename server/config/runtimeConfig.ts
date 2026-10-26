@@ -1,4 +1,3 @@
-/* eslint-disable ts/no-unsafe-type-assertion -- MDT-258 baseline: pre-existing casts, strip as they are rewritten */
 import type { Application } from 'express'
 import path from 'node:path'
 import process from 'node:process'
@@ -83,14 +82,18 @@ export function getRuntimeConfig(app: Application): RuntimeConfig {
 }
 
 function isRuntimeConfig(value: unknown): value is RuntimeConfig {
-  return Boolean(
-    value
-    && typeof value === 'object'
-    && typeof (value as RuntimeConfig).configDir === 'string'
-    && typeof (value as RuntimeConfig).auth === 'object'
-    && typeof (value as RuntimeConfig).origins === 'object'
-    && typeof (value as RuntimeConfig).ownerSessions === 'object',
-  )
+  if (!isRecord(value)) {
+    return false
+  }
+
+  return typeof value.configDir === 'string'
+    && typeof value.auth === 'object'
+    && typeof value.origins === 'object'
+    && typeof value.ownerSessions === 'object'
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
 }
 
 function isAuthConfigured(env: NodeJS.ProcessEnv): boolean {

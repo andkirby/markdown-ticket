@@ -26,7 +26,7 @@ export class ExtractMetadataCommand extends Command {
     this.TTL = ttlSeconds * 1000 // Convert to milliseconds
   }
 
-  async execute(...args: unknown[]): Promise<unknown> {
+  async execute(...args: unknown[]): Promise<FileMetadata> {
     const filePath = args[0]
     if (typeof filePath !== 'string') {
       throw new TypeError('filePath argument must be a string')

@@ -48,3 +48,11 @@ Each is designed to only shrink, but nothing forces it. Ticket owner: every PR t
 Implemented across 8 commits (see [result.md](MDT-260/result.md) for the monotonic shrink table). All ACs beaten: manifest 152 → **80** (premise outdated — phase 5 had migrated the reads; shrink came from behavior-preserving request-decouplings), eslint baseline 37 → **17 files**, knip cloud/cli globs → **per-file entries** (+ real cloud entry found). Parent-thread verified in a clean-checkout worktree: checker 80 identities green, test:boundaries 46/46, knip exit 0, lint:server + lint:mcp exit 0, domain 368.
 
 Handoff: parallel stream's uncommitted `acquireLock`→`withLock` restructure will need a 2-entry manifest sync when it lands (noted in result). Interleaved fix `42d3a94c` repaired their MDT-262 DSH plugin drift that broke gates mid-flight.
+
+### Follow-up 2026-10-26
+
+The previously unstaged command return types, invoker narrowing and runtime
+config guard are grouped as one typing-cleanup follow-up. The actual committed
+marker count before it was 18; removing runtimeConfig's exemption makes the
+reported 17 accurate. See [result.md](MDT-260/result.md) for validation and the
+separately identified CLI export regression.
