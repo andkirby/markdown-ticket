@@ -122,6 +122,18 @@ function registerCommands(program: Command): void {
       await runCliAction(program, 'ticket.create', options, mergedOptions => ticketCreateAction(tokens, mergedOptions))
     })
 
+  // ticket validate — intentionally offline, with no project service resolution.
+  ticketCmd
+    .command('validate')
+    .description('Validate unfinished content in staged primary tickets')
+    .option('--staged', 'Validate the complete Git index snapshot')
+    .option('-j, --json', 'Output as JSON')
+    .option('--yaml', 'Output as YAML')
+    .action(async (options) => {
+      const { ticketValidateAction } = await import('./commands/validate.js')
+      await runCliAction(program, 'ticket.validate', options, mergedOptions => ticketValidateAction(mergedOptions))
+    })
+
   // ticket attr
   ticketCmd
     .command('attr')

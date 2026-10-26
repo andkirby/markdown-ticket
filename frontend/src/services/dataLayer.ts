@@ -17,6 +17,7 @@ import {
   normalizeTicketMetadata as normalizeSharedTicketMetadata,
 } from '@mdt/shared/models/Ticket'
 import { authFetch } from '../auth/authFetch'
+import { readTicketCreationResponse } from './ticketCreationResponse'
 
 type CreateTicketData = TicketData & {
   status?: Status
@@ -283,10 +284,7 @@ class DataLayer {
         throw new Error(errorData.error || `Failed to create ticket: ${response.statusText}`)
       }
 
-      const createdTicket = await response.json()
-      const ticket = normalizeSharedTicket(createdTicket)
-
-      return ticket
+      return readTicketCreationResponse(await response.json())
     }
     catch (error) {
       console.error(`[DataLayer] ❌ Error creating ticket:`, error)

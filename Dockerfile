@@ -8,6 +8,8 @@ WORKDIR /app
 # Install dependencies for shared code and frontend (workspace monorepo)
 COPY package*.json ./
 COPY tsconfig.shared.json ./
+# Shared build verifies generated ticket templates against the catalog.
+COPY scripts/generate-ticket-templates.ts ./scripts/generate-ticket-templates.ts
 COPY shared ./shared
 COPY domain-contracts ./domain-contracts
 COPY server/package*.json ./server/

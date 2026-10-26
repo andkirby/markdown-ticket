@@ -9,7 +9,7 @@
  * hoisted, so importing `@testing-library/jest-dom` (which imports
  * `@testing-library/dom`) at the top of this file evaluates RTL-dom BEFORE
  * happy-dom registers `document` — poisoning `screen` for the entire process.
- * Register first (synchronous), then import jest-dom dynamically.
+ * Register first (synchronous), then load jest-dom synchronously to avoid an async preload race.
  *
  * Isolation contract (why this file owns globals): `bun test` executes every
  * test file in ONE process, in alphabetical order. Unlike Jest, bun does not
@@ -18,6 +18,7 @@
  * `globalThis.fetch` between files. Without the bridges below, one file's DOM,
  * fetch mock, or module mock leaks into every later file.
  */
+import { createRequire } from 'node:module'
 import { GlobalRegistrator } from '@happy-dom/global-registrator'
 import { afterEach } from 'bun:test'
 
@@ -27,15 +28,17 @@ import { afterEach } from 'bun:test'
 // instead of throwing on about:blank.
 GlobalRegistrator.register({ url: 'http://localhost:3075/' })
 
-// Must stay AFTER registration — see note above.
-// eslint-disable-next-line antfu/no-top-level-await
-await import('@testing-library/jest-dom')
+// Load synchronously AFTER DOM registration. Bun can begin isolated test
+// modules before an asynchronous preload import finishes registering matchers.
+const loadSetup = createRequire(import.meta.url)
+loadSetup('@testing-library/jest-dom')
 
 // Bridge bun:test's afterEach onto globalThis BEFORE any test file imports
 // @testing-library/react: RTL enables its automatic cleanup only when
 // `afterEach` is a global (Jest injects it; bun does not). With this in
 // place every `render()` unmounts after each test.
-globalThis.afterEach = afterEach
+// Install the Bun hook without assigning it to Jest's ambient hook signature.
+Object.assign(globalThis, { afterEach })
 
 // Quarantine the other two process-wide globals between tests:
 // - document.body: removes non-RTL DOM a test appended directly

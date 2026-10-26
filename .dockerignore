@@ -52,6 +52,8 @@ docker-compose*
 # Documentation (exclude from build)
 *.md
 !README.md
+# Shared builds validate generated ticket-template projections.
+!shared/templates/*.md
 docs
 
 # Logs

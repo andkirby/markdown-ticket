@@ -1,0 +1,1011 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-261"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "WHEN ticket creation generates a body from absent, empty or whitespace-only input, the system shall return success with one actionable template diagnostic identifying the created ticket and requiring replacement of unfinished instructions before commit.",
+      "sourceRef": "docs/CRs/MDT-261-unfinished-ticket-templates.md#2-desired-outcome",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "WHEN ticket creation receives supplied content, the system shall report recognized unfinished scaffolding without claiming template generation for genuine supplied content.",
+      "sourceRef": "docs/CRs/MDT-261-unfinished-ticket-templates.md#2-desired-outcome",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.3",
+      "kind": "behavior",
+      "text": "WHEN creation succeeds through CLI human, JSON or YAML output, MCP, HTTP, BB or DSH, the system shall expose equivalent shared diagnostics without losing successful creation semantics or duplicating a finding.",
+      "sourceRef": "docs/CRs/MDT-261-unfinished-ticket-templates.md#2-desired-outcome",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-2.1",
+      "kind": "behavior",
+      "text": "WHEN a staged primary ticket contains an active explicit placeholder marker, known unfinished template instruction or only structural boilerplate, the system shall reject validation with ticket key, relative path, line or section, offending content and a correction.",
+      "sourceRef": "docs/CRs/MDT-261-unfinished-ticket-templates.md#2-desired-outcome",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-2.3",
+      "kind": "behavior",
+      "text": "WHEN staged and working-tree contents differ, the system shall decide validation from the complete staged document and staged project configuration.",
+      "sourceRef": "docs/CRs/MDT-261-unfinished-ticket-templates.md#2-desired-outcome",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-2.4",
+      "kind": "behavior",
+      "text": "WHEN a commit is validated, the system shall inspect only added, modified or renamed primary Markdown tickets including epics under configured project paths and codes, skipping deletions and unrelated historical or specification documents.",
+      "sourceRef": "docs/CRs/MDT-261-unfinished-ticket-templates.md#2-desired-outcome",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-2.5",
+      "kind": "behavior",
+      "text": "IF a detected MDT project cannot execute its required validator or snapshot inspection fails, THEN the system shall reject the commit with an actionable failure instead of reporting a clean validation.",
+      "sourceRef": "docs/CRs/MDT-261-unfinished-ticket-templates.md#2-desired-outcome",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "The system shall define canonical diagnostic schemas in domain-contracts and detection plus message construction in shared, leaving adapters responsible only for transport presentation.",
+      "sourceRef": "docs/CRs/MDT-261-unfinished-ticket-templates.md#2-desired-outcome",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "The system shall keep diagnostics outside persisted ticket frontmatter and domain entities while preserving existing creation-result consumers through an explicit compatibility API.",
+      "sourceRef": "docs/CRs/MDT-261-unfinished-ticket-templates.md#2-desired-outcome",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "The system shall use one owned template instruction source for generation and recognition, including file, fallback and legacy compatibility phrases and deterministic markers on future generated instructions.",
+      "sourceRef": "docs/CRs/MDT-261-unfinished-ticket-templates.md#2-desired-outcome",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "The system shall perform staged validation locally without network requests, a running MDT server, content mutation or index mutation.",
+      "sourceRef": "docs/CRs/MDT-261-unfinished-ticket-templates.md#2-desired-outcome",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C5",
+      "kind": "constraint",
+      "text": "The system shall wire the validator through tracked local Lefthook configuration and record successful local verification before changing the separate shared-hooks repository.",
+      "sourceRef": "docs/CRs/MDT-261-unfinished-ticket-templates.md#2-desired-outcome",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C6",
+      "kind": "constraint",
+      "text": "The system shall pass repository paths, blob identifiers and supplied content as data without shell evaluation or unsafe argument expansion.",
+      "sourceRef": "docs/CRs/MDT-261-unfinished-ticket-templates.md#2-desired-outcome",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "WHEN tickets are renamed or contain spaces in paths, the system shall read the correct staged blob using unambiguous Git path handling.",
+      "sourceRef": "docs/CRs/MDT-261-unfinished-ticket-templates.md#2-desired-outcome",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-2",
+      "kind": "edge_case",
+      "text": "WHILE a ticket is not completed, the system shall allow the legacy deferred implementation instruction only in Implementation Notes and shall leave the existing Implemented-task policy independent.",
+      "sourceRef": "docs/CRs/MDT-261-unfinished-ticket-templates.md#2-desired-outcome",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-2.2",
+      "kind": "behavior",
+      "text": "WHEN a staged ticket has genuine concise content, the system shall permit ordinary planning annotations, technical brackets, links, intentional quoted or code examples, unchecked intake criteria and allowed legacy Implementation Notes before completion.",
+      "sourceRef": "docs/CRs/MDT-261-unfinished-ticket-templates.md#placeholder-policy",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "generated_body_notice",
+      "title": "Generated body is visibly unfinished",
+      "covers": [
+        "BR-1.1",
+        "BR-1.3"
+      ],
+      "given": "I have an MDT project and omit the body or supply only whitespace",
+      "when": "I create a ticket using a supported creation surface",
+      "then": "Creation succeeds and returns one shared warning with the created ticket location and instruction to complete it before committing",
+      "sourceRef": "requirements:MDT-261"
+    },
+    {
+      "id": "authored_body_clean",
+      "title": "Authored body stays clean",
+      "covers": [
+        "BR-1.2"
+      ],
+      "given": "I supply a concise real problem and desired outcome",
+      "when": "I create a ticket",
+      "then": "Creation succeeds without a template-generated warning",
+      "sourceRef": "requirements:MDT-261"
+    },
+    {
+      "id": "supplied_instruction_notice",
+      "title": "Supplied template instructions are detected",
+      "covers": [
+        "BR-1.2",
+        "BR-1.3"
+      ],
+      "given": "I supply content that still contains an unfinished template instruction",
+      "when": "I create a ticket using a supported creation surface",
+      "then": "Creation succeeds and exposes the same shared content finding through the surface",
+      "sourceRef": "requirements:MDT-261"
+    },
+    {
+      "id": "unfinished_staged_body",
+      "title": "Unfinished staged ticket is rejected",
+      "covers": [
+        "BR-2.1"
+      ],
+      "given": "My staged ticket contains a known architecture prompt, explicit unfinished marker, partial prompt or empty scaffold",
+      "when": "I validate the proposed commit",
+      "then": "Validation rejects it with ticket, path, location, offending instruction and required correction",
+      "sourceRef": "requirements:MDT-261"
+    },
+    {
+      "id": "genuine_staged_body",
+      "title": "Genuine concise ticket and intentional examples are accepted",
+      "covers": [
+        "BR-2.2"
+      ],
+      "given": "My staged ticket has real content and may quote instructions or contain planning annotations and unchecked intake criteria",
+      "when": "I validate the proposed commit",
+      "then": "Validation accepts the ticket without demanding later-stage implementation content",
+      "sourceRef": "requirements:MDT-261"
+    },
+    {
+      "id": "staged_version_wins",
+      "title": "The staged version determines the verdict",
+      "covers": [
+        "BR-2.3"
+      ],
+      "given": "The staged ticket or project configuration differs from my working copy",
+      "when": "I validate the proposed commit",
+      "then": "Only the complete staged ticket and staged configuration determine acceptance or rejection",
+      "sourceRef": "requirements:MDT-261"
+    },
+    {
+      "id": "changed_primary_scope",
+      "title": "Only changed primary tickets are inspected",
+      "covers": [
+        "BR-2.4"
+      ],
+      "given": "I have unchanged historical scaffolds and unrelated specification documents alongside a changed or renamed primary ticket",
+      "when": "I validate the proposed commit",
+      "then": "Only the changed primary ticket including an epic is inspected and deletions are skipped",
+      "sourceRef": "requirements:MDT-261"
+    },
+    {
+      "id": "validator_failure_visible",
+      "title": "Unavailable or failed validator blocks explicitly",
+      "covers": [
+        "BR-2.5"
+      ],
+      "given": "My detected MDT project has an unavailable validator or unreadable staged snapshot",
+      "when": "I attempt the guarded commit",
+      "then": "The commit is rejected with an actionable validation failure",
+      "sourceRef": "requirements:MDT-261"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-policy",
+      "title": "One schema, template catalog and context-aware content policy",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "C1",
+        "C2",
+        "C3",
+        "Edge-2"
+      ],
+      "artifactIds": [
+        "ART-domain-contracts-src-ticket-creation-result-ts",
+        "ART-domain-contracts-src-ticket-index-ts",
+        "ART-shared-templates-catalog-ts",
+        "ART-shared-templates-legacy-instructions-ts",
+        "ART-shared-services-templateservice-ts",
+        "ART-shared-services-ticket-content-inspection-ts",
+        "ART-scripts-generate-ticket-templates-ts",
+        "ART-shared-package-json",
+        "ART-shared-templates-architecture-md",
+        "ART-shared-templates-bug-fix-md",
+        "ART-shared-templates-feature-enhancement-md",
+        "ART-shared-templates-technical-debt-md",
+        "ART-shared-templates-documentation-md",
+        "ART-shared-templates-research-md",
+        "ART-shared-templates-templates-json",
+        "ART-shared-tests-services-mdt-261-content-inspection-test-ts",
+        "ART-shared-tests-services-mdt-261-template-catalog-test-ts",
+        "ART-domain-contracts-src-ticket-tests-creation-result-test-ts"
+      ],
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "OBL-staged",
+      "title": "Immutable staged snapshot and offline local hook enforcement",
+      "derivedFrom": [
+        "BR-2.1",
+        "BR-2.2",
+        "BR-2.3",
+        "BR-2.4",
+        "BR-2.5",
+        "C4",
+        "C5",
+        "C6",
+        "Edge-1"
+      ],
+      "artifactIds": [
+        "ART-shared-services-ticket-staged-validation-ts",
+        "ART-cli-src-commands-validate-ts",
+        "ART-cli-src-index-ts",
+        "ART-cli-src-output-formatter-ts",
+        "ART-scripts-check-ticket-templates-sh",
+        "ART-lefthook-yml",
+        "ART-cli-mdt-cli-skill-md",
+        "ART-scripts-agents-md",
+        "ART-cli-tests-e2e-ticket-validate-spec-ts",
+        "ART-cli-tests-e2e-ticket-template-hook-spec-ts"
+      ],
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "OBL-creation",
+      "title": "Compatible operation diagnostics through every creation adapter",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "C1",
+        "C2",
+        "C6"
+      ],
+      "artifactIds": [
+        "ART-shared-services-ticketservice-ts",
+        "ART-cli-src-commands-create-ts",
+        "ART-cli-src-output-structured-ts",
+        "ART-mcp-server-src-tools-handlers-crhandlers-ts",
+        "ART-server-services-ticketservice-ts",
+        "ART-frontend-src-services-ticketcreationresponse-ts",
+        "ART-frontend-src-services-ticketcreationresponse-test-ts",
+        "ART-frontend-src-hooks-useticketoperations-ts",
+        "ART-frontend-src-services-datalayer-ts",
+        "ART-cli-tests-e2e-ticket-template-diagnostics-spec-ts",
+        "ART-cli-tests-e2e-helpers-cli-runner-ts",
+        "ART-shared-tests-services-mdt-261-create-diagnostics-test-ts",
+        "ART-mcp-server-src-tools-handlers-tests-create-diagnostics-test-ts",
+        "ART-server-tests-services-mdt-261-create-diagnostics-test-ts",
+        "ART-plugins-tests-template-diagnostics-test-ts",
+        "ART-docs-design-surfaces-ticket-creation-feedback-spec-md",
+        "ART-docs-ticket-template-guard-md",
+        "ART-bun-lock",
+        "ART-package-lock-json",
+        "ART-mcp-server-src-services-crservice-ts",
+        "ART-mcp-server-src-tools-handlers-tests-crhandlers-test-ts",
+        "ART-mcp-server-src-tools-handlers-tests-crhandlers-worktree-test-ts",
+        "ART-server-tests-mocks-shared-services-ticketservice-ts",
+        "ART-server-tests-unit-ticketservice-boundary-compatibility-test-ts",
+        "ART-tests-e2e-ticket-template-warning-spec-ts",
+        "ART-frontend-src-test-setup-ts",
+        "ART-plugins-docs-coverage-md",
+        "ART-dockerfile",
+        "ART-server-dockerfile",
+        "ART-mcp-server-dockerfile",
+        "ART-dockerignore",
+        "ART-docs-development-guide-md"
+      ],
+      "sourceRef": "architecture.md"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-domain-contracts-src-ticket-creation-result-ts",
+      "path": "domain-contracts/src/ticket/creation-result.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-domain-contracts-src-ticket-index-ts",
+      "path": "domain-contracts/src/ticket/index.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-shared-templates-catalog-ts",
+      "path": "shared/templates/catalog.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-shared-templates-legacy-instructions-ts",
+      "path": "shared/templates/legacy-instructions.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-shared-services-templateservice-ts",
+      "path": "shared/services/TemplateService.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-shared-services-ticket-content-inspection-ts",
+      "path": "shared/services/ticket/content-inspection.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-scripts-generate-ticket-templates-ts",
+      "path": "scripts/generate-ticket-templates.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-shared-package-json",
+      "path": "shared/package.json",
+      "kind": "config",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-shared-templates-architecture-md",
+      "path": "shared/templates/architecture.md",
+      "kind": "doc",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-shared-templates-bug-fix-md",
+      "path": "shared/templates/bug-fix.md",
+      "kind": "doc",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-shared-templates-feature-enhancement-md",
+      "path": "shared/templates/feature-enhancement.md",
+      "kind": "doc",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-shared-templates-technical-debt-md",
+      "path": "shared/templates/technical-debt.md",
+      "kind": "doc",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-shared-templates-documentation-md",
+      "path": "shared/templates/documentation.md",
+      "kind": "doc",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-shared-templates-research-md",
+      "path": "shared/templates/research.md",
+      "kind": "doc",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-shared-templates-templates-json",
+      "path": "shared/templates/templates.json",
+      "kind": "config",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-shared-tests-services-mdt-261-content-inspection-test-ts",
+      "path": "shared/tests/services/MDT-261/content-inspection.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-shared-tests-services-mdt-261-template-catalog-test-ts",
+      "path": "shared/tests/services/MDT-261/template-catalog.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-domain-contracts-src-ticket-tests-creation-result-test-ts",
+      "path": "domain-contracts/src/ticket/__tests__/creation-result.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-shared-services-ticket-staged-validation-ts",
+      "path": "shared/services/ticket/staged-validation.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-cli-src-commands-validate-ts",
+      "path": "cli/src/commands/validate.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-cli-src-index-ts",
+      "path": "cli/src/index.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-cli-src-output-formatter-ts",
+      "path": "cli/src/output/formatter.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-scripts-check-ticket-templates-sh",
+      "path": "scripts/check-ticket-templates.sh",
+      "kind": "runtime",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-lefthook-yml",
+      "path": "lefthook.yml",
+      "kind": "config",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-cli-mdt-cli-skill-md",
+      "path": "cli/mdt-cli/SKILL.md",
+      "kind": "doc",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-scripts-agents-md",
+      "path": "scripts/AGENTS.md",
+      "kind": "doc",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-cli-tests-e2e-ticket-validate-spec-ts",
+      "path": "cli/tests/e2e/ticket/validate.spec.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-cli-tests-e2e-ticket-template-hook-spec-ts",
+      "path": "cli/tests/e2e/ticket/template-hook.spec.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-shared-services-ticketservice-ts",
+      "path": "shared/services/TicketService.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-cli-src-commands-create-ts",
+      "path": "cli/src/commands/create.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-cli-src-output-structured-ts",
+      "path": "cli/src/output/structured.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-mcp-server-src-tools-handlers-crhandlers-ts",
+      "path": "mcp-server/src/tools/handlers/crHandlers.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-server-services-ticketservice-ts",
+      "path": "server/services/TicketService.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-frontend-src-services-ticketcreationresponse-ts",
+      "path": "frontend/src/services/ticketCreationResponse.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-frontend-src-services-ticketcreationresponse-test-ts",
+      "path": "frontend/src/services/ticketCreationResponse.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-frontend-src-hooks-useticketoperations-ts",
+      "path": "frontend/src/hooks/useTicketOperations.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-frontend-src-services-datalayer-ts",
+      "path": "frontend/src/services/dataLayer.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-cli-tests-e2e-ticket-template-diagnostics-spec-ts",
+      "path": "cli/tests/e2e/ticket/template-diagnostics.spec.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-cli-tests-e2e-helpers-cli-runner-ts",
+      "path": "cli/tests/e2e/helpers/cli-runner.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-shared-tests-services-mdt-261-create-diagnostics-test-ts",
+      "path": "shared/tests/services/MDT-261/create-diagnostics.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-mcp-server-src-tools-handlers-tests-create-diagnostics-test-ts",
+      "path": "mcp-server/src/tools/handlers/__tests__/create-diagnostics.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-server-tests-services-mdt-261-create-diagnostics-test-ts",
+      "path": "server/tests/services/MDT-261/create-diagnostics.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-plugins-tests-template-diagnostics-test-ts",
+      "path": "plugins/tests/template-diagnostics.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-docs-design-surfaces-ticket-creation-feedback-spec-md",
+      "path": "docs/design/surfaces/ticket-creation-feedback.spec.md",
+      "kind": "doc",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-docs-ticket-template-guard-md",
+      "path": "docs/TICKET_TEMPLATE_GUARD.md",
+      "kind": "doc",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-bun-lock",
+      "path": "bun.lock",
+      "kind": "config",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-package-lock-json",
+      "path": "package-lock.json",
+      "kind": "config",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-mcp-server-src-services-crservice-ts",
+      "path": "mcp-server/src/services/crService.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "ART-mcp-server-src-tools-handlers-tests-crhandlers-test-ts",
+      "path": "mcp-server/src/tools/handlers/__tests__/crHandlers.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md#verification-and-runtimetest-separation"
+    },
+    {
+      "id": "ART-mcp-server-src-tools-handlers-tests-crhandlers-worktree-test-ts",
+      "path": "mcp-server/src/tools/handlers/__tests__/crHandlers.worktree.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md#verification-and-runtimetest-separation"
+    },
+    {
+      "id": "ART-server-tests-mocks-shared-services-ticketservice-ts",
+      "path": "server/tests/mocks/shared/services/TicketService.ts",
+      "kind": "doc",
+      "sourceRef": "architecture.md#verification-and-runtimetest-separation"
+    },
+    {
+      "id": "ART-server-tests-unit-ticketservice-boundary-compatibility-test-ts",
+      "path": "server/tests/unit/TicketService.boundary-compatibility.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md#verification-and-runtimetest-separation"
+    },
+    {
+      "id": "ART-tests-e2e-ticket-template-warning-spec-ts",
+      "path": "tests/e2e/ticket/template-warning.spec.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md#verification-and-runtimetest-separation"
+    },
+    {
+      "id": "ART-frontend-src-test-setup-ts",
+      "path": "frontend/src/test-setup.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md#verification-and-runtimetest-separation"
+    },
+    {
+      "id": "ART-plugins-docs-coverage-md",
+      "path": "plugins/docs/coverage.md",
+      "kind": "doc",
+      "sourceRef": "architecture.md#verification-and-runtimetest-separation"
+    },
+    {
+      "id": "ART-dockerfile",
+      "path": "Dockerfile",
+      "kind": "config",
+      "sourceRef": "architecture.md#runtime-prerequisites"
+    },
+    {
+      "id": "ART-server-dockerfile",
+      "path": "server/Dockerfile",
+      "kind": "config",
+      "sourceRef": "architecture.md#runtime-prerequisites"
+    },
+    {
+      "id": "ART-mcp-server-dockerfile",
+      "path": "mcp-server/Dockerfile",
+      "kind": "config",
+      "sourceRef": "architecture.md#runtime-prerequisites"
+    },
+    {
+      "id": "ART-dockerignore",
+      "path": ".dockerignore",
+      "kind": "config",
+      "sourceRef": "architecture.md#runtime-prerequisites"
+    },
+    {
+      "id": "ART-docs-development-guide-md",
+      "path": "docs/DEVELOPMENT_GUIDE.md",
+      "kind": "doc",
+      "sourceRef": "architecture.md#extension-rule-and-owner-documents"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-content-inspection",
+      "kind": "unit",
+      "title": "Context-sensitive instructions, boilerplate and allowed examples",
+      "covers": [
+        "BR-2.1",
+        "BR-2.2",
+        "OBL-policy"
+      ],
+      "file": "shared/tests/services/MDT-261/content-inspection.test.ts",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "TEST-template-catalog",
+      "kind": "integration",
+      "title": "Built-in/fallback prompt ownership across all ticket types",
+      "covers": [
+        "C3",
+        "OBL-policy"
+      ],
+      "file": "shared/tests/services/MDT-261/template-catalog.test.ts",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "TEST-diagnostic-contract",
+      "kind": "unit",
+      "title": "Canonical operation diagnostic schema",
+      "covers": [
+        "C1",
+        "C2"
+      ],
+      "file": "domain-contracts/src/ticket/__tests__/creation-result.test.ts",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "TEST-browser-creation-feedback",
+      "kind": "unit",
+      "title": "Successful browser creation with persistent deduplicated diagnostic",
+      "covers": [
+        "BR-1.3",
+        "C1",
+        "C2",
+        "OBL-creation"
+      ],
+      "file": "frontend/src/services/ticketCreationResponse.test.ts",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "TEST-create-template-diagnostics",
+      "kind": "e2e",
+      "title": "Compiled CLI success and body diagnostic",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "OBL-creation"
+      ],
+      "file": "cli/tests/e2e/ticket/template-diagnostics.spec.ts",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "TEST-staged-template-validation",
+      "kind": "e2e",
+      "title": "Real index snapshot, scope, path safety and failed validation",
+      "covers": [
+        "BR-2.1",
+        "BR-2.2",
+        "BR-2.3",
+        "BR-2.4",
+        "BR-2.5",
+        "C4",
+        "C5",
+        "C6",
+        "Edge-1",
+        "Edge-2",
+        "OBL-staged"
+      ],
+      "file": "cli/tests/e2e/ticket/validate.spec.ts",
+      "sourceRef": "architecture.md"
+    },
+    {
+      "id": "TEST-shared-creation-operation",
+      "kind": "integration",
+      "title": "Actual formatter outcome, entity compatibility and no persistence of diagnostics",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "C1",
+        "C2",
+        "OBL-creation"
+      ],
+      "file": "shared/tests/services/MDT-261/create-diagnostics.test.ts",
+      "sourceRef": "tests.md"
+    },
+    {
+      "id": "TEST-mcp-creation-forwarding",
+      "kind": "integration",
+      "title": "MCP renders shared warning once while preserving successful creation",
+      "covers": [
+        "BR-1.3",
+        "C1",
+        "OBL-creation"
+      ],
+      "file": "mcp-server/src/tools/handlers/__tests__/create-diagnostics.test.ts",
+      "sourceRef": "tests.md"
+    },
+    {
+      "id": "TEST-http-creation-forwarding",
+      "kind": "integration",
+      "title": "HTTP retains legacy fields and forwards operation metadata",
+      "covers": [
+        "BR-1.3",
+        "C1",
+        "C2",
+        "OBL-creation"
+      ],
+      "file": "server/tests/services/MDT-261/create-diagnostics.test.ts",
+      "sourceRef": "tests.md"
+    },
+    {
+      "id": "TEST-native-creation-forwarding",
+      "kind": "integration",
+      "title": "Both installed and shared native runners preserve actual CLI envelope",
+      "covers": [
+        "BR-1.3",
+        "C1",
+        "OBL-creation"
+      ],
+      "file": "plugins/tests/template-diagnostics.test.ts",
+      "sourceRef": "tests.md"
+    },
+    {
+      "id": "TEST-browser-creation-live",
+      "kind": "e2e",
+      "title": "Real browser DataLayer and HTTP result render persistent dismissible feedback",
+      "covers": [
+        "BR-1.1",
+        "BR-1.3",
+        "OBL-creation"
+      ],
+      "file": "tests/e2e/ticket/template-warning.spec.ts",
+      "sourceRef": "tests.md"
+    },
+    {
+      "id": "TEST-effective-local-hook",
+      "kind": "e2e",
+      "title": "Actual effective Lefthook job and isolated commits block scaffolds and missing validator",
+      "covers": [
+        "BR-2.1",
+        "BR-2.5",
+        "C4",
+        "C5",
+        "C6",
+        "OBL-staged"
+      ],
+      "file": "cli/tests/e2e/ticket/template-hook.spec.ts",
+      "sourceRef": "tests.md"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-1",
+      "title": "Canonical content policy and template source",
+      "ownsArtifactIds": [
+        "ART-domain-contracts-src-ticket-creation-result-ts",
+        "ART-domain-contracts-src-ticket-index-ts",
+        "ART-shared-templates-catalog-ts",
+        "ART-shared-templates-legacy-instructions-ts",
+        "ART-shared-services-templateservice-ts",
+        "ART-shared-services-ticket-content-inspection-ts",
+        "ART-scripts-generate-ticket-templates-ts",
+        "ART-shared-package-json",
+        "ART-shared-templates-architecture-md",
+        "ART-shared-templates-bug-fix-md",
+        "ART-shared-templates-feature-enhancement-md",
+        "ART-shared-templates-technical-debt-md",
+        "ART-shared-templates-documentation-md",
+        "ART-shared-templates-research-md",
+        "ART-shared-templates-templates-json",
+        "ART-shared-tests-services-mdt-261-content-inspection-test-ts",
+        "ART-shared-tests-services-mdt-261-template-catalog-test-ts",
+        "ART-domain-contracts-src-ticket-tests-creation-result-test-ts"
+      ],
+      "makesGreenIds": [
+        "TEST-content-inspection",
+        "TEST-template-catalog",
+        "TEST-diagnostic-contract"
+      ],
+      "skills": [
+        "mdt:implement"
+      ],
+      "sourceRef": "CR:MDT-261"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Offline staged CLI and local hook",
+      "ownsArtifactIds": [
+        "ART-shared-services-ticket-staged-validation-ts",
+        "ART-cli-src-commands-validate-ts",
+        "ART-cli-src-index-ts",
+        "ART-cli-src-output-formatter-ts",
+        "ART-scripts-check-ticket-templates-sh",
+        "ART-lefthook-yml",
+        "ART-cli-mdt-cli-skill-md",
+        "ART-scripts-agents-md",
+        "ART-cli-tests-e2e-ticket-validate-spec-ts",
+        "ART-cli-tests-e2e-ticket-template-hook-spec-ts"
+      ],
+      "makesGreenIds": [
+        "TEST-staged-template-validation",
+        "TEST-effective-local-hook",
+        "unfinished_staged_body",
+        "genuine_staged_body",
+        "staged_version_wins",
+        "changed_primary_scope",
+        "validator_failure_visible"
+      ],
+      "skills": [
+        "mdt:implement"
+      ],
+      "sourceRef": "CR:MDT-261"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Shared creation result and every transport adapter",
+      "ownsArtifactIds": [
+        "ART-shared-services-ticketservice-ts",
+        "ART-cli-src-commands-create-ts",
+        "ART-cli-src-output-structured-ts",
+        "ART-mcp-server-src-tools-handlers-crhandlers-ts",
+        "ART-server-services-ticketservice-ts",
+        "ART-frontend-src-services-ticketcreationresponse-ts",
+        "ART-frontend-src-services-ticketcreationresponse-test-ts",
+        "ART-frontend-src-hooks-useticketoperations-ts",
+        "ART-frontend-src-services-datalayer-ts",
+        "ART-cli-tests-e2e-ticket-template-diagnostics-spec-ts",
+        "ART-cli-tests-e2e-helpers-cli-runner-ts",
+        "ART-shared-tests-services-mdt-261-create-diagnostics-test-ts",
+        "ART-mcp-server-src-tools-handlers-tests-create-diagnostics-test-ts",
+        "ART-server-tests-services-mdt-261-create-diagnostics-test-ts",
+        "ART-plugins-tests-template-diagnostics-test-ts",
+        "ART-docs-design-surfaces-ticket-creation-feedback-spec-md",
+        "ART-docs-ticket-template-guard-md",
+        "ART-bun-lock",
+        "ART-package-lock-json",
+        "ART-mcp-server-src-services-crservice-ts",
+        "ART-mcp-server-src-tools-handlers-tests-crhandlers-test-ts",
+        "ART-mcp-server-src-tools-handlers-tests-crhandlers-worktree-test-ts",
+        "ART-server-tests-mocks-shared-services-ticketservice-ts",
+        "ART-server-tests-unit-ticketservice-boundary-compatibility-test-ts",
+        "ART-tests-e2e-ticket-template-warning-spec-ts",
+        "ART-frontend-src-test-setup-ts",
+        "ART-plugins-docs-coverage-md",
+        "ART-dockerfile",
+        "ART-server-dockerfile",
+        "ART-mcp-server-dockerfile",
+        "ART-dockerignore",
+        "ART-docs-development-guide-md"
+      ],
+      "makesGreenIds": [
+        "TEST-create-template-diagnostics",
+        "TEST-browser-creation-feedback",
+        "TEST-shared-creation-operation",
+        "TEST-mcp-creation-forwarding",
+        "TEST-http-creation-forwarding",
+        "TEST-native-creation-forwarding",
+        "TEST-browser-creation-live",
+        "generated_body_notice",
+        "authored_body_clean",
+        "supplied_instruction_notice"
+      ],
+      "skills": [
+        "mdt:implement",
+        "mdt-frontend"
+      ],
+      "sourceRef": "CR:MDT-261"
+    }
+  ]
+}

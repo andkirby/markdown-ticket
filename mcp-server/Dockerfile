@@ -10,6 +10,8 @@ WORKDIR /app
 # Copy workspace root package.json and shared package.json (workspace monorepo)
 COPY package*.json ./
 COPY tsconfig.shared.json ./
+# Shared build verifies generated ticket templates against the catalog.
+COPY scripts/generate-ticket-templates.ts ./scripts/generate-ticket-templates.ts
 
 # Development stage
 FROM base AS development

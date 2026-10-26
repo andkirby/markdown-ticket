@@ -1,3 +1,4 @@
+import type { CreationRecoveryInspection, CreationRecoveryOutcome, CreationRecoveryReconcileInput, CreationRecoveryResumeInput, PatchTicketInput, TicketDiagnostic, TicketIdentityDiagnostic, TicketUpdateAttrs, UnifiedTicketItem } from '@mdt/domain-contracts'
 /* eslint-disable ts/no-unsafe-type-assertion -- MDT-258 baseline: pre-existing casts, strip as they are rewritten */
 /**
  * Web Server Ticket Service Adapter
@@ -6,7 +7,6 @@
  * Per MDT-082: Uses consolidated CRUD operations from shared layer.
  */
 
-import type { CreationRecoveryInspection, CreationRecoveryOutcome, CreationRecoveryReconcileInput, CreationRecoveryResumeInput, PatchTicketInput, TicketIdentityDiagnostic, TicketUpdateAttrs, UnifiedTicketItem } from '@mdt/domain-contracts'
 import type { Project } from '@mdt/shared/models/Project.js'
 import type { Ticket, TicketData } from '@mdt/shared/models/Ticket.js'
 import type { CRStatus } from '@mdt/shared/models/Types.js'
@@ -43,6 +43,8 @@ interface SearchResponse {
 }
 
 export interface CreateCRResult {
+  ticket: Ticket
+  diagnostics: TicketDiagnostic[]
   success: boolean
   message: string
   crCode: string
@@ -343,19 +345,21 @@ export class TicketService {
       type,
       priority: priority || 'Medium',
       level: level || undefined,
-      content: description
+      content: description?.trim()
         ? `## 1. Description\n\n${description}\n\n`
         : undefined,
     }
 
     // Use shared service to create CR
-    const ticket = await this.sharedTicketService.createCR(
+    const { ticket, diagnostics } = await this.sharedTicketService.createCRWithDiagnostics(
       project,
       type,
       ticketData,
     )
 
     return {
+      ticket,
+      diagnostics,
       success: true,
       message: 'CR created successfully',
       crCode: ticket.code,

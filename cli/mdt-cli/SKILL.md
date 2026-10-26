@@ -95,6 +95,33 @@ Creates a ticket with default metadata and prints the key and path.
 **Type tokens**: `bug`, `feature`, `architecture`, `tech-debt`, `documentation`, `research`
 **Priority tokens**: `critical`/`p1`, `high`/`p2`, `medium`/`p3`, `low`/`p4`
 
+## Validate Staged Tickets
+
+```bash
+mdt-cli ticket validate --staged
+mdt-cli ticket validate --staged --json
+mdt-cli ticket validate --staged --yaml
+```
+
+Validates complete staged primary ticket Markdown files using the Git index's
+`.mdt-config.toml`, configured ticket path and project code. This offline guard
+does not resolve a runtime project, access cloud services or read working ticket
+files. It includes added, modified and renamed tickets and epics; unchanged
+historical tickets, deletions and ticket subdocuments are excluded.
+
+Exit 0 means clean or not applicable (no staged/historically tracked root MDT
+configuration). Exit 1 means unfinished content or an actionable validator/config
+failure. `--staged` is required. JSON/YAML retain the standard `ticket.validate`
+envelope and diagnostics; validation failures use the existing error stream.
+An unstaged fix cannot hide staged instructions, and an unstaged instruction
+cannot block clean staged content. Correct the reported content, stage it and
+retry. No broad ban on planning words or brackets is applied.
+
+The local Lefthook launcher requires Bun and built MDT domain/shared/CLI
+packages; it never installs dependencies or silently skips an unavailable
+validator. Native creation tools preserve creation diagnostics through their
+CLI output; this repository guard command does not require a native tool.
+
 ## Rename
 
 ```bash

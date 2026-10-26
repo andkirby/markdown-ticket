@@ -28,6 +28,9 @@ export interface CliResult {
  * Options for running the CLI
  */
 export interface CliRunOptions {
+  /** Override the CLI entry point for acceptance tests against compiled output. */
+  entrypoint?: string
+
   /**
    * Current working directory for the CLI process
    */
@@ -62,6 +65,7 @@ export async function runCli(args: string[], options: CliRunOptions = {}): Promi
     env = {},
     timeout = 15000,
     stdin: stdinContent,
+    entrypoint = CLI_PATH,
   } = options
 
   // Set NO_COLOR=1 by default for deterministic output matching
@@ -75,7 +79,7 @@ export async function runCli(args: string[], options: CliRunOptions = {}): Promi
     let stderr = ''
     let timedOut = false
 
-    const child = spawn('bun', [CLI_PATH, ...args], {
+    const child = spawn('bun', [entrypoint, ...args], {
       cwd,
       env: { ...process.env, ...cliEnv } as Record<string, string>,
       stdio: 'pipe',

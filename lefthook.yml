@@ -24,6 +24,13 @@ remotes:
       # See docs/semantic-classes.md in agent-commit-hooks for the full concept.
       - configs/general/enforce-semantic-classes.yml
 
+pre-commit:
+  commands:
+    mdt-ticket-templates:
+      run: sh scripts/check-ticket-templates.sh
+
+# MDT-261 verifies that the tracked command above survives the complete effective
+# config on the installed Lefthook 2.1.8. Recheck merging when changing versions.
 # NOTE: the parse-css gate lives in lefthook-local.yml (not here).
 # A local pre-commit > commands block in lefthook.yml is OVERRIDDEN by the
 # remote pre-commit > scripts brought in above (lefthook 2.1.10 does not

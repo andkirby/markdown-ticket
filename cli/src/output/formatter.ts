@@ -8,13 +8,42 @@
  * call formatter functions and console.log/print the result.
  */
 
+import type { StagedTicketValidationResult, TicketDiagnostic } from '@mdt/domain-contracts'
 import type { Project } from '@mdt/shared/models/Project.js'
 import type { Ticket } from '@mdt/shared/models/Ticket.js'
 import type { AttrOperation } from '@mdt/shared/services/ticket/types.js'
 import { readdirSync, statSync } from 'node:fs'
-import { dirname, resolve } from 'node:path'
+import { dirname, isAbsolute, relative, resolve } from 'node:path'
 import { getCliConfig } from '../utils/cliConfig.js'
 import { colorizePath, colorizePriority, colorizeProjectCode, colorizeProjectId, colorizeStatus, colorizeTicketKey, colorizeTitle, colorizeType, shouldUseColor, statusDisplayLabel, visiblePadEnd } from './colors.js'
+
+/** Present shared diagnostic data; policy and message construction stay shared. */
+export function formatTicketDiagnostics(diagnostics: TicketDiagnostic[], projectRoot?: string): string {
+  return diagnostics.map((diagnostic) => {
+    const filePath = projectRoot && isAbsolute(diagnostic.filePath)
+      ? relative(projectRoot, diagnostic.filePath)
+      : diagnostic.filePath
+    const location = diagnostic.line ? `${filePath}:${diagnostic.line}` : filePath
+    const lines = [`${diagnostic.severity.toUpperCase()} ${diagnostic.code} ${diagnostic.ticketKey} ${location}`, diagnostic.message]
+    if (diagnostic.section)
+      lines.push(`Section: ${diagnostic.section}`)
+    if (diagnostic.instruction)
+      lines.push(`Instruction: ${diagnostic.instruction}`)
+    if (diagnostic.correction && !diagnostic.message.includes(diagnostic.correction))
+      lines.push(`Correction: ${diagnostic.correction}`)
+    return lines.join('\n')
+  }).join('\n\n')
+}
+
+export function formatTicketValidation(result: StagedTicketValidationResult): string {
+  if (!result.applicable)
+    return 'No staged MDT project configuration; ticket validation is not applicable.'
+  const summary = result.diagnostics.length > 0
+    ? `Staged ticket validation failed (${result.checked} ticket(s) checked).`
+    : `Staged ticket validation passed (${result.checked} ticket(s) checked).`
+  const diagnostics = formatTicketDiagnostics(result.diagnostics)
+  return diagnostics ? `${summary}\n\n${diagnostics}` : summary
+}
 
 /**
  * Format ticket details for console output

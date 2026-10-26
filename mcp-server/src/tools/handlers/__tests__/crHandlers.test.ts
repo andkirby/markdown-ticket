@@ -74,6 +74,10 @@ describe('cRHandlers - Behavioral Preservation Tests', () => {
       listCRs: jest.fn(),
       getCR: jest.fn(),
       createCR: jest.fn(),
+      createCRWithDiagnostics: jest.fn().mockImplementation(async (...args: Parameters<CRService['createCR']>) => {
+        const ticket = await mockCrServiceInstance.createCR(...args)
+        return { ticket, diagnostics: [{ code: 'TICKET_TEMPLATE_UNFILLED', severity: 'warning', message: 'Fixture shared notice: replace unfinished content before committing.', ticketKey: ticket.code, filePath: ticket.filePath }] }
+      }),
       updateCRStatus: jest.fn(),
       updateCRAttrs: jest.fn(),
       deleteCR: jest.fn(),
@@ -379,9 +383,9 @@ describe('cRHandlers - Behavioral Preservation Tests', () => {
 
       const result = await crHandlers.handleCreateCR(mockProject, 'Bug Fix', dataWithoutContent)
 
-      expect(result).toContain('The CR has been created with a complete template including:')
-      expect(result).toContain('- Problem statement and description')
-      expect(result).toContain('- Standard CR sections ready for completion')
+      expect(result).toContain('Fixture shared notice: replace unfinished content before committing.')
+      expect(result).toContain('TICKET_TEMPLATE_UNFILLED')
+      expect(mockCrServiceInstance.createCRWithDiagnostics).toHaveBeenCalledTimes(1)
     })
   })
 

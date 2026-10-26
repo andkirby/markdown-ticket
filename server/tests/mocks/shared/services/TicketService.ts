@@ -182,6 +182,10 @@ export class TicketService {
   /**
    * Create a new CR
    */
+  async createCRWithDiagnostics(project: ServiceProject, type: string, data: Partial<Ticket>) {
+    return { ticket: await this.createCR(project, type, data), diagnostics: [] }
+  }
+
   async createCR(
     project: ServiceProject,
     type: string,

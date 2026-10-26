@@ -1,7 +1,7 @@
 ---
 code: MDT-261
 creationId: e464ccae-fef9-46c6-ade9-9b1e83e50e98
-status: Proposed
+status: Implemented
 dateCreated: 2026-10-24T12:37:52.554Z
 type: Feature Enhancement
 priority: Medium
@@ -26,7 +26,7 @@ relatedTickets: MDT-233,MDT-229
 - domain-contracts: canonical diagnostic and operation-result contracts.
 - cli: human and structured creation output; content-validation entry point.
 - mcp-server: creation tool responses.
-- plugins/dsh: preservation of diagnostics returned by CLI-backed native tools.
+- plugins: preservation of CLI diagnostics through the shared BB and DSH native-tool adapters.
 - server: HTTP creation-result propagation; frontend creation feedback where applicable.
 - scripts and Lefthook: local commit enforcement and verification.
 
@@ -84,49 +84,52 @@ relatedTickets: MDT-233,MDT-229
 
 | Area | Decision to resolve during architecture | Constraint |
 |------|------------------------------------------|------------|
-| Compatibility | How should shared create operations expose diagnostics without breaking existing consumers? | Keep diagnostics outside the persisted ticket and preserve existing transport contracts where possible |
-| Templates | What exact marker syntax and instruction catalog should be canonical? | Cover file and fallback generation, legacy recognition and future template changes without duplicated policy |
-| Content inspection | What constitutes an empty scaffold, and how are examples distinguished from instructions? | Accept concise real tickets and future-stage omissions; reject remaining intake scaffolding |
-| Local hooks | How should the tracked local hook be wired alongside remote Lefthook scripts? | Verify the effective merged configuration; do not rely on ignored local configuration as the sole distributable integration |
-| Broader rollout | What dependency/version contract will the shared hook require from MDT? | Prove locally first, then update $HOME/home/commithooks/ with recorded compatibility evidence |
+| Compatibility | Add createCRWithDiagnostics; retain entity-returning createCR | Keep diagnostics outside the persisted ticket and preserve existing transport contracts where possible |
+| Templates | Compiled catalog, generated projections and explicit mdt:placeholder markers plus legacy compatibility | Cover file and fallback generation, legacy recognition and future template changes without duplicated policy |
+| Content inspection | Markdown context parsing excludes literal examples; known boilerplate alone is empty | Accept concise real tickets and future-stage omissions; reject remaining intake scaffolding |
+| Local hooks | Tracked pre-commit command, verified through effective config and actual registered job | Verify the effective merged configuration; do not rely on ignored local configuration as the sole distributable integration |
+| Broader rollout | Local command/build contract documented; broader shared-hooks distribution remains separately gated | Prove locally first, then update $HOME/home/commithooks/ with recorded compatibility evidence |
 
 ### Known Constraints
 - User approved local Lefthook work first and shared-hooks rollout only after verification.
-- DSH currently exposes a creation tool without a body parameter; it must still receive the diagnostic and file location. Adding new authoring tools is not a prerequisite for this guard.
+- BB and DSH expose the shared CLI-backed creation tool with optional body input; both must preserve diagnostics and file location whether a body is supplied or omitted. Adding new authoring tools is not a prerequisite for this guard.
 - Existing unrelated worktree changes must remain untouched.
 
-### Decisions Deferred
-- Exact shared operation API, template marker syntax, detector implementation and command syntax belong to architecture.
-- Detailed implementation tasks and automated test layout follow the requirements and architecture stages.
+### Delivery Decisions
+- Approved architecture defines createCRWithDiagnostics, marked compiled templates, context-aware inspection and ticket validate --staged.
+- Canonical task and test-plan links cover policy/contracts, staged enforcement and all creation consumers; see the ticket artifact directory.
 - CI wiring may reuse the same validator after local verification; it must not introduce a second detector or require historical ticket cleanup as part of unrelated changes.
 
 ## 4. Acceptance Criteria
 
 ### Functional
-- [ ] Creating a ticket without body content through each supported creation entry point exposes the same actionable shared diagnostic while reporting successful creation.
-- [ ] CLI JSON and YAML retain valid structured envelopes containing diagnostics; CLI human output and MCP render them visibly; DSH preserves them in model-visible tool output.
-- [ ] HTTP creation results preserve the same diagnostics, and applicable frontend feedback makes the unfinished-body state visible.
-- [ ] Supplying genuine ticket content does not emit a template-generated notice; supplying recognized placeholders still reports the actual content issue.
-- [ ] A staged document reproducing MDT-233 is rejected, including its fallback-template wording.
-- [ ] A partially completed ticket is rejected when a recognized non-deferred instruction remains.
-- [ ] A headings-only or boilerplate-only ticket body is rejected, while a concise ticket with actual problem and outcome content is accepted.
-- [ ] Diagnostic contracts, detection rules and canonical message text have one owner each; CLI, MCP, HTTP and DSH contain no independent copies of the placeholder policy.
+- [x] Creating a ticket without body content through each supported creation entry point exposes the same actionable shared diagnostic while reporting successful creation.
+- [x] CLI JSON and YAML retain valid structured envelopes containing diagnostics; CLI human output and MCP render them visibly; DSH preserves them in model-visible tool output.
+- [x] HTTP creation results preserve the same diagnostics, and applicable frontend feedback makes the unfinished-body state visible.
+- [x] Supplying genuine ticket content does not emit a template-generated notice; supplying recognized placeholders still reports the actual content issue.
+- [x] A staged document reproducing MDT-233 is rejected, including its fallback-template wording.
+- [x] A partially completed ticket is rejected when a recognized non-deferred instruction remains.
+- [x] A headings-only or boilerplate-only ticket body is rejected, while a concise ticket with actual problem and outcome content is accepted.
+- [x] Diagnostic contracts, detection rules and canonical message text have one owner each; CLI, MCP, HTTP and DSH contain no independent copies of the placeholder policy.
 
 ### Non-Functional
-- [ ] The hook validates staged content without reading a live MDT runtime, performing network requests or modifying/staging files.
-- [ ] Existing machine consumers remain compatible, or an explicit tested compatibility path is documented.
-- [ ] Unchanged historical tickets and unrelated Markdown files do not block a commit.
-- [ ] Local enforcement and its effective Lefthook configuration are verified before changes are rolled out through $HOME/home/commithooks/.
+- [x] The hook validates staged content without reading a live MDT runtime, performing network requests or modifying/staging files.
+- [x] Existing machine consumers remain compatible, or an explicit tested compatibility path is documented.
+- [x] Unchanged historical tickets and unrelated Markdown files do not block a commit.
+- [x] Local enforcement and its effective Lefthook configuration are verified before changes are rolled out through $HOME/home/commithooks/.
 
 ### Edge Cases
-- [ ] Missing, empty and whitespace-only body inputs follow a documented shared normalization rule across entry points.
-- [ ] An unstaged fix cannot conceal placeholders still staged for commit; an unstaged placeholder cannot block a clean staged version.
-- [ ] Renamed tickets and paths containing spaces are validated correctly; deleted tickets are skipped.
-- [ ] Examples, Markdown links, legitimate technical brackets and ordinary TODO/TBD prose do not cause false blocking.
-- [ ] Future-stage omissions and permitted legacy Implementation Notes do not force premature workflow completion.
-- [ ] A required validator failure is reported explicitly instead of silently bypassing the check.
+- [x] Missing, empty and whitespace-only body inputs follow a documented shared normalization rule across entry points.
+- [x] An unstaged fix cannot conceal placeholders still staged for commit; an unstaged placeholder cannot block a clean staged version.
+- [x] Renamed tickets and paths containing spaces are validated correctly; deleted tickets are skipped.
+- [x] Examples, Markdown links, legitimate technical brackets and ordinary TODO/TBD prose do not cause false blocking.
+- [x] Future-stage omissions and permitted legacy Implementation Notes do not force premature workflow completion.
+- [x] A required validator failure is reported explicitly instead of silently bypassing the check.
 
 ## 5. Verification
+
+- Pipeline artifacts: [assessment](./MDT-261/assess.md), [requirements](./MDT-261/requirements.md), [acceptance strategy](./MDT-261/bdd.md), [architecture draft](./MDT-261/architecture.md), [Lefthook probe](./MDT-261/poc.md).
+- Local implementation passed all 17 deterministic checks and independent review of all 16 requirements. See [delivery result](./MDT-261/result.md), [architecture](./MDT-261/architecture.md) and [verification specification](./MDT-261/tests.md).
 
 ### How to Verify Success
 - Automated: exercise creation diagnostics across shared, CLI structured/human output, MCP, DSH passthrough and HTTP propagation; confirm one diagnostic is surfaced per underlying finding.

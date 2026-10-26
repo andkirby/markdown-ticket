@@ -327,7 +327,7 @@ export class CRHandlers {
       processedData.content = contentProcessingResult.content
     }
 
-    const ticket = await this.crService.createCR(
+    const { ticket, diagnostics } = await this.crService.createCRWithDiagnostics(
       project,
       typeValidation.value as string,
       processedData,
@@ -369,19 +369,10 @@ export class CRHandlers {
       }
     }
 
-    if (!data.content) {
+    for (const diagnostic of diagnostics) {
       lines.push('')
-      lines.push('The CR has been created with a complete template including:')
-      lines.push('- Problem statement and description')
-      if (data.impactAreas) {
-        lines.push(`- Impact areas (${data.impactAreas.join(', ')})`)
-      }
-      lines.push('- Standard CR sections ready for completion')
-      lines.push('- YAML frontmatter with all metadata')
-      lines.push('')
-      lines.push(
-        'Next step: Update the CR with detailed implementation specifications.',
-      )
+      lines.push(`⚠️ **${diagnostic.code}**: ${diagnostic.message}`)
+      lines.push(`- Ticket: ${diagnostic.ticketKey}; file: ${diagnostic.filePath}`)
     }
 
     return lines.join('\n')

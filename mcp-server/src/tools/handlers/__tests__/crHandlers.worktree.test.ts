@@ -42,6 +42,7 @@ describe('CRHandlers - Worktree Integration (MDT-095)', () => {
       listCRs: jest.fn(),
       getCR: jest.fn(),
       createCR: jest.fn(),
+      createCRWithDiagnostics: jest.fn().mockImplementation(async (...args: Parameters<CRService['createCR']>) => ({ ticket: await mockCrServiceInstance.createCR(...args), diagnostics: [] })),
       updateCRStatus: jest.fn(),
       updateCRAttrs: jest.fn(),
       deleteCR: jest.fn(),

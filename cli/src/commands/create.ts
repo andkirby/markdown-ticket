@@ -13,7 +13,7 @@ import process from 'node:process'
 import { CRPriorities, CRTypes } from '@mdt/domain-contracts/types'
 import { ProjectService } from '@mdt/shared/services/ProjectService.js'
 import { TicketService } from '@mdt/shared/services/TicketService.js'
-import { formatTicketCreate } from '../output/formatter.js'
+import { formatTicketCreate, formatTicketDiagnostics } from '../output/formatter.js'
 import { CliCommandError, formatTicketForStructured, getOutputFormat, writeStructuredSuccess } from '../output/structured.js'
 import { DEFAULT_PRIORITY, DEFAULT_TYPE, PRIORITY_TOKENS, TYPE_TOKENS } from '../utils/aliases.js'
 import { readStdin } from '../utils/stdin.js'
@@ -247,7 +247,7 @@ export async function ticketCreateAction(
 
   // Create the ticket via TicketService
   const ticketService = new TicketService(true)
-  const ticket = await ticketService.createCR(project, type, ticketData)
+  const { ticket, diagnostics } = await ticketService.createCRWithDiagnostics(project, type, ticketData)
 
   const outputFormat = getOutputFormat(options)
   if (outputFormat !== 'human') {
@@ -262,6 +262,7 @@ export async function ticketCreateAction(
         projectCode: project.project.code,
         projectId: project.id,
       },
+      diagnostics,
     )
     return
   }
@@ -269,4 +270,6 @@ export async function ticketCreateAction(
   // Print success message
   const projectPath = project.project.path
   console.log(formatTicketCreate(ticket.code, ticket.filePath, projectPath))
+  if (diagnostics.length > 0)
+    console.log(formatTicketDiagnostics(diagnostics, projectPath))
 }

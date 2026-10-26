@@ -1,8 +1,10 @@
+import type { TicketDiagnostic } from '@mdt/domain-contracts'
 import type { Project } from '@mdt/shared/models/Project.js'
 import type { Ticket } from '@mdt/shared/models/Ticket.js'
 import type { AttrUpdateResult } from './formatter.js'
 import { readdirSync, statSync } from 'node:fs'
 import path from 'node:path'
+import process from 'node:process'
 import { statusDisplayLabel } from './colors.js'
 
 type OutputFormat = 'human' | 'json' | 'yaml'
@@ -18,7 +20,7 @@ interface StructuredEnvelope {
   command: string
   data?: unknown
   meta?: Record<string, unknown>
-  diagnostics: unknown[]
+  diagnostics: TicketDiagnostic[]
   error?: {
     code: string
     message: string
@@ -68,7 +70,7 @@ function formatStructuredSuccess(
   command: string,
   data: unknown,
   meta: Record<string, unknown> = {},
-  diagnostics: unknown[] = [],
+  diagnostics: TicketDiagnostic[] = [],
 ): string {
   return serialize(format, {
     schemaVersion: 1,
@@ -84,7 +86,7 @@ function formatStructuredError(
   format: Exclude<OutputFormat, 'human'>,
   command: string,
   error: unknown,
-  diagnostics: unknown[] = [],
+  diagnostics: TicketDiagnostic[] = [],
 ): string {
   return serialize(format, {
     schemaVersion: 1,
@@ -100,7 +102,7 @@ export function writeStructuredSuccess(
   command: string,
   data: unknown,
   meta: Record<string, unknown> = {},
-  diagnostics: unknown[] = [],
+  diagnostics: TicketDiagnostic[] = [],
 ): void {
   console.log(formatStructuredSuccess(format, command, data, meta, diagnostics))
 }
@@ -109,7 +111,7 @@ export function writeStructuredError(
   format: Exclude<OutputFormat, 'human'>,
   command: string,
   error: unknown,
-  diagnostics: unknown[] = [],
+  diagnostics: TicketDiagnostic[] = [],
 ): void {
   console.error(formatStructuredError(format, command, error, diagnostics))
 }
@@ -199,7 +201,7 @@ function normalizeError(error: unknown): StructuredEnvelope['error'] {
   }
 
   if (error instanceof Error) {
-    const withCode = error as Error & { code?: string; details?: Record<string, unknown> }
+    const withCode = error as Error & { code?: string, details?: Record<string, unknown> }
     return {
       code: withCode.code || 'CLI_ERROR',
       message: error.message,

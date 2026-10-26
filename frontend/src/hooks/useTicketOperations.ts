@@ -4,6 +4,7 @@ import { CRStatus, CRType } from '@mdt/domain-contracts'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { authFetch } from '../auth/authFetch'
 import { useTicketPosition } from '../components/Column/useTicketPosition'
+import { readTicketCreationResponse } from '../services/ticketCreationResponse'
 
 export function useTicketOperations(
   selectedProject: Project | null,
@@ -53,7 +54,7 @@ export function useTicketOperations(
         throw new Error(errorData.error || `HTTP ${response.status}`)
       }
 
-      const newTicket = await response.json()
+      const newTicket = readTicketCreationResponse(await response.json())
 
       // Add to local state immediately
       setTickets((prev: Ticket[]) => [...prev, newTicket])

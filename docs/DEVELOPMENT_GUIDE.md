@@ -124,7 +124,7 @@ server/
 - `services/ProjectService.ts` - Multi-project discovery
 - `services/MarkdownService.ts` - YAML frontmatter parsing
 - `services/TemplateService.ts` - CR template management
-- `templates/` - File-based templates for each CR type
+- `templates/` - Compiled built-in catalog, generated file projections and legacy instruction compatibility
 
 **Build Required:** Run `bun run build:shared` to compile TypeScript (auto-done by `dev:full`)
 
@@ -213,8 +213,8 @@ shared/
 **See [create_ticket.md](create_ticket.md) for CR structure and workflow.**
 
 1. Add enum to `domain-contracts/src/types/schema.ts` (use type-safe enum pattern)
-2. Create template file in `shared/templates/`
-3. Update `shared/templates/templates.json`
+2. Add the type and intake prompts to `shared/templates/catalog.ts`; generated prompts use deterministic placeholder markers
+3. Compile with `bun run --cwd shared build:tools`, run `bun scripts/generate-ticket-templates.ts`, then `bun scripts/generate-ticket-templates.ts --check` to refresh and verify the Markdown/JSON projections
 4. Update frontend type dropdowns
 5. Test with MCP server
 
@@ -226,9 +226,11 @@ shared/
 5. Update templates if needed
 
 ### Working with Templates
-- Template files: `shared/templates/*.md`
-- Template config: `shared/templates/templates.json`
-- Template service: `shared/services/TemplateService.ts`
+- Authored built-in source: `shared/templates/catalog.ts`
+- Generated projections: `shared/templates/*.md` and `shared/templates/templates.json`; do not edit these independently
+- Generation/check command: `bun scripts/generate-ticket-templates.ts [--check]` after catalog compilation; after editing the catalog, run `bun run --cwd shared build:tools` to compile before regenerating (the regular build intentionally reports stale projections)
+- Template service: `shared/services/TemplateService.ts`; built-ins and fallback share the compiled catalog, while explicit custom file overrides remain supported
+- Creation diagnostics and staged commit validation: [Ticket template guard](TICKET_TEMPLATE_GUARD.md)
 
 ### Debugging Issues
 1. **Use MCP development tools** for real-time log monitoring
@@ -292,9 +294,9 @@ Do not store the owner token in localStorage, sessionStorage, frontend code, or 
 3. Rebuild dependents after domain-contracts changes: `bun run build:all`
 
 #### Template Issues
-1. Check template files exist in `shared/templates/`
-2. Verify `templates.json` configuration
-3. Ensure TemplateService can read files
+1. Edit built-in definitions in `shared/templates/catalog.ts`, then compile with `bun run --cwd shared build:tools` and regenerate with `bun scripts/generate-ticket-templates.ts`
+2. Run `bun scripts/generate-ticket-templates.ts --check`; regular shared builds reject stale Markdown/JSON projections
+3. For explicit custom overrides, verify the supplied directory and `templates.json`; use placeholder markers in custom instructions so the guard can identify unfinished content
 
 ---
 

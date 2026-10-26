@@ -1,6 +1,6 @@
 # Native tool coverage
 
-Scope: all non-cloud MDT operations and all operational spec-trace commands. CLI aliases reuse the same native operation. Help, version and presentation-format switches are CLI utilities rather than separate tools. Tool definitions are maintained in [`../_lib/`](../_lib/mdt-tools.js).
+Scope: ticket/project authoring operations and operational spec-trace commands. `ticket validate --staged` is a local Git-commit utility and intentionally CLI-only. CLI aliases reuse the same native operation. Help, version and presentation-format switches are CLI utilities rather than separate tools. Tool definitions are maintained in [`../_lib/`](../_lib/mdt-tools.js).
 
 ## MDT commands
 

@@ -15,6 +15,7 @@ import type {
   ProjectConnectionRead,
   ProjectedHeader,
   TicketClaimResponse,
+  TicketCreationResult,
   TicketIdentityDiagnostic,
 } from '@mdt/domain-contracts'
 import type { Project } from '../models/Project.js'
@@ -80,6 +81,7 @@ import {
 import { ProjectService } from './ProjectService.js'
 import { ServiceError } from './ServiceError.js'
 import { TemplateService } from './TemplateService.js'
+import { buildCreationDiagnostics } from './ticket/content-inspection.js'
 import { assertNotDerivedField } from './ticket/derivedFields.js'
 import { assertSafeTicketInventory, assertUnambiguousTicket, classifyTicketIdentity, repositoryRoots, scanTicketIdentities, TicketIdentityConflictError } from './ticket/TicketIdentityService.js'
 import { TicketLocationResolver } from './ticket/TicketLocationResolver.js'
@@ -546,18 +548,39 @@ export class TicketService {
     crType: string,
     data: TicketData,
   ): Promise<Ticket> {
+    return (await this.createCRWithDiagnostics(project, crType, data)).ticket
+  }
+
+  /** Successful creation plus non-persisted operation diagnostics (MDT-261). */
+  async createCRWithDiagnostics(
+    project: Project,
+    crType: string,
+    data: TicketData,
+  ): Promise<TicketCreationResult> {
+    let bodySource: 'generated' | 'supplied' | 'recovered' = 'recovered'
+    const onBodySource = (source: 'generated' | 'supplied'): void => {
+      bodySource = source
+    }
+    const finish = (ticket: Ticket): TicketCreationResult => ({
+      ticket,
+      diagnostics: buildCreationDiagnostics(ticket, bodySource),
+    })
     try {
       // MDT-205: validate a key-shaped phaseEpic target on create too.
       await this.assertPhaseEpicTarget(project, data.phaseEpic)
 
       const connection = await this.resolveCloudConnection(project)
       if (connection.kind === 'absent') {
-        return this.createLocalTicketWithNumber(
+        return finish(await this.createLocalTicketWithNumber(
           project,
           crType,
           data,
           await this.getNextCRNumber(project),
-        )
+          undefined,
+          false,
+          undefined,
+          onBodySource,
+        ))
       }
       if (connection.kind !== 'enabled') {
         // disabled / malformed / untrusted: fail closed (BR-4.2, BR-1.6). A
@@ -591,7 +614,7 @@ export class TicketService {
           ?? new RuntimeCloudCredentialProvider(),
         coordinator: this.cloudRuntime.coordinatorFactory?.(binding),
       })
-      return await orchestrator.create({
+      const ticket = await orchestrator.create({
         crType,
         data,
         minimumTicketNumber: Math.max(inventory.minimumTicketNumber, project.project.startNumber || 1),
@@ -605,6 +628,7 @@ export class TicketService {
             createdAt,
             true,
             creationId,
+            onBodySource,
           )
           const header = this.toProjectedHeader(ticket)
           return {
@@ -616,6 +640,7 @@ export class TicketService {
           }
         },
       })
+      return finish(ticket)
     }
     catch (error) {
       // MDT-200: preserve typed domain errors so callers can distinguish a
@@ -636,6 +661,7 @@ export class TicketService {
     createdAt?: string,
     exclusive = false,
     creationId?: string,
+    onBodySource?: (source: 'generated' | 'supplied') => void,
   ): Promise<Ticket> {
     const crKey = formatCrKey(project.project.code, ticketNumber)
     const location = await this.ticketLocationResolver.resolve(project, crKey)
@@ -662,7 +688,7 @@ export class TicketService {
       ticket.dateCreated = stableCreatedAt
       ticket.lastModified = stableCreatedAt
     }
-    const markdownContent = this.formatCRAsMarkdown(ticket, data)
+    const markdownContent = this.formatCRAsMarkdown(ticket, data, onBodySource)
     ticket.content = markdownContent
     if (exclusive) {
       try {
@@ -1599,7 +1625,11 @@ export class TicketService {
   /**
    * Format CR as markdown with YAML frontmatter
    */
-  private formatCRAsMarkdown(ticket: Ticket, data: TicketData): string {
+  private formatCRAsMarkdown(
+    ticket: Ticket,
+    data: TicketData,
+    onBodySource?: (source: 'generated' | 'supplied') => void,
+  ): string {
     const sections: string[] = []
 
     // YAML frontmatter - only mandatory fields + optional fields with values
@@ -1641,7 +1671,8 @@ export class TicketService {
     sections.push('')
 
     // Content
-    if (data.content) {
+    if (data.content?.trim()) {
+      onBodySource?.('supplied')
       // MDT-064: CLI title is always the authoritative H1.
       // Strip any leading H1 from content to prevent content from overriding the CLI title.
       const strippedContent = data.content.replace(/^#\s+.+\n*/m, '')
@@ -1650,6 +1681,7 @@ export class TicketService {
       sections.push(strippedContent.trim())
     }
     else {
+      onBodySource?.('generated')
       // Use type-specific template from TemplateService
       const template = this.templateService.getTemplate(ticket.type)
 

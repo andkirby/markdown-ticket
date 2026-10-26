@@ -26,7 +26,7 @@ const ticket = { ...mockCR, dateCreated: null, lastModified: null, relatedTicket
 describe('REST create adapter compatibility', () => {
   afterEach(() => jest.restoreAllMocks())
   it('missing priority still defaults Medium and ignored fields cannot acquire effects', async () => {
-    const create = jest.spyOn(SharedTicketService.prototype, 'createCR').mockResolvedValue(ticket)
+    const create = jest.spyOn(SharedTicketService.prototype, 'createCRWithDiagnostics').mockResolvedValue({ ticket, diagnostics: [] })
     const service = new TicketService({ getAllProjects: async () => [project] })
     await service.createCR(project.id, { title: '  title  ', type: 'Research' })
     expect(create).toHaveBeenCalledWith(project, 'Research', { title: '  title  ', type: 'Research', priority: 'Medium', level: undefined, content: undefined })

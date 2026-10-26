@@ -1,3 +1,4 @@
+import type { TicketCreationResult } from '@mdt/domain-contracts'
 import type { Project } from '@mdt/shared/models/Project.js'
 /**
  * MCP CR Service - Wrapper around Shared TicketService
@@ -36,6 +37,10 @@ export class CRService {
 
   async createCR(project: Project, crType: string, data: TicketData): Promise<Ticket> {
     return this.ticketService.createCR(project, crType, data)
+  }
+
+  async createCRWithDiagnostics(project: Project, crType: string, data: TicketData): Promise<TicketCreationResult> {
+    return this.ticketService.createCRWithDiagnostics(project, crType, data)
   }
 
   async updateCRStatus(project: Project, key: string, status: CRStatus): Promise<boolean> {
