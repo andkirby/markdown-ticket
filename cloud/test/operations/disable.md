@@ -1,47 +1,38 @@
-# Disable Evidence — MDT-200
+# Disable and Markdown continuity evidence — MDT-200
 
-Manual evidence for `TEST-disable-markdown` (BR-4.2). Disabling cloud binding
-leaves all durable ticket content usable from Markdown/Git.
+## Current contract
 
-## Procedure (operations.md § Disable and Vendor Exit)
+`mdt-cli cloud disable --yes` attempts project suspension using the coordination
+Access audience, then retains the installation's CONFIG_DIR connection as
+`disabled`. It does not silently resume local numbering. If credentials or the
+coordinator are unavailable, local state is still disabled and creation remains
+blocked; confirm remote suspended state separately before any detach procedure.
+A device-local disabled connection alone cannot prove project-wide suspension.
 
-Disabling one client does not stop cloud allocations by other clients. The
-project-wide suspend + detach sequence must complete before resuming local
-numbering.
+The connection lives at CONFIG_DIR/projects/{localProjectId}/cloud-sync.toml.
+Repository `[project.cloudSync]` is legacy migration input, not the current
+binding or an instruction to delete configuration. Follow the authoritative
+[disable procedure](../../../docs/CLOUD_COORDINATION_GUIDE.md#disable-a-project).
 
-### Local-only continuity (verified by design)
+## Executed drill — 2026-10-26
 
-The cloud binding is opt-in and additive (C4). The local allocation path
-(`TicketService.getNextCRNumber`, the `highest + 1` scan wrapped by
-`LocalTicketNumberAllocator`) is unchanged when no `[project.cloudSync]` binding
-is present (BR-1.7, covered by `shared/services/cloud-sync/__tests__/no-fallback.test.ts`).
+On an isolated cloud project through Access and the accepted Worker:
 
-Therefore removing a cloud binding (or never enabling one) cannot affect ticket
-file readability or editability:
+- [x] The pinned CLI with the real audience resolver requested cloud suspension
+  and retained disabled device state.
+- [x] A subsequent valid cloud reservation request returned423.
+- [x] Reading and editing an existing canonical Markdown ticket succeeded.
+- [x] Disabled CLI creation failed with no new local ticket file; no local
+  fallback number was assigned.
+- [x] The test project remains suspended, with history retained.
 
-- Ticket bodies and headers live in Markdown/Git (C2 — the cloud is never a
-  content authority).
-- The operation journal holds no secrets and no ticket content.
-- Removing `[project.cloudSync]` reverts allocation to the local scan.
+The initial drill exposed a real defect: extracting the resolver method lost
+its receiver, threw before credential resolution and was silently caught as a
+best-effort disable failure. The corrected bound call and real-factory regression
+now prove suspension before disabled-state persistence. Ordinary offline
+best-effort behavior remains unchanged.
 
-### Project-wide disable (operator)
-
-1. Suspend the cloud project (coordination_state = `suspended`) via the
-   operator procedure — blocks new allocations from all clients.
-2. Drain or retire reservations; synchronize canonical Git repositories.
-3. Remove `[project.cloudSync]` from each client's `.mdt-config.toml`.
-4. Resume local numbering (the local scan picks up from the highest existing
-   number; cloud-allocated numbers are never reused — C3).
-
-### Verification
-
-- [x] Local-only allocation preserved without a binding (unit-tested).
-- [ ] Live disable drill against a provisioned project (operator step; record
-      the suspended-state allocation denial + local resumption).
-
-## Notes
-
-- Tombstones for deleted tickets are retained while the cloud project exists so
-  ticket numbers cannot be mistaken for reusable.
-- A disabled client's stale projected stubs disappear from the board on the next
-  poll (they were derived).
+No binding was removed and no irreversible vendor-exit/local-numbering
+resumption was performed on the real MDT project. Those actions are outside
+this drill; MDT-222 remains separately owned.
+[Deployment and acceptance evidence](../../../docs/CRs/MDT-200/production-rollout-2026-10-26.md).

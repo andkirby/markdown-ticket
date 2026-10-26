@@ -1002,6 +1002,20 @@
         "ART-server-file-watcher"
       ],
       "sourceRef": "docs/CRs/MDT-200/architecture.md"
+    },
+    {
+      "id": "OBL-live-create-delivery",
+      "title": "Route initial acknowledgement through the existing serialized hub with prearmed recovery and committed-row delivery",
+      "derivedFrom": [
+        "BR-1.4",
+        "BR-3.3"
+      ],
+      "artifactIds": [
+        "ART-cloud-creation-delivery",
+        "ART-cloud-application",
+        "ART-cloud-d1"
+      ],
+      "sourceRef": "docs/CRs/MDT-200/architecture.md"
     }
   ],
   "artifacts": [
@@ -1152,6 +1166,12 @@
     {
       "id": "ART-project-code-identity",
       "path": "domain-contracts/src/project/",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-200/architecture.md"
+    },
+    {
+      "id": "ART-cloud-creation-delivery",
+      "path": "cloud/src/cloudflare/durable/ProjectProjectionHub.ts",
       "kind": "runtime",
       "sourceRef": "docs/CRs/MDT-200/architecture.md"
     }
@@ -1711,6 +1731,28 @@
       ],
       "file": "server/tests/unit/TicketService.boundary-compatibility.test.ts",
       "sourceRef": "docs/CRs/MDT-200/tests.md"
+    },
+    {
+      "id": "TEST-live-ack-delivery",
+      "kind": "integration",
+      "title": "Initial ACK commits through hub, prearms recovery, preserves auth and replay, and delivers committed projection to connected clients",
+      "covers": [
+        "BR-1.4",
+        "BR-3.3",
+        "OBL-live-create-delivery"
+      ],
+      "file": "cloud/test/ack.delivery.test.ts",
+      "sourceRef": "docs/CRs/MDT-200/tests.md"
+    },
+    {
+      "id": "TEST-live-disable-resolver",
+      "kind": "integration",
+      "title": "Real audience resolver retains its receiver and suspends cloud before persisting disabled device state",
+      "covers": [
+        "BR-4.2"
+      ],
+      "file": "shared/services/cloud-sync/__tests__/create-management-service.test.ts",
+      "sourceRef": "docs/CRs/MDT-200/tests.md"
     }
   ],
   "tasks": [
@@ -1891,19 +1933,6 @@
       "sourceRef": "docs/CRs/MDT-200/uat.md"
     },
     {
-      "id": "TASK-ack-projection-wiring",
-      "title": "Acknowledge reservation and create projection v1 atomically",
-      "ownsArtifactIds": [
-        "ART-cloud-application",
-        "ART-cloud-d1"
-      ],
-      "makesGreenIds": [
-        "TEST-projection-content",
-        "projection_excludes_body"
-      ],
-      "sourceRef": "docs/CRs/MDT-200/uat.md"
-    },
-    {
       "id": "TASK-ratelimit-wiring",
       "title": "Enforce advisory read, mutation, and operator rate limits in Worker routes",
       "ownsArtifactIds": [
@@ -2006,23 +2035,6 @@
       "sourceRef": "CR:MDT-200"
     },
     {
-      "id": "TASK-uat-operator-reconciliation",
-      "title": "Operational acceptance pending: retain locally verified audited monotonic repair and execute separately authorized production incident reconciliation",
-      "ownsArtifactIds": [
-        "ART-cloud-workspace",
-        "ART-cloud-migrations",
-        "ART-cloud-application",
-        "ART-cloud-d1",
-        "ART-shared-cloud-sync"
-      ],
-      "makesGreenIds": [
-        "TEST-uat-counter-repair",
-        "TEST-uat-production-reconciliation",
-        "operator_repair_is_monotonic"
-      ],
-      "sourceRef": "docs/CRs/MDT-200/uat.md"
-    },
-    {
       "id": "TASK-uat-observation-conflicts",
       "title": "Review fixes implemented: actionable fail-closed inventory and stable bounded claim evidence with safe invalidation",
       "ownsArtifactIds": [
@@ -2085,6 +2097,39 @@
         "uncertain_creation_lock_is_actionable",
         "lowercase_project_code_uses_canonical_identity",
         "TEST-review-recovery-http-integration"
+      ],
+      "sourceRef": "docs/CRs/MDT-200/uat.md"
+    },
+    {
+      "id": "TASK-ack-projection-wiring",
+      "title": "Acknowledge atomically through the existing project hub and deliver the committed initial projection with recovery alarm and typed replay",
+      "ownsArtifactIds": [
+        "ART-cloud-application",
+        "ART-cloud-d1",
+        "ART-cloud-creation-delivery"
+      ],
+      "makesGreenIds": [
+        "TEST-projection-content",
+        "projection_excludes_body",
+        "TEST-live-ack-delivery"
+      ],
+      "sourceRef": "docs/CRs/MDT-200/uat.md"
+    },
+    {
+      "id": "TASK-uat-operator-reconciliation",
+      "title": "Production accepted: migration, reviewed monotonic identity/projection repair, immutable legacy-intent retirement and live multi-client/disable proof",
+      "ownsArtifactIds": [
+        "ART-cloud-workspace",
+        "ART-cloud-migrations",
+        "ART-cloud-application",
+        "ART-cloud-d1",
+        "ART-shared-cloud-sync"
+      ],
+      "makesGreenIds": [
+        "TEST-uat-counter-repair",
+        "TEST-uat-production-reconciliation",
+        "operator_repair_is_monotonic",
+        "TEST-live-disable-resolver"
       ],
       "sourceRef": "docs/CRs/MDT-200/uat.md"
     }

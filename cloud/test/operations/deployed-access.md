@@ -73,3 +73,14 @@ ships option 2 by default (no bypass configured).
 - D1 migration `0001_init.sql` **is applied** to production `02996cfe…` (all six
   tables + five indexes, verified 2026-07-24T21:38Z). See `migration.md`.
 - No staging environment; production-only deploy per user decision.
+
+
+## Current candidate — 2026-10-26
+
+Worker `88738304-310a-41fa-983c-1e2da8050153` was exercised through real
+coordination/operator Access sessions. Health returned200; owner-only project
+suspension and reconciliation succeeded; reservation/audit records attribute
+authenticated operations to the human principal. No token or claim values are
+recorded here. The actual MDT project was repaired without recreating it.
+Machine service-token attribution remains the explicit MDT-224 follow-up.
+[Production acceptance](../../../docs/CRs/MDT-200/production-rollout-2026-10-26.md).

@@ -353,3 +353,21 @@ Acknowledged entries are never passed to RecoveryRunner by the explicit owner
 recovery policy. They require archive-terminal with a held receipt and fresh
 proof, or remain manual-review-required. This prevents the runner's historical
 cleanup-only branch from erasing an incomplete or unproven terminal journal.
+
+
+## Deployed acceptance correction — 2026-10-26
+
+Initial reservation acknowledgement must enter the existing project hub's
+serialized queue, just like subsequent projection publication. The hub arms
+recovery before the authorized D1 acknowledgement/initial-projection use case,
+then reads the committed reservation/projection and delivers its complete delta.
+D1 stays authoritative; no new counter, projection store, polling loop or
+browser channel is introduced. RPC outcomes retain typed failures; the public
+ACK response remains unchanged. Same-intent replay retains one revision, and
+socket ACK cursors suppress already-applied delivery.
+
+`ART-cloud-creation-delivery` and `OBL-live-create-delivery` trace this existing
+MDT-226 delivery boundary to MDT-200 creation acceptance. The management service
+also preserves the audience resolver's receiver when disabling, so its existing
+cloud-suspend-before-device-disable flow reaches the coordinator. Offline local
+disable is still best-effort and cannot prove a remote suspension.

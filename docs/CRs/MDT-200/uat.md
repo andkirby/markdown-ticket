@@ -5,10 +5,12 @@
 Stabilize MDT-200 after the 2026-10-24 ticket-key collisions: no supported create
 or key-based mutation may accept a duplicate identity; manual files must be
 observed safely even when their number is already reserved in the cloud.
-Status: review fixes locally accepted on 2026-10-26; independent completion review passed. The
-October25 challenge findings are addressed in source and regressions. Production
-deployment and incident repair remain pending. Previous UAT evidence is archived in
-[uat-history-2026-07.md](uat-history-2026-07.md).
+Status: accepted and deployed on 2026-10-26. A/B/C are complete, including the
+reviewed MDT production repair and live create/status/disable checks. The two
+integration defects discovered during deployment were fixed and independently
+reviewed under the existing requirements. This remains the October24 round.
+See [production acceptance](production-rollout-2026-10-26.md). Previous UAT
+evidence is archived in [uat-history-2026-07.md](uat-history-2026-07.md).
 
 ## Approved Changes
 
@@ -81,7 +83,7 @@ deployment and incident repair remain pending. Previous UAT evidence is archived
 - Additional direct GREEN targets: TEST-review-inventory-diagnostics, TEST-review-observation-stability, inventory_failure_reports_actionable_paths, bounded_claim_rotation_preserves_diagnostics, identity_diagnostic_cache_invalidates_on_change.
 - Result: inventory retains named failure causes/remedies and valid scanned entries; cached claim evidence stays stable outside the64-probe window and invalidates safely on content, identity, binding, credential or observed authorization changes.
 
-### C — Incident reconciliation and operational acceptance
+### C — Incident reconciliation and operational acceptance — complete
 
 - Objective: preview/verify/apply an audited monotonic repair and explicit legacy
   identity correction, preserve history, and verify before resuming coordination.
@@ -93,13 +95,13 @@ deployment and incident repair remain pending. Previous UAT evidence is archived
 - Canonical task: TASK-uat-operator-reconciliation.
 - Why: local repairs 257→261 and 258→262 did not move cloud reservations or
   projections. A counter-only change leaves incorrect associations unresolved.
-- Operational boundary: implementation/fixture proof does not authorize a live
-  mutation; preserve and inspect production rows before a reviewed repair.
+- Operational boundary: the user explicitly authorized this operation; the reviewed preview/apply,
+  retained history and final state are recorded in the production acceptance record.
 
 ## Validation
 
-- Review documentation/trace pass:7 scenarios,3 artifact records,3 obligations,8 test plans and3 task records synchronized; requirement meanings unchanged. This remains the October24 round. A/B source fixes now have local regression evidence; C remains the separate operational gate.
-- Current review status: A/B implementation and independent review passed. The focused suites total912 passes; five affected package builds, scoped lint and all-stage trace validation passed. See [verification.md](verification.md) for immutable checkpoint digests, baseline failures and remaining live gates. Earlier1068-test evidence remains historical.
+- Review documentation/trace pass:7 scenarios,3 artifact records,3 obligations,8 test plans and3 task records synchronized; requirement meanings unchanged. This remains the October24 round. A/B source fixes now have local regression evidence; C has separate completed production evidence in the linked acceptance record.
+- Current review status: A/B/C implementation, production acceptance and independent review passed. The focused suites total912 passes; five affected package builds, scoped lint and all-stage trace validation passed. See [verification.md](verification.md) for immutable checkpoint digests, baseline failures and remaining live gates. Earlier1068-test evidence remains historical.
 
 - Baseline: all stages except tasks passed; tasks had one pre-existing missing
   closure for TEST-projection-sync-deletion. Resolved through TASK-projection; its link remains intact.
@@ -113,7 +115,7 @@ deployment and incident repair remain pending. Previous UAT evidence is archived
   trace structure and coverage, not implementation readiness.
 - Strict drift/lock: not enabled; this is a non-strict same-ticket UAT delta.
 - Implementation acceptance: run the package-specific cases in tests.md and
-  require separate authorized live incident and multi-client evidence.
+  retain the now-completed authorized live incident and multi-client evidence.
 
 ## Watchlist
 

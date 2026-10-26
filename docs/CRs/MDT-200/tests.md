@@ -173,3 +173,26 @@ manual-review-required and preserve exact active bytes; inspection offers
 archive-terminal only for a parseable held receipt. Reconciliation still
 requires fresh terminal/canonical proof. These cases cover the existing
 corrupt/legacy evidence preservation constraint; no requirement is weakened.
+
+
+## Deployed acceptance regressions — 2026-10-26
+
+- TEST-live-ack-delivery (`cloud/test/ack.delivery.test.ts`): actual hub method and
+  Worker route with real production SQL; prearmed alarm, commit-before-delivery,
+  rollback/no delivery on failure, identity/suspension rejection, replay and
+  unchanged public response. Seven cases pass. Its Bun platform handles are
+  substituted; separate real deployed WebSocket evidence proves runtime delivery.
+- TEST-live-disable-resolver
+  (`shared/services/cloud-sync/__tests__/create-management-service.test.ts`):
+  compose the real resolver/store/coordinator and prove credential audience,
+  actual cloud suspension and ordering before device state is disabled.
+- TEST-uat-production-reconciliation is complete against the original MDT UUID;
+  exact expected-state preview/apply/replay, retained histories, local identities
+  and empty active recovery are recorded in the production acceptance document.
+
+Nine historical full-suite fixtures were reconciled with current authenticated
+read, structured validation and router contracts without weakening product
+validation or the frozen recovery assertions. Full shared/server/CLI/MCP/cloud
+acceptance and the real two-client creation/status and disable proof are in
+[production-rollout-2026-10-26.md](production-rollout-2026-10-26.md). Requirements
+and scenario meanings are unchanged.

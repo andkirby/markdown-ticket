@@ -2,51 +2,44 @@
 
 ## Current status — 2026-10-26
 
-The October24 UAT round's allocation/recovery and observation/diagnostic fixes
-are implemented and locally accepted. Execution tasks A/B are done; C remains
-open for the separately authorized production operation. MDT-200 stays
-**In Progress**. This is the same UAT round, not a new acceptance session.
+The October collision UAT is complete: schema/Worker rollout, reviewed MDT
+identity/projection/counter repair, real multi-client creation/status delivery,
+disable/continuity and independent review passed. Tasks A/B/C are complete.
+MDT-200 is Implemented under the user's authorized conditional closure.
 
-| Checkpoint | Verified result |
+[Production rollout and acceptance](production-rollout-2026-10-26.md) records
+Worker `88738304-310a-41fa-983c-1e2da8050153`, migration0005, backup/restore proof,
+operator receipt, exact limits and the two additional deployed-acceptance fixes.
+MDT is active at next number264, revision176; eight canonical identities are
+verified and no active creation-recovery journal remains. Existing numbers and
+idempotency history were preserved. No production ticket was created by tests.
+
+| Check | Current accepted result |
 | --- | --- |
-| Focused tests |912 passed: 347 shared, 192 server, 245 MCP, 110 cloud, 18 CLI |
-| Builds |domain-contracts, shared, server, MCP and cloud pass |
-| Scoped lint / trace |Pass; all 5 trace stages have 0 issues (non-strict) |
-| Independent completion review |Pass; no in-scope issues |
-| GLM adversarial follow-up |No new required-fix defect; bounded scope |
-| Full-suite / live gates |Shared/server and live gates remain open; the CLI export regression is repaired by MDT-260 |
+| Full suites | shared1,189; server993 (eight existing skips); CLI245; MCP245; cloud117; zero failures |
+| Builds | domain-contracts/shared/CLI/server/MCP/cloud pass |
+| Static checks | scoped ESLint, whitespace, dry-run deploy and pinned-source knip pass |
+| Trace | all five stages, zero issues, non-strict |
+| Independent review | existing allocator/recovery acceptance retained; new ACK-delivery/disable review PASS |
+| Local runtime | managed backend reloaded; health200, owner recovery inspection200/empty |
 
-Source acceptance was captured at HEAD `ee0a940518cd0c1893bd540baca2e3d4ff174d0b`.
-Immutable plan digest: `72143438e19b7a35fcce0fbd503171ce1aa5099a2c18d4a98fbf2ec8fdb6f580`;
-run digest: `a508654026888c083e534135e23a631b411809f28b9473f17bdc7046ac4f3763`.
-The read-only completion review bound to those digests returned pass, including
-the final terminal-journal correction. Its private local record is under
-`.git/mdt/evidence/MDT-200/reviews/` keyed by that run digest. This summary is
-durable even when machine-local evidence or thread-storage paths are unavailable.
+The prior full-suite failures are resolved through contract-aligned fixture
+repairs; the CLI export regression was already repaired by MDT-260. Acceptance
+used a pinned clean source export plus scoped rollout deltas, excluding ongoing
+MDT-261 work. Server `--forceExit` addresses existing open handles; no assertions
+were skipped. The eight existing server skips remain disclosed.
 
-Production migration0005, compatible Worker/client deployment, reviewed D1
-identity/projection/counter repair, and real multi-client acceptance are not
-proved by these local checks. Full shared/server failures remain release gates.
-MDT-200 changes were committed as `e050e455`; no deployment or production
-mutation was performed. MDT-260's subsequent export repair restored CLI build
-and full-suite execution (245 passes). Its shared management/store 20 and
-journal/recovery 76 checks, four package builds, lint and knip also pass.
-The earlier CLI-failure checkpoints below remain historical evidence.
-See [MDT-260 result](../MDT-260/result.md).
+Machine attribution (MDT-224) and broader browser/idle/latency SLO acceptance
+(MDT-226) remain separate follow-ups. MDT-222's relevant restore/concurrency/
+disable drills now have execution evidence; its full vendor-exit scope is not
+claimed complete. Requirements remain unlocked; trace validation is non-strict.
+Residual legacy-recovery enhancements remain as previously recorded, not new
+force-clear functionality.
 
-The sections below preserve dated evidence in order. Their pending/planned
-statements describe their original checkpoints, not the current source status.
-This documentation alignment follows the accepted source checkpoint; it changes
-its document/trace bindings without claiming another execution of the 912 tests.
-No source/test bytes changed in this alignment pass. Requirements/scenario
-meanings are retained; canonical verification gains the existing actual
-HTTP/shared recovery test and its task link.
-
-Residual enhancements remain distinct from required fixes: a verified-dead
-legacy lock-only retirement verb, archive GC, friendlier archived replay after
-route replacement, clearer digest-mismatch logging, and a reviewed exit for
-unprovable legacy intents. None is silently implemented or accepted as force-clear.
-See [recovery limits](../../architecture/cloud-sync/operations.md#recovery-limits).
+The sections below preserve dated evidence. Their pending statements and
+source-bound verifier digests describe their original checkpoints; the new
+production record is the current acceptance evidence. No historical RED or
+completion run was rewritten or claimed to bind to the later rollout changes.
 
 ## Initial UAT checkpoint — 2026-10-24
 

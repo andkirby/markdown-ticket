@@ -94,3 +94,23 @@ created_at < ?` could not use `reservations_by_state_age` (leads with
 Same audit: `cloud_projects(project_code)` provisioning lookup full-scans
 (2 rows, rare operator path) — deliberately not indexed. Production indexes
 now additionally include `reservations_by_expiry`.
+
+
+## 2026-10-26 — `0005_creation_identity.sql` (MDT-200 collision UAT)
+
+- Production export and Time Travel bookmark retained before apply; the export
+  was restored and migration0005 tested against isolated SQLite first.
+- Applied with `wrangler d1 migrations apply mdt-cloud-sync-production --remote`:
+  five commands, ledger `applied_at = 2026-10-26 19:10:26` UTC.
+- Verified nullable reservation creation_id/minimum_ticket_number, partial unique
+  identity index and immutable reconciliation_operations table before Worker
+  rollout. Existing NULL identities are not automatically adopted or repaired.
+- Restored the same export into temporary remote D1
+  `54547e35-e211-4573-94ca-fd44372f2e17`, applied migration0005 there, compared all
+  exported table counts and checked foreign keys; all passed. Removed only that
+  temporary database afterwards. Production was never restored.
+- Accepted Worker `88738304-310a-41fa-983c-1e2da8050153`, existing DO tagv3/binding
+  and cron retained. Cloud117/117, build, lint and deploy dry-run passed.
+
+[Full deployment/backup/repair evidence](../../../docs/CRs/MDT-200/production-rollout-2026-10-26.md)
+contains bookmark, export digest, restore limits and the project-specific repair.

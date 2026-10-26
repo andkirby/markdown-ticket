@@ -1,12 +1,14 @@
 ---
 code: MDT-200
-status: In Progress
+status: Implemented
 dateCreated: 2026-07-24T09:16:41.530Z
 type: Feature Enhancement
 priority: High
 dependsOn: MDT-199
 relatedTickets: MDT-201,MDT-202,MDT-203,MDT-226
 phaseEpic: MDT-227
+implementationDate: 2026-10-26
+implementationNotes: October collision UAT accepted; migration0005 and compatible Worker deployed; original MDT identity/projection/counter repair verified with retained history; live concurrent allocation, two-client create/status delivery and disable continuity passed. Full package suites green; independent review passed. MDT-224 and broader MDT-226 SLOs remain separate.
 ---
 
 # Implement cloud sync first slice
@@ -17,16 +19,15 @@ phaseEpic: MDT-227
 > unified local ticket API/events. MDT-200's allocation, authority, identity,
 > membership, projection-write, and audit decisions remain in force.
 
-> **Open UAT correction — 2026-10-24.** The historical Implemented baseline has
-> a confirmed duplicate-key defect. [Current UAT brief](MDT-200/uat.md) defines
-> allocation/identity, manual-file observation, and operator-repair work.
-> [PoC](MDT-200/poc.md) validates an isolated candidate. Initial source changes
-> passed scoped local checks; the October25 independent challenge reopened
-> recovery/normalization and diagnostic fixes. Those review fixes are now
-> locally accepted:912 focused tests and independent completion review passed.
-> [Verification](MDT-200/verification.md) records evidence and residual limits.
-> Production deployment/incident acceptance and repository-wide release checks
-> remain open. Production has not been repaired by this procedure.
+> **October collision UAT accepted — 2026-10-26.** The general schema/Worker
+> fix is deployed, the existing MDT project was reconciled with retained
+> reservation/idempotency history, and real concurrent creation, two-client
+> create/status delivery and disable/continuity checks passed. The local
+> backend was reloaded. Full shared/server/CLI/MCP/cloud suites have zero
+> failures (eight existing server skips). Independent review passed.
+> [Production acceptance](MDT-200/production-rollout-2026-10-26.md) records
+> deployment IDs, repair receipts, regression fixes and remaining separate
+> MDT-224/MDT-226 work. Earlier pending checkpoints below are historical.
 
 ## 1. Description
 
@@ -154,7 +155,7 @@ rate-limit namespace IDs, IdP groups, and production service-token owners are
 environment inputs. They do not reopen the approved architecture.
 
 MDT-199 received User Review approval after its completed architecture package
-was independently reconciled. MDT-200 is `In Progress` and owns all
+was independently reconciled. MDT-200 is `Implemented` and records all
 requirements, BDD, test, task, implementation, and runtime trace work.
 
 ## 4. Acceptance Criteria
@@ -176,7 +177,12 @@ incident repair. The current same-round status is recorded in Section8 and
 ### Identity and Isolation
 
 - [x] A real Access-protected environment validates browser and interactive CLI human attribution.
-- [ ] A real Access-protected environment validates service-token machine attribution. _(Live drill deferred to [MDT-224](MDT-224-verify-service-token-machine-attribution.md); JWT machine-principal derivation is unit-tested and deployed, but the live service-token request and audit record have not been run.)_
+
+Deferred acceptance owned by [MDT-224](MDT-224-verify-service-token-machine-attribution.md):
+real Access service-token machine attribution remains unexecuted. JWT machine
+principal derivation is tested, but no live service-token request/audit proof is
+claimed. This is the existing first-slice deferral, not completion evidence.
+
 - [x] Viewer, contributor, and owner permissions are enforced per cloud project.
 - [x] Unauthorized project references do not disclose project existence.
 - [x] Revoked membership blocks the next protected project operation.
@@ -192,7 +198,13 @@ incident repair. The current same-round status is recorded in Section8 and
 
 - [x] Allocation, projection, membership, denial, and recovery actions produce structured audit records.
 - [x] Rate limits and failure telemetry cover runaway clients and abandoned reservations.
-- [ ] Backup, restore, export, disable, and vendor-exit procedures are exercised. _(Deferred to [MDT-222](MDT-222-exercise-cloud-sync-operational-drills.md); procedures are documented under `cloud/test/operations/` but the live drills have not been run and recorded.)_
+
+Deferred acceptance owned by [MDT-222](MDT-222-exercise-cloud-sync-operational-drills.md):
+the complete vendor-exit scope remains open. Export/isolated remote restore,
+concurrency and disable/Markdown-continuity drills were executed on2026-10-26
+and are recorded in the production acceptance; they do not accept the entire
+MDT-222 bundle. This preserves the existing first-slice scope decision.
+
 - [x] `docs/CONFIG_SPECIFICATION.md` documents cloud binding and exposure rules.
 - [x] `docs/CLOUD_COORDINATION_GUIDE.md` documents setup, onboarding, credentials, recovery, and disablement.
 - [x] MCP, CLI, and server architecture documentation is reconciled wherever behavior or ownership changes.
@@ -344,3 +356,32 @@ operational drills remain with MDT-224/MDT-222. MDT-200 stays In Progress.
 See [verification.md](MDT-200/verification.md) for evidence, review limits and
 residual manual-review states. No commit, deployment or production mutation
 was performed by this follow-up.
+
+
+### UAT acceptance 2026-10-26 — deployed correction and project repair
+
+The user authorized deployment, production repair, testing and conditional
+closure. Migration0005 and Worker `88738304-310a-41fa-983c-1e2da8050153` are live.
+Reviewed operation `d520cc6b-a586-45e7-a64f-2b946d08e118` repaired canonical
+identity/projection associations and advanced MDT's counter260→264; obsolete256
+is tombstoned and final revision is176. Original reservation/idempotency history
+and the incompatible pending intent were preserved; eight canonical creationId
+lines were added without changing their ticket content.
+
+Live acceptance found and fixed initial ACK delivery bypassing the existing
+hub and disable losing the real credential resolver's receiver. These satisfy
+existing BR-1.4/BR-3.3/BR-4.2; no requirement meaning changed or new UAT round
+was opened. Trace registers the new artifact/obligation/two regression plans and
+preserves all prior links, including TEST-projection-sync-deletion. All five
+stages validate with zero issues; requirements remain unlocked/non-strict.
+
+Full acceptance: shared1,189; server993 (eight existing skips); CLI245; MCP245;
+cloud117, all with zero failures. Six package builds, scoped lint/knip and
+independent bounded review passed. Real CLI creation respected an existing local
+high-water, both already-connected clients received create/status deltas, and
+CLI disable suspended coordination while local reads/edits remained available.
+See [the production record](MDT-200/production-rollout-2026-10-26.md) for source
+binding, exact live scope, encrypted export/isolated remote restore proof and
+remaining follow-ups. MDT-224 machine attribution and MDT-226's broader browser
+SLOs remain separately owned. MDT-261's concurrent implementation is untouched
+and is not accepted by this closure.

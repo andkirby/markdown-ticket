@@ -478,6 +478,14 @@ Platform behavior is mutable. These primary sources were checked on
 
 ## October ticket-identity stabilization rollout
 
+Execution evidence for2026-10-26 is in
+[MDT-200 production acceptance](../../CRs/MDT-200/production-rollout-2026-10-26.md):
+migration0005 and Worker `88738304-310a-41fa-983c-1e2da8050153` deployed; original
+MDT project reconciled and resumed at counter264/revision176. This is an
+explicit reviewed project repair, not automatic adoption of other projects.
+The procedure below remains the operational contract for future incidents.
+
+
 The source now implements allocation protocol v2 and migration
 `0005_creation_identity.sql`; this is not evidence of production deployment.
 Deploy required schema before the Worker, then update all allocation clients.
@@ -561,3 +569,18 @@ failure requires re-inspection and a fresh reviewed operation UUID; existing
 archive directories are never overwritten. Replaying an archived decision when
 a different live intent occupies its route returns 409 and preserves that intent.
 These are source limits, not instructions to delete state or steal a lock.
+
+
+### Creation delivery and disable verification
+
+Initial ACKs and later projection mutations both enter the existing project hub
+queue and arm recovery before D1 commit. A successful ACK must be followed by
+create delivery to already-connected clients; a later status update alone does
+not prove the initial creation path. The 2026-10-26 live drill found and fixed
+that bypass. No polling fallback or new Durable Object authority was added.
+
+Ordinary disable attempts cloud suspension and retains disabled device state
+even when credentials/coordination are unavailable. Confirm the actual remote
+state and allocation denial before treating a project as globally suspended or
+detaching installations. The deployed drill also fixed a lost resolver receiver
+that had prevented this cloud call while silently retaining local disabled state.

@@ -316,9 +316,11 @@ creationId provenance, key-wide ambiguity guards, bounded read-only manual-file
 observation, explicit owner creation recovery, and suspended-project incident
 reconciliation. Manual files are preserved and classified without adopting a
 reservation; unchanged diagnostic evidence survives bounded claim rotation.
-These source contracts passed scoped local acceptance and independent review;
-that evidence does not prove production state. Migration0005 and
-capable-client rollout are required; production repair is not implied by local
-implementation. See [data and consistency](data-and-consistency.md#allocation-protocol-v2-and-durable-creation-identity-mdt-200-october-uat),
+These contracts passed local and deployed acceptance on2026-10-26. Migration0005
+and the compatible Worker are deployed; the original MDT project was explicitly
+reconciled with retained history. That project-specific operation does not
+import other projects. Initial acknowledgement now uses the existing serialized
+hub and prearmed recovery before delivering committed projection data. See
+[production evidence](../../CRs/MDT-200/production-rollout-2026-10-26.md). See [data and consistency](data-and-consistency.md#allocation-protocol-v2-and-durable-creation-identity-mdt-200-october-uat),
 [operations](operations.md#october-ticket-identity-stabilization-rollout), and
 [MDT-200 current UAT](../../CRs/MDT-200/uat.md).

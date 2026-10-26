@@ -790,3 +790,16 @@ files invalidate affected entries; binding/credential changes and observed
 authorization denial invalidate project proof. A failed selected probe becomes
 stale/pending. Timestamp-only refresh updates cache without duplicate semantic
 SSE notification. There is no idle timer and cached proof never authorizes a write.
+
+
+### Initial-creation delivery boundary (2026-10-26 acceptance)
+
+The Worker routes initial reservation acknowledgement through
+`ProjectProjectionHub.acknowledgeAndDeliver`. Its existing per-project queue
+prearms alarm recovery before invoking the unchanged authorized D1 use case.
+Only committed reservation/projection rows produce a complete live delta;
+replay preserves the original revision and socket cursors deduplicate delivery.
+The public acknowledgement DTO and persisted projection-header fields are
+unchanged. D1 retains allocation/projection authority and the hub retains only
+delivery metadata. The binding-less unit-test fallback still calls the same
+authorized use case; production requires the PROJECT_HUB binding.

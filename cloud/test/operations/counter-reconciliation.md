@@ -1,9 +1,14 @@
 # Ticket-number and creation-identity incident reconciliation
 
-Status: implementation and isolated SQL tests only. No production repair was
-performed for the October24 incident by this work. This procedure requires a
-separately reviewed production operation; deploying the source does not repair
-existing rows.
+Status: executed and verified for the original MDT project on2026-10-26,
+operation `d520cc6b-a586-45e7-a64f-2b946d08e118`. Counter260→264, revision166→175,
+then obsolete256 tombstoned at176. Eight canonical files received reviewed
+creationIds; nine reservation identities (including retired256) were reconciled.
+Existing reservations/idempotency history were retained. The exact operation,
+backup, legacy intent archive and live proof are in
+[MDT-200 production acceptance](../../../docs/CRs/MDT-200/production-rollout-2026-10-26.md).
+The procedure below remains required for future repairs; deploying source alone
+does not repair any project's legacy rows.
 
 ## Preconditions and inventory
 

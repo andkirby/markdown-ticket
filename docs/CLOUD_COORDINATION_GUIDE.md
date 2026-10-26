@@ -315,9 +315,11 @@ missing projection blindly.
 
 ## Disable a project
 
-Ordinary disable suspends project coordination and retains the installation's
-CONFIG_DIR connection with `state = "disabled"`; new ticket creation remains
-blocked. Disabling one installation alone does not stop allocations by others.
+Ordinary disable attempts to suspend project coordination and retains the
+installation's CONFIG_DIR connection with `state = "disabled"`; new ticket
+creation remains blocked locally even if the cloud call is unavailable. Verify
+remote suspended state and allocation denial before detach/local-numbering
+procedures; a successful local disable alone is not that proof. Disabling one installation alone does not stop allocations by others.
 
 Disable never silently resumes local numbering. A disabled connection is
 retained (not deleted) so the project remains diagnosable and recoverable; the

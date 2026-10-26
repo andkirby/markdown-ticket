@@ -40,9 +40,9 @@ export is restored into a temporary isolated D1 database and integrity-checked.
 ### Verification
 
 - [x] Export shape documented and matches the schema (`cloud/migrations/0001_init.sql`).
-- [ ] Live export drill: dump all six tables to encrypted storage, verify
+- [x] Live export drill: dump all current coordination tables to encrypted storage, verify
       row counts and the migration version stamp.
-- [ ] Live restore drill: restore into an isolated database, run integrity
+- [x] Live restore drill: restore into an isolated database, run integrity
       checks (counter monotonicity, reservation uniqueness, FK validity),
       confirm readability.
 
@@ -52,3 +52,26 @@ export is restored into a temporary isolated D1 database and integrity-checked.
   stores), a full D1 export is a complete vendor-exit artifact.
 - D1 Time Travel retention: 30 days on Workers Paid, 7 days on Workers Free
   (current as of the 2026-07-24 source check in operations.md).
+
+
+## Executed drill — 2026-10-26
+
+Production export:5,986,100 bytes, SHA-256
+`83357da416ff2c1edbbac733fe3d2fb5bbe5f00632e5702b24117914f106939d`.
+It contains the seven user tables present before migration0005 plus migration
+metadata. The current schema additionally has reconciliation_operations.
+
+The export restored into temporary remote D1
+`54547e35-e211-4573-94ca-fd44372f2e17`; all table counts matched:2 projects,
+4 memberships,56 reservations,56 idempotency rows,54 projections,12,826 audit
+rows,2 provisioning idempotency rows. Foreign-key check returned no violations.
+Migration0005 then applied there, bringing the migration ledger to five files.
+D1 does not authorize PRAGMA integrity_check; the local restored SQLite copy
+passed it. No remote integrity-check result is claimed. The temporary D1 was
+removed after successful verification; production was never restored.
+
+The export is encrypted with AES-256-CBC/PBKDF2,200,000 iterations. Decryption
+matched its plaintext digest; the owner-only key is stored outside Git.
+This one drill does not prove automated weekly backup scheduling/retention or
+complete MDT-222's broader vendor-exit scope.
+[Full evidence](../../../docs/CRs/MDT-200/production-rollout-2026-10-26.md).

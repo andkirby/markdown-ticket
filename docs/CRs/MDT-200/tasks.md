@@ -1,5 +1,15 @@
 # Tasks: MDT-200
 
+## Current acceptance — 2026-10-26
+
+Tasks A/B/C are complete, including production migration, reviewed incident
+reconciliation and live two-client creation/status plus disable checks. The
+[production record](production-rollout-2026-10-26.md) supersedes pending execution
+statements in dated checkpoints below. New ACK-delivery and disable-receiver
+regressions are linked in canonical trace; TASK-projection's deletion link is
+preserved. Separate MDT-224/MDT-226 follow-ups are not accepted here.
+
+
 Canonical trace state lives in the Spec Trace tool; the rendered projection is
 [`tasks.trace.md`](tasks.trace.md). Tasks are ordered by delivery slice. Each
 owns artifacts and makes specific tests/scenarios green. Use
@@ -94,7 +104,7 @@ are done; C retains production incident acceptance. See [uat.md](uat.md) and
 | --- | --- | --- |
 | TASK-uat-allocation-identity | Locally complete: allocation/identity guards, explicit owner recovery, terminal-proof archival and canonical code normalization | TEST-uat-allocation-floor,TEST-uat-key-identity,TEST-uat-create-adapters,stale_cloud_counter_skips_local_high_water,different_slug_same_key_rejected,floor_identity_replay_stable,duplicate_key_access_is_ambiguous |
 | TASK-uat-observation-conflicts | Locally complete: manual/Git classification, actionable fail-closed inventory and stable bounded verification evidence | TEST-uat-manual-observation,TEST-uat-watcher-paths,manual_file_uses_other_reservation,manual_file_without_proof_pending,verified_git_file_is_same_creation |
-| TASK-uat-operator-reconciliation | Production acceptance open: local repair code/tests exist; execute separately authorized incident repair and retain before/after evidence | TEST-uat-counter-repair,TEST-uat-production-reconciliation,operator_repair_is_monotonic |
+| TASK-uat-operator-reconciliation | Production accepted: migration/Worker rollout, reviewed repair, immutable incident archive and live multi-client/disable evidence retained | TEST-uat-counter-repair,TEST-uat-production-reconciliation,operator_repair_is_monotonic |
 
 
 Baseline trace repair: the already-registered `TEST-projection-sync-deletion` had
@@ -117,7 +127,7 @@ not part of this local implementation command.
 - [x] Prove new recovery, lock, adapter and code-normalization regressions RED → GREEN; rerun retained allocation/identity/adapter coverage.
 - Independent local completion review: verdict is recorded in the immutable completion evidence; no full-ticket release claim follows from these checks.
 
-**Current status**: locally complete; independent completion review passed. Full-ticket operational/release gates remain open.
+**Current status**: complete; local/deployed acceptance and independent review passed. Separate follow-ups are listed in the production record.
 
 ### Task 2: Manual-file observation
 
@@ -129,12 +139,13 @@ not part of this local implementation command.
 - [x] Prove real130-file rotation, invalidation and named-inventory-error regressions RED → GREEN; rerun watcher/auth/path-leak checks.
 - Independent local completion review: verdict is recorded in the immutable completion evidence; no full-ticket release claim follows from these checks.
 
-**Current status**: locally complete; independent completion review passed. Full-ticket operational/release gates remain open.
+**Current status**: complete; local/deployed acceptance and independent review passed. Separate follow-ups are listed in the production record.
 
 ### Task 3: Operator reconciliation
 
-Production TEST-uat-production-reconciliation remains open after local code
-verification; execute only as the separately reviewed incident operation.
+Production TEST-uat-production-reconciliation is complete: reviewed operation
+`d520cc6b-a586-45e7-a64f-2b946d08e118` applied and verified on the existing MDT
+project. See the production acceptance record for before/after evidence.
 
 **Canonical Task**: TASK-uat-operator-reconciliation
 
