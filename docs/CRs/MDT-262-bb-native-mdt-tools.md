@@ -1,15 +1,19 @@
 ---
 code: MDT-262
-status: Implemented
+status: In Progress
 dateCreated: 2026-10-24T13:09:41.658Z
 type: Feature Enhancement
 priority: Medium
 relatedTickets: MDT-143,MDT-261
 implementationDate: 2026-10-24
-implementationNotes: bb side live-verified (native mdt_project_current in a fresh thread); DSH fresh-host remount pending user check
+implementationNotes: Reopened for 2026-10-26 UAT: full non-cloud native tool coverage, usage guidance, organized plugin documentation; DSH live testing separate.
 ---
 
 # Native mdt tools plugin for bb; restructure dsh-plugin into plugins/{dsh,bb}
+
+## Current UAT scope
+
+The 2026-10-26 refinement expands BB to 11 non-cloud MDT tools and 8 operational spec-trace tools. See [current UAT brief](MDT-262/uat.md) and [plugin coverage](../../plugins/docs/coverage.md). Original scope and verification below describe the 2026-10-24 implementation; the UAT entry in Section 8 supersedes its coverage exclusions.
 
 ## Problem
 
@@ -74,3 +78,27 @@ implementationNotes: bb side live-verified (native mdt_project_current in a fres
 4. **DSH mdt output parity restored**: mdt passes explicit `successText: stdout` (was inheriting runCli's stdout→stderr fallback, so an empty-stdout success with a stderr warning returned the warning); `mdtErrorDetail` returns trimmed stdout; error prefixes use the CLI label (`mdt-cli`/`spec-trace`, basename of bin), matching the pre-_lib messages.
 5. bb adapter testable: `registerMdtTools(bb, { run })` injectable; `resolveCliBin(which)` injectable; `plugins/bb/tests/plugin.test.ts` executes registered tools with SDK-shaped fixtures (registration, zod rejection, cwd/argv forwarding, remote-host no-spawn, real-spawn happy path, byte-cap kill, missing binary).
 6. Nits: AGENTS.md/COOKBOOK.md CLI-depth mentions fixed; AGENTS.md restart guidance covers `../_lib` changes.
+
+## 8. Clarifications
+
+### UAT Session 2026-10-26
+
+Reopened by user request. Current scope supersedes the original seven-tool BB limit and spec-trace exclusion: full non-cloud MDT operations and eight operational spec-trace tools, agent skill guidance, organized `plugins/` docs and concise root README entry. Cloud stays CLI-only. DSH fresh-host verification is separate.
+
+No prior canonical trace store or workflow artifacts existed for MDT-262; this round adds BR-1.1, BR-1.2, BR-2.1, BR-3.1, C1–C5 and stage-ordered downstream trace. Updated artifacts: assess.md, requirements.md, bdd.md, architecture.md, tests.md, tasks.md and uat.md under MDT-262/. `uat.md` is the current-round brief. A requirements lock was created from the approved UAT scope and all five stages pass strict validation. Reasonable scoped commits and temporary test projects are authorized.
+
+
+### UAT verification progress 2026-10-26
+
+Fresh BB session discovered all 19 tools and loaded the installed on-demand mdt-tools skill. Five native read-only calls passed: current project, project lookup, MDT-262 lookup (In Progress), requirement listing (9 records), strict validation (all five stages, zero issues). Other 14 tools were catalog-inspected; isolated real-CLI acceptance owns mutation verification.
+
+Independent preparation review found stdout JSON diagnostics lost on failed spec-trace validation. A real failing strict-validation regression captured RED before the fix; summary plus detailed JSON must survive for BB and DSH under C3. Initial and diagnostic RED evidence are retained in repository-local .git/mdt/evidence/MDT-262/.
+
+
+### UAT implementation and review 2026-10-26
+
+Delivered 11 MDT and 8 operational spec-trace native tools, including create content/pagination, cwd-only deletion, text rename, project get/init and trace lock/dry-run/render/bundle. Cloud management remains CLI-only. The on-demand mdt-tools skill, plugin entry point, coverage matrix, usage guide, DSH operational docs and concise root README links are reconciled.
+
+Verification: 107 plugin tests across 7 files pass; targeted ESLint, BB TypeScript check, BB build and all five strict trace stages exit 0. The complete registered-tool real-CLI lifecycle uses temporary storage and isolated CONFIG_DIR; no normal project registry mutations. Failed validation retains remediation JSON and stderr summary in both adapters. Independent semantic review: PASS, no blocking issues. DSH fresh-host live testing remains separate and unverified. BB plugin reloaded with 19 tools; local specTracePath configured.
+
+No blocking technical debt or artifact drift was identified. Install-safe copies are intentional and drift-tested; business logic remains in CLI/shared services. User review is the remaining lifecycle gate; status stays In Progress until an explicit close decision. Verification plans, RED captures, runs and semantic-review JSON live under .git/mdt/evidence/MDT-262/.

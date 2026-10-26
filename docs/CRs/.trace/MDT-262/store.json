@@ -1,0 +1,447 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-262"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "WHEN an agent manages project setup, the system shall expose project init, current, get and list through native tools; info/list aliases reuse their matching operation.",
+      "sourceRef": "requirements.md#semantic-decisions",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "WHEN an agent manages tickets, the system shall expose get, list with pagination/selectors, create with optional content, attr, deps, rename and cwd-only delete through native tools.",
+      "sourceRef": "requirements.md#semantic-decisions",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.1",
+      "kind": "behavior",
+      "text": "WHEN an agent manages traceability, the system shall expose init, entity upsert/list/delete including dry-run, requirements lock, validate, render and task bundle as native tools.",
+      "sourceRef": "requirements.md#semantic-decisions",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3.1",
+      "kind": "behavior",
+      "text": "WHEN an agent or maintainer needs tool guidance, the plugin shall provide schema descriptions, an on-demand usage skill and organized capability/verification documentation linked from root README.",
+      "sourceRef": "requirements.md#semantic-decisions",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "The native tool surface shall exclude all cloud commands and arbitrary command escape hatches; cloud remains CLI-only.",
+      "sourceRef": "requirements.md#semantic-decisions",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "The adapter shall resolve the thread workspace and reject remote hosts before spawn, keep option-like inputs from changing command semantics, and follow CLI-specific project targeting.",
+      "sourceRef": "requirements.md#semantic-decisions",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "The subprocess adapter shall preserve cancellation, timeouts, 256 KiB combined output limits, explicit binary/errors, command-specific text/JSON output and explicit create-content stdin.",
+      "sourceRef": "requirements.md#semantic-decisions",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "Shared tool definitions shall remain canonical with install-safe BB copies checked for drift and DSH offline adapter parity.",
+      "sourceRef": "requirements.md#semantic-decisions",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C5",
+      "kind": "constraint",
+      "text": "Coverage documentation shall distinguish implementation, automated checks, fresh BB live checks and separately pending DSH live checks.",
+      "sourceRef": "requirements.md#semantic-decisions",
+      "routePolicy": "tests"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "project_lifecycle",
+      "title": "Manage an isolated project",
+      "covers": [
+        "BR-1.1"
+      ],
+      "given": "an unconfigured temporary directory and isolated registry",
+      "when": "the agent initializes a project and invokes current, get and list",
+      "then": "the new project code and paths are discoverable",
+      "sourceRef": "bdd.md#journeys"
+    },
+    {
+      "id": "ticket_lifecycle",
+      "title": "Complete ticket lifecycle",
+      "covers": [
+        "BR-1.2"
+      ],
+      "given": "a configured temporary project",
+      "when": "the agent creates content, gets, filters/pages, changes attributes, checks dependencies, renames and deletes a ticket",
+      "then": "each operation reflects persisted state and deletion removes the fixture ticket",
+      "sourceRef": "bdd.md#journeys"
+    },
+    {
+      "id": "trace_lifecycle",
+      "title": "Complete trace lifecycle",
+      "covers": [
+        "BR-2.1"
+      ],
+      "given": "a temporary project ticket",
+      "when": "the agent initializes trace, upserts/lists entities, dry-runs/deletes an entry, locks, validates, renders and bundles",
+      "then": "trace state and derived outputs match the requested operations",
+      "sourceRef": "bdd.md#journeys"
+    },
+    {
+      "id": "discover_tool_guidance",
+      "title": "Discover usage and coverage",
+      "covers": [
+        "BR-3.1"
+      ],
+      "given": "the native plugin is installed",
+      "when": "an agent reads tool schemas and loads the mdt-tools skill and a maintainer opens the plugin entry point",
+      "then": "supported commands, concrete examples and CLI-only cloud status are discoverable",
+      "sourceRef": "bdd.md#journeys"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-native-adapters",
+      "title": "Keep shared command contracts, host-local execution and bounded subprocesses in the existing adapters; expose all non-cloud operations.",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-2.1",
+        "C1",
+        "C2",
+        "C3",
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-mdt",
+        "ART-trace",
+        "ART-run",
+        "ART-workspace",
+        "ART-bb",
+        "ART-bb-mdt",
+        "ART-bb-trace",
+        "ART-bb-run",
+        "ART-bb-workspace",
+        "ART-package",
+        "ART-dsh-mdt",
+        "ART-dsh-trace",
+        "ART-dsh-kit",
+        "ART-core-tests",
+        "ART-dsh-tests",
+        "ART-sync-tests",
+        "ART-workspace-tests",
+        "ART-coverage-tests",
+        "ART-bb-tests",
+        "ART-bb-coverage-tests"
+      ],
+      "sourceRef": "CR:MDT-262"
+    },
+    {
+      "id": "OBL-agent-guidance",
+      "title": "Ship an on-demand skill, organized docs and explicit coverage/evidence boundaries.",
+      "derivedFrom": [
+        "BR-3.1",
+        "C1",
+        "C5"
+      ],
+      "artifactIds": [
+        "ART-readme",
+        "ART-coverage-doc",
+        "ART-usage-doc",
+        "ART-skill",
+        "ART-root",
+        "ART-skills-registry",
+        "ART-dsh-instructions",
+        "ART-dsh-debug"
+      ],
+      "sourceRef": "CR:MDT-262"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-mdt",
+      "path": "plugins/_lib/mdt-tools.js",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#owners-and-structure"
+    },
+    {
+      "id": "ART-trace",
+      "path": "plugins/_lib/spec-trace-tools.js",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#owners-and-structure"
+    },
+    {
+      "id": "ART-run",
+      "path": "plugins/_lib/run-cli.js",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#owners-and-structure"
+    },
+    {
+      "id": "ART-workspace",
+      "path": "plugins/_lib/bb-workspace.js",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#owners-and-structure"
+    },
+    {
+      "id": "ART-bb",
+      "path": "plugins/bb/server.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#owners-and-structure"
+    },
+    {
+      "id": "ART-bb-mdt",
+      "path": "plugins/bb/lib/mdt-tools.js",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#owners-and-structure"
+    },
+    {
+      "id": "ART-bb-trace",
+      "path": "plugins/bb/lib/spec-trace-tools.js",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#owners-and-structure"
+    },
+    {
+      "id": "ART-bb-run",
+      "path": "plugins/bb/lib/run-cli.js",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#owners-and-structure"
+    },
+    {
+      "id": "ART-bb-workspace",
+      "path": "plugins/bb/lib/bb-workspace.js",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#owners-and-structure"
+    },
+    {
+      "id": "ART-package",
+      "path": "plugins/bb/package.json",
+      "kind": "config",
+      "sourceRef": "architecture.md#owners-and-structure"
+    },
+    {
+      "id": "ART-dsh-mdt",
+      "path": "plugins/dsh/mdt.js",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#owners-and-structure"
+    },
+    {
+      "id": "ART-dsh-trace",
+      "path": "plugins/dsh/spec-trace.js",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#owners-and-structure"
+    },
+    {
+      "id": "ART-dsh-kit",
+      "path": "plugins/dsh/lib/kit.js",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#owners-and-structure"
+    },
+    {
+      "id": "ART-core-tests",
+      "path": "plugins/tests/core.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md#owners-and-structure"
+    },
+    {
+      "id": "ART-dsh-tests",
+      "path": "plugins/tests/dsh.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md#owners-and-structure"
+    },
+    {
+      "id": "ART-sync-tests",
+      "path": "plugins/tests/lib-sync.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md#owners-and-structure"
+    },
+    {
+      "id": "ART-workspace-tests",
+      "path": "plugins/tests/bb-workspace.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md#owners-and-structure"
+    },
+    {
+      "id": "ART-coverage-tests",
+      "path": "plugins/tests/coverage.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md#owners-and-structure"
+    },
+    {
+      "id": "ART-bb-tests",
+      "path": "plugins/bb/tests/plugin.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md#owners-and-structure"
+    },
+    {
+      "id": "ART-bb-coverage-tests",
+      "path": "plugins/bb/tests/coverage.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md#owners-and-structure"
+    },
+    {
+      "id": "ART-readme",
+      "path": "plugins/README.md",
+      "kind": "doc",
+      "sourceRef": "architecture.md#owners-and-structure"
+    },
+    {
+      "id": "ART-coverage-doc",
+      "path": "plugins/docs/coverage.md",
+      "kind": "doc",
+      "sourceRef": "architecture.md#owners-and-structure"
+    },
+    {
+      "id": "ART-usage-doc",
+      "path": "plugins/docs/usage.md",
+      "kind": "doc",
+      "sourceRef": "architecture.md#owners-and-structure"
+    },
+    {
+      "id": "ART-skill",
+      "path": "plugins/bb/skills/mdt-tools/SKILL.md",
+      "kind": "doc",
+      "sourceRef": "architecture.md#owners-and-structure"
+    },
+    {
+      "id": "ART-root",
+      "path": "README.md",
+      "kind": "doc",
+      "sourceRef": "architecture.md#owners-and-structure"
+    },
+    {
+      "id": "ART-skills-registry",
+      "path": "docs/SKILLS.md",
+      "kind": "doc",
+      "sourceRef": "architecture.md#owners-and-structure"
+    },
+    {
+      "id": "ART-dsh-instructions",
+      "path": "plugins/dsh/AGENTS.md",
+      "kind": "doc",
+      "sourceRef": "architecture.md#owners-and-structure"
+    },
+    {
+      "id": "ART-dsh-debug",
+      "path": "plugins/dsh/DEBUG.md",
+      "kind": "doc",
+      "sourceRef": "architecture.md#owners-and-structure"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-native-coverage",
+      "kind": "e2e",
+      "title": "Native registered tools and isolated real CLI lifecycles",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-2.1",
+        "C1",
+        "C2",
+        "C3"
+      ],
+      "file": "plugins/bb/tests/coverage.test.ts",
+      "sourceRef": "CR:MDT-262"
+    },
+    {
+      "id": "TEST-regression",
+      "kind": "unit",
+      "title": "Preserve output, bounded spawn, workspace, DSH and shared parity",
+      "covers": [
+        "C2",
+        "C3",
+        "C4"
+      ],
+      "file": "plugins/bb/tests/plugin.test.ts",
+      "sourceRef": "CR:MDT-262"
+    },
+    {
+      "id": "TEST-docs",
+      "kind": "unit",
+      "title": "Skill and documentation discovery and cloud exclusion inventory",
+      "covers": [
+        "BR-3.1",
+        "C1",
+        "C5"
+      ],
+      "file": "plugins/tests/coverage.test.ts",
+      "sourceRef": "CR:MDT-262"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-1",
+      "title": "Complete native adapters and executable coverage",
+      "ownsArtifactIds": [
+        "ART-mdt",
+        "ART-trace",
+        "ART-run",
+        "ART-workspace",
+        "ART-bb",
+        "ART-bb-mdt",
+        "ART-bb-trace",
+        "ART-bb-run",
+        "ART-bb-workspace",
+        "ART-package",
+        "ART-dsh-mdt",
+        "ART-dsh-trace",
+        "ART-dsh-kit",
+        "ART-core-tests",
+        "ART-dsh-tests",
+        "ART-sync-tests",
+        "ART-workspace-tests",
+        "ART-coverage-tests",
+        "ART-bb-tests",
+        "ART-bb-coverage-tests"
+      ],
+      "makesGreenIds": [
+        "project_lifecycle",
+        "ticket_lifecycle",
+        "trace_lifecycle",
+        "TEST-native-coverage",
+        "TEST-regression"
+      ],
+      "skills": [
+        "bb-plugin-authoring"
+      ],
+      "sourceRef": "tasks.md#task-1-complete-native-adapters-and-executable-coverage"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Document and verify tool discovery",
+      "ownsArtifactIds": [
+        "ART-readme",
+        "ART-coverage-doc",
+        "ART-usage-doc",
+        "ART-skill",
+        "ART-root",
+        "ART-skills-registry",
+        "ART-dsh-instructions",
+        "ART-dsh-debug"
+      ],
+      "makesGreenIds": [
+        "discover_tool_guidance",
+        "TEST-docs"
+      ],
+      "skills": [
+        "bb-plugin-authoring"
+      ],
+      "sourceRef": "tasks.md#task-2-document-and-verify-tool-discovery"
+    }
+  ]
+}
