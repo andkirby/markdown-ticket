@@ -117,10 +117,11 @@ An unstaged fix cannot hide staged instructions, and an unstaged instruction
 cannot block clean staged content. Correct the reported content, stage it and
 retry. No broad ban on planning words or brackets is applied.
 
-The local Lefthook launcher requires Bun and built MDT domain/shared/CLI
-packages; it never installs dependencies or silently skips an unavailable
-validator. Native creation tools preserve creation diagnostics through their
-CLI output; this repository guard command does not require a native tool.
+The shared Lefthook hook requires an installed MDT CLI with `ticket validate`
+support (MDT-261 or newer), with its runtime and built dependencies available.
+It probes command support and fails with setup instructions when unavailable;
+it never installs dependencies or silently skips validation. Native creation
+tools preserve creation diagnostics through their CLI output; this repository guard command does not require a native tool.
 
 ## Rename
 

@@ -18,18 +18,40 @@ The command reads the complete Git index version and staged project configuratio
 
 Explicit generated markers, recognized legacy template instructions and headings/comments/boilerplate-only bodies block. Ordinary planning words, links, technical brackets, code/quoted examples, and unchecked intake criteria do not independently block. Legacy deferral is allowed only in Implementation Notes before Implemented. This guard detects scaffolding, not prose quality.
 
-## Local hook and prerequisites
+## Shared hook and prerequisites
 
-Tracked lefthook.yml registers the local template guard. scripts/check-ticket-templates.sh delegates to the repository's built CLI; shell contains no content policy. Missing Bun, missing builds or unsupported validator commands fail explicitly with a remedy.
+Tracked lefthook.yml imports configs/mdt/check-ticket-templates.yml from
+[agent-commit-hooks v0.5.0](https://github.com/rikby/agent-commit-hooks/tree/v0.5.0).
+The remote script delegates to `mdt-cli ticket validate --staged` from this
+repository's working directory. Content policy remains in MDT shared services;
+there is no local launcher or duplicate guard registration.
+
+The installed `mdt-cli` must support `ticket validate` (MDT-261 or newer), with
+its runtime and built dependencies available. The hook probes command support;
+the nominal CLI version alone does not establish compatibility. Missing or
+unsupported CLI commands fail with setup instructions. For a source checkout:
 
 ```sh
 bun run build:domain-contracts
 bun run build:shared
 bun run --cwd cli build
-lefthook dump --format json
+mdt-cli ticket validate --help
+bunx lefthook install
+bunx lefthook dump --format json
 ```
 
-Verify that the effective pre-commit configuration contains the guard alongside existing remote and local jobs. Local composition and isolated block/pass/missing-validator tests are verified on Lefthook 2.1.8. Other versions need the same effective-config proof; the root config retains its earlier observation about 2.1.10 rather than assuming it behaves identically.
+The effective pre-commit configuration must contain exactly one
+`check-ticket-templates.sh` script alongside existing remote hooks and the local
+CSS gate. Remote `scripts`/`source_dir` resolution supports the pinned tag.
+`MDT_CLI` may select a different executable; provide it through the invoking
+shell or CI environment because some Lefthook versions do not propagate YAML
+environment overrides. It accepts a single executable path/name, not shell
+arguments. The hook preserves `GIT_INDEX_FILE` and never stages fixes.
+
+The consumer hook tests install the published pinned remote into isolated Git
+repositories and verify real blocked/accepted commits and missing-CLI failure.
+They also exercise the actual registered root job against temporary index/object
+storage without changing the real index or working ticket files.
 
 ## Template ownership
 
@@ -43,6 +65,10 @@ bun scripts/generate-ticket-templates.ts --check
 
 The shared build checks projection drift after compilation. Legacy instruction compatibility lives in shared/templates/legacy-instructions.ts; extend tests with a concrete old template when adding compatibility phrases.
 
-## Rollout boundary
+## Distribution
 
-This ticket establishes and verifies local MDT enforcement. The separate shared-hooks repository and other consuming projects are not changed in the initial rollout. Before distributing the hook there, record the validator/version dependency and verify a separate consuming project using the same staged-content command. Reuse the shared detector; do not copy its phrase rules into shell or CI.
+The shared hook commit and v0.5.0 tag are published. This repository consumes
+that tag and has removed its earlier local registration and launcher. Other
+projects can opt into the same remote config after making a compatible MDT CLI
+available. All consumers use the shared staged-content detector; do not copy its
+phrase rules into shell or CI.

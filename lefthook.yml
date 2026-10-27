@@ -2,8 +2,7 @@ min_version: 1.13.0
 
 remotes:
   - git_url: https://github.com/rikby/agent-commit-hooks.git
-    # TODO: switch to GitHub URL after pushing v0.2.0
-    # ref: v0.2.0
+    ref: v0.5.0
     configs:
       # Secrets & hygiene — every project
       - configs/general/block-env-files.yml
@@ -12,8 +11,9 @@ remotes:
       - configs/general/block-home-paths-commit-msg.yml
       - configs/general/block-generated-files.yml
       - configs/general/block-co-authored-by.yml
-      # Ticket hygiene — block unchecked tasks in Implemented tickets
+      # Ticket hygiene — complete checklists and authored ticket bodies
       - configs/mdt/block-mdt-incomplete-tasks.yml
+      - configs/mdt/check-ticket-templates.yml
       # Markdown + TypeScript
       - configs/general/check-markdown-fences.yml
       - configs/typescript/run-knip.yml
@@ -24,19 +24,6 @@ remotes:
       # See docs/semantic-classes.md in agent-commit-hooks for the full concept.
       - configs/general/enforce-semantic-classes.yml
 
-pre-commit:
-  commands:
-    mdt-ticket-templates:
-      run: sh scripts/check-ticket-templates.sh
-
-# MDT-261 verifies that the tracked command above survives the complete effective
-# config on the installed Lefthook 2.1.8. Recheck merging when changing versions.
-# NOTE: the parse-css gate lives in lefthook-local.yml (not here).
-# A local pre-commit > commands block in lefthook.yml is OVERRIDDEN by the
-# remote pre-commit > scripts brought in above (lefthook 2.1.10 does not
-# deep-merge local commands into the same key as remote scripts). However,
-# a commands block in lefthook-local.yml DOES merge alongside the remote
-# scripts. lefthook-local.yml is gitignored, so each clone must recreate it
-# — see scripts/parse-css.mjs header comment for the one-line setup.
-
-# Override: remove glob restriction for testing
+# The shared ticket guard is resolved through remote scripts/source_dir.
+# Local CSS enforcement is registered separately in lefthook-local.yml;
+# recreate it with scripts/setup-css-gate.sh.

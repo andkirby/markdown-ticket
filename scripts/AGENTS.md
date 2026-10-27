@@ -22,7 +22,6 @@ Guidance for agents working in this directory.
 | `parse-css.mjs`, `setup-css-gate.sh` | CSS syntax pre-commit gate | lefthook |
 | `install-git-hooks.sh`, `githooks/` | Hook installation | `hooks:install` |
 | `validate-mermaid-md` | Mermaid block linting | lefthook |
-| `check-ticket-templates.sh` | Read-only launcher for shared staged ticket-content validation | lefthook `mdt-ticket-templates` |
 | `check-shared-usage.sh` | Dead-code check in shared/ via `scip-finder` | — |
 | `sync-dates.ts` | Frontmatter dates ← git history | `docs/review-dates-*.md` |
 | `build-trace-store.ts`, `render-traceability-view.ts`, `render-verification-report.ts` | Spec-trace store + report renderers | spec-trace workflow |
