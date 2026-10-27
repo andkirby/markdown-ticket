@@ -34,7 +34,7 @@ export const MDT_TOOLS = [
   {
     name: 'mdt_ticket_get',
     description:
-      'Get one MDT ticket by key (e.g. MDT-042) with full attributes. Returns JSON. '
+      'Get one MDT ticket by key (e.g. MDT-042) with full attributes, including stored external refs. Returns JSON. '
       + 'The project resolves from cwd by default; pass `project` only to target a different project.',
     params: { properties: { key: POSITIONAL, project: PROJECT_PARAM }, required: ['key'] },
     argv: args => ['ticket', 'get', '--json', ...projectArgs(args), ...positionalArgs([args.key])],
@@ -74,7 +74,7 @@ export const MDT_TOOLS = [
       'Create a new MDT ticket. `title` is the full ticket title (one string). '
       + '`type` is the optional Type[/priority] marker (e.g. "Bug/high"), `slug` an optional '
       + 'URL slug. The project resolves from cwd by default; pass `project` only to target '
-      + 'a different project. Returns JSON.',
+      + 'a different project. To attach external refs, follow creation with mdt_ticket_attr. Returns JSON.',
     params: {
       properties: {
         title: { ...POSITIONAL, description: 'Full ticket title.' },
@@ -99,12 +99,20 @@ export const MDT_TOOLS = [
     name: 'mdt_ticket_attr',
     description:
       'Update attributes of one MDT ticket. `attrs` are field=value tokens; fields: '
-      + 'status, priority, level, phase, assignee, related, depends, blocks, impl-date, impl-notes. '
+      + 'status, priority, level, phase, assignee, component, related, depends, blocks, refs, impl-date, impl-notes. '
+      + 'Relations and refs support = (replace), += (add), -= (remove). '
+      + 'External refs are ordered instance-scoped identities, e.g. refs=work:PRJ-123,gh:acme/widgets#42; '
+      + 'refs= clears them; refs-= removes exact stored strings only. '
       + 'The project resolves from cwd by default; pass `project` only to target a different project. Returns JSON.',
     params: {
       properties: {
         key: POSITIONAL,
-        attrs: { type: 'array', items: POSITIONAL, minItems: 1 },
+        attrs: {
+          type: 'array',
+          items: POSITIONAL,
+          minItems: 1,
+          description: 'Attribute operations, e.g. refs+=gh:acme/widgets#42 or refs=. For identifiers containing commas, use a JSON string array operand.',
+        },
         project: PROJECT_PARAM,
       },
       required: ['key', 'attrs'],

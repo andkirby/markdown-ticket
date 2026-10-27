@@ -76,6 +76,21 @@ mdt_ticket_delete {"key":"LAB-001","force":true}
 
 `force` suppresses the CLI prompt; native processes have no interactive stdin. Get/list structured output contains metadata/paths; do not assume ticket body text is embedded in the JSON. Create's optional `content` passes Markdown as stdin data.
 
+## External references
+
+`mdt_ticket_attr` uses the same reference operations as the CLI:
+
+```text
+mdt_ticket_attr {"key":"MDT-252","attrs":["refs=work:PRJ-123,gh:acme/widgets#42"]}
+mdt_ticket_attr {"key":"MDT-252","attrs":["refs+=gh:acme/widgets#43"]}
+mdt_ticket_attr {"key":"MDT-252","attrs":["refs-=gh:acme/widgets#42"]}
+mdt_ticket_attr {"key":"MDT-252","attrs":["refs="]}
+```
+
+`=` replaces, `+=` adds absent identities, `-=` removes exact stored strings, and `refs=` clears. Use a JSON string array operand for identifiers containing commas. Get/list JSON includes stored `refs`; unrelated edits preserve unknown refs and order. Add/replacement shorthand such as `gh:#43` requires that configured instance's `defaultRepo`; existing stored shorthand never rebinds on reads.
+
+`mdt_ticket_create` follows the CLI create contract: create the ticket, then attach refs with `mdt_ticket_attr` using the returned key. It has no dedicated `refs` parameter. Configure tracker instances in the project's `.mdt-config.toml`; tracker configuration is file-only. BB and DSH share this tool contract.
+
 ## Trace examples
 
 ```text

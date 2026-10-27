@@ -310,6 +310,21 @@ describe('MDT-262 registered tools against actual CLI binaries in isolated stora
     expect(page1.items[0].key).not.toBe(page2.items[0].key)
     expect((await structured('mdt_ticket_list', { all: true, files: true, info: true })).items).toHaveLength(2)
     await structured('mdt_ticket_attr', { key, attrs: ['status=Approved', 'priority=Low'] })
+    // Exercise external refs through registered tools and the real CLI, including
+    // punctuation that must survive JSON, argv and frontmatter boundaries.
+    const refs = ['work:PRJ-123', 'gh:acme/widgets#42', 'future:<b>raw</b> & "quoted", λ']
+    await structured('mdt_ticket_attr', { key, attrs: [`refs=${JSON.stringify(refs)}`] })
+    expect((await structured('mdt_ticket_get', { key })).ticket.refs).toEqual(refs)
+    await structured('mdt_ticket_attr', { key, attrs: ['refs+=gh:acme/widgets#43'] })
+    await structured('mdt_ticket_attr', { key, attrs: ['refs+=gh:acme/widgets#43'] })
+    await structured('mdt_ticket_attr', { key, attrs: ['refs-=gh:acme/widgets#42'] })
+    await structured('mdt_ticket_attr', { key, attrs: ['refs-=gh:acme/widgets#42', 'priority=High'] })
+    const remainingRefs = [refs[0], refs[2], 'gh:acme/widgets#43']
+    expect((await structured('mdt_ticket_get', { key })).ticket.refs).toEqual(remainingRefs)
+    const listed = await structured('mdt_ticket_list', { all: true })
+    expect(listed.items.find((ticket: { key: string }) => ticket.key === key).refs).toEqual(remainingRefs)
+    await structured('mdt_ticket_attr', { key, attrs: ['refs='] })
+    expect((await structured('mdt_ticket_get', { key })).ticket.refs).toEqual([])
     await structured('mdt_ticket_deps', { key, check: true })
     const renamed = await invoke('mdt_ticket_rename', { key, title: 'Renamed native coverage', slug: 'renamed-native-coverage' })
     expect(renamed).toContain('Renamed native coverage')

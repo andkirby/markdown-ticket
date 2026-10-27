@@ -11,7 +11,7 @@ BB and DSH share these 11 tool definitions. Native output is CLI JSON except tic
 | `ticket get` | `mdt_ticket_get` | `key`, optional `project` |
 | `ticket list`, `ticket ls` | `mdt_ticket_list` | `filters`, `project`, `all`, `limit`, `offset`, `files`, `info` |
 | `ticket create` | `mdt_ticket_create` | `title`, optional `type`, `slug`, `project`, `content`; content goes to stdin |
-| `ticket attr` | `mdt_ticket_attr` | `key`, `attrs` as field=value tokens, optional `project` |
+| `ticket attr` | `mdt_ticket_attr` | `key`, `attrs` operations including `refs=`, `refs+=`, `refs-=`, optional `project` |
 | `ticket deps` | `mdt_ticket_deps` | `key`, optional `check`, `project` |
 | `ticket delete` | `mdt_ticket_delete` | `key`, optional `force`; **current project only**, no project override |
 | `ticket rename` | `mdt_ticket_rename` | `key`, `title`, optional `slug`; title/file-slug rename, text output; qualified keys supported |
@@ -21,6 +21,8 @@ BB and DSH share these 11 tool definitions. Native output is CLI JSON except tic
 | `project init` | `mdt_project_init` | `code`, `name`, optional `dir`, `ticketsPath`; target directory must already exist |
 
 Native operations choose JSON where supported. CLI `--yaml`, human colors, `--no-color`, shortcuts and `--guide` remain CLI presentation/discovery conveniences. `--stdin` is represented by the create tool's `content` parameter. Ticket rename does not rename a ticket key; key-renaming workflow is outside the CLI rename command.
+
+External references use `mdt_ticket_attr` after creation; create has no dedicated `refs` parameter. Get/list return stored refs. Registered BB real-CLI acceptance covers replace/add/exact repeated removal/clear, order, unknown punctuation-bearing refs and preservation through unrelated edits. Shared definitions and install-safe copies are drift-tested; DSH fresh-host live execution remains a separate check. See [reference examples](usage.md#external-references).
 
 ## spec-trace commands
 
@@ -68,6 +70,7 @@ Current UAT round: 2026-10-26, MDT-262. Availability of a definition is separate
 | Lane | Status | Evidence / next step |
 |---|---|---|
 | Shared contract coverage | Passed | Exact 11 + 8 tool set, argv/options, schema and sync tests; 107 plugin tests pass across 7 files |
+| MDT-252 reference follow-up (2026-10-27) | Passed | 111 plugin tests across 8 files, including registered real-CLI refs replace/add/exact removal/clear/read/list; plugin typecheck, targeted lint and build. Installed-session refresh is separate. |
 | BB registered real-CLI acceptance | Passed | All 19 operations, temporary project + isolated CONFIG_DIR; project/ticket lifecycle, all six trace entities, dry-run nonmutation and failed-validation remediation |
 | BB build, typecheck and targeted lint | Passed | All commands below exit 0 |
 | Installed BB fresh-session discovery | Passed | All 19 schemas discovered, installed mdt-tools skill loaded on demand; five read-only native calls passed (current/get project, get ticket, list requirements, strict all-stage validation). Remaining 14 catalog-inspected only; mutations covered by isolated acceptance. |

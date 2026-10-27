@@ -29,6 +29,21 @@ mdt_ticket_delete {"key":"LAB-001","force":true}
 
 Create `content` is Markdown sent separately to stdin; it is optional. Get/list JSON contains ticket metadata and paths, not the full body. List supports `all`, `limit`, `offset`, `files`, `info` and field=value filters. Other MDT commands return JSON; rename returns CLI text. Delete only when removal is authorized; `force` skips the CLI prompt and native processes are noninteractive.
 
+## External references
+
+`mdt_ticket_attr` uses the same reference operations as the CLI:
+
+```text
+mdt_ticket_attr {"key":"MDT-252","attrs":["refs=work:PRJ-123,gh:acme/widgets#42"]}
+mdt_ticket_attr {"key":"MDT-252","attrs":["refs+=gh:acme/widgets#43"]}
+mdt_ticket_attr {"key":"MDT-252","attrs":["refs-=gh:acme/widgets#42"]}
+mdt_ticket_attr {"key":"MDT-252","attrs":["refs="]}
+```
+
+`=` replaces, `+=` adds absent identities, `-=` removes exact stored strings, and `refs=` clears. Use a JSON string array operand for identifiers containing commas. Get/list JSON includes stored `refs`; unrelated edits preserve unknown refs and order. Add/replacement shorthand such as `gh:#43` requires that configured instance's `defaultRepo`; existing stored shorthand never rebinds on reads.
+
+`mdt_ticket_create` follows the CLI create contract: create the ticket, then attach refs with `mdt_ticket_attr` using the returned key. It has no dedicated `refs` parameter. Configure tracker instances in the project's `.mdt-config.toml`; tracker configuration is file-only. BB and DSH share this tool contract.
+
 ## Trace operations
 
 1. `spec_trace_init {"ticket":"MDT-262"}` before upsert.
