@@ -1,9 +1,11 @@
 ---
 code: MDT-254
-status: Proposed
+status: Implemented
 dateCreated: 2026-10-22T05:26:17.054Z
 type: Technical Debt
 priority: Medium
+implementationDate: 2026-10-22
+implementationNotes: Single source of truth: PROJECT_CODE_PATTERN moved to leaf module domain-contracts/src/project/code.ts (pattern + anchor-free BODY); new TICKET_NUMBER_MIN_DIGITS=3 / TICKET_NUMBER_MAX_DIGITS=5 bounds. Deliberate decision: contract is 3-5 digits (formatCrKey/MDT-159, input pattern, identity service already 5-digit; storage CR_CODE_PATTERN widened \d{3,4} -> \d{3,5}). Both postures preserved: input = case-insensitive non-padded \d{1,5}/i; storage = canonical padded uppercase. Derived sites: TicketService resolvePhaseEpicTargetTicket (inline dup removed), staged-validation filename digits, proseScanner token pattern, TreeBuilder ticket-file filter (also fixes TP0/5-digit leak into documents), WorktreeService branch extraction, keyNormalizer full-format bound + new shared normalizeKeyTerm (dedupes useQuickSearch + SwimlaneBoard copies). Sort check 9999->10000: allocation (max+1 parseInt) and listCRs DESC numeric = safe; sortTickets('code') localeCompare was lexicographic (already wrong at 999->1000) -> now numeric-aware. Parity test added so the MDT-252 probe (input true / frontmatter false) cannot regress.
 ---
 
 # Single source of truth for ticket key pattern

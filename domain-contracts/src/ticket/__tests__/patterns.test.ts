@@ -59,8 +59,9 @@ describe('PROJECT_CODE_PATTERN', () => {
 })
 
 // ---------------------------------------------------------------------------
-// 2. CR_CODE_PATTERN — already exists in domain-contracts/src/ticket/frontmatter.ts
-//    Pattern: /^[A-Z][A-Z0-9]{1,4}-\d{3,4}$/
+// 2. CR_CODE_PATTERN — canonical stored form in domain-contracts/src/ticket/frontmatter.ts
+//    Derived (MDT-254) from PROJECT_CODE_PATTERN + digit bounds 3..5:
+//    /^[A-Z][A-Z0-9]{1,4}-\d{3,5}$/
 // ---------------------------------------------------------------------------
 describe('CR_CODE_PATTERN', () => {
   it('accepts "MDT-001" (standard 3-digit)', () => {
@@ -75,12 +76,16 @@ describe('CR_CODE_PATTERN', () => {
     expect(CR_CODE_PATTERN.test('AB-1234')).toBe(true)
   })
 
+  it('accepts "MDT-10000" (5-digit number, matches input posture — MDT-254 probe)', () => {
+    expect(CR_CODE_PATTERN.test('MDT-10000')).toBe(true)
+  })
+
   it('rejects "MDT-01" (only 2 digits)', () => {
     expect(CR_CODE_PATTERN.test('MDT-01')).toBe(false)
   })
 
-  it('rejects "MDT-12345" (5 digits)', () => {
-    expect(CR_CODE_PATTERN.test('MDT-12345')).toBe(false)
+  it('rejects "MDT-123456" (6 digits exceeds max)', () => {
+    expect(CR_CODE_PATTERN.test('MDT-123456')).toBe(false)
   })
 
   it('rejects "mdt-001" (lowercase)', () => {
@@ -98,7 +103,7 @@ describe('CR_CODE_PATTERN', () => {
 
 // ---------------------------------------------------------------------------
 // 3. TICKET_KEY_INPUT_PATTERN — NEW (to be added to frontmatter.ts)
-//    Pattern: /^([A-Z][A-Z0-9]{1,4})-(\d{1,5})$/i
+//    Pattern (MDT-254, derived): /^([A-Z][A-Z0-9]{1,4})-(\d{1,5})$/i
 //    Purpose: Parse loose user input (case-insensitive, non-padded)
 // ---------------------------------------------------------------------------
 describe('TICKET_KEY_INPUT_PATTERN', () => {
@@ -162,6 +167,32 @@ describe('TICKET_KEY_INPUT_PATTERN', () => {
 
   it('rejects empty string', () => {
     expect(TICKET_KEY_INPUT_PATTERN.test('')).toBe(false)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// MDT-254: one key contract, one answer. Everything the input posture accepts
+// must also be accepted by the storage posture once canonicalized — the live
+// probe {"key":"MDT-10000","inputAccepted":true,"frontmatterAccepted":false}
+// must stay impossible.
+// ---------------------------------------------------------------------------
+describe('key contract parity (MDT-254)', () => {
+  const formatLikeNormalizer = (input: string): string | null => {
+    const match = input.match(TICKET_KEY_INPUT_PATTERN)
+    if (!match)
+      return null
+    const padding = Math.max(3, match[2].length)
+    return `${match[1].toUpperCase()}-${match[2].padStart(padding, '0')}`
+  }
+
+  it.each(['MDT-042', 'mdt-1000', 'MDT-10000', 'TP0-7', 'AB-99999'])('input "%s" canonicalizes into a storable key', (input) => {
+    const canonical = formatLikeNormalizer(input)
+    expect(canonical).not.toBeNull()
+    expect(CR_CODE_PATTERN.test(canonical!)).toBe(true)
+  })
+
+  it.each(['MDT-123456', 'A-1', '1AB-1'])('input "%s" is rejected by the input posture', (input) => {
+    expect(TICKET_KEY_INPUT_PATTERN.test(input)).toBe(false)
   })
 })
 

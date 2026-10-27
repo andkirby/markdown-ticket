@@ -1,6 +1,11 @@
 import type { ProjectDetails } from '@mdt/domain-contracts'
 import * as path from 'node:path'
-import { PROJECT_DOCUMENT_CONFIG_DEFAULTS } from '@mdt/domain-contracts'
+import {
+  PROJECT_CODE_PATTERN_BODY,
+  PROJECT_DOCUMENT_CONFIG_DEFAULTS,
+  TICKET_NUMBER_MAX_DIGITS,
+  TICKET_NUMBER_MIN_DIGITS,
+} from '@mdt/domain-contracts'
 import { glob } from 'glob'
 import { shouldIgnorePath } from '../utils/fsIgnoreList.js'
 
@@ -79,11 +84,16 @@ export class TreeBuilder {
     ticketsPath: string,
   ): string[] {
     if (ticketsPath === '.') {
-      // Filter ticket files by pattern when in root directory
+      // Filter ticket files by pattern when in root directory. Shape derives
+      // from the canonical key contract (MDT-254) so 4/5-digit tickets and
+      // alphanumeric project codes (TP0) are filtered correctly.
+      const ticketFileNamePattern = new RegExp(
+        `^${PROJECT_CODE_PATTERN_BODY}-\\d{${TICKET_NUMBER_MIN_DIGITS},${TICKET_NUMBER_MAX_DIGITS}}-.*\\.md$`,
+      )
       return filePaths.filter((filePath) => {
         const fileName = path.basename(filePath)
 
-        return !fileName.match(/^[A-Z]+-\d{3}-.*\.md$/)
+        return !fileName.match(ticketFileNamePattern)
       })
     }
     // Filter out files in tickets directory

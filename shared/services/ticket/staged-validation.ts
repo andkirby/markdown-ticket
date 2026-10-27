@@ -4,7 +4,7 @@ import { execFile } from 'node:child_process'
 import path from 'node:path'
 import process from 'node:process'
 import { promisify } from 'node:util'
-import { CanonicalProjectCodeSchema, ProjectConfigSchema } from '@mdt/domain-contracts'
+import { CanonicalProjectCodeSchema, ProjectConfigSchema, TICKET_NUMBER_MAX_DIGITS } from '@mdt/domain-contracts'
 import { getTicketsPath } from '../../models/Project.js'
 import { parseToml } from '../../utils/toml.js'
 import { inspectTicketContent } from './content-inspection.js'
@@ -150,7 +150,7 @@ export async function validateStagedTickets(request: { repoRoot: string }): Prom
   }
 
   const changed = new Set((await git(repoRoot, ['diff', '--cached', '--no-ext-diff', '--no-renames', '--name-only', '--diff-filter=ACMR', '-z'])).split('\0').filter(Boolean))
-  const filename = new RegExp(`^(${projectCode}-\\d{1,5})(?:-[^/]*)?\\.md$`)
+  const filename = new RegExp(`^(${projectCode}-\\d{1,${TICKET_NUMBER_MAX_DIGITS}})(?:-[^/]*)?\\.md$`)
   const result: StagedTicketValidationResult = { applicable: true, checked: 0, diagnostics: [] }
   for (const entry of entries) {
     if (!changed.has(entry.filePath))

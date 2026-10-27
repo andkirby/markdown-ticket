@@ -1,6 +1,6 @@
 import type { BoardTicket, Ticket } from '../../types'
 import { CRStatus } from '@mdt/domain-contracts'
-import { formatCrKey } from '@mdt/shared/utils/keyNormalizer'
+import { normalizeKeyTerm as sharedNormalizeKeyTerm } from '@mdt/shared/utils/keyNormalizer'
 import { getLocalBoardTicket, isEpicTicket as isEpicBoardTicket } from '../../utils/ticketLevels'
 
 export { isEpicTicket } from '../../utils/ticketLevels'
@@ -128,15 +128,10 @@ export function canDropTicketInLane(ticket: Pick<Ticket, 'phaseEpic'>, laneKey: 
 
 /**
  * Normalize a simplified ticket-key search term ("ABC-12") to the zero-padded
- * stored form ("ABC-012"), mirroring Quick Search's `normalizeTicketKeyTerm`
- * so both surfaces match keys identically. Non-key terms pass through.
+ * stored form ("ABC-012") via the shared key normalizer, mirroring Quick
+ * Search so both surfaces match keys identically. Non-key terms pass through.
  */
-function normalizeKeyTerm(term: string): string {
-  const match = term.match(/^([a-z]+)-(\d+)$/)
-  if (match)
-    return formatCrKey(match[1]!.toUpperCase(), Number.parseInt(match[2]!, 10)).toLowerCase()
-  return term
-}
+const normalizeKeyTerm = sharedNormalizeKeyTerm
 
 /**
  * MDT-206 BR-6.1 (UAT round 9): does an epic ticket match the swimlane toolbar

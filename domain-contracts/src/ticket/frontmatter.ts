@@ -1,11 +1,26 @@
 import { z } from 'zod'
+import { PROJECT_CODE_PATTERN_BODY } from '../project/code'
 import { CRLevelSchema, CRPrioritySchema, CRStatusSchema, CRTypeSchema } from '../types/schema'
 
 /**
- * CR code pattern for validation and OpenAPI schemas
+ * Canonical ticket-number digit bounds (MDT-254).
+ *
+ * Stored keys zero-pad to at least MIN digits ("MDT-001"); wider numbers keep
+ * their natural width up to MAX ("MDT-10000"), matching `formatCrKey` in
+ * shared/utils/keyNormalizer.ts. Every ticket-key regex — storage validation,
+ * user input, filenames, branch names, prose tokens — must derive from
+ * PROJECT_CODE_PATTERN and these bounds. No parallel patterns.
+ */
+export const TICKET_NUMBER_MIN_DIGITS = 3
+export const TICKET_NUMBER_MAX_DIGITS = 5
+
+/**
+ * CR code pattern for validation and OpenAPI schemas (canonical stored form).
  * Format: PROJECT_CODE_PATTERN-123 where PROJECT_CODE_PATTERN is 2-5 alphanumeric chars (first must be letter)
  */
-export const CR_CODE_PATTERN = /^[A-Z][A-Z0-9]{1,4}-\d{3,4}$/
+export const CR_CODE_PATTERN = new RegExp(
+  `^${PROJECT_CODE_PATTERN_BODY}-\\d{${TICKET_NUMBER_MIN_DIGITS},${TICKET_NUMBER_MAX_DIGITS}}$`,
+)
 
 /**
  * Parse user-supplied ticket key input.
@@ -13,7 +28,10 @@ export const CR_CODE_PATTERN = /^[A-Z][A-Z0-9]{1,4}-\d{3,4}$/
  *   [1] = project code prefix (e.g. "MDT")
  *   [2] = ticket number (e.g. "42")
  */
-export const TICKET_KEY_INPUT_PATTERN = /^([A-Z][A-Z0-9]{1,4})-(\d{1,5})$/i
+export const TICKET_KEY_INPUT_PATTERN = new RegExp(
+  `^(${PROJECT_CODE_PATTERN_BODY})-(\\d{1,${TICKET_NUMBER_MAX_DIGITS}})$`,
+  'i',
+)
 
 /**
  * Parse @CODE query syntax for project-scoped search.
@@ -21,8 +39,10 @@ export const TICKET_KEY_INPUT_PATTERN = /^([A-Z][A-Z0-9]{1,4})-(\d{1,5})$/i
  *   [1] = project code (e.g. "MDT")
  *   [2] = search text after the space
  */
-// eslint-disable-next-line regexp/no-super-linear-backtracking
-export const PROJECT_SCOPE_INPUT_PATTERN = /^@([A-Z][A-Z0-9]{1,4})\s+([^\n]*)$/i
+export const PROJECT_SCOPE_INPUT_PATTERN = new RegExp(
+  `^@(${PROJECT_CODE_PATTERN_BODY})\\s+([^\\n]*)$`,
+  'i',
+)
 
 const TrimmedTitleSchema = z.string()
   .min(1, 'Title is required')

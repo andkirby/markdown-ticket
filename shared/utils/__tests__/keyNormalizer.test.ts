@@ -11,7 +11,7 @@
  * Tickets are stored with 3-digit zero-padded numbers (MDT-001, MDT-002, etc.)
  */
 
-import { normalizeKey, KeyNormalizationError } from '../keyNormalizer'
+import { KeyNormalizationError, normalizeKey } from '../keyNormalizer'
 
 describe('keyNormalizer', () => {
   describe('valid Input - Numeric Shorthand', () => {
@@ -158,6 +158,10 @@ describe('keyNormalizer', () => {
       expect(() => normalizeKey('MDT-', 'MDT')).toThrow(KeyNormalizationError)
     })
 
+    it('Given 6-digit full key "MDT-123456" WHEN normalizing THEN throws (exceeds key contract, MDT-254)', () => {
+      expect(() => normalizeKey('MDT-123456', 'MDT')).toThrow(KeyNormalizationError)
+    })
+
     it('Given dash and number only "-5" WHEN normalizing THEN throws KeyNormalizationError', () => {
       expect(() => normalizeKey('-5', 'MDT')).toThrow(KeyNormalizationError)
     })
@@ -252,6 +256,10 @@ describe('keyNormalizer', () => {
     it('Given 5-character prefix "ABCDE-5" WHEN normalizing THEN returns "ABCDE-005"', () => {
       const result = normalizeKey('ABCDE-5', 'ANY')
       expect(result).toBe('ABCDE-005')
+    })
+
+    it('Given 5-digit key "MDT-10000" WHEN normalizing THEN keeps natural width (MDT-254)', () => {
+      expect(normalizeKey('MDT-10000', 'ANY')).toBe('MDT-10000')
     })
   })
 })

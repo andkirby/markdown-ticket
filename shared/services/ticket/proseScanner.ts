@@ -17,6 +17,7 @@
  */
 
 import type { Ticket } from '../../models/Ticket.js'
+import { PROJECT_CODE_PATTERN_BODY, TICKET_NUMBER_MAX_DIGITS } from '@mdt/domain-contracts'
 import { resolveDepKey } from './DependencyGraph.js'
 
 /**
@@ -44,17 +45,21 @@ const PRECONDITION_SECTION_NAMES = new Set([
 ])
 
 /**
- * CR-key token pattern for prose. Same shape as TICKET_KEY_INPUT_PATTERN in
- * domain-contracts (project code 2-5 chars, first letter, dash, 1-5 digits)
+ * CR-key token pattern for prose. Derived from the canonical key contract in
+ * domain-contracts (PROJECT_CODE_PATTERN, 1-TICKET_NUMBER_MAX_DIGITS digits)
  * but global and word-bounded so it matches multiple tokens per line and
- * avoids mid-word false hits.
+ * avoids mid-word false hits. Case-sensitive on purpose: prose references are
+ * expected in canonical uppercase.
  *
  * Deliberately requires a project prefix: bare numbers ("see item 100") are
  * ambiguous in prose (could be a spec section, line number, list index) and
  * are not recognized. The BDD scenarios S8/S9 use fully-qualified keys
  * (VOC-049..VOC-052); this matches that surface exactly.
  */
-const CR_KEY_TOKEN_PATTERN = /\b([A-Z][A-Z0-9]{1,4})-(\d{1,5})\b/g
+const CR_KEY_TOKEN_PATTERN = new RegExp(
+  `\\b(${PROJECT_CODE_PATTERN_BODY})-(\\d{1,${TICKET_NUMBER_MAX_DIGITS}})\\b`,
+  'g',
+)
 
 /**
  * Returns true when a header line introduces a precondition section.

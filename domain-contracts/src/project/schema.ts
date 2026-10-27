@@ -1,9 +1,10 @@
 import type { WorktreeConfig } from './worktree'
 import { z } from 'zod'
 import { SafeConfigStringOptionalSchema, SafeConfigStringSchema } from '../app-config/schema'
+import { PROJECT_CODE_PATTERN } from './code'
 import { WorktreeConfigSchema } from './worktree'
 
-export const PROJECT_CODE_PATTERN = /^[A-Z][A-Z0-9]{1,4}$/
+export { PROJECT_CODE_PATTERN, PROJECT_CODE_PATTERN_BODY } from './code'
 const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/u
 const _WINDOWS_ABSOLUTE_PATH_PATTERN = /^[A-Za-z]:[\\/]/u
 const _TICKETS_PATH_INVALID_CHARS_PATTERN = /[<>"|?*]/u

@@ -6,7 +6,7 @@
 import type { Ticket } from '@/types/ticket'
 
 import { PROJECT_SCOPE_INPUT_PATTERN, TICKET_KEY_INPUT_PATTERN } from '@mdt/domain-contracts'
-import { formatCrKey } from '@mdt/shared/utils/keyNormalizer'
+import { normalizeKeyTerm as sharedNormalizeKeyTerm } from '@mdt/shared/utils/keyNormalizer'
 import { useCallback, useMemo, useState } from 'react'
 
 // ---------------------------------------------------------------------------
@@ -98,15 +98,9 @@ export interface FilterTicketsOptions {
 /**
  * Normalize a ticket key's number part to zero-padded format.
  * E.g. "MDT-42" → "mdt-042", "42" → "042"
- * Used so that simplified keys (MDT-42) match stored keys (MDT-042).
+ * Shared with SwimlaneBoard so both surfaces match keys identically (MDT-254).
  */
-function normalizeTicketKeyTerm(term: string): string {
-  const match = term.match(/^([a-z]+)-(\d+)$/i)
-  if (match) {
-    return formatCrKey(match[1]!.toUpperCase(), Number.parseInt(match[2]!, 10)).toLowerCase()
-  }
-  return term
-}
+const normalizeTicketKeyTerm = sharedNormalizeKeyTerm
 
 function getTicketNumber(code: string): number {
   const match = code.match(/^[A-Z]+-(\d+)/i)

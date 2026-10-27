@@ -15,7 +15,7 @@
  * This utility matches the ticket format used throughout the system.
  */
 
-import { PROJECT_CODE_PATTERN } from '@mdt/domain-contracts'
+import { PROJECT_CODE_PATTERN, TICKET_NUMBER_MAX_DIGITS } from '@mdt/domain-contracts'
 
 /**
  * Error class for key normalization failures
@@ -67,10 +67,10 @@ export function normalizeKey(key: string, projectCode: string): string {
     return formatCrKey(projectCode, Number.parseInt(trimmed, 10))
   }
 
-  // Pattern 2: Full format with project prefix (e.g., "abc-12", "MDT-005", "TP0-002")
-  // Uses PROJECT_CODE_PATTERN from domain-contracts for validation
-  // Must start with a letter, followed by alphanumeric characters
-  const fullFormatPattern = /^([a-z][a-z0-9]*)-(\d+)$/i
+  // Pattern 2: Full format with project prefix (e.g. "abc-12", "MDT-005", "TP0-002")
+  // Loose prefix on purpose (validated against PROJECT_CODE_PATTERN below);
+  // digit width derives from the canonical key contract (MDT-254).
+  const fullFormatPattern = new RegExp(`^([a-z][a-z0-9]*)-(\\d{1,${TICKET_NUMBER_MAX_DIGITS}})$`, 'i')
   const match = trimmed.match(fullFormatPattern)
 
   if (match) {
@@ -110,9 +110,22 @@ export function normalizeKey(key: string, projectCode: string): string {
  */
 export function resolveKeyInProject(key: string, projectCode: string): string {
   const bare = key.includes('/') ? key.slice(key.lastIndexOf('/') + 1) : key
-  const fullFormat = bare.match(/^([a-z][a-z0-9]*)-(\d+)$/i)
+  const fullFormat = bare.match(new RegExp(`^([a-z][a-z0-9]*)-(\\d{1,${TICKET_NUMBER_MAX_DIGITS}})$`, 'i'))
   if (fullFormat) {
     return formatCrKey(projectCode, Number.parseInt(fullFormat[2], 10))
   }
   return normalizeKey(bare, projectCode)
+}
+
+/**
+ * Normalize a loose search term to the zero-padded stored form so simplified
+ * keys ("MDT-42") match stored keys ("MDT-042"). Non-key terms pass through
+ * unchanged. Used by frontend search surfaces (Quick Search, swimlanes) so
+ * every surface matches keys identically.
+ */
+export function normalizeKeyTerm(term: string): string {
+  const match = term.match(new RegExp(`^([a-z]+)-(\\d{1,${TICKET_NUMBER_MAX_DIGITS}})$`, 'i'))
+  if (match)
+    return formatCrKey(match[1].toUpperCase(), Number.parseInt(match[2], 10)).toLowerCase()
+  return term
 }

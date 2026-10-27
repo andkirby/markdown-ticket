@@ -45,6 +45,7 @@ import {
   CanonicalProjectCodeSchema,
   CoordinatorError,
   CRStatus as CRStatusEnum,
+  TICKET_KEY_INPUT_PATTERN,
 } from '@mdt/domain-contracts'
 import fs from 'fs-extra'
 import { getTicketsPath } from '../models/Project.js'
@@ -466,14 +467,8 @@ export class TicketService {
 
       // Sort by ticket code (natural sort, DESC - newest/highest numbers first)
       return filteredCRs.sort((a, b) => {
-        // Extract the numeric part for proper sorting (e.g., CR-A001 vs CR-A010)
-        const extractNumber = (code: string) => {
-          const match = code.match(/(\d+)/)
-          return match ? Number.parseInt(match[1], 10) : 0
-        }
-
-        const aNum = extractNumber(a.code)
-        const bNum = extractNumber(b.code)
+        const aNum = this.extractTicketNumber(a.code)
+        const bNum = this.extractTicketNumber(b.code)
 
         if (aNum !== bNum) {
           return bNum - aNum // DESC: higher numbers first
@@ -749,7 +744,7 @@ export class TicketService {
     project: Project,
     value: string,
   ): Promise<Ticket | null> {
-    const match = value.trim().match(/^([A-Z][A-Z0-9]{1,4})-(\d{1,5})$/i)
+    const match = value.trim().match(TICKET_KEY_INPUT_PATTERN)
     if (!match) {
       return null
     }
@@ -1600,6 +1595,15 @@ export class TicketService {
   /**
    * Sort tickets by the given field (descending by default for dates, ascending for code)
    */
+  /**
+   * Extract the ticket number from a code for numeric ordering (MDT-254:
+   * string comparison would order "MDT-10000" before "MDT-1001").
+   */
+  private extractTicketNumber(code: string): number {
+    const match = code.match(/(\d+)/)
+    return match ? Number.parseInt(match[1], 10) : 0
+  }
+
   private sortTickets(tickets: Ticket[], sortField: string): Ticket[] {
     return [...tickets].sort((a, b) => {
       switch (sortField) {
@@ -1614,6 +1618,10 @@ export class TicketService {
           return bDate - aDate // newest first
         }
         case 'code': {
+          const aNum = this.extractTicketNumber(a.code)
+          const bNum = this.extractTicketNumber(b.code)
+          if (aNum !== bNum)
+            return aNum - bNum
           return a.code.localeCompare(b.code)
         }
         default:

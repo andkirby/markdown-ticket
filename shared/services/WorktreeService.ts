@@ -17,7 +17,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import { promisify } from 'node:util'
 
-import { WorktreeConfigSchema } from '@mdt/domain-contracts'
+import { PROJECT_CODE_PATTERN_BODY, TICKET_NUMBER_MAX_DIGITS, TICKET_NUMBER_MIN_DIGITS, WorktreeConfigSchema } from '@mdt/domain-contracts'
 
 const execFileAsync = promisify(execFile)
 
@@ -235,8 +235,12 @@ export class WorktreeService {
     const branchName = branch.replace(/^refs\/heads\//, '')
 
     // Pattern: PROJECT_CODE-NUMBER (e.g., MDT-095, API-123)
-    // Match from end of string to get last segment
-    const match = branchName.match(/([A-Z]{2,}-\d{3,})$/)
+    // Match from end of string to get last segment; digits bounded by the
+    // canonical ticket-number contract (MDT-254).
+    const branchTicketCodePattern = new RegExp(
+      `(${PROJECT_CODE_PATTERN_BODY}-\\d{${TICKET_NUMBER_MIN_DIGITS},${TICKET_NUMBER_MAX_DIGITS}})$`,
+    )
+    const match = branchName.match(branchTicketCodePattern)
     return match ? match[1] : null
   }
 
