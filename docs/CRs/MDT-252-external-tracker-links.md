@@ -37,6 +37,8 @@ Teams track work in Jira/GitHub/GitLab while MDT is the local-first layer. Ticke
 
 ## Acceptance Criteria
 
+- External references use one badge per tracker instance: one icon, up to three configured short keys, a shared new-tab arrow and +N for additional refs. Overflow uses the same short labels and excludes resolved inline refs; all-fitting resolved groups have no redundant dropdown. Unavailable refs retain explanation access.
+
 - Native plugin interfaces under `plugins/` advertise and document external reference operations for both BB and DSH: `refs=` replaces/clears, `refs+=` adds, and `refs-=` removes exact stored identities. Create follows the CLI contract: create the ticket, then attach refs through `mdt_ticket_attr`.
 - Get/list plugin outputs preserve stored refs. Registered BB-to-CLI acceptance verifies replace, repeated add/removal, clear, order, unknown punctuation-bearing identities, and preservation through unrelated edits.
 - Shared definitions in `plugins/_lib/mdt-tools.js` and the install-safe `plugins/bb/lib/mdt-tools.js` stay synchronized; shipped plugin skills and usage/coverage docs describe the same interface. Plugin tests, typecheck, lint and build pass.
@@ -56,3 +58,9 @@ Verification: plugin follow-up commit `5257c7b9`; 111 tests passed across 8 file
 ## Review record
 
 2026-10-19 — Consultant review (@thread:thr_u6zqw3x92s), verdict **FIX FIRST**: two factual corrections applied (five digits already supported by `formatCrKey`/`TICKET_KEY_INPUT_PATTERN` — only `CR_CODE_PATTERN` lags; Quick Search routes external keys into local-project resolution), plus the instance-scoped ref design replacing kind-scoped refs. No files changed by the reviewer; verification was source review plus a focused key-contract probe.
+
+## 8. Clarifications
+
+### UAT Session 2026-10-27
+
+The user requested short dropdown labels, identified repeated inline references in the old full-list popup, and selected relationship-style grouping (one icon, several keys, +N). Refined BR-7/BR-9/BR-15 in place; updated requirements, BDD, architecture, tests, tasks, current UX, canonical card/badge specs/mockups and HTML styleguide. Written current-round [uat.md](MDT-252/uat.md); relocked the approved requirements and passed strict all-stage validation. New focused evidence covers 26 passing browser tests plus frontend build/typecheck/lint; the original sealed evidence remains historical. Codex thr_g5ynmg2ccm passed the scoped UAT implementation review; its minor old-inspector wording findings were reconciled.

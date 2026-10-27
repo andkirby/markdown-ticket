@@ -40,7 +40,7 @@ Swimlane cards preserve their current Show badges=false default. This outer gate
 
 ## Responsive and accessibility
 
-Badges wrap within card/column width; long external labels constrain themselves without overflowing the column. External details remain reachable by touch/keyboard, including one/two-ref cards. Follow density text/target floors and visible focus from the shared badge spec. No external abbreviation changes the stored identifier or URL.
+Badges wrap within card/column width; long external labels constrain themselves without overflowing the column. External refs use one icon and up to three short links per instance group. Hidden refs are keyboard/touch reachable through +N; inline unavailable refs retain an explanation control even without overflow. Follow density text/target floors and visible focus from the shared badge spec. No external abbreviation changes the stored identifier or URL.
 
 ## Source and verification anchors
 

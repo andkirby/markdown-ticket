@@ -257,3 +257,7 @@ Final boundary review corrections: affected-ticket metadata SSE must be followed
 The same live-update correction invalidates the existing five-minute cross-project response cache on local ticket create/update/delete events and refreshes an active query. Request versions/cache epochs prevent pre-invalidation responses from repopulating stale URLs. New input cancels its prior debounce; cancel clears the active request. Existing TTL, scope and retry behavior remain; no polling or external tracker calls are added.
 
 Delayed-response guards extend to both boundaries: dataLayer.searchProjects accepts a local caller generation in its dedupe key (not the HTTP payload). The hook supplies a useId namespace plus cache epoch, so invalidated requests cannot reuse old in-flight HTTP promises, while equivalent same-generation requests still dedupe. useProjectManager compares a selection-generation ref, incremented on committed project identity transitions, alongside per-ticket versions to reject A→B→A stale completions. Browser tests hold actual HTTP response bodies to verify both races.
+
+## Current UAT refinement
+
+TASK-1 and TASK-3 own the grouped-badge update and hidden-only shortened overflow. Direct GREEN targets are TEST-external-reference-journeys and TEST-external-reference-search; run existing drag regression, frontend build/typecheck/lint and independent review. See [uat.md](uat.md) for the current execution brief; earlier sealed runs remain evidence for their original source, not for this refinement.

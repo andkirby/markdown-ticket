@@ -1,67 +1,60 @@
 # Ticket Card — Mockups
 
-Related spec: [Ticket Card](ticket-card.spec.md). External behavior: [External Reference Badges](external-reference-badge.spec.md).
+Related specs: [Ticket Card](ticket-card.spec.md), [External Reference Badges](external-reference-badge.spec.md).
 
-## Default: selected badge flow
-
-```wireloom
-window "Ticket card — external badges":
-  panel:
-    row justify=between:
-      text "MDT-252" bold
-      text "2h ago" muted
-    text "External issue tracker links" bold
-    row:
-      chip "In Progress"
-      chip "Feature"
-      chip "◈ 123 ↗"
-      button "⋯"
-```
-
-The tracker icon identifies Jira here. Prefix PRJ is omitted because it is the sole configured project key. All metadata, including external refs, shares one wrapping flow; renderer rows do not reserve an external-ref line.
-
-## Reference details open
+## Default grouped Jira references
 
 ```wireloom
-window "Ticket card — reference details":
+window "Ticket card":
   panel:
-    row justify=between:
-      text "MDT-252" bold
-      text "2h ago" muted
-    text "External issue tracker links" bold
-    row:
-      chip "In Progress"
-      chip "Feature"
-      chip "◈ work:123 ↗"
-      chip "◈ client:PRJ-123 ↗"
-      button "+2"
-    section "External references":
-      text "Jira (work) · PRJ-123 ↗"
-      text "Jira (client) · PRJ-123 ↗"
-      text "GitLab · acme/platform/customer-authentication#18 ↗"
-      text "legacy:OPS-7 — unavailable: tracker not configured" muted
+    col 520:
+      row:
+        text "ABC-004" bold
+        text "3m ago" muted
+      text "Make sample data reproducible for frontend integration" bold
+      row:
+        chip "↔ 003"
+        chip "◈ 95 68 ↗"
 ```
 
-This complete-list popover is viewport bounded and scrolls internally. Full namespace paths wrap; all refs appear, not just overflow. Actual product glyphs come from the vendor icon component, not the Wireloom diamond.
+One Jira icon and two independent short links share a badge. No dropdown when all resolved refs fit. The existing wrapping region also holds internal relationships and worktree metadata.
 
-## Narrow card: busy metadata and unavailable ref
+## Instance disambiguation and overflow
 
 ```wireloom
-window "Ticket card — narrow":
+window "Grouped reference overflow":
   panel:
-    row justify=between:
-      text "MDT-252" bold
-      text "2h ago" muted
-    text "External issue tracker links" bold
-    row:
-      chip "In Progress"
-      chip "Feature"
-      chip "Related: 030, 035"
-    row:
-      chip "◈ widgets#123 ↗"
-      chip "⚠ legacy:OPS-7"
-      button "⋯"
-      chip "Worktree"
+    col 520:
+      row:
+        text "MDT-252" bold
+        text "2h ago" muted
+      text "External issue tracker links" bold
+      row:
+        chip "In Progress"
+        chip "◈ work: 123 124 125 ↗ +2"
+        chip "◈ client: 123 ↗"
+      divider
+      text "External references" bold
+      button "126 ↗"
+      button "127 ↗"
 ```
 
-Natural wrapping depends on available width; the fixed order keeps external refs after internal relationships and before worktree. Missing refs render no placeholder. Read-only cards preserve external navigation/details while removing mutation/drag capability. Hidden board badges do not hide search-result or viewer refs.
+The illustrated panel belongs to work:+2. It contains only the two hidden keys, not 123/124/125. The client group remains separate even with an identical issue key. Native titles and accessible names retain full identities and destinations.
+
+## Narrow cards and unavailable references
+
+```wireloom
+window "Narrow ticket card":
+  panel:
+    col 300:
+      row:
+        text "MDT-252" bold
+        text "2h ago" muted
+      text "External issue tracker links" bold
+      row:
+        chip "Git repository-name…#42 ↗"
+        chip "⚠ legacy:OPS-7 ⋯"
+      text "Tracker instance is not configured" muted
+```
+
+Labels constrain or wrap within the available width. Unavailable refs keep an alert and non-navigating explanation control even without overflow. The production Radix popover bounds both dimensions, scrolls internally, wraps long keys, and restores focus to its invoking control.

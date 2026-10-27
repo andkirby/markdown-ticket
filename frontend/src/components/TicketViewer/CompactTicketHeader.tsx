@@ -48,7 +48,7 @@ export function CompactTicketHeader({ ticket, className = '', action }: CompactT
           {(ticket.blocks?.length || 0) > 0 && (
             <RelationshipBadge variant="blocks" links={ticket.blocks} />
           )}
-          <ExternalReferenceBadges refs={ticket.refs} externalRefs={ticket.externalRefs} full />
+          <ExternalReferenceBadges refs={ticket.refs} externalRefs={ticket.externalRefs} />
           {action && (
             <>
               <span className="compact-ticket-header__spacer" />

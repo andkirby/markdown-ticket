@@ -18,6 +18,7 @@
 @layer components {
   .badge[data-external-reference] {
     display: inline-flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: var(--gap-xs);
     min-inline-size: 24px;
@@ -33,8 +34,24 @@
     line-height: 1.4;
     text-decoration: none;
   }
-  .badge[data-reference-state="unavailable"] {
+  .external-reference__link[data-reference-state="unavailable"] {
     color: var(--text-muted);
+  }
+  .external-reference__link,
+  .external-reference__more {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: 24px;
+    min-block-size: 24px;
+    max-inline-size: 100%;
+    border: 0;
+    border-radius: var(--radius-xs);
+    background: transparent;
+    color: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    text-decoration: none;
   }
   .external-reference__key {
     min-inline-size: 0;
@@ -78,9 +95,12 @@
     gap: var(--gap-xs);
     min-inline-size: 0;
   }
-  .external-reference__panel .badge[data-external-reference] {
+  .external-reference__panel .external-reference__link {
     align-self: start;
+    justify-content: start;
+    padding-inline: var(--gap-xs);
     font-size: var(--fs-ui-sm);
+    color: var(--primary-text);
   }
   .external-reference__panel .external-reference__key {
     white-space: normal;
@@ -92,18 +112,18 @@
     color: var(--text-muted);
     overflow-wrap: anywhere;
   }
-  .external-reference:focus-visible,
+  .external-reference__link:focus-visible,
   .external-reference__more:focus-visible,
   .external-reference__panel:focus-visible {
     outline: 2px solid var(--primary-text);
     outline-offset: 2px;
   }
-  .external-reference:active,
+  .external-reference__link:active,
   .external-reference__more:active {
     background: var(--bg-subtle);
   }
   @media (hover: hover) and (pointer: fine) {
-    a.external-reference:hover,
+    a.external-reference__link:hover,
     .external-reference__more:hover {
       background: var(--bg-subtle);
       text-decoration: underline;

@@ -31,7 +31,7 @@ Resolution parses the explicit instance and full identifier first, validates tha
 
 ### Presentation
 
-TicketCard -> TicketAttributeTags -> existing wrapping badge flow (A), with refs after relationships and before worktree. The shared component uses `.badge` data-attribute chrome, neutral surface and link-text tokens, vendor glyph, configured display label and new-tab arrow. Details always remain available, including <=2 refs and unavailable-only refs; reuse Radix Popover with bounded width/height and real focusable targets. Preserve current swimlane Show badges gate and add a preserving one-time per-badge preference migration.
+TicketCard -> TicketAttributeTags -> existing wrapping badge flow (A), with refs after relationships and before worktree. The shared component uses `.badge` data-attribute chrome, neutral surface and link-text tokens, vendor glyph, configured display label and new-tab arrow. Each tracker-instance group shows up to three short links; +N opens hidden-only overflow with matching short labels. All-fitting resolved groups have no dropdown; unavailable refs retain explanation access even at one ref. Full identities stay in native link titles and accessible names. Reuse Radix Popover with bounded width/height and real focusable targets. Preserve current swimlane Show badges gate and add a preserving one-time per-badge preference migration.
 
 CompactTicketHeader shows the complete reference set independently of board preferences. Existing mutation interfaces supply editing; this ticket does not introduce a new card mutation form. Search results likewise always show refs independently of board preferences. Search result containers must allow links/buttons as siblings of their local-selection affordance, never nested inside a native button. Keyboard routing ignores nested external controls instead of selecting the local result.
 
@@ -62,7 +62,7 @@ Least-confident seams and invalidation evidence: (1) scalar legacy frontmatter p
 - C3/C4/C5: only supported encoded HTTP(S), credential-free, configured-origin issue URLs; preserve base paths and GitLab subgroups; no merge-request inference.
 - C6/C13: normalize only new add/replacement operands; remove only exact stored strings, including raw/expanded coexistence.
 - C7/C10/C14: absent/invalid optional trackers never hide projects or erase unknown data. No-config tickets keep their existing behavior.
-- C8/C9: native link semantics, real focus, text/target floors, touch-accessible full details, and preserving preference migration.
+- C8/C9: native link semantics, real focus, text/target floors, touch-accessible overflow and unavailable explanations, and preserving preference migration.
 - C12: no external tracker API requests; browser navigation occurs only on explicit link activation.
 - CLI remains input/output only. Domain contracts remain pure. Runtime resolver/search/mutation logic has one shared owner each. Tests use real files/config/API/browser behavior; fixtures are not runtime code.
 
@@ -99,3 +99,7 @@ The same live-update correction invalidates the existing five-minute cross-proje
 Delayed-response guards extend to both boundaries: dataLayer.searchProjects accepts a local caller generation in its dedupe key (not the HTTP payload). The hook supplies a useId namespace plus cache epoch, so invalidated requests cannot reuse old in-flight HTTP promises, while equivalent same-generation requests still dedupe. useProjectManager compares a selection-generation ref, incremented on committed project identity transitions, alongside per-ticket versions to reject A→B→A stale completions. Browser tests hold actual HTTP response bodies to verify both races.
 
 Popover focus is applied synchronously in the Radix onOpenAutoFocus lifecycle, where content is mounted. Deferring it to requestAnimationFrame could steal focus back after rapid Escape/Shift+F6. Physical keyboard repeat coverage verifies the correction without adding sleeps or weakening focus assertions.
+
+## UAT: grouped external reference badges
+
+ExternalReferenceBadges groups derived references by exact instance and delegates each group to a focused ReferenceGroup. The group reuses RelationshipBadge.INLINE_MAX (three), renders one icon and optional instance alias, independent native anchors and one shared new-tab arrow. Search can rank matching groups/keys inline. Hidden entries are computed from actual inline occurrence keys, then rendered in stored order; resolved inline refs do not repeat in overflow. Inline unavailable refs retain a non-navigating explanation panel. ReferenceLink owns the same configured short label, full-identity tooltip/accessible name and original destination in both places. CompactTicketHeader uses the same presentation instead of forcing raw labels. Resolver, persistence, search, preferences and live-update owners remain unchanged.

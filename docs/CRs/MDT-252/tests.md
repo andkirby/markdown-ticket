@@ -17,7 +17,7 @@ Baseline full build passed. The new domain suite ran and failed 3/3 assertions; 
 
 ## Required mechanisms and review
 
-Round-trip both inline and block arrays, unknown strings/duplicates, punctuation and Unicode. Verify raw shorthand/canonical coexistence, operand-only expansion, exact-only idempotent removal, no read-time rebinding, same-origin/context/subgroup URLs, invalid optional entries, numeric versus #number identity matches, and preserved local-key/drag behavior. Browser acceptance must cover actual focus/targets, full-list touch details, overflow/viewport bounds, hidden-board versus visible-search/viewer refs, and read-only access.
+Round-trip both inline and block arrays, unknown strings/duplicates, punctuation and Unicode. Verify raw shorthand/canonical coexistence, operand-only expansion, exact-only idempotent removal, no read-time rebinding, same-origin/context/subgroup URLs, invalid optional entries, numeric versus #number identity matches, and preserved local-key/drag behavior. Browser acceptance must cover actual focus/targets, grouped short links, touch/keyboard hidden-only overflow and unavailable explanations, overflow/viewport bounds, hidden-board versus visible-search/viewer refs, and read-only access.
 
 The authored tests exercise these through public boundaries; the Tests stage is responsible for filling concrete gaps discovered during review before final verification. Final completion cannot infer unexecuted assertions from coverage labels. No external tracker service or new server mode is required. Existing servers must not be restarted; the isolated E2E wrapper owns only its temporary services.
 
@@ -42,3 +42,13 @@ Live/cached-query race fixtures use a unique external issue number derived from 
 Popover focus is applied synchronously in the Radix onOpenAutoFocus lifecycle, where content is mounted. Deferring it to requestAnimationFrame could steal focus back after rapid Escape/Shift+F6. Physical keyboard repeat coverage verifies the correction without adding sleeps or weakening focus assertions.
 
 Commit-gate reconciliation: package-specific ESLint runs from each package directory with package-relative file paths/config. Running those configs from the repository root did not match the package production glob and incorrectly removed the existing MDT-258 cast-baseline marker in crHandlers. The original marker is restored; no new suppression is introduced. The corrected lint invocations and root commit-hook lint must both pass.
+
+## UAT: grouped instance badges and hidden-only overflow
+
+The user replaced the original two-inline complete-list inspector with relationship-style groups: one icon, three short native links and +N per instance. Dropdowns use the same short labels and exclude resolved inline entries. Unavailable refs retain a non-navigating explanation control. Full raw identities remain in link titles/accessibility names and unchanged storage.
+
+Current focused verification: 26/26 Chromium tests passed across external-reference ticket/search journeys and existing drag-drop regression. This includes one-icon grouping, separate same-kind instances, three inline keys, exact hidden-only shortened overflow, no redundant trigger for all-fitting resolved refs, native link isolation, physical F6/Tab/Shift+F6 traversal, unavailable reasons, density/light-dark, narrow long labels, styleguide, live replace/clear and delayed-response races. Frontend build, changed-file lint and changed TypeScript validation (two projects, five files) passed. Smartflyer's running Safari web app was refreshed after the build and visually confirmed the grouped short-number badges; no server was restarted.
+
+Raw logs for this UAT round live in the requesting BB thread storage: mdt252-group-final-e2e.log, mdt252-group-build.log, mdt252-group-types.log and mdt252-group-lint.log. These are new scoped evidence; the original sealed plan/run/review remain immutable history for their original source. Codex thread thr_g5ynmg2ccm passed the scoped UAT implementation review; three stale old-inspector descriptions identified in that review were reconciled in the active docs.
+
+All three updated Wireloom mockup blocks compile to HTML. Both changed frontend components are GREEN under ts-metrics (CC 16/4, CoC 13/11); the full frontend red-only inventory still reports existing unrelated files, not these components.

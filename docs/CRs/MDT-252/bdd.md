@@ -21,3 +21,7 @@ The tests must assert visible external identities and destinations instead of as
 ## Execution Notes
 
 `spec_trace_validate` at stage `bdd` passed with no issues. This proves trace consistency only. Concrete acceptance files now exist under ticket/external-references.spec.ts and quick-search/external-references.spec.ts. Initial real HTTP execution is RED because ticket reads omit refs; domain/shared assertion suites are also RED. UI placement A and configured display/search rules are agreed. Tests-stage and final implementation review must close any remaining detailed coverage gaps before full acceptance is claimed. No implementation or readiness is claimed.
+
+## UAT: grouped references
+
+One tracker instance produces one badge with one icon and up to three short keys. Different instances remain separate even when the tracker kind/key matches. Overflow contains only the additional keys, using identical configured shortening; all-fitting resolved groups have no redundant details trigger. Unavailable refs retain non-navigating explanation access. Physical keyboard coverage traverses three inline anchors before +N, activates a native external link, verifies the hidden key, and restores focus/query state.

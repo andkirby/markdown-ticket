@@ -55,29 +55,9 @@
       ]
     },
     {
-      "id": "BR-7",
-      "kind": "behavior",
-      "text": "WHEN external references are displayed on a ticket card, the system shall show a tracker icon, the actual external key, and an external-navigation arrow for each resolved inline reference.",
-      "sourceRef": "docs/CRs/MDT-252-external-tracker-links.md",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:in-ticket"
-      ]
-    },
-    {
       "id": "BR-8",
       "kind": "behavior",
       "text": "WHEN a user activates a resolved reference link, the system shall open that external issue in a new tab without also opening or dragging the parent ticket card.",
-      "sourceRef": "docs/CRs/MDT-252-external-tracker-links.md",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:in-ticket"
-      ]
-    },
-    {
-      "id": "BR-9",
-      "kind": "behavior",
-      "text": "WHEN a user requests reference details, the system shall expose every full reference identity and any unavailable reason without requiring external navigation.",
       "sourceRef": "docs/CRs/MDT-252-external-tracker-links.md",
       "routePolicy": "bdd",
       "tags": [
@@ -285,16 +265,6 @@
       ]
     },
     {
-      "id": "BR-15",
-      "kind": "behavior",
-      "text": "WHEN external reference display shortening is configured, the system shall render context-aware abbreviated labels while retaining full stored identifiers, destinations and inspectable identities.",
-      "sourceRef": "docs/CRs/MDT-252/requirements.md",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:in-ticket"
-      ]
-    },
-    {
       "id": "BR-17",
       "kind": "behavior",
       "text": "WHEN Quick Search displays a local ticket with external refs, the system shall display external-reference badges independently of board badge-visibility settings, including for results matched by local identity or title.",
@@ -308,6 +278,36 @@
       "id": "BR-16",
       "kind": "behavior",
       "text": "WHEN a user searches an issue number without a prefix, the system shall include matching local and external issue numbers, while a #number query selects only complete matching external repository-issue numbers rather than local/Jira-only identities or longer numbers.",
+      "sourceRef": "docs/CRs/MDT-252/requirements.md",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-7",
+      "kind": "behavior",
+      "text": "WHEN external references are displayed, the system shall group them by configured tracker instance into one badge with one tracker icon, up to three individually clickable configured short keys, a shared external-navigation arrow, and a +N control for additional references.",
+      "sourceRef": "docs/CRs/MDT-252/requirements.md",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-9",
+      "kind": "behavior",
+      "text": "WHEN a user opens external reference overflow, the system shall show only hidden resolved references using the same configured short labels, retain full identities in accessible names and tooltips, and provide non-navigating explanations for unavailable references even when those references fit inline.",
+      "sourceRef": "docs/CRs/MDT-252/requirements.md",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-15",
+      "kind": "behavior",
+      "text": "WHEN external reference display shortening is configured, the system shall use the same context-aware abbreviated labels inline and in overflow while retaining full stored identifiers, destinations and inspectable identities.",
       "sourceRef": "docs/CRs/MDT-252/requirements.md",
       "routePolicy": "bdd",
       "tags": [
@@ -352,18 +352,6 @@
       "sourceRef": "docs/CRs/MDT-252/requirements.trace.md"
     },
     {
-      "id": "refs_inspected_without_navigation",
-      "title": "Inspect complete references and unavailable reasons",
-      "covers": [
-        "BR-6",
-        "BR-9"
-      ],
-      "given": "a ticket card with one, two, or several refs including a long identifier or unavailable tracker",
-      "when": "I open its reference details using touch or keyboard",
-      "then": "the complete list exposes full identifiers, configured instance names, and unavailable reasons without navigating to an external tracker",
-      "sourceRef": "docs/CRs/MDT-252/requirements.trace.md"
-    },
-    {
       "id": "refs_read_only_navigation",
       "title": "Retain external navigation in read-only viewing",
       "covers": [
@@ -400,20 +388,6 @@
       "sourceRef": "docs/CRs/MDT-252/requirements.trace.md"
     },
     {
-      "id": "refs_open_correct_instance",
-      "title": "refs open correct instance",
-      "covers": [
-        "BR-5",
-        "BR-7",
-        "BR-8",
-        "BR-15"
-      ],
-      "given": "a visible ticket card with configured Jira project PRJ and repository acme/widgets refs",
-      "when": "I inspect the shortened icon-and-key badges and activate a chosen reference",
-      "then": "only configured matching context is shortened, full identities remain inspectable, and the correct actual issue opens in a new tab without opening or dragging the local ticket",
-      "sourceRef": "docs/CRs/MDT-252/requirements.md"
-    },
-    {
       "id": "refs_board_filter",
       "title": "refs board filter",
       "covers": [
@@ -438,6 +412,32 @@
       "when": "I search by that ticket's title or local identity, open the viewer and explicitly replace its reference list",
       "then": "the search result always shows its external badges and the complete viewer list remains readable/editable independently of the board preference",
       "sourceRef": "docs/CRs/MDT-252/requirements.md"
+    },
+    {
+      "id": "refs_open_correct_instance",
+      "title": "Open grouped external references on the configured instance",
+      "covers": [
+        "BR-5",
+        "BR-7",
+        "BR-8",
+        "BR-15"
+      ],
+      "given": "A ticket stores several Jira references in one configured instance plus a reference in another instance.",
+      "when": "The user scans the grouped badges and activates a short key.",
+      "then": "Each instance has one icon and up to three short native links with a shared new-tab indicator; the chosen key opens only its configured destination without opening or dragging the local card.",
+      "sourceRef": "docs/CRs/MDT-252/bdd.md"
+    },
+    {
+      "id": "refs_inspected_without_navigation",
+      "title": "Inspect hidden short references and unavailable reasons without duplication",
+      "covers": [
+        "BR-6",
+        "BR-9"
+      ],
+      "given": "A tracker-instance group has more than three references, or contains an unavailable reference.",
+      "when": "The user opens its overflow or explanation control by pointer or keyboard.",
+      "then": "The bounded panel shows only hidden resolved keys with configured short labels, full native tooltips and accessible identities, plus any unavailable explanations; resolved inline keys are not repeated, and Escape restores the invoking control.",
+      "sourceRef": "docs/CRs/MDT-252/bdd.md"
     }
   ],
   "obligations": [
@@ -822,6 +822,24 @@
         "ART-cross-search-live-cache",
         "ART-search-request-boundary",
         "ART-tests-e2e-ticket-external-references-spec"
+      ],
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "OBL-grouped-reference-presentation",
+      "title": "Render one badge per instance with three short native links and hidden-only shortened overflow; retain unavailable explanations and keyboard isolation",
+      "derivedFrom": [
+        "BR-7",
+        "BR-9",
+        "BR-15",
+        "C8"
+      ],
+      "artifactIds": [
+        "ART-frontend-src-components-badge-externalreferencebadges",
+        "ART-frontend-src-components-badge-badge",
+        "ART-frontend-src-components-ticketviewer-compactticketheader",
+        "ART-tests-e2e-ticket-external-references-spec",
+        "ART-tests-e2e-quick-search-external-references-spec"
       ],
       "sourceRef": "docs/CRs/MDT-252/architecture.md"
     }
@@ -1279,40 +1297,6 @@
       "sourceRef": "docs/CRs/MDT-252/architecture.md"
     },
     {
-      "id": "TEST-external-reference-journeys",
-      "kind": "e2e",
-      "title": "Real persisted refs, mutations, destinations, card/details/readonly/viewer and responsive acceptance",
-      "covers": [
-        "BR-1",
-        "BR-2",
-        "BR-3",
-        "BR-4",
-        "BR-5",
-        "BR-6",
-        "BR-7",
-        "BR-8",
-        "BR-9",
-        "BR-14",
-        "BR-15",
-        "C1",
-        "C2",
-        "C3",
-        "C4",
-        "C5",
-        "C6",
-        "C7",
-        "C8",
-        "C9",
-        "C10",
-        "C11",
-        "C12",
-        "C13",
-        "C14"
-      ],
-      "file": "tests/e2e/ticket/external-references.spec.ts",
-      "sourceRef": "docs/CRs/MDT-252/architecture.md"
-    },
-    {
       "id": "TEST-external-reference-search",
       "kind": "e2e",
       "title": "External/current/key-shaped numeric search, provenance, selection and unconditional ref badges",
@@ -1377,6 +1361,40 @@
         "C10"
       ],
       "file": "mcp-server/src/tools/__tests__/external-reference-boundary.test.ts",
+      "sourceRef": "docs/CRs/MDT-252/tests.md"
+    },
+    {
+      "id": "TEST-external-reference-journeys",
+      "kind": "e2e",
+      "title": "Real refs, grouped instance badges, hidden-only short overflow, unavailable inspection, persistence, live races, responsive and read-only acceptance",
+      "covers": [
+        "BR-1",
+        "BR-2",
+        "BR-3",
+        "BR-4",
+        "BR-5",
+        "BR-6",
+        "BR-7",
+        "BR-8",
+        "BR-9",
+        "BR-14",
+        "BR-15",
+        "C1",
+        "C2",
+        "C3",
+        "C4",
+        "C5",
+        "C6",
+        "C7",
+        "C8",
+        "C9",
+        "C10",
+        "C11",
+        "C12",
+        "C13",
+        "C14"
+      ],
+      "file": "tests/e2e/ticket/external-references.spec.ts",
       "sourceRef": "docs/CRs/MDT-252/tests.md"
     }
   ],

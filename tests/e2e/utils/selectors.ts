@@ -579,6 +579,7 @@ export const quickSearchSelectors = {
 
 /** MDT-252: shared external reference links and non-navigating details. */
 export const externalReferenceSelectors = {
+  group: '[data-testid="external-reference-group"]',
   link: '[data-testid="external-reference-link"]',
   unavailable: '[data-testid="external-reference-unavailable"]',
   detailsTrigger: '[data-testid="external-reference-details-trigger"]',
