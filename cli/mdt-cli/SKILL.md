@@ -1,277 +1,111 @@
 ---
 name: mdt-cli
-description: Use the `mdt-cli` CLI for quick ticket and project lookups from the terminal. This skill should be used when the user wants to inspect tickets, list projects, create tickets, or update attributes without MCP tools. Prefer `mdt-cli` over MCP read operations for single-entity lookups. Covers epic-level tickets (level=epic), the phaseEpic child→epic link, the epic close guard, and lifecycle (Proposed→Approved→Implemented).
+description: Use mdt-cli for terminal ticket and project operations, shell automation, staged-ticket validation, and cloud management. Covers reference mutations and epic constraints. Use when native MDT tools are unavailable or the user requests the CLI.
 ---
 
-# mdt-cli CLI
+# MDT CLI
 
-Terminal tool for Markdown Ticket management. Binary: `mdt-cli`.
+Use `mdt-cli`. Prefer available native MDT tools for supported operations unless the user requests the CLI. Cloud management and staged-ticket validation remain CLI-only. This skill describes command behavior; ticket specification and lifecycle workflows belong to the MDT workflow skills.
 
-## Project Resolution
+## Resolve the project and key
 
-Commands resolve the project from the cwd: the nearest `.mdt-config.toml`
-walking up from the current directory, with a registry fallback. **Inside a
-project, omit `-p` — cwd detection is the default and the recommended path.**
-Use `-p <code>` only to target a *different* project than cwd, and
-`mdt-cli project ls` only for cross-project work or when cwd is not inside a
-project. Do not list all projects just to orient — run bare `mdt-cli project`
-for the current project's info.
+- Inside a project, omit `-p`: resolution walks upward to the nearest `.mdt-config.toml`, with registry fallback. `mdt-cli project --json` reports the current project.
+- Use `-p <code>` for another project. On commands that support it, the explicit project overrides a key-embedded project code. Unknown projects fail with exit 1.
+- Use `mdt-cli project ls` for registry discovery when needed; it is not a prerequisite for ordinary ticket work.
+- Keys accept bare numbers (`12` → the current project's `012`) and full keys (`ABC-12` → `ABC-012`). `mdt-cli 12` is a view shortcut. External refs use their own identities and are never normalized as local keys.
 
-## Key Resolution
+## Choose the command
 
-All ticket commands accept flexible key forms:
-
-| Input | Resolves to |
-|-------|-------------|
-| `12` | `{PROJECT}-012` (from detected project) |
-| `ABC-12` | `ABC-012` (normalized, cross-project) |
-
-Bare numbers and full keys can be used directly: `mdt-cli 12` views the ticket.
-
-## View
+Use canonical commands in automation; shortcuts are optional. Check `<command> --help` for current flags and allowed values, or `--guide` for the generated command manual.
 
 ```bash
-mdt-cli <key>                 # Bare shortcut
-mdt-cli ticket get <key>      # Canonical form
-mdt-cli ticket get -p <code> <key>   # Resolve within an explicit project (any cwd)
+mdt-cli ticket get 12 --json
+mdt-cli ticket list --json --limit 10 --offset 0
+mdt-cli ticket list --all status=impl priority=high,critical
+mdt-cli ticket create --json feature/high 'Add dark mode' dark-mode
+mdt-cli ticket attr 12 priority=High 'status=In Progress'
+mdt-cli ticket deps 12 --check --json
+mdt-cli ticket rename 12 'Clearer title' clearer-title
+mdt-cli ticket delete 12 --force
+mdt-cli project get ABC --json
+mdt-cli project init ABC 'Example project' --dir /existing/project --tickets-path tickets
 ```
 
-Prints ticket title, labeled metadata (status, type, priority, phase, assignee, component, dates), and path. If the ticket has a CR directory with subdocuments, lists them below the path.
+- Get returns metadata, paths and subdocument listings; it does not return the full Markdown body. Get/list JSON includes stored `refs` when present.
+- List defaults to 10 newest tickets. `--all`, `--limit`, `--offset`, `--files` and `--info` control selection/output. Filters AND across fields and fuzzy-match comma-separated alternatives within a field. Fields: `status`, `priority`, `type`, `level`, `assignee`, `component`, `epic`/`phase`.
+- Rename changes the authoritative H1 title and filename slug, not the ticket key. Omit the slug to derive it from the title.
+- Delete prompts only on a TTY without `--force`; non-TTY stdin implicitly forces deletion. It also removes empty ticket directories.
+- Project init requires an existing target directory. It creates/merges the managed MDT working-state `.gitignore` block while preserving unmanaged lines.
+- Top-level `create`, `attr`, `rename`, `delete`, `list`/`ls` and bare ticket keys are shortcuts for the corresponding ticket commands.
 
-`-p, --project <code>` — resolve the ticket within the given project instead of the cwd-detected one; explicit project wins over key-embedded codes. Unknown project → `Project <code> not found`, exit 1. Useful for non-interactive consumers running outside a project root.
+## Create tickets
 
-## List
-
-```bash
-mdt-cli list                  # Shortcut
-mdt-cli ls                    # Shortcut
-mdt-cli ticket list           # Canonical form
-mdt-cli ticket list --project <code>  # List another project's tickets
-```
-
-Shows up to 10 tickets sorted newest-first. Each ticket shows key + title on one line, then an indented metadata row.
-
-Options:
-- `--all` — show every ticket
-- `--limit N` — override default count
-- `--files` — file paths only
-- `--info` — ticket info without paths
-- `--json` — parseable output for LLM consumption
-- `-p, --project <code>` — list tickets from a different project
-
-Filters — positional `key=value` args with AND across fields, comma-separated fuzzy match within a field:
+Type/priority tokens are order-independent. Prefer an explicit type and a multi-word title:
 
 ```bash
-mdt-cli list status=impl priority=high,critical
-```
-
-Filterable fields: `status`, `priority`, `type`, `level`, `assignee`, `component`, `epic`/`phase`. (`level` accepts aliases: `e`→epic, `t`→ticket.)
-
-## Create
-
-```bash
-mdt-cli create <type>[/<priority>] '<title>' [slug]
-mdt-cli ticket create --project <code> feature 'Add dark mode'
-mdt-cli ticket create --stdin feature 'Add dark mode' <<'EOF'
+mdt-cli ticket create --json --stdin feature/high 'Add dark mode' <<'BODY'
 ## Problem
 Users need a dark theme option.
-EOF
+BODY
 ```
 
-For an enabled `[project.cloudSync]` binding, `ticket create` uses the shared
-cloud coordinator automatically. It requires a live Access credential and does
-not allocate a local fallback number. Dedicated cloud project/member management
-commands are owned by MDT-202.
+Types include `bug`, `feature`, `architecture`, `tech-debt`, `documentation`, `research`. Priorities accept `critical`/`p1`, `high`/`p2`, `medium`/`p3`, `low`/`p4`.
 
-Creates a ticket with default metadata and prints the key and path.
+- `--stdin` or piped input supplies the body; the CLI generates frontmatter/H1 and skips the template. It does not take stdin as frontmatter attributes.
+- An unquoted dashed token after the title becomes the slug; without an explicit title, the slug supplies it.
+- Unknown explicit type/priority tokens fail with `INVALID_CREATE_TOKEN`, valid values/aliases and no ticket file. Slash-combined type/priority tokens must be single words. A slash inside a multi-word title is text; a single-word title like `24/7` cannot be expressed bare because shell quotes do not survive parsing. Use a multi-word title. Once a title is determined, unknown bare words are rejected rather than silently ignored.
+- Create has no `refs` parameter or `level` token. Use the returned key with `ticket attr` to attach refs or promote an epic.
+- With cloud coordination enabled, create requires a live Access credential and the shared coordinator. It never allocates a local fallback number.
 
-- **`--project <code>`** — create in a different project instead of cwd-detected one.
-- Type and priority tokens are order-independent.
-- **Strict tokens (MDT-263)**: unknown explicit type/priority tokens are rejected with `INVALID_CREATE_TOKEN`, the valid sets + aliases, exit 1, and no ticket file (`--json`/`--yaml`: `ok=false` envelope). Slash-combined tokens (`<type>[/<priority>]`) must be single words; a slash inside a multi-word title is title text — a single-word slash title like `24/7` cannot be expressed bare (shell quotes don't survive), so use a multi-word title or a dashed slug. Unknown bare words reject once any title is already determined — make the title quoted/multi-word to keep an unknown word out of enum position.
-- Unquoted dashed token after title becomes the filename slug.
-- Without an explicit title, title is derived from the slug.
-- `--stdin` or piped input: generates frontmatter and H1, appends stdin as body, skips template.
+## Update attributes and external refs
 
-**Type tokens**: `bug`, `feature`, `architecture`, `tech-debt`, `documentation`, `research`
-**Priority tokens**: `critical`/`p1`, `high`/`p2`, `medium`/`p3`, `low`/`p4`
+Fields: `status`, `priority`, `level`, `phase`, `assignee`, `component`, `related`, `depends`, `blocks`, `refs`, `impl-date`, `impl-notes`. Quote any whole operand containing shell spaces or special characters.
 
-## Validate Staged Tickets
+Relations (`related`, `depends`, `blocks`) and `refs` support `=` replace, `+=` add, `-=` remove. Other fields accept `=` only. Unknown fields/enum values fail with valid choices; use `mdt-cli ticket attr --help` for the current values and aliases. `component` is free text and supports list filtering.
 
 ```bash
-mdt-cli ticket validate --staged
-mdt-cli ticket validate --staged --json
-mdt-cli ticket validate --staged --yaml
+mdt-cli ticket attr 12 related+=MDT-100 depends-=MDT-050
+mdt-cli ticket attr 12 'refs=work:PRJ-123,gh:acme/widgets#42'
+mdt-cli ticket attr 12 'refs+=gh:#43'
+mdt-cli ticket attr 12 'refs-=gh:acme/widgets#42'
+mdt-cli ticket attr 12 'refs='
 ```
 
-Validates complete staged primary ticket Markdown files using the Git index's
-`.mdt-config.toml`, configured ticket path and project code. This offline guard
-does not resolve a runtime project, access cloud services or read working ticket
-files. It includes added, modified and renamed tickets and epics; unchanged
-historical tickets, deletions and ticket subdocuments are excluded.
+External refs are ordered, instance-scoped strings. Instance names such as `work` and `gh` come from the project's `.mdt-config.toml`; they are not built-in tracker aliases. Tracker configuration remains file-only.
 
-Exit 0 means clean or not applicable (no staged/historically tracked root MDT
-configuration). Exit 1 means unfinished content or an actionable validator/config
-failure. `--staged` is required. JSON/YAML retain the standard `ticket.validate`
-envelope and diagnostics; validation failures use the existing error stream.
-An unstaged fix cannot hide staged instructions, and an unstaged instruction
-cannot block clean staged content. Correct the reported content, stage it and
-retry. No broad ban on planning words or brackets is applied.
-
-The shared Lefthook hook requires an installed MDT CLI with `ticket validate`
-support (MDT-261 or newer), with its runtime and built dependencies available.
-It probes command support and fails with setup instructions when unavailable;
-it never installs dependencies or silently skips validation. Native creation
-tools preserve creation diagnostics through their CLI output; this repository guard command does not require a native tool.
-
-## Rename
-
-```bash
-mdt-cli rename <key> '<title>' [slug]
-mdt-cli ticket rename 143 'Better CLI title'
-mdt-cli ticket rename 143 'Better CLI title' custom-slug
-```
-
-Updates the H1 heading (authoritative title source) and renames the file to `{KEY}-{slug}.md`. Slug is derived from the new title unless provided explicitly.
-
-## Delete
-
-```bash
-mdt-cli delete <key> [--force]
-mdt-cli ticket delete 143 --force
-```
-
-Deletes the ticket file. On TTY without `--force`, prompts `Delete <key> (<title>)? [y/N]`. Non-TTY stdin (piped) is implicit `--force`. Removes empty CR directories after file deletion. Prints `Deleted <key> <path>` on success.
-
-## Attr
-
-```bash
-mdt-cli attr <key> status=Implemented priority=High
-mdt-cli attr <key> related+=MDT-100 related-=MDT-050
-mdt-cli ticket attr -p <code> <key> status=Approved   # Explicit project, any cwd
-```
-
-Updates ticket attributes. Normalizes aliases (e.g. `in-progress` → `In Progress`). Prints old→new confirmation per field.
-
-`-p, --project <code>` — same semantics as on `ticket get`: explicit project wins, unknown project exits 1.
-
-`component` is a free-text subsystem/package label (e.g. `owned-runtime`, `frontend`); it has no value validation and supports `list component=<value>` fuzzy filtering.
-
-Keys: `status`, `priority`, `level`, `phase`, `assignee`, `component`, `related`, `depends`, `blocks`, `refs`, `impl-date`, `impl-notes`.
-
-Relations and external refs (`related`, `depends`, `blocks`, `refs`) support `=` (replace), `+=` (add), `-=` (remove). All others use `=` only.
-
-**Validation:** unknown keys and unknown enum values are rejected with the valid set printed. Enum fields:
-- `status` ∈ Proposed · Approved · In Progress · Implemented · Rejected · On Hold · Partially Implemented. Column/synonym aliases map: `backlog`→Proposed, `open`→Approved, `done`/`complete`/`completed`/`d`→Implemented, `in-progress`→In Progress, `partial`→Partially Implemented, `deferred`→On Hold.
-- `priority` ∈ Low · Medium · High · Critical. Aliases: `p1`–`p4`.
-- `level` ∈ ticket · epic. Aliases: `e`→epic, `t`→ticket.
-- `phase` (phaseEpic) — when set to a ticket key, the target must exist, be `level: epic`, and be `Approved` or `Implemented`. Free-text (non-key) values pass through unvalidated. See **Epics** below.
-
-Run `mdt-cli ticket attr --help` for the full field/value reference.
+- Add/replacement operands may expand `instance:#number` only through that instance's explicit `defaultRepo`. Existing stored shorthand never rebinds on reads, config changes or unrelated edits.
+- Adds append absent refs; removal matches exact stored strings only and is idempotent. `refs=` clears the list.
+- Unknown refs, untouched entries and their order survive unrelated writes. Full stored identities remain independent of display shortening and local ticket numbers.
+- For identifiers containing commas, supply a JSON string array operand, e.g. `'refs=["future:identifier,with-comma","gh:acme/widgets#42"]'`.
 
 ## Epics
 
-An epic is a ticket with `level: epic` (default is `ticket`). Epics group child
-tickets via the existing `phaseEpic` field (the child→epic up-pointer). There is
-no `epicId` and no stored `children[]` — children are derived in-memory from
-`phaseEpic`. Adding `level` to an existing ticket promotes it; no migration.
-
-### Lifecycle
-
-Epics follow **Proposed → Approved → Implemented**. An epic must be `Approved`
-before any child can reference it. Moving an epic to `Implemented` is the epic
-"close" and is guarded (below).
+An epic is a ticket with `level=epic`; children link through `phase` (`phaseEpic`). Children are derived from these links, not a stored `children` array.
 
 ```bash
-mdt-cli create feature 'Auth overhaul' auth-overhaul   # creates a regular ticket
-mdt-cli attr <key> level=epic                           # promote to epic
-mdt-cli attr <key> status=Approved                      # make it referenceable
+mdt-cli ticket create feature 'Auth overhaul' auth-overhaul
+mdt-cli ticket attr <returned-key> level=epic status=Approved
+mdt-cli ticket attr <child-key> phase=<epic-key>
+mdt-cli ticket list --all phase=<epic-key>
+mdt-cli ticket list --all level=epic
 ```
 
-### Linking children (phaseEpic validation)
+- Ticket-key phase targets, including cross-project targets, must exist, be epics, and be `Approved` or `Implemented`. Failures report `EPIC_TARGET_NOT_FOUND`, `EPIC_TARGET_NOT_EPIC` or `EPIC_NOT_USABLE`. Non-key phase text passes through.
+- Closing an epic (`status=Implemented`) requires all children to be terminal: `Implemented`, `Rejected` or `Partially Implemented`. Errors name blockers; zero-child epics close freely. Reopening to `Approved` is allowed.
+- `level` accepts `e`/`t` aliases. Promotion needs no migration.
 
-Setting `phase` to a **ticket key** validates the target on write:
-- target must **exist** — else `EPIC_TARGET_NOT_FOUND`
-- target must be `level: epic` — else `EPIC_TARGET_NOT_EPIC`
-- target must be `Approved` or `Implemented` — else `EPIC_NOT_USABLE`
+## Validate staged tickets
 
 ```bash
-mdt-cli attr MDT-010 level=epic status=Approved         # the epic
-mdt-cli attr MDT-020 phase=MDT-010                      # child link — accepted
-mdt-cli attr MDT-020 phase=MDT-999                      # rejected: target missing
+mdt-cli ticket validate --staged --json
 ```
 
-Free-text values that aren't ticket keys (e.g. `Q3 cleanup`) are **not**
-validated — they pass through unchanged. Cross-project keys (`ABC-012`) are
-validated against the target project's ticket.
+This offline guard reads primary ticket files and `.mdt-config.toml` from the Git index. It checks added/modified/renamed tickets and epics; unchanged historical tickets, deletions and subdocuments are excluded. It does not resolve runtime projects or access cloud services.
 
-### Epic close guard
+Exit 0 means clean or not applicable; exit 1 means unfinished content or a validator/configuration failure. An unstaged fix cannot repair staged content: correct it, stage it, then retry. `--staged` is required. The commit hook requires an installed CLI with this command and built dependencies; unavailable support is a setup failure, not a skipped clean check.
 
-An epic cannot move to `Implemented` while it has non-terminal children. The
-error names the blocking children. Terminal statuses: `Implemented`, `Rejected`,
-`Partially Implemented`. An epic with zero children closes freely; reopening
-(`Implemented`→`Approved`) is always allowed.
+## Cloud and output
 
-```bash
-mdt-cli attr MDT-010 status=Implemented                 # rejected if children open
-```
+Use `mdt-cli cloud --help` to select provisioning/binding, login, status/doctor, members or credentials commands. Cloud management has no native plugin wrapper. Existing cloud configuration still governs ordinary ticket commands.
 
-### Listing epics and children
-
-```bash
-mdt-cli list level=epic                  # all epics
-mdt-cli list phase=MDT-010               # children of one epic
-```
-
-### Workflow pattern: creating a parent epic
-
-```bash
-mdt-cli create feature '<epic title>' <slug>            # 1. create as ticket
-mdt-cli attr <key> level=epic status=Approved            # 2. promote + approve
-mdt-cli attr <child> phase=<key>                         # 3. link each child
-```
-
-Note: `create` does not accept a `level` token — promote with `attr` after
-creation. Alias `e`/`t` work everywhere `level` is resolved.
-
-## Project
-
-```bash
-mdt-cli project                # Current project info
-mdt-cli project get <code>     # Project lookup (case-insensitive)
-mdt-cli project ls             # List all projects
-mdt-cli project init [code] [name] [-t <path>]  # Initialize project in cwd
-```
-
-Bare `mdt-cli project <code>` resolves as `project get <code>`. Lowercase `ls` and `list` are reserved as list aliases.
-
-- **`-t, --tickets-path <path>`** — set a custom tickets directory (relative to project root).
-- **init also scaffolds `.gitignore`** — a marker-delimited `# >>> MDT working state >>>` managed block (counter, trace projections, pipeline state, per-ticket working state, poc/prompts, plus a `!{tickets}/{CODE}-*.md` negation keeping ticket files trackable) is created or idempotently merged into an existing `.gitignore`; unmanaged lines are never touched. Entry list: `docs/MDT_WORKING_STATE_FILES.md`.
-
-## Top-level Aliases
-
-`create`, `delete`, `rename`, `attr` all work without the `ticket` prefix:
-
-```bash
-mdt-cli create feature 'New thing'
-mdt-cli delete 143 --force
-mdt-cli attr 143 status=Implemented
-```
-
-## Output
-
-- Paths are relative to project root by default. Set `cli.ticket.absolutePath=true` in `~/.config/mdt/cli.toml` for absolute paths.
-- Colors render on TTY; suppressed when piped or `NO_COLOR=1`.
-- `--guide` flag at any scope prints a generated command manual from the commander tree.
-
-## External issue references
-
-Use the existing attribute syntax with `refs`:
-
-```bash
-mdt-cli ticket attr 252 'refs=work:PRJ-123,gh:acme/widgets#42'
-mdt-cli ticket attr 252 'refs+=gh:#43'
-mdt-cli ticket attr 252 'refs-=gh:acme/widgets#42'
-mdt-cli ticket attr 252 'refs='
-```
-
-`=` replaces, `+=` appends absent refs, and `-=` removes exact stored strings only. Add/replacement operands can expand `instance:#number` using that configured instance's `defaultRepo`. Existing refs never rebind on reads or unrelated writes. Use a JSON string array operand when an identifier contains commas. Refs are separate from local ticket keys; shared services own validation and persistence.
+Use `--json` for machine-readable results or `--yaml` where supported. Failures retain diagnostics; a failed command is not a successful empty result. Rename returns text. Paths default to project-relative; `cli.ticket.absolutePath=true` in `~/.config/mdt/cli.toml` requests absolute paths. Colors apply on TTY and are suppressed when piped or `NO_COLOR=1`.
