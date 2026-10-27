@@ -75,6 +75,8 @@
   img.external-reference__icon {
     inline-size: var(--sz-icon);
     block-size: var(--sz-icon);
+    /* The filled tile uses the same inset at its leading and block edges. */
+    margin-inline-start: calc(var(--gap-xs) * -1);
   }
   .external-reference__more {
     justify-content: center;
@@ -130,7 +132,10 @@
     background: var(--bg-subtle);
   }
   @media (hover: hover) and (pointer: fine) {
-    a.external-reference__link:hover,
+    /* Keep issue numbers flat, including the shared ticket-key link rule. */
+    a.external-reference__link.ticket-key:hover {
+      text-decoration: none;
+    }
     .external-reference__more:hover {
       background: var(--bg-subtle);
       text-decoration: underline;

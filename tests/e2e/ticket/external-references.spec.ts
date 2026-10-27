@@ -21,7 +21,11 @@ function badgeGeometry(root: Element) {
       borderRadius: style.borderRadius,
     }
   }
+  const icon = root.querySelector('img.external-reference__icon')!
+  const tile = icon.getBoundingClientRect()
+  const group = icon.closest('[data-external-reference]')!.getBoundingClientRect()
   return {
+    iconInsets: { start: tile.left - group.left, top: tile.top - group.top, bottom: group.bottom - tile.bottom },
     external: measure(root.querySelector('[data-external-reference]')!),
     related: measure(root.querySelector('[data-relationship="related"]')!),
   }
@@ -326,6 +330,19 @@ test('MDT-252 compact/light and comfortable/dark retain targets, contrast and ch
     const boardGeometry = await card.evaluate(badgeGeometry)
     await testInfo.attach(`board-badge-geometry-${theme}-${size}`, { body: JSON.stringify(boardGeometry), contentType: 'application/json' })
     expect(boardGeometry.external).toEqual(boardGeometry.related)
+    expect(boardGeometry.iconInsets.start).toBe(boardGeometry.iconInsets.top)
+    expect(boardGeometry.iconInsets.start).toBe(boardGeometry.iconInsets.bottom)
+    await page.mouse.move(0, 0)
+    const restingLink = await link.evaluate(element => {
+      const style = getComputedStyle(element)
+      return { background: style.backgroundColor, decoration: style.textDecorationLine, color: style.color }
+    })
+    await link.hover()
+    expect(await link.evaluate(element => {
+      const style = getComputedStyle(element)
+      return { background: style.backgroundColor, decoration: style.textDecorationLine, color: style.color }
+    })).toEqual(restingLink)
+    expect(restingLink.decoration).toBe('none')
     expect(iconSizes.jira.width).toBeGreaterThanOrEqual(iconSizes.related.width)
     expect(iconSizes.jira.height).toBeGreaterThanOrEqual(iconSizes.related.height)
     expect(iconSizes.jira.width).toBeCloseTo(iconSizes.jira.height)
@@ -374,6 +391,12 @@ test('MDT-252 compact/light and comfortable/dark retain targets, contrast and ch
     const viewerGeometry = await viewer.evaluate(badgeGeometry)
     await testInfo.attach(`viewer-badge-geometry-${theme}-${size}`, { body: JSON.stringify(viewerGeometry), contentType: 'application/json' })
     expect(viewerGeometry.external).toEqual(viewerGeometry.related)
+    expect(viewerGeometry.iconInsets.start).toBe(viewerGeometry.iconInsets.top)
+    expect(viewerGeometry.iconInsets.start).toBe(viewerGeometry.iconInsets.bottom)
+    const viewerLink = viewer.locator(externalReferenceSelectors.link).first()
+    await viewerLink.hover()
+    expect(await viewerLink.evaluate(element => ({ decoration: getComputedStyle(element).textDecorationLine, background: getComputedStyle(element).backgroundColor })))
+      .toEqual({ decoration: 'none', background: 'rgba(0, 0, 0, 0)' })
     const viewerTrigger = viewer.locator(externalReferenceSelectors.detailsTrigger)
     await viewerTrigger.click()
     await page.keyboard.press('Escape')
