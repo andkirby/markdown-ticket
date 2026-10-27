@@ -35,6 +35,14 @@ Teams track work in Jira/GitHub/GitLab while MDT is the local-first layer. Ticke
 7. **Mirror mode interaction** — explicit refs always win; seeded mirror numbering only *prepopulates* stored refs, never becomes a lookup fallback.
 8. **UX handoff** — badge/link/list-column affordances go through `ux-designer-specifier` against `docs/design/surfaces/` before implementation.
 
+## Acceptance Criteria
+
+- Native plugin interfaces under `plugins/` advertise and document external reference operations for both BB and DSH: `refs=` replaces/clears, `refs+=` adds, and `refs-=` removes exact stored identities. Create follows the CLI contract: create the ticket, then attach refs through `mdt_ticket_attr`.
+- Get/list plugin outputs preserve stored refs. Registered BB-to-CLI acceptance verifies replace, repeated add/removal, clear, order, unknown punctuation-bearing identities, and preservation through unrelated edits.
+- Shared definitions in `plugins/_lib/mdt-tools.js` and the install-safe `plugins/bb/lib/mdt-tools.js` stay synchronized; shipped plugin skills and usage/coverage docs describe the same interface. Plugin tests, typecheck, lint and build pass.
+
+Verification: plugin follow-up commit `5257c7b9`; 111 tests passed across 8 files, including real registered BB-to-CLI reference round trips. DSH shares the definitions and has offline adapter coverage; fresh-host DSH execution remains a separate check, as recorded in [plugin coverage](../../plugins/docs/coverage.md).
+
 ## References
 
 - Source idea + second-opinion record: `docs/ideas/IDEA-011-external-tracker-links.md` (Codex review thread thr_g5ynmg2ccm)
