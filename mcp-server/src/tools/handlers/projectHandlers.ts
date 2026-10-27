@@ -1,6 +1,7 @@
 import type { Project } from '@mdt/shared/models/Project.js'
 import type { ProjectService } from '@mdt/shared/services/ProjectService.js'
 import process from 'node:process'
+import { TICKET_KEY_INPUT_PATTERN } from '@mdt/domain-contracts'
 import { Sanitizer } from '../../utils/sanitizer.js'
 import { JsonRpcErrorCode, ToolError } from '../../utils/toolError.js'
 import { validateProjectKey } from '../../utils/validation.js'
@@ -50,9 +51,8 @@ export class ProjectHandlers {
     }
 
     const trimmed = key.trim()
-    // Check for full format: letters-digits (e.g., "MDT-123", "abc-12")
-    const fullFormatPattern = /^([a-z]+)-\d+$/i
-    const match = trimmed.match(fullFormatPattern)
+    // Canonical key input contract (MDT-254): e.g., "MDT-123", "abc-12", "TP0-7"
+    const match = trimmed.match(TICKET_KEY_INPUT_PATTERN)
 
     if (match) {
       return match[1].toUpperCase()

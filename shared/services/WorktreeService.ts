@@ -235,10 +235,12 @@ export class WorktreeService {
     const branchName = branch.replace(/^refs\/heads\//, '')
 
     // Pattern: PROJECT_CODE-NUMBER (e.g., MDT-095, API-123)
-    // Match from end of string to get last segment; digits bounded by the
-    // canonical ticket-number contract (MDT-254).
+    // Match the final path segment only: the left boundary stops a longer
+    // prefix from truncating into a different project's key ("ABCDEF-001"
+    // must not yield "BCDEF-001"). Digits bounded by the canonical
+    // ticket-number contract (MDT-254).
     const branchTicketCodePattern = new RegExp(
-      `(${PROJECT_CODE_PATTERN_BODY}-\\d{${TICKET_NUMBER_MIN_DIGITS},${TICKET_NUMBER_MAX_DIGITS}})$`,
+      `(?:^|\\/)(${PROJECT_CODE_PATTERN_BODY}-\\d{${TICKET_NUMBER_MIN_DIGITS},${TICKET_NUMBER_MAX_DIGITS}})$`,
     )
     const match = branchName.match(branchTicketCodePattern)
     return match ? match[1] : null

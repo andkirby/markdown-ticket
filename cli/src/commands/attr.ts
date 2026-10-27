@@ -1,5 +1,6 @@
 import type { CRStatus } from '@mdt/shared/models/Types.js'
 import type { AttrOperation } from '@mdt/shared/services/ticket/types.js'
+import type { AttrUpdateResult } from '../output/formatter.js'
 /**
  * CLI Ticket Attr Command (MDT-143)
  *
@@ -9,8 +10,8 @@ import type { AttrOperation } from '@mdt/shared/services/ticket/types.js'
  * quoted values) and output formatting.
  */
 
-import type { AttrUpdateResult } from '../output/formatter.js'
 import type { StructuredOutputOptions } from '../output/structured.js'
+import { TICKET_KEY_INPUT_PATTERN } from '@mdt/domain-contracts'
 import { ProjectService } from '@mdt/shared/services/ProjectService.js'
 import { ServiceError } from '@mdt/shared/services/ServiceError.js'
 import { resolveAttrValue } from '@mdt/shared/services/ticket/attrResolver.js'
@@ -46,7 +47,7 @@ function parseTicketKey(key: string): ParsedKey | null {
   }
 
   // Full format with project code: "ABC-12"
-  const fullFormatMatch = key.match(/^([a-z][a-z0-9]*)-(\d+)$/i)
+  const fullFormatMatch = key.match(TICKET_KEY_INPUT_PATTERN)
   if (fullFormatMatch) {
     const [, projectCode, _number] = fullFormatMatch
     return {

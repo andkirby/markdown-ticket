@@ -1,5 +1,6 @@
 import type { Project } from '@mdt/shared/models/Project'
 import type { Ticket } from '../types'
+import { TICKET_KEY_INPUT_PATTERN } from '@mdt/domain-contracts'
 import { formatCrKey } from '@mdt/shared/utils/keyNormalizer'
 import { authFetch } from '../auth/authFetch'
 
@@ -11,10 +12,12 @@ export function normalizeTicketKey(key: string): string {
   // Sanitize: only allow alphanumeric, dash, underscore
   const sanitized = key.replace(/[^\w-]/g, '')
 
-  const match = sanitized.match(/^([A-Z]+)-(\d+)$/)
+  // Canonical key input contract (MDT-254); prefix uppercased so the result
+  // stays comparable to stored uppercase codes.
+  const match = sanitized.match(TICKET_KEY_INPUT_PATTERN)
   if (!match)
     return sanitized
-  return formatCrKey(match[1], Number.parseInt(match[2], 10))
+  return formatCrKey(match[1].toUpperCase(), Number.parseInt(match[2], 10))
 }
 
 export function validateProjectCode(code: string): boolean {
@@ -35,7 +38,7 @@ export async function findProjectByTicketKey(ticketKey: string): Promise<string 
       return null
 
     const normalizedKey = normalizeTicketKey(ticketKey)
-    const projectCode = normalizedKey.match(/^([A-Z0-9-]+)-\d+$/)?.[1]
+    const projectCode = normalizedKey.match(TICKET_KEY_INPUT_PATTERN)?.[1]?.toUpperCase()
     const orderedProjects = projectCode
       ? [
           ...projects.filter(project => project.project.code === projectCode || project.id === projectCode),

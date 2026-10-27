@@ -103,8 +103,9 @@ export interface FilterTicketsOptions {
 const normalizeTicketKeyTerm = sharedNormalizeKeyTerm
 
 function getTicketNumber(code: string): number {
-  const match = code.match(/^[A-Z]+-(\d+)/i)
-  return match ? Number.parseInt(match[1]!, 10) : 0
+  // Dash-anchored so alphanumeric codes ("TP0-999") yield 999, not 0 (MDT-254)
+  const match = code.match(/-(\d+)$/)
+  return match ? Number.parseInt(match[1], 10) : 0
 }
 
 function scoreTermMatch(term: string, normalizedTerm: string, ticket: Ticket): number {

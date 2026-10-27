@@ -12,9 +12,12 @@
  *
  * Obligations: OBL-relationship-badges
  */
+import { PROJECT_CODE_PATTERN_BODY, TICKET_NUMBER_MAX_DIGITS } from '@mdt/domain-contracts'
 
 /** Matches a CR key of shape `{PREFIX}-{DIGITS}` with an uppercase 2–5 char prefix. */
-const CR_KEY_PATTERN = /^([A-Z][A-Z0-9]{1,4})-(\d+)$/
+const CR_KEY_PATTERN = new RegExp(
+  `^(${PROJECT_CODE_PATTERN_BODY})-(\\d{1,${TICKET_NUMBER_MAX_DIGITS}})$`,
+)
 
 export interface ElidedLink {
   /** Original full link string (e.g. `MDT-030` or `not-a-ticket`). */

@@ -6,6 +6,7 @@
  */
 
 import process from 'node:process'
+import { TICKET_KEY_INPUT_PATTERN } from '@mdt/domain-contracts'
 import { ProjectService } from '@mdt/shared/services/ProjectService.js'
 import { TicketService } from '@mdt/shared/services/TicketService.js'
 import { KeyNormalizationError, normalizeKey } from '@mdt/shared/utils/keyNormalizer.js'
@@ -31,7 +32,7 @@ function parseTicketKey(key: string): ParsedKey | null {
   }
 
   // Full format with project code: "ABC-12"
-  const fullFormatMatch = key.match(/^([a-z][a-z0-9]*)-(\d+)$/i)
+  const fullFormatMatch = key.match(TICKET_KEY_INPUT_PATTERN)
   if (fullFormatMatch) {
     const [, projectCode] = fullFormatMatch
     return {

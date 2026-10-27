@@ -3,9 +3,16 @@ import { EventEmitter } from 'node:events'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import process from 'node:process'
+import { PROJECT_CODE_PATTERN_BODY, TICKET_NUMBER_MAX_DIGITS, TICKET_NUMBER_MIN_DIGITS } from '@mdt/domain-contracts'
 import { WorktreeService } from '@mdt/shared/services/WorktreeService.js'
 import { getConfigDir } from '@mdt/shared/utils/constants.js'
 import * as chokidar from 'chokidar'
+
+// Ticket folder ("MDT-142") and ticket slug file ("MDT-142-title.md") shapes,
+// derived from the canonical key contract (MDT-254) so alphanumeric project
+// codes (TP0) and 4-5 digit numbers are recognized.
+const TICKET_DIR_PATTERN = new RegExp(`^(${PROJECT_CODE_PATTERN_BODY}-\\d{${TICKET_NUMBER_MIN_DIGITS},${TICKET_NUMBER_MAX_DIGITS}})$`)
+const TICKET_SLUG_FILE_PATTERN = new RegExp(`^(${PROJECT_CODE_PATTERN_BODY}-\\d{${TICKET_NUMBER_MIN_DIGITS},${TICKET_NUMBER_MAX_DIGITS}})(?:-.+)?\\.md$`)
 
 export interface ProjectPath { id: string, path: string, projectRoot?: string, projectCode?: string }
 
@@ -392,7 +399,7 @@ export class PathWatcherService extends EventEmitter {
     // Search backwards to find ticket folder (e.g., MDT-142)
     for (let i = parts.length - 2; i >= 0; i--) {
       const dir = parts[i]
-      const ticketMatch = dir.match(/^([A-Z]+-\d+)$/)
+      const ticketMatch = dir.match(TICKET_DIR_PATTERN)
       if (ticketMatch) {
         const ticketCode = ticketMatch[1]
         const relativeParts = parts.slice(i + 1)
@@ -417,7 +424,7 @@ export class PathWatcherService extends EventEmitter {
     }
 
     // Check if this is a slug file (e.g., MDT-142-some-title.md)
-    const slugMatch = fn?.match(/^([A-Z]+-\d+)(?:-.+)?\.md$/)
+    const slugMatch = fn?.match(TICKET_SLUG_FILE_PATTERN)
     if (slugMatch) {
       return { ticketCode: slugMatch[1], subdocument: null }
     }

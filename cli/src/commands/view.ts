@@ -1,4 +1,5 @@
 import type { Project } from '@mdt/shared/models/Project.js'
+import type { StructuredOutputOptions } from '../output/structured.js'
 /**
  * CLI Ticket View Command (MDT-143)
  *
@@ -6,7 +7,7 @@ import type { Project } from '@mdt/shared/models/Project.js'
  * Resolves project context, normalizes keys, and displays ticket details.
  */
 
-import type { StructuredOutputOptions } from '../output/structured.js'
+import { TICKET_KEY_INPUT_PATTERN } from '@mdt/domain-contracts'
 import { ProjectService } from '@mdt/shared/services/ProjectService.js'
 import { TicketService } from '@mdt/shared/services/TicketService.js'
 import { KeyNormalizationError, normalizeKey, resolveKeyInProject } from '@mdt/shared/utils/keyNormalizer.js'
@@ -43,7 +44,7 @@ function parseTicketKey(key: string): ParsedKey | null {
   }
 
   // Full format with project code: "ABC-12"
-  const fullFormatMatch = key.match(/^([a-z][a-z0-9]*)-(\d+)$/i)
+  const fullFormatMatch = key.match(TICKET_KEY_INPUT_PATTERN)
   if (fullFormatMatch) {
     const [, projectCode, _number] = fullFormatMatch
     return {

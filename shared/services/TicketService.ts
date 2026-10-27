@@ -1597,10 +1597,11 @@ export class TicketService {
    */
   /**
    * Extract the ticket number from a code for numeric ordering (MDT-254:
-   * string comparison would order "MDT-10000" before "MDT-1001").
+   * string comparison would order "MDT-10000" before "MDT-1001"). Anchored
+   * after the dash so alphanumeric codes ("TP0-999") yield 999, not 0.
    */
   private extractTicketNumber(code: string): number {
-    const match = code.match(/(\d+)/)
+    const match = code.match(/-(\d+)$/)
     return match ? Number.parseInt(match[1], 10) : 0
   }
 

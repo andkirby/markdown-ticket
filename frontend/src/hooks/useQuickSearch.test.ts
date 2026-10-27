@@ -71,6 +71,18 @@ describe('useQuickSearch - Filter by key number (BR-3)', () => {
     expect(result.length).toBe(2)
   })
 
+  it('matches alphanumeric-prefixed simplified key (tp0-7 finds TP0-007, MDT-254 review)', () => {
+    const tickets: Ticket[] = [
+      createMockTicket({ code: 'TP0-007', title: 'Alphanumeric Project' }),
+      createMockTicket({ code: 'MDT-001', title: 'Other Ticket' }),
+    ]
+
+    const result = filterTickets({ query: 'tp0-7', tickets })
+
+    expect(result.length).toBe(1)
+    expect(result[0].code).toBe('TP0-007')
+  })
+
   it('matches simplified ticket key to zero-padded ticket (MDT-42 finds MDT-042)', () => {
     const tickets: Ticket[] = [
       createMockTicket({ code: 'MDT-042', title: 'Some Feature' }),

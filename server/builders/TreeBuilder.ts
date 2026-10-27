@@ -86,9 +86,11 @@ export class TreeBuilder {
     if (ticketsPath === '.') {
       // Filter ticket files by pattern when in root directory. Shape derives
       // from the canonical key contract (MDT-254) so 4/5-digit tickets and
-      // alphanumeric project codes (TP0) are filtered correctly.
+      // alphanumeric project codes (TP0) are filtered correctly; the slug
+      // part is optional (bare "CODE-001.md" is a valid ticket filename,
+      // same shape staged-validation enforces).
       const ticketFileNamePattern = new RegExp(
-        `^${PROJECT_CODE_PATTERN_BODY}-\\d{${TICKET_NUMBER_MIN_DIGITS},${TICKET_NUMBER_MAX_DIGITS}}-.*\\.md$`,
+        `^${PROJECT_CODE_PATTERN_BODY}-\\d{${TICKET_NUMBER_MIN_DIGITS},${TICKET_NUMBER_MAX_DIGITS}}(?:-[^/]*)?\\.md$`,
       )
       return filePaths.filter((filePath) => {
         const fileName = path.basename(filePath)

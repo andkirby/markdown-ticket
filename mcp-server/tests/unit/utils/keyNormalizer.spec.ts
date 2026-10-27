@@ -40,9 +40,12 @@ describe('keyNormalizer', () => {
       expect(result).toBe('MDT-000')
     })
 
-    it('Given large number "999999" WHEN normalizing THEN returns "MDT-999999"', () => {
-      const result = normalizeKey('999999', 'MDT')
-      expect(result).toBe('MDT-999999')
+    it('Given large number "999999" WHEN normalizing THEN throws (exceeds 5-digit key contract, MDT-254)', () => {
+      expect(() => normalizeKey('999999', 'MDT')).toThrow()
+    })
+
+    it('Given 5-digit shorthand "10000" WHEN normalizing THEN returns "MDT-10000" (contract max)', () => {
+      expect(normalizeKey('10000', 'MDT')).toBe('MDT-10000')
     })
   })
 

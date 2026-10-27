@@ -15,7 +15,11 @@
  * This utility matches the ticket format used throughout the system.
  */
 
-import { PROJECT_CODE_PATTERN, TICKET_NUMBER_MAX_DIGITS } from '@mdt/domain-contracts'
+import {
+  PROJECT_CODE_PATTERN,
+  TICKET_KEY_INPUT_PATTERN,
+  TICKET_NUMBER_MAX_DIGITS,
+} from '@mdt/domain-contracts'
 
 /**
  * Error class for key normalization failures
@@ -59,10 +63,20 @@ export function normalizeKey(key: string, projectCode: string): string {
     throw new KeyNormalizationError('Key cannot be empty or whitespace only')
   }
 
-  // Pattern 1: Pure numeric (e.g., "5", "005", "123")
-  // Add project prefix and pad to 3 digits (matching ticket format)
+  // Pattern 1: Pure numeric (e.g., "5", "005", "123", "000123")
+  // Add project prefix and pad to 3 digits (matching ticket format).
+  // Bounded to the canonical contract's numeric maximum (MDT-254) so
+  // shorthand cannot produce a key the storage layer would reject. The bound
+  // is on the value, not string length: leading zeros are accepted.
   const numericPattern = /^\d+$/
   if (numericPattern.test(trimmed)) {
+    const shorthandNumber = Number.parseInt(trimmed, 10)
+    if (shorthandNumber >= 10 ** TICKET_NUMBER_MAX_DIGITS) {
+      throw new KeyNormalizationError(
+        `Ticket number '${trimmed}' exceeds the ${TICKET_NUMBER_MAX_DIGITS}-digit key contract (max ${10 ** TICKET_NUMBER_MAX_DIGITS - 1}).`,
+      )
+    }
+
     // Pad to 3 digits and add project prefix
     return formatCrKey(projectCode, Number.parseInt(trimmed, 10))
   }
@@ -124,7 +138,7 @@ export function resolveKeyInProject(key: string, projectCode: string): string {
  * every surface matches keys identically.
  */
 export function normalizeKeyTerm(term: string): string {
-  const match = term.match(new RegExp(`^([a-z]+)-(\\d{1,${TICKET_NUMBER_MAX_DIGITS}})$`, 'i'))
+  const match = term.match(TICKET_KEY_INPUT_PATTERN)
   if (match)
     return formatCrKey(match[1].toUpperCase(), Number.parseInt(match[2], 10)).toLowerCase()
   return term

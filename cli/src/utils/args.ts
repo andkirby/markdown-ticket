@@ -23,6 +23,8 @@
  * @param argv - process.argv array to normalize (will be mutated in place)
  * @returns Normalized argv array (same reference as input)
  */
+import { TICKET_KEY_INPUT_PATTERN } from '@mdt/domain-contracts'
+
 export function normalizeShortcuts(argv: string[]): string[] {
   if (argv.length < 3) {
     return argv
@@ -103,8 +105,7 @@ export function normalizeShortcuts(argv: string[]): string[] {
   }
 
   // Pattern 7: Full ticket key as bare argument (e.g., "ABC-012") → ticket get
-  const fullKeyPattern = /^[a-z][a-z0-9]*-\d+$/i
-  if (fullKeyPattern.test(first)) {
+  if (TICKET_KEY_INPUT_PATTERN.test(first)) {
     return buildArgv([...globalOutputFlags, 'ticket', 'get', first, ...rest])
   }
 

@@ -1,9 +1,19 @@
 import type { ProjectConfig, TreeNode } from './TreeBuildingStrategy.js'
 import { readdir } from 'node:fs/promises'
 import * as path from 'node:path'
-import { PROJECT_DOCUMENT_CONFIG_DEFAULTS } from '@mdt/domain-contracts'
+import { PROJECT_CODE_PATTERN_BODY, PROJECT_DOCUMENT_CONFIG_DEFAULTS, TICKET_NUMBER_MAX_DIGITS, TICKET_NUMBER_MIN_DIGITS } from '@mdt/domain-contracts'
 import { shouldIgnorePath } from '../utils/fsIgnoreList.js'
 import { TreeBuildingStrategy } from './TreeBuildingStrategy.js'
+
+/**
+ * Ticket filename shape at the repo root, derived from the canonical key
+ * contract (MDT-254): "CODE-001.md" or "CODE-001-slug.md". Mirrors the
+ * staged-validation filename rule so root ticket files are excluded from the
+ * document tree when ticketsPath='.'.
+ */
+const ROOT_TICKET_FILE_PATTERN = new RegExp(
+  `^${PROJECT_CODE_PATTERN_BODY}-\\d{${TICKET_NUMBER_MIN_DIGITS},${TICKET_NUMBER_MAX_DIGITS}}(?:-[^/]*)?\\.md$`,
+)
 
 /**
  * Strategy for building trees for path selection (no metadata).
@@ -141,6 +151,15 @@ export class PathSelectionStrategy extends TreeBuildingStrategy {
         || relativePath.startsWith(`${ticketsPath}/`))
     ) {
       return true
+    }
+
+    // ticketsPath at the repo root ('.') has no prefix to exclude; ticket
+    // files are recognized by name instead (MDT-254 review: otherwise every
+    // root ticket leaks into path selection / document navigation).
+    if (ticketsPath === '.' || ticketsPath === '') {
+      const isRootFile = !relativePath.includes('/')
+      if (isRootFile && ROOT_TICKET_FILE_PATTERN.test(relativePath))
+        return true
     }
 
     return shouldIgnorePath(relativePath, excludeFolders)

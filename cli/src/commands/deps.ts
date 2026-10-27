@@ -16,6 +16,7 @@
 import type { Violation } from '@mdt/shared/services/ticket/DependencyGraph.js'
 import type { RelationEntry, Relations } from '../output/depsFormatter.js'
 import type { StructuredOutputOptions } from '../output/structured.js'
+import { TICKET_KEY_INPUT_PATTERN } from '@mdt/domain-contracts'
 import { ProjectService } from '@mdt/shared/services/ProjectService.js'
 import {
   buildGraph,
@@ -76,7 +77,7 @@ function parseTicketKey(key: string): ParsedKey | null {
   }
 
   // Fully-qualified: "ABC-12"
-  const fullFormatMatch = key.match(/^([a-z][a-z0-9]*)-(\d+)$/i)
+  const fullFormatMatch = key.match(TICKET_KEY_INPUT_PATTERN)
   if (fullFormatMatch) {
     const [, projectCode] = fullFormatMatch
     return {
