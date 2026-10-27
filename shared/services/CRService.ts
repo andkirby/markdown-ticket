@@ -26,6 +26,7 @@ export class CRService {
       lastModified: now,
       content: data.content || '',
       filePath,
+      ...(data.refs !== undefined ? { refs: data.refs } : {}),
       phaseEpic: data.phaseEpic,
       assignee: data.assignee,
       relatedTickets: this.parseArrayField(data.relatedTickets),

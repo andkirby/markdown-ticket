@@ -6,6 +6,7 @@
 import type { Ticket } from '@/types/ticket'
 
 import { PROJECT_SCOPE_INPUT_PATTERN, TICKET_KEY_INPUT_PATTERN } from '@mdt/domain-contracts'
+import { isReferenceKeyQuery, referenceMatchScore } from '@mdt/shared/services/ticket/referenceSearch'
 import { normalizeKeyTerm as sharedNormalizeKeyTerm } from '@mdt/shared/utils/keyNormalizer'
 import { useCallback, useMemo, useState } from 'react'
 
@@ -46,7 +47,7 @@ export function parseQueryMode(query: string, _scope?: string): QueryMode {
 
   // CODE-NUMBER → ticket_key
   const ticketMatch = trimmed.match(TICKET_KEY_INPUT_PATTERN)
-  if (ticketMatch)
+  if (ticketMatch || isReferenceKeyQuery(trimmed))
     return 'ticket_key'
 
   // Scope-aware classification
@@ -76,8 +77,8 @@ export function parseQueryParts(query: string): QueryParts {
   }
 
   if (mode === 'ticket_key') {
-    const match = trimmed.match(TICKET_KEY_INPUT_PATTERN)!
-    return { mode, ticketCode: match[0].toUpperCase(), projectCode: match[1].toUpperCase() }
+    const match = trimmed.match(TICKET_KEY_INPUT_PATTERN)
+    return { mode, ticketCode: match ? match[0].toUpperCase() : trimmed, projectCode: match?.[1]?.toUpperCase() }
   }
 
   return { mode }
@@ -109,6 +110,9 @@ function getTicketNumber(code: string): number {
 }
 
 function scoreTermMatch(term: string, normalizedTerm: string, ticket: Ticket): number {
+  const externalScore = referenceMatchScore(ticket.refs, term)
+  if (/^#\d+$/.test(term))
+    return externalScore
   const keyNum = ticket.code.split('-')[1] || ''
   const code = ticket.code.toLowerCase()
   const title = ticket.title.toLowerCase()
@@ -120,6 +124,8 @@ function scoreTermMatch(term: string, normalizedTerm: string, ticket: Ticket): n
     return 90
   if (code.startsWith(normalizedTerm) || code.startsWith(term))
     return 80
+  if (externalScore >= 90)
+    return externalScore
   if (titleWords.some(word => word.startsWith(term)))
     return 70
   if (keyNum.includes(term))
@@ -128,7 +134,7 @@ function scoreTermMatch(term: string, normalizedTerm: string, ticket: Ticket): n
     return 40
   if (title.includes(term))
     return 30
-  return 0
+  return externalScore
 }
 
 /**

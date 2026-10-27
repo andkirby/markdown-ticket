@@ -79,11 +79,15 @@ import {
   resolvePhaseEpicTarget,
 
 } from './epicRules.js'
+import { resolveExternalReferences } from './externalReferences.js'
 import { ProjectService } from './ProjectService.js'
 import { ServiceError } from './ServiceError.js'
 import { TemplateService } from './TemplateService.js'
 import { buildCreationDiagnostics } from './ticket/content-inspection.js'
 import { assertNotDerivedField } from './ticket/derivedFields.js'
+import { writeReferenceFrontmatter } from './ticket/referenceFrontmatter.js'
+import { mutateReferences, referenceOperands } from './ticket/referenceMutations.js'
+import { ticketSearchProvenance } from './ticket/referenceSearch.js'
 import { assertSafeTicketInventory, assertUnambiguousTicket, classifyTicketIdentity, repositoryRoots, scanTicketIdentities, TicketIdentityConflictError } from './ticket/TicketIdentityService.js'
 import { TicketLocationResolver } from './ticket/TicketLocationResolver.js'
 
@@ -121,7 +125,7 @@ function fuzzyMatch(haystack: string, needle: string): boolean {
   return haystack.toLowerCase().includes(needle.toLowerCase())
 }
 
-const RELATION_FIELDS = ['relatedTickets', 'dependsOn', 'blocks'] as const
+const RELATION_FIELDS = ['relatedTickets', 'dependsOn', 'blocks', 'refs'] as const
 
 function normalizeValue(value: string | string[]): string | string[] {
   if (Array.isArray(value)) {
@@ -314,7 +318,7 @@ export class TicketService {
 
     const normalizedOperations = request.operations.map(operation => ({
       ...operation,
-      value: normalizeValue(operation.value),
+      value: operation.field === 'refs' ? operation.value : normalizeValue(operation.value),
     }))
 
     this.validateAttrOperations(normalizedOperations)
@@ -323,6 +327,13 @@ export class TicketService {
     const updates: Record<string, string | string[]> = {}
 
     for (const operation of normalizedOperations) {
+      if (operation.field === 'refs') {
+        const current = updates.refs ?? currentTicket.refs ?? []
+        updates.refs = mutateReferences(referenceOperands(current), operation, this.referenceTrackers(project))
+        if (JSON.stringify(current) !== JSON.stringify(updates.refs))
+          changedFields.push('refs')
+        continue
+      }
       // Resolve the effective current value for this field: prefer the
       // accumulated in-batch state so multiple ops on the same field compose
       // (e.g. `related+=A related+=B` must yield [A,B], not just [B]).
@@ -404,11 +415,11 @@ export class TicketService {
       const persistUpdates = Object.fromEntries(
         Object.entries(updates).map(([field, value]) => [
           field,
-          Array.isArray(value) ? value.join(',') : value,
+          Array.isArray(value) && field !== 'refs' ? value.join(',') : value,
         ]),
       ) as Partial<TicketData>
 
-      await this.updateCRAttrs(project, request.ticketKey, persistUpdates)
+      await this.persistCRAttrs(project, request.ticketKey, persistUpdates, true)
     }
 
     const updatedTicket = await this.getCR(project, request.ticketKey)
@@ -457,7 +468,7 @@ export class TicketService {
   async listCRs(project: Project, filters?: TicketFilters): Promise<Ticket[]> {
     try {
       // Use shared ProjectService to get CRs with correct path resolution
-      const crs = await this.projectService.getProjectCRs(project)
+      const crs = (await this.projectService.getProjectCRs(project)).map(ticket => this.withExternalReferences(project, ticket))
 
       // Apply filters if provided
       let filteredCRs = crs
@@ -513,7 +524,7 @@ export class TicketService {
 
       // Add worktree metadata
       return {
-        ...targetCR,
+        ...this.withExternalReferences(project, targetCR),
         inWorktree: location.isWorktree,
         worktreePath: location.isWorktree ? location.projectRoot : undefined,
       }
@@ -552,12 +563,14 @@ export class TicketService {
     crType: string,
     data: TicketData,
   ): Promise<TicketCreationResult> {
+    if (data.refs !== undefined)
+      data = { ...data, refs: mutateReferences([], { field: 'refs', op: 'replace', value: data.refs }, this.referenceTrackers(project)) }
     let bodySource: 'generated' | 'supplied' | 'recovered' = 'recovered'
     const onBodySource = (source: 'generated' | 'supplied'): void => {
       bodySource = source
     }
     const finish = (ticket: Ticket): TicketCreationResult => ({
-      ticket,
+      ticket: this.withExternalReferences(project, ticket),
       diagnostics: buildCreationDiagnostics(ticket, bodySource),
     })
     try {
@@ -933,6 +946,23 @@ export class TicketService {
     key: string,
     attributes: Partial<TicketData>,
   ): Promise<boolean> {
+    return this.persistCRAttrs(project, key, attributes, false)
+  }
+
+  private referenceTrackers(project: Project): unknown {
+    return this.projectService.getProjectConfig(project.project.path)?.trackers
+  }
+
+  private withExternalReferences(project: Project, ticket: Ticket): Ticket {
+    return ticket.refs === undefined
+      ? ticket
+      : {
+          ...ticket,
+          externalRefs: resolveExternalReferences(ticket.refs, this.referenceTrackers(project)),
+        }
+  }
+
+  private async persistCRAttrs(project: Project, key: string, attributes: Partial<TicketData>, preserveRefs: boolean): Promise<boolean> {
     try {
       const cr = await this.getCR(project, key)
       if (!cr) {
@@ -965,6 +995,12 @@ export class TicketService {
       // Update each attribute in YAML frontmatter
       for (const [field, value] of Object.entries(attributes)) {
         if (value !== undefined && value !== null) {
+          if (field === 'refs') {
+            const operands = referenceOperands(value)
+            const refs = preserveRefs ? operands : mutateReferences(cr.refs ?? [], { field, op: 'replace', value: operands }, this.referenceTrackers(project))
+            updatedContent = writeReferenceFrontmatter(updatedContent, refs)
+            continue
+          }
           // Convert arrays to comma-separated strings for YAML
           const stringValue = Array.isArray(value)
             ? value.join(',')
@@ -1515,6 +1551,9 @@ export class TicketService {
     if (!filters)
       return true
 
+    if (filters.query && !filters.query.trim().split(/\s+/).every(term => ticketSearchProvenance(ticket, term).length > 0))
+      return false
+
     if (filters.status) {
       const values = Array.isArray(filters.status)
         ? filters.status
@@ -1644,6 +1683,8 @@ export class TicketService {
     // YAML frontmatter - only mandatory fields + optional fields with values
     sections.push('---')
     sections.push(`code: ${ticket.code}`)
+    if (ticket.refs !== undefined)
+      sections.push(`refs: ${JSON.stringify(ticket.refs)}`)
     if (ticket.creationId)
       sections.push(`creationId: ${ticket.creationId}`)
     sections.push(`status: ${ticket.status}`)

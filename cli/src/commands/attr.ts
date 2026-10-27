@@ -100,7 +100,7 @@ function parseAttrToken(token: string): AttrOperation {
     throw new Error(`Missing field name in token '${token}'`)
   }
 
-  if (!valuePart) {
+  if (!valuePart && !(fieldPart.toLowerCase() === 'refs' && operator === '=')) {
     throw new Error(`Missing value in token '${token}'`)
   }
 
@@ -143,6 +143,8 @@ function parseAttrToken(token: string): AttrOperation {
  * Normalize field value based on field type
  */
 function normalizeFieldValue(field: string, value: string): string | string[] {
+  if (field === 'refs')
+    return value
   // Handle quoted values (remove surrounding quotes)
   const trimmedValue = value.trim()
   if ((trimmedValue.startsWith('"') && trimmedValue.endsWith('"'))

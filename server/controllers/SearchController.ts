@@ -163,6 +163,9 @@ export class SearchController {
       return (result as any).results?.map((r: any) => ({
         type: SearchResultType.TICKET,
         ticketKey: r.ticket.code,
+        refs: r.ticket.refs,
+        externalRefs: r.ticket.externalRefs,
+        matchedBy: r.matchedBy,
         title: r.ticket.title,
         status: r.ticket.status ?? '',
         project: {

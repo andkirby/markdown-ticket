@@ -6,8 +6,9 @@
  */
 
 import type { SearchRequest, SearchResponse } from '@mdt/domain-contracts'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { dataLayer } from '../services/dataLayer'
+import { useEventBus } from '../services/eventBus'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -188,6 +189,9 @@ export function useCrossProjectSearch(): CrossProjectSearchResult {
   const deduperRef = useRef<RequestDeduper>(createRequestDeduper())
   const debouncerRef = useRef<SearchDebouncer | null>(null)
   const lastReqRef = useRef<SearchRequest | null>(null)
+  const requestScopeId = useId()
+  const requestVersionRef = useRef(0)
+  const cacheEpochRef = useRef(0)
 
   /** Build a cache/dedupe key from a search request */
   function makeReqKey(req: SearchRequest): string {
@@ -196,7 +200,9 @@ export function useCrossProjectSearch(): CrossProjectSearchResult {
 
   /** Execute the actual search (no debounce — called after debounce fires) */
   const executeSearch = useCallback(async (req: SearchRequest) => {
-    const key = makeReqKey(req)
+    const version = ++requestVersionRef.current
+    const epoch = cacheEpochRef.current
+    const key = `${makeReqKey(req)}:${epoch}`
 
     // Check cache first
     const cached = cacheRef.current.get(req)
@@ -213,22 +219,30 @@ export function useCrossProjectSearch(): CrossProjectSearchResult {
 
     try {
       const resp = await deduperRef.current.dedupe(key, () =>
-        dataLayer.searchProjects(req))
+        dataLayer.searchProjects(req, `${requestScopeId}:${epoch}`))
 
-      // Cache the successful response
+      if (epoch !== cacheEpochRef.current)
+        return
+      // Cache only responses from the current data epoch.
       cacheRef.current.set(req, resp)
+      if (version !== requestVersionRef.current)
+        return
       setResults(resp.results)
       setTotal(resp.total)
       setLoading(false)
     }
     catch (err) {
+      if (epoch !== cacheEpochRef.current || version !== requestVersionRef.current)
+        return
       setError(err instanceof Error ? err : new Error(String(err)))
       setLoading(false)
     }
-  }, [])
+  }, [requestScopeId])
 
   /** Debounced search trigger */
   const search = useCallback((req: SearchRequest) => {
+    debouncerRef.current?.cancel()
+    requestVersionRef.current++
     lastReqRef.current = req
     setLoading(true)
     setError(null)
@@ -244,8 +258,25 @@ export function useCrossProjectSearch(): CrossProjectSearchResult {
   /** Cancel pending search */
   const cancel = useCallback(() => {
     debouncerRef.current?.cancel()
+    requestVersionRef.current++
+    lastReqRef.current = null
     setLoading(false)
   }, [])
+
+  const invalidate = useCallback(() => {
+    cacheEpochRef.current++
+    requestVersionRef.current++
+    cacheRef.current = createSearchCache(SEARCH_CACHE_TTL_MS)
+    debouncerRef.current?.cancel()
+    setResults([])
+    setTotal(0)
+    if (lastReqRef.current)
+      void executeSearch(lastReqRef.current)
+  }, [executeSearch])
+
+  useEventBus('ticket:created', invalidate)
+  useEventBus('ticket:updated', invalidate)
+  useEventBus('ticket:deleted', invalidate)
 
   /** Retry last request */
   const retry = useCallback(() => {
@@ -253,19 +284,25 @@ export function useCrossProjectSearch(): CrossProjectSearchResult {
     if (!lastReq)
       return
 
+    const version = ++requestVersionRef.current
+    const epoch = cacheEpochRef.current
     setError(null)
 
     let attempts = 0
     const tryFetch = async (): Promise<void> => {
       try {
         setLoading(true)
-        const resp = await dataLayer.searchProjects(lastReq)
+        const resp = await dataLayer.searchProjects(lastReq, `${requestScopeId}:${epoch}`)
+        if (epoch !== cacheEpochRef.current || version !== requestVersionRef.current)
+          return
         cacheRef.current.set(lastReq, resp)
         setResults(resp.results)
         setTotal(resp.total)
         setLoading(false)
       }
       catch (err) {
+        if (epoch !== cacheEpochRef.current || version !== requestVersionRef.current)
+          return
         attempts++
         if (attempts <= MAX_RETRIES) {
           await tryFetch()
@@ -277,7 +314,7 @@ export function useCrossProjectSearch(): CrossProjectSearchResult {
       }
     }
     tryFetch()
-  }, [])
+  }, [requestScopeId])
 
   // Cleanup on unmount
   useEffect(() => {

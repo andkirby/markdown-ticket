@@ -5,6 +5,7 @@ import { PersistedTicketFrontmatterSchema } from '@mdt/domain-contracts'
 import { normalizeTicket, normalizeTicketMetadata } from '../models/Ticket.js'
 import { PATTERNS } from '../utils/constants.js'
 import { CRService } from './CRService.js'
+import { readReferenceFrontmatter } from './ticket/referenceFrontmatter.js'
 
 /**
  * Unified Markdown Processing Service
@@ -226,6 +227,9 @@ export class MarkdownService {
         }
       }
 
+      const refs = readReferenceFrontmatter(yamlContent)
+      if (refs !== undefined)
+        result.refs = refs
       return result
     }
     catch (error) {
@@ -239,6 +243,8 @@ export class MarkdownService {
    */
   private static generateYamlFrontmatter(ticket: Ticket): string {
     const lines: string[] = []
+    if (ticket.refs !== undefined)
+      lines.push(`refs: ${JSON.stringify(ticket.refs)}`)
 
     // Core fields
     if (ticket.creationId)

@@ -23,8 +23,7 @@ export function ProjectResultRow({ scoredProject, isSelected, onSelect }: Projec
     <li>
       <button
         type="button"
-        role="option"
-        aria-selected={isSelected}
+        aria-current={isSelected ? 'true' : undefined}
         data-testid="project-result-item"
         data-selected={isSelected ? 'true' : undefined}
         data-type="project"

@@ -568,13 +568,21 @@ export const quickSearchSelectors = {
   /** Results list container */
   results: '[data-testid="quick-search-results"]',
   /** Individual result item */
-  resultItem: '[data-testid="quick-search-result-item"]',
+  resultItem: '[data-testid="quick-search-result-item"], [data-testid="quick-search-cross-project-result-item"]',
   /** Selected/highlighted result item */
-  selectedResult: '[data-testid="quick-search-result-item"][aria-selected="true"]',
+  selectedResult: '[data-testid="quick-search-results"] .search-result[data-selected="true"]',
   /** Result item by ticket code */
   resultByCode: (code: string) => `[data-testid="quick-search-result-item-${code}"]`,
   /** No results message */
   noResults: '[data-testid="quick-search-no-results"]',
+} as const
+
+/** MDT-252: shared external reference links and non-navigating details. */
+export const externalReferenceSelectors = {
+  link: '[data-testid="external-reference-link"]',
+  unavailable: '[data-testid="external-reference-unavailable"]',
+  detailsTrigger: '[data-testid="external-reference-details-trigger"]',
+  details: '[data-testid="external-reference-details"]',
 } as const
 
 /**

@@ -217,6 +217,7 @@
         "smol-toml": "^1.5.2",
         "swagger-jsdoc": "^6.2.8",
         "tree-kill": "^1.2.2",
+        "yaml": "2.9.1",
       },
       "devDependencies": {
         "@jest/globals": "^29.7.0",

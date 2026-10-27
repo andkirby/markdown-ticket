@@ -310,10 +310,12 @@ export const LocalProjectConfigProjectSchema = z.strictObject({
 
 export const LocalProjectConfigSchema = z.strictObject({
   project: LocalProjectConfigProjectSchema,
+  trackers: z.record(z.string(), z.unknown()).optional(),
   worktree: WorktreeConfigSchema.optional(),
 })
 
 export const ProjectConfigSchema = z.object({
+  trackers: z.record(z.string(), z.unknown()).optional(),
   project: z.object({
     code: z.string().trim().min(1, 'Project code is required'),
     name: SafeConfigStringSchema,

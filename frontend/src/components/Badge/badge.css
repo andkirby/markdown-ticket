@@ -16,6 +16,99 @@
  */
 
 @layer components {
+  .badge[data-external-reference] {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gap-xs);
+    min-inline-size: 24px;
+    min-block-size: 24px;
+    max-inline-size: 100%;
+    padding-block: calc(var(--gap-xs) / 2);
+    padding-inline: calc(var(--gap-xs) * 1.5);
+    border: 0;
+    border-radius: var(--radius-xs);
+    background: var(--bg-muted);
+    color: var(--primary-text);
+    font-size: clamp(11px, var(--fs-xs), 2rem);
+    line-height: 1.4;
+    text-decoration: none;
+  }
+  .badge[data-reference-state="unavailable"] {
+    color: var(--text-muted);
+  }
+  .external-reference__key {
+    min-inline-size: 0;
+    overflow: clip;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .external-reference__instance {
+    flex: none;
+    font-weight: 500;
+  }
+  .external-reference__icon,
+  .external-reference__arrow {
+    flex: none;
+    inline-size: 1.35cap;
+    block-size: 1.35cap;
+  }
+  .external-reference__more {
+    justify-content: center;
+    cursor: pointer;
+  }
+  .external-reference__panel[data-external-references] {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-sm);
+    inline-size: max-content;
+    max-inline-size: min(calc(100vw - var(--gap-lg)), calc(var(--sz-control) * 14));
+    max-block-size: min(65dvh, var(--radix-popover-content-available-height, 65dvh));
+    overflow-y: auto;
+    padding: var(--gap-sm);
+    background: var(--bg-elevated);
+    font-size: var(--fs-ui-sm);
+  }
+  .external-reference__heading {
+    padding-inline: var(--gap-xs);
+    color: oklch(var(--foreground));
+  }
+  .external-reference__detail {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-xs);
+    min-inline-size: 0;
+  }
+  .external-reference__panel .badge[data-external-reference] {
+    align-self: start;
+    font-size: var(--fs-ui-sm);
+  }
+  .external-reference__panel .external-reference__key {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    overflow: visible;
+  }
+  .external-reference__reason {
+    padding-inline: var(--gap-xs);
+    color: var(--text-muted);
+    overflow-wrap: anywhere;
+  }
+  .external-reference:focus-visible,
+  .external-reference__more:focus-visible,
+  .external-reference__panel:focus-visible {
+    outline: 2px solid var(--primary-text);
+    outline-offset: 2px;
+  }
+  .external-reference:active,
+  .external-reference__more:active {
+    background: var(--bg-subtle);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    a.external-reference:hover,
+    .external-reference__more:hover {
+      background: var(--bg-subtle);
+      text-decoration: underline;
+    }
+  }
   /* Base badge class (single, shared by all badge types). The default color
      used to come from the wrapper's text-foreground utility — owned here now
      that the wrapper ships zero utilities; data-attribute rules below (0,2,0)

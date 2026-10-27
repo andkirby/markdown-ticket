@@ -7,7 +7,7 @@ import type {
   Ticket,
   TicketMetadata,
 } from '@mdt/domain-contracts'
-import { CRLevel, CRLevels, CRType } from '@mdt/domain-contracts'
+import { CRLevel, CRLevels, CRType, ExternalReferenceSchema } from '@mdt/domain-contracts'
 
 export type {
   Ticket,
@@ -33,6 +33,14 @@ function asRecord(value: unknown): Record<string, unknown> {
 
 function getString(value: unknown, fallback = ''): string {
   return typeof value === 'string' ? value : fallback
+}
+
+function referenceFields(ticket: Record<string, unknown>): Pick<Ticket, 'refs' | 'externalRefs'> {
+  const external = ExternalReferenceSchema.array().safeParse(ticket.externalRefs)
+  return {
+    ...(Array.isArray(ticket.refs) ? { refs: ticket.refs.filter((ref): ref is string => typeof ref === 'string') } : {}),
+    ...(external.success ? { externalRefs: external.data } : {}),
+  }
 }
 
 function parseDate(dateValue: unknown): Date | null {
@@ -84,6 +92,7 @@ function normalizeArray(value: unknown): string[] {
 export function normalizeTicket(rawTicket: unknown): Ticket {
   const ticket = asRecord(rawTicket)
   const normalizedTicket: Ticket = {
+    ...referenceFields(ticket),
     // Map core fields
     code: getString(ticket.code) || getString(ticket.key),
     ...(typeof ticket.creationId === 'string' ? { creationId: ticket.creationId } : {}),
@@ -150,6 +159,7 @@ export function arrayToString(arr: string[]): string {
 export function normalizeTicketMetadata(rawTicket: unknown): TicketMetadata {
   const ticket = asRecord(rawTicket)
   const normalizedMetadata: TicketMetadata = {
+    ...referenceFields(ticket),
     // Map core fields (same as normalizeTicket)
     code: getString(ticket.code) || getString(ticket.key),
     ...(typeof ticket.creationId === 'string' ? { creationId: ticket.creationId } : {}),

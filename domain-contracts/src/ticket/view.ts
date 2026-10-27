@@ -24,6 +24,8 @@ export type TicketItemKind = (typeof TICKET_ITEM_KINDS)[number]
  * behind this item is not currently live (C-11, BR-1.5).
  */
 export interface UnifiedTicketItem {
+  refs?: string[]
+  externalRefs?: import('./external-reference').ExternalReference[]
   /** `canonical` = local Markdown; `projected` = cloud-derived header only. */
   kind: TicketItemKind
   /** Projected items are always read-only; canonical items are editable. */

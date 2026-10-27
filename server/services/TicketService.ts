@@ -1,4 +1,4 @@
-import type { CreationRecoveryInspection, CreationRecoveryOutcome, CreationRecoveryReconcileInput, CreationRecoveryResumeInput, PatchTicketInput, TicketDiagnostic, TicketIdentityDiagnostic, TicketUpdateAttrs, UnifiedTicketItem } from '@mdt/domain-contracts'
+import type { CreationRecoveryInspection, CreationRecoveryOutcome, CreationRecoveryReconcileInput, CreationRecoveryResumeInput, PatchTicketInput, SearchResponse, TicketDiagnostic, TicketIdentityDiagnostic, TicketUpdateAttrs, UnifiedTicketItem } from '@mdt/domain-contracts'
 /* eslint-disable ts/no-unsafe-type-assertion -- MDT-258 baseline: pre-existing casts, strip as they are rewritten */
 /**
  * Web Server Ticket Service Adapter
@@ -11,8 +11,9 @@ import type { Project } from '@mdt/shared/models/Project.js'
 import type { Ticket, TicketData } from '@mdt/shared/models/Ticket.js'
 import type { CRStatus } from '@mdt/shared/models/Types.js'
 import type { CloudRuntimeDependencies } from '@mdt/shared/services/TicketService.js'
-import { CoordinatorError, TICKET_KEY_INPUT_PATTERN } from '@mdt/domain-contracts'
+import { CoordinatorError } from '@mdt/domain-contracts'
 import { resolveAttrValue } from '@mdt/shared/services/ticket/attrResolver.js'
+import { ticketSearchProvenance, ticketSearchScore } from '@mdt/shared/services/ticket/referenceSearch.js'
 import {
   groupNamespacedFiles,
   parseNamespace,
@@ -20,26 +21,13 @@ import {
 import { SubdocumentService } from '@mdt/shared/services/ticket/SubdocumentService.js'
 import { TicketLocationResolver } from '@mdt/shared/services/ticket/TicketLocationResolver.js'
 import { TicketService as SharedTicketService } from '@mdt/shared/services/TicketService.js'
-import { normalizeKey } from '@mdt/shared/utils/keyNormalizer.js'
 import { TraceStoreService } from './TraceStoreService.js'
 
 export type CRData = Pick<
   TicketData,
-  'title' | 'type' | 'priority' | 'level' | 'description'
+  'title' | 'type' | 'priority' | 'level' | 'description' | 'refs'
 > & {
   code?: string
-}
-
-/** Search result item with ticket and project context */
-interface SearchResultItem {
-  ticket: { code: string, title: string, priority: string | null, status: string | null }
-  project: { code: string, name: string }
-}
-
-/** Search response shape */
-interface SearchResponse {
-  results: SearchResultItem[]
-  total: number
 }
 
 export interface CreateCRResult {
@@ -205,6 +193,7 @@ export class TicketService {
       readOnly: false,
       stale: false,
       code: t.code,
+      ...(t.refs !== undefined ? { refs: t.refs, externalRefs: t.externalRefs } : {}),
       title: t.title,
       status: t.status,
       type: t.type,
@@ -331,7 +320,7 @@ export class TicketService {
    * Create new CR in a project.
    */
   async createCR(projectId: string, crData: CRData): Promise<CreateCRResult> {
-    const { title, type, priority, level, description } = crData
+    const { title, type, priority, level, description, refs } = crData
 
     if (!title || !type) {
       throw new Error('Title and type are required')
@@ -341,6 +330,7 @@ export class TicketService {
 
     // Convert CRData to TicketData format
     const ticketData: TicketData = {
+      ...(refs !== undefined ? { refs } : {}),
       title,
       type,
       priority: priority || 'Medium',
@@ -395,6 +385,8 @@ export class TicketService {
 
     // Convert web server updates to TicketData format
     const ticketUpdates: Partial<TicketData> = {}
+    if (updates.refs !== undefined)
+      ticketUpdates.refs = updates.refs
 
     // Map allowed fields (excluding status which is handled above)
     if (updates.priority !== undefined) {
@@ -459,7 +451,7 @@ export class TicketService {
     },
   ): Promise<SearchResponse> {
     if (mode === 'ticket_key') {
-      return this.searchByTicketKey(query, options.limitTotal)
+      return this.searchByTicketKey(query, options.limitTotal, options.limitPerProject)
     }
     return this.searchByProjectScope(
       query,
@@ -476,59 +468,38 @@ export class TicketService {
   private async searchByTicketKey(
     query: string,
     limitTotal: number,
+    limitPerProject: number,
   ): Promise<SearchResponse> {
     if (limitTotal < 1) {
       return { results: [], total: 0 }
     }
 
-    // Extract project code from ticket key (e.g., "MDT-001" → "MDT")
-    const match = query.match(TICKET_KEY_INPUT_PATTERN)
-    if (!match) {
-      return { results: [], total: 0 }
-    }
-
-    const projectCode = match[1].toUpperCase()
     const projects = await this.projectDiscovery.getAllProjects()
-    const project = projects.find(
-      p => p.project.code === projectCode || p.id === projectCode,
-    )
-
-    if (!project) {
-      return { results: [], total: 0 }
-    }
-
-    // Normalize key to zero-padded format (MDT-1 → MDT-001)
-    let normalizedKey: string
-    try {
-      normalizedKey = normalizeKey(query, projectCode)
-    }
-    catch {
-      return { results: [], total: 0 }
-    }
-
-    const cr = await this.sharedTicketService.getCR(project, normalizedKey)
-    if (!cr) {
-      return { results: [], total: 0 }
-    }
-
-    return {
-      results: [
-        {
-          ticket: {
-            code: cr.code,
-            title: cr.title,
-            priority: cr.priority ?? null,
-            // MDT-247: additive status for the cross-project key-strip glyph.
-            status: cr.status ?? null,
-          },
-          project: {
-            code: project.project.code || project.id,
-            name: project.project.name,
-          },
-        },
-      ],
-      total: 1,
-    }
+    const groups = await Promise.all(projects.map(async (project) => {
+      const tickets = await this.sharedTicketService.listCRs(project)
+      return tickets.flatMap((ticket) => {
+        const matchedBy = ticketSearchProvenance(ticket, query)
+        return matchedBy.length
+          ? [{
+              ticket: { code: ticket.code, title: ticket.title, priority: ticket.priority ?? null, status: ticket.status ?? null, refs: ticket.refs, externalRefs: ticket.externalRefs },
+              project: { code: project.project.code || project.id, name: project.project.name },
+              matchedBy,
+            }]
+          : []
+      })
+    }))
+    const matches = groups.flat().sort((a, b) => {
+      const rank = (item: typeof a) => ticketSearchScore(item.ticket, query)
+      return rank(b) - rank(a) || a.project.code.localeCompare(b.project.code) || a.ticket.code.localeCompare(b.ticket.code)
+    })
+    const perProject = new Map<string, number>()
+    const unique = [...new Map(matches.map(result => [`${result.project.code}:${result.ticket.code}`, result])).values()]
+    const results = unique.filter((result) => {
+      const count = perProject.get(result.project.code) ?? 0
+      perProject.set(result.project.code, count + 1)
+      return count < limitPerProject
+    }).slice(0, limitTotal)
+    return { results, total: results.length }
   }
 
   /**
@@ -552,23 +523,25 @@ export class TicketService {
 
     const allCRs = await this.sharedTicketService.listCRs(project)
 
-    // Filter by query — case-insensitive substring match on title or code
     const filtered = query
-      ? allCRs.filter(
-          cr =>
-            cr.title.toLowerCase().includes(query.toLowerCase())
-            || cr.code.toLowerCase().includes(query.toLowerCase()),
-        )
+      ? allCRs.filter(cr => query.trim().split(/\s+/).every(term => ticketSearchProvenance(cr, term).length > 0))
       : allCRs
 
     const effectiveLimit = Math.min(limitPerProject, limitTotal)
-    const limited = filtered.slice(0, effectiveLimit)
+    const ranked = [...filtered].sort((a, b) => {
+      const rank = (ticket: Ticket) => ticketSearchScore(ticket, query)
+      return rank(b) - rank(a)
+    })
+    const limited = ranked.slice(0, effectiveLimit)
 
     return {
       results: limited.map(cr => ({
+        matchedBy: ticketSearchProvenance(cr, query),
         ticket: {
           code: cr.code,
           title: cr.title,
+          refs: cr.refs,
+          externalRefs: cr.externalRefs,
           priority: cr.priority ?? null,
           // MDT-247: additive status for the key-strip glyph (project_scope).
           status: cr.status ?? null,

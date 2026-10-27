@@ -10,9 +10,10 @@ import type { QueryMode, QueryParts } from '@/hooks/useQuickSearch'
 import { useEffect, useRef } from 'react'
 
 export interface QuickSearchInputProps {
+  describedBy?: string
   value: string
-  onChange: (value: string) => void
-  onKeyDown?: (e: React.KeyboardEvent) => void
+  onChange: (_value: string) => void
+  onKeyDown?: (_event: React.KeyboardEvent) => void
   queryMode: QueryMode
   queryParts: QueryParts
   /** Current project code for mode indicator */
@@ -32,7 +33,7 @@ function getModeLabel(queryMode: QueryMode, queryParts: QueryParts, currentProje
   return null
 }
 
-export function QuickSearchInput({ value, onChange, onKeyDown, queryMode, queryParts, currentProjectCode }: QuickSearchInputProps): React.ReactElement {
+export function QuickSearchInput({ describedBy, value, onChange, onKeyDown, queryMode, queryParts, currentProjectCode }: QuickSearchInputProps): React.ReactElement {
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Auto-focus on mount
@@ -43,9 +44,9 @@ export function QuickSearchInput({ value, onChange, onKeyDown, queryMode, queryP
   const modeLabel = getModeLabel(queryMode, queryParts, currentProjectCode)
 
   return (
-    <div className="relative flex items-center">
+    <div className="search-input">
       <svg
-        className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400"
+        className="search-input__icon"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -61,7 +62,8 @@ export function QuickSearchInput({ value, onChange, onKeyDown, queryMode, queryP
         ref={inputRef}
         type="text"
         data-testid="quick-search-input"
-        className="w-full pl-10 pr-4 py-3 text-lg border-0 bg-transparent focus:outline-none focus:ring-0 placeholder-gray-400"
+        className="search-input__field"
+        aria-describedby={describedBy}
         placeholder="Search tickets by key or title..."
         value={value}
         onChange={e => onChange(e.target.value)}

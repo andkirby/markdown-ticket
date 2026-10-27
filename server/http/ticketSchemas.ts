@@ -8,6 +8,7 @@ export const RestCreateTicketInputSchema = CreateTicketInputSchema.pick({
   priority: true,
   level: true,
   description: true,
+  refs: true,
 })
 export const RestPatchTicketInputSchema = PatchTicketInputSchema
 

@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { PROJECT_CODE_PATTERN_BODY } from '../project/code'
 import { CRLevelSchema, CRPrioritySchema, CRStatusSchema, CRTypeSchema } from '../types/schema'
+import { ExternalReferencesSchema } from './external-reference'
 
 /**
  * Canonical ticket-number digit bounds (MDT-254).
@@ -69,6 +70,7 @@ export const TicketFrontmatterSchema = z.object({
   blocks: z.string().optional(),
   assignee: z.string().email('Invalid email format').optional(),
   component: z.string().optional(),
+  refs: ExternalReferencesSchema.optional(),
   content: z.string().optional(),
   implementationDate: ISODateSchema.optional(),
   implementationNotes: z.string().optional(),

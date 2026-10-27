@@ -90,6 +90,9 @@ export function formatTicketView(ticket: Ticket, projectPath?: string): string {
     fields.push({ label: 'assignee', value: ticket.assignee })
   }
 
+  if (ticket.refs?.length)
+    fields.push({ label: 'refs', value: ticket.refs.join(', ') })
+
   if (ticket.component) {
     fields.push({ label: 'component', value: ticket.component })
   }

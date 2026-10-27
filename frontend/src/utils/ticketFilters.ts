@@ -1,5 +1,6 @@
 import type { TicketFilters } from '@mdt/domain-contracts'
 import type { Ticket } from '../types'
+import { referenceMatchScore } from '@mdt/shared/services/ticket/referenceSearch'
 
 /**
  * Facet keys backed by a multi-select array of string values on `TicketFilters`.
@@ -82,11 +83,9 @@ function matchesQuery(ticket: Ticket, query: string | undefined): boolean {
   const title = ticket.title?.toLowerCase() ?? ''
   const code = ticket.code?.toLowerCase() ?? ''
   const description = ticket.description?.toLowerCase() ?? ''
-  return terms.every(term =>
-    title.includes(term)
-    || code.includes(term)
-    || description.includes(term),
-  )
+  return terms.every(term => /^#\d+$/.test(term)
+    ? referenceMatchScore(ticket.refs, term) > 0
+    : referenceMatchScore(ticket.refs, term) > 0 || title.includes(term) || code.includes(term) || description.includes(term))
 }
 
 /**

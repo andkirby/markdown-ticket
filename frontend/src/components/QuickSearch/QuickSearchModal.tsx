@@ -13,7 +13,7 @@ import type { QueryMode } from '@/hooks/useQuickSearch'
 import type { Ticket } from '@/types/ticket'
 
 import { SearchScope, SearchScopes } from '@mdt/domain-contracts'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Modal, ModalBody } from '@/components/ui/Modal'
 import { useCrossProjectSearch } from '@/hooks/useCrossProjectSearch'
 import { useProjectSearch } from '@/hooks/useProjectSearch'
@@ -28,9 +28,9 @@ export interface QuickSearchModalProps {
   isOpen: boolean
   onClose: () => void
   tickets: Ticket[]
-  onSelectTicket: (ticket: Ticket, targetProjectCode?: string) => void
+  onSelectTicket: (_ticket: Ticket, _targetProjectCode?: string) => void
   /** MDT-179: Navigate to a project. If not provided, project clicks do nothing. */
-  onSelectProject?: (project: Project) => void
+  onSelectProject?: (_project: Project) => void
   /** Current project code for mode indicator and cross-project filtering */
   currentProjectCode?: string
   /** All known projects — used to validate @CODE project-scoped queries and project search */
@@ -39,6 +39,8 @@ export interface QuickSearchModalProps {
 
 export function QuickSearchModal({ isOpen, onClose, tickets, onSelectTicket, onSelectProject, currentProjectCode, projects }: QuickSearchModalProps): React.ReactElement | null {
   const [query, setQuery] = useState('')
+  const searchRef = useRef<HTMLDivElement>(null)
+  const hintId = useId()
   const { scope, setScope, cycleScope: _cycleScope, resetScope } = useSearchScope()
 
   const { filteredTickets, selectedIndex, setSelectedIndex } = useQuickSearch({ tickets, query })
@@ -114,8 +116,8 @@ export function QuickSearchModal({ isOpen, onClose, tickets, onSelectTicket, onS
   // Exclude current project from cross-project results — the current project
   // section already shows those tickets via filteredTickets
   const filteredCrossProjectResults = useMemo(
-    () => crossProject.results.filter(r => r.project.code !== currentProjectCode),
-    [crossProject.results, currentProjectCode],
+    () => crossProject.results,
+    [crossProject.results],
   )
 
   // Compute total selectable results across all sections (MDT-179: includes project matches, respects scope)
@@ -125,7 +127,7 @@ export function QuickSearchModal({ isOpen, onClose, tickets, onSelectTicket, onS
     : [], [scope, projectMatches])
   // Scope filtering: hide tickets when scope is projects/documents
   const scopeShowsTickets = scope === SearchScope.GLOBAL || scope === SearchScope.TICKETS
-  const visibleTickets = useMemo(() => scopeShowsTickets ? filteredTickets : [], [scopeShowsTickets, filteredTickets])
+  const visibleTickets = useMemo(() => scopeShowsTickets && queryMode !== 'ticket_key' ? filteredTickets : [], [scopeShowsTickets, filteredTickets, queryMode])
   const totalSelectableResults = (queryMode === 'ticket_key' || queryMode === 'project_scope')
     ? filteredCrossProjectResults.length + (queryMode === 'project_scope' ? 0 : visibleTickets.length) + scopedProjectResults.length
     : visibleTickets.length + scopedProjectResults.length
@@ -147,6 +149,22 @@ export function QuickSearchModal({ isOpen, onClose, tickets, onSelectTicket, onS
 
   /** Scopes available for Tab cycling (Documents hidden until doc search is implemented). */
   const cycleableScopes = useMemo(() => SearchScopes.filter((s): s is SearchScopeValue => s !== SearchScope.DOCUMENTS), [])
+
+  const handleActionFocus = useCallback((event: React.KeyboardEvent) => {
+    if (event.key !== 'F6')
+      return
+    event.preventDefault()
+    event.stopPropagation()
+    const input = searchRef.current?.querySelector<HTMLInputElement>('[data-testid="quick-search-input"]')
+    if (event.shiftKey) {
+      input?.focus()
+      return
+    }
+    const selected = searchRef.current?.querySelector<HTMLElement>('[data-testid="quick-search-results"] .search-result[data-selected="true"]')
+    const primary = selected?.matches('button') ? selected : selected?.querySelector<HTMLButtonElement>('.search-result__select')
+    const target = primary ?? input
+    target?.focus()
+  }, [])
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     // MDT-179: Tab cycles scope (All → Tickets → Projects)
@@ -221,7 +239,7 @@ export function QuickSearchModal({ isOpen, onClose, tickets, onSelectTicket, onS
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl" data-testid="quick-search-modal">
-      <ModalBody className="modal__body--constrained">
+      <ModalBody ref={searchRef} onKeyDown={handleActionFocus} className="modal__body--constrained">
         {/* Search input */}
         <div className="modal__section">
           <QuickSearchInput
@@ -231,8 +249,11 @@ export function QuickSearchModal({ isOpen, onClose, tickets, onSelectTicket, onS
             queryMode={queryMode}
             queryParts={queryParts}
             currentProjectCode={currentProjectCode}
+            describedBy={hintId}
           />
         </div>
+
+        <p id={hintId} className="search-keyboard-hint">Tab: scope · F6: result actions · Shift+F6: search</p>
 
         {/* MDT-179: Scope bar */}
         <SearchScopeBar
@@ -242,6 +263,7 @@ export function QuickSearchModal({ isOpen, onClose, tickets, onSelectTicket, onS
 
         {/* Results */}
         <QuickSearchResults
+          query={query}
           tickets={visibleTickets}
           selectedIndex={selectedIndex}
           onSelect={handleSelectTicket}

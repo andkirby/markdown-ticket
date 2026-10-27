@@ -110,6 +110,15 @@ interface BackendSupplementSetting {
 }
 
 const BACKEND_SUPPLEMENT_SETTINGS: readonly BackendSupplementSetting[] = [
+  // MDT-252: instance-scoped external identity configuration, never a browser/API edit.
+  { selector: 'trackers.<instance>', scope: 'project', file: '{project}/.mdt-config.toml', exposure: 'fileOnly', note: 'Named external tracker instance; invalid entries stay preserved and unavailable.' },
+  { selector: 'trackers.<instance>.kind', scope: 'project', file: '{project}/.mdt-config.toml', exposure: 'fileOnly', note: 'External issue reference configuration (MDT-252); see CONFIG_SPECIFICATION.md.' },
+  { selector: 'trackers.<instance>.baseUrl', scope: 'project', file: '{project}/.mdt-config.toml', exposure: 'fileOnly', note: 'External issue reference configuration (MDT-252); see CONFIG_SPECIFICATION.md.' },
+  { selector: 'trackers.<instance>.defaultRepo', scope: 'project', file: '{project}/.mdt-config.toml', exposure: 'fileOnly', note: 'External issue reference configuration (MDT-252); see CONFIG_SPECIFICATION.md.' },
+  { selector: 'trackers.<instance>.projectKeys', scope: 'project', file: '{project}/.mdt-config.toml', exposure: 'fileOnly', note: 'External issue reference configuration (MDT-252); see CONFIG_SPECIFICATION.md.' },
+  { selector: 'trackers.<instance>.urlTemplate', scope: 'project', file: '{project}/.mdt-config.toml', exposure: 'fileOnly', note: 'External issue reference configuration (MDT-252); see CONFIG_SPECIFICATION.md.' },
+  { selector: 'trackers.<instance>.display.projectCode', scope: 'project', file: '{project}/.mdt-config.toml', exposure: 'fileOnly', note: 'External issue reference configuration (MDT-252); see CONFIG_SPECIFICATION.md.' },
+  { selector: 'trackers.<instance>.display.repository', scope: 'project', file: '{project}/.mdt-config.toml', exposure: 'fileOnly', note: 'External issue reference configuration (MDT-252); see CONFIG_SPECIFICATION.md.' },
   // Project [worktree] and symlinks.
   { selector: 'worktree.enabled', scope: 'project', file: '{project}/.mdt-config.toml', exposure: 'fileOnly', note: 'Worktree feature toggle (default true).' },
   { selector: 'project.allowSymlinks', scope: 'project', file: '{project}/.mdt-config.toml', exposure: 'fileOnly', note: 'Symlink following in subdocument reads (MDT-151, default false).' },

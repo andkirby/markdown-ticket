@@ -479,7 +479,7 @@ test.describe('QuickSearch Cross-Project: Keyboard Navigation (MDT-152 BR-6)', (
 
     // Something should be selected. Scope to the results listbox — the
     // scope tab strip also uses aria-selected and would strict-match.
-    const selected = page.locator('[data-testid="quick-search-results"] [aria-selected="true"]')
+    const selected = page.locator('[data-testid="quick-search-results"] .search-result[data-selected="true"]')
     await expect(selected).toBeVisible()
   })
 
@@ -505,7 +505,7 @@ test.describe('QuickSearch Cross-Project: Keyboard Navigation (MDT-152 BR-6)', (
 })
 
 test.describe('QuickSearch Cross-Project: Edge Cases (MDT-152)', () => {
-  test('Edge-5: own-project ticket key shows only in current project section, not duplicated in cross-project', async ({ page, e2eContext }) => {
+  test('Edge-5: own-project key appears once in the ranked identity results', async ({ page, e2eContext }) => {
     const scenario = await buildScenario(e2eContext.projectFactory, 'medium')
     const ownTicketCode = scenario.crCodes[0]
     if (!ownTicketCode) return
@@ -520,8 +520,9 @@ test.describe('QuickSearch Cross-Project: Edge Cases (MDT-152)', () => {
     const results = page.locator(quickSearchSelectors.resultItem)
     await expect(results.first()).toBeVisible({ timeout: 5000 })
 
-    // Should NOT appear in cross-project section (deduplicated)
-    await expect(page.locator(crossSearchSelectors.crossProjectResultItem)).not.toBeVisible()
+    // One ranked list preserves exact-before-partial ordering across projects.
+    await expect(results.filter({ hasText: ownTicketCode })).toHaveCount(1)
+    await expect(page.locator(crossSearchSelectors.crossProjectResultItem).first()).toContainText(ownTicketCode)
   })
 
   test('Edge-6: @current-project shows results in cross-project section (deduplicated from current)', async ({ page, e2eContext }) => {

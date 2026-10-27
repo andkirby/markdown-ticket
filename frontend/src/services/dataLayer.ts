@@ -362,10 +362,11 @@ class DataLayer {
    * to prevent duplicate in-flight requests.
    *
    * @param req - Parsed search request (ticket_key or project_scope mode)
+   * @param generation - Local caller namespace/data generation; isolates invalidated in-flight reads, never sent to the API
    * @returns SearchResponse with results and total count
    */
-  async searchProjects(req: SearchRequest): Promise<SearchResponse> {
-    const cacheKey = `search-${req.mode}-${'projectCode' in req ? req.projectCode : ''}-${req.query}`
+  async searchProjects(req: SearchRequest, generation: string = ''): Promise<SearchResponse> {
+    const cacheKey = `search-${generation}-${req.mode}-${'projectCode' in req ? req.projectCode : ''}-${req.query}`
     return this.dedupe(cacheKey, async () => {
       try {
         const response = await authFetch(`${this.baseUrl}/projects/search`, {

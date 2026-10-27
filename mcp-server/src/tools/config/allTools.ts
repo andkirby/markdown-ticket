@@ -168,6 +168,11 @@ export const CR_SECTION_TOOLS: Tool[] = [
               items: { type: 'string' },
               description: 'System areas impacted',
             },
+            refs: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Ordered instance-scoped external issue references. Replaces the list; [] clears it. Stored unknown refs are preserved by unrelated edits.',
+            },
             relatedTickets: {
               type: 'string',
               description: 'Related CR codes (comma-separated)',
@@ -273,7 +278,7 @@ export const CR_SECTION_TOOLS: Tool[] = [
   {
     name: 'update_cr_attrs',
     description:
-      'Update CR attributes. Only the following attributes can be updated: level, priority, phaseEpic, assignee, relatedTickets, dependsOn, blocks, implementationDate, implementationNotes. To update CR title, use manage_cr_sections (edit the H1 header - MDT-064). To update CR status, use update_cr_status. To update CR content/sections, use manage_cr_sections.',
+      'Update CR attributes. Only the following attributes can be updated: level, priority, phaseEpic, assignee, relatedTickets, dependsOn, blocks, refs, implementationDate, implementationNotes. To update CR title, use manage_cr_sections (edit the H1 header - MDT-064). To update CR status, use update_cr_status. To update CR content/sections, use manage_cr_sections.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -288,7 +293,7 @@ export const CR_SECTION_TOOLS: Tool[] = [
         attributes: {
           type: 'object',
           description:
-            'Attributes to update. Only these fields are allowed: level, priority, phaseEpic, assignee, relatedTickets, dependsOn, blocks, implementationDate, implementationNotes. Do NOT update title directly - update the H1 header in the CR content using manage_cr_sections instead (MDT-064: H1 as Single Source of Truth).',
+            'Attributes to update. Only these fields are allowed: level, priority, phaseEpic, assignee, relatedTickets, dependsOn, blocks, refs, implementationDate, implementationNotes. Do NOT update title directly - update the H1 header in the CR content using manage_cr_sections instead (MDT-064: H1 as Single Source of Truth).',
           properties: {
             level: {
               type: 'string',
@@ -305,6 +310,11 @@ export const CR_SECTION_TOOLS: Tool[] = [
               type: 'string',
               description:
                 'Phase or epic. When set to a ticket key, the target must be an epic in Approved or Implemented status.',
+            },
+            refs: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Ordered instance-scoped external issue references. Replaces the list; [] clears it. Stored unknown refs are preserved by unrelated edits.',
             },
             relatedTickets: {
               type: 'string',

@@ -6,6 +6,7 @@
  */
 
 import { z } from 'zod'
+import { ExternalReferenceSchema } from '../ticket/external-reference'
 import { SearchResultType, SearchResultTypes, SearchScope, SearchScopes } from './types'
 
 // ---------------------------------------------------------------------------
@@ -34,6 +35,9 @@ export const ProjectResultItemSchema = z.object({
 
 export const TicketResultItemSchema = z.object({
   type: z.literal(SearchResultType.TICKET),
+  refs: z.array(z.string()).optional(),
+  externalRefs: z.array(ExternalReferenceSchema).optional(),
+  matchedBy: z.array(z.enum(['local-key', 'external-ref', 'text'])).optional(),
   ticketKey: z.string(),
   title: z.string(),
   status: z.string(),

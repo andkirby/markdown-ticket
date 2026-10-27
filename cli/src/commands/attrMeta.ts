@@ -20,6 +20,7 @@ export const ATTR_FIELDS: Record<string, string> = {
   'related': 'relatedTickets',
   'depends': 'dependsOn',
   'blocks': 'blocks',
+  'refs': 'refs',
   'impl-date': 'implementationDate',
   'impl-notes': 'implementationNotes',
 }
@@ -30,12 +31,13 @@ export const ATTR_HELP = {
   // Continuation lines are padded to the description column so they align under <attrs>
   // rather than sitting flush-left (commander indents arg-description continuations by 2).
   attrsArg: [
-    'Set attributes as <field><op><value>. Operators: = set, += add, -= remove (relations only).',
+    'Set attributes as <field><op><value>. Operators: = set, += add, -= remove (relations and refs).',
     `status: ${CRStatuses.join(' | ')}`,
     '  aliases: backlog->Proposed, open->Approved, done/complete->Implemented, in-progress->In Progress, partial->Partially Implemented, deferred->On Hold',
     `priority: ${CRPriorities.join(' | ')}  (aliases: p1-p4)`,
     'level: ticket | epic  (aliases: e->epic, t->ticket)',
     'component: free-text subsystem label (e.g. owned-runtime, frontend)',
+    'refs: ordered external identities, comma-separated or a JSON string array; refs= clears; -= matches exact stored strings',
     'Examples: status=Implemented  priority=High  level=epic  related+=MDT-100  depends-=MDT-001',
   ].join(`\n  ${' '.repeat(11)}`),
 }

@@ -1,6 +1,7 @@
 import type {
   CRLevelValue,
 } from '../types/schema'
+import type { ExternalReference } from './external-reference'
 import type { SubDocument } from './subdocument'
 import { z } from 'zod'
 import {
@@ -9,6 +10,7 @@ import {
   CRStatusSchema,
   CRTypeSchema,
 } from '../types/schema'
+import { ExternalReferenceSchema, ExternalReferencesSchema } from './external-reference'
 import { CR_CODE_PATTERN } from './frontmatter'
 import { SubDocumentSchema } from './subdocument'
 
@@ -31,6 +33,8 @@ export interface Ticket {
   assignee?: string
   /** Free-text subsystem/package label (e.g. 'owned-runtime', 'frontend'). Optional, not validated against a vocabulary. */
   component?: string
+  refs?: string[]
+  externalRefs?: ExternalReference[]
   implementationDate?: Date | null
   implementationNotes?: string
   impactAreas?: string[]
@@ -78,6 +82,8 @@ export const TicketSchema: z.ZodType<Ticket> = z.object({
   rationale: z.string().optional(),
   assignee: z.string().optional(),
   component: z.string().optional(),
+  refs: ExternalReferencesSchema.optional(),
+  externalRefs: z.array(ExternalReferenceSchema).optional(),
   implementationDate: NullableDateSchema.optional(),
   implementationNotes: z.string().optional(),
   impactAreas: z.array(z.string()).optional(),

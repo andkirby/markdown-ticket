@@ -15,6 +15,7 @@ import type { ScoredProject } from '@/hooks/useProjectSearch'
 import type { QueryMode } from '@/hooks/useQuickSearch'
 
 import type { Ticket } from '@/types/ticket'
+import { ExternalReferenceBadges } from '@/components/Badge/ExternalReferenceBadges'
 import { TicketCode } from '@/components/TicketCode'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { DocumentResultRow } from './DocumentResultRow'
@@ -68,40 +69,43 @@ function ErrorState({ error, onRetry }: ErrorStateProps): React.ReactElement {
 // ---------------------------------------------------------------------------
 
 interface CrossProjectResultItemProps {
+  query?: string
   result: SearchResponse['results'][number]
   isSelected: boolean
   onSelect: () => void
 }
 
-function CrossProjectResultItem({ result, isSelected, onSelect }: CrossProjectResultItemProps): React.ReactElement {
+function CrossProjectResultItem({ result, isSelected, onSelect, query }: CrossProjectResultItemProps): React.ReactElement {
   return (
     <li>
-      <button
-        type="button"
-        role="option"
-        aria-selected={isSelected}
+      <div
         data-testid="quick-search-cross-project-result-item"
         data-selected={isSelected ? 'true' : undefined}
         data-type="cross-project"
         className="search-result"
-        onClick={onSelect}
       >
-        <div className="search-result__row">
-          <TicketCode code={result.ticket.code} priority={result.ticket.priority ?? undefined} status={result.ticket.status ?? undefined} className="search-result__code" />
-          <span className="search-result__title">
-            {result.ticket.title}
-          </span>
-        </div>
-        <div className="search-result__project-name">
-          <span
-            className="search-result__project-label"
-            data-testid="quick-search-project-label"
-          >
-            {result.project.code}
-          </span>
-          <span>{result.project.name}</span>
-        </div>
-      </button>
+        <button type="button" className="search-result__select" onClick={onSelect} aria-current={isSelected ? 'true' : undefined}>
+          <div className="search-result__row">
+            <TicketCode code={result.ticket.code} priority={result.ticket.priority ?? undefined} status={result.ticket.status ?? undefined} className="search-result__code" />
+            <span className="search-result__title">
+              {result.ticket.title}
+            </span>
+          </div>
+          <div className="search-result__project-name">
+            <span
+              className="search-result__project-label"
+              data-testid="quick-search-project-label"
+            >
+              {result.project.code}
+            </span>
+            <span>{result.project.name}</span>
+          </div>
+        </button>
+        {result.matchedBy?.some(source => source !== 'text') && (
+          <span className="search-result__provenance">{result.matchedBy.filter(source => source !== 'text').map(source => source === 'local-key' ? 'Local key' : 'External reference').join(' · ')}</span>
+        )}
+        <div className="search-result__references"><ExternalReferenceBadges refs={result.ticket.refs} externalRefs={result.ticket.externalRefs} query={query} /></div>
+      </div>
     </li>
   )
 }
@@ -111,6 +115,7 @@ function CrossProjectResultItem({ result, isSelected, onSelect }: CrossProjectRe
 // ---------------------------------------------------------------------------
 
 export interface QuickSearchResultsProps {
+  query?: string
   tickets: Ticket[]
   selectedIndex: number
   onSelect: (ticket: Ticket, targetProjectCode?: string) => void
@@ -134,6 +139,7 @@ export interface QuickSearchResultsProps {
 }
 
 export function QuickSearchResults({
+  query,
   tickets,
   selectedIndex,
   onSelect,
@@ -203,7 +209,7 @@ export function QuickSearchResults({
   }
 
   return (
-    <ScrollArea type="hover" scrollHideDelay={600} className="search-results-scroll" role="listbox" aria-label="Search results" data-testid="quick-search-results">
+    <ScrollArea type="hover" scrollHideDelay={600} className="search-results-scroll" role="region" aria-label="Search results" data-testid="quick-search-results">
       {/* Cross-project section (ticket-key or project-scope mode) */}
       {isCrossProjectMode && scopeShowsTickets && (
         <div role="group" aria-label={isProjectScopeMode ? 'Project Results' : 'Cross-Project Results'} data-testid="quick-search-cross-project-section">
@@ -231,8 +237,9 @@ export function QuickSearchResults({
             <ul className="search-results-list">
               {crossProjectResults.map((result, index) => (
                 <CrossProjectResultItem
-                  key={result.ticket.code}
+                  key={`${result.project.code}:${result.ticket.code}`}
                   result={result}
+                  query={query}
                   isSelected={index === selectedIndex}
                   onSelect={() => {
                     // Map cross-project result to a minimal Ticket for navigation
@@ -267,22 +274,21 @@ export function QuickSearchResults({
               const isSelected = effectiveIndex === selectedIndex
               return (
                 <li key={ticket.code}>
-                  <button
-                    type="button"
-                    role="option"
-                    aria-selected={isSelected}
+                  <div
                     data-testid="quick-search-result-item"
                     data-selected={isSelected ? 'true' : undefined}
                     className="search-result"
-                    onClick={() => onSelect(ticket)}
                   >
-                    <div className="search-result__row">
-                      <TicketCode code={ticket.code} priority={ticket.priority} status={ticket.status} className="search-result__code" />
-                      <span className="search-result__title">
-                        {ticket.title}
-                      </span>
-                    </div>
-                  </button>
+                    <button type="button" className="search-result__select" onClick={() => onSelect(ticket)} aria-current={isSelected ? 'true' : undefined}>
+                      <div className="search-result__row">
+                        <TicketCode code={ticket.code} priority={ticket.priority} status={ticket.status} className="search-result__code" />
+                        <span className="search-result__title">
+                          {ticket.title}
+                        </span>
+                      </div>
+                    </button>
+                    <div className="search-result__references"><ExternalReferenceBadges refs={ticket.refs} externalRefs={ticket.externalRefs} query={query} /></div>
+                  </div>
                 </li>
               )
             })}

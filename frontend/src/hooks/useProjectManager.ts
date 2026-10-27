@@ -79,6 +79,12 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
 
   const selectedProjectRef = useRef<Project | null>(null)
   const lastAccessModeRef = useRef(accessMode)
+  const ticketReadVersionsRef = useRef(new Map<string, number>())
+  const selectionGenerationRef = useRef(0)
+  useEffect(() => {
+    selectionGenerationRef.current++
+    ticketReadVersionsRef.current.clear()
+  }, [selectedProjectValue?.id])
 
   // Fetch tickets for a specific project
   const fetchTicketsForProject = useCallback(async (project: Project): Promise<void> => {
@@ -97,17 +103,27 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
 
   // Set up SSE events if this instance should handle them
   const updateTicketInState = useCallback(async (ticketData: Ticket) => {
-    // SSE only sends metadata, fetch complete ticket including content
-    // Use ref to avoid stale closure issues
+    // Preserve immediate metadata feedback; resolve refs through the canonical read boundary.
     const currentProject = selectedProjectRef.current
-    if (currentProject) {
-      // Update immediately with SSE data for instant UI feedback
-      // This avoids timing issues where backend fetch might return stale data
-      setTickets(prev => prev.map(ticket =>
-        ticket.code === ticketData.code
-          ? { ...ticket, ...ticketData, lastModified: ticketData.lastModified || new Date() }
-          : ticket,
-      ))
+    if (!currentProject)
+      return
+    const selectionGeneration = selectionGenerationRef.current
+    const key = `${currentProject.id}:${ticketData.code}`
+    const version = (ticketReadVersionsRef.current.get(key) ?? 0) + 1
+    ticketReadVersionsRef.current.set(key, version)
+    setTickets(prev => prev.map(ticket => ticket.code === ticketData.code
+      ? { ...ticket, ...ticketData, lastModified: ticketData.lastModified || new Date() }
+      : ticket))
+    try {
+      const canonical = await dataLayer.fetchTicket(currentProject.id, ticketData.code)
+      if (!canonical || selectionGenerationRef.current !== selectionGeneration || selectedProjectRef.current?.id !== currentProject.id || ticketReadVersionsRef.current.get(key) !== version)
+        return
+      setTickets(prev => prev.map(ticket => ticket.code === canonical.code
+        ? { ...ticket, refs: canonical.refs, externalRefs: canonical.externalRefs }
+        : ticket))
+    }
+    catch (error) {
+      console.error('Failed to refresh external references after ticket update:', error)
     }
   }, []) // No dependencies - uses ref instead
 

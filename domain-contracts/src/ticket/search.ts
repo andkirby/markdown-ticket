@@ -5,6 +5,7 @@
  */
 
 import { z } from 'zod'
+import { ExternalReferenceSchema } from './external-reference'
 
 // ---------------------------------------------------------------------------
 // SearchMode enum
@@ -47,7 +48,10 @@ export type SearchRequest = z.infer<typeof SearchRequestSchema>
 export const SearchResponseSchema = z.object({
   results: z.array(
     z.object({
+      matchedBy: z.array(z.enum(['local-key', 'external-ref', 'text'])).optional(),
       ticket: z.object({
+        refs: z.array(z.string()).optional(),
+        externalRefs: z.array(ExternalReferenceSchema).optional(),
         code: z.string(),
         title: z.string(),
         priority: z.string().nullable().optional(),

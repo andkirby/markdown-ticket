@@ -222,3 +222,49 @@
     background: var(--bg-muted);
   }
 }
+
+@layer components {
+  .search-result__references {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--gap-xs);
+    min-inline-size: 0;
+  }
+  .search-result__references:empty { display: none; }
+}
+
+@layer components {
+  .search-result__select {
+    display: block;
+    inline-size: 100%;
+    min-block-size: 24px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: inherit;
+    cursor: pointer;
+  }
+  .search-result__select:focus-visible {
+    outline: 2px solid var(--primary-text);
+    outline-offset: 2px;
+  }
+  .search-result__provenance {
+    display: block;
+    color: var(--text-muted);
+    font-size: clamp(11px, var(--fs-xs), 2rem);
+  }
+}
+
+@layer components {
+  .search-input { @apply relative flex items-center; }
+  .search-input__icon { @apply absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400; }
+  .search-input__field { @apply w-full pl-10 pr-4 py-3 text-lg border-0 bg-transparent focus:outline-none focus:ring-0 placeholder-gray-400; }
+  .search-keyboard-hint {
+    padding-inline: var(--gap-md);
+    color: var(--text-muted);
+    font-size: var(--fs-ui-xs);
+  }
+}

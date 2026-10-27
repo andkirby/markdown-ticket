@@ -5,6 +5,7 @@ import { readLocalStoragePreference, writeLocalStoragePreference } from './local
 // preference from when priority was on by default.
 export const TICKET_CARD_BADGE_STORAGE_KEY = 'markdown-ticket:board:ticket-card-badges:v2'
 export const TICKET_CARD_BADGES_CHANGED_EVENT = 'markdown-ticket:ticket-card-badges-changed'
+const EXTERNAL_REFS_MIGRATION_KEY = 'markdown-ticket:external-references-preference-migrated'
 
 export const TicketCardBadge = {
   STATUS: 'status',
@@ -14,6 +15,7 @@ export const TicketCardBadge = {
   RELATED: 'related',
   DEPENDS: 'depends',
   BLOCKS: 'blocks',
+  EXTERNAL_REFS: 'externalRefs',
   WORKTREE: 'worktree',
 } as const
 
@@ -27,6 +29,7 @@ export const TicketCardBadgeIds = [
   TicketCardBadge.RELATED,
   TicketCardBadge.DEPENDS,
   TicketCardBadge.BLOCKS,
+  TicketCardBadge.EXTERNAL_REFS,
   TicketCardBadge.WORKTREE,
 ] as const
 
@@ -51,6 +54,7 @@ export const TicketCardBadgeOptions: readonly TicketCardBadgeOption[] = [
   { id: TicketCardBadge.RELATED, label: 'Related' },
   { id: TicketCardBadge.DEPENDS, label: 'Depends' },
   { id: TicketCardBadge.BLOCKS, label: 'Blocks' },
+  { id: TicketCardBadge.EXTERNAL_REFS, label: 'External references' },
   { id: TicketCardBadge.WORKTREE, label: 'Worktree' },
 ] as const
 
@@ -67,18 +71,25 @@ export function normalizeTicketCardBadgeIds(value: unknown): TicketCardBadgeId[]
 }
 
 export function getVisibleTicketCardBadges(): TicketCardBadgeId[] {
-  return readLocalStoragePreference(
+  let selected = readLocalStoragePreference(
     TICKET_CARD_BADGE_STORAGE_KEY,
     [...DEFAULT_VISIBLE_TICKET_CARD_BADGES],
     {
       merge: storedValue => normalizeTicketCardBadgeIds(storedValue),
     },
   )
+  if (!readLocalStoragePreference(EXTERNAL_REFS_MIGRATION_KEY, false)) {
+    selected = TicketCardBadgeIds.filter(id => selected.includes(id) || id === TicketCardBadge.EXTERNAL_REFS)
+    writeLocalStoragePreference(TICKET_CARD_BADGE_STORAGE_KEY, selected)
+    writeLocalStoragePreference(EXTERNAL_REFS_MIGRATION_KEY, true)
+  }
+  return selected
 }
 
 export function setVisibleTicketCardBadges(badgeIds: readonly TicketCardBadgeId[]): TicketCardBadgeId[] {
   const normalized = normalizeTicketCardBadgeIds(badgeIds.filter(isTicketCardBadgeId))
   writeLocalStoragePreference(TICKET_CARD_BADGE_STORAGE_KEY, normalized)
+  writeLocalStoragePreference(EXTERNAL_REFS_MIGRATION_KEY, true)
 
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent(TICKET_CARD_BADGES_CHANGED_EVENT, {

@@ -17,6 +17,7 @@ export {
 } from '../types/schema'
 export type { CRLevelValue } from '../types/schema'
 export * from './entity'
+export * from './external-reference'
 export * from './frontmatter'
 // Legacy aliases kept while the rest of the repo migrates to clearer names.
 export { TicketFrontmatterSchema as CRSchema } from './frontmatter'

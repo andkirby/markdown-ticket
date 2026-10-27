@@ -119,6 +119,7 @@ export function writeStructuredError(
 export function formatTicketForStructured(ticket: Ticket, projectPath?: string): Record<string, unknown> {
   return {
     key: ticket.code,
+    ...(ticket.refs !== undefined ? { refs: ticket.refs } : {}),
     title: ticket.title,
     status: enumValue(ticket.status, statusDisplayLabel(ticket.status)),
     type: enumValue(ticket.type),

@@ -39,6 +39,7 @@ type CRAttributes = Pick<
     | 'dependsOn'
     | 'blocks'
     | 'relatedTickets'
+    | 'refs'
     | 'impactAreas'
     | 'implementationDate'
     | 'implementationNotes'
@@ -199,6 +200,7 @@ export class CRHandlers {
             'dependsOn',
             'blocks',
             'relatedTickets',
+            'refs',
             'impactAreas',
             'implementationDate',
             'implementationNotes',
@@ -226,7 +228,7 @@ export class CRHandlers {
           }
 
           // Return formatted JSON output
-          return Sanitizer.sanitizeText(JSON.stringify(attributes, null, 2))
+          return JSON.stringify(attributes, null, 2)
         }
         catch (fileError) {
           throw ToolError.toolExecution(
@@ -240,6 +242,7 @@ export class CRHandlers {
         try {
           const metadata = {
             code: ticket.code,
+            ...(ticket.refs !== undefined ? { refs: ticket.refs } : {}),
             title: Sanitizer.sanitizeText(ticket.title),
             status: ticket.status,
             type: ticket.type,
@@ -250,7 +253,7 @@ export class CRHandlers {
             filePath: ticket.filePath,
           }
 
-          return Sanitizer.sanitizeText(JSON.stringify(metadata, null, 2))
+          return JSON.stringify(metadata, null, 2)
         }
         catch (fileError) {
           throw ToolError.toolExecution(

@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { ExternalReferencesSchema } from './external-reference'
 import { TicketFrontmatterSchema } from './frontmatter'
 
 // Persisted frontmatter is normalized by the shared ticket adapter. It is not
@@ -23,4 +24,5 @@ export const PersistedTicketFrontmatterSchema = z.looseObject({
   relatedTickets: relationship,
   dependsOn: relationship,
   blocks: relationship,
+  refs: ExternalReferencesSchema.optional().catch(undefined),
 })

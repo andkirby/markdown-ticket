@@ -12,6 +12,7 @@ import {
   StatusBadge,
   TypeBadge,
 } from './Badge'
+import { ExternalReferenceBadges } from './Badge/ExternalReferenceBadges'
 import { PriorityBadge } from './Badge/PriorityBadge'
 
 interface TicketAttributeTagsProps {
@@ -101,6 +102,9 @@ const TicketAttributeTags: React.FC<TicketAttributeTagsProps> = ({
         />
       )}
       {/* MDT-095: Worktree Badge */}
+      {isVisible(TicketCardBadge.EXTERNAL_REFS) && (
+        <ExternalReferenceBadges refs={ticket.refs} externalRefs={ticket.externalRefs} />
+      )}
       {isVisible(TicketCardBadge.WORKTREE) && ticket.inWorktree === true && (
         <ContextBadge
           variant="worktree"

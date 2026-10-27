@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import type { Ticket } from '../../types'
 import { useTicketKeyOptions } from '../../config/ticketKeyConfig'
 import { ContextBadge, PriorityBadge, RelationshipBadge, StatusBadge, TypeBadge } from '../Badge'
+import { ExternalReferenceBadges } from '../Badge/ExternalReferenceBadges'
 import { TicketCode } from '../TicketCode'
 
 interface CompactTicketHeaderProps {
@@ -47,6 +48,7 @@ export function CompactTicketHeader({ ticket, className = '', action }: CompactT
           {(ticket.blocks?.length || 0) > 0 && (
             <RelationshipBadge variant="blocks" links={ticket.blocks} />
           )}
+          <ExternalReferenceBadges refs={ticket.refs} externalRefs={ticket.externalRefs} full />
           {action && (
             <>
               <span className="compact-ticket-header__spacer" />

@@ -1,9 +1,11 @@
 import type { CRLevelValue } from '../types/schema'
 import { z } from 'zod'
 import { CRStatusSchema } from '../types/schema'
+import { ExternalReferencesSchema } from './external-reference'
 import { TicketFrontmatterSchema } from './frontmatter'
 
 export interface TicketData {
+  refs?: string[]
   title: string
   type: string
   priority?: string
@@ -23,6 +25,7 @@ export interface TicketData {
 }
 
 export interface TicketUpdateAttrs {
+  refs?: string[] | string
   priority?: string
   level?: CRLevelValue
   phaseEpic?: string
@@ -56,6 +59,7 @@ export interface TicketFilters {
 }
 
 export const TICKET_UPDATE_ATTRS = [
+  'refs',
   'priority',
   'level',
   'phaseEpic',
@@ -83,6 +87,7 @@ export const CreateTicketInputSchema = TicketFrontmatterSchema.pick({
   impactAreas: true,
   assignee: true,
   content: true,
+  refs: true,
 }).extend({
   // Creation warns about long titles in TemplateService; it does not trim them.
   title: z.string().refine(value => value.trim().length > 0, 'Title is required'),
@@ -99,6 +104,7 @@ export const CreateTicketInputSchema = TicketFrontmatterSchema.pick({
 
 export const UpdateTicketInputSchema = z
   .object({
+    refs: ExternalReferencesSchema.optional(),
     priority: TicketFrontmatterSchema.shape.priority.optional(),
     level: TicketFrontmatterSchema.shape.level,
     phaseEpic: TicketFrontmatterSchema.shape.phaseEpic,
@@ -123,6 +129,7 @@ export type UpdateTicketInput = z.infer<typeof UpdateTicketInputSchema>
 // Leave alias normalization to the existing service. Unknown-only updates stay
 // nonempty no-ops; ignored keys must not accidentally become forwarded fields.
 export const PatchTicketInputSchema = z.looseObject({
+  refs: ExternalReferencesSchema.optional(),
   status: CRStatusSchema.optional(),
   priority: z.string().optional(),
   level: z.string().refine(value => ['ticket', 'epic', 'e', 't'].includes(value.trim().toLowerCase()), 'Invalid level').optional(),
@@ -135,6 +142,7 @@ export const PatchTicketInputSchema = z.looseObject({
 
 /** MCP attribute operations preserve aliases and null-as-no-op handling. */
 export const TicketAttributeInputSchema = z.object({
+  refs: z.union([z.string(), ExternalReferencesSchema]).nullish(),
   priority: z.string().nullish(),
   level: z.string().nullish(),
   phaseEpic: z.string().nullish(),

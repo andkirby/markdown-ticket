@@ -26,8 +26,7 @@ export function DocumentResultRow({ document, isSelected, onSelect }: DocumentRe
     <li>
       <button
         type="button"
-        role="option"
-        aria-selected={isSelected}
+        aria-current={isSelected ? 'true' : undefined}
         data-testid="document-result-item"
         data-selected={isSelected ? 'true' : undefined}
         data-type="document"
