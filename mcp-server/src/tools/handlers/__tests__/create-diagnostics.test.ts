@@ -19,7 +19,7 @@ describe('MDT-261 MCP creation metadata', () => {
       { validateTicketData: () => ({ valid: true, errors: [], warnings: [] }) } as unknown as TemplateService,
       {} as TicketService,
     )
-    const result = await handler.handleCreateCR(createMockProject(), 'Architecture', { title: 'Example architecture' })
+    const result = await handler.handleCreateCR(createMockProject(), 'Architecture', { title: 'Example architecture', type: 'Architecture' })
     expect(createCRWithDiagnostics).toHaveBeenCalledTimes(1)
     expect(result).toContain('Created CR MDT-001')
     expect(result.split(diagnostic.message)).toHaveLength(2)

@@ -23,5 +23,5 @@
     "skipLibCheck": true
   },
   "include": ["scripts", "eslint.config.ts", "bun-env.d.ts"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
+  "exclude": ["node_modules", "dist", "scripts/_*/**", "**/*.test.ts", "**/*.spec.ts"]
 }

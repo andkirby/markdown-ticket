@@ -214,6 +214,8 @@ describe('projectController - CRUD Operations', () => {
       }
 
       const createResult = {
+        ticket: { ...mockCR, dateCreated: null, lastModified: null, relatedTickets: [], dependsOn: [], blocks: [] },
+        diagnostics: [],
         success: true,
         message: 'CR created successfully',
         crCode: 'TEST-002',
