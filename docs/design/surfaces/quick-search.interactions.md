@@ -70,13 +70,16 @@ Keyboard selection uses the same order. When a group is hidden by scope or has n
 |-----|--------|
 | `Cmd+K` / `Ctrl+K` | open Quick Search from the app-level shortcut |
 | `Escape` | close through shared modal behavior |
-| `Tab` | cycle visible scopes forward |
-| `Shift+Tab` | cycle visible scopes backward |
+| `Tab` in input | cycle visible scopes forward |
+| `Shift+Tab` in input | cycle visible scopes backward |
+| `F6` | focus selected result primary action; empty results retain input focus |
+| `Shift+F6` | return to search input without resetting query/scope |
+| `Tab` / `Shift+Tab` in results | native traversal among primary, reference and details controls |
 | `ArrowDown` | move selected index to the next visible selectable result |
 | `ArrowUp` | move selected index to the previous visible selectable result |
 | `Enter` | activate the selected visible result |
 
-`Tab` is a scope command inside this modal, not normal focus traversal. If the modal accessibility model changes, this contract must be revisited with `frontend/src/MODALS.md`.
+`Tab` cycles scope only while the input is focused. The visible hint is described by the input. F6 transfers focus into result actions, where native Tab traversal applies; Shift+F6 returns to search. Reference popover Escape closes that popover and restores its invoking control.
 
 ## Enter Dispatch
 

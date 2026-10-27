@@ -334,3 +334,36 @@ if (!resolved.startsWith(resolve(projectRoot))) {
 
 **Related Documentation**:
 - [Global Configuration Specification](./CONFIG_GLOBAL_SPECIFICATION.md) - System-wide settings
+
+## External issue tracker references (MDT-252)
+
+Configure named instances at the root of the local `.mdt-config.toml`. These are file-only settings. Instance names are exact; `gh` below is a configured name, not a built-in alias. Multiple instances of the same kind are supported.
+
+```toml
+[trackers.work]
+kind = "jira"
+baseUrl = "https://issues.example.com/jira"
+projectKeys = ["PRJ"]
+[trackers.work.display]
+projectCode = "auto" # auto (default) or always
+
+[trackers.gh]
+kind = "github"
+baseUrl = "https://github.com"
+defaultRepo = "acme/widgets"
+[trackers.gh.display]
+repository = "name" # name (default) or none
+
+[trackers.gl]
+kind = "gitlab"
+baseUrl = "https://gitlab.example.com/context"
+defaultRepo = "acme/platform/api"
+```
+
+Ticket frontmatter stores an ordered string array, for example `refs: ["work:PRJ-123", "gh:acme/widgets#42", "gl:acme/platform/api#18"]`. It does not change the local MDT key. Add/replacement writes expand `gh:#42` only with that instance's explicit `defaultRepo`; reads, config changes and unrelated edits never expand existing shorthand. Removal matches exact stored strings; `refs=[]` clears through API/MCP, and `refs=` clears through CLI. Unknown strings remain stored and inspectable. There are no tracker API calls or synchronization.
+
+Jira auto display omits a project prefix only when `projectKeys` has exactly one entry and it matches the ref prefix; absent/multiple/nonmatching entries show the full key. `always` shows the full key. Git trackers show `widgets#42` by default. `repository="none"` shows `#42` only for the exact configured default repository, otherwise the basename remains. Full instance/repository/key and destination remain available through details and accessible labels. Owner/namespace is not shown inline. Two same-kind configured instances keep their instance labels.
+
+Optional `urlTemplate` supports `{baseUrl}`, `{key}` (Jira), `{repo}` (git, encoded path segments) and `{number}`. Defaults preserve base path contexts: Jira `{baseUrl}/browse/{key}`, GitHub `{baseUrl}/{repo}/issues/{number}`, GitLab `{baseUrl}/{repo}/-/issues/{number}`. Destinations must be credential-free HTTP(S), remain on the configured origin, and contain no unresolved placeholders. Invalid/unsupported entries yield unavailable refs with reasons without suppressing the local project. GitLab subgroup paths work; merge requests (`!number`) are unsupported.
+
+Search uses stored local data: plain `123` can match local/Jira/git identities; `#123` matches the complete external git issue number only. No external destination is inferred from a local number. Search and viewer badges are independent of board badge preferences.

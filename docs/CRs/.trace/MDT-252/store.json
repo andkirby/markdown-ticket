@@ -1,0 +1,1522 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-252"
+  },
+  "requirements": [
+    {
+      "id": "BR-1",
+      "kind": "behavior",
+      "text": "WHEN a ticket is created with external refs, the system shall persist the ordered instance-scoped refs with that ticket's unchanged local identity.",
+      "sourceRef": "docs/CRs/MDT-252-external-tracker-links.md",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-2",
+      "kind": "behavior",
+      "text": "WHEN a ticket or its metadata is read through a supported consumer, the system shall expose its stored refs without discarding unsupported or unconfigured reference strings.",
+      "sourceRef": "docs/CRs/MDT-252-external-tracker-links.md",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-4",
+      "kind": "behavior",
+      "text": "WHEN attributes or content unrelated to refs are edited, the system shall preserve the stored external reference strings and their order.",
+      "sourceRef": "docs/CRs/MDT-252-external-tracker-links.md",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-5",
+      "kind": "behavior",
+      "text": "WHEN a stored ref resolves against its explicitly named configured tracker instance, the system shall expose the issue URL built from that instance's configuration and the actual external identifier.",
+      "sourceRef": "docs/CRs/MDT-252-external-tracker-links.md",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-6",
+      "kind": "behavior",
+      "text": "IF a stored ref cannot resolve safely, THEN the system shall retain its searchable text and expose an unavailable result without a navigable destination.",
+      "sourceRef": "docs/CRs/MDT-252-external-tracker-links.md",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-7",
+      "kind": "behavior",
+      "text": "WHEN external references are displayed on a ticket card, the system shall show a tracker icon, the actual external key, and an external-navigation arrow for each resolved inline reference.",
+      "sourceRef": "docs/CRs/MDT-252-external-tracker-links.md",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-8",
+      "kind": "behavior",
+      "text": "WHEN a user activates a resolved reference link, the system shall open that external issue in a new tab without also opening or dragging the parent ticket card.",
+      "sourceRef": "docs/CRs/MDT-252-external-tracker-links.md",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-9",
+      "kind": "behavior",
+      "text": "WHEN a user requests reference details, the system shall expose every full reference identity and any unavailable reason without requiring external navigation.",
+      "sourceRef": "docs/CRs/MDT-252-external-tracker-links.md",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-10",
+      "kind": "behavior",
+      "text": "WHEN tickets are filtered by free text, the system shall include matches against stored external refs alongside the existing searchable fields.",
+      "sourceRef": "docs/CRs/MDT-252-external-tracker-links.md",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-11",
+      "kind": "behavior",
+      "text": "WHEN Quick Search receives an external identifier that also has a local-ticket-key shape, the system shall return the eligible local-key and external-reference matches together with their match provenance.",
+      "sourceRef": "docs/CRs/MDT-252-external-tracker-links.md",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-12",
+      "kind": "behavior",
+      "text": "WHEN Quick Search returns matching tickets, the system shall deduplicate by local project-and-ticket identity and rank exact identifier matches above partial external matches.",
+      "sourceRef": "docs/CRs/MDT-252-external-tracker-links.md",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-13",
+      "kind": "behavior",
+      "text": "WHEN a query has only a fuzzy or partial external identifier match, the system shall require explicit result selection rather than automatically opening that match.",
+      "sourceRef": "docs/CRs/MDT-252-external-tracker-links.md",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-14",
+      "kind": "behavior",
+      "text": "WHEN a ticket's complete references are viewed or edited, the system shall expose that full list independently of board badge-visibility preferences.",
+      "sourceRef": "docs/CRs/MDT-252-external-tracker-links.md",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "The system shall keep tracker instances distinct even when their tracker kinds and external identifiers are equal.",
+      "sourceRef": "docs/CRs/MDT-252-external-tracker-links.md",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "The system shall preserve configured base-URL context paths and encode external identifier data so it cannot alter the intended URL structure.",
+      "sourceRef": "docs/CRs/MDT-252-external-tracker-links.md",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C5",
+      "kind": "constraint",
+      "text": "The system shall support canonical GitHub owner/repository and GitLab subgroup namespace issue references while excluding GitLab merge-request inference.",
+      "sourceRef": "docs/CRs/MDT-252-external-tracker-links.md",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C7",
+      "kind": "constraint",
+      "text": "The system shall preserve existing behavior for tickets without refs and projects without tracker configuration.",
+      "sourceRef": "docs/CRs/MDT-252-external-tracker-links.md",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C8",
+      "kind": "constraint",
+      "text": "The system shall provide keyboard-visible focus, announced new-tab links, and actual interactive target sizes of at least 24 pixels with text of at least 11 pixels for external-reference controls.",
+      "sourceRef": "docs/CRs/MDT-252-external-tracker-links.md",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C9",
+      "kind": "constraint",
+      "text": "The system shall preserve unrelated existing board badge preferences when introducing external-reference visibility.",
+      "sourceRef": "docs/CRs/MDT-252-external-tracker-links.md",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C10",
+      "kind": "constraint",
+      "text": "The system shall preserve unknown tracker configuration and unsupported ref text through unrelated configuration or ticket mutations.",
+      "sourceRef": "docs/CRs/MDT-252-external-tracker-links.md",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C11",
+      "kind": "constraint",
+      "text": "The system shall use explicit stored refs as the sole external identity source rather than deriving tracker destinations from local ticket numbering.",
+      "sourceRef": "docs/CRs/MDT-252-external-tracker-links.md",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C12",
+      "kind": "constraint",
+      "text": "The system shall perform external reference linking and search without calling external tracker APIs or introducing synchronization.",
+      "sourceRef": "docs/CRs/MDT-252-external-tracker-links.md",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "The system shall resolve only credential-free HTTP(S) issue URLs on the explicitly configured tracker's base origin without unresolved template placeholders.",
+      "sourceRef": "docs/CRs/MDT-252/requirements.md#non-ambiguity-table",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C6",
+      "kind": "constraint",
+      "text": "The system shall expand repository-relative shorthand into stored identity only for newly supplied replacement or add operands when that explicitly named instance has a default repository, never during reads or configuration changes.",
+      "sourceRef": "docs/CRs/MDT-252/requirements.md#non-ambiguity-table",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C14",
+      "kind": "constraint",
+      "text": "IF an optional tracker entry is invalid or unsupported, THEN the system shall keep the local project available and expose the affected refs as unavailable with a diagnostic.",
+      "sourceRef": "docs/CRs/MDT-252/requirements.md#non-ambiguity-table",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-3",
+      "kind": "behavior",
+      "text": "WHEN refs are replaced, added, removed, or cleared through supported mutation interfaces, the system shall apply ordered and idempotent changes by normalizing supplied replacement/add operands, removing only exact stored strings, and preserving untouched strings and their order.",
+      "sourceRef": "docs/CRs/MDT-252/requirements.md",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C13",
+      "kind": "constraint",
+      "text": "WHEN a ref removal operand is supplied, the system shall remove only exact stored-string matches without expanding or rebinding that operand.",
+      "sourceRef": "docs/CRs/MDT-252/requirements.md",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "The system shall preserve stored external identifiers and URL identities without local MDT code limits, number padding or local relationship-key normalization while permitting configured display-only shortening.",
+      "sourceRef": "docs/CRs/MDT-252/requirements.md",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-15",
+      "kind": "behavior",
+      "text": "WHEN external reference display shortening is configured, the system shall render context-aware abbreviated labels while retaining full stored identifiers, destinations and inspectable identities.",
+      "sourceRef": "docs/CRs/MDT-252/requirements.md",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-17",
+      "kind": "behavior",
+      "text": "WHEN Quick Search displays a local ticket with external refs, the system shall display external-reference badges independently of board badge-visibility settings, including for results matched by local identity or title.",
+      "sourceRef": "docs/CRs/MDT-252/requirements.md",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-16",
+      "kind": "behavior",
+      "text": "WHEN a user searches an issue number without a prefix, the system shall include matching local and external issue numbers, while a #number query selects only complete matching external repository-issue numbers rather than local/Jira-only identities or longer numbers.",
+      "sourceRef": "docs/CRs/MDT-252/requirements.md",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "refs_created_and_read",
+      "title": "Create and read stored external references",
+      "covers": [
+        "BR-1",
+        "BR-2"
+      ],
+      "given": "a local project and external refs work:PROJ-123 and gh:acme/widgets#42",
+      "when": "I create a local ticket with those refs and then read its details and metadata",
+      "then": "the local ticket keeps its allocated MDT key and exposes both stored refs in their original order",
+      "sourceRef": "docs/CRs/MDT-252/requirements.trace.md"
+    },
+    {
+      "id": "refs_mutated_idempotently",
+      "title": "Compose explicit reference changes",
+      "covers": [
+        "BR-3"
+      ],
+      "given": "a ticket with refs work:PROJ-123 and legacy:OPS-7",
+      "when": "I add gh:acme/widgets#42 twice, remove work:PROJ-123 twice, then replace refs with an empty list",
+      "then": "duplicate adds and absent removals are no-ops and the explicit empty replacement clears the ticket's refs",
+      "sourceRef": "docs/CRs/MDT-252/requirements.trace.md"
+    },
+    {
+      "id": "refs_survive_unrelated_edits",
+      "title": "Preserve unsupported refs through unrelated changes",
+      "covers": [
+        "BR-2",
+        "BR-4"
+      ],
+      "given": "a ticket with supported, unknown-instance and unsupported external refs",
+      "when": "I edit its status and then its Markdown content without editing refs",
+      "then": "all ref strings and their order survive both writes and subsequent detail and metadata reads",
+      "sourceRef": "docs/CRs/MDT-252/requirements.trace.md"
+    },
+    {
+      "id": "refs_inspected_without_navigation",
+      "title": "Inspect complete references and unavailable reasons",
+      "covers": [
+        "BR-6",
+        "BR-9"
+      ],
+      "given": "a ticket card with one, two, or several refs including a long identifier or unavailable tracker",
+      "when": "I open its reference details using touch or keyboard",
+      "then": "the complete list exposes full identifiers, configured instance names, and unavailable reasons without navigating to an external tracker",
+      "sourceRef": "docs/CRs/MDT-252/requirements.trace.md"
+    },
+    {
+      "id": "refs_read_only_navigation",
+      "title": "Retain external navigation in read-only viewing",
+      "covers": [
+        "BR-5",
+        "BR-8"
+      ],
+      "given": "a read-only local ticket card with a configured external ref",
+      "when": "I activate its external issue link",
+      "then": "the correct external issue opens in a new tab while local editing and dragging remain unavailable",
+      "sourceRef": "docs/CRs/MDT-252/requirements.trace.md"
+    },
+    {
+      "id": "refs_key_search_union",
+      "title": "Return both local and external exact key matches",
+      "covers": [
+        "BR-11",
+        "BR-12"
+      ],
+      "given": "one ticket whose local key matches PROJ-123 and other local tickets storing external identifier PROJ-123, including one with both identities",
+      "when": "I search for PROJ-123 in Quick Search",
+      "then": "all eligible exact matches are shown with local/external provenance, each local ticket appears once, and partial external matches rank below exact matches",
+      "sourceRef": "docs/CRs/MDT-252/requirements.trace.md"
+    },
+    {
+      "id": "refs_partial_search_selection",
+      "title": "Require selection for partial external matches",
+      "covers": [
+        "BR-10",
+        "BR-13"
+      ],
+      "given": "a query matching only part of one stored external identifier",
+      "when": "I search for that text without choosing a result",
+      "then": "the matching local ticket is listed but does not automatically open",
+      "sourceRef": "docs/CRs/MDT-252/requirements.trace.md"
+    },
+    {
+      "id": "refs_open_correct_instance",
+      "title": "refs open correct instance",
+      "covers": [
+        "BR-5",
+        "BR-7",
+        "BR-8",
+        "BR-15"
+      ],
+      "given": "a visible ticket card with configured Jira project PRJ and repository acme/widgets refs",
+      "when": "I inspect the shortened icon-and-key badges and activate a chosen reference",
+      "then": "only configured matching context is shortened, full identities remain inspectable, and the correct actual issue opens in a new tab without opening or dragging the local ticket",
+      "sourceRef": "docs/CRs/MDT-252/requirements.md"
+    },
+    {
+      "id": "refs_board_filter",
+      "title": "refs board filter",
+      "covers": [
+        "BR-6",
+        "BR-10",
+        "BR-16"
+      ],
+      "given": "tickets with local number 123, Jira key PRJ-123, repository issue acme/widgets#123, and unknown-instance repository refs",
+      "when": "I search for 123 and then #123",
+      "then": "123 finds matching local and external tickets while #123 finds repository issue number 123 only, including unconfigured repository refs, and does not match #1234 or Jira/local-only identities",
+      "sourceRef": "docs/CRs/MDT-252/requirements.md"
+    },
+    {
+      "id": "refs_viewer_independent_visibility",
+      "title": "refs viewer independent visibility",
+      "covers": [
+        "BR-3",
+        "BR-14",
+        "BR-17"
+      ],
+      "given": "a ticket with refs whose board reference badges are hidden",
+      "when": "I search by that ticket's title or local identity, open the viewer and explicitly replace its reference list",
+      "then": "the search result always shows its external badges and the complete viewer list remains readable/editable independently of the board preference",
+      "sourceRef": "docs/CRs/MDT-252/requirements.md"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-contracts",
+      "title": "Keep contracts in the documented owners and carry all linked requirements through the end-to-end runtime and verification paths",
+      "derivedFrom": [
+        "BR-1",
+        "BR-2",
+        "BR-3",
+        "BR-5",
+        "BR-6",
+        "BR-11",
+        "BR-12",
+        "BR-15",
+        "BR-16",
+        "BR-17",
+        "C1",
+        "C2",
+        "C3",
+        "C7",
+        "C10",
+        "C14"
+      ],
+      "artifactIds": [
+        "ART-domain-contracts-src-ticket-external-reference",
+        "ART-domain-contracts-src-ticket-entity",
+        "ART-domain-contracts-src-ticket-frontmatter",
+        "ART-domain-contracts-src-ticket-persisted-frontmatter",
+        "ART-domain-contracts-src-ticket-input",
+        "ART-domain-contracts-src-ticket-schema",
+        "ART-domain-contracts-src-ticket-view",
+        "ART-domain-contracts-src-ticket-search",
+        "ART-domain-contracts-src-project-schema",
+        "ART-domain-contracts-src-search-schema"
+      ],
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "OBL-persistence",
+      "title": "Keep persistence in the documented owners and carry all linked requirements through the end-to-end runtime and verification paths",
+      "derivedFrom": [
+        "BR-1",
+        "BR-2",
+        "BR-3",
+        "BR-4",
+        "BR-5",
+        "BR-6",
+        "C1",
+        "C2",
+        "C3",
+        "C4",
+        "C5",
+        "C6",
+        "C7",
+        "C10",
+        "C11",
+        "C12",
+        "C13",
+        "C14"
+      ],
+      "artifactIds": [
+        "ART-shared-models-ticket",
+        "ART-shared-services-markdownservice",
+        "ART-shared-services-crservice",
+        "ART-shared-services-ticketservice",
+        "ART-shared-services-externalreferences",
+        "ART-shared-services-ticket-referencefrontmatter",
+        "ART-shared-services-ticket-referencemutations",
+        "ART-shared-package",
+        "ART-bun"
+      ],
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "OBL-consumers",
+      "title": "Keep consumers in the documented owners and carry all linked requirements through the end-to-end runtime and verification paths",
+      "derivedFrom": [
+        "BR-1",
+        "BR-2",
+        "BR-3",
+        "BR-4",
+        "BR-14",
+        "C7",
+        "C10",
+        "C13"
+      ],
+      "artifactIds": [
+        "ART-server-services-ticketservice",
+        "ART-mcp-server-src-tools-handlers-crhandlers",
+        "ART-cli-src-commands-attrmeta",
+        "ART-cli-src-commands-attr",
+        "ART-cli-src-output-formatter",
+        "ART-cli-mdt-cli-skill"
+      ],
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "OBL-display",
+      "title": "Keep display in the documented owners and carry all linked requirements through the end-to-end runtime and verification paths",
+      "derivedFrom": [
+        "BR-7",
+        "BR-8",
+        "BR-9",
+        "BR-14",
+        "BR-15",
+        "BR-17",
+        "C1",
+        "C2",
+        "C8",
+        "C9"
+      ],
+      "artifactIds": [
+        "ART-frontend-src-components-badge-externalreferencebadges",
+        "ART-frontend-src-components-badge-trackericon",
+        "ART-frontend-src-components-badge-badge",
+        "ART-frontend-src-components-ticketattributetags",
+        "ART-frontend-src-config-ticketcardbadges",
+        "ART-frontend-src-components-ticketviewer-compactticketheader",
+        "ART-frontend-src-styleguide"
+      ],
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "OBL-search",
+      "title": "Keep search in the documented owners and carry all linked requirements through the end-to-end runtime and verification paths",
+      "derivedFrom": [
+        "BR-10",
+        "BR-11",
+        "BR-12",
+        "BR-13",
+        "BR-16",
+        "BR-17",
+        "C2",
+        "C7",
+        "C12"
+      ],
+      "artifactIds": [
+        "ART-shared-services-ticket-referencesearch",
+        "ART-server-controllers-searchcontroller",
+        "ART-frontend-src-hooks-usequicksearch",
+        "ART-frontend-src-utils-ticketfilters",
+        "ART-frontend-src-components-quicksearch-quicksearchmodal",
+        "ART-frontend-src-components-quicksearch-quicksearchresults",
+        "ART-frontend-src-components-quicksearch-quick-search"
+      ],
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "OBL-acceptance",
+      "title": "Keep acceptance in the documented owners and carry all linked requirements through the end-to-end runtime and verification paths",
+      "derivedFrom": [
+        "BR-1",
+        "BR-2",
+        "BR-3",
+        "BR-4",
+        "BR-5",
+        "BR-6",
+        "BR-7",
+        "BR-8",
+        "BR-9",
+        "BR-10",
+        "BR-11",
+        "BR-12",
+        "BR-13",
+        "BR-14",
+        "BR-15",
+        "BR-16",
+        "BR-17",
+        "C1",
+        "C2",
+        "C3",
+        "C4",
+        "C5",
+        "C6",
+        "C7",
+        "C8",
+        "C9",
+        "C10",
+        "C11",
+        "C12",
+        "C13",
+        "C14"
+      ],
+      "artifactIds": [
+        "ART-tests-e2e-setup-external-references",
+        "ART-tests-e2e-ticket-external-references-spec",
+        "ART-tests-e2e-quick-search-external-references-spec",
+        "ART-tests-e2e-utils-selectors"
+      ],
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "OBL-docs",
+      "title": "Keep docs in the documented owners and carry all linked requirements through the end-to-end runtime and verification paths",
+      "derivedFrom": [
+        "BR-1",
+        "BR-3",
+        "BR-5",
+        "BR-6",
+        "BR-7",
+        "BR-9",
+        "BR-10",
+        "BR-14",
+        "BR-15",
+        "BR-16",
+        "BR-17",
+        "C7",
+        "C9",
+        "C10",
+        "C12"
+      ],
+      "artifactIds": [
+        "ART-docs-config-specification",
+        "ART-docs-crs-mdt-168-configuration-exposure",
+        "ART-docs-design-surfaces-ticket-card-spec",
+        "ART-docs-design-surfaces-ticket-card-mockups",
+        "ART-docs-design-surfaces-external-reference-badge-spec",
+        "ART-docs-design-surfaces-external-reference-badge-mockups"
+      ],
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "OBL-contract-tests",
+      "title": "Verify explicit reference mutation contracts and real inline/block YAML preservation without replacing unknown stored identities",
+      "derivedFrom": [
+        "BR-1",
+        "BR-2",
+        "BR-3",
+        "BR-4",
+        "C2",
+        "C6",
+        "C7",
+        "C10",
+        "C14"
+      ],
+      "artifactIds": [
+        "ART-domain-reference-tests",
+        "ART-shared-reference-tests"
+      ],
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "OBL-mcp",
+      "title": "Advertise and preserve explicit refs through canonical MCP mutation schemas, metadata and shared-service delegation",
+      "derivedFrom": [
+        "BR-1",
+        "BR-2",
+        "BR-3",
+        "C2",
+        "C7",
+        "C10"
+      ],
+      "artifactIds": [
+        "ART-mcp-tools-registry",
+        "ART-mcp-reference-tests"
+      ],
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "OBL-rest-create",
+      "title": "Include refs in the existing explicit REST create pick and pass them unchanged to the shared creation boundary",
+      "derivedFrom": [
+        "BR-1",
+        "BR-3",
+        "C7",
+        "C10"
+      ],
+      "artifactIds": [
+        "ART-rest-ticket-input"
+      ],
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "OBL-contract-type-parity",
+      "title": "Retain exact contract-type equality assertions while adding refs and tracker fields to their expected public shape",
+      "derivedFrom": [
+        "BR-1",
+        "C7",
+        "C10"
+      ],
+      "artifactIds": [
+        "ART-contract-type-equality"
+      ],
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "OBL-cli-structured-refs",
+      "title": "CLI structured get/list metadata preserves stored refs through the explicit DTO projection",
+      "derivedFrom": [
+        "BR-2"
+      ],
+      "artifactIds": [
+        "ART-cli-structured-output"
+      ],
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "OBL-inspection-accessible-search",
+      "title": "Expose file-only tracker inventory and use ordinary search lists with independent primary and reference controls",
+      "derivedFrom": [
+        "BR-5",
+        "BR-11",
+        "C8"
+      ],
+      "artifactIds": [
+        "ART-config-inspection",
+        "ART-project-result-row",
+        "ART-document-result-row",
+        "ART-frontend-src-components-quicksearch-quicksearchresults"
+      ],
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "OBL-search-regression-semantics",
+      "title": "Preserve selection/navigation and own-project deduplication with ordinary-list ranked identity results",
+      "derivedFrom": [
+        "BR-11",
+        "BR-12",
+        "C8"
+      ],
+      "artifactIds": [
+        "ART-search-regression-journey"
+      ],
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "OBL-required-quality-gates",
+      "title": "Keep exact type checks usable: complete legacy server/MCP fixtures without assertion relaxation and exclude documented local scratch from tracked-tooling tsc",
+      "derivedFrom": [
+        "C1",
+        "C10"
+      ],
+      "artifactIds": [
+        "ART-server-create-fixture",
+        "ART-server-controller-fixture",
+        "ART-tooling-tsconfig",
+        "ART-mcp-create-fixture"
+      ],
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "OBL-keyboard-result-actions",
+      "title": "Provide a discoverable physical keyboard path between search input and independent result/reference actions while retaining scope cycling",
+      "derivedFrom": [
+        "C8",
+        "BR-11"
+      ],
+      "artifactIds": [
+        "ART-search-input",
+        "ART-search-interactions-doc",
+        "ART-search-surface-doc",
+        "ART-frontend-src-components-quicksearch-quicksearchmodal",
+        "ART-tests-e2e-quick-search-external-references-spec"
+      ],
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "OBL-mcp-json-reference-reads",
+      "title": "Serialize raw refs as JSON data in actual MCP handler reads under both sanitization modes while retaining intentional per-field sanitization",
+      "derivedFrom": [
+        "BR-2",
+        "C10"
+      ],
+      "artifactIds": [
+        "ART-mcp-server-src-tools-handlers-crhandlers",
+        "ART-mcp-reference-tests"
+      ],
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "OBL-live-reference-canonical-refresh",
+      "title": "Canonically refresh live refs; invalidate active search caches through the HTTP dedupe boundary and guard callbacks with ticket/request and selection generations",
+      "derivedFrom": [
+        "BR-2",
+        "BR-14",
+        "BR-16",
+        "BR-17"
+      ],
+      "artifactIds": [
+        "ART-project-live-state",
+        "ART-cross-search-live-cache",
+        "ART-search-request-boundary",
+        "ART-tests-e2e-ticket-external-references-spec"
+      ],
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-domain-contracts-src-ticket-external-reference",
+      "path": "domain-contracts/src/ticket/external-reference.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-domain-contracts-src-ticket-entity",
+      "path": "domain-contracts/src/ticket/entity.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-domain-contracts-src-ticket-frontmatter",
+      "path": "domain-contracts/src/ticket/frontmatter.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-domain-contracts-src-ticket-persisted-frontmatter",
+      "path": "domain-contracts/src/ticket/persisted-frontmatter.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-domain-contracts-src-ticket-input",
+      "path": "domain-contracts/src/ticket/input.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-domain-contracts-src-ticket-schema",
+      "path": "domain-contracts/src/ticket/schema.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-domain-contracts-src-ticket-view",
+      "path": "domain-contracts/src/ticket/view.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-domain-contracts-src-ticket-search",
+      "path": "domain-contracts/src/ticket/search.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-domain-contracts-src-project-schema",
+      "path": "domain-contracts/src/project/schema.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-domain-contracts-src-search-schema",
+      "path": "domain-contracts/src/search/schema.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-shared-models-ticket",
+      "path": "shared/models/Ticket.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-shared-services-markdownservice",
+      "path": "shared/services/MarkdownService.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-shared-services-crservice",
+      "path": "shared/services/CRService.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-shared-services-ticketservice",
+      "path": "shared/services/TicketService.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-shared-services-externalreferences",
+      "path": "shared/services/externalReferences.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-shared-services-ticket-referencefrontmatter",
+      "path": "shared/services/ticket/referenceFrontmatter.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-shared-services-ticket-referencemutations",
+      "path": "shared/services/ticket/referenceMutations.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-shared-package",
+      "path": "shared/package.json",
+      "kind": "config",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-bun",
+      "path": "bun.lock",
+      "kind": "config",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-server-services-ticketservice",
+      "path": "server/services/TicketService.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-mcp-server-src-tools-handlers-crhandlers",
+      "path": "mcp-server/src/tools/handlers/crHandlers.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-cli-src-commands-attrmeta",
+      "path": "cli/src/commands/attrMeta.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-cli-src-commands-attr",
+      "path": "cli/src/commands/attr.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-cli-src-output-formatter",
+      "path": "cli/src/output/formatter.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-cli-mdt-cli-skill",
+      "path": "cli/mdt-cli/SKILL.md",
+      "kind": "doc",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-frontend-src-components-badge-externalreferencebadges",
+      "path": "frontend/src/components/Badge/ExternalReferenceBadges.tsx",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-frontend-src-components-badge-trackericon",
+      "path": "frontend/src/components/Badge/TrackerIcon.tsx",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-frontend-src-components-badge-badge",
+      "path": "frontend/src/components/Badge/badge.css",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-frontend-src-components-ticketattributetags",
+      "path": "frontend/src/components/TicketAttributeTags.tsx",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-frontend-src-config-ticketcardbadges",
+      "path": "frontend/src/config/ticketCardBadges.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-frontend-src-components-ticketviewer-compactticketheader",
+      "path": "frontend/src/components/TicketViewer/CompactTicketHeader.tsx",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-frontend-src-styleguide",
+      "path": "frontend/src/styleguide.html",
+      "kind": "doc",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-shared-services-ticket-referencesearch",
+      "path": "shared/services/ticket/referenceSearch.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-server-controllers-searchcontroller",
+      "path": "server/controllers/SearchController.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-frontend-src-hooks-usequicksearch",
+      "path": "frontend/src/hooks/useQuickSearch.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-frontend-src-utils-ticketfilters",
+      "path": "frontend/src/utils/ticketFilters.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-frontend-src-components-quicksearch-quicksearchmodal",
+      "path": "frontend/src/components/QuickSearch/QuickSearchModal.tsx",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-frontend-src-components-quicksearch-quicksearchresults",
+      "path": "frontend/src/components/QuickSearch/QuickSearchResults.tsx",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-frontend-src-components-quicksearch-quick-search",
+      "path": "frontend/src/components/QuickSearch/quick-search.css",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-tests-e2e-setup-external-references",
+      "path": "tests/e2e/setup/external-references.ts",
+      "kind": "test",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-tests-e2e-ticket-external-references-spec",
+      "path": "tests/e2e/ticket/external-references.spec.ts",
+      "kind": "test",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-tests-e2e-quick-search-external-references-spec",
+      "path": "tests/e2e/quick-search/external-references.spec.ts",
+      "kind": "test",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-tests-e2e-utils-selectors",
+      "path": "tests/e2e/utils/selectors.ts",
+      "kind": "test",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-docs-config-specification",
+      "path": "docs/CONFIG_SPECIFICATION.md",
+      "kind": "doc",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-docs-crs-mdt-168-configuration-exposure",
+      "path": "docs/CRs/MDT-168/configuration-exposure.md",
+      "kind": "doc",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-docs-design-surfaces-ticket-card-spec",
+      "path": "docs/design/surfaces/ticket-card.spec.md",
+      "kind": "doc",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-docs-design-surfaces-ticket-card-mockups",
+      "path": "docs/design/surfaces/ticket-card.mockups.md",
+      "kind": "doc",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-docs-design-surfaces-external-reference-badge-spec",
+      "path": "docs/design/surfaces/external-reference-badge.spec.md",
+      "kind": "doc",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-docs-design-surfaces-external-reference-badge-mockups",
+      "path": "docs/design/surfaces/external-reference-badge.mockups.md",
+      "kind": "doc",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-domain-reference-tests",
+      "path": "domain-contracts/src/ticket/__tests__/external-reference.test.ts",
+      "kind": "test",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-shared-reference-tests",
+      "path": "shared/tests/services/external-reference.test.ts",
+      "kind": "test",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-mcp-tools-registry",
+      "path": "mcp-server/src/tools/config/allTools.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-mcp-reference-tests",
+      "path": "mcp-server/src/tools/__tests__/external-reference-boundary.test.ts",
+      "kind": "test",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-rest-ticket-input",
+      "path": "server/http/ticketSchemas.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-contract-type-equality",
+      "path": "domain-contracts/src/__tests__/contract-types.test.ts",
+      "kind": "test",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-cli-structured-output",
+      "path": "cli/src/output/structured.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-config-inspection",
+      "path": "scripts/inspect-config.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-project-result-row",
+      "path": "frontend/src/components/QuickSearch/ProjectResultRow.tsx",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-document-result-row",
+      "path": "frontend/src/components/QuickSearch/DocumentResultRow.tsx",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-search-regression-journey",
+      "path": "tests/e2e/quick-search/modal.spec.ts",
+      "kind": "test",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-server-create-fixture",
+      "path": "server/tests/services/MDT-261/create-diagnostics.test.ts",
+      "kind": "test",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-server-controller-fixture",
+      "path": "server/tests/unit/ProjectController.test.ts",
+      "kind": "test",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-tooling-tsconfig",
+      "path": "tsconfig.json",
+      "kind": "config",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-mcp-create-fixture",
+      "path": "mcp-server/src/tools/handlers/__tests__/create-diagnostics.test.ts",
+      "kind": "test",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-search-input",
+      "path": "frontend/src/components/QuickSearch/QuickSearchInput.tsx",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-search-interactions-doc",
+      "path": "docs/design/surfaces/quick-search.interactions.md",
+      "kind": "doc",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-search-surface-doc",
+      "path": "docs/design/surfaces/quick-search.spec.md",
+      "kind": "doc",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-project-live-state",
+      "path": "frontend/src/hooks/useProjectManager.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-cross-search-live-cache",
+      "path": "frontend/src/hooks/useCrossProjectSearch.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "ART-search-request-boundary",
+      "path": "frontend/src/services/dataLayer.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-domain-reference-contracts",
+      "kind": "unit",
+      "title": "Explicit ref and optional tracker schema boundaries",
+      "covers": [
+        "BR-1",
+        "BR-2",
+        "BR-3",
+        "C7",
+        "C10",
+        "C14"
+      ],
+      "file": "domain-contracts/src/ticket/__tests__/external-reference.test.ts",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "TEST-shared-reference-roundtrip",
+      "kind": "unit",
+      "title": "Real inline/block YAML reference round trips and raw normalization preservation",
+      "covers": [
+        "BR-2",
+        "BR-4",
+        "C2",
+        "C7",
+        "C10"
+      ],
+      "file": "shared/tests/services/external-reference.test.ts",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "TEST-external-reference-journeys",
+      "kind": "e2e",
+      "title": "Real persisted refs, mutations, destinations, card/details/readonly/viewer and responsive acceptance",
+      "covers": [
+        "BR-1",
+        "BR-2",
+        "BR-3",
+        "BR-4",
+        "BR-5",
+        "BR-6",
+        "BR-7",
+        "BR-8",
+        "BR-9",
+        "BR-14",
+        "BR-15",
+        "C1",
+        "C2",
+        "C3",
+        "C4",
+        "C5",
+        "C6",
+        "C7",
+        "C8",
+        "C9",
+        "C10",
+        "C11",
+        "C12",
+        "C13",
+        "C14"
+      ],
+      "file": "tests/e2e/ticket/external-references.spec.ts",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "TEST-external-reference-search",
+      "kind": "e2e",
+      "title": "External/current/key-shaped numeric search, provenance, selection and unconditional ref badges",
+      "covers": [
+        "BR-10",
+        "BR-11",
+        "BR-12",
+        "BR-13",
+        "BR-16",
+        "BR-17",
+        "C2",
+        "C7",
+        "C12"
+      ],
+      "file": "tests/e2e/quick-search/external-references.spec.ts",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "TEST-local-key-regression",
+      "kind": "unit",
+      "title": "Preserve canonical local-key patterns from MDT-254",
+      "covers": [
+        "C2",
+        "C7"
+      ],
+      "file": "domain-contracts/src/ticket/__tests__/patterns.test.ts",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "TEST-drag-regression",
+      "kind": "e2e",
+      "title": "Preserve existing ticket drag behavior around new nested external controls",
+      "covers": [
+        "C7",
+        "C8"
+      ],
+      "file": "tests/e2e/board/drag-drop.spec.ts",
+      "sourceRef": "docs/CRs/MDT-252/architecture.md"
+    },
+    {
+      "id": "TEST-contract-type-parity",
+      "kind": "unit",
+      "title": "Exact create/config inferred type parity including optional refs and trackers",
+      "covers": [
+        "BR-1",
+        "C7",
+        "C10"
+      ],
+      "file": "domain-contracts/src/__tests__/contract-types.test.ts",
+      "sourceRef": "docs/CRs/MDT-252/tests.md"
+    },
+    {
+      "id": "TEST-mcp-reference-contracts",
+      "kind": "unit",
+      "title": "Public MCP ref inputs, tool metadata and enabled/disabled structured handler read preservation",
+      "covers": [
+        "BR-1",
+        "BR-2",
+        "BR-3",
+        "C2",
+        "C7",
+        "C10"
+      ],
+      "file": "mcp-server/src/tools/__tests__/external-reference-boundary.test.ts",
+      "sourceRef": "docs/CRs/MDT-252/tests.md"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-1",
+      "title": "Persist refs and deliver configured external badges end to end",
+      "ownsArtifactIds": [
+        "ART-domain-contracts-src-ticket-external-reference",
+        "ART-domain-contracts-src-ticket-entity",
+        "ART-domain-contracts-src-ticket-frontmatter",
+        "ART-domain-contracts-src-ticket-persisted-frontmatter",
+        "ART-domain-contracts-src-ticket-input",
+        "ART-domain-contracts-src-ticket-schema",
+        "ART-domain-contracts-src-ticket-view",
+        "ART-domain-contracts-src-ticket-search",
+        "ART-domain-contracts-src-project-schema",
+        "ART-domain-contracts-src-search-schema",
+        "ART-shared-models-ticket",
+        "ART-shared-services-markdownservice",
+        "ART-shared-services-crservice",
+        "ART-shared-services-ticketservice",
+        "ART-shared-services-externalreferences",
+        "ART-shared-services-ticket-referencefrontmatter",
+        "ART-shared-services-ticket-referencemutations",
+        "ART-shared-package",
+        "ART-bun",
+        "ART-frontend-src-components-badge-externalreferencebadges",
+        "ART-frontend-src-components-badge-trackericon",
+        "ART-frontend-src-components-badge-badge",
+        "ART-frontend-src-components-ticketattributetags",
+        "ART-frontend-src-config-ticketcardbadges",
+        "ART-frontend-src-components-ticketviewer-compactticketheader",
+        "ART-frontend-src-styleguide",
+        "ART-tests-e2e-setup-external-references",
+        "ART-tests-e2e-ticket-external-references-spec",
+        "ART-tests-e2e-quick-search-external-references-spec",
+        "ART-tests-e2e-utils-selectors",
+        "ART-docs-config-specification",
+        "ART-docs-crs-mdt-168-configuration-exposure",
+        "ART-docs-design-surfaces-ticket-card-spec",
+        "ART-docs-design-surfaces-ticket-card-mockups",
+        "ART-docs-design-surfaces-external-reference-badge-spec",
+        "ART-docs-design-surfaces-external-reference-badge-mockups",
+        "ART-server-services-ticketservice",
+        "ART-domain-reference-tests",
+        "ART-shared-reference-tests",
+        "ART-rest-ticket-input",
+        "ART-contract-type-equality"
+      ],
+      "makesGreenIds": [
+        "TEST-domain-reference-contracts",
+        "TEST-shared-reference-roundtrip",
+        "TEST-external-reference-journeys",
+        "TEST-local-key-regression",
+        "refs_created_and_read",
+        "refs_survive_unrelated_edits",
+        "refs_open_correct_instance",
+        "refs_inspected_without_navigation",
+        "refs_read_only_navigation",
+        "refs_viewer_independent_visibility",
+        "TEST-contract-type-parity"
+      ],
+      "skills": [
+        "mdt-frontend",
+        "frontend-react-component",
+        "good-css",
+        "zod-validation-utilities"
+      ],
+      "sourceRef": "docs/CRs/MDT-252/tasks.md"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Expose ordered reference mutations through CLI and MCP",
+      "ownsArtifactIds": [
+        "ART-server-services-ticketservice",
+        "ART-mcp-server-src-tools-handlers-crhandlers",
+        "ART-cli-src-commands-attrmeta",
+        "ART-cli-src-commands-attr",
+        "ART-cli-src-output-formatter",
+        "ART-cli-mdt-cli-skill",
+        "ART-shared-services-ticketservice",
+        "ART-shared-services-ticket-referencemutations",
+        "ART-mcp-tools-registry",
+        "ART-mcp-reference-tests",
+        "ART-cli-structured-output"
+      ],
+      "makesGreenIds": [
+        "TEST-mcp-reference-contracts",
+        "TEST-external-reference-journeys",
+        "refs_mutated_idempotently"
+      ],
+      "skills": [
+        "zod-validation-utilities"
+      ],
+      "sourceRef": "docs/CRs/MDT-252/tasks.md"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Find external identities across search surfaces and verify full delivery",
+      "ownsArtifactIds": [
+        "ART-shared-services-ticket-referencesearch",
+        "ART-server-controllers-searchcontroller",
+        "ART-frontend-src-hooks-usequicksearch",
+        "ART-frontend-src-utils-ticketfilters",
+        "ART-frontend-src-components-quicksearch-quicksearchmodal",
+        "ART-frontend-src-components-quicksearch-quicksearchresults",
+        "ART-frontend-src-components-quicksearch-quick-search",
+        "ART-server-services-ticketservice",
+        "ART-shared-services-ticketservice",
+        "ART-frontend-src-components-badge-externalreferencebadges",
+        "ART-tests-e2e-quick-search-external-references-spec",
+        "ART-config-inspection",
+        "ART-project-result-row",
+        "ART-document-result-row",
+        "ART-search-regression-journey",
+        "ART-server-create-fixture",
+        "ART-server-controller-fixture",
+        "ART-tooling-tsconfig",
+        "ART-mcp-create-fixture",
+        "ART-search-input",
+        "ART-search-interactions-doc",
+        "ART-search-surface-doc",
+        "ART-project-live-state",
+        "ART-cross-search-live-cache",
+        "ART-search-request-boundary"
+      ],
+      "makesGreenIds": [
+        "TEST-external-reference-search",
+        "TEST-drag-regression",
+        "refs_board_filter",
+        "refs_key_search_union",
+        "refs_partial_search_selection"
+      ],
+      "skills": [
+        "mdt-frontend",
+        "frontend-react-component",
+        "good-css"
+      ],
+      "sourceRef": "docs/CRs/MDT-252/tasks.md"
+    }
+  ]
+}

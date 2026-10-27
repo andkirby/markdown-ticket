@@ -6,6 +6,7 @@ type: Technical Debt
 priority: Medium
 implementationDate: 2026-10-22
 implementationNotes: Single source of truth for the ticket-key contract (MDT-254 + review follow-up). Leaf module project/code.ts exports PROJECT_CODE_PATTERN and anchor-free PROJECT_CODE_PATTERN_BODY; frontmatter.ts exports TICKET_NUMBER_MIN_DIGITS (3) and TICKET_NUMBER_MAX_DIGITS (5) and composes CR_CODE_PATTERN (canonical stored form, 3-5 digits) plus TICKET_KEY_INPUT_PATTERN (loose input, case-insensitive non-padded). Contract deliberately 3-5 digits. Every parallel regex now derives - TicketService phaseEpic + numeric sort, staged-validation, proseScanner, TreeBuilder, PathSelectionStrategy root exclusion, PathWatcherService, WorktreeService branch extraction, keyNormalizer (full-format and numeric shorthand bounded), normalizeKeyTerm, MCP project inference, CLI deps/view/attr/rename/args, frontend routing, relationshipLink, quick-search ordering. Review findings from thr_65hd5qhtxx addressed - dash-anchored number extraction, shorthand bound parity, slug-optional ticket filenames, worktree left boundary, watch of ticket dirs, root-ticket document leak. Remaining known parallel parsers (frontend path/link surfaces - markdownPreprocessor, sseClient, linkValidator, linkProcessor) tracked in a follow-up ticket.
+relatedTickets: MDT-252
 ---
 
 # Single source of truth for ticket key pattern

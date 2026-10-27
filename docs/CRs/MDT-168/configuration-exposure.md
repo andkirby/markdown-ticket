@@ -27,6 +27,8 @@
 | `project.document` | `excludeFolders` | Editable | Documents settings/path selector |
 | `project.document` | `maxDepth` | Editable | Documents settings/path selector |
 
+| `trackers.<instance>` | `kind`, `baseUrl`, `defaultRepo`, `projectKeys`, `urlTemplate`, `display.*` | File-only | Local external-reference configuration (MDT-252); no tracker credentials |
+
 ## Global System Configuration: `CONFIG_DIR/config.toml`
 
 | Section | Field | Exposure | Owner |

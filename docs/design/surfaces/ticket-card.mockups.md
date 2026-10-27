@@ -1,168 +1,67 @@
-# Ticket Card — Wireframe Schema
+# Ticket Card — Mockups
 
-Related spec: `ticket-card.spec.md`
+Related spec: [Ticket Card](ticket-card.spec.md). External behavior: [External Reference Badges](external-reference-badge.spec.md).
 
-## Default State
-
-```wireloom
-window "Ticket Card — Default":
-  panel:
-    row:
-      text "MDT-042" bold id="ticket-code"
-      text "Fix login redirect" id="ticket-title"
-    row:
-      chip "Proposed" id="status-badge"
-      chip "Medium" id="priority-badge"
-      chip "Feature" id="type-badge"
-      spacer
-      icon name="gear" id="edit-icon"
-
-annotation "Title row: font-semibold, text-sm" target="ticket-title" position=top
-annotation "Edit icon hidden until hover" target="edit-icon" position=right
-```
-
-## Hover State
+## Default: selected badge flow
 
 ```wireloom
-window "Ticket Card — Hover":
+window "Ticket card — external badges":
   panel:
+    row justify=between:
+      text "MDT-252" bold
+      text "2h ago" muted
+    text "External issue tracker links" bold
     row:
-      text "MDT-042" bold
-      text "Fix login redirect"
-    row:
-      chip "Proposed"
-      chip "Medium"
+      chip "In Progress"
       chip "Feature"
-      spacer
-      icon name="gear" id="edit-icon-hover"
-
-annotation "Shadow elevates, -translate-y-0.5, scale-[1.005]" target="edit-icon-hover" position=right
-annotation "Edit icon fades in (opacity 0→1)" target="edit-icon-hover" position=bottom
+      chip "◈ 123 ↗"
+      button "⋯"
 ```
 
-## Dragging State
+The tracker icon identifies Jira here. Prefix PRJ is omitted because it is the sole configured project key. All metadata, including external refs, shares one wrapping flow; renderer rows do not reserve an external-ref line.
+
+## Reference details open
 
 ```wireloom
-window "Ticket Card — Dragging":
+window "Ticket card — reference details":
   panel:
+    row justify=between:
+      text "MDT-252" bold
+      text "2h ago" muted
+    text "External issue tracker links" bold
     row:
-      text "MDT-042" bold muted id="drag-code"
-      text "Fix login redirect" muted id="drag-title"
-    row:
-      chip "Proposed" id="drag-status"
-      chip "Medium"
+      chip "In Progress"
       chip "Feature"
-
-annotation "opacity-40, scale-95, rotate-2, shadow-2xl" target="drag-code" position=top
+      chip "◈ work:123 ↗"
+      chip "◈ client:PRJ-123 ↗"
+      button "+2"
+    section "External references":
+      text "Jira (work) · PRJ-123 ↗"
+      text "Jira (client) · PRJ-123 ↗"
+      text "GitLab · acme/platform/customer-authentication#18 ↗"
+      text "legacy:OPS-7 — unavailable: tracker not configured" muted
 ```
 
-## With All Badges (Full Attributes)
+This complete-list popover is viewport bounded and scrolls internally. Full namespace paths wrap; all refs appear, not just overflow. Actual product glyphs come from the vendor icon component, not the Wireloom diamond.
 
-Same-project relationship links render as bare zero-padded numbers; lists over `INLINE_MAX` (3) collapse behind `+N`. See `relationship-badge.spec.md` for the full contract and `relationship-badge.mockups.md` for badge-focused states.
+## Narrow card: busy metadata and unavailable ref
 
 ```wireloom
-window "Ticket Card — Full Badges":
+window "Ticket card — narrow":
   panel:
+    row justify=between:
+      text "MDT-252" bold
+      text "2h ago" muted
+    text "External issue tracker links" bold
     row:
-      text "MDT-042🪾" bold id="full-code"
-      text "Implement auth flow"
-    row:
-      chip "In Progress" id="full-status"
-      chip "High" accent=danger id="full-priority"
+      chip "In Progress"
       chip "Feature"
+      chip "Related: 030, 035"
     row:
-      chip "Phase:Auth" id="full-phase"
-      chip "🪾 Worktree" id="full-worktree"
-    row:
-      chip "🔗 030, 005, 035 +2" id="full-related"
-      chip "⬅️ 012" id="full-dep"
-      chip "➡️ VOC-200" id="full-blocks"
-
-annotation "Same-project links → bare number (030, not MDT-030).\nCross-project → full code (VOC-200).\n+2 opens a popover; see relationship-badge.mockups.md." target="full-related" position=right
-annotation "Badges wrap to multiple lines when they overflow the row" target="full-blocks" position=bottom
+      chip "◈ widgets#123 ↗"
+      chip "⚠ legacy:OPS-7"
+      button "⋯"
+      chip "Worktree"
 ```
 
-## Minimal Badges (No Optional Attributes)
-
-```wireloom
-window "Ticket Card — Minimal Badges":
-  panel:
-    row:
-      text "MDT-042" bold
-      text "Fix typo"
-    row:
-      chip "Proposed"
-      chip "Low"
-      chip "Bug"
-      spacer
-      icon name="gear"
-```
-
-## Configured Badge Visibility
-
-```wireloom
-window "Ticket Card — Configured Badges":
-  panel:
-    row:
-      text "MDT-167" bold id="configured-code"
-      text "Add Settings modal"
-    row:
-      chip "Implemented" id="configured-status"
-      chip "Feature" id="configured-type"
-      chip "🪾 Worktree" id="configured-worktree"
-
-annotation "Priority, phase, and relationship badges are hidden by board preference" target="configured-type" position=right
-annotation "Visible badges keep TicketAttributeTags order" target="configured-status" position=top
-```
-
-## Read-only State
-
-```wireloom
-window "Ticket Card — Read-only":
-  panel:
-    row:
-      text "MDT-172" bold id="readonly-ticket-code"
-      text "Public read-only sharing"
-    row:
-      chip "Implemented"
-      chip "High"
-      chip "Feature"
-
-annotation "Card opens viewer only; edit icon and drag affordance are absent" target="readonly-ticket-code" position=right
-```
-
-## Invalid Status
-
-```wireloom
-window "Ticket Card — Invalid Status":
-  panel:
-    row:
-      text "MDT-042" bold id="invalid-title"
-      text "Fix login redirect"
-    row:
-      chip "Foo" accent=danger id="invalid-badge"
-      chip "Medium"
-      chip "Feature"
-      spacer
-      icon name="gear"
-
-annotation "data-invalid=true, tooltip: 'Invalid status: Foo'" target="invalid-badge" position=right
-```
-
-## Annotations
-
-| Element | Token | Class | Notes |
-|---------|-------|-------|-------|
-| Card bg (light) | inline gradient | `from-white to-gray-50/80` | Subtle gradient |
-| Card bg (dark) | inline gradient | `from-slate-800 to-slate-900/80` | |
-| Card border | `--border` | `border rounded-xl` | |
-| Card shadow (rest) | inline | `shadow-[0_1px_3px...]` | Very subtle |
-| Card shadow (hover) | inline | `shadow-[0_8px_20px...]` | Elevated shadow |
-| Ticket code | `--primary` | `text-primary dark:text-blue-400` | `font-medium` |
-| Title text | `--foreground` | `text-gray-900 dark:text-white` | `font-semibold text-sm` (`.ticket-card__title`) |
-| Separator | `--foreground` | `•` with `mx-1` | Between code and title |
-| Edit icon | `--muted-foreground` | `.ticket-card__edit` `opacity-0 group-hover:opacity-100` | 4×4 pencil |
-| Read-only card | `--foreground` | no edit icon, no move cursor | Opens viewer only |
-| Badges | badge.css vars | `.badge[data-*]` | See BADGE_ARCHITECTURE.md |
-| Worktree icon | n/a | `🪾` emoji | Appended to ticket code in title row; also shown as a chip in badge bar |
-| Hidden badge preference | localStorage | `markdown-ticket:board:ticket-card-badges` | Filters board card badges only; no visual placeholder |
+Natural wrapping depends on available width; the fixed order keeps external refs after internal relationships and before worktree. Missing refs render no placeholder. Read-only cards preserve external navigation/details while removing mutation/drag capability. Hidden board badges do not hide search-result or viewer refs.

@@ -1,10 +1,13 @@
 ---
 code: MDT-252
-status: Proposed
+status: Implemented
 dateCreated: 2026-10-22T04:01:08.680Z
 type: Feature Enhancement
 priority: Medium
 phaseEpic: MDT-253
+relatedTickets: MDT-254
+implementationDate: 2026-10-27
+implementationNotes: Implemented instance-scoped external references across shared/domain, CLI, REST, MCP, ticket badges/viewer and search; updated configuration docs, UI specs and HTML styleguide. Preserves raw identities and live updates, with configurable display shortening and keyboard-accessible details. Codex review PASS 31/31 requirements with all findings fixed. Accepted verification: 23 commands passed, including 52 browser and 123 frontend tests, focused domain/shared/MCP/server tests, builds, six-project typecheck and six package lint checks. Related to implemented MDT-254.
 ---
 
 # External issue tracker links (Jira / GitHub / GitLab)
@@ -17,13 +20,13 @@ Teams track work in Jira/GitHub/GitLab while MDT is the local-first layer. Ticke
 
 - Stored, **instance-scoped refs** in frontmatter (e.g. `refs: ["work:PROJ-123", "gh:acme/widgets#42"]`) ship **with** the first badges. A ref names a *configured tracker instance* (`[trackers.work] kind = "jira"` in `.mdt-config.toml`), not a tracker kind — two Jira instances can both contain `PROJ-123`, so kind-only refs would recreate the silent wrong-link problem. Template-only badges are rejected as MVP: on numbering divergence they render silently wrong links.
 - Per-project URL templates in `.mdt-config.toml`. Local identity stays stable; external identity is stored data.
-- Key-mirror alignment (one MDT project per tracker project, seeded numbering) is an explicit opt-in convenience, never an invariant. Schema caps documented: ≤5-char code, ≤4-digit number (`domain-contracts/src/ticket/frontmatter.ts:8`).
+- Key-mirror alignment (one MDT project per tracker project, seeded numbering) is an explicit opt-in convenience, never an invariant. MDT-254 has implemented the canonical local-key contract: 2–5-character project code and 3–5 stored number digits. External identifiers do not inherit these local limits.
 - Refs participate in free-text search (predicate extension — small).
 - Out of scope: two-way sync, MCP reads of external trackers, per-component tracker routing, multi-code namespaces (MDT-143 stays deferred; refs cover the external-linking use case, not internal categorization).
 
-## Open questions
+## Design decisions (resolved by the linked requirements and UX)
 
-1. **Extra key digit — out of scope; the review found a contract mismatch instead.** Widening is *not* needed here: `formatCrKey` already handles five digits (tests cover `MDT-10000`), `TICKET_KEY_INPUT_PATTERN` accepts five (`frontmatter.ts:16`), and the only blocker is the `CR_CODE_PATTERN` validation regex (`frontmatter.ts:8`) — live probe: `MDT-10000` input accepted, frontmatter schema rejected. That mismatch is an existing key-contract inconsistency worth separate tracking (ordinary local numbering reaches 10000 without any tracker); do not bundle it into MDT-252.
+1. **Resolved by MDT-254 (Implemented).** The earlier review found that `formatCrKey` and loose input accepted five digits while stored-frontmatter validation lagged. MDT-254 consolidated the local-key patterns and resolved that mismatch. Reuse its exported contract; do not widen or duplicate it in MDT-252.
 2. **Closed tracker kinds, open instance names** — `[trackers.<instance>] kind = "jira" | "github" | "gitlab"` + `baseUrl`; refs use the instance name (`work:PROJ-123`). Per-kind grammar: GitHub canonical `owner/repo#123`, `#123` only with an explicit default repo (expanded on write); GitLab full namespace paths incl. subgroups, issues only in MVP (MRs are `!123`); Jira keys NOT constrained by MDT's caps (Data Center allows underscores/digits), preserve base-URL context paths like `/jira`. Settle `gh` vs `github` aliasing once, explicitly. Extensibility rule: unsupported refs are preserved verbatim through reads and unrelated edits — never guessed; defer Linear/Asana adapters until requested.
 3. **Refs field shape** — frontmatter key name (`refs`), value grammar, add/remove semantics in CLI `attr` and MCP `update_cr_attrs` / `create_cr`: duplicates, refs shared across tickets, idempotent add/remove, round-trip fidelity for unknown/unsupported refs through serializers and mutations.
 4. **Config schema** — `.mdt-config.toml` `[trackers.<instance>]` keys (kind, baseUrl, template override), allowed placeholders, URL encoding, HTTP(S) validation, unresolved-placeholder behavior, `inspect:config` exposure class.
@@ -37,6 +40,10 @@ Teams track work in Jira/GitHub/GitLab while MDT is the local-first layer. Ticke
 - Source idea + second-opinion record: `docs/ideas/IDEA-011-external-tracker-links.md` (Codex review thread thr_g5ynmg2ccm)
 - Namespace prior art (deferred): `docs/CRs/MDT-143/discovery-ticket-code-namespace.md`
 - Config conventions: `docs/CONFIG_SPECIFICATION.md`
+- Assessment: [assess.md](MDT-252/assess.md)
+- Requirements notes: [requirements.md](MDT-252/requirements.md)
+- Requirements trace: [requirements.trace.md](MDT-252/requirements.trace.md)
+- Agreed UX (placement A): [ux-design.md](MDT-252/ux-design.md)
 
 ## Review record
 

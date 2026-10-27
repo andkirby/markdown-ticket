@@ -119,10 +119,10 @@ Group order is cross-project tickets, current-project tickets, projects, then do
 
 - The modal must follow `frontend/src/MODALS.md` requirements unless that shared contract is explicitly revised.
 - The scope bar uses `role="tablist"` and scope buttons use `role="tab"` with `aria-selected`.
-- The results container uses `role="listbox"`.
-- Selectable result rows use `role="option"` and `aria-selected`.
+- The results container is a labelled region containing ordinary lists.
+- Result rows use native primary buttons and sibling external links/details controls. Selection uses data-selected treatment; primary buttons expose aria-current.
 - Escape closes the modal through the shared modal behavior.
-- The focused input remains the primary keyboard target while arrow keys and Enter operate the selected result.
+- From the input, arrows/Enter select/open results and Tab cycles scope. F6 focuses the selected primary action; native Tab reaches reference controls. Shift+F6 returns to the input, preserving query/scope. With no result, F6 retains input focus. The visible hint is described by the input.
 
 ## Responsive
 

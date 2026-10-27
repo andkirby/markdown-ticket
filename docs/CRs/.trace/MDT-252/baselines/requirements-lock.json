@@ -1,0 +1,130 @@
+{
+  "ticket": "MDT-252",
+  "generatedAt": "2026-10-27T14:11:35.452Z",
+  "requirements": [
+    {
+      "id": "BR-1",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-5",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-6",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-7",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-8",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-9",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-10",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-11",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-12",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-13",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-14",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-15",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-16",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-17",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C1",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C2",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C3",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C4",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C5",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C6",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C7",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C8",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C9",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C10",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C11",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C12",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C13",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C14",
+      "routePolicy": "tests"
+    }
+  ]
+}

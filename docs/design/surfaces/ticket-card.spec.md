@@ -1,157 +1,51 @@
 # Ticket Card
 
-Card displayed in a board column representing a single ticket. Shows ticket identity, title, and attribute badges. Supports drag-and-drop via a wrapper.
+Board card representing one local ticket. Local identity remains primary; external refs are compact metadata links.
+
+## Ownership
+
+Owns card composition and local-viewer entry. The Column drag wrapper owns drag-and-drop; TicketCode owns stable priority/type/epic/worktree identity glyphs. External reference behavior belongs to [External Reference Badges](external-reference-badge.spec.md).
 
 ## Composition
 
 ```text
-DraggableTicketCard (drag wrapper)
+DraggableTicketCard
 └── TicketCard
-    ├── div (title section)
-    │   └── h4.ticket-card__title
-    │       ├── TicketCode
-    │       ├── span[• separator]
-    │       └── span[title text]
-    └── div (attributes section)
-        ├── TicketAttributeTags (flex-1)
-        │   ├── StatusBadge
-        │   ├── PriorityBadge
-        │   ├── TypeBadge
-        │   ├── ContextBadge[phase] (conditional)
-        │   ├── RelationshipBadge[related] (conditional)
-        │   ├── RelationshipBadge[depends] (conditional)
-        │   ├── RelationshipBadge[blocks] (conditional)
-        │   └── ContextBadge[worktree] (conditional)
-        └── div.actions (shrink-0)
-            └── button[edit icon] (opacity on hover)
+    ├── key/timestamp row
+    │   ├── TicketCode (priority glyph, local key, optional type/epic/worktree)
+    │   └── RelativeTimestamp
+    ├── title (two-line clamp)
+    └── attributes region when Show badges is enabled
+        └── TicketAttributeTags (one wrapping flow)
+            ├── status / optional priority / type / phase
+            ├── related / depends / blocks
+            ├── external references
+            └── worktree
 ```
 
-## Children
+## Layout and states
 
-| Child | Component | Spec | Conditional |
-|-------|-----------|------|-------------|
-| TicketCard | `frontend/src/components/TicketCard.tsx` | this file | always |
-| TicketCode | `frontend/src/components/TicketCode.tsx` | — | always |
-| TicketAttributeTags | `frontend/src/components/TicketAttributeTags.tsx` | — | always |
-| StatusBadge | `frontend/src/components/Badge/StatusBadge.tsx` | — | always |
-| PriorityBadge | `frontend/src/components/Badge/PriorityBadge.tsx` | — | always |
-| TypeBadge | `frontend/src/components/Badge/TypeBadge.tsx` | — | always |
-| ContextBadge | `frontend/src/components/Badge/ContextBadge.tsx` | — | phase, assignee, worktree |
-| RelationshipBadge | `frontend/src/components/Badge/RelationshipBadge.tsx` | `relationship-badge.spec.md` | related, depends, blocks |
+- Reuse the live flat raised surface, density padding, radius and high/critical priority stripe from `TicketCard/ticket.css`; no parallel gradient card design.
+- Key and relative timestamp share the top row. Title occupies its own row and clamps to two lines. External refs join the existing wrapping badge flow after internal relationships and before worktree (user-selected option A); no reserved reference row.
+- Card-background activation opens the local ticket viewer. Nested external links/details isolate activation and drag initiation.
+- Hover reveals the existing border treatment. Invalid status uses the existing invalid marker. Dragging treatment belongs to the wrapper.
+- Read-only cards remain viewable, with valid external navigation, but editing/dragging follow project capabilities. Do not add a pencil placeholder; the current card has no hover-edit button.
+- No refs means the existing card layout. Missing tracker configuration preserves raw identifiers in unavailable badges.
 
-## Source files
+## Badge visibility
 
-| Type | Path |
-|------|------|
-| Component | `frontend/src/components/TicketCard.tsx` |
-| Drag wrapper | `frontend/src/components/Column/index.tsx` (DraggableTicketCard) |
-| Attribute tags | `frontend/src/components/TicketAttributeTags.tsx` |
-| Badge module | `frontend/src/components/Badge/` |
-| Badge styles | `frontend/src/components/Badge/badge.css` |
-| TicketCode | `frontend/src/components/TicketCode.tsx` |
+The browser-local card badge preference filters the fixed attribute order without reordering or affecting viewer/search references. Priority is a glyph near the local key and is omitted from the default badge row; existing saved choices remain valid. New external references are added once to pre-feature selections without resetting other choices, then subsequent opt-out is respected.
 
-## Layout
+Swimlane cards preserve their current Show badges=false default. This outer gate precedes the per-badge preference. External refs are not projected onto cloud stubs that do not carry them.
 
-### Card
+## Responsive and accessibility
 
-- Background: gradient `from-white to-gray-50/80 dark:from-slate-800 dark:to-slate-900/80`
-- Border: `border rounded-xl`
-- Padding: `px-3 py-4`
-- Shadow (rest): `shadow-[0_1px_3px_rgba(0,0,0,0.04)]`
-- Backdrop blur: `backdrop-blur-sm`
-- Click handler: opens ticket viewer (`onEdit`)
+Badges wrap within card/column width; long external labels constrain themselves without overflowing the column. External details remain reachable by touch/keyboard, including one/two-ref cards. Follow density text/target floors and visible focus from the shared badge spec. No external abbreviation changes the stored identifier or URL.
 
-### Title row
+## Source and verification anchors
 
-- Flex: `flex items-start justify-between mb-2`
-- TicketCode rendered as `font-medium text-primary dark:text-blue-400`
-- Separator: `•` with `mx-1`
-- Title: `.ticket-card__title` — `font-semibold text-sm truncate` — truncated when it overflows
-
-### Attributes row
-
-- Flex: `flex items-start justify-between gap-2`
-- Badges: `flex flex-wrap gap-2`
-- Edit button: `.ticket-card__edit` — `opacity-0 group-hover:opacity-100`, `w-4 h-4` pencil icon
-
-### Card width
-
-Card fills the column width minus padding. Column padding is `px-3`, drop zone gap is `space-y-2` (8px).
-
-## States
-
-| State | Trigger | Visual Change |
-|-------|---------|---------------|
-| default | normal render | gradient bg, subtle shadow, cursor-pointer |
-| hover | mouse enters | `hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.15)]`, `hover:-translate-y-0.5`, `hover:scale-[1.005]`, edit button fades in |
-| dragging | user drags the card | wrapper: `opacity-40 scale-95 rotate-2 shadow-2xl`, cursor: move |
-| invalid status | status not in valid set | class `ticket-card--invalid`, `data-invalid="true"`, title tooltip shows invalid status name |
-| click | user clicks card | opens TicketViewer modal for this ticket |
-| read-only | `canEdit=false` from project view | card remains clickable for viewing; edit icon/action is absent; drag wrapper disables dragging |
-
-## Badge Display Order
-
-Badges appear left-to-right in this fixed order:
-
-1. **StatusBadge** — always
-2. **PriorityBadge** — always
-3. **TypeBadge** — always
-4. **ContextBadge[phase]** — when `ticket.phaseEpic` is set
-5. **RelationshipBadge[related]** — when `ticket.relatedTickets` has items
-6. **RelationshipBadge[depends]** — when `ticket.dependsOn` has items
-7. **RelationshipBadge[blocks]** — when `ticket.blocks` has items
-8. **ContextBadge[worktree]** — when `ticket.inWorktree === true`
-
-If a badge value is empty or array is empty, the badge is not rendered.
-
-The board Settings tab can hide individual card badge types via `markdown-ticket:board:ticket-card-badges`. The configured list filters this order; it must not reorder badges or affect ticket viewer badges.
-
-## Relationship Badges (board)
-
-Relationship badges on the board follow `relationship-badge.spec.md`. Two board-specific contracts worth flagging here because they affect card density:
-
-- **Same-project elision**: links to the current project render as bare zero-padded numbers (`030`), not full CR keys. Cross-project links keep full codes. This is board-only — the TicketViewer shows full codes.
-- **Overflow compression**: when a relationship list exceeds `INLINE_MAX` (3), the rest collapse behind a `+N` trigger that opens a popover. This keeps long relationship lists from forcing the badge row to wrap and push other badges down.
-
-Both behaviors exist to keep cards compact on the dense board surface. Relationship-badge click handling (`stopPropagation`, popover keyboard behavior) is owned by the child spec.
-
-## TicketCode
-
-The code segment renders with worktree indicator:
-
-- Format: `{CODE}` (e.g., `MDT-042`)
-- Color: `text-primary dark:text-blue-400`
-- Font: `font-medium`
-- Worktree: appends `🪾` icon when `ticket.inWorktree === true`
-- Data attribute: `data-testid="ticket-code"`
-
-## Tokens used
-
-| Element | Token | Usage |
-|---------|-------|-------|
-| card bg (light) | inline gradient | `from-white to-gray-50/80` |
-| card bg (dark) | inline gradient | `from-slate-800 to-slate-900/80` |
-| code text | `--primary` | ticket code color |
-| title text | `--foreground` | `text-gray-900 dark:text-white` |
-| border | `--border` | card border |
-| badge colors | `badge.css` data attributes | see `BADGE_ARCHITECTURE.md` |
-
-## Classes used
-
-| Element | Class | Source |
-|---------|-------|--------|
-| card | `.ticket-card` | inline Tailwind + `ticket.css` |
-| invalid card | `.ticket-card--invalid` | `ticket.css` |
-| title | `.ticket-card__title` | `ticket.css` |
-| edit button | `.ticket-card__edit` | `ticket.css` |
-| badge | `.badge[data-status="..."]` | `badge.css` |
-
-## Extension notes
-
-- Badge order is defined by `TicketAttributeTags.tsx` — add new badges at the end of the render list, before the worktree badge.
-- Visible badge configuration is browser-local board UI state. Validate stored badge IDs and fall back to default badges when storage is invalid or empty.
-- New badge types must follow the `BADGE_ARCHITECTURE.md` data-attribute pattern.
-- Invalid status detection: `isValidStatus()` checks against hardcoded CR status list. If statuses become configurable, this check must update.
-- The drag wrapper (`DraggableTicketCard`) lives in `Column/index.tsx`, not in TicketCard. Card does not own its own drag behavior.
-- Edit button on hover uses `group-hover` — requires `group` class on the card root.
-- Read-only cards must not show a disabled pencil placeholder. Remove the edit affordance entirely so the card reads as a viewer link, not a blocked editor.
+- `frontend/src/components/TicketCard.tsx` and `TicketCard/ticket.css`.
+- `frontend/src/components/TicketAttributeTags.tsx` and `config/ticketCardBadges.ts`.
+- `frontend/src/components/TicketCode.tsx` and `shared/RelativeTimestamp.tsx`.
+- `frontend/src/components/Column/index.tsx` (drag wrapper).
+- `tests/e2e/ticket/external-references.spec.ts` (planned external interactions); existing board/drag-drop and ticket status/type suites preserve local behavior.

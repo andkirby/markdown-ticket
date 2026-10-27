@@ -156,9 +156,9 @@ Updates ticket attributes. Normalizes aliases (e.g. `in-progress` → `In Progre
 
 `component` is a free-text subsystem/package label (e.g. `owned-runtime`, `frontend`); it has no value validation and supports `list component=<value>` fuzzy filtering.
 
-Keys: `status`, `priority`, `level`, `phase`, `assignee`, `component`, `related`, `depends`, `blocks`, `impl-date`, `impl-notes`.
+Keys: `status`, `priority`, `level`, `phase`, `assignee`, `component`, `related`, `depends`, `blocks`, `refs`, `impl-date`, `impl-notes`.
 
-Relations (`related`, `depends`, `blocks`) support `=` (replace), `+=` (add), `-=` (remove). All others use `=` only.
+Relations and external refs (`related`, `depends`, `blocks`, `refs`) support `=` (replace), `+=` (add), `-=` (remove). All others use `=` only.
 
 **Validation:** unknown keys and unknown enum values are rejected with the valid set printed. Enum fields:
 - `status` ∈ Proposed · Approved · In Progress · Implemented · Rejected · On Hold · Partially Implemented. Column/synonym aliases map: `backlog`→Proposed, `open`→Approved, `done`/`complete`/`completed`/`d`→Implemented, `in-progress`→In Progress, `partial`→Partially Implemented, `deferred`→On Hold.
@@ -262,3 +262,16 @@ mdt-cli attr 143 status=Implemented
 - Paths are relative to project root by default. Set `cli.ticket.absolutePath=true` in `~/.config/mdt/cli.toml` for absolute paths.
 - Colors render on TTY; suppressed when piped or `NO_COLOR=1`.
 - `--guide` flag at any scope prints a generated command manual from the commander tree.
+
+## External issue references
+
+Use the existing attribute syntax with `refs`:
+
+```bash
+mdt-cli ticket attr 252 'refs=work:PRJ-123,gh:acme/widgets#42'
+mdt-cli ticket attr 252 'refs+=gh:#43'
+mdt-cli ticket attr 252 'refs-=gh:acme/widgets#42'
+mdt-cli ticket attr 252 'refs='
+```
+
+`=` replaces, `+=` appends absent refs, and `-=` removes exact stored strings only. Add/replacement operands can expand `instance:#number` using that configured instance's `defaultRepo`. Existing refs never rebind on reads or unrelated writes. Use a JSON string array operand when an identifier contains commas. Refs are separate from local ticket keys; shared services own validation and persistence.

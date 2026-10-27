@@ -34,3 +34,7 @@ Intake-level take (2026-10-19):
 - [IDEA-006 — ticket sub-areas / component attribute](./IDEA-006-ticket-sub-areas.md) — adjacent but independent; shares only the per-project config mechanism
 - `frontend/src/utils/linkNormalization.ts` — existing link normalization/rendering
 - [docs/CONFIG_SPECIFICATION.md](../CONFIG_SPECIFICATION.md) — project config conventions (`.mdt-config.toml`)
+
+## Deferred presentation variants (MDT-252 clarification)
+
+The user chose repository basename display and configured Jira prefix shortening. Inline author/owner plus repository, full GitLab group/subgroup paths, and a general vendor-specific display-policy editor remain deferred ideas. Full namespace identity stays available in details; these variants must not expand MDT-252 implementation scope.
