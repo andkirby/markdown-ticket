@@ -7,6 +7,47 @@ import { expect, test } from '../fixtures/test-fixtures.js'
 import { createExternalReferenceProject } from '../setup/external-references.js'
 import { boardSelectors, externalReferenceSelectors, quickSearchSelectors, projectSelectors, selectorSelectors, ticketSelectors } from '../utils/selectors.js'
 
+function badgeGeometry(root: Element) {
+  const measure = (element: Element) => {
+    const style = getComputedStyle(element)
+    return {
+      height: element.getBoundingClientRect().height,
+      fontSize: style.fontSize,
+      lineHeight: style.lineHeight,
+      paddingBlockStart: style.paddingBlockStart,
+      paddingBlockEnd: style.paddingBlockEnd,
+      paddingInlineStart: style.paddingInlineStart,
+      paddingInlineEnd: style.paddingInlineEnd,
+      borderRadius: style.borderRadius,
+    }
+  }
+  return {
+    external: measure(root.querySelector('[data-external-reference]')!),
+    related: measure(root.querySelector('[data-relationship="related"]')!),
+  }
+}
+
+function expandedReferenceHitChecks(links: Element[]) {
+  return links.map((link) => {
+    const rect = link.getBoundingClientRect()
+    const extension = (Math.max(24, rect.height) - rect.height) / 2
+    const ownsPoint = (y: number) => {
+      const hit = document.elementFromPoint(rect.x + rect.width / 2, y)
+      return hit === link || (hit !== null && link.contains(hit))
+    }
+    return {
+      top: ownsPoint(rect.top - extension + 0.25),
+      bottom: ownsPoint(rect.bottom + extension - 0.25),
+      x: rect.x,
+      y: rect.y,
+      height: rect.height,
+      rowGap: getComputedStyle(link.parentElement!).rowGap,
+      inset: getComputedStyle(link, '::after').top,
+      lowerTarget: document.elementFromPoint(rect.x + rect.width / 2, rect.bottom + extension - 0.25)?.closest('a')?.getAttribute('href'),
+    }
+  })
+}
+
 test.describe('MDT-252 external references', () => {
   test('read-only visitors retain external links while ticket mutations are denied', async ({ request, browser, e2eContext }) => {
     const fixture = await createExternalReferenceProject(e2eContext)
@@ -84,7 +125,9 @@ test.describe('MDT-252 external references', () => {
     await expect(card.locator(externalReferenceSelectors.detailsTrigger)).toHaveCount(0)
     await page.context().route('https://jira.example.test/**', route => route.fulfill({ body: '<h1>External issue</h1>', contentType: 'text/html' }))
     const popup = page.waitForEvent('popup')
-    await jira.click()
+    const bounds = (await jira.boundingBox())!
+    const hitTop = bounds.y - (Math.max(24, bounds.height) - bounds.height) / 2
+    await page.mouse.click(bounds.x + bounds.width / 2, hitTop + 0.5)
     await (await popup).close()
     await expect(page.locator(ticketSelectors.detailPanel)).not.toBeVisible()
   })
@@ -130,6 +173,12 @@ test.describe('MDT-252 external references', () => {
     await page.keyboard.press('Enter')
     await expect(page.locator(externalReferenceSelectors.details)).toContainText('legacy:OPS-7')
     await expect(page.locator(externalReferenceSelectors.details)).toContainText(/not configured|unavailable/i)
+    await page.keyboard.press('Escape')
+    await expect(trigger).toBeFocused()
+    const bounds = (await trigger.boundingBox())!
+    const hitTop = bounds.y - (Math.max(24, bounds.height) - bounds.height) / 2
+    await page.mouse.click(bounds.x + bounds.width / 2, hitTop + 0.5)
+    await expect(page.locator(externalReferenceSelectors.details)).toBeVisible()
     await page.keyboard.press('Escape')
     await expect(trigger).toBeFocused()
     await expect(page.locator(ticketSelectors.detailPanel)).not.toBeVisible()
@@ -186,6 +235,27 @@ baseUrl = false
     await page.goto(`/prj/${fixture.project.key}`)
     const card = page.locator(boardSelectors.ticketByCode(ticket.code))
     await expect(card.locator(externalReferenceSelectors.link)).toHaveCount(4)
+    const wrapped = card.getByRole('group', { name: 'github references (gh)', exact: true }).locator(externalReferenceSelectors.link)
+    await expect(wrapped).toHaveCount(3)
+    const hitChecks = await wrapped.evaluateAll(expandedReferenceHitChecks)
+    await test.info().attach('wrapped-link-hit-boundaries', { body: JSON.stringify(hitChecks), contentType: 'application/json' })
+    expect(hitChecks.map(({ top, bottom }) => ({ top, bottom }))).toEqual(Array.from({ length: 3 }, () => ({ top: true, bottom: true })))
+    const firstBounds = (await wrapped.nth(0).boundingBox())!
+    const secondBounds = (await wrapped.nth(1).boundingBox())!
+    expect(secondBounds.y).toBeGreaterThan(firstBounds.y + firstBounds.height)
+    expect(Math.min(firstBounds.x + firstBounds.width, secondBounds.x + secondBounds.width)).toBeGreaterThan(Math.max(firstBounds.x, secondBounds.x))
+    await page.context().route('https://github.example.test/**', route => route.fulfill({ body: '<h1>External issue</h1>', contentType: 'text/html' }))
+    for (const [index, edge] of [[0, 'bottom'], [1, 'top']] as const) {
+      const bounds = (await wrapped.nth(index).boundingBox())!
+      const extension = (Math.max(24, bounds.height) - bounds.height) / 2
+      const y = edge === 'bottom' ? bounds.y + bounds.height + extension - 1 : bounds.y - extension + 1
+      const popup = page.waitForEvent('popup')
+      await page.mouse.click(bounds.x + bounds.width / 2, y)
+      const opened = await popup
+      await expect(opened).toHaveURL(`https://github.example.test/acme/${repository}/issues/${42 + index}`)
+      await opened.close()
+      await expect(page.locator(ticketSelectors.detailPanel)).not.toBeVisible()
+    }
     const trigger = card.locator(externalReferenceSelectors.detailsTrigger)
     await expect(trigger).toHaveText('+3')
     await trigger.click()
@@ -253,6 +323,9 @@ test('MDT-252 compact/light and comfortable/dark retain targets, contrast and ch
       return { jira: { width: jira.width, height: jira.height }, related: { width: related.width, height: related.height } }
     })
     await testInfo.attach(`icon-sizes-${theme}-${size}`, { body: JSON.stringify(iconSizes), contentType: 'application/json' })
+    const boardGeometry = await card.evaluate(badgeGeometry)
+    await testInfo.attach(`board-badge-geometry-${theme}-${size}`, { body: JSON.stringify(boardGeometry), contentType: 'application/json' })
+    expect(boardGeometry.external).toEqual(boardGeometry.related)
     expect(iconSizes.jira.width).toBeGreaterThanOrEqual(iconSizes.related.width)
     expect(iconSizes.jira.height).toBeGreaterThanOrEqual(iconSizes.related.height)
     expect(iconSizes.jira.width).toBeCloseTo(iconSizes.jira.height)
@@ -273,10 +346,18 @@ test('MDT-252 compact/light and comfortable/dark retain targets, contrast and ch
       }
       const text = luminance(computed.color)
       const background = luminance(getComputedStyle(element.closest('[data-external-reference]')!).backgroundColor)
-      return { width: rect.width, height: rect.height, font: Number.parseFloat(computed.fontSize), contrast: (Math.max(text, background) + 0.05) / (Math.min(text, background) + 0.05) }
+      const hitHeight = Math.max(24, rect.height)
+      const extension = (hitHeight - rect.height) / 2
+      const hitsLink = (y: number) => {
+        const target = document.elementFromPoint(rect.x + rect.width / 2, y)
+        return target === element || (target !== null && element.contains(target))
+      }
+      return { width: rect.width, hitHeight, hitTop: hitsLink(rect.top - extension + 0.25), hitBottom: hitsLink(rect.bottom + extension - 0.25), font: Number.parseFloat(computed.fontSize), contrast: (Math.max(text, background) + 0.05) / (Math.min(text, background) + 0.05) }
     })
     expect(style.width).toBeGreaterThanOrEqual(24)
-    expect(style.height).toBeGreaterThanOrEqual(24)
+    expect(style.hitHeight).toBeGreaterThanOrEqual(24)
+    expect(style.hitTop).toBe(true)
+    expect(style.hitBottom).toBe(true)
     expect(style.font).toBeGreaterThanOrEqual(11)
     expect(style.contrast).toBeGreaterThanOrEqual(4.5)
     await card.screenshot({ path: testInfo.outputPath(`external-reference-${theme}-${size}.png`) })
@@ -290,6 +371,9 @@ test('MDT-252 compact/light and comfortable/dark retain targets, contrast and ch
     await expect(trigger).toBeFocused()
     await card.click()
     const viewer = page.locator(ticketSelectors.detailPanel)
+    const viewerGeometry = await viewer.evaluate(badgeGeometry)
+    await testInfo.attach(`viewer-badge-geometry-${theme}-${size}`, { body: JSON.stringify(viewerGeometry), contentType: 'application/json' })
+    expect(viewerGeometry.external).toEqual(viewerGeometry.related)
     const viewerTrigger = viewer.locator(externalReferenceSelectors.detailsTrigger)
     await viewerTrigger.click()
     await page.keyboard.press('Escape')
@@ -327,6 +411,18 @@ test('MDT-252 style guide renders agreed badge flow in both themes', async ({ pa
   await expect(details.locator('.external-reference__link')).toHaveText(['126', '127'])
   await expect(details.locator('.external-reference__link').first()).toHaveAttribute('title', /work:PRJ-126/)
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
+  await details.locator('summary').click()
+  const narrowContainer = section.locator('.external-reference-demo__attributes').last()
+  // Constrain only the parent: shared badge CSS must supply wrap clearance.
+  await narrowContainer.evaluate(element => (element.style.inlineSize = '80px'))
+  const group = narrowContainer.locator('.external-reference').first()
+  await group.scrollIntoViewIfNeeded()
+  const inline = group.locator(':scope > a.external-reference__link')
+  await expect(inline).toHaveCount(3)
+  const hits = await inline.evaluateAll(expandedReferenceHitChecks)
+  await testInfo.attach('styleguide-wrapped-hit-boundaries', { body: JSON.stringify(hits), contentType: 'application/json' })
+  expect(new Set(hits.map(hit => hit.y)).size).toBeGreaterThan(1)
+  expect(hits.map(({ top, bottom }) => ({ top, bottom }))).toEqual(Array.from({ length: 3 }, () => ({ top: true, bottom: true })))
 })
 
 
@@ -344,7 +440,10 @@ test('MDT-252 live absent/add/replace/clear updates board, search and viewer wit
   expect((await request.patch(api, { data: { refs: [jiraRef] } })).ok()).toBe(true)
   await expect(card.locator(externalReferenceSelectors.link)).toHaveAttribute('href', `https://jira.example.test/jira/browse/PRJ-${issue}`)
   await page.keyboard.press(`${process.platform === 'darwin' ? 'Meta' : 'Control'}+k`)
+  await expect(page.locator(quickSearchSelectors.input)).toBeFocused()
+  await expect(page.locator(quickSearchSelectors.input)).toHaveValue('')
   await page.locator(quickSearchSelectors.input).fill(jiraRef)
+  await expect(page.locator(quickSearchSelectors.input)).toHaveValue(jiraRef)
   await expect(page.locator(quickSearchSelectors.results).locator(externalReferenceSelectors.link)).toHaveAttribute('href', `https://jira.example.test/jira/browse/PRJ-${issue}`)
   await page.keyboard.press('Escape')
   await card.click()
@@ -355,7 +454,10 @@ test('MDT-252 live absent/add/replace/clear updates board, search and viewer wit
   await expect(card.locator(externalReferenceSelectors.link)).toHaveAttribute('href', `https://github.example.test/acme/widgets/issues/${issue}`)
   await page.keyboard.press('Escape')
   await page.keyboard.press(`${process.platform === 'darwin' ? 'Meta' : 'Control'}+k`)
+  await expect(page.locator(quickSearchSelectors.input)).toBeFocused()
+  await expect(page.locator(quickSearchSelectors.input)).toHaveValue('')
   await page.locator(quickSearchSelectors.input).fill(jiraRef)
+  await expect(page.locator(quickSearchSelectors.input)).toHaveValue(jiraRef)
   await expect(page.locator(quickSearchSelectors.noResults)).toBeVisible()
   await page.locator(quickSearchSelectors.input).fill(`#${issue}`)
   const results = page.locator(quickSearchSelectors.results)

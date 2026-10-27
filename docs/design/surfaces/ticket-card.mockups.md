@@ -2,7 +2,7 @@
 
 Related specs: [Ticket Card](ticket-card.spec.md), [External Reference Badges](external-reference-badge.spec.md).
 
-`icon="jira"` denotes the supplied [Jira SVG](../../../frontend/public/icons/trackers/jira.svg), sized by `--sz-icon` (16px). Wireloom renders a symbolic icon slot; the [HTML styleguide](../../../frontend/src/styleguide.html#external-reference-badges) shows the actual blue tile and white mark. Other glyphs retain their existing sizing.
+`icon="jira"` denotes the supplied [Jira SVG](../../../frontend/public/icons/trackers/jira.svg), sized by `--sz-icon` (16px). Wireloom renders a symbolic icon slot; the [HTML styleguide](../../../frontend/src/styleguide.html#external-reference-badges) shows the actual blue tile and white mark. Other glyphs retain their existing sizing. The pill uses the shared badge metrics, matching Related in board and ticket views; 24px click areas extend invisibly without increasing visible height.
 
 ## Default grouped Jira references
 

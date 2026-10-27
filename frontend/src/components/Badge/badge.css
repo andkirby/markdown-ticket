@@ -17,21 +17,13 @@
 
 @layer components {
   .badge[data-external-reference] {
-    display: inline-flex;
     flex-wrap: wrap;
-    align-items: center;
-    gap: var(--gap-xs);
-    min-inline-size: 24px;
-    min-block-size: 24px;
+    /* Keep wrapped 24px targets separate, including hit-test pixel rounding.
+       Row spacing adds no height to a single-line badge. */
+    row-gap: calc(var(--gap-sm) + var(--gap-xs));
     max-inline-size: 100%;
-    padding-block: calc(var(--gap-xs) / 2);
-    padding-inline: calc(var(--gap-xs) * 1.5);
-    border: 0;
-    border-radius: var(--radius-xs);
     background: var(--bg-muted);
     color: var(--primary-text);
-    font-size: clamp(11px, var(--fs-xs), 2rem);
-    line-height: 1.4;
     text-decoration: none;
   }
   .external-reference__link[data-reference-state="unavailable"] {
@@ -39,11 +31,11 @@
   }
   .external-reference__link,
   .external-reference__more {
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     min-inline-size: 24px;
-    min-block-size: 24px;
     max-inline-size: 100%;
     border: 0;
     border-radius: var(--radius-xs);
@@ -52,6 +44,15 @@
     font-size: inherit;
     line-height: inherit;
     text-decoration: none;
+  }
+  /* Match the shared badge's visual height. Expand hit areas vertically,
+     without reaching into adjacent keys, as badge-action does below. */
+  a.external-reference__link::after,
+  .external-reference__more::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    inset-block: min(0px, calc((100% - 24px) / 2));
   }
   .external-reference__key {
     min-inline-size: 0;
