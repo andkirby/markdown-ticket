@@ -19,7 +19,7 @@ ExternalReferenceBadges
 
 Use neutral `.badge` chrome and existing primary link-text color; vendor icons distinguish providers without provider-specific badge palettes. Unavailable refs use neutral text plus a visible unavailable marker. Preserve `.ticket-key` typography without routing through local TicketCode/SmartLink normalization.
 
-Jira uses the user-supplied blue tile/white mark SVG asset at `frontend/public/icons/trackers/jira.svg`, rendered decoratively by `TrackerIcon`. The badge background and link text continue to use shared theme tokens.
+Jira uses the user-supplied blue tile/white mark SVG asset at `frontend/public/icons/trackers/jira.svg`, rendered decoratively by `TrackerIcon`. Its inset artwork uses the standard `--sz-icon` slot (16px), rather than font-cap sizing, to stay legible beside other badge glyphs at every density. The badge background and link text continue to use shared theme tokens.
 
 ## Labels and configured shortening
 

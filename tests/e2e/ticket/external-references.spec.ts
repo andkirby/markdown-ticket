@@ -223,9 +223,11 @@ test('MDT-252 preference migration preserves selections and subsequent opt-out',
   await expect(card.locator(externalReferenceSelectors.link)).toHaveCount(0)
 })
 
-test('MDT-252 compact/light and comfortable/dark retain targets, contrast and chrome type', async ({ page, e2eContext }, testInfo) => {
+test('MDT-252 compact/light and comfortable/dark retain targets, contrast and chrome type', async ({ page, request, e2eContext }, testInfo) => {
   const fixture = await createExternalReferenceProject(e2eContext)
   const ticket = await fixture.ticket('Reference appearance verification', ['work:PRJ-123', 'gh:acme/widgets#42', 'legacy:OPS-7'])
+  const related = await fixture.ticket('Related icon size baseline', [])
+  expect((await request.patch(`${e2eContext.backendUrl}/api/projects/${fixture.project.key}/crs/${ticket.code}`, { data: { relatedTickets: [related.code] } })).ok()).toBe(true)
   let panelFont: number | undefined
   for (const [size, space, theme] of [['compact', 'tight', 'light'], ['comfortable', 'relaxed', 'dark']]) {
     await page.addInitScript(({ size, space, theme }) => {
@@ -241,6 +243,19 @@ test('MDT-252 compact/light and comfortable/dark retain targets, contrast and ch
     const card = page.locator(boardSelectors.ticketByCode(ticket.code))
     const link = card.locator(externalReferenceSelectors.link).first()
     await expect(link).toBeVisible()
+    await expect.poll(() => card.evaluate(element => {
+      const icon = element.querySelector<HTMLImageElement>('img.external-reference__icon')
+      return Boolean(icon?.complete && icon.naturalWidth > 0)
+    })).toBe(true)
+    const iconSizes = await card.evaluate(element => {
+      const jira = element.querySelector('img.external-reference__icon')!.getBoundingClientRect()
+      const related = element.querySelector('[data-relationship="related"] .badge__icon')!.getBoundingClientRect()
+      return { jira: { width: jira.width, height: jira.height }, related: { width: related.width, height: related.height } }
+    })
+    await testInfo.attach(`icon-sizes-${theme}-${size}`, { body: JSON.stringify(iconSizes), contentType: 'application/json' })
+    expect(iconSizes.jira.width).toBeGreaterThanOrEqual(iconSizes.related.width)
+    expect(iconSizes.jira.height).toBeGreaterThanOrEqual(iconSizes.related.height)
+    expect(iconSizes.jira.width).toBeCloseTo(iconSizes.jira.height)
     const style = await link.evaluate(element => {
       const rect = element.getBoundingClientRect()
       const computed = getComputedStyle(element)

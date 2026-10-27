@@ -69,6 +69,12 @@
     inline-size: 1.35cap;
     block-size: 1.35cap;
   }
+  /* The Jira tile includes inset artwork; use the standard icon slot so its
+     mark stays legible beside line icons at every content density. */
+  img.external-reference__icon {
+    inline-size: var(--sz-icon);
+    block-size: var(--sz-icon);
+  }
   .external-reference__more {
     justify-content: center;
     cursor: pointer;
