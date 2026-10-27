@@ -2,7 +2,7 @@
 
 Related spec: `ticket-viewer.spec.md`
 
-The side reading pane (MDT-248) is not drawn here — its states have their own file: `ticket-side-doc.mockups.md`. The closed-pane state is this file unchanged.
+The side reading pane (MDT-248) is not drawn here — its states have their own file: `ticket-side-doc.mockups.md`. The closed-pane state uses the same shell below. External-reference groups follow the [shared badge mockups](external-reference-badge.mockups.md), including the supplied 16px Jira SVG; Wireloom uses a symbolic named icon slot.
 
 ## Default State (Ticket with Sub-Documents)
 
@@ -22,7 +22,8 @@ window "Ticket Viewer — With Sub-Docs":
     row:
       chip "Assignee:Bob" id="tv-assignee"
       chip "🪾 Worktree" id="tv-worktree"
-      chip "Related:3" id="tv-related"
+      chip "003" icon="link" id="tv-related"
+      chip "95 59 68 ↗" icon="jira" id="tv-external-refs"
       spacer
       button "Trace Graph" icon="tech" id="tv-trace-action"
     divider
@@ -54,6 +55,8 @@ annotation "RelativeTimestamp, absolute right-4 top-4" target="tv-timestamp" pos
 annotation "ToC: collapsible sidebar" target="tv-toc-1" position=left
 annotation "Markdown body uses markdown-content.spec.md ticket variant" target="tv-h2" position=right
 ```
+
+The Jira group above shows three individually clickable short keys and no redundant dropdown. Viewer refs stay visible when board badges are hidden. Longer instance groups use the shared hidden-only +N pattern; unavailable refs retain non-navigating explanations.
 
 ## No Sub-Documents (Main Content Only)
 

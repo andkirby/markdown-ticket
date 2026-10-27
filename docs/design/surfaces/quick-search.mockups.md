@@ -3,7 +3,7 @@
 Related spec: `quick-search.spec.md`
 Related interactions: `quick-search.interactions.md`
 
-These mockups show the review states for the durable Quick Search contract. Small hover-only or color-only differences belong in the spec state tables, not as separate full-window examples.
+These mockups show the review states for the durable Quick Search contract. Small hover-only or color-only differences belong in the spec state tables, not as separate full-window examples. External-reference chips follow the shared [badge mockups](external-reference-badge.mockups.md): one icon per instance, three short keys and hidden-only +N overflow. Jira uses the supplied 16px SVG; Wireloom shows a symbolic named icon slot. Search badges remain visible independently of board preferences.
 
 ## All Scope
 
@@ -18,7 +18,8 @@ window "Quick Search - All Scope":
     divider
     section "Current Project":
       list:
-        slot "MDT-179   Add scoped global search" active id="ticket-result"
+        slot "MDT-179   Add scoped global search" active id="ticket-result":
+          chip "95 59 68 ↗" icon="jira"
         item "MDT-176   Auth session unlock"
     section "Projects":
       list:
@@ -43,7 +44,8 @@ window "Quick Search - Tickets Scope":
     divider
     section "Current Project":
       list:
-        slot "MDT-140   Badge color update" active id="ticket-selected"
+        slot "MDT-140   Badge color update" active id="ticket-selected":
+          chip "123 124 125 ↗ +2" icon="jira"
         item "MDT-142   Update badge styles"
         item "MDT-155   Badge hover states"
 
@@ -85,15 +87,17 @@ window "Quick Search - Ticket Key Lookup":
     text "Searching: ABC-42" muted id="mode-badge"
     section "Cross-Project Results":
       list:
-        slot "ABC-42   Auth service refactor" active id="cross-ticket":
-          text "ABC   Another Project" muted size=small
-    section "Current Project":
-      list:
-        item "MDT-042   Local ticket with matching number"
+        slot "ABC-042   Auth service refactor" active id="cross-ticket":
+          text "ABC   Another Project · Local key" muted size=small
+        slot "MDT-042   Linked auth work":
+          text "MDT   Current Project · External reference" muted size=small
+          chip "42 ↗" icon="jira"
 
 annotation "Ticket-key syntax is an accelerator inside the visible scope model." target="mode-badge" position=right
 annotation "Cross-project ticket rows include project context." target="cross-ticket" position=right
 ```
+
+The key-shaped results above share one ranked, deduplicated result list: MDT-042 is present because it stores `work:ABC-42`, not merely because its local number is 42. Reference links retain full identities in native tooltips/accessible names and isolate local row selection. The selected Tickets-scope +2 above contains only hidden short keys 126 and 127.
 
 ## Remote Loading And Error
 

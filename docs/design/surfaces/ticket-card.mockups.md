@@ -2,6 +2,8 @@
 
 Related specs: [Ticket Card](ticket-card.spec.md), [External Reference Badges](external-reference-badge.spec.md).
 
+`icon="jira"` denotes the supplied [Jira SVG](../../../frontend/public/icons/trackers/jira.svg), sized by `--sz-icon` (16px). Wireloom renders a symbolic icon slot; the [HTML styleguide](../../../frontend/src/styleguide.html#external-reference-badges) shows the actual blue tile and white mark. Other glyphs retain their existing sizing.
+
 ## Default grouped Jira references
 
 ```wireloom
@@ -14,7 +16,7 @@ window "Ticket card":
       text "Make sample data reproducible for frontend integration" bold
       row:
         chip "↔ 003"
-        chip "◈ 95 68 ↗"
+        chip "95 68 ↗" icon="jira"
 ```
 
 One Jira icon and two independent short links share a badge. No dropdown when all resolved refs fit. The existing wrapping region also holds internal relationships and worktree metadata.
@@ -31,8 +33,8 @@ window "Grouped reference overflow":
       text "External issue tracker links" bold
       row:
         chip "In Progress"
-        chip "◈ work: 123 124 125 ↗ +2"
-        chip "◈ client: 123 ↗"
+        chip "work: 123 124 125 ↗ +2" icon="jira"
+        chip "client: 123 ↗" icon="jira"
       divider
       text "External references" bold
       button "126 ↗"
