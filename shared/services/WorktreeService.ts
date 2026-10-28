@@ -17,9 +17,10 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import { promisify } from 'node:util'
 
-import { PROJECT_CODE_PATTERN_BODY, TICKET_NUMBER_MAX_DIGITS, TICKET_NUMBER_MIN_DIGITS, WorktreeConfigSchema } from '@mdt/domain-contracts'
+import { TICKET_KEY_PATTERN_BODY, WorktreeConfigSchema } from '@mdt/domain-contracts'
 
 const execFileAsync = promisify(execFile)
+const BRANCH_TICKET_PATTERN = new RegExp(`(?:^|/)(${TICKET_KEY_PATTERN_BODY})(?:-[^/]+)?$`)
 
 /**
  * Result type for worktree detection operations.
@@ -60,10 +61,9 @@ export interface WorktreeServiceOptions {
 /**
  * Service for detecting and managing git worktrees for ticket-based development.
  *
- * Walking Skeleton Implementation:
- * - Interface stubs only (no actual git execution)
- * - Type-safe method signatures
- * - Cache management structure
+ * Executes Git discovery and caches branch-to-ticket mappings. Consumers use
+ * this owner for branch identity and ticket routing; watcher subscription
+ * metadata remains in the backend watcher adapter.
  *
  * @example
  * ```ts
@@ -188,7 +188,7 @@ export class WorktreeService {
         // Store previous worktree if we have both path and branch
         if (currentWorktreePath && currentBranch) {
           const ticketCode = this.extractTicketCode(currentBranch)
-          if (ticketCode && ticketCode.startsWith(projectCode)) {
+          if (ticketCode && ticketCode.startsWith(`${projectCode}-`)) {
             // First worktree wins for duplicate ticket codes (BR-8 edge case)
             if (!mapping.has(ticketCode)) {
               mapping.set(ticketCode, currentWorktreePath)
@@ -208,7 +208,7 @@ export class WorktreeService {
     // Process last worktree entry
     if (currentWorktreePath && currentBranch) {
       const ticketCode = this.extractTicketCode(currentBranch)
-      if (ticketCode && ticketCode.startsWith(projectCode)) {
+      if (ticketCode && ticketCode.startsWith(`${projectCode}-`)) {
         if (!mapping.has(ticketCode)) {
           mapping.set(ticketCode, currentWorktreePath)
         }
@@ -228,9 +228,8 @@ export class WorktreeService {
    *
    * @param branch - Full branch ref (e.g., refs/heads/feature/MDT-095)
    * @returns Ticket code if found, otherwise null
-   * @internal
    */
-  private extractTicketCode(branch: string): string | null {
+  extractTicketCode(branch: string): string | null {
     // Remove refs/heads/ prefix
     const branchName = branch.replace(/^refs\/heads\//, '')
 
@@ -239,10 +238,7 @@ export class WorktreeService {
     // prefix from truncating into a different project's key ("ABCDEF-001"
     // must not yield "BCDEF-001"). Digits bounded by the canonical
     // ticket-number contract (MDT-254).
-    const branchTicketCodePattern = new RegExp(
-      `(?:^|\\/)(${PROJECT_CODE_PATTERN_BODY}-\\d{${TICKET_NUMBER_MIN_DIGITS},${TICKET_NUMBER_MAX_DIGITS}})$`,
-    )
-    const match = branchName.match(branchTicketCodePattern)
+    const match = branchName.match(BRANCH_TICKET_PATTERN)
     return match ? match[1] : null
   }
 

@@ -18,6 +18,23 @@ Project identity belongs to the canonical checkout. Linked Git worktrees must no
 
 Ticket operations may still route into active ticket worktrees.
 
+`WorktreeService.extractTicketCode` owns branch identity for both Git worktree
+discovery and live HEAD watching. A final branch segment may be a canonical
+ticket key, optionally followed by a dash and descriptive slug; preceding
+segments such as `feature/` are allowed. Matching uses the domain-contracts
+key body and the exact project code followed by a dash. Invalid prefixes and
+six-digit numbers cannot be truncated into another ticket.
+
+HEAD watchers read the worktree root from the parent of the Git `gitdir` file's
+target. They retain HEAD-path-to-ticket mappings for both startup worktrees and
+new additions so removal does not depend on the worktree directory's name.
+When multiple worktrees name the same ticket, discovery retains the first root.
+HEAD identity is retained only for that selected root; an unselected duplicate
+cannot announce a different root or close the active watcher on removal.
+When metadata is temporarily absent, fallback discovery may find a selected
+root; its own .git pointer must establish the associated HEAD. Ticket identity
+alone does not establish which duplicate HEAD owns that root.
+
 Documents view uses the canonical project path unless a future feature explicitly designs document previews from a selected worktree.
 
 ## Definitions
@@ -212,3 +229,20 @@ Cover these cases:
 5. Ticket list still includes branch-matched worktree-only tickets.
 6. Document tree reads canonical project documents after ticket worktree detection runs.
 7. `getAllProjects(true)` applies the same linked-worktree filtering as startup.
+
+## Watcher operation lifetimes
+
+HEAD ownership refers to the selected subscription entry, not only a ticket
+key. Project/global lifetimes and per-HEAD discovery identities prevent pending
+Git results or queued old callbacks from restoring detached subscriptions.
+Removing a selected ticket invalidates its pending duplicate discoveries too.
+
+Shutdown detaches only its own watcher entries and metadata before awaiting
+close. A new generation can provision the same project or ticket during that
+await; old cleanup cannot remove it. Exclusion state is released with ownership.
+
+Git backlinks may be absolute or relative. Resolve a gitdir file target against
+that metadata file's directory before deriving the worktree root; resolve the
+worktree's own .git pointer against the worktree root. Both reads belong to the
+watcher subscription adapter, while application ticket routing stays in
+WorktreeService.

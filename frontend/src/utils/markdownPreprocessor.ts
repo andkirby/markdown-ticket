@@ -1,4 +1,5 @@
 import { buildDocumentPathWithAnchor, buildTicketPath, buildTicketSubDocPath } from '../routes'
+import { TICKET_FILENAME_PATTERN, TICKET_KEY_PATTERN_BODY, TICKET_KEY_PREFIX_PATTERN, TICKET_SOURCE_PATTERN, TICKET_SUBDOC_PATTERN, TICKET_TOKEN_PATTERN } from './ticketKeyPatterns'
 
 interface PreprocessorState {
   linkPlaceholders: string[]
@@ -6,10 +7,10 @@ interface PreprocessorState {
   inlineCodePlaceholders: string[]
 }
 
-const DOCUMENT_REFERENCE_PATTERN = /(^|[\s([{<])((?:[\w.-]+\/)*\w[\w.-]*\.md(?:#[A-Za-z0-9][\w.~:/?#[\]@!$&'()*+,;=%-]*)?)(?=$|[\s)\]},>.;:!?'’"])/g
+const DOCUMENT_REFERENCE_PATTERN = /(^|[\s([{<])((?:[\w.-]+\/)*\w[\w.-]*\.(?:md|html)(?:#[A-Za-z0-9][\w.~:/?#[\]@!$&'()*+,;=%-]*)?)(?=$|[\s)\]},>.;:!?'’"])/g
 
-function isRelativeMarkdownHref(href: string): boolean {
-  if (!/\.md(?:#[^\s)]*)?$/.test(href)) {
+function isRelativeDocumentHref(href: string): boolean {
+  if (!/\.(?:md|html)(?:#[^\s)]*)?$/.test(href)) {
     return false
   }
 
@@ -117,14 +118,14 @@ function isWholeSpanDocumentReference(content: string): boolean {
   }
   // .html documents render in the viewer too; the anchored regex already
   // rejects schemes, leading '/', and multi-word command spans.
-  if (content.endsWith('.html')) {
+  if (/\.html(?:#.*)?$/.test(content)) {
     return true
   }
   // Percent-encoded spans decode to their real path before resolution (C4)
   if (content.includes('%')) {
     return true
   }
-  return isRelativeMarkdownHref(content)
+  return isRelativeDocumentHref(content)
 }
 
 /** Best-effort percent-decoding that never throws and never double-decodes. */
@@ -298,7 +299,7 @@ function protectExistingLinks(markdown: string, state: PreprocessorState, source
     // UAT 2026-07-21 (BR-5): engage when sourcePath+projectCode present,
     // regardless of ticketKey — documents-view mode uses sourcePath without ticketKey.
     let resolvedHref = href
-    if (sourcePath && projectCode && isRelativeMarkdownHref(href)) {
+    if (sourcePath && projectCode && isRelativeDocumentHref(href)) {
       resolvedHref = resolveDocumentRef(href, sourcePath, ticketKey, projectCode, ticketsPath)
     }
     const resolvedMatch = resolvedHref !== href ? `[${text}](${resolvedHref})` : match
@@ -312,10 +313,10 @@ function protectExistingLinks(markdown: string, state: PreprocessorState, source
  * Converts ticket references to markdown links with absolute URLs
  */
 function convertTicketReferences(markdown: string, currentProject: string): string {
-  const projectPattern = new RegExp(`\\b(${currentProject}-\\d+)\\b`, 'g')
   // Use absolute URLs to prevent Showdown.js from resolving relative to current page
   // Ensure the URLs are explicitly absolute to avoid any relative resolution issues
-  return markdown.replace(projectPattern, (_, ticketRef) => `[${ticketRef}](${buildTicketPath(currentProject, ticketRef)})`)
+  return markdown.replace(TICKET_TOKEN_PATTERN, (match, ticketRef: string) =>
+    ticketRef.startsWith(`${currentProject}-`) ? `[${ticketRef}](${buildTicketPath(currentProject, ticketRef)})` : match)
 }
 
 /**
@@ -340,11 +341,11 @@ function classifyTicketsAreaPath(
     return null
   }
   const rest = resolvedPath.slice(area.length + 1)
-  const ticketDocMatch = rest.match(/^([A-Z]+-\d+)(?:-[^/]*)?\.md$/)
+  const ticketDocMatch = rest.match(TICKET_FILENAME_PATTERN)
   if (ticketDocMatch) {
     return buildTicketPath(projectCode, ticketDocMatch[1], anchor)
   }
-  const subdocMatch = rest.match(/^([A-Z]+-\d+)\/(.+\.(?:md|html))$/)
+  const subdocMatch = rest.match(TICKET_SUBDOC_PATTERN)
   if (subdocMatch) {
     return buildTicketSubDocPath(projectCode, subdocMatch[1], subdocMatch[2], anchor)
   }
@@ -380,7 +381,7 @@ function resolveRelativePath(sourceDir: string, relativePath: string): string {
  * (project-relative, e.g. "docs/architecture/aaaa.md") when the source
  * document is being viewed in the documents view rather than a ticket.
  * Detection rule: sourcePath NOT starting with a ticket-key prefix
- * ("^[A-Z]+-\\d+/") is treated as documents-view mode. In documents mode
+ * (a canonical ticket key followed by "/") is treated as documents-view mode. In documents mode
  * all .md refs (bare and ..-relative) resolve against the source document's
  * directory and route to the documents view, never to a ticket subdoc URL.
  *
@@ -428,7 +429,7 @@ function resolveDocumentRef(
   // Detection: sourcePath is NOT a ticket-relative path. Ticket-relative forms are:
   //   - subdoc:   "MDT-150/requirements.md"  (ticket key + "/" + path)
   //   - main doc: "MDT-150.md"               (ticket key + ".md")
-  if (!/^[A-Z]+-\d+(?:\/|\.md$)/.test(sourcePath)) {
+  if (!TICKET_SOURCE_PATTERN.test(sourcePath)) {
     const sourceDir = sourcePath.includes('/') ? sourcePath.substring(0, sourcePath.lastIndexOf('/')) : ''
     const resolvedPath = resolveRelativePath(sourceDir, pathPart)
 
@@ -445,7 +446,7 @@ function resolveDocumentRef(
     // the ticket — the same rule ticket-context mode applies and the same
     // target plain-text ticket keys already link to (convertTicketReferences).
     if (!pathPart.includes('/')) {
-      const bareTicketMatch = pathPart.match(/^([A-Z]+-\d+)(?:-[^/]*?)?\.md$/)
+      const bareTicketMatch = pathPart.match(TICKET_FILENAME_PATTERN)
       if (bareTicketMatch) {
         return buildTicketPath(projectCode, bareTicketMatch[1], anchor)
       }
@@ -461,7 +462,7 @@ function resolveDocumentRef(
   }
 
   // 1. Ticket key pattern (bare: MDT-151, with .md: MDT-151.md, with suffix: MDT-150-smartlink-doc-urls.md)
-  const ticketKeyMatch = pathPart.match(/^([A-Z]+-\d+)(?:-[^/]*?)?\.md$/)
+  const ticketKeyMatch = pathPart.match(TICKET_FILENAME_PATTERN)
   if (ticketKeyMatch) {
     return buildTicketPath(projectCode, ticketKeyMatch[1], anchor)
   }
@@ -484,8 +485,7 @@ function resolveDocumentRef(
 
   // Check if resolved path is a ticket-key .md file at the tickets level
   // e.g., "MDT-150-smartlink-doc-urls.md" or "MDT-151.md"
-  // eslint-disable-next-line regexp/no-super-linear-backtracking, regexp/optimal-quantifier-concatenation
-  const resolvedTicketMatch = resolvedPath.match(/^([A-Z]+-\d+)[^/]*\.md$/)
+  const resolvedTicketMatch = resolvedPath.match(TICKET_FILENAME_PATTERN)
   if (resolvedTicketMatch) {
     return buildTicketPath(projectCode, resolvedTicketMatch[1], anchor)
   }
@@ -506,7 +506,7 @@ function resolveDocumentRef(
   // directory (e.g. "../GPDE-012/research.md" resolving to "GPDE-012/research.md"
   // relative to the tickets area) names that ticket's subdoc — never a
   // documents-view path.
-  const otherTicketSubdocMatch = resolvedPath.match(/^([A-Z]+-\d+)\/(.+\.(?:md|html))$/)
+  const otherTicketSubdocMatch = resolvedPath.match(TICKET_SUBDOC_PATTERN)
   if (otherTicketSubdocMatch) {
     return buildTicketSubDocPath(projectCode, otherTicketSubdocMatch[1], otherTicketSubdocMatch[2], anchor)
   }
@@ -537,15 +537,10 @@ function resolveDocumentRef(
  */
 function restoreTicketFilenameRef(
   filename: string,
-  ctx: {
-    sourcePath: string
-    ticketKey: string
-    projectCode: string
-    ticketsPath: string
-    enableDocumentLinks: boolean
-    fileExists?: (projectRelPath: string) => boolean | null
-  },
+  ctx: InlineCodeContext & { sourcePath: string, projectCode: string, ticketsPath: string },
 ): string {
+  if (!ctx.ticketKey && !ctx.enableDocumentLinks)
+    return filename
   // The anchor may itself contain '/' (#foo/bar) — split it off before
   // locating the last path separator so the basename never lands mid-anchor.
   const anchorIdxRaw = filename.indexOf('#')
@@ -565,6 +560,12 @@ function restoreTicketFilenameRef(
     ) {
       return `[${filename}](${buildDocumentPathWithAnchor(ctx.projectCode, pathPart, anchor)})`
     }
+  }
+
+  if (!ctx.ticketKey) {
+    const relative = resolveDocumentRef(filename, ctx.sourcePath, undefined, ctx.projectCode, ctx.ticketsPath)
+    const resolved = resolveWithFallback(filename, relative, ctx)
+    return `[${filename}](${resolved})`
   }
 
   const basename = slashIdx >= 0 ? filename.slice(slashIdx + 1) : filename
@@ -623,8 +624,7 @@ function convertDocumentReferences(
 
     // Fallback: simple wrapping (bare filename → relative link)
     // Skip filenames that start with a ticket key pattern (handled by convertTicketReferences)
-    const ticketKeyPattern = /^[A-Z]+-\d.*\.md$/
-    if (ticketKeyPattern.test(filename)) {
+    if (TICKET_FILENAME_PATTERN.test(filename)) {
       return match
     }
     return `${prefix}[${filename}](${filename})`
@@ -695,7 +695,7 @@ export function preprocessMarkdown(
 
   try {
     // Extract ticketKey from sourcePath for resolution
-    const extractedTicketKey = sourcePath?.match(/^([A-Z]+-\d+)/)?.[1]
+    const extractedTicketKey = sourcePath?.match(TICKET_KEY_PREFIX_PATTERN)?.[1]
 
     // Construct full source path relative to project root
     // sourcePath is relative to ticketsPath (e.g., "MDT-150/requirements.md")
@@ -716,14 +716,15 @@ export function preprocessMarkdown(
     })
     processed = normalizeNestedListIndentation(processed)
 
-    // Step 1.5: Protect ALL ticket-key .md filenames from partial ticket conversion
+    // Step 1.5: Protect whole ticket-key document filenames from partial ticket conversion
     // Must happen BEFORE convertTicketReferences to prevent corruption
-    // Protects both bare ticket-key.md (MDT-151.md) and prefixed ones (MDT-150-smartlink-doc-urls.md)
+    // Covers .md/.html basenames and slugged forms before prose-key conversion.
     // UAT 2026-09-05 (BR-2.6): capture the WHOLE path token — a ticket-key
     // basename inside a path (docs/uat/GPDE-003.md) must never be split from
     // its prefix; restore-time routing decides document vs ticket target.
     const ticketFilenamePlaceholders: string[] = []
-    processed = processed.replace(/\b((?:[\w.%-]+\/)*[A-Z]+-\d\S*\.md(?:#\S+)?)\b/g, (match) => {
+    const ticketFilenamePattern = new RegExp(`(?<![\\w-])((?:[\\w.%-]+/)*${TICKET_KEY_PATTERN_BODY}(?!\\d)\\S*\\.(?:md|html)(?:#\\S+)?)\\b`, 'g')
+    processed = processed.replace(ticketFilenamePattern, (match) => {
       const placeholder = `__TICKET_FILENAME_PLACEHOLDER_${ticketFilenamePlaceholders.length}__`
       ticketFilenamePlaceholders.push(match)
       return placeholder
@@ -745,7 +746,7 @@ export function preprocessMarkdown(
     // keep the legacy rendering (bare basename -> ticket route).
     ticketFilenamePlaceholders.forEach((filename, index) => {
       const placeholder = `__TICKET_FILENAME_PLACEHOLDER_${index}__`
-      if (sourcePath && extractedTicketKey && currentProject) {
+      if (sourcePath && currentProject) {
         processed = safeReplace(processed, placeholder, restoreTicketFilenameRef(filename, {
           sourcePath,
           ticketKey: extractedTicketKey,
@@ -753,6 +754,7 @@ export function preprocessMarkdown(
           ticketsPath: tp,
           enableDocumentLinks: linkConfig.enableDocumentLinks,
           fileExists,
+          findUniqueByBasename,
         }))
       }
       else {

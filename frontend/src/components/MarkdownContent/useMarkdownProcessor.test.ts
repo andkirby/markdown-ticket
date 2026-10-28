@@ -4,61 +4,52 @@
  * These tests verify the markdown-it migration by directly testing the
  * rendering engine output against the obligations from architecture.md.
  *
- * Since useMarkdownProcessor is a React hook, we test the underlying
- * markdown-it configuration and pipeline components directly.
+ * The production hook runs the rendering pipeline. Raw converter tests reuse
+ * its exported factory; sanitation uses the real DOMPurify bound to JSDOM.
  *
  * Covers: OBL-processor-unit-tests, OBL-render-pipeline-swap,
  * OBL-wireframe-fence-plugin, OBL-heading-id-slug-compat,
  * OBL-syntax-highlight-compat, OBL-task-list-plugin
  */
-import { describe, expect, it } from 'bun:test'
-import DOMPurify from 'dompurify'
-import MarkdownIt from 'markdown-it'
-import anchor from 'markdown-it-anchor'
-import { markdownItWireframePlugin } from '../../utils/markdownItWireframePlugin'
+import type { WindowLike } from 'dompurify'
+import { renderHook } from '@testing-library/react'
+import { afterAll, describe, expect, it, mock } from 'bun:test'
+import createDOMPurify from 'dompurify'
+import { JSDOM } from 'jsdom'
 import { processMermaidBlocks } from '../../utils/mermaid'
 import { slugify } from '../../utils/slugify'
 import { highlightCodeBlocks } from '../../utils/syntaxHighlight'
 import { ALLOWED_ATTR, ALLOWED_TAGS } from './domPurifyConfig'
 
-/**
- * Creates a markdown-it instance matching the configuration
- * that useMarkdownProcessor will use (markdown-it + plugins).
- */
-function createProcessorMd(): MarkdownIt {
-  // @ts-expect-error markdown-it-task-lists has no type declarations
-  const taskLists = require('markdown-it-task-lists') // eslint-disable-line ts/no-require-imports
+// DOMPurify requires a supported DOM. Keep React on Happy DOM, but bind the
+// real sanitizer to JSDOM; no sanitizer behavior is stubbed or weakened.
+const sanitizerWindow = new JSDOM('').window
+const DOMPurify = createDOMPurify(sanitizerWindow as unknown as WindowLike)
+mock.module('dompurify', () => ({ default: DOMPurify }))
+mock.module('../../config/linkConfig', () => ({
+  ensureGlobalLinkConfig: () => {},
+  subscribeGlobalLinkConfig: () => () => {},
+  getLinkConfig: () => ({ enableAutoLinking: true, enableTicketLinks: true, enableDocumentLinks: true }),
+}))
+mock.module('../../utils/documentExistenceCache', () => ({
+  ensureDocumentIndex: () => {},
+  subscribeDocumentIndex: () => () => {},
+  getCachedDocumentIndex: () => null,
+}))
+const { createMarkdownConverter, useMarkdownProcessor } = await import('./useMarkdownProcessor')
+afterAll(() => {
+  sanitizerWindow.close()
+  mock.restore()
+})
 
-  // @ts-expect-error markdown-it types don't expose all plugin signatures cleanly
-  const md = new MarkdownIt({
-    html: true,
-    linkify: true,
-    typographer: true,
-  })
-
-  // Enable strikethrough
-  md.enable('strikethrough')
-
-  md.use(markdownItWireframePlugin)
-  md.use(taskLists, { disabled: true })
-  md.use(anchor, { slugify, level: Array.from({ length: 6 }, (_, i) => i + 1) })
-
-  return md
+function createProcessorMd() {
+  return createMarkdownConverter(1)
 }
 
-/**
- * Simulates the full rendering pipeline from useMarkdownProcessor:
- * render → processMermaid → highlight → sanitize
- */
 function renderPipeline(markdown: string): string {
-  const md = createProcessorMd()
-  let html = md.render(markdown)
-  html = processMermaidBlocks(html)
-  html = highlightCodeBlocks(html)
-  html = DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: [...ALLOWED_TAGS],
-    ALLOWED_ATTR: [...ALLOWED_ATTR],
-  })
+  const { result, unmount } = renderHook(() => useMarkdownProcessor(markdown, 'MDT', 1))
+  const html = result.current
+  unmount()
   return html
 }
 

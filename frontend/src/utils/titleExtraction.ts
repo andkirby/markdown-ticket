@@ -1,3 +1,5 @@
+import { TICKET_KEY_PATTERN_BODY } from './ticketKeyPatterns'
+
 /**
  * Title extraction utilities for MDT-064
  * H1 as Single Source of Truth for ticket titles
@@ -40,7 +42,7 @@ function _extractTitleFromFilename(filePath: string): string {
   const filename = filePath.split('/').pop()?.replace(/\.md$/, '') || ''
 
   // Look for pattern: CODE-NUMBER-title
-  const match = filename.match(/^[A-Z]+-\d+-(.+)$/i)
+  const match = filename.match(new RegExp(`^${TICKET_KEY_PATTERN_BODY}-(.+)$`, 'i'))
   if (match) {
     return match[1].replace(/-/g, ' ').trim()
   }

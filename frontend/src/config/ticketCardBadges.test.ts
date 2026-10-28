@@ -49,7 +49,16 @@ describe('ticketCardBadges preference', () => {
     expect(getVisibleTicketCardBadges()).toEqual([
       TicketCardBadge.STATUS,
       TicketCardBadge.BLOCKS,
+      TicketCardBadge.EXTERNAL_REFS,
     ])
+  })
+
+  it('migrates legacy selections once and respects a later external-reference opt-out', () => {
+    localStorage.setItem(TICKET_CARD_BADGE_STORAGE_KEY, JSON.stringify([TicketCardBadge.STATUS]))
+    expect(getVisibleTicketCardBadges()).toEqual([TicketCardBadge.STATUS, TicketCardBadge.EXTERNAL_REFS])
+    setVisibleTicketCardBadges([TicketCardBadge.STATUS])
+    expect(getVisibleTicketCardBadges()).toEqual([TicketCardBadge.STATUS])
+    expect(localStorage.getItem(TICKET_CARD_BADGE_STORAGE_KEY)).toBe('["status"]')
   })
 
   it('falls back to defaults when stored JSON is malformed', () => {

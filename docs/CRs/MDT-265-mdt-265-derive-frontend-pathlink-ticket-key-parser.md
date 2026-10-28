@@ -1,10 +1,12 @@
 ---
 code: MDT-265
 creationId: 08f29404-a67f-4d8d-b022-079a665d12eb
-status: Proposed
+status: Implemented
 dateCreated: 2026-10-27T00:55:58.704Z
 type: Technical Debt
 priority: Medium
+implementationDate: 2026-10-29
+implementationNotes: Canonical ticket-key parsers and context-aware document links; lifetime-safe worktree watcher ownership including duplicate roots and relative Git metadata. Independent architect review accepted; frontend, shared, watcher boundaries, builds, types, scoped lint and configured Knip checks passed.
 ---
 
 # MDT-265 Derive frontend path/link ticket-key parsers from canonical key pattern

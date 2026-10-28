@@ -15,7 +15,7 @@ interface MarkdownContentProps {
    * Source file path for link resolution. Two accepted forms:
    * - Ticket-relative (TicketViewer): path relative to ticketsPath (e.g. "MDT-150/requirements.md")
    * - Project-relative (DocumentsView MarkdownViewer, UAT 2026-07-21): full path from project root (e.g. "docs/architecture/aaaa.md")
-   * The preprocessor detects the form via the ^[A-Z]+-\d+/ prefix.
+   * The preprocessor detects the form via the canonical ticket-key path prefix.
    */
   sourcePath?: string
   /** Tickets path relative to project root (e.g., "docs/CRs") */

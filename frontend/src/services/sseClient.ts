@@ -10,6 +10,7 @@
 
 import type { AccessMode, RequestAccessMode } from '@mdt/domain-contracts'
 import type { SSEMessageData } from './sseSchema'
+import { TICKET_SOURCE_PATTERN } from '../utils/ticketKeyPatterns'
 import { eventBus } from './eventBus'
 import { SSEMessageSchema } from './sseSchema'
 
@@ -298,7 +299,7 @@ class SSEClient {
     let ticketCode: string
     if (subdocument?.filePath) {
       // Subdocument path: "MDT-142/architecture.md" -> "MDT-142"
-      const match = subdocument.filePath.match(/^([A-Z]+-\d+)/)
+      const match = subdocument.filePath.match(TICKET_SOURCE_PATTERN)
       ticketCode = match ? match[1] : filename.replace('.md', '')
     }
     else {

@@ -13,10 +13,14 @@ jest.mock('chokidar', () => {
   }
 })
 
+const mockDetectWorktrees = jest.fn().mockResolvedValue(new Map())
+
 // Mock WorktreeService and getConfigDir
 jest.mock('@mdt/shared/services/WorktreeService.js', () => ({
   WorktreeService: jest.fn().mockImplementation(() => ({
     enabled: true,
+    detect: mockDetectWorktrees,
+    extractTicketCode: jest.requireActual<typeof import('@mdt/shared/services/WorktreeService.js')>('@mdt/shared/services/WorktreeService.js').WorktreeService.prototype.extractTicketCode,
   })),
 }))
 
@@ -26,8 +30,12 @@ jest.mock('@mdt/shared/utils/constants.js', () => ({
 
 // Mock fs module
 const mockExistsSync = jest.fn().mockReturnValue(true)
+const mockReadFileSync = jest.fn()
+const mockReaddirSync = jest.fn().mockReturnValue([])
 jest.mock('node:fs', () => ({
-  existsSync: () => mockExistsSync(),
+  existsSync: (...args: unknown[]) => mockExistsSync(...args),
+  readFileSync: (...args: unknown[]) => mockReadFileSync(...args),
+  readdirSync: () => mockReaddirSync(),
 }))
 
 describe('PathWatcherService', () => {
@@ -35,6 +43,9 @@ describe('PathWatcherService', () => {
   let mockWatcher: any
 
   beforeEach(() => {
+    mockReaddirSync.mockReturnValue([])
+    mockExistsSync.mockReturnValue(true)
+    mockDetectWorktrees.mockReset().mockResolvedValue(new Map())
     service = new PathWatcherService()
     mockWatcher = {
       on: jest.fn().mockReturnThis(),
@@ -49,6 +60,253 @@ describe('PathWatcherService', () => {
   })
 
   describe('Multi-path monitoring (BR-1.1)', () => {
+    it.each(['startup', 'live'])('resolves a relative gitdir backlink during %s discovery', async (mode) => {
+      mockReaddirSync.mockReturnValue(mode === 'startup' ? ['first'] : [])
+      mockReadFileSync.mockImplementation((filePath: string) => filePath.endsWith('/HEAD')
+        ? 'ref: refs/heads/TP0-042'
+        : '../../../../worktrees/first/.git')
+      if (mode === 'startup')
+        service.addWatcher('p', 'TP0-042', '/worktrees/first')
+      const added = jest.fn()
+      const removed = jest.fn()
+      service.on('worktree-added', added)
+      service.on('worktree-removed', removed)
+      service.initWorktreeHeadWatcher('/project', 'p', 'TP0')
+      const onAdd = [...mockWatcher.on.mock.calls].reverse().find((call: [string]) => call[0] === 'add')[1]
+      const onUnlink = [...mockWatcher.on.mock.calls].reverse().find((call: [string]) => call[0] === 'unlink')[1]
+      const headPath = '/project/.git/worktrees/first/HEAD'
+      if (mode === 'live') {
+        onAdd(headPath)
+        expect(added).toHaveBeenCalledWith({ projectId: 'p', ticketCode: 'TP0-042', worktreePath: '/worktrees/first' })
+      }
+      onUnlink(headPath)
+      await new Promise(resolve => setImmediate(resolve))
+      expect(removed).toHaveBeenCalledWith({ projectId: 'p', ticketCode: 'TP0-042' })
+    })
+
+    function deferredWorktrees() {
+      let resolve!: (mapping: Map<string, string>) => void
+      const promise = new Promise<Map<string, string>>((fulfill) => {
+        resolve = fulfill
+      })
+      mockDetectWorktrees.mockReturnValueOnce(promise)
+      return resolve
+    }
+
+    function startPendingHead() {
+      const resolve = deferredWorktrees()
+      mockReadFileSync.mockImplementation((filePath: string) => filePath.endsWith('/HEAD')
+        ? 'ref: refs/heads/TP0-042'
+        : 'gitdir: /project/.git/worktrees/first')
+      service.initWorktreeHeadWatcher('/project', 'p', 'TP0')
+      mockExistsSync.mockImplementation((filePath: string) => !filePath.endsWith('/gitdir'))
+      const onAdd = [...mockWatcher.on.mock.calls].reverse().find((call: [string]) => call[0] === 'add')[1]
+      const onUnlink = [...mockWatcher.on.mock.calls].reverse().find((call: [string]) => call[0] === 'unlink')[1]
+      onAdd('/project/.git/worktrees/first/HEAD')
+      return { resolve, onAdd, onUnlink }
+    }
+
+    it.each(['stop', 'stopProject', 'unlink'])('cancels pending HEAD discovery on %s', async (action) => {
+      const { resolve, onAdd, onUnlink } = startPendingHead()
+      const added = jest.fn()
+      service.on('worktree-added', added)
+      if (action === 'stop')
+        service.stop()
+      else if (action === 'stopProject')
+        await service.stopProject('p')
+      else
+        onUnlink('/project/.git/worktrees/first/HEAD')
+      const watchCount = (chokidar.watch as jest.Mock).mock.calls.length
+      resolve(new Map([['TP0-042', '/worktrees/first']]))
+      await new Promise(fulfill => setImmediate(fulfill))
+      expect(service.getWorktreeWatcherCount()).toBe(0)
+      expect(added).not.toHaveBeenCalled()
+      if (action !== 'unlink') {
+        // Queued events from a detached old watcher cannot provision a new owner.
+        onAdd('/project/.git/worktrees/first/HEAD')
+        await new Promise(fulfill => setImmediate(fulfill))
+        expect((chokidar.watch as jest.Mock).mock.calls).toHaveLength(watchCount)
+      }
+    })
+
+    it.each(['stop', 'stopProject'])('cancels pending initial discovery on %s', async (action) => {
+      const resolve = deferredWorktrees()
+      const starting = service.initWorktreeWatchers('p', '/project', 'TP0')
+      if (action === 'stop')
+        service.stop()
+      else
+        await service.stopProject('p')
+      resolve(new Map([['TP0-042', '/worktrees/first']]))
+      expect(await starting).toBe(0)
+      expect(service.getWorktreeWatcherCount()).toBe(0)
+      expect(chokidar.watch).not.toHaveBeenCalled()
+    })
+
+    it('detaches old project ownership before awaiting close and preserves its replacement', async () => {
+      let finishClose!: () => void
+      mockWatcher.close.mockReturnValue(new Promise<void>((resolve) => {
+        finishClose = resolve
+      }))
+      service.addWatcher('p', 'TP0-042', '/worktrees/old')
+      const stopping = service.stopProject('p')
+      const replacement = { on: jest.fn().mockReturnThis(), close: jest.fn().mockResolvedValue(undefined) }
+      ;(chokidar.watch as jest.Mock).mockReturnValue(replacement)
+      service.addWatcher('p', 'TP0-042', '/worktrees/new')
+      finishClose()
+      await stopping
+      expect(service.getProjectWorktreeWatchers('p')[0]?.worktreePath).toBe('/worktrees/new')
+      expect(replacement.close).not.toHaveBeenCalled()
+    })
+
+    it('detaches a removed worktree before awaiting close and preserves the next root', async () => {
+      let finishClose!: () => void
+      mockWatcher.close.mockReturnValue(new Promise<void>((resolve) => {
+        finishClose = resolve
+      }))
+      service.addWatcher('p', 'TP0-042', '/worktrees/old')
+      const stopping = service.removeWorktreeWatcher('p', 'TP0-042')
+      const replacement = { on: jest.fn().mockReturnThis(), close: jest.fn().mockResolvedValue(undefined) }
+      ;(chokidar.watch as jest.Mock).mockReturnValue(replacement)
+      service.addWatcher('p', 'TP0-042', '/worktrees/new')
+      finishClose()
+      await stopping
+      expect(service.getProjectWorktreeWatchers('p')[0]?.worktreePath).toBe('/worktrees/new')
+      expect(replacement.close).not.toHaveBeenCalled()
+    })
+
+    it('keeps another project whose id has the same prefix', async () => {
+      service.initMultiProjectWatcher([{ id: 'p', path: '/p/*.md' }])
+      const other = { on: jest.fn().mockReturnThis(), close: jest.fn().mockResolvedValue(undefined) }
+      ;(chokidar.watch as jest.Mock).mockReturnValue(other)
+      service.initMultiProjectWatcher([{ id: 'p2', path: '/p2/*.md' }])
+      await service.stopProject('p')
+      expect(other.close).not.toHaveBeenCalled()
+    })
+
+    it('does not resurrect a removed selected root from another HEAD discovery', async () => {
+      mockReaddirSync.mockReturnValue(['first'])
+      mockReadFileSync.mockImplementation((filePath: string) => filePath.endsWith('/HEAD')
+        ? 'ref: refs/heads/TP0-042'
+        : filePath.endsWith('/.git') ? 'gitdir: /project/.git/worktrees/first' : '/worktrees/first/.git')
+      service.addWatcher('p', 'TP0-042', '/worktrees/first')
+      service.initWorktreeHeadWatcher('/project', 'p', 'TP0')
+      const resolve = deferredWorktrees()
+      mockExistsSync.mockImplementation((filePath: string) => !filePath.endsWith('/second/gitdir'))
+      const added = jest.fn()
+      service.on('worktree-added', added)
+      const onAdd = [...mockWatcher.on.mock.calls].reverse().find((call: [string]) => call[0] === 'add')[1]
+      const onUnlink = [...mockWatcher.on.mock.calls].reverse().find((call: [string]) => call[0] === 'unlink')[1]
+      onAdd('/project/.git/worktrees/second/HEAD')
+      onUnlink('/project/.git/worktrees/first/HEAD')
+      resolve(new Map([['TP0-042', '/worktrees/first']]))
+      await new Promise(fulfill => setImmediate(fulfill))
+      expect(service.getWorktreeWatcherCount()).toBe(0)
+      expect(added).not.toHaveBeenCalled()
+    })
+
+    it('releases worktree exclusions when a project is restarted without a worktree', async () => {
+      service.addWatcher('p', 'TP0-042', '/worktrees/old')
+      await service.stopProject('p')
+      const main = { on: jest.fn().mockReturnThis(), close: jest.fn().mockResolvedValue(undefined) }
+      ;(chokidar.watch as jest.Mock).mockReturnValue(main)
+      service.initMultiProjectWatcher([{ id: 'p', path: '/project/docs/CRs/*.md' }])
+      const fileChanged = jest.fn()
+      service.on('file-change', fileChanged)
+      const onAdd = main.on.mock.calls.find((call: [string]) => call[0] === 'add')[1]
+      onAdd('/project/docs/CRs/TP0-042-title.md')
+      expect(fileChanged).toHaveBeenCalledWith(expect.objectContaining({ filename: 'TP0-042.md', projectId: 'p', source: 'main' }))
+    })
+
+    it('removes a worktree that was present before HEAD watching began', async () => {
+      mockReaddirSync.mockReturnValue(['arbitrary-name'])
+      mockReadFileSync.mockImplementation((filePath: string) => filePath.endsWith('/HEAD')
+        ? 'ref: refs/heads/TP0-042-description'
+        : '/worktrees/arbitrary-name/.git')
+      service.addWatcher('p', 'TP0-042', '/worktrees/arbitrary-name')
+      service.initWorktreeHeadWatcher('/project', 'p', 'TP0')
+      const removed = jest.fn()
+      service.on('worktree-removed', removed)
+      const onUnlink = [...mockWatcher.on.mock.calls].reverse().find((call: [string]) => call[0] === 'unlink')[1]
+      onUnlink('/project/.git/worktrees/arbitrary-name/HEAD')
+      await new Promise(resolve => setImmediate(resolve))
+      expect(removed).toHaveBeenCalledWith({ projectId: 'p', ticketCode: 'TP0-042' })
+    })
+
+    it('keeps the selected watcher when an unselected duplicate HEAD disappears', async () => {
+      mockReaddirSync.mockReturnValue(['first', 'second'])
+      mockReadFileSync.mockImplementation((filePath: string) => filePath.endsWith('/HEAD')
+        ? 'ref: refs/heads/TP0-042'
+        : `/worktrees/${filePath.includes('/first/') ? 'first' : 'second'}/.git`)
+      service.addWatcher('p', 'TP0-042', '/worktrees/first')
+      service.initWorktreeHeadWatcher('/project', 'p', 'TP0')
+      const removed = jest.fn()
+      service.on('worktree-removed', removed)
+      const onUnlink = [...mockWatcher.on.mock.calls].reverse().find((call: [string]) => call[0] === 'unlink')[1]
+      onUnlink('/project/.git/worktrees/second/HEAD')
+      await new Promise(resolve => setImmediate(resolve))
+      expect(removed).not.toHaveBeenCalled()
+      expect(service.getWorktreeWatcherCount()).toBe(1)
+    })
+
+    it('does not announce a duplicate root while retaining the first watcher', () => {
+      mockReadFileSync.mockImplementation((filePath: string) => filePath.endsWith('/HEAD')
+        ? 'ref: refs/heads/TP0-042'
+        : '/worktrees/second/.git')
+      service.addWatcher('p', 'TP0-042', '/worktrees/first')
+      service.initWorktreeHeadWatcher('/project', 'p', 'TP0')
+      const added = jest.fn()
+      service.on('worktree-added', added)
+      const onAdd = [...mockWatcher.on.mock.calls].reverse().find((call: [string]) => call[0] === 'add')[1]
+      onAdd('/project/.git/worktrees/second/HEAD')
+      expect(added).not.toHaveBeenCalled()
+      expect(service.getWorktreeWatcherCount()).toBe(1)
+    })
+
+    it('attributes a missing-gitdir fallback through the selected root, not the triggering duplicate HEAD', async () => {
+      mockReadFileSync.mockImplementation((filePath: string) => filePath.endsWith('/HEAD')
+        ? 'ref: refs/heads/TP0-042'
+        : 'gitdir: /project/.git/worktrees/first')
+      mockDetectWorktrees.mockResolvedValue(new Map([['TP0-042', '/worktrees/first']]))
+      service.addWatcher('p', 'TP0-042', '/worktrees/first')
+      service.initWorktreeHeadWatcher('/project', 'p', 'TP0')
+      mockExistsSync.mockImplementation((filePath: string) => !filePath.endsWith('/gitdir'))
+      const removed = jest.fn()
+      service.on('worktree-removed', removed)
+      const onAdd = [...mockWatcher.on.mock.calls].reverse().find((call: [string]) => call[0] === 'add')[1]
+      const onUnlink = [...mockWatcher.on.mock.calls].reverse().find((call: [string]) => call[0] === 'unlink')[1]
+      onAdd('/project/.git/worktrees/second/HEAD')
+      await new Promise(resolve => setImmediate(resolve))
+      onUnlink('/project/.git/worktrees/second/HEAD')
+      await new Promise(resolve => setImmediate(resolve))
+      expect(removed).not.toHaveBeenCalled()
+      expect(service.getWorktreeWatcherCount()).toBe(1)
+      const removal = new Promise<void>(resolve => service.once('worktree-removed', () => resolve()))
+      onUnlink('/project/.git/worktrees/first/HEAD')
+      await removal
+      expect(service.getWorktreeWatcherCount()).toBe(0)
+    })
+
+    it.each(['TP0-042', 'TP0-10000', 'MDT-042'])('routes HEAD additions and removal to the exact worktree root for %s', async (key) => {
+      const projectCode = key.split('-')[0]
+      mockReadFileSync.mockImplementation((filePath: string) => filePath.endsWith('/HEAD')
+        ? `ref: refs/heads/feature/${key}-description`
+        : `/worktrees/arbitrary-name/.git\n`)
+      const added = jest.fn()
+      const removed = jest.fn()
+      service.on('worktree-added', added)
+      service.on('worktree-removed', removed)
+      service.initWorktreeHeadWatcher('/project', 'p', projectCode)
+      const headPath = '/project/.git/worktrees/arbitrary-name/HEAD'
+      const onAdd = mockWatcher.on.mock.calls.find((call: [string]) => call[0] === 'add')[1]
+      const onUnlink = mockWatcher.on.mock.calls.find((call: [string]) => call[0] === 'unlink')[1]
+      onAdd(headPath)
+      expect(added).toHaveBeenCalledWith({ projectId: 'p', ticketCode: key, worktreePath: '/worktrees/arbitrary-name' })
+      const removal = new Promise<void>(resolve => service.once('worktree-removed', () => resolve()))
+      onUnlink(headPath)
+      await removal
+      expect(removed).toHaveBeenCalledWith({ projectId: 'p', ticketCode: key })
+    })
+
     it('should initialize watchers for multiple project paths', () => {
       const projectPaths = [
         { id: 'project1', path: '/path1/*.md' },

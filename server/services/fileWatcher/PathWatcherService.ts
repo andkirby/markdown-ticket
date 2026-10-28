@@ -20,6 +20,7 @@ export interface WorktreeWatcherEntry {
   watcherId: string
   projectId: string
   ticketCode: string
+  worktreePath: string
   watchPath: string
   watcher: chokidar.FSWatcher
 }
@@ -60,14 +61,16 @@ const OPTS = { ignoreInitial: true, persistent: true, followSymlinks: false, awa
 export class PathWatcherService extends EventEmitter {
   private watchers = new Map<string, chokidar.FSWatcher>()
   private worktreeWatchers = new Map<string, WorktreeWatcherEntry>()
+  private worktreeHeads = new Map<string, WorktreeWatcherEntry>()
+  private worktreeLifetime = Symbol('worktree service lifetime')
+  private projectLifetimes = new Map<string, symbol>()
+  private headDiscoveries = new Map<string, { projectId: string, token: symbol, ticketCode?: string }>()
   private watchPaths = new Map<string, string>()
   private projectRoots = new Map<string, string>()
   private ticketPaths = new Map<string, string>()
   private worktreeService = new WorktreeService({ enabled: true })
   /** Active worktree ticket codes to exclude from main watcher (MDT-142 C2) */
   private activeWorktreeExclusions = new Set<string>()
-  /** MDT-142: Map project root -> { projectId, projectCode } for worktree HEAD monitoring */
-  private projectRegistry = new Map<string, { projectId: string, projectCode: string }>()
 
   initMultiProjectWatcher(projectPaths: ProjectPath[]): this {
     for (const p of projectPaths) {
@@ -178,12 +181,13 @@ export class PathWatcherService extends EventEmitter {
     let count = 0
     const code = projectCode || projectId.toUpperCase()
 
-    // Register project for HEAD monitoring
-    this.projectRegistry.set(projectPath, { projectId, projectCode: code })
+    const ownsProject = this.captureProjectLifetime(projectId)
 
     console.warn(`[Worktree] Checking ${projectId} at ${projectPath} (code: ${code})`)
     try {
       const worktrees = await this.worktreeService.detect(projectPath, code)
+      if (!ownsProject())
+        return 0
       console.warn(`[Worktree] Found ${worktrees.size} worktrees for ${projectId}:`, Object.fromEntries(worktrees))
       for (const [ticketCode, worktreePath] of worktrees) {
         const result = this.addWatcher(projectId, ticketCode, worktreePath)
@@ -217,13 +221,41 @@ export class PathWatcherService extends EventEmitter {
     const watcherId = `${projectId}__worktree_heads`
     if (this.watchers.has(watcherId))
       return
+    const ownsProject = this.captureProjectLifetime(projectId)
+
+    // HEAD additions are ignored during the initial scan. Retain identities of
+    // existing worktrees too, so their later unlink does not depend on a folder name.
+    try {
+      for (const name of fs.readdirSync(worktreesDir)) {
+        const headPath = path.join(worktreesDir, name, 'HEAD')
+        try {
+          const ticketCode = this.readWorktreeTicketCode(headPath, projectCode)
+          const selected = ticketCode ? this.worktreeWatchers.get(`${projectId}__worktree__${ticketCode}`) : undefined
+          const worktreePath = this.readWorktreeRoot(path.join(worktreesDir, name, 'gitdir'))
+          if (ticketCode && selected && path.resolve(selected.worktreePath) === path.resolve(worktreePath))
+            this.worktreeHeads.set(headPath, selected)
+        }
+        catch {
+          // Git may remove metadata while the initial scan is in progress.
+        }
+      }
+    }
+    catch (error) {
+      console.warn(`[Worktree] Failed to scan HEAD identities for ${projectId}:`, error)
+    }
 
     const headPattern = path.join(worktreesDir, '*', 'HEAD')
     console.warn(`[Worktree] Watching ${worktreesDir}/*/HEAD for ${projectId}`)
 
     this.createWatcher(watcherId, headPattern, (w) => {
-      w.on('add', (fp: string) => this.handleWorktreeHeadEvent('add', fp, projectId, projectCode, projectPath))
-        .on('unlink', (fp: string) => this.handleWorktreeHeadEvent('unlink', fp, projectId, projectCode, projectPath))
+      w.on('add', (fp: string) => {
+        if (ownsProject())
+          this.handleWorktreeHeadEvent('add', fp, projectId, projectCode, projectPath)
+      })
+        .on('unlink', (fp: string) => {
+          if (ownsProject())
+            this.handleWorktreeHeadEvent('unlink', fp, projectId, projectCode, projectPath)
+        })
         .on('error', (e: Error) => console.error(`[Worktree] HEAD watcher error for ${projectId}:`, e))
       this.watchers.set(watcherId, w)
     })
@@ -250,28 +282,44 @@ export class PathWatcherService extends EventEmitter {
     const worktreeName = parts[worktreesIdx + 1]
     if (!worktreeName)
       return
+    const ownsProject = this.captureProjectLifetime(projectId)
 
     if (event === 'add') {
+      const token = Symbol('worktree HEAD discovery')
+      this.headDiscoveries.set(headPath, { projectId, token })
       // New worktree created - read HEAD to get branch name and extract ticket code
       try {
-        const headContent = fs.readFileSync(headPath, 'utf8').trim()
         // HEAD contains: "ref: refs/heads/MDT-142-some-feature" or a commit hash
-        const branchMatch = headContent.match(/refs\/heads\/([A-Z]+-\d+)/)
-        if (branchMatch) {
-          const ticketCode = branchMatch[1]
+        const ticketCode = this.readWorktreeTicketCode(headPath, projectCode)
+        if (ticketCode) {
+          this.headDiscoveries.set(headPath, { projectId, token, ticketCode })
+          const registerWorktree = (worktreePath: string, verifiedHeadPath?: string) => {
+            if (!ownsProject() || this.headDiscoveries.get(headPath)?.token !== token)
+              return
+            const selected = this.worktreeWatchers.get(`${projectId}__worktree__${ticketCode}`)
+            if (selected) {
+              if (verifiedHeadPath && path.resolve(selected.worktreePath) === path.resolve(worktreePath))
+                this.worktreeHeads.set(verifiedHeadPath, selected)
+              return
+            }
+            const watcherId = this.addWatcher(projectId, ticketCode, worktreePath)
+            const registered = watcherId ? this.worktreeWatchers.get(watcherId) : undefined
+            if (registered) {
+              if (verifiedHeadPath)
+                this.worktreeHeads.set(verifiedHeadPath, registered)
+              this.emit('worktree-added', { projectId, ticketCode, worktreePath })
+            }
+          }
           // Derive worktree path from the worktree name
           // The worktree directory is typically at projectRoot/../worktree-name or similar
           // We need to find the actual worktree path
           const gitPath = path.join(projectPath, '.git', 'worktrees', worktreeName, 'gitdir')
           if (fs.existsSync(gitPath)) {
             // gitdir file contains path to .git in worktree, e.g., /path/to/worktree/.git
-            const gitdirContent = fs.readFileSync(gitPath, 'utf8').trim()
-            const worktreeGitDir = path.dirname(gitdirContent)
-            const worktreePath = path.dirname(worktreeGitDir)
+            const worktreePath = this.readWorktreeRoot(gitPath)
 
             console.warn(`[Worktree] Detected new worktree ${ticketCode} at ${worktreePath}`)
-            this.addWatcher(projectId, ticketCode, worktreePath)
-            this.emit('worktree-added', { projectId, ticketCode, worktreePath })
+            registerWorktree(worktreePath, headPath)
           }
           else {
             // Fallback: try to find worktree by searching common locations
@@ -280,8 +328,7 @@ export class PathWatcherService extends EventEmitter {
               const worktreePath = worktrees.get(ticketCode)
               if (worktreePath) {
                 console.warn(`[Worktree] Found worktree ${ticketCode} at ${worktreePath}`)
-                this.addWatcher(projectId, ticketCode, worktreePath)
-                this.emit('worktree-added', { projectId, ticketCode, worktreePath })
+                registerWorktree(worktreePath, this.readWorktreeHeadPath(worktreePath))
               }
             }).catch(e => console.warn(`[Worktree] Failed to detect worktree:`, e))
           }
@@ -292,19 +339,52 @@ export class PathWatcherService extends EventEmitter {
       }
     }
     else if (event === 'unlink') {
-      // Worktree removed - find and close the watcher
-      // We need to match by worktree name pattern
-      const watcherToRemove = Array.from(this.worktreeWatchers.entries())
-        .find(([wid, _entry]) => wid.includes(worktreeName))
-
-      if (watcherToRemove) {
-        const [_wid, entry] = watcherToRemove
+      this.headDiscoveries.delete(headPath)
+      const entry = this.worktreeHeads.get(headPath)
+      this.worktreeHeads.delete(headPath)
+      if (entry && this.worktreeWatchers.get(entry.watcherId) === entry) {
         console.warn(`[Worktree] Detected removed worktree ${entry.ticketCode}`)
         this.removeWorktreeWatcher(projectId, entry.ticketCode)
-          .then(() => this.emit('worktree-removed', { projectId, ticketCode: entry.ticketCode }))
+          .then(() => {
+            if (ownsProject() && !this.worktreeWatchers.has(`${projectId}__worktree__${entry.ticketCode}`))
+              this.emit('worktree-removed', { projectId, ticketCode: entry.ticketCode })
+          })
           .catch(e => console.warn(`[Worktree] Failed to remove watcher:`, e))
       }
     }
+  }
+
+  private captureProjectLifetime(projectId: string): () => boolean {
+    const lifetime = this.worktreeLifetime
+    const projectLifetime = this.projectLifetimes.get(projectId) ?? Symbol('project worktree lifetime')
+    this.projectLifetimes.set(projectId, projectLifetime)
+    return () => this.worktreeLifetime === lifetime && this.projectLifetimes.get(projectId) === projectLifetime
+  }
+
+  private readWorktreeTicketCode(headPath: string, projectCode: string): string | null {
+    const headContent = fs.readFileSync(headPath, 'utf8').trim()
+    if (!headContent.startsWith('ref: refs/heads/'))
+      return null
+    const ticketCode = this.worktreeService.extractTicketCode(headContent.slice('ref: '.length))
+    return ticketCode?.startsWith(`${projectCode}-`) ? ticketCode : null
+  }
+
+  private readWorktreeHeadPath(worktreePath: string): string | undefined {
+    try {
+      const gitPointer = fs.readFileSync(path.join(worktreePath, '.git'), 'utf8').trim()
+      if (gitPointer.startsWith('gitdir: '))
+        return path.join(path.resolve(worktreePath, gitPointer.slice('gitdir: '.length)), 'HEAD')
+    }
+    catch {
+      // Detection can identify a root before its metadata becomes readable.
+      // Without the root's own Git pointer, no HEAD ownership can be inferred.
+    }
+    return undefined
+  }
+
+  private readWorktreeRoot(gitdirPath: string): string {
+    const target = fs.readFileSync(gitdirPath, 'utf8').trim()
+    return path.dirname(path.resolve(path.dirname(gitdirPath), target))
   }
 
   addWatcher(pid: string, tc: string, wp: string): string | null {
@@ -323,7 +403,7 @@ export class PathWatcherService extends EventEmitter {
         .on('unlink', fp => this.handleFileEvent('unlink', fp, pid, 'worktree'))
         .on('error', e => this.emit('worktree-error', { error: e, projectId: pid, ticketCode: tc }))
         .on('ready', () => this.emit('worktree-ready', { projectId: pid, ticketCode: tc, watcherId: wid }))
-      this.worktreeWatchers.set(wid, { watcherId: wid, projectId: pid, ticketCode: tc, watchPath: recursivePath, watcher: w })
+      this.worktreeWatchers.set(wid, { watcherId: wid, projectId: pid, ticketCode: tc, worktreePath: wp, watchPath: recursivePath, watcher: w })
       return wid
     }
     catch (e) {
@@ -335,19 +415,26 @@ export class PathWatcherService extends EventEmitter {
 
   async removeWorktreeWatcher(pid: string, tc: string): Promise<void> {
     const wid = `${pid}__worktree__${tc}`
+    for (const [headPath, discovery] of this.headDiscoveries) {
+      if (discovery.projectId === pid && discovery.ticketCode === tc)
+        this.headDiscoveries.delete(headPath)
+    }
     const entry = this.worktreeWatchers.get(wid)
     if (!entry)
       return
+    this.worktreeWatchers.delete(wid)
+    this.activeWorktreeExclusions.delete(tc)
+    for (const [headPath, owner] of this.worktreeHeads) {
+      if (owner === entry) {
+        this.worktreeHeads.delete(headPath)
+        this.headDiscoveries.delete(headPath)
+      }
+    }
     try {
       await entry.watcher.close()
-      this.worktreeWatchers.delete(wid)
-      // MDT-142 C2: Remove from exclusion set
-      this.activeWorktreeExclusions.delete(tc)
     }
     catch (e) {
       console.error(`Error closing worktree watcher ${wid}:`, e)
-      this.worktreeWatchers.delete(wid)
-      this.activeWorktreeExclusions.delete(tc)
     }
   }
 
@@ -571,58 +658,62 @@ export class PathWatcherService extends EventEmitter {
    * Removes main watcher, document watchers, worktree HEAD watcher, and individual worktree watchers.
    */
   async stopProject(projectId: string): Promise<void> {
-    const prefixes = [
-      projectId, // main watcher
-      `${projectId}__document__`, // document watchers
-      `${projectId}__worktree_heads`, // worktree HEAD watcher
-      `${projectId}__worktree__`, // individual worktree watchers
-    ]
-
-    for (const [wid, watcher] of this.watchers.entries()) {
-      if (prefixes.some(prefix => wid === prefix || wid.startsWith(prefix))) {
-        console.warn(`Stopping watcher for project ${projectId}: ${wid}`)
-        this.watchers.delete(wid)
-        try {
-          await watcher.close()
-        }
-        catch (e) {
-          console.error(`Error closing watcher ${wid}:`, e)
-        }
+    // Relinquish ownership before any await so old cleanup cannot affect a restart.
+    this.projectLifetimes.delete(projectId)
+    const ownedWatchers: Array<[string, chokidar.FSWatcher]> = []
+    for (const [id, watcher] of this.watchers) {
+      if (id === projectId || id === `${projectId}__worktree_heads`
+        || id.startsWith(`${projectId}__document__`) || id.startsWith(`${projectId}__worktree__`)) {
+        this.watchers.delete(id)
+        ownedWatchers.push([id, watcher])
       }
     }
-
-    // Clean up worktree watchers for this project
-    for (const [wid, entry] of this.worktreeWatchers.entries()) {
+    for (const [id, entry] of this.worktreeWatchers) {
       if (entry.projectId === projectId) {
-        this.worktreeWatchers.delete(wid)
-        try {
-          await entry.watcher.close()
-        }
-        catch (e) {
-          console.error(`Error closing worktree watcher ${wid}:`, e)
-        }
+        this.worktreeWatchers.delete(id)
+        this.activeWorktreeExclusions.delete(entry.ticketCode)
+        ownedWatchers.push([id, entry.watcher])
       }
     }
-
-    // Clean up project metadata
+    for (const [headPath, entry] of this.worktreeHeads) {
+      if (entry.projectId === projectId)
+        this.worktreeHeads.delete(headPath)
+    }
+    for (const [headPath, entry] of this.headDiscoveries) {
+      if (entry.projectId === projectId)
+        this.headDiscoveries.delete(headPath)
+    }
     this.watchPaths.delete(projectId)
     this.projectRoots.delete(projectId)
     this.ticketPaths.delete(projectId)
+
+    await Promise.all(ownedWatchers.map(async ([id, watcher]) => {
+      try {
+        await watcher.close()
+      }
+      catch (error) {
+        console.error(`Error closing watcher ${id}:`, error)
+      }
+    }))
   }
 
   stop(): void {
-    this.watchers.forEach((w, pid) => {
-      console.warn(`Stopping file watcher for project: ${pid}`)
-      w.close().catch(e => console.error(`Error closing watcher for ${pid}:`, e))
-    })
+    this.worktreeLifetime = Symbol('worktree service lifetime')
+    const ownedWatchers: Array<[string, chokidar.FSWatcher]> = [
+      ...this.watchers,
+      ...Array.from(this.worktreeWatchers, ([id, entry]): [string, chokidar.FSWatcher] => [id, entry.watcher]),
+    ]
     this.watchers.clear()
+    this.worktreeWatchers.clear()
+    this.projectLifetimes.clear()
+    this.headDiscoveries.clear()
+    this.worktreeHeads.clear()
+    this.activeWorktreeExclusions.clear()
     this.watchPaths.clear()
     this.projectRoots.clear()
     this.ticketPaths.clear()
-    this.worktreeWatchers.forEach((e, wid) => {
-      console.warn(`Stopping worktree watcher: ${wid}`)
-      e.watcher.close().catch(er => console.error(`Error closing worktree watcher ${wid}:`, er))
-    })
-    this.worktreeWatchers.clear()
+    for (const [id, watcher] of ownedWatchers) {
+      watcher.close().catch(error => console.error(`Error closing watcher ${id}:`, error))
+    }
   }
 }

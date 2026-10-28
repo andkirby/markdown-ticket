@@ -8,6 +8,7 @@
 import type { ProjectConfig } from '@mdt/shared/models/Project.js'
 import { basename, dirname, normalize, relative, resolve, sep } from '@mdt/shared/utils/path-browser.js'
 import { buildDocumentPath, buildTicketPath } from '../routes'
+import { CROSS_PROJECT_TICKET_LINK_PATTERN, LINK_TICKET_KEY_PATTERN_BODY, TICKET_LINK_PATTERN } from './ticketKeyPatterns'
 
 export interface LinkContext {
   /** Current project code */
@@ -194,7 +195,7 @@ export class LinkNormalizer {
   // Private helper methods
 
   private static normalizeTicketLink(href: string, context: LinkContext): NormalizedLink {
-    const ticketMatch = href.match(/^([A-Z]+-[A-Z]?\d+)(\.md)?(#.*)?$/)
+    const ticketMatch = href.match(TICKET_LINK_PATTERN)
     if (!ticketMatch) {
       return {
         originalHref: href,
@@ -217,7 +218,7 @@ export class LinkNormalizer {
   }
 
   private static normalizeCrossProjectLink(href: string, context: LinkContext): NormalizedLink {
-    const crossProjectMatch = href.match(/^([A-Z]+)-(\d+)(\.md)?(#.*)?$/)
+    const crossProjectMatch = href.match(CROSS_PROJECT_TICKET_LINK_PATTERN)
     if (!crossProjectMatch) {
       return {
         originalHref: href,
@@ -337,11 +338,11 @@ export class LinkNormalizer {
   }
 
   private static isTicketLink(href: string): boolean {
-    return /^[A-Z]+-[A-Z]?\d+(?:\.md)?(?:#.+)?$/.test(href)
+    return new RegExp(`^${LINK_TICKET_KEY_PATTERN_BODY}(?:\\.md)?(?:#.+)?$`).test(href)
   }
 
   private static isCrossProjectTicket(href: string, context: LinkContext): boolean {
-    const match = href.match(/^([A-Z]+)-(\d+)(\.md)?(#.*)?$/)
+    const match = href.match(CROSS_PROJECT_TICKET_LINK_PATTERN)
     if (!match)
       return false
 

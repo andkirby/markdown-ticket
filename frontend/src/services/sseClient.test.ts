@@ -137,4 +137,26 @@ describe('MDT-258 SSE ingress and unknown-event isolation', () => {
       offSub()
     }
   })
+  it('MDT-265 routes alphanumeric and five-digit subdocument events by the full ticket key', () => {
+    const received: string[] = []
+    const off = eventBus.on('ticket:subdocument:changed', event => received.push(event.payload.ticketCode))
+    try {
+      for (const key of ['TP0-042', 'TP0-10000', 'AB123-99999']) {
+        send({ type: 'file-change', data: { eventType: 'change', filename: 'notes.md', subdocument: { code: key, filePath: `${key}/part/notes.md` } } })
+      }
+      expect(received).toEqual(['TP0-042', 'TP0-10000', 'AB123-99999'])
+    }
+    finally { off() }
+  })
+  it('MDT-265 does not truncate invalid subdocument path keys', () => {
+    const received: string[] = []
+    const off = eventBus.on('ticket:subdocument:changed', event => received.push(event.payload.ticketCode))
+    try {
+      for (const key of ['TP0-100000', 'MDT-100000', 'MDT-042extra']) {
+        send({ type: 'file-change', data: { eventType: 'change', filename: 'notes.md', subdocument: { code: key, filePath: `${key}/notes.md` } } })
+      }
+      expect(received).toEqual(['notes', 'notes', 'notes'])
+    }
+    finally { off() }
+  })
 })

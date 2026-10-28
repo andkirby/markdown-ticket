@@ -1,5 +1,8 @@
 import * as fs from 'node:fs'
 import * as path from 'node:path'
+import { TICKET_KEY_PATTERN_BODY } from '@mdt/domain-contracts'
+
+const TICKET_TITLE_FILENAME_PATTERN = new RegExp(`^${TICKET_KEY_PATTERN_BODY}-(.+)$`, 'i')
 
 /**
  * Cache entry for extracted title information
@@ -147,7 +150,7 @@ export class TitleExtractionService {
     const filename = path.basename(filePath, '.md')
 
     // Look for pattern: CODE-NUMBER-title
-    const match = filename.match(/^[A-Z]+-\d+-(.+)$/i)
+    const match = filename.match(TICKET_TITLE_FILENAME_PATTERN)
     if (match) {
       return match[1].replace(/-/g, ' ').trim()
     }

@@ -135,7 +135,7 @@ describe('SettingsModal', () => {
     expect(screen.queryByTestId('settings-space-density')).not.toBeInTheDocument()
     expect(localStorage.getItem('markdown-ticket-link-config')).toBeNull()
     expect(localStorage.getItem(TICKET_CARD_BADGE_STORAGE_KEY)).toBe(
-      '["status","priority","type","phase","related","depends","blocks","worktree"]',
+      '["status","priority","type","phase","related","depends","blocks","externalRefs","worktree"]',
     )
     expect(fetchMock).not.toHaveBeenCalled()
   })

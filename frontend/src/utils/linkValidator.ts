@@ -1,3 +1,5 @@
+import { TICKET_TOKEN_PATTERN } from './ticketKeyPatterns'
+
 interface ValidationResult {
   success: boolean
   message: string
@@ -18,7 +20,7 @@ function validateTicketReferences(container: HTMLElement): ValidationResult[] {
     null,
   )
 
-  const ticketPattern = /\b([A-Z]+-\d+)\b/g
+  const ticketPattern = TICKET_TOKEN_PATTERN
   let node
 
   for (;;) {

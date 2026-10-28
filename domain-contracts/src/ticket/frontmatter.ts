@@ -15,12 +15,16 @@ import { ExternalReferencesSchema } from './external-reference'
 export const TICKET_NUMBER_MIN_DIGITS = 3
 export const TICKET_NUMBER_MAX_DIGITS = 5
 
+/** Anchor-free canonical syntax for paths, filenames, branches and prose. */
+export const TICKET_KEY_PATTERN_BODY
+  = `${PROJECT_CODE_PATTERN_BODY}-\\d{${TICKET_NUMBER_MIN_DIGITS},${TICKET_NUMBER_MAX_DIGITS}}`
+
 /**
  * CR code pattern for validation and OpenAPI schemas (canonical stored form).
  * Format: PROJECT_CODE_PATTERN-123 where PROJECT_CODE_PATTERN is 2-5 alphanumeric chars (first must be letter)
  */
 export const CR_CODE_PATTERN = new RegExp(
-  `^${PROJECT_CODE_PATTERN_BODY}-\\d{${TICKET_NUMBER_MIN_DIGITS},${TICKET_NUMBER_MAX_DIGITS}}$`,
+  `^${TICKET_KEY_PATTERN_BODY}$`,
 )
 
 /**

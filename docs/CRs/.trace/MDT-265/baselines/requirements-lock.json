@@ -1,0 +1,38 @@
+{
+  "ticket": "MDT-265",
+  "generatedAt": "2026-10-28T22:43:35.038Z",
+  "requirements": [
+    {
+      "id": "C1",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C2",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C3",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C4",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C5",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C6",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C7",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C8",
+      "routePolicy": "tests"
+    }
+  ]
+}

@@ -21,6 +21,69 @@ interface LinkConfig {
   enableDocumentLinks: boolean
 }
 
+/** Canonical markdown-it configuration shared by the hook and rendering tests. */
+export function createMarkdownConverter(headerLevelStart: number): MarkdownIt {
+  // `html: true` passes raw HTML (e.g. `<a href=... target=_blank>`) through to the
+  // token stream. Security is enforced downstream — DOMPurify (pipeline step 5 below)
+  // strips disallowed tags/attributes/dangerous URI schemes against an explicit
+  // allowlist, and SmartLink rebuilds every `<a>` from scratch so author-supplied
+  // target/rel/handlers are discarded. See docs/CRs/MDT-195 for the threat model.
+  const md = new MarkdownIt({
+    html: true,
+    breaks: true,
+    linkify: true,
+    typographer: true,
+  })
+
+  // Enable strikethrough (built-in)
+  md.enable('strikethrough')
+
+  // Plugins
+  md.use(markdownItWireloomPlugin)
+  md.use(markdownItWireframePlugin)
+  md.use(taskLists, { disabled: true })
+  md.use(anchor, {
+    slugify,
+    level: Array.from({ length: 6 }, (_, i) => i + 1),
+    permalink: (slug, _opts, state, idx) => {
+      // Wrap heading content in anchor so entire title is clickable
+      // Token stream: heading_open [inline] heading_close
+      // Insert link_open after heading_open, link_close before heading_close
+      const linkOpen = new state.Token('link_open', 'a', 1)
+      linkOpen.attrs = [
+        ['class', 'header-anchor'],
+        ['href', `#${slug}`],
+      ]
+      linkOpen.info = 'auto'
+      const linkClose = new state.Token('link_close', 'a', -1)
+      // idx+1 = first content token; splice in link_open there
+      state.tokens.splice(idx + 1, 0, linkOpen)
+      // Find heading_close (now shifted by +1 due to splice)
+      const closeIdx = state.tokens.findIndex(
+        (t, i) => i > idx + 2 && t.type === 'heading_close',
+      )
+      state.tokens.splice(closeIdx, 0, linkClose)
+    },
+  })
+
+  // Apply headerLevelStart by adjusting heading levels
+  if (headerLevelStart > 1) {
+    const originalHeadingOpen = md.renderer.rules.heading_open
+    md.renderer.rules.heading_open = (tokens, idx, options, env, self) => {
+      const token = tokens[idx]
+      const level = Number.parseInt(token.tag.slice(1)) // e.g., 'h1' → 1
+      const adjusted = Math.min(level + headerLevelStart - 1, 6)
+      token.tag = `h${adjusted}`
+      if (originalHeadingOpen) {
+        return originalHeadingOpen(tokens, idx, options, env, self)
+      }
+      return self.renderToken(tokens, idx, options)
+    }
+  }
+
+  return md
+}
+
 /**
  * Hook that processes markdown through the rendering pipeline:
  * preprocess → render → mermaid → highlight → sanitize
@@ -53,67 +116,7 @@ export function useMarkdownProcessor(
   }, [currentProject])
 
   // Initialize markdown-it converter
-  const converter = useMemo(() => {
-    // `html: true` passes raw HTML (e.g. `<a href=... target=_blank>`) through to the
-    // token stream. Security is enforced downstream — DOMPurify (pipeline step 5 below)
-    // strips disallowed tags/attributes/dangerous URI schemes against an explicit
-    // allowlist, and SmartLink rebuilds every `<a>` from scratch so author-supplied
-    // target/rel/handlers are discarded. See docs/CRs/MDT-195 for the threat model.
-    const md = new MarkdownIt({
-      html: true,
-      breaks: true,
-      linkify: true,
-      typographer: true,
-    })
-
-    // Enable strikethrough (built-in)
-    md.enable('strikethrough')
-
-    // Plugins
-    md.use(markdownItWireloomPlugin)
-    md.use(markdownItWireframePlugin)
-    md.use(taskLists, { disabled: true })
-    md.use(anchor, {
-      slugify,
-      level: Array.from({ length: 6 }, (_, i) => i + 1),
-      permalink: (slug, _opts, state, idx) => {
-        // Wrap heading content in anchor so entire title is clickable
-        // Token stream: heading_open [inline] heading_close
-        // Insert link_open after heading_open, link_close before heading_close
-        const linkOpen = new state.Token('link_open', 'a', 1)
-        linkOpen.attrs = [
-          ['class', 'header-anchor'],
-          ['href', `#${slug}`],
-        ]
-        linkOpen.info = 'auto'
-        const linkClose = new state.Token('link_close', 'a', -1)
-        // idx+1 = first content token; splice in link_open there
-        state.tokens.splice(idx + 1, 0, linkOpen)
-        // Find heading_close (now shifted by +1 due to splice)
-        const closeIdx = state.tokens.findIndex(
-          (t, i) => i > idx + 2 && t.type === 'heading_close',
-        )
-        state.tokens.splice(closeIdx, 0, linkClose)
-      },
-    })
-
-    // Apply headerLevelStart by adjusting heading levels
-    if (headerLevelStart > 1) {
-      const originalHeadingOpen = md.renderer.rules.heading_open
-      md.renderer.rules.heading_open = (tokens, idx, options, env, self) => {
-        const token = tokens[idx]
-        const level = Number.parseInt(token.tag.slice(1)) // e.g., 'h1' → 1
-        const adjusted = Math.min(level + headerLevelStart - 1, 6)
-        token.tag = `h${adjusted}`
-        if (originalHeadingOpen) {
-          return originalHeadingOpen(tokens, idx, options, env, self)
-        }
-        return self.renderToken(tokens, idx, options)
-      }
-    }
-
-    return md
-  }, [headerLevelStart])
+  const converter = useMemo(() => createMarkdownConverter(headerLevelStart), [headerLevelStart])
 
   // Process markdown through the rendering pipeline
   return useMemo(() => {

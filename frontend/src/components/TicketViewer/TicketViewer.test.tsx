@@ -1,7 +1,7 @@
 /* eslint-disable react/no-unnecessary-use-prefix -- This file mocks hook exports by their real names. */
 import type * as React from 'react'
 import type { Ticket } from '../../types'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterAll, afterEach, beforeEach, describe, expect, it, mock, setSystemTime } from 'bun:test'
 import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { TRACE_GRAPH_HASH_FRAGMENT } from '../../routes'
@@ -449,7 +449,7 @@ describe('TicketViewer', () => {
     })
 
     // Mirror handleTicketClick: navigate to the next ticket without #trace.
-    capturedNavigate!('/projects/MDT')
+    await act(async () => capturedNavigate!('/projects/MDT'))
 
     await waitFor(() => {
       expect(screen.queryByTestId('trace-graph-shell')).toBeNull()

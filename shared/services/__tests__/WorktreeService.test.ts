@@ -6,13 +6,11 @@
  * @module shared/services/__tests__/WorktreeService.test.ts
  */
 
-import { formatCrKey } from '../../utils/keyNormalizer.js'
-
-/* eslint-disable ts/no-explicit-any -- Jest mock return values require 'as any' type assertions */
-
 import { execFile } from 'node:child_process'
+
 import { rm } from 'node:fs/promises'
 import path from 'node:path'
+import { formatCrKey } from '../../utils/keyNormalizer.js'
 
 import { WorktreeService } from '../WorktreeService'
 
@@ -415,6 +413,25 @@ branch refs/heads/feature/MDT-095
   })
 
   describe('scalability (C3: 10+ worktrees)', () => {
+    it('uses canonical branch identity for slugged keys and excludes similar project prefixes', async () => {
+      mockExecFile.mockResolvedValueOnce({
+        stdout: `worktree /test/tp0
+HEAD abc
+branch refs/heads/feature/TP0-10000-description
+
+worktree /test/other
+HEAD def
+branch refs/heads/TP00-042
+
+worktree /test/invalid
+HEAD ghi
+branch refs/heads/TP0-100000
+`,
+        stderr: '',
+      } as any)
+      expect(await worktreeService.detect(mockProjectPath, 'TP0')).toEqual(new Map([['TP0-10000', '/test/tp0']]))
+    })
+
     it('should handle 10+ concurrent worktrees', async () => {
       // Generate porcelain output for 15 worktrees
       const worktrees = Array.from({ length: 15 }, (_, i) => {

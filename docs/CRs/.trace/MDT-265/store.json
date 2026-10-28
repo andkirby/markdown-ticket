@@ -1,0 +1,586 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-265"
+  },
+  "requirements": [
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "Frontend stored-key parsers must derive project and 3–5 digit bounds from domain-contracts, including alphanumeric codes, without matching partial invalid keys.",
+      "sourceRef": "../MDT-265-mdt-265-derive-frontend-pathlink-ticket-key-parser.md#acceptance",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "Preserve case sensitivity, capture layouts, anchors, document resolution, and historical letter-prefixed link support where it already exists.",
+      "sourceRef": "../MDT-265-mdt-265-derive-frontend-pathlink-ticket-key-parser.md#acceptance",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "No independently hardcoded ticket-key regex may remain in frontend runtime source; test markdown, links, normalization, validation and SSE routing.",
+      "sourceRef": "../MDT-265-mdt-265-derive-frontend-pathlink-ticket-key-parser.md#acceptance",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "Canonical key syntax is exported as a pattern body by domain-contracts; WorktreeService alone extracts branch identity, watcher lifecycle uses that identity and exact gitdir root, and shared title fallback derives from the same contract.",
+      "sourceRef": "architecture.md#follow-up-investigation",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C5",
+      "kind": "constraint",
+      "text": "Frontend verification exercises the real markdown hook with supported DOMPurify/JSDOM sanitation and preserves meaningful rendering and XSS assertions; preference expectations match one-time migration and async route tests use React act.",
+      "sourceRef": "architecture.md#follow-up-investigation",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C6",
+      "kind": "constraint",
+      "text": "Relative markdown and HTML document references share one grammar including anchors without broadening URL schemes or absolute-path handling.",
+      "sourceRef": "architecture.md#follow-up-investigation",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C7",
+      "kind": "constraint",
+      "text": "Worktree discovery and shutdown must respect project and HEAD lifetimes: delayed results cannot register after stop/unlink, and detached old cleanup cannot remove replacement generations or another project.",
+      "sourceRef": "architect-review.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C8",
+      "kind": "constraint",
+      "text": "Protected Markdown/HTML filename references must resolve through the existing document resolver in documents context without requiring a ticket key, preserving whole paths and disabled document-link settings.",
+      "sourceRef": "architect-review.md",
+      "routePolicy": "tests"
+    }
+  ],
+  "scenarios": [],
+  "obligations": [
+    {
+      "id": "OBL-1",
+      "title": "Frontend stored-key parsers must derive project and 3–5 digit bounds from domain-contracts, including alphanumeric codes, without matching partial invalid keys.",
+      "derivedFrom": [
+        "C1"
+      ],
+      "artifactIds": [
+        "ART-1",
+        "ART-2",
+        "ART-3",
+        "ART-4",
+        "ART-5",
+        "ART-6",
+        "ART-7",
+        "ART-8",
+        "ART-9",
+        "ART-10",
+        "ART-11",
+        "ART-12",
+        "ART-13"
+      ],
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "OBL-2",
+      "title": "Preserve case sensitivity, capture layouts, anchors, document resolution, and historical letter-prefixed link support where it already exists.",
+      "derivedFrom": [
+        "C2"
+      ],
+      "artifactIds": [
+        "ART-1",
+        "ART-2",
+        "ART-3",
+        "ART-4",
+        "ART-5",
+        "ART-6",
+        "ART-7",
+        "ART-8",
+        "ART-9",
+        "ART-10",
+        "ART-11",
+        "ART-12",
+        "ART-13"
+      ],
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "OBL-3",
+      "title": "No independently hardcoded ticket-key regex may remain in frontend runtime source; test markdown, links, normalization, validation and SSE routing.",
+      "derivedFrom": [
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-1",
+        "ART-2",
+        "ART-3",
+        "ART-4",
+        "ART-5",
+        "ART-6",
+        "ART-7",
+        "ART-8",
+        "ART-9",
+        "ART-10",
+        "ART-11",
+        "ART-12",
+        "ART-13"
+      ],
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "OBL-4",
+      "title": "One canonical key/branch owner, exact watcher identity and root, supported DOM testing through the production markdown hook, and shared HTML/Markdown reference grammar",
+      "derivedFrom": [
+        "C4",
+        "C5",
+        "C6"
+      ],
+      "artifactIds": [
+        "ART-followup-1",
+        "ART-8",
+        "ART-followup-3",
+        "ART-followup-4",
+        "ART-followup-5",
+        "ART-followup-6",
+        "ART-followup-7",
+        "ART-followup-8",
+        "ART-followup-9",
+        "ART-followup-10",
+        "ART-followup-11",
+        "ART-followup-12",
+        "ART-followup-13",
+        "ART-followup-14",
+        "ART-worktree-owner-doc",
+        "ART-markdown-hook",
+        "ART-2",
+        "ART-9"
+      ],
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "OBL-5",
+      "title": "Lifetime-scoped worktree operations and atomic ownership detachment; document-context references reuse the existing resolver",
+      "derivedFrom": [
+        "C7",
+        "C8"
+      ],
+      "artifactIds": [
+        "ART-followup-3",
+        "ART-followup-5",
+        "ART-followup-8",
+        "ART-2",
+        "ART-9",
+        "ART-worktree-owner-doc",
+        "ART-architect-review"
+      ],
+      "sourceRef": "CR:MDT-265"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-1",
+      "path": "frontend/src/services/sseClient.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "ART-2",
+      "path": "frontend/src/utils/markdownPreprocessor.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "ART-3",
+      "path": "frontend/src/utils/linkValidator.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "ART-4",
+      "path": "frontend/src/utils/linkProcessor.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "ART-5",
+      "path": "frontend/src/utils/linkNormalization.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "ART-6",
+      "path": "frontend/src/utils/titleExtraction.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "ART-7",
+      "path": "frontend/src/components/MarkdownContent/index.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "ART-9",
+      "path": "frontend/src/utils/markdownPreprocessor.mdt265.test.ts",
+      "kind": "test",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "ART-10",
+      "path": "frontend/src/utils/linkProcessor.mdt265.test.ts",
+      "kind": "test",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "ART-11",
+      "path": "frontend/src/utils/linkNormalization.mdt265.test.ts",
+      "kind": "test",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "ART-12",
+      "path": "frontend/src/utils/linkValidator.mdt265.test.ts",
+      "kind": "test",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "ART-13",
+      "path": "frontend/src/services/sseClient.test.ts",
+      "kind": "test",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "ART-followup-1",
+      "path": "domain-contracts/src/ticket/frontmatter.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "ART-8",
+      "path": "frontend/src/utils/ticketKeyPatterns.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "ART-followup-3",
+      "path": "shared/services/WorktreeService.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "ART-followup-4",
+      "path": "shared/services/TitleExtractionService.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "ART-followup-5",
+      "path": "server/services/fileWatcher/PathWatcherService.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "ART-followup-6",
+      "path": "shared/services/__tests__/WorktreeService.test.ts",
+      "kind": "test",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "ART-followup-7",
+      "path": "shared/services/__tests__/TitleExtractionService.test.ts",
+      "kind": "test",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "ART-followup-8",
+      "path": "server/tests/unit/PathWatcherService.test.ts",
+      "kind": "test",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "ART-followup-9",
+      "path": "frontend/src/config/ticketCardBadges.test.ts",
+      "kind": "test",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "ART-followup-10",
+      "path": "frontend/src/components/SettingsModal.test.tsx",
+      "kind": "test",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "ART-followup-11",
+      "path": "frontend/src/components/MarkdownContent/useMarkdownProcessor.test.ts",
+      "kind": "test",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "ART-followup-12",
+      "path": "frontend/src/components/TicketViewer/TicketViewer.test.tsx",
+      "kind": "test",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "ART-followup-13",
+      "path": "package.json",
+      "kind": "config",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "ART-followup-14",
+      "path": "bun.lock",
+      "kind": "config",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "ART-worktree-owner-doc",
+      "path": "docs/architecture/project-identity-and-worktrees.md",
+      "kind": "doc",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "ART-markdown-hook",
+      "path": "frontend/src/components/MarkdownContent/useMarkdownProcessor.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "ART-architect-review",
+      "path": "docs/CRs/MDT-265/architect-review.md",
+      "kind": "doc",
+      "sourceRef": "CR:MDT-265"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-2",
+      "kind": "unit",
+      "title": "Route classification and legacy compatibility",
+      "covers": [
+        "C1",
+        "C2",
+        "C3"
+      ],
+      "file": "frontend/src/utils/linkProcessor.mdt265.test.ts",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "TEST-3",
+      "kind": "unit",
+      "title": "Link normalization",
+      "covers": [
+        "C1",
+        "C2",
+        "C3"
+      ],
+      "file": "frontend/src/utils/linkNormalization.mdt265.test.ts",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "TEST-4",
+      "kind": "unit",
+      "title": "Text token validation",
+      "covers": [
+        "C1",
+        "C2",
+        "C3"
+      ],
+      "file": "frontend/src/utils/linkValidator.mdt265.test.ts",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "TEST-5",
+      "kind": "unit",
+      "title": "SSE subdocument identity",
+      "covers": [
+        "C1",
+        "C2",
+        "C3"
+      ],
+      "file": "frontend/src/services/sseClient.test.ts",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "TEST-6",
+      "kind": "unit",
+      "title": "Follow-up regression: WorktreeService.test.ts",
+      "covers": [
+        "C4"
+      ],
+      "file": "shared/services/__tests__/WorktreeService.test.ts",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "TEST-7",
+      "kind": "unit",
+      "title": "Follow-up regression: TitleExtractionService.test.ts",
+      "covers": [
+        "C4"
+      ],
+      "file": "shared/services/__tests__/TitleExtractionService.test.ts",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "TEST-9",
+      "kind": "unit",
+      "title": "Follow-up regression: useMarkdownProcessor.test.ts",
+      "covers": [
+        "C5"
+      ],
+      "file": "frontend/src/components/MarkdownContent/useMarkdownProcessor.test.ts",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "TEST-10",
+      "kind": "unit",
+      "title": "Follow-up regression: ticketCardBadges.test.ts",
+      "covers": [
+        "C5"
+      ],
+      "file": "frontend/src/config/ticketCardBadges.test.ts",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "TEST-11",
+      "kind": "unit",
+      "title": "Follow-up regression: SettingsModal.test.tsx",
+      "covers": [
+        "C5"
+      ],
+      "file": "frontend/src/components/SettingsModal.test.tsx",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "TEST-12",
+      "kind": "unit",
+      "title": "Follow-up regression: TicketViewer.test.tsx",
+      "covers": [
+        "C5"
+      ],
+      "file": "frontend/src/components/TicketViewer/TicketViewer.test.tsx",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "TEST-8",
+      "kind": "unit",
+      "title": "Watcher identity, root selection and lifetime isolation",
+      "covers": [
+        "C4",
+        "C7"
+      ],
+      "file": "server/tests/unit/PathWatcherService.test.ts",
+      "sourceRef": "CR:MDT-265"
+    },
+    {
+      "id": "TEST-1",
+      "kind": "unit",
+      "title": "Ticket/document reference grammar across source contexts",
+      "covers": [
+        "C1",
+        "C2",
+        "C3",
+        "C6",
+        "C8"
+      ],
+      "file": "frontend/src/utils/markdownPreprocessor.mdt265.test.ts",
+      "sourceRef": "CR:MDT-265"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-1",
+      "title": "Unify frontend path and link parsers with canonical key patterns",
+      "ownsArtifactIds": [
+        "ART-1",
+        "ART-2",
+        "ART-3",
+        "ART-4",
+        "ART-5",
+        "ART-6",
+        "ART-7",
+        "ART-8",
+        "ART-9",
+        "ART-10",
+        "ART-11",
+        "ART-12",
+        "ART-13"
+      ],
+      "makesGreenIds": [
+        "TEST-1",
+        "TEST-2",
+        "TEST-3",
+        "TEST-4",
+        "TEST-5"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-1"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Resolve suite failures and consolidate cross-layer parser ownership",
+      "ownsArtifactIds": [
+        "ART-followup-1",
+        "ART-8",
+        "ART-followup-3",
+        "ART-followup-4",
+        "ART-followup-5",
+        "ART-followup-6",
+        "ART-followup-7",
+        "ART-followup-8",
+        "ART-followup-9",
+        "ART-followup-10",
+        "ART-followup-11",
+        "ART-followup-12",
+        "ART-followup-13",
+        "ART-followup-14",
+        "ART-2",
+        "ART-9",
+        "ART-worktree-owner-doc",
+        "ART-markdown-hook"
+      ],
+      "makesGreenIds": [
+        "TEST-1",
+        "TEST-6",
+        "TEST-7",
+        "TEST-8",
+        "TEST-9",
+        "TEST-10",
+        "TEST-11",
+        "TEST-12"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-2"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Resolve architect review findings before commit",
+      "ownsArtifactIds": [
+        "ART-followup-3",
+        "ART-followup-5",
+        "ART-followup-8",
+        "ART-2",
+        "ART-9",
+        "ART-worktree-owner-doc",
+        "ART-architect-review"
+      ],
+      "makesGreenIds": [
+        "TEST-1",
+        "TEST-8"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-3"
+    }
+  ]
+}
