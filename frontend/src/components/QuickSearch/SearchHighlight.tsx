@@ -29,5 +29,6 @@ export function SearchHighlight({ text, query = '' }: { text: string, query?: st
     end = match.end
   }
   parts.push(text.slice(end))
-  return <>{parts}</>
+  // Keep the whole text run in one flex item when rendered beside key glyphs.
+  return <span>{parts}</span>
 }

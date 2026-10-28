@@ -77,8 +77,17 @@ test('MDT-136 highlights keys, titles and short refs without changing links', as
   await expect(link.locator('mark')).toHaveText('95')
   await expect(link).toHaveAttribute('href', 'https://jira.example.test/jira/browse/PRJ-95')
   await expect(link).toHaveAttribute('aria-label', /PRJ-95/)
-  await input.fill(ticket.code.split('-').at(-1)!)
-  await expect(row.locator('[data-testid="ticket-code"] mark')).toBeVisible()
+  await input.fill(ticket.code.split('-').at(-1)!.slice(-2))
+  const keyMark = row.locator('[data-testid="ticket-code"] mark')
+  await expect(keyMark).toBeVisible()
+  // Highlighting must not turn a substring into a separately spaced flex item.
+  const highlightGap = await keyMark.evaluate((mark) => {
+    const prefix = document.createRange()
+    prefix.selectNodeContents(mark.previousSibling!)
+    return mark.getBoundingClientRect().left - prefix.getBoundingClientRect().right
+  })
+  expect(Math.abs(highlightGap)).toBeLessThan(0.5)
+  await row.locator('[data-testid="ticket-code"]').screenshot({ animations: 'disabled', path: testInfo.outputPath('key-highlight-spacing.png') })
   await input.fill('[safe]')
   await expect(row.locator('.search-result__title mark')).toHaveText('[safe]')
   await input.fill('95')
