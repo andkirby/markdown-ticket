@@ -99,7 +99,8 @@ AI-powered commands for the entire development lifecycle:
 - Markdown rendering with Mermaid diagrams, Wireloom wireframes, and clickable inline-code `.md` references
 - Sandboxed HTML document preview in the ticket view and documents view, with a fullscreen overlay
 - Per-user project accent colors (solid or gradient)
-- Scoped global search across all projects
+- Quick Search (Cmd/Ctrl+K) with highlighted matches, current-project defaults, an All projects toggle, and explicit ticket-key or `@CODE` lookup
+- Jira, GitHub, and GitLab issue references with compact badges and searchable identities — [configure tracker instances](docs/CONFIG_SPECIFICATION.md#external-issue-tracker-references-mdt-252)
 - Multi-project support
 - Real-time updates
 - Secure browser unlock for authenticated deployments
@@ -115,6 +116,7 @@ AI-powered commands for the entire development lifecycle:
 
 - Use `mdt-cli` to create, list, view, update, and delete tickets from the terminal
 - Structured output is available for automation-friendly workflows
+- Ticket creation warns when template instructions remain; edit the created ticket before committing ([template guidance](docs/TICKET_TEMPLATE_GUARD.md))
 - Target a project explicitly with `-p/--project` on `ticket get` and `ticket attr`
 - For an enabled cloud-bound project, the same create command obtains an Access
   credential, reserves the shared number, writes Markdown, and acknowledges it;

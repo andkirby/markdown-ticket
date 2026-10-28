@@ -1,5 +1,53 @@
 # Release Notes
 
+## v0.34.0 (2026-10-28)
+
+### Features
+
+**External Issue References (MDT-252)**
+
+- Link tickets to Jira, GitHub, and GitLab issues using configured tracker instances and the `refs` attribute.
+- Open external issues from compact reference badges. Full identities and destinations remain available in their details.
+- Find references through Quick Search alongside local ticket keys and titles. References use stored data; they do not synchronize with external trackers.
+- See [tracker configuration](docs/CONFIG_SPECIFICATION.md#external-issue-tracker-references-mdt-252) for setup and examples.
+
+**Native Agent Tools (MDT-262)**
+
+- Use ticket, project, and spec-trace operations directly as native tools in BB and DeepSeek Harness.
+- See [plugin setup and coverage](plugins/README.md). Cloud management remains available through the CLI.
+
+### Improvements
+
+**Quick Search (MDT-136)**
+
+- Numbers and text search the current project by default. Turn on **All projects** to broaden either search, or enter a full ticket key or `@CODE` to target another project.
+- Matching text is highlighted in keys, titles, project names, and external references.
+- Arrow-key selection stays in view. Tab moves through controls and links, and closing search returns focus to its opener.
+- A compact bottom status bar shows essential shortcuts. Expand its chevron for more help.
+
+**Project Favorites (MDT-129)**
+
+- Recently used favorites appear first in both the project rail and browser. An old favorite's lifetime usage count no longer keeps it ahead of recent work.
+
+**Ticket Creation Feedback (MDT-261)**
+
+- Creating an unfinished ticket template now shows a clear warning across the browser, CLI, MCP, and native tools.
+- Creation still succeeds: edit the created ticket instead of retrying. See [template guidance](docs/TICKET_TEMPLATE_GUARD.md).
+
+### Bug Fixes
+
+- Documents with YAML frontmatter open in the side reading pane with a collapsed metadata section instead of oversized headings. Dark-mode document text is readable against the pane background. (MDT-170, MDT-248)
+- Projects configured only in the global registry list their tickets correctly through the CLI, REST API, and MCP. Project initialization on macOS avoids unnecessary probes of other platforms' system paths. (MDT-257)
+- CLI ticket creation rejects unknown explicit type or priority tokens with valid choices instead of silently substituting defaults. (MDT-263)
+- Cloud-bound creation checks ticket identities and existing numbers to prevent collisions. Initial ticket headers reach connected clients, and suspended projects stop coordination. (MDT-200)
+- Quick Search highlights keep ticket-key characters together, and the footer respects the modal's rounded corners. (MDT-136)
+
+### Upgrade Notes
+
+- Local-only projects need no ticket-file migration. External references are optional and require tracker configuration.
+- Scripts that pass invalid type or priority tokens to `mdt-cli create` must use a supported value or omit it to retain the default. (MDT-263)
+- Cloud operators must apply `0005_creation_identity.sql` before the compatible Worker, then update all allocation clients. The new Worker rejects older reservation writers. Keep affected projects suspended during the compatibility window; follow the [cloud upgrade and reconciliation procedure](docs/architecture/cloud-sync/operations.md#october-ticket-identity-stabilization-rollout). (MDT-200)
+
 ## v0.33.0 (2026-10-17)
 
 ### Improvements
