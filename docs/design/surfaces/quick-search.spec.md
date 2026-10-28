@@ -28,23 +28,17 @@ Related artifacts:
 
 ```text
 QuickSearchModal
-├── Modal[size=xl, constrained body]
-│   ├── SearchInput
-│   │   ├── SearchIcon
-│   │   ├── InputField
-│   │   └── ModeIndicator[conditional]
-│   ├── SearchScopeBar
-│   │   ├── ScopeTab[All]
-│   │   ├── ScopeTab[Tickets]
-│   │   └── ScopeTab[Projects]
-│   └── QuickSearchResults
-│       ├── CrossProjectTickets[conditional]
-│       ├── CurrentProjectTickets[conditional]
-│       ├── Projects[conditional]
-│       ├── Documents[future, hidden until wired]
-│       ├── LoadingState[conditional]
-│       ├── ErrorState[conditional]
-│       └── EmptyState[conditional]
+└── Modal[dialog, constrained body]
+    ├── SearchInput[icon, query, effective location]
+    ├── SearchToolbar
+    │   ├── SearchScopeBar[All, Tickets, Projects]
+    │   └── AllProjectsToggle[ticket scopes only]
+    ├── QuickSearchResults[scrollable]
+    │   ├── RemoteTickets[explicit syntax or toggle]
+    │   ├── CurrentProjectTickets[local location]
+    │   ├── Projects[entity/location rules]
+    │   └── Loading / Error / Empty states
+    └── QuickSearchFooter[keyboard status, optional help]
 ```
 
 ## Children
@@ -54,6 +48,8 @@ QuickSearchModal
 | Modal | `frontend/src/components/ui/Modal.tsx` | `frontend/src/MODALS.md` | always while open |
 | SearchInput | `frontend/src/components/QuickSearch/QuickSearchInput.tsx` | this spec | always |
 | SearchScopeBar | `frontend/src/components/QuickSearch/SearchScopeBar.tsx` | this spec | always |
+| Location control | All projects button in `QuickSearchModal.tsx` | this spec | All/Tickets entity scope |
+| QuickSearchFooter | `frontend/src/components/QuickSearch/QuickSearchFooter.tsx` | this spec | always |
 | QuickSearchResults | `frontend/src/components/QuickSearch/QuickSearchResults.tsx` | this spec | always |
 | ProjectResultRow | `frontend/src/components/QuickSearch/ProjectResultRow.tsx` | `project-browser.spec.md` for project identity rules | when project results exist |
 | DocumentResultRow | `frontend/src/components/QuickSearch/DocumentResultRow.tsx` | `documents-view-navigation.spec.md` for document-search boundary | future document search |
@@ -83,8 +79,8 @@ These refs are drift anchors, not a code inventory. Keep them short and update t
 
 | Scope | Label | Visible Now | Result Groups |
 |-------|-------|-------------|---------------|
-| `global` | `All` | yes | current-project tickets, cross-project tickets when syntax triggers them, project matches |
-| `tickets` | `Tickets` | yes | current-project tickets, cross-project tickets when syntax triggers them |
+| `global` | `All` | yes | current-project tickets, cross-project tickets when explicit syntax or All projects enables remote location, project matches |
+| `tickets` | `Tickets` | yes | current-project tickets, cross-project tickets when explicit syntax or All projects enables remote location |
 | `projects` | `Projects` | yes | project matches only |
 | `documents` | `Documents` | no | future document results only |
 
@@ -94,14 +90,14 @@ Documents are intentionally hidden from the scope bar until document search is w
 
 | Group | When Visible | User Action |
 |-------|--------------|-------------|
-| Cross-Project Results | ticket-key query or `@CODE query` returns remote ticket results | select ticket and navigate with target project code |
+| Cross-Project Results | full-key, `@CODE query` or enabled All projects numeric/text search returns tickets | select ticket and navigate with target project code |
 | Current Project | current scope permits tickets and local ticket results exist | select ticket in current project |
 | Projects | `All` or `Projects` scope has project matches | select project and close modal |
 | Documents | future document search returns matches and `Documents` scope is visible | open document in Documents View |
 
 Group order is cross-project tickets, current-project tickets, projects, then documents. Keyboard selection follows the same order.
 
-Cross-project ticket results keep the ticket key and title on the first row. A second wrapping metadata row contains project code/name and grouped external-reference badges. Reference badges follow the project name. Match-type labels are omitted; match highlighting is deferred. When the available width cannot fit project context and badges together, the badges wrap below the project context without horizontal scrolling. Short context may remain inline on a narrow screen. External links/details stay siblings of the native ticket-selection button; activating them never opens the local ticket. Current-project title results retain their reference row without repeating project context.
+Cross-project ticket results keep the ticket key and title on the first row. A second wrapping metadata row contains project code/name and grouped external-reference badges. Reference badges follow the project name. Match-type labels are omitted; matching visible text is highlighted. When the available width cannot fit project context and badges together, the badges wrap below the project context without horizontal scrolling. Short context may remain inline on a narrow screen. External links/details stay siblings of the native ticket-selection button; activating them never opens the local ticket. Current-project title results retain their reference row without repeating project context.
 
 
 ## States
@@ -111,8 +107,8 @@ Cross-project ticket results keep the ticket key and title on the first row. A s
 | closed | `isOpen=false`, Escape, backdrop click, or selection | modal unmounted |
 | opened | Cmd/Ctrl+K | query cleared, scope reset to `All`, input focused, first selectable result selected |
 | filtering | plain text query | local ticket and project matches update immediately |
-| scoped | user clicks scope tab or presses Tab / Shift+Tab | active scope tab changes and non-matching groups are hidden |
-| cross-project loading | ticket-key or `@CODE query` search is pending | skeleton rows appear in cross-project group |
+| scoped | user selects an entity tab using click or tab-list arrows | active scope tab changes and non-matching groups are hidden |
+| cross-project loading | explicit syntax or All projects numeric/text search is pending | skeleton rows appear in cross-project group |
 | cross-project error | remote ticket search fails | concise error with retry action |
 | invalid project | `@CODE query` uses unknown loaded project code | project-not-found empty state; no remote search is required |
 | empty | no visible result group has rows | concise empty message for active scope |
@@ -124,8 +120,9 @@ Cross-project ticket results keep the ticket key and title on the first row. A s
 - The scope bar uses `role="tablist"` and scope buttons use `role="tab"` with `aria-selected`.
 - The results container is a labelled region containing ordinary lists.
 - Result rows use native primary buttons and sibling external links/details controls. Selection uses data-selected treatment; primary buttons expose aria-current.
+- Quick Search supplies dialog semantics and an accessible name. Its keyboard hook wraps first/last Tab stops and restores the connected opener on close; portalled reference popovers keep their own native focus handling.
 - Escape closes the modal through the shared modal behavior.
-- From the input, arrows/Enter select/open results and Tab cycles scope. F6 focuses the selected primary action; native Tab reaches reference controls. Shift+F6 returns to the input, preserving query/scope. With no result, F6 retains input focus. The visible hint is described by the input.
+- From the input, arrows/Enter select/open results and native Tab reaches controls. Scope tabs use one tab stop with Left/Right/Home/End navigation. F6 focuses the selected primary action; native Tab reaches reference controls. Shift+F6 returns to the input, preserving query and scope. With no result, F6 retains input focus. Concise primary help is described by the input and remains below results; an expandable Keyboard shortcuts control explains optional action focus.
 
 ## Responsive
 
@@ -140,7 +137,7 @@ Only keep class names that express durable composition or state. Exact token val
 
 | Element | Semantic Anchor | Contract |
 |---------|-----------------|----------|
-| Modal shell | `Modal`, `ModalBody`, `modal__body--constrained` | shared modal primitive owns backdrop, focus trap, and scroll lock |
+| Modal shell | `Modal`, `ModalBody`, `modal__body--constrained` | shared modal owns backdrop/Escape/scroll lock; Quick Search keyboard hook owns Tab boundaries and opener restoration |
 | Result row | `.search-result` | one row pattern covers hover, focus-visible, and keyboard-selected states |
 | Result group label | `.search-section-header` | keeps ticket, project, and future document groups visually separate |
 | Scope bar | `.search-scope-bar`, `.search-scope-bar__tab` | visible tab state is the source of truth for active scope |
@@ -153,3 +150,13 @@ Only keep class names that express durable composition or state. Exact token val
 - Do not add phase plans to this spec. If behavior is not implemented, mark it as future or keep it out.
 - Do not add full-text document search here. Document search starts from filename/title/path metadata unless a separate design changes that boundary.
 - If a scope becomes visible or hidden, update the scope table, mockups, and tests together.
+
+## Search Location and Match Visibility
+
+The toolbar below the input contains entity tabs and a separate All projects pressed toggle. Location defaults to the current project on every open; without a current project it defaults to all projects. Numbers, #numbers, reference identifiers and ordinary text remain local unless the user enables All projects. Full ticket keys and @CODE query syntax are explicit lookup accelerators; the input context badge states the effective location. Switching the toggle preserves input and entity type. Explicit @CODE ticket queries suppress project-discovery groups. In All, project matches obey location; the explicit Projects tab remains a global project-discovery entry point and hides the ticket-location control.
+
+Match highlights mark literal case-insensitive substrings in visible ticket keys/titles, project labels/names and external short labels, including overflow. Exclude @CODE syntax from the highlight query. Keep exact content and accessible identities; a highlight must not replace status/priority glyphs or turn native links into row actions. Selected row and match highlight have distinct treatments in light and dark themes.
+
+Only the middle results region scrolls. Arrow selection follows the visible row with nearest alignment while input focus remains. The bottom status bar remains outside that scroller and shows Move, Open, Controls and Close hints; expanded Keyboard shortcuts explains F6 Focus selected result and Shift+F6 Back to search. Help is available in loading, error and empty states. No new global shortcuts.
+
+Returning-user walkthrough (design reasoning): open Cmd/Ctrl+K → see In: current project and the unpressed All projects toggle → enter 20 → only current tickets → enable All projects → same query across projects → Enter opens selected local ticket. The existing Projects tab remains discoverable for project navigation. Narrow layouts wrap toolbar/footer controls without horizontal scrolling.

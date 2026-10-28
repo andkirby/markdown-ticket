@@ -4,17 +4,16 @@ status: Implemented
 dateCreated: 2026-03-09T20:41:09.373Z
 type: Feature Enhancement
 priority: Medium
+implementationDate: 2026-10-28
+implementationNotes: Completed Quick Search UAT: current-project numeric/text default, opt-in All projects, explicit bounded @CODE/full-key lookup, query highlights, selection scroll follow and bottom keyboard help. Added native focus boundaries, opener restoration and dialog semantics. Acceptance: 7 new Chromium UAT, 47 browser regressions, 92 frontend and 20 API tests; production builds, focused lint/typecheck and strict trace validation.
 ---
 
 # Cmd+K Quick Search for Tickets
 
 ## 1. Description
 
-Implement a minimal Cmd+K (Ctrl+K on Windows/Linux) keyboard shortcut that opens a quick search modal for finding tickets by title or key.
+Quick Search opens with Cmd+K (Ctrl+K on Windows/Linux) and defaults to the current project's ticket keys, titles and external refs. All projects explicitly broadens numeric and text search; full ticket keys and @CODE queries retain explicit lookup. Matches are highlighted, arrow selection stays visible and keyboard help remains below results.
 
-**Current state**: Users must visually scan the board or use browser find to locate tickets.
-
-**Desired state**: Press Cmd+K, type search query, select ticket from results, navigate directly to ticket detail.
 ## 2. Rationale
 
 - Cmd+K is the de facto standard for quick search/command palette in modern web apps (Linear, Notion, Slack, GitHub)
@@ -38,7 +37,7 @@ Implement a minimal Cmd+K (Ctrl+K on Windows/Linux) keyboard shortcut that opens
 1. User presses Cmd+K (Mac) or Ctrl+K (Windows/Linux)
 2. Modal overlay appears with focused search input
 3. User types query (title substring or ticket key like "MDT-123")
-4. Results list updates in real-time (max 10 items)
+4. Current-project results update in real-time (max 10); All projects and explicit syntax use the debounced remote search (5/project, 15 total)
 5. User navigates with ↑↓ arrows, selects with Enter
 6. Modal closes, ticket detail view opens
 7. Escape closes modal without action
@@ -50,8 +49,12 @@ frontend/src/components/QuickSearch/
   QuickSearchModal.tsx    # Main modal component
   QuickSearchInput.tsx    # Search input with icon
   QuickSearchResults.tsx  # Results list
-  useQuickSearch.ts       # Hook for filtering logic
+  QuickSearchFooter.tsx   # Bottom keyboard guidance
+  queryPolicy.ts          # Project-location precedence
+  SearchHighlight.tsx     # Literal match presentation
+  useQuickSearchKeyboard.ts # Selection scrolling and action focus
   index.ts                # Exports
+frontend/src/hooks/useQuickSearch.ts # Current-project filtering
 ```
 
 ### Technical Details
@@ -67,15 +70,15 @@ frontend/src/components/QuickSearch/
   - Ticket key match (e.g., "139" matches "MDT-139")
   - Title substring match (case-insensitive)
 - Use existing `tickets` array from `useProjectManager`
-- No API calls needed (data preloaded)
+- Current-project filtering uses preloaded tickets; opt-in remote search reuses the existing authenticated API
 
 **Result Display:**
 - Show ticket key + title
-- Show status badge (optional, minimal)
-- Highlight matching text (optional enhancement)
+- Retain priority/status glyphs through the shared TicketCode owner
+- Highlight matching substrings without changing text, identities or link destinations
 
 ### Integration Points
-- Add keyboard listener in `App.tsx` or dedicated hook
+- Reuse the existing global shortcut hook and project overlay integration; keep App.tsx a route table
 - Modal uses existing overlay patterns (see `frontend/src/MODALS.md`)
 - Navigation: call existing `selectTicket` or equivalent
 
@@ -85,24 +88,24 @@ frontend/src/components/QuickSearch/
 - `frontend/src/hooks/useProjectManager.ts` (expose tickets if needed)
 
 ## 5. Acceptance Criteria
-- [ ] Cmd+K opens search modal (Ctrl+K on Windows/Linux)
-- [ ] Search filters tickets by key number (e.g., "139" → MDT-139)
-- [ ] Search filters tickets by title substring (case-insensitive)
-- [ ] Results show ticket key and title
-- [ ] ↑↓ arrows navigate results
-- [ ] Enter selects and opens ticket detail
-- [ ] Escape closes modal
-- [ ] Click outside modal closes it
-- [ ] Modal shows "No results" when no matches
-- [ ] Works on Board, List, and Documents views
+- [x] Cmd+K opens search modal (Ctrl+K on Windows/Linux)
+- [x] Search filters tickets by key number (e.g., "139" → MDT-139)
+- [x] Search filters tickets by title substring (case-insensitive)
+- [x] Results show ticket key and title
+- [x] ↑↓ arrows navigate results
+- [x] Enter selects and opens ticket detail
+- [x] Escape closes modal
+- [x] Click outside modal closes it
+- [x] Modal shows "No results" when no matches
+- [x] Works on Board, List, and Documents views
 
-> Requirements projection: [requirements.md](./MDT-136/requirements.md) (rendered from canonical spec-trace state)
+> Requirements notes: [requirements.md](./MDT-136/requirements.md)
 
-> BDD projection: [bdd.md](./MDT-136/bdd.md) (rendered from canonical spec-trace state)
+> BDD notes: [bdd.md](./MDT-136/bdd.md)
 
-> Architecture projection: [architecture.md](./MDT-136/architecture.md) (rendered from canonical spec-trace state)
+> Architecture notes: [architecture.md](./MDT-136/architecture.md)
 
-> Tests projection: [tests.md](./MDT-136/tests.md) (rendered from canonical spec-trace state)
+> Tests notes: [tests.md](./MDT-136/tests.md)
 
 ## 8. Clarifications
 
@@ -113,3 +116,11 @@ frontend/src/components/QuickSearch/
 - Updated workflow documents: none.
 - `uat.md` written: no.
 - Strict drift/lock used: no.
+
+### UAT Session 2026-10-28
+
+User approved query highlighting, current-project default, explicit All projects toggle for numbers and text, full-key/@CODE lookup, selected-result scroll follow and bottom keyboard help. MDT-136 owns this refinement; MDT-252 provenance removal remains intact. BR-3/4 refined; BR-9–12 added; C2/C4 reconciled with existing remote/external matching. Current requirements, BDD, architecture, tests, tasks and [uat.md](MDT-136/uat.md) updated. Canonical trace sync and current-round verification are recorded in the brief. Implementation, verification and scoped commits are authorized.
+
+Current-round acceptance: 7/7 Chromium UAT tests (including Board/List/Documents), 47/47 existing browser regressions, 92/92 focused frontend tests and 20/20 search API tests passed. See uat.md for verification scope and tooling notes.
+
+Completion-review corrections: Quick Search now owns native Tab boundaries, opener restoration and dialog semantics without changing the shared modal. Explicit @CODE ticket queries suppress unrelated project-name groups. Surface composition/state descriptions and Projects/key/@CODE mockups were reconciled. BR-12 was refined in place, the approved baseline relocked and all trace stages revalidated.

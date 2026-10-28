@@ -1,24 +1,7 @@
 # Test Plan
 
-## Test Plans By Kind
+Keep existing TEST-use-quick-search-unit and TEST-quick-search-modal regressions. Add TEST-quick-search-uat (tests/e2e/quick-search/uat.spec.ts) for local numeric/text isolation, All projects numeric/text AND matching, explicit full keys/@CODE precedence, query preservation/reset, highlighted keys/titles/shortened refs, scroll follow in both directions, bottom help and native Tab/F6 interactions. Exercise narrow and light/dark states and invalid/empty/error transitions; no background results may be selected.
 
-### unit
+Add TEST-quick-search-policy (frontend query routing/highlight tests) and TEST-quick-search-remote-text (server API search tests) for literal input, multiword queries and existing identity ranking/deduplication. C1-C4 remain direct regression targets. Browser screenshots prove layout and contrast separately from trace validation.
 
-- useQuickSearch Hook Unit Tests (`TEST-use-quick-search-unit`)
-  Covers: `BR-3`, `C2`, `C3`, `C4`
-  File: `frontend/src/hooks/useQuickSearch.test.ts`
-
-### e2e
-
-- Quick Search Modal E2E Tests (`TEST-quick-search-modal`)
-  Covers: `BR-1`, `BR-2`, `BR-3`, `BR-4`, `BR-5`, `BR-6`, `BR-7`, `BR-8`, `C1`, `C2`
-  File: `tests/e2e/quick-search/modal.spec.ts`
-
-## Requirement Coverage Summary
-
-| Requirement ID | Route Policy | Direct Test Plans | Indirect Test Plans |
-|---|---|---|---|
-| `C1` | tests | `TEST-quick-search-modal` | - |
-| `C2` | tests | `TEST-quick-search-modal`, `TEST-use-quick-search-unit` | - |
-| `C3` | tests | `TEST-use-quick-search-unit` | - |
-| `C4` | tests | `TEST-use-quick-search-unit` | - |
+Completion-review regressions: physical Shift+Tab from the input wraps to the final help control, Tab wraps back, dialog semantics are exposed and Escape restores the opener. An @other-project fixture with a matching current-project name must show only scoped ticket results.

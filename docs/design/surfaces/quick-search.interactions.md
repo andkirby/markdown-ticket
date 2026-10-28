@@ -23,20 +23,20 @@ Related mockups: `quick-search.mockups.md`
 
 | Scope Value | Label | Included Local Results | Remote Ticket Search |
 |-------------|-------|------------------------|----------------------|
-| `global` | `All` | current-project tickets and projects | ticket-key and `@CODE query` syntax can trigger remote ticket search |
-| `tickets` | `Tickets` | current-project tickets | ticket-key and `@CODE query` syntax can trigger remote ticket search |
+| `global` | `All` | current-project tickets and projects | All projects toggle, full-key and `@CODE query` syntax enable remote tickets |
+| `tickets` | `Tickets` | current-project tickets | All projects toggle, full-key and `@CODE query` syntax enable remote tickets |
 | `projects` | `Projects` | projects only | remote ticket search is not shown |
 | `documents` | `Documents` | future document matches | hidden until document search is wired |
 
-The visible cycle is `All -> Tickets -> Projects -> All`. `Documents` remains out of the visible cycle until the Documents group has a real source.
+The visible entity tabs are All, Tickets and Projects. Left/Right and Home/End select tabs; native Tab traverses controls. Documents remains hidden until document search has a real source.
 
 ## Query Interpretation
 
 | Input | Parsed Mode | Contract |
 |-------|-------------|----------|
 | empty query | `current_project` | show initial current-project ticket results, up to the local result limit |
-| plain text | `global`, `current_project`, or `projects_only` depending on active scope | filter visible local groups immediately |
-| `{CODE}-{number}` | `ticket_key` | search for that ticket key across projects; keep current-project ticket results visible when the active scope permits tickets |
+| numbers, refs or plain text | `current_project` by default; remote with All projects | search current-project tickets immediately; toggle broadens every query term |
+| `{CODE}-{number}` | `ticket_key` | search local/external identity across projects in one deduplicated ranked list |
 | `@{CODE} {query}` | `project_scope` | search tickets in the specified project code |
 | `@{CODE}` with no query text | `current_project` fallback | do not issue remote search; project discovery remains visible through project results |
 | unknown loaded project code in `@CODE query` | invalid project | show project-not-found state without issuing remote search |
@@ -47,9 +47,9 @@ Ticket-key matching is an accelerator, not a separate visual mode. It must not r
 
 | Result Type | Matching Rule | Limit |
 |-------------|---------------|-------|
-| current-project tickets | all whitespace-separated terms must match ticket key, key number, or title | `MAX_RESULTS = 10` |
+| current-project tickets | all whitespace-separated terms must match ticket key, key number, title or stored refs | `MAX_RESULTS = 10` |
 | projects | all whitespace-separated terms must match project code or name word prefix | 10 |
-| cross-project tickets | remote search request handles result set | max 5 per project, 15 total |
+| cross-project tickets | AND terms with exact identities before partial matches; deduplicate by project and ticket | max 5 per project, 15 total |
 
 Ticket and project results must remain in separate groups even when the same plain-text query matches both.
 
@@ -70,16 +70,16 @@ Keyboard selection uses the same order. When a group is hidden by scope or has n
 |-----|--------|
 | `Cmd+K` / `Ctrl+K` | open Quick Search from the app-level shortcut |
 | `Escape` | close through shared modal behavior |
-| `Tab` in input | cycle visible scopes forward |
-| `Shift+Tab` in input | cycle visible scopes backward |
+| `Tab` / `Shift+Tab` | native control/link traversal |
+| Left/Right, Home/End on scope tabs | select the adjacent/first/last entity tab |
 | `F6` | focus selected result primary action; empty results retain input focus |
 | `Shift+F6` | return to search input without resetting query/scope |
 | `Tab` / `Shift+Tab` in results | native traversal among primary, reference and details controls |
-| `ArrowDown` | move selected index to the next visible selectable result |
-| `ArrowUp` | move selected index to the previous visible selectable result |
+| `ArrowDown` in input | move selected index to the next visible selectable result |
+| `ArrowUp` in input | move selected index to the previous visible selectable result |
 | `Enter` | activate the selected visible result |
 
-`Tab` cycles scope only while the input is focused. The visible hint is described by the input. F6 transfers focus into result actions, where native Tab traversal applies; Shift+F6 returns to search. Reference popover Escape closes that popover and restores its invoking control.
+`Tab` follows native focus order. Entity tabs use roving focus and Left/Right/Home/End. The bottom visible hint is described by the input. F6 transfers focus into result actions, where native Tab traversal applies; Shift+F6 returns to search. Reference popover Escape closes that popover and restores its invoking control.
 
 ## Enter Dispatch
 
@@ -96,7 +96,7 @@ Project rows are checked after the cross-project/current-ticket offset is comput
 
 | Trigger | Behavior |
 |---------|----------|
-| ticket-key query | debounce, then search by `mode: ticket_key` |
+| full ticket key, or nonempty numbers/text with All projects enabled | debounce, then use existing cross-project search |
 | `@CODE query` | debounce, then search by `mode: project_scope` and `projectCode` |
 | query changes away from remote mode | cancel pending remote search |
 | modal closes | cancel pending remote search |
@@ -121,3 +121,13 @@ The UI shows loading immediately after remote search is scheduled, even though t
 - Do not blend project and ticket results into one mixed list.
 - Do not promote Documents scope until document result sourcing and navigation are implemented.
 - Keep remote ticket API details in code/contracts; this doc only records the user-visible interaction.
+
+## MDT-136 location precedence
+
+1. Projects entity tab searches known projects; it does not issue ticket requests.
+2. @CODE query restricts tickets to the named project, independently of All projects.
+3. A full ticket key explicitly enables local/external cross-project identity lookup.
+4. Otherwise All projects enables cross-project numeric and text queries using AND terms.
+5. Otherwise use current-project loaded tickets only. No current project defaults to all-project location.
+
+The toggle preserves the query and entity filter; reopening resets query, selection and location. Query/location/entity changes reset selection and hide stale remote results while loading; remote errors/hidden groups have no selectable remote rows. Search count, click/Enter dispatch and selection indices use identical visible groups. No partial match opens automatically. Arrow selection stays inside the scroller with nearest alignment; the footer and input do not move. Native Tab does not cycle entity scope. Optional F6/Shift+F6 remain compatible and are explained in the footer disclosure. @CODE syntax is excluded from highlighting.

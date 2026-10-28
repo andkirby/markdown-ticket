@@ -83,3 +83,11 @@
 | `BR-6` | 1 | `close_modal_with_escape` |
 | `BR-7` | 1 | `close_modal_with_click_outside` |
 | `BR-8` | 1 | `show_no_results_state` |
+
+## UAT 2026-10-28
+
+- project_location_search (BR-3/9): Given matching tickets in two projects, numbers and text stay local until All projects is enabled; every term must match, switching location preserves query, reopening resets to local.
+- explicit_project_lookup (BR-10): Full ticket keys and @CODE query reach the explicit project with the toggle off; @CODE syntax is excluded from highlighting.
+- query_matches_highlighted (BR-11): Literal case-insensitive matches in visible keys, titles, project context and short refs are marked; identities, glyphs and URLs stay intact.
+- selection_stays_visible (BR-4): On a short viewport, navigating down and back up keeps the selected row inside the results scroller without moving input focus.
+- bottom_keyboard_help (BR-12): Fixed bottom help exposes native Tab controls and understandable optional F6/Shift+F6; result links remain independently reachable, first/last Tab stops wrap inside the dialog and close restores the connected opener.

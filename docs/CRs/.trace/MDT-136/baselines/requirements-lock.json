@@ -1,0 +1,70 @@
+{
+  "ticket": "MDT-136",
+  "generatedAt": "2026-10-28T09:57:21.165Z",
+  "requirements": [
+    {
+      "id": "BR-1",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-5",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-6",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-7",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-8",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-9",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-10",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-11",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-12",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C1",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C2",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C3",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C4",
+      "routePolicy": "tests"
+    }
+  ]
+}

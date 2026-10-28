@@ -15,6 +15,9 @@ window "Quick Search - All Scope":
       chip "All" selected id="scope-all"
       chip "Tickets"
       chip "Projects"
+    row:
+      text "In: MDT" muted
+      toggle "All projects"
     divider
     section "Current Project":
       list:
@@ -23,8 +26,10 @@ window "Quick Search - All Scope":
         item "MDT-176   Auth session unlock"
     section "Projects":
       list:
-        item "Summary Link" id="project-result"
-        item "Transcription Player"
+        item "Markdown Ticket Board" id="project-result"
+  footer:
+    text "↑↓ Move · Enter Open · Tab Controls · Esc Close" muted
+    button "Keyboard shortcuts"
 
 annotation "All shows ticket and project groups without blending them into one mixed list." target="scope-all" position=right
 annotation "Keyboard selection follows visible group order." target="ticket-result" position=right
@@ -41,6 +46,9 @@ window "Quick Search - Tickets Scope":
       chip "All"
       chip "Tickets" selected id="scope-tickets"
       chip "Projects"
+    row:
+      text "In: MDT" muted
+      toggle "All projects"
     divider
     section "Current Project":
       list:
@@ -48,6 +56,10 @@ window "Quick Search - Tickets Scope":
           chip "123 124 125 ↗ +2" icon="jira"
         item "MDT-142   Update badge styles"
         item "MDT-155   Badge hover states"
+
+  footer:
+    text "↑↓ Move · Enter Open · Tab Controls · Esc Close" muted
+    button "Keyboard shortcuts"
 
 annotation "Tickets scope hides project matches even when project names also match." target="scope-tickets" position=right
 annotation "Selected treatment is shared for mouse and keyboard result rows." target="ticket-selected" position=right
@@ -69,6 +81,10 @@ window "Quick Search - Projects Scope":
         slot "SL   Summary Link" active id="project-sl"
         item "SLTTS   Summary Link TTS"
 
+  footer:
+    text "↑↓ Move · Enter Open · Tab Controls · Esc Close" muted
+    button "Keyboard shortcuts"
+
 annotation "Project search is discoverable through the same command palette entrypoint." target="scope-projects" position=right
 annotation "Project code and name are enough here; card layout remains owned by project-browser.spec.md." target="project-sl" position=right
 ```
@@ -83,6 +99,8 @@ window "Quick Search - Ticket Key Lookup":
       chip "All" selected
       chip "Tickets"
       chip "Projects"
+    row:
+      toggle "All projects"
     divider
     text "Searching: ABC-42" muted id="mode-badge"
     section "Cross-Project Results":
@@ -94,6 +112,10 @@ window "Quick Search - Ticket Key Lookup":
           row:
             text "MDT   Current Project" muted size=small
             chip "42 ↗" icon="jira"
+
+  footer:
+    text "↑↓ Move · Enter Open · Tab Controls · Esc Close" muted
+    button "Keyboard shortcuts"
 
 annotation "Ticket-key syntax is an accelerator inside the visible scope model." target="mode-badge" position=right
 annotation "Cross-project ticket rows include project context." target="cross-ticket" position=right
@@ -111,12 +133,18 @@ window "Quick Search - Remote Loading":
       chip "All" selected
       chip "Tickets"
       chip "Projects"
+    row:
+      toggle "All projects"
     divider
     text "In: ABC" muted id="project-mode"
     section "Project Results":
       spinner "Searching..." id="loading"
       text "----------" muted
       text "----------------" muted
+
+  footer:
+    text "↑↓ Move · Enter Open · Tab Controls · Esc Close" muted
+    button "Keyboard shortcuts"
 
 annotation "Remote ticket lookup shows skeleton rows inside the affected group only." target="loading" position=right
 ```
@@ -129,10 +157,17 @@ window "Quick Search - Remote Error":
       chip "All" selected
       chip "Tickets"
       chip "Projects"
+    row:
+      toggle "All projects"
     divider
+    text "In: ABC" muted
     section "Project Results":
       text "Search failed: Network error" id="remote-error"
       button "Retry" id="retry"
+
+  footer:
+    text "↑↓ Move · Enter Open · Tab Controls · Esc Close" muted
+    button "Keyboard shortcuts"
 
 annotation "Retry stays local to the failed remote-ticket group." target="retry" position=right
 annotation "The modal remains open so the user can revise the query." target="remote-error" position=right
@@ -151,6 +186,10 @@ window "Quick Search - Empty Projects":
     divider
     text "No results found in projects" muted id="empty-message"
 
+  footer:
+    text "↑↓ Move · Enter Open · Tab Controls · Esc Close" muted
+    button "Keyboard shortcuts"
+
 annotation "Empty copy names the active non-global scope." target="empty-message" position=right
 ```
 
@@ -164,12 +203,19 @@ window "Quick Search - Mobile":
       chip "All" selected
       chip "Tickets"
       chip "Projects"
+    row:
+      text "In: MDT" muted
+      toggle "All projects"
     divider
     section "Current Project":
       list:
         slot "MDT-136   Fix login" active
         item "MDT-140   Badge color"
         item "MDT-142   Badge styles"
+
+  footer:
+    text "↑↓ Move · Enter Open · Tab Controls · Esc Close" muted
+    button "Keyboard shortcuts"
 
 annotation "Mobile keeps the same scope model; only available width changes." target="mobile-tabs" position=bottom
 ```
@@ -178,7 +224,7 @@ annotation "Mobile keeps the same scope model; only available width changes." ta
 
 | Element | Semantic Pattern | Notes |
 |---------|------------------|-------|
-| Modal shell | `Modal` + `modal__body--constrained` | Shared modal primitive owns backdrop and scroll lock |
+| Modal shell | `Modal` + `modal__body--constrained` | Shared modal owns backdrop and scroll lock; Quick Search owns Tab boundaries and restoration |
 | Scope bar | `.search-scope-bar` | Visible mode switcher; no hidden repeated-shortcut-only mode |
 | Result group | `.search-section-header` | Keeps tickets, projects, and future documents distinct |
 | Result row | `.search-result` | Shared row shape for keyboard and mouse selection |
@@ -189,3 +235,28 @@ annotation "Mobile keeps the same scope model; only available width changes." ta
 - Keep this file to canonical review states: All, Tickets, Projects, ticket-key lookup, remote loading/error, empty, and mobile.
 - Do not add separate full-window examples for hover, selected, badge color, or minor row styling.
 - If Documents becomes visible, add one Documents-scope mockup and update `quick-search.spec.md`.
+
+## Cross-project Text Search
+
+```wireloom
+window "Quick Search - All projects":
+  panel:
+    input placeholder="login redirect" type=search
+    row:
+      chip "All"
+      chip "Tickets" selected
+      chip "Projects"
+    row:
+      text "All projects" muted
+      toggle "All projects" on
+    section "Cross-Project Results":
+      list:
+        slot "MDT-136   Fix login redirect" active:
+          text "MDT   Markdown Ticket Board" muted
+        item "ABC-003   Login redirect fallback"
+  footer:
+    text "↑↓ Move · Enter Open · Tab Controls · Esc Close" muted
+    button "Keyboard shortcuts"
+```
+
+Matching substrings receive a theme-aware background in the real UI; Wireloom preserves plain readable text. The numeric default state uses the same toolbar with All projects off and shows current-project matches only. The mobile state wraps location controls and bottom help within page gutters; footer remains outside the result scroller. Expanded help spells out F6 Focus selected result and Shift+F6 Back to search. Native Tab follows focus order.

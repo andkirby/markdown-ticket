@@ -25,16 +25,6 @@
       ]
     },
     {
-      "id": "BR-4",
-      "kind": "behavior",
-      "text": "WHEN user presses up or down arrow keys, the system shall move selection between result items.",
-      "sourceRef": "CR Section 4: User Flow #5, AC #5",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:now"
-      ]
-    },
-    {
       "id": "BR-5",
       "kind": "behavior",
       "text": "WHEN user presses Enter with a result selected, the system shall close the modal and open the selected ticket's detail view.",
@@ -85,16 +75,6 @@
       ]
     },
     {
-      "id": "C2",
-      "kind": "constraint",
-      "text": "The results list shall display a maximum of 10 matching tickets.",
-      "sourceRef": "CR Section 4: User Flow #4",
-      "routePolicy": "tests",
-      "tags": [
-        "timing:now"
-      ]
-    },
-    {
       "id": "C3",
       "kind": "constraint",
       "text": "Title substring matching shall be case-insensitive.",
@@ -107,22 +87,58 @@
     {
       "id": "BR-3",
       "kind": "behavior",
-      "text": "WHEN user types in the search input, the system shall filter tickets in real-time by ticket key number or title substring (case-insensitive, all words must match).",
-      "sourceRef": "CR Section 4: User Flow #3-4, AC #2-3",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:now"
-      ]
+      "text": "WHEN user types in the search input, the system shall filter current-project tickets in real-time by key, title and stored external references using case-insensitive AND matching.",
+      "sourceRef": "docs/CRs/MDT-136/requirements.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4",
+      "kind": "behavior",
+      "text": "WHEN user presses up or down arrow keys in the search input, the system shall move selection between visible results and keep the selected result visible within the results scroller without moving input focus.",
+      "sourceRef": "docs/CRs/MDT-136/requirements.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-9",
+      "kind": "behavior",
+      "text": "WHEN Quick Search opens with a current project, the system shall default numbers and text to that project and expose an All projects toggle that broadens both numeric and text discovery without changing the query or entity filter.",
+      "sourceRef": "docs/CRs/MDT-136/requirements.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-10",
+      "kind": "behavior",
+      "text": "WHEN the query supplies a full ticket key or explicit @CODE scope, the system shall honor that explicit cross-project lookup independently of the All projects toggle while preserving external-identity matching for full keys.",
+      "sourceRef": "docs/CRs/MDT-136/requirements.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-11",
+      "kind": "behavior",
+      "text": "WHEN results display matching query text, the system shall highlight matching substrings in ticket keys, titles, project labels and external-reference labels without changing text, accessible identities or link destinations.",
+      "sourceRef": "docs/CRs/MDT-136/requirements.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "Current-project filtering shall display at most 10 matching tickets; remote search shall retain the existing limit of 5 per project and 15 total.",
+      "sourceRef": "CR:MDT-136",
+      "routePolicy": "tests"
     },
     {
       "id": "C4",
       "kind": "constraint",
-      "text": "Multi-word queries shall use AND logic: all words in the query must appear in the ticket title (order-independent).",
-      "sourceRef": "Requirements clarification",
-      "routePolicy": "tests",
-      "tags": [
-        "timing:now"
-      ]
+      "text": "Multi-word queries shall use AND logic across searchable ticket keys, titles and stored references in either project location.",
+      "sourceRef": "CR:MDT-136",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-12",
+      "kind": "behavior",
+      "text": "WHEN Quick Search is open, the system shall keep concise keyboard guidance below the results, preserve native Tab navigation within the dialog, expose optional action-focus help and restore focus to its connected opener on close.",
+      "sourceRef": "CR:MDT-136",
+      "routePolicy": "bdd"
     }
   ],
   "scenarios": [
@@ -214,6 +230,62 @@
       "when": "I press Enter",
       "then": "the modal closes and the selected ticket detail view opens",
       "sourceRef": "BR-5"
+    },
+    {
+      "id": "project_location_search",
+      "title": "Numbers and text stay local unless all projects is enabled",
+      "covers": [
+        "BR-3",
+        "BR-9"
+      ],
+      "given": "Current and other projects have matching numeric identities and title words",
+      "when": "Search by number and text, then enable All projects",
+      "then": "Local-only results become deduplicated cross-project results using every query term; query is preserved and new opens reset to local",
+      "sourceRef": "CR:MDT-136"
+    },
+    {
+      "id": "explicit_project_lookup",
+      "title": "Explicit key and project scope override location",
+      "covers": [
+        "BR-10"
+      ],
+      "given": "All projects is off and another project contains a ticket",
+      "when": "Enter its full ticket key or @CODE query",
+      "then": "The explicit lookup finds the target while preserving external identities and @CODE scope",
+      "sourceRef": "CR:MDT-136"
+    },
+    {
+      "id": "query_matches_highlighted",
+      "title": "Matching visible text is highlighted",
+      "covers": [
+        "BR-11"
+      ],
+      "given": "Results include keys, titles, project context and short external labels",
+      "when": "Search with numeric, text and literal punctuation queries",
+      "then": "Only matching visible substrings are marked without changing text, identities, glyphs, destinations or row selection",
+      "sourceRef": "CR:MDT-136"
+    },
+    {
+      "id": "selection_stays_visible",
+      "title": "Arrow navigation scrolls only the results",
+      "covers": [
+        "BR-4"
+      ],
+      "given": "The result list overflows a short viewport",
+      "when": "Navigate down and back up",
+      "then": "Selected rows stay visible inside the results and input retains focus",
+      "sourceRef": "CR:MDT-136"
+    },
+    {
+      "id": "bottom_keyboard_help",
+      "title": "Bottom help and bounded native keyboard traversal",
+      "covers": [
+        "BR-12"
+      ],
+      "given": "Quick Search is open from a focused control with result links",
+      "when": "Use native Tab at both boundaries, open optional help, use F6/Shift+F6 and close",
+      "then": "Focus wraps inside the dialog, reference popovers remain usable, help is below results, optional focus shortcuts preserve query and close restores the connected opener",
+      "sourceRef": "CR:MDT-136"
     }
   ],
   "obligations": [
@@ -245,23 +317,6 @@
         "ART-quick-search-index"
       ],
       "sourceRef": "CR Section 4: User Flow #7, MODALS.md Required Behaviors"
-    },
-    {
-      "id": "OBL-search-filter",
-      "title": "Filter tickets by key number or title substring (case-insensitive, AND logic)",
-      "derivedFrom": [
-        "BR-3",
-        "C3",
-        "C4"
-      ],
-      "artifactIds": [
-        "ART-use-quick-search",
-        "ART-quick-search-input",
-        "ART-quick-search-results",
-        "ART-quick-search-index",
-        "ART-quick-search-e2e-test"
-      ],
-      "sourceRef": "CR Section 4: Search Logic"
     },
     {
       "id": "OBL-results-navigation",
@@ -302,77 +357,219 @@
       "sourceRef": "CR AC #9"
     },
     {
+      "id": "OBL-project-location",
+      "title": "Separate location from entity filter for key and text",
+      "derivedFrom": [
+        "BR-3",
+        "BR-9",
+        "BR-10",
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-quick-search-policy",
+        "ART-quick-search-modal",
+        "ART-quick-search-input",
+        "ART-search-scope",
+        "ART-server-search",
+        "ART-quick-search-uat",
+        "ART-query-policy-test",
+        "ART-server-search-test"
+      ],
+      "sourceRef": "CR:MDT-136"
+    },
+    {
+      "id": "OBL-match-highlight",
+      "title": "Render safe literal matches through existing text owners",
+      "derivedFrom": [
+        "BR-11",
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-search-highlight",
+        "ART-ticket-code",
+        "ART-external-badges",
+        "ART-quick-search-results",
+        "ART-search-css",
+        "ART-search-highlight-test",
+        "ART-quick-search-uat"
+      ],
+      "sourceRef": "CR:MDT-136"
+    },
+    {
       "id": "OBL-result-limit",
-      "title": "Results list limited to 10 items maximum",
+      "title": "Limit current-project tickets to 10 and remote tickets to 5 per project and 15 total",
       "derivedFrom": [
         "C2"
       ],
       "artifactIds": [
         "ART-use-quick-search",
         "ART-quick-search-results",
-        "ART-quick-search-e2e-test"
+        "ART-server-search",
+        "ART-quick-search-e2e-test",
+        "ART-quick-search-uat"
       ],
-      "sourceRef": "CR Section 4: User Flow #4"
+      "sourceRef": "CR:MDT-136"
+    },
+    {
+      "id": "OBL-search-filter",
+      "title": "Filter ticket keys, titles and refs using case-insensitive AND terms",
+      "derivedFrom": [
+        "BR-3",
+        "C3",
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-use-quick-search",
+        "ART-quick-search-input",
+        "ART-quick-search-results",
+        "ART-quick-search-index",
+        "ART-quick-search-e2e-test",
+        "ART-server-search"
+      ],
+      "sourceRef": "CR:MDT-136"
+    },
+    {
+      "id": "OBL-keyboard-visibility",
+      "title": "Keep selection visible, bound native Tab, restore opener and explain shortcuts below results",
+      "derivedFrom": [
+        "BR-4",
+        "BR-12"
+      ],
+      "artifactIds": [
+        "ART-quick-search-modal",
+        "ART-search-keyboard",
+        "ART-search-footer",
+        "ART-search-scope",
+        "ART-search-css",
+        "ART-quick-search-results",
+        "ART-quick-search-uat"
+      ],
+      "sourceRef": "CR:MDT-136"
     }
   ],
   "artifacts": [
-    {
-      "id": "ART-quick-search-modal",
-      "path": "src/components/QuickSearch/QuickSearchModal.tsx",
-      "kind": "runtime",
-      "sourceRef": "CR Section 4: Component Structure"
-    },
-    {
-      "id": "ART-quick-search-input",
-      "path": "src/components/QuickSearch/QuickSearchInput.tsx",
-      "kind": "runtime",
-      "sourceRef": "CR Section 4: Component Structure"
-    },
-    {
-      "id": "ART-quick-search-results",
-      "path": "src/components/QuickSearch/QuickSearchResults.tsx",
-      "kind": "runtime",
-      "sourceRef": "CR Section 4: Component Structure"
-    },
-    {
-      "id": "ART-use-quick-search",
-      "path": "src/hooks/useQuickSearch.ts",
-      "kind": "runtime",
-      "sourceRef": "CR Section 4: Component Structure"
-    },
-    {
-      "id": "ART-use-global-keyboard",
-      "path": "src/hooks/useGlobalKeyboard.ts",
-      "kind": "runtime",
-      "sourceRef": "CR Section 4: Technical Details - Keyboard Handler"
-    },
-    {
-      "id": "ART-quick-search-index",
-      "path": "src/components/QuickSearch/index.ts",
-      "kind": "runtime",
-      "sourceRef": "CR Section 4: Component Structure"
-    },
     {
       "id": "ART-quick-search-e2e-test",
       "path": "tests/e2e/quick-search/modal.spec.ts",
       "kind": "test",
       "sourceRef": "BDD test-plan: TEST-quick-search-modal"
+    },
+    {
+      "id": "ART-quick-search-index",
+      "path": "frontend/src/components/QuickSearch/index.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-136"
+    },
+    {
+      "id": "ART-quick-search-input",
+      "path": "frontend/src/components/QuickSearch/QuickSearchInput.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-136"
+    },
+    {
+      "id": "ART-quick-search-modal",
+      "path": "frontend/src/components/QuickSearch/QuickSearchModal.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-136"
+    },
+    {
+      "id": "ART-quick-search-results",
+      "path": "frontend/src/components/QuickSearch/QuickSearchResults.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-136"
+    },
+    {
+      "id": "ART-use-global-keyboard",
+      "path": "frontend/src/hooks/useGlobalKeyboard.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-136"
+    },
+    {
+      "id": "ART-use-quick-search",
+      "path": "frontend/src/hooks/useQuickSearch.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-136"
+    },
+    {
+      "id": "ART-quick-search-policy",
+      "path": "frontend/src/components/QuickSearch/queryPolicy.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-136"
+    },
+    {
+      "id": "ART-search-highlight",
+      "path": "frontend/src/components/QuickSearch/SearchHighlight.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-136"
+    },
+    {
+      "id": "ART-search-footer",
+      "path": "frontend/src/components/QuickSearch/QuickSearchFooter.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-136"
+    },
+    {
+      "id": "ART-search-keyboard",
+      "path": "frontend/src/components/QuickSearch/useQuickSearchKeyboard.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-136"
+    },
+    {
+      "id": "ART-search-css",
+      "path": "frontend/src/components/QuickSearch/quick-search.css",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-136"
+    },
+    {
+      "id": "ART-search-scope",
+      "path": "frontend/src/components/QuickSearch/SearchScopeBar.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-136"
+    },
+    {
+      "id": "ART-server-search",
+      "path": "server/services/TicketService.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-136"
+    },
+    {
+      "id": "ART-ticket-code",
+      "path": "frontend/src/components/TicketCode.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-136"
+    },
+    {
+      "id": "ART-external-badges",
+      "path": "frontend/src/components/Badge/ExternalReferenceBadges.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-136"
+    },
+    {
+      "id": "ART-quick-search-uat",
+      "path": "tests/e2e/quick-search/uat.spec.ts",
+      "kind": "test",
+      "sourceRef": "CR:MDT-136"
+    },
+    {
+      "id": "ART-query-policy-test",
+      "path": "frontend/src/components/QuickSearch/queryPolicy.test.ts",
+      "kind": "test",
+      "sourceRef": "CR:MDT-136"
+    },
+    {
+      "id": "ART-search-highlight-test",
+      "path": "frontend/src/components/QuickSearch/SearchHighlight.test.tsx",
+      "kind": "test",
+      "sourceRef": "CR:MDT-136"
+    },
+    {
+      "id": "ART-server-search-test",
+      "path": "server/tests/api/projects.search.test.ts",
+      "kind": "test",
+      "sourceRef": "CR:MDT-136"
     }
   ],
   "testPlans": [
-    {
-      "id": "TEST-use-quick-search-unit",
-      "kind": "unit",
-      "title": "useQuickSearch Hook Unit Tests",
-      "covers": [
-        "BR-3",
-        "C2",
-        "C3",
-        "C4"
-      ],
-      "file": "src/hooks/useQuickSearch.test.ts",
-      "sourceRef": "tests.md: Unit Tests section"
-    },
     {
       "id": "TEST-quick-search-modal",
       "kind": "e2e",
@@ -391,81 +588,130 @@
       ],
       "file": "tests/e2e/quick-search/modal.spec.ts",
       "sourceRef": "tests.md: E2E Tests section"
+    },
+    {
+      "id": "TEST-use-quick-search-unit",
+      "kind": "unit",
+      "title": "useQuickSearch Hook Unit Tests",
+      "covers": [
+        "BR-3",
+        "C2",
+        "C3",
+        "C4"
+      ],
+      "file": "frontend/src/hooks/useQuickSearch.test.ts",
+      "sourceRef": "CR:MDT-136"
+    },
+    {
+      "id": "TEST-quick-search-policy",
+      "kind": "unit",
+      "title": "Query routing and safe literal highlight rendering",
+      "covers": [
+        "BR-9",
+        "BR-10",
+        "BR-11",
+        "C3"
+      ],
+      "file": "frontend/src/components/QuickSearch/queryPolicy.test.ts",
+      "sourceRef": "CR:MDT-136"
+    },
+    {
+      "id": "TEST-quick-search-remote-text",
+      "kind": "integration",
+      "title": "All-project multiword search preserves identity ordering",
+      "covers": [
+        "BR-3",
+        "BR-9",
+        "C4"
+      ],
+      "file": "server/tests/api/projects.search.test.ts",
+      "sourceRef": "CR:MDT-136"
+    },
+    {
+      "id": "TEST-quick-search-uat",
+      "kind": "e2e",
+      "title": "Quick Search project location, highlights, scrolling, focus boundaries and footer",
+      "covers": [
+        "BR-3",
+        "BR-4",
+        "BR-9",
+        "BR-10",
+        "BR-11",
+        "BR-12",
+        "C2",
+        "C3",
+        "C4"
+      ],
+      "file": "tests/e2e/quick-search/uat.spec.ts",
+      "sourceRef": "CR:MDT-136"
     }
   ],
   "tasks": [
     {
-      "id": "TASK-1",
-      "title": "Walking Skeleton - Create QuickSearch component stubs",
+      "id": "TASK-6",
+      "title": "Project location and query highlighting",
       "ownsArtifactIds": [
         "ART-quick-search-index",
-        "ART-quick-search-modal",
         "ART-quick-search-input",
+        "ART-quick-search-modal",
         "ART-quick-search-results",
         "ART-use-global-keyboard",
-        "ART-use-quick-search"
-      ],
-      "sourceRef": "tasks.md#task-1"
-    },
-    {
-      "id": "TASK-3",
-      "title": "Search Filtering - useQuickSearch hook with filtering logic",
-      "ownsArtifactIds": [
-        "ART-use-quick-search"
-      ],
-      "makesGreenIds": [
-        "filter_by_ticket_key",
-        "filter_by_title_substring",
-        "TEST-use-quick-search-unit"
-      ],
-      "sourceRef": "tasks.md#task-3"
-    },
-    {
-      "id": "TASK-4",
-      "title": "Results Display - Render filtered results with limits and empty state",
-      "ownsArtifactIds": [
-        "ART-quick-search-results",
-        "ART-quick-search-modal"
+        "ART-use-quick-search",
+        "ART-quick-search-policy",
+        "ART-search-highlight",
+        "ART-server-search",
+        "ART-ticket-code",
+        "ART-external-badges",
+        "ART-quick-search-uat",
+        "ART-query-policy-test",
+        "ART-search-highlight-test",
+        "ART-server-search-test"
       ],
       "makesGreenIds": [
+        "project_location_search",
+        "explicit_project_lookup",
+        "query_matches_highlighted",
         "filter_by_ticket_key",
         "filter_by_title_substring",
         "show_no_results_state",
-        "TEST-quick-search-modal"
+        "TEST-quick-search-policy",
+        "TEST-quick-search-remote-text",
+        "TEST-quick-search-uat",
+        "TEST-use-quick-search-unit"
       ],
-      "sourceRef": "tasks.md#task-4"
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "CR:MDT-136"
     },
     {
-      "id": "TASK-5",
-      "title": "Navigation & Selection - Arrow keys and Enter to select ticket",
+      "id": "TASK-7",
+      "title": "Keyboard visibility and bottom help",
       "ownsArtifactIds": [
-        "ART-quick-search-results",
-        "ART-use-quick-search"
-      ],
-      "makesGreenIds": [
-        "navigate_results_with_arrow_keys",
-        "select_ticket_and_open_detail",
-        "TEST-quick-search-modal"
-      ],
-      "sourceRef": "tasks.md#task-5"
-    },
-    {
-      "id": "TASK-2",
-      "title": "Modal Open/Close - Global keyboard shortcut and modal visibility",
-      "ownsArtifactIds": [
-        "ART-use-global-keyboard",
+        "ART-search-footer",
+        "ART-search-keyboard",
+        "ART-search-css",
+        "ART-search-scope",
         "ART-quick-search-modal",
-        "ART-quick-search-input",
-        "ART-quick-search-index",
+        "ART-quick-search-results",
+        "ART-quick-search-uat",
         "ART-quick-search-e2e-test"
       ],
       "makesGreenIds": [
+        "selection_stays_visible",
+        "bottom_keyboard_help",
         "open_modal_with_keyboard_shortcut",
         "close_modal_with_escape",
         "close_modal_with_click_outside",
+        "navigate_results_with_arrow_keys",
+        "select_ticket_and_open_detail",
+        "TEST-quick-search-uat",
         "TEST-quick-search-modal"
       ],
-      "sourceRef": "tasks.md#task-2"
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "CR:MDT-136"
     }
   ]
 }
