@@ -438,7 +438,7 @@ export class TicketService {
   /**
    * Search for tickets across projects. MDT-152.
    *
-   * ticket_key mode: resolve project from code prefix in the key, look up ticket.
+   * ticket_key mode: ranked cross-project identity or text search (legacy request name).
    * project_scope mode: search within a specific project by code.
    */
   async searchTickets(
@@ -462,8 +462,8 @@ export class TicketService {
   }
 
   /**
-   * ticket_key mode: extract project code from ticket key prefix,
-   * resolve project, look up ticket.
+   * Legacy ticket_key mode: rank local identity, external refs and AND text
+   * matches across eligible projects before deduplication and limits.
    */
   private async searchByTicketKey(
     query: string,
@@ -474,12 +474,14 @@ export class TicketService {
       return { results: [], total: 0 }
     }
 
+    const terms = query.trim().split(/\s+/)
     const projects = await this.projectDiscovery.getAllProjects()
     const groups = await Promise.all(projects.map(async (project) => {
       const tickets = await this.sharedTicketService.listCRs(project)
       return tickets.flatMap((ticket) => {
-        const matchedBy = ticketSearchProvenance(ticket, query)
-        return matchedBy.length
+        const sources = terms.map(term => ticketSearchProvenance(ticket, term))
+        const matchedBy = [...new Set(sources.flat())]
+        return sources.every(matches => matches.length > 0)
           ? [{
               ticket: { code: ticket.code, title: ticket.title, priority: ticket.priority ?? null, status: ticket.status ?? null, refs: ticket.refs, externalRefs: ticket.externalRefs },
               project: { code: project.project.code || project.id, name: project.project.name },
@@ -489,7 +491,7 @@ export class TicketService {
       })
     }))
     const matches = groups.flat().sort((a, b) => {
-      const rank = (item: typeof a) => ticketSearchScore(item.ticket, query)
+      const rank = (item: typeof a) => terms.reduce((score, term) => score + ticketSearchScore(item.ticket, term), 0)
       return rank(b) - rank(a) || a.project.code.localeCompare(b.project.code) || a.ticket.code.localeCompare(b.ticket.code)
     })
     const perProject = new Map<string, number>()

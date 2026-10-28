@@ -11,6 +11,8 @@ import { TypeIcon } from './Badge/TypeIcon'
 interface TicketCodeProps {
   code: string
   className?: string
+  /** Optional presentation for query matches; the key and glyphs retain one owner. */
+  renderCode?: (code: string) => React.ReactNode
   ticket?: Ticket // priority + worktree status
   /** Priority override when a full ticket isn't available (search hits, stubs). */
   priority?: string
@@ -41,7 +43,7 @@ interface TicketCodeProps {
  * pin tooltip) — those pass `status`; everywhere else the badge is the single
  * status encoding.
  */
-export const TicketCode: React.FC<TicketCodeProps> = ({ code, className = '', ticket, priority, status }) => {
+export const TicketCode: React.FC<TicketCodeProps> = ({ code, className = '', ticket, priority, status, renderCode }) => {
   const inWorktree = ticket?.inWorktree === true
   const prio = priority ?? ticket?.priority
   const isEpic = ticket?.level === CRLevel.EPIC
@@ -54,7 +56,7 @@ export const TicketCode: React.FC<TicketCodeProps> = ({ code, className = '', ti
     >
       <PriorityIcon priority={prio} className="priority-icon" />
       <StatusIcon status={status} className="ticket-code__status-icon" title={status} />
-      {code}
+      {renderCode ? renderCode(code) : code}
       {showTypeIcon && <TypeIcon type={ticket.type} className="ticket-code__type-icon" title={ticket.type} />}
       {isEpic && <Zap className="ticket-code__epic-icon" aria-hidden="true" />}
       {inWorktree && ` ${WORKTREE_ICON}`}

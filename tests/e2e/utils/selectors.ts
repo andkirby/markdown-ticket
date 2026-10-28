@@ -563,6 +563,9 @@ export const htmlSandboxSelectors = {
 export const quickSearchSelectors = {
   /** Modal overlay container */
   modal: '[data-testid="quick-search-modal"]',
+  allProjects: '[data-testid="quick-search-all-projects"]',
+  footer: '[data-testid="quick-search-footer"]',
+  keyboardHelp: '[data-testid="quick-search-keyboard-help"]',
   /** Search input field */
   input: '[data-testid="quick-search-input"]',
   /** Results list container */

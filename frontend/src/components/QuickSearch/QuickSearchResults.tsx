@@ -10,6 +10,7 @@
  */
 
 import type { SearchResponse } from '@mdt/domain-contracts'
+import type { ReactNode } from 'react'
 import type { DocumentResultItem } from './DocumentResultRow'
 import type { ScoredProject } from '@/hooks/useProjectSearch'
 import type { QueryMode } from '@/hooks/useQuickSearch'
@@ -70,12 +71,13 @@ function ErrorState({ error, onRetry }: ErrorStateProps): React.ReactElement {
 
 interface CrossProjectResultItemProps {
   query?: string
+  renderMatch?: (text: string) => ReactNode
   result: SearchResponse['results'][number]
   isSelected: boolean
   onSelect: () => void
 }
 
-function CrossProjectResultItem({ result, isSelected, onSelect, query }: CrossProjectResultItemProps): React.ReactElement {
+function CrossProjectResultItem({ result, isSelected, onSelect, query, renderMatch }: CrossProjectResultItemProps): React.ReactElement {
   return (
     <li>
       <div
@@ -86,9 +88,9 @@ function CrossProjectResultItem({ result, isSelected, onSelect, query }: CrossPr
       >
         <button type="button" className="search-result__select" onClick={onSelect} aria-current={isSelected ? 'true' : undefined}>
           <div className="search-result__row">
-            <TicketCode code={result.ticket.code} priority={result.ticket.priority ?? undefined} status={result.ticket.status ?? undefined} className="search-result__code" />
+            <TicketCode code={result.ticket.code} priority={result.ticket.priority ?? undefined} status={result.ticket.status ?? undefined} className="search-result__code" renderCode={renderMatch} />
             <span className="search-result__title">
-              {result.ticket.title}
+              {renderMatch ? renderMatch(result.ticket.title) : result.ticket.title}
             </span>
           </div>
         </button>
@@ -98,11 +100,11 @@ function CrossProjectResultItem({ result, isSelected, onSelect, query }: CrossPr
               className="search-result__project-label"
               data-testid="quick-search-project-label"
             >
-              {result.project.code}
+              {renderMatch ? renderMatch(result.project.code) : result.project.code}
             </span>
-            <span className="search-result__project-title">{result.project.name}</span>
+            <span className="search-result__project-title">{renderMatch ? renderMatch(result.project.name) : result.project.name}</span>
           </span>
-          <div className="search-result__references"><ExternalReferenceBadges refs={result.ticket.refs} externalRefs={result.ticket.externalRefs} query={query} /></div>
+          <div className="search-result__references"><ExternalReferenceBadges refs={result.ticket.refs} externalRefs={result.ticket.externalRefs} query={query} renderLabel={renderMatch} /></div>
         </div>
       </div>
     </li>
@@ -115,6 +117,7 @@ function CrossProjectResultItem({ result, isSelected, onSelect, query }: CrossPr
 
 export interface QuickSearchResultsProps {
   query?: string
+  renderMatch?: (text: string) => ReactNode
   tickets: Ticket[]
   selectedIndex: number
   onSelect: (ticket: Ticket, targetProjectCode?: string) => void
@@ -139,6 +142,7 @@ export interface QuickSearchResultsProps {
 
 export function QuickSearchResults({
   query,
+  renderMatch,
   tickets,
   selectedIndex,
   onSelect,
@@ -199,10 +203,10 @@ export function QuickSearchResults({
   }
 
   // Cross-project modes (ticket_key / project_scope): no results anywhere, not loading, no error
-  if (isCrossProjectMode && !hasCurrentProjectResults && !hasCrossProjectResults && !crossProjectLoading && !crossProjectError) {
+  if (isCrossProjectMode && !hasCurrentProjectResults && !hasCrossProjectResults && !hasProjectResults && !hasDocumentResults && !crossProjectLoading && !crossProjectError) {
     return (
       <div className="search-empty-state" data-testid="quick-search-no-results">
-        {isProjectScopeMode ? 'No matching tickets found in this project' : 'No matching tickets found'}
+        {isTicketKeyMode && query !== undefined && !query.trim() ? 'Type to search all projects' : isProjectScopeMode ? 'No matching tickets found in this project' : 'No matching tickets found'}
       </div>
     )
   }
@@ -239,6 +243,7 @@ export function QuickSearchResults({
                   key={`${result.project.code}:${result.ticket.code}`}
                   result={result}
                   query={query}
+                  renderMatch={renderMatch}
                   isSelected={index === selectedIndex}
                   onSelect={() => {
                     // Map cross-project result to a minimal Ticket for navigation
@@ -280,13 +285,13 @@ export function QuickSearchResults({
                   >
                     <button type="button" className="search-result__select" onClick={() => onSelect(ticket)} aria-current={isSelected ? 'true' : undefined}>
                       <div className="search-result__row">
-                        <TicketCode code={ticket.code} priority={ticket.priority} status={ticket.status} className="search-result__code" />
+                        <TicketCode code={ticket.code} priority={ticket.priority} status={ticket.status} className="search-result__code" renderCode={renderMatch} />
                         <span className="search-result__title">
-                          {ticket.title}
+                          {renderMatch ? renderMatch(ticket.title) : ticket.title}
                         </span>
                       </div>
                     </button>
-                    <div className="search-result__references"><ExternalReferenceBadges refs={ticket.refs} externalRefs={ticket.externalRefs} query={query} /></div>
+                    <div className="search-result__references"><ExternalReferenceBadges refs={ticket.refs} externalRefs={ticket.externalRefs} query={query} renderLabel={renderMatch} /></div>
                   </div>
                 </li>
               )
@@ -308,6 +313,7 @@ export function QuickSearchResults({
                 <ProjectResultRow
                   key={scoredProject.project.project?.code ?? scoredProject.project.id}
                   scoredProject={scoredProject}
+                  renderMatch={renderMatch}
                   isSelected={selectedIndex === offset + index}
                   onSelect={() => onSelectProject?.(scoredProject.project)}
                 />

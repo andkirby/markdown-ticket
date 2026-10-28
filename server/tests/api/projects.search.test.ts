@@ -183,6 +183,20 @@ describe('POST /api/projects/search — MDT-152', () => {
     })
   })
 
+  it('MDT-136 searches every text term across projects with AND semantics', async () => {
+    const first = await projectFactory.createProject('empty', { name: 'UAT first', code: generateTestProjectCode() })
+    const second = await projectFactory.createProject('empty', { name: 'UAT second', code: generateTestProjectCode() })
+    const local = await projectFactory.createTestCR(first.key, { title: 'Uatneedle Login Redirect', type: 'Feature Enhancement', content: 'UAT text query fixture' })
+    const remote = await projectFactory.createTestCR(second.key, { title: 'Redirect Uatneedle Login', type: 'Feature Enhancement', content: 'UAT text query fixture' })
+    const unrelated = await projectFactory.createTestCR(second.key, { title: 'Uatneedle Login Only', type: 'Feature Enhancement', content: 'UAT text query fixture' })
+    expect(local.success && remote.success && unrelated.success).toBe(true)
+    const response = await authRequest.post('/api/projects/search').send({ mode: 'ticket_key', query: 'LOGIN uatneedle redirect' })
+    assertSuccess(response)
+    const codes = response.body.results.map((result: { ticket: { code: string } }) => result.ticket.code)
+    expect(codes).toEqual(expect.arrayContaining([local.crCode, remote.crCode]))
+    expect(codes).not.toContain(unrelated.crCode)
+  })
+
   describe('project_scope mode', () => {
     it('returns 200 with results for valid project code and query', async () => {
       const project = await projectFactory.createProject('empty', {

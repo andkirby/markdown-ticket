@@ -5,10 +5,10 @@
  * Covering: BR-5.1, BR-5.2, BR-5.3, BR-1.4, BR-2.3
  */
 
-import { afterEach, describe, expect, it, vi } from 'bun:test'
-import { render, screen, fireEvent, cleanup } from '@testing-library/react'
-import { QuickSearchModal } from '@/components/QuickSearch/QuickSearchModal'
 import type { Project } from '@mdt/shared/models/Project'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'bun:test'
+import { QuickSearchModal } from '@/components/QuickSearch/QuickSearchModal'
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -89,24 +89,21 @@ describe('QuickSearchModal keyboard navigation (MDT-179)', () => {
     expect(input).toBeDefined()
   })
 
-  it('Tab cycles scope, Shift+Tab reverses (BR-1.4)', () => {
+  it('Tab keeps native navigation and arrows select scope tabs (MDT-136 UAT)', () => {
     renderModal()
     const input = screen.getByTestId('quick-search-input')
-
-    // Initial: global (All)
-    expect(screen.getByTestId('search-scope-tab-global').getAttribute('aria-selected')).toBe('true')
-
-    // Tab to cycle to tickets
-    fireEvent.keyDown(input, { key: 'Tab' })
-    expect(screen.getByTestId('search-scope-tab-tickets').getAttribute('aria-selected')).toBe('true')
-
-    // Tab again to projects
-    fireEvent.keyDown(input, { key: 'Tab' })
-    expect(screen.getByTestId('search-scope-tab-projects').getAttribute('aria-selected')).toBe('true')
-
-    // Shift+Tab to go back to tickets
-    fireEvent.keyDown(input, { key: 'Tab', shiftKey: true })
-    expect(screen.getByTestId('search-scope-tab-tickets').getAttribute('aria-selected')).toBe('true')
+    expect(fireEvent.keyDown(input, { key: 'Tab' })).toBe(true)
+    const all = screen.getByTestId('search-scope-tab-global')
+    expect(all.getAttribute('aria-selected')).toBe('true')
+    fireEvent.keyDown(all, { key: 'ArrowRight' })
+    const tickets = screen.getByTestId('search-scope-tab-tickets')
+    expect(tickets.getAttribute('aria-selected')).toBe('true')
+    expect(document.activeElement).toBe(tickets)
+    fireEvent.keyDown(tickets, { key: 'ArrowRight' })
+    const projects = screen.getByTestId('search-scope-tab-projects')
+    expect(projects.getAttribute('aria-selected')).toBe('true')
+    fireEvent.keyDown(projects, { key: 'ArrowLeft' })
+    expect(tickets.getAttribute('aria-selected')).toBe('true')
   })
 
   it('scope bar click switches scope (BR-1.3)', () => {
@@ -122,29 +119,31 @@ describe('QuickSearchModal keyboard navigation (MDT-179)', () => {
     renderModal()
     const input = screen.getByTestId('quick-search-input')
 
+    fireEvent.click(screen.getByTestId('search-scope-tab-projects'))
+
     // Type partial project name
     fireEvent.change(input, { target: { value: 'task ma' } })
 
     // Should show project section
     expect(screen.getByTestId('quick-search-projects-section')).toBeDefined()
-    expect(screen.getByText('Task Manager')).toBeDefined()
+    expect(screen.getByTestId('project-result-item').textContent).toContain('Task Manager')
   })
 
   it('Enter on project result calls onSelectProject (BR-2.3)', () => {
     renderModal()
     const input = screen.getByTestId('quick-search-input')
 
+    fireEvent.click(screen.getByTestId('search-scope-tab-projects'))
+
     // Type to get project match
     fireEvent.change(input, { target: { value: 'Task Manager' } })
 
     // Project results should be visible
-    expect(screen.getByText('Task Manager')).toBeDefined()
+    expect(screen.getByTestId('project-result-item').textContent).toContain('Task Manager')
 
-    // Navigate to project result (ArrowDown past tickets)
-    // Project results appear after ticket results
-    // Just press enter on first result, then check if project was selected
-    // For now verify the project section exists
-    expect(screen.getByTestId('quick-search-projects-section')).toBeDefined()
+    fireEvent.keyDown(input, { key: 'Enter' })
+    expect(mockOnSelectProject).toHaveBeenCalledWith(PROJECTS[0])
+    expect(mockOnClose).toHaveBeenCalledTimes(1)
   })
 
   it('closing and reopening resets scope to Global', () => {

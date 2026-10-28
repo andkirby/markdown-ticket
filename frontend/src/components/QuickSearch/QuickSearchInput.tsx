@@ -21,6 +21,8 @@ export interface QuickSearchInputProps {
 }
 
 function getModeLabel(queryMode: QueryMode, queryParts: QueryParts, currentProjectCode?: string): string | null {
+  if (queryMode === 'ticket_key' && queryParts.searchText !== undefined)
+    return 'All projects'
   if (queryMode === 'ticket_key' && queryParts.ticketCode) {
     return `Searching: ${queryParts.ticketCode}`
   }
@@ -61,10 +63,11 @@ export function QuickSearchInput({ describedBy, value, onChange, onKeyDown, quer
       <input
         ref={inputRef}
         type="text"
+        aria-label="Search query"
         data-testid="quick-search-input"
         className="search-input__field"
         aria-describedby={describedBy}
-        placeholder="Search tickets by key or title..."
+        placeholder="Search tickets by key, title or reference..."
         value={value}
         onChange={e => onChange(e.target.value)}
         onKeyDown={onKeyDown}

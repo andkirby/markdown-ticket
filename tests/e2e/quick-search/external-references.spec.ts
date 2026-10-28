@@ -147,6 +147,7 @@ test('MDT-252 cross-project references share the project metadata row and wrap o
   const input = page.locator(quickSearchSelectors.input)
   await expect(input).toBeFocused()
   await expect(input).toHaveValue('')
+  await page.locator(quickSearchSelectors.allProjects).click()
   await input.fill(`work:PRJ-${issue}`)
   await expect(input).toHaveValue(`work:PRJ-${issue}`)
   const result = page.locator('[data-testid="quick-search-cross-project-result-item"]').filter({ hasText: ticket.code })

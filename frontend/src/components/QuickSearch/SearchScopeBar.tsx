@@ -46,6 +46,17 @@ export function SearchScopeBar({ activeScope, onScopeChange, className }: Search
             scope === activeScope && 'search-scope-bar__tab--active',
           )}
           aria-selected={scope === activeScope}
+          tabIndex={scope === activeScope ? 0 : -1}
+          onKeyDown={(event) => {
+            const current = VISIBLE_SCOPES.indexOf(scope)
+            const direction = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0
+            const next = event.key === 'Home' ? 0 : event.key === 'End' ? VISIBLE_SCOPES.length - 1 : (current + direction + VISIBLE_SCOPES.length) % VISIBLE_SCOPES.length
+            if (!direction && event.key !== 'Home' && event.key !== 'End')
+              return
+            event.preventDefault()
+            onScopeChange(VISIBLE_SCOPES[next]!)
+            event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('button')[next]?.focus()
+          }}
           onClick={() => onScopeChange(scope)}
         >
           {SCOPE_LABELS[scope]}

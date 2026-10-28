@@ -38,7 +38,7 @@ test.describe('Scoped Global Search (MDT-179)', () => {
   })
 
   test('scope controls are visible when quick search opens (BR-1.1, BR-1.2)', async ({ page, e2eContext }) => {
-    await page.goto(e2eContext.frontendUrl)
+    await page.goto(`/prj/${projectKey}`)
     // MDT-239: wait for the app shell (project auto-select) before pressing
     // Cmd+K — pressing during boot misses the not-yet-attached key listener.
     await expect(page.locator('nav, [data-testid="app-logo"]').first()).toBeVisible({ timeout: 10000 })
@@ -60,7 +60,7 @@ test.describe('Scoped Global Search (MDT-179)', () => {
   })
 
   test('user can switch scope by clicking tab (BR-1.3)', async ({ page, e2eContext }) => {
-    await page.goto(e2eContext.frontendUrl)
+    await page.goto(`/prj/${projectKey}`)
     // MDT-239: wait for the app shell (project auto-select) before pressing
     // Cmd+K — pressing during boot misses the not-yet-attached key listener.
     await expect(page.locator('nav, [data-testid="app-logo"]').first()).toBeVisible({ timeout: 10000 })
@@ -74,8 +74,8 @@ test.describe('Scoped Global Search (MDT-179)', () => {
     await expect(page.getByTestId('search-scope-tab-global')).toHaveAttribute('aria-selected', 'false')
   })
 
-  test('Tab cycles scope (BR-1.4)', async ({ page, e2eContext }) => {
-    await page.goto(e2eContext.frontendUrl)
+  test('Tab reaches scope controls and arrows switch entity type (MDT-136 UAT)', async ({ page, e2eContext }) => {
+    await page.goto(`/prj/${projectKey}`)
     // MDT-239: wait for the app shell (project auto-select) before pressing
     // Cmd+K — pressing during boot misses the not-yet-attached key listener.
     await expect(page.locator('nav, [data-testid="app-logo"]').first()).toBeVisible({ timeout: 10000 })
@@ -86,25 +86,27 @@ test.describe('Scoped Global Search (MDT-179)', () => {
     // Initial: global
     await expect(page.getByTestId('search-scope-tab-global')).toHaveAttribute('aria-selected', 'true')
 
-    // Tab to cycle to tickets
+    // Tab follows native focus order; arrows operate the focused tab list.
     await input.press('Tab')
+    await expect(page.getByTestId('search-scope-tab-global')).toBeFocused()
+    await page.keyboard.press('ArrowRight')
     await expect(page.getByTestId('search-scope-tab-tickets')).toHaveAttribute('aria-selected', 'true')
 
-    // Tab again to cycle to projects
-    await input.press('Tab')
+    await page.keyboard.press('ArrowRight')
     await expect(page.getByTestId('search-scope-tab-projects')).toHaveAttribute('aria-selected', 'true')
 
-    // Shift+Tab to go back to tickets
-    await input.press('Shift+Tab')
+    await page.keyboard.press('ArrowLeft')
     await expect(page.getByTestId('search-scope-tab-tickets')).toHaveAttribute('aria-selected', 'true')
   })
 
   test('global search shows grouped results (BR-2.1)', async ({ page, e2eContext }) => {
-    await page.goto(e2eContext.frontendUrl)
+    await page.goto(`/prj/${projectKey}`)
     // MDT-239: wait for the app shell (project auto-select) before pressing
     // Cmd+K — pressing during boot misses the not-yet-attached key listener.
     await expect(page.locator('nav, [data-testid="app-logo"]').first()).toBeVisible({ timeout: 10000 })
     await page.keyboard.press('Meta+k')
+
+    await page.getByTestId('quick-search-all-projects').click()
 
     // Type a query that matches projects
     const input = page.getByTestId('quick-search-input')
@@ -117,12 +119,13 @@ test.describe('Scoped Global Search (MDT-179)', () => {
   })
 
   test('project results are visually distinct from tickets (BR-2.2)', async ({ page, e2eContext }) => {
-    await page.goto(e2eContext.frontendUrl)
+    await page.goto(`/prj/${projectKey}`)
     // MDT-239: wait for the app shell (project auto-select) before pressing
     // Cmd+K — pressing during boot misses the not-yet-attached key listener.
     await expect(page.locator('nav, [data-testid="app-logo"]').first()).toBeVisible({ timeout: 10000 })
     await page.keyboard.press('Meta+k')
 
+    await page.getByTestId('quick-search-all-projects').click()
     const input = page.getByTestId('quick-search-input')
     await input.fill('Task')
 
@@ -134,22 +137,23 @@ test.describe('Scoped Global Search (MDT-179)', () => {
   })
 
   test('partial project name matches by word prefix (BR-3.1)', async ({ page, e2eContext }) => {
-    await page.goto(e2eContext.frontendUrl)
+    await page.goto(`/prj/${projectKey}`)
     // MDT-239: wait for the app shell (project auto-select) before pressing
     // Cmd+K — pressing during boot misses the not-yet-attached key listener.
     await expect(page.locator('nav, [data-testid="app-logo"]').first()).toBeVisible({ timeout: 10000 })
     await page.keyboard.press('Meta+k')
 
+    await page.getByTestId('quick-search-all-projects').click()
     const input = page.getByTestId('quick-search-input')
     // "task ma" should match "Task Manager" via word-prefix
     await input.fill('task ma')
 
     await expect(page.getByTestId('quick-search-projects-section')).toBeVisible()
-    await expect(page.getByText('Task Manager')).toBeVisible()
+    await expect(page.getByTestId('quick-search-projects-section')).toContainText('Task Manager')
   })
 
   test('exact ticket key prioritizes ticket lookup (BR-3.3)', async ({ page, e2eContext }) => {
-    await page.goto(e2eContext.frontendUrl)
+    await page.goto(`/prj/${projectKey}`)
     // MDT-239: wait for the app shell (project auto-select) before pressing
     // Cmd+K — pressing during boot misses the not-yet-attached key listener.
     await expect(page.locator('nav, [data-testid="app-logo"]').first()).toBeVisible({ timeout: 10000 })
@@ -164,12 +168,13 @@ test.describe('Scoped Global Search (MDT-179)', () => {
   })
 
   test('arrow keys navigate across grouped sections (BR-5.1)', async ({ page, e2eContext }) => {
-    await page.goto(e2eContext.frontendUrl)
+    await page.goto(`/prj/${projectKey}`)
     // MDT-239: wait for the app shell (project auto-select) before pressing
     // Cmd+K — pressing during boot misses the not-yet-attached key listener.
     await expect(page.locator('nav, [data-testid="app-logo"]').first()).toBeVisible({ timeout: 10000 })
     await page.keyboard.press('Meta+k')
 
+    await page.getByTestId('quick-search-all-projects').click()
     const input = page.getByTestId('quick-search-input')
     await input.fill('Task')
 
@@ -185,7 +190,7 @@ test.describe('Scoped Global Search (MDT-179)', () => {
   })
 
   test('enter activates result and closes modal (BR-5.3)', async ({ page, e2eContext }) => {
-    await page.goto(e2eContext.frontendUrl)
+    await page.goto(`/prj/${projectKey}`)
     // MDT-239: wait for the app shell (project auto-select) before pressing
     // Cmd+K — pressing during boot misses the not-yet-attached key listener.
     await expect(page.locator('nav, [data-testid="app-logo"]').first()).toBeVisible({ timeout: 10000 })
@@ -222,12 +227,13 @@ test.describe('Scoped Global Search (MDT-179)', () => {
   })
 
   test('Arrow keys navigate across all groups (BR-5.1, BR-5.2)', async ({ page, e2eContext }) => {
-    await page.goto(e2eContext.frontendUrl)
+    await page.goto(`/prj/${projectKey}`)
     // MDT-239: wait for the app shell (project auto-select) before pressing
     // Cmd+K — pressing during boot misses the not-yet-attached key listener.
     await expect(page.locator('nav, [data-testid="app-logo"]').first()).toBeVisible({ timeout: 10000 })
     await page.keyboard.press('Meta+k')
 
+    await page.getByTestId('quick-search-all-projects').click()
     const input = page.getByTestId('quick-search-input')
     await input.fill('Task')
 
@@ -247,12 +253,13 @@ test.describe('Scoped Global Search (MDT-179)', () => {
   })
 
   test('ambiguous query shows separate groups (BR-6.1)', async ({ page, e2eContext }) => {
-    await page.goto(e2eContext.frontendUrl)
+    await page.goto(`/prj/${projectKey}`)
     // MDT-239: wait for the app shell (project auto-select) before pressing
     // Cmd+K — pressing during boot misses the not-yet-attached key listener.
     await expect(page.locator('nav, [data-testid="app-logo"]').first()).toBeVisible({ timeout: 10000 })
     await page.keyboard.press('Meta+k')
 
+    await page.getByTestId('quick-search-all-projects').click()
     const input = page.getByTestId('quick-search-input')
     // Query that matches project name and could also have ticket results
     await input.fill('Task')
@@ -262,7 +269,7 @@ test.describe('Scoped Global Search (MDT-179)', () => {
   })
 
   test('empty state identifies active scope (BR-6.3)', async ({ page, e2eContext }) => {
-    await page.goto(e2eContext.frontendUrl)
+    await page.goto(`/prj/${projectKey}`)
     // MDT-239: wait for the app shell (project auto-select) before pressing
     // Cmd+K — pressing during boot misses the not-yet-attached key listener.
     await expect(page.locator('nav, [data-testid="app-logo"]').first()).toBeVisible({ timeout: 10000 })
@@ -280,7 +287,7 @@ test.describe('Scoped Global Search (MDT-179)', () => {
   })
 
   test('scope resets to Global when modal reopens', async ({ page, e2eContext }) => {
-    await page.goto(e2eContext.frontendUrl)
+    await page.goto(`/prj/${projectKey}`)
     // MDT-239: wait for the app shell (project auto-select) before pressing
     // Cmd+K — pressing during boot misses the not-yet-attached key listener.
     await expect(page.locator('nav, [data-testid="app-logo"]').first()).toBeVisible({ timeout: 10000 })

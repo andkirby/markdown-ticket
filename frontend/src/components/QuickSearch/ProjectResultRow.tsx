@@ -6,15 +6,17 @@
  * @testid project-result-item — individual project result
  */
 
+import type { ReactNode } from 'react'
 import type { ScoredProject } from '@/hooks/useProjectSearch'
 
 export interface ProjectResultRowProps {
   scoredProject: ScoredProject
+  renderMatch?: (text: string) => ReactNode
   isSelected: boolean
   onSelect: () => void
 }
 
-export function ProjectResultRow({ scoredProject, isSelected, onSelect }: ProjectResultRowProps): React.ReactElement {
+export function ProjectResultRow({ scoredProject, isSelected, onSelect, renderMatch }: ProjectResultRowProps): React.ReactElement {
   const { project } = scoredProject
   const code = project.project?.code ?? ''
   const name = project.project?.name ?? ''
@@ -32,10 +34,10 @@ export function ProjectResultRow({ scoredProject, isSelected, onSelect }: Projec
       >
         <div className="search-result__row">
           <span className="search-result__code">
-            {code}
+            {renderMatch ? renderMatch(code) : code}
           </span>
           <span className="search-result__title">
-            {name}
+            {renderMatch ? renderMatch(name) : name}
           </span>
         </div>
         <div className="search-result__project-name">

@@ -1,5 +1,5 @@
 import type { ExternalReference } from '@mdt/domain-contracts'
-import type { KeyboardEvent } from 'react'
+import type { KeyboardEvent, ReactNode } from 'react'
 import { resolveExternalReferences } from '@mdt/shared/services/externalReferences'
 import { referenceMatchScore } from '@mdt/shared/services/ticket/referenceSearch'
 import { ArrowUpRight, CircleAlert } from 'lucide-react'
@@ -17,8 +17,8 @@ function isolateKeyboard(event: KeyboardEvent) {
     event.stopPropagation()
 }
 
-function ReferenceLink({ reference }: { reference: ExternalReference }) {
-  const content = <span className="external-reference__key">{reference.displayKey}</span>
+function ReferenceLink({ reference, renderLabel }: { reference: ExternalReference, renderLabel?: (label: string) => ReactNode }) {
+  const content = <span className="external-reference__key">{renderLabel ? renderLabel(reference.displayKey) : reference.displayKey}</span>
   if (!reference.url) {
     return (
       <span className="external-reference__link ticket-key" data-reference-state="unavailable" data-testid="external-reference-unavailable" title={`${reference.ref}: ${reference.unavailableReason ?? 'Unavailable'}`} aria-label={`${reference.ref}: unavailable. ${reference.unavailableReason ?? ''}`}>
@@ -33,7 +33,7 @@ function ReferenceLink({ reference }: { reference: ExternalReference }) {
   )
 }
 
-function ReferenceGroup({ references, query }: { references: ExternalReference[], query: string }) {
+function ReferenceGroup({ references, query, renderLabel }: { references: ExternalReference[], query: string, renderLabel?: (label: string) => ReactNode }) {
   const panelRef = useRef<HTMLDivElement>(null)
   const labelId = useId()
   const entries = references.map((reference, index) => ({ reference, key: `${reference.ref}:${index}` }))
@@ -55,7 +55,7 @@ function ReferenceGroup({ references, query }: { references: ExternalReference[]
           :
         </span>
       )}
-      {inline.map(({ reference, key }) => <ReferenceLink key={key} reference={reference} />)}
+      {inline.map(({ reference, key }) => <ReferenceLink key={key} reference={reference} renderLabel={renderLabel} />)}
       {hasLinks && <ArrowUpRight className="external-reference__arrow" aria-hidden="true" />}
       {hasUnavailable && first.kind && <CircleAlert className="external-reference__icon" aria-label="Includes unavailable references" />}
       {details.length > 0 && (
@@ -85,7 +85,7 @@ function ReferenceGroup({ references, query }: { references: ExternalReference[]
             <strong id={labelId} className="external-reference__heading">External references</strong>
             {details.map(({ reference, key }) => (
               <div className="external-reference__detail" key={key}>
-                <ReferenceLink reference={reference} />
+                <ReferenceLink reference={reference} renderLabel={renderLabel} />
                 {reference.unavailableReason && <span className="external-reference__reason">{reference.unavailableReason}</span>}
               </div>
             ))}
@@ -100,6 +100,7 @@ interface ExternalReferenceBadgesProps {
   refs?: readonly string[]
   externalRefs?: readonly ExternalReference[]
   query?: string
+  renderLabel?: (label: string) => ReactNode
 }
 
 /**
@@ -109,7 +110,7 @@ interface ExternalReferenceBadgesProps {
  * @testid external-reference-details-trigger — overflow or unavailable explanation
  * @testid external-reference-details — bounded hidden-reference list
  */
-export function ExternalReferenceBadges({ refs, externalRefs, query = '' }: ExternalReferenceBadgesProps) {
+export function ExternalReferenceBadges({ refs, externalRefs, query = '', renderLabel }: ExternalReferenceBadgesProps) {
   const references = externalRefs ?? resolveExternalReferences(refs ?? [], undefined)
   const groups = new Map<string, ExternalReference[]>()
   for (const reference of references) {
@@ -118,5 +119,5 @@ export function ExternalReferenceBadges({ refs, externalRefs, query = '' }: Exte
     groups.set(reference.instance, group)
   }
   const ordered = [...groups.entries()].sort((a, b) => referenceMatchScore(b[1].map(reference => reference.ref), query) - referenceMatchScore(a[1].map(reference => reference.ref), query))
-  return <>{ordered.map(([instance, entries]) => <ReferenceGroup key={instance} references={entries} query={query} />)}</>
+  return <>{ordered.map(([instance, entries]) => <ReferenceGroup key={instance} references={entries} query={query} renderLabel={renderLabel} />)}</>
 }
