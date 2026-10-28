@@ -101,6 +101,9 @@ Documents are intentionally hidden from the scope bar until document search is w
 
 Group order is cross-project tickets, current-project tickets, projects, then documents. Keyboard selection follows the same order.
 
+Cross-project ticket results keep the ticket key and title on the first row. A second wrapping metadata row contains project code/name and grouped external-reference badges. Reference badges follow the project name. Match-type labels are omitted; match highlighting is deferred. When the available width cannot fit project context and badges together, the badges wrap below the project context without horizontal scrolling. Short context may remain inline on a narrow screen. External links/details stay siblings of the native ticket-selection button; activating them never opens the local ticket. Current-project title results retain their reference row without repeating project context.
+
+
 ## States
 
 | State | Trigger | Visible Contract |

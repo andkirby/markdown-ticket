@@ -127,14 +127,13 @@
     outline: 2px solid var(--primary-text);
     outline-offset: 2px;
   }
-  .external-reference__link:active,
   .external-reference__more:active {
     background: var(--bg-subtle);
   }
   @media (hover: hover) and (pointer: fine) {
-    /* Keep issue numbers flat, including the shared ticket-key link rule. */
-    a.external-reference__link.ticket-key:hover {
-      text-decoration: none;
+    /* Same underline-only feedback as relationship ticket links. */
+    a.external-reference__link:hover {
+      text-decoration-line: underline;
     }
     .external-reference__more:hover {
       background: var(--bg-subtle);

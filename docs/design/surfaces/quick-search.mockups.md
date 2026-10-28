@@ -3,7 +3,7 @@
 Related spec: `quick-search.spec.md`
 Related interactions: `quick-search.interactions.md`
 
-These mockups show the review states for the durable Quick Search contract. Small hover-only or color-only differences belong in the spec state tables, not as separate full-window examples. External-reference chips follow the shared [badge mockups](external-reference-badge.mockups.md): one icon per instance, three short keys and hidden-only +N overflow. Jira uses the supplied 16px SVG; Wireloom shows a symbolic named icon slot. Search badges remain visible independently of board preferences.
+These mockups show the review states for the durable Quick Search contract. Small hover-only or color-only differences belong in the spec state tables, not as separate full-window examples. External-reference chips follow the shared [badge mockups](external-reference-badge.mockups.md): one icon per instance, three short keys and hidden-only +N overflow. Jira uses the supplied 16px SVG; Wireloom shows a symbolic named icon slot. Search badges remain visible independently of board preferences. Cross-project results place project context and reference badges together in one wrapping metadata row below the title.
 
 ## All Scope
 
@@ -88,10 +88,12 @@ window "Quick Search - Ticket Key Lookup":
     section "Cross-Project Results":
       list:
         slot "ABC-042   Auth service refactor" active id="cross-ticket":
-          text "ABC   Another Project · Local key" muted size=small
+          row:
+            text "ABC   Another Project" muted size=small
         slot "MDT-042   Linked auth work":
-          text "MDT   Current Project · External reference" muted size=small
-          chip "42 ↗" icon="jira"
+          row:
+            text "MDT   Current Project" muted size=small
+            chip "42 ↗" icon="jira"
 
 annotation "Ticket-key syntax is an accelerator inside the visible scope model." target="mode-badge" position=right
 annotation "Cross-project ticket rows include project context." target="cross-ticket" position=right

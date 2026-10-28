@@ -91,20 +91,19 @@ function CrossProjectResultItem({ result, isSelected, onSelect, query }: CrossPr
               {result.ticket.title}
             </span>
           </div>
-          <div className="search-result__project-name">
+        </button>
+        <div className="search-result__metadata">
+          <span className="search-result__project">
             <span
               className="search-result__project-label"
               data-testid="quick-search-project-label"
             >
               {result.project.code}
             </span>
-            <span>{result.project.name}</span>
-          </div>
-        </button>
-        {result.matchedBy?.some(source => source !== 'text') && (
-          <span className="search-result__provenance">{result.matchedBy.filter(source => source !== 'text').map(source => source === 'local-key' ? 'Local key' : 'External reference').join(' · ')}</span>
-        )}
-        <div className="search-result__references"><ExternalReferenceBadges refs={result.ticket.refs} externalRefs={result.ticket.externalRefs} query={query} /></div>
+            <span className="search-result__project-title">{result.project.name}</span>
+          </span>
+          <div className="search-result__references"><ExternalReferenceBadges refs={result.ticket.refs} externalRefs={result.ticket.externalRefs} query={query} /></div>
+        </div>
       </div>
     </li>
   )

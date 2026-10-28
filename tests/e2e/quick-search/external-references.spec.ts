@@ -134,3 +134,50 @@ test('MDT-252 exact current-project key stays ahead of cross-project partial ref
   const scoped = await request.post(`${e2eContext.backendUrl}/api/projects/search`, { data: { mode: 'project_scope', query: exact.code, projectCode: first.project.key, limitPerProject: 1 } })
   expect((await scoped.json()).results[0].ticket.code).toBe(exact.code)
 })
+
+
+test('MDT-252 cross-project references share the project metadata row and wrap on mobile', async ({ page, request, e2eContext }, testInfo) => {
+  const fixture = await createExternalReferenceProject(e2eContext)
+  const issue = String(Number.parseInt(fixture.project.key, 36))
+  const ticket = await fixture.ticket('Compact cross-project metadata', [`work:PRJ-${issue}`])
+  expect((await request.put(`${e2eContext.backendUrl}/api/projects/${fixture.project.key}/update`, { data: { name: 'External references across connected customer projects' } })).ok()).toBe(true)
+  await page.goto(`/prj/${fixture.project.key}`)
+  await expect(page.locator(boardSelectors.ticketByCode(ticket.code))).toBeVisible()
+  await page.keyboard.press(`${process.platform === 'darwin' ? 'Meta' : 'Control'}+k`)
+  const input = page.locator(quickSearchSelectors.input)
+  await expect(input).toBeFocused()
+  await expect(input).toHaveValue('')
+  await input.fill(`work:PRJ-${issue}`)
+  await expect(input).toHaveValue(`work:PRJ-${issue}`)
+  const result = page.locator('[data-testid="quick-search-cross-project-result-item"]').filter({ hasText: ticket.code })
+  const metadata = result.locator('.search-result__metadata')
+  const group = metadata.locator(externalReferenceSelectors.group)
+  await expect(group).toBeVisible()
+  await expect(metadata).not.toContainText(/Local match|External match/)
+  await expect(result.locator('button a, button button')).toHaveCount(0)
+  for (const [width, theme] of [[1280, 'light'], [390, 'dark']] as const) {
+    await page.setViewportSize({ width, height: 844 })
+    await page.evaluate(theme => document.documentElement.classList.toggle('dark', theme === 'dark'), theme)
+    const project = (await metadata.locator('.search-result__project').boundingBox())!
+    const badge = (await group.boundingBox())!
+    if (width === 1280) {
+      expect(Math.abs((project.y + project.height / 2) - (badge.y + badge.height / 2))).toBeLessThan(1)
+      expect(badge.x).toBeGreaterThan(project.x + project.width)
+    }
+    else {
+      expect(badge.y).toBeGreaterThanOrEqual(project.y + project.height)
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width)
+    }
+    const link = group.locator(externalReferenceSelectors.link)
+    await link.hover()
+    expect(await link.evaluate(element => ({ background: getComputedStyle(element).backgroundColor, decoration: getComputedStyle(element).textDecorationLine })))
+      .toEqual({ background: 'rgba(0, 0, 0, 0)', decoration: 'underline' })
+    await result.screenshot({ path: testInfo.outputPath(`metadata-${width}-${theme}.png`) })
+  }
+  await page.context().route('https://jira.example.test/**', route => route.fulfill({ body: '<h1>Issue</h1>', contentType: 'text/html' }))
+  const popup = page.waitForEvent('popup')
+  await group.locator(externalReferenceSelectors.link).click()
+  await (await popup).close()
+  await expect(page.locator(quickSearchSelectors.modal)).toBeVisible()
+  await expect(page.locator(ticketSelectors.detailPanel)).not.toBeVisible()
+})

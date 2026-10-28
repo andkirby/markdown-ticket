@@ -16,6 +16,7 @@
   <!-- epic-badge split-chip demo: REAL badge variants + ticket-key typography -->
   <link rel="stylesheet" href="components/Badge/badge.css" />
   <link rel="stylesheet" href="components/TicketCard/ticket.css" />
+  <link rel="stylesheet" href="components/QuickSearch/quick-search.css" />
   <style>
     :root { color-scheme: light dark; }
     body {
@@ -116,7 +117,7 @@
     .external-reference-demo { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr)); gap:var(--gap-md); margin-block-start:var(--gap-md); }
     .external-reference-demo .ticket-card__row { display:flex; align-items:center; justify-content:space-between; gap:var(--gap-sm); }
     .external-reference-demo__attributes { display:flex; align-items:center; flex-wrap:wrap; gap:var(--gap-sm); margin-block-start:var(--gap-xs); }
-    .external-reference-demo .badge { display:inline-flex; align-items:center; column-gap:var(--gap-xs); padding:calc(var(--gap-xs)/2) calc(var(--gap-xs)*1.5); font-size:.75rem; line-height:1rem; font-weight:500; }
+    .external-reference-demo .badge, .search-reference-demo .badge { display:inline-flex; align-items:center; column-gap:var(--gap-xs); padding:calc(var(--gap-xs)/2) calc(var(--gap-xs)*1.5); font-size:.75rem; line-height:1rem; font-weight:500; }
     .external-reference-demo__details { display:inline-block; max-inline-size:100%; }
     .external-reference-demo__details > summary { cursor:pointer; list-style:none; }
     .external-reference-demo__details > summary::-webkit-details-marker { display:none; }
@@ -141,6 +142,33 @@
       <h3 class="ticket-card__title">Same-kind instances and hidden-only overflow</h3>
       <div class="external-reference-demo__attributes"><div class="badge external-reference" data-external-reference><img src="../public/icons/trackers/jira.svg" class="external-reference__icon" alt="" aria-hidden="true" draggable="false" /><span class="external-reference__instance">work:</span><a class="external-reference__link ticket-key" href="https://jira.example.test/jira/browse/PRJ-123" target="_blank" rel="noopener noreferrer" title="work:PRJ-123 — https://jira.example.test/jira/browse/PRJ-123" aria-label="Open work:PRJ-123, new tab"><span class="external-reference__key">123</span></a><a class="external-reference__link ticket-key" href="https://jira.example.test/jira/browse/PRJ-124" target="_blank" rel="noopener noreferrer" title="work:PRJ-124 — https://jira.example.test/jira/browse/PRJ-124" aria-label="Open work:PRJ-124, new tab"><span class="external-reference__key">124</span></a><a class="external-reference__link ticket-key" href="https://jira.example.test/jira/browse/PRJ-125" target="_blank" rel="noopener noreferrer" title="work:PRJ-125 — https://jira.example.test/jira/browse/PRJ-125" aria-label="Open work:PRJ-125, new tab"><span class="external-reference__key">125</span></a><span class="external-reference__arrow" aria-hidden="true">↗</span><details class="external-reference-demo__details"><summary class="external-reference__more">+2</summary><div class="external-reference__panel" data-external-references><strong>External references</strong><div class="external-reference__detail"><a class="external-reference__link ticket-key" href="https://jira.example.test/jira/browse/PRJ-126" target="_blank" rel="noopener noreferrer" title="work:PRJ-126 — https://jira.example.test/jira/browse/PRJ-126" aria-label="Open work:PRJ-126, new tab"><span class="external-reference__key">126</span></a></div><div class="external-reference__detail"><a class="external-reference__link ticket-key" href="https://jira.example.test/jira/browse/PRJ-127" target="_blank" rel="noopener noreferrer" title="work:PRJ-127 — https://jira.example.test/jira/browse/PRJ-127" aria-label="Open work:PRJ-127, new tab"><span class="external-reference__key">127</span></a></div></div></details></div><div class="badge external-reference" data-external-reference><img src="../public/icons/trackers/jira.svg" class="external-reference__icon" alt="" aria-hidden="true" draggable="false" /><span class="external-reference__instance">client:</span><a class="external-reference__link ticket-key" href="https://client.example.test/browse/PRJ-123" target="_blank" rel="noopener noreferrer" title="client:PRJ-123 — https://client.example.test/browse/PRJ-123" aria-label="Open client:PRJ-123, new tab"><span class="external-reference__key">123</span></a><span class="external-reference__arrow" aria-hidden="true">↗</span></div><div class="badge external-reference" data-external-reference><svg class="external-reference__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 19c-4 1-4-2-6-2m12 5v-4a3 3 0 0 0-1-2c3 0 6-2 6-7a5 5 0 0 0-1-4V2s-2 0-4 1a14 14 0 0 0-6 0C7 2 5 2 5 2v3a5 5 0 0 0-1 4c0 5 3 7 6 7a3 3 0 0 0-1 2v4"/></svg><a class="external-reference__link ticket-key" href="https://github.example.test/acme/a-very-long-repository-name-for-layout/issues/42" target="_blank" rel="noopener noreferrer" title="gh:acme/a-very-long-repository-name-for-layout#42 — https://github.example.test/acme/a-very-long-repository-name-for-layout/issues/42" aria-label="Open gh:acme/a-very-long-repository-name-for-layout#42, new tab"><span class="external-reference__key">a-very-long-repository-name-for-layout#42</span></a><span class="external-reference__arrow" aria-hidden="true">↗</span></div><span class="badge" data-context="worktree">Worktree</span></div>
       <p class="external-reference-demo__note">Instance groups remain distinct. +2 contains only 126 and 127, using the same short labels; full identities stay in link titles and accessible names.</p>
+    </article>
+  </div>
+
+  <h2 id="quick-search-reference-metadata">quick search · reference placement</h2>
+  <p class="note">Ticket identity and title lead. Project context and external badges share one wrapping metadata row. Issue numbers use relationship-link hover feedback: underline only, with no separate fill.</p>
+  <style>
+    /* Tailwind layout fallback only; metadata/target behavior uses real CSS. */
+    .search-reference-demo { margin-block-start:var(--gap-md); max-inline-size:100%; background:var(--bg-elevated); }
+    .search-reference-demo .search-result__row { display:flex; align-items:center; gap:calc(var(--gap-xs)*3); }
+    .search-reference-demo .search-result__title { min-inline-size:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .search-reference-demo .search-result__project-label { display:inline-flex; padding:calc(var(--gap-xs)/2) calc(var(--gap-xs)*1.5); border-radius:var(--radius-xs); }
+  </style>
+  <div class="search-reference-demo">
+    <article class="search-result" data-type="cross-project">
+      <button class="search-result__select" type="button">
+        <div class="search-result__row"><span class="ticket-code ticket-key">ABC-003</span><span class="search-result__title">Add public website global search for JRP-95</span></div>
+      </button>
+      <div class="search-result__metadata">
+        <span class="search-result__project"><span class="search-result__project-label">ABC</span><span class="search-result__project-title">Acme Balloon</span></span>
+        <div class="search-result__references"><span class="badge external-reference" data-external-reference>
+          <img src="../public/icons/trackers/jira.svg" class="external-reference__icon" alt="" aria-hidden="true" draggable="false" />
+          <a class="external-reference__link ticket-key" href="https://jira.example.test/browse/JRP-95" target="_blank" rel="noopener noreferrer" title="jira:JRP-95" aria-label="Open JRP-95 in Jira, new tab"><span class="external-reference__key">95</span></a>
+          <a class="external-reference__link ticket-key" href="https://jira.example.test/browse/JRP-59" target="_blank" rel="noopener noreferrer" title="jira:JRP-59" aria-label="Open JRP-59 in Jira, new tab"><span class="external-reference__key">59</span></a>
+          <a class="external-reference__link ticket-key" href="https://jira.example.test/browse/JRP-68" target="_blank" rel="noopener noreferrer" title="jira:JRP-68" aria-label="Open JRP-68 in Jira, new tab"><span class="external-reference__key">68</span></a>
+          <span class="external-reference__arrow" aria-hidden="true">↗</span>
+        </span></div>
+      </div>
     </article>
   </div>
 

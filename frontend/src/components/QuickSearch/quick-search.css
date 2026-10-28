@@ -224,6 +224,27 @@
 }
 
 @layer components {
+  .search-result__metadata {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--gap-sm);
+    margin-block-start: var(--gap-xs);
+    font-size: clamp(11px, var(--fs-xs), 2rem);
+  }
+  .search-result__project {
+    display: inline-flex;
+    align-items: center;
+    gap: calc(var(--gap-xs) * 1.5);
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    color: var(--text-subtle);
+  }
+  .search-result__project-label { flex: none; }
+  .search-result__project-title {
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
   .search-result__references {
     display: flex;
     flex-wrap: wrap;
@@ -250,11 +271,6 @@
   .search-result__select:focus-visible {
     outline: 2px solid var(--primary-text);
     outline-offset: 2px;
-  }
-  .search-result__provenance {
-    display: block;
-    color: var(--text-muted);
-    font-size: clamp(11px, var(--fs-xs), 2rem);
   }
 }
 
