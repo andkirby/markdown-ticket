@@ -52,7 +52,7 @@ The modal body is capped at 80dvh. Header stays pinned, inner content scrolls.
 </ModalBody>
 ```
 
-`.modal__body--constrained` sets `display: flex; flex-direction: column; height: 80dvh; overflow: hidden`. The ScrollArea fills the remaining space after the header.
+`.modal__body--constrained` sets `display: flex; flex-direction: column; height: 80dvh; overflow: hidden` and inherits the modal shell's border radius so its chrome stays inside the rounded corners. The ScrollArea fills the remaining space after the header.
 
 Do NOT use for forms or long-document modals (settings, ticket viewer) — those should grow freely.
 

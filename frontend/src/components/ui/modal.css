@@ -66,6 +66,7 @@
     flex-direction: column;
     height: 80dvh;
     min-height: 0;
+    border-radius: inherit;
     overflow: hidden;
   }
 
