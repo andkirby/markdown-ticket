@@ -355,14 +355,20 @@
   }
   .search-footer kbd { font-family: inherit; font-weight: 600; }
   .search-footer__help > summary {
-    inline-size: fit-content;
     min-block-size: var(--sz-control);
     display: flex;
     align-items: center;
+    gap: var(--gap-sm);
     cursor: pointer;
-    text-decoration: underline;
-    text-underline-offset: var(--gap-xs);
+    list-style: none;
   }
+  .search-footer__help > summary::-webkit-details-marker { display: none; }
+  .search-footer__chevron {
+    flex: none;
+    inline-size: var(--sz-icon);
+    block-size: var(--sz-icon);
+  }
+  .search-footer__help[open] .search-footer__chevron { transform: rotate(90deg); }
   .search-footer__help p { margin-block: var(--gap-xs); }
   @media (hover: hover) and (pointer: fine) {
     .search-location-toggle:not([aria-pressed="true"]):hover,

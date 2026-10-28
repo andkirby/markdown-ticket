@@ -28,8 +28,8 @@ window "Quick Search - All Scope":
       list:
         item "Markdown Ticket Board" id="project-result"
   footer:
+    button "›"
     text "↑↓ Move · Enter Open · Tab Controls · Esc Close" muted
-    button "Keyboard shortcuts"
 
 annotation "All shows ticket and project groups without blending them into one mixed list." target="scope-all" position=right
 annotation "Keyboard selection follows visible group order." target="ticket-result" position=right
@@ -58,8 +58,8 @@ window "Quick Search - Tickets Scope":
         item "MDT-155   Badge hover states"
 
   footer:
+    button "›"
     text "↑↓ Move · Enter Open · Tab Controls · Esc Close" muted
-    button "Keyboard shortcuts"
 
 annotation "Tickets scope hides project matches even when project names also match." target="scope-tickets" position=right
 annotation "Selected treatment is shared for mouse and keyboard result rows." target="ticket-selected" position=right
@@ -82,8 +82,8 @@ window "Quick Search - Projects Scope":
         item "SLTTS   Summary Link TTS"
 
   footer:
+    button "›"
     text "↑↓ Move · Enter Open · Tab Controls · Esc Close" muted
-    button "Keyboard shortcuts"
 
 annotation "Project search is discoverable through the same command palette entrypoint." target="scope-projects" position=right
 annotation "Project code and name are enough here; card layout remains owned by project-browser.spec.md." target="project-sl" position=right
@@ -114,8 +114,8 @@ window "Quick Search - Ticket Key Lookup":
             chip "42 ↗" icon="jira"
 
   footer:
+    button "›"
     text "↑↓ Move · Enter Open · Tab Controls · Esc Close" muted
-    button "Keyboard shortcuts"
 
 annotation "Ticket-key syntax is an accelerator inside the visible scope model." target="mode-badge" position=right
 annotation "Cross-project ticket rows include project context." target="cross-ticket" position=right
@@ -143,8 +143,8 @@ window "Quick Search - Remote Loading":
       text "----------------" muted
 
   footer:
+    button "›"
     text "↑↓ Move · Enter Open · Tab Controls · Esc Close" muted
-    button "Keyboard shortcuts"
 
 annotation "Remote ticket lookup shows skeleton rows inside the affected group only." target="loading" position=right
 ```
@@ -166,8 +166,8 @@ window "Quick Search - Remote Error":
       button "Retry" id="retry"
 
   footer:
+    button "›"
     text "↑↓ Move · Enter Open · Tab Controls · Esc Close" muted
-    button "Keyboard shortcuts"
 
 annotation "Retry stays local to the failed remote-ticket group." target="retry" position=right
 annotation "The modal remains open so the user can revise the query." target="remote-error" position=right
@@ -187,8 +187,8 @@ window "Quick Search - Empty Projects":
     text "No results found in projects" muted id="empty-message"
 
   footer:
+    button "›"
     text "↑↓ Move · Enter Open · Tab Controls · Esc Close" muted
-    button "Keyboard shortcuts"
 
 annotation "Empty copy names the active non-global scope." target="empty-message" position=right
 ```
@@ -214,8 +214,8 @@ window "Quick Search - Mobile":
         item "MDT-142   Badge styles"
 
   footer:
+    button "›"
     text "↑↓ Move · Enter Open · Tab Controls · Esc Close" muted
-    button "Keyboard shortcuts"
 
 annotation "Mobile keeps the same scope model; only available width changes." target="mobile-tabs" position=bottom
 ```
@@ -255,8 +255,10 @@ window "Quick Search - All projects":
           text "MDT   Markdown Ticket Board" muted
         item "ABC-003   Login redirect fallback"
   footer:
+    button "›"
     text "↑↓ Move · Enter Open · Tab Controls · Esc Close" muted
-    button "Keyboard shortcuts"
 ```
 
 Matching substrings receive a theme-aware background in the real UI; Wireloom preserves plain readable text. The numeric default state uses the same toolbar with All projects off and shows current-project matches only. The mobile state wraps location controls and bottom help within page gutters; footer remains outside the result scroller. Expanded help spells out F6 Focus selected result and Shift+F6 Back to search. Native Tab follows focus order.
+
+The leading footer chevron shares the first line with the primary hints, rotates down when expanded, and retains the accessible name Keyboard shortcuts. Additional help appears below that line.

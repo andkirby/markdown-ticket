@@ -122,7 +122,7 @@ Cross-project ticket results keep the ticket key and title on the first row. A s
 - Result rows use native primary buttons and sibling external links/details controls. Selection uses data-selected treatment; primary buttons expose aria-current.
 - Quick Search supplies dialog semantics and an accessible name. Its keyboard hook wraps first/last Tab stops and restores the connected opener on close; portalled reference popovers keep their own native focus handling.
 - Escape closes the modal through the shared modal behavior.
-- From the input, arrows/Enter select/open results and native Tab reaches controls. Scope tabs use one tab stop with Left/Right/Home/End navigation. F6 focuses the selected primary action; native Tab reaches reference controls. Shift+F6 returns to the input, preserving query and scope. With no result, F6 retains input focus. Concise primary help is described by the input and remains below results; an expandable Keyboard shortcuts control explains optional action focus.
+- From the input, arrows/Enter select/open results and native Tab reaches controls. Scope tabs use one tab stop with Left/Right/Home/End navigation. F6 focuses the selected primary action; native Tab reaches reference controls. Shift+F6 returns to the input, preserving query and scope. With no result, F6 retains input focus. Concise primary help is described by the input and remains below results; a chevron at the left of the first footer line expands optional action help and retains the accessible name Keyboard shortcuts.
 
 ## Responsive
 
@@ -157,6 +157,6 @@ The toolbar below the input contains entity tabs and a separate All projects pre
 
 Match highlights mark literal case-insensitive substrings in visible ticket keys/titles, project labels/names and external short labels, including overflow. Exclude @CODE syntax from the highlight query. Keep exact content and accessible identities; a highlight must not replace status/priority glyphs or turn native links into row actions. Selected row and match highlight have distinct treatments in light and dark themes.
 
-Only the middle results region scrolls. Arrow selection follows the visible row with nearest alignment while input focus remains. The bottom status bar remains outside that scroller and shows Move, Open, Controls and Close hints; expanded Keyboard shortcuts explains F6 Focus selected result and Shift+F6 Back to search. Help is available in loading, error and empty states. No new global shortcuts.
+Only the middle results region scrolls. Arrow selection follows the visible row with nearest alignment while input focus remains. The bottom status bar remains outside that scroller and shows Move, Open, Controls and Close hints; the leading chevron rotates when expanded and reveals F6 Focus selected result and Shift+F6 Back to search. Help is available in loading, error and empty states. No new global shortcuts.
 
 Returning-user walkthrough (design reasoning): open Cmd/Ctrl+K → see In: current project and the unpressed All projects toggle → enter 20 → only current tickets → enable All projects → same query across projects → Enter opens selected local ticket. The existing Projects tab remains discoverable for project navigation. Narrow layouts wrap toolbar/footer controls without horizontal scrolling.
