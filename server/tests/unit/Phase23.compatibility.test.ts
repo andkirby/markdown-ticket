@@ -1,19 +1,18 @@
 import type { Request, Response } from 'express'
-import type { AuthenticatedRequest, ProjectServiceExtension, TreeServiceInterface } from '../../controllers/ProjectController'
+import type { AuthenticatedRequest, ProjectServiceExtension } from '../../modules/projects/index.js'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import express from 'express'
 import request from 'supertest'
 import { buildRuntimeConfig } from '../../config/runtimeConfig'
-import { DocumentController } from '../../controllers/DocumentController'
-import { PinController } from '../../controllers/PinController'
-import { ProjectController } from '../../controllers/ProjectController'
-import { createAuthRouter } from '../../routes/auth'
-import { createDevToolsRouter } from '../../routes/devtools'
-import { createReadTokensRouter } from '../../routes/readTokens'
+import { createAuthRouter, createReadTokensRouter } from '../../modules/access/index.js'
+import { DocumentConfigurationController, DocumentController } from '../../modules/documents/index.js'
+import { ProjectController } from '../../modules/projects/index.js'
+import { createDevToolsRouter } from '../../modules/system/index.js'
+import { PinController } from '../../modules/tickets/index.js'
 import { createOriginPolicy } from '../../security/originPolicy'
-import { createMockProjectService, createMockReqRes, createMockTreeService } from '../utils/setupTests'
+import { createMockProjectService, createMockReqRes } from '../utils/setupTests'
 
 // Recorded against the pre-wiring adapters. Keep these assertions unchanged.
 describe('MDT-258 phase 2/3 accepted adapter fixtures', () => {
@@ -21,7 +20,7 @@ describe('MDT-258 phase 2/3 accepted adapter fixtures', () => {
     { name: 'Alpha Project', path: '/tmp/alpha' },
     { name: 'Alpha Project', path: '/tmp/alpha', code: 'alp', ticketsPath: '', globalOnly: true, createProjectPath: false, documentPaths: ['docs', 'README.md'], maxDepth: 0 },
   ])('forwards the real project manager input: %j', async (body) => {
-    const controller = new ProjectController(createMockProjectService() as unknown as ProjectServiceExtension, createMockTreeService() as unknown as TreeServiceInterface, {})
+    const controller = new ProjectController(createMockProjectService() as unknown as ProjectServiceExtension, {})
     const createProject = jest.fn().mockResolvedValue({ id: 'alpha' })
     Object.assign(controller, { projectManager: { createProject } })
     const { req, res } = createMockReqRes()
@@ -32,7 +31,7 @@ describe('MDT-258 phase 2/3 accepted adapter fixtures', () => {
   })
 
   it.each([{}, { ignored: true }, { name: ' Alpha Project ', description: '', repository: '', active: false }])('preserves project no-ops and existing normalization: %j', async (body) => {
-    const controller = new ProjectController(createMockProjectService() as unknown as ProjectServiceExtension, createMockTreeService() as unknown as TreeServiceInterface, {})
+    const controller = new ProjectController(createMockProjectService() as unknown as ProjectServiceExtension, {})
     const updateProject = jest.fn()
     Object.assign(controller, { projectManager: { updateProject } })
     const { req, res } = createMockReqRes()
@@ -44,7 +43,7 @@ describe('MDT-258 phase 2/3 accepted adapter fixtures', () => {
 
   it('forwards an empty document-path set', async () => {
     const service = createMockProjectService()
-    const controller = new ProjectController(service as unknown as ProjectServiceExtension, createMockTreeService() as unknown as TreeServiceInterface, {})
+    const controller = new DocumentConfigurationController(service as unknown as ProjectServiceExtension, {})
     const { req, res } = createMockReqRes()
     req.body = { projectId: 'opaque-id', documentPaths: [] }
     await controller.configureDocuments(req as Request, res as Response)

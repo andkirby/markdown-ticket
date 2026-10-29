@@ -127,7 +127,7 @@ Use backend durability only when collapse state must sync across browsers, affec
 If backend durability is needed:
 
 1. Add schema/defaults in `domain-contracts/src/app-config/schema.ts`.
-2. Add read/write endpoint in `server/routes/system.ts` or a dedicated config route.
+2. Extend selector-backed settings through `server/modules/config/router.ts`; place other system HTTP endpoints in `server/modules/system/router.ts`.
 3. Store stable preferences in `user.toml`.
 4. Store high-churn UI state in JSON. Use top-level `CONFIG_DIR/<feature>.json` for user-wide state and `CONFIG_DIR/projects/{project.id}/{feature}.json` for project-scoped feature state.
 5. Keep frontend optimistic with debounced writes.

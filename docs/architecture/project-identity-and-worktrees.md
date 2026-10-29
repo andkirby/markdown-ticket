@@ -177,7 +177,7 @@ Run linked-worktree checks when project identity is built or refreshed:
 - current-project auto-registration fallback
 - auto-discovery scans
 
-File watchers are initialized from the project list at startup. Registry watcher events currently broadcast project lifecycle SSE events. Any implementation that changes registry paths should also clear project cache and rebuild affected watchers, or document that restart is required.
+The explicit server runtime registers project metadata at startup; per-project file watchers start lazily on the first SSE subscription (the registry watcher is the exception). Registry watcher events currently broadcast project lifecycle SSE events. Any implementation that changes registry paths should also clear project cache and rebuild affected watchers, or document that restart is required.
 
 Ticket worktree watchers are separate. They may be created from `.git/worktrees/*/HEAD` monitoring and should continue to watch active ticket worktrees.
 
@@ -246,3 +246,14 @@ that metadata file's directory before deriving the worktree root; resolve the
 worktree's own .git pointer against the worktree root. Both reads belong to the
 watcher subscription adapter, while application ticket routing stays in
 WorktreeService.
+
+## Project configuration ownership
+
+`shared/services/project/ProjectConfigService.ts` owns project-file mutations and
+the named ordinary, discovery and selector read contracts. ProjectConfigLoader is
+a compatibility delegate for discovery migration; the HTTP ProjectConfigStorageAdapter
+delegates selector persistence to the same owner. The common app resolves a
+validated id/code through its catalog and captures the canonical id/path together
+for each asynchronous selector request and watcher effect. These operations do not
+change canonical registry identity or ticket-worktree routing. Registry/local writes
+keep their existing ordering and are not a multi-file transaction.

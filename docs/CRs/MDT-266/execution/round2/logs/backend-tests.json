@@ -1,0 +1,525 @@
+{
+  "success": true,
+  "numPassedTestSuites": 85,
+  "numFailedTestSuites": 0,
+  "numPassedTests": 1043,
+  "numFailedTests": 0,
+  "numPendingTests": 8,
+  "numTotalTests": 1051,
+  "cwd": ".",
+  "exitCode": 0,
+  "command": "bun run --cwd server jest --runInBand --forceExit --json --outputFile=../docs/CRs/MDT-266/execution/round2/logs/backend-tests.json",
+  "qualification": "Explicit forceExit for existing api/sse.test.ts Supertest fixture listeners, separate natural runtime probe.",
+  "suites": [
+    {
+      "file": "server/tests/api/sse.test.ts",
+      "status": "focused",
+      "passed": 18,
+      "skipped": 4
+    },
+    {
+      "file": "server/tests/integration/worktree-sse.test.ts",
+      "status": "passed",
+      "passed": 2,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/unit/TicketService.boundary-compatibility.test.ts",
+      "status": "passed",
+      "passed": 5,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/api/projects.test.ts",
+      "status": "focused",
+      "passed": 43,
+      "skipped": 4
+    },
+    {
+      "file": "server/tests/api/ticket-namespace.test.ts",
+      "status": "passed",
+      "passed": 13,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/integration/api.test.ts",
+      "status": "passed",
+      "passed": 27,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/api/documents.test.ts",
+      "status": "passed",
+      "passed": 47,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/unit/toml-standardization.test.ts",
+      "status": "passed",
+      "passed": 4,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/integration/application-runtime.test.ts",
+      "status": "passed",
+      "passed": 9,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/api/read-token-management.test.ts",
+      "status": "passed",
+      "passed": 14,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/api/projects.search.test.ts",
+      "status": "passed",
+      "passed": 20,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/api/ticket-subdocuments.test.ts",
+      "status": "passed",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/api/public-sharing.test.ts",
+      "status": "passed",
+      "passed": 10,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/api/document-favs.test.ts",
+      "status": "passed",
+      "passed": 5,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/api/ticket-trace-store.test.ts",
+      "status": "passed",
+      "passed": 5,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/api/subdocuments.security.test.ts",
+      "status": "passed",
+      "passed": 9,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/api/auth-stress-matrix.test.ts",
+      "status": "passed",
+      "passed": 6,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/unit/DevLogBatch.boundaries.test.ts",
+      "status": "passed",
+      "passed": 2,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/integration/combined-ticket-mutation.test.ts",
+      "status": "passed",
+      "passed": 6,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/integration/api.metadata.test.ts",
+      "status": "passed",
+      "passed": 14,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/api/document-raw.test.ts",
+      "status": "passed",
+      "passed": 24,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/PathWatcherService.file-creation.test.ts",
+      "status": "passed",
+      "passed": 1,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/fileWatcherService.subdocument.test.ts",
+      "status": "passed",
+      "passed": 10,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/unit/Phase45.boundaries.test.ts",
+      "status": "passed",
+      "passed": 38,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/api/api-auth.test.ts",
+      "status": "passed",
+      "passed": 22,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/api/system.test.ts",
+      "status": "passed",
+      "passed": 22,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/unit/Phase23.compatibility.test.ts",
+      "status": "passed",
+      "passed": 13,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/api/pins.test.ts",
+      "status": "passed",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/api/search.test.ts",
+      "status": "passed",
+      "passed": 12,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/api/selector.test.ts",
+      "status": "passed",
+      "passed": 25,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/unit/Phase23.boundaries.test.ts",
+      "status": "passed",
+      "passed": 45,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/api/global-only-list.test.ts",
+      "status": "passed",
+      "passed": 3,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/api/auth-session.test.ts",
+      "status": "passed",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/services/cloud-sync/CloudCreationRecovery.test.ts",
+      "status": "passed",
+      "passed": 44,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/api/config-openapi.test.ts",
+      "status": "passed",
+      "passed": 5,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/api/unified-tickets-level.test.ts",
+      "status": "passed",
+      "passed": 2,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/sseBroadcaster.subdocument.test.ts",
+      "status": "passed",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/api/openapi-docs.test.ts",
+      "status": "passed",
+      "passed": 20,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/services/MDT-205/level-rest-adapter.test.ts",
+      "status": "passed",
+      "passed": 3,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/unit/ProjectController.boundaries.test.ts",
+      "status": "passed",
+      "passed": 19,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/unit/ProjectController.compatibility.test.ts",
+      "status": "passed",
+      "passed": 6,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/services/cloud-sync/ProjectionStreamManager.test.ts",
+      "status": "passed",
+      "passed": 25,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/api/config-owner-only.test.ts",
+      "status": "passed",
+      "passed": 4,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/integration/config-request-context.test.ts",
+      "status": "passed",
+      "passed": 2,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/api/config-api.test.ts",
+      "status": "passed",
+      "passed": 5,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/unit/ConfigRepository.test.ts",
+      "status": "passed",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/api/devtools-security.test.ts",
+      "status": "passed",
+      "passed": 2,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/security/apiAuth.test.ts",
+      "status": "passed",
+      "passed": 57,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/routes/config-side-effects.test.ts",
+      "status": "passed",
+      "passed": 4,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/unit/ProjectController.test.ts",
+      "status": "passed",
+      "passed": 16,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/services/cloud-sync/TicketIdentityObservation.test.ts",
+      "status": "passed",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/services/MDT-261/create-diagnostics.test.ts",
+      "status": "passed",
+      "passed": 1,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/api/filesystem-boundary.test.ts",
+      "status": "passed",
+      "passed": 3,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/api/sse-cors.test.ts",
+      "status": "passed",
+      "passed": 3,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/api/config-maintenance-policy.test.ts",
+      "status": "passed",
+      "passed": 2,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/unit/namespace-parser.test.ts",
+      "status": "passed",
+      "passed": 20,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/unit/PathWatcherService.test.ts",
+      "status": "passed",
+      "passed": 56,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/fileWatcherService.worktree.test.ts",
+      "status": "passed",
+      "passed": 16,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/services/config/adapters/StorageAdapters.test.ts",
+      "status": "passed",
+      "passed": 5,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/services/config/ConfigApplicationService.test.ts",
+      "status": "passed",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/routes/config-routes-thin.test.ts",
+      "status": "passed",
+      "passed": 4,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/services/config/GuardedOperations.test.ts",
+      "status": "passed",
+      "passed": 6,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/services/cloud-sync/SSEProjectionFanout.test.ts",
+      "status": "passed",
+      "passed": 6,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/services/config/AtomicFailure.test.ts",
+      "status": "passed",
+      "passed": 2,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/unit/RegistryWatcher.test.ts",
+      "status": "passed",
+      "passed": 14,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/api/reverse-proxy-compat.test.ts",
+      "status": "passed",
+      "passed": 3,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/unit/parseRequest.test.ts",
+      "status": "passed",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/unit/ticketOpenApi.boundaries.test.ts",
+      "status": "passed",
+      "passed": 3,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/api/security-headers.test.ts",
+      "status": "passed",
+      "passed": 1,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/config/runtimeConfig.test.ts",
+      "status": "passed",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/security/readTokenStore.test.ts",
+      "status": "passed",
+      "passed": 5,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/security/filesystemAccess.test.ts",
+      "status": "passed",
+      "passed": 6,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/security/documentPreviewToken.test.ts",
+      "status": "passed",
+      "passed": 21,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/unit/Heartbeat.test.ts",
+      "status": "passed",
+      "passed": 21,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/unit/Debounce.test.ts",
+      "status": "passed",
+      "passed": 13,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/unit/SSEBroadcaster.test.ts",
+      "status": "passed",
+      "passed": 25,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/watcherLifecycle.test.ts",
+      "status": "passed",
+      "passed": 18,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/security/readSession.test.ts",
+      "status": "passed",
+      "passed": 2,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/sseBroadcaster.zombie.test.ts",
+      "status": "passed",
+      "passed": 9,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/config/package-deps-unchanged.test.ts",
+      "status": "passed",
+      "passed": 3,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/security/originPolicy.test.ts",
+      "status": "passed",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/security/dependencyAudit.test.ts",
+      "status": "passed",
+      "passed": 2,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/services/config/ConfigSideEffectRegistry.test.ts",
+      "status": "passed",
+      "passed": 3,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/security/trackedSecretScan.test.ts",
+      "status": "passed",
+      "passed": 1,
+      "skipped": 0
+    },
+    {
+      "file": "server/tests/security/publicLinkOrigins.test.ts",
+      "status": "passed",
+      "passed": 5,
+      "skipped": 0
+    }
+  ]
+}

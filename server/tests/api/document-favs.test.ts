@@ -188,7 +188,7 @@ describe('document favs API (MDT-171)', () => {
   })
 
   it('DocumentFavStateService resolves by id or code and falls back on malformed state', async () => {
-    const service = new DocumentFavStateService(app.locals.projectService.projectDiscovery)
+    const service = new DocumentFavStateService(app.locals.projectService)
     const projectId = await getProjectId()
     const statePath = service.getStatePathForProjectId(projectId)
 

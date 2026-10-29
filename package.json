@@ -115,8 +115,10 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,json,md}\"",
     "clean": "rimraf dist shared/dist server/dist mcp-server/dist domain-contracts/dist cloud/dist",
     "clean:all": "bun run clean && rimraf node_modules */node_modules",
-    "check": "bun run validate:ts:all && bun run lint:all && bun run check-shared && bun run check:boundaries && bun run knip",
+    "check": "bun run validate:ts:all && bun run lint:all && bun run check-shared && bun run check:boundaries && bun run check:modules && bun run knip",
     "check:boundaries": "bun scripts/check-boundary-validation.ts",
+    "check:modules": "bun scripts/check-module-boundaries.ts",
+    "test:modules": "bun test scripts/check-module-boundaries.test.ts",
     "test:boundaries": "bun test scripts/check-boundary-validation.test.ts",
     "check:full": "bun run check && bun run format:check && bun run knip",
     "postinstall": "lefthook install"

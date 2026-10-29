@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'bun:test'
 import {
   ACCENT_PALETTE,
   expandShorthandHex,
@@ -5,7 +6,6 @@ import {
   getForegroundForAccent,
   isValidAccentHex,
 } from '../accentColors'
-import { describe, expect, it } from 'bun:test'
 
 function hexToRgb(hex: string) {
   const normalized = hex.replace('#', '')
@@ -94,8 +94,6 @@ describe('accentColors foreground auto-selection', () => {
 })
 
 describe('expandShorthandHex', () => {
-  const { expandShorthandHex } = require('../accentColors')
-
   it('expands 3-char shorthand without # prefix', () => {
     expect(expandShorthandHex('0bc')).toBe('#00bbcc')
   })

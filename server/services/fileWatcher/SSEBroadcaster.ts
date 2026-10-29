@@ -50,6 +50,7 @@ export interface ResponseLike {
  * Constraints: Max 150 lines (C-2.3), Debounce: 100ms (C-2.5), Heartbeat: 30s (C-2.6)
  */
 export class SSEBroadcaster extends EventEmitter {
+  private stopped = false
   private clients: Set<ResponseLike> = new Set()
   private eventQueue: SSEEvent[] = []
   private debounceTimers: Map<string, NodeJS.Timeout> = new Map()
@@ -58,9 +59,13 @@ export class SSEBroadcaster extends EventEmitter {
   /**
    * Add a client to the broadcast set.
    * Lifecycle (close/error handlers) is managed by the facade, not here.
-   * The broadcaster is a pure broadcast medium — it doesn't own connections.
+   * Runtime disposal ends registered responses; per-client subscriptions stay in the facade.
    */
   addClient(response: ResponseLike): void {
+    if (this.stopped) {
+      response.end?.()
+      return
+    }
     this.clients.add(response)
   }
 
@@ -89,6 +94,8 @@ export class SSEBroadcaster extends EventEmitter {
   }
 
   broadcast(event: SSEEvent): void {
+    if (this.stopped)
+      return
     this.eventQueue.push(event)
     if (this.eventQueue.length > 50)
       this.eventQueue = this.eventQueue.slice(-50)
@@ -111,6 +118,8 @@ export class SSEBroadcaster extends EventEmitter {
   }
 
   debouncedBroadcast(key: string, fn: () => void, delay = 100): void {
+    if (this.stopped)
+      return
     if (this.debounceTimers.has(key))
       clearTimeout(this.debounceTimers.get(key)!)
     const timer = setTimeout(() => {
@@ -121,6 +130,8 @@ export class SSEBroadcaster extends EventEmitter {
   }
 
   startHeartbeat(intervalMs = 30000): void {
+    if (this.stopped)
+      return
     // Clear any existing heartbeat before starting a new one
     if (this.heartbeatInterval !== null) {
       clearInterval(this.heartbeatInterval)
@@ -166,6 +177,7 @@ export class SSEBroadcaster extends EventEmitter {
   }
 
   stop(): void {
+    this.stopped = true
     if (this.heartbeatInterval !== null) {
       clearInterval(this.heartbeatInterval)
       this.heartbeatInterval = null
@@ -174,8 +186,7 @@ export class SSEBroadcaster extends EventEmitter {
     this.debounceTimers.clear()
     this.clients.forEach((client) => {
       try {
-        if (!client.headersSent && client.end)
-          client.end()
+        client.end?.()
       }
       catch {
         // Ignore cleanup errors

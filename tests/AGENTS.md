@@ -31,6 +31,7 @@ directly without the wrapper.
 - Tests reach backend-only operations through the `/_e2e/*` admin seam on the
   backend (`e2eContext.fileWatcher.*`, `e2eContext.setRuntimeConfigOverride`)
   — there is no in-process `app`/`fileWatcher` access anymore.
+- The backend factory delegates to the common `server/app.ts` graph. The launcher awaits its explicit runtime start before listening and awaits disposal during shutdown; API tests use the same graph with background activation controlled by the caller.
 - The wrapper always tears down: kills leaked listeners on its ports and
   removes the run's temp `CONFIG_DIR`.
 

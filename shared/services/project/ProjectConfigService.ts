@@ -1,8 +1,12 @@
-import type { ProjectConfigWriteFile } from '@mdt/domain-contracts'
+import type { ProjectConfigDisplayFile, ProjectConfigWriteFile } from '@mdt/domain-contracts'
 import type { ProjectConfig } from '../../models/Project.js'
 import type { ProjectDocumentEffectiveConfig, ProjectDocumentPatchInput } from './ProjectDocumentPatch.js'
 import type { GlobalConfig, IProjectConfigService, ProjectUpdateFields, ProjectWriteReference } from './types.js'
-import { ProjectConfigReadFileSchema, ProjectConfigWriteFileSchema, ProjectDocumentWriteFileSchema, ProjectRegistryWriteFileSchema } from '@mdt/domain-contracts'
+import { randomBytes } from 'node:crypto'
+import { promises as fs } from 'node:fs'
+import * as path from 'node:path'
+import process from 'node:process'
+import { ProjectConfigDisplayFileSchema, ProjectConfigReadFileSchema, ProjectConfigWriteFileSchema, ProjectDocumentWriteFileSchema, ProjectRegistryWriteFileSchema } from '@mdt/domain-contracts'
 import { getTicketsPath, isLegacyConfig, migrateLegacyConfig, validateProjectConfig } from '../../models/Project.js'
 import { validateTicketsPath } from '../../tools/ProjectValidator.js'
 import { getDefaultConfig as getDefaultConfigUtil, processConfig } from '../../utils/config-validator.js'
@@ -28,6 +32,115 @@ import { ProjectConfigurationMode } from './types.js'
  * local project config, and configuration updates.
  */
 export class ProjectConfigService implements IProjectConfigService {
+  getDiscoveryProjectConfig(projectPath: string): ProjectConfig | null {
+    try {
+      const configPath = buildConfigFilePath(projectPath, CONFIG_FILES.PROJECT_CONFIG)
+
+      if (!fileExists(configPath)) {
+        return null
+      }
+
+      const content = readFile(configPath)
+      const config = ProjectConfigReadFileSchema.parse(parseToml(content))
+
+      // Check for legacy configuration and migrate automatically.
+      if (isLegacyConfig(config)) {
+        logQuiet(this.quiet, `Automatically migrating legacy configuration format for project at ${projectPath}...`)
+        return this.migrateDiscoveryLegacyConfig(config, configPath)
+      }
+      return config
+    }
+    catch (error) {
+      logQuiet(this.quiet, `Error reading project config from ${projectPath}:`, error)
+      return null
+    }
+  }
+
+  /**
+   * Enhanced migration method that properly cleans up legacy configurations
+   * Moves project.path (tickets) to project.ticketsPath and sets project.path to "."
+   */
+  private migrateDiscoveryLegacyConfig(config: ProjectConfig, configPath: string): ProjectConfig {
+    if (!isLegacyConfig(config)) {
+      return config
+    }
+
+    // At this point, config.project.path is guaranteed to be a string (not undefined)
+    // because isLegacyConfig() checks for its existence and non-undefined value
+    const legacyTicketsPath = config.project.path! // Non-null assertion - safe due to isLegacyConfig check
+
+    // Create a clean migrated configuration
+    const migratedConfig = {
+      ...config,
+      project: {
+        ...config.project,
+        // Set project.path to "." since it represents the project root
+        // The legacy path was actually the tickets path, not the project root
+        path: '.',
+        // Move the legacy path to ticketsPath where it belongs
+        ticketsPath: legacyTicketsPath,
+      },
+    }
+
+    // Write the migrated config back to disk to clean up the legacy format
+    // This ensures the migration is persisted and future reads are fast
+    const tomlContent = stringify(migratedConfig)
+    writeFileAtomic(configPath, tomlContent)
+    logQuiet(this.quiet, `Updated legacy config to clean format at ${configPath}`)
+
+    return migratedConfig
+  }
+
+  projectFilePath(projectPath: string): string {
+    return path.join(projectPath, CONFIG_FILES.PROJECT_CONFIG)
+  }
+
+  async readProjectFile(projectPath: string, forWrite = false): Promise<ProjectConfigDisplayFile> {
+    try {
+      const content = await fs.readFile(this.projectFilePath(projectPath), 'utf8')
+      // Display extraction and mutation reloads have separate contracts.
+      return forWrite
+        ? ProjectConfigWriteFileSchema.parse(parseToml(content))
+        : ProjectConfigDisplayFileSchema.parse(parseToml(content))
+    }
+    catch (error) {
+      if (forWrite && !(typeof error === 'object' && error !== null && 'code' in error && error.code === 'ENOENT'))
+        throw error
+      // Missing file -> minimal default shape; caller decides whether to create.
+      return { project: { name: '', code: '', id: '' } }
+    }
+  }
+
+  /** Selector writes keep their strict-reload/minimal-missing-file contract. */
+  async mutateProjectFile(projectPath: string, mutator: (current: ProjectConfigDisplayFile) => ProjectConfigDisplayFile) {
+    const next = mutator(await this.readProjectFile(projectPath, true))
+    await this.writeProjectFile(projectPath, next)
+    return { effective: next, filePath: this.projectFilePath(projectPath) }
+  }
+
+  private async writeProjectFile(projectPath: string, config: ProjectConfigDisplayFile): Promise<void> {
+    const parentDir = path.dirname(this.projectFilePath(projectPath))
+    await fs.mkdir(parentDir, { recursive: true })
+    const tmpPath = `${this.projectFilePath(projectPath)}.${process.pid}.${randomBytes(8).toString('hex')}.tmp`
+    try {
+      await fs.writeFile(
+        tmpPath,
+        stringify(config),
+        'utf8',
+      )
+      await fs.rename(tmpPath, this.projectFilePath(projectPath))
+    }
+    catch (writeError) {
+      try {
+        await fs.unlink(tmpPath)
+      }
+      catch {
+        // ignore cleanup failure
+      }
+      throw writeError
+    }
+  }
+
   private quiet: boolean
 
   constructor(quiet: boolean = false) {

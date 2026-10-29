@@ -1,15 +1,16 @@
 import type { Request, Response } from 'express'
-import type { AuthenticatedRequest, ProjectServiceExtension, TreeServiceInterface } from '../../controllers/ProjectController'
+import type { AuthenticatedRequest, ProjectServiceExtension, TreeServiceInterface } from '../../modules/projects/index.js'
 import type { TicketService } from '../../services/TicketService'
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import express from 'express'
 import request from 'supertest'
-import { DocumentController } from '../../controllers/DocumentController'
-import { ProjectController } from '../../controllers/ProjectController'
+import { DocumentController } from '../../modules/documents/index.js'
+import { ProjectController } from '../../modules/projects/index.js'
+import { createDevToolsRouter, SystemController } from '../../modules/system/index.js'
+import { TicketController } from '../../modules/tickets/index.js'
 import { ConfigRepository } from '../../repositories/ConfigRepository'
-import { createDevToolsRouter } from '../../routes/devtools'
 import { ProjectConfigStorageAdapter } from '../../services/config/adapters/ProjectConfigStorageAdapter'
 import { DocumentFavStateService } from '../../services/DocumentFavStateService'
 import FileWatcherService from '../../services/fileWatcher'
@@ -20,8 +21,10 @@ function setup() {
   const service = createMockProjectService()
   const tree = createMockTreeService()
   const tickets = { getCloudProjections: jest.fn().mockResolvedValue({ entries: [] }), getCR: jest.fn() }
-  const controller = new ProjectController(service as unknown as ProjectServiceExtension, tree as unknown as TreeServiceInterface, {}, undefined, tickets as unknown as TicketService)
-  return { service, tree, tickets, controller }
+  const projects = new ProjectController(service as unknown as ProjectServiceExtension)
+  const system = new SystemController(service as unknown as ProjectServiceExtension, tree as unknown as TreeServiceInterface)
+  const controller = new TicketController(service as unknown as ProjectServiceExtension, tickets as unknown as TicketService)
+  return { service, tree, tickets, controller, projects, system }
 }
 function rejected(res: Partial<Response>, source: string) {
   expect(res.status).toHaveBeenCalledWith(400)
@@ -29,30 +32,36 @@ function rejected(res: Partial<Response>, source: string) {
 }
 describe('MDT-258 phase 5 scalar read boundaries', () => {
   it.each(['getProjectConfig', 'getProjectCRs', 'getUnifiedTickets', 'getCR', 'getTraceStore', 'getTraceStoreMetadata', 'getSubDocument', 'getCloudProjections'] as const)('%s rejects structured params before services', async (method) => {
-    const { controller, service, tickets } = setup()
+    const { controller, projects, service, tickets } = setup()
     const { req, res } = createMockReqRes()
     req.params = { projectId: ['bad'], crId: 'MDT-001', subDocName: 'notes.md' } as never
-    await controller[method](req as AuthenticatedRequest, res as Response)
+    if (method === 'getProjectConfig')
+      await projects.getProjectConfig(req as AuthenticatedRequest, res as Response)
+    else
+      await controller[method](req as AuthenticatedRequest, res as Response)
     rejected(res, 'params')
     expect(service.getAllProjects).not.toHaveBeenCalled()
     expect(tickets.getCR).not.toHaveBeenCalled()
     expect(tickets.getCloudProjections).not.toHaveBeenCalled()
   })
   it.each(['getAllProjects', 'getFileSystemTree', 'getSystemDirectories'] as const)('%s rejects structured queries', async (method) => {
-    const { controller, service, tree } = setup()
+    const { projects, system, service, tree } = setup()
     const { req, res } = createMockReqRes()
     req.query = { projectId: ['bad'], path: {}, bypassCache: ['true'] } as never
-    await controller[method](req as AuthenticatedRequest, res as Response)
+    if (method === 'getAllProjects')
+      await projects.getAllProjects(req as Request, res as Response)
+    else
+      await system[method](req as AuthenticatedRequest, res as Response)
     rejected(res, 'query')
     expect(service.getAllProjects).not.toHaveBeenCalled()
     expect(tree.getPathSelectionTree).not.toHaveBeenCalled()
   })
   it.each([undefined, '', 'TRUE', 'false', 'true'])('keeps bypassCache equality for %s', async (bypassCache) => {
-    const { controller, service } = setup()
+    const { projects, service } = setup()
     service.getAllProjects.mockResolvedValue([])
     const { req, res } = createMockReqRes()
     req.query = { bypassCache }
-    await controller.getAllProjects(req as Request, res as Response)
+    await projects.getAllProjects(req as Request, res as Response)
     expect(service.getAllProjects).toHaveBeenCalledWith(bypassCache === 'true')
   })
   it.each([

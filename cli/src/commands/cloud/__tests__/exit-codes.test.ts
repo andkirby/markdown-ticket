@@ -7,11 +7,11 @@
  * exit number through one place; no handler needs to call process.exit inline.
  */
 
-import { CloudExitCode, CloudCommandError, exitCodeFor } from '../exit-codes'
 import { CoordinatorError } from '@mdt/domain-contracts'
 import { MachineCredentialFormatError } from '@mdt/shared/services/cloud-sync/credential-store'
 import { ProjectStateFormatError, UntrustedServiceOriginError } from '@mdt/shared/services/cloud-sync/project-state-store'
 import { describe, expect, it } from 'bun:test'
+import { CloudCommandError, CloudExitCode, exitCodeFor } from '../exit-codes'
 
 describe('cloud exit-code mapping (TEST-exit-codes)', () => {
   it('maps CloudCommandError to its declared exit code', () => {

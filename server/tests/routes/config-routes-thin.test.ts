@@ -1,7 +1,7 @@
 /// <reference types="jest" />
 import * as fs from 'node:fs'
 import * as path from 'node:path'
-import { createConfigRouter } from '../../routes/config'
+import { createConfigRouter } from '../../modules/config/index.js'
 
 /**
  * Thin routes/controllers test (MDT-168 C-7): config routes/controllers are
@@ -9,8 +9,8 @@ import { createConfigRouter } from '../../routes/config'
  * the route or controller modules. Covers TEST-thin-routes-controllers.
  */
 describe('config routes/controllers are transport-only', () => {
-  it('routes/config.ts contains no direct filesystem reads or parseToml calls', () => {
-    const source = fs.readFileSync(path.resolve(__dirname, '../../routes/config.ts'), 'utf8')
+  it('modules/config/router.ts contains no direct filesystem reads or parseToml calls', () => {
+    const source = fs.readFileSync(path.resolve(__dirname, '../../modules/config/router.ts'), 'utf8')
     // routes may import adapters, but must not inline fs.readFile or parseToml
     expect(source).not.toMatch(/fs\.readFile/)
     expect(source).not.toMatch(/fs\.writeFile/)
@@ -18,8 +18,8 @@ describe('config routes/controllers are transport-only', () => {
     expect(source).not.toMatch(/writeFileAtomic/)
   })
 
-  it('controllers/ConfigController.ts contains no direct filesystem or TOML writes', () => {
-    const source = fs.readFileSync(path.resolve(__dirname, '../../controllers/ConfigController.ts'), 'utf8')
+  it('modules/config/ConfigController.ts contains no direct filesystem or TOML writes', () => {
+    const source = fs.readFileSync(path.resolve(__dirname, '../../modules/config/ConfigController.ts'), 'utf8')
     expect(source).not.toMatch(/fs\.readFile/)
     expect(source).not.toMatch(/fs\.writeFile/)
     expect(source).not.toMatch(/parseToml/)
@@ -46,7 +46,7 @@ describe('config routes/controllers are transport-only', () => {
   it('ConfigController delegates to ConfigApplicationService (does not own persistence)', () => {
     // The controller constructor takes only deps with an adapterResolver; it has
     // no file/TOML dependencies of its own.
-    const source = fs.readFileSync(path.resolve(__dirname, '../../controllers/ConfigController.ts'), 'utf8')
+    const source = fs.readFileSync(path.resolve(__dirname, '../../modules/config/ConfigController.ts'), 'utf8')
     expect(source).toMatch(/ConfigApplicationService/)
     expect(source).toMatch(/transport-only|transport delegate|delegates/i)
   })

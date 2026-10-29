@@ -1,0 +1,25 @@
+{
+  "success": false,
+  "numFailedTestSuites": 1,
+  "numPassedTestSuites": 1,
+  "numFailedTests": 0,
+  "numPassedTests": 11,
+  "numPendingTests": 0,
+  "numTotalTests": 11,
+  "cwd": ".",
+  "exitCode": 1,
+  "command": "bun run --cwd mcp-server jest --runInBand --runTestsByPath tests/integration/mcp-backend-consistency.test.ts tests/integration/mcp-backend-consistency-simple.test.ts --testPathIgnorePatterns='^$' --json --outputFile=../docs/CRs/MDT-266/execution/round2/logs/mcp-tests.json",
+  "qualification": "Same pre-existing ESM harness load failure as baseline; full fixture cases not executed; simple fixture11passed. Raw stack retained in ignored mcp-tests.log.",
+  "suites": [
+    {
+      "file": "mcp-server/tests/integration/mcp-backend-consistency-simple.test.ts",
+      "status": "passed",
+      "cases": 11
+    },
+    {
+      "file": "mcp-server/tests/integration/mcp-backend-consistency.test.ts",
+      "status": "failed",
+      "cases": 0
+    }
+  ]
+}

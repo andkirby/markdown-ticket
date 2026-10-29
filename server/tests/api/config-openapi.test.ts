@@ -14,7 +14,7 @@ import swaggerJsdoc from 'swagger-jsdoc'
 function buildSpecFromRoute(): Record<string, unknown> {
   const options: swaggerJsdoc.Options = {
     definition: { openapi: '3.0.0', info: { title: 'test', version: '1.0.0' } },
-    apis: [path.resolve(__dirname, '../../routes/config.ts')],
+    apis: [path.resolve(__dirname, '../../modules/config/router.ts')],
   }
   return swaggerJsdoc(options) as Record<string, unknown>
 }
@@ -23,7 +23,7 @@ describe('config OpenAPI contract', () => {
   const spec = buildSpecFromRoute()
   const paths = spec.paths as Record<string, Record<string, unknown>>
 
-  it('routes/config.ts has @openapi JSDoc that swagger-jsdoc can parse', () => {
+  it('modules/config/router.ts has @openapi JSDoc that swagger-jsdoc can parse', () => {
     expect(Object.keys(paths).length).toBeGreaterThan(0)
   })
 

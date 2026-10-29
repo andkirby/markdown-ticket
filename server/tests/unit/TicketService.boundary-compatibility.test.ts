@@ -5,10 +5,9 @@ import { CLOUD_SYNC_CONNECTION_VERSION, CoordinatorError } from '@mdt/domain-con
 import { TicketService as SharedTicketService } from '@mdt/shared/services/TicketService.js'
 import express from 'express'
 import request from 'supertest'
-import { ProjectController } from '../../controllers/ProjectController.js'
-import { createCloudCreationRecoveryRouter } from '../../routes/cloudCreationRecovery.js'
+import { createCloudCreationRecoveryRouter, TicketController } from '../../modules/tickets/index.js'
 import { TicketService } from '../../services/TicketService.js'
-import { createMockProjectService, createMockTreeService, mockCR, mockProject } from '../utils/setupTests.js'
+import { createMockProjectService, mockCR, mockProject } from '../utils/setupTests.js'
 
 // This acceptance test deliberately bypasses the server Jest shared-service mock.
 jest.mock('@mdt/shared/services/TicketService.js', () => jest.requireActual('../../../shared/services/TicketService.ts'))
@@ -56,7 +55,7 @@ describe('MDT-200 actual shared-service ambiguity through HTTP', () => {
       projectDiscovery: { getAllProjects: jest.fn(), autoDiscoverProjects: jest.fn(), getRegisteredProjects: jest.fn(), registerProject: jest.fn() },
     }
     discovery.getAllProjects.mockResolvedValue([fixtureProject])
-    const controller = new ProjectController(discovery, createMockTreeService(), {}, undefined, service)
+    const controller = new TicketController(discovery, service)
     const app = express()
     app.use(express.json())
     app.use((req, _res, next) => {

@@ -1,15 +1,15 @@
-import type { AuthenticatedRequest, ProjectServiceExtension, TreeServiceInterface } from '../../controllers/ProjectController.js'
+import type { AuthenticatedRequest, ProjectServiceExtension } from '../../modules/projects/index.js'
 import type { TicketService } from '../../services/TicketService.js'
 import express from 'express'
 import request from 'supertest'
-import { ProjectController } from '../../controllers/ProjectController.js'
-import { createMockProjectService, createMockTreeService } from '../utils/setupTests.js'
+import { TicketController } from '../../modules/tickets/index.js'
+import { createMockProjectService } from '../utils/setupTests.js'
 
 function setup() {
   const service = { getCR: jest.fn().mockResolvedValue({ code: 'TEST-258' }), createCR: jest.fn().mockResolvedValue({ success: true }), updateCRPartial: jest.fn().mockResolvedValue({ success: true }), deleteCR: jest.fn().mockResolvedValue({ success: true }) }
   const projectService = createMockProjectService()
   projectService.getAllProjects.mockResolvedValue([{ id: 'test', project: { code: 'TEST', path: '/fixture', active: true } }])
-  const controller = new ProjectController(projectService as unknown as ProjectServiceExtension, createMockTreeService() as unknown as TreeServiceInterface, {}, undefined, service as unknown as TicketService)
+  const controller = new TicketController(projectService as unknown as ProjectServiceExtension, service as unknown as TicketService)
   const app = express()
   app.use(express.json({ strict: false }))
   app.use((req, _res, next) => {

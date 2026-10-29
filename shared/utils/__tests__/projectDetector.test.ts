@@ -6,10 +6,11 @@
  * and explicit no-project result handling.
  */
 
+import type { ProjectDetectionResult } from '../projectDetector'
 import * as fs from 'node:fs'
-import * as path from 'node:path'
 import * as os from 'node:os'
-import { detectProjectContext, type ProjectDetectionResult } from '../projectDetector'
+import * as path from 'node:path'
+import { detectProjectContext } from '../projectDetector'
 
 describe('projectDetector', () => {
   let tempDir: string

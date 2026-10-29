@@ -147,3 +147,12 @@ derived/runtime state and caches that are not settings: project favorites state
 (`project-selector.json`), document favorites (`document-favs.json`), read-access
 tokens, `selectedProject`, and ticket cache. The MCP server's own `config.toml`
 (a separate domain) is also excluded.
+
+## Project-file operation owner
+
+Project selector persistence delegates from the HTTP adapter to shared
+`ProjectConfigService`, alongside existing synchronous project/document operations.
+The common app resolves a selected project id/code through its catalog and captures
+its canonical id/path per request; post-write watcher effects use that same id.
+Global/user scope adapters and this inspection tool's exposure sources remain
+separate. No setting location or editability classification changes.

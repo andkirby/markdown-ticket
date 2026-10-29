@@ -19,6 +19,15 @@ describe('SSEBroadcaster', () => {
   afterEach(() => {
     broadcaster.stop()
   })
+  it('ends established headers-sent responses exactly once on stop', () => {
+    const client = createMockClient()
+    client.headersSent = true
+    broadcaster.addClient(client)
+    broadcaster.stop()
+    broadcaster.stop()
+    expect(client.end).toHaveBeenCalledTimes(1)
+    expect(broadcaster.getClientCount()).toBe(0)
+  })
 
   describe('Client Lifecycle', () => {
     it('should add client and increment count', () => {
@@ -347,7 +356,7 @@ describe('SSEBroadcaster', () => {
       jest.useRealTimers()
     })
 
-    it('should end client connections if not headers sent', () => {
+    it('should end all connected responses, including established streams', () => {
       const client1 = createMockClient({ headersSent: false })
       const client2 = createMockClient({ headersSent: true })
       broadcaster.addClient(client1)
@@ -356,7 +365,7 @@ describe('SSEBroadcaster', () => {
       broadcaster.stop()
 
       expect(client1.end).toHaveBeenCalled()
-      expect(client2.end).not.toHaveBeenCalled()
+      expect(client2.end).toHaveBeenCalledTimes(1)
     })
 
     it('should handle errors when ending client connections', () => {

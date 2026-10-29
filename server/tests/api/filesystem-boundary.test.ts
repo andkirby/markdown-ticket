@@ -5,8 +5,7 @@ import * as os from 'node:os'
 import * as path from 'node:path'
 import express from 'express'
 import request from 'supertest'
-import { ProjectController } from '../../controllers/ProjectController'
-import { createSystemRouter } from '../../routes/system'
+import { createSystemRouter, SystemController } from '../../modules/system/index.js'
 
 function createApp(projectRoot: string) {
   const app = express()
@@ -33,7 +32,7 @@ function createApp(projectRoot: string) {
     getAllProjects: jest.fn(async () => [{ id: 'p', project: { path: projectRoot, code: 'P' } }]),
     getSystemDirectories: jest.fn(async (targetPath: string) => ({ currentPath: targetPath, parentPath: '', directories: [] })),
   }
-  const controller = new ProjectController(projectService as any, {} as any, {} as any)
+  const controller = new SystemController(projectService as any, {} as any)
 
   app.use('/api', createSystemRouter(
     { getClientCount: () => 0 } as any,

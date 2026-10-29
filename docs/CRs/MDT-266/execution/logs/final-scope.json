@@ -1,0 +1,914 @@
+{
+  "head": "4c8ae15be10ef02626f2c0513e23b3909df92448",
+  "planSHA256": "a0f4aa0178d333d8caa344f3cbde9f9d28114e7f7c054631cd0162976afef4f3",
+  "staged": [],
+  "unauthorized": [],
+  "parentOwnedPreserved": [
+    "docs/CRs/MDT-266-backend-module-boundaries.md",
+    "docs/CRs/MDT-266/module-inventory.md",
+    "docs/CRs/MDT-266/prep/architecture.md",
+    "docs/CRs/MDT-266/prep/refactoring-plan.md"
+  ],
+  "taskFiles": [
+    {
+      "path": ".github/workflows/boundary-validation.yml",
+      "action": "modify",
+      "baselineLines": 21,
+      "currentLines": 23
+    },
+    {
+      "path": "DEBUG.md",
+      "action": "modify",
+      "baselineLines": 491,
+      "currentLines": 523
+    },
+    {
+      "path": "docs/CONFIG_INSPECTION.md",
+      "action": "modify",
+      "baselineLines": 149,
+      "currentLines": 158
+    },
+    {
+      "path": "docs/CONFIG_SPECIFICATION.md",
+      "action": "modify",
+      "baselineLines": 369,
+      "currentLines": 382
+    },
+    {
+      "path": "docs/architecture/cloud-sync/README.md",
+      "action": "modify",
+      "baselineLines": 326,
+      "currentLines": 338
+    },
+    {
+      "path": "docs/architecture/cloud-sync/data-and-consistency.md",
+      "action": "modify",
+      "baselineLines": 805,
+      "currentLines": 815
+    },
+    {
+      "path": "docs/architecture/cloud-sync/operations.md",
+      "action": "modify",
+      "baselineLines": 586,
+      "currentLines": 603
+    },
+    {
+      "path": "docs/architecture/event-system/EVENT_SYSTEM.md",
+      "action": "modify",
+      "baselineLines": 97,
+      "currentLines": 119
+    },
+    {
+      "path": "docs/architecture/project-identity-and-worktrees.md",
+      "action": "modify",
+      "baselineLines": 248,
+      "currentLines": 259
+    },
+    {
+      "path": "package.json",
+      "action": "modify",
+      "baselineLines": 219,
+      "currentLines": 221
+    },
+    {
+      "path": "scripts/AGENTS.md",
+      "action": "modify",
+      "baselineLines": 29,
+      "currentLines": 30
+    },
+    {
+      "path": "scripts/boundary-validation-legacy.json",
+      "action": "modify",
+      "baselineLines": 929,
+      "currentLines": 960
+    },
+    {
+      "path": "scripts/check-module-boundaries.test.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 97
+    },
+    {
+      "path": "scripts/check-module-boundaries.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 263
+    },
+    {
+      "path": "scripts/e2e/AGENTS.md",
+      "action": "modify",
+      "baselineLines": 36,
+      "currentLines": 36
+    },
+    {
+      "path": "scripts/e2e/backend.ts",
+      "action": "modify",
+      "baselineLines": 205,
+      "currentLines": 205
+    },
+    {
+      "path": "scripts/module-boundary-exceptions.json",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 44
+    },
+    {
+      "path": "server/CLAUDE.md",
+      "action": "modify",
+      "baselineLines": 56,
+      "currentLines": 57
+    },
+    {
+      "path": "server/app.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 156
+    },
+    {
+      "path": "server/bootstrap/ProjectServiceAdapter.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 66
+    },
+    {
+      "path": "server/bootstrap/createRuntime.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 349
+    },
+    {
+      "path": "server/bootstrap/types.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 15
+    },
+    {
+      "path": "server/config/runtimeConfig.ts",
+      "action": "modify",
+      "baselineLines": 141,
+      "currentLines": 143
+    },
+    {
+      "path": "server/controllers/ConfigController.ts",
+      "action": "modify",
+      "baselineLines": 157,
+      "currentLines": 1
+    },
+    {
+      "path": "server/controllers/DocumentController.ts",
+      "action": "modify",
+      "baselineLines": 359,
+      "currentLines": 1
+    },
+    {
+      "path": "server/controllers/PinController.ts",
+      "action": "modify",
+      "baselineLines": 63,
+      "currentLines": 1
+    },
+    {
+      "path": "server/controllers/ProjectController.ts",
+      "action": "modify",
+      "baselineLines": 1107,
+      "currentLines": 45
+    },
+    {
+      "path": "server/controllers/SearchController.ts",
+      "action": "modify",
+      "baselineLines": 181,
+      "currentLines": 12
+    },
+    {
+      "path": "server/docs/ARCHITECTURE.md",
+      "action": "modify",
+      "baselineLines": 147,
+      "currentLines": 145
+    },
+    {
+      "path": "server/http/projectAccess.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 26
+    },
+    {
+      "path": "server/jest.config.mjs",
+      "action": "modify",
+      "baselineLines": 65,
+      "currentLines": 71
+    },
+    {
+      "path": "server/modules/access/auth.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 157
+    },
+    {
+      "path": "server/modules/access/index.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 3
+    },
+    {
+      "path": "server/modules/access/readTokens.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 243
+    },
+    {
+      "path": "server/modules/access/share.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 54
+    },
+    {
+      "path": "server/modules/config/ConfigController.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 157
+    },
+    {
+      "path": "server/modules/config/index.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 2
+    },
+    {
+      "path": "server/modules/config/router.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 266
+    },
+    {
+      "path": "server/modules/documents/DocumentController.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 359
+    },
+    {
+      "path": "server/modules/documents/configureDocuments.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 51
+    },
+    {
+      "path": "server/modules/documents/index.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 3
+    },
+    {
+      "path": "server/modules/documents/router.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 221
+    },
+    {
+      "path": "server/modules/projects/ProjectController.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 325
+    },
+    {
+      "path": "server/modules/projects/index.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 3
+    },
+    {
+      "path": "server/modules/projects/router.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 123
+    },
+    {
+      "path": "server/modules/projects/types.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 68
+    },
+    {
+      "path": "server/modules/realtime/index.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 1
+    },
+    {
+      "path": "server/modules/realtime/router.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 120
+    },
+    {
+      "path": "server/modules/search/SearchController.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 59
+    },
+    {
+      "path": "server/modules/search/index.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 2
+    },
+    {
+      "path": "server/modules/search/router.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 57
+    },
+    {
+      "path": "server/modules/system/SystemController.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 99
+    },
+    {
+      "path": "server/modules/system/SystemService.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 169
+    },
+    {
+      "path": "server/modules/system/devtools.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 592
+    },
+    {
+      "path": "server/modules/system/docs.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 61
+    },
+    {
+      "path": "server/modules/system/index.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 3
+    },
+    {
+      "path": "server/modules/system/router.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 519
+    },
+    {
+      "path": "server/modules/tickets/PinController.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 63
+    },
+    {
+      "path": "server/modules/tickets/TicketController.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 483
+    },
+    {
+      "path": "server/modules/tickets/cloudCreationRecovery.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 113
+    },
+    {
+      "path": "server/modules/tickets/index.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 6
+    },
+    {
+      "path": "server/modules/tickets/pins.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 73
+    },
+    {
+      "path": "server/modules/tickets/router.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 209
+    },
+    {
+      "path": "server/modules/tickets/ticketIdentities.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 27
+    },
+    {
+      "path": "server/openapi/config.ts",
+      "action": "modify",
+      "baselineLines": 173,
+      "currentLines": 175
+    },
+    {
+      "path": "server/routes/auth.ts",
+      "action": "modify",
+      "baselineLines": 157,
+      "currentLines": 1
+    },
+    {
+      "path": "server/routes/cloudCreationRecovery.ts",
+      "action": "modify",
+      "baselineLines": 113,
+      "currentLines": 1
+    },
+    {
+      "path": "server/routes/config.ts",
+      "action": "modify",
+      "baselineLines": 276,
+      "currentLines": 1
+    },
+    {
+      "path": "server/routes/devtools.ts",
+      "action": "modify",
+      "baselineLines": 592,
+      "currentLines": 1
+    },
+    {
+      "path": "server/routes/docs.ts",
+      "action": "modify",
+      "baselineLines": 61,
+      "currentLines": 1
+    },
+    {
+      "path": "server/routes/documents.ts",
+      "action": "modify",
+      "baselineLines": 221,
+      "currentLines": 1
+    },
+    {
+      "path": "server/routes/pins.ts",
+      "action": "modify",
+      "baselineLines": 73,
+      "currentLines": 1
+    },
+    {
+      "path": "server/routes/projects.ts",
+      "action": "modify",
+      "baselineLines": 304,
+      "currentLines": 12
+    },
+    {
+      "path": "server/routes/readTokens.ts",
+      "action": "modify",
+      "baselineLines": 243,
+      "currentLines": 1
+    },
+    {
+      "path": "server/routes/search.ts",
+      "action": "modify",
+      "baselineLines": 57,
+      "currentLines": 1
+    },
+    {
+      "path": "server/routes/share.ts",
+      "action": "modify",
+      "baselineLines": 54,
+      "currentLines": 1
+    },
+    {
+      "path": "server/routes/sse.ts",
+      "action": "modify",
+      "baselineLines": 120,
+      "currentLines": 1
+    },
+    {
+      "path": "server/routes/system.ts",
+      "action": "modify",
+      "baselineLines": 666,
+      "currentLines": 1
+    },
+    {
+      "path": "server/routes/ticketIdentities.ts",
+      "action": "modify",
+      "baselineLines": 27,
+      "currentLines": 1
+    },
+    {
+      "path": "server/server.ts",
+      "action": "modify",
+      "baselineLines": 573,
+      "currentLines": 65
+    },
+    {
+      "path": "server/services/TicketService.ts",
+      "action": "modify",
+      "baselineLines": 579,
+      "currentLines": 460
+    },
+    {
+      "path": "server/services/cloud-sync/ProjectionStreamManager.ts",
+      "action": "modify",
+      "baselineLines": 742,
+      "currentLines": 801
+    },
+    {
+      "path": "server/services/cloud-sync/TicketIdentityObservation.ts",
+      "action": "modify",
+      "baselineLines": 148,
+      "currentLines": 149
+    },
+    {
+      "path": "server/services/config/adapters/ProjectConfigStorageAdapter.ts",
+      "action": "modify",
+      "baselineLines": 82,
+      "currentLines": 14
+    },
+    {
+      "path": "server/services/fileWatcher/PathWatcherService.ts",
+      "action": "modify",
+      "baselineLines": 719,
+      "currentLines": 735
+    },
+    {
+      "path": "server/services/fileWatcher/SSEBroadcaster.ts",
+      "action": "modify",
+      "baselineLines": 210,
+      "currentLines": 221
+    },
+    {
+      "path": "server/services/fileWatcher/WatcherLifecycleManager.ts",
+      "action": "modify",
+      "baselineLines": 190,
+      "currentLines": 214
+    },
+    {
+      "path": "server/services/fileWatcher/index.ts",
+      "action": "modify",
+      "baselineLines": 523,
+      "currentLines": 553
+    },
+    {
+      "path": "server/services/fileWatcher/projectRegistrationIntegration.ts",
+      "action": "modify",
+      "baselineLines": 205,
+      "currentLines": 235
+    },
+    {
+      "path": "server/tests/api/config-openapi.test.ts",
+      "action": "modify",
+      "baselineLines": 73,
+      "currentLines": 73
+    },
+    {
+      "path": "server/tests/api/projects.test.ts",
+      "action": "modify",
+      "baselineLines": 611,
+      "currentLines": 613
+    },
+    {
+      "path": "server/tests/api/search.test.ts",
+      "action": "modify",
+      "baselineLines": 147,
+      "currentLines": 170
+    },
+    {
+      "path": "server/tests/api/setup.ts",
+      "action": "modify",
+      "baselineLines": 269,
+      "currentLines": 275
+    },
+    {
+      "path": "server/tests/api/test-app-factory.ts",
+      "action": "modify",
+      "baselineLines": 287,
+      "currentLines": 21
+    },
+    {
+      "path": "server/tests/config/runtimeConfig.test.ts",
+      "action": "modify",
+      "baselineLines": 173,
+      "currentLines": 174
+    },
+    {
+      "path": "server/tests/integration/api.test.ts",
+      "action": "modify",
+      "baselineLines": 327,
+      "currentLines": 313
+    },
+    {
+      "path": "server/tests/integration/application-runtime.test.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 293
+    },
+    {
+      "path": "server/tests/integration/combined-ticket-mutation.test.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 98
+    },
+    {
+      "path": "server/tests/integration/config-request-context.test.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 63
+    },
+    {
+      "path": "server/tests/mocks/shared/services/TicketService.ts",
+      "action": "modify",
+      "baselineLines": 444,
+      "currentLines": 2
+    },
+    {
+      "path": "server/tests/routes/config-routes-thin.test.ts",
+      "action": "modify",
+      "baselineLines": 53,
+      "currentLines": 53
+    },
+    {
+      "path": "server/tests/services/cloud-sync/ProjectionStreamManager.test.ts",
+      "action": "modify",
+      "baselineLines": 747,
+      "currentLines": 821
+    },
+    {
+      "path": "server/tests/services/cloud-sync/TicketIdentityObservation.test.ts",
+      "action": "modify",
+      "baselineLines": 134,
+      "currentLines": 162
+    },
+    {
+      "path": "server/tests/unit/DevLogBatch.boundaries.test.ts",
+      "action": "modify",
+      "baselineLines": 67,
+      "currentLines": 67
+    },
+    {
+      "path": "server/tests/unit/PathWatcherService.test.ts",
+      "action": "modify",
+      "baselineLines": 785,
+      "currentLines": 863
+    },
+    {
+      "path": "server/tests/unit/RegistryWatcher.test.ts",
+      "action": "modify",
+      "baselineLines": 334,
+      "currentLines": 335
+    },
+    {
+      "path": "server/tests/unit/SSEBroadcaster.test.ts",
+      "action": "modify",
+      "baselineLines": 400,
+      "currentLines": 409
+    },
+    {
+      "path": "server/tests/unit/ticketOpenApi.boundaries.test.ts",
+      "action": "modify",
+      "baselineLines": 21,
+      "currentLines": 23
+    },
+    {
+      "path": "server/tests/watcherLifecycle.test.ts",
+      "action": "modify",
+      "baselineLines": 295,
+      "currentLines": 319
+    },
+    {
+      "path": "server/tsconfig.build.json",
+      "action": "modify",
+      "baselineLines": 28,
+      "currentLines": 31
+    },
+    {
+      "path": "server/tsconfig.json",
+      "action": "modify",
+      "baselineLines": 59,
+      "currentLines": 62
+    },
+    {
+      "path": "shared/ARCHITECTURE.md",
+      "action": "modify",
+      "baselineLines": 61,
+      "currentLines": 57
+    },
+    {
+      "path": "shared/services/TicketService.ts",
+      "action": "modify",
+      "baselineLines": 1884,
+      "currentLines": 915
+    },
+    {
+      "path": "shared/services/WorktreeService.ts",
+      "action": "modify",
+      "baselineLines": 378,
+      "currentLines": 392
+    },
+    {
+      "path": "shared/services/__tests__/WorktreeService.test.ts",
+      "action": "modify",
+      "baselineLines": 457,
+      "currentLines": 488
+    },
+    {
+      "path": "shared/services/cloud-sync/__tests__/projection-sync.test.ts",
+      "action": "modify",
+      "baselineLines": 267,
+      "currentLines": 305
+    },
+    {
+      "path": "shared/services/cloud-sync/projection-sync.ts",
+      "action": "modify",
+      "baselineLines": 339,
+      "currentLines": 343
+    },
+    {
+      "path": "shared/services/project/ProjectConfigLoader.ts",
+      "action": "modify",
+      "baselineLines": 83,
+      "currentLines": 11
+    },
+    {
+      "path": "shared/services/project/ProjectConfigService.ts",
+      "action": "modify",
+      "baselineLines": 394,
+      "currentLines": 507
+    },
+    {
+      "path": "shared/services/search/SearchService.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 195
+    },
+    {
+      "path": "shared/services/ticket/MarkdownTicketRepository.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 254
+    },
+    {
+      "path": "shared/services/ticket/TicketMutationService.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 538
+    },
+    {
+      "path": "shared/services/ticket/TicketQueryService.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 273
+    },
+    {
+      "path": "shared/services/ticket/TicketRepository.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 17
+    },
+    {
+      "path": "shared/tests/services/ProjectConfigService/projectFileOwner.test.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 59
+    },
+    {
+      "path": "shared/tests/services/search/SearchService.test.ts",
+      "action": "create",
+      "baselineLines": 0,
+      "currentLines": 41
+    },
+    {
+      "path": "tests/AGENTS.md",
+      "action": "modify",
+      "baselineLines": 72,
+      "currentLines": 73
+    }
+  ],
+  "executionArtifacts": [
+    "docs/CRs/MDT-266/execution/baseline.md",
+    "docs/CRs/MDT-266/execution/logs/audit-doc-links.py",
+    "docs/CRs/MDT-266/execution/logs/audit-execution.py",
+    "docs/CRs/MDT-266/execution/logs/final-auth-501-diagnostic.log",
+    "docs/CRs/MDT-266/execution/logs/final-browser-summary.json",
+    "docs/CRs/MDT-266/execution/logs/final-build-all.log",
+    "docs/CRs/MDT-266/execution/logs/final-cli-build.log",
+    "docs/CRs/MDT-266/execution/logs/final-cli-tests.log",
+    "docs/CRs/MDT-266/execution/logs/final-cli.log",
+    "docs/CRs/MDT-266/execution/logs/final-cloud-tests.log",
+    "docs/CRs/MDT-266/execution/logs/final-combined-tests.log",
+    "docs/CRs/MDT-266/execution/logs/final-commands.json",
+    "docs/CRs/MDT-266/execution/logs/final-decoder.log",
+    "docs/CRs/MDT-266/execution/logs/final-doc-diagrams.log",
+    "docs/CRs/MDT-266/execution/logs/final-doc-links.json",
+    "docs/CRs/MDT-266/execution/logs/final-doc-links.log",
+    "docs/CRs/MDT-266/execution/logs/final-doc-lint.log",
+    "docs/CRs/MDT-266/execution/logs/final-http-owner-lint.log",
+    "docs/CRs/MDT-266/execution/logs/final-http-owner-tests.log",
+    "docs/CRs/MDT-266/execution/logs/final-mcp-build.log",
+    "docs/CRs/MDT-266/execution/logs/final-mcp-tests.log",
+    "docs/CRs/MDT-266/execution/logs/final-mcp.log",
+    "docs/CRs/MDT-266/execution/logs/final-module-fixtures.log",
+    "docs/CRs/MDT-266/execution/logs/final-module-scan.log",
+    "docs/CRs/MDT-266/execution/logs/final-result-lint.log",
+    "docs/CRs/MDT-266/execution/logs/final-runtime-resources.log",
+    "docs/CRs/MDT-266/execution/logs/final-scope.json",
+    "docs/CRs/MDT-266/execution/logs/final-scope.log",
+    "docs/CRs/MDT-266/execution/logs/final-server-diagnostic.log",
+    "docs/CRs/MDT-266/execution/logs/final-server-lint.log",
+    "docs/CRs/MDT-266/execution/logs/final-server-tests-force-exit.log",
+    "docs/CRs/MDT-266/execution/logs/final-server-tests.log",
+    "docs/CRs/MDT-266/execution/logs/final-server.log",
+    "docs/CRs/MDT-266/execution/logs/final-shared-affected-lint.log",
+    "docs/CRs/MDT-266/execution/logs/final-shared-lint.log",
+    "docs/CRs/MDT-266/execution/logs/final-shared-tests.log",
+    "docs/CRs/MDT-266/execution/logs/final-shared.log",
+    "docs/CRs/MDT-266/execution/logs/final-status.zlist",
+    "docs/CRs/MDT-266/execution/logs/final-tooling-lint.log",
+    "docs/CRs/MDT-266/execution/logs/final-tooling-types.log",
+    "docs/CRs/MDT-266/execution/logs/final-types-initial.log",
+    "docs/CRs/MDT-266/execution/logs/final-types.log",
+    "docs/CRs/MDT-266/execution/logs/http501-probe.ts",
+    "docs/CRs/MDT-266/execution/logs/runtime-resource-probe.ts",
+    "docs/CRs/MDT-266/execution/logs/s0-boundaries.log",
+    "docs/CRs/MDT-266/execution/logs/s0-build-all.log",
+    "docs/CRs/MDT-266/execution/logs/s0-cli.log",
+    "docs/CRs/MDT-266/execution/logs/s0-cloud.log",
+    "docs/CRs/MDT-266/execution/logs/s0-config-competing-writes.log",
+    "docs/CRs/MDT-266/execution/logs/s0-config-competing-writes.ts",
+    "docs/CRs/MDT-266/execution/logs/s0-mcp.log",
+    "docs/CRs/MDT-266/execution/logs/s0-put-missing-probe.log",
+    "docs/CRs/MDT-266/execution/logs/s0-put-missing-probe.ts",
+    "docs/CRs/MDT-266/execution/logs/s0-regressions-handles.log",
+    "docs/CRs/MDT-266/execution/logs/s0-regressions.log",
+    "docs/CRs/MDT-266/execution/logs/s0-rest-ticket-adapter.ts",
+    "docs/CRs/MDT-266/execution/logs/s0-server-forced-exit.log",
+    "docs/CRs/MDT-266/execution/logs/s0-server-lint-corrected-fixtures.log",
+    "docs/CRs/MDT-266/execution/logs/s0-server-lint.log",
+    "docs/CRs/MDT-266/execution/logs/s0-server.log",
+    "docs/CRs/MDT-266/execution/logs/s0-shared-lint.log",
+    "docs/CRs/MDT-266/execution/logs/s0-shared.log",
+    "docs/CRs/MDT-266/execution/logs/s0-types-corrected-fixtures.log",
+    "docs/CRs/MDT-266/execution/logs/s0-types.log",
+    "docs/CRs/MDT-266/execution/logs/s1-mutation.log",
+    "docs/CRs/MDT-266/execution/logs/s1-preservation.log",
+    "docs/CRs/MDT-266/execution/logs/s1-shared-build.log",
+    "docs/CRs/MDT-266/execution/logs/s2-focused.log",
+    "docs/CRs/MDT-266/execution/logs/s2-lint-initial.log",
+    "docs/CRs/MDT-266/execution/logs/s2-types-initial.log",
+    "docs/CRs/MDT-266/execution/logs/s3-focused-corrected.log",
+    "docs/CRs/MDT-266/execution/logs/s3-focused.log",
+    "docs/CRs/MDT-266/execution/logs/s3-lint-finalizing.log",
+    "docs/CRs/MDT-266/execution/logs/s3-lint-initial.log",
+    "docs/CRs/MDT-266/execution/logs/s3-lint-wiring.log",
+    "docs/CRs/MDT-266/execution/logs/s3-shared-build-corrected.log",
+    "docs/CRs/MDT-266/execution/logs/s3-shared-build.log",
+    "docs/CRs/MDT-266/execution/logs/s3-shared-lint.log",
+    "docs/CRs/MDT-266/execution/logs/s3-types-corrected.log",
+    "docs/CRs/MDT-266/execution/logs/s3-types-finalizing.log",
+    "docs/CRs/MDT-266/execution/logs/s3-types-initial.log",
+    "docs/CRs/MDT-266/execution/logs/s4-graph-focused.log",
+    "docs/CRs/MDT-266/execution/logs/s4-lint.log",
+    "docs/CRs/MDT-266/execution/logs/s4-runtime-corrected.log",
+    "docs/CRs/MDT-266/execution/logs/s4-runtime.log",
+    "docs/CRs/MDT-266/execution/logs/s4-shared-build.log",
+    "docs/CRs/MDT-266/execution/logs/s4-types.log",
+    "docs/CRs/MDT-266/execution/logs/s5-build-corrected.log",
+    "docs/CRs/MDT-266/execution/logs/s5-build-initial.log",
+    "docs/CRs/MDT-266/execution/logs/s5-build-repaired.log",
+    "docs/CRs/MDT-266/execution/logs/s5-lint-initial.log",
+    "docs/CRs/MDT-266/execution/logs/s5-lint-repaired.log",
+    "docs/CRs/MDT-266/execution/logs/s5-owners-corrected.log",
+    "docs/CRs/MDT-266/execution/logs/s5-owners-focused.log",
+    "docs/CRs/MDT-266/execution/logs/s5-regressions-finalizing.log",
+    "docs/CRs/MDT-266/execution/logs/s5-shared-suite.log",
+    "docs/CRs/MDT-266/execution/logs/s6-disposal-green-initial.log",
+    "docs/CRs/MDT-266/execution/logs/s6-disposal-red-server.log",
+    "docs/CRs/MDT-266/execution/logs/s6-disposal-red-shared.log",
+    "docs/CRs/MDT-266/execution/logs/s6-document-stop-red.log",
+    "docs/CRs/MDT-266/execution/logs/s6-head-discovery-green.log",
+    "docs/CRs/MDT-266/execution/logs/s6-head-discovery-red.log",
+    "docs/CRs/MDT-266/execution/logs/s6-repairs-focused.log",
+    "docs/CRs/MDT-266/execution/logs/s6-retry-green.log",
+    "docs/CRs/MDT-266/execution/logs/s6-server-lint-initial.log",
+    "docs/CRs/MDT-266/execution/logs/s6-shared-build.log",
+    "docs/CRs/MDT-266/execution/logs/s6-shared-lint-initial.log",
+    "docs/CRs/MDT-266/execution/logs/s6-sse-red.log",
+    "docs/CRs/MDT-266/execution/logs/s6-start-close-green.log",
+    "docs/CRs/MDT-266/execution/logs/s6-start-close-red.log",
+    "docs/CRs/MDT-266/execution/logs/s6-worktree-idle-green.log",
+    "docs/CRs/MDT-266/execution/logs/s7-api-diagnosis.log",
+    "docs/CRs/MDT-266/execution/logs/s7-decoder-before-rehome.log",
+    "docs/CRs/MDT-266/execution/logs/s7-decoder-rehome.log",
+    "docs/CRs/MDT-266/execution/logs/s7-decoder-relocations.json",
+    "docs/CRs/MDT-266/execution/logs/s7-decoder-remaining.log",
+    "docs/CRs/MDT-266/execution/logs/s7-module-fixtures.log",
+    "docs/CRs/MDT-266/execution/logs/s7-module-scan-initial.log",
+    "docs/CRs/MDT-266/execution/logs/s7-module-scan.log",
+    "docs/CRs/MDT-266/execution/logs/s7-observe-resolver.ts",
+    "docs/CRs/MDT-266/execution/logs/s7-route-compatibility.log",
+    "docs/CRs/MDT-266/execution/logs/s7-server-lint-initial.log",
+    "docs/CRs/MDT-266/execution/logs/s7-server-lint.log",
+    "docs/CRs/MDT-266/execution/logs/s7-server-types.log",
+    "docs/CRs/MDT-266/execution/logs/s7-shared-build.log",
+    "docs/CRs/MDT-266/execution/logs/s7-subdoc-diagnosis.log",
+    "docs/CRs/MDT-266/execution/logs/s7-subdoc-location.log",
+    "docs/CRs/MDT-266/execution/logs/s7-subdoc-resolver.log",
+    "docs/CRs/MDT-266/execution/logs/s7-subdoc-response.log",
+    "docs/CRs/MDT-266/execution/logs/s7-tooling-lint-finalizing.log",
+    "docs/CRs/MDT-266/execution/logs/s7-tooling-lint-fixed.log",
+    "docs/CRs/MDT-266/execution/logs/s7-tooling-lint.log",
+    "docs/CRs/MDT-266/execution/logs/s7-types-initial.log",
+    "docs/CRs/MDT-266/execution/logs/server-process-cleanup.md",
+    "docs/CRs/MDT-266/execution/plan.md",
+    "docs/CRs/MDT-266/execution/result.md"
+  ]
+}

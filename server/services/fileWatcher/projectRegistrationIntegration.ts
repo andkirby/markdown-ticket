@@ -44,6 +44,7 @@ export interface WatcherRegistrationTarget {
   resubscribeWriteClientsToProject: (projectId: string) => void
   initGlobalRegistryWatcher: () => void
   on: (event: string, listener: (event: unknown) => void) => unknown
+  off: (event: string, listener: (event: unknown) => void) => unknown
 }
 
 /**
@@ -110,6 +111,7 @@ async function tryRegisterRuntimeProject(
   fileWatcher: WatcherRegistrationTarget,
   discovery: ProjectDiscoverySource,
   projectId: string,
+  signal: AbortSignal,
 ): Promise<boolean> {
   const projects = await discovery.getAllProjects(true)
   const added = projects.find(p => p.id === projectId) as DiscoverableProject | undefined
@@ -120,6 +122,8 @@ async function tryRegisterRuntimeProject(
   if (!registration)
     return false // transient (e.g. tickets dir not created yet) — retry
 
+  if (signal.aborted)
+    return true
   fileWatcher.registerProject(registration)
   fileWatcher.resubscribeWriteClientsToProject(registration.id)
   logger.info(`📥 Registered runtime-added project ${registration.id}: ${registration.path}`)
@@ -130,10 +134,13 @@ async function registerRuntimeProject(
   fileWatcher: WatcherRegistrationTarget,
   discovery: ProjectDiscoverySource,
   projectId: string,
+  signal: AbortSignal,
 ): Promise<void> {
   for (let attempt = 0; attempt <= RUNTIME_REGISTRATION_RETRY_DELAYS_MS.length; attempt++) {
+    if (signal.aborted)
+      return
     try {
-      if (await tryRegisterRuntimeProject(fileWatcher, discovery, projectId))
+      if (await tryRegisterRuntimeProject(fileWatcher, discovery, projectId, signal))
         return
     }
     catch (error) {
@@ -141,7 +148,20 @@ async function registerRuntimeProject(
     }
 
     if (attempt < RUNTIME_REGISTRATION_RETRY_DELAYS_MS.length) {
-      await new Promise(resolve => setTimeout(resolve, RUNTIME_REGISTRATION_RETRY_DELAYS_MS[attempt]))
+      await new Promise<void>((resolve) => {
+        if (signal.aborted) {
+          resolve()
+          return
+        }
+        let timer: ReturnType<typeof setTimeout>
+        const finish = () => {
+          clearTimeout(timer)
+          signal.removeEventListener('abort', finish)
+          resolve()
+        }
+        timer = setTimeout(finish, RUNTIME_REGISTRATION_RETRY_DELAYS_MS[attempt])
+        signal.addEventListener('abort', finish, { once: true })
+      })
     }
   }
   logger.warn(`⚠️  Runtime-added project ${projectId} not registered after ${RUNTIME_REGISTRATION_RETRY_DELAYS_MS.length + 1} attempts (will retry on next registry change)`)
@@ -154,7 +174,7 @@ async function registerRuntimeProject(
 export async function initializeProjectWatcherIntegration(
   fileWatcher: WatcherRegistrationTarget,
   discovery: ProjectDiscoverySource,
-): Promise<void> {
+): Promise<() => Promise<void>> {
   logger.info('🔍 Discovering projects for file watching...')
 
   try {
@@ -190,16 +210,26 @@ export async function initializeProjectWatcherIntegration(
   }
   catch (error) {
     console.error('Error initializing global registry watcher:', error)
-    return
+    return async () => {}
   }
 
   // BR-7: runtime project additions feed the lazy watcher lifecycle.
   // 'project-updated' re-runs registration (idempotent) as a late re-trigger.
-  fileWatcher.on('registry-change', (event: unknown) => {
+  const cancellation = new AbortController()
+  const pending = new Set<Promise<void>>()
+  const listener = (event: unknown) => {
     const typed = event as { type?: string, data?: { projectId?: string } }
     const eventType = typed?.type
-    if ((eventType === 'project-created' || eventType === 'project-updated') && typed.data?.projectId) {
-      void registerRuntimeProject(fileWatcher, discovery, typed.data.projectId)
+    if (!cancellation.signal.aborted && (eventType === 'project-created' || eventType === 'project-updated') && typed.data?.projectId) {
+      const work = registerRuntimeProject(fileWatcher, discovery, typed.data.projectId, cancellation.signal)
+      pending.add(work)
+      void work.finally(() => pending.delete(work))
     }
-  })
+  }
+  fileWatcher.on('registry-change', listener)
+  return async () => {
+    cancellation.abort()
+    fileWatcher.off('registry-change', listener)
+    await Promise.all(pending)
+  }
 }

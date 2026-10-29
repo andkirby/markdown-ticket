@@ -1,0 +1,97 @@
+{
+  "executor": "thr_7x3ccba356",
+  "cwd": ".",
+  "browser": "Chromium",
+  "workers": 1,
+  "storageContext": "Raw filenames resolve under ${BB_THREAD_STORAGE} of parent thr_7x3ccba356",
+  "lanes": [
+    {
+      "lane": "round2-browser-baseline",
+      "exit": 0,
+      "stats": {
+        "startTime": "2026-10-29T19:05:15.690Z",
+        "duration": 37330.532999999996,
+        "expected": 40,
+        "skipped": 8,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "ports": [
+        {
+          "port": 59724,
+          "exit": 1,
+          "listeners": ""
+        },
+        {
+          "port": 59725,
+          "exit": 1,
+          "listeners": ""
+        }
+      ],
+      "parentThread": "thr_7x3ccba356",
+      "rawReport": "round2-browser-baseline.json",
+      "rawLog": "round2-browser-baseline.log"
+    },
+    {
+      "lane": "round2-browser-auth",
+      "exit": 0,
+      "stats": {
+        "startTime": "2026-10-29T19:08:32.299Z",
+        "duration": 8361.035,
+        "expected": 8,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "ports": [
+        {
+          "port": 60729,
+          "exit": 1,
+          "listeners": ""
+        },
+        {
+          "port": 60730,
+          "exit": 1,
+          "listeners": ""
+        }
+      ],
+      "parentThread": "thr_7x3ccba356",
+      "rawReport": "round2-browser-auth.json",
+      "rawLog": "round2-browser-auth.log"
+    },
+    {
+      "lane": "round2-browser-operations",
+      "exit": 0,
+      "stats": {
+        "startTime": "2026-10-29T19:10:11.219Z",
+        "duration": 57079.371999999996,
+        "expected": 70,
+        "skipped": 1,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "ports": [
+        {
+          "port": 60999,
+          "exit": 1,
+          "listeners": ""
+        },
+        {
+          "port": 61000,
+          "exit": 1,
+          "listeners": ""
+        }
+      ],
+      "parentThread": "thr_7x3ccba356",
+      "rawReport": "round2-browser-operations.json",
+      "rawLog": "round2-browser-operations.log"
+    }
+  ],
+  "totals": {
+    "passed": 118,
+    "skipped": 9,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "qualification": "Selected ephemeral-wrapper lanes only; auth explicitly disables localhost bypass. Eight auth-gated skips and one pre-existing static skip; no full browser or deployed cloud claim."
+}

@@ -8,8 +8,8 @@ import { TitleExtractionService } from '@mdt/shared/services/TitleExtractionServ
 import { WorktreeService } from '@mdt/shared/services/WorktreeService.js'
 import express from 'express'
 import request from 'supertest'
-import { ProjectController } from '../../../server/controllers/ProjectController'
-import { createProjectRouter } from '../../../server/routes/projects'
+import { createProjectRouter, ProjectController } from '../../../server/modules/projects/index.js'
+import { createTicketRouter, TicketController } from '../../../server/modules/tickets/index.js'
 import { CRService } from '../../src/services/crService'
 import { MCPTools } from '../../src/tools/index'
 
@@ -91,12 +91,6 @@ interface MockService {
   getProjectCRsMetadata: jest.Mock
   getSystemDirectories: jest.Mock
   configureDocuments: jest.Mock
-  projectDiscovery: {
-    getAllProjects: jest.Mock
-    autoDiscoverProjects: jest.Mock
-    getRegisteredProjects: jest.Mock
-    registerProject: jest.Mock
-  }
 }
 
 interface MockTicketService {
@@ -117,10 +111,6 @@ interface MockTicketService {
     deleteCR: jest.Mock
   }
   getProject: jest.Mock
-}
-
-interface MockFileSystemService {
-  getPathSelectionTree: jest.Mock
 }
 
 describe('mCP-Backend Consistency Integration Tests', () => {
@@ -161,12 +151,6 @@ describe('mCP-Backend Consistency Integration Tests', () => {
       getProjectCRsMetadata: jest.fn(),
       getSystemDirectories: jest.fn(),
       configureDocuments: jest.fn(),
-      projectDiscovery: {
-        getAllProjects: jest.fn(),
-        autoDiscoverProjects: jest.fn(),
-        getRegisteredProjects: jest.fn(),
-        registerProject: jest.fn(),
-      },
     }
 
     mockTicketService = {
@@ -189,19 +173,14 @@ describe('mCP-Backend Consistency Integration Tests', () => {
       getProject: jest.fn(),
     }
 
-    const mockFileSystemService: MockFileSystemService = {
-      getPathSelectionTree: jest.fn(),
-    }
-
-    mockProjectController = new ProjectController(
+    mockProjectController = new ProjectController(mockProjectService, {})
+    const tickets = new TicketController(
       mockProjectService,
-      mockFileSystemService,
-      {} as Record<string, unknown>,
-      undefined,
       mockTicketService as unknown as import('../../../server/services/TicketService.js').TicketService,
     )
 
     backendApp.use('/api/projects', createProjectRouter(mockProjectController) as unknown as express.Router)
+    backendApp.use('/api/projects', createTicketRouter(tickets) as unknown as express.Router)
 
     backendRequest = request(backendApp)
   })
@@ -279,7 +258,6 @@ describe('mCP-Backend Consistency Integration Tests', () => {
   describe('cR Tools Consistency', () => {
     beforeEach(() => {
       // Mock project lookup for MCP tools
-      mockProjectService.projectDiscovery.getAllProjects.mockResolvedValue([testProject])
     })
 
     it('should return identical results for list_crs vs GET /api/projects/:id/crs', async () => {
@@ -567,7 +545,6 @@ Testing creation consistency.`,
       const invalidProject = 'INVALID'
 
       // Mock project not found
-      mockProjectService.projectDiscovery.getAllProjects.mockResolvedValue([])
 
       // MCP should throw error
       await expect(mcpTools.handleToolCall('list_crs', {

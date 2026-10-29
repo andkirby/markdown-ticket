@@ -19,7 +19,7 @@ The root cause was a **lifetime mismatch**: the test backend is a *run-scoped* r
 | File | Role |
 |---|---|
 | `run.ts` | The wrapper — every `package.json` `test:e2e*` entrypoint. Allocates two free ports (bind `:0`; backend port held open until just before spawn to shrink the rebind race), creates the run-scoped `CONFIG_DIR`, exports `TEST_BACKEND_PORT` / `TEST_FRONTEND_PORT` / `TEST_FRONTEND_URL` / `VITE_BACKEND_URL` / `PUBLIC_ORIGIN` / `MDT_ALLOWED_ORIGINS`, spawns Playwright, and **always** tears down: safety-net kill of listeners on our ports + temp dir removal. Strips a leading `--` from passthrough args (a forwarded `--` would turn Playwright flags into test filters). |
-| `backend.ts` | The backend as Playwright `webServer[0]` (never inside a worker). `createTestApp()` + the `/_e2e/*` admin seam + shutdown that **destroys open SSE sockets** — `server.close()` alone hangs forever while any SSE stream is open. Requires `TEST_BACKEND_PORT`/`CONFIG_DIR`; exits with a clear error when absent. |
+| `backend.ts` | The backend as Playwright `webServer[0]` (never inside a worker). `createTestApp()` delegates to the production `server/app.ts` builder, with the `/_e2e/*` admin seam injected. It awaits `runtime.start()` before listening; shutdown awaits runtime disposal and HTTP closure and **destroys open SSE sockets** — `server.close()` alone hangs forever while any SSE stream is open. Requires `TEST_BACKEND_PORT`/`CONFIG_DIR`; exits with a clear error when absent. |
 | `clean-leaked-temp-dirs.ts` | One-time cleanup of the pre-MDT-239 temp-dir backlog (dry-run by default, skips dirs modified < 1h ago). |
 
 ## Rejected alternatives (the design defense)

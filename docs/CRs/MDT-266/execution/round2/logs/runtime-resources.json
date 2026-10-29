@@ -1,0 +1,51 @@
+{
+  "command": "node --import tsx docs/CRs/MDT-266/execution/logs/runtime-resource-probe.ts",
+  "cwd": ".",
+  "exitCode": 0,
+  "observations": {
+    "before": {
+      "resources": [],
+      "signals": [
+        1,
+        1
+      ]
+    },
+    "constructed": {
+      "resources": [],
+      "signals": [
+        1,
+        1
+      ],
+      "watchers": 0
+    },
+    "started": {
+      "resources": [
+        "FSReqCallback",
+        "Timeout"
+      ],
+      "registryListeners": 1,
+      "watchers": 1
+    },
+    "duringStop": {
+      "stopReturned": false,
+      "observationFinished": false,
+      "ended": 1
+    },
+    "immediateAfterStop": [],
+    "stopped": {
+      "resources": [],
+      "signals": [
+        1,
+        1
+      ],
+      "registryListeners": 0,
+      "watchers": 0,
+      "clients": 0,
+      "state": "stopped",
+      "stopReturned": true,
+      "observationFinished": true,
+      "ended": 1
+    }
+  },
+  "qualification": "Existing real probe reused; natural process exit; stderr retained only if failure."
+}

@@ -42,7 +42,7 @@ describe('TOML Standardization (MDT-098)', () => {
       // Verify the consuming modules use the shared entrypoint
       const consumingFiles = [
         'server/repositories/ConfigRepository.ts',
-        'server/routes/system.ts',
+        'server/modules/system/SystemService.ts',
         'shared/tools/config-cli.ts',
       ]
 

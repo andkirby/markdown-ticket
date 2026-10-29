@@ -8,9 +8,9 @@
  * the redaction half of C-5/C-6/Edge-8 deterministically.
  */
 
-import { CLOUD_SYNC_CONNECTION_VERSION, CloudSyncConnectionState } from '@mdt/domain-contracts'
 import type { CloudConnectionDiagnostics, CloudSyncConnection, ProjectBindingProbe } from '@mdt/domain-contracts'
 import type { MachineCredentialDiagnostic } from '@mdt/shared/services/cloud-sync/credential-store'
+import { CLOUD_SYNC_CONNECTION_VERSION, CloudSyncConnectionState } from '@mdt/domain-contracts'
 import { describe, expect, it } from 'bun:test'
 import {
   connectResultView,
@@ -121,7 +121,7 @@ describe('cloud renderers redaction (TEST-render-redact)', () => {
     const view = diagnosticsView(d)
     assertNoSecrets('diagnostics-with-probe', view)
     // The probe is nested under diagnosticsView; assert the role survives.
-    const probeNode = (view.probe as Record<string, unknown> | null)
+    const probeNode = view.probe as Record<string, unknown> | null
     expect(probeNode?.role).toBe('owner')
   })
 })

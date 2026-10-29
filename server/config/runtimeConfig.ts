@@ -10,6 +10,7 @@ const DEFAULT_OWNER_SESSION_MAX_AGE_DAYS = 14
 const SECONDS_PER_DAY = 24 * 60 * 60
 
 export interface RuntimeConfig {
+  cloud: { projectionStreamRolloutEnabled: boolean }
   configDir: string
   nodeEnv?: string
   auth: ReturnType<typeof parseApiAuthConfig>
@@ -42,6 +43,7 @@ export function buildRuntimeConfig(env: NodeJS.ProcessEnv = process.env): Runtim
   const publicOrigin = parsePublicOrigin(env.PUBLIC_ORIGIN)
 
   return {
+    cloud: { projectionStreamRolloutEnabled: env.MDT_PROJECTION_STREAM_ROLLOUT === 'true' },
     configDir: resolveConfigDir(env),
     nodeEnv: env.NODE_ENV,
     auth,

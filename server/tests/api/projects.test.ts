@@ -327,6 +327,7 @@ describe('projects API - PUT /api/projects/:code/update', () => {
         throw new Error(`Project ${project.key} not found in registry`)
       })
 
+    const visibleUpdate = jest.spyOn(projectService, 'updateVisibleProject')
     const updatedDescription = 'Updated through local config fallback'
     const updateRes = await authRequest
       .put(`/api/projects/${project.key}/update`)
@@ -335,6 +336,7 @@ describe('projects API - PUT /api/projects/:code/update', () => {
     assertSuccess(updateRes, 200)
     expect(updateRes.body.project.description).toBe(updatedDescription)
     expect(updateSpy).toHaveBeenCalled()
+    expect(visibleUpdate).toHaveBeenCalled()
   })
 
   it('returns 400 and does not write when description validation fails', async () => {

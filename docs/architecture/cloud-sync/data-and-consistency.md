@@ -803,3 +803,13 @@ The public acknowledgement DTO and persisted projection-header fields are
 unchanged. D1 retains allocation/projection authority and the hub retains only
 delivery metadata. The binding-less unit-test fallback still calls the same
 authorized use case; production requires the PROJECT_HUB binding.
+
+## Local composition boundary
+
+The common local HTTP builder is `server/app.ts`; explicit server activation and
+disposal live in `server/bootstrap/createRuntime.ts`. Shared TicketService remains
+the public cloud operation facade while ticket query/mutation/Markdown persistence
+have separate collaborators. Existing journal, identity, projection and recovery
+formats/authority are unchanged. Invalid complete ticket validation precedes local
+persistence/publication; subsequent local/cloud delivery remains separately
+recoverable, without a new cross-store transaction or writer-isolation guarantee.

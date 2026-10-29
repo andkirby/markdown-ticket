@@ -1,0 +1,42 @@
+{
+  "documents": [
+    "server/docs/ARCHITECTURE.md",
+    "server/CLAUDE.md",
+    "docs/architecture/event-system/EVENT_SYSTEM.md",
+    "docs/architecture/preference-storage-architecture.md",
+    "docs/CRs/MDT-266/execution/round2/plan.md",
+    "docs/CRs/MDT-266/execution/round2/baseline.md",
+    "docs/CRs/MDT-266/execution/round2/compatibility-inventory.md",
+    "docs/CRs/MDT-266/execution/round2/result.md"
+  ],
+  "relativeFileLinks": 37,
+  "broken": [],
+  "unclosedFences": [],
+  "diagrams": [
+    {
+      "file": "server/docs/ARCHITECTURE.md",
+      "baselineBlocks": 0,
+      "currentBlocks": 0,
+      "changed": false
+    },
+    {
+      "file": "server/CLAUDE.md",
+      "baselineBlocks": 0,
+      "currentBlocks": 0,
+      "changed": false
+    },
+    {
+      "file": "docs/architecture/event-system/EVENT_SYSTEM.md",
+      "baselineBlocks": 0,
+      "currentBlocks": 0,
+      "changed": false
+    },
+    {
+      "file": "docs/architecture/preference-storage-architecture.md",
+      "baselineBlocks": 0,
+      "currentBlocks": 0,
+      "changed": false
+    }
+  ],
+  "limits": "Local file-target/fence check only. No diagram blocks changed; anchors/external URLs not automatically checked."
+}

@@ -1,8 +1,8 @@
 import type { Response } from 'express'
-import type { AuthenticatedRequest, ProjectServiceExtension, TreeServiceInterface } from '../../controllers/ProjectController.js'
+import type { AuthenticatedRequest, ProjectServiceExtension } from '../../modules/projects/index.js'
 import type { TicketService } from '../../services/TicketService.js'
-import { ProjectController } from '../../controllers/ProjectController.js'
-import { createMockProjectService, createMockReqRes, createMockTreeService } from '../utils/setupTests.js'
+import { TicketController } from '../../modules/tickets/index.js'
+import { createMockProjectService, createMockReqRes } from '../utils/setupTests.js'
 
 // Captured before boundary wiring. Accepted inputs must reach the same adapter.
 export const acceptedWrites = [
@@ -17,7 +17,7 @@ export const acceptedWrites = [
 describe('Phase 0 REST compatibility fixtures', () => {
   it.each(acceptedWrites)('$method preserves adapter arguments: $body', async (fixture) => {
     const service = { createCR: jest.fn(), updateCRPartial: jest.fn(), deleteCR: jest.fn() }
-    const controller = new ProjectController(createMockProjectService() as unknown as ProjectServiceExtension, createMockTreeService() as unknown as TreeServiceInterface, {}, undefined, service as unknown as TicketService)
+    const controller = new TicketController(createMockProjectService() as unknown as ProjectServiceExtension, service as unknown as TicketService)
     const { req, res } = createMockReqRes()
     req.params = { ...fixture.params }
     req.body = 'body' in fixture ? fixture.body : undefined

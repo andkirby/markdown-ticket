@@ -584,3 +584,20 @@ even when credentials/coordination are unavailable. Confirm the actual remote
 state and allocation denial before treating a project as globally suspended or
 detaching installations. The deployed drill also fixed a lost resolver receiver
 that had prevented this cloud call while silently retaining local disabled state.
+
+## Local server lifecycle
+
+The local executable remains `server/server.ts` with the existing start commands.
+It builds the common application and awaits the explicit runtime start handle in
+`server/bootstrap/createRuntime.ts`; only the executable owns process signals and
+listener sockets. Runtime stop detaches callbacks and disposes streams, observation,
+retry runners and watchers. Tests use the same application/runtime with isolated
+configuration and explicit start/stop; they do not enable deployed acceptance or
+change `MDT_PROJECTION_STREAM_ROLLOUT` policy.
+
+Local runtime stop invalidates stream ownership before draining activation and
+persistence. A rollout-enabled start overlapping stop cannot restore a stream or
+retry timer. The journal runner drains flushes launched by its interval; explicit
+foreground operations retain their own lifetime. Active identity observations
+are drained without publishing after stop. No timeout race substitutes for owned
+work settlement.

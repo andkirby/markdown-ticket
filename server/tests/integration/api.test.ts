@@ -170,16 +170,9 @@ describe('aPI Integration Tests - CRUD Endpoints (MDT-106)', () => {
 
     beforeAll(async () => {
       // Create a fresh CR for PUT tests to avoid conflicts with PATCH tests
-      const crResult = await projectFactory.createTestCR(projectCode, {
-        title: 'PUT Test CR',
-        type: 'Feature Enhancement',
-        content: 'Test CR for PUT endpoint',
-      })
-
-      if (!crResult.success) {
-        throw new Error(`Failed to create CR for PUT tests: ${crResult.error}`)
-      }
-      putTestCRCode = crResult.crCode!
+      const response = await projectApi.createCR(authRequest, projectCode, { title: 'PUT Test CR', type: 'Feature Enhancement' })
+      assertSuccess(response, 201)
+      putTestCRCode = response.body.crCode
     })
 
     it('should update CR fully (delegates to updateCRPartial)', async () => {
@@ -208,16 +201,9 @@ describe('aPI Integration Tests - CRUD Endpoints (MDT-106)', () => {
 
     beforeAll(async () => {
       // Create a CR specifically for deletion tests
-      const crResult = await projectFactory.createTestCR(projectCode, {
-        title: 'CR To Be Deleted',
-        type: 'Bug Fix',
-        content: 'This CR will be deleted in tests',
-      })
-
-      if (!crResult.success) {
-        throw new Error(`Failed to create CR for deletion: ${crResult.error}`)
-      }
-      crToDelete = crResult.crCode!
+      const response = await projectApi.createCR(authRequest, projectCode, { title: 'CR To Be Deleted', type: 'Bug Fix' })
+      assertSuccess(response, 201)
+      crToDelete = response.body.crCode
     })
 
     it('should delete CR successfully', async () => {

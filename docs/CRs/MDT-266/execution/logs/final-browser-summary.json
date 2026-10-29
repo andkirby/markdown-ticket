@@ -1,0 +1,65 @@
+{
+  "executor": "parent thr_7x3ccba356",
+  "browser": "Chromium",
+  "workers": 1,
+  "lanes": [
+    {
+      "lane": "browser",
+      "stats": {
+        "startTime": "2026-10-29T17:41:41.254Z",
+        "duration": 35589.442,
+        "expected": 40,
+        "skipped": 8,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "source": "${BB_THREAD_STORAGE}/mdt266-final-browser.json",
+      "log": "${BB_THREAD_STORAGE}/mdt266-final-browser.log"
+    },
+    {
+      "lane": "auth",
+      "stats": {
+        "startTime": "2026-10-29T17:42:25.364Z",
+        "duration": 8496.29,
+        "expected": 8,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "source": "${BB_THREAD_STORAGE}/mdt266-final-auth.json",
+      "log": "${BB_THREAD_STORAGE}/mdt266-final-auth.log"
+    },
+    {
+      "lane": "operations",
+      "stats": {
+        "startTime": "2026-10-29T17:42:52.259Z",
+        "duration": 52225.094999999994,
+        "expected": 70,
+        "skipped": 1,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "source": "${BB_THREAD_STORAGE}/mdt266-final-operations.json",
+      "log": "${BB_THREAD_STORAGE}/mdt266-final-operations.log"
+    }
+  ],
+  "totalPassed": 118,
+  "skipped": 9,
+  "unexpected": 0,
+  "flaky": 0,
+  "portsReleased": [
+    62106,
+    62107,
+    63085,
+    63086,
+    63283,
+    63284
+  ],
+  "portCheck": "lsof -nP -iTCP:<port> -sTCP:LISTEN: each exit1/no listener",
+  "qualifications": [
+    "selected suites only",
+    "auth explicitly API_LOCAL_HOST_BYPASS=false",
+    "8 default auth-gated skips; operations static skip subdoc-navigation.spec.ts:395",
+    "no deployed cloud acceptance"
+  ]
+}

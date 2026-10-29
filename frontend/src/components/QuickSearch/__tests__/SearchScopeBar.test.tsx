@@ -5,10 +5,10 @@
  * Covering: BR-1.2, BR-1.3, C1, C2
  */
 
-import { describe, expect, it, vi } from 'bun:test'
-import { render, screen, fireEvent } from '@testing-library/react'
-import { SearchScopeBar } from '@/components/QuickSearch/SearchScopeBar'
 import { SearchScope, SearchScopes } from '@mdt/domain-contracts'
+import { fireEvent, render, screen } from '@testing-library/react'
+import { describe, expect, it, vi } from 'bun:test'
+import { SearchScopeBar } from '@/components/QuickSearch/SearchScopeBar'
 
 describe('SearchScopeBar', () => {
   it('renders a tab for each visible scope (BR-1.2)', () => {

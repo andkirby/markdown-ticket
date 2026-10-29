@@ -25,9 +25,9 @@ interface RecoveryPort {
 type RouterFactory = (service: RecoveryPort) => ExpressRouter
 
 async function recoveryRouter(service: RecoveryPort): Promise<ExpressRouter> {
-  if (!existsSync(resolve(__dirname, '../../../routes/cloudCreationRecovery.ts')))
+  if (!existsSync(resolve(__dirname, '../../../modules/tickets/cloudCreationRecovery.ts')))
     return Router()
-  const modulePath = '../../../routes/cloudCreationRecovery.js'
+  const modulePath = '../../../modules/tickets/index.js'
   const module = await import(modulePath) as { createCloudCreationRecoveryRouter: RouterFactory }
   return module.createCloudCreationRecoveryRouter(service)
 }

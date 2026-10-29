@@ -168,7 +168,7 @@ describe('pins API (MDT-197)', () => {
   })
 
   it('PinStateService getStatePath is user-global (not per-project)', async () => {
-    const service = new PinStateService(app.locals.projectService.projectDiscovery)
+    const service = new PinStateService(app.locals.projectService)
     expect(service.getStatePath()).toBe(join(process.env.CONFIG_DIR!, 'pins.json'))
   })
 })

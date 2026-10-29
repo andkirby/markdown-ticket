@@ -59,6 +59,37 @@ describe('WorktreeService', () => {
     jest.useRealTimers()
   })
 
+  it.each(['fresh', 'stale'])('drains %s refreshes without changing immediate stale reads or refresh calls', async (mode) => {
+    const output = 'worktree /worktrees/MDT-095\nbranch refs/heads/MDT-095\n'
+    if (mode === 'stale') {
+      mockExecFile.mockResolvedValueOnce({ stdout: output, stderr: '' })
+      await worktreeService.detect(mockProjectPath, mockProjectCode)
+      jest.advanceTimersByTime(30_001)
+    }
+    let release!: (result: { stdout: string, stderr: string }) => void
+    const pending = new Promise<{ stdout: string, stderr: string }>((resolve) => {
+      release = resolve
+    })
+    mockExecFile.mockReturnValueOnce(pending)
+    const detecting = worktreeService.detect(mockProjectPath, mockProjectCode)
+    if (mode === 'stale')
+      expect((await detecting).get('MDT-095')).toBe('/worktrees/MDT-095')
+    let idle = false
+    const draining = worktreeService.whenIdle().then(() => {
+      idle = true
+    })
+    await Promise.resolve()
+    await Promise.resolve()
+    const resolvedEarly = idle
+    release({ stdout: output, stderr: '' })
+    await Promise.all([detecting, draining])
+    expect(resolvedEarly).toBe(false)
+    expect(mockExecFile).toHaveBeenCalledTimes(mode === 'stale' ? 2 : 1)
+    expect(mockExecFile).toHaveBeenLastCalledWith('git', ['worktree', 'list', '--porcelain'], { cwd: mockProjectPath, timeout: 5000 })
+    expect((await worktreeService.detect(mockProjectPath, mockProjectCode)).get('MDT-095')).toBe('/worktrees/MDT-095')
+    expect(mockExecFile).toHaveBeenCalledTimes(mode === 'stale' ? 2 : 1)
+  })
+
   describe('detect()', () => {
     it('should parse git worktree list output and extract ticket codes from branch names', async () => {
       // C1: Worktree detection completes within 100ms

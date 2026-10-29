@@ -3,10 +3,12 @@ import { crPatchProperties, schemas } from '../../openapi/schemas.js'
 describe('REST ticket OpenAPI variants', () => {
   it('create advertises only the consumed projection and optional priority', () => {
     expect(schemas.CRInput.required).toEqual(['title', 'type'])
-    expect(Object.keys(schemas.CRInput.properties).sort()).toEqual(['description', 'level', 'priority', 'title', 'type'])
+    expect(Object.keys(schemas.CRInput.properties).sort()).toEqual(['description', 'level', 'priority', 'refs', 'title', 'type'])
     expect(schemas.CRInput.properties.level).toEqual({ type: 'string', enum: ['ticket', 'epic'] })
     expect(schemas.CRInput.properties.title).toMatchObject({ type: 'string' })
     expect(schemas.CRInput.properties.title).not.toHaveProperty('maxLength')
+    expect(schemas.CRInput.properties.refs).toEqual({ type: 'array', items: { type: 'string' } })
+    expect(crPatchProperties.refs).toEqual(schemas.CRInput.properties.refs)
   })
   it('PUT shares the partial write schema', () => {
     expect(schemas.CRPatchInput).not.toHaveProperty('required')

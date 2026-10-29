@@ -1,9 +1,3 @@
-/**
- * Shared Ticket Service - Consolidated CRUD Operations
- * Single source of truth for ticket/CR management across MCP server and web server
- * Migrated from mcp-server/src/services/crService.ts per MDT-082
- */
-
 import type {
   CloudCredentialProvider,
   CloudSyncCoordinator,
@@ -22,39 +16,28 @@ import type { Project } from '../models/Project.js'
 import type {
   Ticket,
   TicketData,
-  TicketFilters,
-  TicketUpdateAttrs,
 } from '../models/Ticket.js'
-import type { CRStatus } from '../models/Types.js'
+/**
+ * Shared Ticket Service - Consolidated CRUD Operations
+ * Single source of truth for ticket/CR management across MCP server and web server
+ * Migrated from mcp-server/src/services/crService.ts per MDT-082
+ */
+
 import type { PendingOperation } from './cloud-sync/operation-journal.js'
 import type { ProjectionClientPort } from './cloud-sync/projection-sync.js'
-import type { RuleTicket } from './epicRules.js'
-import type { ReadResult } from './project/types.js'
-import type {
-  AttrOperation,
-  GetTicketRequest,
-  ListTicketsRequest,
-  TicketReadResult,
-  TicketWriteResult,
-  UpdateTicketAttributesRequest,
-} from './ticket/types.js'
+import type { TicketRepository } from './ticket/TicketRepository.js'
+
 import { createHash } from 'node:crypto'
-import { readdir, readFile, realpath } from 'node:fs/promises'
+import { readdir, realpath } from 'node:fs/promises'
 import * as path from 'node:path'
 import {
   CanonicalProjectCodeSchema,
   CoordinatorError,
   CRStatus as CRStatusEnum,
-  TICKET_KEY_INPUT_PATTERN,
 } from '@mdt/domain-contracts'
 import fs from 'fs-extra'
-import { getTicketsPath } from '../models/Project.js'
-import {
-  arrayToString,
-  TICKET_UPDATE_ALLOWED_ATTRS,
-} from '../models/Ticket.js'
-import { CRLevel } from '../models/Types.js'
-import { DEFAULTS, getDefaultPaths } from '../utils/constants.js'
+
+import { getDefaultPaths } from '../utils/constants.js'
 import { formatCrKey } from '../utils/keyNormalizer.js'
 import { logQuiet } from '../utils/logger.js'
 import { bindingFromEnabledConnection } from './cloud-sync/allocator-strategy.js'
@@ -73,23 +56,17 @@ import { CloudProjectionSync } from './cloud-sync/projection-sync.js'
 import { RecoveryRunner } from './cloud-sync/recovery.js'
 import { resolveTrustedServiceProfile } from './cloud-sync/trusted-service-profile.js'
 import { CRService as SharedCRService } from './CRService.js'
-import {
-  assertEpicClosable,
-  EpicRuleError,
-  resolvePhaseEpicTarget,
 
-} from './epicRules.js'
-import { resolveExternalReferences } from './externalReferences.js'
 import { ProjectService } from './ProjectService.js'
 import { ServiceError } from './ServiceError.js'
 import { TemplateService } from './TemplateService.js'
 import { buildCreationDiagnostics } from './ticket/content-inspection.js'
-import { assertNotDerivedField } from './ticket/derivedFields.js'
-import { writeReferenceFrontmatter } from './ticket/referenceFrontmatter.js'
-import { mutateReferences, referenceOperands } from './ticket/referenceMutations.js'
-import { ticketSearchProvenance } from './ticket/referenceSearch.js'
-import { assertSafeTicketInventory, assertUnambiguousTicket, classifyTicketIdentity, repositoryRoots, scanTicketIdentities, TicketIdentityConflictError } from './ticket/TicketIdentityService.js'
+import { MarkdownTicketRepository } from './ticket/MarkdownTicketRepository.js'
+import { mutateReferences } from './ticket/referenceMutations.js'
+import { assertSafeTicketInventory, assertUnambiguousTicket, classifyTicketIdentity, repositoryRoots, TicketIdentityConflictError } from './ticket/TicketIdentityService.js'
 import { TicketLocationResolver } from './ticket/TicketLocationResolver.js'
+import { TicketMutationService } from './ticket/TicketMutationService.js'
+import { TicketQueryService } from './ticket/TicketQueryService.js'
 
 /**
  * A cloud coordinator + credential provider for one TicketService instance.
@@ -119,21 +96,6 @@ export interface CloudRuntimeDependencies {
  * Case-insensitive substring match for fuzzy filtering.
  * An empty pattern matches everything.
  */
-function fuzzyMatch(haystack: string, needle: string): boolean {
-  if (!needle)
-    return true
-  return haystack.toLowerCase().includes(needle.toLowerCase())
-}
-
-const RELATION_FIELDS = ['relatedTickets', 'dependsOn', 'blocks', 'refs'] as const
-
-function normalizeValue(value: string | string[]): string | string[] {
-  if (Array.isArray(value)) {
-    return value.map(v => v.trim())
-  }
-  return value.trim()
-}
-
 /**
  * Unified Ticket Service for CRUD Operations
  * Provides ticket management functionality for both MCP and web servers
@@ -143,6 +105,22 @@ function normalizeValue(value: string | string[]): string | string[] {
  * mcp-server/src/tools/handlers/crHandlers.ts
  */
 export class TicketService {
+  private readonly repository: TicketRepository
+  private readonly queries: TicketQueryService
+  private readonly mutations: TicketMutationService
+  listTickets(...args: Parameters<TicketQueryService['listTickets']>): ReturnType<TicketQueryService['listTickets']> { return this.queries.listTickets(...args) }
+  getTicket(...args: Parameters<TicketQueryService['getTicket']>): ReturnType<TicketQueryService['getTicket']> { return this.queries.getTicket(...args) }
+  getCRPath(...args: Parameters<TicketQueryService['getCRPath']>): ReturnType<TicketQueryService['getCRPath']> { return this.queries.getCRPath(...args) }
+  listCRs(...args: Parameters<TicketQueryService['listCRs']>): ReturnType<TicketQueryService['listCRs']> { return this.queries.listCRs(...args) }
+  getCR(...args: Parameters<TicketQueryService['getCR']>): ReturnType<TicketQueryService['getCR']> { return this.queries.getCR(...args) }
+  private withExternalReferences(...args: Parameters<TicketQueryService['withExternalReferences']>): ReturnType<TicketQueryService['withExternalReferences']> { return this.queries.withExternalReferences(...args) }
+  updateTicketAttributes(...args: Parameters<TicketMutationService['updateTicketAttributes']>): ReturnType<TicketMutationService['updateTicketAttributes']> { return this.mutations.updateTicketAttributes(...args) }
+  updateCRStatus(...args: Parameters<TicketMutationService['updateCRStatus']>): ReturnType<TicketMutationService['updateCRStatus']> { return this.mutations.updateCRStatus(...args) }
+  updateCRAttrs(...args: Parameters<TicketMutationService['updateCRAttrs']>): ReturnType<TicketMutationService['updateCRAttrs']> { return this.mutations.updateCRAttrs(...args) }
+  updateCRPartial(...args: Parameters<TicketMutationService['updateCRPartial']>): ReturnType<TicketMutationService['updateCRPartial']> { return this.mutations.updateCRPartial(...args) }
+  private assertPhaseEpicTarget(...args: Parameters<TicketMutationService['assertPhaseEpicTarget']>): ReturnType<TicketMutationService['assertPhaseEpicTarget']> { return this.mutations.assertPhaseEpicTarget(...args) }
+  private referenceTrackers(project: Project): unknown { return this.projectService.getProjectConfig(project.project.path)?.trackers }
+
   private projectService: ProjectService
   private templateService: TemplateService
   private readonly ticketLocationResolver: TicketLocationResolver
@@ -162,29 +140,10 @@ export class TicketService {
     )
     this.quiet = quiet
     this.cloudRuntime = cloudRuntime
-  }
-
-  async listTickets(
-    request: ListTicketsRequest,
-  ): Promise<ReadResult<Ticket[]>> {
-    const project = await this.requireProject(request.projectRef)
-    let tickets = await this.listCRs(project, request.filters)
-
-    // Apply sorting (default: dateModified newest-first)
-    const sortField = request.sort || 'dateModified'
-    tickets = this.sortTickets(tickets, sortField)
-
-    // Apply pagination
-    const offset = request.offset ?? 0
-    const limit = request.limit
-    if (limit !== undefined || offset > 0) {
-      tickets = tickets.slice(
-        offset,
-        limit !== undefined ? offset + limit : undefined,
-      )
-    }
-
-    return { data: tickets }
+    const configLookup = { getProjectConfig: (p: string) => this.projectService.getProjectConfig(p) }
+    this.repository = new MarkdownTicketRepository(configLookup, { getTemplate: type => this.templateService.getTemplate(type) })
+    this.queries = new TicketQueryService({ ...configLookup, getProject: ref => this.projectService.getProject(ref), getProjectCRs: project => this.projectService.getProjectCRs(project) }, this.ticketLocationResolver, this.repository)
+    this.mutations = new TicketMutationService({ ...configLookup, getProject: ref => this.projectService.getProject(ref), getProjectByCodeOrId: ref => this.projectService.getProjectByCodeOrId(ref) }, { getCR: (project, key) => this.getCR(project, key) }, this.ticketLocationResolver, this.repository, (...args) => this.syncTicketProjectionBestEffort(...args))
   }
 
   async pollCloudProjections(
@@ -292,247 +251,6 @@ export class TicketService {
             ? error.code
             : 'coordination_unavailable',
       }
-    }
-  }
-
-  async getTicket(request: GetTicketRequest): Promise<TicketReadResult> {
-    const project = await this.requireProject(request.projectRef)
-    const ticket = await this.getCR(project, request.ticketKey)
-
-    if (!ticket) {
-      throw ServiceError.ticketNotFound(request.ticketKey)
-    }
-
-    return { data: ticket }
-  }
-
-  async updateTicketAttributes(
-    request: UpdateTicketAttributesRequest,
-  ): Promise<TicketWriteResult<AttrOperation[]>> {
-    const project = await this.requireProject(request.projectRef)
-    const currentTicket = await this.getCR(project, request.ticketKey)
-
-    if (!currentTicket) {
-      throw ServiceError.ticketNotFound(request.ticketKey)
-    }
-
-    const normalizedOperations = request.operations.map(operation => ({
-      ...operation,
-      value: operation.field === 'refs' ? operation.value : normalizeValue(operation.value),
-    }))
-
-    this.validateAttrOperations(normalizedOperations)
-
-    const changedFields: string[] = []
-    const updates: Record<string, string | string[]> = {}
-
-    for (const operation of normalizedOperations) {
-      if (operation.field === 'refs') {
-        const current = updates.refs ?? currentTicket.refs ?? []
-        updates.refs = mutateReferences(referenceOperands(current), operation, this.referenceTrackers(project))
-        if (JSON.stringify(current) !== JSON.stringify(updates.refs))
-          changedFields.push('refs')
-        continue
-      }
-      // Resolve the effective current value for this field: prefer the
-      // accumulated in-batch state so multiple ops on the same field compose
-      // (e.g. `related+=A related+=B` must yield [A,B], not just [B]).
-      // Falls back to the disk snapshot on first touch.
-      const resolveRelationValue = (field: string): string[] => {
-        const pending = updates[field]
-        if (Array.isArray(pending))
-          return pending
-        if (typeof pending === 'string' && pending) {
-          return pending
-            .split(',')
-            .map(item => item.trim())
-            .filter(Boolean)
-        }
-        return this.getRelationField(currentTicket, field)
-      }
-
-      if (operation.op === 'replace') {
-        if (this.isRelationField(operation.field)) {
-          const nextValue = Array.isArray(operation.value)
-            ? operation.value
-            : operation.value
-              ? [operation.value]
-              : []
-          const currentRelationValue = resolveRelationValue(operation.field)
-
-          if (
-            JSON.stringify(currentRelationValue) !== JSON.stringify(nextValue)
-          ) {
-            updates[operation.field] = nextValue
-            changedFields.push(operation.field)
-          }
-          continue
-        }
-
-        const currentValue = this.getTicketField(
-          currentTicket,
-          operation.field,
-        )
-        const nextValue = Array.isArray(operation.value)
-          ? operation.value.join(',')
-          : operation.value
-        if (currentValue !== nextValue) {
-          updates[operation.field] = nextValue
-          changedFields.push(operation.field)
-        }
-        continue
-      }
-
-      const currentRelationValue = resolveRelationValue(operation.field)
-      const normalizedValues = Array.isArray(operation.value)
-        ? operation.value
-        : [operation.value]
-
-      if (operation.op === 'add') {
-        const nextValue = [
-          ...new Set([...currentRelationValue, ...normalizedValues]),
-        ]
-        if (
-          JSON.stringify(currentRelationValue) !== JSON.stringify(nextValue)
-        ) {
-          updates[operation.field] = nextValue
-          changedFields.push(operation.field)
-        }
-        continue
-      }
-
-      const valuesToRemove = new Set(normalizedValues)
-      const nextValue = currentRelationValue.filter(
-        value => !valuesToRemove.has(value),
-      )
-      if (JSON.stringify(currentRelationValue) !== JSON.stringify(nextValue)) {
-        updates[operation.field] = nextValue
-        changedFields.push(operation.field)
-      }
-    }
-
-    if (Object.keys(updates).length > 0) {
-      const persistUpdates = Object.fromEntries(
-        Object.entries(updates).map(([field, value]) => [
-          field,
-          Array.isArray(value) && field !== 'refs' ? value.join(',') : value,
-        ]),
-      ) as Partial<TicketData>
-
-      await this.persistCRAttrs(project, request.ticketKey, persistUpdates, true)
-    }
-
-    const updatedTicket = await this.getCR(project, request.ticketKey)
-    if (!updatedTicket) {
-      throw ServiceError.persistenceError(
-        `Ticket ${request.ticketKey} disappeared after update`,
-      )
-    }
-
-    return {
-      ticket: updatedTicket,
-      target: {
-        projectId: project.id,
-        projectCode: project.project.code,
-        ticketKey: request.ticketKey,
-      },
-      normalizedInputs: normalizedOperations,
-      changedFields,
-      path: updatedTicket.filePath,
-    }
-  }
-
-  /**
-   * Get the correct CR path for a project with backward compatibility
-   */
-  public async getCRPath(project: Project): Promise<string> {
-    try {
-      const config = this.projectService.getProjectConfig(project.project.path)
-      if (!config || !config.project) {
-        return path.resolve(project.project.path, DEFAULTS.TICKETS_PATH)
-      }
-
-      // Use helper function with backward compatibility
-      const crPath = getTicketsPath(config, DEFAULTS.TICKETS_PATH)
-      return path.resolve(project.project.path, crPath)
-    }
-    catch {
-      // Fallback to default path on error
-      return path.resolve(project.project.path, DEFAULTS.TICKETS_PATH)
-    }
-  }
-
-  /**
-   * List all CRs for a project with optional filtering
-   */
-  async listCRs(project: Project, filters?: TicketFilters): Promise<Ticket[]> {
-    try {
-      // Use shared ProjectService to get CRs with correct path resolution
-      const crs = (await this.projectService.getProjectCRs(project)).map(ticket => this.withExternalReferences(project, ticket))
-
-      // Apply filters if provided
-      let filteredCRs = crs
-      if (filters) {
-        filteredCRs = crs.filter(cr => this.matchesFilters(cr, filters))
-      }
-
-      // Sort by ticket code (natural sort, DESC - newest/highest numbers first)
-      return filteredCRs.sort((a, b) => {
-        const aNum = this.extractTicketNumber(a.code)
-        const bNum = this.extractTicketNumber(b.code)
-
-        if (aNum !== bNum) {
-          return bNum - aNum // DESC: higher numbers first
-        }
-
-        // Fallback to reverse string comparison if numbers are equal
-        return b.code.localeCompare(a.code)
-      })
-    }
-    catch {
-      return []
-    }
-  }
-
-  /**
-   * Get a specific CR by key
-   * MDT-095: Enhanced with worktree support - resolves path for specific ticket
-   */
-  async getCR(project: Project, key: string): Promise<Ticket | null> {
-    try {
-      const inventory = await this.readIdentityInventory(project)
-      assertUnambiguousTicket(inventory, key)
-      const location = await this.ticketLocationResolver.resolve(project, key)
-
-      // Read the exact inventoried file. A second first-match directory scan
-      // could select a foreign file added between verification and lookup.
-      const resolvedRoot = await realpath(location.projectRoot)
-      const resolvedDirectory = await realpath(path.resolve(location.projectRoot, location.ticketsPath))
-      const candidate = inventory.files.find(file => file.code.toUpperCase() === key.toUpperCase()
-        && (path.dirname(file.absolutePath) === resolvedDirectory || path.dirname(path.dirname(file.absolutePath)) === resolvedDirectory))
-      if (!candidate)
-        return null
-      const { MarkdownService } = await import('./MarkdownService.js')
-      const logicalPath = path.join(location.projectRoot, path.relative(resolvedRoot, candidate.absolutePath))
-      const targetCR = await MarkdownService.parseMarkdownFile(logicalPath, location.projectRoot)
-
-      if (!targetCR) {
-        return null
-      }
-      if (targetCR.code.toUpperCase() !== key.toUpperCase() || targetCR.creationId !== candidate.creationId)
-        throw new TicketIdentityConflictError(key, [candidate.relativePath])
-
-      // Add worktree metadata
-      return {
-        ...this.withExternalReferences(project, targetCR),
-        inWorktree: location.isWorktree,
-        worktreePath: location.isWorktree ? location.projectRoot : undefined,
-      }
-    }
-    catch (error) {
-      if (error instanceof TicketIdentityConflictError)
-        throw error
-      return null
     }
   }
 
@@ -674,7 +392,7 @@ export class TicketService {
     const crKey = formatCrKey(project.project.code, ticketNumber)
     const location = await this.ticketLocationResolver.resolve(project, crKey)
     const crPath = path.resolve(location.projectRoot, location.ticketsPath)
-    const titleSlug = data.slug ?? this.createSlug(data.title)
+    const titleSlug = data.slug ?? this.repository.slug(data.title)
     const filename = `${crKey}-${titleSlug}.md`
     const filePath = path.join(crPath, filename)
 
@@ -696,35 +414,7 @@ export class TicketService {
       ticket.dateCreated = stableCreatedAt
       ticket.lastModified = stableCreatedAt
     }
-    const markdownContent = this.formatCRAsMarkdown(ticket, data, onBodySource)
-    ticket.content = markdownContent
-    if (exclusive) {
-      try {
-        await fs.outputFile(filePath, markdownContent, {
-          encoding: 'utf8',
-          flag: 'wx',
-        })
-      }
-      catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== 'EEXIST') {
-          throw error
-        }
-        const existing = await readFile(filePath, 'utf8')
-        if (existing !== markdownContent) {
-          throw new CoordinatorError('reservation_state_conflict', {
-            message: `reserved ticket path already exists with different content: ${filename}`,
-          })
-        }
-      }
-    }
-    else {
-      await fs.outputFile(filePath, markdownContent, 'utf8')
-    }
-    // The projected header must use the durable file timestamp, not the
-    // in-memory creation timestamp. Later edits read `lastModified` from the
-    // same filesystem metadata; using different clocks would make the first
-    // legitimate projection update look like a divergence.
-    ticket.lastModified = (await fs.stat(filePath)).mtime
+    await this.repository.create(ticket, data, exclusive, onBodySource)
 
     return {
       ...ticket,
@@ -745,314 +435,6 @@ export class TicketService {
       date_created: ticket.dateCreated?.toISOString() ?? null,
       last_modified:
         ticket.lastModified?.toISOString() ?? new Date().toISOString(),
-    }
-  }
-
-  /**
-   * MDT-205: resolve a ticket-key-shaped phaseEpic value to its target ticket,
-   * including cross-project keys (e.g. ABC-012). Returns null when the target
-   * is absent. Free-text (non-key) values are never looked up here.
-   */
-  private async resolvePhaseEpicTargetTicket(
-    project: Project,
-    value: string,
-  ): Promise<Ticket | null> {
-    const match = value.trim().match(TICKET_KEY_INPUT_PATTERN)
-    if (!match) {
-      return null
-    }
-    const targetCode = match[0].toUpperCase()
-    const targetProjectCode = match[1].toUpperCase()
-    const activeProjectCode = project.project.code?.toUpperCase()
-
-    // Same project: resolve within the active project.
-    if (!activeProjectCode || targetProjectCode === activeProjectCode) {
-      return this.getCR(project, targetCode)
-    }
-
-    // Cross-project key (Edge-1): locate the target project by code and look there.
-    const targetProject
-      = await this.projectService.getProjectByCodeOrId(targetProjectCode)
-    if (!targetProject) {
-      return null
-    }
-    return this.getCR(targetProject, targetCode)
-  }
-
-  /**
-   * MDT-205: enforce phaseEpic target validation on a write.
-   * Key-shaped values must point at a usable epic (Approved / Implemented);
-   * free text and clears are allowed untouched (Edge-2, Edge-6).
-   */
-  private async assertPhaseEpicTarget(
-    project: Project,
-    value: string | undefined | null,
-  ): Promise<void> {
-    const resolution = resolvePhaseEpicTarget(value, undefined)
-    // ok (clear) and skipped (free text) need no lookup.
-    if (resolution.outcome === 'ok' || resolution.outcome === 'skipped') {
-      return
-    }
-
-    const target = await this.resolvePhaseEpicTargetTicket(
-      project,
-      (value ?? '').trim(),
-    )
-    const finalResolution = resolvePhaseEpicTarget(value, target ?? null)
-    if (finalResolution.outcome === 'reject') {
-      throw ServiceError.invalidOperation(finalResolution.message, {
-        epicErrorCode: finalResolution.code,
-        target: (value ?? '').trim(),
-      })
-    }
-  }
-
-  /**
-   * MDT-205: enforce the epic close guard. An epic may not move to Implemented
-   * while it has non-terminal children. Scoped to epics only (C-4); non-epic
-   * tickets and all other transitions are unaffected.
-   *
-   * Scans the project-local ticket directory via the same resolver + scan path
-   * that getCR uses, so it works for any project (registered or not) and needs
-   * no global-registry lookup.
-   */
-  private async assertEpicCloseAllowed(
-    project: Project,
-    epic: Ticket,
-    newStatus: string,
-  ): Promise<void> {
-    if (epic.level !== CRLevel.EPIC || newStatus !== CRStatusEnum.IMPLEMENTED) {
-      return
-    }
-    const location = await this.ticketLocationResolver.resolve(
-      project,
-      epic.code,
-    )
-    const fullCRPath = path.resolve(location.projectRoot, location.ticketsPath)
-    const { MarkdownService } = await import('./MarkdownService.js')
-    const allTickets = await MarkdownService.scanMarkdownFiles(
-      fullCRPath,
-      location.projectRoot,
-    )
-    const children: RuleTicket[] = allTickets.filter(
-      t =>
-        t.phaseEpic && t.phaseEpic.toUpperCase() === epic.code.toUpperCase(),
-    )
-    try {
-      assertEpicClosable(
-        { code: epic.code, level: epic.level, status: epic.status },
-        children,
-      )
-    }
-    catch (e) {
-      if (e instanceof EpicRuleError) {
-        throw ServiceError.invalidOperation(e.message, {
-          epicErrorCode: e.code,
-          ...(e.details as Record<string, unknown>),
-        })
-      }
-      throw e
-    }
-  }
-
-  /**
-   * Update CR status with validation
-   */
-  async updateCRStatus(
-    project: Project,
-    key: string,
-    status: CRStatus,
-  ): Promise<boolean> {
-    try {
-      const cr = await this.getCR(project, key)
-      if (!cr) {
-        throw new Error(`CR '${key}' not found in project '${project.id}'`)
-      }
-
-      // MDT-205: epic close guard — epics to Implemented need all children terminal.
-      await this.assertEpicCloseAllowed(project, cr, status)
-
-      // Note: Status transition validation removed to allow free movement
-      // This accommodates legacy/unknown status values in existing tickets
-
-      // Read current file content
-      const content = await readFile(cr.filePath, 'utf-8')
-
-      // Update status in YAML frontmatter
-      const updatedContent = this.updateYAMLField(content, 'status', status)
-      // lastModified will be automatically set from file modification time
-
-      // Write back to file
-      await fs.outputFile(cr.filePath, updatedContent, 'utf-8')
-      const updated = await this.getCR(project, key)
-      if (updated) {
-        await this.syncTicketProjectionBestEffort(
-          project,
-          cr,
-          updated,
-          'active',
-        )
-      }
-
-      return true
-    }
-    catch (error) {
-      // MDT-205: preserve typed domain errors (epic close guard) so callers can
-      // map epicErrorCode to actionable user-facing text across surfaces.
-      if (error instanceof ServiceError || error instanceof TicketIdentityConflictError) {
-        throw error
-      }
-      // Enhanced error handling with specific failure types
-      if (error instanceof Error) {
-        if (error.message.includes('ENOENT')) {
-          throw new Error(
-            `Failed to update CR '${key}': File not found or deleted`,
-          )
-        }
-        if (
-          error.message.includes('EACCES')
-          || error.message.includes('EPERM')
-        ) {
-          throw new Error(
-            `Failed to update CR '${key}': Permission denied. Check file permissions`,
-          )
-        }
-        if (
-          error.message.includes('EBUSY')
-          || error.message.includes('EMFILE')
-        ) {
-          throw new Error(
-            `Failed to update CR '${key}': File locked or in use by another process`,
-          )
-        }
-        if (error.message.includes('Invalid status transition')) {
-          throw error // Re-throw validation errors as-is
-        }
-        if (error.message.includes('not found')) {
-          throw error // Re-throw CR not found errors as-is
-        }
-        // Generic file system or parsing errors
-        throw new Error(`Failed to update CR '${key}': ${error.message}`)
-      }
-      throw new Error(`Failed to update CR '${key}': Unknown error occurred`)
-    }
-  }
-
-  /**
-   * Update CR attributes (partial update)
-   */
-  async updateCRAttrs(
-    project: Project,
-    key: string,
-    attributes: Partial<TicketData>,
-  ): Promise<boolean> {
-    return this.persistCRAttrs(project, key, attributes, false)
-  }
-
-  private referenceTrackers(project: Project): unknown {
-    return this.projectService.getProjectConfig(project.project.path)?.trackers
-  }
-
-  private withExternalReferences(project: Project, ticket: Ticket): Ticket {
-    return ticket.refs === undefined
-      ? ticket
-      : {
-          ...ticket,
-          externalRefs: resolveExternalReferences(ticket.refs, this.referenceTrackers(project)),
-        }
-  }
-
-  private async persistCRAttrs(project: Project, key: string, attributes: Partial<TicketData>, preserveRefs: boolean): Promise<boolean> {
-    try {
-      const cr = await this.getCR(project, key)
-      if (!cr) {
-        throw new Error(`CR '${key}' not found in project '${project.id}'`)
-      }
-
-      // Validate that only allowed attributes are being updated
-      const invalidAttributes = Object.keys(attributes).filter(
-        field =>
-          !TICKET_UPDATE_ALLOWED_ATTRS.has(field as keyof TicketUpdateAttrs),
-      )
-
-      if (invalidAttributes.length > 0) {
-        const allowed = Array.from(TICKET_UPDATE_ALLOWED_ATTRS).join(', ')
-        throw new Error(
-          `Invalid attributes: ${invalidAttributes.join(', ')}. `
-          + `Allowed attributes for update_cr_attrs are: ${allowed}`,
-        )
-      }
-
-      // MDT-205: validate a key-shaped phaseEpic target before persisting.
-      if ('phaseEpic' in attributes) {
-        await this.assertPhaseEpicTarget(project, attributes.phaseEpic)
-      }
-
-      // Read current file content
-      const content = await readFile(cr.filePath, 'utf-8')
-      let updatedContent = content
-
-      // Update each attribute in YAML frontmatter
-      for (const [field, value] of Object.entries(attributes)) {
-        if (value !== undefined && value !== null) {
-          if (field === 'refs') {
-            const operands = referenceOperands(value)
-            const refs = preserveRefs ? operands : mutateReferences(cr.refs ?? [], { field, op: 'replace', value: operands }, this.referenceTrackers(project))
-            updatedContent = writeReferenceFrontmatter(updatedContent, refs)
-            continue
-          }
-          // Convert arrays to comma-separated strings for YAML
-          const stringValue = Array.isArray(value)
-            ? value.join(',')
-            : String(value)
-          updatedContent = this.updateYAMLField(
-            updatedContent,
-            field,
-            stringValue,
-          )
-        }
-      }
-
-      // Write back to file
-      await fs.outputFile(cr.filePath, updatedContent, 'utf-8')
-      const updated = await this.getCR(project, key)
-      if (updated) {
-        await this.syncTicketProjectionBestEffort(
-          project,
-          cr,
-          updated,
-          'active',
-        )
-      }
-
-      return true
-    }
-    catch (error) {
-      // MDT-205: preserve typed domain errors (phaseEpic target validation) so
-      // callers can map epicErrorCode to actionable user-facing text.
-      if (error instanceof ServiceError || error instanceof TicketIdentityConflictError) {
-        throw error
-      }
-      if (error instanceof Error) {
-        if (error.message.includes('ENOENT')) {
-          throw new Error(
-            `Failed to update CR '${key}': File not found or deleted`,
-          )
-        }
-        if (
-          error.message.includes('EACCES')
-          || error.message.includes('EPERM')
-        ) {
-          throw new Error(
-            `Failed to update CR '${key}': Permission denied. Check file permissions`,
-          )
-        }
-        if (error.message.includes('not found')) {
-          throw error // Re-throw CR not found errors as-is
-        }
-        throw new Error(`Failed to update CR '${key}': ${error.message}`)
-      }
-      throw new Error(`Failed to update CR '${key}': Unknown error occurred`)
     }
   }
 
@@ -1138,60 +520,6 @@ export class TicketService {
     }
   }
 
-  private async requireProject(projectRef: string): Promise<Project> {
-    const result = await this.projectService.getProject(projectRef)
-    return result.data
-  }
-
-  private isRelationField(field: string): boolean {
-    return RELATION_FIELDS.includes(field as (typeof RELATION_FIELDS)[number])
-  }
-
-  private validateAttrOperations(operations: AttrOperation[]): void {
-    for (const operation of operations) {
-      // MDT-189: `blocks` is a derived field (inverse of dependsOn) and may
-      // not be written directly. The rejection surfaces as INVALID_OPERATION,
-      // which the CLI attr command passes through transparently. Edit
-      // dependsOn instead; the migration + derivation hook keeps blocks in
-      // sync. See architecture.md D3 and bdd.md S14.
-      assertNotDerivedField(operation.field, operation.op)
-      if (
-        (operation.op === 'add' || operation.op === 'remove')
-        && !this.isRelationField(operation.field)
-      ) {
-        throw ServiceError.invalidOperation(
-          `Cannot use '${operation.op}' operation on non-relation field '${operation.field}'. Only relation fields (${RELATION_FIELDS.join(', ')}) support add/remove operations.`,
-          { field: operation.field, op: operation.op },
-        )
-      }
-    }
-  }
-
-  private getRelationField(ticket: Ticket, field: string): string[] {
-    const value = (ticket as unknown as Record<string, unknown>)[field]
-    if (Array.isArray(value)) {
-      return value.filter((item): item is string => typeof item === 'string')
-    }
-    if (typeof value === 'string' && value) {
-      return value
-        .split(',')
-        .map(item => item.trim())
-        .filter(Boolean)
-    }
-    return []
-  }
-
-  private getTicketField(ticket: Ticket, field: string): string {
-    const value = (ticket as unknown as Record<string, unknown>)[field]
-    if (typeof value === 'string') {
-      return value
-    }
-    if (Array.isArray(value)) {
-      return value.join(',')
-    }
-    return ''
-  }
-
   /**
    * Delete a CR from a project
    */
@@ -1202,7 +530,7 @@ export class TicketService {
         return false
       }
 
-      await fs.remove(cr.filePath)
+      await this.repository.remove(cr.filePath)
       await this.syncTicketProjectionBestEffort(project, cr, cr, 'deleted')
       return true
     }
@@ -1224,10 +552,7 @@ export class TicketService {
    * CONFIG_DIR state never grants identity — the cloud re-verifies membership
    * per operation (BR-3.1, TASK-8).
    */
-  private readIdentityInventory(project: Project) {
-    const config = this.projectService.getProjectConfig(project.project.path)
-    return scanTicketIdentities(project.project.path, config?.project?.ticketsPath ?? project.project.ticketsPath ?? DEFAULTS.TICKETS_PATH, project.project.code)
-  }
+  private readIdentityInventory(project: Project) { return this.repository.inventory(project) }
 
   private canonicalCloudProject(project: Project): Project {
     const parsed = CanonicalProjectCodeSchema.safeParse(project.project.code)
@@ -1540,268 +865,6 @@ export class TicketService {
   }
 
   /**
-   * Filter tickets based on criteria with fuzzy matching support
-   *
-   * For each filter field:
-   * - Multiple values are OR'ed (match any)
-   * - Each value is matched as a case-insensitive substring (fuzzy)
-   * - Empty/null values on the ticket are treated as non-matching
-   */
-  private matchesFilters(ticket: Ticket, filters?: TicketFilters): boolean {
-    if (!filters)
-      return true
-
-    if (filters.query && !filters.query.trim().split(/\s+/).every(term => ticketSearchProvenance(ticket, term).length > 0))
-      return false
-
-    if (filters.status) {
-      const values = Array.isArray(filters.status)
-        ? filters.status
-        : [filters.status]
-      if (!values.some(v => fuzzyMatch(ticket.status, v)))
-        return false
-    }
-
-    if (filters.type) {
-      const values = Array.isArray(filters.type)
-        ? filters.type
-        : [filters.type]
-      if (!values.some(v => fuzzyMatch(ticket.type, v)))
-        return false
-    }
-
-    if (filters.priority) {
-      const values = Array.isArray(filters.priority)
-        ? filters.priority
-        : [filters.priority]
-      if (!values.some(v => fuzzyMatch(ticket.priority, v)))
-        return false
-    }
-
-    if (filters.level) {
-      // Exact enum match: level is a normalized enum, not a fuzzy label.
-      const values = Array.isArray(filters.level)
-        ? filters.level
-        : [filters.level]
-      if (!values.includes((ticket.level || 'ticket')))
-        return false
-    }
-
-    if (filters.assignee) {
-      const values = Array.isArray(filters.assignee)
-        ? filters.assignee
-        : [filters.assignee]
-      if (!values.some(v => fuzzyMatch(ticket.assignee || '', v)))
-        return false
-    }
-
-    if (filters.component) {
-      const values = Array.isArray(filters.component)
-        ? filters.component
-        : [filters.component]
-      if (!values.some(v => fuzzyMatch(ticket.component || '', v)))
-        return false
-    }
-
-    if (filters.phaseEpic) {
-      const values = Array.isArray(filters.phaseEpic)
-        ? filters.phaseEpic
-        : [filters.phaseEpic]
-      if (!values.some(v => fuzzyMatch(ticket.phaseEpic || '', v)))
-        return false
-    }
-
-    if (filters.dateRange) {
-      if (
-        filters.dateRange.start
-        && ticket.dateCreated
-        && ticket.dateCreated < filters.dateRange.start
-      ) {
-        return false
-      }
-      if (
-        filters.dateRange.end
-        && ticket.dateCreated
-        && ticket.dateCreated > filters.dateRange.end
-      ) {
-        return false
-      }
-    }
-
-    return true
-  }
-
-  /**
-   * Sort tickets by the given field (descending by default for dates, ascending for code)
-   */
-  /**
-   * Extract the ticket number from a code for numeric ordering (MDT-254:
-   * string comparison would order "MDT-10000" before "MDT-1001"). Anchored
-   * after the dash so alphanumeric codes ("TP0-999") yield 999, not 0.
-   */
-  private extractTicketNumber(code: string): number {
-    const match = code.match(/-(\d+)$/)
-    return match ? Number.parseInt(match[1], 10) : 0
-  }
-
-  private sortTickets(tickets: Ticket[], sortField: string): Ticket[] {
-    return [...tickets].sort((a, b) => {
-      switch (sortField) {
-        case 'dateModified': {
-          const aDate = a.lastModified?.getTime() ?? 0
-          const bDate = b.lastModified?.getTime() ?? 0
-          return bDate - aDate // newest first
-        }
-        case 'dateCreated': {
-          const aDate = a.dateCreated?.getTime() ?? 0
-          const bDate = b.dateCreated?.getTime() ?? 0
-          return bDate - aDate // newest first
-        }
-        case 'code': {
-          const aNum = this.extractTicketNumber(a.code)
-          const bNum = this.extractTicketNumber(b.code)
-          if (aNum !== bNum)
-            return aNum - bNum
-          return a.code.localeCompare(b.code)
-        }
-        default:
-          return 0
-      }
-    })
-  }
-
-  /**
-   * Format CR as markdown with YAML frontmatter
-   */
-  private formatCRAsMarkdown(
-    ticket: Ticket,
-    data: TicketData,
-    onBodySource?: (source: 'generated' | 'supplied') => void,
-  ): string {
-    const sections: string[] = []
-
-    // YAML frontmatter - only mandatory fields + optional fields with values
-    sections.push('---')
-    sections.push(`code: ${ticket.code}`)
-    if (ticket.refs !== undefined)
-      sections.push(`refs: ${JSON.stringify(ticket.refs)}`)
-    if (ticket.creationId)
-      sections.push(`creationId: ${ticket.creationId}`)
-    sections.push(`status: ${ticket.status}`)
-    sections.push(
-      `dateCreated: ${ticket.dateCreated?.toISOString() || new Date().toISOString()}`,
-    )
-    sections.push(`type: ${ticket.type}`)
-    sections.push(`priority: ${ticket.priority}`)
-    if (ticket.level)
-      sections.push(`level: ${ticket.level}`)
-
-    // Optional fields - only include if they have values
-    if (ticket.phaseEpic)
-      sections.push(`phaseEpic: ${ticket.phaseEpic}`)
-    if (ticket.relatedTickets && ticket.relatedTickets.length > 0)
-      sections.push(`relatedTickets: ${arrayToString(ticket.relatedTickets)}`)
-    if (ticket.dependsOn && ticket.dependsOn.length > 0)
-      sections.push(`dependsOn: ${arrayToString(ticket.dependsOn)}`)
-    if (ticket.blocks && ticket.blocks.length > 0)
-      sections.push(`blocks: ${arrayToString(ticket.blocks)}`)
-    if (ticket.assignee)
-      sections.push(`assignee: ${ticket.assignee}`)
-    if (ticket.component)
-      sections.push(`component: ${ticket.component}`)
-    if (ticket.implementationDate) {
-      sections.push(
-        `implementationDate: ${ticket.implementationDate.toISOString()}`,
-      )
-    }
-    if (ticket.implementationNotes)
-      sections.push(`implementationNotes: ${ticket.implementationNotes}`)
-
-    sections.push('---')
-    sections.push('')
-
-    // Content
-    if (data.content?.trim()) {
-      onBodySource?.('supplied')
-      // MDT-064: CLI title is always the authoritative H1.
-      // Strip any leading H1 from content to prevent content from overriding the CLI title.
-      const strippedContent = data.content.replace(/^#\s+.+\n*/m, '')
-      sections.push(`# ${ticket.title}`)
-      sections.push('')
-      sections.push(strippedContent.trim())
-    }
-    else {
-      onBodySource?.('generated')
-      // Use type-specific template from TemplateService
-      const template = this.templateService.getTemplate(ticket.type)
-
-      // Replace placeholder title in template
-      const templateContent = template.template
-        .replace('[Research Title]', ticket.title)
-        .replace('[Bug Title]', ticket.title)
-        .replace('[Feature Title]', ticket.title)
-        .replace('[Architecture Title]', ticket.title)
-        .replace('[Technical Debt Title]', ticket.title)
-        .replace('[Documentation Title]', ticket.title)
-
-      // If template already has H1, use it as-is
-      if (templateContent.trim().startsWith('# ')) {
-        sections.push(templateContent)
-      }
-      else {
-        // Add H1 if template doesn't have one
-        sections.push(`# ${ticket.title}`)
-        sections.push('')
-        sections.push(templateContent)
-      }
-    }
-
-    return sections.join('\n')
-  }
-
-  /**
-   * Update a single YAML field in markdown content
-   */
-  private updateYAMLField(
-    content: string,
-    field: string,
-    value: string,
-  ): string {
-    const lines = content.split('\n')
-
-    // Find the YAML frontmatter section
-    let inFrontmatter = false
-    let frontmatterStart = -1
-    let frontmatterEnd = -1
-
-    for (let i = 0; i < lines.length; i++) {
-      if (lines[i]?.trim() === '---') {
-        if (!inFrontmatter) {
-          inFrontmatter = true
-          frontmatterStart = i
-        }
-        else {
-          frontmatterEnd = i
-          break
-        }
-      }
-      else if (inFrontmatter && lines[i]?.startsWith(`${field}:`)) {
-        // Update existing field
-        lines[i] = `${field}: ${value}`
-        return lines.join('\n')
-      }
-    }
-
-    // If field doesn't exist, add it before the closing ---
-    if (frontmatterStart !== -1 && frontmatterEnd !== -1) {
-      lines.splice(frontmatterEnd, 0, `${field}: ${value}`)
-      return lines.join('\n')
-    }
-
-    return content
-  }
-
-  /**
    * Rename a ticket: update the H1 title and optionally the file slug.
    *
    * @param project - Project containing the ticket
@@ -1821,35 +884,12 @@ export class TicketService {
       throw ServiceError.ticketNotFound(key)
     }
 
-    const content = await readFile(ticket.filePath, 'utf-8')
-
-    // Replace first H1 with new title
-    const updatedContent = content.replace(
-      /^#\s+(?:\S.*|[\t\v\f \xA0\u1680\u2000-\u200A\u202F\u205F\u3000\uFEFF])$/m,
-      `# ${newTitle}`,
-    )
-
-    // Determine new slug and filename
-    const slug = newSlug ?? this.createSlug(newTitle)
-    const dir = path.dirname(ticket.filePath)
-    const newFilename = `${key}-${slug}.md`
-    const newFilePath = path.join(dir, newFilename)
-
-    // Write content (to old or new path)
-    if (newFilePath !== ticket.filePath) {
-      // Write to new path then remove old
-      await fs.outputFile(newFilePath, updatedContent, 'utf-8')
-      await fs.remove(ticket.filePath)
-    }
-    else {
-      await fs.outputFile(ticket.filePath, updatedContent, 'utf-8')
-    }
+    await this.repository.rename(ticket, key, newTitle, newSlug)
 
     // Re-read to return updated ticket
     const location = await this.ticketLocationResolver.resolve(project, key)
     const fullCRPath = path.resolve(location.projectRoot, location.ticketsPath)
-    const { MarkdownService } = await import('./MarkdownService.js')
-    const tickets = await MarkdownService.scanMarkdownFiles(
+    const tickets = await this.repository.scan(
       fullCRPath,
       location.projectRoot,
     )
@@ -1872,13 +912,4 @@ export class TicketService {
   /**
    * Create URL-safe slug from title
    */
-  private createSlug(title: string): string {
-    return title
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '')
-      .substring(0, 50)
-  }
 }

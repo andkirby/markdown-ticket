@@ -1,0 +1,519 @@
+import type { Request, Response } from 'express'
+import type FileWatcherService from '../../services/fileWatcher/index.js'
+import type { SystemController } from './SystemController.js'
+import * as path from 'node:path'
+import {
+  SelectorStateSchema,
+} from '@mdt/domain-contracts'
+import { logger } from '@mdt/shared/utils/server-logger.js'
+import { Router } from 'express'
+import { getRuntimeConfig } from '../../config/runtimeConfig.js'
+import { parseRequest } from '../../http/parseRequest.js'
+import { FilesystemPathBodySchema } from '../../http/readSchemas.js'
+import { FilesystemAccessDeniedError } from '../../security/filesystemAccess.js'
+import { SystemService } from './SystemService.js'
+
+interface FileInvoker {
+  clearCache: () => void
+  invalidateFile: (filePath: string) => void
+}
+
+interface ProjectDiscovery {
+  clearCache?: () => void | Promise<void>
+  getAllProjects?: (bypassCache?: boolean) => Promise<Array<{ project?: { path?: string }, path?: string }>>
+}
+
+function requireMaintenanceEnabled(req: Request, res: Response): boolean {
+  if (getRuntimeConfig(req.app).system.maintenanceEndpointsEnabled) {
+    return true
+  }
+
+  res.status(404).json({ error: 'Not Found' })
+  return false
+}
+
+/**
+ * Router for system-related endpoints (status, directories, filesystem, config).
+ *
+ * @param fileWatcher - File watcher service instance.
+ * @param systemController - Project controller instance.
+ * @param projectDiscovery - Project discovery service.
+ * @param fileInvoker - File operation invoker for cache management.
+ * @returns Express router.
+ */
+export function createSystemRouter(
+  fileWatcher: FileWatcherService,
+  systemController: Pick<SystemController, 'getSystemDirectories' | 'getFileSystemTree'>,
+  projectDiscovery: ProjectDiscovery,
+  fileInvoker: FileInvoker,
+): Router {
+  const router = Router()
+  const system = new SystemService(projectDiscovery)
+
+  /**
+   * @openapi
+   * /api/status:
+   *   get:
+   *     tags: [System]
+   *     summary: Server health status
+   *     description: Returns server health, uptime info, and SSE client count
+   *     responses:
+   *       200:
+   *         description: Server status
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 status: { type: string, example: ok }
+   *                 message: { type: string }
+   *                 tasksDir: { type: string }
+   *                 timestamp: { type: string, format: date-time }
+   *                 sseClients: { type: integer }
+   */
+  router.get('/status', (_req: Request, res: Response) => {
+    res.json({
+      status: 'ok',
+      message: 'Ticket board server is running',
+      timestamp: new Date().toISOString(),
+      sseClients: fileWatcher.getClientCount(),
+    })
+  })
+
+  router.get('/health', (_req: Request, res: Response) => {
+    res.json({ status: 'ok' })
+  })
+
+  /**
+   * @openapi
+   * /api/directories:
+   *   get:
+   *     tags: [System]
+   *     summary: System directories for path selection
+   *     description: Returns home and common directories for project path browsing
+   *     responses:
+   *       200:
+   *         description: Directory list
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 home: { type: string }
+   *                 directories: { type: array, items: { type: string } }
+   */
+  router.get('/directories', systemController.getSystemDirectories.bind(systemController))
+
+  /**
+   * @openapi
+   * /api/config/links:
+   *   get:
+   *     tags: [System]
+   *     summary: Get link configuration
+   *     description: Returns link auto-detection and preview settings
+   *     responses:
+   *       200:
+   *         description: Link config
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               additionalProperties: { type: boolean }
+   *       404:
+   *         description: Config not found
+   *         content:
+   *           application/json:
+   *             schema: { $ref: '#/components/schemas/Error404' }
+   */
+  router.get('/config/links', async (req: Request, res: Response) => {
+    try {
+      const configDir = getRuntimeConfig(req.app).configDir
+      const config = await system.loadGlobalConfig(configDir)
+
+      res.json(config.links)
+    }
+    catch {
+      res.status(500).json({ error: 'Failed to read configuration file' })
+    }
+  })
+
+  /**
+   * @openapi
+   * /api/filesystem:
+   *   get:
+   *     tags: [System]
+   *     summary: Browse file system tree
+   *     description: Returns directory tree for path selection UI
+   *     parameters:
+   *       - name: path
+   *         in: query
+   *         schema: { type: string }
+   *         description: Root path to browse (defaults to home)
+   *     responses:
+   *       200:
+   *         description: File system tree
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 path: { type: string }
+   *                 children: { type: array, items: { type: object } }
+   */
+  router.get('/filesystem', systemController.getFileSystemTree.bind(systemController))
+
+  /**
+   * @openapi
+   * /api/filesystem/exists:
+   *   post:
+   *     tags: [System]
+   *     summary: Check if directory exists
+   *     description: Validates path existence and checks if within discovery paths
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required: [path]
+   *             properties:
+   *               path: { type: string, description: 'Path to check (supports ~)' }
+   *     responses:
+   *       200:
+   *         description: Path status
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 exists: { type: integer, enum: [0, 1] }
+   *                 isInDiscovery: { type: integer, enum: [0, 1] }
+   *                 expandedPath: { type: string }
+   *       400:
+   *         description: Invalid path
+   *         content:
+   *           application/json:
+   *             schema: { $ref: '#/components/schemas/Error400' }
+   */
+  router.post('/filesystem/exists', async (req: Request, res: Response) => {
+    const body = parseRequest(FilesystemPathBodySchema, req.body, res, 'body')
+    if (!body.success)
+      return
+    const { path: inputPath } = body.data
+
+    try {
+      const result = await system.checkDirectory(inputPath, getRuntimeConfig(req.app))
+
+      res.json(result)
+    }
+    catch (error) {
+      if (error instanceof FilesystemAccessDeniedError) {
+        return res.status(403).json({ error: 'Forbidden' })
+      }
+
+      console.error('Error checking directory existence:', error)
+      res.status(500).json({ error: 'Failed to check directory existence' })
+    }
+  })
+
+  /**
+   * @openapi
+   * /api/cache/clear:
+   *   post:
+   *     tags: [System]
+   *     summary: Clear file operation cache
+   *     description: Clears cached file operations to force fresh reads
+   *     responses:
+   *       200:
+   *         description: Cache cleared
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success: { type: boolean }
+   *                 message: { type: string }
+   *                 timestamp: { type: string, format: date-time }
+   *       500:
+   *         description: Server error
+   *         content:
+   *           application/json:
+   *             schema: { $ref: '#/components/schemas/Error500' }
+   */
+  router.post('/cache/clear', async (req: Request, res: Response) => {
+    if (!requireMaintenanceEnabled(req, res)) {
+      return
+    }
+
+    try {
+      logger.info('🗑️  Clearing file operation cache')
+      fileInvoker.clearCache()
+      res.json({
+        success: true,
+        message: 'Cache cleared successfully',
+        timestamp: new Date().toISOString(),
+      })
+    }
+    catch (error) {
+      console.error('Error clearing cache:', error)
+      res.status(500).json({ error: 'Failed to clear cache' })
+    }
+  })
+
+  /**
+   * @openapi
+   * /api/config:
+   *   get:
+   *     tags: [System]
+   *     summary: Get frontend configuration
+   *     description: Returns discovery settings for frontend display
+   *     responses:
+   *       200:
+   *         description: Config settings
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 configDir: { type: string }
+   *                 discovery:
+   *                   type: object
+   *                   properties:
+   *                     autoDiscover: { type: boolean }
+   *                     searchPaths: { type: array, items: { type: string } }
+   *                     maxDepth: { type: integer }
+   */
+  router.get('/config', async (req: Request, res: Response) => {
+    try {
+      const configDir = getRuntimeConfig(req.app).configDir
+      const config = await system.loadGlobalConfig(configDir)
+
+      logger.debug(`Reading config from: ${path.join(configDir, 'config.toml')}`)
+
+      res.json(getRuntimeConfig(req.app).system.isProduction
+        ? { discovery: config.discovery }
+        : { configDir, discovery: config.discovery })
+    }
+    catch (error) {
+      console.error('Error reading config:', error)
+      res.status(500).json({ error: 'Failed to read config' })
+    }
+  })
+
+  /**
+   * @openapi
+   * /api/config/global:
+   *   get:
+   *     tags: [System]
+   *     summary: Get global configuration
+   *     description: Returns full global config including discovery, links, ui, system settings
+   *     responses:
+   *       200:
+   *         description: Full global config
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 discovery: { type: object }
+   *                 links: { type: object }
+   *                 ui: { type: object }
+   *                 system: { type: object }
+   *       500:
+   *         description: Server error
+   *         content:
+   *           application/json:
+   *             schema: { $ref: '#/components/schemas/Error500' }
+   */
+  router.get('/config/global', async (req: Request, res: Response) => {
+    try {
+      const configDir = getRuntimeConfig(req.app).configDir
+      logger.debug(`Reading global config from: ${path.join(configDir, 'config.toml')}`)
+
+      res.json(await system.loadGlobalConfig(configDir))
+    }
+    catch (error) {
+      console.error('Error reading global config:', error)
+      res.status(500).json({ error: 'Failed to read global config' })
+    }
+  })
+
+  /**
+   * @openapi
+   * /api/config/clear:
+   *   post:
+   *     tags: [System]
+   *     summary: Clear config cache
+   *     description: Clears project discovery and configuration cache
+   *     responses:
+   *       200:
+   *         description: Cache cleared
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success: { type: boolean }
+   *                 message: { type: string }
+   *                 timestamp: { type: string, format: date-time }
+   *       500:
+   *         description: Server error
+   *         content:
+   *           application/json:
+   *             schema: { $ref: '#/components/schemas/Error500' }
+   */
+  router.post('/config/clear', async (req: Request, res: Response) => {
+    if (!requireMaintenanceEnabled(req, res)) {
+      return
+    }
+
+    try {
+      // Clear project discovery cache if it has one
+      if (projectDiscovery.clearCache) {
+        projectDiscovery.clearCache()
+      }
+
+      logger.info('🔄 Config cache cleared')
+      res.json({
+        success: true,
+        message: 'Config cache cleared successfully',
+        timestamp: new Date().toISOString(),
+      })
+    }
+    catch (error) {
+      console.error('Error clearing config cache:', error)
+      res.status(500).json({ error: 'Failed to clear config cache' })
+    }
+  })
+
+  /**
+   * @openapi
+   * /api/config/selector:
+   *   get:
+   *     tags: [System]
+   *     summary: Get project selector configuration and state
+   *     description: Returns preferences from user.toml and state from project-selector.json
+   *     responses:
+   *       200:
+   *         description: Selector configuration and state
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 preferences:
+   *                   type: object
+   *                   properties:
+   *                     visibleCount:
+   *                       type: integer
+   *                       description: Number of visible projects in selector
+   *                       example: 7
+   *                     compactInactive:
+   *                       type: boolean
+   *                       description: Whether to compact inactive projects
+   *                       example: true
+   *                 selectorState:
+   *                   type: object
+   *                   additionalProperties:
+   *                     type: object
+   *                     properties:
+   *                       favorite:
+   *                         type: boolean
+   *                       lastUsedAt:
+   *                         type: string
+   *                         format: date-time
+   *                       count:
+   *                         type: integer
+   *   post:
+   *     tags: [System]
+   *     summary: Update project selector state
+   *     description: Persists selector state to project-selector.json
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             additionalProperties:
+   *               type: object
+   *               properties:
+   *                 favorite:
+   *                   type: boolean
+   *                 lastUsedAt:
+   *                   type: string
+   *                   format: date-time
+   *                 count:
+   *                   type: integer
+   *     responses:
+   *       200:
+   *         description: State persisted successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                 message:
+   *                   type: string
+   *       400:
+   *         description: Invalid request body
+   *         content:
+   *           application/json:
+   *             schema: { $ref: '#/components/schemas/Error400' }
+   *       500:
+   *         description: Server error
+   *         content:
+   *           application/json:
+   *             schema: { $ref: '#/components/schemas/Error500' }
+   */
+
+  // GET /api/config/selector - Return preferences and state
+  router.get('/config/selector', async (req: Request, res: Response) => {
+    try {
+      const configDir = getRuntimeConfig(req.app).configDir
+      logger.debug('getConfigDir returned:', configDir)
+      const userConfig = await system.loadUserConfig(configDir)
+      const selectorState = await system.loadSelectorState(configDir)
+
+      res.json({
+        preferences: userConfig.ui.projectSelector,
+        selectorState,
+        // MDT-244: ticket-key display options ride the same non-owner
+        // user-scope read so every viewer renders according to config.
+        ticketKeyOptions: userConfig.ui.ticketKey,
+      })
+    }
+    catch (error) {
+      console.error('Error reading selector config:', error)
+      res.status(500).json({ error: 'Failed to read selector config' })
+    }
+  })
+
+  // POST /api/config/selector - Persist selector state
+  router.post('/config/selector', async (req: Request, res: Response) => {
+    if (!requireMaintenanceEnabled(req, res)) {
+      return
+    }
+
+    try {
+      const validatedState = parseRequest(SelectorStateSchema, req.body, res, 'body')
+      if (!validatedState.success)
+        return
+
+      const configDir = getRuntimeConfig(req.app).configDir
+      await system.writeSelectorState(configDir, validatedState.data)
+
+      res.json({
+        success: true,
+        message: 'Selector state persisted successfully',
+      })
+    }
+    catch (error) {
+      console.error('Error writing selector state:', error)
+      res.status(500).json({ error: 'Failed to write selector state' })
+    }
+  })
+
+  return router
+}

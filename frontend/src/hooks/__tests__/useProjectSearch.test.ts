@@ -5,8 +5,8 @@
  * Covering: BR-3.1, BR-3.2, BR-6.4
  */
 
-import { describe, expect, it } from 'bun:test'
 import type { Project } from '@mdt/shared/models/Project'
+import { describe, expect, it } from 'bun:test'
 import { matchProjects } from '@/hooks/useProjectSearch'
 
 // ---------------------------------------------------------------------------

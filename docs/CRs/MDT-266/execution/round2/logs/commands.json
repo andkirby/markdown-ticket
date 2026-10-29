@@ -1,0 +1,237 @@
+[
+  {
+    "command": "bun run build:all",
+    "cwd": ".",
+    "exitCode": 0,
+    "evidence": "build-all.log",
+    "counts": null,
+    "executor": "teammate",
+    "qualification": null
+  },
+  {
+    "command": "bun run validate:ts:all",
+    "cwd": ".",
+    "exitCode": 0,
+    "evidence": "types.log",
+    "counts": {
+      "packages": 6
+    },
+    "executor": "teammate",
+    "qualification": null
+  },
+  {
+    "command": "bunx tsc --noEmit -p tsconfig.json",
+    "cwd": ".",
+    "exitCode": 0,
+    "evidence": "types.log",
+    "counts": null,
+    "executor": "teammate",
+    "qualification": null
+  },
+  {
+    "command": "bun run --cwd server jest --runInBand --forceExit --json --outputFile=../docs/CRs/MDT-266/execution/round2/logs/backend-tests.json",
+    "cwd": ".",
+    "exitCode": 0,
+    "evidence": "backend-tests.json",
+    "counts": {
+      "suites": 85,
+      "passed": 1043,
+      "skipped": 8
+    },
+    "executor": "teammate",
+    "qualification": "Existing Supertest listeners require explicit forceExit; natural probe is separate."
+  },
+  {
+    "command": "bun run --cwd shared test --runInBand",
+    "cwd": ".",
+    "exitCode": 0,
+    "evidence": "shared-tests.log",
+    "counts": {
+      "suites": 94,
+      "passed": 1264
+    },
+    "executor": "teammate",
+    "qualification": "Existing shared Jest forceExit configuration."
+  },
+  {
+    "command": "bun run --cwd server lint",
+    "cwd": ".",
+    "exitCode": 0,
+    "evidence": "backend-lint.log",
+    "counts": null,
+    "executor": "teammate",
+    "qualification": null
+  },
+  {
+    "command": "bun run --cwd mcp-server jest --runInBand --runTestsByPath tests/integration/mcp-backend-consistency.test.ts tests/integration/mcp-backend-consistency-simple.test.ts --testPathIgnorePatterns='^$' --json --outputFile=../docs/CRs/MDT-266/execution/round2/logs/baseline-mcp.json",
+    "cwd": ".",
+    "exitCode": 1,
+    "evidence": "baseline-mcp.json",
+    "counts": {
+      "suitesPassed": 1,
+      "suitesFailedToLoad": 1,
+      "passed": 11
+    },
+    "executor": "teammate",
+    "qualification": "Full excluded fixture has same baseline ESM harness load failure; simple manual-handler fixture passes."
+  },
+  {
+    "command": "bun run --cwd mcp-server jest --runInBand --runTestsByPath tests/integration/mcp-backend-consistency.test.ts tests/integration/mcp-backend-consistency-simple.test.ts --testPathIgnorePatterns='^$' --json --outputFile=../docs/CRs/MDT-266/execution/round2/logs/mcp-tests.json",
+    "cwd": ".",
+    "exitCode": 1,
+    "evidence": "mcp-tests.json",
+    "counts": {
+      "suitesPassed": 1,
+      "suitesFailedToLoad": 1,
+      "passed": 11
+    },
+    "executor": "teammate",
+    "qualification": "Full excluded fixture has same baseline ESM harness load failure; simple manual-handler fixture passes."
+  },
+  {
+    "command": "bun run test:modules",
+    "cwd": ".",
+    "exitCode": 0,
+    "evidence": "module-fixtures.log",
+    "counts": {
+      "passed": 10
+    },
+    "executor": "teammate",
+    "qualification": null
+  },
+  {
+    "command": "bun run check:modules",
+    "cwd": ".",
+    "exitCode": 0,
+    "evidence": "module-scan.log",
+    "counts": {
+      "sources": 296,
+      "resolvedEdges": 1097,
+      "violations": 0,
+      "exceptions": 0
+    },
+    "executor": "teammate",
+    "qualification": null
+  },
+  {
+    "command": "bun run check:boundaries",
+    "cwd": ".",
+    "exitCode": 1,
+    "evidence": "decoder-delta.log",
+    "counts": {
+      "baselineUnmatched": 12,
+      "baselineStale": 2,
+      "newFindings": 0
+    },
+    "executor": "teammate",
+    "qualification": "Known unchanged gate outside cleanup scope."
+  },
+  {
+    "command": "node --import tsx docs/CRs/MDT-266/execution/logs/runtime-resource-probe.ts",
+    "cwd": ".",
+    "exitCode": 0,
+    "evidence": "runtime-resources.json",
+    "counts": null,
+    "executor": "teammate",
+    "qualification": "Natural process exit, no listening or credentials, temporary config."
+  },
+  {
+    "command": "bun run knip",
+    "cwd": ".",
+    "exitCode": 0,
+    "evidence": "${BB_THREAD_STORAGE}/round2-final-knip.log",
+    "counts": {
+      "issues": 0,
+      "configurationHints": 0
+    },
+    "executor": "parent thr_7x3ccba356",
+    "qualification": null
+  },
+  {
+    "command": "bun run lint:all",
+    "cwd": ".",
+    "exitCode": 0,
+    "evidence": "${BB_THREAD_STORAGE}/round2-final-lint-all.log",
+    "counts": {
+      "errors": 0,
+      "warnings": 0
+    },
+    "executor": "parent thr_7x3ccba356",
+    "qualification": null
+  },
+  {
+    "command": "bun run fe:test",
+    "cwd": ".",
+    "exitCode": 0,
+    "evidence": "${BB_THREAD_STORAGE}/round2-final-fe-tests.log",
+    "counts": {
+      "passed": 1305,
+      "failed": 0
+    },
+    "executor": "parent thr_7x3ccba356",
+    "qualification": null
+  },
+  {
+    "command": "bun run --cwd cli test",
+    "cwd": ".",
+    "exitCode": 0,
+    "evidence": "${BB_THREAD_STORAGE}/round2-final-cli-tests.log",
+    "counts": {
+      "passed": 280,
+      "failed": 0
+    },
+    "executor": "parent thr_7x3ccba356",
+    "qualification": null
+  },
+  {
+    "command": "bun run build:server",
+    "cwd": ".",
+    "exitCode": 0,
+    "evidence": "${BB_THREAD_STORAGE}/round2-fresh-server-build.log",
+    "counts": {},
+    "executor": "parent thr_7x3ccba356",
+    "qualification": "Removed only ignored server/dist and generated server/tsconfig.build.tsbuildinfo after checking neither was tracked."
+  },
+  {
+    "command": "bun install --lockfile-only --ignore-scripts",
+    "cwd": ".",
+    "exitCode": 0,
+    "evidence": "${BB_THREAD_STORAGE}/round2-parent-evidence.json",
+    "counts": {},
+    "executor": "parent thr_7x3ccba356",
+    "qualification": "two server development dependency entries only; no package resolution/version changes; no dependency installation"
+  },
+  {
+    "command": "bunx markdownlint-cli2 server/docs/ARCHITECTURE.md server/CLAUDE.md docs/architecture/event-system/EVENT_SYSTEM.md docs/architecture/preference-storage-architecture.md docs/CRs/MDT-266/execution/round2/plan.md docs/CRs/MDT-266/execution/round2/baseline.md docs/CRs/MDT-266/execution/round2/compatibility-inventory.md docs/CRs/MDT-266/execution/round2/result.md",
+    "cwd": ".",
+    "exitCode": 0,
+    "evidence": "doc-lint.log",
+    "counts": {
+      "documents": 8,
+      "errors": 0
+    },
+    "executor": "teammate",
+    "qualification": null
+  },
+  {
+    "command": "git diff --check",
+    "cwd": ".",
+    "exitCode": 0,
+    "evidence": "review.md",
+    "counts": null,
+    "executor": "teammate",
+    "qualification": null
+  },
+  {
+    "command": "git commit -m 'refactor(MDT-266): modularize backend capabilities'",
+    "cwd": ".",
+    "exitCode": 0,
+    "evidence": "Parent thread thr_7x3ccba356 storage: round2-checkpoint-commit.log",
+    "counts": {
+      "passedPreCommitChecks": 11,
+      "passedCommitMessageChecks": 2
+    },
+    "executor": "parent",
+    "qualification": "Verified source checkpoint; final result and bounded evidence included by authorized documentation-only amendment; no hook bypass."
+  }
+]

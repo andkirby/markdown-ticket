@@ -20,6 +20,10 @@ interface IndexEntry {
   filePath: string
 }
 
+/**
+ * Stable error identity for consumers of the published staged-validation subpath.
+ * @public
+ */
 export class StagedTicketValidationError extends Error {
   readonly code = 'TICKET_VALIDATION_FAILED'
 }

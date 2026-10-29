@@ -1,0 +1,89 @@
+{
+  "executor": "parent thr_7x3ccba356",
+  "cwd": ".",
+  "command": "bun run lint:all",
+  "exitCode": 0,
+  "packages": [
+    {
+      "package": "frontend",
+      "exitCode": 0
+    },
+    {
+      "package": "server",
+      "exitCode": 0
+    },
+    {
+      "package": "mcp-server",
+      "exitCode": 0
+    },
+    {
+      "package": "domain-contracts",
+      "exitCode": 0
+    },
+    {
+      "package": "shared",
+      "exitCode": 0
+    },
+    {
+      "package": "cli",
+      "exitCode": 0
+    },
+    {
+      "package": "cloud",
+      "exitCode": 0
+    }
+  ],
+  "log": "${BB_THREAD_STORAGE}/round2-final-lint-all.log",
+  "storageContext": "BB_THREAD_STORAGE denotes parent thr_7x3ccba356 storage",
+  "parentLintFixes": {
+    "errors": 37,
+    "testFiles": 20,
+    "assertionsPreserved": true
+  },
+  "knip": {
+    "command": "bun run knip",
+    "exitCode": 0,
+    "issues": 0,
+    "configurationHints": 0,
+    "log": "${BB_THREAD_STORAGE}/round2-final-knip.log",
+    "truthfulException": "One exact dynamic jest-dom dependency; actual ordered createRequire loader preserved",
+    "publicExports": "Four names/signatures retained with precise @public tags",
+    "configurationRefinement": "14 provably stale/redundant Knip entries removed by parent; no wider ignore"
+  },
+  "parentEvidence": "${BB_THREAD_STORAGE}/round2-parent-evidence.json",
+  "frontendTests": {
+    "command": "bun run fe:test",
+    "exit": 0,
+    "passed": 1305,
+    "failed": 0,
+    "files": 124,
+    "expectCalls": 2751,
+    "seconds": 26.24,
+    "baselinePassed": 1305,
+    "log": "round2-final-fe-tests.log"
+  },
+  "cliTests": {
+    "command": "bun run --cwd cli test",
+    "exit": 0,
+    "passed": 280,
+    "failed": 0,
+    "files": 35,
+    "expectCalls": 925,
+    "seconds": 40.13,
+    "log": "round2-final-cli-tests.log"
+  },
+  "freshServerBuild": {
+    "command": "bun run build:server",
+    "preparation": "Removed only ignored server/dist and generated server/tsconfig.build.tsbuildinfo after checking neither was tracked.",
+    "exit": 0,
+    "retiredSourceFoldersAbsent": true,
+    "retiredCompiledControllersRoutesAdapterAbsent": true,
+    "freshAppPresent": true,
+    "log": "round2-fresh-server-build.log"
+  },
+  "lockMetadata": {
+    "command": "bun install --lockfile-only --ignore-scripts",
+    "exit": 0,
+    "diff": "two server development dependency entries only; no package resolution/version changes; no dependency installation"
+  }
+}

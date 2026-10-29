@@ -6,22 +6,22 @@
  */
 import { describe, expect, it } from 'bun:test'
 import {
+  buildDirectTicketPath,
+  buildDirectTicketSubDocPath,
+  buildDocumentPath,
   buildProjectPath,
   buildTicketPath,
   buildTicketSubDocPath,
-  buildDocumentPath,
+  isTraceGraphHash,
+  ROUTE_DIRECT_TICKET,
   ROUTE_PROJECT,
-  ROUTE_PROJECT_LIST,
-  ROUTE_PROJECT_EPICS,
   ROUTE_PROJECT_DOCUMENTS,
+  ROUTE_PROJECT_EPICS,
+  ROUTE_PROJECT_LIST,
   ROUTE_TICKET,
   ROUTE_TICKET_SUBDOC,
-  ROUTE_DIRECT_TICKET,
-  buildDirectTicketPath,
-  buildDirectTicketSubDocPath,
   TRACE_GRAPH_HASH,
   TRACE_GRAPH_HASH_FRAGMENT,
-  isTraceGraphHash,
 } from '../routes'
 
 describe('MDT-184: routes.ts — pattern constants', () => {

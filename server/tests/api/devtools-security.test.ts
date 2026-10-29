@@ -6,7 +6,7 @@ import { createServer, request as httpRequest } from 'node:http'
 import express from 'express'
 import request from 'supertest'
 import { buildRuntimeConfig } from '../../config/runtimeConfig'
-import { createDevToolsRouter } from '../../routes/devtools'
+import { createDevToolsRouter } from '../../modules/system/index.js'
 import { createOriginPolicy } from '../../security/originPolicy'
 
 function withEnv<T>(updates: Record<string, string | undefined>, run: () => T): T {

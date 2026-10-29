@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express'
-import type { ProjectServiceExtension, TreeServiceInterface } from '../../controllers/ProjectController'
+import type { ProjectServiceExtension } from '../../modules/projects/index.js'
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -7,18 +7,15 @@ import { parseToml, stringify } from '@mdt/shared/utils/toml.js'
 import express from 'express'
 import request from 'supertest'
 import { buildRuntimeConfig } from '../../config/runtimeConfig'
-import { DocumentController } from '../../controllers/DocumentController'
-import { PinController } from '../../controllers/PinController'
-import { ProjectController } from '../../controllers/ProjectController'
-import { createAuthRouter } from '../../routes/auth'
-import { createDevToolsRouter } from '../../routes/devtools'
-import { createPublicReadTokensRouter, createReadTokensRouter } from '../../routes/readTokens'
-import { createShareRouter } from '../../routes/share'
-import { createSystemRouter } from '../../routes/system'
+import { createAuthRouter, createPublicReadTokensRouter, createReadTokensRouter, createShareRouter } from '../../modules/access/index.js'
+import { DocumentConfigurationController, DocumentController } from '../../modules/documents/index.js'
+import { ProjectController } from '../../modules/projects/index.js'
+import { createDevToolsRouter, createSystemRouter } from '../../modules/system/index.js'
+import { PinController } from '../../modules/tickets/index.js'
 import { createOriginPolicy } from '../../security/originPolicy'
 import { updateProjectSharing } from '../../security/projectSharing'
 import { ProjectConfigStorageAdapter } from '../../services/config/adapters/ProjectConfigStorageAdapter'
-import { createMockProjectService, createMockReqRes, createMockTreeService } from '../utils/setupTests'
+import { createMockProjectService, createMockReqRes } from '../utils/setupTests'
 
 function structured(response: request.Response, source = 'body') {
   expect(response.status).toBe(400)
@@ -29,7 +26,7 @@ function structured(response: request.Response, source = 'body') {
 describe('MDT-258 project/controller shape rejection', () => {
   function setup() {
     const service = { ...createMockProjectService(), updateProject: jest.fn(), updateProjectByPath: jest.fn() }
-    const controller = new ProjectController(service as unknown as ProjectServiceExtension, createMockTreeService() as unknown as TreeServiceInterface, {})
+    const controller = new ProjectController(service as unknown as ProjectServiceExtension, {})
     const manager = { createProject: jest.fn(), enableProject: jest.fn(), disableProject: jest.fn() }
     Object.assign(controller, { projectManager: manager })
     const app = express()
@@ -37,7 +34,8 @@ describe('MDT-258 project/controller shape rejection', () => {
     app.post('/create', (req, res) => controller.createProject(req, res))
     app.patch('/update/:code', (req, res) => controller.updateProject(req, res))
     app.patch('/sharing/:code', (req, res) => controller.updateProjectSharing(req, res))
-    app.post('/documents', (req, res) => controller.configureDocuments(req, res))
+    const documents = new DocumentConfigurationController(service as unknown as ProjectServiceExtension, {})
+    app.post('/documents', (req, res) => documents.configureDocuments(req, res))
     return { app, controller, service, manager }
   }
   it.each([null, [], false, {}, { name: 'Alpha', path: [] }, { name: 'Alpha', path: '/tmp/a', globalOnly: 'yes' }, { name: 'Alpha', path: '/tmp/a', documentPaths: [{}] }])('rejects create %j before manager/filesystem calls', async (body) => {

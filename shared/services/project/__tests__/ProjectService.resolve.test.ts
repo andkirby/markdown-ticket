@@ -9,6 +9,8 @@
 import type { Project } from '../../../models/Project'
 import type { IProjectCacheService, IProjectConfigService, IProjectDiscoveryService } from '../types'
 
+import { detectProjectContext } from '../../../utils/projectDetector'
+
 import { ProjectService } from '../../ProjectService.js'
 
 // Mock the detector
@@ -34,8 +36,6 @@ jest.mock('../../project/ProjectFactory.js', () => ({
     return instance
   }),
 }))
-
-import { detectProjectContext } from '../../../utils/projectDetector'
 
 const mockedDetect = detectProjectContext as jest.MockedFunction<typeof detectProjectContext>
 

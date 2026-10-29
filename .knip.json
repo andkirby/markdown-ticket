@@ -5,7 +5,6 @@
       "entry": [
         "frontend/src/**/*.tsx",
         "frontend/src/**/*.ts",
-        "frontend/src/test-setup.ts",
         "frontend/tailwind.config.js",
         "frontend/postcss.config.js",
         "frontend/vite.config.ts"
@@ -17,8 +16,6 @@
     },
     "server": {
       "entry": [
-        "server.ts",
-        "eslint.config.ts",
         "scripts/**/*.ts"
       ],
       "project": [
@@ -41,9 +38,7 @@
         "index.ts",
         "tools/**/*.ts",
         "**/__tests__/**/*.test.ts",
-        "**/__tests__/**/*.spec.ts",
-        "**/tests/**/*.test.ts",
-        "**/tests/**/*.spec.ts"
+        "**/tests/**/*.test.ts"
       ],
       "project": [
         "**/*.ts"
@@ -56,9 +51,7 @@
     },
     "mcp-server": {
       "entry": [
-        "src/index.ts",
-        "src/**/__tests__/**/*.test.ts",
-        "src/**/__tests__/**/*.spec.ts"
+        "src/**/__tests__/**/*.test.ts"
       ],
       "project": [
         "src/**/*.ts"
@@ -69,18 +62,12 @@
         "src/**/*.ts"
       ],
       "entry": [
-        "src/cloudflare/worker.ts",
         "test/**/*.test.ts"
       ]
     }
   },
   "ignore": [
-    ".claude/**",
-    "**/__mocks__/**",
     "**/mcp-dev-tools/**",
-    "scripts/**",
-    ".gitWT/**",
-    "docs/**",
     "plugins/**"
   ],
   "ignoreBinaries": [
@@ -92,13 +79,13 @@
   ],
   "ignoreDependencies": [
     "happy-dom",
+    "@testing-library/jest-dom",
     "swagger-jsdoc",
     "@typescript-eslint/eslint-plugin",
     "@typescript-eslint/parser",
     "markdownlint-cli2",
     "autoprefixer",
-    "postcss",
-    "glob"
+    "postcss"
   ],
   "ignoreIssues": {
     "server/**": [

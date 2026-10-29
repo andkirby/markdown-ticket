@@ -1,7 +1,7 @@
 import type { TicketIdentityDiagnostic } from '@mdt/domain-contracts'
 import express from 'express'
 import request from 'supertest'
-import { createTicketIdentityRouter } from '../../../routes/ticketIdentities.js'
+import { createTicketIdentityRouter } from '../../../modules/tickets/index.js'
 import { TicketIdentityObservation } from '../../../services/cloud-sync/TicketIdentityObservation.js'
 
 const diagnostic: TicketIdentityDiagnostic = {
@@ -130,5 +130,33 @@ describe('MDT-200 cached identity diagnostics route', () => {
     await request(app).get('/api/projects/unknown/ticket-identities').set('x-test-owner', 'yes').expect(404)
     expect(observe).toHaveBeenCalledTimes(1)
     manager.stop()
+  })
+})
+
+describe('MDT-266 observation disposal', () => {
+  it('waits for active observation and suppresses late publication', async () => {
+    let release!: () => void
+    const pending = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    let finished = false
+    const onChange = jest.fn()
+    const observation = new TicketIdentityObservation({ observe: async () => {
+      await pending
+      finished = true
+      return []
+    }, onChange })
+    const active = observation.refresh('p')
+    let stopped = false
+    const stop = Promise.resolve(observation.stop()).then(() => {
+      stopped = true
+    })
+    await Promise.resolve()
+    await Promise.resolve()
+    const resolvedEarly = stopped
+    release()
+    await Promise.all([active, stop])
+    expect({ resolvedEarly, stopped, finished }).toEqual({ resolvedEarly: false, stopped: true, finished: true })
+    expect(onChange).not.toHaveBeenCalled()
   })
 })

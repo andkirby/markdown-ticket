@@ -324,3 +324,15 @@ hub and prearmed recovery before delivering committed projection data. See
 [production evidence](../../CRs/MDT-200/production-rollout-2026-10-26.md). See [data and consistency](data-and-consistency.md#allocation-protocol-v2-and-durable-creation-identity-mdt-200-october-uat),
 [operations](operations.md#october-ticket-identity-stabilization-rollout), and
 [MDT-200 current UAT](../../CRs/MDT-200/uat.md).
+
+## Local application assembly
+
+`server/app.ts` constructs the common HTTP graph. The explicit handle in
+`server/bootstrap/createRuntime.ts` owns process-scoped credential broker reuse,
+identity-observation callbacks, one projection stream per enabled project and
+projection-journal retry runners. Construction starts no network/background work;
+start retains the existing rollout flag and non-interactive background policy.
+Stop detaches callbacks and disposes owned streams/runners/watchers. Shared
+TicketService retains protocol/recovery orchestration through its public facade;
+its ticket query/mutation/Markdown collaborators do not own server lifecycle.
+This extraction does not satisfy the separate deployed acceptance gates.

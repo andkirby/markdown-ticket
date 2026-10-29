@@ -135,6 +135,7 @@ interface MutableProjectConfig {
 }
 
 // Global cache (shared across all test runs)
+let cachedRuntime: { stop: () => Promise<void> } | null = null
 let cachedApp: Express | null = null
 let cachedConfigDir: string | null = null
 let cachedFileWatcher: FileWatcherService | null = null
@@ -164,6 +165,7 @@ export async function setupTestEnvironment(): Promise<TestContext> {
     const { createTestApp: createApp } = await import('./test-app-factory')
     const testApp = createApp()
 
+    cachedRuntime = testApp.runtime
     app = testApp.app
     cachedApp = app
     cachedConfigDir = configDir
@@ -181,6 +183,8 @@ export async function setupTestEnvironment(): Promise<TestContext> {
 
 /** Cleanup test environment after tests complete */
 export async function cleanupTestEnvironment(tempDir: string): Promise<void> {
+  await cachedRuntime?.stop()
+  cachedRuntime = null
   cachedFileWatcher?.stop()
   cachedFileWatcher = null
   cachedApp = null
@@ -260,7 +264,9 @@ export async function setProjectDocumentPaths(
 }
 
 /** Reset the test setup cache (useful for testing multiple isolated scenarios) */
-function _resetTestSetupCache(): void {
+async function _resetTestSetupCache(): Promise<void> {
+  await cachedRuntime?.stop()
+  cachedRuntime = null
   cachedFileWatcher?.stop()
   cachedFileWatcher = null
   cachedApp = null

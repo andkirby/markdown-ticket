@@ -265,3 +265,41 @@ describe('MDT-258 corrupt pending projections', () => {
     expect(await readFile(file, 'utf8')).toBe(text)
   })
 })
+
+describe('MDT-266 retry-runner disposal', () => {
+  it('stops the interval immediately and drains only its in-flight flush', async () => {
+    jest.useFakeTimers()
+    const sync = syncWith({ publish: jest.fn() })
+    let release!: () => void
+    const pending = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    const flush = jest.spyOn(sync, 'flush').mockImplementation(async () => {
+      await pending
+      return { synced: 0, transient: 0, authenticationPaused: 0, conflicts: 0, unmanaged: 0 }
+    })
+    try {
+      sync.startRetryRunner(10)
+      jest.advanceTimersByTime(10)
+      let drained = false
+      const stopping = Promise.resolve(sync.stopRetryRunner()).then(() => {
+        drained = true
+      })
+      await Promise.resolve()
+      await Promise.resolve()
+      const resolvedEarly = drained
+      jest.advanceTimersByTime(100)
+      expect(flush).toHaveBeenCalledTimes(1)
+      release()
+      await stopping
+      expect(resolvedEarly).toBe(false)
+      expect(drained).toBe(true)
+      expect(jest.getTimerCount()).toBe(0)
+    }
+    finally {
+      release()
+      await sync.stopRetryRunner()
+      jest.useRealTimers()
+    }
+  })
+})

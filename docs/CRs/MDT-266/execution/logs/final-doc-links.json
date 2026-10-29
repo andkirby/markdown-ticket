@@ -1,0 +1,424 @@
+{
+  "documents": 17,
+  "checkedRelativeFileLinks": 83,
+  "broken": [],
+  "unclosedFences": [],
+  "links": [
+    {
+      "from": "DEBUG.md",
+      "target": "docs/CRs/MDT-266/execution/result.md",
+      "exists": true
+    },
+    {
+      "from": "docs/CONFIG_INSPECTION.md",
+      "target": "CRs/MDT-168/configuration-exposure.md",
+      "exists": true
+    },
+    {
+      "from": "docs/CONFIG_INSPECTION.md",
+      "target": "CONFIG_SPECIFICATION.md",
+      "exists": true
+    },
+    {
+      "from": "docs/CONFIG_INSPECTION.md",
+      "target": "CRs/MDT-168/configuration-exposure.md",
+      "exists": true
+    },
+    {
+      "from": "docs/CONFIG_SPECIFICATION.md",
+      "target": "architecture/project-identity-and-worktrees.md",
+      "exists": true
+    },
+    {
+      "from": "docs/CONFIG_SPECIFICATION.md",
+      "target": "./CONFIG_GLOBAL_SPECIFICATION.md",
+      "exists": true
+    },
+    {
+      "from": "docs/architecture/cloud-sync/README.md",
+      "target": "data-and-consistency.md",
+      "exists": true
+    },
+    {
+      "from": "docs/architecture/cloud-sync/README.md",
+      "target": "identity-and-access.md",
+      "exists": true
+    },
+    {
+      "from": "docs/architecture/cloud-sync/README.md",
+      "target": "data-and-consistency.md",
+      "exists": true
+    },
+    {
+      "from": "docs/architecture/cloud-sync/README.md",
+      "target": "data-and-consistency.md",
+      "exists": true
+    },
+    {
+      "from": "docs/architecture/cloud-sync/README.md",
+      "target": "data-and-consistency.md",
+      "exists": true
+    },
+    {
+      "from": "docs/architecture/cloud-sync/README.md",
+      "target": "sync-use-cases.md",
+      "exists": true
+    },
+    {
+      "from": "docs/architecture/cloud-sync/README.md",
+      "target": "identity-and-access.md",
+      "exists": true
+    },
+    {
+      "from": "docs/architecture/cloud-sync/README.md",
+      "target": "operations.md",
+      "exists": true
+    },
+    {
+      "from": "docs/architecture/cloud-sync/README.md",
+      "target": "../project-identity-and-worktrees.md",
+      "exists": true
+    },
+    {
+      "from": "docs/architecture/cloud-sync/README.md",
+      "target": "operations.md",
+      "exists": true
+    },
+    {
+      "from": "docs/architecture/cloud-sync/README.md",
+      "target": "operations.md",
+      "exists": true
+    },
+    {
+      "from": "docs/architecture/cloud-sync/README.md",
+      "target": "operations.md",
+      "exists": true
+    },
+    {
+      "from": "docs/architecture/cloud-sync/README.md",
+      "target": "../../CRs/MDT-200/production-rollout-2026-10-26.md",
+      "exists": true
+    },
+    {
+      "from": "docs/architecture/cloud-sync/README.md",
+      "target": "data-and-consistency.md",
+      "exists": true
+    },
+    {
+      "from": "docs/architecture/cloud-sync/README.md",
+      "target": "operations.md",
+      "exists": true
+    },
+    {
+      "from": "docs/architecture/cloud-sync/README.md",
+      "target": "../../CRs/MDT-200/uat.md",
+      "exists": true
+    },
+    {
+      "from": "docs/architecture/cloud-sync/data-and-consistency.md",
+      "target": "operations.md",
+      "exists": true
+    },
+    {
+      "from": "docs/architecture/cloud-sync/data-and-consistency.md",
+      "target": "operations.md",
+      "exists": true
+    },
+    {
+      "from": "docs/architecture/cloud-sync/data-and-consistency.md",
+      "target": "../../../cloud/test/operations/counter-reconciliation.md",
+      "exists": true
+    },
+    {
+      "from": "docs/architecture/cloud-sync/operations.md",
+      "target": "../../CRs/MDT-200/production-rollout-2026-10-26.md",
+      "exists": true
+    },
+    {
+      "from": "docs/architecture/cloud-sync/operations.md",
+      "target": "../../../cloud/test/operations/counter-reconciliation.md",
+      "exists": true
+    },
+    {
+      "from": "docs/architecture/event-system/EVENT_SYSTEM.md",
+      "target": "../../CRs/MDT-183/architecture.md",
+      "exists": true
+    },
+    {
+      "from": "docs/architecture/event-system/EVENT_SYSTEM.md",
+      "target": "../../CRs/MDT-183/architecture.md",
+      "exists": true
+    },
+    {
+      "from": "docs/architecture/project-identity-and-worktrees.md",
+      "target": "cloud-sync/data-and-consistency.md",
+      "exists": true
+    },
+    {
+      "from": "scripts/AGENTS.md",
+      "target": "e2e/AGENTS.md",
+      "exists": true
+    },
+    {
+      "from": "server/docs/ARCHITECTURE.md",
+      "target": "../../docs/architecture/cloud-sync/data-and-consistency.md",
+      "exists": true
+    },
+    {
+      "from": "server/docs/ARCHITECTURE.md",
+      "target": "../../docs/architecture/cloud-sync/operations.md",
+      "exists": true
+    },
+    {
+      "from": "shared/ARCHITECTURE.md",
+      "target": "test-lib/write-tests-guide.md",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/baseline.md",
+      "target": "logs/s0-build-all.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/baseline.md",
+      "target": "logs/s0-shared.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/baseline.md",
+      "target": "logs/s0-server.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/baseline.md",
+      "target": "logs/s0-server-forced-exit.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/baseline.md",
+      "target": "logs/s0-cli.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/baseline.md",
+      "target": "logs/s0-mcp.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/baseline.md",
+      "target": "logs/s0-cloud.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/baseline.md",
+      "target": "logs/s0-types-corrected-fixtures.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/baseline.md",
+      "target": "logs/s0-types.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/baseline.md",
+      "target": "logs/s0-server-lint-corrected-fixtures.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/baseline.md",
+      "target": "logs/s0-shared-lint.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/baseline.md",
+      "target": "logs/s0-boundaries.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/baseline.md",
+      "target": "logs/s0-regressions.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/baseline.md",
+      "target": "logs/s0-regressions-handles.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/baseline.md",
+      "target": "logs/s0-config-competing-writes.ts",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/baseline.md",
+      "target": "logs/s0-config-competing-writes.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/plan.md",
+      "target": "baseline.md",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/result.md",
+      "target": "logs/final-combined-tests.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/result.md",
+      "target": "logs/s6-head-discovery-green.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/result.md",
+      "target": "logs/final-runtime-resources.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/result.md",
+      "target": "logs/final-module-fixtures.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/result.md",
+      "target": "logs/final-module-scan.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/result.md",
+      "target": "logs/final-doc-links.json",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/result.md",
+      "target": "logs/final-commands.json",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/result.md",
+      "target": "logs/final-build-all.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/result.md",
+      "target": "logs/final-types.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/result.md",
+      "target": "logs/final-tooling-types.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/result.md",
+      "target": "logs/final-server-tests.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/result.md",
+      "target": "logs/final-shared-tests.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/result.md",
+      "target": "logs/final-cli-build.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/result.md",
+      "target": "logs/final-cli-tests.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/result.md",
+      "target": "logs/final-mcp-build.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/result.md",
+      "target": "logs/final-mcp-tests.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/result.md",
+      "target": "logs/final-cloud-tests.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/result.md",
+      "target": "logs/final-server-lint.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/result.md",
+      "target": "logs/final-shared-affected-lint.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/result.md",
+      "target": "logs/final-shared-lint.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/result.md",
+      "target": "logs/final-tooling-lint.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/result.md",
+      "target": "logs/final-module-fixtures.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/result.md",
+      "target": "logs/final-module-scan.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/result.md",
+      "target": "logs/final-decoder.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/result.md",
+      "target": "logs/runtime-resource-probe.ts",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/result.md",
+      "target": "logs/final-runtime-resources.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/result.md",
+      "target": "logs/final-doc-lint.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/result.md",
+      "target": "logs/final-doc-diagrams.log",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/result.md",
+      "target": "logs/final-scope.json",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/result.md",
+      "target": "logs/final-browser-summary.json",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/result.md",
+      "target": "logs/server-process-cleanup.md",
+      "exists": true
+    },
+    {
+      "from": "docs/CRs/MDT-266/execution/result.md",
+      "target": "logs/final-scope.json",
+      "exists": true
+    }
+  ],
+  "limits": "Local target existence/fence pairing; external URLs and heading anchors not checked automatically."
+}

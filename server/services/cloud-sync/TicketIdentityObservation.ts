@@ -74,12 +74,13 @@ export class TicketIdentityObservation {
     return state ? { ...state, diagnostics: state.diagnostics.map(diagnostic => ({ ...diagnostic })) } : undefined
   }
 
-  stop(): void {
+  async stop(): Promise<void> {
     this.stopped = true
     for (const timer of this.timers.values())
       clearTimeout(timer)
     this.timers.clear()
     this.dirty.clear()
+    await Promise.all(this.active.values())
   }
 
   private markPending(projectId: string): void {

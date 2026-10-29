@@ -1,3 +1,6 @@
+import { execSync } from 'node:child_process'
+import * as fs from 'node:fs'
+import * as path from 'node:path'
 /**
  * MDT-184: Constraint C-1 — No hardcoded /prj/ outside routes module
  *
@@ -5,12 +8,8 @@
  * and asserts that /prj/ path literals only appear in routes.ts.
  */
 import { describe, expect, it } from 'bun:test'
-import { execSync } from 'node:child_process'
-import * as fs from 'node:fs'
-import * as path from 'node:path'
 
 const PROJECT_ROOT = path.resolve(__dirname, '..', '..')
-const SRC_DIR = path.join(PROJECT_ROOT, 'src')
 
 /**
  * Files allowed to contain /prj/ literals.

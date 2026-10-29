@@ -3,7 +3,7 @@
 import express from 'express'
 import request from 'supertest'
 import { buildRuntimeConfig } from '../../config/runtimeConfig'
-import { createSystemRouter } from '../../routes/system'
+import { createSystemRouter } from '../../modules/system/index.js'
 
 function appWithSystemRouter() {
   const app = express()

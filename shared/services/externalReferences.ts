@@ -1,6 +1,10 @@
 import type { ExternalReference, TrackerConfig } from '@mdt/domain-contracts'
 import { JiraProjectDisplay, RepositoryDisplay, TrackerConfigSchema, TrackerKind } from '@mdt/domain-contracts'
 
+/**
+ * Public result contract of parseExternalIdentity on the shared service subpath.
+ * @public
+ */
 export interface ExternalIdentity {
   instance: string
   key: string

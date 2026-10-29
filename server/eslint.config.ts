@@ -21,7 +21,7 @@ export default antfu(
     files: [
       'tests/**/*.ts',
       'mcp-dev-tools/**/*.ts',
-      'routes/devtools.ts',
+      'modules/system/devtools.ts',
     ],
     rules: {
       'no-console': 'off',

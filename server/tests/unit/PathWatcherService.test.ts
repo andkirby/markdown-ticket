@@ -1,5 +1,6 @@
 import * as chokidar from 'chokidar'
 import { PathWatcherService } from '../../services/fileWatcher/PathWatcherService.js'
+import { WatcherLifecycleManager } from '../../services/fileWatcher/WatcherLifecycleManager.js'
 
 // Mock chokidar
 jest.mock('chokidar', () => {
@@ -19,6 +20,7 @@ const mockDetectWorktrees = jest.fn().mockResolvedValue(new Map())
 jest.mock('@mdt/shared/services/WorktreeService.js', () => ({
   WorktreeService: jest.fn().mockImplementation(() => ({
     enabled: true,
+    whenIdle: jest.fn().mockResolvedValue(undefined),
     detect: mockDetectWorktrees,
     extractTicketCode: jest.requireActual<typeof import('@mdt/shared/services/WorktreeService.js')>('@mdt/shared/services/WorktreeService.js').WorktreeService.prototype.extractTicketCode,
   })),
@@ -57,6 +59,68 @@ describe('PathWatcherService', () => {
   afterEach(() => {
     service.stop()
     jest.clearAllMocks()
+  })
+
+  it.each(['project', 'worktree'])('drains already-started %s watcher teardown after ownership removal', async (kind) => {
+    let release!: () => void
+    const pending = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    mockWatcher.close.mockReturnValue(pending)
+    if (kind === 'project')
+      service.initMultiProjectWatcher([{ id: 'p', path: '/project/docs/CRs' }])
+    else
+      service.addWatcher('p', 'TEST-001', '/worktree')
+    const closing = kind === 'project' ? service.stopProject('p') : service.removeWorktreeWatcher('p', 'TEST-001')
+    let stopped = false
+    const stopping = service.stop().then(() => {
+      stopped = true
+    })
+    try {
+      await new Promise(resolve => setImmediate(resolve))
+      const resolvedEarly = stopped
+      release()
+      await Promise.all([closing, stopping])
+      expect(resolvedEarly).toBe(false)
+      expect(service.getWorktreeWatcherCount()).toBe(0)
+    }
+    finally {
+      release()
+      await Promise.all([closing, stopping])
+    }
+  })
+
+  it('drains a real debounce teardown already waiting on watcher close', async () => {
+    jest.useFakeTimers()
+    const lifecycle = new WatcherLifecycleManager(service)
+    let release!: () => void
+    const pending = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    mockWatcher.close.mockReturnValue(pending)
+    lifecycle.registerProject({ id: 'p', path: '/project/docs/CRs' })
+    await lifecycle.ensureWatchers('client', ['p'])
+    lifecycle.releaseClient('client')
+    jest.advanceTimersByTime(5000)
+    expect(mockWatcher.close).toHaveBeenCalledTimes(1)
+    let stopped = false
+    const stopping = Promise.all([lifecycle.stop(), service.stop()]).then(() => {
+      stopped = true
+    })
+    try {
+      await Promise.resolve()
+      await Promise.resolve()
+      const resolvedEarly = stopped
+      release()
+      await stopping
+      expect(resolvedEarly).toBe(false)
+      expect(jest.getTimerCount()).toBe(0)
+    }
+    finally {
+      release()
+      await stopping
+      jest.useRealTimers()
+    }
   })
 
   describe('Multi-path monitoring (BR-1.1)', () => {
@@ -105,6 +169,20 @@ describe('PathWatcherService', () => {
       onAdd('/project/.git/worktrees/first/HEAD')
       return { resolve, onAdd, onUnlink }
     }
+
+    it('drains live HEAD fallback discovery before stop returns', async () => {
+      const { resolve } = startPendingHead()
+      let stopped = false
+      const stopping = service.stop().then(() => {
+        stopped = true
+      })
+      await new Promise(fulfill => setImmediate(fulfill))
+      const resolvedEarly = stopped
+      resolve(new Map([['TP0-042', '/worktrees/first']]))
+      await stopping
+      expect(resolvedEarly).toBe(false)
+      expect(service.getWorktreeWatcherCount()).toBe(0)
+    })
 
     it.each(['stop', 'stopProject', 'unlink'])('cancels pending HEAD discovery on %s', async (action) => {
       const { resolve, onAdd, onUnlink } = startPendingHead()

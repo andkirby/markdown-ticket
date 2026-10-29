@@ -17,6 +17,8 @@ export interface ProjectRegistration extends ProjectPath {
 }
 
 export class WatcherLifecycleManager {
+  private stopped = false
+  private readonly provisioning = new Set<Promise<void>>()
   private pathWatcher: PathWatcherService
   private projectRegistry = new Map<string, ProjectRegistration>()
   private refcounts = new Map<string, number>()
@@ -34,6 +36,8 @@ export class WatcherLifecycleManager {
    * subscribers that raced the registration get watchers provisioned now.
    */
   registerProject(project: ProjectRegistration): void {
+    if (this.stopped)
+      return
     this.projectRegistry.set(project.id, project)
 
     if ((this.refcounts.get(project.id) ?? 0) > 0) {
@@ -48,6 +52,8 @@ export class WatcherLifecycleManager {
    * Creates watchers lazily on first subscriber.
    */
   async ensureWatchers(clientId: string, projectIds: string[]): Promise<void> {
+    if (this.stopped)
+      return
     // Track client subscriptions
     if (!this.clientSubscriptions.has(clientId)) {
       this.clientSubscriptions.set(clientId, new Set())
@@ -80,6 +86,8 @@ export class WatcherLifecycleManager {
         }
       }
 
+      if (this.stopped)
+        return
       this.refcounts.set(projectId, currentCount + 1)
       clientProjects.add(projectId)
     }
@@ -103,6 +111,8 @@ export class WatcherLifecycleManager {
    * Starts debounce stop when refcount hits 0.
    */
   releaseProject(clientId: string, projectIds: string[]): void {
+    if (this.stopped)
+      return
     const clientProjects = this.clientSubscriptions.get(clientId)
     if (!clientProjects)
       return // Client already released or never subscribed
@@ -148,7 +158,16 @@ export class WatcherLifecycleManager {
    * Create the watcher set for a project (ticket glob + document + worktree).
    * Idempotent at the PathWatcherService level (existing watcher IDs are skipped).
    */
-  private async provisionWatchers(project: ProjectRegistration): Promise<void> {
+  private provisionWatchers(project: ProjectRegistration): Promise<void> {
+    const work = this.provisionProject(project)
+    this.provisioning.add(work)
+    void work.finally(() => this.provisioning.delete(work)).catch(() => {})
+    return work
+  }
+
+  private async provisionProject(project: ProjectRegistration): Promise<void> {
+    if (this.stopped)
+      return
     this.pathWatcher.initMultiProjectWatcher([project])
     // Also init document and worktree watchers if project has config
     if (project.projectRoot) {
@@ -183,8 +202,13 @@ export class WatcherLifecycleManager {
   /**
    * Stop all debounce timers. Does not stop watchers (that's PathWatcherService's job).
    */
-  stop(): void {
+  async stop(): Promise<void> {
+    this.stopped = true
+    this.projectRegistry.clear()
+    this.refcounts.clear()
+    this.clientSubscriptions.clear()
     this.debounceTimers.forEach(timer => clearTimeout(timer))
     this.debounceTimers.clear()
+    await Promise.allSettled(this.provisioning)
   }
 }

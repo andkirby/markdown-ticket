@@ -13,7 +13,7 @@ import * as origins from '../../security/originPolicy'
 // handler in an isolated compiled module with a test-only state setter appended;
 // no production activation endpoint or exported testing API is introduced.
 function activeDevApp() {
-  const source = readFileSync(join(__dirname, '../../routes/devtools.ts'), 'utf8')
+  const source = readFileSync(join(__dirname, '../../modules/system/devtools.ts'), 'utf8')
   const compiled = ts.transpileModule(`${source}\nexport function activateForTest() { devModeActive = true; devModeStart = Date.now() }`, {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
   }).outputText
@@ -21,9 +21,9 @@ function activeDevApp() {
   const imports: Record<string, unknown> = {
     '@mdt/domain-contracts': contracts,
     'express': express,
-    '../http/parseRequest.js': parser,
-    '../http/readSchemas.js': readSchemas,
-    '../security/originPolicy.js': origins,
+    '../../http/parseRequest.js': parser,
+    '../../http/readSchemas.js': readSchemas,
+    '../../security/originPolicy.js': origins,
   }
   runInNewContext(compiled, {
     exports,

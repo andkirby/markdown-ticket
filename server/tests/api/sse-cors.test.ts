@@ -4,7 +4,7 @@ import type { Express } from 'express'
 import type { Server } from 'node:http'
 import { createServer, request as httpRequest } from 'node:http'
 import express from 'express'
-import { createSSERouter } from '../../routes/sse'
+import { createSSERouter } from '../../modules/realtime/index.js'
 import { createOriginPolicy } from '../../security/originPolicy'
 import FileWatcherService from '../../services/fileWatcher/index.js'
 

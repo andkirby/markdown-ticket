@@ -745,3 +745,77 @@ function makeFailureHarness(
   })
   return harness
 }
+
+describe('MDT-266 stop drains pending activation without restoring resources', () => {
+  it.each(['authorization', 'activation-save', 'connecting-save', 'initial-load'])('stops during %s', async (pauseAt) => {
+    const root = await mkdtemp(join(tmpdir(), 'mdt266-stream-stop-'))
+    const { ProjectionStreamStateStore } = await import('@mdt/shared/services/cloud-sync/projection-stream-state-store.js')
+    const { transport, connections } = makeMockTransport()
+    const scheduler = jest.fn()
+    let entered!: () => void
+    let release!: () => void
+    const paused = new Promise<void>((resolve) => {
+      entered = resolve
+    })
+    const resume = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    const load = ProjectionStreamStateStore.prototype.load
+    const save = ProjectionStreamStateStore.prototype.save
+    jest.spyOn(ProjectionStreamStateStore.prototype, 'load').mockImplementation(async function (this: InstanceType<typeof ProjectionStreamStateStore>) {
+      if (pauseAt === 'initial-load') {
+        entered()
+        await resume
+      }
+      return load.call(this)
+    })
+    jest.spyOn(ProjectionStreamStateStore.prototype, 'save').mockImplementation(async function (this: InstanceType<typeof ProjectionStreamStateStore>, state) {
+      if ((pauseAt === 'activation-save' && state.reasonCode === 'activation_starting') || (pauseAt === 'connecting-save' && state.reasonCode === 'stream_connecting')) {
+        entered()
+        await resume
+      }
+      return save.call(this, state)
+    })
+    const session = makeSessionHarness()
+    const authorize = session.port.authorize
+    session.port.authorize = async (auth) => {
+      if (pauseAt === 'authorization') {
+        entered()
+        await resume
+      }
+      return authorize(auth)
+    }
+    const manager = new ProjectionStreamManager({
+      clientFactory: opts => new CloudProjectionStreamClient({ ...opts, transport }),
+      readModelFactory: (localProjectId, rootDir) => new CloudProjectionReadModel({ localProjectId, rootDir }),
+      sessionClientFactory: () => session.port,
+      credentialResolver: async () => ({ headers: { 'cf-access-token': fakeJwt('fixture', GRANT_EXPIRY) }, tokenExpiry: GRANT_EXPIRY }),
+      onChange: jest.fn(),
+      now: () => NOW,
+      scheduler,
+    })
+    const starting = manager.start({ localProjectId: 'p', cloudProjectId: 'cloud-p', serviceOrigin: 'https://mdt-sync.example.com', rootDir: root })
+    try {
+      await paused
+      manager.stopAll()
+      let idle = false
+      const drained = manager.whenIdle().then(() => {
+        idle = true
+      })
+      await Promise.resolve()
+      await Promise.resolve()
+      const resolvedEarly = idle
+      release()
+      await Promise.all([starting, drained])
+      expect({ resolvedEarly, connects: connections.length, timers: scheduler.mock.calls.length, managed: manager.openStreamCount }).toEqual({ resolvedEarly: false, connects: 0, timers: 0, managed: 0 })
+    }
+    finally {
+      release()
+      await starting
+      manager.stopAll()
+      await manager.whenIdle()
+      jest.restoreAllMocks()
+      await rm(root, { recursive: true, force: true })
+    }
+  })
+})

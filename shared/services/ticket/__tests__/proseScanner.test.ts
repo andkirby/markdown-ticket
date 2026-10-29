@@ -9,8 +9,8 @@
  * Framework: @jest/globals (cross-runner safe).
  */
 
-import { describe, expect, it } from '@jest/globals'
 import type { Ticket } from '../../../models/Ticket.js'
+import { describe, expect, it } from '@jest/globals'
 import { scanProseGaps } from '../proseScanner.js'
 
 function makeTicket(content: string, dependsOn: string[] = []): Ticket {

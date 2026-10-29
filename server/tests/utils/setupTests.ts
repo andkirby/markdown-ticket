@@ -2,7 +2,7 @@
 
 import type { Response } from 'express'
 
-import type { AuthenticatedRequest } from '../../controllers/ProjectController.js'
+import type { AuthenticatedRequest } from '../../modules/projects/index.js'
 // Mock TreeService as a proper class mock before importing FileSystemService
 // Use requireActual to get the real implementation for integration tests
 import process from 'node:process'
@@ -48,9 +48,6 @@ export function createMockProjectService() {
     getSystemDirectories: jest.fn(),
     configureDocuments: jest.fn(),
     checkDirectoryExists: jest.fn(),
-    projectDiscovery: {
-      getAllProjects: jest.fn(),
-    },
   }
 
   return mockProjectService

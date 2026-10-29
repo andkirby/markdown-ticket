@@ -367,3 +367,16 @@ Jira auto display omits a project prefix only when `projectKeys` has exactly one
 Optional `urlTemplate` supports `{baseUrl}`, `{key}` (Jira), `{repo}` (git, encoded path segments) and `{number}`. Defaults preserve base path contexts: Jira `{baseUrl}/browse/{key}`, GitHub `{baseUrl}/{repo}/issues/{number}`, GitLab `{baseUrl}/{repo}/-/issues/{number}`. Destinations must be credential-free HTTP(S), remain on the configured origin, and contain no unresolved placeholders. Invalid/unsupported entries yield unavailable refs with reasons without suppressing the local project. GitLab subgroup paths work; merge requests (`!number`) are unsupported.
 
 Search uses stored local data: plain `123` can match local/Jira/git identities; `#123` matches the complete external git issue number only. No external destination is inferred from a local number. Search and viewer badges are independent of board badge preferences.
+
+## Project-file mutation ownership
+
+Shared `ProjectConfigService` owns project-file read/modify/write operations.
+ProjectConfigLoader delegates discovery's distinct legacy migration read, and the
+HTTP project scope adapter delegates selector persistence. Ordinary reads keep
+ticketsPath validation and migration; selector display remains tolerant while
+mutation reloads reject invalid existing data except the existing minimal
+missing-file defaults. Synchronous project operations, sibling preservation,
+operation-specific obsolete document handling and registry-before-local write
+ordering remain. Global/user configuration and registry sharing keep their
+existing separate owners. Atomic replacement is not a multi-file transaction or
+a guarantee against concurrent external writers.

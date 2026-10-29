@@ -233,6 +233,10 @@ export class ProjectionStreamManager {
       await new Promise<void>(resolve => this.idleWaiters.push(resolve))
   }
 
+  private isCurrent(managed: ManagedProject): boolean {
+    return this.projects.get(managed.localProjectId) === managed
+  }
+
   /** Track a fire-and-forget background chain for {@link whenIdle}. */
   private track<T>(work: Promise<T>): void {
     this.pendingWork += 1
@@ -274,6 +278,7 @@ export class ProjectionStreamManager {
         this.starting.delete(opts.localProjectId)
     })
     this.starting.set(opts.localProjectId, pending)
+    this.track(pending.promise)
     return pending.promise
   }
 
@@ -293,6 +298,8 @@ export class ProjectionStreamManager {
       localProjectId: opts.localProjectId,
     })
     const persisted = await store.load()
+    if (pending.cancelled || this.projects.has(opts.localProjectId))
+      return
     const session = this.sessionClientFactory(opts)
 
     const state: ProjectionStreamState = persisted?.cloudProjectId === opts.cloudProjectId
@@ -328,15 +335,26 @@ export class ProjectionStreamManager {
       state,
     }
     client.setHandlers({
-      onEnvelope: envelope => this.track(this.applyEnvelope(opts.localProjectId, envelope)),
-      onStale: () => readModel.markStale(),
+      onEnvelope: (envelope) => {
+        if (this.isCurrent(managed))
+          this.track(this.applyEnvelope(opts.localProjectId, envelope))
+      },
+      onStale: () => {
+        if (this.isCurrent(managed))
+          readModel.markStale()
+      },
       onServerError: (code) => {
+        if (!this.isCurrent(managed))
+          return
         readModel.markStale()
         this.track(this.persistPhase(managed, 'paused_authorization', code))
       },
       onTerminated: () => this.handleTransportTerminated(managed),
     })
-    readModel.setChangeListener(this.onChange)
+    readModel.setChangeListener((cloudProjectId) => {
+      if (this.isCurrent(managed))
+        this.onChange(cloudProjectId)
+    })
 
     this.projects.set(opts.localProjectId, managed)
 
@@ -457,20 +475,21 @@ export class ProjectionStreamManager {
     const managed = this.projects.get(localProjectId)
     if (!managed)
       return
+    this.projects.delete(localProjectId)
     this.cancelTimers(managed)
     managed.client.stop()
-    this.projects.delete(localProjectId)
   }
 
   /** Stop all streams (graceful shutdown). */
   stopAll(): void {
     for (const pending of this.starting.values())
       pending.cancelled = true
-    for (const managed of this.projects.values()) {
+    const owned = [...this.projects.values()]
+    this.projects.clear()
+    for (const managed of owned) {
       this.cancelTimers(managed)
       managed.client.stop()
     }
-    this.projects.clear()
   }
 
   /** Number of open streams (exactly one per enabled project). */
@@ -496,12 +515,22 @@ export class ProjectionStreamManager {
    * only on a valid grant (C-14, C-15). A still-valid held grant is reused —
    * reconnects perform zero membership reads.
    */
-  private async activate(
+  private activate(...args: Parameters<ProjectionStreamManager['activateProject']>): Promise<void> {
+    const work = this.activateProject(...args)
+    this.track(work)
+    return work
+  }
+
+  private async activateProject(
     managed: ManagedProject,
     store: ProjectionStreamStateStore,
     preAuth?: { headers: Record<string, string>, tokenExpiry: number },
   ): Promise<void> {
+    if (!this.isCurrent(managed))
+      return
     const auth = preAuth ?? await this.credentialResolver(managed.serviceOrigin)
+    if (!this.isCurrent(managed))
+      return
     if (!auth) {
       // No cached human token or service credential: pause durably without a
       // session request (never launch an interactive login in the background).
@@ -520,6 +549,8 @@ export class ProjectionStreamManager {
     })
     managed.state = { ...managed.state, activationFingerprint: fingerprint }
     await store.save(managed.state)
+    if (!this.isCurrent(managed))
+      return
     this.cacheStatus(managed.localProjectId, managed.state)
 
     const held = managed.session.currentGrant
@@ -542,6 +573,8 @@ export class ProjectionStreamManager {
       return
     }
 
+    if (!this.isCurrent(managed))
+      return
     switch (result.kind) {
       case 'granted':
         await this.openTransport(managed, result, store, auth)
@@ -567,6 +600,8 @@ export class ProjectionStreamManager {
     store: ProjectionStreamStateStore,
     auth: { headers: Record<string, string>, tokenExpiry: number },
   ): Promise<void> {
+    if (!this.isCurrent(managed))
+      return
     // The grant-bearing client is constructed through the factory each time so
     // the manager owns exactly one connection lane per project.
     const client = this.clientFactory({
@@ -578,9 +613,17 @@ export class ProjectionStreamManager {
       tokenExpiry: auth.tokenExpiry,
     })
     client.setHandlers({
-      onEnvelope: envelope => this.track(this.applyEnvelope(managed.localProjectId, envelope)),
-      onStale: () => managed.readModel.markStale(),
+      onEnvelope: (envelope) => {
+        if (this.isCurrent(managed))
+          this.track(this.applyEnvelope(managed.localProjectId, envelope))
+      },
+      onStale: () => {
+        if (this.isCurrent(managed))
+          managed.readModel.markStale()
+      },
       onServerError: (code) => {
+        if (!this.isCurrent(managed))
+          return
         managed.readModel.markStale()
         this.track(this.persistPhase(managed, 'paused_authorization', code, store))
       },
@@ -590,7 +633,13 @@ export class ProjectionStreamManager {
     managed.client.stop()
     managed.client = client
     await this.persistPhase(managed, 'connecting', 'stream_connecting', store)
+    if (!this.isCurrent(managed) || managed.client !== client) {
+      client.stop()
+      return
+    }
     client.connect()
+    if (!this.isCurrent(managed))
+      return
 
     // Reconnect no later than grant/credential expiry (C-10). This is
     // credential rotation for a healthy stream, not a failure retry; terminal
@@ -608,7 +657,7 @@ export class ProjectionStreamManager {
 
   /** Grant/credential rotation for a healthy stream (no D1: cached decision). */
   private async rotateGrant(managed: ManagedProject): Promise<void> {
-    if (!this.projects.has(managed.localProjectId))
+    if (!this.isCurrent(managed))
       return
     if (TERMINAL_PHASEES.has(managed.state.phase))
       return
@@ -625,6 +674,8 @@ export class ProjectionStreamManager {
     reasonCode: string,
     store: ProjectionStreamStateStore,
   ): Promise<void> {
+    if (!this.isCurrent(managed))
+      return
     const attempts = managed.state.attemptCount + 1
     managed.state = { ...managed.state, attemptCount: attempts }
     if (attempts > MAX_TRANSIENT_ATTEMPTS) {
@@ -632,6 +683,8 @@ export class ProjectionStreamManager {
       return
     }
     await this.persistPhase(managed, 'connecting', reasonCode, store)
+    if (!this.isCurrent(managed))
+      return
     const base = Math.min(MAX_BACKOFF_MS, MIN_BACKOFF_MS * 2 ** (attempts - 1))
     managed.reconnectHandle = this.scheduler(base, () => {
       managed.reconnectHandle = undefined
@@ -641,9 +694,9 @@ export class ProjectionStreamManager {
 
   /** Transport termination: mark stale, then one bounded reconnect decision. */
   private handleTransportTerminated(managed: ManagedProject): void {
-    managed.readModel.markStale()
-    if (!this.projects.has(managed.localProjectId))
+    if (!this.isCurrent(managed))
       return
+    managed.readModel.markStale()
     const store = new ProjectionStreamStateStore({
       rootDir: managed.rootDir,
       localProjectId: managed.localProjectId,
@@ -660,6 +713,8 @@ export class ProjectionStreamManager {
     reasonCode: string,
     store?: ProjectionStreamStateStore,
   ): Promise<void> {
+    if (!this.isCurrent(managed))
+      return
     const now = this.now()
     managed.state = {
       ...managed.state,
@@ -675,6 +730,8 @@ export class ProjectionStreamManager {
       localProjectId: managed.localProjectId,
     })
     await target.save(managed.state)
+    if (!this.isCurrent(managed))
+      return
     this.cacheStatus(managed.localProjectId, managed.state)
     if (TERMINAL_PHASEES.has(phase))
       this.cancelTimers(managed)
@@ -711,6 +768,8 @@ export class ProjectionStreamManager {
       // Catch-up complete: advance cursor, persist, ack the high-water revision.
       readModel.advanceCursor(envelope.projectRevision)
       await readModel.persist()
+      if (!this.isCurrent(managed))
+        return
       client.sendAck(envelope.projectRevision)
       await this.persistPhase(managed, 'live', 'stream_live')
       return
@@ -733,7 +792,7 @@ export class ProjectionStreamManager {
         lifecycle: envelope.lifecycle,
         header: envelope.header,
       })
-      if (changed) {
+      if (changed && this.isCurrent(managed)) {
         // Ack only after state+cursor persistence (C-6).
         client.sendAck(envelope.projectRevision)
       }

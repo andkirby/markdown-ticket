@@ -14,8 +14,8 @@
  * Framework: @jest/globals (cross-runner safe — works under jest and bun test).
  */
 
-import { describe, expect, it } from '@jest/globals'
 import type { Ticket } from '../../../models/Ticket.js'
+import { describe, expect, it } from '@jest/globals'
 import {
   buildGraph,
   detectCycle,

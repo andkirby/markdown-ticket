@@ -1,12 +1,13 @@
 {
   "extends": "./tsconfig.json",
   "include": [
+    "app.ts",
+    "bootstrap/**/*.ts",
+    "modules/**/*.ts",
     "server.ts",
     "counterAPI.ts",
     "createSampleTickets.ts",
     "services/**/*.ts",
-    "controllers/**/*.ts",
-    "routes/**/*.ts",
     "strategies/**/*.ts",
     "utils/**/*.ts",
     "repositories/**/*.ts",

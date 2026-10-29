@@ -18,12 +18,6 @@ jest.mock('../../src/tools/handlers/projectHandlers')
 jest.mock('../../src/tools/handlers/crHandlers')
 jest.mock('../../src/tools/handlers/sectionHandlers')
 
-// Mock the modules that exist in the parent directories
-const mockCreateProjectRouter = jest.fn()
-jest.mock('../../../server/routes/projects', () => ({
-  createProjectRouter: mockCreateProjectRouter,
-}))
-
 // Test data
 const testProject = {
   id: 'test-project',
@@ -64,9 +58,6 @@ describe('mCP-Backend Consistency Integration Tests (Simplified)', () => {
   let mockProjectService: jest.Mocked<{
     getAllProjects: jest.Mock
     getProjectConfig: jest.Mock
-    projectDiscovery: {
-      getAllProjects: jest.Mock
-    }
   }>
   let mockTicketService: jest.Mocked<{
     getCR: jest.Mock
@@ -75,16 +66,6 @@ describe('mCP-Backend Consistency Integration Tests (Simplified)', () => {
     deleteCR: jest.Mock
     getProjectCRs: jest.Mock
   }>
-  let _mockProjectController: jest.Mocked<{
-    getAllProjects: jest.Mock
-    getProjectConfig: jest.Mock
-    getProjectCRs: jest.Mock
-    getCR: jest.Mock
-    createCR: jest.Mock
-    updateCRPartial: jest.Mock
-    deleteCR: jest.Mock
-  }>
-
   beforeAll(() => {
     // Set up backend Express app
     backendApp = express()
@@ -94,9 +75,6 @@ describe('mCP-Backend Consistency Integration Tests (Simplified)', () => {
     mockProjectService = {
       getAllProjects: jest.fn(),
       getProjectConfig: jest.fn(),
-      projectDiscovery: {
-        getAllProjects: jest.fn(),
-      },
     }
 
     mockTicketService = {
@@ -106,46 +84,6 @@ describe('mCP-Backend Consistency Integration Tests (Simplified)', () => {
       deleteCR: jest.fn(),
       getProjectCRs: jest.fn(),
     }
-
-    const _mockFileSystemService = {
-      buildProjectFileSystemTree: jest.fn(),
-    }
-
-    _mockProjectController = {
-      getAllProjects: jest.fn(),
-      getProjectConfig: jest.fn(),
-      getProjectCRs: jest.fn(),
-      getCR: jest.fn(),
-      createCR: jest.fn(),
-      updateCRPartial: jest.fn(),
-      deleteCR: jest.fn(),
-    } as jest.Mocked<{
-      getAllProjects: jest.Mock
-      getProjectConfig: jest.Mock
-      getProjectCRs: jest.Mock
-      getCR: jest.Mock
-      createCR: jest.Mock
-      updateCRPartial: jest.Mock
-      deleteCR: jest.Mock
-    }>
-
-    // Mock createProjectRouter to return a router that calls our controller
-    const mockRouter = {
-      get: jest.fn(),
-      post: jest.fn(),
-      patch: jest.fn(),
-      put: jest.fn(),
-      delete: jest.fn(),
-      use: jest.fn(),
-    } as jest.Mocked<{
-      get: jest.Mock
-      post: jest.Mock
-      patch: jest.Mock
-      put: jest.Mock
-      delete: jest.Mock
-      use: jest.Mock
-    }>
-    mockCreateProjectRouter.mockReturnValue(mockRouter)
 
     // Set up route handlers manually
     backendApp.get('/api/projects', async (req: ExpressRequest, res: ExpressResponse) => {

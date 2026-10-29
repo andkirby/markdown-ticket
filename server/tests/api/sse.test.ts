@@ -11,7 +11,7 @@
  * - Error event handling
  * - OpenAPI contract validation.
  *
- * @see server/routes/sse.ts
+ * @see server/modules/realtime/router.ts
  * @see server/services/fileWatcher
  */
 import type { Express } from 'express'

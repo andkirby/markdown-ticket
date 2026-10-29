@@ -8,8 +8,8 @@
  * exclusive `--json`/`--yaml` enforcement that lives in structured output.
  */
 
-import { assertSingleOutputFormat, getOutputFormat } from '../../../output/structured'
 import { describe, expect, it } from 'bun:test'
+import { assertSingleOutputFormat, getOutputFormat } from '../../../output/structured'
 import { CLOUD_MEMBER_ROLES, CLOUD_PRINCIPAL_KINDS } from '../options'
 
 describe('cloud option parsing (TEST-options-parse)', () => {

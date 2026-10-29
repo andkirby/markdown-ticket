@@ -1,0 +1,232 @@
+[
+  {
+    "command": "bun run build:all",
+    "cwd": ".",
+    "exitCode": 0,
+    "log": "final-build-all.log",
+    "counts": null,
+    "qualification": null
+  },
+  {
+    "command": "bun run validate:ts:all",
+    "cwd": ".",
+    "exitCode": 0,
+    "log": "final-types.log",
+    "counts": {
+      "packages": 6
+    },
+    "qualification": null
+  },
+  {
+    "command": "bunx tsc --noEmit -p tsconfig.json",
+    "cwd": ".",
+    "exitCode": 0,
+    "log": "final-tooling-types.log",
+    "counts": null,
+    "qualification": null
+  },
+  {
+    "command": "bun run --cwd server jest --runInBand --forceExit",
+    "cwd": ".",
+    "exitCode": 0,
+    "log": "final-server-tests.log",
+    "counts": {
+      "suites": 85,
+      "passed": 1043,
+      "skipped": 8
+    },
+    "qualification": "Explicit forceExit for pre-existing api/sse Supertest listeners; separate natural resource probe."
+  },
+  {
+    "command": "bun run --cwd shared test --runInBand",
+    "cwd": ".",
+    "exitCode": 0,
+    "log": "final-shared-tests.log",
+    "counts": {
+      "suites": 94,
+      "passed": 1264
+    },
+    "qualification": "Existing shared Jest forceExit configuration."
+  },
+  {
+    "command": "bun run --cwd cli build",
+    "cwd": ".",
+    "exitCode": 0,
+    "log": "final-cli-build.log",
+    "counts": null,
+    "qualification": null
+  },
+  {
+    "command": "bun run --cwd cli test",
+    "cwd": ".",
+    "exitCode": 0,
+    "log": "final-cli-tests.log",
+    "counts": {
+      "passed": 280,
+      "suites": null
+    },
+    "qualification": null
+  },
+  {
+    "command": "bun run --cwd mcp-server build",
+    "cwd": ".",
+    "exitCode": 0,
+    "log": "final-mcp-build.log",
+    "counts": null,
+    "qualification": null
+  },
+  {
+    "command": "bun run --cwd mcp-server jest --runInBand",
+    "cwd": ".",
+    "exitCode": 0,
+    "log": "final-mcp-tests.log",
+    "counts": {
+      "passed": 251,
+      "suites": 18
+    },
+    "qualification": null
+  },
+  {
+    "command": "bun run --cwd cloud test",
+    "cwd": ".",
+    "exitCode": 0,
+    "log": "final-cloud-tests.log",
+    "counts": {
+      "passed": 117
+    },
+    "qualification": "No Worker edits; local tests only."
+  },
+  {
+    "command": "bun run --cwd server lint",
+    "cwd": ".",
+    "exitCode": 0,
+    "log": "final-server-lint.log",
+    "counts": null,
+    "qualification": null
+  },
+  {
+    "command": "bun run --cwd shared lint",
+    "cwd": ".",
+    "exitCode": 1,
+    "log": "final-shared-lint.log",
+    "counts": {
+      "preExistingErrors": 9,
+      "untouchedFiles": 7
+    },
+    "qualification": null
+  },
+  {
+    "command": "bunx eslint services/WorktreeService.ts services/__tests__/WorktreeService.test.ts services/TicketService.ts services/project/ProjectConfigLoader.ts services/project/ProjectConfigService.ts services/cloud-sync/projection-sync.ts services/cloud-sync/__tests__/projection-sync.test.ts services/search/SearchService.ts services/ticket/MarkdownTicketRepository.ts services/ticket/TicketMutationService.ts services/ticket/TicketQueryService.ts services/ticket/TicketRepository.ts tests/services/ProjectConfigService/projectFileOwner.test.ts tests/services/search/SearchService.test.ts --config eslint.config.ts --report-unused-disable-directives --max-warnings 0",
+    "cwd": "shared",
+    "exitCode": 0,
+    "log": "final-shared-affected-lint.log",
+    "counts": null,
+    "qualification": null
+  },
+  {
+    "command": "bunx eslint scripts/check-module-boundaries.ts scripts/check-module-boundaries.test.ts scripts/e2e/backend.ts server/http/projectAccess.ts --report-unused-disable-directives --max-warnings 0",
+    "cwd": ".",
+    "exitCode": 0,
+    "log": "final-tooling-lint.log",
+    "counts": null,
+    "qualification": null
+  },
+  {
+    "command": "bun run test:modules",
+    "cwd": ".",
+    "exitCode": 0,
+    "log": "final-module-fixtures.log",
+    "counts": {
+      "passed": 10
+    },
+    "qualification": null
+  },
+  {
+    "command": "bun run check:modules",
+    "cwd": ".",
+    "exitCode": 0,
+    "log": "final-module-scan.log",
+    "counts": {
+      "sources": 316,
+      "edges": 1132,
+      "violations": 0,
+      "exactExceptions": 6
+    },
+    "qualification": null
+  },
+  {
+    "command": "bun run check:boundaries",
+    "cwd": ".",
+    "exitCode": 1,
+    "log": "final-decoder.log",
+    "counts": {
+      "preExistingUnmatched": 12,
+      "preExistingStale": 2
+    },
+    "qualification": null
+  },
+  {
+    "command": "node --import tsx docs/CRs/MDT-266/execution/logs/runtime-resource-probe.ts",
+    "cwd": ".",
+    "exitCode": 0,
+    "log": "final-runtime-resources.log",
+    "counts": null,
+    "qualification": "Naturally exits; active SSE/deferred observation, no listener, temporary config."
+  },
+  {
+    "command": "bunx markdownlint-cli2 DEBUG.md server/CLAUDE.md server/docs/ARCHITECTURE.md shared/ARCHITECTURE.md scripts/AGENTS.md scripts/e2e/AGENTS.md tests/AGENTS.md docs/CONFIG_INSPECTION.md docs/CONFIG_SPECIFICATION.md docs/architecture/event-system/EVENT_SYSTEM.md docs/architecture/project-identity-and-worktrees.md docs/architecture/cloud-sync/README.md docs/architecture/cloud-sync/data-and-consistency.md docs/architecture/cloud-sync/operations.md docs/CRs/MDT-266/execution/baseline.md docs/CRs/MDT-266/execution/plan.md docs/CRs/MDT-266/execution/result.md",
+    "cwd": ".",
+    "exitCode": 0,
+    "log": "final-doc-lint.log",
+    "counts": {
+      "documents": 17,
+      "errors": 0
+    },
+    "qualification": null
+  },
+  {
+    "command": "scripts/validate-mermaid-md server/docs/ARCHITECTURE.md shared/ARCHITECTURE.md docs/architecture/event-system/EVENT_SYSTEM.md docs/architecture/project-identity-and-worktrees.md docs/architecture/cloud-sync/README.md docs/architecture/cloud-sync/data-and-consistency.md docs/architecture/cloud-sync/operations.md",
+    "cwd": ".",
+    "exitCode": 0,
+    "log": "final-doc-diagrams.log",
+    "counts": {
+      "renderedBlocks": 6
+    },
+    "qualification": null
+  },
+  {
+    "command": "python3 docs/CRs/MDT-266/execution/logs/audit-doc-links.py",
+    "cwd": ".",
+    "exitCode": 0,
+    "log": "final-doc-links.log",
+    "counts": null,
+    "qualification": null
+  },
+  {
+    "command": "python3 docs/CRs/MDT-266/execution/logs/audit-execution.py",
+    "cwd": ".",
+    "exitCode": 0,
+    "log": "final-scope.log",
+    "counts": null,
+    "qualification": null
+  },
+  {
+    "command": "git diff --check",
+    "cwd": ".",
+    "exitCode": 0,
+    "log": null,
+    "counts": null,
+    "qualification": null
+  },
+  {
+    "command": "bunx markdownlint-cli2 docs/CRs/MDT-266/execution/result.md",
+    "cwd": ".",
+    "exitCode": 0,
+    "log": "final-result-lint.log",
+    "counts": {
+      "documents": 1,
+      "errors": 0
+    },
+    "qualification": "Final report metadata/PASS/token template revision."
+  }
+]

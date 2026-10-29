@@ -12,6 +12,10 @@ interface BuiltinTemplateDefinition {
   sections: TemplateSection[]
 }
 
+/**
+ * Public item contract of the built-in template catalog.
+ * @public
+ */
 export interface BuiltinTemplate extends Template {
   file: string
 }

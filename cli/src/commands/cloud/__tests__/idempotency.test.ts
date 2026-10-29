@@ -13,8 +13,8 @@
  */
 
 import { describe, expect, it } from 'bun:test'
-import { enableIdempotencyTokens } from '../../cloud'
 import { CliCommandError } from '../../../output/structured'
+import { enableIdempotencyTokens } from '../../cloud'
 import { CloudExitCode, exitCodeFor } from '../exit-codes'
 
 describe('cloud enable idempotency tokens (TEST-enable-idempotency)', () => {

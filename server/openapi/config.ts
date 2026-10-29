@@ -161,8 +161,8 @@ All endpoints return consistent error responses with \`error\` and \`message\` f
     },
   },
   apis: [
-    path.join(__dirname, '../routes/*.ts'),
-    path.join(__dirname, '../routes/*.js'),
+    path.join(__dirname, '../modules/**/*.ts'),
+    path.join(__dirname, '../modules/**/*.js'),
   ],
 }
 

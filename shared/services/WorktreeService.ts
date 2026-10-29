@@ -74,6 +74,8 @@ export interface WorktreeServiceOptions {
  * ```
  */
 export class WorktreeService {
+  private readonly refreshes = new Set<Promise<WorktreeMapping>>()
+
   /** Worktree detection configuration */
   private readonly config: WorktreeConfig
 
@@ -126,7 +128,7 @@ export class WorktreeService {
     // If we have stale data, return it immediately while refreshing
     if (cachedEntry) {
       // Refresh in background without blocking
-      this.refreshWorktreeMapping(projectPath, projectCode).catch(() => {
+      this.trackRefresh(this.refreshWorktreeMapping(projectPath, projectCode)).catch(() => {
         // Silent degradation - log error but don't throw
         // Background refresh failures don't block operations
       })
@@ -134,8 +136,20 @@ export class WorktreeService {
     }
 
     // No cache at all, perform fresh detection
-    const mapping = await this.refreshWorktreeMapping(projectPath, projectCode)
+    const mapping = await this.trackRefresh(this.refreshWorktreeMapping(projectPath, projectCode))
     return new Map(mapping)
+  }
+
+  /** Drain this instance's Git refreshes without changing cache/read behavior. */
+  async whenIdle(): Promise<void> {
+    while (this.refreshes.size > 0)
+      await Promise.allSettled(this.refreshes)
+  }
+
+  private trackRefresh(work: Promise<WorktreeMapping>): Promise<WorktreeMapping> {
+    this.refreshes.add(work)
+    void work.finally(() => this.refreshes.delete(work)).catch(() => {})
+    return work
   }
 
   /**

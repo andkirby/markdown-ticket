@@ -16,7 +16,7 @@ each stage?
 
 ## System Overview
 
-```
+```text
  .md file changed on disk
         │
         ▼
@@ -29,7 +29,7 @@ each stage?
  SSEBroadcaster (server/services/fileWatcher/SSEBroadcaster.ts)
         │  per-client scope filtering, heartbeat (30s), zombie removal
         ▼
- SSE stream  GET /api/events (server/routes/sse.ts)
+ SSE stream  GET /api/events (server/modules/realtime/router.ts)
         │
         ▼
  sseClient (frontend/src/services/sseClient.ts)
@@ -46,7 +46,7 @@ each stage?
 |--------|----------------|
 | `PathWatcherService` | Owns chokidar watchers: per-project ticket globs, document paths, worktrees, and the global registry watcher (`~config/projects/*.toml`). Emits raw file/document/registry events. |
 | `WatcherLifecycleManager` | Lazy lifecycle: per-project refcount, provision watchers on first SSE subscriber, stop (debounced 5s) on last unsubscribe. Late registration provisions waiting subscribers (BR-7). |
-| `projectRegistrationIntegration` | Production wiring shared by `server.ts` and the e2e app factory: boot-time metadata registration + registry watcher init + runtime (registry-change) project registration with bounded retry. |
+| `projectRegistrationIntegration` | Runtime-owned wiring used by the common app: boot-time metadata registration + registry watcher init + runtime (registry-change) project registration with bounded retry; returns an owned disposal callback. |
 | `SSEBroadcaster` | Client set, per-event scope filtering, 100ms debounce, 30s heartbeat with write-error zombie detection, last-50-event queue. |
 | `index.ts` (facade) | Composes the above; enriches file events with ticket frontmatter metadata; owns client connect/disconnect (`addClient`/`removeClient`); re-subscribes connected write clients when a project registers at runtime. |
 
@@ -95,3 +95,30 @@ AGENTS-level summaries must not claim a polling backup.
 - Unit: `server/tests/watcherLifecycle.test.ts`, `sseBroadcaster.zombie.test.ts`, `tests/unit/RegistryWatcher.test.ts`.
 - E2E (production path, no manual watcher init): `tests/e2e/sse/late-registration.spec.ts` — runtime-created projects, including a client connected before registration.
 - E2E (admin seam `/_e2e/watchers/*`, eager init for pre-existing scenario setups): `tests/e2e/sse/updates.spec.ts`. New specs should follow the production-path pattern.
+
+## Application/runtime ownership
+
+`server/app.ts` constructs the same HTTP/service graph for production and isolated
+tests without starting watchers or heartbeat timers. The explicit runtime in
+`server/bootstrap/createRuntime.ts` awaits registration on start and owns
+observation/heartbeat/cloud activation. Registration disposal detaches its registry
+listener, cancels bounded retry waits and drains in-flight registration before the
+watcher facade awaits watcher closure. Start/stop are idempotent for one handle; a
+stopped handle is not restarted. The E2E launcher awaits this lifecycle and closes
+its own HTTP/SSE sockets. Component boundaries and lazy/SSE semantics above remain
+unchanged.
+
+### Runtime disposal
+
+The common runtime invalidates registrations and watcher subscriptions, ends
+active SSE responses and cancels timers before awaiting work. Stop drains active
+identity observations, worktree discovery (including the watcher's own stale
+Git refresh), document reconfiguration and already-started watcher closes. Late
+SSE callbacks cannot schedule debounce or restore clients. These are local
+resource ownership guarantees; ordinary disconnect debounce and per-project
+watcher reuse keep their existing behavior.
+
+The watcher facade remains the lifecycle coordinator, with watcher inspection
+and event-fixture seams used by runtime tests. Unused single-path initialization
+and forwarding compatibility methods are retired. This does not change lazy
+subscriptions, SSE wire events, stop/drain ownership or per-project reuse.

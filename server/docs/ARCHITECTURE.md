@@ -1,100 +1,105 @@
 # Architecture: Server
 
-Layered architecture for the Express API server.
+The local Express backend is a capability-based modular monolith. Reusable ticket,
+project and search operations live in `shared/`; HTTP admission, response mapping
+and process lifecycle live in `server/`.
 
-## Layers
+## Composition and lifecycle
+
+`server/server.ts` is the executable: it loads environment files, configures logging
+and API documentation, owns the HTTP listener/sockets and installs process signal
+handlers. `createApplication()` in `server/app.ts` constructs the common production
+and test HTTP graph without listening or starting background work.
+
+`server/bootstrap/createRuntime.ts` constructs services and owns explicit
+`start()` / `stop()` handles. Start registers lazy watcher metadata and the registry
+watcher, refreshes identity observation, starts the SSE heartbeat and activates
+eligible cloud streams only under the existing rollout flag. Stop is idempotent,
+detaches owned callbacks, cancels registration retry waits, ends active SSE
+responses and stops scheduling new work immediately. It drains active identity
+observations, stream activation/persistence, interval-owned journal flushes,
+watcher provisioning/discovery, document refresh and already-started watcher
+closure. Concurrent startup cannot acquire resources after disposal. A failed start disposes
+partially initialized resources. A stopped handle is terminal; construct a new one
+to start another runtime.
+
+The test factory is a small launcher over this builder. Its cache setting and
+optional pre-auth control router are explicit test inputs. The isolated E2E launcher
+awaits runtime start and disposal and owns its listener sockets. API documentation
+is an injected router because its OpenAPI generator uses the executable's ESM
+location; tests can construct the application without that presentation adapter.
+
+## Capability owners
+
+| Public entrypoint | HTTP responsibility | Application/data owner |
+| --- | --- | --- |
+| `server/modules/projects/index.ts` | Project discovery/configuration, registration and sharing adapters | Shared ProjectService/ProjectManager and project config owner |
+| `server/modules/tickets/index.ts` | Ticket CRUD, unified reads, subdocuments, trace reads, pins, identity, local cloud status and explicit recovery routes | Shared TicketService facade, query/mutation collaborators and existing identity/recovery services |
+| `server/modules/search/index.ts` | Unified search and legacy project search request/response handling | Shared SearchService |
+| `server/modules/documents/index.ts` | Document discovery/content, favorites, path configuration and preview | Retained DocumentService/TreeService/configuration operations |
+| `server/modules/config/index.ts` | Configuration selector requests and per-request context | ConfigApplicationService; shared ProjectConfigService owns project files; global/user adapters remain separate |
+| `server/modules/access/index.ts` | Sessions, share exchange and read-token management | Existing `server/security/` policy and stores |
+| `server/modules/realtime/index.ts` | SSE admission and streaming | Existing fileWatcher lifecycle and broadcaster |
+| `server/modules/system/index.ts` | Local status, filesystem/config/selector operations and devtools | SystemService and retained scoped services |
+
+`server/modules/system/docs.ts` is the separate executable documentation adapter.
+Internal callers import the capability entrypoints directly. The former
+`server/controllers/` and `server/routes/` compatibility files and mixed
+ProjectController/SearchController constructors have been retired. Each fixture
+uses the actual operation's controller; controllers do not locate other
+controllers.
+
+The common graph injects SharedProjectService directly as the project catalog.
+There is no forwarding ProjectServiceAdapter or nested discovery accessor.
+Sharing cache effects and pin/favorite construction use that same catalog
+instance. Shared/server TicketService facades, discovery's published config
+loader, selector storage adapters and the watcher facade retain their distinct
+application, public API and lifecycle responsibilities.
+
+## Request flow
 
 ```text
-HTTP Clients → server.ts → Generic Middleware → API Auth Gate → Routes → Controllers → Services → Data Storage
+HTTP → common app middleware → API auth → capability router/controller
+     → shared application operation or retained server capability → data adapter
 ```
 
-| Layer | Responsibility |
-|-------|---------------|
-| **API Auth Gate** | Protect `/api/*` routes, exempt only public health/status |
-| **Routes** | Define endpoints, map to controllers |
-| **Controllers** | HTTP handling, request/response formatting |
-| **Services** | Business logic, coordinate operations |
-| **Utilities** | Pure helper functions |
+For example, a ticket patch is parsed at the ticket HTTP edge, projected to the
+supported fields by the server facade, and submitted as one shared mutation.
+The shared mutation validates all requested fields and both existing-epic and
+candidate constraints before one local write and subsequent projection attempt.
+Ignored-only patches retain their no-op behavior. Validation rejection changes
+neither bytes nor publication attempts; post-write cloud delivery keeps its
+existing journal/recovery semantics. There is no cross-store transaction or new
+external-editor/process locking guarantee.
 
-## Request Flow Example
+`server/http/projectAccess.ts` resolves project visibility from a catalog and the
+existing access policy. Document routes receive this operation directly. Search
+receives shared operations directly; ticket ranking/deduplication and project
+scoring are not implemented by HTTP controllers.
 
-```text
-GET /api/projects/markdown-ticket/crs
-  → Middleware (validation, security)
-  → API auth middleware
-  → Route handler (projects.js)
-  → ProjectController.getProjectCRs()
-  → TicketService.getProjectCRs()
-  → ProjectDiscovery.getProjectCRs()
-  → File system (read markdown files)
-  ← JSON response
-```
+## API authentication boundary
 
-## Dependency Injection
+`server/security/apiAuth.ts` owns API auth configuration, credential extraction,
+route exemptions and token comparison. The common app mounts browser auth/share
+exchange routes before the protected `/api` gate, then mounts capability routers.
+New protected endpoints belong after this gate. Existing local-host bypass policy
+is unchanged and remains part of RuntimeConfig.
 
-```javascript
-// Core services
-const fileWatcher = new FileWatcherService()
-const projectDiscovery = new ProjectDiscoveryService()
+Public API exemptions are `GET /api/status`, `GET /api/health`, and GET-only
+`/api/documents/raw-preview/*`. Preview handlers enforce their own HMAC token; the
+raw-preview prefix does not inherit anonymous document-read grants. Protected
+credentials remain Bearer and X-API-Key. Vite frontend-log middleware is a separate
+boundary. Existing access/error envelopes are retained.
 
-// Business services (inject dependencies)
-const projectService = new ProjectService(projectDiscovery)
-const ticketService = new TicketService(projectDiscovery)
+## Dependency enforcement
 
-// Controllers (inject services)
-const projectController = new ProjectController(
-  projectService, ticketService, fileSystemService, fileWatcher
-)
-
-// Routes (inject controllers)
-const projectRouter = createProjectRouter(projectController)
-app.use('/api/projects', projectRouter)
-```
-
-## API Authentication Boundary
-
-`server/security/apiAuth.ts` owns backend API auth configuration, credential extraction, route exemption classification, and token comparison. `server/server.ts` mounts `createApiAuthMiddleware()` once at `/api` before protected routers.
-
-New backend API endpoints should be mounted under `/api` after that middleware. They require a token by default. The only public backend API exemptions are:
-
-- `GET /api/status`
-- `GET /api/health`
-- `GET /api/documents/raw-preview/*` (MDT-221) — GET-only exemption so the opaque sandboxed HTML preview iframe can reach the handler. The handler enforces its own HMAC preview token (the iframe cannot send the `SameSite=Strict` session cookie). The prefix is **carved out** of `isPublicReadRoute` in `accessPolicy.ts` so it does not inherit the broad `/api/documents` anonymous + read-session-readable grant; defense-in-depth alongside the handler's token gate.
-
-Supported credentials for protected backend APIs are `Authorization: Bearer <token>` and `X-API-Key: <token>`. Controllers should not implement their own token checks.
-
-Vite middleware endpoints, such as `/api/frontend/logs*`, are not backend Express routes and do not pass through this auth gate. They need a separate boundary.
-
-## Module Responsibilities
-
-| Module | Does | Doesn't |
-|--------|------|---------|
-| Routes | Define endpoints | Business logic |
-| Controllers | HTTP handling | Business logic |
-| Services | Business rules | HTTP concerns |
-| Utilities | Pure functions | State management |
-
-## Conventions
-
-- **Single Responsibility**: Each layer has one job
-- **Dependency Injection**: Constructor-based, testable
-- **Error Handling**: Service throws → Controller catches → Error middleware responds
-- **Stateless Controllers**: Easy to scale horizontally
-
-## Routes
-
-| Route | Controller |
-|-------|------------|
-| `/api/projects` | ProjectController |
-| `/api/projects/:id/crs` | TicketController |
-| `/api/projects/:id/cloud-projections` | ProjectController (legacy owner-only compatibility feed) |
-| `/api/projects/:id/ticket-identities` | Owner-only cached identity diagnostics router |
-| `/api/projects/:id/cloud-sync/creation-recovery` | Owner-only inspection/resume/reconcile router over shared TicketService |
-| `/api/documents` | DocumentController |
-| `/api/documents/preview-token` | DocumentController (MDT-221, owner-only mint of short-lived HTML preview tokens) |
-| `/api/documents/raw-preview/:token/*` | DocumentController (MDT-221, token-gated raw byte stream for sandboxed HTML preview) |
-| `/api/events` | SSE (Server-Sent Events) |
-| `/api/system` | SystemController |
+`bun run check:modules` resolves local/workspace imports and checks package
+direction, public capability entrypoints, controller dependencies, pure-policy I/O,
+project-writer ownership and runtime cycles. Type-only imports obey ownership
+rules but do not create runtime cycles. The compatibility exception manifest
+`scripts/module-boundary-exceptions.json` is empty; stale exceptions fail.
+`bun run test:modules` exercises rejecting and permitted fixtures. The existing
+`check:boundaries` request/decoder convention check remains a separate gate.
 
 ## HTML Document Preview (MDT-221)
 

@@ -5,6 +5,10 @@ import MarkdownIt from 'markdown-it'
 import { builtinTemplateCatalog } from '../../templates/catalog.js'
 import { legacyTemplateBoilerplate, legacyTemplateInstructions } from '../../templates/legacy-instructions.js'
 
+/**
+ * Public input contract for shared ticket-content inspection callers.
+ * @public
+ */
 export interface TicketContentContext {
   ticketKey: string
   filePath: string

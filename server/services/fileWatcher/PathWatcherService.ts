@@ -59,6 +59,8 @@ export interface DocumentChangeEventPayload {
 const OPTS = { ignoreInitial: true, persistent: true, followSymlinks: false, awaitWriteFinish: { stabilityThreshold: 100, pollInterval: 100 } }
 
 export class PathWatcherService extends EventEmitter {
+  private readonly discoveries = new Set<Promise<void>>()
+  private readonly closing = new Set<Promise<void>>()
   private watchers = new Map<string, chokidar.FSWatcher>()
   private worktreeWatchers = new Map<string, WorktreeWatcherEntry>()
   private worktreeHeads = new Map<string, WorktreeWatcherEntry>()
@@ -138,6 +140,7 @@ export class PathWatcherService extends EventEmitter {
   }
 
   async reconfigureDocumentWatchers(projectId: string, projectRoot: string, documentPaths: string[], ticketsPath?: string): Promise<number> {
+    const ownsProject = this.captureProjectLifetime(projectId)
     const prefix = `${projectId}__document__`
     const watcherIds = Array.from(this.watchers.keys()).filter(id => id.startsWith(prefix))
 
@@ -145,14 +148,15 @@ export class PathWatcherService extends EventEmitter {
       const watcher = this.watchers.get(watcherId)
       this.watchers.delete(watcherId)
       try {
-        await watcher?.close()
+        if (watcher)
+          await this.closeWatcher(watcher)
       }
       catch (error) {
         this.emit('error', { error, projectId })
       }
     }))
 
-    return this.initDocumentWatchers(projectId, projectRoot, documentPaths, ticketsPath)
+    return ownsProject() ? this.initDocumentWatchers(projectId, projectRoot, documentPaths, ticketsPath) : 0
   }
 
   initGlobalRegistryWatcher(): void {
@@ -324,13 +328,15 @@ export class PathWatcherService extends EventEmitter {
           else {
             // Fallback: try to find worktree by searching common locations
             console.warn(`[Worktree] Could not find gitdir for ${worktreeName}, trying detection...`)
-            this.worktreeService.detect(projectPath, projectCode).then((worktrees) => {
+            const discovery = this.worktreeService.detect(projectPath, projectCode).then((worktrees) => {
               const worktreePath = worktrees.get(ticketCode)
               if (worktreePath) {
                 console.warn(`[Worktree] Found worktree ${ticketCode} at ${worktreePath}`)
                 registerWorktree(worktreePath, this.readWorktreeHeadPath(worktreePath))
               }
             }).catch(e => console.warn(`[Worktree] Failed to detect worktree:`, e))
+            this.discoveries.add(discovery)
+            void discovery.finally(() => this.discoveries.delete(discovery))
           }
         }
       }
@@ -431,7 +437,7 @@ export class PathWatcherService extends EventEmitter {
       }
     }
     try {
-      await entry.watcher.close()
+      await this.closeWatcher(entry.watcher)
     }
     catch (e) {
       console.error(`Error closing worktree watcher ${wid}:`, e)
@@ -689,7 +695,7 @@ export class PathWatcherService extends EventEmitter {
 
     await Promise.all(ownedWatchers.map(async ([id, watcher]) => {
       try {
-        await watcher.close()
+        await this.closeWatcher(watcher)
       }
       catch (error) {
         console.error(`Error closing watcher ${id}:`, error)
@@ -697,7 +703,7 @@ export class PathWatcherService extends EventEmitter {
     }))
   }
 
-  stop(): void {
+  stop(): Promise<void> {
     this.worktreeLifetime = Symbol('worktree service lifetime')
     const ownedWatchers: Array<[string, chokidar.FSWatcher]> = [
       ...this.watchers,
@@ -712,8 +718,18 @@ export class PathWatcherService extends EventEmitter {
     this.watchPaths.clear()
     this.projectRoots.clear()
     this.ticketPaths.clear()
-    for (const [id, watcher] of ownedWatchers) {
-      watcher.close().catch(error => console.error(`Error closing watcher ${id}:`, error))
-    }
+    const closes = ownedWatchers.map(async ([id, watcher]) => {
+      await this.closeWatcher(watcher).catch(error => console.error(`Error closing watcher ${id}:`, error))
+    })
+    return Promise.all([...closes, ...this.closing, ...this.discoveries, this.worktreeService.whenIdle()]).then(() => {})
+  }
+
+  private closeWatcher(watcher: chokidar.FSWatcher): Promise<void> {
+    const work = watcher.close()
+    // Callers retain their existing error reporting; disposal drains settlement.
+    const settled = work.then(() => {}, () => {})
+    this.closing.add(settled)
+    void settled.then(() => this.closing.delete(settled))
+    return work
   }
 }

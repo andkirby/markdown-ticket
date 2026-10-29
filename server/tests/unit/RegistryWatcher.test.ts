@@ -17,6 +17,7 @@ jest.mock('chokidar', () => {
 jest.mock('@mdt/shared/services/WorktreeService.js', () => ({
   WorktreeService: jest.fn().mockImplementation(() => ({
     enabled: true,
+    whenIdle: jest.fn().mockResolvedValue(undefined),
   })),
 }))
 

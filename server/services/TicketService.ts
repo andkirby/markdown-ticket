@@ -1,4 +1,5 @@
 import type { CreationRecoveryInspection, CreationRecoveryOutcome, CreationRecoveryReconcileInput, CreationRecoveryResumeInput, PatchTicketInput, SearchResponse, TicketDiagnostic, TicketIdentityDiagnostic, TicketUpdateAttrs, UnifiedTicketItem } from '@mdt/domain-contracts'
+import type { Project } from '@mdt/shared/models/Project.js'
 /* eslint-disable ts/no-unsafe-type-assertion -- MDT-258 baseline: pre-existing casts, strip as they are rewritten */
 /**
  * Web Server Ticket Service Adapter
@@ -7,13 +8,11 @@ import type { CreationRecoveryInspection, CreationRecoveryOutcome, CreationRecov
  * Per MDT-082: Uses consolidated CRUD operations from shared layer.
  */
 
-import type { Project } from '@mdt/shared/models/Project.js'
 import type { Ticket, TicketData } from '@mdt/shared/models/Ticket.js'
-import type { CRStatus } from '@mdt/shared/models/Types.js'
 import type { CloudRuntimeDependencies } from '@mdt/shared/services/TicketService.js'
 import { CoordinatorError } from '@mdt/domain-contracts'
+import { SearchService } from '@mdt/shared/services/search/SearchService.js'
 import { resolveAttrValue } from '@mdt/shared/services/ticket/attrResolver.js'
-import { ticketSearchProvenance, ticketSearchScore } from '@mdt/shared/services/ticket/referenceSearch.js'
 import {
   groupNamespacedFiles,
   parseNamespace,
@@ -99,6 +98,7 @@ export type ProjectionReadModelProvider = (projectId: string) => {
 } | undefined
 
 export class TicketService {
+  readonly searchService: SearchService
   private readonly projectDiscovery: ProjectDiscovery
   private readonly sharedTicketService: SharedTicketService
   private readonly ticketLocationResolver: TicketLocationResolver
@@ -112,6 +112,7 @@ export class TicketService {
   ) {
     this.projectDiscovery = projectDiscovery
     this.sharedTicketService = new SharedTicketService(false, cloudRuntime)
+    this.searchService = new SearchService(projectDiscovery, this.sharedTicketService)
     this.ticketLocationResolver = new TicketLocationResolver()
     this.subdocumentService = new SubdocumentService()
     this.traceStoreService = new TraceStoreService()
@@ -373,13 +374,7 @@ export class TicketService {
     const project = await this.getProject(projectId)
     const updatedFields: string[] = []
 
-    // Handle status update separately using the dedicated method
     if (updates.status !== undefined) {
-      await this.sharedTicketService.updateCRStatus(
-        project,
-        crId,
-        updates.status as CRStatus,
-      )
       updatedFields.push('status')
     }
 
@@ -416,15 +411,22 @@ export class TicketService {
       ticketUpdates.blocks = updates.blocks
     }
 
-    // Use shared service to update attributes if there are any remaining fields
-    if (Object.keys(ticketUpdates).length > 0) {
-      await this.sharedTicketService.updateCRAttrs(
-        project,
-        crId,
-        ticketUpdates,
-      )
-      updatedFields.push(...Object.keys(ticketUpdates))
+    // One shared operation validates the entire candidate before persistence.
+    if (updates.status !== undefined || Object.keys(ticketUpdates).length > 0) {
+      try {
+        await this.sharedTicketService.updateCRPartial(project, crId, {
+          ...(updates.status !== undefined ? { status: updates.status } : {}),
+          ...ticketUpdates,
+        })
+      }
+      catch (error) {
+        // Normalize only the shared domain's exact missing-ticket outcome.
+        if (error instanceof Error && error.message === `CR '${crId}' not found in project '${project.id}'`)
+          throw new Error('CR not found')
+        throw error
+      }
     }
+    updatedFields.push(...Object.keys(ticketUpdates))
 
     return {
       success: true,
@@ -435,131 +437,10 @@ export class TicketService {
     }
   }
 
-  /**
-   * Search for tickets across projects. MDT-152.
-   *
-   * ticket_key mode: ranked cross-project identity or text search (legacy request name).
-   * project_scope mode: search within a specific project by code.
-   */
-  async searchTickets(
-    mode: 'ticket_key' | 'project_scope',
-    query: string,
-    options: {
-      projectCode?: string
-      limitPerProject: number
-      limitTotal: number
-    },
-  ): Promise<SearchResponse> {
-    if (mode === 'ticket_key') {
-      return this.searchByTicketKey(query, options.limitTotal, options.limitPerProject)
-    }
-    return this.searchByProjectScope(
-      query,
-      options.projectCode!,
-      options.limitPerProject,
-      options.limitTotal,
-    )
-  }
+  /** Search through the shared operation; retained server facade signature. */
+  async searchTickets(...args: Parameters<SearchService['searchTickets']>): Promise<SearchResponse> { return this.searchService.searchTickets(...args) }
 
-  /**
-   * Legacy ticket_key mode: rank local identity, external refs and AND text
-   * matches across eligible projects before deduplication and limits.
-   */
-  private async searchByTicketKey(
-    query: string,
-    limitTotal: number,
-    limitPerProject: number,
-  ): Promise<SearchResponse> {
-    if (limitTotal < 1) {
-      return { results: [], total: 0 }
-    }
-
-    const terms = query.trim().split(/\s+/)
-    const projects = await this.projectDiscovery.getAllProjects()
-    const groups = await Promise.all(projects.map(async (project) => {
-      const tickets = await this.sharedTicketService.listCRs(project)
-      return tickets.flatMap((ticket) => {
-        const sources = terms.map(term => ticketSearchProvenance(ticket, term))
-        const matchedBy = [...new Set(sources.flat())]
-        return sources.every(matches => matches.length > 0)
-          ? [{
-              ticket: { code: ticket.code, title: ticket.title, priority: ticket.priority ?? null, status: ticket.status ?? null, refs: ticket.refs, externalRefs: ticket.externalRefs },
-              project: { code: project.project.code || project.id, name: project.project.name },
-              matchedBy,
-            }]
-          : []
-      })
-    }))
-    const matches = groups.flat().sort((a, b) => {
-      const rank = (item: typeof a) => terms.reduce((score, term) => score + ticketSearchScore(item.ticket, term), 0)
-      return rank(b) - rank(a) || a.project.code.localeCompare(b.project.code) || a.ticket.code.localeCompare(b.ticket.code)
-    })
-    const perProject = new Map<string, number>()
-    const unique = [...new Map(matches.map(result => [`${result.project.code}:${result.ticket.code}`, result])).values()]
-    const results = unique.filter((result) => {
-      const count = perProject.get(result.project.code) ?? 0
-      perProject.set(result.project.code, count + 1)
-      return count < limitPerProject
-    }).slice(0, limitTotal)
-    return { results, total: results.length }
-  }
-
-  /**
-   * project_scope mode: search within a specific project.
-   * Throws 'Project not found' if projectCode is invalid.
-   */
-  private async searchByProjectScope(
-    query: string,
-    projectCode: string,
-    limitPerProject: number,
-    limitTotal: number,
-  ): Promise<SearchResponse> {
-    const projects = await this.projectDiscovery.getAllProjects()
-    const project = projects.find(
-      p => p.project.code === projectCode || p.id === projectCode,
-    )
-
-    if (!project) {
-      throw new Error('Project not found')
-    }
-
-    const allCRs = await this.sharedTicketService.listCRs(project)
-
-    const filtered = query
-      ? allCRs.filter(cr => query.trim().split(/\s+/).every(term => ticketSearchProvenance(cr, term).length > 0))
-      : allCRs
-
-    const effectiveLimit = Math.min(limitPerProject, limitTotal)
-    const ranked = [...filtered].sort((a, b) => {
-      const rank = (ticket: Ticket) => ticketSearchScore(ticket, query)
-      return rank(b) - rank(a)
-    })
-    const limited = ranked.slice(0, effectiveLimit)
-
-    return {
-      results: limited.map(cr => ({
-        matchedBy: ticketSearchProvenance(cr, query),
-        ticket: {
-          code: cr.code,
-          title: cr.title,
-          refs: cr.refs,
-          externalRefs: cr.externalRefs,
-          priority: cr.priority ?? null,
-          // MDT-247: additive status for the key-strip glyph (project_scope).
-          status: cr.status ?? null,
-        },
-        project: {
-          code: project.project.code || project.id,
-          name: project.project.name,
-        },
-      })),
-      total: limited.length,
-    }
-  }
-
-  /**
-   * Delete CR from a project.
-   */
+  /** Delete CR from a project. */
   async deleteCR(projectId: string, crId: string): Promise<DeleteResult> {
     const project = await this.getProject(projectId)
     const cr = await this.sharedTicketService.getCR(project, crId)

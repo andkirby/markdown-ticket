@@ -1,0 +1,530 @@
+{
+  "baselineHead": "4c8ae15be10ef02626f2c0513e23b3909df92448",
+  "baselineStagedTree": "bbf4a31798848b1ab9eee54efa8f0222ff488e24",
+  "currentHeadAtAudit": "8111e943123516db78578ff54c9537a5c41c5fb9",
+  "planIdentity": "aa9f025670bb8cdc917198c7834fabc2793c16fc35130fa425fd11a314af22c9",
+  "backendPaths": [
+    {
+      "path": "docs/architecture/event-system/EVENT_SYSTEM.md",
+      "action": "modify",
+      "baselineLines": 119,
+      "currentLines": 124,
+      "changed": true
+    },
+    {
+      "path": "docs/architecture/preference-storage-architecture.md",
+      "action": "modify",
+      "baselineLines": 158,
+      "currentLines": 158,
+      "changed": true
+    },
+    {
+      "path": "mcp-server/tests/integration/mcp-backend-consistency-simple.test.ts",
+      "action": "modify",
+      "baselineLines": 399,
+      "currentLines": 337,
+      "changed": true
+    },
+    {
+      "path": "mcp-server/tests/integration/mcp-backend-consistency.test.ts",
+      "action": "modify",
+      "baselineLines": 657,
+      "currentLines": 634,
+      "changed": true
+    },
+    {
+      "path": "scripts/module-boundary-exceptions.json",
+      "action": "modify",
+      "baselineLines": 44,
+      "currentLines": 1,
+      "changed": true
+    },
+    {
+      "path": "server/CLAUDE.md",
+      "action": "modify",
+      "baselineLines": 57,
+      "currentLines": 57,
+      "changed": true
+    },
+    {
+      "path": "server/app.ts",
+      "action": "modify",
+      "baselineLines": 156,
+      "currentLines": 156,
+      "changed": true
+    },
+    {
+      "path": "server/bootstrap/ProjectServiceAdapter.ts",
+      "action": "delete",
+      "baselineLines": 66,
+      "currentLines": 0,
+      "changed": true
+    },
+    {
+      "path": "server/bootstrap/createRuntime.ts",
+      "action": "modify",
+      "baselineLines": 349,
+      "currentLines": 346,
+      "changed": true
+    },
+    {
+      "path": "server/controllers/ConfigController.ts",
+      "action": "delete",
+      "baselineLines": 1,
+      "currentLines": 0,
+      "changed": true
+    },
+    {
+      "path": "server/controllers/DocumentController.ts",
+      "action": "delete",
+      "baselineLines": 1,
+      "currentLines": 0,
+      "changed": true
+    },
+    {
+      "path": "server/controllers/PinController.ts",
+      "action": "delete",
+      "baselineLines": 1,
+      "currentLines": 0,
+      "changed": true
+    },
+    {
+      "path": "server/controllers/ProjectController.ts",
+      "action": "delete",
+      "baselineLines": 45,
+      "currentLines": 0,
+      "changed": true
+    },
+    {
+      "path": "server/controllers/SearchController.ts",
+      "action": "delete",
+      "baselineLines": 12,
+      "currentLines": 0,
+      "changed": true
+    },
+    {
+      "path": "server/docs/ARCHITECTURE.md",
+      "action": "modify",
+      "baselineLines": 145,
+      "currentLines": 152,
+      "changed": true
+    },
+    {
+      "path": "server/eslint.config.ts",
+      "action": "modify",
+      "baselineLines": 63,
+      "currentLines": 63,
+      "changed": true
+    },
+    {
+      "path": "server/jest.config.mjs",
+      "action": "modify",
+      "baselineLines": 71,
+      "currentLines": 71,
+      "changed": true
+    },
+    {
+      "path": "server/modules/projects/ProjectController.ts",
+      "action": "modify",
+      "baselineLines": 325,
+      "currentLines": 323,
+      "changed": true
+    },
+    {
+      "path": "server/modules/projects/types.ts",
+      "action": "modify",
+      "baselineLines": 68,
+      "currentLines": 59,
+      "changed": true
+    },
+    {
+      "path": "server/modules/tickets/TicketController.ts",
+      "action": "modify",
+      "baselineLines": 483,
+      "currentLines": 465,
+      "changed": true
+    },
+    {
+      "path": "server/openapi/config.ts",
+      "action": "modify",
+      "baselineLines": 175,
+      "currentLines": 173,
+      "changed": true
+    },
+    {
+      "path": "server/routes/auth.ts",
+      "action": "delete",
+      "baselineLines": 1,
+      "currentLines": 0,
+      "changed": true
+    },
+    {
+      "path": "server/routes/cloudCreationRecovery.ts",
+      "action": "delete",
+      "baselineLines": 1,
+      "currentLines": 0,
+      "changed": true
+    },
+    {
+      "path": "server/routes/config.ts",
+      "action": "delete",
+      "baselineLines": 1,
+      "currentLines": 0,
+      "changed": true
+    },
+    {
+      "path": "server/routes/devtools.ts",
+      "action": "delete",
+      "baselineLines": 1,
+      "currentLines": 0,
+      "changed": true
+    },
+    {
+      "path": "server/routes/docs.ts",
+      "action": "delete",
+      "baselineLines": 1,
+      "currentLines": 0,
+      "changed": true
+    },
+    {
+      "path": "server/routes/documents.ts",
+      "action": "delete",
+      "baselineLines": 1,
+      "currentLines": 0,
+      "changed": true
+    },
+    {
+      "path": "server/routes/pins.ts",
+      "action": "delete",
+      "baselineLines": 1,
+      "currentLines": 0,
+      "changed": true
+    },
+    {
+      "path": "server/routes/projects.ts",
+      "action": "delete",
+      "baselineLines": 12,
+      "currentLines": 0,
+      "changed": true
+    },
+    {
+      "path": "server/routes/readTokens.ts",
+      "action": "delete",
+      "baselineLines": 1,
+      "currentLines": 0,
+      "changed": true
+    },
+    {
+      "path": "server/routes/search.ts",
+      "action": "delete",
+      "baselineLines": 1,
+      "currentLines": 0,
+      "changed": true
+    },
+    {
+      "path": "server/routes/share.ts",
+      "action": "delete",
+      "baselineLines": 1,
+      "currentLines": 0,
+      "changed": true
+    },
+    {
+      "path": "server/routes/sse.ts",
+      "action": "delete",
+      "baselineLines": 1,
+      "currentLines": 0,
+      "changed": true
+    },
+    {
+      "path": "server/routes/system.ts",
+      "action": "delete",
+      "baselineLines": 1,
+      "currentLines": 0,
+      "changed": true
+    },
+    {
+      "path": "server/routes/ticketIdentities.ts",
+      "action": "delete",
+      "baselineLines": 1,
+      "currentLines": 0,
+      "changed": true
+    },
+    {
+      "path": "server/services/fileWatcher/index.ts",
+      "action": "modify",
+      "baselineLines": 553,
+      "currentLines": 492,
+      "changed": true
+    },
+    {
+      "path": "server/tests/api/config-api.test.ts",
+      "action": "modify",
+      "baselineLines": 89,
+      "currentLines": 89,
+      "changed": true
+    },
+    {
+      "path": "server/tests/api/config-maintenance-policy.test.ts",
+      "action": "modify",
+      "baselineLines": 50,
+      "currentLines": 50,
+      "changed": true
+    },
+    {
+      "path": "server/tests/api/config-owner-only.test.ts",
+      "action": "modify",
+      "baselineLines": 66,
+      "currentLines": 66,
+      "changed": true
+    },
+    {
+      "path": "server/tests/api/devtools-security.test.ts",
+      "action": "modify",
+      "baselineLines": 94,
+      "currentLines": 94,
+      "changed": true
+    },
+    {
+      "path": "server/tests/api/document-favs.test.ts",
+      "action": "modify",
+      "baselineLines": 200,
+      "currentLines": 200,
+      "changed": true
+    },
+    {
+      "path": "server/tests/api/filesystem-boundary.test.ts",
+      "action": "modify",
+      "baselineLines": 82,
+      "currentLines": 81,
+      "changed": true
+    },
+    {
+      "path": "server/tests/api/pins.test.ts",
+      "action": "modify",
+      "baselineLines": 174,
+      "currentLines": 174,
+      "changed": true
+    },
+    {
+      "path": "server/tests/api/projects.test.ts",
+      "action": "modify",
+      "baselineLines": 613,
+      "currentLines": 613,
+      "changed": true
+    },
+    {
+      "path": "server/tests/api/search.test.ts",
+      "action": "modify",
+      "baselineLines": 170,
+      "currentLines": 169,
+      "changed": true
+    },
+    {
+      "path": "server/tests/api/sse-cors.test.ts",
+      "action": "modify",
+      "baselineLines": 103,
+      "currentLines": 103,
+      "changed": true
+    },
+    {
+      "path": "server/tests/api/sse.test.ts",
+      "action": "modify",
+      "baselineLines": 614,
+      "currentLines": 614,
+      "changed": true
+    },
+    {
+      "path": "server/tests/integration/config-request-context.test.ts",
+      "action": "modify",
+      "baselineLines": 63,
+      "currentLines": 63,
+      "changed": true
+    },
+    {
+      "path": "server/tests/mocks/shared/services/TicketService.ts",
+      "action": "delete",
+      "baselineLines": 2,
+      "currentLines": 0,
+      "changed": true
+    },
+    {
+      "path": "server/tests/routes/config-routes-thin.test.ts",
+      "action": "modify",
+      "baselineLines": 53,
+      "currentLines": 53,
+      "changed": true
+    },
+    {
+      "path": "server/tests/routes/config-side-effects.test.ts",
+      "action": "modify",
+      "baselineLines": 127,
+      "currentLines": 127,
+      "changed": true
+    },
+    {
+      "path": "server/tests/services/cloud-sync/CloudCreationRecovery.test.ts",
+      "action": "modify",
+      "baselineLines": 249,
+      "currentLines": 249,
+      "changed": true
+    },
+    {
+      "path": "server/tests/services/cloud-sync/TicketIdentityObservation.test.ts",
+      "action": "modify",
+      "baselineLines": 162,
+      "currentLines": 162,
+      "changed": true
+    },
+    {
+      "path": "server/tests/unit/Phase23.boundaries.test.ts",
+      "action": "modify",
+      "baselineLines": 258,
+      "currentLines": 256,
+      "changed": true
+    },
+    {
+      "path": "server/tests/unit/Phase23.compatibility.test.ts",
+      "action": "modify",
+      "baselineLines": 122,
+      "currentLines": 121,
+      "changed": true
+    },
+    {
+      "path": "server/tests/unit/Phase45.boundaries.test.ts",
+      "action": "modify",
+      "baselineLines": 167,
+      "currentLines": 176,
+      "changed": true
+    },
+    {
+      "path": "server/tests/unit/ProjectController.boundaries.test.ts",
+      "action": "modify",
+      "baselineLines": 75,
+      "currentLines": 75,
+      "changed": true
+    },
+    {
+      "path": "server/tests/unit/ProjectController.compatibility.test.ts",
+      "action": "modify",
+      "baselineLines": 32,
+      "currentLines": 32,
+      "changed": true
+    },
+    {
+      "path": "server/tests/unit/ProjectController.test.ts",
+      "action": "modify",
+      "baselineLines": 335,
+      "currentLines": 314,
+      "changed": true
+    },
+    {
+      "path": "server/tests/unit/TicketService.boundary-compatibility.test.ts",
+      "action": "modify",
+      "baselineLines": 201,
+      "currentLines": 200,
+      "changed": true
+    },
+    {
+      "path": "server/tests/unit/toml-standardization.test.ts",
+      "action": "modify",
+      "baselineLines": 80,
+      "currentLines": 80,
+      "changed": true
+    },
+    {
+      "path": "server/tests/utils/setupTests.ts",
+      "action": "modify",
+      "baselineLines": 126,
+      "currentLines": 123,
+      "changed": true
+    },
+    {
+      "path": "server/tsconfig.build.json",
+      "action": "modify",
+      "baselineLines": 31,
+      "currentLines": 29,
+      "changed": true
+    },
+    {
+      "path": "server/tsconfig.json",
+      "action": "modify",
+      "baselineLines": 62,
+      "currentLines": 60,
+      "changed": true
+    },
+    {
+      "path": "shared/services/search/SearchService.ts",
+      "action": "modify",
+      "baselineLines": 195,
+      "currentLines": 193,
+      "changed": true
+    }
+  ],
+  "parentChangedPaths": [
+    ".knip.json",
+    "bun.lock",
+    "cli/src/commands/cloud/__tests__/confirm.test.ts",
+    "cli/src/commands/cloud/__tests__/exit-codes.test.ts",
+    "cli/src/commands/cloud/__tests__/idempotency.test.ts",
+    "cli/src/commands/cloud/__tests__/options.test.ts",
+    "cli/src/commands/cloud/__tests__/render.test.ts",
+    "cli/src/commands/cloud/__tests__/secret-prompt.test.ts",
+    "docs/CRs/MDT-266-backend-module-boundaries.md",
+    "docs/CRs/MDT-266/execution/baseline.md",
+    "docs/CRs/MDT-266/execution/logs/final-browser-summary.json",
+    "docs/CRs/MDT-266/execution/logs/final-commands.json",
+    "docs/CRs/MDT-266/execution/result.md",
+    "docs/CRs/MDT-266/prep/architecture.md",
+    "docs/CRs/MDT-266/prep/refactoring-plan.md",
+    "frontend/src/__tests__/no-hardcoded-routes.test.ts",
+    "frontend/src/__tests__/routes.test.ts",
+    "frontend/src/components/QuickSearch/__tests__/QuickSearchResults.test.tsx",
+    "frontend/src/components/QuickSearch/__tests__/SearchScopeBar.test.tsx",
+    "frontend/src/hooks/__tests__/useProjectSearch.test.ts",
+    "frontend/src/hooks/__tests__/useSearchScope.test.ts",
+    "frontend/src/utils/__tests__/accentColors.test.ts",
+    "server/package.json",
+    "shared/services/externalReferences.ts",
+    "shared/services/project/__tests__/ProjectService.resolve.test.ts",
+    "shared/services/ticket/__tests__/DependencyGraph.test.ts",
+    "shared/services/ticket/__tests__/blocksWriteRejection.test.ts",
+    "shared/services/ticket/__tests__/proseScanner.test.ts",
+    "shared/services/ticket/content-inspection.ts",
+    "shared/services/ticket/staged-validation.ts",
+    "shared/templates/catalog.ts",
+    "shared/tools/__tests__/project-management/configuration-validation.test.ts",
+    "shared/tools/__tests__/project-management/helpers/test-utils.ts",
+    "shared/utils/__tests__/projectDetector.test.ts"
+  ],
+  "executionArtifacts": [
+    "docs/CRs/MDT-266/execution/round2/baseline.md",
+    "docs/CRs/MDT-266/execution/round2/compatibility-inventory.md",
+    "docs/CRs/MDT-266/execution/round2/logs/backend-lint.log",
+    "docs/CRs/MDT-266/execution/round2/logs/backend-tests.json",
+    "docs/CRs/MDT-266/execution/round2/logs/backend-tests.log",
+    "docs/CRs/MDT-266/execution/round2/logs/baseline-mcp.json",
+    "docs/CRs/MDT-266/execution/round2/logs/baseline-mcp.log",
+    "docs/CRs/MDT-266/execution/round2/logs/browser-summary.json",
+    "docs/CRs/MDT-266/execution/round2/logs/build-all.log",
+    "docs/CRs/MDT-266/execution/round2/logs/commands.json",
+    "docs/CRs/MDT-266/execution/round2/logs/decoder-delta.log",
+    "docs/CRs/MDT-266/execution/round2/logs/doc-links.json",
+    "docs/CRs/MDT-266/execution/round2/logs/doc-lint.log",
+    "docs/CRs/MDT-266/execution/round2/logs/knip.log",
+    "docs/CRs/MDT-266/execution/round2/logs/mcp-tests.json",
+    "docs/CRs/MDT-266/execution/round2/logs/mcp-tests.log",
+    "docs/CRs/MDT-266/execution/round2/logs/metrics.json",
+    "docs/CRs/MDT-266/execution/round2/logs/module-fixtures.log",
+    "docs/CRs/MDT-266/execution/round2/logs/module-scan.log",
+    "docs/CRs/MDT-266/execution/round2/logs/package-lints.json",
+    "docs/CRs/MDT-266/execution/round2/logs/review.md",
+    "docs/CRs/MDT-266/execution/round2/logs/runtime-resources.json",
+    "docs/CRs/MDT-266/execution/round2/logs/scope.json",
+    "docs/CRs/MDT-266/execution/round2/logs/shared-tests.log",
+    "docs/CRs/MDT-266/execution/round2/logs/types.log",
+    "docs/CRs/MDT-266/execution/round2/plan.md",
+    "docs/CRs/MDT-266/execution/round2/result.md"
+  ],
+  "unexpectedPaths": [],
+  "writerNote": "No teammate index mutation. Parent is staging/creating normal-hook source checkpoint; final result/log artifacts are reserved for parent amendment."
+}

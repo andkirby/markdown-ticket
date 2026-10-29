@@ -5,7 +5,7 @@ import * as path from 'node:path'
 import express from 'express'
 import request from 'supertest'
 import { buildRuntimeConfig } from '../../config/runtimeConfig'
-import { createConfigRouter } from '../../routes/config'
+import { createConfigRouter } from '../../modules/config/index.js'
 
 /**
  * Config API validation tests (MDT-168): field-level errors for disallowed and

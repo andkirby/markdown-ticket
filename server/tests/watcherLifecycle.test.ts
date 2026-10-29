@@ -42,6 +42,30 @@ describe('WatcherLifecycleManager (MDT-183)', () => {
     jest.useRealTimers()
   })
 
+  it('drains lazy provisioning and cannot restore a stopped client subscription', async () => {
+    let release!: () => void
+    const pending = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    mockPathWatcher.initWorktreeWatchers.mockImplementation(async () => {
+      await pending
+      return 0
+    })
+    manager.registerProject(projectA)
+    const provisioning = manager.ensureWatchers('client', ['project-a'])
+    let stopped = false
+    const stopping = manager.stop().then(() => {
+      stopped = true
+    })
+    await Promise.resolve()
+    await Promise.resolve()
+    const resolvedEarly = stopped
+    release()
+    await Promise.all([provisioning, stopping])
+    manager.releaseClient('client')
+    expect({ resolvedEarly, count: manager.refCount('project-a'), timers: jest.getTimerCount() }).toEqual({ resolvedEarly: false, count: 0, timers: 0 })
+  })
+
   // ── BR-1: Zero watchers at startup ──────────────────────────
 
   describe('BR-1: Server starts with zero chokidar watchers', () => {

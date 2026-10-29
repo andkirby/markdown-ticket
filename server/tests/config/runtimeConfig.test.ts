@@ -155,6 +155,7 @@ async function collectTypeScriptFiles(directory: string): Promise<string[]> {
 function isAllowedEnvBoundary(relativePath: string): boolean {
   return relativePath.startsWith('config/')
     || relativePath === 'server.ts'
+    || relativePath === 'app.ts'
 }
 
 function isLegacyConfigDirConsumer(relativePath: string): boolean {

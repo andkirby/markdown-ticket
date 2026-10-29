@@ -34,7 +34,8 @@ describe('assertNotDerivedField', () => {
     try {
       assertNotDerivedField('blocks', 'add')
       throw new Error('expected assertNotDerivedField to throw')
-    } catch (error) {
+    }
+    catch (error) {
       expect(error).toBeInstanceOf(ServiceError)
       const serviceError = error as ServiceError
       expect(serviceError.code).toBe('INVALID_OPERATION')
@@ -73,7 +74,8 @@ describe('assertNotDerivedField', () => {
       try {
         assertNotDerivedField('blocks', op)
         throw new Error('expected throw')
-      } catch (error) {
+      }
+      catch (error) {
         const serviceError = error as ServiceError
         expect(serviceError.details).toMatchObject({ field: 'blocks', op })
       }

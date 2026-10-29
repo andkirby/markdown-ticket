@@ -150,11 +150,12 @@ async function main(): Promise<void> {
   // Isolation contract: CONFIG_DIR is set (verified above) BEFORE the app
   // factory and its services are imported.
   const { createTestApp } = await import('../../server/tests/api/test-app-factory.js')
-  const { app, fileWatcher } = createTestApp({ preAuthRouter: adminRouter, watcherIntegration: true })
+  const { app, fileWatcher, runtime } = createTestApp({ preAuthRouter: adminRouter, watcherIntegration: true })
   deps.app = app
   deps.fileWatcher = fileWatcher
   deps.bootRuntimeConfig = app.locals.runtimeConfig
 
+  await runtime.start()
   const server: Server = createServer(app)
 
   // Track sockets so shutdown can destroy open SSE connections —
@@ -175,15 +176,14 @@ async function main(): Promise<void> {
       process.exit(0)
     }, 3000)
     forceExit.unref()
-    try {
-      fileWatcher.stop()
-    }
-    catch (error) {
-      console.error('[e2e-backend] fileWatcher.stop() failed:', error)
-    }
+    const stopped = runtime.stop().catch((error) => {
+      console.error('[e2e-backend] runtime.stop() failed:', error)
+    })
     server.close(() => {
-      clearTimeout(forceExit)
-      process.exit(0)
+      void stopped.then(() => {
+        clearTimeout(forceExit)
+        process.exit(0)
+      })
     })
     for (const socket of sockets)
       socket.destroy()

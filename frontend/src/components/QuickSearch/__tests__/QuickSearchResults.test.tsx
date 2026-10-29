@@ -5,10 +5,10 @@
  * Covering: BR-2.1, BR-2.2, BR-6.1, BR-6.3
  */
 
-import { afterEach, describe, expect, it, vi } from 'bun:test'
-import { render, screen, cleanup } from '@testing-library/react'
-import { QuickSearchResults } from '@/components/QuickSearch/QuickSearchResults'
 import type { ScoredProject } from '@/hooks/useProjectSearch'
+import { cleanup, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'bun:test'
+import { QuickSearchResults } from '@/components/QuickSearch/QuickSearchResults'
 
 const mockOnSelect = vi.fn()
 const mockOnRetry = vi.fn()

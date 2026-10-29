@@ -7,8 +7,30 @@
 
 import type { SuperAgentTest } from 'supertest'
 import { afterAll, beforeAll, describe, expect, it } from '@jest/globals'
+import { SearchService } from '@mdt/shared/services/search/SearchService.js'
+import express from 'express'
+import request from 'supertest'
+import { SearchController } from '../../modules/search/index.js'
 import { API_TEST_ADMIN_TOKEN, withAuth } from './setup'
 import { createTestApp } from './test-app-factory'
+
+describe('direct shared search operations', () => {
+  it('keeps both project and ticket hits through the capability controller', async () => {
+    const listCRs = jest.fn().mockResolvedValue([{ code: 'ALP-001', title: 'Alpha ticket', status: 'Proposed' }])
+    const search = new SearchService({ getAllProjects: async () => [{ id: 'alpha', project: { code: 'ALP', name: 'Alpha' } }] as never }, { listCRs })
+    const controller = new SearchController(search)
+    const app = express()
+    app.use(express.json())
+    app.post('/search', (req, res) => controller.search(req, res))
+    const result = await request(app).post('/search').send({ query: 'Alpha' })
+    expect(result.status).toBe(200)
+    expect(result.body.results).toEqual(expect.arrayContaining([
+      { type: 'project', code: 'ALP', name: 'Alpha' },
+      expect.objectContaining({ type: 'ticket', ticketKey: 'ALP-001', title: 'Alpha ticket' }),
+    ]))
+    expect(listCRs).toHaveBeenCalledTimes(1)
+  })
+})
 
 describe('POST /api/search — unified search (MDT-179)', () => {
   // Credentialed agent — auth (MDT-157) is ON for this suite, with the admin

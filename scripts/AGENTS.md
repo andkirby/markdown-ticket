@@ -22,6 +22,7 @@ Guidance for agents working in this directory.
 | `parse-css.mjs`, `setup-css-gate.sh` | CSS syntax pre-commit gate | lefthook |
 | `install-git-hooks.sh`, `githooks/` | Hook installation | `hooks:install` |
 | `validate-mermaid-md` | Mermaid block linting | lefthook |
+| `check-module-boundaries.ts`, `check-module-boundaries.test.ts`, `module-boundary-exceptions.json` | Resolved import/ownership and runtime-cycle gate, rejecting fixtures and exact compatibility exceptions; separate from the request/decoder gate | `check:modules`, `test:modules`, CI |
 | `check-shared-usage.sh` | Dead-code check in shared/ via `scip-finder` | — |
 | `sync-dates.ts` | Frontmatter dates ← git history | `docs/review-dates-*.md` |
 | `build-trace-store.ts`, `render-traceability-view.ts`, `render-verification-report.ts` | Spec-trace store + report renderers | spec-trace workflow |

@@ -1,0 +1,25 @@
+{
+  "success": false,
+  "numFailedTestSuites": 1,
+  "numPassedTestSuites": 1,
+  "numFailedTests": 0,
+  "numPassedTests": 11,
+  "numPendingTests": 0,
+  "numTotalTests": 11,
+  "command": "bun run --cwd mcp-server jest --runInBand --runTestsByPath tests/integration/mcp-backend-consistency.test.ts tests/integration/mcp-backend-consistency-simple.test.ts --testPathIgnorePatterns='^$' --json --outputFile=../docs/CRs/MDT-266/execution/round2/logs/baseline-mcp.json",
+  "cwd": ".",
+  "exitCode": 1,
+  "qualification": "Full fixture failed before cases because shared/dist/models/Project.js is ESM; simple fixture11passed. Raw output retained in ignored baseline-mcp.log. Paths normalized to repository-relative summary; outcomes unchanged.",
+  "suites": [
+    {
+      "file": "mcp-server/tests/integration/mcp-backend-consistency.test.ts",
+      "status": "failed",
+      "cases": 0
+    },
+    {
+      "file": "mcp-server/tests/integration/mcp-backend-consistency-simple.test.ts",
+      "status": "passed",
+      "cases": 11
+    }
+  ]
+}

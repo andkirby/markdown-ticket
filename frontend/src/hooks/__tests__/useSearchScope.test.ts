@@ -5,8 +5,8 @@
  * Covering: BR-1.1, BR-1.2, BR-1.3, BR-1.4, BR-4.4
  */
 
-import { describe, expect, it } from 'bun:test'
 import { SearchScope, SearchScopes } from '@mdt/domain-contracts'
+import { describe, expect, it } from 'bun:test'
 import { getNextScope } from '@/hooks/useSearchScope'
 
 // ---------------------------------------------------------------------------

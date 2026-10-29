@@ -8,7 +8,9 @@ export default {
     '**/tests/**/*.spec.ts',
   ],
   collectCoverageFrom: [
-    '**/controllers/**/*.ts',
+    'app.ts',
+    'bootstrap/**/*.ts',
+    'modules/**/*.ts',
     '**/services/**/*.ts',
     '!**/node_modules/**',
     '!**/dist/**',
@@ -21,6 +23,10 @@ export default {
     '<rootDir>/tests/utils/setupTests.ts',
   ],
   moduleNameMapper: {
+    '^@mdt/shared/services/TicketService\\.js$': '<rootDir>/../shared/services/TicketService.ts',
+    '^@mdt/shared/services/project/ProjectConfigService\\.js$': '<rootDir>/../shared/services/project/ProjectConfigService.ts',
+    '^@mdt/shared/services/search/(.*)\\.js$': '<rootDir>/../shared/services/search/$1',
+    '^@mdt/shared/services/cloud-sync/(.*)\\.js$': '<rootDir>/../shared/services/cloud-sync/$1',
     '^@/(.*)$': '<rootDir>/$1',
     // Add domain-contracts mapping
     '^@mdt/domain-contracts$': '<rootDir>/../domain-contracts/src/index.ts',

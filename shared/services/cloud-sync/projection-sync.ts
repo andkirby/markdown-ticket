@@ -67,6 +67,7 @@ export class CloudProjectionSync {
   private readonly dir: string
   private readonly client: ProjectionClientPort
   /** Bounded retry runner timer (one per project). */
+  private readonly retryWork = new Set<Promise<unknown>>()
   private retryTimer: ReturnType<typeof setInterval> | undefined
 
   constructor(private readonly options: ProjectionSyncOptions) {
@@ -319,18 +320,21 @@ export class CloudProjectionSync {
     if (this.retryTimer)
       return
     this.retryTimer = setInterval(() => {
-      void this.flush().catch(() => {
+      const work = this.flush().catch(() => {
         // Swallow — the runner must never crash the process.
       })
+      this.retryWork.add(work)
+      void work.finally(() => this.retryWork.delete(work))
     }, intervalMs)
   }
 
   /** Stop the bounded retry runner (graceful shutdown). */
-  stopRetryRunner(): void {
+  async stopRetryRunner(): Promise<void> {
     if (this.retryTimer) {
       clearInterval(this.retryTimer)
       this.retryTimer = undefined
     }
+    await Promise.all(this.retryWork)
   }
 
   private file(ticketNumber: number): string {

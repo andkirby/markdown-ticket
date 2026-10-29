@@ -12,13 +12,15 @@
  */
 
 import { describe, expect, it } from 'bun:test'
-import { CloudExitCode } from '../exit-codes'
 import { confirmDestructive } from '../confirm'
+import { CloudExitCode } from '../exit-codes'
 
 describe('cloud confirm gate (TEST-confirm-gate)', () => {
   it('--yes skips the prompt entirely', async () => {
     let prompted = false
-    await confirmDestructive('destroy?', { yes: true, writePrompt: () => { prompted = true } })
+    await confirmDestructive('destroy?', { yes: true, writePrompt: () => {
+      prompted = true
+    } })
     expect(prompted).toBe(false)
   })
 

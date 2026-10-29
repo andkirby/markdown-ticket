@@ -1,14 +1,14 @@
 /// <reference types="jest" />
 
 import type { Response } from 'express'
-import type { AuthenticatedRequest, ProjectServiceExtension, TreeServiceInterface } from '../../controllers/ProjectController.js'
+import type { AuthenticatedRequest, ProjectServiceExtension } from '../../modules/projects/index.js'
 import type { CreateCRResult, DeleteResult, TicketService, UpdateCRResult } from '../../services/TicketService.js'
-import { ProjectController } from '../../controllers/ProjectController.js'
+import { DocumentConfigurationController } from '../../modules/documents/index.js'
+import { TicketController } from '../../modules/tickets/index.js'
 import {
   createMockProjectService,
   createMockReqRes,
   createMockTicketService,
-  createMockTreeService,
   mockCR,
   mockProject,
 } from '../utils/setupTests.js'
@@ -25,24 +25,16 @@ interface MockTicketService {
   getCloudProjections: jest.MockedFunction<(projectId: string, after?: number, limit?: number) => Promise<unknown>>
 }
 
-describe('projectController - CRUD Operations', () => {
-  let projectController: ProjectController
+describe('TicketController - CRUD Operations', () => {
+  let projectController: TicketController
   let mockProjectService: ProjectServiceExtension
   let mockTicketService: MockTicketService
-  let mockTreeService: TreeServiceInterface
 
   beforeEach(() => {
     mockProjectService = createMockProjectService() as unknown as ProjectServiceExtension
     mockTicketService = createMockTicketService() as MockTicketService
-    mockTreeService = createMockTreeService() as unknown as TreeServiceInterface
 
-    projectController = new ProjectController(
-      mockProjectService,
-      mockTreeService,
-      {}, // fileWatcher - empty object for tests
-      undefined, // ticketController
-      mockTicketService as unknown as TicketService,
-    )
+    projectController = new TicketController(mockProjectService, mockTicketService as unknown as TicketService)
 
     // Mock successful project lookup
     void (mockProjectService.getAllProjects as jest.MockedFunction<typeof mockProjectService.getAllProjects>).mockResolvedValue([mockProject] as never)
@@ -106,14 +98,7 @@ describe('projectController - CRUD Operations', () => {
 
       req.params = { projectId: 'test-project', crId: 'TEST-001' }
 
-      // FileWatcher interface from ProjectController - empty object is sufficient for test
-      const mockFileWatcher = {}
-
-      const controllerWithoutService = new ProjectController(
-        mockProjectService,
-        mockTreeService,
-        mockFileWatcher,
-      )
+      const controllerWithoutService = new TicketController(mockProjectService)
 
       await controllerWithoutService.getCR(req as AuthenticatedRequest, res as Response)
 
@@ -176,13 +161,7 @@ describe('projectController - CRUD Operations', () => {
       const { req, res } = createMockReqRes()
       const reconfigureDocumentWatchers = jest.fn().mockResolvedValue(2)
 
-      const controller = new ProjectController(
-        mockProjectService,
-        mockTreeService,
-        { reconfigureDocumentWatchers },
-        undefined,
-        mockTicketService as unknown as TicketService,
-      )
+      const controller = new DocumentConfigurationController(mockProjectService, { reconfigureDocumentWatchers })
 
       req.body = {
         projectId: 'test-project',

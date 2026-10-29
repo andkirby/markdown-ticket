@@ -7,8 +7,8 @@ import { exec } from 'node:child_process'
 import { existsSync, readFileSync, rmSync, statSync, unlinkSync } from 'node:fs'
 import { join } from 'node:path'
 import { promisify } from 'node:util'
-import { parseToml } from '../../../../utils/toml.js'
 import { PROJECT_CODE_PATTERN } from '@mdt/domain-contracts'
+import { parseToml } from '../../../../utils/toml.js'
 
 const execAsync = promisify(exec)
 

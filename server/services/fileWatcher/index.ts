@@ -27,7 +27,7 @@ interface DocumentChangeEvent {
 
 /**
  * FileWatcherService facade that composes PathWatcherService and SSEBroadcaster.
- * Maintains backward compatibility with the existing monolithic fileWatcherService.ts API.
+ * Coordinates path watching, subscriptions and SSE broadcasting for the local runtime.
  *
  * Architecture:
  * - PathWatcherService: Handles file system watching and raw event emission
@@ -42,44 +42,27 @@ interface DocumentChangeEvent {
  * - 'broadcast' (when an event is sent to clients)
  */
 class FileWatcherService extends EventEmitter {
+  private stopped = false
+  private readonly pendingWork = new Set<Promise<unknown>>()
+  private stopping?: Promise<void>
   private pathWatcher: PathWatcherService
   private sseBroadcaster: SSEBroadcaster
   private lifecycleManager: WatcherLifecycleManager
   private fileInvoker: FileInvoker | null = null
 
-  /** Backward compatibility: expose watchers map for tests */
+  /** Watcher inspection for runtime tests */
   get watchers(): Map<string, import('chokidar').FSWatcher> {
     return (this.pathWatcher as any).watchers
   }
 
-  /** Backward compatibility: expose worktreeWatchers map for tests */
+  /** Worktree watcher inspection for tests */
   get worktreeWatchers(): Map<string, WorktreeWatcherEntry> {
     return (this.pathWatcher as any).worktreeWatchers
   }
 
-  /** Backward compatibility: expose eventQueue for tests */
-  get eventQueue(): SSEEvent[] {
-    return (this.sseBroadcaster as any).eventQueue
-  }
-
-  /** Backward compatibility: expose watchPaths for tests */
+  /** Path fixture seam for watcher integration tests */
   get watchPaths(): Map<string, string> {
     return (this.pathWatcher as any).watchPaths
-  }
-
-  /** Backward compatibility: expose worktreeService for tests */
-  get worktreeService(): any {
-    return (this.pathWatcher as any).worktreeService
-  }
-
-  /** Backward compatibility: expose clients for tests */
-  get clients(): Set<ResponseLike> {
-    return (this.sseBroadcaster as any).clients
-  }
-
-  /** Backward compatibility: expose debounceTimers for tests */
-  get debounceTimers(): Map<string, NodeJS.Timeout> {
-    return (this.sseBroadcaster as any).debounceTimers
   }
 
   constructor() {
@@ -295,32 +278,33 @@ class FileWatcherService extends EventEmitter {
   }
 
   /**
-   * Initialize file watcher for a single path (backward compatibility).
-   */
-  initFileWatcher(watchPath = './sample-tasks/*.md'): this {
-    return this.initMultiProjectWatcher([{ id: 'default', path: watchPath }])
-  }
-
-  /**
    * Initialize file watchers for multiple projects.
    */
   initMultiProjectWatcher(projectPaths: ProjectPath[]): this {
+    if (this.stopped)
+      return this
     this.pathWatcher.initMultiProjectWatcher(projectPaths)
     return this
   }
 
   initDocumentWatchers(projectId: string, projectRoot: string, documentPaths: string[], ticketsPath?: string): number {
+    if (this.stopped)
+      return 0
     return this.pathWatcher.initDocumentWatchers(projectId, projectRoot, documentPaths, ticketsPath)
   }
 
   async reconfigureDocumentWatchers(projectId: string, projectRoot: string, documentPaths: string[], ticketsPath?: string): Promise<number> {
-    return this.pathWatcher.reconfigureDocumentWatchers(projectId, projectRoot, documentPaths, ticketsPath)
+    if (this.stopped)
+      return 0
+    return this.trackWork(this.pathWatcher.reconfigureDocumentWatchers(projectId, projectRoot, documentPaths, ticketsPath))
   }
 
   /**
    * Initialize file watcher for global project registry.
    */
   initGlobalRegistryWatcher(): void {
+    if (this.stopped)
+      return
     this.pathWatcher.initGlobalRegistryWatcher()
   }
 
@@ -328,7 +312,9 @@ class FileWatcherService extends EventEmitter {
    * MDT-142: Auto-discover and create worktree watchers for a project.
    */
   async initWorktreeWatchers(projectId: string, projectPath: string, projectCode?: string): Promise<number> {
-    return this.pathWatcher.initWorktreeWatchers(projectId, projectPath, projectCode)
+    if (this.stopped)
+      return 0
+    return this.trackWork(this.pathWatcher.initWorktreeWatchers(projectId, projectPath, projectCode))
   }
 
   /**
@@ -360,6 +346,10 @@ class FileWatcherService extends EventEmitter {
    * and delegates removal to the lifecycle manager + broadcaster.
    */
   async addClient(response: ResponseLike, scope?: ResponseLike['mdtSseScope']): Promise<void> {
+    if (this.stopped) {
+      response.end?.()
+      return
+    }
     if (scope) {
       response.mdtSseScope = scope
     }
@@ -389,7 +379,7 @@ class FileWatcherService extends EventEmitter {
     // The lifecycle manager owns the authoritative subscription set —
     // connect-time projectRefs miss projects added via D5 resubscribe.
     const clientId = (response as any).__lifecycleClientId as string | undefined
-    if (clientId) {
+    if (clientId && !this.stopped) {
       this.lifecycleManager.releaseClient(clientId)
     }
     this.sseBroadcaster.removeClient(response)
@@ -403,6 +393,8 @@ class FileWatcherService extends EventEmitter {
    * Call after registerProject() so ensureWatchers finds the metadata.
    */
   resubscribeWriteClientsToProject(projectId: string): void {
+    if (this.stopped)
+      return
     for (const client of this.sseBroadcaster.getClients()) {
       // Skip clients already gone — subscribing a dead response would leak a
       // refcount nobody ever releases (breaks the zero-idle-watchers invariant)
@@ -456,56 +448,27 @@ class FileWatcherService extends EventEmitter {
     return this.pathWatcher.getWorktreeWatcherCount()
   }
 
-  /** Backward compatibility: get worktree watcher ID */
-  getWorktreeWatcherId(projectId: string, ticketCode: string): string | null {
-    return (this.pathWatcher as any).getWorktreeWatcherId?.(projectId, ticketCode) ?? null
-  }
-
-  /** Backward compatibility: handle registry event */
-  handleRegistryEvent(eventType: string, filePath: string): void {
-    (this.pathWatcher as any).handleRegistryEvent?.(eventType, filePath)
-  }
-
-  /** Backward compatibility: handle file event */
+  /** Event fixture seam for watcher integration tests */
   handleFileEvent(eventType: string, filePath: string, projectId: string): void {
     (this.pathWatcher as any).handleFileEvent?.(eventType, filePath, projectId)
-  }
-
-  /** Backward compatibility: get project path */
-  getProjectPath(projectId: string): string {
-    return this.pathWatcher.getProjectPath(projectId)
   }
 
   getProjectRoot(projectId: string): string | null {
     return this.pathWatcher.getProjectRoot(projectId)
   }
 
-  /** Backward compatibility: broadcast file change */
-  async broadcastFileChange(eventType: 'add' | 'change' | 'unlink', filename: string, projectId: string): Promise<void> {
-    // Trigger the internal file change handler
-    this.handleFileChangeForSSE({
-      eventType,
-      filename,
-      physicalFilePath: path.resolve(this.pathWatcher.getProjectPath(projectId), filename),
-      projectId,
-      timestamp: Date.now(),
-      subdocument: null,
-      source: 'main',
-    })
-  }
-
-  /** Backward compatibility: send SSE event */
-  sendSSEEvent(response: ResponseLike, event: SSEEvent): void {
-    this.sseBroadcaster.sendSSEEvent(response, event)
-  }
-
   /**
    * Stop all watchers and clean up resources.
    */
-  stop(): void {
-    this.lifecycleManager.stop()
-    this.pathWatcher.stop()
+  stop(): Promise<void> {
+    if (this.stopping)
+      return this.stopping
+    this.stopped = true
+    const subscriptions = this.lifecycleManager.stop()
     this.sseBroadcaster.stop()
+    const watchers = this.pathWatcher.stop()
+    this.stopping = Promise.all([subscriptions, watchers, ...this.pendingWork]).then(() => {})
+    return this.stopping
   }
 
   /**
@@ -516,7 +479,13 @@ class FileWatcherService extends EventEmitter {
   }
 
   emit(event: string, ...args: any[]): boolean {
-    return super.emit(event, ...args)
+    return this.stopped ? false : super.emit(event, ...args)
+  }
+
+  private trackWork<T>(work: Promise<T>): Promise<T> {
+    this.pendingWork.add(work)
+    void work.finally(() => this.pendingWork.delete(work)).catch(() => {})
+    return work
   }
 }
 

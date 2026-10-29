@@ -28,7 +28,10 @@ describe('cloud secret prompt (TEST-secret-stdin)', () => {
     let prompted = ''
     const secret = await readClientSecret({
       isInteractive: true,
-      readHidden: async (p) => { prompted = p; return 'super-secret-value' },
+      readHidden: async (p) => {
+        prompted = p
+        return 'super-secret-value'
+      },
     })
     expect(secret).toBe('super-secret-value')
     expect(prompted).toContain('Client secret')
