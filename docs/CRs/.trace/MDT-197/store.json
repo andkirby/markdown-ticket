@@ -26,20 +26,6 @@
       "routePolicy": "bdd"
     },
     {
-      "id": "BR-4",
-      "kind": "behavior",
-      "text": "Pinned items persist across page reloads via the server endpoint (not browser-local only).",
-      "sourceRef": "docs/CRs/MDT-197-pin-rail.md#L118",
-      "routePolicy": "bdd"
-    },
-    {
-      "id": "BR-5",
-      "kind": "behavior",
-      "text": "Pins from different projects render side by side in the same rail.",
-      "sourceRef": "docs/CRs/MDT-197-pin-rail.md#L119",
-      "routePolicy": "bdd"
-    },
-    {
       "id": "BR-6",
       "kind": "behavior",
       "text": "Hovering a pinned item shows a tooltip with project code, ticket code, title, and status.",
@@ -124,20 +110,6 @@
       "routePolicy": "tests"
     },
     {
-      "id": "Edge-4",
-      "kind": "edge_case",
-      "text": "Pin set in server is from an older schema: migrated or reset; never throws.",
-      "sourceRef": "docs/CRs/MDT-197-pin-rail.md#L138",
-      "routePolicy": "tests"
-    },
-    {
-      "id": "Edge-5",
-      "kind": "edge_case",
-      "text": "Two tickets from different projects have the same numeric code (e.g. MDT-042 and OTHER-042): both render correctly; project code disambiguates.",
-      "sourceRef": "docs/CRs/MDT-197-pin-rail.md#L139",
-      "routePolicy": "tests"
-    },
-    {
       "id": "BR-11",
       "kind": "behavior",
       "text": "User can enable/disable the pin rail in Settings; when disabled, neither the rail nor the collapsed strip occupies any space.",
@@ -171,6 +143,27 @@
       "text": "The pin tooltip renders the ticket key via the canonical <TicketCode> component (src/components/TicketCode.tsx) — the single source of the 'priority glyph before key' invariant shared with the board card, list row, viewer, and QuickSearch. The tooltip must NEVER hand-compose <PriorityIcon> + code. Passing metadata.priority drives the colored priority glyph (lucide icon + data-priority color token); an undefined priority renders no glyph (graceful degradation).",
       "sourceRef": "CR:MDT-197",
       "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-4",
+      "kind": "edge_case",
+      "text": "Pin state from an older schema or the legacy user-global pins.json: migrated (absorbed into the matching project's pin set on first read) or reset; never throws.",
+      "sourceRef": "CR:MDT-197",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-13",
+      "kind": "behavior",
+      "text": "Pin board is project-scoped, never global: the rail shows only the current project's pins and switching projects swaps the pin set. A pin set never spans projects. (UAT 2026-10-30: replaces BR-5.)",
+      "sourceRef": "uat-2026-10-30",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4",
+      "kind": "behavior",
+      "text": "Pinned items persist per-project across page reloads via the server endpoint (not browser-local only).",
+      "sourceRef": "docs/CRs/MDT-197-pin-rail.md#L118",
+      "routePolicy": "bdd"
     }
   ],
   "scenarios": [
@@ -216,17 +209,6 @@
       "given": "the user has pinned at least one ticket and the server PUT /api/pins succeeded",
       "when": "the user reloads the page",
       "then": "the same pin set is restored from the server endpoint, not browser-local storage",
-      "sourceRef": "CR:MDT-197"
-    },
-    {
-      "id": "cross_project_pins_render_side_by_side",
-      "title": "Pins from different projects render side by side",
-      "covers": [
-        "BR-5"
-      ],
-      "given": "the pin set contains tickets from two different project codes",
-      "when": "the rail renders",
-      "then": "both pins appear in the same rail in recency order, each disambiguated by project code in its tooltip",
       "sourceRef": "CR:MDT-197"
     },
     {
@@ -305,89 +287,31 @@
       "when": "the user clicks the pin icon",
       "then": "the rail collapses to a floating button taking no layout space; board columns move left to full width. Clicking the floating button pins it again (docked, takes space). An unpinned rail still reveals as a transient overlay on drag-to-pin.",
       "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "project_scoped_pin_set",
+      "title": "Rail shows only the current project's pins",
+      "covers": [
+        "BR-13"
+      ],
+      "given": "Pins exist in project A and the user pins a ticket in project B",
+      "when": "Viewing project B's rail",
+      "then": "Only B's pins render in B's rail; switching to A shows only A's pins. Pin sets are disjoint.",
+      "sourceRef": "uat-2026-10-30"
+    },
+    {
+      "id": "legacy_global_pins_migrate_per_project",
+      "title": "Legacy global pins migrate per project on first read",
+      "covers": [
+        "BR-13"
+      ],
+      "given": "A legacy user-global pins.json predating project scoping (pins from multiple projects)",
+      "when": "A project's pin state is first read after the upgrade",
+      "then": "Matching pins are absorbed into that project's pin set and render in the rail; bad-schema files reset to empty, never throw.",
+      "sourceRef": "uat-2026-10-30"
     }
   ],
   "obligations": [
-    {
-      "id": "OBL-1",
-      "title": "Pin data model in domain-contracts (PinItem/PinState schemas, validation, types)",
-      "derivedFrom": [
-        "BR-4",
-        "BR-5",
-        "Edge-4",
-        "Edge-5"
-      ],
-      "artifactIds": [
-        "ART-1",
-        "ART-2"
-      ],
-      "sourceRef": "CR:MDT-197"
-    },
-    {
-      "id": "OBL-2",
-      "title": "Server persistence: PUT /api/pins whole-list replace, user-global pins.json, validate project codes",
-      "derivedFrom": [
-        "BR-4",
-        "C-3",
-        "Edge-1",
-        "Edge-4"
-      ],
-      "artifactIds": [
-        "ART-3",
-        "ART-4",
-        "ART-5",
-        "ART-6"
-      ],
-      "sourceRef": "CR:MDT-197"
-    },
-    {
-      "id": "OBL-3",
-      "title": "Frontend pin client + usePins hook (load, add, remove, persist via authFetch)",
-      "derivedFrom": [
-        "BR-1",
-        "BR-3",
-        "BR-4",
-        "Edge-3"
-      ],
-      "artifactIds": [
-        "ART-7",
-        "ART-8"
-      ],
-      "sourceRef": "CR:MDT-197"
-    },
-    {
-      "id": "OBL-4",
-      "title": "PinRail component: 48px left rail, icon-only items, recency order, drop target, empty-collapse, overflow scroll",
-      "derivedFrom": [
-        "BR-1",
-        "BR-5",
-        "BR-7",
-        "BR-8",
-        "BR-9",
-        "C-1"
-      ],
-      "artifactIds": [
-        "ART-9",
-        "ART-10",
-        "ART-11"
-      ],
-      "sourceRef": "CR:MDT-197"
-    },
-    {
-      "id": "OBL-5",
-      "title": "PinItem tooltip with project code + ticket code + title + status badge; hover-x unpin",
-      "derivedFrom": [
-        "BR-3",
-        "BR-6",
-        "Edge-2",
-        "Edge-5"
-      ],
-      "artifactIds": [
-        "ART-10",
-        "ART-11"
-      ],
-      "sourceRef": "CR:MDT-197"
-    },
     {
       "id": "OBL-6",
       "title": "Lift DndProvider from Board.tsx to App.tsx so board drag source and rail drop target share one DnD context",
@@ -425,27 +349,6 @@
       "sourceRef": "CR:MDT-197"
     },
     {
-      "id": "OBL-0",
-      "title": "Design source of truth: pin-rail surface spec + mockups define the UX contract all behavior derives from",
-      "derivedFrom": [
-        "BR-1",
-        "BR-2",
-        "BR-3",
-        "BR-4",
-        "BR-5",
-        "BR-6",
-        "BR-7",
-        "BR-8",
-        "BR-9",
-        "BR-10"
-      ],
-      "artifactIds": [
-        "ART-13",
-        "ART-14"
-      ],
-      "sourceRef": "CR:MDT-197"
-    },
-    {
       "id": "OBL-9",
       "title": "Browser-only pin-rail preferences (enabled + pinned) with localStorage + event broadcast",
       "derivedFrom": [
@@ -473,6 +376,107 @@
         "ART-17"
       ],
       "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "OBL-0",
+      "title": "Design source of truth: pin-rail surface spec + mockups define the UX contract all behavior derives from (project-scoped pin board per UAT 2026-10-30)",
+      "derivedFrom": [
+        "BR-1",
+        "BR-2",
+        "BR-3",
+        "BR-4",
+        "BR-6",
+        "BR-7",
+        "BR-8",
+        "BR-9",
+        "BR-10",
+        "BR-13"
+      ],
+      "artifactIds": [
+        "ART-13",
+        "ART-14"
+      ],
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "OBL-1",
+      "title": "Pin data model in domain-contracts (PinItem/PinState schemas, validation, types; projectCode retained as owning-project identity)",
+      "derivedFrom": [
+        "BR-4",
+        "BR-13",
+        "Edge-4"
+      ],
+      "artifactIds": [
+        "ART-1",
+        "ART-2"
+      ],
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "OBL-2",
+      "title": "Server persistence: GET/PUT /api/pins scoped by projectId, per-project projects/{projectId}/pins.json, pin projectCode must match owning project, legacy user-global pins.json absorbed on first read (never deleted)",
+      "derivedFrom": [
+        "BR-4",
+        "BR-13",
+        "C-3",
+        "Edge-1",
+        "Edge-4"
+      ],
+      "artifactIds": [
+        "ART-3",
+        "ART-4",
+        "ART-5",
+        "ART-6"
+      ],
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "OBL-3",
+      "title": "Frontend pin client + usePins(projectId) hook (load, add, remove, persist via authFetch, keyed by current project)",
+      "derivedFrom": [
+        "BR-1",
+        "BR-3",
+        "BR-4",
+        "BR-13",
+        "Edge-3"
+      ],
+      "artifactIds": [
+        "ART-7",
+        "ART-8"
+      ],
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "OBL-4",
+      "title": "PinRail component: 48px left rail, icon-only items, recency order, drop target, empty-collapse, overflow scroll — renders only the current project's pin set",
+      "derivedFrom": [
+        "BR-1",
+        "BR-13",
+        "BR-7",
+        "BR-8",
+        "BR-9",
+        "C-1"
+      ],
+      "artifactIds": [
+        "ART-9",
+        "ART-10",
+        "ART-11"
+      ],
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "OBL-5",
+      "title": "PinItem tooltip with project code + ticket code + title + status badge; hover-x unpin",
+      "derivedFrom": [
+        "BR-3",
+        "BR-6",
+        "Edge-2"
+      ],
+      "artifactIds": [
+        "ART-10",
+        "ART-11"
+      ],
+      "sourceRef": "CR:MDT-197"
     }
   ],
   "artifacts": [
@@ -495,60 +499,6 @@
       "sourceRef": "CR:MDT-197"
     },
     {
-      "id": "ART-4",
-      "path": "server/controllers/PinController.ts",
-      "kind": "runtime",
-      "sourceRef": "CR:MDT-197"
-    },
-    {
-      "id": "ART-5",
-      "path": "server/routes/pins.ts",
-      "kind": "runtime",
-      "sourceRef": "CR:MDT-197"
-    },
-    {
-      "id": "ART-6",
-      "path": "server/server.ts",
-      "kind": "runtime",
-      "sourceRef": "CR:MDT-197"
-    },
-    {
-      "id": "ART-7",
-      "path": "src/config/pins.ts",
-      "kind": "runtime",
-      "sourceRef": "CR:MDT-197"
-    },
-    {
-      "id": "ART-8",
-      "path": "src/hooks/usePins.ts",
-      "kind": "runtime",
-      "sourceRef": "CR:MDT-197"
-    },
-    {
-      "id": "ART-9",
-      "path": "src/components/PinRail/index.tsx",
-      "kind": "runtime",
-      "sourceRef": "CR:MDT-197"
-    },
-    {
-      "id": "ART-10",
-      "path": "src/components/PinRail/PinItem.tsx",
-      "kind": "runtime",
-      "sourceRef": "CR:MDT-197"
-    },
-    {
-      "id": "ART-11",
-      "path": "src/components/PinRail/pin-rail.css",
-      "kind": "runtime",
-      "sourceRef": "CR:MDT-197"
-    },
-    {
-      "id": "ART-12",
-      "path": "src/App.tsx",
-      "kind": "runtime",
-      "sourceRef": "CR:MDT-197"
-    },
-    {
       "id": "ART-13",
       "path": "docs/design/surfaces/pin-rail.spec.md",
       "kind": "doc",
@@ -561,20 +511,74 @@
       "sourceRef": "CR:MDT-197"
     },
     {
+      "id": "ART-17",
+      "path": "src/styles/animations.css",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "ART-4",
+      "path": "server/modules/tickets/PinController.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "ART-5",
+      "path": "server/modules/tickets/pins.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "ART-6",
+      "path": "server/app.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "ART-7",
+      "path": "frontend/src/config/pins.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "ART-8",
+      "path": "frontend/src/hooks/usePins.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "ART-9",
+      "path": "frontend/src/components/PinRail/index.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "ART-10",
+      "path": "frontend/src/components/PinRail/PinItem.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "ART-11",
+      "path": "frontend/src/components/PinRail/pin-rail.css",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "ART-12",
+      "path": "frontend/src/components/routes/ProjectRouteHandler.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-197"
+    },
+    {
       "id": "ART-15",
-      "path": "src/config/settingsPreferences.ts",
+      "path": "frontend/src/config/settingsPreferences.ts",
       "kind": "runtime",
       "sourceRef": "CR:MDT-197"
     },
     {
       "id": "ART-16",
-      "path": "src/hooks/usePinRailPref.ts",
-      "kind": "runtime",
-      "sourceRef": "CR:MDT-197"
-    },
-    {
-      "id": "ART-17",
-      "path": "src/styles/animations.css",
+      "path": "frontend/src/hooks/usePinRailPref.ts",
       "kind": "runtime",
       "sourceRef": "CR:MDT-197"
     }
@@ -608,28 +612,6 @@
       "title": "PUT /api/pins rejects pins referencing an unregistered project code",
       "covers": [
         "Edge-1"
-      ],
-      "file": "server/tests/api/pins.test.ts",
-      "sourceRef": "CR:MDT-197"
-    },
-    {
-      "id": "TEST-api-reconcile-on-read",
-      "kind": "unit",
-      "title": "GET /api/pins reconciles: drops pins whose project is no longer registered",
-      "covers": [
-        "Edge-1",
-        "Edge-4"
-      ],
-      "file": "server/tests/api/pins.test.ts",
-      "sourceRef": "CR:MDT-197"
-    },
-    {
-      "id": "TEST-api-cross-project",
-      "kind": "unit",
-      "title": "PUT /api/pins accepts pins from multiple project codes in one set",
-      "covers": [
-        "BR-5",
-        "Edge-5"
       ],
       "file": "server/tests/api/pins.test.ts",
       "sourceRef": "CR:MDT-197"
@@ -815,6 +797,37 @@
         "C-7"
       ],
       "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "TEST-api-legacy-migration",
+      "kind": "unit",
+      "title": "GET /api/pins?projectId=X absorbs matching pins from legacy user-global pins.json into the project set on first read; malformed files reset to empty",
+      "covers": [
+        "Edge-4"
+      ],
+      "file": "server/tests/api/pins.test.ts",
+      "sourceRef": "uat-2026-10-30"
+    },
+    {
+      "id": "TEST-api-reconcile-on-read",
+      "kind": "unit",
+      "title": "GET reconciles: drops pins whose projectCode mismatches the owning project (e.g. code renamed after migration)",
+      "covers": [
+        "Edge-1",
+        "Edge-4"
+      ],
+      "file": "server/tests/api/pins.test.ts",
+      "sourceRef": "uat-2026-10-30"
+    },
+    {
+      "id": "TEST-api-project-isolation",
+      "kind": "unit",
+      "title": "Pin sets are isolated per project: PUT to project A leaves B untouched; GET A returns only A's pins",
+      "covers": [
+        "BR-13"
+      ],
+      "file": "server/tests/api/pins.test.ts",
+      "sourceRef": "uat-2026-10-30"
     }
   ],
   "tasks": [
@@ -831,67 +844,6 @@
       "skills": [
         "typescript",
         "zod-patterns"
-      ],
-      "sourceRef": "CR:MDT-197"
-    },
-    {
-      "id": "TASK-2",
-      "title": "Server: PinStateService + PinController + GET/PUT /api/pins route, user-global pins.json",
-      "ownsArtifactIds": [
-        "ART-3",
-        "ART-4",
-        "ART-5",
-        "ART-6"
-      ],
-      "makesGreenIds": [
-        "TEST-api-put-pins",
-        "TEST-api-reject-unknown-project",
-        "TEST-api-reconcile-on-read",
-        "TEST-api-cross-project"
-      ],
-      "skills": [
-        "express",
-        "server-layering"
-      ],
-      "sourceRef": "CR:MDT-197"
-    },
-    {
-      "id": "TASK-3",
-      "title": "Frontend: pins.ts client (authFetch PUT) + usePins hook (load/add/remove/persist)",
-      "ownsArtifactIds": [
-        "ART-7",
-        "ART-8"
-      ],
-      "makesGreenIds": [
-        "pins_persist_across_reload"
-      ],
-      "skills": [
-        "react-hooks",
-        "fetch"
-      ],
-      "sourceRef": "CR:MDT-197"
-    },
-    {
-      "id": "TASK-4",
-      "title": "PinRail component: 48px rail, PinItem icon chips, PinTooltip, hover-x unpin, empty-collapse, overflow scroll, CSS",
-      "ownsArtifactIds": [
-        "ART-9",
-        "ART-10",
-        "ART-11"
-      ],
-      "makesGreenIds": [
-        "drag_to_pin_creates_icon_item",
-        "click_pin_opens_viewer",
-        "hover_x_unpins",
-        "hover_tooltip_full_identity",
-        "empty_rail_is_absent",
-        "overflow_rail_scrolls_vertically",
-        "cross_project_pins_render_side_by_side"
-      ],
-      "skills": [
-        "react",
-        "css",
-        "react-dnd"
       ],
       "sourceRef": "CR:MDT-197"
     },
@@ -995,6 +947,91 @@
         "css"
       ],
       "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Frontend: pins.ts client (projectId-scoped authFetch GET/PUT) + usePins(projectId) hook — load/add/remove/persist keyed by current project",
+      "ownsArtifactIds": [
+        "ART-7",
+        "ART-8"
+      ],
+      "makesGreenIds": [
+        "pins_persist_across_reload"
+      ],
+      "sourceRef": "uat-2026-10-30"
+    },
+    {
+      "id": "TASK-4",
+      "title": "PinRail component: 48px rail, PinItem icon chips, PinTooltip, hover-x unpin, empty-collapse, overflow scroll, CSS — single-project pin set",
+      "ownsArtifactIds": [
+        "ART-9",
+        "ART-10",
+        "ART-11"
+      ],
+      "makesGreenIds": [
+        "drag_to_pin_creates_icon_item",
+        "click_pin_opens_viewer",
+        "hover_x_unpins",
+        "hover_tooltip_full_identity",
+        "empty_rail_is_absent",
+        "overflow_rail_scrolls_vertically",
+        "project_scoped_pin_set"
+      ],
+      "sourceRef": "uat-2026-10-30"
+    },
+    {
+      "id": "TASK-11",
+      "title": "UAT 2026-10-30 frontend slice: usePins(projectId) keyed by current project, projectId-scoped pins client, rail renders only current project's pins; E2E pin-rail suite stays green",
+      "ownsArtifactIds": [
+        "ART-7",
+        "ART-8"
+      ],
+      "makesGreenIds": [
+        "pins_persist_across_reload",
+        "project_scoped_pin_set"
+      ],
+      "sourceRef": "uat-2026-10-30"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Server: PinStateService + PinController + GET/PUT /api/pins — per-project projects/{projectId}/pins.json, projectId-scoped endpoints, visibility gate, legacy pins.json absorb-on-read",
+      "ownsArtifactIds": [
+        "ART-3",
+        "ART-4",
+        "ART-5",
+        "ART-6"
+      ],
+      "makesGreenIds": [
+        "TEST-api-put-pins",
+        "TEST-api-reject-unknown-project",
+        "TEST-api-reconcile-on-read",
+        "TEST-api-project-isolation",
+        "TEST-api-legacy-migration",
+        "legacy_global_pins_migrate_per_project"
+      ],
+      "skills": [
+        "express",
+        "server-layering"
+      ],
+      "sourceRef": "CR:MDT-197"
+    },
+    {
+      "id": "TASK-10",
+      "title": "UAT 2026-10-30 backend slice: project-scope the pin persistence — per-project pins.json under projects/{id}, projectId-scoped API with visibility gate, legacy user-global pins.json absorb-on-read, rewritten pins API tests",
+      "ownsArtifactIds": [
+        "ART-3",
+        "ART-4",
+        "ART-5"
+      ],
+      "makesGreenIds": [
+        "TEST-api-put-pins",
+        "TEST-api-reject-unknown-project",
+        "TEST-api-reconcile-on-read",
+        "TEST-api-project-isolation",
+        "TEST-api-legacy-migration",
+        "legacy_global_pins_migrate_per_project"
+      ],
+      "sourceRef": "uat-2026-10-30"
     }
   ]
 }

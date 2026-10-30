@@ -168,3 +168,24 @@ Out of scope (deferred with evidence):
 - **Phase 1**: tickets only, vertical left rail, server-backed persistence (`/api/pins`), drag-to-pin from board cards, click-to-open, hover tooltip, unpin on hover-×. Cross-project pins. Overflow scroll. Empty rail hidden.
 - **Phase 2**: document pins (requires document drag source — separate dependency).
 - **Deferred**: auto-populate with in-progress tickets (smart default), auto-unpin on done column (per-action toggle in resolution dialog), mobile FAB/sheet for the rail, pin reordering via drag, hover card / preview pane.
+
+## 8. Clarifications
+
+### UAT Session 2026-10-30 — Pin board is project-scoped, never global
+
+**Approved changes** (feedback: "pin board is never meant to be global, it shall work within a project only"):
+
+- Pins are project-scoped: the rail shows only the current project's pins; switching projects swaps the pin set. No cross-project rail, ever.
+- Storage upgraded from user-global `pins.json` to per-project `projects/{projectId}/pins.json` (document-favs pattern). API now takes `projectId` (query on GET, body on PUT) with the per-project visibility gate.
+- Legacy data migration: pins absorbed from the legacy user-global `pins.json` into matching projects on first read; legacy file retained as backup. Existing data verified: ABC-003 → `acmeballoon`, MDT-226 + MDT-223 → `markdown-ticket`.
+
+**Changed requirement IDs**:
+
+- BR-5 (cross-project side-by-side) — **replaced by BR-13** (project-scoped rail), then deleted
+- BR-4 — refined: persists **per-project** via the server endpoint
+- Edge-4 — refined: covers legacy user-global pins.json absorb-on-read
+- Edge-5 (cross-project same-numeric-code disambiguation) — **scope removal, deleted** (moot under project scoping)
+
+**Updated workflow documents**: canonical spec-trace store (all 5 stages re-synced, validated, rendered to `docs/CRs/MDT-197/*.trace.md`); current-round brief written to `docs/CRs/MDT-197/uat.md` (execution slices TASK-10 backend / TASK-11 frontend).
+
+**uat.md written**: yes. **Strict drift/lock**: not used (no competing in-flight work; standard validation gate passed).

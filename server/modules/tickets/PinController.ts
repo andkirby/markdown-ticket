@@ -1,57 +1,67 @@
 import type { Request, Response } from 'express'
 import type { PinStateService } from '../../services/PinStateService.js'
-import { PinStateSchema } from '@mdt/domain-contracts'
+import { PinInputSchema } from '@mdt/domain-contracts'
+import { z } from 'zod'
 import { parseRequest } from '../../http/parseRequest.js'
 
 /**
- * MDT-197: Pin rail controller.
+ * MDT-197: Pin rail controller (project-scoped per UAT 2026-10-30).
  *
  * Thin HTTP layer over PinStateService. Mirrors DocumentController's
  * putDocumentFavs posture: validate shape at the adapter, map known service
  * errors to HTTP statuses, 500 on the unexpected.
  *
- * Two endpoints:
- * - GET /api/pins          → readReconciledState (drops stale project codes)
- * - PUT /api/pins          → writeState (whole-list replace, validates project codes)
+ * Two endpoints, both scoped to a project:
+ * - GET /api/pins?projectId=X  → readReconciledState (legacy-absorbed, reconciled)
+ * - PUT /api/pins {projectId, pins} → writeState (whole-list replace)
  *
- * Auth is applied at the /api mount (createApiAuthMiddleware), same as
- * /api/documents/favs. No per-project visibility gate — pins are user-global.
+ * The router additionally gates both behind project visibility
+ * (ensureProjectVisible), same as /api/documents.
  */
-interface PinStateRequest extends Request {
-  body: {
-    pins?: unknown
-  }
-}
+interface PinStateRequest extends Request {}
+
+const ProjectIdQuerySchema = z.object({ projectId: z.string().min(1) })
 
 export class PinController {
   constructor(private pinStateService: PinStateService) {}
 
-  async getPinState(_req: Request, res: Response): Promise<void> {
+  async getPinState(req: PinStateRequest, res: Response): Promise<void> {
     try {
-      const state = await this.pinStateService.readReconciledState()
+      const query = parseRequest(ProjectIdQuerySchema, req.query, res, 'query')
+      if (!query.success)
+        return
+      const state = await this.pinStateService.readReconciledState(query.data.projectId)
       res.json(state)
     }
     catch (error: unknown) {
       console.error('Error reading pin state:', error)
+      if (error instanceof Error && error.message === 'Project not found') {
+        res.status(404).json({ error: 'Not Found', message: error.message })
+        return
+      }
       res.status(500).json({ error: 'Internal Server Error', message: 'Failed to read pin state' })
     }
   }
 
   async putPinState(req: PinStateRequest, res: Response): Promise<void> {
     try {
-      const body = parseRequest(PinStateSchema, req.body, res, 'body')
+      const body = parseRequest(PinInputSchema, req.body, res, 'body')
       if (!body.success)
         return
-      const state = await this.pinStateService.writeState(body.data)
+      const state = await this.pinStateService.writeState(body.data.projectId, { pins: body.data.pins })
       res.json(state)
     }
     catch (error: unknown) {
       console.error('Error writing pin state:', error)
 
       if (error instanceof Error) {
-        // Zod validation errors carry a recognizable message prefix; service
-        // errors ('Unknown project in pin set') map to 400 as well.
-        if (error.message === 'Unknown project in pin set') {
+        if (error.message === 'Project not found') {
+          res.status(404).json({ error: 'Not Found', message: error.message })
+          return
+        }
+        // Service-level rule violations (projectCode mismatch) and Zod
+        // validation errors both map to 400.
+        if (error.message === 'Pin projectCode does not match owning project') {
           res.status(400).json({ error: 'Bad Request', message: error.message })
           return
         }

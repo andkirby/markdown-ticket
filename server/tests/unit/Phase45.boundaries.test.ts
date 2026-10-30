@@ -151,16 +151,17 @@ describe('MDT-258 phase 4 tolerant persisted adapters', () => {
     const discovery = { getAllProjects: async () => [{ id: 'p', project: { code: 'P' } }] }
     const pins = new PinStateService(discovery as never)
     const favorites = new DocumentFavStateService(discovery as never)
+    const project = { id: 'p', project: { code: 'P' } } as never
     jest.spyOn(pins, 'getStatePath').mockReturnValue(join(dir, 'pins.json'))
     jest.spyOn(favorites, 'getStatePathForProjectId').mockReturnValue(join(dir, 'p/document-favs.json'))
     const favPath = favorites.getStatePathForProjectId('p')
     await mkdir(dirname(favPath), { recursive: true })
-    await writeFile(pins.getStatePath(), text)
+    await writeFile(pins.getStatePath(project), text)
     await writeFile(favPath, text)
-    expect(await pins.readState()).toEqual({ pins: [] })
+    expect(await pins.readReconciledState('p')).toEqual({ pins: [] })
     expect(await favorites.readReconciledState('p', [])).toEqual({ favItems: [] })
     expect(await readFile(favPath, 'utf8')).toBe(text)
-    expect(await readFile(pins.getStatePath(), 'utf8')).toBe(text)
+    expect(await readFile(pins.getStatePath(project), 'utf8')).toBe(text)
   })
   it('watcher projects only compatible frontmatter fields and ISO dates', async () => {
     const file = 'RAW-001.md'

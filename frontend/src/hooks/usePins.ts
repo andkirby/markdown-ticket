@@ -4,12 +4,13 @@ import { loadPins, savePins } from '../config/pins'
 import { useToast } from './useToast'
 
 /**
- * MDT-197: pin rail state + actions.
+ * MDT-197: pin rail state + actions. Project-scoped per UAT 2026-10-30:
+ * the pin set is per project — keyed by `projectId`, reloaded on project
+ * switch, and persisted to that project's set only.
  *
- * Loads the user-global pin set from /api/pins once, then exposes add/remove
- * that optimistically mutate local state and persist the whole list via PUT
- * /api/pins. On persistence failure the optimistic change is reverted and a
- * toast surfaces (Edge-3: no phantom pin).
+ * Exposes add/remove that optimistically mutate local state and persist the
+ * whole list via PUT /api/pins. On persistence failure the optimistic change
+ * is reverted and a toast surfaces (Edge-3: no phantom pin).
  *
  * `canWrite` gates mutations (BR-10): in read-only access modes add/remove
  * are no-ops; the pin set remains readable for click-to-open.
@@ -22,9 +23,9 @@ export interface UsePinsResult {
   loading: boolean
   /** True when (projectCode, ticketCode) is pinned. */
   isPinned: (projectCode: string, ticketCode: string) => boolean
-  /** Pin a ticket. No-op when canWrite is false. Returns true if state changed. */
+  /** Pin a ticket. No-op when canWrite is false or projectId is null. Returns true if state changed. */
   addPin: (projectCode: string, ticketCode: string) => boolean
-  /** Unpin a ticket. No-op when canWrite is false. Returns true if state changed. */
+  /** Unpin a ticket. No-op when canWrite is false or projectId is null. Returns true if state changed. */
   removePin: (projectCode: string, ticketCode: string) => boolean
 }
 
@@ -32,18 +33,30 @@ function pinKey(p: { projectCode: string, ticketCode: string }): string {
   return `${p.projectCode}\u{0000}${p.ticketCode}`
 }
 
-export function usePins(canWrite: boolean): UsePinsResult {
+export function usePins(projectId: string | null, canWrite: boolean): UsePinsResult {
   const [pins, setPins] = useState<PinItem[]>([])
   const [loading, setLoading] = useState(true)
   const pinsRef = useRef<PinItem[]>([])
+  const projectIdRef = useRef<string | null>(projectId)
   const toast = useToast()
 
   // pinsRef is the synchronous source of truth; mutations (add/remove/load)
   // update it directly and mirror into React state via setPins for rendering.
+  // projectIdRef tracks the owning project for persistence between renders.
   useEffect(() => {
+    projectIdRef.current = projectId
+  }, [projectId])
+
+  useEffect(() => {
+    if (!projectId) {
+      pinsRef.current = []
+      setPins([])
+      setLoading(false)
+      return
+    }
     let cancelled = false
     setLoading(true)
-    loadPins()
+    loadPins(projectId)
       .then((state) => {
         if (!cancelled) {
           pinsRef.current = state.pins
@@ -66,12 +79,16 @@ export function usePins(canWrite: boolean): UsePinsResult {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [projectId])
 
   const persist = useCallback(
     async (next: PinItem[]): Promise<boolean> => {
+      const owner = projectIdRef.current
+      if (!owner) {
+        return false
+      }
       try {
-        await savePins(next)
+        await savePins(owner, next)
         return true
       }
       catch (err: unknown) {
@@ -85,7 +102,7 @@ export function usePins(canWrite: boolean): UsePinsResult {
 
   const addPin = useCallback(
     (projectCode: string, ticketCode: string): boolean => {
-      if (!canWrite) {
+      if (!canWrite || !projectIdRef.current) {
         return false
       }
       const key = pinKey({ projectCode, ticketCode })
@@ -109,7 +126,7 @@ export function usePins(canWrite: boolean): UsePinsResult {
 
   const removePin = useCallback(
     (projectCode: string, ticketCode: string): boolean => {
-      if (!canWrite) {
+      if (!canWrite || !projectIdRef.current) {
         return false
       }
       const key = pinKey({ projectCode, ticketCode })

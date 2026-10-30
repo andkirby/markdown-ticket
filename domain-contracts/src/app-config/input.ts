@@ -1,9 +1,15 @@
 import { z } from 'zod'
-import { DocumentFavStateSchema } from './schema'
+import { DocumentFavStateSchema, PinStateSchema } from './schema'
 
 export const DocumentFavInputSchema = z.object({
   projectId: z.string(),
   ...DocumentFavStateSchema.shape,
+})
+
+// MDT-197 UAT: pins are project-scoped — PUT carries the owning projectId.
+export const PinInputSchema = z.object({
+  projectId: z.string().min(1),
+  ...PinStateSchema.shape,
 })
 
 export const PreviewTokenInputSchema = z.object({

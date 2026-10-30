@@ -24,16 +24,19 @@ for the same pixels. This is non-negotiable and is restated in `board-filter-bar
 
 - The left rail zone: a fixed-width vertical column (`48px`, `hidden < md`) rendered as a sibling of
   the content area inside `ProjectRouteHandler.tsx`'s content row — not inside `<main>`, not inside the header.
-- The pin set as **server-backed** state (a whole-list `PUT /api/pins` replace, mirroring
-  `PUT /api/documents/favs`). Cross-project by design: each pin carries its project code.
+- The pin set as **server-backed, project-scoped** state (a whole-list `PUT /api/pins` replace
+  carrying `projectId`, mirroring `PUT /api/documents/favs`). One pin set per project (UAT
+  2026-10-30: the pin board is never global) — the rail renders only the current project's pins and
+  switches with it. Storage: `projects/{projectId}/pins.json`; pins from the legacy user-global
+  `pins.json` are absorbed per project on first read.
 - Icon-only pin items: a `48px`-wide strip with ~`32px` square buttons showing the ticket's numeric
-  code only. Cross-project pins render side by side; the project code is in the tooltip, not on the
-  chip (the numeric code alone is ambiguous across projects — the tooltip is the disambiguator).
+  code only. Within a project the numeric code is unambiguous; the tooltip keeps the project code as
+  identity context.
 - Drag-to-pin: the rail is a drop target for board cards using the existing drag type `'ticket'`
   (`board-layout.spec.md`). No new DnD system. No visible drop glyph — the whole rail is the target;
   drag-hover is signaled by the board's drop-hover style (C-5).
 - Click-to-open: clicking a pin opens the ticket viewer for that ticket, same path as a board card
-  click (cross-project pins open the owning project's viewer).
+  click (pins always belong to the current project).
 - Hover tooltip: priority glyph + status glyph + ticket key (via the canonical `<TicketCode>`) +
   title — the minimum to disambiguate cross-project pins and convey state at a glance. Status rides
   the key-strip glyph (MDT-247 removed the tooltip's `StatusBadge`; no badge co-renders here, so the

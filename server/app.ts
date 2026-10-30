@@ -97,8 +97,9 @@ export function createApplication(options: ApplicationOptions = {}) {
   // Document routes
   app.use('/api/documents', createDocumentRouter(documentController, { ...projectAccess, configureDocuments: (req, res) => documentConfiguration.configureDocuments(req, res) }))
 
-  // Pin rail routes (MDT-197): cross-project pinned tickets, user-global state.
-  app.use('/api/pins', createPinRouter(pinController))
+  // Pin rail routes (MDT-197, project-scoped per UAT 2026-10-30): per-project
+  // pin sets, projectId-scoped API with the document-favs visibility gate.
+  app.use('/api/pins', createPinRouter(pinController, projectAccess))
 
   // SSE routes
   app.use('/api/events', createSSERouter(fileWatcher, originPolicy, projectDiscovery))

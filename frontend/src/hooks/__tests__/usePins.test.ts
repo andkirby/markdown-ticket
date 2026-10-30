@@ -10,8 +10,8 @@ const realPinsModule = { ...realPinsModuleNamespace }
 const realUseToastModule = { ...realUseToastModuleNamespace }
 
 // Mock the pins client so the hook never reaches the network.
-const loadPins = mock(async () => ({ pins: [] as PinItem[] }))
-const savePins = mock(async (pins: PinItem[]) => ({ pins }))
+const loadPins = mock(async (_projectId: string) => ({ pins: [] as PinItem[] }))
+const savePins = mock(async (_projectId: string, pins: PinItem[]) => ({ pins }))
 mock.module('../../config/pins', () => ({ loadPins, savePins }))
 
 // Mock useToast so sonner isn't pulled into the hook test.
@@ -52,7 +52,7 @@ describe('usePins (MDT-197)', () => {
 
   it('loads the pin set on mount', async () => {
     loadPins.mockResolvedValueOnce({ pins: [pin('MDT', 42, '2026-08-05T00:00:00Z')] })
-    const { result } = renderHook(() => usePins(true))
+    const { result } = renderHook(() => usePins('p', true))
     expect(result.current.pins).toEqual([])
     await flush()
     expect(result.current.pins).toHaveLength(1)
@@ -60,7 +60,7 @@ describe('usePins (MDT-197)', () => {
   })
 
   it('addPin prepends (recency-first) and persists the whole list', async () => {
-    const { result } = renderHook(() => usePins(true))
+    const { result } = renderHook(() => usePins('p', true))
     await flush()
 
     let changed1 = false
@@ -76,11 +76,11 @@ describe('usePins (MDT-197)', () => {
     expect(result.current.pins.map(p => p.ticketCode)).toEqual(['MDT-2', 'MDT-1'])
     // Persisted twice (one PUT per add), each with the whole list
     expect(savePins).toHaveBeenCalledTimes(2)
-    expect(savePins.mock.calls[1][0]).toHaveLength(2)
+    expect(savePins.mock.calls[1][1]).toHaveLength(2)
   })
 
   it('addPin is a no-op when the pin already exists (keeps original recency)', async () => {
-    const { result } = renderHook(() => usePins(true))
+    const { result } = renderHook(() => usePins('p', true))
     await flush()
 
     act(() => {
@@ -100,7 +100,7 @@ describe('usePins (MDT-197)', () => {
   })
 
   it('removePin drops the pin and persists', async () => {
-    const { result } = renderHook(() => usePins(true))
+    const { result } = renderHook(() => usePins('p', true))
     await flush()
     act(() => {
       result.current.addPin('MDT', 'MDT-1')
@@ -115,11 +115,11 @@ describe('usePins (MDT-197)', () => {
     expect(changed).toBe(true)
     expect(result.current.pins.map(p => p.ticketCode)).toEqual(['MDT-2'])
     expect(savePins).toHaveBeenCalledTimes(1)
-    expect(savePins.mock.calls[0][0]).toHaveLength(1)
+    expect(savePins.mock.calls[0][1]).toHaveLength(1)
   })
 
   it('mutations are blocked when canWrite is false (read-only)', async () => {
-    const { result } = renderHook(() => usePins(false))
+    const { result } = renderHook(() => usePins('p', false))
     await flush()
 
     let added = true
@@ -135,7 +135,7 @@ describe('usePins (MDT-197)', () => {
   })
 
   it('isPinned reflects current state', async () => {
-    const { result } = renderHook(() => usePins(true))
+    const { result } = renderHook(() => usePins('p', true))
     await flush()
     act(() => {
       result.current.addPin('MDT', 'MDT-42')
@@ -146,8 +146,8 @@ describe('usePins (MDT-197)', () => {
     expect(result.current.isPinned('OTHER', 'OTHER-42')).toBe(false)
   })
 
-  it('disambiguates same numeric code across projects (Edge-5)', async () => {
-    const { result } = renderHook(() => usePins(true))
+  it('pin identity is (projectCode, ticketCode) — same numeric code never collides', async () => {
+    const { result } = renderHook(() => usePins('p', true))
     await flush()
     act(() => {
       result.current.addPin('MDT', 'MDT-42')

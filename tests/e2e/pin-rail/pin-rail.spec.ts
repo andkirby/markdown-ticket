@@ -26,22 +26,18 @@ import { boardSelectors } from '../utils/selectors.js'
 import { getTicketStatus, waitForBoardReady } from '../utils/helpers.js'
 
 /** Seed pins via the API (no-auth-dev E2E backend → no owner-intent needed). */
-async function seedPins(page: import('@playwright/test').Page, pins: Array<{ projectCode: string, ticketCode: string }>): Promise<void> {
+async function seedPins(page: import('@playwright/test').Page, projectId: string, pins: Array<{ projectCode: string, ticketCode: string }>): Promise<void> {
   await page.request.put('/api/pins', {
-    data: { pins: pins.map(p => ({ ...p, favoritedAt: new Date().toISOString() })) },
+    data: { projectId, pins: pins.map(p => ({ ...p, favoritedAt: new Date().toISOString() })) },
   })
 }
 
-/** Clear the pin set (cleanup between independent tests). */
-async function clearPins(page: import('@playwright/test').Page): Promise<void> {
-  await page.request.put('/api/pins', { data: { pins: [] } })
+/** Clear a project's pin set (cleanup between independent tests). */
+async function clearPins(page: import('@playwright/test').Page, projectId: string): Promise<void> {
+  await page.request.put('/api/pins', { data: { projectId, pins: [] } })
 }
 
 test.describe('Pin Rail (MDT-197)', () => {
-  test.beforeEach(async ({ page }) => {
-    await clearPins(page)
-  })
-
   test('TEST-e2e-empty-rail-collapsed: empty pin set keeps the rail present (BR-7/BR-12)', async ({ page, e2eContext }) => {
     const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
     await page.goto(`/prj/${scenario.projectCode}`)
@@ -88,7 +84,7 @@ test.describe('Pin Rail (MDT-197)', () => {
   test('TEST-e2e-pin-toggle-collapse: pin icon toggles rail open/closed (BR-12)', async ({ page, e2eContext }) => {
     const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
     const code = scenario.crCodes[0]
-    await seedPins(page, [{ projectCode: scenario.projectCode, ticketCode: code }])
+    await seedPins(page, scenario.projectCode, [{ projectCode: scenario.projectCode, ticketCode: code }])
     await page.goto(`/prj/${scenario.projectCode}`)
     await waitForBoardReady(page)
 
@@ -113,7 +109,7 @@ test.describe('Pin Rail (MDT-197)', () => {
   test('TEST-e2e-pinned-takes-space: pinned rail pushes columns; collapsed does not (BR-12)', async ({ page, e2eContext }) => {
     const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
     const code = scenario.crCodes[0]
-    await seedPins(page, [{ projectCode: scenario.projectCode, ticketCode: code }])
+    await seedPins(page, scenario.projectCode, [{ projectCode: scenario.projectCode, ticketCode: code }])
     await page.goto(`/prj/${scenario.projectCode}`)
     await waitForBoardReady(page)
 
@@ -142,7 +138,7 @@ test.describe('Pin Rail (MDT-197)', () => {
     // The empty-rail drag-reveal is covered by the unit-level useDragLayer
     // contract; here we verify the drop actually pins a NEW ticket.
     const firstCode = scenario.crCodes[0]
-    await seedPins(page, [{ projectCode: scenario.projectCode, ticketCode: firstCode }])
+    await seedPins(page, scenario.projectCode, [{ projectCode: scenario.projectCode, ticketCode: firstCode }])
     await page.reload()
     await waitForBoardReady(page)
     await expect(page.getByTestId('pin-rail')).toBeVisible()
@@ -164,7 +160,7 @@ test.describe('Pin Rail (MDT-197)', () => {
   test('TEST-e2e-click-opens-viewer: clicking a pin opens the ticket viewer (BR-2)', async ({ page, e2eContext }) => {
     const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
     const code = scenario.crCodes[0]
-    await seedPins(page, [{ projectCode: scenario.projectCode, ticketCode: code }])
+    await seedPins(page, scenario.projectCode, [{ projectCode: scenario.projectCode, ticketCode: code }])
     await page.goto(`/prj/${scenario.projectCode}`)
     await waitForBoardReady(page)
 
@@ -178,7 +174,7 @@ test.describe('Pin Rail (MDT-197)', () => {
   test('TEST-e2e-hover-unpin: hover shows x and clicking it unpins (BR-3, BR-6)', async ({ page, e2eContext }) => {
     const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
     const code = scenario.crCodes[0]
-    await seedPins(page, [{ projectCode: scenario.projectCode, ticketCode: code }])
+    await seedPins(page, scenario.projectCode, [{ projectCode: scenario.projectCode, ticketCode: code }])
     await page.goto(`/prj/${scenario.projectCode}`)
     await waitForBoardReady(page)
 
@@ -198,7 +194,7 @@ test.describe('Pin Rail (MDT-197)', () => {
     await page.goto(`/prj/${scenario.projectCode}`)
     await waitForBoardReady(page)
 
-    await seedPins(page, [{ projectCode: scenario.projectCode, ticketCode: code }])
+    await seedPins(page, scenario.projectCode, [{ projectCode: scenario.projectCode, ticketCode: code }])
     await page.reload()
     await waitForBoardReady(page)
 
@@ -209,7 +205,7 @@ test.describe('Pin Rail (MDT-197)', () => {
   test('TEST-e2e-cross-view: rail stays visible across board/list/documents (BR-9)', async ({ page, e2eContext }) => {
     const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
     const code = scenario.crCodes[0]
-    await seedPins(page, [{ projectCode: scenario.projectCode, ticketCode: code }])
+    await seedPins(page, scenario.projectCode, [{ projectCode: scenario.projectCode, ticketCode: code }])
     await page.goto(`/prj/${scenario.projectCode}`)
     await waitForBoardReady(page)
 
@@ -254,7 +250,7 @@ test.describe('Pin Rail (MDT-197)', () => {
     const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
     // 'simple' scenario crCodes[0] = "Setup Project Structure", priority: High.
     const code = scenario.crCodes[0]
-    await seedPins(page, [{ projectCode: scenario.projectCode, ticketCode: code }])
+    await seedPins(page, scenario.projectCode, [{ projectCode: scenario.projectCode, ticketCode: code }])
     await page.goto(`/prj/${scenario.projectCode}`)
     await waitForBoardReady(page)
 
@@ -280,7 +276,7 @@ test.describe('Pin Rail (MDT-197)', () => {
   test('TEST-e2e-visual-signals-only: no label/divider/"+" glyph; collapsed opacity 0.85; pin code uses ticket-card font token (C-6)', async ({ page, e2eContext }) => {
     const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
     const code = scenario.crCodes[0]
-    await seedPins(page, [{ projectCode: scenario.projectCode, ticketCode: code }])
+    await seedPins(page, scenario.projectCode, [{ projectCode: scenario.projectCode, ticketCode: code }])
     await page.goto(`/prj/${scenario.projectCode}`)
     await waitForBoardReady(page)
 

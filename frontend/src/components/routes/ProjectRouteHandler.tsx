@@ -85,10 +85,11 @@ export function ProjectRouteHandler() {
     markOwnerAdmin,
   } = useAuthSession()
 
-  // MDT-197: pin rail state. canWriteTickets gates mutations (read-only blocks
-  // pin/unpin). Pin metadata (title/status) is resolved from the current
-  // project's tickets; cross-project pins resolve when their project is viewed.
-  const pins = usePins(canWriteTickets)
+  // MDT-197: pin rail state — project-scoped per UAT 2026-10-30. The pin set
+  // is keyed by the current project id and swapped on project switch.
+  // canWriteTickets gates mutations (read-only blocks pin/unpin). Pin metadata
+  // (title/status) is resolved from the current project's tickets.
+  const pins = usePins(selectedProject?.id ?? null, canWriteTickets)
   const pinRailPref = usePinRailPref()
   const resolvePinMetadata = useCallback(
     (pin: { projectCode: string, ticketCode: string }) => {
